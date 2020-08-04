@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P059
 //#######################################################################################################
 //#################################### Plugin 059: Rotary Encoder #######################################
@@ -21,7 +23,6 @@
 #define PLUGIN_VALUENAME1_059 "Counter"
 
 #include <QEIx4.h>
-#include "_Plugin_Helper.h"
 
 std::map<unsigned int, std::shared_ptr<QEIx4> > P_059_sensordefs;
 

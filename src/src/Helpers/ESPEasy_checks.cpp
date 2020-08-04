@@ -25,6 +25,7 @@
 
 #include "../Helpers/ESPEasy_Storage.h"
 
+#include <cstddef>
 
 
 #ifdef USES_NOTIFIER
@@ -53,14 +54,11 @@ void check_size() {
 // Check struct sizes at compile time
 // Usage:
 //   struct X { int a, b, c, d; }
-//   static_assert(ExpectedSize == offsetOf(&X::c), "");
+//   static_assert(ExpectedSize == offsetof(X, c), "");
 // ********************************************************************************
-template<typename T, typename U> constexpr size_t offsetOf(U T::*member)
-{
-    return (char*)&((T*)nullptr->*member) - (char*)nullptr;
-}
 
 void run_compiletime_checks() {
+  #ifndef LIMIT_BUILD_SIZE
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
   const unsigned int SettingsStructSize = (276 + 82 * TASKS_MAX);
@@ -93,22 +91,24 @@ void run_compiletime_checks() {
   #endif
 
   // Check for alignment issues at compile time
-  static_assert(256u == offsetOf(&SecurityStruct::ControllerUser), "");
-  static_assert((256 + (CONTROLLER_MAX * 26))  == offsetOf(&SecurityStruct::ControllerPassword), "");
-  static_assert(192u == offsetOf(&SettingsStruct::Protocol), "");
-  static_assert(195u == offsetOf(&SettingsStruct::Notification), "CONTROLLER_MAX has changed?");
-  static_assert(198u == offsetOf(&SettingsStruct::TaskDeviceNumber), "NOTIFICATION_MAX has changed?");
+  static_assert(256u == offsetof(SecurityStruct, ControllerUser), "");
+  static_assert((256 + (CONTROLLER_MAX * 26))  == offsetof(SecurityStruct, ControllerPassword), "");
+  static_assert(192u == offsetof(SettingsStruct, Protocol), "");
+  static_assert(195u == offsetof(SettingsStruct, Notification), "CONTROLLER_MAX has changed?");
+  static_assert(198u == offsetof(SettingsStruct, TaskDeviceNumber), "NOTIFICATION_MAX has changed?");
 
   // All settings related to N_TASKS
-  static_assert((200 + TASKS_MAX) == offsetOf(&SettingsStruct::OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
-  static_assert((200 + (67 * TASKS_MAX)) == offsetOf(&SettingsStruct::ControllerEnabled), ""); 
+  static_assert((200 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
+  static_assert((200 + (67 * TASKS_MAX)) == offsetof(SettingsStruct, ControllerEnabled), ""); 
 
   // Used to compute true offset.
-  //const size_t offset = offsetOf(&SettingsStruct::ControllerEnabled);
+  //const size_t offset = offsetof(SettingsStruct, ControllerEnabled);
   //check_size<SettingsStruct, offset>();
 
+  #endif
 }
 
+#ifndef LIMIT_BUILD_SIZE
 String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
   String error;
 
@@ -120,6 +120,7 @@ String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
   error += ')';
   return error;
 }
+#endif
 
 /*********************************************************************************************\
 *  Analyze SettingsStruct and report inconsistencies
@@ -127,6 +128,7 @@ String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
 \*********************************************************************************************/
 bool SettingsCheck(String& error) {
   error = "";
+  #ifndef LIMIT_BUILD_SIZE
 #ifdef esp8266
   size_t offset = offsetof(SettingsStruct, ResetFactoryDefaultPreference);
 
@@ -141,12 +143,15 @@ bool SettingsCheck(String& error) {
     }
   }
 
+  #endif
+
   return error.length() == 0;
 }
 
 
 String checkTaskSettings(taskIndex_t taskIndex) {
   String err = LoadTaskSettings(taskIndex);
+  #ifndef LIMIT_BUILD_SIZE
   if (err.length() > 0) return err;
   if (!ExtraTaskSettings.checkUniqueValueNames()) {
     return F("Use unique value names");
@@ -176,5 +181,6 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   }
 
   err += LoadTaskSettings(taskIndex);
+  #endif
   return err;
 }
