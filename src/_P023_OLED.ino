@@ -11,6 +11,11 @@
 //  Lux:[Lux#Lux#R]
 //  Baro:[Baro#Pressure#R]
 
+// Changelog:
+// @tonhuisman: 2020-08-04
+// BUG: Parsing the [<TaskName>]. prefix wasn't working because of a typo (off-by-1)
+// CHG: No need to compare a boolean with true, small code-reformat
+
 #define PLUGIN_023
 #define PLUGIN_ID_023         23
 #define PLUGIN_NAME_023       "Display - OLED SSD1306"
@@ -247,18 +252,15 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         // You can also call it this way:
         // [TaskName].OLED, 1,1, Temp. is 19.9
         int dotPos = arguments.indexOf('.');
-        if(dotPos > -1 && arguments.substring(dotPos,dotPos+4).equalsIgnoreCase(F("oled")))
+        if(dotPos > -1 && arguments.substring(dotPos + 1,dotPos + 1 + 4).equalsIgnoreCase(F("oled")))
         {
           LoadTaskSettings(event->TaskIndex);
           String name = arguments.substring(0,dotPos);
           name.replace("[","");
           name.replace("]","");
-          if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
-          {
+          if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
             arguments = arguments.substring(dotPos+1);
-          }
-          else
-          {
+          } else {
              return false;
           }
         }
