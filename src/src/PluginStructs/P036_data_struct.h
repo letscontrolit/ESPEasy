@@ -4,6 +4,12 @@
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy_common.h"
 
+#ifdef USES_P036
+
+#include <SSD1306.h>
+#include <SH1106Wire.h>
+
+
 // #define PLUGIN_036_DEBUG    // additional debug messages in the log
 
 
@@ -25,11 +31,6 @@
 #define P36_CONTRAST_HIGH 0xFF
 
 
-#include "SSD1306.h"
-#include "SH1106Wire.h"
-#include "OLED_SSD1306_SH1106_images.h"
-#include "Dialog_Plain_12_font.h"
-
 #define P36_WIFI_STATE_UNSET          -2
 #define P36_WIFI_STATE_NOT_CONNECTED  -1
 #define P36_MAX_LinesPerPage          4
@@ -40,7 +41,6 @@
 #define P36_PageScrollPix             4                          // min pixel change while page scrolling
 #define P36_DebounceTreshold          5                          // number of 20 msec (fifty per second) ticks before the button has settled
 #define P36_RepeatDelay               50                         // number of 20 msec ticks before repeating the button action when holding
-                                                                 // it pressed
 
 enum eHeaderContent {
   eSSID     = 1,
@@ -238,5 +238,5 @@ struct P036_data_struct : public PluginTaskData_base {
   bool    bPageScrollDisabled   = true; // first page after INIT or after JumpToPage without scrolling
 };
 
-
+#endif
 #endif // ifndef PLUGINSTRUCTS_P036_DATA_STRUCT_H

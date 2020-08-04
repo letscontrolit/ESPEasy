@@ -157,7 +157,7 @@ private:
 
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
 #define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new ControllerSettingsStruct()); \
-  ControllerSettingsStruct& (T) = *ControllerSettingsStruct_ptr;
+  ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
 
 // Check to see if MakeControllerSettings was successful
 #define AllocatedControllerSettings() (ControllerSettingsStruct_ptr.get() != nullptr)
