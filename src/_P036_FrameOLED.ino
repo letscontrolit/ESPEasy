@@ -13,6 +13,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2020-08-04
+// ADD: Added optional [<Name>]. prefixing for addressing a first/second display by Task name when using the oledframedcmd command
 // @uwekaditz: 2020-06-22
 // BUG: MaxFramesToDisplay was not updated if all display lines were empty -> display_indicator() crashed due to memory overflow
 // CHG: MaxFramesToDisplay will be updated after receiving command with new line content
@@ -92,7 +94,7 @@
 #define P036_CONTRAST    PCONFIG(6)
 #define P036_RESOLUTION  PCONFIG(7)
 
-
+// #define PLUGIN_036_DEBUG
 
 
 boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
@@ -607,6 +609,35 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
+      String arguments = String(string);
+      String name;
+      // this was to manage multiple instances of the plug-in.
+      // You can also call it this way:
+      // [TaskName].OLEDFRAMEDCMD, 1,"Temp. is 19.9"
+      int dotPos = arguments.indexOf('.');
+      if(dotPos > -1 && arguments.substring(dotPos + 1,dotPos + 1 + 13).equalsIgnoreCase(F("oledframedcmd")))
+      {
+        LoadTaskSettings(event->TaskIndex);
+        name = arguments.substring(0,dotPos);
+        name.replace("[","");
+        name.replace("]","");
+        if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
+          arguments = arguments.substring(dotPos+1);
+        } else {
+            return false;
+        }
+      }
+#ifdef PLUGIN_036_DEBUG
+        {
+          String log;
+          log  = F("P036_PLUGIN_WRITE dotPos: ");
+          log += String(dotPos);
+          log += String(F(" name: "));
+          log += name;
+          addLog(LOG_LEVEL_INFO, log);
+        }
+#endif // PLUGIN_036_DEBUG
+
       P036_data_struct *P036_data =
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -625,15 +656,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WRITE ..."));
 #endif // PLUGIN_036_DEBUG
 
-      String command    = parseString(string, 1);
-      String subcommand = parseString(string, 2);
+      String command    = parseString(arguments, 1);
+      String subcommand = parseString(arguments, 2);
       int    LineNo     = event->Par1;
 
       if ((command == F("oledframedcmd")) && P036_data->isInitialized()) {
         if (subcommand == F("display"))
         {
           // display functions
-          String para1 = parseString(string, 3);
+          String para1 = parseString(arguments, 3);
 
           if (para1 == F("on")) {
             success                 = true;
@@ -680,7 +711,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         {
           // content functions
           success = true;
-          String NewContent = parseStringKeepCase(string, 3);
+          String NewContent = parseStringKeepCase(arguments, 3);
           NewContent = P036_data->P36_parseTemplate(NewContent, 20);
 
           if (!safe_strncpy(P036_data->DisplayLinesV1[LineNo - 1].Content, NewContent, P36_NcharsV1)) {
