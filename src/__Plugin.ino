@@ -1156,9 +1156,23 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         if (braceDot > -1) {                              // Second precodition
           taskIndex_t thisTask = findTaskIndexByName(command.substring(1, braceDot));
           if (thisTask != INVALID_TASK_INDEX) {           // Known taskname?
-            firstTask = thisTask;
-            lastTask  = thisTask + 1;                     // Add 1 to satisfy the for condition
-            command   = command.substring(braceDot + 2);  // Remove [<TaskName>]. prefix
+#ifdef USES_P022                                          // Exclude P022 as it has rather explicit differences in commands when used with the [<TaskName>]. prefix
+            if (Settings.TaskDeviceEnabled[thisTask] 
+              && validPluginID_fullcheck(Settings.TaskDeviceNumber[thisTask])
+              && Settings.TaskDeviceDataFeed[thisTask] == 0) {
+              const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(thisTask);
+              if (Device[DeviceIndex].Number == PLUGIN_ID_022) {
+                thisTask = INVALID_TASK_INDEX;
+              }
+            }
+            if (thisTask != INVALID_TASK_INDEX) {
+#endif
+              firstTask = thisTask;
+              lastTask  = thisTask + 1;                     // Add 1 to satisfy the for condition
+              command   = command.substring(braceDot + 2);  // Remove [<TaskName>]. prefix
+#ifdef USES_P022
+          }
+#endif
           }
         }
       }

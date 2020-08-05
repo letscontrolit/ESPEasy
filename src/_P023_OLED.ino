@@ -240,36 +240,12 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         int index = PCONFIG(0) == 0x3C
           ? 0
           : 1;
-        String arguments = String(string);
 
-        //Fixed bug #1864
-        // this was to manage multiple instances of the plug-in.
-        // You can also call it this way:
-        // [TaskName].OLED, 1,1, Temp. is 19.9
-        int dotPos = arguments.indexOf('.');
-        if(dotPos > -1 && arguments.substring(dotPos,dotPos+4).equalsIgnoreCase(F("oled")))
-        {
-          LoadTaskSettings(event->TaskIndex);
-          String name = arguments.substring(0,dotPos);
-          name.replace("[","");
-          name.replace("]","");
-          if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
-          {
-            arguments = arguments.substring(dotPos+1);
-          }
-          else
-          {
-             return false;
-          }
-        }
-
-        // We now continue using 'arguments' and not 'string' as full command line.
-        // If there was any prefix to address a specific task, it is now removed from 'arguments'
-        String cmd = parseString(arguments, 1);
+        String cmd = parseString(string, 1);
         if (cmd.equalsIgnoreCase(F("OLEDCMD")))
         {
           success = true;
-          String param = parseString(arguments, 2);
+          String param = parseString(string, 2);
           if (param.equalsIgnoreCase(F("Off")))
             Plugin_023_displayOff(OLED_Settings[index]);
           else if (param.equalsIgnoreCase(F("On")))
@@ -280,7 +256,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         else if (cmd.equalsIgnoreCase(F("OLED")))
         {
           success = true;
-          String text = parseStringToEndKeepCase(arguments, 4);
+          String text = parseStringToEndKeepCase(string, 4);
           text = P023_parseTemplate(text, 16);
           Plugin_023_sendStrXY(OLED_Settings[index], text.c_str(), event->Par1 - 1, event->Par2 - 1);
         }
