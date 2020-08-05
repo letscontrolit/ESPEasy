@@ -1164,7 +1164,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               && validPluginID_fullcheck(Settings.TaskDeviceNumber[thisTask])
               && Settings.TaskDeviceDataFeed[thisTask] == 0) {
               const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(thisTask);
-              if (Device[DeviceIndex].Number == PLUGIN_ID_022) {
+              if (validDeviceIndex(DeviceIndex) && Device[DeviceIndex].Number == PLUGIN_ID_022) {
                 thisTask = INVALID_TASK_INDEX;
               }
             }
@@ -1174,7 +1174,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               lastTask  = thisTask + 1;                     // Add 1 to satisfy the for condition
               command   = command.substring(dotPos + 1);    // Remove [<TaskName>]. prefix
 #ifdef USES_P022
-          }
+            }
 #endif
           }
         }
