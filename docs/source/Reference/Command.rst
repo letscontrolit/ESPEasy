@@ -567,3 +567,23 @@ P052 :ref:`P052_page`
 .. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. .. include:: ../Plugin/P082_commands.repl
+
+Plugins installed multiple times
+--------------------------------
+
+When 2 or more of the same plugins are installed, the commands supported by these plugins can be prefixed with ``[<TaskName>].`` to address a specific instance. This requires the plugin names to be unique.
+
+Examples:
+
+``[Display1].oledframedcmd,3,'Hello World'``
+
+``[Display2].oledframedcmd,4,'From the other side'``
+
+This will display 'Hello World' on the 3rd line of the display with name 'Display1', and 'From the other side' on line 4 of the display named 'Display2'.
+
+
+``[AC1].irsendac,{<some_json_to_control_AC>}``
+
+``[AC2].irsendac,{<some_json_to_control_AC>}``
+
+This allows to control multiple IR controlled AC's from one ESP.

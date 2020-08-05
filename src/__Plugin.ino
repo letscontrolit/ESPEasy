@@ -1147,26 +1147,41 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WRITE:
     case PLUGIN_REQUEST:
     {
-      for (taskIndex_t task = 0; task < TASKS_MAX; task++)
+      taskIndex_t firstTask = 0;
+      taskIndex_t lastTask = TASKS_MAX;
+      String command = String(str);                       // Local copy to avoid warning in ExecuteCommand
+      if (Function == PLUGIN_WRITE                        // Only applicable on PLUGIN_WRITE function
+        && command.startsWith(F("["))) {                  // First precondition is just a quick check for an open-square-brace (fail-fast strategy)
+        int braceDot = command.indexOf(F("]."));          // Find closing brace-dot combination
+        if (braceDot > -1) {                              // Second precodition
+          taskIndex_t thisTask = findTaskIndexByName(command.substring(1, braceDot));
+          if (thisTask != INVALID_TASK_INDEX) {           // Known taskname?
+            firstTask = thisTask;
+            lastTask  = thisTask + 1;                     // Add 1 to satisfy the for condition
+            command   = command.substring(braceDot + 2);  // Remove [<TaskName>]. prefix
+          }
+        }
+      }
+
+      for (taskIndex_t task = firstTask; task < lastTask; task++)
       {
         if (Settings.TaskDeviceEnabled[task] && validPluginID_fullcheck(Settings.TaskDeviceNumber[task]))
         {
           if (Settings.TaskDeviceDataFeed[task] == 0) // these calls only to tasks with local feed
           {
             const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task);
-
             if (validDeviceIndex(DeviceIndex)) {
               TempEvent.TaskIndex    = task;
               TempEvent.BaseVarIndex = task * VARS_PER_TASK;
               TempEvent.sensorType   = Device[DeviceIndex].VType;
               checkRAM(F("PluginCall_s"), task);
               START_TIMER;
-              bool retval = (Plugin_ptr[DeviceIndex](Function, &TempEvent, str));
+              bool retval = (Plugin_ptr[DeviceIndex](Function, &TempEvent, command));
               STOP_TIMER_TASK(DeviceIndex, Function);
               delay(0); // SMY: call delay(0) unconditionally
 
               if (retval) {
-                CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &TempEvent, str);
+                CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &TempEvent, command);
                 return true;
               }
             }
