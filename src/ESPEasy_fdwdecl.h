@@ -230,4 +230,6 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp);
 
 uint8_t get8BitFromUL(uint32_t number, byte bitnr);
 
+void Blynk_Run_c015();
+
 #endif // ESPEASY_FWD_DECL_H
