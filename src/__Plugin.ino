@@ -1149,15 +1149,18 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     {
       taskIndex_t firstTask = 0;
       taskIndex_t lastTask = TASKS_MAX;
-      String command = String(str);                       // Local copy to avoid warning in ExecuteCommand
-      if (Function == PLUGIN_WRITE                        // Only applicable on PLUGIN_WRITE function
-        && command.startsWith(F("["))) {                  // First precondition is just a quick check for an open-square-brace (fail-fast strategy)
-        int braceDot = command.indexOf(F("]."));          // Find closing brace-dot combination
-        if (braceDot > -1) {                              // Second precodition
-          taskIndex_t thisTask = findTaskIndexByName(command.substring(1, braceDot));
-          if (thisTask != INVALID_TASK_INDEX) {           // Known taskname?
-#ifdef USES_P022                                          // Exclude P022 as it has rather explicit differences in commands when used with the [<TaskName>]. prefix
-            if (Settings.TaskDeviceEnabled[thisTask] 
+      String command = String(str);                         // Local copy to avoid warning in ExecuteCommand
+      int dotPos = command.indexOf(".");                    // Find first period
+      if (Function == PLUGIN_WRITE                          // Only applicable on PLUGIN_WRITE function
+        && dotPos > -1) {                                   // First precondition is just a quick check for a period (fail-fast strategy)
+        String thisTaskName = command.substring(1, dotPos); // Extract taskname
+        thisTaskName.replace("[", "");
+        thisTaskName.replace("]", "");
+        if (thisTaskName.length() > 0) {                    // Second precondition
+          taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
+          if (thisTask != INVALID_TASK_INDEX) {             // Known taskname?
+#ifdef USES_P022                                            // Exclude P022 as it has rather explicit differences in commands when used with the [<TaskName>]. prefix
+            if (Settings.TaskDeviceEnabled[thisTask]        // and internally needs to know wether it was called with the taskname prefixed
               && validPluginID_fullcheck(Settings.TaskDeviceNumber[thisTask])
               && Settings.TaskDeviceDataFeed[thisTask] == 0) {
               const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(thisTask);
@@ -1169,7 +1172,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 #endif
               firstTask = thisTask;
               lastTask  = thisTask + 1;                     // Add 1 to satisfy the for condition
-              command   = command.substring(braceDot + 2);  // Remove [<TaskName>]. prefix
+              command   = command.substring(dotPos + 1);    // Remove [<TaskName>]. prefix
 #ifdef USES_P022
           }
 #endif
