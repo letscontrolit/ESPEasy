@@ -27,10 +27,6 @@
 #ifndef AS_BH1750_h
 #define AS_BH1750_h
 
-// #ifndef ARDUINO
-//   #define ARDUINO 100
-// #endif
-
 #if (ARDUINO >= 100)
 #include <Arduino.h>
 #else
