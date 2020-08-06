@@ -27,6 +27,10 @@
 #ifndef AS_BH1750_h
 #define AS_BH1750_h
 
+// #ifndef ARDUINO
+//   #define ARDUINO 100
+// #endif
+
 #if (ARDUINO >= 100)
 #include <Arduino.h>
 #else
@@ -87,7 +91,12 @@ typedef enum
   }  
   sensors_resolution_t;
 
+#ifdef ESP32
+typedef void (*DelayFuncPtr)(uint32_t);
+#endif
+#ifdef ESP8266
 typedef void (*DelayFuncPtr)(unsigned long);
+#endif
 typedef unsigned long (*TimeFuncPtr)(void);
 
 /**
