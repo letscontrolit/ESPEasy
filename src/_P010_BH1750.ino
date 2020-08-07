@@ -6,9 +6,9 @@
 //#######################################################################################################
 
 
-#ifdef ESP8266  // Needed for precompile issues.
+//#ifdef ESP8266  // Needed for precompile issues.
 #include "AS_BH1750.h"
-#endif
+//#endif
 
 #define PLUGIN_010
 #define PLUGIN_ID_010         10
