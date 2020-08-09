@@ -232,7 +232,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
           TFT_Settings.address_tft_rst = PIN(2);
           TFT_Settings.address_ts_cs = PIN(3);
         }
-        
+
         addFormPinSelect(formatGpioName_output(F("TS CS")), F("p095_ts_cs"), TFT_Settings.address_ts_cs);
 
         byte choice2 = PCONFIG(1);
@@ -247,7 +247,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         PCONFIG(0) = 1; //mark config as already saved (next time, will not use default values)
-        // PIN(1) .. (3) are already set
+        // PIN(0)..(2) are already set
         PIN(3) = getFormItemInt(F("p095_ts_cs"));
         PCONFIG(1) = getFormItemInt(F("p095_rotate"));
         success = true;

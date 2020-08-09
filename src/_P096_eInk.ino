@@ -218,7 +218,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
           EPD_Settings.address_epd_rst = PIN(2);
           EPD_Settings.address_epd_busy = PIN(3);
         }
-        
+
         addFormPinSelect(formatGpioName_output(F("EPD BUSY")), F("p096_epd_busy"), EPD_Settings.address_epd_busy);
 
         byte choice2 = PCONFIG(1);
@@ -243,7 +243,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         PCONFIG(0) = 1; //mark config as already saved (next time, will not use default values)
-        // PIN(1) .. (3) are already set
+        // PIN(0)..(2) are already set
         PIN(3) = getFormItemInt(F("p096_epd_busy"));
         PCONFIG(1) = getFormItemInt(F("p096_rotate"));
         PCONFIG(2) = getFormItemInt(F("p096_width"));
