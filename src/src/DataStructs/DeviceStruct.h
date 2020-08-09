@@ -12,7 +12,9 @@
 #define DEVICE_TYPE_I2C                    20  // connected through I2C
 #define DEVICE_TYPE_SERIAL                 21  // connected through UART/Serial
 #define DEVICE_TYPE_SERIAL_PLUS1           22  // connected through UART/Serial + 1 extra signal pin
-#define DEVICE_TYPE_SPI                    23  // connected through SPI
+#define DEVICE_TYPE_SPI                    23  // connected through SPI (1 GPIO)
+#define DEVICE_TYPE_SPI2                   24  // connected through SPI, 2 GPIOs
+#define DEVICE_TYPE_SPI3                   25  // connected through SPI, 3 GPIOs
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
 // Used for VType

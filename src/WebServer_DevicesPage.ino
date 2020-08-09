@@ -395,6 +395,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
     {
       LoadTaskSettings(x);
       struct EventStruct TempEvent;
+      byte spi_gpios[3] = {static_cast<byte>(-1)};
       TempEvent.TaskIndex = x;
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
@@ -430,6 +431,38 @@ void handle_devicess_ShowAllTasksTable(byte page)
             switch (Device[DeviceIndex].Type) {
               case DEVICE_TYPE_I2C:
                 addHtml(F("I2C"));
+                break;
+              case DEVICE_TYPE_SPI:
+              case DEVICE_TYPE_SPI2:
+              case DEVICE_TYPE_SPI3:
+                {
+                  String html;
+                  html.reserve(72);
+                  if (Settings.InitSPI == 0) {
+                    html += F("SPI (Not enabled)");
+                  } else {
+                    #ifdef ESP32
+                    switch (Settings.InitSPI) {
+                      case 1:
+                        {
+                          html += F("VSPI:<BR>CLK=GPIO-18<BR>MISO=GPIO-19<BR>MOSI=GPIO-23");
+                          spi_gpios[0] = 18; spi_gpios[1] = 19; spi_gpios[2] = 23;
+                          break;
+                        }
+                      case 2:
+                        {
+                          html += F("HSPI:<BR>CLK=GPIO-14<BR>MISO=GPIO-12<BR>MOSI=GPIO-13");
+                          spi_gpios[0] = 14; spi_gpios[1] = 12; spi_gpios[2] = 13;
+                          break;
+                        }
+                    }
+                    #else // #ifdef ESP32
+                    html += F("SPI:<BR>CLK=GPIO-14 (D5)<BR>MISO=GPIO-12 (D6)<BR>>MOSI=GPIO-13 (D7)");
+                    spi_gpios[0] = 14; spi_gpios[1] = 12; spi_gpios[2] = 13;
+                    #endif
+                  }
+                  addHtml(html);
+                }
                 break;
               case DEVICE_TYPE_SERIAL:
               case DEVICE_TYPE_SERIAL_PLUS1:
@@ -549,6 +582,14 @@ void handle_devicess_ShowAllTasksTable(byte page)
             String html;
             html += F("GPIO-");
             html += Settings.TaskDevicePin1[x];
+            if (spi_gpios[0] == Settings.TaskDevicePin1[x]
+              || spi_gpios[1] == Settings.TaskDevicePin1[x]
+              || spi_gpios[2] == Settings.TaskDevicePin1[x]
+              || Settings.Pin_i2c_sda == Settings.TaskDevicePin1[x]
+              || Settings.Pin_i2c_scl == Settings.TaskDevicePin1[x]) {
+              html += " ";
+              html += F(HTML_SYMBOL_WARNING);
+            }
             addHtml(html);
           }
 
@@ -557,6 +598,14 @@ void handle_devicess_ShowAllTasksTable(byte page)
             String html;
             html += F("<BR>GPIO-");
             html += Settings.TaskDevicePin2[x];
+            if (spi_gpios[0] == Settings.TaskDevicePin2[x]
+              || spi_gpios[1] == Settings.TaskDevicePin2[x]
+              || spi_gpios[2] == Settings.TaskDevicePin2[x]
+              || Settings.Pin_i2c_sda == Settings.TaskDevicePin2[x]
+              || Settings.Pin_i2c_scl == Settings.TaskDevicePin2[x]) {
+              html += " ";
+              html += F(HTML_SYMBOL_WARNING);
+            }
             addHtml(html);
           }
 
@@ -565,6 +614,14 @@ void handle_devicess_ShowAllTasksTable(byte page)
             String html;
             html += F("<BR>GPIO-");
             html += Settings.TaskDevicePin3[x];
+            if (spi_gpios[0] == Settings.TaskDevicePin3[x]
+              || spi_gpios[1] == Settings.TaskDevicePin3[x]
+              || spi_gpios[2] == Settings.TaskDevicePin3[x]
+              || Settings.Pin_i2c_sda == Settings.TaskDevicePin3[x]
+              || Settings.Pin_i2c_scl == Settings.TaskDevicePin3[x]) {
+              html += " ";
+              html += F(HTML_SYMBOL_WARNING);
+            }
             addHtml(html);
           }
         }
@@ -688,6 +745,19 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       TempEvent.String3 = F("3rd GPIO");
       String dummy;
       PluginCall(PLUGIN_GET_DEVICEGPIONAMES, &TempEvent, dummy);
+
+      if ((Device[DeviceIndex].Type == DEVICE_TYPE_SPI
+        || Device[DeviceIndex].Type == DEVICE_TYPE_SPI2
+        || Device[DeviceIndex].Type == DEVICE_TYPE_SPI3)
+        && Settings.InitSPI == 0) {
+        addFormNote(F("SPI Interface is not configured yet (Hardware page)."));
+      }
+      if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C
+        && (Settings.Pin_i2c_sda == -1 
+          || Settings.Pin_i2c_scl == -1
+          || Settings.I2C_clockSpeed == 0)) {
+        addFormNote(F("I2C Interface is not configured yet (Hardware page)."));
+      }
 
       if (Device[DeviceIndex].connectedToGPIOpins()) {
         if (Device[DeviceIndex].usesTaskDevicePin(1)) {
