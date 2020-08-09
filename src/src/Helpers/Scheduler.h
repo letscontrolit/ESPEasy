@@ -9,8 +9,6 @@
 /*********************************************************************************************\
 * Generic Timer functions.
 \*********************************************************************************************/
-void setTimer(unsigned long timerType, unsigned long id, unsigned long msecFromNow);
-
 void setNewTimerAt(unsigned long id, unsigned long timer);
 
 // Mix timer type int with an ID describing the scheduled job.
@@ -67,7 +65,11 @@ void process_plugin_task_timer(unsigned long id);
 
 unsigned long createRulesTimerId(unsigned int timerIndex);
 
-bool setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, bool isRecurring);
+// Set timer for Rules#Timer events.
+// @param msecFromNow   Number of milli seconds from now (also used as interval for recurring)
+// @param timerIndex    The index of the timer used. (1 ... max)
+// @param recurringCount  Number of times needed to run (-1 for always)
+bool setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recurringCount = 0);
 
 void process_rules_timer(unsigned long id, unsigned long lasttimer);
 

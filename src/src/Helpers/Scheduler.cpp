@@ -38,10 +38,6 @@
 /*********************************************************************************************\
 * Generic Timer functions.
 \*********************************************************************************************/
-void setTimer(unsigned long timerType, unsigned long id, unsigned long msecFromNow) {
-  setNewTimerAt(getMixedId(timerType, id), millis() + msecFromNow);
-}
-
 void setNewTimerAt(unsigned long id, unsigned long timer) {
   START_TIMER;
   msecTimerHandler.registerAt(id, timer);
@@ -409,7 +405,8 @@ void setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Pa
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
   if (!validDeviceIndex(deviceIndex)) return;
 
-  const unsigned long systemTimerId = createPluginTaskTimerId(deviceIndex, Par1);
+  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createPluginTaskTimerId(deviceIndex, Par1));
+
   systemTimerStruct   timer_data;
 
   timer_data.TaskIndex        = taskIndex;
@@ -418,13 +415,15 @@ void setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Pa
   timer_data.Par3             = Par3;
   timer_data.Par4             = Par4;
   timer_data.Par5             = Par5;
-  systemTimers[systemTimerId] = timer_data;
-  setTimer(PLUGIN_TASK_TIMER, systemTimerId, msecFromNow);
+  systemTimers[mixedTimerId] = timer_data;
+  setNewTimerAt(mixedTimerId, millis() + msecFromNow);
 }
 
 void process_plugin_task_timer(unsigned long id) {
   START_TIMER;
-  const systemTimerStruct timer_data = systemTimers[id];
+
+  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, id);
+  const systemTimerStruct timer_data = systemTimers[mixedTimerId];
   struct EventStruct TempEvent;
   TempEvent.TaskIndex = timer_data.TaskIndex;
   TempEvent.BaseVarIndex =  timer_data.TaskIndex * VARS_PER_TASK;
@@ -447,7 +446,7 @@ void process_plugin_task_timer(unsigned long id) {
      log += id;
      addLog(LOG_LEVEL_INFO, log);
    */
-  systemTimers.erase(id);
+  systemTimers.erase(mixedTimerId);
 
   if (validDeviceIndex(deviceIndex) && validUserVarIndex(TempEvent.BaseVarIndex)) {
     TempEvent.sensorType = Device[deviceIndex].VType;
@@ -481,17 +480,22 @@ bool checkRulesTimerIndex(unsigned int timerIndex) {
 }
 
 
-bool setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, bool isRecurring) {
+bool setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recurringCount) {
   if (!checkRulesTimerIndex(timerIndex)) return false;
 
-  const unsigned long timerId = createRulesTimerId(timerIndex);
+  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
   systemTimerStruct   timer_data;
 
-  timer_data.Par1             = isRecurring ? 1 : 0;
+  timer_data.Par1             = recurringCount;
   timer_data.Par2             = msecFromNow; // The interval
   timer_data.Par3             = timerIndex;
   timer_data.Par4             = 0; // msec till end when paused
-  timer_data.Par5             = 1; // Should be executed
+  timer_data.Par5             = 1; // Execute when > 0, doubles also as counter for loops
+
+  if (recurringCount > 0) {
+    // Will run with Par1 == 0, so must subtract one when setting the value.
+    timer_data.Par1--;
+  }
 
   if (msecFromNow == 0) {
     // Create a new timer which should be "scheduled" now to clear up any data
@@ -500,39 +504,51 @@ bool setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, bool isRe
     addLog(LOG_LEVEL_INFO, F("TIMER: disable timer"))
   }
 
-  systemTimers[timerId] = timer_data;
-  setTimer(RULES_TIMER, timerId, msecFromNow);
+  systemTimers[mixedTimerId] = timer_data;
+  setNewTimerAt(mixedTimerId, millis() + msecFromNow);
   return true;
 }
 
 void process_rules_timer(unsigned long id, unsigned long lasttimer) {
   // Create a deep copy of the timer data as we may delete it from the map before sending the event.
-  const systemTimerStruct timer_data = systemTimers[id];
+  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, id);
+  const systemTimerStruct timer_data = systemTimers[mixedTimerId];
 
   if (timer_data.Par4 != 0) {
     // Timer is paused.
     // Must keep this timer 'active' in the scheduler.
     // Look for its state every second.
-    setNewTimerAt(id, millis() + 1000);
+    setNewTimerAt(mixedTimerId, millis() + 1000);
     return;
   }
 
   // Reschedule before sending the event, as it may get rescheduled in handling the timer event.
-  if (timer_data.Par1 == 1) {
+  if (timer_data.Par1 != 0) {
     // Recurring timer
     unsigned long timer = lasttimer;
     const unsigned long interval = timer_data.Par2;
     setNextTimeInterval(timer, interval);
-    setNewTimerAt(getMixedId(RULES_TIMER, id), timer);
+    setNewTimerAt(mixedTimerId, timer);
+    if (timer_data.Par1 > 0) {
+      // This is a timer with a limited number of runs, so decrease its value.
+      systemTimers[mixedTimerId].Par1--;
+    }
+    if (timer_data.Par5 > 0) {
+      // This one should be executed, so increase the count.
+      systemTimers[mixedTimerId].Par5++;
+    }
   } else {
-    systemTimers.erase(id);
+    systemTimers.erase(mixedTimerId);
   }
 
-  if (timer_data.Par5 == 1) {
+  if (timer_data.Par5 > 0) {
     // Should be executed
     if (Settings.UseRules) {
       String event = F("Rules#Timer=");
       event += timer_data.Par3;
+      // Add count as 2nd eventvalue
+      event += ',';
+      event += timer_data.Par5;
       rulesProcessing(event); // TD-er: Do not add to the eventQueue, but execute right now.
     }
   }
@@ -540,36 +556,40 @@ void process_rules_timer(unsigned long id, unsigned long lasttimer) {
 
 bool pause_rules_timer(unsigned long timerIndex) {
   if (!checkRulesTimerIndex(timerIndex)) return false;
-  const unsigned long timerId = createRulesTimerId(timerIndex);
+  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
   unsigned long timer;
 
-  if (msecTimerHandler.getTimerForId(timerId, timer)) {
-    if (systemTimers[timerId].Par4 == 0) {
+  if (msecTimerHandler.getTimerForId(mixedTimerId, timer)) {
+    if (systemTimers[mixedTimerId].Par4 == 0) {
       // Store remainder of interval
       const long timeLeft = timePassedSince(timer) * -1;
       if (timeLeft > 0) {
-        systemTimers[timerId].Par4 = timeLeft;
+        systemTimers[mixedTimerId].Par4 = timeLeft;
         return true;
       } 
     } else {
       addLog(LOG_LEVEL_INFO, F("TIMER: already paused"));
     }
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("TIMER: No existing timer"));
   }
   return false;
 }
 
 bool resume_rules_timer(unsigned long timerIndex) {
   if (!checkRulesTimerIndex(timerIndex)) return false;
-  const unsigned long timerId = createRulesTimerId(timerIndex);
+  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
   unsigned long timer;
 
-  if (msecTimerHandler.getTimerForId(timerId, timer)) {
-    if (systemTimers[timerId].Par4 != 0) {
+  if (msecTimerHandler.getTimerForId(mixedTimerId, timer)) {
+    if (systemTimers[mixedTimerId].Par4 != 0) {
       // Reschedule timer with remainder of interval
-      setNewTimerAt(timerId, millis() + systemTimers[timerId].Par4);
-      systemTimers[timerId].Par4 = 0;    
+      setNewTimerAt(mixedTimerId, millis() + systemTimers[mixedTimerId].Par4);
+      systemTimers[mixedTimerId].Par4 = 0;    
       return true;
     }
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("TIMER: No existing timer"));
   }
   return false;
 }
@@ -599,7 +619,7 @@ void setPluginTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, in
   const deviceIndex_t deviceIndex = getDeviceIndex(pluginID);
   if (!validDeviceIndex(deviceIndex)) return;
 
-  const unsigned long systemTimerId = createPluginTimerId(deviceIndex, Par1);
+  const unsigned long mixedTimerId = getMixedId(PLUGIN_TIMER, createPluginTimerId(deviceIndex, Par1));
   systemTimerStruct   timer_data;
 
 //timer_data.TaskIndex        = deviceIndex;
@@ -608,13 +628,14 @@ void setPluginTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, in
   timer_data.Par3             = Par3;
   timer_data.Par4             = Par4;
   timer_data.Par5             = Par5;
-  systemTimers[systemTimerId] = timer_data;
-  setTimer(PLUGIN_TIMER, systemTimerId, msecFromNow);
+  systemTimers[mixedTimerId] = timer_data;
+  setNewTimerAt(mixedTimerId, millis() + msecFromNow);
 }
 
 void process_plugin_timer(unsigned long id) {
   START_TIMER;
-  const systemTimerStruct timer_data = systemTimers[id];
+  const unsigned long mixedTimerId = getMixedId(PLUGIN_TIMER, id);
+  const systemTimerStruct timer_data = systemTimers[mixedTimerId];
   struct EventStruct TempEvent;
 //  TempEvent.TaskIndex = timer_data.TaskIndex;
 
@@ -640,7 +661,7 @@ void process_plugin_timer(unsigned long id) {
      log += id;
      addLog(LOG_LEVEL_INFO, log);
    */
-  systemTimers.erase(id);
+  systemTimers.erase(mixedTimerId);
 
   if (validDeviceIndex(deviceIndex)) {
     String dummy;
@@ -665,7 +686,7 @@ void setGPIOTimer(unsigned long msecFromNow, int Par1, int Par2, int Par3, int P
   // Par1 & Par2 form a unique key
   const unsigned long systemTimerId = createGPIOTimerId(Par1, Par2);
 
-  setTimer(GPIO_TIMER, systemTimerId, msecFromNow);
+  setNewTimerAt(getMixedId(GPIO_TIMER, systemTimerId), millis() + msecFromNow);
 }
 
 void process_gpio_timer(unsigned long id) {
