@@ -60,6 +60,22 @@ void setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Pa
 
 void process_plugin_task_timer(unsigned long id);
 
+
+/*********************************************************************************************\
+* Rules Timer
+\*********************************************************************************************/
+
+unsigned long createRulesTimerId(unsigned int timerIndex);
+
+bool setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, bool isRecurring);
+
+void process_rules_timer(unsigned long id, unsigned long lasttimer);
+
+bool pause_rules_timer(unsigned long timerIndex);
+
+bool resume_rules_timer(unsigned long timerIndex);
+
+
 /*********************************************************************************************\
 * Plugin Timer
 \*********************************************************************************************/
@@ -75,6 +91,7 @@ unsigned long createPluginTimerId(deviceIndex_t deviceIndex, int Par1);
 void setPluginTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5);
 
 void process_plugin_timer(unsigned long id);
+
 
 /*********************************************************************************************\
 * GPIO Timer

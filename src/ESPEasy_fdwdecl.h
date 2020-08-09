@@ -161,7 +161,6 @@ uint32_t createKey(uint16_t pluginNumber, uint16_t portNumber);
 
 void sendGratuitousARP();
 bool processNextEvent();
-void rulesTimers();
 void delayedReboot(int rebootDelay);
 void sendSysInfoUDP(byte repeats);
 void refreshNodeList();

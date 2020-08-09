@@ -67,10 +67,15 @@
   }
 
 
-
-
-
-
+  bool msecTimerHandlerStruct::getTimerForId(unsigned long id, unsigned long& timer) const {
+    for (auto it = _timer_ids.begin(); it != _timer_ids.end(); ++it) {
+      if (it->_id == id) {
+        timer = it->_timer;
+        return true;
+      }
+    }
+    return false;
+  }
 
   String msecTimerHandlerStruct::getQueueStats() {
     String result;

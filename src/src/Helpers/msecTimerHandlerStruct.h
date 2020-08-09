@@ -19,6 +19,9 @@ struct msecTimerHandlerStruct {
   // Return 0 if no item has reached timeout moment.
   unsigned long getNextId(unsigned long& timer);
 
+  // Check if a give ID is scheduled and if so, return the set timer.
+  bool getTimerForId(unsigned long id, unsigned long& timer) const;
+
   String getQueueStats();
 
   void updateIdleTimeStats();

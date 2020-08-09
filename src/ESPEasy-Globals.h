@@ -279,21 +279,6 @@ extern boolean printToWebJSON;
 
 struct RTC_cache_handler_struct;
 
-
-/*********************************************************************************************\
- * rulesTimerStruct
-\*********************************************************************************************/
-struct rulesTimerStatus
-{
-  rulesTimerStatus() : timestamp(0), interval(0), paused(false) {}
-
-  unsigned long timestamp;
-  unsigned int interval; //interval in milliseconds
-  bool paused;
-};
-
-extern rulesTimerStatus RulesTimer[RULES_TIMER_MAX];
-
 extern msecTimerHandlerStruct msecTimerHandler;
 
 extern unsigned long timer_gratuitous_arp_interval;

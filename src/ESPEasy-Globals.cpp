@@ -40,7 +40,6 @@ boolean printToWeb = false;
 String printWebString;
 boolean printToWebJSON = false;
 
-rulesTimerStatus RulesTimer[RULES_TIMER_MAX];
 
 msecTimerHandlerStruct msecTimerHandler;
 

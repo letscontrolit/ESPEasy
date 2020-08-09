@@ -23,7 +23,7 @@
 #include "../../ESPEasy_plugindefs.h"
 #include "../../ESPEasy-Globals.h"
 
-#define TIMER_ID_SHIFT    28
+#define TIMER_ID_SHIFT    28  // Must be decreased as soon as timers below reach 15
 
 #define SYSTEM_EVENT_QUEUE   0 // Not really a timer.
 #define CONST_INTERVAL_TIMER 1
@@ -31,6 +31,7 @@
 #define TASK_DEVICE_TIMER    3
 #define GPIO_TIMER           4
 #define PLUGIN_TIMER         5
+#define RULES_TIMER          6
 
 
 
@@ -83,6 +84,9 @@ String decodeSchedulerId(unsigned long mixed_id) {
     case GPIO_TIMER:
       result = F("GPIO");
       break;
+    case RULES_TIMER:
+      result = F("Rules");
+      break;
   }
   result += F(" timer, id: ");
   result += String(id);
@@ -132,6 +136,9 @@ void handle_schedule() {
       break;
     case PLUGIN_TIMER:
       process_plugin_timer(id);
+      break;
+    case RULES_TIMER:
+      process_rules_timer(id, timer);
       break;
     case TASK_DEVICE_TIMER:
       process_task_device_timer(id, timer);
@@ -449,6 +456,124 @@ void process_plugin_task_timer(unsigned long id) {
   }
   STOP_TIMER(PROC_SYS_TIMER);
 }
+
+/*********************************************************************************************\
+* Rules Timer
+\*********************************************************************************************/
+
+unsigned long createRulesTimerId(unsigned int timerIndex) {
+  const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
+  const unsigned long mixed = timerIndex;
+
+  return mixed & mask;
+}
+
+bool checkRulesTimerIndex(unsigned int timerIndex) {
+  if (timerIndex > RULES_TIMER_MAX || timerIndex == 0) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("TIMER: invalid timer number ");
+      log += timerIndex;
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    return false;
+  }
+  return true;
+}
+
+
+bool setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, bool isRecurring) {
+  if (!checkRulesTimerIndex(timerIndex)) return false;
+
+  const unsigned long timerId = createRulesTimerId(timerIndex);
+  systemTimerStruct   timer_data;
+
+  timer_data.Par1             = isRecurring ? 1 : 0;
+  timer_data.Par2             = msecFromNow; // The interval
+  timer_data.Par3             = timerIndex;
+  timer_data.Par4             = 0; // msec till end when paused
+  timer_data.Par5             = 1; // Should be executed
+
+  if (msecFromNow == 0) {
+    // Create a new timer which should be "scheduled" now to clear up any data
+    timer_data.Par1 = 0; // Do not reschedule
+    timer_data.Par5 = 0; // Do not execute
+    addLog(LOG_LEVEL_INFO, F("TIMER: disable timer"))
+  }
+
+  systemTimers[timerId] = timer_data;
+  setTimer(RULES_TIMER, timerId, msecFromNow);
+  return true;
+}
+
+void process_rules_timer(unsigned long id, unsigned long lasttimer) {
+  // Create a deep copy of the timer data as we may delete it from the map before sending the event.
+  const systemTimerStruct timer_data = systemTimers[id];
+
+  if (timer_data.Par4 != 0) {
+    // Timer is paused.
+    // Must keep this timer 'active' in the scheduler.
+    // Look for its state every second.
+    setNewTimerAt(id, millis() + 1000);
+    return;
+  }
+
+  // Reschedule before sending the event, as it may get rescheduled in handling the timer event.
+  if (timer_data.Par1 == 1) {
+    // Recurring timer
+    unsigned long timer = lasttimer;
+    const unsigned long interval = timer_data.Par2;
+    setNextTimeInterval(timer, interval);
+    setNewTimerAt(getMixedId(RULES_TIMER, id), timer);
+  } else {
+    systemTimers.erase(id);
+  }
+
+  if (timer_data.Par5 == 1) {
+    // Should be executed
+    if (Settings.UseRules) {
+      String event = F("Rules#Timer=");
+      event += timer_data.Par3;
+      rulesProcessing(event); // TD-er: Do not add to the eventQueue, but execute right now.
+    }
+  }
+}
+
+bool pause_rules_timer(unsigned long timerIndex) {
+  if (!checkRulesTimerIndex(timerIndex)) return false;
+  const unsigned long timerId = createRulesTimerId(timerIndex);
+  unsigned long timer;
+
+  if (msecTimerHandler.getTimerForId(timerId, timer)) {
+    if (systemTimers[timerId].Par4 == 0) {
+      // Store remainder of interval
+      const long timeLeft = timePassedSince(timer) * -1;
+      if (timeLeft > 0) {
+        systemTimers[timerId].Par4 = timeLeft;
+        return true;
+      } 
+    } else {
+      addLog(LOG_LEVEL_INFO, F("TIMER: already paused"));
+    }
+  }
+  return false;
+}
+
+bool resume_rules_timer(unsigned long timerIndex) {
+  if (!checkRulesTimerIndex(timerIndex)) return false;
+  const unsigned long timerId = createRulesTimerId(timerIndex);
+  unsigned long timer;
+
+  if (msecTimerHandler.getTimerForId(timerId, timer)) {
+    if (systemTimers[timerId].Par4 != 0) {
+      // Reschedule timer with remainder of interval
+      setNewTimerAt(timerId, millis() + systemTimers[timerId].Par4);
+      systemTimers[timerId].Par4 = 0;    
+      return true;
+    }
+  }
+  return false;
+}
+
 
 /*********************************************************************************************\
 * Plugin Timer
