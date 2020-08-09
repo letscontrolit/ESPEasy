@@ -423,35 +423,41 @@ void process_plugin_task_timer(unsigned long id) {
   START_TIMER;
 
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, id);
-  const systemTimerStruct timer_data = systemTimers[mixedTimerId];
+  auto it = systemTimers.find(mixedTimerId);
+  if (it == systemTimers.end()) return;
+
+  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(it->second.TaskIndex);
+
   struct EventStruct TempEvent;
-  TempEvent.TaskIndex = timer_data.TaskIndex;
-  TempEvent.BaseVarIndex =  timer_data.TaskIndex * VARS_PER_TASK;
-  TempEvent.Par1      = timer_data.Par1;
-  TempEvent.Par2      = timer_data.Par2;
-  TempEvent.Par3      = timer_data.Par3;
-  TempEvent.Par4      = timer_data.Par4;
-  TempEvent.Par5      = timer_data.Par5;
+  TempEvent.TaskIndex = it->second.TaskIndex;
+  TempEvent.BaseVarIndex = it->second.TaskIndex * VARS_PER_TASK;
+  TempEvent.Par1      = it->second.Par1;
+  TempEvent.Par2      = it->second.Par2;
+  TempEvent.Par3      = it->second.Par3;
+  TempEvent.Par4      = it->second.Par4;
+  TempEvent.Par5      = it->second.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
-  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
+  TempEvent.sensorType = Device[deviceIndex].VType;
+
 
   /*
      String log = F("proc_system_timer: Pluginid: ");
      log += deviceIndex;
      log += F(" taskIndex: ");
-     log += timer_data.TaskIndex;
+     log += it->second.TaskIndex;
      log += F(" sysTimerID: ");
      log += id;
      addLog(LOG_LEVEL_INFO, log);
    */
   systemTimers.erase(mixedTimerId);
 
-  if (validDeviceIndex(deviceIndex) && validUserVarIndex(TempEvent.BaseVarIndex)) {
-    TempEvent.sensorType = Device[deviceIndex].VType;
-    String dummy;
-    Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
+  if (validDeviceIndex(deviceIndex)) {
+    if (validUserVarIndex(TempEvent.BaseVarIndex)) {
+      String dummy;
+      Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
+    }
   }
   STOP_TIMER(PROC_SYS_TIMER);
 }
@@ -484,37 +490,19 @@ bool setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recur
   if (!checkRulesTimerIndex(timerIndex)) return false;
 
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
-  systemTimerStruct   timer_data;
-
-  timer_data.Par1             = recurringCount;
-  timer_data.Par2             = msecFromNow; // The interval
-  timer_data.Par3             = timerIndex;
-  timer_data.Par4             = 0; // msec till end when paused
-  timer_data.Par5             = 1; // Execute when > 0, doubles also as counter for loops
-
-  if (recurringCount > 0) {
-    // Will run with Par1 == 0, so must subtract one when setting the value.
-    timer_data.Par1--;
-  }
-
-  if (msecFromNow == 0) {
-    // Create a new timer which should be "scheduled" now to clear up any data
-    timer_data.Par1 = 0; // Do not reschedule
-    timer_data.Par5 = 0; // Do not execute
-    addLog(LOG_LEVEL_INFO, F("TIMER: disable timer"))
-  }
-
+  const systemTimerStruct timer_data(recurringCount, msecFromNow, timerIndex);
   systemTimers[mixedTimerId] = timer_data;
   setNewTimerAt(mixedTimerId, millis() + msecFromNow);
   return true;
 }
 
 void process_rules_timer(unsigned long id, unsigned long lasttimer) {
-  // Create a deep copy of the timer data as we may delete it from the map before sending the event.
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, id);
-  const systemTimerStruct timer_data = systemTimers[mixedTimerId];
 
-  if (timer_data.Par4 != 0) {
+  auto it = systemTimers.find(mixedTimerId);
+  if (it == systemTimers.end()) return;
+
+  if (it->second.isPaused()) {
     // Timer is paused.
     // Must keep this timer 'active' in the scheduler.
     // Look for its state every second.
@@ -522,33 +510,29 @@ void process_rules_timer(unsigned long id, unsigned long lasttimer) {
     return;
   }
 
+  // Create a deep copy of the timer data as we may delete it from the map before sending the event.
+  const int loopCount = it->second.getLoopCount();
+  const int timerIndex = it->second.getTimerIndex();
+
   // Reschedule before sending the event, as it may get rescheduled in handling the timer event.
-  if (timer_data.Par1 != 0) {
+  if (it->second.isRecurring()) {
     // Recurring timer
-    unsigned long timer = lasttimer;
-    const unsigned long interval = timer_data.Par2;
-    setNextTimeInterval(timer, interval);
-    setNewTimerAt(mixedTimerId, timer);
-    if (timer_data.Par1 > 0) {
-      // This is a timer with a limited number of runs, so decrease its value.
-      systemTimers[mixedTimerId].Par1--;
-    }
-    if (timer_data.Par5 > 0) {
-      // This one should be executed, so increase the count.
-      systemTimers[mixedTimerId].Par5++;
-    }
+    unsigned long newTimer = lasttimer;
+    setNextTimeInterval(newTimer, it->second.getInterval());
+    setNewTimerAt(mixedTimerId, newTimer);
+    it->second.markNextRecurring();
   } else {
     systemTimers.erase(mixedTimerId);
   }
 
-  if (timer_data.Par5 > 0) {
+  if (loopCount > 0) {
     // Should be executed
     if (Settings.UseRules) {
       String event = F("Rules#Timer=");
-      event += timer_data.Par3;
+      event += timerIndex;
       // Add count as 2nd eventvalue
       event += ',';
-      event += timer_data.Par5;
+      event += loopCount;
       rulesProcessing(event); // TD-er: Do not add to the eventQueue, but execute right now.
     }
   }
@@ -557,21 +541,24 @@ void process_rules_timer(unsigned long id, unsigned long lasttimer) {
 bool pause_rules_timer(unsigned long timerIndex) {
   if (!checkRulesTimerIndex(timerIndex)) return false;
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
+  auto it = systemTimers.find(mixedTimerId);
+  if (it == systemTimers.end()) {
+    addLog(LOG_LEVEL_INFO, F("TIMER: no timer set"));
+    return false;
+  }
+  
   unsigned long timer;
-
   if (msecTimerHandler.getTimerForId(mixedTimerId, timer)) {
-    if (systemTimers[mixedTimerId].Par4 == 0) {
+    if (it->second.isPaused()) {
+      addLog(LOG_LEVEL_INFO, F("TIMER: already paused"));
+    } else {
       // Store remainder of interval
       const long timeLeft = timePassedSince(timer) * -1;
       if (timeLeft > 0) {
-        systemTimers[mixedTimerId].Par4 = timeLeft;
+        it->second.setRemainder(timeLeft);
         return true;
       } 
-    } else {
-      addLog(LOG_LEVEL_INFO, F("TIMER: already paused"));
     }
-  } else {
-    addLog(LOG_LEVEL_ERROR, F("TIMER: No existing timer"));
   }
   return false;
 }
@@ -579,17 +566,17 @@ bool pause_rules_timer(unsigned long timerIndex) {
 bool resume_rules_timer(unsigned long timerIndex) {
   if (!checkRulesTimerIndex(timerIndex)) return false;
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
-  unsigned long timer;
+  auto it = systemTimers.find(mixedTimerId);
+  if (it == systemTimers.end()) return false;
 
+  unsigned long timer;
   if (msecTimerHandler.getTimerForId(mixedTimerId, timer)) {
-    if (systemTimers[mixedTimerId].Par4 != 0) {
+    if (it->second.isPaused()) {
       // Reschedule timer with remainder of interval
-      setNewTimerAt(mixedTimerId, millis() + systemTimers[mixedTimerId].Par4);
-      systemTimers[mixedTimerId].Par4 = 0;    
+      setNewTimerAt(mixedTimerId, millis() + it->second.getRemainder());
+      it->second.setRemainder(0);
       return true;
     }
-  } else {
-    addLog(LOG_LEVEL_ERROR, F("TIMER: No existing timer"));
   }
   return false;
 }
@@ -635,28 +622,30 @@ void setPluginTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, in
 void process_plugin_timer(unsigned long id) {
   START_TIMER;
   const unsigned long mixedTimerId = getMixedId(PLUGIN_TIMER, id);
-  const systemTimerStruct timer_data = systemTimers[mixedTimerId];
+  auto it = systemTimers.find(mixedTimerId);
+  if (it == systemTimers.end()) return;
+
   struct EventStruct TempEvent;
-//  TempEvent.TaskIndex = timer_data.TaskIndex;
+//  TempEvent.TaskIndex = it->second.TaskIndex;
 
 // extract deviceID from timer id:
   const deviceIndex_t deviceIndex = ((1 << 8) -1) & id;
 
-  TempEvent.Par1      = timer_data.Par1;
-  TempEvent.Par2      = timer_data.Par2;
-  TempEvent.Par3      = timer_data.Par3;
-  TempEvent.Par4      = timer_data.Par4;
-  TempEvent.Par5      = timer_data.Par5;
+  TempEvent.Par1      = it->second.Par1;
+  TempEvent.Par2      = it->second.Par2;
+  TempEvent.Par3      = it->second.Par3;
+  TempEvent.Par4      = it->second.Par4;
+  TempEvent.Par5      = it->second.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
-//  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(timer_data.TaskIndex);
+//  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(it->second.TaskIndex);
 
   /*
      String log = F("proc_system_timer: Pluginid: ");
      log += deviceIndex;
      log += F(" taskIndex: ");
-     log += timer_data.TaskIndex;
+     log += it->second.TaskIndex;
      log += F(" sysTimerID: ");
      log += id;
      addLog(LOG_LEVEL_INFO, log);

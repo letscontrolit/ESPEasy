@@ -54,7 +54,14 @@ unsigned long createPluginTaskTimerId(deviceIndex_t deviceIndex, int Par1);
    Par1 = (mixed_id & mask) >> 8;
    }
  */
-void setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5);
+
+void     setPluginTaskTimer(unsigned long msecFromNow,
+                            taskIndex_t   taskIndex,
+                            int           Par1,
+                            int           Par2 = 0,
+                            int           Par3 = 0,
+                            int           Par4 = 0,
+                            int           Par5 = 0);
 
 void process_plugin_task_timer(unsigned long id);
 
@@ -90,7 +97,14 @@ unsigned long createPluginTimerId(deviceIndex_t deviceIndex, int Par1);
    Par1 = (mixed_id & mask) >> 8;
    }
  */
-void setPluginTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5);
+
+void setPluginTimer(unsigned long msecFromNow,
+                    pluginID_t   pluginID,
+                    int           Par1,
+                    int           Par2 = 0,
+                    int           Par3 = 0,
+                    int           Par4 = 0,
+                    int           Par5 = 0);
 
 void process_plugin_timer(unsigned long id);
 
@@ -101,7 +115,12 @@ void process_plugin_timer(unsigned long id);
 \*********************************************************************************************/
 unsigned long createGPIOTimerId(byte pinNumber, int Par1);
 
-void setGPIOTimer(unsigned long msecFromNow, int Par1, int Par2, int Par3, int Par4, int Par5);
+void setGPIOTimer(unsigned long msecFromNow,
+                  int           Par1,
+                  int           Par2 = 0,
+                  int           Par3 = 0,
+                  int           Par4 = 0,
+                  int           Par5 = 0);
 
 void process_gpio_timer(unsigned long id);
 

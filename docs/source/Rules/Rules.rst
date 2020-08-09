@@ -730,6 +730,13 @@ Now send this command to the ESP:
 and it will set rules timer no 1 to 5 seconds. Using this technique you can
 parse a value from an event to the rule engine.
 
+It is possible to use multiple event values. Some system events generate multiple event values.
+
+For example, the ``Rules#Timer`` event has 2 event values (since build 2020/08/09):
+
+* ``%eventvalue1%`` has the timer number (1 ... max timer ID)
+* ``%eventvalue2%`` has the loop count for loop timers (since build 2020/08/09)
+
 .. note::
  'timerSet' is a rule command and cannot be run directly from a remote command.
 
