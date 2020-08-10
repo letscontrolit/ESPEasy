@@ -339,7 +339,7 @@ float AS_BH1750::readLightLevel(DelayFuncPtr fDelayPtr) {
  */
 uint16_t AS_BH1750::readRawLevel(void) {
   uint16_t level;
-  Wire.beginTransmission(_address);
+//  Wire.beginTransmission(_address);  // Issue #1417 and reported in https://github.com/hexenmeister/AS_BH1750/issues/4
   Wire.requestFrom(_address, 2);
 #if (ARDUINO >= 100)
   level = Wire.read();
@@ -350,12 +350,12 @@ uint16_t AS_BH1750::readRawLevel(void) {
   level <<= 8;
   level |= Wire.receive();
 #endif
-  if(Wire.endTransmission()!=0) {
-#if BH1750_DEBUG == 1
-    Serial.println("I2C read error");
-#endif
-    return 65535; // Error marker
-  }
+//   if(Wire.endTransmission()!=0) {  // Issue #1417
+// #if BH1750_DEBUG == 1
+//     Serial.println("I2C read error");
+// #endif
+//     return 65535; // Error marker
+//   }
 
 #if BH1750_DEBUG == 1
   Serial.print("Raw light level: ");
@@ -448,7 +448,7 @@ void AS_BH1750::defineMTReg(uint8_t val) {
     Serial.print("MGTreg low byte: ");
     Serial.println(loByte, BIN);
 #endif
-    write8(hiByte);
+    write8(loByte);  // As reported in https://github.com/hexenmeister/AS_BH1750/issues/2
     //fDelayPtr(10);
   }
 }
