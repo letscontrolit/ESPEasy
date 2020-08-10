@@ -758,25 +758,25 @@ void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsi
 \*********************************************************************************************/
 void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, struct EventStruct *event) {
   if (validDeviceIndex(DeviceIndex)) {
-    schedule_event_timer(TaskPluginEnum, DeviceIndex, Function, event);
+    schedule_event_timer(PluginPtrType::TaskPlugin, DeviceIndex, Function, event);
   }
 }
 
 void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct *event) {
   if (validProtocolIndex(ProtocolIndex)) {
-    schedule_event_timer(ControllerPluginEnum, ProtocolIndex, Function, event);
+    schedule_event_timer(PluginPtrType::ControllerPlugin, ProtocolIndex, Function, event);
   }
 }
 
 unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16) {
-  unsigned long subId = ptr_type;
+  unsigned long subId = static_cast<unsigned long>(ptr_type);
 
   subId = (subId << 16) + crc16;
   return getMixedId(SYSTEM_EVENT_QUEUE, subId);
 }
 
 unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function) {
-  unsigned long subId = ptr_type;
+  unsigned long subId = static_cast<unsigned long>(ptr_type);
 
   subId = (subId << 8) + Index;
   subId = (subId << 8) + Function;
@@ -789,7 +789,7 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t Pro
                                                              byte           *b_payload,
                                                              unsigned int    length) {
   if (validProtocolIndex(ProtocolIndex)) {
-    const unsigned long mixedId = createSystemEventMixedId(ControllerPluginEnum, ProtocolIndex, Function);
+    const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::ControllerPlugin, ProtocolIndex, Function);
     ScheduledEventQueue.emplace_back(mixedId, EventStruct());
     ScheduledEventQueue.back().event.String1 = c_topic;
 
@@ -804,7 +804,7 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t Pro
 }
 
 void ESPEasy_Scheduler::schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct *event) {
-  schedule_event_timer(NotificationPluginEnum, NotificationProtocolIndex, Function, event);
+  schedule_event_timer(PluginPtrType::NotificationPlugin, NotificationProtocolIndex, Function, event);
 }
 
 void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct *event) {
@@ -829,14 +829,14 @@ void ESPEasy_Scheduler::process_system_event_queue() {
   String tmpString;
 
   switch (ptr_type) {
-    case TaskPluginEnum:
+    case PluginPtrType::TaskPlugin:
       LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
       Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
       break;
-    case ControllerPluginEnum:
+    case PluginPtrType::ControllerPlugin:
       CPluginCall(Index, static_cast<CPlugin::Function>(Function), &ScheduledEventQueue.front().event, tmpString);
       break;
-    case NotificationPluginEnum:
+    case PluginPtrType::NotificationPlugin:
       NPlugin_ptr[Index](static_cast<NPlugin::Function>(Function), &ScheduledEventQueue.front().event, tmpString);
       break;
   }

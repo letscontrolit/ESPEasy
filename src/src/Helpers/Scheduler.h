@@ -44,10 +44,10 @@ public:
     TIMER_C020_DELAY_QUEUE,
   };
 
-  enum PluginPtrType {
-    TaskPluginEnum,
-    ControllerPluginEnum,
-    NotificationPluginEnum
+  enum class PluginPtrType {
+    TaskPlugin,
+    ControllerPlugin,
+    NotificationPlugin
   };
 
 
