@@ -276,11 +276,13 @@ extern String printWebString;
 extern boolean printToWebJSON;
 
 
-struct RTC_cache_handler_struct;
+//struct RTC_cache_handler_struct;
 
 
-
+// FIXME TD-er: Must move this to some proper class (ESPEasy_Scheduler ?)
 extern unsigned long timermqtt_interval;
+
+
 extern unsigned long lastSend;
 extern unsigned long lastWeb;
 extern byte cmd_within_mainloop;

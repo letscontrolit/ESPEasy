@@ -1,23 +1,21 @@
 #include "PeriodicalActions.h"
 
+
+#include "../../ESPEasyWifi.h"
+#include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_plugindefs.h"
-#include "../../ESPEasy_Log.h"
-#include "../../ESPEasyWifi.h"
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../ControllerQueue/MQTT_queue_element.h"
-#include "../DataStructs/SchedulerTimers.h"
 #include "../DataStructs/TimingStats.h"
-#include "../Globals/EventQueue.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/EventQueue.h"
 #include "../Globals/MQTT.h"
+#include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Statistics.h"
-#include "../Globals/RTC.h"
-
 #include "../Helpers/Hardware.h"
-
 
 
 /*********************************************************************************************\
@@ -222,7 +220,7 @@ void runEach30Seconds()
 
 
 void scheduleNextMQTTdelayQueue() {
-  Scheduler.scheduleNextDelayQueue(TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler.getNextScheduleTime());
+  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler.getNextScheduleTime());
 }
 
 void schedule_all_tasks_using_MQTT_controller() {
@@ -263,7 +261,7 @@ void processMQTTdelayQueue() {
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
-  Scheduler.setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
 }
@@ -297,7 +295,7 @@ void updateMQTTclient_connected() {
   } else {
     timermqtt_interval = 250;
   }
-  Scheduler.setIntervalTimer(TIMER_MQTT);
+  Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
 }
 
 void runPeriodicalMQTT() {

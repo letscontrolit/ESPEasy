@@ -236,7 +236,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     addNewLine(element.txt);
   }
 
-  Scheduler.scheduleNextDelayQueue(TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());
+  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());
   return success;
 }
 

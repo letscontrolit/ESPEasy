@@ -108,7 +108,7 @@ void ESPEasy_Scheduler::handle_schedule() {
 
   switch (timerType) {
     case CONST_INTERVAL_TIMER:
-      process_interval_timer(id, timer);
+      process_interval_timer(static_cast<ESPEasy_Scheduler::IntervalTimer_e>(id), timer);
       break;
     case PLUGIN_TASK_TIMER:
       process_plugin_task_timer(id);
@@ -153,67 +153,67 @@ void ESPEasy_Scheduler::setNextTimeInterval(unsigned long& timer, const unsigned
   timer = millis() + (step - passed);
 }
 
-void ESPEasy_Scheduler::setIntervalTimer(unsigned long id) {
+void ESPEasy_Scheduler::setIntervalTimer(IntervalTimer_e id) {
   setIntervalTimer(id, millis());
 }
 
-void ESPEasy_Scheduler::setIntervalTimerAt(unsigned long id, unsigned long newtimer) {
-  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), newtimer);
+void ESPEasy_Scheduler::setIntervalTimerAt(IntervalTimer_e id, unsigned long newtimer) {
+  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, static_cast<unsigned long>(id)), newtimer);
 }
 
-void ESPEasy_Scheduler::setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow) {
+void ESPEasy_Scheduler::setIntervalTimerOverride(IntervalTimer_e id, unsigned long msecFromNow) {
   unsigned long timer = millis();
 
   setNextTimeInterval(timer, msecFromNow);
-  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
+  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, static_cast<unsigned long>(id)), timer);
 }
 
-void ESPEasy_Scheduler::scheduleNextDelayQueue(unsigned long id, unsigned long nextTime) {
+void ESPEasy_Scheduler::scheduleNextDelayQueue(IntervalTimer_e id, unsigned long nextTime) {
   if (nextTime != 0) {
     // Schedule for next process run.
     setIntervalTimerAt(id, nextTime);
   }
 }
 
-void ESPEasy_Scheduler::setIntervalTimer(unsigned long id, unsigned long lasttimer) {
+void ESPEasy_Scheduler::setIntervalTimer(IntervalTimer_e id, unsigned long lasttimer) {
   // Set the initial timers for the regular runs
   unsigned long interval = 0;
 
   switch (id) {
-    case TIMER_20MSEC:         interval = 20; break;
-    case TIMER_100MSEC:        interval = 100; break;
-    case TIMER_1SEC:           interval = 1000; break;
-    case TIMER_30SEC:
-    case TIMER_STATISTICS:     interval = 30000; break;
-    case TIMER_MQTT:           interval = timermqtt_interval; break;
-    case TIMER_GRATUITOUS_ARP: interval = timer_gratuitous_arp_interval; break;
+    case IntervalTimer_e::TIMER_20MSEC:         interval = 20; break;
+    case IntervalTimer_e::TIMER_100MSEC:        interval = 100; break;
+    case IntervalTimer_e::TIMER_1SEC:           interval = 1000; break;
+    case IntervalTimer_e::TIMER_30SEC:
+    case IntervalTimer_e::TIMER_STATISTICS:     interval = 30000; break;
+    case IntervalTimer_e::TIMER_MQTT:           interval = timermqtt_interval; break;
+    case IntervalTimer_e::TIMER_GRATUITOUS_ARP: interval = timer_gratuitous_arp_interval; break;
 
     // Fall-through for all DelayQueue, which are just the fall-back timers.
     // The timers for all delay queues will be set according to their own settings as long as there is something to process.
-    case TIMER_MQTT_DELAY_QUEUE:
-    case TIMER_C001_DELAY_QUEUE:
-    case TIMER_C003_DELAY_QUEUE:
-    case TIMER_C004_DELAY_QUEUE:
-    case TIMER_C007_DELAY_QUEUE:
-    case TIMER_C008_DELAY_QUEUE:
-    case TIMER_C009_DELAY_QUEUE:
-    case TIMER_C010_DELAY_QUEUE:
-    case TIMER_C011_DELAY_QUEUE:
-    case TIMER_C012_DELAY_QUEUE:
-    case TIMER_C013_DELAY_QUEUE:
-    case TIMER_C014_DELAY_QUEUE:
-    case TIMER_C015_DELAY_QUEUE:
-    case TIMER_C016_DELAY_QUEUE:
-    case TIMER_C017_DELAY_QUEUE:
-    case TIMER_C018_DELAY_QUEUE:
-    case TIMER_C019_DELAY_QUEUE:
-    case TIMER_C020_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C001_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C003_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C004_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C007_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C008_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C009_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C010_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C011_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C012_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C013_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C014_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C015_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C016_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C017_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C018_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C019_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C020_DELAY_QUEUE:
       interval = 1000; break;
   }
   unsigned long timer = lasttimer;
 
   setNextTimeInterval(timer, interval);
-  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
+  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, static_cast<unsigned long>(id)), timer);
 }
 
 void ESPEasy_Scheduler::sendGratuitousARP_now() {
@@ -221,30 +221,32 @@ void ESPEasy_Scheduler::sendGratuitousARP_now() {
 
   if (Settings.gratuitousARP()) {
     timer_gratuitous_arp_interval = 100;
-    setIntervalTimer(TIMER_GRATUITOUS_ARP);
+    setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_GRATUITOUS_ARP);
   }
 }
 
-void ESPEasy_Scheduler::process_interval_timer(unsigned long id, unsigned long lasttimer) {
+void ESPEasy_Scheduler::process_interval_timer(IntervalTimer_e id, unsigned long lasttimer) {
   // Set the interval timer now, it may be altered by the commands below.
   // This is the default next-run-time.
   setIntervalTimer(id, lasttimer);
 
   switch (id) {
-    case TIMER_20MSEC:         run50TimesPerSecond(); break;
-    case TIMER_100MSEC:
+    case IntervalTimer_e::TIMER_20MSEC:         run50TimesPerSecond(); break;
+    case IntervalTimer_e::TIMER_100MSEC:
 
       if (!UseRTOSMultitasking) {
         run10TimesPerSecond();
       }
       break;
-    case TIMER_1SEC:             runOncePerSecond();      break;
-    case TIMER_30SEC:            runEach30Seconds();      break;
+    case IntervalTimer_e::TIMER_1SEC:             runOncePerSecond();      break;
+    case IntervalTimer_e::TIMER_30SEC:            runEach30Seconds();      break;
+    case IntervalTimer_e::TIMER_MQTT:
 #ifdef USES_MQTT
-    case TIMER_MQTT:             runPeriodicalMQTT();     break;
+      runPeriodicalMQTT();
 #endif // USES_MQTT
-    case TIMER_STATISTICS:       logTimerStatistics();    break;
-    case TIMER_GRATUITOUS_ARP:
+      break;
+    case IntervalTimer_e::TIMER_STATISTICS:       logTimerStatistics();    break;
+    case IntervalTimer_e::TIMER_GRATUITOUS_ARP:
 
       // Slowly increase the interval timer.
       timer_gratuitous_arp_interval = 2 * timer_gratuitous_arp_interval;
@@ -257,108 +259,111 @@ void ESPEasy_Scheduler::process_interval_timer(unsigned long id, unsigned long l
         sendGratuitousARP();
       }
       break;
+    case IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE:
 #ifdef USES_MQTT
-    case TIMER_MQTT_DELAY_QUEUE: processMQTTdelayQueue(); break;
+      processMQTTdelayQueue();
 #endif // USES_MQTT
+      break;
+    case IntervalTimer_e::TIMER_C001_DELAY_QUEUE:
   #ifdef USES_C001
-    case TIMER_C001_DELAY_QUEUE:
       process_c001_delay_queue();
-      break;
   #endif // ifdef USES_C001
+      break;
+    case IntervalTimer_e::TIMER_C003_DELAY_QUEUE:
   #ifdef USES_C003
-    case TIMER_C003_DELAY_QUEUE:
       process_c003_delay_queue();
-      break;
   #endif // ifdef USES_C003
+      break;
+    case IntervalTimer_e::TIMER_C004_DELAY_QUEUE:
   #ifdef USES_C004
-    case TIMER_C004_DELAY_QUEUE:
       process_c004_delay_queue();
-      break;
   #endif // ifdef USES_C004
+      break;
+    case IntervalTimer_e::TIMER_C007_DELAY_QUEUE:
   #ifdef USES_C007
-    case TIMER_C007_DELAY_QUEUE:
       process_c007_delay_queue();
-      break;
   #endif // ifdef USES_C007
+      break;
+    case IntervalTimer_e::TIMER_C008_DELAY_QUEUE:
   #ifdef USES_C008
-    case TIMER_C008_DELAY_QUEUE:
       process_c008_delay_queue();
-      break;
   #endif // ifdef USES_C008
+      break;
+    case IntervalTimer_e::TIMER_C009_DELAY_QUEUE:
   #ifdef USES_C009
-    case TIMER_C009_DELAY_QUEUE:
       process_c009_delay_queue();
-      break;
   #endif // ifdef USES_C009
+      break;
+    case IntervalTimer_e::TIMER_C010_DELAY_QUEUE:
   #ifdef USES_C010
-    case TIMER_C010_DELAY_QUEUE:
       process_c010_delay_queue();
-      break;
   #endif // ifdef USES_C010
+      break;
+    case IntervalTimer_e::TIMER_C011_DELAY_QUEUE:
   #ifdef USES_C011
-    case TIMER_C011_DELAY_QUEUE:
       process_c011_delay_queue();
-      break;
   #endif // ifdef USES_C011
-  #ifdef USES_C012
-    case TIMER_C012_DELAY_QUEUE:
-      process_c012_delay_queue();
       break;
+    case IntervalTimer_e::TIMER_C012_DELAY_QUEUE:
+  #ifdef USES_C012
+      process_c012_delay_queue();
   #endif // ifdef USES_C012
+      break;
 
+    case IntervalTimer_e::TIMER_C013_DELAY_QUEUE:
       /*
        #ifdef USES_C013
-          case TIMER_C013_DELAY_QUEUE:
             process_c013_delay_queue();
-            break;
        #endif
        */
+      break;
 
+    case IntervalTimer_e::TIMER_C014_DELAY_QUEUE:
       /*
        #ifdef USES_C014
-          case TIMER_C014_DELAY_QUEUE:
             process_c014_delay_queue();
-            break;
        #endif
        */
+      break;
+
+    case IntervalTimer_e::TIMER_C015_DELAY_QUEUE:
   #ifdef USES_C015
-    case TIMER_C015_DELAY_QUEUE:
       process_c015_delay_queue();
-      break;
   #endif // ifdef USES_C015
+      break;
+    case IntervalTimer_e::TIMER_C016_DELAY_QUEUE:
   #ifdef USES_C016
-    case TIMER_C016_DELAY_QUEUE:
       process_c016_delay_queue();
-      break;
   #endif // ifdef USES_C016
+      break;
 
+    case IntervalTimer_e::TIMER_C017_DELAY_QUEUE:
   #ifdef USES_C017
-    case TIMER_C017_DELAY_QUEUE:
       process_c017_delay_queue();
-      break;
   #endif // ifdef USES_C017
-
-  #ifdef USES_C018
-    case TIMER_C018_DELAY_QUEUE:
-      process_c018_delay_queue();
       break;
-  #endif // ifdef USES_C018
 
+    case IntervalTimer_e::TIMER_C018_DELAY_QUEUE:
+  #ifdef USES_C018
+      process_c018_delay_queue();
+  #endif // ifdef USES_C018
+      break;
+
+    case IntervalTimer_e::TIMER_C019_DELAY_QUEUE:
       /*
        #ifdef USES_C019
-          case TIMER_C019_DELAY_QUEUE:
             process_c019_delay_queue();
-            break;
        #endif
        */
+      break;
 
+    case IntervalTimer_e::TIMER_C020_DELAY_QUEUE:
       /*
        #ifdef USES_C020
-          case TIMER_C020_DELAY_QUEUE:
             process_c020_delay_queue();
-            break;
        #endif
        */
+      break;
 
       // When extending this, also extend in DelayQueueElements.h
       // Also make sure to extend the "TIMER_C020_DELAY_QUEUE" list of defines.
@@ -375,13 +380,6 @@ unsigned long ESPEasy_Scheduler::createPluginTaskTimerId(deviceIndex_t deviceInd
   return mixed & mask;
 }
 
-/* // Not (yet) used
-   void splitPluginTaskTimerId(const unsigned long mixed_id, byte& plugin, int& Par1) {
-   const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
-   plugin = mixed_id & 0xFF;
-   Par1 = (mixed_id & mask) >> 8;
-   }
- */
 void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
@@ -586,13 +584,6 @@ unsigned long ESPEasy_Scheduler::createPluginTimerId(deviceIndex_t deviceIndex, 
   return mixed & mask;
 }
 
-/* // Not (yet) used
-   void splitPluginTaskTimerId(const unsigned long mixed_id, byte& plugin, int& Par1) {
-   const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
-   plugin = mixed_id & 0xFF;
-   Par1 = (mixed_id & mask) >> 8;
-   }
- */
 void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer

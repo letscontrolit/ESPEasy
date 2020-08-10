@@ -8,8 +8,41 @@
 #include <list>
 #include <map>
 
+
 class ESPEasy_Scheduler {
 public:
+
+  // ********************************************************************************
+  //   Timers used in the scheduler
+  // ********************************************************************************
+
+  enum class IntervalTimer_e {
+    TIMER_20MSEC,
+    TIMER_100MSEC,
+    TIMER_1SEC,
+    TIMER_30SEC,
+    TIMER_MQTT,
+    TIMER_STATISTICS,
+    TIMER_GRATUITOUS_ARP,
+    TIMER_MQTT_DELAY_QUEUE,
+    TIMER_C001_DELAY_QUEUE,
+    TIMER_C003_DELAY_QUEUE,
+    TIMER_C004_DELAY_QUEUE,
+    TIMER_C007_DELAY_QUEUE,
+    TIMER_C008_DELAY_QUEUE,
+    TIMER_C009_DELAY_QUEUE,
+    TIMER_C010_DELAY_QUEUE,
+    TIMER_C011_DELAY_QUEUE,
+    TIMER_C012_DELAY_QUEUE,
+    TIMER_C013_DELAY_QUEUE,
+    TIMER_C014_DELAY_QUEUE,
+    TIMER_C015_DELAY_QUEUE,
+    TIMER_C016_DELAY_QUEUE,
+    TIMER_C017_DELAY_QUEUE,
+    TIMER_C018_DELAY_QUEUE,
+    TIMER_C019_DELAY_QUEUE,
+    TIMER_C020_DELAY_QUEUE,
+  };
 
   enum PluginPtrType {
     TaskPluginEnum,
@@ -46,22 +79,22 @@ public:
   void                 setNextTimeInterval(unsigned long     & timer,
                                            const unsigned long step);
 
-  void                 setIntervalTimer(unsigned long id);
-  void                 setIntervalTimerAt(unsigned long id,
-                                          unsigned long newtimer);
-  void                 setIntervalTimerOverride(unsigned long id,
-                                                unsigned long msecFromNow);
+  void                 setIntervalTimer(IntervalTimer_e id);
+  void                 setIntervalTimerAt(IntervalTimer_e id,
+                                          unsigned long   newtimer);
+  void                 setIntervalTimerOverride(IntervalTimer_e id,
+                                                unsigned long   msecFromNow);
 
-  void                 scheduleNextDelayQueue(unsigned long id,
-                                              unsigned long nextTime);
+  void                 scheduleNextDelayQueue(IntervalTimer_e id,
+                                              unsigned long   nextTime);
 
-  void                 setIntervalTimer(unsigned long id,
-                                        unsigned long lasttimer);
+  void                 setIntervalTimer(IntervalTimer_e id,
+                                        unsigned long   lasttimer);
 
   void                 sendGratuitousARP_now();
 
-  void                 process_interval_timer(unsigned long id,
-                                              unsigned long lasttimer);
+  void                 process_interval_timer(IntervalTimer_e id,
+                                              unsigned long   lasttimer);
 
   /*********************************************************************************************\
   * Plugin Task Timer
@@ -69,21 +102,13 @@ public:
   static unsigned long createPluginTaskTimerId(deviceIndex_t deviceIndex,
                                                int           Par1);
 
-  /* // Not (yet) used
-     void splitPluginTaskTimerId(const unsigned long mixed_id, byte& plugin, int& Par1) {
-     const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
-     plugin = mixed_id & 0xFF;
-     Par1 = (mixed_id & mask) >> 8;
-     }
-   */
-
-  void setPluginTaskTimer(unsigned long msecFromNow,
-                          taskIndex_t   taskIndex,
-                          int           Par1,
-                          int           Par2 = 0,
-                          int           Par3 = 0,
-                          int           Par4 = 0,
-                          int           Par5 = 0);
+  void                 setPluginTaskTimer(unsigned long msecFromNow,
+                                          taskIndex_t   taskIndex,
+                                          int           Par1,
+                                          int           Par2 = 0,
+                                          int           Par3 = 0,
+                                          int           Par4 = 0,
+                                          int           Par5 = 0);
 
   void process_plugin_task_timer(unsigned long id);
 
@@ -116,21 +141,13 @@ public:
   static unsigned long createPluginTimerId(deviceIndex_t deviceIndex,
                                            int           Par1);
 
-  /* // Not (yet) used
-     void splitPluginTaskTimerId(const unsigned long mixed_id, byte& plugin, int& Par1) {
-     const unsigned long mask = (1 << TIMER_ID_SHIFT) -1;
-     plugin = mixed_id & 0xFF;
-     Par1 = (mixed_id & mask) >> 8;
-     }
-   */
-
-  void setPluginTimer(unsigned long msecFromNow,
-                      pluginID_t    pluginID,
-                      int           Par1,
-                      int           Par2 = 0,
-                      int           Par3 = 0,
-                      int           Par4 = 0,
-                      int           Par5 = 0);
+  void                 setPluginTimer(unsigned long msecFromNow,
+                                      pluginID_t    pluginID,
+                                      int           Par1,
+                                      int           Par2 = 0,
+                                      int           Par3 = 0,
+                                      int           Par4 = 0,
+                                      int           Par5 = 0);
 
   void process_plugin_timer(unsigned long id);
 
