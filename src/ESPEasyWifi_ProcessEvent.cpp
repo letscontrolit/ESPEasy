@@ -6,6 +6,7 @@
 #include "ESPEasy_fdwdecl.h"
 #include "src/DataStructs/SchedulerTimers.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/EventQueue.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/MQTT.h"
@@ -286,9 +287,9 @@ void processGotIP() {
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
-  setIntervalTimer(TIMER_MQTT);
+  Scheduler.setIntervalTimer(TIMER_MQTT);
 #endif // USES_MQTT
-  sendGratuitousARP_now();
+  Scheduler.sendGratuitousARP_now();
 
   if (Settings.UseRules)
   {

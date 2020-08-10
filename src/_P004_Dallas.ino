@@ -196,11 +196,11 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_004_DallasPin != -1) {
           if (!timeOutReached(Plugin_004_timeoutGPIO[Plugin_004_DallasPin])){
-              schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
+              Scheduler.schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
           } else {
           if (!Plugin_004_newValue[event->TaskIndex]){
               Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
-              schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
+              Scheduler.schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
               Plugin_004_newValue[event->TaskIndex] = true;
           } else {
           Plugin_004_newValue[event->TaskIndex] = false;

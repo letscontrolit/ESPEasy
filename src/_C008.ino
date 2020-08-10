@@ -95,7 +95,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
             }
           }
         }
-        scheduleNextDelayQueue(TIMER_C008_DELAY_QUEUE, C008_DelayHandler.getNextScheduleTime());
+        Scheduler.scheduleNextDelayQueue(TIMER_C008_DELAY_QUEUE, C008_DelayHandler.getNextScheduleTime());
         break;
       }
 

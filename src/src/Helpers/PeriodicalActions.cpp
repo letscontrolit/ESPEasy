@@ -9,6 +9,7 @@
 #include "../DataStructs/SchedulerTimers.h"
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/EventQueue.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
@@ -221,7 +222,7 @@ void runEach30Seconds()
 
 
 void scheduleNextMQTTdelayQueue() {
-  scheduleNextDelayQueue(TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler.getNextScheduleTime());
+  Scheduler.scheduleNextDelayQueue(TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler.getNextScheduleTime());
 }
 
 void schedule_all_tasks_using_MQTT_controller() {
@@ -234,7 +235,7 @@ void schedule_all_tasks_using_MQTT_controller() {
         Settings.ControllerEnabled[ControllerIndex] &&
         Settings.Protocol[ControllerIndex])
     {
-      schedule_task_device_timer_at_init(task);
+      Scheduler.schedule_task_device_timer_at_init(task);
     }
   }
 }
@@ -262,7 +263,7 @@ void processMQTTdelayQueue() {
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
-  setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+  Scheduler.setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
 }
@@ -296,7 +297,7 @@ void updateMQTTclient_connected() {
   } else {
     timermqtt_interval = 250;
   }
-  setIntervalTimer(TIMER_MQTT);
+  Scheduler.setIntervalTimer(TIMER_MQTT);
 }
 
 void runPeriodicalMQTT() {
@@ -346,7 +347,7 @@ void logTimerStatistics() {
 //  logStatistics(loglevel, true);
   if (loglevelActiveFor(loglevel)) {
     String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
-    queueLog += msecTimerHandler.getQueueStats();
+    queueLog += Scheduler.getQueueStats();
     addLog(loglevel, queueLog);
   }
 #endif
@@ -358,7 +359,7 @@ void updateLoopStats_30sec(byte loglevel) {
   if (loopCounterLast > loopCounterMax)
     loopCounterMax = loopCounterLast;
 
-  msecTimerHandler.updateIdleTimeStats();
+  Scheduler.updateIdleTimeStats();
 
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(loglevel)) {

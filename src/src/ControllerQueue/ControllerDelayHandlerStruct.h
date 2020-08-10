@@ -7,6 +7,7 @@
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Protocol.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Scheduler.h"
@@ -226,7 +227,7 @@ struct ControllerDelayHandlerStruct {
       C##NNN####M##_DelayHandler.markProcessed(do_process_c##NNN####M##_delay_queue(M, *element, ControllerSettings)); \
       STOP_TIMER(C##NNN####M##_DELAY_QUEUE);                                                                           \
     }                                                                                                                  \
-    scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());         \
+    Scheduler.scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());         \
   }
 
 

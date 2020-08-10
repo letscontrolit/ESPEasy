@@ -346,7 +346,7 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
       if (nullptr != P031_data) {
         if (P031_data->process()) {
           // Measurement ready, schedule new read.
-          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
       }
       success = true;

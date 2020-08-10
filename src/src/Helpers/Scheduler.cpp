@@ -1,29 +1,11 @@
 #include "Scheduler.h"
 
-
+#include "../ControllerQueue/DelayQueueElements.h"
 #include "../Globals/RTC.h"
-#include "../DataStructs/RTCStruct.h"
-#include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/EventValueSource.h"
-#include "../DataStructs/TimingStats.h"
-#include "../DataStructs/SchedulerTimers.h"
-#include "../Globals/Device.h"
-#include "../Globals/CPlugins.h"
-#include "../Globals/EventQueue.h"
-#include "../Globals/MQTT.h"
-#include "../Globals/NPlugins.h"
-#include "../Globals/Plugins.h"
-#include "../Globals/SystemTimers.h"
-#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/PeriodicalActions.h"
 
-#include "../ControllerQueue/DelayQueueElements.h"
-
-#include "../../ESPEasy_plugindefs.h"
-#include "../../ESPEasy-Globals.h"
-
-#define TIMER_ID_SHIFT    28  // Must be decreased as soon as timers below reach 15
+#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
 
 #define SYSTEM_EVENT_QUEUE   0 // Not really a timer.
 #define CONST_INTERVAL_TIMER 1
@@ -34,34 +16,35 @@
 #define RULES_TIMER          6
 
 
-
 /*********************************************************************************************\
 * Generic Timer functions.
 \*********************************************************************************************/
-void setNewTimerAt(unsigned long id, unsigned long timer) {
+void ESPEasy_Scheduler::setNewTimerAt(unsigned long id, unsigned long timer) {
   START_TIMER;
   msecTimerHandler.registerAt(id, timer);
   STOP_TIMER(SET_NEW_TIMER);
 }
 
 // Mix timer type int with an ID describing the scheduled job.
-unsigned long getMixedId(unsigned long timerType, unsigned long id) {
+unsigned long ESPEasy_Scheduler::getMixedId(unsigned long timerType, unsigned long id) {
   return (timerType << TIMER_ID_SHIFT) + id;
 }
 
-unsigned long decodeSchedulerId(unsigned long mixed_id, unsigned long& timerType) {
+unsigned long ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id, unsigned long& timerType) {
   timerType = (mixed_id >> TIMER_ID_SHIFT);
   const unsigned long mask = (1 << TIMER_ID_SHIFT) - 1;
+
   return mixed_id & mask;
 }
 
-String decodeSchedulerId(unsigned long mixed_id) {
+String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
   if (mixed_id == 0) {
     return F("Background Task");
   }
   unsigned long timerType = 0;
   const unsigned long id  = decodeSchedulerId(mixed_id, timerType);
   String result;
+
   result.reserve(32);
 
   switch (timerType) {
@@ -92,9 +75,9 @@ String decodeSchedulerId(unsigned long mixed_id) {
 /*********************************************************************************************\
 * Handle scheduled timers.
 \*********************************************************************************************/
-void handle_schedule() {
+void ESPEasy_Scheduler::handle_schedule() {
   START_TIMER
-  unsigned long timer = 0;
+  unsigned long timer    = 0;
   unsigned long mixed_id = 0;
 
   if (timePassedSince(last_system_event_run) < 500) {
@@ -151,7 +134,7 @@ void handle_schedule() {
 * These timers set a new scheduled timer, based on the old value.
 * This will make their interval as constant as possible.
 \*********************************************************************************************/
-void setNextTimeInterval(unsigned long& timer, const unsigned long step) {
+void ESPEasy_Scheduler::setNextTimeInterval(unsigned long& timer, const unsigned long step) {
   timer += step;
   const long passed = timePassedSince(timer);
 
@@ -170,29 +153,29 @@ void setNextTimeInterval(unsigned long& timer, const unsigned long step) {
   timer = millis() + (step - passed);
 }
 
-void setIntervalTimer(unsigned long id) {
+void ESPEasy_Scheduler::setIntervalTimer(unsigned long id) {
   setIntervalTimer(id, millis());
 }
 
-void setIntervalTimerAt(unsigned long id, unsigned long newtimer) {
+void ESPEasy_Scheduler::setIntervalTimerAt(unsigned long id, unsigned long newtimer) {
   setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), newtimer);
 }
 
-void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow) {
+void ESPEasy_Scheduler::setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow) {
   unsigned long timer = millis();
 
   setNextTimeInterval(timer, msecFromNow);
   setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
 }
 
-void scheduleNextDelayQueue(unsigned long id, unsigned long nextTime) {
+void ESPEasy_Scheduler::scheduleNextDelayQueue(unsigned long id, unsigned long nextTime) {
   if (nextTime != 0) {
     // Schedule for next process run.
     setIntervalTimerAt(id, nextTime);
   }
 }
 
-void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
+void ESPEasy_Scheduler::setIntervalTimer(unsigned long id, unsigned long lasttimer) {
   // Set the initial timers for the regular runs
   unsigned long interval = 0;
 
@@ -228,11 +211,12 @@ void setIntervalTimer(unsigned long id, unsigned long lasttimer) {
       interval = 1000; break;
   }
   unsigned long timer = lasttimer;
+
   setNextTimeInterval(timer, interval);
   setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, id), timer);
 }
 
-void sendGratuitousARP_now() {
+void ESPEasy_Scheduler::sendGratuitousARP_now() {
   sendGratuitousARP();
 
   if (Settings.gratuitousARP()) {
@@ -241,7 +225,7 @@ void sendGratuitousARP_now() {
   }
 }
 
-void process_interval_timer(unsigned long id, unsigned long lasttimer) {
+void ESPEasy_Scheduler::process_interval_timer(unsigned long id, unsigned long lasttimer) {
   // Set the interval timer now, it may be altered by the commands below.
   // This is the default next-run-time.
   setIntervalTimer(id, lasttimer);
@@ -258,7 +242,7 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
     case TIMER_30SEC:            runEach30Seconds();      break;
 #ifdef USES_MQTT
     case TIMER_MQTT:             runPeriodicalMQTT();     break;
-#endif //USES_MQTT
+#endif // USES_MQTT
     case TIMER_STATISTICS:       logTimerStatistics();    break;
     case TIMER_GRATUITOUS_ARP:
 
@@ -275,7 +259,7 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
       break;
 #ifdef USES_MQTT
     case TIMER_MQTT_DELAY_QUEUE: processMQTTdelayQueue(); break;
-#endif //USES_MQTT
+#endif // USES_MQTT
   #ifdef USES_C001
     case TIMER_C001_DELAY_QUEUE:
       process_c001_delay_queue();
@@ -358,7 +342,7 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
     case TIMER_C018_DELAY_QUEUE:
       process_c018_delay_queue();
       break;
-  #endif
+  #endif // ifdef USES_C018
 
       /*
        #ifdef USES_C019
@@ -384,7 +368,7 @@ void process_interval_timer(unsigned long id, unsigned long lasttimer) {
 /*********************************************************************************************\
 * Plugin Task Timer
 \*********************************************************************************************/
-unsigned long createPluginTaskTimerId(deviceIndex_t deviceIndex, int Par1) {
+unsigned long ESPEasy_Scheduler::createPluginTaskTimerId(deviceIndex_t deviceIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
   const unsigned long mixed = (Par1 << 8) + deviceIndex;
 
@@ -398,48 +382,50 @@ unsigned long createPluginTaskTimerId(deviceIndex_t deviceIndex, int Par1) {
    Par1 = (mixed_id & mask) >> 8;
    }
  */
-void setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
+void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
   // Use deviceIndex instead of pluginID, since the deviceIndex uses less bits.
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
-  if (!validDeviceIndex(deviceIndex)) return;
+
+  if (!validDeviceIndex(deviceIndex)) { return; }
 
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createPluginTaskTimerId(deviceIndex, Par1));
 
-  systemTimerStruct   timer_data;
+  systemTimerStruct timer_data;
 
-  timer_data.TaskIndex        = taskIndex;
-  timer_data.Par1             = Par1;
-  timer_data.Par2             = Par2;
-  timer_data.Par3             = Par3;
-  timer_data.Par4             = Par4;
-  timer_data.Par5             = Par5;
+  timer_data.TaskIndex       = taskIndex;
+  timer_data.Par1            = Par1;
+  timer_data.Par2            = Par2;
+  timer_data.Par3            = Par3;
+  timer_data.Par4            = Par4;
+  timer_data.Par5            = Par5;
   systemTimers[mixedTimerId] = timer_data;
   setNewTimerAt(mixedTimerId, millis() + msecFromNow);
 }
 
-void process_plugin_task_timer(unsigned long id) {
+void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
   START_TIMER;
 
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, id);
-  auto it = systemTimers.find(mixedTimerId);
-  if (it == systemTimers.end()) return;
+  auto it                          = systemTimers.find(mixedTimerId);
+
+  if (it == systemTimers.end()) { return; }
 
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(it->second.TaskIndex);
 
   struct EventStruct TempEvent;
-  TempEvent.TaskIndex = it->second.TaskIndex;
+
+  TempEvent.TaskIndex    = it->second.TaskIndex;
   TempEvent.BaseVarIndex = it->second.TaskIndex * VARS_PER_TASK;
-  TempEvent.Par1      = it->second.Par1;
-  TempEvent.Par2      = it->second.Par2;
-  TempEvent.Par3      = it->second.Par3;
-  TempEvent.Par4      = it->second.Par4;
-  TempEvent.Par5      = it->second.Par5;
+  TempEvent.Par1         = it->second.Par1;
+  TempEvent.Par2         = it->second.Par2;
+  TempEvent.Par3         = it->second.Par3;
+  TempEvent.Par4         = it->second.Par4;
+  TempEvent.Par5         = it->second.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
-  TempEvent.sensorType = Device[deviceIndex].VType;
 
 
   /*
@@ -454,6 +440,8 @@ void process_plugin_task_timer(unsigned long id) {
   systemTimers.erase(mixedTimerId);
 
   if (validDeviceIndex(deviceIndex)) {
+    TempEvent.sensorType = Device[deviceIndex].VType;
+
     if (validUserVarIndex(TempEvent.BaseVarIndex)) {
       String dummy;
       Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
@@ -465,16 +453,15 @@ void process_plugin_task_timer(unsigned long id) {
 /*********************************************************************************************\
 * Rules Timer
 \*********************************************************************************************/
-
-unsigned long createRulesTimerId(unsigned int timerIndex) {
+unsigned long ESPEasy_Scheduler::createRulesTimerId(unsigned int timerIndex) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
   const unsigned long mixed = timerIndex;
 
   return mixed & mask;
 }
 
-bool checkRulesTimerIndex(unsigned int timerIndex) {
-  if (timerIndex > RULES_TIMER_MAX || timerIndex == 0) {
+static bool checkRulesTimerIndex(unsigned int timerIndex) {
+  if ((timerIndex > RULES_TIMER_MAX) || (timerIndex == 0)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("TIMER: invalid timer number ");
       log += timerIndex;
@@ -485,33 +472,35 @@ bool checkRulesTimerIndex(unsigned int timerIndex) {
   return true;
 }
 
-
-bool setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recurringCount) {
-  if (!checkRulesTimerIndex(timerIndex)) return false;
+bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recurringCount) {
+  if (!checkRulesTimerIndex(timerIndex)) { return false; }
 
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
   const systemTimerStruct timer_data(recurringCount, msecFromNow, timerIndex);
+
   systemTimers[mixedTimerId] = timer_data;
   setNewTimerAt(mixedTimerId, millis() + msecFromNow);
   return true;
 }
 
-void process_rules_timer(unsigned long id, unsigned long lasttimer) {
+void ESPEasy_Scheduler::process_rules_timer(unsigned long id, unsigned long lasttimer) {
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, id);
 
   auto it = systemTimers.find(mixedTimerId);
-  if (it == systemTimers.end()) return;
+
+  if (it == systemTimers.end()) { return; }
 
   if (it->second.isPaused()) {
     // Timer is paused.
     // Must keep this timer 'active' in the scheduler.
+    // However it does not need to be looked at frequently as the resume function re-schedules it when needed.
     // Look for its state every second.
     setNewTimerAt(mixedTimerId, millis() + 1000);
     return;
   }
 
   // Create a deep copy of the timer data as we may delete it from the map before sending the event.
-  const int loopCount = it->second.getLoopCount();
+  const int loopCount  = it->second.getLoopCount();
   const int timerIndex = it->second.getTimerIndex();
 
   // Reschedule before sending the event, as it may get rescheduled in handling the timer event.
@@ -530,6 +519,7 @@ void process_rules_timer(unsigned long id, unsigned long lasttimer) {
     if (Settings.UseRules) {
       String event = F("Rules#Timer=");
       event += timerIndex;
+
       // Add count as 2nd eventvalue
       event += ',';
       event += loopCount;
@@ -538,38 +528,43 @@ void process_rules_timer(unsigned long id, unsigned long lasttimer) {
   }
 }
 
-bool pause_rules_timer(unsigned long timerIndex) {
-  if (!checkRulesTimerIndex(timerIndex)) return false;
+bool ESPEasy_Scheduler::pause_rules_timer(unsigned long timerIndex) {
+  if (!checkRulesTimerIndex(timerIndex)) { return false; }
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
-  auto it = systemTimers.find(mixedTimerId);
+  auto it                          = systemTimers.find(mixedTimerId);
+
   if (it == systemTimers.end()) {
     addLog(LOG_LEVEL_INFO, F("TIMER: no timer set"));
     return false;
   }
-  
+
   unsigned long timer;
+
   if (msecTimerHandler.getTimerForId(mixedTimerId, timer)) {
     if (it->second.isPaused()) {
       addLog(LOG_LEVEL_INFO, F("TIMER: already paused"));
     } else {
       // Store remainder of interval
       const long timeLeft = timePassedSince(timer) * -1;
+
       if (timeLeft > 0) {
         it->second.setRemainder(timeLeft);
         return true;
-      } 
+      }
     }
   }
   return false;
 }
 
-bool resume_rules_timer(unsigned long timerIndex) {
-  if (!checkRulesTimerIndex(timerIndex)) return false;
+bool ESPEasy_Scheduler::resume_rules_timer(unsigned long timerIndex) {
+  if (!checkRulesTimerIndex(timerIndex)) { return false; }
   const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
-  auto it = systemTimers.find(mixedTimerId);
-  if (it == systemTimers.end()) return false;
+  auto it                          = systemTimers.find(mixedTimerId);
+
+  if (it == systemTimers.end()) { return false; }
 
   unsigned long timer;
+
   if (msecTimerHandler.getTimerForId(mixedTimerId, timer)) {
     if (it->second.isPaused()) {
       // Reschedule timer with remainder of interval
@@ -581,11 +576,10 @@ bool resume_rules_timer(unsigned long timerIndex) {
   return false;
 }
 
-
 /*********************************************************************************************\
 * Plugin Timer
 \*********************************************************************************************/
-unsigned long createPluginTimerId(deviceIndex_t deviceIndex, int Par1) {
+unsigned long ESPEasy_Scheduler::createPluginTimerId(deviceIndex_t deviceIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
   const unsigned long mixed = (Par1 << 8) + deviceIndex;
 
@@ -599,47 +593,51 @@ unsigned long createPluginTimerId(deviceIndex_t deviceIndex, int Par1) {
    Par1 = (mixed_id & mask) >> 8;
    }
  */
-void setPluginTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
+void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
   // Use deviceIndex instead of pluginID, since the deviceIndex uses less bits.
   const deviceIndex_t deviceIndex = getDeviceIndex(pluginID);
-  if (!validDeviceIndex(deviceIndex)) return;
+
+  if (!validDeviceIndex(deviceIndex)) { return; }
 
   const unsigned long mixedTimerId = getMixedId(PLUGIN_TIMER, createPluginTimerId(deviceIndex, Par1));
   systemTimerStruct   timer_data;
 
-//timer_data.TaskIndex        = deviceIndex;
-  timer_data.Par1             = Par1;
-  timer_data.Par2             = Par2;
-  timer_data.Par3             = Par3;
-  timer_data.Par4             = Par4;
-  timer_data.Par5             = Par5;
+  // timer_data.TaskIndex        = deviceIndex;
+  timer_data.Par1            = Par1;
+  timer_data.Par2            = Par2;
+  timer_data.Par3            = Par3;
+  timer_data.Par4            = Par4;
+  timer_data.Par5            = Par5;
   systemTimers[mixedTimerId] = timer_data;
   setNewTimerAt(mixedTimerId, millis() + msecFromNow);
 }
 
-void process_plugin_timer(unsigned long id) {
+void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
   START_TIMER;
   const unsigned long mixedTimerId = getMixedId(PLUGIN_TIMER, id);
-  auto it = systemTimers.find(mixedTimerId);
-  if (it == systemTimers.end()) return;
+  auto it                          = systemTimers.find(mixedTimerId);
+
+  if (it == systemTimers.end()) { return; }
 
   struct EventStruct TempEvent;
-//  TempEvent.TaskIndex = it->second.TaskIndex;
 
-// extract deviceID from timer id:
-  const deviceIndex_t deviceIndex = ((1 << 8) -1) & id;
+  //  TempEvent.TaskIndex = it->second.TaskIndex;
 
-  TempEvent.Par1      = it->second.Par1;
-  TempEvent.Par2      = it->second.Par2;
-  TempEvent.Par3      = it->second.Par3;
-  TempEvent.Par4      = it->second.Par4;
-  TempEvent.Par5      = it->second.Par5;
+  // extract deviceID from timer id:
+  const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
+
+  TempEvent.Par1 = it->second.Par1;
+  TempEvent.Par2 = it->second.Par2;
+  TempEvent.Par3 = it->second.Par3;
+  TempEvent.Par4 = it->second.Par4;
+  TempEvent.Par5 = it->second.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
-//  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(it->second.TaskIndex);
+
+  //  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(it->second.TaskIndex);
 
   /*
      String log = F("proc_system_timer: Pluginid: ");
@@ -663,14 +661,14 @@ void process_plugin_timer(unsigned long id) {
 * GPIO Timer
 * Special timer to handle timed GPIO actions
 \*********************************************************************************************/
-unsigned long createGPIOTimerId(byte pinNumber, int Par1) {
+unsigned long ESPEasy_Scheduler::createGPIOTimerId(byte pinNumber, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
   const unsigned long mixed = (Par1 << 8) + pinNumber;
 
   return mixed & mask;
 }
 
-void setGPIOTimer(unsigned long msecFromNow, int Par1, int Par2, int Par3, int Par4, int Par5)
+void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // Par1 & Par2 form a unique key
   const unsigned long systemTimerId = createGPIOTimerId(Par1, Par2);
@@ -678,7 +676,7 @@ void setGPIOTimer(unsigned long msecFromNow, int Par1, int Par2, int Par3, int P
   setNewTimerAt(getMixedId(GPIO_TIMER, systemTimerId), millis() + msecFromNow);
 }
 
-void process_gpio_timer(unsigned long id) {
+void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
   // FIXME TD-er: Allow for all GPIO commands to be scheduled.
   byte pinNumber     = id & 0xFF;
   byte pinStateValue = (id >> 8);
@@ -693,7 +691,7 @@ void process_gpio_timer(unsigned long id) {
 * When the plugin task is initialized, a call to schedule_task_device_timer_at_init
 * will bootstrap this sequence.
 \*********************************************************************************************/
-void schedule_task_device_timer_at_init(unsigned long task_index) {
+void ESPEasy_Scheduler::schedule_task_device_timer_at_init(unsigned long task_index) {
   unsigned long runAt = millis();
 
   if (!isDeepSleepEnabled()) {
@@ -708,14 +706,13 @@ void schedule_task_device_timer_at_init(unsigned long task_index) {
 }
 
 // Typical use case is to run this when all needed connections are made.
-void schedule_all_task_device_timers() {
+void ESPEasy_Scheduler::schedule_all_task_device_timers() {
   for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
     schedule_task_device_timer_at_init(task);
   }
 }
 
-
-void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
+void ESPEasy_Scheduler::schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
   /*
      String log = F("schedule_task_device_timer: task: ");
      log += task_index;
@@ -730,24 +727,26 @@ void schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
   if (!validTaskIndex(task_index)) { return; }
 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task_index);
+
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
-// TD-er: Tasks without a timer or optional timer set to 0 should still be able to call PLUGIN_READ
-// For example to schedule a read from the PLUGIN_TEN_PER_SECOND when a new value is ready.
-/*  
-  if (!Device[DeviceIndex].TimerOption) { return; }
+  // TD-er: Tasks without a timer or optional timer set to 0 should still be able to call PLUGIN_READ
+  // For example to schedule a read from the PLUGIN_TEN_PER_SECOND when a new value is ready.
 
-  if (Device[DeviceIndex].TimerOptional && (Settings.TaskDeviceTimer[task_index] == 0)) {
-    return;
-  }
-*/
+  /*
+     if (!Device[DeviceIndex].TimerOption) { return; }
+
+     if (Device[DeviceIndex].TimerOptional && (Settings.TaskDeviceTimer[task_index] == 0)) {
+      return;
+     }
+   */
 
   if (Settings.TaskDeviceEnabled[task_index]) {
     setNewTimerAt(getMixedId(TASK_DEVICE_TIMER, task_index), runAt);
   }
 }
 
-void process_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
+void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
   if (!validTaskIndex(task_index)) { return; }
   unsigned long newtimer = Settings.TaskDeviceTimer[task_index];
 
@@ -766,19 +765,38 @@ void process_task_device_timer(unsigned long task_index, unsigned long lasttimer
 * Thus only use these when the result is not needed immediately.
 * Proper use case is calling from a callback function, since those cannot use yield() or delay()
 \*********************************************************************************************/
-void schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, struct EventStruct *event) {
   if (validDeviceIndex(DeviceIndex)) {
     schedule_event_timer(TaskPluginEnum, DeviceIndex, Function, event);
   }
 }
 
-void schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct *event) {
   if (validProtocolIndex(ProtocolIndex)) {
     schedule_event_timer(ControllerPluginEnum, ProtocolIndex, Function, event);
   }
 }
 
-void schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, char *c_topic, byte *b_payload, unsigned int length) {
+unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16) {
+  unsigned long subId = ptr_type;
+
+  subId = (subId << 16) + crc16;
+  return getMixedId(SYSTEM_EVENT_QUEUE, subId);
+}
+
+unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function) {
+  unsigned long subId = ptr_type;
+
+  subId = (subId << 8) + Index;
+  subId = (subId << 8) + Function;
+  return getMixedId(SYSTEM_EVENT_QUEUE, subId);
+}
+
+void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex,
+                                                             byte            Function,
+                                                             char           *c_topic,
+                                                             byte           *b_payload,
+                                                             unsigned int    length) {
   if (validProtocolIndex(ProtocolIndex)) {
     const unsigned long mixedId = createSystemEventMixedId(ControllerPluginEnum, ProtocolIndex, Function);
     ScheduledEventQueue.emplace_back(mixedId, EventStruct());
@@ -794,11 +812,11 @@ void schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex, byte Fu
   }
 }
 
-void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct *event) {
   schedule_event_timer(NotificationPluginEnum, NotificationProtocolIndex, Function, event);
 }
 
-void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct *event) {
   const unsigned long mixedId = createSystemEventMixedId(ptr_type, Index, Function);
 
   //  EventStructCommandWrapper eventWrapper(mixedId, *event);
@@ -806,22 +824,7 @@ void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, str
   ScheduledEventQueue.emplace_back(mixedId, *event);
 }
 
-unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16) {
-  unsigned long subId = ptr_type;
-
-  subId = (subId << 16) + crc16;
-  return getMixedId(SYSTEM_EVENT_QUEUE, subId);
-}
-
-unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function) {
-  unsigned long subId = ptr_type;
-
-  subId = (subId << 8) + Index;
-  subId = (subId << 8) + Function;
-  return getMixedId(SYSTEM_EVENT_QUEUE, subId);
-}
-
-void process_system_event_queue() {
+void ESPEasy_Scheduler::process_system_event_queue() {
   if (ScheduledEventQueue.size() == 0) { return; }
   unsigned long id       = ScheduledEventQueue.front().id;
   byte Function          = id & 0xFF;
@@ -849,3 +852,18 @@ void process_system_event_queue() {
   ScheduledEventQueue.pop_front();
 }
 
+String ESPEasy_Scheduler::getQueueStats() {
+  return msecTimerHandler.getQueueStats();
+}
+
+void ESPEasy_Scheduler::updateIdleTimeStats() {
+  msecTimerHandler.updateIdleTimeStats();
+}
+
+float ESPEasy_Scheduler::getIdleTimePct() const {
+  return msecTimerHandler.getIdleTimePct();
+}
+
+void ESPEasy_Scheduler::setEcoMode(bool enabled) {
+  msecTimerHandler.setEcoMode(enabled);
+}

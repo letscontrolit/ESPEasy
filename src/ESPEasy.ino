@@ -108,6 +108,7 @@
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/EventQueue.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
@@ -250,7 +251,7 @@ void setup()
 
     log += RTC.bootCounter;
     log += F(" Last Task: ");
-    log += decodeSchedulerId(lastMixedSchedulerId_beforereboot);
+    log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     log += F(" Last systime: ");
     log += RTC.lastSysTime;
   }
@@ -440,12 +441,12 @@ void setup()
   // Start the interval timers at N msec from now.
   // Make sure to start them at some time after eachother,
   // since they will keep running at the same interval.
-  setIntervalTimerOverride(TIMER_20MSEC,  5); // timer for periodic actions 50 x per/sec
-  setIntervalTimerOverride(TIMER_100MSEC, 66); // timer for periodic actions 10 x per/sec
-  setIntervalTimerOverride(TIMER_1SEC,    777); // timer for periodic actions once per/sec
-  setIntervalTimerOverride(TIMER_30SEC,   1333); // timer for watchdog once per 30 sec
-  setIntervalTimerOverride(TIMER_MQTT,    88); // timer for interaction with MQTT
-  setIntervalTimerOverride(TIMER_STATISTICS, 2222);
+  Scheduler.setIntervalTimerOverride(TIMER_20MSEC,  5); // timer for periodic actions 50 x per/sec
+  Scheduler.setIntervalTimerOverride(TIMER_100MSEC, 66); // timer for periodic actions 10 x per/sec
+  Scheduler.setIntervalTimerOverride(TIMER_1SEC,    777); // timer for periodic actions once per/sec
+  Scheduler.setIntervalTimerOverride(TIMER_30SEC,   1333); // timer for watchdog once per 30 sec
+  Scheduler.setIntervalTimerOverride(TIMER_MQTT,    88); // timer for interaction with MQTT
+  Scheduler.setIntervalTimerOverride(TIMER_STATISTICS, 2222);
 }
 
 #ifdef USE_RTOS_MULTITASKING
@@ -480,7 +481,7 @@ void RTOS_Task10ps( void * parameter )
 void RTOS_HandleSchedule( void * parameter )
 {
  while (true){
-    handle_schedule();
+    Scheduler.handle_schedule();
  }
 }
 
@@ -513,7 +514,7 @@ void updateLoopStats() {
 
 
 float getCPUload() {
-  return 100.0 - msecTimerHandler.getIdleTimePct();
+  return 100.0 - Scheduler.getIdleTimePct();
 }
 
 int getLoopCountPerSec() {
@@ -588,7 +589,7 @@ void loop()
   {
     if (!UseRTOSMultitasking) {
       // On ESP32 the schedule is executed on the 2nd core.
-      handle_schedule();
+      Scheduler.handle_schedule();
     }
   }
 

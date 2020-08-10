@@ -59,7 +59,7 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         success = C004_DelayHandler.addToQueue(C004_queue_element(event));
-        scheduleNextDelayQueue(TIMER_C004_DELAY_QUEUE, C004_DelayHandler.getNextScheduleTime());
+        Scheduler.scheduleNextDelayQueue(TIMER_C004_DELAY_QUEUE, C004_DelayHandler.getNextScheduleTime());
 
         break;
       }

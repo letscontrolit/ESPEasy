@@ -28,7 +28,6 @@
 #include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/ESPEasyLimits.h"
-#include "src/Helpers/msecTimerHandlerStruct.h"
 #include "ESPEasy_plugindefs.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Settings.h"
@@ -279,9 +278,8 @@ extern boolean printToWebJSON;
 
 struct RTC_cache_handler_struct;
 
-extern msecTimerHandlerStruct msecTimerHandler;
 
-extern unsigned long timer_gratuitous_arp_interval;
+
 extern unsigned long timermqtt_interval;
 extern unsigned long lastSend;
 extern unsigned long lastWeb;
@@ -290,7 +288,7 @@ extern unsigned long wdcounter;
 extern unsigned long timerAPoff;    // Timer to check whether the AP mode should be disabled (0 = disabled)
 extern unsigned long timerAPstart;  // Timer to start AP mode, started when no valid network is detected.
 extern unsigned long timerAwakeFromDeepSleep;
-extern unsigned long last_system_event_run;
+
 
 #if FEATURE_ADC_VCC
 extern float vcc;
@@ -304,18 +302,6 @@ extern int WebLoggedInTimer;
 
 
 extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
-
-enum PluginPtrType {
-  TaskPluginEnum,
-  ControllerPluginEnum,
-  NotificationPluginEnum
-};
-void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event);
-unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function);
-unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16);
-
-
-
 
 
 

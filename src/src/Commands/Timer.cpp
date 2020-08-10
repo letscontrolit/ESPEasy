@@ -6,6 +6,7 @@
 #include "../../ESPEasy_common.h"
 
 #include "../../ESPEasy-Globals.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Scheduler.h"
 
@@ -16,7 +17,7 @@ String command_setRulesTimer(int msecFromNow, int timerIndex, int recurringCount
   } else {
     // start new timer when msecFromNow > 0
     // Clear timer when msecFromNow == 0
-    if (setRulesTimer(msecFromNow, timerIndex, recurringCount))
+    if (Scheduler.setRulesTimer(msecFromNow, timerIndex, recurringCount))
     { 
       return return_command_success();
     }
@@ -72,7 +73,7 @@ String Command_Loop_Timer_Set_ms (struct EventStruct *event, const char* Line)
 
 String Command_Timer_Pause(struct EventStruct *event, const char *Line)
 {
-  if (pause_rules_timer(event->Par1)) {
+  if (Scheduler.pause_rules_timer(event->Par1)) {
     String eventName = F("Rules#TimerPause=");
     eventName += event->Par1;
     rulesProcessing(eventName); // TD-er: Process right now
@@ -83,7 +84,7 @@ String Command_Timer_Pause(struct EventStruct *event, const char *Line)
 
 String Command_Timer_Resume(struct EventStruct *event, const char *Line)
 {
-  if (resume_rules_timer(event->Par1)) {
+  if (Scheduler.resume_rules_timer(event->Par1)) {
     String eventName = F("Rules#TimerResume=");
     eventName += event->Par1;
     rulesProcessing(eventName); // TD-er: Process right now

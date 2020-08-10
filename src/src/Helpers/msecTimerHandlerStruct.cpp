@@ -102,7 +102,7 @@
     total_idle_time_usec = 0;
   }
 
-  float msecTimerHandlerStruct::getIdleTimePct() {
+  float msecTimerHandlerStruct::getIdleTimePct() const {
     return idle_time_pct;
   }
 

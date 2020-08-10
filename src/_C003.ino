@@ -48,7 +48,7 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
         url += formatUserVarNoCheck(event, 0);
         url += "\n";
         success = C003_DelayHandler.addToQueue(C003_queue_element(event->ControllerIndex, url));
-        scheduleNextDelayQueue(TIMER_C003_DELAY_QUEUE, C003_DelayHandler.getNextScheduleTime());
+        Scheduler.scheduleNextDelayQueue(TIMER_C003_DELAY_QUEUE, C003_DelayHandler.getNextScheduleTime());
 
         break;
       }

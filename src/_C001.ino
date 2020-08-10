@@ -99,7 +99,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
           #endif
 
           success = C001_DelayHandler.addToQueue(C001_queue_element(event->ControllerIndex, url));
-          scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime());
+          Scheduler.scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime());
         } // if ixd !=0
         else
         {

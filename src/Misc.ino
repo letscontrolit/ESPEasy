@@ -9,6 +9,7 @@
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Plugins_other.h"
@@ -796,7 +797,7 @@ bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled)
   if (validPluginID(Settings.TaskDeviceNumber[taskIndex]) || !enabled) {
     Settings.TaskDeviceEnabled[taskIndex] = enabled;
     if (enabled) {
-      schedule_task_device_timer(taskIndex, millis() + 10);
+      Scheduler.schedule_task_device_timer(taskIndex, millis() + 10);
     }
     return true;
   }
