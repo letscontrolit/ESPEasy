@@ -5,6 +5,8 @@
 #include "src/Globals/Device.h"
 
 
+#define TIMING_STATS_THRESHOLD 100000
+
 void handle_timingstats() {
   checkRAM(F("handle_timingstats"));
   navMenuIndex = MENU_INDEX_TOOLS;

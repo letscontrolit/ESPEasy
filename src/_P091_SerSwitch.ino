@@ -701,8 +701,8 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             unsigned long timer = event->Par3 * 1000;
 
             sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3); // init state
-            //setPluginTimer(timer, PLUGIN_ID_091, rnum, !rcmd);
-            setPluginTaskTimer(timer, PLUGIN_ID_091, event->TaskIndex, rnum, !rcmd);
+            //Scheduler.setPluginTimer(timer, PLUGIN_ID_091, rnum, !rcmd);
+            Scheduler.setPluginTaskTimer(timer, PLUGIN_ID_091, event->TaskIndex, rnum, !rcmd);
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
               if (UserVar[(varIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
                 UserVar[(varIndex + rnum)] = Plugin_091_switchstate[rnum];

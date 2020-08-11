@@ -3,6 +3,7 @@
 #include "../Commands/Common.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/Settings.h"
 #include "../Globals/NPlugins.h"
 #include "../../ESPEasy_plugindefs.h"
@@ -24,7 +25,7 @@ String Command_Notifications_Notify(struct EventStruct *event, const char* Line)
 				TempEvent.NotificationIndex = index;
 				TempEvent.TaskIndex = event->TaskIndex;
 				TempEvent.String1 = message;
-				schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, &TempEvent);
+				Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, &TempEvent);
 			}
 		}
 	}
