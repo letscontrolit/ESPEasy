@@ -184,6 +184,9 @@ struct P082_data_struct : public PluginTaskData_base {
     if (gps->date.age() > P082_TIMESTAMP_AGE) {
       return false;
     }
+    if (!gps->date.isValid() || !gps->time.isValid()) {
+      return false;
+    }
     dateTime.tm_year = gps->date.year() - 1970;
     dateTime.tm_mon  = gps->date.month();
     dateTime.tm_mday = gps->date.day();
@@ -606,6 +609,8 @@ void P082_logStats(struct EventStruct *event) {
   log += P082_data->gps->passedChecksum();
   log += '/';
   log += P082_data->gps->failedChecksum();
+  log += F(" invalid: ");
+  log += P082_data->gps->invalidData();
   addLog(LOG_LEVEL_DEBUG, log);
 }
 
@@ -723,11 +728,13 @@ void P082_html_show_stats(struct EventStruct *event) {
     addHtml(F("-"));
   }
 
-  addRowLabel(F("Checksum (pass/fail)"));
+  addRowLabel(F("Checksum (pass/fail/invalid)"));
   String chksumStats;
   chksumStats  = P082_data->gps->passedChecksum();
   chksumStats += '/';
   chksumStats += P082_data->gps->failedChecksum();
+  chksumStats += '/';
+  chksumStats += P082_data->gps->invalidData();
   addHtml(chksumStats);
 }
 
