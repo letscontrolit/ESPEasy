@@ -1,7 +1,7 @@
 #ifndef ESPEASY_EVENTSTRUCT_H
 #define ESPEASY_EVENTSTRUCT_H
 
-#include "../../ESPEasy_common.h"
+#include <Arduino.h>
 #include "EventValueSource.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/NPlugins.h"

@@ -4,6 +4,9 @@
 class String;
 
 String Command_Timer_Set (struct EventStruct *event, const char* Line);
+String Command_Timer_Set_ms (struct EventStruct *event, const char* Line);
+String Command_Loop_Timer_Set (struct EventStruct *event, const char* Line);
+String Command_Loop_Timer_Set_ms (struct EventStruct *event, const char* Line);
 String Command_Timer_Pause (struct EventStruct *event, const char* Line);
 String Command_Timer_Resume (struct EventStruct *event, const char* Line);
 String Command_Delay (struct EventStruct *event, const char* Line);

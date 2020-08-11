@@ -184,7 +184,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
             Plugin_008_timeoutCount = 0;
 
             if (new_key) sendData(event);
-            setPluginTaskTimer(500, event->TaskIndex, event->Par1);
+            Scheduler.setPluginTaskTimer(500, event->TaskIndex, event->Par1);
 
           //   String info = "";
           //   uint64_t invalue = 0x1234;

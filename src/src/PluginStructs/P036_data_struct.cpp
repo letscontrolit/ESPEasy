@@ -900,7 +900,7 @@ void P036_data_struct::P036_JumpToPage(struct EventStruct *event, uint8_t nextFr
   if ((P036_data == nullptr) || !isInitialized()) {
     return;
   }
-  schedule_task_device_timer(event->TaskIndex,
+  Scheduler.schedule_task_device_timer(event->TaskIndex,
                              millis() + (Settings.TaskDeviceTimer[event->TaskIndex] * 1000)); // reschedule page change
   nextFrameToDisplay    = nextFrame;
   bPageScrollDisabled   = true;                                                               //  show next page without scrolling
@@ -1044,7 +1044,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
     int lTaskTimer = Settings.TaskDeviceTimer[event->TaskIndex];
 
     if (display_scroll(lscrollspeed, lTaskTimer)) {
-      setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
+      Scheduler.setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
     }
 
     if (NetworkConnected() || bScrollWithoutWifi) {
