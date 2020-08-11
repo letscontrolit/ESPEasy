@@ -11,6 +11,7 @@
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/SecuritySettings.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 
 #include "../DataStructs/TimingStats.h"
 #include "../DataStructs/StorageLayout.h"
@@ -365,7 +366,7 @@ void afterloadSettings() {
   if (modelMatchingFlashSize(model)) {
     ResetFactoryDefaultPreference = Settings.ResetFactoryDefaultPreference;
   }
-  msecTimerHandler.setEcoMode(Settings.EcoPowerMode());
+  Scheduler.setEcoMode(Settings.EcoPowerMode());
 
   if (!Settings.UseRules) {
     eventQueue.clear();
