@@ -1,19 +1,19 @@
 #include "ESPEasyWifi_ProcessEvent.h"
+
 #include "ESPEasy-Globals.h"
 #include "ESPEasyNetwork.h"
-#include "ESPEasyWifi.h"
 #include "ESPEasyWiFi_credentials.h"
+#include "ESPEasyWifi.h"
 #include "ESPEasy_fdwdecl.h"
-#include "src/DataStructs/SchedulerTimers.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/EventQueue.h"
-#include "src/Globals/RTC.h"
 #include "src/Globals/MQTT.h"
+#include "src/Globals/RTC.h"
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
-#include "src/Helpers/StringConverter.h"
 #include "src/Helpers/Scheduler.h"
-
+#include "src/Helpers/StringConverter.h"
 
 bool unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
@@ -286,9 +286,9 @@ void processGotIP() {
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
-  setIntervalTimer(TIMER_MQTT);
+  Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
 #endif // USES_MQTT
-  sendGratuitousARP_now();
+  Scheduler.sendGratuitousARP_now();
 
   if (Settings.UseRules)
   {
