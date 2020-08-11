@@ -162,7 +162,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
               // Check if conversion is finished
               if (Plugin_014_si7021_readValues(SI7021_MEASURE_TEMP, res) == 0) {
                 // Update was succesfull, schedule a read.
-                schedule_task_device_timer(event->TaskIndex, millis() + 10);
+                Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
                 // change state of sensor
                 state = SI7021_New_values;
                 success = true;

@@ -51,7 +51,7 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
           break;
         }
         success = C007_DelayHandler.addToQueue(C007_queue_element(event));
-        scheduleNextDelayQueue(TIMER_C007_DELAY_QUEUE, C007_DelayHandler.getNextScheduleTime());
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C007_DELAY_QUEUE, C007_DelayHandler.getNextScheduleTime());
         break;
       }
 
