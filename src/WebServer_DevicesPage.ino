@@ -395,7 +395,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
     {
       LoadTaskSettings(x);
       struct EventStruct TempEvent;
-      byte spi_gpios[3] = {static_cast<byte>(-1)};
+      uint8_t spi_gpios[3] {0xFF, 0xFF, 0xFF};  // Keep length at least at 3 or the tests below will fail
       TempEvent.TaskIndex = x;
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
@@ -509,7 +509,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
                   html += ')';
 
                   if (Settings.TaskDeviceID[controllerNr][x] == 0) {
-                    html += " ";
+                    html += ' ';
                     html += F(HTML_SYMBOL_WARNING);
                   }
                   addHtml(html);
@@ -587,7 +587,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
               || spi_gpios[2] == Settings.TaskDevicePin1[x]
               || Settings.Pin_i2c_sda == Settings.TaskDevicePin1[x]
               || Settings.Pin_i2c_scl == Settings.TaskDevicePin1[x]) {
-              html += " ";
+              html += ' ';
               html += F(HTML_SYMBOL_WARNING);
             }
             addHtml(html);
@@ -603,7 +603,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
               || spi_gpios[2] == Settings.TaskDevicePin2[x]
               || Settings.Pin_i2c_sda == Settings.TaskDevicePin2[x]
               || Settings.Pin_i2c_scl == Settings.TaskDevicePin2[x]) {
-              html += " ";
+              html += ' ';
               html += F(HTML_SYMBOL_WARNING);
             }
             addHtml(html);
@@ -619,7 +619,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
               || spi_gpios[2] == Settings.TaskDevicePin3[x]
               || Settings.Pin_i2c_sda == Settings.TaskDevicePin3[x]
               || Settings.Pin_i2c_scl == Settings.TaskDevicePin3[x]) {
-              html += " ";
+              html += ' ';
               html += F(HTML_SYMBOL_WARNING);
             }
             addHtml(html);
