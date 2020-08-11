@@ -499,6 +499,9 @@ uint8_t Plugin_004_DS_reset(int8_t Plugin_004_DallasPin)
   do // wait until the wire is high... just in case
   {
     if (--retries == 0) {
+      #if defined(ESP32)
+      ESP32interrupts();
+      #endif // if defined(ESP32)
       return 0;
     }
     delayMicroseconds(2);
