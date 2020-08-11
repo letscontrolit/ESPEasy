@@ -12,8 +12,7 @@
 
 // https://github.com/espressif/arduino-esp32/issues/1335
 uint8_t Plugin_004_DS_read_bit(int8_t Plugin_004_DallasPin) ICACHE_RAM_ATTR;
-void    Plugin_004_DS_write_bit(uint8_t v,
-                                int8_t  Plugin_004_DallasPin) ICACHE_RAM_ATTR;
+void    Plugin_004_DS_write_bit(uint8_t v, int8_t  Plugin_004_DallasPin) ICACHE_RAM_ATTR;
 
 #endif // if defined(ESP32)
 
