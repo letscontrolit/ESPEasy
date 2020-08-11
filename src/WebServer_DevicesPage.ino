@@ -395,7 +395,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
     {
       LoadTaskSettings(x);
       struct EventStruct TempEvent;
-      uint8_t spi_gpios[3] {0xFF, 0xFF, 0xFF};
+      int8_t spi_gpios[3] {-1, -1, -1};
       TempEvent.TaskIndex = x;
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
