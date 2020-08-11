@@ -77,6 +77,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormNote(F("External pull up resistor is needed, see docs!"));
+
       uint8_t savedAddress[8];
       byte    resolutionChoice = 0;
 

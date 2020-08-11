@@ -62,6 +62,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormNote(F("External pull up resistor is needed, see docs!"));
       uint8_t savedAddress[8];
 
       // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
