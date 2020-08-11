@@ -30,10 +30,12 @@ void ESPEasy_Now_packet::setSize(size_t packetSize)
   if (packetSize > ESPEASY_NOW_MAX_PACKET_SIZE) {
     packetSize = ESPEASY_NOW_MAX_PACKET_SIZE;
   }
+  #ifdef ESP8266
   const size_t maxFreeBlock = ESP.getMaxFreeBlockSize();
   if (packetSize > maxFreeBlock) {
     packetSize = maxFreeBlock;
   }
+  #endif
 
   _buf.resize(packetSize);
 }

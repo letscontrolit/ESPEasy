@@ -3,6 +3,7 @@
 #include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasyTimeTypes.h"
 
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
@@ -17,33 +18,6 @@
 
 #include <time.h>
 
-
-String toString(timeSource_t timeSource)
-{
-  switch (timeSource) {
-    case timeSource_t::GPS_PPS_time_source:     return F("GPS PPS");
-    case timeSource_t::GPS_time_source:         return F("GPS");
-    case timeSource_t::NTP_time_source:         return F("NTP");
-    case timeSource_t::Manual_set:              return F("Manual");
-    case timeSource_t::ESP_now_peer:            return F("ESPEasy-NOW peer");
-    case timeSource_t::Restore_RTC_time_source: return F("RTC at boot");
-    case timeSource_t::No_time_source:          return F("No time set");
-  }
-  return F("Unknown");
-}
-
-bool isExternalTimeSource(timeSource_t timeSource)
-{
-  switch (timeSource) {
-    case timeSource_t::GPS_PPS_time_source:
-    case timeSource_t::GPS_time_source:    
-    case timeSource_t::NTP_time_source:
-    case timeSource_t::Manual_set:
-      return true;
-    default:
-      return false;
-  }
-}
 
 ESPEasy_time::ESPEasy_time() {
   memset(&tm,      0, sizeof(tm));
@@ -163,7 +137,7 @@ unsigned long ESPEasy_time::now() {
     // nextSyncTime & sysTime are in seconds
     double unixTime_d = -1.0;
 
-    if (externalTimeSource > 0.0f) {
+    if (externalUnixTime_d > 0.0f) {
       unixTime_d = externalUnixTime_d;
 
       // Correct for the delay between the last received external time and applying it
@@ -259,15 +233,17 @@ bool ESPEasy_time::reportNewMinute()
 
 bool ESPEasy_time::systemTimePresent() const {
   switch (timeSource) {
-    case No_time_source: 
+    case timeSource_t::No_time_source: 
       break;
-    case NTP_time_source:  
-    case Restore_RTC_time_source: 
-    case GPS_time_source:
-    case Manual_set:
+    case timeSource_t::NTP_time_source:  
+    case timeSource_t::Restore_RTC_time_source: 
+    case timeSource_t::GPS_time_source:
+    case timeSource_t::GPS_PPS_time_source:
+    case timeSource_t::ESP_now_peer:
+    case timeSource_t::Manual_set:
       return true;
   }
-  return nextSyncTime > 0 || Settings.UseNTP || externalTimeSource > 0.0f;
+  return nextSyncTime > 0 || Settings.UseNTP || externalUnixTime_d > 0.0f;
 }
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)

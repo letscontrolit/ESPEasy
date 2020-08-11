@@ -21,6 +21,10 @@ WiFiEventHandler APModeProbeRequestReceivedHandler;
 std::list<WiFiEventSoftAPModeProbeRequestReceived> APModeProbeRequestReceived_list;
 #endif // ifdef ESP8266
 
+#ifdef ESP32
+std::list<system_event_ap_probe_req_rx_t> APModeProbeRequestReceived_list;
+#endif
+
 
 // WiFi related data
 bool wifiSetup        = false;

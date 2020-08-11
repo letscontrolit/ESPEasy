@@ -17,6 +17,7 @@ void ESPEasy_now_merger::addPacket(
   const uint8_t     *buf,
   size_t             packetSize)
 {
+  #ifdef ESP8266
   const uint16_t maxFreeBlock = ESP.getMaxFreeBlockSize();
 
   if (2 * packetSize > maxFreeBlock) {
@@ -25,6 +26,7 @@ void ESPEasy_now_merger::addPacket(
     _firstPacketTimestamp -= ESPEASY_NOW_MESSAGE_TIMEOUT;
     return;
   }
+  #endif
 
   _queue.emplace(std::make_pair(packet_nr, ESPEasy_Now_packet(mac, buf, packetSize)));
   _firstPacketTimestamp = millis();

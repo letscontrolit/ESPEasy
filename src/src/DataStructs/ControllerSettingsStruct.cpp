@@ -256,10 +256,10 @@ void ControllerSettingsStruct::sendBinary(bool value)
 
 bool ControllerSettingsStruct::enableESPEasyNowFallback() const
 {
-  return bitRead(MQTT_flags, 7);
+  return bitRead(VariousFlags, 8);
 }
 
 void ControllerSettingsStruct::enableESPEasyNowFallback(bool value)
 {
-  bitWrite(MQTT_flags, 7, value);
+  bitWrite(VariousFlags, 8, value);
 }

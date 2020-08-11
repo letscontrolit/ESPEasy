@@ -54,7 +54,7 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
       LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
       // FIXME TD-er: Not sure if MQTT like formatting is the best here.
-      C019_DelayHandler.configureControllerSettings(ControllerSettings);
+      C019_DelayHandler->configureControllerSettings(ControllerSettings);
       break;
     }
 
@@ -67,8 +67,8 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
-      success = C019_DelayHandler.addToQueue(C019_queue_element(event));
-      scheduleNextDelayQueue(TIMER_C019_DELAY_QUEUE, C019_DelayHandler.getNextScheduleTime());
+      success = C019_DelayHandler->addToQueue(C019_queue_element(event));
+      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C019_DELAY_QUEUE, C019_DelayHandler->getNextScheduleTime());
       break;
     }
 
