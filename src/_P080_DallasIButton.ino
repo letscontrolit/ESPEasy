@@ -234,8 +234,12 @@ uint8_t Plugin_080_DS_reset()
     pinMode(Plugin_080_DallasPin, INPUT);
     do // wait until the wire is high... just in case
     {
-        if (--retries == 0)
-            return 0;
+        if (--retries == 0) {
+          #if defined(ESP32)
+          ESP32interrupts();
+          #endif
+          return 0;
+        }
         delayMicroseconds(2);
     }
     while (!digitalRead(Plugin_080_DallasPin));
@@ -496,34 +500,19 @@ boolean Plugin_080_DS_readiButton(byte addr[8])
 \*********************************************************************************************/
 void Plugin_080_DS_write_bit(uint8_t v)
 {
-    if (v & 1)
-    {
-        #if defined(ESP32)
-          ESP32noInterrupts();
-        #endif
-        digitalWrite(Plugin_080_DallasPin, LOW);
-        pinMode(Plugin_080_DallasPin, OUTPUT);
-        delayMicroseconds(10);
-        digitalWrite(Plugin_080_DallasPin, HIGH);
-        #if defined(ESP32)
-          ESP32interrupts();
-        #endif
-        delayMicroseconds(55);
-    }
-    else
-    {
-        #if defined(ESP32)
-          ESP32noInterrupts();
-        #endif
-        digitalWrite(Plugin_080_DallasPin, LOW);
-        pinMode(Plugin_080_DallasPin, OUTPUT);
-        delayMicroseconds(65);
-        digitalWrite(Plugin_080_DallasPin, HIGH);
-        #if defined(ESP32)
-           ESP32interrupts();
-        #endif
-        delayMicroseconds(5);
-    }
+    int timeLow = (v & 1) ? 10 : 65;
+    int timeHigh = (v & 1) ? 55 : 5;
+    #if defined(ESP32)
+        ESP32noInterrupts();
+    #endif
+    digitalWrite(Plugin_080_DallasPin, LOW);
+    pinMode(Plugin_080_DallasPin, OUTPUT);
+    delayMicroseconds(timeLow);
+    digitalWrite(Plugin_080_DallasPin, HIGH);
+    #if defined(ESP32)
+        ESP32interrupts();
+    #endif
+    delayMicroseconds(timeHigh);
 }
 
 /*********************************************************************************************\
