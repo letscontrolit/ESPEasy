@@ -732,10 +732,10 @@ parse a value from an event to the rule engine.
 
 It is possible to use multiple event values. Some system events generate multiple event values.
 
-For example, the ``Rules#Timer`` event has 2 event values (since build 2020/08/09):
+For example, the ``Rules#Timer`` event has 2 event values (since build 2020/08/12):
 
 * ``%eventvalue1%`` has the timer number (1 ... max timer ID)
-* ``%eventvalue2%`` has the loop count for loop timers (since build 2020/08/09)
+* ``%eventvalue2%`` has the loop count for loop timers (since build 2020/08/12)
 
 .. note::
  'timerSet' is a rule command and cannot be run directly from a remote command.
@@ -872,7 +872,7 @@ SR04 and LDR
 Timer
 -----
 
-Until 2020/08/09, there were 8 timers.  (1-8)
+Until 2020/08/12, there were 8 timers.  (1-8)
 Builds made after this date support 256 timers.  (1-256)
 
 .. code-block:: html
@@ -899,7 +899,7 @@ Timers can also be paused and resumed using resp. ``timerPause`` and ``timerResu
 Sub-second resolution and loop timers
 -------------------------------------
 
-Added on 2020/08/09:
+Added on 2020/08/12:
 
 * ``timerSet_ms``  To set the timer with msec resolution.
 * ``loopTimerSet`` To create a repeating timer with constant interval.
