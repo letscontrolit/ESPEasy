@@ -2,16 +2,16 @@
 #define CONTROLLERQUEUE_CONTROLLER_DELAY_HANDLER_STRUCT_H
 
 
+#include "../../_CPlugin_Helper.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
-#include "../DataStructs/SchedulerTimers.h"
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/CPlugins.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/Protocol.h"
-#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
-#include "../../_CPlugin_Helper.h"
 
 #include <list>
 #include <memory> // For std::shared_ptr
@@ -226,7 +226,7 @@ struct ControllerDelayHandlerStruct {
       C##NNN####M##_DelayHandler.markProcessed(do_process_c##NNN####M##_delay_queue(M, *element, ControllerSettings)); \
       STOP_TIMER(C##NNN####M##_DELAY_QUEUE);                                                                           \
     }                                                                                                                  \
-    scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());         \
+    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());         \
   }
 
 

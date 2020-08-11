@@ -391,7 +391,7 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
       TempEvent.TaskIndex = y;
       LoadTaskSettings(TempEvent.TaskIndex);
       TempEvent.BaseVarIndex = y * VARS_PER_TASK;           // This is the index in Uservar where values for this task are stored
-      schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_IMPORT, &TempEvent);
+      Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_IMPORT, &TempEvent);
     }
   }
 }
