@@ -495,31 +495,30 @@ uint8_t Plugin_004_DS_reset(int8_t Plugin_004_DallasPin)
   ESP32noInterrupts();
     #endif // if defined(ESP32)
   pinMode(Plugin_004_DallasPin, INPUT);
+  bool success = true;
 
   do // wait until the wire is high... just in case
   {
     if (--retries == 0) {
-      #if defined(ESP32)
-      ESP32interrupts();
-      #endif // if defined(ESP32)
-      return 0;
+      success = false;
     }
     delayMicroseconds(2);
   }
-  while (!digitalRead(Plugin_004_DallasPin));
+  while (!digitalRead(Plugin_004_DallasPin) && success);
+  if (success) {
+    digitalWrite(Plugin_004_DallasPin, LOW);
+    pinMode(Plugin_004_DallasPin, OUTPUT);
+    delayMicroseconds(500);
+    pinMode(Plugin_004_DallasPin, INPUT); // Float
 
-  digitalWrite(Plugin_004_DallasPin, LOW);
-  pinMode(Plugin_004_DallasPin, OUTPUT);
-  delayMicroseconds(500);
-  pinMode(Plugin_004_DallasPin, INPUT); // Float
+    for (uint8_t i = 0; i < 45; i++)      // 480us RX minimum
+    {
+      delayMicroseconds(15);
 
-  for (uint8_t i = 0; i < 45; i++)      // 480us RX minimum
-  {
-    delayMicroseconds(15);
-
-    if (!digitalRead(Plugin_004_DallasPin)) {
-      r                     = 1;
-      Plugin_004_reset_time = i;
+      if (!digitalRead(Plugin_004_DallasPin)) {
+        r                     = 1;
+        Plugin_004_reset_time = i;
+      }
     }
   }
     #if defined(ESP32)

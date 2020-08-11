@@ -228,21 +228,20 @@ uint8_t Plugin_080_DS_reset()
 {
     uint8_t r;
     uint8_t retries = 125;
+    bool success = true;
     #if defined(ESP32)
-      ESP32noInterrupts();
+        ESP32noInterrupts();
     #endif
     pinMode(Plugin_080_DallasPin, INPUT);
-    do // wait until the wire is high... just in case
-    {
-        if (--retries == 0) {
-          #if defined(ESP32)
-          ESP32interrupts();
-          #endif
-          return 0;
-        }
-        delayMicroseconds(2);
+  do // wait until the wire is high... just in case
+  {
+    if (--retries == 0) {
+      success = false;
     }
-    while (!digitalRead(Plugin_080_DallasPin));
+    delayMicroseconds(2);
+  }
+  while (!digitalRead(Plugin_080_DallasPin) && success);
+  if (success) {
 
     pinMode(Plugin_080_DallasPin, OUTPUT); digitalWrite(Plugin_080_DallasPin, LOW);
     delayMicroseconds(492);               // Dallas spec. = Min. 480uSec. Arduino 500uSec.
@@ -250,9 +249,10 @@ uint8_t Plugin_080_DS_reset()
     delayMicroseconds(40);
     r = !digitalRead(Plugin_080_DallasPin);
     delayMicroseconds(420);
-    #if defined(ESP32)
-      ESP32interrupts();
-    #endif
+  }
+#if defined(ESP32)
+    ESP32interrupts();
+#endif
     return r;
 }
 
