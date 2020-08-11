@@ -632,7 +632,7 @@ bool P049_performInit(struct EventStruct *event) {
 
     //delay first read, because hardware needs to initialize on cold boot
     //otherwise we get a weird value or read error
-    schedule_task_device_timer(event->TaskIndex, millis() + 15000);
+    Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 15000);
   }
   return success;
 }

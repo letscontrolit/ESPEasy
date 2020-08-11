@@ -268,7 +268,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       if (mustCallPluginRead) {
         // Note that the set time is before the current moment, so we call the read as soon as possible.
         // The read does also use any set formula and stored the value in RTC.
-        schedule_task_device_timer(event->TaskIndex, millis() - 10);
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() - 10);
       }
       break;
     }

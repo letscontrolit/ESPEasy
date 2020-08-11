@@ -290,7 +290,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         const float tempOffset = PCONFIG(2) / 10.0;
         if (Plugin_028_update_measurements(i2cAddress, tempOffset, event->TaskIndex)) {
           // Update was succesfull, schedule a read.
-          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
         break;
       }
