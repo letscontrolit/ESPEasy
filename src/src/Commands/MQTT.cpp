@@ -1,6 +1,6 @@
 #include "../../ESPEasy_common.h"
 #include "../Globals/MQTT.h"
-#include "../DataStructs/SchedulerTimers.h"
+
 #ifdef USES_MQTT
 
 #include "../Commands/MQTT.h"
@@ -8,6 +8,7 @@
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
 #include "../Globals/CPlugins.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
@@ -73,7 +74,7 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
 boolean MQTTsubscribe(controllerIndex_t controller_idx, const char* topic, boolean retained)
 {
   if (MQTTclient.subscribe(topic)) {
-    setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+    Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
     String log = F("Subscribed to: ");  log += topic;
     addLog(LOG_LEVEL_INFO, log);
     return true;

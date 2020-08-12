@@ -1054,29 +1054,6 @@ bool conditionMatch(const String& check) {
 }
 
 /********************************************************************************************\
-   Check rule timers
- \*********************************************************************************************/
-void rulesTimers() {
-  if (!Settings.UseRules) {
-    return;
-  }
-  // FIXME TD-er:  Maybe not use the timer struct, but add the timers to the scheduler?
-
-  for (byte x = 0; x < RULES_TIMER_MAX; x++) {
-    if (!RulesTimer[x].paused && (RulesTimer[x].timestamp != 0L)) // timer active?
-    {
-      if (timeOutReached(RulesTimer[x].timestamp))                // timer finished?
-      {
-        RulesTimer[x].timestamp = 0L;                             // turn off this timer
-        String event = F("Rules#Timer=");
-        event += x + 1;
-        rulesProcessing(event); // TD-er: Do not add to the eventQueue, but execute right now.
-      }
-    }
-  }
-}
-
-/********************************************************************************************\
    Generate rule events based on task refresh
  \*********************************************************************************************/
 void createRuleEvents(struct EventStruct *event) {

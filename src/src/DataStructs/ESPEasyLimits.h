@@ -102,7 +102,7 @@
 // ***********************************************************************
 
 #ifndef RULES_TIMER_MAX
-  #define RULES_TIMER_MAX                     8
+  #define RULES_TIMER_MAX                   256
 #endif
 //#ifndef PINSTATE_TABLE_MAX
 //#define PINSTATE_TABLE_MAX                 32

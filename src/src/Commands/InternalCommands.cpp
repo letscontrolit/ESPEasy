@@ -241,6 +241,9 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_A(          "let", Command_Rules_Let,     2); // Rules.h
       COMMAND_CASE_A(         "load", Command_Settings_Load, 0); // Settings.h
       COMMAND_CASE_A(     "logentry", Command_logentry,      1); // Diagnostic.h
+      COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
+      COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
+
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A("logportstatus", Command_logPortStatus, 0); // Diagnostic.h
       COMMAND_CASE_A(       "lowmem", Command_Lowmem,        0); // Diagnostic.h
@@ -318,7 +321,8 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
         COMMAND_CASE_A( "timerpause", Command_Timer_Pause,  1);               // Timers.h
         COMMAND_CASE_A("timerresume", Command_Timer_Resume, 1);               // Timers.h
         COMMAND_CASE_A(   "timerset", Command_Timer_Set,    2);               // Timers.h
-        COMMAND_CASE_R("timezone", Command_TimeZone, 1);                      // Time.h
+        COMMAND_CASE_A("timerset_ms", Command_Timer_Set_ms, 2);               // Timers.h
+        COMMAND_CASE_R(   "timezone", Command_TimeZone, 1);                   // Time.h
       }
       break;
     }
@@ -445,10 +449,10 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   // Maybe ExecuteCommand can be scheduled?
   delay(0);
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Command: ");
     log += cmd;
-    addLog( LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_DEBUG, log);
 #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
     String parameters;
