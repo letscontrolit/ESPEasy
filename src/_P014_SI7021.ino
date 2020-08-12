@@ -33,16 +33,16 @@
 #define SI7021_RESOLUTION_11T_11RH 0x81 // 11 bits RH / 11 bits Temp
 #define SI7021_RESOLUTION_MASK 0B01111110
 
-enum SI7021_state {
-  SI7021_Uninitialized = 0,
-  SI7021_Initialized,
-  SI7021_Wait_for_temperature_samples,
-  SI7021_Wait_for_humidity_samples,
-  SI7021_New_values,
-  SI7021_Values_read
+enum class SI7021_state {
+  Uninitialized = 0,
+  Initialized,
+  Wait_for_temperature_samples,
+  Wait_for_humidity_samples,
+  New_values,
+  Values_read
 };
 
-SI7021_state state = SI7021_Uninitialized;
+SI7021_state state = SI7021_state::Uninitialized;
 uint16_t si7021_humidity;    // latest humidity value read
 int16_t  si7021_temperature; // latest temperature value read (*100)
 
@@ -106,7 +106,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         PCONFIG(0) = getFormItemInt(F("p014_res"));
-        state = SI7021_Uninitialized; // Force device setup next time
+        state = SI7021_state::Uninitialized; // Force device setup next time
         success = true;
         break;
       }
@@ -118,10 +118,10 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
         uint8_t res = PCONFIG(0);
 
         // Init sensor
-        if (state == SI7021_Uninitialized) {
+        if (state == SI7021_state::Uninitialized) {
           success = Plugin_014_si7021_begin(res);
           if (success) {
-            state = SI7021_Initialized;
+            state = SI7021_state::Initialized;
           }
         }
         break;
@@ -134,37 +134,37 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
 
         switch (state)
         {
-          case SI7021_Initialized:
+          case SI7021_state::Initialized:
             {
               // Start conversion for humidity
               Plugin_014_si7021_startConv(SI7021_MEASURE_HUM);
               // change state of sensor
-              state = SI7021_Wait_for_temperature_samples;
+              state = SI7021_state::Wait_for_temperature_samples;
               success = true;
             }
           break;
 
-          case SI7021_Wait_for_temperature_samples:
+          case SI7021_state::Wait_for_temperature_samples:
             {
               // Check if conversion is finished
               if (Plugin_014_si7021_readValues(SI7021_MEASURE_HUM, res) == 0) {
                 // Start conversion for temperature
                 Plugin_014_si7021_startConv(SI7021_MEASURE_TEMP);
                 // change state of sensor
-                state = SI7021_Wait_for_humidity_samples;
+                state = SI7021_state::Wait_for_humidity_samples;
                 success = true;
               }
             }
           break;
 
-          case SI7021_Wait_for_humidity_samples:
+          case SI7021_state::Wait_for_humidity_samples:
             {
               // Check if conversion is finished
               if (Plugin_014_si7021_readValues(SI7021_MEASURE_TEMP, res) == 0) {
                 // Update was succesfull, schedule a read.
                 Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
                 // change state of sensor
-                state = SI7021_New_values;
+                state = SI7021_state::New_values;
                 success = true;
               }
             }
@@ -180,14 +180,14 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
       {
         // Change state of sensor for non bloking reading 
-        if (state == SI7021_Values_read) {
-          state = SI7021_Initialized;
+        if (state == SI7021_state::Values_read) {
+          state = SI7021_state::Initialized;
         }
         // New value
-        else if (state == SI7021_New_values) {
+        else if (state == SI7021_state::New_values) {
           UserVar[event->BaseVarIndex] = si7021_temperature / 100.0;
           UserVar[event->BaseVarIndex + 1] = si7021_humidity / 10.0;
-          state = SI7021_Values_read;
+          state = SI7021_state::Values_read;
           success = true;
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("SI7021 : Temperature: ");
@@ -197,7 +197,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
             log += UserVar[event->BaseVarIndex + 1];
             addLog(LOG_LEVEL_INFO,log);
           }
-        } else if (state == SI7021_Uninitialized) {
+        } else if (state == SI7021_state::Uninitialized) {
           addLog(LOG_LEVEL_INFO,F("SI7021 : sensor not initialized !"));
         }
         else {
