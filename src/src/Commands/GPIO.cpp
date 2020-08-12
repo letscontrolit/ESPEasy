@@ -1,14 +1,15 @@
 #include "../Commands/GPIO.h"
-#include "../DataStructs/PinMode.h"
-#include "../Globals/GlobalMapPortStatus.h"
-#include "../../EspEasyGPIO.h"
 
-#include "../Commands/Common.h"
-#include "../Helpers/StringConverter.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy_common.h"
 
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../EspEasyGPIO.h"
+#include "../Commands/Common.h"
+#include "../DataStructs/PinMode.h"
+#include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/GlobalMapPortStatus.h"
+#include "../Helpers/StringConverter.h"
 
 //predeclaration of functions used in this module
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
@@ -89,7 +90,7 @@ String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char* Line)
     createAndSetPortStatus_Mode_State(key,PIN_MODE_OUTPUT,event->Par2);
     GPIO_Write(pluginID, event->Par1, event->Par2);
 
-    setGPIOTimer(event->Par3, pluginID, event->Par1, !event->Par2);
+    Scheduler.setGPIOTimer(event->Par3, pluginID, event->Par1, !event->Par2);
 
     String log = logPrefix + String(F(" : port ")) + String(event->Par1);
     log += String(F(". Pulse set for ")) + String(event->Par3)+String(F(" ms"));

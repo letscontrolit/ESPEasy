@@ -628,8 +628,7 @@ bool ESPEasy_Scheduler::resume_rules_timer(unsigned long timerIndex) {
 \*********************************************************************************************/
 unsigned long ESPEasy_Scheduler::createPluginTimerId(deviceIndex_t deviceIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
-//  const unsigned long mixed = (Par1 << 8) + pinNumber;
-  const unsigned long mixed = (Par1 << 16) + (pinNumber << 8) + GPIOType;
+  const unsigned long mixed = (Par1 << 8) + deviceIndex;
 
   return mixed & mask;
 }
@@ -694,26 +693,45 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
     String dummy;
     Plugin_ptr[deviceIndex](PLUGIN_ONLY_TIMER_IN, &TempEvent, dummy);
   }
+  STOP_TIMER(PROC_SYS_TIMER);
 }
 
 /*********************************************************************************************\
 * GPIO Timer
 * Special timer to handle timed GPIO actions
 \*********************************************************************************************/
-unsigned long ESPEasy_Scheduler::createGPIOTimerId(byte pinNumber, int Par1) {
-  const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
-  const unsigned long mixed = (Par1 << 8) + pinNumber;
+unsigned long ESPEasy_Scheduler::createGPIOTimerId(byte GPIOType, byte pinNumber, int Par1) {
+  const unsigned long mask = (1 << TIMER_ID_SHIFT) - 1;
+
+  //  const unsigned long mixed = (Par1 << 8) + pinNumber;
+  const unsigned long mixed = (Par1 << 16) + (pinNumber << 8) + GPIOType;
 
   return mixed & mask;
 }
 
-void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, int Par1, int Par2, int Par3, int Par4, int Par5)
+void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
-  // Par1 & Par2 form a unique key
-  const unsigned long systemTimerId = createGPIOTimerId(Par1, Par2);
+  byte GPIOType = GPIO_TYPE_INVALID;
 
-  setNewTimerAt(getMixedId(GPIO_TIMER, systemTimerId), millis() + msecFromNow);
+  switch (pluginID) {
+    case PLUGIN_GPIO:
+      GPIOType = GPIO_TYPE_INTERNAL;
+      break;
+    case PLUGIN_PCF:
+      GPIOType = GPIO_TYPE_PCF;
+      break;
+    case PLUGIN_MCP:
+      GPIOType = GPIO_TYPE_MCP;
+      break;
+  }
+
+  if (GPIOType != GPIO_TYPE_INVALID) {
+    // Par1 & Par2 & GPIOType form a unique key
+    const unsigned long mixedTimerId = getMixedId(GPIO_TIMER, createGPIOTimerId(GPIOType, Par1, Par2));
+    setNewTimerAt(mixedTimerId, millis() + msecFromNow);
+  }
 }
+
 
 void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
   // FIXME TD-er: Allow for all GPIO commands to be scheduled.
