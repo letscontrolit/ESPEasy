@@ -34,6 +34,9 @@
 #define SI7021_RESOLUTION_11T_11RH 0x81 // 11 bits RH / 11 bits Temp
 #define SI7021_RESOLUTION_MASK 0B01111110
 
+
+#define SI7021_TIMEOUT         1000
+
 enum class SI7021_state {
   Uninitialized = 0,
   Initialized,
@@ -44,20 +47,22 @@ enum class SI7021_state {
 };
 
 struct P014_data_struct : public PluginTaskData_base {
-  P014_data_struct() {}
+  P014_data_struct(uint8_t resolution) : res(resolution) {
+    reset();
+  }
 
   void reset()
   {
-    state = SI7021_state::Uninitialized; // Force device setup next time
+    state         = SI7021_state::Uninitialized; // Force device setup next time
+    timeStartRead = 0;
   }
 
-  bool init(uint8_t resolution)
+  bool init()
   {
-    res   = resolution;
     state = SI7021_state::Uninitialized;
 
     // Set the resolution we want
-    const uint8_t ret = setResolution(resolution);
+    const uint8_t ret = setResolution(res);
 
     if (ret == 0) {
       state = SI7021_state::Initialized;
@@ -66,7 +71,7 @@ struct P014_data_struct : public PluginTaskData_base {
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("SI7021 : Res=0x");
-      log += String(resolution, HEX);
+      log += String(res, HEX);
       log += F(" => Error 0x");
       log += String(ret, HEX);
       addLog(LOG_LEVEL_INFO, log);
@@ -81,6 +86,7 @@ struct P014_data_struct : public PluginTaskData_base {
       {
         // Start conversion for humidity
         startConv(SI7021_MEASURE_HUM);
+        timeStartRead = millis();
 
         // change state of sensor
         state = SI7021_state::Wait_for_temperature_samples;
@@ -105,7 +111,8 @@ struct P014_data_struct : public PluginTaskData_base {
         // Check if conversion is finished
         if (readValues(SI7021_MEASURE_TEMP, res) == 0) {
           // change state of sensor
-          state   = SI7021_state::New_values;
+          state         = SI7021_state::New_values;
+          timeStartRead = 0;
         }
         break;
       }
@@ -113,39 +120,68 @@ struct P014_data_struct : public PluginTaskData_base {
       default:
         break;
     }
+
+    if (timeStartRead != 0) {
+      // Apparently we're waiting for some reading.
+      if (timePassedSince(timeStartRead) > SI7021_TIMEOUT) {
+        reset();
+      }
+    }
     return SI7021_state::New_values == state;
   }
 
   bool getReadValue(float& temperature, float& humidity) {
     bool success = false;
 
-    // Change state of sensor for non bloking reading
-    if (state == SI7021_state::Values_read) {
-      state = SI7021_state::Initialized;
-    }
-
-    // New value
-    else if (state == SI7021_state::New_values) {
-      temperature = si7021_temperature / 100.0;
-      humidity    = si7021_humidity / 10.0;
-      state       = SI7021_state::Values_read;
-      success     = true;
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SI7021 : Temperature: ");
-        log += temperature;
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("SI7021 : Humidity: ");
-        log += humidity;
-        addLog(LOG_LEVEL_INFO, log);
+    switch (state) {
+      case SI7021_state::Uninitialized:
+      {
+        addLog(LOG_LEVEL_INFO, F("SI7021 : sensor not initialized !"));
+        init();
+        break;
       }
-    } else if (state == SI7021_state::Uninitialized) {
-      addLog(LOG_LEVEL_INFO, F("SI7021 : sensor not initialized !"));
-    }
-    else {
-      addLog(LOG_LEVEL_INFO, F("SI7021 : Read Error !"));
-    }
+      case SI7021_state::Initialized:
+      {
+        // No call made to start a new reading
+        // Should be handled in the loop()
+        addLog(LOG_LEVEL_INFO, F("SI7021 : No read started !"));
+        break;
+      }
+      case SI7021_state::Wait_for_temperature_samples:
+      case SI7021_state::Wait_for_humidity_samples:
+      {
+        // Still waiting for data
+        // Should be handled in the loop()
+        addLog(LOG_LEVEL_INFO, F("SI7021 : Read Error !"));
+        break;
+      }
 
+      case SI7021_state::New_values:
+      {
+        temperature = si7021_temperature / 100.0;
+        humidity    = si7021_humidity / 10.0;
+        state       = SI7021_state::Values_read;
+        success     = true;
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("SI7021 : Temperature: ");
+          log += temperature;
+          addLog(LOG_LEVEL_INFO, log);
+          log  = F("SI7021 : Humidity: ");
+          log += humidity;
+          addLog(LOG_LEVEL_INFO, log);
+        }
+        break;
+      }
+      case SI7021_state::Values_read:
+      {
+        // This must be done in a separate call to
+        // make sure we only start reading when the plugin wants us to perform a reading.
+        // Change state of sensor for non blocking reading
+        state = SI7021_state::Initialized;
+        break;
+      }
+    }
     return success;
   }
 
@@ -331,10 +367,11 @@ struct P014_data_struct : public PluginTaskData_base {
     return error;
   }
 
-  SI7021_state state              = SI7021_state::Uninitialized;
-  uint16_t     si7021_humidity    = 0; // latest humidity value read
-  int16_t      si7021_temperature = 0; // latest temperature value read (*100)
-  uint8_t      res                = 0;
+  unsigned long timeStartRead      = 0; // Timestamp when started reading sensor
+  uint16_t      si7021_humidity    = 0; // latest humidity value read
+  int16_t       si7021_temperature = 0; // latest temperature value read (*100)
+  SI7021_state  state              = SI7021_state::Uninitialized;
+  uint8_t       res                = 0;
 };
 
 boolean Plugin_014(byte function, struct EventStruct *event, String& string)
@@ -406,7 +443,9 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new P014_data_struct());
+      // Get sensor resolution configuration
+      uint8_t res = PCONFIG(0);
+      initPluginTaskData(event->TaskIndex, new P014_data_struct(res));
       P014_data_struct *P014_data =
         static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -414,10 +453,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
         return success;
       }
 
-      // Get sensor resolution configuration
-      uint8_t res = PCONFIG(0);
-
-      if (P014_data->init(res)) {
+      if (P014_data->init()) {
         success = true;
       }
       break;
