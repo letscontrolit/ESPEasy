@@ -226,12 +226,12 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
         int optionValues2[4] = { 0, 1, 2, 3 };
         addFormSelector(F("Rotation"), F("p096_rotate"), 4, options2, optionValues2, choice2);
 
-        byte width_ = PCONFIG(2);
+        uint16_t width_ = PCONFIG(2);
         if(width_ == 0)
           width_ = 250; //default value
         addFormNumericBox(F("Width (px)"), F("p096_width"), width_, 1, 65535);
 
-        byte height_ = PCONFIG(3);
+        uint16_t height_ = PCONFIG(3);
         if(height_ == 0)
           height_ = 122; //default value
         addFormNumericBox(F("Height (px)"), F("p096_height"), height_, 1, 65535);
