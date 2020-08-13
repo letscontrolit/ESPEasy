@@ -147,6 +147,50 @@ void initI2C() {
   }
 }
 
+#ifdef FEATURE_I2CMULTIPLEXER
+// As initially constructed by krikk in PR#254, quite adapted
+// utility method for the I2C multiplexer
+// select the multiplexer port given as parameter
+void I2CMultiplexerSelect(uint8_t i) {
+  if (i > 7) return;
+
+  byte toWrite = 0;
+  switch (Settings.I2C_Multiplexer_Type) {
+    case I2C_MULTIPLEXER_TCA9546A:  // TCA9546/8 addressing
+    case I2C_MULTIPLEXER_TCA9548A:
+      toWrite = (1 << i);
+      break;
+    case I2C_MULTIPLEXER_PCA9540:   // PCA9540 needs bit 2 set to write the channel
+      toWrite    = 0b00000100;
+      if (i == 1) {
+        toWrite |= 0b00000010;      // And bit 0 not set when selecting channel 0...
+      }
+      break;
+  }
+  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
+  Wire.write(toWrite);
+  Wire.endTransmission();
+}
+
+// utility method for the I2C multiplexer
+// disable all channels on a multiplexer
+void I2CMultiplexerOff() {
+	Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
+	Wire.write(0);  // no channel selected
+	Wire.endTransmission();
+}
+
+byte I2CMultiplexerMaxChannels() {
+  uint channels = 0;
+  switch (Settings.I2C_Multiplexer_Type) {
+    case I2C_MULTIPLEXER_TCA9548A:  channels = 8; break;  // TCA9548A has 8 channels
+    case I2C_MULTIPLEXER_TCA9546A:  channels = 4; break;  // TCA9546A has 4 channels
+    case I2C_MULTIPLEXER_PCA9540:   channels = 2; break;  // PCA9540 has 2 channels
+  }
+  return channels;
+}
+#endif
+
 void checkResetFactoryPin() {
   static byte factoryResetCounter = 0;
 

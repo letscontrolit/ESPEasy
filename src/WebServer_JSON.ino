@@ -324,6 +324,20 @@ void handle_json()
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         String(ExtraTaskSettings.TaskDeviceName));
         stream_next_json_object_value(F("TaskDeviceNumber"), String(Settings.TaskDeviceNumber[TaskIndex]));
+#ifdef FEATURE_I2CMULTIPLEXER
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1) {
+          int8_t channel = Settings.I2C_Multiplexer_Port[TaskIndex];
+          if (channel == -1){
+            stream_next_json_object_value(F("I2Cbus"),       F("Standard I2C bus"));
+          } else {
+            String i2cChannel = F("Multiplexer SD");
+            i2cChannel += String(channel);
+            i2cChannel += F("/SC");
+            i2cChannel += String(channel);
+            stream_next_json_object_value(F("I2Cbus"),       i2cChannel);
+          }
+        }
+#endif
       }
       stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
       stream_last_json_object_value(F("TaskNumber"), String(TaskIndex + 1));

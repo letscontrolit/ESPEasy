@@ -15,6 +15,14 @@ void hardwareInit();
 
 void initI2C();
 
+#ifdef FEATURE_I2CMULTIPLEXER
+void I2CMultiplexerSelect(uint8_t i);
+
+void I2CMultiplexerOff();
+
+byte I2CMultiplexerMaxChannels();
+#endif
+
 void checkResetFactoryPin();
 
 int espeasy_analogRead(int pin);

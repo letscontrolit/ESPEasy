@@ -220,6 +220,11 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
 
 
+#ifdef FEATURE_I2CMULTIPLEXER
+  if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1) {
+    Settings.I2C_Multiplexer_Port[taskIndex] = getFormItemInt(F("taskdevicei2cmuxport"), 0);
+  }
+#endif
   int pin1 = -1;
   int pin2 = -1;
   int pin3 = -1;
@@ -430,6 +435,15 @@ void handle_devicess_ShowAllTasksTable(byte page)
             switch (Device[DeviceIndex].Type) {
               case DEVICE_TYPE_I2C:
                 addHtml(F("I2C"));
+#ifdef FEATURE_I2CMULTIPLEXER
+                if (Settings.I2C_Multiplexer_Addr != -1 && Settings.I2C_Multiplexer_Port[x] != -1) {
+                  String mux = F("<BR>Multiplexer SD");
+                  mux += String(Settings.I2C_Multiplexer_Port[x]);
+                  mux += F("/SC");
+                  mux += String(Settings.I2C_Multiplexer_Port[x]);
+                  addHtml(mux);
+                }
+#endif
                 break;
               case DEVICE_TYPE_SERIAL:
               case DEVICE_TYPE_SERIAL_PLUS1:
@@ -704,6 +718,32 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       }
     }
 
+#ifdef FEATURE_I2CMULTIPLEXER
+    // Show selector for an I2C multiplexer port if a multiplexer is configured
+    if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1) {
+
+      addFormSubHeader(F("I2C Multiplexer"));
+
+      int taskDeviceI2CMuxPort = Settings.I2C_Multiplexer_Port[taskIndex];
+      String  i2c_mux_portoptions[9];
+      int     i2c_mux_portchoices[9];
+      uint8_t mux_opt = 0;
+      i2c_mux_portoptions[mux_opt] = F("(Not connected via multiplexer)");
+      i2c_mux_portchoices[mux_opt] = -1;
+      uint8_t mux_max = I2CMultiplexerMaxChannels();
+      for (int8_t x = 0; x < mux_max; x++) {
+        mux_opt++;
+        i2c_mux_portoptions[mux_opt]  = F("SD");
+        i2c_mux_portoptions[mux_opt] += String(x);
+        i2c_mux_portoptions[mux_opt] += F("/SC");
+        i2c_mux_portoptions[mux_opt] += String(x);
+
+        i2c_mux_portchoices[mux_opt]  = x;
+      }
+      if (taskDeviceI2CMuxPort >= mux_max) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
+      addFormSelector(F("Multiplexer port"), F("taskdevicei2cmuxport"), mux_opt + 1, i2c_mux_portoptions, i2c_mux_portchoices, taskDeviceI2CMuxPort);
+    }
+#endif
     // add plugins content
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) { // only show additional config for local connected sensors
       String webformLoadString;

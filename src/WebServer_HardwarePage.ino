@@ -19,6 +19,14 @@ void handle_hardware() {
     Settings.Pin_i2c_sda             = getFormItemInt(F("psda"));
     Settings.Pin_i2c_scl             = getFormItemInt(F("pscl"));
     Settings.I2C_clockSpeed          = getFormItemInt(F("pi2csp"), DEFAULT_I2C_CLOCK_SPEED);
+#ifdef FEATURE_I2CMULTIPLEXER
+    Settings.I2C_Multiplexer_Type    = getFormItemInt(F("pi2cmuxtype"));
+    if (Settings.I2C_Multiplexer_Type != -1) {
+      Settings.I2C_Multiplexer_Addr  = getFormItemInt(F("pi2cmuxaddr"));
+    } else {
+      Settings.I2C_Multiplexer_Type  = -1;
+    }
+#endif
     #ifdef ESP32
       Settings.InitSPI               = getFormItemInt(F("initspi"), 0);
     #else //for ESP8266 we keep the old UI
@@ -79,6 +87,41 @@ void handle_hardware() {
   addFormNumericBox(F("Clock Speed"), F("pi2csp"), Settings.I2C_clockSpeed, 100, 3400000);
   addUnit(F("Hz"));
   addFormNote(F("Use 100 kHz for old I2C devices, 400 kHz is max for most."));
+#ifdef FEATURE_I2CMULTIPLEXER
+  // Select tye type of multiplexer to use
+  {
+    String i2c_muxtype_options[4];
+    int    i2c_muxtype_choices[4];
+    i2c_muxtype_options[0] = F("- None -");
+    i2c_muxtype_choices[0] = 0;
+    i2c_muxtype_options[1] = F("TCA9548a - 8 channel");
+    i2c_muxtype_choices[1] = I2C_MULTIPLEXER_TCA9548A;
+    i2c_muxtype_options[2] = F("TCA9546a - 4 channel");
+    i2c_muxtype_choices[2] = I2C_MULTIPLEXER_TCA9546A;
+    i2c_muxtype_options[3] = F("PCA9540 - 2 channel (experimental)");
+    i2c_muxtype_choices[3] = I2C_MULTIPLEXER_PCA9540;
+    addFormSelector(F("I2C Multiplexer type"), F("pi2cmuxtype"), 4, i2c_muxtype_options, i2c_muxtype_choices, Settings.I2C_Multiplexer_Type);
+}
+  // Select the I2C address for a port multiplexer
+  {
+    String  i2c_mux_options[9];
+    int     i2c_mux_choices[9];
+    uint8_t mux_opt = 0;
+    i2c_mux_options[mux_opt] = F("- None -");
+    i2c_mux_choices[mux_opt] = -1;
+    for (int8_t x = 0; x < 8; x++) {
+      mux_opt++;
+      i2c_mux_options[mux_opt] = formatToHex_decimal(0x70 + x);
+      if (x == 0) { // PCA9540 has a fixed address 0f 0x70
+        i2c_mux_options[mux_opt] += F(" [TCA9546/8a, PCA9540]");
+      } else {
+        i2c_mux_options[mux_opt] += F(" [TCA9546/8a]");
+      }
+      i2c_mux_choices[mux_opt] = 0x70 + x;
+    }
+    addFormSelector(F("I2C Multiplexer address"), F("pi2cmuxaddr"), mux_opt + 1, i2c_mux_options, i2c_mux_choices, Settings.I2C_Multiplexer_Addr);
+  }
+#endif
 
   // SPI Init
   addFormSubHeader(F("SPI Interface"));

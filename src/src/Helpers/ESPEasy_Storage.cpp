@@ -219,6 +219,13 @@ String BuildFixes()
   if (Settings.Build < 20109) {
     Settings.SyslogPort = 514;
   }
+  if (Settings.Build < 20110) {
+    Settings.I2C_Multiplexer_Type = -1;
+    Settings.I2C_Multiplexer_Addr = -1;
+    for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
+      Settings.I2C_Multiplexer_Port[x] = -1;
+    }
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();

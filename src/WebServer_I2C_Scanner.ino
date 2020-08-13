@@ -14,59 +14,99 @@ void handle_i2cscanner_json() {
   json_init();
   json_open(true);
 
-  byte error, address;
   int  nDevices = 0;
 
-  for (address = 1; address <= 127; address++)
-  {
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
+#ifdef FEATURE_I2CMULTIPLEXER
+  nDevices = scanI2CbusForDevices_json(Settings.I2C_Multiplexer_Addr, -1, nDevices); // Channel -1 = standard I2C bus
+#else
+  nDevices = scanI2CbusForDevices_json(-1, -1, nDevices); // Standard scan
+#endif
 
-    if ((error == 0) || (error == 4))
-    {
-      json_open();
-      json_prop(F("addr"), String(formatToHex(address)));
-      json_number(F("status"), String(error));
-
-      if (error == 4) {
-        json_prop(F("error"), F("Unknown error at address "));
-      } else {
-        String description = getKnownI2Cdevice(address);
-
-        if (description.length() > 0) {
-          json_open(true, F("known devices"));
-          int pos = 0;
-
-          while (pos >= 0) {
-            int newpos = description.indexOf(',', pos);
-
-            if (pos != 0) {
-              addHtml(",");
-            }
-
-            if (newpos == -1) {
-              json_quote_val(description.substring(pos));
-            } else {
-              json_quote_val(description.substring(pos, newpos));
-            }
-            pos = newpos;
-
-            if (newpos != -1)
-            {
-              ++pos;
-            }
-          }
-          json_close(true);
-        }
-        nDevices++;
-      }
-      json_close();
+#ifdef FEATURE_I2CMULTIPLEXER
+  if (Settings.I2C_Multiplexer_Addr != -1) {
+    uint8_t mux_max = I2CMultiplexerMaxChannels();
+    for (uint8_t channel = 0; channel < mux_max; channel++) {
+      I2CMultiplexerSelect(channel);
+      nDevices += scanI2CbusForDevices_json(Settings.I2C_Multiplexer_Addr, channel, nDevices); // Specific channels
     }
+    I2CMultiplexerOff();
   }
+#endif
+  
   json_close(true);
   TXBuffer.endStream();
 }
 
+int scanI2CbusForDevices_json(int8_t muxAddr, int8_t channel, int nDevices) {
+  byte error, address;
+
+  for (address = 1; address <= 127; address++)
+  {
+#ifdef FEATURE_I2CMULTIPLEXER
+    if (muxAddr == -1 || channel == -1 || muxAddr != address) { // Ignore I2C multiplexer when scanning its channels
+#endif
+      Wire.beginTransmission(address);
+      error = Wire.endTransmission();
+
+      if ((error == 0) || (error == 4))
+      {
+        json_open();
+        json_prop(F("addr"), String(formatToHex(address)));
+#ifdef FEATURE_I2CMULTIPLEXER
+        if (muxAddr != -1) {
+          if (channel == -1){
+            json_prop(F("I2Cbus"), F("Standard I2C bus"));
+          } else {
+            String i2cChannel = F("Multiplexer SD");
+            i2cChannel += String(channel);
+            i2cChannel += F("/SC");
+            i2cChannel += String(channel);
+            json_prop(F("I2Cbus"), i2cChannel);
+          }
+        }
+#endif
+        json_number(F("status"), String(error));
+
+        if (error == 4) {
+          json_prop(F("error"), F("Unknown error at address "));
+        } else {
+          String description = getKnownI2Cdevice(address);
+
+          if (description.length() > 0) {
+            json_open(true, F("known devices"));
+            int pos = 0;
+
+            while (pos >= 0) {
+              int newpos = description.indexOf(',', pos);
+
+              if (pos != 0) {
+                addHtml(",");
+              }
+
+              if (newpos == -1) {
+                json_quote_val(description.substring(pos));
+              } else {
+                json_quote_val(description.substring(pos, newpos));
+              }
+              pos = newpos;
+
+              if (newpos != -1) {
+                ++pos;
+              }
+            }
+            json_close(true);
+          }
+          nDevices++;
+        }
+        json_close();
+        addHtml("\n");
+      }
+#ifdef FEATURE_I2CMULTIPLEXER
+    }
+#endif
+  }
+  return nDevices;
+}
 #endif // WEBSERVER_NEW_UI
 
 
@@ -154,20 +194,20 @@ String getKnownI2Cdevice(byte address) {
       result =  F("Adafruit Motorshield v2,SI1145");
       break;
     case 0x70:
-      result =  F("Adafruit Motorshield v2 (Catchall),HT16K33");
+      result =  F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9546/8a I2C multiplexer,PCA9540 I2C multiplexer");
       break;
     case 0x71:
     case 0x72:
     case 0x73:
     case 0x74:
     case 0x75:
-      result =  F("HT16K33");
+      result =  F("HT16K33,TCA9546/8A I2C multiplexer");
       break;
     case 0x76:
-      result =  F("BME280,BMP280,MS5607,MS5611,HT16K33");
+      result =  F("BME280,BMP280,MS5607,MS5611,HT16K33,TCA9546/8a I2C multiplexer");
       break;
     case 0x77:
-      result =  F("BMP085,BMP180,BME280,BMP280,MS5607,MS5611,HT16K33");
+      result =  F("BMP085,BMP180,BME280,BMP280,MS5607,MS5611,HT16K33,TCA9546/8a I2C multiplexer");
       break;
     case 0x7f:
       result =  F("Arduino PME");
@@ -185,37 +225,32 @@ void handle_i2cscanner() {
   sendHeadandTail_stdtemplate(_HEAD);
 
   html_table_class_multirow();
+#ifdef FEATURE_I2CMULTIPLEXER
+  if (Settings.I2C_Multiplexer_Addr != -1) {
+    html_table_header(F("I2C bus"));
+  }
+#endif
   html_table_header(F("I2C Addresses in use"));
   html_table_header(F("Supported devices"));
 
-  byte error, address;
   int  nDevices = 0;
 
-  for (address = 1; address <= 127; address++)
-  {
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
+#ifdef FEATURE_I2CMULTIPLEXER
+  nDevices = scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, -1, nDevices); // Channel -1 = standard I2C bus
+#else
+  nDevices = scanI2CbusForDevices(-1, -1, nDevices); // Standard scan
+#endif
 
-    if (error == 0)
-    {
-      html_TR_TD();
-      addHtml(formatToHex(address));
-      html_TD();
-      String description = getKnownI2Cdevice(address);
-
-      if (description.length() > 0) {
-        description.replace(",", "<BR>");
-        addHtml(description);
-      }
-      nDevices++;
+#ifdef FEATURE_I2CMULTIPLEXER
+  if (Settings.I2C_Multiplexer_Addr != -1) {
+    uint8_t mux_max = I2CMultiplexerMaxChannels();
+    for (uint8_t channel = 0; channel < mux_max; channel++) {
+      I2CMultiplexerSelect(channel);
+      nDevices += scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, channel, nDevices);
     }
-    else if (error == 4)
-    {
-      html_TR_TD();
-      addHtml(F("Unknown error at address "));
-      addHtml(formatToHex(address));
-    }
+    I2CMultiplexerOff();
   }
+#endif
 
   if (nDevices == 0) {
     addHtml(F("<TR>No I2C devices found"));
@@ -226,4 +261,54 @@ void handle_i2cscanner() {
   TXBuffer.endStream();
 }
 
+int scanI2CbusForDevices(int8_t muxAddr, int8_t channel, int nDevices) {
+  byte error, address;
+
+  for (address = 1; address <= 127; address++)
+  {
+#ifdef FEATURE_I2CMULTIPLEXER
+    if (muxAddr == -1 || channel == -1 || muxAddr != address) { // Ignore I2C multiplexer when scanning its channels
+#endif
+      Wire.beginTransmission(address);
+      error = Wire.endTransmission();
+
+      if (error == 0)
+      {
+        html_TR_TD();
+#ifdef FEATURE_I2CMULTIPLEXER
+        if (muxAddr != -1) {
+          if (channel == -1){
+            addHtml(F("Standard I2C bus"));
+          } else {
+            String i2cChannel = F("Multiplexer SD");
+            i2cChannel += String(channel);
+            i2cChannel += F("/SC");
+            i2cChannel += String(channel);
+            addHtml(i2cChannel);
+          }
+          html_TD();
+        }
+#endif
+        addHtml(formatToHex(address));
+        html_TD();
+        String description = getKnownI2Cdevice(address);
+
+        if (description.length() > 0) {
+          description.replace(",", "<BR>");
+          addHtml(description);
+        }
+        nDevices++;
+      }
+      else if (error == 4)
+      {
+        html_TR_TD();
+        addHtml(F("Unknown error at address "));
+        addHtml(formatToHex(address));
+      }
+#ifdef FEATURE_I2CMULTIPLEXER
+    }
+#endif
+  }
+  return nDevices;
+}
 #endif // WEBSERVER_I2C_SCANNER

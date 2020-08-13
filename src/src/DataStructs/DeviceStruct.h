@@ -15,6 +15,12 @@
 #define DEVICE_TYPE_SPI                    23  // connected through SPI
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
 
+#ifdef FEATURE_I2CMULTIPLEXER
+#define I2C_MULTIPLEXER_TCA9548A            0  // TCA9548a 8 channel I2C switch, addresses 0x70-0x77
+#define I2C_MULTIPLEXER_TCA9546A            1  // TCA9546a 4 channel I2C switch, addresses 0x70-0x77
+#define I2C_MULTIPLEXER_PCA9540             2  // PCA9540 2 channel I2C switch, address 0x70, different channel addressing
+#endif
+
 // Used for VType
 #define SENSOR_TYPE_NONE                    0
 #define SENSOR_TYPE_SINGLE                  1
