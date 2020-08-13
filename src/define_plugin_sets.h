@@ -703,7 +703,9 @@ To create/register a plugin, you have to :
 
 // STABLE #####################################
 #ifdef PLUGIN_SET_STABLE
-    #define USE_SERVO
+    #ifndef DONT_USE_SERVO
+        #define USE_SERVO
+    #endif
 
     #define USES_P001   // Switch
     #define USES_P002   // ADC
@@ -957,7 +959,7 @@ To create/register a plugin, you have to :
  * Remove incompatible plugins ************************************************
 \******************************************************************************/
 #ifdef PLUGIN_SET_TEST_ESP32
-  #undef USES_P010   // BH1750          (doesn't work yet on ESP32)
+//  #undef USES_P010   // BH1750          (doesn't work yet on ESP32)
 //  #undef USES_P049   // MHZ19           (doesn't work yet on ESP32)
 
 //  #undef USES_P052   // SenseAir        (doesn't work yet on ESP32)

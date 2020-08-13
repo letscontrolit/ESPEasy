@@ -41,8 +41,6 @@ uint32_t getFreeStackWatermark();
 /*
 struct ControllerSettingsStruct;
 String   getUnknownString();
-void     scheduleNextDelayQueue(unsigned long id,
-                                unsigned long nextTime);
 bool     canYield();
 */
 
@@ -103,9 +101,7 @@ bool safe_strncpy(char       *dest,
                   size_t      max_size);
 
 
-void setIntervalTimer(unsigned long id);
 void rulesProcessing(String& event);
-void schedule_notification_event_timer(byte NotificationProtocolIndex, byte Function, struct EventStruct *event);
 
 #ifdef USES_MQTT
 
@@ -161,7 +157,6 @@ uint32_t createKey(uint16_t pluginNumber, uint16_t portNumber);
 
 void sendGratuitousARP();
 bool processNextEvent();
-void rulesTimers();
 void delayedReboot(int rebootDelay);
 void sendSysInfoUDP(byte repeats);
 void refreshNodeList();
@@ -220,14 +215,13 @@ bool hasIPaddr();
 
 void delayBackground(unsigned long dsdelay);
 
-//implemented in Scheduler.ino
-//void setIntervalTimerOverride(unsigned long id, unsigned long msecFromNow);
-//void sendGratuitousARP_now();
 
 
 byte PluginCall(byte Function, struct EventStruct *event, String& str);
 bool beginWiFiUDP_randomPort(WiFiUDP& udp);
 
 uint8_t get8BitFromUL(uint32_t number, byte bitnr);
+
+void Blynk_Run_c015();
 
 #endif // ESPEASY_FWD_DECL_H

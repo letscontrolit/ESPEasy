@@ -1,4 +1,123 @@
 -------------------------------------------------
+Changes in release mega-20200812 (since mega-20200801)
+-------------------------------------------------
+
+Release date: wo 12 aug 2020 23:29:35 CEST
+
+Gijs Noorlander (19):
+      [Python] Update of python packages in requirements.txt
+      [C011] Fix incorrect load/save settings.
+      [Uncrustify] Clean up C011 code using Uncrustify.
+      [Blynk] Make C015 Blynk controller compile again
+      Include C015 in the custom build for testing
+      [GPS] Apply sanity check on received data.
+      [Rules Timer] Use scheduler for rules timer
+      [Timers] Make loop timers with fixed interval and nr of loops
+      [Docs] Add documentation for msec timers and loop timers
+      [Timers] Cleanup of timer code.
+      [Scheduler] Move global scheduler functions into C++ class
+      [Timers] Change interval timer defines into enum class
+      [Scheduler] Change plugin pointer type into enum class
+      [Dallas iButton] Enable interrupts when no sensor found
+      [Dallas] Fix NoInterrupt calls for ESP32
+      Uncrustify both Dallas plugins
+      [Dallas] Make sure function forward declaration is on one line
+      [Dallas] Add warning about the need for a pull up
+      [Docs] Update mentioned dates of introduced feature
+
+TD-er (1):
+      [Dallas] Enable interrupts when no sensor found
+
+Wiki591 (1):
+      Update URLs.rst
+
+jimmys01 (1):
+      [IR] Update Library
+
+tonhuisman (4):
+      [Docs] Update [P036] documentation that went missing
+      [P010] Changes to enable use on ESP32 (#3175)
+      [P010] Remove some left-overs from testing
+      [P010] Correction in I2C handing, and fix for old issue
+
+
+-------------------------------------------------
+Changes in release mega-20200801 (since mega-20200721)
+-------------------------------------------------
+
+Release date: za  1 aug 2020 16:27:55 CEST
+
+Chris-1965 (14):
+      Fonts usage added
+      minor formatting
+      minor
+      updated suggested requests
+      chneged requested items from last pull request
+      comment on pins added
+      added cusrom-sample-h file to repository
+      updated doc files
+      also in ino file -> docs adapted
+      new update
+      changed fonts can disabled by define, font names instead of numbers
+      resolved a bug : commands other than tft were all sucussfull. Also the output log moved in else otherwise message appears for all commands
+      platformio changed
+      Changed naming as proposed
+
+Gijs Noorlander (25):
+      [Framed OLED] Add checks for display initialized
+      [P036_FramedOLED] Reduce stack and heap memory usage
+      [Web form] Force value in number field within given range
+      [P036_FramedOLED] Uncrustify source code
+      [Framed OLED] Move plugin data to separate .h/.cpp
+      [Framed OLED] Clean up code + use temp. object for load/save lines
+      [e-ink] Include LOLIN_EPD in the lib_deps to make it compile
+      [Alternate WiFi] Use different SDK build for nodes with WiFi issues (#2931)
+      [GCC 10] Fix compile issues with GCC 10.1
+      [Cleanup] Move RTC struct code to .h/.cpp
+      [Build] Remove test VCC MDNS SD build from Travis build
+      Fix build errors
+      [ESP32] Fix build issue (spiffs.h vs SPIFFS.h)
+      [ESP32 build] Fix build issues with lots of lib_ignore set (#3083)
+      [Docs] Document /json and /csv URLs
+      [Arduino] Update to core 2.7.3
+      [SDK] Disable alt_wifi  and use SDK22x_191122 for all builds
+      [Travis] Split builds in several jobs
+      [Build] Do not  generate .bin.gz for 1M builds as no support 2-step OTA
+      [Build] Revert back to SDK22x_190703 + alt_wifi build
+      [Build] Disable custom_alt_wifi_ESP8266_1M as it is too large
+      [Build] Fix using GCC 10.1 toolchain
+      [core_3.0.0 alpha] Fix build issue analog PWMRANGE
+      Fix build issue on ESP32 finding SPIFFS.h
+      [Travis] Enable some core 3.0.0 alpha (*_beta_*) builds
+
+Jean-Michel DECORET (6):
+      Add eInk plugin
+      Add SPI device type
+      Optimize code:  - remove unwanted output - move http answer only in debug mode - fix functions args to const - optimize parsing color data
+      Remove useless comments Use BUILD_NO_DEBUG define Add display timings Fix input text to handle degress and monetary symbols (specific for adafruit gfx lib with eink screen)
+      Fix documentation typo
+      Fix documentation typo
+
+Michael Schröder (1):
+      Decrease the longpress min interval to 500ms
+
+tonhuisman (4):
+      [Build] Add P029 to PLUGIN_SET_ONLY_SWITCH
+      [Build] Enable P029 for hard_shelly builds
+      [Build] Move USES_DOMOTICZ logic together and in a more useful order
+      [Build] Remove superfluous #defines
+
+uwekaditz (7):
+      merged Release mega-20200328
+      [P036] Memory optimization (issue #2799)
+      [P036] temporary pointer to P036_data_struct was not deleted
+      [P036] merged with Tonis PR #3026
+      [P036] re-schedule Settings.TaskDeviceTimer after JumpToPage
+      [P036] clearing window for scrolling lines was 1pix too large in y direction
+      [P036] Fixed: display_indicator() crashed
+
+
+-------------------------------------------------
 Changes in release mega-20200721 (since mega-20200720)
 -------------------------------------------------
 

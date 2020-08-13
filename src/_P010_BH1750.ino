@@ -1,13 +1,14 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P010
 //#######################################################################################################
 //#################################### Plugin-010: LuxRead   ############################################
 //#######################################################################################################
 
-#include "_Plugin_Helper.h"
 
-#ifdef ESP8266  // Needed for precompile issues.
+//#ifdef ESP8266  // Needed for precompile issues.
 #include "AS_BH1750.h"
-#endif
+//#endif
 
 #define PLUGIN_010
 #define PLUGIN_ID_010         10

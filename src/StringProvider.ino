@@ -4,6 +4,8 @@
 #include "ETH.h"
 #endif
 
+#include "src/Globals/ESPEasy_Scheduler.h"
+
 #include "src/Helpers/CompiletimeDefines.h"
 #include "src/Helpers/Scheduler.h"
 
@@ -156,7 +158,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
     case LabelType::RESET_REASON:           return getResetReasonString();
-    case LabelType::LAST_TASK_BEFORE_REBOOT: return decodeSchedulerId(lastMixedSchedulerId_beforereboot);
+    case LabelType::LAST_TASK_BEFORE_REBOOT: return ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     case LabelType::SW_WD_COUNT:            return String(sw_watchdog_callback_count);
 
     case LabelType::WIFI_CONNECTION:        break;

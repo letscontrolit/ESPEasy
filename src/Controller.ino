@@ -6,6 +6,7 @@
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Protocol.h"
@@ -112,7 +113,7 @@ void callback(char *c_topic, byte *b_payload, unsigned int length) {
 
   // TD-er: This one cannot set the TaskIndex, but that may seem to work out.... hopefully.
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(enabledMqttController);
-  schedule_mqtt_controller_event_timer(
+  Scheduler.schedule_mqtt_controller_event_timer(
     ProtocolIndex, 
     CPlugin::Function::CPLUGIN_PROTOCOL_RECV,
     c_topic, b_payload, length);

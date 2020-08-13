@@ -28,6 +28,13 @@ boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
                                   struct EventStruct *,
                                   String&);
 
+void clearUserVar() {
+  for (size_t i = 0; i < sizeof(UserVar) / sizeof(float); ++i) {
+    UserVar[i] = 0.0;
+  }
+}
+
+
 
 bool validDeviceIndex(deviceIndex_t index) {
   if (index < PLUGIN_MAX) {

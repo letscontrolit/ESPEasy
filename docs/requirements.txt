@@ -1,5 +1,5 @@
 recommonmark==0.6.0
-Sphinx==3.1.1
+Sphinx==3.1.2
 sphinx-autobuild==0.7.1
 sphinx-bootstrap-theme==0.7.1
 sphinxcontrib-applehelp==1.0.2
@@ -8,4 +8,4 @@ sphinxcontrib-htmlhelp==1.0.3
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.4
-sphinxcontrib-websupport==1.2.2
+sphinxcontrib-websupport==1.2.3
