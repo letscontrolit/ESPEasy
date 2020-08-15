@@ -155,7 +155,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 
             unsigned long old_key = ((uint32_t) UserVar[event->BaseVarIndex]) | ((uint32_t) UserVar[event->BaseVarIndex + 1])<<16;
             bool new_key = false;
-            if (PCONFIG(1)) {
+            if (PCONFIG(1) == 1) {
               Plugin_008_keyBuffer = castHexAsDec(Plugin_008_keyBuffer);
             }
             
