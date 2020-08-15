@@ -209,7 +209,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
           optionValues[0] = 26;
           optionValues[1] = 34;
           addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
-          bool presentHexToDec = PCONFIG(1);
+          bool presentHexToDec = PCONFIG(1) == 1;
           addFormCheckBox(F("Present hex as decimal value"), F("p008_hexasdec"), presentHexToDec);
           addFormNote(F("Useful only for numeric keypad input!"));
           success = true;
@@ -219,7 +219,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       case PLUGIN_WEBFORM_SAVE:
         {
           PCONFIG(0) = getFormItemInt(F("p008_type"));
-          PCONFIG(1) = getFormItemInt(F("p008_hexasdec"));
+          PCONFIG(1) = isFormItemChecked(F("p008_hexasdec")) ? 1 : 0;
           success = true;
           break;
         }
