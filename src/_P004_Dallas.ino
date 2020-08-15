@@ -12,7 +12,7 @@
 
 // https://github.com/espressif/arduino-esp32/issues/1335
 uint8_t Plugin_004_DS_read_bit(int8_t Plugin_004_DallasPin) ICACHE_RAM_ATTR;
-void Plugin_004_DS_write_bit(uint8_t v, int8_t Plugin_004_DallasPin) ICACHE_RAM_ATTR;
+void    Plugin_004_DS_write_bit(uint8_t v, int8_t  Plugin_004_DallasPin) ICACHE_RAM_ATTR;
 
 #endif // if defined(ESP32)
 
@@ -77,6 +77,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormNote(F("External pull up resistor is needed, see docs!"));
+
       uint8_t savedAddress[8];
       byte    resolutionChoice = 0;
 
@@ -180,7 +182,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
       if (Plugin_004_DallasPin != -1) {
         Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis();
-        Plugin_004_newValue[event->TaskIndex] = false;
+        Plugin_004_newValue[event->TaskIndex]        = false;
       }
       success = true;
       break;
@@ -196,55 +198,55 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_004_DallasPin != -1) {
           if (!timeOutReached(Plugin_004_timeoutGPIO[Plugin_004_DallasPin])){
-              schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
+              Scheduler.schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
           } else {
-          if (!Plugin_004_newValue[event->TaskIndex]){
+            if (!Plugin_004_newValue[event->TaskIndex]) {
               Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
-              schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
+              Scheduler.schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
               Plugin_004_newValue[event->TaskIndex] = true;
-          } else {
-          Plugin_004_newValue[event->TaskIndex] = false;
-          float  value = 0;
-          String log   = F("DS   : Temperature: ");
+            } else {
+              Plugin_004_newValue[event->TaskIndex] = false;
+              float  value = 0;
+              String log   = F("DS   : Temperature: ");
 
-          if (Plugin_004_DS_readTemp(addr, &value, Plugin_004_DallasPin))
-          {
-            UserVar[event->BaseVarIndex] = value;
-            log                         += UserVar[event->BaseVarIndex];
-            success                      = true;
-          }
-          else
-          {
-            if (PCONFIG(0) != P004_ERROR_IGNORE) {
-              float errorValue = NAN;
-
-              switch (PCONFIG(0)) {
-                case P004_ERROR_MIN_RANGE: errorValue = -127; break;
-                case P004_ERROR_ZERO:      errorValue = 0; break;
-                case P004_ERROR_MAX_RANGE: errorValue = 125; break;
-                default:
-                  break;
+              if (Plugin_004_DS_readTemp(addr, &value, Plugin_004_DallasPin))
+              {
+                UserVar[event->BaseVarIndex] = value;
+                log                         += UserVar[event->BaseVarIndex];
+                success                      = true;
               }
-              UserVar[event->BaseVarIndex] = errorValue;
+              else
+              {
+                if (PCONFIG(0) != P004_ERROR_IGNORE) {
+                  float errorValue = NAN;
+
+                  switch (PCONFIG(0)) {
+                    case P004_ERROR_MIN_RANGE: errorValue = -127; break;
+                    case P004_ERROR_ZERO:      errorValue = 0; break;
+                    case P004_ERROR_MAX_RANGE: errorValue = 125; break;
+                    default:
+                      break;
+                  }
+                  UserVar[event->BaseVarIndex] = errorValue;
+                }
+                log += F("Error!");
+              }
+
+              log += F(" (");
+
+              for (byte x = 0; x < 8; x++)
+              {
+                if (x != 0) {
+                  log += '-';
+                }
+                log += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+              }
+
+              log += ')';
+              addLog(LOG_LEVEL_INFO, log);
             }
-            log += F("Error!");
-          }
-
-          log += F(" (");
-
-          for (byte x = 0; x < 8; x++)
-          {
-            if (x != 0) {
-              log += '-';
-            }
-            log += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
-          }
-
-          log += ')';
-          addLog(LOG_LEVEL_INFO, log);
           }
         }
-      }
       }
       break;
     }
@@ -264,8 +266,8 @@ void Plugin_004_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
 
 void Plugin_004_set_timeout(int res, int8_t Plugin_004_DallasPin)
 {
-  if (res < 9 || res >12)  res = 12;
-  Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis()+(800/(1<<(12-res)));
+  if ((res < 9) || (res > 12)) { res = 12; }
+  Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis() + (800 / (1 << (12 - res)));
 }
 
 /*********************************************************************************************\
@@ -495,28 +497,31 @@ uint8_t Plugin_004_DS_reset(int8_t Plugin_004_DallasPin)
   ESP32noInterrupts();
     #endif // if defined(ESP32)
   pinMode(Plugin_004_DallasPin, INPUT);
+  bool success = true;
 
   do // wait until the wire is high... just in case
   {
     if (--retries == 0) {
-      return 0;
+      success = false;
     }
     delayMicroseconds(2);
   }
-  while (!digitalRead(Plugin_004_DallasPin));
+  while (!digitalRead(Plugin_004_DallasPin) && success);
 
-  digitalWrite(Plugin_004_DallasPin, LOW);
-  pinMode(Plugin_004_DallasPin, OUTPUT);
-  delayMicroseconds(500);
-  pinMode(Plugin_004_DallasPin, INPUT); // Float
+  if (success) {
+    digitalWrite(Plugin_004_DallasPin, LOW);
+    pinMode(Plugin_004_DallasPin, OUTPUT);
+    delayMicroseconds(500);
+    pinMode(Plugin_004_DallasPin, INPUT); // Float
 
-  for (uint8_t i = 0; i < 45; i++)      // 480us RX minimum
-  {
-    delayMicroseconds(15);
+    for (uint8_t i = 0; i < 45; i++)      // 480us RX minimum
+    {
+      delayMicroseconds(15);
 
-    if (!digitalRead(Plugin_004_DallasPin)) {
-      r                     = 1;
-      Plugin_004_reset_time = i;
+      if (!digitalRead(Plugin_004_DallasPin)) {
+        r                     = 1;
+        Plugin_004_reset_time = i;
+      }
     }
   }
     #if defined(ESP32)
@@ -808,10 +813,9 @@ boolean Plugin_004_DS_crc8(uint8_t *addr)
   return crc == *addr; // addr 8
 }
 
-
 #if defined(ESP32)
-  #undef ESP32noInterrupts
-  #undef ESP32interrupts
-#endif
+  # undef ESP32noInterrupts
+  # undef ESP32interrupts
+#endif // if defined(ESP32)
 
 #endif // USES_P004

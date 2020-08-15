@@ -637,7 +637,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
     {
       success = C018_DelayHandler.addToQueue(
         C018_queue_element(event, C018_data.getSampleSetCount(event->TaskIndex)));
-      scheduleNextDelayQueue(TIMER_C018_DELAY_QUEUE, C018_DelayHandler.getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C018_DELAY_QUEUE, C018_DelayHandler.getNextScheduleTime());
       if (!C018_data.isInitialized()) {
         // Sometimes the module does need some time after power on to respond.
         // So it may not be initialized well at the call of CPLUGIN_INIT

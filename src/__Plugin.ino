@@ -1,4 +1,5 @@
 #include "src/Globals/Device.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
@@ -1283,7 +1284,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
               if (Function == PLUGIN_INIT) {
                 // Schedule the plugin to be read.
-                schedule_task_device_timer_at_init(TempEvent.TaskIndex);
+                Scheduler.schedule_task_device_timer_at_init(TempEvent.TaskIndex);
               }
               START_TIMER;
               Plugin_ptr[DeviceIndex](Function, &TempEvent, str);
@@ -1317,7 +1318,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
       if (validDeviceIndex(DeviceIndex)) {
         if (Function == PLUGIN_INIT) {
           // Schedule the plugin to be read.
-          schedule_task_device_timer_at_init(event->TaskIndex);
+          Scheduler.schedule_task_device_timer_at_init(event->TaskIndex);
         }
 
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
