@@ -23,7 +23,6 @@ To create/register a plugin, you have to :
 */
 
 //#define FEATURE_SD
-#define FEATURE_I2CMULTIPLEXER
 
 /******************************************************************************\
  * WebServer pages   **********************************************************
@@ -226,6 +225,10 @@ To create/register a plugin, you have to :
     #define  CONTROLLER_SET_STABLE
     #define  NOTIFIER_SET_STABLE
 
+    #ifndef FEATURE_I2CMULTIPLEXER
+        #define FEATURE_I2CMULTIPLEXER
+    #endif
+
     #ifndef BUILD_NO_DEBUG
       #define BUILD_NO_DEBUG
     #endif
@@ -366,9 +369,6 @@ To create/register a plugin, you have to :
     #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
     #define USES_P035      // IRTX
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
-    #ifdef FEATURE_I2CMULTIPLEXER
-        #undef FEATURE_I2CMULTIPLEXER
-    #endif
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED
@@ -385,9 +385,6 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     #define USES_P029      // Output - Domoticz MQTT Helper
     #define PLUGIN_SET_ONLY_TEMP_HUM
-    #ifdef FEATURE_I2CMULTIPLEXER
-        #undef FEATURE_I2CMULTIPLEXER
-    #endif
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
@@ -399,9 +396,6 @@ To create/register a plugin, you have to :
     #define P016_P035_Extended_AC
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
     #define USES_P088      //ToniA IR plugin
-    #ifdef FEATURE_I2CMULTIPLEXER
-        #undef FEATURE_I2CMULTIPLEXER
-    #endif
 #endif
 
 /******************************************************************************\
@@ -589,9 +583,6 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USES_P037
         #define USES_P037   // MQTTImport
-    #endif
-    #ifdef FEATURE_I2CMULTIPLEXER
-        #undef FEATURE_I2CMULTIPLEXER
     #endif
 #endif
 

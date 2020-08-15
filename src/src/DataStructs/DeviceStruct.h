@@ -21,6 +21,9 @@
 #define I2C_MULTIPLEXER_PCA9540             2  // PCA9540 2 channel I2C switch, address 0x70, different channel addressing
 #endif
 
+#define I2C_FLAGS_SLOW_SPEED                0  // Force slow speed when this flag is set
+#define I2C_FLAGS_MUX_MULTICHANNEL          1  // Allow multiple multiplexer channels when set
+
 // Used for VType
 #define SENSOR_TYPE_NONE                    0
 #define SENSOR_TYPE_SINGLE                  1

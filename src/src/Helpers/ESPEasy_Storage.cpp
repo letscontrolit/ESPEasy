@@ -176,7 +176,7 @@ String BuildFixes()
     Settings.OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   }
   if (Settings.Build < 20105) {
-    Settings.I2C_clockSpeed = 400000;
+    Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
   }
   if (Settings.Build <= 20106) {
     // ClientID is now defined in the controller settings.
@@ -220,11 +220,13 @@ String BuildFixes()
     Settings.SyslogPort = 514;
   }
   if (Settings.Build < 20110) {
+    Settings.I2C_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
     Settings.I2C_Multiplexer_Type = -1;
     Settings.I2C_Multiplexer_Addr = -1;
     for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
       Settings.I2C_Multiplexer_Port[x] = -1;
     }
+    Settings.I2C_Multiplexer_ResetPin = -1;
   }
 
   Settings.Build = BUILD;

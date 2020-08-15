@@ -327,14 +327,29 @@ void handle_json()
 #ifdef FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1) {
           int8_t channel = Settings.I2C_Multiplexer_Port[TaskIndex];
-          if (channel == -1){
-            stream_next_json_object_value(F("I2Cbus"),       F("Standard I2C bus"));
+          if (bitRead(Settings.I2C_Flags[TaskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
+            addHtml(F("\"I2CBus\" : [\n"));
+            for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(); c++) {
+              if (bitRead(channel, c)) {
+                String i2cChannel = F("Multiplexer SD");
+                i2cChannel += String(c);
+                i2cChannel += F("/SC");
+                i2cChannel += String(c);
+                addHtml(i2cChannel);
+                addHtml(F(",\n"));
+              }
+            }
+            addHtml(F("],\n"));
           } else {
-            String i2cChannel = F("Multiplexer SD");
-            i2cChannel += String(channel);
-            i2cChannel += F("/SC");
-            i2cChannel += String(channel);
-            stream_next_json_object_value(F("I2Cbus"),       i2cChannel);
+            if (channel == -1){
+              stream_next_json_object_value(F("I2Cbus"),       F("Standard I2C bus"));
+            } else {
+              String i2cChannel = F("Multiplexer SD");
+              i2cChannel += String(channel);
+              i2cChannel += F("/SC");
+              i2cChannel += String(channel);
+              stream_next_json_object_value(F("I2Cbus"),       i2cChannel);
+            }
           }
         }
 #endif

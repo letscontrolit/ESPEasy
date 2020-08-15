@@ -61,7 +61,7 @@ void run_compiletime_checks() {
   #ifndef LIMIT_BUILD_SIZE
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
-  const unsigned int SettingsStructSize = (276 + 82 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (285 + 84 * TASKS_MAX);
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
   #ifdef USES_NOTIFIER

@@ -220,11 +220,31 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
 
 
+  uint8_t flags = 0;
+  if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
+    bitWrite(flags, 0, isFormItemChecked(F("taskdeviceflags0")));
+  }
 #ifdef FEATURE_I2CMULTIPLEXER
   if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1) {
-    Settings.I2C_Multiplexer_Port[taskIndex] = getFormItemInt(F("taskdevicei2cmuxport"), 0);
+    int multipleMuxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0);
+    bitWrite(flags, 1, multipleMuxPortsOption == 1);
+    if (multipleMuxPortsOption == 1) {
+      uint8_t selectedPorts = 0;
+      for (uint8_t x = 0; x < I2CMultiplexerMaxChannels(); x++) {
+        String id = F("taskdeviceflag1ch");
+        id += String(x);
+        bitWrite(selectedPorts, x, isFormItemChecked(id));
+      }
+      Settings.I2C_Multiplexer_Port[taskIndex] = selectedPorts;
+    } else {
+      Settings.I2C_Multiplexer_Port[taskIndex] = getFormItemInt(F("taskdevicei2cmuxport"), 0);
+    }
   }
 #endif
+  if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
+    Settings.I2C_Flags[taskIndex] = flags;
+  }
+
   int pin1 = -1;
   int pin2 = -1;
   int pin3 = -1;
@@ -436,11 +456,27 @@ void handle_devicess_ShowAllTasksTable(byte page)
               case DEVICE_TYPE_I2C:
                 addHtml(F("I2C"));
 #ifdef FEATURE_I2CMULTIPLEXER
-                if (Settings.I2C_Multiplexer_Addr != -1 && Settings.I2C_Multiplexer_Port[x] != -1) {
-                  String mux = F("<BR>Multiplexer SD");
-                  mux += String(Settings.I2C_Multiplexer_Port[x]);
-                  mux += F("/SC");
-                  mux += String(Settings.I2C_Multiplexer_Port[x]);
+                if (Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(x)) {
+                  String mux;
+                  if (bitRead(Settings.I2C_Flags[x], I2C_FLAGS_MUX_MULTICHANNEL)) {    // Multi-channel
+                    mux = F("<BR>Multiplexer channel(s)");
+                    uint8_t b = 0;  // For adding lineBreaks
+                    for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(); c++) {
+                      if (bitRead(Settings.I2C_Multiplexer_Port[x], c)) {
+                        mux += b % 4 == 0 ? F("<BR>") : F(" ");
+                        b++;
+                        mux += F("SD");
+                        mux += String(c);
+                        mux += F("/SC");
+                        mux += String(c);
+                      }
+                    }
+                  } else {    // Single channel
+                    mux = F("<BR>Multiplexer SD");
+                    mux += String(Settings.I2C_Multiplexer_Port[x]);
+                    mux += F("/SC");
+                    mux += String(Settings.I2C_Multiplexer_Port[x]);
+                  }
                   addHtml(mux);
                 }
 #endif
@@ -718,32 +754,78 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       }
     }
 
+    if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
+
+      addFormSubHeader(F("I2C options"));
+
+      addFormCheckBox(F("Force Slow I2C speed"), F("taskdeviceflags0"), bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED));
+    }
 #ifdef FEATURE_I2CMULTIPLEXER
     // Show selector for an I2C multiplexer port if a multiplexer is configured
     if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1) {
-
-      addFormSubHeader(F("I2C Multiplexer"));
-
-      int taskDeviceI2CMuxPort = Settings.I2C_Multiplexer_Port[taskIndex];
-      String  i2c_mux_portoptions[9];
-      int     i2c_mux_portchoices[9];
-      uint8_t mux_opt = 0;
-      i2c_mux_portoptions[mux_opt] = F("(Not connected via multiplexer)");
-      i2c_mux_portchoices[mux_opt] = -1;
-      uint8_t mux_max = I2CMultiplexerMaxChannels();
-      for (int8_t x = 0; x < mux_max; x++) {
-        mux_opt++;
-        i2c_mux_portoptions[mux_opt]  = F("SD");
-        i2c_mux_portoptions[mux_opt] += String(x);
-        i2c_mux_portoptions[mux_opt] += F("/SC");
-        i2c_mux_portoptions[mux_opt] += String(x);
-
-        i2c_mux_portchoices[mux_opt]  = x;
+      bool multipleMuxPorts = bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
+      {
+        String i2c_mux_channels[2];
+        int    i2c_mux_channelOptions[2];
+        int    i2c_mux_channelCount = 1;
+        i2c_mux_channels[0] = F("Single channel");
+        i2c_mux_channelOptions[0] = 0;
+        if (Settings.I2C_Multiplexer_Type == I2C_MULTIPLEXER_PCA9540) {
+          multipleMuxPorts = false; // force off
+        } else {
+          i2c_mux_channels[1] = F("Multiple channels");
+          i2c_mux_channelOptions[1] = 1;
+          i2c_mux_channelCount++;
+        }
+        addFormSelector(F("Multiplexer channels"),F("taskdeviceflags1"), i2c_mux_channelCount, i2c_mux_channels, i2c_mux_channelOptions, multipleMuxPorts ? 1 : 0, true);
       }
-      if (taskDeviceI2CMuxPort >= mux_max) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
-      addFormSelector(F("Multiplexer port"), F("taskdevicei2cmuxport"), mux_opt + 1, i2c_mux_portoptions, i2c_mux_portchoices, taskDeviceI2CMuxPort);
+      if (multipleMuxPorts) {
+          addRowLabel(F("Select connections"), F(""));
+          html_table(F(""), false);  // Sub-table
+          html_table_header(F("Channel"));
+          html_table_header(F("Enable"));
+          html_table_header(F("Channel"));
+          html_table_header(F("Enable"));
+          for (uint8_t x = 0; x < I2CMultiplexerMaxChannels(); x++) {
+            String label = F("SD");
+            label += String(x);
+            label += F("/SC");
+            label += String(x);
+            String id = F("taskdeviceflag1ch");
+            id += String(x);
+            if (x % 2 == 0) { html_TR(); }  // Start a new row for every 2 channels
+            html_TD();
+            addHtml(label);
+            html_TD();
+            addCheckBox(id, bitRead(Settings.I2C_Multiplexer_Port[taskIndex], x), false);
+          }
+          html_end_table();
+      } else {
+        int taskDeviceI2CMuxPort = Settings.I2C_Multiplexer_Port[taskIndex];
+        String  i2c_mux_portoptions[9];
+        int     i2c_mux_portchoices[9];
+        uint8_t mux_opt = 0;
+        i2c_mux_portoptions[mux_opt] = F("(Not connected via multiplexer)");
+        i2c_mux_portchoices[mux_opt] = -1;
+        uint8_t mux_max = I2CMultiplexerMaxChannels();
+        for (int8_t x = 0; x < mux_max; x++) {
+          mux_opt++;
+          i2c_mux_portoptions[mux_opt]  = F("SD");
+          i2c_mux_portoptions[mux_opt] += String(x);
+          i2c_mux_portoptions[mux_opt] += F("/SC");
+          i2c_mux_portoptions[mux_opt] += String(x);
+
+          i2c_mux_portchoices[mux_opt]  = x;
+        }
+        if (taskDeviceI2CMuxPort >= mux_max) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
+        addFormSelector(F("Connected to"), F("taskdevicei2cmuxport"), mux_opt + 1, i2c_mux_portoptions, i2c_mux_portchoices, taskDeviceI2CMuxPort);
+      }
     }
 #endif
+    
+    if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
+      addFormSubHeader(F("Device settings"));
+    }
     // add plugins content
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) { // only show additional config for local connected sensors
       String webformLoadString;

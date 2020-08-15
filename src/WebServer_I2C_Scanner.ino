@@ -5,45 +5,30 @@
 // ********************************************************************************
 // Web Interface I2C scanner
 // ********************************************************************************
-void handle_i2cscanner_json() {
-  checkRAM(F("handle_i2cscanner"));
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startJsonStream();
-  json_init();
-  json_open(true);
-
-  int  nDevices = 0;
-
+int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for valid devices, with JSON output
+        int8_t muxAddr
+      , int8_t channel
+      , int nDevices
 #ifdef FEATURE_I2CMULTIPLEXER
-  nDevices = scanI2CbusForDevices_json(Settings.I2C_Multiplexer_Addr, -1, nDevices); // Channel -1 = standard I2C bus
-#else
-  nDevices = scanI2CbusForDevices_json(-1, -1, nDevices); // Standard scan
+      , String &excludeDevices
 #endif
-
-#ifdef FEATURE_I2CMULTIPLEXER
-  if (Settings.I2C_Multiplexer_Addr != -1) {
-    uint8_t mux_max = I2CMultiplexerMaxChannels();
-    for (uint8_t channel = 0; channel < mux_max; channel++) {
-      I2CMultiplexerSelect(channel);
-      nDevices += scanI2CbusForDevices_json(Settings.I2C_Multiplexer_Addr, channel, nDevices); // Specific channels
-    }
-    I2CMultiplexerOff();
-  }
-#endif
-  
-  json_close(true);
-  TXBuffer.endStream();
-}
-
-int scanI2CbusForDevices_json(int8_t muxAddr, int8_t channel, int nDevices) {
+) {
   byte error, address;
+#ifdef FEATURE_I2CMULTIPLEXER
+  bool skipCheck = false;
+#endif
 
   for (address = 1; address <= 127; address++)
   {
 #ifdef FEATURE_I2CMULTIPLEXER
-    if (muxAddr == -1 || channel == -1 || muxAddr != address) { // Ignore I2C multiplexer when scanning its channels
+    if (channel != -1 && excludeDevices.length() != 0) {
+      String toFind = F("|");
+      toFind += String(address);
+      toFind += F("|");
+      skipCheck = (excludeDevices.indexOf(toFind) != -1);
+    }
+    if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
 #endif
       Wire.beginTransmission(address);
       error = Wire.endTransmission();
@@ -56,6 +41,9 @@ int scanI2CbusForDevices_json(int8_t muxAddr, int8_t channel, int nDevices) {
         if (muxAddr != -1) {
           if (channel == -1){
             json_prop(F("I2Cbus"), F("Standard I2C bus"));
+            excludeDevices += F("|");
+            excludeDevices += String(address);
+            excludeDevices += F("|");
           } else {
             String i2cChannel = F("Multiplexer SD");
             i2cChannel += String(channel);
@@ -107,10 +95,45 @@ int scanI2CbusForDevices_json(int8_t muxAddr, int8_t channel, int nDevices) {
   }
   return nDevices;
 }
+
+void handle_i2cscanner_json() {
+  checkRAM(F("handle_i2cscanner"));
+
+  if (!isLoggedIn()) { return; }
+  navMenuIndex = MENU_INDEX_TOOLS;
+  TXBuffer.startJsonStream();
+  json_init();
+  json_open(true);
+
+  int  nDevices = 0;
+
+  I2CSelectClockSpeed(true);    // Always scan in low speed to also find old/slow devices
+#ifdef FEATURE_I2CMULTIPLEXER
+  String mainBusDevices;
+  mainBusDevices.reserve(32);
+  nDevices = scanI2CbusForDevices_json(Settings.I2C_Multiplexer_Addr, -1, nDevices, mainBusDevices); // Channel -1 = standard I2C bus
+#else
+  nDevices = scanI2CbusForDevices_json(-1, -1, nDevices); // Standard scan
+#endif
+
+#ifdef FEATURE_I2CMULTIPLEXER
+  if (Settings.I2C_Multiplexer_Addr != -1) {
+    uint8_t mux_max = I2CMultiplexerMaxChannels();
+    for (uint8_t channel = 0; channel < mux_max; channel++) {
+      I2CMultiplexerSelect(channel);
+      nDevices += scanI2CbusForDevices_json(Settings.I2C_Multiplexer_Addr, channel, nDevices, mainBusDevices); // Specific channels
+    }
+    I2CMultiplexerOff();
+  }
+#endif
+  I2CSelectClockSpeed(false); // Reset bus to standard speed
+  
+  json_close(true);
+  TXBuffer.endStream();
+}
 #endif // WEBSERVER_NEW_UI
 
 
-// FIXME TD-er: Query all included plugins for their supported addresses (return name of plugin)
 String getKnownI2Cdevice(byte address) {
   String result;
 
@@ -216,58 +239,29 @@ String getKnownI2Cdevice(byte address) {
   return result;
 }
 
-void handle_i2cscanner() {
-  checkRAM(F("handle_i2cscanner"));
-
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
-
-  html_table_class_multirow();
+int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid devices, with HTML table output
+        int8_t muxAddr
+      , int8_t channel
+      , int nDevices
 #ifdef FEATURE_I2CMULTIPLEXER
-  if (Settings.I2C_Multiplexer_Addr != -1) {
-    html_table_header(F("I2C bus"));
-  }
+      , String &excludeDevices
 #endif
-  html_table_header(F("I2C Addresses in use"));
-  html_table_header(F("Supported devices"));
-
-  int  nDevices = 0;
-
-#ifdef FEATURE_I2CMULTIPLEXER
-  nDevices = scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, -1, nDevices); // Channel -1 = standard I2C bus
-#else
-  nDevices = scanI2CbusForDevices(-1, -1, nDevices); // Standard scan
-#endif
-
-#ifdef FEATURE_I2CMULTIPLEXER
-  if (Settings.I2C_Multiplexer_Addr != -1) {
-    uint8_t mux_max = I2CMultiplexerMaxChannels();
-    for (uint8_t channel = 0; channel < mux_max; channel++) {
-      I2CMultiplexerSelect(channel);
-      nDevices += scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, channel, nDevices);
-    }
-    I2CMultiplexerOff();
-  }
-#endif
-
-  if (nDevices == 0) {
-    addHtml(F("<TR>No I2C devices found"));
-  }
-
-  html_end_table();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
-}
-
-int scanI2CbusForDevices(int8_t muxAddr, int8_t channel, int nDevices) {
+) {
   byte error, address;
+#ifdef FEATURE_I2CMULTIPLEXER
+  bool skipCheck = false;
+#endif
 
   for (address = 1; address <= 127; address++)
   {
 #ifdef FEATURE_I2CMULTIPLEXER
-    if (muxAddr == -1 || channel == -1 || muxAddr != address) { // Ignore I2C multiplexer when scanning its channels
+    if (channel != -1 && excludeDevices.length() != 0) {
+      String toFind = F("|");
+      toFind += String(address);
+      toFind += F("|");
+      skipCheck = (excludeDevices.indexOf(toFind) != -1);
+    }
+    if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
 #endif
       Wire.beginTransmission(address);
       error = Wire.endTransmission();
@@ -279,6 +273,9 @@ int scanI2CbusForDevices(int8_t muxAddr, int8_t channel, int nDevices) {
         if (muxAddr != -1) {
           if (channel == -1){
             addHtml(F("Standard I2C bus"));
+            excludeDevices += F("|");
+            excludeDevices += String(address);
+            excludeDevices += F("|");
           } else {
             String i2cChannel = F("Multiplexer SD");
             i2cChannel += String(channel);
@@ -310,5 +307,54 @@ int scanI2CbusForDevices(int8_t muxAddr, int8_t channel, int nDevices) {
 #endif
   }
   return nDevices;
+}
+
+// FIXME TD-er: Query all included plugins for their supported addresses (return name of plugin)
+void handle_i2cscanner() {
+  checkRAM(F("handle_i2cscanner"));
+
+  if (!isLoggedIn()) { return; }
+  navMenuIndex = MENU_INDEX_TOOLS;
+  TXBuffer.startStream();
+  sendHeadandTail_stdtemplate(_HEAD);
+
+  html_table_class_multirow();
+#ifdef FEATURE_I2CMULTIPLEXER
+  if (Settings.I2C_Multiplexer_Addr != -1) {
+    html_table_header(F("I2C bus"));
+  }
+#endif
+  html_table_header(F("I2C Addresses in use"));
+  html_table_header(F("Supported devices"));
+
+  int  nDevices = 0;
+  I2CSelectClockSpeed(true);  // Scan bus using low speed
+#ifdef FEATURE_I2CMULTIPLEXER
+  String mainBusDevices;
+  mainBusDevices.reserve(32);
+  nDevices = scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, -1, nDevices, mainBusDevices); // Channel -1 = standard I2C bus
+#else
+  nDevices = scanI2CbusForDevices(-1, -1, nDevices); // Standard scan
+#endif
+
+#ifdef FEATURE_I2CMULTIPLEXER
+  if (Settings.I2C_Multiplexer_Addr != -1) {
+    uint8_t mux_max = I2CMultiplexerMaxChannels();
+    for (uint8_t channel = 0; channel < mux_max; channel++) {
+      I2CMultiplexerSelect(channel);
+      nDevices += scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, channel, nDevices, mainBusDevices);
+    }
+    I2CMultiplexerOff();
+  }
+#endif
+  I2CSelectClockSpeed(false);   // By default the bus is in standard speed
+
+  if (nDevices == 0) {
+    addHtml(F("<TR>No I2C devices found"));
+  }
+
+  html_end_table();
+  sendHeadandTail_stdtemplate(_TAIL);
+  TXBuffer.endStream();
 }
 #endif // WEBSERVER_I2C_SCANNER
