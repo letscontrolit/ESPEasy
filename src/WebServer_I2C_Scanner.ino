@@ -19,14 +19,12 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
 #endif
 ) {
   byte error, address;
-#ifdef FEATURE_I2CMULTIPLEXER
-  bool skipCheck = false;
-#endif
 
   for (address = 1; address <= 127; address++)
   {
 #ifdef FEATURE_I2CMULTIPLEXER
-    if (channel != -1 && excludeDevices.size() != 0) {
+    bool skipCheck = false;
+    if (channel != -1 && excludeDevices.size() > address) {
       skipCheck = excludeDevices[address];
     }
     if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
@@ -249,14 +247,12 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
 #endif
 ) {
   byte error, address;
-#ifdef FEATURE_I2CMULTIPLEXER
-  bool skipCheck = false;
-#endif
 
   for (address = 1; address <= 127; address++)
   {
 #ifdef FEATURE_I2CMULTIPLEXER
-    if (channel != -1 && excludeDevices.size() != 0) {
+    bool skipCheck = false;
+    if (channel != -1 && excludeDevices.size() > address) {
       skipCheck = excludeDevices[address];
     }
     if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels

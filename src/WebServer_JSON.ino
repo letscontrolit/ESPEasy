@@ -328,13 +328,16 @@ void handle_json()
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
           if (bitRead(Settings.I2C_Flags[TaskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
-            addHtml(F("\"I2CBus\" : [\n"));
+            addHtml(F("\"I2CBus\" : ["));
+            uint8_t b = 0;
             for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(); c++) {
               if (bitRead(channel, c)) {
-                String i2cChannel = F("Multiplexer channel ");
+                if (b > 0) { addHtml(F(",\n")); }
+                b++;
+                String i2cChannel = F("\"Multiplexer channel ");
                 i2cChannel += String(c);
+                i2cChannel += F("\"");
                 addHtml(i2cChannel);
-                addHtml(F(",\n"));
               }
             }
             addHtml(F("],\n"));
