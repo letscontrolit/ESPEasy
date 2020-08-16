@@ -1,5 +1,9 @@
 #ifdef WEBSERVER_I2C_SCANNER
 
+#ifdef FEATURE_I2CMULTIPLEXER
+typedef std::vector<bool> i2c_addresses_t;
+#endif
+
 #ifdef WEBSERVER_NEW_UI
 
 // ********************************************************************************
@@ -11,7 +15,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
       , int8_t channel
       , int nDevices
 #ifdef FEATURE_I2CMULTIPLEXER
-      , String &excludeDevices
+      , i2c_addresses_t &excludeDevices
 #endif
 ) {
   byte error, address;
@@ -22,16 +26,14 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
   for (address = 1; address <= 127; address++)
   {
 #ifdef FEATURE_I2CMULTIPLEXER
-    if (channel != -1 && excludeDevices.length() != 0) {
-      String toFind = F("|");
-      toFind += String(address);
-      toFind += F("|");
-      skipCheck = (excludeDevices.indexOf(toFind) != -1);
+    if (channel != -1 && excludeDevices.size() != 0) {
+      skipCheck = excludeDevices[address];
     }
     if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
 #endif
       Wire.beginTransmission(address);
       error = Wire.endTransmission();
+      delay(1);
 
       if ((error == 0) || (error == 4))
       {
@@ -41,13 +43,9 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
         if (muxAddr != -1) {
           if (channel == -1){
             json_prop(F("I2Cbus"), F("Standard I2C bus"));
-            excludeDevices += F("|");
-            excludeDevices += String(address);
-            excludeDevices += F("|");
+            excludeDevices[address] = true;
           } else {
-            String i2cChannel = F("Multiplexer SD");
-            i2cChannel += String(channel);
-            i2cChannel += F("/SC");
+            String i2cChannel = F("Multiplexer channel ");
             i2cChannel += String(channel);
             json_prop(F("I2Cbus"), i2cChannel);
           }
@@ -109,8 +107,11 @@ void handle_i2cscanner_json() {
 
   I2CSelectClockSpeed(true);    // Always scan in low speed to also find old/slow devices
 #ifdef FEATURE_I2CMULTIPLEXER
-  String mainBusDevices;
-  mainBusDevices.reserve(32);
+  i2c_addresses_t mainBusDevices;
+  mainBusDevices.resize(128);
+  for (int i = 0; i < 128; i++) {
+    mainBusDevices[i] = false;
+  }
   nDevices = scanI2CbusForDevices_json(Settings.I2C_Multiplexer_Addr, -1, nDevices, mainBusDevices); // Channel -1 = standard I2C bus
 #else
   nDevices = scanI2CbusForDevices_json(-1, -1, nDevices); // Standard scan
@@ -119,7 +120,7 @@ void handle_i2cscanner_json() {
 #ifdef FEATURE_I2CMULTIPLEXER
   if (Settings.I2C_Multiplexer_Addr != -1) {
     uint8_t mux_max = I2CMultiplexerMaxChannels();
-    for (uint8_t channel = 0; channel < mux_max; channel++) {
+    for (int8_t channel = 0; channel < mux_max; channel++) {
       I2CMultiplexerSelect(channel);
       nDevices += scanI2CbusForDevices_json(Settings.I2C_Multiplexer_Addr, channel, nDevices, mainBusDevices); // Specific channels
     }
@@ -244,7 +245,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
       , int8_t channel
       , int nDevices
 #ifdef FEATURE_I2CMULTIPLEXER
-      , String &excludeDevices
+      , i2c_addresses_t &excludeDevices
 #endif
 ) {
   byte error, address;
@@ -255,16 +256,14 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
   for (address = 1; address <= 127; address++)
   {
 #ifdef FEATURE_I2CMULTIPLEXER
-    if (channel != -1 && excludeDevices.length() != 0) {
-      String toFind = F("|");
-      toFind += String(address);
-      toFind += F("|");
-      skipCheck = (excludeDevices.indexOf(toFind) != -1);
+    if (channel != -1 && excludeDevices.size() != 0) {
+      skipCheck = excludeDevices[address];
     }
     if (!skipCheck) { // Ignore I2C multiplexer and addresses to exclude when scanning its channels
 #endif
       Wire.beginTransmission(address);
       error = Wire.endTransmission();
+      delay(1);
 
       if (error == 0)
       {
@@ -273,13 +272,9 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
         if (muxAddr != -1) {
           if (channel == -1){
             addHtml(F("Standard I2C bus"));
-            excludeDevices += F("|");
-            excludeDevices += String(address);
-            excludeDevices += F("|");
+            excludeDevices[address] = true;
           } else {
-            String i2cChannel = F("Multiplexer SD");
-            i2cChannel += String(channel);
-            i2cChannel += F("/SC");
+            String i2cChannel = F("Multiplexer channel ");
             i2cChannel += String(channel);
             addHtml(i2cChannel);
           }
@@ -330,8 +325,11 @@ void handle_i2cscanner() {
   int  nDevices = 0;
   I2CSelectClockSpeed(true);  // Scan bus using low speed
 #ifdef FEATURE_I2CMULTIPLEXER
-  String mainBusDevices;
-  mainBusDevices.reserve(32);
+  i2c_addresses_t mainBusDevices;
+  mainBusDevices.resize(128);
+  for (int i = 0; i < 128; i++) {
+    mainBusDevices[i] = false;
+  }
   nDevices = scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, -1, nDevices, mainBusDevices); // Channel -1 = standard I2C bus
 #else
   nDevices = scanI2CbusForDevices(-1, -1, nDevices); // Standard scan
@@ -340,7 +338,7 @@ void handle_i2cscanner() {
 #ifdef FEATURE_I2CMULTIPLEXER
   if (Settings.I2C_Multiplexer_Addr != -1) {
     uint8_t mux_max = I2CMultiplexerMaxChannels();
-    for (uint8_t channel = 0; channel < mux_max; channel++) {
+    for (int8_t channel = 0; channel < mux_max; channel++) {
       I2CMultiplexerSelect(channel);
       nDevices += scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, channel, nDevices, mainBusDevices);
     }

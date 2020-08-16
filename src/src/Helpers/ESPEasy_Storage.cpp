@@ -224,7 +224,7 @@ String BuildFixes()
     Settings.I2C_Multiplexer_Type = -1;
     Settings.I2C_Multiplexer_Addr = -1;
     for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
-      Settings.I2C_Multiplexer_Port[x] = -1;
+      Settings.I2C_Multiplexer_Channel[x] = -1;
     }
     Settings.I2C_Multiplexer_ResetPin = -1;
   }

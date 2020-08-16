@@ -299,12 +299,12 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
     TaskDevicePluginConfigLong[task][cv] = 0;
   }
-  OLD_TaskDeviceSendData[task] = false;
-  TaskDeviceGlobalSync[task]   = false;
-  TaskDeviceDataFeed[task]     = 0;
-  TaskDeviceTimer[task]        = 0;
-  TaskDeviceEnabled[task]      = false;
-  I2C_Multiplexer_Port[task]   = -1;
+  OLD_TaskDeviceSendData[task]  = false;
+  TaskDeviceGlobalSync[task]    = false;
+  TaskDeviceDataFeed[task]      = 0;
+  TaskDeviceTimer[task]         = 0;
+  TaskDeviceEnabled[task]       = false;
+  I2C_Multiplexer_Channel[task] = -1;
 }
 
 template<unsigned int N_TASKS>

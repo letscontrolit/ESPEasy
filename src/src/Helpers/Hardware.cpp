@@ -194,11 +194,11 @@ void I2CMultiplexerSelectByTaskIndex(int8_t taskIndex) {
 
   byte toWrite = 0;
   if (!bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
-    uint8_t i = Settings.I2C_Multiplexer_Port[taskIndex];
+    uint8_t i = Settings.I2C_Multiplexer_Channel[taskIndex];
     if (i > 7) return;
     toWrite = I2CMultiplexerShiftBit(i);
   } else {
-    toWrite = Settings.I2C_Multiplexer_Port[taskIndex];   // Bitpattern is already correctly stored
+    toWrite = Settings.I2C_Multiplexer_Channel[taskIndex];   // Bitpattern is already correctly stored
   }
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
@@ -248,8 +248,8 @@ byte I2CMultiplexerMaxChannels() {
 // Has this taskIndex a channel selected? Checks for both Single channel and Multiple channel mode
 // taskIndex must already be validated! (0..MAX_TASKS)
 bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
-  return ( !bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Port[taskIndex] != -1)
-        || (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Port[taskIndex] !=  0);
+  return ( !bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] != -1)
+        || (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
 }
 #endif
 
