@@ -514,7 +514,10 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
               success = false;
             }
           }
-                    
+          else 
+          {
+            success = false;
+          }
         }
         else
         {
