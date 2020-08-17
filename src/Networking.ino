@@ -422,7 +422,7 @@ void sendSysInfoUDP(byte repeats)
     uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
     uint8_t *macread = NetworkMacAddressAsBytes(mac);
 
-    byte     data[80];
+    byte     data[80] = {0};
     data[0] = 255;
     data[1] = 1;
 
