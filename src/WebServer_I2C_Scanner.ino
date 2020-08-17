@@ -135,6 +135,7 @@ void handle_i2cscanner_json() {
 
 String getKnownI2Cdevice(byte address) {
   String result;
+  #ifndef LIMIT_BUILD_SIZE
 
   switch (address)
   {
@@ -235,6 +236,7 @@ String getKnownI2Cdevice(byte address) {
       result =  F("Arduino PME");
       break;
   }
+  #endif // LIMIT_BUILD_SIZE
   return result;
 }
 
