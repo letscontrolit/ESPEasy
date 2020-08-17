@@ -58,6 +58,7 @@ env:
   - ENV=normal_ESP8266_1M
   - ENV=normal_ESP8266_1M_VCC
   - ENV=normal_ESP8266_4M1M
+  - ENV=normal_ESP8266_4M1M_VCC
   - ENV=normal_ESP8285_1M
   - ENV=normal_IRext_no_rx_ESP8266_4M2M
   - ENV=normal_WROOM02_2M256
