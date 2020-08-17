@@ -72,7 +72,7 @@ void handle_hardware() {
 
   addHtml(F("<form  method='post'>"));
   html_table_class_normal();
-  addFormHeader(F("Hardware Settings"), F("ESPEasy#Hardware_page"));
+  addFormHeader(F("Hardware Settings"), F("ESPEasy#Hardware_page"), F("Hardware/Hardware.html"));
 
   addFormSubHeader(F("Wifi Status LED"));
   addFormPinSelect(formatGpioName_output("LED"), "pled", Settings.Pin_status_led);
