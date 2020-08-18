@@ -18,6 +18,8 @@ void initI2C();
 void I2CSelectClockSpeed(bool setLowSpeed);
 
 #ifdef FEATURE_I2CMULTIPLEXER
+bool isI2CMultiplexerEnabled();
+
 void I2CMultiplexerSelectByTaskIndex(int8_t taskIndex);
 void I2CMultiplexerSelect(uint8_t i);
 

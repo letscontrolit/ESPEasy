@@ -225,7 +225,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     bitWrite(flags, 0, isFormItemChecked(F("taskdeviceflags0")));
   }
 #ifdef FEATURE_I2CMULTIPLEXER
-  if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1) {
+  if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
     int multipleMuxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0);
     bitWrite(flags, 1, multipleMuxPortsOption == 1);
     if (multipleMuxPortsOption == 1) {
@@ -456,7 +456,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
               case DEVICE_TYPE_I2C:
                 addHtml(F("I2C"));
 #ifdef FEATURE_I2CMULTIPLEXER
-                if (Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(x)) {
+                if (isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(x)) {
                   String mux;
                   if (bitRead(Settings.I2C_Flags[x], I2C_FLAGS_MUX_MULTICHANNEL)) {    // Multi-channel
                     mux = F("<BR>Multiplexer channel(s)");
@@ -757,7 +757,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     }
 #ifdef FEATURE_I2CMULTIPLEXER
     // Show selector for an I2C multiplexer port if a multiplexer is configured
-    if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1) {
+    if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
       bool multipleMuxPorts = bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
       {
         String i2c_mux_channels[2];

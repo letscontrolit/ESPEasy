@@ -22,7 +22,7 @@ void handle_hardware() {
     Settings.I2C_clockSpeed_Slow      = getFormItemInt(F("pi2cspslow"), DEFAULT_I2C_CLOCK_SPEED_SLOW);
 #ifdef FEATURE_I2CMULTIPLEXER
     Settings.I2C_Multiplexer_Type     = getFormItemInt(F("pi2cmuxtype"));
-    if (Settings.I2C_Multiplexer_Type != -1) {
+    if (Settings.I2C_Multiplexer_Type != I2C_MULTIPLEXER_NONE) {
       Settings.I2C_Multiplexer_Addr   = getFormItemInt(F("pi2cmuxaddr"));
     } else {
       Settings.I2C_Multiplexer_Addr   = -1;
@@ -113,7 +113,7 @@ void handle_hardware() {
     int     i2c_mux_choices[9];
     uint8_t mux_opt = 0;
     i2c_mux_options[mux_opt] = F("- None -");
-    i2c_mux_choices[mux_opt] = -1;
+    i2c_mux_choices[mux_opt] = I2C_MULTIPLEXER_NONE;
     for (int8_t x = 0; x < 8; x++) {
       mux_opt++;
       i2c_mux_options[mux_opt] = formatToHex_decimal(0x70 + x);

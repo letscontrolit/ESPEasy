@@ -1124,7 +1124,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             validTaskIndex = validTaskVars(event, taskIndex, varNr);
 
 #ifdef FEATURE_I2CMULTIPLEXER
-            if (validTaskIndex && Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(taskIndex)) {
+            if (validTaskIndex && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(taskIndex)) {
               I2CMultiplexerSelectByTaskIndex(taskIndex);
             }
 #else
@@ -1169,7 +1169,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
               validTaskIndex = validTaskVars(event, taskIndex, varNr);
 #ifdef FEATURE_I2CMULTIPLEXER
-              if (validTaskIndex && Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(taskIndex)) {
+              if (validTaskIndex && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(taskIndex)) {
                 I2CMultiplexerSelectByTaskIndex(taskIndex);
               }
 #else
@@ -1213,7 +1213,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               TempEvent.BaseVarIndex = task * VARS_PER_TASK;
               TempEvent.sensorType   = Device[DeviceIndex].VType;
 #ifdef FEATURE_I2CMULTIPLEXER
-              if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(task)) {
+              if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(task)) {
                 I2CMultiplexerSelectByTaskIndex(task);
               }
 #else
@@ -1226,7 +1226,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               bool retval = (Plugin_ptr[DeviceIndex](Function, &TempEvent, str));
               STOP_TIMER_TASK(DeviceIndex, Function);
 #ifdef FEATURE_I2CMULTIPLEXER
-              if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(task)) {
+              if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(task)) {
                 I2CMultiplexerOffByTaskIndex(task);
               }
 #else
@@ -1275,7 +1275,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             // TempEvent.idx = Settings.TaskDeviceID[task]; todo check
             TempEvent.sensorType = Device[DeviceIndex].VType;
 #ifdef FEATURE_I2CMULTIPLEXER
-            if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(task)) {
+            if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(task)) {
               I2CMultiplexerSelectByTaskIndex(task);
             }
 #else
@@ -1287,7 +1287,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             bool retval =  (Plugin_ptr[DeviceIndex](Function, &TempEvent, str));
             STOP_TIMER_TASK(DeviceIndex, Function);
 #ifdef FEATURE_I2CMULTIPLEXER
-            if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(task)) {
+            if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(task)) {
               I2CMultiplexerOffByTaskIndex(task);
             }
 #else
@@ -1343,7 +1343,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 Scheduler.schedule_task_device_timer_at_init(TempEvent.TaskIndex);
               }
 #ifdef FEATURE_I2CMULTIPLEXER
-              if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(task)) {
+              if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(task)) {
                 I2CMultiplexerSelectByTaskIndex(task);
               }
 #else
@@ -1413,7 +1413,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           }
         }
 #ifdef FEATURE_I2CMULTIPLEXER
-        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(event->TaskIndex)) {
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(event->TaskIndex)) {
           I2CMultiplexerSelectByTaskIndex(event->TaskIndex);
         }
 #else
@@ -1434,7 +1434,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
         STOP_TIMER_TASK(DeviceIndex, Function);
 #ifdef FEATURE_I2CMULTIPLEXER
-        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1 && I2CMultiplexerPortSelectedForTask(event->TaskIndex)) {
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(event->TaskIndex)) {
           I2CMultiplexerOffByTaskIndex(event->TaskIndex);
         }
 #else

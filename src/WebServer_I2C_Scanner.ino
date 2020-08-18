@@ -116,7 +116,7 @@ void handle_i2cscanner_json() {
 #endif
 
 #ifdef FEATURE_I2CMULTIPLEXER
-  if (Settings.I2C_Multiplexer_Addr != -1) {
+  if (isI2CMultiplexerEnabled()) {
     uint8_t mux_max = I2CMultiplexerMaxChannels();
     for (int8_t channel = 0; channel < mux_max; channel++) {
       I2CMultiplexerSelect(channel);
@@ -313,7 +313,7 @@ void handle_i2cscanner() {
 
   html_table_class_multirow();
 #ifdef FEATURE_I2CMULTIPLEXER
-  if (Settings.I2C_Multiplexer_Addr != -1) {
+  if (isI2CMultiplexerEnabled()) {
     html_table_header(F("I2C bus"));
   }
 #endif
@@ -334,7 +334,7 @@ void handle_i2cscanner() {
 #endif
 
 #ifdef FEATURE_I2CMULTIPLEXER
-  if (Settings.I2C_Multiplexer_Addr != -1) {
+  if (isI2CMultiplexerEnabled()) {
     uint8_t mux_max = I2CMultiplexerMaxChannels();
     for (int8_t channel = 0; channel < mux_max; channel++) {
       I2CMultiplexerSelect(channel);

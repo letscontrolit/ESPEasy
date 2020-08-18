@@ -159,6 +159,12 @@ void I2CSelectClockSpeed(bool setLowSpeed) {
 }
 
 #ifdef FEATURE_I2CMULTIPLEXER
+// Check if the I2C Multiplexer is enabled
+bool isI2CMultiplexerEnabled() {
+  return Settings.I2C_Multiplexer_Type != I2C_MULTIPLEXER_NONE 
+      && Settings.I2C_Multiplexer_Addr != -1;
+}
+
 // Reset the I2C Multiplexer, if a pin is assigned for that. Pulled to low to force a reset.
 void I2CMultiplexerReset() {
   if (Settings.I2C_Multiplexer_ResetPin != -1) {

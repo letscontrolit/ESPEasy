@@ -325,7 +325,7 @@ void handle_json()
         stream_next_json_object_value(F("TaskName"),         String(ExtraTaskSettings.TaskDeviceName));
         stream_next_json_object_value(F("TaskDeviceNumber"), String(Settings.TaskDeviceNumber[TaskIndex]));
 #ifdef FEATURE_I2CMULTIPLEXER
-        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && Settings.I2C_Multiplexer_Addr != -1) {
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
           if (bitRead(Settings.I2C_Flags[TaskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
             addHtml(F("\"I2CBus\" : ["));

@@ -221,7 +221,7 @@ String BuildFixes()
   }
   if (Settings.Build < 20110) {
     Settings.I2C_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
-    Settings.I2C_Multiplexer_Type = -1;
+    Settings.I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
     Settings.I2C_Multiplexer_Addr = -1;
     for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
       Settings.I2C_Multiplexer_Channel[x] = -1;
