@@ -79,7 +79,7 @@ Setup
 - ``homie/%sysname%/$nodes`` enumerating all devices will be sent as final message of the auto-discover header.
 - The final event log should look like this:
 
-.. code-block:: html
+.. code-block:: none
 
   5584 : EVENT: MQTT#Connected
   5754 : C014 : autodiscover information of 4 Devices and 6 Nodes sent with no errors! (26 messages)
