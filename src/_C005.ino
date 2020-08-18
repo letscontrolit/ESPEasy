@@ -39,11 +39,13 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        MQTTDelayHandler.configureControllerSettings(ControllerSettings);
-        CPlugin_005_pubname = ControllerSettings.Publish;
-        CPlugin_005_mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
+        success = init_mqtt_delay_queue(event->ControllerIndex, CPlugin_005_pubname, CPlugin_005_mqtt_retainFlag);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_mqtt_delay_queue();
         break;
       }
 
