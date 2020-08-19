@@ -67,12 +67,17 @@ Possible use-cases for an I2C multiplexer are:
 There are a couple of I2C multiplexer chips available, currently there is support for:
 
 * TCA9548a (8 channels, multiple channel-connections, 8 I2C addresses, with reset)
-* TCA9546a (4 channels, multiple channel-connections, 8 I2C addresses, with reset)
+* TCA9546a (4 channels, multiple channel-connections, 8 I2C addresses, with reset, also TCA9545a can be used, but no support for the Interrupt function though)
+* TCA9543a (2 channels, multiple channel-connections, 4 I2C addresses, with reset)
 * PCA9540 (2 channels, fixed I2C address, no reset, experimental support)
 
-Both TCA9548a and TCA9546a support connecting multiple channels to the main I2C channel. This can be configured on the Device edit page for I2C devices, once the I2C Multiplexer configuration is enabled by selecting a multiplexer type and an I2C address for the multiplexer.
+The TCA9548a, TCA9546a and TCA9543a support connecting multiple channels to the main I2C channel. This can be configured on the Device edit page for I2C devices, once the I2C Multiplexer configuration is enabled by selecting a multiplexer type and an I2C address for the multiplexer.
 
-Also, both the TCA9548a and TCA9546a chips have a connection for a reset signal available. This allows the chip to be reset if it gets stuck by some 'less compatible' or 'badly behaving' devices. Once connected and configured, the multiplexer can be reset from the software, if desired or required. This feature is not yet used in any I2C device plugin.
+Also, the TCA9548a, TCA9546a and TCA9543a chips have a connection for a reset signal available. This allows the chip to be reset if it gets stuck by some 'less compatible' or 'badly behaving' devices. Once connected and configured, the multiplexer can be reset from the software, if desired or required. This feature is not yet used in any I2C device plugin.
+
+A TCA9543a board has the advantage of being quite a bit smaller than either TCA9546a or TCA9548a, while being digitally compatible. (But with less channels and only 4 I2C addresses).
+
+All these chips/boards can be found at Adafruit, Aliexpress, Banggood, EBay, etc.
 
 .. image:: Hardware_I2CMultiplexerNone.png
 
@@ -90,9 +95,9 @@ Device configuration
 
 If an I2C multiplexer is configured, every Device edit page for I2C devices will show extra options to select the channel the device is connected on.
 
-There is the default option of Single channel, or, when a TCA9548a or TCA9546a is configured, Multiple channels.
+There is the default option of Single channel, or, when a TCA9548a, TCA9546a or TCA9543a is configured, Multiple channels.
 
-*Example: A multiplexer is confgured, but the device is connected directly on the ESP board I2C channel:*
+*Example: A multiplexer is configured, but the device is connected directly on the ESP board I2C channel:*
 
 .. image:: Device_I2COptionsMultiplexerNone.png
 
@@ -112,7 +117,7 @@ NB: Only acceptable channels (0-7/0-3/0-1) will be available in the dropdown lis
 
 Above configuration results in channels 0, 4, 5, 6 and 7 being connected to the ESP board I2C bus when this sensor is active via I2C.
 
-For the 4 channel multiplexer, options 4-7 aren't shown.
+NB: Only acceptable channel checkboxes (0-7/0-3/0-1) will be shown, depending on the Multiplexer type configured.
 
 
 -------------

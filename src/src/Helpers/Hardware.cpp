@@ -178,7 +178,8 @@ void I2CMultiplexerReset() {
 byte I2CMultiplexerShiftBit(uint8_t i) {
   byte toWrite = 0;
   switch (Settings.I2C_Multiplexer_Type) {
-    case I2C_MULTIPLEXER_TCA9546A:  // TCA9546/8 addressing
+    case I2C_MULTIPLEXER_TCA9543A:  // TCA9543/6/8 addressing
+    case I2C_MULTIPLEXER_TCA9546A:
     case I2C_MULTIPLEXER_TCA9548A:
       toWrite = (1 << i);
       break;
@@ -247,6 +248,7 @@ byte I2CMultiplexerMaxChannels() {
     case I2C_MULTIPLEXER_TCA9548A:  channels = 8; break;  // TCA9548A has 8 channels
     case I2C_MULTIPLEXER_TCA9546A:  channels = 4; break;  // TCA9546A has 4 channels
     case I2C_MULTIPLEXER_PCA9540:   channels = 2; break;  // PCA9540 has 2 channels
+    case I2C_MULTIPLEXER_TCA9543A:  channels = 2; break;  // TCA9543A has 2 channels
   }
   return channels;
 }

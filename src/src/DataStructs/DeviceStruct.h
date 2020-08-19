@@ -17,9 +17,10 @@
 
 #ifdef FEATURE_I2CMULTIPLEXER
 #define I2C_MULTIPLEXER_NONE               -1  // None selected
-#define I2C_MULTIPLEXER_TCA9548A            0  // TCA9548a 8 channel I2C switch, addresses 0x70-0x77
-#define I2C_MULTIPLEXER_TCA9546A            1  // TCA9546a 4 channel I2C switch, addresses 0x70-0x77
-#define I2C_MULTIPLEXER_PCA9540             2  // PCA9540 2 channel I2C switch, address 0x70, different channel addressing
+#define I2C_MULTIPLEXER_TCA9548A            0  // TCA9548a 8 channel I2C switch, with reset, addresses 0x70-0x77
+#define I2C_MULTIPLEXER_TCA9546A            1  // TCA9546a or TCA9545a 4 channel I2C switch, with reset, addresses 0x70-0x77 (no interrupt support on TCA9545a)
+#define I2C_MULTIPLEXER_TCA9543A            2  // TCA9543a 2 channel I2C switch, with reset, addresses 0x70-0x73
+#define I2C_MULTIPLEXER_PCA9540             3  // PCA9540 2 channel I2C switch, no reset, address 0x70, different channel addressing
 #endif
 
 #define I2C_FLAGS_SLOW_SPEED                0  // Force slow speed when this flag is set

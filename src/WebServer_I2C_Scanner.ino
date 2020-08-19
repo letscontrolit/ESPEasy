@@ -217,20 +217,22 @@ String getKnownI2Cdevice(byte address) {
       result =  F("Adafruit Motorshield v2,SI1145");
       break;
     case 0x70:
-      result =  F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9546/8a I2C multiplexer,PCA9540 I2C multiplexer");
+      result =  F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9543a/6a/8a I2C multiplexer,PCA9540 I2C multiplexer");
       break;
     case 0x71:
     case 0x72:
     case 0x73:
+      result =  F("HT16K33,TCA9543a/6a/8a I2C multiplexer");
+      break;
     case 0x74:
     case 0x75:
-      result =  F("HT16K33,TCA9546/8A I2C multiplexer");
+      result =  F("HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x76:
-      result =  F("BME280,BMP280,MS5607,MS5611,HT16K33,TCA9546/8a I2C multiplexer");
+      result =  F("BME280,BMP280,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x77:
-      result =  F("BMP085,BMP180,BME280,BMP280,MS5607,MS5611,HT16K33,TCA9546/8a I2C multiplexer");
+      result =  F("BMP085,BMP180,BME280,BMP280,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x7f:
       result =  F("Arduino PME");

@@ -95,17 +95,19 @@ void handle_hardware() {
   addFormSubHeader(F("I2C Multiplexer"));
   // Select the type of multiplexer to use
   {
-    String i2c_muxtype_options[4];
-    int    i2c_muxtype_choices[4];
+    String i2c_muxtype_options[5];
+    int    i2c_muxtype_choices[5];
     i2c_muxtype_options[0] = F("- None -");
     i2c_muxtype_choices[0] = -1;
     i2c_muxtype_options[1] = F("TCA9548a - 8 channel");
     i2c_muxtype_choices[1] = I2C_MULTIPLEXER_TCA9548A;
     i2c_muxtype_options[2] = F("TCA9546a - 4 channel");
     i2c_muxtype_choices[2] = I2C_MULTIPLEXER_TCA9546A;
-    i2c_muxtype_options[3] = F("PCA9540 - 2 channel (experimental)");
-    i2c_muxtype_choices[3] = I2C_MULTIPLEXER_PCA9540;
-    addFormSelector(F("I2C Multiplexer type"), F("pi2cmuxtype"), 4, i2c_muxtype_options, i2c_muxtype_choices, Settings.I2C_Multiplexer_Type);
+    i2c_muxtype_options[3] = F("TCA9543a - 2 channel");
+    i2c_muxtype_choices[3] = I2C_MULTIPLEXER_TCA9543A;
+    i2c_muxtype_options[4] = F("PCA9540 - 2 channel (experimental)");
+    i2c_muxtype_choices[4] = I2C_MULTIPLEXER_PCA9540;
+    addFormSelector(F("I2C Multiplexer type"), F("pi2cmuxtype"), 5, i2c_muxtype_options, i2c_muxtype_choices, Settings.I2C_Multiplexer_Type);
   }
   // Select the I2C address for a port multiplexer
   {
@@ -118,9 +120,11 @@ void handle_hardware() {
       mux_opt++;
       i2c_mux_options[mux_opt] = formatToHex_decimal(0x70 + x);
       if (x == 0) { // PCA9540 has a fixed address 0f 0x70
-        i2c_mux_options[mux_opt] += F(" [TCA9546/8a, PCA9540]");
+        i2c_mux_options[mux_opt] += F(" [TCA9543a/6a/8a, PCA9540]");
+      } else if (x < 4) {
+        i2c_mux_options[mux_opt] += F(" [TCA9543a/6a/8a]");
       } else {
-        i2c_mux_options[mux_opt] += F(" [TCA9546/8a]");
+        i2c_mux_options[mux_opt] += F(" [TCA9546a/8a]");
       }
       i2c_mux_choices[mux_opt] = 0x70 + x;
     }
