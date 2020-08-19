@@ -72,6 +72,9 @@ Possible use-cases for an I2C multiplexer are:
     If devices with conflicting I2C addresses are to be used, then *none* of them can be connected to the ESP main I2C bus, but they should each be connected to a separate channel of the multiplexer. |br|
     Devices that do not conflict with other devices *can* be connected to the ESP main I2C bus, this might improve the performance/responsiveness of these devices.
 
+.. note::
+    When using an I2C Multiplexer, make sure there is no address conflict with any of the devices you intend to connect, f.e. when connecting BME280 sensors, don't set the address of the multiplexer to 0x76 or 0x77.
+
 There are a couple of I2C multiplexer chips available, currently there is support for:
 
 * TCA9548a (8 channels, multiple channel-connections, 8 I2C addresses, with reset)
