@@ -64,6 +64,14 @@ Possible use-cases for an I2C multiplexer are:
 * Connect different devices that have the same I2C address (For example connecting a TSL2561 light/lux sensor and an APDS9960 proximity sensor).
 * Connect slow and fast devices, where the speed of the fast device prohibits proper working of the slow device.
 
+.. |br| raw:: html
+
+    <br>
+
+.. note::
+    If devices with conflicting I2C addresses are to be used, then *none* of them can be connected to the ESP main I2C bus, but they should each be connected to a separate channel of the multiplexer. |br|
+    Devices that do not conflict with other devices *can* be connected to the ESP main I2C bus, this might improve the performance/responsiveness of these devices.
+
 There are a couple of I2C multiplexer chips available, currently there is support for:
 
 * TCA9548a (8 channels, multiple channel-connections, 8 I2C addresses, with reset)
