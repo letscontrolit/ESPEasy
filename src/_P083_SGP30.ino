@@ -24,9 +24,9 @@
 
 
 Adafruit_SGP30 sgp;
-unsigned long Plugin_083_init_time = 0;
-bool Plugin_083_init      = false;
-bool Plugin_083_newValues = false;
+unsigned long  Plugin_083_init_time = 0;
+bool Plugin_083_init                = false;
+bool Plugin_083_newValues           = false;
 
 boolean Plugin_083(byte function, struct EventStruct *event, String& string)
 {
@@ -80,7 +80,7 @@ boolean Plugin_083(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      Plugin_083_init = sgp.begin();
+      Plugin_083_init      = sgp.begin();
       Plugin_083_init_time = millis();
 
       if (!Plugin_083_init) {
@@ -113,7 +113,7 @@ boolean Plugin_083(byte function, struct EventStruct *event, String& string)
           // For the first 15s after the sgp30_iaq_init command the sensor is
           // in an initialization phase during which a sgp30_measure_iaq command
           // returns fixed values of 400 ppm CO2eq and 0 ppb TVOC.
-          if (timePassedSince(Plugin_083_init_time) > 15000 || ((sgp.TVOC != 0) && (sgp.eCO2 != 400))) {
+          if ((timePassedSince(Plugin_083_init_time) > 15000) || ((sgp.TVOC != 0) && (sgp.eCO2 != 400))) {
             Plugin_083_newValues = true;
           }
         }

@@ -15,6 +15,24 @@ void hardwareInit();
 
 void initI2C();
 
+void I2CSelectClockSpeed(bool setLowSpeed);
+
+#ifdef FEATURE_I2CMULTIPLEXER
+bool isI2CMultiplexerEnabled();
+
+void I2CMultiplexerSelectByTaskIndex(int8_t taskIndex);
+void I2CMultiplexerSelect(uint8_t i);
+
+void I2CMultiplexerOffByTaskIndex(int8_t taskIndex);
+void I2CMultiplexerOff();
+
+byte I2CMultiplexerMaxChannels();
+
+void I2CMultiplexerReset();
+
+bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex);
+#endif
+
 void checkResetFactoryPin();
 
 int espeasy_analogRead(int pin);

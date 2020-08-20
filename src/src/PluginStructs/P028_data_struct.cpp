@@ -235,7 +235,12 @@ bool P028_data_struct::check() {
   }
 
   if (sensorID == Unknown_DEVICE) {
-    String log = F("BMx280 : Unable to detect chip ID");
+    String log = F("BMx280 : Unable to detect chip ID (");
+    log += chip_id;
+    if (!wire_status) {
+      log += F(", failed");
+    }
+    log += ')';
     addLog(LOG_LEVEL_INFO, log);
     return false;
   }
