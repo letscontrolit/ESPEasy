@@ -28,7 +28,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               LJ12A3
   GPIO (14)  <-->   Signal (black)
@@ -125,7 +125,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
    On WaterMeter#mL Do
     If [WaterMeter#mL]=0

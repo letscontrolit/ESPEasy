@@ -73,6 +73,7 @@ void handle_i2cscanner_json() {
 // FIXME TD-er: Query all included plugins for their supported addresses (return name of plugin)
 String getKnownI2Cdevice(byte address) {
   String result;
+  #ifndef LIMIT_BUILD_SIZE
 
   switch (address)
   {
@@ -173,6 +174,7 @@ String getKnownI2Cdevice(byte address) {
       result =  F("Arduino PME");
       break;
   }
+  #endif // LIMIT_BUILD_SIZE
   return result;
 }
 

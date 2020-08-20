@@ -20,7 +20,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
  ESP               BMP085
  GPIO (4)   <-->   DA (SDA)
@@ -73,7 +73,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     on BMP#hPa do
      if BMP#hPa>999
