@@ -750,9 +750,9 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     }
 
     if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
-
       addFormSubHeader(F("I2C options"));
-
+      String dummy;
+      PluginCall(PLUGIN_WEBFORM_SHOW_I2C_PARAMS, &TempEvent, dummy);
       addFormCheckBox(F("Force Slow I2C speed"), F("taskdeviceflags0"), bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED));
     }
 #ifdef FEATURE_I2CMULTIPLEXER

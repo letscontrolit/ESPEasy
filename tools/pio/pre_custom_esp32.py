@@ -39,6 +39,7 @@ else:
     "USES_P097",  # Touch (ESP32)
 
     "USE_SETTINGS_ARCHIVE",
+    "FEATURE_I2CMULTIPLEXER",
     "FEATURE_ARDUINO_OTA"
   ])
 

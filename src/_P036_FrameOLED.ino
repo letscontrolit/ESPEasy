@@ -128,6 +128,16 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      uint8_t choice = P036_ADR;
+      int     optionValues[2];
+      optionValues[0] = 0x3C;
+      optionValues[1] = 0x3D;
+      addFormSelectorI2C(F("p036_adr"), 2, optionValues, choice);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
 #ifdef PLUGIN_036_DEBUG
@@ -136,7 +146,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       // Use number 5 to remain compatible with existing configurations,
       // but the item should be one of the first choices.
-      addFormSubHeader(F("Display"));
       {
         uint8_t choice = P036_CONTROLLER;
         String  options[2];
@@ -144,14 +153,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         options[1] = F("SH1106 (132x64 dot controller)");
         int optionValues[2] = { 1, 2 };
         addFormSelector(F("Controller"), F("p036_controller"), 2, options, optionValues, choice);
-      }
-
-      {
-        uint8_t choice = P036_ADR;
-        int     optionValues[2];
-        optionValues[0] = 0x3C;
-        optionValues[1] = 0x3D;
-        addFormSelectorI2C(F("p036_adr"), 2, optionValues, choice);
       }
 
       {
