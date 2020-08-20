@@ -20,7 +20,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               UNIT
   GPIO (X)   <-->   A
@@ -73,7 +73,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
    on TASK#VALUE do
     if [TASK#VALUE]>999

@@ -31,7 +31,7 @@ Wiring
 
 .. image:: P015_TSL2561_2.jpg
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               TSL2561
   GPIO (5)   <-->   SCL
@@ -94,7 +94,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     on Light#VI_Lux do
      if Light#VI_Lux>100

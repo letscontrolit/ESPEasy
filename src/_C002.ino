@@ -13,7 +13,7 @@
 #include <ArduinoJson.h>
 
 String CPlugin_002_pubname;
-bool CPlugin_002_retain = false;
+bool CPlugin_002_mqtt_retainFlag = false;
 
 bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& string)
 {
@@ -42,11 +42,13 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
     {
-      MakeControllerSettings(ControllerSettings);
-      LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-      MQTTDelayHandler.configureControllerSettings(ControllerSettings);
-      CPlugin_002_pubname = ControllerSettings.Publish;
-      CPlugin_002_retain = ControllerSettings.mqtt_retainFlag();
+      success = init_mqtt_delay_queue(event->ControllerIndex, CPlugin_002_pubname, CPlugin_002_mqtt_retainFlag);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+    {
+      exit_mqtt_delay_queue();
       break;
     }
 
@@ -236,7 +238,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         String pubname = CPlugin_002_pubname;
         parseControllerVariables(pubname, event, false);
 
-        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), CPlugin_002_retain);
+        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), CPlugin_002_mqtt_retainFlag);
       } // if ixd !=0
       else
       {
