@@ -56,7 +56,7 @@
 # define __CCS811_H__
 
 # include "stdint.h"
-#include "_Plugin_Helper.h"
+# include "_Plugin_Helper.h"
 
 // Register addresses
 # define CSS811_STATUS          0x00
@@ -108,7 +108,7 @@ public:
   virtual ~CCS811Core() = default;
 
   status beginCore(void);
-  void setAddress(uint8_t);
+  void   setAddress(uint8_t);
 
   // ***Reading functions***//
 
@@ -850,6 +850,7 @@ CCS811Core::status CCS811::setEnvironmentalData(float relativeHumidity, float te
   }
 
   CCS811Core::status returnError = multiWriteRegister(CSS811_ENV_DATA, envData, 4);
+
   return returnError;
 } // CCS811::setEnvironmentalData
 

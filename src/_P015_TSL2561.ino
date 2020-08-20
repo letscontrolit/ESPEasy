@@ -357,7 +357,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
           options1[0] = F("0x39 - (default)");
           options1[1] = F("0x49");
           options1[2] = F("0x29");
-        */
+       */
       int optionValues[3];
       optionValues[0] = TSL2561_ADDR;
       optionValues[1] = TSL2561_ADDR_1;
