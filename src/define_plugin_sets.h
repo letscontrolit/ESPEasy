@@ -342,9 +342,6 @@ To create/register a plugin, you have to :
       #undef USES_SSDP
     #endif
 
-    #ifdef FEATURE_I2CMULTIPLEXER
-        #undef FEATURE_I2CMULTIPLEXER
-    #endif
 #endif
 
 
@@ -1095,6 +1092,9 @@ To create/register a plugin, you have to :
 
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
+  #endif
+  #ifdef FEATURE_I2CMULTIPLEXER
+    #undef FEATURE_I2CMULTIPLEXER
   #endif
 #endif
 
