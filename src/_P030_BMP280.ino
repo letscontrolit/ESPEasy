@@ -101,14 +101,19 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_030));
         break;
       }
-    case PLUGIN_WEBFORM_LOAD:
+
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
       {
         byte choice = PCONFIG(0);
         /*String options[2] = { F("0x76 - default settings (SDO Low)"), F("0x77 - alternate settings (SDO HIGH)") };*/
         int optionValues[2] = { 0x76, 0x77 };
         addFormSelectorI2C(F("p030_bmp280_i2c"), 2, optionValues, choice);
         addFormNote(F("SDO Low=0x76, High=0x77"));
+        break;
+      }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
         addFormNumericBox(F("Altitude"), F("p030_bmp280_elev"), PCONFIG(1));
         addUnit(F("m"));
 

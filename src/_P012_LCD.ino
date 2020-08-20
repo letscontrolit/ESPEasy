@@ -62,8 +62,8 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WEBFORM_LOAD:
-      {
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+     {
         byte choice = PCONFIG(0);
         //String options[16];
         int optionValues[16];
@@ -77,8 +77,11 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
           //options[x] += String(optionValues[x], HEX);
         }
         addFormSelectorI2C(F("p012_adr"), 16, optionValues, choice);
+        break;
+      }
 
-
+    case PLUGIN_WEBFORM_LOAD:
+      {
         byte choice2 = PCONFIG(1);
         String options2[2];
         options2[0] = F("2 x 16");

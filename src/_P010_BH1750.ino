@@ -51,20 +51,25 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      byte choice = PCONFIG(0);
+      /*
+      String options[2];
+      options[0] = F("0x23 - default settings (ADDR Low)");
+      options[1] = F("0x5c - alternate settings (ADDR High)");
+      */
+      int optionValues[2];
+      optionValues[0] = BH1750_DEFAULT_I2CADDR;
+      optionValues[1] = BH1750_SECOND_I2CADDR;
+      addFormSelectorI2C(F("p010"), 2, optionValues, choice);
+      addFormNote(F("ADDR Low=0x23, High=0x5c"));
+      break;
+    }
+
+
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = PCONFIG(0);
-        /*
-        String options[2];
-        options[0] = F("0x23 - default settings (ADDR Low)");
-        options[1] = F("0x5c - alternate settings (ADDR High)");
-        */
-        int optionValues[2];
-        optionValues[0] = BH1750_DEFAULT_I2CADDR;
-        optionValues[1] = BH1750_SECOND_I2CADDR;
-        addFormSelectorI2C(F("p010"), 2, optionValues, choice);
-        addFormNote(F("ADDR Low=0x23, High=0x5c"));
-
         byte choiceMode = PCONFIG(1);
         String optionsMode[4];
         optionsMode[0] = F("RESOLUTION_LOW");

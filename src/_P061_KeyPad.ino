@@ -96,15 +96,20 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WEBFORM_LOAD:
-      {
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+	  {
         byte addr = PCONFIG(0);
 
         int optionValues[16] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F };
         addFormSelectorI2C(F("i2c_addr"), (PCONFIG(1) == 0) ? 8 : 16, optionValues, addr);
         if (PCONFIG(1) != 0)
           addFormNote(F("PCF8574 uses address 0x20+; PCF8574<b>A</b> uses address 0x38+"));
+    	break;
+      }
 
+
+    case PLUGIN_WEBFORM_LOAD:
+      {
         String options[3] = { F("MCP23017 (Matrix 9x8)"), F("PCF8574 (Matrix 5x4)"), F("PCF8574 (Direct 8)") };
         addFormSelector(F("Chip (Mode)"), F("chip"), 3, options, NULL, PCONFIG(1));
 

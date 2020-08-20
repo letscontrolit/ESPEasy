@@ -95,13 +95,17 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
       {
         byte addr = 0x39;   // P064_ADDR; chip has only 1 address
 
         int optionValues[1] = { 0x39 };
         addFormSelectorI2C(F("i2c_addr"), 1, optionValues, addr);  //Only for display I2C address
+        break;
+      }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
         String optionsPluginMode[2];
         optionsPluginMode[0] = F("Gesture/Proximity/Ambient Light Sensor");
         optionsPluginMode[1] = F("R/G/B Colors");

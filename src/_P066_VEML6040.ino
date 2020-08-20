@@ -63,13 +63,15 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+      {
+        int optionValues[1] = { VEML6040_ADDR };
+        addFormSelectorI2C(F("i2c_addr"), 1, optionValues, VEML6040_ADDR);   //Only for display I2C address
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-        {
-          int optionValues[1] = { VEML6040_ADDR };
-          addFormSelectorI2C(F("i2c_addr"), 1, optionValues, VEML6040_ADDR);   //Only for display I2C address
-        }
-
         {
           String optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F("640ms (1031)"), F("1280ms (515)") };
           addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, NULL, PCONFIG(1));

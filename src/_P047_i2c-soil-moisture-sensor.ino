@@ -74,11 +74,16 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+      {
+        addFormTextBox(F("I2C Address (Hex)"), F("p047_i2cSoilMoisture_i2cAddress"), 
+            formatToHex_decimal(PCONFIG(0)), 4);
+        // FIXME TD-er: Why not using addFormSelectorI2C here?
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-      	addFormTextBox(F("I2C Address (Hex)"), F("p047_i2cSoilMoisture_i2cAddress"), 
-            formatToHex_decimal(PCONFIG(0)), 4);
-
         addFormCheckBox(F("Send sensor to sleep"), F("p047_sleep"), PCONFIG(1));
 
         addFormCheckBox(F("Check sensor version") ,F("p047_version"), PCONFIG(2));

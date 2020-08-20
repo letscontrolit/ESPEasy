@@ -77,14 +77,17 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+      {
+        byte choice = PCONFIG(0);
+        /*String options[2] = { F("3C"), F("3D") };*/
+        int optionValues[2] = { 0x3C, 0x3D };
+        addFormSelectorI2C(F("p023_adr"), 2, optionValues, choice);
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-        {
-          byte choice = PCONFIG(0);
-          /*String options[2] = { F("3C"), F("3D") };*/
-          int optionValues[2] = { 0x3C, 0x3D };
-          addFormSelectorI2C(F("p023_adr"), 2, optionValues, choice);
-        }
         {
           byte choice2 = PCONFIG(1);
           String options2[2] = { F("Normal"), F("Rotated") };

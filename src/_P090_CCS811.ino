@@ -220,15 +220,17 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      // I2C address choice
+      String options[2]      = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
+      int    optionValues[2] = { 0x5A, 0x5B };
+      addFormSelector(F("I2C Address"), F("p090_i2c_address"), 2, options, optionValues, P090_I2C_ADDR);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      {
-        // I2C address choice
-        String options[2]      = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
-        int    optionValues[2] = { 0x5A, 0x5B };
-        addFormSelector(F("I2C Address"), F("p090_i2c_address"), 2, options, optionValues, P090_I2C_ADDR);
-      }
-
       {
         // read frequency
         int frequencyChoice        = (int)P090_READ_INTERVAL;

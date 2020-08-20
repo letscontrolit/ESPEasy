@@ -57,11 +57,16 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 			break;
 		}
 
-		case PLUGIN_WEBFORM_LOAD: {
-
-    	addFormTextBox(F("I2C Address (Hex)"), F("p048_adr"),
+	    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    	{
+	    	addFormTextBox(F("I2C Address (Hex)"), F("p048_adr"),
 		               formatToHex_decimal(PCONFIG(0)), 4);
+			// FIXME TD-er: Why not using addFormSelectorI2C here?
+			break;
+		}
 
+
+		case PLUGIN_WEBFORM_LOAD: {
     	addFormNumericBox(F("Stepper: steps per revolution"), F("p048_MotorStepsPerRevolution")
     			, PCONFIG(1));
 

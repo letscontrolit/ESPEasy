@@ -150,11 +150,15 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       int optionValues[8] = { 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
       addFormSelectorI2C(F("i2c_addr"), 8, optionValues, PCONFIG(0));
+      break;
+    }
 
+    case PLUGIN_WEBFORM_LOAD:
+    {
       success = true;
       break;
     }

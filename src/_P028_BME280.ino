@@ -76,12 +76,15 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       int Plugin_28_i2c_addresses[2] = { 0x76, 0x77 };
       addFormSelectorI2C(F("p028_bme280_i2c"), 2, Plugin_28_i2c_addresses, PCONFIG(0));
+      break;
+    }
 
+    case PLUGIN_WEBFORM_LOAD:
+    {
       P028_data_struct *P028_data =
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 

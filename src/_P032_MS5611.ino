@@ -70,13 +70,18 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_032));
         break;
       }
-    case PLUGIN_WEBFORM_LOAD:
+
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
       {
         byte choice = PCONFIG(0);
         /*String options[2] = { F("0x77 - default I2C address"), F("0x76 - alternate I2C address") };*/
         int optionValues[2] = { 0x77, 0x76 };
         addFormSelectorI2C(F("p032_ms5611_i2c"), 2, optionValues, choice);
+        break;
+      }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
         addFormNumericBox(F("Altitude [m]"), F("p032_ms5611_elev"), PCONFIG(1));
 
         success = true;

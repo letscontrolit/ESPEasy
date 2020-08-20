@@ -62,13 +62,17 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
       {
         byte addr = PCONFIG(0);
 
         int optionValues[4] = { 0x5A, 0x5B, 0x5C, 0x5D };
         addFormSelectorI2C(F("i2c_addr"), 4, optionValues, addr);
+        break;
+      }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
         addFormCheckBox(F("ScanCode"), F("scancode"), PCONFIG(1));
 
         success = true;

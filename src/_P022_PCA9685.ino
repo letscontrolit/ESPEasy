@@ -124,19 +124,22 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      int optionValues[PCA9685_NUMS_ADDRESS];
+
+      for (int i = 0; i < PCA9685_NUMS_ADDRESS; i++)
+      {
+        optionValues[i] = PCA9685_ADDRESS + i;
+      }
+      addFormSelectorI2C(F("i2c_addr"), PCA9685_NUMS_ADDRESS, optionValues, address);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       // The options lists are quite long.
       // To prevent stack overflow issues, each selection has its own scope.
-      {
-        int optionValues[PCA9685_NUMS_ADDRESS];
-
-        for (int i = 0; i < PCA9685_NUMS_ADDRESS; i++)
-        {
-          optionValues[i] = PCA9685_ADDRESS + i;
-        }
-        addFormSelectorI2C(F("i2c_addr"), PCA9685_NUMS_ADDRESS, optionValues, address);
-      }
       {
         String m2Options[PCA9685_MODE2_VALUES];
         int    m2Values[PCA9685_MODE2_VALUES];

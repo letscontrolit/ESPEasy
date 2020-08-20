@@ -164,7 +164,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_095;
-        Device[deviceCount].Type = DEVICE_TYPE_I2C;
+        Device[deviceCount].Type = DEVICE_TYPE_I2C;    // FIXME TD-er: This is no I2C, but looks like SPI.
         Device[deviceCount].VType = SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;

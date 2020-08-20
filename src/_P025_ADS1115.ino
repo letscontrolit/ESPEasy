@@ -55,6 +55,15 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+      {
+        #define ADS1115_I2C_OPTION 4
+        byte addr = PCONFIG(0);
+        int optionValues[ADS1115_I2C_OPTION] = { 0x48, 0x49, 0x4A, 0x4B };
+        addFormSelectorI2C(F("p025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         byte port = CONFIG_PORT;
@@ -64,13 +73,6 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
           PCONFIG(0) = 0x48 + ((port-1)/4);
           PCONFIG(2) = ((port-1) & 3) | 4;
           CONFIG_PORT = 0;
-        }
-
-        {
-          #define ADS1115_I2C_OPTION 4
-          byte addr = PCONFIG(0);
-          int optionValues[ADS1115_I2C_OPTION] = { 0x48, 0x49, 0x4A, 0x4B };
-          addFormSelectorI2C(F("p025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
         }
 
         addFormSubHeader(F("Input"));

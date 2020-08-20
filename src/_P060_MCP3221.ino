@@ -65,13 +65,17 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
       {
         byte addr = PCONFIG(0);
 
         int optionValues[8] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
         addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
+        break;
+      }
 
+    case PLUGIN_WEBFORM_LOAD:
+      {
         addFormCheckBox(F("Oversampling"), F("p060_oversampling"), PCONFIG(1));
 
         addFormSubHeader(F("Two Point Calibration"));

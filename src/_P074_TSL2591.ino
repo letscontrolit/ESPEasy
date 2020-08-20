@@ -96,12 +96,15 @@ boolean Plugin_074(byte function, struct EventStruct *event, String &string) {
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      int optionValues[1] = {TSL2591_ADDR};
+      addFormSelectorI2C(F("p074_i2c_addr"), 1, optionValues,
+                        TSL2591_ADDR); // Only for display I2C address
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD: {
-      {
-        int optionValues[1] = {TSL2591_ADDR};
-        addFormSelectorI2C(F("p074_i2c_addr"), 1, optionValues,
-                          TSL2591_ADDR); // Only for display I2C address
-      }
       //        P074_data_struct* P074_data =
       //        static_cast<P074_data_struct*>(getPluginTaskData(event->TaskIndex));
       //        if (nullptr != P074_data) {

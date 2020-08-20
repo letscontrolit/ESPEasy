@@ -128,6 +128,13 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+      {
+        int Plugin_27_i2c_addresses[4] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
+        addFormSelectorI2C(F("p027_i2c"), 4, Plugin_27_i2c_addresses, Plugin_027_i2c_addr(event));
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         {
@@ -141,10 +148,6 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
           optionValuesMode[1] = 1;
           optionValuesMode[2] = 2;
           addFormSelector(F("Measure range"), F("p027_range"), 3, optionsMode, optionValuesMode, choiceMode);
-        }
-        {
-          int Plugin_27_i2c_addresses[4] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
-          addFormSelectorI2C(F("p027_i2c"), 4, Plugin_27_i2c_addresses, Plugin_027_i2c_addr(event));
         }
         {
           byte choiceMeasureType = PCONFIG(2);

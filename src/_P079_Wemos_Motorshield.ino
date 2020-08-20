@@ -93,11 +93,15 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 		break;
 	}
 
-	case PLUGIN_WEBFORM_LOAD: {
-    String i2c_addres_string = formatToHex(PCONFIG(0));
-		addFormTextBox(F("I2C Address (Hex)"), F("p079_adr"), i2c_addres_string, 4);
-    addFormNote(F("Make sure to update the Wemos Motorshield firmware, see <a href='https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield'>wiki</a>"));
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+		String i2c_addres_string = formatToHex(PCONFIG(0));
+			addFormTextBox(F("I2C Address (Hex)"), F("p079_adr"), i2c_addres_string, 4);
+		addFormNote(F("Make sure to update the Wemos Motorshield firmware, see <a href='https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield'>wiki</a>"));
+		break;
+    }
 
+	case PLUGIN_WEBFORM_LOAD: {
 		success = true;
 		break;
 	}

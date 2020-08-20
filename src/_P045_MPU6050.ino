@@ -118,23 +118,26 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
       {
         byte choice = PCONFIG(0);
         // Setup webform for address selection
-        {
-          /*
-          String options[10];
-          options[0] = F("0x68 - default settings (ADDR Low)");
-          options[1] = F("0x69 - alternate settings (ADDR High)");
-          */
-          int optionValues[2];
-          optionValues[0] = 0x68;
-          optionValues[1] = 0x69;
-          addFormSelectorI2C(F("p045_address"), 2, optionValues, choice);
-          addFormNote(F("ADDR Low=0x68, High=0x69"));
-        }
-        choice = PCONFIG(1);
+        /*
+        String options[10];
+        options[0] = F("0x68 - default settings (ADDR Low)");
+        options[1] = F("0x69 - alternate settings (ADDR High)");
+        */
+        int optionValues[2];
+        optionValues[0] = 0x68;
+        optionValues[1] = 0x69;
+        addFormSelectorI2C(F("p045_address"), 2, optionValues, choice);
+        addFormNote(F("ADDR Low=0x68, High=0x69"));
+        break;
+      }
+
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        byte choice = PCONFIG(1);
         {
           String options[10];
           options[0] = F("Movement detection");
