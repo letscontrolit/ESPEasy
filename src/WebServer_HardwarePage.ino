@@ -13,26 +13,36 @@ void handle_hardware() {
 
   if (isFormItem(F("psda")))
   {
-    Settings.Pin_status_led          = getFormItemInt(F("pled"));
-    Settings.Pin_status_led_Inversed = isFormItemChecked(F("pledi"));
-    Settings.Pin_Reset               = getFormItemInt(F("pres"));
-    Settings.Pin_i2c_sda             = getFormItemInt(F("psda"));
-    Settings.Pin_i2c_scl             = getFormItemInt(F("pscl"));
-    Settings.I2C_clockSpeed          = getFormItemInt(F("pi2csp"), DEFAULT_I2C_CLOCK_SPEED);
+    Settings.Pin_status_led           = getFormItemInt(F("pled"));
+    Settings.Pin_status_led_Inversed  = isFormItemChecked(F("pledi"));
+    Settings.Pin_Reset                = getFormItemInt(F("pres"));
+    Settings.Pin_i2c_sda              = getFormItemInt(F("psda"));
+    Settings.Pin_i2c_scl              = getFormItemInt(F("pscl"));
+    Settings.I2C_clockSpeed           = getFormItemInt(F("pi2csp"), DEFAULT_I2C_CLOCK_SPEED);
+    Settings.I2C_clockSpeed_Slow      = getFormItemInt(F("pi2cspslow"), DEFAULT_I2C_CLOCK_SPEED_SLOW);
+#ifdef FEATURE_I2CMULTIPLEXER
+    Settings.I2C_Multiplexer_Type     = getFormItemInt(F("pi2cmuxtype"));
+    if (Settings.I2C_Multiplexer_Type != I2C_MULTIPLEXER_NONE) {
+      Settings.I2C_Multiplexer_Addr   = getFormItemInt(F("pi2cmuxaddr"));
+    } else {
+      Settings.I2C_Multiplexer_Addr   = -1;
+    }
+    Settings.I2C_Multiplexer_ResetPin = getFormItemInt(F("pi2cmuxreset"));
+#endif
     #ifdef ESP32
-      Settings.InitSPI               = getFormItemInt(F("initspi"), 0);
+      Settings.InitSPI                = getFormItemInt(F("initspi"), 0);
     #else //for ESP8266 we keep the old UI
-      Settings.InitSPI               = isFormItemChecked(F("initspi")); // SPI Init
+      Settings.InitSPI                = isFormItemChecked(F("initspi")); // SPI Init
     #endif
-    Settings.Pin_sd_cs               = getFormItemInt(F("sd"));
+    Settings.Pin_sd_cs                = getFormItemInt(F("sd"));
 #ifdef HAS_ETHERNET
-    Settings.ETH_Phy_Addr            = getFormItemInt(F("ethphy"));
-    Settings.ETH_Pin_mdc             = getFormItemInt(F("ethmdc"));
-    Settings.ETH_Pin_mdio            = getFormItemInt(F("ethmdio"));
-    Settings.ETH_Pin_power           = getFormItemInt(F("ethpower"));
-    Settings.ETH_Phy_Type            = getFormItemInt(F("ethtype"));
-    Settings.ETH_Clock_Mode          = getFormItemInt(F("ethclock"));
-    Settings.ETH_Wifi_Mode           = getFormItemInt(F("ethwifi"));
+    Settings.ETH_Phy_Addr             = getFormItemInt(F("ethphy"));
+    Settings.ETH_Pin_mdc              = getFormItemInt(F("ethmdc"));
+    Settings.ETH_Pin_mdio             = getFormItemInt(F("ethmdio"));
+    Settings.ETH_Pin_power            = getFormItemInt(F("ethpower"));
+    Settings.ETH_Phy_Type             = getFormItemInt(F("ethtype"));
+    Settings.ETH_Clock_Mode           = getFormItemInt(F("ethclock"));
+    Settings.ETH_Wifi_Mode            = getFormItemInt(F("ethwifi"));
 #endif
     int gpio = 0;
 
@@ -62,7 +72,7 @@ void handle_hardware() {
 
   addHtml(F("<form  method='post'>"));
   html_table_class_normal();
-  addFormHeader(F("Hardware Settings"), F("ESPEasy#Hardware_page"));
+  addFormHeader(F("Hardware Settings"), F("ESPEasy#Hardware_page"), F("Hardware/Hardware.html"));
 
   addFormSubHeader(F("Wifi Status LED"));
   addFormPinSelect(formatGpioName_output("LED"), "pled", Settings.Pin_status_led);
@@ -79,6 +89,50 @@ void handle_hardware() {
   addFormNumericBox(F("Clock Speed"), F("pi2csp"), Settings.I2C_clockSpeed, 100, 3400000);
   addUnit(F("Hz"));
   addFormNote(F("Use 100 kHz for old I2C devices, 400 kHz is max for most."));
+  addFormNumericBox(F("Slow device Clock Speed"), F("pi2cspslow"), Settings.I2C_clockSpeed_Slow, 100, 3400000);
+  addUnit(F("Hz"));
+#ifdef FEATURE_I2CMULTIPLEXER
+  addFormSubHeader(F("I2C Multiplexer"));
+  // Select the type of multiplexer to use
+  {
+    String i2c_muxtype_options[5];
+    int    i2c_muxtype_choices[5];
+    i2c_muxtype_options[0] = F("- None -");
+    i2c_muxtype_choices[0] = -1;
+    i2c_muxtype_options[1] = F("TCA9548a - 8 channel");
+    i2c_muxtype_choices[1] = I2C_MULTIPLEXER_TCA9548A;
+    i2c_muxtype_options[2] = F("TCA9546a - 4 channel");
+    i2c_muxtype_choices[2] = I2C_MULTIPLEXER_TCA9546A;
+    i2c_muxtype_options[3] = F("TCA9543a - 2 channel");
+    i2c_muxtype_choices[3] = I2C_MULTIPLEXER_TCA9543A;
+    i2c_muxtype_options[4] = F("PCA9540 - 2 channel (experimental)");
+    i2c_muxtype_choices[4] = I2C_MULTIPLEXER_PCA9540;
+    addFormSelector(F("I2C Multiplexer type"), F("pi2cmuxtype"), 5, i2c_muxtype_options, i2c_muxtype_choices, Settings.I2C_Multiplexer_Type);
+  }
+  // Select the I2C address for a port multiplexer
+  {
+    String  i2c_mux_options[9];
+    int     i2c_mux_choices[9];
+    uint8_t mux_opt = 0;
+    i2c_mux_options[mux_opt] = F("- None -");
+    i2c_mux_choices[mux_opt] = I2C_MULTIPLEXER_NONE;
+    for (int8_t x = 0; x < 8; x++) {
+      mux_opt++;
+      i2c_mux_options[mux_opt] = formatToHex_decimal(0x70 + x);
+      if (x == 0) { // PCA9540 has a fixed address 0f 0x70
+        i2c_mux_options[mux_opt] += F(" [TCA9543a/6a/8a, PCA9540]");
+      } else if (x < 4) {
+        i2c_mux_options[mux_opt] += F(" [TCA9543a/6a/8a]");
+      } else {
+        i2c_mux_options[mux_opt] += F(" [TCA9546a/8a]");
+      }
+      i2c_mux_choices[mux_opt] = 0x70 + x;
+    }
+    addFormSelector(F("I2C Multiplexer address"), F("pi2cmuxaddr"), mux_opt + 1, i2c_mux_options, i2c_mux_choices, Settings.I2C_Multiplexer_Addr);
+  }
+  addFormPinSelect(formatGpioName_output_optional("Reset"), F("pi2cmuxreset"), Settings.I2C_Multiplexer_ResetPin);
+  addFormNote(F("Will be pulled low to force a reset. Reset is not available on PCA9540."));
+#endif
 
   // SPI Init
   addFormSubHeader(F("SPI Interface"));
