@@ -350,23 +350,25 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      /*
+          String options1[3];
+          options1[0] = F("0x39 - (default)");
+          options1[1] = F("0x49");
+          options1[2] = F("0x29");
+       */
+      int optionValues[3];
+      optionValues[0] = TSL2561_ADDR;
+      optionValues[1] = TSL2561_ADDR_1;
+      optionValues[2] = TSL2561_ADDR_0;
+      addFormSelectorI2C(F("p015_tsl2561_i2c"), 3, optionValues, PCONFIG(0));
+      break;
+    }
+
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      {
-        /*
-            String options1[3];
-            options1[0] = F("0x39 - (default)");
-            options1[1] = F("0x49");
-            options1[2] = F("0x29");
-         */
-        int optionValues[3];
-        optionValues[0] = TSL2561_ADDR;
-        optionValues[1] = TSL2561_ADDR_1;
-        optionValues[2] = TSL2561_ADDR_0;
-        addFormSelectorI2C(F("p015_tsl2561_i2c"), 3, optionValues, PCONFIG(0));
-      }
-
-
       {
         #define TSL2561_INTEGRATION_OPTION 3
         String options[TSL2561_INTEGRATION_OPTION];

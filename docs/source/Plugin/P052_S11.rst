@@ -28,7 +28,7 @@ Wiring
 
 Circuit wiring (S11 seen from top, with the 5 holes left and the 4 holes right):
 
-.. code-block:: html
+.. code-block:: none
 
     ESP               S11 (UART)
     GPIO (14)  <-->   TX (5th hole of the 5 holes)
@@ -106,7 +106,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
  on CO2#Level do
   if [CO2#Level]>2000

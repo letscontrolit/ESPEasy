@@ -21,7 +21,7 @@ Wiring
 ------
 
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               S8
   GPIO (X)   <-->   TX
@@ -52,7 +52,7 @@ With a delay of 10, on the same node, the clock signal is about 40 kHz.
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
   //Code below...
 

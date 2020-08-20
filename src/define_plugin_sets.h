@@ -225,6 +225,10 @@ To create/register a plugin, you have to :
     #define  CONTROLLER_SET_STABLE
     #define  NOTIFIER_SET_STABLE
 
+    #ifndef FEATURE_I2CMULTIPLEXER
+        #define FEATURE_I2CMULTIPLEXER
+    #endif
+
     #ifndef BUILD_NO_DEBUG
       #define BUILD_NO_DEBUG
     #endif
@@ -337,6 +341,7 @@ To create/register a plugin, you have to :
     #ifdef USES_SSDP
       #undef USES_SSDP
     #endif
+
 #endif
 
 
@@ -1087,6 +1092,9 @@ To create/register a plugin, you have to :
 
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
+  #endif
+  #ifdef FEATURE_I2CMULTIPLEXER
+    #undef FEATURE_I2CMULTIPLEXER
   #endif
 #endif
 

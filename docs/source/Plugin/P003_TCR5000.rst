@@ -25,7 +25,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
   ESP                TCR5000
   GPIO (14)   <-->   S
@@ -97,7 +97,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
    On PowerMeter#W Do
     If [PowerMeter#W]>1500

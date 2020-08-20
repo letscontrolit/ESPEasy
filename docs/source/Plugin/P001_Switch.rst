@@ -24,7 +24,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               Switch/button
   GPIO (X)   <-->   Signal
@@ -128,7 +128,7 @@ Indicators/values (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     on Switch#State do
      if [Switch#State]=3

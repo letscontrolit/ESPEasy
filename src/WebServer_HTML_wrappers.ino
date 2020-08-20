@@ -136,10 +136,14 @@ void html_table_header(const String& label) {
 }
 
 void html_table_header(const String& label, int width) {
-  html_table_header(label, "", width);
+  html_table_header(label, F(""), F(""), width);
 }
 
 void html_table_header(const String& label, const String& helpButton, int width) {
+  html_table_header(label, helpButton, F(""), width);
+}
+
+void html_table_header(const String& label, const String& helpButton, const String& rtdHelpButton, int width) {
   String html;
 
   html.reserve(25 + label.length());
@@ -157,6 +161,9 @@ void html_table_header(const String& label, const String& helpButton, int width)
 
   if (helpButton.length() > 0) {
     addHelpButton(helpButton);
+  }
+  if (rtdHelpButton.length() > 0) {
+    addRTDHelpButton(rtdHelpButton);
   }
   addHtml(F("</TH>"));
 }
