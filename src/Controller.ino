@@ -6,6 +6,7 @@
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Protocol.h"
@@ -112,7 +113,7 @@ void callback(char *c_topic, byte *b_payload, unsigned int length) {
 
   // TD-er: This one cannot set the TaskIndex, but that may seem to work out.... hopefully.
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(enabledMqttController);
-  schedule_mqtt_controller_event_timer(
+  Scheduler.schedule_mqtt_controller_event_timer(
     ProtocolIndex, 
     CPlugin::Function::CPLUGIN_PROTOCOL_RECV,
     c_topic, b_payload, length);
@@ -418,22 +419,28 @@ void SendStatus(EventValueSource::Enum source, const String& status)
 
 #ifdef USES_MQTT
 bool MQTT_queueFull(controllerIndex_t controller_idx) {
+  if (MQTTDelayHandler == nullptr) {
+    return true;
+  }
   MQTT_queue_element dummy_element;
   dummy_element.controller_idx = controller_idx;
-  if (MQTTDelayHandler.queueFull(dummy_element)) {
+  if (MQTTDelayHandler->queueFull(dummy_element)) {
     // The queue is full, try to make some room first.
     processMQTTdelayQueue();
-    return MQTTDelayHandler.queueFull(dummy_element);
+    return MQTTDelayHandler->queueFull(dummy_element);
   }
   return false;
 }
 
 bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained)
 {
+  if (MQTTDelayHandler == nullptr) {
+    return false;
+  }
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler.addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
+  const bool success = MQTTDelayHandler->addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
   scheduleNextMQTTdelayQueue();
   return success;
 }

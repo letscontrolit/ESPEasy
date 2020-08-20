@@ -33,22 +33,30 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        C003_DelayHandler.configureControllerSettings(ControllerSettings);
+        success = init_c003_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c003_delay_queue();
         break;
       }
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
+        if (C003_DelayHandler == nullptr) {
+          break;
+        }
+
         // We now create a URI for the request
         String url = F("variableset ");
         url += event->idx;
         url += ",";
         url += formatUserVarNoCheck(event, 0);
         url += "\n";
-        success = C003_DelayHandler.addToQueue(C003_queue_element(event->ControllerIndex, url));
-        scheduleNextDelayQueue(TIMER_C003_DELAY_QUEUE, C003_DelayHandler.getNextScheduleTime());
+        success = C003_DelayHandler->addToQueue(C003_queue_element(event->ControllerIndex, url));
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C003_DELAY_QUEUE, C003_DelayHandler->getNextScheduleTime());
 
         break;
       }

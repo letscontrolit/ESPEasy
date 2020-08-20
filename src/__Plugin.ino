@@ -1,7 +1,9 @@
 #include "src/Globals/Device.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
+#include "src/Commands/Tasks.h"
 
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/TimingStats.h"
@@ -1114,9 +1116,35 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               // FIXME TD-er: Also resize DeviceIndex_to_Plugin_id ?
             }
           }
+          taskIndex_t  taskIndex;
+          unsigned int varNr;
+          bool validTaskIndex = false;
+
+          if (Function != PLUGIN_DEVICE_ADD && Device[x].Type == DEVICE_TYPE_I2C) {
+            validTaskIndex = validTaskVars(event, taskIndex, varNr);
+
+#ifdef FEATURE_I2CMULTIPLEXER
+            if (validTaskIndex && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(taskIndex)) {
+              I2CMultiplexerSelectByTaskIndex(taskIndex);
+            }
+#else
+            if (validTaskIndex && bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
+              I2CSelectClockSpeed(true);  // Set to Slow
+            }
+#endif
+          }
           START_TIMER;
           Plugin_ptr[x](Function, event, str);
           STOP_TIMER_TASK(x, Function);
+#ifdef FEATURE_I2CMULTIPLEXER
+          if (validTaskIndex && I2CMultiplexerPortSelectedForTask(taskIndex)) {
+            I2CMultiplexerOffByTaskIndex(taskIndex);
+          }
+#else
+            if (validTaskIndex && bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
+              I2CSelectClockSpeed(false);  // Reset
+            }
+#endif
           delay(0); // SMY: call delay(0) unconditionally
         }
       }
@@ -1134,9 +1162,34 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
           const deviceIndex_t DeviceIndex = it->second.x;
           if (validDeviceIndex(DeviceIndex))  {
+            taskIndex_t  taskIndex;
+            unsigned int varNr;
+            bool validTaskIndex = false;
+
+            if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
+              validTaskIndex = validTaskVars(event, taskIndex, varNr);
+#ifdef FEATURE_I2CMULTIPLEXER
+              if (validTaskIndex && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(taskIndex)) {
+                I2CMultiplexerSelectByTaskIndex(taskIndex);
+              }
+#else
+              if (validTaskIndex && bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
+                I2CSelectClockSpeed(true);  // Set to Slow
+              }
+#endif
+            }
             START_TIMER;
             Plugin_ptr[DeviceIndex](Function, &TempEvent, str);
             STOP_TIMER_TASK(DeviceIndex, Function);
+#ifdef FEATURE_I2CMULTIPLEXER
+            if (validTaskIndex && I2CMultiplexerPortSelectedForTask(taskIndex)) {
+              I2CMultiplexerOffByTaskIndex(taskIndex);
+            }
+#else
+            if (validTaskIndex && bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
+              I2CSelectClockSpeed(false);   // Reset
+            }
+#endif
           }
         }
       }
@@ -1159,10 +1212,28 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
               TempEvent.TaskIndex    = task;
               TempEvent.BaseVarIndex = task * VARS_PER_TASK;
               TempEvent.sensorType   = Device[DeviceIndex].VType;
+#ifdef FEATURE_I2CMULTIPLEXER
+              if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(task)) {
+                I2CMultiplexerSelectByTaskIndex(task);
+              }
+#else
+            if (bitRead(Settings.I2C_Flags[task], I2C_FLAGS_SLOW_SPEED)) {
+              I2CSelectClockSpeed(true);  // Set to Slow
+            }
+#endif
               checkRAM(F("PluginCall_s"), task);
               START_TIMER;
               bool retval = (Plugin_ptr[DeviceIndex](Function, &TempEvent, str));
               STOP_TIMER_TASK(DeviceIndex, Function);
+#ifdef FEATURE_I2CMULTIPLEXER
+              if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(task)) {
+                I2CMultiplexerOffByTaskIndex(task);
+              }
+#else
+            if (bitRead(Settings.I2C_Flags[task], I2C_FLAGS_SLOW_SPEED)) {
+              I2CSelectClockSpeed(false);  // Reset
+            }
+#endif
               delay(0); // SMY: call delay(0) unconditionally
 
               if (retval) {
@@ -1203,9 +1274,27 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
             // TempEvent.idx = Settings.TaskDeviceID[task]; todo check
             TempEvent.sensorType = Device[DeviceIndex].VType;
+#ifdef FEATURE_I2CMULTIPLEXER
+            if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(task)) {
+              I2CMultiplexerSelectByTaskIndex(task);
+            }
+#else
+            if (bitRead(Settings.I2C_Flags[task], I2C_FLAGS_SLOW_SPEED)) {
+              I2CSelectClockSpeed(true);  // Set to Slow
+            }
+#endif
             START_TIMER;
             bool retval =  (Plugin_ptr[DeviceIndex](Function, &TempEvent, str));
             STOP_TIMER_TASK(DeviceIndex, Function);
+#ifdef FEATURE_I2CMULTIPLEXER
+            if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(task)) {
+              I2CMultiplexerOffByTaskIndex(task);
+            }
+#else
+            if (bitRead(Settings.I2C_Flags[task], I2C_FLAGS_SLOW_SPEED)) {
+              I2CSelectClockSpeed(false);  // Reset
+            }
+#endif
             delay(0); // SMY: call delay(0) unconditionally
 
             if (retval) {
@@ -1251,11 +1340,29 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
               if (Function == PLUGIN_INIT) {
                 // Schedule the plugin to be read.
-                schedule_task_device_timer_at_init(TempEvent.TaskIndex);
+                Scheduler.schedule_task_device_timer_at_init(TempEvent.TaskIndex);
               }
+#ifdef FEATURE_I2CMULTIPLEXER
+              if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(task)) {
+                I2CMultiplexerSelectByTaskIndex(task);
+              }
+#else
+              if (bitRead(Settings.I2C_Flags[task], I2C_FLAGS_SLOW_SPEED)) {
+                I2CSelectClockSpeed(true);  // Set to Slow
+              }
+#endif
               START_TIMER;
               Plugin_ptr[DeviceIndex](Function, &TempEvent, str);
               STOP_TIMER_TASK(DeviceIndex, Function);
+#ifdef FEATURE_I2CMULTIPLEXER
+              if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && I2CMultiplexerPortSelectedForTask(task)) {
+                I2CMultiplexerOffByTaskIndex(task);
+              }
+#else
+              if (bitRead(Settings.I2C_Flags[task], I2C_FLAGS_SLOW_SPEED)) {
+                I2CSelectClockSpeed(false);  // Reset
+              }
+#endif
               delay(0); // SMY: call delay(0) unconditionally
             }
           }
@@ -1272,6 +1379,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_SAVE:
     case PLUGIN_WEBFORM_SHOW_VALUES:
     case PLUGIN_WEBFORM_SHOW_CONFIG:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     case PLUGIN_GET_DEVICEVALUENAMES:
     case PLUGIN_GET_DEVICEGPIONAMES:
     case PLUGIN_READ:
@@ -1285,7 +1393,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
       if (validDeviceIndex(DeviceIndex)) {
         if (Function == PLUGIN_INIT) {
           // Schedule the plugin to be read.
-          schedule_task_device_timer_at_init(event->TaskIndex);
+          Scheduler.schedule_task_device_timer_at_init(event->TaskIndex);
         }
 
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
@@ -1305,6 +1413,15 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             UserVar[event->BaseVarIndex + i] = 0.0;
           }
         }
+#ifdef FEATURE_I2CMULTIPLEXER
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(event->TaskIndex)) {
+          I2CMultiplexerSelectByTaskIndex(event->TaskIndex);
+        }
+#else
+        if (bitRead(Settings.I2C_Flags[event->TaskIndex], I2C_FLAGS_SLOW_SPEED)) {
+          I2CSelectClockSpeed(true);  // Set to Slow
+        }
+#endif
         START_TIMER;
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
@@ -1317,6 +1434,15 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           clearPluginTaskData(event->TaskIndex);
         }
         STOP_TIMER_TASK(DeviceIndex, Function);
+#ifdef FEATURE_I2CMULTIPLEXER
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(event->TaskIndex)) {
+          I2CMultiplexerOffByTaskIndex(event->TaskIndex);
+        }
+#else
+        if (bitRead(Settings.I2C_Flags[event->TaskIndex], I2C_FLAGS_SLOW_SPEED)) {
+          I2CSelectClockSpeed(false);  // Reset
+        }
+#endif
         delay(0); // SMY: call delay(0) unconditionally
         return retval;
       }

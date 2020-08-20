@@ -454,15 +454,19 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       break;
     }
 
-    case CPlugin::Function::CPLUGIN_EXIT:
+    case CPlugin::Function::CPLUGIN_INIT:
     {
-      C018_data.reset();
+      success = init_c018_delay_queue(event->ControllerIndex);
+      if (success) {
+        C018_init(event);
+      }
       break;
     }
 
-    case CPlugin::Function::CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_EXIT:
     {
-      C018_init(event);
+      C018_data.reset();
+      exit_c018_delay_queue();
       break;
     }
 
@@ -635,9 +639,13 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
-      success = C018_DelayHandler.addToQueue(
+      if (C018_DelayHandler == nullptr) {
+        break;
+      }
+
+      success = C018_DelayHandler->addToQueue(
         C018_queue_element(event, C018_data.getSampleSetCount(event->TaskIndex)));
-      scheduleNextDelayQueue(TIMER_C018_DELAY_QUEUE, C018_DelayHandler.getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C018_DELAY_QUEUE, C018_DelayHandler->getNextScheduleTime());
       if (!C018_data.isInitialized()) {
         // Sometimes the module does need some time after power on to respond.
         // So it may not be initialized well at the call of CPLUGIN_INIT
@@ -678,8 +686,12 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
 bool C018_init(struct EventStruct *event) {
   MakeControllerSettings(ControllerSettings);
+  if (!AllocatedControllerSettings()) {
+    return false;
+  }
+
   LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-  C018_DelayHandler.configureControllerSettings(ControllerSettings);
+  C018_DelayHandler->configureControllerSettings(ControllerSettings);
 
   C018_ConfigStruct customConfig;
   LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));

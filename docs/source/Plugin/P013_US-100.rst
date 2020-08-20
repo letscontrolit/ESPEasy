@@ -26,7 +26,7 @@ Wiring
 
 The US-100 must be run on 5V. Running it with 3.3V will show very weak results or nothing at all.
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               US-100
   GPIO (X)   <-->   Trigger
@@ -89,7 +89,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block::
 
    on US100#distance do
     if [US100#distance]<50 and [US100#distance]>45

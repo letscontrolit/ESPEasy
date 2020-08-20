@@ -12,6 +12,7 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 
 // Defines to make plugins more readable.

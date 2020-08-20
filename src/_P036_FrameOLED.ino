@@ -93,8 +93,6 @@
 #define P036_RESOLUTION  PCONFIG(7)
 
 
-
-
 boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 {
   bool success = false;
@@ -128,6 +126,16 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      uint8_t choice = P036_ADR;
+      int     optionValues[2];
+      optionValues[0] = 0x3C;
+      optionValues[1] = 0x3D;
+      addFormSelectorI2C(F("p036_adr"), 2, optionValues, choice);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
 #ifdef PLUGIN_036_DEBUG
@@ -136,7 +144,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       // Use number 5 to remain compatible with existing configurations,
       // but the item should be one of the first choices.
-      addFormSubHeader(F("Display"));
       {
         uint8_t choice = P036_CONTROLLER;
         String  options[2];
@@ -144,14 +151,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         options[1] = F("SH1106 (132x64 dot controller)");
         int optionValues[2] = { 1, 2 };
         addFormSelector(F("Controller"), F("p036_controller"), 2, options, optionValues, choice);
-      }
-
-      {
-        uint8_t choice = P036_ADR;
-        int     optionValues[2];
-        optionValues[0] = 0x3C;
-        optionValues[1] = 0x3D;
-        addFormSelectorI2C(F("p036_adr"), 2, optionValues, choice);
       }
 
       {
@@ -171,7 +170,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       {
         p036_resolution tOLEDIndex = static_cast<p036_resolution>(P036_RESOLUTION);
-        addFormNumericBox(F("Lines per Frame"), F("p036_nlines"), P036_NLINES, 1, P036_data_struct::getDisplaySizeSettings(tOLEDIndex).MaxLines);
+        addFormNumericBox(F("Lines per Frame"),
+                          F("p036_nlines"),
+                          P036_NLINES,
+                          1,
+                          P036_data_struct::getDisplaySizeSettings(tOLEDIndex).MaxLines);
       }
 
       {
@@ -188,10 +191,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
-      bool tbPin3Invers = bitRead(PCONFIG_LONG(0), 16);   // Bit 16
-      addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"),     tbPin3Invers);
+      bool tbPin3Invers = bitRead(PCONFIG_LONG(0), 16);      // Bit 16
+      addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"), tbPin3Invers);
       bool bStepThroughPages = bitRead(PCONFIG_LONG(0), 19); // Bit 19
-      addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"), bStepThroughPages);
+      addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bStepThroughPages);
 
       addFormNumericBox(F("Display Timeout"), F("p036_timer"), P036_TIMER);
 
@@ -220,8 +223,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         uint8_t choice9      = get8BitFromUL(PCONFIG_LONG(0), 8); // Bit15-8 HeaderContent
         uint8_t choice10     = get8BitFromUL(PCONFIG_LONG(0), 0); // Bit7-0 HeaderContentAlternative
         String  options9[14] =
-        { F("SSID"),         F("SysName"), F("IP"),      F("MAC"),     F("RSSI"),     F("BSSID"), 
-          F("WiFi channel"), F("Unit"),    F("SysLoad"), F("SysHeap"), F("SysStack"), F("Date"), 
+        { F("SSID"),         F("SysName"),         F("IP"),                 F("MAC"),         F("RSSI"),      F("BSSID"),
+          F("WiFi channel"), F("Unit"),            F("SysLoad"),            F("SysHeap"),     F("SysStack"),  F("Date"),
           F("Time"),         F("PageNumbers") };
         int optionValues9[14] =
         { eSSID, eSysName, eIP, eMAC, eRSSI, eBSSID, eWiFiCh, eUnit, eSysLoad, eSysHeap, eSysStack, eDate, eTime, ePageNo };
@@ -233,7 +236,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Scroll long lines"),              F("p036_ScrollLines"), tbScrollLines);
 
       bool tbNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18); // Bit 18
-      addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),               !tbNoDisplayOnReceivedText);
+      addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),   !tbNoDisplayOnReceivedText);
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
       {
@@ -241,6 +244,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         // This data in memory can be altered through write commands.
         // Therefore we must read the lines from flash in a temporary object.
         P036_data_struct *P036_data = new P036_data_struct();
+
         if (nullptr != P036_data) {
           uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
           P036_data->loadDisplayLines(event->TaskIndex, version);
@@ -252,6 +256,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                            String(P036_data->DisplayLinesV1[varNr].Content),
                            P36_NcharsV1 - 1);
           }
+
           // Need to delete the allocated object here
           delete P036_data;
         }
@@ -268,7 +273,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #endif // PLUGIN_036_DEBUG
 
       // update now
-      schedule_task_device_timer(event->TaskIndex, millis() + 10);
+      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
       P036_ADR        = getFormItemInt(F("p036_adr"));
       P036_ROTATE     = getFormItemInt(F("p036_rotate"));
@@ -282,12 +287,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       uint32_t lSettings = 0;
       set8BitToUL(lSettings, 8, uint8_t(getFormItemInt(F("p036_header")) & 0xff));          // Bit15-8 HeaderContent
       set8BitToUL(lSettings, 0, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff)); // Bit 7-0 HeaderContentAlternative
-      bitWrite(lSettings, 16,  isFormItemChecked(F("p036_pin3invers")));                    // Bit 16 Pin3Invers
-      bitWrite(lSettings, 17,  isFormItemChecked(F("p036_ScrollLines")));                   // Bit 17 ScrollLines
+      bitWrite(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                     // Bit 16 Pin3Invers
+      bitWrite(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));                    // Bit 17 ScrollLines
       bitWrite(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                     // Bit 18 NoDisplayOnReceivingText
-      bitWrite(lSettings, 19,  isFormItemChecked(F("p036_StepPages")));                     // Bit 19 StepThroughPagesWithButton
+      bitWrite(lSettings, 19, isFormItemChecked(F("p036_StepPages")));                      // Bit 19 StepThroughPagesWithButton
       // save CustomTaskSettings always in version V1
-      set4BitToUL(lSettings, 20, 0x01);                                                     // Bit23-20 Version CustomTaskSettings -> version V1
+      set4BitToUL(lSettings, 20, 0x01);                                                     // Bit23-20 Version CustomTaskSettings ->
+                                                                                            // version V1
       bitWrite(lSettings, 24, !isFormItemChecked(F("p036_ScrollWithoutWifi")));             // Bit 24 ScrollWithoutWifi
 
       PCONFIG_LONG(0) = lSettings;
@@ -297,6 +303,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         // This data in memory can be altered through write commands.
         // Therefore we must use a temporary version to store the settings.
         P036_data_struct *P036_data = new P036_data_struct();
+
         if (nullptr != P036_data) {
           String error;
 
@@ -351,17 +358,17 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // Load the custom settings from flash
-      uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20);// Bit23-20 Version CustomTaskSettings
+      uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
 
       // Init the display and turn it on
       if (!(P036_data->init(event->TaskIndex,
                             version,
-                            P036_CONTROLLER,// Type
-                            P036_ADR,   // I2C address
+                            P036_CONTROLLER,                               // Type
+                            P036_ADR,                                      // I2C address
                             Settings.Pin_i2c_sda,
                             Settings.Pin_i2c_scl,
-                            static_cast<p036_resolution>(P036_RESOLUTION),  // OLED index
-                            (P036_ROTATE == 2), // 1 = Normal, 2 = Rotated
+                            static_cast<p036_resolution>(P036_RESOLUTION), // OLED index
+                            (P036_ROTATE == 2),                            // 1 = Normal, 2 = Rotated
                             P036_CONTRAST,
                             P036_TIMER,
                             P036_NLINES
@@ -419,7 +426,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (CONFIG_PIN3 != -1)
       {
         uint8_t newButtonState = digitalRead(CONFIG_PIN3);
-        bool bPin3Invers    = bitRead(PCONFIG_LONG(0), 16); // Bit 16
+        bool    bPin3Invers    = bitRead(PCONFIG_LONG(0), 16); // Bit 16
         P036_data->registerButtonState(newButtonState, bPin3Invers);
       }
       success = true;
@@ -552,8 +559,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if ((UserVar[event->BaseVarIndex] == 1) && P036_data->display_scroll_timer()) { // page scrolling only when the display is on
-        setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1);       // calls next page scrollng tick
+      if ((UserVar[event->BaseVarIndex] == 1) && P036_data->display_scroll_timer()) {     // page scrolling only when the display is on
+        Scheduler.setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
       }
       return success;
     }
@@ -703,7 +710,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             // shorten string because OLED controller can not handle such long strings
             P036_data->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
           }
-          P036_data->MaxFramesToDisplay = 0xff;                            // update frame count
+          P036_data->MaxFramesToDisplay = 0xff;                         // update frame count
 
           bool bNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18); // Bit 18 NoDisplayOnReceivedText
 

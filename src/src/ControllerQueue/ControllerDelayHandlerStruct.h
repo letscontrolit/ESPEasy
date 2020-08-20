@@ -2,16 +2,16 @@
 #define CONTROLLERQUEUE_CONTROLLER_DELAY_HANDLER_STRUCT_H
 
 
+#include "../../_CPlugin_Helper.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
-#include "../DataStructs/SchedulerTimers.h"
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/CPlugins.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/Protocol.h"
-#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
-#include "../../_CPlugin_Helper.h"
 
 #include <list>
 #include <memory> // For std::shared_ptr
@@ -204,13 +204,17 @@ struct ControllerDelayHandlerStruct {
   bool do_process_c##NNN####M##_delay_queue(int controller_number,                                                     \
                                            const C##NNN####M##_queue_element & element,                                \
                                            ControllerSettingsStruct & ControllerSettings);                             \
-  extern ControllerDelayHandlerStruct<C##NNN####M##_queue_element>C##NNN####M##_DelayHandler;                          \
+  typedef ControllerDelayHandlerStruct<C##NNN####M##_queue_element> C##NNN####M##_DelayHandler_t;                      \
+  extern C##NNN####M##_DelayHandler_t *C##NNN####M##_DelayHandler;                                                     \
   void process_c##NNN####M##_delay_queue();                                                                            \
+  bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex);                                              \
+  void exit_c##NNN####M##_delay_queue();                                                                               \
 
 #define DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(NNN, M)                                                                      \
-  ControllerDelayHandlerStruct<C##NNN####M##_queue_element>C##NNN####M##_DelayHandler;                                 \
+  C##NNN####M##_DelayHandler_t *C##NNN####M##_DelayHandler = nullptr;                                                  \
   void process_c##NNN####M##_delay_queue() {                                                                           \
-    C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler.getNext());                                        \
+    if (C##NNN####M##_DelayHandler == nullptr) return;                                                                 \
+    C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler->getNext());                                       \
     if (element == NULL) return;                                                                                       \
     MakeControllerSettings(ControllerSettings);                                                                        \
     bool ready = true;                                                                                                 \
@@ -218,16 +222,37 @@ struct ControllerDelayHandlerStruct {
       ready = false;                                                                                                   \
     } else {                                                                                                           \
       LoadControllerSettings(element->controller_idx, ControllerSettings);                                             \
-      C##NNN####M##_DelayHandler.configureControllerSettings(ControllerSettings);                                      \
-      if (!C##NNN####M##_DelayHandler.readyToProcess(*element)) { ready = false; }                                     \
+      C##NNN####M##_DelayHandler->configureControllerSettings(ControllerSettings);                                     \
+      if (!C##NNN####M##_DelayHandler->readyToProcess(*element)) { ready = false; }                                    \
     }                                                                                                                  \
     if (ready) {                                                                                                       \
       START_TIMER;                                                                                                     \
-      C##NNN####M##_DelayHandler.markProcessed(do_process_c##NNN####M##_delay_queue(M, *element, ControllerSettings)); \
+      C##NNN####M##_DelayHandler->markProcessed(do_process_c##NNN####M##_delay_queue(M, *element, ControllerSettings)); \
       STOP_TIMER(C##NNN####M##_DELAY_QUEUE);                                                                           \
     }                                                                                                                  \
-    scheduleNextDelayQueue(TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler.getNextScheduleTime());         \
-  }
+    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler->getNextScheduleTime());         \
+  }                                                                                                                    \
+  bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                             \
+    if (C##NNN####M##_DelayHandler == nullptr) {                                                                       \
+      C##NNN####M##_DelayHandler = new C##NNN####M##_DelayHandler_t;                                                   \
+    }                                                                                                                  \
+    if (C##NNN####M##_DelayHandler == nullptr) { return false; }                                                       \
+    MakeControllerSettings(ControllerSettings);                                                                        \
+    if (!AllocatedControllerSettings()) {                                                                              \
+      return false;                                                                                                    \
+    }                                                                                                                  \
+    LoadControllerSettings(ControllerIndex, ControllerSettings);                                                       \
+    C##NNN####M##_DelayHandler->configureControllerSettings(ControllerSettings);                                       \
+    return true;                                                                                                       \
+  }                                                                                                                    \
+  void exit_c##NNN####M##_delay_queue() {                                                                              \
+    if (C##NNN####M##_DelayHandler != nullptr) {                                                                       \
+      delete C##NNN####M##_DelayHandler;                                                                               \
+      C##NNN####M##_DelayHandler = nullptr;                                                                            \
+    }                                                                                                                  \
+  }                                                                                                                    \
+
+
 
 
 // Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.

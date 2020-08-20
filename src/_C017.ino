@@ -45,12 +45,30 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String &
       break;
     }
 
+    case CPlugin::Function::CPLUGIN_INIT:
+      {
+        success = init_c017_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c017_delay_queue();
+        break;
+      }
+
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
-    {
+      {
+      if (C017_DelayHandler == nullptr) {
+        break;
+      }
       byte valueCount = getValueCountFromSensorType(event->sensorType);
       C017_queue_element element(event);
 
       MakeControllerSettings(ControllerSettings);
+      if (!AllocatedControllerSettings()) {
+        break;
+      }
       LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
       for (byte x = 0; x < valueCount; x++)
@@ -58,8 +76,8 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String &
         element.txt[x] = formatUserVarNoCheck(event, x);
       }
       // FIXME TD-er must define a proper move operator
-      success = C017_DelayHandler.addToQueue(C017_queue_element(element));
-      scheduleNextDelayQueue(TIMER_C017_DELAY_QUEUE, C017_DelayHandler.getNextScheduleTime());
+      success = C017_DelayHandler->addToQueue(C017_queue_element(element));
+      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C017_DELAY_QUEUE, C017_DelayHandler->getNextScheduleTime());
       break;
     }
 

@@ -9,6 +9,7 @@
 #include "src/Globals/CRCValues.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Plugins_other.h"
@@ -797,7 +798,7 @@ bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled)
   if (validPluginID(Settings.TaskDeviceNumber[taskIndex]) || !enabled) {
     Settings.TaskDeviceEnabled[taskIndex] = enabled;
     if (enabled) {
-      schedule_task_device_timer(taskIndex, millis() + 10);
+      Scheduler.schedule_task_device_timer(taskIndex, millis() + 10);
     }
     return true;
   }
@@ -1092,20 +1093,22 @@ void ResetFactory()
   {
     // Place in a scope to have its memory freed ASAP
     MakeControllerSettings(ControllerSettings);
-    safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
-    safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
-    safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
-    safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
-    safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
-    str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
-    ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
-    ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
-    ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
-    ControllerSettings.Port = DEFAULT_PORT;
-    setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
-    setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
+    if (AllocatedControllerSettings()) {
+      safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
+      safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
+      safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
+      safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
+      safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
+      str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
+      ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
+      ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
+      ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
+      ControllerSettings.Port = DEFAULT_PORT;
+      setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
+      setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
 
-    SaveControllerSettings(0, ControllerSettings);
+      SaveControllerSettings(0, ControllerSettings);
+    }
   }
 #endif
 

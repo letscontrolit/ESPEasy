@@ -35,14 +35,21 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        C001_DelayHandler.configureControllerSettings(ControllerSettings);
+        success = init_c001_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c001_delay_queue();
         break;
       }
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
+        if (C001_DelayHandler == nullptr) {
+          break;
+        }
         if (event->idx != 0)
         {
           // We now create a URI for the request
@@ -98,8 +105,8 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
             url += mapVccToDomoticz();
           #endif
 
-          success = C001_DelayHandler.addToQueue(C001_queue_element(event->ControllerIndex, url));
-          scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime());
+          success = C001_DelayHandler->addToQueue(C001_queue_element(event->ControllerIndex, url));
+          Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C001_DELAY_QUEUE, C001_DelayHandler->getNextScheduleTime());
         } // if ixd !=0
         else
         {

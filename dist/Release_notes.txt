@@ -1,4 +1,47 @@
 -------------------------------------------------
+Changes in release mega-20200812 (since mega-20200801)
+-------------------------------------------------
+
+Release date: wo 12 aug 2020 23:29:35 CEST
+
+Gijs Noorlander (19):
+      [Python] Update of python packages in requirements.txt
+      [C011] Fix incorrect load/save settings.
+      [Uncrustify] Clean up C011 code using Uncrustify.
+      [Blynk] Make C015 Blynk controller compile again
+      Include C015 in the custom build for testing
+      [GPS] Apply sanity check on received data.
+      [Rules Timer] Use scheduler for rules timer
+      [Timers] Make loop timers with fixed interval and nr of loops
+      [Docs] Add documentation for msec timers and loop timers
+      [Timers] Cleanup of timer code.
+      [Scheduler] Move global scheduler functions into C++ class
+      [Timers] Change interval timer defines into enum class
+      [Scheduler] Change plugin pointer type into enum class
+      [Dallas iButton] Enable interrupts when no sensor found
+      [Dallas] Fix NoInterrupt calls for ESP32
+      Uncrustify both Dallas plugins
+      [Dallas] Make sure function forward declaration is on one line
+      [Dallas] Add warning about the need for a pull up
+      [Docs] Update mentioned dates of introduced feature
+
+TD-er (1):
+      [Dallas] Enable interrupts when no sensor found
+
+Wiki591 (1):
+      Update URLs.rst
+
+jimmys01 (1):
+      [IR] Update Library
+
+tonhuisman (4):
+      [Docs] Update [P036] documentation that went missing
+      [P010] Changes to enable use on ESP32 (#3175)
+      [P010] Remove some left-overs from testing
+      [P010] Correction in I2C handing, and fix for old issue
+
+
+-------------------------------------------------
 Changes in release mega-20200801 (since mega-20200721)
 -------------------------------------------------
 

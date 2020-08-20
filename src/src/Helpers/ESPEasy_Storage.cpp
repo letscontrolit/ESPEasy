@@ -11,6 +11,7 @@
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/SecuritySettings.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 
 #include "../DataStructs/TimingStats.h"
 #include "../DataStructs/StorageLayout.h"
@@ -175,7 +176,7 @@ String BuildFixes()
     Settings.OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   }
   if (Settings.Build < 20105) {
-    Settings.I2C_clockSpeed = 400000;
+    Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
   }
   if (Settings.Build <= 20106) {
     // ClientID is now defined in the controller settings.
@@ -217,6 +218,15 @@ String BuildFixes()
   }
   if (Settings.Build < 20109) {
     Settings.SyslogPort = 514;
+  }
+  if (Settings.Build < 20110) {
+    Settings.I2C_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+    Settings.I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+    Settings.I2C_Multiplexer_Addr = -1;
+    for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
+      Settings.I2C_Multiplexer_Channel[x] = -1;
+    }
+    Settings.I2C_Multiplexer_ResetPin = -1;
   }
 
   Settings.Build = BUILD;
@@ -365,7 +375,7 @@ void afterloadSettings() {
   if (modelMatchingFlashSize(model)) {
     ResetFactoryDefaultPreference = Settings.ResetFactoryDefaultPreference;
   }
-  msecTimerHandler.setEcoMode(Settings.EcoPowerMode());
+  Scheduler.setEcoMode(Settings.EcoPowerMode());
 
   if (!Settings.UseRules) {
     eventQueue.clear();

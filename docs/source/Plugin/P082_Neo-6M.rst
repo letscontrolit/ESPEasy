@@ -27,7 +27,7 @@ The TX channel from the ESP to the GPS is not needed for this plugin.
 
 The used baudrate is 9600 bps.
 
-.. code-block:: html
+.. code-block:: none
 
   ESP                         Neo-6M (HW Serial0)
   GPIO (3/RX/RX0/D9)   <-->   TXD
@@ -102,7 +102,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
    on GeoPos#Speed do
     if [GeoPos#Speed]>50
