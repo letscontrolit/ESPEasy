@@ -134,7 +134,7 @@ typedef struct {
 struct P036_data_struct : public PluginTaskData_base {
   P036_data_struct();
 
-  ~P036_data_struct();
+  virtual ~P036_data_struct();
 
   void                        reset();
 

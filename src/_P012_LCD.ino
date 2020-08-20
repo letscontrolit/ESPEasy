@@ -2,6 +2,8 @@
 
 #ifdef USES_P012
 
+# include "src/PluginStructs/P012_data_struct.h"
+
 // #######################################################################################################
 // #################################### Plugin 012: LCD ##################################################
 // #######################################################################################################
@@ -13,12 +15,7 @@
 //  Lux:[Lux#Lux#R]
 //  Baro:[Baro#Pressure#R]
 //  Pump:[Pump#on#O] -> ON/OFF
-# include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C *lcd = NULL;
-int Plugin_012_cols    = 16;
-int Plugin_012_rows    = 2;
-int Plugin_012_mode    = 1;
 
 # define PLUGIN_012
 # define PLUGIN_ID_012         12
@@ -28,10 +25,14 @@ int Plugin_012_mode    = 1;
 # define P12_Nlines 4 // The number of different lines which can be displayed
 # define P12_Nchars 80
 
+# define P012_I2C_ADDR    PCONFIG(0)
+# define P012_SIZE        PCONFIG(1)
+# define P012_TIMER       PCONFIG(2)
+# define P012_MODE        PCONFIG(3)
+
 boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 {
-  boolean success          = false;
-  static byte displayTimer = 0;
+  boolean success = false;
 
   switch (function)
   {
@@ -64,7 +65,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
+      byte choice = P012_I2C_ADDR;
 
       // String options[16];
       int optionValues[16];
@@ -87,7 +88,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte   choice2 = PCONFIG(1);
+      byte   choice2 = P012_SIZE;
       String options2[2];
       options2[0] = F("2 x 16");
       options2[1] = F("4 x 20");
@@ -107,14 +108,14 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       addRowLabel(F("Display button"));
       addPinSelect(false, F("taskdevicepin3"), CONFIG_PIN3);
 
-      addFormNumericBox(F("Display Timeout"), F("p012_timer"), PCONFIG(2));
+      addFormNumericBox(F("Display Timeout"), F("p012_timer"), P012_TIMER);
 
       String options3[3];
       options3[0] = F("Continue to next line (as in v1.4)");
       options3[1] = F("Truncate exceeding message");
       options3[2] = F("Clear then truncate exceeding message");
       int optionValues3[3] = { 0, 1, 2 };
-      addFormSelector(F("LCD command Mode"), F("p012_mode"), 3, options3, optionValues3, PCONFIG(3));
+      addFormSelector(F("LCD command Mode"), F("p012_mode"), 3, options3, optionValues3, P012_MODE);
 
       success = true;
       break;
@@ -122,10 +123,10 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p012_adr"));
-      PCONFIG(1) = getFormItemInt(F("p012_size"));
-      PCONFIG(2) = getFormItemInt(F("p012_timer"));
-      PCONFIG(3) = getFormItemInt(F("p012_mode"));
+      P012_I2C_ADDR = getFormItemInt(F("p012_adr"));
+      P012_SIZE     = getFormItemInt(F("p012_size"));
+      P012_TIMER    = getFormItemInt(F("p012_timer"));
+      P012_MODE     = getFormItemInt(F("p012_mode"));
 
       // FIXME TD-er: This is a huge stack allocated object.
       char   deviceTemplate[P12_Nlines][P12_Nchars];
@@ -148,27 +149,13 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (PCONFIG(1) == 2) {
-        Plugin_012_rows = 4;
-        Plugin_012_cols = 20;
-      } else if (PCONFIG(1) == 1) {
-        Plugin_012_rows = 2;
-        Plugin_012_cols = 16;
+      initPluginTaskData(event->TaskIndex, new P012_data_struct(P012_I2C_ADDR, P012_SIZE, P012_MODE, P012_TIMER));
+      P012_data_struct *P012_data =
+        static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P012_data) {
+        break;
       }
-
-      Plugin_012_mode = PCONFIG(3);
-
-      // TODO:LiquidCrystal_I2C class doesn't have destructor. So if LCD type (size) is changed better reboot for changes to take effect.
-      // workaround is to fix the cols and rows at its maximum (20 and 4)
-      if (!lcd) {
-        lcd = new LiquidCrystal_I2C(PCONFIG(0), 20, 4); // Plugin_012_cols, Plugin_012_rows);
-      }
-
-      // Setup LCD display
-      lcd->init(); // initialize the lcd
-      lcd->backlight();
-      lcd->print(F("ESP Easy"));
-      displayTimer = PCONFIG(2);
 
       if (CONFIG_PIN3 != -1) {
         pinMode(CONFIG_PIN3, INPUT_PULLUP);
@@ -183,10 +170,12 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       {
         if (!digitalRead(CONFIG_PIN3))
         {
-          if (lcd) {
-            lcd->backlight();
+          P012_data_struct *P012_data =
+            static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+          if (nullptr != P012_data) {
+            P012_data->setBacklightTimer(P012_TIMER);
           }
-          displayTimer = PCONFIG(2);
         }
       }
       break;
@@ -194,116 +183,75 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
     {
-      if (displayTimer > 0)
-      {
-        displayTimer--;
+      P012_data_struct *P012_data =
+        static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (lcd && (displayTimer == 0)) {
-          lcd->noBacklight();
-        }
+      if (nullptr != P012_data) {
+        P012_data->checkTimer();
       }
       break;
     }
 
     case PLUGIN_READ:
     {
-      // FIXME TD-er: This is a huge stack allocated object.
-      char deviceTemplate[P12_Nlines][P12_Nchars];
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemplate, sizeof(deviceTemplate));
+      P012_data_struct *P012_data =
+        static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      for (byte x = 0; x < Plugin_012_rows; x++)
-      {
-        String tmpString = deviceTemplate[x];
+      if (nullptr != P012_data) {
+        // FIXME TD-er: This is a huge stack allocated object.
+        char deviceTemplate[P12_Nlines][P12_Nchars];
+        LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemplate, sizeof(deviceTemplate));
 
-        if (lcd && tmpString.length())
+        for (byte x = 0; x < P012_data->Plugin_012_rows; x++)
         {
-          String newString = P012_parseTemplate(tmpString, Plugin_012_cols);
-          lcd->setCursor(0, x);
-          lcd->print(newString);
+          String tmpString = deviceTemplate[x];
+
+          if (tmpString.length())
+          {
+            String newString = P012_parseTemplate(tmpString, P012_data->Plugin_012_cols);
+            P012_data->lcdWrite(newString, 0, x);
+          }
         }
+        success = false;
       }
-      success = false;
       break;
     }
 
     case PLUGIN_WRITE:
     {
-      String cmd = parseString(string, 1);
+      P012_data_struct *P012_data =
+        static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (lcd && cmd.equalsIgnoreCase(F("LCDCMD")))
-      {
-        success = true;
-        String arg1 = parseString(string, 2);
+      if (nullptr != P012_data) {
+        String cmd = parseString(string, 1);
 
-        if (arg1.equalsIgnoreCase(F("Off"))) {
-          lcd->noBacklight();
+        if (cmd.equalsIgnoreCase(F("LCDCMD")))
+        {
+          success = true;
+          String arg1 = parseString(string, 2);
+
+          if (arg1.equalsIgnoreCase(F("Off"))) {
+            P012_data->lcd.noBacklight();
+          }
+          else if (arg1.equalsIgnoreCase(F("On"))) {
+            P012_data->lcd.backlight();
+          }
+          else if (arg1.equalsIgnoreCase(F("Clear"))) {
+            P012_data->lcd.clear();
+          }
         }
-        else if (arg1.equalsIgnoreCase(F("On"))) {
-          lcd->backlight();
+        else if (cmd.equalsIgnoreCase(F("LCD")))
+        {
+          success = true;
+          int colPos  = event->Par2 - 1;
+          int rowPos  = event->Par1 - 1;
+          String text = parseStringKeepCase(string, 4);
+          text = P012_parseTemplate(text, P012_data->Plugin_012_cols);
+
+          P012_data->lcdWrite(text, colPos, rowPos);
         }
-        else if (arg1.equalsIgnoreCase(F("Clear"))) {
-          lcd->clear();
-        }
+        break;
       }
-      else if (lcd && cmd.equalsIgnoreCase(F("LCD")))
-      {
-        success = true;
-        int colPos  = event->Par2 - 1;
-        int rowPos  = event->Par1 - 1;
-        String text = parseStringKeepCase(string, 4);
-        text = P012_parseTemplate(text, Plugin_012_cols);
-
-        // clear line before writing new string
-        if (Plugin_012_mode == 2) {
-          lcd->setCursor(colPos, rowPos);
-
-          for (byte i = colPos; i < Plugin_012_cols; i++) {
-            lcd->print(" ");
-          }
-        }
-
-        // truncate message exceeding cols
-        lcd->setCursor(colPos, rowPos);
-
-        if ((Plugin_012_mode == 1) || (Plugin_012_mode == 2)) {
-          lcd->setCursor(colPos, rowPos);
-
-          for (byte i = 0; i < Plugin_012_cols - colPos; i++) {
-            if (text[i]) {
-              lcd->print(text[i]);
-            }
-          }
-        }
-
-        // message exceeding cols will continue to next line
-        else {
-          // Fix Weird (native) lcd display behaviour that split long string into row 1,3,2,4, instead of 1,2,3,4
-          boolean stillProcessing = 1;
-          byte    charCount       = 1;
-
-          while (stillProcessing) {
-            if (++colPos > Plugin_012_cols) { // have we printed 20 characters yet (+1 for the logic)
-              rowPos += 1;
-              lcd->setCursor(0, rowPos);      // move cursor down
-              colPos = 1;
-            }
-
-            // dont print if "lower" than the lcd
-            if (rowPos < Plugin_012_rows) {
-              lcd->print(text[charCount - 1]);
-            }
-
-            if (!text[charCount]) { // no more chars to process?
-              stillProcessing = 0;
-            }
-            charCount += 1;
-          }
-
-          // lcd->print(text.c_str());
-          // end fix
-        }
-      }
-      break;
     }
   }
   return success;
