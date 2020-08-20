@@ -164,6 +164,13 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_EXIT:
+    {
+      clearPluginTaskData(event->TaskIndex);
+      success = true;
+      break;
+    }
+
     case PLUGIN_TEN_PER_SECOND:
     {
       if (CONFIG_PIN3 != -1)
