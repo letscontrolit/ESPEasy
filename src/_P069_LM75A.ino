@@ -1,14 +1,15 @@
 #ifdef USES_P069
-//#######################################################################################################
-//########################### Plugin 69: LM75A Temperature Sensor (I2C) #################################
-//#######################################################################################################
-//###################### Library source code for Arduino by QuentinCG, 2016 #############################
-//#######################################################################################################
-//##################### Plugin for ESP Easy by B.E.I.C. ELECTRONICS, 2017 ###############################
-//############################## http://www.beicelectronics.com #########################################
-//#######################################################################################################
-//########################## Adapted to ESPEasy 2.0 by Jochen Krapf #####################################
-//#######################################################################################################
+
+// #######################################################################################################
+// ########################### Plugin 69: LM75A Temperature Sensor (I2C) #################################
+// #######################################################################################################
+// ###################### Library source code for Arduino by QuentinCG, 2016 #############################
+// #######################################################################################################
+// ##################### Plugin for ESP Easy by B.E.I.C. ELECTRONICS, 2017 ###############################
+// ############################## http://www.beicelectronics.com #########################################
+// #######################################################################################################
+// ########################## Adapted to ESPEasy 2.0 by Jochen Krapf #####################################
+// #######################################################################################################
 
 
 #define PLUGIN_069
@@ -18,23 +19,22 @@
 
 
 #ifndef LM75A_h
-#define LM75A_h
+# define LM75A_h
 
-#define INVALID_LM75A_TEMPERATURE 1000
+# define INVALID_LM75A_TEMPERATURE 1000
 
-#include "_Plugin_Helper.h"
-namespace LM75AConstValues
-{
-  const int LM75A_BASE_ADDRESS = 0x48;
-  const float LM75A_DEGREES_RESOLUTION = 0.125;
-  const int LM75A_REG_ADDR_TEMP = 0;
+# include "_Plugin_Helper.h"
+namespace LM75AConstValues {
+const int   LM75A_BASE_ADDRESS       = 0x48;
+const float LM75A_DEGREES_RESOLUTION = 0.125;
+const int   LM75A_REG_ADDR_TEMP      = 0;
 }
 
 using namespace LM75AConstValues;
 
-class LM75A
-{
+class LM75A {
 public:
+
   LM75A(bool A0_value = false, bool A1_value = false, bool A2_value = false)
   {
     _i2c_device_address = LM75A_BASE_ADDRESS;
@@ -51,13 +51,14 @@ public:
       _i2c_device_address += 4;
     }
 
-    //Wire.begin();   called in ESPEasy framework
+    // Wire.begin();   called in ESPEasy framework
   }
 
   LM75A(uint8_t addr)
   {
     _i2c_device_address = addr;
-    //Wire.begin();   called in ESPEasy framework
+
+    // Wire.begin();   called in ESPEasy framework
   }
 
   void setAddress(uint8_t addr)
@@ -67,12 +68,13 @@ public:
 
   float getTemperatureInDegrees() const
   {
-    float real_result = INVALID_LM75A_TEMPERATURE;
-    int16_t value = 0;
+    float   real_result = INVALID_LM75A_TEMPERATURE;
+    int16_t value       = 0;
 
     // Go to temperature data register
     Wire.beginTransmission(_i2c_device_address);
     Wire.write(LM75A_REG_ADDR_TEMP);
+
     if (Wire.endTransmission())
     {
       // Transmission error
@@ -81,6 +83,7 @@ public:
 
     // Get content
     Wire.requestFrom(_i2c_device_address, (uint8_t)2);
+
     if (Wire.available() == 2)
     {
       value = (Wire.read() << 8) | Wire.read();
@@ -95,9 +98,9 @@ public:
     value >>= 5;
 
     // Relocate negative bit (11th bit to 16th bit)
-    if (value & 0x0400)   // negative?
+    if (value & 0x0400) // negative?
     {
-      value |= 0xFC00;   // expand to 16 bit
+      value |= 0xFC00;  // expand to 16 bit
     }
 
     // Real value can be calculated with sensor resolution
@@ -107,13 +110,14 @@ public:
   }
 
 private:
+
   uint8_t _i2c_device_address;
 };
 
-#endif
+#endif // ifndef LM75A_h
 
 
-LM75A* PLUGIN_069_LM75A = NULL;
+LM75A *PLUGIN_069_LM75A = NULL;
 
 
 boolean Plugin_069(byte function, struct EventStruct *event, String& string)
@@ -124,17 +128,17 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number = PLUGIN_ID_069;
-      Device[deviceCount].Type = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports = 0;
-      Device[deviceCount].PullUpOption = false;
+      Device[++deviceCount].Number           = PLUGIN_ID_069;
+      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
+      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].Ports              = 0;
+      Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption = true;
-      Device[deviceCount].ValueCount = 1;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption = true;
-      Device[deviceCount].GlobalSyncOption = true;
+      Device[deviceCount].FormulaOption      = true;
+      Device[deviceCount].ValueCount         = 1;
+      Device[deviceCount].SendDataOption     = true;
+      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].GlobalSyncOption   = true;
       break;
     }
 
@@ -150,11 +154,15 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       int optionValues[8] = { 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
       addFormSelectorI2C(F("i2c_addr"), 8, optionValues, PCONFIG(0));
+      break;
+    }
 
+    case PLUGIN_WEBFORM_LOAD:
+    {
       success = true;
       break;
     }
@@ -169,8 +177,9 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (PLUGIN_069_LM75A)
+      if (PLUGIN_069_LM75A) {
         delete PLUGIN_069_LM75A;
+      }
       PLUGIN_069_LM75A = new LM75A((uint8_t)PCONFIG(0));
 
       success = true;
@@ -179,8 +188,9 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      if (!PLUGIN_069_LM75A)
+      if (!PLUGIN_069_LM75A) {
         return success;
+      }
 
       PLUGIN_069_LM75A->setAddress((uint8_t)PCONFIG(0));
 
