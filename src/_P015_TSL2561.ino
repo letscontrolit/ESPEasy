@@ -154,7 +154,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
         static_cast<P015_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P015_data) {
-        P015_data->plugin_015_begin();
+        P015_data->begin();
 
         P015_data->performRead(
           UserVar[event->BaseVarIndex],      // lux
@@ -164,7 +164,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
         if (P015_SLEEP) {
           addLog(LOG_LEVEL_DEBUG_MORE, F("TSL2561: sleeping..."));
-          P015_data->plugin_015_setPowerDown();
+          P015_data->setPowerDown();
         }
       }
       break;

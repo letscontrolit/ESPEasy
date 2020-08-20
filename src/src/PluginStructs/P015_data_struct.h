@@ -17,12 +17,11 @@
 # define P015_EXT_AUTO_GAIN    3
 
 struct P015_data_struct : public PluginTaskData_base {
-    
   P015_data_struct(byte         i2caddr,
                    unsigned int gain,
                    byte         integration);
 
-  bool plugin_015_begin();
+  bool begin();
 
   bool useAutoGain() const;
 
@@ -35,32 +34,32 @@ struct P015_data_struct : public PluginTaskData_base {
   // Address: TSL2561 address (0 to 15)
   // Value will be set to stored byte
   // Returns true (1) if successful, false (0) if there was an I2C error
-  bool plugin_015_readByte(unsigned char  address,
-                           unsigned char& value);
+  bool readByte(unsigned char  address,
+                unsigned char& value);
 
   // Write a byte to a TSL2561 address
   // Address: TSL2561 address (0 to 15)
   // Value: byte to write to address
   // Returns true (1) if successful, false (0) if there was an I2C error
   // (Also see getError() above)
-  bool plugin_015_writeByte(unsigned char address,
-                            unsigned char value);
+  bool writeByte(unsigned char address,
+                 unsigned char value);
 
   // Reads an unsigned integer (16 bits) from a TSL2561 address (low byte first)
   // Address: TSL2561 address (0 to 15), low byte first
   // Value will be set to stored unsigned integer
   // Returns true (1) if successful, false (0) if there was an I2C error
   // (Also see getError() above)
-  bool plugin_015_readUInt(unsigned char address,
-                           unsigned int& value);
+  bool readUInt(unsigned char address,
+                unsigned int& value);
 
   // Write an unsigned integer (16 bits) to a TSL2561 address (low byte first)
   // Address: TSL2561 address (0 to 15), low byte first
   // Value: unsigned int to write to address
   // Returns true (1) if successful, false (0) if there was an I2C error
   // (Also see getError() above)
-  bool plugin_015_writeUInt(unsigned char address,
-                            unsigned int  value);
+  bool writeUInt(unsigned char address,
+                 unsigned int  value);
 
 
   // If gain = false (0), device is set to low gain (1X)
@@ -89,26 +88,26 @@ struct P015_data_struct : public PluginTaskData_base {
 
   // Determine if either sensor saturated (max depends on clock freq. and integration time)
   // If so, abandon ship (calculation will not be accurate)
-  bool plugin_015_ADC_saturated(unsigned char time,
-                                unsigned int  value);
+  bool ADC_saturated(unsigned char time,
+                     unsigned int  value);
 
   // Turn on TSL2561, begin integrations
   // Returns true (1) if successful, false (0) if there was an I2C error
   // (Also see getError() below)
-  bool plugin_015_setPowerUp(void);
+  bool setPowerUp(void);
 
   // Turn off TSL2561
   // Returns true (1) if successful, false (0) if there was an I2C error
   // (Also see getError() below)
-  bool plugin_015_setPowerDown(void);
+  bool setPowerDown(void);
 
 
   // Retrieve raw integration results
   // data0 and data1 will be set to integration results
   // Returns true (1) if successful, false (0) if there was an I2C error
   // (Also see getError() below)
-  bool plugin_015_getData(unsigned int& data0,
-                          unsigned int& data1);
+  bool getData(unsigned int& data0,
+               unsigned int& data1);
 
   // Convert raw data to lux
   // gain: 0 (1X) or 1 (16X), see setTiming()
@@ -117,21 +116,20 @@ struct P015_data_struct : public PluginTaskData_base {
   // lux will be set to resulting lux calculation
   // returns true (1) if calculation was successful
   // RETURNS false (0) AND lux = 0.0 IF EITHER SENSOR WAS SATURATED (0XFFFF)
-  void plugin_015_getLux(unsigned char gain,
-                         float         ms,
-                         unsigned int  CH0,
-                         unsigned int  CH1,
-                         double      & lux,
-                         double      & infrared,
-                         double      & broadband);
+  void getLux(unsigned char gain,
+              float         ms,
+              unsigned int  CH0,
+              unsigned int  CH1,
+              double      & lux,
+              double      & infrared,
+              double      & broadband);
 
 
   unsigned int _gain; // Gain setting, 0 = X1, 1 = X16, 2 = auto, 3 = extended auto;
-  byte         plugin_015_i2caddr = 0;
-  byte         _integration       = 0;
-  byte         _error             = 0;
-  bool         gain16xActive      = false;
-  bool         Plugin_015_init    = false;
+  byte         _i2cAddr       = 0;
+  byte         _integration   = 0;
+  byte         _error         = 0;
+  bool         _gain16xActive = false;
 };
 
 #endif // ifdef USES_P015

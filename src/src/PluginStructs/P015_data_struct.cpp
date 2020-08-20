@@ -13,16 +13,16 @@
 
 P015_data_struct::P015_data_struct(byte i2caddr, unsigned int gain, byte integration) :
   _gain(gain),
-  plugin_015_i2caddr(i2caddr),
+  _i2cAddr(i2caddr),
   _integration(integration)
 {
   // If gain = false (0), device is set to low gain (1X)
   // If gain = high (1), device is set to high gain (16X)
 
-  gain16xActive = gain == 1;
+  _gain16xActive = gain == 1;
 
   if (!useAutoGain()) {
-    gain16xActive = gain == 1;
+    _gain16xActive = gain == 1;
   }
 }
 
@@ -44,12 +44,12 @@ bool P015_data_struct::performRead(float& luxVal,
     // If time = 2, integration will be 402ms
     unsigned char time = _integration;
 
-    plugin_015_setTiming(gain16xActive, time, ms);
-    plugin_015_setPowerUp();
+    plugin_015_setTiming(_gain16xActive, time, ms);
+    setPowerUp();
     delayBackground(ms); // FIXME TD-er: Do not use delayBackground but collect data later.
     unsigned int data0, data1;
 
-    if (plugin_015_getData(data0, data1))
+    if (getData(data0, data1))
     {
       double lux;       // Resulting lux value
       double infrared;  // Resulting infrared value
@@ -57,20 +57,20 @@ bool P015_data_struct::performRead(float& luxVal,
 
 
       // Perform lux calculation:
-      success = !plugin_015_ADC_saturated(time,  data0) && !plugin_015_ADC_saturated(time, data1);
-      plugin_015_getLux(gain16xActive, ms, data0, data1, lux, infrared, broadband);
+      success = !ADC_saturated(time,  data0) && !ADC_saturated(time, data1);
+      getLux(_gain16xActive, ms, data0, data1, lux, infrared, broadband);
 
       if (useAutoGain()) {
-        if (gain16xActive) {
+        if (_gain16xActive) {
           // Last reading was using 16x gain
           // Check using some margin to see if gain is still needed
-          if (plugin_015_ADC_saturated(time,  data0 * 16)) {
-            gain16xActive = false;
+          if (ADC_saturated(time,  data0 * 16)) {
+            _gain16xActive = false;
           }
         } else {
           // Check using some margin to see if gain will improve reading resolution
           if (lux < 40) {
-            gain16xActive = true;
+            _gain16xActive = true;
           }
         }
       }
@@ -81,7 +81,7 @@ bool P015_data_struct::performRead(float& luxVal,
           // Only store/update it when not close to the limits of both ADC ranges.
           // When using this value to compute extended ranges, it must not be using a ratio taken from a
           // heated sensor, since then the IR part may be off quite a bit resulting in very unrealistic values.
-          if (!plugin_015_ADC_saturated(time,  data0 * 2) && !plugin_015_ADC_saturated(time, data1 * 2)) {
+          if (!ADC_saturated(time,  data0 * 2) && !ADC_saturated(time, data1 * 2)) {
             ir_broadband_ratio = infrared / broadband;
           }
         }
@@ -90,7 +90,7 @@ bool P015_data_struct::performRead(float& luxVal,
         // If IR is saturated, output the max value based on the last known ratio.
         if ((ir_broadband_ratio > 0.0) && (_gain == P015_EXT_AUTO_GAIN)) {
           data0 = static_cast<double>(data1) / ir_broadband_ratio;
-          plugin_015_getLux(gain16xActive, ms, data0, data1, lux, infrared, broadband);
+          getLux(_gain16xActive, ms, data0, data1, lux, infrared, broadband);
           success = true;
         }
       }
@@ -116,13 +116,13 @@ bool P015_data_struct::useAutoGain() const
   return autoGain;
 }
 
-bool P015_data_struct::plugin_015_begin()
+bool P015_data_struct::begin()
 {
   // Wire.begin();   called in ESPEasy framework
   return true;
 }
 
-bool P015_data_struct::plugin_015_readByte(unsigned char address, unsigned char& value)
+bool P015_data_struct::readByte(unsigned char address, unsigned char& value)
 
 // Reads a byte from a TSL2561 address
 // Address: TSL2561 address (0 to 15)
@@ -130,14 +130,14 @@ bool P015_data_struct::plugin_015_readByte(unsigned char address, unsigned char&
 // Returns true (1) if successful, false (0) if there was an I2C error
 {
   // Set up command byte for read
-  Wire.beginTransmission(plugin_015_i2caddr);
+  Wire.beginTransmission(_i2cAddr);
   Wire.write((address & 0x0F) | TSL2561_CMD);
   _error = Wire.endTransmission();
 
   // Read requested byte
   if (_error == 0)
   {
-    Wire.requestFrom(plugin_015_i2caddr, (byte)1);
+    Wire.requestFrom(_i2cAddr, (byte)1);
 
     if (Wire.available() == 1)
     {
@@ -148,7 +148,7 @@ bool P015_data_struct::plugin_015_readByte(unsigned char address, unsigned char&
   return false;
 }
 
-bool P015_data_struct::plugin_015_writeByte(unsigned char address, unsigned char value)
+bool P015_data_struct::writeByte(unsigned char address, unsigned char value)
 
 // Write a byte to a TSL2561 address
 // Address: TSL2561 address (0 to 15)
@@ -157,7 +157,7 @@ bool P015_data_struct::plugin_015_writeByte(unsigned char address, unsigned char
 // (Also see getError() above)
 {
   // Set up command byte for write
-  Wire.beginTransmission(plugin_015_i2caddr);
+  Wire.beginTransmission(_i2cAddr);
   Wire.write((address & 0x0F) | TSL2561_CMD);
 
   // Write byte
@@ -171,7 +171,7 @@ bool P015_data_struct::plugin_015_writeByte(unsigned char address, unsigned char
   return false;
 }
 
-bool P015_data_struct::plugin_015_readUInt(unsigned char address, unsigned int& value)
+bool P015_data_struct::readUInt(unsigned char address, unsigned int& value)
 
 // Reads an unsigned integer (16 bits) from a TSL2561 address (low byte first)
 // Address: TSL2561 address (0 to 15), low byte first
@@ -180,14 +180,14 @@ bool P015_data_struct::plugin_015_readUInt(unsigned char address, unsigned int& 
 // (Also see getError() above)
 {
   // Set up command byte for read
-  Wire.beginTransmission(plugin_015_i2caddr);
+  Wire.beginTransmission(_i2cAddr);
   Wire.write((address & 0x0F) | TSL2561_CMD);
   _error = Wire.endTransmission();
 
   // Read two bytes (low and high)
   if (_error == 0)
   {
-    Wire.requestFrom(plugin_015_i2caddr, (byte)2);
+    Wire.requestFrom(_i2cAddr, (byte)2);
 
     if (Wire.available() == 2)
     {
@@ -203,7 +203,7 @@ bool P015_data_struct::plugin_015_readUInt(unsigned char address, unsigned int& 
   return false;
 }
 
-bool P015_data_struct::plugin_015_writeUInt(unsigned char address, unsigned int value)
+bool P015_data_struct::writeUInt(unsigned char address, unsigned int value)
 
 // Write an unsigned integer (16 bits) to a TSL2561 address (low byte first)
 // Address: TSL2561 address (0 to 15), low byte first
@@ -212,8 +212,8 @@ bool P015_data_struct::plugin_015_writeUInt(unsigned char address, unsigned int 
 // (Also see getError() above)
 {
   // Split int into lower and upper bytes, write each byte
-  if (plugin_015_writeByte(address, lowByte(value))
-      && plugin_015_writeByte(address + 1, highByte(value))) {
+  if (writeByte(address, lowByte(value))
+      && writeByte(address + 1, highByte(value))) {
     return true;
   }
 
@@ -234,7 +234,7 @@ bool P015_data_struct::plugin_015_setTiming(bool gain, unsigned char time)
   unsigned char timing;
 
   // Get timing byte
-  if (plugin_015_readByte(TSL2561_REG_TIMING, timing))
+  if (readByte(TSL2561_REG_TIMING, timing))
   {
     // Set gain (0 or 1)
     if (gain) {
@@ -249,7 +249,7 @@ bool P015_data_struct::plugin_015_setTiming(bool gain, unsigned char time)
     timing |= (time & 0x03);
 
     // Write modified timing byte back to device
-    if (plugin_015_writeByte(TSL2561_REG_TIMING, timing)) {
+    if (writeByte(TSL2561_REG_TIMING, timing)) {
       return true;
     }
   }
@@ -283,7 +283,7 @@ bool P015_data_struct::plugin_015_setTiming(bool gain, unsigned char time, float
 
 // Determine if either sensor saturated (max depends on clock freq. and integration time)
 // If so, abandon ship (calculation will not be accurate)
-bool P015_data_struct::plugin_015_ADC_saturated(unsigned char time, unsigned int value) {
+bool P015_data_struct::ADC_saturated(unsigned char time, unsigned int value) {
   unsigned int max_ADC_count = 65535;
 
   switch (time)
@@ -296,27 +296,27 @@ bool P015_data_struct::plugin_015_ADC_saturated(unsigned char time, unsigned int
   return value >= max_ADC_count;
 }
 
-bool P015_data_struct::plugin_015_setPowerUp(void)
+bool P015_data_struct::setPowerUp(void)
 
 // Turn on TSL2561, begin integrations
 // Returns true (1) if successful, false (0) if there was an I2C error
 // (Also see getError() below)
 {
   // Write 0x03 to command byte (power on)
-  return plugin_015_writeByte(TSL2561_REG_CONTROL, 0x03);
+  return writeByte(TSL2561_REG_CONTROL, 0x03);
 }
 
-bool P015_data_struct::plugin_015_setPowerDown(void)
+bool P015_data_struct::setPowerDown(void)
 
 // Turn off TSL2561
 // Returns true (1) if successful, false (0) if there was an I2C error
 // (Also see getError() below)
 {
   // Clear command byte (power off)
-  return plugin_015_writeByte(TSL2561_REG_CONTROL, 0x00);
+  return writeByte(TSL2561_REG_CONTROL, 0x00);
 }
 
-bool P015_data_struct::plugin_015_getData(unsigned int& data0, unsigned int& data1)
+bool P015_data_struct::getData(unsigned int& data0, unsigned int& data1)
 
 // Retrieve raw integration results
 // data0 and data1 will be set to integration results
@@ -324,20 +324,20 @@ bool P015_data_struct::plugin_015_getData(unsigned int& data0, unsigned int& dat
 // (Also see getError() below)
 {
   // Get data0 and data1 out of result registers
-  if (plugin_015_readUInt(TSL2561_REG_DATA_0, data0) && plugin_015_readUInt(TSL2561_REG_DATA_1, data1)) {
+  if (readUInt(TSL2561_REG_DATA_0, data0) && readUInt(TSL2561_REG_DATA_1, data1)) {
     return true;
   }
 
   return false;
 }
 
-void P015_data_struct::plugin_015_getLux(unsigned char gain,
-                                         float         ms,
-                                         unsigned int  CH0,
-                                         unsigned int  CH1,
-                                         double      & lux,
-                                         double      & infrared,
-                                         double      & broadband)
+void P015_data_struct::getLux(unsigned char gain,
+                              float         ms,
+                              unsigned int  CH0,
+                              unsigned int  CH1,
+                              double      & lux,
+                              double      & infrared,
+                              double      & broadband)
 
 // Convert raw data to lux
 // gain: 0 (1X) or 1 (16X), see setTiming()
