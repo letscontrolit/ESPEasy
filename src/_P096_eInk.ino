@@ -377,7 +377,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
             else if(subcommand.equalsIgnoreCase(F("ROT")))
             {
               arguments = arguments.substring(argIndex + 1);
-              eInkScreen->setRotation(arguments.toInt() %3);
+              eInkScreen->setRotation(arguments.toInt() % 4);
               eInkScreen->display();
             } 
             else 

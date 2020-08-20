@@ -337,7 +337,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
               ///control?cmd=tftcmd,rot,0
               //not working to verify
               arguments = arguments.substring(argIndex + 1);
-              tft->setRotation(arguments.toInt() %3);
+              tft->setRotation(arguments.toInt() % 4);
             }
             else
             {
