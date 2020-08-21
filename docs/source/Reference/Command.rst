@@ -571,7 +571,7 @@ P052 :ref:`P052_page`
 Plugins installed multiple times
 --------------------------------
 
-When 2 or more of the same plugins are installed, the commands supported by these plugins can be prefixed with ``[<TaskName>].`` (square brackets are optional) to address a specific instance. This requires the plugin names to be unique.
+In case 2 or more of the same plugins are installed, and you want to send a command to either of them, the commands supported by these plugins can be prefixed with ``[<TaskName>].`` or ``[<TaskNumber>].`` (square brackets are optional) to address a specific instance. This requires the plugin names to be unique (if the TaskName variant is used).
 
 Examples:
 
