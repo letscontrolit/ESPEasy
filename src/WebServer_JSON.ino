@@ -193,6 +193,7 @@ void handle_json()
       stream_next_json_object_value(LabelType::ETH_SPEED);
       stream_next_json_object_value(LabelType::ETH_STATE);
       stream_last_json_object_value(LabelType::ETH_SPEED_STATE);
+      addHtml(F(",\n"));
     }
     #endif
 
