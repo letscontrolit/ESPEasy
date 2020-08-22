@@ -203,22 +203,25 @@ void SettingsStruct_tmpl<N_TASKS>::clearUnitNameSettings() {
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
-  PID            = 0;
-  Version        = 0;
-  Build          = 0;
-  IP_Octet       = 0;
-  Delay          = 0;
-  Pin_i2c_sda    = -1;
-  Pin_i2c_scl    = -1;
-  Pin_status_led = -1;
-  Pin_sd_cs      = -1;
-  ETH_Phy_Addr   = 0;
-  ETH_Pin_mdc    = -1;
-  ETH_Pin_mdio   = -1;
-  ETH_Pin_power  = -1;
-  ETH_Phy_Type   = 0;
-  ETH_Clock_Mode = 0;
-  ETH_Wifi_Mode = 0;
+  PID                      = 0;
+  Version                  = 0;
+  Build                    = 0;
+  IP_Octet                 = 0;
+  Delay                    = 0;
+  Pin_i2c_sda              = -1;
+  Pin_i2c_scl              = -1;
+  Pin_status_led           = -1;
+  Pin_sd_cs                = -1;
+  ETH_Phy_Addr             = 0;
+  ETH_Pin_mdc              = -1;
+  ETH_Pin_mdio             = -1;
+  ETH_Pin_power            = -1;
+  ETH_Phy_Type             = 0;
+  ETH_Clock_Mode           = 0;
+  ETH_Wifi_Mode            = 0;
+  I2C_Multiplexer_Type     = -1;
+  I2C_Multiplexer_Addr     = -1;
+  I2C_Multiplexer_ResetPin = -1;
 
   for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
   BaudRate                         = 0;
@@ -296,11 +299,12 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
     TaskDevicePluginConfigLong[task][cv] = 0;
   }
-  OLD_TaskDeviceSendData[task] = false;
-  TaskDeviceGlobalSync[task]   = false;
-  TaskDeviceDataFeed[task]     = 0;
-  TaskDeviceTimer[task]        = 0;
-  TaskDeviceEnabled[task]      = false;
+  OLD_TaskDeviceSendData[task]  = false;
+  TaskDeviceGlobalSync[task]    = false;
+  TaskDeviceDataFeed[task]      = 0;
+  TaskDeviceTimer[task]         = 0;
+  TaskDeviceEnabled[task]       = false;
+  I2C_Multiplexer_Channel[task] = -1;
 }
 
 template<unsigned int N_TASKS>

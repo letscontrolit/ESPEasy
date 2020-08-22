@@ -179,7 +179,7 @@ have to be figured into your project. It is also possible to use a small SSR to 
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               Relay (board)
   GPIO (X)   <-->   IN1
@@ -204,7 +204,7 @@ find more information on how to do this.
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     On Switch#State Do
      if [Switch#State]=1

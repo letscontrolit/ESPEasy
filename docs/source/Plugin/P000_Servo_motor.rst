@@ -29,7 +29,7 @@ Wiring
 ------
 
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               Servo
   GPIO (X)   <-->   S (signal)
@@ -48,7 +48,7 @@ find more information on how to do this.
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
   On Switch#State Do
    if [Switch#State]=1

@@ -53,6 +53,18 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
       break;
     }
 
+    case CPlugin::Function::CPLUGIN_INIT:
+      {
+        success = init_c011_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c011_delay_queue();
+        break;
+      }
+
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
       String escapeBuffer;
@@ -121,6 +133,10 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
+      if (C011_DelayHandler == nullptr) {
+        break;
+      }
+
       success = Create_schedule_HTTP_C011(event);
       break;
     }
@@ -162,6 +178,10 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
 // ********************************************************************************
 boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 {
+  if (C011_DelayHandler == nullptr) {
+    return false;
+  }
+
   String authHeader;
   String hostportString;
 
@@ -208,14 +228,14 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     removeExtraNewLine(payload);
 
     // Add a new element to the queue with the minimal payload
-    success = C011_DelayHandler.addToQueue(C011_queue_element(event->ControllerIndex, payload));
+    success = C011_DelayHandler->addToQueue(C011_queue_element(event->ControllerIndex, payload));
   }
 
   if (success) {
     // Element was added.
     // Now we try to append to the existing element
     // and thus preventing the need to create a long string only to copy it to a queue element.
-    C011_queue_element& element = C011_DelayHandler.sendQueue.back();
+    C011_queue_element& element = C011_DelayHandler->sendQueue.back();
 
     if (strlen(customConfig->HttpHeader) > 0) {
       element.txt += customConfig->HttpHeader;
@@ -236,7 +256,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     addNewLine(element.txt);
   }
 
-  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C011_DELAY_QUEUE, C011_DelayHandler.getNextScheduleTime());
+  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C011_DELAY_QUEUE, C011_DelayHandler->getNextScheduleTime());
   return success;
 }
 

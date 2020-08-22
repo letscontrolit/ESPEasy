@@ -97,7 +97,7 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
       /*
           case CPlugin::Function::CPLUGIN_FLUSH:
             {
-              process_c013_delay_queue();
+              process_c013_delay_queue(event->ControllerIndex);
               delay(0);
               break;
             }
