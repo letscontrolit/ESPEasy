@@ -528,6 +528,27 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     // Has an internal pull-up, so unconnected = High = normal output.
     warning = true;
   }
+
+  #ifdef HAS_ETHERNET
+
+  // Check pins used for RMII Ethernet PHY
+  if (ETHERNET == Settings.ETH_Wifi_Mode) {
+    switch (gpio) {
+      case 0:
+      case 21:
+      case 19:
+      case 22:
+      case 25:
+      case 26:
+      case 27:
+        warning = true;
+        break;
+    }
+    // FIXME TD-er: Must we also check for pins used for MDC/MDIO and Eth PHY power?
+  }
+
+
+  #endif
   return true;
 }
 

@@ -152,7 +152,7 @@ void handle_hardware() {
   
 #ifdef HAS_ETHERNET
   addFormSubHeader(F("Ethernet"));
-  addRowLabel_tr_id(F("Ethernet or WIFI?"), "ethwifi");
+  addRowLabel_tr_id(F("Preferred network medium"), "ethwifi");
   String ethWifiOptions[2] = { F("WIFI"), F("ETHERNET") };
   addSelector("ethwifi", 2, ethWifiOptions, NULL, NULL, Settings.ETH_Wifi_Mode, false, true);
   addFormNote(F("Change Switch between WIFI and ETHERNET requires reboot to activate"));
