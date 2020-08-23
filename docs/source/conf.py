@@ -287,7 +287,7 @@ todo_include_todos = True
 
 # This def is used to add ESP Easy related formatation (color etc).
 def setup(app):
-    app.add_stylesheet('css/custom.css')
+    app.add_css_file('css/custom.css')
 
 # To replace chunks of text globally +
 # ESP Easy colors (set in cutom.css)

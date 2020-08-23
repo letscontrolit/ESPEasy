@@ -155,6 +155,90 @@ Other SPI pins to be used are device specific, and need to be configured from th
 
 NB: When using the VSPI interface and also the I2C interface is used, another pin has to be selected for I2C GPIO -> SCL, as its configuration is fixed for the VSPI setting.
 
+--------
+Ethernet
+--------
+
+On builds including ``_eth`` in their build name, it is also possible to use ethernet instead of WiFi.
+Currently this is only present for ESP32 builds and no plans currently exist to support it for ESP82xx.
+
+N.B. This is still in testing phase, so not all kinds of network communications work right now.
+
+Preferred network medium
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Allows to switch between:
+
+* WiFi (default)
+* Ethernet
+
+To activate a new configuration, a reboot is needed.
+
+Ethernet PHY type
+^^^^^^^^^^^^^^^^^
+
+Select the used PHY controller type:
+
+* LAN8710  (LAN8720 is also supported, but none of the newer features are supported)
+* TLK110  
+
+Ethernet PHY Address
+^^^^^^^^^^^^^^^^^^^^
+
+The PHY address depends on the hardware and the PHY configuration. 
+
+* Espressif's Ethernet board with TLK110 PHY use PHY address 31.
+* Common Waveshare LAN8720 PHY breakout use PHY address 1.
+* Olimex ESP32 EVB REV B IoT LAN8710 PHY Board with CAN use PHY address 0.
+* Other LAN8720 breakouts often use PHY address 0.
+
+If the PHY address is incorrect then the EMAC will initialise but all attempts to read/write configuration registers on the PHY will fail.
+
+GPIO pins
+^^^^^^^^^
+
+RMII PHY SMI Wiring
+"""""""""""""""""""
+
+Most PHY boards have documented their *RMII PHY SMI Wiring* pins:
+
+* **MDC**  Output to PHY, usually pin 23
+* **MDIO** Bidirectional, usually pin 18
+
+Clock sync
+""""""""""
+
+The PHY and the ESP need to keep a clock in sync.
+This can either be done via an external crystal, which is connected to a GPIO pin.
+Another option is to let the ESP provide the clock to the PHY.
+
+* External crystal oscillator
+* 50MHz APLL Output on GPIO0
+* 50MHz APLL Output on GPIO16
+* 50MHz APLL Inverted Output on GPIO17
+
+Power pin
+"""""""""
+
+On almost all PHY boards, or ESP boards equiped with an ethernet PHY, it is possible to turn the PHY on or off.
+Either to save energy, or to make sure the external clock is not affecting the ESP boot mode when it restarts.
+
+For example the Olimex ESP32-EVB does have the *external crystal oscillator* connected to GPIO-0, which could boot the ESP32 randomly into UART flash mode.
+Most boards use a specific GPIO pin to control the power to the PHY.
+The Olimex ESP32-EVB does have a specific delay circuit to only allow power to the PHY after boot and therefore does not need to control the PHY power.
+
+For other boards, the default is often GPIO-17, but this may change per board.
+
+RMII PHY Wiring
+"""""""""""""""
+
+Apart from these GPIO pins, there is a number of other pins reserved on the ESP32 for RMII PHY Wiring.
+
+Since these GPIO pin assignments cannot be changed, it is also not needed to configure them.
+However, they also cannot be used when *RMII PHY* is used.
+
+.. include:: ../Reference/Ethernet_PHY_ESP32.rst
+
 
 -------------------
 GPIO boot states

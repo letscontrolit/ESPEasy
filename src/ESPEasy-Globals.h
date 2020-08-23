@@ -403,14 +403,34 @@ struct GpioFactorySettingsStruct {
         i2c_scl = -1;    // GPIO5 conflicts with SW input
         break;
       case DeviceMode_Olimex_ESP32_PoE:
-        button[0] = 34;    // DUT1 Button
+        button[0] = 34;    // BUT1 Button
         relais[0] = -1;    // No LED's or relays on board
         status_led = -1;
-        i2c_sda = 4;
-        i2c_scl = 5;
+        i2c_sda = 13;
+        i2c_scl = 16;
+        eth_phyaddr = 0;
+        eth_phytype = 0;     // LAN8710
+        eth_mdc = 23;
+        eth_mdio = 18;
         eth_power = 12;
-        eth_clock_mode = 3;
-        eth_wifi_mode = 1;
+        eth_clock_mode = 3; // 50MHz APLL Inverted Output on GPIO17
+        eth_wifi_mode = 1;  // default to ethernet
+        break;
+      case DeviceMode_Olimex_ESP32_EVB:
+        button[0] = 34;      // BUT1 Button
+        relais[0] = 32;      // LED1 + Relay1 (0 = Off, 1 = On)
+        relais[1] = 33;      // LED2 + Relay2 (0 = Off, 1 = On)
+
+        status_led = -1;
+        i2c_sda = 13;
+        i2c_scl = 16;
+        eth_phyaddr = 0;
+        eth_phytype = 0;     // LAN8710
+        eth_mdc = 23;
+        eth_mdio = 18;
+        eth_power = -1;      // No Ethernet power pin
+        eth_clock_mode = 0;  // External crystal oscillator
+        eth_wifi_mode = 1;   // default to ethernet
         break;
 
       // case DeviceModel_default: break;
