@@ -42,7 +42,7 @@ void handle_hardware() {
     Settings.ETH_Pin_power            = getFormItemInt(F("ethpower"));
     Settings.ETH_Phy_Type             = getFormItemInt(F("ethtype"));
     Settings.ETH_Clock_Mode           = getFormItemInt(F("ethclock"));
-    Settings.ETH_Wifi_Mode            = getFormItemInt(F("ethwifi"));
+    Settings.ETH_Wifi_Mode            = static_cast<NetworkMedium_t>(getFormItemInt(F("ethwifi")));
 #endif
     int gpio = 0;
 
@@ -153,8 +153,11 @@ void handle_hardware() {
 #ifdef HAS_ETHERNET
   addFormSubHeader(F("Ethernet"));
   addRowLabel_tr_id(F("Preferred network medium"), "ethwifi");
-  String ethWifiOptions[2] = { F("WiFi"), F("Ethernet") };
-  addSelector("ethwifi", 2, ethWifiOptions, NULL, NULL, Settings.ETH_Wifi_Mode, false, true);
+  String ethWifiOptions[2] = {
+    toString(NetworkMedium_t::WIFI), 
+    toString(NetworkMedium_t::Ethernet) 
+    };
+  addSelector("ethwifi", 2, ethWifiOptions, NULL, NULL, static_cast<int>(Settings.ETH_Wifi_Mode), false, true);
   addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
   addRowLabel_tr_id(F("Ethernet PHY type"), "ethtype");
   String ethPhyTypes[2] = { F("LAN8710"), F("TLK110") };

@@ -2,6 +2,8 @@
 #define ESPEASY_DEFAULTS_H_
 
 
+#include "../DataStructs/NetworkMedium.h"
+
 // ********************************************************************************
 //   User specific configuration
 // ********************************************************************************
@@ -193,9 +195,8 @@
 #define DEFAULT_ETH_CLOCK_MODE           0
 #endif
 #ifndef DEFAULT_ETH_WIFI_MODE
-#define DEFAULT_ETH_WIFI_MODE            0
-                                                // 0 WIFI
-                                                // 1 ETHERNET
+#define DEFAULT_ETH_WIFI_MODE            NetworkMedium_t::WIFI
+//#define DEFAULT_ETH_WIFI_MODE            NetworkMedium_t::Ethernet
 #endif
 
 

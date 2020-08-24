@@ -123,7 +123,7 @@ void handle_root() {
 
 #ifdef HAS_ETHERNET
     addRowLabelValue(LabelType::ETH_WIFI_MODE);
-    if(eth_wifi_mode == ETHERNET) {
+    if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
       addRowLabelValue(LabelType::ETH_SPEED_STATE);
       addRowLabelValue(LabelType::ETH_IP_ADDRESS);
     }

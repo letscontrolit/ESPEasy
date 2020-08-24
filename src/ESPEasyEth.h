@@ -9,7 +9,6 @@ void ethSetupStaticIPconfig();
 bool ethCheckSettings();
 bool ethPrepare();
 String ethGetDebugClockModeStr();
-String ethGetDebugEthWifiModeStr();
 void ethPrintSettings();
 void ETHConnectRelaxed();
 bool ETHConnected();

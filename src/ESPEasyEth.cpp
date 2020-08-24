@@ -1,10 +1,13 @@
 #ifdef HAS_ETHERNET
 
 #include "ESPEasyEth.h"
+
+
+#include "ESPEasy-Globals.h"
 #include "ESPEasyNetwork.h"
 #include "ETH.h"
-#include "ESPEasy-Globals.h"
 #include "eth_phy/phy.h"
+#include "src/Globals/NetworkState.h"
 #include "src/Helpers/StringConverter.h"
 
 bool ethUseStaticIP() {
@@ -38,7 +41,7 @@ bool ethCheckSettings() {
     result = false;
   if (Settings.ETH_Clock_Mode > 3)
     result = false;
-  if (Settings.ETH_Wifi_Mode > 1)
+  if (!isValid(Settings.ETH_Wifi_Mode))
     result = false;
   if (Settings.ETH_Pin_mdc > MAX_GPIO)
     result = false;
@@ -74,20 +77,11 @@ String ethGetDebugClockModeStr() {
   }
 }
 
-String ethGetDebugEthWifiModeStr() {
-  switch (eth_wifi_mode)
-  {
-    case 0: return F("WiFi");
-    case 1: return F("Ethernet");
-    default: return F("ETH_WIFI_ERR");
-  }
-}
-
 void ethPrintSettings() {
   String settingsDebugLog;
   settingsDebugLog.reserve(115);
   settingsDebugLog += F("Eth Wifi mode: ");
-  settingsDebugLog += ethGetDebugEthWifiModeStr();
+  settingsDebugLog += toString(eth_wifi_mode);
   settingsDebugLog += F(" ETH: PHY Type: ");
   settingsDebugLog += Settings.ETH_Phy_Type == 0 ? F("ETH_PHY_LAN8720") : F("ETH_PHY_TLK110");
   settingsDebugLog += F(" PHY Addr: ");

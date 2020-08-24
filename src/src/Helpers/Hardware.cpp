@@ -535,7 +535,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   #ifdef HAS_ETHERNET
 
   // Check pins used for RMII Ethernet PHY
-  if (ETHERNET == Settings.ETH_Wifi_Mode) {
+  if (NetworkMedium_t::Ethernet == Settings.ETH_Wifi_Mode) {
     switch (gpio) {
       case 0:
       case 21:

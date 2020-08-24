@@ -11,6 +11,7 @@
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/MQTT.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
@@ -176,7 +177,7 @@ void runEach30Seconds()
     log += F(" FreeMem ");
     log += FreeMem();
     #ifdef HAS_ETHERNET
-    if(eth_wifi_mode == ETHERNET) {
+    if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
       log += F( " EthSpeedState ");
       log += getValue(LabelType::ETH_SPEED_STATE);
     } else {

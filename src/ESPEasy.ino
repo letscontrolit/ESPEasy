@@ -115,6 +115,7 @@
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/MQTT.h"
+#include "src/Globals/NetworkState.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Protocol.h"
 #include "src/Globals/RTC.h"
@@ -130,6 +131,7 @@
 #include "src/Helpers/Hardware.h"
 #include "src/Helpers/PeriodicalActions.h"
 #include "src/Helpers/Scheduler.h"
+
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
@@ -297,10 +299,7 @@ void setup()
   // This only works after LoadSettings();
   eth_wifi_mode = Settings.ETH_Wifi_Mode;
   log = F("INIT : ETH_WIFI_MODE:");
-  log += String(eth_wifi_mode);
-  log += F(" (");
-  log += (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
-  log += F(")");
+  log += toString(eth_wifi_mode);
   addLog(LOG_LEVEL_INFO, log);
   #endif
 
@@ -540,7 +539,7 @@ void loop()
 
   #ifdef HAS_ETHERNET
   // Handle WiFiEvents when compiled with HAS_ETHERNET but in WiFi Mode eth_wifi_mode (WIFI = 0, ETHERNET = 1)
-  if(eth_wifi_mode == WIFI) {
+  if(eth_wifi_mode == NetworkMedium_t::WIFI) {
     handle_unprocessedWiFiEvents();
   }
   #else
