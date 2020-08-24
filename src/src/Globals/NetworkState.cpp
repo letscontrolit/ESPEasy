@@ -1,10 +1,8 @@
 #include "NetworkState.h"
 
 // Ethernet Connectiopn status
-#ifdef HAS_ETHERNET
-NetworkMedium_t eth_wifi_mode = NetworkMedium_t::Ethernet;
+NetworkMedium_t active_network_medium = DEFAULT_NETWORK_MEDIUM;
 bool eth_connected = false;
-#endif // ifdef HAS_ETHERNET
 
 
 bool webserverRunning(false);

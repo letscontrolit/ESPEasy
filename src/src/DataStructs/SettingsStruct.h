@@ -194,7 +194,7 @@ class SettingsStruct_tmpl
   byte          ETH_Gateway[4];
   byte          ETH_Subnet[4];
   byte          ETH_DNS[4];
-  NetworkMedium_t ETH_Wifi_Mode;
+  NetworkMedium_t NetworkMedium;
   int8_t        I2C_Multiplexer_Type;
   int8_t        I2C_Multiplexer_Addr;
   int8_t        I2C_Multiplexer_Channel[N_TASKS];

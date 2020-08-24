@@ -41,7 +41,7 @@ bool ethCheckSettings() {
     result = false;
   if (!isValid(Settings.ETH_Clock_Mode))
     result = false;
-  if (!isValid(Settings.ETH_Wifi_Mode))
+  if (!isValid(Settings.NetworkMedium))
     result = false;
   if (Settings.ETH_Pin_mdc > MAX_GPIO)
     result = false;
@@ -70,7 +70,7 @@ void ethPrintSettings() {
   String settingsDebugLog;
   settingsDebugLog.reserve(115);
   settingsDebugLog += F("Eth Wifi mode: ");
-  settingsDebugLog += toString(eth_wifi_mode);
+  settingsDebugLog += toString(active_network_medium);
   settingsDebugLog += F(" ETH: PHY Type: ");
   settingsDebugLog += toString(Settings.ETH_Phy_Type);
   settingsDebugLog += F(" PHY Addr: ");

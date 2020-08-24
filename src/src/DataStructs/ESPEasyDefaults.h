@@ -194,9 +194,12 @@
 #ifndef DEFAULT_ETH_CLOCK_MODE
 #define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
 #endif
-#ifndef DEFAULT_ETH_WIFI_MODE
-#define DEFAULT_ETH_WIFI_MODE            NetworkMedium_t::WIFI
-//#define DEFAULT_ETH_WIFI_MODE            NetworkMedium_t::Ethernet
+#ifndef DEFAULT_NETWORK_MEDIUM
+  #ifdef HAS_ETHERNET
+    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::Ethernet
+  #else
+    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
+  #endif
 #endif
 
 

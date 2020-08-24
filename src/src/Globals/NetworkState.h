@@ -8,11 +8,8 @@
 #include "../DataStructs/NetworkMedium.h"
 
 // Ethernet Connectiopn status
-#ifdef HAS_ETHERNET
-extern NetworkMedium_t eth_wifi_mode;
+extern NetworkMedium_t active_network_medium;
 extern bool    eth_connected;
-#endif // ifdef HAS_ETHERNET
-
 
 extern bool webserverRunning;
 extern bool webserver_init;

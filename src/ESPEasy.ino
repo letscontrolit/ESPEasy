@@ -297,9 +297,9 @@ void setup()
   #ifdef HAS_ETHERNET
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
-  eth_wifi_mode = Settings.ETH_Wifi_Mode;
+  active_network_medium = Settings.NetworkMedium;
   log = F("INIT : ETH_WIFI_MODE:");
-  log += toString(eth_wifi_mode);
+  log += toString(active_network_medium);
   addLog(LOG_LEVEL_INFO, log);
   #endif
 
@@ -537,14 +537,16 @@ void loop()
 
   updateLoopStats();
 
-  #ifdef HAS_ETHERNET
-  // Handle WiFiEvents when compiled with HAS_ETHERNET but in WiFi Mode eth_wifi_mode (WIFI = 0, ETHERNET = 1)
-  if(eth_wifi_mode == NetworkMedium_t::WIFI) {
-    handle_unprocessedWiFiEvents();
+  switch (active_network_medium) {
+    case NetworkMedium_t::WIFI:
+      handle_unprocessedWiFiEvents();
+      break;
+    case NetworkMedium_t::Ethernet:
+      if (NetworkConnected()) {
+        updateUDPport();
+      }
+      break;
   }
-  #else
-  handle_unprocessedWiFiEvents();
-  #endif
 
   bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
   if (firstLoopConnectionsEstablished) {

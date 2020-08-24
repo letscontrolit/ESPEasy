@@ -218,7 +218,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   ETH_Pin_power            = DEFAULT_ETH_PIN_POWER;
   ETH_Phy_Type             = DEFAULT_ETH_PHY_TYPE;
   ETH_Clock_Mode           = DEFAULT_ETH_CLOCK_MODE;
-  ETH_Wifi_Mode            = DEFAULT_ETH_WIFI_MODE;
+  NetworkMedium            = DEFAULT_NETWORK_MEDIUM;
   I2C_Multiplexer_Type     = -1;
   I2C_Multiplexer_Addr     = -1;
   I2C_Multiplexer_ResetPin = -1;

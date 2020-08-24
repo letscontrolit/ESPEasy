@@ -177,7 +177,7 @@ void runEach30Seconds()
     log += F(" FreeMem ");
     log += FreeMem();
     #ifdef HAS_ETHERNET
-    if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
+    if(active_network_medium == NetworkMedium_t::Ethernet) {
       log += F( " EthSpeedState ");
       log += getValue(LabelType::ETH_SPEED_STATE);
     } else {

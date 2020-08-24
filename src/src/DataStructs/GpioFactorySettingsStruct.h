@@ -20,7 +20,7 @@ struct GpioFactorySettingsStruct {
   int8_t eth_mdio;
   int8_t eth_power;
   EthClockMode_t eth_clock_mode;
-  NetworkMedium_t eth_wifi_mode;
+  NetworkMedium_t active_network_medium;
 };
 
 

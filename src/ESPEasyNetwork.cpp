@@ -19,8 +19,8 @@
 void NetworkConnectRelaxed() {
 #ifdef HAS_ETHERNET
   addLog(LOG_LEVEL_INFO, F("Connect to: "));
-  addLog(LOG_LEVEL_INFO, toString(eth_wifi_mode));
-  if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
+  addLog(LOG_LEVEL_INFO, toString(active_network_medium));
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
     ETHConnectRelaxed();
   } else {
     WiFiConnectRelaxed();
@@ -32,7 +32,7 @@ void NetworkConnectRelaxed() {
 
 bool NetworkConnected() {
   #ifdef HAS_ETHERNET
-  if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
     return ETHConnected();
   } else {
     return WiFiConnected();
@@ -44,7 +44,7 @@ bool NetworkConnected() {
 
 IPAddress NetworkLocalIP() {
   #ifdef HAS_ETHERNET
-  if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(eth_connected) {
       return ETH.localIP();
     } else {
@@ -61,7 +61,7 @@ IPAddress NetworkLocalIP() {
 
 IPAddress NetworkSubnetMask() {
   #ifdef HAS_ETHERNET
-  if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(eth_connected) {
       return ETH.subnetMask();
     } else {
@@ -78,7 +78,7 @@ IPAddress NetworkSubnetMask() {
 
 IPAddress NetworkGatewayIP() {
   #ifdef HAS_ETHERNET
-  if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(eth_connected) {
       return ETH.gatewayIP();
     } else {
@@ -95,7 +95,7 @@ IPAddress NetworkGatewayIP() {
 
 IPAddress NetworkDnsIP (uint8_t dns_no) {
   #ifdef HAS_ETHERNET
-  if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(eth_connected) {
       return ETH.dnsIP();
     } else {
@@ -112,7 +112,7 @@ IPAddress NetworkDnsIP (uint8_t dns_no) {
 
 String NetworkMacAddress() {
   #ifdef HAS_ETHERNET
-  if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(!eth_connected) {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddress() only on connected Ethernet!"));
     } else {
@@ -131,7 +131,7 @@ String NetworkMacAddress() {
 
 uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
   #ifdef HAS_ETHERNET
-  if(eth_wifi_mode == NetworkMedium_t::Ethernet) {
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
     return ETHMacAddress(mac);
   } else {
     return WiFi.macAddress(mac);
@@ -144,7 +144,7 @@ uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
 String NetworkGetHostname() {
     #ifdef ESP32
       #ifdef HAS_ETHERNET 
-      if(Settings.ETH_Wifi_Mode == NetworkMedium_t::Ethernet) {
+      if(Settings.NetworkMedium == NetworkMedium_t::Ethernet) {
         return String(ETH.getHostname());
       }
         return String(WiFi.getHostname());
