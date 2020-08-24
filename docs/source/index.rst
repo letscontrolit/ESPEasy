@@ -12,6 +12,7 @@ Welcome to ESP Easy's documentation!
 
    ESPEasy/AboutUs.rst
    ESPEasy/FunctionBlocks.rst
+   Config/Config.rst
    Controller/_Controller.rst
    Hardware/Hardware.rst
    Plugin/_Plugin.rst
