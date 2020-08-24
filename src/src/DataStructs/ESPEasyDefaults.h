@@ -180,7 +180,7 @@
 #define DEFAULT_ETH_PHY_ADDR             0
 #endif
 #ifndef DEFAULT_ETH_PHY_TYPE
-#define DEFAULT_ETH_PHY_TYPE             0
+#define DEFAULT_ETH_PHY_TYPE             EthPhyType_t::LAN8710
 #endif
 #ifndef DEFAULT_ETH_PIN_MDC
 #define DEFAULT_ETH_PIN_MDC              23

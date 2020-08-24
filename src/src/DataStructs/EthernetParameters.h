@@ -16,4 +16,15 @@ bool   isValid(EthClockMode_t clockMode);
 String toString(EthClockMode_t clockMode);
 
 
+// Is stored in settings
+enum class EthPhyType_t : uint8_t {
+  LAN8710 = 0,
+  TLK110  = 1
+};
+
+bool   isValid(EthPhyType_t phyType);
+
+String toString(EthPhyType_t phyType);
+
+
 #endif // DATASTRUCTS_ETHERNETPARAMETERS_H

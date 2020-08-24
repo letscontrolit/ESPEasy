@@ -37,7 +37,7 @@ void ethSetupStaticIPconfig() {
 
 bool ethCheckSettings() {
   bool result = true;
-  if (Settings.ETH_Phy_Type != 0 && Settings.ETH_Phy_Type != 1)
+  if (!isValid(Settings.ETH_Phy_Type))
     result = false;
   if (!isValid(Settings.ETH_Clock_Mode))
     result = false;
@@ -72,7 +72,7 @@ void ethPrintSettings() {
   settingsDebugLog += F("Eth Wifi mode: ");
   settingsDebugLog += toString(eth_wifi_mode);
   settingsDebugLog += F(" ETH: PHY Type: ");
-  settingsDebugLog += Settings.ETH_Phy_Type == 0 ? F("ETH_PHY_LAN8720") : F("ETH_PHY_TLK110");
+  settingsDebugLog += toString(Settings.ETH_Phy_Type);
   settingsDebugLog += F(" PHY Addr: ");
   settingsDebugLog += Settings.ETH_Phy_Addr;
   settingsDebugLog += F(" Eth Clock mode: ");

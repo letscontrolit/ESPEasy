@@ -15,7 +15,7 @@ struct GpioFactorySettingsStruct {
   int8_t i2c_sda;
   int8_t i2c_scl;
   int8_t eth_phyaddr;
-  int8_t eth_phytype;
+  EthPhyType_t eth_phytype;
   int8_t eth_mdc;
   int8_t eth_mdio;
   int8_t eth_power;

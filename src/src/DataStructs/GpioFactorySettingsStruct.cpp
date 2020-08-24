@@ -95,7 +95,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda        = 13;
       i2c_scl        = 16;
       eth_phyaddr    = 0;
-      eth_phytype    = 0; // LAN8710
+      eth_phytype    = EthPhyType_t::LAN8710;
       eth_mdc        = 23;
       eth_mdio       = 18;
       eth_power      = 12;
@@ -111,7 +111,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda        = 13;
       i2c_scl        = 16;
       eth_phyaddr    = 0;
-      eth_phytype    = 0;  // LAN8710
+      eth_phytype    = EthPhyType_t::LAN8710;
       eth_mdc        = 23;
       eth_mdio       = 18;
       eth_power      = -1; // No Ethernet power pin
