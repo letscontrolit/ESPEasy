@@ -41,7 +41,7 @@ void handle_hardware() {
     Settings.ETH_Pin_mdio             = getFormItemInt(F("ethmdio"));
     Settings.ETH_Pin_power            = getFormItemInt(F("ethpower"));
     Settings.ETH_Phy_Type             = getFormItemInt(F("ethtype"));
-    Settings.ETH_Clock_Mode           = getFormItemInt(F("ethclock"));
+    Settings.ETH_Clock_Mode           = static_cast<EthClockMode_t>(getFormItemInt(F("ethclock")));
     Settings.ETH_Wifi_Mode            = static_cast<NetworkMedium_t>(getFormItemInt(F("ethwifi")));
 #endif
     int gpio = 0;
@@ -168,11 +168,13 @@ void handle_hardware() {
   addFormPinSelect(formatGpioName_input("Ethernet MIO pin"), "ethmdio", Settings.ETH_Pin_mdio);
   addFormPinSelect(formatGpioName_output("Ethernet Power pin"), "ethpower", Settings.ETH_Pin_power);
   addRowLabel_tr_id(F("Ethernet Clock"), "ethclock");
-  String ethClockOptions[4] = { F("External crystal oscillator"),
-                            F("50MHz APLL Output on GPIO0"),
-                            F("50MHz APLL Output on GPIO16"),
-                            F("50MHz APLL Inverted Output on GPIO17") };
-  addSelector("ethclock", 4, ethClockOptions, NULL, NULL, Settings.ETH_Clock_Mode, false, true);
+  String ethClockOptions[4] = { 
+    toString(EthClockMode_t::Ext_crystal_osc),
+    toString(EthClockMode_t::Int_50MHz_GPIO_0),
+    toString(EthClockMode_t::Int_50MHz_GPIO_16),
+    toString(EthClockMode_t::Int_50MHz_GPIO_17_inv)
+     };
+  addSelector("ethclock", 4, ethClockOptions, NULL, NULL, static_cast<int>(Settings.ETH_Clock_Mode), false, true);
 #endif // ifdef HAS_ETHERNET
 
   addFormSubHeader(F("GPIO boot states"));

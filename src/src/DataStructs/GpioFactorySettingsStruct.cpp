@@ -99,7 +99,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       eth_mdc        = 23;
       eth_mdio       = 18;
       eth_power      = 12;
-      eth_clock_mode = 3; // 50MHz APLL Inverted Output on GPIO17
+      eth_clock_mode = EthClockMode_t::Int_50MHz_GPIO_17_inv;
       eth_wifi_mode  = NetworkMedium_t::Ethernet;
       break;
     case DeviceMode_Olimex_ESP32_EVB:
@@ -115,7 +115,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       eth_mdc        = 23;
       eth_mdio       = 18;
       eth_power      = -1; // No Ethernet power pin
-      eth_clock_mode = 0;  // External crystal oscillator
+      eth_clock_mode = EthClockMode_t::Ext_crystal_osc;
       eth_wifi_mode  = NetworkMedium_t::Ethernet;
       break;
 

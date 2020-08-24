@@ -2,6 +2,7 @@
 #define DATASTRUCTS_GPIOFACTORYSETTINGSSTRUCT_H
 
 #include "../DataStructs/DeviceModel.h"
+#include "../DataStructs/EthernetParameters.h"
 #include "../DataStructs/NetworkMedium.h"
 
 
@@ -18,7 +19,7 @@ struct GpioFactorySettingsStruct {
   int8_t eth_mdc;
   int8_t eth_mdio;
   int8_t eth_power;
-  int8_t eth_clock_mode;
+  EthClockMode_t eth_clock_mode;
   NetworkMedium_t eth_wifi_mode;
 };
 

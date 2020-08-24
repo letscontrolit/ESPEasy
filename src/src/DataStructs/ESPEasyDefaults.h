@@ -192,7 +192,7 @@
 #define DEFAULT_ETH_PIN_POWER            -1
 #endif
 #ifndef DEFAULT_ETH_CLOCK_MODE
-#define DEFAULT_ETH_CLOCK_MODE           0
+#define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
 #endif
 #ifndef DEFAULT_ETH_WIFI_MODE
 #define DEFAULT_ETH_WIFI_MODE            NetworkMedium_t::WIFI

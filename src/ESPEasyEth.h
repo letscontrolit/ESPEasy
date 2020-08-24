@@ -8,7 +8,6 @@ bool ethUseStaticIP();
 void ethSetupStaticIPconfig();
 bool ethCheckSettings();
 bool ethPrepare();
-String ethGetDebugClockModeStr();
 void ethPrintSettings();
 void ETHConnectRelaxed();
 bool ETHConnected();

@@ -39,7 +39,7 @@ bool ethCheckSettings() {
   bool result = true;
   if (Settings.ETH_Phy_Type != 0 && Settings.ETH_Phy_Type != 1)
     result = false;
-  if (Settings.ETH_Clock_Mode > 3)
+  if (!isValid(Settings.ETH_Clock_Mode))
     result = false;
   if (!isValid(Settings.ETH_Wifi_Mode))
     result = false;
@@ -66,17 +66,6 @@ bool ethPrepare() {
   return true;
 }
 
-String ethGetDebugClockModeStr() {
-  switch (Settings.ETH_Clock_Mode)
-  {
-    case 0: return F("ETH_CLOCK_GPIO0_IN");
-    case 1: return F("ETH_CLOCK_GPIO0_OUT");
-    case 2: return F("ETH_CLOCK_GPIO16_OUT");
-    case 3: return F("ETH_CLOCK_GPIO17_OUT");
-    default: return F("ETH_CLOCK_ERR");
-  }
-}
-
 void ethPrintSettings() {
   String settingsDebugLog;
   settingsDebugLog.reserve(115);
@@ -87,7 +76,7 @@ void ethPrintSettings() {
   settingsDebugLog += F(" PHY Addr: ");
   settingsDebugLog += Settings.ETH_Phy_Addr;
   settingsDebugLog += F(" Eth Clock mode: ");
-  settingsDebugLog += ethGetDebugClockModeStr();
+  settingsDebugLog += toString(Settings.ETH_Clock_Mode);
   settingsDebugLog += F(" MDC Pin: ");
   settingsDebugLog += String(Settings.ETH_Pin_mdc);
   settingsDebugLog += F(" MIO Pin: ");

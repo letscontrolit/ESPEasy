@@ -2,7 +2,7 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_H
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
-
+#include "../DataStructs/EthernetParameters.h"
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../DataStructs/NetworkMedium.h"
 #include "../Globals/Plugins.h"
@@ -189,7 +189,7 @@ class SettingsStruct_tmpl
   int8_t        ETH_Pin_mdio;
   int8_t        ETH_Pin_power;
   int8_t        ETH_Phy_Type;
-  uint8_t       ETH_Clock_Mode;
+  EthClockMode_t  ETH_Clock_Mode;
   byte          ETH_IP[4];
   byte          ETH_Gateway[4];
   byte          ETH_Subnet[4];
