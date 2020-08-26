@@ -7,9 +7,10 @@ bool isValid(EthClockMode_t clockMode) {
     case  EthClockMode_t::Int_50MHz_GPIO_16:
     case  EthClockMode_t::Int_50MHz_GPIO_17_inv:
       return true;
-    default:
-      return false;
+
+      // Do not use default: as this allows the compiler to detect any missing cases.
   }
+  return false;
 }
 
 String toString(EthClockMode_t clockMode) {
@@ -18,9 +19,10 @@ String toString(EthClockMode_t clockMode) {
     case  EthClockMode_t::Int_50MHz_GPIO_0:      return F("50MHz APLL Output on GPIO0");
     case  EthClockMode_t::Int_50MHz_GPIO_16:     return F("50MHz APLL Output on GPIO16");
     case  EthClockMode_t::Int_50MHz_GPIO_17_inv: return F("50MHz APLL Inverted Output on GPIO17");
-    default:
-      return F("Unknown");
+
+      // Do not use default: as this allows the compiler to detect any missing cases.
   }
+  return F("Unknown");
 }
 
 bool isValid(EthPhyType_t phyType) {
@@ -28,16 +30,18 @@ bool isValid(EthPhyType_t phyType) {
     case EthPhyType_t::LAN8710:
     case EthPhyType_t::TLK110:
       return true;
-    default:
-      return false;
+
+      // Do not use default: as this allows the compiler to detect any missing cases.
   }
+  return false;
 }
 
 String toString(EthPhyType_t phyType) {
   switch (phyType) {
     case EthPhyType_t::LAN8710: return F("LAN8710");
     case EthPhyType_t::TLK110:  return F("TLK110");
-    default:
-      return F("Unknown");
+
+      // Do not use default: as this allows the compiler to detect any missing cases.
   }
+  return F("Unknown");
 }

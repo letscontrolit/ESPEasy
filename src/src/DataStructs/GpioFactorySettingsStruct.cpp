@@ -62,64 +62,68 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       break;
 
     case DeviceModel_Sonoff_4ch:
-      button[0]  = 0;      // Button 1
-      button[1]  = 9;      // Button 2
-      button[2]  = 10;     // Button 3
-      button[3]  = 14;     // Button 4
-      relais[0]  = 12;     // Red Led and Relay1 (0 = Off, 1 = On)
-      relais[1]  = 5;      // Red Led and Relay2 (0 = Off, 1 = On)
-      relais[2]  = 4;      // Red Led and Relay3 (0 = Off, 1 = On)
-      relais[3]  = 15;     // Red Led and Relay4 (0 = Off, 1 = On)
-      status_led = 13;     // Blue Led (0 = On, 1 = Off)
-      i2c_sda    = -1;     // GPIO4 conflicts with GPIO_REL3
-      i2c_scl    = -1;     // GPIO5 conflicts with GPIO_REL2
+      button[0]  = 0;             // Button 1
+      button[1]  = 9;             // Button 2
+      button[2]  = 10;            // Button 3
+      button[3]  = 14;            // Button 4
+      relais[0]  = 12;            // Red Led and Relay1 (0 = Off, 1 = On)
+      relais[1]  = 5;             // Red Led and Relay2 (0 = Off, 1 = On)
+      relais[2]  = 4;             // Red Led and Relay3 (0 = Off, 1 = On)
+      relais[3]  = 15;            // Red Led and Relay4 (0 = Off, 1 = On)
+      status_led = 13;            // Blue Led (0 = On, 1 = Off)
+      i2c_sda    = -1;            // GPIO4 conflicts with GPIO_REL3
+      i2c_scl    = -1;            // GPIO5 conflicts with GPIO_REL2
       break;
     case DeviceModel_Shelly1:
-      button[0]  = 5;      // Single Button
-      relais[0]  = 4;      // Red Led and Relay (0 = Off, 1 = On)
-      status_led = 15;     // Blue Led (0 = On, 1 = Off)
-      i2c_sda    = -1;     // GPIO4 conflicts with relay control.
-      i2c_scl    = -1;     // GPIO5 conflicts with SW input
+      button[0]  = 5;             // Single Button
+      relais[0]  = 4;             // Red Led and Relay (0 = Off, 1 = On)
+      status_led = 15;            // Blue Led (0 = On, 1 = Off)
+      i2c_sda    = -1;            // GPIO4 conflicts with relay control.
+      i2c_scl    = -1;            // GPIO5 conflicts with SW input
       break;
     case DeviceModel_ShellyPLUG_S:
-      button[0]  = 13;     // Single Button
-      relais[0]  = 15;     // Red Led and Relay (0 = Off, 1 = On)
-      status_led = 2;      // Blue Led (0 = On, 1 = Off)
-      i2c_sda    = -1;     // GPIO4 conflicts with relay control.
-      i2c_scl    = -1;     // GPIO5 conflicts with SW input
+      button[0]  = 13;            // Single Button
+      relais[0]  = 15;            // Red Led and Relay (0 = Off, 1 = On)
+      status_led = 2;             // Blue Led (0 = On, 1 = Off)
+      i2c_sda    = -1;            // GPIO4 conflicts with relay control.
+      i2c_scl    = -1;            // GPIO5 conflicts with SW input
       break;
     case DeviceMode_Olimex_ESP32_PoE:
-      button[0]      = 34; // BUT1 Button
-      relais[0]      = -1; // No LED's or relays on board
-      status_led     = -1;
-      i2c_sda        = 13;
-      i2c_scl        = 16;
-      eth_phyaddr    = 0;
-      eth_phytype    = EthPhyType_t::LAN8710;
-      eth_mdc        = 23;
-      eth_mdio       = 18;
-      eth_power      = 12;
-      eth_clock_mode = EthClockMode_t::Int_50MHz_GPIO_17_inv;
-      active_network_medium  = NetworkMedium_t::Ethernet;
+      button[0]             = 34; // BUT1 Button
+      relais[0]             = -1; // No LED's or relays on board
+      status_led            = -1;
+      i2c_sda               = 13;
+      i2c_scl               = 16;
+      eth_phyaddr           = 0;
+      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_mdc               = 23;
+      eth_mdio              = 18;
+      eth_power             = 12;
+      eth_clock_mode        = EthClockMode_t::Int_50MHz_GPIO_17_inv;
+      active_network_medium = NetworkMedium_t::Ethernet;
       break;
     case DeviceMode_Olimex_ESP32_EVB:
       button[0] = 34; // BUT1 Button
       relais[0] = 32; // LED1 + Relay1 (0 = Off, 1 = On)
       relais[1] = 33; // LED2 + Relay2 (0 = Off, 1 = On)
 
-      status_led     = -1;
-      i2c_sda        = 13;
-      i2c_scl        = 16;
-      eth_phyaddr    = 0;
-      eth_phytype    = EthPhyType_t::LAN8710;
-      eth_mdc        = 23;
-      eth_mdio       = 18;
-      eth_power      = -1; // No Ethernet power pin
-      eth_clock_mode = EthClockMode_t::Ext_crystal_osc;
-      active_network_medium  = NetworkMedium_t::Ethernet;
+      status_led            = -1;
+      i2c_sda               = 13;
+      i2c_scl               = 16;
+      eth_phyaddr           = 0;
+      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_mdc               = 23;
+      eth_mdio              = 18;
+      eth_power             = -1; // No Ethernet power pin
+      eth_clock_mode        = EthClockMode_t::Ext_crystal_osc;
+      active_network_medium = NetworkMedium_t::Ethernet;
       break;
 
-    // case DeviceModel_default: break;
-    default: break;
+    case DeviceModel_default:
+    case DeviceModel_MAX:
+      break;
+
+      // Do not use default: as this allows the compiler to detect any missing cases.
+      // default: break;
   }
 }
