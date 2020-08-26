@@ -152,10 +152,10 @@ void handle_hardware() {
   
 #ifdef HAS_ETHERNET
   addFormSubHeader(F("Ethernet"));
-  addRowLabel_tr_id(F("Ethernet or WIFI?"), "ethwifi");
-  String ethWifiOptions[2] = { F("WIFI"), F("ETHERNET") };
+  addRowLabel_tr_id(F("Preferred network medium"), "ethwifi");
+  String ethWifiOptions[2] = { F("WiFi"), F("Ethernet") };
   addSelector("ethwifi", 2, ethWifiOptions, NULL, NULL, Settings.ETH_Wifi_Mode, false, true);
-  addFormNote(F("Change Switch between WIFI and ETHERNET requires reboot to activate"));
+  addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
   addRowLabel_tr_id(F("Ethernet PHY type"), "ethtype");
   String ethPhyTypes[2] = { F("LAN8710"), F("TLK110") };
   addSelector("ethtype", 2, ethPhyTypes, NULL, NULL, Settings.ETH_Phy_Type, false, true);

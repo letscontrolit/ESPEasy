@@ -196,6 +196,7 @@ bool P044_Task::validP1char(char ch) {
     case '-':
     case '*':
     case ':':
+    case '_':
       return true;
   }
   return false;
