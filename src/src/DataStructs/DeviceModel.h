@@ -21,6 +21,8 @@ enum DeviceModel {
   DeviceModel_ShellyPLUG_S,
   DeviceMode_Olimex_ESP32_PoE,
   DeviceMode_Olimex_ESP32_EVB,
+  DeviceMode_Olimex_ESP32_GATEWAY,
+  
 
   DeviceModel_MAX
 };

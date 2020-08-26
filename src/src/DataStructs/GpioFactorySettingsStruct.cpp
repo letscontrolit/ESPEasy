@@ -119,6 +119,40 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       active_network_medium = NetworkMedium_t::Ethernet;
       break;
 
+    case DeviceMode_Olimex_ESP32_GATEWAY:
+      button[0]             = 34; // BUT1 Button
+      relais[0]             = -1; // No LED's or relays on board
+      status_led            = 33;
+      i2c_sda               = -1;
+      i2c_scl               = -1;
+      eth_phyaddr           = 0;
+      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_mdc               = 23;
+      eth_mdio              = 18;
+      eth_power             = 5;
+      eth_clock_mode        = EthClockMode_t::Int_50MHz_GPIO_17_inv;
+      active_network_medium = NetworkMedium_t::Ethernet;
+      // Rev A to E:
+      // GPIO 5, 17 can be used only if Ethernet functionality is not used
+      // GPIO 6, 7, 8, 9, 10, 11 used for internal flash and SD card
+      // GPIO 33 - Status LED
+      // GPIO 34 - User button
+      // GPIO 16, 32, 35, 36, 39 free to use
+
+      // Rev F and up:
+      // GPIO 5, 17 can be used only if Ethernet functionality is not used
+      // GPIO 2, 14, 15 are used for SD card, they are free to use if SD is not used.
+      // GPIO 33 - Status LED
+      // GPIO 34 - User button
+      // GPIO 4, 12, 13, 32, 35, 36, 39 free to use
+
+      // ESPEasy default setting:
+      // No GPIO pins selected in profile for I2C.
+      // Since there are none free to use in all revisions capable of input/output.
+      // N.B. GPIO 35 and up are input only.
+
+      break;
+
     case DeviceModel_default:
     case DeviceModel_MAX:
       break;
