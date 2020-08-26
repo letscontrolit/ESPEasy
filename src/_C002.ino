@@ -122,14 +122,12 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
 
                     switch ((int)nvalue)
                     {
-                      case 0:
+                      case 0:  // Off
                         pwmValue         = 0;
                         UserVar[baseVar] = pwmValue;
                         break;
-                      case 1:
-                        pwmValue = UserVar[baseVar];
-                        break;
-                      case 2:
+                      case 1: // On
+                      case 2: // Update dimmer value
                         pwmValue         = 10 * atol(svalue1);
                         UserVar[baseVar] = pwmValue;
                         break;

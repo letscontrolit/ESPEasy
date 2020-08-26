@@ -1,4 +1,4 @@
-#include "DLBus.h"
+#include "P092_data_struct.h"
 //
 // DLBus reads and decodes the DL-Bus.
 // The DL-Bus is used in heating control units e.g. sold by Technische Alternative (www.ta.co.at).
@@ -14,19 +14,6 @@
 #define DLbus_FlagLongerThanDoubleWidth       0x40
 #define DLbus_FlagLongerThanTwiceDoubleWidth  0x80
 #define DLbus_FlagsWrongTiming                (DLbus_FlagLongerThanTwiceDoubleWidth | DLbus_FlagLongerThanDoubleWidth | DLbus_FlagBetweenDoubleSingleWidth | DLbus_FlagShorterThanSingleWidth)
-
-extern long usecPassedSince(unsigned long timestamp) ICACHE_RAM_ATTR;
-extern void addToLog(byte loglevel, const String& string);
-
-//#define LOG_LEVEL_ERROR                     1
-#define LOG_LEVEL_INFO                      2
-#ifndef F
-// Create a no-op F() macro so the code base still compiles outside of the
-// Arduino framework. Thus we can safely use the Arduino 'F()' macro through-out
-// the code base. That macro stores constants in Flash (PROGMEM) memory.
-// See: https://github.com/crankyoldgit/IRremoteESP8266/issues/667
-	#define F(x) x
-#endif  // F
 
 // Helper for ISR call
 DLBus* DLBus::__instance = nullptr;

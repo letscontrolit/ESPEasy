@@ -77,8 +77,8 @@ String ethGetDebugClockModeStr() {
 String ethGetDebugEthWifiModeStr() {
   switch (eth_wifi_mode)
   {
-    case 0: return F("WIFI");
-    case 1: return F("ETHERNET");
+    case 0: return F("WiFi");
+    case 1: return F("Ethernet");
     default: return F("ETH_WIFI_ERR");
   }
 }
