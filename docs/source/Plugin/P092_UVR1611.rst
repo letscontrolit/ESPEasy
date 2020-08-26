@@ -11,11 +11,13 @@ Introduction
 ------------
 
 The UVR1611 unit is a freely programmable universal control system.
+
 The UVR1611 universal controller can be freely programmed using function modules to match any system configuration for heating room management.
 
-The DL bus runs at 12 volts.
-The data frame consist of 63 bytes (excluding sync and CRC).
-The data are transmitted @ 488Hz, therefore the transmission of one data set takes about 1.4 seconds.
+* The DL bus runs at 12 volts.
+* The data frame consist of 63 bytes (excluding sync and CRC).
+* The data are transmitted @ 488Hz, therefore the transmission of one data set takes about 1.4 seconds.
+
 .. image:: P092_UVR1611.png
 
 Wiring

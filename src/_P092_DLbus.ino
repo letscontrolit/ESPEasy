@@ -38,7 +38,7 @@
 
 \**************************************************/
 
-#include <DLBus.h>
+#include "src/PluginStructs/P092_data_struct.h"
 
 #define PLUGIN_092
 #define PLUGIN_ID_092         92
