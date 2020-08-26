@@ -502,7 +502,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
                         }
                     }
                     #else // #ifdef ESP32
-                    html += F("SPI:<BR>CLK=GPIO-14 (D5)<BR>MISO=GPIO-12 (D6)<BR>>MOSI=GPIO-13 (D7)");
+                    html += F("SPI:<BR>CLK=GPIO-14 (D5)<BR>MISO=GPIO-12 (D6)<BR>MOSI=GPIO-13 (D7)");
                     spi_gpios[0] = 14; spi_gpios[1] = 12; spi_gpios[2] = 13;
                     #endif
                   }
