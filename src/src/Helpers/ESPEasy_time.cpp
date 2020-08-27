@@ -1,16 +1,18 @@
 #include "ESPEasy_time.h"
 
-#include "ESPEasy_time_calc.h"
+#include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_Log.h"
+#include "../../ESPEasy_fdwdecl.h"
 
-#include "../Globals/TimeZone.h"
+#include "../Globals/EventQueue.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
-#include "../Globals/EventQueue.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy_Log.h"
-#include "../../ESPEasy-Globals.h"
+#include "../Globals/TimeZone.h"
 
 #include "../Helpers/Numerical.h"
+
+#include "ESPEasy_time_calc.h"
 
 #include <time.h>
 
