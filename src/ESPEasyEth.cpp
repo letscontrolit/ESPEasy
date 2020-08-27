@@ -91,20 +91,24 @@ uint8_t * ETHMacAddress(uint8_t* mac) {
     return mac;
 }
 
-void ETHConnectRelaxed() {
+bool ETHConnectRelaxed() {
   ethPrintSettings();
-  ETH.begin(Settings.ETH_Phy_Addr,
-            Settings.ETH_Pin_power,
-            Settings.ETH_Pin_mdc,
-            Settings.ETH_Pin_mdio,
-            (eth_phy_type_t)Settings.ETH_Phy_Type,
-            (eth_clock_mode_t)Settings.ETH_Clock_Mode);
+  if (!ETH.begin( Settings.ETH_Phy_Addr,
+                  Settings.ETH_Pin_power,
+                  Settings.ETH_Pin_mdc,
+                  Settings.ETH_Pin_mdio,
+                  (eth_phy_type_t)Settings.ETH_Phy_Type,
+                  (eth_clock_mode_t)Settings.ETH_Clock_Mode)) 
+  {
+    return false;
+  }
   addLog(LOG_LEVEL_INFO, F("After ETH.begin"));
   if (!ethPrepare()) {
     // Dead code for now...
     addLog(LOG_LEVEL_ERROR, F("ETH : Could not prepare ETH!"));
-    return;
+    return false;
   }
+  return true;
 }
 
 bool ETHConnected() {

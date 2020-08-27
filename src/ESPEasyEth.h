@@ -9,7 +9,7 @@ void ethSetupStaticIPconfig();
 bool ethCheckSettings();
 bool ethPrepare();
 void ethPrintSettings();
-void ETHConnectRelaxed();
+bool ETHConnectRelaxed();
 bool ETHConnected();
 uint8_t * ETHMacAddress(uint8_t* mac);
 

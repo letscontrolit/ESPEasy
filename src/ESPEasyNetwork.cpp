@@ -21,13 +21,15 @@ void NetworkConnectRelaxed() {
   addLog(LOG_LEVEL_INFO, F("Connect to: "));
   addLog(LOG_LEVEL_INFO, toString(active_network_medium));
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    ETHConnectRelaxed();
-  } else {
-    WiFiConnectRelaxed();
+    if (ETHConnectRelaxed()) {
+      return;
+    }
+    // Failed to start the Ethernet network, probably not present of wrong parameters.
+    // So set the runtime active medium to WiFi to try connecting to WiFi or at least start the AP.
+    active_network_medium = NetworkMedium_t::WIFI;
   }
-#else
-  WiFiConnectRelaxed();
 #endif
+  WiFiConnectRelaxed();
 }
 
 bool NetworkConnected() {
