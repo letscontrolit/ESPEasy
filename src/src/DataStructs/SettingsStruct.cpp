@@ -1,8 +1,10 @@
-#include "../../ESPEasy_common.h"
 #include "../DataStructs/SettingsStruct.h"
-#include "../DataStructs/ESPEasyLimits.h"
+
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
+#include "../DataStructs/ESPEasyLimits.h"
+#include "../DataStructs/DeviceStruct.h"
+#include "../../ESPEasy_common.h"
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {
@@ -219,9 +221,15 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   ETH_Phy_Type             = DEFAULT_ETH_PHY_TYPE;
   ETH_Clock_Mode           = DEFAULT_ETH_CLOCK_MODE;
   NetworkMedium            = DEFAULT_NETWORK_MEDIUM;
-  I2C_Multiplexer_Type     = -1;
+
+  I2C_clockSpeed_Slow      = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+  I2C_Multiplexer_Type     = I2C_MULTIPLEXER_NONE;
   I2C_Multiplexer_Addr     = -1;
+  for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
+    I2C_Multiplexer_Channel[x] = -1;
+  }
   I2C_Multiplexer_ResetPin = -1;
+
 
   for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
   BaudRate                         = 0;
