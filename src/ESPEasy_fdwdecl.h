@@ -195,7 +195,7 @@ void SendStatus(EventValueSource::Enum source, const String& status);
 //void setSTA(bool enable);
 
 // Used for Networking with Wifi or Ethernet
-#include "ESPEasyEthWifi.h"
+//#include "ESPEasyEthWiFi.h"
 #include "ESPEasyNetwork.h"
 //void WiFiConnectRelaxed();
 //bool WiFiConnected();
