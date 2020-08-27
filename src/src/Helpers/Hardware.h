@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #include "../DataStructs/DeviceModel.h"
+#include "../DataStructs/GpioFactorySettingsStruct.h"
 #include "../DataStructs/PinMode.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
 #include "../../ESPEasy-Globals.h"

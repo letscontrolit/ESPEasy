@@ -8,10 +8,8 @@ bool ethUseStaticIP();
 void ethSetupStaticIPconfig();
 bool ethCheckSettings();
 bool ethPrepare();
-String ethGetDebugClockModeStr();
-String ethGetDebugEthWifiModeStr();
 void ethPrintSettings();
-void ETHConnectRelaxed();
+bool ETHConnectRelaxed();
 bool ETHConnected();
 uint8_t * ETHMacAddress(uint8_t* mac);
 
