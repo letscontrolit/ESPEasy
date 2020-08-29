@@ -5,7 +5,7 @@
 
 #define PLUGIN_095
 #define PLUGIN_ID_095         95
-#define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341/XPT2046 [TESTING]"
+#define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341 [TESTING]"
 #define PLUGIN_VALUENAME1_095 "TFT"
 #define PLUGIN_095_MAX_DISPLAY 1
 
@@ -15,6 +15,14 @@
   #define PLUGIN_095_FONT_INCLUDED   // enable to use fonts in this plugin
 #endif
 
+/**
+ * Changelog:
+ * 2020-08-29 tonhuisman: Removed TS (Touchscreen) related stuff, XPT2046 will be a separate plugin
+ *                        Changed initial text from '--cdt--' to 'ESPEasy'
+ * 2020-08 tonhuisman: SPI improvements
+ * 2020-04 TD-er: Pull plugin into main repository and rework according to new plugin standards
+ * 2019 Jean-Michel Decoret: Initial plugin work
+ */
 /* README.MD
 
 ## INTRO
@@ -128,27 +136,24 @@ void Plugin_095_printText(const char *string, int X, int Y, unsigned int textSiz
   #define TFT_CS_HSPI 26  // when connected to Hardware-SPI GPIO-14 is already used
   #define TFT_DC 27
   #define TFT_RST 33
-  #define TS_CS 12
 #else
  //for D1 Mini with shield connection
   #define TFT_CS 16   // D0
   #define TFT_DC 15   // D8
   #define TFT_RST -1
-  #define TS_CS 0     // D3
 #endif
 
 //The setting structure
 struct Plugin_095_TFT_SettingStruct
 {
   Plugin_095_TFT_SettingStruct()
-  : address_tft_cs(TFT_CS), address_tft_dc(TFT_DC), address_tft_rst(TFT_RST), address_ts_cs(TS_CS), rotation(0)
+  : address_tft_cs(TFT_CS), address_tft_dc(TFT_DC), address_tft_rst(TFT_RST), rotation(0)
   {
 
   }
   byte address_tft_cs;
   byte address_tft_dc;
   byte address_tft_rst;
-  byte address_ts_cs;
   byte rotation;
 } TFT_Settings;
 
@@ -215,7 +220,6 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
           PIN(0) = TFT_Settings.address_tft_cs;
           PIN(1) = TFT_Settings.address_tft_dc;
           PIN(2) = TFT_Settings.address_tft_rst;
-          PIN(3) = TFT_Settings.address_ts_cs;
         }
         break;
       }
@@ -230,10 +234,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
           TFT_Settings.address_tft_cs = PIN(0);
           TFT_Settings.address_tft_dc = PIN(1);
           TFT_Settings.address_tft_rst = PIN(2);
-          TFT_Settings.address_ts_cs = PIN(3);
         }
-
-        addFormPinSelect(formatGpioName_output(F("TS CS")), F("p095_ts_cs"), TFT_Settings.address_ts_cs);
 
         byte choice2 = PCONFIG(1);
         String options2[4] = { F("Normal"), F("+90°"), F("+180°"), F("+270°") };
@@ -248,7 +249,6 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
       {
         PCONFIG(0) = 1; //mark config as already saved (next time, will not use default values)
         // PIN(0)..(2) are already set
-        PIN(3) = getFormItemInt(F("p095_ts_cs"));
         PCONFIG(1) = getFormItemInt(F("p095_rotate"));
         success = true;
         break;
@@ -260,14 +260,13 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         TFT_Settings.address_tft_cs = PIN(0);
         TFT_Settings.address_tft_dc = PIN(1);
         TFT_Settings.address_tft_rst = PIN(2);
-        TFT_Settings.address_ts_cs = PIN(3);
         TFT_Settings.rotation = PCONFIG(1);
 
         tft = new Adafruit_ILI9341(TFT_Settings.address_tft_cs, TFT_Settings.address_tft_dc, TFT_Settings.address_tft_rst);
         tft->begin();
         tft->setRotation(TFT_Settings.rotation);
         tft->fillScreen(ILI9341_WHITE);
-        Plugin_095_printText("--cdt--", 1, 1);
+        Plugin_095_printText("ESPEasy", 1, 1);
         success = true;
         break;
       }
