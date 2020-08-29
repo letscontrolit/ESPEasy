@@ -128,7 +128,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P028_data) {
-        const float tempOffset = PCONFIG(2) / 10.0;
+        const float tempOffset = PCONFIG(2) / 10.0f;
 
         if (P028_data->updateMeasurements(tempOffset, event->TaskIndex)) {
           // Update was succesfull, schedule a read.

@@ -48,7 +48,7 @@
 void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
   unsigned long minVal, maxVal;
   unsigned int  count = stats.getMinMax(minVal, maxVal);
-  float call_per_sec = static_cast<float>(count) / static_cast<float>(timeSinceLastReset) * 1000.0;
+  float call_per_sec = static_cast<float>(count) / static_cast<float>(timeSinceLastReset) * 1000.0f;
 
   json_number(F("count"), String(count));
   json_number(F("call-per-sec"),   String(call_per_sec));

@@ -237,7 +237,7 @@ boolean handle_AC_IRremote(const String &cmd) {
   st.model = IRac::strToModel(tempstr.c_str(), -1); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
   tempstr = doc[F("power")].as<String>();
   st.power = IRac::strToBool(tempstr.c_str(), false); //POWER ON or OFF. Defaults to false if missing from JSON
-  st.degrees = doc[F("temp")] | 22.0;                //What temperature should the unit be set to?. Defaults to 22c if missing from JSON
+  st.degrees = doc[F("temp")] | 22.0f;                //What temperature should the unit be set to?. Defaults to 22c if missing from JSON
   tempstr = doc[F("use_celsius")].as<String>();
   st.celsius = IRac::strToBool(tempstr.c_str(), true); //Use degreees Celsius, otherwise Fahrenheit. Defaults to true if missing from JSON
   tempstr = doc[F("mode")].as<String>();

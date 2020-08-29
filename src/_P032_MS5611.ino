@@ -231,7 +231,7 @@ void Plugin_032_readout() {
 // MSL pressure formula
 // **************************************************************************/
 double Plugin_032_pressureElevation(double atmospheric, int altitude) {
-  return atmospheric / pow(1.0 - (altitude / 44330.0), 5.255);
+  return atmospheric / pow(1.0f - (altitude / 44330.0f), 5.255f);
 }
 
 #endif // USES_P032

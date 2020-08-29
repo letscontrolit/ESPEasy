@@ -208,18 +208,18 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   switch (Par3) {
     case P005_DHT11:
     case P005_DHT12:
-      temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0; // Temperature
+      temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0f; // Temperature
       if (dht_dat[3] & 0x80) { temperature = -temperature; } // Negative temperature
-      humidity = float(dht_dat[0]*10+dht_dat[1]) / 10.0; // Humidity
+      humidity = float(dht_dat[0]*10+dht_dat[1]) / 10.0f; // Humidity
       break;
     case P005_DHT22:
     case P005_AM2301:
     case P005_SI7021:
       if (dht_dat[2] & 0x80) // negative temperature
-        temperature = -0.1 * word(dht_dat[2] & 0x7F, dht_dat[3]);
+        temperature = -0.1f * word(dht_dat[2] & 0x7F, dht_dat[3]);
       else
-        temperature = 0.1 * word(dht_dat[2], dht_dat[3]);
-      humidity = 0.1 * word(dht_dat[0], dht_dat[1]); // Humidity
+        temperature = 0.1f * word(dht_dat[2], dht_dat[3]);
+      humidity = 0.1f * word(dht_dat[0], dht_dat[1]); // Humidity
       break;
   }
 

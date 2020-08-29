@@ -158,7 +158,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
           P002_formatStatistics(F("Minimum"),   0,                  P002_applyCalibration(event, 0));
           P002_formatStatistics(F("Maximum"),   P002_MAX_ADC_VALUE, P002_applyCalibration(event, P002_MAX_ADC_VALUE));
 
-          float stepsize = P002_applyCalibration(event, 1.0) - P002_applyCalibration(event, 0.0);
+          float stepsize = P002_applyCalibration(event, 1.0f) - P002_applyCalibration(event, 0.0f);
           P002_formatStatistics(F("Step size"), 1,                  stepsize);
         }
       }
@@ -219,7 +219,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       int   raw_value = 0;
-      float res_value = 0.0;
+      float res_value = 0.0f;
 
       if (P002_getOutputValue(event, raw_value, res_value)) {
         UserVar[event->BaseVarIndex] = res_value;
@@ -262,7 +262,7 @@ bool P002_getOutputValue(struct EventStruct *event, int& raw_value, float& res_v
   if (nullptr == P002_data) {
     return false;
   }
-  float float_value = 0.0;
+  float float_value = 0.0f;
 
   bool valueRead = P002_OVERSAMPLING && P002_data->getOversamplingValue(float_value, raw_value);
 

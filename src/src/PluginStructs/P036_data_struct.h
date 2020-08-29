@@ -80,8 +80,8 @@ typedef struct {
   uint8_t  Height      = 0;   // Height in Pix
   uint8_t  ypos        = 0;   // y position in pix
   int      CurrentLeft = 0;   // current left pix position
-  float    dPix        = 0.0; // pix change per scroll time (100ms)
-  float    fPixSum     = 0.0; // pix sum while scrolling (100ms)
+  float    dPix        = 0.0f; // pix change per scroll time (100ms)
+  float    fPixSum     = 0.0f; // pix sum while scrolling (100ms)
 } tScrollLine;
 
 typedef struct {

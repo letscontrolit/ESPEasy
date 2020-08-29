@@ -123,9 +123,9 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_RGB_VALUENAME3_064));
 
         // Reset values
-        UserVar[event->BaseVarIndex + 0] = 0.0;
-        UserVar[event->BaseVarIndex + 1] = 0.0;
-        UserVar[event->BaseVarIndex + 2] = 0.0;
+        UserVar[event->BaseVarIndex + 0] = 0.0f;
+        UserVar[event->BaseVarIndex + 1] = 0.0f;
+        UserVar[event->BaseVarIndex + 2] = 0.0f;
       }
 
       if (P064_IS_GPL_SENSOR // Gesture/Proximity/ALS mode and default R/G/B values: Set new default names
@@ -137,9 +137,9 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_GPL_VALUENAME3_064));
 
         // Reset values
-        UserVar[event->BaseVarIndex + 0] = 0.0;
-        UserVar[event->BaseVarIndex + 1] = 0.0;
-        UserVar[event->BaseVarIndex + 2] = 0.0;
+        UserVar[event->BaseVarIndex + 0] = 0.0f;
+        UserVar[event->BaseVarIndex + 1] = 0.0f;
+        UserVar[event->BaseVarIndex + 2] = 0.0f;
       }
 
       // Gain options, multiple gain optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here

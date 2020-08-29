@@ -1410,7 +1410,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
         if (Function == PLUGIN_SET_DEFAULTS) {
           for (int i = 0; i < VARS_PER_TASK; ++i) {
-            UserVar[event->BaseVarIndex + i] = 0.0;
+            UserVar[event->BaseVarIndex + i] = 0.0f;
           }
         }
 #ifdef FEATURE_I2CMULTIPLEXER

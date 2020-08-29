@@ -31,7 +31,7 @@ unsigned long timerAwakeFromDeepSleep = 0;
 
 
 #if FEATURE_ADC_VCC
-float vcc = -1.0;
+float vcc = -1.0f;
 #endif
 int lastADCvalue = 0;
 

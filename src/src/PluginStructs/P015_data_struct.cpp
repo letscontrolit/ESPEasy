@@ -76,7 +76,7 @@ bool P015_data_struct::performRead(float& luxVal,
       }
 
       if (success) {
-        if (broadband > 0.0) {
+        if (broadband > 0.0f) {
           // Store the ratio in an unused user var. (should we make it available?)
           // Only store/update it when not close to the limits of both ADC ranges.
           // When using this value to compute extended ranges, it must not be using a ratio taken from a
@@ -88,7 +88,7 @@ bool P015_data_struct::performRead(float& luxVal,
       } else {
         // Use last known ratio to reconstruct the broadband value
         // If IR is saturated, output the max value based on the last known ratio.
-        if ((ir_broadband_ratio > 0.0) && (_gain == P015_EXT_AUTO_GAIN)) {
+        if ((ir_broadband_ratio > 0.0f) && (_gain == P015_EXT_AUTO_GAIN)) {
           data0 = static_cast<double>(data1) / ir_broadband_ratio;
           getLux(_gain16xActive, ms, data0, data1, lux, infrared, broadband);
           success = true;
@@ -271,7 +271,7 @@ bool P015_data_struct::plugin_015_setTiming(bool gain, unsigned char time, float
   // Calculate ms for user
   switch (time)
   {
-    case 0: ms  = 13.7; break;
+    case 0: ms  = 13.7f; break;
     case 1: ms  = 101; break;
     case 2: ms  = 402; break;
     default: ms = 402; // used in a division, so do not use 0
@@ -360,8 +360,8 @@ void P015_data_struct::getLux(unsigned char gain,
   broadband = d0;
 
   // Normalize for integration time
-  d0 *= (402.0 / ms);
-  d1 *= (402.0 / ms);
+  d0 *= (402.0f / ms);
+  d1 *= (402.0f / ms);
 
   // Normalize for gain
   if (!gain)
@@ -371,21 +371,21 @@ void P015_data_struct::getLux(unsigned char gain,
   }
 
   // Determine lux per datasheet equations:
-  if (ratio < 0.5)
+  if (ratio < 0.5f)
   {
-    lux = 0.0304 * d0 - 0.062 * d0 * pow(ratio, 1.4);
-  } else if (ratio < 0.61)
+    lux = 0.0304f * d0 - 0.062f * d0 * pow(ratio, 1.4);
+  } else if (ratio < 0.61f)
   {
-    lux = 0.0224 * d0 - 0.031 * d1;
-  } else if (ratio < 0.80)
+    lux = 0.0224f * d0 - 0.031f * d1;
+  } else if (ratio < 0.80f)
   {
-    lux = 0.0128 * d0 - 0.0153 * d1;
-  } else if (ratio < 1.30)
+    lux = 0.0128f * d0 - 0.0153f * d1;
+  } else if (ratio < 1.30f)
   {
-    lux = 0.00146 * d0 - 0.00112 * d1;
+    lux = 0.00146f * d0 - 0.00112f * d1;
   } else {
     // ratio >= 1.30
-    lux = 0.0;
+    lux = 0.0f;
   }
 }
 

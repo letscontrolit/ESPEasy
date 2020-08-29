@@ -170,13 +170,13 @@ public:
 private:
 
   // These are the air quality values obtained from the sensor
-  float refResistance = 0.0;
-  float resistance    = 0.0;
+  float refResistance = 0.0f;
+  float resistance    = 0.0f;
   uint16_t tVOC       = 0;
   uint16_t CO2        = 0;
   uint16_t vrefCounts = 0;
   uint16_t ntcCounts  = 0;
-  float temperature   = 0.0;
+  float temperature   = 0.0f;
 };
 
 #endif // End of definition check
@@ -383,7 +383,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
 
         if (temperature_in_fahrenheit)
         {
-          temperature = (temperature - 32) * 5 / 9;
+          temperature = ((temperature - 32) * 5.0f) / 9.0f;
           temp        =  F("F");
         }
 
@@ -883,8 +883,8 @@ CCS811Core::status CCS811::readNTC(void)
   // Code from Milan Malesevic and Zoran Stupic, 2011,
   // Modified by Max Mayfield,
   temperature = log((long)resistance);
-  temperature = 1  / (0.001129148 + (0.000234125 * temperature) + (0.0000000876741 * temperature * temperature * temperature));
-  temperature = temperature - 273.15; // Convert Kelvin to Celsius
+  temperature = 1  / (0.001129148f + (0.000234125f * temperature) + (0.0000000876741f * temperature * temperature * temperature));
+  temperature = temperature - 273.15f; // Convert Kelvin to Celsius
 
   return SENSOR_SUCCESS;
 }

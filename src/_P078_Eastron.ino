@@ -257,7 +257,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 }
 
 float p078_readVal(byte query, byte node, unsigned int model) {
-  if (Plugin_078_SDM == NULL) return 0.0;
+  if (Plugin_078_SDM == NULL) return 0.0f;
 
   byte retry_count = 3;
   bool success = false;

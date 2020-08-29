@@ -94,7 +94,7 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         {
           UserVar[event->BaseVarIndex] = P006_data->readTemperature();
           int   elev     = PCONFIG(1);
-          float pressure = (float)P006_data->readPressure() / 100.0;
+          float pressure = (float)P006_data->readPressure() / 100.0f;
 
           if (elev != 0)
           {

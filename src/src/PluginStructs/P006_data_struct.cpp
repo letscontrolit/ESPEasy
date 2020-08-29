@@ -131,7 +131,7 @@ float P006_data_struct::readTemperature(void)
 }
 
 float P006_data_struct::pressureElevation(float atmospheric, int altitude) {
-  return atmospheric / pow(1.0 - (altitude / 44330.0), 5.255);
+  return atmospheric / pow(1.0f - (altitude / 44330.0f), 5.255f);
 }
 
 #endif // ifdef USES_P006

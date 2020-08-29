@@ -131,12 +131,12 @@ unsigned long ESPEasy_time::now() {
     // nextSyncTime & sysTime are in seconds
     double unixTime_d = -1.0;
 
-    if (externalTimeSource > 0.0) {
+    if (externalTimeSource > 0.0f) {
       unixTime_d         = externalTimeSource;
       externalTimeSource = -1.0;
     }
 
-    if ((unixTime_d > 0.0) || getNtpTime(unixTime_d)) {
+    if ((unixTime_d > 0.0f) || getNtpTime(unixTime_d)) {
       prevMillis = millis(); // restart counting from now (thanks to Korman for this fix)
       timeSynced = true;
 
@@ -148,9 +148,9 @@ unsigned long ESPEasy_time::now() {
         if (-86400 < time_offset && time_offset < 86400) {
           // Only useful to show adjustment if it is less than a day.
           log += F(" Time adjusted by ");
-          log += String(time_offset * 1000.0);
+          log += String(time_offset * 1000.0f);
           log += F(" msec. Wander: ");
-          log += String((time_offset * 1000.0) / syncInterval);
+          log += String((time_offset * 1000.0f) / syncInterval);
           log += F(" msec/second");
         }
         addLog(LOG_LEVEL_INFO, log)
@@ -220,7 +220,7 @@ bool ESPEasy_time::systemTimePresent() const {
     case Manual_set:
       return true;
   }
-  return nextSyncTime > 0 || Settings.UseNTP || externalTimeSource > 0.0;
+  return nextSyncTime > 0 || Settings.UseNTP || externalTimeSource > 0.0f;
 }
 
 
@@ -357,7 +357,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       unixTime_d = static_cast<double>(txTm);
 
       // Add fractional part.
-      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0);
+      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0f);
 
       long total_delay = timePassedSince(beginWait);
 
@@ -584,11 +584,11 @@ float ESPEasy_time::sunDeclination(int doy) {
 
 float ESPEasy_time::diurnalArc(float dec, float lat) {
   // Duration of the half sun path in hours (time from sunrise to the highest level in the south)
-  float rad    = 0.0174532925; // = pi/180.0
-  float height = -50.0 / 60.0 * rad;
+  float rad    = 0.0174532925f; // = pi/180.0
+  float height = -50.0f / 60.0f * rad;
   float latRad = lat * rad;
 
-  return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / 3.1415926536;
+  return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / 3.1415926536f;
 }
 
 float ESPEasy_time::equationOfTime(int doy) {
@@ -621,15 +621,15 @@ void ESPEasy_time::calcSunRiseAndSet() {
   float set  = 12 + da - eqt;
 
   tsRise.tm_hour = (int)rise;
-  tsRise.tm_min  = (rise - (int)rise) * 60.0;
+  tsRise.tm_min  = (rise - (int)rise) * 60.0f;
   tsSet.tm_hour  = (int)set;
-  tsSet.tm_min   = (set - (int)set) * 60.0;
+  tsSet.tm_min   = (set - (int)set) * 60.0f;
   tsRise.tm_mday = tsSet.tm_mday = tm.tm_mday;
   tsRise.tm_mon  = tsSet.tm_mon = tm.tm_mon;
   tsRise.tm_year = tsSet.tm_year = tm.tm_year;
 
   // Now apply the longitude
-  int secOffset_longitude = -1.0 * (Settings.Longitude / 15.0) * 3600;
+  int secOffset_longitude = -1.0f * (Settings.Longitude / 15.0f) * 3600;
   tsSet  = addSeconds(tsSet, secOffset_longitude, false);
   tsRise = addSeconds(tsRise, secOffset_longitude, false);
 

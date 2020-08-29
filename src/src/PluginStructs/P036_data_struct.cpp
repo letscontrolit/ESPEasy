@@ -490,7 +490,7 @@ uint8_t P036_data_struct::display_scroll(int lscrollspeed, int lTaskTimer)
   } else {
     iPageScrollTime = (P36_MaxDisplayWidth / (P36_PageScrollPix * lscrollspeed)) * P36_PageScrollTick;
   }
-  float fScrollTime = (float)(lTaskTimer * 1000 - iPageScrollTime - 2 * P36_WaitScrollLines * 100) / 100.0;
+  float fScrollTime = (float)(lTaskTimer * 1000 - iPageScrollTime - 2 * P36_WaitScrollLines * 100) / 100.0f;
 
 #ifdef PLUGIN_036_DEBUG
   log  = F("PageScrollTime: ");
@@ -539,7 +539,7 @@ uint8_t P036_data_struct::display_scroll(int lscrollspeed, int lTaskTimer)
         ScrollingLines.Line[j].LastWidth = PixLengthLineOut; // while page scrolling this line is right aligned
       }
 
-      if ((PixLengthLineIn > SizeSettings[_disp_resolution].Width) && (fScrollTime > 0.0))
+      if ((PixLengthLineIn > SizeSettings[_disp_resolution].Width) && (fScrollTime > 0.0f))
       {
         // width of the line > display width -> scroll line
         ScrollingLines.Line[j].LineContent = ScrollingPages.LineIn[j];

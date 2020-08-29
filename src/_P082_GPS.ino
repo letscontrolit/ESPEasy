@@ -486,7 +486,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
         }
         P082_setOutputValue(event, P082_QUERY_SATVIS,      P082_data->gps->satellitesStats.nrSatsVisible());
         P082_setOutputValue(event, P082_QUERY_SATUSE,      P082_data->gps->satellitesStats.nrSatsTracked());
-        P082_setOutputValue(event, P082_QUERY_HDOP,        P082_data->gps->hdop.value() / 100.0);
+        P082_setOutputValue(event, P082_QUERY_HDOP,        P082_data->gps->hdop.value() / 100.0f);
         P082_setOutputValue(event, P082_QUERY_FIXQ,        P082_data->gps->location.Quality());
         P082_setOutputValue(event, P082_QUERY_DB_MAX,      P082_data->gps->satellitesStats.getBestSNR());
         P082_setOutputValue(event, P082_QUERY_CHKSUM_FAIL, P082_data->gps->failedChecksum());
@@ -604,7 +604,7 @@ void P082_logStats(struct EventStruct *event) {
   log += F(" #SNR: ");
   log += P082_data->gps->satellitesStats.getBestSNR();
   log += F(" HDOP: ");
-  log += P082_data->gps->hdop.value() / 100.0;
+  log += P082_data->gps->hdop.value() / 100.0f;
   log += F(" Chksum(pass/fail): ");
   log += P082_data->gps->passedChecksum();
   log += '/';
@@ -714,7 +714,7 @@ void P082_html_show_stats(struct EventStruct *event) {
   P082_html_show_satStats(event, false, false);
 
   addRowLabel(F("HDOP"));
-  addHtml(String(P082_data->gps->hdop.value() / 100.0));
+  addHtml(String(P082_data->gps->hdop.value() / 100.0f));
 
   addRowLabel(F("UTC Time"));
   struct tm dateTime;
