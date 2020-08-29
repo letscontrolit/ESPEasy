@@ -240,7 +240,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_SPEED:              return eth_connected ? getEthSpeed() : F("No Ethernet");
     case LabelType::ETH_STATE:              return eth_connected ? (ETH.linkUp() ? F("Link Up") : F("Link Down")) : F("No Ethernet");
     case LabelType::ETH_SPEED_STATE:        return eth_connected ? getEthLinkSpeedState() : F("No Ethernet");
-    case LabelType::ETH_WIFI_MODE:          return (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
+    case LabelType::ETH_WIFI_MODE:          return (active_network_medium == NetworkMedium_t::WIFI ? F("WIFI") : F("ETHERNET"));
     case LabelType::ETH_CONNECTED:          return (eth_connected ? F("CONNECTED") : F("DISCONNECTED")); // 0=disconnected, 1=connected
 #endif
 

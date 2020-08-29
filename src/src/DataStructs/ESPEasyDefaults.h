@@ -2,6 +2,8 @@
 #define ESPEASY_DEFAULTS_H_
 
 
+#include "../DataStructs/NetworkMedium.h"
+
 // ********************************************************************************
 //   User specific configuration
 // ********************************************************************************
@@ -178,7 +180,7 @@
 #define DEFAULT_ETH_PHY_ADDR             0
 #endif
 #ifndef DEFAULT_ETH_PHY_TYPE
-#define DEFAULT_ETH_PHY_TYPE             0
+#define DEFAULT_ETH_PHY_TYPE             EthPhyType_t::LAN8710
 #endif
 #ifndef DEFAULT_ETH_PIN_MDC
 #define DEFAULT_ETH_PIN_MDC              23
@@ -190,12 +192,14 @@
 #define DEFAULT_ETH_PIN_POWER            -1
 #endif
 #ifndef DEFAULT_ETH_CLOCK_MODE
-#define DEFAULT_ETH_CLOCK_MODE           0
+#define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
 #endif
-#ifndef DEFAULT_ETH_WIFI_MODE
-#define DEFAULT_ETH_WIFI_MODE            0
-                                                // 0 WIFI
-                                                // 1 ETHERNET
+#ifndef DEFAULT_NETWORK_MEDIUM
+  #ifdef HAS_ETHERNET
+    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::Ethernet
+  #else
+    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
+  #endif
 #endif
 
 
