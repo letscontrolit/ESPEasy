@@ -934,7 +934,7 @@ boolean P092_fetch_heatmeter(int number, sP092_ReadData* ReadData) {
   if (HMindex.IndexIsValid == 0)
     return false;
   heat_meter = (DLbus_Data->ByteStream[HMindex.kwh_index + 1] << 8) | DLbus_Data->ByteStream[HMindex.kwh_index];
-  heat_meter_mwh = (heat_meter * 0.1f) / 1000f; // in MWh
+  heat_meter_mwh = (heat_meter * 0.1f) / 1000.0f; // in MWh
   if (heat_meter_mwh > 1.0f) {
     // in kWh
     heat_meter = heat_meter_mwh;
