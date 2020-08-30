@@ -156,7 +156,7 @@ String checkTaskSettings(taskIndex_t taskIndex) {
     return F("Use unique value names");
   }
   if (!ExtraTaskSettings.checkInvalidCharInNames()) {
-    return F("Invalid character in names. Do not use ',#[]' or space.");
+    return F("Invalid character in names. Do not use ',-+/*=^%!#[]{}()' or space.");
   }
   String deviceName = ExtraTaskSettings.TaskDeviceName;
   if (deviceName.length() == 0) {

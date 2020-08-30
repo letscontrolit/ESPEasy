@@ -28,7 +28,7 @@ struct NotificationSettingsStruct
 };
 
 typedef std::shared_ptr<NotificationSettingsStruct> NotificationSettingsStruct_ptr_type;
-#define MakeNotificationSettings(T) NotificationSettingsStruct_ptr_type NotificationSettingsStruct_ptr(new NotificationSettingsStruct());\
+#define MakeNotificationSettings(T) NotificationSettingsStruct_ptr_type NotificationSettingsStruct_ptr(new (std::nothrow)  NotificationSettingsStruct());\
                                     NotificationSettingsStruct& T = *NotificationSettingsStruct_ptr;
 
 #endif // DATASTRUCTS_NOTIFICATIONSETTINGSSTRUCT_H
