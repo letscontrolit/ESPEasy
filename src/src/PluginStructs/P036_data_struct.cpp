@@ -107,10 +107,10 @@ bool P036_data_struct::init(taskIndex_t      taskIndex,
 
   switch (_type) {
     case 1:
-      display = new SSD1306Wire(_address, _sda, _scl);
+      display = new (std::nothrow) SSD1306Wire(_address, _sda, _scl);
       break;
     case 2:
-      display = new SH1106Wire(_address, _sda, _scl);
+      display = new (std::nothrow) SH1106Wire(_address, _sda, _scl);
       break;
     default:
       return false;

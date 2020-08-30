@@ -234,7 +234,7 @@ struct ControllerDelayHandlerStruct {
   }                                                                                                                    \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                             \
     if (C##NNN####M##_DelayHandler == nullptr) {                                                                       \
-      C##NNN####M##_DelayHandler = new C##NNN####M##_DelayHandler_t;                                                   \
+      C##NNN####M##_DelayHandler = new (std::nothrow) C##NNN####M##_DelayHandler_t;                                                   \
     }                                                                                                                  \
     if (C##NNN####M##_DelayHandler == nullptr) { return false; }                                                       \
     MakeControllerSettings(ControllerSettings);                                                                        \

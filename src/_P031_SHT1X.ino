@@ -314,7 +314,7 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        initPluginTaskData(event->TaskIndex, new P031_data_struct());
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P031_data_struct());
         P031_data_struct *P031_data =
             static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
         if (nullptr == P031_data) {
