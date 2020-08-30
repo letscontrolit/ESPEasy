@@ -1,10 +1,13 @@
 #ifdef HAS_ETHERNET
 
 #include "ESPEasyEth.h"
+
+
+#include "ESPEasy-Globals.h"
 #include "ESPEasyNetwork.h"
 #include "ETH.h"
-#include "ESPEasy-Globals.h"
 #include "eth_phy/phy.h"
+#include "src/Globals/NetworkState.h"
 #include "src/Helpers/StringConverter.h"
 
 bool ethUseStaticIP() {
@@ -34,11 +37,11 @@ void ethSetupStaticIPconfig() {
 
 bool ethCheckSettings() {
   bool result = true;
-  if (Settings.ETH_Phy_Type != 0 && Settings.ETH_Phy_Type != 1)
+  if (!isValid(Settings.ETH_Phy_Type))
     result = false;
-  if (Settings.ETH_Clock_Mode > 3)
+  if (!isValid(Settings.ETH_Clock_Mode))
     result = false;
-  if (Settings.ETH_Wifi_Mode > 1)
+  if (!isValid(Settings.NetworkMedium))
     result = false;
   if (Settings.ETH_Pin_mdc > MAX_GPIO)
     result = false;
@@ -63,37 +66,17 @@ bool ethPrepare() {
   return true;
 }
 
-String ethGetDebugClockModeStr() {
-  switch (Settings.ETH_Clock_Mode)
-  {
-    case 0: return F("ETH_CLOCK_GPIO0_IN");
-    case 1: return F("ETH_CLOCK_GPIO0_OUT");
-    case 2: return F("ETH_CLOCK_GPIO16_OUT");
-    case 3: return F("ETH_CLOCK_GPIO17_OUT");
-    default: return F("ETH_CLOCK_ERR");
-  }
-}
-
-String ethGetDebugEthWifiModeStr() {
-  switch (eth_wifi_mode)
-  {
-    case 0: return F("WiFi");
-    case 1: return F("Ethernet");
-    default: return F("ETH_WIFI_ERR");
-  }
-}
-
 void ethPrintSettings() {
   String settingsDebugLog;
   settingsDebugLog.reserve(115);
   settingsDebugLog += F("Eth Wifi mode: ");
-  settingsDebugLog += ethGetDebugEthWifiModeStr();
+  settingsDebugLog += toString(active_network_medium);
   settingsDebugLog += F(" ETH: PHY Type: ");
-  settingsDebugLog += Settings.ETH_Phy_Type == 0 ? F("ETH_PHY_LAN8720") : F("ETH_PHY_TLK110");
+  settingsDebugLog += toString(Settings.ETH_Phy_Type);
   settingsDebugLog += F(" PHY Addr: ");
   settingsDebugLog += Settings.ETH_Phy_Addr;
   settingsDebugLog += F(" Eth Clock mode: ");
-  settingsDebugLog += ethGetDebugClockModeStr();
+  settingsDebugLog += toString(Settings.ETH_Clock_Mode);
   settingsDebugLog += F(" MDC Pin: ");
   settingsDebugLog += String(Settings.ETH_Pin_mdc);
   settingsDebugLog += F(" MIO Pin: ");
@@ -108,20 +91,24 @@ uint8_t * ETHMacAddress(uint8_t* mac) {
     return mac;
 }
 
-void ETHConnectRelaxed() {
+bool ETHConnectRelaxed() {
   ethPrintSettings();
-  ETH.begin(Settings.ETH_Phy_Addr,
-            Settings.ETH_Pin_power,
-            Settings.ETH_Pin_mdc,
-            Settings.ETH_Pin_mdio,
-            (eth_phy_type_t)Settings.ETH_Phy_Type,
-            (eth_clock_mode_t)Settings.ETH_Clock_Mode);
+  if (!ETH.begin( Settings.ETH_Phy_Addr,
+                  Settings.ETH_Pin_power,
+                  Settings.ETH_Pin_mdc,
+                  Settings.ETH_Pin_mdio,
+                  (eth_phy_type_t)Settings.ETH_Phy_Type,
+                  (eth_clock_mode_t)Settings.ETH_Clock_Mode)) 
+  {
+    return false;
+  }
   addLog(LOG_LEVEL_INFO, F("After ETH.begin"));
   if (!ethPrepare()) {
     // Dead code for now...
     addLog(LOG_LEVEL_ERROR, F("ETH : Could not prepare ETH!"));
-    return;
+    return false;
   }
+  return true;
 }
 
 bool ETHConnected() {

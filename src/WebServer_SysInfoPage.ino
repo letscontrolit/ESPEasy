@@ -330,7 +330,7 @@ void handle_sysinfo_basicInfo() {
 
 #ifdef HAS_ETHERNET
 void handle_sysinfo_Ethernet() {
-    if(eth_wifi_mode == ETHERNET) {
+    if(active_network_medium == NetworkMedium_t::Ethernet) {
       addTableSeparator(F("Ethernet"), 2, 3);
       addRowLabelValue(LabelType::ETH_STATE);
       addRowLabelValue(LabelType::ETH_SPEED);
@@ -348,7 +348,7 @@ void handle_sysinfo_Network() {
 
   if (
     #ifdef HAS_ETHERNET
-    eth_wifi_mode == WIFI &&
+    active_network_medium == NetworkMedium_t::WIFI &&
     #endif
     NetworkConnected())
   {
