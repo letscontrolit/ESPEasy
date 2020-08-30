@@ -107,10 +107,10 @@ void hardwareInit()
 
 void initI2C() {
   // configure hardware pins according to eeprom settings.
-  if (Settings.Pin_i2c_sda != -1)
+  if (Settings.Pin_i2c_sda != -1 && Settings.Pin_i2c_scl != -1)
   {
     addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
-    Wire.setClock(Settings.I2C_clockSpeed);
+    I2CSelectClockSpeed(false); // Set normal clock speed
     Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
 
     if (Settings.WireClockStretchLimit)
@@ -159,6 +159,13 @@ void initI2C() {
 }
 
 void I2CSelectClockSpeed(bool setLowSpeed) {
+  static uint8_t lastI2CClockSpeed = 255;  
+  const uint8_t newI2CClockSpeed = setLowSpeed ? 0 : 1;
+  if (newI2CClockSpeed == lastI2CClockSpeed) {
+    // No need to change the clock speed.
+    return;
+  }
+  lastI2CClockSpeed = newI2CClockSpeed;  
   Wire.setClock(setLowSpeed ? Settings.I2C_clockSpeed_Slow : Settings.I2C_clockSpeed);
 }
 
@@ -203,8 +210,8 @@ byte I2CMultiplexerShiftBit(uint8_t i) {
 // As initially constructed by krikk in PR#254, quite adapted
 // utility method for the I2C multiplexer
 // select the multiplexer port given as parameter, if taskIndex < 0 then take that abs value as the port to select (to allow I2C scanner)
-void I2CMultiplexerSelectByTaskIndex(int8_t taskIndex) {
-  if (taskIndex >= INVALID_TASK_INDEX) { return; }
+void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex) {
+  if (!validTaskIndex(taskIndex)) { return; }
 
   byte toWrite = 0;
 
@@ -217,12 +224,15 @@ void I2CMultiplexerSelectByTaskIndex(int8_t taskIndex) {
     toWrite = Settings.I2C_Multiplexer_Channel[taskIndex]; // Bitpattern is already correctly stored
   }
 
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(true); // Set to slow
-  }
   Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
   Wire.write(toWrite);
   Wire.endTransmission();
+
+  // Output is selected after this write, so now we must make sure the
+  // frequency is set before anything else is sent.
+  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
+    I2CSelectClockSpeed(true); // Set to slow
+  }
 }
 
 void I2CMultiplexerSelect(uint8_t i) {
@@ -237,7 +247,10 @@ void I2CMultiplexerSelect(uint8_t i) {
 
 // utility method for the I2C multiplexer
 // disable all channels on a multiplexer, and restore I2C speed if it was connecting a slow device
-void I2CMultiplexerOffByTaskIndex(int8_t taskIndex) {
+void I2CMultiplexerOffByTaskIndex(taskIndex_t taskIndex) {
+  if (!validTaskIndex(taskIndex)) { return; }
+
+  // "Slow" device nay still be connected, so first change output, then frequency.
   Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
   Wire.write(0); // no channel selected
   Wire.endTransmission();
@@ -268,6 +281,7 @@ byte I2CMultiplexerMaxChannels() {
 // Has this taskIndex a channel selected? Checks for both Single channel and Multiple channel mode
 // taskIndex must already be validated! (0..MAX_TASKS)
 bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
+  if (!validTaskIndex(taskIndex)) { return false; }
   return (!bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] != -1)
          || (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
 }
