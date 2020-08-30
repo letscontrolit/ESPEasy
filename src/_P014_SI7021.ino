@@ -445,7 +445,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
     {
       // Get sensor resolution configuration
       uint8_t res = PCONFIG(0);
-      initPluginTaskData(event->TaskIndex, new P014_data_struct(res));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P014_data_struct(res));
       P014_data_struct *P014_data =
         static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
 

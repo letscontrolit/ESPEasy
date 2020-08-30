@@ -74,7 +74,7 @@ struct C018_data_struct {
     _baudrate = baudrate;
 
     // FIXME TD-er: Make force SW serial a proper setting.
-    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx, false, 64, C018_FORCE_SW_SERIAL);
+    C018_easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx, false, 64, C018_FORCE_SW_SERIAL);
 
     if (C018_easySerial != nullptr) {
       myLora = new rn2xx3(*C018_easySerial);

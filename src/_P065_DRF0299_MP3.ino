@@ -101,13 +101,13 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         #pragma GCC diagnostic pop
 
 
-        P065_easySerial = new ESPeasySerial(-1, CONFIG_PIN1);   // no RX, only TX
+        P065_easySerial = new (std::nothrow) ESPeasySerial(-1, CONFIG_PIN1);   // no RX, only TX
+        if (P065_easySerial != nullptr) {
+          P065_easySerial->begin(9600);
+          Plugin_065_SetVol(PCONFIG(0));   // set default volume
 
-        P065_easySerial->begin(9600);
-
-        Plugin_065_SetVol(PCONFIG(0));   // set default volume
-
-        success = true;
+          success = true;
+        }
         break;
       }
 

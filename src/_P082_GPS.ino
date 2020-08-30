@@ -89,9 +89,11 @@ struct P082_data_struct : public PluginTaskData_base {
       return false;
     }
     reset();
-    gps             = new TinyGPSPlus();
-    P082_easySerial = new ESPeasySerial(serial_rx, serial_tx);
-    P082_easySerial->begin(9600);
+    gps             = new (std::nothrow) TinyGPSPlus();
+    P082_easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
+    if (P082_easySerial != nullptr) {
+      P082_easySerial->begin(9600);
+    }
     return isInitialized();
   }
 
@@ -393,7 +395,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
       const int16_t pps_pin   = CONFIG_PIN3;
-      initPluginTaskData(event->TaskIndex, new P082_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P082_data_struct());
       P082_data_struct *P082_data =
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 

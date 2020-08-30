@@ -204,7 +204,7 @@ class SettingsStruct_tmpl
 };
 
 /*
-SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
+SettingsStruct* SettingsStruct_ptr = new (std::nothrow) SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 

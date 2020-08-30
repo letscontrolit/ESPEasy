@@ -35,6 +35,18 @@ After rebooting the ESP, the LED will start blinking 10 seconds on then 10 secon
 
 Enjoy.
 
+Device name special considerations
+----------------------------------
+
+To make events work as expected during rules processing, these characters can't be used in any device name:
+
+* Operators: ``-``, ``+``, ``/``, ``*``, ``^`` and ``%``
+* Unary operator: ``!``
+* Equals sign: ``=``
+* Delimiters: ``,``, ``[``, ``]``, ``{``, ``}``, ``(``, ``)`` and ``<space>``
+* Devicename - Value separator: ``#``
+
+An errormessage will be shown if any of these characters is used.
 
 Special Notations
 -----------------

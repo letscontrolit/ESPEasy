@@ -228,7 +228,10 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
       if (PLUGIN_064_pds) {
         delete PLUGIN_064_pds;
       }
-      PLUGIN_064_pds = new SparkFun_APDS9960();
+      PLUGIN_064_pds = new (std::nothrow) SparkFun_APDS9960();
+      if (PLUGIN_064_pds == nullptr) {
+        break;
+      }
 
       String log = F("APDS : ");
 

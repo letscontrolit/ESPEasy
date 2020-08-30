@@ -396,7 +396,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         else {
           addLog(LOG_LEVEL_INFO, F("P092_init ..."));
           if (DLbus_Data == nullptr) {
-            DLbus_Data = new DLBus;
+            DLbus_Data = new (std::nothrow) DLBus;
             if (DLbus_Data == nullptr) {
               addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
               return false;
