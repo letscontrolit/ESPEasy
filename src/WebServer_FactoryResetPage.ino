@@ -94,13 +94,15 @@ void addPreDefinedConfigSelector() {
 
   for (byte x = 0; x < DeviceModel_MAX; ++x) {
     DeviceModel model = static_cast<DeviceModel>(x);
-    addSelector_Item(
-      getDeviceModelString(model),
-      x,
-      model == active_model,
-      !modelMatchingFlashSize(model),
-      ""
-      );
+    if (modelMatchingFlashSize(model)) {
+      addSelector_Item(
+        getDeviceModelString(model),
+        x,
+        model == active_model,
+        false,
+        ""
+        );
+    }
   }
   addSelector_Foot();
 }

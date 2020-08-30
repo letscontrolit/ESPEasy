@@ -1,14 +1,18 @@
 #include "SystemVariables.h"
 
-#include "../DataStructs/TimingStats.h"
-#include "../Globals/CRCValues.h"
-#include "StringConverter.h"
 #include "../../ESPEasy-Globals.h"
-#include "CompiletimeDefines.h"
 
+#include "../DataStructs/TimingStats.h"
+
+#include "../Globals/CRCValues.h"
 #ifdef USES_MQTT
 # include "../Globals/MQTT.h"
 #endif // ifdef USES_MQTT
+#include "../Globals/NetworkState.h"
+
+#include "CompiletimeDefines.h"
+#include "StringConverter.h"
+
 
 
 String getReplacementString(const String& format, String& s) {
