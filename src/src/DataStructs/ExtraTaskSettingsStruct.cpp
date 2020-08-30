@@ -70,6 +70,8 @@ bool ExtraTaskSettingsStruct::checkInvalidCharInNames(const char *name) const {
       case '!':
       case '[':
       case ']':
+      case '{':
+      case '}':
         return false;
     }
     ++pos;
