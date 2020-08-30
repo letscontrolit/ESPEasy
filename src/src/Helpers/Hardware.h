@@ -24,8 +24,9 @@ bool isI2CMultiplexerEnabled();
 void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex);
 void I2CMultiplexerSelect(uint8_t i);
 
-void I2CMultiplexerOffByTaskIndex(taskIndex_t taskIndex);
 void I2CMultiplexerOff();
+
+void SetI2CMultiplexer(byte toWrite);
 
 byte I2CMultiplexerMaxChannels();
 

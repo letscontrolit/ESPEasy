@@ -212,6 +212,7 @@ byte I2CMultiplexerShiftBit(uint8_t i) {
 // select the multiplexer port given as parameter, if taskIndex < 0 then take that abs value as the port to select (to allow I2C scanner)
 void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex) {
   if (!validTaskIndex(taskIndex)) { return; }
+  if (!I2CMultiplexerPortSelectedForTask(taskIndex)) { return; }
 
   byte toWrite = 0;
 
@@ -224,46 +225,28 @@ void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex) {
     toWrite = Settings.I2C_Multiplexer_Channel[taskIndex]; // Bitpattern is already correctly stored
   }
 
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(toWrite);
-  Wire.endTransmission();
-
-  // Output is selected after this write, so now we must make sure the
-  // frequency is set before anything else is sent.
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(true); // Set to slow
-  }
+  SetI2CMultiplexer(toWrite);
 }
 
 void I2CMultiplexerSelect(uint8_t i) {
   if (i > 7) { return; }
 
   byte toWrite = I2CMultiplexerShiftBit(i);
-
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(toWrite);
-  Wire.endTransmission();
-}
-
-// utility method for the I2C multiplexer
-// disable all channels on a multiplexer, and restore I2C speed if it was connecting a slow device
-void I2CMultiplexerOffByTaskIndex(taskIndex_t taskIndex) {
-  if (!validTaskIndex(taskIndex)) { return; }
-
-  // "Slow" device nay still be connected, so first change output, then frequency.
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(0); // no channel selected
-  Wire.endTransmission();
-
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(false); // Reset clockspeed
-  }
+  SetI2CMultiplexer(toWrite);
 }
 
 void I2CMultiplexerOff() {
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(0); // no channel selected
-  Wire.endTransmission();
+  SetI2CMultiplexer(0); // no channel selected
+}
+
+void SetI2CMultiplexer(byte toWrite) {
+  if (isI2CMultiplexerEnabled()) {
+    // FIXME TD-er: Must check to see if we can cache the value so only change it when needed.
+    Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
+    Wire.write(toWrite);
+    Wire.endTransmission();
+    // FIXME TD-er: We must check if the chip needs some time to set the output. (delay?)
+  }
 }
 
 byte I2CMultiplexerMaxChannels() {
@@ -282,6 +265,7 @@ byte I2CMultiplexerMaxChannels() {
 // taskIndex must already be validated! (0..MAX_TASKS)
 bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
   if (!validTaskIndex(taskIndex)) { return false; }
+  if (!isI2CMultiplexerEnabled()) { return false; }
   return (!bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] != -1)
          || (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
 }

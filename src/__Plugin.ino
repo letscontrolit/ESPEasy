@@ -1371,14 +1371,14 @@ void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
     return;
   }
 #ifdef FEATURE_I2CMULTIPLEXER
-  if (isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(taskIndex)) {
-    I2CMultiplexerSelectByTaskIndex(taskIndex);
-  }
-#else
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(true);  // Set to Slow
-  }
+  I2CMultiplexerSelectByTaskIndex(taskIndex);
+  // Output is selected after this write, so now we must make sure the
+  // frequency is set before anything else is sent.
 #endif
+
+  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
+    I2CSelectClockSpeed(true); // Set to slow
+  }
 }
 
 
@@ -1390,13 +1390,11 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
     return;
   }
 #ifdef FEATURE_I2CMULTIPLEXER
-  if (I2CMultiplexerPortSelectedForTask(taskIndex)) {
-    I2CMultiplexerOffByTaskIndex(taskIndex);
-  }
-#else
+  I2CMultiplexerOff();
+#endif
+
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
     I2CSelectClockSpeed(false);  // Reset
   }
-#endif
 }
 
