@@ -43,7 +43,7 @@ To make events work as expected during rules processing, these characters can't 
 * Operators: ``-``, ``+``, ``/``, ``*``, ``^`` and ``%``
 * Unary operator: ``!``
 * Equals sign: ``=``
-* Delimiters: ``,``, ``[``, ``]``, ``{`` and ``}``
+* Delimiters: ``,``, ``[``, ``]``, ``{``, ``}``, ``(`` and ``)``
 * Devicename - Value separator: ``#``
 
 An errormessage will be shown if any of these characters is used.
