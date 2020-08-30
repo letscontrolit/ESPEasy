@@ -149,7 +149,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new P012_data_struct(P012_I2C_ADDR, P012_SIZE, P012_MODE, P012_TIMER));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P012_data_struct(P012_I2C_ADDR, P012_SIZE, P012_MODE, P012_TIMER));
       P012_data_struct *P012_data =
         static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
 

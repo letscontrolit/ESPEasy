@@ -56,7 +56,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new P028_data_struct(PCONFIG(0)));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P028_data_struct(PCONFIG(0)));
       P028_data_struct *P028_data =
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
