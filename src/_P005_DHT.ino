@@ -223,7 +223,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
       break;
   }
 
-  if (temperature == NAN || humidity == NAN)
+  if (isnan(NAN) || isnan(humidity))
   {     P005_log(event, P005_error_invalid_NAN_reading);
         return false;
   }
