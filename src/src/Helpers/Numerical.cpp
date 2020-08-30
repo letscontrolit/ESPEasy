@@ -8,9 +8,6 @@ bool isFloat(const String& tBuf) {
 }
 
 bool isValidFloat(float f) {
-  if (f == NAN)      return false; //("NaN");
-  if (f == INFINITY) return false; //("INFINITY");
-  if (-f == INFINITY)return false; //("-INFINITY");
   if (isnan(f))      return false; //("isnan");
   if (isinf(f))      return false; //("isinf");
   return true;

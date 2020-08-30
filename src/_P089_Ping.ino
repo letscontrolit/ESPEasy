@@ -44,10 +44,12 @@ public:
     destIPAddress.addr = 0;
     idseq = 0;
     if (nullptr == P089_data) {
-      P089_data = new P089_icmp_pcb();
-      P089_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
-      raw_recv(P089_data->m_IcmpPCB, PingReceiver, NULL);
-      raw_bind(P089_data->m_IcmpPCB, IP_ADDR_ANY);
+      P089_data = new (std::nothrow) P089_icmp_pcb();
+      if (P089_data != nullptr) {
+        P089_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
+        raw_recv(P089_data->m_IcmpPCB, PingReceiver, NULL);
+        raw_bind(P089_data->m_IcmpPCB, IP_ADDR_ANY);
+      }
     } else {
       P089_data->instances++;
     }
@@ -182,7 +184,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
   case PLUGIN_INIT:
   {
-    initPluginTaskData(event->TaskIndex, new P089_data_struct());
+    initPluginTaskData(event->TaskIndex, new (std::nothrow) P089_data_struct());
     UserVar[event->BaseVarIndex] = 0;
     success = true;
     break;
