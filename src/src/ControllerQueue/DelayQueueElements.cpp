@@ -2,7 +2,33 @@
 
 
 #ifdef USES_MQTT
-ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
+ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler = nullptr;
+
+bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag) {
+  MakeControllerSettings(ControllerSettings);
+  if (!AllocatedControllerSettings()) {
+    return false;
+  }
+  LoadControllerSettings(ControllerIndex, ControllerSettings);
+  if (MQTTDelayHandler == nullptr) {
+    MQTTDelayHandler = new ControllerDelayHandlerStruct<MQTT_queue_element>;
+  }
+  if (MQTTDelayHandler == nullptr) {
+    return false;
+  }
+  MQTTDelayHandler->configureControllerSettings(ControllerSettings);
+  pubname = ControllerSettings.Publish;
+  retainFlag = ControllerSettings.mqtt_retainFlag();
+  return true;
+}
+
+void exit_mqtt_delay_queue() {
+  if (MQTTDelayHandler != nullptr) {
+    delete MQTTDelayHandler;
+    MQTTDelayHandler = nullptr;
+  }
+}
+
 #endif // USES_MQTT
 
 

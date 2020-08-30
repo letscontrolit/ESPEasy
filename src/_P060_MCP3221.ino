@@ -1,7 +1,8 @@
 #ifdef USES_P060
-//#######################################################################################################
-//#################################### Plugin 060: MCP3221 ##############################################
-//#######################################################################################################
+
+// #######################################################################################################
+// #################################### Plugin 060: MCP3221 ##############################################
+// #######################################################################################################
 
 // Plugin to read 12-bit-values from ADC chip MCP3221. It is used e.g. in MinipH pH interface to sample a pH probe in an aquarium
 // written by Jochen Krapf (jk@nerd2nerd.org)
@@ -20,13 +21,16 @@ uint16_t Plugin_060_OversamplingCount = 0;
 uint16_t readMCP3221(byte addr)
 {
   uint16_t value;
+
   Wire.requestFrom(addr, (uint8_t)2);
+
   if (Wire.available() == 2)
   {
     value = (Wire.read() << 8) | Wire.read();
   }
-  else
+  else {
     value = 9999;
+  }
 
   return value;
 }
@@ -38,127 +42,132 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
-      {
-        Device[++deviceCount].Number = PLUGIN_ID_060;
-        Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
-        Device[deviceCount].Ports = 0;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 1;
-        Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].TimerOption = true;
-        Device[deviceCount].GlobalSyncOption = true;
-        break;
-      }
+    {
+      Device[++deviceCount].Number           = PLUGIN_ID_060;
+      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
+      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].Ports              = 0;
+      Device[deviceCount].PullUpOption       = false;
+      Device[deviceCount].InverseLogicOption = false;
+      Device[deviceCount].FormulaOption      = true;
+      Device[deviceCount].ValueCount         = 1;
+      Device[deviceCount].SendDataOption     = true;
+      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].GlobalSyncOption   = true;
+      break;
+    }
 
     case PLUGIN_GET_DEVICENAME:
-      {
-        string = F(PLUGIN_NAME_060);
-        break;
-      }
+    {
+      string = F(PLUGIN_NAME_060);
+      break;
+    }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
-      {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_060));
-        break;
-      }
+    {
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_060));
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      byte addr = PCONFIG(0);
+
+      int optionValues[8] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
+      addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
-      {
-        byte addr = PCONFIG(0);
+    {
+      addFormCheckBox(F("Oversampling"), F("p060_oversampling"), PCONFIG(1));
 
-        int optionValues[8] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
-        addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
+      addFormSubHeader(F("Two Point Calibration"));
 
-        addFormCheckBox(F("Oversampling"), F("p060_oversampling"), PCONFIG(1));
+      addFormCheckBox(F("Calibration Enabled"), F("p060_cal"), PCONFIG(3));
 
-        addFormSubHeader(F("Two Point Calibration"));
+      addFormNumericBox(F("Point 1"), F("p060_adc1"), PCONFIG_LONG(0), 0, 4095);
+      html_add_estimate_symbol();
+      addTextBox(F("p060_out1"), String(PCONFIG_FLOAT(0), 3), 10);
 
-        addFormCheckBox(F("Calibration Enabled"), F("p060_cal"), PCONFIG(3));
+      addFormNumericBox(F("Point 2"), F("p060_adc2"), PCONFIG_LONG(1), 0, 4095);
+      html_add_estimate_symbol();
+      addTextBox(F("p060_out2"), String(PCONFIG_FLOAT(1), 3), 10);
 
-        addFormNumericBox(F("Point 1"), F("p060_adc1"), PCONFIG_LONG(0), 0, 4095);
-        html_add_estimate_symbol();
-        addTextBox(F("p060_out1"), String(PCONFIG_FLOAT(0), 3), 10);
-
-        addFormNumericBox(F("Point 2"), F("p060_adc2"), PCONFIG_LONG(1), 0, 4095);
-        html_add_estimate_symbol();
-        addTextBox(F("p060_out2"), String(PCONFIG_FLOAT(1), 3), 10);
-
-        success = true;
-        break;
-      }
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_SAVE:
-      {
-        PCONFIG(0) = getFormItemInt(F("i2c_addr"));
+    {
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
 
-        PCONFIG(1) = isFormItemChecked(F("p060_oversampling"));
+      PCONFIG(1) = isFormItemChecked(F("p060_oversampling"));
 
-        PCONFIG(3) = isFormItemChecked(F("p060_cal"));
+      PCONFIG(3) = isFormItemChecked(F("p060_cal"));
 
-        PCONFIG_LONG(0) = getFormItemInt(F("p060_adc1"));
-        PCONFIG_FLOAT(0) = getFormItemFloat(F("p060_out1"));
+      PCONFIG_LONG(0)  = getFormItemInt(F("p060_adc1"));
+      PCONFIG_FLOAT(0) = getFormItemFloat(F("p060_out1"));
 
-        PCONFIG_LONG(1) = getFormItemInt(F("p060_adc2"));
-        PCONFIG_FLOAT(1) = getFormItemFloat(F("p060_out2"));
+      PCONFIG_LONG(1)  = getFormItemInt(F("p060_adc2"));
+      PCONFIG_FLOAT(1) = getFormItemFloat(F("p060_out2"));
 
-        success = true;
-        break;
-      }
+      success = true;
+      break;
+    }
 
     case PLUGIN_TEN_PER_SECOND:
+    {
+      if (PCONFIG(1)) // Oversampling?
       {
-        if (PCONFIG(1))   //Oversampling?
-        {
-          Plugin_060_OversamplingValue += readMCP3221(PCONFIG(0));
-          Plugin_060_OversamplingCount ++;
-        }
-        success = true;
-        break;
+        Plugin_060_OversamplingValue += readMCP3221(PCONFIG(0));
+        Plugin_060_OversamplingCount++;
       }
+      success = true;
+      break;
+    }
 
     case PLUGIN_READ:
+    {
+      String log = F("ADMCP: Analog value: ");
+
+      if (Plugin_060_OversamplingCount > 0)
       {
-        String log = F("ADMCP: Analog value: ");
+        UserVar[event->BaseVarIndex] = (float)Plugin_060_OversamplingValue / Plugin_060_OversamplingCount;
+        Plugin_060_OversamplingValue = 0;
+        Plugin_060_OversamplingCount = 0;
 
-        if (Plugin_060_OversamplingCount > 0)
+        log += String(UserVar[event->BaseVarIndex], 3);
+      }
+      else
+      {
+        int16_t value = readMCP3221(PCONFIG(0));
+        UserVar[event->BaseVarIndex] = (float)value;
+
+        log += value;
+      }
+
+      if (PCONFIG(3)) // Calibration?
+      {
+        int   adc1 = PCONFIG_LONG(0);
+        int   adc2 = PCONFIG_LONG(1);
+        float out1 = PCONFIG_FLOAT(0);
+        float out2 = PCONFIG_FLOAT(1);
+
+        if (adc1 != adc2)
         {
-          UserVar[event->BaseVarIndex] = (float)Plugin_060_OversamplingValue / Plugin_060_OversamplingCount;
-          Plugin_060_OversamplingValue = 0;
-          Plugin_060_OversamplingCount = 0;
+          float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
+          UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
+          log += F(" = ");
           log += String(UserVar[event->BaseVarIndex], 3);
         }
-        else
-        {
-          int16_t value = readMCP3221(PCONFIG(0));
-          UserVar[event->BaseVarIndex] = (float)value;
-
-          log += value;
-        }
-
-        if (PCONFIG(3))   //Calibration?
-        {
-          int adc1 = PCONFIG_LONG(0);
-          int adc2 = PCONFIG_LONG(1);
-          float out1 = PCONFIG_FLOAT(0);
-          float out2 = PCONFIG_FLOAT(1);
-          if (adc1 != adc2)
-          {
-            float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
-            UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
-
-            log += F(" = ");
-            log += String(UserVar[event->BaseVarIndex], 3);
-          }
-        }
-
-        addLog(LOG_LEVEL_INFO,log);
-        success = true;
-        break;
       }
+
+      addLog(LOG_LEVEL_INFO, log);
+      success = true;
+      break;
+    }
   }
   return success;
 }

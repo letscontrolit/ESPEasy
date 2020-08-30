@@ -4,7 +4,7 @@ RTC Reference
 The ESP microprocessors we use, have some special memory which will retain its information as long as the node remains powered.
 Espressif calls this _RTC_ RAM and thus we're using the same term for it.
 
-The name may be a bit strange, as RTC usually refers to _Real Time Clock_.
+The name may be a bit strange, as RTC usually refers to *Real Time Clock*.
 
 Currently we only support RTC functions on the ESP8266 and ESP8285.
 ESP32 does also have RTC memory, but that's organised a bit different.

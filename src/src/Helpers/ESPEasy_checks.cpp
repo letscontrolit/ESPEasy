@@ -1,25 +1,25 @@
 #include "ESPEasy_checks.h"
 
-#include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_common.h"
 
-#include "../DataStructs/NodeStruct.h"
 #include "../DataStructs/CRCStruct.h"
-#include "../DataStructs/SettingsStruct.h"
-
-#include "../DataStructs/SecurityStruct.h"
-#include "../DataStructs/ExtraTaskSettingsStruct.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
-#include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/LogStruct.h"
 #include "../DataStructs/DeviceStruct.h"
-#include "../DataStructs/ProtocolStruct.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/NodeStruct.h"
-#include "../DataStructs/RTCStruct.h"
-#include "../DataStructs/SystemTimerStruct.h"
-#include "../DataStructs/PortStatusStruct.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/ExtraTaskSettingsStruct.h"
 #include "../DataStructs/FactoryDefaultPref.h"
+#include "../DataStructs/GpioFactorySettingsStruct.h"
+#include "../DataStructs/LogStruct.h"
+#include "../DataStructs/NodeStruct.h"
+#include "../DataStructs/NodeStruct.h"
+#include "../DataStructs/PortStatusStruct.h"
+#include "../DataStructs/ProtocolStruct.h"
+#include "../DataStructs/RTCStruct.h"
+#include "../DataStructs/SecurityStruct.h"
+#include "../DataStructs/SettingsStruct.h"
+#include "../DataStructs/SystemTimerStruct.h"
 
 #include "../Globals/ExtraTaskSettings.h"
 
@@ -61,7 +61,7 @@ void run_compiletime_checks() {
   #ifndef LIMIT_BUILD_SIZE
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
-  const unsigned int SettingsStructSize = (276 + 82 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (288 + 84 * TASKS_MAX);
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
   #ifdef USES_NOTIFIER

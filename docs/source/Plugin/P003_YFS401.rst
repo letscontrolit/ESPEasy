@@ -27,7 +27,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               YFS401
   GPIO (14)  <-->   Signal (yellow)
@@ -104,7 +104,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
    On WaterMeter#mL Do
     If [WaterMeter#mL]=0

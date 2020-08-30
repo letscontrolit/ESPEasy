@@ -22,7 +22,7 @@ Wiring
 ------
 
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               S8
   GPIO (X)   <-->   TX
@@ -42,7 +42,7 @@ Setup
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
   //Code below...
 
