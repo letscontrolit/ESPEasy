@@ -150,7 +150,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_INIT: {
-      initPluginTaskData(event->TaskIndex, new P074_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P074_data_struct());
       P074_data_struct *P074_data =
         static_cast<P074_data_struct *>(getPluginTaskData(event->TaskIndex));
 

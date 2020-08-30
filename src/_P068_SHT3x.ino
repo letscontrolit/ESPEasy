@@ -192,7 +192,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new SHT3X(PCONFIG(0)));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) SHT3X(PCONFIG(0)));
       success = true;
       break;
     }

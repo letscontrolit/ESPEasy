@@ -247,7 +247,10 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
           log = F("PMSx003: using software serial");
           addLog(LOG_LEVEL_INFO, log);
         }
-        P053_easySerial = new ESPeasySerial(rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
+        P053_easySerial = new (std::nothrow) ESPeasySerial(rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
+        if (P053_easySerial == nullptr) {
+          break;
+        }
         P053_easySerial->begin(9600);
         P053_easySerial->flush();
 
