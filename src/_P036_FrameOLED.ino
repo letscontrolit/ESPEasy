@@ -243,7 +243,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         // For load and save of the display lines, we must not rely on the data in memory.
         // This data in memory can be altered through write commands.
         // Therefore we must read the lines from flash in a temporary object.
-        P036_data_struct *P036_data = new P036_data_struct();
+        P036_data_struct *P036_data = new (std::nothrow) P036_data_struct();
 
         if (nullptr != P036_data) {
           uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
@@ -302,7 +302,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         // For load and save of the display lines, we must not rely on the data in memory.
         // This data in memory can be altered through write commands.
         // Therefore we must use a temporary version to store the settings.
-        P036_data_struct *P036_data = new P036_data_struct();
+        P036_data_struct *P036_data = new (std::nothrow) P036_data_struct();
 
         if (nullptr != P036_data) {
           String error;
@@ -349,7 +349,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new P036_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P036_data_struct());
       P036_data_struct *P036_data =
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 

@@ -94,7 +94,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           // It was already created and initialzed
           // So don't recreate to keep the webserver running.
         } else {
-          initPluginTaskData(event->TaskIndex, new P044_Task());
+          initPluginTaskData(event->TaskIndex, new (std::nothrow) P044_Task());
           task = static_cast<P044_Task *>(getPluginTaskData(event->TaskIndex));
         }
         if (nullptr == task) {

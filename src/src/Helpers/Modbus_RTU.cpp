@@ -44,7 +44,8 @@ bool ModbusRTU_struct::init(const int16_t serial_rx, const int16_t serial_tx, in
     return false;
   }
   reset();
-  easySerial = new ESPeasySerial(serial_rx, serial_tx);
+  easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
+  if (easySerial == nullptr) { return false; }
   easySerial->begin(baudrate);
 
   if (!isInitialized()) { return false; }

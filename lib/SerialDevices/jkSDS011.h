@@ -64,7 +64,7 @@ private:
   void ParseCommandReply();
 
 //  SensorSerial _serial;
-  ESPeasySerial *_serial;
+  ESPeasySerial *_serial = nullptr;
   CSensorSerialBuffer _data;
   CSensorSerialBuffer _command;
   float _pm2_5;

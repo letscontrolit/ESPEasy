@@ -140,7 +140,10 @@ struct P049_data_struct : public PluginTaskData_base {
     if (serial_rx < 0 || serial_tx < 0)
       return false;
     reset();
-    easySerial = new ESPeasySerial(serial_rx, serial_tx);
+    easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
+    if (easySerial == nullptr) {
+      return false;
+    }
     easySerial->begin(9600);
     ABC_Disable = setABCdisabled;
     if (ABC_Disable) {
@@ -443,7 +446,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        initPluginTaskData(event->TaskIndex, new P049_data_struct());
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P049_data_struct());
         success = P049_performInit(event);
         break;
       }
