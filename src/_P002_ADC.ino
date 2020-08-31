@@ -183,12 +183,6 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
-      break;
-    }
-
     case PLUGIN_INIT:
     {
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P002_data_struct());

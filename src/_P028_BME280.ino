@@ -68,13 +68,6 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_EXIT:
-    {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
-      break;
-    }
-
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       int Plugin_28_i2c_addresses[2] = { 0x76, 0x77 };

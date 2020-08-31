@@ -141,13 +141,6 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_EXIT:
-    {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
-      break;
-    }
-
     case PLUGIN_READ:
     {
       P015_data_struct *P015_data =

@@ -418,7 +418,6 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
       const int16_t pps_pin = CONFIG_PIN3;
 
       if (pps_pin != -1) {

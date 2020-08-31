@@ -408,7 +408,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #ifdef PLUGIN_036_DEBUG
       addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_EXIT ..."));
 #endif // PLUGIN_036_DEBUG
-      clearPluginTaskData(event->TaskIndex);
       success = true;
       break;
     }

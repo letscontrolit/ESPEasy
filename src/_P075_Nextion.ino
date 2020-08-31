@@ -375,13 +375,6 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-
-    case PLUGIN_EXIT: {
-        clearPluginTaskData(event->TaskIndex);
-        break;
-    }
-
-
     case PLUGIN_ONCE_A_SECOND: {
         success = true;
         break;
