@@ -12,8 +12,6 @@
 #define PLUGIN_VALUENAME1_034 "Temperature"
 #define PLUGIN_VALUENAME2_034 "Humidity"
 
-boolean Plugin_034_init = false;
-
 #define DHT12_I2C_ADDRESS      0x5C // I2C address for the sensor
 
 boolean Plugin_034(byte function, struct EventStruct *event, String& string)
