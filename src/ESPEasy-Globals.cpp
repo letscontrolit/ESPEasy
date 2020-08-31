@@ -9,7 +9,6 @@
 #endif
 
 
-I2Cdev i2cdev;
 
 
 
