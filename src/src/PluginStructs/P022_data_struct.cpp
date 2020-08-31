@@ -1,6 +1,8 @@
 
 #include "P022_data_struct.h"
 
+#ifdef USES_P022
+
 bool P022_data_struct::p022_is_init(uint8_t address) {
   if ((address < PCA9685_ADDRESS) || (address > PCA9685_MAX_ADDRESS)) { return false; }
   uint32_t address_offset = address - PCA9685_ADDRESS;
@@ -123,3 +125,5 @@ void P022_data_struct::Plugin_022_initialize(int address)
   // Plugin_022_writeRegister(i2cAddress, PCA9685_MODE2, (byte)0x10); // set to output
   p022_set_init(address);
 }
+
+#endif // ifdef USES_P022
