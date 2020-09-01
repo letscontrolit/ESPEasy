@@ -108,12 +108,14 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      String optionsPluginMode[2];
-      optionsPluginMode[0] = F("Gesture/Proximity/Ambient Light Sensor");
-      optionsPluginMode[1] = F("R/G/B Colors");
-      int optionsPluginModeValues[2] = { PLUGIN_MODE_GPL_064, PLUGIN_MODE_RGB_064 };
-      addFormSelector(F("Plugin Mode"), F("p064_mode"), 2, optionsPluginMode, optionsPluginModeValues, P064_MODE, true);
-      addFormNote(F("After changing Plugin Mode you may want to change the Values names, below."));
+      {
+        String optionsPluginMode[2];
+        optionsPluginMode[0]           = F("Gesture/Proximity/Ambient Light Sensor");
+        optionsPluginMode[1]           = F("R/G/B Colors");
+        int optionsPluginModeValues[2] = { PLUGIN_MODE_GPL_064, PLUGIN_MODE_RGB_064 };
+        addFormSelector(F("Plugin Mode"), F("p064_mode"), 2, optionsPluginMode, optionsPluginModeValues, P064_MODE, true);
+        addFormNote(F("After changing Plugin Mode you may want to change the Values names, below."));
+      }
 
       if (P064_IS_RGB_SENSOR // R/G/B Colors mode and default Gesture/Proximity/ALS values: Set new default names
           && (strcmp_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_GPL_VALUENAME1_064)) == 0)
@@ -143,64 +145,67 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 2] = 0.0f;
       }
 
-      // Gain options, multiple gain optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
-      String optionsGain[4];
-      optionsGain[0] = F("1x");
-      optionsGain[1] = F("2x");
-      optionsGain[2] = F("4x (default)");
-      optionsGain[3] = F("8x");
-      int optionsGainValues[4] = { PGAIN_1X, PGAIN_2X, PGAIN_4X, PGAIN_8X }; // Also used for optionsALSGain
-      // Ambient Light Sensor Gain options, values are equal to PGAIN values, so again avoid duplication
-      String optionsALSGain[4];
-      optionsALSGain[0] = F("1x");
-      optionsALSGain[1] = F("4x (default)");
-      optionsALSGain[2] = F("16x");
-      optionsALSGain[3] = F("64x");
+      {
+        // Gain options, multiple gain optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
+        String optionsGain[4];
+        optionsGain[0] = F("1x");
+        optionsGain[1] = F("2x");
+        optionsGain[2] = F("4x (default)");
+        optionsGain[3] = F("8x");
+        int optionsGainValues[4] = { PGAIN_1X, PGAIN_2X, PGAIN_4X, PGAIN_8X }; // Also used for optionsALSGain
 
-      // Led_Drive options, all Led_Drive optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
-      String optionsLedDrive[4];
-      optionsLedDrive[0] = F("100 mA (default)");
-      optionsLedDrive[1] = F("50 mA");
-      optionsLedDrive[2] = F("25 mA");
-      optionsLedDrive[3] = F("12.5 mA");
-      int optionsLedDriveValues[4] = { LED_DRIVE_100MA, LED_DRIVE_50MA, LED_DRIVE_25MA, LED_DRIVE_12_5MA };
+        // Led_Drive options, all Led_Drive optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
+        String optionsLedDrive[4];
+        optionsLedDrive[0] = F("100 mA (default)");
+        optionsLedDrive[1] = F("50 mA");
+        optionsLedDrive[2] = F("25 mA");
+        optionsLedDrive[3] = F("12.5 mA");
+        int optionsLedDriveValues[4] = { LED_DRIVE_100MA, LED_DRIVE_50MA, LED_DRIVE_25MA, LED_DRIVE_12_5MA };
 
-      // Gesture Led-boost values
-      String optionsLedBoost[4];
-      optionsLedBoost[0] = F("100 %");
-      optionsLedBoost[1] = F("150 %");
-      optionsLedBoost[2] = F("200 %");
-      optionsLedBoost[3] = F("300 % (default)");
-      int optionsLedBoostValues[4] = { LED_BOOST_100, LED_BOOST_150, LED_BOOST_200, LED_BOOST_300 };
 
-      String lightSensorGainLabel;
-      String lightSensorDriveLabel;
+        String lightSensorGainLabel;
+        String lightSensorDriveLabel;
 
-      if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
-        addFormSubHeader(F("Gesture parameters"));
+        if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
+          addFormSubHeader(F("Gesture parameters"));
 
-        addFormSelector(F("Gesture Gain"),      F("p064_ggain"),   4, optionsGain,     optionsGainValues,     P064_GGAIN);
+          addFormSelector(F("Gesture Gain"),      F("p064_ggain"),   4, optionsGain,     optionsGainValues,     P064_GGAIN);
 
-        addFormSelector(F("Gesture LED Drive"), F("p064_gldrive"), 4, optionsLedDrive, optionsLedDriveValues, P064_GLDRIVE);
+          addFormSelector(F("Gesture LED Drive"), F("p064_gldrive"), 4, optionsLedDrive, optionsLedDriveValues, P064_GLDRIVE);
+          {
+            // Gesture Led-boost values
+            String optionsLedBoost[4];
+            optionsLedBoost[0] = F("100 %");
+            optionsLedBoost[1] = F("150 %");
+            optionsLedBoost[2] = F("200 %");
+            optionsLedBoost[3] = F("300 % (default)");
+            int optionsLedBoostValues[4] = { LED_BOOST_100, LED_BOOST_150, LED_BOOST_200, LED_BOOST_300 };
+            addFormSelector(F("Gesture LED Boost"), F("p064_lboost"), 4, optionsLedBoost, optionsLedBoostValues, P064_LED_BOOST);
+          }
 
-        addFormSelector(F("Gesture LED Boost"), F("p064_lboost"),  4, optionsLedBoost, optionsLedBoostValues, P064_LED_BOOST);
+          addFormSubHeader(F("Proximity & Ambient Light Sensor parameters"));
 
-        addFormSubHeader(F("Proximity & Ambient Light Sensor parameters"));
+          addFormSelector(F("Proximity Gain"), F("p064_pgain"), 4, optionsGain, optionsGainValues, P064_PGAIN);
 
-        addFormSelector(F("Proximity Gain"), F("p064_pgain"), 4, optionsGain, optionsGainValues, P064_PGAIN);
+          lightSensorGainLabel  = F("Ambient Light Sensor Gain");
+          lightSensorDriveLabel = F("Proximity & ALS LED Drive");
+        } else {
+          addFormSubHeader(F("R/G/B Colors parameters"));
 
-        lightSensorGainLabel  = F("Ambient Light Sensor Gain");
-        lightSensorDriveLabel = F("Proximity & ALS LED Drive");
-      } else {
-        addFormSubHeader(F("R/G/B Colors parameters"));
-
-        lightSensorGainLabel  = F("Light Sensor Gain");
-        lightSensorDriveLabel = F("Light Sensor LED Drive");
+          lightSensorGainLabel  = F("Light Sensor Gain");
+          lightSensorDriveLabel = F("Light Sensor LED Drive");
+        }
+        {
+          // Ambient Light Sensor Gain options, values are equal to PGAIN values, so again avoid duplication
+          String optionsALSGain[4];
+          optionsALSGain[0] = F("1x");
+          optionsALSGain[1] = F("4x (default)");
+          optionsALSGain[2] = F("16x");
+          optionsALSGain[3] = F("64x");
+          addFormSelector(lightSensorGainLabel, F("p064_again"), 4, optionsALSGain, optionsGainValues, P064_AGAIN);
+        }
+        addFormSelector(lightSensorDriveLabel, F("p064_ldrive"), 4, optionsLedDrive, optionsLedDriveValues, P064_LDRIVE);
       }
-      addFormSelector(lightSensorGainLabel,  F("p064_again"),  4, optionsALSGain,  optionsGainValues,     P064_AGAIN);
-
-      addFormSelector(lightSensorDriveLabel, F("p064_ldrive"), 4, optionsLedDrive, optionsLedDriveValues, P064_LDRIVE);
-
       success = true;
       break;
     }
