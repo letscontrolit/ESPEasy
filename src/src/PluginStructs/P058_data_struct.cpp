@@ -1,6 +1,5 @@
 #include "P058_data_struct.h"
 
-#include "P058_data_struct.h"
 
 #ifdef USES_P058
 

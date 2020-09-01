@@ -1,6 +1,5 @@
 #include "P060_data_struct.h"
 
-#include "P060_data_struct.h"
 
 #ifdef USES_P060
 
