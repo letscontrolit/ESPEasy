@@ -176,7 +176,7 @@ String BuildFixes()
     Settings.OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   }
   if (Settings.Build < 20105) {
-    Settings.I2C_clockSpeed = 400000;
+    Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
   }
   if (Settings.Build <= 20106) {
     // ClientID is now defined in the controller settings.
@@ -214,10 +214,19 @@ String BuildFixes()
     Settings.ETH_Pin_power  = DEFAULT_ETH_PIN_POWER;
     Settings.ETH_Phy_Type   = DEFAULT_ETH_PHY_TYPE;
     Settings.ETH_Clock_Mode = DEFAULT_ETH_CLOCK_MODE;
-    Settings.ETH_Wifi_Mode  = DEFAULT_ETH_WIFI_MODE;
+    Settings.NetworkMedium  = DEFAULT_NETWORK_MEDIUM;
   }
   if (Settings.Build < 20109) {
     Settings.SyslogPort = 514;
+  }
+  if (Settings.Build < 20110) {
+    Settings.I2C_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+    Settings.I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+    Settings.I2C_Multiplexer_Addr = -1;
+    for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
+      Settings.I2C_Multiplexer_Channel[x] = -1;
+    }
+    Settings.I2C_Multiplexer_ResetPin = -1;
   }
 
   Settings.Build = BUILD;

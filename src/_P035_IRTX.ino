@@ -116,13 +116,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         }
 
 #ifdef P016_P035_Extended_AC
-        if (Plugin_035_commonAc == 0 && irPin != -1)
+        if (Plugin_035_commonAc == nullptr && irPin != -1)
         {
           addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
           addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols());
-          Plugin_035_commonAc = new IRac(irPin);
+          Plugin_035_commonAc = new (std::nothrow) IRac(irPin);
         }
-        if (Plugin_035_commonAc != 0 && irPin == -1)
+        if (Plugin_035_commonAc != nullptr && irPin == -1)
         {
           addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX Removed"));
           delete Plugin_035_commonAc;
@@ -298,7 +298,7 @@ boolean handleRawRaw2Encoding(const String &cmd) {
 
   uint16_t idx = 0; //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
   uint16_t *buf;
-  buf = new uint16_t[P35_Ntimings]; //The Raw Timings that we can buffer.
+  buf = new (std::nothrow) uint16_t[P35_Ntimings]; //The Raw Timings that we can buffer.
   if (buf == nullptr)
   { // error assigning memory.
     return false;

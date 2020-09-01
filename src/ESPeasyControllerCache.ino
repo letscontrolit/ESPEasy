@@ -33,7 +33,7 @@ struct ControllerCache_struct {
 
   void init() {
     if (_RTC_cache_handler == nullptr) {
-      _RTC_cache_handler = new RTC_cache_handler_struct;
+      _RTC_cache_handler = new (std::nothrow) RTC_cache_handler_struct;
     }
   }
 

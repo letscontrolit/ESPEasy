@@ -46,7 +46,7 @@ The extra argument handles seconds.
 
 See also `Wikipedia - Cron <https://en.wikipedia.org/wiki/Cron>`_ for more detailed information.
 
-.. code-block:: html
+.. code-block:: none
 
  ┌───────────── seconds (0 - 59)
  │ ┌───────────── minute (0 - 59)
@@ -76,7 +76,7 @@ Examples of supported expressions
 
 Expression, input date, next date:
 
-.. code-block:: html
+.. code-block:: none
 
  "*/15 * 1-4 * * *",  "2012-07-01_09:53:50", "2012-07-02_01:00:00"
  "0 */2 1-4 * * *",   "2012-07-01_09:00:00", "2012-07-02_01:00:00"

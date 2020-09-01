@@ -41,7 +41,7 @@ For some controllers or dataset types it is not necessary to acknowledge the new
 Example Rules for every value / event type
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: html
+.. code-block:: none
 
     // The "homie controller" schedules the event defined in the plug-in.
     // Does NOT store string values or arrays in the "homie receiver" plug-in.

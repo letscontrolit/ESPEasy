@@ -7,7 +7,7 @@
    Will trigger when the cron expression of task named ``foo`` matches the current time.
    ","
 
-   .. code-block:: html
+   .. code-block:: none
 
       on Cron#foo do
        GPIO,2,1 //LED on

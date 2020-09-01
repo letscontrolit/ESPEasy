@@ -47,6 +47,7 @@ else:
 
     "FEATURE_MDNS",
     "FEATURE_SD",
+    "FEATURE_I2CMULTIPLEXER",
 
     "USE_SETTINGS_ARCHIVE"
   ])

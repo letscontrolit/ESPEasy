@@ -34,7 +34,10 @@ struct P070_data_struct : public PluginTaskData_base {
   void init(struct EventStruct *event) {
     if (!Plugin_070_pixels)
     {
-      Plugin_070_pixels = new Adafruit_NeoPixel(NUMBER_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+      Plugin_070_pixels = new (std::nothrow) Adafruit_NeoPixel(NUMBER_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+      if (Plugin_070_pixels == nullptr) {
+        return;
+      }
       Plugin_070_pixels->begin(); // This initializes the NeoPixel library.
     }
     set(event);
@@ -236,7 +239,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        initPluginTaskData(event->TaskIndex, new P070_data_struct());
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P070_data_struct());
         P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
         if (nullptr == P070_data) {
           return success;
