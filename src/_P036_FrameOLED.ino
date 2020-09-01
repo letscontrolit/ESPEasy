@@ -268,7 +268,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #endif // PLUGIN_036_DEBUG
 
       // update now
-      schedule_task_device_timer(event->TaskIndex, millis() + 10);
+      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
       P036_ADR        = getFormItemInt(F("p036_adr"));
       P036_ROTATE     = getFormItemInt(F("p036_rotate"));
@@ -553,7 +553,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if ((UserVar[event->BaseVarIndex] == 1) && P036_data->display_scroll_timer()) { // page scrolling only when the display is on
-        setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1);       // calls next page scrollng tick
+        Scheduler.setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1);       // calls next page scrollng tick
       }
       return success;
     }

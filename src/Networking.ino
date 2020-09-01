@@ -1,4 +1,5 @@
 #include "src/Commands/InternalCommands.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/Nodes.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 
@@ -388,7 +389,7 @@ void refreshNodeList()
   }
 
   if (mustSendGratuitousARP) {
-    sendGratuitousARP_now();
+    Scheduler.sendGratuitousARP_now();
   }
 }
 
@@ -955,7 +956,7 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
   yield();
 
   if (!connected) {
-    sendGratuitousARP_now();
+    Scheduler.sendGratuitousARP_now();
   }
   STOP_TIMER(CONNECT_CLIENT_STATS);
 #if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
@@ -982,7 +983,7 @@ bool resolveHostByName(const char *aHostname, IPAddress& aResult) {
   yield();
 
   if (!resolvedIP) {
-    sendGratuitousARP_now();
+    Scheduler.sendGratuitousARP_now();
   }
   STOP_TIMER(HOST_BY_NAME_STATS);
   return resolvedIP;

@@ -170,7 +170,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
             }
             
             if (new_key) sendData(event);
-            setPluginTaskTimer(500, event->TaskIndex, event->Par1);
+            Scheduler.setPluginTaskTimer(500, event->TaskIndex, event->Par1);
           }
         }
         break;

@@ -730,6 +730,13 @@ Now send this command to the ESP:
 and it will set rules timer no 1 to 5 seconds. Using this technique you can
 parse a value from an event to the rule engine.
 
+It is possible to use multiple event values. Some system events generate multiple event values.
+
+For example, the ``Rules#Timer`` event has 2 event values (since build 2020/08/12):
+
+* ``%eventvalue1%`` has the timer number (1 ... max timer ID)
+* ``%eventvalue2%`` has the loop count for loop timers (since build 2020/08/12)
+
 .. note::
  'timerSet' is a rule command and cannot be run directly from a remote command.
 
@@ -865,7 +872,8 @@ SR04 and LDR
 Timer
 -----
 
-There are 8 timers (1-8) you can use:
+Until 2020/08/12, there were 8 timers.  (1-8)
+Builds made after this date support 256 timers.  (1-256)
 
 .. code-block:: html
 
@@ -883,6 +891,54 @@ There are 8 timers (1-8) you can use:
    servo,1,12,0
    timerSet,1,30      //Set Timer1 for the next event in 30 seconds
  endon
+
+
+Timers can also be paused and resumed using resp. ``timerPause`` and ``timerResume``.
+
+
+Sub-second resolution and loop timers
+-------------------------------------
+
+Added on 2020/08/12:
+
+* ``timerSet_ms``  To set the timer with msec resolution.
+* ``loopTimerSet`` To create a repeating timer with constant interval.
+* ``loopTimerSet_ms`` Same as ``loopTimerSet``, with msec interval.
+
+Here a small example to show how to start/stop and pause loop timers.
+This can be used to create quite complex timing schemas, especially when
+using multiple timers which are set to a relative prime interval.
+
+N.B. the 2nd eventvalue of ``Rules#Timer`` has the number of loops.
+
+.. code-block:: html
+
+ On System#Boot do    //When the ESP boots, do
+   looptimerset_ms,1,2000,10  // Start loop timer 1, 2000 msec interval, 10 loops
+   looptimerset_ms,2,2500     // Start loop timer 2, 2500 msec interval
+ endon
+ 
+ On Rules#Timer=1 do
+   if %eventvalue2% >= 5
+     timerSet,1,0     // Stop timer 1
+   endif
+   //pulse some led on pin 2 shortly
+   Pulse,2,0,50
+   logentry,%eventvalue2%  // log the loop count
+ endon
+ 
+ On Rules#Timer=2 do
+   if %eventvalue2% = 2
+     loopTimerSet_ms,2,2500  // Restart loop timer 2 (thus clearing loop count)
+     timerResume,1
+   else
+     timerPause,1
+   endif
+ endon
+
+
+
+
 
 
 Starting/stopping repeating timers with events
