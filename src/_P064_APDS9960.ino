@@ -48,10 +48,11 @@
 #define P064_IS_GPL_SENSOR        (P064_MODE == PLUGIN_MODE_GPL_064)
 #define P064_IS_RGB_SENSOR        (P064_MODE == PLUGIN_MODE_RGB_064)
 
-#include <SparkFun_APDS9960.h> // Lib is modified to work with ESP
+
 #include "_Plugin_Helper.h"
 
-SparkFun_APDS9960 *PLUGIN_064_pds = NULL;
+#include "src/PluginStructs/P064_data_struct.h"
+
 
 boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 {
@@ -225,65 +226,66 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (PLUGIN_064_pds) {
-        delete PLUGIN_064_pds;
-      }
-      PLUGIN_064_pds = new (std::nothrow) SparkFun_APDS9960();
-      if (PLUGIN_064_pds == nullptr) {
-        break;
-      }
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P064_data_struct());
+      P064_data_struct *P064_data =
+        static_cast<P064_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      String log = F("APDS : ");
+      if (nullptr != P064_data) {
+        String log = F("APDS : ");
 
-      if (PLUGIN_064_pds->init(P064_GGAIN, P064_GLDRIVE, P064_PGAIN, P064_AGAIN, P064_LDRIVE))
-      {
-        log += F("Init");
+        if (P064_data->sensor.init(P064_GGAIN, P064_GLDRIVE, P064_PGAIN, P064_AGAIN, P064_LDRIVE))
+        {
+          log += F("Init");
 
-        PLUGIN_064_pds->enablePower();
+          P064_data->sensor.enablePower();
 
-        if (!PLUGIN_064_pds->enableLightSensor(false)) {
-          log += F(" - Error during light sensor init!");
-        }
-
-        if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
-          if (!PLUGIN_064_pds->enableProximitySensor(false)) {
-            log += F(" - Error during proximity sensor init!");
+          if (!P064_data->sensor.enableLightSensor(false)) {
+            log += F(" - Error during light sensor init!");
           }
 
-          if (!PLUGIN_064_pds->enableGestureSensor(false, P064_LED_BOOST)) {
-            log += F(" - Error during gesture sensor init!");
+          if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
+            if (!P064_data->sensor.enableProximitySensor(false)) {
+              log += F(" - Error during proximity sensor init!");
+            }
+
+            if (!P064_data->sensor.enableGestureSensor(false, P064_LED_BOOST)) {
+              log += F(" - Error during gesture sensor init!");
+            }
           }
         }
-      }
-      else
-      {
-        log += F("Error during APDS-9960 init!");
-      }
+        else
+        {
+          log += F("Error during APDS-9960 init!");
+        }
 
-      addLog(LOG_LEVEL_INFO, log);
-      success = true;
+        addLog(LOG_LEVEL_INFO, log);
+        success = true;
+      }
       break;
     }
 
     case PLUGIN_FIFTY_PER_SECOND:
     {
-      if (!PLUGIN_064_pds) {
+      P064_data_struct *P064_data =
+        static_cast<P064_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P064_data) {
         break;
       }
 
-      if ((P064_MODE != PLUGIN_MODE_GPL_064) || !PLUGIN_064_pds->isGestureAvailable()) {
+      if ((P064_MODE != PLUGIN_MODE_GPL_064) || !P064_data->sensor.isGestureAvailable()) {
         break;
       }
 
-      int gesture = PLUGIN_064_pds->readGesture();
+      int gesture = P064_data->sensor.readGesture();
 
-      // int gesture = PLUGIN_064_pds->readGestureNonBlocking();
+      // int gesture = P064_data->sensor.readGestureNonBlocking();
 
       // if (gesture == -1) serialPrint(".");
       // if (gesture == -2) serialPrint(":");
       // if (gesture == -3) serialPrint("|");
 
-      // if ( 0 && PLUGIN_064_pds->isGestureAvailable() )
+      // if ( 0 && P064_data->sensor.isGestureAvailable() )
       if (gesture >= 0)
       {
         String log = F("APDS : Gesture=");
@@ -316,7 +318,10 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      if (!PLUGIN_064_pds) {
+      P064_data_struct *P064_data =
+        static_cast<P064_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P064_data) {
         break;
       }
 
@@ -326,19 +331,19 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
       {
         if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
           uint8_t proximity_data = 0;
-          PLUGIN_064_pds->readProximity(proximity_data);
+          P064_data->sensor.readProximity(proximity_data);
           UserVar[event->BaseVarIndex + 1] = static_cast<float>(proximity_data);
 
           uint16_t ambient_light = 0;
-          PLUGIN_064_pds->readAmbientLight(ambient_light);
+          P064_data->sensor.readAmbientLight(ambient_light);
           UserVar[event->BaseVarIndex + 2] = static_cast<float>(ambient_light);
         } else {
           uint16_t red_light   = 0;
           uint16_t green_light = 0;
           uint16_t blue_light  = 0;
-          PLUGIN_064_pds->readRedLight(red_light);
-          PLUGIN_064_pds->readGreenLight(green_light);
-          PLUGIN_064_pds->readBlueLight(blue_light);
+          P064_data->sensor.readRedLight(red_light);
+          P064_data->sensor.readGreenLight(green_light);
+          P064_data->sensor.readBlueLight(blue_light);
           UserVar[event->BaseVarIndex + 0] = static_cast<float>(red_light);
           UserVar[event->BaseVarIndex + 1] = static_cast<float>(green_light);
           UserVar[event->BaseVarIndex + 2] = static_cast<float>(blue_light);
