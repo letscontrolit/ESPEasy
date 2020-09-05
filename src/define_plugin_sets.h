@@ -558,6 +558,7 @@ To create/register a plugin, you have to :
 
 
 #ifdef PLUGIN_SET_LC_TECH_RELAY_X2
+    #define CONTROLLER_SET_STABLE
     #define PLUGIN_SET_ONLY_SWITCH
     #define PLUGIN_BUILD_DISABLED
 
