@@ -3,8 +3,8 @@
 
 #include <Arduino.h>
 
-#include "ESPEasy-Globals.h"
-#include "ESPEasy_plugindefs.h"
+#include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_plugindefs.h"
 #include "../DataStructs/NetworkMedium.h"
 
 // Ethernet Connectiopn status
