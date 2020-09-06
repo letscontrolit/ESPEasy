@@ -38,8 +38,9 @@ CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
   _command.SetPacketLength(19);
   _working_period = -1;
   _sleepmode_active = false;
-  _serial = new ESPeasySerial(pinRX, pinTX);
-  _serial->begin(9600);
+  _serial = new (std::nothrow) ESPeasySerial(pinRX, pinTX);
+  if (_serial != nullptr)
+    _serial->begin(9600);
 }
 
 CjkSDS011::~CjkSDS011() {

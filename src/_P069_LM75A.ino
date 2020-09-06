@@ -180,7 +180,7 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
       if (PLUGIN_069_LM75A) {
         delete PLUGIN_069_LM75A;
       }
-      PLUGIN_069_LM75A = new LM75A((uint8_t)PCONFIG(0));
+      PLUGIN_069_LM75A = new (std::nothrow) LM75A((uint8_t)PCONFIG(0));
 
       success = true;
       break;

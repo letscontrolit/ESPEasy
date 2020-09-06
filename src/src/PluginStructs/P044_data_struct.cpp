@@ -29,7 +29,7 @@ void P044_Task::startServer(uint16_t portnumber) {
   }
   stopServer();
   gatewayPort     = portnumber;
-  P1GatewayServer = new WiFiServer(portnumber);
+  P1GatewayServer = new (std::nothrow) WiFiServer(portnumber);
 
   if ((nullptr != P1GatewayServer) && NetworkConnected()) {
     P1GatewayServer->begin();
@@ -207,7 +207,7 @@ void P044_Task::serialBegin(int16_t rxPin, int16_t txPin,
   serialEnd();
 
   if (rxPin >= 0) {
-    P1EasySerial = new ESPeasySerial(rxPin, txPin);
+    P1EasySerial = new (std::nothrow) ESPeasySerial(rxPin, txPin);
 
     if (nullptr != P1EasySerial) {
 #if defined(ESP8266)
