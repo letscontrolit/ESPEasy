@@ -48,11 +48,11 @@ private:
 
 public:
 
-  int16_t _P045_axis[3][5]; // [xyz], [min/max/range,a,g]
+  int16_t _axis[3][5]; // [xyz], [min/max/range,a,g]
 
 private:
 
-  unsigned long _P045_time; // Timer to check values each 5 seconds
+  unsigned long _timer = 0; // Timer to check values each 5 seconds
   uint8_t       i2cAddress;
 };
 #endif // ifdef USES_P045

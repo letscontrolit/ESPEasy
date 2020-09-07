@@ -39,10 +39,10 @@
 // Originally released in the PlayGround as Plugin 118.
 
 // Plugin var usage:
-// Globals    - int16_t _P045_axis[3][5] Array to store sensorvalues of the axis
-//              _P045_axis[0-2][x]  = x, y, z axis
-//              _P045_axis[x][0-4]  = min values, max values, range (max-min), a-values, g-values.
-//            - long _P045_time = Timer to check values each 5 seconds
+// Globals    - int16_t _axis[3][5] Array to store sensorvalues of the axis
+//              _axis[0-2][x]  = x, y, z axis
+//              _axis[x][0-4]  = min values, max values, range (max-min), a-values, g-values.
+//            - long _timer = Timer to check values each 5 seconds
 
 // Framework  - Settings.TaskDevicePluginConfig[x][0]     - Device address (0x68 | 0x69)
 //              Settings.TaskDevicePluginConfig[x][1]     - Instance function
@@ -242,7 +242,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
             {
               // for each axis:
               if (PCONFIG(i + 2) != 0) { // not disabled, check threshold
-                if (P045_data->_P045_axis[i][2] < PCONFIG(i + 2)) { thresexceed = false; }
+                if (P045_data->_axis[i][2] < PCONFIG(i + 2)) { thresexceed = false; }
               } else { count++; }        // If disabled count + 1
             }
 
@@ -286,7 +286,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
           {
             uint8_t reqaxis = (_P045_Function - 1) % 3;       // xyz         -> eg: function 5(ay) (5-1) % 3 = 1           (y)
             uint8_t reqvar  = ((_P045_Function - 1) / 3) + 2; // range, a, g -> eg: function 9(gz) ((9-1) / 3 = 2) + 2 = 4 (g)
-            UserVar[event->BaseVarIndex] = float(P045_data->_P045_axis[reqaxis][reqvar]);
+            UserVar[event->BaseVarIndex] = float(P045_data->_axis[reqaxis][reqvar]);
             success                      = true;
             break;
           }

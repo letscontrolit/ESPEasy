@@ -29,53 +29,59 @@ P045_data_struct::P045_data_struct(uint8_t i2c_addr) : i2cAddress(i2c_addr)
   int16_t ax, ay, az, gx, gy, gz;
 
   getRaw6AxisMotion(&ax, &ay, &az, &gx, &gy, &gz);
+
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 5; ++j) {
+      _axis[i][j] = 0;
+    }
+  }
 }
 
 void P045_data_struct::loop()
 {
   // Read the sensorvalues, we run this bit every 1/10th of a second
-  getRaw6AxisMotion(&_P045_axis[0][3],
-                    &_P045_axis[1][3],
-                    &_P045_axis[2][3],
-                    &_P045_axis[0][4],
-                    &_P045_axis[1][4],
-                    &_P045_axis[2][4]);
+  getRaw6AxisMotion(&_axis[0][3],
+                    &_axis[1][3],
+                    &_axis[2][3],
+                    &_axis[0][4],
+                    &_axis[1][4],
+                    &_axis[2][4]);
 
   // Set the minimum and maximum value for each axis a-value, overwrite previous values if smaller/larger
-  trackMinMax(_P045_axis[0][3], &_P045_axis[0][0], &_P045_axis[0][1]);
-  trackMinMax(_P045_axis[1][3], &_P045_axis[1][0], &_P045_axis[1][1]);
-  trackMinMax(_P045_axis[2][3], &_P045_axis[2][0], &_P045_axis[2][1]);
+  trackMinMax(_axis[0][3], &_axis[0][0], &_axis[0][1]);
+  trackMinMax(_axis[1][3], &_axis[1][0], &_axis[1][1]);
+  trackMinMax(_axis[2][3], &_axis[2][0], &_axis[2][1]);
 
   //          ^ current value @ 3   ^ min val @ 0         ^ max val @ 1
 
-/*
-  // Uncomment this block if you want to debug your MPU6050, but be prepared for a log overload
-  String log = F("MPU6050 : axis values: ");
+  /*
+     // Uncomment this block if you want to debug your MPU6050, but be prepared for a log overload
+     String log = F("MPU6050 : axis values: ");
 
-  log += _P045_axis[0][3];
-  log += F(", ");
-  log += _P045_axis[1][3];
-  log += F(", ");
-  log += _P045_axis[2][3];
-  log += F(", g values: ");
-  log += _P045_axis[0][4];
-  log += F(", ");
-  log += _P045_axis[1][4];
-  log += F(", ");
-  log += _P045_axis[2][4];
-  addLog(LOG_LEVEL_INFO, log);
-*/
+     log += _axis[0][3];
+     log += F(", ");
+     log += _axis[1][3];
+     log += F(", ");
+     log += _axis[2][3];
+     log += F(", g values: ");
+     log += _axis[0][4];
+     log += F(", ");
+     log += _axis[1][4];
+     log += F(", ");
+     log += _axis[2][4];
+     addLog(LOG_LEVEL_INFO, log);
+   */
 
   // Run this bit every 5 seconds per deviceaddress (not per instance)
-  if (timeOutReached(_P045_time + 5000))
+  if (timeOutReached(_timer + 5000))
   {
-    _P045_time = millis();
+    _timer = millis();
 
     // Determine the maximum measured range of each axis
     for (uint8_t i = 0; i < 3; i++) {
-      _P045_axis[i][2] = abs(_P045_axis[i][1] - _P045_axis[i][0]);
-      _P045_axis[i][0] = _P045_axis[i][3];
-      _P045_axis[i][1] = _P045_axis[i][3];
+      _axis[i][2] = abs(_axis[i][1] - _axis[i][0]);
+      _axis[i][0] = _axis[i][3];
+      _axis[i][1] = _axis[i][3];
     }
   }
 }
