@@ -111,7 +111,7 @@ void P032_data_struct::readout() {
   ms5611_temperature -= T2;
   OFF                -= OFF2;
   SENS               -= SENS2;
-  ms5611_pressure     = (((D1 * SENS) / pow(2, 21) - OFF) / pow(2, 15));
+  ms5611_pressure     = (((D1 * SENS) / pow(2, 21) - OFF) / pow(2, 15)); // FIXME TD-er: This is computed twice, is that correct?
 }
 
 // **************************************************************************/

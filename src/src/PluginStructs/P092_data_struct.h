@@ -31,11 +31,11 @@ class DLBus
 		volatile uint8_t ISR_DLB_Pin = 0xFF;
 		volatile boolean ISR_Receiving = false;            	// receiving flag
 		volatile boolean ISR_AllBitsReceived = false;
-		volatile uint16_t ISR_PulseCount;                   // number of received pulses
-		volatile uint16_t ISR_PulseNumber;                  // max naumber of the received pulses
-		volatile uint16_t ISR_MinPulseWidth, ISR_MaxPulseWidth, ISR_MinDoublePulseWidth, ISR_MaxDoublePulseWidth;
+		volatile uint16_t ISR_PulseCount = 0;                   // number of received pulses
+		volatile uint16_t ISR_PulseNumber = 0;                  // max naumber of the received pulses
+		volatile uint16_t ISR_MinPulseWidth, ISR_MaxPulseWidth, ISR_MinDoublePulseWidth, ISR_MaxDoublePulseWidth = 0;
 		// identification bytes for each DL bus device
-	  uint8_t DeviceBytes[2];
+	    uint8_t DeviceBytes[2] = {0};
 		uint8_t ByteStream[DLbus_MaxDataBits / 8 + 1];  		// every bit gets sorted into a bitmap
 		boolean IsLogLevelInfo = false;
 		uint8_t LogLevelInfo = 0xff;
@@ -48,7 +48,7 @@ class DLBus
 	private:
 		volatile uint32_t ISR_TimeLastBitChange = 0;				// remember time of last transition
 		uint8_t DLbus_ChangeBitStream[DLbus_MaxDataBits];   // received bit change stream (each bit change is extended to uint8_t, containing the timing flags)
-		uint16_t BitNumber;                                 // bit number of the received DLbus_ChangeBitStream
+		uint16_t BitNumber = 0;                                 // bit number of the received DLbus_ChangeBitStream
 		static void ISR(void);
 		void ISR_PinChanged(void);
 		void ProcessBit(uint8_t b);
