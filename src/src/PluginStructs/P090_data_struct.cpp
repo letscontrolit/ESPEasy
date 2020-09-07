@@ -177,7 +177,7 @@ CCS811::CCS811(uint8_t inputArg) : CCS811Core(inputArg)
 {
   refResistance = 10000;
   resistance    = 0;
-  temperature   = 0;
+  _temperature  = 0;
   tVOC          = 0;
   CO2           = 0;
 }
@@ -470,9 +470,9 @@ CCS811Core::status CCS811::readNTC(void)
 
   // Code from Milan Malesevic and Zoran Stupic, 2011,
   // Modified by Max Mayfield,
-  temperature = log((long)resistance);
-  temperature = 1  / (0.001129148f + (0.000234125f * temperature) + (0.0000000876741f * temperature * temperature * temperature));
-  temperature = temperature - 273.15f; // Convert Kelvin to Celsius
+  _temperature = log((long)resistance);
+  _temperature = 1  / (0.001129148f + (0.000234125f * _temperature) + (0.0000000876741f * _temperature * _temperature * _temperature));
+  _temperature = _temperature - 273.15f; // Convert Kelvin to Celsius
 
   return SENSOR_SUCCESS;
 }
@@ -494,7 +494,7 @@ float CCS811::getResistance(void)
 
 float CCS811::getTemperature(void)
 {
-  return temperature;
+  return _temperature;
 }
 
 // getDriverError decodes the CCS811Core::status type and prints the

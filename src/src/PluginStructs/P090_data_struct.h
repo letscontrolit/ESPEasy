@@ -99,7 +99,7 @@ private:
   uint16_t CO2        = 0;
   uint16_t vrefCounts = 0;
   uint16_t ntcCounts  = 0;
-  float temperature   = 0.0f;
+  float _temperature  = 0.0f;
 };
 
 struct P090_data_struct : public PluginTaskData_base {
