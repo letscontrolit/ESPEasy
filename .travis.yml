@@ -40,6 +40,7 @@ env:
   - ENV=hard_Shelly_1_2M256
   - ENV=hard_Shelly_PLUG_S_2M256
   - ENV=hard_Ventus_W266
+  - ENV=hard_LCtech_relay_x2_1M
   - ENV=hard_other_POW_ESP8285_1M
   - ENV=minimal_IRext_ESP8266_1M
   - ENV=minimal_IRext_ESP8266_4M1M

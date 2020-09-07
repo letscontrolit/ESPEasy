@@ -557,6 +557,17 @@ To create/register a plugin, you have to :
 #endif
 
 
+#ifdef PLUGIN_SET_LC_TECH_RELAY_X2
+    #define CONTROLLER_SET_STABLE
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P026    // Sysinfo
+    #define USES_P029    // Domoticz MQTT Helper
+    #define USES_P033    // Dummy
+    #define USES_P037    // MQTT import
+    #define USES_P081    // Cron
+    #define USES_P091    // Ser Switch
+#endif
+
 
 
 /******************************************************************************\
