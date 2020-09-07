@@ -18,22 +18,22 @@ struct P023_data_struct : public PluginTaskData_base {
     OLED_128x32  = 0x04
   };
 
-  enum
+  enum class Spacing
   {
-    Size_normal    = 0x01,
-    Size_optimized = 0x02
+    normal    = 0x01,
+    optimized = 0x02
   };
 
-  P023_data_struct(byte _address,
-                   byte _type,
-                   byte _font_width,
-                   byte _displayTimer);
+  P023_data_struct(byte    _address,
+                   byte    _type,
+                   Spacing _font_spacing,
+                   byte    _displayTimer);
 
   void   setDisplayTimer(byte _displayTimer);
   void   checkDisplayTimer();
 
   String parseTemplate(String& tmpString,
-                            byte    lineSize);
+                       byte    lineSize);
 
   void   resetDisplay();
 
@@ -57,7 +57,7 @@ struct P023_data_struct : public PluginTaskData_base {
   // Set the cursor position in a 16 COL * 8 ROW map (128x64 pixels)
   // or 8 COL * 5 ROW map (64x48 pixels)
   void setXY(unsigned char row,
-                        unsigned char col);
+             unsigned char col);
 
   // Prints a string regardless the cursor position.
   // unused:
@@ -67,15 +67,15 @@ struct P023_data_struct : public PluginTaskData_base {
   // Prints a string in coordinates X Y, being multiples of 8.
   // This means we have 16 COLS (0-15) and 8 ROWS (0-7).
   void sendStrXY(const char *string,
-                            int         X,
-                            int         Y);
+                 int         X,
+                 int         Y);
 
   void init_OLED();
 
-  byte address      = 0;
-  byte type         = 0;
-  byte font_width   = 0;
-  byte displayTimer = 0;
+  byte    address      = 0;
+  byte    type         = 0;
+  Spacing font_spacing = Spacing::normal;
+  byte    displayTimer = 0;
 };
 
 #endif // ifdef USES_P023

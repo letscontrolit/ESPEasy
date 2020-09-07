@@ -201,8 +201,8 @@ const char Plugin_023_myFont[][8] PROGMEM = {
 };
 
 
-P023_data_struct::P023_data_struct(byte _address,   byte _type, byte _font_width, byte _displayTimer)
-  :  address(_address), type(_type),  font_width(_font_width),  displayTimer(_displayTimer)
+P023_data_struct::P023_data_struct(byte _address,   byte _type, P023_data_struct::Spacing _font_spacing, byte _displayTimer)
+  :  address(_address), type(_type),  font_spacing(_font_spacing),  displayTimer(_displayTimer)
 {}
 
 void P023_data_struct::setDisplayTimer(byte _displayTimer) {
@@ -268,7 +268,7 @@ void P023_data_struct::clearDisplay()
     {
       for (i = 0; i < 128; i++) // clear all COL
       {
-        sendChar(0); // clear all COL
+        sendChar(0);            // clear all COL
       }
     }
   }
@@ -348,8 +348,8 @@ void P023_data_struct::sendStrXY(const char *string, int X, int Y)
 {
   setXY(X, Y);
   unsigned char i             = 0;
-  unsigned char font_width    = 0;
-  unsigned char currentPixels = Y * 8; // setXY always uses font_width = 8, Y = 0-based
+  unsigned char char_width    = 0;
+  unsigned char currentPixels = Y * 8; // setXY always uses char_width = 8, Y = 0-based
   unsigned char maxPixels     = 128;   // Assumed default display width
 
   switch (type) {                      // Cater for that 1 smaller size display
@@ -361,20 +361,20 @@ void P023_data_struct::sendStrXY(const char *string, int X, int Y)
 
   while (*string && currentPixels < maxPixels) // Prevent display overflow on the character level
   {
-    switch (font_width)
+    switch (font_spacing)
     {
-      case Size_optimized:
-        font_width = pgm_read_byte(&(Plugin_023_myFont_Size[*string - 0x20]));
+      case Spacing::optimized:
+        char_width = pgm_read_byte(&(Plugin_023_myFont_Size[*string - 0x20]));
         break;
       default:
-        font_width = 8;
+        char_width = 8;
     }
 
-    for (i = 0; i < font_width && currentPixels + i < maxPixels; i++) // Prevent display overflow on the pixel-level
+    for (i = 0; i < char_width && currentPixels + i < maxPixels; i++) // Prevent display overflow on the pixel-level
     {
       sendChar(pgm_read_byte(Plugin_023_myFont[*string - 0x20] + i));
     }
-    currentPixels += font_width;
+    currentPixels += char_width;
     string++;
   }
 }

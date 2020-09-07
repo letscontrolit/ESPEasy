@@ -80,7 +80,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         byte   choice4          = PCONFIG(4);
         String options4[2]      = { F("Normal"), F("Optimized") };
         int    optionValues4[2] = { 1, 2 };
-        addFormSelector(F("Font Width"), F("p023_font_width"), 2, options4, optionValues4, choice4);
+        addFormSelector(F("Font Width"), F("p023_font_spacing"), 2, options4, optionValues4, choice4);
       }
       {
         String strings[P23_Nlines];
@@ -107,7 +107,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       PCONFIG(1) = getFormItemInt(F("p023_rotate"));
       PCONFIG(2) = getFormItemInt(F("plugin_23_timer"));
       PCONFIG(3) = getFormItemInt(F("p023_size"));
-      PCONFIG(4) = getFormItemInt(F("p023_font_width"));
+      PCONFIG(4) = getFormItemInt(F("p023_font_spacing"));
 
       // FIXME TD-er: This is a huge stack allocated object.
       char   deviceTemplate[P23_Nlines][P23_Nchars];
@@ -130,10 +130,10 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte address      = PCONFIG(0);
-      byte type         = 0;
-      byte font_width   = P023_data_struct::Size_normal;
-      byte displayTimer = PCONFIG(2);
+      byte address                           = PCONFIG(0);
+      byte type                              = 0;
+      P023_data_struct::Spacing font_spacing = P023_data_struct::Spacing::normal;
+      byte displayTimer                      = PCONFIG(2);
 
       switch (PCONFIG(3)) {
         case 1:
@@ -153,16 +153,14 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         type |= P023_data_struct::OLED_rotated;
       }
 
-      switch (PCONFIG(4)) {
-        case 1:
-          font_width = P023_data_struct::Size_normal;
-          break;
-        case 2:
-          font_width = P023_data_struct::Size_optimized;
+      switch (static_cast<P023_data_struct::Spacing>(PCONFIG(4))) {
+        case P023_data_struct::Spacing::normal:
+        case P023_data_struct::Spacing::optimized:
+          font_spacing = static_cast<P023_data_struct::Spacing>(PCONFIG(4));
           break;
       }
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P023_data_struct(address, type, font_width, displayTimer));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P023_data_struct(address, type, font_spacing, displayTimer));
       P023_data_struct *P023_data =
         static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
