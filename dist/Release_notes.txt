@@ -1,4 +1,76 @@
 -------------------------------------------------
+Changes in release mega-20200829 (since mega-20200812)
+-------------------------------------------------
+
+Release date: za 29 aug 2020 15:58:42 CEST
+
+Gijs Noorlander (32):
+      [docs] Fix table for P095
+      [docs] Replace code-block:: html with code-block:: none
+      [SI7021] Convert state to enum class
+      [SI7071] Allow multiple instances of the same plugin
+      [SI7071] Add timeout for reading sensor (1 sec)
+      [Build] Add normal_ESP8266_4M1M_VCC env.
+      [ESPEasy p2p] Init node data to 0
+      [Build size] Do not include I2C device names for minimal OTA builds
+      [Controller] Convert controller delay handler to pointer
+      [BME280] Allow to be used with I2C multiplexer
+      [Docs] Add some description for P029 Output Domoticz MQTT helper
+      [I2C] Add PLUGIN_WEBFORM_SHOW_I2C_PARAMS to separate I2C address setup
+      [I2C] Move I2C address selector for all I2C plugins with address field
+      [Cleanup] Uncrustify all I2C plugins
+      Revert changes in P095 as they are already already covered by #3205
+      [I2C multiplexer] Fix build issue on units not using I2C multiplexer
+      [Build] Fix build size exceeded for testing builds
+      [Docs] Add documentation for ESP32 ethernet + missing config page
+      [ESP32 ETH] Add pre-defined Olimex ESP32-EVB config
+      [ESP32 ETH] Fix JSON when Ethernet is enabled.
+      [Docs] Fix images with .PNG instead of .png extension
+      [Sphinx docs] Change deprecated add_stylesheet to add_css_file
+      [Docs] Updated DL-bus documentation as it was hard to find
+      [Ethernet] Create enum class for NetworkMedium
+      [Ethernet] Create enum class for EthClockMode
+      [Ethernet] Create enum class for EthPhyType
+      [Ethernet] Fix UDP p2p when using ethernet.
+      [Cleanup] Try not using default: to let compiler find missing used enums
+      [Factory Defaults] Add Olimex ESP32 GATEWAY definitions
+      Fix default settings for I2C and ethernet
+      Only show matching factory default settings
+      [Ethernet] Switch to WiFi when Ethernet adapter is not found
+
+Michał Obrembski (1):
+      Fixed compile-time defines not working in ESP32 platform
+
+TD-er (2):
+      Fix build issue for P094 CUL reader
+      Fix C002 Domoticz dimmer switch set value (#3230)
+
+Ton Huisman (5):
+      [I2C] Some fixes and improvements
+      [I2C] Add TCA9543a multiplexer, updated docs
+      [I2C Docs] Emphasize configuration with multiplexer
+      [I2C Docs] Add note about multiplexer address
+      [P044] Accept '_' in meter ID
+
+tonhuisman (11):
+      [Docs] Updated commands reference
+      [Docs] Fixed some typos and Sphinx syntax errors
+      [OLED] Don't change shared bus speed
+      [I2C] Implement I2C Multiplexer
+      [I2C] Improve I2C Multiplexer support
+      [I2C] Fix builderror on SettingsStructSize (again)
+      [P008] Fix saving/loading new setting
+      [P008] Fix saving/loading new setting
+      [I2C] Bugfixes and improvements for multiplexer implementation
+      [I2C] Optimizations and improvements
+      [I2C/Doc] Add Hardware page documentation, RTD help button
+
+uwekaditz (2):
+      [P092_DLBus] Move plugin data from lib to PluginStructs
+      Update _P092_DLbus.ino
+
+
+-------------------------------------------------
 Changes in release mega-20200812 (since mega-20200801)
 -------------------------------------------------
 

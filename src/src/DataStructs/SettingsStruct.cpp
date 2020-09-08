@@ -1,8 +1,10 @@
-#include "../../ESPEasy_common.h"
 #include "../DataStructs/SettingsStruct.h"
-#include "../DataStructs/ESPEasyLimits.h"
+
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
+#include "../DataStructs/ESPEasyLimits.h"
+#include "../DataStructs/DeviceStruct.h"
+#include "../../ESPEasy_common.h"
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {
@@ -203,22 +205,31 @@ void SettingsStruct_tmpl<N_TASKS>::clearUnitNameSettings() {
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
-  PID            = 0;
-  Version        = 0;
-  Build          = 0;
-  IP_Octet       = 0;
-  Delay          = 0;
-  Pin_i2c_sda    = -1;
-  Pin_i2c_scl    = -1;
-  Pin_status_led = -1;
-  Pin_sd_cs      = -1;
-  ETH_Phy_Addr   = 0;
-  ETH_Pin_mdc    = -1;
-  ETH_Pin_mdio   = -1;
-  ETH_Pin_power  = -1;
-  ETH_Phy_Type   = 0;
-  ETH_Clock_Mode = 0;
-  ETH_Wifi_Mode = 0;
+  PID                      = 0;
+  Version                  = 0;
+  Build                    = 0;
+  IP_Octet                 = 0;
+  Delay                    = 0;
+  Pin_i2c_sda              = DEFAULT_PIN_I2C_SDA;
+  Pin_i2c_scl              = DEFAULT_PIN_I2C_SCL;
+  Pin_status_led           = DEFAULT_PIN_STATUS_LED;
+  Pin_sd_cs                = -1;
+  ETH_Phy_Addr             = DEFAULT_ETH_PHY_ADDR;
+  ETH_Pin_mdc              = DEFAULT_ETH_PIN_MDC;
+  ETH_Pin_mdio             = DEFAULT_ETH_PIN_MDIO;
+  ETH_Pin_power            = DEFAULT_ETH_PIN_POWER;
+  ETH_Phy_Type             = DEFAULT_ETH_PHY_TYPE;
+  ETH_Clock_Mode           = DEFAULT_ETH_CLOCK_MODE;
+  NetworkMedium            = DEFAULT_NETWORK_MEDIUM;
+
+  I2C_clockSpeed_Slow      = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+  I2C_Multiplexer_Type     = I2C_MULTIPLEXER_NONE;
+  I2C_Multiplexer_Addr     = -1;
+  for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
+    I2C_Multiplexer_Channel[x] = -1;
+  }
+  I2C_Multiplexer_ResetPin = -1;
+
 
   for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
   BaudRate                         = 0;
@@ -296,11 +307,12 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
     TaskDevicePluginConfigLong[task][cv] = 0;
   }
-  OLD_TaskDeviceSendData[task] = false;
-  TaskDeviceGlobalSync[task]   = false;
-  TaskDeviceDataFeed[task]     = 0;
-  TaskDeviceTimer[task]        = 0;
-  TaskDeviceEnabled[task]      = false;
+  OLD_TaskDeviceSendData[task]  = false;
+  TaskDeviceGlobalSync[task]    = false;
+  TaskDeviceDataFeed[task]      = 0;
+  TaskDeviceTimer[task]         = 0;
+  TaskDeviceEnabled[task]       = false;
+  I2C_Multiplexer_Channel[task] = -1;
 }
 
 template<unsigned int N_TASKS>

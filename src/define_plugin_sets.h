@@ -225,6 +225,10 @@ To create/register a plugin, you have to :
     #define  CONTROLLER_SET_STABLE
     #define  NOTIFIER_SET_STABLE
 
+    #ifndef FEATURE_I2CMULTIPLEXER
+        #define FEATURE_I2CMULTIPLEXER
+    #endif
+
     #ifndef BUILD_NO_DEBUG
       #define BUILD_NO_DEBUG
     #endif
@@ -337,6 +341,7 @@ To create/register a plugin, you have to :
     #ifdef USES_SSDP
       #undef USES_SSDP
     #endif
+
 #endif
 
 
@@ -551,6 +556,17 @@ To create/register a plugin, you have to :
     #define USES_P046      // TESTING	Hardware	P046_VentusW266.ino
 #endif
 
+
+#ifdef PLUGIN_SET_LC_TECH_RELAY_X2
+    #define CONTROLLER_SET_STABLE
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P026    // Sysinfo
+    #define USES_P029    // Domoticz MQTT Helper
+    #define USES_P033    // Dummy
+    #define USES_P037    // MQTT import
+    #define USES_P081    // Cron
+    #define USES_P091    // Ser Switch
+#endif
 
 
 
@@ -1087,6 +1103,9 @@ To create/register a plugin, you have to :
 
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
+  #endif
+  #ifdef FEATURE_I2CMULTIPLEXER
+    #undef FEATURE_I2CMULTIPLEXER
   #endif
 #endif
 

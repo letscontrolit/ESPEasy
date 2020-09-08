@@ -22,7 +22,7 @@ bool P087_data_struct::init(const int16_t serial_rx, const int16_t serial_tx, un
     return false;
   }
   reset();
-  easySerial = new ESPeasySerial(serial_rx, serial_tx);
+  easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
 
   if (isInitialized()) {
     easySerial->begin(baudrate);

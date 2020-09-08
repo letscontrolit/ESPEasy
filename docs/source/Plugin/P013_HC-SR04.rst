@@ -26,15 +26,15 @@ Wiring
 
 The HC-SR04 must be run on 5V. Running it with 3.3V will show very weak results or nothing at all.
 
-.. code-block:: html
+.. code-block:: none
 
-  ESP               HC-SR04
-  GPIO (X)   <-->   Trigger
-  GPIO (X)   <-->   Echo (voltage divider!)
-
-  Power
-  5.0V       <-->   VCC
-  GND        <-->   GND
+   ESP               HC-SR04
+   GPIO (X)   <-->   Trigger
+   GPIO (X)   <-->   Echo (voltage divider!)
+   
+   Power
+   5.0V       <-->   VCC
+   GND        <-->   GND
 
 .. warning:: Do not connect 5V directly to the ESP! Read more about :ref:`P000_Level_converter_page`.
 
@@ -89,14 +89,14 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block::
 
    on HCSR04#distance do
-    if [HCSR04#distance]<50 and [HCSR04#distance]>45
-      GPIO,14,1 //light up LED to show that you're at the correct position
-    else
-      GPIO,14,0
-    endif
+     if [HCSR04#distance]<50 and [HCSR04#distance]>45
+       GPIO,14,1 //light up LED to show that you're at the correct position
+     else
+       GPIO,14,0
+     endif
    endon
 
 .. Commands available
