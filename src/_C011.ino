@@ -324,7 +324,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
   addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
   addLog(LOG_LEVEL_DEBUG_MORE, s);
 
-  parseControllerVariables(s, event, true);
+  parseControllerVariables(s, event, false);
 
   addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
   addLog(LOG_LEVEL_DEBUG_MORE, s);
