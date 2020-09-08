@@ -269,7 +269,20 @@ struct C018_data_struct {
 
   void async_loop() {
     if (isInitialized()) {
-      myLora->async_loop();
+      rn2xx3_handler::RN_state state = myLora->async_loop();
+      if (rn2xx3_handler::RN_state::must_perform_init == state) {
+        if (myLora->get_busy_count() > 10) {
+          if (_resetPin != -1) {
+            pinMode(_resetPin, OUTPUT);
+            digitalWrite(_resetPin, LOW);
+            delay(50);
+            digitalWrite(_resetPin, HIGH);
+            delay(200);
+          }
+          autobaud_success = false;
+//          triggerAutobaud();
+        }
+      }
     }
   }
 
