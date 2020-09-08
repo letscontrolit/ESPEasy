@@ -55,7 +55,7 @@ You can use this placeholders in http header and in the http body:
 * ``%LF%`` will be replaced with "\n" (newline)
 * ``%sysname%`` will be replaced with the system name
 * ``%tskname%`` will be replaced with the name of the device which is sending data to this controller
-* ``%id%`` 
+* ``%id%`` will be replaced with IDX value.
 * ``%vname1%`` will be replaced with Valuename 1
 * ``%vname2%`` will be replaced with Valuename 2
 * ``%vname3%`` will be replaced with Valuename 3

@@ -82,6 +82,7 @@ struct ControllerSettingsStruct
     CONTROLLER_CLEAN_SESSION,
     CONTROLLER_TIMEOUT,
     CONTROLLER_SAMPLE_SET_INITIATOR,
+    CONTROLLER_SEND_BINARY,
 
     // Keep this as last, is used to loop over all parameters
     CONTROLLER_ENABLED
@@ -110,7 +111,7 @@ struct ControllerSettingsStruct
 
   String    getHostPortString() const;
 
-  // MQTT_flags defaults to 0, keep in mind when adding bit lookups.
+  // VariousFlags defaults to 0, keep in mind when adding bit lookups.
   bool      mqtt_cleanSession() const;
   void      mqtt_cleanSession(bool value);
 
@@ -129,6 +130,9 @@ struct ControllerSettingsStruct
   bool      useExtendedCredentials() const;
   void      useExtendedCredentials(bool value);
 
+  bool      sendBinary() const;
+  void      sendBinary(bool value);
+
   boolean      UseDNS;
   byte         IP[4];
   unsigned int Port;
@@ -145,7 +149,7 @@ struct ControllerSettingsStruct
   unsigned int ClientTimeout;
   bool         MustCheckReply;     // When set to false, a sent message is considered always successful.
   taskIndex_t  SampleSetInitiator; // The first task to start a sample set.
-  uint32_t     MQTT_flags;         // Various flags for MQTT controllers
+  uint32_t     VariousFlags;       // Various flags
   char         ClientID[65];       // Used to define the Client ID used by the controller
 
 private:

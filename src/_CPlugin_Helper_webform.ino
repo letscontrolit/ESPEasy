@@ -48,6 +48,7 @@ String getControllerParameterName(protocolIndex_t ProtocolIndex, ControllerSetti
     case ControllerSettingsStruct::CONTROLLER_WILL_RETAIN:              name = F("Will Retain");            break;
     case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:            name = F("Clean Session");          break;
     case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS: name = F("Use Extended Credentials");  break;
+    case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:              name = F("Send Binary");            break;
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:                  name = F("Client Timeout");         break;
     case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:     name = F("Sample Set Initiator");   break;
 
@@ -80,6 +81,20 @@ String getControllerParameterDisplayName(protocolIndex_t ProtocolIndex, Controll
   bool displayName = true;
 
   return getControllerParameterName(ProtocolIndex, parameterIdx, displayName, isAlternative);
+}
+
+void addControllerEnabledForm(controllerIndex_t controllerindex) {
+  protocolIndex_t  ProtocolIndex  = getProtocolIndex_from_ControllerIndex(controllerindex);
+  if (!validProtocolIndex(ProtocolIndex)) {
+    return;
+  }
+
+  ControllerSettingsStruct::VarType varType = ControllerSettingsStruct::CONTROLLER_ENABLED;
+
+  bool   isAlternativeDisplayName = false;
+  String displayName              = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
+  String internalName             = getControllerParameterInternalName(ProtocolIndex, varType);
+  addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
 }
 
 void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, ControllerSettingsStruct::VarType varType) {
@@ -210,6 +225,9 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS:
       addFormCheckBox(displayName, internalName, ControllerSettings.useExtendedCredentials());
       break;
+    case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:
+      addFormCheckBox(displayName, internalName, ControllerSettings.sendBinary());
+      break;
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:
       addFormNumericBox(displayName, internalName, ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
       addUnit(F("ms"));
@@ -319,6 +337,9 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, c
       break;
     case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS:
       ControllerSettings.useExtendedCredentials(isFormItemChecked(internalName));
+      break;
+    case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:
+      ControllerSettings.sendBinary(isFormItemChecked(internalName));
       break;
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:
       ControllerSettings.ClientTimeout = getFormItemInt(internalName, ControllerSettings.ClientTimeout);

@@ -67,35 +67,48 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
-      String escapeBuffer;
-      std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
-
-      if (customConfig) {
-        LoadCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C011_ConfigStruct));
-        customConfig->zero_last();
+      {
+        String HttpMethod;
+        String HttpUri;
+        String HttpHeader;
+        String HttpBody;
+        if (!load_C011_ConfigStruct(event->ControllerIndex, HttpMethod, HttpUri, HttpHeader, HttpBody))
+        {
+          return false;
+        }
+        addTableSeparator(F("HTTP Config"), 2, 3);
         {
           byte   choice    = 0;
           String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
 
           for (byte i = 0; i < 5; i++)
           {
-            if (methods[i].equals(customConfig->HttpMethod)) {
+            if (methods[i].equals(HttpMethod)) {
               choice = i;
             }
           }
-          addFormSelector(F("HTTP Method"), F("P011httpmethod"), 5, methods, NULL, choice);
+          addFormSelector(F("Method"), F("P011httpmethod"), 5, methods, NULL, choice);
         }
 
-        addFormTextBox(F("HTTP URI"), F("P011httpuri"), customConfig->HttpUri, C011_HTTP_URI_MAX_LEN - 1);
+        addFormTextBox(F("URI"), F("P011httpuri"), HttpUri, C011_HTTP_URI_MAX_LEN - 1);
         {
-          String escapeBuffer = customConfig->HttpHeader;
-          htmlEscape(escapeBuffer);
-          addFormTextArea(F("HTTP Header"), F("P011httpheader"), escapeBuffer, C011_HTTP_HEADER_MAX_LEN - 1, 4, 50);
+          htmlEscape(HttpHeader);
+          addFormTextArea(F("Header"), F("P011httpheader"), HttpHeader, C011_HTTP_HEADER_MAX_LEN - 1, 4, 50);
         }
         {
-          String escapeBuffer = customConfig->HttpBody;
-          htmlEscape(escapeBuffer);
-          addFormTextArea(F("HTTP Body"), F("P011httpbody"), escapeBuffer, C011_HTTP_BODY_MAX_LEN - 1, 8, 50);
+          htmlEscape(HttpBody);
+          addFormTextArea(F("Body"), F("P011httpbody"), HttpBody, C011_HTTP_BODY_MAX_LEN - 1, 8, 50);
+        }
+      }
+      {
+        // Place in scope to delete ControllerSettings as soon as it is no longer needed
+        MakeControllerSettings(ControllerSettings);
+        if (!AllocatedControllerSettings()) {
+          addHtmlError(F("Out of memory, cannot load page"));
+        } else {
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+          addControllerParameterForm(ControllerSettings, event->ControllerIndex, ControllerSettingsStruct::CONTROLLER_SEND_BINARY);
+          addFormNote(F("Do not 'percent escape' body when send binary checked"));
         }
       }
       break;
@@ -173,6 +186,22 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
   return send_via_http(controller_number, client, element.txt, ControllerSettings.MustCheckReply);
 }
 
+bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMethod, String& HttpUri, String& HttpHeader, String& HttpBody) {
+  // Just copy the needed strings and destruct the C011_ConfigStruct as soon as possible
+  std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
+
+  if (!customConfig) {
+    return false;
+  }
+  LoadCustomControllerSettings(ControllerIndex, (byte *)customConfig.get(), sizeof(C011_ConfigStruct));
+  customConfig->zero_last();
+  HttpMethod = customConfig->HttpMethod;
+  HttpUri = customConfig->HttpUri;
+  HttpHeader = customConfig->HttpHeader;
+  HttpBody =  customConfig->HttpBody;
+  return true;
+}
+
 // ********************************************************************************
 // Create request
 // ********************************************************************************
@@ -184,6 +213,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 
   String authHeader;
   String hostportString;
+  bool sendBinary = false;
 
   if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
     String dummy;
@@ -202,24 +232,27 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     authHeader = get_auth_header(event->ControllerIndex, ControllerSettings);
     const bool defaultport = ControllerSettings.Port == 0 || ControllerSettings.Port == 80;
     hostportString = defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString();
+    sendBinary = ControllerSettings.sendBinary();
   }
 
 
-  std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
-
-  if (!customConfig) {
+  String HttpMethod;
+  String HttpUri;
+  String HttpHeader;
+  String HttpBody;
+  if (!load_C011_ConfigStruct(event->ControllerIndex, HttpMethod, HttpUri, HttpHeader, HttpBody))
+  {
     return false;
   }
-  LoadCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C011_ConfigStruct));
-  customConfig->zero_last();
+
 
   bool success = false;
 
   {
     String payload = do_create_http_request(
       hostportString,
-      customConfig->HttpMethod,
-      customConfig->HttpUri,
+      HttpMethod,
+      HttpUri,
       authHeader,
       "",
       -1);
@@ -237,21 +270,20 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     // and thus preventing the need to create a long string only to copy it to a queue element.
     C011_queue_element& element = C011_DelayHandler->sendQueue.back();
 
-    if (strlen(customConfig->HttpHeader) > 0) {
-      element.txt += customConfig->HttpHeader;
+    if (HttpHeader.length() > 0) {
+      element.txt += HttpHeader;
       removeExtraNewLine(element.txt);
     }
-    ReplaceTokenByValue(element.txt, event);
+    ReplaceTokenByValue(element.txt, event, false);
 
-    if (strlen(customConfig->HttpBody) > 0)
+    if (HttpBody.length() > 0)
     {
-      String body = String(customConfig->HttpBody);
-      ReplaceTokenByValue(body, event);
+      ReplaceTokenByValue(HttpBody, event, sendBinary);
       element.txt += F("Content-Length: ");
-      element.txt += String(body.length());
+      element.txt += String(HttpBody.length());
       addNewLine(element.txt);
       addNewLine(element.txt); // Need 2 CRLF between header and body.
-      element.txt += body;
+      element.txt += HttpBody;
     }
     addNewLine(element.txt);
   }
@@ -309,7 +341,7 @@ void DeleteNotNeededValues(String& s, byte numberOfValuesWanted)
 // in case of a sensor with 2 values:
 // SENSORVALUENAME1____TASKNAME1____VALUE1__SENSORVALUENAME2____TASKNAME2____VALUE2
 // ********************************************************************************
-void ReplaceTokenByValue(String& s, struct EventStruct *event)
+void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary)
 {
   // example string:
   // write?db=testdb&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%
@@ -324,7 +356,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event)
   addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
   addLog(LOG_LEVEL_DEBUG_MORE, s);
 
-  parseControllerVariables(s, event, false);
+  parseControllerVariables(s, event, !sendBinary);
 
   addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
   addLog(LOG_LEVEL_DEBUG_MORE, s);
