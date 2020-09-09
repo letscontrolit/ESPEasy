@@ -468,7 +468,11 @@ String send_via_http(const String& logIdentifier,
   http.setAuthorization(user.c_str(), pass.c_str());
   http.setTimeout(timeout);
   yield();
+#if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
+#else
+  http.begin(host, port, uri);
+#endif
   {
     int colonPos = header.indexOf(':');
 
