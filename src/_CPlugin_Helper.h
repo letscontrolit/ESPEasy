@@ -57,9 +57,9 @@ String create_http_request_auth(int controller_number, int controller_index, Con
 void log_connecting_to(const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings);
+void log_connecting_fail(const String& prefix, int controller_number);
 
-bool count_connection_results(bool success, const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings);
+bool count_connection_results(bool success, const String& prefix, int controller_number);
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings);
 

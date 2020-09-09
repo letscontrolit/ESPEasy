@@ -192,7 +192,11 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
     element.header,
     element.postStr,
     httpCode);
-  return httpCode > 0;
+
+  // HTTP codes:
+  // 1xx Informational response
+  // 2xx Success
+  return httpCode >= 100 && httpCode < 300;
 }
 
 bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMethod, String& HttpUri, String& HttpHeader, String& HttpBody) {

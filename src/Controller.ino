@@ -199,7 +199,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
 
   byte controller_number = Settings.Protocol[controller_idx];
-  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number, ControllerSettings);
+  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number);
 
   if (!MQTTresult) {
     MQTTclient.disconnect();

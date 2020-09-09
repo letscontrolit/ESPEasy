@@ -111,18 +111,27 @@ String get_auth_header(int controller_index, const ControllerSettingsStruct& Con
   return authHeader;
 }
 
+String get_user_agent_string() {
+  static unsigned int agent_size = 20;
+  String userAgent;
+  userAgent.reserve(agent_size);
+  userAgent   += F("ESP Easy/");
+  userAgent   += BUILD;
+  userAgent   += '/';
+  userAgent   += get_build_date();
+  userAgent   += ' ';
+  userAgent   += get_build_time();
+  agent_size = userAgent.length();
+  return userAgent;
+}
+
 String get_user_agent_request_header_field() {
   static unsigned int agent_size = 20;
   String request;
 
   request.reserve(agent_size);
   request    = F("User-Agent: ");
-  request   += F("ESP Easy/");
-  request   += BUILD;
-  request   += '/';
-  request   += get_build_date();
-  request   += ' ';
-  request   += get_build_time();
+  request   += get_user_agent_string();
   request   += "\r\n";
   agent_size = request.length();
   return request;
@@ -238,7 +247,7 @@ void log_connecting_to(const String& prefix, int controller_number, ControllerSe
 
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
+void log_connecting_fail(const String& prefix, int controller_number) {
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
@@ -251,11 +260,11 @@ void log_connecting_fail(const String& prefix, int controller_number, Controller
   }
 }
 
-bool count_connection_results(bool success, const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
+bool count_connection_results(bool success, const String& prefix, int controller_number) {
   if (!success)
   {
     ++connectionFailures;
-    log_connecting_fail(prefix, controller_number, ControllerSettings);
+    log_connecting_fail(prefix, controller_number);
     return false;
   }
   statusLED(true);
@@ -278,7 +287,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
   bool success      = ControllerSettings.beginPacket(client);
   const bool result = count_connection_results(
     success,
-    F("UDP  : "), controller_number, ControllerSettings);
+    F("UDP  : "), controller_number);
   STOP_TIMER(TRY_CONNECT_HOST_UDP);
   return result;
 }
@@ -301,7 +310,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   const bool success = ControllerSettings.connectToHost(client);
   const bool result  = count_connection_results(
     success,
-    loglabel, controller_number, ControllerSettings);
+    loglabel, controller_number);
   STOP_TIMER(TRY_CONNECT_HOST_TCP);
   return result;
 }
@@ -436,7 +445,7 @@ String send_via_http(int                             controller_number,
                      const String                  & postStr,
                      int                           & httpCode) {
   client.setTimeout(ControllerSettings.ClientTimeout);
-  return send_via_http(
+  const String result = send_via_http(
     get_formatted_Controller_number(controller_number),
     client,
     ControllerSettings.ClientTimeout,
@@ -449,6 +458,15 @@ String send_via_http(int                             controller_number,
     header,
     postStr,
     httpCode);
+
+  const bool success = httpCode > 0;
+
+  count_connection_results(
+    success,
+    F("HTTP  : "),
+    controller_number);
+
+  return result;
 }
 
 String send_via_http(const String& logIdentifier,
@@ -467,6 +485,13 @@ String send_via_http(const String& logIdentifier,
 
   http.setAuthorization(user.c_str(), pass.c_str());
   http.setTimeout(timeout);
+  http.setUserAgent(get_user_agent_string());
+
+  // Add request header as fall back.
+  // When adding another "accept" header, it may be interpreted as:
+  // "if you have XXX, send it; or failing that, just give me what you've got."
+  http.addHeader(F("Accept"), F("*/*;q=0.1"));
+
   yield();
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
@@ -484,35 +509,29 @@ String send_via_http(const String& logIdentifier,
     }
   }
 
-
-  // start connection and send HTTP header and body
-  if (HttpMethod.equalsIgnoreCase(F("post"))) {
-    httpCode = http.POST(postStr);
-  } else if (HttpMethod.equalsIgnoreCase(F("get"))) {
-    httpCode = http.GET();
-  } else if (HttpMethod.equalsIgnoreCase(F("put"))) {
-    httpCode = http.PUT(postStr);
-  } else if (HttpMethod.equalsIgnoreCase(F("head"))) {
-    // The HEAD method is identical to GET
-    // except that the server MUST NOT return a message-body in the response.
-    // However, HTTPClient library has no HEAD function.
-    httpCode = http.GET();
-  } else if (HttpMethod.equalsIgnoreCase(F("patch"))) {
-    httpCode = http.PATCH(postStr);
+  // start connection and send HTTP header (and body)
+  if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+    httpCode = http.sendRequest(HttpMethod.c_str());
   } else {
-    addLog(LOG_LEVEL_ERROR, F("HTTP : Unknown method"));
+    httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
   }
+
   String response;
 
   // httpCode will be negative on error
   if (httpCode > 0) {
     response = http.getString();
 
-    if (httpCode == HTTP_CODE_OK) {
-      //      response = http.getString();
+    byte loglevel = LOG_LEVEL_ERROR;
+    // HTTP codes:
+    // 1xx Informational response
+    // 2xx Success
+    if (httpCode >= 100 && httpCode < 300) {
+      loglevel = LOG_LEVEL_INFO;
     }
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+
+    if (loglevelActiveFor(loglevel)) {
       String log = F("HTTP : ");
       log += logIdentifier;
       log += ' ';
@@ -524,7 +543,7 @@ String send_via_http(const String& logIdentifier,
         log += ' ';
         log += response;
       }
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLog(loglevel, log);
     }
   } else {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
