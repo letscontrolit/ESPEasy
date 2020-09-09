@@ -23,6 +23,14 @@
 #include <WiFiUdp.h>
 #include <base64.h>
 
+
+#ifdef ESP8266
+# include <ESP8266HTTPClient.h>
+#endif // ifdef ESP8266
+#ifdef ESP32
+# include "HTTPClient.h"
+#endif // ifdef ESP32
+
 bool safeReadStringUntil(Stream     & input,
                          String     & str,
                          char         terminator,
@@ -132,6 +140,7 @@ String do_create_http_request(
 
   if (content_length >= 0) { estimated_size += 45; }
   String request;
+
   request.reserve(estimated_size);
   request += method;
   request += ' ';
@@ -262,6 +271,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 
   if (!NetworkConnected()) { return false; }
   client.setTimeout(ControllerSettings.ClientTimeout);
+  yield();
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
@@ -274,8 +284,8 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 }
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
-  return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));	
-}	
+  return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));
+}
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel) {
   START_TIMER;
@@ -283,6 +293,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   if (!NetworkConnected()) { return false; }
 
   // Use WiFiClient class to create TCP connections
+  yield();
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(loglabel, controller_number, ControllerSettings);
@@ -415,10 +426,121 @@ bool send_via_http(int controller_number, WiFiClient& client, const String& post
   return send_via_http(get_formatted_Controller_number(controller_number), client, postStr, must_check_reply);
 }
 
+String send_via_http(int                             controller_number,
+                     const ControllerSettingsStruct& ControllerSettings,
+                     controllerIndex_t               controller_idx,
+                     WiFiClient                    & client,
+                     const String                  & uri,
+                     const String                  & HttpMethod,
+                     const String                  & header,
+                     const String                  & postStr,
+                     int                           & httpCode) {
+  client.setTimeout(ControllerSettings.ClientTimeout);
+  return send_via_http(
+    get_formatted_Controller_number(controller_number),
+    client,
+    ControllerSettings.ClientTimeout,
+    getControllerUser(controller_idx, ControllerSettings),
+    getControllerPass(controller_idx, ControllerSettings),
+    ControllerSettings.getHost(),
+    ControllerSettings.Port,
+    uri,
+    HttpMethod,
+    header,
+    postStr,
+    httpCode);
+}
+
+String send_via_http(const String& logIdentifier,
+                     WiFiClient  & client,
+                     uint16_t      timeout,
+                     const String& user,
+                     const String& pass,
+                     const String& host,
+                     uint16_t      port,
+                     const String& uri,
+                     const String& HttpMethod,
+                     const String& header,
+                     const String& postStr,
+                     int         & httpCode) {
+  HTTPClient http;
+
+  http.setAuthorization(user.c_str(), pass.c_str());
+  http.setTimeout(timeout);
+  yield();
+  http.begin(client, host, port, uri, false); // HTTP
+  {
+    int colonPos = header.indexOf(':');
+
+    if (colonPos > 0) {
+      String key   = header.substring(0, colonPos);
+      String value = header.substring(colonPos + 1);
+      value.trim();
+      http.addHeader(key, value);
+    }
+  }
+
+
+  // start connection and send HTTP header and body
+  if (HttpMethod.equalsIgnoreCase(F("post"))) {
+    httpCode = http.POST(postStr);
+  } else if (HttpMethod.equalsIgnoreCase(F("get"))) {
+    httpCode = http.GET();
+  } else if (HttpMethod.equalsIgnoreCase(F("put"))) {
+    httpCode = http.PUT(postStr);
+  } else if (HttpMethod.equalsIgnoreCase(F("head"))) {
+    // The HEAD method is identical to GET
+    // except that the server MUST NOT return a message-body in the response.
+    // However, HTTPClient library has no HEAD function.
+    httpCode = http.GET();
+  } else if (HttpMethod.equalsIgnoreCase(F("patch"))) {
+    httpCode = http.PATCH(postStr);
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("HTTP : Unknown method"));
+  }
+  String response;
+
+  // httpCode will be negative on error
+  if (httpCode > 0) {
+    response = http.getString();
+
+    if (httpCode == HTTP_CODE_OK) {
+      //      response = http.getString();
+    }
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("HTTP : ");
+      log += logIdentifier;
+      log += ' ';
+      log += HttpMethod;
+      log += F("... HTTP code: ");
+      log += String(httpCode);
+
+      if (response.length() > 0) {
+        log += ' ';
+        log += response;
+      }
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
+  } else {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("HTTP : ");
+      log += logIdentifier;
+      log += ' ';
+      log += HttpMethod;
+      log += F("... failed, error: ");
+      log += http.errorToString(httpCode);
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+  }
+  http.end();
+  return response;
+}
 
 String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
 {
-  if (!validControllerIndex(controller_idx)) return "";
+  if (!validControllerIndex(controller_idx)) { return ""; }
+
   if (ControllerSettings.useExtendedCredentials()) {
     return ExtendedControllerCredentials.getControllerUser(controller_idx);
   }
@@ -427,7 +549,8 @@ String getControllerUser(controllerIndex_t controller_idx, const ControllerSetti
 
 String getControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
 {
-  if (!validControllerIndex(controller_idx)) return "";
+  if (!validControllerIndex(controller_idx)) { return ""; }
+
   if (ControllerSettings.useExtendedCredentials()) {
     return ExtendedControllerCredentials.getControllerPass(controller_idx);
   }
@@ -436,7 +559,8 @@ String getControllerPass(controllerIndex_t controller_idx, const ControllerSetti
 
 void setControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value)
 {
-  if (!validControllerIndex(controller_idx)) return;
+  if (!validControllerIndex(controller_idx)) { return; }
+
   if (ControllerSettings.useExtendedCredentials()) {
     ExtendedControllerCredentials.setControllerUser(controller_idx, value);
   } else {
@@ -446,7 +570,8 @@ void setControllerUser(controllerIndex_t controller_idx, const ControllerSetting
 
 void setControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value)
 {
-  if (!validControllerIndex(controller_idx)) return;
+  if (!validControllerIndex(controller_idx)) { return; }
+
   if (ControllerSettings.useExtendedCredentials()) {
     ExtendedControllerCredentials.setControllerPass(controller_idx, value);
   } else {

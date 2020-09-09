@@ -153,6 +153,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   updateMQTTclient_connected();
 //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
+  yield();
   mqtt.setTimeout(ControllerSettings.ClientTimeout);
   MQTTclient.setClient(mqtt);
 

@@ -5,14 +5,14 @@
 // ########################### Controller Plugin 011: Generic HTTP Advanced ##############################
 // #######################################################################################################
 
-#define CPLUGIN_011
-#define CPLUGIN_ID_011         11
-#define CPLUGIN_NAME_011       "Generic HTTP Advanced [TESTING]"
+# define CPLUGIN_011
+# define CPLUGIN_ID_011         11
+# define CPLUGIN_NAME_011       "Generic HTTP Advanced [TESTING]"
 
-#define C011_HTTP_METHOD_MAX_LEN          16
-#define C011_HTTP_URI_MAX_LEN             240
-#define C011_HTTP_HEADER_MAX_LEN          256
-#define C011_HTTP_BODY_MAX_LEN            512
+# define C011_HTTP_METHOD_MAX_LEN          16
+# define C011_HTTP_URI_MAX_LEN             240
+# define C011_HTTP_HEADER_MAX_LEN          256
+# define C011_HTTP_BODY_MAX_LEN            512
 
 struct C011_ConfigStruct
 {
@@ -54,16 +54,16 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
     }
 
     case CPlugin::Function::CPLUGIN_INIT:
-      {
-        success = init_c011_delay_queue(event->ControllerIndex);
-        break;
-      }
+    {
+      success = init_c011_delay_queue(event->ControllerIndex);
+      break;
+    }
 
     case CPlugin::Function::CPLUGIN_EXIT:
-      {
-        exit_c011_delay_queue();
-        break;
-      }
+    {
+      exit_c011_delay_queue();
+      break;
+    }
 
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
@@ -72,6 +72,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         String HttpUri;
         String HttpHeader;
         String HttpBody;
+
         if (!load_C011_ConfigStruct(event->ControllerIndex, HttpMethod, HttpUri, HttpHeader, HttpBody))
         {
           return false;
@@ -101,15 +102,17 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         }
       }
       {
-        // Place in scope to delete ControllerSettings as soon as it is no longer needed
-        MakeControllerSettings(ControllerSettings);
-        if (!AllocatedControllerSettings()) {
-          addHtmlError(F("Out of memory, cannot load page"));
-        } else {
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-          addControllerParameterForm(ControllerSettings, event->ControllerIndex, ControllerSettingsStruct::CONTROLLER_SEND_BINARY);
-          addFormNote(F("Do not 'percent escape' body when send binary checked"));
-        }
+        /*
+           // Place in scope to delete ControllerSettings as soon as it is no longer needed
+           MakeControllerSettings(ControllerSettings);
+           if (!AllocatedControllerSettings()) {
+           addHtmlError(F("Out of memory, cannot load page"));
+           } else {
+           LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+           addControllerParameterForm(ControllerSettings, event->ControllerIndex, ControllerSettingsStruct::CONTROLLER_SEND_BINARY);
+           addFormNote(F("Do not 'percent escape' body when send binary checked"));
+           }
+         */
       }
       break;
     }
@@ -146,10 +149,6 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
-      if (C011_DelayHandler == nullptr) {
-        break;
-      }
-
       success = Create_schedule_HTTP_C011(event);
       break;
     }
@@ -179,11 +178,21 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   WiFiClient client;
 
-  if (!try_connect_host(controller_number, client, ControllerSettings)) {
-    return false;
-  }
+  if (!NetworkConnected()) { return false; }
 
-  return send_via_http(controller_number, client, element.txt, ControllerSettings.MustCheckReply);
+  int httpCode = -1;
+
+  send_via_http(
+    controller_number,
+    ControllerSettings,
+    element.controller_idx,
+    client,
+    element.uri,
+    element.HttpMethod,
+    element.header,
+    element.postStr,
+    httpCode);
+  return httpCode > 0;
 }
 
 bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMethod, String& HttpUri, String& HttpHeader, String& HttpBody) {
@@ -196,9 +205,9 @@ bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMetho
   LoadCustomControllerSettings(ControllerIndex, (byte *)customConfig.get(), sizeof(C011_ConfigStruct));
   customConfig->zero_last();
   HttpMethod = customConfig->HttpMethod;
-  HttpUri = customConfig->HttpUri;
+  HttpUri    = customConfig->HttpUri;
   HttpHeader = customConfig->HttpHeader;
-  HttpBody =  customConfig->HttpBody;
+  HttpBody   =  customConfig->HttpBody;
   return true;
 }
 
@@ -208,61 +217,17 @@ bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMetho
 boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 {
   if (C011_DelayHandler == nullptr) {
+    addLog(LOG_LEVEL_ERROR, F("No C011_DelayHandler"));
     return false;
   }
-
-  String authHeader;
-  String hostportString;
-  bool sendBinary = false;
 
   if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
     String dummy;
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
   }
 
-  {
-    // Have the ControllerSettings in a separate scope so we can free it as soon as possible
-    MakeControllerSettings(ControllerSettings);
-
-    if (!AllocatedControllerSettings()) {
-      return false;
-    }
-    LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
-    authHeader = get_auth_header(event->ControllerIndex, ControllerSettings);
-    const bool defaultport = ControllerSettings.Port == 0 || ControllerSettings.Port == 80;
-    hostportString = defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString();
-    sendBinary = ControllerSettings.sendBinary();
-  }
-
-
-  String HttpMethod;
-  String HttpUri;
-  String HttpHeader;
-  String HttpBody;
-  if (!load_C011_ConfigStruct(event->ControllerIndex, HttpMethod, HttpUri, HttpHeader, HttpBody))
-  {
-    return false;
-  }
-
-
-  bool success = false;
-
-  {
-    String payload = do_create_http_request(
-      hostportString,
-      HttpMethod,
-      HttpUri,
-      authHeader,
-      "",
-      -1);
-
-    // Remove extra newline, see https://github.com/letscontrolit/ESPEasy/issues/1970
-    removeExtraNewLine(payload);
-
-    // Add a new element to the queue with the minimal payload
-    success = C011_DelayHandler->addToQueue(C011_queue_element(event->ControllerIndex, payload));
-  }
+  // Add a new element to the queue with the minimal payload
+  bool success = C011_DelayHandler->addToQueue(C011_queue_element(event));
 
   if (success) {
     // Element was added.
@@ -270,22 +235,28 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     // and thus preventing the need to create a long string only to copy it to a queue element.
     C011_queue_element& element = C011_DelayHandler->sendQueue.back();
 
-    if (HttpHeader.length() > 0) {
-      element.txt += HttpHeader;
-      removeExtraNewLine(element.txt);
-    }
-    ReplaceTokenByValue(element.txt, event, false);
-
-    if (HttpBody.length() > 0)
+    if (!load_C011_ConfigStruct(event->ControllerIndex, element.HttpMethod, element.uri, element.header, element.postStr))
     {
-      ReplaceTokenByValue(HttpBody, event, sendBinary);
-      element.txt += F("Content-Length: ");
-      element.txt += String(HttpBody.length());
-      addNewLine(element.txt);
-      addNewLine(element.txt); // Need 2 CRLF between header and body.
-      element.txt += HttpBody;
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log = F("C011   : ");
+        log += element.HttpMethod;
+        log += element.uri;
+        log += element.header;
+        log += element.postStr;
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+      C011_DelayHandler->sendQueue.pop_back();
+      return false;
     }
-    addNewLine(element.txt);
+
+    ReplaceTokenByValue(element.header, event, false);
+
+    if (element.postStr.length() > 0)
+    {
+      ReplaceTokenByValue(element.postStr, event, false);
+    }
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("C011  : Could not add to delay handler"));
   }
 
   Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C011_DELAY_QUEUE, C011_DelayHandler->getNextScheduleTime());

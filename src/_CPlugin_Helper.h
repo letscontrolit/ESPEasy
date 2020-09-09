@@ -72,9 +72,39 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
 //      https://github.com/esp8266/Arduino/pull/1829
 bool client_available(WiFiClient& client);
 
-bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr, bool must_check_reply);
+bool send_via_http(const String& logIdentifier,
+                   WiFiClient  & client,
+                   const String& postStr,
+                   bool          must_check_reply);
 
-bool send_via_http(int controller_number, WiFiClient& client, const String& postStr, bool must_check_reply);
+bool send_via_http(int           controller_number,
+                   WiFiClient  & client,
+                   const String& postStr,
+                   bool          must_check_reply);
+
+String send_via_http(const String& logIdentifier,
+                     WiFiClient  & client,
+                     uint16_t      timeout,
+                     const String& user,
+                     const String& pass,
+                     const String& host,
+                     uint16_t      port,
+                     const String& uri,
+                     const String& HttpMethod,
+                     const String& header,
+                     const String& postStr,
+                     int         & httpCode);
+
+String send_via_http(int                             controller_number,
+                     const ControllerSettingsStruct& ControllerSettings,
+                     controllerIndex_t               controller_idx,
+                     WiFiClient                    & client,
+                     const String                  & uri,
+                     const String                  & HttpMethod,
+                     const String                  & header,
+                     const String                  & postStr,
+                     int                           & httpCode);
+                     
 
 String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);
 String getControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);
