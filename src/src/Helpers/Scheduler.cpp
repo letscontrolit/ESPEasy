@@ -388,7 +388,7 @@ void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_
 
   if (!validDeviceIndex(deviceIndex)) { return; }
 
-  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createPluginTaskTimerId(deviceIndex, Par1));
+  const unsigned long mixedTimerId = getMixedId(PLUGIN_TASK_TIMER, createPluginTaskTimerId(deviceIndex, Par1));
 
   systemTimerStruct timer_data;
 
@@ -405,7 +405,7 @@ void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_
 void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
   START_TIMER;
 
-  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, id);
+  const unsigned long mixedTimerId = getMixedId(PLUGIN_TASK_TIMER, id);
   auto it                          = systemTimers.find(mixedTimerId);
 
   if (it == systemTimers.end()) { return; }
