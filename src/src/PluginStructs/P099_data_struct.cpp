@@ -31,14 +31,14 @@ void P099_data_struct::reset() {
  * Initialize data and set up the touchscreen.
  */
 bool P099_data_struct::init(taskIndex_t taskIndex,
-                 uint8_t  _cs,
-                 uint8_t  _rotation,
-                 uint8_t  _z_treshold,
-                 bool     _send_xy,
-                 bool     _send_z,
-                 bool     _useCalibration,
-                 uint16_t _ts_x_res,
-                 uint16_t _ts_y_res) {
+                            uint8_t     _cs,
+                            uint8_t     _rotation,
+                            uint8_t     _z_treshold,
+                            bool        _send_xy,
+                            bool        _send_z,
+                            bool        _useCalibration,
+                            uint16_t    _ts_x_res,
+                            uint16_t    _ts_y_res) {
   reset();
 
   address_ts_cs  = _cs;
@@ -55,8 +55,6 @@ bool P099_data_struct::init(taskIndex_t taskIndex,
     touchscreen->setRotation(rotation);
     touchscreen->begin();
     loadTouchObjects(taskIndex);
-  } else {
-    return false;
   }
   return isInitialized();
 }
@@ -73,17 +71,15 @@ bool P099_data_struct::isInitialized() const {
  */
 void P099_data_struct::loadTouchObjects(taskIndex_t taskIndex) {
 #ifdef PLUGIN_099_DEBUG
-  String log = F("loadTouchObjects size Cal: ");
-  log += String(sizeof(Calibration));
-  log += F(" T.obj: ");
-  log += String(sizeof(TouchObjects));
+  String log = F("loadTouchObjects size: ");
+  log += String(sizeof(StoredSettings));
   addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_099_DEBUG
-  LoadCustomTaskSettings(taskIndex, (uint8_t *)&(Calibration), sizeof(Calibration) + sizeof(TouchObjects));
+  LoadCustomTaskSettings(taskIndex, (uint8_t *)&(StoredSettings), sizeof(StoredSettings));
 
   for (int i = 0; i < P099_MaxObjectCount; i++) {
-    TouchObjects[i].objectname[P099_MaxObjectNameLength - 1] = 0; // Terminate in case of uninitialized data
-    SurfaceAreas[i] = 0;
+    StoredSettings.TouchObjects[i].objectname[P099_MaxObjectNameLength - 1] = 0; // Terminate strings in case of uninitialized data
+    SurfaceAreas[i] = 0; // Reset
   }
 }
 
@@ -120,10 +116,10 @@ void P099_data_struct::setRotation(uint8_t n) {
  */
 bool P099_data_struct::isCalibrationActive() {
   return    useCalibration
-         && Calibration.top_left.x > 0
-         && Calibration.top_left.y > 0
-         && Calibration.bottom_right.x > 0
-         && Calibration.bottom_right.y > 0; // Enabled and all values != 0 => Active
+         && StoredSettings.Calibration.top_left.x > 0
+         && StoredSettings.Calibration.top_left.y > 0
+         && StoredSettings.Calibration.bottom_right.x > 0
+         && StoredSettings.Calibration.bottom_right.y > 0; // Enabled and all values != 0 => Active
 }
 
 /**
@@ -135,18 +131,20 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x, uint16_t y, Stri
   uint32_t lastObjectArea = 0;
   bool     selected = false;
   for (uint8_t objectNr = 0; objectNr < checkObjectCount; objectNr++) {
-    String objectName = String(TouchObjects[objectNr].objectname);
+    String objectName = String(StoredSettings.TouchObjects[objectNr].objectname);
     if ( objectName.length() > 0
       && objectName.substring(0,1 ) != F("_")         // Ignore if name starts with an underscore
-      && TouchObjects[objectNr].bottom_right.x > 0
-      && TouchObjects[objectNr].bottom_right.y > 0) { // Not initial could be valid
-      if (SurfaceAreas[objectNr] == 0) {
-        SurfaceAreas[objectNr] = (TouchObjects[objectNr].bottom_right.x - TouchObjects[objectNr].top_left.x) * (TouchObjects[objectNr].bottom_right.y - TouchObjects[objectNr].top_left.y);
+      && StoredSettings.TouchObjects[objectNr].bottom_right.x > 0
+      && StoredSettings.TouchObjects[objectNr].bottom_right.y > 0) { // Not initial could be valid
+
+      if (SurfaceAreas[objectNr] == 0) { // Need to calculate the surface area
+        SurfaceAreas[objectNr] = (StoredSettings.TouchObjects[objectNr].bottom_right.x - StoredSettings.TouchObjects[objectNr].top_left.x) * (StoredSettings.TouchObjects[objectNr].bottom_right.y - StoredSettings.TouchObjects[objectNr].top_left.y);
       }
-      if ( TouchObjects[objectNr].top_left.x <= x
-        && TouchObjects[objectNr].top_left.y <= y
-        && TouchObjects[objectNr].bottom_right.x >= x
-        && TouchObjects[objectNr].bottom_right.y >= y
+
+      if ( StoredSettings.TouchObjects[objectNr].top_left.x <= x
+        && StoredSettings.TouchObjects[objectNr].top_left.y <= y
+        && StoredSettings.TouchObjects[objectNr].bottom_right.x >= x
+        && StoredSettings.TouchObjects[objectNr].bottom_right.y >= y
         && (lastObjectArea == 0 
           || SurfaceAreas[objectNr] < lastObjectArea)) { // Select smallest area that fits the coordinates
         selectedObjectName = objectName;
@@ -157,13 +155,13 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x, uint16_t y, Stri
       String log = F("P099 Check touched: obj: ");
       log += objectName;
       log += ',';
-      log += TouchObjects[objectNr].top_left.x;
+      log += StoredSettings.TouchObjects[objectNr].top_left.x;
       log += ',';
-      log += TouchObjects[objectNr].top_left.y;
+      log += StoredSettings.TouchObjects[objectNr].top_left.y;
       log += ',';
-      log += TouchObjects[objectNr].bottom_right.x;
+      log += StoredSettings.TouchObjects[objectNr].bottom_right.x;
       log += ',';
-      log += TouchObjects[objectNr].bottom_right.y;
+      log += StoredSettings.TouchObjects[objectNr].bottom_right.y;
       log += F(" surface:");
       log += SurfaceAreas[objectNr];
       log += F(" x,y:");
@@ -180,22 +178,22 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x, uint16_t y, Stri
 }
 
 /**
- * scale the provided raw coordinates to screen-resolution coordinates if calibration is enabled/configured
+ * Scale the provided raw coordinates to screen-resolution coordinates if calibration is enabled/configured
  */
 void P099_data_struct::scaleRawToCalibrated(uint16_t &x, uint16_t &y) {
   if (isCalibrationActive()) {
-    uint16_t _x = x - Calibration.top_left.x;
+    uint16_t _x = x - StoredSettings.Calibration.top_left.x;
     if (_x <= 0) {
       x = 0;
     } else {
-      float x_fact = (Calibration.bottom_right.x - Calibration.top_left.x) / ts_x_res;
+      float x_fact = (StoredSettings.Calibration.bottom_right.x - StoredSettings.Calibration.top_left.x) / ts_x_res;
       x = int((_x * 1.0f) / x_fact);
     }
-    uint16_t _y = y - Calibration.top_left.y;
+    uint16_t _y = y - StoredSettings.Calibration.top_left.y;
     if (_y <= 0) {
       y = 0;
     } else {
-      float y_fact = (Calibration.bottom_right.y - Calibration.top_left.y) / ts_y_res;
+      float y_fact = (StoredSettings.Calibration.bottom_right.y - StoredSettings.Calibration.top_left.y) / ts_y_res;
       y = int((_y * 1.0f) / y_fact);
     }
   }

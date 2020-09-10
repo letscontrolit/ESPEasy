@@ -17,43 +17,10 @@
   #define P099_TS_CS  0 // D3
 #endif // ESP32
 
-#define P099_TS_TRESHOLD        15    // Treshold before the value is registered as a proper touch
-#define P099_TS_ROTATION        2     // Rotation 0-3 = 180/270/0/90 degrees, should be set to the same rotation degrees, not 0-3 value!, as the screen it is mounted on
-#define P099_TS_SEND_XY         true  // Enable X/Y events
-#define P099_TS_SEND_Z          false // Disable Z events
-#define P099_TS_SEND_OBJECTNAME true  // Enable objectname events
-#define P099_TS_USE_CALIBRATION false // Disable calibration
-#define P099_TS_LOG_CALIBRATION true  // Enable calibration logging
-#define P099_TS_X_RES           240   // Pixels, should match with the screen it is mounted on
-#define P099_TS_Y_RES           320
-#define P099_INIT_OBJECTCOUNT   8     // Initial setting
-
-#define P099_TOUCH_X_INVALID  4095 // When picking up spurious noise (or an open/not connected TS-CS pin), these are the values that turn up
-#define P099_TOUCH_Y_INVALID  4095
-#define P099_TOUCH_Z_INVALID  255
-
 #define P099_MaxObjectNameLength 16 // 15 character objectnames + terminating 0
 #define P099_MaxObjectCount      40 // This count of touchobjects should be enough, because of limited settings storage, 960 bytes + 8 bytes calibration coordinates
 
-// The setting structures
-typedef struct
-{
-  uint16_t x = 0;
-  uint16_t y = 0;
-} tP099_Point;
-
-typedef struct
-{
-  char        objectname[P099_MaxObjectNameLength] = { 0 };
-  tP099_Point top_left;
-  tP099_Point bottom_right;
-} tP099_Touchobjects;
-
-typedef struct {
-  tP099_Point top_left;
-  tP099_Point bottom_right;
-} tP099_Calibration;
-
+// Data structure
 struct P099_data_struct : public PluginTaskData_base
 {
   P099_data_struct();
@@ -78,6 +45,7 @@ struct P099_data_struct : public PluginTaskData_base
   bool isValidAndTouchedTouchObject(uint16_t x, uint16_t y, String &selectedObjectName, uint8_t checkObjectCount);
   void scaleRawToCalibrated(uint16_t &x, uint16_t &y);
 
+  // This is initialized by calling init()
   XPT2046_Touchscreen *touchscreen;
   uint8_t  address_ts_cs;
   uint8_t  rotation;
@@ -87,11 +55,42 @@ struct P099_data_struct : public PluginTaskData_base
   bool     useCalibration;
   uint16_t ts_x_res;
   uint16_t ts_y_res;
-  uint32_t           SurfaceAreas[P099_MaxObjectCount];
-  // Keep these 2 struct implementations together and in this order, as they are saved/restored as 1 block.
-  tP099_Calibration  Calibration;
-  tP099_Touchobjects TouchObjects[P099_MaxObjectCount];
-  // End of saved data
+
+  // This is filled during checking of a touchobject
+  uint32_t SurfaceAreas[P099_MaxObjectCount];
+
+  // The settings structures
+  // Lets define our own coordinate point
+  struct tP099_Point
+  {
+    uint16_t x = 0;
+    uint16_t y = 0;
+  };
+
+  // For touch objects we store a name and 2 coordinates
+  struct tP099_Touchobjects
+  {
+    char        objectname[P099_MaxObjectNameLength] = { 0 };
+    tP099_Point top_left;
+    tP099_Point bottom_right;
+  };
+
+  // Only 2 coordinates used for calibration (we must assume that the touch panel is mounted straight on to tft)
+  struct tP099_Calibration
+  {
+    tP099_Point top_left;
+    tP099_Point bottom_right;
+  };
+
+  // The stuff we want to save between settings (Calibration coordinates and touchable objects)
+  struct tP099_StoredSettings_struct
+  {
+    tP099_Calibration  Calibration;
+    tP099_Touchobjects TouchObjects[P099_MaxObjectCount];
+  };
+
+  // Stored settings data:
+  tP099_StoredSettings_struct StoredSettings;
 };
 
 #endif  // ifdef USED_P099
