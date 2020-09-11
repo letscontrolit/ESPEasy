@@ -273,46 +273,55 @@ bool MQTTCheck(controllerIndex_t controller_idx)
 
   if (Protocol[ProtocolIndex].usesMQTT)
   {
-    MakeControllerSettings(ControllerSettings);
-    if (!AllocatedControllerSettings()) {
-      addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot check, out of RAM"));
-      return false;
-    }
+    bool mqtt_sendLWT = false;
+    String LWTTopic, LWTMessageConnect;
+    bool willRetain = false;
+    {
+      MakeControllerSettings(ControllerSettings);
+      if (!AllocatedControllerSettings()) {
+        addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot check, out of RAM"));
+        return false;
+      }
 
-    LoadControllerSettings(controller_idx, ControllerSettings);
+      LoadControllerSettings(controller_idx, ControllerSettings);
 
-    // FIXME TD-er: Is this still needed?
-    /*
-    #ifdef USES_ESPEASY_NOW
-    if (!MQTTclient.connected()) {
-      if (ControllerSettings.enableESPEasyNowFallback()) {
+      // FIXME TD-er: Is this still needed?
+      /*
+      #ifdef USES_ESPEASY_NOW
+      if (!MQTTclient.connected()) {
+        if (ControllerSettings.enableESPEasyNowFallback()) {
+          return true;
+        }
+      }
+      #endif
+      */
+
+      if (!ControllerSettings.isSet()) {
         return true;
       }
-    }
-    #endif
-    */
 
-    if (ControllerSettings.isSet()) {
-      if (MQTTclient_should_reconnect || !MQTTclient.connected())
-      {
-        if (MQTTclient_should_reconnect) {
-          addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
-        }
-        return MQTTConnect(controller_idx);
+      if (ControllerSettings.mqtt_sendLWT()) {
+        mqtt_sendLWT = true;
+        LWTTopic          = getLWT_topic(ControllerSettings);
+        LWTMessageConnect = getLWT_messageConnect(ControllerSettings);
+        willRetain        = ControllerSettings.mqtt_willRetain();
       }
+    }
+    if (MQTTclient_should_reconnect || !MQTTclient.connected())
+    {
+      if (MQTTclient_should_reconnect) {
+        addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
+      }
+      return MQTTConnect(controller_idx);
+    }
 
-      if (MQTTclient_must_send_LWT_connected) {
-        if (ControllerSettings.mqtt_sendLWT()) {
-          String LWTTopic          = getLWT_topic(ControllerSettings);
-          String LWTMessageConnect = getLWT_messageConnect(ControllerSettings);
-          bool   willRetain        = ControllerSettings.mqtt_willRetain();
-
-          if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), willRetain)) {
-            MQTTclient_must_send_LWT_connected = false;
-          }
-        } else {
+    if (MQTTclient_must_send_LWT_connected) {
+      if (mqtt_sendLWT) {
+        if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), willRetain)) {
           MQTTclient_must_send_LWT_connected = false;
         }
+      } else {
+        MQTTclient_must_send_LWT_connected = false;
       }
     }
   }
