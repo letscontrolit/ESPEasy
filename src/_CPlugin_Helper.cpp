@@ -469,6 +469,29 @@ String send_via_http(int                             controller_number,
   return result;
 }
 
+bool splitHeaders(int& strpos, const String& multiHeaders, String& name, String& value) {
+  if (strpos < 0) {
+    return false;
+  }
+  int colonPos = multiHeaders.indexOf(':', strpos);
+
+  if (colonPos < 0) {
+    return false;
+  }
+  name   = multiHeaders.substring(strpos, colonPos);
+  int valueEndPos = multiHeaders.indexOf('\n', colonPos + 1);
+  if (valueEndPos < 0) {
+    value = multiHeaders.substring(colonPos + 1);
+    strpos = -1;
+  } else {
+    value = multiHeaders.substring(colonPos + 1, valueEndPos);
+    strpos = valueEndPos + 1;
+  }
+  value.replace('\r', ' ');
+  value.trim();
+  return true;
+}
+
 String send_via_http(const String& logIdentifier,
                      WiFiClient  & client,
                      uint16_t      timeout,
@@ -498,14 +521,12 @@ String send_via_http(const String& logIdentifier,
 #else
   http.begin(host, port, uri);
 #endif
+  
   {
-    int colonPos = header.indexOf(':');
-
-    if (colonPos > 0) {
-      String key   = header.substring(0, colonPos);
-      String value = header.substring(colonPos + 1);
-      value.trim();
-      http.addHeader(key, value);
+    int headerpos = 0;
+    String name, value;
+    while (splitHeaders(headerpos, header, name, value)) {
+      http.addHeader(name, value);
     }
   }
 

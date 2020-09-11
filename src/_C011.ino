@@ -14,6 +14,9 @@
 # define C011_HTTP_HEADER_MAX_LEN          256
 # define C011_HTTP_BODY_MAX_LEN            512
 
+
+bool C011_sendBinary = false;
+
 struct C011_ConfigStruct
 {
   void zero_last() {
@@ -55,6 +58,13 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
     {
+      {
+        MakeControllerSettings(ControllerSettings);
+        if (AllocatedControllerSettings()) {
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+          C011_sendBinary = ControllerSettings.sendBinary();
+        }
+      }
       success = init_c011_delay_queue(event->ControllerIndex);
       break;
     }
@@ -102,17 +112,16 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         }
       }
       {
-        /*
-           // Place in scope to delete ControllerSettings as soon as it is no longer needed
-           MakeControllerSettings(ControllerSettings);
-           if (!AllocatedControllerSettings()) {
-           addHtmlError(F("Out of memory, cannot load page"));
-           } else {
-           LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-           addControllerParameterForm(ControllerSettings, event->ControllerIndex, ControllerSettingsStruct::CONTROLLER_SEND_BINARY);
-           addFormNote(F("Do not 'percent escape' body when send binary checked"));
-           }
-         */
+        
+        // Place in scope to delete ControllerSettings as soon as it is no longer needed
+        MakeControllerSettings(ControllerSettings);
+        if (!AllocatedControllerSettings()) {
+          addHtmlError(F("Out of memory, cannot load page"));
+        } else {
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+          addControllerParameterForm(ControllerSettings, event->ControllerIndex, ControllerSettingsStruct::CONTROLLER_SEND_BINARY);
+          addFormNote(F("Do not 'percent escape' body when send binary checked"));
+        }
       }
       break;
     }
@@ -253,11 +262,12 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
       return false;
     }
 
+    ReplaceTokenByValue(element.uri, event, false);
     ReplaceTokenByValue(element.header, event, false);
 
     if (element.postStr.length() > 0)
     {
-      ReplaceTokenByValue(element.postStr, event, false);
+      ReplaceTokenByValue(element.postStr, event, C011_sendBinary);
     }
   } else {
     addLog(LOG_LEVEL_ERROR, F("C011  : Could not add to delay handler"));
