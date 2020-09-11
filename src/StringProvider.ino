@@ -4,6 +4,8 @@
 #include "ETH.h"
 #endif
 
+#include "src/Globals/ESPEasy_Scheduler.h"
+
 #include "src/Helpers/CompiletimeDefines.h"
 #include "src/Helpers/Scheduler.h"
 
@@ -156,7 +158,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
     case LabelType::RESET_REASON:           return getResetReasonString();
-    case LabelType::LAST_TASK_BEFORE_REBOOT: return decodeSchedulerId(lastMixedSchedulerId_beforereboot);
+    case LabelType::LAST_TASK_BEFORE_REBOOT: return ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     case LabelType::SW_WD_COUNT:            return String(sw_watchdog_callback_count);
 
     case LabelType::WIFI_CONNECTION:        break;
@@ -238,7 +240,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_SPEED:              return eth_connected ? getEthSpeed() : F("No Ethernet");
     case LabelType::ETH_STATE:              return eth_connected ? (ETH.linkUp() ? F("Link Up") : F("Link Down")) : F("No Ethernet");
     case LabelType::ETH_SPEED_STATE:        return eth_connected ? getEthLinkSpeedState() : F("No Ethernet");
-    case LabelType::ETH_WIFI_MODE:          return (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
+    case LabelType::ETH_WIFI_MODE:          return (active_network_medium == NetworkMedium_t::WIFI ? F("WIFI") : F("ETHERNET"));
     case LabelType::ETH_CONNECTED:          return (eth_connected ? F("CONNECTED") : F("DISCONNECTED")); // 0=disconnected, 1=connected
 #endif
 

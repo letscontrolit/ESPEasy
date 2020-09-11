@@ -90,45 +90,48 @@
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
 
+
+
+#include "ESPEasyWiFi_credentials.h"
+#include "ESPEasyWifi.h"
+#include "ESPEasyWifi_ProcessEvent.h"
+
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/DeviceModel.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
 #include "src/DataStructs/ProtocolStruct.h"
 #include "src/DataStructs/RTCStruct.h"
-#include "src/DataStructs/SchedulerTimers.h"
 #include "src/DataStructs/SettingsType.h"
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
-
 #include "src/DataStructs/tcp_cleanup.h"
 
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
-#include "src/Globals/ExtraTaskSettings.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/EventQueue.h"
+#include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/MQTT.h"
+#include "src/Globals/NetworkState.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Protocol.h"
-#include "src/Globals/RamTracker.h"
 #include "src/Globals/RTC.h"
+#include "src/Globals/RamTracker.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/Globals/Services.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/Statistics.h"
 
+#include "src/Helpers/DeepSleep.h"
+#include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_checks.h"
 #include "src/Helpers/Hardware.h"
-#include "src/Helpers/Scheduler.h"
-#include "src/Helpers/ESPEasy_Storage.h"
-#include "src/Helpers/DeepSleep.h"
 #include "src/Helpers/PeriodicalActions.h"
+#include "src/Helpers/Scheduler.h"
 
-#include "ESPEasyWiFi_credentials.h"
-#include "ESPEasyWifi_ProcessEvent.h"
-#include "ESPEasyWifi.h"
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
@@ -172,12 +175,7 @@ void setup()
 #ifdef ESP8266_DISABLE_EXTRA4K
   disable_extra4k_at_link_time();
 #endif
-  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  WiFi.setAutoReconnect(false);
-  // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
-  // those WiFi connections will take a long time to make or sometimes will not work at all.
-  WiFi.disconnect();
-  setWifiMode(WIFI_OFF);
+  initWiFi();
   
   run_compiletime_checks();
   lowestFreeStack = getFreeStackWatermark();
@@ -196,6 +194,12 @@ void setup()
   lastADCvalue = analogRead(A0);
 #endif
 
+#ifdef ESP8266
+  // See https://github.com/esp8266/Arduino/commit/a67986915512c5304bd7c161cf0d9c65f66e0892
+  analogWriteRange(1023);
+#endif
+
+
   resetPluginTaskData();
 
   checkRAM(F("setup"));
@@ -208,18 +212,6 @@ void setup()
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
-
-#if defined(ESP32)
-  WiFi.onEvent(WiFiEvent);
-#else
-  // WiFi event handlers
-  stationConnectedHandler = WiFi.onStationModeConnected(onConnected);
-	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
-	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
-  stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
-  APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
-  APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisonnectedAPmode);
-#endif
 
   if (SpiffsSectors() < 32)
   {
@@ -240,7 +232,8 @@ void setup()
   log += FreeMem();
   addLog(LOG_LEVEL_INFO, log);
 
-  //warm boot
+  #ifdef ESP8266
+  // Our ESP32 code does not yet support RTC, so separate this in code for ESP8266 and ESP32
   if (readFromRTC())
   {
     RTC.bootFailedCount++;
@@ -251,7 +244,7 @@ void setup()
     if (RTC.deepSleepState == 1)
     {
       log = F("INIT : Rebooted from deepsleep #");
-      lastBootCause=BOOT_CAUSE_DEEP_SLEEP;
+      lastBootCause = BOOT_CAUSE_DEEP_SLEEP;
     }
     else {
       node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
@@ -260,7 +253,7 @@ void setup()
 
     log += RTC.bootCounter;
     log += F(" Last Task: ");
-    log += decodeSchedulerId(lastMixedSchedulerId_beforereboot);
+    log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     log += F(" Last systime: ");
     log += RTC.lastSysTime;
   }
@@ -274,6 +267,21 @@ void setup()
       lastBootCause = BOOT_CAUSE_COLD_BOOT;
     log = F("INIT : Cold Boot");
   }
+  #endif // ESP8266
+
+  #ifdef ESP32
+  if (rtc_get_reset_reason( (RESET_REASON) 0) == DEEPSLEEP_RESET) {
+    log = F("INIT : Rebooted from deepsleep #");
+    lastBootCause = BOOT_CAUSE_DEEP_SLEEP;
+  } else {
+    // cold boot situation
+    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
+      lastBootCause = BOOT_CAUSE_COLD_BOOT;
+    log = F("INIT : Cold Boot");
+  }
+
+  #endif // ESP32
+
   log += F(" - Restart Reason: ");
   log += getResetReasonString();
 
@@ -283,18 +291,15 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
   fileSystemCheck();
-  progMemMD5check();
+//  progMemMD5check();
   LoadSettings();
 
   #ifdef HAS_ETHERNET
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
-  eth_wifi_mode = Settings.ETH_Wifi_Mode;
+  active_network_medium = Settings.NetworkMedium;
   log = F("INIT : ETH_WIFI_MODE:");
-  log += String(eth_wifi_mode);
-  log += F(" (");
-  log += (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
-  log += F(")");
+  log += toString(active_network_medium);
   addLog(LOG_LEVEL_INFO, log);
   #endif
 
@@ -401,12 +406,9 @@ void setup()
   ArduinoOTAInit();
   #endif
 
-  // setup UDP
-  if (Settings.UDPPort != 0)
-    portUDP.begin(Settings.UDPPort);
-
-  if (node_time.systemTimePresent())
+  if (node_time.systemTimePresent()) {
     node_time.initTime();
+  }
 
   if (Settings.UseRules)
   {
@@ -438,12 +440,12 @@ void setup()
   // Start the interval timers at N msec from now.
   // Make sure to start them at some time after eachother,
   // since they will keep running at the same interval.
-  setIntervalTimerOverride(TIMER_20MSEC,  5); // timer for periodic actions 50 x per/sec
-  setIntervalTimerOverride(TIMER_100MSEC, 66); // timer for periodic actions 10 x per/sec
-  setIntervalTimerOverride(TIMER_1SEC,    777); // timer for periodic actions once per/sec
-  setIntervalTimerOverride(TIMER_30SEC,   1333); // timer for watchdog once per 30 sec
-  setIntervalTimerOverride(TIMER_MQTT,    88); // timer for interaction with MQTT
-  setIntervalTimerOverride(TIMER_STATISTICS, 2222);
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_20MSEC,  5); // timer for periodic actions 50 x per/sec
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_100MSEC, 66); // timer for periodic actions 10 x per/sec
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_1SEC,    777); // timer for periodic actions once per/sec
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_30SEC,   1333); // timer for watchdog once per 30 sec
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT,    88); // timer for interaction with MQTT
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_STATISTICS, 2222);
 }
 
 #ifdef USE_RTOS_MULTITASKING
@@ -478,7 +480,7 @@ void RTOS_Task10ps( void * parameter )
 void RTOS_HandleSchedule( void * parameter )
 {
  while (true){
-    handle_schedule();
+    Scheduler.handle_schedule();
  }
 }
 
@@ -511,7 +513,7 @@ void updateLoopStats() {
 
 
 float getCPUload() {
-  return 100.0 - msecTimerHandler.getIdleTimePct();
+  return 100.0 - Scheduler.getIdleTimePct();
 }
 
 int getLoopCountPerSec() {
@@ -535,14 +537,16 @@ void loop()
 
   updateLoopStats();
 
-  #ifdef HAS_ETHERNET
-  // Handle WiFiEvents when compiled with HAS_ETHERNET but in WiFi Mode eth_wifi_mode (WIFI = 0, ETHERNET = 1)
-  if(eth_wifi_mode == WIFI) {
-    handle_unprocessedWiFiEvents();
+  switch (active_network_medium) {
+    case NetworkMedium_t::WIFI:
+      handle_unprocessedWiFiEvents();
+      break;
+    case NetworkMedium_t::Ethernet:
+      if (NetworkConnected()) {
+        updateUDPport();
+      }
+      break;
   }
-  #else
-  handle_unprocessedWiFiEvents();
-  #endif
 
   bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
   if (firstLoopConnectionsEstablished) {
@@ -586,7 +590,7 @@ void loop()
   {
     if (!UseRTOSMultitasking) {
       // On ESP32 the schedule is executed on the 2nd core.
-      handle_schedule();
+      Scheduler.handle_schedule();
     }
   }
 

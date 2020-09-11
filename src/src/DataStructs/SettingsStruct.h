@@ -2,8 +2,9 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_H
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
-
+#include "../DataStructs/EthernetParameters.h"
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../DataStructs/NetworkMedium.h"
 #include "../Globals/Plugins.h"
 
 //we disable SPI if not defined
@@ -175,6 +176,9 @@ class SettingsStruct_tmpl
   uint32_t      VariousBits1;
   uint32_t      ResetFactoryDefaultPreference; // Do not clear this one in the clearAll()
   uint32_t      I2C_clockSpeed;
+  uint16_t      WebserverPort;
+  uint16_t      SyslogPort;
+
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
   // Try to extend settings to make the checksum 4-byte aligned.
@@ -184,19 +188,25 @@ class SettingsStruct_tmpl
   int8_t        ETH_Pin_mdc;
   int8_t        ETH_Pin_mdio;
   int8_t        ETH_Pin_power;
-  int8_t        ETH_Phy_Type;
-  uint8_t       ETH_Clock_Mode;
+  EthPhyType_t   ETH_Phy_Type;
+  EthClockMode_t ETH_Clock_Mode;
   byte          ETH_IP[4];
   byte          ETH_Gateway[4];
   byte          ETH_Subnet[4];
   byte          ETH_DNS[4];
-  uint8_t       ETH_Wifi_Mode;
+  NetworkMedium_t NetworkMedium;
+  int8_t        I2C_Multiplexer_Type;
+  int8_t        I2C_Multiplexer_Addr;
+  int8_t        I2C_Multiplexer_Channel[N_TASKS];
+  uint8_t       I2C_Flags[N_TASKS];
+  uint32_t      I2C_clockSpeed_Slow;
+  uint8_t       I2C_Multiplexer_ResetPin;
   uint16_t      WebserverPort;
   uint16_t      unused;
 };
 
 /*
-SettingsStruct* SettingsStruct_ptr = new SettingsStruct;
+SettingsStruct* SettingsStruct_ptr = new (std::nothrow) SettingsStruct;
 SettingsStruct& Settings = *SettingsStruct_ptr;
 */
 

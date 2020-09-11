@@ -1,22 +1,22 @@
 #include "PeriodicalActions.h"
 
+
+#include "../../ESPEasyWifi.h"
+#include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_plugindefs.h"
-#include "../../ESPEasy_Log.h"
-#include "../../ESPEasyWifi.h"
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../ControllerQueue/MQTT_queue_element.h"
-#include "../DataStructs/SchedulerTimers.h"
 #include "../DataStructs/TimingStats.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/MQTT.h"
+#include "../Globals/NetworkState.h"
+#include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Statistics.h"
-#include "../Globals/RTC.h"
-
 #include "../Helpers/Hardware.h"
-
 
 
 /*********************************************************************************************\
@@ -139,9 +139,6 @@ void runOncePerSecond()
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummy);
 //  unsigned long elapsed = micros() - start;
 
-  if (Settings.UseRules)
-    rulesTimers();
-
 
   if (SecuritySettings.Password[0] != 0)
   {
@@ -180,16 +177,16 @@ void runEach30Seconds()
     log += F(" FreeMem ");
     log += FreeMem();
     #ifdef HAS_ETHERNET
-    if(eth_wifi_mode == ETHERNET) {
+    if(active_network_medium == NetworkMedium_t::Ethernet) {
       log += F( " EthSpeedState ");
       log += getValue(LabelType::ETH_SPEED_STATE);
     } else {
       log += F(" WiFiStatus ");
-      log += WiFi.status();
+      log += ArduinoWifiStatusToString(WiFi.status());
     }
     #else
     log += F(" WiFiStatus ");
-    log += WiFi.status();
+    log += ArduinoWifiStatusToString(WiFi.status());
     #endif
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
@@ -224,7 +221,7 @@ void runEach30Seconds()
 
 
 void scheduleNextMQTTdelayQueue() {
-  scheduleNextDelayQueue(TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler.getNextScheduleTime());
+  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
 }
 
 void schedule_all_tasks_using_MQTT_controller() {
@@ -237,14 +234,18 @@ void schedule_all_tasks_using_MQTT_controller() {
         Settings.ControllerEnabled[ControllerIndex] &&
         Settings.Protocol[ControllerIndex])
     {
-      schedule_task_device_timer_at_init(task);
+      Scheduler.schedule_task_device_timer_at_init(task);
     }
   }
 }
 
 void processMQTTdelayQueue() {
+  if (MQTTDelayHandler == nullptr) {
+    return;
+  }
+
   START_TIMER;
-  MQTT_queue_element *element(MQTTDelayHandler.getNext());
+  MQTT_queue_element *element(MQTTDelayHandler->getNext());
 
   if (element == NULL) { return; }
 
@@ -252,20 +253,20 @@ void processMQTTdelayQueue() {
     if (connectionFailures > 0) {
       --connectionFailures;
     }
-    MQTTDelayHandler.markProcessed(true);
+    MQTTDelayHandler->markProcessed(true);
   } else {
-    MQTTDelayHandler.markProcessed(false);
+    MQTTDelayHandler->markProcessed(false);
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("MQTT : process MQTT queue not published, ");
-      log += MQTTDelayHandler.sendQueue.size();
+      log += MQTTDelayHandler->sendQueue.size();
       log += F(" items left in queue");
       addLog(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
-  setIntervalTimerOverride(TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
 }
@@ -299,7 +300,7 @@ void updateMQTTclient_connected() {
   } else {
     timermqtt_interval = 250;
   }
-  setIntervalTimer(TIMER_MQTT);
+  Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
 }
 
 void runPeriodicalMQTT() {
@@ -349,7 +350,7 @@ void logTimerStatistics() {
 //  logStatistics(loglevel, true);
   if (loglevelActiveFor(loglevel)) {
     String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
-    queueLog += msecTimerHandler.getQueueStats();
+    queueLog += Scheduler.getQueueStats();
     addLog(loglevel, queueLog);
   }
 #endif
@@ -361,7 +362,7 @@ void updateLoopStats_30sec(byte loglevel) {
   if (loopCounterLast > loopCounterMax)
     loopCounterMax = loopCounterLast;
 
-  msecTimerHandler.updateIdleTimeStats();
+  Scheduler.updateIdleTimeStats();
 
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(loglevel)) {

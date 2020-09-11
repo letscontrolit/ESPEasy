@@ -103,8 +103,8 @@ void handle_sysinfo_json() {
   json_number(F("md5_check"), String(CRCValues.checkPassed()));
   json_prop(F("build_time"), get_build_time());
   json_prop(F("filename"),   getValue(LabelType::BINARY_FILENAME));
-  json_prop(F("build_platform")), getValue(LabelType::BUILD_PLATFORM);
-  json_prop(F("git_head")), getValue(LabelType::GIT_HEAD);
+  json_prop(F("build_platform"), getValue(LabelType::BUILD_PLATFORM));
+  json_prop(F("git_head"), getValue(LabelType::GIT_HEAD));
   json_close();
 
   json_open(false, F("esp"));
@@ -330,7 +330,7 @@ void handle_sysinfo_basicInfo() {
 
 #ifdef HAS_ETHERNET
 void handle_sysinfo_Ethernet() {
-    if(eth_wifi_mode == ETHERNET) {
+    if(active_network_medium == NetworkMedium_t::Ethernet) {
       addTableSeparator(F("Ethernet"), 2, 3);
       addRowLabelValue(LabelType::ETH_STATE);
       addRowLabelValue(LabelType::ETH_SPEED);
@@ -348,7 +348,7 @@ void handle_sysinfo_Network() {
 
   if (
     #ifdef HAS_ETHERNET
-    eth_wifi_mode == WIFI &&
+    active_network_medium == NetworkMedium_t::WIFI &&
     #endif
     NetworkConnected())
   {

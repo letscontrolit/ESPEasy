@@ -1,8 +1,7 @@
 #define _HEAD false
 #define _TAIL true
 
-
-#include <WString.h>
+#include <Arduino.h>
 
 #include "ESPEasyNetwork.h"
 #include "ESPEasy_common.h"

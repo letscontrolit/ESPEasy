@@ -5,7 +5,9 @@
 #include "ESPEasy_time_calc.h"
 #include "StringConverter.h"
 
-ModbusRTU_struct::ModbusRTU_struct() : easySerial(nullptr) {}
+ModbusRTU_struct::ModbusRTU_struct() : easySerial(nullptr) {
+  reset();
+}
 
 ModbusRTU_struct::~ModbusRTU_struct() {
   reset();
@@ -42,7 +44,8 @@ bool ModbusRTU_struct::init(const int16_t serial_rx, const int16_t serial_tx, in
     return false;
   }
   reset();
-  easySerial = new ESPeasySerial(serial_rx, serial_tx);
+  easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
+  if (easySerial == nullptr) { return false; }
   easySerial->begin(baudrate);
 
   if (!isInitialized()) { return false; }

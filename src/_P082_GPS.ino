@@ -89,9 +89,11 @@ struct P082_data_struct : public PluginTaskData_base {
       return false;
     }
     reset();
-    gps             = new TinyGPSPlus();
-    P082_easySerial = new ESPeasySerial(serial_rx, serial_tx);
-    P082_easySerial->begin(9600);
+    gps             = new (std::nothrow) TinyGPSPlus();
+    P082_easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
+    if (P082_easySerial != nullptr) {
+      P082_easySerial->begin(9600);
+    }
     return isInitialized();
   }
 
@@ -182,6 +184,9 @@ struct P082_data_struct : public PluginTaskData_base {
     }
 
     if (gps->date.age() > P082_TIMESTAMP_AGE) {
+      return false;
+    }
+    if (!gps->date.isValid() || !gps->time.isValid()) {
       return false;
     }
     dateTime.tm_year = gps->date.year() - 1970;
@@ -390,7 +395,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
       const int16_t pps_pin   = CONFIG_PIN3;
-      initPluginTaskData(event->TaskIndex, new P082_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P082_data_struct());
       P082_data_struct *P082_data =
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -431,7 +436,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 #ifdef P082_SEND_GPS_TO_LOG
         addLog(LOG_LEVEL_DEBUG, P082_data->lastSentence);
 #endif // ifdef P082_SEND_GPS_TO_LOG
-        schedule_task_device_timer(event->TaskIndex, millis() + 10);
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
         delay(0); // Processing a full sentence may take a while, run some
                   // background tasks.
       }
@@ -606,6 +611,8 @@ void P082_logStats(struct EventStruct *event) {
   log += P082_data->gps->passedChecksum();
   log += '/';
   log += P082_data->gps->failedChecksum();
+  log += F(" invalid: ");
+  log += P082_data->gps->invalidData();
   addLog(LOG_LEVEL_DEBUG, log);
 }
 
@@ -723,11 +730,13 @@ void P082_html_show_stats(struct EventStruct *event) {
     addHtml(F("-"));
   }
 
-  addRowLabel(F("Checksum (pass/fail)"));
+  addRowLabel(F("Checksum (pass/fail/invalid)"));
   String chksumStats;
   chksumStats  = P082_data->gps->passedChecksum();
   chksumStats += '/';
   chksumStats += P082_data->gps->failedChecksum();
+  chksumStats += '/';
+  chksumStats += P082_data->gps->invalidData();
   addHtml(chksumStats);
 }
 

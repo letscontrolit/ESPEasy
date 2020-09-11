@@ -33,9 +33,13 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        C004_DelayHandler.configureControllerSettings(ControllerSettings);
+        success = init_c004_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c004_delay_queue();
         break;
       }
 
@@ -58,8 +62,11 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
-        success = C004_DelayHandler.addToQueue(C004_queue_element(event));
-        scheduleNextDelayQueue(TIMER_C004_DELAY_QUEUE, C004_DelayHandler.getNextScheduleTime());
+        if (C004_DelayHandler == nullptr) {
+          break;
+        }
+        success = C004_DelayHandler->addToQueue(C004_queue_element(event));
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C004_DELAY_QUEUE, C004_DelayHandler->getNextScheduleTime());
 
         break;
       }

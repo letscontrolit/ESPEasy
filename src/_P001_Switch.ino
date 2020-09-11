@@ -2,6 +2,7 @@
 
 #include "_Plugin_Helper.h"
 #include "src/DataStructs/PinMode.h"
+#include "src/Helpers/Scheduler.h"
 
 // #######################################################################################################
 // #################################### Plugin 001: Input Switch #########################################
@@ -48,7 +49,7 @@ Servo servo2;
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH  2
 #define PLUGIN_001_DOUBLECLICK_MIN_INTERVAL      1000
 #define PLUGIN_001_DOUBLECLICK_MAX_INTERVAL      3000
-#define PLUGIN_001_LONGPRESS_MIN_INTERVAL        1000
+#define PLUGIN_001_LONGPRESS_MIN_INTERVAL        500
 #define PLUGIN_001_LONGPRESS_MAX_INTERVAL        5000
 #define PLUGIN_001_DC_DISABLED                   0
 #define PLUGIN_001_DC_LOW                        1
@@ -958,8 +959,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           unsigned long timer = time_in_msec ? event->Par3 : event->Par3 * 1000;
 
           // Create a future system timer call to set the GPIO pin back to its normal value.
-//          setPluginTaskTimer(timer, event->TaskIndex, event->Par1, inversePinStateValue);
-          setPluginTimer(timer, PLUGIN_ID_001, event->Par1, inversePinStateValue);
+//          Scheduler.setPluginTaskTimer(timer, event->TaskIndex, event->Par1, inversePinStateValue);
+          Scheduler.setPluginTimer(timer, PLUGIN_ID_001, event->Par1, inversePinStateValue);
           log = String(F("SW   : GPIO ")) + String(event->Par1) +
                 String(F(" Pulse set for ")) + String(event->Par3) + String(time_in_msec ? F(" msec") : F(" sec"));
           addLog(LOG_LEVEL_INFO, log);

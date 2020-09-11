@@ -155,7 +155,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 
             unsigned long old_key = ((uint32_t) UserVar[event->BaseVarIndex]) | ((uint32_t) UserVar[event->BaseVarIndex + 1])<<16;
             bool new_key = false;
-            if (PCONFIG(1)) {
+            if (PCONFIG(1) == 1) {
               Plugin_008_keyBuffer = castHexAsDec(Plugin_008_keyBuffer);
             }
             
@@ -184,7 +184,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
             Plugin_008_timeoutCount = 0;
 
             if (new_key) sendData(event);
-            setPluginTaskTimer(500, event->TaskIndex, event->Par1);
+            Scheduler.setPluginTaskTimer(500, event->TaskIndex, event->Par1);
 
           //   String info = "";
           //   uint64_t invalue = 0x1234;
@@ -209,7 +209,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
           optionValues[0] = 26;
           optionValues[1] = 34;
           addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
-          bool presentHexToDec = PCONFIG(1);
+          bool presentHexToDec = PCONFIG(1) == 1;
           addFormCheckBox(F("Present hex as decimal value"), F("p008_hexasdec"), presentHexToDec);
           addFormNote(F("Useful only for numeric keypad input!"));
           success = true;
@@ -219,7 +219,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       case PLUGIN_WEBFORM_SAVE:
         {
           PCONFIG(0) = getFormItemInt(F("p008_type"));
-          PCONFIG(1) = getFormItemInt(F("p008_hexasdec"));
+          PCONFIG(1) = isFormItemChecked(F("p008_hexasdec")) ? 1 : 0;
           success = true;
           break;
         }

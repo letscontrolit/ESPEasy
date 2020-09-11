@@ -33,14 +33,22 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        C007_DelayHandler.configureControllerSettings(ControllerSettings);
+        success = init_c004_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c007_delay_queue();
         break;
       }
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
+        if (C007_DelayHandler == nullptr) {
+          break;
+        }
+
         if (event->sensorType == SENSOR_TYPE_STRING) {
           addLog(LOG_LEVEL_ERROR, F("emoncms : No support for SENSOR_TYPE_STRING"));
           break;
@@ -50,8 +58,8 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
           addLog(LOG_LEVEL_ERROR, F("emoncms : Unknown sensortype or too many sensor values"));
           break;
         }
-        success = C007_DelayHandler.addToQueue(C007_queue_element(event));
-        scheduleNextDelayQueue(TIMER_C007_DELAY_QUEUE, C007_DelayHandler.getNextScheduleTime());
+        success = C007_DelayHandler->addToQueue(C007_queue_element(event));
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C007_DELAY_QUEUE, C007_DelayHandler->getNextScheduleTime());
         break;
       }
 

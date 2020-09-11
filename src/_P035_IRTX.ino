@@ -116,13 +116,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         }
 
 #ifdef P016_P035_Extended_AC
-        if (Plugin_035_commonAc == 0 && irPin != -1)
+        if (Plugin_035_commonAc == nullptr && irPin != -1)
         {
           addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
           addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols());
-          Plugin_035_commonAc = new IRac(irPin);
+          Plugin_035_commonAc = new (std::nothrow) IRac(irPin);
         }
-        if (Plugin_035_commonAc != 0 && irPin == -1)
+        if (Plugin_035_commonAc != nullptr && irPin == -1)
         {
           addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX Removed"));
           delete Plugin_035_commonAc;
@@ -298,7 +298,7 @@ boolean handleRawRaw2Encoding(const String &cmd) {
 
   uint16_t idx = 0; //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
   uint16_t *buf;
-  buf = new uint16_t[P35_Ntimings]; //The Raw Timings that we can buffer.
+  buf = new (std::nothrow) uint16_t[P35_Ntimings]; //The Raw Timings that we can buffer.
   if (buf == nullptr)
   { // error assigning memory.
     return false;
@@ -541,8 +541,7 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
     return false; // No input. Abort.
   }
 
-  switch (irType)
-  { // Get the correct state size for the protocol.
+   switch (irType) {  // Get the correct state size for the protocol.
     case DAIKIN:
       // Daikin has 2 different possible size states.
       // (The correct size, and a legacy shorter size.)
@@ -550,7 +549,7 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
       // the correct length/byte size.
       // This should provide backward compatiblity with legacy messages.
-      stateSize = inputLength / 2; // Every two hex chars is a byte.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
       // Use at least the minimum size.
       stateSize = std::max(stateSize, kDaikinStateLengthShort);
       // If we think it isn't a "short" message.
@@ -565,25 +564,42 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
       // the correct length/byte size.
-      stateSize = inputLength / 2; // Every two hex chars is a byte.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
       // Use at least the minimum size.
       stateSize = std::max(stateSize,
-                           (uint16_t)(kFujitsuAcStateLengthShort - 1));
+                           (uint16_t) (kFujitsuAcStateLengthShort - 1));
       // If we think it isn't a "short" message.
       if (stateSize > kFujitsuAcStateLengthShort)
         // Then it has to be at least the smaller version of the "normal" size.
-        stateSize = std::max(stateSize, (uint16_t)(kFujitsuAcStateLength - 1));
+        stateSize = std::max(stateSize, (uint16_t) (kFujitsuAcStateLength - 1));
       // Lastly, it should never exceed the maximum "normal" size.
       stateSize = std::min(stateSize, kFujitsuAcStateLength);
+      break;
+    case HITACHI_AC3:
+      // HitachiAc3 has two distinct & different size states, so make a best
+      // guess which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize,
+                           (uint16_t) (kHitachiAc3MinStateLength));
+      // If we think it isn't a "short" message.
+      if (stateSize > kHitachiAc3MinStateLength)
+        // Then it probably the "normal" size.
+        stateSize = std::max(stateSize,
+                             (uint16_t) (kHitachiAc3StateLength));
+      // Lastly, it should never exceed the maximum "normal" size.
+      stateSize = std::min(stateSize, kHitachiAc3StateLength);
       break;
     case MWM:
       // MWM has variable size states, so make a best guess
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
       // the correct length/byte size.
-      stateSize = inputLength / 2; // Every two hex chars is a byte.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
       // Use at least the minimum size.
-      stateSize = std::max(stateSize, (uint16_t)3);
+      stateSize = std::max(stateSize, (uint16_t) 3);
       // Cap the maximum size.
       stateSize = std::min(stateSize, kStateSizeMax);
       break;
@@ -592,18 +608,18 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
       // the correct length/byte size.
-      stateSize = inputLength / 2; // Every two hex chars is a byte.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
       // Use at least the minimum size.
-      stateSize = std::max(stateSize, (uint16_t)(kSamsungAcStateLength));
+      stateSize = std::max(stateSize, (uint16_t) (kSamsungAcStateLength));
       // If we think it isn't a "normal" message.
       if (stateSize > kSamsungAcStateLength)
         // Then it probably the extended size.
         stateSize = std::max(stateSize,
-                             (uint16_t)(kSamsungAcExtendedStateLength));
+                             (uint16_t) (kSamsungAcExtendedStateLength));
       // Lastly, it should never exceed the maximum "extended" size.
       stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
       break;
-    default: // Everything else.
+    default:  // Everything else.
       stateSize = IRsend::defaultBits(irType) / 8;
       if (!stateSize || !hasACState(irType))
       {

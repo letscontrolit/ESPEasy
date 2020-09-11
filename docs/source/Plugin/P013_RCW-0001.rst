@@ -26,7 +26,7 @@ Wiring
 
 The RCW-0001 must be run on 5V. Running it with 3.3V will show very weak results or nothing at all.
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               RCW-0001
   GPIO (X)   <-->   Trigger
@@ -89,7 +89,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block::
 
    on RCW0001#distance do
     if [RCW0001#distance]<50 and [RCW0001#distance]>45

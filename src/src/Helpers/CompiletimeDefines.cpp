@@ -13,7 +13,11 @@
 #endif // ifndef SET_BUILD_GIT_HEAD
 
 String get_binary_filename() {
-  return F(SET_BUILD_BINARY_FILENAME);
+ #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
+   return F("firmware.bin");
+ #else
+    return F(SET_BUILD_BINARY_FILENAME);
+ #endif
 }
 
 String get_build_time() {
@@ -35,9 +39,17 @@ String get_build_origin() {
 }
 
 String get_build_platform() {
-  return F(SET_BUILD_PLATFORM);
+ #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
+    return "";
+  #else
+    return F(SET_BUILD_PLATFORM);
+ #endif
 }
 
 String get_git_head() {
-  return F(SET_BUILD_GIT_HEAD);
+ #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
+   return "";
+ #else
+    return F(SET_BUILD_GIT_HEAD);
+ #endif
 }

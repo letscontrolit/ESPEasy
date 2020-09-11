@@ -6,7 +6,7 @@
 
 #include <Arduino.h>
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 #include <IRsend.h>  // From IRremoteESP8266 library
 #include <stdint.h>
 #endif
@@ -75,7 +75,7 @@ class IRSenderESP32 : public IRSender
 };
 #endif
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 class IRSenderIRremoteESP8266 : public IRSender
 {
   public:

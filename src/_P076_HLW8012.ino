@@ -318,7 +318,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
           p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor());
           ++p076_read_stage;
           // Measurement is done, schedule a new PLUGIN_READ call
-          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
         break;
       default:
@@ -378,7 +378,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     const byte SEL_PIN = CONFIG_PIN1;
 
     if (CF_PIN != -1 && CF1_PIN != -1 && SEL_PIN != -1) {
-      Plugin_076_hlw = new HLW8012;
+      Plugin_076_hlw = new (std::nothrow) HLW8012;
       if (Plugin_076_hlw) {
         byte currentRead = PCONFIG(4);
         byte cf_trigger  = PCONFIG(5);

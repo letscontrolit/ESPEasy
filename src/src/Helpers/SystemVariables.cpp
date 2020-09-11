@@ -1,14 +1,18 @@
 #include "SystemVariables.h"
 
-#include "../DataStructs/TimingStats.h"
-#include "../Globals/CRCValues.h"
-#include "StringConverter.h"
 #include "../../ESPEasy-Globals.h"
-#include "CompiletimeDefines.h"
 
+#include "../DataStructs/TimingStats.h"
+
+#include "../Globals/CRCValues.h"
 #ifdef USES_MQTT
 # include "../Globals/MQTT.h"
 #endif // ifdef USES_MQTT
+#include "../Globals/NetworkState.h"
+
+#include "CompiletimeDefines.h"
+#include "StringConverter.h"
+
 
 
 String getReplacementString(const String& format, String& s) {
@@ -92,7 +96,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
 
       case ISNTP:             value = String(statusNTPInitialized); break;
-      case ISWIFI:            value = String(wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 3=services initialized
+      case ISWIFI:            value = String(wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 4=services initialized
       // TODO: PKR: Add ETH Objects
       #ifdef HAS_ETHERNET
       

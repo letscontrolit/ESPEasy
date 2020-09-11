@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "src/Globals/CPlugins.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Helpers/Numerical.h"
 #include "src/Helpers/StringConverter.h"
 #include "src/ControllerQueue/DelayQueueElements.h"
