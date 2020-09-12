@@ -111,9 +111,9 @@
 .. |C010_maintainer| replace:: `.`
 .. |C010_compileinfo| replace:: `.`
 
-.. |C011_name| replace:: :cyan:`Generic HTTP`
+.. |C011_name| replace:: :cyan:`Generic HTTP Advanced`
 .. |C011_type| replace:: :cyan:`Controller`
-.. |C011_typename| replace:: :cyan:`Controller - Generic HTTP`
+.. |C011_typename| replace:: :cyan:`Controller - Generic HTTP Advanced`
 .. |C011_status| replace:: :yellow:`TESTING`
 .. |C011_github| replace:: C011.ino
 .. _C011_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C011.ino

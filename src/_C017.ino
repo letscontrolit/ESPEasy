@@ -65,12 +65,6 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String &
       byte valueCount = getValueCountFromSensorType(event->sensorType);
       C017_queue_element element(event);
 
-      MakeControllerSettings(ControllerSettings);
-      if (!AllocatedControllerSettings()) {
-        break;
-      }
-      LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
       for (byte x = 0; x < valueCount; x++)
       {
         element.txt[x] = formatUserVarNoCheck(event, x);
