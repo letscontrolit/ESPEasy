@@ -104,6 +104,20 @@ Rules examples
 
 .. .. include:: P005_commands.repl
 
+How to patch Wemos DHT shield
+-----------------------------
+
+The Wemos DHT shield uses a pin which is also toggled at boot disrupting the connected DHT22 sensor.
+
+This causes the sensor to become unresponsive after a reboot.
+
+The DHT sensor needs to be connected to a configurable GPIO on the ESP module. 
+In case you have a simple ESP-01 module, it's best to use the GPIO-2 pin.
+
+See this `elaborate post on GitHub <https://github.com/letscontrolit/ESPEasy/issues/2569#issuecomment-688901549>`_ 
+describing the problem and how to patch the board to make it work like it should.
+
+
 Where to buy
 ------------
 
