@@ -678,6 +678,10 @@ rn2xx3_handler::RN_state rn2xx3_handler::get_state() const {
   return _state;
 }
 
+uint8_t rn2xx3_handler::get_busy_count() const {
+  return _busy_count;
+}
+
 String rn2xx3_handler::sysver() {
   String ver = sendRawCommand(F("sys get ver"));
 
@@ -1014,7 +1018,7 @@ void rn2xx3_handler::handle_reply_received() {
       }
       else
       {
-        delay(1000);
+        delay(100);
       }
       break;
     }
