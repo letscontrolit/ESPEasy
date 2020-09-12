@@ -206,6 +206,8 @@ public:
    */
   rn2xx3_handler::RN_state async_loop();
 
+  uint8_t get_busy_count() const;
+
   rn2xx3_handler::RN_state wait_command_finished(unsigned long timeout = 10000);
 
   rn2xx3_handler::RN_state wait_command_accepted(unsigned long timeout = 10000);
