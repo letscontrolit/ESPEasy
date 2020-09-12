@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C001
 //#######################################################################################################
 //########################### Controller Plugin 001: Domoticz HTTP ######################################
@@ -20,6 +21,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].defaultPort = 8080;
         Protocol[protocolCount].usesID = true;
         break;
@@ -33,39 +35,45 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        C001_DelayHandler.configureControllerSettings(ControllerSettings);
+        success = init_c001_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c001_delay_queue();
         break;
       }
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
+        if (C001_DelayHandler == nullptr) {
+          break;
+        }
         if (event->idx != 0)
         {
           // We now create a URI for the request
           String url;
+          url.reserve(128);
+          url = F("/json.htm?type=command&param=");
+
 
           switch (event->sensorType)
           {
             case SENSOR_TYPE_SWITCH:
-              url = F("/json.htm?type=command&param=switchlight&idx=");
-              url += event->idx;
-              url += F("&switchcmd=");
-              if (UserVar[event->BaseVarIndex] == 0)
-                url += F("Off");
-              else
-                url += F("On");
-              break;
             case SENSOR_TYPE_DIMMER:
-              url = F("/json.htm?type=command&param=switchlight&idx=");
+              url += F("switchlight&idx=");
               url += event->idx;
               url += F("&switchcmd=");
               if (UserVar[event->BaseVarIndex] == 0) {
-                url += ("Off");
+                url += F("Off");
               } else {
-                url += F("Set%20Level&level=");
-                url += UserVar[event->BaseVarIndex];
+                if (event->sensorType == SENSOR_TYPE_SWITCH) {
+                  url += F("On");
+                } else {
+                  url += F("Set%20Level&level=");
+                  url += UserVar[event->BaseVarIndex];
+                }
               }
               break;
 
@@ -81,7 +89,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
             case SENSOR_TYPE_WIND:
             case SENSOR_TYPE_STRING:
             default:
-              url = F("/json.htm?type=command&param=udevice&idx=");
+              url += F("udevice&idx=");
               url += event->idx;
               url += F("&nvalue=0");
               url += F("&svalue=");
@@ -97,8 +105,8 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
             url += mapVccToDomoticz();
           #endif
 
-          success = C001_DelayHandler.addToQueue(C001_queue_element(event->ControllerIndex, url));
-          scheduleNextDelayQueue(TIMER_C001_DELAY_QUEUE, C001_DelayHandler.getNextScheduleTime());
+          success = C001_DelayHandler->addToQueue(C001_queue_element(event->ControllerIndex, url));
+          Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C001_DELAY_QUEUE, C001_DelayHandler->getNextScheduleTime());
         } // if ixd !=0
         else
         {

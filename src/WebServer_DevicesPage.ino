@@ -170,7 +170,7 @@ void addDeviceSelect(const String& name,  int choice)
 {
   String deviceName;
 
-  addSelector_Head(name, true);
+  addSelector_Head_reloadOnChange(name);
   addSelector_Item(F("- None -"), 0, false, false, "");
 
   for (byte x = 0; x <= deviceCount; x++)
@@ -219,6 +219,31 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
 
+
+  uint8_t flags = 0;
+  if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
+    bitWrite(flags, 0, isFormItemChecked(F("taskdeviceflags0")));
+  }
+#ifdef FEATURE_I2CMULTIPLEXER
+  if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
+    int multipleMuxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0);
+    bitWrite(flags, 1, multipleMuxPortsOption == 1);
+    if (multipleMuxPortsOption == 1) {
+      uint8_t selectedPorts = 0;
+      for (uint8_t x = 0; x < I2CMultiplexerMaxChannels(); x++) {
+        String id = F("taskdeviceflag1ch");
+        id += String(x);
+        bitWrite(selectedPorts, x, isFormItemChecked(id));
+      }
+      Settings.I2C_Multiplexer_Channel[taskIndex] = selectedPorts;
+    } else {
+      Settings.I2C_Multiplexer_Channel[taskIndex] = getFormItemInt(F("taskdevicei2cmuxport"), 0);
+    }
+  }
+#endif
+  if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
+    Settings.I2C_Flags[taskIndex] = flags;
+  }
 
   int pin1 = -1;
   int pin2 = -1;
@@ -349,7 +374,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
   html_table_header("Name");
   html_table_header("Port");
   html_table_header(F("Ctr (IDX)"), 100);
-  html_table_header("GPIO",         70);
+  html_table_header("GPIO",         100);
   html_table_header(F("Values"));
 
   String deviceName;
@@ -430,7 +455,32 @@ void handle_devicess_ShowAllTasksTable(byte page)
             switch (Device[DeviceIndex].Type) {
               case DEVICE_TYPE_I2C:
                 addHtml(F("I2C"));
+#ifdef FEATURE_I2CMULTIPLEXER
+                if (isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(x)) {
+                  String mux;
+                  if (bitRead(Settings.I2C_Flags[x], I2C_FLAGS_MUX_MULTICHANNEL)) {    // Multi-channel
+                    mux = F("<BR>Multiplexer channel(s)");
+                    uint8_t b = 0;  // For adding lineBreaks
+                    for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(); c++) {
+                      if (bitRead(Settings.I2C_Multiplexer_Channel[x], c)) {
+                        mux += b == 0 ? F("<BR>") : F(", ");
+                        b++;
+                        mux += String(c);
+                      }
+                    }
+                  } else {    // Single channel
+                    mux = F("<BR>Multiplexer channel ");
+                    mux += String(Settings.I2C_Multiplexer_Channel[x]);
+                  }
+                  addHtml(mux);
+                }
+#endif
                 break;
+              case DEVICE_TYPE_SERIAL:
+              case DEVICE_TYPE_SERIAL_PLUS1:
+                addHtml(serialHelper_getSerialTypeLabel(&TempEvent));
+                break;
+
               default:
 
                 // Plugin has no custom port formatting, show default one.
@@ -506,7 +556,19 @@ void handle_devicess_ShowAllTasksTable(byte page)
             }
             case DEVICE_TYPE_ANALOG:
             {
-              addHtml(F("ADC (TOUT)"));
+              #ifdef ESP8266
+                #if FEATURE_ADC_VCC
+                  addHtml(F("ADC (VDD)"));
+                #else
+                  addHtml(F("ADC (TOUT)"));
+                #endif
+              #endif
+              #ifdef ESP32
+              showpin1 = true;
+              addHtml(formatGpioName_ADC(Settings.TaskDevicePin1[x]));
+              html_BR();
+              #endif
+
               break;
             }
             case DEVICE_TYPE_SERIAL_PLUS1:
@@ -514,7 +576,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
               // fallthrough
             case DEVICE_TYPE_SERIAL:
             {
-              addHtml(serialHelper_getGpioDescription(Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x]));
+              addHtml(serialHelper_getGpioDescription(Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x], F("<BR>")));
               if (showpin3) {
                 html_BR();
               }
@@ -687,6 +749,74 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       }
     }
 
+    if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
+      addFormSubHeader(F("I2C options"));
+      String dummy;
+      PluginCall(PLUGIN_WEBFORM_SHOW_I2C_PARAMS, &TempEvent, dummy);
+      addFormCheckBox(F("Force Slow I2C speed"), F("taskdeviceflags0"), bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED));
+    }
+#ifdef FEATURE_I2CMULTIPLEXER
+    // Show selector for an I2C multiplexer port if a multiplexer is configured
+    if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
+      bool multipleMuxPorts = bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
+      {
+        String i2c_mux_channels[2];
+        int    i2c_mux_channelOptions[2];
+        int    i2c_mux_channelCount = 1;
+        i2c_mux_channels[0] = F("Single channel");
+        i2c_mux_channelOptions[0] = 0;
+        if (Settings.I2C_Multiplexer_Type == I2C_MULTIPLEXER_PCA9540) {
+          multipleMuxPorts = false; // force off
+        } else {
+          i2c_mux_channels[1] = F("Multiple channels");
+          i2c_mux_channelOptions[1] = 1;
+          i2c_mux_channelCount++;
+        }
+        addFormSelector(F("Multiplexer channels"),F("taskdeviceflags1"), i2c_mux_channelCount, i2c_mux_channels, i2c_mux_channelOptions, multipleMuxPorts ? 1 : 0, true);
+      }
+      if (multipleMuxPorts) {
+        addRowLabel(F("Select connections"), F(""));
+        html_table(F(""), false);  // Sub-table
+        html_table_header(F("Channel"));
+        html_table_header(F("Enable"));
+        html_table_header(F("Channel"));
+        html_table_header(F("Enable"));
+        for (uint8_t x = 0; x < I2CMultiplexerMaxChannels(); x++) {
+          String label = F("Channel ");
+          label += String(x);
+          String id = F("taskdeviceflag1ch");
+          id += String(x);
+          if (x % 2 == 0) { html_TR(); }  // Start a new row for every 2 channels
+          html_TD();
+          addHtml(label);
+          html_TD();
+          addCheckBox(id, bitRead(Settings.I2C_Multiplexer_Channel[taskIndex], x), false);
+        }
+        html_end_table();
+      } else {
+        int taskDeviceI2CMuxPort = Settings.I2C_Multiplexer_Channel[taskIndex];
+        String  i2c_mux_portoptions[9];
+        int     i2c_mux_portchoices[9];
+        uint8_t mux_opt = 0;
+        i2c_mux_portoptions[mux_opt] = F("(Not connected via multiplexer)");
+        i2c_mux_portchoices[mux_opt] = -1;
+        uint8_t mux_max = I2CMultiplexerMaxChannels();
+        for (int8_t x = 0; x < mux_max; x++) {
+          mux_opt++;
+          i2c_mux_portoptions[mux_opt]  = F("Channel ");
+          i2c_mux_portoptions[mux_opt] += String(x);
+
+          i2c_mux_portchoices[mux_opt]  = x;
+        }
+        if (taskDeviceI2CMuxPort >= mux_max) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
+        addFormSelector(F("Connected to"), F("taskdevicei2cmuxport"), mux_opt + 1, i2c_mux_portoptions, i2c_mux_portchoices, taskDeviceI2CMuxPort);
+      }
+    }
+#endif
+    
+    if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
+      addFormSubHeader(F("Device settings"));
+    }
     // add plugins content
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) { // only show additional config for local connected sensors
       String webformLoadString;
@@ -844,62 +974,3 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 
 #endif // ifdef WEBSERVER_DEVICES
 
-
-// ********************************************************************************
-// change of device: cleanup old device and reset default settings
-// ********************************************************************************
-void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskIndex) {
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = taskIndex;
-  String dummy;
-
-  // let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
-  PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
-  taskClear(taskIndex, false); // clear settings, but do not save
-  ClearCustomTaskSettings(taskIndex);
-
-  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
-
-  if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
-  {
-    // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
-    PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.
-  } else {
-    // New task is empty task, thus save config now.
-    taskClear(taskIndex, true);                                 // clear settings, and save
-  }
-}
-
-// ********************************************************************************
-// Initialize task with some default values applicable for almost all tasks
-// ********************************************************************************
-void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
-                        bool enabled, const String& name, int pin1, int pin2, int pin3) {
-  if (!validTaskIndex(taskIndex)) { return; }
-  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
-
-  if (!validDeviceIndex(DeviceIndex)) { return; }
-
-  LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
-
-  if (taskdevicetimer > 0) {
-    Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
-  } else {
-    if (!Device[DeviceIndex].TimerOptional) { // Set default delay, unless it's optional...
-      Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
-    }
-    else {
-      Settings.TaskDeviceTimer[taskIndex] = 0;
-    }
-  }
-  Settings.TaskDeviceEnabled[taskIndex] = enabled;
-  safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
-
-  // FIXME TD-er: Check for valid GPIO pin (and  -1 for "not set")
-  Settings.TaskDevicePin1[taskIndex] = pin1;
-  Settings.TaskDevicePin2[taskIndex] = pin2;
-  Settings.TaskDevicePin3[taskIndex] = pin3;
-  SaveTaskSettings(taskIndex);
-}

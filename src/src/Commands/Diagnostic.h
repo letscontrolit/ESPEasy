@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <map>
 
-#include "../../define_plugin_sets.h"
+#include "../../ESPEasy_common.h"
 
 class String;
 struct portStatusStruct;

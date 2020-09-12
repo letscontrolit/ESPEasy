@@ -1,0 +1,41 @@
+.. csv-table::
+   :header: "Event", "Example"
+   :widths: 30, 20
+
+   "
+   ``<taskname>#<taskvar>``
+
+   The regular events like in every other task. Only difference here is that you may have an event either when the touch pad is touched, released or both.
+   ","
+
+   .. code-block:: none
+
+      on touch#Touch do
+       GPIO,2,1 //LED on
+      endon
+
+   "
+   "
+   ``<taskname>#Duration=``
+   
+   When enabled, this event will be sent on release of the touch pad. The event variable is the time in msec the pad had been touched.
+   ","
+
+   .. code-block:: none
+   
+      on touch#Duration do
+         LogEntry,'Touch Duration %eventvalue% ms'
+      endon
+   
+   Example in the log:
+
+   .. code-block:: none
+   
+      6553261 : Info  : Touch : ADC2 ch5 (T5): 10
+      6553338 : Info  : EVENT: touch#Touch=10.00
+      6553638 : Info  : EVENT: touch#Duration=460
+      6553653 : Info  : ACT  : LogEntry,'Touch Duration 460 ms'
+      6553654 : Info  : Command: LogEntry
+      6553655 : Info  : Touch Duration 460 ms
+
+   "

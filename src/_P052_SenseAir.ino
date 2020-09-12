@@ -96,6 +96,7 @@
 
 #include <ESPeasySerial.h>
 #include "_Plugin_Helper.h"
+#include "src/Helpers/Modbus_RTU.h"
 
 
 struct P052_data_struct : public PluginTaskData_base {
@@ -118,7 +119,6 @@ struct P052_data_struct : public PluginTaskData_base {
   }
 
   ModbusRTU_struct modbus;
-  byte             sensortype;
 };
 
 unsigned int _plugin_052_last_measurement = 0;
@@ -443,7 +443,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P052_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P052_data_struct());
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 

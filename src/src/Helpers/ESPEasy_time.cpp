@@ -1,17 +1,29 @@
 #include "ESPEasy_time.h"
 
-#include "ESPEasy_time_calc.h"
+#include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_Log.h"
+#include "../../ESPEasy_fdwdecl.h"
 
-#include "../Globals/TimeZone.h"
+#include "../Globals/EventQueue.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
+#include "../Globals/TimeZone.h"
 
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy_Log.h"
-#include "../../ESPEasy-Globals.h"
+#include "../Helpers/Numerical.h"
+
+#include "ESPEasy_time_calc.h"
 
 #include <time.h>
 
+
+ESPEasy_time::ESPEasy_time() {
+  memset(&tm, 0, sizeof(tm));
+  memset(&tsRise, 0, sizeof(tm));
+  memset(&tsSet, 0, sizeof(tm));
+  memset(&sunRise, 0, sizeof(tm));
+  memset(&sunSet, 0, sizeof(tm));
+}
 
 struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLocalTime) const {
   unsigned long time = makeTime(ts);
@@ -215,7 +227,7 @@ bool ESPEasy_time::systemTimePresent() const {
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP || !WiFiConnected(10)) {
+  if (!Settings.UseNTP || !NetworkConnected(10)) {
     return false;
   }
   IPAddress timeServerIP;
@@ -307,6 +319,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           // Does not make sense to try it very often if a single host is used which is not synchronized.
           nextSyncTime = sysTime + 120;
         }
+        udp.stop();
         return false;
       } 
 
@@ -329,6 +342,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           // Retry again in a minute.
           nextSyncTime = sysTime + 60;
         }
+        udp.stop();
         return false;
       }
       uint32_t txTm = secsSince1900 - 2208988800UL;

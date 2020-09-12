@@ -50,7 +50,7 @@ void Plugin_037_try_connect() {
   Plugin_037_update_connect_status();
   if (MQTTclient_037_connected) return;
   // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
-  espclient_037 = WiFiClient();
+//  espclient_037 = WiFiClient();
   espclient_037.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 
   if (MQTTclient_037 == NULL) {
@@ -85,7 +85,7 @@ void Plugin_037_update_connect_status() {
     if (!connected) {
       // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
       if (MQTTclient_037 != NULL) {
-        espclient_037 = WiFiClient();
+//        espclient_037 = WiFiClient();
         espclient_037.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
         MQTTclient_037->setClient(espclient_037);
       }
@@ -377,23 +377,21 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
     return;
   }
 
-  // We generate a temp event structure to pass to the plugins
-
-  struct EventStruct TempEvent;
-
-  TempEvent.String1 = topic;                            // This is the topic of the message
-  TempEvent.String2 = payload;                          // This is the payload
-
   //  Here we loop over all tasks and call each 037 plugin with function PLUGIN_IMPORT
 
   for (taskIndex_t y = 0; y < TASKS_MAX; y++)
   {
     if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_037)                // if we have found a 037 device, then give it something to think about!
     {
+      // We generate a temp event structure to pass to the plugins
+      struct EventStruct TempEvent;
+
+      TempEvent.String1 = topic;                            // This is the topic of the message
+      TempEvent.String2 = payload;                          // This is the payload
       TempEvent.TaskIndex = y;
       LoadTaskSettings(TempEvent.TaskIndex);
       TempEvent.BaseVarIndex = y * VARS_PER_TASK;           // This is the index in Uservar where values for this task are stored
-      schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_IMPORT, &TempEvent);
+      Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_IMPORT, &TempEvent);
     }
   }
 }
@@ -418,11 +416,16 @@ boolean MQTTConnect_037()
   if (MQTTclient_037->connected()) return true;
 
   // define stuff for the client - this could also be done in the intial declaration of MQTTclient_037
-  if (!WiFiConnected(100)) {
+  if (!NetworkConnected(100)) {
     Plugin_037_update_connect_status();
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
   MakeControllerSettings(ControllerSettings);
+  if (!AllocatedControllerSettings()) {
+    addLog(LOG_LEVEL_ERROR, F("IMPT : Cannot load controller settings, out of RAM"));
+    return false;
+  }
+
   LoadControllerSettings(enabledMqttController, ControllerSettings);
   if (ControllerSettings.UseDNS) {
     MQTTclient_037->setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
@@ -437,8 +440,10 @@ boolean MQTTConnect_037()
   {
     String log = "";
 
-    if ((SecuritySettings.ControllerUser[enabledMqttController][0] != 0) && (SecuritySettings.ControllerPassword[enabledMqttController][0] != 0))
-      result = MQTTclient_037->connect(clientid.c_str(), SecuritySettings.ControllerUser[enabledMqttController], SecuritySettings.ControllerPassword[enabledMqttController]);
+    if (hasControllerCredentialsSet(enabledMqttController, ControllerSettings))
+      result = MQTTclient_037->connect(clientid.c_str(), 
+                                      getControllerUser(enabledMqttController, ControllerSettings).c_str(), 
+                                      getControllerPass(enabledMqttController, ControllerSettings).c_str());
     else
       result = MQTTclient_037->connect(clientid.c_str());
 

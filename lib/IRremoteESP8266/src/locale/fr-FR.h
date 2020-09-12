@@ -10,6 +10,8 @@
 #define D_STR_SLEEP "Pause"
 #define D_STR_LIGHT "Lumière"
 #define D_STR_POWERFUL "Puissance"
+#define D_STR_PREVIOUS "Precedente"
+#define D_STR_PREVIOUSPOWER D_STR_POWER " " D_STR_PREVIOUS
 #define D_STR_QUIET "Silence"
 #define D_STR_ECONO "Economie"
 #define D_STR_BEEP "Bip"
@@ -101,12 +103,12 @@
 
 #define D_STR_REPEAT "Répetition"
 
-// IRrecvDumpV2
+// IRrecvDumpV2+
 #define D_STR_TIMESTAMP "Horodatage"
 #define D_STR_LIBRARY "Bibliothèque"
 #define D_STR_MESGDESC "Rèférence"
 #define D_STR_IRRECVDUMP_STARTUP \
-    "IRrecvDumpV2 fonctionne et attend l’entrée IR sur la broche %d"
+    "IRrecvDump fonctionne et attend l’entrée IR sur la broche %d"
 #define D_WARN_BUFFERFULL \
     "ATTENTION: IR Code est trop gros pour le buffer (>= %d). " \
     "Le résultat ne doit pas être approuvé avant que cela soit résolu. " \

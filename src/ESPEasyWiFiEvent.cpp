@@ -1,11 +1,21 @@
+#ifdef HAS_ETHERNET
+#include "ETH.h"
+#endif
 #include "ESPEasyWiFiEvent.h"
+#include "ESPEasyWifi_ProcessEvent.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/RTC.h"
 #include "ESPEasyTimeTypes.h"
+#include "ESPEasy_Log.h"
+#include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/RTCStruct.h"
 
 #include "src/Helpers/ESPEasy_time_calc.h"
+
+#ifdef HAS_ETHERNET
+extern bool eth_connected;
+#endif
 
 #ifdef ESP32
 void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
@@ -29,7 +39,10 @@ void setUseStaticIP(bool enabled) {
 
 void markGotIP() {
   lastGetIPmoment = millis();
-  wifiStatus      |= ESPEASY_WIFI_GOT_IP;
+  // Create the 'got IP event' so mark the wifiStatus to not have the got IP flag set
+  // This also implies the services are not fully initialized.
+  bitClear(wifiStatus, ESPEASY_WIFI_GOT_IP);
+  bitClear(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
   processedGotIP = false;
 }
 
@@ -59,7 +72,6 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       last_ssid = (const char*) ssid_copy;
       lastConnectMoment = millis();
       processedConnect  = false;
-      wifiStatus       |= ESPEASY_WIFI_CONNECTED;
       break;
     }
     case SYSTEM_EVENT_STA_DISCONNECTED:
@@ -77,7 +89,6 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
         }
         processedDisconnect  = false;
         lastDisconnectReason = static_cast<WiFiDisconnectReason>(info.disconnected.reason);
-        wifiStatus          |= ESPEASY_WIFI_DISCONNECTED;
       }
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
@@ -101,6 +112,51 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_SCAN_DONE:
       processedScanDone = false;
       break;
+#ifdef HAS_ETHERNET
+    case SYSTEM_EVENT_ETH_START:
+      addLog(LOG_LEVEL_INFO, F("ETH Started"));
+      break;
+    case SYSTEM_EVENT_ETH_CONNECTED:
+      addLog(LOG_LEVEL_INFO, F("ETH Connected"));
+      eth_connected = true;
+      processEthernetConnected();
+      break;
+    case SYSTEM_EVENT_ETH_GOT_IP:
+      if (loglevelActiveFor(LOG_LEVEL_INFO))
+      {
+        String log = F("ETH MAC: ");
+        log += NetworkMacAddress();
+        log += F(" IPv4: ");
+        log += NetworkLocalIP().toString();
+        log += " (";
+        log += NetworkGetHostname();
+        log += F(") GW: ");
+        log += NetworkGatewayIP().toString();
+        log += F(" SN: ");
+        log += NetworkSubnetMask().toString();
+        if (ETH.fullDuplex()) {
+          log += F(" FULL_DUPLEX");
+        }
+        log += F(" ");
+        log += ETH.linkSpeed();
+        log += F("Mbps");
+        addLog(LOG_LEVEL_INFO, log);
+      }
+      eth_connected = true;
+      break;
+    case SYSTEM_EVENT_ETH_DISCONNECTED:
+      addLog(LOG_LEVEL_ERROR, F("ETH Disconnected"));
+      eth_connected = false;
+      processEthernetDisconnected();
+      break;
+    case SYSTEM_EVENT_ETH_STOP:
+      addLog(LOG_LEVEL_INFO, F("ETH Stopped"));
+      eth_connected = false;
+      break;
+    case SYSTEM_EVENT_GOT_IP6:
+      addLog(LOG_LEVEL_INFO, F("ETH Got IP6"));
+      break;
+#endif //HAS_ETHERNET
     default:
       break;
   }
@@ -113,7 +169,6 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 void onConnected(const WiFiEventStationModeConnected& event) {
   lastConnectMoment = millis();
   processedConnect  = false;
-  wifiStatus       |= ESPEASY_WIFI_CONNECTED;
   channel_changed   = RTC.lastWiFiChannel != event.channel;
   RTC.lastWiFiChannel      = event.channel;
   last_ssid         = event.ssid;
@@ -137,7 +192,6 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event) {
     lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
   }
   lastDisconnectReason = event.reason;
-  wifiStatus           = ESPEASY_WIFI_DISCONNECTED;
 
   if (WiFi.status() == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
@@ -162,7 +216,7 @@ void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
   processedConnectAPmode = false;
 }
 
-void onDisonnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
+void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
   for (byte i = 0; i < 6; ++i) {
     lastMacDisconnectedAPmode[i] = event.mac[i];
   }

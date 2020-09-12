@@ -1,6 +1,9 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C015
 
 #include "src/Globals/CPlugins.h"
+#include "src/Commands/Common.h"
+
 
 //#######################################################################################################
 //########################### Controller Plugin 015: Blynk  #############################################
@@ -71,6 +74,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = false;
         break;
@@ -84,12 +88,20 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
       {
-       // when connected to another server and user has changed settings
-       if (Blynk.connected()){
+        success = init_c015_delay_queue(event->ControllerIndex);
+
+        // when connected to another server and user has changed settings
+        if (success && Blynk.connected()){
           addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "disconnect from server"));
           Blynk.disconnect();
-       }
-       break;
+        }
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c015_delay_queue();
+        break;
       }
 
     #ifdef CPLUGIN_015_SSL
@@ -138,54 +150,65 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
      case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
+        if (C015_DelayHandler == nullptr) {
+          break;
+        }
+
         if (!Settings.ControllerEnabled[event->ControllerIndex])
           break;
 
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C015_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          String dummy;
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
-        }
-
-        for (byte x = 0; x < valueCount; x++)
-        {
-          bool isvalid;
-          String formattedValue = formatUserVar(event, x, isvalid);
-          if (!isvalid)
-            // send empty string to Blynk in case of error
-            formattedValue = F("");
-
-          String valueName = ExtraTaskSettings.TaskDeviceValueNames[x];
-          String valueFullName = ExtraTaskSettings.TaskDeviceName;
-          valueFullName += F(".");
-          valueFullName += valueName;
-          String vPinNumberStr = valueName.substring(1, 4);
-          int vPinNumber = vPinNumberStr.toInt();
-          String log = F(C015_LOG_PREFIX);
-          log += Blynk.connected()? F("(online): ") : F("(offline): ");
-          if (vPinNumber > 0 && vPinNumber < 256){
-            log += F("send ");
-            log += valueFullName;
-            log += F(" = ");
-            log += formattedValue;
-            log += F(" to blynk pin v");
-            log += vPinNumber;
+        
+        // FIXME TD-er must define a proper move operator
+        success = C015_DelayHandler->addToQueue(C015_queue_element(event, valueCount));
+        if (success) {
+          // Element was added.
+          // Now we try to append to the existing element 
+          // and thus preventing the need to create a long string only to copy it to a queue element.
+          C015_queue_element &element = C015_DelayHandler->sendQueue.back();
+          if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+            String dummy;
+            PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
           }
-          else{
-            vPinNumber = -1;
-            log += F("error got vPin number for ");
-            log += valueFullName;
-            log += F(", got not valid value: ");
-            log += vPinNumberStr;
+
+          for (byte x = 0; x < valueCount; x++)
+          {
+            bool isvalid;
+            String formattedValue = formatUserVar(event, x, isvalid);
+            if (!isvalid)
+              // send empty string to Blynk in case of error
+              formattedValue = F("");
+
+            String valueName = ExtraTaskSettings.TaskDeviceValueNames[x];
+            String valueFullName = ExtraTaskSettings.TaskDeviceName;
+            valueFullName += F(".");
+            valueFullName += valueName;
+            String vPinNumberStr = valueName.substring(1, 4);
+            int vPinNumber = vPinNumberStr.toInt();
+            String log = F(C015_LOG_PREFIX);
+            log += Blynk.connected()? F("(online): ") : F("(offline): ");
+            if (vPinNumber > 0 && vPinNumber < 256){
+              log += F("send ");
+              log += valueFullName;
+              log += F(" = ");
+              log += formattedValue;
+              log += F(" to blynk pin v");
+              log += vPinNumber;
+            }
+            else{
+              vPinNumber = -1;
+              log += F("error got vPin number for ");
+              log += valueFullName;
+              log += F(", got not valid value: ");
+              log += vPinNumberStr;
+            }
+            addLog(LOG_LEVEL_INFO, log);
+            element.vPin[x] = vPinNumber;
+            element.txt[x] = formattedValue;
           }
-          addLog(LOG_LEVEL_INFO, log);
-          element.vPin[x] = vPinNumber;
-          element.txt[x] = formattedValue;
         }
-        success = C015_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C015_DELAY_QUEUE, C015_DelayHandler.getNextScheduleTime());
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C015_DELAY_QUEUE, C015_DelayHandler->getNextScheduleTime());
         break;
       }
 
@@ -211,7 +234,7 @@ bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_
     // controller has been disabled. Answer true to flush queue.
     return true;
 
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     return false;
   }
 
@@ -225,16 +248,20 @@ bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_
       return true;
   }
 
-  return element.checkDone(Blynk_send_c015(element.txt[element.valuesSent], element.vPin[element.valuesSent]));
+  bool sendSuccess = Blynk_send_c015(
+    element.txt[element.valuesSent], 
+    element.vPin[element.valuesSent],
+    ControllerSettings.ClientTimeout);
+  return element.checkDone(sendSuccess);
 }
 
 
 boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct& ControllerSettings){
-  if (!WiFiConnected())
+  if (!NetworkConnected())
     return false;
 
   if (!Blynk.connected()){
-    String auth = SecuritySettings.ControllerPassword[controllerIndex];
+    String auth = getControllerPass(controllerIndex, ControllerSettings);
     boolean connectDefault = false;
 
     if (timePassedSince(_C015_LastConnectAttempt[controllerIndex]) < CPLUGIN_015_RECONNECT_INTERVAL){
@@ -360,10 +387,11 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
 }
 
 
-boolean Blynk_send_c015(const String& value, int vPin )
+boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeout)
 {
   Blynk.virtualWrite(vPin, value);
-  unsigned long timer = millis() + Settings.MessageDelay;
+  
+  unsigned long timer = millis() + clientTimeout;
   while (!timeOutReached(timer))
               backgroundtasks();
   return true;

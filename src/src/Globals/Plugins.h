@@ -58,6 +58,8 @@ extern taskVarIndex_t INVALID_TASKVAR_INDEX;
 extern float customFloatVar[CUSTOM_VARS_MAX];
 extern float UserVar[VARS_PER_TASK * TASKS_MAX];
 
+void clearUserVar();
+
 
 extern int deviceCount;
 

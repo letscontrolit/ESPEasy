@@ -66,7 +66,6 @@ bool p022_clear_init(uint8_t address) {
   return true;
 }
 
-
 boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 {
   boolean  success = false;
@@ -124,19 +123,22 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      int optionValues[PCA9685_NUMS_ADDRESS];
+
+      for (int i = 0; i < PCA9685_NUMS_ADDRESS; i++)
+      {
+        optionValues[i] = PCA9685_ADDRESS + i;
+      }
+      addFormSelectorI2C(F("i2c_addr"), PCA9685_NUMS_ADDRESS, optionValues, address);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       // The options lists are quite long.
       // To prevent stack overflow issues, each selection has its own scope.
-      {
-        int optionValues[PCA9685_NUMS_ADDRESS];
-
-        for (int i = 0; i < PCA9685_NUMS_ADDRESS; i++)
-        {
-          optionValues[i] = PCA9685_ADDRESS + i;
-        }
-        addFormSelectorI2C(F("i2c_addr"), PCA9685_NUMS_ADDRESS, optionValues, address);
-      }
       {
         String m2Options[PCA9685_MODE2_VALUES];
         int    m2Values[PCA9685_MODE2_VALUES];
@@ -186,6 +188,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       if (!p022_is_init(CONFIG_PORT))
       {
         Plugin_022_initialize(address);
+
         if (PCONFIG(0) != mode2) {
           Plugin_022_writeRegister(address, PCA9685_MODE2, PCONFIG(0));
         }
@@ -445,12 +448,12 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
               }
             }
           }
-          setPluginTaskTimer(event->Par3
-                             , event->TaskIndex
-                             , event->Par1
-                             , !event->Par2
-                             , event->Par3
-                             , autoreset);
+          Scheduler.setPluginTaskTimer(event->Par3
+                                       , event->TaskIndex
+                                       , event->Par1
+                                       , !event->Par2
+                                       , event->Par3
+                                       , autoreset);
 
           // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
           portStatusStruct newStatus;
@@ -499,12 +502,12 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           log += String(autoreset);
           autoreset--;
         }
-        setPluginTaskTimer(event->Par3
-                           , event->TaskIndex
-                           , event->Par1
-                           , !event->Par2
-                           , event->Par3
-                           , autoreset);
+        Scheduler.setPluginTaskTimer(event->Par3
+                                     , event->TaskIndex
+                                     , event->Par1
+                                     , !event->Par2
+                                     , event->Par3
+                                     , autoreset);
       }
 
       // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
@@ -589,10 +592,12 @@ void Plugin_022_Frequency(int address, uint16_t freq)
 
   //  prescale = 25000000 / 4096;
   uint16_t prescale = 6103;
+
   prescale /=  freq;
   prescale -= 1;
   uint8_t oldmode = Plugin_022_readRegister(i2cAddress, 0);
   uint8_t newmode = (oldmode & 0x7f) | 0x10;
+
   Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)newmode);
   Plugin_022_writeRegister(i2cAddress, 0xfe,                     (byte)prescale); // prescale register
   Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)oldmode);

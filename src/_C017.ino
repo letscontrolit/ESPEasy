@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C017
 //#######################################################################################################
 //###########################   Controller Plugin 017: ZABBIX  ##########################################
@@ -44,20 +45,39 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String &
       break;
     }
 
+    case CPlugin::Function::CPLUGIN_INIT:
+      {
+        success = init_c017_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c017_delay_queue();
+        break;
+      }
+
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
-    {
+      {
+      if (C017_DelayHandler == nullptr) {
+        break;
+      }
       byte valueCount = getValueCountFromSensorType(event->sensorType);
       C017_queue_element element(event);
 
       MakeControllerSettings(ControllerSettings);
+      if (!AllocatedControllerSettings()) {
+        break;
+      }
       LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
       for (byte x = 0; x < valueCount; x++)
       {
         element.txt[x] = formatUserVarNoCheck(event, x);
       }
-      success = C017_DelayHandler.addToQueue(element);
-      scheduleNextDelayQueue(TIMER_C017_DELAY_QUEUE, C017_DelayHandler.getNextScheduleTime());
+      // FIXME TD-er must define a proper move operator
+      success = C017_DelayHandler->addToQueue(C017_queue_element(element));
+      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C017_DELAY_QUEUE, C017_DelayHandler->getNextScheduleTime());
       break;
     }
 
@@ -86,7 +106,7 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
   if (valueCount == 0)
     return true; //exit if we don't have anything to send.
 
-  if (!WiFiConnected(10))
+  if (!NetworkConnected(10))
   {
     return false;
   }

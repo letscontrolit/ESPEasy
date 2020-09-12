@@ -77,7 +77,7 @@ Prerequisites
 ^^^^^^^^^^^^^
 
 * Same UDP port must be setup on both nodes. (preferrably UDP port 8266) This can be done in Tools -> Advanced -> UDP port
-* Nodes must be rebooted after UDP port has changed.
+* Nodes must be rebooted after UDP port has changed. (Builds before 2020-07-19)
 * Each node must have an unique unit number. This must not be 0 and not 255, but anything inbetween is fine.
 
 
@@ -163,10 +163,10 @@ Of each known node the following data is kept:
 The key to index this ``NodeStruct`` is the nodes unit number.
 
 ASCII Data
-~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 Command Message
-***************
+^^^^^^^^^^^^^^^^
 
 First byte is not 0xFF.
 
@@ -175,13 +175,13 @@ The entire message processed as a command like this:
 .. code-block:: C++
 
   packetBuffer[len] = 0;
-  ExecuteCommand_all(VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
+  ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
 
 As can be seen, no checks for size, and it is just expected to be a valid ESPeasy command.
 Also no check to see if the command is supported by the receiving end and no feedback to the sender.
 
 Binary Data
-~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 Binary data is marked with the first byte 0xFF.
 
@@ -207,7 +207,7 @@ Message types supported, determined by the 2nd byte:
 * 5: Sensor data
 
 Sysinfo Message
-***************
+^^^^^^^^^^^^^^^^
 
 There are 2 types of Sysinfo messages, a standard and an extended message.
 The extended message starts with the same information as the standard one.
@@ -234,7 +234,7 @@ The node type is defined as:
 * 81 = "Nano Easy"
 
 Sensor Info message
-*******************
+^^^^^^^^^^^^^^^^^^^^
 
 Sensor Info messages are just a description of a shared sensor.
 It contains some information to setup a new sensor on the receiving end.
@@ -258,7 +258,7 @@ These messages are just a serialized byte stream of ``struct C013_SensorInfoStru
 
 
 Sensor Data message
-*******************
+^^^^^^^^^^^^^^^^^^^^
 
 
 These messages are just a serialized byte stream of ``struct C013_SensorDataStruct`` .

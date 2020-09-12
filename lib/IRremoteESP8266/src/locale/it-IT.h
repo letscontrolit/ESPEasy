@@ -8,6 +8,8 @@
 #define D_STR_UNKNOWN "SCONOSCIUTO"
 #define D_STR_PROTOCOL "Protocollo"
 #define D_STR_POWER "Accensione"
+#define D_STR_PREVIOUS "Precedente"
+#define D_STR_PREVIOUSPOWER D_STR_POWER " " D_STR_PREVIOUS
 #define D_STR_ON "Acceso"
 #define D_STR_OFF "Spento"
 #define D_STR_MODE "Modalità"
@@ -139,12 +141,12 @@
 #define D_STR_REPEAT "Ripeti"
 #define D_STR_CODE "Codice"
 #define D_STR_BITS "Bit"
-// IRrecvDumpV2
 
+// IRrecvDumpV2+
 #define D_STR_LIBRARY "Libreria"
 #define D_STR_MESGDESC "Desc. Mess."
 #define D_STR_IRRECVDUMP_STARTUP \
-    "IRrecvDumpV2 è ora attivo e in attesa di segnali IR dal pin %d"
+    "IRrecvDump è ora attivo e in attesa di segnali IR dal pin %d"
 
 #ifndef D_WARN_BUFFERFULL
 #define D_WARN_BUFFERFULL \

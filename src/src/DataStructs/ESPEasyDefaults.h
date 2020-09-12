@@ -2,6 +2,8 @@
 #define ESPEASY_DEFAULTS_H_
 
 
+#include "../DataStructs/NetworkMedium.h"
+
 // ********************************************************************************
 //   User specific configuration
 // ********************************************************************************
@@ -127,6 +129,10 @@
 #ifndef DEFAULT_SERVER_USEDNS
 #define DEFAULT_SERVER_USEDNS false             // true: Use hostname.  false: use IP
 #endif
+#ifndef DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS
+#define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
+#endif
+
 #ifndef DEFAULT_PORT
 #define DEFAULT_PORT        8080                // Enter your Server port value
 #endif
@@ -156,12 +162,44 @@
 #ifndef DEFAULT_I2C_CLOCK_SPEED
 #define DEFAULT_I2C_CLOCK_SPEED          400000            // Use 100 kHz if working with old I2C chips
 #endif
+#ifndef DEFAULT_I2C_CLOCK_SPEED_SLOW
+#define DEFAULT_I2C_CLOCK_SPEED_SLOW      100000            // Use 100 kHz for old/slow I2C chips
+#endif
 
 #ifndef DEFAULT_PIN_STATUS_LED
 #define DEFAULT_PIN_STATUS_LED           (-1)
 #endif
 #ifndef DEFAULT_PIN_STATUS_LED_INVERSED
 #define DEFAULT_PIN_STATUS_LED_INVERSED  true
+#endif
+
+#ifndef DEFAULT_PIN_RESET_BUTTON
+#define DEFAULT_PIN_RESET_BUTTON         (-1)
+#endif
+#ifndef DEFAULT_ETH_PHY_ADDR
+#define DEFAULT_ETH_PHY_ADDR             0
+#endif
+#ifndef DEFAULT_ETH_PHY_TYPE
+#define DEFAULT_ETH_PHY_TYPE             EthPhyType_t::LAN8710
+#endif
+#ifndef DEFAULT_ETH_PIN_MDC
+#define DEFAULT_ETH_PIN_MDC              23
+#endif
+#ifndef DEFAULT_ETH_PIN_MDIO
+#define DEFAULT_ETH_PIN_MDIO             18
+#endif
+#ifndef DEFAULT_ETH_PIN_POWER
+#define DEFAULT_ETH_PIN_POWER            -1
+#endif
+#ifndef DEFAULT_ETH_CLOCK_MODE
+#define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
+#endif
+#ifndef DEFAULT_NETWORK_MEDIUM
+  #ifdef HAS_ETHERNET
+    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::Ethernet
+  #else
+    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
+  #endif
 #endif
 
 

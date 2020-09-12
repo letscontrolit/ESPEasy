@@ -35,6 +35,18 @@ After rebooting the ESP, the LED will start blinking 10 seconds on then 10 secon
 
 Enjoy.
 
+Device name special considerations
+----------------------------------
+
+To make events work as expected during rules processing, these characters can't be used in any device name:
+
+* Operators: ``-``, ``+``, ``/``, ``*``, ``^`` and ``%``
+* Unary operator: ``!``
+* Equals sign: ``=``
+* Delimiters: ``,``, ``[``, ``]``, ``{``, ``}``, ``(``, ``)`` and ``<space>``
+* Devicename - Value separator: ``#``
+
+An errormessage will be shown if any of these characters is used.
 
 Special Notations
 -----------------
@@ -51,46 +63,79 @@ Syntax
 
 The syntax of a rule can be single line:
 
-.. code-block:: html
+.. code-block:: none
 
-  on <trigger> do <action> endon
+   on <trigger> do <action> endon
 
 or multi-line (need to be closed with an "endon"):
 
-.. code-block:: html
+.. code-block:: none
 
-  on <trigger> do
-   <action>
-   <action>
-   <action>
-  endon
+   on <trigger> do
+    <action>
+    <action>
+    <action>
+   endon
 
-IF/ELSE
--------
+IF/ELSE - IF/ELSEIF/ELSE
+------------------------
 
 Also simple if ... else ... statements are possible:
 
-.. code-block:: html
+.. code-block:: none
 
- on <trigger> do
-  if <test>
-    <action>
-    <action>
-  else
-   <action>
-  endif
- endon
+   on <trigger> do
+    if <test>
+      <action>
+      <action>
+    else
+     <action>
+    endif
+   endon
 
 If the "else" part is not needed it can be removed:
 
-.. code-block:: html
+.. code-block:: none
 
- on <trigger> do
-  if <test>
-    <action>
-    <action>
-  endif
- endon
+   on <trigger> do
+    if <test>
+      <action>
+      <action>
+    endif
+   endon
+
+Also more complex if ... elseif ... else statements are possible (multiple elseif's can be used)
+
+.. code-block:: none
+
+   on <trigger> do
+    if <test1>
+      <action>
+      <action>
+    elseif <test2>
+      <action>
+      <action>
+    else
+     <action>
+    endif
+   endon
+
+Again, if the "else" part is not needed it can be removed:
+
+.. code-block:: none
+
+   on <trigger> do
+    if <test1>
+      <action>
+      <action>
+    elseif <test2>
+      <action>
+      <action>
+    elseif <test3>
+      <action>
+      <action>
+    endif
+   endon
 
 AND/OR
 ------
@@ -102,55 +147,55 @@ consumption of stack space (IRAM). Depending on plug-ins in use this might
 lead to unpredictable, unreliable behavior, advice is not to exceed 3 levels
 of nesting.
 
-.. code-block:: html
+.. code-block:: none
 
- on <trigger> do
-  if <test1>
-    event,<EventName1>
-  endif
- endon
-
- on <EventName1> do
-  if <test2>
-    <action>
-  endif
- endon
+   on <trigger> do
+    if <test1>
+      event,<EventName1>
+    endif
+   endon
+   
+   on <EventName1> do
+    if <test2>
+      <action>
+    endif
+   endon
 
 As of mega-201803.. we have the possibility to use AND/OR:
 
-.. code-block:: html
+.. code-block:: none
 
- on test do
-   if [test#a]=0 or [test#b]=0 or [test#c]=0
-    event,ok
-   else
-    event,not_ok
-   endif
- endon
-
- on test2 do
-   if [test#a]=1 and [test#b]=1 and [test#c]=1
-    event,ok
-   else
-    event,not_ok
-   endif
- endon
-
- on test3 do
-   if [test#a]=1 and [test#b]=1 or [test#c]=0
-    event,ok
-   else
-    event,not_ok
-   endif
- endon
-
- on test4 do
-   if [test#a]=0
-    event,ok
-   else
-    event,not_ok
-   endif
- endon
+   on test do
+     if [test#a]=0 or [test#b]=0 or [test#c]=0
+      event,ok
+     else
+      event,not_ok
+     endif
+   endon
+   
+   on test2 do
+     if [test#a]=1 and [test#b]=1 and [test#c]=1
+      event,ok
+     else
+      event,not_ok
+     endif
+   endon
+   
+   on test3 do
+     if [test#a]=1 and [test#b]=1 or [test#c]=0
+      event,ok
+     else
+      event,not_ok
+     endif
+   endon
+   
+   on test4 do
+     if [test#a]=0
+      event,ok
+     else
+      event,not_ok
+     endif
+   endon
 
 Up to two AND/OR can be used per if statement, that means that you can test
 three float values and if the statement is true/false corresponding action will take place.
@@ -158,13 +203,13 @@ three float values and if the statement is true/false corresponding action will 
 Trigger
 -------
 
-.. code-block:: html
+.. code-block:: none
 
   <trigger>
 
 The trigger can be an device value being changed:
 
-.. code-block:: html
+.. code-block:: none
 
   DeviceName#ValueName
 
@@ -173,13 +218,13 @@ Operator (inequality function)
 
 Or a inequality function:
 
-.. code-block:: html
+.. code-block:: none
 
  DeviceName#ValueName<inequality function><value>
 
 Where the "inequality function" is a simple check:
 
-.. code-block:: html
+.. code-block:: none
 
   equal (=) to
   less (<) than
@@ -207,14 +252,14 @@ boot/reboot/time/sleep etc. of the unit:
 Test
 ----
 
-.. code-block:: html
+.. code-block:: none
 
   <test>
 
 As described in the trigger section the test is a check done by checking
 if the DeviceName#ValueName is meeting a criteria:
 
-.. code-block:: html
+.. code-block:: none
 
   [DeviceName#ValueName]<inequality function><value>
 
@@ -224,7 +269,7 @@ DeviceName#ValueName is closed by (square) brackets "[" and "]".
 Action
 ------
 
-.. code-block:: html
+.. code-block:: none
 
  <action>
 
@@ -239,7 +284,7 @@ Comment
 If you want you can add comments to any row in your rules code. Just
 remember to add them after the code and always begin with "//":
 
-.. code-block:: html
+.. code-block:: none
 
  on <trigger> do //If this happens then do that...
   if <test>
@@ -323,13 +368,13 @@ In order to allow the comma or space in a parameter, you can wrap the parameter 
 There are multiple quotes available for this, to be able to use "the other quote" in your parameter.
 For example in JSON, you need the double quote for string like values or keys.
 
-.. code-block:: html
+.. code-block:: none
  
  Publish domoticz/in,{"idx":26,"nvalue":0,"svalue":"[AQ#TVOC]"}
 
 This can be fixed by wrapping the last parameter with single quotes like this:
 
-.. code-block:: html
+.. code-block:: none
  
  Publish domoticz/in,'{"idx":26,"nvalue":0,"svalue":"[AQ#TVOC]"}'
 
@@ -355,12 +400,16 @@ Transformation
 * A "binary" transformation can be "inverted" by adding a leading ``!``.
 * A "binary" value is considered 0 when its string value is "0" or empty, otherwise it is an 1. (float values are rounded)
 * A "binary" value can also be used to detect presence of a string, as it is 0 on an empty string or 1 otherwise.
+* If the transformation contains ``R``, under certain circumstances, the value will be right-aligned.
 
 Binary transformations:
 
 * ``C``: 0 => "CLOSE" 1 => " OPEN"
+* ``c``: 0 => "CLOSED" 1 => "  OPEN"
 * ``H``: 0 => "COLD" 1 => " HOT"
 * ``I``: 0 => "OUT" 1 => " IN"
+* ``L``: 0 => " LEFT" 1 => "RIGHT"
+* ``l``: 0 => "L" 1 => "R"
 * ``M``: 0 => "AUTO" 1 => " MAN"
 * ``m``: 0 => "A" 1 => "M"
 * ``O``: 0 => "OFF" 1 => " ON"
@@ -381,14 +430,24 @@ Floating point transformations:
 * ``F``: Floor (round down)
 * ``E``: cEiling (round up)
 
+Other transformations:
+
+* ``p``: Password display, replacing all value characters by asterisks ``*``. If the value is "0", nothing will be displayed.
+* ``pc``: Password display with custom character ``c``. For example p- will display value "123" as "---". If the value is "0", nothing will be displayed.
+
 Justification
 ^^^^^^^^^^^^^
+
+To apply a justification, a transformation must also be used. If no transformation is needed, use the ``V`` (value) transformation.
 
 * ``Pn``: Prefix Fill with n spaces.
 * ``Sn``: Suffix Fill with n spaces.
 * ``Ln``: Left part of the string, n characters.
 * ``Rn``: Right part of the string, n characters.
 * ``Ux.y``: Substring Ux.y where x=firstChar and y=number of characters.
+* ``C``: Capitalize first character of each word (space/period separated).
+* ``u``: Uppercase entire value.
+* ``l``: Lowercase entire value.
 
 
 String Formatting and Interpreting
@@ -412,7 +471,7 @@ The position arguments are the same as in Arduino ``String::substring`` , meanin
 
 For example:
 
-.. code-block:: html
+.. code-block:: none
  
  on DS-1#Temperature do
    logentry,{substring:0:1:%eventvalue%}
@@ -423,7 +482,7 @@ For example:
 The ``%eventvalue%`` may contain the value "23.06"
 The output in the log will then be:
 
-.. code-block:: html
+.. code-block:: none
 
  1512372 : Info  : EVENT: DS-1#Temperature=23.06
  1512404 : Info  : ACT  : logentry,2
@@ -441,13 +500,13 @@ N.B. it is also possible to concatenate these and refer to ``{taskname#varname}`
 
 For example (bit useless example, just for illustrative purposes): 
 
-.. code-block:: html
+.. code-block:: none
 
  on DS-1#Temperature do
    logentry,{substring:0:2:{strtol:16:{substring:0:2:[DS-1#Temperature]}{substring:3:5:[DS-1#Temperature]}}}
  endon
 
-.. code-block:: html
+.. code-block:: none
 
  221313 : Info  : EVENT: DS-1#Temperature=22.13
  221346 : Info  : parse_string_commands cmd: substring:0:2:22.13 -> 22
@@ -468,14 +527,14 @@ Usage: ``{strtol:16:<string>}``  to convert HEX (base 16) into an integer value.
 
 Example of extracting sub strings from a value and interpreting as if they were HEX values:
 
-.. code-block:: html
+.. code-block:: none
 
  on DS-1#Temperature do
    logentry,{strtol:16:%eventvalue%}
    logentry,{strtol:16:{substring:3:5:%eventvalue%}}
  endon
 
-.. code-block:: html
+.. code-block:: none
 
  1987550 : Info  : EVENT: DS-1#Temperature=24.12
  1987586 : Info  : ACT  : logentry,36
@@ -519,7 +578,7 @@ Last but not least the fraction is not correct, it needs to be divided by 256 (a
 
 Complete rule used to parse this and set a variable in a dummy device:
 
-.. code-block:: html
+.. code-block:: none
 
  // Room temperature
  on !Serial#T1018* do
@@ -536,7 +595,7 @@ Usage: ``{ord:<string>}``
 
 For example:
 
-.. code-block:: html
+.. code-block:: none
 
  on DS-1#Temperature do
    logentry,{ord:A}   // ASCII value of 'A'
@@ -544,7 +603,7 @@ For example:
  endon
 
 
-.. code-block:: html
+.. code-block:: none
 
  2982455 : Info  : EVENT: DS-1#Temperature=23.12
  2982487 : Info  : ACT  : logentry,65
@@ -579,7 +638,7 @@ Regarding spaces in names it is recommended to NOT use them as it makes bug
 testing rules a lot harder. Spaces between chunks of code is possible to make
 the code more readable:
 
-.. code-block:: html
+.. code-block:: none
 
  [DeviceName#ValueName]<<value> //These work...
  [DeviceName#ValueName] < <value> //the same...
@@ -600,14 +659,14 @@ TaskValueSet
 Dummy Device is a single way to store and read value on variable.
 Just create Generic - Dummy Device and variables inside it.
 
-.. code-block:: html
+.. code-block:: none
 
  TaskValueSet,TASKnr,VARnr,Value
 
 This example for two switches that toggle one device (LED and Relay on GPIO 13 and 16).
 
 
-.. code-block:: html
+.. code-block:: none
 
  on sw1#state do
   if [dummy#var1]=0
@@ -641,7 +700,7 @@ For the Unix time there are now 2 variables included:
 Here some example used to store the Unix time in the dummy plugin to keep track of actions.
 The values stored in the Dummy variables will be kept and restored on a crash/reboot as long as the ESP remains powered.
 
-.. code-block:: html
+.. code-block:: none
 
  if [DT#YMD]=0 and %unixday%>0
   taskvalueset,7,1,%unixday%-1
@@ -668,7 +727,7 @@ the '=' sign, up to four values are possible).
 
 Sample rules section:
 
-.. code-block:: html
+.. code-block:: none
 
  on remoteTimerControl do
    timerSet,1,%eventvalue%
@@ -676,12 +735,19 @@ Sample rules section:
 
 Now send this command to the ESP:
 
-.. code-block:: html
+.. code-block:: none
 
  http://<espeasyip>/control?cmd=event,remoteTimerControl=5
 
 and it will set rules timer no 1 to 5 seconds. Using this technique you can
 parse a value from an event to the rule engine.
+
+It is possible to use multiple event values. Some system events generate multiple event values.
+
+For example, the ``Rules#Timer`` event has 2 event values (since build 2020/08/12):
+
+* ``%eventvalue1%`` has the timer number (1 ... max timer ID)
+* ``%eventvalue2%`` has the loop count for loop timers (since build 2020/08/12)
 
 .. note::
  'timerSet' is a rule command and cannot be run directly from a remote command.
@@ -693,7 +759,7 @@ the value of the Dummy device as condition in if-statement within rules.
 
 Multiple event values:
 
-.. code-block:: html
+.. code-block:: none
 
  on ToggleGPIO do
    GPIO,%eventvalue1%,%eventvalue2%
@@ -701,7 +767,7 @@ Multiple event values:
 
 You could then use the command "ToggleGPIO" with dynamic GPIO numbers and state.
 
-.. code-block:: html
+.. code-block:: none
 
  http://<espeasyip>/control?cmd=event,ToggleGPIO=12,1
 
@@ -710,7 +776,7 @@ Internal variables
 
 A really great feature to use is the 16 internal variables. You set them like this:
 
-.. code-block:: html
+.. code-block:: none
 
  Let,<n>,<value>
 
@@ -727,7 +793,7 @@ remove the jumpiness with hardware you might want to add a filter in the softwar
 
 A **10 value average**:
 
-.. code-block:: html
+.. code-block:: none
 
   On Temp#Value Do
    Let,10,[VAR#9]
@@ -751,7 +817,7 @@ value instead of the sensor value.
 
 Another filter could be to just use the previous value and **dilute** the new value with that one:
 
-.. code-block:: html
+.. code-block:: none
 
   On Temp#Value Do
     Let,2,[VAR#1]
@@ -762,7 +828,7 @@ Another filter could be to just use the previous value and **dilute** the new va
 
 Yet another filter could be to add the new value to a **summarized average**:
 
-.. code-block:: html
+.. code-block:: none
 
   On Temp#Value Do
     Let,1,[Temp#Value]
@@ -776,7 +842,7 @@ one suits your actual scenario the best.
 PIR and LDR
 -----------
 
-.. code-block:: html
+.. code-block:: none 
 
  On PIR#State do
    if [LDR#Light]<500
@@ -789,7 +855,7 @@ PIR and LDR
   In other words: If the PIR switch is set (to either 1 or 0) and if
   the light value < 500, then set GPIO port 16 of the ESP.
 
-.. code-block:: html
+.. code-block:: none
 
  on PIR#State=1 do
    if [LDR#Light]<500
@@ -802,7 +868,7 @@ Now the event is only triggered when the PIR switches on.
 SR04 and LDR
 ------------
 
-.. code-block:: html
+.. code-block:: none
 
  on SR04#range<100 do
    if [ldr#lux]<500
@@ -818,9 +884,10 @@ SR04 and LDR
 Timer
 -----
 
-There are 8 timers (1-8) you can use:
+Until 2020/08/12, there were 8 timers.  (1-8)
+Builds made after this date support 256 timers.  (1-256)
 
-.. code-block:: html
+.. code-block:: none
 
  On System#Boot do    //When the ESP boots, do
    servo,1,12,0
@@ -838,13 +905,61 @@ There are 8 timers (1-8) you can use:
  endon
 
 
+Timers can also be paused and resumed using resp. ``timerPause`` and ``timerResume``.
+
+
+Sub-second resolution and loop timers
+-------------------------------------
+
+Added on 2020/08/12:
+
+* ``timerSet_ms``  To set the timer with msec resolution.
+* ``loopTimerSet`` To create a repeating timer with constant interval.
+* ``loopTimerSet_ms`` Same as ``loopTimerSet``, with msec interval.
+
+Here a small example to show how to start/stop and pause loop timers.
+This can be used to create quite complex timing schemas, especially when
+using multiple timers which are set to a relative prime interval.
+
+N.B. the 2nd eventvalue of ``Rules#Timer`` has the number of loops.
+
+.. code-block:: html
+
+ On System#Boot do    //When the ESP boots, do
+   looptimerset_ms,1,2000,10  // Start loop timer 1, 2000 msec interval, 10 loops
+   looptimerset_ms,2,2500     // Start loop timer 2, 2500 msec interval
+ endon
+ 
+ On Rules#Timer=1 do
+   if %eventvalue2% >= 5
+     timerSet,1,0     // Stop timer 1
+   endif
+   //pulse some led on pin 2 shortly
+   Pulse,2,0,50
+   logentry,%eventvalue2%  // log the loop count
+ endon
+ 
+ On Rules#Timer=2 do
+   if %eventvalue2% = 2
+     loopTimerSet_ms,2,2500  // Restart loop timer 2 (thus clearing loop count)
+     timerResume,1
+   else
+     timerPause,1
+   endif
+ endon
+
+
+
+
+
+
 Starting/stopping repeating timers with events
 ----------------------------------------------
 
 To disable an existing timer, set it to 0. This is useful to make repeating
 timers for things like alarms or warnings:
 
-.. code-block:: html
+.. code-block:: none
 
  //start the warning signal when we receive a start_warning event:
  On start_warning do
@@ -868,7 +983,7 @@ timers for things like alarms or warnings:
 
 To start or stop the warning signal use http:
 
-.. code-block:: html
+.. code-block:: none
 
  http://<espeasyip>/control?cmd=event,start_warning
  http://<espeasyip>/control?cmd=event,stop_warning
@@ -878,14 +993,14 @@ HTTP call
 
 When you enter this first command with the correct IP address in the URL of your browser:
 
-.. code-block:: html
+.. code-block:: none
 
  http://<espeasyip>/control?cmd=event,startwatering
  http://<espeasyip>/control?cmd=event,stopwatering
 
 And have this rule in the addressed ESP:
 
-.. code-block:: html
+.. code-block:: none
 
  On startwatering do
   gpio,12,1 //start watering (open valve)
@@ -919,7 +1034,7 @@ SendTo:  SendTo <unit>,<command>
 Imagine you have two ESP Easy modules, ESP#1 and ESP#2
 In the Rules section of ESP#1 you have this:
 
-.. code-block:: html
+.. code-block:: none
 
  on demoEvent do
    sendTo,2,event,startwatering //(to use the previous example.)
@@ -929,7 +1044,7 @@ And ESP#2 has the rules according to the previous example (givemesomewater)
 
 If you then enter this with the correct IP address in the URL of your browser:
 
-.. code-block:: html
+.. code-block:: none
 
  http://<ESP#1-ip >/control?cmd=event,demoEvent
 
@@ -937,7 +1052,7 @@ Then ESP#1 shall send the event 'startwatering ' to ESP#2.
 
 It is also possible to directly order GPIO changes, like:
 
-.. code-block:: html
+.. code-block:: none
 
  on demoEvent do
    sendTo,2,GPIO,2,1
@@ -946,7 +1061,7 @@ It is also possible to directly order GPIO changes, like:
 
 Publish
 
-.. code-block:: html
+.. code-block:: none
 
  Publish,<topic>,<value>
 
@@ -957,7 +1072,7 @@ Time
 
 With Rules you can also start or stop actions on a given day and time, or even on every day.
 
-.. code-block:: html
+.. code-block:: none
 
  On Clock#Time=All,18:25 do // every day at 18:25 hours do ...
   gpio,14,0
@@ -965,7 +1080,7 @@ With Rules you can also start or stop actions on a given day and time, or even o
 
 Or for a specific day:
 
-.. code-block:: html
+.. code-block:: none
 
  On Clock#Time=Sun,18:25 do  // for Sunday, but All, Sun, Mon, Tue, Wed, Thu, Fri, Sat will do.
   gpio,14,0
@@ -974,7 +1089,7 @@ Or for a specific day:
 It is also possible to use the system value %systime% in rules conditions
 to make things happen during certain hours of the day:
 
-.. code-block:: html
+.. code-block:: none
 
   On Pir#State=1 do
    If %systime% < 07:00:00
@@ -994,7 +1109,7 @@ SendToHTTP
 
 To send a message to another device, like a command to switch on a light to Domoticz
 
-.. code-block:: html
+.. code-block:: none
 
  On System#Boot do    //When the ESP boots, do
    timerSet,1,10      //Set Timer 1 for the next event in 10 seconds
@@ -1008,7 +1123,7 @@ Many users have reported problems with commands being truncated, particularly
 when trying to send commands to Domoticz. It seems to be a parsing error.
 There is the following workaround:
 
-.. code-block:: html
+.. code-block:: none
 
    SendToHTTP 192.168.0.243,8080,/json.htm?type=param=switchlight&command&idx=174&switchcmd=On
 
@@ -1024,7 +1139,7 @@ different i2c addresses.
 
 For dew point on the 'outside':
 
-.. code-block:: html
+.. code-block:: none
 
  on TempHumidityPressure_OUTSIDE#%RH do
   TaskValueSet,7,1,[TempHumidityPressure_OUTSIDE#°C]-(100-[TempHumidityPressure_OUTSIDE#%RH])/5  // "7" is the number of the task that the dummy device is on, "1" is its first value where we dump our result
@@ -1037,7 +1152,7 @@ For dew point on the 'outside':
 
 For dew point on the 'inside':
 
-.. code-block:: html
+.. code-block:: none
 
  on TempHumidityPressure_INSIDE#%RH do
   TaskValueSet,7,2,[TempHumidityPressure_INSIDE#°C]-(100-[TempHumidityPressure_INSIDE#%RH])/5  // "7" is the number of the task that the dummy device is on, "2" is its second value where we dump our result
@@ -1055,7 +1170,7 @@ Report IP every 30 seconds using MQTT
 This rule also work as a ping or heart beat of the unit. If it has not
 published a IP number for 30+ seconds the unit is experiencing problems.
 
-.. code-block:: html
+.. code-block:: none
 
  On System#Boot do    //When the ESP boots, do
   Publish,%sysname%/IP,%ip%
@@ -1078,7 +1193,7 @@ just as an example we want to publish these as custom messages with a unique IDX
 
 *MQTT*
 
-.. code-block:: html
+.. code-block:: none
 
  on INA219#Amps do
   Publish domoticz/in,{"idx":123456,"nvalue":0,"svalue":"[INA219#Amps]"} //Own made up IDX 123456
@@ -1091,7 +1206,7 @@ just as an example we want to publish these as custom messages with a unique IDX
 
 *HTTP*
 
-.. code-block:: html
+.. code-block:: none
 
  on INA219#Amps do
   SendToHTTP 192.168.1.2,8080,/json.htm?type=command&param=udevice&idx=123456&nvalue=0&svalue=[INA219#Amps] //Own made up IDX 123456
@@ -1112,7 +1227,7 @@ Using a "normal switch" device which is in this example normally set to low
 (0) you can make one of two actions  when pressed. If you either release the
 button in less than a second or press it for more than a second:
 
-.. code-block:: html
+.. code-block:: none
 
  on Button#State=1 do
   timerSet,1,1
@@ -1131,7 +1246,7 @@ Calculating water consumption
 
 Using the pulse counter you can calculate and act on waterflow and changes like this:
 
-.. code-block:: html
+.. code-block:: none
 
  On System#Boot do // When the ESP boots, do
   TaskValueSet,3,1,0 // TaskValueSet TASKnr,VARnr,Value, Reset the Liters counter to 0

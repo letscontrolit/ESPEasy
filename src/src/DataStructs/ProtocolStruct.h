@@ -9,10 +9,9 @@
 \*********************************************************************************************/
 struct ProtocolStruct
 {
-  ProtocolStruct() :
-    defaultPort(0), Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
-    usesTemplate(false), usesID(false), Custom(false), usesHost(true), usesPort(true),
-    usesQueue(true), usesCheckReply(true), usesTimeout(true), usesSampleSets(false) {}
+  ProtocolStruct();
+
+  bool useExtendedCredentials() const;
 
   uint16_t defaultPort;
   byte     Number;
@@ -28,6 +27,8 @@ struct ProtocolStruct
   bool     usesCheckReply : 1;
   bool     usesTimeout    : 1;
   bool     usesSampleSets : 1;
+  bool     usesExtCreds   : 1;
+  bool     needsNetwork   : 1;
 };
 
 typedef std::vector<ProtocolStruct> ProtocolVector;

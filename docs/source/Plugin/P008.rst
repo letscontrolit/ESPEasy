@@ -21,6 +21,18 @@ Maintainer: |P008_maintainer|
 
 Used libraries: |P008_usedlibraries|
 
+Description
+-----------
+
+The Wiegand plugin reads the Wiegand protocol, either the 26 or 34 bit variant, transmitted over a 2-wire serial connection. The RFID reader or keypad has to be connected to two GPIO pins on the ESP module. The plugin uses an interrupt routine to decode the bitstream. A RFID reader will send a message containing the unique RFID Tag ID. A keypad will send the input after pressing the #, or another configured, confirmation key.
+
+Data is transmitted in hexadecimal format.
+For numeric keypads an option is provided to transform the hex value into a decimal representation, so that when entering value 1234# (# is the confirmation key here), not the result 4660 (0x1234) is made available, but actually 1234. This for easier processing/validating of the entered value. Any input of A-F is replaced by 0 when this option is enabled! It should not be enabled when using a RFID reader, as the Tag ID won't be correct.
+
+The value is placed in the Tag variable (this name can be changed).
+
+.. image:: P008_Settings.png
+
 Supported hardware
 ------------------
 

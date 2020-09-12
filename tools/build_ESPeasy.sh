@@ -7,8 +7,13 @@
 # sudo apt-get update
 # sudo apt-get upgrade
 # sudo apt install python-minimal virtualenv build-essential zip binutils
+# For Python 3.8:
+# sudo apt install -y software-properties-common
+# sudo add-apt-repository ppa:deadsnakes/ppa
+# sudo apt install -y python3.8
 
-VENV=~/.venv/python2.7
+
+VENV=~/.venv/python3.8
 SRC=~/GitHub/letscontrolit/ESPEasy
 REPO=https://github.com/letscontrolit/ESPEasy.git
 BRANCH=mega
@@ -33,7 +38,7 @@ done
 # If virtualenv does not exist, make it.
 if [ ! -d ${VENV} ]; then
   mkdir -p ${VENV}
-  virtualenv -p python2.7 ${VENV}
+  virtualenv -p python3.8 ${VENV}
 fi
 
 # if repository directory does not exist, make it and clone repository
@@ -74,6 +79,11 @@ platformio run --target clean
 # patch platformio core libs for PUYA bug (https://github.com/letscontrolit/ESPEasy/issues/650)
 cd ${SRC}/patches; ./check_puya_patch;
 cd ${SRC}
+
+if [ -d "build_output/" ]; then
+  rm -Rf build_output/*
+fi
+
 
 # Must look into all possible env definitions.
 # Exclude so called "spec_" (special) builds

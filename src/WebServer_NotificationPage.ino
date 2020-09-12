@@ -2,7 +2,9 @@
 // ********************************************************************************
 // Web Interface notifcations page
 // ********************************************************************************
-#ifndef NOTIFIER_SET_NONE
+#include "ESPEasy_common.h"
+
+#ifdef USES_NOTIFIER
 
 #include "src/Globals/NPlugins.h"
 
@@ -70,7 +72,7 @@ void handle_notifications() {
       {
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = notificationindex;
-        schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, &TempEvent);
+        Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, &TempEvent);
       }
     }
   }
@@ -134,7 +136,7 @@ void handle_notifications() {
     addFormHeader(F("Notification Settings"));
     addRowLabel(F("Notification"));
     byte choice = Settings.Notification[notificationindex];
-    addSelector_Head(F("notification"), true);
+    addSelector_Head_reloadOnChange(F("notification"));
     addSelector_Item(F("- None -"), 0, false, false, "");
 
     for (byte x = 0; x <= notificationCount; x++)
@@ -213,4 +215,4 @@ void handle_notifications() {
   TXBuffer.endStream();
 }
 
-#endif // NOTIFIER_SET_NONE
+#endif // USES_NOTIFIER

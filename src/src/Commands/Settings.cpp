@@ -5,6 +5,9 @@
 #include "../Globals/Settings.h"
 #include "../Globals/SecuritySettings.h"
 
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
+
 #include "../../ESPEasy_fdwdecl.h"
 
 
@@ -71,7 +74,7 @@ String Command_Settings_Print(struct EventStruct *event, const char* Line)
 	serialPrintln();
 
 	serialPrintln(F("System Info"));
-	serialPrint(F("  IP Address    : ")); serialPrintln(WiFi.localIP().toString());
+	serialPrint(F("  IP Address    : ")); serialPrintln(NetworkLocalIP().toString());
 	serialPrint(F("  Build         : ")); serialPrintln(String((int)BUILD));
 	serialPrint(F("  Name          : ")); serialPrintln(Settings.Name);
 	serialPrint(F("  Unit          : ")); serialPrintln(String((int)Settings.Unit));

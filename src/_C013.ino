@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C013
 
 #include "src/Globals/Nodes.h"
@@ -96,7 +97,7 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
       /*
           case CPlugin::Function::CPLUGIN_FLUSH:
             {
-              process_c013_delay_queue();
+              process_c013_delay_queue(event->ControllerIndex);
               delay(0);
               break;
             }
@@ -114,7 +115,7 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
 // ********************************************************************************
 void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return;
   }
 
@@ -158,7 +159,7 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
 
 void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
 {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return;
   }
   struct C013_SensorDataStruct dataReply;
@@ -196,7 +197,7 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
 \*********************************************************************************************/
 void C013_sendUDP(byte unit, byte *data, byte size)
 {
-  if (!WiFiConnected(10)) {
+  if (!NetworkConnected(10)) {
     return;
   }
   NodesMap::iterator it;

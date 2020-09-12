@@ -1,7 +1,7 @@
 #ifndef GLOBALS_MQTT_H
 #define GLOBALS_MQTT_H
 
-#include "../../define_plugin_sets.h"
+#include "../../ESPEasy_common.h"
 
 
 #ifdef USES_MQTT
@@ -13,6 +13,7 @@
 extern WiFiClient   mqtt;
 extern PubSubClient MQTTclient;
 extern bool MQTTclient_should_reconnect;
+extern bool MQTTclient_must_send_LWT_connected;
 extern bool MQTTclient_connected;
 extern int  mqtt_reconnect_count;
 #endif // USES_MQTT

@@ -31,11 +31,20 @@ void ControllerSettingsStruct::reset() {
     IP[i] = 0;
   }
   ZERO_FILL(HostName);
+  ZERO_FILL(ClientID);
   ZERO_FILL(Publish);
   ZERO_FILL(Subscribe);
   ZERO_FILL(MQTTLwtTopic);
   ZERO_FILL(LWTMessageConnect);
   ZERO_FILL(LWTMessageDisconnect);
+  safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
+}
+
+bool ControllerSettingsStruct::isSet() const {
+  if (UseDNS) {
+    return HostName[0] != 0;
+  }
+  return ipSet();
 }
 
 void ControllerSettingsStruct::validate() {
@@ -82,8 +91,12 @@ void ControllerSettingsStruct::setHostname(const String& controllerhostname) {
   updateIPcache();
 }
 
-boolean ControllerSettingsStruct::checkHostReachable(bool quick) {
-  if (!WiFiConnected(10)) {
+bool ControllerSettingsStruct::checkHostReachable(bool quick) {
+  if (!isSet()) {
+    // No IP/hostname set
+    return false;
+  }
+  if (!NetworkConnected(10)) {
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
   delay(1);       // Make sure the Watchdog will not trigger a reset.
@@ -98,7 +111,7 @@ boolean ControllerSettingsStruct::checkHostReachable(bool quick) {
   return hostReachable(getIP());
 }
 
-boolean ControllerSettingsStruct::connectToHost(WiFiClient& client) {
+bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   if (!checkHostReachable(true)) {
     return false; // Host not reachable
   }
@@ -107,10 +120,6 @@ boolean ControllerSettingsStruct::connectToHost(WiFiClient& client) {
 
   while (retry > 0 && !connected) {
     --retry;
-
-    // In case of domain name resolution error result can be negative.
-    // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
-    // Thus must match the result with 1.
     connected = connectClient(client, getIP(), Port);
 
     if (connected) { return true; }
@@ -122,26 +131,23 @@ boolean ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   return false;
 }
 
-// Returns 1 if successful, 0 if there was a problem resolving the hostname or port
-int ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
+bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
   if (!checkHostReachable(true)) {
-    return 0; // Host not reachable
+    return false; // Host not reachable
   }
   byte retry     = 2;
-  int  connected = 0;
-
-  while (retry > 0 && connected == 0) {
+  while (retry > 0) {
     --retry;
-    connected = client.beginPacket(getIP(), Port);
-
-    if (connected != 0) { return connected; }
+    if (client.beginPacket(getIP(), Port) == 1) {
+      return true;
+    }
 
     if (!checkHostReachable(false)) {
-      return 0;
+      return false;
     }
     delay(10);
   }
-  return 0;
+  return false;
 }
 
 String ControllerSettingsStruct::getHostPortString() const {
@@ -152,7 +158,7 @@ String ControllerSettingsStruct::getHostPortString() const {
   return result;
 }
 
-bool ControllerSettingsStruct::ipSet() {
+bool ControllerSettingsStruct::ipSet() const {
   for (byte i = 0; i < 4; ++i) {
     if (IP[i] != 0) { return true; }
   }
@@ -164,7 +170,7 @@ bool ControllerSettingsStruct::updateIPcache() {
     return true;
   }
 
-  if (!WiFiConnected()) { return false; }
+  if (!NetworkConnected()) { return false; }
   IPAddress tmpIP;
 
   if (resolveHostByName(HostName, tmpIP)) {
@@ -176,33 +182,62 @@ bool ControllerSettingsStruct::updateIPcache() {
   return false;
 }
 
-
-bool ControllerSettingsStruct::mqtt_cleanSession() const 
+bool ControllerSettingsStruct::mqtt_cleanSession() const
 {
-  return getBitFromUL(MQTT_flags, 1);
+  return bitRead(MQTT_flags, 1);
 }
 
 void ControllerSettingsStruct::mqtt_cleanSession(bool value)
 {
-  setBitToUL(MQTT_flags, 1, value);
+  bitWrite(MQTT_flags, 1, value);
 }
 
 bool ControllerSettingsStruct::mqtt_sendLWT() const
 {
-  return !getBitFromUL(MQTT_flags, 2);
+  return !bitRead(MQTT_flags, 2);
 }
 
 void ControllerSettingsStruct::mqtt_sendLWT(bool value)
 {
-  setBitToUL(MQTT_flags, 2, !value);
+  bitWrite(MQTT_flags, 2, !value);
 }
 
-bool ControllerSettingsStruct::mqtt_willRetain() const 
+bool ControllerSettingsStruct::mqtt_willRetain() const
 {
-  return !getBitFromUL(MQTT_flags, 3);
+  return !bitRead(MQTT_flags, 3);
 }
 
 void ControllerSettingsStruct::mqtt_willRetain(bool value)
 {
-  setBitToUL(MQTT_flags, 3, !value);
+  bitWrite(MQTT_flags, 3, !value);
+}
+
+bool ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect() const
+{
+  return bitRead(MQTT_flags, 4);
+}
+
+void ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect(bool value)
+{
+  bitWrite(MQTT_flags, 4, value);
+}
+
+bool ControllerSettingsStruct::mqtt_retainFlag() const
+{
+  return bitRead(MQTT_flags, 5);
+}
+
+void ControllerSettingsStruct::mqtt_retainFlag(bool value)
+{
+  bitWrite(MQTT_flags, 5, value);
+}
+
+bool ControllerSettingsStruct::useExtendedCredentials() const
+{
+  return bitRead(MQTT_flags, 6);
+}
+
+void ControllerSettingsStruct::useExtendedCredentials(bool value)
+{
+  bitWrite(MQTT_flags, 6, value);
 }

@@ -14,7 +14,7 @@ void handle_setup() {
   // Do not check client IP range allowed.
   TXBuffer.startStream();
 
-  if (!WiFiConnected())
+  if (!NetworkConnected())
   {
     sendHeadandTail(F("TmplAP"));
     static byte status       = 0;
@@ -78,7 +78,7 @@ void handle_setup() {
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
   if (WiFi.scanComplete() <= 0) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
-    WifiScan(false);
+    WifiScan(false, false);
     setWifiMode(cur_wifimode);
   }
 
@@ -188,7 +188,7 @@ void handle_setup_finish() {
   html_TD();
 
   if (!clientIPinSubnet()) {
-    String host = formatIP(WiFi.localIP());
+    String host = formatIP(NetworkLocalIP());
     String url  = F("http://");
     url += host;
     url += F("/config");

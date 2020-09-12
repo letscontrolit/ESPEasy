@@ -5,9 +5,6 @@
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../../ESPEasy_fdwdecl.h"
 
-#include "../../define_plugin_sets.h"  // For USES_xxx
-
-
 #include "../ControllerQueue/ControllerDelayHandlerStruct.h"
 #include "../ControllerQueue/SimpleQueueElement_string_only.h"
 #include "../ControllerQueue/queue_element_single_value_base.h"
@@ -31,7 +28,10 @@
 
 #ifdef USES_MQTT
 # include "../ControllerQueue/MQTT_queue_element.h"
-ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
+extern ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler;
+
+bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag);
+void exit_mqtt_delay_queue();
 #endif // USES_MQTT
 
 
@@ -157,7 +157,7 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 18)
  */
 
 
-// When extending this, also extend in Scheduler.ino:
+// When extending this, also extend in Scheduler.cpp:
 // void process_interval_timer(unsigned long id, unsigned long lasttimer)
 
 

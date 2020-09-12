@@ -5,6 +5,7 @@
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/DeepSleep.h"
 
 
 String Command_System_NoSleep(struct EventStruct *event, const char* Line)
@@ -17,7 +18,7 @@ String Command_System_NoSleep(struct EventStruct *event, const char* Line)
 
 String Command_System_deepSleep(struct EventStruct *event, const char* Line)
 {
-	if (event->Par1 > 0) {
+	if (event->Par1 >= 0) {
 		deepSleepStart(event->Par1); // call the second part of the function to avoid check and enable one-shot operation
 	}
 	return return_command_success();

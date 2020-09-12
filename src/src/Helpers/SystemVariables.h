@@ -13,10 +13,22 @@ public:
     CR,
     IP,
     IP4,  // 4th IP octet
+    SUBNET,
+    GATEWAY,
+    DNS,
+    CLIENTIP,
     ISMQTT,
     ISMQTTIMP,
     ISNTP,
     ISWIFI,
+    #ifdef HAS_ETHERNET
+    ETHWIFIMODE,
+    ETHCONNECTED,
+    ETHDUPLEX,
+    ETHSPEED,
+    ETHSTATE,
+    ETHSPEEDSTATE,
+    #endif
     LCLTIME,
     LCLTIME_AM,
     LF,

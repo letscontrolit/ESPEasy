@@ -90,17 +90,19 @@ void handle_factoryreset() {
 void addPreDefinedConfigSelector() {
   DeviceModel active_model = ResetFactoryDefaultPreference.getDeviceModel();
 
-  addSelector_Head("fdm", true);
+  addSelector_Head_reloadOnChange("fdm");
 
   for (byte x = 0; x < DeviceModel_MAX; ++x) {
     DeviceModel model = static_cast<DeviceModel>(x);
-    addSelector_Item(
-      getDeviceModelString(model),
-      x,
-      model == active_model,
-      !modelMatchingFlashSize(model),
-      ""
-      );
+    if (modelMatchingFlashSize(model)) {
+      addSelector_Item(
+        getDeviceModelString(model),
+        x,
+        model == active_model,
+        false,
+        ""
+        );
+    }
   }
   addSelector_Foot();
 }

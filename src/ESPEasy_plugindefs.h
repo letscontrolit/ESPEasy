@@ -37,6 +37,8 @@
 #define PLUGIN_GET_PACKED_RAW_DATA         30 // Return all data in a compact binary format specific for that plugin.
                                               // Needs USES_PACKED_RAW_DATA
 #define PLUGIN_ONLY_TIMER_IN               31
+#define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     32
+
 
 
 // ********************************************************************************

@@ -32,7 +32,7 @@ Wiring
 
 .. image:: P004_DS18b20_5.jpg
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               DS18b20
   GPIO (14)  <-->   1-wire/D (yellow)
@@ -42,8 +42,10 @@ Wiring
   GND        <-->   GND (black)
 
 The sensor needs a pull up resistor. If you use the breakout board type the resistor usually is already on the board.
-This gets you into problems if using several DS18B20 breakout boards. There should be **only one resistor fore the entire line**
+This gets you into problems if using several DS18B20 breakout boards. There should be **only one resistor for the entire line**
 so you might have to remove resistors leaving just one at one end of the line.
+
+Typical value for the pull up resistor is 4k7. For multiple sensors on the same wire this value may need to be lowered a bit.
 
 Do not use very thin cabling! Tested with a 3x0.14mm² cable the length with 5 Sensors was 10 meters, longer cabling did not work.
 Use a phone line cable (2x2x0.6mm²) instead if you need long distances up to 50..100 meters. remember: One (!) pull-up resistor for the whole line!
@@ -106,7 +108,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     On Temp1#Celsius Do
      If [Temp1#Celsius]>37

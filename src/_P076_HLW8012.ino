@@ -60,9 +60,14 @@ unsigned int p076_hpowfact = 0;
 #define P076_Teckin       7
 #define P076_TeckinUS     8
 #define P076_Gosund       9
+#define P076_Shelly_PLUG_S 10
 
 // Keep values as they are stored and increase this when adding new ones.
-#define MAX_P076_DEVICE   10
+#define MAX_P076_DEVICE   11
+
+void ICACHE_RAM_ATTR p076_hlw8012_cf1_interrupt();
+void ICACHE_RAM_ATTR p076_hlw8012_cf_interrupt();
+
 
 bool p076_getDeviceString(int device, String& name) {
   switch(device) {
@@ -76,6 +81,7 @@ bool p076_getDeviceString(int device, String& name) {
     case P076_Teckin   : name = F("Teckin");          break;
     case P076_TeckinUS : name = F("Teckin US");       break;
     case P076_Gosund   : name = F("Gosund SP1 v23");  break;
+    case P076_Shelly_PLUG_S : name = F("Shelly PLUG-S");  break;
     default:
       return false;
   }
@@ -94,6 +100,7 @@ bool p076_getDeviceParameters(int device, byte &SEL_Pin, byte &CF_Pin, byte &CF1
     case P076_Teckin   : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     case P076_TeckinUS : SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     case P076_Gosund   : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Shelly_PLUG_S : SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     default:
       return false;
   }
@@ -197,12 +204,12 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       byte cf_trigger  = PCONFIG(5);
       byte cf1_trigger = PCONFIG(6);
       addFormSubHeader(F("Custom Pin settings (choose Custom above)"));
-      addFormSelector(F("Current (A) Reading"), F("p076_curr_read"), 2,
+      addFormSelector(F("SEL Current (A) Reading"), F("p076_curr_read"), 2,
                       modeCurr, modeCurrValues, currentRead );
-      addFormSelector(F("CF Interrupt Edge"), F("p076_cf_edge"), 4,
-                      modeRaise, modeValues, cf_trigger );
       addFormSelector(F("CF1  Interrupt Edge"), F("p076_cf1_edge"), 4,
                       modeRaise, modeValues, cf1_trigger);
+      addFormSelector(F("CF Interrupt Edge"), F("p076_cf_edge"), 4,
+                      modeRaise, modeValues, cf_trigger );
     }
 
 
@@ -308,10 +315,10 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
         if (timeOutReached(p076_timer)) {
           p076_hvoltage = Plugin_076_hlw->getVoltage();
           p076_hpower = Plugin_076_hlw->getActivePower();
-          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor());
+          p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor());
           ++p076_read_stage;
           // Measurement is done, schedule a new PLUGIN_READ call
-          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
         break;
       default:
@@ -331,7 +338,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
           p076_hpower = Plugin_076_hlw->getActivePower();
           p076_hvoltage = Plugin_076_hlw->getVoltage();
           p076_hcurrent = Plugin_076_hlw->getCurrent();
-          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor());
+          p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor());
         
         // Measurement is complete.
         p076_read_stage = 0;
@@ -371,7 +378,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     const byte SEL_PIN = CONFIG_PIN1;
 
     if (CF_PIN != -1 && CF1_PIN != -1 && SEL_PIN != -1) {
-      Plugin_076_hlw = new HLW8012;
+      Plugin_076_hlw = new (std::nothrow) HLW8012;
       if (Plugin_076_hlw) {
         byte currentRead = PCONFIG(4);
         byte cf_trigger  = PCONFIG(5);

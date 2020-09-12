@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C002
 
 // #######################################################################################################
@@ -8,7 +9,11 @@
 #define CPLUGIN_ID_002         2
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
+#include "src/Commands/InternalCommands.h"
 #include <ArduinoJson.h>
+
+String CPlugin_002_pubname;
+bool CPlugin_002_mqtt_retainFlag = false;
 
 bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& string)
 {
@@ -23,6 +28,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesTemplate = true;
       Protocol[protocolCount].usesAccount  = true;
       Protocol[protocolCount].usesPassword = true;
+      Protocol[protocolCount].usesExtCreds = true;
       Protocol[protocolCount].defaultPort  = 1883;
       Protocol[protocolCount].usesID       = true;
       break;
@@ -36,9 +42,13 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
     {
-      MakeControllerSettings(ControllerSettings);
-      LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-      MQTTDelayHandler.configureControllerSettings(ControllerSettings);
+      success = init_mqtt_delay_queue(event->ControllerIndex, CPlugin_002_pubname, CPlugin_002_mqtt_retainFlag);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+    {
+      exit_mqtt_delay_queue();
       break;
     }
 
@@ -112,14 +122,12 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
 
                     switch ((int)nvalue)
                     {
-                      case 0:
+                      case 0:  // Off
                         pwmValue         = 0;
                         UserVar[baseVar] = pwmValue;
                         break;
-                      case 1:
-                        pwmValue = UserVar[baseVar];
-                        break;
-                      case 2:
+                      case 1: // On
+                      case 2: // Update dimmer value
                         pwmValue         = 10 * atol(svalue1);
                         UserVar[baseVar] = pwmValue;
                         break;
@@ -148,7 +156,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               }
 
               if (action.length() > 0) {
-                ExecuteCommand_plugin(x, VALUE_SOURCE_MQTT, action.c_str());
+                ExecuteCommand_plugin(x, EventValueSource::Enum::VALUE_SOURCE_MQTT, action.c_str());
 
                 // trigger rulesprocessing
                 if (Settings.UseRules) {
@@ -170,16 +178,6 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
     {
       if (event->idx != 0)
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
-        /*
-                  if (!ControllerSettings.checkHostReachable(true)) {
-                    success = false;
-                    break;
-                  }
-         */
-
         DynamicJsonDocument root(200);
         root[F("idx")]  = event->idx;
         root[F("RSSI")] = mapRSSItoDomoticz();
@@ -235,10 +233,10 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         addLog(LOG_LEVEL_DEBUG, log);
 #endif // ifndef BUILD_NO_DEBUG
 
-        String pubname = ControllerSettings.Publish;
+        String pubname = CPlugin_002_pubname;
         parseControllerVariables(pubname, event, false);
 
-        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), Settings.MQTTRetainFlag);
+        success = MQTTpublish(event->ControllerIndex, pubname.c_str(), json.c_str(), CPlugin_002_mqtt_retainFlag);
       } // if ixd !=0
       else
       {

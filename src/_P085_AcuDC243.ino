@@ -57,6 +57,7 @@
 
 #include <ESPeasySerial.h>
 #include "_Plugin_Helper.h"
+#include "src/Helpers/Modbus_RTU.h"
 
 struct P085_data_struct : public PluginTaskData_base {
   P085_data_struct() {}
@@ -323,7 +324,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P085_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P085_data_struct());
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -334,6 +335,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       if (P085_data->init(serial_rx, serial_tx, P085_DEPIN,
                           p085_storageValueToBaudrate(P085_BAUDRATE),
                           P085_DEV_ID)) {
+        serialHelper_log_GpioDescription(serial_rx, serial_tx);
         success = true;
       } else {
         clearPluginTaskData(event->TaskIndex);

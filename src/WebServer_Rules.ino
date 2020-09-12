@@ -10,8 +10,6 @@ void handle_rules() {
 
   if (!isLoggedIn() || !Settings.UseRules) { return; }
   navMenuIndex = MENU_INDEX_RULES;
-  static byte currentSet = 1;
-
   const byte rulesSet = getFormItemInt(F("set"), 1);
 
   #if defined(ESP8266)
@@ -25,92 +23,62 @@ void handle_rules() {
 
   String error;
 
-  if (web_server.args() > 0) {
-    String log = F("Rules : Save rulesSet: ");
-    log += rulesSet;
-    log += F(" currentSet: ");
-    log += currentSet;
-
-    if (currentSet == rulesSet) {
-      if (web_server.hasArg(F("rules"))) {
-        size_t rulesLength = web_server.arg(F("rules")).length();
-
-        // Reported length is with CRLF counted as a single byte.
-        // So rulesLength > reported_length is a valid situation.
-        size_t reported_length = getFormItemInt(F("rules_len"), 0);
-
-        if (rulesLength > RULES_MAX_SIZE) {
-          error = F("Error: Data was not saved, exceeds web editor limit!");
-        }
-
-        if (reported_length > rulesLength) {
-          error  = F("Error: Data was not saved, not received all. (");
-          error += rulesLength;
-          error += '/';
-          error += reported_length;
-          error += ')';
-        } else {
-          // Save as soon as possible, as the webserver may already overwrite the args.
-          const byte *memAddress = reinterpret_cast<const byte *>(web_server.arg(F("rules")).c_str());
-          error = doSaveToFile(fileName.c_str(), 0, memAddress, rulesLength, "w");
-        }
-      } else {
-        error = F("Error: Data was not saved, rules argument missing or corrupted");
-      }
+  // Make sure file exists
+  if (!ESPEASY_FS.exists(fileName))
+  {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Rules : Create new file: ");
+      log += fileName;
+      addLog(LOG_LEVEL_INFO, log);
     }
-    else // changed set, check if file exists and create new
-    {
-      if (!SPIFFS.exists(fileName))
-      {
-        log += F(" Create new file: ");
-        log += fileName;
-        fs::File f = tryOpenFile(fileName, "w");
+    fs::File f = tryOpenFile(fileName, "w");
 
-        if (f) { f.close(); }
-      }
-    }
-    addLog(LOG_LEVEL_INFO, log);
+    if (f) { f.close(); }
   }
+
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
   addHtmlError(error);
 
-  if (rulesSet != currentSet) {
-    currentSet = rulesSet;
-  }
-
-  addHtml(F("<form name = 'frmselect' method = 'post' onsubmit='addRulesLength()'>"));
   html_table_class_normal();
   html_TR();
   html_table_header(F("Rules"));
 
-  byte   choice = rulesSet;
-  String options[RULESETS_MAX];
-  int    optionValues[RULESETS_MAX];
-
-  for (byte x = 0; x < RULESETS_MAX; x++)
+  html_TR_TD();
+  addHtml(F("<form name = 'frmselect'>"));
   {
-    options[x]      = F("Rules Set ");
-    options[x]     += x + 1;
-    optionValues[x] = x + 1;
+    // Place combo box in its own scope to release these arrays as soon as possible
+    byte   choice = rulesSet;
+    String options[RULESETS_MAX];
+    int    optionValues[RULESETS_MAX];
+
+    for (byte x = 0; x < RULESETS_MAX; x++)
+    {
+      options[x]      = F("Rules Set ");
+      options[x]     += x + 1;
+      optionValues[x] = x + 1;
+    }
+
+    addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true, true);
+    addHelpButton(F("Tutorial_Rules"));
+    addRTDHelpButton(F("Rules/Rules.html"));
   }
 
   html_TR_TD();
-  addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true);
-  addHelpButton(F("Tutorial_Rules"));
-
   Rule_showRuleTextArea(fileName);
 
-  addFormSeparator(2);
-
   html_TR_TD();
-  addSubmitButton();
+  html_end_form();
+  addHtml(F("<button id='save_button' class='button' onClick='saveRulesFile()'>Save</button>"));
+  addHtml(F("<div id='toastmessage'>Saved!</div>"));
+
   addButton(fileName, F("Download to file"));
   html_end_table();
-  html_end_form();
-  html_add_script(F(
-                    "function addRulesLength() {    var r_len = document.getElementById('rules').value.length;	document.getElementById('rules_len').setAttribute('value', r_len);  };"),
-                  true);
+
+  html_add_script(true);
+  TXBuffer += jsSaveRules;
+  html_add_script_end();
+
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
 
@@ -236,7 +204,7 @@ void handle_rules_new() {
                                    Serial.println(fi.Name);
     #endif // ifdef WEBSERVER_RULES_DEBUG
 
-                                   return count <= endIdx;
+                                   return count < endIdx;
                                  };
 
 
@@ -348,7 +316,7 @@ void handle_rules_delete() {
 
   if (fileName.length() > 0)
   {
-    removed = SPIFFS.remove(fileName);
+    removed = ESPEASY_FS.remove(fileName);
   }
 
   if (removed)
@@ -421,7 +389,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     Serial.print(F("File name: "));
     Serial.println(fileName);
       #endif // ifdef WEBSERVER_RULES_DEBUG
-    bool isEdit = SPIFFS.exists(fileName);
+    bool isEdit = ESPEASY_FS.exists(fileName);
 
     if (web_server.args() > 0)
     {
@@ -536,16 +504,15 @@ void Rule_showRuleTextArea(const String& fileName) {
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
   size = streamFile_htmlEscape(fileName);
   addHtml(F("</textarea>"));
-  addHtml(F("<TR><TD colspan='2'>"));
 
   html_TR_TD();
   {
     String html;
     html.reserve(64);
 
-    html += F("Current size: ");
+    html += F("Current size: <span id='size'>");
     html += size;
-    html += F(" characters (Max ");
+    html += F("</span> characters (Max ");
     html += RULES_MAX_SIZE;
     html += F(")");
     addHtml(html);
@@ -554,7 +521,6 @@ void Rule_showRuleTextArea(const String& fileName) {
   if (size > RULES_MAX_SIZE) {
     addHtml(F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>"));
   }
-  addHtml(F("<p><input type='text' id='rules_len' name='rules_len' value='0'></p>"));
 }
 
 bool Rule_Download(const String& path)
@@ -597,7 +563,7 @@ bool EnumerateFileAndDirectory(String          & rootPath
   bool next    = true;
 
   #ifdef ESP8266
-  fs::Dir dir = SPIFFS.openDir(rootPath);
+  fs::Dir dir = ESPEASY_FS.openDir(rootPath);
   Serial.print(F("Enumerate files of "));
   Serial.println(rootPath);
 
@@ -621,14 +587,14 @@ bool EnumerateFileAndDirectory(String          & rootPath
   hasMore = dir.next();
   #endif // ifdef ESP8266
   #ifdef ESP32
-  File root = SPIFFS.open(rootPath);
+  File root = ESPEASY_FS.open(rootPath);
 
   if (root)
   {
     File file = root.openNextFile();
 
     while (next && file) {
-      if (count > skip) {
+      if (count >= skip) {
         fileInfo fi;
         fi.Name        = file.name();
         fi.Size        = file.size();
@@ -641,6 +607,7 @@ bool EnumerateFileAndDirectory(String          & rootPath
       }
       file = root.openNextFile();
     }
+    hasMore = file;
   }
   else
   {

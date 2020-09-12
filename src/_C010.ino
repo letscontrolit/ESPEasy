@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C010
 //#######################################################################################################
 //########################### Controller Plugin 010: Generic UDP ########################################
@@ -38,8 +39,24 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
+    case CPlugin::Function::CPLUGIN_INIT:
+      {
+        success = init_c010_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c010_delay_queue();
+        break;
+      }
+
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
+        if (C010_DelayHandler == nullptr) {
+          break;
+        }
+
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C010_queue_element element(event, valueCount);
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
@@ -48,6 +65,9 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
         }
 
         MakeControllerSettings(ControllerSettings);
+        if (!AllocatedControllerSettings()) {
+          break;
+        }
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         for (byte x = 0; x < valueCount; x++)
@@ -63,8 +83,9 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
             addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
           }
         }
-        success = C010_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C010_DELAY_QUEUE, C010_DelayHandler.getNextScheduleTime());
+        // FIXME TD-er must define a proper move operator
+        success = C010_DelayHandler->addToQueue(C010_queue_element(element));
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C010_DELAY_QUEUE, C010_DelayHandler->getNextScheduleTime());
         break;
       }
 

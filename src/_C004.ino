@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C004
 //#######################################################################################################
 //########################### Controller Plugin 004: ThingSpeak #########################################
@@ -32,9 +33,13 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        C004_DelayHandler.configureControllerSettings(ControllerSettings);
+        success = init_c004_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c004_delay_queue();
         break;
       }
 
@@ -42,10 +47,10 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
       {
         success = true;
         switch (event->idx) {
-          case CONTROLLER_USER:
+          case ControllerSettingsStruct::CONTROLLER_USER:
             string = F("ThingHTTP Name");
             break;
-          case CONTROLLER_PASS:
+          case ControllerSettingsStruct::CONTROLLER_PASS:
             string = F("API Key");
             break;
           default:
@@ -57,8 +62,11 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
-        success = C004_DelayHandler.addToQueue(C004_queue_element(event));
-        scheduleNextDelayQueue(TIMER_C004_DELAY_QUEUE, C004_DelayHandler.getNextScheduleTime());
+        if (C004_DelayHandler == nullptr) {
+          break;
+        }
+        success = C004_DelayHandler->addToQueue(C004_queue_element(event));
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C004_DELAY_QUEUE, C004_DelayHandler->getNextScheduleTime());
 
         break;
       }
@@ -88,7 +96,7 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
     return false;
 
   String postDataStr = F("api_key=");
-  postDataStr += SecuritySettings.ControllerPassword[element.controller_idx]; // used for API key
+  postDataStr += getControllerPass(element.controller_idx, ControllerSettings); // used for API key
 
   if (element.sensorType == SENSOR_TYPE_STRING) {
       postDataStr += F("&status=");

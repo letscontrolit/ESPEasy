@@ -14,7 +14,7 @@
 
 String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 {
-	if (WiFiConnected()) {
+	if (NetworkConnected()) {
 		String host = parseString(Line, 2);
 		const int port = parseCommandArgumentInt(Line, 2);
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -24,7 +24,7 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 			log += port;
 			addLog(LOG_LEVEL_DEBUG, log);
 		}
-		if (!port < 0 || port > 65535) return return_command_failed();
+		if (port < 0 || port > 65535) return return_command_failed();
 		// FIXME TD-er: This is not using the tolerant settings option.
     // String path = tolerantParseStringKeepCase(Line, 4);
 		String path = parseStringToEndKeepCase(Line, 4);

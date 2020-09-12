@@ -7,6 +7,8 @@
 #define D_STR_UNKNOWN "DESCONOCIDO"
 #define D_STR_PROTOCOL "Protocolo"
 #define D_STR_POWER "Poder"
+#define D_STR_PREVIOUS "Anterior"
+#define D_STR_PREVIOUSPOWER D_STR_POWER " " D_STR_PREVIOUS
 #define D_STR_ON "Encendido"
 #define D_STR_OFF "Apagado"
 #define D_STR_MODE "Modo"
@@ -119,11 +121,11 @@
 #define D_STR_REPEAT "Repetir"
 #define D_STR_CODE "Codigo"
 
-// IRrecvDumpV2
+// IRrecvDumpV2+
 #define D_STR_TIMESTAMP "marca de tiempo"
 #define D_STR_LIBRARY "Libreria"
 #define D_STR_IRRECVDUMP_STARTUP \
-    "IRrecvDumpV2 esta ahora corriendo y esperando por comando IR en Pin %d"
+    "IRrecvDump esta ahora corriendo y esperando por comando IR en Pin %d"
 #ifndef D_WARN_BUFFERFULL
 #define D_WARN_BUFFERFULL \
     "WARNING: Codigo IR es muy grande para el buffer (>= %d). "\

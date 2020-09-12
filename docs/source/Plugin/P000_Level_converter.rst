@@ -43,7 +43,7 @@ Wiring
    A direct connection by mistake from 5V to a GPIO may fry your ESP! Handle level-shifters with some care.
    The used FET transistors are somewhat sensible against electrostatic discharge. Use a anti-static mat.
 
-.. code-block:: html
+.. code-block:: none
 
   ESP                 Level converter             Connected hardware
   GPIO (X)     <-->   3A, LV1, A1 etc.     <-->   5A, HV1, B2 etc.

@@ -1,0 +1,59 @@
+#ifndef HELPERS_PERIODICALACTIONS_H
+#define HELPERS_PERIODICALACTIONS_H
+
+#include <Arduino.h>
+#include "../../ESPEasy_common.h"
+
+#include "../Globals/CPlugins.h"
+
+/*********************************************************************************************\
+ * Tasks that run 50 times per second
+\*********************************************************************************************/
+
+void run50TimesPerSecond();
+
+/*********************************************************************************************\
+ * Tasks that run 10 times per second
+\*********************************************************************************************/
+void run10TimesPerSecond();
+
+
+/*********************************************************************************************\
+ * Tasks each second
+\*********************************************************************************************/
+void runOncePerSecond();
+
+/*********************************************************************************************\
+ * Tasks each 30 seconds
+\*********************************************************************************************/
+void runEach30Seconds();
+
+#ifdef USES_MQTT
+
+void scheduleNextMQTTdelayQueue();
+void schedule_all_tasks_using_MQTT_controller();
+
+void processMQTTdelayQueue();
+
+void updateMQTTclient_connected();
+
+void runPeriodicalMQTT();
+
+controllerIndex_t firstEnabledMQTT_ControllerIndex();
+
+
+#endif //USES_MQTT
+
+
+void logTimerStatistics();
+
+void updateLoopStats_30sec(byte loglevel);
+
+/********************************************************************************************\
+   Clean up all before going to sleep or reboot.
+ \*********************************************************************************************/
+void prepareShutdown();
+
+
+
+#endif // HELPERS_PERIODICALACTIONS_H

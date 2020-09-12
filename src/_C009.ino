@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C009
 //#######################################################################################################
 //########################### Controller Plugin 009: FHEM HTTP ##########################################
@@ -44,6 +45,7 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
         Protocol[protocolCount].usesTemplate = false;
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].usesID = false;
         Protocol[protocolCount].defaultPort = 8383;
         break;
@@ -55,20 +57,40 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
+    case CPlugin::Function::CPLUGIN_INIT:
+      {
+        success = init_c009_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c009_delay_queue();
+        break;
+      }
+
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
+        if (C009_DelayHandler == nullptr) {
+          break;
+        }
+
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C009_queue_element element(event);
 
         MakeControllerSettings(ControllerSettings);
+        if (!AllocatedControllerSettings()) {
+          break;
+        }
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         for (byte x = 0; x < valueCount; x++)
         {
           element.txt[x] = formatUserVarNoCheck(event, x);
         }
-        success = C009_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C009_DELAY_QUEUE, C009_DelayHandler.getNextScheduleTime());
+        // FIXME TD-er must define a proper move operator
+        success = C009_DelayHandler->addToQueue(C009_queue_element(element));
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
         break;
       }
 
@@ -122,9 +144,9 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
 
     // embed IP, important if there is NAT/PAT
     // char ipStr[20];
-    // IPAddress ip = WiFi.localIP();
+    // IPAddress ip = NetworkLocalIP();
     // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-    ESP[F("ip")] = WiFi.localIP().toString();
+    ESP[F("ip")] = NetworkLocalIP().toString();
 
     // Create nested SENSOR json object
     JsonObject SENSOR = data.createNestedObject(String(F("SENSOR")));

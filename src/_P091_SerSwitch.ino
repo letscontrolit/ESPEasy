@@ -118,18 +118,20 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        String options[4];
-        options[0] = F("Yewelink/TUYA");
-        options[1] = F("Sonoff Dual");
-        options[2] = F("LC TECH");
-        options[3] = F("Moes Wifi Dimmer");
-        int optionValues[4] = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
-        addFormSelector(F("Switch Type"), F("plugin_091_type"), 4, options, optionValues, choice);
+        {
+          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+          String options[4];
+          options[0] = F("Yewelink/TUYA");
+          options[1] = F("Sonoff Dual");
+          options[2] = F("LC TECH");
+          options[3] = F("Moes Wifi Dimmer");
+          int optionValues[4] = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
+          addFormSelector(F("Switch Type"), F("plugin_091_type"), 4, options, optionValues, choice);
+        }
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_YEWE)
         {
-          choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
           String buttonOptions[4];
           buttonOptions[0] = F("1");
           buttonOptions[1] = F("2/Dimmer#2");
@@ -141,7 +143,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_SONOFFDUAL)
         {
-          choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
           String modeoptions[3];
           modeoptions[0] = F("Normal");
           modeoptions[1] = F("Exclude/Blinds mode");
@@ -152,26 +154,30 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
         if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_LCTECH)
         {
-          choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-          String buttonOptions[4];
-          buttonOptions[0] = F("1");
-          buttonOptions[1] = F("2");
-          buttonOptions[2] = F("3");
-          buttonOptions[3] = F("4");
-          int buttonoptionValues[4] = { 1, 2, 3, 4 };
-          addFormSelector(F("Number of relays"), F("plugin_091_button"), 4, buttonOptions, buttonoptionValues, choice);
+          {
+            byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+            String buttonOptions[4];
+            buttonOptions[0] = F("1");
+            buttonOptions[1] = F("2");
+            buttonOptions[2] = F("3");
+            buttonOptions[3] = F("4");
+            int buttonoptionValues[4] = { 1, 2, 3, 4 };
+            addFormSelector(F("Number of relays"), F("plugin_091_button"), 4, buttonOptions, buttonoptionValues, choice);
+          }
 
-          choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-          String speedOptions[8];
-          speedOptions[0] = F("9600");
-          speedOptions[1] = F("19200");
-          speedOptions[2] = F("115200");
-          speedOptions[3] = F("1200");
-          speedOptions[4] = F("2400");
-          speedOptions[5] = F("4800");
-          speedOptions[6] = F("38400");
-          speedOptions[7] = F("57600");
-          addFormSelector(F("Serial speed"), F("plugin_091_speed"), 8, speedOptions, NULL, choice);
+          {
+            byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+            String speedOptions[8];
+            speedOptions[0] = F("9600");
+            speedOptions[1] = F("19200");
+            speedOptions[2] = F("115200");
+            speedOptions[3] = F("1200");
+            speedOptions[4] = F("2400");
+            speedOptions[5] = F("4800");
+            speedOptions[6] = F("38400");
+            speedOptions[7] = F("57600");
+            addFormSelector(F("Serial speed"), F("plugin_091_speed"), 8, speedOptions, NULL, choice);
+          }
 
           addFormCheckBox(F("Use command doubling"), F("plugin_091_dbl"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
           addFormCheckBox(F("Use IPD preamble"), F("plugin_091_ipd"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
@@ -622,8 +628,6 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             log += F(":");
             log += rcmd;
             addLog(LOG_LEVEL_INFO, log);
-            log = F("Ok");
-            SendStatus(event->Source, log);
           }
 
           if ( command == F("relaypulse") )
@@ -674,8 +678,6 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             log += String(event->Par3);
             log += F(" mS");
             addLog(LOG_LEVEL_INFO, log);
-            log = F("\nOk");
-            SendStatus(event->Source, log);
           }
 
           if ( command == F("relaylongpulse") )
@@ -699,8 +701,8 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             unsigned long timer = event->Par3 * 1000;
 
             sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3); // init state
-            //setPluginTimer(timer, PLUGIN_ID_091, rnum, !rcmd);
-            setPluginTaskTimer(timer, PLUGIN_ID_091, event->TaskIndex, rnum, !rcmd);
+            //Scheduler.setPluginTimer(timer, PLUGIN_ID_091, rnum, !rcmd);
+            Scheduler.setPluginTaskTimer(timer, PLUGIN_ID_091, event->TaskIndex, rnum, !rcmd);
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
               if (UserVar[(varIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
                 UserVar[(varIndex + rnum)] = Plugin_091_switchstate[rnum];
@@ -727,8 +729,6 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             log += String(event->Par3);
             log += F(" sec");
             addLog(LOG_LEVEL_INFO, log);
-            log = F("\nOk");
-            SendStatus(event->Source, log);
           }
           if ( command == F("ydim") ) // deal with dimmer command
           {
@@ -756,11 +756,10 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               }
               log += event->Par1;
               addLog(LOG_LEVEL_INFO, log);
-              log = F("\nOk");
             } else {
-              log = F("\nNot supported");
+              log = F("\nYDim not supported");
+              SendStatus(event->Source, log);
             }
-            SendStatus(event->Source, log);
           }
 
         }

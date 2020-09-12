@@ -3,6 +3,10 @@
 
 #include <Arduino.h>
 #include "src/Globals/CPlugins.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Helpers/Numerical.h"
+#include "src/Helpers/StringConverter.h"
+#include "src/ControllerQueue/DelayQueueElements.h"
 
 struct ControllerSettingsStruct;
 class WiFiUDP;
@@ -17,11 +21,9 @@ bool safeReadStringUntil(Stream     & input,
                          unsigned int maxSize = 1024,
                          unsigned int timeout = 1000);
 
-String get_formatted_Controller_number(cpluginID_t cpluginID);
-
 String get_auth_header(const String& user, const String& pass);
 
-String get_auth_header(int controller_index);
+String get_auth_header(int controller_index, const ControllerSettingsStruct& ControllerSettings);
 
 String get_user_agent_request_header_field();
 
@@ -73,6 +75,13 @@ bool client_available(WiFiClient& client);
 bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr, bool must_check_reply);
 
 bool send_via_http(int controller_number, WiFiClient& client, const String& postStr, bool must_check_reply);
+
+String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);
+String getControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);
+void setControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value);
+void setControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, const String& value);
+
+bool hasControllerCredentialsSet(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);
 
 
 #endif // CPLUGIN_HELPER_H

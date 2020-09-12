@@ -12,7 +12,9 @@ Welcome to ESP Easy's documentation!
 
    ESPEasy/AboutUs.rst
    ESPEasy/FunctionBlocks.rst
+   Config/Config.rst
    Controller/_Controller.rst
+   Hardware/Hardware.rst
    Plugin/_Plugin.rst
    Rules/Rules.rst
    Tools/Tools.rst
@@ -35,6 +37,7 @@ Welcome to ESP Easy's documentation!
    Reference/Events.rst
    Reference/GPIO.rst
    Reference/SystemVariable.rst
+   Reference/URLs.rst
    Reference/RTC.rst
    Reference/ChangeLog.rst
 

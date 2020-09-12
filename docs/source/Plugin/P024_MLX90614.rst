@@ -21,7 +21,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
  ESP               MLX90614
  GPIO (4)   <-->   SDA
@@ -71,7 +71,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     on Temp#C do
      if [Temp#C]>300

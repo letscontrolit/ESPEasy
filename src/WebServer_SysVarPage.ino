@@ -42,12 +42,25 @@ void handle_sysvars() {
 #if defined(ESP8266)
   addSysVar_enum_html(SystemVariables::MAC_INT);
 #endif // if defined(ESP8266)
+  addSysVar_enum_html(SystemVariables::IP);
   addSysVar_enum_html(SystemVariables::IP4);
-  addSysVar_enum_html(SystemVariables::IP4);
+  addSysVar_enum_html(SystemVariables::SUBNET);
+  addSysVar_enum_html(SystemVariables::GATEWAY);
+  addSysVar_enum_html(SystemVariables::DNS);
   addSysVar_enum_html(SystemVariables::RSSI);
   addSysVar_enum_html(SystemVariables::SSID);
   addSysVar_enum_html(SystemVariables::BSSID);
   addSysVar_enum_html(SystemVariables::WI_CH);
+
+#ifdef HAS_ETHERNET
+  addTableSeparator(F("Ethernet"), 3, 3);
+  addSysVar_enum_html(SystemVariables::ETHWIFIMODE);
+  addSysVar_enum_html(SystemVariables::ETHCONNECTED);
+  addSysVar_enum_html(SystemVariables::ETHDUPLEX);
+  addSysVar_enum_html(SystemVariables::ETHSPEED);
+  addSysVar_enum_html(SystemVariables::ETHSTATE);
+  addSysVar_enum_html(SystemVariables::ETHSPEEDSTATE);
+ #endif
 
   addTableSeparator(F("System"), 3, 3);
   addSysVar_enum_html(SystemVariables::UNIT_sysvar);

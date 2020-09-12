@@ -12,7 +12,17 @@
 #define DEVICE_TYPE_I2C                    20  // connected through I2C
 #define DEVICE_TYPE_SERIAL                 21  // connected through UART/Serial
 #define DEVICE_TYPE_SERIAL_PLUS1           22  // connected through UART/Serial + 1 extra signal pin
+#define DEVICE_TYPE_SPI                    23  // connected through SPI
 #define DEVICE_TYPE_DUMMY                  99  // Dummy device, has no physical connection
+
+#define I2C_MULTIPLEXER_NONE               -1  // None selected
+#define I2C_MULTIPLEXER_TCA9548A            0  // TCA9548a 8 channel I2C switch, with reset, addresses 0x70-0x77
+#define I2C_MULTIPLEXER_TCA9546A            1  // TCA9546a or TCA9545a 4 channel I2C switch, with reset, addresses 0x70-0x77 (no interrupt support on TCA9545a)
+#define I2C_MULTIPLEXER_TCA9543A            2  // TCA9543a 2 channel I2C switch, with reset, addresses 0x70-0x73
+#define I2C_MULTIPLEXER_PCA9540             3  // PCA9540 2 channel I2C switch, no reset, address 0x70, different channel addressing
+
+#define I2C_FLAGS_SLOW_SPEED                0  // Force slow speed when this flag is set
+#define I2C_FLAGS_MUX_MULTICHANNEL          1  // Allow multiple multiplexer channels when set
 
 // Used for VType
 #define SENSOR_TYPE_NONE                    0
@@ -44,7 +54,7 @@ struct DeviceStruct
 
   byte Number;  // Plugin ID number.   (PLUGIN_ID_xxx)
   byte Type;    // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
-  byte VType;   // Type of value the plugin will return, used only for Domoticz
+  byte VType;   // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
   byte Ports;   // Port to use when device has multiple I/O pins  (N.B. not used much)
   byte ValueCount;             // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
   bool PullUpOption : 1;       // Allow to set internal pull-up resistors.

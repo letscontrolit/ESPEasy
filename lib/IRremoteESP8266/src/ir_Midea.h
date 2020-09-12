@@ -1,11 +1,20 @@
 // Copyright 2017 David Conran
-// Midea
+
+/// @file
+/// @brief Support for Midea protocols.
+/// Midea added by crankyoldgit & bwze
+/// @see https://docs.google.com/spreadsheets/d/1TZh4jWrx4h9zzpYUI9aYXMl1fYOiqu-xVuOOMqagxrs/edit?usp=sharing
 
 // Supports:
-//   Brand: Pioneer System,  Model: RYBO12GMFILCAD A/C (12K BTU)
-//   Brand: Pioneer System,  Model: RUBO18GMFILCAD A/C (18K BTU)
-//   Brand: Comfee, Model: MPD1-12CRN7 A/C
-//   Brand: Keystone, Model: RG57H4(B)BGEF remote
+//   Brand: Pioneer System,  Model: RYBO12GMFILCAD A/C (12K BTU) (MIDEA)
+//   Brand: Pioneer System,  Model: RUBO18GMFILCAD A/C (18K BTU) (MIDEA)
+//   Brand: Comfee, Model: MPD1-12CRN7 A/C (MIDEA)
+//   Brand: Keystone, Model: RG57H4(B)BGEF remote (MIDEA)
+//   Brand: Midea,  Model: FS40-7AR Stand Fan (MIDEA24)
+//   Brand: Danby,  Model: DAC080BGUWDB (MIDEA)
+//   Brand: Danby,  Model: DAC100BGUWDB (MIDEA)
+//   Brand: Danby,  Model: DAC120BGUWDB (MIDEA)
+//   Brand: Danby,  Model: R09C/BCGE remote (MIDEA)
 
 #ifndef IR_MIDEA_H_
 #define IR_MIDEA_H_
@@ -21,9 +30,9 @@
 #include "IRsend_test.h"
 #endif
 
-// Midea added by crankyoldgit & bwze
-// Ref:
-//   https://docs.google.com/spreadsheets/d/1TZh4jWrx4h9zzpYUI9aYXMl1fYOiqu-xVuOOMqagxrs/edit?usp=sharing
+#if DANBY_DAC
+    kSwingVToggleStr = kIonStr;
+#endif
 
 // Constants
 const uint8_t kMideaACTempOffset = 24;
@@ -48,6 +57,9 @@ const uint8_t kMideaACFanHigh = 3;  // 0b11
 const uint8_t kMideaACSleepOffset = 38;
 const uint8_t kMideaACPowerOffset = 39;
 const uint64_t kMideaACToggleSwingV = 0x0000A201FFFFFF7C;
+// For Danby DAC unit, the Ionizer toggle is the same as ToggleSwingV
+// const uint64_t kMideaACToggleIonizer = 0x0000A201FFFFFF7C;
+const uint64_t kMideaACToggleEcono = 0x0000A202FFFFFF7E;
 
 // Legacy defines. (Deprecated)
 #define MIDEA_AC_COOL kMideaACCool
@@ -66,15 +78,21 @@ const uint64_t kMideaACToggleSwingV = 0x0000A201FFFFFF7C;
 #define MIDEA_AC_MIN_TEMP_C kMideaACMinTempC
 #define MIDEA_AC_MAX_TEMP_C kMideaACMaxTempC
 
+// Classes
+/// Class for handling detailed Midea A/C messages.
+/// @warning Consider this very alpha code.
 class IRMideaAC {
  public:
   explicit IRMideaAC(const uint16_t pin, const bool inverted = false,
                      const bool use_modulation = true);
-
   void stateReset(void);
 #if SEND_MIDEA
   void send(const uint16_t repeat = kMideaMinRepeat);
-  uint8_t calibrate(void) { return _irsend.calibrate(); }
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
+  int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_MIDEA
   void begin(void);
   void on(void);
@@ -97,6 +115,9 @@ class IRMideaAC {
   bool isSwingVToggle(void);
   void setSwingVToggle(const bool on);
   bool getSwingVToggle(void);
+  bool isEconoToggle(void);
+  void setEconoToggle(const bool on);
+  bool getEconoToggle(void);
   uint8_t convertMode(const stdAc::opmode_t mode);
   uint8_t convertFan(const stdAc::fanspeed_t speed);
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
@@ -106,12 +127,15 @@ class IRMideaAC {
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
-#else
-  IRsendTest _irsend;
-#endif
-  uint64_t remote_state;
+  IRsend _irsend;  ///< Instance of the IR send class
+#else  // UNIT_TEST
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< Instance of the testing IR send class
+  /// @endcond
+#endif  // UNIT_TEST
+  uint64_t remote_state;  ///< The state of the IR remote in IR code form.
   bool _SwingVToggle;
+  bool _EconoToggle;
   void checksum(void);
   static uint8_t calcChecksum(const uint64_t state);
 };
