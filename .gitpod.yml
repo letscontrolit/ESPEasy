@@ -1,5 +1,5 @@
 tasks:
-  - init: python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/develop/scripts/get-platformio.py)" && brew install uncrustify && pip3 install -r ./requirements.txt
+  - before: python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/develop/scripts/get-platformio.py)" && brew install uncrustify && pip3 install -r ./requirements.txt
 
 image:
   file: .gitpod.Dockerfile
