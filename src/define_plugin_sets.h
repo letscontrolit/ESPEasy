@@ -1107,6 +1107,15 @@ To create/register a plugin, you have to :
   #ifdef FEATURE_I2CMULTIPLEXER
     #undef FEATURE_I2CMULTIPLEXER
   #endif
+  #ifdef USE_SERVO
+    #undef USE_SERVO
+  #endif
+  #ifdef USES_BLYNK
+    #undef USES_BLYNK
+  #endif
+  #ifdef USES_C017 // Zabbix
+    #undef USES_C017
+  #endif
 #endif
 
 // Timing stats page needs timing stats
@@ -1128,6 +1137,16 @@ To create/register a plugin, you have to :
     #define BUILD_NO_RAM_TRACKER
   #endif
 
+#endif
+
+// It may have gotten undefined to fit a build. Make sure the Blynk controllers are not defined
+#ifndef USES_BLYNK
+  #ifdef USES_C012
+    #undef USES_C012
+  #endif
+  #ifdef USES_C015
+    #undef USES_C015
+  #endif
 #endif
 
 
