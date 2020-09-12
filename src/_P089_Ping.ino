@@ -190,12 +190,6 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
     break;
   }
 
-  case PLUGIN_EXIT:
-  {
-    clearPluginTaskData(event->TaskIndex);
-    break;
-  }
-
   case PLUGIN_READ:
   {
     P089_data_struct *P089_taskdata =

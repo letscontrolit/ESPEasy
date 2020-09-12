@@ -30,7 +30,7 @@ boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
 
 void clearUserVar() {
   for (size_t i = 0; i < sizeof(UserVar) / sizeof(float); ++i) {
-    UserVar[i] = 0.0;
+    UserVar[i] = 0.0f;
   }
 }
 

@@ -207,7 +207,7 @@ void runEach30Seconds()
   #endif
 #if FEATURE_ADC_VCC
   if (!wifiConnectInProgress) {
-    vcc = ESP.getVcc() / 1000.0;
+    vcc = ESP.getVcc() / 1000.0f;
   }
 #endif
 

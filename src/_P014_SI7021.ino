@@ -158,8 +158,8 @@ struct P014_data_struct : public PluginTaskData_base {
 
       case SI7021_state::New_values:
       {
-        temperature = si7021_temperature / 100.0;
-        humidity    = si7021_humidity / 10.0;
+        temperature = si7021_temperature / 100.0f;
+        humidity    = si7021_humidity / 10.0f;
         state       = SI7021_state::Values_read;
         success     = true;
 

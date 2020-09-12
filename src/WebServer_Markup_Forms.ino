@@ -316,7 +316,7 @@ float getFormItemFloat(const String& id)
 {
   String val = web_server.arg(id);
 
-  if (!isFloat(val)) { return 0.0; }
+  if (!isFloat(val)) { return 0.0f; }
   return val.toFloat();
 }
 
