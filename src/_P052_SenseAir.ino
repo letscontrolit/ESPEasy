@@ -476,7 +476,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
       success = true;
       break;
     }
@@ -508,13 +507,13 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
                 temperatureX100 = P052_data->modbus.read_RAM_EEPROM(
                   P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2, errorcode);
               }
-              value     = static_cast<float>(temperatureX100) / 100.0;
+              value     = static_cast<float>(temperatureX100) / 100.0f;
               logPrefix = F("temperature = ");
               break;
             }
             case 3: {
               int rhX100 = P052_data->modbus.readInputRegister(P052_IR_SPACE_HUMIDITY, errorcode);
-              value     = static_cast<float>(rhX100) / 100.0;
+              value     = static_cast<float>(rhX100) / 100.0f;
               logPrefix = F("humidity = ");
               break;
             }
@@ -646,9 +645,9 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
    log += F("CO2: ");
    log += co2;
    log += F(" ppm Temp: ");
-   log += (float)temperature / 100.0;
+   log += (float)temperature / 100.0f;
    log += F(" C Hum: ");
-   log += (float)humidity / 100.0;
+   log += (float)humidity / 100.0f;
    log += F("%");
    if (!valid_measurement)
     log += F(" (old)");

@@ -136,7 +136,6 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
       {
-        clearPluginTaskData(event->TaskIndex);
         success = true;
         break;
       }

@@ -127,11 +127,14 @@ void handle_devices() {
       addHtmlError(SaveTaskSettings(taskIndex));
       addHtmlError(SaveSettings());
 
+      struct EventStruct TempEvent;
+      TempEvent.TaskIndex = taskIndex;
+      String dummy;
+
       if (Settings.TaskDeviceEnabled[taskIndex]) {
-        struct EventStruct TempEvent;
-        TempEvent.TaskIndex = taskIndex;
-        String dummy;
         PluginCall(PLUGIN_INIT, &TempEvent, dummy);
+      } else {
+        PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
       }
     }
   }

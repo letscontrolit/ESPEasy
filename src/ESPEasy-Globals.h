@@ -111,8 +111,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 #include "ESPeasySerial.h"
 #include "ESPEasy_fdwdecl.h"
 #include "WebServer_fwddecl.h"
-#include "I2CTypes.h"
-#include <I2Cdev.h>
+
 
 
 #define FS_NO_GLOBALS
@@ -210,7 +209,7 @@ using namespace fs;
 #include <base64.h>
 
 
-extern I2Cdev i2cdev;
+
 
 
 enum gpio_direction {

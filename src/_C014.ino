@@ -183,8 +183,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
           // $stats/signal	Device → Controller	Signal strength in %	Yes	No
           float RssI = WiFi.RSSI();
-          RssI = isnan(RssI) ? -100.0 : RssI;
-          RssI = min(max(2 * (RssI + 100.0), 0.0), 100.0);
+          RssI = isnan(RssI) ? -100.0f : RssI;
+          RssI = min(max(2 * (RssI + 100.0f), 0.0f), 100.0f);
 
           CPlugin_014_sendMQTTdevice(pubname,"$stats/signal",toString(RssI,1).c_str(),errorCounter);
 #endif

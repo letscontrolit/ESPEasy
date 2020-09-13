@@ -17,7 +17,7 @@ unsigned long timingstats_last_reset(0);
 
 
 
-TimingStats::TimingStats() : _timeTotal(0.0), _count(0), _maxVal(0), _minVal(4294967295) {}
+TimingStats::TimingStats() : _timeTotal(0.0f), _count(0), _maxVal(0), _minVal(4294967295) {}
 
 void TimingStats::add(unsigned long time) {
   _timeTotal += static_cast<float>(time);
@@ -29,7 +29,7 @@ void TimingStats::add(unsigned long time) {
 }
 
 void TimingStats::reset() {
-  _timeTotal = 0.0;
+  _timeTotal = 0.0f;
   _count     = 0;
   _maxVal    = 0;
   _minVal    = 4294967295;
@@ -40,7 +40,7 @@ bool TimingStats::isEmpty() const {
 }
 
 float TimingStats::getAvg() const {
-  if (_count == 0) { return 0.0; }
+  if (_count == 0) { return 0.0f; }
   return _timeTotal / static_cast<float>(_count);
 }
 
