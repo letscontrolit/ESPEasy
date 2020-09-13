@@ -765,12 +765,6 @@ boolean Plugin_093(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
-      break;
-    }
-
     case PLUGIN_TEN_PER_SECOND: {
       P093_data_struct* heatPump = static_cast<P093_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (heatPump != nullptr && heatPump->sync()) {

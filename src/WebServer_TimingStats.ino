@@ -26,7 +26,7 @@ void handle_timingstats() {
   html_end_table();
 
   html_table_class_normal();
-  const float timespan = timeSinceLastReset / 1000.0;
+  const float timespan = timeSinceLastReset / 1000.0f;
   addFormHeader(F("Statistics"));
   addRowLabel(F("Start Period"));
   struct tm startPeriod = node_time.addSeconds(node_time.tm, -1.0 * timespan, false);
@@ -45,7 +45,7 @@ void handle_timingstats() {
 // HTML table formatted timing statistics
 // ********************************************************************************
 void format_using_threshhold(unsigned long value) {
-  float value_msec = value / 1000.0;
+  float value_msec = value / 1000.0f;
 
   if (value > TIMING_STATS_THRESHOLD) {
     html_B(String(value_msec, 3));
@@ -61,7 +61,7 @@ void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset)
   html_TD();
   addHtml(String(c));
   html_TD();
-  float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0;
+  float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0f;
   addHtml(String(call_per_sec, 2));
   html_TD();
   format_using_threshhold(minVal);

@@ -35,7 +35,7 @@ void handle_dumpcache() {
   float csv_values[VARS_PER_TASK * TASKS_MAX];
 
   for (int i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
-    csv_values[i] = 0.0;
+    csv_values[i] = 0.0f;
   }
 
   while (C016_getCSVline(timestamp, controller_idx, TaskIndex, sensorType,
@@ -65,7 +65,7 @@ void handle_dumpcache() {
       html.reserve(12);
       html += ';';
 
-      if (csv_values[i] == 0.0) {
+      if (csv_values[i] == 0.0f) {
         html += '0';
       } else {
         html += String(csv_values[i], 6);

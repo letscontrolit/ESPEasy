@@ -88,8 +88,8 @@ void SHT3X::readFromSensor()
     if (CRC8(data[0], data[1], data[2]) &&
         CRC8(data[3], data[4], data[5]))
     {
-      tmp = ((((data[0] << 8) | data[1]) * 175.0) / 65535.0) - 45.0;
-      hum = ((((data[3] << 8) | data[4]) * 100.0) / 65535.0);
+      tmp = ((((data[0] << 8) | data[1]) * 175.0f) / 65535.0f) - 45.0f;
+      hum = ((((data[3] << 8) | data[4]) * 100.0f) / 65535.0f);
     }
   }
   else
