@@ -602,6 +602,7 @@ String getPinModeString(byte mode) {
     case PIN_MODE_UNDEFINED:    return F("undefined");
     case PIN_MODE_INPUT:        return F("input");
     case PIN_MODE_INPUT_PULLUP: return F("input pullup");
+    case PIN_MODE_INPUT_PULLDOWN: return F("input pulldown");
     case PIN_MODE_OFFLINE:      return F("offline");
     case PIN_MODE_OUTPUT:       return F("output");
     case PIN_MODE_PWM:          return F("PWM");
