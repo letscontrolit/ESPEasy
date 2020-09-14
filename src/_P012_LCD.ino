@@ -263,11 +263,86 @@ String P012_parseTemplate(String& tmpString, byte lineSize) {
   String result            = parseTemplate_padded(tmpString, lineSize);
   const char degree[3]     = { 0xc2, 0xb0, 0 }; // Unicode degree symbol
   const char degree_lcd[2] = { 0xdf, 0 };       // P012_LCD degree symbol
-
   result.replace(degree, degree_lcd);
 
-  char unicodePrefix = 0xc3;
+  char unicodePrefix = 0xc4;
+#ifdef USES_P012_POLISH_CHARS
+  if (result.indexOf(unicodePrefix) != -1) {
 
+    const char znak_a_uni[3] = { 0xc4, 0x85, 0 }; // Unicode znak a
+    const char znak_a_lcd[2] = { 0x05, 0 };       // P012_LCD znak a
+    result.replace(znak_a_uni, znak_a_lcd);
+
+    const char znak_A_uni[3] = { 0xc4, 0x84, 0 }; // Unicode znak A
+    result.replace(znak_A_uni, znak_a_lcd);
+
+    const char znak_c_uni[3] = { 0xc4, 0x87, 0 }; // Unicode znak c
+    const char znak_c_lcd[2] = { 0x03, 0 };       // P012_LCD znak c
+    result.replace(znak_c_uni, znak_c_lcd);
+
+    const char znak_C_uni[3] = { 0xc4, 0x86, 0 }; // Unicode znak C
+    result.replace(znak_C_uni, znak_c_lcd);
+
+    const char znak_e_uni[3] = { 0xc4, 0x99, 0 }; // Unicode znak e
+    const char znak_e_lcd[2] = { 0x02, 0 };       // P012_LCD znak e
+    result.replace(znak_e_uni, znak_e_lcd);
+
+    const char znak_E_uni[3] = { 0xc4, 0x98, 0 }; // Unicode znak E
+    result.replace(znak_E_uni, znak_e_lcd);
+  }
+
+  unicodePrefix = 0xc5;
+  if (result.indexOf(unicodePrefix) != -1) {
+
+    const char znak_l_uni[3] = { 0xc5, 0x82, 0 }; // Unicode znak l
+    const char znak_l_lcd[2] = { 0x01, 0 };       // P012_LCD znak l
+    result.replace(znak_l_uni, znak_l_lcd);
+
+    const char znak_L_uni[3] = { 0xc5, 0x81, 0 }; // Unicode znak L
+    result.replace(znak_L_uni, znak_l_lcd);
+
+    const char znak_n_uni[3] = { 0xc5, 0x84, 0 }; // Unicode znak n
+    const char znak_n_lcd[2] = { 0x04, 0 };       // P012_LCD znak n
+    result.replace(znak_n_uni, znak_n_lcd);
+
+    const char znak_N_uni[3] = { 0xc5, 0x83, 0 }; // Unicode znak N
+    result.replace(znak_N_uni, znak_n_lcd);
+    
+    const char znak_s_uni[3] = { 0xc5, 0x9b, 0 }; // Unicode znak s
+    const char znak_s_lcd[2] = { 0x06, 0 };       // P012_LCD znak s
+    result.replace(znak_s_uni, znak_s_lcd);
+
+    const char znak_S_uni[3] = { 0xc5, 0x9a, 0 }; // Unicode znak S
+    result.replace(znak_S_uni, znak_s_lcd);
+
+    const char znak_z1_uni[3] = { 0xc5, 0xba, 0 }; // Unicode znak z z kreska
+    const char znak_z1_lcd[2] = { 0x07, 0 };       // P012_LCD znak z z kropka
+    result.replace(znak_z1_uni, znak_z1_lcd);
+
+    const char znak_Z1_uni[3] = { 0xc5, 0xb9, 0 }; // Unicode znak Z z kreska
+    result.replace(znak_Z1_uni, znak_z1_lcd);
+
+    const char znak_z2_uni[3] = { 0xc5, 0xbc, 0 }; // Unicode znak z z kropka
+    const char znak_z2_lcd[2] = { 0x07, 0 };       // P012_LCD znak z z kropka
+    result.replace(znak_z2_uni, znak_z2_lcd);
+
+    const char znak_Z2_uni[3] = { 0xc5, 0xbb, 0 }; // Unicode znak Z z kropka
+    result.replace(znak_Z2_uni, znak_z2_lcd);
+  }
+
+  unicodePrefix = 0xc3;
+  if (result.indexOf(unicodePrefix) != -1) {
+
+    const char znak_o_uni[3] = { 0xc3, 0xB3, 0 }; // Unicode znak o
+    const char znak_o_lcd[2] = { 0x08, 0 };       // P012_LCD znak o
+    result.replace(znak_o_uni, znak_o_lcd);
+
+    const char znak_O_uni[3] = { 0xc3, 0x93, 0 }; // Unicode znak O
+    result.replace(znak_O_uni, znak_o_lcd);
+  }
+#endif // USES_P012_POLISH_CHARS
+
+  unicodePrefix = 0xc3;
   if (result.indexOf(unicodePrefix) != -1) {
     // See: https://github.com/letscontrolit/ESPEasy/issues/2081
 
