@@ -120,7 +120,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
         // enable filtersize option if filter is used,
         if (filterType != FILTER_NONE)
-        	addFormNumericBox(F("Filter size"), F("p013_FilterSize"), filterSize, 2, 20);
+        	addFormNumericBox(F("Number of Pings"), F("p013_FilterSize"), filterSize, 2, 20);
 
         success = true;
         break;

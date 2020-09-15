@@ -8,7 +8,7 @@
 #define MAX_SCHEDULER_WAIT_TIME 5 // Max delay used in the scheduler for passing idle time.
 
   msecTimerHandlerStruct::msecTimerHandlerStruct() : get_called(0), get_called_ret_id(0), max_queue_length(0),
-    last_exec_time_usec(0), total_idle_time_usec(0),  idle_time_pct(0.0), is_idle(false), eco_mode(true)
+    last_exec_time_usec(0), total_idle_time_usec(0),  idle_time_pct(0.0f), is_idle(false), eco_mode(true)
   {
     last_log_start_time = millis();
   }
@@ -98,7 +98,7 @@
     const long duration = timePassedSince(last_log_start_time);
 
     last_log_start_time  = millis();
-    idle_time_pct        = static_cast<float>(total_idle_time_usec) / duration / 10.0;
+    idle_time_pct        = static_cast<float>(total_idle_time_usec) / duration / 10.0f;
     total_idle_time_usec = 0;
   }
 

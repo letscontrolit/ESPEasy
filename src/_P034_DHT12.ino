@@ -12,8 +12,6 @@
 #define PLUGIN_VALUENAME1_034 "Temperature"
 #define PLUGIN_VALUENAME2_034 "Humidity"
 
-boolean Plugin_034_init = false;
-
 #define DHT12_I2C_ADDRESS      0x5C // I2C address for the sensor
 
 boolean Plugin_034(byte function, struct EventStruct *event, String& string)
@@ -81,10 +79,10 @@ boolean Plugin_034(byte function, struct EventStruct *event, String& string)
 
         if (dht_dat[4] == dht_check_sum)
         {
-          float temperature = float(dht_dat[2] * 10 + (dht_dat[3] & 0x7f)) / 10.0; // Temperature
+          float temperature = float(dht_dat[2] * 10 + (dht_dat[3] & 0x7f)) / 10.0f; // Temperature
 
           if (dht_dat[3] & 0x80) { temperature = -temperature; }
-          float humidity = float(dht_dat[0] * 10 + dht_dat[1]) / 10.0;             // Humidity
+          float humidity = float(dht_dat[0] * 10 + dht_dat[1]) / 10.0f;             // Humidity
 
           UserVar[event->BaseVarIndex]     = temperature;
           UserVar[event->BaseVarIndex + 1] = humidity;

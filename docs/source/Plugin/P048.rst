@@ -26,10 +26,10 @@ Supported hardware
 
 |P048_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands available
+^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P048_commands.repl
+.. include:: P048_commands.repl
 
 .. Events
 .. ~~~~~~

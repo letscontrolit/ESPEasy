@@ -66,25 +66,34 @@ String Command_Blynk_Get(struct EventStruct *event, const char *Line)
 
 bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *data)
 {
-  MakeControllerSettings(ControllerSettings);
-  if (!AllocatedControllerSettings()) {
-    addLog(LOG_LEVEL_ERROR, F("Blynk : Cannot run GET, out of RAM"));
-    return false;
-  }
-
-  LoadControllerSettings(controllerIndex, ControllerSettings);
-
-  if ((getControllerPass(controllerIndex, ControllerSettings).length() == 0)) {
-    addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
-    return false;
-  }
-
+  bool MustCheckReply = false;
+  String hostname, pass;
+  unsigned int ClientTimeout = 0;
   WiFiClient client;
 
-  if (!try_connect_host(/* CPLUGIN_ID_012 */ 12, client, ControllerSettings)) {
-    return false;
-  }
+  {
+    // Place ControllerSettings in its own scope, as it is quite big.
+    MakeControllerSettings(ControllerSettings);
+    if (!AllocatedControllerSettings()) {
+      addLog(LOG_LEVEL_ERROR, F("Blynk : Cannot run GET, out of RAM"));
+      return false;
+    }
 
+    LoadControllerSettings(controllerIndex, ControllerSettings);
+    MustCheckReply = ControllerSettings.MustCheckReply;
+    hostname = ControllerSettings.getHost();
+    pass = getControllerPass(controllerIndex, ControllerSettings);
+    ClientTimeout = ControllerSettings.ClientTimeout;
+
+    if (pass.length() == 0) {
+      addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
+      return false;
+    }
+
+    if (!try_connect_host(/* CPLUGIN_ID_012 */ 12, client, ControllerSettings)) {
+      return false;
+    }
+  }
 
   // We now create a URI for the request
   {
@@ -92,15 +101,15 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
     char request[300] = { 0 };
     sprintf_P(request,
               PSTR("GET /%s/%s HTTP/1.1\r\n Host: %s \r\n Connection: close\r\n\r\n"),
-              getControllerPass(controllerIndex, ControllerSettings).c_str(),
+              pass.c_str(),
               command.c_str(),
-              ControllerSettings.getHost().c_str());
+              hostname.c_str());
     addLog(LOG_LEVEL_DEBUG, request);
     client.print(request);
   }
-  bool success = !ControllerSettings.MustCheckReply;
+  bool success = !MustCheckReply;
 
-  if (ControllerSettings.MustCheckReply || data) {
+  if (MustCheckReply || data) {
     unsigned long timer = millis() + 200;
 
     while (!client_available(client) && !timeOutReached(timer)) {
@@ -155,7 +164,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
   client.stop();
 
   // important - backgroundtasks - free mem
-  unsigned long timer = millis() + ControllerSettings.ClientTimeout;
+  unsigned long timer = millis() + ClientTimeout;
 
   while (!timeOutReached(timer)) {
     backgroundtasks();

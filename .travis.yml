@@ -6,10 +6,7 @@ dist: bionic
 
 sudo: false
 
-cache:
-  directories:
-  # - "~/.platformio"
-  # - "./.pio"
+cache: false
 
 addons:
   apt:
@@ -45,8 +42,8 @@ env:
   - ENV=minimal_IRext_ESP8266_1M
   - ENV=minimal_IRext_ESP8266_4M1M
   - ENV=minimal_IRext_ESP8266_4M2M
-  - ENV=minimal_core_242_ESP8266_1M_OTA
-  - ENV=minimal_core_242_ESP8285_1M_OTA
+  #- ENV=minimal_core_242_ESP8266_1M_OTA
+  #- ENV=minimal_core_242_ESP8285_1M_OTA
   - ENV=minimal_core_274_ESP8266_1M_OTA_Domoticz
   - ENV=minimal_core_274_ESP8266_1M_OTA_FHEM_HA
   - ENV=minimal_core_274_ESP8285_1M_OTA_Domoticz
@@ -80,7 +77,7 @@ env:
   - ENV=test_ESP8266_4M1M_VCC
   #- ENV=test_ESP8266_4M1M_VCC_MDNS_SD
   - ENV=test_alt_wifi_ESP8266_4M1M_VCC
-  - ENV=test_beta_ESP8266_16M_LittleFS
+  #- ENV=test_beta_ESP8266_16M_LittleFS
   - ENV=test_beta_ESP8266_4M1M
 
 script:

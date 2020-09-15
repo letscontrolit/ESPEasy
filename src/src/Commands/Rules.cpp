@@ -64,7 +64,7 @@ String Command_Rules_Let(struct EventStruct *event, const char *Line)
   String TmpStr1;
 
   if (GetArgv(Line, TmpStr1, 3)) {
-    float result = 0.0;
+    float result = 0.0f;
     Calculate(TmpStr1.c_str(), &result);
     customFloatVar[event->Par1 - 1] = result;
   }

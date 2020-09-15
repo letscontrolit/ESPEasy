@@ -61,13 +61,6 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
         }
 
-        MakeControllerSettings(ControllerSettings);
-        if (!AllocatedControllerSettings()) {
-          break;
-        }
-
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
         for (byte x = 0; x < valueCount; x++)
         {
           bool isvalid;
