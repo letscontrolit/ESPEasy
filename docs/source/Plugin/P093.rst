@@ -89,7 +89,7 @@ Commands
 .. Events
 .. ~~~~~~
 
-.. include:: P093_events.repl
+.. This file is missing. (remove up to 'include' when fixed) include:: P093_events.repl
 
 Example
 -------

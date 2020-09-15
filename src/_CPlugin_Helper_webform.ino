@@ -7,7 +7,10 @@
 /*********************************************************************************************\
 * Functions to load and store controller settings on the web page.
 \*********************************************************************************************/
-String getControllerParameterName(protocolIndex_t ProtocolIndex, ControllerSettingsStruct::VarType parameterIdx, bool displayName, bool& isAlternative) {
+String getControllerParameterName(protocolIndex_t                   ProtocolIndex,
+                                  ControllerSettingsStruct::VarType parameterIdx,
+                                  bool                              displayName,
+                                  bool                            & isAlternative) {
   String name;
 
   if (displayName) {
@@ -48,6 +51,7 @@ String getControllerParameterName(protocolIndex_t ProtocolIndex, ControllerSetti
     case ControllerSettingsStruct::CONTROLLER_WILL_RETAIN:              name = F("Will Retain");            break;
     case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:            name = F("Clean Session");          break;
     case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS: name = F("Use Extended Credentials");  break;
+    case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:              name = F("Send Binary");            break;
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:                  name = F("Client Timeout");         break;
     case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:     name = F("Sample Set Initiator");   break;
 
@@ -80,6 +84,21 @@ String getControllerParameterDisplayName(protocolIndex_t ProtocolIndex, Controll
   bool displayName = true;
 
   return getControllerParameterName(ProtocolIndex, parameterIdx, displayName, isAlternative);
+}
+
+void addControllerEnabledForm(controllerIndex_t controllerindex) {
+  protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+
+  if (!validProtocolIndex(ProtocolIndex)) {
+    return;
+  }
+
+  ControllerSettingsStruct::VarType varType = ControllerSettingsStruct::CONTROLLER_ENABLED;
+
+  bool   isAlternativeDisplayName = false;
+  String displayName              = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
+  String internalName             = getControllerParameterInternalName(ProtocolIndex, varType);
+  addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
 }
 
 void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, ControllerSettingsStruct::VarType varType) {
@@ -119,7 +138,8 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     }
     case ControllerSettingsStruct::CONTROLLER_USER:
     {
-      size_t fieldMaxLength = ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_USER_LENGTH : sizeof(SecuritySettings.ControllerUser[0]) - 1;
+      size_t fieldMaxLength =
+        ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_USER_LENGTH : sizeof(SecuritySettings.ControllerUser[0]) - 1;
       addFormTextBox(displayName,
                      internalName,
                      getControllerUser(controllerindex, ControllerSettings),
@@ -138,7 +158,6 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
         addFormPasswordBox(displayName, internalName,
                            getControllerPass(controllerindex, ControllerSettings),
                            fieldMaxLength);
-
       }
       break;
     }
@@ -175,7 +194,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:
-      addFormTextBox(displayName, internalName, ControllerSettings.ClientID,            sizeof(ControllerSettings.ClientID) - 1);
+      addFormTextBox(displayName, internalName, ControllerSettings.ClientID, sizeof(ControllerSettings.ClientID) - 1);
       break;
     case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT:
       addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_uniqueMQTTclientIdReconnect());
@@ -210,6 +229,9 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS:
       addFormCheckBox(displayName, internalName, ControllerSettings.useExtendedCredentials());
       break;
+    case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:
+      addFormCheckBox(displayName, internalName, ControllerSettings.sendBinary());
+      break;
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:
       addFormNumericBox(displayName, internalName, ControllerSettings.ClientTimeout, 10, CONTROLLER_CLIENTTIMEOUT_MAX);
       addUnit(F("ms"));
@@ -223,12 +245,15 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
   }
 }
 
-void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, ControllerSettingsStruct::VarType varType) {
+void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSettings,
+                                 controllerIndex_t                 controllerindex,
+                                 ControllerSettingsStruct::VarType varType) {
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+
   if (!validProtocolIndex(ProtocolIndex)) {
     return;
   }
-  String internalName  = getControllerParameterInternalName(ProtocolIndex, varType);
+  String internalName = getControllerParameterInternalName(ProtocolIndex, varType);
 
   switch (varType) {
     case ControllerSettingsStruct::CONTROLLER_USE_DNS:  ControllerSettings.UseDNS = getFormItemInt(internalName); break;
@@ -260,13 +285,14 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, c
       setControllerUser(controllerindex, ControllerSettings, web_server.arg(internalName));
       break;
     case ControllerSettingsStruct::CONTROLLER_PASS:
-      {
-        String password;
-        if (getFormPassword(internalName, password)) {
-          setControllerPass(controllerindex, ControllerSettings, password);
-        }
+    {
+      String password;
+
+      if (getFormPassword(internalName, password)) {
+        setControllerPass(controllerindex, ControllerSettings, password);
       }
       break;
+    }
 
     case ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL:
       ControllerSettings.MinimalTimeBetweenMessages = getFormItemInt(internalName, ControllerSettings.MinimalTimeBetweenMessages);
@@ -285,7 +311,7 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, c
       break;
 
     case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:
-      strncpy_webserver_arg(ControllerSettings.ClientID,             internalName);
+      strncpy_webserver_arg(ControllerSettings.ClientID, internalName);
       break;
     case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT:
       ControllerSettings.mqtt_uniqueMQTTclientIdReconnect(isFormItemChecked(internalName));
@@ -319,6 +345,9 @@ void saveControllerParameterForm(ControllerSettingsStruct& ControllerSettings, c
       break;
     case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS:
       ControllerSettings.useExtendedCredentials(isFormItemChecked(internalName));
+      break;
+    case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:
+      ControllerSettings.sendBinary(isFormItemChecked(internalName));
       break;
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:
       ControllerSettings.ClientTimeout = getFormItemInt(internalName, ControllerSettings.ClientTimeout);

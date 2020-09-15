@@ -422,7 +422,7 @@ void sendSysInfoUDP(byte repeats)
     uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
     uint8_t *macread = NetworkMacAddressAsBytes(mac);
 
-    byte     data[80];
+    byte     data[80] = {0};
     data[0] = 255;
     data[1] = 1;
 
@@ -568,6 +568,7 @@ bool SSDP_begin() {
 
   if (_server) {
     _server->unref();
+
     _server = 0;
   }
 
@@ -650,7 +651,8 @@ void SSDP_send(byte method) {
               (uint16_t)((chipId >>  8) & 0xff),
               (uint16_t)chipId        & 0xff);
 
-    char *buffer = new char[1460]();
+    char *buffer = new (std::nothrow) char[1460]();
+    if (buffer == nullptr) { return; }
     int   len    = snprintf(buffer, 1460,
                             _ssdp_packet_template.c_str(),
                             (method == 0) ? _ssdp_response_template.c_str() : _ssdp_notify_template.c_str(),

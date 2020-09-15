@@ -266,7 +266,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new P081_data_struct(P081_getCronExpr(event->TaskIndex)));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P081_data_struct(P081_getCronExpr(event->TaskIndex)));
       P081_data_struct *P081_data =
         static_cast<P081_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -280,12 +280,6 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       } else {
         clearPluginTaskData(event->TaskIndex);
       }
-      break;
-    }
-
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
       break;
     }
 

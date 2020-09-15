@@ -34,13 +34,13 @@
 // Configuration Settings. Custom Configuration Memory must be less than 1024 Bytes (per TD'er findings).
 //#define P75_Nlines 12             // Custom Config, Number of user entered Command Statment Lines. DO NOT USE!
 //#define P75_Nchars 64           // Custom Config, Length of user entered Command Statment Lines. DO NOT USE!
-#define P75_Nlines 10               // Custom Config, Number of user entered Command Statments.
+#define P75_Nlines 10             // Custom Config, Number of user entered Command Statments.
 #define P75_Nchars 51             // Custom Config, Length of user entered Command Statments.
 
 // Nextion defines
-#define RXBUFFSZ  64            // Serial RxD buffer (Local staging buffer and ESPeasySerial).
-#define RXBUFFWARN RXBUFFSZ-16  // Warning, Rx buffer close to being full.
-#define TOUCH_BASE 500          // Base offset for 0X65 Touch Event Send Component ID.
+#define RXBUFFSZ  64              // Serial RxD buffer (Local staging buffer and ESPeasySerial).
+#define RXBUFFWARN (RXBUFFSZ-16)  // Warning, Rx buffer close to being full.
+#define TOUCH_BASE 500            // Base offset for 0X65 Touch Event Send Component ID.
 
 // Serial defines
 #define P075_B9600    0
@@ -58,7 +58,7 @@ struct P075_data_struct : public PluginTaskData_base {
     if (baudrate < 9600 || baudrate > 115200) {
       baudrate = 9600;
     }
-    easySerial = new ESPeasySerial(rx, tx, false, RXBUFFSZ);
+    easySerial = new (std::nothrow) ESPeasySerial(rx, tx, false, RXBUFFSZ);
     if (easySerial != nullptr) {
       easySerial->begin(baudrate);
       easySerial->flush();
@@ -239,7 +239,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       if(BaudCode > P075_B115200) BaudCode = P075_B9600;
       const uint32_t BaudArray[4] = {9600UL, 38400UL, 57600UL, 115200UL};
-      initPluginTaskData(event->TaskIndex, new P075_data_struct(CONFIG_PIN1, CONFIG_PIN2, BaudArray[BaudCode]));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P075_data_struct(CONFIG_PIN1, CONFIG_PIN2, BaudArray[BaudCode]));
       P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
@@ -374,13 +374,6 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       }
       break;
     }
-
-
-    case PLUGIN_EXIT: {
-        clearPluginTaskData(event->TaskIndex);
-        break;
-    }
-
 
     case PLUGIN_ONCE_A_SECOND: {
         success = true;

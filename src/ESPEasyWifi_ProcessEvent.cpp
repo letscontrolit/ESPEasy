@@ -9,6 +9,7 @@
 #include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/EventQueue.h"
 #include "src/Globals/MQTT.h"
+#include "src/Globals/NetworkState.h"
 #include "src/Globals/RTC.h"
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"

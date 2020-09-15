@@ -154,7 +154,7 @@ void handle_config() {
   addFormSubHeader(F("WiFi IP Settings"));
 
   addFormIPBox(F("ESP WiFi IP"),         F("espip"),      Settings.IP);
-  addFormIPBox(F("ESP WiFi GW"),         F("espgateway"), Settings.Gateway);
+  addFormIPBox(F("ESP WiFi Gateway"),    F("espgateway"), Settings.Gateway);
   addFormIPBox(F("ESP WiFi Subnetmask"), F("espsubnet"),  Settings.Subnet);
   addFormIPBox(F("ESP WiFi DNS"),        F("espdns"),     Settings.DNS);
   addFormNote(F("Leave empty for DHCP"));
@@ -163,7 +163,7 @@ void handle_config() {
   addFormSubHeader(F("Ethernet IP Settings"));
 
   addFormIPBox(F("ESP Ethernet IP"),         F("espethip"),      Settings.ETH_IP);
-  addFormIPBox(F("ESP Ethernet GW"),         F("espethgateway"), Settings.ETH_Gateway);
+  addFormIPBox(F("ESP Ethernet Gateway"),    F("espethgateway"), Settings.ETH_Gateway);
   addFormIPBox(F("ESP Ethernet Subnetmask"), F("espethsubnet"),  Settings.ETH_Subnet);
   addFormIPBox(F("ESP Ethernet DNS"),        F("espethdns"),     Settings.ETH_DNS);
   addFormNote(F("Leave empty for DHCP"));

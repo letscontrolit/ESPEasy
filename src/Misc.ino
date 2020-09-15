@@ -1068,7 +1068,7 @@ void ResetFactory()
   Settings.ETH_Pin_power           = gpio_settings.eth_power;
   Settings.ETH_Phy_Type            = gpio_settings.eth_phytype;
   Settings.ETH_Clock_Mode          = gpio_settings.eth_clock_mode;
-  Settings.ETH_Wifi_Mode           = gpio_settings.eth_wifi_mode;
+  Settings.NetworkMedium           = gpio_settings.active_network_medium;
 
 /*
 	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
@@ -1092,20 +1092,22 @@ void ResetFactory()
   {
     // Place in a scope to have its memory freed ASAP
     MakeControllerSettings(ControllerSettings);
-    safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
-    safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
-    safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
-    safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
-    safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
-    str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
-    ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
-    ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
-    ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
-    ControllerSettings.Port = DEFAULT_PORT;
-    setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
-    setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
+    if (AllocatedControllerSettings()) {
+      safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
+      safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
+      safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
+      safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
+      safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
+      str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
+      ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
+      ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
+      ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
+      ControllerSettings.Port = DEFAULT_PORT;
+      setControllerUser(0, ControllerSettings, F(DEFAULT_CONTROLLER_USER));
+      setControllerPass(0, ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
 
-    SaveControllerSettings(0, ControllerSettings);
+      SaveControllerSettings(0, ControllerSettings);
+    }
   }
 #endif
 
@@ -1578,7 +1580,7 @@ void transformValue(
     if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
     {
       int logicVal = 0;
-      float valFloat = 0.0;
+      float valFloat = 0.0f;
       if (validFloatFromString(value, valFloat))
       {
         //to be used for binary values (0 or 1)
@@ -1881,7 +1883,7 @@ float pop()
   if (sp != (globalstack - 1)) // empty
     return *(sp--);
   else
-    return 0.0;
+    return 0.0f;
 }
 
 float apply_operator(char op, float first, float second)
@@ -2589,26 +2591,26 @@ uint16_t getPortFromKey(uint32_t key) {
 void HSV2RGB(float H, float S, float I, int rgb[3]) {
   int r, g, b;
   H = fmod(H,360); // cycle H around to 0-360 degrees
-  H = 3.14159*H/(float)180; // Convert to radians.
+  H = 3.14159f*H/(float)180; // Convert to radians.
   S = S / 100;
   S = S>0?(S<1?S:1):0; // clamp S and I to interval [0,1]
   I = I / 100;
   I = I>0?(I<1?I:1):0;
 
   // Math! Thanks in part to Kyle Miller.
-  if(H < 2.09439) {
-    r = 255*I/3*(1+S*cos(H)/cos(1.047196667-H));
-    g = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667-H)));
+  if(H < 2.09439f) {
+    r = 255*I/3*(1+S*cos(H)/cos(1.047196667f-H));
+    g = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667f-H)));
     b = 255*I/3*(1-S);
-  } else if(H < 4.188787) {
-    H = H - 2.09439;
-    g = 255*I/3*(1+S*cos(H)/cos(1.047196667-H));
-    b = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667-H)));
+  } else if(H < 4.188787f) {
+    H = H - 2.09439f;
+    g = 255*I/3*(1+S*cos(H)/cos(1.047196667f-H));
+    b = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667f-H)));
     r = 255*I/3*(1-S);
   } else {
-    H = H - 4.188787;
-    b = 255*I/3*(1+S*cos(H)/cos(1.047196667-H));
-    r = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667-H)));
+    H = H - 4.188787f;
+    b = 255*I/3*(1+S*cos(H)/cos(1.047196667f-H));
+    r = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667f-H)));
     g = 255*I/3*(1-S);
   }
   rgb[0]=r;
@@ -2623,31 +2625,31 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   int r, g, b, w;
   float cos_h, cos_1047_h;
   H = fmod(H,360); // cycle H around to 0-360 degrees
-  H = 3.14159*H/(float)180; // Convert to radians.
+  H = 3.14159f*H/(float)180; // Convert to radians.
   S = S / 100;
   S = S>0?(S<1?S:1):0; // clamp S and I to interval [0,1]
   I = I / 100;
   I = I>0?(I<1?I:1):0;
 
-  if(H < 2.09439) {
+  if(H < 2.09439f) {
     cos_h = cos(H);
-    cos_1047_h = cos(1.047196667-H);
+    cos_1047_h = cos(1.047196667f-H);
     r = S*255*I/3*(1+cos_h/cos_1047_h);
     g = S*255*I/3*(1+(1-cos_h/cos_1047_h));
     b = 0;
     w = 255*(1-S)*I;
-  } else if(H < 4.188787) {
-    H = H - 2.09439;
+  } else if(H < 4.188787f) {
+    H = H - 2.09439f;
     cos_h = cos(H);
-    cos_1047_h = cos(1.047196667-H);
+    cos_1047_h = cos(1.047196667f-H);
     g = S*255*I/3*(1+cos_h/cos_1047_h);
     b = S*255*I/3*(1+(1-cos_h/cos_1047_h));
     r = 0;
     w = 255*(1-S)*I;
   } else {
-    H = H - 4.188787;
+    H = H - 4.188787f;
     cos_h = cos(H);
-    cos_1047_h = cos(1.047196667-H);
+    cos_1047_h = cos(1.047196667f-H);
     b = S*255*I/3*(1+cos_h/cos_1047_h);
     r = S*255*I/3*(1+(1-cos_h/cos_1047_h));
     g = 0;

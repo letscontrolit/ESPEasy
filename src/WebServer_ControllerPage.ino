@@ -23,6 +23,7 @@ void handle_controllers() {
   if ((protocol != -1) && !controllerNotSet)
   {
     bool mustInit = false;
+    bool mustCallCpluginSave = false;
     {
       // Place in a scope to free ControllerSettings memory ASAP
       MakeControllerSettings(ControllerSettings);
@@ -48,9 +49,17 @@ void handle_controllers() {
         {
           mustInit = true;
           handle_controllers_CopySubmittedSettings(controllerindex, ControllerSettings);
+          mustCallCpluginSave = true;
         }
       }
       addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
+    }
+    if (mustCallCpluginSave) {
+      // Call CPLUGIN_WEBFORM_SAVE after destructing ControllerSettings object to reduce RAM usage.
+      // Controller plugin almost only deals with custom controller settings.
+      // Even if they need to save things to the ControllerSettings, then the changes must 
+      // already be saved first as the CPluginCall does not have the ControllerSettings as argument.
+      handle_controllers_CopySubmittedSettings_CPluginCall(controllerindex);
     }
     addHtmlError(SaveSettings());
 
@@ -133,7 +142,9 @@ void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSe
     ControllerSettingsStruct::VarType varType = static_cast<ControllerSettingsStruct::VarType>(parameterIdx);
     saveControllerParameterForm(ControllerSettings, controllerindex, varType);
   }
+}
 
+void handle_controllers_CopySubmittedSettings_CPluginCall(byte controllerindex) {
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
 
   if (validProtocolIndex(ProtocolIndex)) {
@@ -161,62 +172,63 @@ void handle_controllers_ShowAllControllersTable()
   html_table_header("Port");
 
   MakeControllerSettings(ControllerSettings);
-
-  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
-  {
-    const bool cplugin_set = Settings.Protocol[x] != INVALID_C_PLUGIN_ID;
-
-
-    LoadControllerSettings(x, ControllerSettings);
-    html_TR_TD();
-
-    if (cplugin_set && !supportedCPluginID(Settings.Protocol[x])) {
-      html_add_button_prefix(F("red"), true);
-    } else {
-      html_add_button_prefix();
-    }
+  if (AllocatedControllerSettings()) {
+    for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
     {
-      String html;
-      html.reserve(32);
-      html += F("controllers?index=");
-      html += x + 1;
-      html += F("'>");
+      const bool cplugin_set = Settings.Protocol[x] != INVALID_C_PLUGIN_ID;
 
-      if (cplugin_set) {
-        html += F("Edit");
+
+      LoadControllerSettings(x, ControllerSettings);
+      html_TR_TD();
+
+      if (cplugin_set && !supportedCPluginID(Settings.Protocol[x])) {
+        html_add_button_prefix(F("red"), true);
       } else {
-        html += F("Add");
+        html_add_button_prefix();
       }
-      html += F("</a><TD>");
-      html += getControllerSymbol(x);
-      addHtml(html);
-    }
-    html_TD();
-
-    if (cplugin_set)
-    {
-      addEnabled(Settings.ControllerEnabled[x]);
-
-      html_TD();
-      addHtml(getCPluginNameFromCPluginID(Settings.Protocol[x]));
-      html_TD();
       {
-        const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
-        String hostDescription;
-        CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
+        String html;
+        html.reserve(32);
+        html += F("controllers?index=");
+        html += x + 1;
+        html += F("'>");
 
-        if (hostDescription.length() != 0) {
-          addHtml(hostDescription);
+        if (cplugin_set) {
+          html += F("Edit");
         } else {
-          addHtml(ControllerSettings.getHost());
+          html += F("Add");
         }
+        html += F("</a><TD>");
+        html += getControllerSymbol(x);
+        addHtml(html);
       }
-
       html_TD();
-      addHtml(String(ControllerSettings.Port));
-    }
-    else {
-      html_TD(3);
+
+      if (cplugin_set)
+      {
+        addEnabled(Settings.ControllerEnabled[x]);
+
+        html_TD();
+        addHtml(getCPluginNameFromCPluginID(Settings.Protocol[x]));
+        html_TD();
+        {
+          const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+          String hostDescription;
+          CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
+
+          if (hostDescription.length() != 0) {
+            addHtml(hostDescription);
+          } else {
+            addHtml(ControllerSettings.getHost());
+          }
+        }
+
+        html_TD();
+        addHtml(String(ControllerSettings.Port));
+      }
+      else {
+        html_TD(3);
+      }
     }
   }
   html_end_table();
@@ -256,90 +268,97 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
 
   if (Settings.Protocol[controllerindex])
-  {
-    MakeControllerSettings(ControllerSettings);
-    LoadControllerSettings(controllerindex, ControllerSettings);
-
-    if (!Protocol[ProtocolIndex].Custom)
+  { 
     {
-      if (Protocol[ProtocolIndex].usesHost) {
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_DNS);
+      MakeControllerSettings(ControllerSettings);
+      if (!AllocatedControllerSettings()) {
+        addHtmlError(F("Out of memory, cannot load page"));
+      } else {
+        LoadControllerSettings(controllerindex, ControllerSettings);
 
-        if (ControllerSettings.UseDNS)
+        if (!Protocol[ProtocolIndex].Custom)
         {
-          addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_HOSTNAME);
+          if (Protocol[ProtocolIndex].usesHost) {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_DNS);
+
+            if (ControllerSettings.UseDNS)
+            {
+              addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_HOSTNAME);
+            }
+            else
+            {
+              addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_IP);
+            }
+          }
+          addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
+
+          if (Protocol[ProtocolIndex].usesQueue) {
+            addTableSeparator(F("Controller Queue"), 2, 3);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_RETRIES);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION);
+          }
+
+          if (Protocol[ProtocolIndex].usesCheckReply) {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CHECK_REPLY);
+          }
+
+          if (Protocol[ProtocolIndex].usesTimeout) {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_TIMEOUT);
+          }
+
+          if (Protocol[ProtocolIndex].usesSampleSets) {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
+          }
+
+          if (Protocol[ProtocolIndex].useExtendedCredentials()) {
+            addTableSeparator(F("Credentials"), 2, 3);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS);
+          }
+
+          if (Protocol[ProtocolIndex].usesAccount)
+          {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USER);
+          }
+
+          if (Protocol[ProtocolIndex].usesPassword)
+          {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PASS);
+          }
+          #ifdef USES_MQTT
+          if (Protocol[ProtocolIndex].usesMQTT) {
+            addTableSeparator(F("MQTT"), 2, 3);
+
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLIENT_ID);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT);        
+            addRowLabel(F("Current Client ID"));
+            addHtml(getMQTTclientID(ControllerSettings));
+            addFormNote(F("Updated on load of this page"));
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINFLAG);
+          }
+          #endif // USES_MQTT
+
+
+          if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
+          {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SUBSCRIBE);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PUBLISH);
+          }
+          #ifdef USES_MQTT
+          if (Protocol[ProtocolIndex].usesMQTT)
+          {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_TOPIC);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_CONNECT_MESSAGE);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_DISCONNECT_MESSAGE);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SEND_LWT);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_WILL_RETAIN);
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION);
+          }
+          #endif // USES_MQTT
         }
-        else
-        {
-          addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_IP);
-        }
       }
-      addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
-
-      if (Protocol[ProtocolIndex].usesQueue) {
-        addTableSeparator(F("Controller Queue"), 2, 3);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_RETRIES);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION);
-      }
-
-      if (Protocol[ProtocolIndex].usesCheckReply) {
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CHECK_REPLY);
-      }
-
-      if (Protocol[ProtocolIndex].usesTimeout) {
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_TIMEOUT);
-      }
-
-      if (Protocol[ProtocolIndex].usesSampleSets) {
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
-      }
-
-      if (Protocol[ProtocolIndex].useExtendedCredentials()) {
-        addTableSeparator(F("Credentials"), 2, 3);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS);
-      }
-
-      if (Protocol[ProtocolIndex].usesAccount)
-      {
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USER);
-      }
-
-      if (Protocol[ProtocolIndex].usesPassword)
-      {
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PASS);
-      }
-      #ifdef USES_MQTT
-      if (Protocol[ProtocolIndex].usesMQTT) {
-        addTableSeparator(F("MQTT"), 2, 3);
-
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLIENT_ID);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT);        
-        addRowLabel(F("Current Client ID"));
-        addHtml(getMQTTclientID(ControllerSettings));
-        addFormNote(F("Updated on load of this page"));
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINFLAG);
-      }
-      #endif // USES_MQTT
-
-
-      if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
-      {
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SUBSCRIBE);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PUBLISH);
-      }
-      #ifdef USES_MQTT
-      if (Protocol[ProtocolIndex].usesMQTT)
-      {
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_TOPIC);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_CONNECT_MESSAGE);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_DISCONNECT_MESSAGE);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SEND_LWT);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_WILL_RETAIN);
-        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION);
-      }
-      #endif // USES_MQTT
+      // End of scope for ControllerSettings, destruct it to save memory.
     }
     {
       // Load controller specific settings
@@ -353,7 +372,9 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
         addHtmlError(F("Bug in CPlugin::Function::CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
       }
     }
-    addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_ENABLED);
+    // Separate enabled checkbox as it doesn't need to use the ControllerSettings.
+    // So ControllerSettings object can be destructed before controller specific settings are loaded.
+    addControllerEnabledForm(controllerindex);
   }
 
   addFormSeparator(2);

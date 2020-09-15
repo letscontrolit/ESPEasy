@@ -259,10 +259,13 @@ void addTableSeparator(const String& label, int colspan, int h_size, const Strin
   }
 }
 
-void addFormHeader(const String& header, const String& helpButton)
+void addFormHeader(const String& header, const String& helpButton) {
+  addFormHeader(header, helpButton, F(""));
+}
+void addFormHeader(const String& header, const String& helpButton, const String& rtdHelpButton)
 {
   html_TR();
-  html_table_header(header, helpButton, 225);
+  html_table_header(header, helpButton, rtdHelpButton, 225);
   html_table_header("");
 }
 

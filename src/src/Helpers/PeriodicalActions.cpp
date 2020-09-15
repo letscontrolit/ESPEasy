@@ -11,6 +11,7 @@
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/MQTT.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
@@ -176,7 +177,7 @@ void runEach30Seconds()
     log += F(" FreeMem ");
     log += FreeMem();
     #ifdef HAS_ETHERNET
-    if(eth_wifi_mode == ETHERNET) {
+    if(active_network_medium == NetworkMedium_t::Ethernet) {
       log += F( " EthSpeedState ");
       log += getValue(LabelType::ETH_SPEED_STATE);
     } else {
@@ -206,7 +207,7 @@ void runEach30Seconds()
   #endif
 #if FEATURE_ADC_VCC
   if (!wifiConnectInProgress) {
-    vcc = ESP.getVcc() / 1000.0;
+    vcc = ESP.getVcc() / 1000.0f;
   }
 #endif
 
@@ -220,7 +221,7 @@ void runEach30Seconds()
 
 
 void scheduleNextMQTTdelayQueue() {
-  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler.getNextScheduleTime());
+  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
 }
 
 void schedule_all_tasks_using_MQTT_controller() {
@@ -239,8 +240,12 @@ void schedule_all_tasks_using_MQTT_controller() {
 }
 
 void processMQTTdelayQueue() {
+  if (MQTTDelayHandler == nullptr) {
+    return;
+  }
+
   START_TIMER;
-  MQTT_queue_element *element(MQTTDelayHandler.getNext());
+  MQTT_queue_element *element(MQTTDelayHandler->getNext());
 
   if (element == NULL) { return; }
 
@@ -248,14 +253,14 @@ void processMQTTdelayQueue() {
     if (connectionFailures > 0) {
       --connectionFailures;
     }
-    MQTTDelayHandler.markProcessed(true);
+    MQTTDelayHandler->markProcessed(true);
   } else {
-    MQTTDelayHandler.markProcessed(false);
+    MQTTDelayHandler->markProcessed(false);
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("MQTT : process MQTT queue not published, ");
-      log += MQTTDelayHandler.sendQueue.size();
+      log += MQTTDelayHandler->sendQueue.size();
       log += F(" items left in queue");
       addLog(LOG_LEVEL_DEBUG, log);
     }

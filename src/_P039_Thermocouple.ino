@@ -45,7 +45,7 @@
 uint8_t Plugin_039_SPI_CS_Pin = 15;  // D8
 bool Plugin_039_SensorAttached = true;
 uint32_t Plugin_039_Sensor_fault = 0;
-double Plugin_039_Celsius = 0.0;
+float Plugin_039_Celsius = 0.0f;
 
 boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 {
@@ -177,7 +177,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-double readMax6675()
+float readMax6675()
 {
   uint16_t rawvalue = 0;
   // take the SS pin low to select the chip:
@@ -210,7 +210,7 @@ double readMax6675()
     rawvalue >>= 3;
 
     // Calculate Celsius
-    return rawvalue * 0.25;
+    return rawvalue * 0.25f;
   }
   else
   {
@@ -218,7 +218,7 @@ double readMax6675()
   }
 }
 
-double readMax31855()
+float readMax31855()
 {
   uint32_t rawvalue = 0;
   // take the SS pin low to select the chip:
@@ -277,7 +277,7 @@ double readMax31855()
     // We're left with (32 - 18 =) 14 bits
     int temperature = Plugin_039_convert_two_complement(rawvalue, 14);
     // Calculate Celsius
-    return temperature * 0.25;
+    return temperature * 0.25f;
   }
   else
   {

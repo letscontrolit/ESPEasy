@@ -321,13 +321,12 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
       success = true;
       break;
     }
 
     case PLUGIN_INIT: {
-      initPluginTaskData(event->TaskIndex, new P073_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P073_data_struct());
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
