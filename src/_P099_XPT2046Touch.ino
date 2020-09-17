@@ -158,6 +158,9 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
         String options3[P099_EVENTS_OPTIONS] = { F("None"), F("X and Y"), F("X, Y and Z"), F("Objectnames only"), F("Objectnames, X and Y"), F("Objectnames, X, Y and Z")};
         int optionValues3[P099_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
         addFormSelector(F("Events"), F("p099_events"), P099_EVENTS_OPTIONS, options3, optionValues3, choice3);
+        if (!Settings.UseRules) {
+          addFormNote(F("Tools / Advanced / Rules must be enabled for events to be fired."));
+        }
 
         {
           P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -430,32 +433,34 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
                 addLog(LOG_LEVEL_INFO, log);
               }
 
-              if (bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY)) {   // Send events for each touch
-                const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
-                if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) {   // Do NOT send a Z event for each touch?
-                  Device[DeviceIndex].VType = SENSOR_TYPE_DUAL;
-                  Device[DeviceIndex].ValueCount = 2;
+              if (Settings.UseRules) { // No events to handle if rules not enabled
+                if (bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY)) {   // Send events for each touch
+                  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+                  if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) {   // Do NOT send a Z event for each touch?
+                    Device[DeviceIndex].VType = SENSOR_TYPE_DUAL;
+                    Device[DeviceIndex].ValueCount = 2;
+                  }
+                  sendData(event); // Send X/Y(/Z) event
+                  if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) {   // Reset device configuration
+                    Device[DeviceIndex].VType = SENSOR_TYPE_TRIPLE;
+                    Device[DeviceIndex].ValueCount = 3;
+                  }
                 }
-                sendData(event); // Send X/Y(/Z) event
-                if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) {   // Reset device configuration
-                  Device[DeviceIndex].VType = SENSOR_TYPE_TRIPLE;
-                  Device[DeviceIndex].ValueCount = 3;
-                }
-              }
-              if (bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_OBJECTNAME)) {   // Send events for objectname if within reach
-                String selectedObjectName;
-                if (P099_data->isValidAndTouchedTouchObject(x, y, selectedObjectName, P099_CONFIG_OBJECTCOUNT)) {
-                  // Matching object is found, send <TaskDeviceName>#<ObjectName> event with x, y and z as %eventvalue1/2/3%
-                  String eventCommand = getTaskDeviceName(event->TaskIndex);
-                  eventCommand += '#';
-                  eventCommand += selectedObjectName;
-                  eventCommand += '='; // Add arguments
-                  eventCommand += x;
-                  eventCommand += ',';
-                  eventCommand += y;
-                  eventCommand += ',';
-                  eventCommand += z;
-                  eventQueue.add(eventCommand);
+                if (bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_OBJECTNAME)) {   // Send events for objectname if within reach
+                  String selectedObjectName;
+                  if (P099_data->isValidAndTouchedTouchObject(x, y, selectedObjectName, P099_CONFIG_OBJECTCOUNT)) {
+                    // Matching object is found, send <TaskDeviceName>#<ObjectName> event with x, y and z as %eventvalue1/2/3%
+                    String eventCommand = getTaskDeviceName(event->TaskIndex);
+                    eventCommand += '#';
+                    eventCommand += selectedObjectName;
+                    eventCommand += '='; // Add arguments
+                    eventCommand += x;
+                    eventCommand += ',';
+                    eventCommand += y;
+                    eventCommand += ',';
+                    eventCommand += z;
+                    eventQueue.add(eventCommand);
+                  }
                 }
               }
               success = true;

@@ -867,6 +867,7 @@ To create/register a plugin, you have to :
     //#define USES_P095  // TFT ILI9341
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
+    //#define USES_P099   // XPT2046 Touchscreen
 #endif
 
 
