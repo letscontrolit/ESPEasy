@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 #include <IRSender.h>
 
 IRSenderIRremoteESP8266::IRSenderIRremoteESP8266(uint8_t pin) : IRSender(pin), _ir(pin) 

@@ -1,0 +1,31 @@
+#######################################
+# Syntax Coloring Map For LOLIN EPD
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+LOLIN_IL3897	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+clearBuffer	KEYWORD2
+drawPixel   KEYWORD2
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+EPD_BLACK   LITERAL1
+EPD_WHITE	LITERAL1
+EPD_INVERSE	LITERAL1
+EPD_RED	LITERAL1
+EPD_DARK	LITERAL1
+EPD_LIGHT	LITERAL1
+
+
+

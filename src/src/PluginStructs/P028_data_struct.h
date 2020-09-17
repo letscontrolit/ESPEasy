@@ -172,10 +172,10 @@ struct P028_data_struct : public PluginTaskData_base {
 
   bme280_uncomp_data uncompensated;
   bme280_calib_data  calib;
-  float              last_hum_val      = 0.0;
-  float              last_press_val    = 0.0;
-  float              last_temp_val     = 0.0;
-  float              last_dew_temp_val = 0.0;
+  float              last_hum_val      = 0.0f;
+  float              last_press_val    = 0.0f;
+  float              last_temp_val     = 0.0f;
+  float              last_dew_temp_val = 0.0f;
   unsigned long      last_measurement  = 0;
   BMx_ChipId         sensorID          = Unknown_DEVICE;
   uint8_t            i2cAddress        = 0;

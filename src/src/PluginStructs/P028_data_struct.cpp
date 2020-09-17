@@ -6,10 +6,10 @@
 
 
 P028_data_struct::P028_data_struct(uint8_t addr) :
-  last_hum_val(0.0),
-  last_press_val(0.0),
-  last_temp_val(0.0),
-  last_dew_temp_val(0.0),
+  last_hum_val(0.0f),
+  last_press_val(0.0f),
+  last_temp_val(0.0f),
+  last_dew_temp_val(0.0f),
   last_measurement(0),
   sensorID(Unknown_DEVICE),
   i2cAddress(addr),
@@ -127,7 +127,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   last_measurement = current_time;
   state            = BMx_New_values;
   last_temp_val    = readTemperature();
-  last_press_val   = ((float)readPressure()) / 100.0;
+  last_press_val   = ((float)readPressure()) / 100.0f;
   last_hum_val     = ((float)readHumidity());
 
 
@@ -143,13 +143,13 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   if (hasHumidity()) {
     // Apply half of the temp offset, to correct the dew point offset.
     // The sensor is warmer than the surrounding air, which has effect on the perceived humidity.
-    last_dew_temp_val = compute_dew_point_temp(last_temp_val + (tempOffset / 2.0), last_hum_val);
+    last_dew_temp_val = compute_dew_point_temp(last_temp_val + (tempOffset / 2.0f), last_hum_val);
   } else {
     // No humidity measurement, thus set dew point equal to air temperature.
     last_dew_temp_val = last_temp_val;
   }
 
-  if ((tempOffset > 0.1) || (tempOffset < -0.1)) {
+  if ((tempOffset > 0.1f) || (tempOffset < -0.1f)) {
     // There is some offset to apply.
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log += F(" Apply temp offset ");
@@ -170,7 +170,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
         log += F("%");
       }
     } else {
-      last_hum_val = 0.0;
+      last_hum_val = 0.0f;
     }
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -373,7 +373,7 @@ float P028_data_struct::readHumidity()
 {
   if (!hasHumidity()) {
     // No support for humidity
-    return 0.0;
+    return 0.0f;
   }
   int32_t adc_H = uncompensated.humidity;
 
@@ -394,7 +394,7 @@ float P028_data_struct::readHumidity()
   v_x1_u32r = (v_x1_u32r > 419430400) ? 419430400 : v_x1_u32r;
   float h = (v_x1_u32r >> 12);
 
-  return h / 1024.0;
+  return h / 1024.0f;
 }
 
 float P028_data_struct::Plugin_028_readAltitude(float seaLevel)
@@ -406,13 +406,13 @@ float P028_data_struct::Plugin_028_readAltitude(float seaLevel)
   // at high altitude.  See this thread for more information:
   //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
 
-  float atmospheric = readPressure() / 100.0F;
+  float atmospheric = readPressure() / 100.0f;
 
-  return 44330.0 * (1.0 - pow(atmospheric / seaLevel, 0.1903));
+  return 44330.0f * (1.0f - pow(atmospheric / seaLevel, 0.1903f));
 }
 
 float P028_data_struct::pressureElevation(int altitude) {
-  return last_press_val / pow(1.0 - (altitude / 44330.0), 5.255);
+  return last_press_val / pow(1.0f - (altitude / 44330.0f), 5.255f);
 }
 
 #endif // ifdef USES_P028

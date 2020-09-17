@@ -201,7 +201,7 @@ float P026_get_value(int type)
 # if FEATURE_ADC_VCC
       value = vcc;
 # else // if FEATURE_ADC_VCC
-      value = -1.0;
+      value = -1.0f;
 # endif // if FEATURE_ADC_VCC
       break;
     }
