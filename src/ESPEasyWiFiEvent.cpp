@@ -71,6 +71,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
       last_ssid = (const char*) ssid_copy;
       lastConnectMoment = millis();
+      wifi_considered_stable = false;
       processedConnect  = false;
       break;
     }
@@ -81,11 +82,11 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
         WiFi.persistent(false);
         WiFi.disconnect(true);
 
-        if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
+        if (lastConnectMoment.timeDiff(last_wifi_connect_attempt_moment) > 0ll) {
           // There was an unsuccessful connection attempt
-          lastConnectedDuration = timeDiff(last_wifi_connect_attempt_moment, lastDisconnectMoment);
+          lastConnectedDuration = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
         } else {
-          lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
+          lastConnectedDuration = lastConnectMoment.timeDiff(lastDisconnectMoment);
         }
         processedDisconnect  = false;
         lastDisconnectReason = static_cast<WiFiDisconnectReason>(info.disconnected.reason);
@@ -168,6 +169,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 
 void onConnected(const WiFiEventStationModeConnected& event) {
   lastConnectMoment = millis();
+  wifi_considered_stable = false;
   processedConnect  = false;
   channel_changed   = RTC.lastWiFiChannel != event.channel;
   RTC.lastWiFiChannel      = event.channel;
@@ -185,11 +187,11 @@ void onConnected(const WiFiEventStationModeConnected& event) {
 void onDisconnect(const WiFiEventStationModeDisconnected& event) {
   lastDisconnectMoment = millis();
 
-  if (timeDiff(lastConnectMoment, last_wifi_connect_attempt_moment) > 0) {
+  if (lastConnectMoment.timeDiff(last_wifi_connect_attempt_moment) > 0ll) {
     // There was an unsuccessful connection attempt
-    lastConnectedDuration = timeDiff(last_wifi_connect_attempt_moment, lastDisconnectMoment);
+    lastConnectedDuration = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
   } else {
-    lastConnectedDuration = timeDiff(lastConnectMoment, lastDisconnectMoment);
+    lastConnectedDuration = lastConnectMoment.timeDiff(lastDisconnectMoment);
   }
   lastDisconnectReason = event.reason;
 
