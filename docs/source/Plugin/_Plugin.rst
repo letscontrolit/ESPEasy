@@ -269,6 +269,11 @@ Plugins: |Plugin_Switch_input|
 
 Hardware: |P001_usedby|
 
+Touch
+-----
+
+Plugins: |Plugin_Touch|
+
 Weight
 ------
 

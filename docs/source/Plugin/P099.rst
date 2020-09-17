@@ -26,12 +26,15 @@ Description
 
 Touchscreen support for XPT2046.
 
-Some type of TFT screens, particularly the ILI9341 65000 color TFT screens, come with a resistive touchscreen using a XPT2046 controller. Usually, a screen pen is included with the purchase.
+Some type of TFT screens, particularly the :ref:`P095_page` 65000 color screens, come with a resistive touchscreen using a XPT2046 controller. Usually, a screen pen is included with the purchase.
 
 Configuration options
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. image:: P099_DeviceConfiguration.png
+
+Actuator
+~~~~~~~~
 
 The only connection, besides the standard SPI signals ``MISO``, ``MOSI`` and ``CLK``, is the ``CS`` pin (usually labeled ``TS_CS`` at the connector) that is configured in the device.
 
@@ -45,7 +48,9 @@ Touch configuration
 
 To avoid spurious ghost-touches, a treshold, Touch minimum pressure, can be set. The default value is 15 (and max = 255, but then no touch will be detected).
 
-The events fiered by the touchscreen can be configured to send 2 events for X and Y coordinates, or 3 events for Y, Y and Z coordinates, 1 event for the defined touchobject name (see below), or a series of 3 or 4 events for X, Y and touchobject name or X, Y, Z and touchobject name.
+NB: For events to be sent, the `Rules` option must be enabled in Tools / Advanced settings!
+
+The events fired by the touchscreen can be configured to send 2 events for X and Y coordinates, 3 events for Y, Y and Z coordinates, 1 event for a defined touchobject name (see below), or a series of 3 or 4 events for X, Y and touchobject name or X, Y, Z and touchobject name.
 
 By default the X and Y events are fired.
 
@@ -65,7 +70,7 @@ Touch objects
 
 To make the use of the touchscreen easier, specific screen areas, called touchobjects, can be defined. The default # of objects made available is 8, but this can be set from None to 40 in increments of 8.
 
-After changing this setting the page is reloaded to adjust the list of objects. When set to None, no touch objects will be shown (though the objectnames and coordinates won't be cleared, only the number of touchobjects configured here will be checked if the touchscreen is touched).
+After changing this setting the page is reloaded to adjust the list of objects. When set to None, no touch objects will be shown (though the objectnames and coordinates won't be cleared), only the number of touchobjects configured here will be checked when the touchscreen is touched.
 
 A touchobject has a name, that will be used as the second part of the event-name if Events includes the option Objectnames, where the first part is the device Name. So if the objectname is ``button`` and the device name is ``XPT2046``, the event ``XPT2046#button`` will be fired, with the actual X, Y and Z values of the touch that triggered it as ``%eventvalue1%``, ``%eventvalue2%`` and ``%eventvalue3%``.
 

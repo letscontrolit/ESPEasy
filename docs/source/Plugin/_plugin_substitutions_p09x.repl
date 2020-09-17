@@ -59,9 +59,9 @@
 .. |P094_compileinfo| replace:: `.`
 .. |P094_usedlibraries| replace:: `.`
 
-.. |P095_name| replace:: :cyan:`TFT 2.4 inches ILI9341/XPT2046`
+.. |P095_name| replace:: :cyan:`TFT 2.4 inches ILI9341`
 .. |P095_type| replace:: :cyan:`Display`
-.. |P095_typename| replace:: :cyan:`Display - TFT 2.4 inches ILI9341/XPT2046`
+.. |P095_typename| replace:: :cyan:`Display - TFT 2.4 inches ILI9341`
 .. |P095_porttype| replace:: `.`
 .. |P095_status| replace:: :yellow:`TESTING`
 .. |P095_github| replace:: _P095_ILI9341.ino
