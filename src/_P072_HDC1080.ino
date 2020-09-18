@@ -13,8 +13,6 @@
 
 #include "_Plugin_Helper.h"
 
-boolean Plugin_072_init = false;
-
 #define HDC1080_I2C_ADDRESS      0x40 // I2C address for the sensor
 
 boolean Plugin_072(byte function, struct EventStruct *event, String& string)

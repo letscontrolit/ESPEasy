@@ -1,0 +1,46 @@
+.. include:: ../Plugin/_plugin_substitutions_p10x.repl
+.. _P100_page:
+
+|P100_typename|
+==================================================
+
+|P100_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P100_type|
+
+Name: |P100_name|
+
+Status: |P100_status|
+
+GitHub: |P100_github|_
+
+Maintainer: |P100_maintainer|
+
+Used libraries: |P100_usedlibraries|
+
+Description
+-----------
+
+1-Wire pulse counter.
+
+The module supports upto four 32-bit counters, of which 2 are with external trigger (A and B).
+
+
+
+Events
+~~~~~~
+
+.. include:: P100_events.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-04-25

@@ -19,10 +19,9 @@
 #define PLUGIN_NAME_048       "Motor - Adafruit Motorshield v2 [TESTING]"
 #define PLUGIN_VALUENAME1_048 "MotorShield v2"
 
-uint8_t Plugin_048_MotorShield_address = 0x60;
-
-int Plugin_048_MotorStepsPerRevolution = 200;
-int Plugin_048_StepperSpeed            = 10;
+#define Plugin_048_MotorShield_address     PCONFIG(0)
+#define Plugin_048_MotorStepsPerRevolution PCONFIG(1)
+#define Plugin_048_StepperSpeed            PCONFIG(2)
 
 boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
   boolean success = false;
@@ -59,19 +58,28 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       addFormTextBox(F("I2C Address (Hex)"), F("p048_adr"),
-                     formatToHex_decimal(PCONFIG(0)), 4);
+                     formatToHex_decimal(Plugin_048_MotorShield_address), 4);
 
       // FIXME TD-er: Why not using addFormSelectorI2C here?
+      break;
+    }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      Plugin_048_MotorShield_address     = 0x60;
+      Plugin_048_MotorStepsPerRevolution = 200;
+      Plugin_048_StepperSpeed            = 10;
+
       break;
     }
 
 
     case PLUGIN_WEBFORM_LOAD: {
       addFormNumericBox(F("Stepper: steps per revolution"), F("p048_MotorStepsPerRevolution")
-                        , PCONFIG(1));
+                        , Plugin_048_MotorStepsPerRevolution);
 
       addFormNumericBox(F("Stepper speed (rpm)"),           F("p048_StepperSpeed")
-                        , PCONFIG(2));
+                        , Plugin_048_StepperSpeed);
 
       success = true;
       break;
@@ -79,20 +87,16 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_WEBFORM_SAVE: {
       String plugin1 = web_server.arg(F("p048_adr"));
-      PCONFIG(0) = (int)strtol(plugin1.c_str(), 0, 16);
+      Plugin_048_MotorShield_address = (int)strtol(plugin1.c_str(), 0, 16);
 
-      PCONFIG(1) = getFormItemInt(F("p048_MotorStepsPerRevolution"));
+      Plugin_048_MotorStepsPerRevolution = getFormItemInt(F("p048_MotorStepsPerRevolution"));
 
-      PCONFIG(2) = getFormItemInt(F("p048_StepperSpeed"));
-      success    = true;
+      Plugin_048_StepperSpeed = getFormItemInt(F("p048_StepperSpeed"));
+      success                 = true;
       break;
     }
 
     case PLUGIN_INIT: {
-      Plugin_048_MotorShield_address     = PCONFIG(0);
-      Plugin_048_MotorStepsPerRevolution = PCONFIG(1);
-      Plugin_048_StepperSpeed            = PCONFIG(2);
-
       success = true;
       break;
     }
