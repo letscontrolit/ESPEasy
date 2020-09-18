@@ -37,3 +37,61 @@ Change log
 
 Description
 -----------
+
+Many systems provide a simple HTTP API where data can be changed using a HTTP request with a properly constructed querystring.
+
+This Controller allows you to send HTTP GET, POST and PUT Requests to the given webserver.
+
+For every device you have to choose to which Controllers it is sending its data. When configuring the Controller you can access this data and use them to generate your querystring.
+
+You can use this placeholders in http header and in the http body:
+
+* ``%systime%`` will be replaced with the local system time
+* ``%vcc%`` will be replaced with the power supply voltage (if enable in this build)
+* ``%ip%`` will be replaced with the local ip adress
+* ``%sysload%`` will be replaced with the system load
+* ``%uptime%`` will be replaced with the system uptime
+* ``%CR%`` will be replaced with "\r"
+* ``%LF%`` will be replaced with "\n" (newline)
+* ``%sysname%`` will be replaced with the system name
+* ``%tskname%`` will be replaced with the name of the device which is sending data to this controller
+* ``%id%`` will be replaced with IDX value.
+* ``%vname1%`` will be replaced with Valuename 1
+* ``%vname2%`` will be replaced with Valuename 2
+* ``%vname3%`` will be replaced with Valuename 3
+* ``%vname4%`` will be replaced with Valuename 4
+* ``%val1%`` will be replaced with the value 1 of the device which is sending data to this controller
+* ``%val2%`` will be replaced with the value 2 of the device which is sending data to this controller
+
+You can also write things like this:
+
+``%1%_some_text_and_placeholder_%/1%`` everything between ``%1%`` and ``%/1%`` will only print when there is a value ``1``
+
+
+Examples
+--------
+
+InfluxDB HTTP Api
+^^^^^^^^^^^^^^^^^
+
+* HTTP Method: ``POST``
+* HTTP URI: ``write?db=testdb``
+* HTTP Header: ``Content-Type: application/x-www-form-urlencoded``
+* HTTP Body: 
+
+.. code-block:: none
+
+  %1%%vname1%,Standort=%tskname%
+  Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%taskname%
+  Wert=%val2%%/2%%3%%LF%%vname2%,Standort=%taskname%
+  Wert=%val3%%/3%%4%%LF%%vname2%,Standort=%taskname%
+  Wert=%val4%%/4%
+
+See also `InfluxDB API description <https://docs.influxdata.com/influxdb/v1.5/guides/writing_data/#writing-multiple-points>`_
+
+Nettemp HTTP Api
+^^^^^^^^^^^^^^^^
+
+untested but should work with something like this:
+
+``/receiver.php?device=ip&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%``

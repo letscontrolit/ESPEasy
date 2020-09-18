@@ -235,12 +235,6 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
     break;
   }
 
-  case PLUGIN_EXIT: {
-    clearPluginTaskData(event->TaskIndex);
-    success = true;
-    break;
-  }
-
   case PLUGIN_INIT: {
     initPluginTaskData(event->TaskIndex, new (std::nothrow) P077_data_struct());
     if (PCONFIG(0) == 0) PCONFIG(0) = HLW_UREF_PULSE;

@@ -42,6 +42,9 @@ Details and discussion are on the "Experimental" section of the forum: https://w
 
 Automated builds of the (new) documentation can be found at [ESPEasy.readthedocs.io](https://espeasy.readthedocs.io/en/latest/)
 
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/letscontrolit/ESPEasy) 
+
+
 ## Icons used
 
 Icons on courtesy of [ICONS8](https://icons8.com/).

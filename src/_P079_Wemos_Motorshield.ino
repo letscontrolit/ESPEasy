@@ -32,14 +32,16 @@
 # include "Wire.h"
 # include "_Plugin_Helper.h"
 
-# define _MOTOR_A 0
-# define _MOTOR_B 1
+# define P079_MOTOR_A 0
+# define P079_MOTOR_B 1
 
-# define _SHORT_BRAKE 0
-# define _CCW  1
-# define _CW     2
-# define _STOP 3
-# define _STANDBY 4
+# define P079_SHORT_BRAKE 0
+# define P079_CCW         1
+# define P079_CW          2
+# define P079_STOP        3
+# define P079_STANDBY     4
+
+# define P079_I2C_ADDR PCONFIG(0)
 
 class WemosMotor {
 public:
@@ -67,8 +69,6 @@ private:
 #endif // ifndef __WEMOS_MOTOR_H
 
 // end copied from <WEMOS_Motor.h>
-
-uint8_t Plugin_079_MotorShield_address = 0x30;
 
 
 boolean Plugin_079(byte function, struct EventStruct *event, String& string)
@@ -103,9 +103,15 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P079_I2C_ADDR = 0x30;
+      break;
+    }
+
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      String i2c_addres_string = formatToHex(PCONFIG(0));
+      String i2c_addres_string = formatToHex(P079_I2C_ADDR);
       addFormTextBox(F("I2C Address (Hex)"), F("p079_adr"), i2c_addres_string, 4);
       addFormNote(F(
                     "Make sure to update the Wemos Motorshield firmware, see <a href='https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield'>wiki</a>"));
@@ -119,15 +125,13 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE: {
       String i2c_address = web_server.arg(F("p079_adr"));
-      PCONFIG(0) = (int)strtol(i2c_address.c_str(), 0, 16);
+      P079_I2C_ADDR = (int)strtol(i2c_address.c_str(), 0, 16);
 
       success = true;
       break;
     }
 
     case PLUGIN_INIT: {
-      Plugin_079_MotorShield_address = PCONFIG(0);
-
       success = true;
       break;
     }
@@ -150,12 +154,12 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
         String paramDirection = parseString(tmpString, 3); // Direction
         String paramSpeed     = parseString(tmpString, 4); // Speed
 
-        WemosMotor WMS(Plugin_079_MotorShield_address, paramMotor.toInt(), 1000);
+        WemosMotor WMS(P079_I2C_ADDR, paramMotor.toInt(), 1000);
         addLog(LOG_LEVEL_DEBUG,
-               String(F("WemosMotorShield: Address = ")) + Plugin_079_MotorShield_address + String(F(" Motor = ")) + paramMotor);
+               String(F("WemosMotorShield: Address = ")) + P079_I2C_ADDR + String(F(" Motor = ")) + paramMotor);
 
         if (paramDirection.equalsIgnoreCase(F("Forward"))) {
-          WMS.setmotor(_CW, paramSpeed.toInt());
+          WMS.setmotor(P079_CW, paramSpeed.toInt());
           addLog(LOG_LEVEL_INFO,
                  String(F("WemosMotor: Motor = ")) + paramMotor + String(F(" Direction = ")) + paramDirection + String(F(
                                                                                                                          " Speed = ")) +
@@ -163,7 +167,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
         }
 
         if (paramDirection.equalsIgnoreCase(F("Backward"))) {
-          WMS.setmotor(_CCW, paramSpeed.toInt());
+          WMS.setmotor(P079_CCW, paramSpeed.toInt());
           addLog(LOG_LEVEL_INFO,
                  String(F("WemosMotor: Motor = ")) + paramMotor + String(F(" Direction = ")) + paramDirection + String(F(
                                                                                                                          " Speed = ")) +
@@ -171,7 +175,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
         }
 
         if (paramDirection.equalsIgnoreCase(F("Stop"))) {
-          WMS.setmotor(_STOP);
+          WMS.setmotor(P079_STOP);
           addLog(LOG_LEVEL_INFO, String(F("WemosMotor: Motor = ")) + paramMotor + String(F(" Direction = ")) + paramDirection);
         }
 
@@ -190,11 +194,11 @@ WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq)
 {
   _use_STBY_IO = false;
 
-  if (motor == _MOTOR_A) {
-    _motor = _MOTOR_A;
+  if (motor == P079_MOTOR_A) {
+    _motor = P079_MOTOR_A;
   }
   else {
-    _motor = _MOTOR_B;
+    _motor = P079_MOTOR_B;
   }
 
   // Wire.begin();   called in ESPEasy framework
@@ -209,11 +213,11 @@ WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq, uint8_t ST
   _use_STBY_IO = true;
   _STBY_IO     = STBY_IO;
 
-  if (motor == _MOTOR_A) {
-    _motor = _MOTOR_A;
+  if (motor == P079_MOTOR_A) {
+    _motor = P079_MOTOR_A;
   }
   else {
-    _motor = _MOTOR_B;
+    _motor = P079_MOTOR_B;
   }
 
   // Wire.begin();   called in ESPEasy framework
@@ -251,15 +255,15 @@ void WemosMotor::setfreq(uint32_t freq)
 /* setmotor() -- set motor
 
    motor:
-        _MOTOR_A	0	Motor A
-        _MOTOR_B	1	Motor B
+        P079_MOTOR_A	0	Motor A
+        P079_MOTOR_B	1	Motor B
 
    dir:
-        _SHORT_BRAKE  0
-        _CCW		      1
-        _CW           2
-        _STOP         3
-        _STANDBY      4
+        P079_SHORT_BRAKE  0
+        P079_CCW		      1
+        P079_CW           2
+        P079_STOP         3
+        P079_STANDBY      4
 
    pwm_val:
         0.00 - 100.00  (%)
@@ -276,7 +280,7 @@ void WemosMotor::setmotor(uint8_t dir, float pwm_val)
   uint16_t _pwm_val;
 
   if (_use_STBY_IO == true) {
-    if (dir == _STANDBY) {
+    if (dir == P079_STANDBY) {
       digitalWrite(_STBY_IO, LOW);
       return;
     } else {

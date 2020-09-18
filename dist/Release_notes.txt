@@ -1,4 +1,64 @@
 -------------------------------------------------
+Changes in release mega-20200913 (since mega-20200829)
+-------------------------------------------------
+
+Release date: zo 13 sep 2020  0:11:35 CEST
+
+Gijs Noorlander (19):
+      [Build] Change to esp8266/Arduino core 2.7.4
+      [Travis] Also update "core_273" to "core_274" in build names
+      [new new] Prepare for upcoming changes of 'new' in esp8266/Arduino
+      [build] Add build definition for 1M with Serial Switch.
+      [build] Add Stable controller set to hard_LCtech_relay_x2_1M build
+      Include debug logs and other removed features to reduce size LC_TECH_1M
+      [Scheduler] Fix PLUGIN_TIMER_IN not being called (#3247)
+      [Docs] Add some documentation on C011 Generic HTTP Advanced
+      [HTTP Advanced] Do not percent-encode body  (#1306)
+      [HTTP Advanced] Optimize load/save settings + add send binary option.
+      [Cleanup] Reduce memory usage on load/save C018 LoRaWAN RN2483 controller
+      [RN2483] Call LoRaWAN module reset  when LoRaWAN stack hangs (#3225 )
+      [C011] Use ESP8266HTTPClient library
+      [C011] Fix build issue for older ESP8266 core versions
+      [Travis] Disable core 2.4.2 builds as Travis can't install it anymore
+      [C011] Improve logging + connection tracking.
+      [C011] Split multiline headers + also parse url
+      [Cleanup] Reduce memory usage when using ControllerSettings struct
+      [VCC Build] Strip Servo, Blynk and Zabbix from test build to make it fit.
+
+Max Prokhorov (3):
+      == INFINITY / NAN are bogus
+      Update _P005_DHT.ino
+      typo
+
+TD-er (14):
+      Add gitpod config
+      Sanitize Requirements.txt and switch to Python 3.8
+      Add Gitpod extensions
+      Add VSCode Extentions
+      Change bracket pair colorizer for one that installs in GitPod
+      Remove PlatformIO Extension from GitPod.yml
+      [Arduino IDE] Fix relative path for includes
+      Document hardware bug on Wemos DHT shield (#2569)
+      [ESP32] Core 2.0.0 released
+      [PIO] Set minimum PlatformIO library to 5.0.1
+      Restore Requirements.txt after merge
+      [Gitpod] Use pip3 as we need Python3
+      [Gitpod] Change init: into before:
+      [Gitpod] Apparently Gitpod still uses Python 2.7
+
+Ton Huisman (5):
+      [Checks] Disallow - (dash) in tasknames This may *feel* like a breaking change, but using names with dash(es) doesn't properly work
+      [Checks] Disallow all operators in tasknames
+      [Checks] Update docs, disallow curly braces
+      [Checks] Disallow round braces too
+      [Checks] Update docs
+
+Toni (2):
+      HeatpumpIR 1.0.16 update
+      Build definition for image test_ESP32_IRExt_4M316k:
+
+
+-------------------------------------------------
 Changes in release mega-20200829 (since mega-20200812)
 -------------------------------------------------
 

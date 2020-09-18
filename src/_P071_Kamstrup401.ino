@@ -182,25 +182,25 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
 
               tmpstr = strtok(NULL, " ");
               if (tmpstr)
-               m_tempin = atol(tmpstr)/100.0;
+               m_tempin = atol(tmpstr)/100.0f;
               else
                m_tempin = 0;
 
               tmpstr = strtok(NULL, " ");
               if (tmpstr)
-               m_tempout = atol(tmpstr)/100.0;
+               m_tempout = atol(tmpstr)/100.0f;
               else
                m_tempout = 0;
 
               tmpstr = strtok(NULL, " ");
               if (tmpstr)
-               m_tempdiff = atol(tmpstr)/100.0;
+               m_tempdiff = atol(tmpstr)/100.0f;
               else
                m_tempdiff = 0;
 
               tmpstr = strtok(NULL, " ");
               if (tmpstr)
-               m_power = atol(tmpstr)/10.0;
+               m_power = atol(tmpstr)/10.0f;
               else
                m_power = 0;
 

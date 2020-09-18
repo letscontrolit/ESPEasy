@@ -1,0 +1,12 @@
+.. |P100_name| replace:: :cyan:`DS2423`
+.. |P100_type| replace:: :cyan:`Generic`
+.. |P100_typename| replace:: :cyan:`Pulse Counter - DS2423`
+.. |P100_porttype| replace:: `.`
+.. |P100_status| replace:: :yellow:`TESTING`
+.. |P100_github| replace:: P100_CCS811.ino
+.. _P100_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P100_DS2423_counter.ino
+.. |P100_usedby| replace:: `.`
+.. |P100_shortinfo| replace:: `1-Wire 4kbit RAM with counter (only counter is currently used)`
+.. |P100_maintainer| replace:: `TD-er`
+.. |P100_compileinfo| replace:: `.`
+.. |P100_usedlibraries| replace:: `.`
