@@ -37,6 +37,7 @@ else:
     "USES_P082",  # GPS
     "USES_P087",  # Serial Proxy
     "USES_P097",  # Touch (ESP32)
+    "USES_P100",  # Pulse Counter - DS2423
 
     "USE_SETTINGS_ARCHIVE",
     "FEATURE_I2CMULTIPLEXER",

@@ -8,7 +8,7 @@
 .. |Plugin_Environment| replace:: :ref:`P004_page`, :ref:`P005_page`, :ref:`P006_page`, :ref:`P014_page`, :ref:`P024_page`, :ref:`P028_page`, :ref:`P030_page`, :ref:`P031_page`, :ref:`P032_page`, :ref:`P034_page`, :ref:`P039_page`, :ref:`P047_page`, :ref:`P051_page`, :ref:`P068_page`, :ref:`P069_page`, :ref:`P072_page`
 .. |Plugin_Extra_IO| replace:: :ref:`P011_page`, :ref:`P022_page`
 .. |Plugin_Gases| replace:: :ref:`P049_page`, :ref:`P052_page`, :ref:`P083_page`, :ref:`P090_page`
-.. |Plugin_Generic| replace:: :ref:`P003_page`, :ref:`P026_page`, :ref:`P033_page`, :ref:`P037_page`, :ref:`P081_page`
+.. |Plugin_Generic| replace:: :ref:`P003_page`, :ref:`P026_page`, :ref:`P033_page`, :ref:`P037_page`, :ref:`P081_page`, :ref:`P100_page`
 .. |Plugin_Gesture| replace:: :ref:`P064_page`
 .. |Plugin_Gyro| replace:: :ref:`P045_page`
 .. |Plugin_Hardware| replace:: :ref:`P046_page`
