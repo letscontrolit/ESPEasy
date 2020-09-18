@@ -185,18 +185,20 @@ void P099_data_struct::scaleRawToCalibrated(uint16_t &x, uint16_t &y) {
     uint16_t _x = x - StoredSettings.Calibration.top_left.x;
     if (_x <= 0) {
       x = 0;
-    } else if (_x > StoredSettings.Calibration.bottom_right.x) {
-      _x = StoredSettings.Calibration.bottom_right.x;
     } else {
+      if (_x > StoredSettings.Calibration.bottom_right.x) {
+        _x = StoredSettings.Calibration.bottom_right.x;
+      }
       float x_fact = (StoredSettings.Calibration.bottom_right.x - StoredSettings.Calibration.top_left.x) / ts_x_res;
       x = int((_x * 1.0f) / x_fact);
     }
     uint16_t _y = y - StoredSettings.Calibration.top_left.y;
     if (_y <= 0) {
       y = 0;
-    } else if (_y > StoredSettings.Calibration.bottom_right.y) {
-      _y = StoredSettings.Calibration.bottom_right.y;
     } else {
+      if (_y > StoredSettings.Calibration.bottom_right.y) {
+        _y = StoredSettings.Calibration.bottom_right.y;
+      }
       float y_fact = (StoredSettings.Calibration.bottom_right.y - StoredSettings.Calibration.top_left.y) / ts_y_res;
       y = int((_y * 1.0f) / y_fact);
     }
