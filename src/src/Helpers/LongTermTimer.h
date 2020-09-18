@@ -10,17 +10,39 @@ public:
 
   LongTermTimer() {}
 
-  LongTermTimer(uint64_t start_time) : _timer(start_time) {}
+  explicit LongTermTimer(uint64_t start_time) : _timer(start_time) {}
 
-  void clear() { _timer = 0ull; }
+  inline bool operator<(const LongTermTimer& rhs) const
+  {
+    return _timer < rhs.get();
+  }
 
-  void set(uint64_t start_time) { _timer = start_time; }
+  inline bool operator>(const LongTermTimer& rhs) const
+  {
+    return _timer > rhs.get();
+  }
 
-  bool isSet() const { return _timer > 0ull; }
+  LongTermTimer& operator=(const LongTermTimer& rhs)
+  {
+    _timer = rhs.get();
+    return *this;
+  }
 
-  uint64_t ICACHE_RAM_ATTR  get() const;
+  void clear() {
+    _timer = 0ull;
+  }
 
-  void ICACHE_RAM_ATTR    setNow();
+  void set(uint64_t start_time) {
+    _timer = start_time;
+  }
+
+  bool isSet() const {
+    return _timer > 0ull;
+  }
+
+  uint64_t ICACHE_RAM_ATTR get() const;
+
+  void ICACHE_RAM_ATTR     setNow();
 
   // Positive when next is past this time value.
   Duration ICACHE_RAM_ATTR timeDiff(const LongTermTimer& next) const;
@@ -28,15 +50,16 @@ public:
   Duration ICACHE_RAM_ATTR usecPassedSince() const;
   Duration ICACHE_RAM_ATTR millisPassedSince() const;
 
-  bool ICACHE_RAM_ATTR    timeReached() const;
+  bool ICACHE_RAM_ATTR     timeReached() const;
 
-  bool ICACHE_RAM_ATTR    timeoutReached(uint32_t millisTimeout) const;
+  bool ICACHE_RAM_ATTR     timeoutReached(uint32_t millisTimeout) const;
 
 private:
 
-  static Duration ICACHE_RAM_ATTR __timeDiff(uint64_t prev, uint64_t next);
+  static Duration ICACHE_RAM_ATTR __timeDiff(uint64_t prev,
+                                             uint64_t next);
 
-  uint64_t _timer = 0;
+  uint64_t _timer = 0ull;
 };
 
 #endif // HELPERS_LONGTERMTIMER_H

@@ -38,7 +38,7 @@ void setUseStaticIP(bool enabled) {
 }
 
 void markGotIP() {
-  lastGetIPmoment = millis();
+  lastGetIPmoment.setNow();
   // Create the 'got IP event' so mark the wifiStatus to not have the got IP flag set
   // This also implies the services are not fully initialized.
   bitClear(wifiStatus, ESPEASY_WIFI_GOT_IP);
@@ -70,7 +70,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       memcpy(ssid_copy, info.connected.ssid, info.connected.ssid_len);
       ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
       last_ssid = (const char*) ssid_copy;
-      lastConnectMoment = millis();
+      lastConnectMoment.setNow();
       wifi_considered_stable = false;
       processedConnect  = false;
       break;
@@ -78,11 +78,11 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_STA_DISCONNECTED:
       if (!ignoreDisconnectEvent) {
         ignoreDisconnectEvent = true;
-        lastDisconnectMoment = millis();
+        lastDisconnectMoment.setNow();
         WiFi.persistent(false);
         WiFi.disconnect(true);
 
-        if (lastConnectMoment.timeDiff(last_wifi_connect_attempt_moment) > 0ll) {
+        if (last_wifi_connect_attempt_moment.isSet() && (lastConnectMoment > last_wifi_connect_attempt_moment)) {
           // There was an unsuccessful connection attempt
           lastConnectedDuration = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
         } else {
@@ -168,7 +168,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 #ifdef ESP8266
 
 void onConnected(const WiFiEventStationModeConnected& event) {
-  lastConnectMoment = millis();
+  lastConnectMoment.setNow();
   wifi_considered_stable = false;
   processedConnect  = false;
   channel_changed   = RTC.lastWiFiChannel != event.channel;
@@ -185,9 +185,9 @@ void onConnected(const WiFiEventStationModeConnected& event) {
 }
 
 void onDisconnect(const WiFiEventStationModeDisconnected& event) {
-  lastDisconnectMoment = millis();
+  lastDisconnectMoment.setNow();
 
-  if (lastConnectMoment.timeDiff(last_wifi_connect_attempt_moment) > 0ll) {
+  if (lastConnectMoment > last_wifi_connect_attempt_moment) {
     // There was an unsuccessful connection attempt
     lastConnectedDuration = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
   } else {

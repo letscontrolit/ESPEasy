@@ -9,6 +9,7 @@
 
 // WifiStatus
 #define ESPEASY_WIFI_DISCONNECTED            0
+
 // Bit numbers for WiFi status
 #define ESPEASY_WIFI_CONNECTED               0
 #define ESPEASY_WIFI_GOT_IP                  1
@@ -59,7 +60,7 @@ enum WiFiDisconnectReason
 
 void WiFiEvent(system_event_id_t   event,
                system_event_info_t info);
-extern WiFiEventId_t  wm_event_id;
+extern WiFiEventId_t wm_event_id;
 #endif // ifdef ESP32
 
 #ifdef ESP8266
@@ -82,11 +83,11 @@ extern bool wifiSetupConnect;
 extern uint8_t wifiStatus;
 extern LongTermTimer last_wifi_connect_attempt_moment;
 extern unsigned int  wifi_connect_attempt;
-extern bool wifi_considered_stable;
-extern int wifi_reconnects; // First connection attempt is not a reconnect.
-extern String  last_ssid;
-extern bool    bssid_changed;
-extern bool    channel_changed;
+extern bool   wifi_considered_stable;
+extern int    wifi_reconnects; // First connection attempt is not a reconnect.
+extern String last_ssid;
+extern bool   bssid_changed;
+extern bool   channel_changed;
 
 extern WiFiDisconnectReason lastDisconnectReason;
 extern LongTermTimer lastConnectMoment;
@@ -95,8 +96,8 @@ extern LongTermTimer lastWiFiResetMoment;
 extern LongTermTimer lastGetIPmoment;
 extern LongTermTimer lastGetScanMoment;
 extern LongTermTimer::Duration lastConnectedDuration;
-extern LongTermTimer timerAPoff;    // Timer to check whether the AP mode should be disabled (0 = disabled)
-extern LongTermTimer timerAPstart;  // Timer to start AP mode, started when no valid network is detected.
+extern LongTermTimer timerAPoff;   // Timer to check whether the AP mode should be disabled (0 = disabled)
+extern LongTermTimer timerAPstart; // Timer to start AP mode, started when no valid network is detected.
 
 extern bool intent_to_reboot;
 extern uint8_t lastMacConnectedAPmode[6];

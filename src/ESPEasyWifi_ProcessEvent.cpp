@@ -389,7 +389,7 @@ void processScanDone() {
       return;
   }
 
-  lastGetScanMoment = millis();
+  lastGetScanMoment.setNow();
   processedScanDone = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

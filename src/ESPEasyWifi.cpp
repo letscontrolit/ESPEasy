@@ -183,7 +183,7 @@ void WiFiConnectRelaxed() {
 
   if (!prepareWiFi()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : Could not prepare WiFi!"));
-    last_wifi_connect_attempt_moment = millis();
+    last_wifi_connect_attempt_moment.setNow();
     wifi_connect_attempt             = 1;
     return;
   }
@@ -213,7 +213,7 @@ void WiFiConnectRelaxed() {
     log += wifi_connect_attempt + 1;
     addLog(LOG_LEVEL_INFO, log);
   }
-  last_wifi_connect_attempt_moment = millis();
+  last_wifi_connect_attempt_moment.setNow();
   wifiConnectInProgress            = true;
 
   // First try quick reconnect using last known BSSID and channel.
@@ -329,7 +329,7 @@ void resetWiFi() {
   lastGetIPmoment.clear();
   lastGetScanMoment.clear();
   last_wifi_connect_attempt_moment.clear();
-  timerAPstart = 0;
+  timerAPstart.clear();
 
   // Mark all flags to default to prevent handling old events.
   processedConnect          = true;
@@ -410,7 +410,7 @@ void WifiScan(bool async, bool quick) {
   addLog(LOG_LEVEL_INFO, F("WIFI  : Start network scan"));
   bool show_hidden         = true;
   processedScanDone = false;
-  lastGetScanMoment = millis();
+  lastGetScanMoment.setNow();
   if (quick) {
     #ifdef ESP8266
     // Only scan a single channel if the RTC.lastWiFiChannel is known to speed up connection time.
@@ -644,7 +644,7 @@ bool wifiConnectTimeoutReached() {
   // For the first attempt, do not wait to start connecting.
   if (wifi_connect_attempt == 0) { return true; }
 
-  if (last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment) > 0ll) {
+  if (lastDisconnectMoment.isSet() && (last_wifi_connect_attempt_moment > lastDisconnectMoment)) {
     // Connection attempt was already ended.
     return true;
   }

@@ -24,11 +24,11 @@ LongTermTimer::Duration LongTermTimer::millisPassedSince() const {
 }
 
 bool LongTermTimer::timeReached() const {
-    return getMicros64() > _timer;
+  return getMicros64() > _timer;
 }
 
 bool LongTermTimer::timeoutReached(uint32_t millisTimeout) const {
-    return getMicros64() > (_timer + (millisTimeout * 1000ull));
+  return getMicros64() > (_timer + (millisTimeout * 1000ull));
 }
 
 LongTermTimer::Duration LongTermTimer::__timeDiff(uint64_t prev, uint64_t next) {
