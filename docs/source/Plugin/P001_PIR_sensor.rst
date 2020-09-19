@@ -31,7 +31,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               PIR
   GPIO (X)   <-->   I/O or OUT
@@ -117,7 +117,7 @@ Indicators/values (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     on Motion#Detection=1 do
       timerSet,1,1

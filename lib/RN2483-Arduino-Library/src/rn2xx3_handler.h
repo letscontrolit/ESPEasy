@@ -181,6 +181,8 @@ public:
 
   RN_state      get_state() const;
 
+  uint8_t       get_busy_count() const;
+
   String        sysver();
 
   // delay from last moment of sending to receive RX1 and RX2 window

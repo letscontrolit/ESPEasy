@@ -115,6 +115,7 @@
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/MQTT.h"
+#include "src/Globals/NetworkState.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Protocol.h"
 #include "src/Globals/RTC.h"
@@ -130,6 +131,7 @@
 #include "src/Helpers/Hardware.h"
 #include "src/Helpers/PeriodicalActions.h"
 #include "src/Helpers/Scheduler.h"
+
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
@@ -186,7 +188,7 @@ void setup()
   // Read ADC at boot, before WiFi tries to connect.
   // see https://github.com/letscontrolit/ESPEasy/issues/2646
 #if FEATURE_ADC_VCC
-  vcc = ESP.getVcc() / 1000.0;
+  vcc = ESP.getVcc() / 1000.0f;
 #endif
 #ifdef ESP8266
   lastADCvalue = analogRead(A0);
@@ -295,12 +297,9 @@ void setup()
   #ifdef HAS_ETHERNET
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
-  eth_wifi_mode = Settings.ETH_Wifi_Mode;
+  active_network_medium = Settings.NetworkMedium;
   log = F("INIT : ETH_WIFI_MODE:");
-  log += String(eth_wifi_mode);
-  log += F(" (");
-  log += (eth_wifi_mode == WIFI ? F("WIFI") : F("ETHERNET"));
-  log += F(")");
+  log += toString(active_network_medium);
   addLog(LOG_LEVEL_INFO, log);
   #endif
 
@@ -514,7 +513,7 @@ void updateLoopStats() {
 
 
 float getCPUload() {
-  return 100.0 - Scheduler.getIdleTimePct();
+  return 100.0f - Scheduler.getIdleTimePct();
 }
 
 int getLoopCountPerSec() {
@@ -538,14 +537,16 @@ void loop()
 
   updateLoopStats();
 
-  #ifdef HAS_ETHERNET
-  // Handle WiFiEvents when compiled with HAS_ETHERNET but in WiFi Mode eth_wifi_mode (WIFI = 0, ETHERNET = 1)
-  if(eth_wifi_mode == WIFI) {
-    handle_unprocessedWiFiEvents();
+  switch (active_network_medium) {
+    case NetworkMedium_t::WIFI:
+      handle_unprocessedWiFiEvents();
+      break;
+    case NetworkMedium_t::Ethernet:
+      if (NetworkConnected()) {
+        updateUDPport();
+      }
+      break;
   }
-  #else
-  handle_unprocessedWiFiEvents();
-  #endif
 
   bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
   if (firstLoopConnectionsEstablished) {

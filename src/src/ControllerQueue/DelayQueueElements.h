@@ -28,7 +28,10 @@
 
 #ifdef USES_MQTT
 # include "../ControllerQueue/MQTT_queue_element.h"
-extern ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
+extern ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler;
+
+bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag);
+void exit_mqtt_delay_queue();
 #endif // USES_MQTT
 
 
@@ -90,7 +93,7 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO( 0, 10)
 * C011_queue_element for queueing requests for 011: Generic HTTP Advanced
 \*********************************************************************************************/
 #ifdef USES_C011
-# define C011_queue_element simple_queue_element_string_only
+# include "../ControllerQueue/C011_queue_element.h"
 DEFINE_Cxxx_DELAY_QUEUE_MACRO( 0, 11)
 #endif // ifdef USES_C011
 

@@ -24,9 +24,6 @@
   # include <WebServer.h>
 #endif // if defined(ESP32)
 
-#include "I2CTypes.h"
-#include "I2Cdev.h"
-
 #include <FS.h>
 
 #include <WiFiUdp.h>
@@ -71,26 +68,6 @@ bool   NetworkConnected(uint32_t timeout_ms);
 bool   hostReachable(const IPAddress& ip);
 bool   hostReachable(const String& hostname);
 void   updateUDPport();
-
-
-bool     I2C_read_bytes(uint8_t        i2caddr,
-                        I2Cdata_bytes& data);
-bool     I2C_write8_reg(uint8_t i2caddr,
-                        byte    reg,
-                        byte    value);
-uint8_t  I2C_read8_reg(uint8_t i2caddr,
-                       byte    reg,
-                       bool   *is_ok = NULL);
-uint16_t I2C_read16_reg(uint8_t i2caddr,
-                        byte    reg);
-int32_t  I2C_read24_reg(uint8_t i2caddr,
-                        byte    reg);
-uint16_t I2C_read16_LE_reg(uint8_t i2caddr,
-                           byte    reg);
-int16_t  I2C_readS16_reg(uint8_t i2caddr,
-                         byte    reg);
-int16_t  I2C_readS16_LE_reg(uint8_t i2caddr,
-                            byte    reg);
 
 
 bool safe_strncpy(char         *dest,
@@ -195,7 +172,7 @@ void SendStatus(EventValueSource::Enum source, const String& status);
 //void setSTA(bool enable);
 
 // Used for Networking with Wifi or Ethernet
-#include "ESPEasyEthWifi.h"
+//#include "ESPEasyEthWiFi.h"
 #include "ESPEasyNetwork.h"
 //void WiFiConnectRelaxed();
 //bool WiFiConnected();

@@ -36,8 +36,23 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
+        success = init_c012_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c012_delay_queue();
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
+      {
+        if (C012_DelayHandler == nullptr) {
+          break;
+        }
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C012_queue_element element(event, valueCount);
@@ -45,9 +60,6 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
           String dummy;
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
         }
-
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
 
         for (byte x = 0; x < valueCount; x++)
         {
@@ -62,8 +74,8 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
           }
         }
         // FIXME TD-er must define a proper move operator
-        success = C012_DelayHandler.addToQueue(C012_queue_element(element));
-        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C012_DELAY_QUEUE, C012_DelayHandler.getNextScheduleTime());
+        success = C012_DelayHandler->addToQueue(C012_queue_element(element));
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C012_DELAY_QUEUE, C012_DelayHandler->getNextScheduleTime());
         break;
       }
 

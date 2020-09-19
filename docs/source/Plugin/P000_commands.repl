@@ -30,6 +30,12 @@
     
     Example output: ``Allowed IP range : 192.168.10.0 - 192.168.10.255``"
     "
+    Background","
+    :red:`Internal`","
+    Process background tasks.
+
+    ``Background``"
+    "
     Build","
     :red:`Internal`","
     Get or set build information.  This will not be stored, so only valid until reboot.
@@ -86,7 +92,7 @@
     * ``Datetime,2020-02-29`` - set node time '2020-02-29 00:00:00'
     * ``Datetime`` - get current node time
     
-    Time source will be set to ``Manual_set`` until the time will be updated via another source. (e.g. GPS or NTP)
+    Time source will be set to ``Manual_set`` until the time will be updated via another source. (e.g. GPS or NTP)"
     "
     Debug","
     :red:`Internal`","
@@ -164,7 +170,7 @@
     
     Example output:
 
-    .. code-block:: html
+    .. code-block:: none
 
      4500043 : Info  : Command: i2cscanner
      I2C  : Found 0x3c
@@ -200,6 +206,12 @@
     Add string to log
 
     ``LogEntry,<string>``"
+    "
+    LogPortStatus","
+    :red:`Internal`","
+    Display status information about all ports
+
+    ``LogPortStatus``"
     "
     LoopTimerSet
 
@@ -240,7 +252,7 @@
     
     Example output:
 
-    .. code-block:: html
+    .. code-block:: none
 
      4306250 : Info  : Command: meminfo
      SecurityStruct         | 593      
@@ -334,6 +346,16 @@
 
     ``Settings``"
     "
+    Subnet","
+    :red:`Internal`","
+    Get or set the network subnet setting
+
+    ``Subnet``
+
+    Example output: ``Subnet:255.255.255.0(DHCP)``
+
+    ``Subnet,255.255.255.0``"
+    "
     Subscribe","
     :green:`Rules`","
     Subscribes to a specific topic using MQTT broker service
@@ -378,6 +400,24 @@
 
     ``TaskValueSet,<task nr>,<value nr>,<value/formula>``"
     "
+    TaskValueSetAndRun","
+    :green:`Rules`","
+    Set values on a **Dummy Task** (device) and execute a TaskRun on it
+
+    ``TaskValueSetAndRun,<task nr>,<value nr>,<value/formula>``"
+    "
+    TimerPause","
+    :green:`Rules`","
+    Pause a timer
+
+    ``TimerPause,<timer number>``"
+    "
+    TimerResume","
+    :green:`Rules`","
+    Resume a paused timer
+
+    ``TimerResume,<timer number>``"
+    "
     TimerSet
 
     TimerSet_ms","
@@ -392,11 +432,55 @@
 
     N.B. the timernr is shared between ``TimerSet`` and ``LoopTimerSet``"
     "
+    TimeZone","
+    :red:`Internal`","
+    Get or set the TimeZone
+
+    ``TimeZone``
+
+    Example output: ``TimeZone:60``
+
+    ``TimeZone,<minutes from UTC>``"
+    "
+    UdpPort","
+    :red:`Internal`","
+    Set the udp port
+
+    ``UdpPort,<port>``"
+    "
+    UdpTest","
+    :red:`Internal`","
+    Send a test message to an udp port, for <count> number of times
+
+    ``UdpTest,<port>,<count>``"
+    "
     Unit","
     :red:`Internal`","
     Set the unit number
 
     ``Unit,<unit number>``"
+    "
+    UseNTP","
+    :red:`Internal`","
+    Get or set the status of NTP (Network Time Protocol)
+
+    ``UseNTP``
+
+    Example output: ``UseNTP:true``
+
+    ``UseNTP,<0/1>``"
+    "
+    WdConfig","
+    :red:`Internal`","
+    Configure external Watchdog device
+
+    ``WdConfig,<address>,<command>,<data>``"
+    "
+    WdRead","
+    :red:`Internal`","
+    Read from external Watchdog device
+
+    ``WdRead,<address>,<pointer/register>``"
     "
     WifiAPKey","
     :red:`Internal`","
@@ -451,6 +535,12 @@
     Change SSID to connect as secondry WiFi
 
     ``WifiSSID2,<SSID>``"
+    "
+    WifiSTAMode","
+    :red:`Internal`","
+    Force the unit into STA mode.
+
+    ``WifiSTAMode``"
 
 
 
@@ -478,7 +568,7 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
 
     **Rules example**
 
-    .. code-block:: html
+    .. code-block:: none
 
         on SingleEvent do
           Publish,%sysname%/Info,A single event has been triggered!
@@ -491,7 +581,7 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
 
     **Rules example**
 
-    .. code-block:: html
+    .. code-block:: none
 
       on SingleValue do
         Publish,%sysname%/Info,An event has been sent (%eventvalue%)!
@@ -505,7 +595,7 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
 
     **Rules example**
 
-    .. code-block:: html
+    .. code-block:: none
 
       on Multi do
         if %eventvalue4%=99

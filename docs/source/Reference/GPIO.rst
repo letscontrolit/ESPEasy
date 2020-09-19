@@ -243,3 +243,9 @@ It is best not to use any of the GPIO pins 6 - 11.
 
 GPIO 6, 7 & 8 may output some PWM signals at boot.
 GPIO 9, 10 & 11 output high at boot and may fail to boot of pulled either high or low.
+
+
+Pins used for RMII Ethernet PHY
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Reference/Ethernet_PHY_ESP32.rst

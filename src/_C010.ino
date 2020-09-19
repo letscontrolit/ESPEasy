@@ -39,8 +39,24 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
+    case CPlugin::Function::CPLUGIN_INIT:
+      {
+        success = init_c010_delay_queue(event->ControllerIndex);
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c010_delay_queue();
+        break;
+      }
+
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
+        if (C010_DelayHandler == nullptr) {
+          break;
+        }
+
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C010_queue_element element(event, valueCount);
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
@@ -48,25 +64,30 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
           PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
         }
 
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
-        for (byte x = 0; x < valueCount; x++)
         {
-          bool isvalid;
-          String formattedValue = formatUserVar(event, x, isvalid);
-          if (isvalid) {
-            element.txt[x] = "";
-            element.txt[x] += ControllerSettings.Publish;
-            parseControllerVariables(element.txt[x], event, false);
-            element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-            element.txt[x].replace(F("%value%"), formattedValue);
-            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+          MakeControllerSettings(ControllerSettings);
+          if (!AllocatedControllerSettings()) {
+            break;
+          }
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+
+          for (byte x = 0; x < valueCount; x++)
+          {
+            bool isvalid;
+            String formattedValue = formatUserVar(event, x, isvalid);
+            if (isvalid) {
+              element.txt[x] = "";
+              element.txt[x] += ControllerSettings.Publish;
+              parseControllerVariables(element.txt[x], event, false);
+              element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+              element.txt[x].replace(F("%value%"), formattedValue);
+              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+            }
           }
         }
         // FIXME TD-er must define a proper move operator
-        success = C010_DelayHandler.addToQueue(C010_queue_element(element));
-        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C010_DELAY_QUEUE, C010_DelayHandler.getNextScheduleTime());
+        success = C010_DelayHandler->addToQueue(C010_queue_element(element));
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C010_DELAY_QUEUE, C010_DelayHandler->getNextScheduleTime());
         break;
       }
 

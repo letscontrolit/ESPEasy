@@ -2,7 +2,33 @@
 
 
 #ifdef USES_MQTT
-ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
+ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler = nullptr;
+
+bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag) {
+  MakeControllerSettings(ControllerSettings);
+  if (!AllocatedControllerSettings()) {
+    return false;
+  }
+  LoadControllerSettings(ControllerIndex, ControllerSettings);
+  if (MQTTDelayHandler == nullptr) {
+    MQTTDelayHandler = new (std::nothrow)  ControllerDelayHandlerStruct<MQTT_queue_element>;
+  }
+  if (MQTTDelayHandler == nullptr) {
+    return false;
+  }
+  MQTTDelayHandler->configureControllerSettings(ControllerSettings);
+  pubname = ControllerSettings.Publish;
+  retainFlag = ControllerSettings.mqtt_retainFlag();
+  return true;
+}
+
+void exit_mqtt_delay_queue() {
+  if (MQTTDelayHandler != nullptr) {
+    delete MQTTDelayHandler;
+    MQTTDelayHandler = nullptr;
+  }
+}
+
 #endif // USES_MQTT
 
 
@@ -61,7 +87,6 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP( 0, 10)
 * C011_queue_element for queueing requests for 011: Generic HTTP Advanced
 \*********************************************************************************************/
 #ifdef USES_C011
-# define C011_queue_element simple_queue_element_string_only
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP( 0, 11)
 #endif // ifdef USES_C011
 

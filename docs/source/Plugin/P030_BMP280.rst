@@ -23,7 +23,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
  ESP               BMP280
  GPIO (4)   <-->   SDI (SDA)
@@ -77,7 +77,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     on BMP#hPa do
      if BMP#hPa>999

@@ -89,9 +89,11 @@ struct P082_data_struct : public PluginTaskData_base {
       return false;
     }
     reset();
-    gps             = new TinyGPSPlus();
-    P082_easySerial = new ESPeasySerial(serial_rx, serial_tx);
-    P082_easySerial->begin(9600);
+    gps             = new (std::nothrow) TinyGPSPlus();
+    P082_easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
+    if (P082_easySerial != nullptr) {
+      P082_easySerial->begin(9600);
+    }
     return isInitialized();
   }
 
@@ -393,7 +395,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
       const int16_t pps_pin   = CONFIG_PIN3;
-      initPluginTaskData(event->TaskIndex, new P082_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P082_data_struct());
       P082_data_struct *P082_data =
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -416,7 +418,6 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
       const int16_t pps_pin = CONFIG_PIN3;
 
       if (pps_pin != -1) {
@@ -486,7 +487,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
         }
         P082_setOutputValue(event, P082_QUERY_SATVIS,      P082_data->gps->satellitesStats.nrSatsVisible());
         P082_setOutputValue(event, P082_QUERY_SATUSE,      P082_data->gps->satellitesStats.nrSatsTracked());
-        P082_setOutputValue(event, P082_QUERY_HDOP,        P082_data->gps->hdop.value() / 100.0);
+        P082_setOutputValue(event, P082_QUERY_HDOP,        P082_data->gps->hdop.value() / 100.0f);
         P082_setOutputValue(event, P082_QUERY_FIXQ,        P082_data->gps->location.Quality());
         P082_setOutputValue(event, P082_QUERY_DB_MAX,      P082_data->gps->satellitesStats.getBestSNR());
         P082_setOutputValue(event, P082_QUERY_CHKSUM_FAIL, P082_data->gps->failedChecksum());
@@ -604,7 +605,7 @@ void P082_logStats(struct EventStruct *event) {
   log += F(" #SNR: ");
   log += P082_data->gps->satellitesStats.getBestSNR();
   log += F(" HDOP: ");
-  log += P082_data->gps->hdop.value() / 100.0;
+  log += P082_data->gps->hdop.value() / 100.0f;
   log += F(" Chksum(pass/fail): ");
   log += P082_data->gps->passedChecksum();
   log += '/';
@@ -714,7 +715,7 @@ void P082_html_show_stats(struct EventStruct *event) {
   P082_html_show_satStats(event, false, false);
 
   addRowLabel(F("HDOP"));
-  addHtml(String(P082_data->gps->hdop.value() / 100.0));
+  addHtml(String(P082_data->gps->hdop.value() / 100.0f));
 
   addRowLabel(F("UTC Time"));
   struct tm dateTime;

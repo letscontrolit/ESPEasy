@@ -24,7 +24,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
  ESP               BME280
  GPIO (4)   <-->   SDA
@@ -75,7 +75,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     on BME#hPa do
      if BME#hPa>999

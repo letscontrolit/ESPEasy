@@ -26,6 +26,7 @@ void handle_tools() {
   html_TR_TD();
   addSubmitButton();
   addHelpButton(F("ESPEasy_Command_Reference"));
+  addRTDHelpButton(F("Reference/Command.html"));
   html_TR_TD();
 
   printToWeb     = true;
