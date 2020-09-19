@@ -21,6 +21,12 @@ Maintainer: |P012_maintainer|
 
 Used libraries: |P012_usedlibraries|
 
+Build Info
+----------
+
+To support characters used in the Polish language, add this define: ``USES_P012_POLISH_CHARS``
+
+
 Supported hardware
 ------------------
 
@@ -39,11 +45,11 @@ Supported hardware
 Change log
 ----------
 
-.. versionchanged:: 2.0
+.. versionchanged:: 2020-09-14
   ...
 
   |added|
-  Major overhaul for 2.0 release.
+  Support for characters used in Polish language, define  ``USES_P012_POLISH_CHARS`` to include those in a build.
 
 .. versionadded:: 1.0
   ...

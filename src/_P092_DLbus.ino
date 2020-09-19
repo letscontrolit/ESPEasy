@@ -244,7 +244,6 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         return false;
       }
 
-
 #ifdef PLUGIN_092_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -385,6 +384,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           (timePassedSince(P092_data->P092_LastReceived) > (static_cast<long>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000 / 2)))) {
         P092_data->Plugin_092_StartReceiving();
         success = true;
+
       }
       break;
     }

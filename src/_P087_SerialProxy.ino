@@ -184,12 +184,6 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
-      break;
-    }
-
     case PLUGIN_FIFTY_PER_SECOND: {
       if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
         P087_data_struct *P087_data =

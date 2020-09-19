@@ -9,31 +9,13 @@
 
 #include "_Plugin_Helper.h"
 
+#include "src/PluginStructs/P060_data_struct.h"
+
 #define PLUGIN_060
 #define PLUGIN_ID_060         60
 #define PLUGIN_NAME_060       "Analog input - MCP3221 [TESTING]"
 #define PLUGIN_VALUENAME1_060 "Analog"
 
-uint32_t Plugin_060_OversamplingValue = 0;
-uint16_t Plugin_060_OversamplingCount = 0;
-
-
-uint16_t readMCP3221(byte addr)
-{
-  uint16_t value;
-
-  Wire.requestFrom(addr, (uint8_t)2);
-
-  if (Wire.available() == 2)
-  {
-    value = (Wire.read() << 8) | Wire.read();
-  }
-  else {
-    value = 9999;
-  }
-
-  return value;
-}
 
 boolean Plugin_060(byte function, struct EventStruct *event, String& string)
 {
@@ -116,56 +98,67 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_INIT:
+    {
+      byte address = PCONFIG(0);
+
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P060_data_struct(address));
+      P060_data_struct *P060_data =
+        static_cast<P060_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P060_data) {
+        success = true;
+      }
+      break;
+    }
+
+
     case PLUGIN_TEN_PER_SECOND:
     {
       if (PCONFIG(1)) // Oversampling?
       {
-        Plugin_060_OversamplingValue += readMCP3221(PCONFIG(0));
-        Plugin_060_OversamplingCount++;
+        P060_data_struct *P060_data =
+          static_cast<P060_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr != P060_data) {
+          P060_data->overSampleRead();
+          success = true;
+        }
       }
-      success = true;
       break;
     }
 
     case PLUGIN_READ:
     {
-      String log = F("ADMCP: Analog value: ");
+      P060_data_struct *P060_data =
+        static_cast<P060_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (Plugin_060_OversamplingCount > 0)
-      {
-        UserVar[event->BaseVarIndex] = (float)Plugin_060_OversamplingValue / Plugin_060_OversamplingCount;
-        Plugin_060_OversamplingValue = 0;
-        Plugin_060_OversamplingCount = 0;
+      if (nullptr != P060_data) {
+        UserVar[event->BaseVarIndex] = P060_data->getValue();
 
+        String log = F("ADMCP: Analog value: ");
         log += String(UserVar[event->BaseVarIndex], 3);
-      }
-      else
-      {
-        int16_t value = readMCP3221(PCONFIG(0));
-        UserVar[event->BaseVarIndex] = (float)value;
 
-        log += value;
-      }
-
-      if (PCONFIG(3)) // Calibration?
-      {
-        int   adc1 = PCONFIG_LONG(0);
-        int   adc2 = PCONFIG_LONG(1);
-        float out1 = PCONFIG_FLOAT(0);
-        float out2 = PCONFIG_FLOAT(1);
-
-        if (adc1 != adc2)
+        if (PCONFIG(3)) // Calibration?
         {
-          float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
-          UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+          int   adc1 = PCONFIG_LONG(0);
+          int   adc2 = PCONFIG_LONG(1);
+          float out1 = PCONFIG_FLOAT(0);
+          float out2 = PCONFIG_FLOAT(1);
 
-          log += F(" = ");
-          log += String(UserVar[event->BaseVarIndex], 3);
+          if (adc1 != adc2)
+          {
+            float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
+            UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+
+            log += F(" = ");
+            log += String(UserVar[event->BaseVarIndex], 3);
+          }
         }
-      }
 
-      addLog(LOG_LEVEL_INFO, log);
-      success = true;
+        addLog(LOG_LEVEL_INFO, log);
+        success = true;
+      }
       break;
     }
   }

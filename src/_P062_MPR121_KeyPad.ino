@@ -21,11 +21,10 @@
 #define PLUGIN_NAME_062       "Keypad - MPR121 Touch [TESTING]"
 #define PLUGIN_VALUENAME1_062 "ScanCode"
 
-#include <Adafruit_MPR121.h>
+
 #include "_Plugin_Helper.h"
 
-Adafruit_MPR121 *Plugin_062_K = NULL;
-
+#include "src/PluginStructs/P062_data_struct.h"
 
 boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 {
@@ -91,57 +90,43 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte addr = PCONFIG(0);
+      byte address = PCONFIG(0);
 
-      if (!Plugin_062_K) {
-        Plugin_062_K = new Adafruit_MPR121;
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P062_data_struct(address, PCONFIG(1)));
+      P062_data_struct *P062_data =
+        static_cast<P062_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P062_data) {
+        success = true;
       }
-
-      Plugin_062_K->begin(addr);
-
-      success = true;
       break;
     }
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (Plugin_062_K)
-      {
-        static uint16_t keyLast = 0;
+      P062_data_struct *P062_data =
+        static_cast<P062_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        uint16_t key = Plugin_062_K->touched();
+      if (nullptr != P062_data) {
+        uint16_t key;
 
-        if (key && PCONFIG(1))
+        if (P062_data->readKey(key))
         {
-          uint16_t colMask = 0x01;
-
-          for (byte col = 1; col <= 12; col++)
-          {
-            if (key & colMask) // this key pressed?
-            {
-              key = col;
-              break;
-            }
-            colMask <<= 1;
-          }
-        }
-
-        if (keyLast != key)
-        {
-          keyLast                      = key;
           UserVar[event->BaseVarIndex] = (float)key;
           event->sensorType            = SENSOR_TYPE_SWITCH;
 
-          String log = F("Tkey : ");
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("Tkey : ");
 
-          if (PCONFIG(1)) {
-            log = F("ScanCode=0x");
+            if (PCONFIG(1)) {
+              log = F("ScanCode=0x");
+            }
+            else {
+              log = F("KeyMap=0x");
+            }
+            log += String(key, 16);
+            addLog(LOG_LEVEL_INFO, log);
           }
-          else {
-            log = F("KeyMap=0x");
-          }
-          log += String(key, 16);
-          addLog(LOG_LEVEL_INFO, log);
 
           sendData(event);
         }
@@ -152,8 +137,6 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      if (Plugin_062_K)
-      {}
       success = true;
       break;
     }
