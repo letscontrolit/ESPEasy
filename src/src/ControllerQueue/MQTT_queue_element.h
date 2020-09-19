@@ -13,10 +13,10 @@ public:
 
   MQTT_queue_element();
 
-  MQTT_queue_element(int           ctrl_idx,
-                     const String& topic,
-                     const String& payload,
-                     bool          retained);
+  explicit MQTT_queue_element(int           ctrl_idx,
+                              const String& topic,
+                              const String& payload,
+                              bool          retained);
 
   size_t getSize() const;
 
