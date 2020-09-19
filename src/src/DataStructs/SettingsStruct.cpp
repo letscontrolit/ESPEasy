@@ -118,9 +118,9 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (UDPPort > 65535) { UDPPort = 0; }
 
-  if ((Latitude  < -90.0) || (Latitude > 90.0)) { Latitude = 0.0; }
+  if ((Latitude  < -90.0f) || (Latitude > 90.0f)) { Latitude = 0.0f; }
 
-  if ((Longitude < -180.0) || (Longitude > 180.0)) { Longitude = 0.0; }
+  if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
   if (VariousBits1 > (1 << 30)) { VariousBits1 = 0; }
   ZERO_TERMINATE(Name);
@@ -158,8 +158,8 @@ void SettingsStruct_tmpl<N_TASKS>::clearTimeSettings() {
   DST       = false;
   DST_Start = 0;
   DST_End   = 0;
-  Latitude  = 0.0;
-  Longitude = 0.0;
+  Latitude  = 0.0f;
+  Longitude = 0.0f;
 }
 
 template<unsigned int N_TASKS>
@@ -301,7 +301,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   TaskDevicePin1Inversed[task] = false;
 
   for (byte cv = 0; cv < PLUGIN_CONFIGFLOATVAR_MAX; ++cv) {
-    TaskDevicePluginConfigFloat[task][cv] = 0.0;
+    TaskDevicePluginConfigFloat[task][cv] = 0.0f;
   }
 
   for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {

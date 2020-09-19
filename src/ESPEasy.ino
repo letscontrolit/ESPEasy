@@ -188,7 +188,7 @@ void setup()
   // Read ADC at boot, before WiFi tries to connect.
   // see https://github.com/letscontrolit/ESPEasy/issues/2646
 #if FEATURE_ADC_VCC
-  vcc = ESP.getVcc() / 1000.0;
+  vcc = ESP.getVcc() / 1000.0f;
 #endif
 #ifdef ESP8266
   lastADCvalue = analogRead(A0);
@@ -513,7 +513,7 @@ void updateLoopStats() {
 
 
 float getCPUload() {
-  return 100.0 - Scheduler.getIdleTimePct();
+  return 100.0f - Scheduler.getIdleTimePct();
 }
 
 int getLoopCountPerSec() {

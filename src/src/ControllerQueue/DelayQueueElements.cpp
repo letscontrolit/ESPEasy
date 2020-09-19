@@ -87,7 +87,6 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP( 0, 10)
 * C011_queue_element for queueing requests for 011: Generic HTTP Advanced
 \*********************************************************************************************/
 #ifdef USES_C011
-# define C011_queue_element simple_queue_element_string_only
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP( 0, 11)
 #endif // ifdef USES_C011
 

@@ -759,7 +759,7 @@ void parseStandardConversions(String& s, boolean useURLencode) {
   if (s.indexOf(F("%c_")) == -1) {
     return; // Nothing to replace
   }
-  float arg1       = 0.0;
+  float arg1       = 0.0f;
   int   startIndex = 0;
   int   endIndex   = 0;
 
@@ -782,7 +782,7 @@ void parseStandardConversions(String& s, boolean useURLencode) {
   // Conversions with 2 parameters
   #define SMART_CONV(T, FUN) \
   while (getConvertArgument2((T), s, arg1, arg2, startIndex, endIndex)) { repl(s.substring(startIndex, endIndex), (FUN), s, useURLencode); }
-  float arg2 = 0.0;
+  float arg2 = 0.0f;
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(arg1, arg2), 2))
   #undef SMART_CONV
 }

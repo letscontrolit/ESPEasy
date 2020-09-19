@@ -420,33 +420,41 @@ boolean MQTTConnect_037()
     Plugin_037_update_connect_status();
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
-  MakeControllerSettings(ControllerSettings);
-  if (!AllocatedControllerSettings()) {
-    addLog(LOG_LEVEL_ERROR, F("IMPT : Cannot load controller settings, out of RAM"));
-    return false;
-  }
+  
+  String user, pass;
+  bool hasCredentials = false;
 
-  LoadControllerSettings(enabledMqttController, ControllerSettings);
-  if (ControllerSettings.UseDNS) {
-    MQTTclient_037->setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
-  } else {
-    MQTTclient_037->setServer(ControllerSettings.getIP(), ControllerSettings.Port);
+  {
+    MakeControllerSettings(ControllerSettings);
+    if (!AllocatedControllerSettings()) {
+      addLog(LOG_LEVEL_ERROR, F("IMPT : Cannot load controller settings, out of RAM"));
+      return false;
+    }
+
+    LoadControllerSettings(enabledMqttController, ControllerSettings);
+    if (ControllerSettings.UseDNS) {
+      MQTTclient_037->setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
+    } else {
+      MQTTclient_037->setServer(ControllerSettings.getIP(), ControllerSettings.Port);
+    }
+    MQTTclient_037->setCallback(mqttcallback_037);
+    if (hasControllerCredentialsSet(enabledMqttController, ControllerSettings)) {
+      hasCredentials = true;
+      user = getControllerUser(enabledMqttController, ControllerSettings);
+      pass = getControllerPass(enabledMqttController, ControllerSettings);
+    }
   }
-  MQTTclient_037->setCallback(mqttcallback_037);
 
   //  Try three times for a connection
-
   for (byte x = 1; x < 4; x++)
   {
     String log = "";
 
-    if (hasControllerCredentialsSet(enabledMqttController, ControllerSettings))
-      result = MQTTclient_037->connect(clientid.c_str(), 
-                                      getControllerUser(enabledMqttController, ControllerSettings).c_str(), 
-                                      getControllerPass(enabledMqttController, ControllerSettings).c_str());
-    else
+    if (hasCredentials) {
+      result = MQTTclient_037->connect(clientid.c_str(), user.c_str(), pass.c_str());
+    } else {
       result = MQTTclient_037->connect(clientid.c_str());
-
+    }
 
     if (result)
     {

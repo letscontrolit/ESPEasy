@@ -108,12 +108,6 @@ boolean Plugin_097(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
-      break;
-    }
-
     case PLUGIN_INIT:
     {
       P097_setEventParams(CONFIG_PIN1, P097_TOUCH_THRESHOLD);

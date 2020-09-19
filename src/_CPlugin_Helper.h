@@ -57,9 +57,9 @@ String create_http_request_auth(int controller_number, int controller_index, Con
 void log_connecting_to(const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings);
+void log_connecting_fail(const String& prefix, int controller_number);
 
-bool count_connection_results(bool success, const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings);
+bool count_connection_results(bool success, const String& prefix, int controller_number);
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings);
 
@@ -72,9 +72,39 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
 //      https://github.com/esp8266/Arduino/pull/1829
 bool client_available(WiFiClient& client);
 
-bool send_via_http(const String& logIdentifier, WiFiClient& client, const String& postStr, bool must_check_reply);
+bool send_via_http(const String& logIdentifier,
+                   WiFiClient  & client,
+                   const String& postStr,
+                   bool          must_check_reply);
 
-bool send_via_http(int controller_number, WiFiClient& client, const String& postStr, bool must_check_reply);
+bool send_via_http(int           controller_number,
+                   WiFiClient  & client,
+                   const String& postStr,
+                   bool          must_check_reply);
+
+String send_via_http(const String& logIdentifier,
+                     WiFiClient  & client,
+                     uint16_t      timeout,
+                     const String& user,
+                     const String& pass,
+                     const String& host,
+                     uint16_t      port,
+                     const String& uri,
+                     const String& HttpMethod,
+                     const String& header,
+                     const String& postStr,
+                     int         & httpCode);
+
+String send_via_http(int                             controller_number,
+                     const ControllerSettingsStruct& ControllerSettings,
+                     controllerIndex_t               controller_idx,
+                     WiFiClient                    & client,
+                     const String                  & uri,
+                     const String                  & HttpMethod,
+                     const String                  & header,
+                     const String                  & postStr,
+                     int                           & httpCode);
+                     
 
 String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);
 String getControllerPass(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings);

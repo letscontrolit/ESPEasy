@@ -21,7 +21,7 @@ unsigned long lastLoopStart     = 0;
 unsigned long shortestLoop      = 10000000;
 unsigned long longestLoop       = 0;
 unsigned long loopCounter_full  = 1;
-float loop_usec_duration_total  = 0.0;
+float loop_usec_duration_total  = 0.0f;
 
 
 unsigned long dailyResetCounter                   = 0;
