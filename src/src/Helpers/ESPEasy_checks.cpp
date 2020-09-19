@@ -61,7 +61,7 @@ void check_size() {
 void run_compiletime_checks() {
   #ifndef LIMIT_BUILD_SIZE
   check_size<CRCStruct,                             204u>();
-  check_size<SecurityStruct,                        593u>();
+  check_size<SecurityStruct,                        653u>();
   #ifdef ESP32
   const unsigned int SettingsStructSize = (312 + 84 * TASKS_MAX);
   #endif

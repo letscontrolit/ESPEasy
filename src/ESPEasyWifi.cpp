@@ -224,7 +224,7 @@ void WiFiConnectRelaxed() {
       log += wifi_connect_attempt;
       addLog(LOG_LEVEL_INFO, log);
     }
-    last_wifi_connect_attempt_moment = millis();
+    last_wifi_connect_attempt_moment.setNow();
     if ((wifi_connect_attempt != 0) && wifi_connect_attempt % 4 == 0 ) {
       WifiScan(false, false);
     }
@@ -240,6 +240,9 @@ void WiFiConnectRelaxed() {
   lastDisconnectMoment.clear();
   last_wifi_connect_attempt_moment.setNow();
   wifiConnectInProgress            = true;
+
+    // First try quick reconnect using last known BSSID and channel.
+    bool useQuickConnect = RTC.lastBSSID[0] != 0 && RTC.lastWiFiChannel != 0 && wifi_connect_attempt < 3;
 
     if (useQuickConnect) {
       WiFi.begin(ssid, passphrase, RTC.lastWiFiChannel, &RTC.lastBSSID[0]);
@@ -451,6 +454,7 @@ void WifiScan(bool async, bool quick) {
   bool show_hidden         = true;
   processedScanDone = false;
   lastGetScanMoment.setNow();
+  uint8_t channel = 0; // Default to scan all channels
   if (quick) {
     #ifdef ESP8266
     // Only scan a single channel if the RTC.lastWiFiChannel is known to speed up connection time.
@@ -481,7 +485,7 @@ void WifiScan_channel(uint8_t channel, bool async) {
   }
   bool show_hidden  = true;
   processedScanDone = false;
-  lastGetScanMoment = millis();
+  lastGetScanMoment.setNow();
   #ifdef ESP8266
   WiFi.scanNetworks(async, show_hidden, channel);
   #else
@@ -752,7 +756,7 @@ bool wifiAPmodeActivelyUsed()
     return false;
   }
   if (WiFi.softAPgetStationNum() != 0) {
-    if (timePassedSince(lastAPmodeStationConnectMoment) < (5*60*1000)) {
+    if (!lastAPmodeStationConnectMoment.timeoutReached(5*60*1000)) {
       // Client is connected for less then 5 minutes
       return true;
     }

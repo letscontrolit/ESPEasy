@@ -31,7 +31,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_098;
       Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
-      Device[deviceCount].VType              = SENSOR_TYPE_STRING; // FIXME TD-er: Must make this the same as the sender.
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_STRING; // FIXME TD-er: Must make this the same as the sender.
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -96,7 +96,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      event->sensorType = PCONFIG(0);
+      event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
       success           = true;
       break;
     }
