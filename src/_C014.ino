@@ -39,7 +39,7 @@
 byte msgCounter=0; // counter for send Messages (currently for information / log only!
 
 String CPlugin_014_pubname;
-bool CPlugin_014_mqtt_retainFlag;
+bool CPlugin_014_mqtt_retainFlag = false;
 
 
 // send MQTT Message with complete Topic / Payload

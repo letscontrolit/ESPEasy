@@ -9,7 +9,7 @@
 #define CPLUGIN_NAME_005       "Home Assistant (openHAB) MQTT"
 
 String CPlugin_005_pubname;
-bool CPlugin_005_mqtt_retainFlag;
+bool CPlugin_005_mqtt_retainFlag = false;
 
 
 bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& string)
