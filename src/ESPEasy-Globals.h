@@ -251,8 +251,6 @@ extern unsigned long lastSend;
 extern unsigned long lastWeb;
 extern byte cmd_within_mainloop;
 extern unsigned long wdcounter;
-extern unsigned long timerAPoff;    // Timer to check whether the AP mode should be disabled (0 = disabled)
-extern unsigned long timerAPstart;  // Timer to start AP mode, started when no valid network is detected.
 extern unsigned long timerAwakeFromDeepSleep;
 
 
