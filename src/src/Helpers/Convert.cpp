@@ -130,26 +130,26 @@ String secondsToDayHourMinuteSecond(int seconds) {
   return TimeString;
 }
 
-String format_msec_duration(long duration) {
+String format_msec_duration(int64_t duration) {
   String result;
 
   if (duration < 0) {
     result   = "-";
-    duration = -1 * duration;
+    duration = -1ll * duration;
   }
 
-  if (duration < 10000) {
-    result += duration;
+  if (duration < 10000ll) {
+    result += static_cast<int32_t>(duration);
     result += F(" ms");
     return result;
   }
-  duration /= 1000;
+  duration /= 1000ll;
 
-  if (duration < 3600) {
-    int sec     = duration % 60;
-    int minutes = duration / 60;
+  if (duration < 3600ll) {
+    int sec     = duration % 60ll;
+    int minutes = duration / 60ll;
 
-    if (minutes > 0) {
+    if (minutes > 0ll) {
       result += minutes;
       result += F(" m ");
     }
@@ -157,9 +157,9 @@ String format_msec_duration(long duration) {
     result += F(" s");
     return result;
   }
-  duration /= 60;
+  duration /= 60ll;
 
-  if (duration < 1440) { return minutesToHourMinute(duration); }
+  if (duration < 1440ll) { return minutesToHourMinute(duration); }
   return minutesToDayHourMinute(duration);
 }
 
