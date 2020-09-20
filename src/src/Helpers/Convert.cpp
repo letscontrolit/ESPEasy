@@ -6,10 +6,10 @@
 String getBearing(int degrees)
 {
   const int nr_directions = 16;
-  float stepsize      = (360.0 / nr_directions);
+  float stepsize      = (360.0f / nr_directions);
 
   if (degrees < 0) { degrees += 360; } // Allow for bearing -360 .. 359
-  int bearing_idx = int((degrees + (stepsize / 2.0)) / stepsize) % nr_directions;
+  int bearing_idx = int((degrees + (stepsize / 2.0f)) / stepsize) % nr_directions;
 
   if (bearing_idx >= 0) {
     switch (bearing_idx) {
@@ -35,43 +35,43 @@ String getBearing(int degrees)
 }
 
 float CelsiusToFahrenheit(float celsius) {
-  return celsius * (9.0 / 5.0) + 32;
+  return celsius * (9.0f / 5.0f) + 32;
 }
 
 int m_secToBeaufort(float m_per_sec) {
-  if (m_per_sec < 0.3) { return 0; }
+  if (m_per_sec < 0.3f) { return 0; }
 
-  if (m_per_sec < 1.6) { return 1; }
+  if (m_per_sec < 1.6f) { return 1; }
 
-  if (m_per_sec < 3.4) { return 2; }
+  if (m_per_sec < 3.4f) { return 2; }
 
-  if (m_per_sec < 5.5) { return 3; }
+  if (m_per_sec < 5.5f) { return 3; }
 
-  if (m_per_sec < 8.0) { return 4; }
+  if (m_per_sec < 8.0f) { return 4; }
 
-  if (m_per_sec < 10.8) { return 5; }
+  if (m_per_sec < 10.8f) { return 5; }
 
-  if (m_per_sec < 13.9) { return 6; }
+  if (m_per_sec < 13.9f) { return 6; }
 
-  if (m_per_sec < 17.2) { return 7; }
+  if (m_per_sec < 17.2f) { return 7; }
 
-  if (m_per_sec < 20.8) { return 8; }
+  if (m_per_sec < 20.8f) { return 8; }
 
-  if (m_per_sec < 24.5) { return 9; }
+  if (m_per_sec < 24.5f) { return 9; }
 
-  if (m_per_sec < 28.5) { return 10; }
+  if (m_per_sec < 28.5f) { return 10; }
 
-  if (m_per_sec < 32.6) { return 11; }
+  if (m_per_sec < 32.6f) { return 11; }
   return 12;
 }
 
 String centimeterToImperialLength(float cm) {
-  return millimeterToImperialLength(cm * 10.0);
+  return millimeterToImperialLength(cm * 10.0f);
 }
 
 String millimeterToImperialLength(float mm) {
-  float inches = mm / 25.4;
-  int   feet   = inches / 12;
+  float inches = mm / 25.4f;
+  int   feet   = inches / 12.0f;
 
   inches = inches - (feet * 12);
   String result;
@@ -87,7 +87,7 @@ String millimeterToImperialLength(float mm) {
 }
 
 float minutesToDay(int minutes) {
-  return minutes / 1440.0;
+  return minutes / 1440.0f;
 }
 
 String minutesToDayHour(int minutes) {
@@ -130,26 +130,26 @@ String secondsToDayHourMinuteSecond(int seconds) {
   return TimeString;
 }
 
-String format_msec_duration(long duration) {
+String format_msec_duration(int64_t duration) {
   String result;
 
   if (duration < 0) {
     result   = "-";
-    duration = -1 * duration;
+    duration = -1ll * duration;
   }
 
-  if (duration < 10000) {
-    result += duration;
+  if (duration < 10000ll) {
+    result += static_cast<int32_t>(duration);
     result += F(" ms");
     return result;
   }
-  duration /= 1000;
+  duration /= 1000ll;
 
-  if (duration < 3600) {
-    int sec     = duration % 60;
-    int minutes = duration / 60;
+  if (duration < 3600ll) {
+    int sec     = duration % 60ll;
+    int minutes = duration / 60ll;
 
-    if (minutes > 0) {
+    if (minutes > 0ll) {
       result += minutes;
       result += F(" m ");
     }
@@ -157,9 +157,9 @@ String format_msec_duration(long duration) {
     result += F(" s");
     return result;
   }
-  duration /= 60;
+  duration /= 60ll;
 
-  if (duration < 1440) { return minutesToHourMinute(duration); }
+  if (duration < 1440ll) { return minutesToHourMinute(duration); }
   return minutesToDayHourMinute(duration);
 }
 
@@ -168,16 +168,16 @@ String format_msec_duration(long duration) {
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php
 // Td = (f/100)^(1/8) * (112 + 0.9*T) + 0.1*T - 112
 float compute_dew_point_temp(float temperature, float humidity_percentage) {
-  return pow(humidity_percentage / 100.0, 0.125) *
-         (112.0 + 0.9*temperature) + 0.1*temperature - 112.0;
+  return pow(humidity_percentage / 100.0f, 0.125f) *
+         (112.0f + 0.9f*temperature) + 0.1f*temperature - 112.0f;
 }
 
 // Compute the humidity given temperature and dew point temperature (temp in Celcius)
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_relative_humidity.php
 // f = 100 * ((112 - 0.1*T + Td) / (112 + 0.9 * T))^8
 float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
-  return 100.0 * pow((112.0 - 0.1 * temperature + dew_temperature) /
-                     (112.0 + 0.9 * temperature), 8);
+  return 100.0f * pow((112.0f - 0.1f * temperature + dew_temperature) /
+                     (112.0f + 0.9f * temperature), 8);
 }
 
 

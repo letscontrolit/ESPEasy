@@ -20,7 +20,7 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, byte val
     if (i < value_count) {
       values[i] = UserVar[BaseVarIndex + i];
     } else {
-      values[i] = 0.0;
+      values[i] = 0.0f;
     }
   }
 }

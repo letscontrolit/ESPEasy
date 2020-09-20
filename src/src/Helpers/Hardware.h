@@ -21,11 +21,12 @@ void I2CSelectClockSpeed(bool setLowSpeed);
 #ifdef FEATURE_I2CMULTIPLEXER
 bool isI2CMultiplexerEnabled();
 
-void I2CMultiplexerSelectByTaskIndex(int8_t taskIndex);
+void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex);
 void I2CMultiplexerSelect(uint8_t i);
 
-void I2CMultiplexerOffByTaskIndex(int8_t taskIndex);
 void I2CMultiplexerOff();
+
+void SetI2CMultiplexer(byte toWrite);
 
 byte I2CMultiplexerMaxChannels();
 
@@ -75,6 +76,8 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 // ********************************************************************************
 // return true when pin can be used.
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning);
+
+bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown);
 
 
 #ifdef ESP32

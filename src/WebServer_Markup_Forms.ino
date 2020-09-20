@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+#include "src/Helpers/Hardware.h"
 
 // ********************************************************************************
 // Add a separator as row start
@@ -253,11 +254,61 @@ void addFormSelector_script(const String& label,
 // ********************************************************************************
 // Add a GPIO pin select dropdown list
 // ********************************************************************************
-void addFormPinStateSelect(const String& label, const String& id, int choice, bool enabled)
+void addFormPinStateSelect(int gpio, int choice)
 {
-  addRowLabel_tr_id(label, id);
-  String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
-  addSelector(id, 4, options, NULL, NULL, choice, false, enabled);
+    bool enabled = true;
+
+  if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
+    // do not add the pin state select for these pins.
+    enabled = false;
+  }
+  int  pinnr = -1;
+  bool input, output, warning;
+
+  if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+    String label;
+    label.reserve(32);
+    label  = F("Pin mode ");
+    label += createGPIO_label(gpio, pinnr, input, output, warning);
+    String id = "p";
+    id += gpio;
+
+    addRowLabel_tr_id(label, id);
+    bool hasPullUp, hasPullDown;
+    getGpioPullResistor(gpio, hasPullUp, hasPullDown);
+    int nr_options = 0;
+    String options[5];
+    int option_val[5];
+    options[nr_options] = F("Default");
+    option_val[nr_options] = static_cast<int>(PinBootState::Default_state);
+    ++nr_options;
+    if (output) {
+      options[nr_options] = F("Output Low");
+      option_val[nr_options] = static_cast<int>(PinBootState::Output_low);
+      ++nr_options;
+      options[nr_options] = F("Output High");
+      option_val[nr_options] = static_cast<int>(PinBootState::Output_high);
+      ++nr_options;
+    }
+    if (input) {
+      if (hasPullUp) {
+        options[nr_options] = F("Input pullup");
+        option_val[nr_options] = static_cast<int>(PinBootState::Input_pullup);
+        ++nr_options;
+      }
+      if (hasPullDown) {
+        options[nr_options] = F("Input pulldown");
+        option_val[nr_options] = static_cast<int>(PinBootState::Input_pulldown);
+        ++nr_options;
+      }
+      if (!hasPullUp && !hasPullDown) {
+        options[nr_options] = F("Input");
+        option_val[nr_options] = static_cast<int>(PinBootState::Input);
+        ++nr_options;
+      }
+    }
+    addSelector(id, nr_options, options, option_val, NULL, choice, false, enabled);
+  }
 }
 
 // ********************************************************************************
@@ -316,7 +367,7 @@ float getFormItemFloat(const String& id)
 {
   String val = web_server.arg(id);
 
-  if (!isFloat(val)) { return 0.0; }
+  if (!isFloat(val)) { return 0.0f; }
   return val.toFloat();
 }
 

@@ -324,7 +324,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P085_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P085_data_struct());
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -344,7 +344,6 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
       success = true;
       break;
     }
@@ -411,13 +410,13 @@ float p085_readValue(byte query, struct EventStruct *event) {
       case P085_QUERY_A:
         return P085_data->modbus.read_float_HoldingRegister(0x202);
       case P085_QUERY_W:
-        return P085_data->modbus.read_float_HoldingRegister(0x204) * 1000.0; // power (kW => W)
+        return P085_data->modbus.read_float_HoldingRegister(0x204) * 1000.0f; // power (kW => W)
       case P085_QUERY_Wh_imp:
-        return P085_data->modbus.read_32b_HoldingRegister(0x300) * 10.0;     // 0.01 kWh => Wh
+        return P085_data->modbus.read_32b_HoldingRegister(0x300) * 10.0f;     // 0.01 kWh => Wh
       case P085_QUERY_Wh_exp:
-        return P085_data->modbus.read_32b_HoldingRegister(0x302) * 10.0;     // 0.01 kWh => Wh
+        return P085_data->modbus.read_32b_HoldingRegister(0x302) * 10.0f;     // 0.01 kWh => Wh
       case P085_QUERY_Wh_tot:
-        return P085_data->modbus.read_32b_HoldingRegister(0x304) * 10.0;     // 0.01 kWh => Wh
+        return P085_data->modbus.read_32b_HoldingRegister(0x304) * 10.0f;     // 0.01 kWh => Wh
       case P085_QUERY_Wh_net:
       {
         int64_t intvalue = P085_data->modbus.read_32b_HoldingRegister(0x306);
@@ -426,16 +425,16 @@ float p085_readValue(byte query, struct EventStruct *event) {
           intvalue = 4294967296ll - intvalue;
         }
         float value = static_cast<float>(intvalue);
-        value *= 10.0; // 0.01 kWh => Wh
+        value *= 10.0f; // 0.01 kWh => Wh
         return value;
       }
       case P085_QUERY_h_tot:
-        return P085_data->modbus.read_32b_HoldingRegister(0x280) / 100.0;
+        return P085_data->modbus.read_32b_HoldingRegister(0x280) / 100.0f;
       case P085_QUERY_h_load:
-        return P085_data->modbus.read_32b_HoldingRegister(0x282) / 100.0;
+        return P085_data->modbus.read_32b_HoldingRegister(0x282) / 100.0f;
     }
   }
-  return 0.0;
+  return 0.0f;
 }
 
 void p085_showValueLoadPage(byte query, struct EventStruct *event) {

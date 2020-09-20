@@ -557,6 +557,17 @@ To create/register a plugin, you have to :
 #endif
 
 
+#ifdef PLUGIN_SET_LC_TECH_RELAY_X2
+    #define CONTROLLER_SET_STABLE
+    #define PLUGIN_SET_ONLY_SWITCH
+    #define USES_P026    // Sysinfo
+    #define USES_P029    // Domoticz MQTT Helper
+    #define USES_P033    // Dummy
+    #define USES_P037    // MQTT import
+    #define USES_P081    // Cron
+    #define USES_P091    // Ser Switch
+#endif
+
 
 
 /******************************************************************************\
@@ -856,6 +867,7 @@ To create/register a plugin, you have to :
     //#define USES_P095  // TFT ILI9341
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
+    #define USES_P100   // Pulse Counter - DS2423
 #endif
 
 
@@ -1096,6 +1108,24 @@ To create/register a plugin, you have to :
   #ifdef FEATURE_I2CMULTIPLEXER
     #undef FEATURE_I2CMULTIPLEXER
   #endif
+  #ifdef USE_SERVO
+    #undef USE_SERVO
+  #endif
+  #ifdef USES_BLYNK
+    #undef USES_BLYNK
+  #endif
+  #ifdef USES_C017 // Zabbix
+    #undef USES_C017
+  #endif
+  #ifdef USES_P092
+    #undef USES_P092   // DL-Bus
+  #endif
+  #ifdef USES_P093
+    #undef USES_P093   // Mitsubishi Heat Pump
+  #endif
+  #ifdef USES_P100 // Pulse Counter - DS2423
+    #undef USES_P100
+  #endif
 #endif
 
 // Timing stats page needs timing stats
@@ -1117,6 +1147,16 @@ To create/register a plugin, you have to :
     #define BUILD_NO_RAM_TRACKER
   #endif
 
+#endif
+
+// It may have gotten undefined to fit a build. Make sure the Blynk controllers are not defined
+#ifndef USES_BLYNK
+  #ifdef USES_C012
+    #undef USES_C012
+  #endif
+  #ifdef USES_C015
+    #undef USES_C015
+  #endif
 #endif
 
 

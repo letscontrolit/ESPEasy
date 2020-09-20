@@ -158,8 +158,8 @@ struct P014_data_struct : public PluginTaskData_base {
 
       case SI7021_state::New_values:
       {
-        temperature = si7021_temperature / 100.0;
-        humidity    = si7021_humidity / 10.0;
+        temperature = si7021_temperature / 100.0f;
+        humidity    = si7021_humidity / 10.0f;
         state       = SI7021_state::Values_read;
         success     = true;
 
@@ -445,7 +445,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
     {
       // Get sensor resolution configuration
       uint8_t res = PCONFIG(0);
-      initPluginTaskData(event->TaskIndex, new P014_data_struct(res));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P014_data_struct(res));
       P014_data_struct *P014_data =
         static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
 

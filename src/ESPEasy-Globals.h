@@ -111,8 +111,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 #include "ESPeasySerial.h"
 #include "ESPEasy_fdwdecl.h"
 #include "WebServer_fwddecl.h"
-#include "I2CTypes.h"
-#include <I2Cdev.h>
+
 
 
 #define FS_NO_GLOBALS
@@ -210,7 +209,7 @@ using namespace fs;
 #include <base64.h>
 
 
-extern I2Cdev i2cdev;
+
 
 
 enum gpio_direction {
@@ -252,8 +251,6 @@ extern unsigned long lastSend;
 extern unsigned long lastWeb;
 extern byte cmd_within_mainloop;
 extern unsigned long wdcounter;
-extern unsigned long timerAPoff;    // Timer to check whether the AP mode should be disabled (0 = disabled)
-extern unsigned long timerAPstart;  // Timer to start AP mode, started when no valid network is detected.
 extern unsigned long timerAwakeFromDeepSleep;
 
 

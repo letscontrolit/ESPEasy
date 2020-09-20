@@ -209,7 +209,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           delete Plugin_078_SoftSerial;
           Plugin_078_SoftSerial=NULL;
         }
-        Plugin_078_SoftSerial = new ESPeasySerial(CONFIG_PIN1, CONFIG_PIN2);
+        Plugin_078_SoftSerial = new (std::nothrow) ESPeasySerial(CONFIG_PIN1, CONFIG_PIN2);
+        if (Plugin_078_SoftSerial == nullptr) {
+          break;
+        }
         unsigned int baudrate = p078_storageValueToBaudrate(P078_BAUDRATE);
         Plugin_078_SoftSerial->begin(baudrate);
 
@@ -218,8 +221,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           Plugin_078_SDM=NULL;
         }
         Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
-        Plugin_078_SDM->begin();
-        success = true;
+        if (Plugin_078_SDM != nullptr) {
+          Plugin_078_SDM->begin();
+          success = true;
+        }
         break;
       }
 
@@ -257,7 +262,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 }
 
 float p078_readVal(byte query, byte node, unsigned int model) {
-  if (Plugin_078_SDM == NULL) return 0.0;
+  if (Plugin_078_SDM == NULL) return 0.0f;
 
   byte retry_count = 3;
   bool success = false;

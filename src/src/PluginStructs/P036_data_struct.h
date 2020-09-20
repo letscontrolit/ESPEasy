@@ -42,7 +42,7 @@
 #define P36_DebounceTreshold          5                          // number of 20 msec (fifty per second) ticks before the button has settled
 #define P36_RepeatDelay               50                         // number of 20 msec ticks before repeating the button action when holding
 
-enum eHeaderContent {
+enum class eHeaderContent {
   eSSID     = 1,
   eSysName  = 2,
   eIP       = 3,
@@ -59,13 +59,13 @@ enum eHeaderContent {
   ePageNo   = 14,
 };
 
-enum p036_resolution {
+enum class p036_resolution {
   pix128x64 = 0,
   pix128x32 = 1,
   pix64x48  = 2
 };
 
-enum ePageScrollSpeed {
+enum class ePageScrollSpeed {
   ePSS_VerySlow = 1, // 800ms
   ePSS_Slow     = 2, // 400ms
   ePSS_Fast     = 4, // 200ms
@@ -80,8 +80,8 @@ typedef struct {
   uint8_t  Height      = 0;   // Height in Pix
   uint8_t  ypos        = 0;   // y position in pix
   int      CurrentLeft = 0;   // current left pix position
-  float    dPix        = 0.0; // pix change per scroll time (100ms)
-  float    fPixSum     = 0.0; // pix sum while scrolling (100ms)
+  float    dPix        = 0.0f; // pix change per scroll time (100ms)
+  float    fPixSum     = 0.0f; // pix sum while scrolling (100ms)
 } tScrollLine;
 
 typedef struct {
@@ -134,7 +134,7 @@ typedef struct {
 struct P036_data_struct : public PluginTaskData_base {
   P036_data_struct();
 
-  ~P036_data_struct();
+  virtual ~P036_data_struct();
 
   void                        reset();
 
@@ -176,7 +176,7 @@ struct P036_data_struct : public PluginTaskData_base {
   void    display_logo();
   void    display_indicator();
   void    prepare_pagescrolling();
-  uint8_t display_scroll(int lscrollspeed,
+  uint8_t display_scroll(ePageScrollSpeed lscrollspeed,
                          int lTaskTimer);
   uint8_t display_scroll_timer();
 
@@ -214,7 +214,7 @@ struct P036_data_struct : public PluginTaskData_base {
   int8_t lastWiFiState = 0;
 
   // display
-  p036_resolution _disp_resolution   = pix128x64;
+  p036_resolution _disp_resolution   = p036_resolution::pix128x64;
   bool             bLineScrollEnabled = false;
   uint8_t          TopLineOffset      = 0; // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
   // Display button
@@ -226,8 +226,8 @@ struct P036_data_struct : public PluginTaskData_base {
   // frame header
   bool           bAlternativHeader = false;
   uint16_t       HeaderCount       = 0;
-  eHeaderContent HeaderContent;
-  eHeaderContent HeaderContentAlternative;
+  eHeaderContent HeaderContent = eHeaderContent::eSSID;
+  eHeaderContent HeaderContentAlternative = eHeaderContent::eSSID;
 
   // frames
   uint8_t MaxFramesToDisplay    = 0;    // total number of frames to display

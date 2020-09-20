@@ -67,6 +67,11 @@ before WiFi connection is made or during lost connection.
   Especially useful for controllers which cannot send samples in a burst. This makes the receiving time stamp useless to detect what samples were taken around the same time.
   The sample set counter value can help matching received samples to a single set.
 
+.. note::
+  Be careful when setting the timeout too high.
+  For almost all controllers, sending data is a blocking call, so it may halt execution of other code on the node.
+  With timouts longer than 2 seconds, the ESP may reboot as the software watchdog may step in.
+
 
 
 Sample ThingSpeak configuration

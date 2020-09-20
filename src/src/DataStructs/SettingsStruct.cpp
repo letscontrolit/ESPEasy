@@ -118,9 +118,9 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (UDPPort > 65535) { UDPPort = 0; }
 
-  if ((Latitude  < -90.0) || (Latitude > 90.0)) { Latitude = 0.0; }
+  if ((Latitude  < -90.0f) || (Latitude > 90.0f)) { Latitude = 0.0f; }
 
-  if ((Longitude < -180.0) || (Longitude > 180.0)) { Longitude = 0.0; }
+  if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
   if (VariousBits1 > (1 << 30)) { VariousBits1 = 0; }
   ZERO_TERMINATE(Name);
@@ -158,8 +158,8 @@ void SettingsStruct_tmpl<N_TASKS>::clearTimeSettings() {
   DST       = false;
   DST_Start = 0;
   DST_End   = 0;
-  Latitude  = 0.0;
-  Longitude = 0.0;
+  Latitude  = 0.0f;
+  Longitude = 0.0f;
 }
 
 template<unsigned int N_TASKS>
@@ -230,8 +230,21 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   }
   I2C_Multiplexer_ResetPin = -1;
 
-
-  for (byte i = 0; i < 17; ++i) { PinBootStates[i] = 0; }
+  {
+    // Here we initialize all data to 0, so this is the ONLY reason why PinBootStates 
+    // can now be directly accessed.
+    // In all other use cases, use the get and set functions for it.
+    constexpr byte maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
+    for (byte i = 0; i < maxStates; ++i) { 
+      PinBootStates[i] = 0; 
+    }
+    #ifdef ESP32
+    constexpr byte maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
+    for (byte i = 0; i < maxStatesesp32; ++i) {
+      PinBootStates_ESP32[i] = 0;
+    }
+    #endif
+  }
   BaudRate                         = 0;
   MessageDelay_unused              = 0;
   deepSleep_wakeTime               = 0;
@@ -301,7 +314,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   TaskDevicePin1Inversed[task] = false;
 
   for (byte cv = 0; cv < PLUGIN_CONFIGFLOATVAR_MAX; ++cv) {
-    TaskDevicePluginConfigFloat[task][cv] = 0.0;
+    TaskDevicePluginConfigFloat[task][cv] = 0.0f;
   }
 
   for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
@@ -329,4 +342,36 @@ String SettingsStruct_tmpl<N_TASKS>::getHostname(bool appendUnit) const {
     hostname += this->Unit;
   }
   return hostname;
+}
+
+
+template<unsigned int N_TASKS>
+PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(uint8_t gpio_pin) const {
+  constexpr byte maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
+  if (gpio_pin < maxStates) {
+    return static_cast<PinBootState>(PinBootStates[gpio_pin]);
+  }
+  #ifdef ESP32
+  constexpr byte maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
+  const uint8_t addr = gpio_pin - maxStates;
+  if (addr < maxStatesesp32) {
+    return static_cast<PinBootState>(PinBootStates_ESP32[addr]);
+  }
+  #endif
+  return PinBootState::Default_state;
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setPinBootState(uint8_t gpio_pin, PinBootState state) {
+  constexpr byte maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
+  if (gpio_pin < maxStates) {
+    PinBootStates[gpio_pin] = static_cast<int8_t>(state);
+  }
+  #ifdef ESP32
+  constexpr byte maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
+  const uint8_t addr = gpio_pin - maxStates;
+  if (addr < maxStatesesp32) {
+    PinBootStates_ESP32[addr] = static_cast<int8_t>(state);
+  }
+  #endif
 }

@@ -6,27 +6,24 @@
 // ########################### Controller Plugin 018: LoRa TTN - RN2483/RN2903 ###########################
 // #######################################################################################################
 
-#define CPLUGIN_018
-#define CPLUGIN_ID_018         18
-#define CPLUGIN_NAME_018       "LoRa TTN - RN2483/RN2903 [TESTING]"
-
-#define C018_BAUDRATE           9600
-#define C018_BAUDRATE_LABEL     "baudrate"
+# define CPLUGIN_018
+# define CPLUGIN_ID_018         18
+# define CPLUGIN_NAME_018       "LoRa TTN - RN2483/RN2903 [TESTING]"
+# define C018_BAUDRATE_LABEL     "baudrate"
 
 
-#include <rn2xx3.h>
-#include <ESPeasySerial.h>
-#include "src/Globals/CPlugins.h"
-#include "src/Globals/Protocol.h"
-#include "src/ControllerQueue/C018_queue_element.h"
-#include "ESPEasy_plugindefs.h"
-#include "ESPEasy_fdwdecl.h"
-
+# include <rn2xx3.h>
+# include <ESPeasySerial.h>
+# include "ESPEasy_fdwdecl.h"
+# include "ESPEasy_plugindefs.h"
+# include "src/ControllerQueue/C018_queue_element.h"
+# include "src/Globals/CPlugins.h"
+# include "src/Globals/Protocol.h"
 
 // Have this define after the includes, so we can set it in Custom.h
-#ifndef C018_FORCE_SW_SERIAL
-#define C018_FORCE_SW_SERIAL false
-#endif
+# ifndef C018_FORCE_SW_SERIAL
+#  define C018_FORCE_SW_SERIAL false
+# endif // ifndef C018_FORCE_SW_SERIAL
 
 struct C018_data_struct {
   C018_data_struct() : C018_easySerial(nullptr), myLora(nullptr) {}
@@ -74,7 +71,7 @@ struct C018_data_struct {
     _baudrate = baudrate;
 
     // FIXME TD-er: Make force SW serial a proper setting.
-    C018_easySerial = new ESPeasySerial(serial_rx, serial_tx, false, 64, C018_FORCE_SW_SERIAL);
+    C018_easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx, false, 64, C018_FORCE_SW_SERIAL);
 
     if (C018_easySerial != nullptr) {
       myLora = new rn2xx3(*C018_easySerial);
@@ -102,6 +99,7 @@ struct C018_data_struct {
   bool useOTAA() const {
     if (!isInitialized()) { return true; }
     bool res = myLora->useOTAA();
+
     C018_logError(F("useOTA()"));
     return res;
   }
@@ -130,6 +128,7 @@ struct C018_data_struct {
   bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan plan) {
     if (!isInitialized()) { return false; }
     bool res = myLora->setFrequencyPlan(plan);
+
     C018_logError(F("setFrequencyPlan()"));
     return res;
   }
@@ -137,6 +136,7 @@ struct C018_data_struct {
   bool setSF(uint8_t sf) {
     if (!isInitialized()) { return false; }
     bool res = myLora->setSF(sf);
+
     C018_logError(F("setSF()"));
     return res;
   }
@@ -144,6 +144,7 @@ struct C018_data_struct {
   bool initOTAA(const String& AppEUI = "", const String& AppKey = "", const String& DevEUI = "") {
     if (myLora == nullptr) { return false; }
     bool success = myLora->initOTAA(AppEUI, AppKey, DevEUI);
+
     C018_logError(F("initOTAA()"));
     updateCacheOnInit();
     return success;
@@ -152,6 +153,7 @@ struct C018_data_struct {
   bool initABP(const String& addr, const String& AppSKey, const String& NwkSKey) {
     if (myLora == nullptr) { return false; }
     bool success = myLora->initABP(addr, AppSKey, NwkSKey);
+
     C018_logError(F("initABP()"));
     updateCacheOnInit();
     return success;
@@ -166,6 +168,7 @@ struct C018_data_struct {
       addLog(LOG_LEVEL_INFO, log);
     }
     String res = myLora->sendRawCommand(command);
+
     C018_logError(F("sendRawCommand()"));
     return res;
   }
@@ -188,6 +191,7 @@ struct C018_data_struct {
   String getDataRate() {
     if (!isInitialized()) { return ""; }
     String res = myLora->getDataRate();
+
     C018_logError(F("getDataRate()"));
     return res;
   }
@@ -210,6 +214,7 @@ struct C018_data_struct {
   bool getFrameCounters(uint32_t& dnctr, uint32_t& upctr) {
     if (!isInitialized()) { return false; }
     bool res = myLora->getFrameCounters(dnctr, upctr);
+
     C018_logError(F("getFrameCounters()"));
     return res;
   }
@@ -217,6 +222,7 @@ struct C018_data_struct {
   bool setFrameCounters(uint32_t dnctr, uint32_t upctr) {
     if (!isInitialized()) { return false; }
     bool res = myLora->setFrameCounters(dnctr, upctr);
+
     C018_logError(F("setFrameCounters()"));
     return res;
   }
@@ -263,7 +269,20 @@ struct C018_data_struct {
 
   void async_loop() {
     if (isInitialized()) {
-      myLora->async_loop();
+      rn2xx3_handler::RN_state state = myLora->async_loop();
+      if (rn2xx3_handler::RN_state::must_perform_init == state) {
+        if (myLora->get_busy_count() > 10) {
+          if (_resetPin != -1) {
+            pinMode(_resetPin, OUTPUT);
+            digitalWrite(_resetPin, LOW);
+            delay(50);
+            digitalWrite(_resetPin, HIGH);
+            delay(200);
+          }
+          autobaud_success = false;
+//          triggerAutobaud();
+        }
+      }
     }
   }
 
@@ -286,22 +305,22 @@ private:
   void updateCacheOnInit() {
     cacheDevAddr = "";
 
-    if (!isInitialized()) {
-      return;
-    }
+    if (isInitialized()) {
+      if (myLora->getStatus().Joined)
+      {
+        cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
 
-    if (myLora->getStatus().Joined)
-    {
-      cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
-
-      if (cacheDevAddr == F("00000000")) {
-        cacheDevAddr = "";
+        if (cacheDevAddr == F("00000000")) {
+          cacheDevAddr = "";
+        }
       }
     }
   }
 
   void triggerAutobaud() {
-    if (C018_easySerial == nullptr || myLora == nullptr) return;
+    if ((C018_easySerial == nullptr) || (myLora == nullptr)) {
+      return;
+    }
     int retries = 2;
 
     while (retries > 0 && !autobaud_success) {
@@ -348,8 +367,6 @@ private:
     }
   }
 
-
-
   ESPeasySerial *C018_easySerial = nullptr;
   rn2xx3        *myLora          = nullptr;
   String         cacheDevAddr;
@@ -358,17 +375,17 @@ private:
   unsigned long  _baudrate          = 57600;
   uint8_t        sampleSetCounter   = 0;
   taskIndex_t    sampleSetInitiator = INVALID_TASK_INDEX;
-  int8_t         _resetPin           = -1;
+  int8_t         _resetPin          = -1;
   bool           autobaud_success   = false;
 } C018_data;
 
 
-#define C018_DEVICE_EUI_LEN          17
-#define C018_DEVICE_ADDR_LEN         33
-#define C018_NETWORK_SESSION_KEY_LEN 33
-#define C018_APP_SESSION_KEY_LEN     33
-#define C018_USE_OTAA                0
-#define C018_USE_ABP                 1
+# define C018_DEVICE_EUI_LEN          17
+# define C018_DEVICE_ADDR_LEN         33
+# define C018_NETWORK_SESSION_KEY_LEN 33
+# define C018_APP_SESSION_KEY_LEN     33
+# define C018_USE_OTAA                0
+# define C018_USE_ABP                 1
 struct C018_ConfigStruct
 {
   C018_ConfigStruct() {
@@ -432,7 +449,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesCheckReply = false;
       Protocol[protocolCount].usesTimeout    = false;
       Protocol[protocolCount].usesSampleSets = true;
-      Protocol[protocolCount].needsNetwork      = false;
+      Protocol[protocolCount].needsNetwork   = false;
       break;
     }
 
@@ -457,6 +474,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_INIT:
     {
       success = init_c018_delay_queue(event->ControllerIndex);
+
       if (success) {
         C018_init(event);
       }
@@ -472,11 +490,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
-      C018_ConfigStruct customConfig;
-
-      LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
-      customConfig.validate();
-
+      addTableSeparator(F("Credentials"), 2, 3);
       {
         // Script to toggle visibility of OTAA/ABP field, based on the activation method selector.
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
@@ -494,51 +508,79 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         html_add_script_end();
       }
 
+      unsigned long baudrate;
+      int8_t  rxpin;
+      int8_t  txpin;
+      int8_t  resetpin;
+      uint8_t sf;
+      uint8_t frequencyplan;
+      uint8_t joinmethod;
+
       {
-        addFormTextBox(F("Device EUI"), F("deveui"), customConfig.DeviceEUI, C018_DEVICE_EUI_LEN - 1);
-        String deveui_note = F("Leave empty to use HW DevEUI: ");
-        deveui_note += C018_data.hweui();
-        addFormNote(deveui_note, F("deveui_note"));
+        // Keep this object in a small scope so we can destruct it as soon as possible again.
+        std::shared_ptr<C018_ConfigStruct> customConfig(new C018_ConfigStruct);
+
+        if (!customConfig) {
+          break;
+        }
+        LoadCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C018_ConfigStruct));
+        customConfig->validate();
+        baudrate      = customConfig->baudrate;
+        rxpin         = customConfig->rxpin;
+        txpin         = customConfig->txpin;
+        resetpin      = customConfig->resetpin;
+        sf            = customConfig->sf;
+        frequencyplan = customConfig->frequencyplan;
+        joinmethod    = customConfig->joinmethod;
+
+        {
+          addFormTextBox(F("Device EUI"), F("deveui"), customConfig->DeviceEUI, C018_DEVICE_EUI_LEN - 1);
+          String deveui_note = F("Leave empty to use HW DevEUI: ");
+          deveui_note += C018_data.hweui();
+          addFormNote(deveui_note, F("deveui_note"));
+        }
+
+        addFormTextBox(F("Device Addr"),         F("devaddr"), customConfig->DeviceAddr,        C018_DEVICE_ADDR_LEN - 1);
+        addFormTextBox(F("Network Session Key"), F("nskey"),   customConfig->NetworkSessionKey, C018_NETWORK_SESSION_KEY_LEN - 1);
+        addFormTextBox(F("App Session Key"),     F("appskey"), customConfig->AppSessionKey,     C018_APP_SESSION_KEY_LEN - 1);
       }
 
-      addFormTextBox(F("Device Addr"),         F("devaddr"), customConfig.DeviceAddr,        C018_DEVICE_ADDR_LEN - 1);
-      addFormTextBox(F("Network Session Key"), F("nskey"),   customConfig.NetworkSessionKey, C018_NETWORK_SESSION_KEY_LEN - 1);
-      addFormTextBox(F("App Session Key"),     F("appskey"), customConfig.AppSessionKey,     C018_APP_SESSION_KEY_LEN - 1);
-
       {
-        byte   choice     = customConfig.joinmethod;
         String options[2] = { F("OTAA"),  F("ABP") };
         int    values[2]  = { C018_USE_OTAA, C018_USE_ABP };
         addFormSelector_script(F("Activation Method"), F("joinmethod"), 2,
-                               options, values, NULL, choice,
+                               options, values, NULL, joinmethod,
                                F("joinChanged(this)")); // Script to toggle OTAA/ABP fields visibility when changing selection.
       }
       html_add_script(F("document.getElementById('joinmethod').onchange();"), false);
 
       addTableSeparator(F("Connection Configuration"), 2, 3);
       {
-        byte   choice     = customConfig.frequencyplan;
         String options[4] = { F("SINGLE_CHANNEL_EU"), F("TTN_EU"), F("TTN_US"), F("DEFAULT_EU") };
-        int    values[4] =
-        { RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU, RN2xx3_datatypes::Freq_plan::TTN_EU, RN2xx3_datatypes::Freq_plan::TTN_US,
-          RN2xx3_datatypes::Freq_plan::DEFAULT_EU };
+        int    values[4]  =
+        {
+          RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU,
+          RN2xx3_datatypes::Freq_plan::TTN_EU,
+          RN2xx3_datatypes::Freq_plan::TTN_US,
+          RN2xx3_datatypes::Freq_plan::DEFAULT_EU
+        };
 
-        addFormSelector(F("Frequency Plan"), F("frequencyplan"), 4, options, values, NULL, choice, false);
+        addFormSelector(F("Frequency Plan"), F("frequencyplan"), 4, options, values, NULL, frequencyplan, false);
       }
-      addFormNumericBox(F("Spread Factor"), F("sf"), customConfig.sf, 7, 12);
+      addFormNumericBox(F("Spread Factor"), F("sf"), sf, 7, 12);
 
 
       addTableSeparator(F("Serial Port Configuration"), 2, 3);
 
       // Optional reset pin RN2xx3
-      addFormPinSelect(formatGpioName_output_optional(F("Reset")), F("taskdevicepin3"), customConfig.resetpin);
+      addFormPinSelect(formatGpioName_output_optional(F("Reset")), F("taskdevicepin3"), resetpin);
 
       // Show serial port selection
-      addFormPinSelect(formatGpioName_RX(false),                   F("taskdevicepin1"), customConfig.rxpin);
-      addFormPinSelect(formatGpioName_TX(false),                   F("taskdevicepin2"), customConfig.txpin);
-      serialHelper_webformLoad(customConfig.rxpin, customConfig.txpin, true);
+      addFormPinSelect(formatGpioName_RX(false),                   F("taskdevicepin1"), rxpin);
+      addFormPinSelect(formatGpioName_TX(false),                   F("taskdevicepin2"), txpin);
+      serialHelper_webformLoad(rxpin, txpin, true);
 
-      addFormNumericBox(F("Baudrate"), F(C018_BAUDRATE_LABEL), customConfig.baudrate, 2400, 115200);
+      addFormNumericBox(F("Baudrate"), F(C018_BAUDRATE_LABEL), baudrate, 2400, 115200);
       addUnit(F("baud"));
       addFormNote(F("Module default baudrate: 57600 bps"));
 
@@ -590,26 +632,29 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
     }
     case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
     {
-      C018_ConfigStruct customConfig;
-      customConfig.reset();
-      String deveui  = web_server.arg(F("deveui"));
-      String devaddr = web_server.arg(F("devaddr"));
-      String nskey   = web_server.arg(F("nskey"));
-      String appskey = web_server.arg(F("appskey"));
+      std::shared_ptr<C018_ConfigStruct> customConfig(new C018_ConfigStruct);
 
-      strlcpy(customConfig.DeviceEUI,         deveui.c_str(),  sizeof(customConfig.DeviceEUI));
-      strlcpy(customConfig.DeviceAddr,        devaddr.c_str(), sizeof(customConfig.DeviceAddr));
-      strlcpy(customConfig.NetworkSessionKey, nskey.c_str(),   sizeof(customConfig.NetworkSessionKey));
-      strlcpy(customConfig.AppSessionKey,     appskey.c_str(), sizeof(customConfig.AppSessionKey));
-      customConfig.baudrate      = getFormItemInt(F(C018_BAUDRATE_LABEL), customConfig.baudrate);
-      customConfig.rxpin         = getFormItemInt(F("taskdevicepin1"), customConfig.rxpin);
-      customConfig.txpin         = getFormItemInt(F("taskdevicepin2"), customConfig.txpin);
-      customConfig.resetpin      = getFormItemInt(F("taskdevicepin3"), customConfig.resetpin);
-      customConfig.sf            = getFormItemInt(F("sf"), customConfig.sf);
-      customConfig.frequencyplan = getFormItemInt(F("frequencyplan"), customConfig.frequencyplan);
-      customConfig.joinmethod    = getFormItemInt(F("joinmethod"), customConfig.joinmethod);
-      serialHelper_webformSave(customConfig.rxpin, customConfig.txpin);
-      SaveCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
+      if (customConfig) {
+        customConfig->reset();
+        String deveui  = web_server.arg(F("deveui"));
+        String devaddr = web_server.arg(F("devaddr"));
+        String nskey   = web_server.arg(F("nskey"));
+        String appskey = web_server.arg(F("appskey"));
+
+        strlcpy(customConfig->DeviceEUI,         deveui.c_str(),  sizeof(customConfig->DeviceEUI));
+        strlcpy(customConfig->DeviceAddr,        devaddr.c_str(), sizeof(customConfig->DeviceAddr));
+        strlcpy(customConfig->NetworkSessionKey, nskey.c_str(),   sizeof(customConfig->NetworkSessionKey));
+        strlcpy(customConfig->AppSessionKey,     appskey.c_str(), sizeof(customConfig->AppSessionKey));
+        customConfig->baudrate      = getFormItemInt(F(C018_BAUDRATE_LABEL), customConfig->baudrate);
+        customConfig->rxpin         = getFormItemInt(F("taskdevicepin1"), customConfig->rxpin);
+        customConfig->txpin         = getFormItemInt(F("taskdevicepin2"), customConfig->txpin);
+        customConfig->resetpin      = getFormItemInt(F("taskdevicepin3"), customConfig->resetpin);
+        customConfig->sf            = getFormItemInt(F("sf"), customConfig->sf);
+        customConfig->frequencyplan = getFormItemInt(F("frequencyplan"), customConfig->frequencyplan);
+        customConfig->joinmethod    = getFormItemInt(F("joinmethod"), customConfig->joinmethod);
+        serialHelper_webformSave(customConfig->rxpin, customConfig->txpin);
+        SaveCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C018_ConfigStruct));
+      }
       break;
     }
 
@@ -646,6 +691,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       success = C018_DelayHandler->addToQueue(
         C018_queue_element(event, C018_data.getSampleSetCount(event->TaskIndex)));
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C018_DELAY_QUEUE, C018_DelayHandler->getNextScheduleTime());
+
       if (!C018_data.isInitialized()) {
         // Sometimes the module does need some time after power on to respond.
         // So it may not be initialized well at the call of CPLUGIN_INIT
@@ -685,51 +731,68 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 }
 
 bool C018_init(struct EventStruct *event) {
-  MakeControllerSettings(ControllerSettings);
-  if (!AllocatedControllerSettings()) {
-    return false;
+  String AppEUI;
+  String AppKey;
+  taskIndex_t  SampleSetInitiator = INVALID_TASK_INDEX;
+  unsigned int Port               = 0;
+  {
+    // Allocate ControllerSettings object in a scope, so we can destruct it as soon as possible.
+    MakeControllerSettings(ControllerSettings);
+
+    if (!AllocatedControllerSettings()) {
+      return false;
+    }
+
+    LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+    C018_DelayHandler->configureControllerSettings(ControllerSettings);
+    AppEUI = getControllerUser(event->ControllerIndex, ControllerSettings);
+    AppKey = getControllerPass(event->ControllerIndex, ControllerSettings);
+    SampleSetInitiator = ControllerSettings.SampleSetInitiator;
+    Port = ControllerSettings.Port;
   }
 
-  LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-  C018_DelayHandler->configureControllerSettings(ControllerSettings);
+  std::shared_ptr<C018_ConfigStruct> customConfig(new C018_ConfigStruct);
 
-  C018_ConfigStruct customConfig;
-  LoadCustomControllerSettings(event->ControllerIndex, (byte *)&customConfig, sizeof(customConfig));
-  customConfig.validate();
+  if (!customConfig) {
+    return false;
+  }
+  LoadCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C018_ConfigStruct));
+  customConfig->validate();
 
-  if (!C018_data.init(customConfig.rxpin, customConfig.txpin, customConfig.baudrate,
-                  customConfig.joinmethod == C018_USE_OTAA,
-                  ControllerSettings.SampleSetInitiator, customConfig.resetpin)) 
+  if (!C018_data.init(customConfig->rxpin, customConfig->txpin, customConfig->baudrate,
+                      (customConfig->joinmethod == C018_USE_OTAA),
+                      SampleSetInitiator, customConfig->resetpin))
   {
     return false;
   }
 
-  C018_data.setFrequencyPlan(static_cast<RN2xx3_datatypes::Freq_plan>(customConfig.frequencyplan));
+  C018_data.setFrequencyPlan(static_cast<RN2xx3_datatypes::Freq_plan>(customConfig->frequencyplan));
 
-  if (customConfig.joinmethod == C018_USE_OTAA) {
-    String AppEUI = getControllerUser(event->ControllerIndex, ControllerSettings);
-    String AppKey = getControllerPass(event->ControllerIndex, ControllerSettings);
+  if (customConfig->joinmethod == C018_USE_OTAA) {
     String log = F("OTAA: AppEUI: ");
     log += AppEUI;
     log += F(" AppKey: ");
     log += AppKey;
     log += F(" DevEUI: ");
-    log += customConfig.DeviceEUI;
+    log += customConfig->DeviceEUI;
 
     addLog(LOG_LEVEL_INFO, log);
-    if (!C018_data.initOTAA(AppEUI, AppKey, customConfig.DeviceEUI)) {
+
+    if (!C018_data.initOTAA(AppEUI, AppKey, customConfig->DeviceEUI)) {
       return false;
     }
   }
   else {
-    if (!C018_data.initABP(customConfig.DeviceAddr, customConfig.AppSessionKey, customConfig.NetworkSessionKey)) {
+    if (!C018_data.initABP(customConfig->DeviceAddr, customConfig->AppSessionKey, customConfig->NetworkSessionKey)) {
       return false;
     }
   }
-  if (!C018_data.setSF(customConfig.sf)) {
+
+  if (!C018_data.setSF(customConfig->sf)) {
     return false;
   }
-  if (!C018_data.txUncnf("ESPeasy (TTN)", ControllerSettings.Port)) {
+
+  if (!C018_data.txUncnf("ESPeasy (TTN)", Port)) {
     return false;
   }
   return true;

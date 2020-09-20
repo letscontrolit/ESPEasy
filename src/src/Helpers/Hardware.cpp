@@ -13,49 +13,75 @@
 void hardwareInit()
 {
   // set GPIO pins state if not set to default
-  constexpr byte maxStates = sizeof(Settings.PinBootStates) / sizeof(Settings.PinBootStates[0]);
+  bool hasPullUp, hasPullDown;
 
   for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
-    bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
-    const int8_t bootState = (gpio < maxStates) ? Settings.PinBootStates[gpio] : 0;
-
-    if (!serialPinConflict && (bootState != 0)) {
+    const bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+    if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
+      if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
+        switch (Settings.getPinBootState(gpio))
+        {
+          case PinBootState::Default_state:
+            // At startup, pins are configured as INPUT
+            break;
+          case PinBootState::Output_low:
+            pinMode(gpio, OUTPUT);
+            digitalWrite(gpio, LOW);
+            globalMapPortStatus[key].state = LOW;
+            globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
+            globalMapPortStatus[key].init  = 1;
 
-      switch (bootState)
-      {
-        case 1:
-          pinMode(gpio, OUTPUT);
-          digitalWrite(gpio, LOW);
-          globalMapPortStatus[key].state = LOW;
-          globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
-          globalMapPortStatus[key].init  = 1;
+            // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
+            break;
+          case PinBootState::Output_high:
+            pinMode(gpio, OUTPUT);
+            digitalWrite(gpio, HIGH);
+            globalMapPortStatus[key].state = HIGH;
+            globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
+            globalMapPortStatus[key].init  = 1;
 
-          // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
-          break;
-        case 2:
-          pinMode(gpio, OUTPUT);
-          digitalWrite(gpio, HIGH);
-          globalMapPortStatus[key].state = HIGH;
-          globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
-          globalMapPortStatus[key].init  = 1;
+            // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
+            break;
+          case PinBootState::Input_pullup:
+            if (hasPullUp) {
+              pinMode(gpio, INPUT_PULLUP);
+              globalMapPortStatus[key].state = 0;
+              globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLUP;
+              globalMapPortStatus[key].init  = 1;
+            }
+            break;
+          case PinBootState::Input_pulldown:
+            if (hasPullDown) {
+              #ifdef ESP8266
+              if (gpio == 16) {
+                pinMode(gpio, INPUT_PULLDOWN_16);
+              }
+              #endif
+              #ifdef ESP32
+              pinMode(gpio, INPUT_PULLDOWN);
+              #endif
+              globalMapPortStatus[key].state = 0;
+              globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLDOWN;
+              globalMapPortStatus[key].init  = 1;
+            }
+            break;
+          case PinBootState::Input:
+            pinMode(gpio, INPUT);
+            globalMapPortStatus[key].state = 0;
+            globalMapPortStatus[key].mode  = PIN_MODE_INPUT;
+            globalMapPortStatus[key].init  = 1;
+            break;
 
-          // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
-          break;
-        case 3:
-          pinMode(gpio, INPUT_PULLUP);
-          globalMapPortStatus[key].state = 0;
-          globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLUP;
-          globalMapPortStatus[key].init  = 1;
-
-          // setPinState(1, gpio, PIN_MODE_INPUT, 0);
-          break;
+        }
       }
     }
   }
 
-  if (Settings.Pin_Reset != -1) {
-    pinMode(Settings.Pin_Reset, INPUT_PULLUP);
+  if (getGpioPullResistor(Settings.Pin_Reset, hasPullUp, hasPullDown)) {
+    if (hasPullUp) {
+      pinMode(Settings.Pin_Reset, INPUT_PULLUP);
+    }
   }
 
   initI2C();
@@ -107,10 +133,10 @@ void hardwareInit()
 
 void initI2C() {
   // configure hardware pins according to eeprom settings.
-  if (Settings.Pin_i2c_sda != -1)
+  if (Settings.Pin_i2c_sda != -1 && Settings.Pin_i2c_scl != -1)
   {
     addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
-    Wire.setClock(Settings.I2C_clockSpeed);
+    I2CSelectClockSpeed(false); // Set normal clock speed
     Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
 
     if (Settings.WireClockStretchLimit)
@@ -159,6 +185,13 @@ void initI2C() {
 }
 
 void I2CSelectClockSpeed(bool setLowSpeed) {
+  static uint8_t lastI2CClockSpeed = 255;  
+  const uint8_t newI2CClockSpeed = setLowSpeed ? 0 : 1;
+  if (newI2CClockSpeed == lastI2CClockSpeed) {
+    // No need to change the clock speed.
+    return;
+  }
+  lastI2CClockSpeed = newI2CClockSpeed;  
   Wire.setClock(setLowSpeed ? Settings.I2C_clockSpeed_Slow : Settings.I2C_clockSpeed);
 }
 
@@ -203,8 +236,9 @@ byte I2CMultiplexerShiftBit(uint8_t i) {
 // As initially constructed by krikk in PR#254, quite adapted
 // utility method for the I2C multiplexer
 // select the multiplexer port given as parameter, if taskIndex < 0 then take that abs value as the port to select (to allow I2C scanner)
-void I2CMultiplexerSelectByTaskIndex(int8_t taskIndex) {
-  if (taskIndex >= INVALID_TASK_INDEX) { return; }
+void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex) {
+  if (!validTaskIndex(taskIndex)) { return; }
+  if (!I2CMultiplexerPortSelectedForTask(taskIndex)) { return; }
 
   byte toWrite = 0;
 
@@ -217,40 +251,28 @@ void I2CMultiplexerSelectByTaskIndex(int8_t taskIndex) {
     toWrite = Settings.I2C_Multiplexer_Channel[taskIndex]; // Bitpattern is already correctly stored
   }
 
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(true); // Set to slow
-  }
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(toWrite);
-  Wire.endTransmission();
+  SetI2CMultiplexer(toWrite);
 }
 
 void I2CMultiplexerSelect(uint8_t i) {
   if (i > 7) { return; }
 
   byte toWrite = I2CMultiplexerShiftBit(i);
-
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(toWrite);
-  Wire.endTransmission();
-}
-
-// utility method for the I2C multiplexer
-// disable all channels on a multiplexer, and restore I2C speed if it was connecting a slow device
-void I2CMultiplexerOffByTaskIndex(int8_t taskIndex) {
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(0); // no channel selected
-  Wire.endTransmission();
-
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(false); // Reset clockspeed
-  }
+  SetI2CMultiplexer(toWrite);
 }
 
 void I2CMultiplexerOff() {
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(0); // no channel selected
-  Wire.endTransmission();
+  SetI2CMultiplexer(0); // no channel selected
+}
+
+void SetI2CMultiplexer(byte toWrite) {
+  if (isI2CMultiplexerEnabled()) {
+    // FIXME TD-er: Must check to see if we can cache the value so only change it when needed.
+    Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
+    Wire.write(toWrite);
+    Wire.endTransmission();
+    // FIXME TD-er: We must check if the chip needs some time to set the output. (delay?)
+  }
 }
 
 byte I2CMultiplexerMaxChannels() {
@@ -268,6 +290,8 @@ byte I2CMultiplexerMaxChannels() {
 // Has this taskIndex a channel selected? Checks for both Single channel and Multiple channel mode
 // taskIndex must already be validated! (0..MAX_TASKS)
 bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
+  if (!validTaskIndex(taskIndex)) { return false; }
+  if (!isI2CMultiplexerEnabled()) { return false; }
   return (!bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] != -1)
          || (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
 }
@@ -610,6 +634,30 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   return true;
 }
 
+bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
+  hasPullDown = false;
+  hasPullUp = false;
+
+  int pinnr;
+  bool input;
+  bool output;
+  bool warning;
+  if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
+    return false;
+  }
+  if (gpio >= 34) {
+    // For GPIO 34 .. 39, no pull-up nor pull-down.
+  } else if (gpio == 12) {
+    // No Pull-up on GPIO12
+    // compatible with the SDIO protocol.
+    // Just connect GPIO12 to VDD via a 10 kOhm resistor.
+  } else {
+    hasPullUp = true;
+    hasPullDown = true;
+  }
+  return true;
+}
+
 #else // ifdef ESP32
 
 // return true when pin can be used.
@@ -642,18 +690,54 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     case 15: pinnr =  8; input = false; break;
     case 16: pinnr =  0; break; // This is used by the deep-sleep mechanism
   }
-  # ifndef ESP8285
+  if (isFlashInterfacePin(gpio)) {
+    #ifdef ESP8285
+    
+    if ((gpio == 9) || (gpio == 10)) {
+      // Usable on ESP8285
+    } else {
+      warning = true;
+    }
 
-  if ((gpio == 9) || (gpio == 10)) {
-    // On ESP8266 used for flash
+    #else
+
     warning = true;
-  }
-  # endif // ifndef ESP8285
+    // On ESP8266 GPIO 9 & 10 are only usable if not connected to flash 
+    if (gpio == 9) {
+      // GPIO9 is internally used to control the flash memory.
+      input  = false;
+      output = false;
+    } else if (gpio == 10) {
+      // GPIO10 can be used as input only.
+      output = false;
+    }
 
-  if (pinnr < 0) {
+    #endif
+  }
+
+  if (pinnr < 0 || pinnr > 16) {
     input  = false;
     output = false;
     return false;
+  }
+  return true;
+}
+
+bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
+  hasPullDown = false;
+  hasPullUp = false;
+
+  int pinnr;
+  bool input;
+  bool output;
+  bool warning;
+  if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
+    return false;
+  }
+  if (gpio == 16) {
+    hasPullDown = true;
+  } else {
+    hasPullUp = true;
   }
   return true;
 }

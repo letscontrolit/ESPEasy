@@ -165,7 +165,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P087_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P087_data_struct());
       P087_data_struct *P087_data =
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -181,12 +181,6 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       } else {
         clearPluginTaskData(event->TaskIndex);
       }
-      break;
-    }
-
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
       break;
     }
 
