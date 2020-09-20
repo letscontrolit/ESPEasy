@@ -12,41 +12,6 @@
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24UL)
 #define LEAP_YEAR(Y) (((1970 + Y) > 0) && !((1970 + Y) % 4) && (((1970 + Y) % 100) || !((1970 + Y) % 400)))
 
-long ICACHE_RAM_ATTR timeDiff(const unsigned long prev, const unsigned long next)
-{
-  long signed_diff = 0;
-
-  // To cast a value to a signed long, the difference may not exceed half the ULONG_MAX
-  const unsigned long half_max_unsigned_long = 2147483647u; // = 2^31 -1
-
-  if (next >= prev) {
-    const unsigned long diff = next - prev;
-
-    if (diff <= half_max_unsigned_long) {
-      // Normal situation, just return the difference.
-      // Difference is a positive value.
-      signed_diff = static_cast<long>(diff);
-    } else {
-      // prev has overflow, return a negative difference value
-      signed_diff = static_cast<long>((ULONG_MAX - next) + prev + 1u);
-      signed_diff = -1 * signed_diff;
-    }
-  } else {
-    // next < prev
-    const unsigned long diff = prev - next;
-
-    if (diff <= half_max_unsigned_long) {
-      // Normal situation, return a negative difference value
-      signed_diff = static_cast<long>(diff);
-      signed_diff = -1 * signed_diff;
-    } else {
-      // next has overflow, return a positive difference value
-      signed_diff = static_cast<long>((ULONG_MAX - prev) + next + 1u);
-    }
-  }
-  return signed_diff;
-}
-
 
 long timePassedSince(unsigned long timestamp) {
   return timeDiff(timestamp, millis());

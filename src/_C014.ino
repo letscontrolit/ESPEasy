@@ -39,7 +39,7 @@
 byte msgCounter=0; // counter for send Messages (currently for information / log only!
 
 String CPlugin_014_pubname;
-bool CPlugin_014_mqtt_retainFlag;
+bool CPlugin_014_mqtt_retainFlag = false;
 
 
 // send MQTT Message with complete Topic / Payload
@@ -287,9 +287,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
           // FIRST Standard GPIO tasks
           int gpio = 0;
-          // FIXME TD-er: Max of 17 is a limit in the Settings.PinBootStates array???
-          while (gpio < MAX_GPIO  && gpio < 17) {
-            if (Settings.PinBootStates[gpio]>0) // anything but default
+          while (gpio <= MAX_GPIO) {
+            if (Settings.getPinBootState(gpio) != PinBootState::Default_state) // anything but default
             {
               nodeCount++;
               valueName = CPLUGIN_014_GPIO_VALUE;
@@ -300,7 +299,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, valueName.c_str(), "/$name", valueName.c_str(), errorCounter);
               //$datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
               CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, valueName.c_str(), "/$datatype", "boolean", errorCounter);
-              if (Settings.PinBootStates[gpio]<3) // defined as default low or high so output
+              if (Settings.getPinBootState(gpio) != PinBootState::Input) // defined as output
               {
                 //$settable	Device → Controller	Specifies whether the property is settable (true) or readonly (false)	true or false	Yes	No (false)
                 CPlugin_014_sendMQTTnode(nodename, CPLUGIN_014_SYSTEM_DEVICE, valueName.c_str(), "/$settable", "true", errorCounter);
