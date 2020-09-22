@@ -30,9 +30,8 @@
 
 
 #define P052_QUERY1_CONFIG_POS  0
-#define P052_SENSOR_TYPE_INDEX  P052_QUERY1_CONFIG_POS + (VARS_PER_TASK + 1)
-#define P052_NR_OUTPUT_VALUES   getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX))
-
+#define P052_SENSOR_TYPE_INDEX  (P052_QUERY1_CONFIG_POS + (VARS_PER_TASK + 1))
+#define P052_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P052_SENSOR_TYPE_INDEX))) 
 #define P052_NR_OUTPUT_OPTIONS  8
 
 
@@ -147,7 +146,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_052;
       Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -180,6 +179,20 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P052_NR_OUTPUT_VALUES;
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->Par1 = PCONFIG(P052_SENSOR_TYPE_INDEX);
+      success = true;
+      break;
+    }
+
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event);
       break;
@@ -200,7 +213,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         PCONFIG(i) = 0; // "Empty"
       }
 
-      //    PCONFIG(P052_SENSOR_TYPE_INDEX) = SENSOR_TYPE_SINGLE;
+      //    PCONFIG(P052_SENSOR_TYPE_INDEX) = Sensor_VType::SENSOR_TYPE_SINGLE;
       success = true;
       break;
     }
@@ -461,7 +474,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
 
            Plugin_052_setABCperiod(periodInHours[choiceABCperiod]);
          */
-        sensorTypeHelper_setSensorType(event, P052_SENSOR_TYPE_INDEX);
         P052_data->modbus.setModbusTimeout(P052_MODBUS_TIMEOUT);
 
         //      P052_data->modbus.writeMultipleRegisters(0x09, 1); // Start Single Measurement
@@ -485,7 +497,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P052_data) && P052_data->isInitialized()) {
-        event->sensorType = PCONFIG(P052_SENSOR_TYPE_INDEX);
+        event->sensorType = static_cast<Sensor_VType>(PCONFIG(P052_SENSOR_TYPE_INDEX));
         String log = F("Senseair: ");
         String logPrefix;
 

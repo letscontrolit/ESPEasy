@@ -30,7 +30,7 @@ void sendData(struct EventStruct *event)
   }
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
-  if (event->sensorType == SENSOR_TYPE_NONE) {
+  if (event->sensorType == Sensor_VType::SENSOR_TYPE_NONE) {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
     if (validDeviceIndex(DeviceIndex)) {
       event->sensorType = Device[DeviceIndex].VType;
@@ -75,8 +75,8 @@ void sendData(struct EventStruct *event)
 
 bool validUserVar(struct EventStruct *event) {
   switch (event->sensorType) {
-    case SENSOR_TYPE_LONG:    return true;
-    case SENSOR_TYPE_STRING:  return true; // FIXME TD-er: Must look at length of event->String2 ?
+    case Sensor_VType::SENSOR_TYPE_LONG:    return true;
+    case Sensor_VType::SENSOR_TYPE_STRING:  return true; // FIXME TD-er: Must look at length of event->String2 ?
     default:
       break;
   }

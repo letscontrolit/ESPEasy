@@ -1066,7 +1066,7 @@ void createRuleEvents(struct EventStruct *event) {
 
   LoadTaskSettings(event->TaskIndex);
   byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-  byte sensorType   = Device[DeviceIndex].VType;
+  const Sensor_VType sensorType = getDeviceVTypeForTask(event->TaskIndex);
 
   const byte valueCount = getValueCountForTask(event->TaskIndex);
 
@@ -1079,11 +1079,11 @@ void createRuleEvents(struct EventStruct *event) {
     eventString += F("=");
 
     switch (sensorType) {
-      case SENSOR_TYPE_LONG:
+      case Sensor_VType::SENSOR_TYPE_LONG:
         eventString += (unsigned long)UserVar[BaseVarIndex] +
                        ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
         break;
-      case SENSOR_TYPE_STRING:
+      case Sensor_VType::SENSOR_TYPE_STRING:
 
         // FIXME TD-er: What to add here? length of string?
         break;

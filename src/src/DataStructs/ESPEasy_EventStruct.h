@@ -6,6 +6,7 @@
 #include "../Globals/CPlugins.h"
 #include "../Globals/NPlugins.h"
 #include "../Globals/Plugins.h"
+#include "DeviceStruct.h"
 
 /*********************************************************************************************\
 * EventStruct
@@ -33,7 +34,7 @@ struct EventStruct
   controllerIndex_t      ControllerIndex;   // index position in Settings.Controller, 0-3
   notifierIndex_t        NotificationIndex; // index position in Settings.Notification, 0-3
   byte                   BaseVarIndex;
-  byte                   sensorType;
+  Sensor_VType           sensorType;
   byte                   OriginTaskIndex;
 };
 

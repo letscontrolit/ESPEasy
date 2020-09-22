@@ -11,7 +11,7 @@ EventStruct::EventStruct() :
   Source(EventValueSource::Enum::VALUE_SOURCE_NOT_SET), 
   TaskIndex(INVALID_TASK_INDEX), ControllerIndex(INVALID_CONTROLLER_INDEX),
   NotificationIndex(INVALID_NOTIFIER_INDEX), BaseVarIndex(0),
-  sensorType(0), OriginTaskIndex(0) {}
+  sensorType(Sensor_VType::SENSOR_TYPE_NONE), OriginTaskIndex(0) {}
 
 EventStruct::EventStruct(const struct EventStruct& event) :
   String1(event.String1)

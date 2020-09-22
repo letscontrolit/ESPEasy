@@ -135,3 +135,10 @@ int getValueCountForTask(taskIndex_t   taskIndex) {
   PluginCall(PLUGIN_GET_DEVICEVALUECOUNT, &TempEvent, dummy);
   return TempEvent.Par1;
 }
+
+Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex) {
+  struct EventStruct TempEvent;
+  String dummy;
+  PluginCall(PLUGIN_GET_DEVICEVTYPE, &TempEvent, dummy);
+  return static_cast<Sensor_VType>(TempEvent.Par1);
+}

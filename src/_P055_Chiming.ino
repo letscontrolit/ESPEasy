@@ -103,7 +103,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_055;
         Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = SENSOR_TYPE_NONE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = true;
         Device[deviceCount].FormulaOption = false;

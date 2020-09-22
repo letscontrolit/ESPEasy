@@ -20,7 +20,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_033;
         Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -46,6 +46,20 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+      {
+        event->Par1 = getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(0)));
+        success = true;
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+      {
+        event->Par1 = PCONFIG(0);
+        success = true;
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         sensorTypeHelper_webformLoad_allTypes(event, 0);
@@ -62,16 +76,14 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        // Do not set the sensor type, or else it will be set for all instances of the Dummy plugin.
-        //sensorTypeHelper_setSensorType(event, 0);
         success = true;
         break;
       }
 
     case PLUGIN_READ:
       {
-        event->sensorType = PCONFIG(0);
-        for (byte x = 0; x < getValueCountFromSensorType(PCONFIG(0)); x++)
+        event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
+        for (byte x = 0; x < getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(0))); x++)
         {
           String log = F("Dummy: value ");
           log += x+1;

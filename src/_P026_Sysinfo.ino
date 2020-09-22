@@ -13,8 +13,8 @@
 
 // place sensor type selector right after the output value settings
 #define P026_QUERY1_CONFIG_POS  0
-#define P026_SENSOR_TYPE_INDEX  P026_QUERY1_CONFIG_POS + VARS_PER_TASK
-#define P026_NR_OUTPUT_VALUES   getValueCountFromSensorType(PCONFIG(P026_SENSOR_TYPE_INDEX))
+#define P026_SENSOR_TYPE_INDEX  (P026_QUERY1_CONFIG_POS + VARS_PER_TASK)
+#define P026_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P026_SENSOR_TYPE_INDEX)))
 
 #define P026_NR_OUTPUT_OPTIONS  12
 
@@ -47,7 +47,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number       = PLUGIN_ID_026;
-      Device[deviceCount].VType          = SENSOR_TYPE_QUAD;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].ValueCount     = 4;
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption    = true;
@@ -85,6 +85,14 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->Par1 = PCONFIG(P026_SENSOR_TYPE_INDEX);
+      success = true;
+      break;
+    }
+
+
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(0) = 0;    // "Uptime"
@@ -92,7 +100,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       for (byte i = 1; i < VARS_PER_TASK; ++i) {
         PCONFIG(i) = 11; // "None"
       }
-      PCONFIG(P026_SENSOR_TYPE_INDEX) = SENSOR_TYPE_QUAD;
+      PCONFIG(P026_SENSOR_TYPE_INDEX) = static_cast<byte>(Sensor_VType::SENSOR_TYPE_QUAD);
       success                         = true;
       break;
     }
@@ -129,7 +137,6 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      sensorTypeHelper_setSensorType(event, P026_SENSOR_TYPE_INDEX);
       success = true;
       break;
     }

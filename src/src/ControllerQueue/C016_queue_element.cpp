@@ -5,7 +5,8 @@
 #include "../../ESPEasy_fdwdecl.h"
 
 
-C016_queue_element::C016_queue_element() : timestamp(0), TaskIndex(INVALID_TASK_INDEX), controller_idx(0), sensorType(0) {}
+C016_queue_element::C016_queue_element() : timestamp(0), TaskIndex(INVALID_TASK_INDEX), controller_idx(0), sensorType(
+    Sensor_VType::SENSOR_TYPE_NONE) {}
 
 C016_queue_element::C016_queue_element(const struct EventStruct *event, byte value_count, unsigned long unixTime) :
   timestamp(unixTime),

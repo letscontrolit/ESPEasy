@@ -69,7 +69,7 @@
 static byte Plugin_091_switchstate[4];
 static byte Plugin_091_ostate[4];
 byte Plugin_091_commandstate = 0; // 0:no,1:inprogress,2:finished
-byte Plugin_091_type;
+Sensor_VType Plugin_091_type = Sensor_VType::SENSOR_TYPE_NONE;
 byte Plugin_091_numrelay = 1;
 byte Plugin_091_ownindex;
 byte Plugin_091_globalpar0;
@@ -88,7 +88,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_091;
         Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
-        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_QUAD;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -299,16 +299,16 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         switch (Plugin_091_numrelay)
         {
           case 1:
-            Plugin_091_type = SENSOR_TYPE_SWITCH;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_SWITCH;
             break;
           case 2:
-            Plugin_091_type = SENSOR_TYPE_DUAL;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_DUAL;
             break;
           case 3:
-            Plugin_091_type = SENSOR_TYPE_TRIPLE;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_TRIPLE;
             break;
           case 4:
-            Plugin_091_type = SENSOR_TYPE_QUAD;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_QUAD;
             break;
         }
         addLog(LOG_LEVEL_INFO, log);

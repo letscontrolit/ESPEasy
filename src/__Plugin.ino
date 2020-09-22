@@ -1346,6 +1346,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_GET_CONFIG:
     case PLUGIN_GET_DEVICEVALUENAMES:
     case PLUGIN_GET_DEVICEVALUECOUNT:
+    case PLUGIN_GET_DEVICEVTYPE:
     case PLUGIN_GET_DEVICEGPIONAMES:
     case PLUGIN_WEBFORM_SAVE:
     case PLUGIN_WEBFORM_SHOW_VALUES:
@@ -1376,6 +1377,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
         if (Function == PLUGIN_GET_DEVICEVALUECOUNT) {
           event->Par1 = Device[DeviceIndex].ValueCount;
+        }
+        if (Function == PLUGIN_GET_DEVICEVTYPE) {
+          event->Par1 = static_cast<int>(Device[DeviceIndex].VType);
         }
 
         START_TIMER;

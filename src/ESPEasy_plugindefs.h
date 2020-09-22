@@ -18,27 +18,28 @@
 #define PLUGIN_GET_DEVICENAME              11
 #define PLUGIN_GET_DEVICEVALUENAMES        12
 #define PLUGIN_GET_DEVICEVALUECOUNT        13
-#define PLUGIN_WRITE                       14
-#define PLUGIN_EVENT_OUT                   15
-#define PLUGIN_WEBFORM_SHOW_CONFIG         16
-#define PLUGIN_SERIAL_IN                   17
-#define PLUGIN_UDP_IN                      18
-#define PLUGIN_CLOCK_IN                    19
-#define PLUGIN_TIMER_IN                    20
-#define PLUGIN_FIFTY_PER_SECOND            21
-#define PLUGIN_SET_CONFIG                  22
-#define PLUGIN_GET_DEVICEGPIONAMES         23
-#define PLUGIN_EXIT                        24
-#define PLUGIN_GET_CONFIG                  25
-#define PLUGIN_UNCONDITIONAL_POLL          26
-#define PLUGIN_REQUEST                     27
-#define PLUGIN_TIME_CHANGE                 28
-#define PLUGIN_MONITOR                     29
-#define PLUGIN_SET_DEFAULTS                30
-#define PLUGIN_GET_PACKED_RAW_DATA         31 // Return all data in a compact binary format specific for that plugin.
+#define PLUGIN_GET_DEVICEVTYPE             14
+#define PLUGIN_WRITE                       15
+#define PLUGIN_EVENT_OUT                   16
+#define PLUGIN_WEBFORM_SHOW_CONFIG         17
+#define PLUGIN_SERIAL_IN                   18
+#define PLUGIN_UDP_IN                      19
+#define PLUGIN_CLOCK_IN                    20
+#define PLUGIN_TIMER_IN                    21
+#define PLUGIN_FIFTY_PER_SECOND            22
+#define PLUGIN_SET_CONFIG                  23
+#define PLUGIN_GET_DEVICEGPIONAMES         24
+#define PLUGIN_EXIT                        25
+#define PLUGIN_GET_CONFIG                  26
+#define PLUGIN_UNCONDITIONAL_POLL          27
+#define PLUGIN_REQUEST                     28
+#define PLUGIN_TIME_CHANGE                 29
+#define PLUGIN_MONITOR                     30
+#define PLUGIN_SET_DEFAULTS                31
+#define PLUGIN_GET_PACKED_RAW_DATA         32 // Return all data in a compact binary format specific for that plugin.
                                               // Needs USES_PACKED_RAW_DATA
-#define PLUGIN_ONLY_TIMER_IN               32
-#define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     33
+#define PLUGIN_ONLY_TIMER_IN               33
+#define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     34
 
 
 
