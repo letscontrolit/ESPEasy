@@ -694,12 +694,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
         statusLED(true);
 
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          String dummy;
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
-        }
-
         parseControllerVariables(pubname, event, false);
+        LoadTaskSettings(event->TaskIndex);
 
         String value = "";
         byte valueCount = getValueCountFromSensorType(event->sensorType);

@@ -690,14 +690,20 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
       SMART_REPL(F("%val4%"), formatUserVarNoCheck(event, 3))
     }
   }
-  LoadTaskSettings(event->TaskIndex);
-  repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+  const bool tskname_found = s.indexOf(F("%tskname%")) != -1;
+  const bool vname_found = s.indexOf(F("%vname")) != -1;
+  if (tskname_found || vname_found) {
+    LoadTaskSettings(event->TaskIndex);
+    if (tskname_found) {
+      repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+    }
 
-  if (s.indexOf(F("%vname")) != -1) {
-    repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
-    repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
-    repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
-    repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
+    if (vname_found) {
+      repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
+      repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
+      repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
+      repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
+    }
   }
 }
 

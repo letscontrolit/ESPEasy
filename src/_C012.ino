@@ -53,13 +53,11 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
         if (C012_DelayHandler == nullptr) {
           break;
         }
+        LoadTaskSettings(event->TaskIndex);
+
         // Collect the values at the same run, to make sure all are from the same sample
         byte valueCount = getValueCountFromSensorType(event->sensorType);
         C012_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          String dummy;
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
-        }
 
         for (byte x = 0; x < valueCount; x++)
         {

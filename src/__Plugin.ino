@@ -1358,10 +1358,8 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
       if (validDeviceIndex(DeviceIndex)) {
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
-          LoadTaskSettings(event->TaskIndex);
-        }
+        // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
+        LoadTaskSettings(event->TaskIndex);
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
         {
           String descr;

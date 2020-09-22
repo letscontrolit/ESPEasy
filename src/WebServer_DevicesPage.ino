@@ -274,8 +274,18 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     Settings.TaskDevicePin1Inversed[taskIndex] = isFormItemChecked(F("TDPI"));
   }
 
-  const byte valueCount = getValueCountForTask(taskIndex);
+  struct EventStruct TempEvent;
+  TempEvent.TaskIndex = taskIndex;
 
+  ExtraTaskSettings.clear();
+  {
+    ExtraTaskSettings.TaskIndex = taskIndex;
+    String dummy;
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
+  }
+
+
+  const byte valueCount = getValueCountForTask(taskIndex);
   for (byte varNr = 0; varNr < valueCount; varNr++)
   {
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr],    String(F("TDF")) + (varNr + 1));
@@ -294,14 +304,6 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   //   taskdevicevaluename[varNr].toCharArray(tmpString, 41);
   //   strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
   // }
-
-  struct EventStruct TempEvent;
-  TempEvent.TaskIndex = taskIndex;
-
-  if (ExtraTaskSettings.TaskIndex != TempEvent.TaskIndex) { // if field set empty, reload defaults
-    String dummy;
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
-  }
 
   // allow the plugin to save plugin-specific form settings.
   {
