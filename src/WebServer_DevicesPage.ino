@@ -274,7 +274,9 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     Settings.TaskDevicePin1Inversed[taskIndex] = isFormItemChecked(F("TDPI"));
   }
 
-  for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+  const byte valueCount = getValueCountForTask(taskIndex);
+
+  for (byte varNr = 0; varNr < valueCount; varNr++)
   {
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr],    String(F("TDF")) + (varNr + 1));
     ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = getFormItemInt(String(F("TDVD")) + (varNr + 1));
@@ -287,7 +289,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   }
 
   // // task value names handling.
-  // for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+  // for (byte varNr = 0; varNr < valueCount; varNr++)
   // {
   //   taskdevicevaluename[varNr].toCharArray(tmpString, 41);
   //   strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
@@ -627,7 +629,8 @@ void handle_devicess_ShowAllTasksTable(byte page)
 
         if (!customValues)
         {
-          for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+          const byte valueCount = getValueCountForTask(x);
+          for (byte varNr = 0; varNr < valueCount; varNr++)
           {
             if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
             {
@@ -899,7 +902,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     }
 
     // section: Values
-    if (!Device[DeviceIndex].Custom && (Device[DeviceIndex].ValueCount > 0))
+    const byte valueCount = getValueCountForTask(taskIndex);
+    if (!Device[DeviceIndex].Custom && (valueCount > 0))
     {
       addFormSubHeader(F("Values"));
       html_end_table();
@@ -920,7 +924,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       }
 
       // table body
-      for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+      for (byte varNr = 0; varNr < valueCount; varNr++)
       {
         html_TR_TD();
         addHtml(String(varNr + 1));

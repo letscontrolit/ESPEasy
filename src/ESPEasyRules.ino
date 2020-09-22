@@ -1068,7 +1068,9 @@ void createRuleEvents(struct EventStruct *event) {
   byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
   byte sensorType   = Device[DeviceIndex].VType;
 
-  for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
+  const byte valueCount = getValueCountForTask(event->TaskIndex);
+
+  for (byte varNr = 0; varNr < valueCount; varNr++) {
     String eventString;
     eventString.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
     eventString  = getTaskDeviceName(event->TaskIndex);

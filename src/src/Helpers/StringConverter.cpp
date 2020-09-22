@@ -18,6 +18,7 @@
 
 #include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_fdwdecl.h"
+#include "../../_Plugin_Helper.h"
 
 
 // -V::569
@@ -207,7 +208,9 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     return "0";
   }
 
-  if (Device[DeviceIndex].ValueCount <= rel_index) {
+  const byte valueCount = getValueCountForTask(event->TaskIndex);
+
+  if (valueCount <= rel_index) {
     isvalid = false;
 
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

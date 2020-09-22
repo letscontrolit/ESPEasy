@@ -1247,7 +1247,6 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
       }
       return false;
-      break;
     }
 
     // Call to all plugins that are used in a task
@@ -1295,24 +1294,14 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
       }
       return true;
-      break;
     }
 
-    // Call to specific plugin that is used for current task
+    // Call to specific task which may interact with the hardware
     case PLUGIN_INIT:
     case PLUGIN_EXIT:
     case PLUGIN_WEBFORM_LOAD:
-    case PLUGIN_WEBFORM_SAVE:
-    case PLUGIN_WEBFORM_SHOW_VALUES:
-    case PLUGIN_WEBFORM_SHOW_CONFIG:
-    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
-    case PLUGIN_GET_DEVICEVALUENAMES:
-    case PLUGIN_GET_DEVICEGPIONAMES:
     case PLUGIN_READ:
-    case PLUGIN_SET_CONFIG:
-    case PLUGIN_GET_CONFIG:
     case PLUGIN_GET_PACKED_RAW_DATA:
-    case PLUGIN_SET_DEFAULTS:
     {
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
@@ -1334,17 +1323,11 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           descr += event->TaskIndex;
           checkRAM(descr, String(Function));
         }
-        if (Function == PLUGIN_SET_DEFAULTS) {
-          for (int i = 0; i < VARS_PER_TASK; ++i) {
-            UserVar[event->BaseVarIndex + i] = 0.0f;
-          }
-        }
         prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
         START_TIMER;
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
-        if ((retval && (Function == PLUGIN_READ)) 
-            || Function == PLUGIN_SET_DEFAULTS) {
+        if (retval && (Function == PLUGIN_READ)) {
           saveUserVarToRTC();
         }
 
@@ -1358,6 +1341,55 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
       }
       return false;
     }
+
+    // Call to specific task not interacting with hardware
+    case PLUGIN_GET_CONFIG:
+    case PLUGIN_GET_DEVICEVALUENAMES:
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    case PLUGIN_GET_DEVICEGPIONAMES:
+    case PLUGIN_WEBFORM_SAVE:
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    case PLUGIN_SET_CONFIG:
+    case PLUGIN_SET_DEFAULTS:
+    {
+      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+
+      if (validDeviceIndex(DeviceIndex)) {
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+          // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
+          LoadTaskSettings(event->TaskIndex);
+        }
+        event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+        {
+          String descr;
+          descr.reserve(20);
+          descr  = String(F("PluginCall_task_"));
+          descr += event->TaskIndex;
+          checkRAM(descr, String(Function));
+        }
+        if (Function == PLUGIN_SET_DEFAULTS) {
+          for (int i = 0; i < VARS_PER_TASK; ++i) {
+            UserVar[event->BaseVarIndex + i] = 0.0f;
+          }
+        }
+        if (Function == PLUGIN_GET_DEVICEVALUECOUNT) {
+          event->Par1 = Device[DeviceIndex].ValueCount;
+        }
+
+        START_TIMER;
+        bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
+        if (Function == PLUGIN_SET_DEFAULTS) {
+          saveUserVarToRTC();
+        }
+        STOP_TIMER_TASK(DeviceIndex, Function);
+        delay(0); // SMY: call delay(0) unconditionally
+        return retval;
+      }
+      return false;
+    }
+
   } // case
   return false;
 }

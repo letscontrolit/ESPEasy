@@ -78,6 +78,13 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P026_NR_OUTPUT_VALUES;
+      success = true;
+      break;
+    }
+
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(0) = 0;    // "Uptime"

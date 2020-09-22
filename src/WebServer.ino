@@ -810,8 +810,9 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
   }
 
   LoadTaskSettings(TaskIndex);
+  const byte valueCount = getValueCountForTask(TaskIndex);
 
-  for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+  for (byte x = 0; x < valueCount; x++)
   {
     String html;
     html.reserve(96);

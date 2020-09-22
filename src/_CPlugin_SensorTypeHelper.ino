@@ -95,7 +95,7 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
   if (!validDeviceIndex(DeviceIndex)) {
     choice = 0;
     PCONFIG(pconfigIndex) = choice;
-  } else if (getValueCountFromSensorType(choice) != Device[DeviceIndex].ValueCount) {
+  } else if (getValueCountFromSensorType(choice) != getValueCountForTask(event->TaskIndex)) {
     // Invalid value
     choice                = Device[DeviceIndex].VType;
     PCONFIG(pconfigIndex) = choice;
@@ -132,6 +132,9 @@ void sensorTypeHelper_setSensorType(struct EventStruct *event, byte pconfigIndex
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
   if (validDeviceIndex(DeviceIndex)) {
     Device[DeviceIndex].VType      = sensorType;
+
+    // FIXME TD-er: This should not be changed anymore!!!!!!!
+    // now we have getValueCountForTask
     Device[DeviceIndex].ValueCount = getValueCountFromSensorType(sensorType);
   }
 }

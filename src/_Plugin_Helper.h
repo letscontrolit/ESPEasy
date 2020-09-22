@@ -98,5 +98,6 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
                                           const String& string,
                                           byte          paramNr);
 
+int getValueCountForTask(taskIndex_t   taskIndex);
 
 #endif // PLUGIN_HELPER_H

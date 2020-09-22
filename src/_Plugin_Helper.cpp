@@ -128,3 +128,10 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
   }
   return found_taskIndex == taskIndex;
 }
+
+int getValueCountForTask(taskIndex_t   taskIndex) {
+  struct EventStruct TempEvent;
+  String dummy;
+  PluginCall(PLUGIN_GET_DEVICEVALUECOUNT, &TempEvent, dummy);
+  return TempEvent.Par1;
+}

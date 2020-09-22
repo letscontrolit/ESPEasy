@@ -3,6 +3,7 @@
 
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
+#include "_Plugin_Helper.h"
 
 //#######################################################################################################
 //################################# Controller Plugin 0014: Homie 3/4 ###################################
@@ -327,11 +328,12 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               { // device enabled
                 valuesList="";
 
+                const byte valueCount = getValueCountForTask(x);
                 if (!Device[DeviceIndex].SendDataOption) // check if device is not sending data = assume that it can receive.
                 {
                   if (Device[DeviceIndex].Number==86) // Homie receiver
                   {
-                    for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
+                    for (byte varNr = 0; varNr < valueCount; varNr++) {
                       if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
                         if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0]!=0) { // do not send if Value Name is empty!
                           CPLUGIN_014_addToList(valuesList,ExtraTaskSettings.TaskDeviceValueNames[varNr]);
@@ -348,14 +350,14 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                     if (ExtraTaskSettings.TaskDevicePluginConfig[varNr]!=0 || ExtraTaskSettings.TaskDevicePluginConfig[varNr+5]!=0) {
                                       unitName = ExtraTaskSettings.TaskDevicePluginConfig[varNr];
                                       unitName += ":";
-                                      unitName += ExtraTaskSettings.TaskDevicePluginConfig[varNr+Device[DeviceIndex].ValueCount];
+                                      unitName += ExtraTaskSettings.TaskDevicePluginConfig[varNr + valueCount];
                                     }
                                     break;
                             case 1: valueName = F("float");
                                     if (ExtraTaskSettings.TaskDevicePluginConfig[varNr]!=0 || ExtraTaskSettings.TaskDevicePluginConfig[varNr+5]!=0) {
                                       unitName = ExtraTaskSettings.TaskDevicePluginConfig[varNr];
                                       unitName += ":";
-                                      unitName += ExtraTaskSettings.TaskDevicePluginConfig[varNr+Device[DeviceIndex].ValueCount];
+                                      unitName += ExtraTaskSettings.TaskDevicePluginConfig[varNr + valueCount];
                                     }
                                     break;
                             case 2: valueName = F("boolean"); break;
@@ -384,7 +386,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                   byte customValues = false;
                   if (!customValues)
                   { // standard Values
-                    for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+                    for (byte varNr = 0; varNr < valueCount; varNr++)
                     {
                       if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
                       {
