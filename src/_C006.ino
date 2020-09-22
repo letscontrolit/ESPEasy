@@ -9,7 +9,7 @@
 #define CPLUGIN_NAME_006       "PiDome MQTT"
 
 String CPlugin_006_pubname;
-bool CPlugin_006_mqtt_retainFlag;
+bool CPlugin_006_mqtt_retainFlag = false;
 
 
 bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& string)

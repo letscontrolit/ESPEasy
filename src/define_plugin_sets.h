@@ -1118,6 +1118,12 @@ To create/register a plugin, you have to :
   #ifdef USES_C017 // Zabbix
     #undef USES_C017
   #endif
+  #ifdef USES_P092
+    #undef USES_P092   // DL-Bus
+  #endif
+  #ifdef USES_P093
+    #undef USES_P093   // Mitsubishi Heat Pump
+  #endif
   #ifdef USES_P100 // Pulse Counter - DS2423
     #undef USES_P100
   #endif
