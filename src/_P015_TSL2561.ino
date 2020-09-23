@@ -149,7 +149,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
       if (nullptr != P015_data) {
         P015_data->begin();
 
-        P015_data->performRead(
+        success = P015_data->performRead(
           UserVar[event->BaseVarIndex],      // lux
           UserVar[event->BaseVarIndex + 1],  // infrared
           UserVar[event->BaseVarIndex + 2],  // broadband
