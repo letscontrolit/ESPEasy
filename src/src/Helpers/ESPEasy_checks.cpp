@@ -3,6 +3,7 @@
 #include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/C013_p2p_dataStructs.h"
 #include "../DataStructs/CRCStruct.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/DeviceStruct.h"
@@ -90,6 +91,8 @@ void run_compiletime_checks() {
   check_size<portStatusStruct,                      4u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
+  check_size<C013_SensorInfoStruct,                 137u>();
+  check_size<C013_SensorDataStruct,                 24u>();
   #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
     static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
   #endif
