@@ -127,11 +127,15 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
       addFormNumericBox(F("Baudrate"), P094_BAUDRATE_LABEL, P094_BAUDRATE, 2400, 115200);
       addUnit(F("baud"));
+      break;
+    }
 
+    case PLUGIN_WEBFORM_LOAD: 
+    {
       addFormSubHeader(F("Filtering"));
       P094_html_show_matchForms(event);
 
@@ -143,7 +147,6 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
       P094_BAUDRATE = getFormItemInt(P094_BAUDRATE_LABEL);
 
       P094_data_struct *P094_data =

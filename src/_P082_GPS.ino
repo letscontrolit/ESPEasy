@@ -318,7 +318,6 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
 
       /*
          P082_data_struct *P082_data =
@@ -373,7 +372,6 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
       P082_TIMEOUT  = getFormItemInt(P082_TIMEOUT_LABEL);
       P082_DISTANCE = getFormItemInt(P082_DISTANCE_LABEL);
 

@@ -78,7 +78,6 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        serialHelper_webformLoad(event);
 
         // FIXME TD-er:  Whether TX pin is connected should be set somewhere
         if (Plugin_056_hasTxPin(event)) {
@@ -92,7 +91,6 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
       }
       case PLUGIN_WEBFORM_SAVE:
         {
-          serialHelper_webformSave(event);
 
           if (Plugin_056_hasTxPin(event)) {
             // Communications to device should work.

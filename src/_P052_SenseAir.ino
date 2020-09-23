@@ -274,7 +274,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
 
       {
         String options[P052_NR_OUTPUT_OPTIONS];
@@ -384,7 +383,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
 
       // Save output selector parameters.
       for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {

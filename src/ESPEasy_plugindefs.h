@@ -40,6 +40,7 @@
                                               // Needs USES_PACKED_RAW_DATA
 #define PLUGIN_ONLY_TIMER_IN               33
 #define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     34
+#define PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  35 // When needed, show additional parameters like baudrate or specific serial config
 
 
 

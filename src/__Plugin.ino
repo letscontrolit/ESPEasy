@@ -1352,6 +1352,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_SHOW_VALUES:
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     case PLUGIN_SET_CONFIG:
     case PLUGIN_SET_DEFAULTS:
     {

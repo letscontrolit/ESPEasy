@@ -122,47 +122,52 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
+      if (P078_DEV_ID == 0 || P078_DEV_ID > 247 || P078_BAUDRATE >= 6) {
+        // Load some defaults
+        P078_DEV_ID = P078_DEV_ID_DFLT;
+        P078_MODEL = P078_MODEL_DFLT;
+        P078_BAUDRATE = P078_BAUDRATE_DFLT;
+        P078_QUERY1 = P078_QUERY1_DFLT;
+        P078_QUERY2 = P078_QUERY2_DFLT;
+        P078_QUERY3 = P078_QUERY3_DFLT;
+        P078_QUERY4 = P078_QUERY4_DFLT;
+      }
+      {
+        String options_baudrate[6];
+        for (int i = 0; i < 6; ++i) {
+          options_baudrate[i] = String(p078_storageValueToBaudrate(i));
+        }
+        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, NULL, P078_BAUDRATE );
+        addUnit(F("baud"));
+      }
+
+      if (P078_MODEL == 0 && P078_BAUDRATE > 3)
+        addFormNote(F("<span style=\"color:red\"> SDM120 only allows up to 9600 baud with default 2400!</span>"));
+
+      if (P078_MODEL == 3 && P078_BAUDRATE == 0)
+        addFormNote(F("<span style=\"color:red\"> SDM630 only allows 2400 to 38400 baud with default 9600!</span>"));
+
+      addFormNumericBox(F("Modbus Address"), P078_DEV_ID_LABEL, P078_DEV_ID, 1, 247);
+
+      if (Plugin_078_SDM != nullptr) {
+        addRowLabel(F("Checksum (pass/fail)"));
+        String chksumStats;
+        chksumStats = Plugin_078_SDM->getSuccCount();
+        chksumStats += '/';
+        chksumStats += Plugin_078_SDM->getErrCount();
+        addHtml(chksumStats);
+      }
+
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-        serialHelper_webformLoad(event);
-
-        if (P078_DEV_ID == 0 || P078_DEV_ID > 247 || P078_BAUDRATE >= 6) {
-          // Load some defaults
-          P078_DEV_ID = P078_DEV_ID_DFLT;
-          P078_MODEL = P078_MODEL_DFLT;
-          P078_BAUDRATE = P078_BAUDRATE_DFLT;
-          P078_QUERY1 = P078_QUERY1_DFLT;
-          P078_QUERY2 = P078_QUERY2_DFLT;
-          P078_QUERY3 = P078_QUERY3_DFLT;
-          P078_QUERY4 = P078_QUERY4_DFLT;
-        }
-        addFormNumericBox(F("Modbus Address"), P078_DEV_ID_LABEL, P078_DEV_ID, 1, 247);
-
         {
           String options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
           addFormSelector(F("Model Type"), P078_MODEL_LABEL, 4, options_model, NULL, P078_MODEL );
-        }
-        {
-          String options_baudrate[6];
-          for (int i = 0; i < 6; ++i) {
-            options_baudrate[i] = String(p078_storageValueToBaudrate(i));
-          }
-          addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, NULL, P078_BAUDRATE );
-        }
-
-        if (P078_MODEL == 0 && P078_BAUDRATE > 3)
-          addFormNote(F("<span style=\"color:red\"> SDM120 only allows up to 9600 baud with default 2400!</span>"));
-
-        if (P078_MODEL == 3 && P078_BAUDRATE == 0)
-          addFormNote(F("<span style=\"color:red\"> SDM630 only allows 2400 to 38400 baud with default 9600!</span>"));
-
-        if (Plugin_078_SDM != nullptr) {
-          addRowLabel(F("Checksum (pass/fail)"));
-          String chksumStats;
-          chksumStats = Plugin_078_SDM->getSuccCount();
-          chksumStats += '/';
-          chksumStats += Plugin_078_SDM->getErrCount();
-          addHtml(chksumStats);
         }
 
         {
@@ -185,7 +190,6 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-          serialHelper_webformSave(event);
           // Save output selector parameters.
           for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
             const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;

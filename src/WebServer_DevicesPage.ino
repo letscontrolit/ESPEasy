@@ -302,6 +302,13 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     }
   }
 
+  if (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL ||
+      Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1) 
+  {
+    serialHelper_webformSave(&TempEvent);
+  }
+
+
   const byte valueCount = getValueCountForTask(taskIndex);
   for (byte varNr = 0; varNr < valueCount; varNr++)
   {
@@ -773,6 +780,13 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
         }
       }
     }
+    if (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL ||
+        Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1) 
+    {
+      serialHelper_webformLoad(&TempEvent);
+      String webformLoadString;
+      PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
+    }
 
     if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
       addFormSubHeader(F("I2C options"));
@@ -842,6 +856,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
       addFormSubHeader(F("Device settings"));
     }
+
 
     {
       int pconfigIndex = -1;

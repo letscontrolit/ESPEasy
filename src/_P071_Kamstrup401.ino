@@ -82,14 +82,11 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        serialHelper_webformLoad(event);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
-
       success = true;
       break;
     }
