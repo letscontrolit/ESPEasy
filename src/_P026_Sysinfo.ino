@@ -52,6 +52,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].FormulaOption  = true;
+      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
       break;
     }
 
@@ -88,6 +89,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVTYPE:
     {
       event->Par1 = PCONFIG(P026_SENSOR_TYPE_INDEX);
+      event->Par2 = P026_SENSOR_TYPE_INDEX;
       success = true;
       break;
     }
@@ -107,7 +109,6 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      sensorTypeHelper_webformLoad_simple(event, P026_SENSOR_TYPE_INDEX);
       String options[P026_NR_OUTPUT_OPTIONS];
 
       for (byte i = 0; i < P026_NR_OUTPUT_OPTIONS; ++i) {
@@ -130,7 +131,6 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         const byte choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_026_valuename(choice, false));
       }
-      sensorTypeHelper_saveSensorType(event, P026_SENSOR_TYPE_INDEX);
       success = true;
       break;
     }

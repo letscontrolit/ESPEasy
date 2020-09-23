@@ -93,6 +93,9 @@ void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, byte pconfig
 
 void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, int optionCount, const byte options[])
 {
+  if (pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
+    return;
+  }
   Sensor_VType choice      = static_cast<Sensor_VType>(PCONFIG(pconfigIndex));
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
   if (!validDeviceIndex(DeviceIndex)) {
@@ -100,7 +103,8 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
     PCONFIG(pconfigIndex) = static_cast<byte>(choice);
   } else if (getValueCountFromSensorType(choice) != getValueCountForTask(event->TaskIndex)) {
     // Invalid value
-    choice                = getDeviceVTypeForTask(event->TaskIndex);
+    int pconfig_index_dummy;
+    choice                = getDeviceVTypeForTask(event->TaskIndex, pconfig_index_dummy);
     PCONFIG(pconfigIndex) = static_cast<byte>(choice);
   }
   addRowLabel(F("Output Data Type"));
@@ -120,12 +124,6 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
   addFormNote(F("Changing 'Output Data Type' may affect behavior of some controllers (e.g. Domoticz)"));
 
   // addFormSelector(F("Output Data Type"), PCONFIG_LABEL(pconfigIndex), 11, options, optionValues, choice);
-}
-
-void sensorTypeHelper_saveSensorType(struct EventStruct *event, byte pconfigIndex)
-{
-  pconfig_webformSave(event, pconfigIndex);
-  ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(pconfigIndex))));
 }
 
 void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, byte pconfigIndex, byte valueIndex, const String& defaultValueName)

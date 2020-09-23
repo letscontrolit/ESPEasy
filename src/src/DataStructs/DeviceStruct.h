@@ -43,6 +43,12 @@ enum class Sensor_VType : byte {
   SENSOR_TYPE_STRING          =   22
 };
 
+enum class Output_Data_type_t : byte {
+  Default = 0,
+  Simple, // SENSOR_TYPE_SINGLE, _DUAL, _TRIPLE, _QUAD
+  All
+
+};
 
 /*********************************************************************************************\
 * DeviceStruct
@@ -61,6 +67,7 @@ struct DeviceStruct
   Sensor_VType VType;                  // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
   byte         Ports;                  // Port to use when device has multiple I/O pins  (N.B. not used much)
   byte         ValueCount;             // The number of output values of a plugin. The value should match the number of keys
+  Output_Data_type_t OutputDataType;   // Subset of selectable output data types
                                        // PLUGIN_VALUENAME1_xxx
   bool         PullUpOption       : 1; // Allow to set internal pull-up resistors.
   bool         InverseLogicOption : 1; // Allow to invert the boolean state (e.g. a switch)

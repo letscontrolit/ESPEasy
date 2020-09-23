@@ -30,6 +30,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
+        Device[deviceCount].OutputDataType = Output_Data_type_t::All;
         break;
       }
 
@@ -56,20 +57,19 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVTYPE:
       {
         event->Par1 = PCONFIG(0);
+        event->Par2 = 0;
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        sensorTypeHelper_webformLoad_allTypes(event, 0);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        sensorTypeHelper_saveSensorType(event, 0);
         success = true;
         break;
       }

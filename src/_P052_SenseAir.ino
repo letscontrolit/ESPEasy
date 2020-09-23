@@ -155,6 +155,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
       break;
     }
 
@@ -189,6 +190,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_GET_DEVICEVTYPE:
     {
       event->Par1 = PCONFIG(P052_SENSOR_TYPE_INDEX);
+      event->Par2 = P052_SENSOR_TYPE_INDEX;
       success = true;
       break;
     }
@@ -274,6 +276,20 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_WEBFORM_LOAD: {
       serialHelper_webformLoad(event);
 
+      {
+        String options[P052_NR_OUTPUT_OPTIONS];
+
+        for (byte i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
+          options[i] = Plugin_052_valuename(i, true);
+        }
+
+        for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
+          const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P052_NR_OUTPUT_OPTIONS, options);
+        }
+      }
+
+
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -351,7 +367,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
           }
         }
       }
-      sensorTypeHelper_webformLoad_simple(event, P052_SENSOR_TYPE_INDEX);
 
       /*
          // ABC functionality disabled for now, due to a bug in the firmware.
@@ -363,18 +378,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
          NULL, choiceABCperiod);
        */
 
-      {
-        String options[P052_NR_OUTPUT_OPTIONS];
-
-        for (byte i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
-          options[i] = Plugin_052_valuename(i, true);
-        }
-
-        for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
-          const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
-          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P052_NR_OUTPUT_OPTIONS, options);
-        }
-      }
 
       success = true;
       break;
@@ -389,7 +392,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         const byte choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_052_valuename(choice, false));
       }
-      sensorTypeHelper_saveSensorType(event, P052_SENSOR_TYPE_INDEX);
 
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));

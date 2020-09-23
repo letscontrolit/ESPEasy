@@ -79,7 +79,7 @@ void run_compiletime_checks() {
   // Has to be round up to multiple of 4.
   const unsigned int LogStructSize = ((12u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
-  check_size<DeviceStruct,                          7u>();
+  check_size<DeviceStruct,                          8u>(); // Is not stored
   check_size<ProtocolStruct,                        6u>();
   #ifdef USES_NOTIFIER
   check_size<NotificationStruct,                    3u>();

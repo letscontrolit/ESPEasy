@@ -1066,7 +1066,8 @@ void createRuleEvents(struct EventStruct *event) {
 
   LoadTaskSettings(event->TaskIndex);
   byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-  const Sensor_VType sensorType = getDeviceVTypeForTask(event->TaskIndex);
+  int pconfig_index;
+  const Sensor_VType sensorType = getDeviceVTypeForTask(event->TaskIndex, pconfig_index);
 
   const byte valueCount = getValueCountForTask(event->TaskIndex);
 
