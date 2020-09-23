@@ -867,6 +867,7 @@ To create/register a plugin, you have to :
     //#define USES_P095  // TFT ILI9341
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
+    #define USES_P100   // Pulse Counter - DS2423
 #endif
 
 
@@ -1115,6 +1116,15 @@ To create/register a plugin, you have to :
   #endif
   #ifdef USES_C017 // Zabbix
     #undef USES_C017
+  #endif
+  #ifdef USES_P092
+    #undef USES_P092   // DL-Bus
+  #endif
+  #ifdef USES_P093
+    #undef USES_P093   // Mitsubishi Heat Pump
+  #endif
+  #ifdef USES_P100 // Pulse Counter - DS2423
+    #undef USES_P100
   #endif
 #endif
 
