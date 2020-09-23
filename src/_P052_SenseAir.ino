@@ -189,8 +189,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_GET_DEVICEVTYPE:
     {
-      event->Par1 = PCONFIG(P052_SENSOR_TYPE_INDEX);
-      event->Par2 = P052_SENSOR_TYPE_INDEX;
+      event->sensorType = static_cast<Sensor_VType>(PCONFIG(P052_SENSOR_TYPE_INDEX));
+      event->idx = P052_SENSOR_TYPE_INDEX;
       success = true;
       break;
     }
@@ -209,13 +209,13 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_SET_DEFAULTS:
     {
+      PCONFIG(P052_SENSOR_TYPE_INDEX) = static_cast<int16_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
       PCONFIG(0) = 1;   // "CO2"
 
       for (byte i = 1; i < VARS_PER_TASK; ++i) {
         PCONFIG(i) = 0; // "Empty"
       }
 
-      //    PCONFIG(P052_SENSOR_TYPE_INDEX) = Sensor_VType::SENSOR_TYPE_SINGLE;
       success = true;
       break;
     }

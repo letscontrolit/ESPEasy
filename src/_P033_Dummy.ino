@@ -56,8 +56,8 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVTYPE:
       {
-        event->Par1 = PCONFIG(0);
-        event->Par2 = 0;
+        event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
+        event->idx = 0;
         success = true;
         break;
       }

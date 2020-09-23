@@ -137,14 +137,19 @@ int getValueCountForTask(taskIndex_t   taskIndex) {
   return TempEvent.Par1;
 }
 
+Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex) {
+  int dummyIndex;
+  return getDeviceVTypeForTask(taskIndex, dummyIndex);
+}
+
 Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex, int& pconfig_index) {
   struct EventStruct TempEvent;
   TempEvent.TaskIndex = taskIndex;
   String dummy;
   if (PluginCall(PLUGIN_GET_DEVICEVTYPE, &TempEvent, dummy)) {
-    pconfig_index = TempEvent.Par2;
+    pconfig_index = TempEvent.idx;
   } else {
     pconfig_index = -1;
   }
-  return static_cast<Sensor_VType>(TempEvent.Par1);
+  return TempEvent.sensorType;
 }
