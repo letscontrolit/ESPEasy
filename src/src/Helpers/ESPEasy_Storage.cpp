@@ -230,6 +230,14 @@ String BuildFixes()
     }
     Settings.I2C_Multiplexer_ResetPin = -1;
   }
+  if (Settings.Build < 20111) {
+    #ifdef ESP32
+    constexpr byte maxStatesesp32 = sizeof(Settings.PinBootStates_ESP32) / sizeof(Settings.PinBootStates_ESP32[0]);
+    for (byte i = 0; i < maxStatesesp32; ++i) {
+      Settings.PinBootStates_ESP32[i] = 0;
+    }
+    #endif
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();

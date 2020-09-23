@@ -46,7 +46,7 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
         return error;
       }
 
-      LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+      LoadControllerSettings(enabledMqttController, ControllerSettings);
       mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
     }
 
