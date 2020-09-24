@@ -47,7 +47,6 @@ enum class Output_Data_type_t : byte {
   Default = 0,
   Simple, // SENSOR_TYPE_SINGLE, _DUAL, _TRIPLE, _QUAD
   All
-
 };
 
 /*********************************************************************************************\
@@ -62,22 +61,22 @@ struct DeviceStruct
 
   bool usesTaskDevicePin(int pin) const;
 
-  byte         Number;                 // Plugin ID number.   (PLUGIN_ID_xxx)
-  byte         Type;                   // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
-  Sensor_VType VType;                  // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
-  byte         Ports;                  // Port to use when device has multiple I/O pins  (N.B. not used much)
-  byte         ValueCount;             // The number of output values of a plugin. The value should match the number of keys
-  Output_Data_type_t OutputDataType;   // Subset of selectable output data types
-                                       // PLUGIN_VALUENAME1_xxx
-  bool         PullUpOption       : 1; // Allow to set internal pull-up resistors.
-  bool         InverseLogicOption : 1; // Allow to invert the boolean state (e.g. a switch)
-  bool         FormulaOption      : 1; // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
-  bool         Custom             : 1;
-  bool         SendDataOption     : 1; // Allow to send data to a controller.
-  bool         GlobalSyncOption   : 1; // No longer used. Was used for ESPeasy values sync between nodes
-  bool         TimerOption        : 1; // Allow to set the "Interval" timer for the plugin.
-  bool         TimerOptional      : 1; // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
-  bool         DecimalsOnly       : 1; // Allow to set the number of decimals (otherwise treated a 0 decimals)
+  byte               Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
+  byte               Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
+  Sensor_VType       VType;          // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
+  byte               Ports;          // Port to use when device has multiple I/O pins  (N.B. not used much)
+  byte               ValueCount;     // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
+  Output_Data_type_t OutputDataType; // Subset of selectable output data types (Default = no selection)
+                                     
+  bool PullUpOption       : 1;       // Allow to set internal pull-up resistors.
+  bool InverseLogicOption : 1;       // Allow to invert the boolean state (e.g. a switch)
+  bool FormulaOption      : 1;       // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
+  bool Custom             : 1;
+  bool SendDataOption     : 1;       // Allow to send data to a controller.
+  bool GlobalSyncOption   : 1;       // No longer used. Was used for ESPeasy values sync between nodes
+  bool TimerOption        : 1;       // Allow to set the "Interval" timer for the plugin.
+  bool TimerOptional      : 1;       // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
+  bool DecimalsOnly       : 1;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
 };
 typedef std::vector<DeviceStruct> DeviceVector;
 
