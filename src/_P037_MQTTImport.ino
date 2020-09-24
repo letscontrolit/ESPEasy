@@ -384,13 +384,10 @@ void mqttcallback_037(char* c_topic, byte* b_payload, unsigned int length)
     if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_037)                // if we have found a 037 device, then give it something to think about!
     {
       // We generate a temp event structure to pass to the plugins
-      struct EventStruct TempEvent;
-
+      struct EventStruct TempEvent(y);
       TempEvent.String1 = topic;                            // This is the topic of the message
       TempEvent.String2 = payload;                          // This is the payload
-      TempEvent.TaskIndex = y;
       LoadTaskSettings(TempEvent.TaskIndex);
-      TempEvent.BaseVarIndex = y * VARS_PER_TASK;           // This is the index in Uservar where values for this task are stored
       Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_IMPORT, &TempEvent);
     }
   }

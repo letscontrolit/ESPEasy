@@ -65,8 +65,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         } else {
           // FIXME TD-er: Command is not parsed for template arguments.
           String cmd;
-          struct EventStruct TempEvent;
-          TempEvent.TaskIndex = event->TaskIndex;
+          struct EventStruct TempEvent(event->TaskIndex);
           bool validTopic = false;
           const int lastindex = event->String1.lastIndexOf('/');
           const String lastPartTopic = event->String1.substring(lastindex + 1);

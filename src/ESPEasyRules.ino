@@ -1065,7 +1065,6 @@ void createRuleEvents(struct EventStruct *event) {
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
   LoadTaskSettings(event->TaskIndex);
-  byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
   const Sensor_VType sensorType = getDeviceVTypeForTask(event->TaskIndex);
 
   const byte valueCount = getValueCountForTask(event->TaskIndex);
@@ -1080,8 +1079,8 @@ void createRuleEvents(struct EventStruct *event) {
 
     switch (sensorType) {
       case Sensor_VType::SENSOR_TYPE_LONG:
-        eventString += (unsigned long)UserVar[BaseVarIndex] +
-                       ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
+        eventString += (unsigned long)UserVar[event->BaseVarIndex] +
+                       ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
         break;
       case Sensor_VType::SENSOR_TYPE_STRING:
 
@@ -1090,7 +1089,7 @@ void createRuleEvents(struct EventStruct *event) {
       default:
 
         // FIXME TD-er: Do we need to call formatUserVarNoCheck here? (or with check)
-        eventString += UserVar[BaseVarIndex + varNr];
+        eventString += UserVar[event->BaseVarIndex + varNr];
         break;
     }
     eventQueue.add(eventString);

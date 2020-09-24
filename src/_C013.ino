@@ -303,8 +303,7 @@ void C013_Receive(struct EventStruct *event) {
           }
 
           if (Settings.UseRules) {
-            struct EventStruct TempEvent;
-            TempEvent.TaskIndex = dataReply.destTaskIndex;
+            struct EventStruct TempEvent(dataReply.destTaskIndex);
             createRuleEvents(&TempEvent);
           }
         }

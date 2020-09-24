@@ -75,8 +75,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
 
         String name = topicSplit[4];
         String cmd = topicSplit[5];
-        struct EventStruct TempEvent;
-        TempEvent.TaskIndex = event->TaskIndex;
+        struct EventStruct TempEvent(event->TaskIndex);
         TempEvent.Par1 = topicSplit[6].toInt();
         TempEvent.Par2 = 0;
         TempEvent.Par3 = 0;

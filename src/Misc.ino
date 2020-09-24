@@ -1381,8 +1381,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
           }
         } else {
           // try if this is a get config request
-          struct EventStruct TempEvent;
-          TempEvent.TaskIndex = taskIndex;
+          struct EventStruct TempEvent(taskIndex);
           String tmpName = valueName;
 
           if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))

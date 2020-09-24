@@ -128,8 +128,7 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
               if (!validDeviceIndex(DeviceIndex)) {
                 break;
               }
-              event->TaskIndex = index;
-              event->BaseVarIndex = index * VARS_PER_TASK;
+              event->setTaskIndex(index);
               if (!validUserVarIndex(event->BaseVarIndex)) {
                 break;
               }

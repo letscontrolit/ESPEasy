@@ -509,23 +509,19 @@ void SensorSendTask(taskIndex_t TaskIndex)
   checkRAM(F("SensorSendTask"));
   if (Settings.TaskDeviceEnabled[TaskIndex])
   {
-    byte varIndex = TaskIndex * VARS_PER_TASK;
-
     bool success = false;
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
     if (!validDeviceIndex(DeviceIndex)) return;
 
     LoadTaskSettings(TaskIndex);
 
-    struct EventStruct TempEvent;
-    TempEvent.TaskIndex = TaskIndex;
-    TempEvent.BaseVarIndex = varIndex;
+    struct EventStruct TempEvent(TaskIndex);
     // TempEvent.idx = Settings.TaskDeviceID[TaskIndex]; todo check
     TempEvent.sensorType = Device[DeviceIndex].VType;
 
     float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
     for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-      preValue[varNr] = UserVar[varIndex + varNr];
+      preValue[varNr] = UserVar[TempEvent.BaseVarIndex + varNr];
 
     if(Settings.TaskDeviceDataFeed[TaskIndex] == 0)  // only read local connected sensorsfeeds
     {
@@ -545,11 +541,11 @@ void SensorSendTask(taskIndex_t TaskIndex)
           {
             String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
             formula.replace(F("%pvalue%"), String(preValue[varNr]));
-            formula.replace(F("%value%"), String(UserVar[varIndex + varNr]));
+            formula.replace(F("%value%"), String(UserVar[TempEvent.BaseVarIndex + varNr]));
             float result = 0;
             byte error = Calculate(formula.c_str(), &result);
             if (error == 0)
-              UserVar[varIndex + varNr] = result;
+              UserVar[TempEvent.BaseVarIndex + varNr] = result;
           }
         }
         STOP_TIMER(COMPUTE_FORMULA_STATS);

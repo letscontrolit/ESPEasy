@@ -160,8 +160,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
 
                 // trigger rulesprocessing
                 if (Settings.UseRules) {
-                  struct EventStruct TempEvent;
-                  TempEvent.TaskIndex = x;
+                  struct EventStruct TempEvent(x);
                   parseCommandString(&TempEvent, action);
                   createRuleEvents(&TempEvent);
                 }

@@ -127,8 +127,7 @@ void handle_devices() {
       addHtmlError(SaveTaskSettings(taskIndex));
       addHtmlError(SaveSettings());
 
-      struct EventStruct TempEvent;
-      TempEvent.TaskIndex = taskIndex;
+      struct EventStruct TempEvent(taskIndex);
       String dummy;
 
       if (Settings.TaskDeviceEnabled[taskIndex]) {
@@ -248,8 +247,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     Settings.I2C_Flags[taskIndex] = flags;
   }
 
-  struct EventStruct TempEvent;
-  TempEvent.TaskIndex = taskIndex;
+  struct EventStruct TempEvent(taskIndex);
 
   ExtraTaskSettings.clear();
   {
@@ -410,7 +408,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
 
   String deviceName;
 
-  for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
+  for (taskIndex_t x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
     const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.TaskDeviceNumber[x];
@@ -450,8 +448,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
     if (pluginID_set)
     {
       LoadTaskSettings(x);
-      struct EventStruct TempEvent;
-      TempEvent.TaskIndex = x;
+      struct EventStruct TempEvent(x);
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
       html_TD();
@@ -683,8 +680,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
   LoadTaskSettings(taskIndex);
-  struct EventStruct TempEvent;
-  TempEvent.TaskIndex = taskIndex;
+  struct EventStruct TempEvent(taskIndex);
 
   html_add_form();
   html_table_class_normal();

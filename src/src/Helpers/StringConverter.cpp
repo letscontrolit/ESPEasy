@@ -222,11 +222,10 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     }
     return "";
   }
-  const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
 
   switch (Device[DeviceIndex].VType) {
     case Sensor_VType::SENSOR_TYPE_LONG:
-      return String((unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16));
+      return String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
     case Sensor_VType::SENSOR_TYPE_STRING:
       return event->String2;
 
@@ -234,7 +233,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
       break;
   }
 
-  float f(UserVar[BaseVarIndex + rel_index]);
+  float f(UserVar[event->BaseVarIndex + rel_index]);
 
   if (mustCheck && !isValidFloat(f)) {
     isvalid = false;
@@ -260,17 +259,13 @@ String formatUserVarNoCheck(taskIndex_t TaskIndex, byte rel_index) {
   bool isvalid;
 
   // FIXME TD-er: calls to this function cannot handle Sensor_VType::SENSOR_TYPE_STRING
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = TaskIndex;
+  struct EventStruct TempEvent(TaskIndex);
   return doFormatUserVar(&TempEvent, rel_index, false, isvalid);
 }
 
 String formatUserVar(taskIndex_t TaskIndex, byte rel_index, bool& isvalid) {
   // FIXME TD-er: calls to this function cannot handle Sensor_VType::SENSOR_TYPE_STRING
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = TaskIndex;
+  struct EventStruct TempEvent(TaskIndex);
   return doFormatUserVar(&TempEvent, rel_index, true, isvalid);
 }
 

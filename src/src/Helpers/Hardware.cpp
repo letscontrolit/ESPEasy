@@ -808,9 +808,7 @@ int touchPinToGpio(int touch_pin)
 // change of device: cleanup old device and reset default settings
 // ********************************************************************************
 void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskIndex) {
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = taskIndex;
+  struct EventStruct TempEvent(taskIndex);
   String dummy;
 
   // let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex

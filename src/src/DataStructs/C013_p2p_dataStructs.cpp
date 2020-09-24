@@ -4,10 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 
-C013_SensorInfoStruct::C013_SensorInfoStruct() :
-  sourceTaskIndex(INVALID_TASK_INDEX),
-  destTaskIndex(INVALID_TASK_INDEX),
-  deviceNumber(INVALID_PLUGIN_ID)
+C013_SensorInfoStruct::C013_SensorInfoStruct()
 {
   ZERO_FILL(taskName);
 
@@ -30,9 +27,7 @@ bool C013_SensorInfoStruct::isValid() const
   return true;
 }
 
-C013_SensorDataStruct::C013_SensorDataStruct() :
-  sourceTaskIndex(INVALID_TASK_INDEX),
-  destTaskIndex(INVALID_TASK_INDEX)
+C013_SensorDataStruct::C013_SensorDataStruct()
 {
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     Values[i] = 0.0f;

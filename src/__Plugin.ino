@@ -1183,8 +1183,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
             if (validDeviceIndex(DeviceIndex)) {
-              TempEvent.TaskIndex    = taskIndex;
-              TempEvent.BaseVarIndex = taskIndex * VARS_PER_TASK;
+              TempEvent.setTaskIndex(taskIndex);
               TempEvent.sensorType   = Device[DeviceIndex].VType;
               prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
               checkRAM(F("PluginCall_s"), taskIndex);
@@ -1227,8 +1226,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
           if (validDeviceIndex(DeviceIndex)) {
-            TempEvent.TaskIndex    = taskIndex;
-            TempEvent.BaseVarIndex = taskIndex * VARS_PER_TASK;
+            TempEvent.setTaskIndex(taskIndex);
 
             // TempEvent.idx = Settings.TaskDeviceID[taskIndex]; todo check
             TempEvent.sensorType = Device[DeviceIndex].VType;
@@ -1271,8 +1269,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
             const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
             if (validDeviceIndex(DeviceIndex)) {
-              TempEvent.TaskIndex    = taskIndex;
-              TempEvent.BaseVarIndex = taskIndex * VARS_PER_TASK;
+              TempEvent.setTaskIndex(taskIndex);
 
               // TempEvent.idx = Settings.TaskDeviceID[taskIndex]; todo check
               TempEvent.sensorType      = Device[DeviceIndex].VType;

@@ -130,8 +130,7 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
 }
 
 int getValueCountForTask(taskIndex_t   taskIndex) {
-  struct EventStruct TempEvent;
-  TempEvent.TaskIndex = taskIndex;
+  struct EventStruct TempEvent(taskIndex);
   String dummy;
   PluginCall(PLUGIN_GET_DEVICEVALUECOUNT, &TempEvent, dummy);
   return TempEvent.Par1;
@@ -143,8 +142,7 @@ Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex) {
 }
 
 Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex, int& pconfig_index) {
-  struct EventStruct TempEvent;
-  TempEvent.TaskIndex = taskIndex;
+  struct EventStruct TempEvent(taskIndex);
   String dummy;
   if (PluginCall(PLUGIN_GET_DEVICEVTYPE, &TempEvent, dummy)) {
     pconfig_index = TempEvent.idx;

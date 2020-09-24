@@ -15,11 +15,9 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, byte val
   sensorType(event->sensorType),
   valueCount(value_count)
 {
-  const byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
-
   for (byte i = 0; i < VARS_PER_TASK; ++i) {
     if (i < value_count) {
-      values[i] = UserVar[BaseVarIndex + i];
+      values[i] = UserVar[event->BaseVarIndex + i];
     } else {
       values[i] = 0.0f;
     }

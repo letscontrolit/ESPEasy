@@ -534,8 +534,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           String cmd;
           int valueNr=0;
           taskIndex_t taskIndex = INVALID_TASK_INDEX;
-          struct EventStruct TempEvent;
-          TempEvent.TaskIndex = event->TaskIndex;
+          struct EventStruct TempEvent(event->TaskIndex);
           TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_MQTT; // to trigger the correct acknowledgment
           int lastindex = event->String1.lastIndexOf('/');
           errorCounter = 0;
