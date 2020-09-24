@@ -412,10 +412,7 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
 
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(it->second.TaskIndex);
 
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex    = it->second.TaskIndex;
-  TempEvent.BaseVarIndex = it->second.TaskIndex * VARS_PER_TASK;
+  struct EventStruct TempEvent(it->second.TaskIndex);
   TempEvent.Par1         = it->second.Par1;
   TempEvent.Par2         = it->second.Par2;
   TempEvent.Par3         = it->second.Par3;
@@ -595,7 +592,7 @@ void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t plu
   const unsigned long mixedTimerId = getMixedId(PLUGIN_TIMER, createPluginTimerId(deviceIndex, Par1));
   systemTimerStruct   timer_data;
 
-  // timer_data.TaskIndex        = deviceIndex;
+  // PLUGIN_TIMER does not address a task, so don't set TaskIndex
   timer_data.Par1            = Par1;
   timer_data.Par2            = Par2;
   timer_data.Par3            = Par3;
@@ -613,8 +610,7 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
   if (it == systemTimers.end()) { return; }
 
   struct EventStruct TempEvent;
-
-  //  TempEvent.TaskIndex = it->second.TaskIndex;
+  // PLUGIN_TIMER does not address a task, so don't set TaskIndex
 
   // extract deviceID from timer id:
   const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;

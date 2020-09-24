@@ -5,39 +5,42 @@
 // ********************************************************************************
 //   Plugin (Task) function calls
 // ********************************************************************************
-#define PLUGIN_INIT_ALL                     1
-#define PLUGIN_INIT                         2
+#define PLUGIN_INIT_ALL                     1 // Not implemented in a plugin, only called during boot
+#define PLUGIN_INIT                         2 // Init the task, called when task is set to enabled (also at boot)
 #define PLUGIN_READ                         3 // This call can yield new data (when success = true) and then send to controllers
 #define PLUGIN_ONCE_A_SECOND                4 // Called once a second
 #define PLUGIN_TEN_PER_SECOND               5 // Called 10x per second (typical for checking new data instead of waiting)
 #define PLUGIN_DEVICE_ADD                   6 // Called at boot for letting a plugin adding itself to list of available plugins/devices
-#define PLUGIN_EVENTLIST_ADD                7
+#define PLUGIN_EVENTLIST_ADD                7 // Not used.
 #define PLUGIN_WEBFORM_SAVE                 8 // Call from web interface to save settings
 #define PLUGIN_WEBFORM_LOAD                 9 // Call from web interface for presenting settings and status of plugin
 #define PLUGIN_WEBFORM_SHOW_VALUES         10 // Call from devices overview page to format values in HTML
-#define PLUGIN_GET_DEVICENAME              11
-#define PLUGIN_GET_DEVICEVALUENAMES        12
-#define PLUGIN_WRITE                       13
-#define PLUGIN_EVENT_OUT                   14
-#define PLUGIN_WEBFORM_SHOW_CONFIG         15
-#define PLUGIN_SERIAL_IN                   16
-#define PLUGIN_UDP_IN                      17
-#define PLUGIN_CLOCK_IN                    18
-#define PLUGIN_TIMER_IN                    19
-#define PLUGIN_FIFTY_PER_SECOND            20
-#define PLUGIN_SET_CONFIG                  21
-#define PLUGIN_GET_DEVICEGPIONAMES         22
-#define PLUGIN_EXIT                        23
-#define PLUGIN_GET_CONFIG                  24
-#define PLUGIN_UNCONDITIONAL_POLL          25
-#define PLUGIN_REQUEST                     26
-#define PLUGIN_TIME_CHANGE                 27
-#define PLUGIN_MONITOR                     28
-#define PLUGIN_SET_DEFAULTS                29
-#define PLUGIN_GET_PACKED_RAW_DATA         30 // Return all data in a compact binary format specific for that plugin.
+#define PLUGIN_GET_DEVICENAME              11 // Call to get the plugin description (e.g. "Switch input - Switch")
+#define PLUGIN_GET_DEVICEVALUENAMES        12 // Call to let the plugin generate some default value names when not defined.
+#define PLUGIN_GET_DEVICEVALUECOUNT        13 // Optional function call to allow tasks to specify the number of output values (e.g. P026_Sysinfo.ino)
+#define PLUGIN_GET_DEVICEVTYPE             14 // Only needed when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
+#define PLUGIN_WRITE                       15 // Called to allow a task to process a command. Must return success = true when it can handle the command.
+#define PLUGIN_EVENT_OUT                   16 // Does not seem to be used
+#define PLUGIN_WEBFORM_SHOW_CONFIG         17 // Called to show non default pin assignment or addresses like for plugins using serial or 1-Wire
+#define PLUGIN_SERIAL_IN                   18 // Called on received data via serial port Serial0 (N.B. this may conflict with sending commands via serial)
+#define PLUGIN_UDP_IN                      19 // Called for received UDP data via ESPEasy p2p which isn't a standard p2p packet. (See C013 for handling standard p2p packets)
+#define PLUGIN_CLOCK_IN                    20 // Called every new minute
+#define PLUGIN_TIMER_IN                    21 // Called with a previously defined event at a specific time, set via setPluginTaskTimer
+#define PLUGIN_FIFTY_PER_SECOND            22 // Called 50 times per second
+#define PLUGIN_SET_CONFIG                  23 // Counterpart of PLUGIN_GET_CONFIG to allow to set a config via a command.
+#define PLUGIN_GET_DEVICEGPIONAMES         24 // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
+#define PLUGIN_EXIT                        25 // Called when a task no longer is enabled (or deleted)
+#define PLUGIN_GET_CONFIG                  26 // Similar to PLUGIN_WRITE, but meant to fetch some information. Must return success = true when it can handle the command.
+#define PLUGIN_UNCONDITIONAL_POLL          27 // Used to be called 10x per sec, but no longer used as GPIO related plugins now use a different technique.
+#define PLUGIN_REQUEST                     28 // Specific command to fetch a state (FIXME TD-er: Seems very similar to PLUGIN_GET_CONFIG)
+#define PLUGIN_TIME_CHANGE                 29 // Called when system time is set (e.g. via NTP)
+#define PLUGIN_MONITOR                     30 // Replaces PLUGIN_UNCONDITIONAL_POLL
+#define PLUGIN_SET_DEFAULTS                31 // Called when assigning a plugin to a task, to set some default config.
+#define PLUGIN_GET_PACKED_RAW_DATA         32 // Return all data in a compact binary format specific for that plugin.
                                               // Needs USES_PACKED_RAW_DATA
-#define PLUGIN_ONLY_TIMER_IN               31
-#define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     32
+#define PLUGIN_ONLY_TIMER_IN               33 // Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
+#define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     34 // Show I2C parameters like address.
+#define PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  35 // When needed, show additional parameters like baudrate or specific serial config
 
 
 

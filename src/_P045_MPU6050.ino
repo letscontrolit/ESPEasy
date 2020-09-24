@@ -82,7 +82,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number       = PLUGIN_ID_045;
       Device[deviceCount].Type           = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType          = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].ValueCount     = 1;    // Unfortunatly domoticz has no custom multivalue sensors.
       Device[deviceCount].SendDataOption = true; //   and I use Domoticz ... so there.
       Device[deviceCount].TimerOption    = true;
@@ -277,7 +277,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 
             // The default sensorType of the device is a single sensor value. But for detection movement we want it to be
             // a switch so we change the sensortype here. Looks like a legal thing to do because _P001_Switch does it as well.
-            event->sensorType = SENSOR_TYPE_SWITCH;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
             break;
           }
 
