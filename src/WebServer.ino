@@ -1036,12 +1036,12 @@ void getConfig_dat_file_layout() {
   int struct_size = 0;
 
   // background
-  const uint32_t realSize = SettingsType::getFileSize(SettingsType::TaskSettings_Type);
+  const uint32_t realSize = SettingsType::getFileSize(SettingsType::Enum::TaskSettings_Type);
   createSvgHorRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
 
-  for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+  for (int st = 0; st < static_cast<int>(SettingsType::Enum::SettingsType_MAX); ++st) {
     SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
-    if (SettingsType::getSettingsFile(settingsType) == SettingsType::FILE_CONFIG_type) {
+    if (SettingsType::getSettingsFile(settingsType) == SettingsType::SettingsFileEnum::FILE_CONFIG_type) {
       unsigned int color = SettingsType::getSVGcolor(settingsType);
       SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
 
@@ -1057,7 +1057,7 @@ void getConfig_dat_file_layout() {
   // Text labels
   float textXoffset = SVG_BAR_WIDTH + 2;
   float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
-  createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::TaskSettings_Type), textXoffset, textYoffset);
+  createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::Enum::TaskSettings_Type), textXoffset, textYoffset);
   addHtml(F("</svg>\n"));
 }
 

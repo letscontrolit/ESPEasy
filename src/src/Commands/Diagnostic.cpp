@@ -94,7 +94,7 @@ String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
   showSettingsFileLayout = true;
   Command_MemInfo(event, Line);
 
-  for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+  for (int st = 0; st < static_cast<int>(SettingsType::Enum::SettingsType_MAX); ++st) {
     SettingsType::SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
     int max_index, offset, max_size;
     int struct_size = 0;
