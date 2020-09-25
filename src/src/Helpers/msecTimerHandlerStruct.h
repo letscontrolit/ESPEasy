@@ -2,11 +2,11 @@
 #define HELPERS_MSECTIMERHANDLERSTRUCT_H
 
 
+#include <Arduino.h>
 #include <list>
 
 #include "../DataStructs/timer_id_couple.h"
 
-class String;
 
 struct msecTimerHandlerStruct {
   msecTimerHandlerStruct();

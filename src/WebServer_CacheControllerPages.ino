@@ -11,7 +11,7 @@ void handle_dumpcache() {
   unsigned long timestamp;
   byte  controller_idx;
   byte  TaskIndex;
-  byte  sensorType;
+  Sensor_VType  sensorType;
   byte  valueCount;
   float val1;
   float val2;
@@ -47,7 +47,7 @@ void handle_dumpcache() {
       html += ';';
       html += controller_idx;
       html += ';';
-      html += sensorType;
+      html += static_cast<byte>(sensorType);
       html += ';';
       html += TaskIndex;
       html += ';';

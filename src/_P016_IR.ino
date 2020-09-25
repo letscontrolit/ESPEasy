@@ -109,8 +109,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
   {
     Device[++deviceCount].Number = PLUGIN_ID_016;
     Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-    if (P016_SEND_IR_TO_CONTROLLER) Device[deviceCount].VType = SENSOR_TYPE_STRING;
-    else Device[deviceCount].VType = SENSOR_TYPE_LONG;
+    if (P016_SEND_IR_TO_CONTROLLER) Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_STRING;
+    else Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_LONG;
     Device[deviceCount].Ports = 0;
     Device[deviceCount].PullUpOption = true;
     Device[deviceCount].InverseLogicOption = true;

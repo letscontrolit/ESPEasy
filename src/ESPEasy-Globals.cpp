@@ -1,8 +1,7 @@
 #include <Arduino.h>
 
 #include "ESPEasy-Globals.h"
-#include "ESPEasy_plugindefs.h"
-
+#include "src/DataStructs/ESPEasy_plugin_functions.h"
 
 #if defined(ESP32)
   int8_t ledChannelPin[16];
@@ -24,8 +23,6 @@ unsigned long lastSend = 0;
 unsigned long lastWeb = 0;
 byte cmd_within_mainloop = 0;
 unsigned long wdcounter = 0;
-unsigned long timerAPoff = 0;    // Timer to check whether the AP mode should be disabled (0 = disabled)
-unsigned long timerAPstart = 0;  // Timer to start AP mode, started when no valid network is detected.
 unsigned long timerAwakeFromDeepSleep = 0;
 
 

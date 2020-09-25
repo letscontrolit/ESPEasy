@@ -7,6 +7,8 @@
 #define NPLUGIN_ID_002         2
 #define NPLUGIN_NAME_002       "Buzzer"
 
+#include "src/Helpers/Audio.h"
+
 boolean NPlugin_002(NPlugin::Function function, struct EventStruct *event, String& string)
 {
   boolean success = false;

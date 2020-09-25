@@ -16,8 +16,13 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
 
+#include "../Helpers/StringParser.h"
+
+#include "Misc.h"
+
 #include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_fdwdecl.h"
+#include "../../_Plugin_Helper.h"
 
 
 // -V::569
@@ -207,7 +212,9 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     return "0";
   }
 
-  if (Device[DeviceIndex].ValueCount <= rel_index) {
+  const byte valueCount = getValueCountForTask(event->TaskIndex);
+
+  if (valueCount <= rel_index) {
     isvalid = false;
 
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -219,19 +226,18 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     }
     return "";
   }
-  const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
 
   switch (Device[DeviceIndex].VType) {
-    case SENSOR_TYPE_LONG:
-      return String((unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16));
-    case SENSOR_TYPE_STRING:
+    case Sensor_VType::SENSOR_TYPE_LONG:
+      return String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
+    case Sensor_VType::SENSOR_TYPE_STRING:
       return event->String2;
 
     default:
       break;
   }
 
-  float f(UserVar[BaseVarIndex + rel_index]);
+  float f(UserVar[event->BaseVarIndex + rel_index]);
 
   if (mustCheck && !isValidFloat(f)) {
     isvalid = false;
@@ -256,18 +262,14 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 String formatUserVarNoCheck(taskIndex_t TaskIndex, byte rel_index) {
   bool isvalid;
 
-  // FIXME TD-er: calls to this function cannot handle SENSOR_TYPE_STRING
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = TaskIndex;
+  // FIXME TD-er: calls to this function cannot handle Sensor_VType::SENSOR_TYPE_STRING
+  struct EventStruct TempEvent(TaskIndex);
   return doFormatUserVar(&TempEvent, rel_index, false, isvalid);
 }
 
 String formatUserVar(taskIndex_t TaskIndex, byte rel_index, bool& isvalid) {
-  // FIXME TD-er: calls to this function cannot handle SENSOR_TYPE_STRING
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = TaskIndex;
+  // FIXME TD-er: calls to this function cannot handle Sensor_VType::SENSOR_TYPE_STRING
+  struct EventStruct TempEvent(TaskIndex);
   return doFormatUserVar(&TempEvent, rel_index, true, isvalid);
 }
 
@@ -678,7 +680,7 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
   SMART_REPL(F("%id%"), String(event->idx))
 
   if (s.indexOf(F("%val")) != -1) {
-    if (event->sensorType == SENSOR_TYPE_LONG) {
+    if (event->sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
       SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
     } else {
       SMART_REPL(F("%val1%"), formatUserVarNoCheck(event, 0))
@@ -687,14 +689,20 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
       SMART_REPL(F("%val4%"), formatUserVarNoCheck(event, 3))
     }
   }
-  LoadTaskSettings(event->TaskIndex);
-  repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+  const bool tskname_found = s.indexOf(F("%tskname%")) != -1;
+  const bool vname_found = s.indexOf(F("%vname")) != -1;
+  if (tskname_found || vname_found) {
+    LoadTaskSettings(event->TaskIndex);
+    if (tskname_found) {
+      repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+    }
 
-  if (s.indexOf(F("%vname")) != -1) {
-    repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
-    repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
-    repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
-    repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
+    if (vname_found) {
+      repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
+      repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
+      repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
+      repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
+    }
   }
 }
 

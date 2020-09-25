@@ -28,7 +28,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_028;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_TEMP_HUM_BARO;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -145,7 +145,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
         if (!P028_data->hasHumidity()) {
           // Patch the sensor type to output only the measured values.
-          event->sensorType = SENSOR_TYPE_TEMP_EMPTY_BARO;
+          event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
         }
         UserVar[event->BaseVarIndex]     = P028_data->last_temp_val;
         UserVar[event->BaseVarIndex + 1] = P028_data->last_hum_val;

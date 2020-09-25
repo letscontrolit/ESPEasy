@@ -13,14 +13,14 @@ ExtendedControllerCredentialsStruct::ExtendedControllerCredentialsStruct() {}
 
 String ExtendedControllerCredentialsStruct::load()
 {
-  return LoadStringArray(SettingsType::ExtdControllerCredentials_Type,
+  return LoadStringArray(SettingsType::Enum::ExtdControllerCredentials_Type,
                            0,
                            _strings, CONTROLLER_MAX * 2, 0);
 }
 
 String ExtendedControllerCredentialsStruct::save() const
 {
-  return SaveStringArray(SettingsType::ExtdControllerCredentials_Type,
+  return SaveStringArray(SettingsType::Enum::ExtdControllerCredentials_Type,
                            0,
                            _strings, CONTROLLER_MAX * 2, 0);
 }

@@ -23,7 +23,7 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_040;
-        Device[deviceCount].VType = SENSOR_TYPE_LONG;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_LONG;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -128,8 +128,7 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
               if (!validDeviceIndex(DeviceIndex)) {
                 break;
               }
-              event->TaskIndex = index;
-              event->BaseVarIndex = index * VARS_PER_TASK;
+              event->setTaskIndex(index);
               if (!validUserVarIndex(event->BaseVarIndex)) {
                 break;
               }

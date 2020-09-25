@@ -73,7 +73,7 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number           = PLUGIN_ID_061;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
       Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = SENSOR_TYPE_SWITCH;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
@@ -161,7 +161,7 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
         if (sentScanCode != actScanCode) // any change to last sent data?
         {
           UserVar[event->BaseVarIndex] = (float)actScanCode;
-          event->sensorType            = SENSOR_TYPE_SWITCH;
+          event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           String log = F("KPad : ScanCode=0x");
           log += String(actScanCode, 16);

@@ -1,15 +1,18 @@
 #include "../Commands/Settings.h"
 
 #include "../../ESPEasy_common.h"
-#include "../Commands/Common.h"
-#include "../Globals/Settings.h"
-#include "../Globals/SecuritySettings.h"
-
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/StringConverter.h"
-
 #include "../../ESPEasy_fdwdecl.h"
 
+#include "../Commands/Common.h"
+
+#include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
+
+#include "../Helpers/ESPEasy_FactoryDefault.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
 
 
 String Command_Settings_Build(struct EventStruct *event, const char* Line)

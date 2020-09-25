@@ -26,7 +26,7 @@ String minutesToDayHourMinute(int minutes);
 
 String secondsToDayHourMinuteSecond(int seconds);
 
-String format_msec_duration(long duration);
+String format_msec_duration(int64_t duration);
 
 // Compute the dew point temperature, given temperature and humidity (temp in Celcius)
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php

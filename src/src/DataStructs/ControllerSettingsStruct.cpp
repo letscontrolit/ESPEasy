@@ -4,6 +4,8 @@
 #include "../../ESPEasy_fdwdecl.h"
 #include "../DataStructs/ESPEasyLimits.h"
 
+#include "../Helpers/StringConverter.h"
+
 
 #include <IPAddress.h>
 #include <WString.h>

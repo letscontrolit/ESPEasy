@@ -1,5 +1,8 @@
 #include "P023_data_struct.h"
 
+#include "../Helpers/Misc.h"
+#include "../Helpers/StringParser.h"
+
 #ifdef USES_P023
 const char Plugin_023_myFont_Size[] PROGMEM = {
   0x05, // SPACE
