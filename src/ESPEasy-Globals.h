@@ -212,11 +212,6 @@ using namespace fs;
 
 
 
-enum gpio_direction {
-  gpio_input,
-  gpio_output,
-  gpio_bidirectional
-};
 
 
 /*********************************************************************************************\

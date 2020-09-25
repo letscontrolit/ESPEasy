@@ -5,12 +5,16 @@
 
 #include "ESPEasyNetwork.h"
 #include "ESPEasy_common.h"
+
+#include "src/DataStructs/SettingsType.h"
+
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/TXBuffer.h"
-#include "src/Static/WebStaticData.h"
-#include "src/DataStructs/SettingsType.h"
 
+#include "src/Helpers/OTA.h"
+
+#include "src/Static/WebStaticData.h"
 
 
 void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean rebooting = false) {

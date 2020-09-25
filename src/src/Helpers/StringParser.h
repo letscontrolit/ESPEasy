@@ -64,5 +64,24 @@ bool findNextDevValNameInString(const String& input,
                                 String      & format);
 
 
+/********************************************************************************************\
+   Check to see if a given argument is a valid taskIndex (argc = 0 => command)
+ \*********************************************************************************************/
+taskIndex_t parseCommandArgumentTaskIndex(const String& string,
+                                          unsigned int  argc);
+
+
+/********************************************************************************************\
+   Get int from command argument (argc = 0 => command)
+ \*********************************************************************************************/
+int parseCommandArgumentInt(const String& string,
+                            unsigned int  argc);
+
+/********************************************************************************************\
+   Parse a command string to event struct
+ \*********************************************************************************************/
+void parseCommandString(struct EventStruct *event,
+                        const String      & string);
+
 
 #endif

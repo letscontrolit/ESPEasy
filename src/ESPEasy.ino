@@ -129,9 +129,13 @@
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_checks.h"
 #include "src/Helpers/Hardware.h"
+#include "src/Helpers/Memory.h"
 #include "src/Helpers/Misc.h"
+#include "src/Helpers/Network.h"
+#include "src/Helpers/OTA.h"
 #include "src/Helpers/PeriodicalActions.h"
 #include "src/Helpers/Scheduler.h"
+#include "src/Helpers/StringGenerator_System.h"
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);

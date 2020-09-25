@@ -7,7 +7,9 @@
 #include "src/Commands/Diagnostic.h"
 
 #include "src/Helpers/Hardware.h"
-
+#include "src/Helpers/Memory.h"
+#include "src/Helpers/OTA.h"
+#include "src/Helpers/StringGenerator_System.h"
 
 #ifdef WEBSERVER_NEW_UI
 

@@ -13,6 +13,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringParser.h"
 
 
 String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)

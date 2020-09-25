@@ -10,6 +10,7 @@
 
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 

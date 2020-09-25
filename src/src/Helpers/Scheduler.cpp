@@ -1,5 +1,7 @@
 #include "Scheduler.h"
 
+#include "../../ESPEasy_common.h"
+
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../Globals/RTC.h"
 #include "../Helpers/DeepSleep.h"

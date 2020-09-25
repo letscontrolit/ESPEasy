@@ -7,201 +7,24 @@
 #include "../../ESPEasy-Globals.h"
 
 
-#define HTML_SYMBOL_WARNING "&#9888;"
-#define HTML_SYMBOL_INPUT   "&#8656;"
-#define HTML_SYMBOL_OUTPUT  "&#8658;"
-#define HTML_SYMBOL_I_O     "&#8660;"
-
-
-#ifdef ESP32
-
-// MFD: adding tone support here while waiting for the Arduino Espressif implementation to catch up
-// As recomandation is not to use external libraries the following code was taken from: https://github.com/lbernstone/Tone Thanks
-  # define TONE_CHANNEL 15
-
-void noToneESP32(uint8_t pin,
-                 uint8_t channel = TONE_CHANNEL);
-
-void toneESP32(uint8_t       pin,
-               unsigned int  frequency,
-               unsigned long duration,
-               uint8_t       channel = TONE_CHANNEL);
-
-#endif // ifdef ESP32
-
-/*********************************************************************************************\
-   ESPEasy specific strings
-\*********************************************************************************************/
-
-
-String getNodeTypeDisplayString(byte nodeType);
-
-
-#ifdef USES_MQTT
-String getMQTT_state();
-#endif // USES_MQTT
-
-/********************************************************************************************\
-   Get system information
- \*********************************************************************************************/
-String getLastBootCauseString();
-
-#ifdef ESP32
-
-// See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
-String  getResetReasonString(byte icore);
-#endif // ifdef ESP32
-
-String  getResetReasonString();
-
-String  getSystemBuildString();
-
-String  getPluginDescriptionString();
-
-String  getSystemLibraryString();
-
-#ifdef ESP8266
-String  getLWIPversion();
-#endif // ifdef ESP8266
-
-bool    puyaSupport();
-
-uint8_t getFlashChipVendorId();
-
-bool    flashChipVendorPuya();
-
-
-/*********************************************************************************************\
-   Memory management
-\*********************************************************************************************/
-
-
-// For keeping track of 'cont' stack
-// See: https://github.com/esp8266/Arduino/issues/2557
-//      https://github.com/esp8266/Arduino/issues/5148#issuecomment-424329183
-//      https://github.com/letscontrolit/ESPEasy/issues/1824
-#ifdef ESP32
-
-// FIXME TD-er: For ESP32 you need to provide the task number, or NULL to get from the calling task.
-uint32_t getCurrentFreeStack();
-
-uint32_t getFreeStackWatermark();
-
-// FIXME TD-er: Must check if these functions are also needed for ESP32.
-bool     canYield();
-
-#else // ifdef ESP32
-
-extern "C" {
-# include <cont.h>
-extern cont_t *g_pcont;
-}
-
-uint32_t getCurrentFreeStack();
-
-uint32_t getFreeStackWatermark();
-
-bool     canYield();
-
-bool     allocatedOnStack(const void *address);
-
-#endif // ESP32
 
 
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
 
-/*********************************************************************************************\
-   Collect the stored preference for factory default
-\*********************************************************************************************/
-void applyFactoryDefaultPref();
-
-
-/*********************************************************************************************\
-   Device GPIO name functions to share flash strings
-\*********************************************************************************************/
-String formatGpioDirection(gpio_direction direction);
-
-String formatGpioLabel(int  gpio,
-                       bool includeWarning);
-
-String formatGpioName(const String & label,
-                      gpio_direction direction,
-                      bool           optional);
-
-String formatGpioName(const String & label,
-                      gpio_direction direction);
-
-String formatGpioName_input(const String& label);
-String formatGpioName_output(const String& label);
-String formatGpioName_bidirectional(const String& label);
-String formatGpioName_input_optional(const String& label);
-
-String formatGpioName_output_optional(const String& label);
-
-// RX/TX are the only signals which are crossed, so they must be labelled like this:
-// "GPIO <-- TX" and "GPIO --> RX"
-String formatGpioName_TX(bool optional);
-
-String formatGpioName_RX(bool optional);
-
-String formatGpioName_TX_HW(bool optional);
-
-String formatGpioName_RX_HW(bool optional);
-
-#ifdef ESP32
-
-String formatGpioName_ADC(int gpio_pin);
-
-#endif // ifdef ESP32
-
-String createGPIO_label(int  gpio,
-                        int  pinnr,
-                        bool input,
-                        bool output,
-                        bool warning);
 
 
 #if defined(ESP32)
-void   analogWriteESP32(int pin,
-                        int value);
+void analogWriteESP32(int pin,
+                      int value);
 #endif // if defined(ESP32)
 
 
-/********************************************************************************************\
-   Status LED
- \*********************************************************************************************/
-#define PWMRANGE_FULL 1023
-#define STATUS_PWM_NORMALVALUE (PWMRANGE_FULL >> 2)
-#define STATUS_PWM_NORMALFADE (PWMRANGE_FULL >> 8)
-#define STATUS_PWM_TRAFFICRISE (PWMRANGE_FULL >> 1)
-
-void statusLED(bool traffic);
 
 /********************************************************************************************\
    delay in milliseconds with background processing
  \*********************************************************************************************/
 void delayBackground(unsigned long dsdelay);
-
-
-/********************************************************************************************\
-   Check to see if a given argument is a valid taskIndex (argc = 0 => command)
- \*********************************************************************************************/
-taskIndex_t parseCommandArgumentTaskIndex(const String& string,
-                                          unsigned int  argc);
-
-
-/********************************************************************************************\
-   Get int from command argument (argc = 0 => command)
- \*********************************************************************************************/
-int parseCommandArgumentInt(const String& string,
-                            unsigned int  argc);
-
-/********************************************************************************************\
-   Parse a command string to event struct
- \*********************************************************************************************/
-void parseCommandString(struct EventStruct *event,
-                        const String      & string);
 
 
 /********************************************************************************************\
@@ -294,17 +117,10 @@ String getTaskDeviceName(taskIndex_t TaskIndex);
 void emergencyReset();
 
 
-/********************************************************************************************\
-   Get free system mem
- \*********************************************************************************************/
-unsigned long FreeMem(void);
-
-unsigned long getMaxFreeBlock();
-
-void          logtimeStringToSeconds(const String& tBuf,
-                                     int           hours,
-                                     int           minutes,
-                                     int           seconds);
+void logtimeStringToSeconds(const String& tBuf,
+                            int           hours,
+                            int           minutes,
+                            int           seconds);
 
 // convert old and new time string to nr of seconds
 // return whether it should be considered a time string.
@@ -315,46 +131,13 @@ bool timeStringToSeconds(const String& tBuf,
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
  \*********************************************************************************************/
-void   delayedReboot(int rebootDelay);
+void delayedReboot(int rebootDelay);
 
-void   reboot();
-
-
-
-void         SendValueLogger(taskIndex_t TaskIndex);
+void reboot();
 
 
-// #ifdef PLUGIN_BUILD_TESTING
+void SendValueLogger(taskIndex_t TaskIndex);
 
-// #define isdigit(n) (n >= '0' && n <= '9') //Conflicts with ArduJson 6+, when this lib is used there is no need for this macro
-
-/********************************************************************************************\
-   Generate a tone of specified frequency on pin
- \*********************************************************************************************/
-void tone_espEasy(uint8_t       _pin,
-                  unsigned int  frequency,
-                  unsigned long duration);
-
-/********************************************************************************************\
-   Play RTTTL string on specified pin
- \*********************************************************************************************/
-void play_rtttl(uint8_t     _pin,
-                const char *p);
-
-// #endif
-
-bool OTA_possible(uint32_t& maxSketchSize,
-                  bool    & use2step);
-
-#ifdef FEATURE_ARDUINO_OTA
-
-/********************************************************************************************\
-   Allow updating via the Arduino OTA-protocol. (this allows you to upload directly from platformio)
- \*********************************************************************************************/
-
-void ArduinoOTAInit();
-
-#endif // ifdef FEATURE_ARDUINO_OTA
 
 
 

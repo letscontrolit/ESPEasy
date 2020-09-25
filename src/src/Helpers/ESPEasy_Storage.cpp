@@ -1,5 +1,6 @@
 #include "ESPEasy_Storage.h"
 
+#include "../../ESPEasy_common.h"
 
 #include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_Log.h"
@@ -21,6 +22,7 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/PeriodicalActions.h"

@@ -15,6 +15,7 @@
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/Misc.h"
+#include "src/Helpers/Network.h"
 #include "src/Helpers/Scheduler.h"
 #include "src/Helpers/StringConverter.h"
 

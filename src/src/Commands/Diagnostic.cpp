@@ -30,6 +30,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringParser.h"
 
 #include <map>
 #include <stdint.h>

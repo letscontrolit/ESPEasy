@@ -263,3 +263,12 @@ void ResetFactory()
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   reboot();
 }
+
+
+/*********************************************************************************************\
+   Collect the stored preference for factory default
+\*********************************************************************************************/
+void applyFactoryDefaultPref() {
+  // TODO TD-er: Store it in more places to make it more persistent
+  Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+}
