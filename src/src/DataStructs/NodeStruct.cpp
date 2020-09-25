@@ -1,15 +1,14 @@
 #include "NodeStruct.h"
 
-#include "../Globals/Settings.h"
 #include "../../ESPEasy-Globals.h"
 #include "../../ESPEasyTimeTypes.h"
 #include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
 #define NODE_STRUCT_AGE_TIMEOUT 120000  // 2 minutes
 
-NodeStruct::NodeStruct() : ESPEasyNowPeer(0), useAP_ESPEasyNow(0), scaled_rssi(0),
-    build(0), age(0), nodeType(0), webgui_portnumber(0)
+NodeStruct::NodeStruct() : ESPEasyNowPeer(0), useAP_ESPEasyNow(0), scaled_rssi(0)
 {}
 
 bool NodeStruct::valid() const {

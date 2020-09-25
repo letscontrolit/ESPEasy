@@ -19,7 +19,7 @@
 #include "src/Globals/SendData_DuplicateChecker.h"
 #include "_CPlugin_Helper.h"
 
-#include "src/Helpers/ESPEasy_now.h"
+//#include "src/Helpers/ESPEasy_now.h"
 #include "src/Helpers/PortStatus.h"
 #include "src/Helpers/Rules_calculate.h"
 

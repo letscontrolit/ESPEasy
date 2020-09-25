@@ -446,14 +446,6 @@ void WifiDisconnect()
 // Scan WiFi network
 // ********************************************************************************
 void WifiScan(bool async, bool quick) {
-  if (WiFi.scanComplete() == -1) { 
-    // Scan still busy
-    return;
-  }
-  addLog(LOG_LEVEL_INFO, F("WIFI  : Start network scan"));
-  bool show_hidden         = true;
-  processedScanDone = false;
-  lastGetScanMoment.setNow();
   uint8_t channel = 0; // Default to scan all channels
   if (quick) {
     #ifdef ESP8266

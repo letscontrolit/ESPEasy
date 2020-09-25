@@ -85,6 +85,8 @@ bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char
 bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, bool retained);
 #endif
 
+void sendData(struct EventStruct *event);
+
 #endif // ifdef USES_MQTT
 
 void flushAndDisconnectAllClients();

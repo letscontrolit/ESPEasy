@@ -4,8 +4,9 @@
 #include "../../ESPEasy_common.h"
 #include "../Helpers/ESPEasy_time.h"
 #include "MAC_address.h"
-#include <map>
+
 #include <IPAddress.h>
+#include <map>
 
 
 #define NODE_TYPE_ID_ESP_EASY_STD           1
@@ -15,7 +16,6 @@
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
 
-String getNodeTypeDisplayString(byte nodeType);
 
 /*********************************************************************************************\
 * NodeStruct
