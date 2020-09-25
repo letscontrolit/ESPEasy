@@ -808,9 +808,7 @@ int touchPinToGpio(int touch_pin)
 // change of device: cleanup old device and reset default settings
 // ********************************************************************************
 void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskIndex) {
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = taskIndex;
+  struct EventStruct TempEvent(taskIndex);
   String dummy;
 
   // let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
@@ -819,9 +817,12 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
   ClearCustomTaskSettings(taskIndex);
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
-
   if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
   {
+    // FIXME TD-er: Must check if this is working (e.g. need to set nr. decimals?)
+    ExtraTaskSettings.clear();
+    ExtraTaskSettings.TaskIndex = taskIndex;
+
     // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
     PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.

@@ -168,7 +168,7 @@ bool C016_getCSVline(
   unsigned long& timestamp,
   byte& controller_idx,
   byte& TaskIndex,
-  byte& sensorType,
+  Sensor_VType& sensorType,
   byte& valueCount,
   float& val1,
   float& val2,

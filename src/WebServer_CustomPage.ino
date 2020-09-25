@@ -152,9 +152,11 @@ boolean handle_custom(String path) {
             html_TR_TD();
             addHtml(ExtraTaskSettings.TaskDeviceName);
 
+            const byte valueCount = getValueCountForTask(x);
+
             for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
             {
-              if ((varNr < Device[DeviceIndex].ValueCount) &&
+              if ((varNr < valueCount) &&
                   (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0))
               {
                 if (varNr > 0) {

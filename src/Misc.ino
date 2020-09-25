@@ -1381,8 +1381,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
           }
         } else {
           // try if this is a get config request
-          struct EventStruct TempEvent;
-          TempEvent.TaskIndex = taskIndex;
+          struct EventStruct TempEvent(taskIndex);
           String tmpName = valueName;
 
           if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
@@ -1479,7 +1478,7 @@ byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
   }
   LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
 
-  const byte valCount = Device[deviceIndex].ValueCount;
+  const byte valCount = getValueCountForTask(taskIndex);
   for (byte valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
@@ -2230,7 +2229,8 @@ void SendValueLogger(taskIndex_t TaskIndex)
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
     if (validDeviceIndex(DeviceIndex)) {
       LoadTaskSettings(TaskIndex);
-      for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+      const byte valueCount = getValueCountForTask(TaskIndex);
+      for (byte varNr = 0; varNr < valueCount; varNr++)
       {
         logger += node_time.getDateString('-');
         logger += ' ';

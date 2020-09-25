@@ -1065,10 +1065,11 @@ void createRuleEvents(struct EventStruct *event) {
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
   LoadTaskSettings(event->TaskIndex);
-  byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-  byte sensorType   = Device[DeviceIndex].VType;
+  const Sensor_VType sensorType = getDeviceVTypeForTask(event->TaskIndex);
 
-  for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
+  const byte valueCount = getValueCountForTask(event->TaskIndex);
+
+  for (byte varNr = 0; varNr < valueCount; varNr++) {
     String eventString;
     eventString.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
     eventString  = getTaskDeviceName(event->TaskIndex);
@@ -1077,18 +1078,18 @@ void createRuleEvents(struct EventStruct *event) {
     eventString += F("=");
 
     switch (sensorType) {
-      case SENSOR_TYPE_LONG:
-        eventString += (unsigned long)UserVar[BaseVarIndex] +
-                       ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
+      case Sensor_VType::SENSOR_TYPE_LONG:
+        eventString += (unsigned long)UserVar[event->BaseVarIndex] +
+                       ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
         break;
-      case SENSOR_TYPE_STRING:
+      case Sensor_VType::SENSOR_TYPE_STRING:
 
         // FIXME TD-er: What to add here? length of string?
         break;
       default:
 
         // FIXME TD-er: Do we need to call formatUserVarNoCheck here? (or with check)
-        eventString += UserVar[BaseVarIndex + varNr];
+        eventString += UserVar[event->BaseVarIndex + varNr];
         break;
     }
     eventQueue.add(eventString);

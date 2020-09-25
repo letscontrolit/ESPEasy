@@ -713,8 +713,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 
   if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) {
     // if field set empty, reload defaults
-    struct EventStruct TempEvent;
-    TempEvent.TaskIndex = TaskIndex;
+    struct EventStruct TempEvent(TaskIndex);
     String tmp;
 
     // the plugin call should populate ExtraTaskSettings with its default values.

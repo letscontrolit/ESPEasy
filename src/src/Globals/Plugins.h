@@ -28,8 +28,8 @@
 
 
    UserVar has the output values for a task.
-   - BaseVarIndex = taskIndex + VARS_PER_TASK
-   - taskVarIndex = 0 ... VARS_PER_TASK
+   - BaseVarIndex = taskIndex * VARS_PER_TASK
+   - taskVarIndex = 0 ... (VARS_PER_TASK - 1)
    - userVarIndex = BaseVarIndex + taskVarIndex  => 0 ... USERVAR_MAX_INDEX
    - USERVAR_MAX_INDEX = (TASKS_MAX * VARS_PER_TASK)
  \*********************************************************************************************/

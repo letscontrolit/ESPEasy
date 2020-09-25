@@ -34,13 +34,11 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
   if (raw_packed.length() > 0) {
     packed += raw_packed;
   } else {
-    const byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-
     switch (event->sensorType)
     {
-      case SENSOR_TYPE_LONG:
+      case Sensor_VType::SENSOR_TYPE_LONG:
       {
-        unsigned long longval = (unsigned long)UserVar[BaseVarIndex] + ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
+        unsigned long longval = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
         packed += LoRa_addInt(longval, PackedData_uint32);
         break;
       }
@@ -49,7 +47,7 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
 
         for (byte i = 0; i < value_count && i < VARS_PER_TASK; ++i) {
           // For now, just store the floats as an int32 by multiplying the value with 10000.
-          packed += LoRa_addFloat(UserVar[BaseVarIndex + i], PackedData_int32_1e4);
+          packed += LoRa_addFloat(UserVar[event->BaseVarIndex + i], PackedData_int32_1e4);
         }
         break;
     }

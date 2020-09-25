@@ -66,17 +66,17 @@ String formatDomoticzSensorType(struct EventStruct *event) {
 
   switch (event->sensorType)
   {
-    case SENSOR_TYPE_SINGLE: // single value sensor, used for Dallas, BH1750, etc
+    case Sensor_VType::SENSOR_TYPE_SINGLE: // single value sensor, used for Dallas, BH1750, etc
       values = formatUserVarDomoticz(event, 0);
       break;
-    case SENSOR_TYPE_LONG:   // single LONG value, stored in two floats (rfid tags)
+    case Sensor_VType::SENSOR_TYPE_LONG:   // single LONG value, stored in two floats (rfid tags)
       values = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
       break;
-    case SENSOR_TYPE_DUAL:   // any sensor that uses two simple values
+    case Sensor_VType::SENSOR_TYPE_DUAL:   // any sensor that uses two simple values
       values  = formatUserVarDomoticz(event, 0);
       values += formatUserVarDomoticz(event, 1);
       break;
-    case SENSOR_TYPE_TEMP_HUM:
+    case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
 
       // temp + hum + hum_stat, used for DHT11
       // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fhumidity
@@ -84,7 +84,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       values += formatUserVarDomoticz(event, 1); // HUM = Humidity
       values += humStatDomoticz(event, 1);       // HUM_STAT = Humidity status
       break;
-    case SENSOR_TYPE_TEMP_HUM_BARO:
+    case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
 
       // temp + hum + hum_stat + bar + bar_fore, used for BME280
       // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fhumidity.2Fbarometer
@@ -94,7 +94,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       values += formatUserVarDomoticz(event, 2); // BAR = Barometric pressure
       values += formatUserVarDomoticz(0);        // BAR_FOR = Barometer forecast
       break;
-    case SENSOR_TYPE_TEMP_BARO:
+    case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
 
       // temp + hum + hum_stat + bar + bar_fore, used for BMP085
       // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fbarometer
@@ -103,7 +103,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       values += formatUserVarDomoticz(0);        // BAR_FOR = Barometer forecast
       values += formatUserVarDomoticz(0);        // ALTITUDE= Not used at the moment, can be 0
       break;
-    case SENSOR_TYPE_TEMP_EMPTY_BARO:
+    case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
 
       // temp + bar + bar_fore, used for BMP280
       // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fbarometer
@@ -112,18 +112,18 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       values += formatUserVarDomoticz(0);        // BAR_FOR = Barometer forecast
       values += formatUserVarDomoticz(0);        // ALTITUDE= Not used at the moment, can be 0
       break;
-    case SENSOR_TYPE_TRIPLE:
+    case Sensor_VType::SENSOR_TYPE_TRIPLE:
       values  = formatUserVarDomoticz(event, 0);
       values += formatUserVarDomoticz(event, 1);
       values += formatUserVarDomoticz(event, 2);
       break;
-    case SENSOR_TYPE_QUAD:
+    case Sensor_VType::SENSOR_TYPE_QUAD:
       values  = formatUserVarDomoticz(event, 0);
       values += formatUserVarDomoticz(event, 1);
       values += formatUserVarDomoticz(event, 2);
       values += formatUserVarDomoticz(event, 3);
       break;
-    case SENSOR_TYPE_WIND:
+    case Sensor_VType::SENSOR_TYPE_WIND:
 
       // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust; 0
       // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Wind
@@ -138,18 +138,18 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       values += formatUserVarDomoticz(0);                 // Temperature
       values += formatUserVarDomoticz(0);                 // Temperature Windchill
       break;
-    case SENSOR_TYPE_SWITCH:
-    case SENSOR_TYPE_DIMMER:
+    case Sensor_VType::SENSOR_TYPE_SWITCH:
+    case Sensor_VType::SENSOR_TYPE_DIMMER:
 
       // Too specific for HTTP/MQTT
       break;
-    case SENSOR_TYPE_STRING:
+    case Sensor_VType::SENSOR_TYPE_STRING:
       values = event->String2;
       break;
     default:
     {
       String log = F("Domoticz Controller: Not yet implemented sensor type: ");
-      log += event->sensorType;
+      log += static_cast<byte>(event->sensorType);
       log += F(" idx: ");
       log += event->idx;
       addLog(LOG_LEVEL_ERROR, log);
@@ -166,7 +166,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
   values.trim();
   {
     String log = F(" Domoticz: Sensortype: ");
-    log += event->sensorType;
+    log += static_cast<byte>(event->sensorType);
     log += F(" idx: ");
     log += event->idx;
     log += F(" values: ");
