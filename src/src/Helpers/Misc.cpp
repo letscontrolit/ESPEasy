@@ -41,38 +41,33 @@
 
 
 #ifdef ESP32
- 
-  //MFD: adding tone support here while waiting for the Arduino Espressif implementation to catch up
-  //As recomandation is not to use external libraries the following code was taken from: https://github.com/lbernstone/Tone Thanks
-  #define TONE_CHANNEL 15
 
-  void noToneESP32(uint8_t pin, uint8_t channel=TONE_CHANNEL)
-  {
-      ledcDetachPin(pin);
-      ledcWrite(channel, 0);
+void noToneESP32(uint8_t pin, uint8_t channel)
+{
+  ledcDetachPin(pin);
+  ledcWrite(channel, 0);
+}
+
+void toneESP32(uint8_t pin, unsigned int frequency, unsigned long duration, uint8_t channel)
+{
+  if (ledcRead(channel)) {
+    log_e("Tone channel %d is already in use", ledcRead(channel));
+    return;
   }
+  ledcAttachPin(pin, channel);
+  ledcWriteTone(channel, frequency);
 
-  void toneESP32(uint8_t pin, unsigned int frequency, unsigned long duration, uint8_t channel=TONE_CHANNEL)
-  {
-      if (ledcRead(channel)) {
-          log_e("Tone channel %d is already in use", ledcRead(channel));
-          return;
-      }
-      ledcAttachPin(pin, channel);
-      ledcWriteTone(channel, frequency);
-      if (duration) {
-          delay(duration);
-          noToneESP32(pin, channel);
-      }    
+  if (duration) {
+    delay(duration);
+    noToneESP32(pin, channel);
   }
+}
 
+#endif // ifdef ESP32
 
-#endif
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
-
-
 String getNodeTypeDisplayString(byte nodeType) {
   switch (nodeType)
   {
@@ -86,66 +81,69 @@ String getNodeTypeDisplayString(byte nodeType) {
   return "";
 }
 
-
 #ifdef USES_MQTT
 String getMQTT_state() {
   switch (MQTTclient.state()) {
-    case MQTT_CONNECTION_TIMEOUT     : return F("Connection timeout");
-    case MQTT_CONNECTION_LOST        : return F("Connection lost");
-    case MQTT_CONNECT_FAILED         : return F("Connect failed");
-    case MQTT_DISCONNECTED           : return F("Disconnected");
-    case MQTT_CONNECTED              : return F("Connected");
-    case MQTT_CONNECT_BAD_PROTOCOL   : return F("Connect bad protocol");
-    case MQTT_CONNECT_BAD_CLIENT_ID  : return F("Connect bad client_id");
-    case MQTT_CONNECT_UNAVAILABLE    : return F("Connect unavailable");
+    case MQTT_CONNECTION_TIMEOUT: return F("Connection timeout");
+    case MQTT_CONNECTION_LOST: return F("Connection lost");
+    case MQTT_CONNECT_FAILED: return F("Connect failed");
+    case MQTT_DISCONNECTED: return F("Disconnected");
+    case MQTT_CONNECTED: return F("Connected");
+    case MQTT_CONNECT_BAD_PROTOCOL: return F("Connect bad protocol");
+    case MQTT_CONNECT_BAD_CLIENT_ID: return F("Connect bad client_id");
+    case MQTT_CONNECT_UNAVAILABLE: return F("Connect unavailable");
     case MQTT_CONNECT_BAD_CREDENTIALS: return F("Connect bad credentials");
-    case MQTT_CONNECT_UNAUTHORIZED   : return F("Connect unauthorized");
+    case MQTT_CONNECT_UNAUTHORIZED: return F("Connect unauthorized");
     default: break;
   }
   return "";
 }
-#endif //USES_MQTT
+
+#endif // USES_MQTT
 
 /********************************************************************************************\
-  Get system information
-  \*********************************************************************************************/
+   Get system information
+ \*********************************************************************************************/
 String getLastBootCauseString() {
   switch (lastBootCause)
   {
     case BOOT_CAUSE_MANUAL_REBOOT: return F("Manual reboot");
-    case BOOT_CAUSE_DEEP_SLEEP: //nobody should ever see this, since it should sleep again right away.
-       return F("Deep sleep");
+    case BOOT_CAUSE_DEEP_SLEEP: // nobody should ever see this, since it should sleep again right away.
+      return F("Deep sleep");
     case BOOT_CAUSE_COLD_BOOT:
-       return F("Cold boot");
+      return F("Cold boot");
     case BOOT_CAUSE_EXT_WD:
-       return F("External Watchdog");
+      return F("External Watchdog");
   }
   return getUnknownString();
 }
 
 #ifdef ESP32
+
 // See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
 String getResetReasonString(byte icore) {
   bool isDEEPSLEEP_RESET(false);
-  switch (rtc_get_reset_reason( (RESET_REASON) icore)) {
-    case NO_MEAN                : return F("NO_MEAN");
-    case POWERON_RESET          : return F("Vbat power on reset");
-    case SW_RESET               : return F("Software reset digital core");
-    case OWDT_RESET             : return F("Legacy watch dog reset digital core");
-    case DEEPSLEEP_RESET        : isDEEPSLEEP_RESET = true; break;
-    case SDIO_RESET             : return F("Reset by SLC module, reset digital core");
-    case TG0WDT_SYS_RESET       : return F("Timer Group0 Watch dog reset digital core");
-    case TG1WDT_SYS_RESET       : return F("Timer Group1 Watch dog reset digital core");
-    case RTCWDT_SYS_RESET       : return F("RTC Watch dog Reset digital core");
-    case INTRUSION_RESET        : return F("Instrusion tested to reset CPU");
-    case TGWDT_CPU_RESET        : return F("Time Group reset CPU");
-    case SW_CPU_RESET           : return F("Software reset CPU");
-    case RTCWDT_CPU_RESET       : return F("RTC Watch dog Reset CPU");
-    case EXT_CPU_RESET          : return F("for APP CPU, reseted by PRO CPU");
-    case RTCWDT_BROWN_OUT_RESET : return F("Reset when the vdd voltage is not stable");
-    case RTCWDT_RTC_RESET       : return F("RTC Watch dog reset digital core and rtc module");
+
+  switch (rtc_get_reset_reason((RESET_REASON)icore)) {
+    case NO_MEAN: return F("NO_MEAN");
+    case POWERON_RESET: return F("Vbat power on reset");
+    case SW_RESET: return F("Software reset digital core");
+    case OWDT_RESET: return F("Legacy watch dog reset digital core");
+    case DEEPSLEEP_RESET: isDEEPSLEEP_RESET = true; break;
+    case SDIO_RESET: return F("Reset by SLC module, reset digital core");
+    case TG0WDT_SYS_RESET: return F("Timer Group0 Watch dog reset digital core");
+    case TG1WDT_SYS_RESET: return F("Timer Group1 Watch dog reset digital core");
+    case RTCWDT_SYS_RESET: return F("RTC Watch dog Reset digital core");
+    case INTRUSION_RESET: return F("Instrusion tested to reset CPU");
+    case TGWDT_CPU_RESET: return F("Time Group reset CPU");
+    case SW_CPU_RESET: return F("Software reset CPU");
+    case RTCWDT_CPU_RESET: return F("RTC Watch dog Reset CPU");
+    case EXT_CPU_RESET: return F("for APP CPU, reseted by PRO CPU");
+    case RTCWDT_BROWN_OUT_RESET: return F("Reset when the vdd voltage is not stable");
+    case RTCWDT_RTC_RESET: return F("RTC Watch dog reset digital core and rtc module");
     default: break;
   }
+
   if (isDEEPSLEEP_RESET) {
     String reason = F("Deep Sleep, Wakeup reason (");
     reason += rtc_get_wakeup_cause();
@@ -154,7 +152,8 @@ String getResetReasonString(byte icore) {
   }
   return getUnknownString();
 }
-#endif
+
+#endif // ifdef ESP32
 
 String getResetReasonString() {
   #ifdef ESP32
@@ -163,13 +162,14 @@ String getResetReasonString() {
   reason += F(" CPU1: ");
   reason += getResetReasonString(1);
   return reason;
-  #else
+  #else // ifdef ESP32
   return ESP.getResetReason();
-  #endif
+  #endif // ifdef ESP32
 }
 
 String getSystemBuildString() {
   String result;
+
   result += BUILD;
   result += ' ';
   result += F(BUILD_NOTES);
@@ -178,40 +178,43 @@ String getSystemBuildString() {
 
 String getPluginDescriptionString() {
   String result;
+
   #ifdef PLUGIN_BUILD_NORMAL
-    result += F(" [Normal]");
-  #endif
+  result += F(" [Normal]");
+  #endif // ifdef PLUGIN_BUILD_NORMAL
   #ifdef PLUGIN_BUILD_TESTING
-    result += F(" [Testing]");
-  #endif
+  result += F(" [Testing]");
+  #endif // ifdef PLUGIN_BUILD_TESTING
   #ifdef PLUGIN_BUILD_DEV
-    result += F(" [Development]");
-  #endif
+  result += F(" [Development]");
+  #endif // ifdef PLUGIN_BUILD_DEV
   #ifdef PLUGIN_DESCR
   result += " [";
   result += F(PLUGIN_DESCR);
   result += ']';
-  #endif
+  #endif // ifdef PLUGIN_DESCR
   #ifdef USE_NON_STANDARD_24_TASKS
   result += F(" 24tasks");
-  #endif
+  #endif // ifdef USE_NON_STANDARD_24_TASKS
   result.trim();
   return result;
 }
 
 String getSystemLibraryString() {
   String result;
+
   #if defined(ESP32)
-    result += F("ESP32 SDK ");
-    result += ESP.getSdkVersion();
-  #else
-    result += F("ESP82xx Core ");
-    result += ESP.getCoreVersion();
-    result += F(", NONOS SDK ");
-    result += system_get_sdk_version();
-    result += F(", LWIP: ");
-    result += getLWIPversion();
-  #endif
+  result += F("ESP32 SDK ");
+  result += ESP.getSdkVersion();
+  #else // if defined(ESP32)
+  result += F("ESP82xx Core ");
+  result += ESP.getCoreVersion();
+  result += F(", NONOS SDK ");
+  result += system_get_sdk_version();
+  result += F(", LWIP: ");
+  result += getLWIPversion();
+  #endif // if defined(ESP32)
+
   if (puyaSupport()) {
     result += F(" PUYA support");
   }
@@ -221,11 +224,13 @@ String getSystemLibraryString() {
 #ifdef ESP8266
 String getLWIPversion() {
   String result;
+
   result += LWIP_VERSION_MAJOR;
   result += '.';
   result += LWIP_VERSION_MINOR;
   result += '.';
   result += LWIP_VERSION_REVISION;
+
   if (LWIP_VERSION_IS_RC) {
     result += F("-RC");
     result += LWIP_VERSION_RC;
@@ -234,42 +239,46 @@ String getLWIPversion() {
   }
   return result;
 }
-#endif
+
+#endif // ifdef ESP8266
 
 bool puyaSupport() {
   bool supported = false;
+
 #ifdef PUYA_SUPPORT
+
   // New support starting core 2.5.0
-  if (PUYA_SUPPORT) supported = true;
-#endif
+  if (PUYA_SUPPORT) { supported = true; }
+#endif // ifdef PUYA_SUPPORT
 #ifdef PUYASUPPORT
+
   // Old patch
   supported = true;
-#endif
+#endif // ifdef PUYASUPPORT
   return supported;
 }
 
 uint8_t getFlashChipVendorId() {
 #ifdef PUYA_SUPPORT
   return ESP.getFlashChipVendorId();
-#else
-  #if defined(ESP8266)
-    uint32_t flashChipId = ESP.getFlashChipId();
-    return (flashChipId & 0x000000ff);
-  #else
-    return 0xFF; // Not an existing function for ESP32
-  #endif
-#endif
+#else // ifdef PUYA_SUPPORT
+  # if defined(ESP8266)
+  uint32_t flashChipId = ESP.getFlashChipId();
+  return flashChipId & 0x000000ff;
+  # else // if defined(ESP8266)
+  return 0xFF; // Not an existing function for ESP32
+  # endif // if defined(ESP8266)
+#endif // ifdef PUYA_SUPPORT
 }
 
 bool flashChipVendorPuya() {
   uint8_t vendorId = getFlashChipVendorId();
-  return vendorId == 0x85;  // 0x146085 PUYA
+
+  return vendorId == 0x85; // 0x146085 PUYA
 }
 
-
 /*********************************************************************************************\
- Memory management
+   Memory management
 \*********************************************************************************************/
 
 
@@ -278,10 +287,12 @@ bool flashChipVendorPuya() {
 //      https://github.com/esp8266/Arduino/issues/5148#issuecomment-424329183
 //      https://github.com/letscontrolit/ESPEasy/issues/1824
 #ifdef ESP32
+
 // FIXME TD-er: For ESP32 you need to provide the task number, or NULL to get from the calling task.
 uint32_t getCurrentFreeStack() {
-  register uint8_t *sp asm("a1");
-  return (sp - pxTaskGetStackStart(NULL));
+  register uint8_t *sp asm ("a1");
+
+  return sp - pxTaskGetStackStart(NULL);
 }
 
 uint32_t getFreeStackWatermark() {
@@ -289,13 +300,16 @@ uint32_t getFreeStackWatermark() {
 }
 
 // FIXME TD-er: Must check if these functions are also needed for ESP32.
-bool canYield() { return true; }
+bool canYield() {
+  return true;
+}
 
-#else
+#else // ifdef ESP32
 
 uint32_t getCurrentFreeStack() {
   // https://github.com/esp8266/Arduino/issues/2557
-  register uint32_t *sp asm("a1");
+  register uint32_t *sp asm ("a1");
+
   return 4 * (sp - g_pcont->stack);
 }
 
@@ -307,24 +321,21 @@ bool canYield() {
   return cont_can_yield(g_pcont);
 }
 
-bool allocatedOnStack(const void* address) {
-  register uint32_t *sp asm("a1");
-  if (sp < address) return false;
+bool allocatedOnStack(const void *address) {
+  register uint32_t *sp asm ("a1");
+
+  if (sp < address) { return false; }
   return g_pcont->stack < address;
 }
 
 #endif // ESP32
 
 
-
-
-
-
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
   checkRAM(F("remoteConfig"));
-  bool success = false;
-  String  command = parseString(string, 1);
+  bool   success = false;
+  String command = parseString(string, 1);
 
   if (command == F("config"))
   {
@@ -333,9 +344,10 @@ bool remoteConfig(struct EventStruct *event, const String& string)
     if (parseString(string, 2) == F("task"))
     {
       String configTaskName = parseStringKeepCase(string, 3);
+
       // FIXME TD-er: This command is not using the tolerance setting
       // tolerantParseStringKeepCase(Line, 4);
-      String configCommand  = parseStringToEndKeepCase(string, 4);
+      String configCommand = parseStringToEndKeepCase(string, 4);
 
       if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
         return success; // TD-er: Should this be return false?
@@ -353,13 +365,12 @@ bool remoteConfig(struct EventStruct *event, const String& string)
 }
 
 /*********************************************************************************************\
-   Collect the stored preference for factory default 
+   Collect the stored preference for factory default
 \*********************************************************************************************/
 void applyFactoryDefaultPref() {
   // TODO TD-er: Store it in more places to make it more persistent
   Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
 }
-
 
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings
@@ -393,6 +404,7 @@ String formatGpioName(const String& label, gpio_direction direction, bool option
     reserveLength += 11;
   }
   String result;
+
   result.reserve(reserveLength);
   result += F("GPIO ");
   result += formatGpioDirection(direction);
@@ -403,8 +415,6 @@ String formatGpioName(const String& label, gpio_direction direction, bool option
   }
   return result;
 }
-
-
 
 String formatGpioName(const String& label, gpio_direction direction) {
   return formatGpioName(label, direction, false);
@@ -448,12 +458,11 @@ String formatGpioName_RX_HW(bool optional) {
   return formatGpioName(F("TX (HW)"), gpio_input, optional);
 }
 
-
-
 #ifdef ESP32
 
 String formatGpioName_ADC(int gpio_pin) {
-  int adc,ch, t;
+  int adc, ch, t;
+
   if (getADC_gpio_info(gpio_pin, adc, ch, t)) {
     if (adc == 0) {
       return F("Hall Effect");
@@ -461,6 +470,7 @@ String formatGpioName_ADC(int gpio_pin) {
     String res = F("ADC# ch?");
     res.replace("#", String(adc));
     res.replace("?", String(ch));
+
     if (t >= 0) {
       res += F(" (T");
       res += t;
@@ -471,7 +481,7 @@ String formatGpioName_ADC(int gpio_pin) {
   return "";
 }
 
-#endif
+#endif // ifdef ESP32
 
 // ********************************************************************************
 // Add a GPIO pin select dropdown list for 8266, 8285 or ESP32
@@ -479,6 +489,7 @@ String formatGpioName_ADC(int gpio_pin) {
 String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warning) {
   if (gpio < 0) { return F("- None -"); }
   String result;
+
   result.reserve(24);
   result  = F("GPIO-");
   result += gpio;
@@ -508,17 +519,16 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
   return result;
 }
 
-
 /*********************************************************************************************\
    set pin mode & state (info table)
-  \*********************************************************************************************/
+\*********************************************************************************************/
 /*
-void setPinState(byte plugin, byte index, byte mode, uint16_t value)
-{
-  // plugin number and index form a unique key
-  // first check if this pin is already known
-  bool reUse = false;
-  for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+   void setPinState(byte plugin, byte index, byte mode, uint16_t value)
+   {
+   // plugin number and index form a unique key
+   // first check if this pin is already known
+   bool reUse = false;
+   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
     {
       pinStates[x].mode = mode;
@@ -527,8 +537,8 @@ void setPinState(byte plugin, byte index, byte mode, uint16_t value)
       break;
     }
 
-  if (!reUse)
-  {
+   if (!reUse)
+   {
     for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
       if (pinStates[x].plugin == 0)
       {
@@ -538,60 +548,59 @@ void setPinState(byte plugin, byte index, byte mode, uint16_t value)
         pinStates[x].value = value;
         break;
       }
-  }
-}
-*/
+   }
+   }
+ */
 
 /*********************************************************************************************\
    get pin mode & state (info table)
-  \*********************************************************************************************/
+\*********************************************************************************************/
 
 /*
-bool getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
-{
-  for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+   bool getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
+   {
+   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
     {
-      *mode = pinStates[x].mode;
-      *value = pinStates[x].value;
+ * mode = pinStates[x].mode;
+ * value = pinStates[x].value;
       return true;
     }
-  return false;
-}
+   return false;
+   }
 
-*/
+ */
 /*********************************************************************************************\
    check if pin mode & state is known (info table)
-  \*********************************************************************************************/
+\*********************************************************************************************/
 /*
-bool hasPinState(byte plugin, byte index)
-{
-  for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+   bool hasPinState(byte plugin, byte index)
+   {
+   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
     {
       return true;
     }
-  return false;
-}
+   return false;
+   }
 
-*/
-
+ */
 
 
 /*********************************************************************************************\
    report pin mode & state (info table) using json
-  \*********************************************************************************************/
+\*********************************************************************************************/
 String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noSearchValue)
 {
   checkRAM(F("getPinStateJSON"));
   printToWebJSON = true;
-  byte mode = PIN_MODE_INPUT;
+  byte mode     = PIN_MODE_INPUT;
   int16_t value = noSearchValue;
-  bool found = false;
+  bool    found = false;
 
   if (search && existPortStatus(key))
   {
-    mode = globalMapPortStatus[key].mode;
+    mode  = globalMapPortStatus[key].mode;
     value = globalMapPortStatus[key].state;
     found = true;
   }
@@ -661,52 +670,56 @@ void analogWriteESP32(int pin, int value)
   }
   ledcWrite(ledChannel, value);
 }
+
 #endif // if defined(ESP32)
 
 
 /********************************************************************************************\
-  Status LED
-\*********************************************************************************************/
-
+   Status LED
+ \*********************************************************************************************/
 void statusLED(bool traffic)
 {
   static int gnStatusValueCurrent = -1;
-  static long int gnLastUpdate = millis();
+  static long int gnLastUpdate    = millis();
 
-  if (Settings.Pin_status_led == -1)
+  if (Settings.Pin_status_led == -1) {
     return;
+  }
 
-  if (gnStatusValueCurrent<0)
+  if (gnStatusValueCurrent < 0) {
     pinMode(Settings.Pin_status_led, OUTPUT);
+  }
 
   int nStatusValue = gnStatusValueCurrent;
 
   if (traffic)
   {
-    nStatusValue += STATUS_PWM_TRAFFICRISE; //ramp up fast
+    nStatusValue += STATUS_PWM_TRAFFICRISE; // ramp up fast
   }
   else
   {
-
     if (NetworkConnected())
     {
       long int delta = timePassedSince(gnLastUpdate);
-      if (delta>0 || delta<0 )
+
+      if ((delta > 0) || (delta < 0))
       {
-        nStatusValue -= STATUS_PWM_NORMALFADE; //ramp down slowly
-        nStatusValue = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
-        gnLastUpdate=millis();
+        nStatusValue -= STATUS_PWM_NORMALFADE; // ramp down slowly
+        nStatusValue  = std::max(nStatusValue, STATUS_PWM_NORMALVALUE);
+        gnLastUpdate  = millis();
       }
     }
-    //AP mode is active
+
+    // AP mode is active
     else if (WifiIsAP(WiFi.getMode()))
     {
-      nStatusValue = ((millis()>>1) & PWMRANGE_FULL) - (PWMRANGE_FULL>>2); //ramp up for 2 sec, 3/4 luminosity
+      nStatusValue = ((millis() >> 1) & PWMRANGE_FULL) - (PWMRANGE_FULL >> 2); // ramp up for 2 sec, 3/4 luminosity
     }
-    //Disconnected
+
+    // Disconnected
     else
     {
-      nStatusValue = (millis()>>1) & (PWMRANGE_FULL>>2); //ramp up for 1/2 sec, 1/4 luminosity
+      nStatusValue = (millis() >> 1) & (PWMRANGE_FULL >> 2); // ramp up for 1/2 sec, 1/4 luminosity
     }
   }
 
@@ -716,39 +729,42 @@ void statusLED(bool traffic)
   {
     gnStatusValueCurrent = nStatusValue;
 
-    long pwm = nStatusValue * nStatusValue; //simple gamma correction
+    long pwm = nStatusValue * nStatusValue; // simple gamma correction
     pwm >>= 10;
-    if (Settings.Pin_status_led_Inversed)
-      pwm = PWMRANGE_FULL-pwm;
+
+    if (Settings.Pin_status_led_Inversed) {
+      pwm = PWMRANGE_FULL - pwm;
+    }
 
     #if defined(ESP8266)
-      analogWrite(Settings.Pin_status_led, pwm);
+    analogWrite(Settings.Pin_status_led, pwm);
     #endif // if defined(ESP8266)
     #if defined(ESP32)
-       analogWriteESP32(Settings.Pin_status_led, pwm);
+    analogWriteESP32(Settings.Pin_status_led, pwm);
     #endif // if defined(ESP32)
   }
 }
 
-
 /********************************************************************************************\
-  delay in milliseconds with background processing
-  \*********************************************************************************************/
+   delay in milliseconds with background processing
+ \*********************************************************************************************/
 void delayBackground(unsigned long dsdelay)
 {
   unsigned long timer = millis() + dsdelay;
-  while (!timeOutReached(timer))
+
+  while (!timeOutReached(timer)) {
     backgroundtasks();
+  }
 }
 
-
 /********************************************************************************************\
-  Check to see if a given argument is a valid taskIndex (argc = 0 => command)
-  \*********************************************************************************************/
+   Check to see if a given argument is a valid taskIndex (argc = 0 => command)
+ \*********************************************************************************************/
 taskIndex_t parseCommandArgumentTaskIndex(const String& string, unsigned int argc)
 {
   taskIndex_t taskIndex = INVALID_TASK_INDEX;
-  const int ti = parseCommandArgumentInt(string, argc);
+  const int   ti        = parseCommandArgumentInt(string, argc);
+
   if (ti > 0) {
     // Task Index used as argument in commands start at 1.
     taskIndex = static_cast<taskIndex_t>(ti - 1);
@@ -756,26 +772,27 @@ taskIndex_t parseCommandArgumentTaskIndex(const String& string, unsigned int arg
   return taskIndex;
 }
 
-
 /********************************************************************************************\
-  Get int from command argument (argc = 0 => command)
-  \*********************************************************************************************/
+   Get int from command argument (argc = 0 => command)
+ \*********************************************************************************************/
 int parseCommandArgumentInt(const String& string, unsigned int argc)
 {
   int value = 0;
+
   if (argc > 0) {
     // No need to check for the command (argc == 0)
     String TmpStr;
-    if (GetArgv(string.c_str(), TmpStr, argc + 1)) { 
-      value = CalculateParam(TmpStr.c_str()); 
+
+    if (GetArgv(string.c_str(), TmpStr, argc + 1)) {
+      value = CalculateParam(TmpStr.c_str());
     }
   }
   return value;
 }
 
 /********************************************************************************************\
-  Parse a command string to event struct
-  \*********************************************************************************************/
+   Parse a command string to event struct
+ \*********************************************************************************************/
 void parseCommandString(struct EventStruct *event, const String& string)
 {
   checkRAM(F("parseCommandString"));
@@ -786,17 +803,16 @@ void parseCommandString(struct EventStruct *event, const String& string)
   event->Par5 = parseCommandArgumentInt(string, 5);
 }
 
-
-
 /********************************************************************************************\
-  Toggle controller enabled state
-  \*********************************************************************************************/
+   Toggle controller enabled state
+ \*********************************************************************************************/
 bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 {
-  if (!validControllerIndex(controllerIndex)) return false;
+  if (!validControllerIndex(controllerIndex)) { return false; }
   checkRAM(F("setControllerEnableStatus"));
+
   // Only enable controller if it has a protocol configured
-  if (Settings.Protocol[controllerIndex] != 0 || !enabled) {
+  if ((Settings.Protocol[controllerIndex] != 0) || !enabled) {
     Settings.ControllerEnabled[controllerIndex] = enabled;
     return true;
   }
@@ -804,15 +820,17 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 }
 
 /********************************************************************************************\
-  Toggle task enabled state
-  \*********************************************************************************************/
+   Toggle task enabled state
+ \*********************************************************************************************/
 bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled)
 {
-  if (!validTaskIndex(taskIndex)) return false;
+  if (!validTaskIndex(taskIndex)) { return false; }
   checkRAM(F("setTaskEnableStatus"));
+
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.TaskDeviceNumber[taskIndex]) || !enabled) {
     Settings.TaskDeviceEnabled[taskIndex] = enabled;
+
     if (enabled) {
       Scheduler.schedule_task_device_timer(taskIndex, millis() + 10);
     }
@@ -821,68 +839,68 @@ bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled)
   return false;
 }
 
-
 /********************************************************************************************\
-  Clear task settings for given task
-  \*********************************************************************************************/
+   Clear task settings for given task
+ \*********************************************************************************************/
 void taskClear(taskIndex_t taskIndex, bool save)
 {
-  if (!validTaskIndex(taskIndex)) return;
+  if (!validTaskIndex(taskIndex)) { return; }
   checkRAM(F("taskClear"));
   Settings.clearTask(taskIndex);
   ExtraTaskSettings.clear(); // Invalidate any cached values.
   ExtraTaskSettings.TaskIndex = taskIndex;
+
   if (save) {
     SaveTaskSettings(taskIndex);
     SaveSettings();
   }
 }
 
-
-
-
-
-
 /********************************************************************************************\
-  check the program memory hash
-  The const MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere... needs to remain unchanged as it will be replaced by
-  - 16 bytes md5 hash, followed by
-  - 4 * uint32_t start of memory segment 1-4
-  - 4 * uint32_t end of memory segment 1-4
-  currently there are only two segemts included in the hash. Unused segments have start adress 0.
-  Execution time 520kb @80Mhz: 236ms
-  Returns: 0 if hash compare fails, number of checked bytes otherwise.
-  The reference hash is calculated by a .py file and injected into the binary.
-  Caution: currently the hash sits in an unchecked segment. If it ever moves to a checked segment, make sure
-  it is excluded from the calculation !
-  \*********************************************************************************************/
+   check the program memory hash
+   The const MD5_MD5_MD5_MD5_BoundariesOfTheSegmentsGoHere... needs to remain unchanged as it will be replaced by
+   - 16 bytes md5 hash, followed by
+   - 4 * uint32_t start of memory segment 1-4
+   - 4 * uint32_t end of memory segment 1-4
+   currently there are only two segemts included in the hash. Unused segments have start adress 0.
+   Execution time 520kb @80Mhz: 236ms
+   Returns: 0 if hash compare fails, number of checked bytes otherwise.
+   The reference hash is calculated by a .py file and injected into the binary.
+   Caution: currently the hash sits in an unchecked segment. If it ever moves to a checked segment, make sure
+   it is excluded from the calculation !
+ \*********************************************************************************************/
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-void dump (uint32_t addr) { //Seems already included in core 2.4 ...
-  serialPrint (String(addr, HEX));
+void dump(uint32_t addr) { // Seems already included in core 2.4 ...
+  serialPrint(String(addr, HEX));
   serialPrint(": ");
+
   for (uint32_t a = addr; a < addr + 16; a++)
   {
-    serialPrint ( String(pgm_read_byte(a), HEX));
-    serialPrint (" ");
+    serialPrint(String(pgm_read_byte(a), HEX));
+    serialPrint(" ");
   }
   serialPrintln("");
 }
-#endif
+
+#endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 
 /*
-uint32_t progMemMD5check(){
+   uint32_t progMemMD5check(){
     checkRAM(F("progMemMD5check"));
-    #define BufSize 10
+ #define BufSize 10
     uint32_t calcBuffer[BufSize];
     CRCValues.numberOfCRCBytes = 0;
-    memcpy (calcBuffer,CRCValues.compileTimeMD5,16);                                                  // is there still the dummy in memory ? - the dummy needs to be replaced by the real md5 after linking.
-    if( memcmp (calcBuffer, "MD5_MD5_MD5_",12)==0){                                                   // do not memcmp with CRCdummy directly or it will get optimized away.
+    memcpy (calcBuffer,CRCValues.compileTimeMD5,16);                                                  // is there still the dummy in memory
+       ? - the dummy needs to be replaced by the real md5 after linking.
+    if( memcmp (calcBuffer, "MD5_MD5_MD5_",12)==0){                                                   // do not memcmp with CRCdummy
+       directly or it will get optimized away.
         addLog(LOG_LEVEL_INFO, F("CRC  : No program memory checksum found. Check output of crc2.py"));
         return 0;
     }
     MD5Builder md5;
     md5.begin();
-    for (int l = 0; l<4; l++){                                                                            // check max segments,  if the pointer is not 0
+    for (int l = 0; l<4; l++){                                                                            // check max segments,  if the
+       pointer is not 0
         uint32_t *ptrStart = (uint32_t *)&CRCValues.compileTimeMD5[16+l*4];
         uint32_t *ptrEnd =   (uint32_t *)&CRCValues.compileTimeMD5[16+4*4+l*4];
         if ((*ptrStart) == 0) break;                                                                      // segment not used.
@@ -891,7 +909,8 @@ uint32_t progMemMD5check(){
                 calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                       // read 4 bytes
                 CRCValues.numberOfCRCBytes+=sizeof(calcBuffer[0]);
              }
-             md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5. At the end not the whole buffer. md5 ptr to data in ram.
+             md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
+                At the end not the whole buffer. md5 ptr to data in ram.
         }
    }
    md5.calculate();
@@ -902,35 +921,37 @@ uint32_t progMemMD5check(){
    }
    addLog(LOG_LEVEL_INFO, F("CRC  : program checksum       ...FAIL"));
    return 0;
-}
-*/
+   }
+ */
 
 /********************************************************************************************\
-  Handler for keeping ExtraTaskSettings up to date using cache
-  \*********************************************************************************************/
+   Handler for keeping ExtraTaskSettings up to date using cache
+ \*********************************************************************************************/
 String getTaskDeviceName(taskIndex_t TaskIndex) {
   LoadTaskSettings(TaskIndex);
   return ExtraTaskSettings.TaskDeviceName;
 }
 
-
 /********************************************************************************************\
-  Reset all settings to factory defaults
-  \*********************************************************************************************/
+   Reset all settings to factory defaults
+ \*********************************************************************************************/
 void ResetFactory()
 {
   const GpioFactorySettingsStruct gpio_settings(ResetFactoryDefaultPreference.getDeviceModel());
 
   checkRAM(F("ResetFactory"));
+
   // Direct Serial is allowed here, since this is only an emergency task.
   serialPrint(F("RESET: Resetting factory defaults... using "));
   serialPrint(getDeviceModelString(ResetFactoryDefaultPreference.getDeviceModel()));
   serialPrintln(F(" settings"));
   delay(1000);
+
   if (readFromRTC())
   {
     serialPrint(F("RESET: Warm boot, reset count: "));
     serialPrintln(String(RTC.factoryResetCounter));
+
     if (RTC.factoryResetCounter >= 3)
     {
       serialPrintln(F("RESET: Too many resets, protecting your flash memory (powercycle to solve this)"));
@@ -941,18 +962,21 @@ void ResetFactory()
   {
     serialPrintln(F("RESET: Cold boot"));
     initRTC();
+
     // TODO TD-er: Store set device model in RTC.
   }
 
-  RTC.flashCounter=0; //reset flashcounter, since we're already counting the number of factory-resets. we dont want to hit a flash-count limit during reset.
+  RTC.flashCounter = 0; // reset flashcounter, since we're already counting the number of factory-resets. we dont want to hit a flash-count
+                        // limit during reset.
   RTC.factoryResetCounter++;
   saveToRTC();
 
-  //always format on factory reset, in case of corrupt FS
+  // always format on factory reset, in case of corrupt FS
   ESPEASY_FS.end();
   serialPrintln(F("RESET: formatting..."));
   ESPEASY_FS.format();
   serialPrintln(F("RESET: formatting done..."));
+
   if (!ESPEASY_FS.begin())
   {
     serialPrintln(F("RESET: FORMAT FS FAILED!"));
@@ -960,72 +984,77 @@ void ResetFactory()
   }
 
 
-  //pad files with extra zeros for future extensions
+  // pad files with extra zeros for future extensions
   String fname;
 
-  fname=FILE_CONFIG;
+  fname = FILE_CONFIG;
   InitFile(fname.c_str(), CONFIG_FILE_SIZE);
 
-  fname=FILE_SECURITY;
+  fname = FILE_SECURITY;
   InitFile(fname.c_str(), 4096);
 
   #ifdef USES_NOTIFIER
-  fname=FILE_NOTIFICATION;
+  fname = FILE_NOTIFICATION;
   InitFile(fname.c_str(), 4096);
-  #endif
-  fname=FILE_RULES;
+  #endif // ifdef USES_NOTIFIER
+  fname = FILE_RULES;
   InitFile(fname.c_str(), 0);
 
   Settings.clearMisc();
+
   if (!ResetFactoryDefaultPreference.keepNTP()) {
     Settings.clearTimeSettings();
-    Settings.UseNTP			= DEFAULT_USE_NTP;
+    Settings.UseNTP = DEFAULT_USE_NTP;
     strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
-    Settings.TimeZone		= DEFAULT_TIME_ZONE;
-    Settings.DST   			= DEFAULT_USE_DST;
+    Settings.TimeZone = DEFAULT_TIME_ZONE;
+    Settings.DST      = DEFAULT_USE_DST;
   }
 
   if (!ResetFactoryDefaultPreference.keepNetwork()) {
     Settings.clearNetworkSettings();
+
     // TD-er Reset access control
-    str2ip(F(DEFAULT_IPRANGE_LOW), SecuritySettings.AllowedIPrangeLow);
+    str2ip(F(DEFAULT_IPRANGE_LOW),  SecuritySettings.AllowedIPrangeLow);
     str2ip(F(DEFAULT_IPRANGE_HIGH), SecuritySettings.AllowedIPrangeHigh);
     SecuritySettings.IPblockLevel = DEFAULT_IP_BLOCK_LEVEL;
 
     #if DEFAULT_USE_STATIC_IP
-      str2ip((char*)DEFAULT_IP, Settings.IP);
-      str2ip((char*)DEFAULT_DNS, Settings.DNS);
-      str2ip((char*)DEFAULT_GW, Settings.Gateway);
-      str2ip((char*)DEFAULT_SUBNET, Settings.Subnet);
-    #endif
+    str2ip((char *)DEFAULT_IP,     Settings.IP);
+    str2ip((char *)DEFAULT_DNS,    Settings.DNS);
+    str2ip((char *)DEFAULT_GW,     Settings.Gateway);
+    str2ip((char *)DEFAULT_SUBNET, Settings.Subnet);
+    #endif // if DEFAULT_USE_STATIC_IP
   }
 
   Settings.clearNotifications();
   Settings.clearControllers();
   Settings.clearTasks();
+
   if (!ResetFactoryDefaultPreference.keepLogSettings()) {
     Settings.clearLogSettings();
-    str2ip((char*)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
+    str2ip((char *)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
 
     setLogLevelFor(LOG_TO_SYSLOG, DEFAULT_SYSLOG_LEVEL);
     setLogLevelFor(LOG_TO_SERIAL, DEFAULT_SERIAL_LOG_LEVEL);
     setLogLevelFor(LOG_TO_WEBLOG, DEFAULT_WEB_LOG_LEVEL);
     setLogLevelFor(LOG_TO_SDCARD, DEFAULT_SD_LOG_LEVEL);
-    Settings.SyslogFacility	= DEFAULT_SYSLOG_FACILITY;
+    Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
     Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
   }
+
   if (!ResetFactoryDefaultPreference.keepUnitName()) {
     Settings.clearUnitNameSettings();
-    Settings.Unit           = UNIT;
+    Settings.Unit = UNIT;
     strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
-    Settings.UDPPort				= DEFAULT_SYNC_UDP_PORT;
+    Settings.UDPPort = DEFAULT_SYNC_UDP_PORT;
   }
+
   if (!ResetFactoryDefaultPreference.keepWiFi()) {
-    strcpy_P(SecuritySettings.WifiSSID, PSTR(DEFAULT_SSID));
-    strcpy_P(SecuritySettings.WifiKey, PSTR(DEFAULT_KEY));
+    strcpy_P(SecuritySettings.WifiSSID,  PSTR(DEFAULT_SSID));
+    strcpy_P(SecuritySettings.WifiKey,   PSTR(DEFAULT_KEY));
     strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
     SecuritySettings.WifiSSID2[0] = 0;
-    SecuritySettings.WifiKey2[0] = 0;
+    SecuritySettings.WifiKey2[0]  = 0;
   }
   strcpy_P(SecuritySettings.Password, PSTR(DEFAULT_ADMIN_PASS));
 
@@ -1034,73 +1063,77 @@ void ResetFactory()
   // now we set all parameters that need to be non-zero as default value
 
 
-  Settings.PID             = ESP_PROJECT_PID;
-  Settings.Version         = VERSION;
-  Settings.Build           = BUILD;
-//  Settings.IP_Octet				 = DEFAULT_IP_OCTET;
-  Settings.Delay           = DEFAULT_DELAY;
-  Settings.Pin_i2c_sda     = gpio_settings.i2c_sda;
-  Settings.Pin_i2c_scl     = gpio_settings.i2c_scl;
-  Settings.Pin_status_led  = gpio_settings.status_led;
-  Settings.Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
-  Settings.Pin_sd_cs       = -1;
-  Settings.Pin_Reset       = DEFAULT_PIN_RESET_BUTTON;
-  Settings.Protocol[0]     = DEFAULT_PROTOCOL;
-  Settings.deepSleep_wakeTime       = false;
-  Settings.CustomCSS       = false;
-  Settings.InitSPI         = DEFAULT_SPI;
+  Settings.PID     = ESP_PROJECT_PID;
+  Settings.Version = VERSION;
+  Settings.Build   = BUILD;
+
+  //  Settings.IP_Octet				 = DEFAULT_IP_OCTET;
+  Settings.Delay                   = DEFAULT_DELAY;
+  Settings.Pin_i2c_sda             = gpio_settings.i2c_sda;
+  Settings.Pin_i2c_scl             = gpio_settings.i2c_scl;
+  Settings.Pin_status_led          = gpio_settings.status_led;
+  Settings.Pin_status_led_Inversed = DEFAULT_PIN_STATUS_LED_INVERSED;
+  Settings.Pin_sd_cs               = -1;
+  Settings.Pin_Reset               = DEFAULT_PIN_RESET_BUTTON;
+  Settings.Protocol[0]             = DEFAULT_PROTOCOL;
+  Settings.deepSleep_wakeTime      = false;
+  Settings.CustomCSS               = false;
+  Settings.InitSPI                 = DEFAULT_SPI;
+
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
-    Settings.TaskDevicePin1[x] = -1;
-    Settings.TaskDevicePin2[x] = -1;
-    Settings.TaskDevicePin3[x] = -1;
-    Settings.TaskDevicePin1PullUp[x] = true;
+    Settings.TaskDevicePin1[x]         = -1;
+    Settings.TaskDevicePin2[x]         = -1;
+    Settings.TaskDevicePin3[x]         = -1;
+    Settings.TaskDevicePin1PullUp[x]   = true;
     Settings.TaskDevicePin1Inversed[x] = false;
-    for (controllerIndex_t y = 0; y < CONTROLLER_MAX; y++)
+
+    for (controllerIndex_t y = 0; y < CONTROLLER_MAX; y++) {
       Settings.TaskDeviceSendData[y][x] = true;
+    }
     Settings.TaskDeviceTimer[x] = Settings.Delay;
   }
 
   // advanced Settings
-  Settings.UseRules 		= DEFAULT_USE_RULES;
-  Settings.ControllerEnabled[0] = DEFAULT_CONTROLLER_ENABLED;
-  Settings.MQTTRetainFlag_unused	= DEFAULT_MQTT_RETAIN;
-  Settings.MessageDelay_unused	= DEFAULT_MQTT_DELAY;
+  Settings.UseRules                         = DEFAULT_USE_RULES;
+  Settings.ControllerEnabled[0]             = DEFAULT_CONTROLLER_ENABLED;
+  Settings.MQTTRetainFlag_unused            = DEFAULT_MQTT_RETAIN;
+  Settings.MessageDelay_unused              = DEFAULT_MQTT_DELAY;
   Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
   // allow to set default latitude and longitude
   #ifdef DEFAULT_LATITUDE
-    Settings.Latitude   = DEFAULT_LATITUDE;
-  #endif
+  Settings.Latitude = DEFAULT_LATITUDE;
+  #endif // ifdef DEFAULT_LATITUDE
   #ifdef DEFAULT_LONGITUDE
-    Settings.Longitude  = DEFAULT_LONGITUDE;
-  #endif
+  Settings.Longitude = DEFAULT_LONGITUDE;
+  #endif // ifdef DEFAULT_LONGITUDE
 
-  Settings.UseSerial		= DEFAULT_USE_SERIAL;
-  Settings.BaudRate		= DEFAULT_SERIAL_BAUD;
+  Settings.UseSerial = DEFAULT_USE_SERIAL;
+  Settings.BaudRate  = DEFAULT_SERIAL_BAUD;
 
-  Settings.ETH_Phy_Addr            = gpio_settings.eth_phyaddr;
-  Settings.ETH_Pin_mdc             = gpio_settings.eth_mdc;
-  Settings.ETH_Pin_mdio            = gpio_settings.eth_mdio;
-  Settings.ETH_Pin_power           = gpio_settings.eth_power;
-  Settings.ETH_Phy_Type            = gpio_settings.eth_phytype;
-  Settings.ETH_Clock_Mode          = gpio_settings.eth_clock_mode;
-  Settings.NetworkMedium           = gpio_settings.active_network_medium;
+  Settings.ETH_Phy_Addr   = gpio_settings.eth_phyaddr;
+  Settings.ETH_Pin_mdc    = gpio_settings.eth_mdc;
+  Settings.ETH_Pin_mdio   = gpio_settings.eth_mdio;
+  Settings.ETH_Pin_power  = gpio_settings.eth_power;
+  Settings.ETH_Phy_Type   = gpio_settings.eth_phytype;
+  Settings.ETH_Clock_Mode = gpio_settings.eth_clock_mode;
+  Settings.NetworkMedium  = gpio_settings.active_network_medium;
 
-/*
-	Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
+  /*
+          Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
 
-	Settings.IP_Octet						= DEFAULT_IP_OCTET;
-	Settings.WDI2CAddress					= DEFAULT_WD_IC2_ADDRESS;
-	Settings.UseSSDP						= DEFAULT_USE_SSDP;
-	Settings.ConnectionFailuresThreshold	= DEFAULT_CON_FAIL_THRES;
-	Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
-*/
-  Settings.I2C_clockSpeed     = DEFAULT_I2C_CLOCK_SPEED;
+          Settings.IP_Octet						= DEFAULT_IP_OCTET;
+          Settings.WDI2CAddress					= DEFAULT_WD_IC2_ADDRESS;
+          Settings.UseSSDP						= DEFAULT_USE_SSDP;
+          Settings.ConnectionFailuresThreshold	= DEFAULT_CON_FAIL_THRES;
+          Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
+   */
+  Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
 
 #ifdef PLUGIN_DESCR
   strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));
-#endif
+#endif // ifdef PLUGIN_DESCR
 
   addPredefinedPlugins(gpio_settings);
   addPredefinedRules(gpio_settings);
@@ -1109,13 +1142,16 @@ void ResetFactory()
   {
     // Place in a scope to have its memory freed ASAP
     MakeControllerSettings(ControllerSettings);
+
     if (AllocatedControllerSettings()) {
-      safe_strncpy(ControllerSettings.Subscribe, F(DEFAULT_SUB), sizeof(ControllerSettings.Subscribe));
-      safe_strncpy(ControllerSettings.Publish, F(DEFAULT_PUB), sizeof(ControllerSettings.Publish));
-      safe_strncpy(ControllerSettings.MQTTLwtTopic, F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
-      safe_strncpy(ControllerSettings.LWTMessageConnect, F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageConnect));
-      safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE), sizeof(ControllerSettings.LWTMessageDisconnect));
-      str2ip((char*)DEFAULT_SERVER, ControllerSettings.IP);
+      safe_strncpy(ControllerSettings.Subscribe,            F(DEFAULT_SUB),            sizeof(ControllerSettings.Subscribe));
+      safe_strncpy(ControllerSettings.Publish,              F(DEFAULT_PUB),            sizeof(ControllerSettings.Publish));
+      safe_strncpy(ControllerSettings.MQTTLwtTopic,         F(DEFAULT_MQTT_LWT_TOPIC), sizeof(ControllerSettings.MQTTLwtTopic));
+      safe_strncpy(ControllerSettings.LWTMessageConnect,    F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE),
+                   sizeof(ControllerSettings.LWTMessageConnect));
+      safe_strncpy(ControllerSettings.LWTMessageDisconnect, F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE),
+                   sizeof(ControllerSettings.LWTMessageDisconnect));
+      str2ip((char *)DEFAULT_SERVER, ControllerSettings.IP);
       ControllerSettings.setHostname(F(DEFAULT_SERVER_HOST));
       ControllerSettings.UseDNS = DEFAULT_SERVER_USEDNS;
       ControllerSettings.useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
@@ -1126,26 +1162,25 @@ void ResetFactory()
       SaveControllerSettings(0, ControllerSettings);
     }
   }
-#endif
+#endif // if DEFAULT_CONTROLLER
 
   SaveSettings();
 
   checkRAM(F("ResetFactory2"));
   serialPrintln(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));
-  //NOTE: this is a known ESP8266 bug, not our fault. :)
+
+  // NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
-  WiFi.persistent(true); // use SDK storage of SSID/WPA parameters
+  WiFi.persistent(true);  // use SDK storage of SSID/WPA parameters
   intent_to_reboot = true;
-  WifiDisconnect(); // this will store empty ssid/wpa into sdk storage
+  WifiDisconnect();       // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   reboot();
 }
 
-
 /********************************************************************************************\
-  If RX and TX tied together, perform emergency reset to get the system out of boot loops
-  \*********************************************************************************************/
-
+   If RX and TX tied together, perform emergency reset to get the system out of boot loops
+ \*********************************************************************************************/
 void emergencyReset()
 {
   // Direct Serial is allowed here, since this is only an emergency task.
@@ -1153,51 +1188,51 @@ void emergencyReset()
   Serial.write(0xAA);
   Serial.write(0x55);
   delay(1);
-  if (Serial.available() == 2)
-    if (Serial.read() == 0xAA && Serial.read() == 0x55)
+
+  if (Serial.available() == 2) {
+    if ((Serial.read() == 0xAA) && (Serial.read() == 0x55))
     {
       serialPrintln(F("\n\n\rSystem will reset to factory defaults in 10 seconds..."));
       delay(10000);
       ResetFactory();
     }
+  }
 }
 
-
 /********************************************************************************************\
-  Get free system mem
-  \*********************************************************************************************/
+   Get free system mem
+ \*********************************************************************************************/
 unsigned long FreeMem(void)
 {
   #if defined(ESP8266)
-    return system_get_free_heap_size();
-  #endif
+  return system_get_free_heap_size();
+  #endif // if defined(ESP8266)
   #if defined(ESP32)
-    return ESP.getFreeHeap();
-  #endif
+  return ESP.getFreeHeap();
+  #endif // if defined(ESP32)
 }
-
 
 unsigned long getMaxFreeBlock()
 {
   unsigned long freemem = FreeMem();
+
   #ifdef CORE_POST_2_5_0
-    // computing max free block is a rather extensive operation, so only perform when free memory is already low.
-    if (freemem < 6144) {
-      return ESP.getMaxFreeBlockSize();
-    }
-  #endif
+
+  // computing max free block is a rather extensive operation, so only perform when free memory is already low.
+  if (freemem < 6144) {
+    return ESP.getMaxFreeBlockSize();
+  }
+  #endif // ifdef CORE_POST_2_5_0
   return freemem;
 }
-
-
-
 
 void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seconds)
 {
   #ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
-    log = F("timeStringToSeconds: ");
+    log  = F("timeStringToSeconds: ");
     log += tBuf;
     log += F(" -> ");
     log += hours;
@@ -1241,7 +1276,7 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
     // Old format, only HH:MM
     if (!validIntFromString(tBuf.substring(hour_sep_pos + 1), minutes)) {
       logtimeStringToSeconds(tBuf, hours, minutes, seconds);
-      return false;    
+      return false;
     }
   } else {
     // New format, only HH:MM:SS
@@ -1263,7 +1298,6 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
   logtimeStringToSeconds(tBuf, hours, minutes, seconds);
   return true;
 }
-
 
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
@@ -1316,13 +1350,15 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   // Keep current loaded taskSettings to restore at the end.
   byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
   String newString;
+
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
 
 
-  if (parseTemplate_CallBack_ptr != nullptr)
-     parseTemplate_CallBack_ptr(tmpString, useURLencode);
+  if (parseTemplate_CallBack_ptr != nullptr) {
+    parseTemplate_CallBack_ptr(tmpString, useURLencode);
+  }
   parseSystemVariables(tmpString, useURLencode);
-  
+
 
   int startpos = 0;
   int lastStartpos = 0;
@@ -1332,7 +1368,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   while (findNextDevValNameInString(tmpString, startpos, endpos, deviceName, valueName, format)) {
     // First copy all upto the start of the [...#...] part to be replaced.
     newString += tmpString.substring(lastStartpos, startpos);
-    
+
     // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
     if (deviceName.equals(F("plugin")))
     {
@@ -1353,7 +1389,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
         newString += command;
       }
     }
-    else if (deviceName.equals(F("var")) || deviceName.equals(F("int"))) 
+    else if (deviceName.equals(F("var")) || deviceName.equals(F("int")))
     {
       // Address an internal variable either as float or as int
       // For example: Let,10,[VAR#9]
@@ -1362,6 +1398,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
       if (validIntFromString(valueName, varNum)) {
         if ((varNum > 0) && (varNum <= CUSTOM_VARS_MAX)) {
           unsigned char nr_decimals = 2;
+
           if (deviceName.equals(F("int"))) {
             nr_decimals = 0;
           } else if (format.length() != 0)
@@ -1375,7 +1412,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
         }
       }
     }
-    else 
+    else
     {
       // Address a value from a plugin.
       // For example: "[bme#temp]"
@@ -1403,11 +1440,11 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
           if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
           {
             transformValue(newString, minimal_lineSize, tmpName, format, tmpString);
-          }                  
+          }
         }
       }
     }
-    
+
 
     // Conversion is done (or impossible) for the found "[...#...]"
     // Continue with the next one.
@@ -1417,7 +1454,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
     // This may have taken some time, so call delay()
     delay(0);
   }
-  
+
   // Copy the rest of the string (or all if no replacements were done)
   newString += tmpString.substring(lastStartpos);
 
@@ -1432,7 +1469,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   parseStandardConversions(newString, useURLencode);
 
   // process other markups as well
-  parse_string_commands(newString); 
+  parse_string_commands(newString);
 
   // padding spaces
   while (newString.length() < minimal_lineSize) {
@@ -1450,13 +1487,16 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
 {
   // cache this, since LoadTaskSettings does take some time.
   auto result = Cache.taskIndexName.find(deviceName);
+
   if (result != Cache.taskIndexName.end()) {
     return result->second;
   }
+
   for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
   {
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       String taskDeviceName = getTaskDeviceName(taskIndex);
+
       if (taskDeviceName.length() != 0)
       {
         // Use entered taskDeviceName can have any case, so compare case insensitive.
@@ -1473,28 +1513,32 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
 
 // Find the first device value index of a taskIndex.
 // Return VARS_PER_TASK if none found.
-byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex) 
+byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
 {
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
-  if (!validDeviceIndex(deviceIndex)) return VARS_PER_TASK;
+
+  if (!validDeviceIndex(deviceIndex)) { return VARS_PER_TASK; }
 
   // cache this, since LoadTaskSettings does take some time.
   // We need to use a cache search key including the taskIndex,
   // to allow several tasks to have the same value names.
   String cache_valueName;
+
   cache_valueName.reserve(valueName.length() + 4);
-  cache_valueName = valueName;
-  cache_valueName += '#'; // The '#' cannot exist in a value name, use it in the cache key.
+  cache_valueName  = valueName;
+  cache_valueName += '#';        // The '#' cannot exist in a value name, use it in the cache key.
   cache_valueName += taskIndex;
   cache_valueName.toLowerCase(); // No need to store multiple versions of the same entry with only different case.
 
   auto result = Cache.taskIndexValueName.find(cache_valueName);
+
   if (result != Cache.taskIndexValueName.end()) {
     return result->second;
   }
   LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
 
   const byte valCount = getValueCountForTask(taskIndex);
+
   for (byte valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
@@ -1517,6 +1561,7 @@ bool findNextValMarkInString(const String& input, int& startpos, int& hashpos, i
   int tmpHashpos = input.indexOf('#', tmpStartpos);
 
   if (tmpHashpos == -1) { return false; }
+
   // We found a hash position, check if there is another '[' inbetween.
   for (int i = tmpStartpos; i < tmpHashpos; ++i) {
     if (input[i] == '[') {
@@ -1561,95 +1606,105 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
 }
 
 /********************************************************************************************\
-  Transform values
-\*********************************************************************************************/
+   Transform values
+ \*********************************************************************************************/
+
 // Syntax: [task#value#transformation#justification]
 // valueFormat="transformation#justification"
 void transformValue(
-	String& newString,
-  byte lineSize,
-	String value,
-	String& valueFormat,
-  const String &tmpString)
+  String      & newString,
+  byte          lineSize,
+  String        value,
+  String      & valueFormat,
+  const String& tmpString)
 {
   // FIXME TD-er: This function does append to newString and uses its length to perform right aling.
   // Is this the way it is intended to use?
-  
+
   checkRAM(F("transformValue"));
 
   // start changes by giig1967g - 2018-04-20
   // Syntax: [task#value#transformation#justification]
   // valueFormat="transformation#justification"
-  if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
+  if (valueFormat.length() > 0) // do the checks only if a Format is defined to optimize loop
   {
     String valueJust = "";
 
     int hashtagIndex = valueFormat.indexOf('#');
+
     if (hashtagIndex >= 0)
     {
-      valueJust = valueFormat.substring(hashtagIndex + 1); //Justification part
-      valueFormat = valueFormat.substring(0, hashtagIndex); //Transformation part
+      valueJust   = valueFormat.substring(hashtagIndex + 1); // Justification part
+      valueFormat = valueFormat.substring(0, hashtagIndex);  // Transformation part
     }
 
     // valueFormat="transformation"
     // valueJust="justification"
-    if (valueFormat.length() > 0) //do the checks only if a Format is defined to optimize loop
+    if (valueFormat.length() > 0) // do the checks only if a Format is defined to optimize loop
     {
-      int logicVal = 0;
+      int   logicVal = 0;
       float valFloat = 0.0f;
+
       if (validFloatFromString(value, valFloat))
       {
-        //to be used for binary values (0 or 1)
-        logicVal = static_cast<int>(roundf(valFloat)) == 0 ? 0 : 1; 
+        // to be used for binary values (0 or 1)
+        logicVal = static_cast<int>(roundf(valFloat)) == 0 ? 0 : 1;
       } else {
         if (value.length() > 0) {
           logicVal = 1;
-        }        
+        }
       }
       String tempValueFormat = valueFormat;
       {
         const int invertedIndex = tempValueFormat.indexOf('!');
+
         if (invertedIndex != -1) {
           // We must invert the value.
           logicVal = (logicVal == 0) ? 1 : 0;
+
           // Remove the '!' from the string.
-          tempValueFormat.remove(invertedIndex,1);
+          tempValueFormat.remove(invertedIndex, 1);
         }
       }
 
-      const int rightJustifyIndex = tempValueFormat.indexOf('R');
-      const bool rightJustify = rightJustifyIndex >= 0 ? 1 : 0;
-      if (rightJustify)
-        tempValueFormat.remove(rightJustifyIndex,1);
+      const int  rightJustifyIndex = tempValueFormat.indexOf('R');
+      const bool rightJustify      = rightJustifyIndex >= 0 ? 1 : 0;
+
+      if (rightJustify) {
+        tempValueFormat.remove(rightJustifyIndex, 1);
+      }
 
       const int tempValueFormatLength = tempValueFormat.length();
 
-      //Check Transformation syntax
+      // Check Transformation syntax
       if (tempValueFormatLength > 0)
       {
         switch (tempValueFormat[0])
-          {
-          case 'V': //value = value without transformations
+        {
+          case 'V': // value = value without transformations
             break;
           case 'p': // Password hide using asterisks or custom character: pc
+          {
+            char maskChar = '*';
+
+            if (tempValueFormatLength > 1)
             {
-              char maskChar = '*';
-              if (tempValueFormatLength > 1)
-              {
-                maskChar = tempValueFormat[1];
-              }
-              if (value == F("0")) {
-                value = "";
-              } else {
-                const int valueLength = value.length();
-                for (int i = 0; i < valueLength; i++) {
-                  value[i] = maskChar;
-                }
+              maskChar = tempValueFormat[1];
+            }
+
+            if (value == F("0")) {
+              value = "";
+            } else {
+              const int valueLength = value.length();
+
+              for (int i = 0; i < valueLength; i++) {
+                value[i] = maskChar;
               }
             }
             break;
+          }
           case 'O':
-            value = logicVal == 0 ? F("OFF") : F(" ON"); //(equivalent to XOR operator)
+            value = logicVal == 0 ? F("OFF") : F(" ON"); // (equivalent to XOR operator)
             break;
           case 'C':
             value = logicVal == 0 ? F("CLOSE") : F(" OPEN");
@@ -1690,116 +1745,133 @@ void transformValue(
           case 'l':
             value = logicVal == 0 ? F("L") : F("R");
             break;
-          case 'Z' :// return "0" or "1"
+          case 'Z': // return "0" or "1"
             value = logicVal == 0 ? "0" : "1";
             break;
-          case 'D' ://Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
-          case 'd' ://like above but with spaces padding
-            {
-              int x;
-              int y;
-              x = 0;
-              y = 0;
+          case 'D': // Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
+          case 'd': // like above but with spaces padding
+          {
+            int x;
+            int y;
+            x = 0;
+            y = 0;
 
-              switch (tempValueFormatLength)
-              {
-                case 2: //Dx
-                  if (isDigit(tempValueFormat[1]))
-                  {
-                    x = (int)tempValueFormat[1]-'0';
-                  }
-                  break;
-                case 3: //D.y
-                  if (tempValueFormat[1]=='.' && isDigit(tempValueFormat[2]))
-                  {
-                    y = (int)tempValueFormat[2]-'0';
-                  }
-                  break;
-                case 4: //Dx.y
-                  if (isDigit(tempValueFormat[1]) && tempValueFormat[2]=='.' && isDigit(tempValueFormat[3]))
-                  {
-                    x = (int)tempValueFormat[1]-'0';
-                    y = (int)tempValueFormat[3]-'0';
-                  }
-                  break;
-                case 1: //D
-                default: //any other combination x=0; y=0;
-                  break;
-              }
-              value = toString(valFloat,y);
-              int indexDot = value.indexOf('.');
-              if (indexDot == -1) {
-                indexDot = value.length();
-              }              
-              for (byte f = 0; f < (x - indexDot); f++) {
-                value = (tempValueFormat[0]=='d'? ' ' : '0') + value;
-              }
-              break;
+            switch (tempValueFormatLength)
+            {
+              case 2: // Dx
+
+                if (isDigit(tempValueFormat[1]))
+                {
+                  x = (int)tempValueFormat[1] - '0';
+                }
+                break;
+              case 3: // D.y
+
+                if ((tempValueFormat[1] == '.') && isDigit(tempValueFormat[2]))
+                {
+                  y = (int)tempValueFormat[2] - '0';
+                }
+                break;
+              case 4: // Dx.y
+
+                if (isDigit(tempValueFormat[1]) && (tempValueFormat[2] == '.') && isDigit(tempValueFormat[3]))
+                {
+                  x = (int)tempValueFormat[1] - '0';
+                  y = (int)tempValueFormat[3] - '0';
+                }
+                break;
+              case 1:  // D
+              default: // any other combination x=0; y=0;
+                break;
             }
-          case 'F' :// FLOOR (round down)
+            value = toString(valFloat, y);
+            int indexDot = value.indexOf('.');
+
+            if (indexDot == -1) {
+              indexDot = value.length();
+            }
+
+            for (byte f = 0; f < (x - indexDot); f++) {
+              value = (tempValueFormat[0] == 'd' ? ' ' : '0') + value;
+            }
+            break;
+          }
+          case 'F': // FLOOR (round down)
             value = (int)floorf(valFloat);
             break;
-          case 'E' :// CEILING (round up)
+          case 'E': // CEILING (round up)
             value = (int)ceilf(valFloat);
             break;
           default:
             value = F("ERR");
             break;
-          }
+        }
 
-          // Check Justification syntax
-          const int valueJustLength = valueJust.length();
-          if (valueJustLength > 0) //do the checks only if a Justification is defined to optimize loop
+        // Check Justification syntax
+        const int valueJustLength = valueJust.length();
+
+        if (valueJustLength > 0) // do the checks only if a Justification is defined to optimize loop
+        {
+          value.trim();          // remove right justification spaces for backward compatibility
+
+          switch (valueJust[0])
           {
-            value.trim(); //remove right justification spaces for backward compatibility
-            switch (valueJust[0])
-            {
-            case 'P' :// Prefix Fill with n spaces: Pn
+            case 'P': // Prefix Fill with n spaces: Pn
+
               if (valueJustLength > 1)
               {
-                if (isDigit(valueJust[1])) //Check Pn where n is between 0 and 9
+                if (isDigit(valueJust[1]))                          // Check Pn where n is between 0 and 9
                 {
-                  int filler = valueJust[1] - value.length() - '0' ; //char '0' = 48; char '9' = 58
-                  for (byte f = 0; f < filler; f++)
+                  int filler = valueJust[1] - value.length() - '0'; // char '0' = 48; char '9' = 58
+
+                  for (byte f = 0; f < filler; f++) {
                     newString += ' ';
+                  }
                 }
               }
               break;
-            case 'S' :// Suffix Fill with n spaces: Sn
+            case 'S': // Suffix Fill with n spaces: Sn
+
               if (valueJustLength > 1)
               {
-                if (isDigit(valueJust[1])) //Check Sn where n is between 0 and 9
+                if (isDigit(valueJust[1]))                          // Check Sn where n is between 0 and 9
                 {
-                  int filler = valueJust[1] - value.length() - '0' ; //48
-                  for (byte f = 0; f < filler; f++)
+                  int filler = valueJust[1] - value.length() - '0'; // 48
+
+                  for (byte f = 0; f < filler; f++) {
                     value += ' ';
+                  }
                 }
               }
               break;
-            case 'L': //left part of the string
+            case 'L': // left part of the string
+
               if (valueJustLength > 1)
               {
-                if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
+                if (isDigit(valueJust[1])) // Check n where n is between 0 and 9
                 {
-                  value = value.substring(0,(int)valueJust[1]-'0');
+                  value = value.substring(0, (int)valueJust[1] - '0');
                 }
               }
               break;
-            case 'R': //Right part of the string
+            case 'R': // Right part of the string
+
               if (valueJustLength > 1)
               {
-                if (isDigit(valueJust[1])) //Check n where n is between 0 and 9
+                if (isDigit(valueJust[1])) // Check n where n is between 0 and 9
                 {
-                  value = value.substring(std::max(0,(int)value.length()-((int)valueJust[1]-'0')));
-                 }
+                  value = value.substring(std::max(0, (int)value.length() - ((int)valueJust[1] - '0')));
+                }
               }
               break;
-            case 'U': //Substring Ux.y where x=firstChar and y=number of characters
+            case 'U': // Substring Ux.y where x=firstChar and y=number of characters
+
               if (valueJustLength > 1)
               {
-                if (isDigit(valueJust[1]) && valueJust[2]=='.' && isDigit(valueJust[3]) && valueJust[1] > '0' && valueJust[3] > '0')
+                if (isDigit(valueJust[1]) && (valueJust[2] == '.') && isDigit(valueJust[3]) && (valueJust[1] > '0') && (valueJust[3] > '0'))
                 {
-                  value = value.substring(std::min((int)value.length(),(int)valueJust[1]-'0'-1),(int)valueJust[1]-'0'-1+(int)valueJust[3]-'0');
+                  value = value.substring(std::min((int)value.length(), (int)valueJust[1] - '0' - 1),
+                                          (int)valueJust[1] - '0' - 1 + (int)valueJust[3] - '0');
                 }
                 else
                 {
@@ -1808,12 +1880,15 @@ void transformValue(
               }
               break;
             case 'C': // Capitalize First Word-Character value (space/period are checked)
+
               if (value.length() > 0) {
                 value.toLowerCase();
                 bool nextCapital = true;
-                for (uint8_t i = 0; i < value.length();i++) {
-                  if (nextCapital)
+
+                for (uint8_t i = 0; i < value.length(); i++) {
+                  if (nextCapital) {
                     value[i] = toupper(value[i]);
+                  }
                   nextCapital = (value[i] == ' ' || value[i] == '.'); // Very simple, capitalize-first-after-space/period
                 }
               }
@@ -1830,14 +1905,18 @@ void transformValue(
           }
         }
       }
+
       if (rightJustify)
       {
-        int filler = lineSize - newString.length() - value.length() - tmpString.length() ;
-        for (byte f = 0; f < filler; f++)
+        int filler = lineSize - newString.length() - value.length() - tmpString.length();
+
+        for (byte f = 0; f < filler; f++) {
           newString += ' ';
+        }
       }
       {
 #ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String logFormatted = F("DEBUG: Formatted String='");
           logFormatted += newString;
@@ -1845,36 +1924,38 @@ void transformValue(
           logFormatted += '\'';
           addLog(LOG_LEVEL_DEBUG, logFormatted);
         }
-#endif
+#endif // ifndef BUILD_NO_DEBUG
       }
     }
   }
-  //end of changes by giig1967g - 2018-04-18
+
+  // end of changes by giig1967g - 2018-04-18
 
   newString += value;
   {
 #ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
       String logParsed = F("DEBUG DEV: Parsed String='");
       logParsed += newString;
       logParsed += '\'';
       addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
     }
-#endif
+#endif // ifndef BUILD_NO_DEBUG
   }
   checkRAM(F("transformValue2"));
 }
 
 /********************************************************************************************\
-  Calculate function for simple expressions
-  \*********************************************************************************************/
+   Calculate function for simple expressions
+ \*********************************************************************************************/
 
-float globalstack[STACK_SIZE];
-float *sp = globalstack - 1;
+float  globalstack[STACK_SIZE];
+float *sp     = globalstack - 1;
 float *sp_max = &globalstack[STACK_SIZE - 1];
 
-#define is_operator(c)  (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%')
-#define is_unary_operator(c)  (c == '!')
+#define is_operator(c) (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%')
+#define is_unary_operator(c) (c == '!')
 
 int push(float value)
 {
@@ -1883,16 +1964,19 @@ int push(float value)
     *(++sp) = value;
     return 0;
   }
-  else
+  else {
     return CALCULATE_ERROR_STACK_OVERFLOW;
+  }
 }
 
 float pop()
 {
-  if (sp != (globalstack - 1)) // empty
+  if (sp != (globalstack - 1)) { // empty
     return *(sp--);
-  else
+  }
+  else {
     return 0.0f;
+  }
 }
 
 float apply_operator(char op, float first, float second)
@@ -1927,35 +2011,39 @@ float apply_unary_operator(char op, float first)
   }
 }
 
-char *next_token(char *linep)
+char* next_token(char *linep)
 {
-  while (isspace(*(linep++)));
-  while (*linep && !isspace(*(linep++)));
+  while (isspace(*(linep++))) {}
+
+  while (*linep && !isspace(*(linep++))) {}
   return linep;
 }
 
-int RPNCalculate(char* token)
+int RPNCalculate(char *token)
 {
-  if (token[0] == 0)
+  if (token[0] == 0) {
     return 0; // geen moeite doen voor een lege string
+  }
 
-  if (is_operator(token[0]) && token[1] == 0)
+  if (is_operator(token[0]) && (token[1] == 0))
   {
     float second = pop();
-    float first = pop();
+    float first  = pop();
 
-    if (push(apply_operator(token[0], first, second)))
+    if (push(apply_operator(token[0], first, second))) {
       return CALCULATE_ERROR_STACK_OVERFLOW;
-  } else if (is_unary_operator(token[0]) && token[1] == 0)
+    }
+  } else if (is_unary_operator(token[0]) && (token[1] == 0))
   {
     float first = pop();
 
-    if (push(apply_unary_operator(token[0], first)))
+    if (push(apply_unary_operator(token[0], first))) {
       return CALCULATE_ERROR_STACK_OVERFLOW;
-
+    }
   } else // Als er nog een is, dan deze ophalen
-    if (push(atof(token))) // is het een waarde, dan op de stack plaatsen
-      return CALCULATE_ERROR_STACK_OVERFLOW;
+  if (push(atof(token))) { // is het een waarde, dan op de stack plaatsen
+    return CALCULATE_ERROR_STACK_OVERFLOW;
+  }
 
   return 0;
 }
@@ -1994,9 +2082,9 @@ bool op_left_assoc(const char c)
     case '+':
     case '-':
     case '%':
-      return true;     // left to right
+      return true;  // left to right
     case '!':
-      return false;    // right to left
+      return false; // right to left
   }
   return false;
 }
@@ -2018,22 +2106,21 @@ unsigned int op_arg_count(const char c)
   return 0;
 }
 
-
-int Calculate(const char *input, float* result)
+int Calculate(const char *input, float *result)
 {
   #define TOKEN_LENGTH 25
   checkRAM(F("Calculate"));
   const char *strpos = input, *strend = input + strlen(input);
   char token[TOKEN_LENGTH];
   char c, oc, *TokenPos = token;
-  char stack[32];       // operator stack
-  unsigned int sl = 0;  // stack length
-  char     sc;          // used for record stack element
-  int error = 0;
+  char stack[32];      // operator stack
+  unsigned int sl = 0; // stack length
+  char sc;             // used for record stack element
+  int  error = 0;
 
-  //*sp=0; // bug, it stops calculating after 50 times
+  // *sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
-  oc=c=0;
+  oc = c = 0;
 
   if (input[0] == '=') {
     ++strpos;
@@ -2042,14 +2129,16 @@ int Calculate(const char *input, float* result)
 
   while (strpos < strend)
   {
-	  if ((TokenPos - &token[0]) >= (TOKEN_LENGTH - 1)) return CALCULATE_ERROR_STACK_OVERFLOW;
+    if ((TokenPos - &token[0]) >= (TOKEN_LENGTH - 1)) { return CALCULATE_ERROR_STACK_OVERFLOW; }
+
     // read one token from the input stream
     oc = c;
-    c = *strpos;
+    c  = *strpos;
+
     if (c != ' ')
     {
       // If the token is a number (identifier), then add it to the token queue.
-      if ((c >= '0' && c <= '9') || c == '.' || (c == '-' && is_operator(oc)))
+      if (((c >= '0') && (c <= '9')) || (c == '.') || ((c == '-') && is_operator(oc)))
       {
         *TokenPos = c;
         ++TokenPos;
@@ -2059,12 +2148,15 @@ int Calculate(const char *input, float* result)
       else if (is_operator(c) || is_unary_operator(c))
       {
         *(TokenPos) = 0;
-        error = RPNCalculate(token);
-        TokenPos = token;
-        if (error)return error;
+        error       = RPNCalculate(token);
+        TokenPos    = token;
+
+        if (error) { return error; }
+
         while (sl > 0 && sl < 31)
         {
           sc = stack[sl - 1];
+
           // While there is an operator token, op2, at the top of the stack
           // op1 is left-associative and its precedence is less than or equal to that of op2,
           // or op1 has precedence less than that of op2,
@@ -2076,39 +2168,48 @@ int Calculate(const char *input, float* result)
             *TokenPos = sc;
             ++TokenPos;
             *(TokenPos) = 0;
-            error = RPNCalculate(token);
-            TokenPos = token;
-            if (error)return error;
+            error       = RPNCalculate(token);
+            TokenPos    = token;
+
+            if (error) { return error; }
             sl--;
           }
-          else
+          else {
             break;
+          }
         }
+
         // push op1 onto the stack.
         stack[sl] = c;
         ++sl;
       }
+
       // If the token is a left parenthesis, then push it onto the stack.
       else if (c == '(')
       {
-		if (sl >= 32) return CALCULATE_ERROR_STACK_OVERFLOW;
+        if (sl >= 32) { return CALCULATE_ERROR_STACK_OVERFLOW; }
         stack[sl] = c;
         ++sl;
       }
+
       // If the token is a right parenthesis:
       else if (c == ')')
       {
         bool pe = false;
+
         // Until the token at the top of the stack is a left parenthesis,
         // pop operators off the stack onto the token queue
         while (sl > 0)
         {
           *(TokenPos) = 0;
-          error = RPNCalculate(token);
-          TokenPos = token;
-          if (error)return error;
-          if (sl > 32) return CALCULATE_ERROR_STACK_OVERFLOW;
+          error       = RPNCalculate(token);
+          TokenPos    = token;
+
+          if (error) { return error; }
+
+          if (sl > 32) { return CALCULATE_ERROR_STACK_OVERFLOW; }
           sc = stack[sl - 1];
+
           if (sc == '(')
           {
             pe = true;
@@ -2121,44 +2222,52 @@ int Calculate(const char *input, float* result)
             sl--;
           }
         }
+
         // If the stack runs out without finding a left parenthesis, then there are mismatched parentheses.
-        if (!pe)
+        if (!pe) {
           return CALCULATE_ERROR_PARENTHESES_MISMATCHED;
+        }
 
         // Pop the left parenthesis from the stack, but not onto the token queue.
         sl--;
 
         // If the token at the top of the stack is a function token, pop it onto the token queue.
-		// FIXME TD-er: This sc value is never used, it is re-assigned a new value before it is being checked.
-        if (sl > 0 && sl < 32)
+        // FIXME TD-er: This sc value is never used, it is re-assigned a new value before it is being checked.
+        if ((sl > 0) && (sl < 32)) {
           sc = stack[sl - 1];
-
+        }
       }
-      else
+      else {
         return CALCULATE_ERROR_UNKNOWN_TOKEN;
+      }
     }
     ++strpos;
   }
+
   // When there are no more tokens to read:
   // While there are still operator tokens in the stack:
   while (sl > 0)
   {
     sc = stack[sl - 1];
-    if (sc == '(' || sc == ')')
+
+    if ((sc == '(') || (sc == ')')) {
       return CALCULATE_ERROR_PARENTHESES_MISMATCHED;
+    }
 
     *(TokenPos) = 0;
-    error = RPNCalculate(token);
-    TokenPos = token;
-    if (error)return error;
+    error       = RPNCalculate(token);
+    TokenPos    = token;
+
+    if (error) { return error; }
     *TokenPos = sc;
     ++TokenPos;
     --sl;
   }
 
   *(TokenPos) = 0;
-  error = RPNCalculate(token);
-  TokenPos = token;
+  error       = RPNCalculate(token);
+  TokenPos    = token;
+
   if (error)
   {
     *result = 0;
@@ -2175,13 +2284,16 @@ int CalculateParam(const char *TmpStr) {
   // Minimize calls to the Calulate function.
   // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
   if (TmpStr[0] != '=') {
-    returnValue=str2int(TmpStr);
+    returnValue = str2int(TmpStr);
   } else {
-    float param=0;
+    float param = 0;
+
     // Starts with an '=', so Calculate starting at next position
-    int returnCode=Calculate(&TmpStr[1], &param);
-    if (returnCode!=CALCULATE_OK) {
+    int returnCode = Calculate(&TmpStr[1], &param);
+
+    if (returnCode != CALCULATE_OK) {
       String errorDesc;
+
       switch (returnCode) {
         case CALCULATE_ERROR_STACK_OVERFLOW:
           errorDesc = F("Stack Overflow");
@@ -2198,19 +2310,20 @@ int CalculateParam(const char *TmpStr) {
         default:
           errorDesc = F("Unknown error");
           break;
-        }
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
-          addLog(LOG_LEVEL_ERROR, log);
-          log = F("CALCULATE PARAM ERROR details: ");
-          log += TmpStr;
-          log += F(" = ");
-          log += round(param);
-          addLog(LOG_LEVEL_ERROR, log);
-        }
       }
+
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
+        addLog(LOG_LEVEL_ERROR, log);
+        log  = F("CALCULATE PARAM ERROR details: ");
+        log += TmpStr;
+        log += F(" = ");
+        log += round(param);
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+    }
 #ifndef BUILD_NO_DEBUG
-        else {
+    else {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CALCULATE PARAM: ");
         log += TmpStr;
@@ -2219,8 +2332,8 @@ int CalculateParam(const char *TmpStr) {
         addLog(LOG_LEVEL_DEBUG, log);
       }
     }
-#endif
-    returnValue=round(param); //return integer only as it's valid only for device and task id
+#endif // ifndef BUILD_NO_DEBUG
+    returnValue = round(param); // return integer only as it's valid only for device and task id
   }
   return returnValue;
 }
@@ -2228,17 +2341,19 @@ int CalculateParam(const char *TmpStr) {
 void SendValueLogger(taskIndex_t TaskIndex)
 {
 #if !defined(BUILD_NO_DEBUG) || defined(FEATURE_SD)
-  bool featureSD = false;
+  bool   featureSD = false;
   String logger;
-  #ifdef FEATURE_SD
-    featureSD = true;
-  #endif
-  
+  # ifdef FEATURE_SD
+  featureSD = true;
+  # endif // ifdef FEATURE_SD
+
   if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+
     if (validDeviceIndex(DeviceIndex)) {
       LoadTaskSettings(TaskIndex);
       const byte valueCount = getValueCountForTask(TaskIndex);
+
       for (byte varNr = 0; varNr < valueCount; varNr++)
       {
         logger += node_time.getDateString('-');
@@ -2256,63 +2371,62 @@ void SendValueLogger(taskIndex_t TaskIndex)
       }
       addLog(LOG_LEVEL_DEBUG, logger);
     }
-
   }
-#endif
+#endif // if !defined(BUILD_NO_DEBUG) || defined(FEATURE_SD)
 
 #ifdef FEATURE_SD
   String filename = F("VALUES.CSV");
-  File logFile = SD.open(filename, FILE_WRITE);
-  if (logFile)
+  File   logFile  = SD.open(filename, FILE_WRITE);
+
+  if (logFile) {
     logFile.print(logger);
+  }
   logFile.close();
-#endif
+#endif // ifdef FEATURE_SD
 }
 
+// #ifdef PLUGIN_BUILD_TESTING
 
-
-
-//#ifdef PLUGIN_BUILD_TESTING
-
-//#define isdigit(n) (n >= '0' && n <= '9') //Conflicts with ArduJson 6+, when this lib is used there is no need for this macro
+// #define isdigit(n) (n >= '0' && n <= '9') //Conflicts with ArduJson 6+, when this lib is used there is no need for this macro
 
 /********************************************************************************************\
-  Generate a tone of specified frequency on pin
-  \*********************************************************************************************/
+   Generate a tone of specified frequency on pin
+ \*********************************************************************************************/
 void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
   #ifdef ESP32
-    toneESP32(_pin,frequency,duration);
-  #else
-    analogWriteFreq(frequency);
-    //NOTE: analogwrite reserves IRAM and uninitalized ram.
-    analogWrite(_pin,100);
-    delay(duration);
-    analogWrite(_pin,0);
-  #endif
+  toneESP32(_pin, frequency, duration);
+  #else // ifdef ESP32
+  analogWriteFreq(frequency);
+
+  // NOTE: analogwrite reserves IRAM and uninitalized ram.
+  analogWrite(_pin, 100);
+  delay(duration);
+  analogWrite(_pin, 0);
+  #endif // ifdef ESP32
 }
 
 /********************************************************************************************\
-  Play RTTTL string on specified pin
-  \*********************************************************************************************/
-void play_rtttl(uint8_t _pin, const char *p )
+   Play RTTTL string on specified pin
+ \*********************************************************************************************/
+void play_rtttl(uint8_t _pin, const char *p)
 {
   checkRAM(F("play_rtttl"));
   #define OCTAVE_OFFSET 0
+
   // FIXME: Absolutely no error checking in here
 
   const int notes[] = { 0,
-    262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494,
-    523, 554, 587, 622, 659, 698, 740, 784, 831, 880, 932, 988,
-    1047, 1109, 1175, 1245, 1319, 1397, 1480, 1568, 1661, 1760, 1865, 1976,
-    2093, 2217, 2349, 2489, 2637, 2794, 2960, 3136, 3322, 3520, 3729, 3951
+                        262, 277,  294,   311,  330,  349,  370,  392,  415,  440,  466,  494,
+                        523, 554,  587,   622,  659,  698,  740,  784,  831,  880,  932,  988,
+                        1047,1109, 1175,  1245, 1319, 1397, 1480, 1568, 1661, 1760, 1865, 1976,
+                        2093,2217, 2349,  2489, 2637, 2794, 2960, 3136, 3322, 3520, 3729, 3951
   };
-
 
 
   byte default_dur = 4;
   byte default_oct = 6;
-  int bpm = 63;
-  int num;
+  int  bpm         = 63;
+  int  num;
   long wholenote;
   long duration;
   byte note;
@@ -2321,62 +2435,69 @@ void play_rtttl(uint8_t _pin, const char *p )
   // format: d=N,o=N,b=NNN:
   // find the start (skip name, etc)
 
-  while(*p != ':') p++;    // ignore name
+  while (*p != ':') { p++; // ignore name
+  }
   p++;                     // skip ':'
 
   // get default duration
-  if(*p == 'd')
+  if (*p == 'd')
   {
-    p++; p++;              // skip "d="
+    p++; p++; // skip "d="
     num = 0;
-    while(isdigit(*p))
+
+    while (isdigit(*p))
     {
       num = (num * 10) + (*p++ - '0');
     }
-    if(num > 0) default_dur = num;
-    p++;                   // skip comma
+
+    if (num > 0) { default_dur = num; }
+    p++; // skip comma
   }
 
   // get default octave
-  if(*p == 'o')
+  if (*p == 'o')
   {
-    p++; p++;              // skip "o="
+    p++; p++; // skip "o="
     num = *p++ - '0';
-    if(num >= 3 && num <=7) default_oct = num;
-    p++;                   // skip comma
+
+    if ((num >= 3) && (num <= 7)) { default_oct = num; }
+    p++; // skip comma
   }
 
   // get BPM
-  if(*p == 'b')
+  if (*p == 'b')
   {
-    p++; p++;              // skip "b="
+    p++; p++; // skip "b="
     num = 0;
-    while(isdigit(*p))
+
+    while (isdigit(*p))
     {
       num = (num * 10) + (*p++ - '0');
     }
     bpm = num;
-    p++;                   // skip colon
+    p++; // skip colon
   }
 
   // BPM usually expresses the number of quarter notes per minute
-  wholenote = (60 * 1000L / bpm) * 4;  // this is the time for whole note (in milliseconds)
+  wholenote = (60 * 1000L / bpm) * 4; // this is the time for whole note (in milliseconds)
 
   // now begin note loop
-  while(*p)
+  while (*p)
   {
     // first, get note duration, if available
     num = 0;
-    while(isdigit(*p))
+
+    while (isdigit(*p))
     {
       num = (num * 10) + (*p++ - '0');
     }
 
-    if (num) duration = wholenote / num;
-    else duration = wholenote / default_dur;  // we will need to check if we are a dotted note after
+    if (num) { duration = wholenote / num; }
+    else { duration = wholenote / default_dur; // we will need to check if we are a dotted note after
+    }
 
     // now get the note
-    switch(*p)
+    switch (*p)
     {
       case 'c':
         note = 1;
@@ -2406,21 +2527,21 @@ void play_rtttl(uint8_t _pin, const char *p )
     p++;
 
     // now, get optional '#' sharp
-    if(*p == '#')
+    if (*p == '#')
     {
       note++;
       p++;
     }
 
     // now, get optional '.' dotted note
-    if(*p == '.')
+    if (*p == '.')
     {
-      duration += duration/2;
+      duration += duration / 2;
       p++;
     }
 
     // now, get scale
-    if(isdigit(*p))
+    if (isdigit(*p))
     {
       scale = *p - '0';
       p++;
@@ -2432,33 +2553,36 @@ void play_rtttl(uint8_t _pin, const char *p )
 
     scale += OCTAVE_OFFSET;
 
-    if(*p == ',')
-      p++;       // skip comma for next note (or we may be at the end)
+    if (*p == ',') {
+      p++; // skip comma for next note (or we may be at the end)
+    }
 
     // now play the note
-    if(note)
+    if (note)
     {
       tone_espEasy(_pin, notes[(scale - 4) * 12 + note], duration);
     }
     else
     {
-      delay(duration/10);
+      delay(duration / 10);
     }
   }
- checkRAM(F("play_rtttl2"));
+  checkRAM(F("play_rtttl2"));
 }
 
-//#endif
+// #endif
 
 bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
 #if defined(ESP8266)
+
   // Compute the current free space and sketch size, rounded to 4k blocks.
   // These block bounaries are needed for erasing a full block on flash.
-  const uint32_t freeSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-  const uint32_t currentSketchSize = (ESP.getSketchSize() + 0x1000) & 0xFFFFF000;
+  const uint32_t freeSketchSpace            = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+  const uint32_t currentSketchSize          = (ESP.getSketchSize() + 0x1000) & 0xFFFFF000;
   const uint32_t smallestOtaImageSizeNeeded = (((SMALLEST_OTA_IMAGE + 16) + 0x1000) & 0xFFFFF000);
-  const bool otaPossible = freeSketchSpace >= smallestOtaImageSizeNeeded;
+  const bool     otaPossible                = freeSketchSpace >= smallestOtaImageSizeNeeded;
   use2step = freeSketchSpace < currentSketchSize; // Assume the new image has the same size.
+
   if (use2step) {
     const uint32_t totalSketchSpace = freeSketchSpace + currentSketchSize;
     maxSketchSize = totalSketchSpace - smallestOtaImageSizeNeeded;
@@ -2466,60 +2590,67 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
     maxSketchSize = freeSketchSpace;
   }
   maxSketchSize -= 16; // Must leave 16 bytes at the end.
-  if (maxSketchSize > MAX_SKETCH_SIZE) maxSketchSize = MAX_SKETCH_SIZE;
+
+  if (maxSketchSize > MAX_SKETCH_SIZE) { maxSketchSize = MAX_SKETCH_SIZE; }
   return otaPossible;
 #elif defined(ESP32)
   maxSketchSize = MAX_SKETCH_SIZE;
-  use2step = false;
+  use2step      = false;
   return true;
-#else
+#else // if defined(ESP8266)
   return false;
-#endif
+#endif // if defined(ESP8266)
 }
 
 #ifdef FEATURE_ARDUINO_OTA
-/********************************************************************************************\
-  Allow updating via the Arduino OTA-protocol. (this allows you to upload directly from platformio)
-  \*********************************************************************************************/
 
+/********************************************************************************************\
+   Allow updating via the Arduino OTA-protocol. (this allows you to upload directly from platformio)
+ \*********************************************************************************************/
 void ArduinoOTAInit()
 {
   checkRAM(F("ArduinoOTAInit"));
 
   ArduinoOTA.setPort(ARDUINO_OTA_PORT);
   ArduinoOTA.setHostname(Settings.getHostname().c_str());
-  if (SecuritySettings.Password[0]!=0)
+
+  if (SecuritySettings.Password[0] != 0) {
     ArduinoOTA.setPassword(SecuritySettings.Password);
+  }
 
   ArduinoOTA.onStart([]() {
-      serialPrintln(F("OTA  : Start upload"));
-      ArduinoOTAtriggered = true;
-      ESPEASY_FS.end(); //important, otherwise it fails
+    serialPrintln(F("OTA  : Start upload"));
+    ArduinoOTAtriggered = true;
+    ESPEASY_FS.end(); // important, otherwise it fails
   });
 
   ArduinoOTA.onEnd([]() {
-      serialPrintln(F("\nOTA  : End"));
-      //"dangerous": if you reset during flash you have to reflash via serial
-      //so dont touch device until restart is complete
-      serialPrintln(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
-      //delay(100);
-      //reboot(); //Not needed, node reboots automaticall after calling onEnd and succesfully flashing
+    serialPrintln(F("\nOTA  : End"));
+
+    // "dangerous": if you reset during flash you have to reflash via serial
+    // so dont touch device until restart is complete
+    serialPrintln(F("\nOTA  : DO NOT RESET OR POWER OFF UNTIL BOOT+FLASH IS COMPLETE."));
+
+    // delay(100);
+    // reboot(); //Not needed, node reboots automaticall after calling onEnd and succesfully flashing
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    if (Settings.UseSerial)
+    if (Settings.UseSerial) {
       Serial.printf("OTA  : Progress %u%%\r", (progress / (total / 100)));
+    }
   });
 
   ArduinoOTA.onError([](ota_error_t error) {
-      serialPrint(F("\nOTA  : Error (will reboot): "));
-      if (error == OTA_AUTH_ERROR) serialPrintln(F("Auth Failed"));
-      else if (error == OTA_BEGIN_ERROR) serialPrintln(F("Begin Failed"));
-      else if (error == OTA_CONNECT_ERROR) serialPrintln(F("Connect Failed"));
-      else if (error == OTA_RECEIVE_ERROR) serialPrintln(F("Receive Failed"));
-      else if (error == OTA_END_ERROR) serialPrintln(F("End Failed"));
+    serialPrint(F("\nOTA  : Error (will reboot): "));
 
-      delay(100);
-      reboot();
+    if (error == OTA_AUTH_ERROR) { serialPrintln(F("Auth Failed")); }
+    else if (error == OTA_BEGIN_ERROR) { serialPrintln(F("Begin Failed")); }
+    else if (error == OTA_CONNECT_ERROR) { serialPrintln(F("Connect Failed")); }
+    else if (error == OTA_RECEIVE_ERROR) { serialPrintln(F("Receive Failed")); }
+    else if (error == OTA_END_ERROR) { serialPrintln(F("End Failed")); }
+
+    delay(100);
+    reboot();
   });
   ArduinoOTA.begin();
 
@@ -2530,9 +2661,7 @@ void ArduinoOTAInit()
   }
 }
 
-#endif
-
-
+#endif // ifdef FEATURE_ARDUINO_OTA
 
 
 /**********************************************************
@@ -2540,21 +2669,25 @@ void ArduinoOTAInit()
 * Helper Functions for managing the status data structure *
 *                                                         *
 **********************************************************/
-
-void savePortStatus(uint32_t key, struct portStatusStruct &tempStatus) {
+void savePortStatus(uint32_t key, struct portStatusStruct& tempStatus) {
   // FIXME TD-er: task and monitor are unsigned, should we only check for == ????
-  if (tempStatus.task<=0 && tempStatus.monitor<=0 && tempStatus.command<=0)
+  if ((tempStatus.task <= 0) && (tempStatus.monitor <= 0) && (tempStatus.command <= 0)) {
     globalMapPortStatus.erase(key);
-  else
+  }
+  else {
     globalMapPortStatus[key] = tempStatus;
+  }
 }
 
 bool existPortStatus(uint32_t key) {
   bool retValue = false;
-  //check if KEY exists:
-  std::map<uint32_t,portStatusStruct>::iterator it;
+
+  // check if KEY exists:
+  std::map<uint32_t, portStatusStruct>::iterator it;
+
   it = globalMapPortStatus.find(key);
-  if (it != globalMapPortStatus.end()) {  //if KEY exists...
+
+  if (it != globalMapPortStatus.end()) { // if KEY exists...
     retValue = true;
   }
   return retValue;
@@ -2563,25 +2696,31 @@ bool existPortStatus(uint32_t key) {
 void removeTaskFromPort(uint32_t key) {
   if (existPortStatus(key)) {
     (globalMapPortStatus[key].task > 0) ? globalMapPortStatus[key].task-- : globalMapPortStatus[key].task = 0;
-    if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0&& globalMapPortStatus[key].init<=0)
+
+    if ((globalMapPortStatus[key].task <= 0) && (globalMapPortStatus[key].monitor <= 0) && (globalMapPortStatus[key].command <= 0) &&
+        (globalMapPortStatus[key].init <= 0)) {
       globalMapPortStatus.erase(key);
+    }
   }
 }
 
 void removeMonitorFromPort(uint32_t key) {
   if (existPortStatus(key)) {
-    globalMapPortStatus[key].monitor=0;
-    if (globalMapPortStatus[key].task<=0 && globalMapPortStatus[key].monitor<=0 && globalMapPortStatus[key].command<=0&& globalMapPortStatus[key].init<=0)
+    globalMapPortStatus[key].monitor = 0;
+
+    if ((globalMapPortStatus[key].task <= 0) && (globalMapPortStatus[key].monitor <= 0) && (globalMapPortStatus[key].command <= 0) &&
+        (globalMapPortStatus[key].init <= 0)) {
       globalMapPortStatus.erase(key);
+    }
   }
 }
 
 void addMonitorToPort(uint32_t key) {
-  globalMapPortStatus[key].monitor=1;
+  globalMapPortStatus[key].monitor = 1;
 }
 
 uint32_t createKey(uint16_t pluginNumber, uint16_t portNumber) {
-  return (uint32_t) pluginNumber << 16 | portNumber;
+  return (uint32_t)pluginNumber << 16 | portNumber;
 }
 
 pluginID_t getPluginFromKey(uint32_t key) {
@@ -2592,86 +2731,87 @@ uint16_t getPortFromKey(uint32_t key) {
   return static_cast<uint16_t>(key & 0xFFFF);
 }
 
-//#######################################################################################################
-//############################ quite acurate but slow color converter####################################
-//#######################################################################################################
+// #######################################################################################################
+// ############################ quite acurate but slow color converter####################################
+// #######################################################################################################
 // uses H 0..360 S 1..100 I/V 1..100 (according to homie convention)
 // Source https://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
 
 void HSV2RGB(float H, float S, float I, int rgb[3]) {
   int r, g, b;
-  H = fmod(H,360); // cycle H around to 0-360 degrees
-  H = 3.14159f*H/(float)180; // Convert to radians.
+
+  H = fmod(H, 360);                // cycle H around to 0-360 degrees
+  H = 3.14159f * H / (float)180;   // Convert to radians.
   S = S / 100;
-  S = S>0?(S<1?S:1):0; // clamp S and I to interval [0,1]
+  S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
   I = I / 100;
-  I = I>0?(I<1?I:1):0;
+  I = I > 0 ? (I < 1 ? I : 1) : 0;
 
   // Math! Thanks in part to Kyle Miller.
-  if(H < 2.09439f) {
-    r = 255*I/3*(1+S*cos(H)/cos(1.047196667f-H));
-    g = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667f-H)));
-    b = 255*I/3*(1-S);
-  } else if(H < 4.188787f) {
+  if (H < 2.09439f) {
+    r = 255 * I / 3 * (1 + S * cos(H) / cos(1.047196667f - H));
+    g = 255 * I / 3 * (1 + S * (1 - cos(H) / cos(1.047196667f - H)));
+    b = 255 * I / 3 * (1 - S);
+  } else if (H < 4.188787f) {
     H = H - 2.09439f;
-    g = 255*I/3*(1+S*cos(H)/cos(1.047196667f-H));
-    b = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667f-H)));
-    r = 255*I/3*(1-S);
+    g = 255 * I / 3 * (1 + S * cos(H) / cos(1.047196667f - H));
+    b = 255 * I / 3 * (1 + S * (1 - cos(H) / cos(1.047196667f - H)));
+    r = 255 * I / 3 * (1 - S);
   } else {
     H = H - 4.188787f;
-    b = 255*I/3*(1+S*cos(H)/cos(1.047196667f-H));
-    r = 255*I/3*(1+S*(1-cos(H)/cos(1.047196667f-H)));
-    g = 255*I/3*(1-S);
+    b = 255 * I / 3 * (1 + S * cos(H) / cos(1.047196667f - H));
+    r = 255 * I / 3 * (1 + S * (1 - cos(H) / cos(1.047196667f - H)));
+    g = 255 * I / 3 * (1 - S);
   }
-  rgb[0]=r;
-  rgb[1]=g;
-  rgb[2]=b;
+  rgb[0] = r;
+  rgb[1] = g;
+  rgb[2] = b;
 }
 
 // uses H 0..360 S 1..100 I/V 1..100 (according to homie convention)
 // Source https://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
 
 void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
-  int r, g, b, w;
+  int   r, g, b, w;
   float cos_h, cos_1047_h;
-  H = fmod(H,360); // cycle H around to 0-360 degrees
-  H = 3.14159f*H/(float)180; // Convert to radians.
-  S = S / 100;
-  S = S>0?(S<1?S:1):0; // clamp S and I to interval [0,1]
-  I = I / 100;
-  I = I>0?(I<1?I:1):0;
 
-  if(H < 2.09439f) {
-    cos_h = cos(H);
-    cos_1047_h = cos(1.047196667f-H);
-    r = S*255*I/3*(1+cos_h/cos_1047_h);
-    g = S*255*I/3*(1+(1-cos_h/cos_1047_h));
-    b = 0;
-    w = 255*(1-S)*I;
-  } else if(H < 4.188787f) {
-    H = H - 2.09439f;
-    cos_h = cos(H);
-    cos_1047_h = cos(1.047196667f-H);
-    g = S*255*I/3*(1+cos_h/cos_1047_h);
-    b = S*255*I/3*(1+(1-cos_h/cos_1047_h));
-    r = 0;
-    w = 255*(1-S)*I;
+  H = fmod(H, 360);                // cycle H around to 0-360 degrees
+  H = 3.14159f * H / (float)180;   // Convert to radians.
+  S = S / 100;
+  S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
+  I = I / 100;
+  I = I > 0 ? (I < 1 ? I : 1) : 0;
+
+  if (H < 2.09439f) {
+    cos_h      = cos(H);
+    cos_1047_h = cos(1.047196667f - H);
+    r          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
+    g          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
+    b          = 0;
+    w          = 255 * (1 - S) * I;
+  } else if (H < 4.188787f) {
+    H          = H - 2.09439f;
+    cos_h      = cos(H);
+    cos_1047_h = cos(1.047196667f - H);
+    g          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
+    b          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
+    r          = 0;
+    w          = 255 * (1 - S) * I;
   } else {
-    H = H - 4.188787f;
-    cos_h = cos(H);
-    cos_1047_h = cos(1.047196667f-H);
-    b = S*255*I/3*(1+cos_h/cos_1047_h);
-    r = S*255*I/3*(1+(1-cos_h/cos_1047_h));
-    g = 0;
-    w = 255*(1-S)*I;
+    H          = H - 4.188787f;
+    cos_h      = cos(H);
+    cos_1047_h = cos(1.047196667f - H);
+    b          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
+    r          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
+    g          = 0;
+    w          = 255 * (1 - S) * I;
   }
 
-  rgbw[0]=r;
-  rgbw[1]=g;
-  rgbw[2]=b;
-  rgbw[3]=w;
+  rgbw[0] = r;
+  rgbw[1] = g;
+  rgbw[2] = b;
+  rgbw[3] = w;
 }
-
 
 // Simple bitwise get/set functions
 
