@@ -3,6 +3,7 @@
 #include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "Statistics.h"
+#include "../Helpers/Misc.h"
 
 #ifndef BUILD_NO_RAM_TRACKER
 RamTracker myRamTracker;

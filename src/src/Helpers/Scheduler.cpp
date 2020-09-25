@@ -3,6 +3,7 @@
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../Globals/RTC.h"
 #include "../Helpers/DeepSleep.h"
+#include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/PeriodicalActions.h"
 
 #define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15

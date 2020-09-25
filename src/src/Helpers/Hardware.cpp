@@ -5,7 +5,10 @@
 #include "../Globals/Statistics.h"
 #include "../Globals/GlobalMapPortStatus.h"
 
+#include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)

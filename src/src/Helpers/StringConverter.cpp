@@ -16,6 +16,8 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
 
+#include "Misc.h"
+
 #include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../_Plugin_Helper.h"

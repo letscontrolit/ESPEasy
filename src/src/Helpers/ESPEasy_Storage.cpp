@@ -16,8 +16,11 @@
 #include "../DataStructs/TimingStats.h"
 #include "../DataStructs/StorageLayout.h"
 
+#include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
