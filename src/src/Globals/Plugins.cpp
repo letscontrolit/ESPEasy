@@ -1,6 +1,7 @@
 #include "Plugins.h"
-#include "../../ESPEasy_plugindefs.h"
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../Globals/Device.h"
 #include "../Globals/Settings.h"
 #include "../../ESPEasy_Log.h"

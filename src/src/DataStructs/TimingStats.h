@@ -1,8 +1,8 @@
 #ifndef DATASTRUCTS_TIMINGSTATS_H
 #define DATASTRUCTS_TIMINGSTATS_H
 
+#include "ESPEasy_plugin_functions.h"
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_plugindefs.h"
 #include "../../ESPEasy_fdwdecl.h"
 
 #ifdef USES_TIMING_STATS
@@ -113,7 +113,7 @@ extern unsigned long timingstats_last_reset;
 # define STOP_TIMER_TASK(T, F) \
   if (mustLogFunction(F)) pluginStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart));
 # define STOP_TIMER_CONTROLLER(T, F) \
-  if (mustLogCFunction(F)) controllerStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart));
+  if (mustLogCFunction(F)) controllerStats[(T) * 256 + static_cast<int>(F)].add(usecPassedSince(statisticsTimerStart));
 
 // #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
 # define STOP_TIMER(L) miscStats[L].add(usecPassedSince(statisticsTimerStart));

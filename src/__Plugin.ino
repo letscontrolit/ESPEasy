@@ -6,10 +6,11 @@
 #include "src/Commands/Tasks.h"
 
 #include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/ESPEasy_plugin_functions.h"
 #include "src/DataStructs/TimingStats.h"
 
 #include "ESPEasy_common.h"
-#include "ESPEasy_plugindefs.h"
+
 
 
 // ********************************************************************************

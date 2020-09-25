@@ -15,8 +15,9 @@
 # include <rn2xx3.h>
 # include <ESPeasySerial.h>
 # include "ESPEasy_fdwdecl.h"
-# include "ESPEasy_plugindefs.h"
+
 # include "src/ControllerQueue/C018_queue_element.h"
+# include "src/DataStructs/ESPEasy_plugin_functions.h"
 # include "src/Globals/CPlugins.h"
 # include "src/Globals/Protocol.h"
 
