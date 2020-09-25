@@ -155,11 +155,6 @@ size_t streamFile_htmlEscape(const String& fileName)
 // Web Interface init
 // ********************************************************************************
 // #include "core_version.h"
-#define HTML_SYMBOL_WARNING "&#9888;"
-#define HTML_SYMBOL_INPUT   "&#8656;"
-#define HTML_SYMBOL_OUTPUT  "&#8658;"
-#define HTML_SYMBOL_I_O     "&#8660;"
-
 
 #define TASKS_PER_PAGE TASKS_MAX
 

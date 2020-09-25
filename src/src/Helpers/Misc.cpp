@@ -1,27 +1,43 @@
-#include "ESPEasy_common.h"
+#include "Misc.h"
 
-#include "src/DataStructs/Caches.h"
-#include "src/DataStructs/NodeStruct.h"
-#include "src/DataStructs/PinMode.h"
-#include "src/DataStructs/RTCStruct.h"
-#include "src/DataStructs/StorageLayout.h"
+#include "../DataStructs/Caches.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
+#include "../DataStructs/ExtendedControllerCredentialsStruct.h"
+#include "../DataStructs/NodeStruct.h"
+#include "../DataStructs/PinMode.h"
+#include "../DataStructs/RTCStruct.h"
+#include "../DataStructs/StorageLayout.h"
 
-#include "src/Globals/CRCValues.h"
-#include "src/Globals/Cache.h"
-#include "src/Globals/Device.h"
-#include "src/Globals/ESPEasy_Scheduler.h"
-#include "src/Globals/CPlugins.h"
-#include "src/Globals/Plugins.h"
-#include "src/Globals/Plugins_other.h"
-#include "src/Globals/RTC.h"
-#include "src/Globals/ResetFactoryDefaultPref.h"
-#include "src/Globals/Services.h"
-#include "src/Globals/Settings.h"
 
-#include "src/Helpers/Hardware.h"
-#include "src/Helpers/Convert.h"
+#include "../Globals/CPlugins.h"
+#include "../Globals/CRCValues.h"
+#include "../Globals/Cache.h"
+#include "../Globals/Device.h"
+#include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ExtraTaskSettings.h"
+#include "../Globals/GlobalMapPortStatus.h"
+#include "../Globals/MQTT.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/Plugins_other.h"
+#include "../Globals/RTC.h"
+#include "../Globals/ResetFactoryDefaultPref.h"
+#include "../Globals/SecuritySettings.h"
+#include "../Globals/Services.h"
+#include "../Globals/Settings.h"
+#include "../Globals/Statistics.h"
 
-#include "ESPEasyWifi.h"
+#include "../Helpers/Convert.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/StringConverter.h"
+
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasyWifi.h"
+#include "../../_CPlugin_Helper.h"
+#include "../../_Plugin_Helper.h"
 
 
 #ifdef ESP32
@@ -202,7 +218,7 @@ String getSystemLibraryString() {
   return result;
 }
 
-#ifndef ESP32
+#ifdef ESP8266
 String getLWIPversion() {
   String result;
   result += LWIP_VERSION_MAJOR;
@@ -276,41 +292,6 @@ uint32_t getFreeStackWatermark() {
 bool canYield() { return true; }
 
 #else
-#ifdef CORE_PRE_2_4_2
-// All version before core 2.4.2
-extern "C" {
-#include <cont.h>
-  extern cont_t g_cont;
-}
-
-uint32_t getCurrentFreeStack() {
-  register uint32_t *sp asm("a1");
-  return 4 * (sp - g_cont.stack);
-}
-
-uint32_t getFreeStackWatermark() {
-  return cont_get_free_stack(&g_cont);
-}
-
-bool canYield() {
-  return cont_can_yield(&g_cont);
-}
-
-bool allocatedOnStack(const void* address) {
-  register uint32_t *sp asm("a1");
-  if (sp < address) return false;
-  return g_cont.stack < address;
-}
-
-
-#else
-// All version from core 2.4.2
-// See: https://github.com/esp8266/Arduino/pull/5018
-//      https://github.com/esp8266/Arduino/pull/4553
-extern "C" {
-#include <cont.h>
-  extern cont_t* g_pcont;
-}
 
 uint32_t getCurrentFreeStack() {
   // https://github.com/esp8266/Arduino/issues/2557
@@ -332,7 +313,6 @@ bool allocatedOnStack(const void* address) {
   return g_pcont->stack < address;
 }
 
-#endif // ARDUINO_ESP8266_RELEASE_2_x_x
 #endif // ESP32
 
 
@@ -424,6 +404,8 @@ String formatGpioName(const String& label, gpio_direction direction, bool option
   return result;
 }
 
+
+
 String formatGpioName(const String& label, gpio_direction direction) {
   return formatGpioName(label, direction, false);
 }
@@ -451,20 +433,22 @@ String formatGpioName_output_optional(const String& label) {
 // RX/TX are the only signals which are crossed, so they must be labelled like this:
 // "GPIO <-- TX" and "GPIO --> RX"
 String formatGpioName_TX(bool optional) {
-  return formatGpioName("RX", gpio_output, optional);
+  return formatGpioName(F("RX"), gpio_output, optional);
 }
 
 String formatGpioName_RX(bool optional) {
-  return formatGpioName("TX", gpio_input, optional);
+  return formatGpioName(F("TX"), gpio_input, optional);
 }
 
 String formatGpioName_TX_HW(bool optional) {
-  return formatGpioName("RX (HW)", gpio_output, optional);
+  return formatGpioName(F("RX (HW)"), gpio_output, optional);
 }
 
 String formatGpioName_RX_HW(bool optional) {
-  return formatGpioName("TX (HW)", gpio_input, optional);
+  return formatGpioName(F("TX (HW)"), gpio_input, optional);
 }
+
+
 
 #ifdef ESP32
 
@@ -488,6 +472,42 @@ String formatGpioName_ADC(int gpio_pin) {
 }
 
 #endif
+
+// ********************************************************************************
+// Add a GPIO pin select dropdown list for 8266, 8285 or ESP32
+// ********************************************************************************
+String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warning) {
+  if (gpio < 0) { return F("- None -"); }
+  String result;
+  result.reserve(24);
+  result  = F("GPIO-");
+  result += gpio;
+
+  if (pinnr >= 0) {
+    result += F(" (D");
+    result += pinnr;
+    result += ')';
+  }
+
+  if (input != output) {
+    result += ' ';
+    result += input ? F(HTML_SYMBOL_INPUT) : F(HTML_SYMBOL_OUTPUT);
+  }
+
+  if (warning) {
+    result += ' ';
+    result += F(HTML_SYMBOL_WARNING);
+  }
+  bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+
+  if (serialPinConflict) {
+    if (gpio == 1) { result += F(" TX0"); }
+
+    if (gpio == 3) { result += F(" RX0"); }
+  }
+  return result;
+}
+
 
 /*********************************************************************************************\
    set pin mode & state (info table)
@@ -647,10 +667,6 @@ void analogWriteESP32(int pin, int value)
 /********************************************************************************************\
   Status LED
 \*********************************************************************************************/
-#define PWMRANGE_FULL 1023
-#define STATUS_PWM_NORMALVALUE (PWMRANGE_FULL>>2)
-#define STATUS_PWM_NORMALFADE (PWMRANGE_FULL>>8)
-#define STATUS_PWM_TRAFFICRISE (PWMRANGE_FULL>>1)
 
 void statusLED(bool traffic)
 {
@@ -1852,13 +1868,6 @@ void transformValue(
 /********************************************************************************************\
   Calculate function for simple expressions
   \*********************************************************************************************/
-#define CALCULATE_OK                            0
-#define CALCULATE_ERROR_STACK_OVERFLOW          1
-#define CALCULATE_ERROR_BAD_OPERATOR            2
-#define CALCULATE_ERROR_PARENTHESES_MISMATCHED  3
-#define CALCULATE_ERROR_UNKNOWN_TOKEN           4
-#define STACK_SIZE 10 // was 50
-#define TOKEN_MAX 20
 
 float globalstack[STACK_SIZE];
 float *sp = globalstack - 1;

@@ -128,7 +128,9 @@
 #include "src/Helpers/DeepSleep.h"
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_checks.h"
+#include "src/Helpers/ESPEasyRTC.h"
 #include "src/Helpers/Hardware.h"
+#include "src/Helpers/Misc.h"
 #include "src/Helpers/PeriodicalActions.h"
 #include "src/Helpers/Scheduler.h"
 

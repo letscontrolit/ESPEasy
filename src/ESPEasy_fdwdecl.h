@@ -79,6 +79,7 @@ bool safe_strncpy(char       *dest,
 
 
 void rulesProcessing(String& event);
+void parse_string_commands(String &line);
 
 #ifdef USES_MQTT
 
