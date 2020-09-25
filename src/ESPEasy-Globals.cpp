@@ -1,8 +1,7 @@
 #include <Arduino.h>
 
 #include "ESPEasy-Globals.h"
-#include "ESPEasy_plugindefs.h"
-
+#include "src/DataStructs/ESPEasy_plugin_functions.h"
 
 #if defined(ESP32)
   int8_t ledChannelPin[16];

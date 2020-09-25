@@ -1,4 +1,5 @@
 #include "StringProviderTypes.h"
+
 #include "ESPEasyNetwork.h"
 #ifdef HAS_ETHERNET
 #include "ETH.h"
@@ -7,7 +8,9 @@
 #include "src/Globals/ESPEasy_Scheduler.h"
 
 #include "src/Helpers/CompiletimeDefines.h"
+#include "src/Helpers/Memory.h"
 #include "src/Helpers/Scheduler.h"
+#include "src/Helpers/StringGenerator_System.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);

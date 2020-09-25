@@ -8,6 +8,8 @@
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/SecuritySettings.h"
+#include "src/Helpers/Misc.h"
+#include "src/Helpers/StringParser.h"
 
 
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { nullptr, };

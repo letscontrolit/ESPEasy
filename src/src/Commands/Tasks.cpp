@@ -1,11 +1,15 @@
 #include "../Commands/Tasks.h"
 
-#include "../Commands/Common.h"
-#include "../Helpers/StringConverter.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy_common.h"
 
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+
+#include "../Commands/Common.h"
+
+#include "../Helpers/Misc.h"
+#include "../Helpers/Rules_calculate.h"
+#include "../Helpers/StringConverter.h"
 
 //      taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX
 //	varNr = event->Par2 - 1;

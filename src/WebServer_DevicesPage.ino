@@ -5,6 +5,7 @@
 # include "src/Globals/CPlugins.h"
 # include "src/Globals/Plugins.h"
 # include "src/Static/WebStaticData.h"
+# include "src/Helpers/StringGenerator_GPIO.h"
 
 
 void handle_devices() {
