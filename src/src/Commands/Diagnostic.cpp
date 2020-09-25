@@ -28,6 +28,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 
 #include <map>

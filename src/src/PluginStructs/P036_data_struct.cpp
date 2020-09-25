@@ -11,6 +11,7 @@
 # include "../Helpers/Misc.h"
 # include "../Helpers/Scheduler.h"
 # include "../Helpers/StringConverter.h"
+# include "../Helpers/StringParser.h"
 # include "../Helpers/SystemVariables.h"
 
 # include "Dialog_Plain_12_font.h"

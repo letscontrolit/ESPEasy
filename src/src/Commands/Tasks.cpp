@@ -8,6 +8,7 @@
 #include "../Commands/Common.h"
 
 #include "../Helpers/Misc.h"
+#include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 
 //      taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX

@@ -17,6 +17,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/PortStatus.h"
 
 #define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 

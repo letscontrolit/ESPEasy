@@ -8,6 +8,7 @@
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 
 /********************************************************************************************\

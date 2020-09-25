@@ -36,6 +36,7 @@
 
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringParser.h"
 
 
 bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {

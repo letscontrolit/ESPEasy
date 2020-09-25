@@ -19,6 +19,7 @@
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"

@@ -161,39 +161,6 @@ String createGPIO_label(int  gpio,
                         bool output,
                         bool warning);
 
-/*********************************************************************************************\
-   set pin mode & state (info table)
-\*********************************************************************************************/
-/*
-   void setPinState(byte plugin, byte index, byte mode, uint16_t value);
- */
-
-/*********************************************************************************************\
-   get pin mode & state (info table)
-\*********************************************************************************************/
-
-/*
-   bool getPinState(byte plugin, byte index, byte *mode, uint16_t *value);
-
- */
-/*********************************************************************************************\
-   check if pin mode & state is known (info table)
-\*********************************************************************************************/
-/*
-   bool hasPinState(byte plugin, byte index);
-
- */
-
-
-/*********************************************************************************************\
-   report pin mode & state (info table) using json
-\*********************************************************************************************/
-String getPinStateJSON(bool          search,
-                       uint32_t      key,
-                       const String& log,
-                       int16_t       noSearchValue);
-
-String getPinModeString(byte mode);
 
 #if defined(ESP32)
 void   analogWriteESP32(int pin,
@@ -352,106 +319,7 @@ void   delayedReboot(int rebootDelay);
 
 void   reboot();
 
-/********************************************************************************************\
-   Parse string template
- \*********************************************************************************************/
-String parseTemplate(String& tmpString);
 
-String parseTemplate(String& tmpString,
-                     bool    useURLencode);
-
-String parseTemplate_padded(String& tmpString,
-                            byte    minimal_lineSize);
-
-String parseTemplate_padded(String& tmpString,
-                            byte    minimal_lineSize,
-                            bool    useURLencode);
-
-// Find the first (enabled) task with given name
-// Return INVALID_TASK_INDEX when not found, else return taskIndex
-taskIndex_t findTaskIndexByName(const String& deviceName);
-
-// Find the first device value index of a taskIndex.
-// Return VARS_PER_TASK if none found.
-byte findDeviceValueIndexByName(const String& valueName,
-                                taskIndex_t   taskIndex);
-
-// Find positions of [...#...] in the given string.
-// Only update pos values on success.
-// Return true when found.
-bool findNextValMarkInString(const String& input,
-                             int         & startpos,
-                             int         & hashpos,
-                             int         & endpos);
-
-// Find [deviceName#valueName] or [deviceName#valueName#format]
-// DeviceName and valueName will be returned in lower case.
-// Format may contain case sensitive formatting syntax.
-bool findNextDevValNameInString(const String& input,
-                                int         & startpos,
-                                int         & endpos,
-                                String      & deviceName,
-                                String      & valueName,
-                                String      & format);
-
-/********************************************************************************************\
-   Transform values
- \*********************************************************************************************/
-
-// Syntax: [task#value#transformation#justification]
-// valueFormat="transformation#justification"
-void transformValue(
-  String      & newString,
-  byte          lineSize,
-  String        value,
-  String      & valueFormat,
-  const String& tmpString);
-
-/********************************************************************************************\
-   Calculate function for simple expressions
- \*********************************************************************************************/
-#define CALCULATE_OK                            0
-#define CALCULATE_ERROR_STACK_OVERFLOW          1
-#define CALCULATE_ERROR_BAD_OPERATOR            2
-#define CALCULATE_ERROR_PARENTHESES_MISMATCHED  3
-#define CALCULATE_ERROR_UNKNOWN_TOKEN           4
-#define STACK_SIZE 10 // was 50
-#define TOKEN_MAX 20
-
-extern float  globalstack[STACK_SIZE];
-extern float *sp;
-extern float *sp_max;
-
-int   push(float value);
-
-float pop();
-
-float apply_operator(char  op,
-                     float first,
-                     float second);
-
-float apply_unary_operator(char  op,
-                           float first);
-
-char* next_token(char *linep);
-
-int   RPNCalculate(char *token);
-
-// operators
-// precedence   operators         associativity
-// 3            !                 right to left
-// 2            * / %             left to right
-// 1            + - ^             left to right
-int          op_preced(const char c);
-
-bool         op_left_assoc(const char c);
-
-unsigned int op_arg_count(const char c);
-
-int          Calculate(const char *input,
-                       float      *result);
-
-int          CalculateParam(const char *TmpStr);
 
 void         SendValueLogger(taskIndex_t TaskIndex);
 
@@ -489,29 +357,6 @@ void ArduinoOTAInit();
 #endif // ifdef FEATURE_ARDUINO_OTA
 
 
-/**********************************************************
-*                                                         *
-* Helper Functions for managing the status data structure *
-*                                                         *
-**********************************************************/
-
-void       savePortStatus(uint32_t                 key,
-                          struct portStatusStruct& tempStatus);
-
-bool       existPortStatus(uint32_t key);
-
-void       removeTaskFromPort(uint32_t key);
-
-void       removeMonitorFromPort(uint32_t key);
-
-void       addMonitorToPort(uint32_t key);
-
-uint32_t   createKey(uint16_t pluginNumber,
-                     uint16_t portNumber);
-
-pluginID_t getPluginFromKey(uint32_t key);
-
-uint16_t   getPortFromKey(uint32_t key);
 
 // #######################################################################################################
 // ############################ quite acurate but slow color converter####################################
