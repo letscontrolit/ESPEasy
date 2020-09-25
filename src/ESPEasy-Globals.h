@@ -28,7 +28,7 @@
 #include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/ESPEasyLimits.h"
-#include "ESPEasy_plugindefs.h"
+#include "src/DataStructs/ESPEasy_plugin_functions.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/ESPEasy_time.h"
@@ -212,11 +212,6 @@ using namespace fs;
 
 
 
-enum gpio_direction {
-  gpio_input,
-  gpio_output,
-  gpio_bidirectional
-};
 
 
 /*********************************************************************************************\
@@ -251,8 +246,6 @@ extern unsigned long lastSend;
 extern unsigned long lastWeb;
 extern byte cmd_within_mainloop;
 extern unsigned long wdcounter;
-extern unsigned long timerAPoff;    // Timer to check whether the AP mode should be disabled (0 = disabled)
-extern unsigned long timerAPstart;  // Timer to start AP mode, started when no valid network is detected.
 extern unsigned long timerAwakeFromDeepSleep;
 
 

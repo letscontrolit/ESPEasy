@@ -5,7 +5,11 @@
 #include "../Globals/Statistics.h"
 #include "../Globals/GlobalMapPortStatus.h"
 
+#include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/PortStatus.h"
+#include "../Helpers/StringConverter.h"
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -13,49 +17,75 @@
 void hardwareInit()
 {
   // set GPIO pins state if not set to default
-  constexpr byte maxStates = sizeof(Settings.PinBootStates) / sizeof(Settings.PinBootStates[0]);
+  bool hasPullUp, hasPullDown;
 
   for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
-    bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
-    const int8_t bootState = (gpio < maxStates) ? Settings.PinBootStates[gpio] : 0;
-
-    if (!serialPinConflict && (bootState != 0)) {
+    const bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+    if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
+      if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
+        switch (Settings.getPinBootState(gpio))
+        {
+          case PinBootState::Default_state:
+            // At startup, pins are configured as INPUT
+            break;
+          case PinBootState::Output_low:
+            pinMode(gpio, OUTPUT);
+            digitalWrite(gpio, LOW);
+            globalMapPortStatus[key].state = LOW;
+            globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
+            globalMapPortStatus[key].init  = 1;
 
-      switch (bootState)
-      {
-        case 1:
-          pinMode(gpio, OUTPUT);
-          digitalWrite(gpio, LOW);
-          globalMapPortStatus[key].state = LOW;
-          globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
-          globalMapPortStatus[key].init  = 1;
+            // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
+            break;
+          case PinBootState::Output_high:
+            pinMode(gpio, OUTPUT);
+            digitalWrite(gpio, HIGH);
+            globalMapPortStatus[key].state = HIGH;
+            globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
+            globalMapPortStatus[key].init  = 1;
 
-          // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
-          break;
-        case 2:
-          pinMode(gpio, OUTPUT);
-          digitalWrite(gpio, HIGH);
-          globalMapPortStatus[key].state = HIGH;
-          globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
-          globalMapPortStatus[key].init  = 1;
+            // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
+            break;
+          case PinBootState::Input_pullup:
+            if (hasPullUp) {
+              pinMode(gpio, INPUT_PULLUP);
+              globalMapPortStatus[key].state = 0;
+              globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLUP;
+              globalMapPortStatus[key].init  = 1;
+            }
+            break;
+          case PinBootState::Input_pulldown:
+            if (hasPullDown) {
+              #ifdef ESP8266
+              if (gpio == 16) {
+                pinMode(gpio, INPUT_PULLDOWN_16);
+              }
+              #endif
+              #ifdef ESP32
+              pinMode(gpio, INPUT_PULLDOWN);
+              #endif
+              globalMapPortStatus[key].state = 0;
+              globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLDOWN;
+              globalMapPortStatus[key].init  = 1;
+            }
+            break;
+          case PinBootState::Input:
+            pinMode(gpio, INPUT);
+            globalMapPortStatus[key].state = 0;
+            globalMapPortStatus[key].mode  = PIN_MODE_INPUT;
+            globalMapPortStatus[key].init  = 1;
+            break;
 
-          // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
-          break;
-        case 3:
-          pinMode(gpio, INPUT_PULLUP);
-          globalMapPortStatus[key].state = 0;
-          globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLUP;
-          globalMapPortStatus[key].init  = 1;
-
-          // setPinState(1, gpio, PIN_MODE_INPUT, 0);
-          break;
+        }
       }
     }
   }
 
-  if (Settings.Pin_Reset != -1) {
-    pinMode(Settings.Pin_Reset, INPUT_PULLUP);
+  if (getGpioPullResistor(Settings.Pin_Reset, hasPullUp, hasPullDown)) {
+    if (hasPullUp) {
+      pinMode(Settings.Pin_Reset, INPUT_PULLUP);
+    }
   }
 
   initI2C();
@@ -362,6 +392,43 @@ uint32_t getFlashRealSizeInBytes() {
   #endif // if defined(ESP32)
 }
 
+
+bool puyaSupport() {
+  bool supported = false;
+
+#ifdef PUYA_SUPPORT
+
+  // New support starting core 2.5.0
+  if (PUYA_SUPPORT) { supported = true; }
+#endif // ifdef PUYA_SUPPORT
+#ifdef PUYASUPPORT
+
+  // Old patch
+  supported = true;
+#endif // ifdef PUYASUPPORT
+  return supported;
+}
+
+uint8_t getFlashChipVendorId() {
+#ifdef PUYA_SUPPORT
+  return ESP.getFlashChipVendorId();
+#else // ifdef PUYA_SUPPORT
+  # if defined(ESP8266)
+  uint32_t flashChipId = ESP.getFlashChipId();
+  return flashChipId & 0x000000ff;
+  # else // if defined(ESP8266)
+  return 0xFF; // Not an existing function for ESP32
+  # endif // if defined(ESP8266)
+#endif // ifdef PUYA_SUPPORT
+}
+
+bool flashChipVendorPuya() {
+  uint8_t vendorId = getFlashChipVendorId();
+
+  return vendorId == 0x85; // 0x146085 PUYA
+}
+
+
 /********************************************************************************************\
    Hardware specific configurations
  \*********************************************************************************************/
@@ -608,6 +675,30 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   return true;
 }
 
+bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
+  hasPullDown = false;
+  hasPullUp = false;
+
+  int pinnr;
+  bool input;
+  bool output;
+  bool warning;
+  if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
+    return false;
+  }
+  if (gpio >= 34) {
+    // For GPIO 34 .. 39, no pull-up nor pull-down.
+  } else if (gpio == 12) {
+    // No Pull-up on GPIO12
+    // compatible with the SDIO protocol.
+    // Just connect GPIO12 to VDD via a 10 kOhm resistor.
+  } else {
+    hasPullUp = true;
+    hasPullDown = true;
+  }
+  return true;
+}
+
 #else // ifdef ESP32
 
 // return true when pin can be used.
@@ -640,18 +731,54 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     case 15: pinnr =  8; input = false; break;
     case 16: pinnr =  0; break; // This is used by the deep-sleep mechanism
   }
-  # ifndef ESP8285
+  if (isFlashInterfacePin(gpio)) {
+    #ifdef ESP8285
+    
+    if ((gpio == 9) || (gpio == 10)) {
+      // Usable on ESP8285
+    } else {
+      warning = true;
+    }
 
-  if ((gpio == 9) || (gpio == 10)) {
-    // On ESP8266 used for flash
+    #else
+
     warning = true;
-  }
-  # endif // ifndef ESP8285
+    // On ESP8266 GPIO 9 & 10 are only usable if not connected to flash 
+    if (gpio == 9) {
+      // GPIO9 is internally used to control the flash memory.
+      input  = false;
+      output = false;
+    } else if (gpio == 10) {
+      // GPIO10 can be used as input only.
+      output = false;
+    }
 
-  if (pinnr < 0) {
+    #endif
+  }
+
+  if (pinnr < 0 || pinnr > 16) {
     input  = false;
     output = false;
     return false;
+  }
+  return true;
+}
+
+bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
+  hasPullDown = false;
+  hasPullUp = false;
+
+  int pinnr;
+  bool input;
+  bool output;
+  bool warning;
+  if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
+    return false;
+  }
+  if (gpio == 16) {
+    hasPullDown = true;
+  } else {
+    hasPullUp = true;
   }
   return true;
 }
@@ -722,9 +849,7 @@ int touchPinToGpio(int touch_pin)
 // change of device: cleanup old device and reset default settings
 // ********************************************************************************
 void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskIndex) {
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = taskIndex;
+  struct EventStruct TempEvent(taskIndex);
   String dummy;
 
   // let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
@@ -733,9 +858,12 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
   ClearCustomTaskSettings(taskIndex);
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
-
   if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
   {
+    // FIXME TD-er: Must check if this is working (e.g. need to set nr. decimals?)
+    ExtraTaskSettings.clear();
+    ExtraTaskSettings.TaskIndex = taskIndex;
+
     // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
     PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.
