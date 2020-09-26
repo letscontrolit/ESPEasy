@@ -261,13 +261,8 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
               log += state;
               addLog(LOG_LEVEL_INFO,log);
               switchstate[event->TaskIndex] = state;
-              if (operatingMode == OPMODE_STATE) {
-                UserVar[event->BaseVarIndex] = state;
-                event->sensorType = SENSOR_TYPE_SWITCH;
-              } else {
-                UserVar[event->BaseVarIndex+1] = state;
-                event->sensorType = SENSOR_TYPE_DUAL;
-              }
+              UserVar[event->BaseVarIndex] = state;
+              event->sensorType = SENSOR_TYPE_SWITCH;
               sendData(event);
             }
           }

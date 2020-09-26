@@ -3,9 +3,9 @@
 
 #include <map>
 #include <vector>
-#include "../DataStructs/ESPEasyLimits.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
-#include "../../ESPEasy_plugindefs.h"
+#include "../DataStructs/ESPEasyLimits.h"
+#include "../DataStructs/ESPEasy_plugin_functions.h"
 
 
 /********************************************************************************************\
