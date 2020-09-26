@@ -10,8 +10,11 @@
    Values:
 
    ``0       180 degrees``
+
    ``1       270 degrees``
+
    ``2       0 degrees (Normal)``
+
    ``3       90 degrees``
 
    (NB: I only have 1 display with a touchscreen mounted, and it is possible that mine is mounted 180 degrees rotated. It may be needed later to add a setting for this, we'll see.)
@@ -20,5 +23,27 @@
 
    ``touch,rot,1``           Rotate the device to 270 degrees.
  
+   "
+   "
+   ``touch,enable,<objectname>``
+
+   Enable a disabled touchobject by name.
+
+   ","
+   Examples:
+
+   ``touch,enable,sun``       Enable all touchobjects with the name 'sun'.
+
+   "
+   "
+   ``touch,disable,<objectname>``
+
+   Disable an enabled touchobject by name.
+
+   ","
+   Examples:
+
+   ``touch,disable,sun``       Disable all touchobjects with the name 'sun'.
+
    "
  

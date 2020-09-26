@@ -59,7 +59,7 @@ For TouchObject name events to be sent, some touchobject name(s) must be defined
 Calibration
 ~~~~~~~~~~~~
 
-Optionally, the screen can be calibrated to the screen resolution the touchscreen is mounted on. This will make the coordinate-mapping with the screen more human understandable. By default this option is turned off. When changing this setting, the page will be reloaded, and reveal the calibration coordinates to be entered.
+Optionally, the touchscreen can be calibrated to the display resolution the touchscreen is mounted on. This will make the coordinate-mapping with the display more human understandable. By default this option is turned off. When changing this setting, the page will be reloaded, and reveal or hide the calibration coordinates to be entered.
 
 By enabling the 'Enable logging for calibration' setting, extra logging is produced (Info level) so calibration and touchobject coordinates can be determined.
 
@@ -72,9 +72,13 @@ To make the use of the touchscreen easier, specific screen areas, called touchob
 
 After changing this setting the page is reloaded to adjust the list of objects. When set to None, no touch objects will be shown (though the objectnames and coordinates won't be cleared), only the number of touchobjects configured here will be checked when the touchscreen is touched.
 
-A touchobject has a name, that will be used as the second part of the event-name if Events includes the option Objectnames, where the first part is the device Name. So if the objectname is ``button`` and the device name is ``XPT2046``, the event ``XPT2046#button`` will be fired, with the actual X, Y and Z values of the touch that triggered it as ``%eventvalue1%``, ``%eventvalue2%`` and ``%eventvalue3%``.
+A touchobject has a name, that will be used as the second part of the event-name if the Events setting includes the option Objectnames, where the first part is the device Name. So if the objectname is ``button`` and the device name is ``XPT2046``, the event ``XPT2046#button`` will be fired, with the actual X, Y and Z values of the touch that triggered it as ``%eventvalue1%``, ``%eventvalue2%`` and ``%eventvalue3%``.
 
-When the name of the touchobject starts with '_' (underscore), that objectname is ignored, to make it easy to temporary disable an object, without the need of removing it from the list.
+When the name of the touchobject starts with '_' (underscore), that objectname is ignored, to make it easy to temporary disable an object, without the need of removing it from the list. The commands ``touch,disable,<objectname>`` and ``touch,enable,<objectname>`` can be used to disable/enable touch objects from rules or externally.
+
+Per touchobject, checkboxes are available to configure that object as an On/Off button, and optionally invert the state. When the On/Off button option is checked, the event fired by the object has its On/Off state as an argument, just like a switch does. So in that case it fires ``XPT2046#button`` with the state (0 or 1) as the ``%eventvalue%``. Any X, Y or Z values can be used by reading ``[XPT2046#X]`` etc.
+
+Object names do not have to be unique, though they should not be the same as the Values defined in the Device settings. When defining multiple touchobjects with the same name and options (On/Off button and Inverted), but different touch coordinates, they will fire the same event for different touch coordinates. Also, when using the ``touch,enable,<objectname>`` and ``touch,disable,<objectname>`` commands, all objects with that name will be enabled/disabled.
 
 How to calibrate
 ~~~~~~~~~~~~~~~~
@@ -89,11 +93,11 @@ There are some settings that can make calibration, or touchobject configuration,
 
 3. Select for the touchscreen device the option 'Events' either 'Off' or 'Objectnames only' (so touching a touchobject defined area will show the eventname in the log).
 
-4. Open 2 tabs in the webbrowser (easiest is to use a laptop or computer, not a tablet or mobile phone for this calibration configuration), 1 tab showing the Device configuration, and the second showing the Tools page. Instead of a second browser tab the Serial log can be used if the ESP is connected to the computer via USB. Then that log level should be set to Info.
+4. Open 2 tabs in a webbrowser (easiest is to use a laptop or computer, not a tablet or mobile phone for this calibration configuration), 1 tab showing the Device configuration, and another showing the Tools page. Instead of a second browser tab the Serial log can be used if the ESP is connected to the computer via USB. Then the serial log level should also be set to Info.
 
 5. Draw a non-filled rectangle on the underlying display from coordinate 0,0 to the maximum screen resolution (in this documentation the display used is set to 320 x 240 px, 270 degrees rotated). These commands can be sent from the Tools page of ESPEasy.
 
-   For example on 'TFT 2.4 inches ILI9341' screen: 
+   For example on 'Display - TFT 2.4 inches ILI9341' screen: 
    
    a. Set background color to black:  ``tftcmd,clear,black``
  
@@ -101,7 +105,10 @@ There are some settings that can make calibration, or touchobject configuration,
  
    c. Draw a white, non-filled, rectangle:  ``tft,r,0,0,320,240,white``
 
+
 6. On the Device configuration set the Touch calibration to Yes, and tick the checkbox at 'Enable logging for calibration'.
+
+.. image:: P099_CalibrationEnabled.png
 
 7. Now open the Log from the Tools page, or view the serial log output.
 
@@ -125,14 +132,16 @@ There are some settings that can make calibration, or touchobject configuration,
 
 9. Save the settings using the Submit button at the bottom of the page.
 
+.. image:: P099_CalibrationSetup.png
+
 After calibration is set, the output of the log lines shown changes, for example, when now touching the top left corner of the rectangle, this output wil show::
 
   1857810 : Info  : Touch calibration rx= 355, ry= 297; z= 157, x= 0, y= 0
   1857910 : Info  : Touch calibration rx= 357, ry= 305; z= 135, x= 0, y= 0
   1859110 : Info  : Touch calibration rx= 361, ry= 360; z= 144, x= 0, y= 4
 
-Now that calibration is set up, the ``x`` and ``y`` values of the logging now have the calibrated values of the raw x and y (``rx``/``ry``) values.
-There are several log lines with nearly the same values. The count of lines depends on the duration of pressing the pen on the screen, and the touchscreen is read 10 times per second.
+Now that calibration is set up, the ``x`` and ``y`` values of the logging have the calibrated values of the raw x and y (``rx``/``ry``) values.
+There are several log lines with nearly the same values. The count of lines depends on the duration of pressing the pen on the screen, as the touchscreen is read 10 times per second.
 Also there can be a little variation on the ``x`` and ``y`` values, but anything below the calibrated top-left or above the bottom-right values is cut off to that value.
 
 How to configure touch objects
@@ -143,7 +152,7 @@ The many posibilities are only limited by the imagination of the user and the si
 
 Setting up touch objects:
 
-First configure your device according to steps 1..4 of the 'How to calibrate' instructions, above.
+First configure your device according to steps 1..4 and step 7 of the 'How to calibrate' instructions, above.
 
 Then, draw the desired user interface on the display, or design it, using the constraints of the display resolution the touchscreen is mounted on.
 
@@ -181,11 +190,11 @@ and bottom-right::
 
 .. image:: P099_TouchObject_sun.png
 
-Up to 40 touchobjects can be defined in this way.
+Up to 40 touchobjects can be defined in this way. When changing the # of objects, the configuration will also be saved.
 
 Now Submit the page to save the configuration.
 
-After the configuration is saved, the objects can be touched to see the events sent, assuming we configured to only send events for Touchobjects, we'll only see those::
+After the configuration is saved, the objects can be touched to see the events sent, assuming we configured to only send events for Touchobjects (Enable logging for calibration is still enabled here, though it could be turned off now), we'll only see those::
 
   3500336 : Info  : Touch calibration rx= 3461, ry= 1005; z= 24, x= 282, y= 50
   3500337 : Info  : EVENT: XPT2046#sun=282,50,24
@@ -194,10 +203,23 @@ After the configuration is saved, the objects can be touched to see the events s
   3500536 : Info  : Touch calibration rx= 3501, ry= 1012; z= 41, x= 286, y= 51
   3500537 : Info  : EVENT: XPT2046#sun=286,51,41
 
-As you see, multiple events are sent when holding the pen on the touch area, that may require some careful planning while handling the event actions, as they can be fired up to 10 times per second!
-()
+Or, when the On/Off button option is checked (as in the screenshot)::
 
-The screen, with its content, is defined like this (content is sent to the screen from a Raspberry Pi with a Python script, collecting data from Zevercloud and some Domoticz data)
+  1784226 : Info  : Touch calibration rx= 3421, ry= 954; z= 32, x= 278, y= 47
+  1784326 : Info  : Touch calibration rx= 3414, ry= 990; z= 148, x= 278, y= 49
+  1784426 : Info  : Touch calibration rx= 3423, ry= 944; z= 239, x= 279, y= 46
+  1784427 : Info  : EVENT: XPT2046#sun=1
+  1792926 : Info  : Touch calibration rx= 3364, ry= 894; z= 79, x= 273, y= 42
+  1793026 : Info  : Touch calibration rx= 3350, ry= 930; z= 165, x= 272, y= 45
+  1793126 : Info  : Touch calibration rx= 3376, ry= 907; z= 134, x= 274, y= 43
+  1793127 : Info  : EVENT: XPT2046#sun=0
+
+As you see, multiple events are sent when holding the pen on the touch area, that may require some careful planning while handling the event actions, as they can be fired up to 10 times per second!
+
+When configuring a touchobject as an On/Off button, less events will be sent, as some 'debouncing' is built in (currently fixed at 150 msec), so a 'toggle' of the button requirs a good press before it is registered.
+And in that configuration, only an On  or Off event is sent (or inverted when that checkbox is on). The X, Y and Z values can be read from the values as usual.
+
+The screen, with its content, is defined like this (the content shown is drawn on the display from a Raspberry Pi using a Python script, collecting data from Zevercloud and some Domoticz data)
 
 .. image:: P099_TouchObject_definitions.jpg
 

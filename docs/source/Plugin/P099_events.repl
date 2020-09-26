@@ -6,6 +6,8 @@
    ``<taskname>#<objectname>``
 
    The regular events like in every other task. It is fired if the configuration is set to send events for objectnames. Has 3 eventvalues, the X, Y and Z values of the touch event.
+
+   When the setting On/Off button is checked for a touchobject, then the new state (On or Off) will be sent as the only ``%eventvalue%`` argument.
    ","
 
    .. code-block:: none
@@ -15,6 +17,7 @@
         let,2,0
       endon
 
+      // With debouncing in the script
       on XPT2046#sun do
         if %v2%=0
           let,2,1
@@ -36,6 +39,11 @@
           endif
           let,2,0
         endif
+      endon
+
+      // Alternatively, using the On/Off button setting, the on/off state can also be inverted, if desired.
+      on XPT2046#sun do
+        GPIO,2,%eventvalue%
       endon
 
    "

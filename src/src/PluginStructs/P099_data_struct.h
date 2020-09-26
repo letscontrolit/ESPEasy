@@ -17,8 +17,11 @@
   #define P099_TS_CS  0 // D3
 #endif // ESP32
 
-#define P099_MaxObjectNameLength 16 // 15 character objectnames + terminating 0
+#define P099_MaxObjectNameLength 15 // 14 character objectnames + terminating 0
 #define P099_MaxObjectCount      40 // This count of touchobjects should be enough, because of limited settings storage, 960 bytes + 8 bytes calibration coordinates
+
+#define P099_FLAGS_ON_OFF_BUTTON 0 // TouchObjects.flags On/Off Button function
+#define P099_FLAGS_INVERT_BUTTON 1 // TouchObjects.flags Inverted On/Off Button function
 
 // Data structure
 struct P099_data_struct : public PluginTaskData_base
@@ -42,7 +45,8 @@ struct P099_data_struct : public PluginTaskData_base
 	void readData(uint16_t *x, uint16_t *y, uint8_t *z);
   void setRotation(uint8_t n);
   bool isCalibrationActive();
-  bool isValidAndTouchedTouchObject(uint16_t x, uint16_t y, String &selectedObjectName, uint8_t checkObjectCount);
+  bool isValidAndTouchedTouchObject(uint16_t x, uint16_t y, String &selectedObjectName, int &selectedObjectIndex, uint8_t checkObjectCount);
+  bool setTouchObjectState(String touchObject, bool state, uint8_t checkObjectCount);
   void scaleRawToCalibrated(uint16_t &x, uint16_t &y);
 
   // This is initialized by calling init()
@@ -59,6 +63,10 @@ struct P099_data_struct : public PluginTaskData_base
   // This is filled during checking of a touchobject
   uint32_t SurfaceAreas[P099_MaxObjectCount];
 
+  // Counters for debouncing touch button
+  uint32_t TouchTimers[P099_MaxObjectCount];
+  bool     TouchStates[P099_MaxObjectCount];
+
   // The settings structures
   // Lets define our own coordinate point
   struct tP099_Point
@@ -71,6 +79,7 @@ struct P099_data_struct : public PluginTaskData_base
   struct tP099_Touchobjects
   {
     char        objectname[P099_MaxObjectNameLength] = { 0 };
+    byte        flags = 0;
     tP099_Point top_left;
     tP099_Point bottom_right;
   };

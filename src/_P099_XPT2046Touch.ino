@@ -5,6 +5,7 @@
 
 /**
  * Changelog:
+ * 2020-09-23/24/25 tonhuisman: Add object disable/enable commands, add On/Off button mode, and inverted, for touchobjects
  * 2020-09-10 tonhuisman: Clean up code, testing
  * 2020-09-07/08/09 tonhuisman: Fix code issues
  * 2020-09-06 tonhuisman: Add object 'layering' so the 'top-most' object only sends an event
@@ -13,6 +14,14 @@
  * 2020-08-31 tonhuisman: Add Calibration settings
  * 2020-08-30 tonhuisman: Add settings and 2/3 event support
  * 2020-08-29 tonhuisman: Initial plugin, based on XPT2046_Touchscreen by Paul Stoffregen from https://github.com/PaulStoffregen/XPT2046_Touchscreen
+ */
+
+/**
+ * Commands supported:
+ * -------------------
+ * touch,rot,<0..3>             : Set rotation to 180(0), 270(1), 0(2), 90(3) degrees (uncommon order may be caused by touch panel mounted rotated by 180 degrees...)
+ * touch,enable,<objectName>    : Enables a disabled objectname (removes a leading underscore)
+ * touch,disable,<objectName>   : Disables an enabled objectname (adds a leading underscore)
  */
 
 #define PLUGIN_099
@@ -54,6 +63,7 @@
 #define P099_TS_X_RES           240   // Pixels, should match with the screen it is mounted on
 #define P099_TS_Y_RES           320
 #define P099_INIT_OBJECTCOUNT   8     // Initial setting
+#define P099_DEBOUNCE_MILLIS    150   // Debounce delay for On/Off button function
 
 #define P099_TOUCH_X_INVALID  4095 // When picking up spurious noise (or an open/not connected TS-CS pin), these are the values that turn up
 #define P099_TOUCH_Y_INVALID  4095
@@ -70,7 +80,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_099;
         Device[deviceCount].Type = DEVICE_TYPE_SPI;
-        Device[deviceCount].VType = SENSOR_TYPE_TRIPLE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -230,6 +240,8 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
             html_table_header(F("Top-left y"));
             html_table_header(F("Bottom-right x"));
             html_table_header(F("Bottom-right y"));
+            html_table_header(F("On/Off button"));
+            html_table_header(F("Inverted"));
 
             for (int objectNr = 0; objectNr < P099_CONFIG_OBJECTCOUNT; objectNr++) {
               html_TR_TD();
@@ -248,6 +260,10 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
               addNumericBox(getPluginCustomArgName(objectNr + 300), P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.x, 0, 65535);
               html_TD();
               addNumericBox(getPluginCustomArgName(objectNr + 400), P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.y, 0, 65535);
+              html_TD();
+              addCheckBox(  getPluginCustomArgName(objectNr + 500), bitRead(P099_data->StoredSettings.TouchObjects[objectNr].flags, P099_FLAGS_ON_OFF_BUTTON), false);
+              html_TD();
+              addCheckBox(  getPluginCustomArgName(objectNr + 600), bitRead(P099_data->StoredSettings.TouchObjects[objectNr].flags, P099_FLAGS_INVERT_BUTTON), false);
             }
             html_end_table();
             addFormNote(F("Start objectname with '_' to ignore/disable the object (temporarily)."));
@@ -302,6 +318,11 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
           P099_data->StoredSettings.TouchObjects[objectNr].top_left.y =     getFormItemInt(getPluginCustomArgName(objectNr + 200));
           P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.x = getFormItemInt(getPluginCustomArgName(objectNr + 300));
           P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.y = getFormItemInt(getPluginCustomArgName(objectNr + 400));
+
+          uint8_t flags = 0;
+          bitWrite(flags, P099_FLAGS_ON_OFF_BUTTON,                         isFormItemChecked(getPluginCustomArgName(objectNr + 500)));
+          bitWrite(flags, P099_FLAGS_INVERT_BUTTON,                         isFormItemChecked(getPluginCustomArgName(objectNr + 600)));
+          P099_data->StoredSettings.TouchObjects[objectNr].flags =          flags;
         }
         if (error.length() > 0) {
           addHtmlError(error);
@@ -371,10 +392,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
         int argIndex = string.indexOf(',');
         if (argIndex) {
           command = parseString(string, 1);
-          command.toLowerCase();
           subcommand = parseString(string, 2);
-          subcommand.toLowerCase();
-          success = true;
 
           P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -382,16 +400,19 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
             return success;
           }
           if (command.equals(F("touch"))) {
-            if(subcommand.equals(F("rot"))) {
+            if(subcommand.equals(F("rot"))) { // touch,rot,<0..3> : Set rotation to 180, 270, 0, 90 degrees (strange order may be caused by touch panel mounted rotated by 180 degrees...)
               arguments = parseString(string, 3);
               uint8_t rot_ = static_cast<uint8_t>(arguments.toInt() % 4);
 
               P099_data->setRotation(rot_);
-            } else {
-              success = false;
+              success = true;
+            } else if (subcommand.equals(F("enable"))) { // touch,enable,<objectName> : Enables a disabled objectname (with a leading underscore)
+              arguments = parseString(string, 3);
+              success = P099_data->setTouchObjectState(arguments, true, P099_CONFIG_OBJECTCOUNT);
+            } else if (subcommand.equals(F("disable"))) { // touch,disable,<objectName> : Disables an enabled objectname (without a leading underscore)
+              arguments = parseString(string, 3);
+              success = P099_data->setTouchObjectState(arguments, false, P099_CONFIG_OBJECTCOUNT);
             }
-          } else {
-            success = false;
           }
         }
         break;
@@ -437,29 +458,51 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
                 if (bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY)) {   // Send events for each touch
                   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
                   if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) {   // Do NOT send a Z event for each touch?
-                    Device[DeviceIndex].VType = SENSOR_TYPE_DUAL;
+                    Device[DeviceIndex].VType = Sensor_VType::SENSOR_TYPE_DUAL;
                     Device[DeviceIndex].ValueCount = 2;
                   }
                   sendData(event); // Send X/Y(/Z) event
                   if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) {   // Reset device configuration
-                    Device[DeviceIndex].VType = SENSOR_TYPE_TRIPLE;
+                    Device[DeviceIndex].VType = Sensor_VType::SENSOR_TYPE_TRIPLE;
                     Device[DeviceIndex].ValueCount = 3;
                   }
                 }
                 if (bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_OBJECTNAME)) {   // Send events for objectname if within reach
                   String selectedObjectName;
-                  if (P099_data->isValidAndTouchedTouchObject(x, y, selectedObjectName, P099_CONFIG_OBJECTCOUNT)) {
-                    // Matching object is found, send <TaskDeviceName>#<ObjectName> event with x, y and z as %eventvalue1/2/3%
-                    String eventCommand = getTaskDeviceName(event->TaskIndex);
-                    eventCommand += '#';
-                    eventCommand += selectedObjectName;
-                    eventCommand += '='; // Add arguments
-                    eventCommand += x;
-                    eventCommand += ',';
-                    eventCommand += y;
-                    eventCommand += ',';
-                    eventCommand += z;
-                    eventQueue.add(eventCommand);
+                  int    selectedObjectIndex = -1;
+                  if (P099_data->isValidAndTouchedTouchObject(x, y, selectedObjectName, selectedObjectIndex, P099_CONFIG_OBJECTCOUNT)) {
+                    if (selectedObjectIndex > -1 && bitRead(P099_data->StoredSettings.TouchObjects[selectedObjectIndex].flags, P099_FLAGS_ON_OFF_BUTTON)) {
+                      if (P099_data->TouchTimers[selectedObjectIndex] == 0 || P099_data->TouchTimers[selectedObjectIndex] < millis() - (2 * P099_DEBOUNCE_MILLIS)) { // Not touched yet or too long ago
+                        P099_data->TouchTimers[selectedObjectIndex] = millis() + P099_DEBOUNCE_MILLIS; // From now wait the debounce time
+                      } else {
+                        if (P099_data->TouchTimers[selectedObjectIndex] <= millis()) { // Debouncing time elapsed?
+                          P099_data->TouchStates[selectedObjectIndex] = !P099_data->TouchStates[selectedObjectIndex];
+                          P099_data->TouchTimers[selectedObjectIndex] = 0;
+                          String eventCommand = getTaskDeviceName(event->TaskIndex);
+                          eventCommand += '#';
+                          eventCommand += selectedObjectName;
+                          eventCommand += '='; // Add arguments
+                          if (bitRead(P099_data->StoredSettings.TouchObjects[selectedObjectIndex].flags, P099_FLAGS_INVERT_BUTTON)) {
+                            eventCommand += (P099_data->TouchStates[selectedObjectIndex] ? '0' : '1'); // Act like an inverted button, 0 = On, 1 = Off
+                          } else {
+                            eventCommand += (P099_data->TouchStates[selectedObjectIndex] ? '1' : '0'); // Act like a button, 1 = On, 0 = Off
+                          }
+                          eventQueue.add(eventCommand);
+                        }
+                      }
+                    } else {
+                      // Matching object is found, send <TaskDeviceName>#<ObjectName> event with x, y and z as %eventvalue1/2/3%
+                      String eventCommand = getTaskDeviceName(event->TaskIndex);
+                      eventCommand += '#';
+                      eventCommand += selectedObjectName;
+                      eventCommand += '='; // Add arguments
+                      eventCommand += x;
+                      eventCommand += ',';
+                      eventCommand += y;
+                      eventCommand += ',';
+                      eventCommand += z;
+                      eventQueue.add(eventCommand);
+                    }
                   }
                 }
               }
