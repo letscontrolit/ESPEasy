@@ -4,6 +4,7 @@
 #include "../../ESPEasy_common.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
+#include "../DataStructs/DeviceStruct.h"
 
 struct EventStruct;
 
@@ -25,7 +26,7 @@ public:
   int idx                          = 0;
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
-  byte sensorType                  = 0;
+  Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
 };
 
 // #endif //USES_C007

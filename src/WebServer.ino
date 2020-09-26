@@ -5,12 +5,16 @@
 
 #include "ESPEasyNetwork.h"
 #include "ESPEasy_common.h"
+
+#include "src/DataStructs/SettingsType.h"
+
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/TXBuffer.h"
-#include "src/Static/WebStaticData.h"
-#include "src/DataStructs/SettingsType.h"
 
+#include "src/Helpers/OTA.h"
+
+#include "src/Static/WebStaticData.h"
 
 
 void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean rebooting = false) {
@@ -155,11 +159,6 @@ size_t streamFile_htmlEscape(const String& fileName)
 // Web Interface init
 // ********************************************************************************
 // #include "core_version.h"
-#define HTML_SYMBOL_WARNING "&#9888;"
-#define HTML_SYMBOL_INPUT   "&#8656;"
-#define HTML_SYMBOL_OUTPUT  "&#8658;"
-#define HTML_SYMBOL_I_O     "&#8660;"
-
 
 #define TASKS_PER_PAGE TASKS_MAX
 
@@ -810,8 +809,9 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
   }
 
   LoadTaskSettings(TaskIndex);
+  const byte valueCount = getValueCountForTask(TaskIndex);
 
-  for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+  for (byte x = 0; x < valueCount; x++)
   {
     String html;
     html.reserve(96);
@@ -1035,12 +1035,12 @@ void getConfig_dat_file_layout() {
   int struct_size = 0;
 
   // background
-  const uint32_t realSize = SettingsType::getFileSize(SettingsType::TaskSettings_Type);
+  const uint32_t realSize = SettingsType::getFileSize(SettingsType::Enum::TaskSettings_Type);
   createSvgHorRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
 
-  for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+  for (int st = 0; st < static_cast<int>(SettingsType::Enum::SettingsType_MAX); ++st) {
     SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
-    if (SettingsType::getSettingsFile(settingsType) == SettingsType::FILE_CONFIG_type) {
+    if (SettingsType::getSettingsFile(settingsType) == SettingsType::SettingsFileEnum::FILE_CONFIG_type) {
       unsigned int color = SettingsType::getSVGcolor(settingsType);
       SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
 
@@ -1056,7 +1056,7 @@ void getConfig_dat_file_layout() {
   // Text labels
   float textXoffset = SVG_BAR_WIDTH + 2;
   float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
-  createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::TaskSettings_Type), textXoffset, textYoffset);
+  createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::Enum::TaskSettings_Type), textXoffset, textYoffset);
   addHtml(F("</svg>\n"));
 }
 

@@ -201,13 +201,13 @@ public:
                                        struct EventStruct *event);
 
   void schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex,
-                                            byte            Function,
+                                            CPlugin::Function Function,
                                             char           *c_topic,
                                             byte           *b_payload,
                                             unsigned int    length);
 
   void schedule_notification_event_timer(byte                NotificationProtocolIndex,
-                                         byte                Function,
+                                         NPlugin::Function   Function,
                                          struct EventStruct *event);
 
 

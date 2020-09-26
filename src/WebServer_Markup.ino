@@ -500,40 +500,6 @@ String makeDocLink(const String& url, bool isRTD) {
   return result;
 }
 
-// ********************************************************************************
-// Add a GPIO pin select dropdown list for 8266, 8285 or ESP32
-// ********************************************************************************
-String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warning) {
-  if (gpio < 0) { return F("- None -"); }
-  String result;
-  result.reserve(24);
-  result  = F("GPIO-");
-  result += gpio;
-
-  if (pinnr >= 0) {
-    result += F(" (D");
-    result += pinnr;
-    result += ')';
-  }
-
-  if (input != output) {
-    result += ' ';
-    result += input ? F(HTML_SYMBOL_INPUT) : F(HTML_SYMBOL_OUTPUT);
-  }
-
-  if (warning) {
-    result += ' ';
-    result += F(HTML_SYMBOL_WARNING);
-  }
-  bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
-
-  if (serialPinConflict) {
-    if (gpio == 1) { result += F(" TX0"); }
-
-    if (gpio == 3) { result += F(" RX0"); }
-  }
-  return result;
-}
 
 void addPinSelect(boolean forI2C, const String& id,  int choice)
 {

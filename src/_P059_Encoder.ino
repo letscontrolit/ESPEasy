@@ -37,7 +37,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_059;
         Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SWITCH;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
@@ -150,7 +150,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
           {
             long c = P_059_sensordefs[event->TaskIndex]->read();
             UserVar[event->BaseVarIndex] = (float)c;
-            event->sensorType = SENSOR_TYPE_SWITCH;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
             String log = F("QEI  : ");
             log += c;

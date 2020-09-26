@@ -25,6 +25,8 @@ The controller can deliver the data to:
 <TODO>
 */
 
+#include "src/DataStructs/ESPEasyControllerCache.h"
+
 #define CPLUGIN_016
 #define CPLUGIN_ID_016         16
 #define CPLUGIN_NAME_016       "Cache Controller [Experimental]"
@@ -168,7 +170,7 @@ bool C016_getCSVline(
   unsigned long& timestamp,
   byte& controller_idx,
   byte& TaskIndex,
-  byte& sensorType,
+  Sensor_VType& sensorType,
   byte& valueCount,
   float& val1,
   float& val2,

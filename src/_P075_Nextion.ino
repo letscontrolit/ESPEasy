@@ -108,7 +108,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number = PLUGIN_ID_075;
       Device[deviceCount].Type = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType = SENSOR_TYPE_DUAL;
+      Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_DUAL;
       Device[deviceCount].Ports = 0;
       Device[deviceCount].PullUpOption = false;         // Pullup is not used.
       Device[deviceCount].InverseLogicOption = false;
@@ -148,23 +148,20 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
+      String options[4];
+      options[0] = F("9600");
+      options[1] = F("38400");
+      options[2] = F("57600");
+      options[3] = F("115200");
+
+      addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
+      addUnit(F("baud"));
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
-
-/*
-      addFormSeparator(2);
-      addFormSubHeader(F("Enhanced Serial Communication"));
-      addFormCheckBox(F("Use Hardware Serial"), F("AdvHwSerial"), PCONFIG(0));
-*/
-      {
-        String options[4];
-        options[0] = F("9600");
-        options[1] = F("38400");
-        options[2] = F("57600");
-        options[3] = F("115200");
-
-        addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
-      }
 
 //    ** DEVELOPER DEBUG MESSAGE AREA **
 //    int datax = (int)(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
@@ -200,7 +197,6 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_WEBFORM_SAVE: {
-        serialHelper_webformSave(event);
 
         {
           // FIXME TD-er: This is a huge object allocated on the Stack.

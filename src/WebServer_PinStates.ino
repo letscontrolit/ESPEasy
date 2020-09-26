@@ -1,5 +1,7 @@
+#include "src/Helpers/PortStatus.h"
 
 #ifdef WEBSERVER_NEW_UI
+
 
 // ********************************************************************************
 // Web Interface pin state list

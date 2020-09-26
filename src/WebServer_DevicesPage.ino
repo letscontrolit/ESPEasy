@@ -5,6 +5,7 @@
 # include "src/Globals/CPlugins.h"
 # include "src/Globals/Plugins.h"
 # include "src/Static/WebStaticData.h"
+# include "src/Helpers/StringGenerator_GPIO.h"
 
 
 void handle_devices() {
@@ -127,8 +128,7 @@ void handle_devices() {
       addHtmlError(SaveTaskSettings(taskIndex));
       addHtmlError(SaveSettings());
 
-      struct EventStruct TempEvent;
-      TempEvent.TaskIndex = taskIndex;
+      struct EventStruct TempEvent(taskIndex);
       String dummy;
 
       if (Settings.TaskDeviceEnabled[taskIndex]) {
@@ -248,6 +248,15 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     Settings.I2C_Flags[taskIndex] = flags;
   }
 
+  struct EventStruct TempEvent(taskIndex);
+
+  ExtraTaskSettings.clear();
+  {
+    ExtraTaskSettings.TaskIndex = taskIndex;
+    String dummy;
+    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
+  }
+
   int pin1 = -1;
   int pin2 = -1;
   int pin3 = -1;
@@ -274,7 +283,33 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     Settings.TaskDevicePin1Inversed[taskIndex] = isFormItemChecked(F("TDPI"));
   }
 
-  for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+  // Save selected output type.
+  switch(Device[DeviceIndex].OutputDataType) {
+    case Output_Data_type_t::Default:
+      break;
+    case Output_Data_type_t::Simple:
+    case Output_Data_type_t::All:
+    {
+      int pconfigIndex = -1;
+      getDeviceVTypeForTask(taskIndex, pconfigIndex);
+      if (pconfigIndex >= 0 && pconfigIndex < PLUGIN_CONFIGVAR_MAX) {
+        Sensor_VType VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
+        Settings.TaskDevicePluginConfig[taskIndex][pconfigIndex] = static_cast<int>(VType);
+        ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
+      }
+      break;
+    }
+  }
+
+  if (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL ||
+      Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1) 
+  {
+    serialHelper_webformSave(&TempEvent);
+  }
+
+
+  const byte valueCount = getValueCountForTask(taskIndex);
+  for (byte varNr = 0; varNr < valueCount; varNr++)
   {
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr],    String(F("TDF")) + (varNr + 1));
     ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = getFormItemInt(String(F("TDVD")) + (varNr + 1));
@@ -287,19 +322,11 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   }
 
   // // task value names handling.
-  // for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+  // for (byte varNr = 0; varNr < valueCount; varNr++)
   // {
   //   taskdevicevaluename[varNr].toCharArray(tmpString, 41);
   //   strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
   // }
-
-  struct EventStruct TempEvent;
-  TempEvent.TaskIndex = taskIndex;
-
-  if (ExtraTaskSettings.TaskIndex != TempEvent.TaskIndex) { // if field set empty, reload defaults
-    String dummy;
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
-  }
 
   // allow the plugin to save plugin-specific form settings.
   {
@@ -382,7 +409,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
 
   String deviceName;
 
-  for (byte x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
+  for (taskIndex_t x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
     const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.TaskDeviceNumber[x];
@@ -422,9 +449,8 @@ void handle_devicess_ShowAllTasksTable(byte page)
     if (pluginID_set)
     {
       LoadTaskSettings(x);
-      struct EventStruct TempEvent;
       int8_t spi_gpios[3] {-1, -1, -1};
-      TempEvent.TaskIndex = x;
+      struct EventStruct TempEvent(x);
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
       html_TD();
@@ -684,7 +710,8 @@ void handle_devicess_ShowAllTasksTable(byte page)
 
         if (!customValues)
         {
-          for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+          const byte valueCount = getValueCountForTask(x);
+          for (byte varNr = 0; varNr < valueCount; varNr++)
           {
             if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
             {
@@ -711,8 +738,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
   LoadTaskSettings(taskIndex);
-  struct EventStruct TempEvent;
-  TempEvent.TaskIndex = taskIndex;
+  struct EventStruct TempEvent(taskIndex);
 
   html_add_form();
   html_table_class_normal();
@@ -821,6 +847,13 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
         }
       }
     }
+    if (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL ||
+        Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1) 
+    {
+      serialHelper_webformLoad(&TempEvent);
+      String webformLoadString;
+      PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
+    }
 
     if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
       addFormSubHeader(F("I2C options"));
@@ -890,6 +923,30 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
       addFormSubHeader(F("Device settings"));
     }
+
+
+    {
+      int pconfigIndex = -1;
+      getDeviceVTypeForTask(taskIndex, pconfigIndex);
+
+      switch(Device[DeviceIndex].OutputDataType) {
+        case Output_Data_type_t::Default:
+          break;
+        case Output_Data_type_t::Simple:
+          if (pconfigIndex >= 0) {
+            sensorTypeHelper_webformLoad_simple(&TempEvent, pconfigIndex);
+          }
+          break;
+        case Output_Data_type_t::All:
+        {
+          if (pconfigIndex >= 0) {
+            sensorTypeHelper_webformLoad_allTypes(&TempEvent, pconfigIndex);
+          }
+          break;
+        }
+      }
+    }
+
     // add plugins content
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) { // only show additional config for local connected sensors
       String webformLoadString;
@@ -969,7 +1026,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     }
 
     // section: Values
-    if (!Device[DeviceIndex].Custom && (Device[DeviceIndex].ValueCount > 0))
+    const byte valueCount = getValueCountForTask(taskIndex);
+    if (!Device[DeviceIndex].Custom && (valueCount > 0))
     {
       addFormSubHeader(F("Values"));
       html_end_table();
@@ -990,7 +1048,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       }
 
       // table body
-      for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++)
+      for (byte varNr = 0; varNr < valueCount; varNr++)
       {
         html_TR_TD();
         addHtml(String(varNr + 1));

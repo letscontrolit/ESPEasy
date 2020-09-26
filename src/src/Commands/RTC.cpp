@@ -1,10 +1,15 @@
 #include "../Commands/RTC.h"
 
-#include "../Commands/Common.h"
-#include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
-#include "../Globals/RTC.h"
+#include "../../ESPEasy_fdwdecl.h"
+
+#include "../Commands/Common.h"
+
 #include "../DataStructs/RTCStruct.h"
+
+#include "../Globals/RTC.h"
+
+#include "../Helpers/ESPEasyRTC.h"
 
 
 String Command_RTC_Clear(struct EventStruct *event, const char* Line)
