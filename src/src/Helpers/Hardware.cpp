@@ -5,7 +5,11 @@
 #include "../Globals/Statistics.h"
 #include "../Globals/GlobalMapPortStatus.h"
 
+#include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/PortStatus.h"
+#include "../Helpers/StringConverter.h"
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -387,6 +391,43 @@ uint32_t getFlashRealSizeInBytes() {
   return ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
   #endif // if defined(ESP32)
 }
+
+
+bool puyaSupport() {
+  bool supported = false;
+
+#ifdef PUYA_SUPPORT
+
+  // New support starting core 2.5.0
+  if (PUYA_SUPPORT) { supported = true; }
+#endif // ifdef PUYA_SUPPORT
+#ifdef PUYASUPPORT
+
+  // Old patch
+  supported = true;
+#endif // ifdef PUYASUPPORT
+  return supported;
+}
+
+uint8_t getFlashChipVendorId() {
+#ifdef PUYA_SUPPORT
+  return ESP.getFlashChipVendorId();
+#else // ifdef PUYA_SUPPORT
+  # if defined(ESP8266)
+  uint32_t flashChipId = ESP.getFlashChipId();
+  return flashChipId & 0x000000ff;
+  # else // if defined(ESP8266)
+  return 0xFF; // Not an existing function for ESP32
+  # endif // if defined(ESP8266)
+#endif // ifdef PUYA_SUPPORT
+}
+
+bool flashChipVendorPuya() {
+  uint8_t vendorId = getFlashChipVendorId();
+
+  return vendorId == 0x85; // 0x146085 PUYA
+}
+
 
 /********************************************************************************************\
    Hardware specific configurations

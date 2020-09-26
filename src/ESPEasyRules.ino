@@ -8,6 +8,8 @@
 #include "src/Globals/Plugins_other.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/Numerical.h"
+#include "src/Helpers/StringParser.h"
+
 
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();

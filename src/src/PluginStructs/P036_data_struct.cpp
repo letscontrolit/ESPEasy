@@ -2,17 +2,20 @@
 
 #ifdef USES_P036
 
-# include "../../ESPEasyNetwork.h"
-# include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/Scheduler.h"
-# include "../Helpers/StringConverter.h"
-# include "../Helpers/SystemVariables.h"
 
+
+# include "../../ESPEasyNetwork.h"
 # include "../../ESPEasy_fdwdecl.h"
 
-# include "OLED_SSD1306_SH1106_images.h"
-# include "Dialog_Plain_12_font.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Misc.h"
+# include "../Helpers/Scheduler.h"
+# include "../Helpers/StringConverter.h"
+# include "../Helpers/StringParser.h"
+# include "../Helpers/SystemVariables.h"
 
+# include "Dialog_Plain_12_font.h"
+# include "OLED_SSD1306_SH1106_images.h"
 
 P036_data_struct::P036_data_struct() : display(nullptr) {}
 

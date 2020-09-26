@@ -1,6 +1,6 @@
 #include "CPlugins.h"
-#include "../../ESPEasy_plugindefs.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"

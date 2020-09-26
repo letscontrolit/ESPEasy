@@ -3,6 +3,7 @@
 #include "_Plugin_Helper.h"
 #include "src/DataStructs/PinMode.h"
 #include "src/Helpers/Scheduler.h"
+#include "src/Helpers/Audio.h"
 
 // #######################################################################################################
 // #################################### Plugin 001: Input Switch #########################################

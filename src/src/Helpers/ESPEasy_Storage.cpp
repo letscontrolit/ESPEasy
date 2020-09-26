@@ -1,5 +1,6 @@
 #include "ESPEasy_Storage.h"
 
+#include "../../ESPEasy_common.h"
 
 #include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_Log.h"
@@ -16,8 +17,13 @@
 #include "../DataStructs/TimingStats.h"
 #include "../DataStructs/StorageLayout.h"
 
+#include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
@@ -273,7 +279,7 @@ void fileSystemCheck()
     }
     #endif // if defined(ESP8266)
 
-    fs::File f = tryOpenFile(SettingsType::getSettingsFileName(SettingsType::BasicSettings_Type).c_str(), "r");
+    fs::File f = tryOpenFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), "r");
 
     if (!f)
     {
@@ -339,7 +345,7 @@ String SaveSettings(void)
       memcpy(Settings.md5, tmp_md5, 16);
    */
   Settings.validate();
-  err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::BasicSettings_Type).c_str(), 0, (byte *)&Settings, sizeof(Settings));
+  err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, (byte *)&Settings, sizeof(Settings));
 
   if (err.length()) {
     return err;
@@ -403,7 +409,7 @@ String LoadSettings()
   uint8_t calculatedMd5[16];
   MD5Builder md5;
 
-  err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::BasicSettings_Type).c_str(), 0, (byte *)&Settings, sizeof(SettingsStruct));
+  err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, (byte *)&Settings, sizeof(SettingsStruct));
 
   if (err.length()) {
     return err;
@@ -677,7 +683,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex != TaskIndex) {
     return F("SaveTaskSettings taskIndex does not match");
   }
-  String err = SaveToFile(SettingsType::TaskSettings_Type,
+  String err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
                           TaskIndex,
                           (byte *)&ExtraTaskSettings,
                           sizeof(struct ExtraTaskSettingsStruct));
@@ -706,7 +712,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   ExtraTaskSettings.clear();
   String result = "";
   result =
-    LoadFromFile(SettingsType::TaskSettings_Type, TaskIndex, (byte *)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+    LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, (byte *)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
@@ -731,7 +737,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 String SaveCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("SaveCustomTaskSettings"));
-  return SaveToFile(SettingsType::CustomTaskSettings_Type, TaskIndex, memAddress, datasize);
+  return SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, TaskIndex, memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -742,7 +748,7 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
 {
   checkRAM(F("SaveCustomTaskSettings"));
   return SaveStringArray(
-    SettingsType::CustomTaskSettings_Type, TaskIndex,
+    SettingsType::Enum::CustomTaskSettings_Type, TaskIndex,
     strings, nrStrings, maxStringLength);
 }
 
@@ -760,7 +766,7 @@ String getCustomTaskSettingsError(byte varNr) {
 String ClearCustomTaskSettings(taskIndex_t TaskIndex)
 {
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom task settings"));
-  return ClearInFile(SettingsType::CustomTaskSettings_Type, TaskIndex);
+  return ClearInFile(SettingsType::Enum::CustomTaskSettings_Type, TaskIndex);
 }
 
 /********************************************************************************************\
@@ -770,7 +776,7 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datas
 {
   START_TIMER;
   checkRAM(F("LoadCustomTaskSettings"));
-  String result = LoadFromFile(SettingsType::CustomTaskSettings_Type, TaskIndex, memAddress, datasize);
+  String result = LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type, TaskIndex, memAddress, datasize);
   STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
   return result;
 }
@@ -783,7 +789,7 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
 {
   START_TIMER;
   checkRAM(F("LoadCustomTaskSettings"));
-  String result = LoadStringArray(SettingsType::CustomTaskSettings_Type,
+  String result = LoadStringArray(SettingsType::Enum::CustomTaskSettings_Type,
                            TaskIndex,
                            strings, nrStrings, maxStringLength);
   STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
@@ -797,7 +803,7 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
 {
   checkRAM(F("SaveControllerSettings"));
   controller_settings.validate(); // Make sure the saved controller settings have proper values.
-  return SaveToFile(SettingsType::ControllerSettings_Type, ControllerIndex,
+  return SaveToFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                     (byte *)&controller_settings, sizeof(controller_settings));
 }
 
@@ -807,7 +813,7 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
 String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSettingsStruct& controller_settings) {
   checkRAM(F("LoadControllerSettings"));
   String result =
-    LoadFromFile(SettingsType::ControllerSettings_Type, ControllerIndex,
+    LoadFromFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                  (byte *)&controller_settings, sizeof(controller_settings));
   controller_settings.validate(); // Make sure the loaded controller settings have proper values.
   return result;
@@ -821,7 +827,7 @@ String ClearCustomControllerSettings(controllerIndex_t ControllerIndex)
   checkRAM(F("ClearCustomControllerSettings"));
 
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom controller settings"));
-  return ClearInFile(SettingsType::CustomControllerSettings_Type, ControllerIndex);
+  return ClearInFile(SettingsType::Enum::CustomControllerSettings_Type, ControllerIndex);
 }
 
 /********************************************************************************************\
@@ -830,7 +836,7 @@ String ClearCustomControllerSettings(controllerIndex_t ControllerIndex)
 String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("SaveCustomControllerSettings"));
-  return SaveToFile(SettingsType::CustomControllerSettings_Type, ControllerIndex, memAddress, datasize);
+  return SaveToFile(SettingsType::Enum::CustomControllerSettings_Type, ControllerIndex, memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -839,7 +845,7 @@ String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, byte *mem
 String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("LoadCustomControllerSettings"));
-  return LoadFromFile(SettingsType::CustomControllerSettings_Type, ControllerIndex, memAddress, datasize);
+  return LoadFromFile(SettingsType::Enum::CustomControllerSettings_Type, ControllerIndex, memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -848,7 +854,7 @@ String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, byte *mem
 String SaveNotificationSettings(int NotificationIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("SaveNotificationSettings"));
-  return SaveToFile(SettingsType::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
+  return SaveToFile(SettingsType::Enum::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -857,7 +863,7 @@ String SaveNotificationSettings(int NotificationIndex, byte *memAddress, int dat
 String LoadNotificationSettings(int NotificationIndex, byte *memAddress, int datasize)
 {
   checkRAM(F("LoadNotificationSettings"));
-  return LoadFromFile(SettingsType::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
+  return LoadFromFile(SettingsType::Enum::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
 }
 
 /********************************************************************************************\
@@ -1053,7 +1059,7 @@ String LoadFromFile(const char *fname, int offset, byte *memAddress, int datasiz
    Wrapper functions to handle errors in accessing settings
  \*********************************************************************************************/
 String getSettingsFileIndexRangeError(bool read, SettingsType::Enum settingsType, int index) {
-  if (settingsType >= SettingsType::SettingsType_MAX) {
+  if (settingsType >= SettingsType::Enum::SettingsType_MAX) {
     String error = F("Unknown settingsType: ");
     error += static_cast<int>(settingsType);
     return error;

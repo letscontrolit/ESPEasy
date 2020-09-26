@@ -1,3 +1,5 @@
+#include "ESPEasyRTC.h"
+
 #include "src/Globals/RTC.h"
 #include "src/DataStructs/RTCStruct.h"
 #include "src/DataStructs/RTCCacheStruct.h"
@@ -56,7 +58,7 @@
 /********************************************************************************************\
    Save RTC struct to RTC memory
  \*********************************************************************************************/
-boolean saveToRTC()
+bool saveToRTC()
 {
   #if defined(ESP32)
   return false;
@@ -84,14 +86,16 @@ void initRTC()
   RTC.init();
   saveToRTC();
 
-  clearUserVar();
+  for (size_t i = 0; i < sizeof(UserVar) / sizeof(float); ++i) {
+    UserVar[i] = 0.0f;
+  }
   saveUserVarToRTC();
 }
 
 /********************************************************************************************\
    Read RTC struct from RTC memory
  \*********************************************************************************************/
-boolean readFromRTC()
+bool readFromRTC()
 {
   #if defined(ESP32)
   return false;
@@ -126,7 +130,7 @@ bool saveUserVarToRTC()
 /********************************************************************************************\
    Read RTC struct from RTC memory
  \*********************************************************************************************/
-boolean readUserVarFromRTC()
+bool readUserVarFromRTC()
 {
   #if defined(ESP32)
   return false;
@@ -135,7 +139,7 @@ boolean readUserVarFromRTC()
   // addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
   byte    *buffer = (byte *)&UserVar;
   size_t   size   = sizeof(UserVar);
-  boolean  ret    = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
+  bool  ret    = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
   uint32_t sumRAM = calc_CRC32(buffer, size);
   uint32_t sumRTC = 0;
   ret &= system_rtc_mem_read(RTC_BASE_USERVAR + (size >> 2), (byte *)&sumRTC, 4);

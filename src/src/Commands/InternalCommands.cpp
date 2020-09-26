@@ -34,7 +34,9 @@
 #include "../Commands/wd.h"
 #include "../Commands/WiFi.h"
 
+#include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringParser.h"
 
 
 bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {

@@ -6,6 +6,7 @@
 #include "_Plugin_Helper.h"
 
 #include "ESPEasy_packed_raw_data.h"
+#include "src/Helpers/Memory.h"
 
 #define PLUGIN_026
 #define PLUGIN_ID_026         26
