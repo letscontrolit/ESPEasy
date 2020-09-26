@@ -42,7 +42,7 @@ void handle_csvval()
     if (validDeviceIndex(DeviceIndex))
     {
       LoadTaskSettings(taskNr);
-      byte taskValCount = Device[DeviceIndex].ValueCount;
+      const byte taskValCount = getValueCountForTask(taskNr);
       uint16_t stringReserveSize = (valNr == INVALID_VALUE_NUM ? 1 : taskValCount) * 24;
       htmlData.reserve(stringReserveSize);
 
@@ -274,7 +274,8 @@ void handle_json()
       unsigned long ttl_json = 60; // Default value
 
       // For simplicity, do the optional values first.
-      if (Device[DeviceIndex].ValueCount != 0) {
+      const byte valueCount = getValueCountForTask(TaskIndex);
+      if (valueCount != 0) {
         if ((taskInterval > 0) && Settings.TaskDeviceEnabled[TaskIndex]) {
           ttl_json = taskInterval;
 
@@ -284,7 +285,7 @@ void handle_json()
         }
         addHtml(F("\"TaskValues\": [\n"));
 
-        for (byte x = 0; x < Device[DeviceIndex].ValueCount; x++)
+        for (byte x = 0; x < valueCount; x++)
         {
           addHtml("{");
           stream_next_json_object_value(F("ValueNumber"), String(x + 1));
@@ -292,7 +293,7 @@ void handle_json()
           stream_next_json_object_value(F("NrDecimals"),  String(ExtraTaskSettings.TaskDeviceValueDecimals[x]));
           stream_last_json_object_value(F("Value"), formatUserVarNoCheck(TaskIndex, x));
 
-          if (x < (Device[DeviceIndex].ValueCount - 1)) {
+          if (x < (valueCount - 1)) {
             addHtml(F(",\n"));
           }
         }

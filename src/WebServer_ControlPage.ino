@@ -2,6 +2,8 @@
 #ifdef WEBSERVER_CONTROL
 
 #include "src/Commands/InternalCommands.h"
+#include "src/Helpers/StringParser.h"
+
 
 // ********************************************************************************
 // Web Interface control page (no password!)

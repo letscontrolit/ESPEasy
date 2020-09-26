@@ -1,7 +1,7 @@
-#include "ESPEasy_plugindefs.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/SecuritySettings.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/ESPEasy_plugin_functions.h"
 
 
 /*********************************************************************************************\

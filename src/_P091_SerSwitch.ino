@@ -69,7 +69,7 @@
 static byte Plugin_091_switchstate[4];
 static byte Plugin_091_ostate[4];
 byte Plugin_091_commandstate = 0; // 0:no,1:inprogress,2:finished
-byte Plugin_091_type;
+Sensor_VType Plugin_091_type = Sensor_VType::SENSOR_TYPE_NONE;
 byte Plugin_091_numrelay = 1;
 byte Plugin_091_ownindex;
 byte Plugin_091_globalpar0;
@@ -88,7 +88,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_091;
         Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
-        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_QUAD;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -299,16 +299,16 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         switch (Plugin_091_numrelay)
         {
           case 1:
-            Plugin_091_type = SENSOR_TYPE_SWITCH;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_SWITCH;
             break;
           case 2:
-            Plugin_091_type = SENSOR_TYPE_DUAL;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_DUAL;
             break;
           case 3:
-            Plugin_091_type = SENSOR_TYPE_TRIPLE;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_TRIPLE;
             break;
           case 4:
-            Plugin_091_type = SENSOR_TYPE_QUAD;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_QUAD;
             break;
         }
         addLog(LOG_LEVEL_INFO, log);
@@ -594,12 +594,10 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             }
 
             LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
-            event->TaskIndex = Plugin_091_ownindex;
-            byte varIndex = Plugin_091_ownindex * VARS_PER_TASK;
-            event->BaseVarIndex = varIndex;
+            event->setTaskIndex(Plugin_091_ownindex);
 
             if (event->Par2 == 2) { // toggle
-              rcmd = 1 - UserVar[(varIndex + rnum)];
+              rcmd = 1 - UserVar[(event->BaseVarIndex + rnum)];
             }
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
@@ -607,17 +605,19 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             }
             sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3);
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
-              if (UserVar[(varIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-                UserVar[(varIndex + rnum)] = Plugin_091_switchstate[rnum];
+              if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
+                UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
                 if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
                 { // exclusive on mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = 0;
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
                 }
                 if (par3 == 2) { // simultaneous mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
                 }
                 if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-                  UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -641,9 +641,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               rcmd = event->Par2;
             }
             LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
-            event->TaskIndex = Plugin_091_ownindex;
-            byte varIndex = Plugin_091_ownindex * VARS_PER_TASK;
-            event->BaseVarIndex = varIndex;
+            event->setTaskIndex(Plugin_091_ownindex);
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
               par3 = Plugin_091_globalpar1;
@@ -653,17 +651,19 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             delay(event->Par3);
             sendmcucommand(rnum, !rcmd, Plugin_091_globalpar0, par3); // invert state
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
-              if (UserVar[(varIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-                UserVar[(varIndex + rnum)] = Plugin_091_switchstate[rnum];
+              if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
+                UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
                 if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
                 { // exclusive on mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = 0;
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
                 }
                 if (par3 == 2) { // simultaneous mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
                 }
                 if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-                  UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -691,9 +691,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               rcmd = event->Par2;
             }
             LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
-            event->TaskIndex = Plugin_091_ownindex;
-            byte varIndex = Plugin_091_ownindex * VARS_PER_TASK;
-            event->BaseVarIndex = varIndex;
+            event->setTaskIndex(Plugin_091_ownindex);
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
               par3 = Plugin_091_globalpar1;
@@ -704,17 +702,19 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             //Scheduler.setPluginTimer(timer, PLUGIN_ID_091, rnum, !rcmd);
             Scheduler.setPluginTaskTimer(timer, PLUGIN_ID_091, event->TaskIndex, rnum, !rcmd);
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
-              if (UserVar[(varIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-                UserVar[(varIndex + rnum)] = Plugin_091_switchstate[rnum];
+              if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
+                UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
                 if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
                 { // exclusive on mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = 0;
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
                 }
                 if (par3 == 2) { // simultaneous mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
                 }
                 if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-                  UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -737,19 +737,17 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               success = true;
 
               LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
-              event->TaskIndex = Plugin_091_ownindex;
-              byte varIndex = Plugin_091_ownindex * VARS_PER_TASK;
-              event->BaseVarIndex = varIndex;
+              event->setTaskIndex(Plugin_091_ownindex);
 
               sendmcudim(event->Par1, Plugin_091_globalpar0);
               if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
                 if (Plugin_091_switchstate[1] < 1) // follow state
                 {
-                  UserVar[varIndex] = 0;
-                  UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar[event->BaseVarIndex] = 0;
+                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
                 } else {
-                  UserVar[varIndex] = 1;
-                  UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar[event->BaseVarIndex] = 1;
+                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -772,9 +770,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         byte par3 = 0;
 
         LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
-        event->TaskIndex = Plugin_091_ownindex;
-        byte varIndex = Plugin_091_ownindex * VARS_PER_TASK;
-        event->BaseVarIndex = varIndex;
+        event->setTaskIndex(Plugin_091_ownindex);
 
         if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
           par3 = Plugin_091_globalpar1;
@@ -785,17 +781,19 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
         sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3); // invert state
         if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
-          if (UserVar[(varIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-            UserVar[(varIndex + rnum)] = Plugin_091_switchstate[rnum];
+          if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
+            UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
             if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
             { // exclusive on mode for Dual
-              UserVar[(varIndex + 1 - rnum)] = 0;
+              // FIXME TD-er: Is this a valid UserVar index?
+              UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
             }
             if (par3 == 2) { // simultaneous mode for Dual
-              UserVar[(varIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+              // FIXME TD-er: Is this a valid UserVar index?
+              UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
             }
             if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-              UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+              UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
             }
             event->sensorType = Plugin_091_type;
             sendData(event);

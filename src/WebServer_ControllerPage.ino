@@ -71,8 +71,8 @@ void handle_controllers() {
         struct EventStruct TempEvent;
         TempEvent.ControllerIndex = controllerindex;
         String dummy;
-        byte   cfunction = Settings.ControllerEnabled[controllerindex] ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
-        CPluginCall(ProtocolIndex, static_cast<CPlugin::Function>(cfunction), &TempEvent, dummy);
+        CPlugin::Function cfunction = Settings.ControllerEnabled[controllerindex] ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
+        CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy);
       }
     }
   }

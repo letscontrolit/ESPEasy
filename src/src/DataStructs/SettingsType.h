@@ -7,7 +7,7 @@
 class SettingsType {
 public:
 
-  enum Enum {
+  enum class Enum {
     BasicSettings_Type = 0,
     TaskSettings_Type,
     CustomTaskSettings_Type,
@@ -20,7 +20,7 @@ public:
     SettingsType_MAX
   };
 
-  enum SettingsFileEnum {
+  enum class SettingsFileEnum {
     FILE_CONFIG_type,
     FILE_NOTIFICATION_type,
     FILE_SECURITY_type,
@@ -44,7 +44,7 @@ public:
 
 #ifndef BUILD_MINIMAL_OTA
   static unsigned int     getSVGcolor(Enum settingsType);
-#endif
+#endif // ifndef BUILD_MINIMAL_OTA
 
   static SettingsFileEnum getSettingsFile(Enum settingsType);
   static String           getSettingsFileName(Enum settingsType);

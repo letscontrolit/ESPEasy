@@ -41,7 +41,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_003;
       Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -193,13 +193,13 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       {
         case 0:
         {
-          event->sensorType            = SENSOR_TYPE_SINGLE;
+          event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
           UserVar[event->BaseVarIndex] = Plugin_003_pulseCounter[event->TaskIndex];
           break;
         }
         case 1:
         {
-          event->sensorType                = SENSOR_TYPE_TRIPLE;
+          event->sensorType                = Sensor_VType::SENSOR_TYPE_TRIPLE;
           UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
           UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
           UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex];
@@ -207,13 +207,13 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         }
         case 2:
         {
-          event->sensorType            = SENSOR_TYPE_SINGLE;
+          event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
           UserVar[event->BaseVarIndex] = Plugin_003_pulseTotalCounter[event->TaskIndex];
           break;
         }
         case 3:
         {
-          event->sensorType                = SENSOR_TYPE_DUAL;
+          event->sensorType                = Sensor_VType::SENSOR_TYPE_DUAL;
           UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
           UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
           break;
