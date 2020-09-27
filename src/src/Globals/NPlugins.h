@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include "../DataStructs/ESPEasyLimits.h"
-#include "../../ESPEasy_plugindefs.h"
+#include "../DataStructs/ESPEasy_plugin_functions.h"
 
 struct NotificationStruct;
 

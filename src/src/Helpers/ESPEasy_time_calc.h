@@ -3,6 +3,17 @@
 
 #include <Arduino.h>
 
+
+inline uint64_t getMicros64() {
+  #ifdef ESP8266
+  return micros64();
+  #endif
+  #ifdef ESP32
+  return esp_timer_get_time();
+  #endif
+}
+
+
 /********************************************************************************************\
    Simple time computations.
  \*********************************************************************************************/
@@ -10,7 +21,9 @@
 // Return the time difference as a signed value, taking into account the timers may overflow.
 // Returned timediff is between -24.9 days and +24.9 days.
 // Returned value is positive when "next" is after "prev"
-long ICACHE_RAM_ATTR timeDiff(const unsigned long prev, const unsigned long next);
+inline int32_t timeDiff(const unsigned long prev, const unsigned long next) {
+  return ((int32_t) (next - prev));
+}
 
 // Compute the number of milliSeconds passed since timestamp given.
 // N.B. value can be negative if the timestamp has not yet been reached.

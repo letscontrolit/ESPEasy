@@ -247,7 +247,7 @@ These messages are just a serialized byte stream of ``struct C013_SensorInfoStru
   {
     byte header = 255;
     byte ID = 3;
-    byte sourcelUnit;
+    byte sourceUnit;
     byte destUnit;
     byte sourceTaskIndex;
     byte destTaskIndex;
@@ -269,7 +269,7 @@ These messages are just a serialized byte stream of ``struct C013_SensorDataStru
   {
     byte header = 255;
     byte ID = 5;
-    byte sourcelUnit;
+    byte sourceUnit;
     byte destUnit;
     byte sourceTaskIndex;
     byte destTaskIndex;

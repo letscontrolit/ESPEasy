@@ -180,7 +180,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
       Device[++deviceCount].Number           = PLUGIN_ID_081;
       Device[deviceCount].Type               = DEVICE_TYPE_DUMMY; // how the device is connected
-      Device[deviceCount].VType              = SENSOR_TYPE_NONE;  // type of value the plugin will return, used only for Domoticz
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;  // type of value the plugin will return, used only for Domoticz
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;

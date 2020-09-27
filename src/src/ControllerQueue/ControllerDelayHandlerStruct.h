@@ -13,8 +13,11 @@
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 
+#include <Arduino.h>
 #include <list>
 #include <memory> // For std::shared_ptr
+#include <new>    // std::nothrow
+
 
 /*********************************************************************************************\
 * ControllerDelayHandlerStruct
@@ -234,7 +237,7 @@ struct ControllerDelayHandlerStruct {
   }                                                                                                                    \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                             \
     if (C##NNN####M##_DelayHandler == nullptr) {                                                                       \
-      C##NNN####M##_DelayHandler = new (std::nothrow) C##NNN####M##_DelayHandler_t;                                                   \
+      C##NNN####M##_DelayHandler = new (std::nothrow) (C##NNN####M##_DelayHandler_t);                                  \
     }                                                                                                                  \
     if (C##NNN####M##_DelayHandler == nullptr) { return false; }                                                       \
     MakeControllerSettings(ControllerSettings);                                                                        \

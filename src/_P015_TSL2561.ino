@@ -37,7 +37,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_015;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_TRIPLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -149,7 +149,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
       if (nullptr != P015_data) {
         P015_data->begin();
 
-        P015_data->performRead(
+        success = P015_data->performRead(
           UserVar[event->BaseVarIndex],      // lux
           UserVar[event->BaseVarIndex + 1],  // infrared
           UserVar[event->BaseVarIndex + 2],  // broadband

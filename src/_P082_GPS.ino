@@ -231,7 +231,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_082;
       Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1;
-      Device[deviceCount].VType              = SENSOR_TYPE_QUAD;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -318,7 +318,6 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
 
       /*
          P082_data_struct *P082_data =
@@ -373,7 +372,6 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
       P082_TIMEOUT  = getFormItemInt(P082_TIMEOUT_LABEL);
       P082_DISTANCE = getFormItemInt(P082_DISTANCE_LABEL);
 

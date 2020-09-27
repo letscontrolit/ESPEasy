@@ -1,13 +1,17 @@
 #include "DeepSleep.h"
 
-#include "ESPEasy_time_calc.h"
-#include "PeriodicalActions.h"
-#include "../Globals/Settings.h"
-#include "../Globals/Statistics.h"
+#include "../../ESPEasyNetwork.h"
+#include "../../ESPEasy_common.h"
+
 #include "../Globals/EventQueue.h"
 #include "../Globals/RTC.h"
-#include "../../ESPEasy_common.h"
-#include "../../ESPEasyNetwork.h"
+#include "../Globals/Settings.h"
+#include "../Globals/Statistics.h"
+
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/PeriodicalActions.h"
+
 #include <limits.h>
 
 

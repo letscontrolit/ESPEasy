@@ -27,7 +27,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_027;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_TRIPLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -160,7 +160,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         {
           case 0:
           {
-            event->sensorType            = SENSOR_TYPE_SINGLE;
+            event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar[event->BaseVarIndex] = voltage;
             log                         += F(": Voltage: ");
             log                         += voltage;
@@ -168,7 +168,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
           }
           case 1:
           {
-            event->sensorType            = SENSOR_TYPE_SINGLE;
+            event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar[event->BaseVarIndex] = current;
             log                         += F(" Current: ");
             log                         += current;
@@ -176,7 +176,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
           }
           case 2:
           {
-            event->sensorType            = SENSOR_TYPE_SINGLE;
+            event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar[event->BaseVarIndex] = power;
             log                         += F(" Power: ");
             log                         += power;
@@ -184,7 +184,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
           }
           case 3:
           {
-            event->sensorType                = SENSOR_TYPE_TRIPLE;
+            event->sensorType                = Sensor_VType::SENSOR_TYPE_TRIPLE;
             UserVar[event->BaseVarIndex]     = voltage;
             UserVar[event->BaseVarIndex + 1] = current;
             UserVar[event->BaseVarIndex + 2] = power;

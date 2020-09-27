@@ -1,9 +1,25 @@
 #include "Plugins.h"
-#include "../../ESPEasy_plugindefs.h"
-#include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../Globals/Device.h"
-#include "../Globals/Settings.h"
+
 #include "../../ESPEasy_Log.h"
+#include "../../_Plugin_Helper.h"
+
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/ESPEasy_plugin_functions.h"
+#include "../DataStructs/TimingStats.h"
+
+#include "../Globals/Device.h"
+#include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ExtraTaskSettings.h"
+#include "../Globals/GlobalMapPortStatus.h"
+#include "../Globals/Settings.h"
+
+#include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/PortStatus.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringParser.h"
 
 #define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 
@@ -28,11 +44,7 @@ boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
                                   struct EventStruct *,
                                   String&);
 
-void clearUserVar() {
-  for (size_t i = 0; i < sizeof(UserVar) / sizeof(float); ++i) {
-    UserVar[i] = 0.0f;
-  }
-}
+
 
 
 
@@ -185,4 +197,395 @@ void sortDeviceIndexArray() {
       innerLoop--;
     }
   }
+}
+
+// ********************************************************************************
+// Functions to assist changing I2C multiplexer port or clock speed 
+// when addressing a task
+// ********************************************************************************
+
+void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
+  if (!validTaskIndex(taskIndex) || !validDeviceIndex(DeviceIndex)) {
+    return;
+  }
+  if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
+    return;
+  }
+#ifdef FEATURE_I2CMULTIPLEXER
+  I2CMultiplexerSelectByTaskIndex(taskIndex);
+  // Output is selected after this write, so now we must make sure the
+  // frequency is set before anything else is sent.
+#endif
+
+  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
+    I2CSelectClockSpeed(true); // Set to slow
+  }
+}
+
+
+void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
+  if (!validTaskIndex(taskIndex) || !validDeviceIndex(DeviceIndex)) {
+    return;
+  }
+  if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
+    return;
+  }
+#ifdef FEATURE_I2CMULTIPLEXER
+  I2CMultiplexerOff();
+#endif
+
+  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
+    I2CSelectClockSpeed(false);  // Reset
+  }
+}
+
+
+/**
+ * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
+ */
+bool PluginCallForTask(taskIndex_t task, byte Function, EventStruct *TempEvent, String& command, bool unConditional = false) {
+  bool retval = false;
+  if (unConditional || (Settings.TaskDeviceEnabled[task] && validPluginID_fullcheck(Settings.TaskDeviceNumber[task])))
+  {
+    if (unConditional || Settings.TaskDeviceDataFeed[task] == 0) // these calls only to tasks with local feed
+    {
+      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task);
+      if (validDeviceIndex(DeviceIndex)) {
+        TempEvent->TaskIndex    = task;
+        TempEvent->BaseVarIndex = task * VARS_PER_TASK;
+        TempEvent->sensorType   = Device[DeviceIndex].VType;
+
+        if (Function == PLUGIN_INIT) {
+          // Schedule the plugin to be read.
+          Scheduler.schedule_task_device_timer_at_init(TempEvent->TaskIndex);
+        }
+
+        prepare_I2C_by_taskIndex(task, DeviceIndex);
+        switch (Function) {
+          case PLUGIN_WRITE:          // First set
+          case PLUGIN_REQUEST:
+          case PLUGIN_ONCE_A_SECOND:  // Second set
+          case PLUGIN_TEN_PER_SECOND:
+          case PLUGIN_FIFTY_PER_SECOND:
+          case PLUGIN_INIT:           // Second set, instead of PLUGIN_INIT_ALL
+          case PLUGIN_CLOCK_IN:
+          case PLUGIN_EVENT_OUT:
+          case PLUGIN_TIME_CHANGE:
+            {
+              checkRAM(F("PluginCall_s"), task);
+              break;
+            }
+        }
+        START_TIMER;
+        retval = (Plugin_ptr[DeviceIndex](Function, TempEvent, command));
+        STOP_TIMER_TASK(DeviceIndex, Function);
+        post_I2C_by_taskIndex(task, DeviceIndex);
+        delay(0); // SMY: call delay(0) unconditionally
+      }
+    }
+  }
+  return retval;
+}
+
+/*********************************************************************************************\
+* Function call to all or specific plugins
+\*********************************************************************************************/
+byte PluginCall(byte Function, struct EventStruct *event, String& str)
+{
+  struct EventStruct TempEvent;
+
+  if (event == nullptr) {
+    event = &TempEvent;
+  }
+  else {
+    TempEvent = (*event);
+  }
+
+
+  checkRAM(F("PluginCall"), Function);
+
+  switch (Function)
+  {
+    // Unconditional calls to all plugins
+    case PLUGIN_DEVICE_ADD:
+    case PLUGIN_UNCONDITIONAL_POLL:    // FIXME TD-er: PLUGIN_UNCONDITIONAL_POLL is not being used at the moment
+
+      for (byte x = 0; x < PLUGIN_MAX; x++) {
+        if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
+          if (Function == PLUGIN_DEVICE_ADD) {
+            if ((deviceCount + 2) > static_cast<int>(Device.size())) {
+              // Increase with 16 to get some compromise between number of resizes and wasted space
+              unsigned int newSize = Device.size();
+              newSize = newSize + 16 - (newSize % 16);
+              Device.resize(newSize);
+
+              // FIXME TD-er: Also resize DeviceIndex_to_Plugin_id ?
+            }
+          }
+          // FIXME TD-er: This is not correct as we don't have a taskIndex here when addressing a plugin
+          /*
+          taskIndex_t  taskIndex = INVALID_TASK_INDEX;
+          if (Function != PLUGIN_DEVICE_ADD && Device[x].Type == DEVICE_TYPE_I2C) {
+            unsigned int varNr;
+            validTaskVars(event, taskIndex, varNr);
+            prepare_I2C_by_taskIndex(taskIndex, x);
+          }
+          */
+          START_TIMER;
+          Plugin_ptr[x](Function, event, str);
+          STOP_TIMER_TASK(x, Function);
+          /*
+          // FIXME TD-er: This is not correct as we don't have a taskIndex here when addressing a plugin
+          if (Function != PLUGIN_DEVICE_ADD) {
+            post_I2C_by_taskIndex(taskIndex, x);
+          }
+          */
+          delay(0); // SMY: call delay(0) unconditionally
+        }
+      }
+      return true;
+
+    case PLUGIN_MONITOR:
+
+      for (auto it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
+        // only call monitor function if there the need to
+        if (it->second.monitor || it->second.command || it->second.init) {
+          TempEvent.Par1 = getPortFromKey(it->first);
+
+          // initialize the "x" variable to synch with the pluginNumber if second.x == -1
+          if (!validDeviceIndex(it->second.x)) { it->second.x = getDeviceIndex(getPluginFromKey(it->first)); }
+
+          const deviceIndex_t DeviceIndex = it->second.x;
+          if (validDeviceIndex(DeviceIndex))  {
+            // FIXME TD-er: This is not correct, as the event is NULL for calls to PLUGIN_MONITOR
+            /*
+            taskIndex_t  taskIndex = INVALID_TASK_INDEX;
+            if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
+              unsigned int varNr;  
+              validTaskVars(event, taskIndex, varNr);
+              prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
+            }
+            */
+            START_TIMER;
+            Plugin_ptr[DeviceIndex](Function, &TempEvent, str);
+            STOP_TIMER_TASK(DeviceIndex, Function);
+            // post_I2C_by_taskIndex(taskIndex, DeviceIndex);
+          }
+        }
+      }
+      return true;
+
+
+    // Call to all plugins. Return at first match
+    case PLUGIN_WRITE:
+    case PLUGIN_REQUEST:
+    {
+      taskIndex_t firstTask = 0;
+      taskIndex_t lastTask = TASKS_MAX;
+      String command = String(str);                           // Local copy to avoid warning in ExecuteCommand
+      int dotPos = command.indexOf(".");                      // Find first period
+      if (Function == PLUGIN_WRITE                            // Only applicable on PLUGIN_WRITE function
+        && dotPos > -1) {                                     // First precondition is just a quick check for a period (fail-fast strategy)
+        String arg0 = parseString(command, 1);                // Get first argument
+        dotPos = arg0.indexOf(".");
+        if (dotPos > -1) {
+          String thisTaskName = command.substring(0, dotPos); // Extract taskname prefix
+          thisTaskName.replace("[", "");                      // Remove the optional square brackets
+          thisTaskName.replace("]", "");
+          if (thisTaskName.length() > 0) {                    // Second precondition
+            taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
+            if (!validTaskIndex(thisTask)) {                  // Taskname not found or invalid, check for a task number?
+              thisTask = static_cast<taskIndex_t>(atoi(thisTaskName.c_str()));
+              if (thisTask == 0 || thisTask > TASKS_MAX) {
+                thisTask = INVALID_TASK_INDEX;
+              } else {
+                thisTask--;                                   // 0-based
+              }
+            }
+            if (validTaskIndex(thisTask)) {                   // Known taskindex?
+#ifdef USES_P022                                              // Exclude P022 as it has rather explicit differences in commands when used with the [<TaskName>]. prefix
+              if (Settings.TaskDeviceEnabled[thisTask]        // and internally needs to know wether it was called with the taskname prefixed
+                && validPluginID_fullcheck(Settings.TaskDeviceNumber[thisTask])
+                && Settings.TaskDeviceDataFeed[thisTask] == 0) {
+                const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(thisTask);
+                if (validDeviceIndex(DeviceIndex) && Device[DeviceIndex].Number == PLUGIN_ID_022) {
+                  thisTask = INVALID_TASK_INDEX;
+                }
+              }
+              if (validTaskIndex(thisTask)) {
+#endif
+                firstTask = thisTask;
+                lastTask  = thisTask + 1;                     // Add 1 to satisfy the for condition
+                command   = command.substring(dotPos + 1);    // Remove [<TaskName>]. prefix
+#ifdef USES_P022
+              }
+#endif
+            }
+          }
+        }
+      }
+  // String info = F("PLUGIN_WRITE first: "); // To remove
+  // info += firstTask;
+  // info += F(" last: ");
+  // info += lastTask;
+  // addLog(LOG_LEVEL_INFO, info);
+
+      for (taskIndex_t task = firstTask; task < lastTask; task++)
+      {
+        bool retval = PluginCallForTask(task, Function, &TempEvent, command);
+
+        if (retval) {
+          CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &TempEvent, command);
+          return true;
+        }
+      }
+
+      // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
+      for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
+        if (validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
+          if (Plugin_ptr[deviceIndex](Function, event, str)) {
+            delay(0); // SMY: call delay(0) unconditionally
+            CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, event, str);
+            return true;
+          }
+        }
+      }
+      break;
+    }
+
+    // Call to all plugins used in a task. Return at first match
+    case PLUGIN_SERIAL_IN:
+    case PLUGIN_UDP_IN:
+    {
+      for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
+      {
+        bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str);
+
+        if (retval) {
+          checkRAM(F("PluginCallUDP"), taskIndex);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Call to all plugins that are used in a task
+    case PLUGIN_ONCE_A_SECOND:
+    case PLUGIN_TEN_PER_SECOND:
+    case PLUGIN_FIFTY_PER_SECOND:
+    case PLUGIN_INIT_ALL:
+    case PLUGIN_CLOCK_IN:
+    case PLUGIN_EVENT_OUT:
+    case PLUGIN_TIME_CHANGE:
+    {
+      if (Function == PLUGIN_INIT_ALL) {
+        Function = PLUGIN_INIT;
+      }
+
+      for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
+      {
+        PluginCallForTask(taskIndex, Function, &TempEvent, str);
+      }
+      return true;
+    }
+
+    // Call to specific task which may interact with the hardware
+    case PLUGIN_INIT:
+    case PLUGIN_EXIT:
+    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_READ:
+    case PLUGIN_GET_PACKED_RAW_DATA:
+    {
+      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+
+      if (validDeviceIndex(DeviceIndex)) {
+        if (Function == PLUGIN_INIT) {
+          // Schedule the plugin to be read.
+          Scheduler.schedule_task_device_timer_at_init(event->TaskIndex);
+        }
+
+        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+          // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
+          LoadTaskSettings(event->TaskIndex);
+        }
+        event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+        {
+          String descr;
+          descr.reserve(20);
+          descr  = String(F("PluginCall_task_"));
+          descr += event->TaskIndex;
+          checkRAM(descr, String(Function));
+        }
+        prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
+        START_TIMER;
+        bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
+
+        if (retval && (Function == PLUGIN_READ)) {
+          saveUserVarToRTC();
+        }
+
+        if (Function == PLUGIN_EXIT) {
+          clearPluginTaskData(event->TaskIndex);
+        }
+        STOP_TIMER_TASK(DeviceIndex, Function);
+        post_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
+        delay(0); // SMY: call delay(0) unconditionally
+        return retval;
+      }
+      return false;
+    }
+
+    // Call to specific task not interacting with hardware
+    case PLUGIN_GET_CONFIG:
+    case PLUGIN_GET_DEVICEVALUENAMES:
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    case PLUGIN_GET_DEVICEVTYPE:
+    case PLUGIN_GET_DEVICEGPIONAMES:
+    case PLUGIN_WEBFORM_SAVE:
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    case PLUGIN_SET_CONFIG:
+    case PLUGIN_SET_DEFAULTS:
+    {
+      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
+
+      if (validDeviceIndex(DeviceIndex)) {
+        // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
+        LoadTaskSettings(event->TaskIndex);
+        event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+        {
+          String descr;
+          descr.reserve(20);
+          descr  = String(F("PluginCall_task_"));
+          descr += event->TaskIndex;
+          checkRAM(descr, String(Function));
+        }
+        if (Function == PLUGIN_SET_DEFAULTS) {
+          for (int i = 0; i < VARS_PER_TASK; ++i) {
+            UserVar[event->BaseVarIndex + i] = 0.0f;
+          }
+        }
+        if (Function == PLUGIN_GET_DEVICEVALUECOUNT) {
+          event->Par1 = Device[DeviceIndex].ValueCount;
+        }
+        if (Function == PLUGIN_GET_DEVICEVTYPE) {
+          event->Par1 = static_cast<int>(Device[DeviceIndex].VType);
+        }
+
+        START_TIMER;
+        bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
+        if (Function == PLUGIN_SET_DEFAULTS) {
+          saveUserVarToRTC();
+        }
+        STOP_TIMER_TASK(DeviceIndex, Function);
+        delay(0); // SMY: call delay(0) unconditionally
+        return retval;
+      }
+      return false;
+    }
+
+  } // case
+  return false;
 }
