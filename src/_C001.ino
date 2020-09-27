@@ -60,15 +60,15 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 
           switch (event->sensorType)
           {
-            case SENSOR_TYPE_SWITCH:
-            case SENSOR_TYPE_DIMMER:
+            case Sensor_VType::SENSOR_TYPE_SWITCH:
+            case Sensor_VType::SENSOR_TYPE_DIMMER:
               url += F("switchlight&idx=");
               url += event->idx;
               url += F("&switchcmd=");
               if (UserVar[event->BaseVarIndex] == 0) {
                 url += F("Off");
               } else {
-                if (event->sensorType == SENSOR_TYPE_SWITCH) {
+                if (event->sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
                   url += F("On");
                 } else {
                   url += F("Set%20Level&level=");
@@ -77,17 +77,17 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
               }
               break;
 
-            case SENSOR_TYPE_SINGLE:
-            case SENSOR_TYPE_LONG:
-            case SENSOR_TYPE_DUAL:
-            case SENSOR_TYPE_TRIPLE:
-            case SENSOR_TYPE_QUAD:
-            case SENSOR_TYPE_TEMP_HUM:
-            case SENSOR_TYPE_TEMP_BARO:
-            case SENSOR_TYPE_TEMP_EMPTY_BARO:
-            case SENSOR_TYPE_TEMP_HUM_BARO:
-            case SENSOR_TYPE_WIND:
-            case SENSOR_TYPE_STRING:
+            case Sensor_VType::SENSOR_TYPE_SINGLE:
+            case Sensor_VType::SENSOR_TYPE_LONG:
+            case Sensor_VType::SENSOR_TYPE_DUAL:
+            case Sensor_VType::SENSOR_TYPE_TRIPLE:
+            case Sensor_VType::SENSOR_TYPE_QUAD:
+            case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
+            case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
+            case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
+            case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
+            case Sensor_VType::SENSOR_TYPE_WIND:
+            case Sensor_VType::SENSOR_TYPE_STRING:
             default:
               url += F("udevice&idx=");
               url += event->idx;

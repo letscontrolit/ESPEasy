@@ -3,6 +3,7 @@
 #include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/C013_p2p_dataStructs.h"
 #include "../DataStructs/CRCStruct.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/DeviceStruct.h"
@@ -61,7 +62,12 @@ void run_compiletime_checks() {
   #ifndef LIMIT_BUILD_SIZE
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
+  #ifdef ESP32
+  const unsigned int SettingsStructSize = (312 + 84 * TASKS_MAX);
+  #endif
+  #ifdef ESP8266
   const unsigned int SettingsStructSize = (288 + 84 * TASKS_MAX);
+  #endif
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
   #ifdef USES_NOTIFIER
@@ -74,7 +80,7 @@ void run_compiletime_checks() {
   // Has to be round up to multiple of 4.
   const unsigned int LogStructSize = ((12u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
-  check_size<DeviceStruct,                          7u>();
+  check_size<DeviceStruct,                          8u>(); // Is not stored
   check_size<ProtocolStruct,                        6u>();
   #ifdef USES_NOTIFIER
   check_size<NotificationStruct,                    3u>();
@@ -85,6 +91,8 @@ void run_compiletime_checks() {
   check_size<portStatusStruct,                      4u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
+  check_size<C013_SensorInfoStruct,                 137u>();
+  check_size<C013_SensorDataStruct,                 24u>();
   #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
     static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
   #endif

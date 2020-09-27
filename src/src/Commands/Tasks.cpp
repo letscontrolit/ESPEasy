@@ -1,11 +1,15 @@
 #include "../Commands/Tasks.h"
 
-#include "../Commands/Common.h"
-#include "../Helpers/StringConverter.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy_common.h"
 
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+
+#include "../Commands/Common.h"
+
+#include "../Helpers/Misc.h"
+#include "../Helpers/Rules_calculate.h"
+#include "../Helpers/StringConverter.h"
 
 #include "../../Misc.h"
 
@@ -214,9 +218,7 @@ String Command_Task_Run(struct EventStruct *event, const char *Line)
 
 String Command_Task_RemoteConfig(struct EventStruct *event, const char *Line)
 {
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = event->TaskIndex;
+  struct EventStruct TempEvent(event->TaskIndex);
   String request = Line;
 
   // FIXME TD-er: Should we call ExecuteCommand here? The command is not parsed like any other call.

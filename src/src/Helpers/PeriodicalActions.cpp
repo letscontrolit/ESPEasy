@@ -4,9 +4,9 @@
 #include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_plugindefs.h"
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../ControllerQueue/MQTT_queue_element.h"
+#include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/EventQueue.h"
@@ -16,7 +16,11 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Statistics.h"
+#include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/StringGenerator_System.h"
 
 
 /*********************************************************************************************\

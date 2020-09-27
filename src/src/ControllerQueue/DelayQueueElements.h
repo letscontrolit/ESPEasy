@@ -1,13 +1,15 @@
 #ifndef DELAY_QUEUE_ELEMENTS_H
 #define DELAY_QUEUE_ELEMENTS_H
 
+
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/ControllerSettingsStruct.h"
 #include "../../ESPEasy_fdwdecl.h"
 
 #include "../ControllerQueue/ControllerDelayHandlerStruct.h"
 #include "../ControllerQueue/SimpleQueueElement_string_only.h"
 #include "../ControllerQueue/queue_element_single_value_base.h"
+
+#include "../DataStructs/ControllerSettingsStruct.h"
 
 
 // The most logical place to have these queue element handlers defined would be in their
@@ -156,9 +158,39 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 18)
  #endif
  */
 
+/*
+ #ifdef USES_C021
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 21)
+ #endif
+ */
 
-// When extending this, also extend in Scheduler.cpp:
-// void process_interval_timer(unsigned long id, unsigned long lasttimer)
+/*
+ #ifdef USES_C022
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 22)
+ #endif
+ */
+
+/*
+ #ifdef USES_C023
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 23)
+ #endif
+ */
+
+/*
+ #ifdef USES_C024
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 24)
+ #endif
+ */
+
+/*
+ #ifdef USES_C025
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 25)
+ #endif
+ */
+
+
+// When extending this, search for EXTEND_CONTROLLER_IDS 
+// in the code to find all places that need to be updated too.
 
 
 #endif // ifndef DELAY_QUEUE_ELEMENTS_H

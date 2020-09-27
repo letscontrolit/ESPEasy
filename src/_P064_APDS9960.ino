@@ -65,7 +65,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number           = PLUGIN_ID_064;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
       Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = SENSOR_TYPE_SWITCH;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
@@ -310,7 +310,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         log += ')';
 
         UserVar[event->BaseVarIndex] = static_cast<float>(gesture);
-        event->sensorType            = SENSOR_TYPE_SWITCH;
+        event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
         sendData(event);
 

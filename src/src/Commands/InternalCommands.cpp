@@ -34,7 +34,9 @@
 #include "../Commands/wd.h"
 #include "../Commands/WiFi.h"
 
+#include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringParser.h"
 
 
 bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
@@ -392,7 +394,7 @@ bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const 
 
   // FIXME TD-er: Not sure what happens now, but TaskIndex cannot always be set here
   // since commands can originate from anywhere.
-  TempEvent.TaskIndex = taskIndex;
+  TempEvent.setTaskIndex(taskIndex);
   TempEvent.Source = source;
 
   String action(Line);

@@ -34,7 +34,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_071;
         Device[deviceCount].Type = DEVICE_TYPE_SERIAL;
-        Device[deviceCount].VType = SENSOR_TYPE_DUAL;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_DUAL;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -82,14 +82,11 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        serialHelper_webformLoad(event);
         success = true;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
-
       success = true;
       break;
     }

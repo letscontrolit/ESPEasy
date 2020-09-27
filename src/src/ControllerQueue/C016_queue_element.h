@@ -2,6 +2,7 @@
 #define CONTROLLERQUEUE_C016_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+#include "../DataStructs/DeviceStruct.h"
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../Globals/Plugins.h"
 
@@ -28,7 +29,7 @@ public:
   unsigned long timestamp     = 0; // Unix timestamp
   taskIndex_t TaskIndex       = INVALID_TASK_INDEX;
   byte controller_idx         = 0;
-  byte sensorType             = 0;
+  Sensor_VType sensorType     = Sensor_VType::SENSOR_TYPE_NONE;
   byte valueCount             = 0;
 };
 
