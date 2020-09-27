@@ -408,7 +408,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
                 && validPluginID_fullcheck(Settings.TaskDeviceNumber[thisTask])
                 && Settings.TaskDeviceDataFeed[thisTask] == 0) {
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(thisTask);
-                if (validDeviceIndex(DeviceIndex) && Device[DeviceIndex].Number == PLUGIN_ID_022) {
+                if (validDeviceIndex(DeviceIndex) && Device[DeviceIndex].Number == 22 /* PLUGIN_ID_022 define no longer available, 'assume' 22 for now */) {
                   thisTask = INVALID_TASK_INDEX;
                 }
               }
