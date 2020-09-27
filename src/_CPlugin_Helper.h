@@ -2,6 +2,9 @@
 #define CPLUGIN_HELPER_H CPLUGIN_HELPER_H
 
 #include <Arduino.h>
+
+#include "ESPEasy_common.h"
+
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Helpers/Numerical.h"
