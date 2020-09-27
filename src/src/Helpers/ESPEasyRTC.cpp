@@ -1,11 +1,11 @@
 #include "ESPEasyRTC.h"
 
-#include "src/Globals/RTC.h"
-#include "src/DataStructs/RTCStruct.h"
-#include "src/DataStructs/RTCCacheStruct.h"
-#include "src/DataStructs/RTC_cache_handler_struct.h"
-#include "src/Globals/Plugins.h"
-#include "src/Helpers/CRC_functions.h"
+#include "../Globals/RTC.h"
+#include "../DataStructs/RTCStruct.h"
+#include "../DataStructs/RTCCacheStruct.h"
+#include "../DataStructs/RTC_cache_handler_struct.h"
+#include "../Globals/Plugins.h"
+#include "../Helpers/CRC_functions.h"
 
 #ifdef ESP8266
 #include <user_interface.h>
