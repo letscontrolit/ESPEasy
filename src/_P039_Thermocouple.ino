@@ -111,6 +111,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        // FIXME TD-er: Why is this list needed? GPIO selector should provide this info.
         #ifdef ESP8266
         addFormNote(F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
         #endif
