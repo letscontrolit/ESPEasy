@@ -7,6 +7,11 @@
 #pragma GCC diagnostic warning "-Wall"
 #endif
 
+// Include this as first, to make sure all defines are active during the entire compile.
+// See: https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=7980
+// If Custom.h build from Arduino IDE is needed, uncomment #define USE_CUSTOM_H in ESPEasy_common.h
+#include "ESPEasy_common.h"
+
 // Needed due to preprocessor issues.
 #ifdef PLUGIN_SET_GENERIC_ESP32
   #ifndef ESP32

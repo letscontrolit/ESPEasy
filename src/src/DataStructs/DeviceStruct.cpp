@@ -9,11 +9,14 @@
 
   bool DeviceStruct::connectedToGPIOpins() const {
     switch(Type) {
-      case DEVICE_TYPE_SINGLE:
-      case DEVICE_TYPE_DUAL:
-      case DEVICE_TYPE_TRIPLE:
+      case DEVICE_TYPE_SINGLE:  // Single GPIO
+      case DEVICE_TYPE_SPI:
+      case DEVICE_TYPE_DUAL:    // Dual GPIOs
       case DEVICE_TYPE_SERIAL:
+      case DEVICE_TYPE_SPI2:
+      case DEVICE_TYPE_TRIPLE:  // Triple GPIOs
       case DEVICE_TYPE_SERIAL_PLUS1:
+      case DEVICE_TYPE_SPI3:
         return true;
       default:
         return false;
@@ -25,9 +28,9 @@
     case 1:
       return connectedToGPIOpins();
     case 2:
-      return connectedToGPIOpins() && Type != DEVICE_TYPE_SINGLE;
+      return connectedToGPIOpins() && !(Type == DEVICE_TYPE_SINGLE || Type == DEVICE_TYPE_SPI);
     case 3:
-      return Type == DEVICE_TYPE_TRIPLE || Type == DEVICE_TYPE_SERIAL_PLUS1;
+      return Type == DEVICE_TYPE_TRIPLE || Type == DEVICE_TYPE_SERIAL_PLUS1 || Type == DEVICE_TYPE_SPI3;
     }
     return false;
   }
