@@ -848,14 +848,14 @@ void logConnectionStatus() {
   #endif
 #ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI  : Arduino wifi status: ");
     log += ArduinoWifiStatusToString(WiFi.status());
     log += F(" ESPeasy internal wifi status: ");
     log += ESPeasyWifiStatusToString();
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
+    addLog(LOG_LEVEL_INFO, log);
   }
-
+/*
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
 
@@ -889,6 +889,7 @@ void logConnectionStatus() {
       addLog(LOG_LEVEL_INFO, log);
     }
   }
+  */
 #endif // ifndef BUILD_NO_DEBUG
 }
 
