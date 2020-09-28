@@ -13,6 +13,8 @@
 #define DEVICE_TYPE_SERIAL                 21 // connected through UART/Serial
 #define DEVICE_TYPE_SERIAL_PLUS1           22 // connected through UART/Serial + 1 extra signal pin
 #define DEVICE_TYPE_SPI                    23 // connected through SPI
+#define DEVICE_TYPE_SPI2                   24 // connected through SPI, 2 GPIOs
+#define DEVICE_TYPE_SPI3                   25 // connected through SPI, 3 GPIOs
 #define DEVICE_TYPE_DUMMY                  99 // Dummy device, has no physical connection
 
 #define I2C_MULTIPLEXER_NONE               -1 // None selected

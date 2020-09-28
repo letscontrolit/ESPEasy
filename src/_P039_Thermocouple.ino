@@ -56,7 +56,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_039;
-        Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
+        Device[deviceCount].Type = DEVICE_TYPE_SPI;
         Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
@@ -111,7 +111,13 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        // FIXME TD-er: Why is this list needed? GPIO selector should provide this info.
+        #ifdef ESP8266
         addFormNote(F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
+        #endif
+        #ifdef ESP32
+        addFormNote(F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15..19, 21..23, 25..27, 32, 33)"));
+        #endif
         //addHtml(F("<TR><TD>Info GPIO:<TD><b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
 
         byte choice = PCONFIG(0);
