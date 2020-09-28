@@ -22,7 +22,7 @@ else:
   env.Append(CPPDEFINES=[
     "CONTROLLER_SET_ALL",
     "NOTIFIER_SET_NONE",
-    "PLUGIN_SET_ONLY_SWITCH",
+#    "PLUGIN_BUILD_NORMAL",
     "USES_P001",  # Switch
     "USES_P002",  # ADC
     "USES_P004",  # Dallas DS18b20
@@ -44,7 +44,7 @@ else:
 
     "USES_C016",  # Cache Controller
     "USES_C018",  # TTN/RN2483
-    "USES_C015",  # TTN/RN2483
+#    "USES_C015",  # TTN/RN2483
 
     "FEATURE_MDNS",
     "FEATURE_SD",
