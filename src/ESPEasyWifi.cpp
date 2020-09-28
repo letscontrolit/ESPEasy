@@ -183,7 +183,7 @@ void WiFiConnectRelaxed() {
 
   if (!prepareWiFi()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : Could not prepare WiFi!"));
-    last_wifi_connect_attempt_moment.setNow();
+    last_wifi_connect_attempt_moment.clear();
     wifi_connect_attempt             = 1;
     return;
   }
@@ -213,6 +213,7 @@ void WiFiConnectRelaxed() {
     log += wifi_connect_attempt + 1;
     addLog(LOG_LEVEL_INFO, log);
   }
+  lastDisconnectMoment.clear();
   last_wifi_connect_attempt_moment.setNow();
   wifiConnectInProgress            = true;
 
