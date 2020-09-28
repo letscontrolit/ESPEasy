@@ -3,6 +3,7 @@
 #include "_Plugin_Helper.h"
 #include "src/DataStructs/PinMode.h"
 #include "src/Helpers/Scheduler.h"
+#include "src/Helpers/Audio.h"
 
 // #######################################################################################################
 // #################################### Plugin 001: Input Switch #########################################
@@ -118,7 +119,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_001;
       Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = SENSOR_TYPE_SWITCH;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = true;
       Device[deviceCount].InverseLogicOption = true;
@@ -564,14 +565,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               } else {
                 output_value = sendState ? 1 : 0; // single click
               }
-              event->sensorType = SENSOR_TYPE_SWITCH;
+              event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
               if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) {
                 if (sendState) {
                   output_value = PCONFIG(1);
 
                   // Only set type to being dimmer when setting a value else it is "switched off".
-                  event->sensorType = SENSOR_TYPE_DIMMER;
+                  event->sensorType = Sensor_VType::SENSOR_TYPE_DIMMER;
                 }
               }
               UserVar[event->BaseVarIndex] = output_value;

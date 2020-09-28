@@ -91,7 +91,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_085;
       Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
-      Device[deviceCount].VType              = SENSOR_TYPE_QUAD;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -154,22 +154,20 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
+      String options_baudrate[6];
 
-      {
-        // Modbus parameters put in scope to make sure the String array will not keep memory occupied.
-        String options_baudrate[6];
-
-        for (int i = 0; i < 6; ++i) {
-          options_baudrate[i] = String(p085_storageValueToBaudrate(i));
-        }
-        addFormNumericBox(F("Modbus Address"), P085_DEV_ID_LABEL, P085_DEV_ID, 1,
-                          247);
-        addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate,
-                        NULL, P085_BAUDRATE);
+      for (int i = 0; i < 6; ++i) {
+        options_baudrate[i] = String(p085_storageValueToBaudrate(i));
       }
+      addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate, NULL, P085_BAUDRATE);
+      addUnit(F("baud"));
+      addFormNumericBox(F("Modbus Address"), P085_DEV_ID_LABEL, P085_DEV_ID, 1, 247);
+      break;
+    }
 
+    case PLUGIN_WEBFORM_LOAD: {
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -268,7 +266,6 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
 
       // Save normal parameters
       for (int i = 0; i < P085_QUERY1_CONFIG_POS; ++i) {

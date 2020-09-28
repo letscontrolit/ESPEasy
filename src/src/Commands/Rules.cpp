@@ -1,14 +1,19 @@
 #include "../Commands/Rules.h"
 
-#include "../../ESPEasy_common.h"
-#include "../Commands/Common.h"
-#include "../DataStructs/EventValueSource.h"
-#include "../Globals/EventQueue.h"
-#include "../Globals/Settings.h"
-#include "../Helpers/StringConverter.h"
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
 
+#include "../Commands/Common.h"
+
+#include "../DataStructs/EventValueSource.h"
+
+#include "../Globals/EventQueue.h"
+#include "../Globals/Settings.h"
+
+#include "../Helpers/Misc.h"
+#include "../Helpers/Rules_calculate.h"
+#include "../Helpers/StringConverter.h"
 
 String Command_Rules_Execute(struct EventStruct *event, const char *Line)
 {

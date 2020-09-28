@@ -30,6 +30,7 @@ Welcome to ESP Easy's documentation!
    :caption: Appendix
 
    Participate/PlatformIO.rst
+   Participate/ArduinoIDE.rst
    Participate/Documentation.rst
    Participate/ProjectStructure.rst
    Reference/Safety.rst

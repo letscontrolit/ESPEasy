@@ -233,11 +233,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     addLog(LOG_LEVEL_ERROR, F("No C011_DelayHandler"));
     return false;
   }
-
-  if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-    String dummy;
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
-  }
+  LoadTaskSettings(event->TaskIndex);
 
   // Add a new element to the queue with the minimal payload
   bool success = C011_DelayHandler->addToQueue(C011_queue_element(event));

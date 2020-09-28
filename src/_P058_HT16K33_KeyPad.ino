@@ -49,7 +49,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number           = PLUGIN_ID_058;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
       Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = SENSOR_TYPE_SWITCH;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
@@ -121,7 +121,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
         if (P058_data->readKey(key))
         {
           UserVar[event->BaseVarIndex] = (float)key;
-          event->sensorType            = SENSOR_TYPE_SWITCH;
+          event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("Mkey : key=0x");

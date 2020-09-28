@@ -1,6 +1,8 @@
 #ifndef ESPEASYWIFI_PROCESSEVENT_H
 #define ESPEASYWIFI_PROCESSEVENT_H
 
+#include "ESPEasy_common.h"
+
 bool unprocessedWifiEvents();
 void handle_unprocessedWiFiEvents();
 void processDisconnect();

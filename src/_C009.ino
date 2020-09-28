@@ -19,7 +19,7 @@
  - fixed JSON TaskDeviceValueDecimals handling
  - ArduinoJson Library v5.6.4 required (as used by stable R120)
  - parse for HTTP errors 400, 401
- - moved on/off translation for SENSOR_TYPE_SWITCH/DIMMER to FHEM module
+ - moved on/off translation for Sensor_VType::SENSOR_TYPE_SWITCH/DIMMER to FHEM module
  - v1.03
  - changed http request from GET to POST (RFC conform)
  - removed obsolete http get url code
@@ -153,7 +153,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
       JsonObject val = SENSOR.createNestedObject(String(x));
       val[F("deviceName")] = getTaskDeviceName(element.TaskIndex);
       val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
-      val[F("type")]       = element.sensorType;
+      val[F("type")]       = static_cast<int>(element.sensorType);
       val[F("value")]      = element.txt[x];
     }
 
