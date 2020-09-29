@@ -1,6 +1,7 @@
 #include "Scheduler.h"
 
 #include "../../ESPEasy_common.h"
+#include "../../_Plugin_Helper.h"
 
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../Globals/RTC.h"
@@ -485,7 +486,7 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
   systemTimers.erase(mixedTimerId);
 
   if (validDeviceIndex(deviceIndex)) {
-    TempEvent.sensorType = Device[deviceIndex].VType;
+    TempEvent.sensorType = getDeviceVTypeForTask(it->second.TaskIndex);
 
     if (validUserVarIndex(TempEvent.BaseVarIndex)) {
       String dummy;
