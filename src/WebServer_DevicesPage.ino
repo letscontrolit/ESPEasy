@@ -680,11 +680,11 @@ void format_originating_node(byte remoteUnit) {
   addHtml(String(remoteUnit));
 
   if (remoteUnit != 255) {
-    NodesMap::iterator it = Nodes.find(remoteUnit);
+    const NodeStruct *node = Nodes.getNode(remoteUnit);
 
-    if (it != Nodes.end()) {
+    if (node != nullptr) {
       addHtml(F(" - "));
-      addHtml(it->second.nodeName);
+      addHtml(node->getNodeName());
     } else {
       addHtml(F(" - Not Seen recently"));
     }
@@ -886,10 +886,10 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       addFormNumericBox(F("Remote Unit"), F("RemoteUnit"), remoteUnit, 0, 255);
 
       if (remoteUnit != 255) {
-        auto it = Nodes.find(remoteUnit);
+        const NodeStruct* node = Nodes.getNode(remoteUnit);
 
-        if (it != Nodes.end()) {
-          addUnit(it->second.getNodeName());
+        if (node != nullptr) {
+          addUnit(node->getNodeName());
         } else {
           addUnit(F("Unknown Unit Name"));
         }
