@@ -288,6 +288,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   gratuitousARP(DEFAULT_GRATUITOUS_ARP);
   TolerantLastArgParse(DEFAULT_TOLERANT_LAST_ARG_PARSE);
   SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
+  UseESPEasyNow(DEFAULT_USE_ESPEASYNOW);
 }
 
 template<unsigned int N_TASKS>

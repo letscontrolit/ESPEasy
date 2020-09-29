@@ -73,6 +73,11 @@
 #define DEFAULT_ADMIN_PASS     ""
 #endif
 
+
+#ifndef DEFAULT_APPEND_UNIT_TO_HOSTNAME
+#define DEFAULT_APPEND_UNIT_TO_HOSTNAME  false
+#endif
+
 #ifndef DEFAULT_WIFI_CONNECTION_TIMEOUT
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
 #endif
@@ -97,6 +102,10 @@
 #endif
 #ifndef DEFAULT_SEND_TO_HTTP_ACK
 #define DEFAULT_SEND_TO_HTTP_ACK         false // Wait for ack with SendToHttp command.
+#endif
+
+#ifndef DEFAULT_USE_ESPEASYNOW
+#define DEFAULT_USE_ESPEASYNOW           false
 #endif
 
 // --- Default Controller ------------------------------------------------------------------------------
@@ -285,6 +294,7 @@
 #ifndef DEFAULT_SYNC_UDP_PORT
 #define DEFAULT_SYNC_UDP_PORT                   0                       // Used for ESPEasy p2p. (IANA registered port: 8266)
 #endif
+
 
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
