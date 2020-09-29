@@ -296,10 +296,11 @@ void processMQTTdelayQueue() {
       }
       processed = true;
     }
-    MQTTDelayHandler->markProcessed(true);
+  }
+  MQTTDelayHandler->markProcessed(processed);
+  if (processed) {
     statusLED(true);
   } else {
-    MQTTDelayHandler->markProcessed(false);
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
