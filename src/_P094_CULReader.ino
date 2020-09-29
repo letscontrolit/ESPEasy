@@ -10,6 +10,7 @@
 
 #include "_Plugin_Helper.h"
 
+#include "src/Helpers/StringConverter.h"
 #include "src/PluginStructs/P094_data_struct.h"
 
 #include <Regexp.h>
