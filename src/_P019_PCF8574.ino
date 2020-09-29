@@ -61,7 +61,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_019;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_SWITCH;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
       Device[deviceCount].Ports              = 8;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = true;
@@ -402,7 +402,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
             }
-            event->sensorType = SENSOR_TYPE_SWITCH;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
             sendData(event);
 
             // reset Userdata so it displays the correct state value in the web page

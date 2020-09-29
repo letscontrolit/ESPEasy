@@ -46,8 +46,7 @@ void handle_hardware() {
 #endif
     int gpio = 0;
 
-    // FIXME TD-er: Max of 17 is a limit in the Settings.PinBootStates array
-    while (gpio < MAX_GPIO  && gpio < 17) {
+    while (gpio <= MAX_GPIO) {
       if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
         // do not add the pin state select for these pins.
       } else {
@@ -56,8 +55,8 @@ void handle_hardware() {
 
         if (getGpioInfo(gpio, pinnr, input, output, warning)) {
           String int_pinlabel = "p";
-          int_pinlabel                += gpio;
-          Settings.PinBootStates[gpio] = getFormItemInt(int_pinlabel);
+          int_pinlabel       += gpio;
+          Settings.setPinBootState(gpio, static_cast<PinBootState>(getFormItemInt(int_pinlabel)));
         }
       }
       ++gpio;
@@ -180,29 +179,9 @@ void handle_hardware() {
 #endif // ifdef HAS_ETHERNET
 
   addFormSubHeader(F("GPIO boot states"));
-  int gpio = 0;
 
-  // FIXME TD-er: Max of 17 is a limit in the Settings.PinBootStates array
-  while (gpio < MAX_GPIO  && gpio < 17) {
-    bool enabled = true;
-
-    if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
-      // do not add the pin state select for these pins.
-      enabled = false;
-    }
-    int  pinnr = -1;
-    bool input, output, warning;
-
-    if (getGpioInfo(gpio, pinnr, input, output, warning)) {
-      String label;
-      label.reserve(32);
-      label  = F("Pin mode ");
-      label += createGPIO_label(gpio, pinnr, input, output, warning);
-      String int_pinlabel = "p";
-      int_pinlabel += gpio;
-      addFormPinStateSelect(label, int_pinlabel, Settings.PinBootStates[gpio], enabled);
-    }
-    ++gpio;
+  for (int gpio = 0; gpio <= MAX_GPIO; ++gpio) {
+    addFormPinStateSelect(gpio, static_cast<int>(Settings.getPinBootState(gpio)));
   }
   addFormSeparator(2);
 

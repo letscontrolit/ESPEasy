@@ -107,6 +107,7 @@ void Plugin_096_printText(const char *string, int X, int Y, unsigned int textSiz
 #ifdef ESP32
 //for D32 Pro with EPD connector
   #define EPD_CS 14
+  #define EPD_CS_HSPI 26  // when connected to Hardware-SPI GPIO-14 is already used
   #define EPD_DC 27
   #define EPD_RST 33  // can set to -1 and share with microcontroller Reset!
   #define EPD_BUSY -1 // can set to -1 to not use a pin (will wait a fixed delay)
@@ -150,8 +151,8 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_096;
-        Device[deviceCount].Type = DEVICE_TYPE_SPI;
-        Device[deviceCount].VType = SENSOR_TYPE_NONE;
+        Device[deviceCount].Type = DEVICE_TYPE_SPI3;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -177,9 +178,36 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("EPD CS"));
+        event->String2 = formatGpioName_output(F("EPD DC"));
+        event->String3 = formatGpioName_output(F("EPD RST"));
+        break;
+      }
+
+    case PLUGIN_SET_DEFAULTS:
+      {
+        byte init = PCONFIG(0);
+
+        //if already configured take it from settings, else use default values (only for pin values)
+        if(init != 1)
+        {
+          #ifdef ESP32
+          if (Settings.InitSPI == 2) {  // When using ESP32 H(ardware-)SPI
+            EPD_Settings.address_epd_cs = EPD_CS_HSPI; 
+          }
+          #endif
+          PIN(0) = EPD_Settings.address_epd_cs;
+          PIN(1) = EPD_Settings.address_epd_dc;
+          PIN(2) = EPD_Settings.address_epd_rst;
+          PIN(3) = EPD_Settings.address_epd_busy;
+        }
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-
         byte init = PCONFIG(0);
 
         //if already configured take it from settings, else use default values (only for pin values)
@@ -190,26 +218,24 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
           EPD_Settings.address_epd_rst = PIN(2);
           EPD_Settings.address_epd_busy = PIN(3);
         }
-        
-        addFormPinSelect(F("EPD CS"), F("p096_epd_cs"), EPD_Settings.address_epd_cs);
-        addFormPinSelect(F("EPD DC"), F("p096_epd_dc"), EPD_Settings.address_epd_dc);
-        addFormPinSelect(F("EPD RST"), F("p096_epd_rst"), EPD_Settings.address_epd_rst);
-        addFormPinSelect(F("EPD BUSY"), F("p096_epd_busy"), EPD_Settings.address_epd_busy);
+
+        addFormPinSelect(formatGpioName_output(F("EPD BUSY")), F("p096_epd_busy"), EPD_Settings.address_epd_busy);
 
         byte choice2 = PCONFIG(1);
-        String options2[4] = { F("Normal"), F("+90°"), F("+180°"), F("+270°") };
+        String options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
         int optionValues2[4] = { 0, 1, 2, 3 };
         addFormSelector(F("Rotation"), F("p096_rotate"), 4, options2, optionValues2, choice2);
 
-        byte width_ = PCONFIG(2);
+        uint16_t width_ = PCONFIG(2);
         if(width_ == 0)
           width_ = 250; //default value
         addFormNumericBox(F("Width (px)"), F("p096_width"), width_, 1, 65535);
 
-        byte height_ = PCONFIG(3);
+        uint16_t height_ = PCONFIG(3);
         if(height_ == 0)
           height_ = 122; //default value
         addFormNumericBox(F("Height (px)"), F("p096_height"), height_, 1, 65535);
+
         success = true;
         break;
       }
@@ -217,9 +243,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         PCONFIG(0) = 1; //mark config as already saved (next time, will not use default values)
-        PIN(0) = getFormItemInt(F("p096_epd_cs"));
-        PIN(1) = getFormItemInt(F("p096_epd_dc"));
-        PIN(2) = getFormItemInt(F("p096_epd_rst"));
+        // PIN(0)..(2) are already set
         PIN(3) = getFormItemInt(F("p096_epd_busy"));
         PCONFIG(1) = getFormItemInt(F("p096_rotate"));
         PCONFIG(2) = getFormItemInt(F("p096_width"));
@@ -230,6 +254,16 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
+        byte init = PCONFIG(0);
+
+        //if already configured take it from settings, else use default values (only for pin values)
+        if(init != 1)
+        {
+          PIN(0) = EPD_Settings.address_epd_cs;
+          PIN(1) = EPD_Settings.address_epd_dc;
+          PIN(2) = EPD_Settings.address_epd_rst;
+          PIN(3) = EPD_Settings.address_epd_busy;
+        }
 
         EPD_Settings.address_epd_cs = PIN(0);
         EPD_Settings.address_epd_dc = PIN(1);
@@ -343,7 +377,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
             else if(subcommand.equalsIgnoreCase(F("ROT")))
             {
               arguments = arguments.substring(argIndex + 1);
-              eInkScreen->setRotation(arguments.toInt() %3);
+              eInkScreen->setRotation(arguments.toInt() % 4);
               eInkScreen->display();
             } 
             else 
@@ -480,7 +514,10 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
               success = false;
             }
           }
-                    
+          else 
+          {
+            success = false;
+          }
         }
         else
         {

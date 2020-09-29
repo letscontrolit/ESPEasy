@@ -5,8 +5,11 @@
 #include <IPAddress.h>
 #include <stdint.h>
 
+#include "../Helpers/LongTermTimer.h"
+
 // WifiStatus
 #define ESPEASY_WIFI_DISCONNECTED            0
+
 // Bit numbers for WiFi status
 #define ESPEASY_WIFI_CONNECTED               0
 #define ESPEASY_WIFI_GOT_IP                  1
@@ -57,7 +60,7 @@ enum WiFiDisconnectReason
 
 void WiFiEvent(system_event_id_t   event,
                system_event_info_t info);
-extern WiFiEventId_t  wm_event_id;
+extern WiFiEventId_t wm_event_id;
 #endif // ifdef ESP32
 
 #ifdef ESP8266
@@ -78,20 +81,24 @@ extern WiFiEventHandler APModeStationDisconnectedHandler;
 extern bool wifiSetup;
 extern bool wifiSetupConnect;
 extern uint8_t wifiStatus;
-extern unsigned long last_wifi_connect_attempt_moment;
+extern LongTermTimer last_wifi_connect_attempt_moment;
 extern unsigned int  wifi_connect_attempt;
-extern int wifi_reconnects; // First connection attempt is not a reconnect.
-extern String  last_ssid;
-extern bool    bssid_changed;
-extern bool    channel_changed;
+extern bool   wifi_considered_stable;
+extern int    wifi_reconnects; // First connection attempt is not a reconnect.
+extern String last_ssid;
+extern bool   bssid_changed;
+extern bool   channel_changed;
 
 extern WiFiDisconnectReason lastDisconnectReason;
-extern unsigned long lastConnectMoment;
-extern unsigned long lastDisconnectMoment;
-extern unsigned long lastWiFiResetMoment;
-extern unsigned long lastGetIPmoment;
-extern unsigned long lastGetScanMoment;
-extern unsigned long lastConnectedDuration;
+extern LongTermTimer lastConnectMoment;
+extern LongTermTimer lastDisconnectMoment;
+extern LongTermTimer lastWiFiResetMoment;
+extern LongTermTimer lastGetIPmoment;
+extern LongTermTimer lastGetScanMoment;
+extern LongTermTimer::Duration lastConnectedDuration_us;
+extern LongTermTimer timerAPoff;   // Timer to check whether the AP mode should be disabled (0 = disabled)
+extern LongTermTimer timerAPstart; // Timer to start AP mode, started when no valid network is detected.
+
 extern bool intent_to_reboot;
 extern uint8_t lastMacConnectedAPmode[6];
 extern uint8_t lastMacDisconnectedAPmode[6];

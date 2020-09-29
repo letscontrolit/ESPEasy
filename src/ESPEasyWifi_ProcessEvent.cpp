@@ -11,10 +11,14 @@
 #include "src/Globals/MQTT.h"
 #include "src/Globals/NetworkState.h"
 #include "src/Globals/RTC.h"
+#include "src/Helpers/ESPEasyRTC.h"
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/Misc.h"
+#include "src/Helpers/Network.h"
 #include "src/Helpers/Scheduler.h"
 #include "src/Helpers/StringConverter.h"
+
 
 bool unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
@@ -85,12 +89,12 @@ void handle_unprocessedWiFiEvents()
     #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      static unsigned long lastDisconnectMoment_log = 0;
+      static LongTermTimer lastDisconnectMoment_log;
       static uint8_t lastWiFiStatus_log = 0;
       uint8_t cur_wifi_status = WiFi.status();
-      if (lastDisconnectMoment != lastDisconnectMoment_log || 
+      if (lastDisconnectMoment.get() != lastDisconnectMoment_log.get() || 
           lastWiFiStatus_log != cur_wifi_status) {
-        lastDisconnectMoment_log = lastDisconnectMoment;
+        lastDisconnectMoment_log.set(lastDisconnectMoment.get());
         lastWiFiStatus_log = cur_wifi_status;
         String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
         wifilog += ESPeasyWifiStatusToString();
@@ -117,16 +121,17 @@ void handle_unprocessedWiFiEvents()
 
   if (!processedConnectAPmode) { processConnectAPmode(); }
 
-  if (timerAPoff != 0) { processDisableAPmode(); }
+  if (timerAPoff.isSet()) { processDisableAPmode(); }
 
   if (!processedScanDone) { processScanDone(); }
 
   if (wifi_connect_attempt > 0) {
     // We only want to clear this counter if the connection is currently stable.
     if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
-      if (timePassedSince(lastConnectMoment) > WIFI_CONNECTION_CONSIDERED_STABLE) {
+      if (lastConnectMoment.timeoutReached(WIFI_CONNECTION_CONSIDERED_STABLE)) {
         // Connection considered stable
         wifi_connect_attempt = 0;
+        wifi_considered_stable = true;
 
         if (!WiFi.getAutoConnect()) {
           WiFi.setAutoConnect(true);
@@ -160,9 +165,11 @@ void processDisconnect() {
     log += getLastDisconnectReason();
     log += '\'';
 
-    if (lastConnectedDuration > 0) {
+    if (lastConnectedDuration_us > 0) {
       log += F(" Connected for ");
-      log += format_msec_duration(lastConnectedDuration);
+      log += format_msec_duration(lastConnectedDuration_us / 1000ll);
+    } else {
+      log += F(" Connected for a long time...");
     }
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -186,7 +193,7 @@ void processConnect() {
   ++wifi_reconnects;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    const long connect_duration = timeDiff(last_wifi_connect_attempt_moment, lastConnectMoment);
+    const LongTermTimer::Duration connect_duration = last_wifi_connect_attempt_moment.timeDiff(lastConnectMoment);
     String     log              = F("WIFI : Connected! AP: ");
     log += WiFi.SSID();
     log += " (";
@@ -194,10 +201,10 @@ void processConnect() {
     log += F(") Ch: ");
     log += RTC.lastWiFiChannel;
 
-    if ((connect_duration > 0) && (connect_duration < 30000)) {
+    if ((connect_duration > 0ll) && (connect_duration < 30000000ll)) {
       // Just log times when they make sense.
       log += F(" Duration: ");
-      log += connect_duration;
+      log += String(static_cast<int32_t>(connect_duration / 1000));
       log += F(" ms");
     }
     addLog(LOG_LEVEL_INFO, log);
@@ -238,7 +245,7 @@ void processGotIP() {
   }
   const IPAddress gw       = NetworkGatewayIP();
   const IPAddress subnet   = NetworkSubnetMask();
-  const long dhcp_duration = timeDiff(lastConnectMoment, lastGetIPmoment);
+  const LongTermTimer::Duration dhcp_duration = lastConnectMoment.timeDiff(lastGetIPmoment);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : ");
@@ -256,10 +263,10 @@ void processGotIP() {
     log += F(" SN: ");
     log += formatIP(subnet);
 
-    if ((dhcp_duration > 0) && (dhcp_duration < 30000)) {
+    if ((dhcp_duration > 0ll) && (dhcp_duration < 30000000ll)) {
       // Just log times when they make sense.
       log += F("   duration: ");
-      log += dhcp_duration;
+      log += static_cast<int32_t>(dhcp_duration / 1000);
       log += F(" ms");
     }
     addLog(LOG_LEVEL_INFO, log);
@@ -332,7 +339,7 @@ void processConnectAPmode() {
   if (processedConnectAPmode) { return; }
   processedConnectAPmode = true;
   // Extend timer to switch off AP.
-  timerAPoff = millis() + WIFI_AP_OFF_TIMER_DURATION;
+  timerAPoff.setNow();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
@@ -353,17 +360,17 @@ void processConnectAPmode() {
 
 // Switch of AP mode when timeout reached and no client connected anymore.
 void processDisableAPmode() {
-  if (timerAPoff == 0) { return; }
+  if (!timerAPoff.isSet()) { return; }
 
   if (WifiIsAP(WiFi.getMode())) {
     // disable AP after timeout and no clients connected.
-    if (timeOutReached(timerAPoff) && (WiFi.softAPgetStationNum() == 0)) {
+    if (timerAPoff.timeoutReached(WIFI_AP_OFF_TIMER_DURATION) && (WiFi.softAPgetStationNum() == 0)) {
       setAP(false);
     }
   }
 
   if (!WifiIsAP(WiFi.getMode())) {
-    timerAPoff = 0;
+    timerAPoff.clear();
   }
 }
 
@@ -374,7 +381,7 @@ void processScanDone() {
   int8_t scanCompleteStatus = WiFi.scanComplete();
   switch (scanCompleteStatus) {
     case 0: // Nothing (yet) found
-      if (timePassedSince(lastGetScanMoment) > 5000) {
+      if (lastGetScanMoment.timeoutReached(5000)) {
         processedScanDone = true;
       }
       return;
@@ -386,7 +393,7 @@ void processScanDone() {
       return;
   }
 
-  lastGetScanMoment = millis();
+  lastGetScanMoment.setNow();
   processedScanDone = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
