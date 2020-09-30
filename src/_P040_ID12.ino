@@ -129,10 +129,10 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
                 break;
               }
               event->setTaskIndex(index);
+              event->sensorType = getDeviceVTypeForTask(index);
               if (!validUserVarIndex(event->BaseVarIndex)) {
                 break;
               }
-              event->sensorType = Device[DeviceIndex].VType;
               // endof workaround
 
               unsigned long key = 0, old_key = 0;

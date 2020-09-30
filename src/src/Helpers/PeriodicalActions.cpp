@@ -192,6 +192,9 @@ void runEach30Seconds()
     log += F(" WiFiStatus ");
     log += ArduinoWifiStatusToString(WiFi.status());
     #endif
+    log += F(" ESPeasy internal wifi status: ");
+    log += ESPeasyWifiStatusToString();
+
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);

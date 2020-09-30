@@ -341,7 +341,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
             if (validDeviceIndex(DeviceIndex)) {
               TempEvent.setTaskIndex(taskIndex);
-              TempEvent.sensorType   = Device[DeviceIndex].VType;
+              TempEvent.sensorType   = getDeviceVTypeForTask(taskIndex);
               prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
               checkRAM(F("PluginCall_s"), taskIndex);
               START_TIMER;
@@ -384,9 +384,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
           if (validDeviceIndex(DeviceIndex)) {
             TempEvent.setTaskIndex(taskIndex);
+            TempEvent.sensorType = getDeviceVTypeForTask(taskIndex);
 
             // TempEvent.idx = Settings.TaskDeviceID[taskIndex]; todo check
-            TempEvent.sensorType = Device[DeviceIndex].VType;
             prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
             START_TIMER;
             bool retval =  (Plugin_ptr[DeviceIndex](Function, &TempEvent, str));
@@ -427,9 +427,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
             if (validDeviceIndex(DeviceIndex)) {
               TempEvent.setTaskIndex(taskIndex);
+              TempEvent.sensorType = getDeviceVTypeForTask(taskIndex);
 
               // TempEvent.idx = Settings.TaskDeviceID[taskIndex]; todo check
-              TempEvent.sensorType      = Device[DeviceIndex].VType;
               TempEvent.OriginTaskIndex = event->TaskIndex;
               checkRAM(F("PluginCall_s"), taskIndex);
 
@@ -470,6 +470,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           LoadTaskSettings(event->TaskIndex);
         }
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+        event->sensorType = getDeviceVTypeForTask(event->TaskIndex);
         {
           String descr;
           descr.reserve(20);
@@ -532,7 +533,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           event->Par1 = Device[DeviceIndex].ValueCount;
         }
         if (Function == PLUGIN_GET_DEVICEVTYPE) {
-          event->Par1 = static_cast<int>(Device[DeviceIndex].VType);
+          event->sensorType = Device[DeviceIndex].VType;
         }
 
         START_TIMER;

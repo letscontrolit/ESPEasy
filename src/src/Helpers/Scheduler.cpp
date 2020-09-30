@@ -1,6 +1,7 @@
 #include "Scheduler.h"
 
 #include "../../ESPEasy_common.h"
+#include "../../_Plugin_Helper.h"
 
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../Globals/RTC.h"
@@ -211,6 +212,13 @@ void ESPEasy_Scheduler::setIntervalTimer(IntervalTimer_e id, unsigned long lastt
     case IntervalTimer_e::TIMER_C018_DELAY_QUEUE:
     case IntervalTimer_e::TIMER_C019_DELAY_QUEUE:
     case IntervalTimer_e::TIMER_C020_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C021_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C022_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C023_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C024_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C025_DELAY_QUEUE:
+      // When extending this, search for EXTEND_CONTROLLER_IDS 
+      // in the code to find all places that need to be updated too.
       interval = 1000; break;
   }
   unsigned long timer = lasttimer;
@@ -368,8 +376,48 @@ void ESPEasy_Scheduler::process_interval_timer(IntervalTimer_e id, unsigned long
        */
       break;
 
-      // When extending this, also extend in DelayQueueElements.h
-      // Also make sure to extend the "TIMER_C020_DELAY_QUEUE" list of defines.
+    case IntervalTimer_e::TIMER_C021_DELAY_QUEUE:
+      /*
+       #ifdef USES_C021
+            process_c021_delay_queue();
+       #endif
+       */
+      break;
+
+    case IntervalTimer_e::TIMER_C022_DELAY_QUEUE:
+      /*
+       #ifdef USES_C022
+            process_c022_delay_queue();
+       #endif
+       */
+      break;
+
+    case IntervalTimer_e::TIMER_C023_DELAY_QUEUE:
+      /*
+       #ifdef USES_C023
+            process_c023_delay_queue();
+       #endif
+       */
+      break;
+
+    case IntervalTimer_e::TIMER_C024_DELAY_QUEUE:
+      /*
+       #ifdef USES_C024
+            process_c024_delay_queue();
+       #endif
+       */
+      break;
+
+    case IntervalTimer_e::TIMER_C025_DELAY_QUEUE:
+      /*
+       #ifdef USES_C025
+            process_c025_delay_queue();
+       #endif
+       */
+      break;
+
+    // When extending this, search for EXTEND_CONTROLLER_IDS 
+    // in the code to find all places that need to be updated too.
   }
 }
 
@@ -438,7 +486,7 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
   systemTimers.erase(mixedTimerId);
 
   if (validDeviceIndex(deviceIndex)) {
-    TempEvent.sensorType = Device[deviceIndex].VType;
+    TempEvent.sensorType = getDeviceVTypeForTask(it->second.TaskIndex);
 
     if (validUserVarIndex(TempEvent.BaseVarIndex)) {
       String dummy;

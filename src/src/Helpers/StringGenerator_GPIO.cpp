@@ -139,13 +139,14 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
   if (warning) {
     result += ' ';
     result += F(HTML_SYMBOL_WARNING);
-  }
-  bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
 
-  if (serialPinConflict) {
-    if (gpio == 1) { result += F(" TX0"); }
+    bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
 
-    if (gpio == 3) { result += F(" RX0"); }
+    if (serialPinConflict) {
+      if (gpio == 1) { result += F(" TX0"); }
+
+      if (gpio == 3) { result += F(" RX0"); }
+    }
   }
   return result;
 }

@@ -1,5 +1,8 @@
 #include "DelayQueueElements.h"
 
+#include "../DataStructs/ControllerSettingsStruct.h"
+#include "../DataStructs/TimingStats.h"
+#include "../Globals/ESPEasy_Scheduler.h"
 
 #ifdef USES_MQTT
 ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler = nullptr;
@@ -11,7 +14,7 @@ bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, b
   }
   LoadControllerSettings(ControllerIndex, ControllerSettings);
   if (MQTTDelayHandler == nullptr) {
-    MQTTDelayHandler = new (std::nothrow)  ControllerDelayHandlerStruct<MQTT_queue_element>;
+    MQTTDelayHandler = new (std::nothrow) ControllerDelayHandlerStruct<MQTT_queue_element>;
   }
   if (MQTTDelayHandler == nullptr) {
     return false;
@@ -145,6 +148,37 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 18)
  #endif
  */
 
+/*
+ #ifdef USES_C021
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 21)
+ #endif
+ */
 
-// When extending this, also extend in Scheduler.cpp:
-// void process_interval_timer(unsigned long id, unsigned long lasttimer)
+/*
+ #ifdef USES_C022
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 22)
+ #endif
+ */
+
+/*
+ #ifdef USES_C023
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 23)
+ #endif
+ */
+
+/*
+ #ifdef USES_C024
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 24)
+ #endif
+ */
+
+/*
+ #ifdef USES_C025
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 25)
+ #endif
+ */
+
+
+
+// When extending this, search for EXTEND_CONTROLLER_IDS 
+// in the code to find all places that need to be updated too.

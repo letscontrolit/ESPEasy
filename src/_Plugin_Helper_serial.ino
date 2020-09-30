@@ -46,10 +46,10 @@ static String serialHelper_getGpioDescription(int config_pin1, int config_pin2, 
     case ESPeasySerialType::serialtype::serial2:
     {
       result += F("RX: ");
-      result += config_pin1;
+      result += formatGpioLabel(config_pin1, false);
       result += newline;
       result += F("TX: ");
-      result += config_pin2;
+      result += formatGpioLabel(config_pin2, false);
       break;
     }
     default:
