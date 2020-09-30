@@ -174,108 +174,111 @@ void WebServerInit()
   webserver_init = true;
 
   // Prepare webserver pages
+
+  // FIXME TD-er: The added String() wrapper is needed for the latest ESP32 core lib.
+  // See: https://github.com/espressif/arduino-esp32/issues/4374
   #ifdef WEBSERVER_ROOT
-  web_server.on("/",                 handle_root);
+  web_server.on(String(F("/")),                 handle_root);
   #endif
   #ifdef WEBSERVER_ADVANCED
-  web_server.on(F("/advanced"),      handle_advanced);
+  web_server.on(String(F("/advanced")),      handle_advanced);
   #endif
   #ifdef WEBSERVER_CONFIG
-  web_server.on(F("/config"),        handle_config);
+  web_server.on(String(F("/config")),        handle_config);
   #endif
   #ifdef WEBSERVER_CONTROL
-  web_server.on(F("/control"),       handle_control);
+  web_server.on(String(F("/control")),       handle_control);
   #endif
   #ifdef WEBSERVER_CONTROLLERS
-  web_server.on(F("/controllers"),   handle_controllers);
+  web_server.on(String(F("/controllers")),   handle_controllers);
   #endif
   #ifdef WEBSERVER_DEVICES
-  web_server.on(F("/devices"),       handle_devices);
+  web_server.on(String(F("/devices")),       handle_devices);
   #endif
   #ifdef WEBSERVER_DOWNLOAD
-  web_server.on(F("/download"),      handle_download);
+  web_server.on(String(F("/download")),      handle_download);
   #endif
 
 #ifdef USES_C016
   // web_server.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
-  web_server.on(F("/cache_json"),    handle_cache_json); // C016 specific entrie
-  web_server.on(F("/cache_csv"),     handle_cache_csv);  // C016 specific entrie
+  web_server.on(String(F("/cache_json")),    handle_cache_json); // C016 specific entrie
+  web_server.on(String(F("/cache_csv")),     handle_cache_csv);  // C016 specific entrie
 #endif // USES_C016
 
   #ifdef WEBSERVER_FACTORY_RESET
-  web_server.on(F("/factoryreset"),  handle_factoryreset);
+  web_server.on(String(F("/factoryreset")),  handle_factoryreset);
   #endif
   #ifdef USE_SETTINGS_ARCHIVE
-  web_server.on(F("/settingsarchive"), handle_settingsarchive);
+  web_server.on(String(F("/settingsarchive")), handle_settingsarchive);
   #endif
-  web_server.on(F("/favicon.ico"),   handle_favicon);
+  web_server.on(String(F("/favicon.ico")),   handle_favicon);
   #ifdef WEBSERVER_FILELIST
-  web_server.on(F("/filelist"),      handle_filelist);
+  web_server.on(String(F("/filelist")),      handle_filelist);
   #endif
   #ifdef WEBSERVER_HARDWARE
-  web_server.on(F("/hardware"),      handle_hardware);
+  web_server.on(String(F("/hardware")),      handle_hardware);
   #endif
   #ifdef WEBSERVER_I2C_SCANNER
-  web_server.on(F("/i2cscanner"),    handle_i2cscanner);
+  web_server.on(String(F("/i2cscanner")),    handle_i2cscanner);
   #endif
-  web_server.on(F("/json"),          handle_json);     // Also part of WEBSERVER_NEW_UI
-  web_server.on(F("/csv"),           handle_csvval);
-  web_server.on(F("/log"),           handle_log);
-  web_server.on(F("/login"),         handle_login);
-  web_server.on(F("/logjson"),       handle_log_JSON); // Also part of WEBSERVER_NEW_UI
+  web_server.on(String(F("/json")),          handle_json);     // Also part of WEBSERVER_NEW_UI
+  web_server.on(String(F("/csv")),           handle_csvval);
+  web_server.on(String(F("/log")),           handle_log);
+  web_server.on(String(F("/login")),         handle_login);
+  web_server.on(String(F("/logjson")),       handle_log_JSON); // Also part of WEBSERVER_NEW_UI
 #ifdef USES_NOTIFIER
-  web_server.on(F("/notifications"), handle_notifications);
+  web_server.on(String(F("/notifications")), handle_notifications);
 #endif 
   #ifdef WEBSERVER_PINSTATES
-  web_server.on(F("/pinstates"),     handle_pinstates);
+  web_server.on(String(F("/pinstates")),     handle_pinstates);
   #endif
   #ifdef WEBSERVER_RULES
-  web_server.on(F("/rules"),         handle_rules_new);
-  web_server.on(F("/rules/"),        Goto_Rules_Root);
-  web_server.on(F("/rules/add"),     []()
+  web_server.on(String(F("/rules")),         handle_rules_new);
+  web_server.on(String(F("/rules/")),        Goto_Rules_Root);
+  web_server.on(String(F("/rules/add")),     []()
   {
     handle_rules_edit(web_server.uri(), true);
   });
-  web_server.on(F("/rules/backup"),      handle_rules_backup);
-  web_server.on(F("/rules/delete"),      handle_rules_delete);
+  web_server.on(String(F("/rules/backup")),      handle_rules_backup);
+  web_server.on(String(F("/rules/delete")),      handle_rules_delete);
   #endif // WEBSERVER_RULES
 #ifdef FEATURE_SD
-  web_server.on(F("/SDfilelist"),        handle_SDfilelist);
+  web_server.on(String(F("/SDfilelist")),        handle_SDfilelist);
 #endif // ifdef FEATURE_SD
 #ifdef WEBSERVER_SETUP
-  web_server.on(F("/setup"),             handle_setup);
+  web_server.on(String(F("/setup")),             handle_setup);
 #endif
 #ifdef WEBSERVER_SYSINFO
-  web_server.on(F("/sysinfo"),           handle_sysinfo);
+  web_server.on(String(F("/sysinfo")),           handle_sysinfo);
 #endif
 #ifdef WEBSERVER_SYSVARS
-  web_server.on(F("/sysvars"),           handle_sysvars);
+  web_server.on(String(F("/sysvars")),           handle_sysvars);
 #endif // WEBSERVER_SYSVARS
 #ifdef WEBSERVER_TIMINGSTATS
-  web_server.on(F("/timingstats"),       handle_timingstats);
+  web_server.on(String(F("/timingstats")),       handle_timingstats);
 #endif // WEBSERVER_TIMINGSTATS
 #ifdef WEBSERVER_TOOLS
-  web_server.on(F("/tools"),             handle_tools);
+  web_server.on(String(F("/tools")),             handle_tools);
 #endif
 #ifdef WEBSERVER_UPLOAD
-  web_server.on(F("/upload"),            HTTP_GET,  handle_upload);
-  web_server.on(F("/upload"),            HTTP_POST, handle_upload_post, handleFileUpload);
+  web_server.on(String(F("/upload")),            HTTP_GET,  handle_upload);
+  web_server.on(String(F("/upload")),            HTTP_POST, handle_upload_post, handleFileUpload);
 #endif
 #ifdef WEBSERVER_WIFI_SCANNER
-  web_server.on(F("/wifiscanner"),       handle_wifiscanner);
+  web_server.on(String(F("/wifiscanner")),       handle_wifiscanner);
 #endif
 
 #ifdef WEBSERVER_NEW_UI
-  web_server.on(F("/buildinfo"),         handle_buildinfo);     // Also part of WEBSERVER_NEW_UI
-  web_server.on(F("/factoryreset_json"), handle_factoryreset_json);
-  web_server.on(F("/filelist_json"),     handle_filelist_json);
-  web_server.on(F("/i2cscanner_json"),   handle_i2cscanner_json);
-  web_server.on(F("/node_list_json"),    handle_nodes_list_json);
-  web_server.on(F("/pinstates_json"),    handle_pinstates_json);
-  web_server.on(F("/sysinfo_json"),      handle_sysinfo_json);
-  web_server.on(F("/timingstats_json"),  handle_timingstats_json);
-  web_server.on(F("/upload_json"),       HTTP_POST, handle_upload_json, handleFileUpload);
-  web_server.on(F("/wifiscanner_json"),  handle_wifiscanner_json);
+  web_server.on(String(F("/buildinfo")),         handle_buildinfo);     // Also part of WEBSERVER_NEW_UI
+  web_server.on(String(F("/factoryreset_json")), handle_factoryreset_json);
+  web_server.on(String(F("/filelist_json")),     handle_filelist_json);
+  web_server.on(String(F("/i2cscanner_json")),   handle_i2cscanner_json);
+  web_server.on(String(F("/node_list_json")),    handle_nodes_list_json);
+  web_server.on(String(F("/pinstates_json")),    handle_pinstates_json);
+  web_server.on(String(F("/sysinfo_json")),      handle_sysinfo_json);
+  web_server.on(String(F("/timingstats_json")),  handle_timingstats_json);
+  web_server.on(String(F("/upload_json")),       HTTP_POST, handle_upload_json, handleFileUpload);
+  web_server.on(String(F("/wifiscanner_json")),  handle_wifiscanner_json);
 #endif // WEBSERVER_NEW_UI
 
   web_server.onNotFound(handleNotFound);
