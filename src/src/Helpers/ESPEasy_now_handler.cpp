@@ -155,8 +155,11 @@ void ESPEasy_now_handler_t::end()
 {
   _controllerIndex = INVALID_CONTROLLER_INDEX;
   use_EspEasy_now  = false;
-  _last_used = 0;
-  WifiEspNow.end();
+  if (_last_used != 0) {
+    // Only call WifiEspNow.end() if it was started.
+    WifiEspNow.end();
+    _last_used = 0;
+  }
   addLog(LOG_LEVEL_INFO, F("ESPEasy-Now disabled"));
 }
 
