@@ -133,7 +133,7 @@ void NodesHandler::updateThisNode() {
   WiFi.macAddress(thisNode.sta_mac);
   WiFi.softAPmacAddress(thisNode.ap_mac);
   {
-    IPAddress localIP = WiFi.localIP();
+    IPAddress localIP = NetworkLocalIP();
 
     for (byte i = 0; i < 4; ++i) {
       thisNode.ip[i] = localIP[i];
