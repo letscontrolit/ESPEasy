@@ -178,7 +178,7 @@ void WebServerInit()
   // FIXME TD-er: The added String() wrapper is needed for the latest ESP32 core lib.
   // See: https://github.com/espressif/arduino-esp32/issues/4374
   #ifdef WEBSERVER_ROOT
-  web_server.on(String(F("/")),                 handle_root);
+  web_server.on(String(F("/")),              handle_root);
   #endif
   #ifdef WEBSERVER_ADVANCED
   web_server.on(String(F("/advanced")),      handle_advanced);
