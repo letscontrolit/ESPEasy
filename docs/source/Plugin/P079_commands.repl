@@ -9,7 +9,7 @@
 
     ","
     | The *WemosMotorShieldCMD* and *LolinMotorShieldCMD* command keywords are interchangeable.
-    | The *LolinMotorShieldCMD* command keyword is available with Oct-2020 or later mega releases.
+    | The *LolinMotorShieldCMD* command keyword is available on mega-20200929 and later releases.
     | All commands are case insensitive.
 
     "
@@ -43,7 +43,7 @@
 
     ","
 
-    *Brake* and *Standby* actions are only available with Oct-2020 or later mega releases.
+    *Brake* and *Standby* actions are available on mega-20200929 and later releases.
 
     **HTTP Examples:**
 
