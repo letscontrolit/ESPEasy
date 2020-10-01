@@ -145,11 +145,19 @@ Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex) {
 
 Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex, int& pconfig_index) {
   struct EventStruct TempEvent(taskIndex);
-  String dummy;
-  if (PluginCall(PLUGIN_GET_DEVICEVTYPE, &TempEvent, dummy)) {
-    pconfig_index = TempEvent.idx;
-  } else {
-    pconfig_index = -1;
-  }
+  pconfig_index = checkDeviceVTypeForTask(&TempEvent);
   return TempEvent.sensorType;
+}
+
+
+int checkDeviceVTypeForTask(struct EventStruct* event) {
+  if (event->sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET) {
+    if (validTaskIndex(event->TaskIndex)) {
+      String dummy;
+      if (PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy)) {
+        return event->idx; // pconfig_index
+      }
+    }
+  }
+  return -1;
 }

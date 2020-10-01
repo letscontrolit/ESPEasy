@@ -341,7 +341,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
             if (validDeviceIndex(DeviceIndex)) {
               TempEvent.setTaskIndex(taskIndex);
-              TempEvent.sensorType   = getDeviceVTypeForTask(taskIndex);
+              //checkDeviceVTypeForTask(&TempEvent);
               prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
               checkRAM(F("PluginCall_s"), taskIndex);
               START_TIMER;
@@ -384,7 +384,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
           if (validDeviceIndex(DeviceIndex)) {
             TempEvent.setTaskIndex(taskIndex);
-            TempEvent.sensorType = getDeviceVTypeForTask(taskIndex);
+            //checkDeviceVTypeForTask(&TempEvent);
 
             // TempEvent.idx = Settings.TaskDeviceID[taskIndex]; todo check
             prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
@@ -427,7 +427,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
             if (validDeviceIndex(DeviceIndex)) {
               TempEvent.setTaskIndex(taskIndex);
-              TempEvent.sensorType = getDeviceVTypeForTask(taskIndex);
+              //checkDeviceVTypeForTask(&TempEvent);
 
               // TempEvent.idx = Settings.TaskDeviceID[taskIndex]; todo check
               TempEvent.OriginTaskIndex = event->TaskIndex;
@@ -470,7 +470,6 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           LoadTaskSettings(event->TaskIndex);
         }
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-        event->sensorType = getDeviceVTypeForTask(event->TaskIndex);
         {
           String descr;
           descr.reserve(20);

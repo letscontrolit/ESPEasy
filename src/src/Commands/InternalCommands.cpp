@@ -391,12 +391,11 @@ bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const 
     }
   }
 
-  struct EventStruct TempEvent;
-
   // FIXME TD-er: Not sure what happens now, but TaskIndex cannot always be set here
   // since commands can originate from anywhere.
+  struct EventStruct TempEvent;
   TempEvent.setTaskIndex(taskIndex);
-  TempEvent.sensorType = getDeviceVTypeForTask(taskIndex);
+  checkDeviceVTypeForTask(&TempEvent);
   TempEvent.Source = source;
 
   String action(Line);
