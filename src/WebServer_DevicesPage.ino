@@ -4,7 +4,10 @@
 # include "src/Globals/Device.h"
 # include "src/Globals/CPlugins.h"
 # include "src/Globals/Plugins.h"
+
 # include "src/Static/WebStaticData.h"
+
+# include "src/Helpers/_CPlugin_SensorTypeHelper.h"
 # include "src/Helpers/StringGenerator_GPIO.h"
 
 

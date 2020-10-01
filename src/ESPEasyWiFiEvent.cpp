@@ -84,9 +84,9 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 
         if (last_wifi_connect_attempt_moment.isSet() && (lastConnectMoment > last_wifi_connect_attempt_moment)) {
           // There was an unsuccessful connection attempt
-          lastConnectedDuration = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
+          lastConnectedDuration_us = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
         } else {
-          lastConnectedDuration = lastConnectMoment.timeDiff(lastDisconnectMoment);
+          lastConnectedDuration_us = lastConnectMoment.timeDiff(lastDisconnectMoment);
         }
         processedDisconnect  = false;
         lastDisconnectReason = static_cast<WiFiDisconnectReason>(info.disconnected.reason);
@@ -189,9 +189,9 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event) {
 
   if (lastConnectMoment > last_wifi_connect_attempt_moment) {
     // There was an unsuccessful connection attempt
-    lastConnectedDuration = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
+    lastConnectedDuration_us = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
   } else {
-    lastConnectedDuration = lastConnectMoment.timeDiff(lastDisconnectMoment);
+    lastConnectedDuration_us = lastConnectMoment.timeDiff(lastDisconnectMoment);
   }
   lastDisconnectReason = event.reason;
 

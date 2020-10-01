@@ -509,6 +509,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           LoadTaskSettings(event->TaskIndex);
         }
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
+        event->sensorType = getDeviceVTypeForTask(event->TaskIndex);
         {
           String descr;
           descr.reserve(20);
@@ -571,7 +572,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           event->Par1 = Device[DeviceIndex].ValueCount;
         }
         if (Function == PLUGIN_GET_DEVICEVTYPE) {
-          event->Par1 = static_cast<int>(Device[DeviceIndex].VType);
+          event->sensorType = Device[DeviceIndex].VType;
         }
 
         START_TIMER;

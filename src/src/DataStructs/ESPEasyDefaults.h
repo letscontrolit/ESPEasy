@@ -1,6 +1,8 @@
 #ifndef ESPEASY_DEFAULTS_H_
 #define ESPEASY_DEFAULTS_H_
 
+// Needed to make sure Custom.h is used.
+#include "../../ESPEasy_common.h"
 
 #include "../DataStructs/NetworkMedium.h"
 

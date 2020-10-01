@@ -107,7 +107,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         LoadTaskSettings(event->TaskIndex);
         parseControllerVariables(pubname, event, false);
 
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        byte valueCount = getValueCountForTask(event->TaskIndex);
         for (byte x = 0; x < valueCount; x++)
         {
           String tmppubname = pubname;
