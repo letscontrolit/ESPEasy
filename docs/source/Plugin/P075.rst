@@ -95,7 +95,7 @@ This is automatically done when hardware serial is chosen.
 A transistor circuit must be added when hardware serial is used. Despite the extra work, the hardware serial method is strongly recommended.
 
 .. attention::
-   Hardware serial receiver (RX) uses ESP8266's D8 "boot" configuration pin.
+   Hardware serial transmit (TX) uses ESP8266's D8 "boot" configuration pin.
    A transistor buffer is required to isolate the ESP8266 from the Nextion's RX input circuity.
    Omitting the transistor may prevent the ESP8266 from booting correctly!
 
