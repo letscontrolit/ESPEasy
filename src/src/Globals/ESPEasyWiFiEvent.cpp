@@ -37,7 +37,7 @@ LongTermTimer lastDisconnectMoment;
 LongTermTimer lastWiFiResetMoment;
 LongTermTimer lastGetIPmoment;
 LongTermTimer lastGetScanMoment;
-LongTermTimer::Duration lastConnectedDuration = 0ll;
+LongTermTimer::Duration lastConnectedDuration_us = 0ll;
 LongTermTimer timerAPoff;   // Timer to check whether the AP mode should be disabled (0 = disabled)
 LongTermTimer timerAPstart; // Timer to start AP mode, started when no valid network is detected.
 bool intent_to_reboot                = false;

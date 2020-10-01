@@ -103,7 +103,7 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
       postDataStr += element.txt;    // FIXME TD-er: Is this correct?
       // See: https://nl.mathworks.com/help/thingspeak/writedata.html
   } else {
-    byte valueCount = getValueCountFromSensorType(element.sensorType);
+    byte valueCount = getValueCountForTask(element.TaskIndex);
     for (byte x = 0; x < valueCount; x++)
     {
       postDataStr += F("&field");

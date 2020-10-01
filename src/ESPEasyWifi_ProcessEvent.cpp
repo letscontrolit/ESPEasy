@@ -165,9 +165,9 @@ void processDisconnect() {
     log += getLastDisconnectReason();
     log += '\'';
 
-    if (lastConnectedDuration > 0) {
+    if (lastConnectedDuration_us > 0) {
       log += F(" Connected for ");
-      log += format_msec_duration(lastConnectedDuration);
+      log += format_msec_duration(lastConnectedDuration_us / 1000ll);
     } else {
       log += F(" Connected for a long time...");
     }

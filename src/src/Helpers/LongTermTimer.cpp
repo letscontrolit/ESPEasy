@@ -4,19 +4,19 @@
 
 
 uint64_t LongTermTimer::get() const {
-  return _timer;
+  return _timer_usec;
 }
 
 void LongTermTimer::setNow() {
-  _timer = getMicros64();
+  _timer_usec = getMicros64();
 }
 
 LongTermTimer::Duration LongTermTimer::timeDiff(const LongTermTimer& next) const {
-  return __timeDiff(_timer, next.get());
+  return __timeDiff(_timer_usec, next.get());
 }
 
 LongTermTimer::Duration LongTermTimer::usecPassedSince() const {
-  return __timeDiff(_timer, getMicros64());
+  return __timeDiff(_timer_usec, getMicros64());
 }
 
 LongTermTimer::Duration LongTermTimer::millisPassedSince() const {
@@ -24,11 +24,11 @@ LongTermTimer::Duration LongTermTimer::millisPassedSince() const {
 }
 
 bool LongTermTimer::timeReached() const {
-  return getMicros64() > _timer;
+  return getMicros64() > _timer_usec;
 }
 
 bool LongTermTimer::timeoutReached(uint32_t millisTimeout) const {
-  return getMicros64() > (_timer + (millisTimeout * 1000ull));
+  return getMicros64() > (_timer_usec + (millisTimeout * 1000ull));
 }
 
 LongTermTimer::Duration LongTermTimer::__timeDiff(uint64_t prev, uint64_t next) {
