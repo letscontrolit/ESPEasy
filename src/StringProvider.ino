@@ -96,6 +96,10 @@ String getLabel(LabelType::Enum label) {
 
     case LabelType::ESP_CHIP_ID:            return F("ESP Chip ID");
     case LabelType::ESP_CHIP_FREQ:          return F("ESP Chip Frequency");
+    case LabelType::ESP_CHIP_MODEL:         return F("ESP Chip Model");
+    case LabelType::ESP_CHIP_REVISION:      return F("ESP Chip Revision");
+    case LabelType::ESP_CHIP_CORES:         return F("ESP Chip Cores");
+
     case LabelType::ESP_BOARD_NAME:         return F("ESP Board Name");
 
     case LabelType::FLASH_CHIP_ID:          return F("Flash Chip ID");
@@ -216,7 +220,10 @@ String getValue(LabelType::Enum label) {
   #endif
 
     case LabelType::ESP_CHIP_ID:            break;
-    case LabelType::ESP_CHIP_FREQ:          break;
+    case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());
+    case LabelType::ESP_CHIP_MODEL:         return getChipModel();
+    case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
+    case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
     case LabelType::ESP_BOARD_NAME:         break;
 
     case LabelType::FLASH_CHIP_ID:          break;

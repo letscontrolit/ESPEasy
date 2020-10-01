@@ -461,14 +461,14 @@ void handle_sysinfo_SystemStatus() {
 void handle_sysinfo_ESP_Board() {
   addTableSeparator(F("ESP Board"), 2, 3);
 
+
   addRowLabel(getLabel(LabelType::ESP_CHIP_ID));
-  # if defined(ESP8266)
   {
     String html;
     html.reserve(32);
-    html += ESP.getChipId();
+    html += getChipId();
     html += F(" (0x");
-    String espChipId(ESP.getChipId(), HEX);
+    String espChipId(getChipId(), HEX);
     espChipId.toUpperCase();
     html += espChipId;
     html += ')';
@@ -478,29 +478,14 @@ void handle_sysinfo_ESP_Board() {
   addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
   addHtml(String(ESP.getCpuFreqMHz()));
   addHtml(F(" MHz"));
-  # endif // if defined(ESP8266)
-  # if defined(ESP32)
-  {
-    String html;
-    html.reserve(64);
-    html += F(" (0x");
-    uint64_t chipid  = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
-    uint32_t ChipId1 = (uint16_t)(chipid >> 32);
-    String   espChipIdS(ChipId1, HEX);
-    espChipIdS.toUpperCase();
-    html   += espChipIdS;
-    ChipId1 = (uint32_t)chipid;
-    String espChipIdS1(ChipId1, HEX);
-    espChipIdS1.toUpperCase();
-    html += espChipIdS1;
-    html += ')';
-    addHtml(html);
-  }
 
-  addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
-  addHtml(String(ESP.getCpuFreqMHz()));
-  addHtml(F(" MHz"));
+  addRowLabelValue(LabelType::ESP_CHIP_MODEL);
+
+  # if defined(ESP32)
+  addRowLabelValue(LabelType::ESP_CHIP_REVISION);
   # endif // if defined(ESP32)
+  addRowLabelValue(LabelType::ESP_CHIP_CORES);
+
   # ifdef ARDUINO_BOARD
   addRowLabel(getLabel(LabelType::ESP_BOARD_NAME));
   addHtml(ARDUINO_BOARD);

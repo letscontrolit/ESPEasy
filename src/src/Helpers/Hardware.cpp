@@ -11,6 +11,13 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 
+
+#ifdef ESP32
+#include <soc/soc.h>
+#include <soc/efuse_reg.h>
+#endif
+
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
@@ -428,6 +435,66 @@ bool flashChipVendorPuya() {
   return vendorId == 0x85; // 0x146085 PUYA
 }
 
+uint32_t getChipId() {
+  uint32_t chipId = 0;
+
+#ifdef ESP8266
+  chipId = ESP.getChipId();
+#endif
+#ifdef ESP32
+  for(int i=0; i<17; i=i+8) {
+	  chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+	}
+#endif
+
+  return chipId;
+}
+
+uint8_t getChipCores() {
+  uint8_t cores = 1;
+  #ifdef ESP32
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+    cores = chip_info.cores;
+  #endif
+  return cores;
+}
+
+String getChipModel() {
+#ifdef ESP32
+  {
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+    uint32_t pkg_ver = chip_ver & 0x7;
+    switch (pkg_ver) {
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6 :
+        return F("ESP32-D0WDQ6");
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5 :
+        return F("ESP32-D0WDQ5");
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5 :
+        return F("ESP32-D2WDQ5");
+      case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2 :
+        return F("ESP32-PICO-D2");
+      case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4 :
+        return F("ESP32-PICO-D4");
+      default:
+        break;
+    }
+  }
+#elif defined(ESP8285)
+  return F("ESP8285");
+#elif defined(ESP8266)
+  return F("ESP8266");
+#endif
+  return F("Unknown");
+}
+
+uint8_t getChipRevision() {
+  uint8_t rev = 0;
+  #ifdef ESP32
+    rev = ESP.getChipRevision();
+  #endif
+  return rev;
+}
 
 /********************************************************************************************\
    Hardware specific configurations

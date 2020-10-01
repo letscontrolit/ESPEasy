@@ -55,6 +55,14 @@ uint8_t getFlashChipVendorId();
 
 bool    flashChipVendorPuya();
 
+// Last 24 bit of MAC address as integer, to be used in rules.
+uint32_t getChipId();
+
+uint8_t getChipCores();
+
+String getChipModel();
+
+uint8_t getChipRevision();
 
 /********************************************************************************************\
    Hardware specific configurations
