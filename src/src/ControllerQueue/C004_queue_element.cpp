@@ -10,7 +10,7 @@ C004_queue_element::C004_queue_element(const struct EventStruct *event) :
   TaskIndex(event->TaskIndex),
   controller_idx(event->ControllerIndex),
   sensorType(event->sensorType) {
-  if (sensorType == SENSOR_TYPE_STRING) {
+  if (sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
     txt = event->String2;
   }
 }

@@ -2,6 +2,7 @@
 
 #include "src/Commands/InternalCommands.h"
 #include "src/Globals/Nodes.h"
+#include "src/Helpers/Memory.h"
 
 // ********************************************************************************
 // Web Interface root page

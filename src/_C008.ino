@@ -73,7 +73,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         }
 
         // FIXME TD-er must define a proper move operator
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        byte valueCount = getValueCountForTask(event->TaskIndex);
         success = C008_DelayHandler->addToQueue(C008_queue_element(event, valueCount));
         if (success) {
           // Element was added.
@@ -82,10 +82,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
           C008_queue_element &element = C008_DelayHandler->sendQueue.back();
 
           // Collect the values at the same run, to make sure all are from the same sample
-          if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-            String dummy;
-            PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
-          }
+          LoadTaskSettings(event->TaskIndex);
 
           for (byte x = 0; x < valueCount; x++)
           {

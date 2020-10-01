@@ -28,8 +28,8 @@
 
 
    UserVar has the output values for a task.
-   - BaseVarIndex = taskIndex + VARS_PER_TASK
-   - taskVarIndex = 0 ... VARS_PER_TASK
+   - BaseVarIndex = taskIndex * VARS_PER_TASK
+   - taskVarIndex = 0 ... (VARS_PER_TASK - 1)
    - userVarIndex = BaseVarIndex + taskVarIndex  => 0 ... USERVAR_MAX_INDEX
    - USERVAR_MAX_INDEX = (TASKS_MAX * VARS_PER_TASK)
  \*********************************************************************************************/
@@ -58,15 +58,13 @@ extern taskVarIndex_t INVALID_TASKVAR_INDEX;
 extern float customFloatVar[CUSTOM_VARS_MAX];
 extern float UserVar[VARS_PER_TASK * TASKS_MAX];
 
-void clearUserVar();
-
-
 extern int deviceCount;
 
 // Array of function pointers to call plugins.
 extern boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
                                          struct EventStruct *,
                                          String&);
+
 
 // Map to match a plugin ID to a "DeviceIndex"
 extern std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
@@ -102,6 +100,15 @@ String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
 void          sortDeviceIndexArray();
+
+
+void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+
+/*********************************************************************************************\
+* Function call to all or specific plugins
+\*********************************************************************************************/
+byte PluginCall(byte Function, struct EventStruct *event, String& str);
 
 
 #endif // GLOBALS_PLUGIN_H

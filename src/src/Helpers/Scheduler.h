@@ -42,6 +42,14 @@ public:
     TIMER_C018_DELAY_QUEUE,
     TIMER_C019_DELAY_QUEUE,
     TIMER_C020_DELAY_QUEUE,
+    TIMER_C021_DELAY_QUEUE,
+    TIMER_C022_DELAY_QUEUE,
+    TIMER_C023_DELAY_QUEUE,
+    TIMER_C024_DELAY_QUEUE,
+    TIMER_C025_DELAY_QUEUE,
+    // When extending this, search for EXTEND_CONTROLLER_IDS 
+    // in the code to find all places that need to be updated too.
+
   };
 
   enum class PluginPtrType {
@@ -201,13 +209,13 @@ public:
                                        struct EventStruct *event);
 
   void schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex,
-                                            byte            Function,
+                                            CPlugin::Function Function,
                                             char           *c_topic,
                                             byte           *b_payload,
                                             unsigned int    length);
 
   void schedule_notification_event_timer(byte                NotificationProtocolIndex,
-                                         byte                Function,
+                                         NPlugin::Function   Function,
                                          struct EventStruct *event);
 
 

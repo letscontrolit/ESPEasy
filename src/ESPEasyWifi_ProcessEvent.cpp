@@ -11,10 +11,14 @@
 #include "src/Globals/MQTT.h"
 #include "src/Globals/NetworkState.h"
 #include "src/Globals/RTC.h"
+#include "src/Helpers/ESPEasyRTC.h"
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/Misc.h"
+#include "src/Helpers/Network.h"
 #include "src/Helpers/Scheduler.h"
 #include "src/Helpers/StringConverter.h"
+
 
 bool unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
@@ -161,9 +165,9 @@ void processDisconnect() {
     log += getLastDisconnectReason();
     log += '\'';
 
-    if (lastConnectedDuration > 0) {
+    if (lastConnectedDuration_us > 0) {
       log += F(" Connected for ");
-      log += format_msec_duration(lastConnectedDuration);
+      log += format_msec_duration(lastConnectedDuration_us / 1000ll);
     } else {
       log += F(" Connected for a long time...");
     }

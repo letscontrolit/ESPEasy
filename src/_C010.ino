@@ -57,12 +57,9 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
           break;
         }
 
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        LoadTaskSettings(event->TaskIndex);
+        byte valueCount = getValueCountForTask(event->TaskIndex);
         C010_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          String dummy;
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
-        }
 
         {
           MakeControllerSettings(ControllerSettings);

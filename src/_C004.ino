@@ -98,12 +98,12 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
   String postDataStr = F("api_key=");
   postDataStr += getControllerPass(element.controller_idx, ControllerSettings); // used for API key
 
-  if (element.sensorType == SENSOR_TYPE_STRING) {
+  if (element.sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
       postDataStr += F("&status=");
       postDataStr += element.txt;    // FIXME TD-er: Is this correct?
       // See: https://nl.mathworks.com/help/thingspeak/writedata.html
   } else {
-    byte valueCount = getValueCountFromSensorType(element.sensorType);
+    byte valueCount = getValueCountForTask(element.TaskIndex);
     for (byte x = 0; x < valueCount; x++)
     {
       postDataStr += F("&field");

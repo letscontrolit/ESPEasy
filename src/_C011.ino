@@ -233,11 +233,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     addLog(LOG_LEVEL_ERROR, F("No C011_DelayHandler"));
     return false;
   }
-
-  if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-    String dummy;
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
-  }
+  LoadTaskSettings(event->TaskIndex);
 
   // Add a new element to the queue with the minimal payload
   bool success = C011_DelayHandler->addToQueue(C011_queue_element(event));
@@ -334,7 +330,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary)
   //  Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
   addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
   addLog(LOG_LEVEL_DEBUG_MORE, s);
-  const byte valueCount = getValueCountFromSensorType(event->sensorType);
+  const byte valueCount = getValueCountForTask(event->TaskIndex);
 
   DeleteNotNeededValues(s, valueCount);
 

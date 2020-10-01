@@ -62,7 +62,7 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String &
       if (C017_DelayHandler == nullptr) {
         break;
       }
-      byte valueCount = getValueCountFromSensorType(event->sensorType);
+      byte valueCount = getValueCountForTask(event->TaskIndex);
       C017_queue_element element(event);
 
       for (byte x = 0; x < valueCount; x++)
@@ -96,7 +96,7 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
 
 bool do_process_c017_delay_queue(int controller_number, const C017_queue_element &element, ControllerSettingsStruct &ControllerSettings)
 {
-  byte valueCount = getValueCountFromSensorType(element.sensorType);
+  byte valueCount = getValueCountForTask(element.TaskIndex);
   if (valueCount == 0)
     return true; //exit if we don't have anything to send.
 

@@ -1,4 +1,5 @@
 #include "StringProviderTypes.h"
+
 #include "ESPEasyNetwork.h"
 #ifdef HAS_ETHERNET
 #include "ETH.h"
@@ -7,7 +8,9 @@
 #include "src/Globals/ESPEasy_Scheduler.h"
 
 #include "src/Helpers/CompiletimeDefines.h"
+#include "src/Helpers/Memory.h"
 #include "src/Helpers/Scheduler.h"
+#include "src/Helpers/StringGenerator_System.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
@@ -185,7 +188,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::BSSID:                  return WiFi.BSSIDstr();
     case LabelType::CHANNEL:                return String(WiFi.channel());
     case LabelType::CONNECTED:              return format_msec_duration(lastConnectMoment.millisPassedSince());
-    case LabelType::CONNECTED_MSEC:         return String(static_cast<int32_t>(lastConnectMoment.millisPassedSince() / 1000ll)) + F("000");
+    case LabelType::CONNECTED_MSEC:         return String(static_cast<int32_t>(lastConnectMoment.millisPassedSince() / 1000ll)) + F("000"); // Use only the nr of seconds to fit it in an int32, plus append '000' to have msec format again.
     case LabelType::LAST_DISCONNECT_REASON: return String(lastDisconnectReason);
     case LabelType::LAST_DISC_REASON_STR:   return getLastDisconnectReason();
     case LabelType::NUMBER_RECONNECTS:      return String(wifi_reconnects);

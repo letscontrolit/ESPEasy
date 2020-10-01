@@ -7,7 +7,9 @@
 #include "src/Commands/Diagnostic.h"
 
 #include "src/Helpers/Hardware.h"
-
+#include "src/Helpers/Memory.h"
+#include "src/Helpers/OTA.h"
+#include "src/Helpers/StringGenerator_System.h"
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -664,7 +666,7 @@ void handle_sysinfo_Storage() {
     html_TD();
     addHtml(F("(offset / size per item / index)"));
 
-    for (int st = 0; st < SettingsType::SettingsType_MAX; ++st) {
+    for (int st = 0; st < static_cast<int>(SettingsType::Enum::SettingsType_MAX); ++st) {
       SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
       html_TR_TD();
       addHtml(SettingsType::getSettingsTypeString(settingsType));

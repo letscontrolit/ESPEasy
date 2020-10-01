@@ -183,7 +183,7 @@ void WiFiConnectRelaxed() {
 
   if (!prepareWiFi()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : Could not prepare WiFi!"));
-    last_wifi_connect_attempt_moment.setNow();
+    last_wifi_connect_attempt_moment.clear();
     wifi_connect_attempt             = 1;
     return;
   }
@@ -213,6 +213,7 @@ void WiFiConnectRelaxed() {
     log += wifi_connect_attempt + 1;
     addLog(LOG_LEVEL_INFO, log);
   }
+  lastDisconnectMoment.clear();
   last_wifi_connect_attempt_moment.setNow();
   wifiConnectInProgress            = true;
 
@@ -848,14 +849,14 @@ void logConnectionStatus() {
   #endif
 #ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI  : Arduino wifi status: ");
     log += ArduinoWifiStatusToString(WiFi.status());
     log += F(" ESPeasy internal wifi status: ");
     log += ESPeasyWifiStatusToString();
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
+    addLog(LOG_LEVEL_INFO, log);
   }
-
+/*
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
 
@@ -889,6 +890,7 @@ void logConnectionStatus() {
       addLog(LOG_LEVEL_INFO, log);
     }
   }
+  */
 #endif // ifndef BUILD_NO_DEBUG
 }
 

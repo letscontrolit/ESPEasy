@@ -1,15 +1,19 @@
 #include "../Commands/HTTP.h"
 
-#include "../../_CPlugin_Helper.h"
-#include "../Commands/Common.h"
 #include "../../ESPEasy_Log.h"
-#include "../../src/DataStructs/ControllerSettingsStruct.h"
-#include "../../src/DataStructs/SettingsStruct.h"
-#include "../../src/Globals/Settings.h"
-
-#include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../_CPlugin_Helper.h"
 
+#include "../Commands/Common.h"
+
+#include "../DataStructs/ControllerSettingsStruct.h"
+#include "../DataStructs/SettingsStruct.h"
+
+#include "../Globals/Settings.h"
+
+#include "../Helpers/Misc.h"
+#include "../Helpers/StringParser.h"
 
 
 String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)

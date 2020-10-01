@@ -5,7 +5,11 @@
 #include "../Globals/Statistics.h"
 #include "../Globals/GlobalMapPortStatus.h"
 
+#include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/PortStatus.h"
+#include "../Helpers/StringConverter.h"
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -387,6 +391,43 @@ uint32_t getFlashRealSizeInBytes() {
   return ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
   #endif // if defined(ESP32)
 }
+
+
+bool puyaSupport() {
+  bool supported = false;
+
+#ifdef PUYA_SUPPORT
+
+  // New support starting core 2.5.0
+  if (PUYA_SUPPORT) { supported = true; }
+#endif // ifdef PUYA_SUPPORT
+#ifdef PUYASUPPORT
+
+  // Old patch
+  supported = true;
+#endif // ifdef PUYASUPPORT
+  return supported;
+}
+
+uint8_t getFlashChipVendorId() {
+#ifdef PUYA_SUPPORT
+  return ESP.getFlashChipVendorId();
+#else // ifdef PUYA_SUPPORT
+  # if defined(ESP8266)
+  uint32_t flashChipId = ESP.getFlashChipId();
+  return flashChipId & 0x000000ff;
+  # else // if defined(ESP8266)
+  return 0xFF; // Not an existing function for ESP32
+  # endif // if defined(ESP8266)
+#endif // ifdef PUYA_SUPPORT
+}
+
+bool flashChipVendorPuya() {
+  uint8_t vendorId = getFlashChipVendorId();
+
+  return vendorId == 0x85; // 0x146085 PUYA
+}
+
 
 /********************************************************************************************\
    Hardware specific configurations
@@ -808,9 +849,7 @@ int touchPinToGpio(int touch_pin)
 // change of device: cleanup old device and reset default settings
 // ********************************************************************************
 void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskIndex) {
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = taskIndex;
+  struct EventStruct TempEvent(taskIndex);
   String dummy;
 
   // let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
@@ -819,9 +858,12 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
   ClearCustomTaskSettings(taskIndex);
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
-
   if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
   {
+    // FIXME TD-er: Must check if this is working (e.g. need to set nr. decimals?)
+    ExtraTaskSettings.clear();
+    ExtraTaskSettings.TaskIndex = taskIndex;
+
     // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
     PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.

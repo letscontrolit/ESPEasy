@@ -1,16 +1,22 @@
 #include "ESPEasy_common.h"
 #include "ESPEasy_fdwdecl.h"
-#include "ESPEasy_plugindefs.h"
+#include "_CPlugin_Helper.h"
+
 #include "src/ControllerQueue/MQTT_queue_element.h"
+
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/ESPEasy_plugin_functions.h"
+
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Protocol.h"
-#include "_CPlugin_Helper.h"
+
+#include "src/Helpers/PortStatus.h"
+#include "src/Helpers/Rules_calculate.h"
 
 // ********************************************************************************
 // Interface for Sending to Controllers
@@ -30,10 +36,10 @@ void sendData(struct EventStruct *event)
   }
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
-  if (event->sensorType == SENSOR_TYPE_NONE) {
+  if (event->sensorType == Sensor_VType::SENSOR_TYPE_NONE) {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
     if (validDeviceIndex(DeviceIndex)) {
-      event->sensorType = Device[DeviceIndex].VType;
+      event->sensorType = getDeviceVTypeForTask(event->TaskIndex);
     }
   }
 
@@ -75,12 +81,12 @@ void sendData(struct EventStruct *event)
 
 bool validUserVar(struct EventStruct *event) {
   switch (event->sensorType) {
-    case SENSOR_TYPE_LONG:    return true;
-    case SENSOR_TYPE_STRING:  return true; // FIXME TD-er: Must look at length of event->String2 ?
+    case Sensor_VType::SENSOR_TYPE_LONG:    return true;
+    case Sensor_VType::SENSOR_TYPE_STRING:  return true; // FIXME TD-er: Must look at length of event->String2 ?
     default:
       break;
   }
-  byte valueCount = getValueCountFromSensorType(event->sensorType);
+  byte valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);
@@ -509,23 +515,19 @@ void SensorSendTask(taskIndex_t TaskIndex)
   checkRAM(F("SensorSendTask"));
   if (Settings.TaskDeviceEnabled[TaskIndex])
   {
-    byte varIndex = TaskIndex * VARS_PER_TASK;
-
     bool success = false;
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
     if (!validDeviceIndex(DeviceIndex)) return;
 
     LoadTaskSettings(TaskIndex);
 
-    struct EventStruct TempEvent;
-    TempEvent.TaskIndex = TaskIndex;
-    TempEvent.BaseVarIndex = varIndex;
+    struct EventStruct TempEvent(TaskIndex);
+    TempEvent.sensorType = getDeviceVTypeForTask(TaskIndex);
     // TempEvent.idx = Settings.TaskDeviceID[TaskIndex]; todo check
-    TempEvent.sensorType = Device[DeviceIndex].VType;
 
     float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
     for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-      preValue[varNr] = UserVar[varIndex + varNr];
+      preValue[varNr] = UserVar[TempEvent.BaseVarIndex + varNr];
 
     if(Settings.TaskDeviceDataFeed[TaskIndex] == 0)  // only read local connected sensorsfeeds
     {
@@ -545,11 +547,11 @@ void SensorSendTask(taskIndex_t TaskIndex)
           {
             String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
             formula.replace(F("%pvalue%"), String(preValue[varNr]));
-            formula.replace(F("%value%"), String(UserVar[varIndex + varNr]));
+            formula.replace(F("%value%"), String(UserVar[TempEvent.BaseVarIndex + varNr]));
             float result = 0;
             byte error = Calculate(formula.c_str(), &result);
             if (error == 0)
-              UserVar[varIndex + varNr] = result;
+              UserVar[TempEvent.BaseVarIndex + varNr] = result;
           }
         }
         STOP_TIMER(COMPUTE_FORMULA_STATS);
