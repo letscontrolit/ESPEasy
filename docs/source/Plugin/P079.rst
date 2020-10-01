@@ -41,14 +41,12 @@ The Shield has a TB6612FNG driver chip that can control two DC motors that draw 
 Motor supply voltage can range from 2.5VDC to 15.0VDC.
 There is also a STM32F030 microcontroller onboard that handles the i2c communication for command processing.
 
-Warning: Only one Motor Shield can be used on a ESPEasy device. This is a limitation of the ESPEasy plugin.
-
 Supported Hardware
 ------------------
 
 There are two variations of the Motor Shield. Originally only the Wemos V1.0 Motor Shield was supported.
 This board requires modification (custom STM32F030 firmware and solder jumpers).
-But in Oct-2020 the ESPEasy plugin was updated to support the Lolin 2.0 Motor Shield.
+But on mega-20200929 and later releases the plugin has been updated to support the Lolin 2.0 Motor Shield.
 The Lolin Shield requires no modifications which greatly simplifies a new installation.
 
 Hardware Installation
