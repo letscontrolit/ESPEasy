@@ -17,6 +17,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/StringParser.h"
+#include "../Helpers/_CPlugin_SensorTypeHelper.h"
 
 #include "Misc.h"
 
@@ -214,20 +215,24 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 
   const byte valueCount = getValueCountForTask(event->TaskIndex);
 
+  Sensor_VType sensorType = getDeviceVTypeForTask(event->TaskIndex);
+
   if (valueCount <= rel_index) {
     isvalid = false;
 
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("No sensor value for TaskIndex: ");
-      log += event->TaskIndex;
+      log += event->TaskIndex + 1;
       log += F(" varnumber: ");
-      log += rel_index;
+      log += rel_index + 1;
+      log += F(" type: ");
+      log += getSensorTypeLabel(sensorType);
       addLog(LOG_LEVEL_ERROR, log);
     }
     return "";
   }
 
-  switch (Device[DeviceIndex].VType) {
+  switch (sensorType) {
     case Sensor_VType::SENSOR_TYPE_LONG:
       return String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
     case Sensor_VType::SENSOR_TYPE_STRING:
@@ -683,10 +688,12 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
     if (event->sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
       SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
     } else {
-      SMART_REPL(F("%val1%"), formatUserVarNoCheck(event, 0))
-      SMART_REPL(F("%val2%"), formatUserVarNoCheck(event, 1))
-      SMART_REPL(F("%val3%"), formatUserVarNoCheck(event, 2))
-      SMART_REPL(F("%val4%"), formatUserVarNoCheck(event, 3))
+      for (byte i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
+        String valstr = F("%val");
+        valstr += (i + 1);
+        valstr += '%';
+        SMART_REPL(valstr, formatUserVarNoCheck(event, i));
+      }
     }
   }
   const bool tskname_found = s.indexOf(F("%tskname%")) != -1;

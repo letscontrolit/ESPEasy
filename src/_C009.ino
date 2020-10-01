@@ -75,7 +75,7 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
           break;
         }
 
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        byte valueCount = getValueCountForTask(event->TaskIndex);
         C009_queue_element element(event);
 
         for (byte x = 0; x < valueCount; x++)
@@ -144,7 +144,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
 
     // Create nested SENSOR json object
     JsonObject SENSOR = data.createNestedObject(String(F("SENSOR")));
-    byte valueCount = getValueCountFromSensorType(element.sensorType);
+    byte valueCount = getValueCountForTask(element.TaskIndex);
     // char itemNames[valueCount][2];
     for (byte x = 0; x < valueCount; x++)
     {

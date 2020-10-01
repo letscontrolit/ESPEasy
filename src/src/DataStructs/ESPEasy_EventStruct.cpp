@@ -9,7 +9,8 @@
 EventStruct::EventStruct() {}
 
 EventStruct::EventStruct(taskIndex_t taskIndex) :
-  TaskIndex(taskIndex), BaseVarIndex(taskIndex * VARS_PER_TASK) {}
+  TaskIndex(taskIndex), BaseVarIndex(taskIndex * VARS_PER_TASK) 
+{}
 
 EventStruct::EventStruct(const struct EventStruct& event) :
   String1(event.String1)

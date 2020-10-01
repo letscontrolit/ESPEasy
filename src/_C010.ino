@@ -58,7 +58,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
         }
 
         LoadTaskSettings(event->TaskIndex);
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        byte valueCount = getValueCountForTask(event->TaskIndex);
         C010_queue_element element(event, valueCount);
 
         {
