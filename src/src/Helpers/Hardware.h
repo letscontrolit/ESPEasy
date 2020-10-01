@@ -47,6 +47,8 @@ int espeasy_analogRead(int pin, bool readAsTouch);
 /********************************************************************************************\
    Hardware information
  \*********************************************************************************************/
+uint32_t getFlashChipId();
+
 uint32_t getFlashRealSizeInBytes();
 
 bool    puyaSupport();

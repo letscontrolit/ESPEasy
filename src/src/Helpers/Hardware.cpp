@@ -391,6 +391,16 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 /********************************************************************************************\
    Hardware information
  \*********************************************************************************************/
+uint32_t getFlashChipId() {
+  uint32_t flashChipId = 0;
+  #ifdef ESP32
+  //esp_flash_read_id(nullptr, &flashChipId);
+  #elif defined(ESP8266)
+  flashChipId = ESP.getFlashChipId();
+  #endif
+  return flashChipId;
+}
+
 uint32_t getFlashRealSizeInBytes() {
   #if defined(ESP32)
   return ESP.getFlashChipSize();
@@ -421,12 +431,13 @@ uint8_t getFlashChipVendorId() {
   return ESP.getFlashChipVendorId();
 #else // ifdef PUYA_SUPPORT
   # if defined(ESP8266)
-  uint32_t flashChipId = ESP.getFlashChipId();
-  return flashChipId & 0x000000ff;
-  # else // if defined(ESP8266)
-  return 0xFF; // Not an existing function for ESP32
+    uint32_t flashChipId = ESP.getFlashChipId();
+    return flashChipId & 0x000000ff;
+  # elif defined(ESP32)
+  
   # endif // if defined(ESP8266)
 #endif // ifdef PUYA_SUPPORT
+  return 0xFF; // Not an existing function for ESP32
 }
 
 bool flashChipVendorPuya() {
