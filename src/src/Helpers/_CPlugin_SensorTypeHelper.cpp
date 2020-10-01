@@ -110,7 +110,8 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
     PCONFIG(pconfigIndex) = static_cast<byte>(choice);
   } else if (getValueCountFromSensorType(choice) != getValueCountForTask(event->TaskIndex)) {
     // Invalid value
-    choice                = getDeviceVTypeForTask(event->TaskIndex);
+    checkDeviceVTypeForTask(event);
+    choice                = event->sensorType;
     PCONFIG(pconfigIndex) = static_cast<byte>(choice);
   }
   addRowLabel(F("Output Data Type"));

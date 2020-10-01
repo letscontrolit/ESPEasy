@@ -138,18 +138,6 @@ int getValueCountForTask(taskIndex_t   taskIndex) {
   return TempEvent.Par1;
 }
 
-Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex) {
-  int dummyIndex;
-  return getDeviceVTypeForTask(taskIndex, dummyIndex);
-}
-
-Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex, int& pconfig_index) {
-  struct EventStruct TempEvent(taskIndex);
-  pconfig_index = checkDeviceVTypeForTask(&TempEvent);
-  return TempEvent.sensorType;
-}
-
-
 int checkDeviceVTypeForTask(struct EventStruct* event) {
   if (event->sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET) {
     if (validTaskIndex(event->TaskIndex)) {
