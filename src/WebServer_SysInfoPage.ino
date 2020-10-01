@@ -525,9 +525,10 @@ void handle_sysinfo_ESP_Board() {
 void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
-  addRowLabel(getLabel(LabelType::FLASH_CHIP_ID));
-  {
-    uint32_t flashChipId = getFlashChipId();
+  uint32_t flashChipId = getFlashChipId();
+  if (flashChipId != 0) {
+    addRowLabel(getLabel(LabelType::FLASH_CHIP_ID));
+
 
     // Set to HEX may be something like 0x1640E0.
     // Where manufacturer is 0xE0 and device is 0x4016.
