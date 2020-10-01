@@ -44,7 +44,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_013;
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-        Device[deviceCount].VType = SENSOR_TYPE_DUAL;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_DUAL;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -217,7 +217,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         int16_t operatingMode = PCONFIG(0);
         int16_t measuringUnit = PCONFIG(3);
         if (operatingMode == OPMODE_VALUE)
-           event->sensorType = SENSOR_TYPE_SINGLE;
+           event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
            
         if ((operatingMode == OPMODE_VALUE) || (operatingMode == OPMODE_COMBINED))
         {
@@ -262,7 +262,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_INFO,log);
               switchstate[event->TaskIndex] = state;
               UserVar[event->BaseVarIndex] = state;
-              event->sensorType = SENSOR_TYPE_SWITCH;
+              event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
               sendData(event);
             }
           }
