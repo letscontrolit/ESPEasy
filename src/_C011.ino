@@ -330,7 +330,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary)
   //  Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
   addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
   addLog(LOG_LEVEL_DEBUG_MORE, s);
-  const byte valueCount = getValueCountFromSensorType(event->sensorType);
+  const byte valueCount = getValueCountForTask(event->TaskIndex);
 
   DeleteNotNeededValues(s, valueCount);
 

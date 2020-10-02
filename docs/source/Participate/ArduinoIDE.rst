@@ -64,11 +64,41 @@ There is a ``Custom-sample.h`` file supplied, which has lots of defines that can
 including just the plugins and controllers needed and maybe even some proper default settings.
 
 To use this file, it must be renamed to ``Custom.h``.
+
+There are two options to define ``USE_CUSTOM_H`` for an Arduino IDE build:
+
+* In ``ESPEasy_common.h``: uncomment ``//#define USE_CUSTOM_H``
+* Create a personal ``platform.local.txt`` file
+
+Define USE_CUSTOM_H in ESPEasy_common.h
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 PlatformIO does recognize the presence of this file when building a ``Custom`` build environment.
 But for Arduino IDE, a single line must be uncommented in ``ESPEasy_common.h``
 
 Make sure to uncomment this line at the start of ``ESPEasy_common.h``: ``//#define USE_CUSTOM_H``
 This define makes sure the ``Custom.h`` file is actually included during build.
+
+
+Build definition via platform.local.txt
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Locate the file ``platform.txt`` in the esp8266 platform directory of ArduinoIDE.
+
+The exact location depends on the installation, usually in a directory below the main application called ``hardware/esp8266.com/``.
+
+In the same directory add an (untraced) file called ``platform.local.txt`` with the following lines:
+
+.. code-block:: none
+
+   compiler.minsize=
+   compiler.c.extra_flags=-DUSE_CUSTOM_H -DPUYA_SUPPORT=0 -DCONFIG_FREERTOS_ASSERT_DISABLE -DCONFIG_LWIP_ESP_GRATUITOUS_ARP -DCONFIG_LWIP_GARP_TMR_INTERVAL=30 -DCORE_POST_2_5_0 -DCORE_POST_2_6_0 -DNDEBUG -DICACHE_FLASH -DWEBSERVER_RULES_DEBUG=0 -DVTABLES_IN_FLASH -mtarget-align -Werror=unused-variable {compiler.minsize}
+   compiler.c.elf.extra_flags=-DUSE_CUSTOM_H -DPUYA_SUPPORT=0 -DCONFIG_FREERTOS_ASSERT_DISABLE -DCONFIG_LWIP_ESP_GRATUITOUS_ARP -DCONFIG_LWIP_GARP_TMR_INTERVAL=30 -DCORE_POST_2_5_0 -DCORE_POST_2_6_0 -DNDEBUG -DICACHE_FLASH -DWEBSERVER_RULES_DEBUG=0 -DVTABLES_IN_FLASH -mtarget-align -Werror=unused-variable {compiler.minsize}
+   compiler.S.extra_flags=-DUSE_CUSTOM_H -DPUYA_SUPPORT=0 -DCONFIG_FREERTOS_ASSERT_DISABLE -DCONFIG_LWIP_ESP_GRATUITOUS_ARP -DCONFIG_LWIP_GARP_TMR_INTERVAL=30 -DCORE_POST_2_5_0 -DCORE_POST_2_6_0 -DNDEBUG -DICACHE_FLASH -DWEBSERVER_RULES_DEBUG=0 -DVTABLES_IN_FLASH -mtarget-align -Werror=unused-variable {compiler.minsize}
+   compiler.cpp.extra_flags=-DUSE_CUSTOM_H -DPUYA_SUPPORT=0 -DCONFIG_FREERTOS_ASSERT_DISABLE -DCONFIG_LWIP_ESP_GRATUITOUS_ARP -DCONFIG_LWIP_GARP_TMR_INTERVAL=30 -DCORE_POST_2_5_0 -DCORE_POST_2_6_0 -DNDEBUG -DICACHE_FLASH -DWEBSERVER_RULES_DEBUG=0 -DVTABLES_IN_FLASH -mtarget-align -Werror=unused-variable {compiler.minsize}
+   compiler.ar.extra_flags=
+   compiler.objcopy.eep.extra_flags=
+   compiler.elf2hex.extra_flags=
 
 
 Board definitions

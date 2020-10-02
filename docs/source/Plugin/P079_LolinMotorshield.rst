@@ -31,9 +31,6 @@ It has a TB6612FNG driver chip that can control two DC motors that draw 1.2A or 
 Motor supply voltage can range from 2.5VDC to 15.0VDC.
 There is also a STM32F030 microcontroller onboard that handles the i2c communication for command processing.
 
-Only one Motor Shield can be used on a ESPEasy device.
-This is a limitation of the ESPEasy plugin.
-
 Hardware Installation
 ---------------------
 The Shield is designed to plug directly onto a Wemos D1 mini (ESP8266).
@@ -79,7 +76,7 @@ Motor Shield Testing
 --------------------
 
 The I2C scan function (found on ESPEasy's *Tools* page) can be used to confirm the board is seen by the bus.
-If the scan does not find address 0x30 then check your wiring and the ESPEasy plugin's configuration.
+If the scan does not find address 0x30 then check your wiring.
 The image below shows a successful Motor Shield I2C Scan:
 
 .. figure:: P079_i2c_scan1.png
@@ -143,33 +140,33 @@ A pair of switches (requires two *Switch input - Switch* plugins) are used to li
 .. code-block:: none
 
   // Events
-  On DoorOpen Do
-    LolinMotorShieldCMD 0 Backward 30
-  EndOn
+  on DoorOpen do
+    LolinMotorShieldCMD,0,Backward,30
+  endon
 
-  On DoorClose Do
-    LolinMotorShieldCMD 0 Forward 30
-  EndOn
+  on DoorClose do
+    LolinMotorShieldCMD,0,Forward,30
+  endon
 
-  On DoorStop Do
-    LolinMotorShieldCMD 0 Stop
-  EndOn
+  on DoorStop do
+    LolinMotorShieldCMD,0,Stop
+  endon
 
   // Timer for all day open door at time if not open
-  On Clock#Time=All,07:00 do
-    If [Limit1#Switch]!=1
-      Event,DoorOpen
-    Else
-      Event,DoorStop
+  on Clock#Time=All,07:00 do
+    if [Limit1#Switch]!=1
+      event,DoorOpen
+    else
+      event,DoorStop
     endif
   endon
 
   // Timer for all day close door at time if not closed
-  On Clock#Time=All,22:00 do
-    If [Limit2#Switch]!=1
-      Event,DoorClose
-    Else
-     Event,DoorStop
+  on Clock#Time=All,22:00 do
+    if [Limit2#Switch]!=1
+      event,DoorClose
+    else
+     event,DoorStop
     endif
   endon
 

@@ -1,6 +1,7 @@
 #include "ESPEasy_common.h"
 #include "ESPEasy_fdwdecl.h"
 #include "_CPlugin_Helper.h"
+#include "_Plugin_Helper.h"
 
 #include "src/ControllerQueue/MQTT_queue_element.h"
 
@@ -36,12 +37,6 @@ void sendData(struct EventStruct *event)
   }
 
   LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
-  if (event->sensorType == Sensor_VType::SENSOR_TYPE_NONE) {
-    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
-    if (validDeviceIndex(DeviceIndex)) {
-      event->sensorType = Device[DeviceIndex].VType;
-    }
-  }
 
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
@@ -80,13 +75,13 @@ void sendData(struct EventStruct *event)
 }
 
 bool validUserVar(struct EventStruct *event) {
-  switch (event->sensorType) {
+  switch (event->getSensorType()) {
     case Sensor_VType::SENSOR_TYPE_LONG:    return true;
     case Sensor_VType::SENSOR_TYPE_STRING:  return true; // FIXME TD-er: Must look at length of event->String2 ?
     default:
       break;
   }
-  byte valueCount = getValueCountFromSensorType(event->sensorType);
+  byte valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);
@@ -522,8 +517,8 @@ void SensorSendTask(taskIndex_t TaskIndex)
     LoadTaskSettings(TaskIndex);
 
     struct EventStruct TempEvent(TaskIndex);
+    checkDeviceVTypeForTask(&TempEvent);
     // TempEvent.idx = Settings.TaskDeviceID[TaskIndex]; todo check
-    TempEvent.sensorType = Device[DeviceIndex].VType;
 
     float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
     for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
