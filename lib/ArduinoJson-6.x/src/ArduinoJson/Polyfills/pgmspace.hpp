@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <ArduinoJson/Configuration.hpp>
 #include <ArduinoJson/Namespace.hpp>
 #include <ArduinoJson/Polyfills/assert.hpp>
 
