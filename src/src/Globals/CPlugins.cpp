@@ -5,6 +5,7 @@
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 #include "../../ESPEasy_Log.h"
+#include "../../_Plugin_Helper.h"
 
 
 protocolIndex_t   INVALID_PROTOCOL_INDEX   = CPLUGIN_MAX;
@@ -101,6 +102,9 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
       if (Settings.ControllerEnabled[controllerindex] && supportedCPluginID(Settings.Protocol[controllerindex]))
       {
+        if (Function == CPlugin::Function::CPLUGIN_PROTOCOL_SEND) {
+          checkDeviceVTypeForTask(event);
+        }
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
         CPluginCall(ProtocolIndex, Function, event, str);
       }
