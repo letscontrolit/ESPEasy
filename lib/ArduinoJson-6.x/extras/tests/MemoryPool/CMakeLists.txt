@@ -4,10 +4,10 @@
 
 add_executable(MemoryPoolTests 
 	allocVariant.cpp
-	allocString.cpp
 	clear.cpp
+	saveString.cpp
 	size.cpp
-	StringBuilder.cpp
+	StringCopier.cpp
 )
 
 add_test(MemoryPool MemoryPoolTests)

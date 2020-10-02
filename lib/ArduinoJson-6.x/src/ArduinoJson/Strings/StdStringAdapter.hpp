@@ -13,9 +13,9 @@
 namespace ARDUINOJSON_NAMESPACE {
 
 template <typename TString>
-class StlStringAdapter {
+class StdStringAdapter {
  public:
-  StlStringAdapter(const TString& str) : _str(&str) {}
+  StdStringAdapter(const TString& str) : _str(&str) {}
 
   void copyTo(char* p, size_t n) const {
     memcpy(p, _str->c_str(), n);
@@ -41,6 +41,10 @@ class StlStringAdapter {
     return _str->size();
   }
 
+  const char* begin() const {
+    return _str->c_str();
+  }
+
   typedef storage_policies::store_by_copy storage_policy;
 
  private:
@@ -52,9 +56,9 @@ struct IsString<std::basic_string<char, TCharTraits, TAllocator> > : true_type {
 };
 
 template <typename TCharTraits, typename TAllocator>
-inline StlStringAdapter<std::basic_string<char, TCharTraits, TAllocator> >
+inline StdStringAdapter<std::basic_string<char, TCharTraits, TAllocator> >
 adaptString(const std::basic_string<char, TCharTraits, TAllocator>& str) {
-  return StlStringAdapter<std::basic_string<char, TCharTraits, TAllocator> >(
+  return StdStringAdapter<std::basic_string<char, TCharTraits, TAllocator> >(
       str);
 }
 
