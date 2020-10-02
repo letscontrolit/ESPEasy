@@ -226,6 +226,8 @@ void handle_sysinfo() {
 
   handle_sysinfo_basicInfo();
 
+  handle_sysinfo_memory();
+
   handle_sysinfo_Network();
 
 #ifdef HAS_ETHERNET
@@ -276,38 +278,6 @@ void handle_sysinfo_basicInfo() {
   }
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
-  int freeMem = ESP.getFreeHeap();
-  addRowLabel(getLabel(LabelType::FREE_MEM));
-  {
-    String html;
-    html.reserve(64);
-
-    html += freeMem;
-    html += " (";
-    html += lowestRAM;
-    html += F(" - ");
-    html += lowestRAMfunction;
-    html += ')';
-    addHtml(html);
-  }
-  addRowLabel(getLabel(LabelType::FREE_STACK));
-  {
-    String html;
-    html.reserve(64);
-    html += getCurrentFreeStack();
-    html += " (";
-    html += lowestFreeStack;
-    html += F(" - ");
-    html += lowestFreeStackfunction;
-    html += ')';
-    addHtml(html);
-  }
-# ifdef CORE_POST_2_5_0
-  addRowLabelValue(LabelType::HEAP_MAX_FREE_BLOCK);
-  addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
-  addHtml("%");
-# endif // ifdef CORE_POST_2_5_0
-
 
   addRowLabel(F("Boot"));
   {
@@ -324,10 +294,65 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
   addRowLabelValue(LabelType::SW_WD_COUNT);
 
-  #ifdef HAS_ETHERNET
-  addRowLabel(F("Network Type"));
-  addRowLabelValue(LabelType::ETH_WIFI_MODE);
-  #endif
+}
+
+void handle_sysinfo_memory() {
+  addTableSeparator(F("Memory"), 2, 3);
+
+#ifdef ESP32
+  addRowLabelValue(LabelType::HEAP_SIZE);
+  addRowLabelValue(LabelType::HEAP_MIN_FREE);
+#endif
+
+  int freeMem = ESP.getFreeHeap();
+  addRowLabel(getLabel(LabelType::FREE_MEM));
+  {
+    String html;
+    html.reserve(64);
+
+    html += freeMem;
+#ifndef BUILD_NO_RAM_TRACKER
+    html += " (";
+    html += lowestRAM;
+    html += F(" - ");
+    html += lowestRAMfunction;
+    html += ')';
+#endif
+    addHtml(html);
+  }
+#if defined(CORE_POST_2_5_0) || defined(ESP32)
+  addRowLabelValue(LabelType::HEAP_MAX_FREE_BLOCK);
+#endif
+#if defined(CORE_POST_2_5_0)
+  addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
+  addHtml("%");
+# endif // ifdef CORE_POST_2_5_0
+
+
+  addRowLabel(getLabel(LabelType::FREE_STACK));
+  {
+    String html;
+    html.reserve(64);
+    html += getCurrentFreeStack();
+#ifndef BUILD_NO_RAM_TRACKER
+    html += " (";
+    html += lowestFreeStack;
+    html += F(" - ");
+    html += lowestFreeStackfunction;
+    html += ')';
+#endif
+    addHtml(html);
+  }
+
+#ifdef ESP32
+  if (ESP.getPsramSize() > 0) {
+    addRowLabelValue(LabelType::PSRAM_SIZE);
+    addRowLabelValue(LabelType::PSRAM_FREE);
+    addRowLabelValue(LabelType::PSRAM_MIN_FREE);
+    addRowLabelValue(LabelType::PSRAM_MAX_FREE_BLOCK);
+  }
+#endif
+
 }
 
 #ifdef HAS_ETHERNET
@@ -347,6 +372,11 @@ void handle_sysinfo_Ethernet() {
 
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
+
+  #ifdef HAS_ETHERNET
+  addRowLabelValue(LabelType::ETH_WIFI_MODE);
+  #endif
+
 
   if (
     #ifdef HAS_ETHERNET
@@ -461,14 +491,14 @@ void handle_sysinfo_SystemStatus() {
 void handle_sysinfo_ESP_Board() {
   addTableSeparator(F("ESP Board"), 2, 3);
 
+
   addRowLabel(getLabel(LabelType::ESP_CHIP_ID));
-  # if defined(ESP8266)
   {
     String html;
     html.reserve(32);
-    html += ESP.getChipId();
+    html += getChipId();
     html += F(" (0x");
-    String espChipId(ESP.getChipId(), HEX);
+    String espChipId(getChipId(), HEX);
     espChipId.toUpperCase();
     html += espChipId;
     html += ')';
@@ -478,29 +508,14 @@ void handle_sysinfo_ESP_Board() {
   addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
   addHtml(String(ESP.getCpuFreqMHz()));
   addHtml(F(" MHz"));
-  # endif // if defined(ESP8266)
-  # if defined(ESP32)
-  {
-    String html;
-    html.reserve(64);
-    html += F(" (0x");
-    uint64_t chipid  = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
-    uint32_t ChipId1 = (uint16_t)(chipid >> 32);
-    String   espChipIdS(ChipId1, HEX);
-    espChipIdS.toUpperCase();
-    html   += espChipIdS;
-    ChipId1 = (uint32_t)chipid;
-    String espChipIdS1(ChipId1, HEX);
-    espChipIdS1.toUpperCase();
-    html += espChipIdS1;
-    html += ')';
-    addHtml(html);
-  }
 
-  addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
-  addHtml(String(ESP.getCpuFreqMHz()));
-  addHtml(F(" MHz"));
+  addRowLabelValue(LabelType::ESP_CHIP_MODEL);
+
+  # if defined(ESP32)
+  addRowLabelValue(LabelType::ESP_CHIP_REVISION);
   # endif // if defined(ESP32)
+  addRowLabelValue(LabelType::ESP_CHIP_CORES);
+
   # ifdef ARDUINO_BOARD
   addRowLabel(getLabel(LabelType::ESP_BOARD_NAME));
   addHtml(ARDUINO_BOARD);
@@ -510,30 +525,31 @@ void handle_sysinfo_ESP_Board() {
 void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
-  addRowLabel(getLabel(LabelType::FLASH_CHIP_ID));
-  # if defined(ESP8266)
-  uint32_t flashChipId = ESP.getFlashChipId();
+  uint32_t flashChipId = getFlashChipId();
+  if (flashChipId != 0) {
+    addRowLabel(getLabel(LabelType::FLASH_CHIP_ID));
 
-  // Set to HEX may be something like 0x1640E0.
-  // Where manufacturer is 0xE0 and device is 0x4016.
-  addHtml(F("Vendor: "));
-  addHtml(formatToHex(flashChipId & 0xFF));
 
-  if (flashChipVendorPuya())
-  {
-    addHtml(F(" (PUYA"));
+    // Set to HEX may be something like 0x1640E0.
+    // Where manufacturer is 0xE0 and device is 0x4016.
+    addHtml(F("Vendor: "));
+    addHtml(formatToHex(flashChipId & 0xFF));
 
-    if (puyaSupport()) {
-      addHtml(F(", supported"));
-    } else {
-      addHtml(F(HTML_SYMBOL_WARNING));
+    if (flashChipVendorPuya())
+    {
+      addHtml(F(" (PUYA"));
+
+      if (puyaSupport()) {
+        addHtml(F(", supported"));
+      } else {
+        addHtml(F(HTML_SYMBOL_WARNING));
+      }
+      addHtml(")");
     }
-    addHtml(")");
+    addHtml(F(" Device: "));
+    uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+    addHtml(formatToHex(flashDevice));
   }
-  addHtml(F(" Device: "));
-  uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-  addHtml(formatToHex(flashDevice));
-  # endif // if defined(ESP8266)
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize  = ESP.getFlashChipSize();
 
