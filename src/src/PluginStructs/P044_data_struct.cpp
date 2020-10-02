@@ -203,12 +203,12 @@ bool P044_Task::validP1char(char ch) {
   return false;
 }
 
-void P044_Task::serialBegin(int16_t rxPin, int16_t txPin,
+void P044_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin,
                             unsigned long baud, byte config) {
   serialEnd();
 
   if (rxPin >= 0) {
-    P1EasySerial = new (std::nothrow) ESPeasySerial(rxPin, txPin);
+    P1EasySerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin);
 
     if (nullptr != P1EasySerial) {
 #if defined(ESP8266)

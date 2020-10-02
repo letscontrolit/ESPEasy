@@ -110,7 +110,8 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
           delete Plugin_056_SDS;
         const int16_t serial_rx = CONFIG_PIN1;
         const int16_t serial_tx = CONFIG_PIN2;
-        Plugin_056_SDS = new CjkSDS011(serial_rx, serial_tx);
+        const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+        Plugin_056_SDS = new CjkSDS011(port, serial_rx, serial_tx);
         String log = F("SDS  : Init OK  ESP GPIO-pin RX:");
         log += serial_rx;
         log += F(" TX:");

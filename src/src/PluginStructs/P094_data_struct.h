@@ -63,7 +63,8 @@ public:
 
   void reset();
 
-  bool init(const int16_t serial_rx,
+  bool init(ESPEasySerialPort port, 
+            const int16_t serial_rx,
             const int16_t serial_tx,
             unsigned long baudrate);
 

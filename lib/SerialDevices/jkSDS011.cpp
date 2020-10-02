@@ -25,7 +25,7 @@
 //#ifdef ESP8266  // Needed for precompile issues.
 #include "jkSDS011.h"
 
-CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
+CjkSDS011::CjkSDS011(ESPEasySerialPort port, int16_t pinRX, int16_t pinTX)
 {
   _sws = ! ( pinRX < 0 || pinRX == 3 );
   _pm2_5 = NAN;
@@ -38,7 +38,7 @@ CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
   _command.SetPacketLength(19);
   _working_period = -1;
   _sleepmode_active = false;
-  _serial = new (std::nothrow) ESPeasySerial(pinRX, pinTX);
+  _serial = new (std::nothrow) ESPeasySerial(port, pinRX, pinTX);
   if (_serial != nullptr)
     _serial->begin(9600);
 }
