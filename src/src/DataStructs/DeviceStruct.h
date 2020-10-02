@@ -42,7 +42,9 @@ enum class Sensor_VType : byte {
   SENSOR_TYPE_DIMMER          =   11,
   SENSOR_TYPE_LONG            =   20,
   SENSOR_TYPE_WIND            =   21,
-  SENSOR_TYPE_STRING          =   22
+  SENSOR_TYPE_STRING          =   22,
+
+  SENSOR_TYPE_NOT_SET         = 255
 };
 
 enum class Output_Data_type_t : byte {

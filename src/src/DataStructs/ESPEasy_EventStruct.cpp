@@ -6,6 +6,8 @@
 #include "../Globals/CPlugins.h"
 #include "../Globals/NPlugins.h"
 
+#include "../../_Plugin_Helper.h"
+
 EventStruct::EventStruct() {}
 
 EventStruct::EventStruct(taskIndex_t taskIndex) :
@@ -57,4 +59,12 @@ EventStruct& EventStruct::operator=(const struct EventStruct& other) {
 void EventStruct::setTaskIndex(taskIndex_t taskIndex) {
   TaskIndex    = taskIndex;
   BaseVarIndex = taskIndex * VARS_PER_TASK;
+  sensorType   = Sensor_VType::SENSOR_TYPE_NOT_SET;
+}
+
+Sensor_VType EventStruct::getSensorType() {
+  const int tmp_idx = idx;
+  checkDeviceVTypeForTask(this);
+  idx = tmp_idx;
+  return sensorType;
 }
