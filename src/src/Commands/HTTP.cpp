@@ -54,7 +54,11 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 #endif
             bool mustCheckAck = Settings.SendToHttp_ack();
 			send_via_http(F("Command_HTTP_SendToHTTP"), client, request, mustCheckAck);
+			return return_command_success();
 		}
+		addLog(LOG_LEVEL_ERROR, F("SendToHTTP connection failed"));
+	} else {
+		addLog(LOG_LEVEL_ERROR, F("SendToHTTP Not connected to network"));
 	}
-	return return_command_success();
+	return return_command_failed();
 }

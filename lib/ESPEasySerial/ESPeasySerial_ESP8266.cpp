@@ -40,27 +40,27 @@ bool ESPeasySerial::_serial0_swap_active = false;
 
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
 
-ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
+ESPeasySerial::ESPeasySerial(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize, bool forceSWserial)
   : _i2cserial(nullptr), _swserial(nullptr), _receivePin(receivePin), _transmitPin(transmitPin)
 {
-  _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
+  _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
   if (forceSWserial) {
     switch (_serialtype) {
-      case ESPeasySerialType::serialtype::sc16is752:
+      case ESPEasySerialPort::sc16is752:
         break;
       default:
-        _serialtype = ESPeasySerialType::serialtype::software;
+        _serialtype = ESPEasySerialPort::software;
         break;
     }    
   }
 
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::software:
+    case ESPEasySerialPort::software:
     {
       _swserial = new ESPeasySoftwareSerial(receivePin, transmitPin, inverse_logic, buffSize);
       break;
     }
-    case ESPeasySerialType::serialtype::sc16is752:
+    case ESPEasySerialPort::sc16is752:
     {
       ESPEasySC16IS752_Serial::I2C_address addr     = static_cast<ESPEasySC16IS752_Serial::I2C_address>(receivePin);
       ESPEasySC16IS752_Serial::SC16IS752_channel ch = static_cast<ESPEasySC16IS752_Serial::SC16IS752_channel>(transmitPin);
@@ -124,11 +124,11 @@ void ESPeasySerial::end() {
 
 HardwareSerial * ESPeasySerial::getHW() {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0:
-    case ESPeasySerialType::serialtype::serial0_swap: return &Serial;
-    case ESPeasySerialType::serialtype::serial1:      return &Serial1;
-    case ESPeasySerialType::serialtype::software:     break;
-    case ESPeasySerialType::serialtype::sc16is752:    break;
+    case ESPEasySerialPort::serial0:
+    case ESPEasySerialPort::serial0_swap: return &Serial;
+    case ESPEasySerialPort::serial1:      return &Serial1;
+    case ESPEasySerialPort::software:     break;
+    case ESPEasySerialPort::sc16is752:    break;
     default: break;
   }
   return nullptr;
@@ -136,11 +136,11 @@ HardwareSerial * ESPeasySerial::getHW() {
 
 const HardwareSerial * ESPeasySerial::getHW() const {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0:
-    case ESPeasySerialType::serialtype::serial0_swap: return &Serial;
-    case ESPeasySerialType::serialtype::serial1:      return &Serial1;
-    case ESPeasySerialType::serialtype::software:     break;
-    case ESPeasySerialType::serialtype::sc16is752:    break;
+    case ESPEasySerialPort::serial0:
+    case ESPEasySerialPort::serial0_swap: return &Serial;
+    case ESPEasySerialPort::serial1:      return &Serial1;
+    case ESPEasySerialPort::software:     break;
+    case ESPEasySerialPort::sc16is752:    break;
     default: break;
   }
   return nullptr;
@@ -148,11 +148,11 @@ const HardwareSerial * ESPeasySerial::getHW() const {
 
 bool ESPeasySerial::isValid() const {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0:
-    case ESPeasySerialType::serialtype::serial0_swap:
-    case ESPeasySerialType::serialtype::serial1:      return true; // Must also check RX pin?
-    case ESPeasySerialType::serialtype::software:     return _swserial != nullptr;
-    case ESPeasySerialType::serialtype::sc16is752:    return _i2cserial != nullptr;
+    case ESPEasySerialPort::serial0:
+    case ESPEasySerialPort::serial0_swap:
+    case ESPEasySerialPort::serial1:      return true; // Must also check RX pin?
+    case ESPEasySerialPort::software:     return _swserial != nullptr;
+    case ESPEasySerialPort::sc16is752:    return _i2cserial != nullptr;
     default: break;
   }
   return false;

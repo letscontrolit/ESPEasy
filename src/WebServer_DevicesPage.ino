@@ -10,6 +10,8 @@
 # include "src/Helpers/_CPlugin_SensorTypeHelper.h"
 # include "src/Helpers/StringGenerator_GPIO.h"
 
+#include <ESPeasySerial.h>
+
 
 void handle_devices() {
   checkRAM(F("handle_devices"));
@@ -585,7 +587,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
               // fallthrough
             case DEVICE_TYPE_SERIAL:
             {
-              addHtml(serialHelper_getGpioDescription(Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x], F("<BR>")));
+              addHtml(serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x], F("<BR>")));
               if (showpin3) {
                 html_BR();
               }

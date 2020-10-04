@@ -35,16 +35,16 @@ void ModbusRTU_struct::reset() {
   _reads_nodata     = 0;
 }
 
-bool ModbusRTU_struct::init(const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, byte address) {
-  return init(serial_rx, serial_tx, baudrate, address, -1);
+bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, byte address) {
+  return init(port, serial_rx, serial_tx, baudrate, address, -1);
 }
 
-bool ModbusRTU_struct::init(const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, byte address, int8_t dere_pin) {
+bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, byte address, int8_t dere_pin) {
   if ((serial_rx < 0) || (serial_tx < 0)) {
     return false;
   }
   reset();
-  easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
+  easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
   if (easySerial == nullptr) { return false; }
   easySerial->begin(baudrate);
 
