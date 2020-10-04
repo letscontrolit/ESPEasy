@@ -4,16 +4,13 @@
 
 #pragma once
 
-#include <stddef.h>  // for size_t
-
-#include <ArduinoJson/Namespace.hpp>
-
-#define JSON_STRING_SIZE(SIZE) (SIZE + 1)
+#include "integral_constant.hpp"
 
 namespace ARDUINOJSON_NAMESPACE {
 
-struct StringSlot {
-  char *value;
-  size_t size;
-};
+template <typename T>
+struct is_pointer : false_type {};
+
+template <typename T>
+struct is_pointer<T*> : true_type {};
 }  // namespace ARDUINOJSON_NAMESPACE

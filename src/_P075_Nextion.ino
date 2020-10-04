@@ -54,11 +54,11 @@
 
 struct P075_data_struct : public PluginTaskData_base {
 
-  P075_data_struct(int rx, int tx, uint32_t baud) : rxPin(rx), txPin(tx), baudrate(baud) {
+  P075_data_struct(ESPEasySerialPort port, int rx, int tx, uint32_t baud) : rxPin(rx), txPin(tx), baudrate(baud) {
     if (baudrate < 9600 || baudrate > 115200) {
       baudrate = 9600;
     }
-    easySerial = new (std::nothrow) ESPeasySerial(rx, tx, false, RXBUFFSZ);
+    easySerial = new (std::nothrow) ESPeasySerial(port, rx, tx, false, RXBUFFSZ);
     if (easySerial != nullptr) {
       easySerial->begin(baudrate);
       easySerial->flush();
@@ -235,7 +235,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       if(BaudCode > P075_B115200) BaudCode = P075_B9600;
       const uint32_t BaudArray[4] = {9600UL, 38400UL, 57600UL, 115200UL};
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P075_data_struct(CONFIG_PIN1, CONFIG_PIN2, BaudArray[BaudCode]));
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P075_data_struct(port, CONFIG_PIN1, CONFIG_PIN2, BaudArray[BaudCode]));
       P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);

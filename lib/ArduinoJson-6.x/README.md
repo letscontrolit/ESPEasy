@@ -2,7 +2,7 @@
 
 ---
 
-[![arduino-library-badge](https://www.ardu-badge.com/badge/ArduinoJson.svg?version=6.15.2)](https://www.ardu-badge.com/ArduinoJson/6.15.2)
+[![arduino-library-badge](https://www.ardu-badge.com/badge/ArduinoJson.svg?version=6.16.1)](https://www.ardu-badge.com/ArduinoJson/6.16.1)
 [![Build Status](https://ci.appveyor.com/api/projects/status/m7s53wav1l0abssg/branch/6.x?svg=true)](https://ci.appveyor.com/project/bblanchon/arduinojson/branch/6.x)
 [![Build Status](https://travis-ci.org/bblanchon/ArduinoJson.svg?branch=6.x)](https://travis-ci.org/bblanchon/ArduinoJson)
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/arduinojson.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:arduinojson)
@@ -31,6 +31,7 @@ ArduinoJson is a C++ JSON library for Arduino and IoT (Internet Of Things).
     * [Consumes roughly 10% less RAM than the "official" Arduino_JSON library](https://arduinojson.org/2019/11/19/arduinojson-vs-arduino_json/?utm_source=github&utm_medium=readme)
     * [Fixed memory allocation, no heap fragmentation](https://arduinojson.org/v6/api/jsondocument/?utm_source=github&utm_medium=readme)
     * [Optionally works without heap memory (zero malloc)](https://arduinojson.org/v6/api/staticjsondocument/?utm_source=github&utm_medium=readme)
+    * Deduplicates strings
 * Versatile
     * [Supports custom allocators (to use external RAM chip, for example)](https://arduinojson.org/v6/how-to/use-external-ram-on-esp32/?utm_source=github&utm_medium=readme)
     * Supports [Arduino's `String`](https://arduinojson.org/v6/api/config/enable_arduino_string/) and [STL's `std::string`](https://arduinojson.org/v6/api/config/enable_std_string/?utm_source=github&utm_medium=readme)
