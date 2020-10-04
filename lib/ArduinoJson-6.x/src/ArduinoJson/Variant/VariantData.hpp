@@ -7,7 +7,6 @@
 #include <ArduinoJson/Memory/MemoryPool.hpp>
 #include <ArduinoJson/Misc/SerializedValue.hpp>
 #include <ArduinoJson/Numbers/convertNumber.hpp>
-#include <ArduinoJson/Polyfills/gsl/not_null.hpp>
 #include <ArduinoJson/Strings/RamStringAdapter.hpp>
 #include <ArduinoJson/Variant/VariantContent.hpp>
 
@@ -33,9 +32,12 @@ class VariantData {
   // - no destructor
   // - no virtual
   // - no inheritance
+  void init() {
+    _flags = 0;
+  }
 
-  template <typename Visitor>
-  void accept(Visitor &visitor) const {
+  template <typename TVisitor>
+  typename TVisitor::result_type accept(TVisitor &visitor) const {
     switch (type()) {
       case VALUE_IS_FLOAT:
         return visitor.visitFloat(_content.asFloat);
@@ -101,7 +103,7 @@ class VariantData {
       case VALUE_IS_OBJECT:
         return toObject().copyFrom(src._content.asCollection, pool);
       case VALUE_IS_OWNED_STRING:
-        return setOwnedString(RamStringAdapter(src._content.asString), pool);
+        return setString(RamStringAdapter(src._content.asString), pool);
       case VALUE_IS_OWNED_RAW:
         return setOwnedRaw(
             serialized(src._content.asRaw.data, src._content.asRaw.size), pool);
@@ -192,7 +194,7 @@ class VariantData {
 
   template <typename T>
   bool setOwnedRaw(SerializedValue<T> value, MemoryPool *pool) {
-    char *dup = pool->saveString(adaptString(value.data(), value.size()));
+    const char *dup = pool->saveString(adaptString(value.data(), value.size()));
     if (dup) {
       setType(VALUE_IS_OWNED_RAW);
       _content.asRaw.data = dup;
@@ -238,37 +240,58 @@ class VariantData {
     _content.asInteger = value;
   }
 
-  void setLinkedString(const char *value) {
-    if (value) {
-      setType(VALUE_IS_LINKED_STRING);
-      _content.asString = value;
-    } else {
-      setType(VALUE_IS_NULL);
-    }
-  }
-
   void setNull() {
     setType(VALUE_IS_NULL);
   }
 
-  void setOwnedString(not_null<const char *> s) {
+  void setStringPointer(const char *s, storage_policies::store_by_copy) {
     setType(VALUE_IS_OWNED_STRING);
-    _content.asString = s.get();
+    _content.asString = s;
   }
 
-  bool setOwnedString(const char *s) {
-    if (s) {
-      setOwnedString(make_not_null(s));
-      return true;
-    } else {
-      setType(VALUE_IS_NULL);
-      return false;
-    }
+  void setStringPointer(const char *s, storage_policies::store_by_address) {
+    setType(VALUE_IS_LINKED_STRING);
+    _content.asString = s;
   }
 
   template <typename TAdaptedString>
-  bool setOwnedString(TAdaptedString value, MemoryPool *pool) {
-    return setOwnedString(pool->saveString(value));
+  bool setString(TAdaptedString value, MemoryPool *pool) {
+    return setString(value, pool, typename TAdaptedString::storage_policy());
+  }
+
+  template <typename TAdaptedString>
+  inline bool setString(TAdaptedString value, MemoryPool *pool,
+                        storage_policies::decide_at_runtime) {
+    if (value.isStatic())
+      return setString(value, pool, storage_policies::store_by_address());
+    else
+      return setString(value, pool, storage_policies::store_by_copy());
+  }
+
+  template <typename TAdaptedString>
+  inline bool setString(TAdaptedString value, MemoryPool *,
+                        storage_policies::store_by_address) {
+    if (value.isNull())
+      setNull();
+    else
+      setStringPointer(value.data(), storage_policies::store_by_address());
+    return true;
+  }
+
+  template <typename TAdaptedString>
+  inline bool setString(TAdaptedString value, MemoryPool *pool,
+                        storage_policies::store_by_copy) {
+    if (value.isNull()) {
+      setNull();
+      return true;
+    }
+    const char *copy = pool->saveString(value);
+    if (!copy) {
+      setNull();
+      return false;
+    }
+    setStringPointer(copy, storage_policies::store_by_copy());
+    return true;
   }
 
   CollectionData &toArray() {
@@ -346,11 +369,11 @@ class VariantData {
       _content.asCollection.movePointers(stringDistance, variantDistance);
   }
 
- private:
   uint8_t type() const {
     return _flags & VALUE_MASK;
   }
 
+ private:
   void setType(uint8_t t) {
     _flags &= KEY_IS_OWNED;
     _flags |= t;
