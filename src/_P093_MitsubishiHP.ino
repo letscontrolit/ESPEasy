@@ -33,8 +33,8 @@ static const uint8_t INFOMODE[] = {
 };
 
 struct P093_data_struct : public PluginTaskData_base {
-  P093_data_struct(const int16_t serialRx, const int16_t serialTx) :
-    _serial(new (std::nothrow) ESPeasySerial(serialRx, serialTx)),
+  P093_data_struct(const ESPEasySerialPort port, const int16_t serialRx, const int16_t serialTx) :
+    _serial(new (std::nothrow) ESPeasySerial(port, serialRx, serialTx)),
     _state(NotConnected),
     _fastBaudRate(false),
     _readPos(0),
@@ -739,7 +739,8 @@ boolean Plugin_093(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_INIT: {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P093_data_struct(CONFIG_PIN1, CONFIG_PIN2));
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P093_data_struct(port, CONFIG_PIN1, CONFIG_PIN2));
       success = getPluginTaskData(event->TaskIndex) != nullptr;
       break;
     }

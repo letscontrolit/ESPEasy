@@ -243,24 +243,26 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
 /**
  * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
  */
-bool PluginCallForTask(taskIndex_t task, byte Function, EventStruct *TempEvent, String& command, bool unConditional = false) {
+bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
   bool retval = false;
-  if (unConditional || (Settings.TaskDeviceEnabled[task] && validPluginID_fullcheck(Settings.TaskDeviceNumber[task])))
+  if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
   {
-    if (unConditional || Settings.TaskDeviceDataFeed[task] == 0) // these calls only to tasks with local feed
+    if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // these calls only to tasks with local feed
     {
-      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(task);
+      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
       if (validDeviceIndex(DeviceIndex)) {
-        TempEvent->TaskIndex    = task;
-        TempEvent->BaseVarIndex = task * VARS_PER_TASK;
+        TempEvent->setTaskIndex(taskIndex);
         TempEvent->sensorType   = Device[DeviceIndex].VType;
+        if (event != nullptr) {
+          TempEvent->OriginTaskIndex = event->TaskIndex;
+        }
 
         if (Function == PLUGIN_INIT) {
           // Schedule the plugin to be read.
           Scheduler.schedule_task_device_timer_at_init(TempEvent->TaskIndex);
         }
 
-        prepare_I2C_by_taskIndex(task, DeviceIndex);
+        prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
         switch (Function) {
           case PLUGIN_WRITE:          // First set
           case PLUGIN_REQUEST:
@@ -272,14 +274,14 @@ bool PluginCallForTask(taskIndex_t task, byte Function, EventStruct *TempEvent, 
           case PLUGIN_EVENT_OUT:
           case PLUGIN_TIME_CHANGE:
             {
-              checkRAM(F("PluginCall_s"), task);
+              checkRAM(F("PluginCall_s"), taskIndex);
               break;
             }
         }
         START_TIMER;
         retval = (Plugin_ptr[DeviceIndex](Function, TempEvent, command));
         STOP_TIMER_TASK(DeviceIndex, Function);
-        post_I2C_by_taskIndex(task, DeviceIndex);
+        post_I2C_by_taskIndex(taskIndex, DeviceIndex);
         delay(0); // SMY: call delay(0) unconditionally
       }
     }
@@ -484,7 +486,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
-        PluginCallForTask(taskIndex, Function, &TempEvent, str);
+        PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
       }
       return true;
     }
@@ -509,7 +511,6 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           LoadTaskSettings(event->TaskIndex);
         }
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-        event->sensorType = getDeviceVTypeForTask(event->TaskIndex);
         {
           String descr;
           descr.reserve(20);

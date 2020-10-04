@@ -20,9 +20,20 @@ enum Enum : short {
 
   FREE_MEM,                    // 9876
   FREE_STACK,                  // 3456
-#ifdef CORE_POST_2_5_0
+#if defined(CORE_POST_2_5_0) || defined(ESP32)
   HEAP_MAX_FREE_BLOCK,         // 7654
+#endif
+#if defined(CORE_POST_2_5_0)
   HEAP_FRAGMENTATION,          // 12
+#endif
+
+#ifdef ESP32
+  HEAP_SIZE,
+  HEAP_MIN_FREE,
+  PSRAM_SIZE,
+  PSRAM_FREE,
+  PSRAM_MIN_FREE,
+  PSRAM_MAX_FREE_BLOCK,
 #endif
 
   BOOT_TYPE,                   // Cold boot
@@ -85,6 +96,9 @@ enum Enum : short {
 
   ESP_CHIP_ID,
   ESP_CHIP_FREQ,
+  ESP_CHIP_MODEL,
+  ESP_CHIP_REVISION,
+  ESP_CHIP_CORES,
   ESP_BOARD_NAME,
 
   FLASH_CHIP_ID,

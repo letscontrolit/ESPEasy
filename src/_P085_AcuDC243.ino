@@ -70,9 +70,9 @@ struct P085_data_struct : public PluginTaskData_base {
     modbus.reset();
   }
 
-  bool init(const int16_t serial_rx, const int16_t serial_tx, int8_t dere_pin,
+  bool init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, int8_t dere_pin,
             unsigned int baudrate, uint8_t modbusAddress) {
-    return modbus.init(serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
+    return modbus.init(port, serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
   }
 
   bool isInitialized() const {
@@ -321,6 +321,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P085_data_struct());
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -329,10 +330,10 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P085_data->init(serial_rx, serial_tx, P085_DEPIN,
+      if (P085_data->init(port, serial_rx, serial_tx, P085_DEPIN,
                           p085_storageValueToBaudrate(P085_BAUDRATE),
                           P085_DEV_ID)) {
-        serialHelper_log_GpioDescription(serial_rx, serial_tx);
+        serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
         success = true;
       } else {
         clearPluginTaskData(event->TaskIndex);

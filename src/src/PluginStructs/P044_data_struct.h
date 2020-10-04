@@ -70,7 +70,8 @@ struct P044_Task : public PluginTaskData_base {
    */
   static bool validP1char(char ch);
 
-  void        serialBegin(int16_t       rxPin,
+  void        serialBegin(const ESPEasySerialPort port,
+                          int16_t       rxPin,
                           int16_t       txPin,
                           unsigned long baud,
                           byte          config);
