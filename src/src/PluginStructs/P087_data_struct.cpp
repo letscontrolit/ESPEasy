@@ -17,12 +17,12 @@ void P087_data_struct::reset() {
   }
 }
 
-bool P087_data_struct::init(const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate) {
+bool P087_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
   }
   reset();
-  easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
+  easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
 
   if (isInitialized()) {
     easySerial->begin(baudrate);

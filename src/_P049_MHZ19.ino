@@ -136,11 +136,11 @@ struct P049_data_struct : public PluginTaskData_base {
     modelA_detected = false;
   }
 
-  bool init(const int16_t serial_rx, const int16_t serial_tx, bool setABCdisabled) {
+  bool init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, bool setABCdisabled) {
     if (serial_rx < 0 || serial_tx < 0)
       return false;
     reset();
-    easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
+    easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
     if (easySerial == nullptr) {
       return false;
     }
@@ -628,12 +628,13 @@ bool P049_performInit(struct EventStruct *event) {
   bool success = false;
   const int16_t serial_rx = CONFIG_PIN1;
   const int16_t serial_tx = CONFIG_PIN2;
+  const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
   P049_data_struct *P049_data =
       static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
   if (nullptr == P049_data) {
     return success;
   }
-  if (P049_data->init(serial_rx, serial_tx, PCONFIG(0) == ABC_disabled)) {
+  if (P049_data->init(port, serial_rx, serial_tx, PCONFIG(0) == ABC_disabled)) {
     success = true;
     addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
 

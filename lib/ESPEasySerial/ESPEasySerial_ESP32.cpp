@@ -6,19 +6,26 @@
 // ****************************************
 
 #ifdef ESP32
-ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic, int serialPort)
+ESPeasySerial::ESPeasySerial(
+  ESPEasySerialPort port, 
+  int receivePin, 
+  int transmitPin, 
+  bool inverse_logic,
+  unsigned int buffSize)
   : _receivePin(receivePin), _transmitPin(transmitPin), _inverse_logic(inverse_logic)
 {
-  switch (serialPort) {
-    case 0: _serialtype = ESPeasySerialType::serialtype::serial0; break;
-    case 1: _serialtype = ESPeasySerialType::serialtype::serial1; break;
-    case 2: _serialtype = ESPeasySerialType::serialtype::serial2; break;
+  switch (port) {
+    case  ESPEasySerialPort::serial0:
+    case  ESPEasySerialPort::serial1:
+    case  ESPEasySerialPort::serial2:
+      _serialtype = port;
+      break;
     default:
-      _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
+      _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
   }
 
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::sc16is752:
+    case ESPEasySerialPort::sc16is752:
     {
       ESPEasySC16IS752_Serial::I2C_address addr     = static_cast<ESPEasySC16IS752_Serial::I2C_address>(receivePin);
       ESPEasySC16IS752_Serial::SC16IS752_channel ch = static_cast<ESPEasySC16IS752_Serial::SC16IS752_channel>(transmitPin);
@@ -84,9 +91,9 @@ void ESPeasySerial::end() {
 
 HardwareSerial * ESPeasySerial::getHW() {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0: return &Serial;
-    case ESPeasySerialType::serialtype::serial1: return &Serial1;
-    case ESPeasySerialType::serialtype::serial2: return &Serial2;
+    case ESPEasySerialPort::serial0: return &Serial;
+    case ESPEasySerialPort::serial1: return &Serial1;
+    case ESPEasySerialPort::serial2: return &Serial2;
 
     default: break;
   }
@@ -95,9 +102,9 @@ HardwareSerial * ESPeasySerial::getHW() {
 
 const HardwareSerial * ESPeasySerial::getHW() const {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0: return &Serial;
-    case ESPeasySerialType::serialtype::serial1: return &Serial1;
-    case ESPeasySerialType::serialtype::serial2: return &Serial2;
+    case ESPEasySerialPort::serial0: return &Serial;
+    case ESPEasySerialPort::serial1: return &Serial1;
+    case ESPEasySerialPort::serial2: return &Serial2;
     default: break;
   }
   return nullptr;
@@ -105,12 +112,12 @@ const HardwareSerial * ESPeasySerial::getHW() const {
 
 bool ESPeasySerial::isValid() const {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0:
-    case ESPeasySerialType::serialtype::serial2:
+    case ESPEasySerialPort::serial0:
+    case ESPEasySerialPort::serial2:
       return true;
-    case ESPeasySerialType::serialtype::serial1:
+    case ESPEasySerialPort::serial1:
       return _transmitPin != -1 && _receivePin != -1;
-    case ESPeasySerialType::serialtype::sc16is752:    
+    case ESPEasySerialPort::sc16is752:    
       return _i2cserial != nullptr;
 
     // FIXME TD-er: Must perform proper check for GPIO pins here.
