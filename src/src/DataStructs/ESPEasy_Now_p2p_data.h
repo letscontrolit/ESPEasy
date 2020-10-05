@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #include "ESPEasyLimits.h"
+#include "../DataStructs/DeviceStruct.h"
 #include "../Globals/Plugins.h"
 
 #define ESPEASY_NOW_P2P_DATA_VERSION    1
@@ -18,6 +19,8 @@ struct __attribute__((__packed__)) ESPEasy_Now_p2p_data {
 
   ~ESPEasy_Now_p2p_data();
 
+  bool validate() const;
+
   // Add float at the end of the binary data
   // @param value  The float to store
   // @retval       True when successful. Only fails if no data could be allocated
@@ -28,6 +31,11 @@ struct __attribute__((__packed__)) ESPEasy_Now_p2p_data {
   // @param offset  The offset in the data array to start. Will be incremented with sizeof(float)
   // @retval        True when the offset was in the range of the data.
   bool getFloat(float & value,
+                size_t& offset) const;
+
+  bool addString(const String& value);
+
+  bool getString(String & value,
                 size_t& offset) const;
 
   // Return the size of the header + data
@@ -58,7 +66,7 @@ private:
 public:
 
   ESPEasy_Now_p2p_data_type dataType        = ESPEasy_Now_p2p_data_type::NotSet;
-  uint16_t                  dataSize        = 0;
+  uint16_t                  dataSize        = 0; 
 
   // The sizeof(data) is intended use of sizeof to return the size of a pointer
   const uint8_t             dataOffset      = sizeof(ESPEasy_Now_p2p_data) - sizeof(data);
@@ -68,6 +76,8 @@ public:
                                                                  // bit
   uint16_t                  sourceUnit      = 0;
   uint16_t                  destUnit        = 0;
+  Sensor_VType              sensorType      = Sensor_VType::SENSOR_TYPE_NONE;
+  uint8_t                   valueCount      = 0;
 
 private:
 

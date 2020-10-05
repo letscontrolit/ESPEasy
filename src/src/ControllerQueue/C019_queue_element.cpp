@@ -11,17 +11,22 @@ String getPackedFromPlugin(struct EventStruct *event,
 
 C019_queue_element::C019_queue_element() {}
 
-C019_queue_element::C019_queue_element(struct EventStruct *event) :
-  controller_idx(event->ControllerIndex)
+C019_queue_element::C019_queue_element(struct EventStruct *event_p) :
+  controller_idx(event_p->ControllerIndex),
+  event(*event_p)
 {
-    #ifdef USES_PACKED_RAW_DATA
-  packed = getPackedFromPlugin(event, 0);
+  #ifdef USES_PACKED_RAW_DATA
+  packed = getPackedFromPlugin(event_p, 0);
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("C019 queue element: ");
     log += packed;
     addLog(LOG_LEVEL_INFO, log);
   }
-    #endif // USES_PACKED_RAW_DATA
+  #endif // USES_PACKED_RAW_DATA
+
+  // Extra check to make sure sensorType is correct.
+  event.sensorType = event.getSensorType();
 }
 
 size_t C019_queue_element::getSize() const {

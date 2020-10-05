@@ -872,6 +872,11 @@ bool ESPEasy_now_handler_t::sendESPEasyNow_p2p(controllerIndex_t controllerIndex
 
 bool ESPEasy_now_handler_t::handle_ESPEasyNow_p2p(const ESPEasy_now_merger& message, bool& mustKeep) {
   mustKeep = false;
+  controllerIndex_t controller_index = findFirstEnabledControllerWithId(19); // CPLUGIN_ID_019
+  if (!validControllerIndex(controller_index)) {
+    return false;
+  }
+
   ESPEasy_Now_p2p_data data;
   size_t payload_pos = 0;
   size_t payload_size = message.getPayloadSize();
@@ -894,7 +899,12 @@ bool ESPEasy_now_handler_t::handle_ESPEasyNow_p2p(const ESPEasy_now_merger& mess
     return false;
   }
 
-  // TODO TD-er: Call C019 controller with event containing this data object as a pointer.
+  // Call C019 controller with event containing this data object as a pointer.
+  EventStruct event;
+  event.ControllerIndex = controller_index;
+  event.Par1 = sizeof(ESPEasy_Now_p2p_data);
+  event.Data = reinterpret_cast<uint8_t *>(&data);
+  CPluginCall(CPlugin::Function::CPLUGIN_PROTOCOL_RECV, &event);
 
   return true;
 }

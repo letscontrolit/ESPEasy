@@ -2,11 +2,10 @@
 #define CONTROLLERQUEUE_C019_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../Globals/CPlugins.h"
 
-
-struct EventStruct;
 
 // #ifdef USES_C019
 
@@ -27,6 +26,7 @@ public:
   String packed;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   pluginID_t plugin_id = INVALID_PLUGIN_ID;
+  EventStruct event;
 };
 
 // #endif //USES_C019

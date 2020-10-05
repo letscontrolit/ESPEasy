@@ -67,15 +67,25 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
       success = C019_DelayHandler->addToQueue(C019_queue_element(event));
+
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C019_DELAY_QUEUE, C019_DelayHandler->getNextScheduleTime());
       break;
     }
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     {
-      // FIXME TD-er: WHen should this be scheduled?
-      // protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
-      // schedule_controller_event_timer(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, event);
+      controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_019);
+
+      if (!validControllerIndex(ControllerID)) {
+        // Controller is not enabled.
+        break;
+      } else {
+        if ((event->Data != nullptr) && (event->Par1 == sizeof(ESPEasy_Now_p2p_data))) {
+          ESPEasy_Now_p2p_data *data = reinterpret_cast<ESPEasy_Now_p2p_data *>(event->Data);
+
+          if (data->validate()) {}
+        }
+      }
       break;
     }
 
@@ -107,9 +117,43 @@ bool do_process_c019_delay_queue(int controller_number, const C019_queue_element
 // *INDENT-ON*
 
 bool do_process_c019_delay_queue(int controller_number, const C019_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  bool success = true;
+  ESPEasy_Now_p2p_data data;
 
-  return success;
+  data.dataType        = ESPEasy_Now_p2p_data_type::PluginData;
+  data.sourceTaskIndex = element.event.TaskIndex;
+  data.plugin_id       = getPluginID_from_TaskIndex(data.sourceTaskIndex);
+  data.sourceUnit      = Settings.Unit;
+  data.sensorType      = element.event.sensorType;
+  data.valueCount      = getValueCountForTask(data.sourceTaskIndex);
+
+  for (byte i = 0; i < data.valueCount; ++i)
+  {
+    switch (data.sensorType) {
+      case Sensor_VType::SENSOR_TYPE_LONG:
+        data.addString(String((unsigned long)UserVar[element.event.BaseVarIndex] +
+                              ((unsigned long)UserVar[element.event.BaseVarIndex + 1] << 16)));
+        break;
+      case Sensor_VType::SENSOR_TYPE_STRING:
+        data.addString(element.event.String2);
+        break;
+
+      default:
+        data.addFloat(UserVar[element.event.BaseVarIndex + i]);
+        break;
+    }
+  }
+
+  if (element.packed.length() > 0) {
+    data.addString(element.packed);
+  }
+
+  MAC_address broadcast;
+
+  for (int i = 0; i < 6; ++i) {
+    broadcast.mac[i] = 0xFF;
+  }
+
+  return ESPEasy_now_handler.sendESPEasyNow_p2p(controller_number, broadcast, data);
 }
 
 #endif // ifdef USES_C019

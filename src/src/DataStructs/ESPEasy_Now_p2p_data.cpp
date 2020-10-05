@@ -10,6 +10,21 @@ ESPEasy_Now_p2p_data::~ESPEasy_Now_p2p_data() {
   }
 }
 
+bool ESPEasy_Now_p2p_data::validate() const {
+  if (data != nullptr) {
+    if (dataSize == 0) { return false; }
+  }
+
+  if (dataOffset == 0) { return false; }
+
+  if (!validTaskIndex(destTaskIndex)) { return false; }
+
+  if (!validPluginID(plugin_id)) { return false; }
+
+  // TODO TD-er: Must add more sanity checks here.
+  return true;
+}
+
 bool ESPEasy_Now_p2p_data::addFloat(float value) {
   return addBinaryData((byte *)(&value), sizeof(float));
 }
@@ -20,6 +35,27 @@ bool ESPEasy_Now_p2p_data::getFloat(float& value, size_t& offset) const {
   }
   memcpy((byte *)(&value), &data[offset], sizeof(float));
   offset += sizeof(float);
+  return true;
+}
+
+bool ESPEasy_Now_p2p_data::addString(const String& value) {
+  return addBinaryData((byte *)(value.c_str()), value.length() + 1); // Include null termination
+}
+
+bool ESPEasy_Now_p2p_data::getString(String& value, size_t& offset) const {
+  int maxStrLen = dataSize - offset;
+
+  if (maxStrLen < 2) {
+    return false;
+  }
+  const size_t str_len = strnlen(reinterpret_cast<const char*>(&data[offset]), maxStrLen);
+
+  value.reserve(str_len);
+
+  for (int i = 0; i < str_len; ++i) {
+    value += data[offset];
+    ++offset;
+  }
   return true;
 }
 
