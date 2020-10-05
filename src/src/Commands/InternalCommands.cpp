@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_Log.h"
+#include "../../_Plugin_Helper.h"
 #include "../Globals/Settings.h"
 
 #ifdef USES_BLYNK
@@ -390,11 +391,11 @@ bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const 
     }
   }
 
-  struct EventStruct TempEvent;
-
   // FIXME TD-er: Not sure what happens now, but TaskIndex cannot always be set here
   // since commands can originate from anywhere.
+  struct EventStruct TempEvent;
   TempEvent.setTaskIndex(taskIndex);
+  checkDeviceVTypeForTask(&TempEvent);
   TempEvent.Source = source;
 
   String action(Line);

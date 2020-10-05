@@ -9,7 +9,7 @@
 
 String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
 {
-  byte   value_count = getValueCountFromSensorType(event->sensorType);
+  byte   value_count = getValueCountForTask(event->TaskIndex);
   String raw_packed;
 
   if (PluginCall(PLUGIN_GET_PACKED_RAW_DATA, event, raw_packed)) {
@@ -34,7 +34,7 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
   if (raw_packed.length() > 0) {
     packed += raw_packed;
   } else {
-    switch (event->sensorType)
+    switch (event->getSensorType())
     {
       case Sensor_VType::SENSOR_TYPE_LONG:
       {

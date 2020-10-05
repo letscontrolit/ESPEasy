@@ -64,7 +64,7 @@ String formatUserVarDomoticz(int value) {
 String formatDomoticzSensorType(struct EventStruct *event) {
   String values;
 
-  switch (event->sensorType)
+  switch (event->getSensorType())
   {
     case Sensor_VType::SENSOR_TYPE_SINGLE: // single value sensor, used for Dallas, BH1750, etc
       values = formatUserVarDomoticz(event, 0);

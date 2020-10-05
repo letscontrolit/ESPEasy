@@ -184,7 +184,9 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         root[F("Battery")] = mapVccToDomoticz();
           #endif // if FEATURE_ADC_VCC
 
-        switch (event->sensorType)
+        const Sensor_VType sensorType = event->getSensorType();
+
+        switch (sensorType)
         {
           case Sensor_VType::SENSOR_TYPE_SWITCH:
             root[F("command")] = String(F("switchlight"));

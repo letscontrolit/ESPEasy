@@ -35,7 +35,7 @@
 class CjkSDS011
 {
 public:
-  CjkSDS011(int16_t pinRX, int16_t pinTX);
+  CjkSDS011(ESPEasySerialPort port, int16_t pinRX, int16_t pinTX);
   virtual ~CjkSDS011();
 
   void Process();

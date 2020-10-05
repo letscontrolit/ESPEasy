@@ -9,12 +9,13 @@
 
 namespace ARDUINOJSON_NAMESPACE {
 
-template <typename Visitor>
-inline void variantAccept(const VariantData *var, Visitor &visitor) {
+template <typename TVisitor>
+inline typename TVisitor::result_type variantAccept(const VariantData *var,
+                                                    TVisitor &visitor) {
   if (var != 0)
-    var->accept(visitor);
+    return var->accept(visitor);
   else
-    visitor.visitNull();
+    return visitor.visitNull();
 }
 
 inline const CollectionData *variantAsArray(const VariantData *var) {
@@ -99,62 +100,18 @@ inline bool variantSetOwnedRaw(VariantData *var, SerializedValue<T> value,
   return var != 0 && var->setOwnedRaw(value, pool);
 }
 
-inline bool variantSetLinkedString(VariantData *var, const char *value) {
-  if (!var)
-    return false;
-  var->setLinkedString(value);
-  return true;
-}
-
 inline void variantSetNull(VariantData *var) {
   if (!var)
     return;
   var->setNull();
 }
 
-inline bool variantSetOwnedString(VariantData *var, char *value) {
-  if (!var)
-    return false;
-  var->setOwnedString(value);
-  return true;
-}
-
-template <typename TAdaptedString>
-inline bool variantSetOwnedString(VariantData *var, TAdaptedString value,
-                                  MemoryPool *pool) {
-  return var != 0 && var->setOwnedString(value, pool);
-}
-
-template <typename TAdaptedString>
-inline bool variantSetString(VariantData *var, TAdaptedString value,
-                             MemoryPool *pool,
-                             storage_policies::decide_at_runtime) {
-  if (value.isStatic())
-    return variantSetString(var, value, pool,
-                            storage_policies::store_by_address());
-  else
-    return variantSetString(var, value, pool,
-                            storage_policies::store_by_copy());
-}
-
 template <typename TAdaptedString>
 inline bool variantSetString(VariantData *var, TAdaptedString value,
                              MemoryPool *pool) {
-  return variantSetString(var, value, pool,
-                          typename TAdaptedString::storage_policy());
-}
-
-template <typename TAdaptedString>
-inline bool variantSetString(VariantData *var, TAdaptedString value,
-                             MemoryPool *, storage_policies::store_by_address) {
-  return variantSetLinkedString(var, value.data());
-}
-
-template <typename TAdaptedString>
-inline bool variantSetString(VariantData *var, TAdaptedString value,
-                             MemoryPool *pool,
-                             storage_policies::store_by_copy) {
-  return variantSetOwnedString(var, value, pool);
+  if (!var)
+    return false;
+  return var->setString(value, pool);
 }
 
 template <typename T>

@@ -147,13 +147,19 @@ bool hasIPaddr();
 //void printDirectory(File dir, int numTabs);
 
 
-
-
-
-
 bool beginWiFiUDP_randomPort(WiFiUDP& udp);
 
 
 void Blynk_Run_c015();
+
+
+
+// FIXME TD-er: Convert WebServer_Markup.ino to .h/.cpp
+void addFormSubHeader(const String& header);
+void addSelector_Head(const String& id);
+void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr);
+int getFormItemInt(const String& key, int defaultValue);
+void addSelector_Foot();
+void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex);
 
 #endif // ESPEASY_FWD_DECL_H

@@ -11,6 +11,7 @@
 
 #include "_Plugin_Helper.h"
 #include "src/PluginStructs/P044_data_struct.h"
+#include <ESPeasySerial.h>
 
 #define PLUGIN_044
 #define PLUGIN_ID_044         44
@@ -103,9 +104,10 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
         int rxPin;
         int txPin;
-        ESPeasySerialType::getSerialTypePins(ESPeasySerialType::serial0, rxPin, txPin);
+        // FIXME TD-er: Must use proper pin settings and standard ESPEasySerial wrapper
+        ESPeasySerialType::getSerialTypePins(ESPEasySerialPort::serial0, rxPin, txPin);
         byte serialconfig = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
-        task->serialBegin(rxPin, txPin, P044_BAUDRATE, serialconfig);
+        task->serialBegin(ESPEasySerialPort::not_set,  rxPin, txPin, P044_BAUDRATE, serialconfig);
         task->startServer(P044_WIFI_SERVER_PORT);
 
         if (!task->isInit()) {

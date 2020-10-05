@@ -321,7 +321,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
     TaskDevicePluginConfigLong[task][cv] = 0;
   }
   OLD_TaskDeviceSendData[task]  = false;
-  TaskDeviceGlobalSync[task]    = false;
+  OLD_TaskDeviceGlobalSync[task]    = false;
   TaskDeviceDataFeed[task]      = 0;
   TaskDeviceTimer[task]         = 0;
   TaskDeviceEnabled[task]       = false;

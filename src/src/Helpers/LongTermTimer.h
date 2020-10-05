@@ -10,34 +10,34 @@ public:
 
   LongTermTimer() {}
 
-  explicit LongTermTimer(uint64_t start_time) : _timer(start_time) {}
+  //explicit LongTermTimer(uint64_t start_time) : _timer_usec(start_time) {}
 
   inline bool operator<(const LongTermTimer& rhs) const
   {
-    return _timer < rhs.get();
+    return _timer_usec < rhs.get();
   }
 
   inline bool operator>(const LongTermTimer& rhs) const
   {
-    return _timer > rhs.get();
+    return _timer_usec > rhs.get();
   }
 
   LongTermTimer& operator=(const LongTermTimer& rhs)
   {
-    _timer = rhs.get();
+    _timer_usec = rhs.get();
     return *this;
   }
 
   void clear() {
-    _timer = 0ull;
+    _timer_usec = 0ull;
   }
 
   void set(uint64_t start_time) {
-    _timer = start_time;
+    _timer_usec = start_time;
   }
 
   bool isSet() const {
-    return _timer > 0ull;
+    return _timer_usec > 0ull;
   }
 
   uint64_t ICACHE_RAM_ATTR get() const;
@@ -59,7 +59,7 @@ private:
   static Duration ICACHE_RAM_ATTR __timeDiff(uint64_t prev,
                                              uint64_t next);
 
-  uint64_t _timer = 0ull;
+  uint64_t _timer_usec = 0ull;
 };
 
 #endif // HELPERS_LONGTERMTIMER_H
