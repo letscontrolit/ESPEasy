@@ -11,6 +11,7 @@
 # include "../DataStructs/ESPEasy_now_merger.h"
 # include "../DataStructs/ESPEasy_Now_NTP_query.h"
 # include "../DataStructs/ESPEasy_Now_MQTT_queue_check_packet.h"
+# include "../DataStructs/ESPEasy_Now_p2p_data.h"
 # include "../DataStructs/MAC_address.h"
 # include "../Globals/CPlugins.h"
 
@@ -51,11 +52,15 @@ public:
                   const String    & payload);
 
   bool sendMQTTCheckControllerQueue(controllerIndex_t controllerIndex);
-  bool sendMQTTCheckControllerQueue(const MAC_address& mac, int channel, ESPEasy_Now_MQTT_queue_check_packet::QueueState state = ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset);
+  bool sendMQTTCheckControllerQueue(const MAC_address& mac, 
+                                    int channel, 
+                                    ESPEasy_Now_MQTT_queue_check_packet::QueueState state = ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset);
 
   void sendSendData_DuplicateCheck(uint32_t                              key,
                                    ESPEasy_Now_DuplicateCheck::message_t message_type,
                                    const MAC_address& mac);
+
+  bool sendESPEasyNow_p2p(controllerIndex_t controllerIndex, const MAC_address& mac, const ESPEasy_Now_p2p_data& data);
 
 private:
 
@@ -68,6 +73,8 @@ private:
   bool handle_MQTTCheckControllerQueue(const ESPEasy_now_merger& message, bool& mustKeep);
 
   bool handle_SendData_DuplicateCheck(const ESPEasy_now_merger& message, bool& mustKeep);
+
+  bool handle_ESPEasyNow_p2p(const ESPEasy_now_merger& message, bool& mustKeep);
 
   bool add_peer(const MAC_address& mac, int channel) const;
 

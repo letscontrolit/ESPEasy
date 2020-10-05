@@ -359,6 +359,10 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
     case ESPEasy_now_hdr::message_t::SendData_DuplicateCheck:
       handled = handle_SendData_DuplicateCheck(message, mustKeep);
       break;
+    case ESPEasy_now_hdr::message_t::P2P_data:
+      handled = handle_ESPEasyNow_p2p(message, mustKeep);
+      considerActive = true;
+      break;
   }
 
   if (handled && considerActive) {
@@ -844,6 +848,55 @@ void ESPEasy_now_handler_t::load_ControllerSettingsCache(controllerIndex_t contr
     _mqtt_retainFlag          = ControllerSettings.mqtt_retainFlag();
     _controllerIndex          = controllerIndex;
   }
+}
+
+
+
+// *************************************************************
+// * ESPEasyNow p2p 
+// *************************************************************
+bool ESPEasy_now_handler_t::sendESPEasyNow_p2p(controllerIndex_t controllerIndex, const MAC_address& mac, const ESPEasy_Now_p2p_data& data) {
+  if (!use_EspEasy_now) { return false; }
+
+  size_t size = data.getTotalSize();
+  ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::P2P_data, size);
+  // Add the first part of the data object, without the data array.
+  msg.addBinaryData(reinterpret_cast<const uint8_t *>(&data), data.dataOffset);
+  
+  // Fetch the data array information, will also update size.
+  const uint8_t* data_ptr = data.getBinaryData(0, size);
+  msg.addBinaryData(data_ptr, size);
+
+  return msg.send(mac);
+}
+
+bool ESPEasy_now_handler_t::handle_ESPEasyNow_p2p(const ESPEasy_now_merger& message, bool& mustKeep) {
+  mustKeep = false;
+  ESPEasy_Now_p2p_data data;
+  size_t payload_pos = 0;
+  size_t payload_size = message.getPayloadSize();
+  size_t headerSize = data.dataOffset;
+  if (headerSize > payload_size) {
+    // This can only happen when the receiving end has a larger ESPEasy_Now_p2p_data struct
+    headerSize = payload_size;
+  }
+  message.getBinaryData(reinterpret_cast<uint8_t *>(&data), headerSize, payload_pos);
+  // dataOffset may have changed to match the offset used by the sender.
+  payload_pos = data.dataOffset;
+
+  size_t binaryData_size = payload_size - payload_pos;
+  uint8_t* binaryData_ptr = data.prepareBinaryData(binaryData_size);
+  if (binaryData_ptr == nullptr) {
+    return false;
+  }
+  if (message.getBinaryData(binaryData_ptr, binaryData_size, payload_pos) != binaryData_size) {
+    // Did not receive all data
+    return false;
+  }
+
+  // TODO TD-er: Call C019 controller with event containing this data object as a pointer.
+
+  return true;
 }
 
 #endif // ifdef USES_ESPEASY_NOW

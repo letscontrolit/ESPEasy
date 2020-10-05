@@ -24,6 +24,7 @@ public:
     NTP_Query,
     SendData_DuplicateCheck,
     MQTTCheckControllerQueue,
+    P2P_data,
 
     ChecksumError = 255
   };
