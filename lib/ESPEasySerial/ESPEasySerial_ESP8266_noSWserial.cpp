@@ -7,10 +7,10 @@
 // No SoftwareSerial
 // Only support HW serial on Serial 0 .. 1
 // ****************************************
-ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize)
+ESPeasySerial::ESPeasySerial(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize)
   : _receivePin(receivePin), _transmitPin(transmitPin)
 {
-  _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
+  _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
 
   if (isValid()) {
     getHW()->pins(transmitPin, receivePin);
@@ -24,7 +24,7 @@ ESPeasySerial::~ESPeasySerial() {
 void ESPeasySerial::begin(unsigned long baud, SerialConfig config, SerialMode mode) {
   _baud = baud;
 
-  if (_serialtype == ESPeasySerialType::serialtype::serial0_swap) {
+  if (_serialtype == ESPEasySerialPort::serial0_swap) {
     // Serial.swap() should only be called here and only once.
     if (!_serial0_swap_active) {
       Serial.begin(baud, config, mode, _transmitPin);
@@ -46,7 +46,7 @@ void ESPeasySerial::end() {
     return;
   }
 
-  if (_serialtype == ESPeasySerialType::serialtype::serial0_swap) {
+  if (_serialtype == ESPEasySerialPort::serial0_swap) {
     if (_serial0_swap_active) {
       Serial.end();
       Serial.swap();
@@ -59,10 +59,10 @@ void ESPeasySerial::end() {
 
 HardwareSerial * ESPeasySerial::getHW() {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0:
-    case ESPeasySerialType::serialtype::serial0_swap: return &Serial;
-    case ESPeasySerialType::serialtype::serial1:      return &Serial1;
-    case ESPeasySerialType::serialtype::software:     break;
+    case ESPEasySerialPort::serial0:
+    case ESPEasySerialPort::serial0_swap: return &Serial;
+    case ESPEasySerialPort::serial1:      return &Serial1;
+    case ESPEasySerialPort::software:     break;
     default: break;
   }
   return nullptr;
@@ -70,10 +70,10 @@ HardwareSerial * ESPeasySerial::getHW() {
 
 const HardwareSerial * ESPeasySerial::getHW() const {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0:
-    case ESPeasySerialType::serialtype::serial0_swap: return &Serial;
-    case ESPeasySerialType::serialtype::serial1:      return &Serial1;
-    case ESPeasySerialType::serialtype::software:     break;
+    case ESPEasySerialPort::serial0:
+    case ESPEasySerialPort::serial0_swap: return &Serial;
+    case ESPEasySerialPort::serial1:      return &Serial1;
+    case ESPEasySerialPort::software:     break;
     default: break;
   }
   return nullptr;
@@ -81,10 +81,10 @@ const HardwareSerial * ESPeasySerial::getHW() const {
 
 bool ESPeasySerial::isValid() const {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0:      return !_serial0_swap_active;
-    case ESPeasySerialType::serialtype::serial0_swap: return _serial0_swap_active;
-    case ESPeasySerialType::serialtype::serial1:      return true; // Must also check RX pin?
-    case ESPeasySerialType::serialtype::software:     return false;
+    case ESPEasySerialPort::serial0:      return !_serial0_swap_active;
+    case ESPEasySerialPort::serial0_swap: return _serial0_swap_active;
+    case ESPEasySerialPort::serial1:      return true; // Must also check RX pin?
+    case ESPEasySerialPort::software:     return false;
     default: break;
   }
   return false;
@@ -163,17 +163,17 @@ bool ESPeasySerial::hasOverrun(void) {
 void ESPeasySerial::swap(uint8_t tx_pin) {
   if (isValid()) {
     switch (_serialtype) {
-      case ESPeasySerialType::serialtype::serial0:
-      case ESPeasySerialType::serialtype::serial0_swap:
+      case ESPEasySerialPort::serial0:
+      case ESPEasySerialPort::serial0_swap:
 
         // isValid() also checks for correct swap active state.
         _serial0_swap_active = !_serial0_swap_active;
         getHW()->swap(tx_pin);
 
-        if (_serialtype == ESPeasySerialType::serialtype::serial0) {
-          _serialtype = ESPeasySerialType::serialtype::serial0_swap;
+        if (_serialtype == ESPEasySerialPort::serial0) {
+          _serialtype = ESPEasySerialPort::serial0_swap;
         } else {
-          _serialtype = ESPeasySerialType::serialtype::serial0;
+          _serialtype = ESPEasySerialPort::serial0;
         }
         break;
       default:

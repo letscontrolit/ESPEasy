@@ -109,8 +109,8 @@ struct P052_data_struct : public PluginTaskData_base {
     modbus.reset();
   }
 
-  bool init(const int16_t serial_rx, const int16_t serial_tx) {
-    return modbus.init(serial_rx, serial_tx, 9600, P052_MODBUS_SLAVE_ADDRESS);
+  bool init(const ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx) {
+    return modbus.init(port, serial_rx, serial_tx, 9600, P052_MODBUS_SLAVE_ADDRESS);
   }
 
   bool isInitialized() const {
@@ -456,6 +456,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P052_data_struct());
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -464,7 +465,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P052_data->init(serial_rx, serial_tx)) {
+
+      if (P052_data->init(port, serial_rx, serial_tx)) {
         /*
            // ABC functionality disabled for now, due to a bug in the firmware.
            // See https://github.com/letscontrolit/ESPEasy/issues/759
