@@ -874,6 +874,7 @@ bool ESPEasy_now_handler_t::handle_ESPEasyNow_p2p(const ESPEasy_now_merger& mess
   mustKeep = false;
   controllerIndex_t controller_index = findFirstEnabledControllerWithId(19); // CPLUGIN_ID_019
   if (!validControllerIndex(controller_index)) {
+    addLog(LOG_LEVEL_ERROR, F("Controller C019 not enabled"));
     return false;
   }
 
@@ -889,14 +890,27 @@ bool ESPEasy_now_handler_t::handle_ESPEasyNow_p2p(const ESPEasy_now_merger& mess
   // dataOffset may have changed to match the offset used by the sender.
   payload_pos = data.dataOffset;
 
-  size_t binaryData_size = payload_size - payload_pos;
+  size_t binaryData_size = payload_size - headerSize;
   uint8_t* binaryData_ptr = data.prepareBinaryData(binaryData_size);
   if (binaryData_ptr == nullptr) {
-    return false;
+    addLog(LOG_LEVEL_ERROR, F("handle_ESPEasyNow_p2p: Cannot allocate data"));
+    // Cannot allocate memory to process message, so return true to make sure it gets deleted.
+    return true;
   }
-  if (message.getBinaryData(binaryData_ptr, binaryData_size, payload_pos) != binaryData_size) {
+
+  size_t received_size = message.getBinaryData(binaryData_ptr, binaryData_size, payload_pos);
+  if (received_size != binaryData_size) {
     // Did not receive all data
-    return false;
+    String log = F("handle_ESPEasyNow_p2p: Did not receive all data ");
+    log += received_size;
+    log += '/';
+    log += binaryData_size;
+    log += F(" dataSize: ");
+    log += data.dataSize;
+    log += F(" payload_pos: ");
+    log += data.dataOffset;
+    addLog(LOG_LEVEL_ERROR, log);
+//    return false;
   }
 
   // Call C019 controller with event containing this data object as a pointer.

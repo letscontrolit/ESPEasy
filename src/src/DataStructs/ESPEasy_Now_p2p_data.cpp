@@ -17,7 +17,7 @@ bool ESPEasy_Now_p2p_data::validate() const {
 
   if (dataOffset == 0) { return false; }
 
-  if (!validTaskIndex(destTaskIndex)) { return false; }
+  if (!validTaskIndex(sourceTaskIndex)) { return false; }
 
   if (!validPluginID(plugin_id)) { return false; }
 
@@ -52,7 +52,7 @@ bool ESPEasy_Now_p2p_data::getString(String& value, size_t& offset) const {
 
   value.reserve(str_len);
 
-  for (int i = 0; i < str_len; ++i) {
+  for (size_t i = 0; i < str_len; ++i) {
     value += data[offset];
     ++offset;
   }
@@ -80,7 +80,7 @@ const uint8_t * ESPEasy_Now_p2p_data::getBinaryData(size_t offset, size_t& size)
 
   const size_t available = dataSize - offset;
 
-  if (size < available) {
+  if (size > available) {
     size = available;
   }
   return &data[offset];
@@ -88,11 +88,11 @@ const uint8_t * ESPEasy_Now_p2p_data::getBinaryData(size_t offset, size_t& size)
 
 uint8_t * ESPEasy_Now_p2p_data::prepareBinaryData(size_t& size) {
   size_t oldSize;
+  dataSize = 0;
 
   if (data != nullptr) {
     delete data;
     data     = nullptr;
-    dataSize = 0;
   }
 
   if (!allocate(size, oldSize)) {

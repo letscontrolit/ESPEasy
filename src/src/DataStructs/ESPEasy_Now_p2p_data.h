@@ -69,13 +69,14 @@ public:
   uint16_t                  dataSize        = 0; 
 
   // The sizeof(data) is intended use of sizeof to return the size of a pointer
-  const uint8_t             dataOffset      = sizeof(ESPEasy_Now_p2p_data) - sizeof(data);
+  const uint8_t             dataOffset      = sizeof(ESPEasy_Now_p2p_data) - sizeof(uint8_t *);
   taskIndex_t               sourceTaskIndex = INVALID_TASK_INDEX;
   taskIndex_t               destTaskIndex   = INVALID_TASK_INDEX;
   uint16_t                  plugin_id       = INVALID_PLUGIN_ID; // FIXME TD-er: Must change to pluginID_t as soon as that's changed to 16
                                                                  // bit
   uint16_t                  sourceUnit      = 0;
   uint16_t                  destUnit        = 0;
+  uint16_t                  idx             = 0;
   Sensor_VType              sensorType      = Sensor_VType::SENSOR_TYPE_NONE;
   uint8_t                   valueCount      = 0;
 

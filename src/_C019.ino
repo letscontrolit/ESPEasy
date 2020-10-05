@@ -29,7 +29,7 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesPassword   = true;
       Protocol[protocolCount].usesExtCreds   = false;
       Protocol[protocolCount].defaultPort    = 0;
-      Protocol[protocolCount].usesID         = false;
+      Protocol[protocolCount].usesID         = true;
       Protocol[protocolCount].Custom         = false;
       Protocol[protocolCount].usesHost       = false;
       Protocol[protocolCount].usesPort       = false;
@@ -49,11 +49,7 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
     {
-      MakeControllerSettings(ControllerSettings);
-      LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
-      // FIXME TD-er: Not sure if MQTT like formatting is the best here.
-      C019_DelayHandler->configureControllerSettings(ControllerSettings);
+      success = init_c019_delay_queue(event->ControllerIndex);
       break;
     }
 
@@ -79,13 +75,33 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
       if (!validControllerIndex(ControllerID)) {
         // Controller is not enabled.
         break;
-      } else {
-        if ((event->Data != nullptr) && (event->Par1 == sizeof(ESPEasy_Now_p2p_data))) {
-          ESPEasy_Now_p2p_data *data = reinterpret_cast<ESPEasy_Now_p2p_data *>(event->Data);
-
-          if (data->validate()) {}
-        }
       }
+
+      if ((event->Data == nullptr) || (event->Par1 != sizeof(ESPEasy_Now_p2p_data))) {
+        break;
+      }
+      ESPEasy_Now_p2p_data *data = reinterpret_cast<ESPEasy_Now_p2p_data *>(event->Data);
+
+      if (!data->validate()) {
+//        break;
+      }
+
+      String log = F("ESPEasy_Now PluginData: ");
+      log += data->plugin_id;
+      log += F(" sourceUnit: ");
+      log += data->sourceUnit;
+      addLog(LOG_LEVEL_INFO, log);
+
+      switch (data->dataType) {
+        case ESPEasy_Now_p2p_data_type::PluginData:
+        {
+          break;
+        }
+        default:
+          break;
+      }
+
+
       break;
     }
 
@@ -119,12 +135,15 @@ bool do_process_c019_delay_queue(int controller_number, const C019_queue_element
 bool do_process_c019_delay_queue(int controller_number, const C019_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   ESPEasy_Now_p2p_data data;
 
+  const taskIndex_t taskIndex = element.event.TaskIndex;
+
   data.dataType        = ESPEasy_Now_p2p_data_type::PluginData;
-  data.sourceTaskIndex = element.event.TaskIndex;
-  data.plugin_id       = getPluginID_from_TaskIndex(data.sourceTaskIndex);
+  data.sourceTaskIndex = taskIndex;
+  data.plugin_id       = getPluginID_from_TaskIndex(taskIndex);
   data.sourceUnit      = Settings.Unit;
+  data.idx             = Settings.TaskDeviceID[element.controller_idx][taskIndex];
   data.sensorType      = element.event.sensorType;
-  data.valueCount      = getValueCountForTask(data.sourceTaskIndex);
+  data.valueCount      = getValueCountForTask(taskIndex);
 
   for (byte i = 0; i < data.valueCount; ++i)
   {
@@ -149,6 +168,7 @@ bool do_process_c019_delay_queue(int controller_number, const C019_queue_element
 
   MAC_address broadcast;
 
+  // FIXME TD-er: Must add a way to reach further than WiFi reach
   for (int i = 0; i < 6; ++i) {
     broadcast.mac[i] = 0xFF;
   }
