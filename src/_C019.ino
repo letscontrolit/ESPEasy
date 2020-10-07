@@ -9,6 +9,8 @@
 #include "src/ControllerQueue/C019_queue_element.h"
 #include "src/Globals/ESPEasy_now_handler.h"
 
+#include "src/Helpers/Controller/C019_ESPEasyNow_helper.h"
+
 
 #define CPLUGIN_019
 #define CPLUGIN_ID_019         19
@@ -70,37 +72,7 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     {
-      controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_019);
-
-      if (!validControllerIndex(ControllerID)) {
-        // Controller is not enabled.
-        break;
-      }
-
-      if ((event->Data == nullptr) || (event->Par1 != sizeof(ESPEasy_Now_p2p_data))) {
-        break;
-      }
-      ESPEasy_Now_p2p_data *data = reinterpret_cast<ESPEasy_Now_p2p_data *>(event->Data);
-
-      if (!data->validate()) {
-//        break;
-      }
-
-      String log = F("ESPEasy_Now PluginData: ");
-      log += data->plugin_id;
-      log += F(" sourceUnit: ");
-      log += data->sourceUnit;
-      addLog(LOG_LEVEL_INFO, log);
-
-      switch (data->dataType) {
-        case ESPEasy_Now_p2p_data_type::PluginData:
-        {
-          break;
-        }
-        default:
-          break;
-      }
-
+      C019_ESPEasyNow_helper::process_receive(event);
 
       break;
     }

@@ -89,11 +89,7 @@ const uint8_t * ESPEasy_Now_p2p_data::getBinaryData(size_t offset, size_t& size)
 uint8_t * ESPEasy_Now_p2p_data::prepareBinaryData(size_t& size) {
   size_t oldSize;
   dataSize = 0;
-
-  if (data != nullptr) {
-    delete data;
-    data     = nullptr;
-  }
+  data     = nullptr;
 
   if (!allocate(size, oldSize)) {
     return nullptr;
@@ -111,6 +107,7 @@ bool ESPEasy_Now_p2p_data::allocate(size_t size, size_t& oldSize) {
   if (tmp_ptr == nullptr) {
     return false;
   }
+  memset(tmp_ptr, 0, newSize);
 
   if (data != nullptr) {
     memcpy(tmp_ptr, data, oldSize);

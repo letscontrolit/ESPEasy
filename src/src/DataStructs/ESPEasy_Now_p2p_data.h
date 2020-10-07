@@ -52,6 +52,8 @@ struct __attribute__((__packed__)) ESPEasy_Now_p2p_data {
                                size_t& size) const;
 
   // Clear and resize data array to size.
+  // This function is meant to be used only on the receiving end to reconstruct the data array.
+  // Meaning the pointer will just be cleared, no call to delete the pointer.
   // @retval pointer to the first element of the data array
   uint8_t* prepareBinaryData(size_t& size);
 
