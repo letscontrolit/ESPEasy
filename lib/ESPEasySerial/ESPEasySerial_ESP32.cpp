@@ -40,9 +40,12 @@ ESPeasySerial::ESPeasySerial(
 
 ESPeasySerial::~ESPeasySerial() {
   end();
+
+#ifndef DISABLE_SC16IS752_Serial
   if (_i2cserial != nullptr) {
     delete _i2cserial;
   }
+#endif
 }
 
 void ESPeasySerial::begin(unsigned long baud, uint32_t config
@@ -61,9 +64,11 @@ void ESPeasySerial::begin(unsigned long baud, uint32_t config
   }
 
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     if (_i2cserial != nullptr) {
       _i2cserial->begin(baud);
     }
+#endif
   } else {
 
     // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
@@ -83,7 +88,9 @@ void ESPeasySerial::end() {
     return;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     _i2cserial->end();
+#endif
   } else {
     getHW()->end();
   }
@@ -117,8 +124,12 @@ bool ESPeasySerial::isValid() const {
       return true;
     case ESPEasySerialPort::serial1:
       return _transmitPin != -1 && _receivePin != -1;
-    case ESPEasySerialPort::sc16is752:    
+    case ESPEasySerialPort::sc16is752:
+    #ifndef DISABLE_SC16IS752_Serial
       return _i2cserial != nullptr;
+    #else
+      return false;
+    #endif
 
     // FIXME TD-er: Must perform proper check for GPIO pins here.
     default: break;
@@ -131,7 +142,11 @@ int ESPeasySerial::peek(void) {
     return -1;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->peek();
+#else
+    return false;
+#endif
   }
   return getHW()->peek();
 }
@@ -141,7 +156,11 @@ size_t ESPeasySerial::write(uint8_t val) {
     return 0;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->write(val);
+#else
+    return 0;
+#endif
   }
   return getHW()->write(val);
 }
@@ -151,7 +170,12 @@ size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
     return 0;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->write(buffer, size);
+#else
+    return 0;
+#endif
+
   }
   return getHW()->write(buffer, size);
 }
@@ -166,7 +190,11 @@ int ESPeasySerial::read(void) {
     return -1;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->read();
+#else
+    return -1;
+#endif
   }
   return getHW()->read();
 }
@@ -176,7 +204,11 @@ int ESPeasySerial::available(void) {
     return 0;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->available();
+#else
+    return 0;
+#endif
   }
   return getHW()->available();
 }
@@ -186,7 +218,9 @@ void ESPeasySerial::flush(void) {
     return;
   }
   if (isI2Cserial()) {
-    return _i2cserial->flush();
+#ifndef DISABLE_SC16IS752_Serial
+    _i2cserial->flush();
+#endif
   }
   getHW()->flush();
 }
