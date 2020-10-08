@@ -52,7 +52,7 @@ Special Notations
 -----------------
 
 * ``[...#...]`` Referring to task variable
-* ``%...%`` Referring to system variable
+* ``%...%`` Referring to system variable or standard conversions.
 * ``{...:...}`` Referring to String conversions
 * Quotes (single, double or back quotes) Marking begin and end of a command parameter
 
