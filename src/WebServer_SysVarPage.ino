@@ -190,6 +190,8 @@ void handle_sysvars() {
   addSysVar_html(F("Mins to dh:   %c_m2dh%(1900)"));
   addSysVar_html(F("Mins to dhm:  %c_m2dhm%(1900)"));
   addSysVar_html(F("Secs to dhms: %c_s2dhms%(100000)"));
+  addFormSeparator(3);
+  addSysVar_html(F("To HEX: %c_2hex%(100000)"));
 
   html_end_table();
   html_end_form();
