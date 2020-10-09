@@ -1,3 +1,16 @@
+#include "WebServer_Login.h"
+
+
+#include "WebServer.h"
+#include "WebServer_AccessControl.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+
+#include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
+
+#include "../../ESPEasy-Globals.h"
 
 
 // ********************************************************************************

@@ -1,7 +1,10 @@
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/SecuritySettings.h"
+#include "src/Globals/Settings.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/ESPEasy_plugin_functions.h"
+
+#include "src/WebServer/WebServer.h"
 
 
 /*********************************************************************************************\

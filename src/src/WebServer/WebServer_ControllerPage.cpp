@@ -1,6 +1,24 @@
+#include "WebServer_ControllerPage.h"
+
+
 #ifdef WEBSERVER_CONTROLLERS
 
-#include "src/Globals/CPlugins.h"
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+#include "WebServer_Markup_Forms.h"
+
+#include "../DataStructs/ESPEasy_EventStruct.h"
+
+#include "../Globals/CPlugins.h"
+#include "../Globals/Protocol.h"
+#include "../Globals/Settings.h"
+
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
+
+#include "../../ESPEasy_fdwdecl.h"
 
 // ********************************************************************************
 // Web Interface controller page

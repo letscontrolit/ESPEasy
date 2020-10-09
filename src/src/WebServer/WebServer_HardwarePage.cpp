@@ -1,3 +1,20 @@
+#include "WebServer_HardwarePage.h"
+
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+#include "WebServer_Markup_Forms.h"
+
+#include "../DataStructs/DeviceStruct.h"
+
+#include "../Globals/Settings.h"
+
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_GPIO.h"
+
 #ifdef WEBSERVER_HARDWARE
 
 // ********************************************************************************

@@ -1,9 +1,19 @@
+#include "WebServer_AccessControl.h"
+
+#include "../Globals/SecuritySettings.h"
+#include "../Globals/Services.h"
+
+#include "../Helpers/Networking.h"
+#include "../Helpers/StringConverter.h"
+
+#include "../../ESPEasyWifi.h"
+#include "../../ESPEasy_Log.h"
+
+#include "WebServer_Markup.h"
+
 // ********************************************************************************
 // Allowed IP range check
 // ********************************************************************************
-#define ALL_ALLOWED            0
-#define LOCAL_SUBNET_ALLOWED   1
-#define ONLY_IP_RANGE_ALLOWED  2
 
 boolean ipLessEqual(const IPAddress& ip, const IPAddress& high)
 {

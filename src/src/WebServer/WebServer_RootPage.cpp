@@ -1,8 +1,21 @@
+#include "WebServer_RootPage.h"
+
+
 #ifdef WEBSERVER_ROOT
 
-#include "src/Commands/InternalCommands.h"
-#include "src/Globals/Nodes.h"
-#include "src/Helpers/Memory.h"
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_LoadFromFS.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+
+#include "../Commands/InternalCommands.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/Nodes.h"
+#include "../Globals/Statistics.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Memory.h"
+#include "../../ESPEasy-Globals.h"
 
 // ********************************************************************************
 // Web Interface root page

@@ -1,4 +1,12 @@
+#include "WebServer_404.h"
 
+#include "WebServer.h"
+#include "WebServer_LoadFromFS.h"
+#include "WebServer_Rules.h"
+
+#include "../Globals/Services.h"
+
+#include "../Globals/ESPEasyWiFiEvent.h"
 
 // ********************************************************************************
 // Web Interface handle other requests

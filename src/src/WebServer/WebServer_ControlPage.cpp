@@ -1,9 +1,17 @@
+#include "WebServer_ControlPage.h"
+
 
 #ifdef WEBSERVER_CONTROL
 
-#include "src/Commands/InternalCommands.h"
-#include "src/Helpers/StringParser.h"
+#include "WebServer_AccessControl.h"
 
+#include "WebServer_HTML_wrappers.h"
+
+#include "../Commands/InternalCommands.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringParser.h"
+#include "../Globals/EventQueue.h"
+#include "../../ESPEasy-Globals.h"
 
 // ********************************************************************************
 // Web Interface control page (no password!)

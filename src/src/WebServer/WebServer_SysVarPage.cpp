@@ -1,8 +1,16 @@
+#include "WebServer_SysVarPage.h"
+
+#include "WebServer.h"
+#include "WebServer_AccessControl.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Forms.h"
+#include "WebServer_HTML_wrappers.h"
+
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/SystemVariables.h"
 
 #ifdef WEBSERVER_SYSVARS
 
-
-#include "src/Helpers/SystemVariables.h"
 
 // ********************************************************************************
 // Web Interface sysvars showing all system vars and their value.

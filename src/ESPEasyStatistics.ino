@@ -2,6 +2,9 @@
 
 #ifdef USES_TIMING_STATS
 
+#include "src/DataStructs/TimingStats.h"
+#include "src/WebServer/WebServer.h"
+
 /*
    void logStatistics(byte loglevel, bool clearStats) {
    if (loglevelActiveFor(loglevel)) {

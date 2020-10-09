@@ -74,7 +74,7 @@ void parse_string_commands(String &line);
 void callback(char        *c_topic,
               byte        *b_payload,
               unsigned int length);
-//void MQTTDisconnect();
+void MQTTDisconnect();
 //bool MQTTConnect(controllerIndex_t controller_idx);
 bool MQTTCheck(controllerIndex_t controller_idx);
 //bool MQTT_queueFull(controllerIndex_t controller_idx);
@@ -146,8 +146,6 @@ bool hasIPaddr();
 //#include <FS.h>
 //void printDirectory(File dir, int numTabs);
 
-
-bool beginWiFiUDP_randomPort(WiFiUDP& udp);
 
 
 void Blynk_Run_c015();

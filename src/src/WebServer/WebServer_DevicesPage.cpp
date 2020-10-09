@@ -1,14 +1,29 @@
+#include "WebServer_DevicesPage.h"
+
 #ifdef WEBSERVER_DEVICES
 
-# include "src/Globals/Nodes.h"
-# include "src/Globals/Device.h"
-# include "src/Globals/CPlugins.h"
-# include "src/Globals/Plugins.h"
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+#include "WebServer_Markup_Forms.h"
 
-# include "src/Static/WebStaticData.h"
+#include "../Globals/CPlugins.h"
+#include "../Globals/Device.h"
+#include "../Globals/ExtraTaskSettings.h"
+#include "../Globals/Nodes.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/Protocol.h"
 
-# include "src/Helpers/_CPlugin_SensorTypeHelper.h"
-# include "src/Helpers/StringGenerator_GPIO.h"
+#include "../Static/WebStaticData.h"
+
+#include "../Helpers/_CPlugin_SensorTypeHelper.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_GPIO.h"
+
+#include "../../_Plugin_Helper.h"
 
 #include <ESPeasySerial.h>
 

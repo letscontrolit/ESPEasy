@@ -10,7 +10,12 @@
 #include "src/Helpers/CompiletimeDefines.h"
 #include "src/Helpers/Memory.h"
 #include "src/Helpers/Scheduler.h"
+#include "src/Helpers/StringConverter.h"
 #include "src/Helpers/StringGenerator_System.h"
+
+#include "src/WebServer/WebServer_JSON.h"
+
+#include "ESPEasyWifi.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);

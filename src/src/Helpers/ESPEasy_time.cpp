@@ -10,6 +10,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 
 #include "ESPEasy_time_calc.h"

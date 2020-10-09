@@ -1,3 +1,11 @@
+#include "WebServer_Markup_Buttons.h"
+
+#include "WebServer_common.h"
+#include "WebServer_HTML_wrappers.h"
+
+#include "../Static/WebStaticData.h"
+
+
 
 void addButton(const String& url, const String& label) {
   addButton(url, label, "");

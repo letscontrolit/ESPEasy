@@ -1,5 +1,13 @@
 
-#include "src/Static/WebStaticData.h"
+#include "WebServer_Favicon.h"
+
+#include "WebServer.h"
+#include "WebServer_404.h"
+
+#include "../Globals/RamTracker.h"
+
+
+#include "../Static/WebStaticData.h"
 
 void handle_favicon() {
   #ifdef WEBSERVER_FAVICON

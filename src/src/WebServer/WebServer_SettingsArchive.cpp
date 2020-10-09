@@ -1,6 +1,19 @@
+#include "WebServer_SettingsArchive.h"
+
 #ifdef USE_SETTINGS_ARCHIVE
 
-#include "src/Globals/ResetFactoryDefaultPref.h"
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+#include "WebServer_Markup_Forms.h"
+
+#include "../Globals/ResetFactoryDefaultPref.h"
+#include "../Helpers/ESPEasy_FactoryDefault.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
+
 
 // ********************************************************************************
 // Web Interface to manage archived settings

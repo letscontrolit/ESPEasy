@@ -1,7 +1,18 @@
-#include "src/Globals/Nodes.h"
-#include "src/Globals/Device.h"
-#include "src/Globals/Plugins.h"
-#include "StringProviderTypes.h"
+#include "WebServer_JSON.h"
+
+#include "WebServer.h"
+#include "WebServer_JSON.h"
+#include "WebServer_Markup_Forms.h"
+
+#include "../Globals/Nodes.h"
+#include "../Globals/Device.h"
+#include "../Globals/Plugins.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
+#include "../../_Plugin_Helper.h"
+#include "../../StringProviderTypes.h"
 
 // ********************************************************************************
 // Web Interface get CSV value from task

@@ -110,7 +110,6 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 #include "StringProviderTypes.h"
 #include "ESPeasySerial.h"
 #include "ESPEasy_fdwdecl.h"
-#include "WebServer_fwddecl.h"
 
 
 
@@ -285,8 +284,6 @@ extern boolean UseRTOSMultitasking;
 // Also the functions use a lot of global defined variables, so include at the end of this file.
 #include "ESPEasyWiFiEvent.h"
 #define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
-#include "WebServer_Rules.h"
-
 
 
 

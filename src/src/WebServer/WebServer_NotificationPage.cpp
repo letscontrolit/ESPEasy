@@ -1,12 +1,13 @@
+#include "WebServer_NotificationPage.h"
+
 
 // ********************************************************************************
 // Web Interface notifcations page
 // ********************************************************************************
-#include "ESPEasy_common.h"
 
 #ifdef USES_NOTIFIER
 
-#include "src/Globals/NPlugins.h"
+#include "../Globals/NPlugins.h"
 
 
 void handle_notifications() {

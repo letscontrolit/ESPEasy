@@ -1,5 +1,17 @@
-#include "src/Globals/Logging.h"
-#include "src/Static/WebStaticData.h"
+#include "WebServer_Log.h"
+
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_JSON.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+
+#include "../DataStructs/LogStruct.h"
+
+#include "../Globals/Logging.h"
+#include "../Globals/Settings.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Static/WebStaticData.h"
 
 // ********************************************************************************
 // Web Interface log page
@@ -15,8 +27,7 @@ void handle_log() {
   #ifdef WEBSERVER_LOG
   addHtml(F("<TR><TH id=\"headline\" align=\"left\">Log"));
   addCopyButton(F("copyText"), "", F("Copy log to clipboard"));
-  addHtml(F(
-            "</TR></table><div  id='current_loglevel' style='font-weight: bold;'>Logging: </div><div class='logviewer' id='copyText_1'></div>"));
+  addHtml(F("</TR></table><div  id='current_loglevel' style='font-weight: bold;'>Logging: </div><div class='logviewer' id='copyText_1'></div>"));
   addHtml(F("Autoscroll: "));
   addCheckBox(F("autoscroll"), true);
   addHtml(F("<BR></body>"));

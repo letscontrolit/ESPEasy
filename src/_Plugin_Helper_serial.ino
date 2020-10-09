@@ -1,5 +1,16 @@
 #include "ESPeasySerial.h"
 
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/Helpers/StringConverter.h"
+#include "src/Helpers/StringGenerator_GPIO.h"
+
+#include "src/WebServer/WebServer_HTML_wrappers.h"
+#include "src/WebServer/WebServer_Markup.h"
+#include "src/WebServer/WebServer_Markup_Forms.h"
+
+#include "_Plugin_Helper.h"
+
+
 struct ESPeasySerialType;
 
 static String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType) {

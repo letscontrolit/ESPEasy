@@ -1,6 +1,14 @@
-#include <Arduino.h>
+#include "WebServer_Markup_Forms.h"
 
-#include "src/Helpers/Hardware.h"
+#include "WebServer.h"
+#include "WebServer_AccessControl.h"
+#include "WebServer_Markup.h"
+#include "WebServer_HTML_wrappers.h"
+
+#include "../Helpers/Hardware.h"
+#include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_GPIO.h"
 
 // ********************************************************************************
 // Add a separator as row start

@@ -1,4 +1,10 @@
-#include "src/Helpers/PortStatus.h"
+#include "WebServer_PinStates.h"
+
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+
+#include "../Globals/GlobalMapPortStatus.h"
+#include "../Helpers/PortStatus.h"
 
 #ifdef WEBSERVER_NEW_UI
 

@@ -1,8 +1,14 @@
-#ifdef WEBSERVER_I2C_SCANNER
+#include "WebServer_I2C_Scanner.h"
 
-#ifdef FEATURE_I2CMULTIPLEXER
-typedef std::vector<bool> i2c_addresses_t;
-#endif
+#include "WebServer.h"
+#include "WebServer_AccessControl.h"
+#include "WebServer_HTML_wrappers.h"
+
+#include "../Helpers/Hardware.h"
+#include "../Helpers/StringConverter.h"
+
+
+#ifdef WEBSERVER_I2C_SCANNER
 
 #ifdef WEBSERVER_NEW_UI
 

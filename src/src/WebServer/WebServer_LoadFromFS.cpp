@@ -1,3 +1,10 @@
+#include "WebServer_LoadFromFS.h"
+
+#include "WebServer.h"
+#include "WebServer_CustomPage.h"
+#include "../Globals/RamTracker.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Network.h"
 
 // ********************************************************************************
 // Web Interface server web file from FS

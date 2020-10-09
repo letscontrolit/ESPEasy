@@ -1,7 +1,24 @@
+#include "WebServer_ConfigPage.h"
 
 #ifdef WEBSERVER_CONFIG
 
-#include "src/Helpers/DeepSleep.h"
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_AccessControl.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+#include "WebServer_Markup_Forms.h"
+
+#include "../Globals/MQTT.h"
+#include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
+
+#include "../Helpers/DeepSleep.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Networking.h"
+#include "../Helpers/StringConverter.h"
+
+#include "../../ESPEasy_fdwdecl.h"
 
 // ********************************************************************************
 // Web Interface config page

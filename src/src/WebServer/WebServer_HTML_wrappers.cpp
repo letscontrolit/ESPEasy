@@ -1,4 +1,8 @@
-#include "src/Static/WebStaticData.h"
+#include "WebServer_HTML_wrappers.h"
+
+#include "../Static/WebStaticData.h"
+
+#include "WebServer_Markup.h"
 
 
 // ********************************************************************************
@@ -72,7 +76,7 @@ void html_TD(int td_cnt) {
   }
 }
 
-static int copyTextCounter = 0;
+int copyTextCounter = 0;
 
 void html_reset_copyTextCounter() {
   copyTextCounter = 0;

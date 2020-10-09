@@ -1,8 +1,18 @@
-#include "ESPEasy_common.h"
+#include "WebServer_TimingStats.h"
 
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Forms.h"
+
+#include "../DataStructs/ESPEasy_plugin_functions.h"
+
+#include "../Globals/ESPEasy_time.h"
+#include "../Globals/Protocol.h"
+#include "../Globals/RamTracker.h"
 
 #if defined(WEBSERVER_TIMINGSTATS) && defined(USES_TIMING_STATS)
-#include "src/Globals/Device.h"
+#include "../Globals/Device.h"
 
 
 #define TIMING_STATS_THRESHOLD 100000

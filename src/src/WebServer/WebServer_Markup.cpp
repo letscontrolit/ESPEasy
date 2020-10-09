@@ -1,5 +1,14 @@
-// ********************************************************************************
 
+#include "WebServer_Markup.h"
+
+#include "WebServer_HTML_wrappers.h"
+
+#include "../Globals/Settings.h"
+
+#include "../Helpers/Hardware.h"
+#include "../Helpers/StringGenerator_GPIO.h"
+
+// ********************************************************************************
 // Add Selector
 // ********************************************************************************
 void addSelector(const String& id,

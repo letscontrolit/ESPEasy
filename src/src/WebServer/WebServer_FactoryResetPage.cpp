@@ -1,6 +1,21 @@
+#include "WebServer_FactoryResetPage.h"
+
+
 #ifdef WEBSERVER_FACTORY_RESET
 
-#include "src/Globals/ResetFactoryDefaultPref.h"
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+#include "WebServer_Markup_Forms.h"
+
+#include "../DataStructs/DeviceModel.h"
+
+#include "../Globals/ResetFactoryDefaultPref.h"
+
+#include "../Helpers/ESPEasy_FactoryDefault.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Hardware.h"
 
 // ********************************************************************************
 // Web Interface Factory Reset

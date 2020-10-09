@@ -15,7 +15,13 @@
 #include "src/Globals/Plugins.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/_CPlugin_SensorTypeHelper.h"
 #include "src/Helpers/I2C_access.h"
+#include "src/Helpers/StringGenerator_GPIO.h"
+
+#include "src/WebServer/WebServer_HTML_wrappers.h"
+#include "src/WebServer/WebServer_Markup.h"
+#include "src/WebServer/WebServer_Markup_Forms.h"
 
 // Defines to make plugins more readable.
 

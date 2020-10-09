@@ -1,3 +1,13 @@
+#include "WebServer_FileList.h"
+
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_AccessControl.h"
+#include "WebServer_Markup_Buttons.h"
+
+#include "../Helpers/ESPEasy_Storage.h"
+
+#include "../../ESPEasy-Globals.h"
 
 #ifdef WEBSERVER_NEW_UI
 

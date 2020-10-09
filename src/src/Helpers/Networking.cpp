@@ -1,7 +1,20 @@
-#include "src/Commands/InternalCommands.h"
-#include "src/Globals/ESPEasy_Scheduler.h"
-#include "src/Globals/Nodes.h"
-#include "src/Globals/ESPEasyWiFiEvent.h"
+#include "Networking.h"
+
+#include "../Commands/InternalCommands.h"
+#include "../DataStructs/TimingStats.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/NetworkState.h"
+#include "../Globals/Nodes.h"
+#include "../Globals/Settings.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Network.h"
+#include "../Helpers/StringConverter.h"
+#include "../../ESPEasy_Log.h"
+#include "../../ESPEasyWifi.h"
+
+#include <IPAddress.h>
 
 // Generic Networking routines
 
@@ -54,7 +67,7 @@ void etharp_gratuitous_r(struct netif *netif) {
 #endif  // USE_SETTINGS_ARCHIVE
 
 
-#include "src/DataStructs/EventValueSource.h"
+#include "../DataStructs/EventValueSource.h"
 
 /*********************************************************************************************\
    Syslog client
@@ -534,11 +547,6 @@ void SSDP_schema(WiFiClient& client) {
 /********************************************************************************************\
    Global SSDP stuff
  \*********************************************************************************************/
-typedef enum {
-  NONE,
-  SEARCH,
-  NOTIFY
-} ssdp_method_t;
 
 UdpContext *_server;
 

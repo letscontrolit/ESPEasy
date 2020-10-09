@@ -1,23 +1,66 @@
-#define _HEAD false
-#define _TAIL true
+#include "WebServer.h"
 
-#include <Arduino.h>
+#include "WebServer_404.h"
+#include "WebServer_AccessControl.h"
+#include "WebServer_AdvancedConfigPage.h"
+#include "WebServer_CacheControllerPages.h"
+#include "WebServer_ConfigPage.h"
+#include "WebServer_ControlPage.h"
+#include "WebServer_ControllerPage.h"
+#include "WebServer_CustomPage.h"
+#include "WebServer_DevicesPage.h"
+#include "WebServer_DownloadPage.h"
+#include "WebServer_FactoryResetPage.h"
+#include "WebServer_Favicon.h"
+#include "WebServer_FileList.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_HardwarePage.h"
+#include "WebServer_I2C_Scanner.h"
+#include "WebServer_JSON.h"
+#include "WebServer_LoadFromFS.h"
+#include "WebServer_Log.h"
+#include "WebServer_Login.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+#include "WebServer_Markup_Forms.h"
+#include "WebServer_NotificationPage.h"
+#include "WebServer_PinStates.h"
+#include "WebServer_RootPage.h"
+#include "WebServer_Rules.h"
+#include "WebServer_SettingsArchive.h"
+#include "WebServer_SetupPage.h"
+#include "WebServer_SysInfoPage.h"
+#include "WebServer_SysVarPage.h"
+#include "WebServer_TimingStats.h"
+#include "WebServer_ToolsPage.h"
+#include "WebServer_UploadPage.h"
+#include "WebServer_WiFiScanner.h"
 
-#include "ESPEasyNetwork.h"
-#include "ESPEasy_common.h"
-
-#include "src/DataStructs/SettingsType.h"
-
-#include "src/Globals/CPlugins.h"
-#include "src/Globals/Device.h"
-#include "src/Globals/TXBuffer.h"
-
-#include "src/Helpers/OTA.h"
-
-#include "src/Static/WebStaticData.h"
 
 
-void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean rebooting = false) {
+#include "../../ESPEasyNetwork.h"
+#include "../../ESPEasyWifi.h"
+#include "../../_Plugin_Helper.h"
+
+#include "../DataStructs/SettingsType.h"
+#include "../DataStructs/TimingStats.h"
+
+#include "../Globals/CPlugins.h"
+#include "../Globals/Device.h"
+#include "../Globals/ExtraTaskSettings.h"
+#include "../Globals/NetworkState.h"
+#include "../Globals/Protocol.h"
+#include "../Globals/SecuritySettings.h"
+
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Networking.h"
+#include "../Helpers/OTA.h"
+#include "../Helpers/StringConverter.h"
+
+#include "../Static/WebStaticData.h"
+
+
+void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
@@ -102,7 +145,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail = false, boolean reboo
   STOP_TIMER(HANDLE_SERVING_WEBPAGE);
 }
 
-void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false) {
+void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
 
   if (!Tail) {
@@ -160,13 +203,6 @@ size_t streamFile_htmlEscape(const String& fileName)
 // ********************************************************************************
 // #include "core_version.h"
 
-#define TASKS_PER_PAGE TASKS_MAX
-
-// Uncrustify must not be used on macros, so turn it off.
-// *INDENT-OFF*
-#define strncpy_webserver_arg(D, N) safe_strncpy(D, web_server.arg(N).c_str(), sizeof(D));
-// Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
-// *INDENT-ON*
 
 void WebServerInit()
 {
@@ -465,15 +501,7 @@ void getErrorNotifications() {
   // Check checksum of stored settings.
 }
 
-#define MENU_INDEX_MAIN          0
-#define MENU_INDEX_CONFIG        1
-#define MENU_INDEX_CONTROLLERS   2
-#define MENU_INDEX_HARDWARE      3
-#define MENU_INDEX_DEVICES       4
-#define MENU_INDEX_RULES         5
-#define MENU_INDEX_NOTIFICATIONS 6
-#define MENU_INDEX_TOOLS         7
-static byte navMenuIndex = MENU_INDEX_MAIN;
+byte navMenuIndex = MENU_INDEX_MAIN;
 
 // See https://github.com/letscontrolit/ESPEasy/issues/1650
 String getGpMenuIcon(byte index) {

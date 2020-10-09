@@ -1,7 +1,22 @@
-#include "src/Commands/InternalCommands.h"
-#include "src/Globals/Nodes.h"
-#include "src/Globals/Device.h"
-#include "src/Globals/Plugins.h"
+#include "WebServer_CustomPage.h"
+
+#include "WebServer.h"
+#include "WebServer_AccessControl.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Forms.h"
+
+#include "../Commands/InternalCommands.h"
+#include "../Globals/ExtraTaskSettings.h"
+#include "../Globals/Nodes.h"
+#include "../Globals/Device.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/Settings.h"
+
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringParser.h"
+
+#include "../../_Plugin_Helper.h"
 
 // ********************************************************************************
 // Web Interface custom page handler

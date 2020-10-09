@@ -1,15 +1,25 @@
-#include "src/Globals/RTC.h"
-#include "src/DataStructs/RTCStruct.h"
-#include "src/Globals/CRCValues.h"
-#include "src/Static/WebStaticData.h"
-#include "ESPEasy_common.h"
+#include "WebServer_SysInfoPage.h"
 
-#include "src/Commands/Diagnostic.h"
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
 
-#include "src/Helpers/Hardware.h"
-#include "src/Helpers/Memory.h"
-#include "src/Helpers/OTA.h"
-#include "src/Helpers/StringGenerator_System.h"
+#include "../Globals/RTC.h"
+#include "../DataStructs/RTCStruct.h"
+#include "../Globals/CRCValues.h"
+#include "../Static/WebStaticData.h"
+
+#include "../Commands/Diagnostic.h"
+
+#include "../Helpers/CompiletimeDefines.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/Memory.h"
+#include "../Helpers/OTA.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_GPIO.h"
+#include "../Helpers/StringGenerator_System.h"
 
 #ifdef WEBSERVER_NEW_UI
 

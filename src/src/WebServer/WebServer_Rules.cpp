@@ -1,5 +1,22 @@
 // #define WEBSERVER_RULES_DEBUG
 
+#include "WebServer_Rules.h"
+
+#include "WebServer.h"
+#include "WebServer_AccessControl.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+#include "WebServer_Markup_Forms.h"
+
+
+#include "../Globals/Settings.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
+#include "../Static/WebStaticData.h"
+
+#include <FS.h>
+
 #ifdef WEBSERVER_RULES
 
 // ********************************************************************************
@@ -138,74 +155,75 @@ void handle_rules_new() {
 
   // Build table detail
   int count = -1;
-  HandlerFileInfo renderDetail = [/*&buffer,*/ &count, endIdx](fileInfo fi) {
-    #ifdef WEBSERVER_RULES_DEBUG
-                                   Serial.print(F("Start generation of: "));
-                                   Serial.println(fi.Name);
-    #endif // ifdef WEBSERVER_RULES_DEBUG
+  HandlerFileInfo renderDetail = [/*&buffer,*/ &count, endIdx](fileInfo fi) 
+  {
+#ifdef WEBSERVER_RULES_DEBUG
+    Serial.print(F("Start generation of: "));
+    Serial.println(fi.Name);
+#endif // ifdef WEBSERVER_RULES_DEBUG
 
-                                   if (fi.isDirectory)
-                                   {
-                                     html_TR_TD();
-                                   }
-                                   else
-                                   {
-                                     count++;
-                                     addHtml(F("<TR><TD style='text-align:right'>"));
-                                   }
+    if (fi.isDirectory)
+    {
+      html_TR_TD();
+    }
+    else
+    {
+      count++;
+      addHtml(F("<TR><TD style='text-align:right'>"));
+    }
 
-                                   // Event Name
-                                   addHtml(FileNameToEvent(fi.Name));
+    // Event Name
+    addHtml(FileNameToEvent(fi.Name));
 
-                                   if (fi.isDirectory)
-                                   {
-                                     addHtml(F("</TD><TD></TD><TD></TD><TD>"));
-                                     addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
-                                                   , F("Backup")
-                                                   );
-                                   }
-                                   else
-                                   {
-                                     String encodedPath =  URLEncode((fi.Name + F(".txt")).c_str());
+    if (fi.isDirectory)
+    {
+      addHtml(F("</TD><TD></TD><TD></TD><TD>"));
+      addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
+                    , F("Backup")
+                    );
+    }
+    else
+    {
+      String encodedPath =  URLEncode((fi.Name + F(".txt")).c_str());
 
-                                     // File Name
-                                     {
-                                       String html;
-                                       html.reserve(128);
+      // File Name
+      {
+        String html;
+        html.reserve(128);
 
-                                       html += F("</TD><TD><a href='");
-                                       html += fi.Name;
-                                       html += F(".txt");
-                                       html += "'>";
-                                       html += fi.Name;
-                                       html += F(".txt");
-                                       html += F("</a></TD>");
+        html += F("</TD><TD><a href='");
+        html += fi.Name;
+        html += F(".txt");
+        html += "'>";
+        html += fi.Name;
+        html += F(".txt");
+        html += F("</a></TD>");
 
-                                       // File size
-                                       html += F("<TD>");
-                                       html += fi.Size;
-                                       html += F("</TD>");
-                                       addHtml(html);
-                                     }
+        // File size
+        html += F("<TD>");
+        html += fi.Size;
+        html += F("</TD>");
+        addHtml(html);
+      }
 
-                                     // Actions
-                                     html_TD();
-                                     addSaveButton(String(F("/rules/backup?fileName=")) + encodedPath
-                                                   , F("Backup")
-                                                   );
+      // Actions
+      html_TD();
+      addSaveButton(String(F("/rules/backup?fileName=")) + encodedPath
+                    , F("Backup")
+                    );
 
-                                     addDeleteButton(String(F("/rules/delete?fileName=")) + encodedPath
-                                                     , F("Delete")
-                                                     );
-                                   }
-                                   addHtml(F("</TD></TR>"));
-    #ifdef WEBSERVER_RULES_DEBUG
-                                   Serial.print(F("End generation of: "));
-                                   Serial.println(fi.Name);
-    #endif // ifdef WEBSERVER_RULES_DEBUG
+      addDeleteButton(String(F("/rules/delete?fileName=")) + encodedPath
+                      , F("Delete")
+                      );
+    }
+    addHtml(F("</TD></TR>"));
+#ifdef WEBSERVER_RULES_DEBUG
+    Serial.print(F("End generation of: "));
+    Serial.println(fi.Name);
+#endif // ifdef WEBSERVER_RULES_DEBUG
 
-                                   return count < endIdx;
-                                 };
+    return count < endIdx;
+  };
 
 
   bool hasMore = EnumerateFileAndDirectory(rootPath

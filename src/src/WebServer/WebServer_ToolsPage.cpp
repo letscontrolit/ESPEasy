@@ -1,3 +1,16 @@
+#include "WebServer_ToolsPage.h"
+
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+#include "WebServer_Markup_Forms.h"
+
+#include "../Helpers/OTA.h"
+
+#include "../../ESPEasy-Globals.h"
+
+
 #ifdef WEBSERVER_TOOLS
 
 #include "src/Commands/InternalCommands.h"

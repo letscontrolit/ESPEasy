@@ -1,6 +1,8 @@
 #ifdef WEBSERVER_ADVANCED
 
-#include "src/Globals/TimeZone.h"
+#include "WebServer_AdvancedConfigPage.h"
+
+#include "../Globals/TimeZone.h"
 
 // ********************************************************************************
 // Web Interface config page
