@@ -569,6 +569,7 @@ function Converter(decoded, port) {
                 case 85:
                     converted.name = "AcuDC243";
                     // This plugin can output any value, just using the default settings here.
+                    // TODO TD-er: Must add binary representation of all values
                     converted.volt  = converted.val_1;
                     converted.current  = converted.val_2;
                     converted.watt  = converted.val_3;
@@ -595,7 +596,61 @@ function Converter(decoded, port) {
                     */
                     break;
 
+                case 89:
+                    converted.name = "Ping";
+                    converted.fails = converted.val_1;
+                    break;
+    
+                case 90:
+                    converted.name = "CCS811";
+                    converted.TVOC  = converted.val_1;
+                    converted.eCO2  = converted.val_2;
+                    break;
+    
+                case 91:
+                    converted.name = "SerSwitch";
+                    // Can select a number of outputs
+                    converted.relay1  = converted.val_1;
+                    converted.relay2  = converted.val_2;
+                    converted.relay3  = converted.val_3;
+                    converted.relay4  = converted.val_4;
+                    break;
+    
+                case 92:
+                    converted.name = "DLbus";
+                    // Can select a number of outputs
+                    // TODO TD-er: Must add binary representation of all values
+                    converted.v1  = converted.val_1;
+                    converted.v2  = converted.val_2;
+                    converted.v3  = converted.val_3;
+                    converted.v4  = converted.val_4;
+                    break;
 
+                case 93:
+                    converted.name = "MitsubishiHP";
+                    // Outputs string
+                    // TODO TD-er: Must add binary representation of all values
+                    converted.v1  = converted.val_1;
+                    break;
+
+                case 94:
+                    converted.name = "CULreader";
+                    // Outputs string
+                    // TODO TD-er: Must add binary representation of all values
+                    converted.v1  = converted.val_1;
+                    break;
+
+                case 97:
+                    converted.name = "ESP32Touch";
+                    converted.touch  = converted.val_1;
+                    break;
+
+                case 100:
+                    converted.name = "DS2423counter";
+                    // TODO TD-er: This is probably the worst possible value to send over a LoRa network, as packets may get lost.
+                    converted.countdelta  = converted.val_1;
+                    break;
+                        
 
                 default:
                     converted.v1  = converted.val_1;
