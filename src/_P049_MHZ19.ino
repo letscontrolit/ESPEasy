@@ -592,24 +592,24 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex]     = (float)ppm;
             UserVar[event->BaseVarIndex + 1] = (float)temp;
             UserVar[event->BaseVarIndex + 2] = (float)u;
-
-            if ((s == 0) || (s == 64)) {
-              // Reading is stable.
-              if (P049_data->ABC_MustApply) {
-                // Send ABC enable/disable command based on the desired state.
-                if (P049_data->ABC_Disable) {
-                  P049_data->send_mhzCmd(mhzCmdABCDisable);
-                  addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
-                } else {
-                  P049_data->send_mhzCmd(mhzCmdABCEnable);
-                  addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
-                }
-                P049_data->ABC_MustApply = false;
-              }
-            }
-            success = true;
+            success                          = true;
           } else {
             success = false;
+          }
+        }
+
+        if ((s == 0) || (s == 64)) {
+          // Reading is stable.
+          if (P049_data->ABC_MustApply) {
+            // Send ABC enable/disable command based on the desired state.
+            if (P049_data->ABC_Disable) {
+              P049_data->send_mhzCmd(mhzCmdABCDisable);
+              addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
+            } else {
+              P049_data->send_mhzCmd(mhzCmdABCEnable);
+              addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
+            }
+            P049_data->ABC_MustApply = false;
           }
         }
 
