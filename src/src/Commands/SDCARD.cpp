@@ -2,8 +2,8 @@
 
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
+#include "../ESPEasyCore/Serial.h"
 #include "../Globals/Settings.h"
-
 
 
 

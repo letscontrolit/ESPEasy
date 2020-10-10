@@ -3,6 +3,7 @@
 #include "WebServer.h"
 #include "WebServer_HTML_wrappers.h"
 #include "WebServer_AccessControl.h"
+#include "WebServer_Markup.h"
 #include "WebServer_Markup_Buttons.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
@@ -10,6 +11,11 @@
 #include "../Helpers/ESPEasy_Storage.h"
 
 #include "../../ESPEasy-Globals.h"
+
+#ifdef USES_C016
+#include "../Globals/C016_ControllerCache.h"
+#endif
+
 
 #ifdef WEBSERVER_NEW_UI
 

@@ -7,6 +7,12 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/Networking.h"
 
+#include <FS.h>
+
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
   \*********************************************************************************************/

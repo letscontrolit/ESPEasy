@@ -1,6 +1,6 @@
 #include "PeriodicalActions.h"
 
-
+#include "../../ESPEasyNetwork.h"
 #include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_common.h"
 #include "../../EspEasyGPIO.h"

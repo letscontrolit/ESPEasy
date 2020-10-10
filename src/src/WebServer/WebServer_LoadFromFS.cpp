@@ -6,6 +6,10 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Network.h"
 
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 // ********************************************************************************
 // Web Interface server web file from FS
 // ********************************************************************************

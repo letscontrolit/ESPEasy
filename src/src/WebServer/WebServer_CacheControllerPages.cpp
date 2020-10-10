@@ -2,6 +2,18 @@
 
 #ifdef USES_C016
 
+#include "WebServer.h"
+#include "WebServer_AccessControl.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_JSON.h"
+#include "../DataStructs/DeviceStruct.h"
+#include "../DataStructs/ESPEasyLimits.h"
+#include "../DataStructs/TaskIndex.h"
+#include "../Globals/C016_ControllerCache.h"
+#include "../Globals/ExtraTaskSettings.h"
+#include "../Helpers/ESPEasy_Storage.h"
+
+
 // ********************************************************************************
 // URLs needed for C016_CacheController
 // to help dump the content of the binary log files
