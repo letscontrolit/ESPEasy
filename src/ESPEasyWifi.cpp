@@ -5,6 +5,8 @@
 #include "ESPEasyWiFi_credentials.h"
 #include "ESPEasyWifi_ProcessEvent.h"
 #include "src/DataStructs/TimingStats.h"
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/Serial.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/EventQueue.h"
 #include "src/Globals/NetworkState.h"

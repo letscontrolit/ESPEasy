@@ -10,6 +10,8 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/EventValueSource.h"
 
+#include "../ESPEasyCore/Serial.h"
+
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 

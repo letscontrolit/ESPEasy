@@ -1,7 +1,6 @@
 #include "_CPlugin_Helper.h"
 
 #include "ESPEasy_fdwdecl.h"
-#include "ESPEasy_Log.h"
 #include "ESPEasy_common.h"
 
 #include "src/DataStructs/SecurityStruct.h"
@@ -10,6 +9,8 @@
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/TimingStats.h"
+
+#include "src/ESPEasyCore/ESPEasy_Log.h"
 
 #include "src/Globals/Settings.h"
 #include "src/Globals/SecuritySettings.h"

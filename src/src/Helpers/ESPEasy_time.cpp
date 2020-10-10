@@ -1,8 +1,9 @@
 #include "ESPEasy_time.h"
 
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_fdwdecl.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"

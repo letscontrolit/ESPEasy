@@ -10,6 +10,8 @@
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 #include "../DataStructs/StorageLayout.h"
 
+#include "../ESPEasyCore/Serial.h"
+
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/SecuritySettings.h"

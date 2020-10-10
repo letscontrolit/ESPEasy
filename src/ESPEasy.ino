@@ -111,6 +111,8 @@
 #include "src/DataStructs/tcp_cleanup.h"
 
 #include "src/ESPEasyCore/ESPEasyRules.h"
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/Serial.h"
 
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"

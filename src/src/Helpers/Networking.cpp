@@ -2,6 +2,7 @@
 
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/TimingStats.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/NetworkState.h"
@@ -12,7 +13,6 @@
 #include "../Helpers/Network.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
-#include "../../ESPEasy_Log.h"
 #include "../../ESPEasyWifi.h"
 
 #include <IPAddress.h>

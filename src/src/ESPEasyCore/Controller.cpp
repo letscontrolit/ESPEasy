@@ -12,6 +12,7 @@
 #include "../DataStructs/ESPEasy_plugin_functions.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
+#include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"

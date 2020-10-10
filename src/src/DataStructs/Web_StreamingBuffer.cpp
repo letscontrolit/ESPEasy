@@ -1,9 +1,9 @@
 #include "../DataStructs/Web_StreamingBuffer.h"
 
 #include "../DataStructs/tcp_cleanup.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
-#include "../../ESPEasy_Log.h"
 #include "../../ESPEasyTimeTypes.h"
 
 

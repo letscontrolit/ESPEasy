@@ -1,7 +1,8 @@
 #include "MDNS_Helper.h"
 
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/NetworkState.h"
-#include "../../ESPEasy_Log.h"
+
 #include "../../ESPEasyNetwork.h"
 
 

@@ -1,6 +1,9 @@
 #include "P044_data_struct.h"
 
+#include "../ESPEasyCore/Serial.h"
+
 #include "../Globals/EventQueue.h"
+
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
 

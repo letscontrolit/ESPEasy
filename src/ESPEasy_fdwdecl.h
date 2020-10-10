@@ -70,21 +70,16 @@ bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char
 */
 void flushAndDisconnectAllClients();
 
+/*
 // Used in src/Commands/*
 void process_serialWriteBuffer();
 void serialPrintln(const String& text);
 void serialPrintln();
-
+*/
 
 
 float getCPUload();
 int getLoopCountPerSec();
-void serialPrint(const String& text);
-
-
-
-
-
 
 
 

@@ -8,6 +8,7 @@
 
 #include "../Commands/Common.h"
 
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Globals/ESPEasy_Scheduler.h"

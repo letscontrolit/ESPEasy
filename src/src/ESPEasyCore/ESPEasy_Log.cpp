@@ -1,8 +1,11 @@
 #include "ESPEasy_Log.h"
-#include "src/Globals/Logging.h"
-#include "src/Globals/ESPEasyWiFiEvent.h"
-#include "src/Globals/Settings.h"
-#include "src/DataStructs/LogStruct.h"
+
+#include "../DataStructs/LogStruct.h"
+#include "../ESPEasyCore/Serial.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/Logging.h"
+#include "../Globals/Settings.h"
+#include "../Helpers/Networking.h"
 
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )

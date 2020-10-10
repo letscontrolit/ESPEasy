@@ -106,10 +106,8 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 
 
 
-#include "ESPEasy_Log.h"
 #include "ESPEasyTimeTypes.h"
 #include "StringProviderTypes.h"
-#include "ESPeasySerial.h"
 #include "ESPEasy_fdwdecl.h"
 
 

@@ -8,6 +8,7 @@
 #include "../Commands/Common.h"
 
 #include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/Serial.h"
 
 #include "../Helpers/Misc.h"
 #include "../Helpers/Rules_calculate.h"

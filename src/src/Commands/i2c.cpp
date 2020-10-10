@@ -1,6 +1,8 @@
 #include "../Commands/i2c.h"
 
 #include "../Commands/Common.h"
+#include "../ESPEasyCore/Serial.h"
+
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
 

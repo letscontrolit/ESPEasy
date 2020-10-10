@@ -1,11 +1,12 @@
 #include "Plugins.h"
 
-#include "../../ESPEasy_Log.h"
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/TimingStats.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasy_Scheduler.h"

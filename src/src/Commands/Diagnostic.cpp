@@ -8,7 +8,7 @@
  */
 
 
-#include "../../ESPEasy_Log.h"
+
 #include "../../ESPEasy_fdwdecl.h"
 
 #include "../Commands/Common.h"
@@ -16,6 +16,9 @@
 #include "../DataStructs/PortStatusStruct.h"
 #include "../DataStructs/SettingsType.h"
 #include "../DataStructs/SettingsType.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/Device.h"
 #include "../Globals/ExtraTaskSettings.h"

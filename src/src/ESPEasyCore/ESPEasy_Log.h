@@ -1,5 +1,5 @@
-#ifndef ESP_EASY_LOG_H
-#define ESP_EASY_LOG_H
+#ifndef ESPEASYCORE_ESPEASY_LOG_H
+#define ESPEASYCORE_ESPEASY_LOG_H
 
 
 #include "ESPEasy_common.h"
@@ -21,6 +21,8 @@
 /********************************************************************************************\
   Logging
   \*********************************************************************************************/
+void initLog();
+
 String getLogLevelDisplayString(int logLevel);
 
 String getLogLevelDisplayStringFromIndex(byte index, int& logLevel);
@@ -50,4 +52,4 @@ void addToLog(byte logLevel, const char *line);
 #define addLog(L,S) if (loglevelActiveFor(L)) { addToLog(L,S); }
 
 
-#endif // ESP_EASY_LOG_H
+#endif 

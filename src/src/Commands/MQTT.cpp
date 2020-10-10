@@ -3,13 +3,13 @@
 
 #ifdef USES_MQTT
 
-#include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_fdwdecl.h"
 
 #include "../Commands/Common.h"
 #include "../Commands/MQTT.h"
 
 #include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"

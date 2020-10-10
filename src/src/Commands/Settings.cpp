@@ -5,6 +5,8 @@
 
 #include "../Commands/Common.h"
 
+#include "../ESPEasyCore/Serial.h"
+
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 

@@ -1,9 +1,15 @@
-#include "src/Commands/InternalCommands.h"
+#include "Serial.h"
+
+
+#include "../Commands/InternalCommands.h"
+
+#include "../Globals/Logging.h" //  For serialWriteBuffer
+
+#include "../Helpers/Memory.h"
 
 /********************************************************************************************\
  * Get data from Serial Interface
  \*********************************************************************************************/
-#define INPUT_BUFFER_SIZE          128
 
 byte SerialInByte;
 int  SerialInByteCounter = 0;

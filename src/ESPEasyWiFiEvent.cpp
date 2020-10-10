@@ -6,10 +6,11 @@
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/RTC.h"
 #include "ESPEasyTimeTypes.h"
-#include "ESPEasy_Log.h"
 #include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/RTCStruct.h"
+
+#include "src/ESPEasyCore/ESPEasy_Log.h"
 
 #include "src/Helpers/ESPEasy_time_calc.h"
 

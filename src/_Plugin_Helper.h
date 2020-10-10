@@ -4,13 +4,13 @@
 #include <Arduino.h>
 
 #include "ESPEasy_common.h"
-#include "ESPEasy_Log.h"
 #include "ESPEasy_fdwdecl.h"
 #include "src/DataStructs/DeviceStruct.h"
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/ESPEasy_plugin_functions.h"
 #include "src/ESPEasyCore/Controller.h"
+#include "src/ESPEasyCore/ESPEasy_Log.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/Plugins.h"

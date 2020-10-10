@@ -1,6 +1,5 @@
 #include "../Commands/HTTP.h"
 
-#include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../_CPlugin_Helper.h"
@@ -9,6 +8,8 @@
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/SettingsStruct.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/Settings.h"
 

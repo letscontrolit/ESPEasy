@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#include "../../ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/RamTracker.h"
 #include "../Helpers/StringConverter.h"
 
