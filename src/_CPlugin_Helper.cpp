@@ -1,7 +1,7 @@
 #include "_CPlugin_Helper.h"
 
-#include "ESPEasy_fdwdecl.h"
 #include "ESPEasy_common.h"
+#include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/SecurityStruct.h"
 #include "src/DataStructs/SettingsStruct.h"
@@ -20,7 +20,10 @@
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/Network.h"
+#include "src/Helpers/Networking.h"
 #include "src/Helpers/StringConverter.h"
+
+#include "ESPEasyNetwork.h"
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>

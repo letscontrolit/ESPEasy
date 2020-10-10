@@ -1,7 +1,7 @@
 #include "../Commands/Settings.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasyNetwork.h"
 
 #include "../Commands/Common.h"
 

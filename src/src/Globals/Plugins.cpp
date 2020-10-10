@@ -20,14 +20,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/PortStatus.h"
 
-#define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 
-
-deviceIndex_t  INVALID_DEVICE_INDEX  = PLUGIN_MAX;
-taskIndex_t    INVALID_TASK_INDEX    = TASKS_MAX;
-pluginID_t     INVALID_PLUGIN_ID     = 0;
-userVarIndex_t INVALID_USERVAR_INDEX = USERVAR_MAX_INDEX;
-taskVarIndex_t INVALID_TASKVAR_INDEX = VARS_PER_TASK;
 
 std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
 std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;

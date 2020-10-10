@@ -1,6 +1,6 @@
 #include "StringConverter.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"

@@ -4,21 +4,26 @@
 #include <Arduino.h>
 
 #include "ESPEasy_common.h"
-#include "ESPEasy_fdwdecl.h"
+
 #include "src/DataStructs/DeviceStruct.h"
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/ESPEasy_plugin_functions.h"
+
 #include "src/ESPEasyCore/Controller.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
+
 #include "src/Globals/Device.h"
-#include "src/Globals/ExtraTaskSettings.h"
-#include "src/Globals/Plugins.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Globals/ExtraTaskSettings.h"
+#include "src/Globals/I2Cdev.h"
+#include "src/Globals/Plugins.h"
+#include "src/Globals/Settings.h"
+
 #include "src/Helpers/ESPEasy_time_calc.h"
-#include "src/Helpers/_CPlugin_SensorTypeHelper.h"
 #include "src/Helpers/I2C_access.h"
 #include "src/Helpers/StringGenerator_GPIO.h"
+#include "src/Helpers/_CPlugin_SensorTypeHelper.h"
 
 #include "src/WebServer/WebServer_HTML_wrappers.h"
 #include "src/WebServer/WebServer_Markup.h"

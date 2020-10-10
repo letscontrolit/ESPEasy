@@ -3,7 +3,7 @@
 
 #ifdef USES_MQTT
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include "../Commands/Common.h"
 #include "../Commands/MQTT.h"

@@ -20,7 +20,7 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 // ********************************************************************************
 // Web Interface config page

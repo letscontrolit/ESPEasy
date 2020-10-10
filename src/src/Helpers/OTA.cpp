@@ -3,6 +3,8 @@
 #include <ArduinoOTA.h>
 
 #include "../../ESPEasy-Globals.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/Serial.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Helpers/Misc.h"

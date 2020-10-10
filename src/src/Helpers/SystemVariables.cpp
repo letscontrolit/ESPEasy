@@ -2,10 +2,13 @@
 
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasyNetwork.h"
+#include "../../ESPEasy_fdwdecl.h"
 
 #include "../DataStructs/TimingStats.h"
 
 #include "../Globals/CRCValues.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #ifdef USES_MQTT
 # include "../Globals/MQTT.h"
 #endif // ifdef USES_MQTT

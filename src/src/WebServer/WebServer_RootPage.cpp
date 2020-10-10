@@ -11,11 +11,14 @@
 
 #include "../Commands/InternalCommands.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasyNetwork.h"
 
 // ********************************************************************************
 // Web Interface root page

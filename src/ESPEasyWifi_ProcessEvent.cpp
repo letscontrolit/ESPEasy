@@ -4,7 +4,6 @@
 #include "ESPEasyNetwork.h"
 #include "ESPEasyWiFi_credentials.h"
 #include "ESPEasyWifi.h"
-#include "ESPEasy_fdwdecl.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ESPEasy_Scheduler.h"

@@ -1,7 +1,7 @@
 #include "../Commands/HTTP.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasyNetwork.h"
 #include "../../_CPlugin_Helper.h"
 
 #include "../Commands/Common.h"

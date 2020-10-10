@@ -1,6 +1,7 @@
 #include "WebServer_Log.h"
 
 #include "WebServer.h"
+#include "WebServer_404.h"
 #include "WebServer_HTML_wrappers.h"
 #include "WebServer_JSON.h"
 #include "WebServer_Markup.h"

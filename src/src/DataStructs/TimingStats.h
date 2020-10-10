@@ -3,7 +3,7 @@
 
 #include "ESPEasy_plugin_functions.h"
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #ifdef USES_TIMING_STATS
 

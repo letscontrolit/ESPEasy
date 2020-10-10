@@ -1,6 +1,6 @@
 #include "Modbus_RTU.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "ESPEasy_time_calc.h"
 #include "StringConverter.h"

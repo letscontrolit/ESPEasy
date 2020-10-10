@@ -11,6 +11,7 @@
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/Cache.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/ExtraTaskSettings.h"

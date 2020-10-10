@@ -53,6 +53,7 @@
 #include "../Globals/SecuritySettings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/MDNS_Helper.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"

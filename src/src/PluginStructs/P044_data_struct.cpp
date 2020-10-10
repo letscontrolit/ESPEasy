@@ -7,6 +7,8 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
 
+#include "../../ESPEasyNetwork.h"
+
 #define P044_RX_WAIT              PCONFIG(0)
 
 

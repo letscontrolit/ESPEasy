@@ -1,7 +1,6 @@
 #include "_Plugin_Helper.h"
 
 #include "ESPEasy_common.h"
-#include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/SettingsStruct.h"

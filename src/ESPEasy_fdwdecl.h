@@ -2,109 +2,20 @@
 #define ESPEASY_FWD_DECL_H
 
 #include "ESPEasy_common.h"
-#include "src/DataStructs/SettingsType.h"
-#include "src/DataStructs/ESPEasy_EventStruct.h"
-
-#include "src/Globals/CPlugins.h"
 
 // FIXME TD-er: This header file should only be included from .ino or .cpp files
 // This is only needed until the classes that need these can include the appropriate .h files to have these forward declared.
 
 
-
-
-#if defined(ESP8266)
-
-//  #include <lwip/init.h>
-  # include <ESP8266WiFi.h>
-  # include <ESP8266WebServer.h>
-#endif // if defined(ESP8266)
-#if defined(ESP32)
-  # include <WiFi.h>
-  # include <WebServer.h>
-#endif // if defined(ESP32)
-
-#include <FS.h>
-
-#include <WiFiUdp.h>
-
-
 void     backgroundtasks();
 
 
-/*
-struct ControllerSettingsStruct;
-String   getUnknownString();
-bool     canYield();
-*/
-
-
-/*
-fs::File tryOpenFile(const String& fname,
-                     const String& mode);
-*/
-
-
-/*
-bool   NetworkConnected(uint32_t timeout_ms);
-bool   hostReachable(const IPAddress& ip);
-bool   hostReachable(const String& hostname);
-void   updateUDPport();
-*/
-
-/*
-void rulesProcessing(String& event);
-void parse_string_commands(String &line);
-
-#ifdef USES_MQTT
-
-void callback(char        *c_topic,
-              byte        *b_payload,
-              unsigned int length);
-void MQTTDisconnect();
-//bool MQTTConnect(controllerIndex_t controller_idx);
-bool MQTTCheck(controllerIndex_t controller_idx);
-//bool MQTT_queueFull(controllerIndex_t controller_idx);
-bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained);
-#endif // ifdef USES_MQTT
-*/
 void flushAndDisconnectAllClients();
-
-/*
-// Used in src/Commands/*
-void process_serialWriteBuffer();
-void serialPrintln(const String& text);
-void serialPrintln();
-*/
 
 
 float getCPUload();
 int getLoopCountPerSec();
 
-
-
-//bool ExecuteCommand(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line, bool tryPlugin, bool tryInternal, bool tryRemoteConfig);
-
-//void WifiScan(bool async, bool quick = false);
-//void WifiScan();
-//void WifiDisconnect();
-//void setAP(bool enable);
-//void setSTA(bool enable);
-
-// Used for Networking with Wifi or Ethernet
-//#include "ESPEasyEthWiFi.h"
-#include "ESPEasyNetwork.h"
-//void WiFiConnectRelaxed();
-//bool WiFiConnected();
-
-#include "src/Globals/ESPEasyWiFiEvent.h"
-
-//void setWifiMode(WiFiMode_t wifimode);
-
-
-
-//#include <FS.h>
-//void printDirectory(File dir, int numTabs);
 
 
 

@@ -1,7 +1,8 @@
 #include "../DataStructs/ControllerSettingsStruct.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasyNetwork.h"
+
 #include "../DataStructs/ESPEasyLimits.h"
 
 #include "../Helpers/Networking.h"

@@ -25,7 +25,6 @@
 
 
 #include "ESPEasy_common.h"
-#include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/ESPEasy_plugin_functions.h"
@@ -108,7 +107,6 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 
 #include "ESPEasyTimeTypes.h"
 #include "StringProviderTypes.h"
-#include "ESPEasy_fdwdecl.h"
 
 
 

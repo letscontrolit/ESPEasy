@@ -14,6 +14,7 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../../ESPEasyWifi.h"
+#include "../../ESPEasyNetwork.h"
 
 #include <IPAddress.h>
 

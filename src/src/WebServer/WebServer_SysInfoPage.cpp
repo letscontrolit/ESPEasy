@@ -8,6 +8,7 @@
 #include "../Globals/RTC.h"
 #include "../DataStructs/RTCStruct.h"
 #include "../Globals/CRCValues.h"
+#include "../Globals/NetworkState.h"
 #include "../Static/WebStaticData.h"
 
 #include "../Commands/Diagnostic.h"
@@ -20,6 +21,15 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 #include "../Helpers/StringGenerator_System.h"
+
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasyNetwork.h"
+
+
+#ifdef ESP32
+#include <esp_partition.h>
+#endif
+
 
 #ifdef WEBSERVER_NEW_UI
 

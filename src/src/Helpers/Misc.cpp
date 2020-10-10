@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
+#include "../../ESPEasy_fdwdecl.h"
 
 #include "../ESPEasyCore/Serial.h"
 

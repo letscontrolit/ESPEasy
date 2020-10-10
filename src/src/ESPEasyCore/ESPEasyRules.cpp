@@ -18,6 +18,8 @@
 
 #include "../../_Plugin_Helper.h"
 
+#include "../../ESPEasy_fdwdecl.h"
+
 boolean activeRuleSets[RULESETS_MAX];
 
 String EventToFileName(const String& eventName) {

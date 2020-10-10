@@ -5,7 +5,7 @@
 #include "../Globals/Settings.h"
 #include "../WebServer/WebServer_AccessControl.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #ifdef HAS_ETHERNET
 #include "ETH.h"
 #endif

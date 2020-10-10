@@ -9,6 +9,7 @@
 #include "eth_phy/phy.h"
 #include "src/Globals/NetworkState.h"
 #include "src/Helpers/StringConverter.h"
+#include "src/ESPEasyCore/ESPEasy_Log.h"
 
 bool ethUseStaticIP() {
   return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[0] != 255;

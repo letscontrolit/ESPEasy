@@ -1,7 +1,7 @@
 #include "Controller.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../_CPlugin_Helper.h"
 #include "../../_Plugin_Helper.h"
 
@@ -16,6 +16,7 @@
 
 #include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"

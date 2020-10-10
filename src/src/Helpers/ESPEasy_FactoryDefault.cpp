@@ -12,6 +12,7 @@
 
 #include "../ESPEasyCore/Serial.h"
 
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/SecuritySettings.h"

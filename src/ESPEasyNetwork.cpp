@@ -3,7 +3,6 @@
 #include "ESPEasy-Globals.h"
 #include "ESPEasyEth.h"
 #include "ESPEasyWifi.h"
-#include "ESPEasy_fdwdecl.h"
 
 #include "src/ESPEasyCore/ESPEasy_Log.h"
 #include "src/Globals/NetworkState.h"

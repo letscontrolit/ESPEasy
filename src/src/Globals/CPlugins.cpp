@@ -8,9 +8,7 @@
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 
-protocolIndex_t   INVALID_PROTOCOL_INDEX   = CPLUGIN_MAX;
-controllerIndex_t INVALID_CONTROLLER_INDEX = CONTROLLER_MAX;
-cpluginID_t       INVALID_C_PLUGIN_ID      = 0;
+
 
 // FIXME TD-er: Make these private and add functions to access its content.
 std::map<cpluginID_t, protocolIndex_t> CPlugin_id_to_ProtocolIndex;

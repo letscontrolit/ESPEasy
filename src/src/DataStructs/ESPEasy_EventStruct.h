@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "EventValueSource.h"
+#include "ControllerIndex.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/NPlugins.h"
 #include "../Globals/Plugins.h"

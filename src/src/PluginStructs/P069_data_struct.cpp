@@ -1,5 +1,6 @@
 #include "P069_data_struct.h"
 
+#include "../Globals/I2Cdev.h"
 
 #ifdef USES_P069
 

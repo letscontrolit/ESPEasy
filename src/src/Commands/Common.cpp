@@ -5,7 +5,7 @@
 
 #include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/EventValueSource.h"

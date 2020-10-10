@@ -3,7 +3,8 @@
 #include "../Commands/Common.h"
 #include "../ESPEasyCore/Serial.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+#include "../Globals/I2Cdev.h"
+
 #include "../../ESPEasy_common.h"
 
 String Command_i2c_Scanner(struct EventStruct *event, const char* Line)
