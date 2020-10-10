@@ -1,9 +1,11 @@
-#include "ESPEasy_common.h"
+#include "ESPEasyStatistics.h"
+
 
 #ifdef USES_TIMING_STATS
 
-#include "src/DataStructs/TimingStats.h"
-#include "src/WebServer/WebServer.h"
+#include "../DataStructs/TimingStats.h"
+#include "../WebServer/WebServer.h"
+#include "../Globals/Protocol.h"
 
 /*
    void logStatistics(byte loglevel, bool clearStats) {
