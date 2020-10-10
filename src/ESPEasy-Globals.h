@@ -106,7 +106,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 
 
 #include "ESPEasyTimeTypes.h"
-#include "StringProviderTypes.h"
+#include "src/Helpers/StringProvider.h"
 
 
 

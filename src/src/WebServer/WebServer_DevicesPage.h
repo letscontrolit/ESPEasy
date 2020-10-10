@@ -6,15 +6,15 @@
 
 #ifdef WEBSERVER_DEVICES
 
-# include "src/Globals/Nodes.h"
-# include "src/Globals/Device.h"
-# include "src/Globals/CPlugins.h"
-# include "src/Globals/Plugins.h"
+#include "../Globals/Nodes.h"
+#include "../Globals/Device.h"
+#include "../Globals/CPlugins.h"
+#include "../Globals/Plugins.h"
 
-# include "src/Static/WebStaticData.h"
+#include "../Static/WebStaticData.h"
 
-# include "src/Helpers/_CPlugin_SensorTypeHelper.h"
-# include "src/Helpers/StringGenerator_GPIO.h"
+#include "../Helpers/_CPlugin_SensorTypeHelper.h"
+#include "../Helpers/StringGenerator_GPIO.h"
 
 #include <ESPeasySerial.h>
 

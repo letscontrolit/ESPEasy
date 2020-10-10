@@ -11,8 +11,9 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringProvider.h"
 #include "../../_Plugin_Helper.h"
-#include "../../StringProviderTypes.h"
+
 
 // ********************************************************************************
 // Web Interface get CSV value from task

@@ -5,7 +5,7 @@
 
 #ifdef USE_SETTINGS_ARCHIVE
 
-#include "../../StringProviderTypes.h"
+#include "../Helpers/StringProvider.h"
 
 // ********************************************************************************
 // Web Interface to manage archived settings

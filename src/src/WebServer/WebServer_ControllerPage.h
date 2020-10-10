@@ -9,7 +9,7 @@
 
 #ifdef WEBSERVER_CONTROLLERS
 
-#include "src/Globals/CPlugins.h"
+#include "../Globals/CPlugins.h"
 
 // ********************************************************************************
 // Web Interface controller page

@@ -13,7 +13,7 @@
 
 #ifdef WEBSERVER_TOOLS
 
-#include "src/Commands/InternalCommands.h"
+#include "../Commands/InternalCommands.h"
 
 // ********************************************************************************
 // Web Interface Tools page
