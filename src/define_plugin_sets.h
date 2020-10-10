@@ -1108,6 +1108,10 @@ To create/register a plugin, you have to :
   #ifdef FEATURE_I2CMULTIPLEXER
     #undef FEATURE_I2CMULTIPLEXER
   #endif
+  #ifdef USE_SETTINGS_ARCHIVE
+    #undef USE_SETTINGS_ARCHIVE
+  #endif
+
   #ifdef USE_SERVO
     #undef USE_SERVO
   #endif
