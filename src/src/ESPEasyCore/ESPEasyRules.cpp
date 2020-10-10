@@ -3,6 +3,7 @@
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/EventValueSource.h"
 #include "../DataStructs/TimingStats.h"
+#include "../ESPEasyCore/Serial.h"
 #include "../Globals/Device.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/ExtraTaskSettings.h"

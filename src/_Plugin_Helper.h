@@ -24,6 +24,7 @@
 #include "src/Helpers/I2C_access.h"
 #include "src/Helpers/StringGenerator_GPIO.h"
 #include "src/Helpers/_CPlugin_SensorTypeHelper.h"
+#include "src/Helpers/_Plugin_Helper_serial.h"
 
 #include "src/WebServer/WebServer_HTML_wrappers.h"
 #include "src/WebServer/WebServer_Markup.h"

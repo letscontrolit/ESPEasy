@@ -5,6 +5,7 @@
 #include "../../_CPlugin_Helper.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/Protocol.h"

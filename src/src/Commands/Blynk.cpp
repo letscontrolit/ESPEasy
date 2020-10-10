@@ -2,6 +2,7 @@
 
 
 #include "../../_CPlugin_Helper.h"
+#include "../../ESPEasy_fdwdecl.h"
 #include "../Commands/Common.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"

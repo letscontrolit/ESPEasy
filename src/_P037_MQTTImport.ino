@@ -11,6 +11,7 @@
 #include "src/Globals/MQTT.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
+#include "src/Helpers/StringParser.h"
 #include "_Plugin_Helper.h"
 
 #define PLUGIN_037

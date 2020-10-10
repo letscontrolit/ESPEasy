@@ -414,7 +414,9 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_POW
-    #define PLUGIN_DESCR  "Sonoff POW R1/R2"
+    #ifndef PLUGIN_DESCR
+        #define PLUGIN_DESCR  "Sonoff POW R1/R2"
+    #endif
 
     #define CONTROLLER_SET_STABLE
     #define PLUGIN_SET_ONLY_SWITCH
