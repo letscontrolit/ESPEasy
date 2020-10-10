@@ -11,10 +11,14 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
+#include "../ESPEasyCore/Controller.h"
+
 #include "../Globals/CPlugins.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 
+#include "../Helpers/_CPlugin_Helper_webform.h"
+#include "../Helpers/_CPlugin_SensorTypeHelper.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
 

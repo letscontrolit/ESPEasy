@@ -9,6 +9,7 @@
 #include "WebServer_Markup_Buttons.h"
 #include "WebServer_Markup_Forms.h"
 
+#include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"

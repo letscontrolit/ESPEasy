@@ -10,6 +10,7 @@
 #include "../Globals/Protocol.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 

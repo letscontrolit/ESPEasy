@@ -3,6 +3,8 @@
 #include "../../ESPEasyNetwork.h"
 #include "../../ESPEasy_common.h"
 
+#include "../ESPEasyCore/ESPEasyRules.h"
+
 #include "../Globals/EventQueue.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"

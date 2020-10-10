@@ -18,6 +18,7 @@
 #include "../Static/WebStaticData.h"
 
 #include "../Helpers/_CPlugin_SensorTypeHelper.h"
+#include "../Helpers/_Plugin_Helper_serial.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"

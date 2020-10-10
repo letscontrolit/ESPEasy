@@ -1,11 +1,15 @@
-#include "src/Globals/CPlugins.h"
-#include "src/Globals/SecuritySettings.h"
-#include "src/Globals/Settings.h"
-#include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/DataStructs/ESPEasy_plugin_functions.h"
+#include "_CPlugin_Helper_webform.h"
 
-#include "src/WebServer/WebServer.h"
-
+#include "../../_CPlugin_Helper.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/ESPEasy_plugin_functions.h"
+#include "../Globals/CPlugins.h"
+#include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
+#include "../Helpers/Networking.h"
+#include "../WebServer/WebServer.h"
+#include "../WebServer/WebServer_Markup.h"
+#include "../WebServer/WebServer_Markup_Forms.h"
 
 /*********************************************************************************************\
 * Functions to load and store controller settings on the web page.

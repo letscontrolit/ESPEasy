@@ -5,6 +5,8 @@
 #include "WebServer_AccessControl.h"
 #include "WebServer_Markup_Buttons.h"
 
+#include "../ESPEasyCore/ESPEasyRules.h"
+
 #include "../Helpers/ESPEasy_Storage.h"
 
 #include "../../ESPEasy-Globals.h"

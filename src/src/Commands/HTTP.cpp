@@ -13,6 +13,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringParser.h"
 
 

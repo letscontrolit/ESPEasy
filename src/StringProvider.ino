@@ -14,6 +14,7 @@
 #include "src/Helpers/StringGenerator_System.h"
 
 #include "src/WebServer/WebServer_JSON.h"
+#include "src/WebServer/WebServer_AccessControl.h"
 
 #include "ESPEasyWifi.h"
 

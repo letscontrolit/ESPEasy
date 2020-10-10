@@ -10,6 +10,7 @@
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/ESPEasy_plugin_functions.h"
+#include "src/ESPEasyCore/Controller.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/Plugins.h"

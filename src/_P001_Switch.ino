@@ -1,10 +1,13 @@
 #ifdef USES_P001
 
 #include "_Plugin_Helper.h"
+
 #include "src/DataStructs/PinMode.h"
 #include "src/Commands/GPIO.h"
-#include "src/Helpers/Scheduler.h"
+#include "src/ESPEasyCore/Controller.h"
 #include "src/Helpers/Audio.h"
+#include "src/Helpers/PortStatus.h"
+#include "src/Helpers/Scheduler.h"
 
 // #######################################################################################################
 // #################################### Plugin 001: Input Switch #########################################

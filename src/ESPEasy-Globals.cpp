@@ -45,6 +45,5 @@ String dummyString = "";  // FIXME @TD-er  This may take a lot of memory over ti
 bool shouldReboot(false);
 bool firstLoop(true);
 
-boolean activeRuleSets[RULESETS_MAX];
 
 boolean UseRTOSMultitasking(false);

@@ -1,19 +1,18 @@
-#include "ESPeasySerial.h"
-
-#include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/Helpers/StringConverter.h"
-#include "src/Helpers/StringGenerator_GPIO.h"
-
-#include "src/WebServer/WebServer_HTML_wrappers.h"
-#include "src/WebServer/WebServer_Markup.h"
-#include "src/WebServer/WebServer_Markup_Forms.h"
-
-#include "_Plugin_Helper.h"
+#include "_Plugin_Helper_serial.h"
 
 
-struct ESPeasySerialType;
+#include "../../_Plugin_Helper.h"
 
-static String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType) {
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_GPIO.h"
+
+#include "../WebServer/WebServer_HTML_wrappers.h"
+#include "../WebServer/WebServer_Markup.h"
+#include "../WebServer/WebServer_Markup_Forms.h"
+
+
+String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType) {
   int portnr = 0;
   switch (serType) {
     case ESPEasySerialPort::software:        return F("SoftwareSerial"); 
@@ -38,7 +37,7 @@ void serialHelper_log_GpioDescription(ESPEasySerialPort typeHint, int config_pin
   }
 }
 
-static String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pin1, int config_pin2, const String& newline) {
+String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pin1, int config_pin2, const String& newline) {
   String result;
   result.reserve(20);
   switch (ESPeasySerialType::getSerialType(typeHint, config_pin1, config_pin2)) {

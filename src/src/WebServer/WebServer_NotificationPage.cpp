@@ -1,5 +1,21 @@
 #include "WebServer_NotificationPage.h"
 
+#include "WebServer.h"
+#include "WebServer_HTML_wrappers.h"
+#include "WebServer_Markup.h"
+#include "WebServer_Markup_Buttons.h"
+#include "WebServer_Markup_Forms.h"
+
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/NotificationSettingsStruct.h"
+
+#include "../Helpers/ESPEasy_Storage.h"
+
+#include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/NPlugins.h"
+#include "../Globals/Settings.h"
+
+
 
 // ********************************************************************************
 // Web Interface notifcations page
@@ -44,6 +60,7 @@ void handle_notifications() {
         nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
         if (validNProtocolIndex(NotificationProtocolIndex)) {
+          String dummyString;
           NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
         }
         NotificationSettings.Port                       = getFormItemInt(F("port"), 0);

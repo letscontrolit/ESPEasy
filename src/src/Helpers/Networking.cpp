@@ -10,6 +10,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Network.h"
+#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../../ESPEasy_Log.h"
 #include "../../ESPEasyWifi.h"

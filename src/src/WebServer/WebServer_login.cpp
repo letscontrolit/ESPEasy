@@ -7,6 +7,8 @@
 #include "WebServer_Markup.h"
 #include "WebServer_Markup_Buttons.h"
 
+#include "../ESPEasyCore/ESPEasyRules.h"
+
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 

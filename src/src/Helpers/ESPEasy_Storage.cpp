@@ -22,6 +22,7 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/MDNS_Helper.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"

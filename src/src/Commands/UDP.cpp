@@ -7,6 +7,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 

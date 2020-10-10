@@ -10,6 +10,7 @@
 //#######################################################################################################
 
 #include "_Plugin_Helper.h"
+#include "src/Helpers/_Plugin_Helper_serial.h"
 #include "src/PluginStructs/P044_data_struct.h"
 #include <ESPeasySerial.h>
 

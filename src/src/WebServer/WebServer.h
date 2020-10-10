@@ -7,6 +7,7 @@
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../DataStructs/SettingsType.h"
 #include "../Globals/Plugins.h"
+#include "../Helpers/StringConverter.h"
 
 #define _HEAD false
 #define _TAIL true
@@ -36,8 +37,6 @@ void sendHeadandTail_stdtemplate(boolean Tail = false, boolean rebooting = false
 size_t streamFile_htmlEscape(const String& fileName);
 
 void WebServerInit();
-
-void set_mDNS();
 
 void setWebserverRunning(bool state);
 

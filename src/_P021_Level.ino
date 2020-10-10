@@ -5,6 +5,8 @@
 
 #include "_Plugin_Helper.h"
 
+#include "src/Helpers/Rules_calculate.h"
+
 #define PLUGIN_021
 #define PLUGIN_ID_021        21
 #define PLUGIN_NAME_021       "Regulator - Level Control"

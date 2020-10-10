@@ -9,6 +9,8 @@
 #include "WebServer_Markup_Buttons.h"
 #include "WebServer_Markup_Forms.h"
 
+#include "../ESPEasyCore/Controller.h"
+
 #include "../Globals/MQTT.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"

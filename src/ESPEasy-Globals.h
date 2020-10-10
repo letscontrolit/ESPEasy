@@ -29,6 +29,7 @@
 
 #include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/ESPEasy_plugin_functions.h"
+#include "src/DataStructs/NodeStruct.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/ESPEasy_time.h"
@@ -267,7 +268,6 @@ extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over 
 extern bool shouldReboot;
 extern bool firstLoop;
 
-extern boolean activeRuleSets[RULESETS_MAX];
 
 extern boolean UseRTOSMultitasking;
 

@@ -6,9 +6,11 @@
 
 #include "../Commands/GPIO.h"
 #include "../ControllerQueue/DelayQueueElements.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 #include "../Globals/RTC.h"
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"
 
 

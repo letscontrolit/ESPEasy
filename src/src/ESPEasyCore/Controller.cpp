@@ -1,23 +1,30 @@
-#include "ESPEasy_common.h"
-#include "ESPEasy_fdwdecl.h"
-#include "_CPlugin_Helper.h"
-#include "_Plugin_Helper.h"
+#include "Controller.h"
 
-#include "src/ControllerQueue/MQTT_queue_element.h"
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../_CPlugin_Helper.h"
+#include "../../_Plugin_Helper.h"
 
-#include "src/DataStructs/ControllerSettingsStruct.h"
-#include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/DataStructs/ESPEasy_plugin_functions.h"
+#include "../ControllerQueue/MQTT_queue_element.h"
 
-#include "src/Globals/CPlugins.h"
-#include "src/Globals/Device.h"
-#include "src/Globals/ESPEasy_Scheduler.h"
-#include "src/Globals/MQTT.h"
-#include "src/Globals/Plugins.h"
-#include "src/Globals/Protocol.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/ESPEasy_plugin_functions.h"
 
-#include "src/Helpers/PortStatus.h"
-#include "src/Helpers/Rules_calculate.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
+
+#include "../Globals/CPlugins.h"
+#include "../Globals/Device.h"
+#include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/MQTT.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/Protocol.h"
+
+#include "../Helpers/Misc.h"
+#include "../Helpers/Network.h"
+#include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/PortStatus.h"
+#include "../Helpers/Rules_calculate.h"
 
 // ********************************************************************************
 // Interface for Sending to Controllers

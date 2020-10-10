@@ -9,6 +9,8 @@
 #include "../ControllerQueue/MQTT_queue_element.h"
 #include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/TimingStats.h"
+#include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/MQTT.h"
@@ -21,6 +23,7 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringGenerator_System.h"
 
 

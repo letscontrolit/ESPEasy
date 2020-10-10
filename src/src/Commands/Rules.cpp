@@ -8,6 +8,9 @@
 
 #include "../DataStructs/EventValueSource.h"
 
+#include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
+
 #include "../Globals/EventQueue.h"
 #include "../Globals/Settings.h"
 

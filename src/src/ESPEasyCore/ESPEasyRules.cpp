@@ -1,15 +1,24 @@
-#define RULE_FILE_SEPARAROR '/'
-#define RULE_MAX_FILENAME_LENGTH 24
+#include "ESPEasyRules.h"
 
-#include "src/Commands/InternalCommands.h"
-#include "src/DataStructs/EventValueSource.h"
-#include "src/Globals/Device.h"
-#include "src/Globals/Plugins.h"
-#include "src/Globals/Plugins_other.h"
-#include "src/Helpers/ESPEasy_time_calc.h"
-#include "src/Helpers/Numerical.h"
-#include "src/Helpers/StringParser.h"
+#include "../Commands/InternalCommands.h"
+#include "../DataStructs/EventValueSource.h"
+#include "../DataStructs/TimingStats.h"
+#include "../Globals/Device.h"
+#include "../Globals/EventQueue.h"
+#include "../Globals/ExtraTaskSettings.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/Plugins_other.h"
+#include "../Globals/Settings.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringParser.h"
 
+#include "../../_Plugin_Helper.h"
+
+boolean activeRuleSets[RULESETS_MAX];
 
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();

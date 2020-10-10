@@ -53,6 +53,7 @@
 #include "../Globals/SecuritySettings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/MDNS_Helper.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
@@ -344,34 +345,6 @@ void WebServerInit()
   }
   # endif // USES_SSDP
   #endif  // if defined(ESP8266)
-}
-
-void set_mDNS() {
-  #ifdef FEATURE_MDNS
-
-  if (webserverRunning) {
-    addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
-    bool mdns_started = MDNS.begin(NetworkGetHostname().c_str());
-    MDNS.setInstanceName(NetworkGetHostname()); // Needed for when the hostname has changed.
-
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WIFI : ");
-
-      if (mdns_started) {
-        log += F("mDNS started, with name: ");
-        log += getValue(LabelType::M_DNS);
-      }
-      else {
-        log += F("mDNS failed");
-      }
-      addLog(LOG_LEVEL_INFO, log);
-    }
-
-    if (mdns_started) {
-      MDNS.addService("http", "tcp", Settings.WebserverPort);
-    }
-  }
-  #endif // ifdef FEATURE_MDNS
 }
 
 void setWebserverRunning(bool state) {

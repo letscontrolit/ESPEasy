@@ -5,8 +5,8 @@
 #include <vector>
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../DataStructs/ESPEasy_plugin_functions.h"
+#include "../DataStructs/NotificationStruct.h"
 
-struct NotificationStruct;
 
 typedef byte    nprotocolIndex_t;
 typedef byte    notifierIndex_t;

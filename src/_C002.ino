@@ -10,6 +10,9 @@
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
 #include "src/Commands/InternalCommands.h"
+
+#include "src/Helpers/StringParser.h"
+
 #include <ArduinoJson.h>
 
 String CPlugin_002_pubname;

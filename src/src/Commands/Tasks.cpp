@@ -7,6 +7,8 @@
 
 #include "../Commands/Common.h"
 
+#include "../ESPEasyCore/Controller.h"
+
 #include "../Helpers/Misc.h"
 #include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"

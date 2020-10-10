@@ -4,6 +4,7 @@
 #include "../../ESPEasy_fdwdecl.h"
 #include "../DataStructs/ESPEasyLimits.h"
 
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 
 

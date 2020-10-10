@@ -110,6 +110,8 @@
 #include "src/DataStructs/TimingStats.h"
 #include "src/DataStructs/tcp_cleanup.h"
 
+#include "src/ESPEasyCore/ESPEasyRules.h"
+
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
