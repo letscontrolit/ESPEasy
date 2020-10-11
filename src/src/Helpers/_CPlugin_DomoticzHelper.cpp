@@ -12,6 +12,8 @@
 #include "../Helpers/Convert.h"
 #include "../Helpers/StringConverter.h"
 
+#include "../../ESPEasy-Globals.h"
+
 
 
 // HUM_STAT can be one of:
