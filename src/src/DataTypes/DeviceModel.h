@@ -27,7 +27,5 @@ enum DeviceModel {
   DeviceModel_MAX
 };
 
-bool modelMatchingFlashSize(DeviceModel model, int size_MB);
-
 
 #endif // DATASTRUCTS_DEVICEMODEL_H

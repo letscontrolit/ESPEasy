@@ -42,8 +42,9 @@
 #include "../../ESPEasyWifi.h"
 #include "../../_Plugin_Helper.h"
 
-#include "../DataStructs/SettingsType.h"
 #include "../DataStructs/TimingStats.h"
+
+#include "../DataTypes/SettingsType.h"
 
 #include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"

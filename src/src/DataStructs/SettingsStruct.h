@@ -2,9 +2,9 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_H
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
-#include "../DataStructs/EthernetParameters.h"
-#include "../DataStructs/ESPEasyLimits.h"
-#include "../DataStructs/NetworkMedium.h"
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataTypes/EthernetParameters.h"
+#include "../DataTypes/NetworkMedium.h"
 #include "../Globals/Plugins.h"
 #include "../../ESPEasy_common.h"
 
@@ -12,6 +12,9 @@
 #ifndef DEFAULT_SPI
  #define DEFAULT_SPI 0
 #endif
+
+
+// FIXME TD-er: Move this PinBootState to DataTypes folder
 
 // State is stored, so don't change order
 enum class PinBootState {

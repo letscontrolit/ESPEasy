@@ -10,7 +10,8 @@
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
+
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/Serial.h"

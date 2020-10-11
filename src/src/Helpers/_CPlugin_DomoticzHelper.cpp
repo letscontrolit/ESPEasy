@@ -3,7 +3,7 @@
 #ifdef USES_DOMOTICZ
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/TaskIndex.h"
+#include "../DataTypes/TaskIndex.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 

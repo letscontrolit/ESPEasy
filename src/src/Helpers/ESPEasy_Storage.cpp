@@ -3,7 +3,8 @@
 #include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/StorageLayout.h"
+#include "../CustomBuild/StorageLayout.h"
+
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"

@@ -8,7 +8,7 @@
 
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/EventValueSource.h"
+#include "../DataTypes/EventValueSource.h"
 
 #include "../ESPEasyCore/Serial.h"
 

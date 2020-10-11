@@ -1,9 +1,10 @@
 #include "SettingsType.h"
 
-#include "ControllerSettingsStruct.h"
-#include "NotificationSettingsStruct.h"
-#include "SecurityStruct.h"
-#include "StorageLayout.h"
+#include "../CustomBuild/StorageLayout.h"
+#include "../DataStructs/NotificationSettingsStruct.h"
+#include "../DataStructs/SecurityStruct.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
+
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
 

@@ -1,8 +1,8 @@
 #include "ESPEasyRules.h"
 
 #include "../Commands/InternalCommands.h"
-#include "../DataStructs/EventValueSource.h"
 #include "../DataStructs/TimingStats.h"
+#include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Device.h"
 #include "../Globals/EventQueue.h"

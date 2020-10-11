@@ -3,11 +3,13 @@
 
 #include <map>
 #include <vector>
-#include "../DataStructs/PluginID.h"
-#include "../DataStructs/DeviceIndex.h"
-#include "../DataStructs/TaskIndex.h"
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
+
+#include "../DataTypes/PluginID.h"
+#include "../DataTypes/DeviceIndex.h"
+#include "../DataTypes/TaskIndex.h"
+
 #include "../../ESPEasy_common.h"
 
 

@@ -9,7 +9,7 @@
 #include "WebServer_Markup_Buttons.h"
 #include "WebServer_Markup_Forms.h"
 
-#include "../DataStructs/DeviceModel.h"
+#include "../DataTypes/DeviceModel.h"
 
 #include "../Globals/ResetFactoryDefaultPref.h"
 

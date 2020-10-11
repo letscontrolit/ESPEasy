@@ -16,10 +16,10 @@
 # include <ESPeasySerial.h>
 
 # include "src/ControllerQueue/C018_queue_element.h"
-# include "src/DataStructs/ESPEasy_plugin_functions.h"
-# include "src/Helpers/_Plugin_Helper_serial.h"
+# include "src/DataTypes/ESPEasy_plugin_functions.h"
 # include "src/Globals/CPlugins.h"
 # include "src/Globals/Protocol.h"
+# include "src/Helpers/_Plugin_Helper_serial.h"
 
 
 // Have this define after the includes, so we can set it in Custom.h

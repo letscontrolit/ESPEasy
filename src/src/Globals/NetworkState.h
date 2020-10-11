@@ -7,8 +7,8 @@
 #include <DNSServer.h>
 #include <WiFiUdp.h>
 
-#include "../DataStructs/ESPEasy_plugin_functions.h"
-#include "../DataStructs/NetworkMedium.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../DataTypes/NetworkMedium.h"
 
 // Ethernet Connectiopn status
 extern NetworkMedium_t active_network_medium;

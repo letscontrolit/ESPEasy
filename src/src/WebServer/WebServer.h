@@ -4,8 +4,8 @@
 #include "WebServer_common.h"
 
 
-#include "../DataStructs/ESPEasyLimits.h"
-#include "../DataStructs/SettingsType.h"
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataTypes/SettingsType.h"
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringConverter.h"
 

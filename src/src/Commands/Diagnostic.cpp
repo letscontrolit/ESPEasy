@@ -12,8 +12,8 @@
 #include "../Commands/Common.h"
 
 #include "../DataStructs/PortStatusStruct.h"
-#include "../DataStructs/SettingsType.h"
-#include "../DataStructs/SettingsType.h"
+
+#include "../DataTypes/SettingsType.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/Serial.h"

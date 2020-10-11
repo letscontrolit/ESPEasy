@@ -4,13 +4,15 @@
 #include "ETH.h"
 #endif
 #include "ESPEasyWifi_ProcessEvent.h"
-#include "src/Globals/ESPEasyWiFiEvent.h"
-#include "src/Globals/RTC.h"
-#include "ESPEasyTimeTypes.h"
 
 #include "src/DataStructs/RTCStruct.h"
 
+#include "src/DataTypes/ESPEasyTimeSource.h"
+
 #include "src/ESPEasyCore/ESPEasy_Log.h"
+
+#include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/RTC.h"
 
 #include "src/Helpers/ESPEasy_time_calc.h"
 

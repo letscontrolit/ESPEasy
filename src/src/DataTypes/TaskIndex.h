@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 
 #define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 

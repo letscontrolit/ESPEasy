@@ -4,8 +4,8 @@
 #include "../../ESPEasy_common.h"
 
 #include "../DataStructs/EventStructCommandWrapper.h"
-#include "../DataStructs/ProtocolIndex.h"
 #include "../DataStructs/SystemTimerStruct.h"
+#include "../DataTypes/ProtocolIndex.h"
 #include "../Helpers/msecTimerHandlerStruct.h"
 
 #include <list>

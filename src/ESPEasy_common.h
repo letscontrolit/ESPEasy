@@ -49,10 +49,9 @@ namespace std
 //  #define PLUGIN_BUILD_NORMAL
 #endif
 
-#include "src/Globals/RamTracker.h"
-#include "src/DataStructs/ESPEasyDefaults.h"
-
+#include "src/CustomBuild/ESPEasyDefaults.h"
 #include "src/DataStructs/NodeStruct.h"
+#include "src/Globals/RamTracker.h"
 
 
 #define FS_NO_GLOBALS
@@ -141,10 +140,9 @@ using namespace fs;
 #endif
 
 // Include custom first, then build info. (one may want to set BUILD_GIT for example)
-#include "ESPEasy_buildinfo.h"
-
-#include "src/DataStructs/ESPEasyLimits.h"
-#include "define_plugin_sets.h"
+#include "src/CustomBuild/ESPEasy_buildinfo.h"
+#include "src/CustomBuild/ESPEasyLimits.h"
+#include "src/CustomBuild/define_plugin_sets.h"
 
 #ifdef ESP32
 #include <esp8266-compat.h>

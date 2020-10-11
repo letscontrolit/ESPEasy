@@ -3,7 +3,7 @@
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasyNetwork.h"
 
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"

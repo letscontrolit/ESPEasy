@@ -2,7 +2,7 @@
 
 #include "../../_CPlugin_Helper.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"

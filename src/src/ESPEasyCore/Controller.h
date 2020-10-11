@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/EventValueSource.h"
+#include "../DataTypes/EventValueSource.h"
 #include "../Globals/CPlugins.h"
 
 // ********************************************************************************

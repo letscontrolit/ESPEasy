@@ -3,11 +3,12 @@
 #include "ESPEasy_common.h"
 #include "ESPEasy_fdwdecl.h"
 
+#include "src/CustomBuild/ESPEasyLimits.h"
+
 #include "src/DataStructs/SecurityStruct.h"
 #include "src/DataStructs/SettingsStruct.h"
 
 #include "src/DataStructs/ControllerSettingsStruct.h"
-#include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/TimingStats.h"
 
 #include "src/ESPEasyCore/ESPEasy_Log.h"

@@ -4,7 +4,7 @@
 #include <FS.h>
 
 
-#include "../DataStructs/SettingsType.h"
+#include "../DataTypes/SettingsType.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
 

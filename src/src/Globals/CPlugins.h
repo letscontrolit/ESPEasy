@@ -3,12 +3,12 @@
 
 #include <map>
 #include <vector>
-#include "../DataStructs/CPluginID.h"
-#include "../DataStructs/ControllerIndex.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
-#include "../DataStructs/ESPEasyLimits.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
-#include "../DataStructs/ProtocolIndex.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../DataTypes/CPluginID.h"
+#include "../DataTypes/ControllerIndex.h"
+#include "../DataTypes/ProtocolIndex.h"
 
 
 /********************************************************************************************\

@@ -108,15 +108,16 @@
 #include "ESPEasyWifi_ProcessEvent.h"
 
 #include "src/DataStructs/ControllerSettingsStruct.h"
-#include "src/DataStructs/DeviceModel.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
 #include "src/DataStructs/ProtocolStruct.h"
 #include "src/DataStructs/RTCStruct.h"
-#include "src/DataStructs/SettingsType.h"
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
 #include "src/DataStructs/tcp_cleanup.h"
+
+#include "src/DataTypes/DeviceModel.h"
+#include "src/DataTypes/SettingsType.h"
 
 #include "src/ESPEasyCore/ESPEasyRules.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"

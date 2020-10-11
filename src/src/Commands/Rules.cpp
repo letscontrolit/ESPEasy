@@ -6,7 +6,7 @@
 
 #include "../Commands/Common.h"
 
-#include "../DataStructs/EventValueSource.h"
+#include "../DataTypes/EventValueSource.h"
 
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/ESPEasyRules.h"

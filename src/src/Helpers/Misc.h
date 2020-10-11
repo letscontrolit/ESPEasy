@@ -3,9 +3,9 @@
 
 #include <Arduino.h>
 
-#include "../DataStructs/ControllerIndex.h"
 #include "../DataStructs/PinMode.h"
-#include "../DataStructs/TaskIndex.h"
+#include "../DataTypes/ControllerIndex.h"
+#include "../DataTypes/TaskIndex.h"
 
 #include "../../ESPEasy_common.h"
 

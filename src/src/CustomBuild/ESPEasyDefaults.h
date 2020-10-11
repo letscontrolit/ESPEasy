@@ -4,7 +4,7 @@
 // Needed to make sure Custom.h is used.
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/NetworkMedium.h"
+#include "../DataTypes/NetworkMedium.h"
 
 // ********************************************************************************
 //   User specific configuration

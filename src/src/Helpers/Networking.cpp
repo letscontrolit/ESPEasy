@@ -2,6 +2,7 @@
 
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/TimingStats.h"
+#include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
@@ -69,7 +70,6 @@ void etharp_gratuitous_r(struct netif *netif) {
 #endif  // USE_SETTINGS_ARCHIVE
 
 
-#include "../DataStructs/EventValueSource.h"
 
 /*********************************************************************************************\
    Syslog client

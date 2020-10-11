@@ -3,8 +3,9 @@
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/TimingStats.h"
+
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 

@@ -3,7 +3,7 @@
 #include "../Commands/Common.h"
 
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/Settings.h"
 #include "../Globals/NPlugins.h"

@@ -6,7 +6,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 
 
 extern boolean activeRuleSets[RULESETS_MAX];

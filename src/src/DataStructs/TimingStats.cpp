@@ -2,7 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../../_CPlugin_Helper.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../Globals/CPlugins.h"
 #include "../Helpers/StringConverter.h"
 

@@ -5,7 +5,7 @@
 #include "WebServer_Markup.h"
 #include "WebServer_Markup_Forms.h"
 
-#include "../DataStructs/ESPEasy_plugin_functions.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Protocol.h"
