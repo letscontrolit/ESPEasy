@@ -1,9 +1,9 @@
 #include "ESPEasyWifi.h"
 
-#include "ESPEasy-Globals.h"
 #include "ESPEasyNetwork.h"
 #include "ESPEasyWiFi_credentials.h"
 #include "ESPEasyWifi_ProcessEvent.h"
+#include "ESPEasyWiFiEvent.h"
 #include "src/DataStructs/TimingStats.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
 #include "src/ESPEasyCore/Serial.h"
@@ -12,9 +12,13 @@
 #include "src/Globals/NetworkState.h"
 #include "src/Globals/RTC.h"
 #include "src/Globals/SecuritySettings.h"
+#include "src/Globals/Settings.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/Networking.h"
 #include "src/Helpers/StringConverter.h"
+
+#include "ESPEasy-Globals.h"
+
 
 // ********************************************************************************
 // WiFi state

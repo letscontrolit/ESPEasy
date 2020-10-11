@@ -3,8 +3,11 @@
 
 #include <Arduino.h>
 
+#include "../DataStructs/ControllerIndex.h"
 #include "../DataStructs/PinMode.h"
-#include "../../ESPEasy-Globals.h"
+#include "../DataStructs/TaskIndex.h"
+
+#include "../../ESPEasy_common.h"
 
 
 

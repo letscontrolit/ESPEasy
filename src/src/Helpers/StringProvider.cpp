@@ -6,10 +6,13 @@
 # include "ETH.h"
 #endif // ifdef HAS_ETHERNET
 #include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy-Globals.h"
 
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
+#include "../Globals/Settings.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Memory.h"

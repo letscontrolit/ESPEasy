@@ -1,6 +1,7 @@
 #include "Controller.h"
 
 #include "../../ESPEasy_common.h"
+#include "../../ESPEasy-Globals.h"
 
 #include "../../_CPlugin_Helper.h"
 #include "../../_Plugin_Helper.h"

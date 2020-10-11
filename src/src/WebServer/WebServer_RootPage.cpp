@@ -10,14 +10,18 @@
 #include "WebServer_Markup_Buttons.h"
 
 #include "../Commands/InternalCommands.h"
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/MainLoopCommand.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
+#include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
-#include "../../ESPEasy-Globals.h"
+
 #include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy-Globals.h"
 #include "../../ESPEasyNetwork.h"
 
 // ********************************************************************************

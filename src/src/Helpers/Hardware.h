@@ -6,8 +6,12 @@
 #include "../DataStructs/DeviceModel.h"
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 #include "../DataStructs/PinMode.h"
+#include "../DataStructs/PluginID.h"
+#include "../DataStructs/TaskIndex.h"
+
 #include "../Globals/ResetFactoryDefaultPref.h"
-#include "../../ESPEasy-Globals.h"
+
+#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)

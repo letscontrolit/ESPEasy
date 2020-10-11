@@ -1,13 +1,12 @@
-#ifdef HAS_ETHERNET
-
 #include "ESPEasyEth.h"
 
+#ifdef HAS_ETHERNET
 
-#include "ESPEasy-Globals.h"
 #include "ESPEasyNetwork.h"
 #include "ETH.h"
 #include "eth_phy/phy.h"
 #include "src/Globals/NetworkState.h"
+#include "src/Globals/Settings.h"
 #include "src/Helpers/StringConverter.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
 

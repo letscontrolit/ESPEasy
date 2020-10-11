@@ -1,7 +1,8 @@
+#include "ESPEasyWiFiEvent.h"
+
 #ifdef HAS_ETHERNET
 #include "ETH.h"
 #endif
-#include "ESPEasyWiFiEvent.h"
 #include "ESPEasyWifi_ProcessEvent.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/RTC.h"

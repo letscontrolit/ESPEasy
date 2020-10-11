@@ -19,11 +19,13 @@
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/MDNS_Helper.h"
 #include "../Helpers/Memory.h"

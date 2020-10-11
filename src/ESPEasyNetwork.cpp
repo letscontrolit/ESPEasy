@@ -1,11 +1,11 @@
 #include "ESPEasyNetwork.h"
 
-#include "ESPEasy-Globals.h"
 #include "ESPEasyEth.h"
 #include "ESPEasyWifi.h"
 
 #include "src/ESPEasyCore/ESPEasy_Log.h"
 #include "src/Globals/NetworkState.h"
+#include "src/Globals/Settings.h"
 #include "src/Helpers/StringConverter.h"
 
 #ifdef HAS_ETHERNET

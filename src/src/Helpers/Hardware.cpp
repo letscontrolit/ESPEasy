@@ -3,6 +3,7 @@
 #include "../Commands/GPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
+#include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
@@ -16,6 +17,7 @@
 #include "../Helpers/StringConverter.h"
 
 #include "../../EspEasyGPIO.h"
+#include "../../ESPEasy-Globals.h"
 
 #ifdef ESP32
 #include <soc/soc.h>

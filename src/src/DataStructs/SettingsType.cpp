@@ -6,7 +6,7 @@
 #include "StorageLayout.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
-#include "../../ESPEasy-Globals.h"
+
 
 String SettingsType::getSettingsTypeString(Enum settingsType) {
   switch (settingsType) {

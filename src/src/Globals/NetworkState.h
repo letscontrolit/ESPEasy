@@ -3,7 +3,10 @@
 
 #include <Arduino.h>
 
-#include "../../ESPEasy-Globals.h"
+#include <IPAddress.h>
+#include <DNSServer.h>
+#include <WiFiUdp.h>
+
 #include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/NetworkMedium.h"
 

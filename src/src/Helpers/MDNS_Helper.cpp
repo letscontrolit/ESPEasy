@@ -2,6 +2,9 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/NetworkState.h"
+#include "../Globals/Settings.h"
+
+#include "../Helpers/StringProvider.h"
 
 #include "../../ESPEasyNetwork.h"
 

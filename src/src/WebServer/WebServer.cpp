@@ -37,7 +37,7 @@
 #include "WebServer_WiFiScanner.h"
 
 
-
+#include "../../ESPEasy-Globals.h"
 #include "../../ESPEasyNetwork.h"
 #include "../../ESPEasyWifi.h"
 #include "../../_Plugin_Helper.h"

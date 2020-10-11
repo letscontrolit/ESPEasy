@@ -7,6 +7,21 @@
 //#define USE_CUSTOM_H
 // *****************************************************************************************
 
+/*
+    To modify the stock configuration without changing this repo file :
+    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
+    - add a "Custom.h" file in this folder.
+
+*/
+
+#ifndef CORE_POST_2_5_0
+  #define STR_HELPER(x) #x
+  #define STR(x) STR_HELPER(x)
+#endif
+
+#ifdef __GCC__
+#pragma GCC system_header
+#endif
 
 
 #include <stddef.h>
@@ -20,14 +35,100 @@ namespace std
 #include <Arduino.h>
 #include <string.h>
 
+
+
+
 // User configuration
 // Include Custom.h before ESPEasyDefaults.h. 
 #ifdef USE_CUSTOM_H
-#include "Custom.h"
+// make the compiler show a warning to confirm that this file is inlcuded
+//#warning "**** Using Settings from Custom.h File ***"
+  #include "Custom.h"
+#else 
+  // Set as default
+//  #define PLUGIN_BUILD_NORMAL
 #endif
 
 #include "src/Globals/RamTracker.h"
 #include "src/DataStructs/ESPEasyDefaults.h"
+
+#include "src/DataStructs/NodeStruct.h"
+
+
+#define FS_NO_GLOBALS
+#if defined(ESP8266)
+  #include "core_version.h"
+  #define NODE_TYPE_ID      NODE_TYPE_ID_ESP_EASYM_STD
+  #define FILE_CONFIG       "config.dat"
+  #define FILE_SECURITY     "security.dat"
+  #define FILE_NOTIFICATION "notification.dat"
+  #define FILE_RULES        "rules1.txt"
+  #include <lwip/init.h>
+  #ifndef LWIP_VERSION_MAJOR
+    #error
+  #endif
+  #if LWIP_VERSION_MAJOR == 2
+  //  #include <lwip/priv/tcp_priv.h>
+  #else
+    #include <lwip/tcp_impl.h>
+  #endif
+  #include <ESP8266WiFi.h>
+  //#include <ESP8266Ping.h>
+  #include <DNSServer.h>
+  #include <Servo.h>
+  #ifndef LWIP_OPEN_SRC
+  #define LWIP_OPEN_SRC
+  #endif
+  #include "lwip/opt.h"
+  #include "lwip/udp.h"
+  #include "lwip/igmp.h"
+  #include "include/UdpContext.h"
+  #include "limits.h"
+  extern "C" {
+   #include "user_interface.h"
+  }
+
+  #ifdef FEATURE_MDNS
+    #include <ESP8266mDNS.h>
+  #endif
+  #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
+  #define MAX_SKETCH_SIZE 1044464   // 1020 kB - 16 bytes
+  #define PIN_D_MAX        16
+#endif
+#if defined(ESP32)
+
+  // Temp fix for a missing core_version.h within ESP Arduino core. Wait until they actually have different releases
+  #define ARDUINO_ESP8266_RELEASE "2_4_0"
+
+  #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
+  #define ICACHE_RAM_ATTR IRAM_ATTR
+  #define FILE_CONFIG       "/config.dat"
+  #define FILE_SECURITY     "/security.dat"
+  #define FILE_NOTIFICATION "/notification.dat"
+  #define FILE_RULES        "/rules1.txt"
+  #include <WiFi.h>
+//  #include  "esp32_ping.h"
+  #include <rom/rtc.h>
+  #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
+  #ifdef FEATURE_MDNS
+    #include <ESPmDNS.h>
+  #endif
+  #define PIN_D_MAX        39
+  #define MAX_SKETCH_SIZE 1900544   // 0x1d0000 look at partitions in csv file
+#endif
+
+#include <WiFiUdp.h>
+#include <DNSServer.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <FS.h>
+#ifdef FEATURE_SD
+#include <SD.h>
+#else
+using namespace fs;
+#endif
+#include <base64.h>
+
 
 #ifdef USE_LITTLEFS
   #include <LittleFS.h>
@@ -42,6 +143,7 @@ namespace std
 // Include custom first, then build info. (one may want to set BUILD_GIT for example)
 #include "ESPEasy_buildinfo.h"
 
+#include "src/DataStructs/ESPEasyLimits.h"
 #include "define_plugin_sets.h"
 
 #ifdef ESP32
@@ -125,5 +227,6 @@ String getUnknownString();
  //#define FEATURE_ARDUINO_OTA
  //#define FEATURE_MDNS
 #endif
+
 
 #endif // ESPEASY_COMMON_H

@@ -1,7 +1,10 @@
+#ifndef ESPEASY_NETWORK_H
+#define ESPEASY_NETWORK_H
+
+#include "ESPEasy_common.h"
+
 #ifndef NETWORK_H
 #define NETWORK_H
-
-#include "ESPEasy-Globals.h"
 
 void NetworkConnectRelaxed();
 bool NetworkConnected();
@@ -18,4 +21,5 @@ String createRFCCompliantHostname(const String& oldString);
 String WifiSoftAPmacAddress();
 
 
-#endif // NETWORK_H
+#endif 
+#endif

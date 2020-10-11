@@ -1,6 +1,17 @@
+#include "_CPlugin_DomoticzHelper.h"
+
 #ifdef USES_DOMOTICZ
 
-#include "src/Helpers/Convert.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/TaskIndex.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
+
+#include "../Globals/ExtraTaskSettings.h"
+
+#include "../Helpers/Convert.h"
+#include "../Helpers/StringConverter.h"
+
 
 
 // HUM_STAT can be one of:

@@ -8,6 +8,7 @@
 #include "../DataStructs/TaskIndex.h"
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../../ESPEasy_common.h"
 
 
 /********************************************************************************************\

@@ -1,6 +1,6 @@
 #include "../Commands/Time.h"
 
-#include "../../ESPEasy-Globals.h"
+
 #include "../../ESPEasy_common.h"
 
 
@@ -8,6 +8,7 @@
 
 #include "../ESPEasyCore/Serial.h"
 
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"

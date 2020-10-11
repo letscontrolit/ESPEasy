@@ -8,6 +8,8 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
 
+#include "../../ESPEasy_common.h"
+
 /********************************************************************************************\
    file system error handling
    Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h

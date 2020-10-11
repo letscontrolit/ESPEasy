@@ -66,8 +66,10 @@ void disableSerialLog() {
 void setLogLevelFor(byte destination, byte logLevel) {
   switch (destination) {
     case LOG_TO_SERIAL:
-      if (!log_to_serial_disabled || logLevel == 0)
-        Settings.SerialLogLevel = logLevel; break;
+      if (!log_to_serial_disabled || logLevel == 0) {
+        Settings.SerialLogLevel = logLevel; 
+      }
+      break;
     case LOG_TO_SYSLOG: Settings.SyslogLevel = logLevel;    break;
     case LOG_TO_WEBLOG: Settings.WebLogLevel = logLevel;    break;
     case LOG_TO_SDCARD: Settings.SDLogLevel = logLevel;     break;

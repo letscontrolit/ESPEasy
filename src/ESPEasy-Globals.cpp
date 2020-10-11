@@ -21,7 +21,7 @@ boolean printToWebJSON = false;
 unsigned long timermqtt_interval = 250;
 unsigned long lastSend = 0;
 unsigned long lastWeb = 0;
-byte cmd_within_mainloop = 0;
+
 unsigned long wdcounter = 0;
 unsigned long timerAwakeFromDeepSleep = 0;
 

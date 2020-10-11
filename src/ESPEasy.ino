@@ -12,6 +12,13 @@
 // If Custom.h build from Arduino IDE is needed, uncomment #define USE_CUSTOM_H in ESPEasy_common.h
 #include "ESPEasy_common.h"
 
+#ifdef USE_CUSTOM_H
+// make the compiler show a warning to confirm that this file is inlcuded
+  #warning "**** Using Settings from Custom.h File ***"
+#endif
+
+
+
 // Needed due to preprocessor issues.
 #ifdef PLUGIN_SET_GENERIC_ESP32
   #ifndef ESP32
@@ -119,6 +126,7 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Globals/ESPEasy_time.h"
 #include "src/Globals/EventQueue.h"
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/GlobalMapPortStatus.h"

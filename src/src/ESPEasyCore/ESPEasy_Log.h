@@ -2,7 +2,7 @@
 #define ESPEASYCORE_ESPEASY_LOG_H
 
 
-#include "ESPEasy_common.h"
+#include "../../ESPEasy_common.h"
 
 #define LOG_LEVEL_NONE                      0
 #define LOG_LEVEL_ERROR                     1

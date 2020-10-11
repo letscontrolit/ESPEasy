@@ -6,6 +6,7 @@
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../DataStructs/NetworkMedium.h"
 #include "../Globals/Plugins.h"
+#include "../../ESPEasy_common.h"
 
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI

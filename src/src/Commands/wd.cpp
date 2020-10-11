@@ -1,8 +1,5 @@
 #include "../Commands/wd.h"
 
-#include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_common.h"
-
 
 #include "../Commands/Common.h"
 

@@ -1,6 +1,6 @@
 #include "../Commands/UPD.h"
 
-#include "../../ESPEasy-Globals.h"
+
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasyNetwork.h"
 

@@ -12,7 +12,10 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
+
 #include "../../_Plugin_Helper.h"
+#include "../../ESPEasy-Globals.h"
+
 
 
 // ********************************************************************************

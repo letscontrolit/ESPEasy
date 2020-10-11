@@ -1029,6 +1029,7 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_P085) || defined (USES_P052) || defined(USES_P078)
+  // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
   #define USES_MODBUS
 #endif
 

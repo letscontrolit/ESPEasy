@@ -6,7 +6,7 @@
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../../ESPEasy-Globals.h"
+
 
 // ********************************************************************************
 // Web Interface download page

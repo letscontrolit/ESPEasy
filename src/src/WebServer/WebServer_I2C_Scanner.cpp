@@ -4,6 +4,8 @@
 #include "WebServer_AccessControl.h"
 #include "WebServer_HTML_wrappers.h"
 
+#include "../Globals/Settings.h"
+
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 

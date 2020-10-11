@@ -6,6 +6,7 @@
 #include "../DataStructs/ESPEasyLimits.h"
 #include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/NotificationStruct.h"
+#include "../DataStructs/NotificationSettingsStruct.h"
 
 
 typedef byte    nprotocolIndex_t;

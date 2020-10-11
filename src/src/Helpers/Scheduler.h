@@ -1,7 +1,10 @@
 #ifndef HELPERS_SCHEDULER_H
 #define HELPERS_SCHEDULER_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../DataStructs/EventStructCommandWrapper.h"
+#include "../DataStructs/ProtocolIndex.h"
 #include "../DataStructs/SystemTimerStruct.h"
 #include "../Helpers/msecTimerHandlerStruct.h"
 

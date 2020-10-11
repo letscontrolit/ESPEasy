@@ -1,4 +1,7 @@
-#include "Modbus.h"
+#include "../DataStructs/Modbus.h"
+
+#include "../DataStructs/ControllerSettingsStruct.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #ifdef USES_MODBUS
 

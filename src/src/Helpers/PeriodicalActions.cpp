@@ -6,6 +6,7 @@
 #include "../../EspEasyGPIO.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy-Globals.h"
+
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../ControllerQueue/MQTT_queue_element.h"
 #include "../DataStructs/ESPEasy_plugin_functions.h"
@@ -16,12 +17,15 @@
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
+#include "../Globals/MainLoopCommand.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
+#include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
@@ -29,6 +33,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/StringProvider.h"
 
 
 /*********************************************************************************************\

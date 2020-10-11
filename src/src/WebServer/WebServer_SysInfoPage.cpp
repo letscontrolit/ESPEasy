@@ -5,13 +5,18 @@
 #include "WebServer_Markup.h"
 #include "WebServer_Markup_Buttons.h"
 
-#include "../Globals/RTC.h"
-#include "../DataStructs/RTCStruct.h"
-#include "../Globals/CRCValues.h"
-#include "../Globals/NetworkState.h"
-#include "../Static/WebStaticData.h"
+#include "../../ESPEasyNetwork.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy-Globals.h"
 
 #include "../Commands/Diagnostic.h"
+
+#include "../DataStructs/RTCStruct.h"
+
+#include "../Globals/CRCValues.h"
+#include "../Globals/ESPEasy_time.h"
+#include "../Globals/NetworkState.h"
+#include "../Globals/RTC.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -22,9 +27,7 @@
 #include "../Helpers/StringGenerator_GPIO.h"
 #include "../Helpers/StringGenerator_System.h"
 
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasyNetwork.h"
-
+#include "../Static/WebStaticData.h"
 
 #ifdef ESP32
 #include <esp_partition.h>

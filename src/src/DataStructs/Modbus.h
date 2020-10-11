@@ -1,6 +1,8 @@
 #ifndef DATASTRUCTS_MODBUS_H
 #define DATASTRUCTS_MODBUS_H
 
+#include "../../ESPEasy_common.h"
+
 #ifdef USES_MODBUS
 
 enum MODBUS_states_t { MODBUS_IDLE, MODBUS_RECEIVE, MODBUS_RECEIVE_PAYLOAD };
