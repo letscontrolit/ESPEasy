@@ -17,6 +17,7 @@
 #define P36_NcharsV0 32     // max chars per line up to 22.11.2019 (V0)
 #define P36_NcharsV1 64     // max chars per line from 22.11.2019 (V1)
 #define P36_MaxSizesCount 3 // number of different OLED sizes
+#define P36_MaxFontCount 4  // number of different fonts
 
 #define P36_MaxDisplayWidth 128
 #define P36_MaxDisplayHeight 64
@@ -111,10 +112,16 @@ typedef struct {
   uint8_t reserved              = 0;
 } tDisplayLines;
 
+typedef struct {
+  const char  *fontData;  // font
+  uint8_t     Width;      // font width in pix
+  uint8_t     Height;     // font height in pix
+} tFontSizes;
 
 typedef struct {
   uint8_t     Top;      // top in pix for this line setting
   const char *fontData; // font for this line setting
+  uint8_t     Height;   // font height in pix
   uint8_t     Space;    // space in pix between lines for this line setting
 } tFontSettings;
 
@@ -123,10 +130,6 @@ typedef struct {
   uint8_t       Height;             // height in pix
   uint8_t       PixLeft;            // first left pix position
   uint8_t       MaxLines;           // max. line count
-  tFontSettings L1;                 // settings for 1 line
-  tFontSettings L2;                 // settings for 2 lines
-  tFontSettings L3;                 // settings for 3 lines
-  tFontSettings L4;                 // settings for 4 lines
   uint8_t       WiFiIndicatorLeft;  // left of WiFi indicator
   uint8_t       WiFiIndicatorWidth; // width of WiFi indicator
 } tSizeSettings;
@@ -189,6 +192,11 @@ struct P036_data_struct : public PluginTaskData_base {
   // Perform the actual write to the display.
   void    update_display();
 
+  // get pixel positions
+  int16_t GetHeaderHeight();
+  int16_t GetIndicatorTop();
+  tFontSettings CalculateFontSettings(uint8_t _defaultLines);
+
   void    P036_JumpToPage(struct EventStruct *event,
                           uint8_t             nextFrame);
 
@@ -212,6 +220,7 @@ struct P036_data_struct : public PluginTaskData_base {
   tDisplayLines DisplayLinesV1[P36_Nlines]; // holds the CustomTaskSettings for V1
 
   int8_t lastWiFiState = 0;
+  bool bDisplayingLogo = false;
 
   // display
   p036_resolution _disp_resolution   = p036_resolution::pix128x64;
@@ -224,6 +233,8 @@ struct P036_data_struct : public PluginTaskData_base {
   uint8_t RepeatCounter   = 0;             // Repeat delay counter when holding button pressed
   uint8_t displayTimer    = 0;             // counter for display OFF
   // frame header
+  bool           bHideHeader = false;
+  bool           bHideFooter = false;
   bool           bAlternativHeader = false;
   uint16_t       HeaderCount       = 0;
   eHeaderContent HeaderContent = eHeaderContent::eSSID;

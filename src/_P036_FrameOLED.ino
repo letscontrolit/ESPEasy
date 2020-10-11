@@ -13,6 +13,12 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2020-10-211
+// NEW: Support for 128x32 displays (see https://www.letscontrolit.com/forum/viewtopic.php?p=39840#p39840)
+// NEW: Option to hide the header
+// CHG: Calculate font setting, if necessary reduce lines per page (fonts are not longer a fixed setting)
+// CHG: Reduce espeasy_logo to 32x32 to fit all displays
+// CHG: Calculate font setting for splash screen
 // @uwekaditz: 2020-06-22
 // BUG: MaxFramesToDisplay was not updated if all display lines were empty -> display_indicator() crashed due to memory overflow
 // CHG: MaxFramesToDisplay will be updated after receiving command with new line content
@@ -179,6 +185,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                           1,
                           P036_data_struct::getDisplaySizeSettings(tOLEDIndex).MaxLines);
       }
+      addFormNote(F("Will be automatically reduced if there is no font to fit this setting."));
 
       {
         uint8_t choice = P036_SCROLL;
@@ -226,6 +233,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("When checked, all scrollings (pages and lines) are disabled as long as WiFi is not connected."));
 
       addFormSubHeader(F("Content"));
+
+      bool tbHideHeader = bitRead(PCONFIG_LONG(0), 25);             // Bit 25
+      addFormCheckBox(F("Hide header"), F("p036_HideHeader"), tbHideHeader);
 
       {
         uint8_t choice9      = get8BitFromUL(PCONFIG_LONG(0), 8); // Bit15-8 HeaderContent
@@ -316,6 +326,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, 20, 0x01);                                                     // Bit23-20 Version CustomTaskSettings ->
                                                                                             // version V1
       bitWrite(lSettings, 24, !isFormItemChecked(F("p036_ScrollWithoutWifi")));             // Bit 24 ScrollWithoutWifi
+      bitWrite(lSettings, 25, isFormItemChecked(F("p036_HideHeader")));                     // Bit 25 Hide header
 
       PCONFIG_LONG(0) = lSettings;
 
@@ -380,6 +391,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       // Load the custom settings from flash
       uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
+
+      P036_data->bHideHeader = bitRead(PCONFIG_LONG(0), 25); // Bit 25 Hide header
 
       // Init the display and turn it on
       if (!(P036_data->init(event->TaskIndex,
