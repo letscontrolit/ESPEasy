@@ -4,6 +4,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
 struct EventStruct;
@@ -20,16 +21,18 @@ public:
   queue_element_single_value_base(const struct EventStruct *event,
                                   byte                      value_count);
 
+//  queue_element_single_value_base(queue_element_single_value_base &&rval);
+
   bool   checkDone(bool succesfull) const;
 
   size_t getSize() const;
 
   String txt[VARS_PER_TASK];
-  int controller_idx      = 0;
-  int idx                 = 0;
-  taskIndex_t TaskIndex   = INVALID_TASK_INDEX;
-  mutable byte valuesSent = 0; // Value must be set by const function checkDone()
-  byte valueCount         = 0;
+  int idx                          = 0;
+  taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
+  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
+  mutable byte valuesSent          = 0; // Value must be set by const function checkDone()
+  byte valueCount                  = 0;
 };
 
 

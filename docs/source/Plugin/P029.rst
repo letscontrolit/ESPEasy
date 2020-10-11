@@ -36,6 +36,17 @@ Supported hardware
 
 .. .. include:: P029_events.repl
 
+Description
+-----------
+
+Using the Domoticz MQTT protocol, it is not possible to configure direct commands to control output.
+Instead, a json message is send by Domoticz on the Domoticz/Out channel.
+
+We need to configure the IDX value within ESP Easy and link this to a given output pin.
+This plugin is a special 'helper' device to link IDX to GPIO.
+
+Only the IDX and the corresponding GPIO pin needs to be set.
+
 Change log
 ----------
 

@@ -1,6 +1,14 @@
 #ifndef ESPEASY_COMMON_H
 #define ESPEASY_COMMON_H
 
+// *****************************************************************************************
+// For Arduino IDE users:
+// When building using Custom.h, uncomment the next line:
+//#define USE_CUSTOM_H
+// *****************************************************************************************
+
+
+
 #include <stddef.h>
 namespace std
 {
@@ -10,13 +18,25 @@ namespace std
 
 #include <stdint.h>
 #include <Arduino.h>
+#include <string.h>
 
 // User configuration
-#include "src/DataStructs/ESPEasyDefaults.h"
-
-
+// Include Custom.h before ESPEasyDefaults.h. 
 #ifdef USE_CUSTOM_H
 #include "Custom.h"
+#endif
+
+#include "src/Globals/RamTracker.h"
+#include "src/DataStructs/ESPEasyDefaults.h"
+
+#ifdef USE_LITTLEFS
+  #include <LittleFS.h>
+  #define ESPEASY_FS LittleFS
+#else 
+  #ifdef ESP32
+    #include <SPIFFS.h>
+  #endif
+  #define ESPEASY_FS SPIFFS
 #endif
 
 // Include custom first, then build info. (one may want to set BUILD_GIT for example)
@@ -24,17 +44,19 @@ namespace std
 
 #include "define_plugin_sets.h"
 
+#ifdef ESP32
+#include <esp8266-compat.h>
+
+#endif
+
+
 #define ZERO_FILL(S)  memset((S), 0, sizeof(S))
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
 
 
+
 String getUnknownString();
 
-/*********************************************************************************************\
-   Bitwise operators
-  \*********************************************************************************************/
-bool getBitFromUL(uint32_t number, byte bitnr);
-void setBitToUL(uint32_t& number, byte bitnr, bool value);
 
 
 /******************************************************************************\
@@ -100,7 +122,7 @@ void setBitToUL(uint32_t& number, byte bitnr, bool value);
   // #define FEATURE_MDNS
 #endif
 #if defined(ESP32)
- #define FEATURE_ARDUINO_OTA
+ //#define FEATURE_ARDUINO_OTA
  //#define FEATURE_MDNS
 #endif
 

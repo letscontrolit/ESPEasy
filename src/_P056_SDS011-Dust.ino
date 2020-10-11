@@ -1,3 +1,6 @@
+#include "_Plugin_Helper.h"
+
+
 #ifdef USES_P056
 //#######################################################################################################
 //#################################### Plugin 056: Dust Sensor SDS011 / SDS018 ##########################
@@ -9,7 +12,7 @@
   This plugin reads the particle concentration from SDS011 Sensor
   DevicePin1 - RX on ESP, TX on SDS
 */
-#ifdef ESP8266  // Needed for precompile issues.
+//#ifdef ESP8266  // Needed for precompile issues.
 
 #define PLUGIN_056
 #define PLUGIN_ID_056         56
@@ -33,8 +36,8 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_056;
-        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-        Device[deviceCount].VType = SENSOR_TYPE_DUAL;
+        Device[deviceCount].Type = DEVICE_TYPE_SERIAL;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_DUAL;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -75,7 +78,6 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        serialHelper_webformLoad(event);
 
         // FIXME TD-er:  Whether TX pin is connected should be set somewhere
         if (Plugin_056_hasTxPin(event)) {
@@ -89,7 +91,6 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
       }
       case PLUGIN_WEBFORM_SAVE:
         {
-          serialHelper_webformSave(event);
 
           if (Plugin_056_hasTxPin(event)) {
             // Communications to device should work.
@@ -109,7 +110,8 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
           delete Plugin_056_SDS;
         const int16_t serial_rx = CONFIG_PIN1;
         const int16_t serial_tx = CONFIG_PIN2;
-        Plugin_056_SDS = new CjkSDS011(serial_rx, serial_tx);
+        const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+        Plugin_056_SDS = new CjkSDS011(port, serial_rx, serial_tx);
         String log = F("SDS  : Init OK  ESP GPIO-pin RX:");
         log += serial_rx;
         log += F(" TX:");
@@ -152,7 +154,7 @@ boolean Plugin_056(byte function, struct EventStruct *event, String& string)
           {
             UserVar[event->BaseVarIndex + 0] = pm2_5;
             UserVar[event->BaseVarIndex + 1] = pm10;
-            event->sensorType = SENSOR_TYPE_DUAL;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_DUAL;
             sendData(event);
           }
         }
@@ -216,5 +218,5 @@ void Plugin_056_setWorkingPeriod(int minutes) {
   addLog(LOG_LEVEL_INFO, log);
 }
 
+//#endif
 #endif // USES_P056
-#endif

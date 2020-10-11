@@ -1,5 +1,232 @@
 # Release Notes
 
+## _v2.7.9 (20200730)_
+
+**[Bug Fixes]**
+- Fix mistake in `IRLGAc::convertFan()`. (#1214 #1215)
+
+**[Features]**
+- Add Sanyo A/C (72 bit) protocol with detailed support. (#1211 #1218)
+- Added modification to Midea unit to support Danby DAC AC units.  (#1213)
+- ToshibaAc: Rework to support Carrier models and add more settings. (#1205 #1212)
+- Add detailed support for Airwell A/C protocol. (#1202 #1204)
+
+**[Misc]**
+- Pioneer: Update timings based on user collected data. (#1220 #1222)
+- Samsung36: Adjust timings & update unit tests. (#1220 #1221)
+- Consolidate common code: Inverted byte pairs (#1219)
+- Remove duplicate code from `IRToshibaAC::calcChecksum()` (#1207)
+- Update missing/incorrect doxygen comments (#1203)
+
+
+## _v2.7.8 (20200622)_
+
+**[BREAKING CHANGES]**
+- Fix Manchester code handling; Increase Airwell to `34` bits. (#1200)
+
+**[Bug Fixes]**
+- Carrier40: Use correct gap value. (#1193)
+
+**[Features]**
+- CarrierAc64: Add detailed support. (#1133)
+- Add experimental support for Hitachi A/C 344 bit protocol (#1139)
+- Automatic & full library code/API documentation via Doxygen (#1150 #1154 #1155 #1156 #1158 #1165 #1167 #1169 #1180 #1184 #1189 #1191 #1194 #1195 #1197 #1198)
+- Hitachi344: Add detailed support and change bit ordering. (#1147)
+- Add Corona AC Protocol (#1152)
+- Hitachi344: Add Swing(H) and improve Swing(V) (#1148)
+- Update auto_analyse_raw_data.py with better code comment sections (#1164)
+- Add support for Midea24 protocol. (#1171)
+- Add basic Zepeal protocol support (#1178)
+
+**[Misc]**
+- scrape_supported_devices.py: avoid changes to SupportedProtocols.md (#1140)
+- auto_analyze nice exit on empty rawdata input (#1141)
+- Comments update + cleanup (#1143)
+- Update D_STR_IRRECVDUMP_STARTUP text and comments. (#1144)
+- Minor code cleanups (#1149)
+- Update `README.md`'s to point to new API docs. (#1151)
+- Update "Supports" sections (#1160)
+- Add a `doxygen` check to CI/Travis. (#1161)
+- scrape_supported_devices: warn about misplaced or legacy supports sections (#1159)
+- Add Supports sections to some files (#1163 #1166)
+- Fix compile error when `DEBUG` is enabled.
+- Add no-output option and return code on error to scrape_supported_devices
+- Travis: Add scrape_supported_devices error check
+- Update auto_analyse_raw_data.py to have a default Supports: section
+- Treat compiler warnings as errors. (#1174)
+- Remove `calcLGChecksum()` and use new generic `sumNibbles()` (#1175)
+- Suppress more potential compiler warnings. (#1179)
+- Load balance travis tasks to reduce wall clock time. (#1183)
+- Set PlatformIO's default baudrate to 115200 (#1188)
+- Some fixes to Doshisha protocol handler
+- Minor cleanups of Corona and Zepeal
+- Enable Doxygen warning when the parameters for a function/method/procedure are wrong/missing. (#1196)
+
+
+## _v2.7.7 (20200519)_
+
+**[BREAKING CHANGES]**
+- Fix Symphony protocol. (#1107, #1105)
+  * Now 12 bits and bits are inverted. All previous codes will no longer work.
+- IRMQTTServer: Better handle power & mode operations for Home Assistant. (#1099, #1092)
+  * When `MQTT_CLIMATE_HA_MODE` is enabled (default) this will break previous operation mode resumption when power is changed.
+
+**[Bug Fixes]**
+- Set correct return type for `.calibrate()` (#1095, #1093)
+
+**[Features]**
+- Add basic support for Carrier 40 & 64 bit protocols. (#1125, #1112, #1127)
+- Gree: Enable native support for Fahrenheit (#1124, #1121)
+- Gree: Add option to control display temp source. (#1120, #1118)
+- Add support for Multibrackets protocol. (#1106, #1103)
+- Add RawToPronto.py tool & improve `sendPronto()` precision (#1104, #1103)
+- Add support for `Doshisha` LED light protocol (#1115)
+- Introduce IRrecvDumpV3 with basic OTA update support (#1111)
+- Add detailed support for Delonghi A/C (#1098, #1096)
+- Improved support for SharpAc. (#1094, #1091)
+- Update auto_analyse to use new decode call structure. (#1102, #1097)
+- Added Blynk app example (#1090)
+
+**[Misc]**
+- update auto_analyse script to use new param documentation (#1126)
+- Improve `raw_to_pronto_code.py` (#1122, #1103)
+- Use pattern rules in Makefiles to reduce specific rule (#1110)
+- Update list of supported Daikin models. (#1101)
+
+
+## _v2.7.6 (20200425)_
+
+**[Features]**
+- IRMQTTServer: Use more i18n text. (#1086)
+- Convert Protocol names to shared text. Saves ~3k of flash. (#1078)
+- Add Chinese translation (zh-CN) & add utf-8 support. (#1080, #1085)
+
+**[Misc]**
+- IRMQTTServer: Ensure MQTT_MAX_PACKET_SIZE is correctly set. (#1084)
+- Add Italian locale to IRrecvDumpV2 platformio file.
+
+
+## _v2.7.5 (20200409)_
+
+**[Features]**
+- Detailed support for `HITACHI_AC1` protocol. (#1056, #1061, #1072)
+- update sharp to match Sharp AH-A5SAY (#1074)
+- Experimental support for AIRWELL protocol. (#1069, #1070)
+- SamsungAC: Add Breeze (Aka WindFree) control (#1062, #1071)
+- Support for Daikin FFN-C A/C (#1064, #1065)
+- Add basic support for HITACHI_AC3 protocol. (#1060, #1063)
+- Add support for `SYMPHONY` 11 bit protocol. (#1057, #1058)
+- IRMQTTServer: Improve Home-Assistant discovery by sending a 'device' with the discovery packet (#1055)
+
+**[Misc]**
+- Clean up support status of various protocols.
+- Add `decodeToState()` unit tests to all supported protocols (#1067, #1068)
+- Add Gree AC example code. (#1066)
+
+
+## _v2.7.4 (20200226)_
+
+**[Bug Fixes]**
+- IRMQTTServer: Fix bug when receiving an IR A/C message and not re-transmitting it. (#1035, #1038)
+- Coolix: `setRaw()` doesn't update power state. (#1040, #1041)
+
+**[Features]**
+- Electra: Add improved feature support. (#1033, #1051)
+- Add support for Epson protocol. (#1034, #1050)
+- Add options to `decode()` to aid detection. Improve NEC detection. (#1042, #1046)
+- SamsungAc: Add support for Light & Ion (VirusDoctor). (#1045, #1048, #1049)
+- Add Italian (it-IT) locale/language support. (#1047) (kudos @egueli)
+- gc_decode: Add repeat support for pronto codes. (#1034, #1043)
+
+**[Misc]**
+- Update supported SamsungAc devices (#1045)
+- Coolix: Subtle protocol timing adjustments (#1036, #1037)
+- Add supported Electra device model info (#1033)
+
+
+## _v2.7.3 (20200130)_
+
+**[Features]**
+- Allow protocols to be enabled or disabled with compiler flags. (#1013, #1012)
+- Panasonic AC: Add Ion Filter support for DKE models. (#1025, #1024)
+- Add support for sending Sony at 38Khz (#1029, #1018, #1019)
+- auto_analyse_raw_data.py: Handle analysing messages with no headers. (#1017)
+
+**[Misc]**
+- Fix Coolix unit test errors when using Apple c++ compiler. (#1030, #1028)
+- Fix Apple clang c++ compiler error in unit tests. (#1027, #1026)
+- Improve/fix scraping of supported devices (#1022)
+- Panasonic PKR series A/C uses DKE protocol. (#1020, #1021)
+- Update NEC supported devices. (#1018)
+- Add note to avoid GPIO16 on the ESP8266 for receiving. (#1016, #1015)
+
+
+## _v2.7.2 (20200106)_
+
+**[Bug Fixes]**
+- Common AC api: Better handle protocols with power toggles. (#1002)
+
+**[Features]**
+- Experimental detailed support for LG a/c. (#1008 #1009)
+
+**[Misc]**
+- Add remote codes for Aloka LED lamp. (#1005)
+- Improve Supported Devices scraping. (#1006)
+
+
+## _v2.7.1 (20191125)_
+
+**[Bug Fixes]**
+- Hitachi424Ac: Fix Incorrect Power Byte Values (#987)
+- Coolix: Fix setPower(false) issue. (#990)
+
+**[Features]**
+- Use `char*` instead of `String` for common text. Saves ~1-3k. (#992, #989)
+- Hitachi424Ac: Add Vertical Swing ability (#986)
+
+**[Misc]**
+- IRMQTTServer: Update HA example/discovery message. (#995)
+- Move newly added common text to a better location. (#993)
+
+
+## _v2.7.0 (20191030)_
+
+**[Bug Fixes]**
+- auto_analyse: Fix > 64 bit send code generation. (#976)
+- auto_analyse: Fix missing arguments in generated code for send64+ (#972)
+- IRsendProntoDemo: Fix compile issue on ESP32 platform. (#938)
+- IRMQTTServer: Fix compile error when `MQTT_ENABLE` is false. (#933)
+
+**[Features]**
+- Add Hitachi 424 bit A/C support. (#975, #980, #981)
+- Experimental detailed support for `DAIKIN152` (#971)
+- Mitsubishi 112bit A/C support (#947, #968)
+- gc_decode: Adding Support for Decoding codes in raw code format (#963)
+- Refactor to use common routines/macros to handle bit manipulation. (#934)
+- Use centralised common strings. Saves ~1.5k of program space. (#946)
+- Add Internationalisation (i18n) / Locale support. (#946, #955, #966)
+  - `de-CH`: Swiss German. (#949, #954)
+  - `de-DE`: German. (#946, #950, #952)
+  - `en-AU`: English/Australia (Default locale) (#946)
+  - `en-IE`: English/Ireland (#946)
+  - `en-UK`: English/United Kingdom (#946)
+  - `en-US`: English/United States (#946)
+  - `es-ES`: Spanish. (#953)
+  - `fr-FR`: French. (#962)
+- Port CI pipeline to PlatformIO (#936)
+
+**[Misc]**
+- Add DAIKIN128 & DAIKIN152 to `decodeToState()` (#982)
+- auto_analyse: Produce better code when leader is detected. (#977)
+- Coolix A/C improvements (#944)
+- A/C setRaw/getRaw/stateReset() cleanup. (#967)
+- Add documentation on how to use & support the i18n aspects of the library.
+- Make travis checks faster. (#957)
+- Translate README.md to french (#959)
+- Fixed Coolix kCoolixDefaultState (#941)
+- Improve generation of list of pio projects. (#940)
+
+
 ## _v2.6.6 (20190923)_
 
 **[Bug Fixes]**

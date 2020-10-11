@@ -1,11 +1,17 @@
 #define RULE_FILE_SEPARAROR '/'
 #define RULE_MAX_FILENAME_LENGTH 24
 
+#include "src/Commands/InternalCommands.h"
 #include "src/DataStructs/EventValueSource.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Plugins_other.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/Numerical.h"
+#include "src/Helpers/StringParser.h"
 
-String EventToFileName(String& eventName) {
+
+String EventToFileName(const String& eventName) {
   int size  = eventName.length();
   int index = eventName.indexOf('=');
 
@@ -24,7 +30,7 @@ String EventToFileName(String& eventName) {
   return fileName;
 }
 
-String FileNameToEvent(String& fileName) {
+String FileNameToEvent(const String& fileName) {
 #if defined(ESP8266)
   String eventName = fileName.substring(6);
 #endif // if defined(ESP8266)
@@ -46,7 +52,7 @@ void checkRuleSets() {
     fileName += x + 1;
     fileName += F(".txt");
 
-    if (SPIFFS.exists(fileName)) {
+    if (ESPEASY_FS.exists(fileName)) {
       activeRuleSets[x] = true;
     }
     else {
@@ -63,6 +69,24 @@ void checkRuleSets() {
 #endif // ifndef BUILD_NO_DEBUG
   }
 }
+
+/********************************************************************************************\
+   Process next event from event queue
+ \*********************************************************************************************/
+bool processNextEvent() {
+  if (Settings.UseRules)
+  {
+    String nextEvent;
+    if (eventQueue.getNext(nextEvent)) {
+      rulesProcessing(nextEvent);
+      return true;
+    }
+  }
+  // Just make sure any (accidentally) added or remaining events are not kept.
+  eventQueue.clear();
+  return false;
+}
+
 
 /********************************************************************************************\
    Rules processing
@@ -102,7 +126,7 @@ void rulesProcessing(String& event) {
     String fileName = EventToFileName(event);
 
     // if exists processed the rule file
-    if (SPIFFS.exists(fileName)) {
+    if (ESPEASY_FS.exists(fileName)) {
       rulesProcessingFile(fileName, event);
     }
 #ifndef BUILD_NO_DEBUG
@@ -191,6 +215,8 @@ String rulesProcessingFile(const String& fileName, String& event) {
         case '\n':
         {
           // Line end, parse rule
+          line.trim();
+          check_rules_line_user_errors(line);
           const size_t lineLength = line.length();
 
           if (lineLength > longestLineSize) {
@@ -265,6 +291,195 @@ String rulesProcessingFile(const String& fileName, String& event) {
   return "";
 }
 
+
+/********************************************************************************************\
+   Strip comment from the line.
+   Return true when comment was stripped.
+ \*********************************************************************************************/
+bool rules_strip_trailing_comments(String& line)
+{
+   // Strip trailing comments
+  int comment = line.indexOf(F("//"));
+
+  if (comment >= 0) {
+    line = line.substring(0, comment);
+    line.trim();
+    return true;
+  }
+  return false; 
+}
+
+/********************************************************************************************\
+   Test for common mistake
+   Return true if mistake was found (and corrected)
+ \*********************************************************************************************/
+bool rules_replace_common_mistakes(const String& from, const String& to, String& line)
+{
+  if (line.indexOf(from) == -1) {
+    return false; // Nothing replaced
+  }
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log;
+    log.reserve(32 + from.length() + to.length() + line.length());
+    log = F("Rules (Syntax Error, auto-corrected): '");
+    log += from;
+    log += F("' => '");
+    log += to;
+    log += F("' in: '");
+    log += line;
+    log += '\'';
+    addLog(LOG_LEVEL_ERROR, log);
+  }
+  line.replace(from, to);
+  return true;
+}
+
+/********************************************************************************************\
+   Check for common mistakes
+   Return true if nothing strange found
+ \*********************************************************************************************/
+bool check_rules_line_user_errors(String& line)
+{
+  bool res = true;
+  if (rules_replace_common_mistakes(F("if["), F("if ["), line)) {
+    res = false;
+  }
+  if (rules_replace_common_mistakes(F("if%"), F("if %"), line)) {
+    res = false;
+  }
+
+  return res;
+}
+
+
+
+/********************************************************************************************\
+   Parse string commands
+ \*********************************************************************************************/
+
+bool get_next_inner_bracket(const String& line, int& startIndex, int& closingIndex, char closingBracket)
+{
+  char openingBracket = closingIndex;
+  switch (closingBracket) {
+    case ']': openingBracket = '['; break;
+    case '}': openingBracket = '{'; break;
+    case ')': openingBracket = '('; break;
+    default:
+      // unknown bracket type
+      return false;
+  }
+  closingIndex = line.indexOf(closingBracket);
+  if (closingIndex == -1) return false;
+  
+  for (int i = closingIndex; i >= 0; --i) {
+    if (line[i] == openingBracket) {
+      startIndex = i;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool get_next_argument(const String& fullCommand, int& index, String& argument, char separator)
+{
+  int newIndex = fullCommand.indexOf(separator, index);
+  if (newIndex == -1) {
+    argument = fullCommand.substring(index);
+  } else {
+    argument = fullCommand.substring(index, newIndex);
+  }
+  if (argument.startsWith(String(separator))) {
+    argument = argument.substring(1);
+  }
+//  addLog(LOG_LEVEL_INFO, String("get_next_argument: ") + String(index) + " " + fullCommand + " " + argument);
+  index = newIndex + 1;
+  return argument.length() > 0;
+}
+
+void parse_string_commands(String &line) {
+  int startIndex, closingIndex;
+
+  while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
+    // Command without opening and closing brackets.
+    String fullCommand = line.substring(startIndex + 1, closingIndex);
+    int tmpIndex = 0;
+    String cmd_s_lower, arg1, arg2, arg3;
+    if (get_next_argument(fullCommand, tmpIndex, cmd_s_lower, ':')) {
+      if (get_next_argument(fullCommand, tmpIndex, arg1, ':')) {
+        if (get_next_argument(fullCommand, tmpIndex, arg2, ':')) {
+          get_next_argument(fullCommand, tmpIndex, arg3, ':');
+        }
+      }
+    }
+    if (cmd_s_lower.length() > 0) {
+      String replacement; // maybe just replace with empty to avoid looping?
+      cmd_s_lower.toLowerCase();
+//      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
+
+      int iarg1, iarg2;
+      if (cmd_s_lower.equals(F("substring"))) {
+        // substring arduino style (first char included, last char excluded)
+        // Syntax like 12345[substring:8:12:ANOTHER HELLO WORLD]67890
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = arg3.substring(iarg1, iarg2);
+        }
+      } else if (cmd_s_lower.equals(F("strtol"))) {
+        // string to long integer (from cstdlib)
+        // Syntax like 1234[strtol:16:38]7890
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(strtol(arg2.c_str(), NULL, iarg1));
+        }
+        // FIXME TD-er: removed for now as it is too specific.
+        // Maybe introduce one using 2 or 3 parameters ([div:100:255:3] for *100/255 3 decimals)
+        /*
+      } else if (cmd_s_lower.equals(F("div100ths"))) {
+        // division and giving the 100ths as integer
+        // 5 / 100 would yield 5
+        // useful for fractions that use a full byte gaining a
+        // precision/granularity of 1/256 instead of only 1/100
+        // Syntax like XXX[div100ths:24:256]XXX
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          float val = (100.0 * iarg1) / (1.0 * iarg2);
+          char sval[10];
+          sprintf(sval, "%02d", (int)val);
+          replacement = String(sval);
+        }
+        */
+      } else  if (cmd_s_lower.equals(F("ord"))) {
+        // Give the ordinal/integer value of the first character of a string
+        // Syntax like let 1,[ord:B]
+        uint8_t uval = arg1.c_str()[0];
+        replacement = String(uval);
+      }
+      if (replacement.length() == 0) {
+        // part in braces is not a supported command.
+        // replace the {} with other characters to mask the braces so we can continue parsing.
+        // We have to unmask then after we're finished.
+        // See: https://github.com/letscontrolit/ESPEasy/issues/2932#issuecomment-596139096
+        replacement = line.substring(startIndex, closingIndex + 1);
+        replacement.replace('{', static_cast<char>(0x02));
+        replacement.replace('}', static_cast<char>(0x03));
+      }
+      // Replace the full command including opening and closing brackets.
+      line.replace(line.substring(startIndex, closingIndex + 1), replacement);
+
+      /*
+      if (replacement.length() > 0) {
+        addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + fullCommand + String(F(" -> ")) + replacement);
+      }
+      */
+    }
+  }
+  // We now have to check if we did mask some parts and unmask them.
+  // Let's hope we don't mess up any Unicode here.
+  line.replace(static_cast<char>(0x02), '{');
+  line.replace(static_cast<char>(0x03), '}');
+}
+
+
 void replace_EventValueN_Argv(String& line, const String& argString, unsigned int argc)
 {
   String eventvalue;
@@ -287,25 +502,26 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
   }
 }
 
+
 void substitute_eventvalue(String& line, const String& event) {
-  if (line.indexOf(F("%eventvalue")) == -1) {
-    return; // Nothing to replace.
-  }
+  if (substitute_eventvalue_CallBack_ptr != nullptr)
+    substitute_eventvalue_CallBack_ptr(line, event);
+  if (line.indexOf(F("%eventvalue")) != -1) {
+    if (event.charAt(0) == '!') {
+      line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
+                                              // literal event string if
+                                              // starting with '!'
+    } else {
+      int equalsPos = event.indexOf("=");
 
-  if (event.charAt(0) == '!') {
-    line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
-                                            // literal event string if
-                                            // starting with '!'
-  } else {
-    int equalsPos = event.indexOf("=");
+      if (equalsPos > 0) {
+        // Replace %eventvalueX% with the actual value of the event.
+        // For compatibility reasons also replace %eventvalue%  (argc = 0)
+        String argString = event.substring(equalsPos + 1);
 
-    if (equalsPos > 0) {
-      // Replace %eventvalueX% with the actual value of the event.
-      // For compatibility reasons also replace %eventvalue%  (argc = 0)
-      String argString = event.substring(equalsPos + 1);
-
-      for (unsigned int argc = 0; argc <= 4; ++argc) {
-        replace_EventValueN_Argv(line, argString, argc);
+        for (unsigned int argc = 0; argc <= 4; ++argc) {
+          replace_EventValueN_Argv(line, argString, argc);
+        }
       }
     }
   }
@@ -328,13 +544,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
   isCommand = true;
 
-  // Strip trailing comments
-  int comment = line.indexOf(F("//"));
-
-  if (comment >= 0) {
-    line = line.substring(0, comment);
-  }
-  line.trim();
+  rules_strip_trailing_comments(line);
 
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the
@@ -349,7 +559,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
     if (match || lineStartsWith_on) {
       // Only parseTemplate when we are actually doing something with the line.
       // When still looking for the "on ... do" part, do not change it before we found the block.
-      line = parseTemplate(line, line.length());
+      line = parseTemplate(line);
     }
   }
 
@@ -452,6 +662,7 @@ void processMatchedRule(String& action, String& event,
         }
         else {
           String check = lcAction.substring(split + 7);
+          check.trim();
           condition[ifBlock - 1] = conditionMatchExtended(check);
 #ifndef BUILD_NO_DEBUG
 
@@ -469,13 +680,15 @@ void processMatchedRule(String& action, String& event,
       }
     }
   } else {
-    split = lcAction.indexOf(F("if ")); // check for optional "if" condition
+     // check for optional "if" condition
+    split = lcAction.indexOf(F("if "));
 
     if (split != -1) {
       if (ifBlock < RULES_IF_MAX_NESTING_LEVEL) {
         if (isCommand) {
           ifBlock++;
           String check = lcAction.substring(split + 3);
+          check.trim();
           condition[ifBlock - 1] = conditionMatchExtended(check);
           ifBranche[ifBlock - 1] = true;
 #ifndef BUILD_NO_DEBUG
@@ -499,7 +712,7 @@ void processMatchedRule(String& action, String& event,
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           log  = F("Lev.");
           log += String(ifBlock);
-          log  = F(": Error: IF Nesting level exceeded!");
+          log += F(": Error: IF Nesting level exceeded!");
           addLog(LOG_LEVEL_ERROR, log);
         }
       }
@@ -547,32 +760,7 @@ void processMatchedRule(String& action, String& event,
       addLog(LOG_LEVEL_INFO, log);
     }
 
-    struct EventStruct TempEvent;
-    parseCommandString(&TempEvent, action);
-
-    // FIXME TD-er: This part seems a bit strange.
-    // It can't schedule a call to PLUGIN_WRITE.
-    // Maybe ExecuteCommand can be scheduled?
-    delay(0);
-
-    // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly
-    // alter the string.
-    String tmpAction(action);
-
-    if (!PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction)) {
-      if (!tmpAction.equals(action)) {
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("PLUGIN_WRITE altered the string: ");
-          log += action;
-          log += F(" to: ");
-          log += tmpAction;
-          addLog(LOG_LEVEL_ERROR, log);
-        }
-
-        // TODO: assign here modified action???
-      }
-      ExecuteCommand(VALUE_SOURCE_SYSTEM, action.c_str());
-    }
+    ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
     delay(0);
   }
 }
@@ -603,7 +791,7 @@ bool ruleMatch(const String& event, const String& rule) {
 
     if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
     {
-      return event.substring(0, pos - 1).equalsIgnoreCase(rule.substring(0, pos - 1));
+      return event.substring(0, pos).equalsIgnoreCase(rule.substring(0, pos));
     } else {
       const bool pound_char_found = rule.indexOf('#') != -1;
 
@@ -705,7 +893,7 @@ bool conditionMatchExtended(String& check) {
     condOr  = check.indexOf(F(" or "));
 
     if ((condAnd > 0) || (condOr > 0)) {                             // we got AND/OR
-      if ((condAnd > 0) && (((condOr < 0) && (condOr < condAnd)) ||
+      if ((condAnd > 0) && (((condOr < 0) /*&& (condOr < condAnd)*/) ||
                             ((condOr > 0) && (condOr > condAnd)))) { // AND is first
         check     = check.substring(condAnd + 5);
         rightcond = conditionMatch(check);
@@ -752,56 +940,57 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
   posStart = check.length();
   posEnd   = posStart;
   int comparePos = 0;
+  bool found = false;
 
   if (((comparePos = check.indexOf("!=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '!' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<>")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '!' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf(">=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '>' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '=';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("<")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '<';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf(">")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '>';
-    return true;
+    found = true;
   }
 
   if (((comparePos = check.indexOf("=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '=';
-    return true;
+    found = true;
   }
-  return false;
+  return found;
 }
 
 bool compareValues(char compare, float Value1, float Value2)
@@ -849,29 +1038,21 @@ bool conditionMatch(const String& check) {
     }
   }
 
-  return compareValues(compare, Value1, Value2);
-}
-
-/********************************************************************************************\
-   Check rule timers
- \*********************************************************************************************/
-void rulesTimers() {
-  if (!Settings.UseRules) {
-    return;
+  bool result = compareValues(compare, Value1, Value2);
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("compareValues: _");
+    log += check;
+    log += F("_ val1: ");
+    log += Value1;
+    log += F(" val2: ");
+    log += Value2;
+    log += F(" = ");
+    log += boolToString(result);
+    addLog(LOG_LEVEL_DEBUG, log);
   }
-
-  for (byte x = 0; x < RULES_TIMER_MAX; x++) {
-    if (!RulesTimer[x].paused && (RulesTimer[x].timestamp != 0L)) // timer active?
-    {
-      if (timeOutReached(RulesTimer[x].timestamp))                // timer finished?
-      {
-        RulesTimer[x].timestamp = 0L;                             // turn off this timer
-        String event = F("Rules#Timer=");
-        event += x + 1;
-        rulesProcessing(event);
-      }
-    }
-  }
+  #endif
+  return result;
 }
 
 /********************************************************************************************\
@@ -886,10 +1067,10 @@ void createRuleEvents(struct EventStruct *event) {
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
   LoadTaskSettings(event->TaskIndex);
-  byte BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-  byte sensorType   = Device[DeviceIndex].VType;
 
-  for (byte varNr = 0; varNr < Device[DeviceIndex].ValueCount; varNr++) {
+  const byte valueCount = getValueCountForTask(event->TaskIndex);
+
+  for (byte varNr = 0; varNr < valueCount; varNr++) {
     String eventString;
     eventString.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
     eventString  = getTaskDeviceName(event->TaskIndex);
@@ -897,22 +1078,21 @@ void createRuleEvents(struct EventStruct *event) {
     eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
     eventString += F("=");
 
-    switch (sensorType) {
-      case SENSOR_TYPE_LONG:
-        eventString += (unsigned long)UserVar[BaseVarIndex] +
-                       ((unsigned long)UserVar[BaseVarIndex + 1] << 16);
+    switch (event->getSensorType()) {
+      case Sensor_VType::SENSOR_TYPE_LONG:
+        eventString += (unsigned long)UserVar[event->BaseVarIndex] +
+                       ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
         break;
-      case SENSOR_TYPE_STRING:
+      case Sensor_VType::SENSOR_TYPE_STRING:
 
         // FIXME TD-er: What to add here? length of string?
         break;
       default:
 
         // FIXME TD-er: Do we need to call formatUserVarNoCheck here? (or with check)
-        eventString += UserVar[BaseVarIndex + varNr];
+        eventString += UserVar[event->BaseVarIndex + varNr];
         break;
     }
-
-    rulesProcessing(eventString);
+    eventQueue.add(eventString);
   }
 }

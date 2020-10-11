@@ -1,21 +1,26 @@
 #include "../Commands/HTTP.h"
 
-#include "../../_CPlugin_Helper.h"
-#include "../Commands/Common.h"
 #include "../../ESPEasy_Log.h"
-#include "../../src/DataStructs/ControllerSettingsStruct.h"
-
-#include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../_CPlugin_Helper.h"
 
+#include "../Commands/Common.h"
+
+#include "../DataStructs/ControllerSettingsStruct.h"
+#include "../DataStructs/SettingsStruct.h"
+
+#include "../Globals/Settings.h"
+
+#include "../Helpers/Misc.h"
+#include "../Helpers/StringParser.h"
 
 
 String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 {
-	if (WiFiConnected()) {
-		String strLine = Line;
-		String host = parseString(strLine, 2);
-		String port = parseString(strLine, 3);
+	if (NetworkConnected()) {
+		String host = parseString(Line, 2);
+		const int port = parseCommandArgumentInt(Line, 2);
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 			String log = F("SendToHTTP: Host: ");
 			log += host;
@@ -23,8 +28,10 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 			log += port;
 			addLog(LOG_LEVEL_DEBUG, log);
 		}
-		if (!isInt(port)) return return_command_failed();
-		String path = parseStringToEndKeepCase(strLine, 4);
+		if (port < 0 || port > 65535) return return_command_failed();
+		// FIXME TD-er: This is not using the tolerant settings option.
+    // String path = tolerantParseStringKeepCase(Line, 4);
+		String path = parseStringToEndKeepCase(Line, 4);
 #ifndef BUILD_NO_DEBUG
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 			String log = F("SendToHTTP: Path: ");
@@ -33,21 +40,25 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 		}
 #endif
 		WiFiClient client;
-		client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-		const int port_int = port.toInt();
-		const bool connected = connectClient(client, host.c_str(), port_int);
+		client.setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX);
+		const bool connected = connectClient(client, host.c_str(), port);
 		if (connected) {
 			String hostportString = host;
-			if (port_int != 0 && port_int != 80) {
+			if (port != 0 && port != 80) {
 				hostportString += ':';
-				hostportString += port_int;
+				hostportString += port;
 			}
 			String request = do_create_http_request(hostportString, F("GET"), path);
 #ifndef BUILD_NO_DEBUG
 			addLog(LOG_LEVEL_DEBUG, request);
 #endif
-			send_via_http(F("Command_HTTP_SendToHTTP"), client, request, false);
+            bool mustCheckAck = Settings.SendToHttp_ack();
+			send_via_http(F("Command_HTTP_SendToHTTP"), client, request, mustCheckAck);
+			return return_command_success();
 		}
+		addLog(LOG_LEVEL_ERROR, F("SendToHTTP connection failed"));
+	} else {
+		addLog(LOG_LEVEL_ERROR, F("SendToHTTP Not connected to network"));
 	}
-	return return_command_success();
+	return return_command_failed();
 }

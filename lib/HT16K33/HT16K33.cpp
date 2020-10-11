@@ -133,7 +133,8 @@ uint8_t CHT16K33::ReadKeys(void)
     {
       _keyBuffer[i] = Wire.read() | (Wire.read() << 8);
     }
-    Wire.endTransmission();
+    // Not needed See: https://github.com/Koepel/How-to-use-the-Arduino-Wire-library/wiki/Common-mistakes#2
+    // Wire.endTransmission();
   }
 
   for (byte i=0; i<3; i++)

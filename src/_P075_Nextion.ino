@@ -14,6 +14,7 @@
 
 #ifdef USES_P075
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 // *****************************************************************************************************
 // Defines start here
@@ -33,13 +34,13 @@
 // Configuration Settings. Custom Configuration Memory must be less than 1024 Bytes (per TD'er findings).
 //#define P75_Nlines 12             // Custom Config, Number of user entered Command Statment Lines. DO NOT USE!
 //#define P75_Nchars 64           // Custom Config, Length of user entered Command Statment Lines. DO NOT USE!
-#define P75_Nlines 10               // Custom Config, Number of user entered Command Statments.
+#define P75_Nlines 10             // Custom Config, Number of user entered Command Statments.
 #define P75_Nchars 51             // Custom Config, Length of user entered Command Statments.
 
 // Nextion defines
-#define RXBUFFSZ  64            // Serial RxD buffer (Local staging buffer and ESPeasySerial).
-#define RXBUFFWARN RXBUFFSZ-16  // Warning, Rx buffer close to being full.
-#define TOUCH_BASE 500          // Base offset for 0X65 Touch Event Send Component ID.
+#define RXBUFFSZ  64              // Serial RxD buffer (Local staging buffer and ESPeasySerial).
+#define RXBUFFWARN (RXBUFFSZ-16)  // Warning, Rx buffer close to being full.
+#define TOUCH_BASE 500            // Base offset for 0X65 Touch Event Send Component ID.
 
 // Serial defines
 #define P075_B9600    0
@@ -53,11 +54,11 @@
 
 struct P075_data_struct : public PluginTaskData_base {
 
-  P075_data_struct(int rx, int tx, uint32_t baud) : rxPin(rx), txPin(tx), baudrate(baud) {
+  P075_data_struct(ESPEasySerialPort port, int rx, int tx, uint32_t baud) : rxPin(rx), txPin(tx), baudrate(baud) {
     if (baudrate < 9600 || baudrate > 115200) {
       baudrate = 9600;
     }
-    easySerial = new ESPeasySerial(rx, tx, false, RXBUFFSZ);
+    easySerial = new (std::nothrow) ESPeasySerial(port, rx, tx, false, RXBUFFSZ);
     if (easySerial != nullptr) {
       easySerial->begin(baudrate);
       easySerial->flush();
@@ -106,8 +107,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number = PLUGIN_ID_075;
-      Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType = SENSOR_TYPE_DUAL;
+      Device[deviceCount].Type = DEVICE_TYPE_SERIAL;
+      Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_DUAL;
       Device[deviceCount].Ports = 0;
       Device[deviceCount].PullUpOption = false;         // Pullup is not used.
       Device[deviceCount].InverseLogicOption = false;
@@ -147,15 +148,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
-
-/*
-      addFormSeparator(2);
-      addFormSubHeader(F("Enhanced Serial Communication"));
-      addFormCheckBox(F("Use Hardware Serial"), F("AdvHwSerial"), PCONFIG(0));
-*/
-
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
       String options[4];
       options[0] = F("9600");
       options[1] = F("38400");
@@ -163,6 +157,11 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       options[3] = F("115200");
 
       addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
+      addUnit(F("baud"));
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD: {
 
 //    ** DEVELOPER DEBUG MESSAGE AREA **
 //    int datax = (int)(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
@@ -198,26 +197,29 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_WEBFORM_SAVE: {
-        serialHelper_webformSave(event);
 
-        char deviceTemplate[P75_Nlines][P75_Nchars];
-        String error;
-        for (byte varNr = 0; varNr < P75_Nlines; varNr++)
         {
-          if (!safe_strncpy(deviceTemplate[varNr], WebServer.arg(getPluginCustomArgName(varNr)), P75_Nchars)) {
-            error += getCustomTaskSettingsError(varNr);
+          // FIXME TD-er: This is a huge object allocated on the Stack.
+          char deviceTemplate[P75_Nlines][P75_Nchars];
+          String error;
+          for (byte varNr = 0; varNr < P75_Nlines; varNr++)
+          {
+            if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P75_Nchars)) {
+              error += getCustomTaskSettingsError(varNr);
+            }
           }
+          if (error.length() > 0) {
+            addHtmlError(error);
+          }
+          SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         }
-        if (error.length() > 0) {
-          addHtmlError(error);
-        }
+
         if(getTaskDeviceName(event->TaskIndex) == "") {         // Check to see if user entered device name.
             strcpy(ExtraTaskSettings.TaskDeviceName,PLUGIN_DEFAULT_NAME); // Name missing, populate default name.
         }
 //        PCONFIG(0) = isFormItemChecked(F("AdvHwSerial"));
         P075_BaudRate = getFormItemInt(F("p075_baud"));
         P075_IncludeValues = isFormItemChecked(F("IncludeValues"));
-        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
         if (nullptr != P075_data) {
           P075_data->loadDisplayLines(event->TaskIndex);
@@ -233,7 +235,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       if(BaudCode > P075_B115200) BaudCode = P075_B9600;
       const uint32_t BaudArray[4] = {9600UL, 38400UL, 57600UL, 115200UL};
-      initPluginTaskData(event->TaskIndex, new P075_data_struct(CONFIG_PIN1, CONFIG_PIN2, BaudArray[BaudCode]));
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P075_data_struct(port, CONFIG_PIN1, CONFIG_PIN2, BaudArray[BaudCode]));
       P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
@@ -290,7 +293,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               newString += String(barVal,DEC);
             }
             else {
-              newString = parseTemplate(tmpString, 0);
+              newString = parseTemplate(tmpString);
             }
 
             P075_sendCommand(event->TaskIndex, newString.c_str());
@@ -336,49 +339,38 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 // Nextion commands received from events (including http) get processed here. PLUGIN_WRITE
 // does NOT process publish commands that are sent.
     case PLUGIN_WRITE: {
-        // FIXME TD-er: This one is not using parseString* function
-        String tmpString = string;
-        int argIndex = tmpString.indexOf(',');
-        if (argIndex) tmpString = tmpString.substring(0, argIndex);
+      String command = parseString(string, 1);
+      // If device names match we have a command to write.
+      if (command.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
+        success = true; // Set true only if plugin found a command to execute.
+        String nextionArguments = parseStringToEndKeepCase(string, 2);
+        P075_sendCommand(event->TaskIndex, nextionArguments.c_str());
+        {
+          String log;
+          log.reserve(24 + nextionArguments.length()); // Prevent re-allocation
+          log = F("NEXTION075 : WRITE = ");
+          log += nextionArguments;
+          addLog(LOG_LEVEL_DEBUG, log);
+          SendStatus(event->Source, log);              // Reply (echo) to sender. This will print message on browser.
+        }
 
 // Enable addLog() code below to help debug plugin write problems.
 /*
         String log;
         log.reserve(140);                               // Prevent re-allocation
         String log = F("Nextion arg0: ");
-        log += tmpString;
+        log += command;
         log += F(", TaskDeviceName: ");
         log += getTaskDeviceName(event->TaskIndex);
         log += F(", event->TaskIndex: ");
         log += String(event->TaskIndex);
-        log += F(", cmd str: ");
-        log += string;
+        log += F(", nextionArguments: ");
+        log += nextionArguments;
         addLog(LOG_LEVEL_INFO, log);
 */
-        if (tmpString.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true) { // If device names match we have a command to write.
-            argIndex = string.indexOf(',');
-            tmpString = string.substring(argIndex + 1);
-            P075_sendCommand(event->TaskIndex, tmpString.c_str());
-
-            String log;
-            log.reserve(110);                           // Prevent re-allocation
-            log = F("NEXTION075 : WRITE = ");
-            log += tmpString;
-            #ifdef DEBUG_LOG
-              addLog(LOG_LEVEL_INFO, log);
-            #endif
-            SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.
-            success = true;                             // Set true only if plugin found a command to execute.
-        }
-        break;
+      }
+      break;
     }
-
-
-    case PLUGIN_EXIT: {
-        clearPluginTaskData(event->TaskIndex);
-        break;
-    }
-
 
     case PLUGIN_ONCE_A_SECOND: {
         success = true;
@@ -391,145 +383,145 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       if (nullptr == P075_data) {
         break;
       }
-      uint16_t i;
-      uint8_t c;
-      uint8_t charCount;
-      String Vidx;
-      String Nvalue;
-      String Svalue;
-      String Nswitch;
-      char __buffer[RXBUFFSZ+1];                        // Staging buffer.
-
       if(P075_data->rxPin < 0) {
         String log = F("NEXTION075 : Missing RxD Pin, aborted serial receive");
         addLog(LOG_LEVEL_INFO, log);
         break;
       }
-
       if(P075_data->easySerial == nullptr) break;                   // P075_data->easySerial missing, exit.
-      charCount = P075_data->easySerial->available();            // Prime the Soft Serial engine.
-      if(charCount >= RXBUFFWARN) {
-          String log;
-          log.reserve(70);                           // Prevent re-allocation
-          log = F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, ");
-          log += String(charCount);
-          log += F(" bytes");
-          addLog(LOG_LEVEL_INFO, log);
-      }
-      uint32_t baudrate_delay_unit = P075_data->baudrate / 9600;
-      if (baudrate_delay_unit == 0) {
-        baudrate_delay_unit = 1;
-      }
 
-      while (charCount) {                               // This is the serial engine. It processes the serial Rx stream.
-        c = P075_data->easySerial->read();
-
-        if (c == 0x65) {
-          if (charCount < 6) delay((5/(baudrate_delay_unit))+1); // Let's wait for a few more chars to arrive.
-
-          charCount = P075_data->easySerial->available();
-          if (charCount >= 6) {
-            __buffer[0] = c;                            // Store in staging buffer.
-            for (i = 1; i < 7; i++) {
-                __buffer[i] = P075_data->easySerial->read();
-            }
-
-            __buffer[i] = 0x00;
-
-            if (0xFF == __buffer[4] && 0xFF == __buffer[5] && 0xFF == __buffer[6]) {
-              UserVar[event->BaseVarIndex] = (__buffer[1] * 256) + __buffer[2] + TOUCH_BASE;
-              UserVar[event->BaseVarIndex + 1] = __buffer[3];
-              sendData(event);
-
-              #ifdef DEBUG_LOG
-                String log;
-                log.reserve(70);                        // Prevent re-allocation
-                log = F("NEXTION075 : code: ");
-                log += __buffer[1];
-                log += ",";
-                log += __buffer[2];
-                log += ",";
-                log += __buffer[3];
-                addLog(LOG_LEVEL_INFO, log);
-              #endif
-            }
-          }
+      {
+        uint16_t i;
+        uint8_t c;
+        String Vidx;
+        String Nvalue;
+        String Svalue;
+        String Nswitch;
+        char __buffer[RXBUFFSZ+1];                        // Staging buffer.
+        uint8_t charCount = P075_data->easySerial->available();            // Prime the Soft Serial engine.
+        if(charCount >= RXBUFFWARN) {
+            String log;
+            log.reserve(70);                           // Prevent re-allocation
+            log = F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, ");
+            log += String(charCount);
+            log += F(" bytes");
+            addLog(LOG_LEVEL_INFO, log);
         }
-        else {
-          if (c == '|') {
-            __buffer[0] = c;                                  // Store in staging buffer.
+        uint32_t baudrate_delay_unit = P075_data->baudrate / 9600;
+        if (baudrate_delay_unit == 0) {
+          baudrate_delay_unit = 1;
+        }
 
-            if (charCount < 8) delay((9/(baudrate_delay_unit))+1); // Let's wait for more chars to arrive.
-            else delay((3/(baudrate_delay_unit))+1);               // Short wait for tardy chars.
+        while (charCount) {                               // This is the serial engine. It processes the serial Rx stream.
+          c = P075_data->easySerial->read();
+
+          if (c == 0x65) {
+            if (charCount < 6) delay((5/(baudrate_delay_unit))+1); // Let's wait for a few more chars to arrive.
+
             charCount = P075_data->easySerial->available();
+            if (charCount >= 6) {
+              __buffer[0] = c;                            // Store in staging buffer.
+              for (i = 1; i < 7; i++) {
+                  __buffer[i] = P075_data->easySerial->read();
+              }
 
-            i = 1;
-            while (P075_data->easySerial->available() > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
-              __buffer[i] = P075_data->easySerial->read();
-              if (__buffer[i]==0x0a || __buffer[i]==0x0d) break;
-              i++;
-            }
+              __buffer[i] = 0x00;
 
-            __buffer[i] = 0x00;
-
-            String tmpString = __buffer;
-
-            #ifdef DEBUG_LOG
-              String log;
-              log.reserve(50);                          // Prevent re-allocation
-              log = F("NEXTION075 : Code = ");
-              log += tmpString;
-              addLog(LOG_LEVEL_INFO, log);
-            #endif
-
-            int argIndex = tmpString.indexOf(F(",i"));
-            int argEnd = tmpString.indexOf(',', argIndex + 1);
-            if (argIndex) Vidx = tmpString.substring(argIndex + 2,argEnd);
-
-            boolean GotPipeCmd = false;
-            switch (__buffer[1]){
-              case 'u':
-                GotPipeCmd = true;
-                argIndex = argEnd;
-                argEnd = tmpString.indexOf(',',argIndex + 1);
-                if (argIndex) Nvalue = tmpString.substring(argIndex + 2,argEnd);
-                argIndex = argEnd;
-                argEnd = tmpString.indexOf(0x0a);
-                if (argIndex) Svalue = tmpString.substring(argIndex + 2,argEnd);
-                break;
-              case 's':
-                GotPipeCmd = true;
-                argIndex = argEnd;
-                argEnd = tmpString.indexOf(0x0a);
-                if (argIndex) Nvalue = tmpString.substring(argIndex + 2,argEnd);
-                if (Nvalue == F("On")) Svalue='1';
-                if (Nvalue == F("Off")) Svalue='0';
-                break;
-            }
-
-            if (GotPipeCmd) {
-                UserVar[event->BaseVarIndex] = Vidx.toFloat();
-                UserVar[event->BaseVarIndex+1] = Svalue.toFloat();
+              if (0xFF == __buffer[4] && 0xFF == __buffer[5] && 0xFF == __buffer[6]) {
+                UserVar[event->BaseVarIndex] = (__buffer[1] * 256) + __buffer[2] + TOUCH_BASE;
+                UserVar[event->BaseVarIndex + 1] = __buffer[3];
                 sendData(event);
 
                 #ifdef DEBUG_LOG
-                 String log;
-                 log.reserve(80);                       // Prevent re-allocation
-                 log = F("NEXTION075 : Pipe Command Sent: ");
-                 log += __buffer;
-                 log += UserVar[event->BaseVarIndex];
-                 addLog(LOG_LEVEL_INFO, log);
+                  String log;
+                  log.reserve(70);                        // Prevent re-allocation
+                  log = F("NEXTION075 : code: ");
+                  log += __buffer[1];
+                  log += ",";
+                  log += __buffer[2];
+                  log += ",";
+                  log += __buffer[3];
+                  addLog(LOG_LEVEL_INFO, log);
                 #endif
-            }
-            else {
-                #ifdef DEBUG_LOG
-                 String log = F("NEXTION075 : Unknown Pipe Command, skipped");
-                 addLog(LOG_LEVEL_INFO, log);
-                #endif
+              }
             }
           }
+          else {
+            if (c == '|') {
+              __buffer[0] = c;                                  // Store in staging buffer.
+
+              if (charCount < 8) delay((9/(baudrate_delay_unit))+1); // Let's wait for more chars to arrive.
+              else delay((3/(baudrate_delay_unit))+1);               // Short wait for tardy chars.
+              charCount = P075_data->easySerial->available();
+
+              i = 1;
+              while (P075_data->easySerial->available() > 0 && i<RXBUFFSZ) { // Copy global serial buffer to local buffer.
+                __buffer[i] = P075_data->easySerial->read();
+                if (__buffer[i]==0x0a || __buffer[i]==0x0d) break;
+                i++;
+              }
+
+              __buffer[i] = 0x00;
+
+              String tmpString = __buffer;
+
+              #ifdef DEBUG_LOG
+                String log;
+                log.reserve(50);                          // Prevent re-allocation
+                log = F("NEXTION075 : Code = ");
+                log += tmpString;
+                addLog(LOG_LEVEL_INFO, log);
+              #endif
+
+              int argIndex = tmpString.indexOf(F(",i"));
+              int argEnd = tmpString.indexOf(',', argIndex + 1);
+              if (argIndex) Vidx = tmpString.substring(argIndex + 2,argEnd);
+
+              boolean GotPipeCmd = false;
+              switch (__buffer[1]){
+                case 'u':
+                  GotPipeCmd = true;
+                  argIndex = argEnd;
+                  argEnd = tmpString.indexOf(',',argIndex + 1);
+                  if (argIndex) Nvalue = tmpString.substring(argIndex + 2,argEnd);
+                  argIndex = argEnd;
+                  argEnd = tmpString.indexOf(0x0a);
+                  if (argIndex) Svalue = tmpString.substring(argIndex + 2,argEnd);
+                  break;
+                case 's':
+                  GotPipeCmd = true;
+                  argIndex = argEnd;
+                  argEnd = tmpString.indexOf(0x0a);
+                  if (argIndex) Nvalue = tmpString.substring(argIndex + 2,argEnd);
+                  if (Nvalue == F("On")) Svalue='1';
+                  if (Nvalue == F("Off")) Svalue='0';
+                  break;
+              }
+
+              if (GotPipeCmd) {
+                  UserVar[event->BaseVarIndex] = Vidx.toFloat();
+                  UserVar[event->BaseVarIndex+1] = Svalue.toFloat();
+                  sendData(event);
+
+                  #ifdef DEBUG_LOG
+                  String log;
+                  log.reserve(80);                       // Prevent re-allocation
+                  log = F("NEXTION075 : Pipe Command Sent: ");
+                  log += __buffer;
+                  log += UserVar[event->BaseVarIndex];
+                  addLog(LOG_LEVEL_INFO, log);
+                  #endif
+              }
+              else {
+                  #ifdef DEBUG_LOG
+                  String log = F("NEXTION075 : Unknown Pipe Command, skipped");
+                  addLog(LOG_LEVEL_INFO, log);
+                  #endif
+              }
+            }
+          }
+          charCount = P075_data->easySerial->available();
         }
-        charCount = P075_data->easySerial->available();
       }
 
       success = true;

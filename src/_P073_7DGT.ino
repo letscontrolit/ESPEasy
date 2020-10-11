@@ -46,6 +46,7 @@
 #define P073_DISP_CLOCK12       4
 #define P073_DISP_DATE          5
 
+#include "_Plugin_Helper.h"
 struct P073_data_struct : public PluginTaskData_base {
   P073_data_struct()
     : dotpos(-1), pin1(-1), pin2(-1), pin3(-1), displayModel(0), output(0),
@@ -59,9 +60,9 @@ struct P073_data_struct : public PluginTaskData_base {
     ClearBuffer();
 
     if (sevendgt_now) {
-      sevendgt_hours   = hour();
-      sevendgt_minutes = minute();
-      sevendgt_seconds = second();
+      sevendgt_hours   = node_time.hour();
+      sevendgt_minutes = node_time.minute();
+      sevendgt_seconds = node_time.second();
     }
 
     if (flag12h && (sevendgt_hours > 12)) {
@@ -85,9 +86,9 @@ struct P073_data_struct : public PluginTaskData_base {
     int sevendgt_year0 = sevendgt_year;
 
     if (sevendgt_now) {
-      sevendgt_day   = day();
-      sevendgt_month = month();
-      sevendgt_year0 = year();
+      sevendgt_day   = node_time.day();
+      sevendgt_month = node_time.month();
+      sevendgt_year0 = node_time.year();
     } else {
       if (sevendgt_year0 < 100) {
         sevendgt_year0 += 2000;
@@ -233,7 +234,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_073;
       Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType              = SENSOR_TYPE_NONE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -320,13 +321,12 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
       success = true;
       break;
     }
 
     case PLUGIN_INIT: {
-      initPluginTaskData(event->TaskIndex, new P073_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P073_data_struct());
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -435,38 +435,32 @@ bool p073_plugin_write(struct EventStruct *event, const String& string) {
     return false;
   }
 
-  // FIXME TD-er: This one is not using parseString* function
-  String tmpString = string;
-  int    argIndex  = tmpString.indexOf(',');
-
-  if (argIndex) {
-    tmpString = tmpString.substring(0, argIndex);
-  }
-  tmpString.toLowerCase();
-
-  if (tmpString.equals("7dn")) {
-    return p073_plugin_write_7dn(event, string);
-  } else if (tmpString.equals("7dt")) {
-    return p073_plugin_write_7dt(event, string);
-  } else if (tmpString.equals("7dst")) {
-    return p073_plugin_write_7dst(event, string);
-  } else if (tmpString.equals("7dsd")) {
-    return p073_plugin_write_7dsd(event, string);
-  } else if (tmpString.equals("7dtext")) {
-    return p073_plugin_write_7dtext(event, string);
+  String cmd = parseString(string, 1);
+  cmd.toLowerCase();
+  String text = parseStringToEndKeepCase(string, 2);
+  if (cmd.equals("7dn")) {
+    return p073_plugin_write_7dn(event, text);
+  } else if (cmd.equals("7dt")) {
+    return p073_plugin_write_7dt(event, text);
+  } else if (cmd.equals("7dst")) {
+    return p073_plugin_write_7dst(event);
+  } else if (cmd.equals("7dsd")) {
+    return p073_plugin_write_7dsd(event);
+  } else if (cmd.equals("7dtext")) {
+    return p073_plugin_write_7dtext(event, text);
   } else {
     bool p073_validcmd = false;
     bool p073_displayon;
 
-    if (tmpString.equals("7don")) {
+    if (cmd.equals("7don")) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
       p073_displayon = true;
       p073_validcmd  = true;
-    } else if (tmpString.equals("7doff")) {
+    } else if (cmd.equals("7doff")) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display OFF"));
       p073_displayon = false;
       p073_validcmd  = true;
-    } else if (tmpString.equals("7db")) {
+    } else if (cmd.equals("7db")) {
       if ((event->Par1 >= 0) && (event->Par1 < 16)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("7DGT : Brightness=");
@@ -502,7 +496,7 @@ bool p073_plugin_write(struct EventStruct *event, const String& string) {
   return false;
 }
 
-bool p073_plugin_write_7dn(struct EventStruct *event, const String& tmpStr) {
+bool p073_plugin_write_7dn(struct EventStruct *event, const String& text) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -520,8 +514,6 @@ bool p073_plugin_write_7dn(struct EventStruct *event, const String& tmpStr) {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  int comma1 = tmpStr.indexOf(',');
-
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON: {
       if ((event->Par1 > -1000) && (event->Par1 < 10000)) {
@@ -535,7 +527,7 @@ bool p073_plugin_write_7dn(struct EventStruct *event, const String& tmpStr) {
     }
     case P073_TM1637_4DGTDOTS: {
       if ((event->Par1 > -1000) && (event->Par1 < 10000)) {
-        P073_data->FillBufferWithNumber(tmpStr.substring(comma1 + 1).c_str());
+        P073_data->FillBufferWithNumber(text.c_str());
       }
       else {
         P073_data->FillBufferWithDash();
@@ -545,7 +537,7 @@ bool p073_plugin_write_7dn(struct EventStruct *event, const String& tmpStr) {
     }
     case P073_TM1637_6DGT: {
       if ((event->Par1 > -100000) && (event->Par1 < 1000000)) {
-        P073_data->FillBufferWithNumber(tmpStr.substring(comma1 + 1).c_str());
+        P073_data->FillBufferWithNumber(text.c_str());
       }
       else {
         P073_data->FillBufferWithDash();
@@ -555,9 +547,9 @@ bool p073_plugin_write_7dn(struct EventStruct *event, const String& tmpStr) {
       break;
     }
     case P073_MAX7219_8DGT: {
-      if (comma1 > 0) {
+      if (text.length() > 0) {
         if ((event->Par1 > -10000000) && (event->Par1 < 100000000)) {
-          P073_data->FillBufferWithNumber(tmpStr.substring(comma1 + 1).c_str());
+          P073_data->FillBufferWithNumber(text.c_str());
         } else {
           P073_data->FillBufferWithDash();
         }
@@ -570,7 +562,7 @@ bool p073_plugin_write_7dn(struct EventStruct *event, const String& tmpStr) {
   return true;
 }
 
-bool p073_plugin_write_7dt(struct EventStruct *event, const String& tmpStr) {
+bool p073_plugin_write_7dt(struct EventStruct *event, const String& text) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -583,10 +575,8 @@ bool p073_plugin_write_7dt(struct EventStruct *event, const String& tmpStr) {
   }
   double p073_temptemp    = 0;
   bool   p073_tempflagdot = false;
-  int    comma1           = tmpStr.indexOf(',');
-
-  if (comma1 > 0) {
-    p073_temptemp = atof(tmpStr.substring(comma1 + 1).c_str());
+  if (text.length() > 0) {
+    validDoubleFromString(text, p073_temptemp);
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -647,7 +637,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event, const String& tmpStr) {
   return true;
 }
 
-bool p073_plugin_write_7dst(struct EventStruct *event, const String& string) {
+bool p073_plugin_write_7dst(struct EventStruct *event) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -690,7 +680,7 @@ bool p073_plugin_write_7dst(struct EventStruct *event, const String& string) {
   return true;
 }
 
-bool p073_plugin_write_7dsd(struct EventStruct *event, const String& string) {
+bool p073_plugin_write_7dsd(struct EventStruct *event) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -731,7 +721,7 @@ bool p073_plugin_write_7dsd(struct EventStruct *event, const String& string) {
   return true;
 }
 
-bool p073_plugin_write_7dtext(struct EventStruct *event, const String& string) {
+bool p073_plugin_write_7dtext(struct EventStruct *event, const String& text) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -742,22 +732,12 @@ bool p073_plugin_write_7dtext(struct EventStruct *event, const String& string) {
   if (P073_data->output != P073_DISP_MANUAL) {
     return false;
   }
-  String tmpString = string;
-  int    argIndex  = tmpString.indexOf(',');
-
-  if (argIndex) {
-    tmpString = tmpString.substring(argIndex + 1);
-  }
-  else {
-    tmpString = "";
-  }
-
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("7DGT : Show Text=");
-    log += tmpString;
+    log += text;
     addLog(LOG_LEVEL_INFO, log);
   }
-  P073_data->FillBufferWithString(tmpString);
+  P073_data->FillBufferWithString(text);
 
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON:

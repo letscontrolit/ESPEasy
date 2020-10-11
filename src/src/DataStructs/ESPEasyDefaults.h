@@ -1,6 +1,10 @@
 #ifndef ESPEASY_DEFAULTS_H_
 #define ESPEASY_DEFAULTS_H_
 
+// Needed to make sure Custom.h is used.
+#include "../../ESPEasy_common.h"
+
+#include "../DataStructs/NetworkMedium.h"
 
 // ********************************************************************************
 //   User specific configuration
@@ -65,6 +69,9 @@
 #ifndef DEFAULT_ADMIN_USERNAME
 #define DEFAULT_ADMIN_USERNAME  "admin"
 #endif
+#ifndef DEFAULT_ADMIN_PASS
+#define DEFAULT_ADMIN_PASS     ""
+#endif
 
 #ifndef DEFAULT_WIFI_CONNECTION_TIMEOUT
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT  10000  // minimum timeout in ms for WiFi to be connected.
@@ -84,11 +91,30 @@
 #ifndef DEFAULT_GRATUITOUS_ARP
 #define DEFAULT_GRATUITOUS_ARP           false  // When set, the node will send periodical gratuitous ARP packets to announce itself.
 #endif
+#ifndef DEFAULT_TOLERANT_LAST_ARG_PARSE
+#define DEFAULT_TOLERANT_LAST_ARG_PARSE  false  // When set, the last argument of some commands will be parsed to the end of the line
+                                                // See: https://github.com/letscontrolit/ESPEasy/issues/2724
+#endif
+#ifndef DEFAULT_SEND_TO_HTTP_ACK
+#define DEFAULT_SEND_TO_HTTP_ACK         false // Wait for ack with SendToHttp command.
+#endif
 
 // --- Default Controller ------------------------------------------------------------------------------
 #ifndef DEFAULT_CONTROLLER
-#define DEFAULT_CONTROLLER   false              // true or false enabled or disabled, set 1st controller defaults
+#define DEFAULT_CONTROLLER   true              // true or false enabled or disabled, set 1st controller defaults
 #endif
+
+#ifndef DEFAULT_CONTROLLER_ENABLED
+#define DEFAULT_CONTROLLER_ENABLED   false     // Enable default controller by default
+#endif
+
+#ifndef DEFAULT_CONTROLLER_USER
+#define DEFAULT_CONTROLLER_USER    ""                                       // Default controller user
+#endif
+#ifndef DEFAULT_CONTROLLER_PASS
+#define DEFAULT_CONTROLLER_PASS    ""                                       // Default controller Password
+#endif
+
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
 #ifndef DEFAULT_PUB
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
@@ -99,9 +125,21 @@
 #ifndef DEFAULT_SERVER
 #define DEFAULT_SERVER      "192.168.0.8"       // Enter your Server IP address
 #endif
+#ifndef DEFAULT_SERVER_HOST
+#define DEFAULT_SERVER_HOST ""                  // Server hostname
+#endif
+#ifndef DEFAULT_SERVER_USEDNS
+#define DEFAULT_SERVER_USEDNS false             // true: Use hostname.  false: use IP
+#endif
+#ifndef DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS
+#define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
+#endif
+
 #ifndef DEFAULT_PORT
 #define DEFAULT_PORT        8080                // Enter your Server port value
 #endif
+
+
 
 #ifndef DEFAULT_PROTOCOL
 #define DEFAULT_PROTOCOL    0                   // Protocol used for controller communications
@@ -123,12 +161,47 @@
 #ifndef DEFAULT_PIN_I2C_SCL
 #define DEFAULT_PIN_I2C_SCL              5
 #endif
+#ifndef DEFAULT_I2C_CLOCK_SPEED
+#define DEFAULT_I2C_CLOCK_SPEED          400000            // Use 100 kHz if working with old I2C chips
+#endif
+#ifndef DEFAULT_I2C_CLOCK_SPEED_SLOW
+#define DEFAULT_I2C_CLOCK_SPEED_SLOW      100000            // Use 100 kHz for old/slow I2C chips
+#endif
 
 #ifndef DEFAULT_PIN_STATUS_LED
 #define DEFAULT_PIN_STATUS_LED           (-1)
 #endif
 #ifndef DEFAULT_PIN_STATUS_LED_INVERSED
 #define DEFAULT_PIN_STATUS_LED_INVERSED  true
+#endif
+
+#ifndef DEFAULT_PIN_RESET_BUTTON
+#define DEFAULT_PIN_RESET_BUTTON         (-1)
+#endif
+#ifndef DEFAULT_ETH_PHY_ADDR
+#define DEFAULT_ETH_PHY_ADDR             0
+#endif
+#ifndef DEFAULT_ETH_PHY_TYPE
+#define DEFAULT_ETH_PHY_TYPE             EthPhyType_t::LAN8710
+#endif
+#ifndef DEFAULT_ETH_PIN_MDC
+#define DEFAULT_ETH_PIN_MDC              23
+#endif
+#ifndef DEFAULT_ETH_PIN_MDIO
+#define DEFAULT_ETH_PIN_MDIO             18
+#endif
+#ifndef DEFAULT_ETH_PIN_POWER
+#define DEFAULT_ETH_PIN_POWER            -1
+#endif
+#ifndef DEFAULT_ETH_CLOCK_MODE
+#define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
+#endif
+#ifndef DEFAULT_NETWORK_MEDIUM
+  #ifdef HAS_ETHERNET
+    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::Ethernet
+  #else
+    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
+  #endif
 #endif
 
 
@@ -209,11 +282,14 @@
 #define DEFAULT_SYSLOG_FACILITY               	0 	    // kern
 #endif
 
+#ifndef DEFAULT_SYNC_UDP_PORT
+#define DEFAULT_SYNC_UDP_PORT                   0                       // Used for ESPEasy p2p. (IANA registered port: 8266)
+#endif
+
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
 
 #define DEFAULT_USE_GLOBAL_SYNC                 false           // (true|false)
-#define DEFAULT_SYNC_UDP_PORT                   0                       //
 
 #define DEFAULT_IP_OCTET                        0                       //
 #define DEFAULT_WD_IC2_ADDRESS                  0                       //

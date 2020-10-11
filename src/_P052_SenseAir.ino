@@ -30,9 +30,8 @@
 
 
 #define P052_QUERY1_CONFIG_POS  0
-#define P052_SENSOR_TYPE_INDEX  P052_QUERY1_CONFIG_POS + (VARS_PER_TASK + 1)
-#define P052_NR_OUTPUT_VALUES   getValueCountFromSensorType(PCONFIG(P052_SENSOR_TYPE_INDEX))
-
+#define P052_SENSOR_TYPE_INDEX  (P052_QUERY1_CONFIG_POS + (VARS_PER_TASK + 1))
+#define P052_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P052_SENSOR_TYPE_INDEX))) 
 #define P052_NR_OUTPUT_OPTIONS  8
 
 
@@ -95,6 +94,8 @@
 #define P052_MODBUS_TIMEOUT  180       // 100 msec communication timeout.
 
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
+#include "src/Helpers/Modbus_RTU.h"
 
 
 struct P052_data_struct : public PluginTaskData_base {
@@ -108,8 +109,8 @@ struct P052_data_struct : public PluginTaskData_base {
     modbus.reset();
   }
 
-  bool init(const int16_t serial_rx, const int16_t serial_tx) {
-    return modbus.init(serial_rx, serial_tx, 9600, P052_MODBUS_SLAVE_ADDRESS);
+  bool init(const ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx) {
+    return modbus.init(port, serial_rx, serial_tx, 9600, P052_MODBUS_SLAVE_ADDRESS);
   }
 
   bool isInitialized() const {
@@ -117,7 +118,6 @@ struct P052_data_struct : public PluginTaskData_base {
   }
 
   ModbusRTU_struct modbus;
-  byte             sensortype;
 };
 
 unsigned int _plugin_052_last_measurement = 0;
@@ -145,8 +145,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_052;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -155,6 +155,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
       break;
     }
 
@@ -179,6 +180,21 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P052_NR_OUTPUT_VALUES;
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = static_cast<Sensor_VType>(PCONFIG(P052_SENSOR_TYPE_INDEX));
+      event->idx = P052_SENSOR_TYPE_INDEX;
+      success = true;
+      break;
+    }
+
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event);
       break;
@@ -193,13 +209,13 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_SET_DEFAULTS:
     {
+      PCONFIG(P052_SENSOR_TYPE_INDEX) = static_cast<int16_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
       PCONFIG(0) = 1;   // "CO2"
 
       for (byte i = 1; i < VARS_PER_TASK; ++i) {
         PCONFIG(i) = 0; // "Empty"
       }
 
-      //    PCONFIG(P052_SENSOR_TYPE_INDEX) = SENSOR_TYPE_SINGLE;
       success = true;
       break;
     }
@@ -258,7 +274,20 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
+
+      {
+        String options[P052_NR_OUTPUT_OPTIONS];
+
+        for (byte i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
+          options[i] = Plugin_052_valuename(i, true);
+        }
+
+        for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
+          const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P052_NR_OUTPUT_OPTIONS, options);
+        }
+      }
+
 
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -337,7 +366,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
           }
         }
       }
-      sensorTypeHelper_webformLoad_simple(event, P052_SENSOR_TYPE_INDEX);
 
       /*
          // ABC functionality disabled for now, due to a bug in the firmware.
@@ -349,25 +377,12 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
          NULL, choiceABCperiod);
        */
 
-      {
-        String options[P052_NR_OUTPUT_OPTIONS];
-
-        for (byte i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
-          options[i] = Plugin_052_valuename(i, true);
-        }
-
-        for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
-          const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
-          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P052_NR_OUTPUT_OPTIONS, options);
-        }
-      }
 
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
 
       // Save output selector parameters.
       for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
@@ -375,7 +390,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         const byte choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_052_valuename(choice, false));
       }
-      sensorTypeHelper_saveSensorType(event, P052_SENSOR_TYPE_INDEX);
 
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -442,7 +456,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P052_data_struct());
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P052_data_struct());
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -450,7 +465,8 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P052_data->init(serial_rx, serial_tx)) {
+
+      if (P052_data->init(port, serial_rx, serial_tx)) {
         /*
            // ABC functionality disabled for now, due to a bug in the firmware.
            // See https://github.com/letscontrolit/ESPEasy/issues/759
@@ -460,7 +476,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
 
            Plugin_052_setABCperiod(periodInHours[choiceABCperiod]);
          */
-        sensorTypeHelper_setSensorType(event, P052_SENSOR_TYPE_INDEX);
         P052_data->modbus.setModbusTimeout(P052_MODBUS_TIMEOUT);
 
         //      P052_data->modbus.writeMultipleRegisters(0x09, 1); // Start Single Measurement
@@ -475,7 +490,6 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
       success = true;
       break;
     }
@@ -485,7 +499,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P052_data) && P052_data->isInitialized()) {
-        event->sensorType = PCONFIG(P052_SENSOR_TYPE_INDEX);
+        event->sensorType = static_cast<Sensor_VType>(PCONFIG(P052_SENSOR_TYPE_INDEX));
         String log = F("Senseair: ");
         String logPrefix;
 
@@ -507,13 +521,13 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
                 temperatureX100 = P052_data->modbus.read_RAM_EEPROM(
                   P052_CMD_READ_RAM, P052_RAM_ADDR_DET_TEMPERATURE, 2, errorcode);
               }
-              value     = static_cast<float>(temperatureX100) / 100.0;
+              value     = static_cast<float>(temperatureX100) / 100.0f;
               logPrefix = F("temperature = ");
               break;
             }
             case 3: {
               int rhX100 = P052_data->modbus.readInputRegister(P052_IR_SPACE_HUMIDITY, errorcode);
-              value     = static_cast<float>(rhX100) / 100.0;
+              value     = static_cast<float>(rhX100) / 100.0f;
               logPrefix = F("humidity = ");
               break;
             }
@@ -645,9 +659,9 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
    log += F("CO2: ");
    log += co2;
    log += F(" ppm Temp: ");
-   log += (float)temperature / 100.0;
+   log += (float)temperature / 100.0f;
    log += F(" C Hum: ");
-   log += (float)humidity / 100.0;
+   log += (float)humidity / 100.0f;
    log += F("%");
    if (!valid_measurement)
     log += F(" (old)");

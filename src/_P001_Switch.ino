@@ -1,6 +1,9 @@
 #ifdef USES_P001
 
+#include "_Plugin_Helper.h"
 #include "src/DataStructs/PinMode.h"
+#include "src/Helpers/Scheduler.h"
+#include "src/Helpers/Audio.h"
 
 // #######################################################################################################
 // #################################### Plugin 001: Input Switch #########################################
@@ -47,7 +50,7 @@ Servo servo2;
 #define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH  2
 #define PLUGIN_001_DOUBLECLICK_MIN_INTERVAL      1000
 #define PLUGIN_001_DOUBLECLICK_MAX_INTERVAL      3000
-#define PLUGIN_001_LONGPRESS_MIN_INTERVAL        1000
+#define PLUGIN_001_LONGPRESS_MIN_INTERVAL        500
 #define PLUGIN_001_LONGPRESS_MAX_INTERVAL        5000
 #define PLUGIN_001_DC_DISABLED                   0
 #define PLUGIN_001_DC_LOW                        1
@@ -116,7 +119,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_001;
       Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = SENSOR_TYPE_SWITCH;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = true;
       Device[deviceCount].InverseLogicOption = true;
@@ -163,26 +166,30 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         globalMapPortStatus[key].previousTask = event->TaskIndex;
       }
 
-      String options[2];
-      options[0] = F("Switch");
-      options[1] = F("Dimmer");
-      int optionValues[2]   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
-      const byte switchtype = P001_getSwitchType(event);
-      addFormSelector(F("Switch Type"), F("p001_type"), 2, options, optionValues, switchtype);
-
-      if (switchtype == PLUGIN_001_TYPE_DIMMER)
       {
-        addFormNumericBox(F("Dim value"), F("p001_dimvalue"), PCONFIG(1), 0, 255);
+        String options[2];
+        options[0] = F("Switch");
+        options[1] = F("Dimmer");
+        int optionValues[2]   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
+        const byte switchtype = P001_getSwitchType(event);
+        addFormSelector(F("Switch Type"), F("p001_type"), 2, options, optionValues, switchtype);
+
+        if (switchtype == PLUGIN_001_TYPE_DIMMER)
+        {
+          addFormNumericBox(F("Dim value"), F("p001_dimvalue"), PCONFIG(1), 0, 255);
+        }
       }
 
-      byte   choice = PCONFIG(2);
-      String buttonOptions[3];
-      buttonOptions[0] = F("Normal Switch");
-      buttonOptions[1] = F("Push Button Active Low");
-      buttonOptions[2] = F("Push Button Active High");
-      int buttonOptionValues[3] =
-      { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
-      addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
+      {
+        byte   choice = PCONFIG(2);
+        String buttonOptions[3];
+        buttonOptions[0] = F("Normal Switch");
+        buttonOptions[1] = F("Push Button Active Low");
+        buttonOptions[2] = F("Push Button Active High");
+        int buttonOptionValues[3] =
+        { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
+        addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
+      }
 
       addFormCheckBox(F("Send Boot state"), F("p001_boot"),
                       PCONFIG(3));
@@ -196,15 +203,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(1) = PLUGIN_001_DOUBLECLICK_MIN_INTERVAL;
       }
 
-      byte   choiceDC = PCONFIG(4);
-      String buttonDC[4];
-      buttonDC[0] = F("Disabled");
-      buttonDC[1] = F("Active only on LOW (EVENT=3)");
-      buttonDC[2] = F("Active only on HIGH (EVENT=3)");
-      buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
-      int buttonDCValues[4] = { PLUGIN_001_DC_DISABLED, PLUGIN_001_DC_LOW, PLUGIN_001_DC_HIGH, PLUGIN_001_DC_BOTH };
+      {
+        byte   choiceDC = PCONFIG(4);
+        String buttonDC[4];
+        buttonDC[0] = F("Disabled");
+        buttonDC[1] = F("Active only on LOW (EVENT=3)");
+        buttonDC[2] = F("Active only on HIGH (EVENT=3)");
+        buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
+        int buttonDCValues[4] = { PLUGIN_001_DC_DISABLED, PLUGIN_001_DC_LOW, PLUGIN_001_DC_HIGH, PLUGIN_001_DC_BOTH };
 
-      addFormSelector(F("Doubleclick event"), F("p001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+        addFormSelector(F("Doubleclick event"), F("p001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+      }
 
       addFormNumericBox(F("Doubleclick max. interval (ms)"),
                         F("p001_dcmaxinterval"),
@@ -217,15 +226,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(2) = PLUGIN_001_LONGPRESS_MIN_INTERVAL;
       }
 
-      byte   choiceLP = PCONFIG(5);
-      String buttonLP[4];
-      buttonLP[0] = F("Disabled");
-      buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
-      buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
-      buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
-      int buttonLPValues[4] =
-      { PLUGIN_001_LONGPRESS_DISABLED, PLUGIN_001_LONGPRESS_LOW, PLUGIN_001_LONGPRESS_HIGH, PLUGIN_001_LONGPRESS_BOTH };
-      addFormSelector(F("Longpress event"), F("p001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+      {
+        byte   choiceLP = PCONFIG(5);
+        String buttonLP[4];
+        buttonLP[0] = F("Disabled");
+        buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
+        buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
+        buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
+        int buttonLPValues[4] =
+        { PLUGIN_001_LONGPRESS_DISABLED, PLUGIN_001_LONGPRESS_LOW, PLUGIN_001_LONGPRESS_HIGH, PLUGIN_001_LONGPRESS_BOTH };
+        addFormSelector(F("Longpress event"), F("p001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+      }
 
       addFormNumericBox(F("Longpress min. interval (ms)"),
                         F("p001_lpmininterval"),
@@ -554,14 +565,14 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               } else {
                 output_value = sendState ? 1 : 0; // single click
               }
-              event->sensorType = SENSOR_TYPE_SWITCH;
+              event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
               if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) {
                 if (sendState) {
                   output_value = PCONFIG(1);
 
                   // Only set type to being dimmer when setting a value else it is "switched off".
-                  event->sensorType = SENSOR_TYPE_DIMMER;
+                  event->sensorType = Sensor_VType::SENSOR_TYPE_DIMMER;
                 }
               }
               UserVar[event->BaseVarIndex] = output_value;
@@ -820,6 +831,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           pinMode(event->Par1, OUTPUT);
             #endif // if defined(ESP8266)
 
+          if (event->Par4 > 0 && event->Par4 <= 40000 ){
+            #if defined(ESP8266)
+            analogWriteFreq(event->Par4);
+            #endif // if defined(ESP8266)
+            #if defined(ESP32)
+            //TODO: ESP32 not supported in core, but we can try https://github.com/ERROPiX/ESP32_AnalogWrite
+            #endif // if defined(ESP32)
+          }
+
           if (event->Par3 != 0)
           {
             const byte prev_mode = tempStatus.mode;
@@ -935,11 +955,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           tempStatus.state   = event->Par2;
           tempStatus.output  = event->Par2;
           tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
+          (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0;
           savePortStatus(key, tempStatus);
           unsigned long timer = time_in_msec ? event->Par3 : event->Par3 * 1000;
 
           // Create a future system timer call to set the GPIO pin back to its normal value.
-          setPluginTaskTimer(timer, event->TaskIndex, event->Par1, inversePinStateValue);
+//          Scheduler.setPluginTaskTimer(timer, event->TaskIndex, event->Par1, inversePinStateValue);
+          Scheduler.setPluginTimer(timer, PLUGIN_ID_001, event->Par1, inversePinStateValue);
           log = String(F("SW   : GPIO ")) + String(event->Par1) +
                 String(F(" Pulse set for ")) + String(event->Par3) + String(time_in_msec ? F(" msec") : F(" sec"));
           addLog(LOG_LEVEL_INFO, log);
@@ -1135,43 +1157,31 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
       tempStatus.state = event->Par2;
       tempStatus.mode  = PIN_MODE_OUTPUT;
+      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; //added to send event for longpulse command
+      savePortStatus(key, tempStatus);
+      break;
+    }
+
+    case PLUGIN_ONLY_TIMER_IN:
+    {
+      digitalWrite(event->Par1, event->Par2);
+
+      // setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
+      portStatusStruct tempStatus;
+
+      // WARNING: operator [] creates an entry in the map if key does not exist
+      const uint32_t key = createKey(PLUGIN_ID_001, event->Par1);
+      tempStatus = globalMapPortStatus[key];
+
+      tempStatus.state = event->Par2;
+      tempStatus.mode  = PIN_MODE_OUTPUT;
+      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; //added to send event for longpulse command
       savePortStatus(key, tempStatus);
       break;
     }
   }
   return success;
 }
-
-#if defined(ESP32)
-void analogWriteESP32(int pin, int value)
-{
-  // find existing channel if this pin has been used before
-  int8_t ledChannel = -1;
-
-  for (byte x = 0; x < 16; x++) {
-    if (ledChannelPin[x] == pin) {
-      ledChannel = x;
-    }
-  }
-
-  if (ledChannel == -1)             // no channel set for this pin
-  {
-    for (byte x = 0; x < 16; x++) { // find free channel
-      if (ledChannelPin[x] == -1)
-      {
-        int freq = 5000;
-        ledChannelPin[x] = pin; // store pin nr
-        ledcSetup(x, freq, 10); // setup channel
-        ledcAttachPin(pin, x);  // attach to this pin
-        ledChannel = x;
-        break;
-      }
-    }
-  }
-  ledcWrite(ledChannel, value);
-}
-
-#endif // if defined(ESP32)
 
 // TD-er: Needed to fix a mistake in earlier fixes.
 byte P001_getSwitchType(struct EventStruct *event) {

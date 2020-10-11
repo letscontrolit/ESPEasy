@@ -19,6 +19,8 @@ extern "C"
 #include <lwip/netif.h>
 }
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_089
 #define PLUGIN_ID_089             89
 #define PLUGIN_NAME_089           "Communication - Ping"
@@ -42,10 +44,12 @@ public:
     destIPAddress.addr = 0;
     idseq = 0;
     if (nullptr == P089_data) {
-      P089_data = new P089_icmp_pcb();
-      P089_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
-      raw_recv(P089_data->m_IcmpPCB, PingReceiver, NULL);
-      raw_bind(P089_data->m_IcmpPCB, IP_ADDR_ANY);
+      P089_data = new (std::nothrow) P089_icmp_pcb();
+      if (P089_data != nullptr) {
+        P089_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
+        raw_recv(P089_data->m_IcmpPCB, PingReceiver, NULL);
+        raw_bind(P089_data->m_IcmpPCB, IP_ADDR_ANY);
+      }
     } else {
       P089_data->instances++;
     }
@@ -74,7 +78,7 @@ public:
       is_failure = true;
 
     /* This ping lost for sure */
-    if (!WiFiConnected()) {
+    if (!NetworkConnected()) {
       return true;
     }
 
@@ -134,7 +138,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
   {
     Device[++deviceCount].Number = PLUGIN_ID_089;
     Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
-    Device[deviceCount].VType = DEVICE_TYPE_SINGLE;
+    Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
     Device[deviceCount].Ports = 0;
     Device[deviceCount].ValueCount = 1;
     Device[deviceCount].PullUpOption = false;
@@ -172,7 +176,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
     char hostname[PLUGIN_089_HOSTNAME_SIZE];
     // Reset "Fails" if settings updated
     UserVar[event->BaseVarIndex] = 0;
-    strncpy(hostname,  WebServer.arg(F("p089_ping_host")).c_str() , sizeof(hostname));
+    strncpy(hostname,  web_server.arg(F("p089_ping_host")).c_str() , sizeof(hostname));
     SaveCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
     success = true;
     break;
@@ -180,15 +184,9 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
   case PLUGIN_INIT:
   {
-    initPluginTaskData(event->TaskIndex, new P089_data_struct());
+    initPluginTaskData(event->TaskIndex, new (std::nothrow) P089_data_struct());
     UserVar[event->BaseVarIndex] = 0;
     success = true;
-    break;
-  }
-
-  case PLUGIN_EXIT:
-  {
-    clearPluginTaskData(event->TaskIndex);
     break;
   }
 

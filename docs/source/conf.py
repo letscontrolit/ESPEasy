@@ -21,7 +21,7 @@ import sphinx_bootstrap_theme
 # -- Project information -----------------------------------------------------
 
 project = u'ESP Easy'
-copyright = u'2018, ESP Easy'
+copyright = u'2018-2020, ESP Easy'
 author = u'Grovkillen, TD-er & Friends'
 
 # The short X.Y version
@@ -45,6 +45,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
     'sphinx.ext.imgconverter',
+    'recommonmark'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -286,7 +287,7 @@ todo_include_todos = True
 
 # This def is used to add ESP Easy related formatation (color etc).
 def setup(app):
-    app.add_stylesheet('css/custom.css')
+    app.add_css_file('css/custom.css')
 
 # To replace chunks of text globally +
 # ESP Easy colors (set in cutom.css)

@@ -1,3 +1,5 @@
+#include "_CPlugin_Helper.h"
+
 #ifdef USES_C008
 //#######################################################################################################
 //########################### Controller Plugin 008: Generic HTTP #######################################
@@ -8,85 +10,109 @@
 #define CPLUGIN_NAME_008       "Generic HTTP"
 #include <ArduinoJson.h>
 
-bool CPlugin_008(byte function, struct EventStruct *event, String& string)
+bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_008;
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesTemplate = true;
         Protocol[protocolCount].usesAccount = true;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = true;
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_008);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        C008_DelayHandler.configureControllerSettings(ControllerSettings);
+        success = init_c008_delay_queue(event->ControllerIndex);
         break;
       }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c008_delay_queue();
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = "";
         event->String2 = F("demo.php?name=%sysname%&task=%tskname%&valuename=%valname%&value=%value%");
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
-        // Collect the values at the same run, to make sure all are from the same sample
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C008_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          String dummy;
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
+        if (C008_DelayHandler == nullptr) {
+          break;
         }
 
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
-        for (byte x = 0; x < valueCount; x++)
+        String pubname;
         {
-          bool isvalid;
-          String formattedValue = formatUserVar(event, x, isvalid);
-          if (isvalid) {
-            element.txt[x] = "/";
-            element.txt[x] += ControllerSettings.Publish;
-            parseControllerVariables(element.txt[x], event, true);
+          // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+          MakeControllerSettings(ControllerSettings);
+          if (!AllocatedControllerSettings()) {
+            addLog(LOG_LEVEL_ERROR, F("C008 : Generic HTTP - Cannot send, out of RAM"));
+            break;
+          }
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+          pubname = ControllerSettings.Publish;
+        }
 
-            element.txt[x].replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[x]));
-            element.txt[x].replace(F("%value%"), formattedValue);
+        // FIXME TD-er must define a proper move operator
+        byte valueCount = getValueCountForTask(event->TaskIndex);
+        success = C008_DelayHandler->addToQueue(C008_queue_element(event, valueCount));
+        if (success) {
+          // Element was added.
+          // Now we try to append to the existing element 
+          // and thus preventing the need to create a long string only to copy it to a queue element.
+          C008_queue_element &element = C008_DelayHandler->sendQueue.back();
+
+          // Collect the values at the same run, to make sure all are from the same sample
+          LoadTaskSettings(event->TaskIndex);
+
+          for (byte x = 0; x < valueCount; x++)
+          {
+            bool isvalid;
+            String formattedValue = formatUserVar(event, x, isvalid);
+            if (isvalid) {
+              element.txt[x] = "/";
+              element.txt[x] += pubname;
+              element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+              element.txt[x].replace(F("%value%"), formattedValue);
+              parseControllerVariables(element.txt[x], event, true);
 #ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
 #endif
+            }
           }
         }
-        success = C008_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C008_DELAY_QUEUE, C008_DelayHandler.getNextScheduleTime());
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C008_DELAY_QUEUE, C008_DelayHandler->getNextScheduleTime());
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         process_c008_delay_queue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
   }
   return success;
@@ -95,7 +121,11 @@ bool CPlugin_008(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic HTTP get request
 //********************************************************************************
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   while (element.txt[element.valuesSent] == "") {

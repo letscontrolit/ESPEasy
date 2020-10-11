@@ -93,9 +93,48 @@ void MitsubishiHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t oper
     powerMode = MITSUBISHI_AIRCON1_MODE_OFF;
   }
 
-  if (_mitsubishiModel !=  MITSUBISHI_MSY)
+  if (_mitsubishiModel == MITSUBISHI_FA) // set operating model for FA
   {
-    Serial.printf("Mode=%d\n",operatingModeCmd);
+	  switch (operatingModeCmd)
+	  {
+      case MODE_AUTO:
+        operatingMode = MITSUBISHI_AIRCON3_MODE_AUTO;
+        break;
+      case MODE_HEAT:
+        operatingMode = MITSUBISHI_AIRCON3_MODE_HEAT;
+        break;
+      case MODE_COOL:
+        operatingMode = MITSUBISHI_AIRCON3_MODE_COOL;
+        break;
+      case MODE_DRY:
+        operatingMode = MITSUBISHI_AIRCON3_MODE_DRY;
+        break;
+	  }
+  }
+  else if (_mitsubishiModel == MITSUBISHI_MSY)
+  {
+	  operatingMode = MITSUBISHI_AIRCON2_MODE_COOL;
+	  switch (operatingModeCmd)
+	  {
+      case MODE_AUTO:
+        operatingMode = MITSUBISHI_AIRCON2_MODE_IFEEL;
+        break;
+      case MODE_HEAT:
+        operatingMode = MITSUBISHI_AIRCON1_MODE_HEAT;
+        break;
+      case MODE_COOL:
+        operatingMode = MITSUBISHI_AIRCON2_MODE_COOL;
+        break;
+      case MODE_DRY:
+        operatingMode = MITSUBISHI_AIRCON1_MODE_DRY;
+        break;
+      case MODE_FAN:
+        operatingMode = MITSUBISHI_AIRCON2_MODE_FAN;
+        break;
+	  }
+  }
+  else
+  {
     switch (operatingModeCmd)
     {
       case MODE_AUTO:
@@ -128,43 +167,6 @@ void MitsubishiHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t oper
         }
         break;
     }
-  }
-  else if (_mitsubishiModel == MITSUBISHI_FA) // set operating model for FA
-  {
-	  switch (operatingModeCmd)
-	  {
-	  case MODE_AUTO:
-		  operatingMode = MITSUBISHI_AIRCON3_MODE_AUTO;
-		  break;
-	  case MODE_HEAT:
-		  operatingMode = MITSUBISHI_AIRCON3_MODE_HEAT;
-		  break;
-	  case MODE_COOL:
-		  operatingMode = MITSUBISHI_AIRCON3_MODE_COOL;
-		  break;
-	  case MODE_DRY:
-		  operatingMode = MITSUBISHI_AIRCON3_MODE_DRY;
-		  break;
-	  }
-  }
-  else
-  {
-	  operatingMode = MITSUBISHI_AIRCON2_MODE_COOL;
-	  switch (operatingModeCmd)
-	  {
-	  case MODE_AUTO:
-		  operatingMode = MITSUBISHI_AIRCON2_MODE_IFEEL;
-		  break;
-	  case MODE_COOL:
-		  operatingMode = MITSUBISHI_AIRCON2_MODE_COOL;
-		  break;
-	  case MODE_DRY:
-		  operatingMode = MITSUBISHI_AIRCON2_MODE_DRY;
-		  break;
-	  case MODE_FAN:
-		  operatingMode = MITSUBISHI_AIRCON2_MODE_FAN;
-		  break;
-	  }  
   }
 
   switch (fanSpeedCmd)
@@ -282,8 +284,8 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8
   // KJ has a bit different template
   if (_mitsubishiModel == MITSUBISHI_KJ) {
     MitsubishiTemplate[15] = 0x00;
-  }  
-  
+  }
+
   // Set the operatingmode on the template message
   MitsubishiTemplate[5] = powerMode;
   MitsubishiTemplate[6] = operatingMode;
@@ -303,12 +305,12 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8
   // Set the fan speed and vertical air direction on the template message
   MitsubishiTemplate[9] = fanSpeed | swingV;
 
-  
+
 
   if (_mitsubishiModel == MITSUBISHI_KJ) {
     MitsubishiTemplate[8] = 0;
     if ( operatingMode == MITSUBISHI_AIRCON1_MODE_AUTO || operatingMode == MITSUBISHI_AIRCON1_MODE_COOL )
-      MitsubishiTemplate[8] = 0x6;    	    
+      MitsubishiTemplate[8] = 0x6;
     if ( operatingMode == MITSUBISHI_AIRCON1_MODE_DRY )
       MitsubishiTemplate[8] = 0x2;
 
@@ -319,20 +321,24 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8
 
 #ifdef USE_TIME_H
   time(&now);
-  timeinfo = localtime(&now);  
-  
+  timeinfo = localtime(&now);
+
   MitsubishiTemplate[10] = (uint8_t)(timeinfo->tm_hour * 60 + timeinfo->tm_min)/6;
 #endif
 
 #ifdef IR_SEND_TIME
   if (_mitsubishiModel == MITSUBISHI_KJ) {
+#ifdef DEBUG
     Serial.printf("Send time %02d:%02d day %d --> %x\n", sendHour, sendMinute, sendWeekday, (sendHour * 60 + sendMinute)/10);
+#endif
     MitsubishiTemplate[10] = (uint8_t)((sendHour * 60 + sendMinute)/10);
     // Sunday is start if week , value 1
-    MitsubishiTemplate[14] = TempTranslate[( sendWeekday - 1 ) % 7];  
+    MitsubishiTemplate[14] = TempTranslate[( sendWeekday - 1 ) % 7];
   }
   else {
+#ifdef DEBUG
     Serial.printf("Send time %02d:%02d --> %x\n", sendHour, sendMinute, (sendHour * 60 + sendMinute)/6);
+#endif
     MitsubishiTemplate[10] = (uint8_t)((sendHour * 60 + sendMinute)/6);
   }
 #endif
@@ -385,5 +391,3 @@ void MitsubishiHeatpumpIR::sendMitsubishi(IRSender& IR, uint8_t powerMode, uint8
   IR.mark(MITSUBISHI_AIRCON1_BIT_MARK);
   IR.space(0);
 }
-
-

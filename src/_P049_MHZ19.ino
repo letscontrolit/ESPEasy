@@ -2,24 +2,24 @@
 /*
 
   This plug in is written by Dmitry (rel22 ___ inbox.ru)
-  Plugin is based upon SenseAir plugin by Daniel Tedenljung info__AT__tedenljungconsulting.com
-  Additional features based on https://geektimes.ru/post/285572/ by Gerben (infernix__AT__gmail.com)
+   Plugin is based upon SenseAir plugin by Daniel Tedenljung info__AT__tedenljungconsulting.com
+   Additional features based on https://geektimes.ru/post/285572/ by Gerben (infernix__AT__gmail.com)
 
-  This plugin reads the CO2 value from MH-Z19 NDIR Sensor
+   This plugin reads the CO2 value from MH-Z19 NDIR Sensor
 
-  Pin-out:
-  Hd o
-  SR o   o PWM
-  Tx o   o AOT
-  Rx o   o GND
-  Vo o   o Vin
-  (bottom view)
-  Skipping pin numbers due to inconsistancies in individual data sheet revisions.
-  MHZ19:  Connection:
-  VCC     5 V
-  GND     GND
-  Tx      ESP8266 1st GPIO specified in Device-settings
-  Rx      ESP8266 2nd GPIO specified in Device-settings
+   Pin-out:
+   Hd o
+   SR o   o PWM
+   Tx o   o AOT
+   Rx o   o GND
+   Vo o   o Vin
+   (bottom view)
+   Skipping pin numbers due to inconsistancies in individual data sheet revisions.
+   MHZ19:  Connection:
+   VCC     5 V
+   GND     GND
+   Tx      ESP8266 1st GPIO specified in Device-settings
+   Rx      ESP8266 2nd GPIO specified in Device-settings
 */
 
 // Uncomment the following define to enable the detection range commands:
@@ -40,6 +40,7 @@
 #define PLUGIN_049_FILTER_SLOW       5
 
 #include <ESPeasySerial.h>
+#include "_Plugin_Helper.h"
 
 enum MHZ19Types {
   MHZ19_notDetected,
@@ -135,11 +136,14 @@ struct P049_data_struct : public PluginTaskData_base {
     modelA_detected = false;
   }
 
-  bool init(const int16_t serial_rx, const int16_t serial_tx, bool setABCdisabled) {
+  bool init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, bool setABCdisabled) {
     if (serial_rx < 0 || serial_tx < 0)
       return false;
     reset();
-    easySerial = new ESPeasySerial(serial_rx, serial_tx);
+    easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
+    if (easySerial == nullptr) {
+      return false;
+    }
     easySerial->begin(9600);
     ABC_Disable = setABCdisabled;
     if (ABC_Disable) {
@@ -321,26 +325,29 @@ boolean Plugin_049_Check_and_ApplyFilter(unsigned int prevVal, unsigned int &new
     // value is more stable.
     // This will make the reading useful in more turbulent environments,
     // where the sensor would report more rapid change of measured values.
-    difference = difference * s;
-    difference /= 64;
-    log += F("Compensate Unstable ");
+    difference    = difference * s;
+    difference   /= 64;
+    log          += F("Compensate Unstable ");
     filterApplied = true;
   }
+
   switch (filterValue) {
     case PLUGIN_049_FILTER_OFF: {
-      if (s != 0 && s != 64) {
+      if ((s != 0) && (s != 64)) {
         log += F("Skip Unstable ");
         return false;
       }
       filterApplied = false;
       break;
     }
-                                                  // #Samples to reach >= 75% of step response
+
+    // #Samples to reach >= 75% of step response
     case PLUGIN_049_FILTER_OFF_ALLSAMPLES: filterApplied = false; break; // No Delay
-    case PLUGIN_049_FILTER_FAST:    difference /= 2; break; // Delay: 2 samples
-    case PLUGIN_049_FILTER_MEDIUM:  difference /= 4; break; // Delay: 5 samples
-    case PLUGIN_049_FILTER_SLOW:    difference /= 8; break; // Delay: 11 samples
+    case PLUGIN_049_FILTER_FAST:    difference          /= 2; break;     // Delay: 2 samples
+    case PLUGIN_049_FILTER_MEDIUM:  difference          /= 4; break;     // Delay: 5 samples
+    case PLUGIN_049_FILTER_SLOW:    difference          /= 8; break;     // Delay: 11 samples
   }
+
   if (filterApplied) {
     log += F("Raw PPM: ");
     log += newVal;
@@ -356,60 +363,62 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
   switch (function)
   {
-
     case PLUGIN_DEVICE_ADD:
-      {
-        Device[++deviceCount].Number = PLUGIN_ID_049;
-        Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-        Device[deviceCount].VType = SENSOR_TYPE_TRIPLE;
-        Device[deviceCount].Ports = 0;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 3;
-        Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].TimerOption = true;
-        Device[deviceCount].GlobalSyncOption = true;
-        break;
-      }
+    {
+      Device[++deviceCount].Number           = PLUGIN_ID_049;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      Device[deviceCount].Ports              = 0;
+      Device[deviceCount].PullUpOption       = false;
+      Device[deviceCount].InverseLogicOption = false;
+      Device[deviceCount].FormulaOption      = true;
+      Device[deviceCount].ValueCount         = 3;
+      Device[deviceCount].SendDataOption     = true;
+      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].GlobalSyncOption   = true;
+      break;
+    }
 
     case PLUGIN_GET_DEVICENAME:
-      {
-        string = F(PLUGIN_NAME_049);
-        break;
-      }
+    {
+      string = F(PLUGIN_NAME_049);
+      break;
+    }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
-      {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_049));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_049));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_049));
-        break;
-      }
+    {
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_049));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_049));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_049));
+      break;
+    }
 
     case PLUGIN_GET_DEVICEGPIONAMES:
-      {
-        serialHelper_getGpioNames(event);
-        break;
-      }
+    {
+      serialHelper_getGpioNames(event);
+      break;
+    }
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
-      {
-        string += serialHelper_getSerialTypeLabel(event);
-        success = true;
-        break;
-      }
+    {
+      string += serialHelper_getSerialTypeLabel(event);
+      success = true;
+      break;
+    }
 
 
     case PLUGIN_WEBFORM_LOAD:
+    {
       {
-        serialHelper_webformLoad(event);
-        byte choice = PCONFIG(0);
-        String options[2] = { F("Normal"), F("ABC disabled") };
+        byte choice         = PCONFIG(0);
+        String options[2]   = { F("Normal"), F("ABC disabled") };
         int optionValues[2] = { ABC_enabled, ABC_disabled };
         addFormSelector(F("Auto Base Calibration"), F("p049_abcdisable"), 2, options, optionValues, choice);
-        byte choiceFilter = PCONFIG(1);
-        String filteroptions[5] = { F("Skip Unstable"), F("Use Unstable"), F("Fast Response"), F("Medium Response"), F("Slow Response") };
+      }
+      {
+        byte   choiceFilter     = PCONFIG(1);
+        String filteroptions[5] =
+        { F("Skip Unstable"), F("Use Unstable"), F("Fast Response"), F("Medium Response"), F("Slow Response") };
         int filteroptionValues[5] = {
           PLUGIN_049_FILTER_OFF,
           PLUGIN_049_FILTER_OFF_ALLSAMPLES,
@@ -417,38 +426,37 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           PLUGIN_049_FILTER_MEDIUM,
           PLUGIN_049_FILTER_SLOW };
         addFormSelector(F("Filter"), F("p049_filter"), 5, filteroptions, filteroptionValues, choiceFilter);
-
-        P049_html_show_stats(event);
-
-        success = true;
-        break;
       }
+      P049_html_show_stats(event);
+
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_SAVE:
-      {
-        P049_data_struct *P049_data =
-            static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
-        if (nullptr == P049_data) {
-          return success;
-        }
-        serialHelper_webformSave(event);
-        const int formValue = getFormItemInt(F("p049_abcdisable"));
+    {
+      const int formValue = getFormItemInt(F("p049_abcdisable"));
+
+      P049_data_struct *P049_data =
+        static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P049_data) {
         P049_data->setABCmode(formValue);
-        PCONFIG(0) = formValue;
-        PCONFIG(1) = getFormItemInt(F("p049_filter"));
-        success = true;
-        break;
       }
+      PCONFIG(0) = formValue;
+      PCONFIG(1) = getFormItemInt(F("p049_filter"));
+      success    = true;
+      break;
+    }
 
     case PLUGIN_INIT:
-      {
-        initPluginTaskData(event->TaskIndex, new P049_data_struct());
-        success = P049_performInit(event);
-        break;
-      }
+    {
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P049_data_struct());
+      success = P049_performInit(event);
+      break;
+    }
 
     case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
       success = true;
       break;
     }
@@ -512,10 +520,10 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           {
             P049_data->send_mhzCmd(mhzCmdMeasurementRange5000);
             addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-5000PPM!"));
-            success = true;
-          }
+              success = true;
+            }
         }
-#endif
+#endif // ENABLE_DETECTION_RANGE_COMMANDS
         break;
 
       }
@@ -557,31 +565,31 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
                   // Reading is stable.
                   if (P049_data->ABC_MustApply) {
                     // Send ABC enable/disable command based on the desired state.
-                    if (P049_data->ABC_Disable) {
-                      P049_data->send_mhzCmd(mhzCmdABCDisable);
-                      addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
-                    } else {
-                      P049_data->send_mhzCmd(mhzCmdABCEnable);
-                      addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
-                    }
-                    P049_data->ABC_MustApply = false;
-                  }
+                if (P049_data->ABC_Disable) {
+                  P049_data->send_mhzCmd(mhzCmdABCDisable);
+                  addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
+                } else {
+                  P049_data->send_mhzCmd(mhzCmdABCEnable);
+                  addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
                 }
-                success = true;
-              } else {
-                success = false;
+                P049_data->ABC_MustApply = false;
               }
             }
+            success = true;
+          } else {
+            success = false;
+          }
+        }
 
-            // Log values in all cases
-            log += F("PPM value: ");
-            log += ppm;
-            log += F(" Temp/S/U values: ");
-            log += temp;
-            log += '/';
-            log += s;
-            log += '/';
-            log += u;
+        // Log values in all cases
+        log += F("PPM value: ");
+        log += ppm;
+        log += F(" Temp/S/U values: ");
+        log += temp;
+        log += '/';
+        log += s;
+        log += '/';
+        log += u;
             addLog(LOG_LEVEL_INFO, log);
             break;
 
@@ -598,8 +606,8 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
         // log verbosely anything else that the sensor reports
         } else {
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("MHZ19: Unknown response:");
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("MHZ19: Unknown response:");
             log += P049_data->getBufferHexDump();
             addLog(LOG_LEVEL_INFO, log);
           }
@@ -608,10 +616,10 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
             P049_performInit(event);
           }
           success = false;
-          break;
-        }
         break;
       }
+      break;
+    }
   }
   return success;
 }
@@ -620,18 +628,19 @@ bool P049_performInit(struct EventStruct *event) {
   bool success = false;
   const int16_t serial_rx = CONFIG_PIN1;
   const int16_t serial_tx = CONFIG_PIN2;
+  const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
   P049_data_struct *P049_data =
       static_cast<P049_data_struct *>(getPluginTaskData(event->TaskIndex));
   if (nullptr == P049_data) {
     return success;
   }
-  if (P049_data->init(serial_rx, serial_tx, PCONFIG(0) == ABC_disabled)) {
+  if (P049_data->init(port, serial_rx, serial_tx, PCONFIG(0) == ABC_disabled)) {
     success = true;
     addLog(LOG_LEVEL_INFO, F("MHZ19: Init OK "));
 
     //delay first read, because hardware needs to initialize on cold boot
     //otherwise we get a weird value or read error
-    schedule_task_device_timer(event->TaskIndex, millis() + 15000);
+    Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 15000);
   }
   return success;
 }

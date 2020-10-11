@@ -1,4 +1,10 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C015
+
+#include "src/Globals/CPlugins.h"
+#include "src/Commands/Common.h"
+
+
 //#######################################################################################################
 //########################### Controller Plugin 015: Blynk  #############################################
 //#######################################################################################################
@@ -56,41 +62,50 @@ void Blynk_Run_c015(){
 }
 
 
-bool CPlugin_015(byte function, struct EventStruct *event, String& string)
+bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_015;
         Protocol[protocolCount].usesMQTT = false;
         Protocol[protocolCount].usesAccount = false;
         Protocol[protocolCount].usesPassword = true;
+        Protocol[protocolCount].usesExtCreds = true;
         Protocol[protocolCount].defaultPort = 80;
         Protocol[protocolCount].usesID = false;
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_015);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
-       // when connected to another server and user has changed settings
-       if (Blynk.connected()){
+        success = init_c015_delay_queue(event->ControllerIndex);
+
+        // when connected to another server and user has changed settings
+        if (success && Blynk.connected()){
           addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "disconnect from server"));
           Blynk.disconnect();
-       }
-       break;
+        }
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c015_delay_queue();
+        break;
       }
 
     #ifdef CPLUGIN_015_SSL
-      case CPLUGIN_WEBFORM_LOAD:
+      case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
         {
           char thumbprint[60];
           LoadCustomControllerSettings(event->ControllerIndex,(byte*)&thumbprint, sizeof(thumbprint));
@@ -102,18 +117,20 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         }
     #endif
 
-    case CPLUGIN_WEBFORM_SAVE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
       {
         success = true;
         if (isFormItemChecked(F("controllerenabled"))){
-          for (byte i = 0; i < CONTROLLER_MAX; ++i) {
-            byte ProtocolIndex = getProtocolIndex(Settings.Protocol[i]);
-            if (i != event->ControllerIndex && Protocol[ProtocolIndex].Number == 15 && Settings.ControllerEnabled[i]) {
-              success = false;
-              // FIXME:  this will only show a warning message and not uncheck "enabled" in webform.
-              // Webserver object is not checking result of "success" var :(
-              addHtmlError(F("Only one enabled instance of blynk controller is supported"));
-              break;
+          for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
+            protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+            if (validProtocolIndex(ProtocolIndex)) {
+              if (i != event->ControllerIndex && Protocol[ProtocolIndex].Number == 15 && Settings.ControllerEnabled[i]) {
+                success = false;
+                // FIXME:  this will only show a warning message and not uncheck "enabled" in webform.
+                // Webserver object is not checking result of "success" var :(
+                addHtmlError(F("Only one enabled instance of blynk controller is supported"));
+                break;
+              }
             }
           }
           // force to connect without delay when webform saved
@@ -122,7 +139,7 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
           #ifdef CPLUGIN_015_SSL
             char thumbprint[60];
             String error = F("Specify server thumbprint with exactly 59 symbols string like " CPLUGIN_015_DEFAULT_THUMBPRINT);
-            if (!safe_strncpy(thumbprint, WebServer.arg("c015_thumbprint"), 60) || strlen(thumbprint) != 59) {
+            if (!safe_strncpy(thumbprint, web_server.arg("c015_thumbprint"), 60) || strlen(thumbprint) != 59) {
               addHtmlError(error);
             }
             SaveCustomControllerSettings(event->ControllerIndex,(byte*)&thumbprint, sizeof(thumbprint));
@@ -131,58 +148,70 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-     case CPLUGIN_PROTOCOL_SEND:
+     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
+        if (C015_DelayHandler == nullptr) {
+          break;
+        }
+
         if (!Settings.ControllerEnabled[event->ControllerIndex])
           break;
 
         // Collect the values at the same run, to make sure all are from the same sample
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C015_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          String dummy;
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
-        }
+        byte valueCount = getValueCountForTask(event->TaskIndex);
+        
+        // FIXME TD-er must define a proper move operator
+        success = C015_DelayHandler->addToQueue(C015_queue_element(event, valueCount));
+        if (success) {
+          // Element was added.
+          // Now we try to append to the existing element 
+          // and thus preventing the need to create a long string only to copy it to a queue element.
+          C015_queue_element &element = C015_DelayHandler->sendQueue.back();
+          LoadTaskSettings(event->TaskIndex);
 
-        for (byte x = 0; x < valueCount; x++)
-        {
-          bool isvalid;
-          String formattedValue = formatUserVar(event, x, isvalid);
-          if (!isvalid)
-            // send empty string to Blynk in case of error
-            formattedValue = F("");
+          for (byte x = 0; x < valueCount; x++)
+          {
+            bool isvalid;
+            String formattedValue = formatUserVar(event, x, isvalid);
+            if (!isvalid)
+              // send empty string to Blynk in case of error
+              formattedValue = F("");
 
-          String valueName = ExtraTaskSettings.TaskDeviceValueNames[x];
-          String valueFullName = ExtraTaskSettings.TaskDeviceName;
-          valueFullName += F(".");
-          valueFullName += valueName;
-          String vPinNumberStr = valueName.substring(1, 4);
-          int vPinNumber = vPinNumberStr.toInt();
-          String log = F(C015_LOG_PREFIX);
-          log += Blynk.connected()? F("(online): ") : F("(offline): ");
-          if (vPinNumber > 0 && vPinNumber < 256){
-            log += F("send ");
-            log += valueFullName;
-            log += F(" = ");
-            log += formattedValue;
-            log += F(" to blynk pin v");
-            log += vPinNumber;
+            String valueName = ExtraTaskSettings.TaskDeviceValueNames[x];
+            String valueFullName = ExtraTaskSettings.TaskDeviceName;
+            valueFullName += F(".");
+            valueFullName += valueName;
+            String vPinNumberStr = valueName.substring(1, 4);
+            int vPinNumber = vPinNumberStr.toInt();
+            String log = F(C015_LOG_PREFIX);
+            log += Blynk.connected()? F("(online): ") : F("(offline): ");
+            if (vPinNumber > 0 && vPinNumber < 256){
+              log += F("send ");
+              log += valueFullName;
+              log += F(" = ");
+              log += formattedValue;
+              log += F(" to blynk pin v");
+              log += vPinNumber;
+            }
+            else{
+              vPinNumber = -1;
+              log += F("error got vPin number for ");
+              log += valueFullName;
+              log += F(", got not valid value: ");
+              log += vPinNumberStr;
+            }
+            addLog(LOG_LEVEL_INFO, log);
+            element.vPin[x] = vPinNumber;
+            element.txt[x] = formattedValue;
           }
-          else{
-            vPinNumber = -1;
-            log += F("error got vPin number for ");
-            log += valueFullName;
-            log += F(", got not valid value: ");
-            log += vPinNumberStr;
-          }
-          addLog(LOG_LEVEL_INFO, log);
-          element.vPin[x] = vPinNumber;
-          element.txt[x] = formattedValue;
         }
-        success = C015_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C015_DELAY_QUEUE, C015_DelayHandler.getNextScheduleTime());
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C015_DELAY_QUEUE, C015_DelayHandler->getNextScheduleTime());
         break;
       }
+
+    default:
+      break;
+
   }
   return success;
 }
@@ -191,14 +220,18 @@ bool CPlugin_015(byte function, struct EventStruct *event, String& string)
 // Process Queued Blynk request, with data set to NULL
 //********************************************************************************
 // controller_plugin_number = 015 because of C015
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   if (!Settings.ControllerEnabled[element.controller_idx])
     // controller has been disabled. Answer true to flush queue.
     return true;
 
-  if (!WiFiConnected()) {
+  if (!NetworkConnected()) {
     return false;
   }
 
@@ -212,16 +245,20 @@ bool do_process_c015_delay_queue(int controller_plugin_number, const C015_queue_
       return true;
   }
 
-  return element.checkDone(Blynk_send_c015(element.txt[element.valuesSent], element.vPin[element.valuesSent]));
+  bool sendSuccess = Blynk_send_c015(
+    element.txt[element.valuesSent], 
+    element.vPin[element.valuesSent],
+    ControllerSettings.ClientTimeout);
+  return element.checkDone(sendSuccess);
 }
 
 
 boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct& ControllerSettings){
-  if (!WiFiConnected())
+  if (!NetworkConnected())
     return false;
 
   if (!Blynk.connected()){
-    String auth = SecuritySettings.ControllerPassword[controllerIndex];
+    String auth = getControllerPass(controllerIndex, ControllerSettings);
     boolean connectDefault = false;
 
     if (timePassedSince(_C015_LastConnectAttempt[controllerIndex]) < CPLUGIN_015_RECONNECT_INTERVAL){
@@ -328,7 +365,7 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
     return err;
   }
 
-  String data = parseString(Line, 3, true, false);
+  String data = parseString(Line, 3);
 
   if (data.length() == 0){
     String err = F("Skip sending empty data to blynk vPin ");
@@ -347,10 +384,11 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char* Line){
 }
 
 
-boolean Blynk_send_c015(const String& value, int vPin )
+boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeout)
 {
   Blynk.virtualWrite(vPin, value);
-  unsigned long timer = millis() + Settings.MessageDelay;
+  
+  unsigned long timer = millis() + clientTimeout;
   while (!timeOutReached(timer))
               backgroundtasks();
   return true;
@@ -360,38 +398,48 @@ boolean Blynk_send_c015(const String& value, int vPin )
 BLYNK_WRITE_DEFAULT() {
   byte vPin = request.pin;
   float pinValue = param.asFloat();
-  String log = F(C015_LOG_PREFIX "server set v");
-  log += vPin;
-  log += F(" to ");
-  log += pinValue;
-  addLog(LOG_LEVEL_INFO, log);
-  String eventCommand = F("blynkv");
-  eventCommand += vPin;
-  eventCommand += F("=");
-  eventCommand += pinValue;
-  rulesProcessing(eventCommand);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F(C015_LOG_PREFIX "server set v");
+    log += vPin;
+    log += F(" to ");
+    log += pinValue;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  if (Settings.UseRules) {
+    String eventCommand = F("blynkv");
+    eventCommand += vPin;
+    eventCommand += F("=");
+    eventCommand += pinValue;
+    eventQueue.add(eventCommand);
+  }
 }
 
 BLYNK_CONNECTED() {
-// Your code here when hardware connects to Blynk Cloud or private server.
-// It’s common to call sync functions inside of this function.
-// Requests all stored on the server latest values for all widgets.
-  String eventCommand = F("blynk_connected");
-  rulesProcessing(eventCommand);
+  // Your code here when hardware connects to Blynk Cloud or private server.
+  // It’s common to call sync functions inside of this function.
+  // Requests all stored on the server latest values for all widgets.
+  if (Settings.UseRules) {
+    String eventCommand = F("blynk_connected");
+    eventQueue.add(eventCommand);
+  }
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "connected handler"));
 }
 
 // This is called when Smartphone App is opened
 BLYNK_APP_CONNECTED() {
-  String eventCommand = F("blynk_app_connected");
-  rulesProcessing(eventCommand);
+  if (Settings.UseRules) {
+    String eventCommand = F("blynk_app_connected");
+    eventQueue.add(eventCommand);
+  }
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "app connected handler"));
 }
 
 // This is called when Smartphone App is closed
 BLYNK_APP_DISCONNECTED() {
-  String eventCommand = F("blynk_app_disconnected");
-  rulesProcessing(eventCommand);
+  if (Settings.UseRules) {
+    String eventCommand = F("blynk_app_disconnected");
+    eventQueue.add(eventCommand);
+  }
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "app disconnected handler"));
 }
 

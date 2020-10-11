@@ -24,6 +24,8 @@
 #ifndef CCRONEXPR_H
 #define CCRONEXPR_H
 
+//-V::795
+
 #if defined(__cplusplus) && !defined(CRON_COMPILE_AS_CXX)
 extern "C" {
 #endif
@@ -35,6 +37,12 @@ extern "C" {
 #endif /* ANDROID */
 
 #include <stdint.h> /*added for use if uint*_t data types*/
+
+
+#define CRON_INVALID_INSTANT ((time_t) -1)
+
+// Define to use local time
+#define CRON_USE_LOCAL_TIME
 
 /**
  * Parsed cron expression
@@ -90,30 +98,6 @@ time_t cron_prev(cron_expr* expr, time_t date);
 } /* extern "C"*/
 #endif
 
-#define CRON_MAX_SECONDS 60
-#define CRON_MAX_MINUTES 60
-#define CRON_MAX_HOURS 24
-#define CRON_MAX_DAYS_OF_WEEK 8
-#define CRON_MAX_DAYS_OF_MONTH 32
-#define CRON_MAX_MONTHS 12
-#define CRON_MAX_YEARS_DIFF 4
-
-#define CRON_CF_SECOND 0
-#define CRON_CF_MINUTE 1
-#define CRON_CF_HOUR_OF_DAY 2
-#define CRON_CF_DAY_OF_WEEK 3
-#define CRON_CF_DAY_OF_MONTH 4
-#define CRON_CF_MONTH 5
-#define CRON_CF_YEAR 6
-
-#define CRON_CF_ARR_LEN 7
-
-#define CRON_INVALID_INSTANT ((time_t) -1)
-
-static const char* const DAYS_ARR[] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
-#define CRON_DAYS_ARR_LEN 7
-static const char* const MONTHS_ARR[] = { "FOO", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
-#define CRON_MONTHS_ARR_LEN 13
 #endif /* CCRONEXPR_H */
 
 

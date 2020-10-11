@@ -1,12 +1,19 @@
+#include <Arduino.h>
+
+#include "src/Helpers/Hardware.h"
 
 // ********************************************************************************
 // Add a separator as row start
 // ********************************************************************************
 void addFormSeparator(int clspan)
 {
-  TXBuffer += F("<TR><TD colspan='");
-  TXBuffer += clspan;
-  TXBuffer += F("'><hr>");
+  String html;
+
+  html.reserve(40);
+  html += F("<TR><TD colspan='");
+  html += clspan;
+  html += F("'><hr>");
+  addHtml(html);
 }
 
 // ********************************************************************************
@@ -15,9 +22,12 @@ void addFormSeparator(int clspan)
 void addFormNote(const String& text, const String& id)
 {
   addRowLabel_tr_id("", id);
-  TXBuffer += F("<div class='note'>Note: ");
-  TXBuffer += text;
-  TXBuffer += F("</div>");
+  String html;
+  html.reserve(40 + text.length());
+  html += F("<div class='note'>Note: ");
+  html += text;
+  html += F("</div>");
+  addHtml(html);
 }
 
 // ********************************************************************************
@@ -71,7 +81,6 @@ void addTaskSelectBox(const String& label, const String& id, taskIndex_t choice)
   addTaskSelect(id, choice);
 }
 
-
 // ********************************************************************************
 // Add a Text Box form
 // ********************************************************************************
@@ -88,13 +97,13 @@ void addFormTextBox(const String& label,
 }
 
 void addFormTextArea(const String& label,
-                    const String& id,
-                    const String& value,
-                    int           maxlength,
-                    int           rows, 
-                    int           columns,
-                    bool          readonly,
-                    bool          required)
+                     const String& id,
+                     const String& value,
+                     int           maxlength,
+                     int           rows,
+                     int           columns,
+                     bool          readonly,
+                     bool          required)
 {
   addRowLabel_tr_id(label, id);
   addTextArea(id, value, maxlength, rows, columns, readonly, required);
@@ -107,18 +116,29 @@ void addFormTextArea(const String& label,
 void addFormPasswordBox(const String& label, const String& id, const String& password, int maxlength)
 {
   addRowLabel_tr_id(label, id);
-  TXBuffer += F("<input class='wide' type='password' name='");
-  TXBuffer += id;
-  TXBuffer += F("' maxlength=");
-  TXBuffer += maxlength;
-  TXBuffer += F(" value='");
+
+  String html;
+  html.reserve(80 + id.length());
+
+  html += F("<input class='wide' type='password' name='");
+  html += id;
+  html += F("' maxlength=");
+  html += maxlength;
+  html += F(" value='");
 
   if (password != "") { // no password?
-    TXBuffer += F("*****");
+    html += F("*****");
   }
 
-  // TXBuffer += password;   //password will not published over HTTP
-  TXBuffer += "'>";
+  // html += password;   //password will not published over HTTP
+  html += "'>";
+  addHtml(html);
+}
+
+bool getFormPassword(const String& id, String& password)
+{
+  password = web_server.arg(id);
+  return !password.equals(F("*****"));
 }
 
 // ********************************************************************************
@@ -130,14 +150,19 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
   bool empty_IP = (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
 
   addRowLabel_tr_id(label, id);
-  TXBuffer += F("<input class='wide' type='text' name='");
-  TXBuffer += id;
-  TXBuffer += F("' value='");
+
+  String html;
+  html.reserve(80 + id.length());
+
+  html += F("<input class='wide' type='text' name='");
+  html += id;
+  html += F("' value='");
 
   if (!empty_IP) {
-    TXBuffer += formatIP(ip);
+    html += formatIP(ip);
   }
-  TXBuffer += "'>";
+  html += "'>";
+  addHtml(html);
 }
 
 // ********************************************************************************
@@ -167,17 +192,19 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
 
 void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex)
 {
-  String options[addressCount];
+  addRowLabel_tr_id(F("I2C Address"), id);
+  do_addSelector_Head(id, "", "", false);
 
   for (byte x = 0; x < addressCount; x++)
   {
-    options[x] = formatToHex_decimal(addresses[x]);
+    String option = formatToHex_decimal(addresses[x]);
 
     if (x == 0) {
-      options[x] += F(" - (default)");
+      option += F(" - (default)");
     }
+    addSelector_option(addresses[x], option, "", addresses[x] == selectedIndex);
   }
-  addFormSelector(F("I2C Address"), id, addressCount, options, addresses, NULL, selectedIndex, false);
+  addSelector_Foot();
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex)
@@ -206,7 +233,7 @@ void addFormSelector(const String& label,
                      boolean       reloadonchange)
 {
   addRowLabel_tr_id(label, id);
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange);
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
 }
 
 void addFormSelector_script(const String& label,
@@ -219,7 +246,7 @@ void addFormSelector_script(const String& label,
                             const String& onChangeCall)
 {
   addRowLabel_tr_id(label, id);
-  addSelector_Head(id, onChangeCall, false);
+  do_addSelector_Head(id, "", onChangeCall, false);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
@@ -227,11 +254,61 @@ void addFormSelector_script(const String& label,
 // ********************************************************************************
 // Add a GPIO pin select dropdown list
 // ********************************************************************************
-void addFormPinStateSelect(const String& label, const String& id, int choice, bool enabled)
+void addFormPinStateSelect(int gpio, int choice)
 {
-  addRowLabel_tr_id(label, id);
-  String options[4] = { F("Default"), F("Output Low"), F("Output High"), F("Input") };
-  addSelector(id, 4, options, NULL, NULL, choice, false, enabled);
+    bool enabled = true;
+
+  if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
+    // do not add the pin state select for these pins.
+    enabled = false;
+  }
+  int  pinnr = -1;
+  bool input, output, warning;
+
+  if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+    String label;
+    label.reserve(32);
+    label  = F("Pin mode ");
+    label += createGPIO_label(gpio, pinnr, input, output, warning);
+    String id = "p";
+    id += gpio;
+
+    addRowLabel_tr_id(label, id);
+    bool hasPullUp, hasPullDown;
+    getGpioPullResistor(gpio, hasPullUp, hasPullDown);
+    int nr_options = 0;
+    String options[5];
+    int option_val[5];
+    options[nr_options] = F("Default");
+    option_val[nr_options] = static_cast<int>(PinBootState::Default_state);
+    ++nr_options;
+    if (output) {
+      options[nr_options] = F("Output Low");
+      option_val[nr_options] = static_cast<int>(PinBootState::Output_low);
+      ++nr_options;
+      options[nr_options] = F("Output High");
+      option_val[nr_options] = static_cast<int>(PinBootState::Output_high);
+      ++nr_options;
+    }
+    if (input) {
+      if (hasPullUp) {
+        options[nr_options] = F("Input pullup");
+        option_val[nr_options] = static_cast<int>(PinBootState::Input_pullup);
+        ++nr_options;
+      }
+      if (hasPullDown) {
+        options[nr_options] = F("Input pulldown");
+        option_val[nr_options] = static_cast<int>(PinBootState::Input_pulldown);
+        ++nr_options;
+      }
+      if (!hasPullUp && !hasPullDown) {
+        options[nr_options] = F("Input");
+        option_val[nr_options] = static_cast<int>(PinBootState::Input);
+        ++nr_options;
+      }
+    }
+    addSelector(id, nr_options, options, option_val, NULL, choice, false, enabled);
+  }
 }
 
 // ********************************************************************************
@@ -247,18 +324,38 @@ int getFormItemInt(const String& key, int defaultValue) {
 }
 
 bool getCheckWebserverArg_int(const String& key, int& value) {
-  String valueStr = WebServer.arg(key);
+  String valueStr = web_server.arg(key);
 
   if (!isInt(valueStr)) { return false; }
   value = valueStr.toInt();
   return true;
 }
 
+bool update_whenset_FormItemInt(const String& key, int& value) {
+  int tmpVal;
+
+  if (getCheckWebserverArg_int(key, tmpVal)) {
+    value = tmpVal;
+    return true;
+  }
+  return false;
+}
+
+bool update_whenset_FormItemInt(const String& key, byte& value) {
+  int tmpVal;
+
+  if (getCheckWebserverArg_int(key, tmpVal)) {
+    value = tmpVal;
+    return true;
+  }
+  return false;
+}
+
 // Note: Checkbox values will not appear in POST Form data if unchecked.
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.
 bool isFormItemChecked(const String& id)
 {
-  return WebServer.arg(id) == F("on");
+  return web_server.arg(id) == F("on");
 }
 
 int getFormItemInt(const String& id)
@@ -268,23 +365,21 @@ int getFormItemInt(const String& id)
 
 float getFormItemFloat(const String& id)
 {
-  String val = WebServer.arg(id);
+  String val = web_server.arg(id);
 
-  if (!isFloat(val)) { return 0.0; }
+  if (!isFloat(val)) { return 0.0f; }
   return val.toFloat();
 }
 
 bool isFormItem(const String& id)
 {
-  return WebServer.arg(id).length() != 0;
+  return web_server.arg(id).length() != 0;
 }
 
 void copyFormPassword(const String& id, char *pPassword, int maxlength)
 {
-  String password = WebServer.arg(id);
-
-  if (password == F("*****")) { // no change?
-    return;
+  String password;
+  if (getFormPassword(id, password)) {
+    safe_strncpy(pPassword, password.c_str(), maxlength);
   }
-  safe_strncpy(pPassword, password.c_str(), maxlength);
 }

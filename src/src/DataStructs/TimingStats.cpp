@@ -1,8 +1,13 @@
 #include "../DataStructs/TimingStats.h"
-#include "../../ESPEasy_common.h"
-#include "../../ESPEasy_plugindefs.h"
-#include "../../_CPlugin_Helper.h"
 
+#include "../../ESPEasy_common.h"
+#include "../../_CPlugin_Helper.h"
+#include "../DataStructs/ESPEasy_plugin_functions.h"
+#include "../Globals/CPlugins.h"
+#include "../Helpers/StringConverter.h"
+
+
+#ifdef USES_TIMING_STATS
 
 
 std::map<int, TimingStats> pluginStats;
@@ -13,7 +18,7 @@ unsigned long timingstats_last_reset(0);
 
 
 
-TimingStats::TimingStats() : _timeTotal(0.0), _count(0), _maxVal(0), _minVal(4294967295) {}
+TimingStats::TimingStats() : _timeTotal(0.0f), _count(0), _maxVal(0), _minVal(4294967295) {}
 
 void TimingStats::add(unsigned long time) {
   _timeTotal += static_cast<float>(time);
@@ -25,7 +30,7 @@ void TimingStats::add(unsigned long time) {
 }
 
 void TimingStats::reset() {
-  _timeTotal = 0.0;
+  _timeTotal = 0.0f;
   _count     = 0;
   _maxVal    = 0;
   _minVal    = 4294967295;
@@ -36,7 +41,7 @@ bool TimingStats::isEmpty() const {
 }
 
 float TimingStats::getAvg() const {
-  if (_count == 0) { return 0.0; }
+  if (_count == 0) { return 0.0f; }
   return _timeTotal / static_cast<float>(_count);
 }
 
@@ -125,36 +130,62 @@ bool mustLogFunction(int function) {
   return false;
 }
 
-String getCPluginCFunctionName(int function) {
+String getCPluginCFunctionName(CPlugin::Function function) {
   switch (function) {
-    case CPLUGIN_PROTOCOL_ADD:              return F("CPLUGIN_PROTOCOL_ADD");
-    case CPLUGIN_PROTOCOL_TEMPLATE:         return F("CPLUGIN_PROTOCOL_TEMPLATE");
-    case CPLUGIN_PROTOCOL_SEND:             return F("CPLUGIN_PROTOCOL_SEND");
-    case CPLUGIN_PROTOCOL_RECV:             return F("CPLUGIN_PROTOCOL_RECV");
-    case CPLUGIN_GET_DEVICENAME:            return F("CPLUGIN_GET_DEVICENAME");
-    case CPLUGIN_WEBFORM_SAVE:              return F("CPLUGIN_WEBFORM_SAVE");
-    case CPLUGIN_WEBFORM_LOAD:              return F("CPLUGIN_WEBFORM_LOAD");
-    case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME: return F("CPLUGIN_GET_PROTOCOL_DISPLAY_NAME");
-    case CPLUGIN_TASK_CHANGE_NOTIFICATION:  return F("CPLUGIN_TASK_CHANGE_NOTIFICATION");
-    case CPLUGIN_INIT:                      return F("CPLUGIN_INIT");
-    case CPLUGIN_UDP_IN:                    return F("CPLUGIN_UDP_IN");
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return F("CPLUGIN_PROTOCOL_ADD");
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return F("CPLUGIN_PROTOCOL_TEMPLATE");
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:             return F("CPLUGIN_PROTOCOL_SEND");
+    case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:             return F("CPLUGIN_PROTOCOL_RECV");
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:            return F("CPLUGIN_GET_DEVICENAME");
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:              return F("CPLUGIN_WEBFORM_SAVE");
+    case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:              return F("CPLUGIN_WEBFORM_LOAD");
+    case CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME: return F("CPLUGIN_GET_PROTOCOL_DISPLAY_NAME");
+    case CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION:  return F("CPLUGIN_TASK_CHANGE_NOTIFICATION");
+    case CPlugin::Function::CPLUGIN_INIT:                      return F("CPLUGIN_INIT");
+    case CPlugin::Function::CPLUGIN_UDP_IN:                    return F("CPLUGIN_UDP_IN");
+    case CPlugin::Function::CPLUGIN_FLUSH:                     return F("CPLUGIN_FLUSH");
+    case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:            return F("CPLUGIN_TEN_PER_SECOND");
+    case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return F("CPLUGIN_FIFTY_PER_SECOND");
+    case CPlugin::Function::CPLUGIN_INIT_ALL:                  return F("CPLUGIN_INIT_ALL");
+    case CPlugin::Function::CPLUGIN_EXIT:                      return F("CPLUGIN_EXIT");
+
+    case CPlugin::Function::CPLUGIN_GOT_CONNECTED:
+    case CPlugin::Function::CPLUGIN_GOT_INVALID:
+    case CPlugin::Function::CPLUGIN_INTERVAL:
+    case CPlugin::Function::CPLUGIN_ACKNOWLEDGE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+      break;
+
   }
   return getUnknownString();
 }
 
-bool mustLogCFunction(int function) {
+bool mustLogCFunction(CPlugin::Function function) {
   switch (function) {
-    case CPLUGIN_PROTOCOL_ADD:              return false;
-    case CPLUGIN_PROTOCOL_TEMPLATE:         return false;
-    case CPLUGIN_PROTOCOL_SEND:             return true;
-    case CPLUGIN_PROTOCOL_RECV:             return true;
-    case CPLUGIN_GET_DEVICENAME:            return false;
-    case CPLUGIN_WEBFORM_SAVE:              return false;
-    case CPLUGIN_WEBFORM_LOAD:              return false;
-    case CPLUGIN_GET_PROTOCOL_DISPLAY_NAME: return false;
-    case CPLUGIN_TASK_CHANGE_NOTIFICATION:  return false;
-    case CPLUGIN_INIT:                      return false;
-    case CPLUGIN_UDP_IN:                    return true;
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return false;
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return false;
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:             return true;
+    case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:             return true;
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:            return false;
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:              return false;
+    case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:              return false;
+    case CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME: return false;
+    case CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION:  return false;
+    case CPlugin::Function::CPLUGIN_INIT:                      return false;
+    case CPlugin::Function::CPLUGIN_UDP_IN:                    return true;
+    case CPlugin::Function::CPLUGIN_FLUSH:                     return false;
+    case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:            return true;
+    case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return true;
+    case CPlugin::Function::CPLUGIN_INIT_ALL:                  return false;
+    case CPlugin::Function::CPLUGIN_EXIT:                      return false;
+
+    case CPlugin::Function::CPLUGIN_GOT_CONNECTED:
+    case CPlugin::Function::CPLUGIN_GOT_INVALID:
+    case CPlugin::Function::CPLUGIN_INTERVAL:
+    case CPlugin::Function::CPLUGIN_ACKNOWLEDGE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+      break;
+
   }
   return false;
 }
@@ -168,6 +199,8 @@ String getMiscStatsName(int stat) {
     case PLUGIN_CALL_10PS:        return F("Plugin call 10 p/s");
     case PLUGIN_CALL_10PSU:       return F("Plugin call 10 p/s U");
     case PLUGIN_CALL_1PS:         return F("Plugin call  1 p/s");
+    case CPLUGIN_CALL_50PS:       return F("CPlugin call 50 p/s");
+    case CPLUGIN_CALL_10PS:       return F("CPlugin call 10 p/s");
     case SENSOR_SEND_TASK:        return F("SensorSendTask()");
     case SEND_DATA_STATS:         return F("sendData()");
     case COMPUTE_FORMULA_STATS:   return F("Compute formula");
@@ -184,14 +217,14 @@ String getMiscStatsName(int stat) {
     case WIFI_NOTCONNECTED_STATS: return F("WiFi.isConnected() (fail)");
     case LOAD_TASK_SETTINGS:      return F("LoadTaskSettings()");
     case TRY_OPEN_FILE:           return F("TryOpenFile()");
-    case SPIFFS_GC_SUCCESS:       return F("SPIFFS GC success");
-    case SPIFFS_GC_FAIL:          return F("SPIFFS GC fail");
+    case FS_GC_SUCCESS:           return F("ESPEASY_FS GC success");
+    case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
     case RULES_PROCESSING:        return F("rulesProcessing()");
     case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
     case BACKGROUND_TASKS:        return F("backgroundtasks()");
     case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
     case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");
-    case PARSE_TEMPLATE:          return F("parseTemplate()");
+    case PARSE_TEMPLATE_PADDED:   return F("parseTemplate_padded()");
     case PARSE_SYSVAR:            return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
@@ -219,9 +252,11 @@ String getMiscStatsName(int stat) {
       String result;
       result.reserve(16);
       result  = F("Delay queue ");
-      result += get_formatted_Controller_number(static_cast<int>(stat - C001_DELAY_QUEUE + 1));
+      result += get_formatted_Controller_number(static_cast<cpluginID_t>(stat - C001_DELAY_QUEUE + 1));
       return result;
     }
   }
   return getUnknownString();
 }
+
+#endif

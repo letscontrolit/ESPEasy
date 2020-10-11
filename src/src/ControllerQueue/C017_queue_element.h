@@ -2,7 +2,9 @@
 #define CONTROLLERQUEUE_C017_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+#include "../DataStructs/DeviceStruct.h"
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
 struct EventStruct;
@@ -23,10 +25,10 @@ public:
   size_t getSize() const;
 
   String txt[VARS_PER_TASK];
-  int controller_idx = 0;
-  int idx            = 0;
-  taskIndex_t TaskIndex = INVALID_TASK_INDEX;
-  byte sensorType    = 0;
+  int idx                          = 0;
+  taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
+  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
+  Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
 };
 
 // #endif //USES_C017

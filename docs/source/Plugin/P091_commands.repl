@@ -1,0 +1,33 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``/control?cmd=relay,<relaynr>,<state>``
+        ","
+        Examples:
+
+        - ``/control?cmd=relay,0,1``           Switch on first relay
+        - ``/control?cmd=relay,0,0``           Switch off first relay
+        - ``/control?cmd=relay,1,1``           Switch on second relay
+        - ``/control?cmd=relay,1,0``           Switch off second relay
+
+        "
+        "
+        ``/control?cmd=relaypulse,<relaynr>,<state>,<duration>``
+        ","
+        Examples:
+
+        - ``/control?cmd=relaypulse,0,1,500``    Set first relay to ON for 500ms, then stay OFF
+        - ``/control?cmd=relaypulse,0,0,1000``   Set first relay to OFF for 1s, then stay ON
+         
+        "
+        "
+        ``/control?cmd=ydim,<value>``
+        ","
+        Examples:
+
+        - ``/control?cmd=ydim,255``              Set dimmer to MAX value
+        - ``/control?cmd=ydim,25``               Set dimmer to ~10%
+
+        "

@@ -7,8 +7,13 @@
 # sudo apt-get update
 # sudo apt-get upgrade
 # sudo apt install python-minimal virtualenv build-essential zip binutils
+# For Python 3.8:
+# sudo apt install -y software-properties-common
+# sudo add-apt-repository ppa:deadsnakes/ppa
+# sudo apt install -y python3.8
 
-VENV=~/.venv/python2.7
+
+VENV=~/.venv/python3.8
 SRC=~/GitHub/letscontrolit/ESPEasy
 REPO=https://github.com/letscontrolit/ESPEasy.git
 BRANCH=mega
@@ -33,7 +38,7 @@ done
 # If virtualenv does not exist, make it.
 if [ ! -d ${VENV} ]; then
   mkdir -p ${VENV}
-  virtualenv -p python2.7 ${VENV}
+  virtualenv -p python3.8 ${VENV}
 fi
 
 # if repository directory does not exist, make it and clone repository
@@ -75,13 +80,17 @@ platformio run --target clean
 cd ${SRC}/patches; ./check_puya_patch;
 cd ${SRC}
 
-# Build all targets in the platformio.ini file.
-PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run
+if [ -d "build_output/" ]; then
+  rm -Rf build_output/*
+fi
 
-#for ENV in `grep "^\[env:" platformio.ini |cut -d':' -f2|cut -d']' -f1`;
-#do
-#  platformio run -e ${ENV}
-#done
+
+# Must look into all possible env definitions.
+# Exclude so called "spec_" (special) builds
+for ENV in `grep "^\[env:" platformio*.ini |cut -d'[' -f2|cut -d']' -f1|cut -d':' -f2|sort -n|grep -v spec_`;
+do 
+  PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e ${ENV}
+done
 
 # Rename all built files, compute CRC and insert binaryFilename
 # Collect all in a zip file.

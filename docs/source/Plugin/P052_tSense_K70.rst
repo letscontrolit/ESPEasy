@@ -36,7 +36,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
     ESP               tSense
     GPIO (7)   <-->   TX (see pictures further down)
@@ -140,7 +140,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
  on CO2#Level do
   if [CO2#Level]>2000

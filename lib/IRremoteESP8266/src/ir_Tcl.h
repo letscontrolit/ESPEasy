@@ -1,5 +1,8 @@
 // Copyright 2019 David Conran
 
+/// @file
+/// @brief Support for TCL protocols.
+
 // Supports:
 //   Brand: Leberg,  Model: LBS-TOR07 A/C
 
@@ -23,7 +26,9 @@ const uint16_t kTcl112AcBitMark = 500;
 const uint16_t kTcl112AcOneSpace = 1050;
 const uint16_t kTcl112AcZeroSpace = 325;
 const uint32_t kTcl112AcGap = kDefaultMessageGap;  // Just a guess.
-const uint8_t kTcl112AcTolerance = 5;  // Extra Percent
+// Total tolerance percentage to use for matching the header mark.
+const uint8_t kTcl112AcHdrMarkTolerance = 6;
+const uint8_t kTcl112AcTolerance = 5;  // Extra Percentage for the rest.
 
 const uint8_t kTcl112AcHeat = 1;
 const uint8_t kTcl112AcDry =  2;
@@ -53,17 +58,22 @@ const uint8_t kTcl112AcSwingVOn =    0b111;
 const uint8_t kTcl112AcSwingVOff =   0b000;
 const uint8_t kTcl112AcBitTurboOffset = 6;
 
-
+// Classes
+/// Class for handling detailed TCL A/C messages.
 class IRTcl112Ac {
  public:
   explicit IRTcl112Ac(const uint16_t pin, const bool inverted = false,
                       const bool use_modulation = true);
-
 #if SEND_TCL112AC
   void send(const uint16_t repeat = kTcl112AcDefaultRepeat);
-  uint8_t calibrate(void) { return _irsend.calibrate(); }
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
+  int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_TCL
   void begin(void);
+  void stateReset(void);
   uint8_t* getRaw(void);
   void setRaw(const uint8_t new_code[],
               const uint16_t length = kTcl112AcStateLength);
@@ -102,12 +112,13 @@ class IRTcl112Ac {
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
-#else
-  IRsendTest _irsend;
-#endif
-  uint8_t remote_state[kTcl112AcStateLength];
-  void stateReset(void);
+  IRsend _irsend;  ///< Instance of the IR send class
+#else  // UNIT_TEST
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< Instance of the testing IR send class
+  /// @endcond
+#endif  // UNIT_TEST
+  uint8_t remote_state[kTcl112AcStateLength];  ///< The State in IR code form.
   void checksum(const uint16_t length = kTcl112AcStateLength);
 };
 

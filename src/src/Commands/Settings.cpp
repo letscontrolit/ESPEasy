@@ -1,12 +1,18 @@
 #include "../Commands/Settings.h"
 
 #include "../../ESPEasy_common.h"
-#include "../Commands/Common.h"
-#include "../Globals/Settings.h"
-#include "../Globals/SecuritySettings.h"
-
 #include "../../ESPEasy_fdwdecl.h"
 
+#include "../Commands/Common.h"
+
+#include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
+
+#include "../Helpers/ESPEasy_FactoryDefault.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
 
 
 String Command_Settings_Build(struct EventStruct *event, const char* Line)
@@ -71,7 +77,7 @@ String Command_Settings_Print(struct EventStruct *event, const char* Line)
 	serialPrintln();
 
 	serialPrintln(F("System Info"));
-	serialPrint(F("  IP Address    : ")); serialPrintln(WiFi.localIP().toString());
+	serialPrint(F("  IP Address    : ")); serialPrintln(NetworkLocalIP().toString());
 	serialPrint(F("  Build         : ")); serialPrintln(String((int)BUILD));
 	serialPrint(F("  Name          : ")); serialPrintln(Settings.Name);
 	serialPrint(F("  Unit          : ")); serialPrintln(String((int)Settings.Unit));

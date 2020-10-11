@@ -1,6 +1,7 @@
 // Copyright 2019 David Conran
 
 #include "ir_Vestel.h"
+#include "IRac.h"
 #include "IRrecv.h"
 #include "IRrecv_test.h"
 #include "IRsend.h"
@@ -407,7 +408,8 @@ TEST(TestDecodeVestelAc, NormalDecodeWithStrict) {
   irsend.reset();
   irsend.sendVestelAc(expectedState);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeVestelAc(&irsend.capture, kVestelAcBits, true));
+  ASSERT_TRUE(irrecv.decodeVestelAc(&irsend.capture, kStartOffset,
+                                    kVestelAcBits, true));
   EXPECT_EQ(VESTEL_AC, irsend.capture.decode_type);
   EXPECT_EQ(kVestelAcBits, irsend.capture.bits);
   EXPECT_FALSE(irsend.capture.repeat);
@@ -440,7 +442,6 @@ TEST(TestDecodeVestelAc, NormalDecodeWithStrict) {
 TEST(TestDecodeVestelAc, RealNormalExample) {
   IRsendTest irsend(0);
   IRrecv irrecv(0);
-  IRVestelAc ac(0);
   irsend.begin();
 
   uint16_t rawData[115] = {
@@ -464,12 +465,12 @@ TEST(TestDecodeVestelAc, RealNormalExample) {
   EXPECT_EQ(0xF4410001FF1201ULL, irsend.capture.value);
   EXPECT_EQ(0, irsend.capture.address);
   EXPECT_EQ(0, irsend.capture.command);
-  ac.begin();
-  ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
       "Power: On, Mode: 4 (Heat), Temp: 16C, Fan: 1 (Auto), Sleep: Off, "
       "Turbo: Off, Ion: On, Swing: Off",
-      ac.toString());
+      IRAcUtils::resultAcToString(&irsend.capture));
+  stdAc::state_t r, p;
+  ASSERT_TRUE(IRAcUtils::decodeToState(&irsend.capture, &r, &p));
 }
 
 TEST(TestDecodeVestelAc, RealTimerExample) {

@@ -22,10 +22,10 @@
   License along with MechInputs.  If not, see
   <http://www.gnu.org/licenses/>.
   -------------------------------------------------------------------------*/
-#ifdef ESP8266  // Needed for precompile issues.
+//#ifdef ESP8266  // Needed for precompile issues.
 #include "jkSDS011.h"
 
-CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
+CjkSDS011::CjkSDS011(ESPEasySerialPort port, int16_t pinRX, int16_t pinTX)
 {
   _sws = ! ( pinRX < 0 || pinRX == 3 );
   _pm2_5 = NAN;
@@ -38,8 +38,9 @@ CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
   _command.SetPacketLength(19);
   _working_period = -1;
   _sleepmode_active = false;
-  _serial = new ESPeasySerial(pinRX, pinTX);
-  _serial->begin(9600);
+  _serial = new (std::nothrow) ESPeasySerial(port, pinRX, pinTX);
+  if (_serial != nullptr)
+    _serial->begin(9600);
 }
 
 CjkSDS011::~CjkSDS011() {
@@ -124,8 +125,10 @@ void CjkSDS011::ParseCommandReply() {
 
 void CjkSDS011::Process()
 {
-  while (_serial->available())
+  int serial_available = _serial->available();
+  while (serial_available > 0)
   {
+    --serial_available;
   	_data.AddData(_serial->read());
 
     if (_data[0] == 0xAA && _data[9] == 0xAB)   // correct packet frame?
@@ -161,6 +164,9 @@ void CjkSDS011::Process()
         return;
       }
     }
+    if (serial_available == 0) {
+      serial_available = _serial->available();
+    }
   }
 }
 
@@ -186,4 +192,4 @@ boolean CjkSDS011::ReadAverage(float &pm25, float &pm10)
   pm10 = NAN;
   return false;
 }
-#endif
+// #endif

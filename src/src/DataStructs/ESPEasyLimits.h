@@ -102,7 +102,7 @@
 // ***********************************************************************
 
 #ifndef RULES_TIMER_MAX
-  #define RULES_TIMER_MAX                     8
+  #define RULES_TIMER_MAX                   256
 #endif
 //#ifndef PINSTATE_TABLE_MAX
 //#define PINSTATE_TABLE_MAX                 32
@@ -126,6 +126,16 @@
 
 
 // ***********************************************************************
+// * Extended SecuritySettings
+// ***********************************************************************
+#ifndef EXT_SECURITY_MAX_USER_LENGTH
+  #define EXT_SECURITY_MAX_USER_LENGTH        128
+#endif
+#ifndef EXT_SECURITY_MAX_PASS_LENGTH
+  #define EXT_SECURITY_MAX_PASS_LENGTH        128
+#endif
+
+// ***********************************************************************
 // * Other operational limits
 // ***********************************************************************
 
@@ -133,7 +143,7 @@
   #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
 #endif
 #ifndef UDP_PACKETSIZE_MAX
-  #define UDP_PACKETSIZE_MAX               2048
+  #define UDP_PACKETSIZE_MAX               256 // Currently only needed for C013_Receive
 #endif
 #ifndef TIMER_GRATUITOUS_ARP_MAX
   #define TIMER_GRATUITOUS_ARP_MAX           5000

@@ -1,6 +1,7 @@
 .. |P060_name| replace:: :cyan:`MCP3221`
 .. |P060_type| replace:: :cyan:`Analog input`
 .. |P060_typename| replace:: :cyan:`Analog input - MCP3221`
+.. |P060_porttype| replace:: `.`
 .. |P060_status| replace:: :yellow:`TESTING`
 .. |P060_github| replace:: P060_MCP3221.ino
 .. _P060_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P060_MCP3221.ino
@@ -13,6 +14,7 @@
 .. |P061_name| replace:: :cyan:`PCF8574/MCP23017`
 .. |P061_type| replace:: :cyan:`Keypad`
 .. |P061_typename| replace:: :cyan:`Keypad - PCF8574/MCP23017`
+.. |P061_porttype| replace:: `.`
 .. |P061_status| replace:: :yellow:`TESTING`
 .. |P061_github| replace:: P061_KeyPad.ino
 .. _P061_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P061_KeyPad.ino
@@ -25,6 +27,7 @@
 .. |P062_name| replace:: :cyan:`MPR121 Touch`
 .. |P062_type| replace:: :cyan:`Keypad`
 .. |P062_typename| replace:: :cyan:`Keypad - MPR121 Touch`
+.. |P062_porttype| replace:: `.`
 .. |P062_status| replace:: :yellow:`TESTING`
 .. |P062_github| replace:: P062_MPR121_KeyPad.ino
 .. _P062_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P062_MPR121_KeyPad.ino
@@ -37,6 +40,7 @@
 .. |P063_name| replace:: :cyan:`TTP229 Touch`
 .. |P063_type| replace:: :cyan:`Keypad`
 .. |P063_typename| replace:: :cyan:`Keypad - TTP229 Touch`
+.. |P063_porttype| replace:: `.`
 .. |P063_status| replace:: :green:`NORMAL`
 .. |P063_github| replace:: P063_TTP229_KeyPad.ino
 .. _P063_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P063_TTP229_KeyPad.ino
@@ -48,7 +52,8 @@
 
 .. |P064_name| replace:: :cyan:`APDS9960`
 .. |P064_type| replace:: :cyan:`Gesture`
-.. |P064_typename| replace:: :cyan:`Gestrure - APDS9960`
+.. |P064_typename| replace:: :cyan:`Gesture - APDS9960`
+.. |P064_porttype| replace:: `.`
 .. |P064_status| replace:: :red:`DEVELOPMENT`
 .. |P064_github| replace:: P064_APDS9960.ino
 .. _P064_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P064_APDS9960.ino
@@ -56,11 +61,12 @@
 .. |P064_shortinfo| replace:: `.`
 .. |P064_maintainer| replace:: `.`
 .. |P064_compileinfo| replace:: `.`
-.. |P064_usedlibraries| replace:: `.`
+.. |P064_usedlibraries| replace:: https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor (extended and improved)
 
 .. |P065_name| replace:: :cyan:`DFPlayer-Mini MP3`
 .. |P065_type| replace:: :cyan:`Notify`
 .. |P065_typename| replace:: :cyan:`Notify - DFPlayer-Mini MP3`
+.. |P065_porttype| replace:: `.`
 .. |P065_status| replace:: :yellow:`TESTING`
 .. |P065_github| replace:: P065_DRF0299_MP3.ino
 .. _P065_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P065_DRF0299_MP3.ino
@@ -73,6 +79,7 @@
 .. |P066_name| replace:: :cyan:`VEML6040`
 .. |P066_type| replace:: :cyan:`Color`
 .. |P066_typename| replace:: :cyan:`Color - VEML6040`
+.. |P066_porttype| replace:: `.`
 .. |P066_status| replace:: :yellow:`TESTING`
 .. |P066_github| replace:: P066_VEML6040.ino
 .. _P066_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P066_VEML6040.ino
@@ -85,6 +92,7 @@
 .. |P067_name| replace:: :cyan:`HX711 Load Cell`
 .. |P067_type| replace:: :cyan:`Weight`
 .. |P067_typename| replace:: :cyan:`Weight - HX711 Load Cell`
+.. |P067_porttype| replace:: `.`
 .. |P067_status| replace:: :yellow:`TESTING`
 .. |P067_github| replace:: P067_HX711_Load_Cell.ino
 .. _P067_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P067_HX711_Load_Cell.ino
@@ -97,6 +105,7 @@
 .. |P068_name| replace:: :cyan:`SHT30/31/35`
 .. |P068_type| replace:: :cyan:`Environment`
 .. |P068_typename| replace:: :cyan:`Environment - SHT30/31/35`
+.. |P068_porttype| replace:: `.`
 .. |P068_status| replace:: :yellow:`TESTING`
 .. |P068_github| replace:: P068_SHT3x.ino
 .. _P068_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P068_SHT3x.ino
@@ -109,6 +118,7 @@
 .. |P069_name| replace:: :cyan:`LM75A`
 .. |P069_type| replace:: :cyan:`Environment`
 .. |P069_typename| replace:: :cyan:`Environment - LM75A`
+.. |P069_porttype| replace:: `.`
 .. |P069_status| replace:: :yellow:`TESTING`
 .. |P069_github| replace:: P069_LM75A.ino
 .. _P069_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P069_LM75A.ino

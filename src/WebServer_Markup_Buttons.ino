@@ -10,57 +10,61 @@ void addButton(const String& url, const String& label, const String& classes) {
 void addButton(const String& url, const String& label, const String& classes, bool enabled)
 {
   html_add_button_prefix(classes, enabled);
-  TXBuffer += url;
-  TXBuffer += "'>";
-  TXBuffer += label;
-  TXBuffer += F("</a>");
+  String html;
+  html.reserve(8 + url.length() + label.length());
+  html += url;
+  html += "'>";
+  html += label;
+  html += F("</a>");
+  addHtml(html);
 }
 
-void addButton(class StreamingBuffer& buffer, const String& url, const String& label)
+void addButtonWithSvg(const String& url, const String& label)
 {
-  addButtonWithSvg(buffer, url, label, "", false);
+  addButtonWithSvg(url, label, "", false);
 }
 
-void addButtonWithSvg(class StreamingBuffer& buffer, const String& url, const String& label, const String& svgPath, bool needConfirm) {
+void addButtonWithSvg(const String& url, const String& label, const String& svgPath, bool needConfirm) {
+  addHtml(F("<a class='button link' href='"));
+  addHtml(url);
+  #ifndef BUILD_MINIMAL_OTA
   bool hasSVG = svgPath.length() > 0;
-
-  buffer += F("<a class='button link' href='");
-  buffer += url;
-
-  if (hasSVG) {
-    buffer += F("' alt='");
-    buffer += label;
+  if (hasSVG) 
+  {
+    String altText;
+    altText.reserve(7 + label.length());
+    altText = F("' alt='");
+    altText += label;
+    addHtml(altText);
   }
+  #endif 
 
   if (needConfirm) {
-    buffer += F("' onclick='return confirm(\"Are you sure?\")");
+    addHtml(F("' onclick='return confirm(\"Are you sure?\")"));
   }
-  buffer += F("'>");
+  addHtml(F("'>"));
 
+  #ifndef BUILD_MINIMAL_OTA
   if (hasSVG) {
-    buffer += F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>");
-    buffer += svgPath;
-    buffer += F("</svg>");
-  } else {
-    buffer += label;
+    addHtml(F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>"));
+    addHtml(svgPath);
+    addHtml(F("</svg>"));
+  } else 
+  #endif
+  {
+    addHtml(label);
   }
-  buffer += F("</a>");
+  addHtml(F("</a>"));
 }
 
 void addSaveButton(const String& url, const String& label)
 {
-  addSaveButton(TXBuffer, url, label);
-}
-
-void addSaveButton(class StreamingBuffer& buffer, const String& url, const String& label)
-{
 #ifdef BUILD_MINIMAL_OTA
-  addButtonWithSvg(buffer, url, label
+  addButtonWithSvg(url, label
                    , ""
                    , false);
 #else // ifdef BUILD_MINIMAL_OTA
-  addButtonWithSvg(buffer,
-                   url,
+  addButtonWithSvg(url,
                    label
                    ,
                    F(
@@ -72,18 +76,12 @@ void addSaveButton(class StreamingBuffer& buffer, const String& url, const Strin
 
 void addDeleteButton(const String& url, const String& label)
 {
-  addSaveButton(TXBuffer, url, label);
-}
-
-void addDeleteButton(class StreamingBuffer& buffer, const String& url, const String& label)
-{
 #ifdef BUILD_MINIMAL_OTA
-  addButtonWithSvg(buffer, url, label
+  addButtonWithSvg(url, label
                    , ""
                    , true);
 #else // ifdef BUILD_MINIMAL_OTA
-  addButtonWithSvg(buffer,
-                   url,
+  addButtonWithSvg(url,
                    label
                    ,
                    F(
@@ -104,10 +102,13 @@ void addWideButton(const String& url, const String& label, const String& classes
 void addWideButton(const String& url, const String& label, const String& classes, bool enabled)
 {
   html_add_wide_button_prefix(classes, enabled);
-  TXBuffer += url;
-  TXBuffer += "'>";
-  TXBuffer += label;
-  TXBuffer += F("</a>");
+  String html;
+  html.reserve(8 + url.length() + label.length());
+  html += url;
+  html += "'>";
+  html += label;
+  html += F("</a>");
+  addHtml(html);
 }
 
 void addSubmitButton()
@@ -122,36 +123,35 @@ void addSubmitButton(const String& value, const String& name) {
 
 void addSubmitButton(const String& value, const String& name, const String& classes)
 {
-  TXBuffer += F("<input class='button link");
+  addHtml(F("<input class='button link"));
 
   if (classes.length() > 0) {
-    TXBuffer += ' ';
-    TXBuffer += classes;
+    addHtml(" ");
+    addHtml(classes);
   }
-  TXBuffer += F("' type='submit' value='");
-  TXBuffer += value;
+  addHtml(F("' type='submit' value='"));
+  addHtml(value);
 
   if (name.length() > 0) {
-    TXBuffer += F("' name='");
-    TXBuffer += name;
+    addHtml(F("' name='"));
+    addHtml(name);
   }
-  TXBuffer += F("'><div id='toastmessage'></div><script type='text/javascript'>toasting();</script>");
+  addHtml(F("' onclick='toasting()'/><div id='toastmessage'></div>"));
 }
 
 // add copy to clipboard button
 void addCopyButton(const String& value, const String& delimiter, const String& name)
 {
   TXBuffer += jsClipboardCopyPart1;
-  TXBuffer += value;
+  addHtml(value);
   TXBuffer += jsClipboardCopyPart2;
-  TXBuffer += delimiter;
+  addHtml(delimiter);
   TXBuffer += jsClipboardCopyPart3;
 
   // Fix HTML
-  TXBuffer += F("<button class='button link' onclick='setClipboard()'>");
-  TXBuffer += name;
-  TXBuffer += " (";
+  addHtml(F("<button class='button link' onclick='setClipboard()'>"));
+  addHtml(name);
+  addHtml(" (");
   html_copyText_marker();
-  TXBuffer += ')';
-  TXBuffer += F("</button>");
+  addHtml(F(")</button>"));
 }

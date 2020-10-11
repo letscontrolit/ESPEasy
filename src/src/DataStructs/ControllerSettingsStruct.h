@@ -41,42 +41,59 @@ class WiFiUDP;
 
 // Timeout of the client in msec.
 #ifndef CONTROLLER_CLIENTTIMEOUT_MAX
-# define CONTROLLER_CLIENTTIMEOUT_MAX     1000
+# define CONTROLLER_CLIENTTIMEOUT_MAX     4000 // Not sure if this may trigger SW watchdog.
 #endif // ifndef CONTROLLER_CLIENTTIMEOUT_MAX
 #ifndef CONTROLLER_CLIENTTIMEOUT_DFLT
 # define CONTROLLER_CLIENTTIMEOUT_DFLT     100
 #endif // ifndef CONTROLLER_CLIENTTIMEOUT_DFLT
 
-
-// ********************************************************************************
-//   IDs of controller settings, used to generate web forms
-// ********************************************************************************
-
-#define CONTROLLER_USE_DNS                  1
-#define CONTROLLER_HOSTNAME                 2
-#define CONTROLLER_IP                       3
-#define CONTROLLER_PORT                     4
-#define CONTROLLER_USER                     5
-#define CONTROLLER_PASS                     6
-#define CONTROLLER_MIN_SEND_INTERVAL        7
-#define CONTROLLER_MAX_QUEUE_DEPTH          8
-#define CONTROLLER_MAX_RETRIES              9
-#define CONTROLLER_FULL_QUEUE_ACTION        10
-#define CONTROLLER_CHECK_REPLY              12
-#define CONTROLLER_SUBSCRIBE                13
-#define CONTROLLER_PUBLISH                  14
-#define CONTROLLER_LWT_TOPIC                15
-#define CONTROLLER_LWT_CONNECT_MESSAGE      16
-#define CONTROLLER_LWT_DISCONNECT_MESSAGE   17
-#define CONTROLLER_TIMEOUT                  18
-#define CONTROLLER_SAMPLE_SET_INITIATOR     19
-#define CONTROLLER_ENABLED                  20 // Keep this as last, is used to loop over all parameters
+#ifndef CONTROLLER_DEFAULT_CLIENTID
+# define CONTROLLER_DEFAULT_CLIENTID  "%sysname%_%unit%"
+#endif // ifndef CONTROLLER_DEFAULT_CLIENTID
 
 struct ControllerSettingsStruct
 {
+  // ********************************************************************************
+  //   IDs of controller settings, used to generate web forms
+  // ********************************************************************************
+  enum VarType {
+    CONTROLLER_USE_DNS                  = 0, // PLace this before HOSTNAME/IP
+    CONTROLLER_USE_EXTENDED_CREDENTIALS = 1, // Place this before USER/PASS
+    CONTROLLER_HOSTNAME,
+    CONTROLLER_IP,
+    CONTROLLER_PORT,
+    CONTROLLER_USER,
+    CONTROLLER_PASS,
+    CONTROLLER_MIN_SEND_INTERVAL,
+    CONTROLLER_MAX_QUEUE_DEPTH,
+    CONTROLLER_MAX_RETRIES,
+    CONTROLLER_FULL_QUEUE_ACTION,
+    CONTROLLER_CHECK_REPLY,
+    CONTROLLER_CLIENT_ID,
+    CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT,
+    CONTROLLER_RETAINFLAG,
+    CONTROLLER_SUBSCRIBE,
+    CONTROLLER_PUBLISH,
+    CONTROLLER_LWT_TOPIC,
+    CONTROLLER_LWT_CONNECT_MESSAGE,
+    CONTROLLER_LWT_DISCONNECT_MESSAGE,
+    CONTROLLER_SEND_LWT,
+    CONTROLLER_WILL_RETAIN,
+    CONTROLLER_CLEAN_SESSION,
+    CONTROLLER_TIMEOUT,
+    CONTROLLER_SAMPLE_SET_INITIATOR,
+    CONTROLLER_SEND_BINARY,
+
+    // Keep this as last, is used to loop over all parameters
+    CONTROLLER_ENABLED
+  };
+
+
   ControllerSettingsStruct();
 
   void      reset();
+
+  bool      isSet() const;
 
   void      validate();
 
@@ -86,14 +103,35 @@ struct ControllerSettingsStruct
 
   void      setHostname(const String& controllerhostname);
 
-  boolean   checkHostReachable(bool quick);
+  bool      checkHostReachable(bool quick);
 
-  boolean   connectToHost(WiFiClient& client);
+  bool      connectToHost(WiFiClient& client);
 
-  // Returns 1 if successful, 0 if there was a problem resolving the hostname or port
-  int       beginPacket(WiFiUDP& client);
+  bool      beginPacket(WiFiUDP& client);
 
   String    getHostPortString() const;
+
+  // VariousFlags defaults to 0, keep in mind when adding bit lookups.
+  bool      mqtt_cleanSession() const;
+  void      mqtt_cleanSession(bool value);
+
+  bool      mqtt_sendLWT() const;
+  void      mqtt_sendLWT(bool value);
+
+  bool      mqtt_willRetain() const;
+  void      mqtt_willRetain(bool value);
+
+  bool      mqtt_uniqueMQTTclientIdReconnect() const;
+  void      mqtt_uniqueMQTTclientIdReconnect(bool value);
+
+  bool      mqtt_retainFlag() const;
+  void      mqtt_retainFlag(bool value);
+
+  bool      useExtendedCredentials() const;
+  void      useExtendedCredentials(bool value);
+
+  bool      sendBinary() const;
+  void      sendBinary(bool value);
 
   boolean      UseDNS;
   byte         IP[4];
@@ -107,20 +145,25 @@ struct ControllerSettingsStruct
   unsigned int MinimalTimeBetweenMessages;
   unsigned int MaxQueueDepth;
   unsigned int MaxRetry;
-  boolean      DeleteOldest;       // Action to perform when buffer full, delete oldest, or ignore newest.
+  bool         DeleteOldest;       // Action to perform when buffer full, delete oldest, or ignore newest.
   unsigned int ClientTimeout;
-  boolean      MustCheckReply;     // When set to false, a sent message is considered always successful.
+  bool         MustCheckReply;     // When set to false, a sent message is considered always successful.
   taskIndex_t  SampleSetInitiator; // The first task to start a sample set.
+  uint32_t     VariousFlags;       // Various flags
+  char         ClientID[65];       // Used to define the Client ID used by the controller
 
 private:
 
-  bool ipSet();
+  bool ipSet() const;
 
   bool updateIPcache();
 };
 
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
-#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new ControllerSettingsStruct()); \
-  ControllerSettingsStruct& (T) = *ControllerSettingsStruct_ptr;
+#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new (std::nothrow)  ControllerSettingsStruct()); \
+  ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
+
+// Check to see if MakeControllerSettings was successful
+#define AllocatedControllerSettings() (ControllerSettingsStruct_ptr.get() != nullptr)
 
 #endif // DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H

@@ -1,4 +1,4 @@
-VENV=~/.venv/python2.7
+VENV=~/.venv/python3.8
 SRC=~/GitHub/letscontrolit/ESPEasy
 REPO=https://github.com/letscontrolit/ESPEasy.git
 BRANCH=mega
@@ -11,6 +11,7 @@ DESCRIPTION=""
 VAGRANT_FOLDER="/vagrant"
 BUILD_FOLDER=`echo "${VAGRANT_FOLDER}/build"`
 CUSTOM_H_FILE="Custom.h"
+ENV_LIST_FILE="pio_envlist.txt"
 
 while getopts p:d: option
 do
@@ -29,7 +30,7 @@ done
 # If virtualenv does not exist, make it.
 if [ ! -d ${VENV} ]; then
   mkdir -p ${VENV}
-  virtualenv -p python2.7 ${VENV}
+  virtualenv -p python3.8 ${VENV}
 fi
 
 # if repository directory does not exist, make it and clone repository
@@ -40,9 +41,9 @@ fi
 
 # Activate Python virtual environment and install/upgrade packages
 source ${VENV}/bin/activate
-pip install -U platformio
 #pip install -r ${SRC}/docs/requirements.txt
-
+pip install -r ${SRC}/requirements.txt
+pip install -U platformio
 
 # Update platformio
 cd ${SRC}
@@ -53,15 +54,26 @@ cd ${SRC}/patches; ./check_puya_patch;
 cd ${SRC}
 
 VAGRANT_CUSTOM_H_FILE=`echo "${VAGRANT_FOLDER}/${CUSTOM_H_FILE}"`
+VAGRANT_PIO_ENVLIST_FILE=`echo "${VAGRANT_FOLDER}/${ENV_LIST_FILE}"`
 SRC_CUSTOM_H_FILE=`echo "${SRC}/src/${CUSTOM_H_FILE}"`
+SRC_PIO_ENVLIST_FILE=`echo "${SRC}/src/${ENV_LIST_FILE}"`
 if [ -f ${VAGRANT_CUSTOM_H_FILE} ]; then
   # replace Windows line endings with Unix line endings
   sed 's/\r$//g' ${VAGRANT_CUSTOM_H_FILE} > ${SRC_CUSTOM_H_FILE}
   echo "Copy ${VAGRANT_CUSTOM_H_FILE} > ${SRC_CUSTOM_H_FILE}"
 fi
-
-# Build custom_ESP8266_4M target in the platformio.ini file
-PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e ${PIO_BUILDENV}
+if [ -f ${VAGRANT_PIO_ENVLIST_FILE} ]; then
+  # replace Windows line endings with Unix line endings
+  sed 's/\r$//g' ${VAGRANT_PIO_ENVLIST_FILE} > ${SRC_PIO_ENVLIST_FILE}
+  input=`echo "${SRC_PIO_ENVLIST_FILE}"`
+  while IFS= read -r line
+  do
+    PLATFORMIO_BUILD_FLAGS="-D VAGRANT_BUILD" platformio run -e $line
+  done < "$input"
+else
+  # Build custom_ESP8266_4M target in the platformio.ini file
+  PLATFORMIO_BUILD_FLAGS="-D VAGRANT_BUILD" platformio run -e ${PIO_BUILDENV}
+fi
 
 # rename and check file
 DATE=`date +%Y%m%d`

@@ -11,19 +11,14 @@ void handle_wifiscanner_json() {
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
-  TXBuffer += "[{";
+  addHtml("[{");
   bool firstentry = true;
   int  n          = WiFi.scanNetworks(false, true);
 
   for (int i = 0; i < n; ++i)
   {
     if (firstentry) { firstentry = false; }
-    else { TXBuffer += ",{"; }
-
-    stream_next_json_object_value(getLabel(LabelType::SSID),      WiFi.SSID(i));
-    stream_next_json_object_value(getLabel(LabelType::BSSID),     WiFi.BSSIDstr(i));
-    stream_next_json_object_value(getLabel(LabelType::CHANNEL),   String(WiFi.channel(i)));
-    stream_next_json_object_value(getLabel(LabelType::WIFI_RSSI), String(WiFi.RSSI(i)));
+    else { addHtml(",{"); }
     String authType;
 
     switch (WiFi.encryptionType(i)) {
@@ -46,10 +41,17 @@ void handle_wifiscanner_json() {
     }
 
     if (authType.length() > 0) {
-      stream_last_json_object_value(F("auth"), authType);
+      stream_next_json_object_value(F("auth"), authType);
     }
+    stream_next_json_object_value(getLabel(LabelType::SSID),      WiFi.SSID(i));
+    stream_next_json_object_value(getLabel(LabelType::BSSID),     WiFi.BSSIDstr(i));
+    stream_next_json_object_value(getLabel(LabelType::CHANNEL),   String(WiFi.channel(i)));
+    stream_last_json_object_value(getLabel(LabelType::WIFI_RSSI), String(WiFi.RSSI(i)));
   }
-  TXBuffer += "]";
+  if (firstentry) {
+    addHtml("}");
+  }
+  addHtml("]");
   TXBuffer.endStream();
 }
 
@@ -61,6 +63,11 @@ void handle_wifiscanner() {
   checkRAM(F("handle_wifiscanner"));
 
   if (!isLoggedIn()) { return; }
+
+  WiFiMode_t cur_wifimode = WiFi.getMode();
+  WifiScan(false, false);
+  setWifiMode(cur_wifimode);
+
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
@@ -68,19 +75,23 @@ void handle_wifiscanner() {
   html_TR();
   html_table_header(getLabel(LabelType::SSID));
   html_table_header(getLabel(LabelType::BSSID));
-  html_table_header("info");
+  html_table_header(F("Network info"));
+  html_table_header(F("RSSI"), 50);
 
-  int n = WiFi.scanNetworks(false, true);
+  const int8_t scanCompleteStatus = WiFi.scanComplete();
 
-  if (n == 0) {
-    TXBuffer += F("No Access Points found");
+  if (scanCompleteStatus <= 0) {
+    addHtml(F("No Access Points found"));
   }
   else
   {
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < scanCompleteStatus; ++i)
     {
       html_TR_TD();
-      TXBuffer += formatScanResult(i, "<TD>");
+      int32_t rssi = 0;
+      addHtml(formatScanResult(i, "<TD>", rssi));
+      html_TD();
+      getWiFi_RSSI_icon(rssi, 45);
     }
   }
 

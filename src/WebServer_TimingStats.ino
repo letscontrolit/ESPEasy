@@ -1,7 +1,11 @@
+#include "ESPEasy_common.h"
 
-#ifdef WEBSERVER_TIMINGSTATS
+
+#if defined(WEBSERVER_TIMINGSTATS) && defined(USES_TIMING_STATS)
 #include "src/Globals/Device.h"
 
+
+#define TIMING_STATS_THRESHOLD 100000
 
 void handle_timingstats() {
   checkRAM(F("handle_timingstats"));
@@ -22,15 +26,15 @@ void handle_timingstats() {
   html_end_table();
 
   html_table_class_normal();
-  const float timespan = timeSinceLastReset / 1000.0;
+  const float timespan = timeSinceLastReset / 1000.0f;
   addFormHeader(F("Statistics"));
   addRowLabel(F("Start Period"));
-  struct tm startPeriod = addSeconds(tm, -1.0 * timespan, false);
-  TXBuffer += getDateTimeString(startPeriod, '-', ':', ' ', false);
+  struct tm startPeriod = node_time.addSeconds(node_time.tm, -1.0 * timespan, false);
+  addHtml(ESPEasy_time::getDateTimeString(startPeriod, '-', ':', ' ', false));
   addRowLabelValue(LabelType::LOCAL_TIME);
   addRowLabel(F("Time span"));
-  TXBuffer += String(timespan);
-  TXBuffer += " sec";
+  addHtml(String(timespan));
+  addHtml(F(" sec"));
   html_end_table();
 
   sendHeadandTail_stdtemplate(_TAIL);
@@ -41,12 +45,12 @@ void handle_timingstats() {
 // HTML table formatted timing statistics
 // ********************************************************************************
 void format_using_threshhold(unsigned long value) {
-  float value_msec = value / 1000.0;
+  float value_msec = value / 1000.0f;
 
   if (value > TIMING_STATS_THRESHOLD) {
     html_B(String(value_msec, 3));
   } else {
-    TXBuffer += String(value_msec, 3);
+    addHtml(String(value_msec, 3));
   }
 }
 
@@ -55,10 +59,10 @@ void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset)
   unsigned int  c = stats.getMinMax(minVal, maxVal);
 
   html_TD();
-  TXBuffer += c;
+  addHtml(String(c));
   html_TD();
-  float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0;
-  TXBuffer += call_per_sec;
+  float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0f;
+  addHtml(String(call_per_sec, 2));
   html_TD();
   format_using_threshhold(minVal);
   html_TD();
@@ -73,18 +77,24 @@ long stream_timing_statistics(bool clearStats) {
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {
       const deviceIndex_t deviceIndex = static_cast<deviceIndex_t>(x.first / 256);
+
       if (validDeviceIndex(deviceIndex)) {
         if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
           html_TR_TD_highlight();
         } else {
           html_TR_TD();
         }
-        TXBuffer += F("P_");
-        TXBuffer += Device[deviceIndex].Number;
-        TXBuffer += '_';
-        TXBuffer += getPluginNameFromDeviceIndex(deviceIndex);
+        {
+          String html;
+          html.reserve(64);
+          html += F("P_");
+          html += Device[deviceIndex].Number;
+          html += '_';
+          html += getPluginNameFromDeviceIndex(deviceIndex);
+          addHtml(html);
+        }
         html_TD();
-        TXBuffer += getPluginFunctionName(x.first % 256);
+        addHtml(getPluginFunctionName(x.first % 256));
         stream_html_timing_stats(x.second, timeSinceLastReset);
       }
 
@@ -94,21 +104,25 @@ long stream_timing_statistics(bool clearStats) {
 
   for (auto& x: controllerStats) {
     if (!x.second.isEmpty()) {
-      const int deviceIndex = x.first / 256;
-      String    C_name   = "";
-      CPluginCall(deviceIndex, CPLUGIN_GET_DEVICENAME, NULL, C_name);
+      const int ProtocolIndex = x.first / 256;
 
       if (x.second.thresholdExceeded(TIMING_STATS_THRESHOLD)) {
         html_TR_TD_highlight();
       } else {
         html_TR_TD();
       }
-      TXBuffer += F("C_");
-      TXBuffer += Protocol[deviceIndex].Number;
-      TXBuffer += '_';
-      TXBuffer += C_name;
+      {
+        String html;
+        html.reserve(64);
+
+        html += F("C_");
+        html += Protocol[ProtocolIndex].Number;
+        html += '_';
+        html += getCPluginNameFromProtocolIndex(ProtocolIndex);
+        addHtml(html);
+      }
       html_TD();
-      TXBuffer += getCPluginCFunctionName(x.first % 256);
+      addHtml(getCPluginCFunctionName(static_cast<CPlugin::Function>(x.first % 256)));
       stream_html_timing_stats(x.second, timeSinceLastReset);
 
       if (clearStats) { x.second.reset(); }
@@ -122,7 +136,7 @@ long stream_timing_statistics(bool clearStats) {
       } else {
         html_TR_TD();
       }
-      TXBuffer += getMiscStatsName(x.first);
+      addHtml(getMiscStatsName(x.first));
       html_TD();
       stream_html_timing_stats(x.second, timeSinceLastReset);
 

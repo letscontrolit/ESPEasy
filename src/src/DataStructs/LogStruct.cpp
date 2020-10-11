@@ -1,5 +1,7 @@
 #include "../DataStructs/LogStruct.h"
 #include "../../ESPEasy_fdwdecl.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 
 LogStruct::LogStruct() : write_idx(0), read_idx(0), lastReadTimeStamp(0) {
@@ -18,7 +20,9 @@ void LogStruct::add(const byte loglevel, const char *line) {
   }
   timeStamp[write_idx] = millis();
   log_level[write_idx] = loglevel;
-  unsigned linelength = strlen(line);
+
+  // Must use PROGMEM aware functions here to process line
+  unsigned linelength = strlen_P(line);
 
   if (linelength > LOG_STRUCT_MESSAGE_SIZE - 1) {
     linelength = LOG_STRUCT_MESSAGE_SIZE - 1;
@@ -26,8 +30,9 @@ void LogStruct::add(const byte loglevel, const char *line) {
   Message[write_idx] = "";
   Message[write_idx].reserve(linelength);
 
+  const char* c = line;
   for (unsigned i = 0; i < linelength; ++i) {
-    Message[write_idx] += *(line + i);
+    Message[write_idx] += static_cast<char>(pgm_read_byte(c++));
   }
 }
 

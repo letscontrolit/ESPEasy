@@ -28,7 +28,10 @@
 #include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/ESPEasyLimits.h"
-#include "ESPEasy_plugindefs.h"
+#include "src/DataStructs/ESPEasy_plugin_functions.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/Settings.h"
+#include "src/Globals/ESPEasy_time.h"
 
 
 
@@ -91,7 +94,9 @@
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/DataStructs/NotificationStruct.h"
 
+#ifdef USES_NOTIFIER
 extern NotificationStruct Notification[NPLUGIN_MAX];
+#endif
 
 
 
@@ -106,8 +111,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 #include "ESPeasySerial.h"
 #include "ESPEasy_fdwdecl.h"
 #include "WebServer_fwddecl.h"
-#include "I2CTypes.h"
-#include <I2Cdev.h>
+
 
 
 #define FS_NO_GLOBALS
@@ -161,7 +165,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
     #include <ESP8266mDNS.h>
   #endif
   #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
-  #define MAX_SKETCH_SIZE 1044464
+  #define MAX_SKETCH_SIZE 1044464   // 1020 kB - 16 bytes
   #define PIN_D_MAX        16
 #endif
 #if defined(ESP32)
@@ -177,7 +181,11 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
   #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
 //  #include  "esp32_ping.h"
-  #include "SPIFFS.h"
+  #ifdef USE_LITTLEFS
+    #include "LittleFS.h"
+  #else
+    #include "SPIFFS.h"
+  #endif
   #include <rom/rtc.h>
   #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
   #ifdef FEATURE_MDNS
@@ -185,6 +193,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
   #endif
   #define PIN_D_MAX        39
   extern int8_t ledChannelPin[16];
+  #define MAX_SKETCH_SIZE 1900544   // 0x1d0000 look at partitions in csv file
 #endif
 
 #include <WiFiUdp.h>
@@ -200,44 +209,9 @@ using namespace fs;
 #include <base64.h>
 
 
-extern I2Cdev i2cdev;
 
 
 
-
-
-// Setup DNS, only used if the ESP has no valid WiFi config
-extern const byte DNS_PORT;
-extern IPAddress apIP;
-extern DNSServer dnsServer;
-extern bool dnsServerActive;
-
-//NTP status
-extern bool statusNTPInitialized;
-
-// udp protocol stuff (syslog, global sync, node info list, ntp time)
-extern WiFiUDP portUDP;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-enum gpio_direction {
-  gpio_input,
-  gpio_output,
-  gpio_bidirectional
-};
 
 
 /*********************************************************************************************\
@@ -256,93 +230,39 @@ struct pinStatesStruct
 
 
 
-extern int protocolCount;
-extern int notificationCount;
-
 extern boolean printToWeb;
 extern String printWebString;
 extern boolean printToWebJSON;
 
-/********************************************************************************************\
-  RTC_cache_struct
-\*********************************************************************************************/
-struct RTC_cache_struct
-{
-  uint32_t checksumData = 0;
-  uint16_t readFileNr = 0;       // File number used to read from.
-  uint16_t writeFileNr = 0;      // File number to write to.
-  uint16_t readPos = 0;          // Read position in file based cache
-  uint16_t writePos = 0;         // Write position in the RTC memory
-  uint32_t checksumMetadata = 0;
-};
 
-struct RTC_cache_handler_struct;
+//struct RTC_cache_handler_struct;
 
 
-/*********************************************************************************************\
- * rulesTimerStruct
-\*********************************************************************************************/
-struct rulesTimerStatus
-{
-  rulesTimerStatus() : timestamp(0), interval(0), paused(false) {}
-
-  unsigned long timestamp;
-  unsigned int interval; //interval in milliseconds
-  bool paused;
-};
-
-extern rulesTimerStatus RulesTimer[RULES_TIMER_MAX];
-
-extern msecTimerHandlerStruct msecTimerHandler;
-
-extern unsigned long timer_gratuitous_arp_interval;
+// FIXME TD-er: Must move this to some proper class (ESPEasy_Scheduler ?)
 extern unsigned long timermqtt_interval;
+
+
 extern unsigned long lastSend;
 extern unsigned long lastWeb;
 extern byte cmd_within_mainloop;
 extern unsigned long wdcounter;
-extern unsigned long timerAPoff;    // Timer to check whether the AP mode should be disabled (0 = disabled)
-extern unsigned long timerAPstart;  // Timer to start AP mode, started when no valid network is detected.
 extern unsigned long timerAwakeFromDeepSleep;
-extern unsigned long last_system_event_run;
+
 
 #if FEATURE_ADC_VCC
 extern float vcc;
+#endif
+#ifdef ESP8266
+extern int lastADCvalue; // Keep track of last ADC value as it cannot be read while WiFi is connecting
 #endif
 
 extern boolean WebLoggedIn;
 extern int WebLoggedInTimer;
 
 
-extern bool (*CPlugin_ptr[CPLUGIN_MAX])(byte, struct EventStruct*, String&);
-extern byte CPlugin_id[CPLUGIN_MAX];
-
-extern boolean (*NPlugin_ptr[NPLUGIN_MAX])(byte, struct EventStruct*, String&);
-extern byte NPlugin_id[NPLUGIN_MAX];
-
 extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
 
-enum PluginPtrType {
-  TaskPluginEnum,
-  ControllerPluginEnum,
-  NotificationPluginEnum,
-  CommandTimerEnum
-};
-void schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct* event);
-unsigned long createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function);
-unsigned long createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16);
 
-
-
-
-
-
-
-extern bool webserverRunning;
-extern bool webserver_init;
-
-
-extern String eventBuffer;
 
 
 extern bool shouldReboot;
@@ -356,121 +276,7 @@ extern boolean UseRTOSMultitasking;
 // void (*MainLoopCall_ptr)(void); //FIXME TD-er: No idea what this does.
 
 
-/*
-String getLogLine(const TimingStats& stats) {
-    unsigned long minVal, maxVal;
-    unsigned int c = stats.getMinMax(minVal, maxVal);
-    String log;
-    log.reserve(64);
-    log += F("Count: ");
-    log += c;
-    log += F(" Avg/min/max ");
-    log += stats.getAvg();
-    log += '/';
-    log += minVal;
-    log += '/';
-    log += maxVal;
-    log += F(" usec");
-    return log;
-}
-*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-#include "src/DataStructs/DeviceModel.h"
-
-struct GpioFactorySettingsStruct {
-  GpioFactorySettingsStruct(DeviceModel model = DeviceModel_default) {
-    for (int i = 0; i < 4; ++i) {
-      button[i] = -1;
-      relais[i] = -1;
-    }
-    switch (model) {
-      case DeviceModel_Sonoff_Basic:
-      case DeviceModel_Sonoff_TH1x:
-      case DeviceModel_Sonoff_S2x:
-      case DeviceModel_Sonoff_TouchT1:
-      case DeviceModel_Sonoff_POWr2:
-        button[0] = 0;   // Single Button
-        relais[0] = 12;  // Red Led and Relay (0 = Off, 1 = On)
-        status_led = 13; // Green/Blue Led (0 = On, 1 = Off)
-        i2c_sda = -1;
-        i2c_scl = -1;
-        break;
-      case DeviceModel_Sonoff_POW:
-        button[0] = 0;   // Single Button
-        relais[0] = 12;  // Red Led and Relay (0 = Off, 1 = On)
-        status_led = 15; // Blue Led (0 = On, 1 = Off)
-        i2c_sda = -1;
-        i2c_scl = -1;    // GPIO5 conflicts with HLW8012 Sel output
-        break;
-      case DeviceModel_Sonoff_TouchT2:
-        button[0] = 0;   // Button 1
-        button[1] = 9;   // Button 2
-        relais[0] = 12;  // Led and Relay1 (0 = Off, 1 = On)
-        relais[1] = 4;   // Led and Relay2 (0 = Off, 1 = On)
-        status_led = 13; // Blue Led (0 = On, 1 = Off)
-        i2c_sda = -1;    // GPIO4 conflicts with GPIO_REL3
-        i2c_scl = -1;    // GPIO5 conflicts with GPIO_REL2
-        break;
-      case DeviceModel_Sonoff_TouchT3:
-        button[0] = 0;   // Button 1
-        button[1] = 10;  // Button 2
-        button[2] = 9;   // Button 3
-        relais[0] = 12;  // Led and Relay1 (0 = Off, 1 = On)
-        relais[1] = 5;   // Led and Relay2 (0 = Off, 1 = On)
-        relais[2] = 4;   // Led and Relay3 (0 = Off, 1 = On)
-        status_led = 13; // Blue Led (0 = On, 1 = Off)
-        i2c_sda = -1;    // GPIO4 conflicts with GPIO_REL3
-        i2c_scl = -1;    // GPIO5 conflicts with GPIO_REL2
-        break;
-
-      case DeviceModel_Sonoff_4ch:
-        button[0] = 0;   // Button 1
-        button[1] = 9;   // Button 2
-        button[2] = 10;  // Button 3
-        button[3] = 14;  // Button 4
-        relais[0] = 12;  // Red Led and Relay1 (0 = Off, 1 = On)
-        relais[1] = 5;   // Red Led and Relay2 (0 = Off, 1 = On)
-        relais[2] = 4;   // Red Led and Relay3 (0 = Off, 1 = On)
-        relais[3] = 15;  // Red Led and Relay4 (0 = Off, 1 = On)
-        status_led = 13; // Blue Led (0 = On, 1 = Off)
-        i2c_sda = -1;    // GPIO4 conflicts with GPIO_REL3
-        i2c_scl = -1;    // GPIO5 conflicts with GPIO_REL2
-        break;
-      case DeviceModel_Shelly1:
-        button[0] = 5;   // Single Button
-        relais[0] = 4;   // Red Led and Relay (0 = Off, 1 = On)
-        status_led = 15; // Blue Led (0 = On, 1 = Off)
-        i2c_sda = -1;    // GPIO4 conflicts with relay control.
-        i2c_scl = -1;    // GPIO5 conflicts with SW input
-        break;
-
-      // case DeviceModel_default: break;
-      default: break;
-    }
-  }
-
-  int8_t button[4];
-  int8_t relais[4];
-  int8_t status_led = DEFAULT_PIN_STATUS_LED;
-  int8_t i2c_sda = DEFAULT_PIN_I2C_SDA;
-  int8_t i2c_scl = DEFAULT_PIN_I2C_SCL;
-};
-
-void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);
-void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 
 
 

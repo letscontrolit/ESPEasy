@@ -6,13 +6,18 @@
 // Flash strings are not checked for duplication.
 // ********************************************************************************
 void wrap_html_tag(const String& tag, const String& text) {
-  TXBuffer += '<';
-  TXBuffer += tag;
-  TXBuffer += '>';
-  TXBuffer += text;
-  TXBuffer += "</";
-  TXBuffer += tag;
-  TXBuffer += '>';
+  String html;
+
+  html.reserve(6 + (2 * tag.length()) + text.length());
+
+  html += '<';
+  html += tag;
+  html += '>';
+  html += text;
+  html += "</";
+  html += tag;
+  html += '>';
+  addHtml(html);
 }
 
 void html_B(const String& text) {
@@ -28,7 +33,7 @@ void html_U(const String& text) {
 }
 
 void html_TR_TD_highlight() {
-  TXBuffer += F("<TR class=\"highlight\">");
+  addHtml(F("<TR class=\"highlight\">"));
   html_TD();
 }
 
@@ -38,18 +43,23 @@ void html_TR_TD() {
 }
 
 void html_BR() {
-  TXBuffer += F("<BR>");
+  addHtml(F("<BR>"));
 }
 
 void html_TR() {
-  TXBuffer += F("<TR>");
+  addHtml(F("<TR>"));
 }
 
 void html_TR_TD_height(int height) {
   html_TR();
-  TXBuffer += F("<TD HEIGHT=\"");
-  TXBuffer += height;
-  TXBuffer += "\">";
+
+  String html;
+  html.reserve(20);
+
+  html += F("<TD HEIGHT=\"");
+  html += height;
+  html += "\">";
+  addHtml(html);
 }
 
 void html_TD() {
@@ -58,7 +68,7 @@ void html_TD() {
 
 void html_TD(int td_cnt) {
   for (int i = 0; i < td_cnt; ++i) {
-    TXBuffer += F("<TD>");
+    addHtml(F("<TD>"));
   }
 }
 
@@ -70,18 +80,23 @@ void html_reset_copyTextCounter() {
 
 void html_copyText_TD() {
   ++copyTextCounter;
-  TXBuffer += F("<TD id='copyText_");
-  TXBuffer += copyTextCounter;
-  TXBuffer += "'>";
+
+  String html;
+  html.reserve(24);
+
+  html += F("<TD id='copyText_");
+  html += copyTextCounter;
+  html += "'>";
+  addHtml(html);
 }
 
 // Add some recognizable token to show which parts will be copied.
 void html_copyText_marker() {
-  TXBuffer += F("&#x022C4;"); //   &diam; &diamond; &Diamond; &#x022C4; &#8900;
+  addHtml(F("&#x022C4;")); //   &diam; &diamond; &Diamond; &#x022C4; &#8900;
 }
 
 void html_add_estimate_symbol() {
-  TXBuffer += F(" &#8793; "); //   &#8793;  &#x2259;  &wedgeq;
+  addHtml(F(" &#8793; ")); //   &#8793;  &#x2259;  &wedgeq;
 }
 
 void html_table_class_normal() {
@@ -101,14 +116,19 @@ void html_table(const String& tableclass) {
 }
 
 void html_table(const String& tableclass, bool boxed) {
-  TXBuffer += F("<table class='");
-  TXBuffer += tableclass;
-  TXBuffer += '\'';
+  String html;
+
+  html.reserve(16 + tableclass.length());
+
+  html += F("<table class='");
+  html += tableclass;
+  html += '\'';
+  addHtml(html);
 
   if (boxed) {
-    TXBuffer += F("' border=1px frame='box' rules='all'");
+    addHtml(F("' border=1px frame='box' rules='all'"));
   }
-  TXBuffer += '>';
+  addHtml(">");
 }
 
 void html_table_header(const String& label) {
@@ -116,32 +136,44 @@ void html_table_header(const String& label) {
 }
 
 void html_table_header(const String& label, int width) {
-  html_table_header(label, "", width);
+  html_table_header(label, F(""), F(""), width);
 }
 
 void html_table_header(const String& label, const String& helpButton, int width) {
-  TXBuffer += F("<TH");
+  html_table_header(label, helpButton, F(""), width);
+}
+
+void html_table_header(const String& label, const String& helpButton, const String& rtdHelpButton, int width) {
+  String html;
+
+  html.reserve(25 + label.length());
+
+  html += F("<TH");
 
   if (width > 0) {
-    TXBuffer += F(" style='width:");
-    TXBuffer += String(width);
-    TXBuffer += F("px;'");
+    html += F(" style='width:");
+    html += String(width);
+    html += F("px;'");
   }
-  TXBuffer += '>';
-  TXBuffer += label;
+  html += '>';
+  html += label;
+  addHtml(html);
 
   if (helpButton.length() > 0) {
     addHelpButton(helpButton);
   }
-  TXBuffer += F("</TH>");
+  if (rtdHelpButton.length() > 0) {
+    addRTDHelpButton(rtdHelpButton);
+  }
+  addHtml(F("</TH>"));
 }
 
 void html_end_table() {
-  TXBuffer += F("</table>");
+  addHtml(F("</table>"));
 }
 
 void html_end_form() {
-  TXBuffer += F("</form>");
+  addHtml(F("</form>"));
 }
 
 void html_add_button_prefix() {
@@ -149,22 +181,25 @@ void html_add_button_prefix() {
 }
 
 void html_add_button_prefix(const String& classes, bool enabled) {
-  TXBuffer += F(" <a class='button link");
+  addHtml(F(" <a class='button link"));
 
   if (classes.length() > 0) {
-    TXBuffer += ' ';
-    TXBuffer += classes;
+    String html;
+    html.reserve(classes.length() + 1);
+    html += ' ';
+    html += classes;
+    addHtml(html);
   }
 
   if (!enabled) {
     addDisabled();
   }
-  TXBuffer += '\'';
+  addHtml("'");
 
   if (!enabled) {
     addDisabled();
   }
-  TXBuffer += F(" href='");
+  addHtml(F(" href='"));
 }
 
 void html_add_wide_button_prefix() {
@@ -181,13 +216,13 @@ void html_add_wide_button_prefix(const String& classes, bool enabled) {
 }
 
 void html_add_form() {
-  TXBuffer += F("<form name='frmselect' method='post'>");
+  addHtml(F("<form name='frmselect' method='post'>"));
 }
 
 void html_add_autosubmit_form() {
-  TXBuffer += F("<script><!--\n"
-                "function dept_onchange(frmselect) {frmselect.submit();}"
-                "\n//--></script>");
+  addHtml(F("<script><!--\n"
+            "function dept_onchange(frmselect) {frmselect.submit();}"
+            "\n//--></script>"));
 }
 
 void html_add_script(const String& script, bool defer) {
@@ -197,40 +232,38 @@ void html_add_script(const String& script, bool defer) {
 }
 
 void html_add_script(bool defer) {
-  TXBuffer += F("<script");
+  addHtml(F("<script"));
 
   if (defer) {
-    TXBuffer += F(" defer");
+    addHtml(F(" defer"));
   }
-  TXBuffer += F(" type='text/JavaScript'>");
+  addHtml(F(" type='text/JavaScript'>"));
 }
 
 void html_add_script_end() {
-  TXBuffer += F("</script>");
+  addHtml(F("</script>"));
 }
 
 // if there is an error-string, add it to the html code with correct formatting
 void addHtmlError(const String& error) {
   if (error.length() > 0)
   {
-    TXBuffer += F("<div class=\"");
+    String html;
+    html.reserve(20);
+    html += F("<div class=\"");
 
     if (error.startsWith(F("Warn"))) {
-      TXBuffer += F("warning");
+      html += F("warning");
     } else {
-      TXBuffer += F("alert");
+      html += F("alert");
     }
-    TXBuffer += F("\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>");
-    TXBuffer += error;
-    TXBuffer += F("</div>");
+    addHtml( html);
+    addHtml(    F("\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>"));
+    addHtml(error);
+    addHtml(    F("</div>"));
   }
   else
   {
-    TXBuffer += jsToastMessageBegin;
-
-    // we can push custom messages here in future releases...
-    TXBuffer += F("Submitted");
-    TXBuffer += jsToastMessageEnd;
   }
 }
 
@@ -239,28 +272,37 @@ void addHtml(const String& html) {
 }
 
 void addDisabled() {
-  TXBuffer += F(" disabled");
+  addHtml(F(" disabled"));
 }
 
 void addHtmlLink(const String& htmlclass, const String& url, const String& label) {
-  TXBuffer += F(" <a class='");
-  TXBuffer += htmlclass;
-  TXBuffer += F("' href='");
-  TXBuffer += url;
-  TXBuffer += F("' target='_blank'>");
-  TXBuffer += label;
-  TXBuffer += F("</a>");
+  String html;
+
+  html.reserve(44 + htmlclass.length() + url.length() + label.length());
+
+  html += F(" <a class='");
+  html += htmlclass;
+  html += F("' href='");
+  html += url;
+  html += F("' target='_blank'>");
+  html += label;
+  html += F("</a>");
+  addHtml(html);
 }
 
 void addEnabled(boolean enabled)
 {
-  TXBuffer += F("<span class='enabled ");
+  String html;
+
+  html.reserve(40);
+  html += F("<span class='enabled ");
 
   if (enabled) {
-    TXBuffer += F("on'>&#10004;");
+    html += F("on'>&#10004;");
   }
   else {
-    TXBuffer += F("off'>&#10060;");
+    html += F("off'>&#10060;");
   }
-  TXBuffer += F("</span>");
+  html += F("</span>");
+  addHtml(html);
 }

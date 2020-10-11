@@ -20,9 +20,20 @@ enum Enum : short {
 
   FREE_MEM,                    // 9876
   FREE_STACK,                  // 3456
-#ifdef CORE_POST_2_5_0
+#if defined(CORE_POST_2_5_0) || defined(ESP32)
   HEAP_MAX_FREE_BLOCK,         // 7654
+#endif
+#if defined(CORE_POST_2_5_0)
   HEAP_FRAGMENTATION,          // 12
+#endif
+
+#ifdef ESP32
+  HEAP_SIZE,
+  HEAP_MIN_FREE,
+  PSRAM_SIZE,
+  PSRAM_FREE,
+  PSRAM_MIN_FREE,
+  PSRAM_MAX_FREE_BLOCK,
 #endif
 
   BOOT_TYPE,                   // Cold boot
@@ -41,6 +52,9 @@ enum Enum : short {
   IP_ADDRESS_SUBNET,           // 192.168.1.123 / 255.255.255.0
   GATEWAY,                     // 192.168.1.1
   CLIENT_IP,                   // 192.168.1.67
+  #ifdef FEATURE_MDNS
+  M_DNS,                       // breadboard.local
+  #endif
   DNS,                         // 192.168.1.1 / (IP unset)
   DNS_1,
   DNS_2,
@@ -65,10 +79,13 @@ enum Enum : short {
   BUILD_DESC,
   GIT_BUILD,
   SYSTEM_LIBRARIES,
-  PLUGINS,
+  PLUGIN_COUNT,
   PLUGIN_DESCRIPTION,
   BUILD_TIME,
   BINARY_FILENAME,
+  BUILD_PLATFORM,
+  GIT_HEAD,
+
 
   SYSLOG_LOG_LEVEL,
   SERIAL_LOG_LEVEL,
@@ -79,6 +96,9 @@ enum Enum : short {
 
   ESP_CHIP_ID,
   ESP_CHIP_FREQ,
+  ESP_CHIP_MODEL,
+  ESP_CHIP_REVISION,
+  ESP_CHIP_CORES,
   ESP_BOARD_NAME,
 
   FLASH_CHIP_ID,
@@ -89,15 +109,31 @@ enum Enum : short {
   FLASH_WRITE_COUNT,
   SKETCH_SIZE,
   SKETCH_FREE,
-  SPIFFS_SIZE,
-  SPIFFS_FREE,
-
+  FS_SIZE,
+  FS_FREE,
+  MAX_OTA_SKETCH_SIZE,
+  OTA_2STEP,
+  OTA_POSSIBLE,
+#ifdef HAS_ETHERNET
+  ETH_IP_ADDRESS,
+  ETH_IP_SUBNET,
+  ETH_IP_ADDRESS_SUBNET,
+  ETH_IP_GATEWAY,
+  ETH_IP_DNS,
+  ETH_MAC,
+  ETH_DUPLEX,
+  ETH_SPEED,
+  ETH_STATE,
+  ETH_SPEED_STATE,
+  ETH_WIFI_MODE,
+  ETH_CONNECTED,
+#endif
 
 };
 };
 
 
-String getInternalLabel(LabelType::Enum label);
+String getInternalLabel(LabelType::Enum label, char replaceSpace = '_');
 String getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);

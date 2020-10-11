@@ -2,6 +2,8 @@
 #define CONTROLLERQUEUE_SIMPLE_QUEUE_ELEMENT_STRING_ONLY_H
 
 #include "../../ESPEasy_common.h"
+#include "../Globals/CPlugins.h"
+
 
 /*********************************************************************************************\
 * Simple queue element, only storing controller index and some String
@@ -16,8 +18,8 @@ public:
 
   size_t getSize() const;
 
-  int controller_idx = 0;
   String txt;
+  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
 };
 
 

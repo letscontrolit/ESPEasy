@@ -3,6 +3,8 @@
 //######################## Plugin 005: Temperature and Humidity sensor DHT 11/22 ########################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_005
 #define PLUGIN_ID_005         5
 #define PLUGIN_NAME_005       "Environment - DHT11/12/22  SONOFF2301/7021"
@@ -34,7 +36,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_005;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_TEMP_HUM;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -151,7 +153,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   digitalWrite(Plugin_005_DHT_Pin, LOW);              // Pull low
   
   switch (Par3) {
-    case P005_DHT11:  delay(18); break;  // minimum 18ms
+    case P005_DHT11:  delay(19); break;  // minimum 18ms
     case P005_DHT22:  delay(2);  break;  // minimum 1ms
     case P005_DHT12:  delay(200); break; // minimum 200ms
     case P005_AM2301: delayMicroseconds(900); break;
@@ -172,15 +174,12 @@ bool P005_do_plugin_read(struct EventStruct *event) {
       delayMicroseconds(20);
       break;
   }
-  
-  if(!P005_waitState(0)) {P005_log(event, P005_error_no_reading); return false; }
-  if(!P005_waitState(1)) {P005_log(event, P005_error_no_reading); return false; }
+
   noInterrupts();
-  if(!P005_waitState(0)) {
-    interrupts();
-    P005_log(event, P005_error_no_reading);
-    return false;
-  }
+  if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(1)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+  if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
+
   bool readingAborted = false;
   byte dht_dat[5];
   for (i = 0; i < 5 && !readingAborted; i++)
@@ -196,7 +195,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   if (readingAborted)
     return false;
 
-        // Checksum calculation is a Rollover Checksum by design!
+  // Checksum calculation is a Rollover Checksum by design!
   byte dht_check_sum = (dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]) & 0xFF; // check check_sum
   if (dht_dat[4] != dht_check_sum)
   {
@@ -208,26 +207,23 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   float humidity = NAN;
   switch (Par3) {
     case P005_DHT11:
-      temperature = float(dht_dat[2]); // Temperature
-      humidity = float(dht_dat[0]); // Humidity
-      break;
     case P005_DHT12:
-      temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0; // Temperature
+      temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0f; // Temperature
       if (dht_dat[3] & 0x80) { temperature = -temperature; } // Negative temperature
-      humidity = float(dht_dat[0]*10+dht_dat[1]) / 10.0; // Humidity
+      humidity = float(dht_dat[0]*10+dht_dat[1]) / 10.0f; // Humidity
       break;
     case P005_DHT22:
     case P005_AM2301:
     case P005_SI7021:
       if (dht_dat[2] & 0x80) // negative temperature
-        temperature = -0.1 * word(dht_dat[2] & 0x7F, dht_dat[3]);
+        temperature = -0.1f * word(dht_dat[2] & 0x7F, dht_dat[3]);
       else
-        temperature = 0.1 * word(dht_dat[2], dht_dat[3]);
-      humidity = 0.1 * word(dht_dat[0], dht_dat[1]); // Humidity
+        temperature = 0.1f * word(dht_dat[2], dht_dat[3]);
+      humidity = 0.1f * word(dht_dat[0], dht_dat[1]); // Humidity
       break;
   }
 
-  if (temperature == NAN || humidity == NAN)
+  if (isnan(temperature) || isnan(humidity))
   {     P005_log(event, P005_error_invalid_NAN_reading);
         return false;
   }

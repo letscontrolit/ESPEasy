@@ -1,3 +1,5 @@
+#include "src/Commands/InternalCommands.h"
+
 /********************************************************************************************\
  * Get data from Serial Interface
  \*********************************************************************************************/
@@ -35,15 +37,7 @@ void serial()
       InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
       Serial.write('>');
       serialPrintln(InputBuffer_Serial);
-      String action = InputBuffer_Serial;
-      struct EventStruct TempEvent;
-      action = parseTemplate(action, action.length()); // @giig1967g: parseTemplate before executing the command bug#1977
-      parseCommandString(&TempEvent, action);
-      TempEvent.Source = VALUE_SOURCE_SERIAL;
-
-      if (!PluginCall(PLUGIN_WRITE, &TempEvent, action)) {
-        ExecuteCommand(VALUE_SOURCE_SERIAL, action.c_str());
-      }
+      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
       SerialInByteCounter   = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
     }
@@ -52,23 +46,25 @@ void serial()
 
 void addToSerialBuffer(const char *line) {
   process_serialWriteBuffer(); // Try to make some room first.
-  const size_t line_length = strlen(line);
-  int roomLeft             = getMaxFreeBlock();
+  int roomLeft = getMaxFreeBlock();
 
-  if (roomLeft < 500) {
+  if (roomLeft < 1000) {
     roomLeft = 0;                              // Do not append to buffer.
-  } else if (roomLeft < 3000) {
+  } else if (roomLeft < 4000) {
     roomLeft = 128 - serialWriteBuffer.size(); // 1 buffer.
   } else {
-    roomLeft -= 3000;                          // leave some free for normal use.
+    roomLeft -= 4000;                          // leave some free for normal use.
   }
 
-  if (roomLeft > 0) {
-    size_t pos = 0;
-
-    while (pos < line_length && pos < static_cast<size_t>(roomLeft)) {
-      serialWriteBuffer.push_back(line[pos]);
-      ++pos;
+  const char* c = line;
+  while (roomLeft > 0) {
+    // Must use PROGMEM aware functions here.
+    char ch = pgm_read_byte(c++);
+    if (ch == '\0') {
+      return;
+    } else {
+      serialWriteBuffer.push_back(ch);
+      --roomLeft;
     }
   }
 }
@@ -81,20 +77,18 @@ void addNewlineToSerialBuffer() {
 
 void process_serialWriteBuffer() {
   if (serialWriteBuffer.size() == 0) { return; }
-  size_t snip = 128; // Some default, ESP32 doesn't have the availableForWrite function yet.
-#if defined(ESP8266)
-  snip = Serial.availableForWrite();
-#endif // if defined(ESP8266)
+  size_t snip = Serial.availableForWrite();
 
   if (snip > 0) {
     size_t bytes_to_write = serialWriteBuffer.size();
 
     if (snip < bytes_to_write) { bytes_to_write = snip; }
 
-    for (size_t i = 0; i < bytes_to_write; ++i) {
+    while (bytes_to_write > 0) {
       const char c = serialWriteBuffer.front();
       Serial.write(c);
       serialWriteBuffer.pop_front();
+      --bytes_to_write;
     }
   }
 }

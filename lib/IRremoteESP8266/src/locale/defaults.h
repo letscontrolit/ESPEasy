@@ -24,6 +24,9 @@
 #ifndef D_STR_POWER
 #define D_STR_POWER "Power"
 #endif  // D_STR_POWER
+#ifndef D_STR_PREVIOUS
+#define D_STR_PREVIOUS "Previous"
+#endif  // D_STR_PREVIOUS
 #ifndef D_STR_ON
 #define D_STR_ON "On"
 #endif  // D_STR_ON
@@ -61,17 +64,17 @@
 #define D_STR_SWING "Swing"
 #endif  // D_STR_SWING
 #ifndef D_STR_SWINGH
-#define D_STR_SWINGH D_STR_SWING"(H)"
+#define D_STR_SWINGH D_STR_SWING"(H)"  // Set `D_STR_SWING` first!
 #endif  // D_STR_SWINGH
 #ifndef D_STR_SWINGV
-#define D_STR_SWINGV D_STR_SWING"(V)"
+#define D_STR_SWINGV D_STR_SWING"(V)"  // Set `D_STR_SWING` first!
 #endif  // D_STR_SWINGV
 #ifndef D_STR_BEEP
 #define D_STR_BEEP "Beep"
 #endif  // D_STR_BEEP
-#ifndef D_STR_MOLD
-#define D_STR_MOLD "Mold"
-#endif  // D_STR_MOLD
+#ifndef D_STR_MOULD
+#define D_STR_MOULD "Mould"
+#endif  // D_STR_MOULD
 #ifndef D_STR_CLEAN
 #define D_STR_CLEAN "Clean"
 #endif  // D_STR_CLEAN
@@ -82,10 +85,10 @@
 #define D_STR_TIMER "Timer"
 #endif  // D_STR_TIMER
 #ifndef D_STR_ONTIMER
-#define D_STR_ONTIMER D_STR_ON " " D_STR_TIMER
+#define D_STR_ONTIMER D_STR_ON " " D_STR_TIMER  // Set `D_STR_ON` first!
 #endif  // D_STR_ONTIMER
 #ifndef D_STR_OFFTIMER
-#define D_STR_OFFTIMER D_STR_OFF " " D_STR_TIMER
+#define D_STR_OFFTIMER D_STR_OFF " " D_STR_TIMER  // Set `D_STR_OFF` first!
 #endif  // D_STR_OFFTIMER
 #ifndef D_STR_CLOCK
 #define D_STR_CLOCK "Clock"
@@ -130,7 +133,7 @@
 #define D_STR_HOLD "Hold"
 #endif  // D_STR_HOLD
 #ifndef D_STR_8C_HEAT
-#define D_STR_8C_HEAT "8C " D_STR_HEAT
+#define D_STR_8C_HEAT "8C " D_STR_HEAT  // Set `D_STR_HEAT` first!
 #endif  // D_STR_8C_HEAT
 #ifndef D_STR_BUTTON
 #define D_STR_BUTTON "Button"
@@ -154,13 +157,13 @@
 #define D_STR_UP "Up"
 #endif  // D_STR_UP
 #ifndef D_STR_TEMPUP
-#define D_STR_TEMPUP D_STR_TEMP " " D_STR_UP
+#define D_STR_TEMPUP D_STR_TEMP " " D_STR_UP  // Set `D_STR_TEMP` first!
 #endif  // D_STR_TEMPUP
 #ifndef D_STR_DOWN
 #define D_STR_DOWN "Down"
 #endif  // D_STR_DOWN
 #ifndef D_STR_TEMPDOWN
-#define D_STR_TEMPDOWN D_STR_TEMP " " D_STR_DOWN
+#define D_STR_TEMPDOWN D_STR_TEMP " " D_STR_DOWN  // Set `D_STR_TEMP` first!
 #endif  // D_STR_TEMPDOWN
 #ifndef D_STR_CHANGE
 #define D_STR_CHANGE "Change"
@@ -186,11 +189,14 @@
 #ifndef D_STR_SENSOR
 #define D_STR_SENSOR "Sensor"
 #endif  // D_STR_SENSOR
+#ifndef D_STR_DISPLAY
+#define D_STR_DISPLAY "Display"
+#endif  // D_STR_DISPLAY
 #ifndef D_STR_WEEKLY
 #define D_STR_WEEKLY "Weekly"
 #endif  // D_STR_WEEKLY
 #ifndef D_STR_WEEKLYTIMER
-#define D_STR_WEEKLYTIMER D_STR_WEEKLY " " D_STR_TIMER
+#define D_STR_WEEKLYTIMER D_STR_WEEKLY " " D_STR_TIMER  // Needs `D_STR_WEEKLY`!
 #endif  // D_STR_WEEKLYTIMER
 #ifndef D_STR_WIFI
 #define D_STR_WIFI "WiFi"
@@ -213,6 +219,9 @@
 #ifndef D_STR_NA
 #define D_STR_NA "N/A"
 #endif  // D_STR_NA
+#ifndef D_STR_INSIDE
+#define D_STR_INSIDE "Inside"
+#endif  // D_STR_INSIDE
 #ifndef D_STR_OUTSIDE
 #define D_STR_OUTSIDE "Outside"
 #endif  // D_STR_OUTSIDE
@@ -322,19 +331,19 @@
 #define D_STR_RIGHT "Right"
 #endif  // D_STR_RIGHT
 #ifndef D_STR_MAXRIGHT
-#define D_STR_MAXRIGHT D_STR_MAX " " D_STR_RIGHT
+#define D_STR_MAXRIGHT D_STR_MAX " " D_STR_RIGHT  // Set `D_STR_MAX` first!
 #endif  // D_STR_MAXRIGHT
 #ifndef D_STR_RIGHTMAX_NOSPACE
-#define D_STR_RIGHTMAX_NOSPACE D_STR_RIGHT D_STR_MAX
+#define D_STR_RIGHTMAX_NOSPACE D_STR_RIGHT D_STR_MAX  // Set `D_STR_MAX` first!
 #endif  // D_STR_RIGHTMAX_NOSPACE
 #ifndef D_STR_LEFT
 #define D_STR_LEFT "Left"
 #endif  // D_STR_LEFT
 #ifndef D_STR_MAXLEFT
-#define D_STR_MAXLEFT D_STR_MAX " " D_STR_LEFT
+#define D_STR_MAXLEFT D_STR_MAX " " D_STR_LEFT  // Set `D_STR_MAX` first!
 #endif  // D_STR_MAXLEFT
 #ifndef D_STR_LEFTMAX_NOSPACE
-#define D_STR_LEFTMAX_NOSPACE D_STR_LEFT D_STR_MAX
+#define D_STR_LEFTMAX_NOSPACE D_STR_LEFT D_STR_MAX  // Set `D_STR_MAX` first!
 #endif  // D_STR_LEFTMAX_NOSPACE
 #ifndef D_STR_WIDE
 #define D_STR_WIDE "Wide"
@@ -349,6 +358,49 @@
 #define D_STR_BOTTOM "Bottom"
 #endif  // D_STR_BOTTOM
 
+// Compound words/phrases/descriptions from pre-defined words.
+// Note: Obviously these need to be defined *after* their component words.
+#ifndef D_STR_ECONOTOGGLE
+#define D_STR_ECONOTOGGLE D_STR_ECONO " " D_STR_TOGGLE
+#endif  // D_STR_ECONOTOGGLE
+#ifndef D_STR_EYEAUTO
+#define D_STR_EYEAUTO D_STR_EYE " " D_STR_AUTO
+#endif  // D_STR_EYEAUTO
+#ifndef D_STR_LIGHTTOGGLE
+#define D_STR_LIGHTTOGGLE D_STR_LIGHT " " D_STR_TOGGLE
+#endif  // D_STR_LIGHTTOGGLE
+#ifndef D_STR_OUTSIDEQUIET
+#define D_STR_OUTSIDEQUIET D_STR_OUTSIDE " " D_STR_QUIET
+#endif  // D_STR_OUTSIDEQUIET
+#ifndef D_STR_POWERTOGGLE
+#define D_STR_POWERTOGGLE D_STR_POWER " " D_STR_TOGGLE
+#endif  // D_STR_POWERTOGGLE
+#ifndef D_STR_POWERBUTTON
+#define D_STR_POWERBUTTON D_STR_POWER " " D_STR_BUTTON
+#endif  // D_STR_POWERBUTTON
+#ifndef D_STR_PREVIOUSPOWER
+#define D_STR_PREVIOUSPOWER D_STR_PREVIOUS " " D_STR_POWER
+#endif  // D_STR_PREVIOUSPOWER
+#ifndef D_STR_DISPLAYTEMP
+#define D_STR_DISPLAYTEMP D_STR_DISPLAY " " D_STR_TEMP
+#endif  // D_STR_DISPLAYTEMP
+#ifndef D_STR_SENSORTEMP
+#define D_STR_SENSORTEMP D_STR_SENSOR " " D_STR_TEMP
+#endif  // D_STR_SENSORTEMP
+#ifndef D_STR_SLEEP_TIMER
+#define D_STR_SLEEP_TIMER D_STR_SLEEP " " D_STR_TIMER
+#endif  // D_STR_SLEEP_TIMER
+#ifndef D_STR_SWINGVMODE
+#define D_STR_SWINGVMODE D_STR_SWINGV " " D_STR_MODE
+#endif  // D_STR_SWINGVMODE
+#ifndef D_STR_SWINGVTOGGLE
+#define D_STR_SWINGVTOGGLE D_STR_SWINGV " " D_STR_TOGGLE
+#endif  // D_STR_SWINGVTOGGLE
+
+// Separators
+#ifndef D_CHR_TIME_SEP
+#define D_CHR_TIME_SEP ':'
+#endif  // D_CHR_TIME_SEP
 #ifndef D_STR_SPACELBRACE
 #define D_STR_SPACELBRACE " ("
 #endif  // D_STR_SPACELBRACE
@@ -359,9 +411,6 @@
 #define D_STR_COLONSPACE ": "
 #endif  // D_STR_COLONSPACE
 
-#ifndef D_CHR_TIME_SEP
-#define D_CHR_TIME_SEP ':'
-#endif  // D_CHR_TIME_SEP
 #ifndef D_STR_DAY
 #define D_STR_DAY "Day"
 #endif  // D_STR_DAY
@@ -416,7 +465,282 @@
 #define D_STR_BITS "Bits"
 #endif  // D_STR_BITS
 
-// IRrecvDumpV2
+// Protocols Names
+#ifndef D_STR_AIRWELL
+#define D_STR_AIRWELL "AIRWELL"
+#endif  // D_STR_AIRWELL
+#ifndef D_STR_AIWA_RC_T501
+#define D_STR_AIWA_RC_T501 "AIWA_RC_T501"
+#endif  // D_STR_AIWA_RC_T501
+#ifndef D_STR_AMCOR
+#define D_STR_AMCOR "AMCOR"
+#endif  // D_STR_AMCOR
+#ifndef D_STR_ARGO
+#define D_STR_ARGO "ARGO"
+#endif  // D_STR_ARGO
+#ifndef D_STR_CARRIER_AC
+#define D_STR_CARRIER_AC "CARRIER_AC"
+#endif  // D_STR_CARRIER_AC
+#ifndef D_STR_CARRIER_AC40
+#define D_STR_CARRIER_AC40 D_STR_CARRIER_AC "40"
+#endif  // D_STR_CARRIER_AC40
+#ifndef D_STR_CARRIER_AC64
+#define D_STR_CARRIER_AC64 D_STR_CARRIER_AC "64"
+#endif  // D_STR_CARRIER_AC64
+#ifndef D_STR_COOLIX
+#define D_STR_COOLIX "COOLIX"
+#endif  // D_STR_COOLIX
+#ifndef D_STR_CORONA_AC
+#define D_STR_CORONA_AC "CORONA_AC"
+#endif  // D_STR_CORONA_AC
+#ifndef D_STR_DAIKIN
+#define D_STR_DAIKIN "DAIKIN"
+#endif  // D_STR_DAIKIN
+#ifndef D_STR_DAIKIN128
+#define D_STR_DAIKIN128 "DAIKIN128"
+#endif  // D_STR_DAIKIN128
+#ifndef D_STR_DAIKIN152
+#define D_STR_DAIKIN152 "DAIKIN152"
+#endif  // D_STR_DAIKIN152
+#ifndef D_STR_DAIKIN160
+#define D_STR_DAIKIN160 "DAIKIN160"
+#endif  // D_STR_DAIKIN160
+#ifndef D_STR_DAIKIN176
+#define D_STR_DAIKIN176 "DAIKIN176"
+#endif  // D_STR_DAIKIN176
+#ifndef D_STR_DAIKIN2
+#define D_STR_DAIKIN2 "DAIKIN2"
+#endif  // D_STR_DAIKIN2
+#ifndef D_STR_DAIKIN216
+#define D_STR_DAIKIN216 "DAIKIN216"
+#endif  // D_STR_DAIKIN216
+#ifndef D_STR_DAIKIN64
+#define D_STR_DAIKIN64 "DAIKIN64"
+#endif  // D_STR_DAIKIN64
+#ifndef D_STR_DELONGHI_AC
+#define D_STR_DELONGHI_AC "DELONGHI_AC"
+#endif  // D_STR_DELONGHI_AC
+#ifndef D_STR_DENON
+#define D_STR_DENON "DENON"
+#endif  // D_STR_DENON
+#ifndef D_STR_DISH
+#define D_STR_DISH "DISH"
+#endif  // D_STR_DISH
+#ifndef D_STR_DOSHISHA
+#define D_STR_DOSHISHA "DOSHISHA"
+#endif  // D_STR_DOSHISHA
+#ifndef D_STR_ELECTRA_AC
+#define D_STR_ELECTRA_AC "ELECTRA_AC"
+#endif  // D_STR_ELECTRA_AC
+#ifndef D_STR_EPSON
+#define D_STR_EPSON "EPSON"
+#endif  // D_STR_EPSON
+#ifndef D_STR_FUJITSU_AC
+#define D_STR_FUJITSU_AC "FUJITSU_AC"
+#endif  // D_STR_FUJITSU_AC
+#ifndef D_STR_GICABLE
+#define D_STR_GICABLE "GICABLE"
+#endif  // D_STR_GICABLE
+#ifndef D_STR_GLOBALCACHE
+#define D_STR_GLOBALCACHE "GLOBALCACHE"
+#endif  // D_STR_GLOBALCACHE
+#ifndef D_STR_GOODWEATHER
+#define D_STR_GOODWEATHER "GOODWEATHER"
+#endif  // D_STR_GOODWEATHER
+#ifndef D_STR_GREE
+#define D_STR_GREE "GREE"
+#endif  // D_STR_GREE
+#ifndef D_STR_HAIER_AC
+#define D_STR_HAIER_AC "HAIER_AC"
+#endif  // D_STR_HAIER_AC
+#ifndef D_STR_HAIER_AC_YRW02
+#define D_STR_HAIER_AC_YRW02 "HAIER_AC_YRW02"
+#endif  // D_STR_HAIER_AC_YRW02
+#ifndef D_STR_HITACHI_AC
+#define D_STR_HITACHI_AC "HITACHI_AC"
+#endif  // D_STR_HITACHI_AC
+#ifndef D_STR_HITACHI_AC1
+#define D_STR_HITACHI_AC1 "HITACHI_AC1"
+#endif  // D_STR_HITACHI_AC1
+#ifndef D_STR_HITACHI_AC2
+#define D_STR_HITACHI_AC2 "HITACHI_AC2"
+#endif  // D_STR_HITACHI_AC2
+#ifndef D_STR_HITACHI_AC3
+#define D_STR_HITACHI_AC3 "HITACHI_AC3"
+#endif  // D_STR_HITACHI_AC3
+#ifndef D_STR_HITACHI_AC344
+#define D_STR_HITACHI_AC344 "HITACHI_AC344"
+#endif  // D_STR_HITACHI_AC344
+#ifndef D_STR_HITACHI_AC424
+#define D_STR_HITACHI_AC424 "HITACHI_AC424"
+#endif  // D_STR_HITACHI_AC424
+#ifndef D_STR_INAX
+#define D_STR_INAX "INAX"
+#endif  // D_STR_INAX
+#ifndef D_STR_JVC
+#define D_STR_JVC "JVC"
+#endif  // D_STR_JVC
+#ifndef D_STR_KELVINATOR
+#define D_STR_KELVINATOR "KELVINATOR"
+#endif  // D_STR_KELVINATOR
+#ifndef D_STR_LASERTAG
+#define D_STR_LASERTAG "LASERTAG"
+#endif  // D_STR_LASERTAG
+#ifndef D_STR_LEGOPF
+#define D_STR_LEGOPF "LEGOPF"
+#endif  // D_STR_LEGOPF
+#ifndef D_STR_LG
+#define D_STR_LG "LG"
+#endif  // D_STR_LG
+#ifndef D_STR_LG2
+#define D_STR_LG2 "LG2"
+#endif  // D_STR_LG2
+#ifndef D_STR_LUTRON
+#define D_STR_LUTRON "LUTRON"
+#endif  // D_STR_LUTRON
+#ifndef D_STR_MAGIQUEST
+#define D_STR_MAGIQUEST "MAGIQUEST"
+#endif  // D_STR_MAGIQUEST
+#ifndef D_STR_MIDEA
+#define D_STR_MIDEA "MIDEA"
+#endif  // D_STR_MIDEA
+#ifndef D_STR_MIDEA24
+#define D_STR_MIDEA24 "MIDEA24"
+#endif  // D_STR_MIDEA24
+#ifndef D_STR_MITSUBISHI
+#define D_STR_MITSUBISHI "MITSUBISHI"
+#endif  // D_STR_MITSUBISHI
+#ifndef D_STR_MITSUBISHI112
+#define D_STR_MITSUBISHI112 "MITSUBISHI112"
+#endif  // D_STR_MITSUBISHI112
+#ifndef D_STR_MITSUBISHI136
+#define D_STR_MITSUBISHI136 "MITSUBISHI136"
+#endif  // D_STR_MITSUBISHI136
+#ifndef D_STR_MITSUBISHI2
+#define D_STR_MITSUBISHI2 "MITSUBISHI2"
+#endif  // D_STR_MITSUBISHI2
+#ifndef D_STR_MITSUBISHI_AC
+#define D_STR_MITSUBISHI_AC "MITSUBISHI_AC"
+#endif  // D_STR_MITSUBISHI_AC
+#ifndef D_STR_MITSUBISHI_HEAVY_152
+#define D_STR_MITSUBISHI_HEAVY_152 "MITSUBISHI_HEAVY_152"
+#endif  // D_STR_MITSUBISHI_HEAVY_152
+#ifndef D_STR_MITSUBISHI_HEAVY_88
+#define D_STR_MITSUBISHI_HEAVY_88 "MITSUBISHI_HEAVY_88"
+#endif  // D_STR_MITSUBISHI_HEAVY_88
+#ifndef D_STR_MULTIBRACKETS
+#define D_STR_MULTIBRACKETS "MULTIBRACKETS"
+#endif  // D_STR_MULTIBRACKETS
+#ifndef D_STR_MWM
+#define D_STR_MWM "MWM"
+#endif  // D_STR_MWM
+#ifndef D_STR_NEC
+#define D_STR_NEC "NEC"
+#endif  // D_STR_NEC
+#ifndef D_STR_NEC_LIKE
+#define D_STR_NEC_LIKE D_STR_NEC "_LIKE"
+#endif  // D_STR_NEC_LIKE
+#ifndef D_STR_NEC_NON_STRICT
+#define D_STR_NEC_NON_STRICT D_STR_NEC " (NON-STRICT)"
+#endif  // D_STR_NEC_NON_STRICT
+#ifndef D_STR_NEOCLIMA
+#define D_STR_NEOCLIMA "NEOCLIMA"
+#endif  // D_STR_NEOCLIMA
+#ifndef D_STR_NIKAI
+#define D_STR_NIKAI "NIKAI"
+#endif  // D_STR_NIKAI
+#ifndef D_STR_PANASONIC
+#define D_STR_PANASONIC "PANASONIC"
+#endif  // D_STR_PANASONIC
+#ifndef D_STR_PANASONIC_AC
+#define D_STR_PANASONIC_AC "PANASONIC_AC"
+#endif  // D_STR_PANASONIC_AC
+#ifndef D_STR_PIONEER
+#define D_STR_PIONEER "PIONEER"
+#endif  // D_STR_PIONEER
+#ifndef D_STR_PRONTO
+#define D_STR_PRONTO "PRONTO"
+#endif  // D_STR_PRONTO
+#ifndef D_STR_RAW
+#define D_STR_RAW "RAW"
+#endif  // D_STR_RAW
+#ifndef D_STR_RC5
+#define D_STR_RC5 "RC5"
+#endif  // D_STR_RC5
+#ifndef D_STR_RC5X
+#define D_STR_RC5X "RC5X"
+#endif  // D_STR_RC5X
+#ifndef D_STR_RC6
+#define D_STR_RC6 "RC6"
+#endif  // D_STR_RC6
+#ifndef D_STR_RCMM
+#define D_STR_RCMM "RCMM"
+#endif  // D_STR_RCMM
+#ifndef D_STR_SAMSUNG
+#define D_STR_SAMSUNG "SAMSUNG"
+#endif  // D_STR_SAMSUNG
+#ifndef D_STR_SAMSUNG36
+#define D_STR_SAMSUNG36 "SAMSUNG36"
+#endif  // D_STR_SAMSUNG36
+#ifndef D_STR_SAMSUNG_AC
+#define D_STR_SAMSUNG_AC "SAMSUNG_AC"
+#endif  // D_STR_SAMSUNG_AC
+#ifndef D_STR_SANYO
+#define D_STR_SANYO "SANYO"
+#endif  // D_STR_SANYO
+#ifndef D_STR_SANYO_AC
+#define D_STR_SANYO_AC "SANYO_AC"
+#endif  // D_STR_SANYO_AC
+#ifndef D_STR_SANYO_LC7461
+#define D_STR_SANYO_LC7461 "SANYO_LC7461"
+#endif  // D_STR_SANYO_LC7461
+#ifndef D_STR_SHARP
+#define D_STR_SHARP "SHARP"
+#endif  // D_STR_SHARP
+#ifndef D_STR_SHARP_AC
+#define D_STR_SHARP_AC "SHARP_AC"
+#endif  // D_STR_SHARP_AC
+#ifndef D_STR_SHERWOOD
+#define D_STR_SHERWOOD "SHERWOOD"
+#endif  // D_STR_SHERWOOD
+#ifndef D_STR_SONY
+#define D_STR_SONY "SONY"
+#endif  // D_STR_SONY
+#ifndef D_STR_SONY_38K
+#define D_STR_SONY_38K "SONY_38K"
+#endif  // D_STR_SONY_38K
+#ifndef D_STR_SYMPHONY
+#define D_STR_SYMPHONY "SYMPHONY"
+#endif  // D_STR_SYMPHONY
+#ifndef D_STR_TCL112AC
+#define D_STR_TCL112AC "TCL112AC"
+#endif  // D_STR_TCL112AC
+#ifndef D_STR_TECO
+#define D_STR_TECO "TECO"
+#endif  // D_STR_TECO
+#ifndef D_STR_TOSHIBA_AC
+#define D_STR_TOSHIBA_AC "TOSHIBA_AC"
+#endif  // D_STR_TOSHIBA_AC
+#ifndef D_STR_TROTEC
+#define D_STR_TROTEC "TROTEC"
+#endif  // D_STR_TROTEC
+#ifndef D_STR_UNUSED
+#define D_STR_UNUSED "UNUSED"
+#endif  // D_STR_UNUSED
+#ifndef D_STR_VESTEL_AC
+#define D_STR_VESTEL_AC "VESTEL_AC"
+#endif  // D_STR_VESTEL_AC
+#ifndef D_STR_WHIRLPOOL_AC
+#define D_STR_WHIRLPOOL_AC "WHIRLPOOL_AC"
+#endif  // D_STR_WHIRLPOOL_AC
+#ifndef D_STR_WHYNTER
+#define D_STR_WHYNTER "WHYNTER"
+#endif  // D_STR_WHYNTER
+#ifndef D_STR_ZEPEAL
+#define D_STR_ZEPEAL "ZEPEAL"
+#endif  // D_STR_ZEPEAL
+
+// IRrecvDumpV2+
 #ifndef D_STR_TIMESTAMP
 #define D_STR_TIMESTAMP "Timestamp"
 #endif  // D_STR_TIMESTAMP
@@ -428,7 +752,7 @@
 #endif  // D_STR_MESGDESC
 #ifndef D_STR_IRRECVDUMP_STARTUP
 #define D_STR_IRRECVDUMP_STARTUP \
-    "IRrecvDumpV2 is now running and waiting for IR input on Pin %d"
+    "IRrecvDump is now running and waiting for IR input on Pin %d"
 #endif  // D_STR_IRRECVDUMP_STARTUP
 #ifndef D_WARN_BUFFERFULL
 #define D_WARN_BUFFERFULL \

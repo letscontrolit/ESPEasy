@@ -1,0 +1,38 @@
+#######################################
+# Syntax Coloring Map for SC16IS752
+# (esp8266)
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SC16IS752	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin KEYWORD2
+beginA KEYWORD2
+beginB KEYWORD2
+read KEYWORD2
+write KEYWORD2
+available KEYWORD2
+pinMode KEYWORD2
+digitalWrite KEYWORD2
+digitalRead KEYWORD2
+ping KEYWORD2
+peek KEYWORD2
+flush KEYWORD2
+GPIOGetPortState KEYWORD2
+InterruptPendingTest KEYWORD2
+SetPinInterrupt KEYWORD2
+InterruptControl KEYWORD2
+ModemPin KEYWORD2
+GPIOLatch KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+

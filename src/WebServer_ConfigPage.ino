@@ -1,6 +1,8 @@
 
 #ifdef WEBSERVER_CONFIG
 
+#include "src/Helpers/DeepSleep.h"
+
 // ********************************************************************************
 // Web Interface config page
 // ********************************************************************************
@@ -13,32 +15,38 @@ void handle_config() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  if (WebServer.args() != 0)
+  if (web_server.args() != 0)
   {
-    String name = WebServer.arg(F("name"));
+    String name = web_server.arg(F("name"));
     name.trim();
 
-    // String password = WebServer.arg(F("password"));
-    String iprangelow  = WebServer.arg(F("iprangelow"));
-    String iprangehigh = WebServer.arg(F("iprangehigh"));
+    // String password = web_server.arg(F("password"));
+    String iprangelow  = web_server.arg(F("iprangelow"));
+    String iprangehigh = web_server.arg(F("iprangehigh"));
 
     Settings.Delay              = getFormItemInt(F("delay"), Settings.Delay);
     Settings.deepSleep_wakeTime = getFormItemInt(F("awaketime"), Settings.deepSleep_wakeTime);
-    String espip      = WebServer.arg(F("espip"));
-    String espgateway = WebServer.arg(F("espgateway"));
-    String espsubnet  = WebServer.arg(F("espsubnet"));
-    String espdns     = WebServer.arg(F("espdns"));
+    String espip      = web_server.arg(F("espip"));
+    String espgateway = web_server.arg(F("espgateway"));
+    String espsubnet  = web_server.arg(F("espsubnet"));
+    String espdns     = web_server.arg(F("espdns"));
+#ifdef HAS_ETHERNET
+    String espethip      = web_server.arg(F("espethip"));
+    String espethgateway = web_server.arg(F("espethgateway"));
+    String espethsubnet  = web_server.arg(F("espethsubnet"));
+    String espethdns     = web_server.arg(F("espethdns"));
+#endif
     Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
 
-    // String apkey = WebServer.arg(F("apkey"));
-    String ssid = WebServer.arg(F("ssid"));
+    // String apkey = web_server.arg(F("apkey"));
+    String ssid = web_server.arg(F("ssid"));
 
     if (strcmp(Settings.Name, name.c_str()) != 0) {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
 
-      if (CPluginCall(CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
+      if (CPluginCall(CPlugin::Function::CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
 #ifdef USES_MQTT
-        MQTTDisconnect();                        // disconnect form MQTT Server if invalid message was sent succesfull.
+        MQTTDisconnect();                                           // disconnect form MQTT Server if invalid message was sent succesfull.
 #endif // USES_MQTT
       }
 #ifdef USES_MQTT
@@ -96,6 +104,12 @@ void handle_config() {
     str2ip(espgateway, Settings.Gateway);
     str2ip(espsubnet,  Settings.Subnet);
     str2ip(espdns,     Settings.DNS);
+#ifdef HAS_ETHERNET
+    str2ip(espethip,      Settings.ETH_IP);
+    str2ip(espethgateway, Settings.ETH_Gateway);
+    str2ip(espethsubnet,  Settings.ETH_Subnet);
+    str2ip(espethdns,     Settings.ETH_DNS);
+#endif
     addHtmlError(SaveSettings());
   }
 
@@ -137,13 +151,23 @@ void handle_config() {
     addFormIPBox(F("Access IP upper range"), F("iprangehigh"), iphigh);
   }
 
-  addFormSubHeader(F("IP Settings"));
+  addFormSubHeader(F("WiFi IP Settings"));
 
-  addFormIPBox(F("ESP IP"),         F("espip"),      Settings.IP);
-  addFormIPBox(F("ESP GW"),         F("espgateway"), Settings.Gateway);
-  addFormIPBox(F("ESP Subnetmask"), F("espsubnet"),  Settings.Subnet);
-  addFormIPBox(F("ESP DNS"),        F("espdns"),     Settings.DNS);
+  addFormIPBox(F("ESP WiFi IP"),         F("espip"),      Settings.IP);
+  addFormIPBox(F("ESP WiFi Gateway"),    F("espgateway"), Settings.Gateway);
+  addFormIPBox(F("ESP WiFi Subnetmask"), F("espsubnet"),  Settings.Subnet);
+  addFormIPBox(F("ESP WiFi DNS"),        F("espdns"),     Settings.DNS);
   addFormNote(F("Leave empty for DHCP"));
+
+#ifdef HAS_ETHERNET
+  addFormSubHeader(F("Ethernet IP Settings"));
+
+  addFormIPBox(F("ESP Ethernet IP"),         F("espethip"),      Settings.ETH_IP);
+  addFormIPBox(F("ESP Ethernet Gateway"),    F("espethgateway"), Settings.ETH_Gateway);
+  addFormIPBox(F("ESP Ethernet Subnetmask"), F("espethsubnet"),  Settings.ETH_Subnet);
+  addFormIPBox(F("ESP Ethernet DNS"),        F("espethdns"),     Settings.ETH_DNS);
+  addFormNote(F("Leave empty for DHCP"));
+#endif
 
 
   addFormSubHeader(F("Sleep Mode"));

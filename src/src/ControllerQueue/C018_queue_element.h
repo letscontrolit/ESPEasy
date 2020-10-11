@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/ESPEasyLimits.h"
+#include "../Globals/CPlugins.h"
+
 
 struct EventStruct;
 
@@ -18,12 +20,13 @@ public:
 
   C018_queue_element();
 
-  C018_queue_element(struct EventStruct *event, uint8_t sampleSetCount);
+  C018_queue_element(struct EventStruct *event,
+                     uint8_t             sampleSetCount);
 
   size_t getSize() const;
 
-  int controller_idx = 0;
   String packed;
+  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
 };
 
 // #endif //USES_C018

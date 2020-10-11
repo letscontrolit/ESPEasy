@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C016
 //#######################################################################################################
 //########################### Controller Plugin 016: Controller - Cache #################################
@@ -16,13 +17,15 @@ Typical sample sets contain:
 These are the result of any plugin sending data to this controller.
 
 The controller can save the samples from RTC memory to several places on the flash:
-- Files on SPIFFS
+- Files on FS
 - Part reserved for OTA update (TODO)
 - Unused flash after the partitioned space (TODO)
 
 The controller can deliver the data to:
 <TODO>
 */
+
+#include "src/DataStructs/ESPEasyControllerCache.h"
 
 #define CPLUGIN_016
 #define CPLUGIN_ID_016         16
@@ -31,13 +34,13 @@ The controller can deliver the data to:
 
 ControllerCache_struct ControllerCache;
 
-bool CPlugin_016(byte function, struct EventStruct *event, String& string)
+bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_016;
         Protocol[protocolCount].usesMQTT = false;
@@ -49,65 +52,77 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
         Protocol[protocolCount].usesHost = false;
         Protocol[protocolCount].usesPort = false;
         Protocol[protocolCount].usesSampleSets = false;
+        Protocol[protocolCount].needsNetwork = false;
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_016);
         break;
       }
 
-    case CPLUGIN_INIT:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        C016_DelayHandler.configureControllerSettings(ControllerSettings);
+        success = init_c016_delay_queue(event->ControllerIndex);
         ControllerCache.init();
         break;
       }
 
-    case CPLUGIN_WEBFORM_LOAD:
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c016_delay_queue();
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
       {
 
         break;
       }
 
-    case CPLUGIN_WEBFORM_SAVE:
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
       {
 
         break;
       }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = "";
         event->String2 = "";
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
       {
         // Collect the values at the same run, to make sure all are from the same sample
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C016_queue_element element(event, valueCount, getUnixTime());
+        byte valueCount = getValueCountForTask(event->TaskIndex);
+        C016_queue_element element(event, valueCount, node_time.getUnixTime());
         success = ControllerCache.write((uint8_t*)&element, sizeof(element));
 
 /*
+        if (C016_DelayHandler == nullptr) {
+          break;
+        }
+
         MakeControllerSettings(ControllerSettings);
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-        success = C016_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C016_DELAY_QUEUE, C016_DelayHandler.getNextScheduleTime());
+        success = C016_DelayHandler->addToQueue(element);
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C016_DELAY_QUEUE, C016_DelayHandler->getNextScheduleTime());
 */
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         process_c016_delay_queue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
   }
   return success;
@@ -118,7 +133,10 @@ bool CPlugin_016(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Process the data from the cache
 //********************************************************************************
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   return true;
@@ -152,7 +170,7 @@ bool C016_getCSVline(
   unsigned long& timestamp,
   byte& controller_idx,
   byte& TaskIndex,
-  byte& sensorType,
+  Sensor_VType& sensorType,
   byte& valueCount,
   float& val1,
   float& val2,

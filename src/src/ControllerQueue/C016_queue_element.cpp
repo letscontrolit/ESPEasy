@@ -1,9 +1,12 @@
 #include "../ControllerQueue/C016_queue_element.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../Globals/Plugins.h"
 #include "../../ESPEasy_fdwdecl.h"
 
-C016_queue_element::C016_queue_element() : timestamp(0), TaskIndex(INVALID_TASK_INDEX), controller_idx(0), sensorType(0) {}
+
+C016_queue_element::C016_queue_element() : timestamp(0), TaskIndex(INVALID_TASK_INDEX), controller_idx(0), sensorType(
+    Sensor_VType::SENSOR_TYPE_NONE) {}
 
 C016_queue_element::C016_queue_element(const struct EventStruct *event, byte value_count, unsigned long unixTime) :
   timestamp(unixTime),
@@ -12,13 +15,11 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, byte val
   sensorType(event->sensorType),
   valueCount(value_count)
 {
-  const byte BaseVarIndex = TaskIndex * VARS_PER_TASK;
-
   for (byte i = 0; i < VARS_PER_TASK; ++i) {
     if (i < value_count) {
-      values[i] = getUserVar(BaseVarIndex + i);
+      values[i] = UserVar[event->BaseVarIndex + i];
     } else {
-      values[i] = 0.0;
+      values[i] = 0.0f;
     }
   }
 }

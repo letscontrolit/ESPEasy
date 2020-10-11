@@ -1,4 +1,4 @@
-// Quick and dirty tool to decode GlobalCache (GC) codes
+// Quick and dirty tool to decode Raw Codes, GlobalCache (GC) codes
 // and ProntoHex codes
 // Copyright 2017 Jorge Cisneros
 
@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include "IRac.h"
 #include "IRsend.h"
 #include "IRsend_test.h"
 #include "IRutils.h"
@@ -24,30 +25,53 @@ void str_to_uint16(char *str, uint16_t *res, uint8_t base) {
 }
 
 void usage_error(char *name) {
-  std::cerr << "Usage: " << name << " [-raw] <global_code>" << std::endl
-            << "Usage: " << name << " -prontohex [-raw] <prontohex_code>"
-            << std::endl;
+  std::cerr << "Usage: " << name << " [-gc] [-rawdump] <global_code>"
+            << std::endl
+            << "Usage: " << name
+            << " -prontohex [-rawdump] [-repeats num] <prontohex_code>"
+            << std::endl
+            << "Usage: " << name << " -raw [-rawdump] <raw_code>" << std::endl;
 }
 
 int main(int argc, char *argv[]) {
   int argv_offset = 1;
+  int repeats = 0;
   bool dumpraw = false;
-  bool prontohex = false;
-
+  enum decode_type_t input_type = GLOBALCACHE;
+  const uint16_t raw_freq = 38;
   // Check the invocation/calling usage.
-  if (argc < 2 || argc > 4) {
+  if (argc < 2 || argc > 6) {
     usage_error(argv[0]);
     return 1;
   }
-  if (strncmp("-prontohex", argv[argv_offset], 10) == 0) {
-    prontohex = true;
+  if (strncmp("-gc", argv[argv_offset], 3) == 0) {
+    argv_offset++;
+  } else if (strncmp("-prontohex", argv[argv_offset], 10) == 0) {
+    input_type = PRONTO;
+    argv_offset++;
+  } else if (strncmp("-raw", argv[argv_offset], 4) == 0) {
+    input_type = RAW;
     argv_offset++;
   }
 
-  if (strncmp("-raw", argv[argv_offset], 4) == 0) {
+  if (strncmp("-rawdump", argv[argv_offset], 8) == 0) {
     dumpraw = true;
     argv_offset++;
   }
+
+  if (input_type == PRONTO && strncmp("-repeats", argv[argv_offset], 8) == 0) {
+    argv_offset++;
+    if (argc - argv_offset <= 1) {
+      usage_error(argv[0]);
+      return 1;
+    }
+    repeats = atoi(argv[argv_offset++]);
+    if (repeats < 0) {
+      usage_error(argv[0]);
+      return 1;
+    }
+  }
+
   if (argc - argv_offset != 1) {
     usage_error(argv[0]);
     return 1;
@@ -59,8 +83,7 @@ int main(int argc, char *argv[]) {
   char *saveptr1;
   char *sep = const_cast<char *>(",");
   int codebase = 10;
-
-  if (prontohex) {
+  if (input_type == PRONTO) {
     sep = const_cast<char *>(" ");
     codebase = 16;
   }
@@ -72,15 +95,23 @@ int main(int argc, char *argv[]) {
     index++;
   }
 
-  IRsendTest irsend(4);
-  IRrecv irrecv(4);
+  IRsendTest irsend(0);
+  IRrecv irrecv(0);
   irsend.begin();
   irsend.reset();
 
-  if (prontohex) {
-    irsend.sendPronto(gc_test, index);
-  } else {
-    irsend.sendGC(gc_test, index);
+  switch (input_type) {
+    case GLOBALCACHE:
+      irsend.sendGC(gc_test, index);
+      break;
+    case PRONTO:
+      irsend.sendPronto(gc_test, index, repeats);
+      break;
+    case RAW:
+      irsend.sendRaw(gc_test, index, raw_freq);
+      break;
+    default:
+      break;
   }
   irsend.makeDecodeResult();
   irrecv.decode(&irsend.capture);
@@ -94,6 +125,10 @@ int main(int argc, char *argv[]) {
     for (uint16_t i = 0; i < irsend.capture.bits / 8; i++)
       printf("%02X", irsend.capture.state[i]);
     std::cout << std::endl;
+    String description = IRAcUtils::resultAcToString(&irsend.capture);
+    if (description.length()) {
+      std::cout << "Msg Description: " << description.c_str() << std::endl;
+    }
   } else {
     std::cout << "Code value     0x" << std::hex << irsend.capture.value
               << std::endl

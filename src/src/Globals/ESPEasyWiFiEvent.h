@@ -5,11 +5,15 @@
 #include <IPAddress.h>
 #include <stdint.h>
 
+#include "../Helpers/LongTermTimer.h"
+
 // WifiStatus
 #define ESPEASY_WIFI_DISCONNECTED            0
-#define ESPEASY_WIFI_CONNECTED               1
-#define ESPEASY_WIFI_GOT_IP                  2
-#define ESPEASY_WIFI_SERVICES_INITIALIZED    4
+
+// Bit numbers for WiFi status
+#define ESPEASY_WIFI_CONNECTED               0
+#define ESPEASY_WIFI_GOT_IP                  1
+#define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
 
 extern unsigned long connectionFailures;
@@ -17,6 +21,8 @@ extern unsigned long connectionFailures;
 
 #ifdef ESP32
 # include <esp_event.h>
+# include <WiFiGeneric.h>
+# include <WiFiType.h>
 
 
 enum WiFiDisconnectReason
@@ -54,6 +60,7 @@ enum WiFiDisconnectReason
 
 void WiFiEvent(system_event_id_t   event,
                system_event_info_t info);
+extern WiFiEventId_t wm_event_id;
 #endif // ifdef ESP32
 
 #ifdef ESP8266
@@ -73,30 +80,29 @@ extern WiFiEventHandler APModeStationDisconnectedHandler;
 // WiFi related data
 extern bool wifiSetup;
 extern bool wifiSetupConnect;
-extern uint8_t lastBSSID[6];
 extern uint8_t wifiStatus;
-extern unsigned long last_wifi_connect_attempt_moment;
+extern LongTermTimer last_wifi_connect_attempt_moment;
 extern unsigned int  wifi_connect_attempt;
-extern int wifi_reconnects; // First connection attempt is not a reconnect.
-extern uint8_t lastWiFiSettings;
-extern String  last_ssid;
-extern bool    bssid_changed;
-extern bool    channel_changed;
-extern uint8_t last_channel;
+extern bool   wifi_considered_stable;
+extern int    wifi_reconnects; // First connection attempt is not a reconnect.
+extern String last_ssid;
+extern bool   bssid_changed;
+extern bool   channel_changed;
+
 extern WiFiDisconnectReason lastDisconnectReason;
-extern unsigned long lastConnectMoment;
-extern unsigned long lastDisconnectMoment;
-extern unsigned long lastGetIPmoment;
-extern unsigned long lastGetScanMoment;
-extern unsigned long lastConnectedDuration;
+extern LongTermTimer lastConnectMoment;
+extern LongTermTimer lastDisconnectMoment;
+extern LongTermTimer lastWiFiResetMoment;
+extern LongTermTimer lastGetIPmoment;
+extern LongTermTimer lastGetScanMoment;
+extern LongTermTimer::Duration lastConnectedDuration_us;
+extern LongTermTimer timerAPoff;   // Timer to check whether the AP mode should be disabled (0 = disabled)
+extern LongTermTimer timerAPstart; // Timer to start AP mode, started when no valid network is detected.
+
 extern bool intent_to_reboot;
 extern uint8_t lastMacConnectedAPmode[6];
 extern uint8_t lastMacDisconnectedAPmode[6];
 
-// uint32_t scan_done_status = 0;
-extern uint8_t scan_done_number;
-
-// uint8_t  scan_done_scan_id = 0;
 
 // Semaphore like bools for processing data gathered from WiFi events.
 extern volatile bool processedConnect;

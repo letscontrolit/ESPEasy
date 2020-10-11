@@ -77,7 +77,7 @@
 // Device is automatically set to Power Down after measurement.
 #define BH1750_ONE_TIME_LOW_RES_MODE  0x23
 
-#define MAX_U_LONG 4294967295;
+#define MAX_U_LONG 4294967295
 
 /** Virtual Modi */
 typedef enum
@@ -89,7 +89,12 @@ typedef enum
   }  
   sensors_resolution_t;
 
+#ifdef ESP32
+typedef void (*DelayFuncPtr)(uint32_t);
+#endif
+#ifdef ESP8266
 typedef void (*DelayFuncPtr)(unsigned long);
+#endif
 typedef unsigned long (*TimeFuncPtr)(void);
 
 /**
@@ -192,8 +197,8 @@ private:
   
   TimeFuncPtr _fTimePtr;
   int _stage = 0;
-  int _nextDelay = 0;
-  int _lastTimestamp = 0;
+  unsigned long _nextDelay = 0;
+  unsigned long _lastTimestamp = 0;
   float _lastResult = -100;
   bool delayExpired();
   void selectAutoMode();

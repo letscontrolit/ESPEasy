@@ -12,7 +12,7 @@
  *       A compatible IR RX modules SHOULD be connected to ESP
  *       if you want to capture & decode IR nessages. e.g. GPIO14 (D5)
  *       See 'IR_RX' in IRMQTTServer.h.
- *       GPIOs are configurable from the http://<your_esp8266's_ip_address>/gpio
+ *       GPIOs are configurable from the http://<your_esp's_ip_address>/gpio
  *       page.
  *
  * WARN: This is *very* advanced & complicated example code. Not for beginners.
@@ -56,25 +56,25 @@
  *   https://github.com/tzapu/WiFiManager#how-it-works
  *
  * If you need to reset the WiFi and saved settings to go back to "First Boot",
- * visit:  http://<your_esp8266's_ip_address>/reset
+ * visit:  http://<your_esp's_ip_address>/reset
  *
  * ## Normal Use (After initial setup)
- * Enter 'http://<your_esp8266's_ip_address/' in your browser & follow the
+ * Enter 'http://<your_esp's_ip_address/' in your browser & follow the
  * instructions there to send IR codes via HTTP/HTML.
- * Visit the http://<your_esp8266's_ip_address>/gpio page to configure the GPIOs
+ * Visit the http://<your_esp's_ip_address>/gpio page to configure the GPIOs
  * for the IR LED(s) and/or IR RX demodulator.
  *
  * You can send URLs like the following, with similar data type limitations as
  * the MQTT formating in the next section. e.g:
- *   http://<your_esp8266's_ip_address>/ir?type=7&code=E0E09966
- *   http://<your_esp8266's_ip_address>/ir?type=4&code=0xf50&bits=12
- *   http://<your_esp8266's_ip_address>/ir?code=C1A2E21D&repeats=8&type=19
- *   http://<your_esp8266's_ip_address>/ir?type=31&code=40000,1,1,96,24,24,24,48,24,24,24,24,24,48,24,24,24,24,24,48,24,24,24,24,24,24,24,24,1058
- *   http://<your_esp8266's_ip_address>/ir?type=18&code=190B8050000000E0190B8070000010f0
- *   http://<your_esp8266's_ip_address>/ir?repeats=1&type=25&code=0000,006E,0022,0002,0155,00AA,0015,0040,0015,0040,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0040,0015,0040,0015,0015,0015,0040,0015,0015,0015,0015,0015,0015,0015,0040,0015,0015,0015,0015,0015,0040,0015,0040,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0040,0015,0015,0015,0015,0015,0040,0015,0040,0015,0040,0015,0040,0015,0040,0015,0640,0155,0055,0015,0E40
+ *   http://<your_esp's_ip_address>/ir?type=7&code=E0E09966
+ *   http://<your_esp's_ip_address>/ir?type=4&code=0xf50&bits=12
+ *   http://<your_esp's_ip_address>/ir?code=C1A2E21D&repeats=8&type=19
+ *   http://<your_esp's_ip_address>/ir?type=31&code=40000,1,1,96,24,24,24,48,24,24,24,24,24,48,24,24,24,24,24,48,24,24,24,24,24,24,24,24,1058
+ *   http://<your_esp's_ip_address>/ir?type=18&code=190B8050000000E0190B8070000010f0
+ *   http://<your_esp's_ip_address>/ir?repeats=1&type=25&code=0000,006E,0022,0002,0155,00AA,0015,0040,0015,0040,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0040,0015,0040,0015,0015,0015,0040,0015,0015,0015,0015,0015,0015,0015,0040,0015,0015,0015,0015,0015,0040,0015,0040,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0040,0015,0015,0015,0015,0015,0040,0015,0040,0015,0040,0015,0040,0015,0040,0015,0640,0155,0055,0015,0E40
  * If you have enabled more than 1 TX GPIO, you can use the "channel" argument:
- *   http://<your_esp8266's_ip_address>/ir?channel=0&type=7&code=E0E09966
- *   http://<your_esp8266's_ip_address>/ir?channel=1&type=7&code=E0E09966
+ *   http://<your_esp's_ip_address>/ir?channel=0&type=7&code=E0E09966
+ *   http://<your_esp's_ip_address>/ir?channel=1&type=7&code=E0E09966
  *
  * or
  *
@@ -241,20 +241,20 @@
  *       - "dry"
  *       - "fan_only"
  *     fan_modes:
- *       - "auto"
- *       - "min"
- *       - "low"
- *       - "medium"
- *       - "high"
- *       - "max"
+ *       - "Auto"
+ *       - "Min"
+ *       - "Low"
+ *       - "Medium"
+ *       - "High"
+ *       - "Max"
  *     swing_modes:
- *       - "off"
- *       - "auto"
- *       - "highest"
- *       - "high"
- *       - "middle"
- *       - "low"
- *       - "lowest"
+ *       - "Off"
+ *       - "Auto"
+ *       - "Highest"
+ *       - "High"
+ *       - "Middle"
+ *       - "Low"
+ *       - "Lowest"
  *     power_command_topic: "ir_server/ac/cmnd/power"
  *     mode_command_topic: "ir_server/ac/cmnd/mode"
  *     mode_state_topic: "ir_server/ac/stat/mode"
@@ -271,7 +271,7 @@
  *
  * #### Home Assistant MQTT Discovery
  *   There is an option for this: 'Send MQTT Discovery' under the 'Admin' menu.
- *   It will produce a single MQTT Cliamte Discovery message for Home Assistant
+ *   It will produce a single MQTT Climate Discovery message for Home Assistant
  *   provided you have everything configured correctly here and in HA.
  *   This message has MQTT RETAIN set on it, so it only ever needs to be sent
  *   once or if the config details change etc.
@@ -284,13 +284,13 @@
  *   first TX GPIO climate. You will need to manually configure the others.
  *
  * ### via HTTP:
- *   Use the "http://<your_esp8266's_ip_address>/aircon/set" URL and pass on
+ *   Use the "http://<your_esp's_ip_address>/aircon/set" URL and pass on
  *   the arguments as needed to control your device. See the `KEY_*` #defines
  *   in the code for all the parameters.
  *   i.e. protocol, model, power, mode, temp, fanspeed, swingv, swingh, quiet,
  *        turbo, light, beep, econo, sleep, filter, clean, use_celsius, channel
  *   Example:
- *     http://<your_esp8266's_ip_address>/aircon/set?channel=0&protocol=PANASONIC_AC&model=LKE&power=on&mode=auto&fanspeed=min&temp=23
+ *     http://<your_esp's_ip_address>/aircon/set?channel=0&protocol=PANASONIC_AC&model=LKE&power=on&mode=auto&fanspeed=min&temp=23
  *
  *   NOTE: If you don't set the channel, the first GPIO (Channel 0) is used.
  *
@@ -353,16 +353,22 @@
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRsend.h>
+#include <IRtext.h>
 #include <IRtimer.h>
 #include <IRutils.h>
 #include <IRac.h>
 #if MQTT_ENABLE
+#include <PubSubClient.h>
 // --------------------------------------------------------------------
 // * * * IMPORTANT * * *
 // You must change <PubSubClient.h> to have the following value.
 // #define MQTT_MAX_PACKET_SIZE 768
 // --------------------------------------------------------------------
-#include <PubSubClient.h>
+// Check that the user has set MQTT_MAX_PACKET_SIZE to an appropriate size.
+#if MQTT_MAX_PACKET_SIZE < 768
+#error "MQTT_MAX_PACKET_SIZE in <PubSubClient.h> is too small. "\
+  "Increase the value per comments."
+#endif  // MQTT_MAX_PACKET_SIZE < 768
 #endif  // MQTT_ENABLE
 #include <algorithm>  // NOLINT(build/include)
 #include <memory>
@@ -448,6 +454,7 @@ String MqttClimate;  // Sub-topic for the climate topics.
 String MqttClimateCmnd;  // Sub-topic for the climate command topics.
 #if MQTT_DISCOVERY_ENABLE
 String MqttDiscovery;
+String MqttUniqueId;
 #endif  // MQTT_DISCOVERY_ENABLE
 String MqttHAName;
 String MqttClientId;
@@ -620,7 +627,7 @@ bool loadConfigFile(void) {
 
 String timeElapsed(uint32_t const msec) {
   String result = msToString(msec);
-  if (result.equalsIgnoreCase("Now"))
+  if (result.equalsIgnoreCase(D_STR_NOW))
     return result;
   else
     return result + F(" ago");
@@ -640,7 +647,7 @@ String timeSince(uint32_t const start) {
 
 String gpioToString(const int16_t gpio) {
   if (gpio == kGpioUnused)
-    return F("Unused");
+    return F(D_STR_UNUSED);
   else
     return String(gpio);
 }
@@ -713,13 +720,13 @@ void handleRoot(void) {
   html += F(
     "<h3>Send a simple IR message</h3><p>"
     "<form method='POST' action='/ir' enctype='multipart/form-data'>"
-      "Type: ");
+      D_STR_PROTOCOL ": ");
   html += htmlSelectAcStateProtocol(KEY_TYPE, decode_type_t::NEC, true);
   html += F(
-      " Code: 0x<input type='text' name='code' min='0' value='0' size='16'"
-        " maxlength='16'>"
-      " Bit size: "
-      "<select name='bits'>"
+      " " D_STR_CODE ": 0x<input type='text' name='" KEY_CODE "' min='0' "
+        "value='0' size='16' maxlength='16'> "
+      D_STR_BITS ": "
+      "<select name='" KEY_BITS "'>"
         "<option selected='selected' value='0'>Default</option>");  // Default
   for (uint8_t i = 0; i < sizeof(kCommonBitSizes); i++) {
     String num = String(kCommonBitSizes[i]);
@@ -731,18 +738,18 @@ void handleRoot(void) {
   }
   html += F(
       "</select>"
-      " Repeats: <input type='number' name='repeats' min='0' max='99' value='0'"
-        "size='2' maxlength='2'>"
-      " <input type='submit' value='Send IR'>"
+      " " D_STR_REPEAT ": <input type='number' name='" KEY_REPEAT "' min='0' "
+        "max='99' value='0' size='2' maxlength='2'>"
+      " <input type='submit' value='Send " D_STR_CODE "'>"
     "</form>"
     "<br><hr>"
     "<h3>Send a complex (Air Conditioner) IR message</h3><p>"
     "<form method='POST' action='/ir' enctype='multipart/form-data'>"
-      "Type: ");
+      D_STR_PROTOCOL ": ");
   html += htmlSelectAcStateProtocol(KEY_TYPE, decode_type_t::KELVINATOR, false);
   html += F(
-      " State code: 0x"
-      "<input type='text' name='code' size='");
+      " State " D_STR_CODE ": 0x"
+      "<input type='text' name='" KEY_CODE "' size='");
   html += String(kStateSizeMax * 2);
   html += F("' maxlength='");
   html += String(kStateSizeMax * 2);
@@ -752,14 +759,14 @@ void handleRoot(void) {
                 "190B8050000000E0190B8070000010F0"
 #endif   // EXAMPLES_ENABLE
                 "'>"
-      " <input type='submit' value='Send A/C State'>"
+      " <input type='submit' value='Send A/C " D_STR_CODE "'>"
     "</form>"
     "<br><hr>"
     "<h3>Send an IRremote Raw IR message</h3><p>"
     "<form method='POST' action='/ir' enctype='multipart/form-data'>"
-      "<input type='hidden' name='type' value='30'>"
-      "String: (freq,array data) <input type='text' name='code' size='132'"
-      " value='"
+      "<input type='hidden' name='" KEY_TYPE "' value='30'>"
+      "String: (freq,array data) <input type='text' name='" KEY_CODE "'"
+      " size='132' value='"
 #if EXAMPLES_ENABLE
           "38000,4420,4420,520,1638,520,1638,520,1638,520,520,520,520,520,"
           "520,520,520,520,520,520,1638,520,1638,520,1638,520,520,520,"
@@ -774,8 +781,8 @@ void handleRoot(void) {
     "<h3>Send a <a href='https://irdb.globalcache.com/'>GlobalCache</a>"
         " IR message</h3><p>"
     "<form method='POST' action='/ir' enctype='multipart/form-data'>"
-      "<input type='hidden' name='type' value='31'>"
-      "String: 1:1,1,<input type='text' name='code' size='132'"
+      "<input type='hidden' name='" KEY_TYPE "' value='31'>"
+      "String: 1:1,1,<input type='text' name='" KEY_CODE "' size='132'"
       " value='"
 #if EXAMPLES_ENABLE
           "38000,1,1,170,170,20,63,20,63,20,63,20,20,20,20,20,20,20,20,20,"
@@ -790,9 +797,9 @@ void handleRoot(void) {
     "<h3>Send a <a href='http://www.remotecentral.com/cgi-bin/files/rcfiles.cgi"
       "?area=pronto&db=discrete'>Pronto code</a> IR message</h3><p>"
     "<form method='POST' action='/ir' enctype='multipart/form-data'>"
-      "<input type='hidden' name='type' value='25'>"
-      "String (comma separated): <input type='text' name='code' size='132'"
-      " value='"
+      "<input type='hidden' name='" KEY_TYPE "' value='25'>"
+      "String (comma separated): <input type='text' name='" KEY_CODE "'"
+      " size='132' value='"
 #if EXAMPLES_ENABLE
           "0000,0067,0000,0015,0060,0018,0018,0018,0030,0018,0030,0018,"
           "0030,0018,0018,0018,0030,0018,0018,0018,0018,0018,0030,0018,0018,"
@@ -800,8 +807,8 @@ void handleRoot(void) {
           "0018,0018,0018,0018,0030,0018,0018,03f6"
 #endif   // EXAMPLES_ENABLE
           "'>"
-      " Repeats: <input type='number' name='repeats' min='0' max='99' value='0'"
-          "size='2' maxlength='2'>"
+      " " D_STR_REPEAT ": <input type='number' name='" KEY_REPEAT "' min='0' "
+          "max='99' value='0' size='2' maxlength='2'>"
       " <input type='submit' value='Send Pronto'>"
     "</form>"
     "<br>");
@@ -823,7 +830,7 @@ String addJsReloadUrl(const String url, const uint16_t timeout_s,
   if (notify && timeout_s) {
     html += F("  document.write(\"You will be redirected to the main page in ");
     html += String(timeout_s);
-    html += F(" seconds.\");\n");
+    html += F(" " D_STR_SECONDS ".\");\n");
   }
   html += F("  setTimeout('Redirect()', ");
   html += String(timeout_s * 1000);  // Convert to mSecs
@@ -846,35 +853,44 @@ void handleExamples(void) {
   html += htmlMenu();
   html += F(
     "<h3>Hardcoded examples</h3>"
-    "<p><a href=\"ir?code=38000,1,69,341,171,21,64,21,64,21,21,21,21,21,21,21,"
-        "21,21,21,21,64,21,64,21,21,21,64,21,21,21,21,21,21,21,64,21,21,21,64,"
-        "21,21,21,21,21,21,21,64,21,21,21,21,21,21,21,21,21,64,21,64,21,64,21,"
-        "21,21,64,21,64,21,64,21,1600,341,85,21,3647&type=31\">"
-        "Sherwood Amp On (GlobalCache)</a></p>"
-    "<p><a href=\"ir?code=38000,8840,4446,546,1664,546,1664,546,546,546,546,"
-        "546,546,546,546,546,546,546,1664,546,1664,546,546,546,1664,546,546,"
-        "546,546,546,546,546,1664,546,546,546,1664,546,546,546,1664,546,1664,"
-        "546,1664,546,546,546,546,546,546,546,546,546,1664,546,546,546,546,546,"
-        "546,546,1664,546,1664,546,1664,546,41600,8840,2210,546&type=30\">"
-        "Sherwood Amp Off (Raw)</a></p>"
-    "<p><a href=\"ir?code=0000,006E,0022,0002,0155,00AA,0015,0040,0015,0040"
-        ",0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0040,0015,0040"
-        ",0015,0015,0015,0040,0015,0015,0015,0015,0015,0015,0015,0040,0015,0015"
-        ",0015,0015,0015,0040,0015,0040,0015,0015,0015,0015,0015,0015,0015,0015"
-        ",0015,0015,0015,0040,0015,0015,0015,0015,0015,0040,0015,0040,0015,0040"
-        ",0015,0040,0015,0040,0015,0640,0155,0055,0015,0E40"
-        "&type=25&repeats=1\">"
+    "<p><a href=\"ir?" KEY_CODE "=38000,1,69,341,171,21,64,21,64,21,21,21,21,"
+        "21,21,21,21,21,21,21,64,21,64,21,21,21,64,21,21,21,21,21,21,21,64,21,"
+        "21,21,64,21,21,21,21,21,21,21,64,21,21,21,21,21,21,21,21,21,64,21,64,"
+        "21,64,21,21,21,64,21,64,21,64,21,1600,341,85,21,3647"
+        "&" KEY_TYPE "=31\">Sherwood Amp " D_STR_ON " (GlobalCache)</a></p>"
+    "<p><a href=\"ir?" KEY_CODE "=38000,8840,4446,546,1664,546,1664,546,546,"
+        "546,546,546,546,546,546,546,546,546,1664,546,1664,546,546,546,1664,"
+        "546,546,546,546,546,546,546,1664,546,546,546,1664,546,546,546,1664,"
+        "546,1664,546,1664,546,546,546,546,546,546,546,546,546,1664,546,546,"
+        "546,546,546,546,546,1664,546,1664,546,1664,546,41600,8840,2210,546"
+        "&" KEY_TYPE "=30\">Sherwood Amp " D_STR_OFF " (Raw)</a></p>"
+    "<p><a href=\"ir?" KEY_CODE "=0000,006E,0022,0002,0155,00AA,0015,0040,0015,"
+        "0040,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0015,0040,0015,"
+        "0040,0015,0015,0015,0040,0015,0015,0015,0015,0015,0015,0015,0040,0015,"
+        "0015,0015,0015,0015,0040,0015,0040,0015,0015,0015,0015,0015,0015,0015,"
+        "0015,0015,0015,0015,0040,0015,0015,0015,0015,0015,0040,0015,0040,0015,"
+        "0040,0015,0040,0015,0040,0015,0640,0155,0055,0015,0E40"
+        "&" KEY_TYPE "=25&" KEY_REPEAT "=1\">"
         "Sherwood Amp Input TAPE (Pronto)</a></p>"
-    "<p><a href=\"ir?type=7&code=E0E09966\">TV on (Samsung)</a></p>"
-    "<p><a href=\"ir?type=4&code=0xf50&bits=12\">Power Off (Sony 12bit)</a></p>"
-    "<p><a href=\"aircon/set?protocol=PANASONIC_AC&model=LKE&power=on&"
-      "mode=auto&fanspeed=min&temp=23\">"
-      "Panasonic A/C LKE model, On, Auto mode, Min fan, 23C"
+    "<p><a href=\"ir?" KEY_TYPE "=7&" KEY_CODE "=E0E09966\">TV " D_STR_ON
+        " (Samsung)</a></p>"
+    "<p><a href=\"ir?" KEY_TYPE "=4&" KEY_CODE "=0xf50&bits=12\">" D_STR_POWER
+        " " D_STR_OFF " (Sony 12 " D_STR_BITS ")</a></p>"
+    "<p><a href=\"aircon/set?protocol=PANASONIC_AC&"
+      KEY_MODEL "=LKE&"
+      KEY_POWER "=on&"
+      KEY_MODE "=auto&"
+      KEY_FANSPEED "=min&"
+      KEY_TEMP "=23\">"
+      "Panasonic A/C " D_STR_MODEL " LKE, " D_STR_ON ", " D_STR_AUTO " "
+      D_STR_MODE ", " D_STR_MIN " " D_STR_FAN ", 23C"
       " <i>(via HTTP aircon interface)</i></a></p>"
-    "<p><a href=\"aircon/set?temp=27\">"
-      "Change just the temp to 27C <i>(via HTTP aircon interface)</i></a></p>"
-    "<p><a href=\"aircon/set?power=off&mode=off\">"
-      "Turn OFF the current A/C <i>(via HTTP aircon interface)</i></a></p>"
+    "<p><a href=\"aircon/set?" KEY_TEMP "=27\">"
+      "Change just the " D_STR_TEMP " to 27C <i>"
+      "(via HTTP aircon interface)</i></a></p>"
+    "<p><a href=\"aircon/set?" KEY_POWER "=off&" KEY_MODE "=off\">"
+      "Turn " D_STR_OFF " the current A/C <i>("
+      "via HTTP aircon interface)</i></a></p>"
     "<br><hr>");
   html += htmlEnd();
   server.send(200, "text/html", html);
@@ -994,7 +1010,9 @@ String htmlSelectSwingh(const String name, const stdAc::swingh_t def) {
 String htmlHeader(const String title, const String h1_text) {
   String html = F("<html><head><title>");
   html += title;
-  html += F("</title></head><body><center><h1>");
+  html += F("</title><meta http-equiv=\"Content-Type\" "
+            "content=\"text/html;charset=utf-8\">"
+            "</head><body><center><h1>");
   if (h1_text.length())
     html += h1_text;
   else
@@ -1040,20 +1058,20 @@ void handleAirCon(void) {
         "<input type='hidden' name='" KEY_CHANNEL "' value='" + String(chan) +
             "'>" +
         "<table style='width:33%'>"
-        "<tr><td>Protocol</td><td>" +
+        "<tr><td>" D_STR_PROTOCOL "</td><td>" +
             htmlSelectClimateProtocol(KEY_PROTOCOL,
                                       climate[chan]->next.protocol) +
             "</td></tr>"
-        "<tr><td>Model</td><td>" +
+        "<tr><td>" D_STR_MODEL "</td><td>" +
             htmlSelectModel(KEY_MODEL, climate[chan]->next.model) +
             "</td></tr>"
-        "<tr><td>Power</td><td>" +
+        "<tr><td>" D_STR_POWER "</td><td>" +
             htmlSelectBool(KEY_POWER, climate[chan]->next.power) +
             "</td></tr>"
-        "<tr><td>Mode</td><td>" +
+        "<tr><td>" D_STR_MODE "</td><td>" +
             htmlSelectMode(KEY_MODE, climate[chan]->next.mode) +
             "</td></tr>"
-        "<tr><td>Temp</td><td>"
+        "<tr><td>" D_STR_TEMP "</td><td>"
             "<input type='number' name='" KEY_TEMP "' min='16' max='90' "
             "step='0.5' value='" + String(climate[chan]->next.degrees, 1) + "'>"
             "<select name='" KEY_CELSIUS "'>"
@@ -1064,34 +1082,34 @@ void handleAirCon(void) {
                 (!climate[chan]->next.celsius ? " selected='selected'" : "") +
                 ">F</option>"
             "</select></td></tr>"
-        "<tr><td>Fan Speed</td><td>" +
+        "<tr><td>" D_STR_FAN "</td><td>" +
             htmlSelectFanspeed(KEY_FANSPEED, climate[chan]->next.fanspeed) +
             "</td></tr>"
-        "<tr><td>Swing (V)</td><td>" +
+        "<tr><td>" D_STR_SWINGV "</td><td>" +
             htmlSelectSwingv(KEY_SWINGV, climate[chan]->next.swingv) +
             "</td></tr>"
-        "<tr><td>Swing (H)</td><td>" +
+        "<tr><td>" D_STR_SWINGH "</td><td>" +
             htmlSelectSwingh(KEY_SWINGH, climate[chan]->next.swingh) +
             "</td></tr>"
-        "<tr><td>Quiet</td><td>" +
+        "<tr><td>" D_STR_QUIET "</td><td>" +
             htmlSelectBool(KEY_QUIET, climate[chan]->next.quiet) +
             "</td></tr>"
-        "<tr><td>Turbo</td><td>" +
+        "<tr><td>" D_STR_TURBO "</td><td>" +
             htmlSelectBool(KEY_TURBO, climate[chan]->next.turbo) +
             "</td></tr>"
-        "<tr><td>Econo</td><td>" +
+        "<tr><td>" D_STR_ECONO "</td><td>" +
             htmlSelectBool(KEY_ECONO, climate[chan]->next.econo) +
             "</td></tr>"
-        "<tr><td>Light</td><td>" +
+        "<tr><td>" D_STR_LIGHT "</td><td>" +
             htmlSelectBool(KEY_LIGHT, climate[chan]->next.light) +
             "</td></tr>"
-        "<tr><td>Filter</td><td>" +
+        "<tr><td>" D_STR_FILTER "</td><td>" +
             htmlSelectBool(KEY_FILTER, climate[chan]->next.filter) +
             "</td></tr>"
-        "<tr><td>Clean</td><td>" +
+        "<tr><td>" D_STR_CLEAN "</td><td>" +
             htmlSelectBool(KEY_CLEAN, climate[chan]->next.clean) +
             "</td></tr>"
-        "<tr><td>Beep</td><td>" +
+        "<tr><td>" D_STR_BEEP "</td><td>" +
             htmlSelectBool(KEY_BEEP, climate[chan]->next.beep) +
             "</td></tr>"
         "<tr><td>Force resend</td><td>" +
@@ -1181,7 +1199,7 @@ void handleAdmin(void) {
 #endif  // MQTT_ENABLE
   html += htmlButton(
       kUrlReboot, F("Reboot"),
-      F("A simple reboot of the ESP8266. <small>ie. No changes</small><br>"
+      F("A simple reboot of the ESP. <small>ie. No changes</small><br>"
         "<br>"));
   html += htmlButton(
       kUrlWipe, F("Wipe Settings"),
@@ -1227,6 +1245,7 @@ void handleInfo(void) {
     "<h3>General</h3>"
     "<p>Hostname: " + String(Hostname) + "<br>"
     "IP address: " + WiFi.localIP().toString() + "<br>"
+    "MAC address: " + WiFi.macAddress() + "<br>"
     "Booted: " + timeSince(1) + "<br>" +
     "Version: " _MY_VERSION_ "<br>"
     "Built: " __DATE__
@@ -1257,9 +1276,9 @@ void handleInfo(void) {
     "Last IR Received: " + lastIrReceived +
     " <i>(" + timeSince(lastIrReceivedTime) + ")</i><br>"
 #endif  // IR_RX
-    "Duplicate Wifi networks: " +
+    "Duplicate " D_STR_WIFI " networks: " +
         String(HIDE_DUPLICATE_NETWORKS ? "Hide" : "Show") + "<br>"
-    "Min Wifi signal required: "
+    "Min " D_STR_WIFI " signal required: "
 #ifdef MIN_SIGNAL_STRENGTH
         + String(static_cast<int>(MIN_SIGNAL_STRENGTH)) +
 #else  // MIN_SIGNAL_STRENGTH
@@ -1268,9 +1287,9 @@ void handleInfo(void) {
         "%<br>"
     "Serial debugging: "
 #if DEBUG
-        + String(isSerialGpioUsedByIr() ? "Off" : "On") +
+        + String(isSerialGpioUsedByIr() ? D_STR_OFF : D_STR_ON) +
 #else  // DEBUG
-        "Off"
+        D_STR_OFF
 #endif  // DEBUG
         "<br>"
 #if REPORT_VCC
@@ -1286,6 +1305,7 @@ void handleInfo(void) {
                              : "Disconnected " + timeSince(lastConnectedTime)) +
     ")</i><br>"
     "Disconnections: " + String(mqttDisconnectCounter - 1) + "<br>"
+    "Max Packet Size: " + MQTT_MAX_PACKET_SIZE + " bytes<br>"
     "Client id: " + MqttClientId + "<br>"
     "Command topic(s): " + listOfCommandTopics() + "<br>"
     "Acknowledgements topic: " + MqttAck + "<br>"
@@ -1327,6 +1347,7 @@ void handleInfo(void) {
             timeElapsed(lastDiscovery.elapsed()) :
             String("<i>Never</i>"))) +
         "<br>"
+    "Discovery topic: " + MqttDiscovery + "<br>" +
 #endif  // MQTT_DISCOVERY_ENABLE
     "Command topics: " + MqttClimate + channel_re + '/' + MQTT_CLIMATE_CMND +
         '/' + kClimateTopics +
@@ -1336,7 +1357,7 @@ void handleInfo(void) {
     "</p>"
     // Page footer
     "<hr><p><small><center>"
-      "<i>(Note: Page will refresh every 60 seconds.)</i>"
+      "<i>(Note: Page will refresh every 60 " D_STR_SECONDS ".)</i>"
     "<centre></small></p>";
   html += addJsReloadUrl(kUrlInfo, 60, false);
   html += htmlEnd();
@@ -1398,7 +1419,7 @@ void handleClearMqtt(void) {
     htmlHeader(F("Clearing saved info from MQTT"),
                F("Removing all saved settings for this device from "
                  "MQTT.")) +
-    "<p>Device restarting. Try connecting in a few seconds.</p>" +
+    "<p>Device restarting. Try connecting in a few " D_STR_SECONDS ".</p>" +
     addJsReloadUrl(kUrlRoot, 10, true) +
     htmlEnd());
   // Do the clearing.
@@ -1420,7 +1441,7 @@ void handleReset(void) {
   server.send(200, "text/html",
     htmlHeader(F("Reset WiFi Config"),
                F("Resetting the WiFiManager config back to defaults.")) +
-    "<p>Device restarting. Try connecting in a few seconds.</p>" +
+    "<p>Device restarting. Try connecting in a few " D_STR_SECONDS ".</p>" +
     addJsReloadUrl(kUrlRoot, 10, true) +
     htmlEnd());
   // Do the reset.
@@ -1453,7 +1474,7 @@ void handleReboot() {
 #endif
   server.send(200, "text/html",
     htmlHeader(F("Device restarting.")) +
-    "<p>Try connecting in a few seconds.</p>" +
+    "<p>Try connecting in a few " D_STR_SECONDS ".</p>" +
     addJsReloadUrl(kUrlRoot, kRebootTime, true) +
     htmlEnd());
   doRestart("Reboot requested");
@@ -1514,6 +1535,23 @@ bool parseStringAndSendAirCon(IRsend *irsend, const decode_type_t irType,
         stateSize = std::max(stateSize, (uint16_t) (kFujitsuAcStateLength - 1));
       // Lastly, it should never exceed the maximum "normal" size.
       stateSize = std::min(stateSize, kFujitsuAcStateLength);
+      break;
+    case HITACHI_AC3:
+      // HitachiAc3 has two distinct & different size states, so make a best
+      // guess which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize,
+                           (uint16_t) (kHitachiAc3MinStateLength));
+      // If we think it isn't a "short" message.
+      if (stateSize > kHitachiAc3MinStateLength)
+        // Then it probably the "normal" size.
+        stateSize = std::max(stateSize,
+                             (uint16_t) (kHitachiAc3StateLength));
+      // Lastly, it should never exceed the maximum "normal" size.
+      stateSize = std::min(stateSize, kHitachiAc3StateLength);
       break;
     case MWM:
       // MWM has variable size states, so make a best guess
@@ -1992,7 +2030,8 @@ void setup_wifi(void) {
 
   if (!wifiManager.autoConnect())
     // Reboot. A.k.a. "Have you tried turning it Off and On again?"
-    doRestart("Wifi failed to connect and hit timeout. Rebooting...", true);
+    doRestart(D_STR_WIFI " failed to connect and hit timeout. Rebooting...",
+              true);
 
 #if MQTT_ENABLE
   strncpy(MqttServer, custom_mqtt_server.getValue(), kHostnameLength);
@@ -2032,6 +2071,8 @@ void init_vars(void) {
   // Sub-topic for the climate stat topics.
 #if MQTT_DISCOVERY_ENABLE
   MqttDiscovery = "homeassistant/climate/" + String(Hostname) + "/config";
+  MqttUniqueId = WiFi.macAddress();
+  MqttUniqueId.replace(":", "");
 #endif  // MQTT_DISCOVERY_ENABLE
   MqttHAName = String(Hostname) + "_aircon";
   // Create a unique MQTT client id.
@@ -2162,7 +2203,8 @@ void setup(void) {
         server.send(200, "text/html",
             htmlHeader(F("Updating firmware")) +
             "<hr>"
-            "<h3>Warning! Don't power off the device for 60 seconds!</h3>"
+            "<h3>Warning! Don't " D_STR_POWER " " D_STR_OFF " the device for "
+            "60 " D_STR_SECONDS "!</h3>"
             "<p>The firmware is uploading and will try to flash itself. "
             "It is important to not interrupt the process.</p>"
             "<p>The firmware upload seems to have " +
@@ -2514,6 +2556,8 @@ void sendMQTTDiscovery(const char *topic) {
       "\"pow_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_POWER "\","
       "\"mode_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_MODE "\","
       "\"mode_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_MODE "\","
+      // I don't know why, but the modes need to be lower case to work with
+      // Home Assistant & Google Home.
       "\"modes\":[\"off\",\"auto\",\"cool\",\"heat\",\"dry\",\"fan_only\"],"
       "\"temp_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_TEMP "\","
       "\"temp_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_TEMP "\","
@@ -2522,11 +2566,22 @@ void sendMQTTDiscovery(const char *topic) {
       "\"temp_step\":\"1\","
       "\"fan_mode_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_FANSPEED "\","
       "\"fan_mode_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_FANSPEED "\","
-      "\"fan_modes\":[\"auto\",\"min\",\"low\",\"medium\",\"high\",\"max\"],"
+      "\"fan_modes\":[\"" D_STR_AUTO "\",\"" D_STR_MIN "\",\"" D_STR_LOW "\",\""
+                      D_STR_MEDIUM "\",\"" D_STR_HIGH "\",\"" D_STR_MAX "\"],"
       "\"swing_mode_cmd_t\":\"~/" MQTT_CLIMATE_CMND "/" KEY_SWINGV "\","
       "\"swing_mode_stat_t\":\"~/" MQTT_CLIMATE_STAT "/" KEY_SWINGV "\","
-      "\"swing_modes\":["
-        "\"off\",\"auto\",\"highest\",\"high\",\"middle\",\"low\",\"lowest\"]"
+      "\"swing_modes\":[\"" D_STR_OFF "\",\"" D_STR_AUTO "\",\"" D_STR_HIGHEST
+                        "\",\"" D_STR_HIGH "\",\"" D_STR_MIDDLE "\",\""
+                        D_STR_LOW "\",\"" D_STR_LOWEST "\"],"
+      "\"uniq_id\":\"" + MqttUniqueId + "\","
+      "\"device\":{"
+        "\"identifiers\":[\"" + MqttUniqueId + "\"],"
+        "\"connections\":[[\"mac\",\"" + WiFi.macAddress() + "\"]],"
+        "\"manufacturer\":\"IRremoteESP8266\","
+        "\"model\":\"IRMQTTServer\","
+        "\"name\":\"" + Hostname + "\","
+        "\"sw_version\":\"" _MY_VERSION_ "\""
+        "}"
       "}").c_str(), true)) {
     mqttLog("MQTT climate discovery successful sent.");
     hasDiscoveryBeenSent = true;
@@ -2674,7 +2729,7 @@ uint64_t getUInt64fromHex(char const *str) {
 //   code:     Numeric payload of the IR message. Most protocols use this.
 //   code_str: The unparsed code to be sent. Used by complex protocol encodings.
 //   bits:     Nr. of bits in the protocol. 0 means use the protocol's default.
-//   repeat:   Nr. of times the message is to be repeated. (Not all protcols.)
+//   repeat:   Nr. of times the message is to be repeated. (Not all protocols.)
 // Returns:
 //   bool: Successfully sent or not.
 bool sendIRCode(IRsend *irsend, decode_type_t const ir_type,
@@ -2733,12 +2788,12 @@ bool sendIRCode(IRsend *irsend, decode_type_t const ir_type,
   } else {
     debug("Failed to send IR Message:");
   }
-  debug("Type:");
+  debug(D_STR_PROTOCOL ": ");
   debug(String(ir_type).c_str());
   // For "long" codes we basically repeat what we got.
   if (hasACState(ir_type) || ir_type == PRONTO || ir_type == RAW ||
       ir_type == GLOBALCACHE) {
-    debug("Code: ");
+    debug(D_STR_CODE ": ");
     debug(code_str);
     // Confirm what we were asked to send was sent.
 #if MQTT_ENABLE
@@ -2757,9 +2812,9 @@ bool sendIRCode(IRsend *irsend, decode_type_t const ir_type,
     }
 #endif  // MQTT_ENABLE
   } else {  // For "short" codes, we break it down a bit more before we report.
-    debug(("Code: 0x" + uint64ToString(code, 16)).c_str());
-    debug(("Bits: " + String(bits)).c_str());
-    debug(("Repeats: " + String(repeat)).c_str());
+    debug((D_STR_CODE ": 0x" + uint64ToString(code, 16)).c_str());
+    debug((D_STR_BITS ": " + String(bits)).c_str());
+    debug((D_STR_REPEAT ": " + String(repeat)).c_str());
 #if MQTT_ENABLE
     if (success) {
       mqtt_client.publish(MqttAck.c_str(), (String(ir_type) +
@@ -2909,40 +2964,47 @@ void updateClimate(stdAc::state_t *state, const String str,
     *state = jsonToState(*state, payload.c_str());
   else
 #endif  // MQTT_CLIMATE_JSON
-  if (str.equals(prefix + KEY_PROTOCOL))
+  if (str.equals(prefix + KEY_PROTOCOL)) {
     state->protocol = strToDecodeType(payload.c_str());
-  else if (str.equals(prefix + KEY_MODEL))
+  } else if (str.equals(prefix + KEY_MODEL)) {
     state->model = IRac::strToModel(payload.c_str());
-  else if (str.equals(prefix + KEY_POWER))
+  } else if (str.equals(prefix + KEY_POWER)) {
     state->power = IRac::strToBool(payload.c_str());
-  else if (str.equals(prefix + KEY_MODE))
+#if MQTT_CLIMATE_HA_MODE
+    if (!state->power) state->mode = stdAc::opmode_t::kOff;
+#endif  // MQTT_CLIMATE_HA_MODE
+  } else if (str.equals(prefix + KEY_MODE)) {
     state->mode = IRac::strToOpmode(payload.c_str());
-  else if (str.equals(prefix + KEY_TEMP))
+#if MQTT_CLIMATE_HA_MODE
+    state->power = (state->mode != stdAc::opmode_t::kOff);
+#endif  // MQTT_CLIMATE_HA_MODE
+  } else if (str.equals(prefix + KEY_TEMP)) {
     state->degrees = payload.toFloat();
-  else if (str.equals(prefix + KEY_FANSPEED))
+  } else if (str.equals(prefix + KEY_FANSPEED)) {
     state->fanspeed = IRac::strToFanspeed(payload.c_str());
-  else if (str.equals(prefix + KEY_SWINGV))
+  } else if (str.equals(prefix + KEY_SWINGV)) {
     state->swingv = IRac::strToSwingV(payload.c_str());
-  else if (str.equals(prefix + KEY_SWINGH))
+  } else if (str.equals(prefix + KEY_SWINGH)) {
     state->swingh = IRac::strToSwingH(payload.c_str());
-  else if (str.equals(prefix + KEY_QUIET))
+  } else if (str.equals(prefix + KEY_QUIET)) {
     state->quiet = IRac::strToBool(payload.c_str());
-  else if (str.equals(prefix + KEY_TURBO))
+  } else if (str.equals(prefix + KEY_TURBO)) {
     state->turbo = IRac::strToBool(payload.c_str());
-  else if (str.equals(prefix + KEY_ECONO))
+  } else if (str.equals(prefix + KEY_ECONO)) {
     state->econo = IRac::strToBool(payload.c_str());
-  else if (str.equals(prefix + KEY_LIGHT))
+  } else if (str.equals(prefix + KEY_LIGHT)) {
     state->light = IRac::strToBool(payload.c_str());
-  else if (str.equals(prefix + KEY_BEEP))
+  } else if (str.equals(prefix + KEY_BEEP)) {
     state->beep = IRac::strToBool(payload.c_str());
-  else if (str.equals(prefix + KEY_FILTER))
+  } else if (str.equals(prefix + KEY_FILTER)) {
     state->filter = IRac::strToBool(payload.c_str());
-  else if (str.equals(prefix + KEY_CLEAN))
+  } else if (str.equals(prefix + KEY_CLEAN)) {
     state->clean = IRac::strToBool(payload.c_str());
-  else if (str.equals(prefix + KEY_CELSIUS))
+  } else if (str.equals(prefix + KEY_CELSIUS)) {
     state->celsius = IRac::strToBool(payload.c_str());
-  else if (str.equals(prefix + KEY_SLEEP))
+  } else if (str.equals(prefix + KEY_SLEEP)) {
     state->sleep = payload.toInt();
+  }
 }
 
 bool sendClimate(const String topic_prefix, const bool retain,
@@ -2961,16 +3023,15 @@ bool sendClimate(const String topic_prefix, const bool retain,
     diff = true;
     success &= sendInt(topic_prefix + KEY_MODEL, next.model, retain);
   }
+  String mode_str = IRac::opmodeToString(next.mode);
+  // I don't know why, but the modes need to be lower case to work with
+  // Home Assistant & Google Home.
+  mode_str.toLowerCase();
 #if MQTT_CLIMATE_HA_MODE
   // Home Assistant want's these two bound together.
   if (prev.power != next.power || prev.mode != next.mode || forceMQTT) {
-    diff = true;
     success &= sendBool(topic_prefix + KEY_POWER, next.power, retain);
-    success &= sendString(topic_prefix + KEY_MODE,
-                          (next.power ? IRac::opmodeToString(next.mode)
-                                      : F("off")),
-                          retain);
-  }
+    if (!next.power) mode_str = F("off");
 #else  // MQTT_CLIMATE_HA_MODE
   // In non-Home Assistant mode, power and mode are not bound together.
   if (prev.power != next.power || forceMQTT) {
@@ -2978,11 +3039,10 @@ bool sendClimate(const String topic_prefix, const bool retain,
     success &= sendBool(topic_prefix + KEY_POWER, next.power, retain);
   }
   if (prev.mode != next.mode || forceMQTT) {
-    diff = true;
-    success &= sendString(topic_prefix + KEY_MODE,
-                          IRac::opmodeToString(next.mode), retain);
-  }
 #endif  // MQTT_CLIMATE_HA_MODE
+    success &= sendString(topic_prefix + KEY_MODE, mode_str, retain);
+    diff = true;
+  }
   if (prev.degrees != next.degrees || forceMQTT) {
     diff = true;
     success &= sendFloat(topic_prefix + KEY_TEMP, next.degrees, retain);
@@ -3068,6 +3128,10 @@ bool sendClimate(const String topic_prefix, const bool retain,
     lastClimateIr.reset();
     irClimateCounter++;
   }
+  // Mark the "next" value as old/previous.
+  if (ac != NULL) {
+    ac->markAsSent();
+  }
   return success;
 }
 
@@ -3095,20 +3159,20 @@ bool decodeCommonAc(const decode_results *decode) {
   }
 #if IGNORE_DECODED_AC_PROTOCOL
   if (climate[0]->next.protocol != decode_type_t::UNKNOWN) {
-    // Use the previous protcol/model if set.
+    // Use the previous protocol/model if set.
     state.protocol = climate[0]->next.protocol;
     state.model = climate[0]->next.model;
   }
 #endif  // IGNORE_DECODED_AC_PROTOCOL
-// Continue to use the previously prefered temperature units.
-// i.e. Keep using Celsius or Fahrenheit.
-if (climate[0]->next.celsius != state.celsius) {
-  // We've got a mismatch, so we need to convert.
-  state.degrees = climate[0]->next.celsius ? fahrenheitToCelsius(state.degrees)
-                                           : celsiusToFahrenheit(state.degrees);
-  state.celsius = climate[0]->next.celsius;
-}
-climate[0]->next = state;  // Copy over the new climate state.
+  // Continue to use the previously prefered temperature units.
+  // i.e. Keep using Celsius or Fahrenheit.
+  if (climate[0]->next.celsius != state.celsius) {
+    // We've got a mismatch, so we need to convert.
+    state.degrees = climate[0]->next.celsius ?
+        fahrenheitToCelsius(state.degrees) : celsiusToFahrenheit(state.degrees);
+    state.celsius = climate[0]->next.celsius;
+  }
+  climate[0]->next = state;  // Copy over the new climate state.
 #if MQTT_ENABLE
   sendClimate(genStatTopic(0), true, false, REPLAY_DECODED_AC_MESSAGE,
               REPLAY_DECODED_AC_MESSAGE, climate[0]);

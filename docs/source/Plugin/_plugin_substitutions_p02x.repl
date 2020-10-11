@@ -1,6 +1,7 @@
 .. |P020_name| replace:: :cyan:`Serial Server`
 .. |P020_type| replace:: :cyan:`Communication`
 .. |P020_typename| replace:: :cyan:`Communication - Serial Server`
+.. |P020_porttype| replace:: `.`
 .. |P020_status| replace:: :green:`NORMAL`
 .. |P020_github| replace:: P020_Ser2Net.ino
 .. _P020_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P020_Ser2Net.ino
@@ -13,6 +14,7 @@
 .. |P021_name| replace:: :cyan:`Level Control`
 .. |P021_type| replace:: :cyan:`Regulator`
 .. |P021_typename| replace:: :cyan:`Regulator - Level Control`
+.. |P021_porttype| replace:: `.`
 .. |P021_status| replace:: :green:`NORMAL`
 .. |P021_github| replace:: P021_Level.ino
 .. _P021_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P021_Level.ino
@@ -25,6 +27,7 @@
 .. |P022_name| replace:: :cyan:`PCA9685`
 .. |P022_type| replace:: :cyan:`Extra IO`
 .. |P022_typename| replace:: :cyan:`Extra IO - PCA9685`
+.. |P022_porttype| replace:: `.`
 .. |P022_status| replace:: :green:`NORMAL`
 .. |P022_github| replace:: P022_PCA9685.ino
 .. _P022_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P022_PCA9685.ino
@@ -37,6 +40,7 @@
 .. |P023_name| replace:: :cyan:`OLED SSD1306`
 .. |P023_type| replace:: :cyan:`Display`
 .. |P023_typename| replace:: :cyan:`Display - OLED SSD1306`
+.. |P023_porttype| replace:: `.`
 .. |P023_status| replace:: :green:`NORMAL`
 .. |P023_github| replace:: P023_OLED.ino
 .. _P023_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P023_OLED.ino
@@ -49,6 +53,7 @@
 .. |P024_name| replace:: :cyan:`MLX90614`
 .. |P024_type| replace:: :cyan:`Environment`
 .. |P024_typename| replace:: :cyan:`Environment - MLX90614`
+.. |P024_porttype| replace:: `.`
 .. |P024_status| replace:: :green:`NORMAL`
 .. |P024_github| replace:: P024_MLX90614.ino
 .. _P024_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P024_MLX90614.ino
@@ -61,6 +66,7 @@
 .. |P025_name| replace:: :cyan:`ADS1115`
 .. |P025_type| replace:: :cyan:`Analog input`
 .. |P025_typename| replace:: :cyan:`Analog input - ADS1115`
+.. |P025_porttype| replace:: `.`
 .. |P025_status| replace:: :green:`NORMAL`
 .. |P025_github| replace:: P025_ADS1115.ino
 .. _P025_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P025_ADS1115.ino
@@ -73,6 +79,7 @@
 .. |P026_name| replace:: :cyan:`System Info`
 .. |P026_type| replace:: :cyan:`Generic`
 .. |P026_typename| replace:: :cyan:`Generic - System Info`
+.. |P026_porttype| replace:: `.`
 .. |P026_status| replace:: :green:`NORMAL`
 .. |P026_github| replace:: P026_Sysinfo.ino
 .. _P026_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P026_Sysinfo.ino
@@ -85,6 +92,7 @@
 .. |P027_name| replace:: :cyan:`INA219`
 .. |P027_type| replace:: :cyan:`Energy (DC)`
 .. |P027_typename| replace:: :cyan:`Energy (DC) - INA219`
+.. |P027_porttype| replace:: `.`
 .. |P027_status| replace:: :green:`NORMAL`
 .. |P027_github| replace:: P027_INA219.ino
 .. _P027_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P027_INA219.ino
@@ -97,6 +105,7 @@
 .. |P028_name| replace:: :cyan:`BMx280`
 .. |P028_type| replace:: :cyan:`Environment`
 .. |P028_typename| replace:: :cyan:`Environment - BMx280`
+.. |P028_porttype| replace:: `.`
 .. |P028_status| replace:: :green:`NORMAL`
 .. |P028_github| replace:: P028_BME280.ino
 .. _P028_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P028_BME280.ino
@@ -109,6 +118,7 @@
 .. |P029_name| replace:: :cyan:`Domoticz MQTT Helper`
 .. |P029_type| replace:: :cyan:`Output`
 .. |P029_typename| replace:: :cyan:`Output - Domoticz MQTT Helper`
+.. |P029_porttype| replace:: `.`
 .. |P029_status| replace:: :green:`NORMAL`
 .. |P029_github| replace:: P029_Output.ino
 .. _P029_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P029_Output.ino

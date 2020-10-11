@@ -3,6 +3,8 @@
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/StringConverter.h"
+#include "../../ESPEasyWifi.h"
 
 #include "../../ESPEasy_fdwdecl.h"
 
@@ -53,7 +55,7 @@ String Command_Wifi_Scan(struct EventStruct *event, const char *Line)
 
 String Command_Wifi_Connect(struct EventStruct *event, const char *Line)
 {
-  WiFiConnectRelaxed();
+  wifiConnectAttemptNeeded = true;
   return return_command_success();
 }
 

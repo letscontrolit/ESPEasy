@@ -10,16 +10,16 @@ BalluHeatpumpIR::BalluHeatpumpIR()
 }
 
 
-void BalluHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd)
+void BalluHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
   // Sensible defaults for the heat pump mode
-  
+
   uint8_t operatingMode = BALLU_AIRCON_MODE_COOL;
   uint8_t fanSpeed      = BALLU_AIRCON_FAN_AUTO;
   uint8_t temperature   = 21;
   uint8_t powerMode     = 00;
-  
-  
+
+
   if (powerModeCmd == POWER_OFF)
   {
     powerMode = BALLU_AIRCON_MODE_OFF;
@@ -43,7 +43,7 @@ void BalluHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operating
         break;
     }
   }
-  
+
   switch (fanSpeedCmd)
   {
     case FAN_AUTO:
@@ -59,12 +59,11 @@ void BalluHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operating
       fanSpeed = BALLU_AIRCON_FAN3;
       break;
   }
-  
+
   if (temperatureCmd > 15 && temperatureCmd < 31)
   {
     temperature = temperatureCmd;
   }
-  
   sendBallu(IR, powerMode, operatingMode, fanSpeed, temperature);
 }
 

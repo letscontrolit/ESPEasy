@@ -1,3 +1,4 @@
+#include "_CPlugin_Helper.h"
 #ifdef USES_C010
 //#######################################################################################################
 //########################### Controller Plugin 010: Generic UDP ########################################
@@ -7,13 +8,13 @@
 #define CPLUGIN_ID_010         10
 #define CPLUGIN_NAME_010       "Generic UDP"
 
-bool CPlugin_010(byte function, struct EventStruct *event, String& string)
+bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
       {
         Protocol[++protocolCount].Number = CPLUGIN_ID_010;
         Protocol[protocolCount].usesMQTT = false;
@@ -25,55 +26,77 @@ bool CPlugin_010(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
       {
         string = F(CPLUGIN_NAME_010);
         break;
       }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
       {
         event->String1 = "";
         event->String2 = F("%sysname%_%tskname%_%valname%=%value%");
         break;
       }
 
-    case CPLUGIN_PROTOCOL_SEND:
+    case CPlugin::Function::CPLUGIN_INIT:
       {
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
-        C010_queue_element element(event, valueCount);
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          String dummy;
-          PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummy);
-        }
-
-        MakeControllerSettings(ControllerSettings);
-        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-
-        for (byte x = 0; x < valueCount; x++)
-        {
-          bool isvalid;
-          String formattedValue = formatUserVar(event, x, isvalid);
-          if (isvalid) {
-            element.txt[x] = "";
-            element.txt[x] += ControllerSettings.Publish;
-            parseControllerVariables(element.txt[x], event, false);
-            element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-            element.txt[x].replace(F("%value%"), formattedValue);
-            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
-          }
-        }
-        success = C010_DelayHandler.addToQueue(element);
-        scheduleNextDelayQueue(TIMER_C010_DELAY_QUEUE, C010_DelayHandler.getNextScheduleTime());
+        success = init_c010_delay_queue(event->ControllerIndex);
         break;
       }
 
-    case CPLUGIN_FLUSH:
+    case CPlugin::Function::CPLUGIN_EXIT:
+      {
+        exit_c010_delay_queue();
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
+      {
+        if (C010_DelayHandler == nullptr) {
+          break;
+        }
+
+        LoadTaskSettings(event->TaskIndex);
+        byte valueCount = getValueCountForTask(event->TaskIndex);
+        C010_queue_element element(event, valueCount);
+
+        {
+          MakeControllerSettings(ControllerSettings);
+          if (!AllocatedControllerSettings()) {
+            break;
+          }
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+
+          for (byte x = 0; x < valueCount; x++)
+          {
+            bool isvalid;
+            String formattedValue = formatUserVar(event, x, isvalid);
+            if (isvalid) {
+              element.txt[x] = "";
+              element.txt[x] += ControllerSettings.Publish;
+              parseControllerVariables(element.txt[x], event, false);
+              element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+              element.txt[x].replace(F("%value%"), formattedValue);
+              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+            }
+          }
+        }
+        // FIXME TD-er must define a proper move operator
+        success = C010_DelayHandler->addToQueue(C010_queue_element(element));
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C010_DELAY_QUEUE, C010_DelayHandler->getNextScheduleTime());
+        break;
+      }
+
+    case CPlugin::Function::CPLUGIN_FLUSH:
       {
         process_c010_delay_queue();
         delay(0);
         break;
       }
+
+    default:
+      break;
 
 
   }
@@ -84,7 +107,11 @@ bool CPlugin_010(byte function, struct EventStruct *event, String& string)
 //********************************************************************************
 // Generic UDP message
 //********************************************************************************
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
 bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+// *INDENT-ON*
 
 bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   while (element.txt[element.valuesSent] == "") {

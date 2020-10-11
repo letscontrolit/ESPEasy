@@ -1,0 +1,52 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``oledframedcmd,display,<value>``
+
+        Value:
+
+        * ``on`` will turn the display ON.
+        * ``off`` will turn the display OFF.
+        * ``low`` will dim the display to low.
+        * ``med`` will dim the display to medium.
+        * ``high`` will set the brightness to maximum.
+
+        ","
+        OLED displays will age quite fast, so it is not adviced to run them continously at max brightness.
+
+        Some displays do not accept all brightness levels and some also make a quite high pitch coil whine noise when running on some brightness levels.
+        So different levels of brightness can also be of help on those displays.
+        
+        The display controller itself does support more brightness levels, but these are chosen to give noticable change in brightness levels and also to help in choosing the best values for the 2 brightness control registers.
+        As there are 2 brightness control registers, there is some overlap in their range, but some combinations may lead to issues like coil whining noise or sometimes not even working displays as not all of these displays are wired to support both controls to be used.        
+        "
+        "
+        ``oledframedcmd,<line>,<text>``
+        ","
+        The <line> parameter corresponds with the same lines as the plugin configuration has.
+
+        The <text> parameter must be a single command parameter. 
+        Meaning, it must be wrapped in quotes when using a space or comma as text.
+
+        If double quote characters are needed, wrap the parameter in single quotes or back quotes.
+
+        The updated line text is not stored in the settings itself, but kept in memory.
+        After a reboot the stored plugin settings will be used.
+
+        All template notations can be used, like system variables, or reference to a task value.
+
+        After receiving text this way, the frame where the text is placed is shown, if the setting for 'Wake display on receiving text' is checked.
+        "
+        "
+        ``oledframedcmd,frame[,<framenr>]``
+        ","
+        This command is to display a specific frame (aka page), or the next frame. When reaching the last frame, a 'next' (0) will display the first frame.
+
+        The <framenr> parameter corresponds to the desired frame (1..<number of frames>) to display. The number of frames is determined by dividing the lines in use (at least one line in that frame with some data), by the number of Lines per Frame. So practically, the range is 1..3 when all lines are used and 4 Lines per Frame is set, or 1..12 if Line per frames is set to 1. The number of frames is updated if a frame would initially be empty, and an external source places text on a line of that frame (see above).
+
+        When omitting <framenr>, or providing 0, the next frame is displayed.
+
+        When the display is off, because a 'Display Timeout' is set and the timer has expired or it is turned off by the off command (see above), then it is turned on, and, when set, the timer is started again.
+        "

@@ -3,6 +3,8 @@
 //################################## Plugin 086: Homie receiver##########################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_086
 #define PLUGIN_ID_086         86
 #define PLUGIN_NAME_086       "Generic - Homie receiver [TESTING]"
@@ -37,7 +39,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_086;
         Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
-        Device[deviceCount].VType = SENSOR_TYPE_NONE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;

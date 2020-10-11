@@ -17,7 +17,7 @@ void handle_factoryreset() {
   html_TR();
   addFormHeader(F("Factory Reset"));
 
-  if (WebServer.hasArg("fdm")) {
+  if (web_server.hasArg("fdm")) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
 
     if (modelMatchingFlashSize(model)) {
@@ -25,7 +25,7 @@ void handle_factoryreset() {
     }
   }
 
-  if (WebServer.hasArg(F("savepref"))) {
+  if (web_server.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
     ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
     ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
@@ -36,7 +36,7 @@ void handle_factoryreset() {
     addHtmlError(SaveSettings());
   }
 
-  if (WebServer.hasArg(F("performfactoryreset"))) {
+  if (web_server.hasArg(F("performfactoryreset"))) {
     // User confirmed to really perform the reset.
     applyFactoryDefaultPref();
 
@@ -90,17 +90,19 @@ void handle_factoryreset() {
 void addPreDefinedConfigSelector() {
   DeviceModel active_model = ResetFactoryDefaultPreference.getDeviceModel();
 
-  addSelector_Head("fdm", true);
+  addSelector_Head_reloadOnChange("fdm");
 
   for (byte x = 0; x < DeviceModel_MAX; ++x) {
     DeviceModel model = static_cast<DeviceModel>(x);
-    addSelector_Item(
-      getDeviceModelString(model),
-      x,
-      model == active_model,
-      !modelMatchingFlashSize(model),
-      ""
-      );
+    if (modelMatchingFlashSize(model)) {
+      addSelector_Item(
+        getDeviceModelString(model),
+        x,
+        model == active_model,
+        false,
+        ""
+        );
+    }
   }
   addSelector_Foot();
 }
@@ -109,9 +111,9 @@ void addPreDefinedConfigSelector() {
 void handle_factoryreset_json() {
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
-  TXBuffer += "{";
+  addHtml("{");
 
-  if (WebServer.hasArg("fdm")) {
+  if (web_server.hasArg("fdm")) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
 
     if (modelMatchingFlashSize(model)) {
@@ -119,47 +121,58 @@ void handle_factoryreset_json() {
     }
   }
 
-  if (WebServer.hasArg("kun")) {
+  if (web_server.hasArg("kun")) {
     ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
   }
 
-  if (WebServer.hasArg("kw")) {
+  if (web_server.hasArg("kw")) {
     ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
   }
 
-  if (WebServer.hasArg("knet")) {
+  if (web_server.hasArg("knet")) {
     ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
   }
 
-  if (WebServer.hasArg("kntp")) {
+  if (web_server.hasArg("kntp")) {
     ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
   }
 
-  if (WebServer.hasArg("klog")) {
+  if (web_server.hasArg("klog")) {
     ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
   }
+  String error;
+  bool   performReset = false;
+  bool   savePref     = false;
 
-  if (WebServer.hasArg(F("savepref"))) {
+  if (web_server.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
-    applyFactoryDefaultPref();
-    addHtmlError(SaveSettings());
-    stream_last_json_object_value(F("status"), F("ok"));
+    savePref = true;
   }
 
-  if (WebServer.hasArg(F("performfactoryreset"))) {
+  if (web_server.hasArg(F("performfactoryreset"))) {
     // User confirmed to really perform the reset.
-    applyFactoryDefaultPref();
-    stream_last_json_object_value(F("status"), F("ok"));
-    TXBuffer += "}";
-    TXBuffer.endStream();
-
-    // No need to call SaveSettings(); ResetFactory() will save the new settings.
-    ResetFactory();
+    performReset = true;
+    savePref     = true;
   } else {
-    stream_last_json_object_value(F("status"), F("error"));
+    error = F("no reset");
   }
-  TXBuffer += "}";
+
+  if (savePref) {
+    applyFactoryDefaultPref();
+    error = SaveSettings();
+  }
+
+  if (error.length() == 0) {
+    error = F("ok");
+  }
+
+  stream_last_json_object_value(F("status"), error);
+  addHtml("}");
   TXBuffer.endStream();
+
+  if (performReset) {
+    ResetFactory();
+  }
 }
 
 #endif // WEBSERVER_NEW_UI

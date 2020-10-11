@@ -3,6 +3,8 @@
 //#################################### Plugin 021: Level Control ########################################
 //#######################################################################################################
 
+#include "_Plugin_Helper.h"
+
 #define PLUGIN_021
 #define PLUGIN_ID_021        21
 #define PLUGIN_NAME_021       "Regulator - Level Control"
@@ -20,7 +22,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_021;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SWITCH;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;

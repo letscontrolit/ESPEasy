@@ -3,6 +3,7 @@
 
 #include "limits.h"
 #include "StringProviderTypes.h"
+#include "src/Helpers/SystemVariables.h"
 
 
 // ********************************************************************************
@@ -46,6 +47,9 @@ void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled = fal
 void addFormCheckBox_disabled(LabelType::Enum label, boolean checked);
 
 
+
+// FIXME TD-er: replace stream_xxx_json_object* into this code.
+// N.B. handling of numerical values differs (string vs. no string)
 void stream_next_json_object_value(LabelType::Enum label);
 void stream_last_json_object_value(LabelType::Enum label);
 void addRowLabelValue(LabelType::Enum label);
@@ -106,7 +110,7 @@ void addSelector(const String& id,
                  const int     indices[],
                  const String  attr[],
                  int           selectedIndex,
-                 boolean       reloadonchange = false,
-                 bool          enabled = true);
+                 boolean       reloadonchange,
+                 bool          enabled);
 
 #endif // WEBSERVER_FWD_DECL_H

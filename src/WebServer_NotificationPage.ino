@@ -2,7 +2,13 @@
 // ********************************************************************************
 // Web Interface notifcations page
 // ********************************************************************************
-#ifndef NOTIFIER_SET_NONE
+#include "ESPEasy_common.h"
+
+#ifdef USES_NOTIFIER
+
+#include "src/Globals/NPlugins.h"
+
+
 void handle_notifications() {
   checkRAM(F("handle_notifications"));
 
@@ -34,10 +40,10 @@ void handle_notifications() {
     {
       if (Settings.Notification != 0)
       {
-        byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
+        nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
-        if (NotificationProtocolIndex != NPLUGIN_NOT_FOUND) {
-          NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_SAVE, 0, dummyString);
+        if (validNProtocolIndex(NotificationProtocolIndex)) {
+          NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
         }
         NotificationSettings.Port                       = getFormItemInt(F("port"), 0);
         NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), 0);
@@ -58,15 +64,15 @@ void handle_notifications() {
     addHtmlError(SaveNotificationSettings(notificationindex, (byte *)&NotificationSettings, sizeof(NotificationSettingsStruct)));
     addHtmlError(SaveSettings());
 
-    if (WebServer.hasArg(F("test"))) {
+    if (web_server.hasArg(F("test"))) {
       // Perform tests with the settings in the form.
-      byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
+      nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
-      if (NotificationProtocolIndex != NPLUGIN_NOT_FOUND)
+      if (validNProtocolIndex(NotificationProtocolIndex))
       {
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = notificationindex;
-        schedule_notification_event_timer(NotificationProtocolIndex, NPLUGIN_NOTIFY, &TempEvent);
+        Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, &TempEvent);
       }
     }
   }
@@ -92,11 +98,11 @@ void handle_notifications() {
       NotificationSettings.validate();
       html_TR_TD();
       html_add_button_prefix();
-      TXBuffer += F("notifications?index=");
-      TXBuffer += x + 1;
-      TXBuffer += F("'>Edit</a>");
+      addHtml(F("notifications?index="));
+      addHtml(String(x + 1));
+      addHtml(F("'>Edit</a>"));
       html_TD();
-      TXBuffer += x + 1;
+      addHtml(String(x + 1));
       html_TD();
 
       if (Settings.Notification[x] != 0)
@@ -104,18 +110,18 @@ void handle_notifications() {
         addEnabled(Settings.NotificationEnabled[x]);
 
         html_TD();
-        byte   NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[x]);
+        byte   NotificationProtocolIndex = getNProtocolIndex(Settings.Notification[x]);
         String NotificationName          = F("(plugin not found?)");
 
-        if (NotificationProtocolIndex != NPLUGIN_NOT_FOUND)
+        if (validNProtocolIndex(NotificationProtocolIndex))
         {
-          NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_GET_DEVICENAME, 0, NotificationName);
+          NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_GET_DEVICENAME, 0, NotificationName);
         }
-        TXBuffer += NotificationName;
+        addHtml(NotificationName);
         html_TD();
-        TXBuffer += NotificationSettings.Server;
+        addHtml(NotificationSettings.Server);
         html_TD();
-        TXBuffer += NotificationSettings.Port;
+        addHtml(String(NotificationSettings.Port));
       }
       else {
         html_TD(3);
@@ -130,13 +136,13 @@ void handle_notifications() {
     addFormHeader(F("Notification Settings"));
     addRowLabel(F("Notification"));
     byte choice = Settings.Notification[notificationindex];
-    addSelector_Head(F("notification"), true);
+    addSelector_Head_reloadOnChange(F("notification"));
     addSelector_Item(F("- None -"), 0, false, false, "");
 
     for (byte x = 0; x <= notificationCount; x++)
     {
       String NotificationName = "";
-      NPlugin_ptr[x](NPLUGIN_GET_DEVICENAME, 0, NotificationName);
+      NPlugin_ptr[x](NPlugin::Function::NPLUGIN_GET_DEVICENAME, 0, NotificationName);
       addSelector_Item(NotificationName,
                        Notification[x].Number,
                        choice == Notification[x].Number,
@@ -153,9 +159,9 @@ void handle_notifications() {
       LoadNotificationSettings(notificationindex, (byte *)&NotificationSettings, sizeof(NotificationSettingsStruct));
       NotificationSettings.validate();
 
-      byte NotificationProtocolIndex = getNotificationProtocolIndex(Settings.Notification[notificationindex]);
+      nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
-      if (NotificationProtocolIndex != NPLUGIN_NOT_FOUND)
+      if (validNProtocolIndex(NotificationProtocolIndex))
       {
         if (Notification[NotificationProtocolIndex].usesMessaging)
         {
@@ -171,9 +177,9 @@ void handle_notifications() {
           addFormTextBox(F("Pass"),     F("pass"),     NotificationSettings.Pass,     sizeof(NotificationSettings.Pass) - 1);
 
           addRowLabel(F("Body"));
-          TXBuffer += F("<textarea name='body' rows='20' size=512 wrap='off'>");
-          TXBuffer += NotificationSettings.Body;
-          TXBuffer += F("</textarea>");
+          addHtml(F("<textarea name='body' rows='20' size=512 wrap='off'>"));
+          addHtml(NotificationSettings.Body);
+          addHtml(F("</textarea>"));
         }
 
         if (Notification[NotificationProtocolIndex].usesGPIO > 0)
@@ -187,10 +193,10 @@ void handle_notifications() {
 
         TempEvent.NotificationIndex = notificationindex;
         String webformLoadString;
-        NPlugin_ptr[NotificationProtocolIndex](NPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
+        NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
 
         if (webformLoadString.length() > 0) {
-          addHtmlError(F("Bug in NPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
+          addHtmlError(F("Bug in NPlugin::Function::NPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
         }
       }
     }
@@ -209,4 +215,4 @@ void handle_notifications() {
   TXBuffer.endStream();
 }
 
-#endif // NOTIFIER_SET_NONE
+#endif // USES_NOTIFIER

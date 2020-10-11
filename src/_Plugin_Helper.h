@@ -1,9 +1,21 @@
 #ifndef PLUGIN_HELPER_H
 #define PLUGIN_HELPER_H
 
+#include <Arduino.h>
+
 #include "ESPEasy_common.h"
+#include "ESPEasy_Log.h"
+#include "ESPEasy_fdwdecl.h"
+#include "src/DataStructs/DeviceStruct.h"
 #include "src/DataStructs/ESPEasyLimits.h"
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/ESPEasy_plugin_functions.h"
+#include "src/Globals/Device.h"
+#include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/I2C_access.h"
 
 // Defines to make plugins more readable.
 
@@ -50,31 +62,47 @@ struct PluginTaskData_base {
   // perform checks on the casting.
   // This is also a check to only use these functions and not to insert pointers
   // at random in the Plugin_task_data array.
-  deviceIndex_t _taskdata_deviceIndex = INVALID_DEVICE_INDEX;
+  pluginID_t _taskdata_pluginID = INVALID_PLUGIN_ID;
 };
 
 
+void                 resetPluginTaskData();
 
-void resetPluginTaskData();
+void                 clearPluginTaskData(taskIndex_t taskIndex);
 
-void clearPluginTaskData(taskIndex_t taskIndex);
-
-void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data);
+void                 initPluginTaskData(taskIndex_t          taskIndex,
+                                        PluginTaskData_base *data);
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex);
 
-bool pluginTaskData_initialized(taskIndex_t taskIndex);
+bool                 pluginTaskData_initialized(taskIndex_t taskIndex);
 
-String getPluginCustomArgName(int varNr);
+String               getPluginCustomArgName(int varNr);
 
 // Helper function to create formatted custom values for display in the devices overview page.
 // When called from PLUGIN_WEBFORM_SHOW_VALUES, the last item should add a traling div_br class
 // if the regular values should also be displayed.
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-String pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak = false);
+String pluginWebformShowValue(taskIndex_t   taskIndex,
+                              byte          varNr,
+                              const String& label,
+                              const String& value,
+                              bool          addTrailingBreak = false);
 
+// Check if given parameter nr matches with given taskIndex.
+// paramNr == 0 -> command, paramNr == 1 -> 1st parameter
+// When there is no parameter at given parameter position, this function will return true. (as it is an optional parameter)
+// When given taskIndex is invalid, return value is false.
+// Return if parameter at given paramNr matches given taskIndex.
+bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
+                                          const String& string,
+                                          byte          paramNr);
 
+int getValueCountForTask(taskIndex_t   taskIndex);
 
+// Check if the DeviceVType is set and update if it isn't.
+// Return pconfig_index
+int checkDeviceVTypeForTask(struct EventStruct* event);
 
 #endif // PLUGIN_HELPER_H

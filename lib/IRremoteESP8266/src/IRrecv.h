@@ -64,7 +64,8 @@ const uint16_t kStateSizeMax = 0;
 #endif
 
 // Types
-// information for the interrupt handler
+
+/// Information for the interrupt handler
 typedef struct {
   uint8_t recvpin;   // pin for IR data from detector
   uint8_t rcvstate;  // state machine
@@ -78,7 +79,7 @@ typedef struct {
   uint8_t timeout;   // Nr. of milliSeconds before we give up.
 } irparams_t;
 
-// results from a data match
+/// Results from a data match
 typedef struct {
   bool success;   // Was the match successful?
   uint64_t data;  // The data found.
@@ -87,7 +88,7 @@ typedef struct {
 
 // Classes
 
-// Results returned from the decoder
+/// Results returned from the decoder
 class decode_results {
  public:
   decode_type_t decode_type;  // NEC, SONY, RC5, UNKNOWN
@@ -109,7 +110,7 @@ class decode_results {
   bool repeat;  // Is the result a repeat code?
 };
 
-// main class for receiving IR
+/// Class for receiving IR messages.
 class IRrecv {
  public:
 #if defined(ESP32)
@@ -125,7 +126,8 @@ class IRrecv {
   ~IRrecv(void);                                                  // Destructor
   void setTolerance(const uint8_t percent = kTolerance);
   uint8_t getTolerance(void);
-  bool decode(decode_results *results, irparams_t *save = NULL);
+  bool decode(decode_results *results, irparams_t *save = NULL,
+              uint8_t max_skip = 0, uint16_t noise_floor = 0);
   void enableIRIn(const bool pullup = false);
   void disableIRIn(void);
   void resume(void);
@@ -220,286 +222,451 @@ class IRrecv {
                         const uint8_t tolerance = kUseDefTol,
                         const int16_t excess = kMarkExcess,
                         const bool MSBfirst = true);
+  uint16_t matchGenericConstBitTime(volatile uint16_t *data_ptr,
+                                    uint64_t *result_ptr,
+                                    const uint16_t remaining,
+                                    const uint16_t nbits,
+                                    const uint16_t hdrmark,
+                                    const uint32_t hdrspace,
+                                    const uint16_t one,
+                                    const uint32_t zero,
+                                    const uint16_t footermark,
+                                    const uint32_t footerspace,
+                                    const bool atleast = false,
+                                    const uint8_t tolerance = kUseDefTol,
+                                    const int16_t excess = kMarkExcess,
+                                    const bool MSBfirst = true);
+  uint16_t matchManchesterData(volatile const uint16_t *data_ptr,
+                               uint64_t *result_ptr,
+                               const uint16_t remaining,
+                               const uint16_t nbits,
+                               const uint16_t half_period,
+                               const uint16_t starting_balance = 0,
+                               const uint8_t tolerance = kUseDefTol,
+                               const int16_t excess = kMarkExcess,
+                               const bool MSBfirst = true,
+                               const bool GEThomas = true);
+  uint16_t matchManchester(volatile const uint16_t *data_ptr,
+                           uint64_t *result_ptr,
+                           const uint16_t remaining,
+                           const uint16_t nbits,
+                           const uint16_t hdrmark,
+                           const uint32_t hdrspace,
+                           const uint16_t clock_period,
+                           const uint16_t footermark,
+                           const uint32_t footerspace,
+                           const bool atleast = false,
+                           const uint8_t tolerance = kUseDefTol,
+                           const int16_t excess = kMarkExcess,
+                           const bool MSBfirst = true,
+                           const bool GEThomas = true);
+  void crudeNoiseFilter(decode_results *results, const uint16_t floor = 0);
   bool decodeHash(decode_results *results);
-#if (DECODE_NEC || DECODE_SHERWOOD || DECODE_AIWA_RC_T501 || SEND_SANYO)
-  bool decodeNEC(decode_results *results, uint16_t nbits = kNECBits,
-                 bool strict = true);
+#if (DECODE_NEC || DECODE_SHERWOOD || DECODE_AIWA_RC_T501 || DECODE_SANYO)
+  bool decodeNEC(decode_results *results, uint16_t offset = kStartOffset,
+                 const uint16_t nbits = kNECBits, const bool strict = true);
 #endif
 #if DECODE_ARGO
-  bool decodeArgo(decode_results *results, const uint16_t nbits = kArgoBits,
-                  const bool strict = true);
+  bool decodeArgo(decode_results *results, uint16_t offset = kStartOffset,
+                  const uint16_t nbits = kArgoBits, const bool strict = true);
 #endif  // DECODE_ARGO
 #if DECODE_SONY
-  bool decodeSony(decode_results *results, uint16_t nbits = kSonyMinBits,
-                  bool strict = false);
+  bool decodeSony(decode_results *results, uint16_t offset = kStartOffset,
+                  const uint16_t nbits = kSonyMinBits,
+                  const bool strict = false);
 #endif
 #if DECODE_SANYO
   // DISABLED due to poor quality.
-  // bool decodeSanyo(decode_results *results,
+  // bool decodeSanyo(decode_results *results, uint16_t offset = kStartOffset,
   //                  uint16_t nbits = kSanyoSA8650BBits,
   //                  bool strict = false);
   bool decodeSanyoLC7461(decode_results *results,
-                         uint16_t nbits = kSanyoLC7461Bits, bool strict = true);
+                         uint16_t offset = kStartOffset,
+                         const uint16_t nbits = kSanyoLC7461Bits,
+                         const bool strict = true);
 #endif
+#if DECODE_SANYO_AC
+  bool decodeSanyoAc(decode_results *results,
+                     uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kSanyoAcBits,
+                     const bool strict = true);
+#endif  // DECODE_SANYO_AC
 #if DECODE_MITSUBISHI
-  bool decodeMitsubishi(decode_results *results,
-                        uint16_t nbits = kMitsubishiBits, bool strict = true);
+  bool decodeMitsubishi(decode_results *results, uint16_t offset = kStartOffset,
+                        const uint16_t nbits = kMitsubishiBits,
+                        const bool strict = true);
 #endif
 #if DECODE_MITSUBISHI2
   bool decodeMitsubishi2(decode_results *results,
-                         uint16_t nbits = kMitsubishiBits, bool strict = true);
+                         uint16_t offset = kStartOffset,
+                         const uint16_t nbits = kMitsubishiBits,
+                         const bool strict = true);
 #endif
 #if DECODE_MITSUBISHI_AC
   bool decodeMitsubishiAC(decode_results *results,
-                          uint16_t nbits = kMitsubishiACBits,
-                          bool strict = false);
+                          uint16_t offset = kStartOffset,
+                          const uint16_t nbits = kMitsubishiACBits,
+                          const bool strict = false);
 #endif
 #if DECODE_MITSUBISHI136
   bool decodeMitsubishi136(decode_results *results,
+                           uint16_t offset = kStartOffset,
                            const uint16_t nbits = kMitsubishi136Bits,
                            const bool strict = true);
 #endif
+#if DECODE_MITSUBISHI112
+  bool decodeMitsubishi112(decode_results *results,
+                           uint16_t offset = kStartOffset,
+                           const uint16_t nbits = kMitsubishi112Bits,
+                           const bool strict = true);
+#endif
 #if DECODE_MITSUBISHIHEAVY
-  bool decodeMitsubishiHeavy(decode_results *results, const uint16_t nbits,
+  bool decodeMitsubishiHeavy(decode_results *results,
+                             uint16_t offset = kStartOffset,
+                             const uint16_t nbits = kMitsubishiHeavy152Bits,
                              const bool strict = true);
 #endif
 #if (DECODE_RC5 || DECODE_R6 || DECODE_LASERTAG || DECODE_MWM)
   int16_t getRClevel(decode_results *results, uint16_t *offset, uint16_t *used,
-                     uint16_t bitTime, uint8_t tolerance = kUseDefTol,
-                     int16_t excess = kMarkExcess, uint16_t delta = 0,
-                     uint8_t maxwidth = 3);
+                     uint16_t bitTime, const uint8_t tolerance = kUseDefTol,
+                     const int16_t excess = kMarkExcess,
+                     const uint16_t delta = 0, const uint8_t maxwidth = 3);
 #endif
 #if DECODE_RC5
-  bool decodeRC5(decode_results *results, uint16_t nbits = kRC5XBits,
-                 bool strict = true);
+  bool decodeRC5(decode_results *results, uint16_t offset = kStartOffset,
+                 const uint16_t nbits = kRC5XBits,
+                 const bool strict = true);
 #endif
 #if DECODE_RC6
-  bool decodeRC6(decode_results *results, uint16_t nbits = kRC6Mode0Bits,
-                 bool strict = false);
+  bool decodeRC6(decode_results *results, uint16_t offset = kStartOffset,
+                 const uint16_t nbits = kRC6Mode0Bits,
+                 const bool strict = false);
 #endif
 #if DECODE_RCMM
-  bool decodeRCMM(decode_results *results, uint16_t nbits = kRCMMBits,
-                  bool strict = false);
+  bool decodeRCMM(decode_results *results, uint16_t offset = kStartOffset,
+                  const uint16_t nbits = kRCMMBits,
+                  const bool strict = false);
 #endif
 #if (DECODE_PANASONIC || DECODE_DENON)
-  bool decodePanasonic(decode_results *results,
+  bool decodePanasonic(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kPanasonicBits,
                        const bool strict = false,
                        const uint32_t manufacturer = kPanasonicManufacturer);
 #endif
 #if DECODE_LG
-  bool decodeLG(decode_results *results, uint16_t nbits = kLgBits,
-                bool strict = false);
+  bool decodeLG(decode_results *results, uint16_t offset = kStartOffset,
+                const uint16_t nbits = kLgBits,
+                const bool strict = false);
 #endif
 #if DECODE_INAX
-  bool decodeInax(decode_results *results, const uint16_t nbits = kInaxBits,
+  bool decodeInax(decode_results *results, uint16_t offset = kStartOffset,
+                  const uint16_t nbits = kInaxBits,
                   const bool strict = true);
 #endif  // DECODE_INAX
 #if DECODE_JVC
-  bool decodeJVC(decode_results *results, uint16_t nbits = kJvcBits,
-                 bool strict = true);
+  bool decodeJVC(decode_results *results, uint16_t offset = kStartOffset,
+                 const uint16_t nbits = kJvcBits,
+                 const bool strict = true);
 #endif
 #if DECODE_SAMSUNG
-  bool decodeSAMSUNG(decode_results *results,
+  bool decodeSAMSUNG(decode_results *results, uint16_t offset = kStartOffset,
                      const uint16_t nbits = kSamsungBits,
                      const bool strict = true);
 #endif
 #if DECODE_SAMSUNG
-  bool decodeSamsung36(decode_results *results,
+  bool decodeSamsung36(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kSamsung36Bits,
                        const bool strict = true);
 #endif
 #if DECODE_SAMSUNG_AC
-  bool decodeSamsungAC(decode_results *results,
+  bool decodeSamsungAC(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kSamsungAcBits,
                        const bool strict = true);
 #endif
 #if DECODE_WHYNTER
-  bool decodeWhynter(decode_results *results, uint16_t nbits = kWhynterBits,
-                     bool strict = true);
+  bool decodeWhynter(decode_results *results, uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kWhynterBits,
+                     const bool strict = true);
 #endif
 #if DECODE_COOLIX
-  bool decodeCOOLIX(decode_results *results, uint16_t nbits = kCoolixBits,
-                    bool strict = true);
+  bool decodeCOOLIX(decode_results *results, uint16_t offset = kStartOffset,
+                    const uint16_t nbits = kCoolixBits,
+                    const bool strict = true);
 #endif
 #if DECODE_DENON
-  bool decodeDenon(decode_results *results, uint16_t nbits = kDenonBits,
-                   bool strict = true);
+  bool decodeDenon(decode_results *results, uint16_t offset = kStartOffset,
+                   const uint16_t nbits = kDenonBits,
+                   const bool strict = true);
 #endif
 #if DECODE_DISH
-  bool decodeDISH(decode_results *results, uint16_t nbits = kDishBits,
-                  bool strict = true);
+  bool decodeDISH(decode_results *results, uint16_t offset = kStartOffset,
+                  const uint16_t nbits = kDishBits,
+                  const bool strict = true);
 #endif
 #if (DECODE_SHARP || DECODE_DENON)
-  bool decodeSharp(decode_results *results, const uint16_t nbits = kSharpBits,
+  bool decodeSharp(decode_results *results, uint16_t offset = kStartOffset,
+                   const uint16_t nbits = kSharpBits,
                    const bool strict = true, const bool expansion = true);
 #endif
 #if DECODE_SHARP_AC
-  bool decodeSharpAc(decode_results *results,
+  bool decodeSharpAc(decode_results *results, uint16_t offset = kStartOffset,
                      const uint16_t nbits = kSharpAcBits,
                      const bool strict = true);
 #endif
 #if DECODE_AIWA_RC_T501
-  bool decodeAiwaRCT501(decode_results *results,
-                        uint16_t nbits = kAiwaRcT501Bits, bool strict = true);
+  bool decodeAiwaRCT501(decode_results *results, uint16_t offset = kStartOffset,
+                        const uint16_t nbits = kAiwaRcT501Bits,
+                        const bool strict = true);
 #endif
 #if DECODE_NIKAI
-  bool decodeNikai(decode_results *results, uint16_t nbits = kNikaiBits,
-                   bool strict = true);
+  bool decodeNikai(decode_results *results, uint16_t offset = kStartOffset,
+                   const uint16_t nbits = kNikaiBits,
+                   const bool strict = true);
 #endif
 #if DECODE_MAGIQUEST
-  bool decodeMagiQuest(decode_results *results, uint16_t nbits = kMagiquestBits,
-                       bool strict = true);
+  bool decodeMagiQuest(decode_results *results, uint16_t offset = kStartOffset,
+                       const uint16_t nbits = kMagiquestBits,
+                       const bool strict = true);
 #endif
 #if DECODE_KELVINATOR
-  bool decodeKelvinator(decode_results *results,
-                        uint16_t nbits = kKelvinatorBits, bool strict = true);
+  bool decodeKelvinator(decode_results *results, uint16_t offset = kStartOffset,
+                        const uint16_t nbits = kKelvinatorBits,
+                        const bool strict = true);
 #endif
 #if DECODE_DAIKIN
-  bool decodeDaikin(decode_results *results, const uint16_t nbits = kDaikinBits,
+  bool decodeDaikin(decode_results *results, uint16_t offset = kStartOffset,
+                    const uint16_t nbits = kDaikinBits,
                     const bool strict = true);
 #endif
+#if DECODE_DAIKIN64
+  bool decodeDaikin64(decode_results *results, uint16_t offset = kStartOffset,
+                      const uint16_t nbits = kDaikin64Bits,
+                      const bool strict = true);
+#endif  // DECODE_DAIKIN64
 #if DECODE_DAIKIN128
-  bool decodeDaikin128(decode_results *results,
+  bool decodeDaikin128(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kDaikin128Bits,
                        const bool strict = true);
 #endif  // DECODE_DAIKIN128
 #if DECODE_DAIKIN152
-  bool decodeDaikin152(decode_results *results,
+  bool decodeDaikin152(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kDaikin152Bits,
                        const bool strict = true);
 #endif  // DECODE_DAIKIN152
 #if DECODE_DAIKIN160
-  bool decodeDaikin160(decode_results *results,
+  bool decodeDaikin160(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kDaikin160Bits,
                        const bool strict = true);
 #endif  // DECODE_DAIKIN160
 #if DECODE_DAIKIN176
-  bool decodeDaikin176(decode_results *results,
+  bool decodeDaikin176(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kDaikin176Bits,
                        const bool strict = true);
 #endif  // DECODE_DAIKIN176
 #if DECODE_DAIKIN2
-  bool decodeDaikin2(decode_results *results, uint16_t nbits = kDaikin2Bits,
-                     bool strict = true);
+  bool decodeDaikin2(decode_results *results, uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kDaikin2Bits,
+                     const bool strict = true);
 #endif
 #if DECODE_DAIKIN216
-  bool decodeDaikin216(decode_results *results,
+  bool decodeDaikin216(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kDaikin216Bits,
                        const bool strict = true);
 #endif
 #if DECODE_TOSHIBA_AC
-  bool decodeToshibaAC(decode_results *results,
-                       const uint16_t nbytes = kToshibaACBits,
+  bool decodeToshibaAC(decode_results *results, uint16_t offset = kStartOffset,
+                       const uint16_t nbits = kToshibaACBits,
                        const bool strict = true);
 #endif
 #if DECODE_TROTEC
-  bool decodeTrotec(decode_results *results, const uint16_t nbits = kTrotecBits,
+  bool decodeTrotec(decode_results *results, uint16_t offset = kStartOffset,
+                    const uint16_t nbits = kTrotecBits,
                     const bool strict = true);
 #endif  // DECODE_TROTEC
 #if DECODE_MIDEA
-  bool decodeMidea(decode_results *results, uint16_t nbits = kMideaBits,
-                   bool strict = true);
-#endif
+  bool decodeMidea(decode_results *results, uint16_t offset = kStartOffset,
+                   const uint16_t nbits = kMideaBits,
+                   const bool strict = true);
+#endif  // DECODE_MIDEA
+#if DECODE_MIDEA24
+  bool decodeMidea24(decode_results *results, uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kMidea24Bits,
+                     const bool strict = true);
+#endif  // DECODE_MIDEA24
 #if DECODE_FUJITSU_AC
-  bool decodeFujitsuAC(decode_results *results, uint16_t nbits = kFujitsuAcBits,
-                       bool strict = false);
+  bool decodeFujitsuAC(decode_results *results, uint16_t offset = kStartOffset,
+                       const uint16_t nbits = kFujitsuAcBits,
+                       const bool strict = false);
 #endif
 #if DECODE_LASERTAG
-  bool decodeLasertag(decode_results *results, uint16_t nbits = kLasertagBits,
-                      bool strict = true);
+  bool decodeLasertag(decode_results *results, uint16_t offset = kStartOffset,
+                      const uint16_t nbits = kLasertagBits,
+                      const bool strict = true);
 #endif
 #if DECODE_CARRIER_AC
-  bool decodeCarrierAC(decode_results *results, uint16_t nbits = kCarrierAcBits,
-                       bool strict = true);
-#endif
+  bool decodeCarrierAC(decode_results *results, uint16_t offset = kStartOffset,
+                       const uint16_t nbits = kCarrierAcBits,
+                       const bool strict = true);
+#endif  // DECODE_CARRIER_AC
+#if DECODE_CARRIER_AC40
+  bool decodeCarrierAC40(decode_results *results,
+                         uint16_t offset = kStartOffset,
+                         const uint16_t nbits = kCarrierAc40Bits,
+                         const bool strict = true);
+#endif  // DECODE_CARRIER_AC40
+#if DECODE_CARRIER_AC64
+  bool decodeCarrierAC64(decode_results *results,
+                         uint16_t offset = kStartOffset,
+                         const uint16_t nbits = kCarrierAc64Bits,
+                         const bool strict = true);
+#endif  // DECODE_CARRIER_AC64
 #if DECODE_GOODWEATHER
   bool decodeGoodweather(decode_results *results,
+                         uint16_t offset = kStartOffset,
                          const uint16_t nbits = kGoodweatherBits,
                          const bool strict = true);
 #endif  // DECODE_GOODWEATHER
 #if DECODE_GREE
-  bool decodeGree(decode_results *results, uint16_t nbits = kGreeBits,
-                  bool strict = true);
+  bool decodeGree(decode_results *results, uint16_t offset = kStartOffset,
+                  const uint16_t nbits = kGreeBits,
+                  const bool strict = true);
 #endif
 #if (DECODE_HAIER_AC | DECODE_HAIER_AC_YRW02)
-  bool decodeHaierAC(decode_results *results, uint16_t nbits = kHaierACBits,
-                     bool strict = true);
+  bool decodeHaierAC(decode_results *results, uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kHaierACBits,
+                     const bool strict = true);
 #endif
 #if DECODE_HAIER_AC_YRW02
   bool decodeHaierACYRW02(decode_results *results,
-                          uint16_t nbits = kHaierACYRW02Bits,
-                          bool strict = true);
+                          uint16_t offset = kStartOffset,
+                          const uint16_t nbits = kHaierACYRW02Bits,
+                          const bool strict = true);
 #endif
-#if (DECODE_HITACHI_AC || DECODE_HITACHI_AC2)
-  bool decodeHitachiAC(decode_results *results,
+#if (DECODE_HITACHI_AC || DECODE_HITACHI_AC2 || DECODE_HITACHI_AC344)
+  bool decodeHitachiAC(decode_results *results, uint16_t offset = kStartOffset,
                        const uint16_t nbits = kHitachiAcBits,
-                       const bool strict = true);
+                       const bool strict = true, const bool MSBfirst = true);
 #endif
 #if DECODE_HITACHI_AC1
-  bool decodeHitachiAC1(decode_results *results,
+  bool decodeHitachiAC1(decode_results *results, uint16_t offset = kStartOffset,
                         const uint16_t nbits = kHitachiAc1Bits,
                         const bool strict = true);
 #endif
+#if DECODE_HITACHI_AC3
+  bool decodeHitachiAc3(decode_results *results,
+                          uint16_t offset = kStartOffset,
+                          const uint16_t nbits = kHitachiAc3Bits,
+                          const bool strict = true);
+#endif  // DECODE_HITACHI_AC3
+#if DECODE_HITACHI_AC424
+  bool decodeHitachiAc424(decode_results *results,
+                          uint16_t offset = kStartOffset,
+                          const uint16_t nbits = kHitachiAc424Bits,
+                          const bool strict = true);
+#endif  // DECODE_HITACHI_AC424
 #if DECODE_GICABLE
-  bool decodeGICable(decode_results *results, uint16_t nbits = kGicableBits,
-                     bool strict = true);
+  bool decodeGICable(decode_results *results, uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kGicableBits,
+                     const bool strict = true);
 #endif
 #if DECODE_WHIRLPOOL_AC
   bool decodeWhirlpoolAC(decode_results *results,
+                         uint16_t offset = kStartOffset,
                          const uint16_t nbits = kWhirlpoolAcBits,
                          const bool strict = true);
 #endif
 #if DECODE_LUTRON
-  bool decodeLutron(decode_results *results, uint16_t nbits = kLutronBits,
-                    bool strict = true);
+  bool decodeLutron(decode_results *results, uint16_t offset = kStartOffset,
+                    const uint16_t nbits = kLutronBits,
+                    const bool strict = true);
 #endif
 #if DECODE_ELECTRA_AC
-  bool decodeElectraAC(decode_results *results, uint16_t nbits = kElectraAcBits,
-                       bool strict = true);
+  bool decodeElectraAC(decode_results *results, uint16_t offset = kStartOffset,
+                       const uint16_t nbits = kElectraAcBits,
+                       const bool strict = true);
 #endif
 #if DECODE_PANASONIC_AC
   bool decodePanasonicAC(decode_results *results,
+                         uint16_t offset = kStartOffset,
                          const uint16_t nbits = kPanasonicAcBits,
                          const bool strict = true);
 #endif
 #if DECODE_PIONEER
-  bool decodePioneer(decode_results *results,
+  bool decodePioneer(decode_results *results, uint16_t offset = kStartOffset,
                      const uint16_t nbits = kPioneerBits,
                      const bool strict = true);
 #endif
 #if DECODE_MWM
-  bool decodeMWM(decode_results *results, uint16_t nbits = 24,
-                 bool strict = true);
+  bool decodeMWM(decode_results *results, uint16_t offset = kStartOffset,
+                 const uint16_t nbits = 24,
+                 const bool strict = true);
 #endif
 #if DECODE_VESTEL_AC
-  bool decodeVestelAc(decode_results *results,
+  bool decodeVestelAc(decode_results *results, uint16_t offset = kStartOffset,
                       const uint16_t nbits = kVestelAcBits,
                       const bool strict = true);
 #endif
-#if DECODE_TCL112AC
-  bool decodeTcl112Ac(decode_results *results,
-                      const uint16_t nbits = kTcl112AcBits,
-                      const bool strict = true);
-#endif
 #if DECODE_TECO
-  bool decodeTeco(decode_results *results, const uint16_t nbits = kTecoBits,
+  bool decodeTeco(decode_results *results, uint16_t offset = kStartOffset,
+                  const uint16_t nbits = kTecoBits,
                   const bool strict = false);
 #endif
 #if DECODE_LEGOPF
-  bool decodeLegoPf(decode_results *results, const uint16_t nbits = kLegoPfBits,
+  bool decodeLegoPf(decode_results *results, uint16_t offset = kStartOffset,
+                    const uint16_t nbits = kLegoPfBits,
                     const bool strict = true);
 #endif
 #if DECODE_NEOCLIMA
-bool decodeNeoclima(decode_results *results,
-                    const uint16_t nbits = kNeoclimaBits,
-                    const bool strict = true);
+  bool decodeNeoclima(decode_results *results, uint16_t offset = kStartOffset,
+                      const uint16_t nbits = kNeoclimaBits,
+                      const bool strict = true);
 #endif  // DECODE_NEOCLIMA
 #if DECODE_AMCOR
-bool decodeAmcor(decode_results *results,
-                 const uint16_t nbits = kAmcorBits,
-                 const bool strict = true);
+  bool decodeAmcor(decode_results *results, uint16_t offset = kStartOffset,
+                   const uint16_t nbits = kAmcorBits,
+                   const bool strict = true);
 #endif  // DECODE_AMCOR
+#if DECODE_EPSON
+  bool decodeEpson(decode_results *results, uint16_t offset = kStartOffset,
+                   const uint16_t nbits = kEpsonBits,
+                   const bool strict = true);
+#endif  // DECODE_EPSON
+#if DECODE_SYMPHONY
+  bool decodeSymphony(decode_results *results, uint16_t offset = kStartOffset,
+                   const uint16_t nbits = kSymphonyBits,
+                   const bool strict = true);
+#endif  // DECODE_SYMPHONY
+#if DECODE_AIRWELL
+  bool decodeAirwell(decode_results *results, uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kAirwellBits,
+                     const bool strict = true);
+#endif  // DECODE_AIRWELL
+#if DECODE_DELONGHI_AC
+  bool decodeDelonghiAc(decode_results *results, uint16_t offset = kStartOffset,
+                     const uint16_t nbits = kDelonghiAcBits,
+                     const bool strict = true);
+#endif  // DECODE_DELONGHI_AC
+#if DECODE_DOSHISHA
+  bool decodeDoshisha(decode_results *results, uint16_t offset = kStartOffset,
+                      const uint16_t nbits = kDoshishaBits,
+                      const bool strict = true);
+#endif  // DECODE_DOSHISHA
+#if DECODE_MULTIBRACKETS
+  bool decodeMultibrackets(decode_results *results,
+                           uint16_t offset = kStartOffset,
+                           const uint16_t nbits = kMultibracketsBits,
+                           const bool strict = true);
+#endif  // DECODE_MULTIBRACKETS
+#if DECODE_CORONA_AC
+  bool decodeCoronaAc(decode_results *results, uint16_t offset = kStartOffset,
+                      const uint16_t nbits = kCoronaAcBitsShort,
+                      const bool strict = true);
+#endif  // DECODE_CORONA_AC
+#if DECODE_ZEPEAL
+bool decodeZepeal(decode_results *results, uint16_t offset = kStartOffset,
+                  const uint16_t nbits = kZepealBits,
+                  const bool strict = true);
+#endif  // DECODE_ZEPEAL
 };
 
 #endif  // IRRECV_H_

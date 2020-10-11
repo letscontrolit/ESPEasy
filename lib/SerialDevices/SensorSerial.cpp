@@ -26,14 +26,14 @@
 #include <SensorSerial.h>
 
 #ifdef ESP32
-SensorSerial::SensorSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) :
- ESPeasySerial(receivePin, transmitPin, inverse_logic)
+SensorSerial::SensorSerial(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) :
+ ESPeasySerial(port, receivePin, transmitPin, inverse_logic)
 {}
 #endif
 
 #ifdef ESP8266
-SensorSerial::SensorSerial(int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) :
- ESPeasySerial(receivePin, transmitPin, inverse_logic, buffSize)
+SensorSerial::SensorSerial(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize) :
+ ESPeasySerial(port, receivePin, transmitPin, inverse_logic, buffSize)
 {}
 #endif
 
@@ -46,9 +46,9 @@ int SensorSerial::peek()
   return ESPeasySerial::peek();
 }
 
-size_t SensorSerial::write(uint8_t byte)
+size_t SensorSerial::write(uint8_t val)
 {
-  return ESPeasySerial::write(byte);
+  return ESPeasySerial::write(val);
 }
 
 int SensorSerial::read()

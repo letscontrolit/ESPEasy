@@ -1,22 +1,46 @@
 // Copyright 2016 sillyfrog
 // Copyright 2017 sillyfrog, crankyoldgit
-// Copyright 2018-2019 crankyoldgit
+// Copyright 2018-2020 crankyoldgit
+// Copyright 2019 pasna (IRDaikin160 class / Daikin176 class)
+
+/// @file
+/// @brief Support for Daikin A/C protocols.
+/// @see Daikin http://harizanov.com/2012/02/control-daikin-air-conditioner-over-the-internet/
+/// @see Daikin https://github.com/mharizanov/Daikin-AC-remote-control-over-the-Internet/tree/master/IRremote
+/// @see Daikin http://rdlab.cdmt.vn/project-2013/daikin-ir-protocol
+/// @see Daikin https://github.com/blafois/Daikin-IR-Reverse
+/// @see Daikin128 https://github.com/crankyoldgit/IRremoteESP8266/issues/827
+/// @see Daikin152 https://github.com/crankyoldgit/IRremoteESP8266/issues/873
+/// @see Daikin152 https://github.com/ToniA/arduino-heatpumpir/blob/master/DaikinHeatpumpARC480A14IR.cpp
+/// @see Daikin152 https://github.com/ToniA/arduino-heatpumpir/blob/master/DaikinHeatpumpARC480A14IR.h
+/// @see Daikin160 https://github.com/crankyoldgit/IRremoteESP8266/issues/731
+/// @see Daikin2 https://docs.google.com/spreadsheets/d/1f8EGfIbBUo2B-CzUFdrgKQprWakoYNKM80IKZN4KXQE/edit#gid=236366525&range=B25:D32
+/// @see Daikin2 https://github.com/crankyoldgit/IRremoteESP8266/issues/582
+/// @see Daikin2 https://www.daikin.co.nz/sites/default/files/daikin-split-system-US7-FTXZ25-50NV1B.pdf
+/// @see Daikin216 https://github.com/crankyoldgit/IRremoteESP8266/issues/689
+/// @see Daikin216 https://github.com/danny-source/Arduino_DY_IRDaikin
+/// @see Daikin64 https://github.com/crankyoldgit/IRremoteESP8266/issues/1064
 
 // Supports:
-//   Brand: Daikin,  Model: ARC433** remote
-//   Brand: Daikin,  Model: ARC477A1 remote
-//   Brand: Daikin,  Model: FTXZ25NV1B A/C
-//   Brand: Daikin,  Model: FTXZ35NV1B A/C
-//   Brand: Daikin,  Model: FTXZ50NV1B A/C
-//   Brand: Daikin,  Model: ARC433B69 remote
-//   Brand: Daikin,  Model: ARC423A5 remote
+//   Brand: Daikin,  Model: ARC433** remote (DAIKIN)
+//   Brand: Daikin,  Model: ARC477A1 remote (DAIKIN2)
+//   Brand: Daikin,  Model: FTXZ25NV1B A/C (DAIKIN2)
+//   Brand: Daikin,  Model: FTXZ35NV1B A/C (DAIKIN2)
+//   Brand: Daikin,  Model: FTXZ50NV1B A/C (DAIKIN2)
+//   Brand: Daikin,  Model: ARC433B69 remote (DAIKIN216)
+//   Brand: Daikin,  Model: ARC423A5 remote (DAIKIN160)
 //   Brand: Daikin,  Model: FTE12HV2S A/C
-//   Brand: Daikin,  Model: BRC4C153 remote
+//   Brand: Daikin,  Model: BRC4C153 remote (DAIKIN176)
 //   Brand: Daikin,  Model: 17 Series A/C (DAIKIN128)
 //   Brand: Daikin,  Model: FTXB12AXVJU A/C (DAIKIN128)
 //   Brand: Daikin,  Model: FTXB09AXVJU A/C (DAIKIN128)
 //   Brand: Daikin,  Model: BRC52B63 remote (DAIKIN128)
 //   Brand: Daikin,  Model: ARC480A5 remote (DAIKIN152)
+//   Brand: Daikin,  Model: FFN-C/FCN-F Series A/C (DAIKIN64)
+//   Brand: Daikin,  Model: DGS01 remote (DAIKIN64)
+//   Brand: Daikin,  Model: M Series A/C (DAIKIN)
+//   Brand: Daikin,  Model: FTXM-M A/C (DAIKIN)
+//   Brand: Daikin,  Model: ARC466A33 remote (DAIKIN)
 
 #ifndef IR_DAIKIN_H_
 #define IR_DAIKIN_H_
@@ -130,6 +154,8 @@ const uint8_t kDaikinByteChecksum2 = 15;
 const uint8_t kDaikinBytePower = 21;
 const uint8_t kDaikinBitPowerOffset = 0;
 const uint8_t kDaikinBitPower = 1 << kDaikinBitPowerOffset;
+const uint8_t kDaikinTempOffset = 1;
+const uint8_t kDaikinTempSize = 6;
 const uint8_t kDaikinByteTemp = 22;
 const uint8_t kDaikinByteFan = 24;
 const uint8_t kDaikinByteSwingH = 25;
@@ -187,7 +213,7 @@ const uint16_t kDaikinGap = 29000;
 const uint64_t kDaikinFirstHeader64 =
     0b1101011100000000000000001100010100000000001001111101101000010001;
 
-// Another variant of the protocol for the Daikin ARC477A1 remote.
+
 const uint16_t kDaikin2Freq = 36700;  // Modulation Frequency in Hz.
 const uint16_t kDaikin2LeaderMark = 10024;
 const uint16_t kDaikin2LeaderSpace = 25180;
@@ -233,8 +259,6 @@ const uint8_t kDaikin2SwingVBreeze = 0xC;
 const uint8_t kDaikin2SwingVCirculate = 0xD;
 const uint8_t kDaikin2FanByte = 28;
 
-// Ref:
-//   https://docs.google.com/spreadsheets/d/1f8EGfIbBUo2B-CzUFdrgKQprWakoYNKM80IKZN4KXQE/edit#gid=236366525&range=B25:D32
 const uint8_t kDaikin2SwingHWide =     0xA3;
 const uint8_t kDaikin2SwingHLeftMax =  0xA8;
 const uint8_t kDaikin2SwingHLeft =     0xA9;
@@ -246,7 +270,7 @@ const uint8_t kDaikin2SwingHSwing =    0xBF;
 
 const uint8_t kDaikin2MinCoolTemp = 18;  // Min temp (in C) when in Cool mode.
 
-// Another variant of the protocol for the Daikin ARC433B69 remote.
+
 const uint16_t kDaikin216Freq = 38000;  // Modulation Frequency in Hz.
 const uint16_t kDaikin216HdrMark = 3440;
 const uint16_t kDaikin216HdrSpace = 1750;
@@ -276,7 +300,7 @@ const uint8_t kDaikin216SwingOff = 0b0000;
 const uint8_t kDaikin216ByteSwingH = 17;
 const uint8_t kDaikin216BytePowerful = 21;
 
-// Another variant of the protocol for the Daikin ARC423A5 remote.
+
 const uint16_t kDaikin160Freq = 38000;  // Modulation Frequency in Hz.
 const uint16_t kDaikin160HdrMark = 5000;
 const uint16_t kDaikin160HdrSpace = 2145;
@@ -306,7 +330,7 @@ const uint8_t kDaikin160SwingVHigh =    0x4;
 const uint8_t kDaikin160SwingVHighest = 0x5;
 const uint8_t kDaikin160SwingVAuto =    0xF;
 
-// Another variant of the protocol for the Daikin BRC4C153 remote.
+
 const uint16_t kDaikin176Freq = 38000;  // Modulation Frequency in Hz.
 const uint16_t kDaikin176HdrMark = 5070;
 const uint16_t kDaikin176HdrSpace = 2140;
@@ -337,8 +361,7 @@ const uint8_t kDaikin176ByteSwingH = 18;
 const uint8_t kDaikin176SwingHAuto =  0x5;
 const uint8_t kDaikin176SwingHOff = 0x6;
 
-// Another variant of the protocol for the Daikin BRC52B63 remote.
-// Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/827
+
 const uint16_t kDaikin128Freq = 38000;  // Modulation Frequency in Hz.
 const uint16_t kDaikin128LeaderMark = 9800;
 const uint16_t kDaikin128LeaderSpace = 9800;
@@ -396,8 +419,7 @@ const uint8_t kDaikin128BitWall =         0b00001000;
 const uint8_t kDaikin128BitCeiling =      0b00000001;
 const uint8_t kDaikin128MaskLight = kDaikin128BitWall | kDaikin128BitCeiling;
 
-// Another variant of the protocol for the Daikin ARC480A5 remote.
-// Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/873
+
 const uint16_t kDaikin152Freq = 38000;  // Modulation Frequency in Hz.
 const uint8_t  kDaikin152LeaderBits = 5;
 const uint16_t kDaikin152HdrMark = 3492;
@@ -406,6 +428,80 @@ const uint16_t kDaikin152BitMark = 433;
 const uint16_t kDaikin152OneSpace = 1529;
 const uint16_t kDaikin152ZeroSpace = kDaikin152BitMark;
 const uint16_t kDaikin152Gap = 25182;
+
+// Byte[5]
+const uint8_t kDaikin152ModeByte = 5;                        // Mask 0b01110000
+const uint8_t kDaikin152PowerByte = kDaikin152ModeByte;      // Mask 0b00000001
+// Byte[6]
+const uint8_t kDaikin152TempByte = 6;                        // Mask 0b11111110
+const uint8_t kDaikin152TempSize = 7;
+const uint8_t kDaikin152DryTemp = kDaikin2MinCoolTemp;  // Celsius
+const uint8_t kDaikin152FanTemp = 0x60;  // 96 Celsius
+// Byte[8]
+const uint8_t kDaikin152FanByte = 8;
+const uint8_t kDaikin152SwingVByte = kDaikin152FanByte;
+// Byte[13]
+const uint8_t kDaikin152QuietByte = 13;                      // Mask 0b00100000
+const uint8_t kDaikin152PowerfulByte = kDaikin152QuietByte;  // Mask 0b00000001
+// Byte[16]
+const uint8_t kDaikin152EconoByte = 16;                      // Mask 0b00000100
+const uint8_t kDaikin152ComfortByte = kDaikin152EconoByte;   // Mask 0b00000010
+const uint8_t kDaikin152ComfortOffset = 1;                   // Mask 0b00000010
+const uint8_t kDaikin152SensorByte = kDaikin152EconoByte;    // Mask 0b00001000
+const uint8_t kDaikin152SensorOffset = 3;                    // Mask 0b00001000
+
+
+const uint16_t kDaikin64HdrMark = kDaikin128HdrMark;
+const uint16_t kDaikin64BitMark = kDaikin128BitMark;
+const uint16_t kDaikin64HdrSpace = kDaikin128HdrSpace;
+const uint16_t kDaikin64OneSpace = kDaikin128OneSpace;
+const uint16_t kDaikin64ZeroSpace = kDaikin128ZeroSpace;
+const uint16_t kDaikin64LdrMark = kDaikin128LeaderMark;
+const uint16_t kDaikin64Gap = kDaikin128Gap;
+const uint16_t kDaikin64LdrSpace = kDaikin128LeaderSpace;
+const uint16_t kDaikin64Freq = kDaikin128Freq;  // Hz.
+const uint8_t kDaikin64Overhead = 9;
+const int8_t  kDaikin64ToleranceDelta = 5;  // +5%
+
+const uint64_t kDaikin64KnownGoodState = 0x7C16161607204216;
+const uint8_t kDaikin64ModeOffset = 8;
+const uint8_t kDaikin64ModeSize = 4;  // Mask 0b111100000000
+const uint8_t kDaikin64Dry =  0b001;
+const uint8_t kDaikin64Cool = 0b010;
+const uint8_t kDaikin64Fan =  0b100;
+const uint8_t kDaikin64FanOffset = kDaikin64ModeOffset + kDaikin64ModeSize;
+const uint8_t kDaikin64FanSize = 4;  // Mask 0b1111000000000000
+const uint8_t kDaikin64FanAuto =  0b0001;
+const uint8_t kDaikin64FanLow =   0b1000;
+const uint8_t kDaikin64FanMed =   0b0100;
+const uint8_t kDaikin64FanHigh =  0b0010;
+const uint8_t kDaikin64FanQuiet = 0b1001;
+const uint8_t kDaikin64FanTurbo = 0b0011;
+const uint8_t kDaikin64ClockOffset = kDaikin64FanOffset + kDaikin64FanSize;
+const uint8_t kDaikin64ClockMinsSize = 8;
+const uint8_t kDaikin64ClockHoursSize = 8;
+const uint8_t kDaikin64ClockSize = kDaikin64ClockMinsSize +
+    kDaikin64ClockHoursSize;  // Mask 0b1111111111111111 << 15
+const uint8_t kDaikin64OnTimeOffset = kDaikin64ClockOffset +
+                                      kDaikin64ClockSize;
+const uint8_t kDaikin64OnTimeSize = 6;
+const uint8_t kDaikin64OnTimeHalfHourBit = kDaikin64OnTimeOffset +
+                                           kDaikin64OnTimeSize;
+const uint8_t kDaikin64OnTimeEnableBit = kDaikin64OnTimeHalfHourBit + 1;
+const uint8_t kDaikin64OffTimeOffset = kDaikin64OnTimeEnableBit + 1;
+const uint8_t kDaikin64OffTimeSize = 6;
+const uint8_t kDaikin64OffTimeHalfHourBit = kDaikin64OffTimeOffset +
+                                            kDaikin64OffTimeSize;
+const uint8_t kDaikin64OffTimeEnableBit = kDaikin64OffTimeHalfHourBit + 1;
+const uint8_t kDaikin64TempOffset = 48;
+const uint8_t kDaikin64TempSize = 8;  // Mask 0b11111111 << 47
+const uint8_t kDaikin64MinTemp = 16;  // Celsius
+const uint8_t kDaikin64MaxTemp = 30;  // Celsius
+const uint8_t kDaikin64SwingVBit = 56;
+const uint8_t kDaikin64SleepBit = kDaikin64SwingVBit + 1;
+const uint8_t kDaikin64PowerToggleBit = 59;
+const uint8_t kDaikin64ChecksumOffset = 60;
+const uint8_t kDaikin64ChecksumSize = 4;  // Mask 0b1111 << 59
 
 // Legacy defines.
 #define DAIKIN_COOL kDaikinCool
@@ -420,6 +516,7 @@ const uint16_t kDaikin152Gap = 25182;
 #define DAIKIN_FAN_AUTO kDaikinFanAuto
 #define DAIKIN_FAN_QUIET kDaikinFanQuiet
 
+/// Class for handling detailed Daikin 280-bit A/C messages.
 class IRDaikinESP {
  public:
   explicit IRDaikinESP(const uint16_t pin, const bool inverted = false,
@@ -427,7 +524,11 @@ class IRDaikinESP {
 
 #if SEND_DAIKIN
   void send(const uint16_t repeat = kDaikinDefaultRepeat);
-  uint8_t calibrate(void) { return _irsend.calibrate(); }
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
+  int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif
   void begin(void);
   void on(void);
@@ -484,17 +585,20 @@ class IRDaikinESP {
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
+  IRsend _irsend;  ///< instance of the IR send class
 #else
-  IRsendTest _irsend;
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< instance of the testing IR send class
+  /// @endcond
 #endif
   // # of bytes per command
-  uint8_t remote[kDaikinStateLength];
+  uint8_t remote[kDaikinStateLength];  ///< The state of the IR remote.
   void stateReset(void);
   void checksum(void);
 };
 
-// Class to emulate a Daikin ARC477A1 remote.
+/// Class for handling detailed Daikin 312-bit A/C messages.
+/// @note Code by crankyoldgit, Reverse engineering analysis by sheppy99
 class IRDaikin2 {
  public:
   explicit IRDaikin2(const uint16_t pin, const bool inverted = false,
@@ -502,7 +606,11 @@ class IRDaikin2 {
 
 #if SEND_DAIKIN2
   void send(const uint16_t repeat = kDaikin2DefaultRepeat);
-  uint8_t calibrate(void) { return _irsend.calibrate(); }
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
+  int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif
   void begin();
   void on();
@@ -523,8 +631,6 @@ class IRDaikin2 {
   void setQuiet(const bool on);
   bool getPowerful();
   void setPowerful(const bool on);
-  void setSensor(const bool on);
-  bool getSensor();
   void setEcono(const bool on);
   bool getEcono();
   void setEye(const bool on);
@@ -561,8 +667,6 @@ class IRDaikin2 {
   bool getFreshAirHigh();
   uint8_t* getRaw();
   void setRaw(const uint8_t new_code[]);
-  uint32_t getCommand();
-  void setCommand(uint32_t value);
   static bool validChecksum(uint8_t state[],
                             const uint16_t length = kDaikin2StateLength);
   static uint8_t convertMode(const stdAc::opmode_t mode);
@@ -576,19 +680,21 @@ class IRDaikin2 {
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
+  IRsend _irsend;  ///< instance of the IR send class
 #else
-  IRsendTest _irsend;
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< instance of the testing IR send class
+  /// @endcond
 #endif
   // # of bytes per command
-  uint8_t remote_state[kDaikin2StateLength];
+  uint8_t remote_state[kDaikin2StateLength];  ///< The state of the IR remote.
   void stateReset();
   void checksum();
   void clearOnTimerFlag();
   void clearSleepTimerFlag();
 };
 
-// Class to emulate a Daikin ARC433B69 remote.
+/// Class for handling detailed Daikin 216-bit A/C messages.
 class IRDaikin216 {
  public:
   explicit IRDaikin216(const uint16_t pin, const bool inverted = false,
@@ -596,7 +702,11 @@ class IRDaikin216 {
 
 #if SEND_DAIKIN216
   void send(const uint16_t repeat = kDaikin216DefaultRepeat);
-  uint8_t calibrate(void) { return _irsend.calibrate(); }
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
+  int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif
   void begin();
   uint8_t* getRaw();
@@ -628,17 +738,19 @@ class IRDaikin216 {
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
+  IRsend _irsend;  ///< instance of the IR send class
 #else
-  IRsendTest _irsend;
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< instance of the testing IR send class
+  /// @endcond
 #endif
   // # of bytes per command
-  uint8_t remote_state[kDaikin216StateLength];
+  uint8_t remote_state[kDaikin216StateLength];  ///< The state of the IR remote.
   void stateReset();
   void checksum();
 };
 
-// Class to emulate a Daikin ARC423A5 remote.
+/// Class for handling detailed Daikin 160-bit A/C messages.
 class IRDaikin160 {
  public:
   explicit IRDaikin160(const uint16_t pin, const bool inverted = false,
@@ -646,7 +758,11 @@ class IRDaikin160 {
 
 #if SEND_DAIKIN160
   void send(const uint16_t repeat = kDaikin160DefaultRepeat);
-  uint8_t calibrate(void) { return _irsend.calibrate(); }
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
+  int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif
   void begin();
   uint8_t* getRaw();
@@ -674,17 +790,19 @@ class IRDaikin160 {
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
+  IRsend _irsend;  ///< instance of the IR send class
 #else
-  IRsendTest _irsend;
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< instance of the testing IR send class
+  /// @endcond
 #endif
   // # of bytes per command
-  uint8_t remote_state[kDaikin160StateLength];
+  uint8_t remote_state[kDaikin160StateLength];  ///< The state of the IR remote.
   void stateReset();
   void checksum();
 };
 
-// Class to emulate a Daikin BRC4C153 remote.
+/// Class for handling detailed Daikin 176-bit A/C messages.
 class IRDaikin176 {
  public:
   explicit IRDaikin176(const uint16_t pin, const bool inverted = false,
@@ -692,7 +810,11 @@ class IRDaikin176 {
 
 #if SEND_DAIKIN176
   void send(const uint16_t repeat = kDaikin176DefaultRepeat);
-  uint8_t calibrate(void) { return _irsend.calibrate(); }
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
+  int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif
   void begin();
   uint8_t* getRaw();
@@ -723,25 +845,32 @@ class IRDaikin176 {
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
+  IRsend _irsend;  ///< instance of the IR send class
 #else
-  IRsendTest _irsend;
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< instance of the testing IR send class
+  /// @endcond
 #endif
   // # of bytes per command
-  uint8_t remote_state[kDaikin176StateLength];
+  uint8_t remote_state[kDaikin176StateLength];  ///< The state of the IR remote.
   uint8_t _saved_temp;
   void stateReset();
   void checksum();
 };
 
-// Class to emulate a Daikin BRC52B63 remote / Daikin 17 series A/C.
+/// Class for handling detailed Daikin 128-bit A/C messages.
+/// @note Code by crankyoldgit. Analysis by Daniel Vena
 class IRDaikin128 {
  public:
   explicit IRDaikin128(const uint16_t pin, const bool inverted = false,
                        const bool use_modulation = true);
 #if SEND_DAIKIN128
   void send(const uint16_t repeat = kDaikin128DefaultRepeat);
-  uint8_t calibrate(void) { return _irsend.calibrate(); }
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
+  int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_DAIKIN128
   void begin();
   void setPowerToggle(const bool toggle);
@@ -786,12 +915,14 @@ class IRDaikin128 {
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
+  IRsend _irsend;  ///< instance of the IR send class
 #else
-  IRsendTest _irsend;
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< instance of the testing IR send class
+  /// @endcond
 #endif
   // # of bytes per command
-  uint8_t remote_state[kDaikin128StateLength];
+  uint8_t remote_state[kDaikin128StateLength];  ///< The state of the IR remote.
   void stateReset(void);
   static uint8_t calcFirstChecksum(const uint8_t state[]);
   static uint8_t calcSecondChecksum(const uint8_t state[]);
@@ -802,7 +933,7 @@ class IRDaikin128 {
   void clearSleepTimerFlag(void);
 };
 
-// Class to emulate a Daikin ARC480A5 remote.
+/// Class for handling detailed Daikin 152-bit A/C messages.
 class IRDaikin152 {
  public:
   explicit IRDaikin152(const uint16_t pin, const bool inverted = false,
@@ -810,22 +941,119 @@ class IRDaikin152 {
 
 #if SEND_DAIKIN152
   void send(const uint16_t repeat = kDaikin152DefaultRepeat);
-  uint8_t calibrate(void) { return _irsend.calibrate(); }
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
+  int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif
   void begin();
   uint8_t* getRaw();
   void setRaw(const uint8_t new_code[]);
   static bool validChecksum(uint8_t state[],
                             const uint16_t length = kDaikin152StateLength);
+  void on(void);
+  void off(void);
+  void setPower(const bool on);
+  bool getPower(void);
+  void setTemp(const uint8_t temp);
+  uint8_t getTemp();
+  void setFan(const uint8_t fan);
+  uint8_t getFan(void);
+  void setMode(const uint8_t mode);
+  uint8_t getMode(void);
+  void setSwingV(const bool on);
+  bool getSwingV(void);
+  bool getQuiet(void);
+  void setQuiet(const bool on);
+  bool getPowerful(void);
+  void setPowerful(const bool on);
+  void setSensor(const bool on);
+  bool getSensor(void);
+  void setEcono(const bool on);
+  bool getEcono(void);
+  void setComfort(const bool on);
+  bool getComfort(void);
+  static uint8_t convertMode(const stdAc::opmode_t mode);
+  static uint8_t convertFan(const stdAc::fanspeed_t speed);
+  stdAc::state_t toCommon(void);
+  String toString(void);
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
+  IRsend _irsend;  ///< instance of the IR send class
 #else
-  IRsendTest _irsend;
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< instance of the testing IR send class
+  /// @endcond
 #endif
   // # of bytes per command
-  uint8_t remote_state[kDaikin152StateLength];
+  uint8_t remote_state[kDaikin152StateLength];  ///< The state of the IR remote.
+  void stateReset();
+  void checksum();
+};
+
+/// Class for handling detailed Daikin 64-bit A/C messages.
+class IRDaikin64 {
+ public:
+  explicit IRDaikin64(const uint16_t pin, const bool inverted = false,
+                       const bool use_modulation = true);
+
+#if SEND_DAIKIN64
+  void send(const uint16_t repeat = kDaikin64DefaultRepeat);
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
+  int8_t calibrate(void) { return _irsend.calibrate(); }
+#endif  // SEND_DAIKIN64
+  void begin();
+  uint64_t getRaw();
+  void setRaw(const uint64_t new_state);
+  static uint8_t calcChecksum(const uint64_t state);
+  static bool validChecksum(const uint64_t state);
+  void setPowerToggle(const bool on);
+  bool getPowerToggle(void);
+  void setTemp(const uint8_t temp);
+  uint8_t getTemp();
+  void setFan(const uint8_t fan);
+  uint8_t getFan(void);
+  void setMode(const uint8_t mode);
+  uint8_t getMode(void);
+  void setSwingVertical(const bool on);
+  bool getSwingVertical(void);
+  void setSleep(const bool on);
+  bool getSleep(void);
+  bool getQuiet(void);
+  void setQuiet(const bool on);
+  bool getTurbo(void);
+  void setTurbo(const bool on);
+  void setClock(const uint16_t mins_since_midnight);
+  uint16_t getClock(void);
+  void setOnTimeEnabled(const bool on);
+  bool getOnTimeEnabled(void);
+  void setOnTime(const uint16_t mins_since_midnight);
+  uint16_t getOnTime(void);
+  void setOffTimeEnabled(const bool on);
+  bool getOffTimeEnabled(void);
+  void setOffTime(const uint16_t mins_since_midnight);
+  uint16_t getOffTime(void);
+  static uint8_t convertMode(const stdAc::opmode_t mode);
+  static uint8_t convertFan(const stdAc::fanspeed_t speed);
+  static stdAc::opmode_t toCommonMode(const uint8_t mode);
+  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
+  stdAc::state_t toCommon(const stdAc::state_t *prev = NULL);
+  String toString(void);
+#ifndef UNIT_TEST
+
+ private:
+  IRsend _irsend;  ///< instance of the IR send class
+#else
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< instance of the testing IR send class
+  /// @endcond
+#endif
+  uint64_t remote_state;  ///< The state of the IR remote.
   void stateReset();
   void checksum();
 };

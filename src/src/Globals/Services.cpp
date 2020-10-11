@@ -6,14 +6,17 @@
 
 
 #ifdef ESP8266  
-  ESP8266WebServer WebServer(80);
+  ESP8266WebServer web_server(80);
   #ifndef NO_HTTP_UPDATER
   ESP8266HTTPUpdateServer httpUpdater(true);
   #endif
 #endif
 
-/*
 #ifdef ESP32
-  WebServer WebServer(80);
+  #include <WiFi.h>
+  #include <WebServer.h>
+  WebServer web_server(80);
+  #ifndef NO_HTTP_UPDATER
+  ESP32HTTPUpdateServer httpUpdater(true);
+  #endif
 #endif
-*/

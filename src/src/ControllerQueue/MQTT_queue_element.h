@@ -2,6 +2,8 @@
 #define CONTROLLERQUEUE_MQTT_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+#include "../Globals/CPlugins.h"
+
 
 /*********************************************************************************************\
 * MQTT_queue_element for all MQTT base controllers
@@ -11,15 +13,17 @@ public:
 
   MQTT_queue_element();
 
-  MQTT_queue_element(int ctrl_idx,
-                     const String& topic, const String& payload, bool retained);
+  explicit MQTT_queue_element(int           ctrl_idx,
+                              const String& topic,
+                              const String& payload,
+                              bool          retained);
 
   size_t getSize() const;
 
-  int controller_idx = 0;
   String _topic;
   String _payload;
-  bool _retained = false;
+  controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
+  bool _retained                   = false;
 };
 
 
