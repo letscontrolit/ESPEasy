@@ -100,7 +100,7 @@
 // Must be included after all the defines, since it is using TASKS_MAX
 #include "_Plugin_Helper.h"
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 
 #include "ESPEasyNetwork.h"
 #include "ESPEasyWiFi_credentials.h"

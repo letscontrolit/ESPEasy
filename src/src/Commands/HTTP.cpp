@@ -2,7 +2,6 @@
 
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasyNetwork.h"
-#include "../../_CPlugin_Helper.h"
 
 #include "../Commands/Common.h"
 
@@ -13,6 +12,7 @@
 
 #include "../Globals/Settings.h"
 
+#include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringParser.h"

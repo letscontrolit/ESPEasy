@@ -1,30 +1,30 @@
-#include "_CPlugin_Helper.h"
+#include "../Helpers/_CPlugin_Helper.h"
 
-#include "ESPEasy_common.h"
-#include "ESPEasy_fdwdecl.h"
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
 
-#include "src/CustomBuild/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 
-#include "src/DataStructs/SecurityStruct.h"
-#include "src/DataStructs/SettingsStruct.h"
+#include "../DataStructs/SecurityStruct.h"
+#include "../DataStructs/SettingsStruct.h"
 
-#include "src/DataStructs/ControllerSettingsStruct.h"
-#include "src/DataStructs/TimingStats.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
+#include "../DataStructs/TimingStats.h"
 
-#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
-#include "src/Globals/Settings.h"
-#include "src/Globals/SecuritySettings.h"
-#include "src/Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/Settings.h"
+#include "../Globals/SecuritySettings.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 
-#include "src/Helpers/CompiletimeDefines.h"
-#include "src/Helpers/ESPEasy_time_calc.h"
-#include "src/Helpers/Misc.h"
-#include "src/Helpers/Network.h"
-#include "src/Helpers/Networking.h"
-#include "src/Helpers/StringConverter.h"
+#include "../Helpers/CompiletimeDefines.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/Network.h"
+#include "../Helpers/Networking.h"
+#include "../Helpers/StringConverter.h"
 
-#include "ESPEasyNetwork.h"
+#include "../../ESPEasyNetwork.h"
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
@@ -340,7 +340,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   // therefore we calculate modulo 256.
   // see discussion here https://github.com/letscontrolit/ESPEasy/pull/1979
   // and implementation here
-  // https://github.com/esp8266/Arduino/blob/561426c0c77e9d05708f2c4bf2a956d3552a3706/libraries/ESP8266WiFi/src/include/ClientContext.h#L437-L467
+  // https://github.com/esp8266/Arduino/blob/561426c0c77e9d05708f2c4bf2a956d3552a3706/libraries/ESP8266WiFi/../include/ClientContext.h#L437-L467
   // this needs to be adjusted if the WiFiClient.print method changes.
   if (written != (postStr.length() % 256)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

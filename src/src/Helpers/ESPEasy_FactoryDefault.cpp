@@ -2,7 +2,6 @@
 
 #include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_common.h"
-#include "../../_CPlugin_Helper.h"
 #include "../../_Plugin_Helper.h"
 
 #include "../CustomBuild/StorageLayout.h"
@@ -18,6 +17,7 @@
 #include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/SecuritySettings.h"
 
+#include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"

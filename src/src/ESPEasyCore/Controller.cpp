@@ -3,7 +3,6 @@
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"
 
-#include "../../_CPlugin_Helper.h"
 #include "../../_Plugin_Helper.h"
 
 #include "../ControllerQueue/MQTT_queue_element.h"
@@ -24,6 +23,7 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/Protocol.h"
 
+#include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/PeriodicalActions.h"

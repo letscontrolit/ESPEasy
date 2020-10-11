@@ -1,16 +1,16 @@
 #ifndef CPLUGIN_HELPER_H
-#define CPLUGIN_HELPER_H CPLUGIN_HELPER_H
+#define CPLUGIN_HELPER_H
 
 #include <Arduino.h>
 
-#include "ESPEasy_common.h"
+#include "../../ESPEasy_common.h"
 
-#include "src/Globals/CPlugins.h"
-#include "src/Globals/ESPEasy_Scheduler.h"
-#include "src/Helpers/_CPlugin_Helper_webform.h"
-#include "src/Helpers/Numerical.h"
-#include "src/Helpers/StringConverter.h"
-#include "src/ControllerQueue/DelayQueueElements.h"
+#include "../Globals/CPlugins.h"
+#include "../Globals/ESPEasy_Scheduler.h"
+#include "../Helpers/_CPlugin_Helper_webform.h"
+#include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
+#include "../ControllerQueue/DelayQueueElements.h"
 
 struct ControllerSettingsStruct;
 class WiFiUDP;
