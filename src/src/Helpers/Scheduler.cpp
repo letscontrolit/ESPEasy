@@ -12,7 +12,7 @@
 #include "../Helpers/PeriodicalActions.h"
 
 
-#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
+//#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
 
 #define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
 #define SYSTEM_EVENT_QUEUE   0 // Not really a timer.
@@ -734,11 +734,47 @@ void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, pluginID_t plugi
 
 
 void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
-  // FIXME TD-er: Allow for all GPIO commands to be scheduled.
-  byte pinNumber     = id & 0xFF;
-  byte pinStateValue = (id >> 8);
+  byte GPIOType = static_cast<byte>((id) & 0xFF);
+  byte pinNumber = static_cast<byte>((id >> 8) & 0xFF);
+  byte pinStateValue = static_cast<byte>((id >> 16) & 0xFF);
 
-  digitalWrite(pinNumber, pinStateValue);
+  bool success = true;
+
+  byte pluginID;
+
+  switch (GPIOType)
+  {
+    case GPIO_TYPE_INTERNAL:
+      GPIO_Internal_Write(pinNumber, pinStateValue);
+      pluginID=PLUGIN_GPIO;
+      break;
+    case GPIO_TYPE_MCP:
+      GPIO_MCP_Write(pinNumber, pinStateValue);
+      pluginID=PLUGIN_MCP;
+      break;
+    case GPIO_TYPE_PCF:
+      GPIO_PCF_Write(pinNumber, pinStateValue);
+      pluginID=PLUGIN_PCF;
+      break;
+    default:
+      success=false;
+  }
+  if (success) {
+    const uint32_t key = createKey(pluginID, pinNumber);
+    // WARNING: operator [] creates an entry in the map if key does not exist
+    portStatusStruct tempStatus = globalMapPortStatus[key];
+
+    tempStatus.mode     = PIN_MODE_OUTPUT;
+    tempStatus.command  = 1; //set to 1 in order to display the status in the PinStatus page
+
+    if (tempStatus.state != pinStateValue) {
+      tempStatus.state        = pinStateValue;
+      tempStatus.output       = pinStateValue;
+      tempStatus.forceEvent   = 1;
+      tempStatus.forceMonitor = 1;
+    }
+    savePortStatus(key,tempStatus);
+  }
 }
 
 /*********************************************************************************************\

@@ -309,9 +309,11 @@ void GPIO_Monitor10xSec()
       }
       if (caseFound && ((it->second.state != currentState) || (it->second.forceMonitor && it->second.monitor))) {
         // update state
-        if (!it->second.task) it->second.state = currentState; //update state ONLY if task flag=false otherwise it will not be picked up by 10xSEC function
-        // send event
-        if (it->second.monitor) sendMonitorEvent(eventString.c_str(), gpioPort, currentState);
+        if (!it->second.task) {
+          it->second.state = currentState; //update state ONLY if task flag=false otherwise it will not be picked up by 10xSEC function
+          // send event if not task, otherwise is sent in the task PLUGIN_TEN_PER_SECOND
+          if (it->second.monitor) sendMonitorEvent(eventString.c_str(), gpioPort, currentState);
+        }
       }
       it->second.forceMonitor=0; //reset flag
     }

@@ -404,6 +404,10 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
             }
+            // send task event
+            sendData(event);
+            // send monitor event
+            if (currentStatus.monitor) sendMonitorEvent("PCF", CONFIG_PORT, output_value);
 
             // Reset forceEvent
             currentStatus.forceEvent = 0;
@@ -465,13 +469,18 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
             }
+            // send task event
             sendData(event);
+            // send monitor event
+            if (currentStatus.monitor) sendMonitorEvent("PCF", CONFIG_PORT, output_value);
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
           }
         } else {
           if (PCONFIG_LONG(3) == 1) { // Safe Button detected. Send EVENT value = 4
+            const byte SAFE_BUTTON_EVENT = 4;
+
             // Reset SafeButton counter
             PCONFIG_LONG(3) = 0;
 
@@ -486,7 +495,10 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
               log += tempUserVar;
               addLog(LOG_LEVEL_INFO, log);
             }
+            // send task event
             sendData(event);
+            // send monitor event
+            if (currentStatus.monitor) sendMonitorEvent("PCF", CONFIG_PIN1, SAFE_BUTTON_EVENT);
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = tempUserVar;
@@ -506,7 +518,11 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           log += F(" is offline (EVENT= -1)");
           addLog(LOG_LEVEL_INFO, log);
         }
+        // send task event
         sendData(event);
+        // send monitor event
+        if (currentStatus.monitor) sendMonitorEvent("PCF", CONFIG_PORT, -1);
+        
         savePortStatus(key, currentStatus);
       }
       success = true;

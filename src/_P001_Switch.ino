@@ -573,7 +573,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                   log += output_value;
                   addLog(LOG_LEVEL_INFO, log);
                 }
+                // send task event
                 sendData(event);
+                // send monitor event
+                if (currentStatus.monitor) sendMonitorEvent("GPIO", CONFIG_PIN1, output_value);
 
                 // reset Userdata so it displays the correct state value in the web page
                 UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -662,7 +665,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                   log += output_value;
                   addLog(LOG_LEVEL_INFO, log);
                 }
+                // send task event
                 sendData(event);
+                // send monitor event
+                if (currentStatus.monitor) sendMonitorEvent("GPIO", CONFIG_PIN1, output_value);
 
                 // reset Userdata so it displays the correct state value in the web page
                 UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -671,12 +677,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             }
           } else {
             if (PCONFIG_LONG(3) == 1) { // Safe Button detected. Send EVENT value = 4
+              const byte SAFE_BUTTON_EVENT = 4;
               // Reset SafeButton counter
               PCONFIG_LONG(3) = 0;
 
               // Create EVENT with value = 4 for SafeButton false positive detection
               const int tempUserVar = round(UserVar[event->BaseVarIndex]);
-              UserVar[event->BaseVarIndex] = 4;
+              UserVar[event->BaseVarIndex] = SAFE_BUTTON_EVENT;
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("SW  : SafeButton: false positive detected. GPIO= ");
@@ -685,7 +692,10 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 log += tempUserVar;
                 addLog(LOG_LEVEL_INFO, log);
               }
+              // send task event
               sendData(event);
+              // send monitor event
+              if (currentStatus.monitor) sendMonitorEvent("GPIO", CONFIG_PIN1, SAFE_BUTTON_EVENT);
 
               // reset Userdata so it displays the correct state value in the web page
               UserVar[event->BaseVarIndex] = tempUserVar;
