@@ -304,6 +304,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
          {
         const int8_t state = GPIO_MCP_Read(CONFIG_PORT);
+        const String monitorEventString = F("MCP");
         /**************************************************************************\
         20181022 - @giig1967g: new doubleclick logic is:
         if there is a 'state' change, check debounce period.
@@ -403,7 +404,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             // send task event
             sendData(event);
             // send monitor event
-            if (currentStatus.monitor) sendMonitorEvent("MCP", CONFIG_PORT, output_value);
+            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value);
 
             // Reset forceEvent
             currentStatus.forceEvent = 0;
@@ -468,7 +469,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             // send task event
             sendData(event);
             // send monitor event
-            if (currentStatus.monitor) sendMonitorEvent("MCP", CONFIG_PORT, output_value);
+            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value);
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -484,7 +485,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log = F("MCP : SafeButton: false positive detected. GPIO= ");
-              log += CONFIG_PIN1;
+              log += CONFIG_PORT;
               log += F(" State=");
               log += tempUserVar;
               addLog(LOG_LEVEL_INFO, log);
@@ -492,7 +493,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
             // send task event
             sendData(event);
             // send monitor event
-            if (currentStatus.monitor) sendMonitorEvent("MCP", CONFIG_PIN1, 4);
+            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, 4);
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = tempUserVar;
@@ -513,7 +514,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         // send task event
         sendData(event);
         // send monitor event
-        if (currentStatus.monitor) sendMonitorEvent("MCP", CONFIG_PORT, -1);
+        if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, -1);
 
         savePortStatus(key, currentStatus);
       }

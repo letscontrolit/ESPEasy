@@ -457,6 +457,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       // long timerstats = millis();
 
       // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
+      const String monitorEventString = F("GPIO");
+
       if ((CONFIG_PIN1 >= 0) && (CONFIG_PIN1 <= PIN_D_MAX))
       {
         const uint32_t   key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
@@ -576,7 +578,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 // send task event
                 sendData(event);
                 // send monitor event
-                if (currentStatus.monitor) sendMonitorEvent("GPIO", CONFIG_PIN1, output_value);
+                if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PIN1, output_value);
 
                 // reset Userdata so it displays the correct state value in the web page
                 UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -668,7 +670,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 // send task event
                 sendData(event);
                 // send monitor event
-                if (currentStatus.monitor) sendMonitorEvent("GPIO", CONFIG_PIN1, output_value);
+                if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PIN1, output_value);
 
                 // reset Userdata so it displays the correct state value in the web page
                 UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -695,7 +697,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               // send task event
               sendData(event);
               // send monitor event
-              if (currentStatus.monitor) sendMonitorEvent("GPIO", CONFIG_PIN1, SAFE_BUTTON_EVENT);
+              if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PIN1, SAFE_BUTTON_EVENT);
 
               // reset Userdata so it displays the correct state value in the web page
               UserVar[event->BaseVarIndex] = tempUserVar;
