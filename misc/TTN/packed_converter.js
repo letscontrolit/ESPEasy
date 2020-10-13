@@ -544,13 +544,9 @@ function Converter(decoded, port) {
 
                 case 82:
                     converted.name = "GPS";
-                    // The GPS plugin must be set first to output like this.
+                    // GPS data is already decoded in packed_decoder.js
                     // HDOP is needed by TTN mapper to weigh the quality of the data.
                     // When using TTN mapper, make sure to output these values.
-//                    converted.longitude  = converted.val_1;
-//                    converted.latitude  = converted.val_2;
-//                    converted.altitude  = converted.val_3;
-//                    converted.hdop  = converted.val_4;
                     break;
 
                 case 83:
@@ -568,12 +564,16 @@ function Converter(decoded, port) {
 
                 case 85:
                     converted.name = "AcuDC243";
-                    // This plugin can output any value, just using the default settings here.
-                    // TODO TD-er: Must add binary representation of all values
-                    converted.volt  = converted.val_1;
-                    converted.current  = converted.val_2;
-                    converted.watt  = converted.val_3;
-                    converted.wh_total  = converted.val_4;
+                    // This plugin can output any value, so show string representation 
+                    // of the unit of measure
+                    converted.unit1 = getAcuDC243Unit(converted.unit1);
+                    converted.unit2 = getAcuDC243Unit(converted.unit2);
+                    converted.unit3 = getAcuDC243Unit(converted.unit3);
+                    converted.unit4 = getAcuDC243Unit(converted.unit4);
+                    converted.v1  = converted.val_1;
+                    converted.v2  = converted.val_2;
+                    converted.v3  = converted.val_3;
+                    converted.v4  = converted.val_4;
                     break;
 
                 case 86:
@@ -668,4 +668,28 @@ function Converter(decoded, port) {
     }
 
     return converted;
+}
+
+function getAcuDC243Unit(unit_id) {
+    switch (unit_id) {
+        case 0: // P085_QUERY_V       0
+            return "V";
+        case 1: // P085_QUERY_A       1
+            return "A";
+        case 2: // P085_QUERY_W       2
+            return "W";
+        case 3: // P085_QUERY_Wh_imp  3
+            return "Wh imp";
+        case 4: // P085_QUERY_Wh_exp  4
+            return "Wh exp";
+        case 5: // P085_QUERY_Wh_tot  5
+            return "Wh total";
+        case 6: // P085_QUERY_Wh_net  6
+            return "Wh net";
+        case 7: // P085_QUERY_h_tot   7
+            return "hours tot";
+        case 8: // P085_QUERY_h_load  8
+            return "hours load";
+    }
+    return "unknown" + unit_id;
 }
