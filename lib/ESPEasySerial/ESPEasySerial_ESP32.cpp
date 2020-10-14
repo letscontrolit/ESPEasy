@@ -6,19 +6,26 @@
 // ****************************************
 
 #ifdef ESP32
-ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic, int serialPort)
+ESPeasySerial::ESPeasySerial(
+  ESPEasySerialPort port, 
+  int receivePin, 
+  int transmitPin, 
+  bool inverse_logic,
+  unsigned int buffSize)
   : _receivePin(receivePin), _transmitPin(transmitPin), _inverse_logic(inverse_logic)
 {
-  switch (serialPort) {
-    case 0: _serialtype = ESPeasySerialType::serialtype::serial0; break;
-    case 1: _serialtype = ESPeasySerialType::serialtype::serial1; break;
-    case 2: _serialtype = ESPeasySerialType::serialtype::serial2; break;
+  switch (port) {
+    case  ESPEasySerialPort::serial0:
+    case  ESPEasySerialPort::serial1:
+    case  ESPEasySerialPort::serial2:
+      _serialtype = port;
+      break;
     default:
-      _serialtype = ESPeasySerialType::getSerialType(receivePin, transmitPin);
+      _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
   }
 
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::sc16is752:
+    case ESPEasySerialPort::sc16is752:
     {
       ESPEasySC16IS752_Serial::I2C_address addr     = static_cast<ESPEasySC16IS752_Serial::I2C_address>(receivePin);
       ESPEasySC16IS752_Serial::SC16IS752_channel ch = static_cast<ESPEasySC16IS752_Serial::SC16IS752_channel>(transmitPin);
@@ -33,9 +40,12 @@ ESPeasySerial::ESPeasySerial(int receivePin, int transmitPin, bool inverse_logic
 
 ESPeasySerial::~ESPeasySerial() {
   end();
+
+#ifndef DISABLE_SC16IS752_Serial
   if (_i2cserial != nullptr) {
     delete _i2cserial;
   }
+#endif
 }
 
 void ESPeasySerial::begin(unsigned long baud, uint32_t config
@@ -54,9 +64,11 @@ void ESPeasySerial::begin(unsigned long baud, uint32_t config
   }
 
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     if (_i2cserial != nullptr) {
       _i2cserial->begin(baud);
     }
+#endif
   } else {
 
     // Make sure the extra bit is set for the config. The config differs between ESP32 and ESP82xx
@@ -76,7 +88,9 @@ void ESPeasySerial::end() {
     return;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     _i2cserial->end();
+#endif
   } else {
     getHW()->end();
   }
@@ -84,9 +98,9 @@ void ESPeasySerial::end() {
 
 HardwareSerial * ESPeasySerial::getHW() {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0: return &Serial;
-    case ESPeasySerialType::serialtype::serial1: return &Serial1;
-    case ESPeasySerialType::serialtype::serial2: return &Serial2;
+    case ESPEasySerialPort::serial0: return &Serial;
+    case ESPEasySerialPort::serial1: return &Serial1;
+    case ESPEasySerialPort::serial2: return &Serial2;
 
     default: break;
   }
@@ -95,9 +109,9 @@ HardwareSerial * ESPeasySerial::getHW() {
 
 const HardwareSerial * ESPeasySerial::getHW() const {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0: return &Serial;
-    case ESPeasySerialType::serialtype::serial1: return &Serial1;
-    case ESPeasySerialType::serialtype::serial2: return &Serial2;
+    case ESPEasySerialPort::serial0: return &Serial;
+    case ESPEasySerialPort::serial1: return &Serial1;
+    case ESPEasySerialPort::serial2: return &Serial2;
     default: break;
   }
   return nullptr;
@@ -105,13 +119,17 @@ const HardwareSerial * ESPeasySerial::getHW() const {
 
 bool ESPeasySerial::isValid() const {
   switch (_serialtype) {
-    case ESPeasySerialType::serialtype::serial0:
-    case ESPeasySerialType::serialtype::serial2:
+    case ESPEasySerialPort::serial0:
+    case ESPEasySerialPort::serial2:
       return true;
-    case ESPeasySerialType::serialtype::serial1:
+    case ESPEasySerialPort::serial1:
       return _transmitPin != -1 && _receivePin != -1;
-    case ESPeasySerialType::serialtype::sc16is752:    
+    case ESPEasySerialPort::sc16is752:
+    #ifndef DISABLE_SC16IS752_Serial
       return _i2cserial != nullptr;
+    #else
+      return false;
+    #endif
 
     // FIXME TD-er: Must perform proper check for GPIO pins here.
     default: break;
@@ -124,7 +142,11 @@ int ESPeasySerial::peek(void) {
     return -1;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->peek();
+#else
+    return false;
+#endif
   }
   return getHW()->peek();
 }
@@ -134,7 +156,11 @@ size_t ESPeasySerial::write(uint8_t val) {
     return 0;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->write(val);
+#else
+    return 0;
+#endif
   }
   return getHW()->write(val);
 }
@@ -144,7 +170,12 @@ size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
     return 0;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->write(buffer, size);
+#else
+    return 0;
+#endif
+
   }
   return getHW()->write(buffer, size);
 }
@@ -159,7 +190,11 @@ int ESPeasySerial::read(void) {
     return -1;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->read();
+#else
+    return -1;
+#endif
   }
   return getHW()->read();
 }
@@ -169,7 +204,11 @@ int ESPeasySerial::available(void) {
     return 0;
   }
   if (isI2Cserial()) {
+#ifndef DISABLE_SC16IS752_Serial
     return _i2cserial->available();
+#else
+    return 0;
+#endif
   }
   return getHW()->available();
 }
@@ -179,7 +218,9 @@ void ESPeasySerial::flush(void) {
     return;
   }
   if (isI2Cserial()) {
-    return _i2cserial->flush();
+#ifndef DISABLE_SC16IS752_Serial
+    _i2cserial->flush();
+#endif
   }
   getHW()->flush();
 }

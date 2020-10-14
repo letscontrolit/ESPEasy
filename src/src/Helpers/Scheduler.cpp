@@ -487,9 +487,8 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
   systemTimers.erase(mixedTimerId);
 
   if (validDeviceIndex(deviceIndex)) {
-    TempEvent.sensorType = getDeviceVTypeForTask(it->second.TaskIndex);
-
     if (validUserVarIndex(TempEvent.BaseVarIndex)) {
+      //checkDeviceVTypeForTask(&TempEvent);
       String dummy;
       Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
     }

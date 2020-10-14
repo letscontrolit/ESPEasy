@@ -214,8 +214,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
   }
 
   const byte valueCount = getValueCountForTask(event->TaskIndex);
-
-  Sensor_VType sensorType = getDeviceVTypeForTask(event->TaskIndex);
+  Sensor_VType sensorType = event->getSensorType();
 
   if (valueCount <= rel_index) {
     isvalid = false;
@@ -685,7 +684,7 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
   SMART_REPL(F("%id%"), String(event->idx))
 
   if (s.indexOf(F("%val")) != -1) {
-    if (event->sensorType == Sensor_VType::SENSOR_TYPE_LONG) {
+    if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
       SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
     } else {
       for (byte i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
@@ -792,6 +791,7 @@ void parseStandardConversions(String& s, boolean useURLencode) {
   SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(arg1))
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(arg1))
+  SMART_CONV(F("%c_2hex%"),   formatToHex(arg1, F("")))
   #undef SMART_CONV
 
   // Conversions with 2 parameters

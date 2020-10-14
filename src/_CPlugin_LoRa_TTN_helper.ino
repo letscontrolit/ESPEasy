@@ -34,7 +34,7 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
   if (raw_packed.length() > 0) {
     packed += raw_packed;
   } else {
-    switch (event->sensorType)
+    switch (event->getSensorType())
     {
       case Sensor_VType::SENSOR_TYPE_LONG:
       {

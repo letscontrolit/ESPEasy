@@ -84,7 +84,7 @@ bool ExtraTaskSettingsStruct::checkInvalidCharInNames(const char *name) const {
 bool ExtraTaskSettingsStruct::checkInvalidCharInNames() const {
   if (!checkInvalidCharInNames(&TaskDeviceName[0])) { return false; }
 
-  for (int i = 0; i < (VARS_PER_TASK - 1); ++i) {
+  for (int i = 0; i < VARS_PER_TASK; ++i) {
     if (!checkInvalidCharInNames(&TaskDeviceValueNames[i][0])) { return false; }
   }
   return true;
