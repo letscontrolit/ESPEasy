@@ -268,6 +268,13 @@ struct C018_data_struct {
     return sampleSetCounter;
   }
 
+  float getLoRaAirTime(uint8_t  pl) const {
+    if (isInitialized()) {
+      return myLora->getLoRaAirTime(pl);
+    }
+    return -1.0;
+  }
+
   void async_loop() {
     if (isInitialized()) {
       rn2xx3_handler::RN_state state = myLora->async_loop();
@@ -809,6 +816,21 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   bool   success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
+  if (success) {
+    uint8_t pl = (element.packed.length() / 2) + 13; // We have a LoRaWAN header of 13 bytes.
+    float airtime_ms = C018_data.getLoRaAirTime(pl);
+    if (airtime_ms > 0.0) {      
+      ADD_TIMER_STAT(C018_AIR_TIME, static_cast<unsigned long>(airtime_ms * 1000));
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("LoRaWAN : Payload Length: ");
+        log += pl;
+        log += F(" Air Time: ");
+        log += String(airtime_ms, 3);
+        log += F(" ms");
+        addLog(LOG_LEVEL_INFO, log);
+      }
+    }
+  }
   String error   = C018_data.getLastError(); // Clear the error string.
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

@@ -221,6 +221,42 @@ public:
    * This can be overwritten by the network when using OTAA.
    * So to force a datarate, call this function after initOTAA().
    */
+  /*
+    EU / CN
+    Frequencies:
+
+    EU 863-870 MHz (LoRaWAN Specification (2015), Page 35, Table 14)
+    CN 779-787 MHz (LoRaWAN Specification (2015), Page 44, Table 25)
+    EU 433 MHz (LoRaWAN Specification (2015), Page 48, Table 31)
+    DataRate    Modulation  SF  BW  bit/s
+    0           LoRa        12  125 250
+    1           LoRa        11  125 440
+    2           LoRa        10  125 980
+    3           LoRa        9   125 1'760
+    4           LoRa        8   125 3'125
+    5           LoRa        7   125 5'470
+    6           LoRa        7   250 11'000
+    7           FSK 50 kbps         50'000
+    Data rates 8-15 are reserved.
+
+    US
+    Frequencies:
+
+    US 902-928 MHz (LoRaWAN Specification (2015), Page 40, Table 18)
+    DataRate    Modulation  SF  BW  bit/s
+    0           LoRa        10  125 980
+    1           LoRa        9   125 1'760
+    2           LoRa        8   125 3'125
+    3           LoRa        7   125 5'470
+    4           LoRa        8   500 12'500
+    8           LoRa        12  500 980
+    9           LoRa        11  500 1'760
+    10          LoRa        10  500 3'900
+    11          LoRa        9   500 7'000
+    12          LoRa        8   500 12'500
+    13          LoRa        7   500 21'900
+    Data rates 5-7 and 14-15 are reserved.
+  */
   bool                     setDR(int dr);
 
   /*
@@ -286,6 +322,11 @@ public:
   String                   getLastError();
 
   String                   peekLastError() const;
+
+  // Compute the air time for a packet in msec.
+  // Formula used from https://www.loratools.nl/#/airtime
+  // @param pl   Payload length in bytes
+  float getLoRaAirTime(uint8_t  pl) const;
 
   bool                     hasJoined() const {
     return _rn2xx3_handler.Status.Joined;
