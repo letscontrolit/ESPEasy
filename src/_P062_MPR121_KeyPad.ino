@@ -6,6 +6,8 @@
 
 // ESPEasy Plugin to scan a 12 key touch pad chip MPR121
 // written by Jochen Krapf (jk@nerd2nerd.org)
+// 2020-10-14 tonhuisman: Added settings for global and per-sensor sensitivity
+//                        and getting 'calibration' touch pressure data (current, min, max)
 
 // ScanCode;
 // Value 1...12 for the key number
@@ -109,25 +111,13 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
         P062_data_struct *P062_data = static_cast<P062_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-#ifdef PLUGIN_062_DEBUG
-        String log = F("p062_data size: ");
-        log += sizeof(P062_data);
-#endif // PLUGIN_062_DEBUG
         if (nullptr == P062_data) {
-#ifdef PLUGIN_062_DEBUG
-          log += F(" nullpointer!");
-          addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_062_DEBUG
-          P062_data = new (std::nothrow) P062_data_struct(PCONFIG(0), PCONFIG(1), tbUseCalibration);
+          P062_data = new (std::nothrow) P062_data_struct();
           canCalibrate = false;
           if (P062_data == nullptr) {
             return success;
           }
         }
-#ifdef PLUGIN_062_DEBUG
-        log += F(" valid");
-        addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_062_DEBUG
         P062_data->loadTouchObjects(event->TaskIndex);
 
         addRowLabel(F("Object"), F(""));
@@ -198,7 +188,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         P062_data_struct *P062_data = static_cast<P062_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr == P062_data) {
-          P062_data = new (std::nothrow) P062_data_struct(PCONFIG(0), PCONFIG(1), tbUseCalibration);
+          P062_data = new (std::nothrow) P062_data_struct();
           canCalibrate = false;
           if (P062_data == nullptr) {
             return success; // Save other settings even though this didn't initialize properly
@@ -234,15 +224,14 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte address = PCONFIG(0);
       bool tbUseCalibration = bitRead(P062_CONFIG_FLAGS, P062_FLAGS_USE_CALIBRATION);
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P062_data_struct(address, PCONFIG(1), tbUseCalibration));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P062_data_struct());
       P062_data_struct *P062_data = static_cast<P062_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P062_data) {
         success = true;
-        if (!P062_data->init(event->TaskIndex)) {
+        if (!P062_data->init(event->TaskIndex, PCONFIG(0), PCONFIG(1), tbUseCalibration)) {
           clearPluginTaskData(event->TaskIndex);
           P062_data = nullptr;
         } else {

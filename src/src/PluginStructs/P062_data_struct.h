@@ -15,10 +15,11 @@
 struct P062_data_struct : public PluginTaskData_base {
 public:
 
-  P062_data_struct(uint8_t i2c_addr,
-                   bool    scancode,
-                   bool    keepCalibrationData);
-  bool init(taskIndex_t taskIndex);
+  P062_data_struct();
+  bool init(taskIndex_t taskIndex,
+            uint8_t     i2c_addr,
+            bool        scancode,
+            bool        keepCalibrationData);
 
   bool readKey(uint16_t& key);
   void setThresholds(uint8_t touch, uint8_t release);
@@ -61,9 +62,9 @@ private:
 
   Adafruit_MPR121 *keypad = NULL;
   uint16_t        keyLast = 0;
-  int8_t          i2c_addr = -1;
-  bool            use_scancode;
-  bool            keepCalibrationData;
+  int8_t          _i2c_addr = -1;
+  bool            _use_scancode;
+  bool            _keepCalibrationData;
 };
 
 #endif // ifdef USES_P062

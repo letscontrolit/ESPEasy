@@ -4,23 +4,29 @@
 #ifdef USES_P062
 #include "../Helpers/ESPEasy_Storage.h"
 
-P062_data_struct::P062_data_struct(uint8_t i2c_addr, bool scancode, bool keepCalibrationData) 
-    : i2c_addr(i2c_addr), use_scancode(scancode), keepCalibrationData(keepCalibrationData) {
+P062_data_struct::P062_data_struct() {
 #ifdef PLUGIN_062_DEBUG
   addLog(LOG_LEVEL_INFO, F("P062_data_struct constructor"));
 #endif
   clearCalibrationData(); // Reset
 }
 
-bool P062_data_struct::init(taskIndex_t taskIndex) {
+bool P062_data_struct::init(taskIndex_t taskIndex,
+                            uint8_t i2c_addr,
+                            bool scancode,
+                            bool keepCalibrationData) {
 #ifdef PLUGIN_062_DEBUG
   addLog(LOG_LEVEL_INFO, F("P062_data_struct init()"));
 #endif
+  _i2c_addr            = i2c_addr;
+  _use_scancode        = scancode;
+  _keepCalibrationData = keepCalibrationData;
+
   if (!keypad) {
     keypad = new Adafruit_MPR121();
   }
   if (keypad) {
-    keypad->begin(i2c_addr);
+    keypad->begin(_i2c_addr);
     loadTouchObjects(taskIndex);
     return true;
   }
@@ -29,7 +35,7 @@ bool P062_data_struct::init(taskIndex_t taskIndex) {
 
 void P062_data_struct::updateCalibration(uint8_t t) {
   if (t > 12) return;
-  if (keepCalibrationData) {
+  if (_keepCalibrationData) {
     uint16_t current = keypad->filteredData(t);
     CalibrationData.CalibrationValues[t].current = current;
     if (CalibrationData.CalibrationValues[t].min == 0 || current < CalibrationData.CalibrationValues[t].min) {
@@ -54,7 +60,7 @@ bool P062_data_struct::readKey(uint16_t& key) {
       if (key & colMask) // this key pressed?
       {
         updateCalibration(col);
-        if (use_scancode) {
+        if (_use_scancode) {
           key = col;
           break;
         }
