@@ -236,6 +236,7 @@ String getMiscStatsName(int stat) {
     case ESPEASY_NOW_SEND_MSG_FAIL: return F("ESPEasy Now send Message Fail");
     case ESPEASY_NOW_SEND_PCKT:    return F("ESPEasy Now send Packet");
     case ESPEASY_NOW_DEDUP_LOOP:   return F("ESPEasy Now DuplicateCheck loop");
+    case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");
     case C001_DELAY_QUEUE:
     case C002_DELAY_QUEUE:
     case C003_DELAY_QUEUE:
