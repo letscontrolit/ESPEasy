@@ -288,9 +288,9 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
             if (tbUseCalibration) {
               uint16_t colMask = 0x01;
-              log.reserve(50);
+              log.reserve(55);
 
-              for (byte col = 1; col <= 12; col++)
+              for (byte col = 0; col < P062_MaxTouchObjects; col++)
               {
                 if (key & colMask) // this key pressed?
                 {
@@ -298,7 +298,9 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
                   uint16_t min     = 0;
                   uint16_t max     = 0;
                   P062_data->getCalibrationData(col, &current, &min, &max);
-                  log  = F("P062 touch current: ");
+                  log  = F("P062 touch #");
+                  log += col;
+                  log += F(" current: ");
                   log += current;
                   log += F(" min: ");
                   log += min;
