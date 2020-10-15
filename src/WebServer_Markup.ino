@@ -349,12 +349,13 @@ void addFloatNumberBox(const String& id, float value, float min, float max)
   html += id;
   html += '\'';
   html += F(" min=");
-  html += min;
+  html += String(min, 6);
   html += F(" max=");
-  html += max;
-  html += F(" step=0.01");
-  html += F(" style='width:5em;' value=");
-  html += value;
+  html += String(max, 6);
+  html += F(" step=0.000001");
+
+  html += F(" style='width:7em;' value=");
+  html += String(value, 6);
   html += '>';
 
   addHtml(html);

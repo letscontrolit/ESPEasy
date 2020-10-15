@@ -21,8 +21,16 @@ function Decoder(bytes, port) {
   
       case 82:
         // GPS
-        return decode(bytes, [header, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8],
-          ['header', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked']);
+        if (header.valuecount === 7) {
+          return decode(bytes, [header, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8],
+            ['header', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked']);
+        } else if (header.valuecount === 8) {
+            return decode(bytes, [header, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8, uint24_1e2],
+              ['header', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked', 'distance_total_km']);
+        } else {
+          return decode(bytes, [header, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8, uint24_1e2, uint24_1e1],
+            ['header', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked', 'distance_total_km', 'distance_ref']);
+        }
 
       case 85:
         // AcuDC243
