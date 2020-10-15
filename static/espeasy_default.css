@@ -91,7 +91,7 @@ input.wide, select.wide{
 }
 .widenumber{
     max-width:500px;
-    width:100px
+    width:7em
 }
 .container,.container2{
     font-size:12pt;
