@@ -153,5 +153,39 @@ Decoding Data
 Controller Settings
 -------------------
 
+Since there are legal limitations on the amount of time you are allowed to send,
+it is even more important to understand what effect the Controller Queue parameters may have on the reliability of data transmission.
+
+You are allowed to send only 1% of the time.
+Meaning if your message takes 100 msec to send, you can only send a message every 10 seconds.
+
+As a rule of thumb, the time needed to send a message of N bytes doubles for every step up in the Spreading Factor.
+
+For example, a message sent at SF7 may take 100 msec to send.
+The same message sent at SF8, will take 200 msec.
+At SF9 takes 400 msec, etc. The slowest is SF12.
+
+The RN2483 module does keep track of the used air time, per channel.
+Meaning it is possible to send a burst of upto 8 messages (since we have 8 channels) after which we have to wait for a free channel to send out a new one.
+
+As with any other ESPEasy controller, there is a queue mechanism to manage the messages ready to be sent and also allow for a number of retries.
+
+This number of retries is even more important on this LoRaWAN TTN controller.
+If sending a message fails due to no free channels, the minimum send interval will be dynamically increased, based on the air time of the message to be sent.
+The dynamic adjustment is 10x the expected air time. So by setting the number of retries to 10, it is almost guaranteed the message will eventually be sent.
+10 retries with 10x the expected air time equals a maximum of 100x the expected air time, which eventually will be as low as 1% of the time sending.
+
+N.B. This expected air time is dependant on the set Spread Factor and the length of the message.
+
+In practice the messages will be sent in bursts, and thus the extra wait time is often 2 - 3x the expected air time of the message.
+So on setups with a large variation in message sizes, it makes sense to send the large ones at the start of a message burst.
+
+Setting the number of retries high (e.g. 10x), may be useful to make sure a sequence of messages in a burst will all get sent.
+But it may also lead to a large number of messages to be lost as the queue is full.
+So it depends on the use case what will be the best strategy here.
+
+At least the Minimum Send Interval can be kept low (e.g. the default 100 msec) to allow for quickly sending out a burst of upto 8 messages.
+
+
 
 

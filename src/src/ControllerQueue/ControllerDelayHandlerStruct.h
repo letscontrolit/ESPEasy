@@ -160,6 +160,13 @@ struct ControllerDelayHandlerStruct {
     return nextTime;
   }
 
+  // Set the "lastSend" to "now" + some additional delay.
+  // This will cause the next schedule time to be delayed to 
+  // msecFromNow + minTimeBetweenMessages
+  void setAdditionalDelay(unsigned long msecFromNow) {
+    lastSend = millis() + msecFromNow;
+  }
+
   size_t getQueueMemorySize() const {
     size_t totalSize = 0;
 

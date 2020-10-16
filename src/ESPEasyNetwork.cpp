@@ -160,17 +160,18 @@ String NetworkGetHostname() {
 // ********************************************************************************
 // Determine Wifi AP name to set. (also used for mDNS)
 // ********************************************************************************
-String NetworkGetHostNameFromSettings()
+String NetworkGetHostNameFromSettings(bool force_add_unitnr)
 {
+  if (force_add_unitnr) return Settings.getHostname(true);
   return Settings.getHostname();
 }
 
-String NetworkCreateRFCCompliantHostname() {
-  return createRFCCompliantHostname(NetworkGetHostNameFromSettings());
+String NetworkCreateRFCCompliantHostname(bool force_add_unitnr) {
+  return createRFCCompliantHostname(NetworkGetHostNameFromSettings(force_add_unitnr));
 }
 
 // Create hostname with - instead of spaces
-String createRFCCompliantHostname(String oldString) {
+String createRFCCompliantHostname(const String& oldString) {
   String result(oldString);
 
   result.replace(" ", "-");
