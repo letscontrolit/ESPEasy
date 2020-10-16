@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release mega-20201016 (since mega-20201009)
+-------------------------------------------------
+
+Release date: vr 16 okt 2020 23:26:50 CEST
+
+TD-er (7):
+      [LoRaTTN] Add encoder/decoder for unit of measure for AcuDC243
+      [WiFi] Fix WiFi (re)connect issues caused by new WiFi timers
+      [Timing Stats] Add duty cycle column + LoRa TTN on air timings
+      [Syslog] Fix syslog name does not include unit number (#3288)
+      [Docs] Document LoRaWAN TTN dynamic send interval setting
+      [GPS] Add distance counter + distance from ref point
+      [LoRa TTN] Fix decoder issue in GPS data
+
+Ton Huisman (1):
+      [Checks] Check all 4 variable names
+
+uwekaditz (1):
+      [P092] Exception solved
+
+
+-------------------------------------------------
 Changes in release mega-20201009 (since mega-20200929)
 -------------------------------------------------
 
