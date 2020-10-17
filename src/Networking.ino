@@ -85,7 +85,7 @@ void syslog(byte logLevel, const char *message)
     // Using Settings.Name as the Hostname (Hostname must NOT content space)
     {
       String header;
-      String hostname = Settings.Name;
+      String hostname = NetworkCreateRFCCompliantHostname(true);
       hostname.trim();
       hostname.replace(' ', '_');
       header.reserve(16 + hostname.length());
