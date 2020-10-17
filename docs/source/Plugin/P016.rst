@@ -21,6 +21,8 @@ Maintainer: |P016_maintainer|
 
 Used libraries: |P016_usedlibraries|
 
+.. include:: P016_TSOP4838.rst
+
 Supported hardware
 ------------------
 

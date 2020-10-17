@@ -23,6 +23,7 @@
 #include <IRrecv.h>
 
 #include "_Plugin_Helper.h"
+#include "src/PluginStructs/P016_data_struct.h"
 
 #ifdef P016_P035_Extended_AC
 #include <IRac.h>
@@ -36,6 +37,10 @@
 #ifndef P016_SEND_IR_TO_CONTROLLER
 #define P016_SEND_IR_TO_CONTROLLER false
 #endif
+
+// History
+// @uwekaditz: 2020-10-17
+// NEW: received valid IR code can be saved and a command can be assigned to it, the command is submitted if the code is received again
 
 // A lot of the following code has been taken directly (with permission) from the IRrecvDumpV2.ino example code
 // of the IRremoteESP8266 library. (https://github.com/markszabo/IRremoteESP8266) 
@@ -142,6 +147,19 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
   case PLUGIN_INIT:
   {
+#ifdef PLUGIN_016_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT ..."));
+#endif // PLUGIN_016_DEBUG
+
+    initPluginTaskData(event->TaskIndex, new (std::nothrow) P016_data_struct());
+    P016_data_struct *P016_data =
+      static_cast<P016_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+    if (nullptr == P016_data) {
+      return success;
+    }
+    P016_data->init(event->TaskIndex);
+
     int irPin = CONFIG_PIN1;
     if (irReceiver == 0 && irPin != -1)
     {
@@ -175,12 +193,149 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
   }
   case PLUGIN_WEBFORM_LOAD:
   {
+#ifdef PLUGIN_016_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_WEBFORM_LOAD ..."));
+#endif // PLUGIN_016_DEBUG
+
     addRowLabel(F("Info"));
     addHtml(F("Check serial or web log for replay solutions via Communication - IR Transmit plugin"));
+
+    addFormSubHeader(F("Content"));
+    bool bAddNewCode = bitRead(PCONFIG_LONG(0), P016_BitAddNewCode);
+    addFormCheckBox(F("Add new received code to command lines"), F("p016_AddNewCode"),  bAddNewCode);
+    bool bExecuteCmd = bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd);
+    addFormCheckBox(F("Execute commands"), F("p016_ExecuteCmd"),  bExecuteCmd);
+
+    {
+      // For load and save of the display lines, we must not rely on the data in memory.
+      // This data in memory can be altered through write commands.
+      // Therefore we must read the lines from flash in a temporary object.
+      P016_data_struct *P016_data = new (std::nothrow) P016_data_struct();
+
+      if (nullptr != P016_data) {
+        P016_data->loadCommandLines(event->TaskIndex);  // load saved codes and commands
+        String _strCode;
+
+        for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++)
+        {
+          _strCode = "";
+          if (P016_data->CommandLines[varNr].Code > 0) {
+            _strCode = uint64ToString(P016_data->CommandLines[varNr].Code, 16); // convert code to hex for display
+          }
+          addFormTextBox(String(F("Code ")) + (varNr + 1) + String(F(" [Hex]")),
+                          "Code"+getPluginCustomArgName(varNr),
+                          _strCode,
+                          P16_Cchars - 1);
+          _strCode = "";
+          if (P016_data->CommandLines[varNr].AlternativeCode > 0) {
+            _strCode = uint64ToString(P016_data->CommandLines[varNr].AlternativeCode, 16); // convert code to hex for display
+          }
+          addFormTextBox(String(F("Alternative code ")) + (varNr + 1) + String(F(" [Hex]")),
+                          "ACode"+getPluginCustomArgName(varNr),
+                          _strCode,
+                          P16_Cchars - 1);
+          addFormTextBox(String(F("Command ")) + (varNr + 1),
+                          getPluginCustomArgName(varNr),
+                          String(P016_data->CommandLines[varNr].Command),
+                          P16_Nchars - 1);
+        }
+
+        // Need to delete the allocated object here
+        delete P016_data;
+      }
+    }
 
     success = true;
     break;
   }
+
+    case PLUGIN_WEBFORM_SAVE:
+    {
+#ifdef PLUGIN_016_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_WEBFORM_SAVE ..."));
+#endif // PLUGIN_016_DEBUG
+
+      // update now
+      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+
+      uint32_t lSettings = 0;
+      bitWrite(lSettings, P016_BitAddNewCode,  isFormItemChecked(F("p016_AddNewCode")));
+      bitWrite(lSettings, P016_BitExecuteCmd,  isFormItemChecked(F("p016_ExecuteCmd")));
+
+      PCONFIG_LONG(0) = lSettings;
+
+      {
+        // For load and save of the display lines, we must not rely on the data in memory.
+        // This data in memory can be altered through write commands.
+        // Therefore we must use a temporary version to store the settings.
+        P016_data_struct *P016_data = new (std::nothrow) P016_data_struct();
+
+        if (nullptr != P016_data) {
+          String error;
+          char _CodeStr[P16_Cchars];
+          uint32_t _Code;
+
+
+          for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++)
+          {
+            _Code = 0;
+            if (!safe_strncpy(_CodeStr, web_server.arg("Code"+getPluginCustomArgName(varNr)), P16_Cchars)) {
+              error += "Code"+getCustomTaskSettingsError(varNr);
+            }
+            else {
+              _Code = strtol(_CodeStr, 0, 16);  // convert string with hexnumbers to uint32_t
+            }
+            P016_data->CommandLines[varNr].Code = _Code;
+
+            _Code = 0;
+            if (!safe_strncpy(_CodeStr, web_server.arg("ACode"+getPluginCustomArgName(varNr)), P16_Cchars)) {
+              error += "ACode"+getCustomTaskSettingsError(varNr);
+            }
+            else {
+              _Code = strtol(_CodeStr, 0, 16);  // convert string with hexnumbers to uint32_t
+            }
+            P016_data->CommandLines[varNr].AlternativeCode = _Code;
+
+            if (!safe_strncpy(P016_data->CommandLines[varNr].Command, web_server.arg(getPluginCustomArgName(varNr)), P16_Nchars)) {
+              error += "Command"+getCustomTaskSettingsError(varNr);
+            }
+          }
+
+          if (error.length() > 0) {
+            addHtmlError(error);
+          }
+          SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P016_data->CommandLines), sizeof(P016_data->CommandLines));
+
+          // Need to delete the allocated object here
+          delete P016_data;
+        }
+      }
+
+#ifdef PLUGIN_016_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_WEBFORM_SAVE Done"));
+#endif // PLUGIN_016_DEBUG
+      success = true;
+      break;
+    }
+
+  case PLUGIN_ONCE_A_SECOND:
+  {
+    P016_data_struct *P016_data =
+      static_cast<P016_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+    if (nullptr != P016_data) {
+      if (P016_data->bCodeChanged) {  // code has been added -> SaveCustomTaskSettings 
+        SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P016_data->CommandLines), sizeof(P016_data->CommandLines));
+        P016_data->bCodeChanged = false;
+#ifdef PLUGIN_016_DEBUG
+        addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_ONCE_A_SECOND CustomTaskSettings Saved"));
+#endif // PLUGIN_016_DEBUG
+      }
+    }
+    success = true;
+    break;
+  }
+
 
   case PLUGIN_TEN_PER_SECOND:
   {
@@ -202,7 +357,29 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         output = String(F("{\"protocol\":\"")) + typeToString(results.decode_type, results.repeat) + String(F("\",\"data\":\"")) + resultToHexidecimal(&results) + String(F("\",\"bits\":")) + uint64ToString(results.bits)+ '}';
         addLog(LOG_LEVEL_INFO, String(F("IRSEND,\'"))+output+'\''); //JSON representation of the command
         event->String2 = output;
+
+        // Check if this is a code we have a command for or we have to add
+          P016_data_struct *P016_data =
+        static_cast<P016_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr != P016_data) {
+          // convert result to uint32_t
+          uint32_t _Code = ((uint32_t) results.decode_type) * 0x1000000;  // Bits 31-24 (upper byte) for decode_type
+          if (results.repeat)
+            _Code += 0x800000;                                            // Bit 23 for repeat
+          char _CodeStr[P16_Cchars];
+          if (safe_strncpy(_CodeStr, resultToHexidecimal(&results), P16_Cchars)) {
+            _Code += strtol(_CodeStr,0,16);                               // Bits 21-0 for code
+            bool bAddNewCode = bitRead(PCONFIG_LONG(0), P016_BitAddNewCode);
+            if (bAddNewCode)
+              P016_data->AddCode(_Code);                                  // add code if not save so far
+            bool bExecuteCmd = bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd);
+            if (bExecuteCmd)
+              P016_data->ExecuteCode(_Code);                              // execute command for code if available
+          }
+        }
       }
+
       //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
       #ifdef P016_P035_USE_RAW_RAW2
       if (results.decode_type == decode_type_t::UNKNOWN && !displayRawToReadableB32Hex(event->String2))
