@@ -173,7 +173,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
         }
 
         {
-          P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
+          P099_data_struct *P099_data = new (std::nothrow) P099_data_struct();
 
           if (nullptr == P099_data) {
             return success;
@@ -269,6 +269,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
             addFormNote(F("Start objectname with '_' to ignore/disable the object (temporarily)."));
 
           }
+          delete P099_data;
         }
         success = true;
         break;
@@ -292,7 +293,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
         bitWrite(lSettings, P099_FLAGS_LOG_CALIBRATION, isFormItemChecked(F("p099_log_calibration")));
         P099_CONFIG_FLAGS  = lSettings;
 
-        P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
+        P099_data_struct *P099_data = new (std::nothrow) P099_data_struct();
 
         if (nullptr == P099_data) {
           return success; // Save other settings even though this didn't initialize properly
@@ -333,6 +334,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_099_DEBUG
         SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P099_data->StoredSettings), sizeof(P099_data->StoredSettings) /*+ sizeof(P099_data->TouchObjects)*/);
+        delete P099_data;
 
         success = true;
         break;
