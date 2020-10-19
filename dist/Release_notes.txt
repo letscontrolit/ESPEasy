@@ -1,4 +1,176 @@
 -------------------------------------------------
+Changes in release mega-20201016 (since mega-20201009)
+-------------------------------------------------
+
+Release date: vr 16 okt 2020 23:26:50 CEST
+
+TD-er (7):
+      [LoRaTTN] Add encoder/decoder for unit of measure for AcuDC243
+      [WiFi] Fix WiFi (re)connect issues caused by new WiFi timers
+      [Timing Stats] Add duty cycle column + LoRa TTN on air timings
+      [Syslog] Fix syslog name does not include unit number (#3288)
+      [Docs] Document LoRaWAN TTN dynamic send interval setting
+      [GPS] Add distance counter + distance from ref point
+      [LoRa TTN] Fix decoder issue in GPS data
+
+Ton Huisman (1):
+      [Checks] Check all 4 variable names
+
+uwekaditz (1):
+      [P092] Exception solved
+
+
+-------------------------------------------------
+Changes in release mega-20201009 (since mega-20200929)
+-------------------------------------------------
+
+Release date: vr  9 okt 2020 21:08:39 CEST
+
+TD-er (14):
+      Fix used sensor type on plugins allowing to select output type
+      [Custom build] Custom.h was not always used for factory default settings
+      [ESP32] Add detailed chip info on ESP32
+      [Sysinfo page] Split memory info from basic system info + add for ESP32
+      Document Custom.h alternative for Arduino IDE
+      [Sysinfo page] Hide flash chip ID for ESP32 (not possible to read)
+      [Load] Fix high CPU load introduced by fixing sensorType consistency
+      [Cleanup] Simplify functions to sync sensorType consistency
+      [ESPEasySerial] Make GPIO pins selectabel on ESP32
+      [ESPEasySerial] Fix missed ESPEasy Serial instance build issues.
+      [SendToHTTP] Return command failed if no connection could be made
+      [build] Add define DISABLE_SC16IS752_Serial
+      Add standard conversion for converting int to HEX
+      [LoRaWAN TTN] Add new plugins to packet converter JavaScript
+
+Thomas (1):
+      Updated Docs: P075 Nextion and P079 Motorshield
+
+jimmys01 (1):
+      Update ArduJSON
+
+
+-------------------------------------------------
+Changes in release mega-20200929 (since mega-20200913)
+-------------------------------------------------
+
+Release date: di 29 sep 2020  9:34:42 CEST
+
+André Klein (1):
+      Update README.md
+
+Gijs Noorlander (44):
+      [I2C] multiple instances P047 - Environment - Soil moisture sensor
+      [I2C] Multiple instances P079 - Wemos Motorshield
+      [I2C] Multiple instances P012 - LCD 2004
+      [I2C] Multiple Instances P006 - BMP085/180
+      [I2C] Multiple instances P015 - TSL2561
+      [Cleanup] Cleanup P015
+      [Cleanup] Mark floating point numbers with f to reduce resource usage
+      Add missing float marking
+      Fix compiler issue with incorrect 1000f in P092 DLbus
+      [I2C multiplexer] Cleanup multiplexer code in _Plugin.ino
+      [I2C multiplexer] Further cleanup of code
+      Use new (std::nothrow)
+      Fix compiler warnings for LOLIN_EPD library
+      [I2C] Multiple Instances P022 - PCA9685
+      [P022] Forgot #ifdef USES_P022
+      [I2C] Multiple Instances P023 OLED
+      [Cleanup] No need to call clearPluginTaskData from PLUGIN_EXIT
+      [I2C] Multiple Instances P024 MLX90614
+      [I2C] Multiple Instances P025 ADS1115
+      [I2C] Multiple Instances P027 INA219
+      [I2C] Move I2C.ino to helpers .h/.cpp
+      [I2C] Multiple Instances P032 MS5611
+      [Build] Fix build issues with LOLIN_EPD lib on minimal OTA builds
+      [I2C] Multiple instances P034 DHT12
+      [I2C] Multiple Instances P045 MPU6050
+      [I2C] Multiple Instances P048 Motorshield V2
+      [I2C] Multiple Instances P057 - Display - HT16K33 LED
+      [I2C] Multiple instances P058 - Keypad - HT16K33
+      [I2C] Multiple Instances P060 - Analog input - MCP3221
+      [Cleanup] Shorten member variable names
+      [I2C] Multiple Instances P062 - Keypad - MPR121 Touch
+      [I2C] Multiple Instances  P064 - APDS9960 Gesture
+      [I2C] Multiple Instances P069 - LM75A Temperature Sensor (I2C)
+      [I2C] Multiple instances P072 - Temp/Hum HDC1080 (no changes)
+      [I2C] Multiple instances P083 - SGP30 - Gas
+      [I2C] Multiple Instances P090 - CCS811 Air Quality TVOC/eCO2
+      [Cleanup] Reduce stack usage for P064 in web load function
+      [Cleanup] Use enum class in P023 OLED
+      [Cleanup] Proper initialize all member variables of plugins
+      [Cleanup] Uncrustify P092_DLbus
+      [Cleanup] Use enum class for P036_FramedOLED
+      [Cleanup] Rename member vars of P045 and initialize all members
+      [Cleanup] Rename member + initialize members for P090
+      Add check for AllocatedControllerSettings in storage
+
+TD-er (35):
+      [Docs] Document P048 motorshield commands
+      Add ESP32 PinBootState options + ESP8266 gpio16
+      [Build] Fix compile time check for settings size ESP32
+      [P013 HCSR04] Clarify filter setting in web config
+      [P012 LCD] Add characters used in Polish language
+      [DS2423] Add 1-wire counter
+      [Docs] Add documentation entry for P100 DS2423 1-Wire counter
+      [WiFi] Fix issue where unit no longer considers connected > 25 days
+      [WiFi] Fix some issues where timeouts were incorrectly evaluated
+      [MQTT] Fix disregard retain flag using publish from rules (#3256)
+      [build] Disable P092 and P093 on builds exceeding build size
+      Add function to ask task for valueCount instead of plugin
+      Add function to ask task for VType instead of plugins
+      [ExtraTaskSettings] Make sure the ExtraTaskSettings are active when used
+      Fix compiler issue C016 (incorrect find/replace)
+      Fix P015 TSL2561 PLUGIN_READ return success = true
+      Move output tyle selection load/save to device page handler
+      [Serial] Handle serial config from webpage devices handler
+      Use more logical parameters to query task sensor VType
+      [ESPEasy p2p] Split p2p data structs into C++ objects (#3264)
+      Document the DeviceStruct variables and update _Pxxx_PluginTemplate.ino
+      [Cleanup] Add EventStruct constructor with TaskIndex as parameter
+      [Storage] Make enums used for storage enum class
+      Change CPlugin and NPlugin functions to enum class
+      [Cleanup] Convert Misc.ino to .h/.cpp
+      [Cleanup] Uncrustify Misc.h / Misc.cpp
+      [Cleanup] Remove fwdelc declarations of functions moved to .h/.cpp
+      [Cleanup] Split functions from Misc.cpp/.h
+      [Cleanup] Split even more functions from Mist.cpp/.h
+      Add stubs for new controllers up-to C025
+      [Web Interface] Improve task config consistency + code readability
+      [P039 Thermocouple] Add FIXME to remove unneeded strings.
+      [Arduino IDE] Document how to build using Custom.h in Arduino IDE
+      [Cleanup] Rename some to clarify msec or usec interval
+      [WiFi] Fix reconnect loop when getting IP or connecting takes a while.
+
+Thomas (4):
+      Update Wemos Motor Shield's ReadtheDocs
+      Update P079_Wemos_Motorshield
+      Updated P079 Motor Shield Plugin
+      Updated P075 Nextion Plugin's Doc Files
+
+Ton Huisman (7):
+      [P095/P096] Allow rotation +270 via cmd mode
+      [SPI] Correct typo in devices list
+      [P095] (Re)move touchscreen stuff There will be a new plugin for XPT2046 touchscreen Setting wasn't used here anyway
+      [P099] Add documentation for Touchscreen - Device Configuration - Setting up Calibration - Configuring Touch objects
+      [P099] Remove wrongly committed files
+      [P099] Remove link from plugin overview docs
+      [P095] [P096] Avoid using unicode in source
+
+stefan (1):
+      [ArduinoIDE] Fix includes
+
+tonhuisman (8):
+      [SPI] Extend SPI interface support in configuration
+      [SPI] Update SPI-based plugin configuration
+      [SPI] Fixed typos in comments...
+      [SPI] Minor corrections
+      [SPI] Remove unneeded comment
+      [SPI] Minor correction, used wrong type
+      [P096] Widen temp settings var from byte to uint16_t
+      [P096] Avoid crash if no eInk display is connected and a yet unhandled command is sent
+
+
+-------------------------------------------------
 Changes in release mega-20200913 (since mega-20200829)
 -------------------------------------------------
 

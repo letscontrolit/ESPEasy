@@ -10,6 +10,7 @@
 
 #include "_Plugin_Helper.h"
 
+#include "src/Helpers/StringConverter.h"
 #include "src/PluginStructs/P094_data_struct.h"
 
 #include <Regexp.h>
@@ -168,6 +169,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P094_data_struct());
       P094_data_struct *P094_data =
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -176,12 +178,12 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P094_data->init(serial_rx, serial_tx, P094_BAUDRATE)) {
+      if (P094_data->init(port, serial_rx, serial_tx, P094_BAUDRATE)) {
         LoadCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0);
         P094_data->post_init();
         success = true;
 
-        serialHelper_log_GpioDescription(serial_rx, serial_tx);
+        serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
       } else {
         clearPluginTaskData(event->TaskIndex);
       }
