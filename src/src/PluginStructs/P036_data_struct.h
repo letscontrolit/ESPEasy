@@ -145,15 +145,15 @@ struct P036_data_struct : public PluginTaskData_base {
 
   bool init(taskIndex_t      taskIndex,
             uint8_t          LoadVersion,
-            uint8_t          _type,
-            uint8_t          _address,
-            uint8_t          _sda,
-            uint8_t          _scl,
-            p036_resolution disp_resolution,
-            bool             _rotated,
+            uint8_t          Type,
+            uint8_t          Address,
+            uint8_t          Sda,
+            uint8_t          Scl,
+            p036_resolution  Disp_resolution,
+            bool             Rotated,
             uint8_t          contrast,
-            uint8_t          _displayTimer,
-            uint8_t          nrLines);
+            uint8_t          DisplayTimer,
+            uint8_t          NrLines);
 
   bool isInitialized() const;
 
@@ -223,7 +223,7 @@ struct P036_data_struct : public PluginTaskData_base {
   bool bDisplayingLogo = false;
 
   // display
-  p036_resolution _disp_resolution   = p036_resolution::pix128x64;
+  p036_resolution  disp_resolution   = p036_resolution::pix128x64;
   bool             bLineScrollEnabled = false;
   uint8_t          TopLineOffset      = 0; // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
   // Display button

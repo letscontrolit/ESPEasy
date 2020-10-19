@@ -282,13 +282,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
           P036_data->loadDisplayLines(event->TaskIndex, version);
 
-          String _strLabel;
+          String strLabel;
 
           for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
           {
-            _strLabel = F("Line ");
-            _strLabel += (varNr + 1);
-            addFormTextBox(_strLabel,
+            strLabel = F("Line ");
+            strLabel += (varNr + 1);
+            addFormTextBox(strLabel,
                            getPluginCustomArgName(varNr),
                            String(P036_data->DisplayLinesV1[varNr].Content),
                            P36_NcharsV1 - 1);
@@ -374,7 +374,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         // After saving, make sure the active lines are updated.
         P036_data->frameCounter       = 0;
         P036_data->MaxFramesToDisplay = 0xFF;
-        P036_data->_disp_resolution   = static_cast<p036_resolution>(P036_RESOLUTION);
+        P036_data->disp_resolution   = static_cast<p036_resolution>(P036_RESOLUTION);
         P036_data->loadDisplayLines(event->TaskIndex, 1);
       }
 
@@ -740,10 +740,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           uint16_t PixLength = P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content));
 
           if (PixLength > 255) {
-            String _error = F("Pixel length of ");
-            _error += PixLength;
-            _error += F(" too long for line! Max. 255 pix!");
-            addHtmlError(_error);
+            String str_error = F("Pixel length of ");
+            str_error += PixLength;
+            str_error += F(" too long for line! Max. 255 pix!");
+            addHtmlError(str_error);
 
             int   strlen         = String(P036_data->DisplayLinesV1[LineNo - 1].Content).length();
             float fAvgPixPerChar = ((float)PixLength) / strlen;
@@ -770,7 +770,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
 
 #ifdef PLUGIN_036_DEBUG
-          String log = F("[P36] Line: ");
+          String log;
+          log.reserve(200); // estimated
+          log = F("[P36] Line: ");
           log += LineNo;
           log += F(" NewContent:");
           log += NewContent;
