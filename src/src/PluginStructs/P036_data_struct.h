@@ -151,7 +151,7 @@ struct P036_data_struct : public PluginTaskData_base {
             uint8_t          Scl,
             p036_resolution  Disp_resolution,
             bool             Rotated,
-            uint8_t          contrast,
+            uint8_t          Contrast,
             uint8_t          DisplayTimer,
             uint8_t          NrLines);
 
