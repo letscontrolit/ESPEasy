@@ -7,8 +7,11 @@
 
 P016_data_struct::P016_data_struct() {}
 
-void P016_data_struct::init(taskIndex_t     taskIndex) {
+void P016_data_struct::init(taskIndex_t taskIndex, uint16_t CmdInhibitTime) {
   loadCommandLines(taskIndex);
+  _CmdInhibitTime = CmdInhibitTime;
+  _LastCmd = 0;
+  _LastCmdTime = 0;
 }
 
 void P016_data_struct::loadCommandLines(taskIndex_t taskIndex) {
@@ -43,8 +46,10 @@ void P016_data_struct::AddCode(uint32_t  Code) {
   CommandLines[_index].Code = Code;
   bCodeChanged = true;
 #ifdef PLUGIN_016_DEBUG
-  String log = String(F("[P36] AddCode: 0x")) + uint64ToString(Code, 16);
-  log += String(F(" to index ")) + String(_index);
+  String log = F("[P36] AddCode: 0x");
+  log += uint64ToString(Code, 16);
+  log += F(" to index ");
+  log += _index;
   addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_016_DEBUG
 }
@@ -55,12 +60,30 @@ void P016_data_struct::ExecuteCode(uint32_t  Code) {
   }
   for (int i = 0; i < P16_Nlines; ++i) {
     if ((CommandLines[i].Code == Code) || (CommandLines[i].AlternativeCode == Code)) {
+      uint32_t _now = millis();
+
       // code already saved
+      if (_LastCmd == Code) {
+        // same code as before
+        if (_CmdInhibitTime > (int32_t)(_now - _LastCmdTime)) {
+          // inhibit time not ellapsed
+          return;
+        }
+      }
+      _LastCmd = Code;
+      _LastCmdTime = _now;
+
       if (CommandLines[i].Command[0] != 0) {
-        ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_NR_VALUES, CommandLines[i].Command);
+        bool _success = ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_NR_VALUES, CommandLines[i].Command);
 #ifdef PLUGIN_016_DEBUG
-        String log = String(F("[P36] ExecuteCode: 0x")) + uint64ToString(Code, 16);
-        log += String(F(" with command: ")) + String(CommandLines[i].Command);
+        String log = F("[P36] ExecuteCode: 0x");
+        log += uint64ToString(Code, 16);
+        log += F(" with command: {");
+        log += String(CommandLines[i].Command);
+        log += '}';
+        if (!_success) {
+          log += F(" FAILED!");
+        }
         addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_016_DEBUG
       }

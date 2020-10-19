@@ -28,7 +28,7 @@ struct P016_data_struct : public PluginTaskData_base {
 public:
   P016_data_struct();
 
-  void init(taskIndex_t taskIndex);
+  void init(taskIndex_t taskIndex, uint16_t CmdInhibitTime);
   void loadCommandLines(taskIndex_t taskIndex);
   void AddCode(uint32_t  Code);
   void ExecuteCode(uint32_t  Code);
@@ -37,6 +37,10 @@ public:
   tCommandLines CommandLines[P16_Nlines]; // holds the CustomTaskSettings
 
   bool bCodeChanged = false;  // set if code has been added and CommandLines need to be saved (in PLUGIN_ONCE_A_SECOND)
+private:
+  uint16_t _CmdInhibitTime; // inhibit time for sending the same command again
+  uint32_t _LastCmd;        // last command send
+  uint32_t _LastCmdTime;    // time while last command was send
 };
 
 #endif // ifdef USES_P016

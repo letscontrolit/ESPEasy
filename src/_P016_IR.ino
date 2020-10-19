@@ -33,12 +33,17 @@
 #define PLUGIN_ID_016 16
 #define PLUGIN_NAME_016 "Communication - TSOP4838"
 #define PLUGIN_VALUENAME1_016 "IR"
+#define P016_CMDINHIBIT       PCONFIG(1)
 
 #ifndef P016_SEND_IR_TO_CONTROLLER
 #define P016_SEND_IR_TO_CONTROLLER false
 #endif
 
 // History
+// @uwekaditz: 2020-10-19
+// NEW: Inhibit time between executing the same command
+// CHG: ressouce-saving string calculation
+// CHG: automatic adding of new IR codes is disabled after boot up
 // @uwekaditz: 2020-10-17
 // NEW: received valid IR code can be saved and a command can be assigned to it, the command is submitted if the code is received again
 
@@ -103,6 +108,7 @@ const uint16_t kMinUnknownSize = 12;
 
 IRrecv *irReceiver = NULL;
 decode_results results;
+bool bEnableIRcodeAdding = false;
 
 boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 {
@@ -158,11 +164,12 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
     if (nullptr == P016_data) {
       return success;
     }
-    P016_data->init(event->TaskIndex);
+    P016_data->init(event->TaskIndex, P016_CMDINHIBIT);
 
     int irPin = CONFIG_PIN1;
     if (irReceiver == 0 && irPin != -1)
     {
+
       addLog(LOG_LEVEL_INFO, String(F("INIT: IR RX")));
       addLog(LOG_LEVEL_INFO, String(F("IR lib Version: ")) + _IRREMOTEESP8266_VERSION_);
       irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
@@ -180,14 +187,16 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
   }
   case PLUGIN_EXIT:
   {
+#ifdef PLUGIN_016_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_EXIT"));
+#endif // PLUGIN_016_DEBUG
+    if (irReceiver != 0)
     {
-      if (irReceiver != 0)
-      {
-        irReceiver->disableIRIn(); // Stop the receiver
-        delete irReceiver;
-        irReceiver = 0;
-      }
+      irReceiver->disableIRIn(); // Stop the receiver
+      delete irReceiver;
+      irReceiver = 0;
     }
+
     success = true;
     break;
   }
@@ -205,6 +214,11 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
     addFormCheckBox(F("Add new received code to command lines"), F("p016_AddNewCode"),  bAddNewCode);
     bool bExecuteCmd = bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd);
     addFormCheckBox(F("Execute commands"), F("p016_ExecuteCmd"),  bExecuteCmd);
+    addFormNumericBox(F("Inhibit time for the same command [ms]"),
+                      F("p016_cmdinhibit"),
+                      P016_CMDINHIBIT,
+                      1,
+                      2000);
 
     {
       // For load and save of the display lines, we must not rely on the data in memory.
@@ -214,30 +228,41 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
       if (nullptr != P016_data) {
         P016_data->loadCommandLines(event->TaskIndex);  // load saved codes and commands
+        String _strLabel;
+        _strLabel.reserve(30); // Length of expected string, needed for strings > 11 chars
+        String _strID;
         String _strCode;
 
         for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++)
         {
+          // settings for code <nn>
           _strCode = "";
           if (P016_data->CommandLines[varNr].Code > 0) {
             _strCode = uint64ToString(P016_data->CommandLines[varNr].Code, 16); // convert code to hex for display
           }
-          addFormTextBox(String(F("Code ")) + (varNr + 1) + String(F(" [Hex]")),
-                          "Code"+getPluginCustomArgName(varNr),
-                          _strCode,
-                          P16_Cchars - 1);
+          _strLabel = F("Code ");
+          _strLabel += (varNr + 1);
+          _strLabel += F(" [Hex]");
+          _strID = F("Code");
+          _strID += (varNr + 1);
+          addFormTextBox(_strLabel, _strID, _strCode, P16_Cchars - 1);
           _strCode = "";
           if (P016_data->CommandLines[varNr].AlternativeCode > 0) {
             _strCode = uint64ToString(P016_data->CommandLines[varNr].AlternativeCode, 16); // convert code to hex for display
           }
-          addFormTextBox(String(F("Alternative code ")) + (varNr + 1) + String(F(" [Hex]")),
-                          "ACode"+getPluginCustomArgName(varNr),
-                          _strCode,
-                          P16_Cchars - 1);
-          addFormTextBox(String(F("Command ")) + (varNr + 1),
-                          getPluginCustomArgName(varNr),
-                          String(P016_data->CommandLines[varNr].Command),
-                          P16_Nchars - 1);
+          // settings for Alternative code <nn>
+          _strLabel = F("Alternative code ");
+          _strLabel += (varNr + 1);
+          _strLabel += F(" [Hex]");
+          _strID = F("ACode");
+          _strID += (varNr + 1);
+          addFormTextBox(_strLabel, _strID,  _strCode, P16_Cchars - 1);
+          // settings for command <nn>
+          _strLabel = F("Command ");
+          _strLabel += (varNr + 1);
+          _strID = F("Command");
+          _strID += (varNr + 1);
+          addFormTextBox(_strLabel, _strID, String(P016_data->CommandLines[varNr].Command), P16_Nchars - 1);
         }
 
         // Need to delete the allocated object here
@@ -262,7 +287,9 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       bitWrite(lSettings, P016_BitAddNewCode,  isFormItemChecked(F("p016_AddNewCode")));
       bitWrite(lSettings, P016_BitExecuteCmd,  isFormItemChecked(F("p016_ExecuteCmd")));
 
+      bEnableIRcodeAdding = true;
       PCONFIG_LONG(0) = lSettings;
+      P016_CMDINHIBIT = getFormItemInt(F("p016_cmdinhibit"));
 
       {
         // For load and save of the display lines, we must not rely on the data in memory.
@@ -271,16 +298,23 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         P016_data_struct *P016_data = new (std::nothrow) P016_data_struct();
 
         if (nullptr != P016_data) {
-          String error;
           char _CodeStr[P16_Cchars];
+          String _error;
+          _error.reserve(30); // Length of expected string, needed for strings > 11 chars
+          String _strID;
           uint32_t _Code;
 
 
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++)
           {
             _Code = 0;
-            if (!safe_strncpy(_CodeStr, web_server.arg("Code"+getPluginCustomArgName(varNr)), P16_Cchars)) {
-              error += "Code"+getCustomTaskSettingsError(varNr);
+            _error = "";
+            _strID = F("Code");
+            _strID += (varNr + 1);
+
+            if (!safe_strncpy(_CodeStr, web_server.arg(_strID), P16_Cchars)) {
+              _error += _strID;
+              _error += ' ';
             }
             else {
               _Code = strtol(_CodeStr, 0, 16);  // convert string with hexnumbers to uint32_t
@@ -288,22 +322,28 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             P016_data->CommandLines[varNr].Code = _Code;
 
             _Code = 0;
-            if (!safe_strncpy(_CodeStr, web_server.arg("ACode"+getPluginCustomArgName(varNr)), P16_Cchars)) {
-              error += "ACode"+getCustomTaskSettingsError(varNr);
+            _strID = F("ACode");
+            _strID += (varNr + 1);
+            if (!safe_strncpy(_CodeStr, web_server.arg(_strID), P16_Cchars)) {
+              _error += _strID;
+              _error += ' ';
             }
             else {
               _Code = strtol(_CodeStr, 0, 16);  // convert string with hexnumbers to uint32_t
             }
             P016_data->CommandLines[varNr].AlternativeCode = _Code;
 
-            if (!safe_strncpy(P016_data->CommandLines[varNr].Command, web_server.arg(getPluginCustomArgName(varNr)), P16_Nchars)) {
-              error += "Command"+getCustomTaskSettingsError(varNr);
+            _strID = F("Command");
+            _strID += (varNr + 1);
+            if (!safe_strncpy(P016_data->CommandLines[varNr].Command, web_server.arg(_strID), P16_Nchars)) {
+              _error += _strID;
+            }
+
+            if (_error.length() > 0) {
+              addHtmlError(_error);
             }
           }
 
-          if (error.length() > 0) {
-            addHtmlError(error);
-          }
           SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P016_data->CommandLines), sizeof(P016_data->CommandLines));
 
           // Need to delete the allocated object here
@@ -336,7 +376,6 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
     break;
   }
 
-
   case PLUGIN_TEN_PER_SECOND:
   {
     if (irReceiver->decode(&results))
@@ -348,14 +387,24 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         success = false;
         break; //Do not continue and risk hanging the ESP
       }
-      String output="";
+      String output;
+      output.reserve(100); // Length of expected string, needed for strings > 11 chars
       // Display the basic output of what we found.
       if (results.decode_type != decode_type_t::UNKNOWN)
       {
         //String output = String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results) + ',' + uint64ToString(results.bits);
         //addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035 // Old style command
-        output = String(F("{\"protocol\":\"")) + typeToString(results.decode_type, results.repeat) + String(F("\",\"data\":\"")) + resultToHexidecimal(&results) + String(F("\",\"bits\":")) + uint64ToString(results.bits)+ '}';
-        addLog(LOG_LEVEL_INFO, String(F("IRSEND,\'"))+output+'\''); //JSON representation of the command
+        output = F("{\"protocol\":\"");
+        output += typeToString(results.decode_type, results.repeat);
+        output += F("\",\"data\":\"");
+        output += resultToHexidecimal(&results);
+        output += F("\",\"bits\":");
+        output += uint64ToString(results.bits);
+        output += '}';
+        String _Log = F("IRSEND,\'");
+        _Log += output;
+        _Log += "\'";
+        addLog(LOG_LEVEL_INFO, _Log); //JSON representation of the command
         event->String2 = output;
 
         // Check if this is a code we have a command for or we have to add
@@ -371,11 +420,13 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           if (safe_strncpy(_CodeStr, resultToHexidecimal(&results), P16_Cchars)) {
             _Code += strtol(_CodeStr,0,16);                               // Bits 21-0 for code
             bool bAddNewCode = bitRead(PCONFIG_LONG(0), P016_BitAddNewCode);
-            if (bAddNewCode)
-              P016_data->AddCode(_Code);                                  // add code if not save so far
+            if (bAddNewCode && bEnableIRcodeAdding) {
+              P016_data->AddCode(_Code);                                  // add code if not saved so far
+            }
             bool bExecuteCmd = bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd);
-            if (bExecuteCmd)
+            if (bExecuteCmd) {
               P016_data->ExecuteCode(_Code);                              // execute command for code if available
+            }
           }
         }
       }
@@ -387,7 +438,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       if (results.decode_type == decode_type_t::UNKNOWN)
       #endif
       {
-        addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timmings are in the serial output)"));
+        addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timings are in the serial output)"));
         serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results));
         event->String2 = F("NaN");
         yield(); // Feed the WDT as it can take a while to print.
