@@ -58,11 +58,7 @@ void P016_data_struct::ExecuteCode(uint32_t  Code) {
   if (Code == 0) {
     return;
   }
-  for (int i = 0; i < P16_Nlines; ++i) {
-    if ((CommandLines[i].Code == Code) || (CommandLines[i].AlternativeCode == Code)) {
       uint32_t _now = millis();
-
-      // code already saved
       if (_LastCmd == Code) {
         // same code as before
         if (_CmdInhibitTime > (int32_t)(_now - _LastCmdTime)) {
@@ -70,6 +66,9 @@ void P016_data_struct::ExecuteCode(uint32_t  Code) {
           return;
         }
       }
+  for (int i = 0; i < P16_Nlines; ++i) {
+    if ((CommandLines[i].Code == Code) || (CommandLines[i].AlternativeCode == Code)) {
+      // code already saved
       _LastCmd = Code;
       _LastCmdTime = _now;
 
@@ -78,7 +77,9 @@ void P016_data_struct::ExecuteCode(uint32_t  Code) {
 #ifdef PLUGIN_016_DEBUG
         String log = F("[P36] ExecuteCode: 0x");
         log += uint64ToString(Code, 16);
-        log += F(" with command: {");
+        log += F(" with command ");
+        log += (i+1);
+        log += F(": {");
         log += String(CommandLines[i].Command);
         log += '}';
         if (!_success) {

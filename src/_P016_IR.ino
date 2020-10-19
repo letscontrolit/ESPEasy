@@ -41,6 +41,7 @@
 
 // History
 // @uwekaditz: 2020-10-19
+// CHG: reduce memory usage when plugin not used
 // NEW: Inhibit time between executing the same command
 // CHG: ressouce-saving string calculation
 // CHG: automatic adding of new IR codes is disabled after boot up
@@ -107,8 +108,8 @@ const uint16_t kMinUnknownSize = 12;
 // ==================== end of TUNEABLE PARAMETERS ====================
 
 IRrecv *irReceiver = NULL;
-decode_results results;
 bool bEnableIRcodeAdding = false;
+boolean displayRawToReadableB32Hex(String &outputStr, decode_results results);
 
 boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 {
@@ -129,7 +130,6 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
     Device[deviceCount].ValueCount = 1;
     Device[deviceCount].SendDataOption = true;
     Device[deviceCount].TimerOption = false;
-    Device[deviceCount].GlobalSyncOption = true;
     break;
   }
 
@@ -378,6 +378,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
   case PLUGIN_TEN_PER_SECOND:
   {
+    decode_results results;
+
     if (irReceiver->decode(&results))
     {
       yield(); // Feed the WDT after a time expensive decoding procedure
@@ -433,7 +435,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
       //Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
       #ifdef P016_P035_USE_RAW_RAW2
-      if (results.decode_type == decode_type_t::UNKNOWN && !displayRawToReadableB32Hex(event->String2))
+      if (results.decode_type == decode_type_t::UNKNOWN && !displayRawToReadableB32Hex(event->String2, results))
       #else
       if (results.decode_type == decode_type_t::UNKNOWN)
       #endif
@@ -548,7 +550,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 //
 // Author: Gilad Raz (jazzgil)  23sep2018
 
-boolean displayRawToReadableB32Hex(String &outputStr)
+boolean displayRawToReadableB32Hex(String &outputStr, decode_results results)
 {
   String line;
   uint16_t div[2];
