@@ -13,6 +13,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2020-10-19
+// CHG: ressouce-saving string calculation
 // @uwekaditz: 2020-10-211
 // NEW: Support for 128x32 displays (see https://www.letscontrolit.com/forum/viewtopic.php?p=39840#p39840)
 // NEW: Option to hide the header
@@ -280,9 +282,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
           P036_data->loadDisplayLines(event->TaskIndex, version);
 
+          String _strLabel;
+
           for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
           {
-            addFormTextBox(String(F("Line ")) + (varNr + 1),
+            _strLabel = F("Line ");
+            _strLabel += (varNr + 1);
+            addFormTextBox(_strLabel,
                            getPluginCustomArgName(varNr),
                            String(P036_data->DisplayLinesV1[varNr].Content),
                            P36_NcharsV1 - 1);
@@ -734,7 +740,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           uint16_t PixLength = P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content));
 
           if (PixLength > 255) {
-            addHtmlError(String(F("Pixel length of ")) + String(PixLength) + String(F(" too long for line! Max. 255 pix!")));
+            String _error = F("Pixel length of ");
+            _error += PixLength;
+            _error += F(" too long for line! Max. 255 pix!");
+            addHtmlError(_error);
 
             int   strlen         = String(P036_data->DisplayLinesV1[LineNo - 1].Content).length();
             float fAvgPixPerChar = ((float)PixLength) / strlen;
@@ -761,12 +770,18 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
 
 #ifdef PLUGIN_036_DEBUG
-          String log = String(F("[P36] Line: ")) + String(LineNo);
-          log += String(F(" NewContent:")) + String(NewContent);
-          log += String(F(" Content:")) + String(P036_data->DisplayLinesV1[LineNo - 1].Content);
-          log += String(F(" Length:")) + String(String(P036_data->DisplayLinesV1[LineNo - 1].Content).length());
-          log += String(F(" Pix: ")) + String(P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content)));
-          log += String(F(" Reserved:")) + String(P036_data->DisplayLinesV1[LineNo - 1].reserved);
+          String log = F("[P36] Line: ");
+          log += LineNo;
+          log += F(" NewContent:");
+          log += NewContent;
+          log += F(" Content:");
+          log += String(P036_data->DisplayLinesV1[LineNo - 1].Content);
+          log += F(" Length:");
+          log += P036_data->DisplayLinesV1[LineNo - 1].Content).length();
+          log += F(" Pix: ");
+          log += P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content));
+          log += F(" Reserved:");
+          log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
           addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_036_DEBUG
         }
@@ -774,9 +789,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #ifdef PLUGIN_036_DEBUG
 
       if (!success) {
-        String log = String(F("[P36] Cmd: ")) + String(command);
-        log += String(F(" SubCmd:")) + String(subcommand);
-        log += String(F(" Success:")) + jsonBool(success);
+        String log = F("[P36] Cmd: ");
+        log += command;
+        log += F(" SubCmd:");
+        log += subcommand;
+        log += F(" Success:"):
+        log += jsonBool(success);
         addLog(LOG_LEVEL_INFO, log);
       }
 #endif // PLUGIN_036_DEBUG
