@@ -95,11 +95,11 @@
 
         ``5`` Fan only
 
-        ``6`` Maintenance heating (10 or 8 degrees Celcius)
+        ``6`` Maintenance heating (10 or 8 degrees Celsius)
 
         fan: a value from 0 to 5, 0 is auto speed
 
-        temperature: temperature in degrees Celcius, 16-30
+        temperature: temperature in degrees Celsius, 16-30
 
         swingV: vertical swing position (not supported on most models)
 
