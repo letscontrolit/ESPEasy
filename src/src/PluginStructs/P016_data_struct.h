@@ -38,9 +38,9 @@ public:
 
   bool bCodeChanged = false;  // set if code has been added and CommandLines need to be saved (in PLUGIN_ONCE_A_SECOND)
 private:
-  uint16_t _CmdInhibitTime; // inhibit time for sending the same command again
-  uint32_t _LastCmd;        // last command send
-  uint32_t _LastCmdTime;    // time while last command was send
+  uint16_t iCmdInhibitTime; // inhibit time for sending the same command again
+  uint32_t iLastCmd;        // last command send
+  uint32_t iLastCmdTime;    // time while last command was send
 };
 
 #endif // ifdef USES_P016

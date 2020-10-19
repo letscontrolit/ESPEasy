@@ -9,9 +9,9 @@ P016_data_struct::P016_data_struct() {}
 
 void P016_data_struct::init(taskIndex_t taskIndex, uint16_t CmdInhibitTime) {
   loadCommandLines(taskIndex);
-  _CmdInhibitTime = CmdInhibitTime;
-  _LastCmd = 0;
-  _LastCmdTime = 0;
+  iCmdInhibitTime = CmdInhibitTime;
+  iLastCmd = 0;
+  iLastCmdTime = 0;
 }
 
 void P016_data_struct::loadCommandLines(taskIndex_t taskIndex) {
@@ -46,7 +46,9 @@ void P016_data_struct::AddCode(uint32_t  Code) {
   CommandLines[_index].Code = Code;
   bCodeChanged = true;
 #ifdef PLUGIN_016_DEBUG
-  String log = F("[P36] AddCode: 0x");
+  String log;
+  log.reserve(45); // estimated
+  log = F("[P36] AddCode: 0x");
   log += uint64ToString(Code, 16);
   log += F(" to index ");
   log += _index;
@@ -58,24 +60,26 @@ void P016_data_struct::ExecuteCode(uint32_t  Code) {
   if (Code == 0) {
     return;
   }
-      uint32_t _now = millis();
-      if (_LastCmd == Code) {
-        // same code as before
-        if (_CmdInhibitTime > (int32_t)(_now - _LastCmdTime)) {
-          // inhibit time not ellapsed
-          return;
-        }
-      }
+  uint32_t _now = millis();
+  if (iLastCmd == Code) {
+    // same code as before
+    if (iCmdInhibitTime > (int32_t)(_now - iLastCmdTime)) {
+      // inhibit time not ellapsed
+      return;
+    }
+  }
   for (int i = 0; i < P16_Nlines; ++i) {
     if ((CommandLines[i].Code == Code) || (CommandLines[i].AlternativeCode == Code)) {
       // code already saved
-      _LastCmd = Code;
-      _LastCmdTime = _now;
+      iLastCmd = Code;
+      iLastCmdTime = _now;
 
       if (CommandLines[i].Command[0] != 0) {
         bool _success = ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_NR_VALUES, CommandLines[i].Command);
 #ifdef PLUGIN_016_DEBUG
-        String log = F("[P36] ExecuteCode: 0x");
+        String log;
+        log.reserve(128); // estimated
+        log = F("[P36] ExecuteCode: 0x");
         log += uint64ToString(Code, 16);
         log += F(" with command ");
         log += (i+1);

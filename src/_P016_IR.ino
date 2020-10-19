@@ -228,41 +228,41 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
       if (nullptr != P016_data) {
         P016_data->loadCommandLines(event->TaskIndex);  // load saved codes and commands
-        String _strLabel;
-        _strLabel.reserve(30); // Length of expected string, needed for strings > 11 chars
-        String _strID;
-        String _strCode;
+        String strLabel;
+        strLabel.reserve(30); // Length of expected string, needed for strings > 11 chars
+        String strID;
+        String strCode;
 
         for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++)
         {
           // settings for code <nn>
-          _strCode = "";
+          strCode = "";
           if (P016_data->CommandLines[varNr].Code > 0) {
-            _strCode = uint64ToString(P016_data->CommandLines[varNr].Code, 16); // convert code to hex for display
+            strCode = uint64ToString(P016_data->CommandLines[varNr].Code, 16); // convert code to hex for display
           }
-          _strLabel = F("Code ");
-          _strLabel += (varNr + 1);
-          _strLabel += F(" [Hex]");
-          _strID = F("Code");
-          _strID += (varNr + 1);
-          addFormTextBox(_strLabel, _strID, _strCode, P16_Cchars - 1);
-          _strCode = "";
+          strLabel = F("Code ");
+          strLabel += (varNr + 1);
+          strLabel += F(" [Hex]");
+          strID = F("Code");
+          strID += (varNr + 1);
+          addFormTextBox(strLabel, strID, strCode, P16_Cchars - 1);
+          strCode = "";
           if (P016_data->CommandLines[varNr].AlternativeCode > 0) {
-            _strCode = uint64ToString(P016_data->CommandLines[varNr].AlternativeCode, 16); // convert code to hex for display
+            strCode = uint64ToString(P016_data->CommandLines[varNr].AlternativeCode, 16); // convert code to hex for display
           }
           // settings for Alternative code <nn>
-          _strLabel = F("Alternative code ");
-          _strLabel += (varNr + 1);
-          _strLabel += F(" [Hex]");
-          _strID = F("ACode");
-          _strID += (varNr + 1);
-          addFormTextBox(_strLabel, _strID,  _strCode, P16_Cchars - 1);
+          strLabel = F("Alternative code ");
+          strLabel += (varNr + 1);
+          strLabel += F(" [Hex]");
+          strID = F("ACode");
+          strID += (varNr + 1);
+          addFormTextBox(strLabel, strID,  strCode, P16_Cchars - 1);
           // settings for command <nn>
-          _strLabel = F("Command ");
-          _strLabel += (varNr + 1);
-          _strID = F("Command");
-          _strID += (varNr + 1);
-          addFormTextBox(_strLabel, _strID, String(P016_data->CommandLines[varNr].Command), P16_Nchars - 1);
+          strLabel = F("Command ");
+          strLabel += (varNr + 1);
+          strID = F("Command");
+          strID += (varNr + 1);
+          addFormTextBox(strLabel, strID, String(P016_data->CommandLines[varNr].Command), P16_Nchars - 1);
         }
 
         // Need to delete the allocated object here
@@ -298,49 +298,49 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         P016_data_struct *P016_data = new (std::nothrow) P016_data_struct();
 
         if (nullptr != P016_data) {
-          char _CodeStr[P16_Cchars];
-          String _error;
-          _error.reserve(30); // Length of expected string, needed for strings > 11 chars
-          String _strID;
-          uint32_t _Code;
+          char strCode[P16_Cchars];
+          String strError;
+          strError.reserve(30); // Length of expected string, needed for strings > 11 chars
+          String strID;
+          uint32_t iCode;
 
 
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++)
           {
-            _Code = 0;
-            _error = "";
-            _strID = F("Code");
-            _strID += (varNr + 1);
+            iCode = 0;
+            strError = "";
+            strID = F("Code");
+            strID += (varNr + 1);
 
-            if (!safe_strncpy(_CodeStr, web_server.arg(_strID), P16_Cchars)) {
-              _error += _strID;
-              _error += ' ';
+            if (!safe_strncpy(strCode, web_server.arg(strID), P16_Cchars)) {
+              strError += strID;
+              strError += ' ';
             }
             else {
-              _Code = strtol(_CodeStr, 0, 16);  // convert string with hexnumbers to uint32_t
+              iCode = strtol(strCode, 0, 16);  // convert string with hexnumbers to uint32_t
             }
-            P016_data->CommandLines[varNr].Code = _Code;
+            P016_data->CommandLines[varNr].Code = iCode;
 
-            _Code = 0;
-            _strID = F("ACode");
-            _strID += (varNr + 1);
-            if (!safe_strncpy(_CodeStr, web_server.arg(_strID), P16_Cchars)) {
-              _error += _strID;
-              _error += ' ';
+            iCode = 0;
+            strID = F("ACode");
+            strID += (varNr + 1);
+            if (!safe_strncpy(strCode, web_server.arg(strID), P16_Cchars)) {
+              strError += strID;
+              strError += ' ';
             }
             else {
-              _Code = strtol(_CodeStr, 0, 16);  // convert string with hexnumbers to uint32_t
+              iCode = strtol(strCode, 0, 16);  // convert string with hexnumbers to uint32_t
             }
-            P016_data->CommandLines[varNr].AlternativeCode = _Code;
+            P016_data->CommandLines[varNr].AlternativeCode = iCode;
 
-            _strID = F("Command");
-            _strID += (varNr + 1);
-            if (!safe_strncpy(P016_data->CommandLines[varNr].Command, web_server.arg(_strID), P16_Nchars)) {
-              _error += _strID;
+            strID = F("Command");
+            strID += (varNr + 1);
+            if (!safe_strncpy(P016_data->CommandLines[varNr].Command, web_server.arg(strID), P16_Nchars)) {
+              strError += strID;
             }
 
-            if (_error.length() > 0) {
-              addHtmlError(_error);
+            if (strError.length() > 0) {
+              addHtmlError(strError);
             }
           }
 
@@ -403,10 +403,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         output += F("\",\"bits\":");
         output += uint64ToString(results.bits);
         output += '}';
-        String _Log = F("IRSEND,\'");
-        _Log += output;
-        _Log += "\'";
-        addLog(LOG_LEVEL_INFO, _Log); //JSON representation of the command
+        String Log = F("IRSEND,\'");
+        Log += output;
+        Log += "\'";
+        addLog(LOG_LEVEL_INFO, Log); //JSON representation of the command
         event->String2 = output;
 
         // Check if this is a code we have a command for or we have to add
@@ -415,19 +415,19 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
         if (nullptr != P016_data) {
           // convert result to uint32_t
-          uint32_t _Code = ((uint32_t) results.decode_type) * 0x1000000;  // Bits 31-24 (upper byte) for decode_type
+          uint32_t iCode = ((uint32_t) results.decode_type) * 0x1000000;  // Bits 31-24 (upper byte) for decode_type
           if (results.repeat)
-            _Code += 0x800000;                                            // Bit 23 for repeat
-          char _CodeStr[P16_Cchars];
-          if (safe_strncpy(_CodeStr, resultToHexidecimal(&results), P16_Cchars)) {
-            _Code += strtol(_CodeStr,0,16);                               // Bits 21-0 for code
+            iCode += 0x800000;                                            // Bit 23 for repeat
+          char strCode[P16_Cchars];
+          if (safe_strncpy(strCode, resultToHexidecimal(&results), P16_Cchars)) {
+            iCode += strtol(strCode,0,16);                               // Bits 21-0 for code
             bool bAddNewCode = bitRead(PCONFIG_LONG(0), P016_BitAddNewCode);
             if (bAddNewCode && bEnableIRcodeAdding) {
-              P016_data->AddCode(_Code);                                  // add code if not saved so far
+              P016_data->AddCode(iCode);                                  // add code if not saved so far
             }
             bool bExecuteCmd = bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd);
             if (bExecuteCmd) {
-              P016_data->ExecuteCode(_Code);                              // execute command for code if available
+              P016_data->ExecuteCode(iCode);                              // execute command for code if available
             }
           }
         }
