@@ -10,6 +10,8 @@
 # include "src/Helpers/_CPlugin_SensorTypeHelper.h"
 # include "src/Helpers/StringGenerator_GPIO.h"
 
+#include <ESPeasySerial.h>
+
 
 void handle_devices() {
   checkRAM(F("handle_devices"));
@@ -293,8 +295,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     case Output_Data_type_t::Simple:
     case Output_Data_type_t::All:
     {
-      int pconfigIndex = -1;
-      getDeviceVTypeForTask(taskIndex, pconfigIndex);
+      int pconfigIndex = checkDeviceVTypeForTask(&TempEvent);
       if (pconfigIndex >= 0 && pconfigIndex < PLUGIN_CONFIGVAR_MAX) {
         Sensor_VType VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
         Settings.TaskDevicePluginConfig[taskIndex][pconfigIndex] = static_cast<int>(VType);
@@ -586,7 +587,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
               // fallthrough
             case DEVICE_TYPE_SERIAL:
             {
-              addHtml(serialHelper_getGpioDescription(Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x], F("<BR>")));
+              addHtml(serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x], F("<BR>")));
               if (showpin3) {
                 html_BR();
               }
@@ -1071,8 +1072,7 @@ void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t Devic
 {
   struct EventStruct TempEvent(taskIndex);
 
-  int pconfigIndex = -1;
-  getDeviceVTypeForTask(taskIndex, pconfigIndex);
+  int pconfigIndex = checkDeviceVTypeForTask(&TempEvent);
 
   switch(Device[DeviceIndex].OutputDataType) {
     case Output_Data_type_t::Default:

@@ -11,10 +11,10 @@ IPAddress NetworkGatewayIP();
 IPAddress NetworkDnsIP (uint8_t dns_no);
 uint8_t * NetworkMacAddressAsBytes(uint8_t* mac);
 String NetworkMacAddress();
-String NetworkGetHostNameFromSettings();
+String NetworkGetHostNameFromSettings(bool force_add_unitnr = false);
 String NetworkGetHostname();
-String NetworkCreateRFCCompliantHostname();
-String createRFCCompliantHostname(String oldString);
+String NetworkCreateRFCCompliantHostname(bool force_add_unitnr = false);
+String createRFCCompliantHostname(const String& oldString);
 String WifiSoftAPmacAddress();
 
 

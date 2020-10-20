@@ -70,9 +70,9 @@ struct P085_data_struct : public PluginTaskData_base {
     modbus.reset();
   }
 
-  bool init(const int16_t serial_rx, const int16_t serial_tx, int8_t dere_pin,
+  bool init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, int8_t dere_pin,
             unsigned int baudrate, uint8_t modbusAddress) {
-    return modbus.init(serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
+    return modbus.init(port, serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
   }
 
   bool isInitialized() const {
@@ -321,6 +321,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P085_data_struct());
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -329,10 +330,10 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P085_data->init(serial_rx, serial_tx, P085_DEPIN,
+      if (P085_data->init(port, serial_rx, serial_tx, P085_DEPIN,
                           p085_storageValueToBaudrate(P085_BAUDRATE),
                           P085_DEV_ID)) {
-        serialHelper_log_GpioDescription(serial_rx, serial_tx);
+        serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
         success = true;
       } else {
         clearPluginTaskData(event->TaskIndex);
@@ -359,6 +360,31 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       }
       break;
     }
+#ifdef USES_PACKED_RAW_DATA
+    case PLUGIN_GET_PACKED_RAW_DATA:
+    {
+      P085_data_struct *P085_data =
+        static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P085_data) && P085_data->isInitialized()) {
+        // Matching JS code:
+        // return decode(bytes, [header, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4],
+        //   ['header', 'unit1', 'val_1', 'unit2', 'val_2', 'unit3', 'val_3', 'unit4', 'val_4']);
+        for (byte i = 0; i < VARS_PER_TASK; ++i) {
+          const byte pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+          const byte choice       = PCONFIG(pconfigIndex);
+          string += LoRa_addInt(choice, PackedData_uint8);
+          string += LoRa_addFloat(UserVar[event->BaseVarIndex + i], PackedData_int32_1e4);
+        }
+        event->Par1 = 8; // valuecount 
+        
+        success = true;
+      }
+      break;
+    }
+#endif // USES_PACKED_RAW_DATA
+
+
   }
   return success;
 }

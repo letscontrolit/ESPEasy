@@ -31,9 +31,20 @@ String getLabel(LabelType::Enum label) {
 
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
-#ifdef CORE_POST_2_5_0
+#if defined(CORE_POST_2_5_0) || defined(ESP32)
     case LabelType::HEAP_MAX_FREE_BLOCK:    return F("Heap Max Free Block");
+#endif
+#if defined(CORE_POST_2_5_0)
     case LabelType::HEAP_FRAGMENTATION:     return F("Heap Fragmentation");
+#endif
+
+#ifdef ESP32
+    case LabelType::HEAP_SIZE:              return F("Heap Size");
+    case LabelType::HEAP_MIN_FREE:          return F("Heap Min Free");
+    case LabelType::PSRAM_SIZE:             return F("PSRAM Size");
+    case LabelType::PSRAM_FREE:             return F("PSRAM Free");
+    case LabelType::PSRAM_MIN_FREE:         return F("PSRAM Min Free");
+    case LabelType::PSRAM_MAX_FREE_BLOCK:   return F("PSRAM Max Free Block");
 #endif
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
@@ -96,6 +107,10 @@ String getLabel(LabelType::Enum label) {
 
     case LabelType::ESP_CHIP_ID:            return F("ESP Chip ID");
     case LabelType::ESP_CHIP_FREQ:          return F("ESP Chip Frequency");
+    case LabelType::ESP_CHIP_MODEL:         return F("ESP Chip Model");
+    case LabelType::ESP_CHIP_REVISION:      return F("ESP Chip Revision");
+    case LabelType::ESP_CHIP_CORES:         return F("ESP Chip Cores");
+
     case LabelType::ESP_BOARD_NAME:         return F("ESP Board Name");
 
     case LabelType::FLASH_CHIP_ID:          return F("Flash Chip ID");
@@ -127,7 +142,7 @@ String getLabel(LabelType::Enum label) {
     case LabelType::ETH_SPEED:              return F("Eth Speed");
     case LabelType::ETH_STATE:              return F("Eth State");
     case LabelType::ETH_SPEED_STATE:        return F("Eth Speed State");
-    case LabelType::ETH_WIFI_MODE:          return F("Eth Wifi Mode");
+    case LabelType::ETH_WIFI_MODE:          return F("Network Type");
     case LabelType::ETH_CONNECTED:          return F("Eth connected");
 #endif
 
@@ -153,10 +168,24 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
-#ifdef CORE_POST_2_5_0
+#if defined(CORE_POST_2_5_0)
     case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxFreeBlockSize());
+#endif
+#if  defined(ESP32)
+    case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxAllocHeap());
+#endif
+#if defined(CORE_POST_2_5_0)
     case LabelType::HEAP_FRAGMENTATION:     return String(ESP.getHeapFragmentation());
 #endif
+#ifdef ESP32
+    case LabelType::HEAP_SIZE:              return String(ESP.getHeapSize());
+    case LabelType::HEAP_MIN_FREE:          return String(ESP.getMinFreeHeap());
+    case LabelType::PSRAM_SIZE:             return String(ESP.getPsramSize());
+    case LabelType::PSRAM_FREE:             return String(ESP.getFreePsram());
+    case LabelType::PSRAM_MIN_FREE:         return String(ESP.getMinFreeHeap());
+    case LabelType::PSRAM_MAX_FREE_BLOCK:   return String(ESP.getMaxAllocPsram());
+#endif
+
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
@@ -216,7 +245,10 @@ String getValue(LabelType::Enum label) {
   #endif
 
     case LabelType::ESP_CHIP_ID:            break;
-    case LabelType::ESP_CHIP_FREQ:          break;
+    case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());
+    case LabelType::ESP_CHIP_MODEL:         return getChipModel();
+    case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
+    case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
     case LabelType::ESP_BOARD_NAME:         break;
 
     case LabelType::FLASH_CHIP_ID:          break;

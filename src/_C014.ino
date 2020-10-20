@@ -642,7 +642,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             if (command == F("event") || command == F("asyncevent"))
             {
               if (Settings.UseRules) {
-                String newEvent = parseStringToEnd(cmd, 2); 
+                String newEvent = parseStringToEnd(cmd, 2);
                 eventQueue.add(newEvent);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log=F("C014 : taskIndex:");
@@ -652,7 +652,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                     log+=taskIndex;
                     log+=F(" valueNr:");
                     log+=valueNr;
-                    log+=F(" valueType:");                
+                    log+=F(" valueType:");
                     log+=Settings.TaskDevicePluginConfig[taskIndex][valueNr];
                   }
                   log+=F(" Event: ");
@@ -662,17 +662,21 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               }
             } else { // not an event
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log=F("C014 : PluginCall:");
+                log=F("C014 :");
               }
               // FIXME TD-er: Command is not parsed, should we call ExecuteCommand here?
-              if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
-                remoteConfig(&TempEvent, cmd);
+              if (ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str())) {
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log +=F(" failed! remoteConfig?");
+                  log +=F(" Internal Command: OK!");
+                }
+              } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  log +=F(" PluginCall: OK!");
                 }
               } else {
+                remoteConfig(&TempEvent, cmd);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log +=F(" OK!");
+                  log +=F(" Plugin/Internal command failed! remoteConfig?");
                 }
               }
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -704,7 +708,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
 
           // Small optimization so we don't try to copy potentially large strings
-          if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+          if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
             MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
             value = event->String2.substring(0, 20); // For the log
           } else {

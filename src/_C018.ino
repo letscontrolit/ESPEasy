@@ -49,7 +49,7 @@ struct C018_data_struct {
     autobaud_success = false;
   }
 
-  bool init(const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate,
+  bool init(const uint8_t port, const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate,
             bool joinIsOTAA, taskIndex_t sampleSet_Initiator, int8_t reset_pin) {
     if ((serial_rx < 0) || (serial_tx < 0)) {
       // Both pins are needed, or else no serial possible
@@ -72,7 +72,7 @@ struct C018_data_struct {
     _baudrate = baudrate;
 
     // FIXME TD-er: Make force SW serial a proper setting.
-    C018_easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx, false, 64, C018_FORCE_SW_SERIAL);
+    C018_easySerial = new (std::nothrow) ESPeasySerial(static_cast<ESPEasySerialPort>(port), serial_rx, serial_tx, false, 64);
 
     if (C018_easySerial != nullptr) {
       myLora = new rn2xx3(*C018_easySerial);
@@ -103,6 +103,10 @@ struct C018_data_struct {
 
     C018_logError(F("useOTA()"));
     return res;
+  }
+
+  bool command_finished() const {
+    return myLora->command_finished();
   }
 
   bool txUncnfBytes(const byte *data, uint8_t size, uint8_t port) {
@@ -268,9 +272,17 @@ struct C018_data_struct {
     return sampleSetCounter;
   }
 
+  float getLoRaAirTime(uint8_t pl) const {
+    if (isInitialized()) {
+      return myLora->getLoRaAirTime(pl + 13); // We have a LoRaWAN header of 13 bytes.
+    }
+    return -1.0;
+  }
+
   void async_loop() {
     if (isInitialized()) {
       rn2xx3_handler::RN_state state = myLora->async_loop();
+
       if (rn2xx3_handler::RN_state::must_perform_init == state) {
         if (myLora->get_busy_count() > 10) {
           if (_resetPin != -1) {
@@ -281,7 +293,8 @@ struct C018_data_struct {
             delay(200);
           }
           autobaud_success = false;
-//          triggerAutobaud();
+
+          //          triggerAutobaud();
         }
       }
     }
@@ -341,11 +354,11 @@ private:
 
       // First set the baud rate low enough to even trigger autobaud when 9600 baud is active
       C018_easySerial->begin(600);
-      C018_easySerial->write(0x00);
+      C018_easySerial->write(static_cast<uint8_t>(0x00));
 
       // Set to desired baud rate.
       C018_easySerial->begin(_baudrate);
-      C018_easySerial->write(0x55);
+      C018_easySerial->write(static_cast<uint8_t>(0x55));
       C018_easySerial->println();
       delay(100);
 
@@ -429,6 +442,7 @@ struct C018_ConfigStruct
   uint8_t       sf                                              = 7;
   uint8_t       frequencyplan                                   = RN2xx3_datatypes::Freq_plan::TTN_EU;
   uint8_t       joinmethod                                      = C018_USE_OTAA;
+  uint8_t       serialPort                                      = 0;
 };
 
 
@@ -579,7 +593,9 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       // Show serial port selection
       addFormPinSelect(formatGpioName_RX(false),                   F("taskdevicepin1"), rxpin);
       addFormPinSelect(formatGpioName_TX(false),                   F("taskdevicepin2"), txpin);
-      serialHelper_webformLoad(rxpin, txpin, true);
+
+      // FIXME TD-er: Add port selector
+      serialHelper_webformLoad(ESPEasySerialPort::not_set, rxpin, txpin, true);
 
       addFormNumericBox(F("Baudrate"), F(C018_BAUDRATE_LABEL), baudrate, 2400, 115200);
       addUnit(F("baud"));
@@ -653,7 +669,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         customConfig->sf            = getFormItemInt(F("sf"), customConfig->sf);
         customConfig->frequencyplan = getFormItemInt(F("frequencyplan"), customConfig->frequencyplan);
         customConfig->joinmethod    = getFormItemInt(F("joinmethod"), customConfig->joinmethod);
-        serialHelper_webformSave(customConfig->rxpin, customConfig->txpin);
+        serialHelper_webformSave(customConfig->serialPort, customConfig->rxpin, customConfig->txpin);
         SaveCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C018_ConfigStruct));
       }
       break;
@@ -746,10 +762,10 @@ bool C018_init(struct EventStruct *event) {
 
     LoadControllerSettings(event->ControllerIndex, ControllerSettings);
     C018_DelayHandler->configureControllerSettings(ControllerSettings);
-    AppEUI = getControllerUser(event->ControllerIndex, ControllerSettings);
-    AppKey = getControllerPass(event->ControllerIndex, ControllerSettings);
+    AppEUI             = getControllerUser(event->ControllerIndex, ControllerSettings);
+    AppKey             = getControllerPass(event->ControllerIndex, ControllerSettings);
     SampleSetInitiator = ControllerSettings.SampleSetInitiator;
-    Port = ControllerSettings.Port;
+    Port               = ControllerSettings.Port;
   }
 
   std::shared_ptr<C018_ConfigStruct> customConfig(new C018_ConfigStruct);
@@ -760,7 +776,7 @@ bool C018_init(struct EventStruct *event) {
   LoadCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C018_ConfigStruct));
   customConfig->validate();
 
-  if (!C018_data.init(customConfig->rxpin, customConfig->txpin, customConfig->baudrate,
+  if (!C018_data.init(customConfig->serialPort, customConfig->rxpin, customConfig->txpin, customConfig->baudrate,
                       (customConfig->joinmethod == C018_USE_OTAA),
                       SampleSetInitiator, customConfig->resetpin))
   {
@@ -805,8 +821,36 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
 // *INDENT-ON*
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  bool   success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
-  String error   = C018_data.getLastError(); // Clear the error string.
+  uint8_t pl           = (element.packed.length() / 2);
+  float   airtime_ms   = C018_data.getLoRaAirTime(pl);
+  bool    mustSetDelay = false;
+  bool    success      = false;
+
+  if (!C018_data.command_finished()) {
+    mustSetDelay = true;
+  } else {
+    success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
+
+    if (success) {
+      if (airtime_ms > 0.0) {
+        ADD_TIMER_STAT(C018_AIR_TIME, static_cast<unsigned long>(airtime_ms * 1000));
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("LoRaWAN : Payload Length: ");
+          log += pl + 13; // We have a LoRaWAN header of 13 bytes.
+          log += F(" Air Time: ");
+          log += String(airtime_ms, 3);
+          log += F(" ms");
+          addLog(LOG_LEVEL_INFO, log);
+        }
+      }
+    }
+  }
+  String error = C018_data.getLastError(); // Clear the error string.
+
+  if (error.indexOf(F("no_free_ch")) != -1) {
+    mustSetDelay = true;
+  }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("C018 : Sent: ");
@@ -820,6 +864,21 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
     log += error;
     addLog(LOG_LEVEL_INFO, log);
   }
+
+  if (mustSetDelay) {
+    // Module is still sending, delay for 10x expected air time, which is equivalent of 10% air time duty cycle.
+    // This can be retried a few times, so at most 10 retries like these are needed to get below 1% air time again.
+    // Very likely only 2 - 3 of these delays are needed, as we have 8 channels to send from and messages are likely sent in bursts.
+    C018_DelayHandler->setAdditionalDelay(10 * airtime_ms);
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("LoRaWAN : Unable to send. Delay for ");
+      log += 10 * airtime_ms;
+      log += F(" ms");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  }
+
   return success;
 }
 
