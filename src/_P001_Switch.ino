@@ -5,6 +5,7 @@
 #include "src/DataStructs/PinMode.h"
 #include "src/Commands/GPIO.h"
 #include "src/ESPEasyCore/Controller.h"
+#include "src/ESPEasyCore/ESPEasyGPIO.h"
 #include "src/Helpers/Audio.h"
 #include "src/Helpers/PortStatus.h"
 #include "src/Helpers/Scheduler.h"

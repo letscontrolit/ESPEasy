@@ -1,6 +1,7 @@
 #include "Hardware.h"
 
 #include "../Commands/GPIO.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/Device.h"
@@ -16,7 +17,6 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 
-#include "../../EspEasyGPIO.h"
 #include "../../ESPEasy-Globals.h"
 
 #ifdef ESP32

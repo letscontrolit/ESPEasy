@@ -1,11 +1,15 @@
+#include "ESPEasyGPIO.h"
+
 /****************************************************************************/
 // Central functions for GPIO handling
 // **************************************************************************/
-#include "EspEasyGPIO.h"
-
-#include "src/Commands/GPIO.h"
-
-#include "src/Helpers/PortStatus.h"
+#include "../../_Plugin_Helper.h"
+#include "../Commands/GPIO.h"
+#include "../DataStructs/PinMode.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
+#include "../Globals/GlobalMapPortStatus.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/PortStatus.h"
 
 //********************************************************************************
 // Internal GPIO write
