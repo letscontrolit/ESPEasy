@@ -21,9 +21,9 @@
 # include "src/Globals/Protocol.h"
 # include "src/Helpers/_Plugin_Helper_serial.h"
 # include "src/Helpers/StringGenerator_GPIO.h"
-# include "src/WebServer/WebServer_Markup.h"
-# include "src/WebServer/WebServer_Markup_Forms.h"
-# include "src/WebServer/WebServer_HTML_wrappers.h"
+# include "src/WebServer/Markup.h"
+# include "src/WebServer/Markup_Forms.h"
+# include "src/WebServer/HTML_wrappers.h"
 
 
 // Have this define after the includes, so we can set it in Custom.h
