@@ -1,5 +1,7 @@
 #include "P044_data_struct.h"
 
+#ifdef USES_P044
+
 #include "../ESPEasyCore/Serial.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 
@@ -369,3 +371,5 @@ void P044_Task::discardSerialIn() {
 bool P044_Task::isInit() const {
   return nullptr != P1GatewayServer && nullptr != P1EasySerial;
 }
+
+#endif

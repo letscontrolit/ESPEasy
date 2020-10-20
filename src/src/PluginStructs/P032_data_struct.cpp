@@ -1,8 +1,9 @@
 #include "P032_data_struct.h"
 
+#ifdef USES_P032
+
 #include "../Globals/I2Cdev.h"
 
-#ifdef USES_P032
 
 enum
 {

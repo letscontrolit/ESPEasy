@@ -1,9 +1,8 @@
 #include "P090_data_struct.h"
 
-#include "../Globals/I2Cdev.h"
-
 #ifdef USES_P090
 
+#include "../Globals/I2Cdev.h"
 
 // Register addresses
 # define CSS811_STATUS          0x00

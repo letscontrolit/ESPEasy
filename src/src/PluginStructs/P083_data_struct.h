@@ -2,9 +2,10 @@
 #define PLUGINSTRUCTS_P083_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
+#ifdef USES_P083
+
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_P083
 
 # include "Adafruit_SGP30.h"
 
