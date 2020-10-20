@@ -20,8 +20,8 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_System.h"
 
-#include "../WebServer/WebServer_JSON.h"
-#include "../WebServer/WebServer_AccessControl.h"
+#include "../WebServer/JSON.h"
+#include "../WebServer/AccessControl.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);

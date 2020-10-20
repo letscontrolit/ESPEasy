@@ -7,9 +7,9 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-#include "../WebServer/WebServer_HTML_wrappers.h"
-#include "../WebServer/WebServer_Markup.h"
-#include "../WebServer/WebServer_Markup_Forms.h"
+#include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/Markup.h"
+#include "../WebServer/Markup_Forms.h"
 
 
 String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType) {
