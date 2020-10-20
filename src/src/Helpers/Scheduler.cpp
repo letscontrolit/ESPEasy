@@ -15,6 +15,7 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/PortStatus.h"
 
 
 //#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
