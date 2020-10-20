@@ -6,7 +6,6 @@
 // #######################################################################################################
 // This sketch is based on https://github.com/Schm1tz1/arduino-ms5xxx
 
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P032_data_struct.h"
 

@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P100
 
 // #######################################################################################################
@@ -16,7 +17,6 @@ void    Plugin_100_DS_write_bit(uint8_t v, int8_t  Plugin_100_DallasPin) ICACHE_
 
 #endif // if defined(ESP32)
 
-#include "_Plugin_Helper.h"
 
 
 #define PLUGIN_100

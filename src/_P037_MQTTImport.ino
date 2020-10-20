@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P037
 //#######################################################################################################
 //#################################### Plugin 037: MQTT Import ##########################################
@@ -12,7 +13,7 @@
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
 #include "src/Helpers/StringParser.h"
-#include "_Plugin_Helper.h"
+
 
 #define PLUGIN_037
 #define PLUGIN_ID_037         37

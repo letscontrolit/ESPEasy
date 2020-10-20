@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P088
 //#######################################################################################################
 //#################################### Plugin 088: Heatpump IR ##########################################
@@ -44,7 +45,6 @@
  */
 
 #include <HeatpumpIRFactory.h>
-#include "_Plugin_Helper.h"
 
 IRSenderIRremoteESP8266 *Plugin_088_irSender = NULL;
 int panasonicCKPTimer = 0;

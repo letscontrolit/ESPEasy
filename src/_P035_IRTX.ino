@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P035
 //#######################################################################################################
 //#################################### Plugin 035: Output IR ############################################
@@ -36,8 +37,6 @@
 #include <IRac.h>
 #include <IRutils.h>
 #include <IRsend.h>
-
-#include "_Plugin_Helper.h"
 
 #ifdef P016_P035_Extended_AC
 #include <IRac.h>
