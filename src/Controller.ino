@@ -385,6 +385,7 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
 void SendStatusOnlyIfNeeded(EventValueSource::Enum eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
   if (SourceNeedsStatusUpdate(eventSource)) {
     SendStatus(eventSource, getPinStateJSON(param1, key, param2, param3));
+    printToWeb=false; //SP: 2020-06-12: to avoid to add more info to a JSON structure
   }
 }
 
@@ -423,7 +424,7 @@ void SendStatus(EventValueSource::Enum source, const String& status)
       serialPrintln(status);
       break;
 
-    default: 
+    default:
       break;
   }
 }
