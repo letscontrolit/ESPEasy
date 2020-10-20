@@ -34,7 +34,7 @@ bool P062_data_struct::init(taskIndex_t taskIndex,
 }
 
 void P062_data_struct::updateCalibration(uint8_t t) {
-  if (t > 12) return;
+  if (t >= P062_MaxTouchObjects) return;
   if (_keepCalibrationData) {
     uint16_t current = keypad->filteredData(t);
     CalibrationData.CalibrationValues[t].current = current;
@@ -59,7 +59,7 @@ bool P062_data_struct::readKey(uint16_t& key) {
     {
       if (key & colMask) // this key pressed?
       {
-        updateCalibration(col);
+        updateCalibration(col - 1);
         if (_use_scancode) {
           key = col;
           break;
@@ -107,7 +107,7 @@ void P062_data_struct::loadTouchObjects(taskIndex_t taskIndex) {
  * Get the Calibration data for 1 touch object, return false if all zeroes or invalid input for t.
  */
 bool P062_data_struct::getCalibrationData(uint8_t t, uint16_t *current, uint16_t *min, uint16_t *max) {
-  if (t > P062_MaxTouchObjects) return false;
+  if (t >= P062_MaxTouchObjects) return false;
   *current = CalibrationData.CalibrationValues[t].current;
   *min     = CalibrationData.CalibrationValues[t].min;
   *max     = CalibrationData.CalibrationValues[t].max;
