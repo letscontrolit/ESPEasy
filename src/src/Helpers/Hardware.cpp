@@ -1,5 +1,6 @@
 #include "Hardware.h"
 
+#include "../Commands/GPIO.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
@@ -11,12 +12,12 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 
+#include "../../EspEasyGPIO.h"
 
 #ifdef ESP32
 #include <soc/soc.h>
 #include <soc/efuse_reg.h>
 #endif
-
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
