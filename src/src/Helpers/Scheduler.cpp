@@ -1,16 +1,20 @@
 #include "Scheduler.h"
 
 #include "../../ESPEasy_common.h"
+#include "../../EspEasyGPIO.h"
 #include "../../_Plugin_Helper.h"
 
+#include "../Commands/GPIO.h"
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../Globals/RTC.h"
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/PeriodicalActions.h"
 
-#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
 
+//#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
+
+#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
 #define SYSTEM_EVENT_QUEUE   0 // Not really a timer.
 #define CONST_INTERVAL_TIMER 1
 #define PLUGIN_TASK_TIMER    2
@@ -57,9 +61,6 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
       break;
     case PLUGIN_TASK_TIMER:
       result = F("Plugin Task");
-      break;
-    case PLUGIN_TIMER:
-      result = F("Plugin");
       break;
     case TASK_DEVICE_TIMER:
       result = F("Task Device");
@@ -698,27 +699,81 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
 * GPIO Timer
 * Special timer to handle timed GPIO actions
 \*********************************************************************************************/
-unsigned long ESPEasy_Scheduler::createGPIOTimerId(byte pinNumber, int Par1) {
-  const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
-  const unsigned long mixed = (Par1 << 8) + pinNumber;
+unsigned long ESPEasy_Scheduler::createGPIOTimerId(byte GPIOType, byte pinNumber, int Par1) {
+  const unsigned long mask = (1 << TIMER_ID_SHIFT) - 1;
+
+  //  const unsigned long mixed = (Par1 << 8) + pinNumber;
+  const unsigned long mixed = (Par1 << 16) + (pinNumber << 8) + GPIOType;
 
   return mixed & mask;
 }
 
-void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, int Par1, int Par2, int Par3, int Par4, int Par5)
+void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
-  // Par1 & Par2 form a unique key
-  const unsigned long systemTimerId = createGPIOTimerId(Par1, Par2);
+  byte GPIOType = GPIO_TYPE_INVALID;
 
-  setNewTimerAt(getMixedId(GPIO_TIMER, systemTimerId), millis() + msecFromNow);
+  switch (pluginID) {
+    case PLUGIN_GPIO:
+      GPIOType = GPIO_TYPE_INTERNAL;
+      break;
+    case PLUGIN_PCF:
+      GPIOType = GPIO_TYPE_PCF;
+      break;
+    case PLUGIN_MCP:
+      GPIOType = GPIO_TYPE_MCP;
+      break;
+  }
+
+  if (GPIOType != GPIO_TYPE_INVALID) {
+    // Par1 & Par2 & GPIOType form a unique key
+    const unsigned long mixedTimerId = getMixedId(GPIO_TIMER, createGPIOTimerId(GPIOType, Par1, Par2));
+    setNewTimerAt(mixedTimerId, millis() + msecFromNow);
+  }
 }
 
-void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
-  // FIXME TD-er: Allow for all GPIO commands to be scheduled.
-  byte pinNumber     = id & 0xFF;
-  byte pinStateValue = (id >> 8);
 
-  digitalWrite(pinNumber, pinStateValue);
+void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
+  byte GPIOType = static_cast<byte>((id) & 0xFF);
+  byte pinNumber = static_cast<byte>((id >> 8) & 0xFF);
+  byte pinStateValue = static_cast<byte>((id >> 16) & 0xFF);
+
+  bool success = true;
+
+  byte pluginID;
+
+  switch (GPIOType)
+  {
+    case GPIO_TYPE_INTERNAL:
+      GPIO_Internal_Write(pinNumber, pinStateValue);
+      pluginID=PLUGIN_GPIO;
+      break;
+    case GPIO_TYPE_MCP:
+      GPIO_MCP_Write(pinNumber, pinStateValue);
+      pluginID=PLUGIN_MCP;
+      break;
+    case GPIO_TYPE_PCF:
+      GPIO_PCF_Write(pinNumber, pinStateValue);
+      pluginID=PLUGIN_PCF;
+      break;
+    default:
+      success=false;
+  }
+  if (success) {
+    const uint32_t key = createKey(pluginID, pinNumber);
+    // WARNING: operator [] creates an entry in the map if key does not exist
+    portStatusStruct tempStatus = globalMapPortStatus[key];
+
+    tempStatus.mode     = PIN_MODE_OUTPUT;
+    tempStatus.command  = 1; //set to 1 in order to display the status in the PinStatus page
+
+    if (tempStatus.state != pinStateValue) {
+      tempStatus.state        = pinStateValue;
+      tempStatus.output       = pinStateValue;
+      tempStatus.forceEvent   = 1;
+      tempStatus.forceMonitor = 1;
+    }
+    savePortStatus(key,tempStatus);
+  }
 }
 
 /*********************************************************************************************\
