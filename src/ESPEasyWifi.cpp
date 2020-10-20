@@ -183,7 +183,7 @@ void WiFiConnectRelaxed() {
 
   if (!prepareWiFi()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : Could not prepare WiFi!"));
-    last_wifi_connect_attempt_moment.setNow();
+    last_wifi_connect_attempt_moment.clear();
     wifi_connect_attempt             = 1;
     return;
   }
@@ -213,6 +213,11 @@ void WiFiConnectRelaxed() {
     log += wifi_connect_attempt + 1;
     addLog(LOG_LEVEL_INFO, log);
   }
+  wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
+  lastDisconnectMoment.clear();
+  lastConnectMoment.clear();
+  lastGetIPmoment.clear();
+  wifi_considered_stable = false;
   last_wifi_connect_attempt_moment.setNow();
   wifiConnectInProgress            = true;
 
@@ -257,7 +262,9 @@ bool prepareWiFi() {
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   #endif // if defined(ESP32)
 
-  if (RTC.lastWiFiChannel == 0 && wifi_connect_attempt <= 1) {
+  const bool canSkipScan = RTC.lastWiFiChannel != 0 && wifi_connect_attempt <= 1;
+
+  if (!canSkipScan) {
     WifiScan(false, true);
   }
   setConnectionSpeed();
@@ -321,7 +328,7 @@ void resetWiFi() {
     // Don't reset WiFi too often
     return;
   }
-  lastDisconnectMoment.setNow();
+  lastDisconnectMoment.clear();
   lastWiFiResetMoment.setNow();
   wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
   lastConnectMoment.clear();
@@ -644,7 +651,12 @@ bool wifiConnectTimeoutReached() {
   // For the first attempt, do not wait to start connecting.
   if (wifi_connect_attempt == 0) { return true; }
 
-  if (lastDisconnectMoment.isSet() && (last_wifi_connect_attempt_moment > lastDisconnectMoment)) {
+  if (!last_wifi_connect_attempt_moment.isSet()) {
+    // No attempt made
+    return true;
+  }
+
+  if (lastDisconnectMoment.isSet()) {
     // Connection attempt was already ended.
     return true;
   }
@@ -655,7 +667,7 @@ bool wifiConnectTimeoutReached() {
   }
 
   // wait until it connects + add some device specific random offset to prevent
-  // all nodes overloading the accesspoint when turning on at the same time.
+  // all nodes overloading the access point when turning on at the same time.
   #if defined(ESP8266)
   const unsigned int randomOffset_in_msec = (wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getChipId() & 0xF));
   #endif // if defined(ESP8266)
@@ -848,14 +860,14 @@ void logConnectionStatus() {
   #endif
 #ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI  : Arduino wifi status: ");
     log += ArduinoWifiStatusToString(WiFi.status());
     log += F(" ESPeasy internal wifi status: ");
     log += ESPeasyWifiStatusToString();
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
+    addLog(LOG_LEVEL_INFO, log);
   }
-
+/*
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
 
@@ -889,6 +901,7 @@ void logConnectionStatus() {
       addLog(LOG_LEVEL_INFO, log);
     }
   }
+  */
 #endif // ifndef BUILD_NO_DEBUG
 }
 

@@ -4,6 +4,7 @@
 #include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_common.h"
+#include "../../EspEasyGPIO.h"
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../ControllerQueue/MQTT_queue_element.h"
 #include "../DataStructs/ESPEasy_plugin_functions.h"
@@ -46,6 +47,12 @@ void run50TimesPerSecond() {
 \*********************************************************************************************/
 void run10TimesPerSecond() {
   String dummy;
+  //@giig19767g: WARNING: Monitor10xSec must run before PLUGIN_TEN_PER_SECOND
+  {
+    START_TIMER;
+    GPIO_Monitor10xSec();
+    STOP_TIMER(PLUGIN_CALL_10PSU);
+  }
   {
     START_TIMER;
     PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummy);
@@ -192,6 +199,9 @@ void runEach30Seconds()
     log += F(" WiFiStatus ");
     log += ArduinoWifiStatusToString(WiFi.status());
     #endif
+    log += F(" ESPeasy internal wifi status: ");
+    log += ESPeasyWifiStatusToString();
+
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);

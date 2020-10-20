@@ -242,6 +242,11 @@ String rn2xx3::peekLastError() const
   return _rn2xx3_handler.peekLastError();
 }
 
+float rn2xx3::getLoRaAirTime(uint8_t  pl) const
+{
+  return _rn2xx3_handler.getLoRaAirTime(pl);
+}
+
 String rn2xx3::getLastError()
 {
   return _rn2xx3_handler.getLastError();

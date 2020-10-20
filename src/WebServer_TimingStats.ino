@@ -18,6 +18,7 @@ void handle_timingstats() {
   html_table_header(F("Function"));
   html_table_header(F("#calls"));
   html_table_header(F("call/sec"));
+  html_table_header(F("duty (%)"));
   html_table_header(F("min (ms)"));
   html_table_header(F("Avg (ms)"));
   html_table_header(F("max (ms)"));
@@ -35,6 +36,8 @@ void handle_timingstats() {
   addRowLabel(F("Time span"));
   addHtml(String(timespan));
   addHtml(F(" sec"));
+  addRowLabel(F("*"));
+  addHtml(F("Duty cycle based on average < 1 msec is highly unreliable"));
   html_end_table();
 
   sendHeadandTail_stdtemplate(_TAIL);
@@ -56,17 +59,34 @@ void format_using_threshhold(unsigned long value) {
 
 void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
   unsigned long minVal, maxVal;
-  unsigned int  c = stats.getMinMax(minVal, maxVal);
+  const unsigned int  c = stats.getMinMax(minVal, maxVal);
 
   html_TD();
   addHtml(String(c));
   html_TD();
-  float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0f;
+  const float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0f;
+  const float avg = stats.getAvg();
   addHtml(String(call_per_sec, 2));
+  html_TD();
+  {
+    const float duty = (call_per_sec * avg / 10000.0f);
+    String duty_str = String(duty, 2);
+    if (avg < 1000) {
+      // Unreliable as average is below 1 msec
+      duty_str += '*';
+      html_I(duty_str);
+    } else if (duty > 10.0f) {
+      // Over 10% of the time
+      html_B(duty_str);
+    } else {
+      addHtml(duty_str);
+    }
+  }
+
   html_TD();
   format_using_threshhold(minVal);
   html_TD();
-  format_using_threshhold(stats.getAvg());
+  format_using_threshhold(avg);
   html_TD();
   format_using_threshhold(maxVal);
 }

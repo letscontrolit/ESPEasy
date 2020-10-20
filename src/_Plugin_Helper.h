@@ -102,7 +102,8 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
 
 int getValueCountForTask(taskIndex_t   taskIndex);
 
-Sensor_VType getDeviceVTypeForTask(taskIndex_t taskIndex);
-Sensor_VType getDeviceVTypeForTask(taskIndex_t taskIndex, int& pconfig_index);
+// Check if the DeviceVType is set and update if it isn't.
+// Return pconfig_index
+int checkDeviceVTypeForTask(struct EventStruct* event);
 
 #endif // PLUGIN_HELPER_H

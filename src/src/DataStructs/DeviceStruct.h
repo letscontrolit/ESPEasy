@@ -13,6 +13,8 @@
 #define DEVICE_TYPE_SERIAL                 21 // connected through UART/Serial
 #define DEVICE_TYPE_SERIAL_PLUS1           22 // connected through UART/Serial + 1 extra signal pin
 #define DEVICE_TYPE_SPI                    23 // connected through SPI
+#define DEVICE_TYPE_SPI2                   24 // connected through SPI, 2 GPIOs
+#define DEVICE_TYPE_SPI3                   25 // connected through SPI, 3 GPIOs
 #define DEVICE_TYPE_DUMMY                  99 // Dummy device, has no physical connection
 
 #define I2C_MULTIPLEXER_NONE               -1 // None selected
@@ -40,7 +42,9 @@ enum class Sensor_VType : byte {
   SENSOR_TYPE_DIMMER          =   11,
   SENSOR_TYPE_LONG            =   20,
   SENSOR_TYPE_WIND            =   21,
-  SENSOR_TYPE_STRING          =   22
+  SENSOR_TYPE_STRING          =   22,
+
+  SENSOR_TYPE_NOT_SET         = 255
 };
 
 enum class Output_Data_type_t : byte {

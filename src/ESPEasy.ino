@@ -7,6 +7,11 @@
 #pragma GCC diagnostic warning "-Wall"
 #endif
 
+// Include this as first, to make sure all defines are active during the entire compile.
+// See: https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=7980
+// If Custom.h build from Arduino IDE is needed, uncomment #define USE_CUSTOM_H in ESPEasy_common.h
+#include "ESPEasy_common.h"
+
 // Needed due to preprocessor issues.
 #ifdef PLUGIN_SET_GENERIC_ESP32
   #ifndef ESP32
@@ -162,7 +167,7 @@ void preinit() {
 /*********************************************************************************************\
  * ISR call back function for handling the watchdog.
 \*********************************************************************************************/
-void sw_watchdog_callback(void *arg) 
+void sw_watchdog_callback(void *arg)
 {
   yield(); // feed the WD
   ++sw_watchdog_callback_count;
@@ -619,14 +624,14 @@ void flushAndDisconnectAllClients() {
       if (mqttControllerEnabled && MQTTclient.connected()) {
         MQTTclient.loop();
       }
-#endif //USES_MQTT      
+#endif //USES_MQTT
     }
-#ifdef USES_MQTT    
+#ifdef USES_MQTT
     if (mqttControllerEnabled && MQTTclient.connected()) {
       MQTTclient.disconnect();
       updateMQTTclient_connected();
     }
-#endif //USES_MQTT      
+#endif //USES_MQTT
     saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }

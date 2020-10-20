@@ -349,12 +349,13 @@ void addFloatNumberBox(const String& id, float value, float min, float max)
   html += id;
   html += '\'';
   html += F(" min=");
-  html += min;
+  html += String(min, 6);
   html += F(" max=");
-  html += max;
-  html += F(" step=0.01");
-  html += F(" style='width:5em;' value=");
-  html += value;
+  html += String(max, 6);
+  html += F(" step=0.000001");
+
+  html += F(" style='width:7em;' value=");
+  html += String(value, 6);
   html += '>';
 
   addHtml(html);
@@ -597,6 +598,22 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
 
       if (Settings.UseSerial && ((optionValues[x] == 1) || (optionValues[x] == 3))) {
         disabled = true;
+      }
+
+      if (Settings.InitSPI != 0) {
+        #ifdef ESP32
+        switch (Settings.InitSPI)
+        {
+        case 1:
+          disabled = (optionValues[x] == 18 || optionValues[x] == 19 || optionValues[x] == 23);
+          break;
+        case 2:
+          disabled = (optionValues[x] == 14 || optionValues[x] == 12 || optionValues[x] == 13);
+          break;
+        }
+        #else // #ifdef ESP32
+        disabled = (optionValues[x] == 14 || optionValues[x] == 12 || optionValues[x] == 13);
+        #endif
       }
     }
     addSelector_Item(options[x],

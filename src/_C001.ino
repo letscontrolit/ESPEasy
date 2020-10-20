@@ -57,8 +57,10 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
           url.reserve(128);
           url = F("/json.htm?type=command&param=");
 
+          const Sensor_VType sensorType = event->getSensorType();
 
-          switch (event->sensorType)
+
+          switch (sensorType)
           {
             case Sensor_VType::SENSOR_TYPE_SWITCH:
             case Sensor_VType::SENSOR_TYPE_DIMMER:
@@ -68,7 +70,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
               if (UserVar[event->BaseVarIndex] == 0) {
                 url += F("Off");
               } else {
-                if (event->sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
+                if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
                   url += F("On");
                 } else {
                   url += F("Set%20Level&level=");

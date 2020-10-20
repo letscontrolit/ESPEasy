@@ -213,7 +213,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           delete Plugin_078_SoftSerial;
           Plugin_078_SoftSerial=NULL;
         }
-        Plugin_078_SoftSerial = new (std::nothrow) ESPeasySerial(CONFIG_PIN1, CONFIG_PIN2);
+        Plugin_078_SoftSerial = new (std::nothrow) ESPeasySerial(static_cast<ESPEasySerialPort>(CONFIG_PORT), CONFIG_PIN1, CONFIG_PIN2);
         if (Plugin_078_SoftSerial == nullptr) {
           break;
         }

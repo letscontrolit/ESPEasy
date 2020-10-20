@@ -1,9 +1,16 @@
-#include "src/Globals/Device.h"
-#include "src/Globals/Plugins.h"
-#include "src/DataStructs/DeviceStruct.h"
+#include "_CPlugin_SensorTypeHelper.h"
+
+#include "../../_Plugin_Helper.h"
+#include "../../ESPEasy_Log.h"
+#include "../DataStructs/DeviceStruct.h"
+#include "../Globals/Device.h"
+#include "../Globals/Plugins.h"
 
 /*********************************************************************************************\
    Get value count from sensor type
+
+   Only use this function to determine nr of output values when changing output type of a task
+   To get the actual output values for a task, use getValueCountForTask
 \*********************************************************************************************/
 byte getValueCountFromSensorType(Sensor_VType sensorType)
 {
@@ -30,6 +37,7 @@ byte getValueCountFromSensorType(Sensor_VType sensorType)
       return 4;
     case Sensor_VType::SENSOR_TYPE_STRING:  // String type data stored in the event->String2
       return 1;
+    case Sensor_VType::SENSOR_TYPE_NOT_SET:  break;
   }
   addLog(LOG_LEVEL_ERROR, F("getValueCountFromSensorType: Unknown sensortype"));
   return 0;
@@ -50,7 +58,8 @@ String getSensorTypeLabel(Sensor_VType sensorType) {
     case Sensor_VType::SENSOR_TYPE_LONG:             return F("Long");
     case Sensor_VType::SENSOR_TYPE_WIND:             return F("Wind");
     case Sensor_VType::SENSOR_TYPE_STRING:           return F("String");
-    case Sensor_VType::SENSOR_TYPE_NONE: break;
+    case Sensor_VType::SENSOR_TYPE_NONE:             return F("None");
+    case Sensor_VType::SENSOR_TYPE_NOT_SET:  break;
   }
   return "";
 }
@@ -103,7 +112,8 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
     PCONFIG(pconfigIndex) = static_cast<byte>(choice);
   } else if (getValueCountFromSensorType(choice) != getValueCountForTask(event->TaskIndex)) {
     // Invalid value
-    choice                = getDeviceVTypeForTask(event->TaskIndex);
+    checkDeviceVTypeForTask(event);
+    choice                = event->sensorType;
     PCONFIG(pconfigIndex) = static_cast<byte>(choice);
   }
   addRowLabel(F("Output Data Type"));

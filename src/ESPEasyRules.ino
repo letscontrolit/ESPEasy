@@ -1068,7 +1068,6 @@ void createRuleEvents(struct EventStruct *event) {
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
   LoadTaskSettings(event->TaskIndex);
-  const Sensor_VType sensorType = getDeviceVTypeForTask(event->TaskIndex);
 
   const byte valueCount = getValueCountForTask(event->TaskIndex);
 
@@ -1080,7 +1079,7 @@ void createRuleEvents(struct EventStruct *event) {
     eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
     eventString += F("=");
 
-    switch (sensorType) {
+    switch (event->getSensorType()) {
       case Sensor_VType::SENSOR_TYPE_LONG:
         eventString += (unsigned long)UserVar[event->BaseVarIndex] +
                        ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);

@@ -128,7 +128,7 @@ void handle_unprocessedWiFiEvents()
   if (wifi_connect_attempt > 0) {
     // We only want to clear this counter if the connection is currently stable.
     if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
-      if (lastConnectMoment.timeoutReached(WIFI_CONNECTION_CONSIDERED_STABLE)) {
+      if (lastConnectMoment.isSet() && lastConnectMoment.timeoutReached(WIFI_CONNECTION_CONSIDERED_STABLE)) {
         // Connection considered stable
         wifi_connect_attempt = 0;
         wifi_considered_stable = true;
@@ -165,9 +165,9 @@ void processDisconnect() {
     log += getLastDisconnectReason();
     log += '\'';
 
-    if (lastConnectedDuration > 0) {
+    if (lastConnectedDuration_us > 0) {
       log += F(" Connected for ");
-      log += format_msec_duration(lastConnectedDuration);
+      log += format_msec_duration(lastConnectedDuration_us / 1000ll);
     } else {
       log += F(" Connected for a long time...");
     }
