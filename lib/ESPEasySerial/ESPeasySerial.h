@@ -27,7 +27,9 @@
 #include <HardwareSerial.h>
 #include <inttypes.h>
 #include <Stream.h>
+#ifndef DISABLE_SC16IS752_Serial
 #include <ESPEasySC16IS752_Serial.h>
+#endif
 
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   # ifndef DISABLE_SOFTWARE_SERIAL
@@ -359,8 +361,10 @@ private:
   bool isI2Cserial() const {
     return _serialtype == ESPEasySerialPort::sc16is752;
   }
-
+  
+#ifndef DISABLE_SC16IS752_Serial
   ESPEasySC16IS752_Serial *_i2cserial = nullptr;
+#endif
 
 #if !defined(DISABLE_SOFTWARE_SERIAL) && defined(ESP8266)
   bool isSWserial() const {

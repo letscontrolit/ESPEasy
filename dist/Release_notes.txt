@@ -1,4 +1,55 @@
 -------------------------------------------------
+Changes in release mega-20201016 (since mega-20201009)
+-------------------------------------------------
+
+Release date: vr 16 okt 2020 23:26:50 CEST
+
+TD-er (7):
+      [LoRaTTN] Add encoder/decoder for unit of measure for AcuDC243
+      [WiFi] Fix WiFi (re)connect issues caused by new WiFi timers
+      [Timing Stats] Add duty cycle column + LoRa TTN on air timings
+      [Syslog] Fix syslog name does not include unit number (#3288)
+      [Docs] Document LoRaWAN TTN dynamic send interval setting
+      [GPS] Add distance counter + distance from ref point
+      [LoRa TTN] Fix decoder issue in GPS data
+
+Ton Huisman (1):
+      [Checks] Check all 4 variable names
+
+uwekaditz (1):
+      [P092] Exception solved
+
+
+-------------------------------------------------
+Changes in release mega-20201009 (since mega-20200929)
+-------------------------------------------------
+
+Release date: vr  9 okt 2020 21:08:39 CEST
+
+TD-er (14):
+      Fix used sensor type on plugins allowing to select output type
+      [Custom build] Custom.h was not always used for factory default settings
+      [ESP32] Add detailed chip info on ESP32
+      [Sysinfo page] Split memory info from basic system info + add for ESP32
+      Document Custom.h alternative for Arduino IDE
+      [Sysinfo page] Hide flash chip ID for ESP32 (not possible to read)
+      [Load] Fix high CPU load introduced by fixing sensorType consistency
+      [Cleanup] Simplify functions to sync sensorType consistency
+      [ESPEasySerial] Make GPIO pins selectabel on ESP32
+      [ESPEasySerial] Fix missed ESPEasy Serial instance build issues.
+      [SendToHTTP] Return command failed if no connection could be made
+      [build] Add define DISABLE_SC16IS752_Serial
+      Add standard conversion for converting int to HEX
+      [LoRaWAN TTN] Add new plugins to packet converter JavaScript
+
+Thomas (1):
+      Updated Docs: P075 Nextion and P079 Motorshield
+
+jimmys01 (1):
+      Update ArduJSON
+
+
+-------------------------------------------------
 Changes in release mega-20200929 (since mega-20200913)
 -------------------------------------------------
 
