@@ -94,7 +94,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Temperature offset"), F("p028_bme280_tempoffset"), PCONFIG(2));
       addUnit(F("x 0.1C"));
-      String offsetNote = F("Offset in units of 0.1 degree Celcius");
+      String offsetNote = F("Offset in units of 0.1 degree Celsius");
 
       if (nullptr != P028_data) {
         if (P028_data->hasHumidity()) {
