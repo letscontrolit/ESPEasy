@@ -1,7 +1,6 @@
 #include "SystemVariables.h"
 
 
-#include "../../ESPEasyNetwork.h"
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy-Globals.h"
@@ -9,6 +8,7 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/ESPEasy_time.h"

@@ -1,11 +1,11 @@
 #include "ESPEasyWifi_ProcessEvent.h"
 
-#include "ESPEasyNetwork.h"
 #include "ESPEasyWiFiEvent.h"
 #include "ESPEasyWiFi_credentials.h"
-#include "ESPEasyWifi.h"
 #include "ESPEasy-Globals.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
+#include "src/ESPEasyCore/ESPEasyWifi.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/ESPEasy_time.h"

@@ -1,7 +1,5 @@
 #include "PeriodicalActions.h"
 
-#include "../../ESPEasyNetwork.h"
-#include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_common.h"
 #include "../../EspEasyGPIO.h"
 #include "../../ESPEasy_fdwdecl.h"
@@ -13,6 +11,8 @@
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/ESPEasyWiFiEvent.h"

@@ -10,13 +10,14 @@
 #include "src/DataTypes/ESPEasyTimeSource.h"
 
 #include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
+#include "src/ESPEasyCore/ESPEasyWifi.h"
 
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/RTC.h"
 
 #include "src/Helpers/ESPEasy_time_calc.h"
 
-#include "ESPEasyNetwork.h"
 
 #ifdef HAS_ETHERNET
 extern bool eth_connected;

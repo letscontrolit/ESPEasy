@@ -12,6 +12,9 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/Settings.h"
 #include "../Globals/SecuritySettings.h"
@@ -23,8 +26,6 @@
 #include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
-
-#include "../../ESPEasyNetwork.h"
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>

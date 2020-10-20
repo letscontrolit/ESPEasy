@@ -2,9 +2,9 @@
 
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasyNetwork.h"
 
 #include "../Commands/Common.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"

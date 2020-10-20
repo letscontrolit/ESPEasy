@@ -1,6 +1,5 @@
 #include "ESPEasy_FactoryDefault.h"
 
-#include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
 
@@ -10,6 +9,7 @@
 #include "../DataStructs/FactoryDefaultPref.h"
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 
+#include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/ESPEasyWiFiEvent.h"

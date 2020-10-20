@@ -4,6 +4,8 @@
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/NetworkState.h"
@@ -14,8 +16,6 @@
 #include "../Helpers/Network.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
-#include "../../ESPEasyWifi.h"
-#include "../../ESPEasyNetwork.h"
 
 #include <IPAddress.h>
 

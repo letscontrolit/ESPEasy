@@ -1,11 +1,13 @@
 #include "DeepSleep.h"
 
-#include "../../ESPEasyNetwork.h"
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"
 
-#include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Globals/EventQueue.h"
 #include "../Globals/RTC.h"

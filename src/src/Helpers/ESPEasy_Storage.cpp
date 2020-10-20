@@ -1,6 +1,5 @@
 #include "ESPEasy_Storage.h"
 
-#include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_common.h"
 
 #include "../CustomBuild/StorageLayout.h"
@@ -8,6 +7,7 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/CRCValues.h"

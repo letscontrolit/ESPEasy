@@ -1,8 +1,8 @@
 #include "../WebServer/AccessControl.h"
 
-#include "../../ESPEasyWifi.h"
-
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"

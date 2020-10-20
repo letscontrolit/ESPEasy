@@ -1,7 +1,6 @@
 #include "../Commands/HTTP.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasyNetwork.h"
 
 #include "../Commands/Common.h"
 
@@ -9,6 +8,7 @@
 #include "../DataStructs/SettingsStruct.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/Settings.h"
 

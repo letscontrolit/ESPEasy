@@ -1,13 +1,13 @@
 #include "MDNS_Helper.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/StringProvider.h"
-
-#include "../../ESPEasyNetwork.h"
-
 
 void set_mDNS() {
   #ifdef FEATURE_MDNS

@@ -1,12 +1,13 @@
 #include "StringProvider.h"
 
-#include "../../ESPEasyNetwork.h"
-#include "../../ESPEasyWifi.h"
 #ifdef HAS_ETHERNET
 # include "ETH.h"
 #endif // ifdef HAS_ETHERNET
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy-Globals.h"
+
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"

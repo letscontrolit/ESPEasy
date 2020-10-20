@@ -38,13 +38,14 @@
 
 
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasyNetwork.h"
-#include "../../ESPEasyWifi.h"
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/TimingStats.h"
 
 #include "../DataTypes/SettingsType.h"
+
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"

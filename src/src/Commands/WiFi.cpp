@@ -1,10 +1,10 @@
 #include "../Commands/WiFi.h"
 
-#include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_common.h"
 
 #include "../Commands/Common.h"
 
+#include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/ESPEasyWiFiEvent.h"

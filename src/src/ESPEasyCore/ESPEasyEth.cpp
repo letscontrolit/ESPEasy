@@ -5,10 +5,10 @@
 #include "ESPEasyNetwork.h"
 #include "ETH.h"
 #include "eth_phy/phy.h"
-#include "src/Globals/NetworkState.h"
-#include "src/Globals/Settings.h"
-#include "src/Helpers/StringConverter.h"
-#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "../Globals/NetworkState.h"
+#include "../Globals/Settings.h"
+#include "../Helpers/StringConverter.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 bool ethUseStaticIP() {
   return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[0] != 255;

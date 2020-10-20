@@ -1,10 +1,10 @@
 #include "../Commands/Settings.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasyNetwork.h"
 
 #include "../Commands/Common.h"
 
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/SecuritySettings.h"

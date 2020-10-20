@@ -102,9 +102,8 @@
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "src/Helpers/_CPlugin_Helper.h"
 
-#include "ESPEasyNetwork.h"
+
 #include "ESPEasyWiFi_credentials.h"
-#include "ESPEasyWifi.h"
 #include "ESPEasyWifi_ProcessEvent.h"
 
 #include "src/DataStructs/ControllerSettingsStruct.h"
@@ -119,8 +118,10 @@
 #include "src/DataTypes/DeviceModel.h"
 #include "src/DataTypes/SettingsType.h"
 
-#include "src/ESPEasyCore/ESPEasyRules.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
+#include "src/ESPEasyCore/ESPEasyRules.h"
+#include "src/ESPEasyCore/ESPEasyWifi.h"
 #include "src/ESPEasyCore/Serial.h"
 
 #include "src/Globals/CPlugins.h"

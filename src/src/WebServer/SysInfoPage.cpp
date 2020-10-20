@@ -5,13 +5,14 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 
-#include "../../ESPEasyNetwork.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy-Globals.h"
 
 #include "../Commands/Diagnostic.h"
 
 #include "../DataStructs/RTCStruct.h"
+
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/ESPEasy_time.h"
