@@ -354,13 +354,15 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
       }
 
-      // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
-      for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
-        if (validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
-          if (Plugin_ptr[deviceIndex](Function, event, str)) {
-            delay(0); // SMY: call delay(0) unconditionally
-            CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, event, str);
-            return true;
+      if (Function == PLUGIN_REQUEST) {
+        // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
+        for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
+          if (validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
+            if (Plugin_ptr[deviceIndex](Function, event, str)) {
+              delay(0); // SMY: call delay(0) unconditionally
+              CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, event, str);
+              return true;
+            }
           }
         }
       }
