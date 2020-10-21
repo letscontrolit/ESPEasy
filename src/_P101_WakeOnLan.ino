@@ -10,7 +10,7 @@
 //   Oct-12-2020: Creation
 //   Oct-16-2020: Beta Test Release to ESPEasy Forum.
 //   Oct-18-2020: Re-assigned as plugin number P101 (was P248).
-//   Oct-20-2020: Github PR, Submitted as [Testing] plugin.
+//   Oct-20-2020: Github PR #3328, Submitted as [Testing] plugin.
 //
 // This ESPEasy plugin requires the WakeOnLan library found here:
 //   https://github.com/a7md0/WakeOnLan
@@ -87,6 +87,9 @@
 
 // Misc Defines
 #define LOG_NAME_P101      "WAKE ON LAN: "
+#define NAME_MISSING       0
+#define NAME_SAFE          1
+#define NAME_UNSAFE        2
 
 // ************************************************************************************************
 // WOL Objects
@@ -95,20 +98,16 @@ WakeOnLan WOL(udp);
 
 // ************************************************************************************************
 // Local Functions
-bool validateIp(String ipStr);
-bool validateMac(String macStr);
-bool validatePort(String portStr);
+uint8_t safeName(taskIndex_t index);
+bool    validateIp(String ipStr);
+bool    validateMac(String macStr);
+bool    validatePort(String portStr);
 
 // ************************************************************************************************
 
 boolean Plugin_101(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-
-  char   ipString[IP_BUFF_SIZE_P101]   = "";
-  char   macString[MAC_BUFF_SIZE_P101] = "";
-  String msgStr;
-  const String wolStr = F(LOG_NAME_P101);
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
@@ -141,6 +140,10 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_LOAD: {
+      char   ipString[IP_BUFF_SIZE_P101]   = "";
+      char   macString[MAC_BUFF_SIZE_P101] = "";
+      String msgStr;
+
       addFormSubHeader(""); // Blank line, vertical space.
       addFormHeader(F("Default Settings"));
 
@@ -168,14 +171,24 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      String errorStr = "";
+      char   ipString[IP_BUFF_SIZE_P101]   = "";
+      char   macString[MAC_BUFF_SIZE_P101] = "";
       char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101];
+      String errorStr = "";
+      String msgStr;
+      const String wolStr = F(LOG_NAME_P101);
 
       LoadTaskSettings(event->TaskIndex);
 
       // Check Task Name.
-      if (getTaskDeviceName(event->TaskIndex) == "") {                // Check to see if user entered device name.
-        strcpy(ExtraTaskSettings.TaskDeviceName, DEF_TASK_NAME_P101); // Task Device Name missing, use default name.
+      uint8_t nameCode = safeName(event->TaskIndex);
+
+      if ((nameCode == NAME_MISSING) || (nameCode == NAME_UNSAFE)) {               // Check to see if user submitted safe device name.
+        strcpy(ExtraTaskSettings.TaskDeviceName, (char *)(F(DEF_TASK_NAME_P101))); // Use default name.
+
+        if (nameCode == NAME_UNSAFE) {
+          errorStr = F("ALERT, Renamed Unsafe Task Name. ");
+        }
       }
 
       // Check IP Address.
@@ -197,7 +210,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       else if (strlen(ipString) < IP_MIN_SIZE_P101) { // IP Address too short, load default value. Warn User.
         strcpy_P(ipString, (char *)(F(IP_STR_DEF_P101)));
 
-        msgStr    = F("Provided IP Invalid, Using Default. ");
+        msgStr    = F("Provided IP Invalid (Using Default). ");
         errorStr += msgStr;
         msgStr    = wolStr + msgStr;
         msgStr   += F("[");
@@ -266,40 +279,41 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WRITE: {
-      bool   taskEnable  = true;
-      byte   parse_error = false;
-      String tmpString   = string;
+      char   ipString[IP_BUFF_SIZE_P101]   = "";
+      char   macString[MAC_BUFF_SIZE_P101] = "";
+      bool   taskEnable                    = false;
+      byte   parse_error                   = false;
+      String msgStr;
       String strings[2];
+      String tmpString    = string;
+      const String wolStr = F(LOG_NAME_P101);
 
       //  addLog(LOG_LEVEL_INFO, String(F("--> WOL taskIndex= ")) + String(event->TaskIndex)); // Debug
 
-      //  Warning, event->TaskIndex is incorrectly set in PLUGIN_WRITE if plugin is disabled.
-      //  So checking the task enable status needs special attention.
+      String cmd = parseString(tmpString, 1);
+
+      //  Warning, event->TaskIndex is invalid in PLUGIN_WRITE during controller ack calls.
+      //  So checking the Device Name needs special attention.
       //  See https://github.com/letscontrolit/ESPEasy/issues/3317
-      if (event->TaskIndex < TASKS_MAX) {
+      if (validTaskIndex(event->TaskIndex) &&
+          (cmd.equalsIgnoreCase(F(CMD_NAME_P101)) ||
+           cmd.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)))) {
         LoadTaskSettings(event->TaskIndex);
         taskEnable = Settings.TaskDeviceEnabled[event->TaskIndex];
+
+        // Do not process WOL command if plugin disabled. This code is for errant situations which may never occur.
+        if (!taskEnable) {
+          // String ErrorStr = F("Plugin is Disabled, Command Ignored. ");
+          // addLog(LOG_LEVEL_INFO, wolStr + ErrorStr);
+          // SendStatus(event->Source, ErrorStr); // Reply (echo) to sender. This will print message on browser.
+          break;
+        }
+
+        success = true;
+
         LoadCustomTaskSettings(event->TaskIndex, strings, 2, CUSTOMTASK_STR_SIZE_P101);
         safe_strncpy(ipString,  strings[0],  IP_BUFF_SIZE_P101);
         safe_strncpy(macString, strings[1], MAC_BUFF_SIZE_P101);
-      }
-
-      String cmd = parseString(tmpString, 1);
-
-      //  Warning, event->TaskIndex is incorrectly set in PLUGIN_WRITE if plugin is disabled.
-      //  So checking the Device Name needs special attention.
-      //  See https://github.com/letscontrolit/ESPEasy/issues/3317
-      if (cmd.equalsIgnoreCase(F(CMD_NAME_P101)) ||
-          ((event->TaskIndex < TASKS_MAX) && cmd.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)))) {
-        success = true;
-
-        // Do not process WOL command if the plugin is disabled.
-        if ((taskEnable == false) || (event->TaskIndex >= TASKS_MAX)) {
-          String ErrorStr = F("Plugin is Disabled, Command Ignored. ");
-          addLog(LOG_LEVEL_INFO, wolStr + ErrorStr);
-          SendStatus(event->Source, ErrorStr); // Reply (echo) to sender. This will print message on browser.
-          break;
-        }
 
         String paramMac  = parseString(tmpString, 2); // MAC Address (optional)
         String paramIp   = parseString(tmpString, 3); // IP Address (optional)
@@ -396,6 +410,30 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
     }
   }
   return success;
+}
+
+// ************************************************************************************************
+// safeName(): Check task name and confirm it is present and safe to use.
+// Arg: task index
+// Returns: NAME_SAFE, NAME_MISSING, or NAME_USAFE.
+uint8_t safeName(taskIndex_t index) {
+  uint8_t safeCode = NAME_SAFE;
+  String  devName  = getTaskDeviceName(index);
+
+  devName.toLowerCase();
+
+  if (devName == "") {
+    safeCode = NAME_MISSING;
+  }
+
+  if (devName == F("reboot")) {
+    safeCode = NAME_UNSAFE;
+  }
+  else if (devName == F("reset")) {
+    safeCode = NAME_UNSAFE;
+  }
+
+  return safeCode;
 }
 
 // ************************************************************************************************
