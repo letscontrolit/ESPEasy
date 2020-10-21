@@ -334,7 +334,7 @@ void checkResetFactoryPin() {
 
     if (factoryResetCounter > 3) {
       // normal reboot
-      reboot();
+      reboot(ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryPinActive);
     }
     factoryResetCounter = 0; // count was < 3, reset counter
   }

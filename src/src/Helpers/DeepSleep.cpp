@@ -119,7 +119,7 @@ void deepSleepStart(int dsdelay)
 
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   RTC.deepSleepState = 1;
-  prepareShutdown();
+  prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e::DeepSleep);
 
   #if defined(ESP8266)
     # if defined(CORE_POST_2_5_0)

@@ -62,7 +62,7 @@ String getLabel(LabelType::Enum label) {
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
     case LabelType::RESET_REASON:           return F("Reset Reason");
-    case LabelType::LAST_TASK_BEFORE_REBOOT: return F("Last Task");
+    case LabelType::LAST_TASK_BEFORE_REBOOT: return F("Last Action before Reboot");
     case LabelType::SW_WD_COUNT:            return F("SW WD count");
 
 
