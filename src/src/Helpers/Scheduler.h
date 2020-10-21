@@ -52,12 +52,31 @@ public:
 
   };
 
+  static String toString(IntervalTimer_e timer);
+
   enum class PluginPtrType {
     TaskPlugin,
     ControllerPlugin,
     NotificationPlugin
   };
 
+  enum class IntendedRebootReason_e {
+    DeepSleep,
+    DelayedReboot,
+    ResetFactory,
+    ResetFactoryPinActive,
+    ResetFactoryCommand,
+    CommandReboot,
+    RestoreSettings,
+    OTA_error,
+    ConnectionFailuresThreshold,
+
+  };
+
+  static String toString(IntendedRebootReason_e reason);
+
+
+  void markIntendedReboot(IntendedRebootReason_e reason);
 
   /*********************************************************************************************\
   * Generic Timer functions.

@@ -261,7 +261,7 @@ void setup()
     }
 
     log += RTC.bootCounter;
-    log += F(" Last Task: ");
+    log += F(" Last Action before Reboot: ");
     log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     log += F(" Last systime: ");
     log += RTC.lastSysTime;
