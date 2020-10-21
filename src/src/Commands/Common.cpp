@@ -35,6 +35,11 @@ String return_incorrect_nr_arguments()
   return F("Too many arguments, try using quotes!");
 }
 
+String return_incorrect_source()
+{
+  return F("Command not allowed from this source!");
+}
+
 String return_not_connected()
 {
   return F("Not connected to WiFi");

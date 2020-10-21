@@ -52,12 +52,31 @@ public:
 
   };
 
+  static String toString(IntervalTimer_e timer);
+
   enum class PluginPtrType {
     TaskPlugin,
     ControllerPlugin,
     NotificationPlugin
   };
 
+  enum class IntendedRebootReason_e {
+    DeepSleep,
+    DelayedReboot,
+    ResetFactory,
+    ResetFactoryPinActive,
+    ResetFactoryCommand,
+    CommandReboot,
+    RestoreSettings,
+    OTA_error,
+    ConnectionFailuresThreshold,
+
+  };
+
+  static String toString(IntendedRebootReason_e reason);
+
+
+  void markIntendedReboot(IntendedRebootReason_e reason);
 
   /*********************************************************************************************\
   * Generic Timer functions.
@@ -164,15 +183,18 @@ public:
   * GPIO Timer
   * Special timer to handle timed GPIO actions
   \*********************************************************************************************/
-  static unsigned long createGPIOTimerId(byte pinNumber,
+  static unsigned long createGPIOTimerId(byte GPIOType,
+                                         byte pinNumber,
                                          int  Par1);
 
-  void                 setGPIOTimer(unsigned long msecFromNow,
-                                    int           Par1,
-                                    int           Par2 = 0,
-                                    int           Par3 = 0,
-                                    int           Par4 = 0,
-                                    int           Par5 = 0);
+
+  void setGPIOTimer(unsigned long msecFromNow,
+                    pluginID_t    pluginID,
+                    int           Par1,
+                    int           Par2 = 0,
+                    int           Par3 = 0,
+                    int           Par4 = 0,
+                    int           Par5 = 0);
 
   void process_gpio_timer(unsigned long id);
 

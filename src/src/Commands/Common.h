@@ -10,6 +10,7 @@ String return_command_success();
 String return_command_failed();
 String return_incorrect_source();
 String return_incorrect_nr_arguments();
+String return_incorrect_source();
 String return_not_connected();
 String return_result(struct EventStruct *event,
                      const String      & result);

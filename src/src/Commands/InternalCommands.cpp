@@ -14,6 +14,7 @@
 #include "../Commands/Common.h"
 #include "../Commands/Controller.h"
 #include "../Commands/Diagnostic.h"
+#include "../Commands/GPIO.h"
 #include "../Commands/HTTP.h"
 #include "../Commands/i2c.h"
 
@@ -226,7 +227,9 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'g': {
-      COMMAND_CASE_R("gateway", Command_Gateway, 1); // Network Command
+      COMMAND_CASE_R(   "gateway", Command_Gateway,     1); // Network Command
+      COMMAND_CASE_A(      "gpio", Command_GPIO,        2); // Gpio.h
+      COMMAND_CASE_A("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
       break;
     }
     case 'i': {
@@ -246,19 +249,29 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_A(     "logentry", Command_logentry,      1); // Diagnostic.h
       COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
       COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
-
+      COMMAND_CASE_A(    "longpulse", Command_GPIO_LongPulse,   3);    // GPIO.h
+      COMMAND_CASE_A( "longpulse_ms", Command_GPIO_LongPulse_Ms,3);    // GPIO.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      COMMAND_CASE_A("logportstatus", Command_logPortStatus, 0); // Diagnostic.h
-      COMMAND_CASE_A(       "lowmem", Command_Lowmem,        0); // Diagnostic.h
+      COMMAND_CASE_A("logportstatus", Command_logPortStatus,    0); // Diagnostic.h
+      COMMAND_CASE_A(       "lowmem", Command_Lowmem,           0); // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       break;
     }
     case 'm': {
+      if (cmd_lc[1] == 'c') {
+        COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
+        COMMAND_CASE_A(  "mcpgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
+        COMMAND_CASE_A(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
+        COMMAND_CASE_A("mcplongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
+        COMMAND_CASE_A(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
+      }
+      COMMAND_CASE_A(      "monitor", Command_GPIO_Monitor,   2); // GPIO.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      COMMAND_CASE_A(       "malloc", Command_Malloc,         1); // Diagnostic.h
-      COMMAND_CASE_A(      "meminfo", Command_MemInfo,        0); // Diagnostic.h
-      COMMAND_CASE_A("meminfodetail", Command_MemInfo_detail, 0); // Diagnostic.h
+      COMMAND_CASE_A(       "malloc", Command_Malloc,         1);        // Diagnostic.h
+      COMMAND_CASE_A(      "meminfo", Command_MemInfo,        0);        // Diagnostic.h
+      COMMAND_CASE_A("meminfodetail", Command_MemInfo_detail, 0);        // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+
       break;
     }
     case 'n': {
@@ -269,9 +282,17 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'p': {
-      COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
+      if (cmd_lc[1] == 'c') {
+        COMMAND_CASE_A(        "pcfgpio", Command_GPIO,              2); // Gpio.h
+        COMMAND_CASE_A(  "pcfgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
+        COMMAND_CASE_A(   "pcflongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
+        COMMAND_CASE_A("pcflongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
+        COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,        3); // GPIO.h
+      }
+      COMMAND_CASE_R("password", Command_Settings_Password, 1);          // Settings.h
+      COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
 #ifdef USES_MQTT
-      COMMAND_CASE_A("publish", Command_MQTT_Publish, 2);       // MQTT.h
+      COMMAND_CASE_A("publish", Command_MQTT_Publish, 2);                // MQTT.h
 #endif // USES_MQTT
       break;
     }
@@ -279,7 +300,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_A("reboot", Command_System_Reboot, 0);                              // System.h
       COMMAND_CASE_R("reset", Command_Settings_Reset, 0);                              // Settings.h
       COMMAND_CASE_A("resetflashwritecounter", Command_RTC_resetFlashWriteCounter, 0); // RTC.h
-      COMMAND_CASE_A(               "restart", Command_System_Restart,             0); // System.h
+      COMMAND_CASE_A(               "restart", Command_System_Reboot,              0); // System.h
       COMMAND_CASE_A(                 "rules", Command_Rules_UseRules,             1); // Rule.h
       break;
     }
@@ -301,6 +322,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
         COMMAND_CASE_R(   "settings", Command_Settings_Print, 0); // Settings.h
       }
+      COMMAND_CASE_A("status", Command_GPIO_Status,          2); // GPIO.h
       COMMAND_CASE_R("subnet", Command_Subnet, 1);                // Network Command
     #ifdef USES_MQTT
       COMMAND_CASE_A("subscribe", Command_MQTT_Subscribe, 1);     // MQTT.h
@@ -324,16 +346,17 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
         COMMAND_CASE_A( "timerpause", Command_Timer_Pause,  1);               // Timers.h
         COMMAND_CASE_A("timerresume", Command_Timer_Resume, 1);               // Timers.h
         COMMAND_CASE_A(   "timerset", Command_Timer_Set,    2);               // Timers.h
-        COMMAND_CASE_A("timerset_ms", Command_Timer_Set_ms, 2);               // Timers.h
-        COMMAND_CASE_R(   "timezone", Command_TimeZone, 1);                   // Time.h
-      }
+        COMMAND_CASE_A("timerset_ms", Command_Timer_Set_ms, 2); // Timers.h
+        COMMAND_CASE_R("timezone", Command_TimeZone, 1);                      // Time.h
+      }      
       break;
     }
     case 'u': {
-      COMMAND_CASE_R("udpport", Command_UDP_Port,      1); // UDP.h
-      COMMAND_CASE_R("udptest", Command_UDP_Test,      2); // UDP.h
-      COMMAND_CASE_R(   "unit", Command_Settings_Unit, 1); // Settings.h
-      COMMAND_CASE_R( "usentp", Command_useNTP,        1); // Time.h
+      COMMAND_CASE_R("udpport", Command_UDP_Port,      1);    // UDP.h
+      COMMAND_CASE_R("udptest", Command_UDP_Test,      2);    // UDP.h
+      COMMAND_CASE_R(   "unit", Command_Settings_Unit, 1);    // Settings.h
+      COMMAND_CASE_A("unmonitor", Command_GPIO_UnMonitor, 2); // GPIO.h
+      COMMAND_CASE_R("usentp", Command_useNTP, 1);            // Time.h
       break;
     }
     case 'w': {
@@ -341,7 +364,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_R(  "wdread", Command_WD_Read,   2);               // WD.h
 
       if (cmd_lc[1] == 'i') {
-        COMMAND_CASE_A(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
+        COMMAND_CASE_R(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
         COMMAND_CASE_A(   "wificonnect", Command_Wifi_Connect,    0); // WiFi.h
         COMMAND_CASE_A("wifidisconnect", Command_Wifi_Disconnect, 0); // WiFi.h
         COMMAND_CASE_R(       "wifikey", Command_Wifi_Key,        1); // WiFi.h

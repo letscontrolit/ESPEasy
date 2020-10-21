@@ -5,6 +5,7 @@
 
 #include "../DataStructs/PinMode.h"
 #include "../../ESPEasy-Globals.h"
+#include "../Helpers/Scheduler.h"
 
 
 
@@ -131,9 +132,9 @@ bool timeStringToSeconds(const String& tBuf,
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
  \*********************************************************************************************/
-void delayedReboot(int rebootDelay);
+void delayedReboot(int rebootDelay, ESPEasy_Scheduler::IntendedRebootReason_e reason = ESPEasy_Scheduler::IntendedRebootReason_e::DelayedReboot);
 
-void reboot();
+void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason);
 
 
 void SendValueLogger(taskIndex_t TaskIndex);
