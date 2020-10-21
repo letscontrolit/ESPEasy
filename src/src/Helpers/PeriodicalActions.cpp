@@ -112,7 +112,7 @@ void runOncePerSecond()
 
   if (Settings.ConnectionFailuresThreshold)
     if (connectionFailures > Settings.ConnectionFailuresThreshold)
-      delayedReboot(60);
+      delayedReboot(60, ESPEasy_Scheduler::IntendedRebootReason_e::DelayedReboot);
 
   if (cmd_within_mainloop != 0)
   {
@@ -125,7 +125,7 @@ void runOncePerSecond()
         }
       case CMD_REBOOT:
         {
-          reboot();
+          reboot(ESPEasy_Scheduler::IntendedRebootReason_e::CommandReboot);
           break;
         }
     }
@@ -439,7 +439,7 @@ void updateLoopStats_30sec(byte loglevel) {
 /********************************************************************************************\
    Clean up all before going to sleep or reboot.
  \*********************************************************************************************/
-void prepareShutdown()
+void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
 {
 #ifdef USES_MQTT
   runPeriodicalMQTT(); // Flush outstanding MQTT messages
@@ -450,6 +450,7 @@ void prepareShutdown()
   ESPEASY_FS.end();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();
+  Scheduler.markIntendedReboot(reason);
   saveToRTC();
 }
 
