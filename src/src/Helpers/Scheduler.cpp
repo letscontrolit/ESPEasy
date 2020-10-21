@@ -22,6 +22,7 @@
 #define GPIO_TIMER           4
 #define PLUGIN_TIMER         5
 #define RULES_TIMER          6
+#define REBOOT_TIMER         15 // Used to show intended reboot
 
 
 String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntervalTimer_e timer) {
@@ -74,6 +75,27 @@ String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntervalTimer_e timer) {
 #endif
 }
 
+String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
+  switch(reason) {
+    case IntendedRebootReason_e::DeepSleep:              return F("DeepSleep");
+    case IntendedRebootReason_e::DelayedReboot:          return F("DelayedReboot");
+    case IntendedRebootReason_e::ResetFactory:           return F("ResetFactory");
+    case IntendedRebootReason_e::ResetFactoryPinActive:  return F("ResetFactoryPinActive");
+    case IntendedRebootReason_e::ResetFactoryCommand:    return F("ResetFactoryCommand");
+    case IntendedRebootReason_e::CommandReboot:          return F("CommandReboot");
+    case IntendedRebootReason_e::RestoreSettings:        return F("RestoreSettings");
+    case IntendedRebootReason_e::OTA_error:              return F("OTA_error");
+    case IntendedRebootReason_e::ConnectionFailuresThreshold: return F("ConnectionFailuresThreshold");
+  }
+  return String(static_cast<int>(reason));
+}
+
+void ESPEasy_Scheduler::markIntendedReboot(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
+  const unsigned long mixed_id = getMixedId(REBOOT_TIMER, static_cast<unsigned long>(reason));
+  RTC.lastMixedSchedulerId = mixed_id;
+  saveToRTC();
+}
+
 /*********************************************************************************************\
 * Generic Timer functions.
 \*********************************************************************************************/
@@ -103,7 +125,7 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
   const unsigned long id  = decodeSchedulerId(mixed_id, timerType);
   String idStr = String(id);
   String result = String(timerType);
-  result.reserve(32);
+  result.reserve(64);
   switch (timerType) {
     case CONST_INTERVAL_TIMER:
       result = F("Const Interval: ");
@@ -170,6 +192,12 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
       const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
       const unsigned long timerID = id & mask;
       result += timerID;
+      return result;
+    }
+    case REBOOT_TIMER:
+    {
+      result = F("Intended Reboot: ");
+      result += toString(static_cast<ESPEasy_Scheduler::IntendedRebootReason_e>(id));
       return result;
     }
   }
