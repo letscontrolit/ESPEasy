@@ -75,7 +75,7 @@ void P016_data_struct::ExecuteCode(uint32_t  Code) {
       iLastCmdTime = _now;
 
       if (CommandLines[i].Command[0] != 0) {
-        bool _success = ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_NR_VALUES, CommandLines[i].Command);
+        bool _success = ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, CommandLines[i].Command);
 #ifdef PLUGIN_016_DEBUG
         String log;
         log.reserve(128); // estimated
