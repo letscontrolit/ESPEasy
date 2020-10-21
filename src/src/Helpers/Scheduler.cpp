@@ -24,6 +24,56 @@
 #define RULES_TIMER          6
 
 
+String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntervalTimer_e timer) {
+#ifdef BUILD_NO_DEBUG
+  return String(static_cast<int>(timer));
+#else
+  switch (timer) {
+    case IntervalTimer_e::TIMER_20MSEC:           return F("TIMER_20MSEC");
+    case IntervalTimer_e::TIMER_100MSEC:          return F("TIMER_100MSEC");
+    case IntervalTimer_e::TIMER_1SEC:             return F("TIMER_1SEC");
+    case IntervalTimer_e::TIMER_30SEC:            return F("TIMER_30SEC");
+    case IntervalTimer_e::TIMER_MQTT:             return F("TIMER_MQTT");
+    case IntervalTimer_e::TIMER_STATISTICS:       return F("TIMER_STATISTICS");
+    case IntervalTimer_e::TIMER_GRATUITOUS_ARP:   return F("TIMER_GRATUITOUS_ARP");
+    case IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE: return F("TIMER_MQTT_DELAY_QUEUE");
+    case IntervalTimer_e::TIMER_C001_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C003_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C004_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C007_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C008_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C009_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C010_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C011_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C012_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C013_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C014_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C015_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C016_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C017_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C018_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C019_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C020_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C021_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C022_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C023_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C024_DELAY_QUEUE:
+    case IntervalTimer_e::TIMER_C025_DELAY_QUEUE:
+    {
+      String res;
+      res.reserve(24);
+      res = F("TIMER_C0");
+      const int id = static_cast<int>(timer) - static_cast<int>(IntervalTimer_e::TIMER_C001_DELAY_QUEUE) + 1;
+      if (id < 10) { res += '0'; }
+      res += id;
+      res += F("_DELAY_QUEUE");
+      return res;
+    }
+  }
+  return F("unknown");
+#endif
+}
+
 /*********************************************************************************************\
 * Generic Timer functions.
 \*********************************************************************************************/
@@ -51,29 +101,80 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
   }
   unsigned long timerType = 0;
   const unsigned long id  = decodeSchedulerId(mixed_id, timerType);
-  String result;
-
+  String idStr = String(id);
+  String result = String(timerType);
   result.reserve(32);
-
   switch (timerType) {
     case CONST_INTERVAL_TIMER:
-      result = F("Const Interval");
-      break;
+      result = F("Const Interval: ");
+      result +=  toString(static_cast<ESPEasy_Scheduler::IntervalTimer_e>(id));
+      return result;
     case PLUGIN_TASK_TIMER:
-      result = F("Plugin Task");
-      break;
+    {
+      result = F("PLUGIN_TIMER_IN: ");
+      const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
+      if (validDeviceIndex(deviceIndex)) {
+        idStr = getPluginNameFromDeviceIndex(deviceIndex);
+      }
+      result += idStr;
+      return result;
+    }
+    case PLUGIN_TIMER:
+    {
+      result = F("PLUGIN_ONLY_TIMER_IN: ");
+      const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
+      if (validDeviceIndex(deviceIndex)) {
+        idStr = getPluginNameFromDeviceIndex(deviceIndex);
+      }
+      result += idStr;
+      return result;
+    }
     case TASK_DEVICE_TIMER:
-      result = F("Task Device");
-      break;
+    {
+      result = F("PLUGIN_READ: Task ");
+      // Id is taskIndex
+      result += (id + 1);
+      return result;
+    }
     case GPIO_TIMER:
-      result = F("GPIO");
-      break;
+    {
+      result = F("GPIO: ");
+      byte GPIOType = static_cast<byte>((id) & 0xFF);
+      byte pinNumber = static_cast<byte>((id >> 8) & 0xFF);
+      byte pinStateValue = static_cast<byte>((id >> 16) & 0xFF);
+
+      switch (GPIOType)
+      {
+        case GPIO_TYPE_INTERNAL:
+          result += F("int");
+          break;
+        case GPIO_TYPE_MCP:
+          result += F("MCP");
+          break;
+        case GPIO_TYPE_PCF:
+          result += F("PCF");
+          break;
+        default:
+          result += F("?");
+          break;
+      }
+      result += F(" pin: ");
+      result += pinNumber;
+      result += F(" state: ");
+      result += pinStateValue;
+      return result;
+    }
     case RULES_TIMER:
-      result = F("Rules");
-      break;
+    {
+      result = F("Rules#Timer=");
+      const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
+      const unsigned long timerID = id & mask;
+      result += timerID;
+      return result;
+    }
   }
   result += F(" timer, id: ");
-  result += String(id);
+  result += idStr;
   return result;
 }
 

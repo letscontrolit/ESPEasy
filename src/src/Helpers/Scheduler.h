@@ -52,6 +52,8 @@ public:
 
   };
 
+  static String toString(IntervalTimer_e timer);
+
   enum class PluginPtrType {
     TaskPlugin,
     ControllerPlugin,
