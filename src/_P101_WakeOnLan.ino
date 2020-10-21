@@ -99,9 +99,9 @@ WakeOnLan WOL(udp);
 // ************************************************************************************************
 // Local Functions
 uint8_t safeName(taskIndex_t index);
-bool    validateIp(String ipStr);
-bool    validateMac(String macStr);
-bool    validatePort(String portStr);
+bool    validateIp(const String& ipStr);
+bool    validateMac(const String& macStr);
+bool    validatePort(const String& portStr);
 
 // ************************************************************************************************
 
@@ -440,7 +440,7 @@ uint8_t safeName(taskIndex_t index) {
 // validateIp(): IPv4 Address validity checker.
 // Arg: IP Address String in dot separated format (192.168.1.255).
 // Return true if IP string appears legit.
-bool validateIp(String ipStr) {
+bool validateIp(const String& ipStr) {
   IPAddress ip;
   unsigned int length = ipStr.length();
 
@@ -458,7 +458,7 @@ bool validateIp(String ipStr) {
 // validateMac(): MAC Address validity checker.
 // Arg: MAC Address String in colon separated format (00:00:00:00:00:00).
 // Return true if MAC string appears legit.
-bool validateMac(String macStr) {
+bool validateMac(const String& macStr) {
   uint8_t pos = 0;
   char    hexChar;
 
@@ -492,7 +492,7 @@ bool validateMac(String macStr) {
 // validatePort(): Simple UDP Port Number validity checker.
 // Arg: Port Number String (decimal).
 // Return true if Port string appears legit.
-bool validatePort(String portStr) {
+bool validatePort(const String& portStr) {
   bool pass = true;
   long portNumber;
 
