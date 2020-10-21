@@ -63,7 +63,7 @@ void handle_settingsarchive() {
     }
   } else if (web_server.hasArg(F("reboot"))) {
     showOptions = false;
-    reboot();
+    reboot(ESPEasy_Scheduler::IntendedRebootReason_e::RestoreSettings);
   }
 
   if (showOptions) {

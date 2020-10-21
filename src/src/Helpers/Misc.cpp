@@ -315,7 +315,7 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
  \*********************************************************************************************/
-void delayedReboot(int rebootDelay)
+void delayedReboot(int rebootDelay, ESPEasy_Scheduler::IntendedRebootReason_e reason)
 {
   // Direct Serial is allowed here, since this is only an emergency task.
   while (rebootDelay != 0)
@@ -325,11 +325,11 @@ void delayedReboot(int rebootDelay)
     rebootDelay--;
     delay(1000);
   }
-  reboot();
+  reboot(reason);
 }
 
-void reboot() {
-  prepareShutdown();
+void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
+  prepareShutdown(reason);
   #if defined(ESP32)
   ESP.restart();
   #else // if defined(ESP32)
