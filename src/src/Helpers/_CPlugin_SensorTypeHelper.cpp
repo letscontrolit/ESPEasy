@@ -1,10 +1,12 @@
 #include "_CPlugin_SensorTypeHelper.h"
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_Log.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
+
+#include "../WebServer/Markup.h"
 
 /*********************************************************************************************\
    Get value count from sensor type

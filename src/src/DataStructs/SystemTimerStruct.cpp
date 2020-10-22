@@ -1,6 +1,6 @@
 #include "SystemTimerStruct.h"
 
-#include "../../ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 
 // Rules Timer use

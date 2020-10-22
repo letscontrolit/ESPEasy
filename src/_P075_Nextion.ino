@@ -1,3 +1,7 @@
+#include "_Plugin_Helper.h"
+#ifdef USES_P075
+
+
 //#######################################################################################################
 //#######################################################################################################
 //################################### Plugin 075: Nextion <info@sensorio.cz>  ###########################
@@ -12,9 +16,8 @@
 // Added reserve() to minimize string memory allocations.
 //
 
-#ifdef USES_P075
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
+
 
 // *****************************************************************************************************
 // Defines start here
@@ -263,7 +266,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             UcTmpString.toUpperCase();
             RssiIndex = UcTmpString.indexOf(F("RSSIBAR"));  // RSSI bargraph Keyword found, wifi value in dBm.
             if(RssiIndex >= 0) {
-              int barVal;
+              int barVal=0;
               newString.reserve(P75_Nchars+10);               // Prevent re-allocation
               newString = P075_data->displayLines[x].substring(0, RssiIndex);
               int nbars = WiFi.RSSI();

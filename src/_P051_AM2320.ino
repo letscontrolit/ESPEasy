@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P051
 
 // #######################################################################################################
@@ -13,7 +14,6 @@
 
 
 #include <AM2320.h>
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_051
 #define PLUGIN_ID_051        51

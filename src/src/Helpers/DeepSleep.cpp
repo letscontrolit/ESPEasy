@@ -1,7 +1,13 @@
 #include "DeepSleep.h"
 
-#include "../../ESPEasyNetwork.h"
 #include "../../ESPEasy_common.h"
+#include "../../ESPEasy-Globals.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Globals/EventQueue.h"
 #include "../Globals/RTC.h"
@@ -113,7 +119,7 @@ void deepSleepStart(int dsdelay)
 
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   RTC.deepSleepState = 1;
-  prepareShutdown();
+  prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e::DeepSleep);
 
   #if defined(ESP8266)
     # if defined(CORE_POST_2_5_0)

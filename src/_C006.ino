@@ -1,4 +1,4 @@
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C006
 //#######################################################################################################
 //########################### Controller Plugin 006: PiDome MQTT ########################################
@@ -88,7 +88,9 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
           TempEvent.Par2 = event->String2.toFloat();
         if (name == Settings.Name)
         {
-          PluginCall(PLUGIN_WRITE, &TempEvent, cmd);
+          if (ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str())) {
+          } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
+          }
         }
         break;
       }

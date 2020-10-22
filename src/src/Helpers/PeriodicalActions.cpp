@@ -1,26 +1,39 @@
 #include "PeriodicalActions.h"
 
-
-#include "../../ESPEasyWifi.h"
-#include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy-Globals.h"
+
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../ControllerQueue/MQTT_queue_element.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/TimingStats.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
+#include "../ESPEasyCore/Serial.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
+#include "../Globals/MainLoopCommand.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
+#include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/StringProvider.h"
 
 
 /*********************************************************************************************\
@@ -46,6 +59,12 @@ void run50TimesPerSecond() {
 \*********************************************************************************************/
 void run10TimesPerSecond() {
   String dummy;
+  //@giig19767g: WARNING: Monitor10xSec must run before PLUGIN_TEN_PER_SECOND
+  {
+    START_TIMER;
+    GPIO_Monitor10xSec();
+    STOP_TIMER(PLUGIN_CALL_10PSU);
+  }
   {
     START_TIMER;
     PluginCall(PLUGIN_TEN_PER_SECOND, 0, dummy);
@@ -92,7 +111,7 @@ void runOncePerSecond()
 
   if (Settings.ConnectionFailuresThreshold)
     if (connectionFailures > Settings.ConnectionFailuresThreshold)
-      delayedReboot(60);
+      delayedReboot(60, ESPEasy_Scheduler::IntendedRebootReason_e::DelayedReboot);
 
   if (cmd_within_mainloop != 0)
   {
@@ -105,7 +124,7 @@ void runOncePerSecond()
         }
       case CMD_REBOOT:
         {
-          reboot();
+          reboot(ESPEasy_Scheduler::IntendedRebootReason_e::CommandReboot);
           break;
         }
     }
@@ -394,7 +413,7 @@ void updateLoopStats_30sec(byte loglevel) {
 /********************************************************************************************\
    Clean up all before going to sleep or reboot.
  \*********************************************************************************************/
-void prepareShutdown()
+void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
 {
 #ifdef USES_MQTT
   runPeriodicalMQTT(); // Flush outstanding MQTT messages
@@ -405,6 +424,7 @@ void prepareShutdown()
   ESPEASY_FS.end();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();
+  Scheduler.markIntendedReboot(reason);
   saveToRTC();
 }
 

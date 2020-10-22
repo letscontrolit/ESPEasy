@@ -1,12 +1,16 @@
 #include "../Commands/Time.h"
 
+
 #include "../../ESPEasy_common.h"
+
+
 #include "../Commands/Common.h"
+
+#include "../ESPEasyCore/Serial.h"
+
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
 
-#include "../../ESPEasy_fdwdecl.h"
-
-#include "../../ESPEasy-Globals.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/StringConverter.h"
 

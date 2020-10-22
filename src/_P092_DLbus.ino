@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P092
 
 // #######################################################################################################
@@ -20,6 +21,12 @@
 
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
+
+    @uwekaditz 2020-10-05 Exception solved
+    CHG: Interrupt will be only enabled after network is connected
+    CHG: usecPassedSince() not longer used in ISR_PinChanged(), caused the exception ???
+    CHG: in case no DLbus is connected, the next reading attempt happens only after the next PLUGIN_092_READ was called
+          (reduces load and log messages)
 
    @uwekaditz 2020-03-01 Memory usage optimized
          CHG: Moved arrays into the class DLBus
@@ -435,12 +442,12 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         }
         P092_init       = true;
         P092_ReceivedOK = false;
-        addLog(LOG_LEVEL_INFO, F("P092_init: attachInterrupt"));
+        addLog(LOG_LEVEL_INFO, F("P092_init: Set pin"));
         DLbus_Data->ISR_DLB_Pin = CONFIG_PIN1;
         pinMode(CONFIG_PIN1, INPUT_PULLUP);
 
-        // on a CHANGE on the data pin P092_Pin_changed is called
-        DLbus_Data->attachDLBusInterrupt();
+//        // on a CHANGE on the data pin P092_Pin_changed is called
+//        DLbus_Data->attachDLBusInterrupt();
         UserVar[event->BaseVarIndex] = NAN;
       }
       success = true;
@@ -461,9 +468,16 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         return false;
       }
 
+      if (!DLbus_Data->IsISRset) {
+        // on a CHANGE on the data pin P092_Pin_changed is called
+        DLbus_Data->attachDLBusInterrupt();
+        addLog(LOG_LEVEL_INFO, F("P092 ISR set"));
+      }
+
       if (DLbus_Data->ISR_Receiving) {
         return false;
       }
+
       Plugin_092_SetIndices(PCONFIG(0));
 
       if (DLbus_Data->ISR_AllBitsReceived) {
@@ -488,8 +502,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         success = P092_ReceivedOK;
       }
 
-      if ((P092_ReceivedOK == false) ||
-          (timePassedSince(P092_LastReceived) > (static_cast<long>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000 / 2)))) {
+      if ((DLbus_Data->IsNoData == false) &&
+          ((P092_ReceivedOK == false) ||
+          (timePassedSince(P092_LastReceived) > (static_cast<long>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000 / 2))))) {
         Plugin_092_StartReceiving();
         success = true;
       }
@@ -525,10 +540,24 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_ERROR, log);
         return false;
       }
+
+      if (!DLbus_Data->IsISRset) {
+        // on a CHANGE on the data pin P092_Pin_changed is called
+        addLog(LOG_LEVEL_ERROR, F("## P092_read: Error DL-Bus: ISR not set"));
+        return false;
+      }
+
+      if (DLbus_Data->IsNoData) {
+        // start new receiving attempt
+        DLbus_Data->IsNoData = false;
+        return true;
+      }
+
       success = P092_ReceivedOK;
 
       if (P092_ReceivedOK == false) {
         addLog(LOG_LEVEL_INFO, F("P092_read: Still receiving DL-Bus bits!"));
+        return true;
       }
       else {
         sP092_ReadData P092_ReadData;
@@ -723,6 +752,7 @@ void           Plugin_092_StartReceiving(void) {
   if (DLbus_Data->ISR_PulseCount == 0) {
     // nothing received
     DLbus_Data->ISR_Receiving = false;
+    DLbus_Data->IsNoData = true;  // stop receiving until next PLUGIN_092_READ
     addLog(LOG_LEVEL_ERROR, F("## StartReceiving: Error: Nothing received! No DL bus connected!"));
   }
 }

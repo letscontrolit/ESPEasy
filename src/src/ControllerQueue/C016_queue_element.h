@@ -2,8 +2,8 @@
 #define CONTROLLERQUEUE_C016_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
-#include "../DataStructs/ESPEasyLimits.h"
 #include "../Globals/Plugins.h"
 
 struct EventStruct;

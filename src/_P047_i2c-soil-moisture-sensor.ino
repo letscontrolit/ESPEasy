@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P047
 
 // #######################################################################################################
@@ -9,8 +10,6 @@
 // based on this library: https://github.com/Apollon77/I2CSoilMoistureSensor
 // this code is based on version 1.1.2 of the above library
 //
-
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_047
 #define PLUGIN_ID_047        47

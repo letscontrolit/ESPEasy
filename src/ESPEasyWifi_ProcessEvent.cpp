@@ -1,21 +1,25 @@
 #include "ESPEasyWifi_ProcessEvent.h"
 
-#include "ESPEasy-Globals.h"
-#include "ESPEasyNetwork.h"
+#include "ESPEasyWiFiEvent.h"
 #include "ESPEasyWiFi_credentials.h"
-#include "ESPEasyWifi.h"
-#include "ESPEasy_fdwdecl.h"
+#include "ESPEasy-Globals.h"
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
+#include "src/ESPEasyCore/ESPEasyWifi.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Globals/ESPEasy_time.h"
 #include "src/Globals/EventQueue.h"
 #include "src/Globals/MQTT.h"
 #include "src/Globals/NetworkState.h"
 #include "src/Globals/RTC.h"
+#include "src/Globals/Settings.h"
 #include "src/Helpers/ESPEasyRTC.h"
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/Network.h"
+#include "src/Helpers/Networking.h"
 #include "src/Helpers/Scheduler.h"
 #include "src/Helpers/StringConverter.h"
 
@@ -128,7 +132,7 @@ void handle_unprocessedWiFiEvents()
   if (wifi_connect_attempt > 0) {
     // We only want to clear this counter if the connection is currently stable.
     if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
-      if (lastConnectMoment.timeoutReached(WIFI_CONNECTION_CONSIDERED_STABLE)) {
+      if (lastConnectMoment.isSet() && lastConnectMoment.timeoutReached(WIFI_CONNECTION_CONSIDERED_STABLE)) {
         // Connection considered stable
         wifi_connect_attempt = 0;
         wifi_considered_stable = true;

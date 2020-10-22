@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P084
 
 // #######################################################################################################
@@ -9,7 +10,6 @@
 // Based on VEML6070 plugin from Sonoff-Tasmota (https://github.com/arendst/Sonoff-Tasmota)
 // Datasheet: https://www.vishay.com/docs/84277/veml6070.pdf
 
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_084
 #define PLUGIN_ID_084         84

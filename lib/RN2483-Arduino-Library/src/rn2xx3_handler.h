@@ -189,6 +189,12 @@ public:
   bool          getRxDelayValues(uint32_t& rxdelay1,
                                  uint32_t& rxdelay2);
 
+  // Compute the air time for a packet in msec.
+  // Formula used from https://www.loratools.nl/#/airtime
+  // @param pl   Payload length in bytes
+  float getLoRaAirTime(uint8_t  pl) const;
+
+
 private:
 
   RN2xx3_datatypes::Model configureModuleType();
@@ -259,6 +265,7 @@ private:
   RN2xx3_datatypes::Model _moduleType = RN2xx3_datatypes::Model::RN_NA;
   RN2xx3_datatypes::Freq_plan _fp     = RN2xx3_datatypes::Freq_plan::TTN_EU;
   uint8_t _sf                         = 7;
+  uint8_t _dr                         = 5;
 
   bool _otaa      = true;  // Switch between OTAA or ABP activation (default OTAA)
   bool _asyncMode = false; // When set, the user must call async_loop() frequently

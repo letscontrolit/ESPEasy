@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P008
 //#######################################################################################################
 //################################# Plugin 008: Wiegand RFID Tag Reader #################################
@@ -13,7 +14,7 @@ History:
 No initial history available.
 */
 
-#include "_Plugin_Helper.h"
+
 
 #define PLUGIN_008
 #define PLUGIN_ID_008         8

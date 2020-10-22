@@ -1,5 +1,7 @@
 #include "P092_data_struct.h"
 
+#ifdef USES_P092
+
 //
 // DLBus reads and decodes the DL-Bus.
 // The DL-Bus is used in heating control units e.g. sold by Technische Alternative (www.ta.co.at).
@@ -58,6 +60,8 @@ void DLBus::AddToErrorLog(const String& string)
 void DLBus::attachDLBusInterrupt(void)
 {
   ISR_Receiving = false;
+  IsISRset = true;
+  IsNoData = false;
   attachInterrupt(digitalPinToInterrupt(ISR_DLB_Pin), ISR, CHANGE);
 }
 
@@ -80,9 +84,12 @@ void ICACHE_RAM_ATTR DLBus::ISR(void)
 
 void ICACHE_RAM_ATTR DLBus::ISR_PinChanged(void)
 {
-  long TimeDiff = usecPassedSince(ISR_TimeLastBitChange); // time difference to previous pulse in Âµs
+//  long TimeDiff = usecPassedSince(ISR_TimeLastBitChange); // time difference to previous pulse in Âµs
+  uint32_t _now = micros();
+  int32_t TimeDiff = (int32_t)(_now - ISR_TimeLastBitChange);
 
-  ISR_TimeLastBitChange = micros();                       // save last pin change time
+//  ISR_TimeLastBitChange = micros();                           // save last pin change time
+  ISR_TimeLastBitChange = _now;                           // save last pin change time
 
   if (ISR_Receiving) {
     uint8_t val = digitalRead(ISR_DLB_Pin);               // read state
@@ -426,3 +433,5 @@ boolean DLBus::CheckCRC(uint8_t IdxCRC) {
   }
   return false;
 }
+
+#endif
