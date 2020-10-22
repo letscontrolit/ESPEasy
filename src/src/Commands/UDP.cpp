@@ -1,12 +1,15 @@
 #include "../Commands/UPD.h"
 
-#include "../../ESPEasy-Globals.h"
+
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../Commands/Common.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Network.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 

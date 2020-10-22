@@ -4,9 +4,11 @@
 #include <FS.h>
 
 
-#include "../DataStructs/SettingsType.h"
+#include "../DataTypes/SettingsType.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
+
+#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
    file system error handling

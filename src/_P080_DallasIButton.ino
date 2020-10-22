@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P080
 
 // #######################################################################################################
@@ -16,7 +17,6 @@
 #define PLUGIN_NAME_080       "Input - iButton [TESTING]"
 #define PLUGIN_VALUENAME1_080 "iButton"
 
-#include "_Plugin_Helper.h"
 
 int8_t Plugin_080_DallasPin;
 

@@ -6,8 +6,9 @@
 #include "src/Commands/Tasks.h"
 
 #include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/DataStructs/ESPEasy_plugin_functions.h"
 #include "src/DataStructs/TimingStats.h"
+
+#include "src/DataTypes/ESPEasy_plugin_functions.h"
 
 #include "ESPEasy_common.h"
 

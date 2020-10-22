@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P085
 
 // #######################################################################################################
@@ -56,7 +57,6 @@
 #define P085_MEASUREMENT_INTERVAL 60000L
 
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
 #include "src/Helpers/Modbus_RTU.h"
 
 struct P085_data_struct : public PluginTaskData_base {
