@@ -1,5 +1,6 @@
 .. include:: ../Plugin/_plugin_substitutions_p07x.repl
 .. _P075_page:
+
 .. role:: raw-html(raw)
     :format: html
 
@@ -276,7 +277,7 @@ It also sends new touch event values to the controller.
 :raw-html:`<br clear="all">`
 
 
-Nextion Command Format Summary
+Nextion Data Format Summary
 ------------------------------
 
 There are three different formats for sending data from the Nextion display to ESPEasy.
@@ -371,6 +372,18 @@ For example, to send idx = 50 and value = -3 the Nextion code would be written u
    print "|u,i50,n,s-3" // Send idx 50 and value -3 to ESPEasy
    printh 0a            // Required print termination character
 
+
+Display Commands
+----------------
+
+.. include:: P075_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P075_events.repl
+
+
 Nextion IDE Development / User MCU Input
 ----------------------------------------
 
@@ -399,6 +412,8 @@ Configure your development station as follows:
         If the Nextion display board is connected it will be ignored. It does NOT need to be removed.
 
 You can now use the Nextion IDE instead of an actual HMI display board to test out your EPSEasy application.
+
+
 
 Change log
 ----------
