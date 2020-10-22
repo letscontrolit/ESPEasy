@@ -1,11 +1,13 @@
 #include "Plugins.h"
 
-#include "../../ESPEasy_Log.h"
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/TimingStats.h"
+
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasy_Scheduler.h"
@@ -19,14 +21,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/PortStatus.h"
 
-#define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 
-
-deviceIndex_t  INVALID_DEVICE_INDEX  = PLUGIN_MAX;
-taskIndex_t    INVALID_TASK_INDEX    = TASKS_MAX;
-pluginID_t     INVALID_PLUGIN_ID     = 0;
-userVarIndex_t INVALID_USERVAR_INDEX = USERVAR_MAX_INDEX;
-taskVarIndex_t INVALID_TASKVAR_INDEX = VARS_PER_TASK;
 
 std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
 std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;
@@ -341,7 +336,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
             if (validDeviceIndex(DeviceIndex)) {
               TempEvent.setTaskIndex(taskIndex);
-              TempEvent.sensorType   = Device[DeviceIndex].VType;
+              //checkDeviceVTypeForTask(&TempEvent);
               prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
               checkRAM(F("PluginCall_s"), taskIndex);
               START_TIMER;
@@ -359,13 +354,15 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
       }
 
-      // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
-      for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
-        if (validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
-          if (Plugin_ptr[deviceIndex](Function, event, str)) {
-            delay(0); // SMY: call delay(0) unconditionally
-            CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, event, str);
-            return true;
+      if (Function == PLUGIN_REQUEST) {
+        // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
+        for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
+          if (validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
+            if (Plugin_ptr[deviceIndex](Function, event, str)) {
+              delay(0); // SMY: call delay(0) unconditionally
+              CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, event, str);
+              return true;
+            }
           }
         }
       }
@@ -384,9 +381,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
           if (validDeviceIndex(DeviceIndex)) {
             TempEvent.setTaskIndex(taskIndex);
+            //checkDeviceVTypeForTask(&TempEvent);
 
             // TempEvent.idx = Settings.TaskDeviceID[taskIndex]; todo check
-            TempEvent.sensorType = Device[DeviceIndex].VType;
             prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
             START_TIMER;
             bool retval =  (Plugin_ptr[DeviceIndex](Function, &TempEvent, str));
@@ -427,9 +424,9 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
 
             if (validDeviceIndex(DeviceIndex)) {
               TempEvent.setTaskIndex(taskIndex);
+              //checkDeviceVTypeForTask(&TempEvent);
 
               // TempEvent.idx = Settings.TaskDeviceID[taskIndex]; todo check
-              TempEvent.sensorType      = Device[DeviceIndex].VType;
               TempEvent.OriginTaskIndex = event->TaskIndex;
               checkRAM(F("PluginCall_s"), taskIndex);
 
@@ -532,7 +529,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
           event->Par1 = Device[DeviceIndex].ValueCount;
         }
         if (Function == PLUGIN_GET_DEVICEVTYPE) {
-          event->Par1 = static_cast<int>(Device[DeviceIndex].VType);
+          event->sensorType = Device[DeviceIndex].VType;
         }
 
         START_TIMER;

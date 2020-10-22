@@ -1,5 +1,8 @@
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C001
+
+#include "src/Helpers/_CPlugin_DomoticzHelper.h"
+
 //#######################################################################################################
 //########################### Controller Plugin 001: Domoticz HTTP ######################################
 //#######################################################################################################
@@ -7,6 +10,7 @@
 #define CPLUGIN_001
 #define CPLUGIN_ID_001         1
 #define CPLUGIN_NAME_001       "Domoticz HTTP"
+
 
 
 bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& string)
@@ -57,8 +61,10 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
           url.reserve(128);
           url = F("/json.htm?type=command&param=");
 
+          const Sensor_VType sensorType = event->getSensorType();
 
-          switch (event->sensorType)
+
+          switch (sensorType)
           {
             case Sensor_VType::SENSOR_TYPE_SWITCH:
             case Sensor_VType::SENSOR_TYPE_DIMMER:
@@ -68,7 +74,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
               if (UserVar[event->BaseVarIndex] == 0) {
                 url += F("Off");
               } else {
-                if (event->sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
+                if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
                   url += F("On");
                 } else {
                   url += F("Set%20Level&level=");

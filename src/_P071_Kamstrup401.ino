@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P071
 //#######################################################################################################
 //############################# Plugin 071: Kamstrup Multical 401 #######################################
@@ -12,7 +13,7 @@
 
 
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
+
 
 #define PLUGIN_071
 #define PLUGIN_ID_071 71
@@ -95,8 +96,9 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
       {
         PIN_KAMSER_RX = CONFIG_PIN1;
         PIN_KAMSER_TX = CONFIG_PIN2;
+        const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
 
-        ESPeasySerial kamSer(PIN_KAMSER_RX, PIN_KAMSER_TX, false);  // Initialize serial
+        ESPeasySerial kamSer(port, PIN_KAMSER_RX, PIN_KAMSER_TX, false);  // Initialize serial
 
         pinMode(PIN_KAMSER_RX,INPUT);
         pinMode(PIN_KAMSER_TX,OUTPUT);

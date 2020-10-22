@@ -34,7 +34,7 @@
 class SensorSerial : public ESPeasySerial
 {
 public:
-  SensorSerial(int receivePin, int transmitPin = -1, bool inverse_logic = false, unsigned int buffSize = 64);
+  SensorSerial(ESPEasySerialPort port, int receivePin, int transmitPin = -1, bool inverse_logic = false, unsigned int buffSize = 64);
 
   void begin(long speed);
 

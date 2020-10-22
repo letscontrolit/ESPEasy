@@ -1,6 +1,6 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P040
 
-#include "_Plugin_Helper.h"
 
 //#######################################################################################################
 //#################################### Plugin 040: Serial RFID ID-12 ####################################
@@ -132,7 +132,7 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
               if (!validUserVarIndex(event->BaseVarIndex)) {
                 break;
               }
-              event->sensorType = Device[DeviceIndex].VType;
+              checkDeviceVTypeForTask(event);
               // endof workaround
 
               unsigned long key = 0, old_key = 0;

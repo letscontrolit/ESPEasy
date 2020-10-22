@@ -1,7 +1,7 @@
 #include "../DataStructs/SecurityStruct.h"
 
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../Globals/CPlugins.h"
 
 SecurityStruct::SecurityStruct() {

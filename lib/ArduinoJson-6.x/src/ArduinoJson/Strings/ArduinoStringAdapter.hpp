@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <WString.h>
+#include <Arduino.h>
 
 #include <ArduinoJson/Polyfills/safe_strcmp.hpp>
 #include <ArduinoJson/Strings/IsString.hpp>
@@ -37,6 +37,10 @@ class ArduinoStringAdapter {
 
   size_t size() const {
     return _str->length();
+  }
+
+  const char* begin() const {
+    return _str->c_str();
   }
 
   typedef storage_policies::store_by_copy storage_policy;

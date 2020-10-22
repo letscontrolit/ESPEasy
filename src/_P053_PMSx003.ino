@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P053
 //#######################################################################################################
 //#################################### Plugin 053: Plantower PMSx003 ####################################
@@ -11,7 +12,7 @@
 
 
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
+
 
 #define PLUGIN_053
 #define PLUGIN_ID_053 53
@@ -220,6 +221,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
       {
         int rxPin = CONFIG_PIN1;
         int txPin = CONFIG_PIN2;
+        const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
         int resetPin = CONFIG_PIN3;
 
         String log = F("PMSx003 : config ");
@@ -245,7 +247,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
           log = F("PMSx003: using software serial");
           addLog(LOG_LEVEL_INFO, log);
         }
-        P053_easySerial = new (std::nothrow) ESPeasySerial(rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
+        P053_easySerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
         if (P053_easySerial == nullptr) {
           break;
         }

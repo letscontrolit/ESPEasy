@@ -1,4 +1,4 @@
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 
 #ifdef USES_C008
 //#######################################################################################################
@@ -73,7 +73,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         }
 
         // FIXME TD-er must define a proper move operator
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        byte valueCount = getValueCountForTask(event->TaskIndex);
         success = C008_DelayHandler->addToQueue(C008_queue_element(event, valueCount));
         if (success) {
           // Element was added.

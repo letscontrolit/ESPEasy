@@ -2,15 +2,19 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_H
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
-#include "../DataStructs/EthernetParameters.h"
-#include "../DataStructs/ESPEasyLimits.h"
-#include "../DataStructs/NetworkMedium.h"
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataTypes/EthernetParameters.h"
+#include "../DataTypes/NetworkMedium.h"
 #include "../Globals/Plugins.h"
+#include "../../ESPEasy_common.h"
 
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
  #define DEFAULT_SPI 0
 #endif
+
+
+// FIXME TD-er: Move this PinBootState to DataTypes folder
 
 // State is stored, so don't change order
 enum class PinBootState {
@@ -178,8 +182,8 @@ class SettingsStruct_tmpl
   boolean       TaskDevicePin1Inversed[N_TASKS];
   float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
   long          TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
-  boolean       OLD_TaskDeviceSendData[N_TASKS];
-  boolean       TaskDeviceGlobalSync[N_TASKS];
+  byte          OLD_TaskDeviceSendData[N_TASKS];
+  byte          OLD_TaskDeviceGlobalSync[N_TASKS];
   byte          TaskDeviceDataFeed[N_TASKS];    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[N_TASKS];
   boolean       TaskDeviceEnabled[N_TASKS];

@@ -1,3 +1,5 @@
+#include "ESPEasy_common.h"
+
 #ifdef USES_N002
 //#######################################################################################################
 //########################### Notification Plugin 002: Buzzer ###########################################
@@ -8,6 +10,8 @@
 #define NPLUGIN_NAME_002       "Buzzer"
 
 #include "src/Helpers/Audio.h"
+#include "src/DataStructs/NotificationSettingsStruct.h"
+#include "src/Globals/NPlugins.h"
 
 boolean NPlugin_002(NPlugin::Function function, struct EventStruct *event, String& string)
 {

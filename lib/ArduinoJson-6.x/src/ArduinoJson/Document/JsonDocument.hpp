@@ -15,8 +15,8 @@ namespace ARDUINOJSON_NAMESPACE {
 
 class JsonDocument : public Visitable {
  public:
-  template <typename Visitor>
-  void accept(Visitor& visitor) const {
+  template <typename TVisitor>
+  typename TVisitor::result_type accept(TVisitor& visitor) const {
     return getVariant().accept(visitor);
   }
 
@@ -46,6 +46,10 @@ class JsonDocument : public Visitable {
 
   size_t memoryUsage() const {
     return _pool.size();
+  }
+
+  bool overflowed() const {
+    return _pool.overflowed();
   }
 
   size_t nesting() const {
@@ -81,6 +85,7 @@ class JsonDocument : public Visitable {
     return _pool;
   }
 
+  // for internal use only
   VariantData& data() {
     return _data;
   }

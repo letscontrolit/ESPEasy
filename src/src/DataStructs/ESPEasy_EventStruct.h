@@ -2,11 +2,15 @@
 #define ESPEASY_EVENTSTRUCT_H
 
 #include <Arduino.h>
-#include "EventValueSource.h"
-#include "../Globals/CPlugins.h"
+
+#include "../DataTypes/ControllerIndex.h"
+#include "../DataTypes/EventValueSource.h"
+#include "../DataTypes/TaskIndex.h"
+//#include "../Globals/CPlugins.h"
 #include "../Globals/NPlugins.h"
-#include "../Globals/Plugins.h"
+//#include "../Globals/Plugins.h"
 #include "DeviceStruct.h"
+
 
 /*********************************************************************************************\
 * EventStruct
@@ -19,6 +23,9 @@ struct EventStruct
   EventStruct& operator=(const struct EventStruct& other);
 
   void setTaskIndex(taskIndex_t taskIndex);
+
+  // Check (and update) sensorType if not set, plus return (corrected) sensorType
+  Sensor_VType getSensorType();
 
   String String1;
   String String2;
@@ -39,7 +46,7 @@ struct EventStruct
   controllerIndex_t      ControllerIndex   = INVALID_CONTROLLER_INDEX; // index position in Settings.Controller, 0-3
   notifierIndex_t        NotificationIndex = INVALID_NOTIFIER_INDEX;   // index position in Settings.Notification, 0-3
   byte                   BaseVarIndex      = 0;
-  Sensor_VType           sensorType        = Sensor_VType::SENSOR_TYPE_NONE;
+  Sensor_VType           sensorType        = Sensor_VType::SENSOR_TYPE_NOT_SET;
   byte                   OriginTaskIndex   = 0;
 };
 

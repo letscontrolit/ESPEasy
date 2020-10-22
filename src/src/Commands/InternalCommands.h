@@ -5,10 +5,12 @@
 #include "../Globals/Plugins.h"
 
 
+bool checkSourceFlags(EventValueSource::Enum source, EventValueSourceGroup::Enum group);
+
 bool checkNrArguments(const char *cmd, const char *Line, int nrArguments);
 
 typedef String (*command_function)(struct EventStruct *, const char *);
-bool do_command_case(const String& cmd_lc, const char *cmd, struct EventStruct *event, const char *line, String& status, const String& cmd_test, command_function pFunc, int nrArguments, bool& retval);
+bool do_command_case(const String& cmd_lc, const char *cmd, struct EventStruct *event, const char *line, String& status, const String& cmd_test, command_function pFunc, int nrArguments, EventValueSourceGroup::Enum group, bool& retval);
 
 
 /*********************************************************************************************\

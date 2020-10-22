@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P078
 
 //#######################################################################################################
@@ -38,10 +40,8 @@
 #define P078_NR_OUTPUT_OPTIONS        10
 #define P078_QUERY1_CONFIG_POS  3
 
-
-#include <SDM.h>    // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
+#include <SDM.h>    // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
 
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
@@ -213,7 +213,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           delete Plugin_078_SoftSerial;
           Plugin_078_SoftSerial=NULL;
         }
-        Plugin_078_SoftSerial = new (std::nothrow) ESPeasySerial(CONFIG_PIN1, CONFIG_PIN2);
+        Plugin_078_SoftSerial = new (std::nothrow) ESPeasySerial(static_cast<ESPEasySerialPort>(CONFIG_PORT), CONFIG_PIN1, CONFIG_PIN2);
         if (Plugin_078_SoftSerial == nullptr) {
           break;
         }

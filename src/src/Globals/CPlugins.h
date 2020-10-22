@@ -3,9 +3,12 @@
 
 #include <map>
 #include <vector>
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
-#include "../DataStructs/ESPEasyLimits.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../DataTypes/CPluginID.h"
+#include "../DataTypes/ControllerIndex.h"
+#include "../DataTypes/ProtocolIndex.h"
 
 
 /********************************************************************************************\
@@ -27,13 +30,6 @@
    - Protocol    - Vector of ProtocolStruct containing Cplugin specific information.
  \*********************************************************************************************/
 
-typedef byte    protocolIndex_t;
-typedef byte    controllerIndex_t;
-typedef uint8_t cpluginID_t;
-
-extern protocolIndex_t   INVALID_PROTOCOL_INDEX;
-extern controllerIndex_t INVALID_CONTROLLER_INDEX;
-extern cpluginID_t       INVALID_C_PLUGIN_ID;
 
 extern bool (*CPlugin_ptr[CPLUGIN_MAX])(CPlugin::Function,
                                         struct EventStruct *,

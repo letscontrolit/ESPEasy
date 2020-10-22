@@ -1,15 +1,14 @@
 #include "CPlugins.h"
+
+#include "../../_Plugin_Helper.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/TimingStats.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
-#include "../../ESPEasy_Log.h"
 
 
-protocolIndex_t   INVALID_PROTOCOL_INDEX   = CPLUGIN_MAX;
-controllerIndex_t INVALID_CONTROLLER_INDEX = CONTROLLER_MAX;
-cpluginID_t       INVALID_C_PLUGIN_ID      = 0;
 
 // FIXME TD-er: Make these private and add functions to access its content.
 std::map<cpluginID_t, protocolIndex_t> CPlugin_id_to_ProtocolIndex;
@@ -101,6 +100,9 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
       if (Settings.ControllerEnabled[controllerindex] && supportedCPluginID(Settings.Protocol[controllerindex]))
       {
+        if (Function == CPlugin::Function::CPLUGIN_PROTOCOL_SEND) {
+          checkDeviceVTypeForTask(event);
+        }
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
         CPluginCall(ProtocolIndex, Function, event, str);
       }

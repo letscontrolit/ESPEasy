@@ -1,4 +1,4 @@
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C012
 //#######################################################################################################
 //########################### Controller Plugin 012: Blynk  #############################################
@@ -56,7 +56,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
         LoadTaskSettings(event->TaskIndex);
 
         // Collect the values at the same run, to make sure all are from the same sample
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        byte valueCount = getValueCountForTask(event->TaskIndex);
         C012_queue_element element(event, valueCount);
 
         for (byte x = 0; x < valueCount; x++)

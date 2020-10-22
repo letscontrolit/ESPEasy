@@ -2,7 +2,7 @@
 
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../../ESPEasy_common.h"
 
@@ -321,7 +321,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
     TaskDevicePluginConfigLong[task][cv] = 0;
   }
   OLD_TaskDeviceSendData[task]  = false;
-  TaskDeviceGlobalSync[task]    = false;
+  OLD_TaskDeviceGlobalSync[task]    = false;
   TaskDeviceDataFeed[task]      = 0;
   TaskDeviceTimer[task]         = 0;
   TaskDeviceEnabled[task]       = false;

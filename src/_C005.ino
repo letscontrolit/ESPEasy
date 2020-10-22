@@ -1,5 +1,10 @@
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C005
+
+#include "src/Commands/InternalCommands.h"
+#include "src/Helpers/StringParser.h"
+
+
 //#######################################################################################################
 //################### Controller Plugin 005: Home Assistant (openHAB) MQTT ##############################
 //#######################################################################################################
@@ -72,6 +77,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
           if (lastPartTopic == F("cmd")) {
             cmd = event->String2;
             parseCommandString(&TempEvent, cmd);
+//SP_C005a: string= ;cmd=gpio,12,0 ;taskIndex=12 ;string1=ESPT12/cmd ;string2=gpio,12,0
             TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_MQTT;
             validTopic = true;
           } else {
@@ -92,8 +98,9 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
             String command = parseString(cmd, 1);
             if (command == F("event") || command == F("asyncevent")) {
               eventQueue.add(parseStringToEnd(cmd, 2));
-            } else if (!PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
-              remoteConfig(&TempEvent, cmd);
+            } else if (ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str())) {
+            } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
+            } else { remoteConfig(&TempEvent, cmd);
             }
           }
         }
@@ -108,13 +115,13 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         LoadTaskSettings(event->TaskIndex);
         parseControllerVariables(pubname, event, false);
 
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
+        byte valueCount = getValueCountForTask(event->TaskIndex);
         for (byte x = 0; x < valueCount; x++)
         {
           //MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
           if (ExtraTaskSettings.TaskDeviceValueNames[x][0]==0)
              continue; //we skip values with empty labels
-             
+
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
           String value = "";

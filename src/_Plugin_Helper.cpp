@@ -1,9 +1,8 @@
 #include "_Plugin_Helper.h"
 
 #include "ESPEasy_common.h"
-#include "ESPEasy_fdwdecl.h"
 
-#include "src/DataStructs/ESPEasyLimits.h"
+#include "src/CustomBuild/ESPEasyLimits.h"
 #include "src/DataStructs/SettingsStruct.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
@@ -138,18 +137,14 @@ int getValueCountForTask(taskIndex_t   taskIndex) {
   return TempEvent.Par1;
 }
 
-Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex) {
-  int dummyIndex;
-  return getDeviceVTypeForTask(taskIndex, dummyIndex);
-}
-
-Sensor_VType getDeviceVTypeForTask(taskIndex_t   taskIndex, int& pconfig_index) {
-  struct EventStruct TempEvent(taskIndex);
-  String dummy;
-  if (PluginCall(PLUGIN_GET_DEVICEVTYPE, &TempEvent, dummy)) {
-    pconfig_index = TempEvent.idx;
-  } else {
-    pconfig_index = -1;
+int checkDeviceVTypeForTask(struct EventStruct* event) {
+  if (event->sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET) {
+    if (validTaskIndex(event->TaskIndex)) {
+      String dummy;
+      if (PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy)) {
+        return event->idx; // pconfig_index
+      }
+    }
   }
-  return TempEvent.sensorType;
+  return -1;
 }

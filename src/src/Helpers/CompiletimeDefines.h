@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+//#include "../../ESPEasy_common.h"
+
 String get_binary_filename();
 String get_build_time();
 String get_build_date();
