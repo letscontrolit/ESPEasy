@@ -2,9 +2,9 @@
 #define PLUGINSTRUCTS_P016_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-
 #ifdef USES_P016
+
+#include "../../ESPEasy_common.h"
 
 #define PLUGIN_016_DEBUG        // additional debug messages in the log
 
