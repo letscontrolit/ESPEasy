@@ -2,9 +2,9 @@
 #define PLUGINSTRUCTS_P082_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-
 #ifdef USES_P082
+
+#include "../../ESPEasy_common.h"
 
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>

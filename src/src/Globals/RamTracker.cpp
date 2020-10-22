@@ -1,7 +1,8 @@
 #include "RamTracker.h"
 
-#include "../../ESPEasy_Log.h"
-#include "../../ESPEasy_fdwdecl.h"
+
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/Statistics.h"
 

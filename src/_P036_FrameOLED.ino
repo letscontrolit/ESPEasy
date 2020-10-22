@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P036
 
 // #######################################################################################################
@@ -83,7 +84,7 @@
 // NEW: Content of header is adjustable, also the alternating function (saved as Bit 15-0 in PCONFIG_LONG(0))
 // CHG: Parameters sorted
 
-#include "_Plugin_Helper.h"
+
 #include "src/PluginStructs/P036_data_struct.h"
 
 #define PLUGIN_036

@@ -2,11 +2,7 @@
 
 #ifdef USES_P036
 
-
-
-# include "../../ESPEasyNetwork.h"
-# include "../../ESPEasy_fdwdecl.h"
-
+# include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Misc.h"
 # include "../Helpers/Scheduler.h"

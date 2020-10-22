@@ -1,8 +1,8 @@
 #include "P015_data_struct.h"
+#ifdef USES_P015
 
 #include "../Helpers/Misc.h"
 
-#ifdef USES_P015
 
 
 # define TSL2561_CMD           0x80

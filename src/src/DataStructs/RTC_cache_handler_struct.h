@@ -4,6 +4,8 @@
 
 #include "RTCCacheStruct.h"
 
+#include "../../ESPEasy_common.h"
+
 #include <FS.h>
 
 

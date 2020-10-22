@@ -2,6 +2,9 @@
 
 #ifdef USES_P032
 
+#include "../Globals/I2Cdev.h"
+
+
 enum
 {
   MS5xxx_CMD_RESET    = 0x1E, // perform reset

@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "../../ESPEasy_common.h"
+
 class SystemVariables {
 
 public:
