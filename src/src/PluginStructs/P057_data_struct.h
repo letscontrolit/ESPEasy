@@ -2,9 +2,9 @@
 #define PLUGINSTRUCTS_P057_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-
 #ifdef USES_P057
+
+#include "../../ESPEasy_common.h"
 
 # include <HT16K33.h>
 

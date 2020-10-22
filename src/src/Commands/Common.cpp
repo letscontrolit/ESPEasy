@@ -3,12 +3,13 @@
 #include <ctype.h>
 #include <IPAddress.h>
 
-#include "../../ESPEasyWifi.h"
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/EventValueSource.h"
+#include "../DataTypes/EventValueSource.h"
+
+#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/Serial.h"
 
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"

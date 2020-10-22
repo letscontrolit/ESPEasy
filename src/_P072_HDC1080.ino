@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P072
 
 // ######################################################################################################
@@ -11,7 +12,6 @@
 #define PLUGIN_VALUENAME1_072 "Temperature"
 #define PLUGIN_VALUENAME2_072 "Humidity"
 
-#include "_Plugin_Helper.h"
 
 #define HDC1080_I2C_ADDRESS      0x40 // I2C address for the sensor
 

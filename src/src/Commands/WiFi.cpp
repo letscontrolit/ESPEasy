@@ -1,12 +1,17 @@
 #include "../Commands/WiFi.h"
 
 #include "../../ESPEasy_common.h"
-#include "../Commands/Common.h"
-#include "../Globals/Settings.h"
-#include "../Helpers/StringConverter.h"
-#include "../../ESPEasyWifi.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+#include "../Commands/Common.h"
+
+#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/Serial.h"
+
+#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/Settings.h"
+
+#include "../Helpers/StringConverter.h"
+
 
 #define WIFI_MODE_MAX (WiFiMode_t)4
 

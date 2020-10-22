@@ -1,7 +1,7 @@
 #ifndef DATASTRUCTS_FACTORY_DEFAULT_PREF_H
 #define DATASTRUCTS_FACTORY_DEFAULT_PREF_H
 
-#include "../DataStructs/DeviceModel.h"
+#include "../DataTypes/DeviceModel.h"
 
 #include <stdint.h>
 

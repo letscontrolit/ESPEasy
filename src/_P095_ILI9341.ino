@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P095
 //#######################################################################################################
 //#################################### Plugin 095: ILI9341 TFT 2.4inches display #################################
@@ -9,7 +10,6 @@
 #define PLUGIN_VALUENAME1_095 "TFT"
 #define PLUGIN_095_MAX_DISPLAY 1
 
-#include "_Plugin_Helper.h"
 
 #if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
   #define PLUGIN_095_FONT_INCLUDED   // enable to use fonts in this plugin

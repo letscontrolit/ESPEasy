@@ -1,3 +1,5 @@
+#include "ESPEasy_common.h"
+
 #ifdef USES_N001
 //#######################################################################################################
 //########################### Notification Plugin 001: Email ############################################
@@ -8,6 +10,9 @@
 #define NPLUGIN_NAME_001       "Email (SMTP)"
 
 #define NPLUGIN_001_TIMEOUT 5000
+
+#include "src/DataStructs/NotificationSettingsStruct.h"
+#include "src/Globals/NPlugins.h"
 
 // The message body is included in event->String1
 

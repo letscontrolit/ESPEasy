@@ -3,7 +3,8 @@
 
 #include <Arduino.h>
 
-#include "../../ESPEasyTimeTypes.h"
+#include "../DataTypes/ESPEasyTimeSource.h"
+
 
 
 class ESPEasy_time {
