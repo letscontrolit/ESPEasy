@@ -10,8 +10,8 @@
 // #define DLbus_DEBUG
 
 // Flags for pulse width (bit 0 is the content!)
-#define DLbus_FlagSingleWidth                   0x02
-#define DLbus_FlagDoubleWidth                   0x04
+#define DLbus_FlagSingleWidth                 0x02
+#define DLbus_FlagDoubleWidth                 0x04
 #define DLbus_FlagShorterThanSingleWidth      0x10
 #define DLbus_FlagBetweenDoubleSingleWidth    0x20
 #define DLbus_FlagLongerThanDoubleWidth       0x40

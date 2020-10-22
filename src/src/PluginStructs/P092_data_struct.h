@@ -1,5 +1,5 @@
-#ifndef DLBus_H
-#define DLBus_H
+#ifndef PLUGINSTRUCTS_P036_DATA_STRUCT_H
+#define PLUGINSTRUCTS_P036_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
 
@@ -206,3 +206,4 @@ public:
 
 
 #endif // ifdef USES_P092
+#endif // ifndef PLUGINSTRUCTS_P092_DATA_STRUCT_H
