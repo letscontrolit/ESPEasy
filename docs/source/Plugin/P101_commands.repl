@@ -1,0 +1,57 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    | Example 1: ``WAKEONLAN,<Optional MAC>,<Optional IP>,<Optional Port>``
+
+    | Example 2: ``Task Name,<Optional MAC>,<Optional IP>,<Optional Port>``
+
+    ","
+
+    | When only one WOL task is assigned the *WAKEONLAN* and *Task Name* command keywords are interchangeable.
+    | If multiple WOL tasks are assigned the user provided *Task Name* should be used as the command keyword.
+    |
+    | Optional parameters will override the values entered in the WOL task's configuration page. See examples below.
+
+    "
+
+.. csv-table::
+    :header: "Optional Parameters", "HTTP Examples"
+    :widths: 20, 30
+
+    "
+    **MAC Address:**
+
+    ``aa:bb:cc:dd:ee:ff``
+
+
+    **IP Address:**
+
+    ``255.255.255.255``
+
+
+    **Port Number:**
+
+    ``0-65535``
+
+    ","
+
+    Turn on family room Media Server (WOL task name *MediaPlayer*) using task's default settings.
+
+    ``http://<ESP IP address>/control?cmd=MediaPlayer``
+
+    Turn on basement gaming PC using specific MAC address:
+
+    ``http://<ESP IP address>/control?cmd=WAKEONLAN,74:27:EA:60:40:E5``
+
+    Turn on basement gaming PC using specific IP Address:
+
+    ``http://<ESP IP address>/control?cmd=WAKEONLAN,74:27:EA:60:40:E5,192.168.1.25``
+
+    Turn on basement gaming PC using specific UDP port:
+
+    ``http://<ESP IP address>/control?cmd=WAKEONLAN,74:27:EA:60:40:E5,192.168.1.25,11``
+
+    "

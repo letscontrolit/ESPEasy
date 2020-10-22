@@ -1,0 +1,48 @@
+.. csv-table::
+    :escape: &
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    | ``Task Name,&'page.objname.txt=&"string&"&'``
+    | ``Task Name,&'page.objname.val=number&'``
+
+    ","
+    | The *Task Name* is the user assigned Name for the Nextion Task. Avoid spaces, special characters and reserved words. The default name is NEXTION.
+    | page.objname.txt is the field format for sending text strings to the Nextion display.
+    | page.objname.val is the field format for sending integer values to the Nextion display.
+    | The *page.* argument may be omitted if the Nextion object's attribute is set as global.
+
+    "
+
+.. csv-table::
+    :escape: &
+    :header: "Parameters", "HTTP Examples"
+    :widths: 20, 30
+
+    "
+    In these examples the assigned Task name is *NEXTION*.
+
+    *NEXTION*,&'page0.j1.txt=&"Hello World&"&'
+
+    *NEXTION*,&'page3.t0.val=777&'
+
+    *NEXTION*,&'page8.t_ram.txt=&"System Time [%systime%]&"&'
+
+    ","
+
+
+    Send *Hello World* to a text field on the display.
+
+    ``http://<ESP IP address>/control?cmd=&'NEXTION,page0.j1.txt=&"Hello World&"&'``
+
+    Send integer value *-123* to a numeric field on the display:
+
+    ``http://<ESP IP address>/control?cmd=&'NEXTION,page3.t0.val=-123&'``
+
+    Send a Switch plugin value to a numeric field on the display:
+
+    ``http://<ESP IP address>/control?cmd=&'NEXTION,page3.t0.val=[DoorSwitch#State]&'``
+
+    "

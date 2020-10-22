@@ -1,5 +1,5 @@
 .. csv-table::
-    :header: "COMMAND SYNTAX", "PRECAUTIONS"
+    :header: "Command Syntax", "Extra information"
     :widths: 20, 30
 
     "
@@ -15,7 +15,7 @@
     "
 
 .. csv-table::
-    :header: "PARAMETERS", "USAGE INFORMATION"
+    :header: "Parameters", "HTTP Examples"
     :widths: 20, 30
 
     "
@@ -45,8 +45,6 @@
 
     *Brake* and *Standby* actions are available on mega-20200929 and later releases.
 
-    **HTTP Examples:**
-
     Turn on DC Motor-A, Direction: Forward, Speed: 99
 
     ``http://<ESP IP address>/control?cmd=WemosMotorShieldCMD,0,Forward,99``
@@ -54,6 +52,8 @@
     Stopping DC Motor-A:
 
     ``http://<ESP IP address>/control?cmd=WemosMotorShieldCMD,0,Stop``
+
+    |
 
     **Local Command Testing:**
 
