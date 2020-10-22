@@ -4,12 +4,15 @@
 #include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
-#include "../../EspEasyGPIO.h"
 #include "../Commands/Common.h"
 #include "../DataStructs/PinMode.h"
+#include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/PortStatus.h"
 
 //predeclaration of functions used in this module
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);

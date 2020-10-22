@@ -2,11 +2,14 @@
 
 
 
-#include "../../ESPEasy-Globals.h"
+
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include "../Commands/Common.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Globals/ESPEasy_Scheduler.h"
 

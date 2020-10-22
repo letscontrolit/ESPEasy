@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P063
 //#######################################################################################################
 //#################################### Plugin 063: TTP229 KeyPad ########################################
@@ -28,8 +29,6 @@
 #define PLUGIN_NAME_063       "Keypad - TTP229 Touch"
 #define PLUGIN_VALUENAME1_063 "ScanCode"
 
-// #include <*.h>   no lib required
-#include "_Plugin_Helper.h"
 
 
 uint16_t readTTP229(int16_t pinSCL, int16_t pinSDO)

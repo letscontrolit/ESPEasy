@@ -5,6 +5,8 @@
 
 #include "../DataStructs/TimingStats.h"
 
+#include "../ESPEasyCore/ESPEasyRules.h"
+
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
 

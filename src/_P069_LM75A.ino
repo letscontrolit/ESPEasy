@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P069
 
 // #######################################################################################################
@@ -17,8 +18,6 @@
 #define PLUGIN_NAME_069       "Environment - LM75A"
 #define PLUGIN_VALUENAME1_069 "Temperature"
 
-
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P069_data_struct.h"
 

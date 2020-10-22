@@ -2,8 +2,6 @@
 #define PLUGINSTRUCTS_P062_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-
 #ifdef USES_P062
 
 // #define PLUGIN_062_DEBUG  // Enable extra (debugging) log output

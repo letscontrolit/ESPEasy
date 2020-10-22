@@ -1,14 +1,15 @@
 #include "../DataStructs/Web_StreamingBuffer.h"
 
 #include "../DataStructs/tcp_cleanup.h"
-#include "../Helpers/ESPEasy_time_calc.h"
-
-#include "../../ESPEasy_Log.h"
-#include "../../ESPEasyTimeTypes.h"
-
+#include "../DataTypes/ESPEasyTimeSource.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 // FIXME TD-er: Should keep a pointer to the webserver as a member, not use the global defined one.
 #include "../Globals/Services.h"
+
+#include "../Helpers/ESPEasy_time_calc.h"
+
+
 
 #define CHUNKED_BUFFER_SIZE          400
 

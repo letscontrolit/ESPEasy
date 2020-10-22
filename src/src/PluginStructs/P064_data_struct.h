@@ -2,9 +2,9 @@
 #define PLUGINSTRUCTS_P064_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-
 #ifdef USES_P064
+
+#include "../../ESPEasy_common.h"
 
 #include <SparkFun_APDS9960.h> // Lib is modified to work with ESP
 

@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P062
 
 // #######################################################################################################
@@ -24,7 +25,6 @@
 #define PLUGIN_VALUENAME1_062 "ScanCode"
 
 
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P062_data_struct.h"
 

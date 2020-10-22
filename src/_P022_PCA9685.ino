@@ -1,6 +1,6 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P022
 
-#include "_Plugin_Helper.h"
 #include "src/DataStructs/PinMode.h"
 #include "src/PluginStructs/P022_data_struct.h"
 

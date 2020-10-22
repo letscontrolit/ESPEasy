@@ -1,5 +1,7 @@
 #include "P092_data_struct.h"
 
+#ifdef USES_P092
+
 //
 // DLBus reads and decodes the DL-Bus.
 // The DL-Bus is used in heating control units e.g. sold by Technische Alternative (www.ta.co.at).
@@ -431,3 +433,5 @@ boolean DLBus::CheckCRC(uint8_t IdxCRC) {
   }
   return false;
 }
+
+#endif
