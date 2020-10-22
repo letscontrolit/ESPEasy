@@ -3,6 +3,12 @@
 
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy-Globals.h"
+
+#include "../ESPEasyCore/Serial.h"
+
+#include "../Globals/ESPEasy_time.h"
 
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"

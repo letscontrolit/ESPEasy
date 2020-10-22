@@ -2,9 +2,9 @@
 #define PLUGINSTRUCTS_P027_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-
 #ifdef USES_P027
+
+#include "../../ESPEasy_common.h"
 
 // Many boards, like Adafruit INA219: https://learn.adafruit.com/adafruit-ina219-current-sensor-breakout/assembly
 // A0 and A1 are default connected to GND with 10k pull-down resistor.

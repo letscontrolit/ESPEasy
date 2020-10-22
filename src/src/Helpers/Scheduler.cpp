@@ -1,15 +1,22 @@
 #include "Scheduler.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../EspEasyGPIO.h"
+#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy-Globals.h"
+
 #include "../../_Plugin_Helper.h"
 
 #include "../Commands/GPIO.h"
 #include "../ControllerQueue/DelayQueueElements.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
+#include "../Globals/GlobalMapPortStatus.h"
 #include "../Globals/RTC.h"
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/PortStatus.h"
 
 
 //#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15

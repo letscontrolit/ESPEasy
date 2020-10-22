@@ -1,5 +1,10 @@
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C005
+
+#include "src/Commands/InternalCommands.h"
+#include "src/Helpers/StringParser.h"
+
+
 //#######################################################################################################
 //################### Controller Plugin 005: Home Assistant (openHAB) MQTT ##############################
 //#######################################################################################################
