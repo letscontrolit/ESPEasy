@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P094
 
 // #######################################################################################################
@@ -8,7 +9,6 @@
 // Allows to control the mode of the CUL receiver
 //
 
-#include "_Plugin_Helper.h"
 
 #include "src/Helpers/StringConverter.h"
 #include "src/PluginStructs/P094_data_struct.h"

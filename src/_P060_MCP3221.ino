@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P060
 
 // #######################################################################################################
@@ -7,7 +8,6 @@
 // Plugin to read 12-bit-values from ADC chip MCP3221. It is used e.g. in MinipH pH interface to sample a pH probe in an aquarium
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P060_data_struct.h"
 

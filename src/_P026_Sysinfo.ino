@@ -1,11 +1,11 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P026
 //#######################################################################################################
 //#################################### Plugin 026: System Info ##########################################
 //#######################################################################################################
 
-#include "_Plugin_Helper.h"
 
-#include "ESPEasy_packed_raw_data.h"
+#include "src/DataStructs/ESPEasy_packed_raw_data.h"
 #include "src/Helpers/Memory.h"
 
 #define PLUGIN_026

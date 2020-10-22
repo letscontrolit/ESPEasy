@@ -4,8 +4,11 @@
 #include <Arduino.h>
 
 #include "../DataStructs/PinMode.h"
-#include "../../ESPEasy-Globals.h"
+#include "../DataTypes/ControllerIndex.h"
+#include "../DataTypes/TaskIndex.h"
 #include "../Helpers/Scheduler.h"
+
+#include "../../ESPEasy_common.h"
 
 
 

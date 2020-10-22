@@ -1,13 +1,13 @@
 #include "ESPEasy_time_zone.h"
 
-
-#include <time.h>
+#include "../DataStructs/TimeChangeRule.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Globals/ESPEasy_time.h"
+#include "../Globals/Settings.h"
 
 #include "ESPEasy_time_calc.h"
-#include "../DataStructs/TimeChangeRule.h"
-#include "../Globals/Settings.h"
-#include "../Globals/ESPEasy_time.h"
-#include "../../ESPEasy_Log.h"
+
+#include <time.h>
 
 
 #define SECS_PER_MIN  (60UL)

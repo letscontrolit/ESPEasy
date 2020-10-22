@@ -1,8 +1,7 @@
 #include "InternalCommands.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy_Log.h"
+
 #include "../../_Plugin_Helper.h"
 #include "../Globals/Settings.h"
 
@@ -36,6 +35,8 @@
 #include "../Commands/UPD.h"
 #include "../Commands/wd.h"
 #include "../Commands/WiFi.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"

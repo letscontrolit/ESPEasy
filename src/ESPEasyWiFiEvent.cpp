@@ -1,17 +1,23 @@
+#include "ESPEasyWiFiEvent.h"
+
 #ifdef HAS_ETHERNET
 #include "ETH.h"
 #endif
-#include "ESPEasyWiFiEvent.h"
 #include "ESPEasyWifi_ProcessEvent.h"
-#include "src/Globals/ESPEasyWiFiEvent.h"
-#include "src/Globals/RTC.h"
-#include "ESPEasyTimeTypes.h"
-#include "ESPEasy_Log.h"
-#include "ESPEasy_fdwdecl.h"
 
 #include "src/DataStructs/RTCStruct.h"
 
+#include "src/DataTypes/ESPEasyTimeSource.h"
+
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
+#include "src/ESPEasyCore/ESPEasyWifi.h"
+
+#include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Globals/RTC.h"
+
 #include "src/Helpers/ESPEasy_time_calc.h"
+
 
 #ifdef HAS_ETHERNET
 extern bool eth_connected;

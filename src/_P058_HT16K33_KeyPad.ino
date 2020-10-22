@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P058
 
 // #######################################################################################################
@@ -33,7 +34,6 @@
 #define PLUGIN_NAME_058       "Keypad - HT16K33 [TESTING]"
 #define PLUGIN_VALUENAME1_058 "ScanCode"
 
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P058_data_struct.h"
 

@@ -1,5 +1,7 @@
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C002
+
+#include "src/Helpers/_CPlugin_DomoticzHelper.h"
 
 // #######################################################################################################
 // ########################### Controller Plugin 002: Domoticz MQTT ######################################
@@ -10,6 +12,9 @@
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
 #include "src/Commands/InternalCommands.h"
+
+#include "src/Helpers/StringParser.h"
+
 #include <ArduinoJson.h>
 
 String CPlugin_002_pubname;

@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P014
 
 // #######################################################################################################
@@ -5,7 +6,6 @@
 // #######################################################################################################
 // 12-10-2015 Charles-Henri Hallard, see my projects and blog at https://hallard.me
 
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_014
 #define PLUGIN_ID_014        14

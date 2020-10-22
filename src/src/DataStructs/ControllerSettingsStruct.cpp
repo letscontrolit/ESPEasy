@@ -1,9 +1,10 @@
 #include "../DataStructs/ControllerSettingsStruct.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../DataStructs/ESPEasyLimits.h"
 
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 
 

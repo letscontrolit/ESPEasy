@@ -2,9 +2,9 @@
 #define PLUGINSTRUCTS_P006_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-
 #ifdef USES_P006
+
+#include "../../ESPEasy_common.h"
 
 # define BMP085_ULTRAHIGHRES         3
 

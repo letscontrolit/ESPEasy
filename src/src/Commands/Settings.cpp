@@ -1,9 +1,11 @@
 #include "../Commands/Settings.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
 
 #include "../Commands/Common.h"
+
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"

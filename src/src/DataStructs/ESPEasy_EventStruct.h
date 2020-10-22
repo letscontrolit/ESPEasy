@@ -2,11 +2,15 @@
 #define ESPEASY_EVENTSTRUCT_H
 
 #include <Arduino.h>
-#include "EventValueSource.h"
-#include "../Globals/CPlugins.h"
+
+#include "../DataTypes/ControllerIndex.h"
+#include "../DataTypes/EventValueSource.h"
+#include "../DataTypes/TaskIndex.h"
+//#include "../Globals/CPlugins.h"
 #include "../Globals/NPlugins.h"
-#include "../Globals/Plugins.h"
+//#include "../Globals/Plugins.h"
 #include "DeviceStruct.h"
+
 
 /*********************************************************************************************\
 * EventStruct
