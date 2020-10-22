@@ -1,6 +1,6 @@
 #include "SendData_DuplicateChecker_data.h"
 
-
+#include "../ESPEasyCore/Controller.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../../ESPEasy_fdwdecl.h"
 

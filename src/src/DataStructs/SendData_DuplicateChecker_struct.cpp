@@ -1,9 +1,11 @@
 #include "SendData_DuplicateChecker_struct.h"
 
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Plugins.h"
+#include "../Helpers/CRC_functions.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy_Log.h"
+
 
 
 #define HISTORIC_ELEMENT_LIFETIME  10000 // 10 seconds

@@ -2,8 +2,8 @@
 #define CONTROLLERQUEUE_C019_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/ESPEasyLimits.h"
 #include "../Globals/CPlugins.h"
 
 

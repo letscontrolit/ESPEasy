@@ -19,6 +19,8 @@
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ESPEasy_now_handler.h"
+#include "../Globals/SendData_DuplicateChecker.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Protocol.h"
@@ -83,6 +85,31 @@ void sendData(struct EventStruct *event)
   }
   lastSend = millis();
   STOP_TIMER(SEND_DATA_STATS);
+}
+
+
+// ********************************************************************************
+// Send to controllers, via a duplicate check
+// Some plugins may receive the same data among nodes, so check first if
+// another node may already have sent it.
+// The compare_key is computed by the sender plugin, with plugin specific knowledge
+// to make sure the key describes enough to detect duplicates.
+// ********************************************************************************
+void sendData_checkDuplicates(struct EventStruct *event, const String& compare_key)
+{
+#ifdef USES_ESPEASY_NOW
+  uint32_t key = SendData_DuplicateChecker.add(event, compare_key);
+  if (key != SendData_DuplicateChecker_struct::DUPLICATE_CHECKER_INVALID_KEY) {
+    // Must send out request to other nodes to see if any other has already processed it.
+    uint8_t broadcastMac[6];
+    ESPEasy_now_handler.sendSendData_DuplicateCheck(
+      key, 
+      ESPEasy_Now_DuplicateCheck::message_t::KeyToCheck, 
+      broadcastMac);
+  }
+#else
+  sendData(event);
+#endif
 }
 
 bool validUserVar(struct EventStruct *event) {
@@ -454,6 +481,34 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
   }
   return false;
 }
+
+#ifdef USES_ESPEASY_NOW
+
+bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, bool retained)
+{
+  bool success = false;
+  if (!MQTT_queueFull(controller_idx))
+  {
+    success = MQTTDelayHandler->addToQueue(MQTT_queue_element());
+    if (success) {
+      size_t pos = 0;
+      MQTTDelayHandler->sendQueue.back().controller_idx = controller_idx;
+      MQTTDelayHandler->sendQueue.back()._retained = retained;
+      message.getString(MQTTDelayHandler->sendQueue.back()._topic,   pos);
+      message.getString(MQTTDelayHandler->sendQueue.back()._payload, pos);
+    }
+
+    size_t payloadSize = message.getPayloadSize();
+    if ((MQTTDelayHandler->sendQueue.back()._topic.length() + MQTTDelayHandler->sendQueue.back()._payload.length() + 2) < payloadSize) {
+      success = false;
+      MQTTDelayHandler->sendQueue.pop_back();
+    }
+  }
+  scheduleNextMQTTdelayQueue();
+  return success;
+}
+
+#endif
 
 bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained)
 {

@@ -8,6 +8,7 @@
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ESPEasy_now_handler.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Settings.h"

@@ -3,6 +3,7 @@
 #ifdef USES_ESPEASY_NOW
 
 # include "../../ESPEasy_fdwdecl.h"
+# include "../Helpers/CRC_functions.h"
 
 # define ESPEASY_NOW_MAX_PACKET_SIZE   200
 

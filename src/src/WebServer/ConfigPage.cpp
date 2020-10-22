@@ -12,6 +12,7 @@
 #include "../ESPEasyCore/Controller.h"
 
 #include "../Globals/MQTT.h"
+#include "../Globals/Nodes.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 

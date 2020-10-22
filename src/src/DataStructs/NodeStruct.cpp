@@ -1,7 +1,6 @@
 #include "NodeStruct.h"
 
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasyTimeTypes.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"

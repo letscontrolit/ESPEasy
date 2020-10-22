@@ -33,6 +33,7 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringProvider.h"

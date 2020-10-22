@@ -14,6 +14,7 @@ struct LabelType {
     HOST_NAME,
 
     LOCAL_TIME,
+    TIME_SOURCE,
     UPTIME,
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
@@ -76,6 +77,11 @@ struct LabelType {
     FORCE_WIFI_NOSLEEP,
     PERIODICAL_GRAT_ARP,
     CONNECTION_FAIL_THRESH,
+
+    #ifdef USES_ESPEASY_NOW
+    USE_ESPEASY_NOW,
+    TEMP_DISABLE_ESPEASY_NOW,
+    #endif
 
     BUILD_DESC,
     GIT_BUILD,

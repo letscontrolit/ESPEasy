@@ -4,6 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 #include "../DataTypes/EventValueSource.h"
+#include "../DataStructs/ESPEasy_now_merger.h"
 #include "../Globals/CPlugins.h"
 
 // ********************************************************************************
@@ -12,6 +13,16 @@
 void sendData(struct EventStruct *event);
 
 bool validUserVar(struct EventStruct *event);
+
+// ********************************************************************************
+// Send to controllers, via a duplicate check
+// Some plugins may receive the same data among nodes, so check first if
+// another node may already have sent it.
+// The compare_key is computed by the sender plugin, with plugin specific knowledge
+// to make sure the key describes enough to detect duplicates.
+// ********************************************************************************
+void sendData_checkDuplicates(struct EventStruct *event, const String& compare_key);
+
 
 #ifdef USES_MQTT
 /*********************************************************************************************\
@@ -58,6 +69,10 @@ void SendStatus(EventValueSource::Enum source, const String& status);
 
 #ifdef USES_MQTT
 bool MQTT_queueFull(controllerIndex_t controller_idx);
+
+#ifdef USES_ESPEASY_NOW
+bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, bool retained);
+#endif
 
 bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained);
 

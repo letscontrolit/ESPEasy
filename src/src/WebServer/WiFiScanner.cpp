@@ -6,6 +6,7 @@
 
 #include "../ESPEasyCore/ESPEasyWifi.h"
 
+#include "../Globals/ESPEasy_now_handler.h"
 
 #ifdef WEBSERVER_NEW_UI
 

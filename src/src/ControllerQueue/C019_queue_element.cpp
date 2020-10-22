@@ -1,7 +1,7 @@
 #include "../ControllerQueue/C019_queue_element.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../../ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 
 #ifdef USES_PACKED_RAW_DATA

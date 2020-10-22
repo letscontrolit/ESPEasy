@@ -2,25 +2,28 @@
 
 #ifdef USES_ESPEASY_NOW
 
-# include "../../ESPEasy_fdwdecl.h"
-# include "../../ESPEasy_Log.h"
-# include "../../ESPEasyWifi.h"
 # include "../../ESPEasyWiFi_credentials.h"
-# include "../../_CPlugin_Helper.h"
-# include "ESPEasy_time_calc.h"
+# include "../../ESPEasy_fdwdecl.h"
+# include "../ControllerQueue/MQTT_queue_element.h"
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
 # include "../DataStructs/ESPEasy_Now_packet.h"
 # include "../DataStructs/ESPEasy_now_splitter.h"
 # include "../DataStructs/NodeStruct.h"
 # include "../DataStructs/TimingStats.h"
+# include "../ESPEasyCore/Controller.h"
+# include "../ESPEasyCore/ESPEasyWifi.h"
+# include "../ESPEasyCore/ESPEasy_Log.h"
+# include "../Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/ESPEasy_time.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Globals/SendData_DuplicateChecker.h"
 # include "../Globals/Settings.h"
-# include "../ControllerQueue/MQTT_queue_element.h"
-# include "../Helpers/PeriodicalActions.h"
+# include "../Helpers/CRC_functions.h"
 # include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/ESPEasy_time_calc.h"
+# include "../Helpers/PeriodicalActions.h"
+# include "../Helpers/_CPlugin_Helper.h"
 
 
 # include <list>

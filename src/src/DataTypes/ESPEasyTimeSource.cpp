@@ -1,4 +1,4 @@
-#include "ESPEasyTimeTypes.h"
+#include "ESPEasyTimeSource.h"
 
 #include <Arduino.h>
 

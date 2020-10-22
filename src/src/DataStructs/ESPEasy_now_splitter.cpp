@@ -2,7 +2,7 @@
 
 #ifdef USES_ESPEASY_NOW
 
-# include "../../ESPEasy_Log.h"
+# include "../ESPEasyCore/ESPEasy_Log.h"
 # include "../DataStructs/TimingStats.h"
 # include "../Globals/Nodes.h"
 # include "../Helpers/ESPEasy_time_calc.h"

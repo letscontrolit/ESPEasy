@@ -1,8 +1,8 @@
 #include "C019_ESPEasyNow_helper.h"
 
 #include "../../DataStructs/ESPEasy_EventStruct.h"
+#include "../../ESPEasyCore/ESPEasy_Log.h"
 #include "../../Globals/CPlugins.h"
-#include "../../../ESPEasy_Log.h"
 
 
 bool C019_ESPEasyNow_helper::process_receive(struct EventStruct *event) {

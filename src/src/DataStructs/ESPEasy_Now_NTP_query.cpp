@@ -12,9 +12,9 @@
 
 # define MINIMUM_TIME_BETWEEN_UPDATES  (1800 * 1000) // Half an hour
 
+# include "../ESPEasyCore/ESPEasy_Log.h"
 # include "../Globals/ESPEasy_time.h"
 # include "../Helpers/ESPEasy_time_calc.h"
-# include "../../ESPEasy_Log.h"
 # include "../../ESPEasy_fdwdecl.h"
 
 ESPEasy_Now_NTP_query::ESPEasy_Now_NTP_query()
