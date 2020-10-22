@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P074
 
 // #######################################################################################################
@@ -25,7 +26,7 @@
 
 #include "Adafruit_TSL2591.h"
 #include <Adafruit_Sensor.h>
-#include "_Plugin_Helper.h"
+
 
 struct P074_data_struct : public PluginTaskData_base {
   P074_data_struct() {

@@ -1,8 +1,12 @@
 #ifndef DLBus_H
 #define DLBus_H
 
-#include <Arduino.h>
 #include "../../_Plugin_Helper.h"
+
+#ifdef USES_P092
+
+#include <Arduino.h>
+
 
 /*********************************************************************************************\
    DLBus subs to get values from the receiving bitstream

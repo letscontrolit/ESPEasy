@@ -1,4 +1,63 @@
 -------------------------------------------------
+Changes in release mega-20201022 (since mega-20201016)
+-------------------------------------------------
+
+Release date: do 22 okt 2020 16:46:23 CEST
+
+Gijs Noorlander (10):
+      Fix merge issue merging GPIO core handling
+      [GPIO core] Fix bool/boolean function declaration.
+      Fix incorrect merge.
+      Fix possible uninitialized current state in GPIO monitoring
+      Fix merge issue due to renamed Command.ino
+      Fix merge issue due to change to EventValueSource::Enum
+      [Commands] Add event value source check for commands
+      Fix merge issue WiFi process disconnect event should not disable webserver
+      Fix merge issues
+      [GPIO] Fix merge issues with recent scheduler changes.
+
+Plebs (26):
+      Moved GPIO commands in the core
+      fixed suggestions made by TD-er
+      deprecating inpuswitchstate
+      Moved GPIO commands in the core
+      fixed suggestions made by TD-er
+      deprecating inpuswitchstate
+      Moved GPIO commands in the core
+      fixed suggestions made by TD-er
+      deprecating inpuswitchstate
+      Merge branch 'new/gpiotimers' of https://github.com/giig1967g/ESPEasy into new/gpiotimers
+      added selective command execution according to source
+      added support for C002 (Domoticz MQTT)
+      added C006, C014 and HTTP support
+      Fixed lowercase bug #2841
+      gpio core commands: fixed couple of bugs
+      gpio core commands: bug fixing
+      added asyncevent in ExecuteCommand_all
+      applied changes requested by TD-er
+      updated chackValidPortRange function
+      fixed function
+      fixed JSON/OK return message in HTTP source
+      fixed SONOFF setup and #2892 bug
+      Fixed merge issues
+      fixed "OK" in JSON in a more elegant way
+      fixing merge issues
+      final clean-up
+
+TD-er (10):
+      Fix merge issues.
+      Uncrustify MH-Z19 code
+      [MH-Z19] Fix ABC not (re)set when filtering not used (#3237)
+      [Domoticz MQTT] Fix Domoticz helper able to send internal commands
+      [Domoticz] Document typical use case linking button + relay + Domoticz
+      [Typo] Replace Celcius with Celsius
+      [Nextion] Fix uninitialized variable warning
+      Don't call PLUGIN_WRITE on inactive tasks (#3317)
+      [Crashinfo] Decode last task before reboot
+      [Crashinfo] Decode intended reboot reason
+
+
+-------------------------------------------------
 Changes in release mega-20201016 (since mega-20201009)
 -------------------------------------------------
 

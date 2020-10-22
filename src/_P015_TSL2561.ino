@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P015
 
 // #######################################################################################################
@@ -8,7 +10,6 @@
 // this plugin is based on the sparkfun library
 // written based on version 1.1.0 from https://github.com/sparkfun/SparkFun_TSL2561_Arduino_Library
 
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P015_data_struct.h"
 

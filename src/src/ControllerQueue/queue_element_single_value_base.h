@@ -3,7 +3,7 @@
 
 
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 

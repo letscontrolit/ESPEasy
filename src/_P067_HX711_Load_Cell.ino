@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P067
 //#######################################################################################################
 //#################################### Plugin 063: _P067_HX711_Load_Cell ################################
@@ -21,10 +22,6 @@
 #define PLUGIN_NAME_067         "Weight - HX711 Load Cell [TESTING]"
 #define PLUGIN_VALUENAME1_067   "WeightChanA"
 #define PLUGIN_VALUENAME2_067   "WeightChanB"
-
-// #include <*.h>   no lib required
-#include "_Plugin_Helper.h"
-
 
 
 #define BIT_POS_OS_CHAN_A         0
