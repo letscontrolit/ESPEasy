@@ -5,9 +5,9 @@
 #include "src/Globals/Settings.h"
 
 #include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/DataStructs/ESPEasy_plugin_functions.h"
 #include "src/DataStructs/TimingStats.h"
 
+#include "src/DataTypes/ESPEasy_plugin_functions.h"
 
 // ********************************************************************************
 // Initialize all Controller CPlugins that where defined earlier

@@ -1,4 +1,4 @@
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 
 #ifdef USES_C018
 
@@ -14,12 +14,17 @@
 
 # include <rn2xx3.h>
 # include <ESPeasySerial.h>
-# include "ESPEasy_fdwdecl.h"
 
 # include "src/ControllerQueue/C018_queue_element.h"
-# include "src/DataStructs/ESPEasy_plugin_functions.h"
+# include "src/DataTypes/ESPEasy_plugin_functions.h"
 # include "src/Globals/CPlugins.h"
 # include "src/Globals/Protocol.h"
+# include "src/Helpers/_Plugin_Helper_serial.h"
+# include "src/Helpers/StringGenerator_GPIO.h"
+# include "src/WebServer/Markup.h"
+# include "src/WebServer/Markup_Forms.h"
+# include "src/WebServer/HTML_wrappers.h"
+
 
 // Have this define after the includes, so we can set it in Custom.h
 # ifndef C018_FORCE_SW_SERIAL

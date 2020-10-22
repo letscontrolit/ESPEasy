@@ -1,8 +1,11 @@
 #ifndef HELPERS_SCHEDULER_H
 #define HELPERS_SCHEDULER_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../DataStructs/EventStructCommandWrapper.h"
 #include "../DataStructs/SystemTimerStruct.h"
+#include "../DataTypes/ProtocolIndex.h"
 #include "../Helpers/msecTimerHandlerStruct.h"
 
 #include <list>
@@ -52,12 +55,31 @@ public:
 
   };
 
+  static String toString(IntervalTimer_e timer);
+
   enum class PluginPtrType {
     TaskPlugin,
     ControllerPlugin,
     NotificationPlugin
   };
 
+  enum class IntendedRebootReason_e {
+    DeepSleep,
+    DelayedReboot,
+    ResetFactory,
+    ResetFactoryPinActive,
+    ResetFactoryCommand,
+    CommandReboot,
+    RestoreSettings,
+    OTA_error,
+    ConnectionFailuresThreshold,
+
+  };
+
+  static String toString(IntendedRebootReason_e reason);
+
+
+  void markIntendedReboot(IntendedRebootReason_e reason);
 
   /*********************************************************************************************\
   * Generic Timer functions.

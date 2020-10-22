@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P061
 
 // #######################################################################################################
@@ -59,8 +60,7 @@
 #define PLUGIN_NAME_061       "Keypad - PCF8574 / MCP23017 [TESTING]"
 #define PLUGIN_VALUENAME1_061 "ScanCode"
 
-// #include <*.h>   // no include needed
-#include "_Plugin_Helper.h"
+
 
 boolean Plugin_061(byte function, struct EventStruct *event, String& string)
 {

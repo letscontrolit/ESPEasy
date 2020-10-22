@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P016
 //#######################################################################################################
 //#################################### Plugin 016: Input IR #############################################
@@ -22,7 +23,6 @@
 #include <IRutils.h>
 #include <IRrecv.h>
 
-#include "_Plugin_Helper.h"
 #include "src/PluginStructs/P016_data_struct.h"
 
 #ifdef P016_P035_Extended_AC

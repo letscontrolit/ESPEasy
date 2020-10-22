@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P087
 
 // #######################################################################################################
@@ -8,7 +9,6 @@
 // Allows to redirect data to a controller
 //
 
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P087_data_struct.h"
 

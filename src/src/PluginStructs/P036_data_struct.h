@@ -2,9 +2,10 @@
 #define PLUGINSTRUCTS_P036_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
+#ifdef USES_P036
+
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_P036
 
 #include <SSD1306.h>
 #include <SH1106Wire.h>

@@ -1,8 +1,11 @@
 #ifndef PLUGINSTRUCTS_P044_DATA_STRUCT_H
 #define PLUGINSTRUCTS_P044_DATA_STRUCT_H
 
-#include <ESPeasySerial.h>
 #include "../../_Plugin_Helper.h"
+
+#ifdef USES_P044
+
+#include <ESPeasySerial.h>
 #include "../../ESPEasy_common.h"
 
 
@@ -98,5 +101,5 @@ struct P044_Task : public PluginTaskData_base {
   unsigned long  blinkLEDStartTime = 0;
 };
 
-
-#endif // ifndef PLUGINSTRUCTS_P044_DATA_STRUCT_H
+#endif
+#endif
