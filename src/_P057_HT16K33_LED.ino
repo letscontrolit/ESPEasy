@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P057
 
 // #######################################################################################################
@@ -68,7 +69,6 @@
 #define PLUGIN_ID_057         57
 #define PLUGIN_NAME_057       "Display - HT16K33 [TESTING]"
 
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P057_data_struct.h"
 

@@ -1,4 +1,4 @@
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 
 #ifdef USES_C018
 
@@ -14,12 +14,17 @@
 
 # include <rn2xx3.h>
 # include <ESPeasySerial.h>
-# include "ESPEasy_fdwdecl.h"
 
 # include "src/ControllerQueue/C018_queue_element.h"
-# include "src/DataStructs/ESPEasy_plugin_functions.h"
+# include "src/DataTypes/ESPEasy_plugin_functions.h"
 # include "src/Globals/CPlugins.h"
 # include "src/Globals/Protocol.h"
+# include "src/Helpers/_Plugin_Helper_serial.h"
+# include "src/Helpers/StringGenerator_GPIO.h"
+# include "src/WebServer/Markup.h"
+# include "src/WebServer/Markup_Forms.h"
+# include "src/WebServer/HTML_wrappers.h"
+
 
 // Have this define after the includes, so we can set it in Custom.h
 # ifndef C018_FORCE_SW_SERIAL
@@ -103,6 +108,10 @@ struct C018_data_struct {
 
     C018_logError(F("useOTA()"));
     return res;
+  }
+
+  bool command_finished() const {
+    return myLora->command_finished();
   }
 
   bool txUncnfBytes(const byte *data, uint8_t size, uint8_t port) {
@@ -268,9 +277,17 @@ struct C018_data_struct {
     return sampleSetCounter;
   }
 
+  float getLoRaAirTime(uint8_t pl) const {
+    if (isInitialized()) {
+      return myLora->getLoRaAirTime(pl + 13); // We have a LoRaWAN header of 13 bytes.
+    }
+    return -1.0;
+  }
+
   void async_loop() {
     if (isInitialized()) {
       rn2xx3_handler::RN_state state = myLora->async_loop();
+
       if (rn2xx3_handler::RN_state::must_perform_init == state) {
         if (myLora->get_busy_count() > 10) {
           if (_resetPin != -1) {
@@ -281,7 +298,8 @@ struct C018_data_struct {
             delay(200);
           }
           autobaud_success = false;
-//          triggerAutobaud();
+
+          //          triggerAutobaud();
         }
       }
     }
@@ -749,10 +767,10 @@ bool C018_init(struct EventStruct *event) {
 
     LoadControllerSettings(event->ControllerIndex, ControllerSettings);
     C018_DelayHandler->configureControllerSettings(ControllerSettings);
-    AppEUI = getControllerUser(event->ControllerIndex, ControllerSettings);
-    AppKey = getControllerPass(event->ControllerIndex, ControllerSettings);
+    AppEUI             = getControllerUser(event->ControllerIndex, ControllerSettings);
+    AppKey             = getControllerPass(event->ControllerIndex, ControllerSettings);
     SampleSetInitiator = ControllerSettings.SampleSetInitiator;
-    Port = ControllerSettings.Port;
+    Port               = ControllerSettings.Port;
   }
 
   std::shared_ptr<C018_ConfigStruct> customConfig(new C018_ConfigStruct);
@@ -808,8 +826,36 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
 // *INDENT-ON*
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
-  bool   success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
-  String error   = C018_data.getLastError(); // Clear the error string.
+  uint8_t pl           = (element.packed.length() / 2);
+  float   airtime_ms   = C018_data.getLoRaAirTime(pl);
+  bool    mustSetDelay = false;
+  bool    success      = false;
+
+  if (!C018_data.command_finished()) {
+    mustSetDelay = true;
+  } else {
+    success = C018_data.txHexBytes(element.packed, ControllerSettings.Port);
+
+    if (success) {
+      if (airtime_ms > 0.0) {
+        ADD_TIMER_STAT(C018_AIR_TIME, static_cast<unsigned long>(airtime_ms * 1000));
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("LoRaWAN : Payload Length: ");
+          log += pl + 13; // We have a LoRaWAN header of 13 bytes.
+          log += F(" Air Time: ");
+          log += String(airtime_ms, 3);
+          log += F(" ms");
+          addLog(LOG_LEVEL_INFO, log);
+        }
+      }
+    }
+  }
+  String error = C018_data.getLastError(); // Clear the error string.
+
+  if (error.indexOf(F("no_free_ch")) != -1) {
+    mustSetDelay = true;
+  }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("C018 : Sent: ");
@@ -823,6 +869,21 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
     log += error;
     addLog(LOG_LEVEL_INFO, log);
   }
+
+  if (mustSetDelay) {
+    // Module is still sending, delay for 10x expected air time, which is equivalent of 10% air time duty cycle.
+    // This can be retried a few times, so at most 10 retries like these are needed to get below 1% air time again.
+    // Very likely only 2 - 3 of these delays are needed, as we have 8 channels to send from and messages are likely sent in bursts.
+    C018_DelayHandler->setAdditionalDelay(10 * airtime_ms);
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("LoRaWAN : Unable to send. Delay for ");
+      log += 10 * airtime_ms;
+      log += F(" ms");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  }
+
   return success;
 }
 

@@ -10,6 +10,10 @@ public:
 
   LongTermTimer() {}
 
+  explicit LongTermTimer(bool usenow) : _timer_usec(0ull) {
+    if (usenow) setNow();
+  }
+
   //explicit LongTermTimer(uint64_t start_time) : _timer_usec(start_time) {}
 
   inline bool operator<(const LongTermTimer& rhs) const

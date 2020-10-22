@@ -1,9 +1,9 @@
 #ifndef DATASTRUCTS_TIMINGSTATS_H
 #define DATASTRUCTS_TIMINGSTATS_H
 
-#include "ESPEasy_plugin_functions.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #ifdef USES_TIMING_STATS
 
@@ -54,26 +54,33 @@
 # define C018_DELAY_QUEUE        33
 # define C019_DELAY_QUEUE        34
 # define C020_DELAY_QUEUE        35
-# define TRY_CONNECT_HOST_TCP    36
-# define TRY_CONNECT_HOST_UDP    37
-# define HOST_BY_NAME_STATS      38
-# define CONNECT_CLIENT_STATS    39
-# define LOAD_CUSTOM_TASK_STATS  40
-# define WIFI_ISCONNECTED_STATS  41
-# define WIFI_NOTCONNECTED_STATS 42
-# define LOAD_TASK_SETTINGS      43
-# define TRY_OPEN_FILE           44
-# define FS_GC_SUCCESS           45
-# define FS_GC_FAIL              46
-# define PARSE_SYSVAR            47
-# define PARSE_SYSVAR_NOCHANGE   48
-# define PARSE_TEMPLATE_PADDED   49
-# define RULES_PROCESSING        50
-# define GRAT_ARP_STATS          51
-# define BACKGROUND_TASKS        52
-# define HANDLE_SCHEDULER_IDLE   53
-# define HANDLE_SCHEDULER_TASK   54
-# define HANDLE_SERVING_WEBPAGE  55
+# define C021_DELAY_QUEUE        36
+# define C022_DELAY_QUEUE        37
+# define C023_DELAY_QUEUE        38
+# define C024_DELAY_QUEUE        39
+# define C025_DELAY_QUEUE        40
+# define C018_AIR_TIME           41
+# define TRY_CONNECT_HOST_TCP    42
+# define TRY_CONNECT_HOST_UDP    43
+# define HOST_BY_NAME_STATS      44
+# define CONNECT_CLIENT_STATS    45
+# define LOAD_CUSTOM_TASK_STATS  46
+# define WIFI_ISCONNECTED_STATS  47
+# define WIFI_NOTCONNECTED_STATS 48
+# define LOAD_TASK_SETTINGS      49
+# define TRY_OPEN_FILE           50
+# define FS_GC_SUCCESS           51
+# define FS_GC_FAIL              52
+# define PARSE_SYSVAR            53
+# define PARSE_SYSVAR_NOCHANGE   54
+# define PARSE_TEMPLATE_PADDED   55
+# define RULES_PROCESSING        56
+# define GRAT_ARP_STATS          57
+# define BACKGROUND_TASKS        58
+# define HANDLE_SCHEDULER_IDLE   59
+# define HANDLE_SCHEDULER_TASK   60
+# define HANDLE_SERVING_WEBPAGE  61
+
 
 class TimingStats {
 public:
@@ -109,7 +116,7 @@ extern std::map<int, TimingStats> controllerStats;
 extern std::map<int, TimingStats> miscStats;
 extern unsigned long timingstats_last_reset;
 
-# define START_TIMER const unsigned statisticsTimerStart(micros());
+# define START_TIMER const unsigned long statisticsTimerStart(micros());
 # define STOP_TIMER_TASK(T, F) \
   if (mustLogFunction(F)) pluginStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart));
 # define STOP_TIMER_CONTROLLER(T, F) \
@@ -118,12 +125,16 @@ extern unsigned long timingstats_last_reset;
 // #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
 # define STOP_TIMER(L) miscStats[L].add(usecPassedSince(statisticsTimerStart));
 
+// Add a timer statistic value in usec.
+# define ADD_TIMER_STAT(L, T) miscStats[L].add(T);
+
 #else // ifdef USES_TIMING_STATS
 
 # define START_TIMER
 # define STOP_TIMER_TASK(T, F) ;
 # define STOP_TIMER_CONTROLLER(T, F) ;
 # define STOP_TIMER(L) ;
+# define ADD_TIMER_STAT(L, T) ;
 
 
 // FIXME TD-er: This class is used as a parameter in functions defined in .ino files.

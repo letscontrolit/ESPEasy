@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P085
 
 // #######################################################################################################
@@ -56,7 +57,6 @@
 #define P085_MEASUREMENT_INTERVAL 60000L
 
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
 #include "src/Helpers/Modbus_RTU.h"
 
 struct P085_data_struct : public PluginTaskData_base {
@@ -360,6 +360,31 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       }
       break;
     }
+#ifdef USES_PACKED_RAW_DATA
+    case PLUGIN_GET_PACKED_RAW_DATA:
+    {
+      P085_data_struct *P085_data =
+        static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P085_data) && P085_data->isInitialized()) {
+        // Matching JS code:
+        // return decode(bytes, [header, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4],
+        //   ['header', 'unit1', 'val_1', 'unit2', 'val_2', 'unit3', 'val_3', 'unit4', 'val_4']);
+        for (byte i = 0; i < VARS_PER_TASK; ++i) {
+          const byte pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+          const byte choice       = PCONFIG(pconfigIndex);
+          string += LoRa_addInt(choice, PackedData_uint8);
+          string += LoRa_addFloat(UserVar[event->BaseVarIndex + i], PackedData_int32_1e4);
+        }
+        event->Par1 = 8; // valuecount 
+        
+        success = true;
+      }
+      break;
+    }
+#endif // USES_PACKED_RAW_DATA
+
+
   }
   return success;
 }

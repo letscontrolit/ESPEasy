@@ -1,8 +1,12 @@
 #ifndef DLBus_H
 #define DLBus_H
 
-#include <Arduino.h>
 #include "../../_Plugin_Helper.h"
+
+#ifdef USES_P092
+
+#include <Arduino.h>
+
 
 /*********************************************************************************************\
    DLBus subs to get values from the receiving bitstream
@@ -42,6 +46,8 @@ public:
   uint8_t DeviceBytes[2] = { 0 };
   uint8_t ByteStream[DLbus_MaxDataBits / 8 + 1]; // every bit gets sorted into a bitmap
   boolean IsLogLevelInfo = false;
+  boolean IsNoData = false;
+  boolean IsISRset = false; // ISR set flag
   uint8_t LogLevelInfo   = 0xff;
   uint8_t LogLevelError  = 0xFF;
   void    attachDLBusInterrupt(void);
@@ -71,4 +77,5 @@ private:
   void        AddToErrorLog(const String& string);
 };
 
-#endif // ifndef DLBus_H
+#endif
+#endif

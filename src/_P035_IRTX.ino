@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P035
 //#######################################################################################################
 //#################################### Plugin 035: Output IR ############################################
@@ -27,7 +28,7 @@
 //                                                 - "wide"
 // "on" - "off" parameters are:
 // - "power" - "celsius" - "quiet" - "turbo" - "econo" - "light" - "filter" - "clean" - "light" - "beep"
-// If celcius is set to "off" then farenheit will be used
+// If Celsius is set to "off" then farenheit will be used
 // - "sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
 // - "clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
 // - "model" . Nr or string representation of the model. Better to find it throught P016 - IR RX (0 means default.)
@@ -36,8 +37,6 @@
 #include <IRac.h>
 #include <IRutils.h>
 #include <IRsend.h>
-
-#include "_Plugin_Helper.h"
 
 #ifdef P016_P035_Extended_AC
 #include <IRac.h>

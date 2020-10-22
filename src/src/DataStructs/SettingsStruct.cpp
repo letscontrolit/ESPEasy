@@ -2,7 +2,7 @@
 
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../../ESPEasy_common.h"
 

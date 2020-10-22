@@ -2,9 +2,10 @@
 
 #include <ArduinoOTA.h>
 
-#include "../../ESPEasyWifi.h"
-#include "../../ESPEasyNetwork.h"
 #include "../../ESPEasy_common.h"
+
+#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/Settings.h"
 

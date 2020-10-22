@@ -3,7 +3,14 @@
 
 #include <map>
 #include <vector>
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
+
+#include "../DataTypes/PluginID.h"
+#include "../DataTypes/DeviceIndex.h"
+#include "../DataTypes/TaskIndex.h"
+
+#include "../../ESPEasy_common.h"
 
 
 /********************************************************************************************\
@@ -35,17 +42,6 @@
  \*********************************************************************************************/
 
 
-typedef byte     deviceIndex_t;
-typedef byte     taskIndex_t;
-typedef uint8_t  pluginID_t;
-typedef uint16_t userVarIndex_t;
-typedef uint16_t taskVarIndex_t;
-
-extern deviceIndex_t  INVALID_DEVICE_INDEX;
-extern taskIndex_t    INVALID_TASK_INDEX;
-extern pluginID_t     INVALID_PLUGIN_ID;
-extern userVarIndex_t INVALID_USERVAR_INDEX;
-extern taskVarIndex_t INVALID_TASKVAR_INDEX;
 
 
 /*********************************************************************************************\

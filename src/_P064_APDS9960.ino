@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P064
 
 // #######################################################################################################
@@ -49,7 +50,6 @@
 #define P064_IS_RGB_SENSOR        (P064_MODE == PLUGIN_MODE_RGB_064)
 
 
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P064_data_struct.h"
 
