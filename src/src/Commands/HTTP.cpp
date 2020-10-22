@@ -1,18 +1,20 @@
 #include "../Commands/HTTP.h"
 
-#include "../../ESPEasy_Log.h"
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../_CPlugin_Helper.h"
 
 #include "../Commands/Common.h"
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/SettingsStruct.h"
 
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+
 #include "../Globals/Settings.h"
 
+#include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringParser.h"
 
 

@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P070
 //#######################################################################################################
 //#################################### Plugin 070: NeoPixel ring clock #######################################
@@ -14,7 +15,7 @@
 
 
 #include <Adafruit_NeoPixel.h>
-#include "_Plugin_Helper.h"
+
 
 #define NUMBER_LEDS      60			//number of LED in the strip
 

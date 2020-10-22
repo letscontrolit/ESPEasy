@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P066
 
 // #######################################################################################################
@@ -21,9 +22,7 @@
 
 #define VEML6040_ADDR 0x10
 
-// #include <*.h>   // no include needed
-#include <math.h> // no include needed
-#include "_Plugin_Helper.h"
+#include <math.h> 
 
 boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 {

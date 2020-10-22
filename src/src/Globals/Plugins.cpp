@@ -1,11 +1,13 @@
 #include "Plugins.h"
 
-#include "../../ESPEasy_Log.h"
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
 #include "../DataStructs/TimingStats.h"
+
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasy_Scheduler.h"
@@ -21,14 +23,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
-#define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 
-
-deviceIndex_t  INVALID_DEVICE_INDEX  = PLUGIN_MAX;
-taskIndex_t    INVALID_TASK_INDEX    = TASKS_MAX;
-pluginID_t     INVALID_PLUGIN_ID     = 0;
-userVarIndex_t INVALID_USERVAR_INDEX = USERVAR_MAX_INDEX;
-taskVarIndex_t INVALID_TASKVAR_INDEX = VARS_PER_TASK;
 
 std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
 std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;
@@ -442,13 +437,15 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
         }
       }
 
-      // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
-      for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
-        if (validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
-          if (Plugin_ptr[deviceIndex](Function, event, str)) {
-            delay(0); // SMY: call delay(0) unconditionally
-            CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, event, str);
-            return true;
+      if (Function == PLUGIN_REQUEST) {
+        // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
+        for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
+          if (validPluginID(DeviceIndex_to_Plugin_id[deviceIndex])) {
+            if (Plugin_ptr[deviceIndex](Function, event, str)) {
+              delay(0); // SMY: call delay(0) unconditionally
+              CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, event, str);
+              return true;
+            }
           }
         }
       }

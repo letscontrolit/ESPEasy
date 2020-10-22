@@ -5,6 +5,7 @@
 #include "../../ESPEasy_common.h"
 
 #include "../Globals/CPlugins.h"
+#include "../Helpers/Scheduler.h"
 
 /*********************************************************************************************\
  * Tasks that run 50 times per second
@@ -52,7 +53,7 @@ void updateLoopStats_30sec(byte loglevel);
 /********************************************************************************************\
    Clean up all before going to sleep or reboot.
  \*********************************************************************************************/
-void prepareShutdown();
+void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason);
 
 
 

@@ -1,7 +1,8 @@
 #include "P069_data_struct.h"
 
-
 #ifdef USES_P069
+
+#include "../Globals/I2Cdev.h"
 
 
 # define LM75A_BASE_ADDRESS        0x48
