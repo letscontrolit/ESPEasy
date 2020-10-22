@@ -16,6 +16,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/CompiletimeDefines.h"
+#include "../Helpers/ESPEasy_Build_Description.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
@@ -108,6 +109,7 @@ String getLabel(LabelType::Enum label) {
     case LabelType::BUILD_TIME:             return F("Build Time");
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
     case LabelType::BUILD_PLATFORM:         return F("Build Platform");
+    case LabelType::BUILD_DESCRIPTION:      return F("Build Description");
     case LabelType::GIT_HEAD:               return F("Git HEAD");
 
     case LabelType::SYSLOG_LOG_LEVEL:       return F("Syslog Log Level");
@@ -248,6 +250,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::BUILD_TIME:             return get_build_date() + " " + get_build_time();
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::BUILD_PLATFORM:         return get_build_platform();
+    case LabelType::BUILD_DESCRIPTION:      return CreateBuildDescription(':');
     case LabelType::GIT_HEAD:               return get_git_head();
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
     case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
