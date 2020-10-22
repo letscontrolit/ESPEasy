@@ -79,7 +79,7 @@ void handle_dumpcache() {
       html.reserve(12);
       html += ';';
 
-      if (csv_values[i] == 0.0f) {
+      if (essentiallyEqual(csv_values[i], 0.0f)) {
         html += '0';
       } else {
         html += String(csv_values[i], 6);
