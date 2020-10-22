@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "../../ESPEasy_common.h"
+
 #define HTML_SYMBOL_WARNING "&#9888;"
 #define HTML_SYMBOL_INPUT   "&#8656;"
 #define HTML_SYMBOL_OUTPUT  "&#8658;"

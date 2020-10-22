@@ -1,6 +1,6 @@
 #include "GpioFactorySettingsStruct.h"
 
-#include "../DataStructs/ESPEasyDefaults.h"
+#include "../CustomBuild/ESPEasyDefaults.h"
 
 GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
   :

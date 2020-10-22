@@ -4,18 +4,33 @@
 #include <Arduino.h>
 
 #include "ESPEasy_common.h"
-#include "ESPEasy_Log.h"
-#include "ESPEasy_fdwdecl.h"
+
+#include "src/CustomBuild/ESPEasyLimits.h"
+
 #include "src/DataStructs/DeviceStruct.h"
-#include "src/DataStructs/ESPEasyLimits.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/DataStructs/ESPEasy_plugin_functions.h"
+
+#include "src/DataTypes/ESPEasy_plugin_functions.h"
+
+#include "src/ESPEasyCore/Controller.h"
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+
 #include "src/Globals/Device.h"
-#include "src/Globals/ExtraTaskSettings.h"
-#include "src/Globals/Plugins.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Globals/ExtraTaskSettings.h"
+#include "src/Globals/I2Cdev.h"
+#include "src/Globals/Plugins.h"
+#include "src/Globals/Settings.h"
+
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
+#include "src/Helpers/StringGenerator_GPIO.h"
+#include "src/Helpers/_CPlugin_SensorTypeHelper.h"
+#include "src/Helpers/_Plugin_Helper_serial.h"
+
+#include "src/WebServer/HTML_wrappers.h"
+#include "src/WebServer/Markup.h"
+#include "src/WebServer/Markup_Forms.h"
 
 // Defines to make plugins more readable.
 

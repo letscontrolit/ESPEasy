@@ -1,9 +1,11 @@
 #include "../Commands/Settings.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
 
 #include "../Commands/Common.h"
+
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
@@ -92,6 +94,6 @@ String Command_Settings_Print(struct EventStruct *event, const char* Line)
 String Command_Settings_Reset(struct EventStruct *event, const char* Line)
 {
 	ResetFactory();
-	reboot();
+	reboot(ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryCommand);
 	return return_command_success();
 }

@@ -4,6 +4,8 @@
 #include <ctype.h>
 #include <Arduino.h>
 
+#include "../../ESPEasy_common.h"
+
 class IPAddress;
 
 String return_command_success();

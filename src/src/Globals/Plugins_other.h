@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 
 // This is used to define callbacks to external plugins for various purposes.
 // See https://github.com/letscontrolit/ESPEasy/issues/2888

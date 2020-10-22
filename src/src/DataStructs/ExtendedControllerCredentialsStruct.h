@@ -2,7 +2,7 @@
 #define DATASTRUCTS_EXTENDED_SECURITYSTRUCT_H
 
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../Globals/CPlugins.h"
 
 

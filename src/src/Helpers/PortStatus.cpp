@@ -1,9 +1,9 @@
 #include "PortStatus.h"
 
-
-#include "../../ESPEasy-Globals.h"
 #include "../DataStructs/PinMode.h"
 #include "../Globals/GlobalMapPortStatus.h"
+
+#include "../../ESPEasy-Globals.h"
 
 
 /**********************************************************

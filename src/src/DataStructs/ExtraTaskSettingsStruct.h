@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../Globals/Plugins.h"
 
 // This is only used by some plugins to store extra settings like formula descriptions.
