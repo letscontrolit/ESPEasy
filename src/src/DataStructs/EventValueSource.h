@@ -40,6 +40,7 @@ struct EventValueSource {
         return true;
       case EventValueSource::Enum::VALUE_SOURCE_HTTP:
       case EventValueSource::Enum::VALUE_SOURCE_MQTT:
+      case EventValueSource::Enum::VALUE_SOURCE_ESPEASY_NOW:
         return group == EventValueSourceGroup::Enum::ALL;
     }
     return false;
