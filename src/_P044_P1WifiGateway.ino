@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P044
 //#################################### Plugin 044: P1WifiGateway ########################################
 //
@@ -9,7 +10,8 @@
 //    See also http://domoticx.com/p1-poort-slimme-meter-hardware/
 //#######################################################################################################
 
-#include "_Plugin_Helper.h"
+
+#include "src/Helpers/_Plugin_Helper_serial.h"
 #include "src/PluginStructs/P044_data_struct.h"
 #include <ESPeasySerial.h>
 

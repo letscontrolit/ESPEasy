@@ -2,9 +2,9 @@
 #define PLUGINSTRUCTS_P012_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-
 #ifdef USES_P012
+
+#include "../../ESPEasy_common.h"
 
 # include <LiquidCrystal_I2C.h>
 

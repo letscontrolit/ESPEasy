@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P045
 
 // #######################################################################################################
@@ -62,7 +63,6 @@
 // https://github.com/letscontrolit/ESPEasy/commit/af20984079d3e7aa59e08fd9b232f6d17ba3b523#diff-ec860ac195fffa61ec11dd419fefa5b9
 // https://github.com/letscontrolit/ESPEasy/commit/6400c495e24f39ebac88eb634f29cfb73137fa2b#diff-ec860ac195fffa61ec11dd419fefa5b9
 
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P045_data_struct.h"
 

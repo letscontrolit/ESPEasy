@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../Globals/Plugins.h"
 
 // These structs are sent to other nodes, so make sure not to change order or offset in struct.

@@ -3,10 +3,11 @@
 
 #include <map>
 #include <vector>
-#include "../DataStructs/ESPEasyLimits.h"
-#include "../DataStructs/ESPEasy_plugin_functions.h"
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/NotificationStruct.h"
+#include "../DataStructs/NotificationSettingsStruct.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 
-struct NotificationStruct;
 
 typedef byte    nprotocolIndex_t;
 typedef byte    notifierIndex_t;

@@ -1,6 +1,6 @@
 #include "ExtendedControllerCredentialsStruct.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include "../Helpers/ESPEasy_Storage.h"
 

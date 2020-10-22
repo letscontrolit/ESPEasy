@@ -1,6 +1,6 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P019
 
-#include "_Plugin_Helper.h"
 #include "src/DataStructs/PinMode.h"
 #include "src/Commands/GPIO.h"
 

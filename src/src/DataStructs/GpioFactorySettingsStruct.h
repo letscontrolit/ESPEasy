@@ -1,9 +1,9 @@
 #ifndef DATASTRUCTS_GPIOFACTORYSETTINGSSTRUCT_H
 #define DATASTRUCTS_GPIOFACTORYSETTINGSSTRUCT_H
 
-#include "../DataStructs/DeviceModel.h"
-#include "../DataStructs/EthernetParameters.h"
-#include "../DataStructs/NetworkMedium.h"
+#include "../DataTypes/DeviceModel.h"
+#include "../DataTypes/EthernetParameters.h"
+#include "../DataTypes/NetworkMedium.h"
 
 
 struct GpioFactorySettingsStruct {

@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P076
 //#######################################################################################################
 //#################### Plugin 076 HLW8012 AC Current and Voltage measurement sensor #####################
@@ -17,7 +18,6 @@
 //
 
 #include <HLW8012.h>
-#include "_Plugin_Helper.h"
 
 HLW8012 *Plugin_076_hlw = NULL;
 

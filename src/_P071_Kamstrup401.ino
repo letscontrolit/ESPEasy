@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P071
 //#######################################################################################################
 //############################# Plugin 071: Kamstrup Multical 401 #######################################
@@ -12,7 +13,7 @@
 
 
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
+
 
 #define PLUGIN_071
 #define PLUGIN_ID_071 71
