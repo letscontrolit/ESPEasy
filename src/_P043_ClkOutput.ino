@@ -1,10 +1,9 @@
-#include "_Plugin_Helper.h"
 #ifdef USES_P043
 //#######################################################################################################
 //#################################### Plugin 043: Clock Output #########################################
 //#######################################################################################################
 
-
+#include "_Plugin_Helper.h"
 
 #define PLUGIN_043
 #define PLUGIN_ID_043         43
@@ -28,7 +27,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 1;
+        Device[deviceCount].ValueCount = 2;
         Device[deviceCount].SendDataOption = true;
         break;
       }
@@ -42,6 +41,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_043));
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], "Temp");
         break;
       }
 
@@ -53,11 +53,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        String options[3];
-        options[0] = "";
-        options[1] = F("Off");
-        options[2] = F("On");
-
+ 
         for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
         	addFormTextBox(String(F("Day,Time ")) + (x + 1), String(F("p043_clock")) + (x), timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]), 32);
@@ -68,10 +64,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 //          addHtml(F("' value='"));
 //          addHtml(timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]));
 //          addHtml("'>");
-
-          addHtml(" ");
-          byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
-          addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice);
+        	  addFormNumericBox(String(F("Temp")) + (x + 1), String(F("p043_state")) + (x), ExtraTaskSettings.TaskDevicePluginConfig[x],-100,100 );
         }
         success = true;
         break;
@@ -114,10 +107,13 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
             byte state = ExtraTaskSettings.TaskDevicePluginConfig[x];
             if (state != 0)
             {
-              state--;
+              //state--;
               pinMode(CONFIG_PIN1, OUTPUT);
-              digitalWrite(CONFIG_PIN1, state);
-              UserVar[event->BaseVarIndex] = state;
+              byte state_relais = state -1;
+              if (state == 2 ) digitalWrite(CONFIG_PIN1, state_relais); 
+              if (state == 1)  digitalWrite(CONFIG_PIN1, state_relais);
+              UserVar[event->BaseVarIndex] = x+1;
+              UserVar[event->BaseVarIndex+1] = state;
               String log = F("TCLK : State ");
               log += state;
               addLog(LOG_LEVEL_INFO, log);
