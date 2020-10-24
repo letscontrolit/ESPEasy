@@ -108,9 +108,9 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
           if (matchClockEvent(clockEvent,clockSet))
           {
             byte state = ExtraTaskSettings.TaskDevicePluginConfig[x];
-            if (state != 0) // if GPIO is specified, use the old behavior
+            if (state != 0) 
             {
-              if (CONFIG_PIN1 >= 0) {
+              if (CONFIG_PIN1 >= 0) { // if GPIO is specified, use the old behavior
                 state--;
                 pinMode(CONFIG_PIN1, OUTPUT);
                 digitalWrite(CONFIG_PIN1, state);
