@@ -108,7 +108,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
           if (matchClockEvent(clockEvent,clockSet))
           {
             byte state = ExtraTaskSettings.TaskDevicePluginConfig[x];
-            if (state != 0)
+            if (state != 0) // if GPIO is specified, use the old behavior
             {
               if (CONFIG_PIN1 >= 0) {
                 state--;
