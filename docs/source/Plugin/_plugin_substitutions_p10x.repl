@@ -10,3 +10,16 @@
 .. |P100_maintainer| replace:: `TD-er`
 .. |P100_compileinfo| replace:: `.`
 .. |P100_usedlibraries| replace:: `.`
+
+.. |P101_name| replace:: :cyan:`Wake On LAN`
+.. |P101_type| replace:: :cyan:`Communication`
+.. |P101_typename| replace:: :cyan:`Communication - Wake On LAN`
+.. |P101_porttype| replace:: `.`
+.. |P101_status| replace:: :yellow:`TESTING`
+.. |P101_github| replace:: P101_WakeOnLan.ino
+.. _P101_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P101_WakeOnLan.ino
+.. |P101_usedby| replace:: `.`
+.. |P101_shortinfo| replace:: Wake On LAN (WOL). Plugin can send a Magic Packet to wake-up device on local network.
+.. |P101_maintainer| replace:: thomastech
+.. |P101_compileinfo| replace:: `.`
+.. |P101_usedlibraries| replace::  https://github.com/a7md0/WakeOnLan
