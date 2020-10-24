@@ -861,7 +861,7 @@ To create/register a plugin, you have to :
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Ping
-    #define USES_P090   // CCS811 TVOC/eCO2 Sensor
+    //#define USES_P090   // CCS811 TVOC/eCO2 Sensor
     #define USES_P091	// SerSwitch
     #define USES_P092   // DL-Bus
     #define USES_P093   // Mitsubishi Heat Pump
@@ -869,7 +869,7 @@ To create/register a plugin, you have to :
     //#define USES_P095  // TFT ILI9341
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
-    //#define USES_P099   // XPT2046 Touchscreen
+    #define USES_P099   // XPT2046 Touchscreen
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
 #endif
