@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P097
 
 // #######################################################################################################
@@ -13,7 +14,6 @@
 # define PLUGIN_NAME_097       "Touch (ESP32) - internal"
 # define PLUGIN_VALUENAME1_097 "Touch"
 
-# include "_Plugin_Helper.h"
 
 # ifdef ESP32
   #  define P097_MAX_ADC_VALUE    4095

@@ -2,7 +2,7 @@
 #define DATASTRUCTS_SECURITYSTRUCT_H
 
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 
 /*********************************************************************************************\
  * SecurityStruct

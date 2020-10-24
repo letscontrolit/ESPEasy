@@ -1,10 +1,16 @@
 #include "Controller.h"
 
-#include "../../ESPEasy-Globals.h"
+
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include "../Commands/Common.h"
+
+#include "../DataStructs/ESPEasy_EventStruct.h"
+
+#include "../DataTypes/ControllerIndex.h"
+
+#include "../Globals/CPlugins.h"
 
 #include "../Helpers/Misc.h"
 

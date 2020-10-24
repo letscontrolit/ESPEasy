@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P065
 //#######################################################################################################
 //############################# Plugin 065: P065_DFR0299_MP3 ############################################
@@ -34,7 +35,7 @@
 #define PLUGIN_VALUENAME1_065 ""
 
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
+
 
 
 ESPeasySerial* P065_easySerial = NULL;

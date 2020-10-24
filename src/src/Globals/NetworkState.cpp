@@ -1,5 +1,7 @@
 #include "NetworkState.h"
 
+#include "../../ESPEasy_common.h"
+
 // Ethernet Connectiopn status
 NetworkMedium_t active_network_medium = DEFAULT_NETWORK_MEDIUM;
 bool eth_connected = false;

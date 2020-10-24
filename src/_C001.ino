@@ -1,5 +1,8 @@
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C001
+
+#include "src/Helpers/_CPlugin_DomoticzHelper.h"
+
 //#######################################################################################################
 //########################### Controller Plugin 001: Domoticz HTTP ######################################
 //#######################################################################################################
@@ -7,6 +10,7 @@
 #define CPLUGIN_001
 #define CPLUGIN_ID_001         1
 #define CPLUGIN_NAME_001       "Domoticz HTTP"
+
 
 
 bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& string)
