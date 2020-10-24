@@ -10,6 +10,7 @@
 #define PLUGIN_ID_043         43
 #define PLUGIN_NAME_043       "Output - Clock"
 #define PLUGIN_VALUENAME1_043 "Output"
+#define PLUGIN_VALUENAME2_043 "Output2"
 #define PLUGIN_043_MAX_SETTINGS 8
 
 boolean Plugin_043(byte function, struct EventStruct *event, String& string)
@@ -42,7 +43,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_043));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], "Output2");
+        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_043));
         break;
       }
 
