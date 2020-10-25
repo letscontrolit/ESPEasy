@@ -1,35 +1,31 @@
 #include "ESPEasyWifi_ProcessEvent.h"
 
-#include "ESPEasyWiFiEvent.h"
-#include "ESPEasyWiFi_credentials.h"
-#include "ESPEasy-Globals.h"
-#include "src/ESPEasyCore/ESPEasy_Log.h"
-#include "src/ESPEasyCore/ESPEasyNetwork.h"
-#include "src/ESPEasyCore/ESPEasyWifi.h"
-#include "src/Globals/ESPEasyWiFiEvent.h"
-#include "src/Globals/ESPEasy_Scheduler.h"
-#include "src/Globals/ESPEasy_time.h"
-#include "src/Globals/EventQueue.h"
-#include "src/Globals/MQTT.h"
-#include "src/Globals/NetworkState.h"
-#include "src/Globals/RTC.h"
-#include "src/Globals/Settings.h"
-#include "src/Helpers/ESPEasyRTC.h"
-#include "src/Helpers/ESPEasy_Storage.h"
-#include "src/Helpers/ESPEasy_time_calc.h"
-#include "src/Helpers/Misc.h"
-#include "src/Helpers/Network.h"
-#include "src/Helpers/Networking.h"
-#include "src/Helpers/Scheduler.h"
-#include "src/Helpers/StringConverter.h"
+#include "../../ESPEasy-Globals.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyWiFiEvent.h"
+#include "../ESPEasyCore/ESPEasyWiFi_credentials.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ESPEasy_time.h"
+#include "../Globals/EventQueue.h"
+#include "../Globals/MQTT.h"
+#include "../Globals/NetworkState.h"
+#include "../Globals/RTC.h"
+#include "../Globals/Settings.h"
+#include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/Network.h"
+#include "../Helpers/Networking.h"
+#include "../Helpers/Scheduler.h"
+#include "../Helpers/StringConverter.h"
 
 
 bool unprocessedWifiEvents() {
-  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
-  {
-    return false;
-  }
-  return true;
+  return WiFiEventData.unprocessedWifiEvents();
 }
 
 // ********************************************************************************
@@ -38,8 +34,8 @@ bool unprocessedWifiEvents() {
 // ********************************************************************************
 void handle_unprocessedWiFiEvents()
 {
-  if ((!bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) || unprocessedWifiEvents()) {
-    if (WiFi.status() == WL_DISCONNECTED && wifiConnectInProgress) {
+  if ((!bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) || unprocessedWifiEvents()) {
+    if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
       delay(10);
     }
 
@@ -47,58 +43,58 @@ void handle_unprocessedWiFiEvents()
     // help the background tasks managing wifi connections
     delay(1);
 
-    if (wifiConnectAttemptNeeded) {
+    if (WiFiEventData.wifiConnectAttemptNeeded) {
       NetworkConnectRelaxed();
     }
 
     // Process disconnect events before connect events.
-    if (!processedDisconnect) {
+    if (!WiFiEventData.processedDisconnect) {
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
       #endif // ifndef BUILD_NO_DEBUG
       processDisconnect();
     }
 
-    if (!processedConnect) {
+    if (!WiFiEventData.processedConnect) {
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processConnect()"));
       #endif // ifndef BUILD_NO_DEBUG
       processConnect();
     }
 
-    if (!processedGotIP) {
+    if (!WiFiEventData.processedGotIP) {
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processGotIP()"));
       #endif // ifndef BUILD_NO_DEBUG
       processGotIP();
     }
 
-    if (!processedDHCPTimeout) {
+    if (!WiFiEventData.processedDHCPTimeout) {
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect()"));
       #endif // ifndef BUILD_NO_DEBUG
-      processedDHCPTimeout = true;
+      WiFiEventData.processedDHCPTimeout = true;
       WifiDisconnect();
     }
   }
-  const bool wifi_should_be_initialized = (bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP) && bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED)) || NetworkConnected();
-  if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED) != wifi_should_be_initialized)
+  const bool wifi_should_be_initialized = (bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_GOT_IP) && bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_CONNECTED)) || NetworkConnected();
+  if (bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED) != wifi_should_be_initialized)
   {
-    if (!bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
+    if (!bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
       markWiFi_services_initialized();
     }
   }
 
-  if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
+  if (WiFiEventData.wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
     #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       static LongTermTimer lastDisconnectMoment_log;
       static uint8_t lastWiFiStatus_log = 0;
       uint8_t cur_wifi_status = WiFi.status();
-      if (lastDisconnectMoment.get() != lastDisconnectMoment_log.get() || 
+      if (WiFiEventData.lastDisconnectMoment.get() != lastDisconnectMoment_log.get() || 
           lastWiFiStatus_log != cur_wifi_status) {
-        lastDisconnectMoment_log.set(lastDisconnectMoment.get());
+        lastDisconnectMoment_log.set(WiFiEventData.lastDisconnectMoment.get());
         lastWiFiStatus_log = cur_wifi_status;
         String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
         wifilog += ESPeasyWifiStatusToString();
@@ -121,21 +117,21 @@ void handle_unprocessedWiFiEvents()
     delay(10);
   }
 
-  if (!processedDisconnectAPmode) { processDisconnectAPmode(); }
+  if (!WiFiEventData.processedDisconnectAPmode) { processDisconnectAPmode(); }
 
-  if (!processedConnectAPmode) { processConnectAPmode(); }
+  if (!WiFiEventData.processedConnectAPmode) { processConnectAPmode(); }
 
-  if (timerAPoff.isSet()) { processDisableAPmode(); }
+  if (WiFiEventData.timerAPoff.isSet()) { processDisableAPmode(); }
 
-  if (!processedScanDone) { processScanDone(); }
+  if (!WiFiEventData.processedScanDone) { processScanDone(); }
 
-  if (wifi_connect_attempt > 0) {
+  if (WiFiEventData.wifi_connect_attempt > 0) {
     // We only want to clear this counter if the connection is currently stable.
-    if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
-      if (lastConnectMoment.isSet() && lastConnectMoment.timeoutReached(WIFI_CONNECTION_CONSIDERED_STABLE)) {
+    if (bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
+      if (WiFiEventData.lastConnectMoment.isSet() && WiFiEventData.lastConnectMoment.timeoutReached(WIFI_CONNECTION_CONSIDERED_STABLE)) {
         // Connection considered stable
-        wifi_connect_attempt = 0;
-        wifi_considered_stable = true;
+        WiFiEventData.wifi_connect_attempt = 0;
+        WiFiEventData.wifi_considered_stable = true;
 
         if (!WiFi.getAutoConnect()) {
           WiFi.setAutoConnect(true);
@@ -155,9 +151,9 @@ void handle_unprocessedWiFiEvents()
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
 void processDisconnect() {
-  if (processedDisconnect) { return; }
-  processedDisconnect = true;
-  wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
+  if (WiFiEventData.processedDisconnect) { return; }
+  WiFiEventData.processedDisconnect = true;
+  WiFiEventData.wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
@@ -169,9 +165,9 @@ void processDisconnect() {
     log += getLastDisconnectReason();
     log += '\'';
 
-    if (lastConnectedDuration_us > 0) {
+    if (WiFiEventData.lastConnectedDuration_us > 0) {
       log += F(" Connected for ");
-      log += format_msec_duration(lastConnectedDuration_us / 1000ll);
+      log += format_msec_duration(WiFiEventData.lastConnectedDuration_us / 1000ll);
     } else {
       log += F(" Connected for a long time...");
     }
@@ -186,18 +182,18 @@ void processDisconnect() {
 }
 
 void processConnect() {
-  if (processedConnect) { return; }
+  if (WiFiEventData.processedConnect) { return; }
   //delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
   if (checkAndResetWiFi()) {
     return;
   }
-  processedConnect = true;
+  WiFiEventData.processedConnect = true;
 
-  bitSet(wifiStatus, ESPEASY_WIFI_CONNECTED);
-  ++wifi_reconnects;
+  bitSet(WiFiEventData.wifiStatus, ESPEASY_WIFI_CONNECTED);
+  ++WiFiEventData.wifi_reconnects;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    const LongTermTimer::Duration connect_duration = last_wifi_connect_attempt_moment.timeDiff(lastConnectMoment);
+    const LongTermTimer::Duration connect_duration = WiFiEventData.last_wifi_connect_attempt_moment.timeDiff(WiFiEventData.lastConnectMoment);
     String     log              = F("WIFI : Connected! AP: ");
     log += WiFi.SSID();
     log += " (";
@@ -215,11 +211,11 @@ void processConnect() {
   }
 
   if (Settings.UseRules) {
-    if (bssid_changed) {
+    if (WiFiEventData.bssid_changed) {
       eventQueue.add(F("WiFi#ChangedAccesspoint"));
     }
 
-    if (channel_changed) {
+    if (WiFiEventData.channel_changed) {
       eventQueue.add(F("WiFi#ChangedWiFichannel"));
     }
   } 
@@ -233,7 +229,7 @@ void processConnect() {
 }
 
 void processGotIP() {
-  if (processedGotIP) {
+  if (WiFiEventData.processedGotIP) {
     return;
   }
   if (checkAndResetWiFi()) {
@@ -249,7 +245,7 @@ void processGotIP() {
   }
   const IPAddress gw       = NetworkGatewayIP();
   const IPAddress subnet   = NetworkSubnetMask();
-  const LongTermTimer::Duration dhcp_duration = lastConnectMoment.timeDiff(lastGetIPmoment);
+  const LongTermTimer::Duration dhcp_duration = WiFiEventData.lastConnectMoment.timeDiff(WiFiEventData.lastGetIPmoment);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : ");
@@ -310,28 +306,28 @@ void processGotIP() {
 
   //  WiFi.scanDelete();
 
-  if (wifiSetup) {
+  if (WiFiEventData.wifiSetup) {
     // Wifi setup was active, Apparently these settings work.
-    wifiSetup = false;
+    WiFiEventData.wifiSetup = false;
     SaveSettings();
   }
   logConnectionStatus();
 
-  if ((bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED) || WiFi.isConnected()) && hasIPaddr()) {
-    processedGotIP = true;
-    bitSet(wifiStatus, ESPEASY_WIFI_GOT_IP);
+  if ((bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_CONNECTED) || WiFi.isConnected()) && hasIPaddr()) {
+    WiFiEventData.processedGotIP = true;
+    bitSet(WiFiEventData.wifiStatus, ESPEASY_WIFI_GOT_IP);
   }
 }
 
 // A client disconnected from the AP on this node.
 void processDisconnectAPmode() {
-  if (processedDisconnectAPmode) { return; }
-  processedDisconnectAPmode = true;
+  if (WiFiEventData.processedDisconnectAPmode) { return; }
+  WiFiEventData.processedDisconnectAPmode = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const int nrStationsConnected = WiFi.softAPgetStationNum();
     String    log                 = F("AP Mode: Client disconnected: ");
-    log += formatMAC(lastMacDisconnectedAPmode);
+    log += formatMAC(WiFiEventData.lastMacDisconnectedAPmode);
     log += F(" Connected devices: ");
     log += nrStationsConnected;
     addLog(LOG_LEVEL_INFO, log);
@@ -340,14 +336,14 @@ void processDisconnectAPmode() {
 
 // Client connects to AP on this node
 void processConnectAPmode() {
-  if (processedConnectAPmode) { return; }
-  processedConnectAPmode = true;
+  if (WiFiEventData.processedConnectAPmode) { return; }
+  WiFiEventData.processedConnectAPmode = true;
   // Extend timer to switch off AP.
-  timerAPoff.setNow();
+  WiFiEventData.timerAPoff.setNow();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
-    log += formatMAC(lastMacConnectedAPmode);
+    log += formatMAC(WiFiEventData.lastMacConnectedAPmode);
     log += F(" Connected devices: ");
     log += WiFi.softAPgetStationNum();
     addLog(LOG_LEVEL_INFO, log);
@@ -364,41 +360,41 @@ void processConnectAPmode() {
 
 // Switch of AP mode when timeout reached and no client connected anymore.
 void processDisableAPmode() {
-  if (!timerAPoff.isSet()) { return; }
+  if (!WiFiEventData.timerAPoff.isSet()) { return; }
 
   if (WifiIsAP(WiFi.getMode())) {
     // disable AP after timeout and no clients connected.
-    if (timerAPoff.timeoutReached(WIFI_AP_OFF_TIMER_DURATION) && (WiFi.softAPgetStationNum() == 0)) {
+    if (WiFiEventData.timerAPoff.timeoutReached(WIFI_AP_OFF_TIMER_DURATION) && (WiFi.softAPgetStationNum() == 0)) {
       setAP(false);
     }
   }
 
   if (!WifiIsAP(WiFi.getMode())) {
-    timerAPoff.clear();
+    WiFiEventData.timerAPoff.clear();
   }
 }
 
 void processScanDone() {
-  if (processedScanDone) { return; }
+  if (WiFiEventData.processedScanDone) { return; }
 
   // Better act on the scan done event, as it may get triggered for normal wifi begin calls.
   int8_t scanCompleteStatus = WiFi.scanComplete();
   switch (scanCompleteStatus) {
     case 0: // Nothing (yet) found
-      if (lastGetScanMoment.timeoutReached(5000)) {
-        processedScanDone = true;
+      if (WiFiEventData.lastGetScanMoment.timeoutReached(5000)) {
+        WiFiEventData.processedScanDone = true;
       }
       return;
     case -1: // WIFI_SCAN_RUNNING
       return;
     case -2: // WIFI_SCAN_FAILED
       addLog(LOG_LEVEL_ERROR, F("WiFi  : Scan failed"));
-      processedScanDone = true;
+      WiFiEventData.processedScanDone = true;
       return;
   }
 
-  lastGetScanMoment.setNow();
-  processedScanDone = true;
+  WiFiEventData.lastGetScanMoment.setNow();
+  WiFiEventData.processedScanDone = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI  : Scan finished, found: ");
@@ -459,34 +455,34 @@ void processScanDone() {
 void markWiFi_services_initialized() {
   // Check to see if the WiFi status may be out of sync.
   bool missedEvent = false;
-  if (WiFi.isConnected() != bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
+  if (WiFi.isConnected() != bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
     // Apparently we may have missed some WiFi events.
     if (WiFi.isConnected()) {
-      if (bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED) == 0) {
+      if (bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_CONNECTED) == 0) {
         #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Connected' event"));
         #endif
-        processedConnect = false;
+        WiFiEventData.processedConnect = false;
         missedEvent = true;
       }
     } else {
-      if (bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED)) {
+      if (bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_CONNECTED)) {
         #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Disconnected' event"));
         #endif
-        processedDisconnect = false;
+        WiFiEventData.processedDisconnect = false;
         missedEvent = true;
       }
     }
   }
   bool hasIP = hasIPaddr();
-  if (hasIP != bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP)) {
+  if (hasIP != bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_GOT_IP)) {
     // Apparently we did miss some WiFi events.
     if (hasIP) {
       #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Got IP' event"));
       #endif
-      processedGotIP = false;
+      WiFiEventData.processedGotIP = false;
       missedEvent = true;
     } else {
       // FIXME TD-er: What to do here, as we don't get events when loosing IP address
@@ -502,11 +498,11 @@ void markWiFi_services_initialized() {
       return;
     }
   }
-  processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
+  WiFiEventData.processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
   if (!unprocessedWifiEvents()) {
     addLog(LOG_LEVEL_DEBUG, F("WiFi : WiFi services initialized"));
-    bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
-    wifiConnectInProgress = false;
+    bitSet(WiFiEventData.wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
+    WiFiEventData.wifiConnectInProgress = false;
   }
 }
 

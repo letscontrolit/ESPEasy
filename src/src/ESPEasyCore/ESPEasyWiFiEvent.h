@@ -1,7 +1,7 @@
 #ifndef ESPEASY_WIFI_EVENT_H
 #define ESPEASY_WIFI_EVENT_H
 
-#include "ESPEasy_common.h"
+#include "../../ESPEasy_common.h"
 
 #include <IPAddress.h>
 
