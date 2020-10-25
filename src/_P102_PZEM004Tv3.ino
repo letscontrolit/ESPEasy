@@ -53,7 +53,7 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number           = PLUGIN_ID_102;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
@@ -123,12 +123,6 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
 
       if (P102_PZEM_FIRST == event->TaskIndex)                               // If first PZEM, serial config available
       {
-        addFormSubHeader(F("Communication settings"));
-        addHtml(F("<TR><TD>GPIO ← TX:<TD>"));
-        addPinSelect(false, F("taskdevicepin1"), CONFIG_PIN1);
-        addHtml(F("<TR><TD>GPIO → RX:<TD>"));
-        addPinSelect(false, F("taskdevicepin2"), CONFIG_PIN2);
-        serialHelper_webformLoad(event);
         addHtml(F("<br><B>This PZEM is the first. Its configuration of serial Pins will affect next PZEM. </B>"));
         addHtml(F(
                   "<span style=\"color:red\"> <br><B>If several PZEMs foreseen, don't use HW serial (or invert Tx and Rx to configure as SW serial).</B></span>"));
@@ -327,12 +321,12 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
 String p102_getQueryString(byte query) {
   switch (query)
   {
-    case 0: return F("Voltage_(V)");
-    case 1: return F("Current_(A)");
-    case 2: return F("Power_(W)");
-    case 3: return F("Energy_(WH)");
-    case 4: return F("Power_Factor_(cos-phi)");
-    case 5: return F("Frequency (Hz)");
+    case 0: return F("Voltage_V");
+    case 1: return F("Current_A");
+    case 2: return F("Power_W");
+    case 3: return F("Energy_WH");
+    case 4: return F("Power_Factor_cosphi");
+    case 5: return F("Frequency Hz");
   }
   return "";
 }
