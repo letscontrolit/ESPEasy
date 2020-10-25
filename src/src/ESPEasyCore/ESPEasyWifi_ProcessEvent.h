@@ -3,7 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-bool unprocessedWifiEvents();
 void handle_unprocessedWiFiEvents();
 void processDisconnect();
 void processConnect();

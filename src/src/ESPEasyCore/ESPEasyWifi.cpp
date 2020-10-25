@@ -88,7 +88,7 @@
 bool WiFiConnected() {
   START_TIMER;
 
-  if (unprocessedWifiEvents()) { return false; }
+  if (WiFiEventData.unprocessedWifiEvents()) { return false; }
 
   bool wifi_isconnected = false;
   #ifdef ESP8266
@@ -105,7 +105,7 @@ bool WiFiConnected() {
       break;
     case STATION_IDLE:
     case STATION_CONNECTING:
-      wifi_isconnected = bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
+      wifi_isconnected = WiFiEventData.WiFiServicesInitialized();
       break;
 
     default:
@@ -125,7 +125,7 @@ bool WiFiConnected() {
 
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   bool validWiFi = (WiFi.RSSI() < 0) && wifi_isconnected && hasIPaddr();
-  if (validWiFi != bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
+  if (validWiFi != WiFiEventData.WiFiServicesInitialized()) {
     // else wifiStatus is no longer in sync.
     if (checkAndResetWiFi()) {
       // Wifi has been reset, so no longer valid WiFi
@@ -183,6 +183,10 @@ void WiFiConnectRelaxed() {
     // Scan is still active, so do not yet connect.
     return;
   }
+  if (WiFiEventData.unprocessedWifiEvents()) {
+    // Still need to process WiFi events
+    return;
+  }
 
   // Start connect attempt now, so no longer needed to attempt new connection.
   WiFiEventData.wifiConnectAttemptNeeded = false;
@@ -212,30 +216,24 @@ void WiFiConnectRelaxed() {
   const char *ssid       = getLastWiFiSettingsSSID();
   const char *passphrase = getLastWiFiSettingsPassphrase();
 
+  // First try quick reconnect using last known BSSID and channel.
+  bool useQuickConnect = RTC.lastBSSID[0] != 0 && RTC.lastWiFiChannel != 0 && WiFiEventData.wifi_connect_attempt < 3;
+  WiFiEventData.markWiFiBegin();
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Connecting ");
     log += ssid;
     log += F(" attempt #");
-    log += WiFiEventData.wifi_connect_attempt + 1;
+    log += WiFiEventData.wifi_connect_attempt;
     addLog(LOG_LEVEL_INFO, log);
   }
-  WiFiEventData.wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
-  WiFiEventData.lastDisconnectMoment.clear();
-  WiFiEventData.lastConnectMoment.clear();
-  WiFiEventData.lastGetIPmoment.clear();
-  WiFiEventData.wifi_considered_stable = false;
-  WiFiEventData.last_wifi_connect_attempt_moment.setNow();
-  WiFiEventData.wifiConnectInProgress            = true;
 
-  // First try quick reconnect using last known BSSID and channel.
-  bool useQuickConnect = RTC.lastBSSID[0] != 0 && RTC.lastWiFiChannel != 0 && WiFiEventData.wifi_connect_attempt < 3;
 
   if (useQuickConnect) {
     WiFi.begin(ssid, passphrase, RTC.lastWiFiChannel, &RTC.lastBSSID[0]);
   } else {
     WiFi.begin(ssid, passphrase);
   }
-  ++WiFiEventData.wifi_connect_attempt;
   logConnectionStatus();
 }
 
@@ -334,25 +332,7 @@ void resetWiFi() {
     // Don't reset WiFi too often
     return;
   }
-  WiFiEventData.lastDisconnectMoment.clear();
-  WiFiEventData.lastWiFiResetMoment.setNow();
-  WiFiEventData.wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
-  WiFiEventData.lastConnectMoment.clear();
-  WiFiEventData.wifi_considered_stable = false;
-  WiFiEventData.lastGetIPmoment.clear();
-  WiFiEventData.lastGetScanMoment.clear();
-  WiFiEventData.last_wifi_connect_attempt_moment.clear();
-  WiFiEventData.timerAPstart.clear();
-
-  // Mark all flags to default to prevent handling old events.
-  WiFiEventData.processedConnect          = true;
-  WiFiEventData.processedDisconnect       = true;
-  WiFiEventData.processedGotIP            = true;
-  WiFiEventData.processedDHCPTimeout      = true;
-  WiFiEventData.processedConnectAPmode    = true;
-  WiFiEventData.processedDisconnectAPmode = true;
-  WiFiEventData.processedScanDone         = true;
-  WiFiEventData.wifiConnectAttemptNeeded  = true;
+  WiFiEventData.clearAll();
   WifiDisconnect();
 
   // Send this log only after WifiDisconnect() or else sending to syslog may cause issues
@@ -407,7 +387,7 @@ void WifiDisconnect()
   wifi_station_disconnect();
   ETS_UART_INTR_ENABLE();
   #endif // if defined(ESP32)
-  WiFiEventData.wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
+  WiFiEventData.setWiFiDisconnected();
   WiFiEventData.processedDisconnect = false;
   WiFiEventData.wifiConnectAttemptNeeded = true;
 }
@@ -833,16 +813,16 @@ String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
 
 String ESPeasyWifiStatusToString() {
   String log;
-  if (WiFiEventData.wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
+  if (WiFiEventData.WiFiDisconnected()) {
     log = F("DISCONNECTED");
   } else {
-    if (bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_CONNECTED)) {
+    if (WiFiEventData.WiFiConnected()) {
       log += F("Conn. ");
     }
-    if (bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_GOT_IP)) {
+    if (WiFiEventData.WiFiGotIP()) {
       log += F("IP ");
     }
-    if (bitRead(WiFiEventData.wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
+    if (WiFiEventData.WiFiServicesInitialized()) {
       log += F("Init");
     }
   }

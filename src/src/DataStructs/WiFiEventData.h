@@ -4,13 +4,6 @@
 #include "../DataTypes/WiFiDisconnectReason.h"
 #include "../Helpers/LongTermTimer.h"
 
-// WifiStatus
-#define ESPEASY_WIFI_DISCONNECTED            0
-
-// Bit numbers for WiFi status
-#define ESPEASY_WIFI_CONNECTED               0
-#define ESPEASY_WIFI_GOT_IP                  1
-#define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
 #ifdef ESP32
 # include <esp_event.h>
@@ -24,18 +17,41 @@
 #ifdef ESP8266
 # include <ESP8266WiFiGeneric.h>
 # include <ESP8266WiFiType.h>
-#endif
+#endif // ifdef ESP8266
 
 
 struct WiFiEventData_t {
+  WiFiEventData_t();
 
   bool unprocessedWifiEvents() const;
+
+  void clearAll();
+  void markWiFiBegin();
+
+  bool WiFiDisconnected() const;
+  bool WiFiGotIP() const;
+  bool WiFiConnected() const;
+  bool WiFiServicesInitialized() const;
+
+  void setWiFiDisconnected();
+  void setWiFiGotIP();
+  void setWiFiConnected();
+  void setWiFiServicesInitialized();
+
+
+  void markGotIP();
+  void markDisconnect(WiFiDisconnectReason reason);
+  void markConnected(const String& ssid,
+                     const uint8_t bssid[6],
+                     byte          channel);
+  void markConnectedAPmode(const uint8_t mac[6]);
+  void markDisconnectedAPmode(const uint8_t mac[6]);
 
 
   // WiFi related data
   bool          wifiSetup        = false;
   bool          wifiSetupConnect = false;
-  uint8_t       wifiStatus       = ESPEASY_WIFI_DISCONNECTED;
+  uint8_t       wifiStatus;
   LongTermTimer last_wifi_connect_attempt_moment;
   unsigned int  wifi_connect_attempt   = 0;
   bool          wifi_considered_stable = false;
@@ -73,8 +89,7 @@ struct WiFiEventData_t {
 
   #ifdef ESP32
   WiFiEventId_t wm_event_id;
-  #endif
-
+  #endif // ifdef ESP32
 };
 
-#endif // ifndef DATASTRUCTS_WIFIEVENTDATA_H
+#endif   // ifndef DATASTRUCTS_WIFIEVENTDATA_H

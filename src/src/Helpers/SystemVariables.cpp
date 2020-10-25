@@ -85,7 +85,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
     switch (enumval)
     {
-      case BSSID:             value = String((WiFiEventData.wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
+      case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
       case CR:                value = "\r"; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
       case IP4:               value = String( (int) NetworkLocalIP()[3] ); break; // 4th IP octet
@@ -125,7 +125,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case MAC_INT:           value = String(getChipId()); break; // Last 24 bit of MAC address as integer, to be used in rules.
       case RSSI:              value = getValue(LabelType::WIFI_RSSI); break;
       case SPACE:             value = " "; break;
-      case SSID:              value = (WiFiEventData.wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID(); break;
+      case SSID:              value = (WiFiEventData.WiFiDisconnected()) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
       case SYSBUILD_DATE:     value = get_build_date(); break;
@@ -169,7 +169,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       #else // if FEATURE_ADC_VCC
       case VCC:               value = String(-1); break;
       #endif // if FEATURE_ADC_VCC
-      case WI_CH:             value = String((WiFiEventData.wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.channel()); break;
+      case WI_CH:             value = String((WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel()); break;
 
       case UNKNOWN:
         break;

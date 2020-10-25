@@ -33,7 +33,6 @@ public:
 
 void setUseStaticIP(bool enabled);
 
-void markGotIP();
 
 // ********************************************************************************
 // Functions called on events.
