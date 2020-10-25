@@ -444,10 +444,23 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_ReceivedOK = false;
         addLog(LOG_LEVEL_INFO, F("P092_init: Set pin"));
         DLbus_Data->ISR_DLB_Pin = CONFIG_PIN1;
-        pinMode(CONFIG_PIN1, INPUT);
+        
+        //interrupt is detached in PLUGIN_WEBFORM_SAVE and attached in PLUGIN_ONCE_A_SECOND
+        //to ensure that new interrupt is attached after new pin is configured, setting
+        //IsISRset to false is done here.
+        DLbus_Data->IsISRset = false;
 
-//        // on a CHANGE on the data pin P092_Pin_changed is called
-//        DLbus_Data->attachDLBusInterrupt();
+        //UVR61-3 does not need the pullup resistor
+        //for the other types pullup is activated (as it was before)
+        if ((PCONFIG(0) == 6133) || (PCONFIG(0) == 6132)){
+          addLog(LOG_LEVEL_INFO, F("P092_init: Set pin without pullup"));
+          pinMode(CONFIG_PIN1, INPUT);
+        }
+        else {
+          addLog(LOG_LEVEL_INFO, F("P092_init: Set pin with pullup"));
+          pinMode(CONFIG_PIN1, INPUT_PULLUP);
+        }
+        
         UserVar[event->BaseVarIndex] = NAN;
       }
       success = true;
