@@ -74,6 +74,7 @@ struct _P092_DataStruct
   uint8_t MaxExtSensors;
   uint8_t OutputBytes;
   uint8_t SpeedBytes;
+  uint8_t MaxAanalogOuts;
   uint8_t AnalogBytes;
   uint8_t VolumeBytes;
   uint8_t MaxHeatMeters;
@@ -613,6 +614,7 @@ void Plugin_092_SetIndices(int DeviceIndex) {
   P092_DataSettings.MaxExtSensors  = 6;
   P092_DataSettings.OutputBytes    = 1;
   P092_DataSettings.SpeedBytes     = 1;
+  P092_DataSettings.MaxAnalogOuts  = 1;
   P092_DataSettings.AnalogBytes    = 1;
   P092_DataSettings.VolumeBytes    = 0;
   P092_DataSettings.MaxHeatMeters  = 1;
@@ -633,6 +635,7 @@ void Plugin_092_SetIndices(int DeviceIndex) {
       iDeviceBytes                     = 1;
       P092_DataSettings.MaxExtSensors  = 0;
       P092_DataSettings.SpeedBytes     = 0;
+      P092_DataSettings.MaxAnalogOuts  = 0;
       P092_DataSettings.AnalogBytes    = 0;
       P092_DataSettings.MaxHeatMeters  = 0;
       P092_DataSettings.CurrentHmBytes = 0;
@@ -650,6 +653,7 @@ void Plugin_092_SetIndices(int DeviceIndex) {
       P092_DataSettings.MaxExtSensors  = 0;
       P092_DataSettings.OutputBytes    = 2;
       P092_DataSettings.SpeedBytes     = 4;
+      P092_DataSettings.MaxAnalogOuts  = 0;
       P092_DataSettings.AnalogBytes    = 0;
       P092_DataSettings.MaxHeatMeters  = 2;
       P092_DataSettings.CurrentHmBytes = 4;
@@ -665,6 +669,7 @@ void Plugin_092_SetIndices(int DeviceIndex) {
       iTimeStampBytes                 = 5;
       P092_DataSettings.MaxSensors    = 6;
       P092_DataSettings.MaxExtSensors = 0;
+      P092_DataSettings.MaxAnalogOuts = 1;
       P092_DataSettings.VolumeBytes   = 2;
       P092_DataSettings.MWhBytes      = 4;
       P092_DataSettings.IdxCRC        = P092_DataSettings.DataBytes - 1;
@@ -679,6 +684,7 @@ void Plugin_092_SetIndices(int DeviceIndex) {
       iTimeStampBytes                 = 5;
       P092_DataSettings.MaxSensors    = 6;
       P092_DataSettings.MaxExtSensors = 9;
+      P092_DataSettings.MaxAnalogOuts = 2;
       P092_DataSettings.MaxHeatMeters = 3;
       P092_DataSettings.IdxCRC        = P092_DataSettings.DataBytes - 1;
 
@@ -689,7 +695,7 @@ void Plugin_092_SetIndices(int DeviceIndex) {
   P092_DataSettings.IdxOutput     = P092_DataSettings.IdxExtSensor + 2 * P092_DataSettings.MaxExtSensors;
   P092_DataSettings.IdxDrehzahl   = P092_DataSettings.IdxOutput + P092_DataSettings.OutputBytes;
   P092_DataSettings.IdxAnalog     = P092_DataSettings.IdxDrehzahl + P092_DataSettings.SpeedBytes;
-  P092_DataSettings.IdxHmRegister = P092_DataSettings.IdxAnalog + P092_DataSettings.AnalogBytes;
+  P092_DataSettings.IdxHmRegister = P092_DataSettings.IdxAnalog + P092_DataSettings.AnalogBytes * P092_DataSettings.MaxAnalogOuts;
   P092_DataSettings.IdxVolume     = P092_DataSettings.IdxHmRegister + 1;
   P092_DataSettings.IdxHeatMeter1 = P092_DataSettings.IdxVolume + P092_DataSettings.VolumeBytes;
   P092_DataSettings.IdxkWh1       = P092_DataSettings.IdxHeatMeter1 + P092_DataSettings.CurrentHmBytes;
