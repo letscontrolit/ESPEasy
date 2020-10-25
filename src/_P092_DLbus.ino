@@ -444,7 +444,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_ReceivedOK = false;
         addLog(LOG_LEVEL_INFO, F("P092_init: Set pin"));
         DLbus_Data->ISR_DLB_Pin = CONFIG_PIN1;
-        pinMode(CONFIG_PIN1, INPUT_PULLUP);
+        pinMode(CONFIG_PIN1, INPUT);
 
 //        // on a CHANGE on the data pin P092_Pin_changed is called
 //        DLbus_Data->attachDLBusInterrupt();
