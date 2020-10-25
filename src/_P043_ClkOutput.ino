@@ -68,7 +68,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
             byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
             addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice);
           }
-          else addFormNumericBox(String(F("Temp")) + (x + 1), String(F("p043_state")) + (x), ExtraTaskSettings.TaskDevicePluginConfig[x],-100,100 );
+          else addFormNumericBox(String(F("Value")) + (x + 1), String(F("p043_state")) + (x), ExtraTaskSettings.TaskDevicePluginConfig[x],-100,100 );
         }
         success = true;
         break;
