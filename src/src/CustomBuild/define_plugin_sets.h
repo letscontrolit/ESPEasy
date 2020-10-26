@@ -1,7 +1,7 @@
 #ifndef DEFINE_PLUGIN_SETS_H
 #define DEFINE_PLUGIN_SETS_H
 
-#include "ESPEasy_common.h"
+#include "../../ESPEasy_common.h"
 
 /*
 #################################################

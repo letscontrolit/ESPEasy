@@ -1,8 +1,12 @@
 #ifndef ESPEASY_TIMETYPES_H_
 #define ESPEASY_TIMETYPES_H_
 
+#include "../../src/DataStructs/TimeChangeRule.h"
+#include "../../src/Globals/Plugins.h"
+
+#include <Arduino.h>
 #include <stdint.h>
-class String;
+
 
 // Time Source type, sort by priority.
 // Enum values are sent via NodeStruct, so only add new ones and don't change existing values

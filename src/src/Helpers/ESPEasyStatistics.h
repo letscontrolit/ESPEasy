@@ -2,7 +2,7 @@
 #define HELPERS_ESPEASYSTATISTICS_H
 
 
-#include "ESPEasy_common.h"
+#include "../../ESPEasy_common.h"
 
 
 #ifdef USES_TIMING_STATS
