@@ -13,6 +13,17 @@
 
 WiFiEventData_t::WiFiEventData_t() : wifiStatus(ESPEASY_WIFI_DISCONNECTED) {}
 
+bool WiFiEventData_t::WiFiConnectAllowed() const {
+  if (!wifiConnectAttemptNeeded) return false;
+  if (lastDisconnectMoment.isSet()) {
+    // TODO TD-er: Make this time more dynamic.
+    if (!lastDisconnectMoment.timeoutReached(1000)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool WiFiEventData_t::unprocessedWifiEvents() const {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
   {
@@ -53,6 +64,9 @@ void WiFiEventData_t::markWiFiBegin() {
   wifi_considered_stable = false;
   wifiConnectInProgress  = true;
   ++wifi_connect_attempt;
+  if (!timerAPstart.isSet()) {
+    timerAPstart.setNow();
+  }
 }
 
 bool WiFiEventData_t::WiFiDisconnected() const {

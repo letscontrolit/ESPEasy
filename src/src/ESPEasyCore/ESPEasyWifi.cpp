@@ -88,6 +88,9 @@
 bool WiFiConnected() {
   START_TIMER;
 
+  static bool recursiveCall = false;
+
+
   if (WiFiEventData.unprocessedWifiEvents()) { return false; }
 
   bool wifi_isconnected = false;
@@ -122,6 +125,9 @@ bool WiFiConnected() {
 
   #endif
 
+  if (recursiveCall) return wifi_isconnected;
+  recursiveCall = true;
+
 
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   bool validWiFi = (WiFi.RSSI() < 0) && wifi_isconnected && hasIPaddr();
@@ -139,6 +145,7 @@ bool WiFiConnected() {
       WiFiEventData.timerAPstart.clear();
     }
     STOP_TIMER(WIFI_ISCONNECTED_STATS);
+    recursiveCall = false;
     // Only return true after some time since it got connected.
     return WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
   }
@@ -172,11 +179,12 @@ bool WiFiConnected() {
   }
   delay(1);
   STOP_TIMER(WIFI_NOTCONNECTED_STATS);
+  recursiveCall = false;
   return false;
 }
 
 void WiFiConnectRelaxed() {
-  if (!WiFiEventData.wifiConnectAttemptNeeded || WiFiEventData.wifiConnectInProgress) {
+  if (!WiFiEventData.WiFiConnectAllowed() || WiFiEventData.wifiConnectInProgress) {
     return; // already connected or connect attempt in progress need to disconnect first
   }
   if (!WiFiEventData.processedScanDone) {
@@ -185,6 +193,9 @@ void WiFiConnectRelaxed() {
   }
   if (WiFiEventData.unprocessedWifiEvents()) {
     // Still need to process WiFi events
+    return;
+  }
+  if (!WiFiEventData.wifiSetupConnect && wifiAPmodeActivelyUsed()) {
     return;
   }
 
@@ -388,8 +399,7 @@ void WifiDisconnect()
   ETS_UART_INTR_ENABLE();
   #endif // if defined(ESP32)
   WiFiEventData.setWiFiDisconnected();
-  WiFiEventData.processedDisconnect = false;
-  WiFiEventData.wifiConnectAttemptNeeded = true;
+  WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_ASSOC_LEAVE);
 }
 
 // ********************************************************************************
@@ -586,6 +596,13 @@ void setWifiMode(WiFiMode_t wifimode) {
     delay(100);
     --retry;
   }
+  retry = 2;
+  while (WiFi.getMode() != wifimode && retry > 0) {
+    addLog(LOG_LEVEL_INFO, F("WIFI : mode not yet set"));
+    delay(100);
+    --retry;
+  }
+
 
   if (wifimode == WIFI_OFF) {
     delay(1000);

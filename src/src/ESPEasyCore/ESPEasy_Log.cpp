@@ -32,17 +32,19 @@ void initLog()
   Logging
   \*********************************************************************************************/
 String getLogLevelDisplayString(int logLevel) {
+  String res;
   switch (logLevel) {
-    case LOG_LEVEL_NONE:       return F("None");
-    case LOG_LEVEL_ERROR:      return F("Error");
-    case LOG_LEVEL_INFO:       return F("Info");
-    case LOG_LEVEL_DEBUG:      return F("Debug");
-    case LOG_LEVEL_DEBUG_MORE: return F("Debug More");
-    case LOG_LEVEL_DEBUG_DEV:  return F("Debug dev");
+    case LOG_LEVEL_NONE:       res = F("None"); break;
+    case LOG_LEVEL_ERROR:      res = F("Error"); break;
+    case LOG_LEVEL_INFO:       res = F("Info"); break;
+    case LOG_LEVEL_DEBUG:      res = F("Debug"); break;
+    case LOG_LEVEL_DEBUG_MORE: res = F("Debug More"); break;
+    case LOG_LEVEL_DEBUG_DEV:  res = F("Debug dev"); break;
 
     default:
-      return "";
+    break;
   }
+  return res;
 }
 
 String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
@@ -161,6 +163,12 @@ bool loglevelActive(byte logLevel, byte logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
+void addToLog(byte loglevel, const __FlashStringHelper *str)
+{
+  String copy = str;
+  addToLog(loglevel, copy.c_str());
+}
+
 void addToLog(byte loglevel, const String& string)
 {
   addToLog(loglevel, string.c_str());
@@ -171,13 +179,13 @@ void addToLog(byte logLevel, const char *line)
   // Please note all functions called from here handling line must be PROGMEM aware.
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     addToSerialBuffer(String(millis()).c_str());
-    addToSerialBuffer(" : ");
+    addToSerialBuffer(String(F(" : ")).c_str());
     String loglevelDisplayString = getLogLevelDisplayString(logLevel);
     while (loglevelDisplayString.length() < 6) {
       loglevelDisplayString += ' ';
     }
     addToSerialBuffer(loglevelDisplayString.c_str());
-    addToSerialBuffer(": ");
+    addToSerialBuffer(String(F(" : ")).c_str());
     addToSerialBuffer(line);
     addNewlineToSerialBuffer();
   }

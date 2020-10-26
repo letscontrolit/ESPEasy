@@ -39,9 +39,7 @@ void handle_unprocessedWiFiEvents()
     // help the background tasks managing wifi connections
     delay(1);
 
-    if (WiFiEventData.wifiConnectAttemptNeeded) {
-      NetworkConnectRelaxed();
-    }
+    NetworkConnectRelaxed();
 
     // Process disconnect events before connect events.
     if (!WiFiEventData.processedDisconnect) {
@@ -150,6 +148,7 @@ void processDisconnect() {
   if (WiFiEventData.processedDisconnect) { return; }
   WiFiEventData.processedDisconnect = true;
   WiFiEventData.setWiFiDisconnected();
+  WiFiEventData.wifiConnectAttemptNeeded = true;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
