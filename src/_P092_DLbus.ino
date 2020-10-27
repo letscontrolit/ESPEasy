@@ -74,7 +74,7 @@ struct _P092_DataStruct
   uint8_t MaxExtSensors;
   uint8_t OutputBytes;
   uint8_t SpeedBytes;
-  uint8_t MaxAanalogOuts;
+  uint8_t MaxAnalogOuts;
   uint8_t AnalogBytes;
   uint8_t VolumeBytes;
   uint8_t MaxHeatMeters;
