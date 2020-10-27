@@ -22,6 +22,11 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
+    @uwekaditz 2020-10-27 integrate the changes of PR #3345 (created by pez3)
+    CHG: removed internal pullup (at least for devices UVR61-3 (V8.3) upwards)
+    BUG: fixed setting of interrupt. so changing of GPIO should work now
+    BUG: fixed decoding of UVR61-3 frames. UVR61-3 (V8.3) devices have two analog outputs
+
     @uwekaditz 2020-10-05 reduce memory usage when plugin not used PR #3248
     CHG: all functions and variables moved to P092_data_struct()
     CHG: keeping only global values needed for all tasks
@@ -265,6 +270,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         if (P092_data->DLbus_Data->IsISRset) {
           // interrupt was already attached to P092_DLB_Pin
           detachInterrupt(digitalPinToInterrupt(P092_data->DLbus_Data->ISR_DLB_Pin));
+          P092_data->DLbus_Data->IsISRset = false;  //to ensure that a new interrupt is attached in P092_data->init()
           addLog(LOG_LEVEL_INFO, F("P092_save: detachInterrupt"));
         }
       }
@@ -366,7 +372,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           if (nullptr != P092_data) {
             addLog(LOG_LEVEL_INFO, F("Init P092_data_struct ..."));
 
-            if (!P092_data->init(CONFIG_PIN1)) {
+            if (!P092_data->init(CONFIG_PIN1, PCONFIG(0))) {
               addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
               clearPluginTaskData(event->TaskIndex);
               return false;

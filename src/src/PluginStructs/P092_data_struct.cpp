@@ -462,7 +462,7 @@ P092_data_struct::~P092_data_struct() {
   }
 }
 
-bool P092_data_struct::init(int8_t pin1) {
+bool P092_data_struct::init(int8_t pin1, int DeviceIndex) {
   DLbus_Data = new (std::nothrow) DLBus;
 
   if (DLbus_Data == nullptr) {
@@ -472,9 +472,24 @@ bool P092_data_struct::init(int8_t pin1) {
   DLbus_Data->LogLevelError  = LOG_LEVEL_ERROR;
   DLbus_Data->IsLogLevelInfo = loglevelActiveFor(LOG_LEVEL_INFO);
   DLbus_Data->ISR_DLB_Pin    = pin1;
-  pinMode(pin1, INPUT_PULLUP);
 
-  // on a CHANGE on the data pin P092_Pin_changed is called
+  //interrupt is detached in PLUGIN_WEBFORM_SAVE and attached in PLUGIN_ONCE_A_SECOND
+  //to ensure that new interrupt is attached after new pin is configured, setting
+  //IsISRset to false is done here.
+  DLbus_Data->IsISRset       = false;
+
+  //UVR61-3 does not need the pullup resistor
+  //for the other types pullup is activated (as it was before)
+  if ((DeviceIndex == 6133) || (DeviceIndex == 6132)){
+    addLog(LOG_LEVEL_INFO, F("P092_init: Set pin without pullup"));
+    pinMode(pin1, INPUT);
+  }
+  else {
+    addLog(LOG_LEVEL_INFO, F("P092_init: Set pin with pullup"));
+    pinMode(pin1, INPUT_PULLUP);
+  }
+
+// on a CHANGE on the data pin P092_Pin_changed is called
 //DLbus_Data->attachDLBusInterrupt();
   return true;
 }
@@ -499,6 +514,7 @@ void P092_data_struct::Plugin_092_SetIndices(int DeviceIndex) {
   P092_DataSettings.MaxExtSensors  = 6;
   P092_DataSettings.OutputBytes    = 1;
   P092_DataSettings.SpeedBytes     = 1;
+  P092_DataSettings.MaxAnalogOuts  = 1;
   P092_DataSettings.AnalogBytes    = 1;
   P092_DataSettings.VolumeBytes    = 0;
   P092_DataSettings.MaxHeatMeters  = 1;
@@ -520,6 +536,7 @@ void P092_data_struct::Plugin_092_SetIndices(int DeviceIndex) {
       P092_DataSettings.MaxExtSensors  = 0;
       P092_DataSettings.SpeedBytes     = 0;
       P092_DataSettings.AnalogBytes    = 0;
+      P092_DataSettings.MaxAnalogOuts  = 0;
       P092_DataSettings.MaxHeatMeters  = 0;
       P092_DataSettings.CurrentHmBytes = 0;
       P092_DataSettings.MWhBytes       = 0;
@@ -537,6 +554,7 @@ void P092_data_struct::Plugin_092_SetIndices(int DeviceIndex) {
       P092_DataSettings.OutputBytes    = 2;
       P092_DataSettings.SpeedBytes     = 4;
       P092_DataSettings.AnalogBytes    = 0;
+      P092_DataSettings.MaxAnalogOuts  = 0;
       P092_DataSettings.MaxHeatMeters  = 2;
       P092_DataSettings.CurrentHmBytes = 4;
       P092_DataSettings.IdxCRC         = P092_DataSettings.DataBytes - 1;
@@ -551,6 +569,7 @@ void P092_data_struct::Plugin_092_SetIndices(int DeviceIndex) {
       iTimeStampBytes                 = 5;
       P092_DataSettings.MaxSensors    = 6;
       P092_DataSettings.MaxExtSensors = 0;
+      P092_DataSettings.MaxAnalogOuts = 1;
       P092_DataSettings.VolumeBytes   = 2;
       P092_DataSettings.MWhBytes      = 4;
       P092_DataSettings.IdxCRC        = P092_DataSettings.DataBytes - 1;
@@ -565,6 +584,7 @@ void P092_data_struct::Plugin_092_SetIndices(int DeviceIndex) {
       iTimeStampBytes                 = 5;
       P092_DataSettings.MaxSensors    = 6;
       P092_DataSettings.MaxExtSensors = 9;
+      P092_DataSettings.MaxAnalogOuts = 2;
       P092_DataSettings.MaxHeatMeters = 3;
       P092_DataSettings.IdxCRC        = P092_DataSettings.DataBytes - 1;
 
@@ -575,7 +595,7 @@ void P092_data_struct::Plugin_092_SetIndices(int DeviceIndex) {
   P092_DataSettings.IdxOutput     = P092_DataSettings.IdxExtSensor + 2 * P092_DataSettings.MaxExtSensors;
   P092_DataSettings.IdxDrehzahl   = P092_DataSettings.IdxOutput + P092_DataSettings.OutputBytes;
   P092_DataSettings.IdxAnalog     = P092_DataSettings.IdxDrehzahl + P092_DataSettings.SpeedBytes;
-  P092_DataSettings.IdxHmRegister = P092_DataSettings.IdxAnalog + P092_DataSettings.AnalogBytes;
+  P092_DataSettings.IdxHmRegister = P092_DataSettings.IdxAnalog + (P092_DataSettings.AnalogBytes * P092_DataSettings.MaxAnalogOuts);
   P092_DataSettings.IdxVolume     = P092_DataSettings.IdxHmRegister + 1;
   P092_DataSettings.IdxHeatMeter1 = P092_DataSettings.IdxVolume + P092_DataSettings.VolumeBytes;
   P092_DataSettings.IdxkWh1       = P092_DataSettings.IdxHeatMeter1 + P092_DataSettings.CurrentHmBytes;

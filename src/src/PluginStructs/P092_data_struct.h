@@ -116,7 +116,7 @@ public:
   P092_data_struct();
   ~P092_data_struct();
 
-  bool init(int8_t pin1);
+  bool init(int8_t pin1, int DeviceIndex);
 
   typedef struct {
     uint8_t Idx;
@@ -162,6 +162,7 @@ public:
     uint8_t MaxExtSensors;
     uint8_t OutputBytes;
     uint8_t SpeedBytes;
+    uint8_t MaxAnalogOuts;
     uint8_t AnalogBytes;
     uint8_t VolumeBytes;
     uint8_t MaxHeatMeters;
