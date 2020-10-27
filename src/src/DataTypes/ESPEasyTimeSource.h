@@ -1,12 +1,10 @@
-#ifndef ESPEASY_TIMETYPES_H_
-#define ESPEASY_TIMETYPES_H_
+#ifndef DATATYPES_ESPEASYTIMESOURCE_H
+#define DATATYPES_ESPEASYTIMESOURCE_H
 
-#include "../../src/DataStructs/TimeChangeRule.h"
-#include "../../src/Globals/Plugins.h"
 
-#include <Arduino.h>
 #include <stdint.h>
 
+class String;
 
 // Time Source type, sort by priority.
 // Enum values are sent via NodeStruct, so only add new ones and don't change existing values
@@ -31,4 +29,4 @@ String toString(timeSource_t timeSource);
 bool isExternalTimeSource(timeSource_t timeSource);
 
 
-#endif /* ESPEASY_TIMETYPES_H_ */
+#endif /* DATATYPES_ESPEASYTIMESOURCE_H */
