@@ -232,7 +232,7 @@ void runEach30Seconds()
   #endif // USES_SSDP
   #endif
 #if FEATURE_ADC_VCC
-  if (!wifiConnectInProgress) {
+  if (!WiFiEventData.wifiConnectInProgress) {
     vcc = ESP.getVcc() / 1000.0f;
   }
 #endif
