@@ -22,6 +22,9 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
+    @uwekaditz 2020-10-28 P092_data->init() is always done if P092_init == false, not depending on P092_data == nullptr
+    CHG: changes variable name DeviceIndex to P092DeviceIndex
+
     @uwekaditz 2020-10-27 integrate the changes of PR #3345 (created by pez3)
     CHG: removed internal pullup (at least for devices UVR61-3 (V8.3) upwards)
     BUG: fixed setting of interrupt. so changing of GPIO should work now
@@ -269,8 +272,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         if (P092_data->DLbus_Data->IsISRset) {
           // interrupt was already attached to P092_DLB_Pin
-          detachInterrupt(digitalPinToInterrupt(P092_data->DLbus_Data->ISR_DLB_Pin));
           P092_data->DLbus_Data->IsISRset = false;  //to ensure that a new interrupt is attached in P092_data->init()
+          detachInterrupt(digitalPinToInterrupt(P092_data->DLbus_Data->ISR_DLB_Pin));
           addLog(LOG_LEVEL_INFO, F("P092_save: detachInterrupt"));
         }
       }
@@ -366,10 +369,18 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
           P092_data = new (std::nothrow) P092_data_struct();
           initPluginTaskData(event->TaskIndex, P092_data);
+
+          if (P092_data == nullptr) {
+            addLog(LOG_LEVEL_ERROR, F("## P092_init: Create P092_data_struct failed!"));
+            return false;
+          }
+        }
+        else {
+          addLog(LOG_LEVEL_INFO, F("P092_data_struct -> Already created"));
+        }
           P092_data_struct *P092_data =
             static_cast<P092_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-          if (nullptr != P092_data) {
             addLog(LOG_LEVEL_INFO, F("Init P092_data_struct ..."));
 
             if (!P092_data->init(CONFIG_PIN1, PCONFIG(0))) {
@@ -377,13 +388,10 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
               clearPluginTaskData(event->TaskIndex);
               return false;
             }
+
             P092_init       = true;
           }
-        }
-        else {
-          addLog(LOG_LEVEL_INFO, F("P092_data_struct -> Already created"));
-        }
-      }
+      
       success                      = true;
       UserVar[event->BaseVarIndex] = NAN;
       break;

@@ -116,7 +116,7 @@ public:
   P092_data_struct();
   ~P092_data_struct();
 
-  bool init(int8_t pin1, int DeviceIndex);
+  bool init(int8_t pin1, int P092DeviceIndex);
 
   typedef struct {
     uint8_t Idx;
@@ -124,7 +124,7 @@ public:
     float   value;
   } sP092_ReadData;
 
-  void    Plugin_092_SetIndices(int DeviceIndex);
+  void    Plugin_092_SetIndices(int P092DeviceIndex);
 
   void    Plugin_092_StartReceiving(taskIndex_t taskindex);
 

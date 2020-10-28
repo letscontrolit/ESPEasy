@@ -462,7 +462,7 @@ P092_data_struct::~P092_data_struct() {
   }
 }
 
-bool P092_data_struct::init(int8_t pin1, int DeviceIndex) {
+bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex) {
   DLbus_Data = new (std::nothrow) DLBus;
 
   if (DLbus_Data == nullptr) {
@@ -480,7 +480,7 @@ bool P092_data_struct::init(int8_t pin1, int DeviceIndex) {
 
   //UVR61-3 does not need the pullup resistor
   //for the other types pullup is activated (as it was before)
-  if ((DeviceIndex == 6133) || (DeviceIndex == 6132)){
+  if ((P092DeviceIndex == 6133) || (P092DeviceIndex == 6132)){
     addLog(LOG_LEVEL_INFO, F("P092_init: Set pin without pullup"));
     pinMode(pin1, INPUT);
   }
@@ -494,7 +494,7 @@ bool P092_data_struct::init(int8_t pin1, int DeviceIndex) {
   return true;
 }
 
-void P092_data_struct::Plugin_092_SetIndices(int DeviceIndex) {
+void P092_data_struct::Plugin_092_SetIndices(int P092DeviceIndex) {
   // Set the indices for the DL bus packet
   int iDeviceBytes, iDontCareBytes, iTimeStampBytes;
 
@@ -522,7 +522,7 @@ void P092_data_struct::Plugin_092_SetIndices(int DeviceIndex) {
   P092_DataSettings.MWhBytes       = 2;
   P092_DataSettings.IdxCRC         = 30;
 
-  switch (DeviceIndex) {
+  switch (P092DeviceIndex) {
     case 31: // UVR31
       P092_DataSettings.DataBytes                 = 8;
       P092_DataSettings.DLbus_MinPulseWidth       = P092_min_width_50;
