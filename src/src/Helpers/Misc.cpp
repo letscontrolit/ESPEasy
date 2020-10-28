@@ -20,6 +20,7 @@
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
+  // FIXME TD-er: Why have an event here as argument? It is not used.
   checkRAM(F("remoteConfig"));
   bool   success = false;
   String command = parseString(string, 1);
@@ -43,8 +44,8 @@ bool remoteConfig(struct EventStruct *event, const String& string)
 
       if (validTaskIndex(index))
       {
-        event->TaskIndex = index;
-        success          = PluginCall(PLUGIN_SET_CONFIG, event, configCommand);
+        event->setTaskIndex(index);
+        success = PluginCall(PLUGIN_SET_CONFIG, event, configCommand);
       }
     }
   }
@@ -114,17 +115,25 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 /********************************************************************************************\
    Toggle task enabled state
  \*********************************************************************************************/
-bool setTaskEnableStatus(taskIndex_t taskIndex, bool enabled)
+bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 {
-  if (!validTaskIndex(taskIndex)) { return false; }
+  if (!validTaskIndex(event->TaskIndex)) { return false; }
   checkRAM(F("setTaskEnableStatus"));
 
   // Only enable task if it has a Plugin configured
-  if (validPluginID(Settings.TaskDeviceNumber[taskIndex]) || !enabled) {
-    Settings.TaskDeviceEnabled[taskIndex] = enabled;
+  if (validPluginID(Settings.TaskDeviceNumber[event->TaskIndex]) || !enabled) {
+    String dummy;
+    if (!enabled) {
+      PluginCall(PLUGIN_EXIT, event, dummy);
+    }
+    Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
 
     if (enabled) {
-      Scheduler.schedule_task_device_timer(taskIndex, millis() + 10);
+      if (!PluginCall(PLUGIN_INIT, event, dummy)) {
+        return false;
+      }
+      // Schedule the task to be executed almost immediately
+      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
     }
     return true;
   }
