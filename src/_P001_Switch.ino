@@ -1010,6 +1010,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       } else
 */
       if (command == F("servo")) {
+        // IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
+        #ifdef USE_SERVO
+
         // GPIO number is stored inside event->Par2 instead of event->Par1 as in all the other commands
         // So needs to reload the tempPortStruct.
         success = true;
@@ -1024,10 +1027,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
           switch (event->Par1)
           {
             case 1:
-
-              // IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
-                #ifdef USE_SERVO
-
               // SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
               if (event->Par3 >= 9000) {
                 servo1.detach();
@@ -1035,18 +1034,15 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 servo1.attach(event->Par2);
                 servo1.write(event->Par3);
               }
-                #endif // USE_SERVO
+                
               break;
             case 2:
-                #ifdef USE_SERVO
-
               if (event->Par3 >= 9000) {
                 servo2.detach();
               } else {
                 servo2.attach(event->Par2);
                 servo2.write(event->Par3);
               }
-                #endif // USE_SERVO
               break;
           }
 
@@ -1062,6 +1058,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
           // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, log, 0));
         }
+        #else
+        addLog(LOG_LEVEL_ERROR, F("USE_SERVO not included in build"));
+        #endif // USE_SERVO
       } else
 /*
       if (command == F("status")) {
