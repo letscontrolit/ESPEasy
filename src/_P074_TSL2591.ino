@@ -197,15 +197,30 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
         static_cast<P074_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P074_data) {
+
+        // Fix to re-set the gain/timing before every read.
+        // See https://github.com/letscontrolit/ESPEasy/issues/3347
+        if (!P074_data->tsl.begin()) {
+          break;
+        }
+
         // Simple data read example. Just read the infrared, fullspecrtrum diode
         // or 'visible' (difference between the two) channels.
-        // This can take 100-600 milliseconds! Uncomment whichever of the
-        // following you want to read
         float lux, full, visible, ir;
-        visible = P074_data->tsl.getLuminosity(TSL2591_VISIBLE);
-        ir      = P074_data->tsl.getLuminosity(TSL2591_INFRARED);
-        full    = P074_data->tsl.getLuminosity(TSL2591_FULLSPECTRUM);
-        lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
+        {
+          uint32_t fullLuminosity = P074_data->tsl.getFullLuminosity();
+
+          // TSL2591_FULLSPECTRUM: Reads two byte value from channel 0 (visible + infrared)
+          full = (fullLuminosity & 0xFFFF);
+
+          // TSL2591_INFRARED: Reads two byte value from channel 1 (infrared)
+          ir =  (fullLuminosity >> 16);
+
+          // TSL2591_VISIBLE: Reads all and subtracts out just the visible!
+          visible =  ( (fullLuminosity & 0xFFFF) - (fullLuminosity >> 16));
+
+          lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
+        }
 
         UserVar[event->BaseVarIndex + 0] = lux;
         UserVar[event->BaseVarIndex + 1] = full;
