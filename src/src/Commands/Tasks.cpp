@@ -67,7 +67,7 @@ String Command_Task_ClearAll(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_Task_Disable(struct EventStruct *event, const char *Line)
+String Command_Task_EnableDisable(struct EventStruct *event, bool enable, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
@@ -85,35 +85,23 @@ String Command_Task_Disable(struct EventStruct *event, const char *Line)
   String dummy;
 
   if (validTaskVars(event, taskIndex, varNr)) {
-    PluginCall(PLUGIN_EXIT, event, dummy);
-    if (setTaskEnableStatus(taskIndex, false)) {
+    // This is a command so no guarantee the taskIndex is correct in the event
+    event->setTaskIndex(taskIndex);
+    if (setTaskEnableStatus(event, enable)) {
       return return_command_success();
     }
   }
   return return_command_failed();
 }
 
+String Command_Task_Disable(struct EventStruct *event, const char *Line)
+{
+  return Command_Task_EnableDisable(event, false, Line);
+}
+
 String Command_Task_Enable(struct EventStruct *event, const char *Line)
 {
-  taskIndex_t  taskIndex;
-  unsigned int varNr;
-  String taskName;
-
-  if (!validTaskVars(event, taskIndex, varNr))
-  { 
-    taskIndex_t tmpTaskIndex = taskIndex;
-    if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
-      tmpTaskIndex = findTaskIndexByName(taskName);
-      if (tmpTaskIndex != INVALID_TASK_INDEX)
-        event->Par1 = tmpTaskIndex + 1;
-    }
-  }
-  String dummy;
-
-  if (validTaskVars(event, taskIndex, varNr) && setTaskEnableStatus(taskIndex, true) && PluginCall(PLUGIN_INIT, event, dummy)) {
-    return return_command_success();
-  }
-  return return_command_failed();
+  return Command_Task_EnableDisable(event, true, Line);
 }
 
 bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex, unsigned int &varNr)
