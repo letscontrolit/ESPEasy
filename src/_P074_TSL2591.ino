@@ -75,6 +75,7 @@ struct P074_data_struct : public PluginTaskData_base {
         if (tsl.begin()) {
           tsl.enable();
           integrationStart = millis();
+          duration = 0;
           integrationActive = true;
           startIntegrationNeeded = false;
         }
@@ -83,12 +84,13 @@ struct P074_data_struct : public PluginTaskData_base {
     }
     bool finished = false;
     value = tsl.getFullLuminosity(finished);
+    duration = timePassedSince(integrationStart);
     if (finished) {
       integrationActive = false;
       integrationStart = 0;
       newValuePresent = true;
     } else {
-      if (timePassedSince(integrationStart) > 1000) {
+      if (duration > 1000) {
         // Max integration time is 600 msec, so if we still have no value, reset the current state
         integrationStart = 0;
         integrationActive = false;
@@ -96,11 +98,15 @@ struct P074_data_struct : public PluginTaskData_base {
         startIntegrationNeeded = true; // Apparently a value was needed
       }
     }
+    if (!integrationActive) {
+      tsl.disable();
+    }
     return finished;
   }
 
   Adafruit_TSL2591 tsl;
   unsigned long integrationStart = 0;
+  unsigned long duration = 0;
   bool integrationActive = false;
   bool newValuePresent = false;
   bool startIntegrationNeeded = false;
@@ -241,17 +247,16 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
       if (nullptr != P074_data) {
         uint32_t fullLuminosity;
         if (P074_data->getFullLuminosity(fullLuminosity)) {
-          float lux, full, visible, ir;
           // TSL2591_FULLSPECTRUM: Reads two byte value from channel 0 (visible + infrared)
-          full = (fullLuminosity & 0xFFFF);
+          const uint16_t full = (fullLuminosity & 0xFFFF);
 
           // TSL2591_INFRARED: Reads two byte value from channel 1 (infrared)
-          ir =  (fullLuminosity >> 16);
+          const uint16_t ir =  (fullLuminosity >> 16);
 
           // TSL2591_VISIBLE: Reads all and subtracts out just the visible!
-          visible =  ( (fullLuminosity & 0xFFFF) - (fullLuminosity >> 16));
+          const uint16_t visible =  ( (fullLuminosity & 0xFFFF) - (fullLuminosity >> 16));
 
-          lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
+          const uint16_t lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
 
           UserVar[event->BaseVarIndex + 0] = lux;
           UserVar[event->BaseVarIndex + 1] = full;
@@ -267,6 +272,8 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
             log += String(visible);
             log += F(" IR: ");
             log += String(ir);
+            log += F(" duration: ");
+            log += P074_data->duration;
             addLog(LOG_LEVEL_INFO, log);
           }
 
