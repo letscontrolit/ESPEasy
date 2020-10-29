@@ -82,7 +82,6 @@ String Command_Task_EnableDisable(struct EventStruct *event, bool enable, const 
         event->Par1 = tmpTaskIndex + 1;
     }
   }
-  String dummy;
 
   if (validTaskVars(event, taskIndex, varNr)) {
     // This is a command so no guarantee the taskIndex is correct in the event
@@ -104,6 +103,9 @@ String Command_Task_Enable(struct EventStruct *event, const char *Line)
   return Command_Task_EnableDisable(event, true, Line);
 }
 
+/**
+ * parse TaskName/TaskValue when not numeric for task name and value name and validate values
+ */
 bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex, unsigned int &varNr)
 {
   if (!validTaskVars(event, taskIndex, varNr) || (event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK))  // Extra check required because of shortcutting in validTaskVars()
@@ -124,8 +126,10 @@ bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *
     }
     if (!validTaskVars(event, taskIndex, varNr)) return false; 
   }
+
   return true;
 }
+
 String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
 {
   String TmpStr1;
@@ -145,6 +149,7 @@ String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
     UserVar[uservarIndex] = result;
   } else  {
     // TODO: Get Task description and var name
+    // TODO: Should this be addLog() of some sort ?
     serialPrintln(String(UserVar[uservarIndex]));
   }
   return return_command_success();
@@ -200,7 +205,7 @@ String Command_Task_Run(struct EventStruct *event, const char *Line)
       if (tmpTaskIndex != INVALID_TASK_INDEX)
         event->Par1 = tmpTaskIndex + 1;
     }
-    if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+    if (!validTaskVars(event, taskIndex, varNr)) return return_command_failed();
   }
 
   SensorSendTask(taskIndex);
