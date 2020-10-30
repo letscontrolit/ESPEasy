@@ -14,7 +14,7 @@
 void handleNotFound() {
   checkRAM(F("handleNotFound"));
 
-  if (wifiSetup)
+  if (WiFiEventData.wifiSetup)
   {
     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;

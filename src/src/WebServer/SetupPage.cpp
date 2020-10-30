@@ -55,8 +55,8 @@ void handle_setup() {
     {
       safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
       safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
-      wifiSetupConnect         = true;
-      wifiConnectAttemptNeeded = true;
+      WiFiEventData.wifiSetupConnect         = true;
+      WiFiEventData.wifiConnectAttemptNeeded = true;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
@@ -163,7 +163,7 @@ bool handle_setup_connectingStage(byte& refreshCount) {
     //      SecuritySettings.WifiKey[0] = 0;
     addButton(F("/setup"), F("Back to Setup"));
     html_BR();
-    wifiSetupConnect = false;
+    WiFiEventData.wifiSetupConnect = false;
     return false;
   }
   int wait = WIFI_RECONNECT_WAIT / 1000;
@@ -219,7 +219,7 @@ void handle_setup_finish() {
   html_end_table();
   html_end_form();
 
-  wifiSetup = false;
+  WiFiEventData.wifiSetup = false;
   sendHeadandTail_stdtemplate(_TAIL);
 }
 
