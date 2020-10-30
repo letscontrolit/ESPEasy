@@ -103,9 +103,6 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 
 
-#include "ESPEasyWiFi_credentials.h"
-#include "ESPEasyWifi_ProcessEvent.h"
-
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
@@ -122,6 +119,8 @@
 #include "src/ESPEasyCore/ESPEasyNetwork.h"
 #include "src/ESPEasyCore/ESPEasyRules.h"
 #include "src/ESPEasyCore/ESPEasyWifi.h"
+#include "src/ESPEasyCore/ESPEasyWiFi_credentials.h"
+#include "src/ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "src/ESPEasyCore/Serial.h"
 
 #include "src/Globals/CPlugins.h"
@@ -342,7 +341,7 @@ void setup()
     }
   }
   if (!selectValidWiFiSettings()) {
-    wifiSetup = true;
+    WiFiEventData.wifiSetup = true;
     RTC.lastWiFiChannel = 0; // Must scan all channels
     // Wait until scan has finished to make sure as many as possible are found
     // We're still in the setup phase, so nothing else is taking resources of the ESP.
