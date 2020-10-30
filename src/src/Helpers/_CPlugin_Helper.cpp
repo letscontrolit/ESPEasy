@@ -260,7 +260,7 @@ void log_connecting_fail(const String& prefix, int controller_number) {
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
     log += F(" connection failed (");
-    log += connectionFailures;
+    log += WiFiEventData.connectionFailures;
     log += F("/");
     log += Settings.ConnectionFailuresThreshold;
     log += F(")");
@@ -271,14 +271,14 @@ void log_connecting_fail(const String& prefix, int controller_number) {
 bool count_connection_results(bool success, const String& prefix, int controller_number) {
   if (!success)
   {
-    ++connectionFailures;
+    ++WiFiEventData.connectionFailures;
     log_connecting_fail(prefix, controller_number);
     return false;
   }
   statusLED(true);
 
-  if (connectionFailures > 0) {
-    --connectionFailures;
+  if (WiFiEventData.connectionFailures > 0) {
+    --WiFiEventData.connectionFailures;
   }
   return true;
 }

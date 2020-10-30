@@ -31,7 +31,7 @@ void handle_root() {
   checkRAM(F("handle_root"));
 
   // if Wifi setup, launch setup wizard
-  if (wifiSetup)
+  if (WiFiEventData.wifiSetup)
   {
     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
