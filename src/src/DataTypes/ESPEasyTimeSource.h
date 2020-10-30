@@ -5,8 +5,8 @@
 #include <list>
 #include <time.h>
 
-#include "src/DataStructs/TimeChangeRule.h"
-#include "src/Globals/Plugins.h"
+#include "../../src/DataStructs/TimeChangeRule.h"
+#include "../../src/Globals/Plugins.h"
 
 
 enum timeSource_t {

@@ -1,12 +1,12 @@
 #include "ESPEasyWifi.h"
 
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasyWiFi_credentials.h"
-#include "../../ESPEasyWifi_ProcessEvent.h"
-#include "../../ESPEasyWiFiEvent.h"
 #include "../DataStructs/TimingStats.h"
-#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWiFiEvent.h"
+#include "../ESPEasyCore/ESPEasyWiFi_credentials.h"
+#include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/EventQueue.h"
@@ -17,7 +17,6 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
-
 
 
 // ********************************************************************************
@@ -89,7 +88,10 @@
 bool WiFiConnected() {
   START_TIMER;
 
-  if (unprocessedWifiEvents()) { return false; }
+  static bool recursiveCall = false;
+
+
+  if (WiFiEventData.unprocessedWifiEvents()) { return false; }
 
   bool wifi_isconnected = false;
   #ifdef ESP8266
@@ -106,7 +108,7 @@ bool WiFiConnected() {
       break;
     case STATION_IDLE:
     case STATION_CONNECTING:
-      wifi_isconnected = bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
+      wifi_isconnected = WiFiEventData.WiFiServicesInitialized();
       break;
 
     default:
@@ -123,10 +125,13 @@ bool WiFiConnected() {
 
   #endif
 
+  if (recursiveCall) return wifi_isconnected;
+  recursiveCall = true;
+
 
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   bool validWiFi = (WiFi.RSSI() < 0) && wifi_isconnected && hasIPaddr();
-  if (validWiFi != bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
+  if (validWiFi != WiFiEventData.WiFiServicesInitialized()) {
     // else wifiStatus is no longer in sync.
     if (checkAndResetWiFi()) {
       // Wifi has been reset, so no longer valid WiFi
@@ -136,75 +141,84 @@ bool WiFiConnected() {
 
   if (validWiFi) {
     // Connected, thus disable any timer to start AP mode. (except when in WiFi setup mode)
-    if (!wifiSetupConnect) {
-      timerAPstart.clear();
+    if (!WiFiEventData.wifiSetupConnect) {
+      WiFiEventData.timerAPstart.clear();
     }
     STOP_TIMER(WIFI_ISCONNECTED_STATS);
+    recursiveCall = false;
     // Only return true after some time since it got connected.
-    return wifi_considered_stable || lastConnectMoment.timeoutReached(100);
+    return WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
   }
 
-  if ((timerAPstart.isSet()) && timerAPstart.timeoutReached(WIFI_RECONNECT_WAIT)) {
+  if ((WiFiEventData.timerAPstart.isSet()) && WiFiEventData.timerAPstart.timeoutReached(WIFI_RECONNECT_WAIT)) {
     // Timer reached, so enable AP mode.
     if (!WifiIsAP(WiFi.getMode())) {
       setAP(true);
     }
-    timerAPstart.clear();
+    WiFiEventData.timerAPstart.clear();
   }
 
 
   // When made this far in the code, we apparently do not have valid WiFi connection.
-  if (!timerAPstart.isSet() && !WifiIsAP(WiFi.getMode())) {
+  if (!WiFiEventData.timerAPstart.isSet() && !WifiIsAP(WiFi.getMode())) {
     // First run we do not have WiFi connection any more, set timer to start AP mode
     // Only allow the automatic AP mode in the first N minutes after boot.
     if ((wdcounter / 2) < WIFI_ALLOW_AP_AFTERBOOT_PERIOD) {
-      timerAPstart.setNow();
+      WiFiEventData.timerAPstart.setNow();
       // Fixme TD-er: Make this more elegant as it now needs to know about the extra time needed for the AP start timer.
-      timerAPoff.set(timerAPstart.get() + (WIFI_RECONNECT_WAIT * 1000ll));
+      WiFiEventData.timerAPoff.set(WiFiEventData.timerAPstart.get() + (WIFI_RECONNECT_WAIT * 1000ll));
     }
   }
 
-  if (wifiConnectTimeoutReached() && !wifiSetup) {
+  if (wifiConnectTimeoutReached() && !WiFiEventData.wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
     if (!wifiAPmodeActivelyUsed()) {
-      wifiConnectAttemptNeeded = true;
+      WiFiEventData.wifiConnectAttemptNeeded = true;
     }
-    wifiConnectInProgress = false;
+    WiFiEventData.wifiConnectInProgress = false;
   }
   delay(1);
   STOP_TIMER(WIFI_NOTCONNECTED_STATS);
+  recursiveCall = false;
   return false;
 }
 
 void WiFiConnectRelaxed() {
-  if (!wifiConnectAttemptNeeded || wifiConnectInProgress) {
+  if (!WiFiEventData.WiFiConnectAllowed() || WiFiEventData.wifiConnectInProgress) {
     return; // already connected or connect attempt in progress need to disconnect first
   }
-  if (!processedScanDone) {
+  if (!WiFiEventData.processedScanDone) {
     // Scan is still active, so do not yet connect.
+    return;
+  }
+  if (WiFiEventData.unprocessedWifiEvents()) {
+    // Still need to process WiFi events
+    return;
+  }
+  if (!WiFiEventData.wifiSetupConnect && wifiAPmodeActivelyUsed()) {
     return;
   }
 
   // Start connect attempt now, so no longer needed to attempt new connection.
-  wifiConnectAttemptNeeded = false;
+  WiFiEventData.wifiConnectAttemptNeeded = false;
 
   if (!prepareWiFi()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : Could not prepare WiFi!"));
-    last_wifi_connect_attempt_moment.clear();
-    wifi_connect_attempt             = 1;
+    WiFiEventData.last_wifi_connect_attempt_moment.clear();
+    WiFiEventData.wifi_connect_attempt             = 1;
     return;
   }
 
-  if (wifiSetupConnect) {
+  if (WiFiEventData.wifiSetupConnect) {
     // wifiSetupConnect is when run from the setup page.
     RTC.lastWiFiSettingsIndex     = 0; // Force to load the first settings.
     RTC.lastWiFiChannel = 0; // Force slow connect
-    wifi_connect_attempt = 0;
-    wifiSetupConnect     = false;
+    WiFiEventData.wifi_connect_attempt = 0;
+    WiFiEventData.wifiSetupConnect     = false;
   }
 
   // Switch between WiFi credentials
-  if ((wifi_connect_attempt != 0) && ((wifi_connect_attempt % 2) == 0)) {
+  if ((WiFiEventData.wifi_connect_attempt != 0) && ((WiFiEventData.wifi_connect_attempt % 2) == 0)) {
     if (selectNextWiFiSettings()) {
       // Switch WiFi settings, so the last known BSSID cannot be used for a quick reconnect.
       RTC.lastBSSID[0] = 0;
@@ -213,30 +227,24 @@ void WiFiConnectRelaxed() {
   const char *ssid       = getLastWiFiSettingsSSID();
   const char *passphrase = getLastWiFiSettingsPassphrase();
 
+  // First try quick reconnect using last known BSSID and channel.
+  bool useQuickConnect = RTC.lastBSSID[0] != 0 && RTC.lastWiFiChannel != 0 && WiFiEventData.wifi_connect_attempt < 3;
+  WiFiEventData.markWiFiBegin();
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI : Connecting ");
     log += ssid;
     log += F(" attempt #");
-    log += wifi_connect_attempt + 1;
+    log += WiFiEventData.wifi_connect_attempt;
     addLog(LOG_LEVEL_INFO, log);
   }
-  wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
-  lastDisconnectMoment.clear();
-  lastConnectMoment.clear();
-  lastGetIPmoment.clear();
-  wifi_considered_stable = false;
-  last_wifi_connect_attempt_moment.setNow();
-  wifiConnectInProgress            = true;
 
-  // First try quick reconnect using last known BSSID and channel.
-  bool useQuickConnect = RTC.lastBSSID[0] != 0 && RTC.lastWiFiChannel != 0 && wifi_connect_attempt < 3;
 
   if (useQuickConnect) {
     WiFi.begin(ssid, passphrase, RTC.lastWiFiChannel, &RTC.lastBSSID[0]);
   } else {
     WiFi.begin(ssid, passphrase);
   }
-  ++wifi_connect_attempt;
   logConnectionStatus();
 }
 
@@ -269,7 +277,7 @@ bool prepareWiFi() {
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   #endif // if defined(ESP32)
 
-  const bool canSkipScan = RTC.lastWiFiChannel != 0 && wifi_connect_attempt <= 1;
+  const bool canSkipScan = RTC.lastWiFiChannel != 0 && WiFiEventData.wifi_connect_attempt <= 1;
 
   if (!canSkipScan) {
     WifiScan(false, true);
@@ -294,7 +302,7 @@ bool checkAndResetWiFi() {
       break;
     case STATION_IDLE:
     case STATION_CONNECTING:
-      if (!last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+      if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
         return false;
       }
       break;
@@ -314,7 +322,7 @@ bool checkAndResetWiFi() {
   if (WiFi.isConnected()) {
     return false;
   } else {
-    if (!last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+    if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
       return false;
     }
     String log = F("WIFI  : WiFiConnected() out of sync: ");
@@ -331,29 +339,11 @@ bool checkAndResetWiFi() {
 
 
 void resetWiFi() {
-  if (lastWiFiResetMoment.isSet() && !lastWiFiResetMoment.timeoutReached(1000)) {
+  if (WiFiEventData.lastWiFiResetMoment.isSet() && !WiFiEventData.lastWiFiResetMoment.timeoutReached(1000)) {
     // Don't reset WiFi too often
     return;
   }
-  lastDisconnectMoment.clear();
-  lastWiFiResetMoment.setNow();
-  wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
-  lastConnectMoment.clear();
-  wifi_considered_stable = false;
-  lastGetIPmoment.clear();
-  lastGetScanMoment.clear();
-  last_wifi_connect_attempt_moment.clear();
-  timerAPstart.clear();
-
-  // Mark all flags to default to prevent handling old events.
-  processedConnect          = true;
-  processedDisconnect       = true;
-  processedGotIP            = true;
-  processedDHCPTimeout      = true;
-  processedConnectAPmode    = true;
-  processedDisconnectAPmode = true;
-  processedScanDone         = true;
-  wifiConnectAttemptNeeded  = true;
+  WiFiEventData.clearAll();
   WifiDisconnect();
 
   // Send this log only after WifiDisconnect() or else sending to syslog may cause issues
@@ -382,7 +372,7 @@ void initWiFi()
   setWifiMode(WIFI_OFF);
 
 #if defined(ESP32)
-  wm_event_id = WiFi.onEvent(WiFiEvent);
+  WiFiEventData.wm_event_id = WiFi.onEvent(WiFiEvent);
 #endif
 #ifdef ESP8266
   // WiFi event handlers
@@ -402,15 +392,14 @@ void WifiDisconnect()
 {
   #if defined(ESP32)
   WiFi.disconnect();
-  WiFi.removeEvent(wm_event_id);
+  WiFi.removeEvent(WiFiEventData.wm_event_id);
   #else // if defined(ESP32)
   ETS_UART_INTR_DISABLE();
   wifi_station_disconnect();
   ETS_UART_INTR_ENABLE();
   #endif // if defined(ESP32)
-  wifiStatus          = ESPEASY_WIFI_DISCONNECTED;
-  processedDisconnect = false;
-  wifiConnectAttemptNeeded = true;
+  WiFiEventData.setWiFiDisconnected();
+  WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_ASSOC_LEAVE);
 }
 
 // ********************************************************************************
@@ -423,8 +412,8 @@ void WifiScan(bool async, bool quick) {
   }
   addLog(LOG_LEVEL_INFO, F("WIFI  : Start network scan"));
   bool show_hidden         = true;
-  processedScanDone = false;
-  lastGetScanMoment.setNow();
+  WiFiEventData.processedScanDone = false;
+  WiFiEventData.lastGetScanMoment.setNow();
   if (quick) {
     #ifdef ESP8266
     // Only scan a single channel if the RTC.lastWiFiChannel is known to speed up connection time.
@@ -561,7 +550,7 @@ void setAPinternal(bool enable)
       }
     }
     #endif // ifdef ESP32
-    timerAPoff.setNow();
+    WiFiEventData.timerAPoff.setNow();
   } else {
     if (dnsServerActive) {
       dnsServerActive = false;
@@ -607,6 +596,13 @@ void setWifiMode(WiFiMode_t wifimode) {
     delay(100);
     --retry;
   }
+  retry = 2;
+  while (WiFi.getMode() != wifimode && retry > 0) {
+    addLog(LOG_LEVEL_INFO, F("WIFI : mode not yet set"));
+    delay(100);
+    --retry;
+  }
+
 
   if (wifimode == WIFI_OFF) {
     delay(1000);
@@ -656,37 +652,37 @@ bool useStaticIP() {
 
 bool wifiConnectTimeoutReached() {
   // For the first attempt, do not wait to start connecting.
-  if (wifi_connect_attempt == 0) { return true; }
+  if (WiFiEventData.wifi_connect_attempt == 0) { return true; }
 
-  if (!last_wifi_connect_attempt_moment.isSet()) {
+  if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
     // No attempt made
     return true;
   }
 
-  if (lastDisconnectMoment.isSet()) {
+  if (WiFiEventData.lastDisconnectMoment.isSet()) {
     // Connection attempt was already ended.
     return true;
   }
 
   if (WifiIsAP(WiFi.getMode())) {
     // Initial setup of WiFi, may take much longer since accesspoint is still active.
-    return last_wifi_connect_attempt_moment.timeoutReached(20000);
+    return WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(20000);
   }
 
   // wait until it connects + add some device specific random offset to prevent
   // all nodes overloading the access point when turning on at the same time.
   #if defined(ESP8266)
-  const unsigned int randomOffset_in_msec = (wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getChipId() & 0xF));
+  const unsigned int randomOffset_in_msec = (WiFiEventData.wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getChipId() & 0xF));
   #endif // if defined(ESP8266)
   #if defined(ESP32)
-  const unsigned int randomOffset_in_msec = (wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getEfuseMac() & 0xF));
+  const unsigned int randomOffset_in_msec = (WiFiEventData.wifi_connect_attempt == 1) ? 0 : 1000 * ((ESP.getEfuseMac() & 0xF));
   #endif // if defined(ESP32)
-  return last_wifi_connect_attempt_moment.timeoutReached(DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_msec);
+  return WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(DEFAULT_WIFI_CONNECTION_TIMEOUT + randomOffset_in_msec);
 }
 
 bool wifiAPmodeActivelyUsed()
 {
-  if (!WifiIsAP(WiFi.getMode()) || (!timerAPoff.isSet())) {
+  if (!WifiIsAP(WiFi.getMode()) || (!WiFiEventData.timerAPoff.isSet())) {
     // AP not active or soon to be disabled in processDisableAPmode()
     return false;
   }
@@ -699,7 +695,7 @@ bool wifiAPmodeActivelyUsed()
 void setConnectionSpeed() {
   #ifdef ESP8266
 
-  if (!Settings.ForceWiFi_bg_mode() || (wifi_connect_attempt > 10)) {
+  if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.wifi_connect_attempt > 10)) {
     WiFi.setPhyMode(WIFI_PHY_MODE_11N);
   } else {
     WiFi.setPhyMode(WIFI_PHY_MODE_11G);
@@ -834,16 +830,16 @@ String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
 
 String ESPeasyWifiStatusToString() {
   String log;
-  if (wifiStatus == ESPEASY_WIFI_DISCONNECTED) {
+  if (WiFiEventData.WiFiDisconnected()) {
     log = F("DISCONNECTED");
   } else {
-    if (bitRead(wifiStatus, ESPEASY_WIFI_CONNECTED)) {
+    if (WiFiEventData.WiFiConnected()) {
       log += F("Conn. ");
     }
-    if (bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP)) {
+    if (WiFiEventData.WiFiGotIP()) {
       log += F("IP ");
     }
-    if (bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED)) {
+    if (WiFiEventData.WiFiServicesInitialized()) {
       log += F("Init");
     }
   }
@@ -915,10 +911,10 @@ void logConnectionStatus() {
 String getLastDisconnectReason() {
   String reason = "(";
 
-  reason += lastDisconnectReason;
+  reason += WiFiEventData.lastDisconnectReason;
   reason += F(") ");
 
-  switch (lastDisconnectReason) {
+  switch (WiFiEventData.lastDisconnectReason) {
     case WIFI_DISCONNECT_REASON_UNSPECIFIED:                reason += F("Unspecified");              break;
     case WIFI_DISCONNECT_REASON_AUTH_EXPIRE:                reason += F("Auth expire");              break;
     case WIFI_DISCONNECT_REASON_AUTH_LEAVE:                 reason += F("Auth leave");               break;
