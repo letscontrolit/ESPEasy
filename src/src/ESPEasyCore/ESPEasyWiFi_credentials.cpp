@@ -74,21 +74,21 @@ bool selectNextWiFiSettings() {
     return false; // Nothing changed.
   }
 #ifdef USES_ESPEASY_NOW
-  if (espeasy_now_only != isESPEasy_now_only()) {
-    if (!espeasy_now_only) {
-      espeasy_now_only = true;
+  if (WiFiEventData.espeasy_now_only != isESPEasy_now_only()) {
+    if (!WiFiEventData.espeasy_now_only) {
+      WiFiEventData.espeasy_now_only = true;
       ESPEasy_now_handler.end();
       addLog(LOG_LEVEL_INFO, F("ESPEasy-Now only mode"));
     }
-    if (espeasy_now_only) {
+    if (WiFiEventData.espeasy_now_only) {
       if (!ESPEasy_now_handler.begin()) {
-        espeasy_now_only = false;
+        WiFiEventData.espeasy_now_only = false;
       }
     }
   }
-  if (espeasy_now_only && use_EspEasy_now) {
+  if (WiFiEventData.espeasy_now_only && use_EspEasy_now) {
     if (!ESPEasy_now_handler.active()) {
-      espeasy_now_only = false;
+      WiFiEventData.espeasy_now_only = false;
     }
   }
 #endif

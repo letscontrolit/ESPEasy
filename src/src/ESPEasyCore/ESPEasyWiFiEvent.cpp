@@ -3,20 +3,20 @@
 #ifdef HAS_ETHERNET
 #include "ETH.h"
 #endif
-#include "ESPEasyWifi_ProcessEvent.h"
 
-#include "src/DataStructs/RTCStruct.h"
+#include "../DataStructs/RTCStruct.h"
 
-#include "src/DataTypes/ESPEasyTimeSource.h"
+#include "../DataTypes/ESPEasyTimeSource.h"
 
-#include "src/ESPEasyCore/ESPEasy_Log.h"
-#include "src/ESPEasyCore/ESPEasyNetwork.h"
-#include "src/ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 
-#include "src/Globals/ESPEasyWiFiEvent.h"
-#include "src/Globals/RTC.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/RTC.h"
 
-#include "src/Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 
 #ifdef HAS_ETHERNET
@@ -43,14 +43,6 @@ void setUseStaticIP(bool enabled) {
   tmp_wifi.set_use_static_ip(enabled);
 }
 
-void markGotIP() {
-  lastGetIPmoment.setNow();
-  // Create the 'got IP event' so mark the wifiStatus to not have the got IP flag set
-  // This also implies the services are not fully initialized.
-  bitClear(wifiStatus, ESPEASY_WIFI_GOT_IP);
-  bitClear(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
-  processedGotIP = false;
-}
 
 // ********************************************************************************
 // Functions called on events.
@@ -65,53 +57,32 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
   switch (event) {
     case SYSTEM_EVENT_STA_CONNECTED:
     {
-      RTC.lastWiFiChannel = info.connected.channel;
-      for (byte i = 0; i < 6; ++i) {
-        if (RTC.lastBSSID[i] != info.connected.bssid[i]) {
-          bssid_changed = true;
-          RTC.lastBSSID[i]  = info.connected.bssid[i];
-        }
-      }
       char ssid_copy[33] = { 0 }; // Ensure space for maximum len SSID (32) plus trailing 0
       memcpy(ssid_copy, info.connected.ssid, info.connected.ssid_len);
       ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
-      last_ssid = (const char*) ssid_copy;
-      lastConnectMoment.setNow();
-      processedConnect  = false;
+      WiFiEventData.markConnected((const char*) ssid_copy, info.connected.bssid, info.connected.channel);
       break;
     }
     case SYSTEM_EVENT_STA_DISCONNECTED:
       if (!ignoreDisconnectEvent) {
         ignoreDisconnectEvent = true;
-        lastDisconnectMoment.setNow();
+        WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.disconnected.reason));
         WiFi.persistent(false);
         WiFi.disconnect(true);
-
-        if (last_wifi_connect_attempt_moment.isSet() && (!lastConnectMoment.isSet())) {
-          // There was an unsuccessful connection attempt
-          lastConnectedDuration_us = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
-        } else {
-          lastConnectedDuration_us = lastConnectMoment.timeDiff(lastDisconnectMoment);
-        }
-        processedDisconnect  = false;
-        lastDisconnectReason = static_cast<WiFiDisconnectReason>(info.disconnected.reason);
       }
       break;
     case SYSTEM_EVENT_STA_GOT_IP:
       ignoreDisconnectEvent = false;
-      markGotIP();
+      WiFiEventData.markGotIP();
       break;
     case SYSTEM_EVENT_AP_STACONNECTED:
-
-      lastMacConnectedAPmode.set(info.sta_connected.mac);
-      processedConnectAPmode = false;
+      WiFiEventData.markConnectedAPmode(info.sta_connected.mac);
       break;
     case SYSTEM_EVENT_AP_STADISCONNECTED:
-      lastMacConnectedAPmode.set(info.sta_disconnected.mac);
-      processedDisconnectAPmode = false;
+      WiFiEventData.markDisconnectedAPmode(info.sta_disconnected.mac);
       break;
     case SYSTEM_EVENT_SCAN_DONE:
-      processedScanDone = false;
+      WiFiEventData.processedScanDone = false;
       break;
 #ifdef HAS_ETHERNET
     case SYSTEM_EVENT_ETH_START:
@@ -168,62 +139,37 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 #ifdef ESP8266
 
 void onConnected(const WiFiEventStationModeConnected& event) {
-  lastConnectMoment.setNow();
-  processedConnect  = false;
-  channel_changed   = RTC.lastWiFiChannel != event.channel;
-  RTC.lastWiFiChannel      = event.channel;
-  last_ssid         = event.ssid;
-  bssid_changed     = false;
-
-  for (byte i = 0; i < 6; ++i) {
-    if (RTC.lastBSSID[i] != event.bssid[i]) {
-      bssid_changed = true;
-      RTC.lastBSSID[i]  = event.bssid[i];
-    }
-  }
+  WiFiEventData.markConnected(event.ssid, event.bssid, event.channel);
 }
 
 void onDisconnect(const WiFiEventStationModeDisconnected& event) {
-  lastDisconnectMoment.setNow();
-
-  if (last_wifi_connect_attempt_moment.isSet() && !lastConnectMoment.isSet()) {
-    // There was an unsuccessful connection attempt
-    lastConnectedDuration_us = last_wifi_connect_attempt_moment.timeDiff(lastDisconnectMoment);
-  } else {
-    lastConnectedDuration_us = lastConnectMoment.timeDiff(lastDisconnectMoment);
-  }
-  lastDisconnectReason = event.reason;
-
+  WiFiEventData.markDisconnect(event.reason);
   if (WiFi.status() == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
     WiFi.persistent(false);
     WiFi.disconnect(true);
   }
-  processedDisconnect = false;
 }
 
 void onGotIP(const WiFiEventStationModeGotIP& event) {
-  markGotIP();
+  WiFiEventData.markGotIP();
 }
 
 void ICACHE_RAM_ATTR onDHCPTimeout() {
-  processedDHCPTimeout = false;
+  WiFiEventData.processedDHCPTimeout = false;
 }
 
 void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
-  lastMacConnectedAPmode.set(event.mac);
-  lastAPmodeStationConnectMoment.setNow();
-  processedConnectAPmode = false;
+  WiFiEventData.markConnectedAPmode(event.mac);
 }
 
 void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
-  lastMacDisconnectedAPmode.set(event.mac);
-  processedDisconnectAPmode = false;
+  WiFiEventData.markDisconnectedAPmode(event.mac);
 }
 
 void onProbeRequestAPmode(const WiFiEventSoftAPModeProbeRequestReceived& event) {
   APModeProbeRequestReceived_list.push_back(event);
-  processedProbeRequestAPmode = false;
+  WiFiEventData.processedProbeRequestAPmode = false;
 }
 
 #endif // ifdef ESP8266

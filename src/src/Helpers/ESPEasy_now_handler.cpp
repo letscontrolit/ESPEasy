@@ -2,7 +2,6 @@
 
 #ifdef USES_ESPEASY_NOW
 
-# include "../../ESPEasyWiFi_credentials.h"
 # include "../../ESPEasy_fdwdecl.h"
 # include "../ControllerQueue/MQTT_queue_element.h"
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
@@ -12,6 +11,7 @@
 # include "../DataStructs/TimingStats.h"
 # include "../ESPEasyCore/Controller.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
+# include "../ESPEasyCore/ESPEasyWiFi_credentials.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 # include "../Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/ESPEasy_time.h"
@@ -88,7 +88,7 @@ bool ESPEasy_now_handler_t::begin()
   MAC_address bssid;
   _controllerIndex = INVALID_CONTROLLER_INDEX;
 
-  if (espeasy_now_only) {
+  if (WiFiEventData.espeasy_now_only) {
     WifiScan(false, false);
     addPeerFromWiFiScan();
   }
@@ -106,7 +106,7 @@ bool ESPEasy_now_handler_t::begin()
   const String passphrase = F(ESPEASY_NOW_TMP_PASSPHRASE);
 
   setAP(true);
-  if (espeasy_now_only) {
+  if (WiFiEventData.espeasy_now_only) {
     if (bssid.all_zero()) {
       WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel);
     } else {
@@ -244,7 +244,7 @@ bool ESPEasy_now_handler_t::loop()
 
   if (_send_failed_count > 30 /*|| !active()*/) {
     _send_failed_count = 0;
-    espeasy_now_only   = true;
+    WiFiEventData.espeasy_now_only   = true;
 
     // Start scanning the next channel to see if we may end up with a new found node
     //    WifiScan(false, false);

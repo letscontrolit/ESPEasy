@@ -768,7 +768,7 @@ void SSDP_update() {
 // ********************************************************************************
 bool getSubnetRange(IPAddress& low, IPAddress& high)
 {
-  if (!bitRead(wifiStatus, ESPEASY_WIFI_GOT_IP)) {
+  if (!WiFiEventData.WiFiGotIP()) {
     return false;
   }
   

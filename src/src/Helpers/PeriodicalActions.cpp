@@ -123,7 +123,7 @@ void runOncePerSecond()
   }
 
   if (Settings.ConnectionFailuresThreshold)
-    if (connectionFailures > Settings.ConnectionFailuresThreshold)
+    if (WiFiEventData.connectionFailures > Settings.ConnectionFailuresThreshold)
       delayedReboot(60, ESPEasy_Scheduler::IntendedRebootReason_e::DelayedReboot);
 
   if (cmd_within_mainloop != 0)
@@ -209,7 +209,7 @@ void runEach30Seconds()
     log = F("WD   : Uptime ");
     log += wdcounter / 2;
     log += F(" ConnectFailures ");
-    log += connectionFailures;
+    log += WiFiEventData.connectionFailures;
     log += F(" FreeMem ");
     log += FreeMem();
     #ifdef HAS_ETHERNET
@@ -245,7 +245,7 @@ void runEach30Seconds()
   #endif // USES_SSDP
   #endif
 #if FEATURE_ADC_VCC
-  if (!wifiConnectInProgress) {
+  if (!WiFiEventData.wifiConnectInProgress) {
     vcc = ESP.getVcc() / 1000.0f;
   }
 #endif
@@ -310,8 +310,8 @@ void processMQTTdelayQueue() {
 
   if (!processed) {
     if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
-      if (connectionFailures > 0) {
-        --connectionFailures;
+      if (WiFiEventData.connectionFailures > 0) {
+        --WiFiEventData.connectionFailures;
       }
       processed = true;
     }

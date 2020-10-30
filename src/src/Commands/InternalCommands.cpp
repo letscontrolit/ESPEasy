@@ -132,20 +132,29 @@ bool do_command_case(const String              & cmd_lc,
                      EventValueSourceGroup::Enum group,
                      bool                      & retval)
 {
-  if (cmd_lc.equals(cmd_test)) {
-    if (!checkSourceFlags(event->Source, group)) {
-      status = return_incorrect_source();
-      return false;
-    } else if (!checkNrArguments(cmd, line, nrArguments)) {
+  if (!cmd_lc.equals(cmd_test)) {
+    return false;
+  }
+  if (!checkSourceFlags(event->Source, group)) {
+    status = return_incorrect_source();
+    return false;
+  } 
+  // FIXME TD-er: Do not check nr arguments from MQTT source.
+  // See https://github.com/letscontrolit/ESPEasy/issues/3344
+  // C005 does recreate command partly from topic and published message
+  // e.g. ESP_Easy/Bathroom_pir_env/GPIO/14 with data 0 or 1
+  // This only allows for 2 parameters, but some commands need more arguments (default to "0")
+  const bool mustCheckNrArguments = event->Source != EventValueSource::Enum::VALUE_SOURCE_MQTT;
+  if (mustCheckNrArguments) {
+    if (!checkNrArguments(cmd, line, nrArguments)) {
       status = return_incorrect_nr_arguments();
       retval = false;
-    } else  {
-      status = pFunc(event, line);
-      retval = true;
+      return true; // Command is handled
     }
-    return true; // Command is handled
-  }
-  return false;
+  } 
+  status = pFunc(event, line);
+  retval = true;
+  return true; // Command is handled
 }
 
 bool executeInternalCommand(const char *cmd, struct EventStruct *event, const char *line, String& status)
