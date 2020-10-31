@@ -9,6 +9,7 @@
 
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/Settings.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 
 #include "../Helpers/StringConverter.h"
 
@@ -60,7 +61,7 @@ String Command_Wifi_Scan(struct EventStruct *event, const char *Line)
 
 String Command_Wifi_Connect(struct EventStruct *event, const char *Line)
 {
-  wifiConnectAttemptNeeded = true;
+  WiFiEventData.wifiConnectAttemptNeeded = true;
   return return_command_success();
 }
 

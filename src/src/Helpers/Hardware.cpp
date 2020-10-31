@@ -342,7 +342,7 @@ void checkResetFactoryPin() {
 
 #ifdef ESP8266
 int espeasy_analogRead(int pin) {
-  if (!wifiConnectInProgress) {
+  if (!WiFiEventData.wifiConnectInProgress) {
     lastADCvalue = analogRead(A0);
   }
   return lastADCvalue;
