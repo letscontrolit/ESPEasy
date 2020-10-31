@@ -11,6 +11,7 @@
 #include "../DataTypes/TaskIndex.h"
 #include "../Globals/C016_ControllerCache.h"
 #include "../Globals/ExtraTaskSettings.h"
+#include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
 
 
