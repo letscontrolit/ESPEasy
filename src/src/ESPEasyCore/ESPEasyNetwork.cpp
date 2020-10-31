@@ -15,6 +15,7 @@
    Ethernet or Wifi Support for ESP32 Build flag HAS_ETHERNET
 \*********************************************************************************************/
 void NetworkConnectRelaxed() {
+  if (NetworkConnected()) return;
 #ifdef HAS_ETHERNET
   addLog(LOG_LEVEL_INFO, F("Connect to: "));
   addLog(LOG_LEVEL_INFO, toString(active_network_medium));
