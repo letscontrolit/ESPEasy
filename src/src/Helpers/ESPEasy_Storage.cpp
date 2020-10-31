@@ -378,8 +378,8 @@ String SaveSettings(void)
 
     if (WifiIsAP(WiFi.getMode())) {
       // Security settings are saved, may be update of WiFi settings or hostname.
-      wifiSetupConnect         = true;
-      wifiConnectAttemptNeeded = true;
+      WiFiEventData.wifiSetupConnect         = true;
+      WiFiEventData.wifiConnectAttemptNeeded = true;
     }
   }
   ExtendedControllerCredentials.save();
