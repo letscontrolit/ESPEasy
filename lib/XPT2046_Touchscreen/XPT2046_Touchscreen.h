@@ -51,14 +51,16 @@ public:
 	bool bufferEmpty();
 	uint8_t bufferSize() { return 1; }
 	void setRotation(uint8_t n) { rotation = n % 4; }
+	void setRotationFlipped(bool f) { flipped = f; }
 // protected:
 	volatile bool isrWake=true;
 
 private:
 	void update();
-	uint8_t csPin, tirqPin, rotation=1;
-	int16_t xraw=0, yraw=0, zraw=0;
-	uint32_t msraw=0x80000000;
+	uint8_t  csPin, tirqPin, rotation = 1;
+	int16_t  xraw = 0, yraw = 0, zraw = 0;
+	uint32_t msraw = 0x80000000;
+	bool     flipped = false;
 };
 
 #ifndef ISR_PREFIX

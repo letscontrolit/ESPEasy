@@ -31,19 +31,21 @@ struct P099_data_struct : public PluginTaskData_base
 
   void      reset();
   bool init(taskIndex_t taskIndex,
-            uint8_t  _cs,
-            uint8_t  _rotation,
-            uint8_t  _z_treshold,
-            bool     _send_xy,
-            bool     _send_z,
-            bool     _useCalibration,
-            uint16_t _ts_x_res,
-            uint16_t _ts_y_res);
+            uint8_t     cs,
+            uint8_t     rotation,
+            bool        flipped,
+            uint8_t     z_treshold,
+            bool        send_xy,
+            bool        send_z,
+            bool        useCalibration,
+            uint16_t    ts_x_res,
+            uint16_t    ts_y_res);
   bool isInitialized() const;
   void loadTouchObjects(taskIndex_t taskIndex);
   bool touched();
 	void readData(uint16_t *x, uint16_t *y, uint8_t *z);
   void setRotation(uint8_t n);
+  void setRotationFlipped(bool _flipped);
   bool isCalibrationActive();
   bool isValidAndTouchedTouchObject(uint16_t x, uint16_t y, String &selectedObjectName, int &selectedObjectIndex, uint8_t checkObjectCount);
   bool setTouchObjectState(String touchObject, bool state, uint8_t checkObjectCount);
@@ -51,14 +53,15 @@ struct P099_data_struct : public PluginTaskData_base
 
   // This is initialized by calling init()
   XPT2046_Touchscreen *touchscreen;
-  uint8_t  address_ts_cs;
-  uint8_t  rotation;
-  uint8_t  z_treshold;
-  bool     send_xy;
-  bool     send_z;
-  bool     useCalibration;
-  uint16_t ts_x_res;
-  uint16_t ts_y_res;
+  uint8_t  _address_ts_cs;
+  uint8_t  _rotation;
+  bool     _flipped;
+  uint8_t  _z_treshold;
+  bool     _send_xy;
+  bool     _send_z;
+  bool     _useCalibration;
+  uint16_t _ts_x_res;
+  uint16_t _ts_y_res;
 
   // This is filled during checking of a touchobject
   uint32_t SurfaceAreas[P099_MaxObjectCount];

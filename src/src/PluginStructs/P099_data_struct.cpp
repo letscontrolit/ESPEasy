@@ -34,28 +34,31 @@ void P099_data_struct::reset() {
  * Initialize data and set up the touchscreen.
  */
 bool P099_data_struct::init(taskIndex_t taskIndex,
-                            uint8_t     _cs,
-                            uint8_t     _rotation,
-                            uint8_t     _z_treshold,
-                            bool        _send_xy,
-                            bool        _send_z,
-                            bool        _useCalibration,
-                            uint16_t    _ts_x_res,
-                            uint16_t    _ts_y_res) {
+                            uint8_t     cs,
+                            uint8_t     rotation,
+                            bool        flipped,
+                            uint8_t     z_treshold,
+                            bool        send_xy,
+                            bool        send_z,
+                            bool        useCalibration,
+                            uint16_t    ts_x_res,
+                            uint16_t    ts_y_res) {
   reset();
 
-  address_ts_cs  = _cs;
-  z_treshold     = _z_treshold;
-  rotation       = _rotation;
-  send_xy        = _send_xy;
-  send_z         = _send_z;
-  useCalibration = _useCalibration;
-  ts_x_res       = _ts_x_res;
-  ts_y_res       = _ts_y_res;
+  _address_ts_cs  = cs;
+  _z_treshold     = z_treshold;
+  _rotation       = rotation;
+  _flipped        = flipped;
+  _send_xy        = send_xy;
+  _send_z         = send_z;
+  _useCalibration = useCalibration;
+  _ts_x_res       = ts_x_res;
+  _ts_y_res       = ts_y_res;
 
-  touchscreen = new (std::nothrow) XPT2046_Touchscreen(address_ts_cs);
+  touchscreen = new (std::nothrow) XPT2046_Touchscreen(_address_ts_cs);
   if (touchscreen != nullptr) {
-    touchscreen->setRotation(rotation);
+    touchscreen->setRotation(_rotation);
+    touchscreen->setRotationFlipped(_flipped);
     touchscreen->begin();
     loadTouchObjects(taskIndex);
 #ifdef PLUGIN_099_DEBUG
@@ -130,10 +133,24 @@ void P099_data_struct::setRotation(uint8_t n) {
 }
 
 /**
+ * Only set rotationFlipped if the touchscreen is initialized.
+ */
+void P099_data_struct::setRotationFlipped(bool flipped) {
+  if (isInitialized()) {
+    touchscreen->setRotationFlipped(flipped);
+#ifdef PLUGIN_099_DEBUG
+    String log = F("P099 DEBUG RotationFlipped set: ");
+    log += flipped;
+    addLog(LOG_LEVEL_INFO, log);
+#endif // PLUGIN_099_DEBUG
+  }
+}
+
+/**
  * Determine if calibration is enabled and usable.
  */
 bool P099_data_struct::isCalibrationActive() {
-  return    useCalibration
+  return    _useCalibration
          && StoredSettings.Calibration.top_left.x > 0
          && StoredSettings.Calibration.top_left.y > 0
          && StoredSettings.Calibration.bottom_right.x > 0
@@ -252,7 +269,7 @@ void P099_data_struct::scaleRawToCalibrated(uint16_t &x, uint16_t &y) {
       if (_x > StoredSettings.Calibration.bottom_right.x) {
         _x = StoredSettings.Calibration.bottom_right.x;
       }
-      float x_fact = (StoredSettings.Calibration.bottom_right.x - StoredSettings.Calibration.top_left.x) / ts_x_res;
+      float x_fact = (StoredSettings.Calibration.bottom_right.x - StoredSettings.Calibration.top_left.x) / _ts_x_res;
       x = int((_x * 1.0f) / x_fact);
     }
     uint16_t _y = y - StoredSettings.Calibration.top_left.y;
@@ -262,7 +279,7 @@ void P099_data_struct::scaleRawToCalibrated(uint16_t &x, uint16_t &y) {
       if (_y > StoredSettings.Calibration.bottom_right.y) {
         _y = StoredSettings.Calibration.bottom_right.y;
       }
-      float y_fact = (StoredSettings.Calibration.bottom_right.y - StoredSettings.Calibration.top_left.y) / ts_y_res;
+      float y_fact = (StoredSettings.Calibration.bottom_right.y - StoredSettings.Calibration.top_left.y) / _ts_y_res;
       y = int((_y * 1.0f) / y_fact);
     }
   }

@@ -25,6 +25,16 @@
  
    "
    "
+   ``touch,flip,<0|1>``
+
+   Flip the rotation setting by 0 (default, value 0) or 180 degrees (numeric value > 0)
+
+   ","
+   Examples:
+
+   ``touch,flip,1``           Flip the touchscreen rotation by 180 degrees.
+   "
+   "
    ``touch,enable,<objectname>``
 
    Enable a disabled touchobject by name.

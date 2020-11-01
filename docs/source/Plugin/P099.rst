@@ -41,7 +41,7 @@ The only connection, besides the standard SPI signals ``MISO``, ``MOSI`` and ``C
 Screen
 ~~~~~~
 
-To allow scaling the touch coordinates to screen coordinates, the screen resolution and (touchscreen) rotation need to be configured, as the 0,0 coordinates of the screen and touchscreen should match, for mapping a touch coordinate to a screen coordinate.
+To allow scaling the touch coordinates to screen coordinates, the screen resolution and (touchscreen) rotation need to be configured, as the 0,0 coordinates of the screen and touchscreen should match, for mapping a touch coordinate to a screen coordinate. An option to flip the rotation by 180 degrees is available to be able to set the rotation to the same value as the ILI9341 TFT screen plugin.
 
 Touch configuration
 ~~~~~~~~~~~~~~~~~~~~
@@ -79,6 +79,8 @@ When the name of the touchobject starts with '_' (underscore), that objectname i
 Per touchobject, checkboxes are available to configure that object as an On/Off button, and optionally invert the state. When the On/Off button option is checked, the event fired by the object has its On/Off state as an argument, just like a switch does. So in that case it fires ``XPT2046#button`` with the state (0 or 1) as the ``%eventvalue%``. Any X, Y or Z values can be used by reading ``[XPT2046#X]`` etc.
 
 Object names do not have to be unique, though they should not be the same as the Values defined in the Device settings. When defining multiple touchobjects with the same name and options (On/Off button and Inverted), but different touch coordinates, they will fire the same event for different touch coordinates. Also, when using the ``touch,enable,<objectname>`` and ``touch,disable,<objectname>`` commands, all objects with that name will be enabled/disabled.
+
+When configuring touchobjects as On/Off button, the debounce delay can be configured, to avoid generating multiple On/Off events when touching the screen. Default 150 msec. proved to be working fine during testing, but for a somewhat quicker response the value can be decreased.
 
 How to calibrate
 ~~~~~~~~~~~~~~~~
