@@ -44,6 +44,8 @@ bool loglevelActiveFor(byte destination, byte logLevel);
 
 bool loglevelActive(byte logLevel, byte logLevelSettings);
 
+void addToLog(byte loglevel, const __FlashStringHelper *str);
+
 void addToLog(byte loglevel, const String& string);
 
 void addToLog(byte logLevel, const char *line);
