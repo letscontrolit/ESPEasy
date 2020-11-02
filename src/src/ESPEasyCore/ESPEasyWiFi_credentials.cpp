@@ -1,6 +1,6 @@
 #include "ESPEasyWiFi_credentials.h"
-#include "src/Globals/RTC.h"
-#include "src/Globals/SecuritySettings.h"
+#include "../Globals/RTC.h"
+#include "../Globals/SecuritySettings.h"
 
 // ********************************************************************************
 // Manage WiFi credentials
