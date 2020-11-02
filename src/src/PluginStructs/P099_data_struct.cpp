@@ -262,25 +262,25 @@ bool P099_data_struct::setTouchObjectState(String touchObject, bool state, uint8
  */
 void P099_data_struct::scaleRawToCalibrated(uint16_t &x, uint16_t &y) {
   if (isCalibrationActive()) {
-    uint16_t _x = x - StoredSettings.Calibration.top_left.x;
-    if (_x <= 0) {
+    uint16_t lx = x - StoredSettings.Calibration.top_left.x;
+    if (lx <= 0) {
       x = 0;
     } else {
-      if (_x > StoredSettings.Calibration.bottom_right.x) {
-        _x = StoredSettings.Calibration.bottom_right.x;
+      if (lx > StoredSettings.Calibration.bottom_right.x) {
+        lx = StoredSettings.Calibration.bottom_right.x;
       }
-      float x_fact = (StoredSettings.Calibration.bottom_right.x - StoredSettings.Calibration.top_left.x) / _ts_x_res;
-      x = int((_x * 1.0f) / x_fact);
+      float x_fact = static_cast<float>(StoredSettings.Calibration.bottom_right.x - StoredSettings.Calibration.top_left.x) / static_cast<float>(_ts_x_res);
+      x = static_cast<uint16_t>(round(lx / x_fact));
     }
-    uint16_t _y = y - StoredSettings.Calibration.top_left.y;
-    if (_y <= 0) {
+    uint16_t ly = y - StoredSettings.Calibration.top_left.y;
+    if (ly <= 0) {
       y = 0;
     } else {
-      if (_y > StoredSettings.Calibration.bottom_right.y) {
-        _y = StoredSettings.Calibration.bottom_right.y;
+      if (ly > StoredSettings.Calibration.bottom_right.y) {
+        ly = StoredSettings.Calibration.bottom_right.y;
       }
       float y_fact = (StoredSettings.Calibration.bottom_right.y - StoredSettings.Calibration.top_left.y) / _ts_y_res;
-      y = int((_y * 1.0f) / y_fact);
+      y = static_cast<uint16_t>(round(ly / y_fact));
     }
   }
 }
