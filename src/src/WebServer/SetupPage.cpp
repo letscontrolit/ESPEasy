@@ -156,7 +156,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
   addSubmitButton(F("Connect"), "");
 }
 
-bool handle_setup_connectingStage(byte& refreshCount) {
+bool handle_setup_connectingStage(byte refreshCount) {
   if (refreshCount > 0)
   {
     //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
