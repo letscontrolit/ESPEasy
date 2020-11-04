@@ -77,7 +77,7 @@ void checkRuleSets() {
     if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV) {
       serialPrint(fileName);
       serialPrint(" ");
-      serialPrintln(String(activeRuleSets[x]));
+      serialPrintln(String(activeRuleSets[x] ? 0 : 1));
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
@@ -220,8 +220,6 @@ String rulesProcessingFile(const String& fileName, String& event) {
 
     for (int x = 0; x < len; x++) {
       int data = buf[x];
-
-      SPIFFS_CHECK(data >= 0, fileName.c_str());
 
       switch (static_cast<char>(data))
       {
@@ -635,9 +633,9 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String log = F("RuleDebug: ");
-    log += codeBlock;
-    log += match;
-    log += isCommand;
+    log += codeBlock ? 0 : 1;
+    log += match ? 0 : 1;
+    log += isCommand ? 0 : 1;
     log += ": ";
     log += line;
     addLog(LOG_LEVEL_DEBUG_DEV, log);
