@@ -468,11 +468,11 @@ void TinyGPSDate::commit()
    const uint32_t olddate = date;
    date = newDate;
    valid = false;
-   
+
    {
-     const uint16_t newyear = year();
-     if (newyear < 2020) {
-       // Very unlikely the year of received date is before 2020, which is now.
+     const uint8_t newday = day();
+     if (newday > 31 || newday == 0) {
+       // Day of month
        date = olddate;
        return;
      }
@@ -485,11 +485,21 @@ void TinyGPSDate::commit()
      }
    }
    {
-     const uint8_t newday = day();
-     if (newday > 31 || newday == 0) {
-       // Day of month
-       date = olddate;
-       return;
+     const uint16_t newyear = year();
+     if (newyear < 2020) {
+       // Looks like it is an old GPS unit not working well with the 1024 week rollover.
+       struct tm tm;
+       tm.tm_year = newyear - 1900;
+       tm.tm_mon  = month() - 1; // months start counting at 0 in struct tm
+       tm.tm_mday = day();
+       tm.tm_sec  = 0;
+       tm.tm_min  = 0;
+       tm.tm_hour = 0;
+       tm.tm_mday += 7 * 1024; // Add 1024 weeks
+       mktime(&tm); // Calculate new date
+       date = tm.tm_year;
+       date += (tm.tm_mon + 1) * 100; // months start counting at 0 in struct tm
+       date += tm.tm_mday * 10000;
      }
    }
    lastCommitTime = millis();

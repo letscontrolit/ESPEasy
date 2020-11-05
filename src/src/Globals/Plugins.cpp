@@ -236,7 +236,7 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
 /*********************************************************************************************\
 * Function call to all or specific plugins
 \*********************************************************************************************/
-byte PluginCall(byte Function, struct EventStruct *event, String& str)
+bool PluginCall(byte Function, struct EventStruct *event, String& str)
 {
   struct EventStruct TempEvent;
 
@@ -256,7 +256,7 @@ byte PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_DEVICE_ADD:
     case PLUGIN_UNCONDITIONAL_POLL:    // FIXME TD-er: PLUGIN_UNCONDITIONAL_POLL is not being used at the moment
 
-      for (byte x = 0; x < PLUGIN_MAX; x++) {
+      for (deviceIndex_t x = 0; x < PLUGIN_MAX; x++) {
         if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
           if (Function == PLUGIN_DEVICE_ADD) {
             if ((deviceCount + 2) > static_cast<int>(Device.size())) {
