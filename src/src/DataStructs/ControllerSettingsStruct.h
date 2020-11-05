@@ -6,6 +6,7 @@
 \*********************************************************************************************/
 #include <Arduino.h>
 #include <memory> // For std::shared_ptr
+#include <new> // for std::nothrow
 
 #include "../../ESPEasy_common.h"
 #include "../Globals/Plugins.h"

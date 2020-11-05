@@ -665,9 +665,8 @@ void handle_devicess_ShowAllTasksTable(byte page)
       html_TD();
 
       if (validDeviceIndex(DeviceIndex)) {
-        byte   customValues = false;
         String customValuesString;
-        customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
+        const bool customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
 
         if (!customValues)
         {

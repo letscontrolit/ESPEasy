@@ -279,7 +279,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 # ifdef P082_SEND_GPS_TO_LOG
         addLog(LOG_LEVEL_DEBUG, P082_data->_lastSentence);
 # endif // ifdef P082_SEND_GPS_TO_LOG
-        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
         delay(0); // Processing a full sentence may take a while, run some
                   // background tasks.
       }

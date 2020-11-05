@@ -27,13 +27,19 @@ boolean handle_custom(String path) {
 
   if (!clientIPallowed()) { return false; }
 
-#if !defined(ESP32)
+#ifdef ESP8266
+  // For ESP32 remove the leading slash
   path = path.substring(1);
-#endif // if !defined(ESP32)
+#endif
 
   // create a dynamic custom page, parsing task values into [<taskname>#<taskvalue>] placeholders and parsing %xx% system variables
   fs::File   dataFile      = tryOpenFile(path.c_str(), "r");
+#ifdef ESP8266
   const bool dashboardPage = path.startsWith(F("dashboard"));
+#endif
+#ifdef ESP32
+  const bool dashboardPage = path.startsWith(F("/dashboard"));
+#endif
 
   if (!dataFile && !dashboardPage) {
     return false;    // unknown file that does not exist...

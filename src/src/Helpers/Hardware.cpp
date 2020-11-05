@@ -32,7 +32,7 @@ void hardwareInit()
   // set GPIO pins state if not set to default
   bool hasPullUp, hasPullDown;
 
-  for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
+  for (byte gpio = 0; gpio <= PIN_D_MAX; ++gpio) {
     const bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
     if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
