@@ -65,7 +65,6 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
 
           if (i == nrArguments) {
             parameter = tolerantParseStringKeepCase(Line, i + 1);
-            done      = true;
           } else {
             parameter = parseStringKeepCase(Line, i + 1);
           }

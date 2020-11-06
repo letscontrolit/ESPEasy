@@ -19,9 +19,11 @@ bool I2C_read_words(uint8_t i2caddr, I2Cdata_words& data) {
 
 // See https://github.com/platformio/platform-espressif32/issues/126
 #ifdef ESP32
+  // ESP32: uint8_t TwoWire::endTransmission(bool sendStop)
   # define END_TRANSMISSION_FLAG true
 #else // ifdef ESP32
-  # define END_TRANSMISSION_FLAG false
+  // ESP8266: uint8_t TwoWire::endTransmission(uint8_t sendStop)
+  # define END_TRANSMISSION_FLAG 0
 #endif // ifdef ESP32
 
 // **************************************************************************/
