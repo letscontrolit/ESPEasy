@@ -314,8 +314,10 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + ESPEasy_time::getDateTimeString(*gmtime(&next_exec_time)));
 
             if (function != PLUGIN_TIME_CHANGE) {
-              LoadTaskSettings(event->TaskIndex);
-              eventQueue.add(String(F("Cron#")) + String(ExtraTaskSettings.TaskDeviceName));
+              if (Settings.UseRules) {
+                LoadTaskSettings(event->TaskIndex);
+                eventQueue.add(String(F("Cron#")) + String(ExtraTaskSettings.TaskDeviceName));
+              }
               success = true;
             }
           }
