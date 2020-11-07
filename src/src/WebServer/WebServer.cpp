@@ -635,26 +635,28 @@ void writeDefaultCSS(void)
 {
   return; // TODO
 
+#ifndef BUILD_NO_DEBUG
+
   if (!ESPEASY_FS.exists(F("esp.css")))
   {
-    String defaultCSS;
-
     fs::File f = tryOpenFile(F("esp.css"), "w");
 
     if (f)
     {
+      String defaultCSS;
+      defaultCSS = PGMT(DATA_ESPEASY_DEFAULT_MIN_CSS);
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("CSS  : Writing default CSS file to FS (");
         log += defaultCSS.length();
         log += F(" bytes)");
         addLog(LOG_LEVEL_INFO, log);
       }
-      defaultCSS = PGMT(DATA_ESPEASY_DEFAULT_MIN_CSS);
       f.write((const unsigned char *)defaultCSS.c_str(), defaultCSS.length()); // note: content must be in RAM - a write of F("XXX") does
                                                                                // not work
       f.close();
     }
   }
+#endif
 }
 
 // ********************************************************************************

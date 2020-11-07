@@ -163,6 +163,7 @@ class Adafruit_TSL2591 : public Adafruit_Sensor
   void      setTiming     ( tsl2591IntegrationTime_t integration );
   uint16_t  getLuminosity (uint8_t channel );
   uint32_t  getFullLuminosity ( );
+  uint32_t  getFullLuminosity (bool& finished);
 
   tsl2591IntegrationTime_t getTiming();
   tsl2591Gain_t            getGain();
