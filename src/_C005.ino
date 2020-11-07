@@ -110,7 +110,9 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
             if (command == F("event") || command == F("asyncevent")) {
-              eventQueue.add(parseStringToEnd(cmd, 2));
+              if (Settings.UseRules) {
+                eventQueue.add(parseStringToEnd(cmd, 2));
+              }
             } else {
               ExecuteCommand(event->TaskIndex, EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str(), true, true, true);
             }

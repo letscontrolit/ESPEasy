@@ -2,6 +2,7 @@
 #ifdef USES_P022
 
 #include "src/DataStructs/PinMode.h"
+#include "src/Helpers/PortStatus.h"
 #include "src/PluginStructs/P022_data_struct.h"
 
 // #######################################################################################################
