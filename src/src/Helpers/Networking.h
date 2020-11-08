@@ -31,6 +31,11 @@ void checkUDP();
 void SendUDPCommand(byte destUnit, const char *data, byte dataLength);
 
 /*********************************************************************************************\
+   Get IP address for unit
+\*********************************************************************************************/
+IPAddress getIPAddressForUnit(byte unit);
+
+/*********************************************************************************************\
    Send UDP message (unit 255=broadcast)
 \*********************************************************************************************/
 void sendUDP(byte unit, const byte *data, byte size);

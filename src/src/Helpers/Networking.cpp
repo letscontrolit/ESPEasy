@@ -334,14 +334,9 @@ void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
 }
 
 /*********************************************************************************************\
-   Send UDP message (unit 255=broadcast)
+   Get IP address for unit
 \*********************************************************************************************/
-void sendUDP(byte unit, const byte *data, byte size)
-{
-  if (!NetworkConnected(10)) {
-    return;
-  }
-
+IPAddress getIPAddressForUnit(byte unit) {
   IPAddress remoteNodeIP;
 
   if (unit == 255) {
@@ -351,13 +346,29 @@ void sendUDP(byte unit, const byte *data, byte size)
     NodesMap::iterator it = Nodes.find(unit);
 
     if (it == Nodes.end()) {
-      return;
+      return remoteNodeIP;
     }
 
     if (it->second.ip[0] == 0) {
-      return;
+      return remoteNodeIP;
     }
     remoteNodeIP = it->second.ip;
+  }
+  return remoteNodeIP;
+}
+
+/*********************************************************************************************\
+   Send UDP message (unit 255=broadcast)
+\*********************************************************************************************/
+void sendUDP(byte unit, const byte *data, byte size)
+{
+  if (!NetworkConnected(10)) {
+    return;
+  }
+
+  IPAddress remoteNodeIP = getIPAddressForUnit(unit);
+  if (remoteNodeIP[0] == 0) {
+    return;
   }
 
 #ifndef BUILD_NO_DEBUG
