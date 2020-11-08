@@ -32,7 +32,7 @@ void hardwareInit()
   // set GPIO pins state if not set to default
   bool hasPullUp, hasPullDown;
 
-  for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
+  for (byte gpio = 0; gpio <= PIN_D_MAX; ++gpio) {
     const bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
     if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
@@ -202,14 +202,14 @@ void initI2C() {
 }
 
 void I2CSelectClockSpeed(bool setLowSpeed) {
-  static uint8_t lastI2CClockSpeed = 255;  
-  const uint8_t newI2CClockSpeed = setLowSpeed ? 0 : 1;
+  static uint32_t lastI2CClockSpeed = 0;
+  const uint32_t newI2CClockSpeed = setLowSpeed ? Settings.I2C_clockSpeed_Slow : Settings.I2C_clockSpeed;
   if (newI2CClockSpeed == lastI2CClockSpeed) {
     // No need to change the clock speed.
     return;
   }
   lastI2CClockSpeed = newI2CClockSpeed;  
-  Wire.setClock(setLowSpeed ? Settings.I2C_clockSpeed_Slow : Settings.I2C_clockSpeed);
+  Wire.setClock(newI2CClockSpeed);
 }
 
 #ifdef FEATURE_I2CMULTIPLEXER
