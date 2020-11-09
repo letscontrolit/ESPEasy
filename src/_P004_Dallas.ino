@@ -7,33 +7,32 @@
 
 // Maxim Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
 
-#if defined(ESP32)
-  # define ESP32noInterrupts() { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
-  # define ESP32interrupts() portEXIT_CRITICAL(&mux); }
+# include "src/PluginStructs/P004_data_struct.h"
+
+# if defined(ESP32)
+  #  define ESP32noInterrupts() { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
+  #  define ESP32interrupts() portEXIT_CRITICAL(&mux); }
 
 // https://github.com/espressif/arduino-esp32/issues/1335
 uint8_t Plugin_004_DS_read_bit(int8_t Plugin_004_DallasPin) ICACHE_RAM_ATTR;
-void    Plugin_004_DS_write_bit(uint8_t v, int8_t  Plugin_004_DallasPin) ICACHE_RAM_ATTR;
+void    Plugin_004_DS_write_bit(uint8_t v,
+                                int8_t  Plugin_004_DallasPin) ICACHE_RAM_ATTR;
 
-#endif // if defined(ESP32)
+# endif // if defined(ESP32)
 
 
+# define PLUGIN_004
+# define PLUGIN_ID_004         4
+# define PLUGIN_NAME_004       "Environment - DS18b20"
+# define PLUGIN_VALUENAME1_004 "Temperature"
 
-#define PLUGIN_004
-#define PLUGIN_ID_004         4
-#define PLUGIN_NAME_004       "Environment - DS18b20"
-#define PLUGIN_VALUENAME1_004 "Temperature"
-
-#define P004_ERROR_NAN        0
-#define P004_ERROR_MIN_RANGE  1
-#define P004_ERROR_ZERO       2
-#define P004_ERROR_MAX_RANGE  3
-#define P004_ERROR_IGNORE     4
+# define P004_ERROR_NAN        0
+# define P004_ERROR_MIN_RANGE  1
+# define P004_ERROR_ZERO       2
+# define P004_ERROR_MAX_RANGE  3
+# define P004_ERROR_IGNORE     4
 
 uint8_t Plugin_004_reset_time = 0;
-
-static boolean Plugin_004_newValue[TASKS_MAX];
-static unsigned long Plugin_004_timeoutGPIO[MAX_GPIO];
 
 boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 {
@@ -79,17 +78,13 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
     {
       addFormNote(F("External pull up resistor is needed, see docs!"));
 
-      uint8_t savedAddress[8];
-      byte    resolutionChoice = 0;
-
       // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
       int8_t Plugin_004_DallasPin = CONFIG_PIN1;
 
       if (Plugin_004_DallasPin != -1) {
         // get currently saved address
-        for (byte i = 0; i < 8; i++) {
-          savedAddress[i] = ExtraTaskSettings.TaskDevicePluginConfigLong[i];
-        }
+        uint8_t savedAddress[8];
+        Plugin_004_get_addr(savedAddress, event->TaskIndex);
 
         // find all suitable devices
         addRowLabel(F("Device Address"));
@@ -102,14 +97,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
         while (Plugin_004_DS_search(tmpAddress, Plugin_004_DallasPin))
         {
-          String option = "";
+          String option = Plugin_004_format(tmpAddress);
 
-          for (byte j = 0; j < 8; j++)
-          {
-            option += String(tmpAddress[j], HEX);
-
-            if (j < 7) { option += '-'; }
-          }
           bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
           addSelector_Item(option, count, selected, false, "");
           count++;
@@ -118,16 +107,25 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
         {
           // Device Resolution select
-          if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) {
-            resolutionChoice = Plugin_004_DS_getResolution(savedAddress, Plugin_004_DallasPin);
+          int activeRes =  PCONFIG(1);
+          if (savedAddress[0] != 0) {
+            activeRes = Plugin_004_DS_getResolution(savedAddress, Plugin_004_DallasPin);
           }
-          else {
-            resolutionChoice = 9;
-          }
+
+          int resolutionChoice = PCONFIG(1);
+
+          if ((resolutionChoice < 9) || (resolutionChoice > 12)) { resolutionChoice = activeRes; }
           String resultsOptions[4]      = { F("9"), F("10"), F("11"), F("12") };
           int    resultsOptionValues[4] = { 9, 10, 11, 12 };
           addFormSelector(F("Device Resolution"), F("p004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
           addHtml(F(" Bit"));
+
+          if (savedAddress[0] != 0) {
+            String note = F("Active resolution: ");
+            note += activeRes;
+            note += F(" bit");
+            addFormNote(note);
+          }
         }
 
         {
@@ -143,20 +141,24 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-
-      // save the address for selected device and store into extra tasksettings
       int8_t Plugin_004_DallasPin = CONFIG_PIN1;
 
       if (Plugin_004_DallasPin != -1) {
+        // save the address for selected device and store into extra tasksettings
+        LoadTaskSettings(event->TaskIndex);
+        uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
         Plugin_004_DS_scan(getFormItemInt(F("p004_dev")), addr, Plugin_004_DallasPin);
 
         for (byte x = 0; x < 8; x++) {
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
         }
 
-        Plugin_004_DS_setResolution(addr, getFormItemInt(F("p004_res")), Plugin_004_DallasPin);
-        Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
+        uint8_t res = getFormItemInt(F("p004_res"));
+
+        if ((res < 9) || (res > 12)) { res = 12; }
+        PCONFIG(1) = res;
+
+        Plugin_004_DS_setResolution(addr, res, Plugin_004_DallasPin);
       }
       PCONFIG(0) = getFormItemInt(F("p004_err"));
       success    = true;
@@ -165,54 +167,62 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      for (byte x = 0; x < 8; x++)
-      {
-        if (x != 0) {
-          string += '-';
-        }
-        string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
-      }
+      LoadTaskSettings(event->TaskIndex);
+      uint8_t addr[8];
+      Plugin_004_get_addr(addr, event->TaskIndex);
+      string = Plugin_004_format(addr);
       success = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      int8_t Plugin_004_DallasPin = CONFIG_PIN1;
+      uint8_t addr[8];
+      Plugin_004_get_addr(addr, event->TaskIndex);
 
-      if (Plugin_004_DallasPin != -1) {
-        Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis();
-        Plugin_004_newValue[event->TaskIndex]        = false;
+      if (addr[0] != 0) {
+        const uint8_t res = PCONFIG(1);
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(CONFIG_PIN1, addr, res));
+        P004_data_struct *P004_data =
+          static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr != P004_data) {
+          success = true;
+        }
       }
-      success = true;
+
       break;
     }
 
     case PLUGIN_READ:
     {
-      if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) {
-        uint8_t addr[8];
-        Plugin_004_get_addr(addr, event->TaskIndex);
+      P004_data_struct *P004_data =
+        static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        int8_t Plugin_004_DallasPin = CONFIG_PIN1;
-
-        if (Plugin_004_DallasPin != -1) {
-          if (!timeOutReached(Plugin_004_timeoutGPIO[Plugin_004_DallasPin])){
-              Scheduler.schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
+      if (nullptr != P004_data) {
+        if (P004_data->_gpio != -1) {
+          if (!timeOutReached(P004_data->_timer)) {
+            Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->_timer);
           } else {
-            if (!Plugin_004_newValue[event->TaskIndex]) {
-              Plugin_004_DS_startConversion(addr, Plugin_004_DallasPin);
-              Scheduler.schedule_task_device_timer(event->TaskIndex, Plugin_004_timeoutGPIO[Plugin_004_DallasPin]);
-              Plugin_004_newValue[event->TaskIndex] = true;
-            } else {
-              Plugin_004_newValue[event->TaskIndex] = false;
-              float  value = 0;
-              String log   = F("DS   : Temperature: ");
+            if (!P004_data->_newValue) {
+              if (P004_data->_res != Plugin_004_DS_getResolution(P004_data->_addr, P004_data->_gpio)) {
+                if (!Plugin_004_DS_setResolution(P004_data->_addr, P004_data->_res, P004_data->_gpio)) {
+                  break;
+                }
+              }
+              P004_data->set_timeout();
+              Plugin_004_DS_address_ROM(P004_data->_addr, P004_data->_gpio);
+              Plugin_004_DS_write(0x44, P004_data->_gpio); // Take temperature mesurement
 
-              if (Plugin_004_DS_readTemp(addr, &value, Plugin_004_DallasPin))
+              Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->_timer);
+              P004_data->_newValue = true;
+            } else {
+              P004_data->_newValue = false;
+              float  value = 0;
+
+              if (Plugin_004_DS_readTemp(P004_data->_addr, &value, P004_data->_gpio))
               {
                 UserVar[event->BaseVarIndex] = value;
-                log                         += UserVar[event->BaseVarIndex];
                 success                      = true;
               }
               else
@@ -229,21 +239,19 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
                   }
                   UserVar[event->BaseVarIndex] = errorValue;
                 }
-                log += F("Error!");
               }
-
-              log += F(" (");
-
-              for (byte x = 0; x < 8; x++)
-              {
-                if (x != 0) {
-                  log += '-';
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log   = F("DS   : Temperature: ");
+                if (success) {
+                  log += UserVar[event->BaseVarIndex];
+                } else {
+                  log += F("Error!");
                 }
-                log += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+                log += F(" (");
+                log += Plugin_004_format(P004_data->_addr);
+                log += ')';
+                addLog(LOG_LEVEL_INFO, log);
               }
-
-              log += ')';
-              addLog(LOG_LEVEL_INFO, log);
             }
           }
         }
@@ -254,6 +262,33 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+String Plugin_004_getModel(uint8_t family) {
+    String model;
+    switch (family) {
+        case 0x28: model = F("DS18B20"); break;
+        case 0x3b: model = F("DS1825");  break;
+        case 0x22: model = F("DS1822");  break;
+        case 0x10: model = F("DS1820 / DS18S20");  break;
+    }
+    return model;
+}
+
+String Plugin_004_format(uint8_t addr[]) {
+  String result;
+  result.reserve(40);
+  for (byte j = 0; j < 8; j++)
+  {
+    result += String(addr[j], HEX);
+    if (j < 7) { result += '-'; }
+  }
+  result += F(" ");
+  result += Plugin_004_getModel(addr[0]);
+
+  return result;
+}
+
+
+// Load ROM address from tasksettings
 void Plugin_004_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
 {
   // Load ROM address from tasksettings
@@ -262,12 +297,6 @@ void Plugin_004_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
   for (byte x = 0; x < 8; x++) {
     addr[x] = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
   }
-}
-
-void Plugin_004_set_timeout(int res, int8_t Plugin_004_DallasPin)
-{
-  if ((res < 9) || (res > 12)) { res = 12; }
-  Plugin_004_timeoutGPIO[Plugin_004_DallasPin] = millis() + (800 / (1 << (12 - res)));
 }
 
 /*********************************************************************************************\
@@ -300,20 +329,6 @@ bool Plugin_004_DS_is_parasite(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
   Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
   Plugin_004_DS_write(0xB4, Plugin_004_DallasPin); // read power supply
   return !Plugin_004_DS_read_bit(Plugin_004_DallasPin);
-}
-
-/*********************************************************************************************\
-*  Dallas Start Temperature Conversion, expected max duration:
-*    9 bits resolution ->  93.75 ms
-*   10 bits resolution -> 187.5 ms
-*   11 bits resolution -> 375 ms
-*   12 bits resolution -> 750 ms
-\*********************************************************************************************/
-void Plugin_004_DS_startConversion(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
-{
-  Plugin_004_set_timeout(Plugin_004_DS_getResolution(ROM, Plugin_004_DallasPin), Plugin_004_DallasPin);
-  Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
-  Plugin_004_DS_write(0x44, Plugin_004_DallasPin); // Take temperature mesurement
 }
 
 /*********************************************************************************************\
@@ -393,6 +408,7 @@ byte Plugin_004_DS_getResolution(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
   if (ROM[0] == 0x10) { return 12; }
 
   byte ScratchPad[12];
+
   Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
   Plugin_004_DS_write(0xBE, Plugin_004_DallasPin); // Read scratchpad
 
@@ -433,6 +449,7 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res, int8_t Plugin_004_
   if (ROM[0] == 0x10) { return true; }
 
   byte ScratchPad[12];
+
   Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
   Plugin_004_DS_write(0xBE, Plugin_004_DallasPin); // Read scratchpad
 
@@ -441,6 +458,7 @@ boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res, int8_t Plugin_004_
   }
 
   if (!Plugin_004_DS_crc8(ScratchPad)) {
+    addLog(LOG_LEVEL_ERROR, F("DS   : Cannot set resolution"));
     return false;
   }
   else
@@ -493,9 +511,9 @@ uint8_t Plugin_004_DS_reset(int8_t Plugin_004_DallasPin)
   uint8_t r       = 0;
   uint8_t retries = 125;
 
-    #if defined(ESP32)
+    # if defined(ESP32)
   ESP32noInterrupts();
-    #endif // if defined(ESP32)
+    # endif // if defined(ESP32)
   pinMode(Plugin_004_DallasPin, INPUT);
   bool success = true;
 
@@ -524,14 +542,14 @@ uint8_t Plugin_004_DS_reset(int8_t Plugin_004_DallasPin)
       }
     }
   }
-    #if defined(ESP32)
+    # if defined(ESP32)
   ESP32interrupts();
-    #endif // if defined(ESP32)
+    # endif // if defined(ESP32)
   return r;
 }
 
-#define FALSE 0
-#define TRUE  1
+# define FALSE 0
+# define TRUE  1
 
 unsigned char ROM_NO[8];
 uint8_t LastDiscrepancy;
@@ -723,18 +741,18 @@ uint8_t Plugin_004_DS_read_bit(int8_t Plugin_004_DallasPin)
   if (Plugin_004_DallasPin == -1) { return 0; }
   uint8_t r;
 
-    #if defined(ESP32)
+    # if defined(ESP32)
   ESP32noInterrupts();
-    #endif // if defined(ESP32)
+    # endif // if defined(ESP32)
   digitalWrite(Plugin_004_DallasPin, LOW);
   pinMode(Plugin_004_DallasPin, OUTPUT);
   delayMicroseconds(2);
   pinMode(Plugin_004_DallasPin, INPUT); // let pin float, pull up will raise
   delayMicroseconds(8);
   r = digitalRead(Plugin_004_DallasPin);
-    #if defined(ESP32)
+    # if defined(ESP32)
   ESP32interrupts();
-    #endif // if defined(ESP32)
+    # endif // if defined(ESP32)
   delayMicroseconds(60);
   return r;
 }
@@ -748,30 +766,30 @@ void Plugin_004_DS_write_bit(uint8_t v, int8_t Plugin_004_DallasPin)
 
   if (v & 1)
   {
-        #if defined(ESP32)
+        # if defined(ESP32)
     ESP32noInterrupts();
-        #endif // if defined(ESP32)
+        # endif // if defined(ESP32)
     digitalWrite(Plugin_004_DallasPin, LOW);
     pinMode(Plugin_004_DallasPin, OUTPUT);
     delayMicroseconds(2);
     digitalWrite(Plugin_004_DallasPin, HIGH);
-        #if defined(ESP32)
+        # if defined(ESP32)
     ESP32interrupts();
-        #endif // if defined(ESP32)
+        # endif // if defined(ESP32)
     delayMicroseconds(70);
   }
   else
   {
-        #if defined(ESP32)
+        # if defined(ESP32)
     ESP32noInterrupts();
-        #endif // if defined(ESP32)
+        # endif // if defined(ESP32)
     digitalWrite(Plugin_004_DallasPin, LOW);
     pinMode(Plugin_004_DallasPin, OUTPUT);
     delayMicroseconds(90);
     digitalWrite(Plugin_004_DallasPin, HIGH);
-        #if defined(ESP32)
+        # if defined(ESP32)
     ESP32interrupts();
-        #endif // if defined(ESP32)
+        # endif // if defined(ESP32)
     delayMicroseconds(10);
   }
 }
@@ -813,9 +831,9 @@ boolean Plugin_004_DS_crc8(uint8_t *addr)
   return crc == *addr; // addr 8
 }
 
-#if defined(ESP32)
-  # undef ESP32noInterrupts
-  # undef ESP32interrupts
-#endif // if defined(ESP32)
+# if defined(ESP32)
+  #  undef ESP32noInterrupts
+  #  undef ESP32interrupts
+# endif // if defined(ESP32)
 
-#endif // USES_P004
+#endif  // USES_P004
