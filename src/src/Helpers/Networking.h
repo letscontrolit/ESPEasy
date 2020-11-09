@@ -31,6 +31,12 @@ void checkUDP();
 void SendUDPCommand(byte destUnit, const char *data, byte dataLength);
 
 /*********************************************************************************************\
+   Get formatted IP address for unit
+   formatcodes: 0 = default toString(), 1 = empty string when invalid, 2 = 0 when invalid
+\*********************************************************************************************/
+String formatUnitToIPAddress(byte unit, byte formatCode);
+
+/*********************************************************************************************\
    Get IP address for unit
 \*********************************************************************************************/
 IPAddress getIPAddressForUnit(byte unit);

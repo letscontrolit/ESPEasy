@@ -791,7 +791,6 @@ void parseStandardConversions(String& s, boolean useURLencode) {
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(arg1))
   SMART_CONV(F("%c_2hex%"),   formatToHex(arg1, F("")))
-  SMART_CONV(F("%c_u2ip%"),   getIPAddressForUnit(arg1).toString())
   #undef SMART_CONV
 
   // Conversions with 2 parameters
@@ -799,6 +798,7 @@ void parseStandardConversions(String& s, boolean useURLencode) {
   while (getConvertArgument2((T), s, arg1, arg2, startIndex, endIndex)) { repl(s.substring(startIndex, endIndex), (FUN), s, useURLencode); }
   float arg2 = 0.0f;
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(arg1, arg2), 2))
+  SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(arg1, arg2))
   #undef SMART_CONV
 }
 

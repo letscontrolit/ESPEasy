@@ -334,6 +334,27 @@ void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
 }
 
 /*********************************************************************************************\
+   Get formatted IP address for unit
+   formatcodes: 0 = default toString(), 1 = empty string when invalid, 2 = 0 when invalid
+\*********************************************************************************************/
+String formatUnitToIPAddress(byte unit, byte formatCode) {
+  IPAddress unitIPAddress = getIPAddressForUnit(unit);
+
+  if (unitIPAddress[0] == 0) { // Invalid?
+    switch (formatCode) {
+      case 1: // Return empty string
+      {
+        return F("");
+      }
+      case 2: // Return "0"
+      {
+        return F("0");
+      }
+    }
+  }
+  return unitIPAddress.toString();
+}
+/*********************************************************************************************\
    Get IP address for unit
 \*********************************************************************************************/
 IPAddress getIPAddressForUnit(byte unit) {
