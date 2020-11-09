@@ -884,8 +884,6 @@ String InitFile(const String& fname, int datasize)
   fs::File f = tryOpenFile(fname, "w");
 
   if (f) {
-    SPIFFS_CHECK(f, fname.c_str());
-
     for (int x = 0; x < datasize; x++)
     {
       // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
@@ -1011,8 +1009,6 @@ String ClearInFile(const char *fname, int index, int datasize)
   fs::File f = tryOpenFile(fname, "r+");
 
   if (f) {
-    SPIFFS_CHECK(f,                          fname);
-
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
 
     for (int x = 0; x < datasize; x++)

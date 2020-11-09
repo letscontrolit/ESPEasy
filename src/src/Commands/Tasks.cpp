@@ -114,7 +114,7 @@ String Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
   const int    result       = round(UserVar[uservarIndex]);
 
   if ((result == 0) || (result == 1)) {
-    UserVar[uservarIndex] = !result;
+    UserVar[uservarIndex] = (result == 0) ? 1.0f : 0.0f;
   }
   return return_command_success();
 }
