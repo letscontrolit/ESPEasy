@@ -46,6 +46,7 @@ void handle_tools() {
   printToWeb     = true;
   printWebString = "";
 
+  webrequest.trim();
   if (webrequest.length() > 0)
   {
     ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str());
