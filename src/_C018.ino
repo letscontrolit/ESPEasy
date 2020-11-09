@@ -510,7 +510,6 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
-      addTableSeparator(F("Credentials"), 2, 3);
       {
         // Script to toggle visibility of OTAA/ABP field, based on the activation method selector.
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
