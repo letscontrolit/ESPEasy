@@ -97,6 +97,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         {
           // Device Resolution select
           int activeRes =  PCONFIG(1);
+
           if (savedAddress[0] != 0) {
             activeRes = Dallas_getResolution(savedAddress, Plugin_004_DallasPin);
           }
@@ -159,7 +160,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
       Plugin_004_get_addr(addr, event->TaskIndex);
-      string = Dallas_format_address(addr);
+      string  = Dallas_format_address(addr);
       success = true;
       break;
     }
@@ -169,7 +170,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       uint8_t addr[8];
       Plugin_004_get_addr(addr, event->TaskIndex);
 
-      if (addr[0] != 0 && CONFIG_PIN1 != -1) {
+      if ((addr[0] != 0) && (CONFIG_PIN1 != -1)) {
         const uint8_t res = PCONFIG(1);
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(CONFIG_PIN1, addr, res));
         P004_data_struct *P004_data =
@@ -198,9 +199,10 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
             }
           } else {
             P004_data->set_measurement_inactive();
+
             // Try to get in sync with the existing interval again.
             Scheduler.reschedule_task_device_timer(event->TaskIndex, P004_data->get_measurement_start());
-            float  value = 0;
+            float value = 0;
 
             if (P004_data->read_temp(value))
             {
@@ -222,8 +224,10 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex] = errorValue;
               }
             }
+
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log   = F("DS   : Temperature: ");
+              String log = F("DS   : Temperature: ");
+
               if (success) {
                 log += UserVar[event->BaseVarIndex];
               } else {
@@ -243,7 +247,6 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-
 // Load ROM address from tasksettings
 void Plugin_004_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
 {
@@ -255,4 +258,4 @@ void Plugin_004_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
   }
 }
 
-#endif  // USES_P004
+#endif // USES_P004

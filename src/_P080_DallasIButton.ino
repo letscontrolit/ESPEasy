@@ -9,10 +9,10 @@
 
 # include "src/Helpers/Dallas1WireHelper.h"
 
-#define PLUGIN_080
-#define PLUGIN_ID_080         80
-#define PLUGIN_NAME_080       "Input - iButton [TESTING]"
-#define PLUGIN_VALUENAME1_080 "iButton"
+# define PLUGIN_080
+# define PLUGIN_ID_080         80
+# define PLUGIN_NAME_080       "Input - iButton [TESTING]"
+# define PLUGIN_VALUENAME1_080 "iButton"
 
 
 int8_t Plugin_080_DallasPin;
@@ -60,16 +60,14 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormNote(F("External pull up resistor is needed, see docs!"));
-      uint8_t savedAddress[8];
 
       // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
       Plugin_080_DallasPin = CONFIG_PIN1;
 
       if (Plugin_080_DallasPin != -1) {
         // get currently saved address
-        for (byte i = 0; i < 8; i++) {
-          savedAddress[i] = ExtraTaskSettings.TaskDevicePluginConfigLong[i];
-        }
+        uint8_t savedAddress[8];
+        Plugin_080_get_addr(savedAddress, event->TaskIndex);
 
         // find all suitable devices
         addRowLabel(F("Device Address"));
@@ -82,15 +80,8 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
 
         while (Dallas_search(tmpAddress, Plugin_080_DallasPin))
         {
-          String option = "";
-
-          for (byte j = 0; j < 8; j++)
-          {
-            option += String(tmpAddress[j], HEX);
-
-            if (j < 7) { option += '-'; }
-          }
-          bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
+          String option   = Dallas_format_address(tmpAddress);
+          bool   selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
 
           // check for DS1990A
           if (tmpAddress[0] == 0x01) {
@@ -108,13 +99,12 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-
       // save the address for selected device and store into extra tasksettings
       Plugin_080_DallasPin = CONFIG_PIN1;
 
       // byte devCount =
       if (Plugin_080_DallasPin != -1) {
+        uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
         Dallas_scan(getFormItemInt(F("p080_dev")), addr, Plugin_080_DallasPin);
 
         for (byte x = 0; x < 8; x++) {
@@ -127,14 +117,10 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      for (byte x = 0; x < 8; x++)
-      {
-        if (x != 0) {
-          string += '-';
-        }
-
-        // string += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
-      }
+      LoadTaskSettings(event->TaskIndex);
+      uint8_t addr[8];
+      Plugin_080_get_addr(addr, event->TaskIndex);
+      string  = Dallas_format_address(addr);
       success = true;
       break;
     }
@@ -155,10 +141,10 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND: // PLUGIN_READ:
     {
-      if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0) {
-        uint8_t addr[8];
-        Plugin_080_get_addr(addr, event->TaskIndex);
+      uint8_t addr[8];
+      Plugin_080_get_addr(addr, event->TaskIndex);
 
+      if (addr[0] != 0) {
         Plugin_080_DallasPin = CONFIG_PIN1;
 
         if (Dallas_readiButton(addr, Plugin_080_DallasPin))
@@ -171,8 +157,10 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex] = 0;
         }
         Dallas_startConversion(addr, Plugin_080_DallasPin);
+
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("DS   : iButton: ");
+
           if (success) {
             log += UserVar[event->BaseVarIndex];
           } else {
