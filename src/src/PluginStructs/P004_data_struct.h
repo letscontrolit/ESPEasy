@@ -12,22 +12,31 @@ struct P004_data_struct : public PluginTaskData_base {
                    uint8_t       res);
 
 
-  /*********************************************************************************************\
-  *  Dallas Start Temperature Conversion, expected max duration:
-  *    9 bits resolution ->  93.75 ms
-  *   10 bits resolution -> 187.5 ms
-  *   11 bits resolution -> 375 ms
-  *   12 bits resolution -> 750 ms
-  \*********************************************************************************************/
-  void set_timeout();
+  bool          initiate_read();
 
+  bool          read_temp(float& value) const;
 
+  String        get_formatted_address() const;
 
-  unsigned long _timer    = 0;
-  uint8_t       _addr[8]  = { 0 };
-  int8_t        _gpio     = -1;
-  uint8_t       _res      = 0;
-  bool          _newValue = false;
+  unsigned long get_timer() const {
+    return _timer;
+  }
+
+  bool measurement_active() const {
+    return _measurementActive;
+  }
+
+  void set_measurement_inactive() {
+    _measurementActive = false;
+  }
+
+private:
+
+  unsigned long _timer             = 0;
+  uint8_t       _addr[8]           = { 0 };
+  int8_t        _gpio              = -1;
+  uint8_t       _res               = 0;
+  bool          _measurementActive = false;
 };
 
 #endif // ifdef USES_P004

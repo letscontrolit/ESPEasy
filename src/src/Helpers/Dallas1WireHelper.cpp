@@ -4,29 +4,33 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 
-# if defined(ESP32)
-  #  define ESP32noInterrupts() { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
-  #  define ESP32interrupts() portEXIT_CRITICAL(&mux); }
-# endif // if defined(ESP32)
+#if defined(ESP32)
+  # define ESP32noInterrupts() { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
+  # define ESP32interrupts() portEXIT_CRITICAL(&mux); }
+#endif // if defined(ESP32)
 
 // See: http://owfs.sourceforge.net/simple_family.html
 String Dallas_getModel(uint8_t family) {
-    String model;
-    switch (family) {
-        case 0x28: model = F("DS18B20"); break;
-        case 0x3b: model = F("DS1825");  break;
-        case 0x22: model = F("DS1822");  break;
-        case 0x10: model = F("DS1820 / DS18S20");  break;
-    }
-    return model;
+  String model;
+
+  switch (family) {
+    case 0x28: model = F("DS18B20"); break;
+    case 0x3b: model = F("DS1825");  break;
+    case 0x22: model = F("DS1822");  break;
+    case 0x10: model = F("DS1820 / DS18S20");  break;
+  }
+  return model;
 }
 
-String Dallas_format_address(uint8_t addr[]) {
+String Dallas_format_address(const uint8_t addr[]) {
   String result;
+
   result.reserve(40);
+
   for (byte j = 0; j < 8; j++)
   {
     result += String(addr[j], HEX);
+
     if (j < 7) { result += '-'; }
   }
   result += F(" [");
@@ -35,7 +39,6 @@ String Dallas_format_address(uint8_t addr[]) {
 
   return result;
 }
-
 
 /*********************************************************************************************\
    Dallas Scan bus
@@ -62,14 +65,14 @@ byte Dallas_scan(byte getDeviceROM, uint8_t *ROM, int8_t gpio_pin)
 }
 
 // read power supply
-bool Dallas_is_parasite(uint8_t ROM[8], int8_t gpio_pin)
+bool Dallas_is_parasite(const uint8_t ROM[8], int8_t gpio_pin)
 {
   Dallas_address_ROM(ROM, gpio_pin);
   Dallas_write(0xB4, gpio_pin); // read power supply
   return !Dallas_read_bit(gpio_pin);
 }
 
-void Dallas_startConvertion(uint8_t ROM[8], int8_t gpio_pin)
+void Dallas_startConversion(const uint8_t ROM[8], int8_t gpio_pin)
 {
   Dallas_reset(gpio_pin);
   Dallas_write(0x55, gpio_pin); // Choose ROM
@@ -83,15 +86,15 @@ void Dallas_startConvertion(uint8_t ROM[8], int8_t gpio_pin)
 /*********************************************************************************************\
 *  Dallas Read temperature from scratchpad
 \*********************************************************************************************/
-bool Dallas_readTemp(uint8_t ROM[8], float *value, int8_t gpio_pin)
+bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin)
 {
   int16_t DSTemp;
   byte    ScratchPad[12];
 
   Dallas_address_ROM(ROM, gpio_pin);
-  Dallas_write(0xBE, gpio_pin); // Read scratchpad
+  Dallas_write(0xBE, gpio_pin);  // Read scratchpad
 
-  for (byte i = 0; i < 9; i++) {                   // read 9 bytes
+  for (byte i = 0; i < 9; i++) { // read 9 bytes
     ScratchPad[i] = Dallas_read(gpio_pin);
   }
 
@@ -148,7 +151,7 @@ bool Dallas_readTemp(uint8_t ROM[8], float *value, int8_t gpio_pin)
   return true;
 }
 
-bool Dallas_readiButton(byte addr[8], int8_t gpio_pin)
+bool Dallas_readiButton(const byte addr[8], int8_t gpio_pin)
 {
   // maybe this is needed to trigger the reading
   //    byte ScratchPad[12];
@@ -168,6 +171,7 @@ bool Dallas_readiButton(byte addr[8], int8_t gpio_pin)
 
   byte tmpaddr[8];
   bool found = false;
+
   Dallas_reset(gpio_pin);
   String log = F("DS   : iButton searching for address: ");
 
@@ -200,8 +204,6 @@ bool Dallas_readiButton(byte addr[8], int8_t gpio_pin)
   return found;
 }
 
-
-
 /*********************************************************************************************\
    Dallas read DS2423 counter
    Taken from https://github.com/jbechter/arduino-onewire-DS2423
@@ -210,7 +212,7 @@ bool Dallas_readiButton(byte addr[8], int8_t gpio_pin)
 #define DS2423_PAGE_ONE 0xc0
 #define DS2423_PAGE_TWO 0xe0
 
-bool Dallas_readCounter(uint8_t ROM[8], float *value, int8_t gpio_pin, uint8_t counter)
+bool Dallas_readCounter(const uint8_t ROM[8], float *value, int8_t gpio_pin, uint8_t counter)
 {
   uint8_t data[45];
 
@@ -232,15 +234,16 @@ bool Dallas_readCounter(uint8_t ROM[8], float *value, int8_t gpio_pin, uint8_t c
   Dallas_reset(gpio_pin);
 
   uint32_t count = (uint32_t)data[38];
+
   for (int j = 37; j >= 35; j--) {
     count = (count << 8) + (uint32_t)data[j];
   }
 
-  uint16_t crc = Dallas_crc16(data, 43, 0);
+  uint16_t crc      = Dallas_crc16(data, 43, 0);
   uint8_t *crcBytes = (uint8_t *)&crc;
-  uint8_t crcLo = ~data[43];
-  uint8_t crcHi = ~data[44];
-  bool error = (crcLo != crcBytes[0]) || (crcHi != crcBytes[1]);
+  uint8_t  crcLo    = ~data[43];
+  uint8_t  crcHi    = ~data[44];
+  bool     error    = (crcLo != crcBytes[0]) || (crcHi != crcBytes[1]);
 
   if (!error)
   {
@@ -257,7 +260,7 @@ bool Dallas_readCounter(uint8_t ROM[8], float *value, int8_t gpio_pin, uint8_t c
 /*********************************************************************************************\
 * Dallas Get Resolution
 \*********************************************************************************************/
-byte Dallas_getResolution(uint8_t ROM[8], int8_t gpio_pin)
+byte Dallas_getResolution(const uint8_t ROM[8], int8_t gpio_pin)
 {
   // DS1820 and DS18S20 have no resolution configuration register
   if (ROM[0] == 0x10) { return 12; }
@@ -265,9 +268,9 @@ byte Dallas_getResolution(uint8_t ROM[8], int8_t gpio_pin)
   byte ScratchPad[12];
 
   Dallas_address_ROM(ROM, gpio_pin);
-  Dallas_write(0xBE, gpio_pin); // Read scratchpad
+  Dallas_write(0xBE, gpio_pin);  // Read scratchpad
 
-  for (byte i = 0; i < 9; i++) {                   // read 9 bytes
+  for (byte i = 0; i < 9; i++) { // read 9 bytes
     ScratchPad[i] = Dallas_read(gpio_pin);
   }
 
@@ -298,7 +301,7 @@ byte Dallas_getResolution(uint8_t ROM[8], int8_t gpio_pin)
 /*********************************************************************************************\
 * Dallas Get Resolution
 \*********************************************************************************************/
-bool Dallas_setResolution(uint8_t ROM[8], byte res, int8_t gpio_pin)
+bool Dallas_setResolution(const uint8_t ROM[8], byte res, int8_t gpio_pin)
 {
   // DS1820 and DS18S20 have no resolution configuration register
   if (ROM[0] == 0x10) { return true; }
@@ -306,9 +309,9 @@ bool Dallas_setResolution(uint8_t ROM[8], byte res, int8_t gpio_pin)
   byte ScratchPad[12];
 
   Dallas_address_ROM(ROM, gpio_pin);
-  Dallas_write(0xBE, gpio_pin); // Read scratchpad
+  Dallas_write(0xBE, gpio_pin);  // Read scratchpad
 
-  for (byte i = 0; i < 9; i++) {                   // read 9 bytes
+  for (byte i = 0; i < 9; i++) { // read 9 bytes
     ScratchPad[i] = Dallas_read(gpio_pin);
   }
 
@@ -366,9 +369,9 @@ uint8_t Dallas_reset(int8_t gpio_pin)
   uint8_t r       = 0;
   uint8_t retries = 125;
 
-    # if defined(ESP32)
+    #if defined(ESP32)
   ESP32noInterrupts();
-    # endif // if defined(ESP32)
+    #endif // if defined(ESP32)
   pinMode(gpio_pin, INPUT);
   bool success = true;
 
@@ -385,26 +388,26 @@ uint8_t Dallas_reset(int8_t gpio_pin)
     digitalWrite(gpio_pin, LOW);
     pinMode(gpio_pin, OUTPUT);
     delayMicroseconds(500);
-    pinMode(gpio_pin, INPUT); // Float
+    pinMode(gpio_pin, INPUT);        // Float
 
-    for (uint8_t i = 0; i < 45; i++)      // 480us RX minimum
+    for (uint8_t i = 0; i < 45; i++) // 480us RX minimum
     {
       delayMicroseconds(15);
 
       if (!digitalRead(gpio_pin)) {
-        r                     = 1;
+        r                 = 1;
         Dallas_reset_time = i;
       }
     }
   }
-    # if defined(ESP32)
+    #if defined(ESP32)
   ESP32interrupts();
-    # endif // if defined(ESP32)
+    #endif // if defined(ESP32)
   return r;
 }
 
-# define FALSE 0
-# define TRUE  1
+#define FALSE 0
+#define TRUE  1
 
 unsigned char ROM_NO[8];
 uint8_t LastDiscrepancy;
@@ -597,18 +600,18 @@ uint8_t Dallas_read_bit(int8_t gpio_pin)
   if (gpio_pin == -1) { return 0; }
   uint8_t r;
 
-    # if defined(ESP32)
+    #if defined(ESP32)
   ESP32noInterrupts();
-    # endif // if defined(ESP32)
+    #endif // if defined(ESP32)
   digitalWrite(gpio_pin, LOW);
   pinMode(gpio_pin, OUTPUT);
   delayMicroseconds(2);
   pinMode(gpio_pin, INPUT); // let pin float, pull up will raise
   delayMicroseconds(8);
   r = digitalRead(gpio_pin);
-    # if defined(ESP32)
+    #if defined(ESP32)
   ESP32interrupts();
-    # endif // if defined(ESP32)
+    #endif // if defined(ESP32)
   delayMicroseconds(60);
   return r;
 }
@@ -622,30 +625,30 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin)
 
   if (v & 1)
   {
-        # if defined(ESP32)
+        #if defined(ESP32)
     ESP32noInterrupts();
-        # endif // if defined(ESP32)
+        #endif // if defined(ESP32)
     digitalWrite(gpio_pin, LOW);
     pinMode(gpio_pin, OUTPUT);
     delayMicroseconds(2);
     digitalWrite(gpio_pin, HIGH);
-        # if defined(ESP32)
+        #if defined(ESP32)
     ESP32interrupts();
-        # endif // if defined(ESP32)
+        #endif // if defined(ESP32)
     delayMicroseconds(70);
   }
   else
   {
-        # if defined(ESP32)
+        #if defined(ESP32)
     ESP32noInterrupts();
-        # endif // if defined(ESP32)
+        #endif // if defined(ESP32)
     digitalWrite(gpio_pin, LOW);
     pinMode(gpio_pin, OUTPUT);
     delayMicroseconds(90);
     digitalWrite(gpio_pin, HIGH);
-        # if defined(ESP32)
+        #if defined(ESP32)
     ESP32interrupts();
-        # endif // if defined(ESP32)
+        #endif // if defined(ESP32)
     delayMicroseconds(10);
   }
 }
@@ -653,7 +656,7 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin)
 /*********************************************************************************************\
 *  Standard function to initiate addressing a sensor.
 \*********************************************************************************************/
-void Dallas_address_ROM(uint8_t ROM[8], int8_t gpio_pin)
+void Dallas_address_ROM(const uint8_t ROM[8], int8_t gpio_pin)
 {
   Dallas_reset(gpio_pin);
   Dallas_write(0x55, gpio_pin); // Choose ROM
@@ -666,7 +669,7 @@ void Dallas_address_ROM(uint8_t ROM[8], int8_t gpio_pin)
 /*********************************************************************************************\
 *  Dallas Calculate CRC8 and compare it of addr[0-7] and compares it to addr[8]
 \*********************************************************************************************/
-bool Dallas_crc8(uint8_t *addr)
+bool Dallas_crc8(const uint8_t *addr)
 {
   uint8_t crc = 0;
   uint8_t len = 8;
@@ -690,31 +693,32 @@ bool Dallas_crc8(uint8_t *addr)
 /*********************************************************************************************\
 *  Dallas Calculate CRC16
 \*********************************************************************************************/
-uint16_t Dallas_crc16(const uint8_t* input, uint16_t len, uint16_t crc)
+uint16_t Dallas_crc16(const uint8_t *input, uint16_t len, uint16_t crc)
 {
-    static const uint8_t oddparity[16] =
-        { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
+  static const uint8_t oddparity[16] =
+  { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
 
-    for (uint16_t i = 0 ; i < len ; i++) {
-      // Even though we're just copying a byte from the input,
-      // we'll be doing 16-bit computation with it.
-      uint16_t cdata = input[i];
-      cdata = (cdata ^ crc) & 0xff;
-      crc >>= 8;
+  for (uint16_t i = 0; i < len; i++) {
+    // Even though we're just copying a byte from the input,
+    // we'll be doing 16-bit computation with it.
+    uint16_t cdata = input[i];
+    cdata = (cdata ^ crc) & 0xff;
+    crc >>= 8;
 
-      if (oddparity[cdata & 0x0F] ^ oddparity[cdata >> 4])
-          crc ^= 0xC001;
-
-      cdata <<= 6;
-      crc ^= cdata;
-      cdata <<= 1;
-      crc ^= cdata;
+    if (oddparity[cdata & 0x0F] ^ oddparity[cdata >> 4]) {
+      crc ^= 0xC001;
     }
 
-    return crc;
+    cdata <<= 6;
+    crc    ^= cdata;
+    cdata <<= 1;
+    crc    ^= cdata;
+  }
+
+  return crc;
 }
 
-# if defined(ESP32)
-  #  undef ESP32noInterrupts
-  #  undef ESP32interrupts
-# endif // if defined(ESP32)
+#if defined(ESP32)
+  # undef ESP32noInterrupts
+  # undef ESP32interrupts
+#endif // if defined(ESP32)

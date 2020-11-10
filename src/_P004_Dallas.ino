@@ -169,7 +169,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       uint8_t addr[8];
       Plugin_004_get_addr(addr, event->TaskIndex);
 
-      if (addr[0] != 0) {
+      if (addr[0] != 0 && CONFIG_PIN1 != -1) {
         const uint8_t res = PCONFIG(1);
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(CONFIG_PIN1, addr, res));
         P004_data_struct *P004_data =
@@ -189,58 +189,48 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P004_data) {
-        if (P004_data->_gpio != -1) {
-          if (!timeOutReached(P004_data->_timer)) {
-            Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->_timer);
+        if (!timeOutReached(P004_data->get_timer())) {
+          Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->get_timer());
+        } else {
+          if (!P004_data->measurement_active()) {
+            if (P004_data->initiate_read()) {
+              Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->get_timer());
+            }
           } else {
-            if (!P004_data->_newValue) {
-              if (P004_data->_res != Dallas_getResolution(P004_data->_addr, P004_data->_gpio)) {
-                if (!Dallas_setResolution(P004_data->_addr, P004_data->_res, P004_data->_gpio)) {
-                  break;
-                }
-              }
-              P004_data->set_timeout();
-              Dallas_address_ROM(P004_data->_addr, P004_data->_gpio);
-              Dallas_write(0x44, P004_data->_gpio); // Take temperature mesurement
+            P004_data->set_measurement_inactive();
+            float  value = 0;
 
-              Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->_timer);
-              P004_data->_newValue = true;
-            } else {
-              P004_data->_newValue = false;
-              float  value = 0;
+            if (P004_data->read_temp(value))
+            {
+              UserVar[event->BaseVarIndex] = value;
+              success                      = true;
+            }
+            else
+            {
+              if (PCONFIG(0) != P004_ERROR_IGNORE) {
+                float errorValue = NAN;
 
-              if (Dallas_readTemp(P004_data->_addr, &value, P004_data->_gpio))
-              {
-                UserVar[event->BaseVarIndex] = value;
-                success                      = true;
-              }
-              else
-              {
-                if (PCONFIG(0) != P004_ERROR_IGNORE) {
-                  float errorValue = NAN;
-
-                  switch (PCONFIG(0)) {
-                    case P004_ERROR_MIN_RANGE: errorValue = -127; break;
-                    case P004_ERROR_ZERO:      errorValue = 0; break;
-                    case P004_ERROR_MAX_RANGE: errorValue = 125; break;
-                    default:
-                      break;
-                  }
-                  UserVar[event->BaseVarIndex] = errorValue;
+                switch (PCONFIG(0)) {
+                  case P004_ERROR_MIN_RANGE: errorValue = -127; break;
+                  case P004_ERROR_ZERO:      errorValue = 0; break;
+                  case P004_ERROR_MAX_RANGE: errorValue = 125; break;
+                  default:
+                    break;
                 }
+                UserVar[event->BaseVarIndex] = errorValue;
               }
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log   = F("DS   : Temperature: ");
-                if (success) {
-                  log += UserVar[event->BaseVarIndex];
-                } else {
-                  log += F("Error!");
-                }
-                log += F(" (");
-                log += Dallas_format_address(P004_data->_addr);
-                log += ')';
-                addLog(LOG_LEVEL_INFO, log);
+            }
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log   = F("DS   : Temperature: ");
+              if (success) {
+                log += UserVar[event->BaseVarIndex];
+              } else {
+                log += F("Error!");
               }
+              log += F(" (");
+              log += P004_data->get_formatted_address();
+              log += ')';
+              addLog(LOG_LEVEL_INFO, log);
             }
           }
         }

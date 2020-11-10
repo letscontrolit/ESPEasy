@@ -145,7 +145,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
       if (Plugin_080_DallasPin != -1) {
         uint8_t addr[8];
         Plugin_080_get_addr(addr, event->TaskIndex);
-        Dallas_startConvertion(addr, Plugin_080_DallasPin);
+        Dallas_startConversion(addr, Plugin_080_DallasPin);
 
         delay(800); // give it time to do intial conversion
       }
@@ -170,7 +170,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
         {
           UserVar[event->BaseVarIndex] = 0;
         }
-        Dallas_startConvertion(addr, Plugin_080_DallasPin);
+        Dallas_startConversion(addr, Plugin_080_DallasPin);
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("DS   : iButton: ");
           if (success) {
