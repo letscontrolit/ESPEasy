@@ -22,6 +22,10 @@ struct P004_data_struct : public PluginTaskData_base {
     return _timer;
   }
 
+  unsigned long get_measurement_start() const {
+      return _measurementStart;
+  }
+
   bool measurement_active() const {
     return _measurementActive;
   }
@@ -32,7 +36,11 @@ struct P004_data_struct : public PluginTaskData_base {
 
 private:
 
-  unsigned long _timer             = 0;
+  // Do not set the _timer to 0, since it may cause issues 
+  // if this object is created (settings edited or task enabled)
+  // while the node is up some time between 24.9 and 49.7 days.
+  unsigned long _timer             = millis();
+  unsigned long _measurementStart  = millis();
   uint8_t       _addr[8]           = { 0 };
   int8_t        _gpio              = -1;
   uint8_t       _res               = 0;

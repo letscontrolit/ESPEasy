@@ -14,6 +14,7 @@ P004_data_struct::P004_data_struct(int8_t pin, const uint8_t addr[], uint8_t res
 }
 
 bool P004_data_struct::initiate_read() {
+  _measurementStart = millis();
   const byte cur_resolution = Dallas_getResolution(_addr, _gpio);
 
   if (cur_resolution == 0) { return false; }

@@ -198,6 +198,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
             }
           } else {
             P004_data->set_measurement_inactive();
+            // Try to get in sync with the existing interval again.
+            Scheduler.reschedule_task_device_timer(event->TaskIndex, P004_data->get_measurement_start());
             float  value = 0;
 
             if (P004_data->read_temp(value))
