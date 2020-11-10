@@ -658,12 +658,12 @@ uint8_t Dallas_read_bit(int8_t gpio_pin)
 {
   if (gpio_pin == -1) { return 0; }
   uint8_t r;
+  unsigned long start = micros();
 
     #if defined(ESP32)
   ESP32noInterrupts();
     #endif // if defined(ESP32)
   digitalWrite(gpio_pin, LOW);
-  unsigned long start = micros();
   pinMode(gpio_pin, OUTPUT);
 
   while (usecPassedSince(start) < 6) {
@@ -704,11 +704,11 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin)
   // write 0: low 60 usec, high 10 usec
   const long low_time  = (v & 1) ? 6 : 60;
   const long high_time = (v & 1) ? 64 : 10;
+  unsigned long start = micros();
 
   #if defined(ESP32)
   ESP32noInterrupts();
   #endif // if defined(ESP32)
-  unsigned long start = micros();
   digitalWrite(gpio_pin, LOW);
   pinMode(gpio_pin, OUTPUT);
 
