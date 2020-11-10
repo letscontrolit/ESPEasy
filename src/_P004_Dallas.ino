@@ -8,17 +8,7 @@
 // Maxim Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
 
 # include "src/PluginStructs/P004_data_struct.h"
-
-# if defined(ESP32)
-  #  define ESP32noInterrupts() { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
-  #  define ESP32interrupts() portEXIT_CRITICAL(&mux); }
-
-// https://github.com/espressif/arduino-esp32/issues/1335
-uint8_t Plugin_004_DS_read_bit(int8_t Plugin_004_DallasPin) ICACHE_RAM_ATTR;
-void    Plugin_004_DS_write_bit(uint8_t v,
-                                int8_t  Plugin_004_DallasPin) ICACHE_RAM_ATTR;
-
-# endif // if defined(ESP32)
+# include "src/Helpers/Dallas1WireHelper.h"
 
 
 # define PLUGIN_004
@@ -32,7 +22,6 @@ void    Plugin_004_DS_write_bit(uint8_t v,
 # define P004_ERROR_MAX_RANGE  3
 # define P004_ERROR_IGNORE     4
 
-uint8_t Plugin_004_reset_time = 0;
 
 boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 {
@@ -92,12 +81,12 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         addSelector_Item("", -1, false, false, "");
         uint8_t tmpAddress[8];
         byte    count = 0;
-        Plugin_004_DS_reset(Plugin_004_DallasPin);
-        Plugin_004_DS_reset_search();
+        Dallas_reset(Plugin_004_DallasPin);
+        Dallas_reset_search();
 
-        while (Plugin_004_DS_search(tmpAddress, Plugin_004_DallasPin))
+        while (Dallas_search(tmpAddress, Plugin_004_DallasPin))
         {
-          String option = Plugin_004_format(tmpAddress);
+          String option = Dallas_format_address(tmpAddress);
 
           bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
           addSelector_Item(option, count, selected, false, "");
@@ -109,7 +98,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           // Device Resolution select
           int activeRes =  PCONFIG(1);
           if (savedAddress[0] != 0) {
-            activeRes = Plugin_004_DS_getResolution(savedAddress, Plugin_004_DallasPin);
+            activeRes = Dallas_getResolution(savedAddress, Plugin_004_DallasPin);
           }
 
           int resolutionChoice = PCONFIG(1);
@@ -147,7 +136,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         // save the address for selected device and store into extra tasksettings
         LoadTaskSettings(event->TaskIndex);
         uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-        Plugin_004_DS_scan(getFormItemInt(F("p004_dev")), addr, Plugin_004_DallasPin);
+        Dallas_scan(getFormItemInt(F("p004_dev")), addr, Plugin_004_DallasPin);
 
         for (byte x = 0; x < 8; x++) {
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
@@ -158,7 +147,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         if ((res < 9) || (res > 12)) { res = 12; }
         PCONFIG(1) = res;
 
-        Plugin_004_DS_setResolution(addr, res, Plugin_004_DallasPin);
+        Dallas_setResolution(addr, res, Plugin_004_DallasPin);
       }
       PCONFIG(0) = getFormItemInt(F("p004_err"));
       success    = true;
@@ -170,7 +159,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
       Plugin_004_get_addr(addr, event->TaskIndex);
-      string = Plugin_004_format(addr);
+      string = Dallas_format_address(addr);
       success = true;
       break;
     }
@@ -205,14 +194,14 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
             Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->_timer);
           } else {
             if (!P004_data->_newValue) {
-              if (P004_data->_res != Plugin_004_DS_getResolution(P004_data->_addr, P004_data->_gpio)) {
-                if (!Plugin_004_DS_setResolution(P004_data->_addr, P004_data->_res, P004_data->_gpio)) {
+              if (P004_data->_res != Dallas_getResolution(P004_data->_addr, P004_data->_gpio)) {
+                if (!Dallas_setResolution(P004_data->_addr, P004_data->_res, P004_data->_gpio)) {
                   break;
                 }
               }
               P004_data->set_timeout();
-              Plugin_004_DS_address_ROM(P004_data->_addr, P004_data->_gpio);
-              Plugin_004_DS_write(0x44, P004_data->_gpio); // Take temperature mesurement
+              Dallas_address_ROM(P004_data->_addr, P004_data->_gpio);
+              Dallas_write(0x44, P004_data->_gpio); // Take temperature mesurement
 
               Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->_timer);
               P004_data->_newValue = true;
@@ -220,7 +209,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
               P004_data->_newValue = false;
               float  value = 0;
 
-              if (Plugin_004_DS_readTemp(P004_data->_addr, &value, P004_data->_gpio))
+              if (Dallas_readTemp(P004_data->_addr, &value, P004_data->_gpio))
               {
                 UserVar[event->BaseVarIndex] = value;
                 success                      = true;
@@ -248,7 +237,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
                   log += F("Error!");
                 }
                 log += F(" (");
-                log += Plugin_004_format(P004_data->_addr);
+                log += Dallas_format_address(P004_data->_addr);
                 log += ')';
                 addLog(LOG_LEVEL_INFO, log);
               }
@@ -262,31 +251,6 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-String Plugin_004_getModel(uint8_t family) {
-    String model;
-    switch (family) {
-        case 0x28: model = F("DS18B20"); break;
-        case 0x3b: model = F("DS1825");  break;
-        case 0x22: model = F("DS1822");  break;
-        case 0x10: model = F("DS1820 / DS18S20");  break;
-    }
-    return model;
-}
-
-String Plugin_004_format(uint8_t addr[]) {
-  String result;
-  result.reserve(40);
-  for (byte j = 0; j < 8; j++)
-  {
-    result += String(addr[j], HEX);
-    if (j < 7) { result += '-'; }
-  }
-  result += F(" ");
-  result += Plugin_004_getModel(addr[0]);
-
-  return result;
-}
-
 
 // Load ROM address from tasksettings
 void Plugin_004_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
@@ -298,542 +262,5 @@ void Plugin_004_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
     addr[x] = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
   }
 }
-
-/*********************************************************************************************\
-   Dallas Scan bus
-\*********************************************************************************************/
-byte Plugin_004_DS_scan(byte getDeviceROM, uint8_t *ROM, int8_t Plugin_004_DallasPin)
-{
-  byte tmpaddr[8];
-  byte devCount = 0;
-
-  Plugin_004_DS_reset(Plugin_004_DallasPin);
-
-  Plugin_004_DS_reset_search();
-
-  while (Plugin_004_DS_search(tmpaddr, Plugin_004_DallasPin))
-  {
-    if (getDeviceROM == devCount) {
-      for (byte  i = 0; i < 8; i++) {
-        ROM[i] = tmpaddr[i];
-      }
-    }
-    devCount++;
-  }
-  return devCount;
-}
-
-// read power supply
-bool Plugin_004_DS_is_parasite(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
-{
-  Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
-  Plugin_004_DS_write(0xB4, Plugin_004_DallasPin); // read power supply
-  return !Plugin_004_DS_read_bit(Plugin_004_DallasPin);
-}
-
-/*********************************************************************************************\
-*  Dallas Read temperature from scratchpad
-\*********************************************************************************************/
-boolean Plugin_004_DS_readTemp(uint8_t ROM[8], float *value, int8_t Plugin_004_DallasPin)
-{
-  int16_t DSTemp;
-  byte    ScratchPad[12];
-
-  Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
-  Plugin_004_DS_write(0xBE, Plugin_004_DallasPin); // Read scratchpad
-
-  for (byte i = 0; i < 9; i++) {                   // read 9 bytes
-    ScratchPad[i] = Plugin_004_DS_read(Plugin_004_DallasPin);
-  }
-
-  bool crc_ok = Plugin_004_DS_crc8(ScratchPad);
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("DS: SP: ");
-
-    for (byte x = 0; x < 9; x++)
-    {
-      if (x != 0) {
-        log += ',';
-      }
-      log += String(ScratchPad[x], HEX);
-    }
-
-    if (crc_ok) {
-      log += F(",OK");
-    }
-
-    if (Plugin_004_DS_is_parasite(ROM, Plugin_004_DallasPin)) {
-      log += F(",P");
-    }
-    log += ',';
-    log += String(Plugin_004_reset_time, DEC);
-    addLog(LOG_LEVEL_DEBUG, log);
-  }
-
-  if (!crc_ok)
-  {
-    *value = 0;
-    return false;
-  }
-
-  if ((ROM[0] == 0x28) || (ROM[0] == 0x3b) || (ROM[0] == 0x22)) // DS18B20 or DS1825 or DS1822
-  {
-    DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
-
-    if (DSTemp == 0x550) { // power-on reset value
-      return false;
-    }
-    *value = (float(DSTemp) * 0.0625);
-  }
-  else if (ROM[0] == 0x10)       // DS1820 DS18S20
-  {
-    if (ScratchPad[0] == 0xaa) { // power-on reset value
-      return false;
-    }
-    DSTemp = (ScratchPad[1] << 11) | ScratchPad[0] << 3;
-    DSTemp = ((DSTemp & 0xfff0) << 3) - 16 +
-             (((ScratchPad[7] - ScratchPad[6]) << 7) / ScratchPad[7]);
-    *value = float(DSTemp) * 0.0078125;
-  }
-  return true;
-}
-
-/*********************************************************************************************\
-* Dallas Get Resolution
-\*********************************************************************************************/
-byte Plugin_004_DS_getResolution(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
-{
-  // DS1820 and DS18S20 have no resolution configuration register
-  if (ROM[0] == 0x10) { return 12; }
-
-  byte ScratchPad[12];
-
-  Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
-  Plugin_004_DS_write(0xBE, Plugin_004_DallasPin); // Read scratchpad
-
-  for (byte i = 0; i < 9; i++) {                   // read 9 bytes
-    ScratchPad[i] = Plugin_004_DS_read(Plugin_004_DallasPin);
-  }
-
-  if (!Plugin_004_DS_crc8(ScratchPad)) {
-    return 0;
-  }
-  else
-  {
-    switch (ScratchPad[4])
-    {
-      case 0x7F: // 12 bit
-        return 12;
-
-      case 0x5F: // 11 bit
-        return 11;
-
-      case 0x3F: // 10 bit
-        return 10;
-
-      case 0x1F: //  9 bit
-      default:
-        return 9;
-    }
-  }
-  return 0;
-}
-
-/*********************************************************************************************\
-* Dallas Get Resolution
-\*********************************************************************************************/
-boolean Plugin_004_DS_setResolution(uint8_t ROM[8], byte res, int8_t Plugin_004_DallasPin)
-{
-  // DS1820 and DS18S20 have no resolution configuration register
-  if (ROM[0] == 0x10) { return true; }
-
-  byte ScratchPad[12];
-
-  Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
-  Plugin_004_DS_write(0xBE, Plugin_004_DallasPin); // Read scratchpad
-
-  for (byte i = 0; i < 9; i++) {                   // read 9 bytes
-    ScratchPad[i] = Plugin_004_DS_read(Plugin_004_DallasPin);
-  }
-
-  if (!Plugin_004_DS_crc8(ScratchPad)) {
-    addLog(LOG_LEVEL_ERROR, F("DS   : Cannot set resolution"));
-    return false;
-  }
-  else
-  {
-    byte old_configuration = ScratchPad[4];
-
-    switch (res)
-    {
-      case 12:
-        ScratchPad[4] = 0x7F; // 12 bits
-        break;
-      case 11:
-        ScratchPad[4] = 0x5F; // 11 bits
-        break;
-      case 10:
-        ScratchPad[4] = 0x3F; // 10 bits
-        break;
-      case 9:
-      default:
-        ScratchPad[4] = 0x1F; //  9 bits
-        break;
-    }
-
-    if (ScratchPad[4] == old_configuration) {
-      return true;
-    }
-
-    Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
-    Plugin_004_DS_write(0x4E,          Plugin_004_DallasPin); // Write to EEPROM
-    Plugin_004_DS_write(ScratchPad[2], Plugin_004_DallasPin); // high alarm temp
-    Plugin_004_DS_write(ScratchPad[3], Plugin_004_DallasPin); // low alarm temp
-    Plugin_004_DS_write(ScratchPad[4], Plugin_004_DallasPin); // configuration register
-
-    Plugin_004_DS_address_ROM(ROM, Plugin_004_DallasPin);
-
-    // save the newly written values to eeprom
-    Plugin_004_DS_write(0x48, Plugin_004_DallasPin);
-    delay(100);  // <--- added 20ms delay to allow 10ms long EEPROM write operation (as specified by datasheet)
-    Plugin_004_DS_reset(Plugin_004_DallasPin);
-
-    return true; // new value set
-  }
-}
-
-/*********************************************************************************************\
-*  Dallas Reset
-\*********************************************************************************************/
-uint8_t Plugin_004_DS_reset(int8_t Plugin_004_DallasPin)
-{
-  uint8_t r       = 0;
-  uint8_t retries = 125;
-
-    # if defined(ESP32)
-  ESP32noInterrupts();
-    # endif // if defined(ESP32)
-  pinMode(Plugin_004_DallasPin, INPUT);
-  bool success = true;
-
-  do // wait until the wire is high... just in case
-  {
-    if (--retries == 0) {
-      success = false;
-    }
-    delayMicroseconds(2);
-  }
-  while (!digitalRead(Plugin_004_DallasPin) && success);
-
-  if (success) {
-    digitalWrite(Plugin_004_DallasPin, LOW);
-    pinMode(Plugin_004_DallasPin, OUTPUT);
-    delayMicroseconds(500);
-    pinMode(Plugin_004_DallasPin, INPUT); // Float
-
-    for (uint8_t i = 0; i < 45; i++)      // 480us RX minimum
-    {
-      delayMicroseconds(15);
-
-      if (!digitalRead(Plugin_004_DallasPin)) {
-        r                     = 1;
-        Plugin_004_reset_time = i;
-      }
-    }
-  }
-    # if defined(ESP32)
-  ESP32interrupts();
-    # endif // if defined(ESP32)
-  return r;
-}
-
-# define FALSE 0
-# define TRUE  1
-
-unsigned char ROM_NO[8];
-uint8_t LastDiscrepancy;
-uint8_t LastFamilyDiscrepancy;
-uint8_t LastDeviceFlag;
-
-
-/*********************************************************************************************\
-*  Dallas Reset Search
-\*********************************************************************************************/
-void Plugin_004_DS_reset_search()
-{
-  // reset the search state
-  LastDiscrepancy       = 0;
-  LastDeviceFlag        = FALSE;
-  LastFamilyDiscrepancy = 0;
-
-  for (byte i = 0; i < 8; i++) {
-    ROM_NO[i] = 0;
-  }
-}
-
-/*********************************************************************************************\
-*  Dallas Search bus
-\*********************************************************************************************/
-uint8_t Plugin_004_DS_search(uint8_t *newAddr, int8_t Plugin_004_DallasPin)
-{
-  uint8_t id_bit_number;
-  uint8_t last_zero, rom_byte_number, search_result;
-  uint8_t id_bit, cmp_id_bit;
-  unsigned char rom_byte_mask, search_direction;
-
-  // initialize for search
-  id_bit_number   = 1;
-  last_zero       = 0;
-  rom_byte_number = 0;
-  rom_byte_mask   = 1;
-  search_result   = 0;
-
-  // if the last call was not the last one
-  if (!LastDeviceFlag)
-  {
-    // 1-Wire reset
-    if (!Plugin_004_DS_reset(Plugin_004_DallasPin))
-    {
-      // reset the search
-      LastDiscrepancy       = 0;
-      LastDeviceFlag        = FALSE;
-      LastFamilyDiscrepancy = 0;
-      return FALSE;
-    }
-
-    // issue the search command
-    Plugin_004_DS_write(0xF0, Plugin_004_DallasPin);
-
-    // loop to do the search
-    do
-    {
-      // read a bit and its complement
-      id_bit     = Plugin_004_DS_read_bit(Plugin_004_DallasPin);
-      cmp_id_bit = Plugin_004_DS_read_bit(Plugin_004_DallasPin);
-
-      // check for no devices on 1-wire
-      if ((id_bit == 1) && (cmp_id_bit == 1)) {
-        break;
-      }
-      else
-      {
-        // all devices coupled have 0 or 1
-        if (id_bit != cmp_id_bit) {
-          search_direction = id_bit; // bit write value for search
-        }
-        else
-        {
-          // if this discrepancy if before the Last Discrepancy
-          // on a previous next then pick the same as last time
-          if (id_bit_number < LastDiscrepancy) {
-            search_direction = ((ROM_NO[rom_byte_number] & rom_byte_mask) > 0);
-          }
-          else {
-            // if equal to last pick 1, if not then pick 0
-            search_direction = (id_bit_number == LastDiscrepancy);
-          }
-
-          // if 0 was picked then record its position in LastZero
-          if (search_direction == 0)
-          {
-            last_zero = id_bit_number;
-
-            // check for Last discrepancy in family
-            if (last_zero < 9) {
-              LastFamilyDiscrepancy = last_zero;
-            }
-          }
-        }
-
-        // set or clear the bit in the ROM byte rom_byte_number
-        // with mask rom_byte_mask
-        if (search_direction == 1) {
-          ROM_NO[rom_byte_number] |= rom_byte_mask;
-        }
-        else {
-          ROM_NO[rom_byte_number] &= ~rom_byte_mask;
-        }
-
-        // serial number search direction write bit
-        Plugin_004_DS_write_bit(search_direction, Plugin_004_DallasPin);
-
-        // increment the byte counter id_bit_number
-        // and shift the mask rom_byte_mask
-        id_bit_number++;
-        rom_byte_mask <<= 1;
-
-        // if the mask is 0 then go to new SerialNum byte rom_byte_number and reset mask
-        if (rom_byte_mask == 0)
-        {
-          rom_byte_number++;
-          rom_byte_mask = 1;
-        }
-      }
-    }
-    while (rom_byte_number < 8); // loop until through all ROM bytes 0-7
-
-    // if the search was successful then
-    if (!(id_bit_number < 65))
-    {
-      // search successful so set LastDiscrepancy,LastDeviceFlag,search_result
-      LastDiscrepancy = last_zero;
-
-      // check for last device
-      if (LastDiscrepancy == 0) {
-        LastDeviceFlag = TRUE;
-      }
-
-      search_result = TRUE;
-    }
-  }
-
-  // if no device found then reset counters so next 'search' will be like a first
-  if (!search_result || !ROM_NO[0])
-  {
-    LastDiscrepancy       = 0;
-    LastDeviceFlag        = FALSE;
-    LastFamilyDiscrepancy = 0;
-    search_result         = FALSE;
-  }
-
-  for (int i = 0; i < 8; i++) {
-    newAddr[i] = ROM_NO[i];
-  }
-
-  return search_result;
-}
-
-/*********************************************************************************************\
-*  Dallas Read byte
-\*********************************************************************************************/
-uint8_t Plugin_004_DS_read(int8_t Plugin_004_DallasPin)
-{
-  uint8_t bitMask;
-  uint8_t r = 0;
-
-  for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-    if (Plugin_004_DS_read_bit(Plugin_004_DallasPin)) {
-      r |= bitMask;
-    }
-  }
-
-  return r;
-}
-
-/*********************************************************************************************\
-*  Dallas Write byte
-\*********************************************************************************************/
-void Plugin_004_DS_write(uint8_t ByteToWrite, int8_t Plugin_004_DallasPin)
-{
-  uint8_t bitMask;
-
-  for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-    Plugin_004_DS_write_bit((bitMask & ByteToWrite) ? 1 : 0, Plugin_004_DallasPin);
-  }
-}
-
-/*********************************************************************************************\
-*  Dallas Read bit
-\*********************************************************************************************/
-uint8_t Plugin_004_DS_read_bit(int8_t Plugin_004_DallasPin)
-{
-  if (Plugin_004_DallasPin == -1) { return 0; }
-  uint8_t r;
-
-    # if defined(ESP32)
-  ESP32noInterrupts();
-    # endif // if defined(ESP32)
-  digitalWrite(Plugin_004_DallasPin, LOW);
-  pinMode(Plugin_004_DallasPin, OUTPUT);
-  delayMicroseconds(2);
-  pinMode(Plugin_004_DallasPin, INPUT); // let pin float, pull up will raise
-  delayMicroseconds(8);
-  r = digitalRead(Plugin_004_DallasPin);
-    # if defined(ESP32)
-  ESP32interrupts();
-    # endif // if defined(ESP32)
-  delayMicroseconds(60);
-  return r;
-}
-
-/*********************************************************************************************\
-*  Dallas Write bit
-\*********************************************************************************************/
-void Plugin_004_DS_write_bit(uint8_t v, int8_t Plugin_004_DallasPin)
-{
-  if (Plugin_004_DallasPin == -1) { return; }
-
-  if (v & 1)
-  {
-        # if defined(ESP32)
-    ESP32noInterrupts();
-        # endif // if defined(ESP32)
-    digitalWrite(Plugin_004_DallasPin, LOW);
-    pinMode(Plugin_004_DallasPin, OUTPUT);
-    delayMicroseconds(2);
-    digitalWrite(Plugin_004_DallasPin, HIGH);
-        # if defined(ESP32)
-    ESP32interrupts();
-        # endif // if defined(ESP32)
-    delayMicroseconds(70);
-  }
-  else
-  {
-        # if defined(ESP32)
-    ESP32noInterrupts();
-        # endif // if defined(ESP32)
-    digitalWrite(Plugin_004_DallasPin, LOW);
-    pinMode(Plugin_004_DallasPin, OUTPUT);
-    delayMicroseconds(90);
-    digitalWrite(Plugin_004_DallasPin, HIGH);
-        # if defined(ESP32)
-    ESP32interrupts();
-        # endif // if defined(ESP32)
-    delayMicroseconds(10);
-  }
-}
-
-/*********************************************************************************************\
-*  Standard function to initiate addressing a sensor.
-\*********************************************************************************************/
-void Plugin_004_DS_address_ROM(uint8_t ROM[8], int8_t Plugin_004_DallasPin)
-{
-  Plugin_004_DS_reset(Plugin_004_DallasPin);
-  Plugin_004_DS_write(0x55, Plugin_004_DallasPin); // Choose ROM
-
-  for (byte i = 0; i < 8; i++) {
-    Plugin_004_DS_write(ROM[i], Plugin_004_DallasPin);
-  }
-}
-
-/*********************************************************************************************\
-*  Dallas Calculate CRC8 and compare it of addr[0-7] and compares it to addr[8]
-\*********************************************************************************************/
-boolean Plugin_004_DS_crc8(uint8_t *addr)
-{
-  uint8_t crc = 0;
-  uint8_t len = 8;
-
-  while (len--)
-  {
-    uint8_t inbyte = *addr++; // from 0 to 7
-
-    for (uint8_t i = 8; i; i--)
-    {
-      uint8_t mix = (crc ^ inbyte) & 0x01;
-      crc >>= 1;
-
-      if (mix) { crc ^= 0x8C; }
-      inbyte >>= 1;
-    }
-  }
-  return crc == *addr; // addr 8
-}
-
-# if defined(ESP32)
-  #  undef ESP32noInterrupts
-  #  undef ESP32interrupts
-# endif // if defined(ESP32)
 
 #endif  // USES_P004
