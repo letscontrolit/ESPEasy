@@ -3,6 +3,9 @@
 
 #include <Arduino.h>
 
+#include "../DataTypes/TaskIndex.h"
+#include "../DataTypes/PluginID.h"
+
 // Used timings based on Maxim documentation.
 // See https://www.maximintegrated.com/en/design/technical-documents/app-notes/1/126.html
 // We use the "standard speed" timings, not the "Overdrive speed"
@@ -33,6 +36,22 @@ extern long presence_end;   // End presence condition (minimal 60 usec, typ: 100
 String Dallas_getModel(uint8_t family);
 
 String Dallas_format_address(const uint8_t addr[]);
+
+uint64_t Dallas_addr_to_uint64(const uint8_t addr[]);
+
+void Dallas_uint64_to_addr(uint64_t value, uint8_t addr[]);
+
+void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin, uint8_t nrVariables = 1);
+
+void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin, uint8_t nrVariables = 1);
+
+bool Dallas_plugin(pluginID_t pluginID);
+
+// Load ROM address from tasksettings
+void Dallas_plugin_get_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_index = 0);
+
+void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_index = 0);
+
 
 /*********************************************************************************************\
    Dallas Scan bus

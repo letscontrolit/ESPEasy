@@ -65,33 +65,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
       Plugin_080_DallasPin = CONFIG_PIN1;
 
       if (Plugin_080_DallasPin != -1) {
-        // get currently saved address
-        uint8_t savedAddress[8];
-        Plugin_080_get_addr(savedAddress, event->TaskIndex);
-
-        // find all suitable devices
-        addRowLabel(F("Device Address"));
-        addSelector_Head(F("p080_dev"));
-        addSelector_Item("", -1, false, false, "");
-        uint8_t tmpAddress[8];
-        byte    count = 0;
-        Dallas_reset(Plugin_080_DallasPin);
-        Dallas_reset_search();
-
-        while (Dallas_search(tmpAddress, Plugin_080_DallasPin))
-        {
-          String option   = Dallas_format_address(tmpAddress);
-          bool   selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-
-          // check for DS1990A
-          if (tmpAddress[0] == 0x01) {
-            addSelector_Item(option, count, selected, false, "");
-          }
-
-
-          count++;
-        }
-        addSelector_Foot();
+        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_080_DallasPin);
       }
       success = true;
       break;
@@ -100,17 +74,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       // save the address for selected device and store into extra tasksettings
-      Plugin_080_DallasPin = CONFIG_PIN1;
-
-      // byte devCount =
-      if (Plugin_080_DallasPin != -1) {
-        uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-        Dallas_scan(getFormItemInt(F("p080_dev")), addr, Plugin_080_DallasPin);
-
-        for (byte x = 0; x < 8; x++) {
-          ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
-        }
-      }
+      Dallas_addr_selector_webform_save(event->TaskIndex, CONFIG_PIN1);
       success = true;
       break;
     }
@@ -119,7 +83,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
     {
       LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
-      Plugin_080_get_addr(addr, event->TaskIndex);
+      Dallas_plugin_get_addr(addr, event->TaskIndex);
       string  = Dallas_format_address(addr);
       success = true;
       break;
@@ -130,7 +94,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
 
       if (Plugin_080_DallasPin != -1) {
         uint8_t addr[8];
-        Plugin_080_get_addr(addr, event->TaskIndex);
+        Dallas_plugin_get_addr(addr, event->TaskIndex);
         Dallas_startConversion(addr, Plugin_080_DallasPin);
 
         delay(800); // give it time to do intial conversion
@@ -142,7 +106,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND: // PLUGIN_READ:
     {
       uint8_t addr[8];
-      Plugin_080_get_addr(addr, event->TaskIndex);
+      Dallas_plugin_get_addr(addr, event->TaskIndex);
 
       if (addr[0] != 0) {
         Plugin_080_DallasPin = CONFIG_PIN1;
@@ -175,14 +139,5 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-void Plugin_080_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
-{
-  // Load ROM address from tasksettings
-  LoadTaskSettings(TaskIndex);
-
-  for (byte x = 0; x < 8; x++) {
-    addr[x] = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
-  }
-}
 
 #endif // USES_P080

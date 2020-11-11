@@ -22,6 +22,24 @@
 # define P004_ERROR_MAX_RANGE  3
 # define P004_ERROR_IGNORE     4
 
+// place sensor type selector right after the output value settings
+# define P004_ERROR_STATE_OUTPUT PCONFIG(0)
+# define P004_RESOLUTION         PCONFIG(1)
+# define P004_SENSOR_TYPE_INDEX  2
+# define P004_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P004_SENSOR_TYPE_INDEX)))
+
+String Plugin_004_valuename(byte value_nr, bool displayString) {
+  String name = F("Temperature");
+
+  if (value_nr != 0) {
+    name += String(value_nr + 1);
+  }
+
+  if (!displayString) {
+    name.toLowerCase();
+  }
+  return name;
+}
 
 boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 {
@@ -42,6 +60,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
       break;
     }
 
@@ -53,7 +72,38 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_004));
+      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+        if (i < P004_NR_OUTPUT_VALUES) {
+          safe_strncpy(
+            ExtraTaskSettings.TaskDeviceValueNames[i],
+            Plugin_004_valuename(i, false),
+            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+        } else {
+          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+        }
+      }
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P004_NR_OUTPUT_VALUES;
+      success     = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = static_cast<Sensor_VType>(PCONFIG(P004_SENSOR_TYPE_INDEX));
+      event->idx        = P004_SENSOR_TYPE_INDEX;
+      success           = true;
+      break;
+    }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(P004_SENSOR_TYPE_INDEX) = static_cast<byte>(Sensor_VType::SENSOR_TYPE_SINGLE);
+      success                         = true;
       break;
     }
 
@@ -71,38 +121,20 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       int8_t Plugin_004_DallasPin = CONFIG_PIN1;
 
       if (Plugin_004_DallasPin != -1) {
-        // get currently saved address
-        uint8_t savedAddress[8];
-        Plugin_004_get_addr(savedAddress, event->TaskIndex);
-
-        // find all suitable devices
-        addRowLabel(F("Device Address"));
-        addSelector_Head(F("p004_dev"));
-        addSelector_Item("", -1, false, false, "");
-        uint8_t tmpAddress[8];
-        byte    count = 0;
-        Dallas_reset(Plugin_004_DallasPin);
-        Dallas_reset_search();
-
-        while (Dallas_search(tmpAddress, Plugin_004_DallasPin))
-        {
-          String option = Dallas_format_address(tmpAddress);
-
-          bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-          addSelector_Item(option, count, selected, false, "");
-          count++;
-        }
-        addSelector_Foot();
+        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin, P004_NR_OUTPUT_VALUES);
 
         {
           // Device Resolution select
-          int activeRes =  PCONFIG(1);
+          int activeRes =  P004_RESOLUTION;
+
+          uint8_t savedAddress[8];
+          Dallas_plugin_get_addr(savedAddress, event->TaskIndex);
 
           if (savedAddress[0] != 0) {
             activeRes = Dallas_getResolution(savedAddress, Plugin_004_DallasPin);
           }
 
-          int resolutionChoice = PCONFIG(1);
+          int resolutionChoice = P004_RESOLUTION;
 
           if ((resolutionChoice < 9) || (resolutionChoice > 12)) { resolutionChoice = activeRes; }
           String resultsOptions[4]      = { F("9"), F("10"), F("11"), F("12") };
@@ -122,7 +154,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           // Value in case of Error
           String resultsOptions[5]      = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
           int    resultsOptionValues[5] = { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
-          addFormSelector(F("Error State Value"), F("p004_err"), 5, resultsOptions, resultsOptionValues, PCONFIG(0));
+          addFormSelector(F("Error State Value"), F("p004_err"), 5, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
         }
       }
       success = true;
@@ -135,23 +167,19 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
       if (Plugin_004_DallasPin != -1) {
         // save the address for selected device and store into extra tasksettings
-        LoadTaskSettings(event->TaskIndex);
-        uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-        Dallas_scan(getFormItemInt(F("p004_dev")), addr, Plugin_004_DallasPin);
-
-        for (byte x = 0; x < 8; x++) {
-          ExtraTaskSettings.TaskDevicePluginConfigLong[x] = addr[x];
-        }
+        Dallas_addr_selector_webform_save(event->TaskIndex, Plugin_004_DallasPin, P004_NR_OUTPUT_VALUES);
 
         uint8_t res = getFormItemInt(F("p004_res"));
 
         if ((res < 9) || (res > 12)) { res = 12; }
-        PCONFIG(1) = res;
+        P004_RESOLUTION = res;
 
-        Dallas_setResolution(addr, res, Plugin_004_DallasPin);
+        uint8_t savedAddress[8];
+        Dallas_plugin_get_addr(savedAddress, event->TaskIndex);
+        Dallas_setResolution(savedAddress, res, Plugin_004_DallasPin);
       }
-      PCONFIG(0) = getFormItemInt(F("p004_err"));
-      success    = true;
+      P004_ERROR_STATE_OUTPUT = getFormItemInt(F("p004_err"));
+      success                 = true;
       break;
     }
 
@@ -159,8 +187,17 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
     {
       LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
-      Plugin_004_get_addr(addr, event->TaskIndex);
-      string  = Dallas_format_address(addr);
+
+      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+        if (i < P004_NR_OUTPUT_VALUES) {
+          Dallas_plugin_get_addr(addr, event->TaskIndex, i);
+
+          if (i != 0) {
+            string += F("<br>");
+          }
+          string += Dallas_format_address(addr);
+        }
+      }
       success = true;
       break;
     }
@@ -168,15 +205,20 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       uint8_t addr[8];
-      Plugin_004_get_addr(addr, event->TaskIndex);
+      Dallas_plugin_get_addr(addr, event->TaskIndex);
 
       if ((addr[0] != 0) && (CONFIG_PIN1 != -1)) {
-        const uint8_t res = PCONFIG(1);
+        const uint8_t res = P004_RESOLUTION;
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(CONFIG_PIN1, addr, res));
         P004_data_struct *P004_data =
           static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P004_data) {
+          // Address index 0 is already set
+          for (byte i = 1; i < P004_NR_OUTPUT_VALUES; ++i) {
+            Dallas_plugin_get_addr(addr, event->TaskIndex, i);
+            P004_data->add_addr(addr, i);
+          }
           success = true;
         }
       }
@@ -198,46 +240,47 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
               Scheduler.schedule_task_device_timer(event->TaskIndex, P004_data->get_timer());
             }
           } else {
-            P004_data->set_measurement_inactive();
-
             // Try to get in sync with the existing interval again.
             Scheduler.reschedule_task_device_timer(event->TaskIndex, P004_data->get_measurement_start());
             float value = 0;
 
-            if (P004_data->read_temp(value))
-            {
-              UserVar[event->BaseVarIndex] = value;
-              success                      = true;
-            }
-            else
-            {
-              if (PCONFIG(0) != P004_ERROR_IGNORE) {
-                float errorValue = NAN;
+            for (byte i = 0; i < P004_NR_OUTPUT_VALUES; ++i) {
+              if (P004_data->read_temp(value, i))
+              {
+                UserVar[event->BaseVarIndex + i] = value;
+                success                          = true;
+              }
+              else
+              {
+                if (P004_ERROR_STATE_OUTPUT != P004_ERROR_IGNORE) {
+                  float errorValue = NAN;
 
-                switch (PCONFIG(0)) {
-                  case P004_ERROR_MIN_RANGE: errorValue = -127; break;
-                  case P004_ERROR_ZERO:      errorValue = 0; break;
-                  case P004_ERROR_MAX_RANGE: errorValue = 125; break;
-                  default:
-                    break;
+                  switch (P004_ERROR_STATE_OUTPUT) {
+                    case P004_ERROR_MIN_RANGE: errorValue = -127; break;
+                    case P004_ERROR_ZERO:      errorValue = 0; break;
+                    case P004_ERROR_MAX_RANGE: errorValue = 125; break;
+                    default:
+                      break;
+                  }
+                  UserVar[event->BaseVarIndex + i] = errorValue;
                 }
-                UserVar[event->BaseVarIndex] = errorValue;
+              }
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("DS   : Temperature: ");
+
+                if (success) {
+                  log += UserVar[event->BaseVarIndex];
+                } else {
+                  log += F("Error!");
+                }
+                log += F(" (");
+                log += P004_data->get_formatted_address(i);
+                log += ')';
+                addLog(LOG_LEVEL_INFO, log);
               }
             }
-
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("DS   : Temperature: ");
-
-              if (success) {
-                log += UserVar[event->BaseVarIndex];
-              } else {
-                log += F("Error!");
-              }
-              log += F(" (");
-              log += P004_data->get_formatted_address();
-              log += ')';
-              addLog(LOG_LEVEL_INFO, log);
-            }
+            P004_data->set_measurement_inactive();
           }
         }
       }
@@ -245,17 +288,6 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
     }
   }
   return success;
-}
-
-// Load ROM address from tasksettings
-void Plugin_004_get_addr(uint8_t addr[], taskIndex_t TaskIndex)
-{
-  // Load ROM address from tasksettings
-  LoadTaskSettings(TaskIndex);
-
-  for (byte x = 0; x < 8; x++) {
-    addr[x] = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
-  }
 }
 
 #endif // USES_P004

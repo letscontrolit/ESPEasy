@@ -2,6 +2,8 @@
 
 #include "../../_Plugin_Helper.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Misc.h"
 
 
 #if defined(ESP32)
@@ -54,6 +56,172 @@ String Dallas_format_address(const uint8_t addr[]) {
   result += ']';
 
   return result;
+}
+
+uint64_t Dallas_addr_to_uint64(const uint8_t addr[]) {
+  uint64_t tmpAddr_64 = 0;
+
+  for (byte i = 0; i < 8; ++i) {
+    tmpAddr_64 *= 256;
+    tmpAddr_64 += addr[i];
+  }
+  return tmpAddr_64;
+}
+
+void Dallas_uint64_to_addr(uint64_t value, uint8_t addr[]) {
+  uint8_t i = 8;
+  while (i > 0) {
+    --i;
+    addr[i] = static_cast<uint8_t>(value & 0xFF);
+    value /= 256;
+  }
+}
+
+void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin, uint8_t nrVariables) {
+  if (gpio_pin == -1) {
+    return;
+  }
+
+  if (nrVariables >= VARS_PER_TASK) {
+    nrVariables = VARS_PER_TASK;
+  }
+
+  if (!validTaskIndex(TaskIndex)) {
+    return;
+  }
+
+  std::map<uint64_t, String> addr_task_map;
+
+  for (taskIndex_t task = 0; validTaskIndex(task); ++task) {
+    if (Dallas_plugin(Settings.TaskDeviceNumber[task])) {
+      uint8_t tmpAddress[8] = { 0 };
+      for (uint8_t var_index = 0; var_index < VARS_PER_TASK; ++var_index) {
+        Dallas_plugin_get_addr(tmpAddress, task, var_index);
+        uint64_t tmpAddr_64 = Dallas_addr_to_uint64(tmpAddress);
+
+        if (tmpAddr_64 != 0) {
+            String label;
+            label.reserve(32);
+            label  = F(" (task ");
+            label += String(task + 1);
+            label += F(" [");
+            label += getTaskDeviceName(task);
+            label += '#';
+            label += ExtraTaskSettings.TaskDeviceValueNames[var_index];
+            label += F("])");
+
+            addr_task_map[tmpAddr_64] = label;
+        }
+      }
+    }
+  }
+
+  // find all suitable devices
+  std::vector<uint64_t> scan_res;
+  Dallas_reset(gpio_pin);
+  Dallas_reset_search();
+  uint8_t tmpAddress[8];
+  while (Dallas_search(tmpAddress, gpio_pin))
+  {
+    scan_res.push_back(Dallas_addr_to_uint64(tmpAddress));
+  }
+
+  for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
+    String id = F("dallas_addr");
+    id += String(var_index);
+    String rowLabel = F("Device Address");
+    if (nrVariables > 1) {
+      rowLabel += ' ';
+      rowLabel += String(var_index + 1);
+    }
+    addRowLabel(rowLabel);
+    addSelector_Head(id);
+    addSelector_Item(F("- None -"), -1, false, false, ""); // Empty choice
+    uint8_t tmpAddress[8];
+
+    // get currently saved address
+    uint8_t savedAddress[8];
+
+    for (byte index = 0; index < scan_res.size(); ++index) {
+        Dallas_plugin_get_addr(savedAddress, TaskIndex, var_index);
+        Dallas_uint64_to_addr(scan_res[index], tmpAddress);
+        String option = Dallas_format_address(tmpAddress);
+        auto   it     = addr_task_map.find(Dallas_addr_to_uint64(tmpAddress));
+
+        if (it != addr_task_map.end()) {
+          option += it->second;
+        }
+
+        bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
+        addSelector_Item(option, index, selected, false, "");
+    }
+    addSelector_Foot();
+  }
+}
+
+void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin, uint8_t nrVariables)
+{
+  if (gpio_pin == -1) {
+    return;
+  }
+  if (nrVariables >= VARS_PER_TASK) {
+    nrVariables = VARS_PER_TASK;
+  }
+
+  if (!validTaskIndex(TaskIndex)) {
+    return;
+  }
+  uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+  for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
+    String id = F("dallas_addr");
+    id += String(var_index);
+    int selection = getFormItemInt(id, -1);
+    if (selection != -1) {
+      Dallas_scan(getFormItemInt(id), addr, gpio_pin);
+      Dallas_plugin_set_addr(addr, TaskIndex, var_index);
+    }
+  }
+}
+
+bool Dallas_plugin(pluginID_t pluginID)
+{
+  switch (pluginID) {
+    case 4:
+    case 80:
+    case 100:
+      return true;
+  }
+  return false;
+}
+
+void Dallas_plugin_get_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_index)
+{
+  if (var_index >= 4) {
+    return;
+  }
+
+  // Load ROM address from tasksettings
+  LoadTaskSettings(TaskIndex);
+
+  for (byte x = 0; x < 8; x++) {
+    uint32_t value = (uint32_t)ExtraTaskSettings.TaskDevicePluginConfigLong[x];
+    addr[x] = static_cast<uint8_t>((value >> (var_index * 8)) & 0xFF);
+  }
+}
+
+void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_index)
+{
+  if (var_index >= 4) {
+    return;
+  }
+  LoadTaskSettings(TaskIndex);
+  const uint32_t mask = ~(0xFF << (var_index * 8));
+  for (byte x = 0; x < 8; x++) {
+    uint32_t value = (uint32_t)ExtraTaskSettings.TaskDevicePluginConfigLong[x];
+    value &= mask;
+    value += (static_cast<uint32_t>(addr[x]) << (var_index * 8));
+    ExtraTaskSettings.TaskDevicePluginConfigLong[x] = (long)value;
+  }
 }
 
 /*********************************************************************************************\
@@ -704,7 +872,7 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin)
   // write 0: low 60 usec, high 10 usec
   const long low_time  = (v & 1) ? 6 : 60;
   const long high_time = (v & 1) ? 64 : 10;
-  unsigned long start = micros();
+  unsigned long start  = micros();
 
   #if defined(ESP32)
   ESP32noInterrupts();

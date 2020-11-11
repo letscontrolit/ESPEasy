@@ -118,6 +118,23 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
     choice                = event->sensorType;
     PCONFIG(pconfigIndex) = static_cast<byte>(choice);
   }
+  if (Device[DeviceIndex].OutputDataType ==  Output_Data_type_t::Simple) {
+    switch(event->sensorType) {
+      case Sensor_VType::SENSOR_TYPE_SINGLE:
+      case Sensor_VType::SENSOR_TYPE_DUAL:
+      case Sensor_VType::SENSOR_TYPE_TRIPLE:
+      case Sensor_VType::SENSOR_TYPE_QUAD:
+        // These are valid
+        break;
+      default:
+      {
+        choice = Device[DeviceIndex].VType;
+        PCONFIG(pconfigIndex) = static_cast<byte>(choice);
+        break;
+      }
+    }
+  }
+
   addRowLabel(F("Output Data Type"));
   addSelector_Head(PCONFIG_LABEL(pconfigIndex));
 
