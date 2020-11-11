@@ -425,7 +425,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       if (CONFIG_PIN3 != -1) // Button related setup
       {
-        pinMode(CONFIG_PIN3, INPUT_PULLUP);
+#ifndef ESP32
+        // pinMode can not be used for ESP32, must be set on the hardware page
+        pinMode(CONFIG_PIN3, INPUT_PULLUP);     //  Reset pinstate
+#endif
         P036_data->DebounceCounter = 0;
         P036_data->RepeatCounter   = 0;
         P036_data->ButtonState     = false;
@@ -506,7 +509,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           P036_data->P036_JumpToPage(event, 0); //  Start to display the first page, function needs 65ms!
         }
         P036_data->markButtonStateProcessed();
+#ifndef ESP32
+        // pinMode can not be used for ESP32, must be set on the hardware page
         pinMode(CONFIG_PIN3, INPUT_PULLUP);     //  Reset pinstate
+#endif
       }
 
       if (P036_data->bLineScrollEnabled) {
