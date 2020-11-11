@@ -6,10 +6,13 @@ ProtocolStruct::ProtocolStruct() :
     usesQueue(true), usesCheckReply(true), usesTimeout(true), usesSampleSets(false), 
     usesExtCreds(false), needsNetwork(true) {}
 
+bool ProtocolStruct::useCredentials() const {
+  return usesAccount || usesPassword;
+}
 
 bool ProtocolStruct::useExtendedCredentials() const {
   if (usesExtCreds) {
-    return usesAccount || usesPassword;
+    return useCredentials();
   }
   return false;
 }
