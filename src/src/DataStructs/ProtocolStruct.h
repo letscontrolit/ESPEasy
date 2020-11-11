@@ -11,6 +11,8 @@ struct ProtocolStruct
 {
   ProtocolStruct();
 
+  bool useCredentials() const;
+
   bool useExtendedCredentials() const;
 
   uint16_t defaultPort;
