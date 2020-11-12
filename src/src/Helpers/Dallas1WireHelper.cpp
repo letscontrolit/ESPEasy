@@ -5,6 +5,8 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
 
+#include "../WebServer/JSON.h"
+
 
 #if defined(ESP32)
   # define ESP32noInterrupts() { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
@@ -22,7 +24,9 @@ long presence_start = 0;
 long presence_end   = 0;
 
 
-// See: http://owfs.sourceforge.net/simple_family.html
+// References to 1-wire family codes:
+// http://owfs.sourceforge.net/simple_family.html
+// https://github.com/owfs/owfs-doc/wiki/1Wire-Device-List
 String Dallas_getModel(uint8_t family) {
   String model;
 
@@ -70,10 +74,11 @@ uint64_t Dallas_addr_to_uint64(const uint8_t addr[]) {
 
 void Dallas_uint64_to_addr(uint64_t value, uint8_t addr[]) {
   uint8_t i = 8;
+
   while (i > 0) {
     --i;
     addr[i] = static_cast<uint8_t>(value & 0xFF);
-    value /= 256;
+    value  /= 256;
   }
 }
 
@@ -95,22 +100,23 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin, u
   for (taskIndex_t task = 0; validTaskIndex(task); ++task) {
     if (Dallas_plugin(Settings.TaskDeviceNumber[task])) {
       uint8_t tmpAddress[8] = { 0 };
+
       for (uint8_t var_index = 0; var_index < VARS_PER_TASK; ++var_index) {
         Dallas_plugin_get_addr(tmpAddress, task, var_index);
         uint64_t tmpAddr_64 = Dallas_addr_to_uint64(tmpAddress);
 
         if (tmpAddr_64 != 0) {
-            String label;
-            label.reserve(32);
-            label  = F(" (task ");
-            label += String(task + 1);
-            label += F(" [");
-            label += getTaskDeviceName(task);
-            label += '#';
-            label += ExtraTaskSettings.TaskDeviceValueNames[var_index];
-            label += F("])");
+          String label;
+          label.reserve(32);
+          label  = F(" (task ");
+          label += String(task + 1);
+          label += F(" [");
+          label += getTaskDeviceName(task);
+          label += '#';
+          label += ExtraTaskSettings.TaskDeviceValueNames[var_index];
+          label += F("])");
 
-            addr_task_map[tmpAddr_64] = label;
+          addr_task_map[tmpAddr_64] = label;
         }
       }
     }
@@ -118,9 +124,11 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin, u
 
   // find all suitable devices
   std::vector<uint64_t> scan_res;
+
   Dallas_reset(gpio_pin);
   Dallas_reset_search();
   uint8_t tmpAddress[8];
+
   while (Dallas_search(tmpAddress, gpio_pin))
   {
     scan_res.push_back(Dallas_addr_to_uint64(tmpAddress));
@@ -130,6 +138,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin, u
     String id = F("dallas_addr");
     id += String(var_index);
     String rowLabel = F("Device Address");
+
     if (nrVariables > 1) {
       rowLabel += ' ';
       rowLabel += String(var_index + 1);
@@ -143,20 +152,41 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin, u
     uint8_t savedAddress[8];
 
     for (byte index = 0; index < scan_res.size(); ++index) {
-        Dallas_plugin_get_addr(savedAddress, TaskIndex, var_index);
-        Dallas_uint64_to_addr(scan_res[index], tmpAddress);
-        String option = Dallas_format_address(tmpAddress);
-        auto   it     = addr_task_map.find(Dallas_addr_to_uint64(tmpAddress));
+      Dallas_plugin_get_addr(savedAddress, TaskIndex, var_index);
+      Dallas_uint64_to_addr(scan_res[index], tmpAddress);
+      String option = Dallas_format_address(tmpAddress);
+      auto   it     = addr_task_map.find(Dallas_addr_to_uint64(tmpAddress));
 
-        if (it != addr_task_map.end()) {
-          option += it->second;
-        }
+      if (it != addr_task_map.end()) {
+        option += it->second;
+      }
 
-        bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-        addSelector_Item(option, index, selected, false, "");
+      bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
+      addSelector_Item(option, index, selected, false, "");
     }
     addSelector_Foot();
   }
+}
+
+void Dallas_show_sensor_stats_webform_load(const Dallas_SensorData& sensor_data)
+{
+  if (sensor_data.addr == 0) {
+    return;
+  }
+  addRowLabel(F("Address"));
+  addHtml(sensor_data.get_formatted_address());
+
+  addRowLabel(F("Resolution"));
+  addHtml(String(sensor_data.actual_res));
+
+  addRowLabel(F("Parasite Powered"));
+  addHtml(jsonBool(sensor_data.parasitePowered));
+
+  addRowLabel(F("Samples Read Success"));
+  addHtml(String(sensor_data.read_success));
+
+  addRowLabel(F("Samples Read Failed"));
+  addHtml(String(sensor_data.read_failed));
 }
 
 void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin, uint8_t nrVariables)
@@ -164,6 +194,7 @@ void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin, u
   if (gpio_pin == -1) {
     return;
   }
+
   if (nrVariables >= VARS_PER_TASK) {
     nrVariables = VARS_PER_TASK;
   }
@@ -172,10 +203,12 @@ void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin, u
     return;
   }
   uint8_t addr[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+
   for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
     String id = F("dallas_addr");
     id += String(var_index);
     int selection = getFormItemInt(id, -1);
+
     if (selection != -1) {
       Dallas_scan(getFormItemInt(id), addr, gpio_pin);
       Dallas_plugin_set_addr(addr, TaskIndex, var_index);
@@ -216,10 +249,11 @@ void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
   }
   LoadTaskSettings(TaskIndex);
   const uint32_t mask = ~(0xFF << (var_index * 8));
+
   for (byte x = 0; x < 8; x++) {
     uint32_t value = (uint32_t)ExtraTaskSettings.TaskDevicePluginConfigLong[x];
-    value &= mask;
-    value += (static_cast<uint32_t>(addr[x]) << (var_index * 8));
+    value                                          &= mask;
+    value                                          += (static_cast<uint32_t>(addr[x]) << (var_index * 8));
     ExtraTaskSettings.TaskDevicePluginConfigLong[x] = (long)value;
   }
 }
@@ -964,3 +998,82 @@ uint16_t Dallas_crc16(const uint8_t *input, uint16_t len, uint16_t crc)
   # undef ESP32noInterrupts
   # undef ESP32interrupts
 #endif // if defined(ESP32)
+
+
+void Dallas_SensorData::set_measurement_inactive() {
+  measurementActive = false;
+  value             = 0.0f;
+  valueRead         = false;
+}
+
+bool Dallas_SensorData::initiate_read(int8_t gpio, int8_t res) {
+  if (addr == 0) { return false; }
+  uint8_t tmpaddr[8];
+
+  Dallas_uint64_to_addr(addr, tmpaddr);
+
+  if (lastReadError) {
+    if (!check_sensor(gpio, res)) {
+      return false;
+    }
+    lastReadError = false;
+  }
+
+  if (!Dallas_address_ROM(tmpaddr, gpio)) {
+    ++read_failed;
+    lastReadError = true;
+    return false;
+  }
+  Dallas_write(0x44, gpio); // Take temperature measurement
+  return true;
+}
+
+bool Dallas_SensorData::collect_value(int8_t gpio) {
+  if ((addr != 0) && measurementActive) {
+    uint8_t tmpaddr[8];
+    Dallas_uint64_to_addr(addr, tmpaddr);
+
+    if (Dallas_readTemp(tmpaddr, &value, gpio)) {
+      ++read_success;
+      lastReadError = false;
+      valueRead     = true;
+      return true;
+    }
+    ++read_failed;
+    lastReadError = true;
+  }
+  return false;
+}
+
+String Dallas_SensorData::get_formatted_address() const {
+  if (addr == 0) { return ""; }
+
+  uint8_t tmpaddr[8];
+
+  Dallas_uint64_to_addr(addr, tmpaddr);
+  return Dallas_format_address(tmpaddr);
+}
+
+bool Dallas_SensorData::check_sensor(int8_t gpio, int8_t res) {
+  if (addr == 0) { return false; }
+  uint8_t tmpaddr[8];
+
+  Dallas_uint64_to_addr(addr, tmpaddr);
+
+  actual_res = Dallas_getResolution(tmpaddr, gpio);
+
+  if (actual_res == 0) {
+    ++read_failed;
+    lastReadError = true;
+    return false;
+  }
+
+  if (res != actual_res) {
+    if (!Dallas_setResolution(tmpaddr, res, gpio)) {
+      return false;
+    }
+  }
+
+  parasitePowered = Dallas_is_parasite(tmpaddr, gpio);
+  return true;
+}

@@ -115,8 +115,6 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNote(F("External pull up resistor is needed, see docs!"));
-
       // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
       int8_t Plugin_004_DallasPin = CONFIG_PIN1;
 
@@ -141,13 +139,6 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           int    resultsOptionValues[4] = { 9, 10, 11, 12 };
           addFormSelector(F("Device Resolution"), F("p004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
           addHtml(F(" Bit"));
-
-          if (savedAddress[0] != 0) {
-            String note = F("Active resolution: ");
-            note += activeRes;
-            note += F(" bit");
-            addFormNote(note);
-          }
         }
 
         {
@@ -155,6 +146,23 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           String resultsOptions[5]      = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
           int    resultsOptionValues[5] = { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
           addFormSelector(F("Error State Value"), F("p004_err"), 5, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
+        }
+        addFormNote(F("External pull up resistor is needed, see docs!"));
+
+        {
+          P004_data_struct *P004_data =
+            static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+          if (nullptr != P004_data) {
+            for (uint8_t i = 0; i < P004_NR_OUTPUT_VALUES; ++i) {
+              if (i == 0) {
+                addFormSubHeader(F("Statistics"));
+              } else {
+                addFormSeparator(2);
+              }
+              Dallas_show_sensor_stats_webform_load(P004_data->get_sensor_data(i));
+            }
+          }
         }
       }
       success = true;
@@ -242,9 +250,12 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           } else {
             // Try to get in sync with the existing interval again.
             Scheduler.reschedule_task_device_timer(event->TaskIndex, P004_data->get_measurement_start());
-            float value = 0;
+
+            P004_data->collect_values();
 
             for (byte i = 0; i < P004_NR_OUTPUT_VALUES; ++i) {
+              float value = 0;
+
               if (P004_data->read_temp(value, i))
               {
                 UserVar[event->BaseVarIndex + i] = value;
@@ -270,7 +281,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
                 String log = F("DS   : Temperature: ");
 
                 if (success) {
-                  log += UserVar[event->BaseVarIndex];
+                  log += formatUserVarNoCheck(event, i);
                 } else {
                   log += F("Error!");
                 }

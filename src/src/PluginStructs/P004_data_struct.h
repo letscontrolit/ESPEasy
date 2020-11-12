@@ -6,6 +6,8 @@
 
 # include "../../ESPEasy_common.h"
 
+# include "../Helpers/Dallas1WireHelper.h"
+
 struct P004_data_struct : public PluginTaskData_base {
   /*********************************************************************************************\
   * Task data struct to simplify taking measurements of upto 4 Dallas DS18b20 (or compatible)
@@ -42,6 +44,8 @@ struct P004_data_struct : public PluginTaskData_base {
   // Their index determines the order in which the sensors receive this command.
   bool initiate_read();
 
+  bool collect_values();
+
   // Read temperature from the sensor at given index.
   // May return false if the sensor is not present or address is zero.
   bool          read_temp(float & value,
@@ -57,21 +61,27 @@ struct P004_data_struct : public PluginTaskData_base {
     return _measurementStart;
   }
 
+  int8_t get_gpio() const {
+      return _gpio;
+  }
+
   bool measurement_active() const;
   bool measurement_active(uint8_t index) const;
   void set_measurement_inactive();
+
+  Dallas_SensorData get_sensor_data(uint8_t index) const;
+
 
 private:
 
   // Do not set the _timer to 0, since it may cause issues
   // if this object is created (settings edited or task enabled)
   // while the node is up some time between 24.9 and 49.7 days.
-  unsigned long _timer            = millis();
-  unsigned long _measurementStart = millis();
-  uint64_t      _addr[4]          = { 0 };
-  int8_t        _gpio             = -1;
-  uint8_t       _res              = 0;
-  bool          _measurementActive[4];
+  unsigned long   _timer            = millis();
+  unsigned long   _measurementStart = millis();
+  Dallas_SensorData _sensors[4];
+  int8_t          _gpio = -1;
+  uint8_t         _res  = 0;
 };
 
 #endif // ifdef USES_P004

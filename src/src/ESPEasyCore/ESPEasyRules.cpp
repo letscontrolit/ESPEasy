@@ -1101,7 +1101,7 @@ void createRuleEvents(struct EventStruct *event) {
       default:
 
         // FIXME TD-er: Do we need to call formatUserVarNoCheck here? (or with check)
-        eventString += UserVar[event->BaseVarIndex + varNr];
+        eventString += formatUserVarNoCheck(event, varNr);
         break;
     }
     eventQueue.add(eventString);

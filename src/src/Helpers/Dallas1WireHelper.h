@@ -11,6 +11,32 @@
 // We use the "standard speed" timings, not the "Overdrive speed"
 
 
+struct Dallas_SensorData {
+  bool check_sensor(int8_t gpio,
+                    int8_t res);
+
+  void set_measurement_inactive();
+
+  bool initiate_read(int8_t gpio,
+                     int8_t res);
+
+  bool collect_value(int8_t gpio);
+
+  String get_formatted_address() const;
+
+  uint64_t addr              = 0;
+  float    value             = 0.0f;
+  uint32_t read_success      = 0;
+  uint32_t read_failed       = 0;  
+  uint8_t  actual_res        = 0;
+  bool     measurementActive = false;
+  bool     valueRead         = false;
+  bool     parasitePowered   = false;
+  bool     lastReadError     = false;
+};
+
+
+
 
 /*********************************************************************************************\
    Variables used to keep track of scanning the bus
@@ -42,6 +68,8 @@ uint64_t Dallas_addr_to_uint64(const uint8_t addr[]);
 void Dallas_uint64_to_addr(uint64_t value, uint8_t addr[]);
 
 void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin, uint8_t nrVariables = 1);
+
+void Dallas_show_sensor_stats_webform_load(const Dallas_SensorData& sensor_data);
 
 void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin, uint8_t nrVariables = 1);
 
@@ -153,5 +181,7 @@ bool     Dallas_crc8(const uint8_t *addr);
 uint16_t Dallas_crc16(const uint8_t *input,
                       uint16_t       len,
                       uint16_t       crc);
+
+
 
 #endif // ifndef HELPERS_DALLAS1WIREHELPER_H
