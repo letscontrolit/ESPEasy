@@ -210,6 +210,28 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
       bool tbPin3Invers = bitRead(PCONFIG_LONG(0), 16);      // Bit 16
+
+      {
+        uint8_t choice = uint8_t(bitRead(PCONFIG_LONG(0), 26)); // Bit 26 Input PullUp
+        int Opcount = 2;
+#ifdef INPUT_PULLDOWN
+        choice += uint8_t(bitRead(PCONFIG_LONG(0), 27)) * 2;    // Bit 27 Input PullDown
+        if (choice > 2) {
+          choice = 2;
+        }
+        Opcount = 3;
+#endif
+        String  options[3];
+        options[0] = F("Input");
+        options[1] = F("Input pullup");
+        options[2] = F("Input pulldown");
+        int optionValues[3] =
+        { static_cast<int>(eP036pinmode::ePPM_Input),
+          static_cast<int>(eP036pinmode::ePPM_InputPullUp),
+          static_cast<int>(eP036pinmode::ePPM_InputPullDown) };
+        addFormSelector(F("Pin mode"), F("p036_pinmode"), Opcount, options, optionValues, choice);
+      }
+
       addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"), tbPin3Invers);
       bool bStepThroughPages = bitRead(PCONFIG_LONG(0), 19); // Bit 19
       addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bStepThroughPages);
@@ -335,6 +357,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, 24, !isFormItemChecked(F("p036_ScrollWithoutWifi")));             // Bit 24 ScrollWithoutWifi
       bitWrite(lSettings, 25, isFormItemChecked(F("p036_HideHeader")));                     // Bit 25 Hide header
 
+      int P036pinmode = getFormItemInt(F("p036_pinmode"));
+      switch (P036pinmode) {
+        case 1: bitWrite(lSettings, 26, true);                                              // Bit 26 Input PullUp
+        case 2: bitWrite(lSettings, 27, true);                                              // Bit 27 Input PullDown
+      }
+
       PCONFIG_LONG(0) = lSettings;
 
       {
@@ -425,10 +453,22 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       if (CONFIG_PIN3 != -1) // Button related setup
       {
-#ifndef ESP32
-        // pinMode can not be used for ESP32, must be set on the hardware page
-        pinMode(CONFIG_PIN3, INPUT_PULLUP);     //  Reset pinstate
+
+#ifdef INPUT_PULLDOWN
+        if (bitRead(PCONFIG_LONG(0), 27)) {      // Bit 27 Input PullDown
+          pinMode(CONFIG_PIN3, INPUT_PULLDOWN); // Reset pinstate to PIN_MODE_INPUT_PULLDOWN
+        }
+        else
 #endif
+        {
+          if (bitRead(PCONFIG_LONG(0), 26)) {      // Bit 26 Input PullUp
+            pinMode(CONFIG_PIN3, INPUT_PULLUP);   // Reset pinstate to PIN_MODE_INPUT_PULLUP
+          }
+          else {
+            pinMode(CONFIG_PIN3, INPUT);          // Reset pinstate to PIN_MODE_INPUT
+          }
+        }
+
         P036_data->DebounceCounter = 0;
         P036_data->RepeatCounter   = 0;
         P036_data->ButtonState     = false;
@@ -509,10 +549,22 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           P036_data->P036_JumpToPage(event, 0); //  Start to display the first page, function needs 65ms!
         }
         P036_data->markButtonStateProcessed();
-#ifndef ESP32
-        // pinMode can not be used for ESP32, must be set on the hardware page
-        pinMode(CONFIG_PIN3, INPUT_PULLUP);     //  Reset pinstate
+
+#ifdef INPUT_PULLDOWN
+        if (bitRead(PCONFIG_LONG(0), 27)) {      // Bit 27 Input PullDown
+          pinMode(CONFIG_PIN3, INPUT_PULLDOWN); // Reset pinstate to PIN_MODE_INPUT_PULLDOWN
+        }
+        else
 #endif
+        {
+          if (bitRead(PCONFIG_LONG(0), 26)) {      // Bit 26 Input PullUp
+            pinMode(CONFIG_PIN3, INPUT_PULLUP);   // Reset pinstate to PIN_MODE_INPUT_PULLUP
+          }
+          else {
+            pinMode(CONFIG_PIN3, INPUT);          // Reset pinstate to PIN_MODE_INPUT
+          }
+        }
+
       }
 
       if (P036_data->bLineScrollEnabled) {

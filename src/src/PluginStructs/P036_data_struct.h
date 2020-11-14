@@ -75,6 +75,12 @@ enum class ePageScrollSpeed {
   ePSS_Instant  = 32 // 20ms
 };
 
+enum class eP036pinmode {
+  ePPM_Input          = 0,
+  ePPM_InputPullUp    = 1,
+  ePPM_InputPullDown  = 2
+};
+
 typedef struct {
   String   LineContent;       // content
   uint16_t LastWidth   = 0;   // width of last line in pix
