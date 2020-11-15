@@ -462,7 +462,7 @@ P092_data_struct::~P092_data_struct() {
   }
 }
 
-bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex) {
+bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092pinmode) {
   DLbus_Data = new (std::nothrow) DLBus;
 
   if (DLbus_Data == nullptr) {
@@ -478,19 +478,21 @@ bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex) {
   //IsISRset to false is done here.
   DLbus_Data->IsISRset       = false;
 
-  //UVR61-3 does not need the pullup resistor
-  //for the other types pullup is activated (as it was before)
-#ifndef ESP32
-  // pinMode can not be used for ESP32 (no Input_PullDown option), must be set on the hardware page
-  if ((P092DeviceIndex == 6133) || (P092DeviceIndex == 6132)){
-    addLog(LOG_LEVEL_INFO, F("P092_init: Set pin without pullup"));
-    pinMode(pin1, INPUT);
-  }
-  else {
-    addLog(LOG_LEVEL_INFO, F("P092_init: Set pin with pullup"));
-    pinMode(pin1, INPUT_PULLUP);
-  }
+  switch (P092pinmode) {
+    case eP092pinmode::ePPM_InputPullUp:
+      addLog(LOG_LEVEL_INFO, F("P092_init: Set input pin with pullup"));
+      pinMode(pin1, INPUT_PULLUP);
+    break;
+#ifdef INPUT_PULLDOWN
+    case eP092pinmode::ePPM_InputPullDown:
+      addLog(LOG_LEVEL_INFO, F("P092_init: Set input pin with pulldown"));
+      pinMode(pin1, INPUT_PULLDOWN);
+    break;
 #endif
+    default:
+      addLog(LOG_LEVEL_INFO, F("P092_init: Set input pin"));
+      pinMode(pin1, INPUT);
+  }
 
 // on a CHANGE on the data pin P092_Pin_changed is called
 //DLbus_Data->attachDLBusInterrupt();

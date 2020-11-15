@@ -29,6 +29,12 @@
 // MaxDataBits is double of the maximum bit length because each bit change is stored
 // (((64+2) * (8+1+1) + 16) * 2) + 50 = 1402 bytes
 
+enum class eP092pinmode {
+  ePPM_Input          = 1,
+  ePPM_InputPullUp    = 2,
+  ePPM_InputPullDown  = 3
+};
+
 class DLBus {
 public:
 
@@ -106,7 +112,6 @@ private:
 # define P092_double_max_width_50    (P092_double_pulse_width_50 + (P092_pulse_width_50 * P092_percentage_variance / 100))
 
 # define P092_DLbus_OptionCount 8
-# define P092_DLbus_ValueCount 1
 # define P092_DLbus_DeviceCount 5
 
 
@@ -116,7 +121,7 @@ public:
   P092_data_struct();
   ~P092_data_struct();
 
-  bool init(int8_t pin1, int P092DeviceIndex);
+  bool init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092pinmode);
 
   typedef struct {
     uint8_t Idx;

@@ -91,7 +91,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = P092_DLbus_ValueCount;
+      Device[deviceCount].ValueCount         = 1;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
@@ -113,6 +113,34 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      {
+        uint8_t choice = PCONFIG(2);  // Input mode
+        if (choice == 0) {
+          // pinmode was never set -> use default settings (as it was before)
+          if ((PCONFIG(0) == 6133) || (PCONFIG(0) == 6132)) {
+            // UVR61-3 does not need the pullup resistor
+            choice = static_cast<uint8_t>(eP092pinmode::ePPM_Input);
+          }
+          else {
+            // for the other types pullup is activated (as it was before)
+            choice = static_cast<uint8_t>(eP092pinmode::ePPM_InputPullUp);
+          }
+        }
+#ifdef INPUT_PULLDOWN
+        int Opcount = 3;
+#else
+        int Opcount = 2;
+#endif
+        String  options[3];
+        options[0] = F("Input");
+        options[1] = F("Input pullup");
+        options[2] = F("Input pulldown");
+        int optionValues[3] =
+        { static_cast<int>(eP092pinmode::ePPM_Input),
+          static_cast<int>(eP092pinmode::ePPM_InputPullUp),
+          static_cast<int>(eP092pinmode::ePPM_InputPullDown) };
+        addFormSelector(F("Pin mode"), F("p092_pinmode"), Opcount, options, optionValues, choice);
+      }
       {
         const String Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (bis V8.2)"), F(
                                                            "UVR 61-3 (ab V8.3)") };
@@ -195,32 +223,30 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         addFormSubHeader(F("Inputs"));
 
-        for (int i = 0; i < P092_DLbus_ValueCount; i++) {
-          P092_ValueType = PCONFIG(i + 1) >> 8;
-          P092_ValueIdx  = PCONFIG(i + 1) & 0x00FF;
+        P092_ValueType = PCONFIG(1) >> 8;
+        P092_ValueIdx  = PCONFIG(1) & 0x00FF;
 
-          addFormSelector(plugin_092_DefValueName,
-                          plugin_092_ValStr,
-                          P092_DLbus_OptionCount,
-                          Options,
-                          P092_OptionTypes,
-                          NULL,
-                          P092_ValueType,
-                          true);
+        addFormSelector(plugin_092_DefValueName,
+                        plugin_092_ValStr,
+                        P092_DLbus_OptionCount,
+                        Options,
+                        P092_OptionTypes,
+                        NULL,
+                        P092_ValueType,
+                        true);
 
-          if (P092_MaxIdx[P092_ValueType] > 1) {
-            int CurIdx = P092_ValueIdx;
+        if (P092_MaxIdx[P092_ValueType] > 1) {
+          int CurIdx = P092_ValueIdx;
 
-            if (CurIdx < 1) {
-              CurIdx = 1;
-            }
-
-            if (CurIdx > P092_MaxIdx[P092_ValueType]) {
-              CurIdx = P092_MaxIdx[P092_ValueType];
-            }
-            addHtml(F(" Index: "));
-            addNumericBox(plugin_092_IdxStr, CurIdx, 1, P092_MaxIdx[P092_ValueType]);
+          if (CurIdx < 1) {
+            CurIdx = 1;
           }
+
+          if (CurIdx > P092_MaxIdx[P092_ValueType]) {
+            CurIdx = P092_MaxIdx[P092_ValueType];
+          }
+          addHtml(F(" Index: "));
+          addNumericBox(plugin_092_IdxStr, CurIdx, 1, P092_MaxIdx[P092_ValueType]);
         }
       }
 
@@ -250,16 +276,16 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_OptionValueDecimals[6] = 2;
       }
 
-      for (int i = 0; i < P092_DLbus_ValueCount; i++) {
-        int OptionIdx = getFormItemInt(plugin_092_ValStr);
-        int CurIdx    = getFormItemInt(plugin_092_IdxStr);
+      int OptionIdx = getFormItemInt(plugin_092_ValStr);
+      int CurIdx    = getFormItemInt(plugin_092_IdxStr);
 
-        if (CurIdx < 1) {
-          CurIdx = 1;
-        }
-        PCONFIG(i + 1)                                                     = (OptionIdx << 8) + CurIdx;
-        ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex + i] = P092_OptionValueDecimals[OptionIdx];
+      if (CurIdx < 1) {
+        CurIdx = 1;
       }
+      PCONFIG(1)                                                     = (OptionIdx << 8) + CurIdx;
+      ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = P092_OptionValueDecimals[OptionIdx];
+
+      PCONFIG(2) = getFormItemInt(F("p092_pinmode"));
 
       if (nullptr == P092_data) {
         addLog(LOG_LEVEL_ERROR, F("## P092_save: Error DL-Bus: Class not initialized!"));
@@ -383,7 +409,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
             addLog(LOG_LEVEL_INFO, F("Init P092_data_struct ..."));
 
-            if (!P092_data->init(CONFIG_PIN1, PCONFIG(0))) {
+        if (!P092_data->init(CONFIG_PIN1, PCONFIG(0), eP092pinmode PCONFIG(2))) {
               addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
               clearPluginTaskData(event->TaskIndex);
               return false;
@@ -508,16 +534,14 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       else {
         P092_data_struct::sP092_ReadData P092_ReadData;
 
-        for (int i = 0; i < P092_DLbus_ValueCount; i++) {
-          int OptionIdx = PCONFIG(i + 1) >> 8;
-          int CurIdx    = PCONFIG(i + 1) & 0x00FF;
+        int OptionIdx = PCONFIG(1) >> 8;
+        int CurIdx    = PCONFIG(1) & 0x00FF;
 
-          if (P092_data->P092_GetData(OptionIdx, CurIdx, &P092_ReadData)) {
-            UserVar[event->BaseVarIndex + i] = P092_ReadData.value;
-          }
-          else {
-            addLog(LOG_LEVEL_ERROR, F("## P092_read: Error: No readings!"));
-          }
+        if (P092_data->P092_GetData(OptionIdx, CurIdx, &P092_ReadData)) {
+          UserVar[event->BaseVarIndex] = P092_ReadData.value;
+        }
+        else {
+          addLog(LOG_LEVEL_ERROR, F("## P092_read: Error: No readings!"));
         }
       }
       break;
