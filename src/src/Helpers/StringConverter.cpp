@@ -22,7 +22,7 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringParser.h"
 #include "../Helpers/SystemVariables.h"
-#include "../Helpers/_CPlugin_SensorTypeHelper.h"
+#include "../Helpers/_Plugin_SensorTypeHelper.h"
 
 // -V::569
 
