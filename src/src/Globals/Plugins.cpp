@@ -556,6 +556,9 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_SET_DEFAULTS) {
           saveUserVarToRTC();
         }
+        // Calls may have updated ExtraTaskSettings, so validate them.
+        ExtraTaskSettings.validate();
+        
         STOP_TIMER_TASK(DeviceIndex, Function);
         delay(0); // SMY: call delay(0) unconditionally
         return retval;

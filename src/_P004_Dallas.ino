@@ -78,6 +78,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
             ExtraTaskSettings.TaskDeviceValueNames[i],
             Plugin_004_valuename(i, false),
             sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
         } else {
           ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
         }
@@ -103,6 +104,10 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(P004_SENSOR_TYPE_INDEX) = static_cast<byte>(Sensor_VType::SENSOR_TYPE_SINGLE);
+      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+        ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
+      }
+
       success                         = true;
       break;
     }
