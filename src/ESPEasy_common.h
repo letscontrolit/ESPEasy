@@ -157,6 +157,8 @@ using namespace fs;
 
 String getUnknownString();
 
+extern const String EMPTY_STRING;
+
 
 
 /******************************************************************************\

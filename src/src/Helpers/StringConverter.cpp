@@ -22,7 +22,7 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringParser.h"
 #include "../Helpers/SystemVariables.h"
-#include "../Helpers/_CPlugin_SensorTypeHelper.h"
+#include "../Helpers/_Plugin_SensorTypeHelper.h"
 
 // -V::569
 
@@ -531,7 +531,7 @@ void htmlStrongEscape(String& html)
     else
     {
       char s[4];
-      sprintf(s, "%03d", static_cast<int>(html[i]));
+      sprintf_P(s, PSTR("%03d"), static_cast<int>(html[i]));
       escaped += "&#";
       escaped += s;
       escaped += ";";

@@ -44,6 +44,9 @@
 #define PLUGIN_NAME_001       "Switch input - Switch"
 #define PLUGIN_VALUENAME1_001 "State"
 #ifdef USE_SERVO
+#ifdef ESP32
+#include <Servo.h>
+#endif
 Servo servo1;
 Servo servo2;
 #endif // USE_SERVO

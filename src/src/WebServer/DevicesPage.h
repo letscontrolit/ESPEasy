@@ -13,7 +13,7 @@
 
 #include "../Static/WebStaticData.h"
 
-#include "../Helpers/_CPlugin_SensorTypeHelper.h"
+#include "../Helpers/_Plugin_SensorTypeHelper.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #include <ESPeasySerial.h>
