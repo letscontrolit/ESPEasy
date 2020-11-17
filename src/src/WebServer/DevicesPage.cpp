@@ -17,7 +17,7 @@
 
 #include "../Static/WebStaticData.h"
 
-#include "../Helpers/_CPlugin_SensorTypeHelper.h"
+#include "../Helpers/_Plugin_SensorTypeHelper.h"
 #include "../Helpers/_Plugin_Helper_serial.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
@@ -272,10 +272,46 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   struct EventStruct TempEvent(taskIndex);
 
   ExtraTaskSettings.clear();
-  {
-    ExtraTaskSettings.TaskIndex = taskIndex;
-    String dummy;
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
+  ExtraTaskSettings.TaskIndex = taskIndex;
+    
+  // Save selected output type.
+  switch(Device[DeviceIndex].OutputDataType) {
+    case Output_Data_type_t::Default:
+    {
+      String dummy;
+      PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
+      break;
+    }
+    case Output_Data_type_t::Simple:
+    case Output_Data_type_t::All:
+    {
+      int pconfigIndex = checkDeviceVTypeForTask(&TempEvent);
+      if (pconfigIndex >= 0 && pconfigIndex < PLUGIN_CONFIGVAR_MAX) {
+        Sensor_VType VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
+        Settings.TaskDevicePluginConfig[taskIndex][pconfigIndex] = static_cast<int>(VType);
+        ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
+
+        // nr output values has changed, generate new variable names
+        String oldNames[VARS_PER_TASK];
+        byte oldNrDec[VARS_PER_TASK];
+        for (byte i = 0; i < VARS_PER_TASK; ++i) {
+          oldNames[i] = ExtraTaskSettings.TaskDeviceValueNames[i];
+          oldNrDec[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
+        }
+
+        String dummy;
+        PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
+
+        // Restore the settings that were already set by the user
+        for (byte i = 0; i < VARS_PER_TASK; ++i) {
+          if (oldNames[i].length() != 0) {
+            safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[i], oldNames[i], sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+            ExtraTaskSettings.TaskDeviceValueDecimals[i] = oldNrDec[i];
+          }
+        }
+      }
+      break;
+    }
   }
 
   int pin1 = -1;
@@ -304,23 +340,6 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     Settings.TaskDevicePin1Inversed[taskIndex] = isFormItemChecked(F("TDPI"));
   }
 
-  // Save selected output type.
-  switch(Device[DeviceIndex].OutputDataType) {
-    case Output_Data_type_t::Default:
-      break;
-    case Output_Data_type_t::Simple:
-    case Output_Data_type_t::All:
-    {
-      int pconfigIndex = checkDeviceVTypeForTask(&TempEvent);
-      if (pconfigIndex >= 0 && pconfigIndex < PLUGIN_CONFIGVAR_MAX) {
-        Sensor_VType VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
-        Settings.TaskDevicePluginConfig[taskIndex][pconfigIndex] = static_cast<int>(VType);
-        ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
-      }
-      break;
-    }
-  }
-
   if (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL ||
       Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1) 
   {
@@ -332,21 +351,9 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   for (byte varNr = 0; varNr < valueCount; varNr++)
   {
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr],    String(F("TDF")) + (varNr + 1));
-    ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = getFormItemInt(String(F("TDVD")) + (varNr + 1));
+    update_whenset_FormItemInt(String(F("TDVD")) + (varNr + 1), ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[varNr], String(F("TDVN")) + (varNr + 1));
-
-    // taskdeviceformula[varNr].toCharArray(tmpString, 41);
-    // strcpy(ExtraTaskSettings.TaskDeviceFormula[varNr], tmpString);
-    // ExtraTaskSettings.TaskDeviceValueDecimals[varNr] = taskdevicevaluedecimals[varNr].toInt();
-    // taskdevicevaluename[varNr].toCharArray(tmpString, 41);
   }
-
-  // // task value names handling.
-  // for (byte varNr = 0; varNr < valueCount; varNr++)
-  // {
-  //   taskdevicevaluename[varNr].toCharArray(tmpString, 41);
-  //   strcpy(ExtraTaskSettings.TaskDeviceValueNames[varNr], tmpString);
-  // }
 
   // allow the plugin to save plugin-specific form settings.
   {
@@ -665,9 +672,8 @@ void handle_devicess_ShowAllTasksTable(byte page)
       html_TD();
 
       if (validDeviceIndex(DeviceIndex)) {
-        byte   customValues = false;
         String customValuesString;
-        customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
+        const bool customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
 
         if (!customValues)
         {

@@ -60,7 +60,7 @@ void replSunSetTimeString(const String& format, String& s, boolean useURLencode)
 String timeReplacement_leadZero(int value) 
 {
   char valueString[5] = { 0 };
-  sprintf(valueString, "%02d", value);
+  sprintf_P(valueString, PSTR("%02d"), value);
   return valueString;
 }
 
@@ -106,7 +106,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       #endif // USES_P037
 
 
-      case ISNTP:             value = String(statusNTPInitialized); break;
+      case ISNTP:             value = String(statusNTPInitialized ? 0 : 1); break;
       case ISWIFI:            value = String(WiFiEventData.wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 4=services initialized
       // TODO: PKR: Add ETH Objects
       #ifdef HAS_ETHERNET

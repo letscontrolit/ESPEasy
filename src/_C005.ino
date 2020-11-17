@@ -110,7 +110,9 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
             // in case of event, store to buffer and return...
             String command = parseString(cmd, 1);
             if (command == F("event") || command == F("asyncevent")) {
-              eventQueue.add(parseStringToEnd(cmd, 2));
+              if (Settings.UseRules) {
+                eventQueue.add(parseStringToEnd(cmd, 2));
+              }
             } else {
               ExecuteCommand(event->TaskIndex, EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str(), true, true, true);
             }
@@ -136,7 +138,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-          String value = "";
+          String value;
           // Small optimization so we don't try to copy potentially large strings
           if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
             MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);

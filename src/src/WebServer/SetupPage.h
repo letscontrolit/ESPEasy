@@ -14,7 +14,7 @@ void handle_setup();
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password);
 
-bool handle_setup_connectingStage(byte& refreshCount);
+bool handle_setup_connectingStage(byte refreshCount);
 
 void handle_setup_finish();
 

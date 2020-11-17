@@ -188,10 +188,10 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
         // Color Selection
         char hexvalue[7] = {0};
-        sprintf(hexvalue, "%02X%02X%02X",     // Create Hex value for color
-                PCONFIG(0),
-                PCONFIG(1),
-                PCONFIG(2));
+        sprintf_P(hexvalue, F("%02X%02X%02X"),     // Create Hex value for color
+                  PCONFIG(0),
+                  PCONFIG(1),
+                  PCONFIG(2));
 
         // http://jscolor.com/examples/
         addHtml(F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='"));

@@ -2,6 +2,7 @@
 
 #ifdef USES_P012
 
+# include "src/Helpers/StringParser.h"
 # include "src/PluginStructs/P012_data_struct.h"
 
 // #######################################################################################################
