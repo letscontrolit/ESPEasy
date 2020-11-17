@@ -10,6 +10,10 @@ public:
 
   LongTermTimer() {}
 
+  explicit LongTermTimer(const LongTermTimer& rhs) {
+    _timer_usec = rhs.get();
+  }
+
   explicit LongTermTimer(bool usenow) : _timer_usec(0ull) {
     if (usenow) setNow();
   }

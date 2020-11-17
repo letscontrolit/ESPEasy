@@ -1272,3 +1272,56 @@ Using the pulse counter you can calculate and act on waterflow and changes like 
   endif
     TimerSet,1,30 // Set Timer 1 for the next event in 30 seconds
  Endon
+
+
+Iterate over lookup table
+-------------------------
+
+Sometimes you need to perform actions in a sequence.
+For example turn on a few LEDs in some specific order.
+This means you need to keep track of the current step, but also know what specific pin to turn on or off.
+
+Here an example just showing a number of GPIO pins that could be turned on and off.
+For the example, the GPIO pin numbers are just sent to a log, but it is easy to convert them to a GPIO command.
+
+.. code-block:: none
+
+ on init do
+   // Set the pin lookup sequence
+   let,1,1
+   let,2,2
+   let,3,3
+   let,4,-1
+   let,15,0  // Used for keeping the position in the sequence
+   asyncevent,loop // Trigger the loop
+ endon
+ 
+ on run do
+   // Use %eventvalue1% as the index for the variable
+   if [int#%eventvalue1%] >= 0
+     LogEntry,'Off: [int#%eventvalue1%]'
+   endif
+   if [int#%eventvalue2%] >= 0
+     LogEntry,'On : [int#%eventvalue2%]'
+   endif
+ endon
+ 
+ on loop do
+   if [int#15]<4
+     let,14,[int#15]   // Store the previous value
+     let,15,[int#15]+1 // Increment
+     asyncevent,run=[int#14],[int#15]
+     asyncevent,loop
+   endif
+ endon
+
+This can be started by sending the event ``init`` like this: ``event,init``
+
+N.B. the events ``run`` and ``loop`` are not executed immediately, as that will cause a recursion and thus using a lot of memory to process the rules.
+Therefore the ``asyncevent`` is used to append the events to a queue.
+
+This can be made much more dynamic as you may trigger a ``taskrun``, which will send an event when new values are read.
+Like this it is possible to automate a complex sequence of steps as not only GPIO pins can be stored, but also task indices.
+
+
+

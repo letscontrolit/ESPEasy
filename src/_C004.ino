@@ -108,7 +108,7 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
     {
       postDataStr += F("&field");
       postDataStr += element.idx + x;
-      postDataStr += "=";
+      postDataStr += '=';
       postDataStr += formatUserVarNoCheck(element.TaskIndex, x);
     }
   }
