@@ -25,6 +25,7 @@
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
 #include "src/Helpers/StringGenerator_GPIO.h"
+#include "src/Helpers/StringParser.h"
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"
 #include "src/Helpers/_Plugin_Helper_serial.h"
 
