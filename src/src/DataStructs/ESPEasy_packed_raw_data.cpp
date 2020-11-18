@@ -64,7 +64,7 @@ String LoRa_base16Encode(byte *data, size_t size) {
   char buffer[3];
   for (unsigned i=0; i<size; i++)
   {
-    sprintf(buffer, "%02X", data[i]);
+    sprintf_P(buffer, PSTR("%02X"), data[i]);
     output += buffer[0];
     output += buffer[1];
   }

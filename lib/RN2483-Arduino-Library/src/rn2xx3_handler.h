@@ -1,7 +1,7 @@
 #ifndef RN2XX3_TX_STATE_H
 #define RN2XX3_TX_STATE_H
 
-#include "Arduino.h"
+#include <Arduino.h>
 
 #include "rn2xx3_status.h"
 

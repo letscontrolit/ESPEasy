@@ -19,7 +19,7 @@ RN2xx3_datatypes::Model RN2xx3_datatypes::parseVersion(const String& version, RN
 
   String fw_rev = version.substring(7, 12);
 
-  fw_rev.replace(".", "");
+  fw_rev.replace(F("."), F(""));
   int fw_rev_int = fw_rev.toInt();
   firmware = RN2xx3_datatypes::Firmware::unknown;
 

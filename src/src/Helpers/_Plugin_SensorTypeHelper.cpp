@@ -1,4 +1,4 @@
-#include "_CPlugin_SensorTypeHelper.h"
+#include "_Plugin_SensorTypeHelper.h"
 
 #include "../../_Plugin_Helper.h"
 #include "../DataStructs/DeviceStruct.h"
@@ -118,7 +118,25 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
     choice                = event->sensorType;
     PCONFIG(pconfigIndex) = static_cast<byte>(choice);
   }
-  addRowLabel(F("Output Data Type"));
+  String outputTypeLabel = F("Output Data Type");
+  if (Device[DeviceIndex].OutputDataType ==  Output_Data_type_t::Simple) {
+    switch(event->sensorType) {
+      case Sensor_VType::SENSOR_TYPE_SINGLE:
+      case Sensor_VType::SENSOR_TYPE_DUAL:
+      case Sensor_VType::SENSOR_TYPE_TRIPLE:
+      case Sensor_VType::SENSOR_TYPE_QUAD:
+        // These are valid
+        break;
+      default:
+      {
+        choice = Device[DeviceIndex].VType;
+        PCONFIG(pconfigIndex) = static_cast<byte>(choice);
+        break;
+      }
+    }
+    outputTypeLabel = F("Number Output Values");
+  }
+  addRowLabel(outputTypeLabel);
   addSelector_Head(PCONFIG_LABEL(pconfigIndex));
 
   for (byte x = 0; x < optionCount; x++)
@@ -132,9 +150,13 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
                      "");
   }
   addSelector_Foot();
-  addFormNote(F("Changing 'Output Data Type' may affect behavior of some controllers (e.g. Domoticz)"));
-
-  // addFormSelector(F("Output Data Type"), PCONFIG_LABEL(pconfigIndex), 11, options, optionValues, choice);
+  {
+    String note;
+    note = F("Changing '");
+    note += outputTypeLabel;
+    note += F("' may affect behavior of some controllers (e.g. Domoticz)");
+    addFormNote(note);
+  }
 }
 
 void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, byte pconfigIndex, byte valueIndex, const String& defaultValueName)
