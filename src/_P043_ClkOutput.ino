@@ -31,7 +31,8 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 2;
         Device[deviceCount].SendDataOption = true;
-        break;
+        Device[deviceCount].OutputDataType = Output_Data_type_t::All;
+break;
       }
 
     case PLUGIN_GET_DEVICENAME:
@@ -44,6 +45,21 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_043));
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_043));
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+      {
+        event->Par1 = getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(0)));
+        success = true;
+        break;
+      }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+      {
+        event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
+        event->idx = 0;
+        success = true;
         break;
       }
 
