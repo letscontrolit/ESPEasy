@@ -45,28 +45,26 @@
 #define MPR121_FDLT         0x35
 
 #define MPR121_TOUCHTH_0    0x41
-#define MPR121_RELEASETH_0    0x42
-#define MPR121_DEBOUNCE 0x5B
-#define MPR121_CONFIG1 0x5C
-#define MPR121_CONFIG2 0x5D
+#define MPR121_RELEASETH_0  0x42
+#define MPR121_DEBOUNCE     0x5B
+#define MPR121_CONFIG1      0x5C
+#define MPR121_CONFIG2      0x5D
 #define MPR121_CHARGECURR_0 0x5F
 #define MPR121_CHARGETIME_1 0x6C
-#define MPR121_ECR 0x5E
-#define MPR121_AUTOCONFIG0 0x7B
-#define MPR121_AUTOCONFIG1 0x7C
-#define MPR121_UPLIMIT   0x7D
-#define MPR121_LOWLIMIT  0x7E
+#define MPR121_ECR          0x5E
+#define MPR121_AUTOCONFIG0  0x7B
+#define MPR121_AUTOCONFIG1  0x7C
+#define MPR121_UPLIMIT      0x7D
+#define MPR121_LOWLIMIT     0x7E
 #define MPR121_TARGETLIMIT  0x7F
 
-#define MPR121_GPIODIR  0x76
-#define MPR121_GPIOEN  0x77
-#define MPR121_GPIOSET  0x78
-#define MPR121_GPIOCLR  0x79
-#define MPR121_GPIOTOGGLE  0x7A
+#define MPR121_GPIODIR      0x76
+#define MPR121_GPIOEN       0x77
+#define MPR121_GPIOSET      0x78
+#define MPR121_GPIOCLR      0x79
+#define MPR121_GPIOTOGGLE   0x7A
 
-
-
-#define MPR121_SOFTRESET 0x80
+#define MPR121_SOFTRESET    0x80
 
 //.. thru to 0x1C/0x1D
 class Adafruit_MPR121 {
@@ -77,7 +75,7 @@ class Adafruit_MPR121 {
   boolean begin(uint8_t i2caddr = MPR121_I2CADDR_DEFAULT);
 
   uint16_t filteredData(uint8_t t);
-  uint16_t  baselineData(uint8_t t);
+  uint16_t baselineData(uint8_t t);
 
   uint8_t readRegister8(uint8_t reg);
   uint16_t readRegister16(uint8_t reg);
@@ -86,6 +84,7 @@ class Adafruit_MPR121 {
   // Add deprecated attribute so that the compiler shows a warning
   __attribute__((deprecated)) void setThreshholds(uint8_t touch, uint8_t release);
   void setThresholds(uint8_t touch, uint8_t release);
+  void setThreshold(uint8_t t, uint8_t touch, uint8_t release);
 
  private:
   int8_t _i2caddr;

@@ -1,22 +1,30 @@
-.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 .. _P004_DS18b20_page:
 
-DS18b20
-=======
+.. |br| raw:: html
 
-|P004_typename|
-|P004_status|
+     <br clear="all">
+
+
+DS18b20 temperature sensor
+==========================
 
 .. image:: P004_DS18b20_1.jpg
+    :width: 2055px
+    :height: 2187px
+    :scale: 25 %
+    :alt: DS18B20 Sensor
+    :align: left
+
+|br|
 
 Introduction
 ------------
 
-The DS18B20 manufactured by Dallas and Maxxim is a very simple to use temperature sensor with a tolerance of +/- 0.5°C.
 
-.. note:: Cheap remakes from Chinese market might have bigger tolerance and also might have different pinouts.
+.. note:: Beware of cheap remakes from the Chinese market. They might have wider tolerance and/or different pinouts.
+    The DS18B20 manufactured by Dallas and Maxim is a very simple to use temperature sensor with a tolerance of ±0.5°C.
 
-It's advantages: very simple to use due to "1-wire" data protocol. Chainable, it is possible to chain up to 100
+Its advantages: Very simple to use due to "1-wire" data protocol. Chainable, it is possible to chain up to 100
 sensors on one cable (remember ESP Easy has 12 tasks max...). No calibration necessary if the tolerance fits your
 needs as the sensor gives digital data directly. Many forms available from bare chip to waterproof and tube sensors.
 
@@ -31,6 +39,13 @@ Wiring
 ------
 
 .. image:: P004_DS18b20_5.jpg
+    :width: 276px
+    :height: 211px
+    :scale: 125 %
+    :alt: Sensor Wiring
+    :align: left
+
+|br|
 
 .. code-block:: none
 
@@ -45,10 +60,10 @@ The sensor needs a pull up resistor. If you use the breakout board type the resi
 This gets you into problems if using several DS18B20 breakout boards. There should be **only one resistor for the entire line**
 so you might have to remove resistors leaving just one at one end of the line.
 
-Typical value for the pull up resistor is 4k7. For multiple sensors on the same wire this value may need to be lowered a bit.
+Typical value for the pull up resistor is 4k7 ohms. For multiple sensors on the same wire this value may need to be lowered a bit.
 
 Do not use very thin cabling! Tested with a 3x0.14mm² cable the length with 5 Sensors was 10 meters, longer cabling did not work.
-Use a phone line cable (2x2x0.6mm²) instead if you need long distances up to 50..100 meters. remember: One (!) pull-up resistor for the whole line!
+Use a phone line cable (2x2x0.6mm²) instead if you need long distances up to 50..100 meters. Remember: Use only one pull-up resistor for the whole line!
 
 The preferred structure is a straight line. If possible avoid "stubs". If necessary it can be cabled in a "star" infrastructure.
 But be aware that stubs and star form reduce the possible cable length.
@@ -57,6 +72,13 @@ Setup
 -----
 
 .. image:: P004_Setup_DS18b20_1.png
+    :width: 1145px
+    :height: 735px
+    :scale: 60 %
+    :alt: Task Settings
+    :align: left
+
+|br|
 
 Task settings
 ~~~~~~~~~~~~~
@@ -68,15 +90,96 @@ Task settings
 Sensor
 ^^^^^^
 
-* **GPIO <--> 1-wire**: Pulse input is generally set to **GPIO 14 (D5)**.
+GPIO <--> 1-wire
+""""""""""""""""
 
-after pressing submit the following settings are revealed:
+Pin used for communicating with the Dallas sensor(s).
 
-* **Device address**: Pick your **sensor address**, hold your hand around it to see which one is changing temperature.
-                      Every DS18b20 has a unique address burned in at production time.
-                      This UID (Unique IDentifier) is used to tell the sensors apart on one single cable.
-* **Device resolution**: 9..12 bits, the **lower the resolution the accuracy decreases and the speed increases**.
-                         As temperatures do not change very fast usually a high accuracy can be chosen without problem.
+Please note the pin must be pulled up by a resistor, so only use pins that can be in a pulled up state during boot (thus NOT use GPIO 15 on ESP8266).
+
+Number Output Values
+""""""""""""""""""""
+
+(Added 2020-11-16)
+
+Selector to set number of Dallas sensors for this task.
+
+Number of address selectors is based on the set Number Output Values.
+
+If more then one sensor is set to a task, all sensors will be sent a start measurement command in the order they are selected.
+After the expected reading period (depending on the set resolution) the sensors will be read in the same order.
+
+This means their measurement period overlap, which can be of great use to make sure the temperature values are taken at the same moment.
+
+Not all controllers can handle reading multiple sensors in a single run. 
+For example you cannot send directly to Domoticz controllers running multiple sensors in the same task.
+If it is still needed to have multiple sensors in the same task, one can still send the data via rules to Domoticz.
+
+.. note:: Interleaved reading of multiple sensors on a task can only be done if the sensors are powered via their Vdd pin.
+          Parasite powered sensors are not supported in this mode.
+
+
+Device address
+""""""""""""""
+
+Selector for a specific **sensor address**.
+
+If a found sensor is already assigned (and saved) to a task, the task name and variable name is shown in the combo box. (Added 2020-11-16)
+
+.. image:: P004_Setup_DS18b20_2.png
+    :scale: 60 %
+    :alt: Dallas sensor selection
+    :align: left
+
+|br|
+
+.. note:: It may be hard to keep these addresses apart.
+          Either add them one by one, or heat up a single one by holding it in your hand.
+          When the web page for a Dallas temperature task is loaded the bus is scanned thus newly attached sensors will then show up in the list.
+
+
+Device resolution
+"""""""""""""""""
+
+Possible values: 9..12 bits
+
+The resolution determines the time needed for taking a measurement.
+At 12 bit resolution a measurement takes roughly 800 msec.
+
+As temperatures do not change very fast usually a high accuracy can be chosen without problem.
+  
+N.B. resolution applies to all sensors for this task.
+
+Error State Value
+"""""""""""""""""
+
+Select the value to send if the sensor could not be read.
+
+Almost all controllers will not send values if the value is ``NaN``. 
+By chosing a specific value one can make sure values are sent.
+
+Statistics
+^^^^^^^^^^
+
+Dallas 1-wire sensors may sometimes return a read error.
+A typical setup running Dallas sensors on ESPEasy should have less than 1-in-1000 reads fail.
+
+A failed read attempt will be replaced by the set value of the **Error State Value**.
+
+The number of read errors may depend on a number of factors, like cabling or using non genuine sensors.
+
+Some known counterfeit sensors are known to cause problems when used with > 3 on the same bus.
+Others always report being "Parasite Powered" while they are not.
+
+The Statistics can help determining why a setup of sensors may not perform as well as it should.
+
+.. image:: P004_Setup_DS18b20_3.png
+    :scale: 60 %
+    :alt: Dallas sensor selection
+    :align: left
+
+|br|
+
 
 .. note:: If you need a star infrastructure or stubs or if you need just longer cabling there is a way out.
           One line runs on one GPIO. But nobody said you can't use two GPIO's. If the cabling gets too long or
@@ -89,11 +192,22 @@ after pressing submit the following settings are revealed:
           (or too thin for the given distance). Keep cabling away from other cables to avoid interferences. If necessary place a
           10µF capacitor on the sensors between 3.3v and GND.
 
-Data acquisition
+
+
+Data Acquisition
 ^^^^^^^^^^^^^^^^
 
 * **Send to controller** 1..3: Check which controller (if any) you want to publish to. All or no controller can be used.
 * **Interval**: How often should the task publish its value (5..15 seconds is normal).
+
+Values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* **Name**: Value Name of temperature indicator.
+* **Formula**: Optional math conversion. The measured temperature defaults to Celsius. It can be converted to Fahrenheit by entering this formula:
+
+.. code-block:: none
+
+  (%value%*9/5)+32
 
 
 Indicators (recommended settings)
@@ -110,8 +224,8 @@ Rules examples
 
 .. code-block:: none
 
-    On Temp1#Celsius Do
-     If [Temp1#Celsius]>37
+    On Temperature1#Celsius Do
+     If [Temperature1#Celsius]>37
        NeoPixelAll,255,0,0 //Your body temperature is too high!
      Else
        NeoPixelAll,0,255,0 //Body temperature is OK.
@@ -136,12 +250,30 @@ Where to buy
 
 |affiliate|
 
-
 More pictures
 -------------
 
+|br|
+
 .. image:: P004_DS18b20_2.jpg
+    :width: 900px
+    :height: 428px
+    :scale: 85 %
+    :alt: Chained Sensor Schematic
+    :align: left
 
 .. image:: P004_DS18b20_3.jpg
+    :width: 900px
+    :height: 883px
+    :scale: 65 %
+    :alt: Encapsulated Sensors
+    :align: left
 
 .. image:: P004_DS18b20_4.jpg
+    :width: 900px
+    :height: 807px
+    :scale: 65 %
+    :alt: PCB Module Sensor
+    :align: left
+
+|br|

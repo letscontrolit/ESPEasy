@@ -60,7 +60,7 @@ void replSunSetTimeString(const String& format, String& s, boolean useURLencode)
 String timeReplacement_leadZero(int value) 
 {
   char valueString[5] = { 0 };
-  sprintf(valueString, "%02d", value);
+  sprintf_P(valueString, PSTR("%02d"), value);
   return valueString;
 }
 

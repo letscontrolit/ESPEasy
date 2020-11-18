@@ -31,7 +31,12 @@ function Converter(decoded, port) {
 
                 case 4:
                     converted.name = "Dallas";
+                    // For compatibility reasons, also include temp.
                     converted.temp  = converted.val_1;
+                    converted.temp1  = converted.val_1;
+                    converted.temp2  = converted.val_2;
+                    converted.temp3  = converted.val_3;
+                    converted.temp4  = converted.val_4;
                     break;
 
                 case 5:
