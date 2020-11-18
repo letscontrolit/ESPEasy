@@ -1,5 +1,8 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C007
+
+#include "src/ESPEasyCore/Serial.h"
+
 //#######################################################################################################
 //########################### Controller Plugin 007: Emoncms ############################################
 //#######################################################################################################
@@ -7,6 +10,7 @@
 #define CPLUGIN_007
 #define CPLUGIN_ID_007         7
 #define CPLUGIN_NAME_007       "Emoncms"
+
 
 bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& string)
 {
@@ -33,7 +37,7 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
       {
-        success = init_c004_delay_queue(event->ControllerIndex);
+        success = init_c007_delay_queue(event->ControllerIndex);
         break;
       }
 
