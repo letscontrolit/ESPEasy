@@ -31,7 +31,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].FormulaOption = false;
         Device[deviceCount].ValueCount = 2;
         Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].OutputDataType = Output_Data_type_t::All;
+        Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
 break;
       }
 
