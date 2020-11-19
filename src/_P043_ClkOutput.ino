@@ -48,13 +48,6 @@ break;
         break;
       }
 
-    case PLUGIN_GET_DEVICEVALUECOUNT:
-      {
-        event->Par1 = getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(0)));
-        success = true;
-        break;
-      }
-
     case PLUGIN_GET_DEVICEVTYPE:
       {
         event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
