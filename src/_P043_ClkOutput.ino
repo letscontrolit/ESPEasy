@@ -9,9 +9,24 @@
 #define PLUGIN_043
 #define PLUGIN_ID_043         43
 #define PLUGIN_NAME_043       "Output - Clock"
-#define PLUGIN_VALUENAME1_043 "Output"
-#define PLUGIN_VALUENAME2_043 "Output2"
+# define PLUGIN_VALUENAME_043 "Output"
+//#define PLUGIN_VALUENAME1_043 "Output"
+//#define PLUGIN_VALUENAME2_043 "Output2"
 #define PLUGIN_043_MAX_SETTINGS 8
+# define P043_SENSOR_TYPE_INDEX  2
+# define P043_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P043_SENSOR_TYPE_INDEX)))
+
+String Plugin_043_valuename(byte value_nr, bool displayString) {
+  String name = F("Output");
+
+  if (value_nr != 0) {
+    name += String(value_nr + 1);
+  }
+    if (!displayString) {
+    name.toLowerCase();
+  }
+  return name;
+}
 
 boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 {
@@ -32,7 +47,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].ValueCount = 2;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
-break;
+        break;
       }
 
     case PLUGIN_GET_DEVICENAME:
@@ -42,19 +57,35 @@ break;
       }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
-      {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_043));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_043));
-        break;
+    {
+      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+        if (i < P043_NR_OUTPUT_VALUES) {
+          safe_strncpy(
+            ExtraTaskSettings.TaskDeviceValueNames[i],
+            Plugin_043_valuename(i, false),
+            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
+        } else {
+          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+        }
       }
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P043_NR_OUTPUT_VALUES;
+      success     = true;
+      break;
+    }
 
     case PLUGIN_GET_DEVICEVTYPE:
-      {
-        event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
-        event->idx = 0;
-        success = true;
-        break;
-      }
+    {
+      event->sensorType = static_cast<Sensor_VType>(PCONFIG(P043_SENSOR_TYPE_INDEX));
+      event->idx        = P043_SENSOR_TYPE_INDEX;
+      success           = true;
+      break;
+    }
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
