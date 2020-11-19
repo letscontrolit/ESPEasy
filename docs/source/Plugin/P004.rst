@@ -21,8 +21,11 @@ Maintainer: |P004_maintainer|
 
 Used libraries: |P004_usedlibraries|
 
+
 Supported hardware
 ------------------
+
+.. include:: ../Plugin/P004_DS18b20.rst
 
 |P004_usedby|
 
