@@ -11,8 +11,12 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/GlobalMapPortStatus.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/PortStatus.h"
+
+
+std::map<uint32_t, portStateExtra_t> p001_MapPortStatus_extras;
 
 //predeclaration of functions used in this module
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
@@ -138,6 +142,114 @@ String Command_GPIO_Status(struct EventStruct *event, const char* Line)
 	  SendStatusOnlyIfNeeded(event->Source, sendStatusFlag, key, dummy, 0);
     return return_command_success();
   } else {
+    return return_command_failed();
+  }
+}
+
+String Command_GPIO_PWM(struct EventStruct *event, const char *Line)
+{
+  // Par1: GPIO
+  // Par2: Duty Cycle
+  // Par3: Fade duration
+  // Par4: Frequency
+
+  // For now, we only support the internal GPIO pins.
+  String logPrefix = F("GPIO");
+  byte   pluginID  = PLUGIN_GPIO;
+
+  if (checkValidPortRange(pluginID, event->Par1)) {
+    uint32_t frequency = 1000;
+    portStatusStruct tempStatus;
+
+    // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
+    const uint32_t key = createKey(pluginID, event->Par1);
+
+    // WARNING: operator [] creates an entry in the map if key does not exist
+    // So the next command should be part of each command:
+    tempStatus = globalMapPortStatus[key];
+    portStateExtra_t psExtra = p001_MapPortStatus_extras[key];
+
+          #if defined(ESP8266)
+    pinMode(event->Par1, OUTPUT);
+          #endif // if defined(ESP8266)
+
+    if ((event->Par4 > 0) && (event->Par4 <= 40000)) {
+          #if defined(ESP8266)
+      frequency = event->Par4;
+      analogWriteFreq(event->Par4);
+          #endif // if defined(ESP8266)
+    }
+
+    if (event->Par3 != 0)
+    {
+      const byte prev_mode  = tempStatus.mode;
+      uint16_t   prev_value = psExtra;
+
+      // getPinState(pluginID, event->Par1, &prev_mode, &prev_value);
+      if (prev_mode != PIN_MODE_PWM) {
+        prev_value = 0;
+      }
+
+      int32_t step_value = ((event->Par2 - prev_value) << 12) / event->Par3;
+      int32_t curr_value = prev_value << 12;
+
+      int i = event->Par3;
+
+      while (i--) {
+        curr_value += step_value;
+        int16_t new_value;
+        new_value = (uint16_t)(curr_value >> 12);
+              #if defined(ESP8266)
+        analogWrite(event->Par1, new_value);
+              #endif // if defined(ESP8266)
+              #if defined(ESP32)
+        analogWriteESP32(event->Par1, new_value);
+              #endif // if defined(ESP32)
+        delay(1);
+      }
+    }
+
+          #if defined(ESP8266)
+    analogWrite(event->Par1, event->Par2);
+          #endif // if defined(ESP8266)
+          #if defined(ESP32)
+    frequency = analogWriteESP32(event->Par1, event->Par2, event->Par4);
+          #endif // if defined(ESP32)
+
+    // setPinState(pluginID, event->Par1, PIN_MODE_PWM, event->Par2);
+    tempStatus.mode    = PIN_MODE_PWM;
+    tempStatus.state   = event->Par2;
+    tempStatus.output  = event->Par2;
+    tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
+
+    psExtra                        = event->Par2;
+    p001_MapPortStatus_extras[key] = psExtra;
+
+
+    savePortStatus(key, tempStatus);
+    String log = F("SW   : GPIO ");
+    log += event->Par1;
+    log += F(" PWM duty: ");
+    log += event->Par2;
+
+    if (event->Par3 != 0) {
+      log += F(" Fade duration: ");
+      log += event->Par3;
+      log += F(" ms");
+    }
+    if (event->Par4 != 0) {
+      log += F(" Freq: ");
+      log += frequency;
+      log += F(" Hz");
+    }
+    addLog(LOG_LEVEL_INFO, log);
+    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+
+    // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, pluginID, event->Par1, log, 0));
+
+    return return_command_success();
+  } else {
+    logErrorGpioOutOfRange(logPrefix, event->Par1);
     return return_command_failed();
   }
 }

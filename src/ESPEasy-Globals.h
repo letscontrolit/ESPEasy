@@ -68,6 +68,7 @@ struct pinStatesStruct
 
 #if defined(ESP32)
   extern int8_t ledChannelPin[16];
+  extern uint32_t ledChannelFreq[16];
 #endif
 
 

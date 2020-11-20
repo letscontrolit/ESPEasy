@@ -19,8 +19,9 @@ bool remoteConfig(struct EventStruct *event,
 
 
 #if defined(ESP32)
-void analogWriteESP32(int pin,
-                      int value);
+uint32_t analogWriteESP32(int pin,
+                      int value,
+                      uint32_t frequency = 0);
 #endif // if defined(ESP32)
 
 

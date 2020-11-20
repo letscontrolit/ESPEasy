@@ -4,6 +4,7 @@
 
 #if defined(ESP32)
   int8_t ledChannelPin[16];
+  uint32_t ledChannelFreq[16];
 #endif
 
 

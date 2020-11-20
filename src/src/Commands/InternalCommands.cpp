@@ -301,6 +301,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
 #ifdef USES_MQTT
       COMMAND_CASE_A("publish", Command_MQTT_Publish, 2);                // MQTT.h
 #endif // USES_MQTT
+      COMMAND_CASE_A(    "pwm", Command_GPIO_PWM,        4); // GPIO.h
       break;
     }
     case 'r': {

@@ -10,16 +10,24 @@
 #define GPIO_TYPE_MCP       2
 #define GPIO_TYPE_PCF       3
 
+#include <map>
+#include <Arduino.h>
 
-class String;
 
 String Command_GPIO(struct EventStruct *event, const char* Line);
 String Command_GPIO_Toggle(struct EventStruct *event, const char* Line);
+String Command_GPIO_PWM(struct EventStruct *event, const char* Line);
 String Command_GPIO_Pulse(struct EventStruct *event, const char* Line);
 String Command_GPIO_LongPulse(struct EventStruct *event, const char* Line);
 String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char* Line);
 String Command_GPIO_Monitor(struct EventStruct *event, const char* Line);
 String Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line);
 String Command_GPIO_Status(struct EventStruct *event, const char* Line);
+
+
+// FIXME TD-er: needed to store values for switch plugin which need extra data like PWM.
+typedef uint16_t portStateExtra_t;
+extern std::map<uint32_t, portStateExtra_t> p001_MapPortStatus_extras;
+
 
 #endif // COMMAND_GPIO_H

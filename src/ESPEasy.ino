@@ -230,8 +230,10 @@ void setup()
 
   checkRAM(F("setup"));
   #if defined(ESP32)
-    for(byte x = 0; x < 16; x++)
+    for(byte x = 0; x < 16; x++) {
       ledChannelPin[x] = -1;
+      ledChannelFreq[x] = 1000;
+    }
   #endif
 
   Serial.begin(115200);
