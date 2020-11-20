@@ -742,8 +742,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               // SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
               if (event->Par3 >= 9000) {
                 servo1.detach();
+                #ifdef ESP32
+                detachLedChannel(event->Par2);
+                #endif
               } else {
+                #ifdef ESP32
+                // Must keep track of used channels or else cause conflicts with PWM
+                int8_t ledChannel = attachLedChannel(event->Par2);
+                servo1.attach(event->Par2, ledChannel);
+                #else
                 servo1.attach(event->Par2);
+                #endif
                 servo1.write(event->Par3);
               }
                 
@@ -751,8 +760,17 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             case 2:
               if (event->Par3 >= 9000) {
                 servo2.detach();
+                #ifdef ESP32
+                detachLedChannel(event->Par2);
+                #endif
               } else {
+                #ifdef ESP32
+                // Must keep track of used channels or else cause conflicts with PWM
+                int8_t ledChannel = attachLedChannel(event->Par2);
+                servo2.attach(event->Par2, ledChannel);
+                #else
                 servo2.attach(event->Par2);
+                #endif
                 servo2.write(event->Par3);
               }
               break;
