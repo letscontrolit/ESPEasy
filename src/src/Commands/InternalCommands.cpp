@@ -548,9 +548,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       return true;
     }
   }
-  String errorUnknown = F("Command unknown: \"");
+  String errorUnknown = F("Command unknown: ");
   errorUnknown += action;
-  errorUnknown += '\"';
   addLog(LOG_LEVEL_INFO, errorUnknown);
   SendStatus(source, errorUnknown);
   delay(0);
