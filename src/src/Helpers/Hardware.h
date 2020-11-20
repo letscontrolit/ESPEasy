@@ -113,6 +113,23 @@ int touchPinToGpio(int touch_pin);
 
 #endif
 
+// ********************************************************************************
+// Manage PWM state of GPIO pins.
+// ********************************************************************************
+#if defined(ESP32)
+int8_t attachLedChannel(int pin);
+void detachLedChannel(int pin);
+uint32_t analogWriteESP32(int pin,
+                          int value,
+                          uint32_t frequency = 0);
+#endif // if defined(ESP32)
+
+// Duty cycle 0..100%
+bool set_Gpio_PWM_pct(byte gpio, float dutyCycle_f, uint32_t frequency = 0);
+
+bool set_Gpio_PWM(byte gpio, uint32_t dutyCycle, uint32_t frequency = 0);
+bool set_Gpio_PWM(byte gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key);
+
 
 // ********************************************************************************
 // change of device: cleanup old device and reset default settings

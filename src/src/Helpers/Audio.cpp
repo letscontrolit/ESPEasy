@@ -1,47 +1,16 @@
 #include "Audio.h"
 
 #include "../Globals/RamTracker.h"
-
-#ifdef ESP32
-
-void noToneESP32(uint8_t pin, uint8_t channel)
-{
-  ledcDetachPin(pin);
-  ledcWrite(channel, 0);
-}
-
-void toneESP32(uint8_t pin, unsigned int frequency, unsigned long duration, uint8_t channel)
-{
-  if (ledcRead(channel)) {
-    log_e("Tone channel %d is already in use", ledcRead(channel));
-    return;
-  }
-  ledcAttachPin(pin, channel);
-  ledcWriteTone(channel, frequency);
-
-  if (duration) {
-    delay(duration);
-    noToneESP32(pin, channel);
-  }
-}
-
-#endif // ifdef ESP32
+#include "../Helpers/Hardware.h"
 
 
 /********************************************************************************************\
    Generate a tone of specified frequency on pin
  \*********************************************************************************************/
 void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
-  #ifdef ESP32
-  toneESP32(_pin, frequency, duration);
-  #else // ifdef ESP32
-  analogWriteFreq(frequency);
-
-  // NOTE: analogwrite reserves IRAM and uninitalized ram.
-  analogWrite(_pin, 100);
+  set_Gpio_PWM_pct(_pin, 50, frequency);
   delay(duration);
-  analogWrite(_pin, 0);
-  #endif // ifdef ESP32
+  set_Gpio_PWM(_pin, 0, frequency);
 }
 
 /********************************************************************************************\

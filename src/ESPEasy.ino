@@ -224,17 +224,17 @@ void setup()
   // See https://github.com/esp8266/Arduino/commit/a67986915512c5304bd7c161cf0d9c65f66e0892
   analogWriteRange(1023);
 #endif
+#if defined(ESP32)
+  for(byte x = 0; x < 16; x++) {
+    ledChannelPin[x] = -1;
+    ledChannelFreq[x] = 1000;
+  }
+#endif
 
 
   resetPluginTaskData();
 
   checkRAM(F("setup"));
-  #if defined(ESP32)
-    for(byte x = 0; x < 16; x++) {
-      ledChannelPin[x] = -1;
-      ledChannelFreq[x] = 1000;
-    }
-  #endif
 
   Serial.begin(115200);
   // serialPrint("\n\n\nBOOOTTT\n\n\n");

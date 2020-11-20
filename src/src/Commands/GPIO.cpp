@@ -11,7 +11,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/GlobalMapPortStatus.h"
-#include "../Helpers/Misc.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/PortStatus.h"
 
@@ -155,90 +155,21 @@ String Command_GPIO_PWM(struct EventStruct *event, const char *Line)
 
   // For now, we only support the internal GPIO pins.
   String logPrefix = F("GPIO");
-  byte   pluginID  = PLUGIN_GPIO;
-
-  if (checkValidPortRange(pluginID, event->Par1)) {
-    uint32_t frequency = 1000;
-    portStatusStruct tempStatus;
-
-    // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
-    const uint32_t key = createKey(pluginID, event->Par1);
-
-    // WARNING: operator [] creates an entry in the map if key does not exist
-    // So the next command should be part of each command:
-    tempStatus = globalMapPortStatus[key];
-    portStateExtra_t psExtra = p001_MapPortStatus_extras[key];
-
-          #if defined(ESP8266)
-    pinMode(event->Par1, OUTPUT);
-          #endif // if defined(ESP8266)
-
-    if ((event->Par4 > 0) && (event->Par4 <= 40000)) {
-          #if defined(ESP8266)
-      frequency = event->Par4;
-      analogWriteFreq(event->Par4);
-          #endif // if defined(ESP8266)
-    }
-
-    if (event->Par3 != 0)
-    {
-      const byte prev_mode  = tempStatus.mode;
-      uint16_t   prev_value = psExtra;
-
-      // getPinState(pluginID, event->Par1, &prev_mode, &prev_value);
-      if (prev_mode != PIN_MODE_PWM) {
-        prev_value = 0;
-      }
-
-      int32_t step_value = ((event->Par2 - prev_value) << 12) / event->Par3;
-      int32_t curr_value = prev_value << 12;
-
-      int i = event->Par3;
-
-      while (i--) {
-        curr_value += step_value;
-        int16_t new_value;
-        new_value = (uint16_t)(curr_value >> 12);
-              #if defined(ESP8266)
-        analogWrite(event->Par1, new_value);
-              #endif // if defined(ESP8266)
-              #if defined(ESP32)
-        analogWriteESP32(event->Par1, new_value);
-              #endif // if defined(ESP32)
-        delay(1);
-      }
-    }
-
-          #if defined(ESP8266)
-    analogWrite(event->Par1, event->Par2);
-          #endif // if defined(ESP8266)
-          #if defined(ESP32)
-    frequency = analogWriteESP32(event->Par1, event->Par2, event->Par4);
-          #endif // if defined(ESP32)
-
-    // setPinState(pluginID, event->Par1, PIN_MODE_PWM, event->Par2);
-    tempStatus.mode    = PIN_MODE_PWM;
-    tempStatus.state   = event->Par2;
-    tempStatus.output  = event->Par2;
-    tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
-
-    psExtra                        = event->Par2;
-    p001_MapPortStatus_extras[key] = psExtra;
-
-
-    savePortStatus(key, tempStatus);
-    String log = F("SW   : GPIO ");
+  uint32_t frequency = event->Par4;
+  uint32_t key = 0;
+  if (set_Gpio_PWM(event->Par1, event->Par2, event->Par3, frequency, key)) {
+    String log = F("PWM  : GPIO: ");
     log += event->Par1;
-    log += F(" PWM duty: ");
+    log += F(" duty: ");
     log += event->Par2;
 
     if (event->Par3 != 0) {
-      log += F(" Fade duration: ");
+      log += F(" Fade: ");
       log += event->Par3;
       log += F(" ms");
     }
     if (event->Par4 != 0) {
-      log += F(" Freq: ");
+      log += F(" f: ");
       log += frequency;
       log += F(" Hz");
     }

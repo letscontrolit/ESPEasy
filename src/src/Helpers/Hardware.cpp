@@ -928,6 +928,164 @@ int touchPinToGpio(int touch_pin)
 
 #endif // ifdef ESP32
 
+// ********************************************************************************
+// Manage PWM state of GPIO pins.
+// ********************************************************************************
+#if defined(ESP32)
+int8_t attachLedChannel(int pin)
+{
+  // find existing channel if this pin has been used before
+  int8_t ledChannel = -1;
+
+  for (byte x = 0; x < 16; x++) {
+    if (ledChannelPin[x] == pin) {
+      ledChannel = x;
+    }
+  }
+  if (ledChannel == -1)             // no channel set for this pin
+  {
+    for (byte x = 0; x < 16; x++) { // find free channel
+      if (ledChannelPin[x] == -1)
+      {
+        ledChannelPin[x] = pin; // store pin nr
+        ledcAttachPin(pin, x);  // attach to this pin
+        ledChannel = x;
+        break;
+      }
+    }
+  }
+  return ledChannel;
+}
+
+void detachLedChannel(int pin)
+{
+  int8_t ledChannel = -1;
+
+  for (byte x = 0; x < 16; x++) {
+    if (ledChannelPin[x] == pin) {
+      ledChannel = x;
+    }
+  }
+
+  if (ledChannel != -1) {
+    ledcWrite(ledChannel, 0);
+    ledcDetachPin(pin);
+    ledChannelPin[ledChannel] = -1;
+    ledChannelFreq[ledChannel] = 1000;
+  }
+}
+
+
+uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
+{
+  if (value == 0) {
+    detachLedChannel(pin);
+    return 0;
+  }
+
+  // find existing channel if this pin has been used before
+  int8_t ledChannel = attachLedChannel(pin);
+
+  if (ledChannel != -1) {
+    if (frequency != 0) {
+      ledChannelFreq[ledChannel] = frequency;
+    }
+    ledChannelFreq[ledChannel] = ledcSetup(ledChannel, ledChannelFreq[ledChannel], 10); // setup channel to 10 bit and set frequency.
+    ledcWrite(ledChannel, value);
+    return ledChannelFreq[ledChannel];
+  }
+  return 0;
+}
+
+#endif // if defined(ESP32)
+
+bool set_Gpio_PWM_pct(byte gpio, float dutyCycle_f, uint32_t frequency) {
+  uint32_t dutyCycle = dutyCycle_f * 10.23f;
+  return set_Gpio_PWM(gpio, dutyCycle, frequency);
+}
+
+bool set_Gpio_PWM(byte gpio, uint32_t dutyCycle, uint32_t frequency) {
+  uint32_t key;
+  return set_Gpio_PWM(gpio, dutyCycle, 0, frequency, key);
+}
+
+bool set_Gpio_PWM(byte gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key)
+{
+  // For now, we only support the internal GPIO pins.
+  byte   pluginID  = PLUGIN_GPIO;
+  if (!checkValidPortRange(pluginID, gpio)) {
+    return false;
+  }
+  portStatusStruct tempStatus;
+
+  // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
+  key = createKey(pluginID, gpio);
+
+  // WARNING: operator [] creates an entry in the map if key does not exist
+  // So the next command should be part of each command:
+  tempStatus = globalMapPortStatus[key];
+  portStateExtra_t psExtra = p001_MapPortStatus_extras[key];
+
+        #if defined(ESP8266)
+  pinMode(gpio, OUTPUT);
+        #endif // if defined(ESP8266)
+
+  if ((frequency > 0) && (frequency <= 40000)) {
+        #if defined(ESP8266)
+    analogWriteFreq(frequency);
+        #endif // if defined(ESP8266)
+  }
+
+  if (fadeDuration_ms != 0)
+  {
+    const byte prev_mode  = tempStatus.mode;
+    uint16_t   prev_value = psExtra;
+
+    // getPinState(pluginID, gpio, &prev_mode, &prev_value);
+    if (prev_mode != PIN_MODE_PWM) {
+      prev_value = 0;
+    }
+
+    int32_t step_value = ((dutyCycle - prev_value) << 12) / fadeDuration_ms;
+    int32_t curr_value = prev_value << 12;
+
+    int i = fadeDuration_ms;
+
+    while (i--) {
+      curr_value += step_value;
+      int16_t new_value;
+      new_value = (uint16_t)(curr_value >> 12);
+            #if defined(ESP8266)
+      analogWrite(gpio, new_value);
+            #endif // if defined(ESP8266)
+            #if defined(ESP32)
+      analogWriteESP32(gpio, new_value);
+            #endif // if defined(ESP32)
+      delay(1);
+    }
+  }
+
+        #if defined(ESP8266)
+  analogWrite(gpio, dutyCycle);
+        #endif // if defined(ESP8266)
+        #if defined(ESP32)
+  frequency = analogWriteESP32(gpio, dutyCycle, frequency);
+        #endif // if defined(ESP32)
+
+  // setPinState(pluginID, gpio, PIN_MODE_PWM, dutyCycle);
+  tempStatus.mode    = PIN_MODE_PWM;
+  tempStatus.state   = dutyCycle;
+  tempStatus.output  = dutyCycle;
+  tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
+
+  psExtra                        = dutyCycle;
+  p001_MapPortStatus_extras[key] = psExtra;
+
+
+  savePortStatus(key, tempStatus);
+  return true;
+}
+
 
 // ********************************************************************************
 // change of device: cleanup old device and reset default settings
