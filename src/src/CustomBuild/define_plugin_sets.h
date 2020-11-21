@@ -299,6 +299,9 @@ To create/register a plugin, you have to :
     #ifdef USE_SERVO
       #undef USE_SERVO
     #endif
+    #ifdef USE_RTTTL
+      #undef USE_RTTTL
+    #endif
 #endif
 
 
@@ -724,6 +727,7 @@ To create/register a plugin, you have to :
     #ifndef DONT_USE_SERVO
         #define USE_SERVO
     #endif
+    #define USE_RTTTL
 
     #define USES_P001   // Switch
     #define USES_P002   // ADC
@@ -992,9 +996,6 @@ To create/register a plugin, you have to :
 //  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
 //  #undef USES_P082   // GPS
 
-  #ifdef USE_SERVO
-    #undef USE_SERVO
-  #endif
 #endif
 
 
@@ -1118,6 +1119,9 @@ To create/register a plugin, you have to :
 
   #ifdef USE_SERVO
     #undef USE_SERVO
+  #endif
+  #ifdef USE_RTTTL
+    #undef USE_RTTTL
   #endif
   #ifdef USES_BLYNK
     #undef USES_BLYNK

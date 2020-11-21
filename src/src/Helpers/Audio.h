@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 
+#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
    Generate a tone of specified frequency on pin
@@ -14,8 +15,10 @@ bool tone_espEasy(uint8_t       _pin,
 /********************************************************************************************\
    Play RTTTL string on specified pin
  \*********************************************************************************************/
-void play_rtttl(uint8_t     _pin,
+#ifdef USE_RTTTL
+bool play_rtttl(uint8_t     _pin,
                 const char *p);
+#endif
 
 
 #endif

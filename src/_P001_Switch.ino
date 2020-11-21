@@ -810,42 +810,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
         tempStatus.output                    = event->Par2;
         tempStatus.command                   = 1;
         savePortStatus(key, tempStatus); */
-      } else if (command == F("rtttl")) {
-        // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
-        // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
-        // more info.
-        success = true;
-
-        if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX))
-        {
-          portStatusStruct tempStatus;
-          const uint32_t key = createKey(PLUGIN_ID_001, event->Par1);
-
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus = globalMapPortStatus[key];
-
-          pinMode(event->Par1, OUTPUT);
-
-          // char sng[1024] ="";
-          String tmpString = string;
-          tmpString.replace('-', '#');
-
-          // tmpString.toCharArray(sng, 1024);
-          play_rtttl(event->Par1, tmpString.c_str());
-
-          // setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          tempStatus.mode    = PIN_MODE_OUTPUT;
-          tempStatus.state   = event->Par2;
-          tempStatus.output  = event->Par2;
-          tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
-          savePortStatus(key, tempStatus);
-          log = String(F("SW   : ")) + string;
-          addLog(LOG_LEVEL_INFO, log);
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
-        }
       }
       break;
     }

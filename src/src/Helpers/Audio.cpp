@@ -20,7 +20,8 @@ bool tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) 
 /********************************************************************************************\
    Play RTTTL string on specified pin
  \*********************************************************************************************/
-void play_rtttl(uint8_t _pin, const char *p)
+#ifdef USE_RTTTL
+bool play_rtttl(uint8_t _pin, const char *p)
 {
   checkRAM(F("play_rtttl"));
   #define OCTAVE_OFFSET 0
@@ -49,7 +50,7 @@ void play_rtttl(uint8_t _pin, const char *p)
 
   while (*p != ':') { 
     p++; // ignore name
-    if (*p == 0) return;
+    if (*p == 0) return false;
   }
   p++;                     // skip ':'
 
@@ -174,7 +175,9 @@ void play_rtttl(uint8_t _pin, const char *p)
     // now play the note
     if (note)
     {
-      tone_espEasy(_pin, notes[(scale - 4) * 12 + note], duration);
+      if (!tone_espEasy(_pin, notes[(scale - 4) * 12 + note], duration)) {
+        return false;
+      }
     }
     else
     {
@@ -182,5 +185,6 @@ void play_rtttl(uint8_t _pin, const char *p)
     }
   }
   checkRAM(F("play_rtttl2"));
+  return true;
 }
-
+#endif

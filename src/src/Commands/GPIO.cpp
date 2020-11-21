@@ -203,6 +203,32 @@ String Command_GPIO_Tone(struct EventStruct *event, const char* Line)
   return return_command_failed();
 }
 
+
+String Command_GPIO_RTTTL(struct EventStruct *event, const char* Line)
+{
+  #ifdef USE_RTTTL
+  // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
+  // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
+  // more info.
+
+  String melody = parseStringToEndKeepCase(Line, 2);
+  melody.replace('-', '#');
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("RTTTL : pin: ");
+    log += event->Par1;
+    log += F(" melody: ");
+    log += melody;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  if (play_rtttl(event->Par1, melody.c_str())) {
+    return return_command_success();
+  }
+  #else 
+  addLog(LOG_LEVEL_ERROR, F("RTTTL : command not included in build"));
+  #endif
+  return return_command_failed();
+}
+
 String Command_GPIO_Pulse(struct EventStruct *event, const char* Line)
 {
   String logPrefix;
