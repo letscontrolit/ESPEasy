@@ -16,8 +16,6 @@
 #include "../Helpers/PortStatus.h"
 
 
-std::map<uint32_t, portStateExtra_t> p001_MapPortStatus_extras;
-
 //predeclaration of functions used in this module
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
 bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefix);

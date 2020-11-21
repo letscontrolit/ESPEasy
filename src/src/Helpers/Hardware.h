@@ -41,6 +41,9 @@ bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex);
 
 void checkResetFactoryPin();
 
+#ifdef ESP8266
+extern int lastADCvalue; // Keep track of last ADC value as it cannot be read while WiFi is connecting
+#endif
 int espeasy_analogRead(int pin);
 
 #ifdef ESP32
@@ -116,8 +119,12 @@ int touchPinToGpio(int touch_pin);
 // ********************************************************************************
 // Manage PWM state of GPIO pins.
 // ********************************************************************************
+void initAnalogWrite();
 #if defined(ESP32)
-int8_t attachLedChannel(int pin);
+extern int8_t ledChannelPin[16];
+extern uint32_t ledChannelFreq[16];
+
+int8_t attachLedChannel(int pin, uint32_t frequency = 0);
 void detachLedChannel(int pin);
 uint32_t analogWriteESP32(int pin,
                           int value,
