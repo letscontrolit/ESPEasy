@@ -356,7 +356,8 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
         COMMAND_CASE_A(   "timerset", Command_Timer_Set,    2);               // Timers.h
         COMMAND_CASE_A("timerset_ms", Command_Timer_Set_ms, 2); // Timers.h
         COMMAND_CASE_R("timezone", Command_TimeZone, 1);                      // Time.h
-      }      
+      }
+      COMMAND_CASE_A(      "tone", Command_GPIO_Tone, 3); // GPIO.h
       break;
     }
     case 'u': {

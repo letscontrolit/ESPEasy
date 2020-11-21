@@ -7,10 +7,14 @@
 /********************************************************************************************\
    Generate a tone of specified frequency on pin
  \*********************************************************************************************/
-void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
-  set_Gpio_PWM_pct(_pin, 50, frequency);
-  delay(duration);
-  set_Gpio_PWM(_pin, 0, frequency);
+bool tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
+  // Duty cycle can be used as some kind of volume.
+  if (!set_Gpio_PWM_pct(_pin, 50, frequency)) return false;
+  if (duration > 0) {
+    delay(duration);
+    return set_Gpio_PWM(_pin, 0, frequency);
+  }
+  return true;
 }
 
 /********************************************************************************************\
@@ -43,7 +47,9 @@ void play_rtttl(uint8_t _pin, const char *p)
   // format: d=N,o=N,b=NNN:
   // find the start (skip name, etc)
 
-  while (*p != ':') { p++; // ignore name
+  while (*p != ':') { 
+    p++; // ignore name
+    if (*p == 0) return;
   }
   p++;                     // skip ':'
 

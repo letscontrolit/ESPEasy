@@ -16,6 +16,7 @@
 String Command_GPIO(struct EventStruct *event, const char* Line);
 String Command_GPIO_Toggle(struct EventStruct *event, const char* Line);
 String Command_GPIO_PWM(struct EventStruct *event, const char* Line);
+String Command_GPIO_Tone(struct EventStruct *event, const char* Line);
 String Command_GPIO_Pulse(struct EventStruct *event, const char* Line);
 String Command_GPIO_LongPulse(struct EventStruct *event, const char* Line);
 String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char* Line);

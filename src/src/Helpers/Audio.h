@@ -7,7 +7,7 @@
 /********************************************************************************************\
    Generate a tone of specified frequency on pin
  \*********************************************************************************************/
-void tone_espEasy(uint8_t       _pin,
+bool tone_espEasy(uint8_t       _pin,
                   unsigned int  frequency,
                   unsigned long duration);
 

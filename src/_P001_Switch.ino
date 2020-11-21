@@ -846,34 +846,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
           // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
         }
-      } else if (command == F("tone")) {
-        // play a tone on pin par1, with frequency par2 and duration par3.
-        success = true;
-
-        if ((event->Par1 >= 0) && (event->Par1 <= PIN_D_MAX))
-        {
-          portStatusStruct tempStatus;
-          const uint32_t key = createKey(PLUGIN_ID_001, event->Par1);
-
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus = globalMapPortStatus[key];
-
-          pinMode(event->Par1, OUTPUT);
-          tone_espEasy(event->Par1, event->Par2, event->Par3);
-
-          // setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          tempStatus.mode    = PIN_MODE_OUTPUT;
-          tempStatus.state   = event->Par2;
-          tempStatus.output  = event->Par2;
-          tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
-          savePortStatus(key, tempStatus);
-          log = String(F("SW   : ")) + string;
-          addLog(LOG_LEVEL_INFO, log);
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par1, log, 0));
-        }
       }
       break;
     }
