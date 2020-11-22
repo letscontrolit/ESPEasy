@@ -114,7 +114,7 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        int irPin = Settings.TaskDevicePin1[event->TaskIndex];
+        int irPin = CONFIG_PIN1;
         if (irPin != -1)
         {
           addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR transmitter activated"));

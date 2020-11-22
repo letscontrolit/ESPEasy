@@ -71,14 +71,14 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Stop bits"), F("p020_stop"), ExtraTaskSettings.TaskDevicePluginConfigLong[4]);
 
-      addFormPinSelect(F("TX Enable Pin"),           F("taskdevicepin2"), Settings.TaskDevicePin2[event->TaskIndex]);
+      addFormPinSelect(F("TX Enable Pin"),           F("taskdevicepin2"), CONFIG_PIN2);
 
-      addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
+      addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), CONFIG_PIN1);
 
-      addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), PCONFIG(0));
 
 
-      byte   choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+      byte   choice2 = PCONFIG(1);
       String options2[3];
       options2[0] = F("None");
       options2[1] = F("Generic");
@@ -96,8 +96,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       ExtraTaskSettings.TaskDevicePluginConfigLong[2]      = getFormItemInt(F("p020_data"));
       ExtraTaskSettings.TaskDevicePluginConfigLong[3]      = getFormItemInt(F("p020_parity"));
       ExtraTaskSettings.TaskDevicePluginConfigLong[4]      = getFormItemInt(F("p020_stop"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p020_rxwait"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p020_events"));
+      PCONFIG(0) = getFormItemInt(F("p020_rxwait"));
+      PCONFIG(1) = getFormItemInt(F("p020_events"));
       success                                              = true;
       break;
     }
@@ -129,25 +129,25 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         ser2netServer = new WiFiServer(ExtraTaskSettings.TaskDevicePluginConfigLong[0]);
         ser2netServer->begin();
 
-        if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
+        if (CONFIG_PIN1 != -1)
         {
-          pinMode(Settings.TaskDevicePin1[event->TaskIndex], OUTPUT);
-          digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], LOW);
+          pinMode(CONFIG_PIN1, OUTPUT);
+          digitalWrite(CONFIG_PIN1, LOW);
           delay(500);
-          digitalWrite(Settings.TaskDevicePin1[event->TaskIndex], HIGH);
-          pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
+          digitalWrite(CONFIG_PIN1, HIGH);
+          pinMode(CONFIG_PIN1, INPUT_PULLUP);
         }
 
         // set the TX Enable Pin to LOW
-        if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+        if (CONFIG_PIN2 != -1)
         {
-          pinMode(Settings.TaskDevicePin2[event->TaskIndex], OUTPUT);
-          digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], LOW);
+          pinMode(CONFIG_PIN2, OUTPUT);
+          digitalWrite(CONFIG_PIN2, LOW);
         }
 
         Plugin_020_init = true;
       }
-      Plugin_020_SerialProcessing = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+      Plugin_020_SerialProcessing = PCONFIG(1);
       success                     = true;
       break;
     }
@@ -178,17 +178,17 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             }
             bytes_read = ser2netClient.read(net_buf, count);
 
-            if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+            if (CONFIG_PIN2 != -1)
             {
-              digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], HIGH); // Activate the TX Enable
+              digitalWrite(CONFIG_PIN2, HIGH); // Activate the TX Enable
             }
             Serial.write(net_buf, bytes_read);
             Serial.flush();                                                  // Waits for the transmission of outgoing serial data to
                                                                              // complete
 
-            if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+            if (CONFIG_PIN2 != -1)
             {
-              digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], LOW); // Deactivate the TX Enable
+              digitalWrite(CONFIG_PIN2, LOW); // Deactivate the TX Enable
             }
 
             if (count == P020_BUFFER_SIZE)                                  // if we have a full buffer, drop the last position to stuff
@@ -230,7 +230,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       if (Plugin_020_init)
       {
         uint8_t serial_buf[P020_BUFFER_SIZE];
-        int     RXWait = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        int     RXWait = PCONFIG(0);
 
         if (RXWait == 0) {
           RXWait = 1;

@@ -139,7 +139,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
           PCONFIG(1) = 400;
 
         // FIXME TD-er: Should we add support for 4 pin definitions?
-        addFormPinSelect(formatGpioName_output(F("Driver#8")), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
+        addFormPinSelect(formatGpioName_output(F("Driver#8")), F("TDP4"), (int)PIN(3));
 
         addFormSubHeader(F("Timing"));
 
@@ -167,7 +167,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePin[3][event->TaskIndex] = (int8_t)getFormItemInt(F("TDP4"));
+        PIN(3) = (int8_t)getFormItemInt(F("TDP4"));
 
         PCONFIG(0) = getFormItemInt(F("chimetime"));
         PCONFIG(1) = getFormItemInt(F("pausetime"));
@@ -190,7 +190,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
         String log = F("Chime: GPIO: ");
         for (byte i=0; i<4; i++)
         {
-          int pin = Settings.TaskDevicePin[i][event->TaskIndex];
+          const int pin = PIN(i);
           Plugin_055_Data->pin[i] = pin;
           if (pin >= 0)
           {
@@ -252,7 +252,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
           if (!Plugin_055_Data)
             break;
 
-          String tokens = "";
+          String tokens;
           byte hours = node_time.hour();
           byte minutes = node_time.minute();
 
