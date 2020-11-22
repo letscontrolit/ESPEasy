@@ -872,6 +872,7 @@ To create/register a plugin, you have to :
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
     #define USES_P103   // Atlas Scientific EZO Ph sensor
+    #define USES_P104   // Atlas Scientific EC EZO
 #endif
 
 

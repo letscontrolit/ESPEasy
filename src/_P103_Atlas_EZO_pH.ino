@@ -166,7 +166,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
       addRowLabel(F("<strong>Middle</strong>"));
       addFormFloatNumberBox(F("Ref Ph"),
                             F("Plugin_103_ref_cal_M' step='0.01"),
-                            Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1],
+                            PCONFIG_FLOAT(1),
                             0,
                             14);
 
@@ -182,7 +182,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
       addRowLabel(F("<strong>Low</strong>"));
       addFormFloatNumberBox(F("Ref Ph"),
                             F("Plugin_103_ref_cal_L' step='0.01"),
-                            Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2],
+                            PCONFIG_FLOAT(2),
                             0,
                             14);
 
@@ -198,7 +198,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
       addHtml(F("<TR><TD><strong>High</strong></TD>"));
       addFormFloatNumberBox(F("Ref Ph"),
                             F("Plugin_103_ref_cal_H' step='0.01"),
-                            Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3],
+                            PCONFIG_FLOAT(3),
                             0,
                             14);
 
@@ -256,7 +256,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
     {
       PCONFIG(0) = getFormItemInt(F("plugin_103_i2c"));
 
-      Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = getFormItemFloat(F("plugin_103_sensorVersion"));
+      PCONFIG_FLOAT(0) = getFormItemFloat(F("plugin_103_sensorVersion"));
 
       char sensordata[32];
 
@@ -268,24 +268,24 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
       PCONFIG(1) = isFormItemChecked(F("Plugin_103_status_led"));
 
 
-      Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1] = getFormItemFloat(F("Plugin_103_ref_cal_M"));
-      Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2] = getFormItemFloat(F("Plugin_103_ref_cal_L"));
-      Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3] = getFormItemFloat(F("Plugin_103_ref_cal_H"));
+      PCONFIG_FLOAT(1) = getFormItemFloat(F("Plugin_103_ref_cal_M"));
+      PCONFIG_FLOAT(2) = getFormItemFloat(F("Plugin_103_ref_cal_L"));
+      PCONFIG_FLOAT(3) = getFormItemFloat(F("Plugin_103_ref_cal_H"));
 
       String cmd("Cal,");
       bool   triggerCalibrate = false;
 
       if (isFormItemChecked(F("Plugin_103_enable_cal_M"))) {
         cmd             += F("mid,");
-        cmd             += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][1];
+        cmd             += PCONFIG_FLOAT(1);
         triggerCalibrate = true;
       } else if (isFormItemChecked(F("Plugin_103_enable_cal_L"))) {
         cmd             += F("low,");
-        cmd             += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][2];
+        cmd             += PCONFIG_FLOAT(2);
         triggerCalibrate = true;
       } else if (isFormItemChecked(F("Plugin_103_enable_cal_H"))) {
         cmd             += F("high,");
-        cmd             += Settings.TaskDevicePluginConfigFloat[event->TaskIndex][3];
+        cmd             += PCONFIG_FLOAT(3);
         triggerCalibrate = true;
       }
 
