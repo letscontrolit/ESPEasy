@@ -873,6 +873,7 @@ To create/register a plugin, you have to :
     #define USES_P101   // Wake On Lan
     #define USES_P103   // Atlas Scientific EZO Ph sensor
     #define USES_P104   // Atlas Scientific EC EZO
+    #define USES_P105   // Atlas Scientific EZO ORP
 #endif
 
 
