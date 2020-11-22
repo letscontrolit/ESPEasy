@@ -43,13 +43,7 @@
 #define PLUGIN_ID_001         1
 #define PLUGIN_NAME_001       "Switch input - Switch"
 #define PLUGIN_VALUENAME1_001 "State"
-#ifdef USE_SERVO
-#ifdef ESP32
-#include <Servo.h>
-#endif
-Servo servo1;
-Servo servo2;
-#endif // USE_SERVO
+
 // Make sure the initial default is a switch (value 0)
 #define PLUGIN_001_TYPE_SWITCH                   0
 #define PLUGIN_001_TYPE_DIMMER                   3 // Due to some changes in previous versions, do not use 2.
@@ -112,13 +106,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
-      // FIXME TD-er: This plugin is handling too much.
+      // FIXME TD-er: Split functionality of this plugin into 2 new ones:
       // - switch/dimmer input
-      // - PWM output
       // - switch output (relays)
-      // - servo output
-      // - sending pulses
-      // - playing tunes
       event->String1 = formatGpioName_bidirectional("");
       break;
     }
@@ -721,77 +711,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
       // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
 
-      if (command == F("servo")) {
-        // IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
-        #ifdef USE_SERVO
-
-        // GPIO number is stored inside event->Par2 instead of event->Par1 as in all the other commands
-        // So needs to reload the tempPortStruct.
-        success = true;
-
-        if ((event->Par1 >= 0) && (event->Par1 <= 2)) {
-          portStatusStruct tempStatus;
-          const uint32_t key = createKey(PLUGIN_ID_001, event->Par2); // WARNING: 'servo' uses Par2 instead of Par1
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus = globalMapPortStatus[key];
-
-          switch (event->Par1)
-          {
-            case 1:
-              // SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
-              if (event->Par3 >= 9000) {
-                servo1.detach();
-                #ifdef ESP32
-                detachLedChannel(event->Par2);
-                #endif
-              } else {
-                #ifdef ESP32
-                // Must keep track of used channels or else cause conflicts with PWM
-                int8_t ledChannel = attachLedChannel(event->Par2);
-                servo1.attach(event->Par2, ledChannel);
-                #else
-                servo1.attach(event->Par2);
-                #endif
-                servo1.write(event->Par3);
-              }
-                
-              break;
-            case 2:
-              if (event->Par3 >= 9000) {
-                servo2.detach();
-                #ifdef ESP32
-                detachLedChannel(event->Par2);
-                #endif
-              } else {
-                #ifdef ESP32
-                // Must keep track of used channels or else cause conflicts with PWM
-                int8_t ledChannel = attachLedChannel(event->Par2);
-                servo2.attach(event->Par2, ledChannel);
-                #else
-                servo2.attach(event->Par2);
-                #endif
-                servo2.write(event->Par3);
-              }
-              break;
-          }
-
-          // setPinState(PLUGIN_ID_001, event->Par2, PIN_MODE_SERVO, event->Par3);
-          tempStatus.mode    = PIN_MODE_SERVO;
-          tempStatus.state   = event->Par3;
-          tempStatus.output  = event->Par3;
-          tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
-          savePortStatus(key, tempStatus);
-          log = String(F("SW   : GPIO ")) + String(event->Par2) + String(F(" Servo set to ")) + String(event->Par3);
-          addLog(LOG_LEVEL_INFO, log);
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, log, 0));
-        }
-        #else
-        addLog(LOG_LEVEL_ERROR, F("USE_SERVO not included in build"));
-        #endif // USE_SERVO
-      } else
 
       if (command == F("inputswitchstate")) {
         success = true;

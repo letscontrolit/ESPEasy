@@ -27,6 +27,7 @@
 #include "../Commands/Rules.h"
 #include "../Commands/SDCARD.h"
 #include "../Commands/Settings.h"
+#include "../Commands/Servo.h"
 #include "../Commands/System.h"
 #include "../Commands/Tasks.h"
 #include "../Commands/Time.h"
@@ -330,6 +331,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
         COMMAND_CASE_R("serialfloat", Command_SerialFloat,    0); // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
         COMMAND_CASE_R(   "settings", Command_Settings_Print, 0); // Settings.h
+        COMMAND_CASE_A(      "servo", Command_Servo,          3); // Servo.h
       }
       COMMAND_CASE_A("status", Command_GPIO_Status,          2); // GPIO.h
       COMMAND_CASE_R("subnet", Command_Subnet, 1);                // Network Command
