@@ -19,10 +19,11 @@
 # include <ESP8266WiFiType.h>
 #endif // ifdef ESP8266
 
+// WifiStatus
+#define ESPEASY_WIFI_DISCONNECTED            0
+
 
 struct WiFiEventData_t {
-  WiFiEventData_t();
-
   bool WiFiConnectAllowed() const;
 
   bool unprocessedWifiEvents() const;
@@ -53,7 +54,7 @@ struct WiFiEventData_t {
   // WiFi related data
   bool          wifiSetup        = false;
   bool          wifiSetupConnect = false;
-  uint8_t       wifiStatus;
+  uint8_t       wifiStatus       = ESPEASY_WIFI_DISCONNECTED;
   LongTermTimer last_wifi_connect_attempt_moment;
   unsigned int  wifi_connect_attempt   = 0;
   bool          wifi_considered_stable = false;

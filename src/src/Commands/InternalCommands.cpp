@@ -27,6 +27,7 @@
 #include "../Commands/Rules.h"
 #include "../Commands/SDCARD.h"
 #include "../Commands/Settings.h"
+#include "../Commands/Servo.h"
 #include "../Commands/System.h"
 #include "../Commands/Tasks.h"
 #include "../Commands/Time.h"
@@ -65,7 +66,6 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
 
           if (i == nrArguments) {
             parameter = tolerantParseStringKeepCase(Line, i + 1);
-            done      = true;
           } else {
             parameter = parseStringKeepCase(Line, i + 1);
           }
@@ -302,6 +302,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
 #ifdef USES_MQTT
       COMMAND_CASE_A("publish", Command_MQTT_Publish, 2);                // MQTT.h
 #endif // USES_MQTT
+      COMMAND_CASE_A(    "pwm", Command_GPIO_PWM,        4); // GPIO.h
       break;
     }
     case 'r': {
@@ -309,6 +310,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_R("reset", Command_Settings_Reset, 0);                              // Settings.h
       COMMAND_CASE_A("resetflashwritecounter", Command_RTC_resetFlashWriteCounter, 0); // RTC.h
       COMMAND_CASE_A(               "restart", Command_System_Reboot,              0); // System.h
+      COMMAND_CASE_A(                 "rtttl", Command_GPIO_RTTTL,                 0); // GPIO.h
       COMMAND_CASE_A(                 "rules", Command_Rules_UseRules,             1); // Rule.h
       break;
     }
@@ -329,6 +331,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
         COMMAND_CASE_R("serialfloat", Command_SerialFloat,    0); // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
         COMMAND_CASE_R(   "settings", Command_Settings_Print, 0); // Settings.h
+        COMMAND_CASE_A(      "servo", Command_Servo,          3); // Servo.h
       }
       COMMAND_CASE_A("status", Command_GPIO_Status,          2); // GPIO.h
       COMMAND_CASE_R("subnet", Command_Subnet, 1);                // Network Command
@@ -356,7 +359,8 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
         COMMAND_CASE_A(   "timerset", Command_Timer_Set,    2);               // Timers.h
         COMMAND_CASE_A("timerset_ms", Command_Timer_Set_ms, 2); // Timers.h
         COMMAND_CASE_R("timezone", Command_TimeZone, 1);                      // Time.h
-      }      
+      }
+      COMMAND_CASE_A(      "tone", Command_GPIO_Tone, 3); // GPIO.h
       break;
     }
     case 'u': {
@@ -549,9 +553,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       return true;
     }
   }
-  String errorUnknown = F("Command unknown: \"");
+  String errorUnknown = F("Command unknown: ");
   errorUnknown += action;
-  errorUnknown += '\"';
   addLog(LOG_LEVEL_INFO, errorUnknown);
   SendStatus(source, errorUnknown);
   delay(0);

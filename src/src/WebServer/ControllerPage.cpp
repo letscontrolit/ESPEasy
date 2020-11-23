@@ -18,7 +18,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/_CPlugin_Helper_webform.h"
-#include "../Helpers/_CPlugin_SensorTypeHelper.h"
+#include "../Helpers/_Plugin_SensorTypeHelper.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
 
@@ -49,32 +49,35 @@ void handle_controllers() {
     {
       // Place in a scope to free ControllerSettings memory ASAP
       MakeControllerSettings(ControllerSettings);
-
-      if (Settings.Protocol[controllerindex] != protocol)
-      {
-        // Protocol has changed.
-        Settings.Protocol[controllerindex] = protocol;
-
-        // there is a protocol selected?
-        if (protocol != 0)
+      if (!AllocatedControllerSettings()) {
+        addHtmlError(F("Not enough free memory to save settings"));
+      } else {
+        if (Settings.Protocol[controllerindex] != protocol)
         {
-          mustInit = true;
-          handle_controllers_clearLoadDefaults(controllerindex, ControllerSettings);
-        }
-      }
+          // Protocol has changed.
+          Settings.Protocol[controllerindex] = protocol;
 
-      // subitted same protocol
-      else
-      {
-        // there is a protocol selected
-        if (protocol != 0)
-        {
-          mustInit = true;
-          handle_controllers_CopySubmittedSettings(controllerindex, ControllerSettings);
-          mustCallCpluginSave = true;
+          // there is a protocol selected?
+          if (protocol != 0)
+          {
+            mustInit = true;
+            handle_controllers_clearLoadDefaults(controllerindex, ControllerSettings);
+          }
         }
+
+        // subitted same protocol
+        else
+        {
+          // there is a protocol selected
+          if (protocol != 0)
+          {
+            mustInit = true;
+            handle_controllers_CopySubmittedSettings(controllerindex, ControllerSettings);
+            mustCallCpluginSave = true;
+          }
+        }
+        addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
       }
-      addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
     }
     if (mustCallCpluginSave) {
       // Call CPLUGIN_WEBFORM_SAVE after destructing ControllerSettings object to reduce RAM usage.
@@ -334,8 +337,11 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
           }
 
-          if (Protocol[ProtocolIndex].useExtendedCredentials()) {
+          if (Protocol[ProtocolIndex].useCredentials()) {
             addTableSeparator(F("Credentials"), 2, 3);
+          }
+
+          if (Protocol[ProtocolIndex].useExtendedCredentials()) {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS);
           }
 

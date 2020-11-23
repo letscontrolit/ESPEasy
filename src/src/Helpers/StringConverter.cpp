@@ -19,10 +19,11 @@
 #include "../Helpers/Convert.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringParser.h"
 #include "../Helpers/SystemVariables.h"
-#include "../Helpers/_CPlugin_SensorTypeHelper.h"
+#include "../Helpers/_Plugin_SensorTypeHelper.h"
 
 // -V::569
 
@@ -531,7 +532,7 @@ void htmlStrongEscape(String& html)
     else
     {
       char s[4];
-      sprintf(s, "%03d", static_cast<int>(html[i]));
+      sprintf_P(s, PSTR("%03d"), static_cast<int>(html[i]));
       escaped += "&#";
       escaped += s;
       escaped += ";";
@@ -797,6 +798,7 @@ void parseStandardConversions(String& s, boolean useURLencode) {
   while (getConvertArgument2((T), s, arg1, arg2, startIndex, endIndex)) { repl(s.substring(startIndex, endIndex), (FUN), s, useURLencode); }
   float arg2 = 0.0f;
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(arg1, arg2), 2))
+  SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(arg1, arg2))
   #undef SMART_CONV
 }
 

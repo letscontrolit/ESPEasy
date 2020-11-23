@@ -22,17 +22,7 @@ void savePortStatus(uint32_t key, struct portStatusStruct& tempStatus) {
 }
 
 bool existPortStatus(uint32_t key) {
-  bool retValue = false;
-
-  // check if KEY exists:
-  std::map<uint32_t, portStatusStruct>::iterator it;
-
-  it = globalMapPortStatus.find(key);
-
-  if (it != globalMapPortStatus.end()) { // if KEY exists...
-    retValue = true;
-  }
-  return retValue;
+  return globalMapPortStatus.find(key) != globalMapPortStatus.end();
 }
 
 void removeTaskFromPort(uint32_t key) {
@@ -158,7 +148,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
   if (search && existPortStatus(key))
   {
     mode  = globalMapPortStatus[key].mode;
-    value = globalMapPortStatus[key].state;
+    value = globalMapPortStatus[key].getValue();
     found = true;
   }
 
@@ -179,7 +169,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
     reply += F("\n}\n");
     return reply;
   }
-  return "?";
+  return "";
 }
 
 String getPinModeString(byte mode) {
