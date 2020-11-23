@@ -79,7 +79,7 @@ String rn2xx3_helper::base16encode(const String& input_c)
     if (input[i] == '\0') { break; }
 
     char buffer[3];
-    sprintf(buffer, "%02x", static_cast<int>(input[i]));
+    sprintf_P(buffer, PSTR("%02x"), static_cast<int>(input[i]));
     output += buffer[0];
     output += buffer[1];
   }
@@ -95,7 +95,7 @@ String rn2xx3_helper::base16encode(const byte *data, uint8_t size)
 
   for (unsigned i = 0; i < size; i++)
   {
-    sprintf(buffer, "%02X", data[i]);
+    sprintf_P(buffer, PSTR("%02X"), data[i]);
     dataToTx += buffer[0];
     dataToTx += buffer[1];
   }

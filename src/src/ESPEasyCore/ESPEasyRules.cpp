@@ -455,7 +455,7 @@ void parse_string_commands(String &line) {
             && validIntFromString(arg2, iarg2)) {
           float val = (100.0 * iarg1) / (1.0 * iarg2);
           char sval[10];
-          sprintf(sval, "%02d", (int)val);
+          sprintf_P(sval, PSTR("%02d"), (int)val);
           replacement = String(sval);
         }
         */
@@ -1101,7 +1101,7 @@ void createRuleEvents(struct EventStruct *event) {
       default:
 
         // FIXME TD-er: Do we need to call formatUserVarNoCheck here? (or with check)
-        eventString += UserVar[event->BaseVarIndex + varNr];
+        eventString += formatUserVarNoCheck(event, varNr);
         break;
     }
     eventQueue.add(eventString);
