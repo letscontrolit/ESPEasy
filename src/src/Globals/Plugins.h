@@ -109,4 +109,10 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 bool PluginCall(byte Function, struct EventStruct *event, String& str);
 
 
+/*********************************************************************************************\
+* Adding plugins at boot
+\*********************************************************************************************/
+bool addPlugin(pluginID_t pluginID, deviceIndex_t x);
+
+
 #endif // GLOBALS_PLUGIN_H

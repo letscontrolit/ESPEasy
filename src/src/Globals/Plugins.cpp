@@ -1,5 +1,7 @@
 #include "Plugins.h"
 
+#include "../CustomBuild/ESPEasyLimits.h"
+
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
@@ -576,5 +578,17 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
     }
 
   } // case
+  return false;
+}
+
+bool addPlugin(pluginID_t pluginID, deviceIndex_t x) {
+  if (x < PLUGIN_MAX) { 
+    DeviceIndex_to_Plugin_id[x] = pluginID; 
+    Plugin_id_to_DeviceIndex[pluginID] = x;
+    return true;
+  }
+  String log = F("System: Error - Too many Plugins. PLUGIN_MAX = ");
+  log += PLUGIN_MAX;
+  addLog(LOG_LEVEL_ERROR, log);
   return false;
 }

@@ -220,22 +220,14 @@ void setup()
   vcc = ESP.getVcc() / 1000.0f;
 #endif
 #ifdef ESP8266
-  lastADCvalue = analogRead(A0);
+  espeasy_analogRead(A0);
 #endif
 
-#ifdef ESP8266
-  // See https://github.com/esp8266/Arduino/commit/a67986915512c5304bd7c161cf0d9c65f66e0892
-  analogWriteRange(1023);
-#endif
-
+  initAnalogWrite();
 
   resetPluginTaskData();
 
   checkRAM(F("setup"));
-  #if defined(ESP32)
-    for(byte x = 0; x < 16; x++)
-      ledChannelPin[x] = -1;
-  #endif
 
   Serial.begin(115200);
   // serialPrint("\n\n\nBOOOTTT\n\n\n");

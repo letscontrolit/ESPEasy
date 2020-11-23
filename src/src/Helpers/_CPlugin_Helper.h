@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
+#include "../../_Plugin_Helper.h"
 
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../ESPEasyCore/Controller.h"
