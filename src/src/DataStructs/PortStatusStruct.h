@@ -6,8 +6,13 @@
 #include <map>
 
 struct portStatusStruct {
-  portStatusStruct() : state(-1), output(-1), command(0), init(0), not_used(0), mode(0), task(0), monitor(0), forceMonitor(0), forceEvent(0), previousTask(
-      -1), x(INVALID_DEVICE_INDEX) {}
+  portStatusStruct();
+
+  uint16_t getDutyCycle() const;
+
+  int16_t getValue() const;
+
+  int16_t dutyCycle = 0;
 
   int8_t state          : 2;       // -1,0,1
   int8_t output         : 2;       // -1,0,1
