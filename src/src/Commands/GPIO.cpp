@@ -11,8 +11,11 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/GlobalMapPortStatus.h"
+#include "../Helpers/Audio.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/PortStatus.h"
+
 
 //predeclaration of functions used in this module
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
@@ -140,6 +143,90 @@ String Command_GPIO_Status(struct EventStruct *event, const char* Line)
   } else {
     return return_command_failed();
   }
+}
+
+String Command_GPIO_PWM(struct EventStruct *event, const char *Line)
+{
+  // Par1: GPIO
+  // Par2: Duty Cycle
+  // Par3: Fade duration
+  // Par4: Frequency
+
+  // For now, we only support the internal GPIO pins.
+  String logPrefix = F("GPIO");
+  uint32_t frequency = event->Par4;
+  uint32_t key = 0;
+  if (set_Gpio_PWM(event->Par1, event->Par2, event->Par3, frequency, key)) {
+    String log = F("PWM  : GPIO: ");
+    log += event->Par1;
+    log += F(" duty: ");
+    log += event->Par2;
+
+    if (event->Par3 != 0) {
+      log += F(" Fade: ");
+      log += event->Par3;
+      log += F(" ms");
+    }
+    if (event->Par4 != 0) {
+      log += F(" f: ");
+      log += frequency;
+      log += F(" Hz");
+    }
+    addLog(LOG_LEVEL_INFO, log);
+    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+
+    // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, pluginID, event->Par1, log, 0));
+
+    return return_command_success();
+  } 
+  logErrorGpioOutOfRange(logPrefix, event->Par1);
+  return return_command_failed();
+}
+
+String Command_GPIO_Tone(struct EventStruct *event, const char* Line)
+{
+  // play a tone on pin par1, with frequency par2 and duration in msec par3.
+  unsigned long duration = event->Par3;
+  bool mustScheduleToneOff = false;
+  if (duration > 50) {
+    duration = 0;
+    mustScheduleToneOff = true;
+  }
+  if (tone_espEasy(event->Par1, event->Par2, duration)) {
+    if (mustScheduleToneOff) {
+      // For now, we only support the internal GPIO pins.
+      byte   pluginID  = PLUGIN_GPIO;
+      Scheduler.setGPIOTimer(event->Par3, pluginID, event->Par1, 0);
+    }
+    return return_command_success();
+  }
+  return return_command_failed();
+}
+
+
+String Command_GPIO_RTTTL(struct EventStruct *event, const char* Line)
+{
+  #ifdef USE_RTTTL
+  // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
+  // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
+  // more info.
+
+  String melody = parseStringToEndKeepCase(Line, 2);
+  melody.replace('-', '#');
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("RTTTL : pin: ");
+    log += event->Par1;
+    log += F(" melody: ");
+    log += melody;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  if (play_rtttl(event->Par1, melody.c_str())) {
+    return return_command_success();
+  }
+  #else 
+  addLog(LOG_LEVEL_ERROR, F("RTTTL : command not included in build"));
+  #endif
+  return return_command_failed();
 }
 
 String Command_GPIO_Pulse(struct EventStruct *event, const char* Line)

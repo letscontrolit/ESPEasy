@@ -66,9 +66,6 @@ struct pinStatesStruct
 } pinStates[PINSTATE_TABLE_MAX];
 */
 
-#if defined(ESP32)
-  extern int8_t ledChannelPin[16];
-#endif
 
 
 
@@ -93,9 +90,6 @@ extern unsigned long timerAwakeFromDeepSleep;
 
 #if FEATURE_ADC_VCC
 extern float vcc;
-#endif
-#ifdef ESP8266
-extern int lastADCvalue; // Keep track of last ADC value as it cannot be read while WiFi is connecting
 #endif
 
 extern boolean WebLoggedIn;

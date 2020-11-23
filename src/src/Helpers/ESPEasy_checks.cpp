@@ -90,7 +90,7 @@ void run_compiletime_checks() {
   check_size<NodeStruct,                            28u>();
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
-  check_size<portStatusStruct,                      4u>();
+  check_size<portStatusStruct,                      6u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
   check_size<C013_SensorInfoStruct,                 137u>();
