@@ -3,15 +3,10 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/RTC.h"
 
-// WifiStatus
-#define ESPEASY_WIFI_DISCONNECTED            0
-
 // Bit numbers for WiFi status
 #define ESPEASY_WIFI_CONNECTED               0
 #define ESPEASY_WIFI_GOT_IP                  1
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    2
-
-WiFiEventData_t::WiFiEventData_t() : wifiStatus(ESPEASY_WIFI_DISCONNECTED) {}
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;

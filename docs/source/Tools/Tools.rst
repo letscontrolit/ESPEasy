@@ -263,6 +263,8 @@ activate this mode when response time  on received packets is important.
 If the node is only sending packets (e.g. only a sensor connected and sending to some server),
 then this is a great way to save energy and also reduce heat.
 
+See also :any:`cpu-eco-mode-explanation`
+
 
 
 Show JSON

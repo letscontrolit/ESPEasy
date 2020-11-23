@@ -974,7 +974,7 @@ void ESPEasy_Scheduler::schedule_task_device_timer(unsigned long task_index, uns
   }
 }
 
-void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
+void ESPEasy_Scheduler::reschedule_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
   if (!validTaskIndex(task_index)) { return; }
   unsigned long newtimer = Settings.TaskDeviceTimer[task_index];
 
@@ -982,6 +982,11 @@ void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsi
     newtimer = lasttimer + (newtimer * 1000);
     schedule_task_device_timer(task_index, newtimer);
   }
+}
+
+void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
+  if (!validTaskIndex(task_index)) { return; }
+  reschedule_task_device_timer(task_index, lasttimer);
   START_TIMER;
   SensorSendTask(task_index);
   STOP_TIMER(SENSOR_SEND_TASK);

@@ -3,6 +3,7 @@
 #include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 
+#include "../DataStructs/PinMode.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Helpers/PortStatus.h"
 
@@ -45,35 +46,6 @@ void handle_pinstates_json() {
   }
 
   addHtml(F("]"));
-
-
-  /*
-     html_table_header(F("Plugin"), F("Official_plugin_list"), 0);
-     html_table_header("GPIO");
-     html_table_header("Mode");
-     html_table_header(F("Value/State"));
-     for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
-      if (pinStates[x].plugin != 0)
-      {
-        html_TR_TD(); TXBuffer += "P";
-        if (pinStates[x].plugin < 100)
-        {
-          addHtml("0");
-        }
-        if (pinStates[x].plugin < 10)
-        {
-          addHtml("0");
-        }
-        TXBuffer += pinStates[x].plugin;
-        html_TD();
-        TXBuffer += pinStates[x].index;
-        html_TD();
-        byte mode = pinStates[x].mode;
-        TXBuffer += getPinModeString(mode);
-        html_TD();
-        TXBuffer += pinStates[x].value;
-      }
-   */
 
   TXBuffer.endStream();
 }
@@ -125,7 +97,7 @@ void handle_pinstates() {
     html_TD();
     addHtml(getPinModeString(it->second.mode));
     html_TD();
-    addHtml(String(it->second.state));
+    addHtml(String(it->second.getValue()));
     html_TD();
     addHtml(String(it->second.task));
     html_TD();
@@ -136,34 +108,6 @@ void handle_pinstates() {
     addHtml(String(it->second.init));
   }
 
-
-  /*
-     html_table_header(F("Plugin"), F("Official_plugin_list"), 0);
-     html_table_header("GPIO");
-     html_table_header("Mode");
-     html_table_header(F("Value/State"));
-     for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
-      if (pinStates[x].plugin != 0)
-      {
-        html_TR_TD(); TXBuffer += "P";
-        if (pinStates[x].plugin < 100)
-        {
-          addHtml("0");
-        }
-        if (pinStates[x].plugin < 10)
-        {
-          addHtml("0");
-        }
-        TXBuffer += pinStates[x].plugin;
-        html_TD();
-        TXBuffer += pinStates[x].index;
-        html_TD();
-        byte mode = pinStates[x].mode;
-        TXBuffer += getPinModeString(mode);
-        html_TD();
-        TXBuffer += pinStates[x].value;
-      }
-   */
   html_end_table();
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();

@@ -1,0 +1,26 @@
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+PZEM004Tv30	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+voltage	KEYWORD2
+current	KEYWORD2
+power	KEYWORD2
+energy	KEYWORD2
+frequency KEYWORD2
+pf KEYWORD2
+getAddress KEYWORD2
+setAddress	KEYWORD2
+setPowerAlarm	KEYWORD2
+getPowerAlarm	KEYWORD2
+resetEnergy KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+PZEM_DEFAULT_ADDR LITERAL1

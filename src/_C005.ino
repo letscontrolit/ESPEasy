@@ -138,7 +138,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 
           String tmppubname = pubname;
           tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-          String value = "";
+          String value;
           // Small optimization so we don't try to copy potentially large strings
           if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
             MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);

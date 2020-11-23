@@ -2,3 +2,5 @@
 
 
 String getUnknownString() { return F("Unknown"); }
+
+const String EMPTY_STRING;
