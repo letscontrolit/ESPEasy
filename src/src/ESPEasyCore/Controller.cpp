@@ -417,6 +417,7 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
 
 void SendStatus(EventValueSource::Enum source, const String& status)
 {
+  if (status.length() == 0) return;
   switch (source)
   {
     case EventValueSource::Enum::VALUE_SOURCE_HTTP:

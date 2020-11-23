@@ -706,7 +706,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String log     = "";
+      String log;
       String command = parseString(string, 1);
 
       // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist

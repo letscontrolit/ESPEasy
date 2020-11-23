@@ -148,7 +148,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
   if (search && existPortStatus(key))
   {
     mode  = globalMapPortStatus[key].mode;
-    value = globalMapPortStatus[key].state;
+    value = globalMapPortStatus[key].getValue();
     found = true;
   }
 
@@ -169,7 +169,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
     reply += F("\n}\n");
     return reply;
   }
-  return "?";
+  return "";
 }
 
 String getPinModeString(byte mode) {

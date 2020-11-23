@@ -8,6 +8,7 @@
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/GlobalMapPortStatus.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/PortStatus.h"
 
 #ifdef USE_SERVO
@@ -34,15 +35,18 @@ String Command_Servo(struct EventStruct *event, const char *Line)
     // So the next command should be part of each command:
     tempStatus = globalMapPortStatus[key];
 
+    String log = F("Servo : GPIO ");
+    log += event->Par2;
+
     // SPECIAL CASE TO ALLOW SERVO TO BE DETATTCHED AND SAVE POWER.
     if (event->Par3 >= 9000) {
       auto it = ServoPinMap.find(event->Par2);
 
       if (it != ServoPinMap.end()) {
         it->second.detach();
-            # ifdef ESP32
-        detachLedChannel(event->Par2);
-            # endif // ifdef ESP32
+        # ifdef ESP32
+          detachLedChannel(event->Par2);
+        # endif // ifdef ESP32
         ServoPinMap.erase(it);
       }
 
@@ -50,27 +54,31 @@ String Command_Servo(struct EventStruct *event, const char *Line)
       tempStatus.task    = 0;
       tempStatus.monitor = 0;
       tempStatus.command = 0;
-    } else {
-            # ifdef ESP32
+      savePortStatus(key, tempStatus);
+      log += F(" Servo detached");
+      addLog(LOG_LEVEL_INFO, log);
+      return return_command_success();
 
+    }
+    # ifdef ESP32
       // Must keep track of used channels or else cause conflicts with PWM
       int8_t ledChannel = attachLedChannel(event->Par2);
       ServoPinMap[event->Par2].attach(event->Par2, ledChannel);
-            # else // ifdef ESP32
+    # else // ifdef ESP32
       ServoPinMap[event->Par2].attach(event->Par2);
-            # endif // ifdef ESP32
-      ServoPinMap[event->Par2].write(event->Par3);
+    # endif // ifdef ESP32
+    ServoPinMap[event->Par2].write(event->Par3);
 
-      tempStatus.command   = 1; // set to 1 in order to display the status in the PinStatus page
-      tempStatus.state     = 1;
-      tempStatus.output    = 1;
-      tempStatus.dutyCycle = event->Par3;
-    }
+    tempStatus.command   = 1; // set to 1 in order to display the status in the PinStatus page
+    tempStatus.state     = 1;
+    tempStatus.output    = 1;
+    tempStatus.dutyCycle = event->Par3;
 
     // setPinState(PLUGIN_ID_001, event->Par2, PIN_MODE_SERVO, event->Par3);
     tempStatus.mode = PIN_MODE_SERVO;
     savePortStatus(key, tempStatus);
-    String log = String(F("Servo : GPIO ")) + String(event->Par2) + String(F(" Servo set to ")) + String(event->Par3);
+    log += F(" Servo set to ");
+    log += event->Par3;
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
 
