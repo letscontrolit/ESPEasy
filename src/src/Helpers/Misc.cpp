@@ -52,36 +52,6 @@ bool remoteConfig(struct EventStruct *event, const String& string)
   return success;
 }
 
-#if defined(ESP32)
-void analogWriteESP32(int pin, int value)
-{
-  // find existing channel if this pin has been used before
-  int8_t ledChannel = -1;
-
-  for (byte x = 0; x < 16; x++) {
-    if (ledChannelPin[x] == pin) {
-      ledChannel = x;
-    }
-  }
-
-  if (ledChannel == -1)             // no channel set for this pin
-  {
-    for (byte x = 0; x < 16; x++) { // find free channel
-      if (ledChannelPin[x] == -1)
-      {
-        int freq = 5000;
-        ledChannelPin[x] = pin; // store pin nr
-        ledcSetup(x, freq, 10); // setup channel
-        ledcAttachPin(pin, x);  // attach to this pin
-        ledChannel = x;
-        break;
-      }
-    }
-  }
-  ledcWrite(ledChannel, value);
-}
-
-#endif // if defined(ESP32)
 
 
 /********************************************************************************************\

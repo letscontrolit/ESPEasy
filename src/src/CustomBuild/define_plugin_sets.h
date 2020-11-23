@@ -299,6 +299,9 @@ To create/register a plugin, you have to :
     #ifdef USE_SERVO
       #undef USE_SERVO
     #endif
+    #ifdef USE_RTTTL
+      #undef USE_RTTTL
+    #endif
 #endif
 
 
@@ -724,6 +727,7 @@ To create/register a plugin, you have to :
     #ifndef DONT_USE_SERVO
         #define USE_SERVO
     #endif
+    #define USE_RTTTL
 
     #define USES_P001   // Switch
     #define USES_P002   // ADC
@@ -992,9 +996,6 @@ To create/register a plugin, you have to :
 //  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
 //  #undef USES_P082   // GPS
 
-  #ifdef USE_SERVO
-    #undef USE_SERVO
-  #endif
 #endif
 
 
@@ -1119,11 +1120,11 @@ To create/register a plugin, you have to :
   #ifdef USE_SERVO
     #undef USE_SERVO
   #endif
+  #ifdef USE_RTTTL
+    #undef USE_RTTTL
+  #endif
   #ifdef USES_BLYNK
     #undef USES_BLYNK
-  #endif
-  #ifdef USES_C017 // Zabbix
-    #undef USES_C017
   #endif
   #ifdef USES_P092
     #undef USES_P092   // DL-Bus
@@ -1133,6 +1134,27 @@ To create/register a plugin, you have to :
   #endif
   #ifdef USES_P100 // Pulse Counter - DS2423
     #undef USES_P100
+  #endif
+  #ifdef USES_C012
+    #undef USES_C012 // Blynk
+  #endif
+  #ifdef USES_C015
+    #undef USES_C015 // Blynk
+  #endif
+  #ifdef USES_C016
+    #undef USES_C016 // Cache controller
+  #endif
+  #ifdef USES_C017 // Zabbix
+    #undef USES_C017
+  #endif
+  #ifdef USES_C018
+    #undef USES_C018 // LoRa TTN - RN2483/RN2903
+  #endif
+  #ifdef USES_N001 // Email
+    #undef USES_N001
+  #endif
+  #ifdef USES_N002 // Buzzer
+    #undef USES_N002
   #endif
 #endif
 
