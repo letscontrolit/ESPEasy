@@ -18,13 +18,6 @@ bool remoteConfig(struct EventStruct *event,
 
 
 
-#if defined(ESP32)
-void analogWriteESP32(int pin,
-                      int value);
-#endif // if defined(ESP32)
-
-
-
 /********************************************************************************************\
    delay in milliseconds with background processing
  \*********************************************************************************************/

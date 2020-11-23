@@ -17,8 +17,18 @@
 void GPIO_Internal_Write(byte pin, byte value)
 {
   if (checkValidPortRange(PLUGIN_GPIO, pin)) {
-    pinMode(pin, OUTPUT);
-    digitalWrite(pin, value);
+    const uint32_t key = createKey(PLUGIN_GPIO, pin);
+    if (existPortStatus(key)) {
+      switch (globalMapPortStatus[key].mode) {
+        case PIN_MODE_PWM:
+          set_Gpio_PWM(pin, value);
+          break;
+        default:
+          pinMode(pin, OUTPUT);
+          digitalWrite(pin, value);
+          break;
+      }
+    }
   }
 }
 
