@@ -1,54 +1,32 @@
-#include "src/Globals/Device.h"
-#include "src/Globals/ESPEasy_Scheduler.h"
-#include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
-#include "src/Commands/Tasks.h"
-
-#include "src/DataStructs/ESPEasy_EventStruct.h"
-#include "src/DataStructs/TimingStats.h"
-
-#include "src/DataTypes/ESPEasy_plugin_functions.h"
-
 #include "ESPEasy_common.h"
-
 
 
 // ********************************************************************************
 // Initialize all plugins that where defined earlier
 // and initialize the function call pointer into the plugin array
 // ********************************************************************************
-#include <algorithm>
-static const char ADDPLUGIN_ERROR[] PROGMEM = "System: Error - Too many Plugins";
 
-// Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
 
-/*
- #define ADDPLUGIN(NNN) \
-   if (x < PLUGIN_MAX) \
-   { \
-    DeviceIndex_to_Plugin_id[x] = PLUGIN_ID_##NNN; \
-    Plugin_id_to_DeviceIndex[PLUGIN_ID_##NNN] = x; \
-    Plugin_ptr[x++] = &Plugin_##NNN; \
-   } \
-  else \
-    addLog(LOG_LEVEL_ERROR, FPSTR(ADDPLUGIN_ERROR));
-*/
-#define ADDPLUGIN(NNN) if (x < PLUGIN_MAX) { DeviceIndex_to_Plugin_id[x] = PLUGIN_ID_##NNN; Plugin_id_to_DeviceIndex[PLUGIN_ID_##NNN] = x; Plugin_ptr[x++] = &Plugin_##NNN; } else addLog(LOG_LEVEL_ERROR, FPSTR(ADDPLUGIN_ERROR));
-
+// Uncrustify must not be used on macros, so turn it off.
+// *INDENT-OFF*
+#define ADDPLUGIN(NNN) if (addPlugin(PLUGIN_ID_##NNN, x)) Plugin_ptr[x++] = &Plugin_##NNN;
+// Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
+// *INDENT-ON*
 
 void PluginInit(void)
 {
   DeviceIndex_to_Plugin_id.resize(PLUGIN_MAX + 1); // INVALID_DEVICE_INDEX may be used as index for this array.
   DeviceIndex_to_Plugin_id[PLUGIN_MAX] = INVALID_PLUGIN_ID;
   // Clear pointer table for all plugins
-  for (byte x = 0; x < PLUGIN_MAX; x++)
+  for (deviceIndex_t x = 0; x < PLUGIN_MAX; x++)
   {
     Plugin_ptr[x] = nullptr;
     DeviceIndex_to_Plugin_id[x] = INVALID_PLUGIN_ID;
     // Do not initialize Plugin_id_to_DeviceIndex[x] to an invalid value. (it is map)
   }
-  int x = 0; // Used in ADDPLUGIN macro
+  uint32_t x = 0; // Used in ADDPLUGIN macro
 
 #ifdef PLUGIN_001
   ADDPLUGIN(001)

@@ -20,6 +20,7 @@
 #include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
+#include "../Helpers/WebServer_commandHelper.h"
 
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy-Globals.h"
@@ -56,21 +57,35 @@ void handle_root() {
 
   int freeMem = ESP.getFreeHeap();
 
+  // TODO: move this to handle_tools, from where it is actually called?
 
-  if ((strcasecmp_P(sCommand.c_str(),
-                    PSTR("wifidisconnect")) != 0) && (rebootCmd == false) && (strcasecmp_P(sCommand.c_str(), PSTR("reset")) != 0))
+  // have to disconnect or reboot from within the main loop
+  // because the webconnection is still active at this point
+  // disconnect here could result into a crash/reboot...
+  if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
   {
-    printToWeb     = true;
-    printWebString = "";
+    addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
+    cmd_within_mainloop = CMD_WIFI_DISCONNECT;
+    addHtml(F("OK"));
+  } else if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
+  {
+    addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
+    cmd_within_mainloop = CMD_REBOOT;
+    addHtml(F("OK"));
+  } else if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
+  {
+    addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
+    cmd_within_mainloop = CMD_REBOOT;
+    addHtml(F(
+              "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
+    TXBuffer.endStream();
+    ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
+    return;
+  } else {
+    handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand);
+    printToWeb     = false;
+    printToWebJSON = false;
 
-    if (sCommand.length() > 0) {
-      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
-    }
-
-    // IPAddress ip = NetworkLocalIP();
-    // IPAddress gw = NetwrokGatewayIP();
-
-    addHtml(printWebString);
     addHtml(F("<form>"));
     html_table_class_normal();
     addFormHeader(F("System Info"));
@@ -167,7 +182,21 @@ void handle_root() {
     html_TD();
     addButton(F("sysinfo"), F("More info"));
 
+    if (printWebString.length() > 0)
+    {
+      html_BR();
+      html_BR();
+      addFormHeader(F("Command Argument"));
+      addRowLabel(F("Command"));
+      addHtml(sCommand);
+
+      addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
+      addHtml(printWebString);
+      addHtml(F("</textarea>"));
+      printWebString = "";
+    }
     html_end_table();
+
     html_BR();
     html_BR();
     html_table_class_multirow_noborder();
@@ -238,40 +267,8 @@ void handle_root() {
     printWebString = "";
     printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
-    TXBuffer.endStream();
   }
-  else
-  {
-    // TODO: move this to handle_tools, from where it is actually called?
-
-    // have to disconnect or reboot from within the main loop
-    // because the webconnection is still active at this point
-    // disconnect here could result into a crash/reboot...
-    if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
-    {
-      addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
-      cmd_within_mainloop = CMD_WIFI_DISCONNECT;
-    }
-
-    if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
-    {
-      addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
-      cmd_within_mainloop = CMD_REBOOT;
-    }
-
-    if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
-    {
-      addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
-      cmd_within_mainloop = CMD_REBOOT;
-      addHtml(F(
-                "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
-      TXBuffer.endStream();
-      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
-    }
-
-    addHtml(F("OK"));
-    TXBuffer.endStream();
-  }
+  TXBuffer.endStream();
 }
 
 #endif // ifdef WEBSERVER_ROOT
