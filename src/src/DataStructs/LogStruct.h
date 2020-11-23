@@ -22,8 +22,7 @@
 #endif
 
 struct LogStruct {
-    LogStruct();
-
+    
     void add(const byte loglevel, const char *line);
 
     // Read the next item and append it to the given string.
@@ -44,11 +43,11 @@ struct LogStruct {
     void clearExpiredEntries();
 
     String Message[LOG_STRUCT_MESSAGE_LINES];
-    unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES];
-    int write_idx;
-    int read_idx;
-    unsigned long lastReadTimeStamp;
-    byte log_level[LOG_STRUCT_MESSAGE_LINES];
+    unsigned long timeStamp[LOG_STRUCT_MESSAGE_LINES] = {0};
+    int write_idx = 0;
+    int read_idx = 0;
+    unsigned long lastReadTimeStamp = 0;
+    byte log_level[LOG_STRUCT_MESSAGE_LINES] = {0};
 
 };
 
