@@ -262,7 +262,7 @@ void ResetFactory()
   // NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true);  // use SDK storage of SSID/WPA parameters
-  intent_to_reboot = true;
+  WiFiEventData.intent_to_reboot = true;
   WifiDisconnect();       // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   reboot(ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactory);

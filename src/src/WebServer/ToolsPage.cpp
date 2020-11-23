@@ -7,6 +7,7 @@
 #include "../WebServer/Markup_Forms.h"
 
 #include "../Helpers/OTA.h"
+
 #include "../../ESPEasy-Globals.h"
 
 
@@ -15,6 +16,7 @@
 #ifdef WEBSERVER_TOOLS
 
 #include "../Commands/InternalCommands.h"
+#include "../Helpers/WebServer_commandHelper.h"
 
 // ********************************************************************************
 // Web Interface Tools page
@@ -26,6 +28,9 @@ void handle_tools() {
   sendHeadandTail_stdtemplate(_HEAD);
 
   String webrequest = web_server.arg(F("cmd"));
+  handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND, webrequest);
+  printToWeb     = false;
+  printToWebJSON = false;
 
   addHtml(F("<form>"));
   html_table_class_normal();
@@ -43,20 +48,14 @@ void handle_tools() {
   addRTDHelpButton(F("Reference/Command.html"));
   html_TR_TD();
 
-  printToWeb     = true;
-  printWebString = "";
-
-  if (webrequest.length() > 0)
-  {
-    ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND, webrequest.c_str());
-  }
-
   if (printWebString.length() > 0)
   {
     addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
     addHtml(printWebString);
     addHtml(F("</textarea>"));
+    printWebString = "";
   }
+
 
   addFormSubHeader(F("System"));
 

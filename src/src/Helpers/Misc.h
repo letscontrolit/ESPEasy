@@ -18,13 +18,6 @@ bool remoteConfig(struct EventStruct *event,
 
 
 
-#if defined(ESP32)
-void analogWriteESP32(int pin,
-                      int value);
-#endif // if defined(ESP32)
-
-
-
 /********************************************************************************************\
    delay in milliseconds with background processing
  \*********************************************************************************************/
@@ -40,7 +33,7 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex,
 /********************************************************************************************\
    Toggle task enabled state
  \*********************************************************************************************/
-bool setTaskEnableStatus(taskIndex_t taskIndex,
+bool setTaskEnableStatus(struct EventStruct *event,
                          bool        enabled);
 
 

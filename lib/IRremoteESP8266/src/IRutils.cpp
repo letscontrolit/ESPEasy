@@ -274,7 +274,7 @@ String resultToSourceCode(const decode_results * const results) {
 /// @deprecated This is only for those that want this legacy format.
 String resultToTimingInfo(const decode_results * const results) {
   String output = "";
-  String value = "";
+  String value;
   // Reserve some space for the string to reduce heap fragmentation.
   output.reserve(2048);  // 2KB should cover most cases.
   value.reserve(6);  // Max value should be 2^17 = 131072

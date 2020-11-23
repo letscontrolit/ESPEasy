@@ -378,8 +378,8 @@ String SaveSettings(void)
 
     if (WifiIsAP(WiFi.getMode())) {
       // Security settings are saved, may be update of WiFi settings or hostname.
-      wifiSetupConnect         = true;
-      wifiConnectAttemptNeeded = true;
+      WiFiEventData.wifiSetupConnect         = true;
+      WiFiEventData.wifiConnectAttemptNeeded = true;
     }
   }
   ExtendedControllerCredentials.save();
@@ -717,9 +717,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 
   START_TIMER
   ExtraTaskSettings.clear();
-  String result = "";
-  result =
-    LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, (byte *)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+  const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, (byte *)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
@@ -884,8 +882,6 @@ String InitFile(const String& fname, int datasize)
   fs::File f = tryOpenFile(fname, "w");
 
   if (f) {
-    SPIFFS_CHECK(f, fname.c_str());
-
     for (int x = 0; x < datasize; x++)
     {
       // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
@@ -1011,8 +1007,6 @@ String ClearInFile(const char *fname, int index, int datasize)
   fs::File f = tryOpenFile(fname, "r+");
 
   if (f) {
-    SPIFFS_CHECK(f,                          fname);
-
     SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
 
     for (int x = 0; x < datasize; x++)

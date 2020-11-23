@@ -83,6 +83,10 @@ bool P082_data_struct::loop() {
         _currentSentence = "";
 # endif // ifdef P082_SEND_GPS_TO_LOG
         completeSentence = true;
+      } else {
+        if (available == 0) {
+          available = easySerial->available();
+        }
       }
     }
   }

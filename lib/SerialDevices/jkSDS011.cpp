@@ -94,6 +94,9 @@ void CjkSDS011::SetWorkingPeriod(int minutes) {
   const int currentWorkingPeriod = GetWorkingPeriod();
   if (minutes != currentWorkingPeriod)
     SendCommand(8, 1, minutes);
+  // In some cases the Sensor is set to "report query"-mode, this makes sure to set active reporting of values, otherwise the sensor won't work.
+  Process();
+  SendCommand(2, 1, 0);
 }
 
 int CjkSDS011::GetWorkingPeriod() {

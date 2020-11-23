@@ -2,10 +2,6 @@
 
 #include "ESPEasy-Globals.h"
 
-#if defined(ESP32)
-  int8_t ledChannelPin[16];
-#endif
-
 
 
 
@@ -28,7 +24,6 @@ unsigned long timerAwakeFromDeepSleep = 0;
 #if FEATURE_ADC_VCC
 float vcc = -1.0f;
 #endif
-int lastADCvalue = 0;
 
 boolean WebLoggedIn = false;
 int WebLoggedInTimer = 300;

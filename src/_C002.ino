@@ -12,7 +12,9 @@
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
 #include "src/Commands/InternalCommands.h"
-
+#include "src/ESPEasyCore/ESPEasyRules.h"
+#include "src/Globals/Settings.h"
+#include "src/Helpers/PeriodicalActions.h"
 #include "src/Helpers/StringParser.h"
 
 #include <ArduinoJson.h>
@@ -102,7 +104,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
             // We need the index of the controller we are: 0...CONTROLLER_MAX
             if (Settings.TaskDeviceEnabled[x] && (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
             {
-              String action = "";
+              String action;
 
               switch (Settings.TaskDeviceNumber[x]) {
                 case 1: // temp solution, if input switch, update state
@@ -115,7 +117,6 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                 }
                 case 29: // temp solution, if plugin 029, set gpio
                 {
-                  action = "";
                   int baseVar = x * VARS_PER_TASK;
 
                   if (strcasecmp_P(switchtype, PSTR("dimmer")) == 0)

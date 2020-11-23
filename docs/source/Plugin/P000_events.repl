@@ -15,6 +15,34 @@
 
    "
    "
+   ``TaskInit#<taskname>``
+   Triggered when a tasks ``PLUGIN_INIT`` was called.
+   This can happen at boot, when a task is enabled, or ``TaskEnable`` command is used.
+   ","
+
+   .. code-block:: none
+
+        on TaskInit#bme do
+          LogEntry,'TaskInit task: %eventvalue1% result: %eventvalue2%'
+        endon
+
+   The first event value is the task index, the second event value is the return value of the ``PLUGIN_INIT`` call.
+   The task index can be useful to store in a variable so the task index of a specific plugin like the dummy plugin can be stored to keep rules exchangeble among nodes regardless the order of tasks.
+   "
+   "
+   ``TaskExit#<taskname>``
+   Triggered when a tasks ``PLUGIN_EXIT`` was called.
+   This can happen when entering deep sleep, when a task is disabled, or ``TaskDisable`` command is used.
+   ","
+
+   .. code-block:: none
+
+        on TaskExit#bme do
+          LogEntry,'TaskExit task: %eventvalue1% result: %eventvalue2%'
+        endon
+
+   "
+   "
    ``System#Wake``
    Triggered after power on.
    ","
