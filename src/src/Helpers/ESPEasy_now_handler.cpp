@@ -51,14 +51,16 @@ static uint64_t mac_to_key(const uint8_t *mac, ESPEasy_now_hdr::message_t messag
 std::map<uint64_t, ESPEasy_now_merger> ESPEasy_now_in_queue;
 
 void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
+  START_TIMER;
   if (count < sizeof(ESPEasy_now_hdr)) {
+    STOP_TIMER(INVALID_ESPEASY_NOW_LOOP);
     return; // Too small
   }
-  START_TIMER;
   ESPEasy_now_hdr header;
   memcpy(&header, buf, sizeof(ESPEasy_now_hdr));
 
   if (header.header_version != ESPEASY_NOW_HEADER_VERSION) {
+    STOP_TIMER(INVALID_ESPEASY_NOW_LOOP);
     return;
   }
 
@@ -68,6 +70,7 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
   const uint16_t checksum = calc_CRC16(reinterpret_cast<const char *>(payload), payload_length);
 
   if (header.checksum != checksum) {
+    STOP_TIMER(INVALID_ESPEASY_NOW_LOOP);
     return;
   }
   uint64_t key = mac_to_key(mac, header.message_type, header.message_count);

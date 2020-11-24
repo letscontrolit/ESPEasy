@@ -7,11 +7,13 @@
 
 # define ESPEASY_NOW_MAX_PACKET_SIZE   200
 
+
 ESPEasy_Now_packet::ESPEasy_Now_packet(const ESPEasy_now_hdr& header, size_t payloadSize)
 {
   setSize(payloadSize + sizeof(ESPEasy_now_hdr));
   setHeader(header);
 }
+
 
 ESPEasy_Now_packet::ESPEasy_Now_packet(const MAC_address& mac, const uint8_t *buf, size_t packetSize)
 {
@@ -22,6 +24,8 @@ ESPEasy_Now_packet::ESPEasy_Now_packet(const MAC_address& mac, const uint8_t *bu
     // Cannot store the whole packet, so consider it as invalid.
     packetSize = bufsize;
     _valid = false;
+  } else {
+    _valid = true;
   }
   memcpy(&_buf[0], buf, packetSize);
 }
@@ -90,13 +94,14 @@ ESPEasy_now_hdr ESPEasy_Now_packet::getHeader() const
 
 void ESPEasy_Now_packet::setHeader(ESPEasy_now_hdr header)
 {
-  header.checksum = computeChecksum();
   if (_buf.size() < sizeof(ESPEasy_now_hdr)) {
     // Not even the header will fit, so this is an invalid packet.
     _valid = false;
-  } else {
-    memcpy(&_buf[0], &header, sizeof(ESPEasy_now_hdr));
+    return;
   }
+  header.checksum = computeChecksum();
+  memcpy(&_buf[0], &header, sizeof(ESPEasy_now_hdr));
+  _valid = true;
 }
 
 size_t ESPEasy_Now_packet::addString(const String& string, size_t& payload_pos)

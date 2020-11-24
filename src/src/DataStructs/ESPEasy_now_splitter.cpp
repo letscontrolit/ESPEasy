@@ -58,6 +58,7 @@ void ESPEasy_now_splitter::createNextPacket()
 
   // Determine size of next packet
   size_t message_bytes_left = _totalSize - _bytesStored;
+  _header.payload_size = message_bytes_left - sizeof(ESPEasy_now_hdr);
   _queue.emplace_back(_header, message_bytes_left);
   _payload_pos = 0;
 
@@ -221,15 +222,15 @@ bool ESPEasy_now_splitter::prepareForSend(const MAC_address& mac)
   size_t nr_packets = _queue.size();
 
   for (uint8_t i = 0; i < nr_packets; ++i) {
-    if (!_queue[i].valid()) {
-      addLog(LOG_LEVEL_ERROR, F("ESPEasy Now: Could not prepare for send"));
-      return false;
-    }
     ESPEasy_now_hdr header = _queue[i].getHeader();
     header.nr_packets = nr_packets;
     header.payload_size = _queue[i].getPayloadSize();
     _queue[i].setHeader(header);
     _queue[i].setMac(mac);
+    if (!_queue[i].valid()) {
+      addLog(LOG_LEVEL_ERROR, F("ESPEasy Now: Could not prepare for send"));
+      return false;
+    }
   }
   return true;
 }

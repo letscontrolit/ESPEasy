@@ -14,14 +14,15 @@
 class ESPEasy_Now_packet {
 public:
 
+
   // Constructor for sending a packet
-  ESPEasy_Now_packet(const ESPEasy_now_hdr& header,
-                     size_t                 payloadSize);
+  explicit ESPEasy_Now_packet(const ESPEasy_now_hdr& header,
+                              size_t                 payloadSize);
 
   // Constructor for receiving a packet
-  ESPEasy_Now_packet(const MAC_address& mac,
-                     const uint8_t     *buf,
-                     size_t             packetSize);
+  explicit ESPEasy_Now_packet(const MAC_address& mac,
+                              const uint8_t     *buf,
+                              size_t             packetSize);
 
   // A packet may become invalid if it was not possible to allocate enough memory for the buffer
   bool            valid() const;
@@ -81,7 +82,7 @@ private:
 
   std::vector<uint8_t>_buf;
 
-  bool _valid = true;
+  bool _valid = false;
 
   void     setSize(size_t packetSize);
 

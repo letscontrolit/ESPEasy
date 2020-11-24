@@ -42,7 +42,7 @@ public:
   uint8_t nr_packets     = 1;                          // The highest message number of this sequence
   uint8_t message_count  = 1;                          // A set of messages all have the same message_count
   uint8_t payload_size   = 0;                          // Size of the payload
-  uint16_t checksum      = 0;                          // checksum of the packet
+  uint16_t checksum      = 1;                          // checksum of the packet, initialize to value which cannot match on an empty packet.
 };
 
 #endif // ifdef USES_ESPEASY_NOW
