@@ -121,9 +121,9 @@ struct P015_data_struct : public PluginTaskData_base {
               float         ms,
               unsigned int  CH0,
               unsigned int  CH1,
-              double      & lux,
-              double      & infrared,
-              double      & broadband);
+              float       & lux,
+              float       & infrared,
+              float       & broadband);
 
 
   unsigned int _gain; // Gain setting, 0 = X1, 1 = X16, 2 = auto, 3 = extended auto;

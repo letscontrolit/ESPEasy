@@ -12,27 +12,6 @@
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24UL)
 
 
-long timePassedSince(unsigned long timestamp) {
-  return timeDiff(timestamp, millis());
-}
-
-long usecPassedSince(unsigned long timestamp) {
-  return timeDiff(timestamp, micros());
-}
-
-// Check if a certain timeout has been reached.
-bool timeOutReached(unsigned long timer) {
-  const long passed = timePassedSince(timer);
-
-  return passed >= 0;
-}
-
-bool usecTimeOutReached(unsigned long timer) {
-  const long passed = usecPassedSince(timer);
-
-  return passed >= 0;
-}
-
 
 bool isLeapYear(int year) {
   return (((1970 + year) > 0) && !((1970 + year) % 4) && (((1970 + year) % 100) || !((1970 + year) % 400)));

@@ -417,6 +417,7 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
 
 void SendStatus(EventValueSource::Enum source, const String& status)
 {
+  if (status.length() == 0) return;
   switch (source)
   {
     case EventValueSource::Enum::VALUE_SOURCE_HTTP:
@@ -477,6 +478,11 @@ void MQTTStatus(const String& status)
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
   if (validControllerIndex(enabledMqttController)) {
+    controllerIndex_t DomoticzMQTT_controllerIndex = findFirstEnabledControllerWithId(2);
+    if (DomoticzMQTT_controllerIndex == enabledMqttController) {
+      // Do not send MQTT status updates to Domoticz
+      return;
+    }
     String pubname;
     bool mqtt_retainFlag;
     {
