@@ -42,7 +42,7 @@ void handle_rules() {
   String error;
 
   // Make sure file exists
-  if (!ESPEASY_FS.exists(fileName))
+  if (!fileExists(fileName))
   {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Rules : Create new file: ");
@@ -335,7 +335,7 @@ void handle_rules_delete() {
 
   if (fileName.length() > 0)
   {
-    removed = ESPEASY_FS.remove(fileName);
+    removed = tryDeleteFile(fileName);
   }
 
   if (removed)
@@ -408,7 +408,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     Serial.print(F("File name: "));
     Serial.println(fileName);
       #endif // ifdef WEBSERVER_RULES_DEBUG
-    bool isEdit = ESPEASY_FS.exists(fileName);
+    bool isEdit = fileExists(fileName);
 
     if (web_server.args() > 0)
     {
