@@ -23,7 +23,9 @@
 // ********************************************************************************
 boolean handle_custom(String path) {
   // path is a deepcopy, since it will be changed.
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_custom"));
+  #endif
 
   if (!clientIPallowed()) { return false; }
 

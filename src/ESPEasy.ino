@@ -224,7 +224,9 @@ void setup()
 
   resetPluginTaskData();
 
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
+  #endif
 
   Serial.begin(115200);
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
@@ -375,8 +377,10 @@ void setup()
 
   if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
-
+  
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("hardwareInit"));
+  #endif
   hardwareInit();
 
   timermqtt_interval = 250; // Interval for checking MQTT

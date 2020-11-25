@@ -28,8 +28,9 @@
 void ResetFactory()
 {
   const GpioFactorySettingsStruct gpio_settings(ResetFactoryDefaultPreference.getDeviceModel());
-
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ResetFactory"));
+  #endif
 
   // Direct Serial is allowed here, since this is only an emergency task.
   serialPrint(F("RESET: Resetting factory defaults... using "));
@@ -255,8 +256,9 @@ void ResetFactory()
 #endif // if DEFAULT_CONTROLLER
 
   SaveSettings();
-
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ResetFactory2"));
+  #endif
   serialPrintln(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));
 
   // NOTE: this is a known ESP8266 bug, not our fault. :)

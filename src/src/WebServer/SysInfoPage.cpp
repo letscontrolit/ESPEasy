@@ -41,7 +41,9 @@
 // Web Interface sysinfo page
 // ********************************************************************************
 void handle_sysinfo_json() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_sysinfo"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
@@ -216,7 +218,9 @@ void handle_sysinfo_json() {
 #ifdef WEBSERVER_SYSINFO
 
 void handle_sysinfo() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_sysinfo"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;

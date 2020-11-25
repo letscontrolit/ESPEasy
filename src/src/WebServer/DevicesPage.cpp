@@ -30,7 +30,9 @@
 
 
 void handle_devices() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_devices"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_DEVICES;
@@ -172,7 +174,9 @@ void handle_devices() {
     handle_devices_TaskSettingsPage(taskIndex, page);
   }
 
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_devices"));
+  #endif
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {

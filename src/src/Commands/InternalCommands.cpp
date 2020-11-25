@@ -450,7 +450,9 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
                     bool                   tryInternal,
                     bool                   tryRemoteConfig)
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ExecuteCommand"));
+  #endif
   String cmd;
 
   if (!GetArgv(Line, cmd, 1)) {

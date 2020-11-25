@@ -29,7 +29,9 @@
 // Web Interface root page
 // ********************************************************************************
 void handle_root() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_root"));
+  #endif
 
   // if Wifi setup, launch setup wizard
   if (WiFiEventData.wifiSetup)
