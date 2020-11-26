@@ -9,6 +9,7 @@
 
 #include "src/DataStructs/DeviceStruct.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
+#include "src/DataStructs/PinMode.h"
 
 #include "src/DataTypes/ESPEasy_plugin_functions.h"
 
@@ -18,12 +19,15 @@
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/ExtraTaskSettings.h"
+#include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/I2Cdev.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
 
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
+#include "src/Helpers/PortStatus.h"
+#include "src/Helpers/StringConverter.h"
 #include "src/Helpers/StringGenerator_GPIO.h"
 #include "src/Helpers/StringParser.h"
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"

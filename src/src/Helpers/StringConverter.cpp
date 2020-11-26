@@ -257,7 +257,13 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     f = 0;
   }
   LoadTaskSettings(event->TaskIndex);
-  String result = toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+  
+  byte nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
+  if (!Device[DeviceIndex].configurableDecimals()) {
+    nrDecimals = 0;
+  }
+
+  String result = toString(f, nrDecimals);
   result.trim();
   return result;
 }

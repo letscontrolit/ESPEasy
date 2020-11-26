@@ -1187,7 +1187,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       html_table_header(F("Formula"), F("EasyFormula"), 0);
     }
 
-    if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
+    if (Device[DeviceIndex].configurableDecimals())
     {
       html_table_header(F("Decimals"), 30);
     }
@@ -1210,7 +1210,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         addTextBox(id, ExtraTaskSettings.TaskDeviceFormula[varNr], NAME_FORMULA_LENGTH_MAX);
       }
 
-      if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
+      if (Device[DeviceIndex].configurableDecimals())
       {
         html_TD();
         String id = F("TDVD"); // ="taskdevicevaluedecimals"

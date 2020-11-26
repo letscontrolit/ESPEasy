@@ -12,6 +12,7 @@
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/Cache.h"
+#include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/EventQueue.h"
@@ -759,6 +760,16 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
+
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+  if (validDeviceIndex(DeviceIndex)) {
+    if (!Device[DeviceIndex].configurableDecimals()) {
+      // Nr of decimals cannot be configured, so set them to 0 just to be sure.
+      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+        ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
+      }      
+    }
+  }
 
   if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0) {
     // if field set empty, reload defaults
