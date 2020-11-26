@@ -204,8 +204,10 @@ void setup()
   initWiFi();
   
   run_compiletime_checks();
+#ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
+#endif
 #ifndef ESP32
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif

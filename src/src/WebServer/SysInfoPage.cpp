@@ -60,11 +60,35 @@ void handle_sysinfo_json() {
   int freeMem = ESP.getFreeHeap();
   json_open(false, F("mem"));
   json_number(F("free"),    String(freeMem));
-  json_number(F("low_ram"), String(lowestRAM));
-  json_prop(F("low_ram_fn"), String(lowestRAMfunction));
+  json_number(F("low_ram"), String(
+  #ifndef BUILD_NO_RAM_TRACKER
+  lowestRAM
+  #else
+  0
+  #endif
+  ));
+  json_prop(F("low_ram_fn"), 
+  #ifndef BUILD_NO_RAM_TRACKER
+  lowestRAMfunction
+  #else
+  0
+  #endif
+  );
   json_number(F("stack"),     String(getCurrentFreeStack()));
-  json_number(F("low_stack"), String(lowestFreeStack));
-  json_prop(F("low_stack_fn"), lowestFreeStackfunction);
+  json_number(F("low_stack"), String(
+  #ifndef BUILD_NO_RAM_TRACKER
+  lowestFreeStack
+  #else
+  0
+  #endif
+  ));
+  json_prop(F("low_stack_fn"), 
+  #ifndef BUILD_NO_RAM_TRACKER
+  lowestFreeStackfunction
+  #else
+  0
+  #endif
+  );
   json_close();
   json_open(false, F("boot"));
   json_prop(F("last_cause"), getLastBootCauseString());

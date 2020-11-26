@@ -532,7 +532,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     // alter the string.
     String tmpAction(action);
     bool   handled = PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction);
-
+    
+    #ifndef BUILD_NO_DEBUG
     if (!tmpAction.equals(action)) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = F("PLUGIN_WRITE altered the string: ");
@@ -542,6 +543,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
         addLog(LOG_LEVEL_ERROR, log);
       }
     }
+    #endif
 
     if (handled) {
       SendStatus(source, return_command_success());
