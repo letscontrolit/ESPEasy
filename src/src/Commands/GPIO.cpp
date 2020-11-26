@@ -20,9 +20,9 @@
 //predeclaration of functions used in this module
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
 bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefix);
-void logErrorGpioOffline(String prefix, byte port);
-void logErrorGpioOutOfRange(String prefix, byte port, const char* Line = nullptr);
-void logErrorGpioNotOutput(String prefix, byte port);
+void logErrorGpioOffline(const String& prefix, int port);
+void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line = nullptr);
+void logErrorGpioNotOutput(const String& prefix, int port);
 
 String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
 {
@@ -387,28 +387,31 @@ String Command_GPIO(struct EventStruct *event, const char* Line)
   }
 }
 
-void logErrorGpioOffline(String prefix, byte port)
+void logErrorGpio(const String& prefix, int port, const String& description)
 {
-  String log;
-  log = prefix + String(F(" : port#")) + String(port) + String(F(" is offline."));
-  addLog(LOG_LEVEL_ERROR, log);
-}
-
-void logErrorGpioOutOfRange(String prefix, byte port, const char* Line)
-{
-  String log;
-  log = prefix + String(F(" : port#")) + String(port) + String(F(" is out of range"));
-  addLog(LOG_LEVEL_ERROR, log);
-  if (Line != nullptr) {
-    addLog(LOG_LEVEL_ERROR, Line);
+  if (port >= 0) {
+    addLog(LOG_LEVEL_ERROR, prefix + String(F(" : port#")) + String(port) + description);
   }
 }
 
-void logErrorGpioNotOutput(String prefix, byte port)
+void logErrorGpioOffline(const String& prefix, int port)
 {
-  String log;
-  log = prefix + String(F(" : port#")) + String(port) + String(F(" is not an output port"));
-  addLog(LOG_LEVEL_ERROR, log);
+  logErrorGpio(prefix, port, F(" is offline."));
+}
+
+void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line)
+{
+  logErrorGpio(prefix, port, F(" is out of range"));
+  if (port >= 0) {
+    if (Line != nullptr) {
+      addLog(LOG_LEVEL_DEBUG, Line);
+    }
+  }
+}
+
+void logErrorGpioNotOutput(const String& prefix, int port)
+{
+  logErrorGpio(prefix, port, F(" is not an output port"));
 }
 
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState)
