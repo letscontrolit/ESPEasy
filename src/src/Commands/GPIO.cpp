@@ -21,7 +21,7 @@
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
 bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefix);
 void logErrorGpioOffline(String prefix, byte port);
-void logErrorGpioOutOfRange(String prefix, byte port);
+void logErrorGpioOutOfRange(String prefix, byte port, const char* Line = nullptr);
 void logErrorGpioNotOutput(String prefix, byte port);
 
 String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
@@ -49,7 +49,7 @@ String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
 
     return return_command_success();
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par2);
+    logErrorGpioOutOfRange(logPrefix,event->Par2, Line);
     return return_command_failed();
   }
 }
@@ -73,7 +73,7 @@ String Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line)
 
     return return_command_success();
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par2);
+    logErrorGpioOutOfRange(logPrefix,event->Par2, Line);
     return return_command_failed();
   }
 }
@@ -105,7 +105,7 @@ String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char* Line)
 
     return return_command_success();
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par1);
+    logErrorGpioOutOfRange(logPrefix,event->Par1, Line);
     return return_command_failed();
   }
 }
@@ -179,7 +179,7 @@ String Command_GPIO_PWM(struct EventStruct *event, const char *Line)
 
     return return_command_success();
   } 
-  logErrorGpioOutOfRange(logPrefix, event->Par1);
+  logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
   return return_command_failed();
 }
 
@@ -273,7 +273,7 @@ String Command_GPIO_Pulse(struct EventStruct *event, const char* Line)
 
     return return_command_success();
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par1);
+    logErrorGpioOutOfRange(logPrefix,event->Par1, Line);
     return return_command_failed();
   }
 }
@@ -325,7 +325,7 @@ String Command_GPIO_Toggle(struct EventStruct *event, const char* Line)
         break;
     }
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par1);
+    logErrorGpioOutOfRange(logPrefix,event->Par1, Line);
     return return_command_failed();
   }
 }
@@ -382,7 +382,7 @@ String Command_GPIO(struct EventStruct *event, const char* Line)
       return return_command_failed();
     }
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par1);
+    logErrorGpioOutOfRange(logPrefix,event->Par1, Line);
     return return_command_failed();
   }
 }
@@ -390,21 +390,24 @@ String Command_GPIO(struct EventStruct *event, const char* Line)
 void logErrorGpioOffline(String prefix, byte port)
 {
   String log;
-  log = prefix + String(F(": port# ")) + String(port) + String(F(" is offline."));
+  log = prefix + String(F(" : port#")) + String(port) + String(F(" is offline."));
   addLog(LOG_LEVEL_ERROR, log);
 }
 
-void logErrorGpioOutOfRange(String prefix, byte port)
+void logErrorGpioOutOfRange(String prefix, byte port, const char* Line)
 {
   String log;
-  log = prefix + String(F(" port#")) + String(port) + String(F(" is out of range"));
+  log = prefix + String(F(" : port#")) + String(port) + String(F(" is out of range"));
   addLog(LOG_LEVEL_ERROR, log);
+  if (Line != nullptr) {
+    addLog(LOG_LEVEL_ERROR, Line);
+  }
 }
 
 void logErrorGpioNotOutput(String prefix, byte port)
 {
   String log;
-  log = prefix + String(F(" port#")) + String(port) + String(F(" is not an output port"));
+  log = prefix + String(F(" : port#")) + String(port) + String(F(" is not an output port"));
   addLog(LOG_LEVEL_ERROR, log);
 }
 
