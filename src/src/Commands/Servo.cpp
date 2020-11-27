@@ -1,6 +1,7 @@
 #include "../Commands/Servo.h"
 
 #include "../Commands/Common.h"
+#include "../Commands/GPIO.h"
 #include "../DataStructs/EventStructCommandWrapper.h"
 #include "../DataStructs/PinMode.h"
 #include "../DataStructs/PortStatusStruct.h"
