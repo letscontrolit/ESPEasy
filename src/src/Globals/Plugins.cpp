@@ -569,6 +569,17 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_SET_DEFAULTS) {
           saveUserVarToRTC();
         }
+        if (Function == PLUGIN_GET_DEVICEVALUECOUNT) {
+          // Check if we have a valid value count.
+          if (Output_Data_type_t::Simple == Device[DeviceIndex].OutputDataType) {
+            if (event->Par1 < 1 || event->Par1 > 4) {
+              // Output_Data_type_t::Simple only allows for 1 .. 4 output types.
+              // Apparently the value is not correct, so use the default.
+              event->Par1 = Device[DeviceIndex].ValueCount;
+            }
+          }
+        }
+
         // Calls may have updated ExtraTaskSettings, so validate them.
         ExtraTaskSettings.validate();
         
