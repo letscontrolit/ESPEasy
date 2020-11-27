@@ -123,8 +123,13 @@ bool fileExists(const String& fname) {
 fs::File tryOpenFile(const String& fname, const String& mode) {
   START_TIMER;
   fs::File f;
+  if (fname.length() == 0 || fname.equals(F("/"))) {
+    return f;
+  }
 
-  if ((mode == "r") && !fileExists(fname)) {
+  bool exists = fileExists(fname);
+
+  if ((mode == F("r")) && !exists) {
     return f;
   }
   f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
@@ -168,20 +173,7 @@ String BuildFixes()
 
   if (Settings.Build < 145)
   {
-    String   fname = F(FILE_NOTIFICATION);
-    fs::File f     = tryOpenFile(fname, "w");
-    SPIFFS_CHECK(f, fname.c_str());
-
-    if (f)
-    {
-      for (int x = 0; x < 4096; x++)
-      {
-        // See https://github.com/esp8266/Arduino/commit/b1da9eda467cc935307d553692fdde2e670db258#r32622483
-        uint8_t zero_value = 0;
-        SPIFFS_CHECK(f.write(&zero_value, 1), fname.c_str());
-      }
-      f.close();
-    }
+    InitFile(SettingsType::SettingsFileEnum::FILE_NOTIFICATION_type);
   }
 
   if (Settings.Build < 20101)
@@ -968,6 +960,17 @@ String InitFile(const String& fname, int datasize)
   return String();
 }
 
+String InitFile(SettingsType::Enum settingsType)
+{
+  return InitFile(SettingsType::getSettingsFile(settingsType));
+}
+
+String InitFile(SettingsType::SettingsFileEnum file_type)
+{
+  return InitFile(SettingsType::getSettingsFileName(file_type), 
+                  SettingsType::getInitFileSize(file_type));
+}
+
 /********************************************************************************************\
    Save data into config file on file system
  \*********************************************************************************************/
@@ -1235,6 +1238,9 @@ String SaveToFile(SettingsType::Enum settingsType, int index, byte *memAddress, 
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
   String fname = SettingsType::getSettingsFileName(settingsType);
+  if (!fileExists(fname)) {
+    InitFile(settingsType);
+  }
   return SaveToFile(fname.c_str(), offset + posInBlock, memAddress, datasize);
 }
 

@@ -76,19 +76,13 @@ void ResetFactory()
 
 
   // pad files with extra zeros for future extensions
-  String fname;
-
-  fname = FILE_CONFIG;
-  InitFile(fname.c_str(), CONFIG_FILE_SIZE);
-
-  fname = FILE_SECURITY;
-  InitFile(fname.c_str(), 4096);
-
+  InitFile(SettingsType::SettingsFileEnum::FILE_CONFIG_type);
+  InitFile(SettingsType::SettingsFileEnum::FILE_SECURITY_type);
   #ifdef USES_NOTIFIER
-  fname = FILE_NOTIFICATION;
-  InitFile(fname.c_str(), 4096);
-  #endif // ifdef USES_NOTIFIER
-  fname = FILE_RULES;
+  InitFile(SettingsType::SettingsFileEnum::FILE_NOTIFICATION_type);
+  #endif
+
+  String fname = F(FILE_RULES);
   InitFile(fname.c_str(), 0);
 
   Settings.clearMisc();
