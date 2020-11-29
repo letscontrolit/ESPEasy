@@ -174,6 +174,9 @@ String LoadNotificationSettings(int NotificationIndex, byte *memAddress, int dat
  \*********************************************************************************************/
 String InitFile(const String& fname, int datasize);
 
+String InitFile(SettingsType::Enum settingsType);
+String InitFile(SettingsType::SettingsFileEnum file_type);
+
 /********************************************************************************************\
    Save data into config file on file system
  \*********************************************************************************************/

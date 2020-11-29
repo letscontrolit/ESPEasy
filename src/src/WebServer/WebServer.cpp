@@ -91,7 +91,9 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
     // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
     getWebPageTemplateDefault(tmplName, pageTemplate);
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendWebPage"));
+  #endif
 
   // web activity timer
   lastWeb = millis();
