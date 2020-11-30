@@ -58,7 +58,7 @@ IRsend *Plugin_035_irSender = nullptr;
 
 boolean Plugin_035(byte function, struct EventStruct *event, String &command)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -153,7 +153,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         else if (cmdCode.equalsIgnoreCase(F("IRSENDAC")) && Plugin_035_commonAc != 0) {
           success = true;
           enableIR_RX(false);
-          handle_AC_IRremote(command);
+          handle_AC_IRremote(parseStringToEnd(command, 2));
         }
 #endif // P016_P035_Extended_AC
 
@@ -164,18 +164,18 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
   return success;
 } // Plugin_035 END
 
-boolean handleIRremote(const String &cmd) {
+bool handleIRremote(const String &cmd) {
 
-  String IrType = "";
-  String TmpStr1 = "";
+  String IrType;
+  String TmpStr1;
 
   uint64_t IrCode = 0;
   uint16_t IrBits = 0;
   uint16_t IrRepeat = 0;
-  String ircodestr = "";
+  String ircodestr;
 
   StaticJsonDocument<200> docTemp;
-  DeserializationError error = deserializeJson(docTemp, cmd.substring(cmd.indexOf(',') + 1, cmd.length()));
+  DeserializationError error = deserializeJson(docTemp, parseStringToEnd(cmd, 2));
   if (!error) // If the command is in JSON format
   {
     IrType =  docTemp[F("protocol")].as<String>();
@@ -207,16 +207,8 @@ boolean handleIRremote(const String &cmd) {
 }
 
 #ifdef P016_P035_Extended_AC
-boolean handle_AC_IRremote(const String &cmd) {
-  String irData = "";
+bool handle_AC_IRremote(const String &irData) {
   StaticJsonDocument<JSON_OBJECT_SIZE(18) + 190> doc;
-
-  int argIndex = cmd.indexOf(',') + 1;
-  if (argIndex)
-    irData = cmd.substring(argIndex, cmd.length());
-  //addLog(LOG_LEVEL_INFO, String(F("IRTX: JSON received: ")) + irData);
-  irData.toLowerCase(); // Circumvent the need to have case sensitive JSON keys
-
   DeserializationError error = deserializeJson(doc, irData);         // Deserialize the JSON document
   if (error)         // Test if parsing succeeds.
   {
@@ -231,7 +223,7 @@ boolean handle_AC_IRremote(const String &cmd) {
     return false; //do not continue with sending of the signal.
   }
 
-  String tempstr = "";
+  String tempstr;
   tempstr = doc[F("model")].as<String>();
   st.model = IRac::strToModel(tempstr.c_str(), -1); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
   tempstr = doc[F("power")].as<String>();
@@ -272,9 +264,9 @@ boolean handle_AC_IRremote(const String &cmd) {
 #endif
 
 
-boolean handleRawRaw2Encoding(const String &cmd) {
-  boolean raw=true;
-  String IrType = "";
+bool handleRawRaw2Encoding(const String &cmd) {
+  bool raw=true;
+  String IrType;
   if (!GetArgv(cmd.c_str(), IrType, 2)) return false;
 
   if (IrType.equalsIgnoreCase(F("RAW"))) raw = true;
@@ -480,7 +472,7 @@ String listACProtocols() {
 }
 #endif
 
-boolean addErrorTrue()
+bool addErrorTrue()
 {
   addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));
   return true;
