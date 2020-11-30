@@ -23,7 +23,9 @@
 // Web Interface file list
 // ********************************************************************************
 void handle_filelist_json() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_filelist"));
+  #endif
 
   if (!clientIPallowed()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -129,7 +131,9 @@ void handle_filelist_json() {
 
 #ifdef WEBSERVER_FILELIST
 void handle_filelist() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_filelist"));
+  #endif
 
   if (!clientIPallowed()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -313,7 +317,9 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
 // ********************************************************************************
 #ifdef FEATURE_SD
 void handle_SDfilelist() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_SDfilelist"));
+  #endif
 
   if (!clientIPallowed()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;

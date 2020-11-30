@@ -138,6 +138,7 @@ void RamTracker::getTraceBuffer() {
 }
 
 #else // BUILD_NO_RAM_TRACKER
+/*
 
 void checkRAMtoLog(void) {}
 
@@ -148,5 +149,6 @@ void checkRAM(const String& flashString,
               const String& a) {}
 
 void checkRAM(const String& descr) {}
+*/
 
 #endif // BUILD_NO_RAM_TRACKER
