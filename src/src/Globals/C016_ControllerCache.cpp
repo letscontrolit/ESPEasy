@@ -1,5 +1,8 @@
 #include "C016_ControllerCache.h"
 
+#ifdef USES_C016
+
+
 #include "../ControllerQueue/C016_queue_element.h"
 
 ControllerCache_struct ControllerCache;
@@ -41,3 +44,5 @@ bool C016_getCSVline(
   val4 = element.values[3];
   return result;
 }
+
+#endif
