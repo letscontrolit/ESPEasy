@@ -1,6 +1,7 @@
 #include "../Commands/Servo.h"
 
 #include "../Commands/Common.h"
+#include "../Commands/GPIO.h"
 #include "../DataStructs/EventStructCommandWrapper.h"
 #include "../DataStructs/PinMode.h"
 #include "../DataStructs/PortStatusStruct.h"
@@ -23,7 +24,7 @@ String Command_Servo(struct EventStruct *event, const char *Line)
   // So needs to reload the tempPortStruct.
 
   // FIXME TD-er: For now only fixed to "P001" even when it is for internal GPIO pins
-  pluginID_t pluginID = 1;
+  pluginID_t pluginID = PLUGIN_GPIO;
 
   // Par1: Servo ID (obsolete/unused since 2020/11/22)
   // Par2: GPIO pin

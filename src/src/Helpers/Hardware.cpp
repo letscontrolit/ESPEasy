@@ -32,7 +32,7 @@ void hardwareInit()
   // set GPIO pins state if not set to default
   bool hasPullUp, hasPullDown;
 
-  for (byte gpio = 0; gpio <= PIN_D_MAX; ++gpio) {
+  for (int gpio = 0; gpio <= PIN_D_MAX; ++gpio) {
     const bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
     if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
@@ -633,7 +633,7 @@ void setFactoryDefault(DeviceModel model) {
 /********************************************************************************************\
    Add pre defined plugins and rules.
  \*********************************************************************************************/
-void addSwitchPlugin(taskIndex_t taskIndex, byte gpio, const String& name, bool activeLow) {
+void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool activeLow) {
   setTaskDevice_to_TaskIndex(1, taskIndex);
   setBasicTaskValues(
     taskIndex,
@@ -671,7 +671,7 @@ void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings) {
   }
 }
 
-void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
+void addButtonRelayRule(byte buttonNumber, int relay_gpio) {
   Settings.UseRules = true;
   String fileName;
 
@@ -1040,17 +1040,17 @@ uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
 
 #endif // if defined(ESP32)
 
-bool set_Gpio_PWM_pct(byte gpio, float dutyCycle_f, uint32_t frequency) {
+bool set_Gpio_PWM_pct(int gpio, float dutyCycle_f, uint32_t frequency) {
   uint32_t dutyCycle = dutyCycle_f * 10.23f;
   return set_Gpio_PWM(gpio, dutyCycle, frequency);
 }
 
-bool set_Gpio_PWM(byte gpio, uint32_t dutyCycle, uint32_t frequency) {
+bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t frequency) {
   uint32_t key;
   return set_Gpio_PWM(gpio, dutyCycle, 0, frequency, key);
 }
 
-bool set_Gpio_PWM(byte gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key)
+bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key)
 {
   // For now, we only support the internal GPIO pins.
   byte   pluginID  = PLUGIN_GPIO;

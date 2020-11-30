@@ -26,7 +26,9 @@
 // Web Interface config page
 // ********************************************************************************
 void handle_config() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_config"));
+  #endif
 
   if (!isLoggedIn()) { return; }
 
