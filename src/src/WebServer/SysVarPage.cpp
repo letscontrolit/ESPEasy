@@ -21,7 +21,9 @@ void addSysVar_enum_html(SystemVariables::Enum enumval) {
 
 
 void handle_sysvars() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_sysvars"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startStream();

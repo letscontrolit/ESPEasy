@@ -91,7 +91,9 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
     // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
     getWebPageTemplateDefault(tmplName, pageTemplate);
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendWebPage"));
+  #endif
 
   // web activity timer
   lastWeb = millis();
@@ -573,7 +575,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("logo"))
   {
-    if (ESPEASY_FS.exists(F("esp.png")))
+    if (fileExists(F("esp.png")))
     {
       addHtml(F("<img src=\"esp.png\" width=48 height=48 align=right>"));
     }
@@ -581,7 +583,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("css"))
   {
-    if (ESPEASY_FS.exists(F("esp.css"))) // now css is written in writeDefaultCSS() to FS and always present
+    if (fileExists(F("esp.css"))) // now css is written in writeDefaultCSS() to FS and always present
     // if (0) //TODO
     {
       addHtml(F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">"));
@@ -637,7 +639,7 @@ void writeDefaultCSS(void)
 
 #ifndef BUILD_NO_DEBUG
 
-  if (!ESPEASY_FS.exists(F("esp.css")))
+  if (!fileExists(F("esp.css")))
   {
     fs::File f = tryOpenFile(F("esp.css"), "w");
 

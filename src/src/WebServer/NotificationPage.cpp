@@ -27,7 +27,9 @@
 
 
 void handle_notifications() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_notifications"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_NOTIFICATIONS;

@@ -19,7 +19,9 @@
 // Web Interface to manage archived settings
 // ********************************************************************************
 void handle_settingsarchive() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_settingsarchive"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;

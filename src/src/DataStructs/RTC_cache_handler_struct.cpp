@@ -162,7 +162,7 @@ String RTC_cache_handler_struct::getReadCacheFileName(int& readPos) {
   for (int i = 0; i < 2; ++i) {
     String fname = createCacheFilename(RTC_cache.readFileNr);
 
-    if (ESPEASY_FS.exists(fname)) {
+    if (fileExists(fname)) {
       if (i != 0) {
         // First attempt failed, so stored read position is not valid
         RTC_cache.readPos = 0;
@@ -195,7 +195,7 @@ String RTC_cache_handler_struct::getPeekCacheFileName(bool& islast) {
   }
   islast = peekfilenr > RTC_cache.writeFileNr;
 
-  if (ESPEASY_FS.exists(fname)) {
+  if (fileExists(fname)) {
     return fname;
   }
   return "";

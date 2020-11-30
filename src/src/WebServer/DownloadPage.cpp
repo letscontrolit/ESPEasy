@@ -13,7 +13,9 @@
 // ********************************************************************************
 void handle_download()
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_download"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
