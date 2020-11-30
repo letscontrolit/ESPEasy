@@ -14,7 +14,9 @@
 // Web Interface control page (no password!)
 // ********************************************************************************
 void handle_control() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_control"));
+  #endif
 
   String webrequest = web_server.arg(F("cmd"));
   HandledWebCommand_result res = handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest);

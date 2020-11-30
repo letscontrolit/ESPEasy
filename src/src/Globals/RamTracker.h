@@ -43,6 +43,8 @@ extern RamTracker myRamTracker; // instantiate class. (is global now)
 
 #endif // BUILD_NO_RAM_TRACKER
 
+
+#ifndef BUILD_NO_RAM_TRACKER
 void checkRAMtoLog(void);
 
 void checkRAM(const String& flashString,
@@ -52,7 +54,7 @@ void checkRAM(const String& flashString,
               const String& a);
 
 void checkRAM(const String& descr);
-
+#endif
 
 
 #endif // GLOBALS_RAMTRACKER_H

@@ -15,7 +15,9 @@
 // ********************************************************************************
 bool loadFromFS(boolean spiffs, String path) {
   // path is a deepcopy, since it will be changed here.
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("loadFromFS"));
+  #endif
 
   if (!isLoggedIn()) { return false; }
 

@@ -818,7 +818,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
               if ((commandName == F("taskvalueset")) || (commandName == F("dummyvalueset"))) // should work for both
               {
-                valueStr = toString(UserVar[userVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex]); //parseString(string, 4);
+                valueStr = formatUserVarNoCheck(event, taskVarIndex); //parseString(string, 4);
                 success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
                 if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
                   String log = F("C014 : Acknowledged: ");
@@ -849,7 +849,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                     valueStr = toString(UserVar[userVarIndex],0);
                     break;
                   case 1: // PLUGIN_085_VALUE_FLOAT
-                    valueStr = toString(UserVar[userVarIndex],ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex]);
+                    valueStr = formatUserVarNoCheck(event, taskVarIndex);
                     break;
                   case 2: // PLUGIN_085_VALUE_BOOLEAN
                     if ( UserVar[userVarIndex] == 1) valueStr="true";

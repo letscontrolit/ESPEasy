@@ -229,9 +229,6 @@ To create/register a plugin, you have to :
         #define FEATURE_I2CMULTIPLEXER
     #endif
 
-    #ifndef BUILD_NO_DEBUG
-      #define BUILD_NO_DEBUG
-    #endif
 #endif
 
 #ifdef USES_FHEM
@@ -1109,6 +1106,9 @@ To create/register a plugin, you have to :
 
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
+  #endif
+  #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
+    #define BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   #endif
   #ifdef FEATURE_I2CMULTIPLEXER
     #undef FEATURE_I2CMULTIPLEXER

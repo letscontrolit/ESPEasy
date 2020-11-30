@@ -38,7 +38,9 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
 
 String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useURLencode)
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate_padded"));
+  #endif
   START_TIMER
 
   // Keep current loaded taskSettings to restore at the end.
@@ -151,8 +153,9 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 
   // Copy the rest of the string (or all if no replacements were done)
   newString += tmpString.substring(lastStartpos);
-
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate2"));
+  #endif
 
   // Restore previous loaded taskSettings
   if (currentTaskIndex != 255)
@@ -171,7 +174,9 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   }
 
   STOP_TIMER(PARSE_TEMPLATE_PADDED);
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate3"));
+  #endif
   return newString;
 }
 
@@ -190,8 +195,9 @@ void transformValue(
 {
   // FIXME TD-er: This function does append to newString and uses its length to perform right aling.
   // Is this the way it is intended to use?
-
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("transformValue"));
+  #endif
 
   // start changes by giig1967g - 2018-04-20
   // Syntax: [task#value#transformation#justification]
@@ -513,7 +519,9 @@ void transformValue(
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("transformValue2"));
+  #endif
 }
 
 // Find the first (enabled) task with given name
@@ -679,7 +687,9 @@ int parseCommandArgumentInt(const String& string, unsigned int argc)
  \*********************************************************************************************/
 void parseCommandString(struct EventStruct *event, const String& string)
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseCommandString"));
+  #endif
   event->Par1 = parseCommandArgumentInt(string, 1);
   event->Par2 = parseCommandArgumentInt(string, 2);
   event->Par3 = parseCommandArgumentInt(string, 3);

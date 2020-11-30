@@ -14,7 +14,9 @@
 // Web Interface pin state list
 // ********************************************************************************
 void handle_pinstates_json() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_pinstates"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -55,7 +57,9 @@ void handle_pinstates_json() {
 #ifdef WEBSERVER_PINSTATES
 
 void handle_pinstates() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_pinstates"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
