@@ -15,6 +15,7 @@ def clear_concat_cpp_files(path_to_concat):
 
 
 def clear_all_concat_cpp_files(source, target, env):
+    clear_concat_cpp_files('./src/src/Commands')
     clear_concat_cpp_files('./src/src/ControllerQueue')
     clear_concat_cpp_files('./src/src/PluginStructs')
 
