@@ -1,4 +1,5 @@
- #ifdef USES_P224
+#include "_Plugin_Helper.h"
+#ifdef USES_P224
 
 // ####################################################################################################
 // ############################# Plugin 224: DDS238-x ZN ##############################################
@@ -68,7 +69,6 @@ DF - Below doesn't look right; needs a RS485 to TTL(3.3v) level converter (see h
 #define P224_MEASUREMENT_INTERVAL 60000L
 
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
 #include "src/Helpers/Modbus_RTU.h"
 
 struct P224_data_struct : public PluginTaskData_base {
@@ -82,9 +82,9 @@ struct P224_data_struct : public PluginTaskData_base {
     modbus.reset();
   }
 
-  bool init(const int16_t serial_rx, const int16_t serial_tx, int8_t dere_pin,
+  bool init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, int8_t dere_pin,
             unsigned int baudrate, uint8_t modbusAddress) {
-    return modbus.init(serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
+    return modbus.init(port, serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
   }
 
   bool isInitialized() const {
@@ -94,14 +94,16 @@ struct P224_data_struct : public PluginTaskData_base {
   ModbusRTU_struct modbus;
 };
 
+unsigned int _plugin_224_last_measurement = 0;
+
 boolean Plugin_224(byte function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_224;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE; // connected through 3 datapins
-      Device[deviceCount].VType              = SENSOR_TYPE_QUAD;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -164,22 +166,20 @@ boolean Plugin_224(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
-
-      {
-        // Modbus parameters put in scope to make sure the String array will not keep memory occupied.
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
         String options_baudrate[4];
 
         for (int i = 0; i < 4; ++i) {
           options_baudrate[i] = String(p224_storageValueToBaudrate(i));
         }
-        addFormNumericBox(F("Modbus Address"), P224_DEV_ID_LABEL, P224_DEV_ID, 1,
-                          247);
-        addFormSelector(F("Baud Rate"), P224_BAUDRATE_LABEL, 4, options_baudrate,
-                        NULL, P224_BAUDRATE);
-      }
+        addFormSelector(F("Baud Rate"), P224_BAUDRATE_LABEL, 4, options_baudrate, NULL, P224_BAUDRATE);
+        addUnit(F("baud"));
+        addFormNumericBox(F("Modbus Address"), P224_DEV_ID_LABEL, P224_DEV_ID, 1, 247);
+      break;
+    }
 
+    case PLUGIN_WEBFORM_LOAD: {
       P224_data_struct *P224_data =
         static_cast<P224_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -238,7 +238,7 @@ boolean Plugin_224(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
+//      serialHelper_webformSave(event); // DF - not present in P085
 
       // Save normal parameters
       for (int i = 0; i < P224_QUERY1_CONFIG_POS; ++i) {
@@ -251,13 +251,12 @@ boolean Plugin_224(byte function, struct EventStruct *event, String& string) {
         const byte choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_224_valuename(choice, false));
       }
-
       // Can't clear totals, maybe because of modbus library can't write DWORD?
       // Disabled for now
       /*P224_data_struct *P224_data =
         static_cast<P224_data_struct *>(getPluginTaskData(event->TaskIndex));
-
       if ((nullptr != P224_data) && P224_data->isInitialized()) {
+
         if (isFormItemChecked(F("p224_clear_log")))
         {
           // Clear all logged values in the meter. 
@@ -278,7 +277,8 @@ boolean Plugin_224(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P224_data_struct());
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P224_data_struct());
       P224_data_struct *P224_data =
         static_cast<P224_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -286,9 +286,10 @@ boolean Plugin_224(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P224_data->init(serial_rx, serial_tx, P224_DEPIN,
+      if (P224_data->init(port, serial_rx, serial_tx, P224_DEPIN,
                           p224_storageValueToBaudrate(P224_BAUDRATE),
                           P224_DEV_ID)) {
+        serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
         success = true;
       } else {
         clearPluginTaskData(event->TaskIndex);
@@ -297,7 +298,7 @@ boolean Plugin_224(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
+//       clearPluginTaskData(event->TaskIndex); // DF - not present in P085
       success = true;
       break;
     }
@@ -350,8 +351,8 @@ int p224_storageValueToBaudrate(byte baudrate_setting) {
 }
 
 float p224_readValue(byte query, struct EventStruct *event) {
-  byte errorcode     = -1;
-  float value = 0;
+  byte errorcode     = -1; // DF - not present in P085
+  float value = 0; // DF - not present in P085
   P224_data_struct *P224_data =
     static_cast<P224_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -386,8 +387,8 @@ float p224_readValue(byte query, struct EventStruct *event) {
         break;
     }
   }
-  if (errorcode == 0) return value;
-  return 0.0;
+  if (errorcode == 0) return value; // DF - not present in P085
+  return 0.0f;
 }
 
 void p224_showValueLoadPage(byte query, struct EventStruct *event) {
