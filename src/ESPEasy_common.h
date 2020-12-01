@@ -36,7 +36,15 @@ namespace std
 #include <string.h>
 
 
+#ifdef ESP8266
+  # if !defined(ARDUINO_ESP8266_RELEASE_2_4_0) && !defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+    #  define SUPPORT_ARP
+  # endif
+#endif
 
+#ifdef ESP32
+# define SUPPORT_ARP
+#endif
 
 // User configuration
 // Include Custom.h before ESPEasyDefaults.h. 
