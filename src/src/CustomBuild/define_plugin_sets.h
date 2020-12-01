@@ -449,6 +449,7 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
+    #define USES_P004   // DS18B20
 #endif
 
 #ifdef PLUGIN_SET_SHELLY_PLUG_S

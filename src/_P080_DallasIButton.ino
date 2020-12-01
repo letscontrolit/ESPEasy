@@ -65,7 +65,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
       Plugin_080_DallasPin = CONFIG_PIN1;
 
       if (Plugin_080_DallasPin != -1) {
-        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_080_DallasPin);
+        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_080_DallasPin, Plugin_080_DallasPin);
       }
       success = true;
       break;
@@ -74,7 +74,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       // save the address for selected device and store into extra tasksettings
-      Dallas_addr_selector_webform_save(event->TaskIndex, CONFIG_PIN1);
+      Dallas_addr_selector_webform_save(event->TaskIndex, CONFIG_PIN1, CONFIG_PIN1);
       success = true;
       break;
     }
@@ -95,7 +95,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
       if (Plugin_080_DallasPin != -1) {
         uint8_t addr[8];
         Dallas_plugin_get_addr(addr, event->TaskIndex);
-        Dallas_startConversion(addr, Plugin_080_DallasPin);
+        Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
         delay(800); // give it time to do intial conversion
       }
@@ -111,7 +111,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
       if (addr[0] != 0) {
         Plugin_080_DallasPin = CONFIG_PIN1;
 
-        if (Dallas_readiButton(addr, Plugin_080_DallasPin))
+        if (Dallas_readiButton(addr, Plugin_080_DallasPin, Plugin_080_DallasPin))
         {
           UserVar[event->BaseVarIndex] = 1;
           success                      = true;
@@ -120,7 +120,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
         {
           UserVar[event->BaseVarIndex] = 0;
         }
-        Dallas_startConversion(addr, Plugin_080_DallasPin);
+        Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("DS   : iButton: ");
