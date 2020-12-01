@@ -34,5 +34,6 @@ def concat_cpp_files(path_to_concat):
                 #newf.write('\n\n\n')
 
 
+concat_cpp_files('./src/src/Commands')
 concat_cpp_files('./src/src/ControllerQueue')
 concat_cpp_files('./src/src/PluginStructs')
