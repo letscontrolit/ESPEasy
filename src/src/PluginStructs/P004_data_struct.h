@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P004
 
-# include "../../ESPEasy_common.h"
-
 # include "../Helpers/Dallas1WireHelper.h"
 
 struct P004_data_struct : public PluginTaskData_base {

@@ -2,12 +2,10 @@
 #define PLUGINSTRUCTS_P012_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
+
 #ifdef USES_P012
 
-#include "../../ESPEasy_common.h"
-
-# include <LiquidCrystal_I2C.h>
-
+#include <LiquidCrystal_I2C.h>
 
 struct P012_data_struct : public PluginTaskData_base {
   P012_data_struct(uint8_t addr,
