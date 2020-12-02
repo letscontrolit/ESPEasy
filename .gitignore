@@ -42,9 +42,12 @@ tools/vagrant/.vagrant/
 tools/vagrant/build/
 
 tools/vagrant/Custom.h
-
-.buildcache/
-
-tools/vagrant/pio_envlist.txt
+
+
+.buildcache/
+
+tools/vagrant/pio_envlist.txt
 
 build_output/
+
+**/__tmpfile.cpp

@@ -16,6 +16,9 @@ def concat_cpp_files(path_to_concat):
 
     tmp_cpp_file = os.path.join(cpp_path_out, '__tmpfile.cpp')
 
+    print("\u001b[32m Concat {}/*.cpp to {} \u001b[0m".format(cpp_path, tmp_cpp_file))
+
+
     if os.path.exists(tmp_cpp_file):
         os.remove(tmp_cpp_file)
 
@@ -24,7 +27,7 @@ def concat_cpp_files(path_to_concat):
             if file.endswith('.cpp'):
                 fullname = os.path.join(root, file)
                 cpp_files.append(fullname)
-                print("Add {}".format(fullname))
+                print("\u001b[33m Add: \u001b[0m  {}".format(fullname))
 
 
     with open(tmp_cpp_file,'wb') as newf:
@@ -32,8 +35,11 @@ def concat_cpp_files(path_to_concat):
             with open(filename,'rb') as hf:
                 newf.write(hf.read())
                 newf.write(os.linesep.encode()) #append newline to separate files.
+    
+    print("\u001b[32m ------------------------------- \u001b[0m")
 
 
 concat_cpp_files('./src/src/Commands')
 concat_cpp_files('./src/src/ControllerQueue')
 concat_cpp_files('./src/src/PluginStructs')
+concat_cpp_files('./src/src/WebServer')
