@@ -4,7 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P016
 
-#include "../../ESPEasy_common.h"
 
 #define PLUGIN_016_DEBUG        // additional debug messages in the log
 
