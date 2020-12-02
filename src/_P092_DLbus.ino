@@ -22,6 +22,8 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
+    @uwekaditz 2020-12-028 documentation for UVR61-3 (v8.3 or higher)
+
     @uwekaditz 2020-10-28 P092_data->init() is always done if P092_init == false, not depending on P092_data == nullptr
     CHG: changes variable name DeviceIndex to P092DeviceIndex
 
@@ -142,8 +144,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Pin mode"), F("p092_pinmode"), Opcount, options, optionValues, choice);
       }
       {
-        const String Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (bis V8.2)"), F(
-                                                           "UVR 61-3 (ab V8.3)") };
+        const String Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (up to v8.2)"), F(
+                                                           "UVR 61-3 (v8.3 or higher)") };
         const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 1611, 6132, 6133 };
 
         addFormSelector(F("DL-Bus Type"), F("p092_dlbtype"), P092_DLbus_DeviceCount, Devices, DevTypes, NULL, PCONFIG(0), true);
