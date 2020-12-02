@@ -1,4 +1,4 @@
-#include "P092_data_struct.h"
+#include "../PluginStructs/P092_data_struct.h"
 
 #ifdef USES_P092
 
@@ -434,7 +434,7 @@ boolean DLBus::CheckCRC(uint8_t IdxCRC) {
   return false;
 }
 
-// sensor types
+/ sensor types
 # define DLbus_UNUSED              0b000
 # define DLbus_Sensor_DIGITAL      0b001
 # define DLbus_Sensor_TEMP         0b010

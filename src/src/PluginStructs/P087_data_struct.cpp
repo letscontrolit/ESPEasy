@@ -1,4 +1,4 @@
-#include "P087_data_struct.h"
+#include "../PluginStructs/P087_data_struct.h"
 
 
 #ifdef USES_P087
