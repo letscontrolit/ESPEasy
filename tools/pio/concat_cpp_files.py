@@ -31,7 +31,7 @@ def concat_cpp_files(path_to_concat):
         for filename in cpp_files:
             with open(filename,'rb') as hf:
                 newf.write(hf.read())
-                #newf.write('\n\n\n')
+                newf.write(os.linesep.encode()) #append newline to separate files.
 
 
 concat_cpp_files('./src/src/Commands')
