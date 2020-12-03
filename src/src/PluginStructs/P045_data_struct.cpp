@@ -1,4 +1,4 @@
-#include "P045_data_struct.h"
+#include "../PluginStructs/P045_data_struct.h"
 
 #ifdef USES_P045
 

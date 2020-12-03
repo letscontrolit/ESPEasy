@@ -14,7 +14,9 @@
 // Web Interface Wifi scanner
 // ********************************************************************************
 void handle_wifiscanner_json() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_wifiscanner"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -68,7 +70,9 @@ void handle_wifiscanner_json() {
 #ifdef WEBSERVER_WIFI_SCANNER
 
 void handle_wifiscanner() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_wifiscanner"));
+  #endif
 
   if (!isLoggedIn()) { return; }
 

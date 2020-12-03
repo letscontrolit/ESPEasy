@@ -31,7 +31,9 @@
 #define HANDLE_SETUP_CONNECTING_STAGE 1
 
 void handle_setup() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_setup"));
+  #endif
 
   // Do not check client IP range allowed.
   TXBuffer.startStream();

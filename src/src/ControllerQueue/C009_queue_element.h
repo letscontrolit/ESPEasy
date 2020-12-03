@@ -10,7 +10,7 @@
 struct EventStruct;
 
 
-// #ifdef USES_C009
+#ifdef USES_C009
 
 /*********************************************************************************************\
 * C009_queue_element for queueing requests for C009: FHEM HTTP.
@@ -31,7 +31,7 @@ public:
   Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
 };
 
-// #endif //USES_C009
+#endif //USES_C009
 
 
 #endif // CONTROLLERQUEUE_C009_QUEUE_ELEMENT_H

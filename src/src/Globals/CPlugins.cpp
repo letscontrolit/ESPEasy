@@ -51,7 +51,9 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
             newSize = newSize + 8 - (newSize % 8);
             Protocol.resize(newSize);
           }
+          #ifndef BUILD_NO_RAM_TRACKER
           checkRAM(F("CPluginCallADD"), x);
+          #endif
           String dummy;
           CPluginCall(x, Function, event, dummy);
         }

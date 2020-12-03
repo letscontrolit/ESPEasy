@@ -276,8 +276,9 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
     TempEvent = (*event);
   }
 
-
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("PluginCall"), Function);
+  #endif
 
   switch (Function)
   {
@@ -367,7 +368,9 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
               TempEvent.setTaskIndex(taskIndex);
               //checkDeviceVTypeForTask(&TempEvent);
               prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
+              #ifndef BUILD_NO_RAM_TRACKER
               checkRAM(F("PluginCall_s"), taskIndex);
+              #endif
               START_TIMER;
               bool retval = (Plugin_ptr[DeviceIndex](Function, &TempEvent, str));
               STOP_TIMER_TASK(DeviceIndex, Function);
@@ -421,7 +424,9 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
             delay(0); // SMY: call delay(0) unconditionally
 
             if (retval) {
+              #ifndef BUILD_NO_RAM_TRACKER
               checkRAM(F("PluginCallUDP"), taskIndex);
+              #endif
               return true;
             }
           }
@@ -457,7 +462,9 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
 
               // TempEvent.idx = Settings.TaskDeviceID[taskIndex]; todo check
               TempEvent.OriginTaskIndex = event->TaskIndex;
+              #ifndef BUILD_NO_RAM_TRACKER
               checkRAM(F("PluginCall_s"), taskIndex);
+              #endif
 
               prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
               START_TIMER;
@@ -493,11 +500,13 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
         }
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
         {
+          #ifndef BUILD_NO_RAM_TRACKER
           String descr;
           descr.reserve(20);
           descr  = String(F("PluginCall_task_"));
           descr += event->TaskIndex;
           checkRAM(descr, String(Function));
+          #endif
         }
         prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
         START_TIMER;
@@ -544,11 +553,13 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
         LoadTaskSettings(event->TaskIndex);
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
         {
+          #ifndef BUILD_NO_RAM_TRACKER
           String descr;
           descr.reserve(20);
           descr  = String(F("PluginCall_task_"));
           descr += event->TaskIndex;
           checkRAM(descr, String(Function));
+          #endif
         }
         if (Function == PLUGIN_SET_DEFAULTS) {
           for (int i = 0; i < VARS_PER_TASK; ++i) {
@@ -567,6 +578,17 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_SET_DEFAULTS) {
           saveUserVarToRTC();
         }
+        if (Function == PLUGIN_GET_DEVICEVALUECOUNT) {
+          // Check if we have a valid value count.
+          if (Output_Data_type_t::Simple == Device[DeviceIndex].OutputDataType) {
+            if (event->Par1 < 1 || event->Par1 > 4) {
+              // Output_Data_type_t::Simple only allows for 1 .. 4 output types.
+              // Apparently the value is not correct, so use the default.
+              event->Par1 = Device[DeviceIndex].ValueCount;
+            }
+          }
+        }
+
         // Calls may have updated ExtraTaskSettings, so validate them.
         ExtraTaskSettings.validate();
         

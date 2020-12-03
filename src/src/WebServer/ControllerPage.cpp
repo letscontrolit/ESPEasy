@@ -28,7 +28,9 @@
 // Web Interface controller page
 // ********************************************************************************
 void handle_controllers() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_controllers"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_CONTROLLERS;

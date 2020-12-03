@@ -201,7 +201,9 @@ void runOncePerSecond()
 \*********************************************************************************************/
 void runEach30Seconds()
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAMtoLog();
+  #endif
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;

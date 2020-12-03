@@ -87,11 +87,11 @@ void setFactoryDefault(DeviceModel model);
 /********************************************************************************************\
    Add pre defined plugins and rules.
  \*********************************************************************************************/
-void addSwitchPlugin(taskIndex_t taskIndex, byte gpio, const String& name, bool activeLow);
+void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool activeLow);
 
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);
 
-void addButtonRelayRule(byte buttonNumber, byte relay_gpio);
+void addButtonRelayRule(byte buttonNumber, int relay_gpio);
 
 void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 
@@ -132,10 +132,10 @@ uint32_t analogWriteESP32(int pin,
 #endif // if defined(ESP32)
 
 // Duty cycle 0..100%
-bool set_Gpio_PWM_pct(byte gpio, float dutyCycle_f, uint32_t frequency = 0);
+bool set_Gpio_PWM_pct(int gpio, float dutyCycle_f, uint32_t frequency = 0);
 
-bool set_Gpio_PWM(byte gpio, uint32_t dutyCycle, uint32_t frequency = 0);
-bool set_Gpio_PWM(byte gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key);
+bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t frequency = 0);
+bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key);
 
 
 // ********************************************************************************
