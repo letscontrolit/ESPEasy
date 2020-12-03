@@ -21,7 +21,9 @@
 // Web Interface Factory Reset
 // ********************************************************************************
 void handle_factoryreset() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_factoryreset"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;

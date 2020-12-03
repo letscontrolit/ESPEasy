@@ -74,7 +74,9 @@ bool readyForSleep()
 
 void prepare_deepSleep(int dsdelay)
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("prepare_deepSleep"));
+  #endif
 
   if (!isDeepSleepEnabled())
   {

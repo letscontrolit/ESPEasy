@@ -15,7 +15,9 @@
 // ********************************************************************************
 bool loadFromFS(boolean spiffs, String path) {
   // path is a deepcopy, since it will be changed here.
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("loadFromFS"));
+  #endif
 
   if (!isLoggedIn()) { return false; }
 
@@ -23,7 +25,11 @@ bool loadFromFS(boolean spiffs, String path) {
 
   String dataType = F("text/plain");
 
-  if (path.endsWith("/")) { path += F("index.htm"); }
+  if (!path.startsWith(F("/"))) {
+    path = String(F("/")) + path;
+  }
+
+  if (path.endsWith(F("/"))) { path += F("index.htm"); }
 
   if (path.endsWith(F(".src"))) { path = path.substring(0, path.lastIndexOf(".")); }
   else if (path.endsWith(F(".htm")) || path.endsWith(F(".html")) || path.endsWith(F(".htm.gz")) || path.endsWith(F(".html.gz"))) { dataType = F("text/html"); }

@@ -229,9 +229,6 @@ To create/register a plugin, you have to :
         #define FEATURE_I2CMULTIPLEXER
     #endif
 
-    #ifndef BUILD_NO_DEBUG
-      #define BUILD_NO_DEBUG
-    #endif
 #endif
 
 #ifdef USES_FHEM
@@ -339,6 +336,9 @@ To create/register a plugin, you have to :
 
     #ifndef LIMIT_BUILD_SIZE
         #define LIMIT_BUILD_SIZE
+    #endif
+    #ifndef NOTIFIER_SET_NONE
+        #define NOTIFIER_SET_NONE
     #endif
 
     #ifdef USES_SSDP
@@ -822,6 +822,9 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
   #endif
+  #ifndef NOTIFIER_SET_NONE
+    #define NOTIFIER_SET_NONE
+  #endif
 
 
     #define USES_P045   // MPU6050
@@ -1056,30 +1059,6 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)
-  #define USES_MQTT
-#endif
-
-#if defined(USES_C012) || defined (USES_C015)
-  #define USES_BLYNK
-#endif
-
-// Specific notifier plugins may be enabled via Custom.h, regardless
-// whether NOTIFIER_SET_NONE is defined
-#if defined(USES_N001) || defined(USES_N002)
-  #ifndef USES_NOTIFIER
-    #define USES_NOTIFIER
-  #endif
-#endif
-
-
-#ifdef USES_MQTT
-// MQTT_MAX_PACKET_SIZE : Maximum packet size
-#ifndef MQTT_MAX_PACKET_SIZE
-  #define MQTT_MAX_PACKET_SIZE 1024 // Is also used in PubSubClient
-#endif
-#endif //USES_MQTT
-
 
 // Disable Homie plugin for now in the dev build to make it fit.
 #if defined(PLUGIN_BUILD_DEV) && defined(USES_C014)
@@ -1091,6 +1070,10 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
   #endif
+  #ifndef NOTIFIER_SET_NONE
+    #define NOTIFIER_SET_NONE
+  #endif
+
 #endif
 
 
@@ -1112,6 +1095,9 @@ To create/register a plugin, you have to :
 
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
+  #endif
+  #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
+    #define BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   #endif
   #ifdef FEATURE_I2CMULTIPLEXER
     #undef FEATURE_I2CMULTIPLEXER
@@ -1153,12 +1139,6 @@ To create/register a plugin, you have to :
   #ifdef USES_C018
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
   #endif
-  #ifdef USES_N001 // Email
-    #undef USES_N001
-  #endif
-  #ifdef USES_N002 // Buzzer
-    #undef USES_N002
-  #endif
 #endif
 
 // Timing stats page needs timing stats
@@ -1181,6 +1161,31 @@ To create/register a plugin, you have to :
   #endif
 
 #endif
+
+#if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)
+  #define USES_MQTT
+#endif
+
+#if defined(USES_C012) || defined (USES_C015)
+  #define USES_BLYNK
+#endif
+
+// Specific notifier plugins may be enabled via Custom.h, regardless
+// whether NOTIFIER_SET_NONE is defined
+#if defined(USES_N001) || defined(USES_N002)
+  #ifndef USES_NOTIFIER
+    #define USES_NOTIFIER
+  #endif
+#endif
+
+
+#ifdef USES_MQTT
+// MQTT_MAX_PACKET_SIZE : Maximum packet size
+#ifndef MQTT_MAX_PACKET_SIZE
+  #define MQTT_MAX_PACKET_SIZE 1024 // Is also used in PubSubClient
+#endif
+#endif //USES_MQTT
+
 
 // It may have gotten undefined to fit a build. Make sure the Blynk controllers are not defined
 #ifndef USES_BLYNK

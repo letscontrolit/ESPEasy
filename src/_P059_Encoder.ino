@@ -186,6 +186,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
                 String log = String(F("QEI  : ")) + string;
                 addLog(LOG_LEVEL_INFO, log);
                 P_059_sensordefs[event->TaskIndex]->write(event->Par1);
+                Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
               }
               success = true; // Command is handled.
             }

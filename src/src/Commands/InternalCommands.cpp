@@ -1,4 +1,4 @@
-#include "InternalCommands.h"
+#include "../Commands/InternalCommands.h"
 
 #include "../../ESPEasy_common.h"
 
@@ -310,7 +310,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_R("reset", Command_Settings_Reset, 0);                              // Settings.h
       COMMAND_CASE_A("resetflashwritecounter", Command_RTC_resetFlashWriteCounter, 0); // RTC.h
       COMMAND_CASE_A(               "restart", Command_System_Reboot,              0); // System.h
-      COMMAND_CASE_A(                 "rtttl", Command_GPIO_RTTTL,                 0); // GPIO.h
+      COMMAND_CASE_A(                 "rtttl", Command_GPIO_RTTTL,                -1); // GPIO.h
       COMMAND_CASE_A(                 "rules", Command_Rules_UseRules,             1); // Rule.h
       break;
     }
@@ -450,7 +450,9 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
                     bool                   tryInternal,
                     bool                   tryRemoteConfig)
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ExecuteCommand"));
+  #endif
   String cmd;
 
   if (!GetArgv(Line, cmd, 1)) {
@@ -530,7 +532,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     // alter the string.
     String tmpAction(action);
     bool   handled = PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction);
-
+    
+    #ifndef BUILD_NO_DEBUG
     if (!tmpAction.equals(action)) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = F("PLUGIN_WRITE altered the string: ");
@@ -540,6 +543,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
         addLog(LOG_LEVEL_ERROR, log);
       }
     }
+    #endif
 
     if (handled) {
       SendStatus(source, return_command_success());

@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P057
 
-#include "../../ESPEasy_common.h"
-
 # include <HT16K33.h>
 
 

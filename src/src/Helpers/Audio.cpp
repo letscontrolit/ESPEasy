@@ -23,7 +23,9 @@ bool tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) 
 #ifdef USE_RTTTL
 bool play_rtttl(uint8_t _pin, const char *p)
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("play_rtttl"));
+  #endif
   #define OCTAVE_OFFSET 0
 
   // FIXME: Absolutely no error checking in here
@@ -184,7 +186,9 @@ bool play_rtttl(uint8_t _pin, const char *p)
       delay(duration / 10);
     }
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("play_rtttl2"));
+  #endif
   return true;
 }
 #endif
