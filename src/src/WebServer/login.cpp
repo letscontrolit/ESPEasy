@@ -21,7 +21,9 @@
 // Web Interface login page
 // ********************************************************************************
 void handle_login() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_login"));
+  #endif
 
   if (!clientIPallowed()) { return; }
   TXBuffer.startStream();

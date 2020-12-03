@@ -1,6 +1,10 @@
 #ifndef GLOBALS_C016_CONTROLLERCACHE_H
 #define GLOBALS_C016_CONTROLLERCACHE_H
 
+#include "../../ESPEasy_common.h"
+
+#ifdef USES_C016
+
 #include <Arduino.h>
 #include "../DataStructs/ESPEasyControllerCache.h"
 #include "../DataStructs/DeviceStruct.h"
@@ -27,5 +31,6 @@ bool C016_getCSVline(
   float& val3,
   float& val4);
 
+#endif
 
 #endif

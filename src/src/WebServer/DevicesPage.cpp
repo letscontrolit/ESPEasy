@@ -30,7 +30,9 @@
 
 
 void handle_devices() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_devices"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_DEVICES;
@@ -172,7 +174,9 @@ void handle_devices() {
     handle_devices_TaskSettingsPage(taskIndex, page);
   }
 
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_devices"));
+  #endif
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
@@ -1183,7 +1187,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       html_table_header(F("Formula"), F("EasyFormula"), 0);
     }
 
-    if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
+    if (Device[DeviceIndex].configurableDecimals())
     {
       html_table_header(F("Decimals"), 30);
     }
@@ -1206,7 +1210,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         addTextBox(id, ExtraTaskSettings.TaskDeviceFormula[varNr], NAME_FORMULA_LENGTH_MAX);
       }
 
-      if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
+      if (Device[DeviceIndex].configurableDecimals())
       {
         html_TD();
         String id = F("TDVD"); // ="taskdevicevaluedecimals"

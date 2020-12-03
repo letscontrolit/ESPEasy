@@ -20,9 +20,9 @@
 //predeclaration of functions used in this module
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
 bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefix);
-void logErrorGpioOffline(String prefix, byte port);
-void logErrorGpioOutOfRange(String prefix, byte port);
-void logErrorGpioNotOutput(String prefix, byte port);
+void logErrorGpioOffline(const String& prefix, int port);
+void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line = nullptr);
+void logErrorGpioNotOutput(const String& prefix, int port);
 
 String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
 {
@@ -49,7 +49,7 @@ String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
 
     return return_command_success();
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par2);
+    logErrorGpioOutOfRange(logPrefix,event->Par2, Line);
     return return_command_failed();
   }
 }
@@ -73,7 +73,7 @@ String Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line)
 
     return return_command_success();
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par2);
+    logErrorGpioOutOfRange(logPrefix,event->Par2, Line);
     return return_command_failed();
   }
 }
@@ -105,7 +105,7 @@ String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char* Line)
 
     return return_command_success();
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par1);
+    logErrorGpioOutOfRange(logPrefix,event->Par1, Line);
     return return_command_failed();
   }
 }
@@ -179,7 +179,7 @@ String Command_GPIO_PWM(struct EventStruct *event, const char *Line)
 
     return return_command_success();
   } 
-  logErrorGpioOutOfRange(logPrefix, event->Par1);
+  logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
   return return_command_failed();
 }
 
@@ -273,7 +273,7 @@ String Command_GPIO_Pulse(struct EventStruct *event, const char* Line)
 
     return return_command_success();
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par1);
+    logErrorGpioOutOfRange(logPrefix,event->Par1, Line);
     return return_command_failed();
   }
 }
@@ -325,7 +325,7 @@ String Command_GPIO_Toggle(struct EventStruct *event, const char* Line)
         break;
     }
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par1);
+    logErrorGpioOutOfRange(logPrefix,event->Par1, Line);
     return return_command_failed();
   }
 }
@@ -382,30 +382,36 @@ String Command_GPIO(struct EventStruct *event, const char* Line)
       return return_command_failed();
     }
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par1);
+    logErrorGpioOutOfRange(logPrefix,event->Par1, Line);
     return return_command_failed();
   }
 }
 
-void logErrorGpioOffline(String prefix, byte port)
+void logErrorGpio(const String& prefix, int port, const String& description)
 {
-  String log;
-  log = prefix + String(F(": port# ")) + String(port) + String(F(" is offline."));
-  addLog(LOG_LEVEL_ERROR, log);
+  if (port >= 0) {
+    addLog(LOG_LEVEL_ERROR, prefix + String(F(" : port#")) + String(port) + description);
+  }
 }
 
-void logErrorGpioOutOfRange(String prefix, byte port)
+void logErrorGpioOffline(const String& prefix, int port)
 {
-  String log;
-  log = prefix + String(F(" port#")) + String(port) + String(F(" is out of range"));
-  addLog(LOG_LEVEL_ERROR, log);
+  logErrorGpio(prefix, port, F(" is offline."));
 }
 
-void logErrorGpioNotOutput(String prefix, byte port)
+void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line)
 {
-  String log;
-  log = prefix + String(F(" port#")) + String(port) + String(F(" is not an output port"));
-  addLog(LOG_LEVEL_ERROR, log);
+  logErrorGpio(prefix, port, F(" is out of range"));
+  if (port >= 0) {
+    if (Line != nullptr) {
+      addLog(LOG_LEVEL_DEBUG, Line);
+    }
+  }
+}
+
+void logErrorGpioNotOutput(const String& prefix, int port)
+{
+  logErrorGpio(prefix, port, F(" is not an output port"));
 }
 
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState)

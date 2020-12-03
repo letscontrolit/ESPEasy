@@ -36,7 +36,9 @@
 void sendData(struct EventStruct *event)
 {
   START_TIMER;
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendData"));
+  #endif
   LoadTaskSettings(event->TaskIndex);
 
   if (Settings.UseRules) {
@@ -525,7 +527,9 @@ void MQTTStatus(const String& status)
 void SensorSendTask(taskIndex_t TaskIndex)
 {
   if (!validTaskIndex(TaskIndex)) return;
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SensorSendTask"));
+  #endif
   if (Settings.TaskDeviceEnabled[TaskIndex])
   {
     bool success = false;

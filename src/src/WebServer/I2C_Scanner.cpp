@@ -101,7 +101,9 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
 }
 
 void handle_i2cscanner_json() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_i2cscanner"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -314,7 +316,9 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
 
 // FIXME TD-er: Query all included plugins for their supported addresses (return name of plugin)
 void handle_i2cscanner() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_i2cscanner"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;

@@ -21,7 +21,9 @@
 // Web Interface config page
 // ********************************************************************************
 void handle_advanced() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_advanced"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
