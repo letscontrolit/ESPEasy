@@ -1,4 +1,4 @@
-#include "ESPEasy_Now_cmd.h"
+#include "../Commands/ESPEasy_Now_cmd.h"
 
 
 #include "../Globals/ESPEasy_now_state.h"
