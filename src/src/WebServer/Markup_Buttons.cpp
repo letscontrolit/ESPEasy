@@ -6,7 +6,6 @@
 #include "../Static/WebStaticData.h"
 
 
-
 void addButton(const String& url, const String& label) {
   addButton(url, label, "");
 }
@@ -19,6 +18,7 @@ void addButton(const String& url, const String& label, const String& classes, bo
 {
   html_add_button_prefix(classes, enabled);
   String html;
+
   html.reserve(8 + url.length() + label.length());
   html += url;
   html += "'>";
@@ -35,14 +35,15 @@ void addButtonWithSvg(const String& url, const String& label)
 void addButtonWithSvg(const String& url, const String& label, const String& svgPath, bool needConfirm) {
   addHtml(F("<a "));
   addHtmlAttribute(F("class"), F("button link"));
-  addHtmlAttribute(F("href"), url);
+  addHtmlAttribute(F("href"),  url);
   #ifndef BUILD_MINIMAL_OTA
   bool hasSVG = svgPath.length() > 0;
-  if (hasSVG) 
+
+  if (hasSVG)
   {
     addHtmlAttribute(F("alt"), label);
   }
-  #endif 
+  #endif // ifndef BUILD_MINIMAL_OTA
 
   if (needConfirm) {
     addHtmlAttribute(F("onclick"), F("return confirm(\"Are you sure?\")"));
@@ -50,12 +51,13 @@ void addButtonWithSvg(const String& url, const String& label, const String& svgP
   addHtml('>');
 
   #ifndef BUILD_MINIMAL_OTA
+
   if (hasSVG) {
     addHtml(F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>"));
     addHtml(svgPath);
     addHtml(F("</svg>"));
-  } else 
-  #endif
+  } else
+  #endif // ifndef BUILD_MINIMAL_OTA
   {
     addHtml(label);
   }
@@ -108,6 +110,7 @@ void addWideButton(const String& url, const String& label, const String& classes
 {
   html_add_wide_button_prefix(classes, enabled);
   String html;
+
   html.reserve(8 + url.length() + label.length());
   html += url;
   html += "'>";
@@ -133,13 +136,14 @@ void addSubmitButton(const String& value, const String& name, const String& clas
     String fullClasses;
     fullClasses.reserve(12 + classes.length());
     fullClasses = F("button link");
+
     if (classes.length() == 0) {
       fullClasses += ' ';
       fullClasses += classes;
     }
     addHtmlAttribute(F("class"), fullClasses);
   }
-  addHtmlAttribute(F("type"), F("submit"));
+  addHtmlAttribute(F("type"),  F("submit"));
   addHtmlAttribute(F("value"), value);
 
   if (name.length() > 0) {
@@ -160,7 +164,7 @@ void addCopyButton(const String& value, const String& delimiter, const String& n
 
   // Fix HTML
   addHtml(F("<button "));
-  addHtmlAttribute(F("class"), F("button link"));
+  addHtmlAttribute(F("class"),   F("button link"));
   addHtmlAttribute(F("onclick"), F("setClipboard()"));
   addHtml('>');
   addHtml(name);

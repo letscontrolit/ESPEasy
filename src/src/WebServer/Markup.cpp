@@ -67,6 +67,7 @@ void addSelector_options(int optionCount, const String options[], const int indi
       index = x;
     }
     String attr_str;
+
     if (attr)
     {
       attr_str = attr[x];
@@ -74,7 +75,6 @@ void addSelector_options(int optionCount, const String options[], const int indi
     addSelector_Item(options[x], index, selectedIndex == index, false, attr_str);
   }
 }
-
 
 void addSelector_Head(const String& id) {
   do_addSelector_Head(id, F("wide"), "", false);
@@ -95,9 +95,9 @@ void addSelector_Head_reloadOnChange(const String& id, const String& classname, 
 void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled)
 {
   addHtml(F("<select "));
-  addHtmlAttribute(F("class"), classname); 
-  addHtmlAttribute(F("name"), id);
-  addHtmlAttribute(F("id"), id);
+  addHtmlAttribute(F("class"), classname);
+  addHtmlAttribute(F("name"),  id);
+  addHtmlAttribute(F("id"),    id);
 
   if (disabled) {
     addDisabled();
@@ -121,6 +121,7 @@ void addSelector_Item(const String& option, int index, boolean selected, boolean
   if (disabled) {
     addDisabled();
   }
+
   if (attr.length() > 0)
   {
     addHtml(' ');
@@ -180,6 +181,7 @@ void addRowLabel_copy(const String& label) {
   addHtml(F("<TR>"));
   html_copyText_TD();
   String html;
+
   html += label;
   html += ':';
   addHtml(html);
@@ -229,6 +231,7 @@ void addTableSeparator(const String& label, int colspan, int h_size, const Strin
 void addFormHeader(const String& header, const String& helpButton) {
   addFormHeader(header, helpButton, F(""));
 }
+
 void addFormHeader(const String& header, const String& helpButton, const String& rtdHelpButton)
 {
   html_TR();
@@ -252,8 +255,9 @@ void addCheckBox(const String& id, boolean checked, bool disabled)
   addHtml(F("<label class='container'>&nbsp;"));
   addHtml(F("<input "));
   addHtmlAttribute(F("type"), F("checkbox"));
-  addHtmlAttribute(F("id"), id);
+  addHtmlAttribute(F("id"),   id);
   addHtmlAttribute(F("name"), id);
+
   if (checked) {
     addHtml(F(" checked"));
   }
@@ -272,14 +276,17 @@ void addNumericBox(const String& id, int value, int min, int max)
 {
   addHtml(F("<input "));
   addHtmlAttribute(F("class"), F("widenumber"));
-  addHtmlAttribute(F("type"), F("number"));
-  addHtmlAttribute(F("name"), id);
+  addHtmlAttribute(F("type"),  F("number"));
+  addHtmlAttribute(F("name"),  id);
+
   if (value < min) {
     value = min;
   }
+
   if (value > max) {
     value = max;
   }
+
   if (min != INT_MIN)
   {
     addHtmlAttribute(F("min"), min);
@@ -323,14 +330,20 @@ void addTextBox(const String& id, const String&  value, int maxlength, bool read
   addTextBox(id, value, maxlength, readonly, required, pattern, F("wide"));
 }
 
-void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern, const String& classname)
+void addTextBox(const String& id,
+                const String& value,
+                int           maxlength,
+                bool          readonly,
+                bool          required,
+                const String& pattern,
+                const String& classname)
 {
   addHtml(F("<input "));
-  addHtmlAttribute(F("class"), classname);
-  addHtmlAttribute(F("type"), F("text"));
-  addHtmlAttribute(F("name"), id);
+  addHtmlAttribute(F("class"),     classname);
+  addHtmlAttribute(F("type"),      F("text"));
+  addHtmlAttribute(F("name"),      id);
   addHtmlAttribute(F("maxlength"), maxlength);
-  addHtmlAttribute(F("value"), value);
+  addHtmlAttribute(F("value"),     value);
 
   if (readonly) {
     addHtml(F(" readonly "));
@@ -352,12 +365,12 @@ void addTextBox(const String& id, const String&  value, int maxlength, bool read
 void addTextArea(const String& id, const String& value, int maxlength, int rows, int columns, bool readonly, bool required)
 {
   addHtml(F("<textarea "));
-  addHtmlAttribute(F("class"), F("wide"));
-  addHtmlAttribute(F("type"), F("text"));
-  addHtmlAttribute(F("name"), id);
+  addHtmlAttribute(F("class"),     F("wide"));
+  addHtmlAttribute(F("type"),      F("text"));
+  addHtmlAttribute(F("name"),      id);
   addHtmlAttribute(F("maxlength"), maxlength);
-  addHtmlAttribute(F("rows"), rows);
-  addHtmlAttribute(F("cols"), columns);
+  addHtmlAttribute(F("rows"),      rows);
+  addHtmlAttribute(F("cols"),      columns);
 
   if (readonly) {
     addHtml(F(" readonly "));
@@ -436,7 +449,6 @@ String makeDocLink(const String& url, bool isRTD) {
   return result;
 }
 
-
 void addPinSelect(boolean forI2C, const String& id,  int choice)
 {
   #ifdef ESP32
@@ -473,8 +485,8 @@ void addPinSelect(boolean forI2C, const String& id,  int choice)
 void addADC_PinSelect(bool touchOnly, const String& id,  int choice)
 {
   int NR_ITEMS_PIN_DROPDOWN = touchOnly ? 10 : 19;
-  String *gpio_labels  = new String[NR_ITEMS_PIN_DROPDOWN];
-  int    *gpio_numbers = new int[NR_ITEMS_PIN_DROPDOWN];
+  String *gpio_labels       = new String[NR_ITEMS_PIN_DROPDOWN];
+  int    *gpio_numbers      = new int[NR_ITEMS_PIN_DROPDOWN];
 
   // At i == 0 && gpio == -1, add the "Hall Effect" option first
   int i    = 0;
@@ -483,6 +495,7 @@ void addADC_PinSelect(bool touchOnly, const String& id,  int choice)
   while (i < NR_ITEMS_PIN_DROPDOWN && gpio <= MAX_GPIO) {
     int  pinnr = -1;
     bool input, output, warning;
+
     if (touchOnly) {
       // For touch only list, sort based on touch number
       // Default sort is on GPIO number.
@@ -490,10 +503,12 @@ void addADC_PinSelect(bool touchOnly, const String& id,  int choice)
     }
 
     if (getGpioInfo(gpio, pinnr, input, output, warning) || (i == 0)) {
-      int adc,ch, t;
+      int adc, ch, t;
+
       if (getADC_gpio_info(gpio, adc, ch, t)) {
-        if (!touchOnly || t >= 0) {
+        if (!touchOnly || (t >= 0)) {
           gpio_labels[i] = formatGpioName_ADC(gpio);
+
           if (adc != 0) {
             gpio_labels[i] += F(" / ");
             gpio_labels[i] += createGPIO_label(gpio, pinnr, input, output, warning);
@@ -506,13 +521,13 @@ void addADC_PinSelect(bool touchOnly, const String& id,  int choice)
     ++gpio;
   }
   bool forI2C = false;
+
   renderHTMLForPinSelect(gpio_labels, gpio_numbers, forI2C, id, choice, i);
   delete[] gpio_numbers;
   delete[] gpio_labels;
 }
 
-
-#endif
+#endif // ifdef ESP32
 
 
 // ********************************************************************************
@@ -537,18 +552,19 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
 
       if (Settings.InitSPI != 0) {
         #ifdef ESP32
+
         switch (Settings.InitSPI)
         {
-        case 1:
-          disabled = (optionValues[x] == 18 || optionValues[x] == 19 || optionValues[x] == 23);
-          break;
-        case 2:
-          disabled = (optionValues[x] == 14 || optionValues[x] == 12 || optionValues[x] == 13);
-          break;
+          case 1:
+            disabled = (optionValues[x] == 18 || optionValues[x] == 19 || optionValues[x] == 23);
+            break;
+          case 2:
+            disabled = (optionValues[x] == 14 || optionValues[x] == 12 || optionValues[x] == 13);
+            break;
         }
         #else // #ifdef ESP32
         disabled = (optionValues[x] == 14 || optionValues[x] == 12 || optionValues[x] == 13);
-        #endif
+        #endif // ifdef ESP32
       }
     }
     addSelector_Item(options[x],
