@@ -3,37 +3,37 @@
 
 #ifdef WEBSERVER_SETUP
 
-#include "../WebServer/WebServer.h"
-#include "../WebServer/AccessControl.h"
-#include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
-#include "../WebServer/Markup_Forms.h"
-#include "../WebServer/SysInfoPage.h"
+# include "../WebServer/WebServer.h"
+# include "../WebServer/AccessControl.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/Markup.h"
+# include "../WebServer/Markup_Buttons.h"
+# include "../WebServer/Markup_Forms.h"
+# include "../WebServer/SysInfoPage.h"
 
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../ESPEasyCore/ESPEasyWifi.h"
 
 
-#include "../Globals/ESPEasyWiFiEvent.h"
-#include "../Globals/SecuritySettings.h"
+# include "../Globals/ESPEasyWiFiEvent.h"
+# include "../Globals/SecuritySettings.h"
 
-#include "../Helpers/Networking.h"
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/StringConverter.h"
+# include "../Helpers/Networking.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/StringConverter.h"
 
 
 // ********************************************************************************
 // Web Interface Setup Wizard
 // ********************************************************************************
 
-#define HANDLE_SETUP_SCAN_STAGE       0
-#define HANDLE_SETUP_CONNECTING_STAGE 1
+# define HANDLE_SETUP_SCAN_STAGE       0
+# define HANDLE_SETUP_CONNECTING_STAGE 1
 
 void handle_setup() {
-  #ifndef BUILD_NO_RAM_TRACKER
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_setup"));
-  #endif
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Do not check client IP range allowed.
   TXBuffer.startStream();
@@ -149,22 +149,22 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
   addHtml('>');
   addHtml(F("other SSID:"));
   addHtml(F("<input "));
-  addHtmlAttribute(F("type"), F("radio"));
-  addHtmlAttribute(F("name"), F("ssid"));
-  addHtmlAttribute(F("id"), F("other_ssid"));
+  addHtmlAttribute(F("type"),  F("radio"));
+  addHtmlAttribute(F("name"),  F("ssid"));
+  addHtmlAttribute(F("id"),    F("other_ssid"));
   addHtmlAttribute(F("value"), F("other"));
   addHtml('>');
   addHtml(F("<span class='dotmark'></span></label>"));
 
   addHtml(F("<input "));
   addHtmlAttribute(F("class"), F("wide"));
-  addHtmlAttribute(F("type"), F("text"));
-  addHtmlAttribute(F("name"), F("other"));
+  addHtmlAttribute(F("type"),  F("text"));
+  addHtmlAttribute(F("name"),  F("other"));
   addHtmlAttribute(F("value"), other);
   addHtml('>');
   html_BR();
   html_BR();
-  
+
   addFormSeparator(2);
 
   html_BR();
@@ -173,8 +173,8 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
   html_BR();
   addHtml(F("<input "));
   addHtmlAttribute(F("class"), F("wide"));
-  addHtmlAttribute(F("type"), F("text"));
-  addHtmlAttribute(F("name"), F("pass"));
+  addHtmlAttribute(F("type"),  F("text"));
+  addHtmlAttribute(F("name"),  F("pass"));
   addHtmlAttribute(F("value"), password);
   addHtml('>');
   html_BR();

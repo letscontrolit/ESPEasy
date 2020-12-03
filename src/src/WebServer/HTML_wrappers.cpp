@@ -60,6 +60,7 @@ void html_TR_TD_height(int height) {
   html_TR();
 
   String html;
+
   html.reserve(20);
 
   html += F("<TD HEIGHT=\"");
@@ -88,6 +89,7 @@ void html_copyText_TD() {
   ++copyTextCounter;
 
   String html;
+
   html.reserve(24);
 
   html += F("<TD id='copyText_");
@@ -127,8 +129,8 @@ void html_table(const String& tableclass, bool boxed) {
 
   if (boxed) {
     addHtmlAttribute(F("border"), F("1px"));
-    addHtmlAttribute(F("frame"), F("box"));
-    addHtmlAttribute(F("rules"), F("all"));
+    addHtmlAttribute(F("frame"),  F("box"));
+    addHtmlAttribute(F("rules"),  F("all"));
   }
   addHtml('>');
 }
@@ -164,6 +166,7 @@ void html_table_header(const String& label, const String& helpButton, const Stri
   if (helpButton.length() > 0) {
     addHelpButton(helpButton);
   }
+
   if (rtdHelpButton.length() > 0) {
     addRTDHelpButton(rtdHelpButton);
   }
@@ -259,14 +262,13 @@ void addHtmlError(const String& error) {
     } else {
       html += F("alert");
     }
-    addHtml( html);
-    addHtml(    F("\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>"));
+    addHtml(html);
+    addHtml(F("\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>"));
     addHtml(error);
-    addHtml(    F("</div>"));
+    addHtml(F("</div>"));
   }
   else
-  {
-  }
+  {}
 }
 
 void addHtml(char html) {
@@ -280,6 +282,7 @@ void addHtml(const String& html) {
 void addEncodedHtml(const String& html) {
   // FIXME TD-er: What about the function htmlStrongEscape ??
   String copy(html);
+
   htmlEscape(copy);
   addHtml(copy);
 }
@@ -306,8 +309,8 @@ void addDisabled() {
 
 void addHtmlLink(const String& htmlclass, const String& url, const String& label) {
   addHtml(F(" <a "));
-  addHtmlAttribute(F("class"), htmlclass);
-  addHtmlAttribute(F("href"), url);
+  addHtmlAttribute(F("class"),  htmlclass);
+  addHtmlAttribute(F("href"),   url);
   addHtmlAttribute(F("target"), F("_blank"));
   addHtml('>');
   addHtml(label);
