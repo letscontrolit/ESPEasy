@@ -822,20 +822,18 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
   if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex]))
   {
     // takes lots of memory/time so call this only when needed.
-    addDeviceSelect("TDNUM", Settings.TaskDeviceNumber[taskIndex]); // ="taskdevicenumber"
+    addDeviceSelect(F("TDNUM"), Settings.TaskDeviceNumber[taskIndex]); // ="taskdevicenumber"
   }
 
   // device selected
   else
   {
     // remember selected device number
-    addHtml(F("<input type='hidden' name='TDNUM' value='"));
-    {
-      String html;
-      html += Settings.TaskDeviceNumber[taskIndex];
-      html += "'>";
-      addHtml(html);
-    }
+    addHtml(F("<input "));
+    addHtmlAttribute(F("type"), F("hidden"));
+    addHtmlAttribute(F("name"), F("TDNUM"));
+    addHtmlAttribute(F("value"), Settings.TaskDeviceNumber[taskIndex]);
+    addHtml('>');
 
     // show selected device name and delete button
     addHtml(getPluginNameFromDeviceIndex(DeviceIndex));

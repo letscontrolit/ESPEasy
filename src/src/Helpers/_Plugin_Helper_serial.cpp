@@ -121,7 +121,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
       option += F(" (datasheet: ");
       option += formatToHex(addr * 2);
       option += ')';
-      addSelector_option(addr, option, "", addr == address);
+      addSelector_Item(option, addr, addr == address, false, "");
     }
     addSelector_Foot();
   }  
@@ -317,9 +317,9 @@ void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte curre
         int value = ((bits - 5) << 2);
 
         switch (parity) {
-          case 0: label += "None"; break;
-          case 1: label += "Even"; value += 2; break;
-          case 2: label += "Odd";  value += 3; break;
+          case 0: label += F("None"); break;
+          case 1: label += F("Even"); value += 2; break;
+          case 2: label += F("Odd");  value += 3; break;
         }
         label += F(" / stop bits: ");
         label += String(stopBits);
@@ -329,7 +329,7 @@ void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte curre
           case 1:  value += 0x10; break;
           case 2:  value += 0x30; break;
         }
-        addSelector_option(value, label, "", value == currentSelection);
+        addSelector_Item(label, value, value == currentSelection, false, "");
       }
     }
   }

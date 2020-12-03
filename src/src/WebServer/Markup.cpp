@@ -71,30 +71,8 @@ void addSelector_options(int optionCount, const String options[], const int indi
     {
       attr_str = attr[x];
     }
-    addSelector_option(index, options[x], attr_str, selectedIndex == index);
+    addSelector_Item(options[x], index, selectedIndex == index, false, attr_str);
   }
-}
-
-void addSelector_option(const int index, const String& option, const String& attr, bool isSelected)
-{
-  String html;
-  html.reserve(36 + option.length() + attr.length());
-  html += F("<option value=");
-  html += index;
-
-  if (isSelected) {
-    html += F(" selected");
-  }
-
-  if (attr.length() != 0)
-  {
-    addHtml(" ");
-    html += attr;
-  }
-  html += '>';
-  html += option;
-  html += F("</option>");
-  addHtml(html);
 }
 
 
@@ -116,41 +94,25 @@ void addSelector_Head_reloadOnChange(const String& id, const String& classname, 
 
 void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled)
 {
-  {
-    String html;
-    html.reserve(32 + id.length());
-    html += F("<select class='");
-    html += classname;
-    html += F("' name='");
-    html += id;
-    html += F("' id='");
-    html += id;
-    html += '\'';
-    addHtml(html);
-  }
+  addHtml(F("<select "));
+  addHtmlAttribute(F("class"), classname); 
+  addHtmlAttribute(F("name"), id);
+  addHtmlAttribute(F("id"), id);
 
   if (disabled) {
     addDisabled();
   }
 
-  {
-    String html;
-    html.reserve(16 + onChangeCall.length());
-
-    if (onChangeCall.length() > 0) {
-      html += F(" onchange='");
-      html += onChangeCall;
-      html += '\'';
-    }
-    html += '>';
-    addHtml(html);
+  if (onChangeCall.length() > 0) {
+    addHtmlAttribute(F("onchange"), onChangeCall);
   }
+  addHtml('>');
 }
 
 void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr)
 {
-  addHtml(F("<option value="));
-  addHtml(String(index));
+  addHtml(F("<option "));
+  addHtmlAttribute(F("value"), index);
 
   if (selected) {
     addHtml(F(" selected"));
@@ -159,18 +121,14 @@ void addSelector_Item(const String& option, int index, boolean selected, boolean
   if (disabled) {
     addDisabled();
   }
-  String html;
-  html.reserve(48 + option.length() + attr.length());
-
-  if (attr && (attr.length() > 0))
+  if (attr.length() > 0)
   {
-    html += ' ';
-    html += attr;
+    addHtml(' ');
+    addHtml(attr);
   }
-  html += '>';
-  html += option;
-  html += F("</option>");
-  addHtml(html);
+  addHtml('>');
+  addHtml(option);
+  addHtml(F("</option>"));
 }
 
 void addSelector_Foot()
@@ -292,19 +250,12 @@ void addFormSubHeader(const String& header)
 void addCheckBox(const String& id, boolean checked, bool disabled)
 {
   addHtml(F("<label class='container'>&nbsp;"));
-  addHtml(F("<input type='checkbox' id='"));
-  {
-    String html;
-    html.reserve(16 + 2 * id.length());
-    html += id;
-    html += F("' name='");
-    html += id;
-    html += '\'';
-
-    if (checked) {
-      html += F(" checked");
-    }
-    addHtml(html);
+  addHtml(F("<input "));
+  addHtmlAttribute(F("type"), F("checkbox"));
+  addHtmlAttribute(F("id"), id);
+  addHtmlAttribute(F("name"), id);
+  if (checked) {
+    addHtml(F(" checked"));
   }
 
   if (disabled) { addDisabled(); }
@@ -319,33 +270,27 @@ void addCheckBox(const String& id, boolean checked, bool disabled)
 // ********************************************************************************
 void addNumericBox(const String& id, int value, int min, int max)
 {
-  addHtml(F("<input class='widenumber' type='number' name='"));
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), F("widenumber"));
+  addHtmlAttribute(F("type"), F("number"));
+  addHtmlAttribute(F("name"), id);
   if (value < min) {
     value = min;
   }
   if (value > max) {
     value = max;
   }
-  String html;
-  html.reserve(32 + id.length());
-  html += id;
-  html += '\'';
-
   if (min != INT_MIN)
   {
-    html += F(" min=");
-    html += min;
+    addHtmlAttribute(F("min"), min);
   }
 
   if (max != INT_MAX)
   {
-    html += F(" max=");
-    html += max;
+    addHtmlAttribute(F("max"), max);
   }
-  html += F(" value=");
-  html += value;
-  html += '>';
-  addHtml(html);
+  addHtmlAttribute(F("value"), value);
+  addHtml('>');
 }
 
 void addFloatNumberBox(const String& id, float value, float min, float max)
@@ -380,36 +325,25 @@ void addTextBox(const String& id, const String&  value, int maxlength, bool read
 
 void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern, const String& classname)
 {
-  String html;
-
-  html.reserve(96 + id.length() + value.length() + pattern.length());
-
-  html += F("<input class='");
-  html += classname;
-  html += F("' type='text' name='");
-  html += id;
-  html += F("' maxlength=");
-  html += maxlength;
-  html += F(" value='");
-  html += value;
-  html += '\'';
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), classname);
+  addHtmlAttribute(F("type"), F("text"));
+  addHtmlAttribute(F("name"), id);
+  addHtmlAttribute(F("maxlength"), maxlength);
+  addHtmlAttribute(F("value"), value);
 
   if (readonly) {
-    html += F(" readonly ");
+    addHtml(F(" readonly "));
   }
 
   if (required) {
-    html += F(" required ");
+    addHtml(F(" required "));
   }
 
   if (pattern.length() > 0) {
-    html += F("pattern = '");
-    html += pattern;
-    html += '\'';
+    addHtmlAttribute(F("pattern"), pattern);
   }
-  html += '>';
-
-  addHtml(html);
+  addHtml('>');
 }
 
 // ********************************************************************************
@@ -417,32 +351,24 @@ void addTextBox(const String& id, const String&  value, int maxlength, bool read
 // ********************************************************************************
 void addTextArea(const String& id, const String& value, int maxlength, int rows, int columns, bool readonly, bool required)
 {
-  String html;
-
-  html.reserve(96 + id.length() + value.length());
-
-  html += F("<textarea class='wide' type='text' name='");
-  html += id;
-  html += F("' maxlength=");
-  html += maxlength;
-  html += F("' rows=");
-  html += rows;
-  html += F("' cols=");
-  html += columns;
-  html += '\'';
+  addHtml(F("<textarea "));
+  addHtmlAttribute(F("class"), F("wide"));
+  addHtmlAttribute(F("type"), F("text"));
+  addHtmlAttribute(F("name"), id);
+  addHtmlAttribute(F("maxlength"), maxlength);
+  addHtmlAttribute(F("rows"), rows);
+  addHtmlAttribute(F("cols"), columns);
 
   if (readonly) {
-    html += F(" readonly ");
+    addHtml(F(" readonly "));
   }
 
   if (required) {
-    html += F(" required ");
+    addHtml(F(" required "));
   }
-  html += '>';
-  html += value;
-  html += F("</textarea>");
-
-  addHtml(html);
+  addHtml('>');
+  addHtml(value);
+  addHtml(F("</textarea>"));
 }
 
 // ********************************************************************************

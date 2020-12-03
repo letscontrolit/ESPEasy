@@ -32,10 +32,11 @@ void handle_control() {
 
   if (printToWebJSON) { // it may be set in PLUGIN_WRITE (SendStatus)
     TXBuffer.startJsonStream();
+    addHtml(printWebString);
   } else {
     TXBuffer.startStream();
+    addEncodedHtml(printWebString);
   }
-  addHtml(printWebString);
 
   TXBuffer.endStream();
 
