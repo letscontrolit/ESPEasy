@@ -1,4 +1,4 @@
-#include "InternalCommands.h"
+#include "../Commands/InternalCommands.h"
 
 #include "../../ESPEasy_common.h"
 

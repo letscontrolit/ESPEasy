@@ -9,7 +9,7 @@
 struct EventStruct;
 
 
-// #ifdef USES_C007
+#ifdef USES_C007
 
 /*********************************************************************************************\
 * C007_queue_element for queueing requests for C007 Emoncms
@@ -29,6 +29,6 @@ public:
   Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
 };
 
-// #endif //USES_C007
+#endif //USES_C007
 
 #endif // CONTROLLERQUEUE_C007_QUEUE_ELEMENT_H
