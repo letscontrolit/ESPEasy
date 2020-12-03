@@ -236,7 +236,7 @@ void IRrecv::enableIRIn(const bool pullup) {
 #endif  // UNIT_TEST
   }
 #if defined(ESP32)
-  // Initialize the ESP32 timer.
+  // Initialise the ESP32 timer.
   timer = timerBegin(_timer_num, 80, true);  // 80MHz / 80 = 1 uSec granularity.
   // Set the timer so it only fires once, and set it's trigger in uSeconds.
   timerAlarmWrite(timer, MS_TO_USEC(irparams.timeout), ONCE);
@@ -244,12 +244,12 @@ void IRrecv::enableIRIn(const bool pullup) {
   timerAttachInterrupt(timer, &read_timeout, true);
 #endif  // ESP32
 
-  // Initialize state machine variables
+  // Initialise state machine variables
   resume();
 
 #ifndef UNIT_TEST
 #if defined(ESP8266)
-  // Initialize ESP8266 timer.
+  // Initialise ESP8266 timer.
   os_timer_disarm(&timer);
   os_timer_setfn(&timer, reinterpret_cast<os_timer_func_t *>(read_timeout),
                  NULL);
@@ -390,7 +390,7 @@ void IRrecv::crudeNoiseFilter(decode_results *results, const uint16_t floor) {
 ///   protocols you are not expecting.
 /// @param[in] noise_floor Pulses below this size (in usecs) will be removed or
 ///   merged prior to any decoding. This is to try to remove noise/poor
-///   readings & slighly increase the chances of a successful decode but at the
+///   readings & slightly increase the chances of a successful decode but at the
 ///   cost of data fidelity & integrity.
 ///   (Defaults to 0 usecs. i.e. Don't filter; which is safe!)
 /// @warning DANGER: **Here Be Dragons!**
@@ -844,6 +844,10 @@ bool IRrecv::decode(decode_results *results, irparams_t *save,
     DPRINTLN("Attempting Carrier 64bit decode");
     if (decodeCarrierAC64(results, offset)) return true;
 #endif  // DECODE_CARRIER_AC64
+#if DECODE_TECHNIBEL_AC
+    DPRINTLN("Attempting Technibel AC decode");
+    if (decodeTechnibelAc(results, offset)) return true;
+#endif  // DECODE_TECHNIBEL_AC
 #if DECODE_CORONA_AC
     DPRINTLN("Attempting CoronaAc decode");
     if (decodeCoronaAc(results, offset)) return true;
@@ -860,6 +864,33 @@ bool IRrecv::decode(decode_results *results, irparams_t *save,
     DPRINTLN("Attempting Sanyo AC decode");
     if (decodeSanyoAc(results, offset)) return true;
 #endif  // DECODE_SANYO_AC
+#if DECODE_VOLTAS
+  DPRINTLN("Attempting Voltas decode");
+  if (decodeVoltas(results)) return true;
+#endif  // DECODE_VOLTAS
+#if DECODE_METZ
+    DPRINTLN("Attempting Metz decode");
+    if (decodeMetz(results, offset)) return true;
+#endif  // DECODE_METZ
+#if DECODE_TRANSCOLD
+    DPRINTLN("Attempting Transcold decode");
+    if (decodeTranscold(results, offset)) return true;
+#endif  // DECODE_TRANSCOLD
+#if DECODE_MIRAGE
+    DPRINTLN("Attempting Mirage decode");
+    if (decodeMirage(results, offset)) return true;
+#endif  // DECODE_MIRAGE
+#if DECODE_ELITESCREENS
+    DPRINTLN("Attempting EliteScreens decode");
+    if (decodeElitescreens(results, offset)) return true;
+#endif  // DECODE_ELITESCREENS
+#if DECODE_PANASONIC_AC32
+    DPRINTLN("Attempting Panasonic AC (32bit) long decode");
+    if (decodePanasonicAC32(results, offset, kPanasonicAc32Bits)) return true;
+    DPRINTLN("Attempting Panasonic AC (32bit) short decode");
+    if (decodePanasonicAC32(results, offset, kPanasonicAc32Bits / 2))
+      return true;
+#endif  // DECODE_PANASONIC_AC32
   // Typically new protocols are added above this line.
   }
 #if DECODE_HASH
