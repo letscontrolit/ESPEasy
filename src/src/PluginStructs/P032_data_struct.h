@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P032
 
-#include "../../ESPEasy_common.h"
-
 struct P032_data_struct : public PluginTaskData_base {
 public:
 
