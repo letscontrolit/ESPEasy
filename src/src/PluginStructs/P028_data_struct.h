@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P028
 
-#include "../../ESPEasy_common.h"
-
 
 # define BMx280_REGISTER_DIG_T1           0x88
 # define BMx280_REGISTER_DIG_T2           0x8A

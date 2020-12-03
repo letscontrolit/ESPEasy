@@ -8,7 +8,7 @@
 
 struct EventStruct;
 
-// #ifdef USES_C004
+#ifdef USES_C004
 
 /*********************************************************************************************\
 * C004_queue_element for queueing requests for C004 ThingSpeak.
@@ -31,7 +31,7 @@ public:
   Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
 };
 
-// #endif //USES_C004
+#endif //USES_C004
 
 
 #endif // CONTROLLERQUEUE_C004_QUEUE_ELEMENT_H

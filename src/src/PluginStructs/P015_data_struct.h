@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P015
 
-#include "../../ESPEasy_common.h"
-
 
 # define TSL2561_ADDR_0 0x29 // address with '0' shorted on board
 # define TSL2561_ADDR   0x39 // default address
