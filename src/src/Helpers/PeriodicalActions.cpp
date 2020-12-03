@@ -268,7 +268,7 @@ void schedule_all_tasks_using_MQTT_controller() {
 }
 
 void processMQTTdelayQueue() {
-  if (MQTTDelayHandler == nullptr) {
+  if (MQTTDelayHandler == nullptr || !MQTTclient_connected) {
     return;
   }
 
