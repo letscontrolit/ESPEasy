@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P082
 
-#include "../../ESPEasy_common.h"
-
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
 

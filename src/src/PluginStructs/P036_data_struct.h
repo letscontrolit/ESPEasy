@@ -4,9 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P036
 
-#include "../../ESPEasy_common.h"
-
-
 #include <SSD1306.h>
 #include <SH1106Wire.h>
 

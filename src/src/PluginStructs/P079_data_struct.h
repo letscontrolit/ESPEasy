@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P079
 
-# include "../../ESPEasy_common.h"
-
 # define DEF_I2C_ADDRESS_079  0x30
 # define MOTOR_FREQ_P079      1000
 # define PRODUCT_ID_I2C_LOLIN 0x02
