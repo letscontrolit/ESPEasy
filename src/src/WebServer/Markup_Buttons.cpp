@@ -33,24 +33,21 @@ void addButtonWithSvg(const String& url, const String& label)
 }
 
 void addButtonWithSvg(const String& url, const String& label, const String& svgPath, bool needConfirm) {
-  addHtml(F("<a class='button link' href='"));
-  addHtml(url);
+  addHtml(F("<a "));
+  addHtmlAttribute(F("class"), F("button link"));
+  addHtmlAttribute(F("href"), url);
   #ifndef BUILD_MINIMAL_OTA
   bool hasSVG = svgPath.length() > 0;
   if (hasSVG) 
   {
-    String altText;
-    altText.reserve(7 + label.length());
-    altText = F("' alt='");
-    altText += label;
-    addHtml(altText);
+    addHtmlAttribute(F("alt"), label);
   }
   #endif 
 
   if (needConfirm) {
-    addHtml(F("' onclick='return confirm(\"Are you sure?\")"));
+    addHtmlAttribute(F("onclick"), F("return confirm(\"Are you sure?\")"));
   }
-  addHtml(F("'>"));
+  addHtml('>');
 
   #ifndef BUILD_MINIMAL_OTA
   if (hasSVG) {
@@ -131,20 +128,25 @@ void addSubmitButton(const String& value, const String& name) {
 
 void addSubmitButton(const String& value, const String& name, const String& classes)
 {
-  addHtml(F("<input class='button link"));
-
-  if (classes.length() > 0) {
-    addHtml(" ");
-    addHtml(classes);
+  addHtml(F("<input "));
+  {
+    String fullClasses;
+    fullClasses.reserve(12 + classes.length());
+    fullClasses = F("button link");
+    if (classes.length() == 0) {
+      fullClasses += ' ';
+      fullClasses += classes;
+    }
+    addHtmlAttribute(F("class"), fullClasses);
   }
-  addHtml(F("' type='submit' value='"));
-  addHtml(value);
+  addHtmlAttribute(F("type"), F("submit"));
+  addHtmlAttribute(F("value"), value);
 
   if (name.length() > 0) {
-    addHtml(F("' name='"));
-    addHtml(name);
+    addHtmlAttribute(F("name"), name);
   }
-  addHtml(F("' onclick='toasting()'/><div id='toastmessage'></div>"));
+  addHtmlAttribute(F("onclick"), F("toasting()"));
+  addHtml(F("/><div id='toastmessage'></div>"));
 }
 
 // add copy to clipboard button
@@ -157,7 +159,10 @@ void addCopyButton(const String& value, const String& delimiter, const String& n
   TXBuffer += jsClipboardCopyPart3;
 
   // Fix HTML
-  addHtml(F("<button class='button link' onclick='setClipboard()'>"));
+  addHtml(F("<button "));
+  addHtmlAttribute(F("class"), F("button link"));
+  addHtmlAttribute(F("onclick"), F("setClipboard()"));
+  addHtml('>');
   addHtml(name);
   addHtml(" (");
   html_copyText_marker();

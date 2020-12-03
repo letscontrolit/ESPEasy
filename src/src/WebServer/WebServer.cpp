@@ -556,14 +556,14 @@ void getWebPageTemplateVar(const String& varName)
       }
 #endif
 
-      addHtml(F("<a class='menu"));
-
+      addHtml(F("<a "));
       if (i == navMenuIndex) {
-        addHtml(F(" active"));
+        addHtmlAttribute(F("class"), F("menu active"));
+      } else {
+        addHtmlAttribute(F("class"), F("menu"));
       }
-      addHtml(F("' href='"));
-      addHtml(getGpMenuURL(i));
-      addHtml("'>");
+      addHtmlAttribute(F("href"), getGpMenuURL(i));
+      addHtml('>');
       addHtml(getGpMenuIcon(i));
       addHtml(F("<span class='showmenulabel'>"));
       addHtml(getGpMenuLabel(i));
@@ -752,9 +752,11 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 {
   String deviceName;
 
-  addHtml(F("<select id='selectwidth' name='"));
-  addHtml(name);
-  addHtml(F("' onchange='return dept_onchange(frmselect)'>"));
+  addHtml(F("<select "));
+  addHtmlAttribute(F("id"), F("selectwidth"));
+  addHtmlAttribute(F("name"), name);
+  addHtmlAttribute(F("onchange"), F("return dept_onchange(frmselect)"));
+  addHtml('>');
 
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
@@ -806,15 +808,10 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
-  {
-    String html;
-    html.reserve(34 + name.length());
-
-    html += F("<select id='selectwidth' name='");
-    html += name;
-    html += "'>";
-    addHtml(html);
-  }
+  addHtml(F("<select "));
+  addHtmlAttribute(F("id"), F("selectwidth"));
+  addHtmlAttribute(F("name"), name);
+  addHtml('>');
 
   LoadTaskSettings(TaskIndex);
   const byte valueCount = getValueCountForTask(TaskIndex);

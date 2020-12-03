@@ -127,22 +127,13 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
 {
   addRowLabel_tr_id(label, id);
 
-  String html;
-  html.reserve(80 + id.length());
-
-  html += F("<input class='wide' type='password' name='");
-  html += id;
-  html += F("' maxlength=");
-  html += maxlength;
-  html += F(" value='");
-
-  if (password != "") { // no password?
-    html += F("*****");
-  }
-
-  // html += password;   //password will not published over HTTP
-  html += "'>";
-  addHtml(html);
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), F("wide"));
+  addHtmlAttribute(F("type"), F("password"));
+  addHtmlAttribute(F("name"), id);
+  addHtmlAttribute(F("maxlength"), maxlength);
+  addHtmlAttribute(F("value"), (password.length() == 0) ? F("") : F("*****"));
+  addHtml('>');
 }
 
 bool getFormPassword(const String& id, String& password)
@@ -161,18 +152,12 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 
   addRowLabel_tr_id(label, id);
 
-  String html;
-  html.reserve(80 + id.length());
-
-  html += F("<input class='wide' type='text' name='");
-  html += id;
-  html += F("' value='");
-
-  if (!empty_IP) {
-    html += formatIP(ip);
-  }
-  html += "'>";
-  addHtml(html);
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), F("wide"));
+  addHtmlAttribute(F("type"), F("text"));
+  addHtmlAttribute(F("name"), id);
+  addHtmlAttribute(F("value"), (empty_IP) ? F("") : formatIP(ip));
+  addHtml('>');
 }
 
 // ********************************************************************************
@@ -212,7 +197,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
     if (x == 0) {
       option += F(" - (default)");
     }
-    addSelector_option(addresses[x], option, "", addresses[x] == selectedIndex);
+    addSelector_Item(option, addresses[x], addresses[x] == selectedIndex, false, "");
   }
   addSelector_Foot();
 }

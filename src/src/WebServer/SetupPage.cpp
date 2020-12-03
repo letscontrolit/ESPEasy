@@ -143,17 +143,42 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
     html_end_table();
   }
 
-  addHtml(F(
-            "<BR><label class='container2'>other SSID:<input type='radio' name='ssid' id='other_ssid' value='other' ><span class='dotmark'></span></label>"));
-  addHtml(F("<input class='wide' type ='text' name='other' value='"));
-  addHtml(other);
-  addHtml(F("'><BR><BR>"));
+  html_BR();
+  addHtml(F("<label "));
+  addHtmlAttribute(F("class"), F("container2"));
+  addHtml('>');
+  addHtml(F("other SSID:"));
+  addHtml(F("<input "));
+  addHtmlAttribute(F("type"), F("radio"));
+  addHtmlAttribute(F("name"), F("ssid"));
+  addHtmlAttribute(F("id"), F("other_ssid"));
+  addHtmlAttribute(F("value"), F("other"));
+  addHtml('>');
+  addHtml(F("<span class='dotmark'></span></label>"));
 
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), F("wide"));
+  addHtmlAttribute(F("type"), F("text"));
+  addHtmlAttribute(F("name"), F("other"));
+  addHtmlAttribute(F("value"), other);
+  addHtml('>');
+  html_BR();
+  html_BR();
+  
   addFormSeparator(2);
 
-  addHtml(F("<BR>Password:<BR><input class='wide' type ='text' name='pass' value='"));
-  addHtml(password);
-  addHtml(F("'><BR><BR>"));
+  html_BR();
+
+  addHtml(F("Password:"));
+  html_BR();
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), F("wide"));
+  addHtmlAttribute(F("type"), F("text"));
+  addHtmlAttribute(F("name"), F("pass"));
+  addHtmlAttribute(F("value"), password);
+  addHtml('>');
+  html_BR();
+  html_BR();
 
   addSubmitButton(F("Connect"), "");
 }
