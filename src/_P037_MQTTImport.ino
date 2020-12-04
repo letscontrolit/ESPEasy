@@ -240,6 +240,7 @@ bool MQTTSubscribe_037(struct EventStruct *event)
       }
     }
   }
+  return true;
 }
 
 //
