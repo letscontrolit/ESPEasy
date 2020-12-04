@@ -93,7 +93,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendWebPage"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // web activity timer
   lastWeb = millis();
@@ -220,112 +220,113 @@ void WebServerInit()
   // FIXME TD-er: The added String() wrapper is needed for the latest ESP32 core lib.
   // See: https://github.com/espressif/arduino-esp32/issues/4374
   #ifdef WEBSERVER_ROOT
-  web_server.on(String(F("/")),                 handle_root);
-  #endif
+  web_server.on("/",               handle_root);
+  #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
-  web_server.on(String(F("/advanced")),      handle_advanced);
-  #endif
+  web_server.on(F("/advanced"),    handle_advanced);
+  #endif // ifdef WEBSERVER_ADVANCED
   #ifdef WEBSERVER_CONFIG
-  web_server.on(String(F("/config")),        handle_config);
-  #endif
+  web_server.on(F("/config"),      handle_config);
+  #endif // ifdef WEBSERVER_CONFIG
   #ifdef WEBSERVER_CONTROL
-  web_server.on(String(F("/control")),       handle_control);
-  #endif
+  web_server.on(F("/control"),     handle_control);
+  #endif // ifdef WEBSERVER_CONTROL
   #ifdef WEBSERVER_CONTROLLERS
-  web_server.on(String(F("/controllers")),   handle_controllers);
-  #endif
+  web_server.on(F("/controllers"), handle_controllers);
+  #endif // ifdef WEBSERVER_CONTROLLERS
   #ifdef WEBSERVER_DEVICES
-  web_server.on(String(F("/devices")),       handle_devices);
-  #endif
+  web_server.on(F("/devices"),     handle_devices);
+  #endif // ifdef WEBSERVER_DEVICES
   #ifdef WEBSERVER_DOWNLOAD
-  web_server.on(String(F("/download")),      handle_download);
-  #endif
+  web_server.on(F("/download"),    handle_download);
+  #endif // ifdef WEBSERVER_DOWNLOAD
 
 #ifdef USES_C016
+
   // web_server.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
-  web_server.on(String(F("/cache_json")),    handle_cache_json); // C016 specific entrie
-  web_server.on(String(F("/cache_csv")),     handle_cache_csv);  // C016 specific entrie
+  web_server.on(F("/cache_json"), handle_cache_json); // C016 specific entrie
+  web_server.on(F("/cache_csv"),  handle_cache_csv);  // C016 specific entrie
 #endif // USES_C016
 
   #ifdef WEBSERVER_FACTORY_RESET
-  web_server.on(String(F("/factoryreset")),  handle_factoryreset);
-  #endif
+  web_server.on(F("/factoryreset"),    handle_factoryreset);
+  #endif // ifdef WEBSERVER_FACTORY_RESET
   #ifdef USE_SETTINGS_ARCHIVE
-  web_server.on(String(F("/settingsarchive")), handle_settingsarchive);
-  #endif
-  web_server.on(String(F("/favicon.ico")),   handle_favicon);
+  web_server.on(F("/settingsarchive"), handle_settingsarchive);
+  #endif // ifdef USE_SETTINGS_ARCHIVE
+  web_server.on(F("/favicon.ico"),     handle_favicon);
   #ifdef WEBSERVER_FILELIST
-  web_server.on(String(F("/filelist")),      handle_filelist);
-  #endif
+  web_server.on(F("/filelist"),        handle_filelist);
+  #endif // ifdef WEBSERVER_FILELIST
   #ifdef WEBSERVER_HARDWARE
-  web_server.on(String(F("/hardware")),      handle_hardware);
-  #endif
+  web_server.on(F("/hardware"),        handle_hardware);
+  #endif // ifdef WEBSERVER_HARDWARE
   #ifdef WEBSERVER_I2C_SCANNER
-  web_server.on(String(F("/i2cscanner")),    handle_i2cscanner);
-  #endif
-  web_server.on(String(F("/json")),          handle_json);     // Also part of WEBSERVER_NEW_UI
-  web_server.on(String(F("/csv")),           handle_csvval);
-  web_server.on(String(F("/log")),           handle_log);
-  web_server.on(String(F("/login")),         handle_login);
-  web_server.on(String(F("/logjson")),       handle_log_JSON); // Also part of WEBSERVER_NEW_UI
+  web_server.on(F("/i2cscanner"),      handle_i2cscanner);
+  #endif // ifdef WEBSERVER_I2C_SCANNER
+  web_server.on(F("/json"),            handle_json); // Also part of WEBSERVER_NEW_UI
+  web_server.on(F("/csv"),             handle_csvval);
+  web_server.on(F("/log"),             handle_log);
+  web_server.on(F("/login"),           handle_login);
+  web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
 #ifdef USES_NOTIFIER
-  web_server.on(String(F("/notifications")), handle_notifications);
-#endif 
+  web_server.on(F("/notifications"),   handle_notifications);
+#endif // ifdef USES_NOTIFIER
   #ifdef WEBSERVER_PINSTATES
-  web_server.on(String(F("/pinstates")),     handle_pinstates);
-  #endif
+  web_server.on(F("/pinstates"),       handle_pinstates);
+  #endif // ifdef WEBSERVER_PINSTATES
   #ifdef WEBSERVER_RULES
-  web_server.on(String(F("/rules")),         handle_rules_new);
-  web_server.on(String(F("/rules/")),        Goto_Rules_Root);
-  web_server.on(String(F("/rules/add")),     []()
+  web_server.on(F("/rules"),           handle_rules_new);
+  web_server.on(F("/rules/"),          Goto_Rules_Root);
+  web_server.on(F("/rules/add"),       []()
   {
     handle_rules_edit(web_server.uri(), true);
   });
-  web_server.on(String(F("/rules/backup")),      handle_rules_backup);
-  web_server.on(String(F("/rules/delete")),      handle_rules_delete);
+  web_server.on(F("/rules/backup"), handle_rules_backup);
+  web_server.on(F("/rules/delete"), handle_rules_delete);
   #endif // WEBSERVER_RULES
 #ifdef FEATURE_SD
-  web_server.on(String(F("/SDfilelist")),        handle_SDfilelist);
-#endif // ifdef FEATURE_SD
+  web_server.on(F("/SDfilelist"),   handle_SDfilelist);
+#endif   // ifdef FEATURE_SD
 #ifdef WEBSERVER_SETUP
-  web_server.on(String(F("/setup")),             handle_setup);
-#endif
+  web_server.on(F("/setup"),        handle_setup);
+#endif // ifdef WEBSERVER_SETUP
 #ifdef WEBSERVER_SYSINFO
-  web_server.on(String(F("/sysinfo")),           handle_sysinfo);
-#endif
+  web_server.on(F("/sysinfo"),      handle_sysinfo);
+#endif // ifdef WEBSERVER_SYSINFO
 #ifdef WEBSERVER_SYSVARS
-  web_server.on(String(F("/sysvars")),           handle_sysvars);
+  web_server.on(F("/sysvars"),      handle_sysvars);
 #endif // WEBSERVER_SYSVARS
 #ifdef WEBSERVER_TIMINGSTATS
-  web_server.on(String(F("/timingstats")),       handle_timingstats);
+  web_server.on(F("/timingstats"),  handle_timingstats);
 #endif // WEBSERVER_TIMINGSTATS
 #ifdef WEBSERVER_TOOLS
-  web_server.on(String(F("/tools")),             handle_tools);
-#endif
+  web_server.on(F("/tools"),        handle_tools);
+#endif // ifdef WEBSERVER_TOOLS
 #ifdef WEBSERVER_UPLOAD
-  web_server.on(String(F("/upload")),            HTTP_GET,  handle_upload);
-  web_server.on(String(F("/upload")),            HTTP_POST, handle_upload_post, handleFileUpload);
-#endif
+  web_server.on(F("/upload"),       HTTP_GET,  handle_upload);
+  web_server.on(F("/upload"),       HTTP_POST, handle_upload_post, handleFileUpload);
+#endif // ifdef WEBSERVER_UPLOAD
 #ifdef WEBSERVER_WIFI_SCANNER
-  web_server.on(String(F("/wifiscanner")),       handle_wifiscanner);
-#endif
+  web_server.on(F("/wifiscanner"),  handle_wifiscanner);
+#endif // ifdef WEBSERVER_WIFI_SCANNER
 
 #ifdef WEBSERVER_NEW_UI
-  web_server.on(String(F("/buildinfo")),         handle_buildinfo);     // Also part of WEBSERVER_NEW_UI
-  web_server.on(String(F("/factoryreset_json")), handle_factoryreset_json);
-  web_server.on(String(F("/filelist_json")),     handle_filelist_json);
-  web_server.on(String(F("/i2cscanner_json")),   handle_i2cscanner_json);
-  web_server.on(String(F("/node_list_json")),    handle_nodes_list_json);
-  web_server.on(String(F("/pinstates_json")),    handle_pinstates_json);
-  web_server.on(String(F("/sysinfo_json")),      handle_sysinfo_json);
-  web_server.on(String(F("/timingstats_json")),  handle_timingstats_json);
-  web_server.on(String(F("/upload_json")),       HTTP_POST, handle_upload_json, handleFileUpload);
-  web_server.on(String(F("/wifiscanner_json")),  handle_wifiscanner_json);
+  web_server.on(F("/buildinfo"),         handle_buildinfo); // Also part of WEBSERVER_NEW_UI
+  web_server.on(F("/factoryreset_json"), handle_factoryreset_json);
+  web_server.on(F("/filelist_json"),     handle_filelist_json);
+  web_server.on(F("/i2cscanner_json"),   handle_i2cscanner_json);
+  web_server.on(F("/node_list_json"),    handle_nodes_list_json);
+  web_server.on(F("/pinstates_json"),    handle_pinstates_json);
+  web_server.on(F("/sysinfo_json"),      handle_sysinfo_json);
+  web_server.on(F("/timingstats_json"),  handle_timingstats_json);
+  web_server.on(F("/upload_json"),       HTTP_POST, handle_upload_json, handleFileUpload);
+  web_server.on(F("/wifiscanner_json"),  handle_wifiscanner_json);
 #endif // WEBSERVER_NEW_UI
 
   web_server.onNotFound(handleNotFound);
 
-  #if defined(ESP8266) || defined(ESP32) 
+  #if defined(ESP8266) || defined(ESP32)
   {
     # ifndef NO_HTTP_UPDATER
     uint32_t maxSketchSize;
@@ -487,42 +488,42 @@ byte navMenuIndex = MENU_INDEX_MAIN;
 // See https://github.com/letscontrolit/ESPEasy/issues/1650
 String getGpMenuIcon(byte index) {
   switch (index) {
-    case MENU_INDEX_MAIN          : return F("&#8962;");  
-    case MENU_INDEX_CONFIG        : return F("&#9881;");  
-    case MENU_INDEX_CONTROLLERS   : return F("&#128172;");
-    case MENU_INDEX_HARDWARE      : return F("&#128204;");
-    case MENU_INDEX_DEVICES       : return F("&#128268;");
-    case MENU_INDEX_RULES         : return F("&#10740;"); 
-    case MENU_INDEX_NOTIFICATIONS : return F("&#9993;");  
-    case MENU_INDEX_TOOLS         : return F("&#128295;");
+    case MENU_INDEX_MAIN: return F("&#8962;");
+    case MENU_INDEX_CONFIG: return F("&#9881;");
+    case MENU_INDEX_CONTROLLERS: return F("&#128172;");
+    case MENU_INDEX_HARDWARE: return F("&#128204;");
+    case MENU_INDEX_DEVICES: return F("&#128268;");
+    case MENU_INDEX_RULES: return F("&#10740;");
+    case MENU_INDEX_NOTIFICATIONS: return F("&#9993;");
+    case MENU_INDEX_TOOLS: return F("&#128295;");
   }
   return "";
 }
 
 String getGpMenuLabel(byte index) {
   switch (index) {
-    case MENU_INDEX_MAIN          : return F("Main");         
-    case MENU_INDEX_CONFIG        : return F("Config");       
-    case MENU_INDEX_CONTROLLERS   : return F("Controllers");  
-    case MENU_INDEX_HARDWARE      : return F("Hardware");     
-    case MENU_INDEX_DEVICES       : return F("Devices");      
-    case MENU_INDEX_RULES         : return F("Rules");        
-    case MENU_INDEX_NOTIFICATIONS : return F("Notifications");
-    case MENU_INDEX_TOOLS         : return F("Tools");        
+    case MENU_INDEX_MAIN: return F("Main");
+    case MENU_INDEX_CONFIG: return F("Config");
+    case MENU_INDEX_CONTROLLERS: return F("Controllers");
+    case MENU_INDEX_HARDWARE: return F("Hardware");
+    case MENU_INDEX_DEVICES: return F("Devices");
+    case MENU_INDEX_RULES: return F("Rules");
+    case MENU_INDEX_NOTIFICATIONS: return F("Notifications");
+    case MENU_INDEX_TOOLS: return F("Tools");
   }
   return "";
 }
 
 String getGpMenuURL(byte index) {
   switch (index) {
-    case MENU_INDEX_MAIN          : return F("/");             
-    case MENU_INDEX_CONFIG        : return F("/config");       
-    case MENU_INDEX_CONTROLLERS   : return F("/controllers");  
-    case MENU_INDEX_HARDWARE      : return F("/hardware");     
-    case MENU_INDEX_DEVICES       : return F("/devices");      
-    case MENU_INDEX_RULES         : return F("/rules");        
-    case MENU_INDEX_NOTIFICATIONS : return F("/notifications");
-    case MENU_INDEX_TOOLS         : return F("/tools");        
+    case MENU_INDEX_MAIN: return F("/");
+    case MENU_INDEX_CONFIG: return F("/config");
+    case MENU_INDEX_CONTROLLERS: return F("/controllers");
+    case MENU_INDEX_HARDWARE: return F("/hardware");
+    case MENU_INDEX_DEVICES: return F("/devices");
+    case MENU_INDEX_RULES: return F("/rules");
+    case MENU_INDEX_NOTIFICATIONS: return F("/notifications");
+    case MENU_INDEX_TOOLS: return F("/tools");
   }
   return "";
 }
@@ -557,16 +558,17 @@ void getWebPageTemplateVar(const String& varName)
       if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
         continue;
       }
-#endif
+#endif // ifndef USES_NOTIFIER
 
-      addHtml(F("<a class='menu"));
+      addHtml(F("<a "));
 
       if (i == navMenuIndex) {
-        addHtml(F(" active"));
+        addHtmlAttribute(F("class"), F("menu active"));
+      } else {
+        addHtmlAttribute(F("class"), F("menu"));
       }
-      addHtml(F("' href='"));
-      addHtml(getGpMenuURL(i));
-      addHtml("'>");
+      addHtmlAttribute(F("href"), getGpMenuURL(i));
+      addHtml('>');
       addHtml(getGpMenuIcon(i));
       addHtml(F("<span class='showmenulabel'>"));
       addHtml(getGpMenuLabel(i));
@@ -607,6 +609,7 @@ void getWebPageTemplateVar(const String& varName)
     html_add_autosubmit_form();
     html_add_script(false);
     TXBuffer += jsToastMessageBegin;
+
     // we can push custom messages here in future releases...
     addHtml(F("Submitted"));
     TXBuffer += jsToastMessageEnd;
@@ -650,6 +653,7 @@ void writeDefaultCSS(void)
     {
       String defaultCSS;
       defaultCSS = PGMT(DATA_ESPEASY_DEFAULT_MIN_CSS);
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("CSS  : Writing default CSS file to FS (");
         log += defaultCSS.length();
@@ -661,7 +665,7 @@ void writeDefaultCSS(void)
       f.close();
     }
   }
-#endif
+#endif // ifndef BUILD_NO_DEBUG
 }
 
 // ********************************************************************************
@@ -755,9 +759,11 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 {
   String deviceName;
 
-  addHtml(F("<select id='selectwidth' name='"));
-  addHtml(name);
-  addHtml(F("' onchange='return dept_onchange(frmselect)'>"));
+  addHtml(F("<select "));
+  addHtmlAttribute(F("id"),       F("selectwidth"));
+  addHtmlAttribute(F("name"),     name);
+  addHtmlAttribute(F("onchange"), F("return dept_onchange(frmselect)"));
+  addHtml('>');
 
   for (taskIndex_t x = 0; x < TASKS_MAX; x++)
   {
@@ -809,15 +815,10 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
-  {
-    String html;
-    html.reserve(34 + name.length());
-
-    html += F("<select id='selectwidth' name='");
-    html += name;
-    html += "'>";
-    addHtml(html);
-  }
+  addHtml(F("<select "));
+  addHtmlAttribute(F("id"),   F("selectwidth"));
+  addHtmlAttribute(F("name"), name);
+  addHtml('>');
 
   LoadTaskSettings(TaskIndex);
   const byte valueCount = getValueCountForTask(TaskIndex);
@@ -948,6 +949,7 @@ void createSvgHorRectPath(unsigned int color, int xoffset, int yoffset, int size
 
   if (width < 2) { width = 2; }
   String html;
+
   html.reserve(96);
   html += formatToHex(color, F("<path fill=\"#"));
   html += F("\" d=\"M");
@@ -1023,6 +1025,7 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
   if (white_between_bar < 1) { white_between_bar = 1; }
   const int barWidth   = (width_pixels - (nbars - 1) * white_between_bar) / nbars;
   int svg_width_pixels = nbars * barWidth + (nbars - 1) * white_between_bar;
+
   write_SVG_image_header(svg_width_pixels, svg_width_pixels, true);
   float scale               = 100 / svg_width_pixels;
   const int bar_height_step = 100 / nbars;
@@ -1047,10 +1050,12 @@ void getConfig_dat_file_layout() {
 
   // background
   const uint32_t realSize = SettingsType::getFileSize(SettingsType::Enum::TaskSettings_Type);
+
   createSvgHorRectPath(0xcdcdcd, 0, yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
 
   for (int st = 0; st < static_cast<int>(SettingsType::Enum::SettingsType_MAX); ++st) {
     SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
+
     if (SettingsType::getSettingsFile(settingsType) == SettingsType::SettingsFileEnum::FILE_CONFIG_type) {
       unsigned int color = SettingsType::getSVGcolor(settingsType);
       SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
@@ -1067,6 +1072,7 @@ void getConfig_dat_file_layout() {
   // Text labels
   float textXoffset = SVG_BAR_WIDTH + 2;
   float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+
   createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::Enum::TaskSettings_Type), textXoffset, textYoffset);
   addHtml(F("</svg>\n"));
 }
@@ -1135,7 +1141,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 #ifdef ESP32
 
-#include <esp_partition.h>
+# include <esp_partition.h>
 
 int getPartionCount(byte pType) {
   esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);
@@ -1161,6 +1167,7 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
   esp_partition_type_t     partitionType = static_cast<esp_partition_type_t>(pType);
   const esp_partition_t   *_mypart;
   esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+
   write_SVG_image_header(SVG_BAR_WIDTH + 250, nrPartitions * SVG_BAR_HEIGHT + shiftY);
   float yOffset = shiftY;
 

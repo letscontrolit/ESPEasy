@@ -481,11 +481,12 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     addHtml(F("<form name = 'editRule' method = 'post'><table class='normal'><TR><TH align='left' colspan='2'>Edit Rule"));
 
     // hidden field to check Overwrite
-    addHtml(F("<input type='hidden' id='IsNew' name='IsNew' value='"));
-    addHtml(isAddNew
-            ? F("yes")
-            : F("no"));
-    addHtml(F("'>"));
+    addHtml(F("<input "));
+    addHtmlAttribute(F("type"), F("hidden"));
+    addHtmlAttribute(F("id"), F("IsNew"));
+    addHtmlAttribute(F("name"), F("IsNew"));
+    addHtmlAttribute(F("value"), isAddNew ? F("yes") : F("no"));
+    addHtml('>');
 
     bool isReadOnly = !isOverwrite && ((isEdit && !isAddNew && !isNew) || (isAddNew && isNew));
       #ifdef WEBSERVER_RULES_DEBUG

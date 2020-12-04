@@ -39,9 +39,14 @@ void handle_tools() {
 
   addFormSubHeader(F("Command"));
   html_TR_TD();
-  addHtml(F("<TR><TD colspan='2'><input style='width: 98%' type='text' name='cmd' value='"));
-  addHtml(webrequest);
-  addHtml("'>");
+  addHtml(F("<TR><TD colspan='2'>"));
+  addHtml(F("<input "));
+  addHtmlAttribute(F("style"), F("width: 98%"));
+  addHtmlAttribute(F("type"), F("text"));
+  addHtmlAttribute(F("name"), F("cmd"));
+  addHtmlAttribute(F("value"), webrequest);
+  addHtml('>');
+  
   html_TR_TD();
   addSubmitButton();
   addHelpButton(F("ESPEasy_Command_Reference"));

@@ -545,6 +545,10 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     case PLUGIN_SET_CONFIG:
     case PLUGIN_SET_DEFAULTS:
+
+    // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
+    //case PLUGIN_MQTT_CONNECTION_STATE:
+    //case PLUGIN_MQTT_IMPORT:
     {
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
