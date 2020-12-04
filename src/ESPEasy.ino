@@ -205,8 +205,10 @@ void setup()
   initWiFi();
   
   run_compiletime_checks();
+#ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
+#endif
 #ifndef ESP32
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif
@@ -225,7 +227,9 @@ void setup()
 
   resetPluginTaskData();
 
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
+  #endif
 
   Serial.begin(115200);
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
@@ -387,8 +391,10 @@ void setup()
 
   if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
-
+  
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("hardwareInit"));
+  #endif
   hardwareInit();
 
   timermqtt_interval = 250; // Interval for checking MQTT

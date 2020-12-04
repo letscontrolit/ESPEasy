@@ -561,15 +561,10 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
       // returns pin value using syntax: [plugin#pcfgpio#pinstate#xx]
       if ((string.length() >= 16) && string.substring(0, 16).equalsIgnoreCase(F("pcfgpio,pinstate")))
       {
-        // returns pin value using syntax: [plugin#pcfgpio#pinstate#xx]
-        if ((string.length() >= 16) && string.substring(0, 16).equalsIgnoreCase(F("pcfgpio,pinstate")))
-        {
-          int par1;
+        int par1;
 
-          if (validIntFromString(parseString(string, 3), par1)) {
-            string = GPIO_PCF_Read(par1);
-          }
-          success = true;
+        if (validIntFromString(parseString(string, 3), par1)) {
+          string = GPIO_PCF_Read(par1);
         }
         success = true;
       }

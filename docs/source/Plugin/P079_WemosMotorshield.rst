@@ -144,7 +144,6 @@ Follow these steps to configure a new Motor Shield.
     :scale: 80 %
     :alt: Task Configuration
     :align: left
-R
 
 .. image:: P079_Wemos_Device1.png
     :width: 825px
@@ -184,7 +183,7 @@ For example, to control Motor-A, go to the 'Tools' page and submit each of these
 .. hint:: Commands are case insensitive.
 
 Motor Shield Actions
--------------------
+--------------------
 
 Motor control actions can be executed using ESPEasy rules.
 They can also be sent remotely using HTTP and MQTT.

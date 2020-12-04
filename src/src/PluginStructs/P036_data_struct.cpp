@@ -1,4 +1,4 @@
-#include "P036_data_struct.h"
+#include "../PluginStructs/P036_data_struct.h"
 
 #ifdef USES_P036
 
@@ -10,8 +10,8 @@
 # include "../Helpers/StringParser.h"
 # include "../Helpers/SystemVariables.h"
 
-# include "Dialog_Plain_12_font.h"
-# include "OLED_SSD1306_SH1106_images.h"
+# include <Dialog_Plain_12_font.h>
+# include <OLED_SSD1306_SH1106_images.h>
 
 P036_data_struct::P036_data_struct() : display(nullptr) {}
 

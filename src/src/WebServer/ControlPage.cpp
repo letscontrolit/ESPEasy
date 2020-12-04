@@ -4,19 +4,21 @@
 #ifdef WEBSERVER_CONTROL
 
 
-#include "../WebServer/HTML_wrappers.h"
-#include "../Helpers/WebServer_commandHelper.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../Helpers/WebServer_commandHelper.h"
 
-#include "../../ESPEasy-Globals.h"
+# include "../../ESPEasy-Globals.h"
 
 
 // ********************************************************************************
 // Web Interface control page (no password!)
 // ********************************************************************************
 void handle_control() {
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_control"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  String webrequest = web_server.arg(F("cmd"));
+  String webrequest            = web_server.arg(F("cmd"));
   HandledWebCommand_result res = handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest);
 
   switch (res) {
@@ -30,10 +32,11 @@ void handle_control() {
 
   if (printToWebJSON) { // it may be set in PLUGIN_WRITE (SendStatus)
     TXBuffer.startJsonStream();
+    addHtml(printWebString);
   } else {
     TXBuffer.startStream();
+    addEncodedHtml(printWebString);
   }
-  addHtml(printWebString);
 
   TXBuffer.endStream();
 

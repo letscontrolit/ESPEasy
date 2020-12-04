@@ -2,10 +2,12 @@
 
 #include <Arduino.h>
 
+#ifndef BUILD_NO_RAM_TRACKER
 uint32_t lowestRAM = 0;
 String   lowestRAMfunction;
 uint32_t lowestFreeStack = 0;
 String   lowestFreeStackfunction;
+#endif
 
 uint8_t lastBootCause                           = BOOT_CAUSE_MANUAL_REBOOT;
 unsigned long lastMixedSchedulerId_beforereboot = 0;

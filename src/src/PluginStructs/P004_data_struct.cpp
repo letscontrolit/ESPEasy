@@ -1,4 +1,4 @@
-#include "P004_data_struct.h"
+#include "../PluginStructs/P004_data_struct.h"
 
 #ifdef USES_P004
 
