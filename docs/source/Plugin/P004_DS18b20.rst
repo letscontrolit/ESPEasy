@@ -93,9 +93,16 @@ Sensor
 GPIO <--> 1-wire
 """"""""""""""""
 
-Pin used for communicating with the Dallas sensor(s).
+Pin used for communicating with the Dallas sensor(s). This is the single wire setup so you can leave the TX GPIO empty or set it equal to the RX GPIO.
 
 Please note the pin must be pulled up by a resistor, so only use pins that can be in a pulled up state during boot (thus NOT use GPIO 15 on ESP8266).
+
+GPIO <--> Shelly Temperature add-on
+"""""""""""""""""""""""""""""""""""
+
+The Shelly temperature add-on requires a two wire setup. Set TX to GPIO 3 and RX to GPIO 0.
+
+Please note GPIO 3 is normally used by Serial 0 which is enabled by default. You might run into issues when not disabling the Serial port first (Tools > Advanced > Enable Serial port).
 
 Number Output Values
 """"""""""""""""""""

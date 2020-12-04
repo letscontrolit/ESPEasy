@@ -10,7 +10,7 @@
 struct EventStruct;
 
 
-// #ifdef USES_C017
+#ifdef USES_C017
 
 /*********************************************************************************************\
 * C017_queue_element for queueing requests for C017: Zabbix Trapper Protocol.
@@ -31,7 +31,7 @@ public:
   Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
 };
 
-// #endif //USES_C017
+#endif //USES_C017
 
 
 #endif // CONTROLLERQUEUE_C017_QUEUE_ELEMENT_H

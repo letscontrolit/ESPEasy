@@ -109,7 +109,9 @@ void rulesProcessing(String& event) {
     return;
   }
   START_TIMER
-    checkRAM(F("rulesProcessing"));
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("rulesProcessing"));
+  #endif
 #ifndef BUILD_NO_DEBUG
   unsigned long timer = millis();
 #endif // ifndef BUILD_NO_DEBUG
@@ -173,7 +175,9 @@ String rulesProcessingFile(const String& fileName, String& event) {
   if (!Settings.UseRules || !fileExists(fileName)) {
     return "";
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile"));
+  #endif
 #ifndef BUILD_NO_DEBUG
 
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV) {
@@ -298,7 +302,9 @@ String rulesProcessingFile(const String& fileName, String& event) {
   }
 
   nestingLevel--;
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
+  #endif
   return "";
 }
 
@@ -780,7 +786,9 @@ void processMatchedRule(String& action, String& event,
    Check if an event matches to a given rule
  \*********************************************************************************************/
 bool ruleMatch(const String& event, const String& rule) {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ruleMatch"));
+  #endif
 
   String tmpEvent = event;
   String tmpRule  = rule;
@@ -871,7 +879,9 @@ bool ruleMatch(const String& event, const String& rule) {
   if (stringMatch) {
     match = compareValues(compare, value, ruleValue);
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ruleMatch2"));
+  #endif
   return match;
 }
 

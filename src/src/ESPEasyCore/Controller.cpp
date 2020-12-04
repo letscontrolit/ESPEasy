@@ -30,13 +30,18 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Rules_calculate.h"
 
+
+#define PLUGIN_ID_MQTT_IMPORT         37
+
 // ********************************************************************************
 // Interface for Sending to Controllers
 // ********************************************************************************
 void sendData(struct EventStruct *event)
 {
   START_TIMER;
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendData"));
+  #endif
   LoadTaskSettings(event->TaskIndex);
 
   if (Settings.UseRules) {
@@ -108,7 +113,7 @@ bool validUserVar(struct EventStruct *event) {
 \*********************************************************************************************/
 
 // handle MQTT messages
-void callback(char *c_topic, byte *b_payload, unsigned int length) {
+void incoming_mqtt_callback(char *c_topic, byte *b_payload, unsigned int length) {
   statusLED(true);
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
@@ -129,6 +134,20 @@ void callback(char *c_topic, byte *b_payload, unsigned int length) {
     ProtocolIndex, 
     CPlugin::Function::CPLUGIN_PROTOCOL_RECV,
     c_topic, b_payload, length);
+
+  deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_ID_MQTT_IMPORT); // Check if P037_MQTTimport is present in the build
+  if (validDeviceIndex(DeviceIndex)) {
+    //  Here we loop over all tasks and call each 037 plugin with function PLUGIN_MQTT_IMPORT
+    for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
+    {
+      if (Settings.TaskDeviceEnabled[taskIndex] && Settings.TaskDeviceNumber[taskIndex] == PLUGIN_ID_MQTT_IMPORT)
+      {
+        Scheduler.schedule_mqtt_plugin_import_event_timer(
+          DeviceIndex, taskIndex, PLUGIN_MQTT_IMPORT, 
+          c_topic, b_payload, length);
+      }
+    }
+  }  
 }
 
 /*********************************************************************************************\
@@ -174,7 +193,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   } else {
     MQTTclient.setServer(ControllerSettings.getIP(), ControllerSettings.Port);
   }
-  MQTTclient.setCallback(callback);
+  MQTTclient.setCallback(incoming_mqtt_callback);
 
   // MQTT needs a unique clientname to subscribe to broker
   String clientid = getMQTTclientID(ControllerSettings);
@@ -525,7 +544,9 @@ void MQTTStatus(const String& status)
 void SensorSendTask(taskIndex_t TaskIndex)
 {
   if (!validTaskIndex(TaskIndex)) return;
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SensorSendTask"));
+  #endif
   if (Settings.TaskDeviceEnabled[TaskIndex])
   {
     bool success = false;

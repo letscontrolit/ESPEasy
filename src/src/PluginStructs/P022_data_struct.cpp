@@ -1,5 +1,5 @@
 
-#include "P022_data_struct.h"
+#include "../PluginStructs/P022_data_struct.h"
 
 #ifdef USES_P022
 
