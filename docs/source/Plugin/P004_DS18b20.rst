@@ -102,6 +102,8 @@ GPIO <--> Shelly Temperature add-on
 
 The Shelly temperature add-on requires a two wire setup. Set TX to GPIO 3 and RX to GPIO 0.
 
+Please note GPIO 3 is normally used by Serial 0 which is enabled by default. You might run into issues when not disabling the Serial port first (Tools > Advanced > Enable Serial port).
+
 Number Output Values
 """"""""""""""""""""
 
