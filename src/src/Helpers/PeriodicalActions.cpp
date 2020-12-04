@@ -36,6 +36,9 @@
 #include "../Helpers/StringProvider.h"
 
 
+#define PLUGIN_ID_MQTT_IMPORT         37
+
+
 /*********************************************************************************************\
  * Tasks that run 50 times per second
 \*********************************************************************************************/
@@ -188,7 +191,9 @@ void runOncePerSecond()
 \*********************************************************************************************/
 void runEach30Seconds()
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAMtoLog();
+  #endif
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
@@ -255,6 +260,18 @@ void schedule_all_tasks_using_MQTT_controller() {
 
   if (!validControllerIndex(ControllerIndex)) { return; }
 
+  deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_ID_MQTT_IMPORT); // Check if P037_MQTTimport is present in the build
+  if (validDeviceIndex(DeviceIndex)) {
+    for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
+      if (Settings.TaskDeviceNumber[task] == PLUGIN_ID_MQTT_IMPORT) {
+        // Schedule a call to each MQTT import plugin to notify the broker connection state
+        EventStruct event(task);
+        event.Par1 = MQTTclient_connected ? 1 : 0;
+        Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, &event);
+      }
+    }
+  }
+
   for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
     if (Settings.TaskDeviceSendData[ControllerIndex][task] &&
         Settings.ControllerEnabled[ControllerIndex] &&
@@ -266,7 +283,7 @@ void schedule_all_tasks_using_MQTT_controller() {
 }
 
 void processMQTTdelayQueue() {
-  if (MQTTDelayHandler == nullptr) {
+  if (MQTTDelayHandler == nullptr || !MQTTclient_connected) {
     return;
   }
 
@@ -308,6 +325,7 @@ void updateMQTTclient_connected() {
       }
       MQTTclient_must_send_LWT_connected = false;
     } else {
+      // Now schedule all tasks using the MQTT controller.
       schedule_all_tasks_using_MQTT_controller();
     }
     if (Settings.UseRules) {

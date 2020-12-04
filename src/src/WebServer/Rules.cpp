@@ -24,7 +24,9 @@
 // Web Interface rules page
 // ********************************************************************************
 void handle_rules() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules"));
+  #endif
 
   if (!isLoggedIn() || !Settings.UseRules) { return; }
   navMenuIndex = MENU_INDEX_RULES;
@@ -116,7 +118,9 @@ void handle_rules_new() {
     handle_rules();
     return;
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules"));
+  #endif
   navMenuIndex = 5;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"), _HEAD);
@@ -253,7 +257,9 @@ void handle_rules_new() {
   // TXBuffer += F("<BR><BR>");
   sendHeadandTail(F("TmplStd"), _TAIL);
   TXBuffer.endStream();
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules"));
+  #endif
 }
 
 void handle_rules_backup() {
@@ -269,7 +275,9 @@ void handle_rules_backup() {
   if (!isLoggedIn() || !Settings.UseRules) { return; }
 
   if (!clientIPallowed()) { return; }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_backup"));
+  #endif
   String directory = web_server.arg(F("directory"));
   String fileName  = web_server.arg(F("fileName"));
   String error;
@@ -309,8 +317,9 @@ void handle_rules_backup() {
     addHtmlError(error);
     TXBuffer.endStream();
   }
-
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_backup"));
+  #endif
 }
 
 void handle_rules_delete() {
@@ -323,7 +332,9 @@ void handle_rules_delete() {
     Goto_Rules_Root();
     return;
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_delete"));
+  #endif
   String fileName = web_server.arg(F("fileName"));
   fileName = fileName.substring(0, fileName.length() - 4);
   bool removed = false;
@@ -353,7 +364,9 @@ void handle_rules_delete() {
     sendHeadandTail(F("TmplMsg"), _TAIL);
     TXBuffer.endStream();
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_delete"));
+  #endif
 }
 
 bool handle_rules_edit(const String& originalUri)
@@ -365,7 +378,9 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
   // originalUri is passed via deepcopy, since it will be converted to lower case.
   if (!isLoggedIn() || !Settings.UseRules) { return false; }
   originalUri.toLowerCase();
-  checkRAM(F("handle_rules"));
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handle_rules_edit"));
+  #endif
   bool handle = false;
 
   #ifdef WEBSERVER_RULES_DEBUG
@@ -466,11 +481,12 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     addHtml(F("<form name = 'editRule' method = 'post'><table class='normal'><TR><TH align='left' colspan='2'>Edit Rule"));
 
     // hidden field to check Overwrite
-    addHtml(F("<input type='hidden' id='IsNew' name='IsNew' value='"));
-    addHtml(isAddNew
-            ? F("yes")
-            : F("no"));
-    addHtml(F("'>"));
+    addHtml(F("<input "));
+    addHtmlAttribute(F("type"), F("hidden"));
+    addHtmlAttribute(F("id"), F("IsNew"));
+    addHtmlAttribute(F("name"), F("IsNew"));
+    addHtmlAttribute(F("value"), isAddNew ? F("yes") : F("no"));
+    addHtml('>');
 
     bool isReadOnly = !isOverwrite && ((isEdit && !isAddNew && !isNew) || (isAddNew && isNew));
       #ifdef WEBSERVER_RULES_DEBUG
@@ -510,8 +526,9 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     sendHeadandTail(F("TmplStd"), true);
     TXBuffer.endStream();
   }
-
-  checkRAM(F("handle_rules"));
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handle_rules_edit2"));
+  #endif
   return handle;
 }
 

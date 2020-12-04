@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "../../ESPEasy_common.h"
+
 class String;
 
 #define BOOT_CAUSE_MANUAL_REBOOT            0
@@ -10,10 +12,12 @@ class String;
 #define BOOT_CAUSE_DEEP_SLEEP               2
 #define BOOT_CAUSE_EXT_WD                  10
 
+#ifndef BUILD_NO_RAM_TRACKER
 extern uint32_t lowestRAM;
 extern String   lowestRAMfunction;
 extern uint32_t lowestFreeStack;
 extern String   lowestFreeStackfunction;
+#endif
 
 extern uint8_t lastBootCause;
 extern unsigned long lastMixedSchedulerId_beforereboot;

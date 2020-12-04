@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P004
 
-# include "../../ESPEasy_common.h"
-
 # include "../Helpers/Dallas1WireHelper.h"
 
 struct P004_data_struct : public PluginTaskData_base {
@@ -30,7 +28,8 @@ struct P004_data_struct : public PluginTaskData_base {
   // @param pin  The GPIO pin used to communicate to the Dallas sensors in this task
   // @param addr Address of the (1st) Dallas sensor (index = 0) in this task
   // @param res  The resolution of the Dallas sensor(s) used in this task
-  P004_data_struct(int8_t        pin,
+  P004_data_struct(int8_t        pin_rx,
+                   int8_t        pin_tx,
                    const uint8_t addr[],
                    uint8_t       res);
 
@@ -61,8 +60,12 @@ struct P004_data_struct : public PluginTaskData_base {
     return _measurementStart;
   }
 
-  int8_t get_gpio() const {
-      return _gpio;
+  int8_t get_gpio_rx() const {
+      return _gpio_rx;
+  }
+
+  int8_t get_gpio_tx() const {
+      return _gpio_tx;
   }
 
   bool measurement_active() const;
@@ -80,7 +83,8 @@ private:
   unsigned long   _timer            = millis();
   unsigned long   _measurementStart = millis();
   Dallas_SensorData _sensors[4];
-  int8_t          _gpio = -1;
+  int8_t          _gpio_rx = -1;
+  int8_t          _gpio_tx = -1;
   uint8_t         _res  = 0;
 };
 
