@@ -2,6 +2,8 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
+#ifdef USES_C007
+
 C007_queue_element::C007_queue_element() {}
 
 C007_queue_element::C007_queue_element(const struct EventStruct *event) :
@@ -13,3 +15,5 @@ C007_queue_element::C007_queue_element(const struct EventStruct *event) :
 size_t C007_queue_element::getSize() const {
   return sizeof(*this);
 }
+
+#endif
