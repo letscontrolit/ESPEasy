@@ -10,7 +10,7 @@
 struct EventStruct;
 
 
-// #ifdef USES_C011
+#ifdef USES_C011
 
 /*********************************************************************************************\
 * C011_queue_element for queueing requests for C011: Generic HTTP Advanced.
@@ -34,7 +34,7 @@ public:
   Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
 };
 
-// #endif //USES_C011
+#endif //USES_C011
 
 
 #endif // CONTROLLERQUEUE_C011_QUEUE_ELEMENT_H

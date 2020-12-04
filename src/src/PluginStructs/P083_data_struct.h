@@ -4,10 +4,7 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P083
 
-#include "../../ESPEasy_common.h"
-
-
-# include "Adafruit_SGP30.h"
+# include <Adafruit_SGP30.h>
 
 struct P083_data_struct : public PluginTaskData_base {
 public:
