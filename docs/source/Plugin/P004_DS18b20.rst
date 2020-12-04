@@ -100,7 +100,7 @@ Please note the pin must be pulled up by a resistor, so only use pins that can b
 GPIO <--> Shelly Temperature add-on
 """""""""""""""""""""""""""""""""""
 
-The Shelly temperature add-on require a two wire setup. Set TX to GPIO 3 and RX to GPIO 0.
+The Shelly temperature add-on requires a two wire setup. Set TX to GPIO 3 and RX to GPIO 0.
 
 Number Output Values
 """"""""""""""""""""
