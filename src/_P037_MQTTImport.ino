@@ -129,30 +129,14 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_MQTT_IMPORT:
       {
-        //      Get the payload and check it out
-        LoadTaskSettings(event->TaskIndex);
+        // Get the payload and check it out
+        //   Topic:   event->String1;
+        //   Payload: event->String2;
 
-        // FIXME TD-er: It may be useful to generate events with string values.
-        String Payload = event->String2;
-        float floatPayload;
-        if (!string2float(Payload, floatPayload)) {
-          String log = F("IMPT : Bad Import MQTT Command ");
-          log += event->String1;
-          addLog(LOG_LEVEL_ERROR, log);
-          log = F("ERR  : Illegal Payload ");
-          log += Payload;
-          log += "  ";
-          log += getTaskDeviceName(event->TaskIndex);
-          addLog(LOG_LEVEL_INFO, log);
-          success = false;
-          break;
-        }
-
-        //      Get the Topic and see if it matches any of the subscriptions
-
-        String Topic = event->String1;
+        // Get the Topic and see if it matches any of the subscriptions
         char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
 
+        LoadTaskSettings(event->TaskIndex);
         LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
         for (byte x = 0; x < VARS_PER_TASK; x++)
@@ -163,8 +147,23 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
           // Now check if the incoming topic matches one of our subscriptions
           parseSystemVariables(subscriptionTopic, false);
-          if (MQTTCheckSubscription_037(Topic, subscriptionTopic))
+          if (MQTTCheckSubscription_037(event->String1, subscriptionTopic))
           {
+            // FIXME TD-er: It may be useful to generate events with string values.
+            float floatPayload;
+            if (!string2float(event->String2, floatPayload)) {
+              String log = F("IMPT : Bad Import MQTT Command ");
+              log += event->String1;
+              addLog(LOG_LEVEL_ERROR, log);
+              log = F("ERR  : Illegal Payload ");
+              log += event->String2;
+              log += ' ';
+              log += getTaskDeviceName(event->TaskIndex);
+              addLog(LOG_LEVEL_INFO, log);
+              success = false;
+              break;
+            }
+
             UserVar[event->BaseVarIndex + x] = floatPayload;							// Save the new value
 
             // Log the event
@@ -182,11 +181,11 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
             if (Settings.UseRules)
             {
-              String RuleEvent = "";
+              String RuleEvent;
               RuleEvent += getTaskDeviceName(event->TaskIndex);
-              RuleEvent += F("#");
+              RuleEvent += '#';
               RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[x];
-              RuleEvent += F("=");
+              RuleEvent += '=';
               RuleEvent += floatPayload;
               eventQueue.add(RuleEvent);
             }
@@ -247,6 +246,9 @@ bool MQTTSubscribe_037(struct EventStruct *event)
 // Check to see if Topic matches the MQTT subscription
 //
 bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) {
+  if (Topic.length() == 0 || Subscription.length() == 0)  {
+    return false;
+  }
 
   String tmpTopic = Topic;
   String tmpSub = Subscription;
@@ -254,10 +256,9 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
   tmpTopic.trim();
   tmpSub.trim();
 
-  // Get rid of any initial /
-
-  if (tmpTopic.substring(0, 1) == "/")tmpTopic = tmpTopic.substring(1);
-  if (tmpSub.substring(0, 1) == "/")tmpSub = tmpSub.substring(1);
+  // Get rid of leading '/'
+  if (tmpTopic[0] == '/') { tmpTopic = tmpTopic.substring(1); }
+  if (tmpSub[0] == '/') { tmpSub = tmpSub.substring(1); }
 
   // Add trailing / if required
 
