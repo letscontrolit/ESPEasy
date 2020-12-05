@@ -1,4 +1,4 @@
-#include "P023_data_struct.h"
+#include "../PluginStructs/P023_data_struct.h"
 #ifdef USES_P023
 
 #include "../Helpers/Misc.h"

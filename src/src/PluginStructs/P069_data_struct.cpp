@@ -1,4 +1,4 @@
-#include "P069_data_struct.h"
+#include "../PluginStructs/P069_data_struct.h"
 
 #ifdef USES_P069
 

@@ -193,7 +193,9 @@ void Web_StreamingBuffer::endStream(void) {
 
 
 void Web_StreamingBuffer::sendContentBlocking(String& data) {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendContentBlocking"));
+  #endif
   uint32_t freeBeforeSend = ESP.getFreeHeap();
   const uint32_t length   = data.length();
 #ifndef BUILD_NO_DEBUG
@@ -228,7 +230,9 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
       duringTXRam = ESP.getFreeHeap();
     }
     trackCoreMem();
+    #ifndef BUILD_NO_RAM_TRACKER
     checkRAM(F("duringDataTX"));
+    #endif
     delay(1);
   }
 #endif // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
@@ -239,7 +243,9 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 }
 
 void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendHeaderBlocking"));
+  #endif
   web_server.client().flush();
   String contenttype;
 
@@ -279,7 +285,9 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
          !timeOutReached(beginWait + timeout)) {
+    #ifndef BUILD_NO_RAM_TRACKER
     checkRAM(F("duringHeaderTX"));
+    #endif
     delay(1);
   }
 #endif // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)

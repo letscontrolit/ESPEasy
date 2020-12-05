@@ -12,7 +12,9 @@
 // Web Interface handle other requests
 // ********************************************************************************
 void handleNotFound() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handleNotFound"));
+  #endif
 
   if (WiFiEventData.wifiSetup)
   {

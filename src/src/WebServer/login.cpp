@@ -15,13 +15,13 @@
 #include "../../ESPEasy-Globals.h"
 
 
-
-
 // ********************************************************************************
 // Web Interface login page
 // ********************************************************************************
 void handle_login() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_login"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (!clientIPallowed()) { return; }
   TXBuffer.startStream();
@@ -31,9 +31,12 @@ void handle_login() {
   addHtml(F("<form method='post'>"));
   html_table_class_normal();
   addHtml(F("<TR><TD>Password<TD>"));
-  addHtml(F("<input class='wide' type='password' name='password' value='"));
-  addHtml(webrequest);
-  addHtml("'>");
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), F("wide"));
+  addHtmlAttribute(F("type"),  F("password"));
+  addHtmlAttribute(F("name"),  F("password"));
+  addHtmlAttribute(F("value"), webrequest);
+  addHtml('>');
   html_TR_TD();
   html_TD();
   addSubmitButton();

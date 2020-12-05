@@ -2,35 +2,37 @@
 
 #ifdef WEBSERVER_DEVICES
 
-#include "../WebServer/WebServer.h"
-#include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
-#include "../WebServer/Markup_Forms.h"
+# include "../WebServer/WebServer.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/Markup.h"
+# include "../WebServer/Markup_Buttons.h"
+# include "../WebServer/Markup_Forms.h"
 
-#include "../Globals/CPlugins.h"
-#include "../Globals/Device.h"
-#include "../Globals/ExtraTaskSettings.h"
-#include "../Globals/Nodes.h"
-#include "../Globals/Plugins.h"
-#include "../Globals/Protocol.h"
+# include "../Globals/CPlugins.h"
+# include "../Globals/Device.h"
+# include "../Globals/ExtraTaskSettings.h"
+# include "../Globals/Nodes.h"
+# include "../Globals/Plugins.h"
+# include "../Globals/Protocol.h"
 
-#include "../Static/WebStaticData.h"
+# include "../Static/WebStaticData.h"
 
-#include "../Helpers/_Plugin_SensorTypeHelper.h"
-#include "../Helpers/_Plugin_Helper_serial.h"
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Hardware.h"
-#include "../Helpers/StringConverter.h"
-#include "../Helpers/StringGenerator_GPIO.h"
+# include "../Helpers/_Plugin_SensorTypeHelper.h"
+# include "../Helpers/_Plugin_Helper_serial.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Hardware.h"
+# include "../Helpers/StringConverter.h"
+# include "../Helpers/StringGenerator_GPIO.h"
 
-#include "../../_Plugin_Helper.h"
+# include "../../_Plugin_Helper.h"
 
-#include <ESPeasySerial.h>
+# include <ESPeasySerial.h>
 
 
 void handle_devices() {
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_devices"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_DEVICES;
@@ -172,7 +174,9 @@ void handle_devices() {
     handle_devices_TaskSettingsPage(taskIndex, page);
   }
 
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_devices"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
@@ -241,19 +245,24 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
   unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
+
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
 
 
   uint8_t flags = 0;
+
   if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
     bitWrite(flags, 0, isFormItemChecked(F("taskdeviceflags0")));
   }
-#ifdef FEATURE_I2CMULTIPLEXER
-  if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
+# ifdef FEATURE_I2CMULTIPLEXER
+
+  if ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && isI2CMultiplexerEnabled()) {
     int multipleMuxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0);
     bitWrite(flags, 1, multipleMuxPortsOption == 1);
+
     if (multipleMuxPortsOption == 1) {
       uint8_t selectedPorts = 0;
+
       for (uint8_t x = 0; x < I2CMultiplexerMaxChannels(); x++) {
         String id = F("taskdeviceflag1ch");
         id += String(x);
@@ -264,7 +273,8 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
       Settings.I2C_Multiplexer_Channel[taskIndex] = getFormItemInt(F("taskdevicei2cmuxport"), 0);
     }
   }
-#endif
+# endif // ifdef FEATURE_I2CMULTIPLEXER
+
   if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
     Settings.I2C_Flags[taskIndex] = flags;
   }
@@ -273,9 +283,9 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
   ExtraTaskSettings.clear();
   ExtraTaskSettings.TaskIndex = taskIndex;
-    
+
   // Save selected output type.
-  switch(Device[DeviceIndex].OutputDataType) {
+  switch (Device[DeviceIndex].OutputDataType) {
     case Output_Data_type_t::Default:
     {
       String dummy;
@@ -286,14 +296,16 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     case Output_Data_type_t::All:
     {
       int pconfigIndex = checkDeviceVTypeForTask(&TempEvent);
-      if (pconfigIndex >= 0 && pconfigIndex < PLUGIN_CONFIGVAR_MAX) {
+
+      if ((pconfigIndex >= 0) && (pconfigIndex < PLUGIN_CONFIGVAR_MAX)) {
         Sensor_VType VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
         Settings.TaskDevicePluginConfig[taskIndex][pconfigIndex] = static_cast<int>(VType);
         ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
 
         // nr output values has changed, generate new variable names
         String oldNames[VARS_PER_TASK];
-        byte oldNrDec[VARS_PER_TASK];
+        byte   oldNrDec[VARS_PER_TASK];
+
         for (byte i = 0; i < VARS_PER_TASK; ++i) {
           oldNames[i] = ExtraTaskSettings.TaskDeviceValueNames[i];
           oldNrDec[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
@@ -340,17 +352,18 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     Settings.TaskDevicePin1Inversed[taskIndex] = isFormItemChecked(F("TDPI"));
   }
 
-  if (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL ||
-      Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1) 
+  if ((Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL) ||
+      (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1))
   {
     serialHelper_webformSave(&TempEvent);
   }
 
 
   const byte valueCount = getValueCountForTask(taskIndex);
+
   for (byte varNr = 0; varNr < valueCount; varNr++)
   {
-    strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr],    String(F("TDF")) + (varNr + 1));
+    strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr], String(F("TDF")) + (varNr + 1));
     update_whenset_FormItemInt(String(F("TDVD")) + (varNr + 1), ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[varNr], String(F("TDVN")) + (varNr + 1));
   }
@@ -425,7 +438,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
     }
   }
 
-  html_table_header(F("Task"), 50);
+  html_table_header(F("Task"),    50);
   html_table_header(F("Enabled"), 100);
   html_table_header(F("Device"));
   html_table_header(F("Name"));
@@ -476,7 +489,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
     if (pluginID_set)
     {
       LoadTaskSettings(x);
-      int8_t spi_gpios[3] {-1, -1, -1};
+      int8_t spi_gpios[3] { -1, -1, -1 };
       struct EventStruct TempEvent(x);
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
@@ -490,7 +503,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
         if (Settings.TaskDeviceDataFeed[x] != 0) {
           // Show originating node number
           const byte remoteUnit = Settings.TaskDeviceDataFeed[x];
-          format_originating_node(remoteUnit);          
+          format_originating_node(remoteUnit);
         } else {
           String portDescr;
 
@@ -504,10 +517,10 @@ void handle_devicess_ShowAllTasksTable(byte page)
               case DEVICE_TYPE_SPI:
               case DEVICE_TYPE_SPI2:
               case DEVICE_TYPE_SPI3:
-                {
-                  format_SPI_port_description(spi_gpios);
-                }
+              {
+                format_SPI_port_description(spi_gpios);
                 break;
+              }
               case DEVICE_TYPE_SERIAL:
               case DEVICE_TYPE_SERIAL_PLUS1:
                 addHtml(serialHelper_getSerialTypeLabel(&TempEvent));
@@ -573,6 +586,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
           bool showpin1 = false;
           bool showpin2 = false;
           bool showpin3 = false;
+
           switch (Device[DeviceIndex].Type) {
             case DEVICE_TYPE_I2C:
             {
@@ -581,36 +595,41 @@ void handle_devicess_ShowAllTasksTable(byte page)
             }
             case DEVICE_TYPE_SPI3:
               showpin3 = true;
-              // Fall Through
+
+            // Fall Through
             case DEVICE_TYPE_SPI2:
               showpin2 = true;
-              // Fall Through
+
+            // Fall Through
             case DEVICE_TYPE_SPI:
               format_SPI_pin_description(spi_gpios, x);
               break;
             case DEVICE_TYPE_ANALOG:
             {
-              #ifdef ESP8266
-                #if FEATURE_ADC_VCC
-                  addHtml(F("ADC (VDD)"));
-                #else
-                  addHtml(F("ADC (TOUT)"));
-                #endif
-              #endif
-              #ifdef ESP32
+              # ifdef ESP8266
+                #  if FEATURE_ADC_VCC
+              addHtml(F("ADC (VDD)"));
+                #  else // if FEATURE_ADC_VCC
+              addHtml(F("ADC (TOUT)"));
+                #  endif // if FEATURE_ADC_VCC
+              # endif // ifdef ESP8266
+              # ifdef ESP32
               showpin1 = true;
               addHtml(formatGpioName_ADC(Settings.TaskDevicePin1[x]));
               html_BR();
-              #endif
+              # endif // ifdef ESP32
 
               break;
             }
             case DEVICE_TYPE_SERIAL_PLUS1:
               showpin3 = true;
-              // fallthrough
+
+            // fallthrough
             case DEVICE_TYPE_SERIAL:
             {
-              addHtml(serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x], Settings.TaskDevicePin2[x], F("<BR>")));
+              addHtml(serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x],
+                                                      Settings.TaskDevicePin2[x], F("<BR>")));
+
               if (showpin3) {
                 html_BR();
               }
@@ -623,44 +642,47 @@ void handle_devicess_ShowAllTasksTable(byte page)
               break;
           }
 
-          if (Settings.TaskDevicePin1[x] != -1 && showpin1)
+          if ((Settings.TaskDevicePin1[x] != -1) && showpin1)
           {
             String html = formatGpioLabel(Settings.TaskDevicePin1[x], false);
-            if (spi_gpios[0] == Settings.TaskDevicePin1[x]
-              || spi_gpios[1] == Settings.TaskDevicePin1[x]
-              || spi_gpios[2] == Settings.TaskDevicePin1[x]
-              || Settings.Pin_i2c_sda == Settings.TaskDevicePin1[x]
-              || Settings.Pin_i2c_scl == Settings.TaskDevicePin1[x]) {
+
+            if ((spi_gpios[0] == Settings.TaskDevicePin1[x])
+                || (spi_gpios[1] == Settings.TaskDevicePin1[x])
+                || (spi_gpios[2] == Settings.TaskDevicePin1[x])
+                || (Settings.Pin_i2c_sda == Settings.TaskDevicePin1[x])
+                || (Settings.Pin_i2c_scl == Settings.TaskDevicePin1[x])) {
               html += ' ';
               html += F(HTML_SYMBOL_WARNING);
             }
             addHtml(html);
           }
 
-          if (Settings.TaskDevicePin2[x] != -1 && showpin2)
+          if ((Settings.TaskDevicePin2[x] != -1) && showpin2)
           {
             html_BR();
             String html = formatGpioLabel(Settings.TaskDevicePin2[x], false);
-            if (spi_gpios[0] == Settings.TaskDevicePin2[x]
-              || spi_gpios[1] == Settings.TaskDevicePin2[x]
-              || spi_gpios[2] == Settings.TaskDevicePin2[x]
-              || Settings.Pin_i2c_sda == Settings.TaskDevicePin2[x]
-              || Settings.Pin_i2c_scl == Settings.TaskDevicePin2[x]) {
+
+            if ((spi_gpios[0] == Settings.TaskDevicePin2[x])
+                || (spi_gpios[1] == Settings.TaskDevicePin2[x])
+                || (spi_gpios[2] == Settings.TaskDevicePin2[x])
+                || (Settings.Pin_i2c_sda == Settings.TaskDevicePin2[x])
+                || (Settings.Pin_i2c_scl == Settings.TaskDevicePin2[x])) {
               html += ' ';
               html += F(HTML_SYMBOL_WARNING);
             }
             addHtml(html);
           }
 
-          if (Settings.TaskDevicePin3[x] != -1 && showpin3)
+          if ((Settings.TaskDevicePin3[x] != -1) && showpin3)
           {
             html_BR();
             String html = formatGpioLabel(Settings.TaskDevicePin3[x], false);
-            if (spi_gpios[0] == Settings.TaskDevicePin3[x]
-              || spi_gpios[1] == Settings.TaskDevicePin3[x]
-              || spi_gpios[2] == Settings.TaskDevicePin3[x]
-              || Settings.Pin_i2c_sda == Settings.TaskDevicePin3[x]
-              || Settings.Pin_i2c_scl == Settings.TaskDevicePin3[x]) {
+
+            if ((spi_gpios[0] == Settings.TaskDevicePin3[x])
+                || (spi_gpios[1] == Settings.TaskDevicePin3[x])
+                || (spi_gpios[2] == Settings.TaskDevicePin3[x])
+                || (Settings.Pin_i2c_sda == Settings.TaskDevicePin3[x])
+                || (Settings.Pin_i2c_scl == Settings.TaskDevicePin3[x])) {
               html += ' ';
               html += F(HTML_SYMBOL_WARNING);
             }
@@ -678,6 +700,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
         if (!customValues)
         {
           const byte valueCount = getValueCountForTask(x);
+
           for (byte varNr = 0; varNr < valueCount; varNr++)
           {
             if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
@@ -695,7 +718,6 @@ void handle_devicess_ShowAllTasksTable(byte page)
   html_end_table();
   html_end_form();
 }
-
 
 void format_originating_node(byte remoteUnit) {
   addHtml(F("Unit "));
@@ -716,12 +738,15 @@ void format_originating_node(byte remoteUnit) {
 void format_I2C_port_description(taskIndex_t x)
 {
   addHtml(F("I2C"));
-#ifdef FEATURE_I2CMULTIPLEXER
+# ifdef FEATURE_I2CMULTIPLEXER
+
   if (isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(x)) {
     String mux;
-    if (bitRead(Settings.I2C_Flags[x], I2C_FLAGS_MUX_MULTICHANNEL)) {    // Multi-channel
+
+    if (bitRead(Settings.I2C_Flags[x], I2C_FLAGS_MUX_MULTICHANNEL)) { // Multi-channel
       mux = F("<BR>Multiplexer channel(s)");
-      uint8_t b = 0;  // For adding lineBreaks
+      uint8_t b = 0;                                                  // For adding lineBreaks
+
       for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(); c++) {
         if (bitRead(Settings.I2C_Multiplexer_Channel[x], c)) {
           mux += b == 0 ? F("<BR>") : F(", ");
@@ -729,13 +754,13 @@ void format_I2C_port_description(taskIndex_t x)
           mux += String(c);
         }
       }
-    } else {    // Single channel
-      mux = F("<BR>Multiplexer channel ");
+    } else { // Single channel
+      mux  = F("<BR>Multiplexer channel ");
       mux += String(Settings.I2C_Multiplexer_Channel[x]);
     }
     addHtml(mux);
   }
-#endif
+# endif // ifdef FEATURE_I2CMULTIPLEXER
 }
 
 void format_SPI_port_description(int8_t spi_gpios[3])
@@ -743,32 +768,34 @@ void format_SPI_port_description(int8_t spi_gpios[3])
   if (Settings.InitSPI == 0) {
     addHtml(F("SPI (Not enabled)"));
   } else {
-    #ifdef ESP32
+    # ifdef ESP32
+
     switch (Settings.InitSPI) {
       case 1:
-        {
-          addHtml(F("VSPI"));
-          spi_gpios[0] = 18; spi_gpios[1] = 19; spi_gpios[2] = 23;
-          break;
-        }
+      {
+        addHtml(F("VSPI"));
+        spi_gpios[0] = 18; spi_gpios[1] = 19; spi_gpios[2] = 23;
+        break;
+      }
       case 2:
-        {
-          addHtml(F("HSPI"));
-          spi_gpios[0] = 14; spi_gpios[1] = 12; spi_gpios[2] = 13;
-          break;
-        }
+      {
+        addHtml(F("HSPI"));
+        spi_gpios[0] = 14; spi_gpios[1] = 12; spi_gpios[2] = 13;
+        break;
+      }
     }
-    #endif
-    #ifdef ESP8266
+    # endif // ifdef ESP32
+    # ifdef ESP8266
     addHtml(F("SPI"));
     spi_gpios[0] = 14; spi_gpios[1] = 12; spi_gpios[2] = 13;
-    #endif
+    # endif // ifdef ESP8266
   }
 }
 
 void format_I2C_pin_description()
 {
   String html;
+
   html.reserve(20);
   html += F("SDA: ");
   html += formatGpioLabel(Settings.Pin_i2c_sda, false);
@@ -795,8 +822,6 @@ void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x)
   }
 }
 
-
-
 // ********************************************************************************
 // Show the task settings page
 // ********************************************************************************
@@ -818,20 +843,18 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
   if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex]))
   {
     // takes lots of memory/time so call this only when needed.
-    addDeviceSelect("TDNUM", Settings.TaskDeviceNumber[taskIndex]); // ="taskdevicenumber"
+    addDeviceSelect(F("TDNUM"), Settings.TaskDeviceNumber[taskIndex]); // ="taskdevicenumber"
   }
 
   // device selected
   else
   {
     // remember selected device number
-    addHtml(F("<input type='hidden' name='TDNUM' value='"));
-    {
-      String html;
-      html += Settings.TaskDeviceNumber[taskIndex];
-      html += "'>";
-      addHtml(html);
-    }
+    addHtml(F("<input "));
+    addHtmlAttribute(F("type"),  F("hidden"));
+    addHtmlAttribute(F("name"),  F("TDNUM"));
+    addHtmlAttribute(F("value"), Settings.TaskDeviceNumber[taskIndex]);
+    addHtml('>');
 
     // show selected device name and delete button
     addHtml(getPluginNameFromDeviceIndex(DeviceIndex));
@@ -865,6 +888,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 
       devicePage_show_pin_config(taskIndex, DeviceIndex);
     }
+
     switch (Device[DeviceIndex].Type) {
       case DEVICE_TYPE_SERIAL:
       case DEVICE_TYPE_SERIAL_PLUS1:
@@ -977,16 +1001,17 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     addFormNote(F("Will go into effect on next input change."));
   }
 
-  if ((Device[DeviceIndex].Type == DEVICE_TYPE_SPI
-    || Device[DeviceIndex].Type == DEVICE_TYPE_SPI2
-    || Device[DeviceIndex].Type == DEVICE_TYPE_SPI3)
-    && Settings.InitSPI == 0) {
+  if (((Device[DeviceIndex].Type == DEVICE_TYPE_SPI)
+       || (Device[DeviceIndex].Type == DEVICE_TYPE_SPI2)
+       || (Device[DeviceIndex].Type == DEVICE_TYPE_SPI3))
+      && (Settings.InitSPI == 0)) {
     addFormNote(F("SPI Interface is not configured yet (Hardware page)."));
   }
-  if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C
-    && (Settings.Pin_i2c_sda == -1 
-      || Settings.Pin_i2c_scl == -1
-      || Settings.I2C_clockSpeed == 0)) {
+
+  if ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
+      && ((Settings.Pin_i2c_sda == -1)
+          || (Settings.Pin_i2c_scl == -1)
+          || (Settings.I2C_clockSpeed == 0))) {
     addFormNote(F("I2C Interface is not configured yet (Hardware page)."));
   }
 
@@ -1017,20 +1042,25 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 void devicePage_show_serial_config(taskIndex_t taskIndex)
 {
   struct EventStruct TempEvent(taskIndex);
+
   serialHelper_webformLoad(&TempEvent);
   String webformLoadString;
+
   PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
 }
 
 void devicePage_show_I2C_config(taskIndex_t taskIndex)
 {
   struct EventStruct TempEvent(taskIndex);
+
   addFormSubHeader(F("I2C options"));
   String dummy;
+
   PluginCall(PLUGIN_WEBFORM_SHOW_I2C_PARAMS, &TempEvent, dummy);
   addFormCheckBox(F("Force Slow I2C speed"), F("taskdeviceflags0"), bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED));
 
-#ifdef FEATURE_I2CMULTIPLEXER
+# ifdef FEATURE_I2CMULTIPLEXER
+
   // Show selector for an I2C multiplexer port if a multiplexer is configured
   if (isI2CMultiplexerEnabled()) {
     bool multipleMuxPorts = bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
@@ -1038,30 +1068,40 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
       String i2c_mux_channels[2];
       int    i2c_mux_channelOptions[2];
       int    i2c_mux_channelCount = 1;
-      i2c_mux_channels[0] = F("Single channel");
+      i2c_mux_channels[0]       = F("Single channel");
       i2c_mux_channelOptions[0] = 0;
+
       if (Settings.I2C_Multiplexer_Type == I2C_MULTIPLEXER_PCA9540) {
         multipleMuxPorts = false; // force off
       } else {
-        i2c_mux_channels[1] = F("Multiple channels");
+        i2c_mux_channels[1]       = F("Multiple channels");
         i2c_mux_channelOptions[1] = 1;
         i2c_mux_channelCount++;
       }
-      addFormSelector(F("Multiplexer channels"),F("taskdeviceflags1"), i2c_mux_channelCount, i2c_mux_channels, i2c_mux_channelOptions, multipleMuxPorts ? 1 : 0, true);
+      addFormSelector(F("Multiplexer channels"),
+                      F("taskdeviceflags1"),
+                      i2c_mux_channelCount,
+                      i2c_mux_channels,
+                      i2c_mux_channelOptions,
+                      multipleMuxPorts ? 1 : 0,
+                      true);
     }
+
     if (multipleMuxPorts) {
       addRowLabel(F("Select connections"), F(""));
-      html_table(F(""), false);  // Sub-table
+      html_table(F(""), false); // Sub-table
       html_table_header(F("Channel"));
       html_table_header(F("Enable"));
       html_table_header(F("Channel"));
       html_table_header(F("Enable"));
+
       for (uint8_t x = 0; x < I2CMultiplexerMaxChannels(); x++) {
         String label = F("Channel ");
         label += String(x);
         String id = F("taskdeviceflag1ch");
         id += String(x);
-        if (x % 2 == 0) { html_TR(); }  // Start a new row for every 2 channels
+
+        if (x % 2 == 0) { html_TR(); } // Start a new row for every 2 channels
         html_TD();
         addHtml(label);
         html_TD();
@@ -1076,18 +1116,25 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
       i2c_mux_portoptions[mux_opt] = F("(Not connected via multiplexer)");
       i2c_mux_portchoices[mux_opt] = -1;
       uint8_t mux_max = I2CMultiplexerMaxChannels();
+
       for (int8_t x = 0; x < mux_max; x++) {
         mux_opt++;
         i2c_mux_portoptions[mux_opt]  = F("Channel ");
         i2c_mux_portoptions[mux_opt] += String(x);
 
-        i2c_mux_portchoices[mux_opt]  = x;
+        i2c_mux_portchoices[mux_opt] = x;
       }
+
       if (taskDeviceI2CMuxPort >= mux_max) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
-      addFormSelector(F("Connected to"), F("taskdevicei2cmuxport"), mux_opt + 1, i2c_mux_portoptions, i2c_mux_portchoices, taskDeviceI2CMuxPort);
+      addFormSelector(F("Connected to"),
+                      F("taskdevicei2cmuxport"),
+                      mux_opt + 1,
+                      i2c_mux_portoptions,
+                      i2c_mux_portchoices,
+                      taskDeviceI2CMuxPort);
     }
   }
-#endif
+# endif // ifdef FEATURE_I2CMULTIPLEXER
 }
 
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
@@ -1096,10 +1143,11 @@ void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t Devic
 
   int pconfigIndex = checkDeviceVTypeForTask(&TempEvent);
 
-  switch(Device[DeviceIndex].OutputDataType) {
+  switch (Device[DeviceIndex].OutputDataType) {
     case Output_Data_type_t::Default:
       break;
     case Output_Data_type_t::Simple:
+
       if (pconfigIndex >= 0) {
         sensorTypeHelper_webformLoad_simple(&TempEvent, pconfigIndex);
       }
@@ -1168,6 +1216,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 {
   // section: Values
   const byte valueCount = getValueCountForTask(taskIndex);
+
   if (!Device[DeviceIndex].Custom && (valueCount > 0))
   {
     addFormSubHeader(F("Values"));
@@ -1183,7 +1232,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       html_table_header(F("Formula"), F("EasyFormula"), 0);
     }
 
-    if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
+    if (Device[DeviceIndex].configurableDecimals())
     {
       html_table_header(F("Decimals"), 30);
     }
@@ -1206,7 +1255,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         addTextBox(id, ExtraTaskSettings.TaskDeviceFormula[varNr], NAME_FORMULA_LENGTH_MAX);
       }
 
-      if (Device[DeviceIndex].FormulaOption || Device[DeviceIndex].DecimalsOnly)
+      if (Device[DeviceIndex].configurableDecimals())
       {
         html_TD();
         String id = F("TDVD"); // ="taskdevicevaluedecimals"
@@ -1218,4 +1267,3 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 }
 
 #endif // ifdef WEBSERVER_DEVICES
-

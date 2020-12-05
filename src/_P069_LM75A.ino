@@ -107,7 +107,7 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
       success                      = !isnan(tempC);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        if (success) {
+        if (!success) {
           String log = F("LM75A: No reading!");
           addLog(LOG_LEVEL_INFO, log);
         }
