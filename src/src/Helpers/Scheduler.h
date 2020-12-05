@@ -234,6 +234,14 @@ public:
                                         byte                Function,
                                         struct EventStruct *event);
 
+  void schedule_mqtt_plugin_import_event_timer(deviceIndex_t   DeviceIndex,
+                                               taskIndex_t     TaskIndex,
+                                               byte            Function,
+                                               char           *c_topic,
+                                               byte           *b_payload,
+                                               unsigned int    length);
+
+
   void schedule_controller_event_timer(protocolIndex_t     ProtocolIndex,
                                        byte                Function,
                                        struct EventStruct *event);

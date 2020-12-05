@@ -58,7 +58,7 @@ IRsend *Plugin_035_irSender = nullptr;
 
 boolean Plugin_035(byte function, struct EventStruct *event, String &command)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -153,7 +153,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         else if (cmdCode.equalsIgnoreCase(F("IRSENDAC")) && Plugin_035_commonAc != 0) {
           success = true;
           enableIR_RX(false);
-          handle_AC_IRremote(command);
+          handle_AC_IRremote(parseStringToEnd(command, 2));
         }
 #endif // P016_P035_Extended_AC
 
@@ -164,18 +164,18 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
   return success;
 } // Plugin_035 END
 
-boolean handleIRremote(const String &cmd) {
+bool handleIRremote(const String &cmd) {
 
-  String IrType = "";
-  String TmpStr1 = "";
+  String IrType;
+  String TmpStr1;
 
   uint64_t IrCode = 0;
   uint16_t IrBits = 0;
   uint16_t IrRepeat = 0;
-  String ircodestr = "";
+  String ircodestr;
 
   StaticJsonDocument<200> docTemp;
-  DeserializationError error = deserializeJson(docTemp, cmd.substring(cmd.indexOf(',') + 1, cmd.length()));
+  DeserializationError error = deserializeJson(docTemp, parseStringToEnd(cmd, 2));
   if (!error) // If the command is in JSON format
   {
     IrType =  docTemp[F("protocol")].as<String>();
@@ -185,19 +185,16 @@ boolean handleIRremote(const String &cmd) {
     IrRepeat = docTemp[F("repeats")] | 0;
   }
   else { // If the command is NOT in JSON format (legacy)
-    if (GetArgv(cmd.c_str(), TmpStr1, 2))
+    IrType = parseString(cmd, 2);
+    if (IrType.length() > 0)
     {
-      IrType = TmpStr1;
-
-      if (GetArgv(cmd.c_str(), ircodestr, 3))
+      ircodestr = parseString(cmd, 3);
+      if (ircodestr.length() > 0)
       {
         IrCode = strtoull(ircodestr.c_str(), NULL, 16);
       }
-      IrBits = 0; //Leave it to 0 for default protocol bits
-      if (GetArgv(cmd.c_str(), TmpStr1, 4))
-        IrBits = str2int(TmpStr1.c_str()); // Number of bits to be sent. USE 0 for default protocol bits
-      if (GetArgv(cmd.c_str(), TmpStr1, 5))
-        IrRepeat = str2int(TmpStr1.c_str());  // Nr. of times the message is to be repeated
+      IrBits = parseString(cmd, 4).toInt();   // Number of bits to be sent. USE 0 for default protocol bits
+      IrRepeat = parseString(cmd, 5).toInt(); // Nr. of times the message is to be repeated
     }
   }
 
@@ -207,16 +204,8 @@ boolean handleIRremote(const String &cmd) {
 }
 
 #ifdef P016_P035_Extended_AC
-boolean handle_AC_IRremote(const String &cmd) {
-  String irData = "";
+bool handle_AC_IRremote(const String &irData) {
   StaticJsonDocument<JSON_OBJECT_SIZE(18) + 190> doc;
-
-  int argIndex = cmd.indexOf(',') + 1;
-  if (argIndex)
-    irData = cmd.substring(argIndex, cmd.length());
-  //addLog(LOG_LEVEL_INFO, String(F("IRTX: JSON received: ")) + irData);
-  irData.toLowerCase(); // Circumvent the need to have case sensitive JSON keys
-
   DeserializationError error = deserializeJson(doc, irData);         // Deserialize the JSON document
   if (error)         // Test if parsing succeeds.
   {
@@ -231,7 +220,7 @@ boolean handle_AC_IRremote(const String &cmd) {
     return false; //do not continue with sending of the signal.
   }
 
-  String tempstr = "";
+  String tempstr;
   tempstr = doc[F("model")].as<String>();
   st.model = IRac::strToModel(tempstr.c_str(), -1); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
   tempstr = doc[F("power")].as<String>();
@@ -272,28 +261,18 @@ boolean handle_AC_IRremote(const String &cmd) {
 #endif
 
 
-boolean handleRawRaw2Encoding(const String &cmd) {
-  boolean raw=true;
-  String IrType = "";
-  if (!GetArgv(cmd.c_str(), IrType, 2)) return false;
+bool handleRawRaw2Encoding(const String &cmd) {
+  bool raw=true;
+  String IrType = parseString(cmd, 2);
+  if (IrType.length() == 0) return false;
 
   if (IrType.equalsIgnoreCase(F("RAW"))) raw = true;
   else if (IrType.equalsIgnoreCase(F("RAW2")))  raw = false;
 
-
-  String IrRaw, TmpStr1;
-  uint16_t IrHz = 0;
-  unsigned int IrPLen = 0;
-  unsigned int IrBLen = 0;
-
-  if (GetArgv(cmd.c_str(), TmpStr1, 3))
-    IrRaw = TmpStr1; //Get the "Base32" encoded/compressed Ir signal
-  if (GetArgv(cmd.c_str(), TmpStr1, 4))
-    IrHz = str2int(TmpStr1.c_str()); //Get the base freguency of the signal (allways 38)
-  if (GetArgv(cmd.c_str(), TmpStr1, 5))
-    IrPLen = str2int(TmpStr1.c_str()); //Get the Pulse Length in ms
-  if (GetArgv(cmd.c_str(), TmpStr1, 6))
-    IrBLen = str2int(TmpStr1.c_str()); //Get the Blank Pulse Length in ms
+  String       IrRaw  = parseString(cmd, 3);         // Get the "Base32" encoded/compressed Ir signal
+  uint16_t     IrHz   = parseString(cmd, 4).toInt(); // Get the base freguency of the signal (allways 38)
+  unsigned int IrPLen = parseString(cmd, 5).toInt(); // Get the Pulse Length in ms
+  unsigned int IrBLen = parseString(cmd, 6).toInt(); // Get the Blank Pulse Length in ms
 
   uint16_t idx = 0; //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
   uint16_t *buf;
@@ -480,7 +459,7 @@ String listACProtocols() {
 }
 #endif
 
-boolean addErrorTrue()
+bool addErrorTrue()
 {
   addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));
   return true;
