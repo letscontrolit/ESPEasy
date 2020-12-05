@@ -36,12 +36,33 @@ Sensor
 Content
 ^^^^^^^
 
-* **Add new received code to command lines**: After receiving an valid IR code the code is automatically added to the following table if it not already exists.
+Add new received code to command lines
+""""""""""""""""""""""""""""""""""""""
+
+After receiving an valid IR code the code is automatically added to the following table if it not already exists.
+
 .. note:: The code is only added automatically to line **Code nn [Hex]:**!
-* **Execute commands**: After receiving an valid IR the command that is assigned to this code (**Code nn [Hex]:** or **Alternative code nn [Hex]:**) is executed.
-* **Code nn [Hex]:**: If the received valid IR code matches this setting the **Command nn** is executed.
-* **Alternative code nn [Hex]:**: If the received valid IR code matches this setting the **Command nn** is executed.
-* **Command nn:**: If the received valid IR code matches the code in **Code nn [Hex]:** or **Alternative code nn [Hex]:** this command is executed.
+
+Execute commands
+""""""""""""""""
+
+After receiving an valid IR the command that is assigned to this code (**Code nn [Hex]:** or **Alternative code nn [Hex]:**) is executed.
+
+Code nn [Hex]
+"""""""""""""
+
+If the received valid IR code matches this setting the **Command nn** is executed.
+
+Alternative code nn [Hex]
+"""""""""""""""""""""""""
+
+If the received valid IR code matches this setting the **Command nn** is executed.
+
+Command nn
+""""""""""
+
+If the received valid IR code matches the code in **Code nn [Hex]:** or **Alternative code nn [Hex]:** this command is executed.
+
 .. note:: Up to 10 commands can be set !
 
 Data acquisition

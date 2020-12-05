@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P023
 
-#include "../../ESPEasy_common.h"
-
 
 # define P23_Nlines 8 // The number of different lines which can be displayed
 # define P23_Nchars 64
