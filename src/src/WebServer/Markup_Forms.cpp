@@ -33,6 +33,7 @@ void addFormNote(const String& text, const String& id)
 {
   addRowLabel_tr_id("", id);
   String html;
+
   html.reserve(40 + text.length());
   html += F("<div class='note'>Note: ");
   html += text;
@@ -127,22 +128,13 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
 {
   addRowLabel_tr_id(label, id);
 
-  String html;
-  html.reserve(80 + id.length());
-
-  html += F("<input class='wide' type='password' name='");
-  html += id;
-  html += F("' maxlength=");
-  html += maxlength;
-  html += F(" value='");
-
-  if (password != "") { // no password?
-    html += F("*****");
-  }
-
-  // html += password;   //password will not published over HTTP
-  html += "'>";
-  addHtml(html);
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"),     F("wide"));
+  addHtmlAttribute(F("type"),      F("password"));
+  addHtmlAttribute(F("name"),      id);
+  addHtmlAttribute(F("maxlength"), maxlength);
+  addHtmlAttribute(F("value"),     (password.length() == 0) ? F("") : F("*****"));
+  addHtml('>');
 }
 
 bool getFormPassword(const String& id, String& password)
@@ -161,18 +153,12 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
 
   addRowLabel_tr_id(label, id);
 
-  String html;
-  html.reserve(80 + id.length());
-
-  html += F("<input class='wide' type='text' name='");
-  html += id;
-  html += F("' value='");
-
-  if (!empty_IP) {
-    html += formatIP(ip);
-  }
-  html += "'>";
-  addHtml(html);
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), F("wide"));
+  addHtmlAttribute(F("type"),  F("text"));
+  addHtmlAttribute(F("name"),  id);
+  addHtmlAttribute(F("value"), (empty_IP) ? F("") : formatIP(ip));
+  addHtml('>');
 }
 
 // ********************************************************************************
@@ -212,7 +198,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
     if (x == 0) {
       option += F(" - (default)");
     }
-    addSelector_option(addresses[x], option, "", addresses[x] == selectedIndex);
+    addSelector_Item(option, addresses[x], addresses[x] == selectedIndex, false, "");
   }
   addSelector_Foot();
 }
@@ -266,7 +252,7 @@ void addFormSelector_script(const String& label,
 // ********************************************************************************
 void addFormPinStateSelect(int gpio, int choice)
 {
-    bool enabled = true;
+  bool enabled = true;
 
   if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
     // do not add the pin state select for these pins.
@@ -288,31 +274,35 @@ void addFormPinStateSelect(int gpio, int choice)
     getGpioPullResistor(gpio, hasPullUp, hasPullDown);
     int nr_options = 0;
     String options[6];
-    int option_val[6];
-    options[nr_options] = F("Default");
+    int    option_val[6];
+    options[nr_options]    = F("Default");
     option_val[nr_options] = static_cast<int>(PinBootState::Default_state);
     ++nr_options;
+
     if (output) {
-      options[nr_options] = F("Output Low");
+      options[nr_options]    = F("Output Low");
       option_val[nr_options] = static_cast<int>(PinBootState::Output_low);
       ++nr_options;
-      options[nr_options] = F("Output High");
+      options[nr_options]    = F("Output High");
       option_val[nr_options] = static_cast<int>(PinBootState::Output_high);
       ++nr_options;
     }
+
     if (input) {
       if (hasPullUp) {
-        options[nr_options] = F("Input pullup");
+        options[nr_options]    = F("Input pullup");
         option_val[nr_options] = static_cast<int>(PinBootState::Input_pullup);
         ++nr_options;
       }
+
       if (hasPullDown) {
-        options[nr_options] = F("Input pulldown");
+        options[nr_options]    = F("Input pulldown");
         option_val[nr_options] = static_cast<int>(PinBootState::Input_pulldown);
         ++nr_options;
       }
+
       if (!hasPullUp && !hasPullDown) {
-        options[nr_options] = F("Input");
+        options[nr_options]    = F("Input");
         option_val[nr_options] = static_cast<int>(PinBootState::Input);
         ++nr_options;
       }
@@ -389,6 +379,7 @@ bool isFormItem(const String& id)
 void copyFormPassword(const String& id, char *pPassword, int maxlength)
 {
   String password;
+
   if (getFormPassword(id, password)) {
     safe_strncpy(pPassword, password.c_str(), maxlength);
   }
