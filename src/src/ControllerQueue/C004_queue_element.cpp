@@ -3,6 +3,8 @@
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
+#ifdef USES_C004
+
 C004_queue_element::C004_queue_element() {}
 
 C004_queue_element::C004_queue_element(const struct EventStruct *event) :
@@ -18,3 +20,5 @@ C004_queue_element::C004_queue_element(const struct EventStruct *event) :
 size_t C004_queue_element::getSize() const {
   return sizeof(*this) + txt.length();
 }
+
+#endif

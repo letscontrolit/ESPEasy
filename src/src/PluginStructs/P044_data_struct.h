@@ -6,8 +6,6 @@
 #ifdef USES_P044
 
 #include <ESPeasySerial.h>
-#include "../../ESPEasy_common.h"
-
 
 #ifndef PLUGIN_044_DEBUG
   # define PLUGIN_044_DEBUG                 false // extra logging in serial out

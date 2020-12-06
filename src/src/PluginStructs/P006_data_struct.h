@@ -4,7 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P006
 
-#include "../../ESPEasy_common.h"
 
 # define BMP085_ULTRAHIGHRES         3
 

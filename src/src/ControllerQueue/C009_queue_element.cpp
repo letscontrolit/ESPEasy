@@ -2,6 +2,8 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
+#ifdef USES_C009
+
 C009_queue_element::C009_queue_element() {}
 
 C009_queue_element::C009_queue_element(const struct EventStruct *event) :
@@ -18,3 +20,5 @@ size_t C009_queue_element::getSize() const {
   }
   return total;
 }
+
+#endif

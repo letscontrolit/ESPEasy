@@ -5,9 +5,7 @@
 #ifdef USES_P094
 
 #include <ESPeasySerial.h>
-#include "../../ESPEasy_common.h"
-
-# include <Regexp.h>
+#include <Regexp.h>
 
 
 # define P094_REGEX_POS             0

@@ -62,7 +62,7 @@ boolean Plugin_100(byte function, struct EventStruct *event, String& string)
       int8_t Plugin_100_DallasPin = CONFIG_PIN1;
 
       if (Plugin_100_DallasPin != -1) {
-        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_100_DallasPin);
+        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_100_DallasPin, Plugin_100_DallasPin);
 
         // Counter select
         String resultsOptions[2]      = { F("A"), F("B") };
@@ -80,7 +80,7 @@ boolean Plugin_100(byte function, struct EventStruct *event, String& string)
       PCONFIG(0) = getFormItemInt(F("p100_counter"));
 
       // 1-wire device address
-      Dallas_addr_selector_webform_save(event->TaskIndex, CONFIG_PIN1);
+      Dallas_addr_selector_webform_save(event->TaskIndex, CONFIG_PIN1, CONFIG_PIN1);
 
       success = true;
       break;
@@ -115,7 +115,7 @@ boolean Plugin_100(byte function, struct EventStruct *event, String& string)
         if (CONFIG_PIN1 != -1) {
           float value = 0;
 
-          if (Dallas_readCounter(addr, &value, CONFIG_PIN1, PCONFIG(0)))
+          if (Dallas_readCounter(addr, &value, CONFIG_PIN1, CONFIG_PIN1, PCONFIG(0)))
           {
             UserVar[event->BaseVarIndex] = UserVar[event->BaseVarIndex + 2] != 0
               ? value - UserVar[event->BaseVarIndex + 1]

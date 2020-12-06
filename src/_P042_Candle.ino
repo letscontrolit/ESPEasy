@@ -175,14 +175,14 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         if (Candle_color == ColorDefault) {
           addHtml(F(" checked>"));
         } else {
-          addHtml(">");
+          addHtml('>');
         }
         addHtml(F("<label for='web_Color_Default'> Use default color</label><br>"));
         addHtml(F("<input type='radio' id='web_Color_Selected' name='web_Color_Type' value='1'"));
         if (Candle_color == ColorSelected) {
           addHtml(F(" checked>"));
         } else {
-          addHtml(">");
+          addHtml('>');
         }
         addHtml(F("<label for='web_Color_Selected'> Use selected color</label><br>"));
 

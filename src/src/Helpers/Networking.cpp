@@ -1,5 +1,6 @@
 #include "Networking.h"
 
+#include "../../ESPEasy_common.h"
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
@@ -31,15 +32,7 @@
 //  #endif
 
 #include <lwip/netif.h>
-#ifdef ESP8266
-  # if !defined(ARDUINO_ESP8266_RELEASE_2_4_0) && !defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-    #  define SUPPORT_ARP
-  # endif // if !defined(ARDUINO_ESP8266_RELEASE_2_4_0) && !defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-#endif    // ifdef ESP8266
 
-#ifdef ESP32
-# define SUPPORT_ARP
-#endif // ifdef ESP32
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
@@ -1204,7 +1197,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   }
 
   long len = http.getSize();
-  File f   = ESPEASY_FS.open(file_save, "w");
+  File f   = tryOpenFile(file_save, "w");
 
   if (f) {
     uint8_t buff[128];

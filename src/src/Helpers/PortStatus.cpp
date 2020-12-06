@@ -139,7 +139,9 @@ uint16_t getPortFromKey(uint32_t key) {
 \*********************************************************************************************/
 String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noSearchValue)
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("getPinStateJSON"));
+  #endif
   printToWebJSON = true;
   byte mode     = PIN_MODE_INPUT;
   int16_t value = noSearchValue;

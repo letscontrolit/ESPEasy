@@ -519,7 +519,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                   }
                 }
                 UserVar[event->BaseVarIndex] = output_value;
-
+                
+                #ifndef BUILD_NO_DEBUG
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   String log = F("SW  : GPIO=");
                   log += CONFIG_PIN1;
@@ -529,6 +530,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                   log += output_value;
                   addLog(LOG_LEVEL_INFO, log);
                 }
+                #endif
                 // send task event
                 sendData(event);
                 // send monitor event
@@ -612,6 +614,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
                 UserVar[event->BaseVarIndex] = output_value;
 
+                #ifndef BUILD_NO_DEBUG
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   String log = F("SW  : LongPress: GPIO= ");
                   log += CONFIG_PIN1;
@@ -621,6 +624,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                   log += output_value;
                   addLog(LOG_LEVEL_INFO, log);
                 }
+                #endif
                 // send task event
                 sendData(event);
                 // send monitor event
@@ -641,6 +645,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               const int tempUserVar = round(UserVar[event->BaseVarIndex]);
               UserVar[event->BaseVarIndex] = SAFE_BUTTON_EVENT;
 
+              #ifndef BUILD_NO_DEBUG
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("SW  : SafeButton: false positive detected. GPIO= ");
                 log += CONFIG_PIN1;
@@ -648,6 +653,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 log += tempUserVar;
                 addLog(LOG_LEVEL_INFO, log);
               }
+              #endif
               // send task event
               sendData(event);
               // send monitor event
@@ -695,11 +701,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     {
       // We do not actually read the pin state as this is already done 10x/second
       // Instead we just send the last known state stored in Uservar
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("SW   : State ");
         log += UserVar[event->BaseVarIndex];
         addLog(LOG_LEVEL_INFO, log);
       }
+      #endif
       success = true;
       break;
     }

@@ -1,4 +1,4 @@
-#include "P092_data_struct.h"
+#include "../PluginStructs/P092_data_struct.h"
 
 #ifdef USES_P092
 
