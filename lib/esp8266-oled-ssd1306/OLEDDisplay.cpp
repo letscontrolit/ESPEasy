@@ -683,6 +683,11 @@ size_t OLEDDisplay::write(const char* str) {
   return length;
 }
 
+void OLEDDisplay::SetComPins(uint8_t _compins) {
+  sendCommand(SETCOMPINS);
+  sendCommand(_compins); // according to the adafruit lib, sometimes this may need to be 0x02
+}
+
 // Private functions
 void OLEDDisplay::sendInitCommands(void) {
   sendCommand(DISPLAYOFF);
