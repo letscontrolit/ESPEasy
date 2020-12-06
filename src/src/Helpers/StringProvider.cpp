@@ -256,7 +256,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::SD_LOG_LEVEL:           return getLogLevelDisplayString(Settings.SDLogLevel);
   #endif // ifdef FEATURE_SD
 
-    case LabelType::ESP_CHIP_ID:            break;
+    case LabelType::ESP_CHIP_ID:            return String(getChipId(), HEX);
     case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());

@@ -1004,6 +1004,31 @@ void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceInd
   }
 }
 
+void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(deviceIndex_t   DeviceIndex,
+                                                                taskIndex_t     TaskIndex,
+                                                                byte            Function,
+                                                                char           *c_topic,
+                                                                byte           *b_payload,
+                                                                unsigned int    length) {
+  if (validDeviceIndex(DeviceIndex)) {
+    // Emplace empty event in the queue first and the fill it.
+    // This makes sure the relatively large event will not be in memory twice.
+    const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::TaskPlugin, DeviceIndex, static_cast<byte>(Function));
+    ScheduledEventQueue.emplace_back(mixedId, EventStruct(TaskIndex));
+    ScheduledEventQueue.back().event.String1 = c_topic;
+
+    String& payload = ScheduledEventQueue.back().event.String2;
+    if (!payload.reserve(length)) {
+      addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
+    }
+
+    for (unsigned int i = 0; i < length; ++i) {
+      char c = static_cast<char>(*(b_payload + i));
+      payload += c;
+    }
+  }
+}
+
 void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct *event) {
   if (validProtocolIndex(ProtocolIndex)) {
     schedule_event_timer(PluginPtrType::ControllerPlugin, ProtocolIndex, Function, event);
@@ -1031,12 +1056,16 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t Pro
                                                              byte           *b_payload,
                                                              unsigned int    length) {
   if (validProtocolIndex(ProtocolIndex)) {
+    // Emplace empty event in the queue first and the fill it.
+    // This makes sure the relatively large event will not be in memory twice.
     const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::ControllerPlugin, ProtocolIndex, static_cast<byte>(Function));
     ScheduledEventQueue.emplace_back(mixedId, EventStruct());
     ScheduledEventQueue.back().event.String1 = c_topic;
 
     String& payload = ScheduledEventQueue.back().event.String2;
-    payload.reserve(length);
+    if (!payload.reserve(length)) {
+      addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
+    }
 
     for (unsigned int i = 0; i < length; ++i) {
       char c = static_cast<char>(*(b_payload + i));
