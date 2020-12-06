@@ -472,8 +472,6 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines)
     iHeight = getDisplaySizeSettings(disp_resolution).Height;
   }
   
-  result.Space = 0;
-
   while (iFontIndex < 0) {
     iMaxHeightForFont = (iHeight - (iLinesPerFrame - 1)) / iLinesPerFrame;  // at least 1 pixel space between lines
 
@@ -504,6 +502,10 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines)
     if (iLinesPerFrame > 1) {
       // more than one lines per frame -> calculate space inbetween
       result.Space = (iHeight-iMaxHeightForFont) / iLinesPerFrame;
+    }
+    else {
+      // just one lines per frame -> no space inbetween
+      result.Space = 0;
     }
     result.Top = (iHeight - (iMaxHeightForFont + (result.Space * (iLinesPerFrame-1)))) / 2;
   }
@@ -644,7 +646,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         ScrollingLines.Line[j].LastWidth = PixLengthLineOut; // while page scrolling this line is right aligned
       }
 
-      if ((PixLengthLineIn > getDisplaySizeSettings(disp_resolution).Width) && (iScrollTime >= 0))
+      if ((PixLengthLineIn > getDisplaySizeSettings(disp_resolution).Width) && (iScrollTime > 0))
       {
         // width of the line > display width -> scroll line
         ScrollingLines.Line[j].LineContent = ScrollingPages.LineIn[j];
