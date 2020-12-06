@@ -121,7 +121,16 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_MQTT_CONNECTION_STATE:
       {
-        if (event->Par1 == 1) {
+        const bool currentConnectedState = event->Par1 == 1;
+        if (P037_MQTTImport_connected != currentConnectedState) {
+          P037_MQTTImport_connected = currentConnectedState;
+          if (Settings.UseRules)
+          {
+            eventQueue.add(currentConnectedState ? F("MQTTimport#Connected") : F("MQTTimport#Disconnected"));
+          }
+        }
+
+        if (currentConnectedState) {
           success = MQTTSubscribe_037(event);
         }
         break;
