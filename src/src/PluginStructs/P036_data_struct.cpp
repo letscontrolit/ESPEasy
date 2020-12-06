@@ -439,10 +439,8 @@ int16_t P036_data_struct::GetHeaderHeight()
     // no header
     return 0;
   }
-  else
-  {
-    return P36_HeaderHeight;
-  }
+  return P36_HeaderHeight;
+
 }
 int16_t P036_data_struct::GetIndicatorTop()
 {
@@ -450,10 +448,7 @@ int16_t P036_data_struct::GetIndicatorTop()
     // no footer (indicator) -> returm max. display height
     return getDisplaySizeSettings(disp_resolution).Height;
   }
-  else
-  {
-    return P036_IndicatorTop;
-  }
+  return P036_IndicatorTop;
 }
 
 tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines)
@@ -495,17 +490,21 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines)
       }
     }
     if (iFontIndex < 0) {
-      // no font fits -> rduce number of lines per page
+      // no font fits -> reduce number of lines per page
       iLinesPerFrame--;
-      if (iLinesPerFrame == 0)
+      if (iLinesPerFrame == 0) {
+        // lines per frame is at minimum
         break;
+      }
     }
   }
   if (iFontIndex >= 0) {
     // font found -> calculate top position and space between lines
     iMaxHeightForFont = FontSizes[iFontIndex].Height * iLinesPerFrame;
-    if (iLinesPerFrame > 1)
+    if (iLinesPerFrame > 1) {
+      // more than one lines per frame -> calculate space inbetween
       result.Space = (iHeight-iMaxHeightForFont) / iLinesPerFrame;
+    }
     result.Top = (iHeight - (iMaxHeightForFont + (result.Space * (iLinesPerFrame-1)))) / 2;
   }
   else {
@@ -596,7 +595,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   } else {
     iPageScrollTime = (P36_MaxDisplayWidth / (P36_PageScrollPix * static_cast<int>(lscrollspeed))) * P36_PageScrollTick;
   }
-  float fScrollTime = (float)(lTaskTimer * 1000 - iPageScrollTime - 2 * P36_WaitScrollLines * 100) / 100.0f;
+  int iScrollTime = (float)(lTaskTimer * 1000 - iPageScrollTime - 2 * P36_WaitScrollLines * 100) / 100; // scrollTime in ms
 
 # ifdef PLUGIN_036_DEBUG
   log  = F("PageScrollTime: ");
@@ -645,7 +644,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         ScrollingLines.Line[j].LastWidth = PixLengthLineOut; // while page scrolling this line is right aligned
       }
 
-      if ((PixLengthLineIn > getDisplaySizeSettings(disp_resolution).Width) && (fScrollTime > 0.0f))
+      if ((PixLengthLineIn > getDisplaySizeSettings(disp_resolution).Width) && (iScrollTime >= 0))
       {
         // width of the line > display width -> scroll line
         ScrollingLines.Line[j].LineContent = ScrollingPages.LineIn[j];
@@ -654,7 +653,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         ScrollingLines.Line[j].fPixSum     = (float)getDisplaySizeSettings(disp_resolution).PixLeft;
 
         // pix change per scrolling line tick
-        ScrollingLines.Line[j].dPix = ((float)(PixLengthLineIn - getDisplaySizeSettings(disp_resolution).Width)) / fScrollTime;
+        ScrollingLines.Line[j].dPix = ((float)(PixLengthLineIn - getDisplaySizeSettings(disp_resolution).Width)) / iScrollTime;
 
 # ifdef PLUGIN_036_DEBUG
         log  = String(F("Line: ")) + String(j + 1);

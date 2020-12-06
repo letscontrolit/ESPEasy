@@ -359,8 +359,16 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       int P036pinmode = getFormItemInt(F("p036_pinmode"));
       switch (P036pinmode) {
-        case 1: bitWrite(lSettings, 26, true);                                              // Bit 26 Input PullUp
-        case 2: bitWrite(lSettings, 27, true);                                              // Bit 27 Input PullDown
+        case 1:
+        {
+          bitWrite(lSettings, 26, true);                                                    // Bit 26 Input PullUp
+          break;
+        }
+        case 2:
+        {
+          bitWrite(lSettings, 27, true);                                                    // Bit 27 Input PullDown
+          break;
+        }
       }
 
       PCONFIG_LONG(0) = lSettings;
