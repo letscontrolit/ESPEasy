@@ -82,6 +82,12 @@ void Adafruit_MPR121::setThresholds(uint8_t touch, uint8_t release) {
   }
 }
 
+void Adafruit_MPR121::setThreshold(uint8_t t, uint8_t touch, uint8_t release) {
+  if (t > 12) return;
+  writeRegister(MPR121_TOUCHTH_0 + 2 * t, touch);
+  writeRegister(MPR121_RELEASETH_0 + 2 * t, release);
+}
+
 uint16_t  Adafruit_MPR121::filteredData(uint8_t t) {
   if (t > 12) return 0;
   return readRegister16(MPR121_FILTDATA_0L + t*2);

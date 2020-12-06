@@ -204,8 +204,10 @@ void setup()
   initWiFi();
   
   run_compiletime_checks();
+#ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
+#endif
 #ifndef ESP32
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif
@@ -217,21 +219,15 @@ void setup()
   vcc = ESP.getVcc() / 1000.0f;
 #endif
 #ifdef ESP8266
-  lastADCvalue = analogRead(A0);
+  espeasy_analogRead(A0);
 #endif
 
-#ifdef ESP8266
-  // See https://github.com/esp8266/Arduino/commit/a67986915512c5304bd7c161cf0d9c65f66e0892
-  analogWriteRange(1023);
-#endif
-
+  initAnalogWrite();
 
   resetPluginTaskData();
 
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
-  #if defined(ESP32)
-    for(byte x = 0; x < 16; x++)
-      ledChannelPin[x] = -1;
   #endif
 
   Serial.begin(115200);
@@ -383,8 +379,10 @@ void setup()
 
   if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
-
+  
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("hardwareInit"));
+  #endif
   hardwareInit();
 
   timermqtt_interval = 250; // Interval for checking MQTT

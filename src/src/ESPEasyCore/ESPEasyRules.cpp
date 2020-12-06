@@ -65,7 +65,7 @@ void checkRuleSets() {
     fileName += x + 1;
     fileName += F(".txt");
 
-    if (ESPEASY_FS.exists(fileName)) {
+    if (fileExists(fileName)) {
       activeRuleSets[x] = true;
     }
     else {
@@ -77,7 +77,7 @@ void checkRuleSets() {
     if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV) {
       serialPrint(fileName);
       serialPrint(" ");
-      serialPrintln(String(activeRuleSets[x]));
+      serialPrintln(String(activeRuleSets[x] ? 0 : 1));
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
@@ -109,7 +109,9 @@ void rulesProcessing(String& event) {
     return;
   }
   START_TIMER
-    checkRAM(F("rulesProcessing"));
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("rulesProcessing"));
+  #endif
 #ifndef BUILD_NO_DEBUG
   unsigned long timer = millis();
 #endif // ifndef BUILD_NO_DEBUG
@@ -139,7 +141,7 @@ void rulesProcessing(String& event) {
     String fileName = EventToFileName(event);
 
     // if exists processed the rule file
-    if (ESPEASY_FS.exists(fileName)) {
+    if (fileExists(fileName)) {
       rulesProcessingFile(fileName, event);
     }
 #ifndef BUILD_NO_DEBUG
@@ -173,7 +175,9 @@ String rulesProcessingFile(const String& fileName, String& event) {
   if (!Settings.UseRules || !fileExists(fileName)) {
     return "";
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile"));
+  #endif
 #ifndef BUILD_NO_DEBUG
 
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV) {
@@ -220,8 +224,6 @@ String rulesProcessingFile(const String& fileName, String& event) {
 
     for (int x = 0; x < len; x++) {
       int data = buf[x];
-
-      SPIFFS_CHECK(data >= 0, fileName.c_str());
 
       switch (static_cast<char>(data))
       {
@@ -300,7 +302,9 @@ String rulesProcessingFile(const String& fileName, String& event) {
   }
 
   nestingLevel--;
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
+  #endif
   return "";
 }
 
@@ -457,7 +461,7 @@ void parse_string_commands(String &line) {
             && validIntFromString(arg2, iarg2)) {
           float val = (100.0 * iarg1) / (1.0 * iarg2);
           char sval[10];
-          sprintf(sval, "%02d", (int)val);
+          sprintf_P(sval, PSTR("%02d"), (int)val);
           replacement = String(sval);
         }
         */
@@ -635,9 +639,9 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String log = F("RuleDebug: ");
-    log += codeBlock;
-    log += match;
-    log += isCommand;
+    log += codeBlock ? 0 : 1;
+    log += match ? 0 : 1;
+    log += isCommand ? 0 : 1;
     log += ": ";
     log += line;
     addLog(LOG_LEVEL_DEBUG_DEV, log);
@@ -768,9 +772,9 @@ void processMatchedRule(String& action, String& event,
     substitute_eventvalue(action, event);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("ACT  : ");
-      log += action;
-      addLog(LOG_LEVEL_INFO, log);
+      String actionlog = F("ACT  : ");
+      actionlog += action;
+      addLog(LOG_LEVEL_INFO, actionlog);
     }
 
     ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
@@ -782,7 +786,9 @@ void processMatchedRule(String& action, String& event,
    Check if an event matches to a given rule
  \*********************************************************************************************/
 bool ruleMatch(const String& event, const String& rule) {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ruleMatch"));
+  #endif
 
   String tmpEvent = event;
   String tmpRule  = rule;
@@ -873,7 +879,9 @@ bool ruleMatch(const String& event, const String& rule) {
   if (stringMatch) {
     match = compareValues(compare, value, ruleValue);
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ruleMatch2"));
+  #endif
   return match;
 }
 
@@ -1103,7 +1111,7 @@ void createRuleEvents(struct EventStruct *event) {
       default:
 
         // FIXME TD-er: Do we need to call formatUserVarNoCheck here? (or with check)
-        eventString += UserVar[event->BaseVarIndex + varNr];
+        eventString += formatUserVarNoCheck(event, varNr);
         break;
     }
     eventQueue.add(eventString);

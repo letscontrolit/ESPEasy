@@ -1,6 +1,7 @@
-#ifndef DATASTRUCTS_EVENT_VALUE_SOURCE_H
-#define DATASTRUCTS_EVENT_VALUE_SOURCE_H
+#ifndef DATATYPES_EVENT_VALUE_SOURCE_H
+#define DATATYPES_EVENT_VALUE_SOURCE_H
 
+#include <Arduino.h>
 
 struct EventValueSourceGroup {
   enum class Enum : byte {
@@ -46,4 +47,4 @@ struct EventValueSource {
 };
 
 
-#endif // DATASTRUCTS_EVENT_VALUE_SOURCE_H
+#endif // DATATYPES_EVENT_VALUE_SOURCE_H

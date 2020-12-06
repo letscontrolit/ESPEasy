@@ -6,7 +6,7 @@
 # Needed packages:
 # sudo apt-get update
 # sudo apt-get upgrade
-# sudo apt install python-minimal virtualenv build-essential zip binutils
+# sudo apt install python3-minimal virtualenv build-essential zip binutils
 # For Python 3.8:
 # sudo apt install -y software-properties-common
 # sudo add-apt-repository ppa:deadsnakes/ppa

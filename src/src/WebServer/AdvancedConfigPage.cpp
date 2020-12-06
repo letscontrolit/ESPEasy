@@ -21,7 +21,9 @@
 // Web Interface config page
 // ********************************************************************************
 void handle_advanced() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_advanced"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -284,7 +286,6 @@ void addLogLevelSelect(const String& name, int choice)
   int    optionValues[LOG_LEVEL_NRELEMENTS + 1] = { 0 };
 
   options[0]      = getLogLevelDisplayString(0);
-  optionValues[0] = 0;
 
   for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
     options[i + 1] = getLogLevelDisplayStringFromIndex(i, optionValues[i + 1]);

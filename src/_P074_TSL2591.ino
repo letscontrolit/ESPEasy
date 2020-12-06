@@ -61,7 +61,55 @@ struct P074_data_struct : public PluginTaskData_base {
     }
   }
 
+  // Return true when value is present.
+  bool getFullLuminosity(uint32_t & value) {
+    value = 0;
+    if (newValuePresent) {
+      // don't try to read a new value until the last one was processed.
+      return false;
+    }
+    if (!integrationActive) {
+      if (startIntegrationNeeded) {
+        // Fix to re-set the gain/timing before every read.
+        // See https://github.com/letscontrolit/ESPEasy/issues/3347
+        if (tsl.begin()) {
+          tsl.enable();
+          integrationStart = millis();
+          duration = 0;
+          integrationActive = true;
+          startIntegrationNeeded = false;
+        }
+      }
+      return false; // Started integration, so no value possible yet.
+    }
+    bool finished = false;
+    value = tsl.getFullLuminosity(finished);
+    duration = timePassedSince(integrationStart);
+    if (finished) {
+      integrationActive = false;
+      integrationStart = 0;
+      newValuePresent = true;
+    } else {
+      if (duration > 1000) {
+        // Max integration time is 600 msec, so if we still have no value, reset the current state
+        integrationStart = 0;
+        integrationActive = false;
+        newValuePresent = false;
+        startIntegrationNeeded = true; // Apparently a value was needed
+      }
+    }
+    if (!integrationActive) {
+      tsl.disable();
+    }
+    return finished;
+  }
+
   Adafruit_TSL2591 tsl;
+  unsigned long integrationStart = 0;
+  unsigned long duration = 0;
+  bool integrationActive = false;
+  bool newValuePresent = false;
+  bool startIntegrationNeeded = false;
 };
 
 boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
@@ -192,38 +240,67 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
+    case PLUGIN_TEN_PER_SECOND: {
+      P074_data_struct *P074_data =
+        static_cast<P074_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P074_data) {
+        uint32_t fullLuminosity;
+        if (P074_data->getFullLuminosity(fullLuminosity)) {
+          // TSL2591_FULLSPECTRUM: Reads two byte value from channel 0 (visible + infrared)
+          const uint16_t full = (fullLuminosity & 0xFFFF);
+
+          // TSL2591_INFRARED: Reads two byte value from channel 1 (infrared)
+          const uint16_t ir =  (fullLuminosity >> 16);
+
+          // TSL2591_VISIBLE: Reads all and subtracts out just the visible!
+          const uint16_t visible =  ( (fullLuminosity & 0xFFFF) - (fullLuminosity >> 16));
+
+          const uint16_t lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
+
+          UserVar[event->BaseVarIndex + 0] = lux;
+          UserVar[event->BaseVarIndex + 1] = full;
+          UserVar[event->BaseVarIndex + 2] = visible;
+          UserVar[event->BaseVarIndex + 3] = ir;
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("TSL2591: Lux: ");
+            log += String(lux);
+            log += F(" Full: ");
+            log += String(full);
+            log += F(" Visible: ");
+            log += String(visible);
+            log += F(" IR: ");
+            log += String(ir);
+            log += F(" duration: ");
+            log += P074_data->duration;
+            addLog(LOG_LEVEL_INFO, log);
+          }
+
+          // Update was succesfull, schedule a read.
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+        }
+      }
+      break;
+    }
+
     case PLUGIN_READ: {
       P074_data_struct *P074_data =
         static_cast<P074_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P074_data) {
-        // Simple data read example. Just read the infrared, fullspecrtrum diode
-        // or 'visible' (difference between the two) channels.
-        // This can take 100-600 milliseconds! Uncomment whichever of the
-        // following you want to read
-        float lux, full, visible, ir;
-        visible = P074_data->tsl.getLuminosity(TSL2591_VISIBLE);
-        ir      = P074_data->tsl.getLuminosity(TSL2591_INFRARED);
-        full    = P074_data->tsl.getLuminosity(TSL2591_FULLSPECTRUM);
-        lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
-
-        UserVar[event->BaseVarIndex + 0] = lux;
-        UserVar[event->BaseVarIndex + 1] = full;
-        UserVar[event->BaseVarIndex + 2] = visible;
-        UserVar[event->BaseVarIndex + 3] = ir;
-
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("TSL2591: Lux: ");
-          log += String(lux);
-          log += F(" Full: ");
-          log += String(full);
-          log += F(" Visible: ");
-          log += String(visible);
-          log += F(" IR: ");
-          log += String(ir);
-          addLog(LOG_LEVEL_INFO, log);
+        // PLUGIN_READ is either triggered by the task interval timer, or re-scheduled 
+        // from PLUGIN_TEN_PER_SECOND when there is new data.
+        if (P074_data->newValuePresent) {
+          // Value was read in the PLUGIN_TEN_PER_SECOND call, just notify controllers.
+          P074_data->newValuePresent = false;
+          success = true;
+        } else {
+          if (!P074_data->integrationActive) {
+            // No reading in progress and no new value present, so must trigger a new reading.
+            P074_data->startIntegrationNeeded = true;
+          }
         }
-        success = true;
       } else {
         addLog(LOG_LEVEL_ERROR, F("TSL2591: Sensor not initialized!?"));
       }

@@ -21,7 +21,9 @@
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
   // FIXME TD-er: Why have an event here as argument? It is not used.
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("remoteConfig"));
+  #endif
   bool   success = false;
   String command = parseString(string, 1);
 
@@ -52,36 +54,6 @@ bool remoteConfig(struct EventStruct *event, const String& string)
   return success;
 }
 
-#if defined(ESP32)
-void analogWriteESP32(int pin, int value)
-{
-  // find existing channel if this pin has been used before
-  int8_t ledChannel = -1;
-
-  for (byte x = 0; x < 16; x++) {
-    if (ledChannelPin[x] == pin) {
-      ledChannel = x;
-    }
-  }
-
-  if (ledChannel == -1)             // no channel set for this pin
-  {
-    for (byte x = 0; x < 16; x++) { // find free channel
-      if (ledChannelPin[x] == -1)
-      {
-        int freq = 5000;
-        ledChannelPin[x] = pin; // store pin nr
-        ledcSetup(x, freq, 10); // setup channel
-        ledcAttachPin(pin, x);  // attach to this pin
-        ledChannel = x;
-        break;
-      }
-    }
-  }
-  ledcWrite(ledChannel, value);
-}
-
-#endif // if defined(ESP32)
 
 
 /********************************************************************************************\
@@ -102,7 +74,9 @@ void delayBackground(unsigned long dsdelay)
 bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 {
   if (!validControllerIndex(controllerIndex)) { return false; }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setControllerEnableStatus"));
+  #endif
 
   // Only enable controller if it has a protocol configured
   if ((Settings.Protocol[controllerIndex] != 0) || !enabled) {
@@ -118,7 +92,9 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 {
   if (!validTaskIndex(event->TaskIndex)) { return false; }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setTaskEnableStatus"));
+  #endif
 
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.TaskDeviceNumber[event->TaskIndex]) || !enabled) {
@@ -146,7 +122,9 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 void taskClear(taskIndex_t taskIndex, bool save)
 {
   if (!validTaskIndex(taskIndex)) { return; }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("taskClear"));
+  #endif
   Settings.clearTask(taskIndex);
   ExtraTaskSettings.clear(); // Invalidate any cached values.
   ExtraTaskSettings.TaskIndex = taskIndex;

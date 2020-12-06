@@ -229,9 +229,6 @@ To create/register a plugin, you have to :
         #define FEATURE_I2CMULTIPLEXER
     #endif
 
-    #ifndef BUILD_NO_DEBUG
-      #define BUILD_NO_DEBUG
-    #endif
 #endif
 
 #ifdef USES_FHEM
@@ -299,6 +296,9 @@ To create/register a plugin, you have to :
     #ifdef USE_SERVO
       #undef USE_SERVO
     #endif
+    #ifdef USE_RTTTL
+      #undef USE_RTTTL
+    #endif
 #endif
 
 
@@ -336,6 +336,9 @@ To create/register a plugin, you have to :
 
     #ifndef LIMIT_BUILD_SIZE
         #define LIMIT_BUILD_SIZE
+    #endif
+    #ifndef NOTIFIER_SET_NONE
+        #define NOTIFIER_SET_NONE
     #endif
 
     #ifdef USES_SSDP
@@ -449,6 +452,7 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
+    #define USES_P004   // DS18B20
 #endif
 
 #ifdef PLUGIN_SET_SHELLY_PLUG_S
@@ -724,6 +728,7 @@ To create/register a plugin, you have to :
     #ifndef DONT_USE_SERVO
         #define USE_SERVO
     #endif
+    #define USE_RTTTL
 
     #define USES_P001   // Switch
     #define USES_P002   // ADC
@@ -817,6 +822,9 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_TESTING
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
+  #endif
+  #ifndef NOTIFIER_SET_NONE
+    #define NOTIFIER_SET_NONE
   #endif
 
 
@@ -992,9 +1000,6 @@ To create/register a plugin, you have to :
 //  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
 //  #undef USES_P082   // GPS
 
-  #ifdef USE_SERVO
-    #undef USE_SERVO
-  #endif
 #endif
 
 
@@ -1052,6 +1057,109 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
+
+// Disable Homie plugin for now in the dev build to make it fit.
+#if defined(PLUGIN_BUILD_DEV) && defined(USES_C014)
+  #undef USES_C014
+#endif
+
+// VCC builds need a bit more, disable timing stats to make it fit.
+#ifdef FEATURE_ADC_VCC
+  #ifndef LIMIT_BUILD_SIZE
+    #define LIMIT_BUILD_SIZE
+  #endif
+  #ifndef NOTIFIER_SET_NONE
+    #define NOTIFIER_SET_NONE
+  #endif
+
+#endif
+
+
+// Due to size restrictions, disable a few plugins/controllers for 1M builds
+#ifdef SIZE_1M
+  #ifdef USES_C003
+    #undef USES_C003
+  #endif
+  #ifndef LIMIT_BUILD_SIZE
+    #define LIMIT_BUILD_SIZE
+  #endif
+#endif
+
+// Disable some diagnostic parts to make builds fit.
+#ifdef LIMIT_BUILD_SIZE
+  #ifdef WEBSERVER_TIMINGSTATS
+    #undef WEBSERVER_TIMINGSTATS
+  #endif
+
+  #ifndef BUILD_NO_DEBUG
+    #define BUILD_NO_DEBUG
+  #endif
+  #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
+    #define BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
+  #endif
+  #ifdef FEATURE_I2CMULTIPLEXER
+    #undef FEATURE_I2CMULTIPLEXER
+  #endif
+  #ifdef USE_SETTINGS_ARCHIVE
+    #undef USE_SETTINGS_ARCHIVE
+  #endif
+
+  #ifdef USE_SERVO
+    #undef USE_SERVO
+  #endif
+  #ifdef USE_RTTTL
+    #undef USE_RTTTL
+  #endif
+  #ifdef USES_BLYNK
+    #undef USES_BLYNK
+  #endif
+  #ifdef USES_P092
+    #undef USES_P092   // DL-Bus
+  #endif
+  #ifdef USES_P093
+    #undef USES_P093   // Mitsubishi Heat Pump
+  #endif
+  #ifdef USES_P100 // Pulse Counter - DS2423
+    #undef USES_P100
+  #endif
+  #ifdef USES_C012
+    #undef USES_C012 // Blynk
+  #endif
+  #ifdef USES_C015
+    #undef USES_C015 // Blynk
+  #endif
+  #ifdef USES_C016
+    #undef USES_C016 // Cache controller
+  #endif
+  #ifdef USES_C017 // Zabbix
+    #undef USES_C017
+  #endif
+  #ifdef USES_C018
+    #undef USES_C018 // LoRa TTN - RN2483/RN2903
+  #endif
+#endif
+
+// Timing stats page needs timing stats
+#if defined(WEBSERVER_TIMINGSTATS) && !defined(USES_TIMING_STATS)
+  #define USES_TIMING_STATS
+#endif
+
+// If timing stats page is not included, there is no need in collecting the stats
+#if !defined(WEBSERVER_TIMINGSTATS) && defined(USES_TIMING_STATS)
+  #undef USES_TIMING_STATS
+#endif
+
+
+#ifdef BUILD_NO_DEBUG
+  #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    #define BUILD_NO_DIAGNOSTIC_COMMANDS
+  #endif
+  #ifndef BUILD_NO_RAM_TRACKER
+    #define BUILD_NO_RAM_TRACKER
+  #endif
+
+#endif
+
 #if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)
   #define USES_MQTT
 #endif
@@ -1076,86 +1184,6 @@ To create/register a plugin, you have to :
 #endif
 #endif //USES_MQTT
 
-
-// Disable Homie plugin for now in the dev build to make it fit.
-#if defined(PLUGIN_BUILD_DEV) && defined(USES_C014)
-  #undef USES_C014
-#endif
-
-// VCC builds need a bit more, disable timing stats to make it fit.
-#ifdef FEATURE_ADC_VCC
-  #ifndef LIMIT_BUILD_SIZE
-    #define LIMIT_BUILD_SIZE
-  #endif
-#endif
-
-
-// Due to size restrictions, disable a few plugins/controllers for 1M builds
-#ifdef SIZE_1M
-  #ifdef USES_C003
-    #undef USES_C003
-  #endif
-  #ifndef LIMIT_BUILD_SIZE
-    #define LIMIT_BUILD_SIZE
-  #endif
-#endif
-
-// Disable some diagnostic parts to make builds fit.
-#ifdef LIMIT_BUILD_SIZE
-  #ifdef WEBSERVER_TIMINGSTATS
-    #undef WEBSERVER_TIMINGSTATS
-  #endif
-
-  #ifndef BUILD_NO_DEBUG
-    #define BUILD_NO_DEBUG
-  #endif
-  #ifdef FEATURE_I2CMULTIPLEXER
-    #undef FEATURE_I2CMULTIPLEXER
-  #endif
-  #ifdef USE_SETTINGS_ARCHIVE
-    #undef USE_SETTINGS_ARCHIVE
-  #endif
-
-  #ifdef USE_SERVO
-    #undef USE_SERVO
-  #endif
-  #ifdef USES_BLYNK
-    #undef USES_BLYNK
-  #endif
-  #ifdef USES_C017 // Zabbix
-    #undef USES_C017
-  #endif
-  #ifdef USES_P092
-    #undef USES_P092   // DL-Bus
-  #endif
-  #ifdef USES_P093
-    #undef USES_P093   // Mitsubishi Heat Pump
-  #endif
-  #ifdef USES_P100 // Pulse Counter - DS2423
-    #undef USES_P100
-  #endif
-#endif
-
-// Timing stats page needs timing stats
-#if defined(WEBSERVER_TIMINGSTATS) && !defined(USES_TIMING_STATS)
-  #define USES_TIMING_STATS
-#endif
-
-// If timing stats page is not included, there is no need in collecting the stats
-#if !defined(WEBSERVER_TIMINGSTATS) && defined(USES_TIMING_STATS)
-  #undef USES_TIMING_STATS
-#endif
-
-
-#ifdef BUILD_NO_DEBUG
-  #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-    #define BUILD_NO_DIAGNOSTIC_COMMANDS
-  #endif
-  #ifndef BUILD_NO_RAM_TRACKER
-    #define BUILD_NO_RAM_TRACKER
-  #endif
-
-#endif
 
 // It may have gotten undefined to fit a build. Make sure the Blynk controllers are not defined
 #ifndef USES_BLYNK

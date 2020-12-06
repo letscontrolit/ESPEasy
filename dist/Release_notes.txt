@@ -1,4 +1,173 @@
 -------------------------------------------------
+Changes in release mega-20201130 (since mega-20201125)
+-------------------------------------------------
+
+Release date: ma 30 nov 2020  0:18:16 CET
+
+TD-er (13):
+      [Cleanup] Reduce build size LIMIT_BUILD_SIZE builds
+      [RTTTL] Fix check argument count for RTTTL command (#3391)
+      Check nr. task value decimals = 0, when decimals cannot be set (#3396)
+      [Build Size] Exclude typical debug logs from minimal builds
+      [GPIO] Echo the GPIO command line if parameters are invalid
+      [GPIO] Only log errors when using positive GPIO
+      [GPIO] Add proper valid GPIO pin check to all GPIO commands
+      [Servo] Fix build issue due to missing include
+      [Cleanup] Do not execute invalid command from Domoticz MQTT helper
+      [Storage] Check if file exists before writing to it
+      Check range of set output device values
+      BUILD_NO_DEBUG should be enabled for Normal builds
+      Update build_ESPeasy.sh
+
+
+-------------------------------------------------
+Changes in release mega-20201125 (since mega-20201102)
+-------------------------------------------------
+
+Release date: wo 25 nov 2020  9:59:22 CET
+
+TD-er (50):
+      [Build IR] Do not exclude IR lib on Custom build
+      Add custom_IR_ESP8266_4M1M PIO environment
+      [Playground] Move P251 PZEM 004T-v30 from Playground to main repo
+      Uncrustify [P102] PZEM004Tv3
+      [P102] Cleanup serial config
+      [ESP32][Mini Dashboard] Not working (#3356)
+      [GPS] Fix 1024 week roll over on old GPS modules
+      [PVS-Studio] Fix able to build PVS-Studio test builds
+      [GPS] Process full sentence sooner after receiving line
+      [PVS-Studio] Fix suggestions made by PVS-studio
+      [PVS-Studio] Fix suggestions made by PVS-Sturdio (pt 2)
+      [Events] Trigger new events TaskInit#taskname and TaskExit#taskname
+      [I2C] Update I2C clock based on frequency, not in low/high speed mode
+      [command] Trim spaces from commands given via web interface Tools page
+      [RN2483] Properly format LoRaWAN controller credentials on web UI
+      [Dallas] Fix timings for multiple tasks running Dallas sensors
+      [Dallas] Move redundant code from P004, P080 and P100 to a Dallas helper
+      [Dallas] Cleanup P004 DS18b20 plugin code
+      [Dallas] Reschedule at normal interval to prevent drift caused by reading
+      [Dallas] Improve timings to comply with datasheet timings
+      [Dallas] Fix build issue on ESP32
+      [Docs] Make the P004 Dallas documentation a bit more informative
+      [Dallas] Support multiple temp sensors in 1 task for simultaneous reads
+      [Dallas] Add statistics + speed up reading
+      [Cleanup] Rename _CPlugin_SensorTypeHelper.h to _Plugin_SensorTypeHelper.h
+      [Cleanup] Load default var names when changing nr output values
+      [LoRaWAN] C018 Reduce memory usage when controller not used
+      [Cleanup] Save resources by moving static strings to flash
+      [GPS] Read all data available in the serial buffer
+      [Dallas] Document + update TTN decoder
+      Fix build issue on ESP32
+      Include all Dallas plugins in the Custom builds
+      [Servo] Add normal build for ESP32 including servo support
+      [Servo] Fix lib_ignore for all ESP82xx builds to ignore ServoESP32
+      [EmonCMS] Fix copy/paste bug (#3377)
+      Standardise command execution via web interface (#3374)
+      [PWM] Move PWM command to internal + add support for ESP32 PWM frequency
+      [Servo] Fix interoperability between PWM command and servo on ESP32
+      [PWM] Use central GPIO manager functions for all analogWrite calls
+      [PWM] Fix stability issues on ESP32 regarding PWM
+      [Tone] Move command 'tone' from switch plugin to be an internal command
+      [RTTTL] Move RTTTL command from switch to be an internal command
+      [TLS2561] Use floats instead of double to reduce build size
+      [MS5611] Use bit shift instead of pow calculations
+      [Servo] Move Servo command from switch to internal command
+      [Docs] Document WiFi ECO mode
+      [Cleanup] Fix small left-over issues related to GPIO/Servo handling
+      [Build] Remove some more plugins for limited size builds
+      [ESP32] Make sure calls to open files have leading / on ESP32
+      [Encoder] Update output immediately after "encwrite"
+
+Ton Huisman (6):
+      [P062 Touch] Add sensitivity configuration - Add global sensitivity setting - Add sensitivity setting per touchobject - Add calibration data gathering and display
+      [P062 touch] Some code improvements
+      [P062 Touch] Fix calibration log
+      [P062] Another calibration log fix
+      [Conversions] Add unitnr to IP address conversion - Uses UDP Network member list to lookup the IP address - Inspired by a [forum question](https://www.letscontrolit.com/forum/viewtopic.php?f=6&t=8066)
+      Add argument for result on unknown IP: - 0 = default `(IP unset)` - 1 = empty string - 2 = `0`
+
+fcauwe (1):
+      [P056] Fixed bug when SDS sensor is not reporting
+
+uwekaditz (7):
+      Improvement: a received IR code can be saved and a command can be assigned to it
+      ressouce-saving string calculation, Inhibit time between executing the same command, automatic adding of new IR codes is disabled after boot up
+      [P016] reduce memory usage when plugin not used
+      not using the _ prefix anymore, use reserve() for long log strings
+      BUG: Wrong EventValueSource for ExecuteCommand_all()
+      [CHG] #include "../../ESPEasy_common.h" after #ifdef USES_P016
+      Update platformio_esp32_envs.ini
+
+
+-------------------------------------------------
+Changes in release mega-20201102 (since mega-20201022)
+-------------------------------------------------
+
+Release date: ma  2 nov 2020 12:59:12 CET
+
+TD-er (41):
+      [Webserver] Move WebServer_xxx.ino to src/WebServer/...cpp
+      [WebServer] Add .h files for moved WebServer_xxx.ino
+      [Cleanup] Move Controller.ino and ESPEasyRules.ino to .cpp/.h
+      [Cleanup] Move ESPEasy_Log.ino and Serial.ino to .cpp/.h
+      [Cleanup] Strip almost all from ESPEasy_fdwdecl.h
+      [Build] Disable Settings Archive on limit build size builds.
+      [Build] Fix build issues reported by Travis
+      [Build] Some extra build issues with specific custom builds
+      [Cleanup] Convert StringProvider.ino to .cpp/.h
+      [Cleanup] Convert ESPEasyStatistics.ino to .cpp/.h
+      [Cleanup] Convert LoRa TTN .ino  to .cpp/.h
+      [Cleanup] Convert Modbus.ino to .cpp/.h
+      [Cleanup]  strip ESPEasy-Globals.h + check #include "ESPEasy_common.h"
+      [Build] Fix missing include for VCC builds
+      [Cleanup] Move enum/define only files to DataTypes & CustomBuild folder
+      [Cleanup] Move _CPluginHelper to src/Helpers/ folder
+      [Cleanup] Rename src/WebServer/WebServer_*  to  src/WebServer/*
+      [Cleanup] Move WiFi/Ethernet code to ESPEasyCore directory
+      [Cleanup] Make sure _Plugin_Helper.h is included before #ifdef USES_xxx
+      [Cleanup] Make sure _Plugin_Helper.h is included before #ifdef USES_xxx (2)
+      Fix dependency in SDM Energy Meter library
+      Fix missing rename of ser/WebServer/WebServer_ includes
+      Fix merge issues after GPIO PR merged
+      [Cleanup] Move ESPeasyGPIO.ino to ESPEasyCore/ESPEasyGPIO.cpp/.h
+      Fix missing include in C005
+      Don't call PLUGIN_WRITE on inactive tasks (#3317)
+      Fix GPIO command from dashboard.esp broken
+      [WiFi] Move global ESPEasy WiFi runtime data to single struct
+      [Build IR] Do not exclude IR lib on Custom build
+      Add custom_IR_ESP8266_4M1M PIO environment
+      [Servo] Log error when servo command is used while servo not in build
+      [WiFi] Move WiFi state logic to WiFiEventData struct
+      [WiFi] Fix recursive calls to WiFiConnected() + limit reconnect rate
+      [WiFi] Fix build issue for _VCC builds
+      [MQTT] Fix gpio command sent from MQTT (#3344)
+      [MQTT] Fix command handling for PiDome MQTT
+      [Task command] Fix taskenable / taskdisable commands
+      [TSL2591] Check sensor before reading + speedup
+      [TSL2591] Perform async reading of sensor prevent blocking calls
+      [TSL2591] Force disable sensor after timeout + log duration
+      [Docs] Describe how to iterate over a lookup table using rules
+
+Thomas (13):
+      Added Wake On LAN Plugin P101
+      Updated Command.rst for Wake On LAN Plugin P101
+      Added Doc files for Wake On LAN Plugin P101
+      Update _plugin_categories.repl
+      Updated ReadTheDocs for P075 Nextion.
+      Update P075 and P079 Plugin Docs
+      Update _P101_WakeOnLan.ino
+      Add WakeOnLan V1.1.6 Library
+      Update _P101_WakeOnLan.ino
+      Rename P101_WakeOnLan.rst to P101.rst
+      Add Doc File Missing in PR #3328
+      Add doc file missing in PR 3328
+      Add missing doc file for PR 3328
+
+stefan (1):
+      [ArduinoIDE] Fix include path for new structure
+
+
+-------------------------------------------------
 Changes in release mega-20201022 (since mega-20201016)
 -------------------------------------------------
 

@@ -14,8 +14,15 @@ float  globalstack[STACK_SIZE];
 float *sp     = globalstack - 1;
 float *sp_max = &globalstack[STACK_SIZE - 1];
 
-#define is_operator(c) (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%')
-#define is_unary_operator(c) (c == '!')
+bool is_operator(char c)
+{
+  return (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%');
+}
+
+bool is_unary_operator(char c) 
+{
+  return (c == '!');
+}
 
 int push(float value)
 {
@@ -169,7 +176,9 @@ unsigned int op_arg_count(const char c)
 int Calculate(const char *input, float *result)
 {
   #define TOKEN_LENGTH 25
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("Calculate"));
+  #endif
   const char *strpos = input, *strend = input + strlen(input);
   char token[TOKEN_LENGTH];
   char c, oc, *TokenPos = token;
@@ -334,7 +343,9 @@ int Calculate(const char *input, float *result)
     return error;
   }
   *result = *sp;
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("Calculate2"));
+  #endif
   return CALCULATE_OK;
 }
 

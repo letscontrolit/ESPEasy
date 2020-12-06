@@ -5,9 +5,8 @@
 #ifdef USES_P087
 
 #include <ESPeasySerial.h>
-#include "../../ESPEasy_common.h"
 
-# include <Regexp.h>
+#include <Regexp.h>
 
 
 # define P087_REGEX_POS          0

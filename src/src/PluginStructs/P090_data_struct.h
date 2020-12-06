@@ -2,7 +2,6 @@
 #define PLUGINSTRUCTS_P090_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
 
 #ifdef USES_P090
 

@@ -1,4 +1,4 @@
-#include "P015_data_struct.h"
+#include "../PluginStructs/P015_data_struct.h"
 #ifdef USES_P015
 
 #include "../Helpers/Misc.h"
@@ -52,9 +52,9 @@ bool P015_data_struct::performRead(float& luxVal,
 
     if (getData(data0, data1))
     {
-      double lux;       // Resulting lux value
-      double infrared;  // Resulting infrared value
-      double broadband; // Resulting broadband value
+      float lux;       // Resulting lux value
+      float infrared;  // Resulting infrared value
+      float broadband; // Resulting broadband value
 
 
       // Perform lux calculation:
@@ -90,7 +90,7 @@ bool P015_data_struct::performRead(float& luxVal,
         // Use last known ratio to reconstruct the broadband value
         // If IR is saturated, output the max value based on the last known ratio.
         if ((ir_broadband_ratio > 0.0f) && (_gain == P015_EXT_AUTO_GAIN)) {
-          data0 = static_cast<double>(data1) / ir_broadband_ratio;
+          data0 = static_cast<float>(data1) / ir_broadband_ratio;
           getLux(_gain16xActive, ms, data0, data1, lux, infrared, broadband);
           success = true;
         }
@@ -336,9 +336,9 @@ void P015_data_struct::getLux(unsigned char gain,
                               float         ms,
                               unsigned int  CH0,
                               unsigned int  CH1,
-                              double      & lux,
-                              double      & infrared,
-                              double      & broadband)
+                              float       & lux,
+                              float       & infrared,
+                              float       & broadband)
 
 // Convert raw data to lux
 // gain: 0 (1X) or 1 (16X), see setTiming()
@@ -348,7 +348,7 @@ void P015_data_struct::getLux(unsigned char gain,
 // returns true (1) if calculation was successful
 // RETURNS false (0) AND lux = 0.0 IF EITHER SENSOR WAS SATURATED (0XFFFF)
 {
-  double ratio, d0, d1;
+  float ratio, d0, d1;
 
   // Convert from unsigned integer to floating point
   d0 = CH0; d1 = CH1;
