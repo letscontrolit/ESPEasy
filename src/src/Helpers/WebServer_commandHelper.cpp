@@ -36,13 +36,13 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     eventQueue.add(parseStringToEnd(webrequest, 2));
     handledCmd = true;
     sendOK     = true;
-  } else if (command.equalsIgnoreCase(F("taskrun")) ||
-             command.equalsIgnoreCase(F("taskvalueset")) ||
-             command.equalsIgnoreCase(F("taskvaluetoggle")) ||
-             command.equalsIgnoreCase(F("let")) ||
-             command.equalsIgnoreCase(F("logPortStatus")) ||
-             command.equalsIgnoreCase(F("jsonportstatus")) ||
-             command.equalsIgnoreCase(F("rules"))) {
+  } else if (command.equals(F("taskrun")) ||
+             command.equals(F("taskvalueset")) ||
+             command.equals(F("taskvaluetoggle")) ||
+             command.equals(F("let")) ||
+             command.equals(F("logPortStatus")) ||
+             command.equals(F("jsonportstatus")) ||
+             command.equals(F("rules"))) {
     handledCmd = ExecuteCommand_internal(source, webrequest.c_str());
     sendOK     = true;
 
