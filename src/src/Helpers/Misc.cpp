@@ -21,7 +21,9 @@
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
   // FIXME TD-er: Why have an event here as argument? It is not used.
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("remoteConfig"));
+  #endif
   bool   success = false;
   String command = parseString(string, 1);
 
@@ -72,7 +74,9 @@ void delayBackground(unsigned long dsdelay)
 bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 {
   if (!validControllerIndex(controllerIndex)) { return false; }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setControllerEnableStatus"));
+  #endif
 
   // Only enable controller if it has a protocol configured
   if ((Settings.Protocol[controllerIndex] != 0) || !enabled) {
@@ -88,7 +92,9 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 {
   if (!validTaskIndex(event->TaskIndex)) { return false; }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setTaskEnableStatus"));
+  #endif
 
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.TaskDeviceNumber[event->TaskIndex]) || !enabled) {
@@ -116,7 +122,9 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 void taskClear(taskIndex_t taskIndex, bool save)
 {
   if (!validTaskIndex(taskIndex)) { return; }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("taskClear"));
+  #endif
   Settings.clearTask(taskIndex);
   ExtraTaskSettings.clear(); // Invalidate any cached values.
   ExtraTaskSettings.TaskIndex = taskIndex;

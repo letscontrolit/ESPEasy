@@ -16,8 +16,6 @@
 #include "../Helpers/_Plugin_SensorTypeHelper.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-#include <ESPeasySerial.h>
-
 
 void handle_devices();
 

@@ -41,6 +41,8 @@
 #define PLUGIN_ONLY_TIMER_IN               33 // Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
 #define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     34 // Show I2C parameters like address.
 #define PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  35 // When needed, show additional parameters like baudrate or specific serial config
+#define PLUGIN_MQTT_CONNECTION_STATE       36 // Signal when connection to MQTT broker is re-established
+#define PLUGIN_MQTT_IMPORT                 37 // For P037 MQTT import
 
 
 

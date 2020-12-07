@@ -1,4 +1,26 @@
 -------------------------------------------------
+Changes in release mega-20201130 (since mega-20201125)
+-------------------------------------------------
+
+Release date: ma 30 nov 2020  0:18:16 CET
+
+TD-er (13):
+      [Cleanup] Reduce build size LIMIT_BUILD_SIZE builds
+      [RTTTL] Fix check argument count for RTTTL command (#3391)
+      Check nr. task value decimals = 0, when decimals cannot be set (#3396)
+      [Build Size] Exclude typical debug logs from minimal builds
+      [GPIO] Echo the GPIO command line if parameters are invalid
+      [GPIO] Only log errors when using positive GPIO
+      [GPIO] Add proper valid GPIO pin check to all GPIO commands
+      [Servo] Fix build issue due to missing include
+      [Cleanup] Do not execute invalid command from Domoticz MQTT helper
+      [Storage] Check if file exists before writing to it
+      Check range of set output device values
+      BUILD_NO_DEBUG should be enabled for Normal builds
+      Update build_ESPeasy.sh
+
+
+-------------------------------------------------
 Changes in release mega-20201125 (since mega-20201102)
 -------------------------------------------------
 

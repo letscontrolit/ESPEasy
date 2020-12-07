@@ -1,4 +1,4 @@
-#include "P015_data_struct.h"
+#include "../PluginStructs/P015_data_struct.h"
 #ifdef USES_P015
 
 #include "../Helpers/Misc.h"

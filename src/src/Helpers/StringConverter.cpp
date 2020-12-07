@@ -257,7 +257,13 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     f = 0;
   }
   LoadTaskSettings(event->TaskIndex);
-  String result = toString(f, ExtraTaskSettings.TaskDeviceValueDecimals[rel_index]);
+  
+  byte nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
+  if (!Device[DeviceIndex].configurableDecimals()) {
+    nrDecimals = 0;
+  }
+
+  String result = toString(f, nrDecimals);
   result.trim();
   return result;
 }
@@ -579,6 +585,7 @@ void repl(const String& key, const String& val, String& s, boolean useURLencode)
   }
 }
 
+#ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 void parseSpecialCharacters(String& s, boolean useURLencode)
 {
   bool no_accolades   = s.indexOf('{') == -1 || s.indexOf('}') == -1;
@@ -657,6 +664,7 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
     repl(F("&divide;"), divide, s, useURLencode);
   }
 }
+#endif
 
 /********************************************************************************************\
    replace other system variables like %sysname%, %systime%, %ip%
@@ -671,7 +679,9 @@ void parseControllerVariables(String& s, struct EventStruct *event, boolean useU
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
 void parseSystemVariables(String& s, boolean useURLencode)
 {
+  #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   parseSpecialCharacters(s, useURLencode);
+  #endif
 
   SystemVariables::parseSystemVariables(s, useURLencode);
 }
