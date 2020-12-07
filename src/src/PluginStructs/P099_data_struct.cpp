@@ -1,4 +1,4 @@
-#include "P099_data_struct.h"
+#include "../PluginStructs/P099_data_struct.h"
 
 #ifdef USES_P099
 #include "../ESPEasyCore/ESPEasyNetwork.h"
