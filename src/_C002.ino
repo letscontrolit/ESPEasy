@@ -12,7 +12,11 @@
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
 #include "src/Commands/InternalCommands.h"
-
+#include "src/Commands/GPIO.h"
+#include "src/ESPEasyCore/ESPEasyGPIO.h"
+#include "src/ESPEasyCore/ESPEasyRules.h"
+#include "src/Globals/Settings.h"
+#include "src/Helpers/PeriodicalActions.h"
 #include "src/Helpers/StringParser.h"
 
 #include <ArduinoJson.h>
@@ -102,7 +106,8 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
             // We need the index of the controller we are: 0...CONTROLLER_MAX
             if (Settings.TaskDeviceEnabled[x] && (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
             {
-              String action = "";
+              String action;
+              bool mustSendEvent = false;
 
               switch (Settings.TaskDeviceNumber[x]) {
                 case 1: // temp solution, if input switch, update state
@@ -115,15 +120,12 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                 }
                 case 29: // temp solution, if plugin 029, set gpio
                 {
-                  action = "";
                   int baseVar = x * VARS_PER_TASK;
 
                   if (strcasecmp_P(switchtype, PSTR("dimmer")) == 0)
                   {
+                    mustSendEvent = true;
                     int pwmValue = UserVar[baseVar];
-                    action  = F("pwm,");
-                    action += Settings.TaskDevicePin1[x];
-                    action += ',';
 
                     switch ((int)nvalue)
                     {
@@ -137,13 +139,21 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                         UserVar[baseVar] = pwmValue;
                         break;
                     }
-                    action += pwmValue;
+                    if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
+                      action  = F("pwm,");
+                      action += Settings.TaskDevicePin1[x];
+                      action += ',';
+                      action += pwmValue;
+                    }
                   } else {
+                    mustSendEvent = true;
                     UserVar[baseVar] = nvalue;
-                    action           = F("gpio,");
-                    action          += Settings.TaskDevicePin1[x];
-                    action          += ',';
-                    action          += static_cast<int>(nvalue);
+                    if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
+                      action  = F("gpio,");
+                      action += Settings.TaskDevicePin1[x];
+                      action += ',';
+                      action += static_cast<int>(nvalue);
+                    }
                   }
                   break;
                 }
@@ -160,10 +170,14 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                   break;
               }
 
-              if (action.length() > 0) {
+              const bool validCommand = action.length() > 0;
+              if (validCommand) {
+                mustSendEvent = true;
                 // Try plugin and internal
                 ExecuteCommand(x, EventValueSource::Enum::VALUE_SOURCE_MQTT, action.c_str(), true, true, false);
+              }
 
+              if (mustSendEvent) {
                 // trigger rulesprocessing
                 if (Settings.UseRules) {
                   struct EventStruct TempEvent(x);

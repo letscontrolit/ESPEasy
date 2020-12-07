@@ -25,11 +25,11 @@ bool WakeOnLan::stringToArray(uint8_t* _macAddress, const char* _macString) {
 	unsigned int tempMACAddress[6];
 
 	if (strlen(_macString) == 12)  // FFFFFFFFFFFF
-		sprintf(macFormat, "%%2x%%2x%%2x%%2x%%2x%%2x");
+		sprintf_P(macFormat, PSTR("%%2x%%2x%%2x%%2x%%2x%%2x"));
 	else if (strlen(_macString) == 14)  // FFFF-FFFF-FFFF
-		sprintf(macFormat, "%%2x%%2x%c%%2x%%2x%c%%2x%%2x", _macString[4], _macString[9]);
+		sprintf_P(macFormat, PSTR("%%2x%%2x%c%%2x%%2x%c%%2x%%2x"), _macString[4], _macString[9]);
 	else if (strlen(_macString) == 17)  // FF-FF-FF-FF-FF-FF
-		sprintf(macFormat, "%%2x%c%%2x%c%%2x%c%%2x%c%%2x%c%%2x", _macString[2], _macString[5], _macString[8], _macString[11], _macString[14]);
+		sprintf_P(macFormat, PSTR("%%2x%c%%2x%c%%2x%c%%2x%c%%2x%c%%2x"), _macString[2], _macString[5], _macString[8], _macString[11], _macString[14]);
 	else
 		return false;
 

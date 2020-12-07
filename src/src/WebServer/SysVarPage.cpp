@@ -21,7 +21,9 @@ void addSysVar_enum_html(SystemVariables::Enum enumval) {
 
 
 void handle_sysvars() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_sysvars"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startStream();
@@ -200,6 +202,8 @@ void handle_sysvars() {
   addSysVar_html(F("Secs to dhms: %c_s2dhms%(100000)"));
   addFormSeparator(3);
   addSysVar_html(F("To HEX: %c_2hex%(100000)"));
+  addFormSeparator(3);
+  addSysVar_html(F("Unit to IP: %c_u2ip%(%unit%, 2)"));
 
   html_end_table();
   html_end_form();

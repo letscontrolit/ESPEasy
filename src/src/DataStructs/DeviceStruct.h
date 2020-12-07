@@ -65,6 +65,8 @@ struct DeviceStruct
 
   bool usesTaskDevicePin(int pin) const;
 
+  bool configurableDecimals() const;
+
   byte               Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
   byte               Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
   Sensor_VType       VType;          // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING

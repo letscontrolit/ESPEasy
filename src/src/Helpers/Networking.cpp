@@ -1,5 +1,6 @@
 #include "Networking.h"
 
+#include "../../ESPEasy_common.h"
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
@@ -31,15 +32,7 @@
 //  #endif
 
 #include <lwip/netif.h>
-#ifdef ESP8266
-  # if !defined(ARDUINO_ESP8266_RELEASE_2_4_0) && !defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-    #  define SUPPORT_ARP
-  # endif // if !defined(ARDUINO_ESP8266_RELEASE_2_4_0) && !defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-#endif    // ifdef ESP8266
 
-#ifdef ESP32
-# define SUPPORT_ARP
-#endif // ifdef ESP32
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
@@ -334,14 +327,30 @@ void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
 }
 
 /*********************************************************************************************\
-   Send UDP message (unit 255=broadcast)
+   Get formatted IP address for unit
+   formatcodes: 0 = default toString(), 1 = empty string when invalid, 2 = 0 when invalid
 \*********************************************************************************************/
-void sendUDP(byte unit, const byte *data, byte size)
-{
-  if (!NetworkConnected(10)) {
-    return;
-  }
+String formatUnitToIPAddress(byte unit, byte formatCode) {
+  IPAddress unitIPAddress = getIPAddressForUnit(unit);
 
+  if (unitIPAddress[0] == 0) { // Invalid?
+    switch (formatCode) {
+      case 1: // Return empty string
+      {
+        return F("");
+      }
+      case 2: // Return "0"
+      {
+        return F("0");
+      }
+    }
+  }
+  return unitIPAddress.toString();
+}
+/*********************************************************************************************\
+   Get IP address for unit
+\*********************************************************************************************/
+IPAddress getIPAddressForUnit(byte unit) {
   IPAddress remoteNodeIP;
 
   if (unit == 255) {
@@ -351,13 +360,29 @@ void sendUDP(byte unit, const byte *data, byte size)
     NodesMap::iterator it = Nodes.find(unit);
 
     if (it == Nodes.end()) {
-      return;
+      return remoteNodeIP;
     }
 
     if (it->second.ip[0] == 0) {
-      return;
+      return remoteNodeIP;
     }
     remoteNodeIP = it->second.ip;
+  }
+  return remoteNodeIP;
+}
+
+/*********************************************************************************************\
+   Send UDP message (unit 255=broadcast)
+\*********************************************************************************************/
+void sendUDP(byte unit, const byte *data, byte size)
+{
+  if (!NetworkConnected(10)) {
+    return;
+  }
+
+  IPAddress remoteNodeIP = getIPAddressForUnit(unit);
+  if (remoteNodeIP[0] == 0) {
+    return;
   }
 
 #ifndef BUILD_NO_DEBUG
@@ -1172,7 +1197,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   }
 
   long len = http.getSize();
-  File f   = ESPEASY_FS.open(file_save, "w");
+  File f   = tryOpenFile(file_save, "w");
 
   if (f) {
     uint8_t buff[128];

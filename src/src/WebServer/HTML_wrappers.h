@@ -84,7 +84,13 @@ void html_add_script_end();
 // if there is an error-string, add it to the html code with correct formatting
 void addHtmlError(const String& error);
 
+void addHtml(char html);
 void addHtml(const String& html);
+
+void addEncodedHtml(const String& html);
+
+void addHtmlAttribute(const String& label, int value);
+void addHtmlAttribute(const String& label, const String& value);
 
 void addDisabled();
 

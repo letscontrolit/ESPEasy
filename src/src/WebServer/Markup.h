@@ -35,8 +35,6 @@ void addSelector(const String& id,
 
 void addSelector_options(int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex);
 
-void addSelector_option(const int index, const String& option, const String& attr, bool isSelected);
-
 void addSelector_Head(const String& id);
 
 void addSelector_Head_reloadOnChange(const String& id);

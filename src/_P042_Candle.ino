@@ -175,23 +175,23 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         if (Candle_color == ColorDefault) {
           addHtml(F(" checked>"));
         } else {
-          addHtml(">");
+          addHtml('>');
         }
         addHtml(F("<label for='web_Color_Default'> Use default color</label><br>"));
         addHtml(F("<input type='radio' id='web_Color_Selected' name='web_Color_Type' value='1'"));
         if (Candle_color == ColorSelected) {
           addHtml(F(" checked>"));
         } else {
-          addHtml(">");
+          addHtml('>');
         }
         addHtml(F("<label for='web_Color_Selected'> Use selected color</label><br>"));
 
         // Color Selection
         char hexvalue[7] = {0};
-        sprintf(hexvalue, "%02X%02X%02X",     // Create Hex value for color
-                PCONFIG(0),
-                PCONFIG(1),
-                PCONFIG(2));
+        sprintf_P(hexvalue, F("%02X%02X%02X"),     // Create Hex value for color
+                  PCONFIG(0),
+                  PCONFIG(1),
+                  PCONFIG(2));
 
         // http://jscolor.com/examples/
         addHtml(F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='"));

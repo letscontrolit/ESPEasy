@@ -201,8 +201,10 @@ SettingsType::SettingsFileEnum SettingsType::getSettingsFile(Enum settingsType)
 }
 
 String SettingsType::getSettingsFileName(Enum settingsType) {
-  SettingsType::SettingsFileEnum file_type = getSettingsFile(settingsType);
+  return getSettingsFileName(getSettingsFile(settingsType));
+}
 
+String SettingsType::getSettingsFileName(SettingsType::SettingsFileEnum file_type) {
   switch (file_type) {
     case SettingsFileEnum::FILE_CONFIG_type:        return F(FILE_CONFIG);
     case SettingsFileEnum::FILE_NOTIFICATION_type:  return F(FILE_NOTIFICATION);
@@ -210,4 +212,14 @@ String SettingsType::getSettingsFileName(Enum settingsType) {
     case SettingsFileEnum::FILE_UNKNOWN_type:       break;
   }
   return "";
+}
+
+size_t SettingsType::getInitFileSize(SettingsType::SettingsFileEnum file_type) {
+  switch (file_type) {
+    case SettingsFileEnum::FILE_CONFIG_type:        return CONFIG_FILE_SIZE;
+    case SettingsFileEnum::FILE_NOTIFICATION_type:  return 4096;
+    case SettingsFileEnum::FILE_SECURITY_type:      return 4096;
+    case SettingsFileEnum::FILE_UNKNOWN_type:       break;
+  }
+  return 0;
 }

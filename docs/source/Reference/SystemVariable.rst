@@ -189,3 +189,8 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - To HEX: ``%c_2hex%(100000)``
      - To HEX: ``186A0``
      - Convert integer value to HEX notation.  (Added: 2020/10/07)
+   * - Unit to IP: ``%c_u2ip%(%unit%,0)``
+     - Unit to IP: ``192.168.1.67``
+     - Convert a (known) unit number to its IP Address. (Added: 2020/11/08)
+
+       f_opt: for invalid IP: 0 = ``(IP unset)`` 1 = (empty string)  2 = ``0``

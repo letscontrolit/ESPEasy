@@ -41,6 +41,9 @@ bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex);
 
 void checkResetFactoryPin();
 
+#ifdef ESP8266
+extern int lastADCvalue; // Keep track of last ADC value as it cannot be read while WiFi is connecting
+#endif
 int espeasy_analogRead(int pin);
 
 #ifdef ESP32
@@ -84,11 +87,11 @@ void setFactoryDefault(DeviceModel model);
 /********************************************************************************************\
    Add pre defined plugins and rules.
  \*********************************************************************************************/
-void addSwitchPlugin(taskIndex_t taskIndex, byte gpio, const String& name, bool activeLow);
+void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool activeLow);
 
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);
 
-void addButtonRelayRule(byte buttonNumber, byte relay_gpio);
+void addButtonRelayRule(byte buttonNumber, int relay_gpio);
 
 void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 
@@ -112,6 +115,27 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t);
 int touchPinToGpio(int touch_pin);
 
 #endif
+
+// ********************************************************************************
+// Manage PWM state of GPIO pins.
+// ********************************************************************************
+void initAnalogWrite();
+#if defined(ESP32)
+extern int8_t ledChannelPin[16];
+extern uint32_t ledChannelFreq[16];
+
+int8_t attachLedChannel(int pin, uint32_t frequency = 0);
+void detachLedChannel(int pin);
+uint32_t analogWriteESP32(int pin,
+                          int value,
+                          uint32_t frequency = 0);
+#endif // if defined(ESP32)
+
+// Duty cycle 0..100%
+bool set_Gpio_PWM_pct(int gpio, float dutyCycle_f, uint32_t frequency = 0);
+
+bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t frequency = 0);
+bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key);
 
 
 // ********************************************************************************

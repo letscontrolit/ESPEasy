@@ -213,8 +213,13 @@ public:
   // Typical use case is to run this when all needed connections are made.
   void schedule_all_task_device_timers();
 
+  // Schedule a call to SensorSendTask, which calls PLUGIN_READ
   void schedule_task_device_timer(unsigned long task_index,
                                   unsigned long runAt);
+
+  // Reschedule task device timer based on the set task interval.
+  void reschedule_task_device_timer(unsigned long task_index,
+                                    unsigned long lasttimer);
 
   void process_task_device_timer(unsigned long task_index,
                                  unsigned long lasttimer);
@@ -228,6 +233,14 @@ public:
   void schedule_plugin_task_event_timer(deviceIndex_t       DeviceIndex,
                                         byte                Function,
                                         struct EventStruct *event);
+
+  void schedule_mqtt_plugin_import_event_timer(deviceIndex_t   DeviceIndex,
+                                               taskIndex_t     TaskIndex,
+                                               byte            Function,
+                                               char           *c_topic,
+                                               byte           *b_payload,
+                                               unsigned int    length);
+
 
   void schedule_controller_event_timer(protocolIndex_t     ProtocolIndex,
                                        byte                Function,

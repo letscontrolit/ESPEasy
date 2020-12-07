@@ -338,24 +338,24 @@ bool rn2xx3_handler::initOTAA(uint8_t *AppEUI, uint8_t *AppKey, uint8_t *DevEUI)
 
   for (uint8_t i = 0; i < 8; i++)
   {
-    sprintf(buff, "%02X", AppEUI[i]);
+    sprintf_P(buff, PSTR("%02X"), AppEUI[i]);
     app_eui += String(buff);
   }
 
   if (DevEUI == nullptr)
   {
-    dev_eui = "0";
+    dev_eui = '0';
   } else {
     for (uint8_t i = 0; i < 8; i++)
     {
-      sprintf(buff, "%02X", DevEUI[i]);
+      sprintf_P(buff, PSTR("%02X"), DevEUI[i]);
       dev_eui += String(buff);
     }
   }
 
   for (uint8_t i = 0; i < 16; i++)
   {
-    sprintf(buff, "%02X", AppKey[i]);
+    sprintf_P(buff, PSTR("%02X"), AppKey[i]);
     app_key += String(buff);
   }
 

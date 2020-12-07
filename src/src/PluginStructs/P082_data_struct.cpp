@@ -1,5 +1,10 @@
-#include "P082_data_struct.h"
+#include "../PluginStructs/P082_data_struct.h"
 
+
+// Needed also here for PlatformIO's library finder as the .h file 
+// is in a directory which is excluded in the src_filter
+# include <TinyGPS++.h>
+# include <ESPeasySerial.h>
 
 #ifdef USES_P082
 
@@ -83,6 +88,10 @@ bool P082_data_struct::loop() {
         _currentSentence = "";
 # endif // ifdef P082_SEND_GPS_TO_LOG
         completeSentence = true;
+      } else {
+        if (available == 0) {
+          available = easySerial->available();
+        }
       }
     }
   }

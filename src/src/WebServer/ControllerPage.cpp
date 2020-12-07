@@ -18,7 +18,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/_CPlugin_Helper_webform.h"
-#include "../Helpers/_CPlugin_SensorTypeHelper.h"
+#include "../Helpers/_Plugin_SensorTypeHelper.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
 
@@ -28,7 +28,9 @@
 // Web Interface controller page
 // ********************************************************************************
 void handle_controllers() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_controllers"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_CONTROLLERS;
@@ -337,8 +339,11 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
           }
 
-          if (Protocol[ProtocolIndex].useExtendedCredentials()) {
+          if (Protocol[ProtocolIndex].useCredentials()) {
             addTableSeparator(F("Credentials"), 2, 3);
+          }
+
+          if (Protocol[ProtocolIndex].useExtendedCredentials()) {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS);
           }
 

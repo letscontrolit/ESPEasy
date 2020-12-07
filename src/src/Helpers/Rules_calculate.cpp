@@ -176,7 +176,9 @@ unsigned int op_arg_count(const char c)
 int Calculate(const char *input, float *result)
 {
   #define TOKEN_LENGTH 25
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("Calculate"));
+  #endif
   const char *strpos = input, *strend = input + strlen(input);
   char token[TOKEN_LENGTH];
   char c, oc, *TokenPos = token;
@@ -341,7 +343,9 @@ int Calculate(const char *input, float *result)
     return error;
   }
   *result = *sp;
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("Calculate2"));
+  #endif
   return CALCULATE_OK;
 }
 
