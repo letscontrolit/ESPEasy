@@ -178,6 +178,8 @@ void preinit() {
   // No global object methods or C++ exceptions can be called in here!
   //The below is a static class method, which is similar to a function, so it's ok.
   ESP8266WiFiClass::preinitWiFiOff();
+  system_phy_set_powerup_option(RF_NO_CAL);
+
 }
 #endif
 
