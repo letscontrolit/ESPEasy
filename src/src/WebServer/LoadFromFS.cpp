@@ -43,7 +43,9 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(F(".json"))) { dataType = F("application/json"); }
   else if (path.endsWith(F(".txt")) ||
            path.endsWith(F(".dat"))) { dataType = F("application/octet-stream"); }
+#ifdef WEBSERVER_CUSTOM
   else if (path.endsWith(F(".esp"))) { return handle_custom(path); }
+#endif
 
 #ifndef BUILD_NO_DEBUG
 
