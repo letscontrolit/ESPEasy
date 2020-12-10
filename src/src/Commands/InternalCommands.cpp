@@ -268,9 +268,7 @@ bool executeInternalCommand(command_case_data & data)
     }
     case 'm': {
       if (data.cmd_lc[1] == 'c') {
-        COMMAND_CASE_A(        "mcpall", Command_GPIO_McpAll,      4); // Gpio.h
-        COMMAND_CASE_A(       "mcpwrite", Command_GPIO_mcptest_write,      2); // Gpio.h
-        COMMAND_CASE_A(        "mcpread", Command_GPIO_mcptest_read,      3); // Gpio.h
+        COMMAND_CASE_A(         "mcpall", Command_GPIO_McpAll,       4); // Gpio.h
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(  "mcpgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
         COMMAND_CASE_A(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h

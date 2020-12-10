@@ -460,20 +460,22 @@ String Command_GPIO_McpAll(struct EventStruct *event, const char* Line) {
   //Par2=ending pin
   //Par3=value
   //Par4=mask (optional)
-  String log = F("Inside GPIO McpAll");
-  addLog(LOG_LEVEL_INFO,log);
 
   if ((event->Par2 < event->Par1) || !checkValidPortRange(PLUGIN_MCP, event->Par1) || !checkValidPortRange(PLUGIN_MCP, event->Par2))
     return return_command_failed();
 
-  uint32_t write = event->Par3==0 ? 0 : 1;
-  uint32_t mask  = event->Par4;  
+  String log;
+  bool isWriteMask = true;
+  if (event->Par3==0 || event->Par3==1) isWriteMask = false;
 
+  uint32_t write = event->Par3;
+  uint32_t mask  = event->Par4;  
+  
   byte firstPin     = int((event->Par1-1)/8)*8 + 1;
   byte lastPin      = int((event->Par2-1)/8)*8 + 8;
   byte numBytes     = (lastPin - firstPin + 1)/8;
   byte deltaStart   = event->Par1 - firstPin;
-  byte deltaEnd     = lastPin - event->Par2;
+  //byte deltaEnd     = lastPin - event->Par2;
   byte numBits      = event->Par2 - event->Par1 + 1;
   byte firstAddress = int((event->Par1 - 1)/16)+0x20; 
   byte firstBank    = (((firstPin-1)/8)+2) % 2;
@@ -482,34 +484,43 @@ String Command_GPIO_McpAll(struct EventStruct *event, const char* Line) {
   if (mask == 0) {
     mask = (1 << numBits) - 1;
     mask = mask << (deltaStart); 
-    log = String(F("1a. mask==0. mask="))+String(mask);
-    addLog(LOG_LEVEL_INFO,log);
+ //   log = String(F("1a. mask==0. mask="))+String(mask);
+ //   addLog(LOG_LEVEL_INFO,log);
   } else {
-    mask = mask & ((256 ^ (numBytes))-1);
-    mask = mask & ((2^numBits)-1);
+    mask = mask & (byte(pow(256,numBytes))-1);
+    mask = mask & (byte(pow(2,numBits))-1);
     mask = mask << deltaStart;
-    log = String(F("1b. mask<>0. mask="))+String(mask);
-    addLog(LOG_LEVEL_INFO,log);
+  //  log = String(F("1b. mask<>0. mask="))+String(mask);
+  //  addLog(LOG_LEVEL_INFO,log);
   }
 
-  if (write > 0) {
-    write = (write << numBits) - 1;
+  if (isWriteMask) {
+    write = write & (byte(pow(256,numBytes))-1);
+    write = write & (byte(pow(2,numBits))-1);
     write = write << deltaStart;
-  }
-  
-  log = String(F("1c. write="))+String(write);
-  addLog(LOG_LEVEL_INFO,log);
+  } else {
+    write = event->Par3==0 ? 0 : 1;
+    if (write > 0) {
+      write = (write << numBits) - 1;
+      write = write << deltaStart;
+    }
+  }  
+//  log = String(F("1c. write="))+String(write);
+//  addLog(LOG_LEVEL_INFO,log);
 
-  bool success = false;
+  bool onLine = false;
 
-  for (byte i=1; i<=numBytes; i++) {
+  for (byte i=0; i<numBytes; i++) {
     uint8_t readValue;
-    byte currentVal = initVal - 1 + i;
+    byte currentVal = initVal + i;
     byte currentAddress = int(currentVal/2);
-    byte currentMask  = (mask  >> (8*(i-1))) & 0xFF;
+    byte currentMask  = (mask  >> (8*i)) & 0xFF;
     byte currentInvertedMask  = 0xFF - currentMask;
-    byte currentWrite = (write >> (8*(i-1))) & 0xFF;
-    byte currentRegister = ((currentVal % 2)==0) ? MCP23017_GPIOA : MCP23017_GPIOB ;
+    byte currentWrite = (write >> (8*i)) & 0xFF;
+    byte currentGPIORegister = ((currentVal % 2)==0) ? MCP23017_GPIOA : MCP23017_GPIOB ;
+    byte currentIOModeRegister = ((currentVal % 2)==0) ? MCP23017_IODIRA : MCP23017_IODIRB ;
+    byte writeGPIOValue;
+/*
     log = String(F("2a. i="))+String(i);
     addLog(LOG_LEVEL_INFO,log);
     log = String(F("2b. currentVal="))+String(currentVal);
@@ -520,239 +531,54 @@ String Command_GPIO_McpAll(struct EventStruct *event, const char* Line) {
     addLog(LOG_LEVEL_INFO,log);
     log = String(F("2e. currentWrite="))+String(currentWrite);
     addLog(LOG_LEVEL_INFO,log);
-    log = String(F("2f. currentRegister="))+String(currentRegister);
+    log = String(F("2f. currentRegister="))+String(currentGPIORegister);
     addLog(LOG_LEVEL_INFO,log);
+*/
+    if (GPIO_MCP_ReadRegister(currentAddress,currentIOModeRegister,&readValue)) {
+  //    log = String(F("3a. readValue register="))+String(readValue);
+  //    addLog(LOG_LEVEL_INFO,log);
 
-    if (GPIO_MCP_ReadRegister(currentAddress,currentRegister,&readValue)) {
-      log = String(F("3. readValue register="))+String(readValue);
-      addLog(LOG_LEVEL_INFO,log);
+      byte writeModeValue = (readValue & currentInvertedMask); //| ((255-mask) & mask);
+  //    log = String(F("3b. writeValue="))+String(writeModeValue);
+  //    addLog(LOG_LEVEL_INFO,log);
 
-      byte writeValue = (readValue & currentInvertedMask) | (currentWrite & mask);
-      log = String(F("4. writeValue="))+String(writeValue);
-      addLog(LOG_LEVEL_INFO,log);
-//    GPIO_MCP_WriteRegister(currentAddress,currentRegister,write);
-      success=true;
+      // set type to output
+      GPIO_MCP_WriteRegister(currentAddress,currentIOModeRegister,writeModeValue);
+
+      GPIO_MCP_ReadRegister(currentAddress,currentGPIORegister,&readValue);
+  //    log = String(F("4a. readValue register="))+String(readValue);
+  //    addLog(LOG_LEVEL_INFO,log);
+
+      writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
+  //    log = String(F("4b. writeValue="))+String(writeGPIOValue);
+  //    addLog(LOG_LEVEL_INFO,log);
+      
+      // write to port
+      GPIO_MCP_WriteRegister(currentAddress,currentGPIORegister,writeGPIOValue);
+
+      onLine=true;
     } else {
-      success=false;    }
-  }
-  return success?return_command_success():return_command_failed();
-}
-
-String Command_GPIO_mcptest_write(struct EventStruct *event, const char* Line) {
-
-  bool readSuccess;
-  uint8_t retValue;
-  String log = String(F("Par1-Address=")) + String(event->Par1);
-  log += String(F(". Par2-Value=")) + String(event->Par2);
-  addLog(LOG_LEVEL_INFO, log);
-  
-  readSuccess=GPIO_MCP_ReadRegister(event->Par1,0x00,&retValue);
-  if (readSuccess)
-    log = String(F("Before registro 0x00=")) + String(retValue);
-  else
-    log = String(F("Cannot read from this address"));  
-  addLog(LOG_LEVEL_INFO, log);
-
-  //set output mode
-  GPIO_MCP_WriteRegister(event->Par1,0x00,0x00);  
-  readSuccess=GPIO_MCP_ReadRegister(event->Par1,0x00,&retValue);
-
-  readSuccess=GPIO_MCP_ReadRegister(event->Par1,0x00,&retValue);
-  if (readSuccess)
-    log = String(F("After registro 0x00=")) + String(retValue);
-  else
-    log = String(F("Cannot read from this address"));  
-  addLog(LOG_LEVEL_INFO, log);
-
-  // read values
-  readSuccess=GPIO_MCP_ReadRegister(event->Par1,0x12,&retValue);
-  if (readSuccess)
-    log = String(F("Before registro 0x12=")) + String(retValue);
-  else
-    log = String(F("Cannot read from this address"));
-  addLog(LOG_LEVEL_INFO, log);
-
-
-  // set values
-  if (event->Par2==1)
-    GPIO_MCP_WriteRegister(event->Par1,0x12,0xFF);
-  else
-    GPIO_MCP_WriteRegister(event->Par1,0x12,0x00);
-
-  readSuccess=GPIO_MCP_ReadRegister(event->Par1,0x12,&retValue);
-  if (readSuccess)
-    log = String(F("After registro 0x12=")) + String(retValue);
-  else
-    log = String(F("Cannot read from this address"));
-  addLog(LOG_LEVEL_INFO, log);
-
-
-	return return_command_success();
-}
-
-String Command_GPIO_mcptest_read(struct EventStruct *event, const char* Line) {
-
-  uint8_t retValue;
-  bool readSuccess=GPIO_MCP_ReadRegister(event->Par1,0x12,&retValue);
-  String log;
-
-  if (readSuccess) {
-    log = String(F(". Par2-Register=")) + String(event->Par2);
-    log += String(F(". Registro=")) + String(retValue);
-  } else
-    log = String(F("Cannot read from this address"));
-  addLog(LOG_LEVEL_INFO, log);
-
-	return readSuccess?return_command_success():return_command_failed();
-}
-/*
-bool getPluginIDAndPrefixAndType(char selection, pluginID_t &pluginID, String &logPrefix, byte &gpioTimerType)
-{
-  bool success = true;
-  switch(tolower(selection))
-  {
-    case 'l': //longpulse (gpio)
-      pluginID =PLUGIN_GPIO;
-      logPrefix=F("GPIO");
-      gpioTimerType = GPIO_TYPE_INTERNAL;
-      break;
-    case 'm': //mcplongpulse (mcp)
-      pluginID =PLUGIN_MCP;
-      logPrefix=F("MCP");
-      gpioTimerType = GPIO_TYPE_MCP;
-      break;
-    case 'p': //pcflongpulse (pcf)
-      pluginID =PLUGIN_PCF;
-      logPrefix=F("PCF");
-      gpioTimerType = GPIO_TYPE_PCF;
-      break;
-    default:
-      logPrefix=F("PluginID out of range. Error");
-      success=false;
-  }
-  return success;
-}
-*/
-
-/*
-String Command_GPIO_PinAll(struct EventStruct *event, const char* Line)
-{
-  //syntax:
-  // 1) pinAll,expander parameter,address,hex (0xFF)
-  // 2) pinAll,expander parameter,address,string ('0101201102')
-  
-  //Split Line in single parameters
-  // par1=expander parameter: mcp,pcf,mcpA,mcpB
-  // par2=address: pcf: 20->27 + 38->3F mcp: 20->27 (see ESPEASY documentation)
-  // par3=hex or string starting with '
-  // Line[0]: m,p
-
-  String logPrefix;// = new char;
-  pluginID_t pluginID=INVALID_PLUGIN_ID;
-  //Line[0] ='p':pcfgpio; ='m':mcpgpio
-  bool success = getPluginIDAndPrefix(Line[0], pluginID, logPrefix);
-  bool successRange = false;
-  byte setExpander = 0;
-
-  if (Line[0]=='p') { //pcf 
-    setExpander = 1; 
-    successRange = checkRange();
-  } else if (Line[0]=='m' and lenght(event->Par1)==3) { //mcp
-    setExpander = 2; 
-    successRange = checkRange();
-  } else if (Line[0]=='m' and lenght(event->Par1)==4 and Line[3]=='a') { //mcpA
-    setExpander = 3;
-    successRange = checkRange();
-  } else if (Line[0]=='m' and lenght(event->Par1)==4 and Line[3]=='b') { //mcpB
-    setExpander = 4;
-    successRange = checkRange();
-  }
-
-  if (success && setExpander>0 && successRange)
-  {
- 	  int8_t state=0;
-	  byte mode;
-
-    switch case (setExpander) {
-      case 1: 
-        for i=1 to 8
-
-        setModeAllOutput()
-
-        setPinAllPCF();
-        break;
-      case 2: 
-        setModeAllOutput()
-        setPinAll16MCP();
-      break;
-      case 3: 
-        setModeAllOutput()
-        setPinAll8MCPA();
-      break;
-      case 4: 
-        setModeAllOutput()
-        setPinAll8MCPB();
-      break;
+      onLine=false;    
     }
 
-  } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par1, Line);
-    return return_command_failed();
-  }
+    byte mode = (onLine)? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
+    int8_t state;
 
+    for (byte j=0; j<8; j++) {
+//      log=String(F("currentMask="))+String(currentMask)+String(F(". j="))+String(j)+String(F(". 2^j="))+String(2^j)+String(F(". currentMask & (2^j)) >> j="))+String(((currentMask & (2^j)) >> j));
+//      addLog(LOG_LEVEL_INFO,log);
+      if ((currentMask & byte(pow(2,j))) >> j) { //only for the pins in the mask
+        byte currentPin = firstPin + j + 8*i;
+        const uint32_t key = createKey(PLUGIN_MCP,currentPin);
 
+        state = onLine ? (writeGPIOValue & byte(pow(2,j)) >> j) : -1;
 
-
-
-
-
-	  int8_t state=0;
-	  byte mode;
-
-	  if (event->Par2 == 2) { //INPUT
-		  mode = PIN_MODE_INPUT_PULLUP;
-      switch (pluginID) {
-        case PLUGIN_GPIO:
-          setInternalGPIOPullupMode(event->Par1);
-          state = GPIO_Read_Switch_State(event->Par1, PIN_MODE_INPUT_PULLUP);
-          break;
-        case PLUGIN_MCP:
-        case PLUGIN_PCF:
-          // PCF8574/MCP specific: only can read 0/low state, so we must send 1
-          state = 1;
-          break;
-		  }
-    } else { // OUTPUT
-      mode=PIN_MODE_OUTPUT;
-      state=(event->Par2==0)?0:1;
-    }
-
-    const uint32_t key = createKey(pluginID,event->Par1);
-
-    if (globalMapPortStatus[key].mode != PIN_MODE_OFFLINE)
-    {
-      int8_t currentState;
-      GPIO_Read(pluginID, event->Par1, currentState);
-      if (currentState==-1) {
-        mode=PIN_MODE_OFFLINE;
-        state = -1;
+        createAndSetPortStatus_Mode_State(key,mode,state);
+        String log = String(F("MCPALL : port#")) + String(currentPin) + String(F(": set to ")) + String(state);
+        addLog(LOG_LEVEL_INFO, log);
+        SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
       }
-
-      createAndSetPortStatus_Mode_State(key,mode,state);
-      GPIO_Write(pluginID,event->Par1,state,mode);
-
-  		String log = logPrefix + String(F(" : port#")) + String(event->Par1) + String(F(": set to ")) + String(state);
-  		addLog(LOG_LEVEL_INFO, log);
-  		SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-  		return return_command_success();
-  	} else {
-      logErrorGpioOffline(logPrefix,event->Par1);
-      return return_command_failed();
     }
-  } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par1, Line);
-    return return_command_failed();
   }
+  return onLine?return_command_success():return_command_failed();
 }
-
-*/
