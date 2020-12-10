@@ -267,6 +267,9 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
     }
     case 'm': {
       if (cmd_lc[1] == 'c') {
+        COMMAND_CASE_A(        "mcpall", Command_GPIO_McpAll,      4); // Gpio.h
+        COMMAND_CASE_A(       "mcpwrite", Command_GPIO_mcptest_write,      2); // Gpio.h
+        COMMAND_CASE_A(        "mcpread", Command_GPIO_mcptest_read,      3); // Gpio.h
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(  "mcpgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
         COMMAND_CASE_A(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
@@ -297,7 +300,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
         COMMAND_CASE_A("pcflongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,        3); // GPIO.h
       }
-      COMMAND_CASE_R("password", Command_Settings_Password, 1);          // Settings.h
+      COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
 #ifdef USES_MQTT
       COMMAND_CASE_A("publish", Command_MQTT_Publish, 2);                // MQTT.h

@@ -86,7 +86,7 @@ bool GPIO_Read_Switch_State(int pin, byte pinMode) {
 }
 
 //********************************************************************************
-// MCP23017 read
+// MCP23017 PIN read
 //********************************************************************************
 int8_t GPIO_MCP_Read(int Par1)
 {
@@ -114,9 +114,40 @@ int8_t GPIO_MCP_Read(int Par1)
   return state;
 }
 
+//********************************************************************************
+// MCP23017 read register
+//********************************************************************************
+
+bool GPIO_MCP_ReadRegister(byte mcpAddr, uint8_t regAddr, uint8_t *retValue) {
+  bool success = false;
+  // Read the register
+  Wire.beginTransmission(mcpAddr);
+  Wire.write(regAddr);
+  Wire.endTransmission();
+
+  Wire.requestFrom(mcpAddr, (uint8_t)0x1);
+  if (Wire.available()) {
+    success=true;
+    *retValue = Wire.read();
+  }
+  return success;
+}
 
 //********************************************************************************
-// MCP23017 write
+// MCP23017 write register
+//********************************************************************************
+
+void GPIO_MCP_WriteRegister(byte mcpAddr, uint8_t regAddr, uint8_t regValue) {
+  // Write the register
+  Wire.beginTransmission(mcpAddr);
+  Wire.write(regAddr);
+  Wire.write(regValue);
+  Wire.endTransmission();
+}
+
+
+//********************************************************************************
+// MCP23017 write pin
 //********************************************************************************
 bool GPIO_MCP_Write(int Par1, byte Par2)
 {
@@ -174,7 +205,6 @@ bool GPIO_MCP_Write(int Par1, byte Par2)
   }
   return(success);
 }
-
 
 //********************************************************************************
 // MCP23017 config
