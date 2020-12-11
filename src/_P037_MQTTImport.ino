@@ -9,11 +9,16 @@
 
 // This task reads data from the MQTT Import input stream and saves the value
 
+/**
+ * 2020-12-10, tonhuisman: Add name-value mapping, filtering and json parsing
+ */
+
 #include "src/Globals/MQTT.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
 #include "src/Helpers/StringParser.h"
 
+#include "src/PluginStructs/P037_data_struct.h"
 
 #define PLUGIN_037
 #define PLUGIN_ID_037         37
@@ -23,6 +28,13 @@
 #define PLUGIN_VALUENAME2_037 "Value2"
 #define PLUGIN_VALUENAME3_037 "Value3"
 #define PLUGIN_VALUENAME4_037 "Value4"
+
+
+# define P037_PARSE_JSON      PCONFIG(1)  // Parse/process json messages
+# define P037_APPLY_MAPPINGS  PCONFIG(2)  // Apply mapping strings to numbers
+# define P037_APPLY_FILTERS   PCONFIG(3)  // Apply filtering on data values
+# define P037_SEND_EVENTS     PCONFIG(4)  // Send event for each received topic
+# define P037_EXTRA_LOGGING   PCONFIG(5)  // Additional logging for each topic/subjext
 
 
 boolean Plugin_037(byte function, struct EventStruct *event, String& string)
@@ -64,43 +76,92 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        addFormSubHeader(F("Options"));
+#if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT) || defined(P037_FILTER_SUPPORT)
+        String optionsNoYes[2] = { F("No"), F("Yes") };
+        int optionValuesNoYes[2] = { 0, 1 };
+#endif
 
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-        {
-        	addFormTextBox(String(F("MQTT Topic ")) + (varNr + 1), String(F("p037_template")) +
-        			(varNr + 1), deviceTemplate[varNr], 40);
-        }
-        success = true;
+#ifdef P037_MAPPING_SUPPORT
+        addFormSelector(F("Apply mappings"),      F("p037_apply_mappings"), 2, optionsNoYes, optionValuesNoYes, P037_APPLY_MAPPINGS, true);
+#endif
+#ifdef P037_FILTER_SUPPORT
+        addFormSelector(F("Apply filters"),       F("p037_apply_filters"),  2, optionsNoYes, optionValuesNoYes, P037_APPLY_FILTERS, true);
+#endif
+#ifdef P037_JSON_SUPPORT
+        addFormSelector(F("Parse JSON messages"), F("p037_parse_json"),     2, optionsNoYes, optionValuesNoYes, P037_PARSE_JSON, true);
+#endif
+#if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT) || defined(P037_FILTER_SUPPORT)
+        addFormNote(F("Changing a Yes/No option will reload the page. Changing to No will clear corresponding settings!"));
+#endif
+        addFormCheckBox(F("Generate events for accepted topics"),
+                                                F("p037_send_events"), P037_SEND_EVENTS);
+        addFormNote(F("Event: &lt;TaskName&gt;#&lt;topic&gt;=&lt;payload&gt;"));
+
+        P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
+
+        if (nullptr == P037_data) {
+          return success;
+          }
+        success = P037_data->webform_load(
+#ifdef P037_MAPPING_SUPPORT
+                                          P037_APPLY_MAPPINGS
+#endif
+#if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
+                                          ,
+#endif
+#ifdef P037_FILTER_SUPPORT
+                                          P037_APPLY_FILTERS
+#endif
+#if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
+                                          ,
+#endif
+#ifdef P037_JSON_SUPPORT
+                                          P037_PARSE_JSON
+#endif
+                                         );
+        delete P037_data;
         break;
       }
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String error;
-        char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
-        {
-          String argName = F("p037_template");
-          argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
-            error += getCustomTaskSettingsError(varNr);
-          }
-        }
-        if (error.length() > 0) {
-          addHtmlError(error);
-        }
+#ifdef P037_JSON_SUPPORT
+        P037_PARSE_JSON     = getFormItemInt(F("p037_parse_json"));
+#endif
+#ifdef P037_MAPPING_SUPPORT
+        P037_APPLY_MAPPINGS = getFormItemInt(F("p037_apply_mappings"));
+#endif
+#ifdef P037_FILTER_SUPPORT
+        P037_APPLY_FILTERS  = getFormItemInt(F("p037_apply_filters"));
+#endif
+        P037_SEND_EVENTS    = isFormItemChecked(F("p037_send_events"));
 
-        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
-        success = true;
+        if (nullptr == P037_data) {
+          return success;
+        }
+        success = P037_data->webform_save(
+#ifdef P037_FILTER_SUPPORT
+                                          P037_APPLY_FILTERS
+#endif
+#if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
+                                          ,
+#endif
+#ifdef P037_JSON_SUPPORT
+                                          P037_PARSE_JSON
+#endif
+                                         );
+        delete P037_data;
         break;
       }
 
     case PLUGIN_INIT:
       {
         success = false;
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P037_data_struct(event->TaskIndex));
+
         //    When we edit the subscription data from the webserver, the plugin is called again with init.
         //    In order to resubscribe we have to disconnect and reconnect in order to get rid of any obsolete subscriptions
         if (MQTTclient_connected) {
@@ -108,8 +169,25 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
           MQTTSubscribe_037(event);
           success = true;
         }
+        break;
       }
-      break;
+
+    case PLUGIN_EXIT:
+      {
+        P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr == P037_data) {
+          return success;
+        }
+
+        clearPluginTaskData(event->TaskIndex);
+
+        delete P037_data;
+
+        break;
+      }
+
+
 
     case PLUGIN_READ:
       {
@@ -138,66 +216,279 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_MQTT_IMPORT:
       {
-        // Get the payload and check it out
-        //   Topic:   event->String1;
-        //   Payload: event->String2;
-
-        // Get the Topic and see if it matches any of the subscriptions
-        char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-
         LoadTaskSettings(event->TaskIndex);
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
 
+        // Resolved tonhuisman: TD-er: It may be useful to generate events with string values.
+        // Get the payload and check it out
+        String Payload         = event->String2;
+        String unparsedPayload; // To keep an unprocessed copy
+
+        // #ifdef PLUGIN_037_DEBUG
+        // String info = F("P037 : topic: ");
+        // info += event->String1;
+        // info += F(" value: ");
+        // info += Payload;
+        // addLog(LOG_LEVEL_INFO, info);
+        // #endif
+
+        P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr == P037_data) {
+          return success;
+        }
+        LoadCustomTaskSettings(event->TaskIndex, (byte*)&P037_data->StoredSettings, sizeof(P037_data->StoredSettings));
+
+        bool checkJson = false;
+
+#if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT) || defined(P037_JSON_SUPPORT)
+        bool processData = false; // Don't do the for loop again if we're not going to match
+        // As we can receive quite a lot of topics not intended for this plugin,
+        // first do a quick check if the topic matches here, to try and avoid a bunch of unneeded mapping, filtering and logging
+        bool matchedTopic = false; // Ignore by default
         for (byte x = 0; x < VARS_PER_TASK; x++)
         {
-          String subscriptionTopic = deviceTemplate[x];
+          String subscriptionTopic = P037_data->StoredSettings.deviceTemplate[x];
           subscriptionTopic.trim();
           if (subscriptionTopic.length() == 0) continue;							// skip blank subscriptions
 
           // Now check if the incoming topic matches one of our subscriptions
           parseSystemVariables(subscriptionTopic, false);
-          if (MQTTCheckSubscription_037(event->String1, subscriptionTopic))
+          if (MQTTCheckSubscription_037(event->String1, subscriptionTopic)) {
+            matchedTopic = true; // Yes we should process it here
+            processData = true; // Allow going into second for loop
+          }
+        }
+#else
+        bool processData = true;
+#endif
+#ifdef P037_JSON_SUPPORT
+        if (matchedTopic && P037_PARSE_JSON && Payload.substring(0, 1) == F("{")) { // With JSON enabled and rudimentary check for JSon content
+          #ifdef PLUGIN_037_DEBUG
+          addLog(LOG_LEVEL_INFO, F("IMPT : MQTT 037 JSON data detected."));
+          #endif
+          checkJson = true;
+        }
+#endif // P037_JSON_SUPPORT
+        if (!checkJson) { // Avoid storing any json in an extra copy in memory
+          unparsedPayload = event->String2;
+        }
+
+#ifdef P037_MAPPING_SUPPORT
+        if (matchedTopic && !checkJson && P037_APPLY_MAPPINGS) { // Apply mappings?
+          Payload = P037_data->mapValue(Payload);
+        }
+#endif // P037_MAPPING_SUPPORT
+
+        String log;
+        log.reserve(50);
+
+        bool continueProcessing = false;
+        String key;
+
+#ifdef P037_JSON_SUPPORT
+        DynamicJsonDocument root(512); // Rough estimate
+        JsonObject doc;
+        JsonObject::iterator iter;
+        if (checkJson) {
+          deserializeJson(root, event->String2.c_str());
+
+          if (!root.isNull())
           {
-            // FIXME TD-er: It may be useful to generate events with string values.
-            float floatPayload;
-            if (!string2float(event->String2, floatPayload)) {
-              String log = F("IMPT : Bad Import MQTT Command ");
-              log += event->String1;
-              addLog(LOG_LEVEL_ERROR, log);
-              log = F("ERR  : Illegal Payload ");
-              log += event->String2;
-              log += ' ';
-              log += getTaskDeviceName(event->TaskIndex);
-              addLog(LOG_LEVEL_INFO, log);
-              success = false;
-              break;
-            }
+            continueProcessing = true;
+            doc = root.as<JsonObject>();
+            iter = doc.begin();
+          }
+        }
+#endif // P037_JSON_SUPPORT
 
-            UserVar[event->BaseVarIndex + x] = floatPayload;							// Save the new value
+#ifdef P037_FILTER_SUPPORT
+        // non-json filter check
+        if (matchedTopic && !checkJson && P037_data->hasFilters()) { // See if we pass the filters
+#ifdef P037_MAPPING_SUPPORT
+          Payload = P037_data->mapValue(Payload);
+#endif
+          key = event->String1;
+          key.trim();
+          int16_t lastSlash = key.lastIndexOf('/');
+          key = event->String1.substring(lastSlash + 1); // Take last part of the topic
+          processData = P037_data->checkFilters(key, Payload); // Will return true unless key matches *and* Payload doesn't
+        }
+#ifdef P037_JSON_SUPPORT
+        // json filter check
+        if (matchedTopic && checkJson && P037_data->hasFilters()) { // See if we pass the filters for all json attributes
+          do {
+            key = iter->key().c_str();
+            Payload = iter->value().as<String>();
+#ifdef P037_MAPPING_SUPPORT
+            Payload = P037_data->mapValue(Payload);
+#endif
+            processData = P037_data->checkFilters(key, Payload); // Will return true unless key matches *and* Payload doesn't
+            ++iter;
+          } while (processData && iter != doc.end());
+          iter = doc.begin();
+        }
+#endif // P037_JSON_SUPPORT
+        if (matchedTopic && P037_data->hasFilters()) { // Single log statement
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            log = F("IMPT : MQTT 037 filter result: ");
+            log += processData ? F("true") : F("false");
+            addLog(LOG_LEVEL_INFO, log);
+          }
+        }
+#endif // P037_FILTER_SUPPORT
 
-            // Log the event
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("IMPT : [");
-              log += getTaskDeviceName(event->TaskIndex);
-              log += F("#");
-              log += ExtraTaskSettings.TaskDeviceValueNames[x];
-              log += F("] : ");
-              log += floatPayload;
-              addLog(LOG_LEVEL_INFO, log);
-            }
+        // Get the Topic and see if it matches any of the subscriptions
+        for (byte x = 0; x < VARS_PER_TASK && processData; x++)
+        {
+          String subscriptionTopic = P037_data->StoredSettings.deviceTemplate[x];
+          subscriptionTopic.trim();
+          if (subscriptionTopic.length() == 0) continue;							// skip blank subscriptions
 
-            // Generate event for rules processing - proposed by TridentTD
+          // Now check if the incoming topic matches one of our subscriptions
+          parseSystemVariables(subscriptionTopic, false);
+          if (MQTTCheckSubscription_037(event->String1, subscriptionTopic)) {
+            do {
+#ifdef P037_JSON_SUPPORT
+              if (checkJson && iter != doc.end()) {
+                String jsonAttribute = P037_data->StoredSettings.jsonAttributes[x];
+                jsonAttribute.replace(';', ',');
+                String jsonIndex = parseString(jsonAttribute, 2);
+                jsonAttribute = parseString(jsonAttribute, 1);
+                jsonAttribute.trim();
+                if (jsonAttribute.length() > 0) {
+                  key = jsonAttribute;
+                  Payload = doc[key].as<String>();
+                  unparsedPayload = Payload;
+                  int8_t jIndex = jsonIndex.toInt();
+                  if (jIndex > 1) {
+                    Payload.replace(';', ',');
+                    Payload = parseString(Payload, jIndex);
+                  }
+                  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                    log = F("IMPT : MQTT 037 fetched json attribute: ");
+                    log += key;
+                    log += F(" payload: ");
+                    log += Payload;
+                    if (jsonIndex.length() > 0) {
+                      log += F(" index: ");
+                      log += jsonIndex;
+                    }
+                    addLog(LOG_LEVEL_INFO, log);
+                  }
+                  continueProcessing = false; // no need to loop over all attributes, the configured one is found
+                } else {
+                  key = iter->key().c_str();
+                  Payload = iter->value().as<String>();
+                  unparsedPayload = Payload;
+                }
+#ifdef P037_MAPPING_SUPPORT
+                if (P037_APPLY_MAPPINGS) {
+                  Payload = P037_data->mapValue(Payload);
+                }
+#endif
+                #ifdef PLUGIN_037_DEBUG
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  log = F("P037 json key: ");
+                  log += key;
+                  log += F(" payload: ");
+                  log += Payload;
+                  addLog(LOG_LEVEL_INFO, log);
+                }
+                #endif
+                ++iter;
+              }
+#endif // P037_JSON_SUPPORT
+              bool numericPayload = true; // Unless it's not
+              if (!checkJson || (checkJson && key.length() > 0)) {
+                float floatPayload;
+                if (!string2float(Payload, floatPayload)) {
+                  if (!checkJson && !P037_SEND_EVENTS) { // If we want all values as events, then no error logged and don't stop here
+                    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                      log = F("IMPT : Bad Import MQTT Command ");
+                      log += event->String1;
+                      addLog(LOG_LEVEL_ERROR, log);
+                      log = F("ERR  : Illegal Payload ");
+                      log += Payload;
+                      log += ' ';
+                      log += getTaskDeviceName(event->TaskIndex);
+                      addLog(LOG_LEVEL_INFO, log);
+                    }
+                    success = false;
+                    break;
+                  }
+                  numericPayload = false; // No, it isn't numeric
+                  floatPayload = 0.0f;
+                } else {
 
-            if (Settings.UseRules)
-            {
-              String RuleEvent;
-              RuleEvent += getTaskDeviceName(event->TaskIndex);
-              RuleEvent += '#';
-              RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[x];
-              RuleEvent += '=';
-              RuleEvent += floatPayload;
-              eventQueue.add(RuleEvent);
-            }
+                  UserVar[event->BaseVarIndex + x] = floatPayload;							// Save the new value
+                }
+
+                if (!checkJson && P037_SEND_EVENTS && Settings.UseRules) { // Generate event of all non-json topic/payloads
+                  String RuleEvent;
+                  RuleEvent  = getTaskDeviceName(event->TaskIndex);
+                  RuleEvent += '#';
+                  RuleEvent += event->String1;
+                  RuleEvent += '=';
+                  RuleEvent += unparsedPayload;
+                  eventQueue.add(RuleEvent);
+                }
+
+                // Log the event
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log = F("IMPT : [");
+                  log += getTaskDeviceName(event->TaskIndex);
+                  log += '#';
+                  if (checkJson) {
+                    log += key;
+                  } else {
+                    log += ExtraTaskSettings.TaskDeviceValueNames[x];
+                  }
+                  log += F("] : ");
+                  log += floatPayload;
+                  addLog(LOG_LEVEL_INFO, log);
+                }
+
+                // Generate event for rules processing - proposed by TridentTD
+
+                if (Settings.UseRules) {
+                  String RuleEvent;
+                  if (checkJson) {
+                    // For JSON payloads generate <Topic>#<Attribute>=<Payload> event
+                    RuleEvent  = event->String1;
+                    RuleEvent += '#';
+                    RuleEvent += key;
+                    RuleEvent += '=';
+                    bool hasSemicolon = unparsedPayload.indexOf(';') > -1;
+                    if (numericPayload && !hasSemicolon) {
+                      RuleEvent += floatPayload;
+                    } else if (numericPayload && hasSemicolon) { // semicolon separated list, pass unparsed
+                      RuleEvent += Payload;
+                      RuleEvent += ',';
+                      RuleEvent += unparsedPayload;
+                    } else {
+                      RuleEvent += Payload; // Pass mapped result
+                    }
+                    eventQueue.add(RuleEvent);
+                  } 
+                  // (Always) Generate <Taskname>#<Valuename>=<Payload> event
+                  RuleEvent  = getTaskDeviceName(event->TaskIndex);
+                  RuleEvent += '#';
+                  RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[x];
+                  RuleEvent += '=';
+                  if (numericPayload) {
+                    RuleEvent += floatPayload;
+                  } else {
+                    RuleEvent += Payload;
+                  }
+                  eventQueue.add(RuleEvent);
+                }
+#ifdef P037_JSON_SUPPORT
+                if (checkJson && iter == doc.end()) {
+                  continueProcessing = false;
+                }
+#endif // P037_JSON_SUPPORT
+              }
+            } while (continueProcessing);
 
             success = true;
           }
@@ -210,16 +501,24 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
   return success;
 }
+
 bool MQTTSubscribe_037(struct EventStruct *event)
 {
   // We must subscribe to the topics.
-  char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-  LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+  P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+  if (nullptr == P037_data) {
+    return false;
+  }
+
+  //char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
+  LoadCustomTaskSettings(event->TaskIndex, (byte*)&P037_data->StoredSettings, sizeof(P037_data->StoredSettings));
 
   // Now loop over all import variables and subscribe to those that are not blank
   for (byte x = 0; x < VARS_PER_TASK; x++)
   {
-    String subscribeTo = deviceTemplate[x];
+    String subscribeTo = P037_data->StoredSettings.deviceTemplate[x];
+    subscribeTo.trim();
 
     if (subscribeTo.length() > 0)
     {
