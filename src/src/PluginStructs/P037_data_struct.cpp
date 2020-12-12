@@ -2,6 +2,7 @@
 
 #ifdef USES_P037
 
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../WebServer/Markup_Forms.h"
 #include "../WebServer/WebServer.h"
 #include "../WebServer/Markup.h"

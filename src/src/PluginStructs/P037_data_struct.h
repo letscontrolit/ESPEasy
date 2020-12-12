@@ -13,17 +13,17 @@
 # define P037_FILTER_SUPPORT  // Enable filtering support
 # define P037_JSON_SUPPORT    // Enable Json support
 
-// #ifdef LIMIT_BUILD_SIZE       // Leave out the fancy stuff is available flash is tight
-// #  ifdef P037_MAPPING_SUPPORT
-//      #undef P037_MAPPING_SUPPORT
-// #  endif
-// #  ifdef P037_FILTER_SUPPORT
-//      #undef P037_FILTER_SUPPORT
-// #  endif
-// #  ifdef P037_JSON_SUPPORT
-//      #undef P037_JSON_SUPPORT
-// #  endif
-// #endif
+#ifdef LIMIT_BUILD_SIZE       // Leave out the fancy stuff if available flash is tight
+  #ifdef P037_MAPPING_SUPPORT
+    #undef P037_MAPPING_SUPPORT
+  #endif
+  #ifdef P037_FILTER_SUPPORT
+    #undef P037_FILTER_SUPPORT
+  #endif
+  // #ifdef P037_JSON_SUPPORT
+  //   #undef P037_JSON_SUPPORT
+  // #endif
+#endif
 
 # define P037_MAX_MAPPINGS  25
 # define P037_MAX_FILTERS   25
