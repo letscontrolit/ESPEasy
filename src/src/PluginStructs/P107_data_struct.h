@@ -7,14 +7,11 @@
 # include <Adafruit_SI1145.h>
 
 
-# define BMP085_ULTRAHIGHRES         3
-
 struct P107_data_struct : public PluginTaskData_base {
-
   bool begin();
 
   Adafruit_SI1145 uv;
-  bool initialized = false;
+  bool            initialized = false;
 };
 
 #endif // ifdef USES_P107

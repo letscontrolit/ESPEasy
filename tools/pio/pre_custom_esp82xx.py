@@ -43,6 +43,7 @@ else:
 #   "USES_P087",  # Serial Proxy
 #   "USES_P094",  # CUL Reader
 #   "USES_P095",  # TFT ILI9341
+    "USES_P107",  # SI1145 UV index
 
     "USES_C016",  # Cache Controller
     "USES_C018",  # TTN/RN2483
