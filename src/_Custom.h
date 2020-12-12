@@ -305,6 +305,8 @@
  #define USES_P097   // Touch (ESP32)
  #define USES_P098   // ESPEasy-Now Reader
 
+// #define USES_P103   // DDS238-x ZN Modbus energy meters
+
 
 // Special plugins needing IR library
 // #define USES_P016   // IR

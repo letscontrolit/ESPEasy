@@ -886,6 +886,7 @@ To create/register a plugin, you have to :
     #define USES_P097   // Touch (ESP32)
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
+    #define USES_P103   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
 #endif
 
 
@@ -1041,7 +1042,7 @@ To create/register a plugin, you have to :
   #define USES_PACKED_RAW_DATA
 #endif
 
-#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078)
+#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P103)
   // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
   #define USES_MODBUS
 #endif
