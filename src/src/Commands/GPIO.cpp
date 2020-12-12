@@ -24,6 +24,7 @@ void logErrorGpioOffline(const String& prefix, int port);
 void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line = nullptr);
 void logErrorGpioNotOutput(const String& prefix, int port);
 bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Line);
+bool gpio_unmonitor_helper(int port, EventValueSource::Enum source, const char* Line);
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
 
 
@@ -67,25 +68,33 @@ bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Li
 
 String Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line)
 {
+  if (gpio_unmonitor_helper(event->Par2, event->Source, Line))
+    return return_command_success();
+  else 
+    return return_command_failed();
+}
+
+bool gpio_unmonitor_helper(int port, EventValueSource::Enum source, const char* Line)
+{
   String logPrefix;
   pluginID_t pluginID = INVALID_PLUGIN_ID;
   //parseString(Line, 2).charAt(0)='g':gpio; ='p':pcf; ='m':mcp
   bool success = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), pluginID, logPrefix);
 
-  if (success && checkValidPortRange(pluginID, event->Par2))
+  if (success && checkValidPortRange(pluginID, port))
   {
-    const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'monitor' uses Par2 instead of Par1
+    const uint32_t key = createKey(pluginID, port); // WARNING: 'monitor' uses Par2 instead of Par1
     String dummy;
-    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummy, 0);
+    SendStatusOnlyIfNeeded(source, SEARCH_PIN_STATE, key, dummy, 0);
 
     removeMonitorFromPort(key);
-    String log = logPrefix + String(F(" port #")) + String(event->Par2) + String(F(": removed from monitor list."));
+    String log = logPrefix + String(F(" port #")) + String(port) + String(F(": removed from monitor list."));
     addLog(LOG_LEVEL_INFO, log);
 
-    return return_command_success();
+    return true;
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par2, Line);
-    return return_command_failed();
+    logErrorGpioOutOfRange(logPrefix, port, Line);
+    return false;
   }
 }
 
@@ -597,8 +606,8 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
     addLog(LOG_LEVEL_INFO,log);
     log = String(F("2c. currentAddress="))+String(currentAddress);
     addLog(LOG_LEVEL_INFO,log); */
-    log = String(F("currentMask="))+String(currentMask);
-    addLog(LOG_LEVEL_INFO,log);
+//    log = String(F("currentMask="))+String(currentMask);
+//    addLog(LOG_LEVEL_INFO,log);
 /*    log = String(F("2e. currentWrite="))+String(currentWrite);
     addLog(LOG_LEVEL_INFO,log);
     log = String(F("2f. currentRegister="))+String(currentGPIORegister);
@@ -609,8 +618,8 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   //    addLog(LOG_LEVEL_INFO,log);
 
       byte writeModeValue = (readValue & currentInvertedMask);
-      log = String(F("writeMODEValue="))+String(writeModeValue);
-      addLog(LOG_LEVEL_INFO,log);
+ //     log = String(F("writeMODEValue="))+String(writeModeValue);
+ //     addLog(LOG_LEVEL_INFO,log);
 
       // set type to output only for the pins of the mask
       GPIO_MCP_WriteRegister(currentAddress,currentIOModeRegister,writeModeValue);
@@ -620,8 +629,8 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   //    addLog(LOG_LEVEL_INFO,log);
 
       writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
-      log = String(F("writeGPIOValue="))+String(writeGPIOValue);
-      addLog(LOG_LEVEL_INFO,log);
+ //     log = String(F("writeGPIOValue="))+String(writeGPIOValue);
+ //     addLog(LOG_LEVEL_INFO,log);
       
       // write to port
       GPIO_MCP_WriteRegister(currentAddress,currentGPIORegister,writeGPIOValue);
@@ -639,7 +648,7 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
         byte currentPin = firstPin + j + 8*i;
         const uint32_t key = createKey(PLUGIN_MCP,currentPin);
 
-        state = onLine ? (writeGPIOValue & byte(pow(2,j)) >> j) : -1;
+        state = onLine ? ((writeGPIOValue & byte(pow(2,j))) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key,mode,state);
         log = logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
@@ -651,7 +660,6 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   return onLine;
 }
 
-
 String Command_GPIO_MonitorRange(struct EventStruct *event, const char* Line) 
 {
   bool success=true;
@@ -661,3 +669,11 @@ String Command_GPIO_MonitorRange(struct EventStruct *event, const char* Line)
   return success?return_command_success():return_command_failed();
 }
 
+String Command_GPIO_UnMonitorRange(struct EventStruct *event, const char* Line) 
+{
+  bool success=true;
+  for (byte i=event->Par2;i<=event->Par3;i++) {
+    success &= gpio_unmonitor_helper(i, event->Source, Line);
+  }
+  return success?return_command_success():return_command_failed();
+}

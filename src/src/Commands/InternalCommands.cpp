@@ -378,6 +378,7 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R("udptest", Command_UDP_Test,      2);    // UDP.h
       COMMAND_CASE_R(   "unit", Command_Settings_Unit, 1);    // Settings.h
       COMMAND_CASE_A("unmonitor", Command_GPIO_UnMonitor, 2); // GPIO.h
+      COMMAND_CASE_A("unmonitorrange", Command_GPIO_UnMonitorRange, 3); // GPIO.h
       COMMAND_CASE_R("usentp", Command_useNTP, 1);            // Time.h
       break;
     }
