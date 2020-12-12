@@ -23,34 +23,45 @@ bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefi
 void logErrorGpioOffline(const String& prefix, int port);
 void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line = nullptr);
 void logErrorGpioNotOutput(const String& prefix, int port);
+bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Line);
+bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
+
 
 String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
+{
+  if (gpio_monitor_helper(event->Par2, event->Source, Line))
+    return return_command_success();
+  else 
+    return return_command_failed();
+}
+
+bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Line)
 {
   String logPrefix;
   pluginID_t pluginID = INVALID_PLUGIN_ID;
   //parseString(Line, 2).charAt(0)='g':gpio; ='p':pcf; ='m':mcp
   bool success = getPluginIDAndPrefix(parseString(Line, 2).charAt(0), pluginID, logPrefix);
-  if (success && checkValidPortRange(pluginID, event->Par2))
+  if (success && checkValidPortRange(pluginID, port))
   {
-    const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'monitor' uses Par2 instead of Par1
+    const uint32_t key = createKey(pluginID, port); // WARNING: 'monitor' uses Par2 instead of Par1
     //if (!existPortStatus(key)) globalMapPortStatus[key].mode=PIN_MODE_OUTPUT;
     addMonitorToPort(key);
 
     int8_t state;
     //giig1967g: Comment next 3 lines to receive an EVENT just after calling the monitor command
-    GPIO_Read(pluginID, event->Par2, state);
+    GPIO_Read(pluginID, port, state);
     globalMapPortStatus[key].state = state;
     if (state == -1) globalMapPortStatus[key].mode=PIN_MODE_OFFLINE;
 
-    String log = logPrefix + String(F(" port #")) + String(event->Par2) + String(F(": added to monitor list."));
+    String log = logPrefix + String(F(" port #")) + String(port) + String(F(": added to monitor list."));
     addLog(LOG_LEVEL_INFO, log);
     String dummy;
-    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummy, 0);
+    SendStatusOnlyIfNeeded(source, SEARCH_PIN_STATE, key, dummy, 0);
 
-    return return_command_success();
+    return true;
   } else {
-    logErrorGpioOutOfRange(logPrefix,event->Par2, Line);
-    return return_command_failed();
+    logErrorGpioOutOfRange(logPrefix,port, Line);
+    return false;
   }
 }
 
@@ -455,21 +466,76 @@ bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefi
   return success;
 }
 
-String Command_GPIO_McpAll(struct EventStruct *event, const char* Line) {
-  //Par1=starting pin
-  //Par2=ending pin
-  //Par3=value
-  //Par4=mask (optional)
+String Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char* Line) 
+/******************************************************************************
+** Par1=starting pin
+** Par2=ending pin (must be higher of starting pin; and maximum 16 pin per command)
+** Par3=write pattern: it's a write pattern. Write 0 or 1. 
+**                     Example: use decimal number 15 (in binary is 00001111) to set to 1 pin 1,2,3 and 4 and to set to 0 pins 5,6,7,8 
+**                     if number of bit lower than number of pins, then padded with 0;
+**                     if number of bit higher than number of pins, then it's truncated.
+** Par4=mask (optional): if not present assume to operate in all pins; if present is used as a mask (1=update, 0=do not update).
+**            if number of bit lower than number of pins, then padded with 0;
+**            if number of bit higher than number of pins, then it's truncated.
+**
+**  examples:
+**  mcpgpioPattern,1,8,255
+**     write pattern = '1101' that will be padded as: '0000001101'
+**     mask not present, assume mask = '1111111111'
+**  mcpgpioPattern,3,12,13
+**     write pattern = '1101' that will be padded as: '0000001101'
+**     mask not present, assume mask = '1111111111'
+**  mcpgpioPattern,3,12,525
+**     write pattern = 525 = '100001101'
+**     mask not present, assume mask = '1111111111'
+**  mcpgpioPattern,3,12,525,973
+**     write pattern = 525 = '100001101'
+**     mask = 973 = '1111001101'
+**     write pattern after mask = '1000xx11x1' where x indicates that the pin will not be changed
+******************************************************************************/
+{
+  return mcpgpio_range_pattern_helper(event, Line, true)?return_command_success():return_command_failed();
+}
 
-  if ((event->Par2 < event->Par1) || !checkValidPortRange(PLUGIN_MCP, event->Par1) || !checkValidPortRange(PLUGIN_MCP, event->Par2))
-    return return_command_failed();
+String Command_GPIO_McpGPIORange(struct EventStruct *event, const char* Line) 
+/******************************************************************************
+** Par1=starting pin
+** Par2=ending pin (must be higher of starting pin; and maximum 16 pin per command)
+** Par3=write value: if 0 (or 1) then assume 0 (or 1) for all the pins in the range; 
+** Par4=mask (optional): if not present assume to operate in all pins; if present is used as a mask (1=update, 0=do not update).
+**            if number of bit lower than number of pins, then padded with 0;
+**            if number of bit higher than number of pins, then it's truncated.
+**
+**  examples:
+**  mcpgpioRange,1,8,1: set pins 1 to 8 to 1
+**  mcpgpioRange,3,12,1: set pins 3 to 12 to 1
+**  mcpgpioRange,5,17,0: set pins 5 to 17 to 0
+**  mcpgpioRange,3,12,1,525
+**     mask = '0100001101'
+**     write pattern after mask = 'x1xxxx11x1' where x indicates that the pin will not be changed
+**  mcpgpioRange,3,12,1,973
+**     mask = 973 = '1111001101'
+**     write pattern after mask = '1111xx11x1' where x indicates that the pin will not be changed
+******************************************************************************/
+{
+  return mcpgpio_range_pattern_helper(event, Line, false)?return_command_success():return_command_failed();
+}
+
+bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern) {
 
   String log;
-  bool isWriteMask = true;
-  if (event->Par3==0 || event->Par3==1) isWriteMask = false;
+  String logPrefix = isWritePattern?String(F("McpGPIOPattern")):String(F("McpGPIORange"));
 
-  uint32_t write = event->Par3;
-  uint32_t mask  = event->Par4;  
+  if ((event->Par2 < event->Par1) || !checkValidPortRange(PLUGIN_MCP, event->Par1) || !checkValidPortRange(PLUGIN_MCP, event->Par2) || (event->Par2 - event->Par1 + 1)>16 ) {
+    log=logPrefix + String(F(": pin numbers out of range."));
+    addLog(LOG_LEVEL_INFO,log);
+    return false;
+  }
+  
+  bool isMask = (parseString(Line, 5) == "")? false : true;
+
+  uint32_t write;
+  uint32_t mask;  
   
   byte firstPin     = int((event->Par1-1)/8)*8 + 1;
   byte lastPin      = int((event->Par2-1)/8)*8 + 8;
@@ -481,28 +547,32 @@ String Command_GPIO_McpAll(struct EventStruct *event, const char* Line) {
   byte firstBank    = (((firstPin-1)/8)+2) % 2;
   byte initVal      = 2 * firstAddress + firstBank;
 
-  if (mask == 0) {
-    mask = (1 << numBits) - 1;
-    mask = mask << (deltaStart); 
- //   log = String(F("1a. mask==0. mask="))+String(mask);
- //   addLog(LOG_LEVEL_INFO,log);
-  } else {
-    mask = mask & (byte(pow(256,numBytes))-1);
+  if (isMask) {
+    mask = event->Par4 & (byte(pow(256,numBytes))-1);
     mask = mask & (byte(pow(2,numBits))-1);
     mask = mask << deltaStart;
-  //  log = String(F("1b. mask<>0. mask="))+String(mask);
-  //  addLog(LOG_LEVEL_INFO,log);
+  } else {
+    mask = (1 << numBits) - 1;
+    mask = mask << (deltaStart); 
   }
 
-  if (isWriteMask) {
-    write = write & (byte(pow(256,numBytes))-1);
-    write = write & (byte(pow(2,numBits))-1);
-    write = write << deltaStart;
-  } else {
-    write = event->Par3==0 ? 0 : 1;
-    if (write > 0) {
-      write = (write << numBits) - 1;
+  if (isWritePattern) { //write pattern is present
+    write = event->Par3 & (byte(pow(256,numBytes))-1); //limit number of bytes
+    write = write & (byte(pow(2,numBits))-1); //limit to number of bits
+    //add the following to pad with 1:
+    //uint16_t padBits = int(log2(write))+1; //calculate the size of the write pattern
+    //write = byte(pow(2,numBits-padBits)-1) << padBits; //pad left pattern with 1 (off)
+    write = write << deltaStart; //shift to start from starting pin
+  } else { //write pattern not present
+    if (event->Par3 == 0) {
+      write = 0;
+    } else if (event->Par3 == 1) {
+      write = (1 << numBits) - 1;
       write = write << deltaStart;
+    } else {
+      log=logPrefix + String(F(": Write value must be 0 or 1."));
+      addLog(LOG_LEVEL_INFO,log);
+      return false;
     }
   }  
 //  log = String(F("1c. write="))+String(write);
@@ -526,10 +596,10 @@ String Command_GPIO_McpAll(struct EventStruct *event, const char* Line) {
     log = String(F("2b. currentVal="))+String(currentVal);
     addLog(LOG_LEVEL_INFO,log);
     log = String(F("2c. currentAddress="))+String(currentAddress);
+    addLog(LOG_LEVEL_INFO,log); */
+    log = String(F("currentMask="))+String(currentMask);
     addLog(LOG_LEVEL_INFO,log);
-    log = String(F("2d. currentMask="))+String(currentMask);
-    addLog(LOG_LEVEL_INFO,log);
-    log = String(F("2e. currentWrite="))+String(currentWrite);
+/*    log = String(F("2e. currentWrite="))+String(currentWrite);
     addLog(LOG_LEVEL_INFO,log);
     log = String(F("2f. currentRegister="))+String(currentGPIORegister);
     addLog(LOG_LEVEL_INFO,log);
@@ -538,11 +608,11 @@ String Command_GPIO_McpAll(struct EventStruct *event, const char* Line) {
   //    log = String(F("3a. readValue register="))+String(readValue);
   //    addLog(LOG_LEVEL_INFO,log);
 
-      byte writeModeValue = (readValue & currentInvertedMask); //| ((255-mask) & mask);
-  //    log = String(F("3b. writeValue="))+String(writeModeValue);
-  //    addLog(LOG_LEVEL_INFO,log);
+      byte writeModeValue = (readValue & currentInvertedMask);
+      log = String(F("writeMODEValue="))+String(writeModeValue);
+      addLog(LOG_LEVEL_INFO,log);
 
-      // set type to output
+      // set type to output only for the pins of the mask
       GPIO_MCP_WriteRegister(currentAddress,currentIOModeRegister,writeModeValue);
 
       GPIO_MCP_ReadRegister(currentAddress,currentGPIORegister,&readValue);
@@ -550,8 +620,8 @@ String Command_GPIO_McpAll(struct EventStruct *event, const char* Line) {
   //    addLog(LOG_LEVEL_INFO,log);
 
       writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
-  //    log = String(F("4b. writeValue="))+String(writeGPIOValue);
-  //    addLog(LOG_LEVEL_INFO,log);
+      log = String(F("writeGPIOValue="))+String(writeGPIOValue);
+      addLog(LOG_LEVEL_INFO,log);
       
       // write to port
       GPIO_MCP_WriteRegister(currentAddress,currentGPIORegister,writeGPIOValue);
@@ -565,8 +635,6 @@ String Command_GPIO_McpAll(struct EventStruct *event, const char* Line) {
     int8_t state;
 
     for (byte j=0; j<8; j++) {
-//      log=String(F("currentMask="))+String(currentMask)+String(F(". j="))+String(j)+String(F(". 2^j="))+String(2^j)+String(F(". currentMask & (2^j)) >> j="))+String(((currentMask & (2^j)) >> j));
-//      addLog(LOG_LEVEL_INFO,log);
       if ((currentMask & byte(pow(2,j))) >> j) { //only for the pins in the mask
         byte currentPin = firstPin + j + 8*i;
         const uint32_t key = createKey(PLUGIN_MCP,currentPin);
@@ -574,11 +642,22 @@ String Command_GPIO_McpAll(struct EventStruct *event, const char* Line) {
         state = onLine ? (writeGPIOValue & byte(pow(2,j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key,mode,state);
-        String log = String(F("MCPALL : port#")) + String(currentPin) + String(F(": set to ")) + String(state);
+        log = logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
       }
     }
   }
-  return onLine?return_command_success():return_command_failed();
+  return onLine;
 }
+
+
+String Command_GPIO_MonitorRange(struct EventStruct *event, const char* Line) 
+{
+  bool success=true;
+  for (byte i=event->Par2;i<=event->Par3;i++) {
+    success &= gpio_monitor_helper(i, event->Source, Line);
+  }
+  return success?return_command_success():return_command_failed();
+}
+

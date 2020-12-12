@@ -268,18 +268,22 @@ bool executeInternalCommand(command_case_data & data)
     }
     case 'm': {
       if (data.cmd_lc[1] == 'c') {
-        COMMAND_CASE_A(         "mcpall", Command_GPIO_McpAll,       4); // Gpio.h
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
+        COMMAND_CASE_A(   "mcpgpiorange", Command_GPIO_McpGPIORange, -1); // Gpio.h
+        COMMAND_CASE_A( "mcpgpiopattern", Command_GPIO_McpGPIOPattern, -1); // Gpio.h
         COMMAND_CASE_A(  "mcpgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
         COMMAND_CASE_A(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
         COMMAND_CASE_A("mcplongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
+        //COMMAND_CASE_A(        "mcpmode", Command_GPIO_Mode,              2); // Gpio.h   ************
+        //COMMAND_CASE_A(   "mcpmoderange", Command_GPIO_McpModeRange, 4); // Gpio.h   ************
         COMMAND_CASE_A(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
       }
-      COMMAND_CASE_A(      "monitor", Command_GPIO_Monitor,   2); // GPIO.h
+      COMMAND_CASE_A(          "monitor", Command_GPIO_Monitor,      2); // GPIO.h
+      COMMAND_CASE_A(     "monitorrange", Command_GPIO_MonitorRange,      3); // GPIO.h   ************
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      COMMAND_CASE_A(       "malloc", Command_Malloc,         1);        // Diagnostic.h
-      COMMAND_CASE_A(      "meminfo", Command_MemInfo,        0);        // Diagnostic.h
-      COMMAND_CASE_A("meminfodetail", Command_MemInfo_detail, 0);        // Diagnostic.h
+      COMMAND_CASE_A(          "malloc", Command_Malloc,         1);        // Diagnostic.h
+      COMMAND_CASE_A(         "meminfo", Command_MemInfo,        0);        // Diagnostic.h
+      COMMAND_CASE_A(   "meminfodetail", Command_MemInfo_detail, 0);        // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 
       break;
@@ -294,9 +298,13 @@ bool executeInternalCommand(command_case_data & data)
     case 'p': {
       if (data.cmd_lc[1] == 'c') {
         COMMAND_CASE_A(        "pcfgpio", Command_GPIO,              2); // Gpio.h
+        //COMMAND_CASE_A(   "pcfgpiorange", Command_GPIO_PcfGPIORange, -1); // Gpio.h
+        //COMMAND_CASE_A(   "pcfgpiopattern", Command_GPIO_PcfGPIOPattern, -1); // Gpio.h
         COMMAND_CASE_A(  "pcfgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
         COMMAND_CASE_A(   "pcflongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
         COMMAND_CASE_A("pcflongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
+        //COMMAND_CASE_A(        "pcfmode", Command_GPIO_Mode,              2); // Gpio.h   ************
+        //COMMAND_CASE_A(   "pcfmoderange", Command_GPIO_McpModeRange, 4); // Gpio.h   ************
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,        3); // GPIO.h
       }
       COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
