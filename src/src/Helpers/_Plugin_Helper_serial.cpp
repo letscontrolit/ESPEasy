@@ -243,10 +243,11 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
   if (Settings.UseSerial) {
     addFormNote(F("Do <b>NOT</b> combine HW Serial0 and log to serial on Tools->Advanced->Serial Port."));
   }
-
+#ifdef ESP8266
   if ((rxPinDef == 15) || (txPinDef == 15)) {
     addFormNote(F("GPIO-15 (D8) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));
   }
+#endif
 }
 
 void serialHelper_webformSave(byte& port, int8_t& rxPin, int8_t& txPin) {
