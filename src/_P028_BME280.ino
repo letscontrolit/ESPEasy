@@ -70,7 +70,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       int Plugin_28_i2c_addresses[2] = { 0x76, 0x77 };
-      addFormSelectorI2C(F("p028_bme280_i2c"), 2, Plugin_28_i2c_addresses, PCONFIG(0));
+      addFormSelectorI2C(F("i2c_addr"), 2, Plugin_28_i2c_addresses, PCONFIG(0));
       break;
     }
 
@@ -108,7 +108,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p028_bme280_i2c"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p028_bme280_elev"));
       PCONFIG(2) = getFormItemInt(F("p028_bme280_tempoffset"));
       success    = true;

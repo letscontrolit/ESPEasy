@@ -108,7 +108,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 
       /*String options[2] = { F("0x76 - default settings (SDO Low)"), F("0x77 - alternate settings (SDO HIGH)") };*/
       int optionValues[2] = { 0x76, 0x77 };
-      addFormSelectorI2C(F("p030_bmp280_i2c"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       addFormNote(F("SDO Low=0x76, High=0x77"));
       break;
     }
@@ -124,7 +124,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p030_bmp280_i2c"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p030_bmp280_elev"));
       success    = true;
       break;

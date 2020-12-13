@@ -116,7 +116,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
       int optionValues[2];
       optionValues[0] = 0x68;
       optionValues[1] = 0x69;
-      addFormSelectorI2C(F("p045_address"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       addFormNote(F("ADDR Low=0x68, High=0x69"));
       break;
     }
@@ -167,7 +167,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       // Save the vars
-      PCONFIG(0) = getFormItemInt(F("p045_address"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p045_function"));
       PCONFIG(2) = getFormItemInt(F("p045_threshold_x"));
       PCONFIG(3) = getFormItemInt(F("p045_threshold_y"));
