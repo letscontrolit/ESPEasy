@@ -75,7 +75,7 @@ uint8_t GPIO_PCF_ReadAllPins(uint8_t address);
 // PCF8574 write
 //********************************************************************************
 bool GPIO_PCF_Write(int Par1, byte Par2);
-bool GPIO_PCF_Write8(int Par1, byte Par2);
+bool GPIO_PCF_WriteAllPins(uint8_t Par1, uint8_t Par2);
 
 //*********************************************************
 // GPIO_Monitor10xSec:

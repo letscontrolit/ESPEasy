@@ -282,9 +282,17 @@ uint8_t GPIO_PCF_ReadAllPins(uint8_t address)
   return rawState;
 }
 
+
 //********************************************************************************
 // PCF8574 write
 //********************************************************************************
+void GPIO_PCF_WriteAllPins(uint8_t address, uint8_t value) 
+{
+  Wire.beginTransmission(address);
+  Wire.write(value);
+  Wire.endTransmission();
+}
+
 bool GPIO_PCF_Write(int Par1, byte Par2)
 {
   if (!checkValidPortRange(PLUGIN_PCF, Par1)) {
@@ -302,6 +310,9 @@ bool GPIO_PCF_Write(int Par1, byte Par2)
 
   uint32_t key;
 
+  //REMEMBER: all input pins must be set to 1 when writing to the unit
+
+
   for(i=0; i<8; i++){
     key = createKey(PLUGIN_PCF,unit+i);
 
@@ -309,7 +320,7 @@ bool GPIO_PCF_Write(int Par1, byte Par2)
       portmask &= ~(1 << i); //set port i = 0
   }
 
-  key = createKey(PLUGIN_PCF,Par1);
+  //key = createKey(PLUGIN_PCF,Par1);
 
   if (Par2 == 1)
     portmask |= (1 << (port-1));

@@ -558,7 +558,7 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
 
   if (isMask) {
     mask = event->Par4 & (byte(pow(256,numBytes))-1);
-    mask = mask & (byte(pow(2,numBits))-1);
+    mask &= (byte(pow(2,numBits))-1);
     mask = mask << deltaStart;
   } else {
     mask = (1 << numBits) - 1;
@@ -567,7 +567,7 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
 
   if (isWritePattern) { //write pattern is present
     write = event->Par3 & (byte(pow(256,numBytes))-1); //limit number of bytes
-    write = write & (byte(pow(2,numBits))-1); //limit to number of bits
+    write &= (byte(pow(2,numBits))-1); //limit to number of bits
     //add the following to pad with 1:
     //uint16_t padBits = int(log2(write))+1; //calculate the size of the write pattern
     //write = byte(pow(2,numBits-padBits)-1) << padBits; //pad left pattern with 1 (off)
