@@ -60,14 +60,14 @@
 #include "src/PluginStructs/P090_data_struct.h"
 
 
-#define P090_I2C_ADDR                 Settings.TaskDevicePluginConfig[event->TaskIndex][0]
-#define P090_COMPENSATE_ENABLE        Settings.TaskDevicePluginConfig[event->TaskIndex][1]
-#define P090_TEMPERATURE_TASK_INDEX   Settings.TaskDevicePluginConfig[event->TaskIndex][2]
-#define P090_TEMPERATURE_TASK_VALUE   Settings.TaskDevicePluginConfig[event->TaskIndex][3]
-#define P090_HUMIDITY_TASK_INDEX      Settings.TaskDevicePluginConfig[event->TaskIndex][4]
-#define P090_HUMIDITY_TASK_VALUE      Settings.TaskDevicePluginConfig[event->TaskIndex][5]
-#define P090_TEMPERATURE_SCALE        Settings.TaskDevicePluginConfig[event->TaskIndex][6] // deg C/F
-#define P090_READ_INTERVAL            Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]
+#define P090_I2C_ADDR                 PCONFIG(0)
+#define P090_COMPENSATE_ENABLE        PCONFIG(1)
+#define P090_TEMPERATURE_TASK_INDEX   PCONFIG(2)
+#define P090_TEMPERATURE_TASK_VALUE   PCONFIG(3)
+#define P090_HUMIDITY_TASK_INDEX      PCONFIG(4)
+#define P090_HUMIDITY_TASK_VALUE      PCONFIG(5)
+#define P090_TEMPERATURE_SCALE        PCONFIG(6) // deg C/F
+#define P090_READ_INTERVAL            PCONFIG_LONG(0)
 
 
 boolean Plugin_090(byte function, struct EventStruct *event, String& string)
