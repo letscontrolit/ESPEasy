@@ -7,17 +7,20 @@
 
 #ifdef USES_P037
 
-# define PLUGIN_037_DEBUG     // Additional debugging information
+// # define PLUGIN_037_DEBUG     // Additional debugging information
 
 # define P037_MAPPING_SUPPORT // Enable Value mapping support
 # define P037_FILTER_SUPPORT  // Enable filtering support
 # define P037_JSON_SUPPORT    // Enable Json support
 
 #ifdef LIMIT_BUILD_SIZE       // Leave out the fancy stuff if available flash is tight
+  #ifdef PLUGIN_037_DEBUG
+    #undef PLUGIN_037_DEBUG
+  #endif
   #ifdef P037_MAPPING_SUPPORT
     #undef P037_MAPPING_SUPPORT
   #endif
-  #ifdef P037_FILTER_SUPPORT
+  #if defined(FEATURE_ADC_VCC) && defined(P037_FILTER_SUPPORT)
     #undef P037_FILTER_SUPPORT
   #endif
   // #ifdef P037_JSON_SUPPORT
@@ -32,7 +35,7 @@
 # define P037_OPERAND_COUNT 2
 # define P037_OPERAND_LIST  F("=%")
 
-# define P037_FILTER_COUNT  2 // 3rd option not implemented yet
+# define P037_FILTER_COUNT  3 // 3rd option not implemented yet
 # define P037_FILTER_LIST   F("=-:")
 
 // Data structure
@@ -70,12 +73,12 @@ struct P037_data_struct : public PluginTaskData_base
 #endif
                      );
 #ifdef P037_MAPPING_SUPPORT
-  String mapValue(String input);
+  String mapValue(String input, String attribute);
   void   logMapValue(String input, String result);
 #endif // P037_MAPPING_SUPPORT
 #ifdef P037_FILTER_SUPPORT
   bool   hasFilters();
-  bool   checkFilters(String key, String value);
+  bool   checkFilters(String key, String value, int8_t topicId);
 #ifdef PLUGIN_037_DEBUG
   void   logFilterValue(String text, String key, String value, String match);
 #endif // PLUGIN_037_DEBUG

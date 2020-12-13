@@ -245,8 +245,8 @@ bool P037_data_struct::webform_load(
     html_table_header(F("Value"));
 
     String operandOptions[P037_OPERAND_COUNT];
-    operandOptions[0] = F("map (=)");     // map name to int
-    operandOptions[1] = F("percent (%)"); // map attribute value to percentage of provided value
+    operandOptions[0] = F("map");        // map name to int
+    operandOptions[1] = F("percentage"); // map attribute value to percentage of provided value
     int operandIndices[P037_OPERAND_COUNT] = { 0, 1 };
 
     String operands = P037_OPERAND_LIST; // Anticipate more operations
@@ -334,15 +334,16 @@ bool P037_data_struct::webform_load(
     addRowLabel(F("Filter"), F(""));
     html_table(F(""), false);  // Sub-table
     html_table_header(F("&nbsp;#&nbsp;"));
-    html_table_header(F("Name"));
+    html_table_header(F("Name[;Index]"));
+    //TODO: tonhuisman html_table_header(F("Name[;Index][#TopicId]"));
     html_table_header(F("Operand"), 180);
     html_table_header(F("Value"));
 
     String filterOptions[P037_FILTER_COUNT];
-    filterOptions[0] = F("equals (=)");     // map name to value
-    filterOptions[1] = F("range (-)");      // between 2 values
+    filterOptions[0] = F("equals");     // map name to value
+    filterOptions[1] = F("range");      // between 2 values
     #if P037_FILTER_COUNT >= 3
-    filterOptions[2] = F("list (:)");       // list of multiple values
+    filterOptions[2] = F("list");       // list of multiple values
     #endif
     int filterIndices[P037_FILTER_COUNT] = { 0, 1
     #if P037_FILTER_COUNT >= 3
@@ -427,7 +428,7 @@ bool P037_data_struct::webform_load(
       addFormNote(moreMessage);
     }
   }
-#endif  // ifdef P037_FILTER_SUPPORT
+#endif  // P037_FILTER_SUPPORT
 
   success = true;
   return success;
@@ -585,26 +586,28 @@ bool P037_data_struct::webform_save(
 
 #ifdef P037_MAPPING_SUPPORT
 void P037_data_struct::logMapValue(String input, String result) {
-  String info;
-  info.reserve(25);
-  info = F("IMPT : MQTT 037 mapped value '");
-  info += input;
-  info += F("' to '");
-  info += result;
-  info += '\'';
-  addLog(LOG_LEVEL_INFO, info);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String info;
+    info.reserve(45);
+    info  = F("IMPT : MQTT 037 mapped value '");
+    info += input;
+    info += F("' to '");
+    info += result;
+    info += '\'';
+    addLog(LOG_LEVEL_INFO, info);
+  }
 } // logMapValue
 
 /**
  * Map a string to a (numeric) value, unchanged if no mapping found
  */
-String P037_data_struct::mapValue(String input) {
+String P037_data_struct::mapValue(String input, String attribute) {
   String result = String(input); // clone
   if (input.length() > 0) {
     parseMappings();
     String operands = P037_OPERAND_LIST;
     for (int8_t idx = 0; idx < _maxIdx; idx += 3) {
-      if (_mapping[idx + 0] == input) {
+      if (_mapping[idx + 0] == input || (attribute.length() > 0 && _mapping[idx + 0] == attribute)) {
         int8_t operandIndex = operands.indexOf(_mapping[idx + 1]);
         switch(operandIndex) {
           case 0: // = => 1:1 mapping
@@ -615,14 +618,20 @@ String P037_data_struct::mapValue(String input) {
             }
             break;
           }
-          case 1: // % => percentage of mapping (0 decimals)
+          case 1: // % => percentage of mapping
           {
             float inputFloat;
             float mappingFloat;
             if (string2float(input, inputFloat) && string2float(_mapping[idx + 2], mappingFloat)) {
               if (compareValues('>', mappingFloat, 0.0)) {
-                float resultFloat = (100.0f / mappingFloat) * inputFloat;
-                result = toString(resultFloat, 0); // Percentage with 0 decimals
+                float resultFloat = (100.0f / mappingFloat) * inputFloat; // Simple calculation to percentage
+                int8_t decimals = 0;
+                int8_t dotPos = input.indexOf('.');
+                if (dotPos > -1) {
+                  String decPart = input.substring(dotPos + 1);
+                  decimals = decPart.length(); // Take the number of decimals to the output value
+                }
+                result = toString(resultFloat, decimals); // Percentage with same decimals as input
                 logMapValue(input, result);
               }
             }
@@ -651,7 +660,9 @@ bool P037_data_struct::hasFilters() {
 #ifdef PLUGIN_037_DEBUG
 void P037_data_struct::logFilterValue(String text, String key, String value, String match) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = text;
+    String log;
+    log.reserve(50);
+    log  = text;
     log += key;
     log += F(" value: ");
     log += value;
@@ -670,71 +681,86 @@ void P037_data_struct::logFilterValue(String text, String key, String value, Str
  * - if key is found but value doesn't match, return false
  * key can be in the list multiple times
  */
-bool P037_data_struct::checkFilters(String key, String value) {
+bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
   bool result = true;
 
   if (key.length() > 0 && value.length() > 0) { // Ignore empty input(s)
     String filters = P037_FILTER_LIST;
-    String fltKey, fltIndex, valueData;
+    String valueData = value;
+    String fltKey, fltIndex, filterData;
+    float from, to, floatValue;
+    int8_t rangeSeparator;
+    bool accept, matchTopicId = true;
 
     for (uint8_t flt = 0; flt < _maxFilter; flt += 3) {
       fltKey = _filter[flt + 0];
+      //TODO: tonhuisman Parse filter name[;index][#topicId] for optional TopicId to see if this filter is specific to a TopicID
+      rangeSeparator = fltKey.indexOf('#');
+      if (rangeSeparator > -1) {
+        fltIndex = fltKey.substring(rangeSeparator + 1);
+        fltKey = fltKey.substring(0, rangeSeparator); // Remove #topicId part
+        // if (topicId > 0) {
+        //   matchTopicId = (fltIndex.toInt() == topicId);
+        //   // #ifdef PLUGIN_037_DEBUG
+        //   // logFilterValue(F("P037 filter TopicId match on key: "), key, _filter[flt + 0], String(topicId) + (matchTopicId ? F(": true") : F(": false")));
+        //   // #endif
+        // }
+      }
       // Parse filter name[;index] into name and index
       fltKey.replace(';', ',');
       fltIndex = parseString(fltKey, 2);
-      int8_t fIndex = fltIndex.toInt();
-      valueData = value;
-      if (fIndex > 1) {
+      rangeSeparator = fltIndex.toInt();
+      if (rangeSeparator > 1) {
         valueData.replace(';', ',');
-        valueData = parseString(valueData, fIndex);
+        valueData = parseString(valueData, rangeSeparator);
       }
       fltKey = parseString(fltKey, 1);
       fltKey.trim();
       if (fltKey == key) {
         result = false; // Matched key, so now we are looking for matching value
         int8_t filterIndex = filters.indexOf(_filter[flt + 1]);
+        filterData = _filter[flt + 2];
+        parseSystemVariables(filterData, false); // Replace system variables
         switch(filterIndex) {
           case 0: // = => equals
           {
-            String filterData = _filter[flt + 2];
-            parseSystemVariables(filterData, false); // Replace system variables
             if (filterData == valueData) {
               #ifdef PLUGIN_037_DEBUG
-              logFilterValue(F("P037 filter equals key: "), key, valueData, _filter[flt + 2] + '>' + filterData);
+              logFilterValue(F("P037 filter equals key: "), key, valueData, _filter[flt + 2] + (topicId > 0 ? (String(F(" topic match: ")) + String(matchTopicId ? F("yes"): F("no"))): String(F(""))));
               #endif
-              return true; // Match, don't look any further
+              return matchTopicId; // Match, don't look any further
             }
             break;
           }
           case 1: // - => range x-y (inside) or y-x (outside)
           {
-            String filterData = _filter[flt + 2];
-            parseSystemVariables(filterData, false); // Replace system variables
-            int8_t rangeSeparator = filterData.indexOf(';');
+            rangeSeparator = filterData.indexOf(';');
+            if (rangeSeparator == -1) {
+              rangeSeparator = filterData.indexOf('-'); // Fall-back test for dash
+            }
             if (rangeSeparator > -1) {
-              float from, to, floatValue;
-              bool range = false;;
+              accept = false;;
               if (string2float(filterData.substring(0, rangeSeparator),  from) 
                && string2float(filterData.substring(rangeSeparator + 1), to)
                && string2float(valueData,                                floatValue)) {
                 if (compareValues('>' + '=', to, from)) { // Normal low - high range: between low and high
                   if (compareValues('>' + '=', floatValue, from) && compareValues('<' + '=', floatValue, to)) {
-                    range = true; // to be refactored, no if needed
+                    accept = true;
                   }
                 } else { // Alternative high - low range: outside low and high values
                   if (compareValues('>' + '=', floatValue, from) || compareValues('<' + '=', floatValue, to)) {
-                    range = true;
+                    accept = true;
                   }
                 }
-                if (range) {
+                if (accept) {
                   #ifdef PLUGIN_037_DEBUG
-                  logFilterValue(F("P037 filter in range key: "), key, valueData, _filter[flt + 2] + '>' + filterData);
+                  logFilterValue(F("P037 filter in range key: "), key, valueData, _filter[flt + 2]);
                   #endif
-                  return range; // bail out, we're done
+                  return matchTopicId; // bail out, we're done
+                #ifdef PLUGIN_037_DEBUG
                 } else {
-                  #ifdef PLUGIN_037_DEBUG
-                  logFilterValue(F("P037 filter NOT in range key: "), key, valueData, _filter[flt + 2] + '>' + filterData);
-                  #endif
+                  logFilterValue(F("P037 filter NOT in range key: "), key, valueData, _filter[flt + 2]);
+                #endif
                 }
               }
             }
@@ -743,7 +769,32 @@ bool P037_data_struct::checkFilters(String key, String value) {
           #if P037_FILTER_COUNT >= 3
           case 2: // : => Match against a semicolon-separated list
           {
-            // TODO
+            String item;
+            rangeSeparator = filterData.indexOf(';');
+            if (rangeSeparator > -1 && string2float(valueData, floatValue)) {
+              accept = false;
+              do {
+                item = filterData.substring(0, rangeSeparator);
+                item.trim();
+                filterData = filterData.substring(rangeSeparator + 1);
+                filterData.trim();
+                rangeSeparator = filterData.indexOf(';');
+                if (rangeSeparator == -1) rangeSeparator = filterData.length(); // Last value
+                if (string2float(item, from) && compareValues('=', floatValue, from)) {
+                  accept = true;
+                }
+              } while (filterData.length() > 0 && !accept);
+              if (accept) {
+                #ifdef PLUGIN_037_DEBUG
+                logFilterValue(F("P037 filter in list key: "), key, valueData, _filter[flt + 2]);
+                #endif
+                return matchTopicId; // bail out, we're done
+              #ifdef PLUGIN_037_DEBUG
+              } else {
+                logFilterValue(F("P037 filter NOT in list key: "), key, valueData, _filter[flt + 2]);
+              #endif
+              }
+            }            
             break;
           }
           #endif
@@ -756,6 +807,6 @@ bool P037_data_struct::checkFilters(String key, String value) {
   }
   return result;
 }
-#endif  // ifdef P037_FILTER_SUPPORT
+#endif  // P037_FILTER_SUPPORT
 
 #endif  // ifdef USES_P037
