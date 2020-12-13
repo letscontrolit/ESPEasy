@@ -80,9 +80,10 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+
+      byte choice = PCONFIG(0);
 
       /*
          String options[2];
@@ -92,8 +93,12 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
       int optionValues[2] = { 0x77, 0x76 };
       addFormSelectorI2C(F("plugin_106_BME680_i2c"), 2, optionValues, choice);
       addFormNote(F("SDO Low=0x76, High=0x77"));
+      break;
+    }
 
-      addFormNumericBox(F("Altitude"), F("plugin_106_BME680_elev"), Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+    case PLUGIN_WEBFORM_LOAD:
+    {
+      addFormNumericBox(F("Altitude"), F("plugin_106_BME680_elev"), PCONFIG(1));
       addUnit(F("m"));
 
       success = true;
@@ -102,8 +107,8 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_106_BME680_i2c"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_106_BME680_elev"));
+      PCONFIG(0) = getFormItemInt(F("plugin_106_BME680_i2c"));
+      PCONFIG(1) = getFormItemInt(F("plugin_106_BME680_elev"));
       success                                              = true;
       break;
     }
