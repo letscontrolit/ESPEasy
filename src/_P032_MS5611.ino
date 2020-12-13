@@ -56,7 +56,7 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
       /*String options[2] = { F("0x77 - default I2C address"), F("0x76 - alternate I2C address") };*/
       int optionValues[2] = { 0x77, 0x76 };
-      addFormSelectorI2C(F("p032_ms5611_i2c"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       break;
     }
 
@@ -70,7 +70,7 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p032_ms5611_i2c"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p032_ms5611_elev"));
       success    = true;
       break;
