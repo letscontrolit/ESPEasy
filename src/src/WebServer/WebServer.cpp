@@ -1188,3 +1188,7 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
 }
 
 #endif // ifdef ESP32
+
+bool webArg2ip(const String& arg, byte *IP) {
+  return str2ip(web_server.arg(arg), IP);
+}
