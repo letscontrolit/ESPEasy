@@ -77,7 +77,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
       optionValues[0] = TSL2561_ADDR;
       optionValues[1] = TSL2561_ADDR_1;
       optionValues[2] = TSL2561_ADDR_0;
-      addFormSelectorI2C(F("p015_tsl2561_i2c"), 3, optionValues, P015_I2C_ADDR);
+      addFormSelectorI2C(F("i2c_addr"), 3, optionValues, P015_I2C_ADDR);
       break;
     }
 
@@ -121,7 +121,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P015_I2C_ADDR    = getFormItemInt(F("p015_tsl2561_i2c"));
+      P015_I2C_ADDR    = getFormItemInt(F("i2c_addr"));
       P015_INTEGRATION = getFormItemInt(F("p015_integration"));
       P015_SLEEP       = isFormItemChecked(F("p015_sleep"));
       P015_GAIN        = getFormItemInt(F("p015_gain"));

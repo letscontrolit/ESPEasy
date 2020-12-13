@@ -109,7 +109,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
       // I2C address choice
       String options[2]      = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
       int    optionValues[2] = { 0x5A, 0x5B };
-      addFormSelector(F("I2C Address"), F("p090_i2c_address"), 2, options, optionValues, P090_I2C_ADDR);
+      addFormSelector(F("I2C Address"), F("i2c_addr"), 2, options, optionValues, P090_I2C_ADDR);
       break;
     }
 
@@ -165,7 +165,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P090_I2C_ADDR               = getFormItemInt(F("p090_i2c_address"));
+      P090_I2C_ADDR               = getFormItemInt(F("i2c_addr"));
       P090_COMPENSATE_ENABLE      = isFormItemChecked(F("p090_enable_compensation"));
       P090_TEMPERATURE_TASK_INDEX = getFormItemInt(F("p090_temperature_task"));
       P090_TEMPERATURE_TASK_VALUE = getFormItemInt(F("p090_temperature_value"));

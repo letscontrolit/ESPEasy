@@ -91,7 +91,7 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
          options[1] = F("0x77 - alternate settings (SDO HIGH)");
        */
       int optionValues[2] = { 0x77, 0x76 };
-      addFormSelectorI2C(F("plugin_106_BME680_i2c"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       addFormNote(F("SDO Low=0x76, High=0x77"));
       break;
     }
@@ -107,7 +107,7 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("plugin_106_BME680_i2c"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("plugin_106_BME680_elev"));
       success                                              = true;
       break;
