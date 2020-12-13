@@ -66,6 +66,9 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_CONTROLLERS
         #define WEBSERVER_CONTROLLERS
     #endif
+    #ifndef WEBSERVER_CUSTOM
+        #define WEBSERVER_CUSTOM
+    #endif
     #ifndef WEBSERVER_DEVICES
         #define WEBSERVER_DEVICES
     #endif
@@ -332,6 +335,10 @@ To create/register a plugin, you have to :
         #ifdef WEBSERVER_WIFI_SCANNER
             #undef WEBSERVER_WIFI_SCANNER
         #endif
+        #ifdef WEBSERVER_CUSTOM
+            #undef WEBSERVER_CUSTOM
+        #endif
+
     #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
 
     #ifndef LIMIT_BUILD_SIZE
