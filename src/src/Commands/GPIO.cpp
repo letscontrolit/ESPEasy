@@ -26,7 +26,7 @@ void logErrorGpioNotOutput(const String& prefix, int port);
 bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Line);
 bool gpio_unmonitor_helper(int port, EventValueSource::Enum source, const char* Line);
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
-
+bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
 
 String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
 {
@@ -729,7 +729,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
 
   for (byte i=0; i<numBytes; i++) {
     uint8_t readValue;
-    byte currentAddress = firstAddress + i; ********
+    byte currentAddress = firstAddress + i; 
     if (currentAddress>0x27) currentAddress+=0x10;
 
     byte currentMask  = (mask  >> (8*i)) & 0xFF;

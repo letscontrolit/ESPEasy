@@ -68,8 +68,7 @@ void GPIO_MCP_Config(int Par1, byte Par2);
 //********************************************************************************
 //@giig1967g-20181023: changed to int8_t
 int8_t GPIO_PCF_Read(int Par1);
-
-uint8_t GPIO_PCF_ReadAllPins(uint8_t address);
+bool GPIO_PCF_ReadAllPins(uint8_t address, uint8_t *retValue);
 
 //********************************************************************************
 // PCF8574 write

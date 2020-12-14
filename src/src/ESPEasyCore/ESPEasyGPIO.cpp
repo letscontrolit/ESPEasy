@@ -271,16 +271,17 @@ int8_t GPIO_PCF_Read(int Par1)
   return state;
 }
 
-uint8_t GPIO_PCF_ReadAllPins(uint8_t address)
+bool GPIO_PCF_ReadAllPins(uint8_t address, uint8_t *retValue)
 {
-  uint8_t rawState = 0;
+  bool success = false;
 
   Wire.requestFrom(address, (uint8_t)0x1);
   if (Wire.available())
   {
-    rawState =Wire.read();
+    success=true;
+    *retValue = Wire.read();
   }
-  return rawState;
+  return success;
 }
 
 
