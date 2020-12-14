@@ -609,7 +609,7 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
     byte currentWrite = (write >> (8*i)) & 0xFF;
     byte currentGPIORegister = ((currentVal % 2)==0) ? MCP23017_GPIOA : MCP23017_GPIOB ;
     byte currentIOModeRegister = ((currentVal % 2)==0) ? MCP23017_IODIRA : MCP23017_IODIRB ;
-    byte writeGPIOValue;
+    byte writeGPIOValue=0;
 /*
     log = String(F("2a. i="))+String(i);
     addLog(LOG_LEVEL_INFO,log);
@@ -695,7 +695,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   byte numBits      = event->Par2 - event->Par1 + 1;
   byte firstAddress = int((event->Par1 - 1)/8)+0x20; 
   if (firstAddress>0x27) firstAddress+=0x10;
-  byte initVal      = firstAddress; 
+  //byte initVal      = firstAddress; 
 
   if (isMask) {
     mask = event->Par4 & (byte(pow(256,numBytes))-1);
@@ -725,7 +725,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
 //  log = String(F("1c. write="))+String(write);
 //  addLog(LOG_LEVEL_INFO,log);
 
-  bool onLine;
+  bool onLine=false;
 
   for (byte i=0; i<numBytes; i++) {
     uint8_t readValue;
@@ -735,7 +735,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
     byte currentMask  = (mask  >> (8*i)) & 0xFF;
     byte currentInvertedMask  = 0xFF - currentMask;
     byte currentWrite = (write >> (8*i)) & 0xFF;
-    byte writeGPIOValue;
+    byte writeGPIOValue=255;
 /*
     log = String(F("2a. i="))+String(i);
     addLog(LOG_LEVEL_INFO,log);
@@ -751,6 +751,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
     addLog(LOG_LEVEL_INFO,log);
 */
     onLine = GPIO_PCF_ReadAllPins(currentAddress,&readValue);
+    writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
 
     byte mode = (onLine)? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
     int8_t state;
@@ -769,19 +770,21 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
       } else {
         //set to 1 the INPUT pins and the PIN that have not been initialized yet.
         if (!existPortStatus(key) || (existPortStatus(key) && (globalMapPortStatus[key].mode == PIN_MODE_INPUT || globalMapPortStatus[key].mode == PIN_MODE_INPUT_PULLUP)))
-          readValue |= byte(pow(2,j)); //set port j = 1        
+          readValue |= byte(pow(2,j)); //set port j = 1   
       }
     }
-    writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
-    log = String(F("A. currentAddress="))+String(currentAddress);
-    addLog(LOG_LEVEL_INFO,log);
-    log = String(F("B. readValue="))+String(readValue);
-    addLog(LOG_LEVEL_INFO,log);
-    log = String(F("C. writeGPIOValue="))+String(writeGPIOValue);
-    addLog(LOG_LEVEL_INFO,log);
-      
-    // write to port
-    //GPIO_PCF_WriteAllPins(currentAddress,writeGPIOValue);
+    if (onLine) {
+      writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
+      log = String(F("A. currentAddress="))+String(currentAddress);
+      addLog(LOG_LEVEL_INFO,log);
+      log = String(F("B. readValue="))+String(readValue);
+      addLog(LOG_LEVEL_INFO,log);
+      log = String(F("C. writeGPIOValue="))+String(writeGPIOValue);
+      addLog(LOG_LEVEL_INFO,log);
+        
+      // write to port
+      //GPIO_PCF_WriteAllPins(currentAddress,writeGPIOValue);
+    }
   }
   return onLine;
 }
