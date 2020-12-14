@@ -103,7 +103,7 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
         static_cast<P106_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P106_data) {
-        P106_data->bme.begin(PCONFIG(0));
+        P106_data->begin(PCONFIG(0));
         success = P106_data->initialized;
       }
       break;
@@ -116,7 +116,7 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
 
       if (nullptr != P106_data)
       {
-        P106_data->bme.begin(PCONFIG(0));
+        P106_data->begin(PCONFIG(0));
 
         if (!P106_data->initialized) {
           break;
@@ -131,8 +131,8 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
 
         UserVar[event->BaseVarIndex + 0] = P106_data->bme.temperature;
         UserVar[event->BaseVarIndex + 1] = P106_data->bme.humidity;
-        UserVar[event->BaseVarIndex + 2] = P106_data->bme.pressure / 100.0;
-        UserVar[event->BaseVarIndex + 3] = P106_data->bme.gas_resistance / 1000.0;
+        UserVar[event->BaseVarIndex + 2] = P106_data->bme.pressure / 100.0f;
+        UserVar[event->BaseVarIndex + 3] = P106_data->bme.gas_resistance / 1000.0f;
       }
 
       success = true;
