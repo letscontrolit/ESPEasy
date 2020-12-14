@@ -27,6 +27,9 @@ bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Li
 bool gpio_unmonitor_helper(int port, EventValueSource::Enum source, const char* Line);
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
 bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
+byte getPcfAddress(uint8_t pin);
+
+/*************************************************************************/
 
 String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
 {
@@ -34,6 +37,15 @@ String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
     return return_command_success();
   else 
     return return_command_failed();
+}
+
+String Command_GPIO_MonitorRange(struct EventStruct *event, const char* Line) 
+{
+  bool success=true;
+  for (byte i=event->Par2;i<=event->Par3;i++) {
+    success &= gpio_monitor_helper(i, event->Source, Line);
+  }
+  return success?return_command_success():return_command_failed();
 }
 
 bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Line)
@@ -72,6 +84,15 @@ String Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line)
     return return_command_success();
   else 
     return return_command_failed();
+}
+
+String Command_GPIO_UnMonitorRange(struct EventStruct *event, const char* Line) 
+{
+  bool success=true;
+  for (byte i=event->Par2;i<=event->Par3;i++) {
+    success &= gpio_unmonitor_helper(i, event->Source, Line);
+  }
+  return success?return_command_success():return_command_failed();
 }
 
 bool gpio_unmonitor_helper(int port, EventValueSource::Enum source, const char* Line)
@@ -561,11 +582,11 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   byte lastPin      = int((event->Par2-1)/8)*8 + 8;
   byte numBytes     = (lastPin - firstPin + 1)/8;
   byte deltaStart   = event->Par1 - firstPin;
-  //byte deltaEnd     = lastPin - event->Par2;
   byte numBits      = event->Par2 - event->Par1 + 1;
   byte firstAddress = int((event->Par1 - 1)/16)+0x20; 
   byte firstBank    = (((firstPin-1)/8)+2) % 2;
   byte initVal      = 2 * firstAddress + firstBank;
+  bool onLine       = false;
 
   if (isMask) {
     mask = event->Par4 & (byte(pow(256,numBytes))-1);
@@ -579,9 +600,6 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   if (isWritePattern) { //write pattern is present
     write = event->Par3 & (byte(pow(256,numBytes))-1); //limit number of bytes
     write &= (byte(pow(2,numBits))-1); //limit to number of bits
-    //add the following to pad with 1:
-    //uint16_t padBits = int(log2(write))+1; //calculate the size of the write pattern
-    //write = byte(pow(2,numBits-padBits)-1) << padBits; //pad left pattern with 1 (off)
     write = write << deltaStart; //shift to start from starting pin
   } else { //write pattern not present
     if (event->Par3 == 0) {
@@ -595,10 +613,6 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
       return false;
     }
   }  
-//  log = String(F("1c. write="))+String(write);
-//  addLog(LOG_LEVEL_INFO,log);
-
-  bool onLine = false;
 
   for (byte i=0; i<numBytes; i++) {
     uint8_t readValue;
@@ -610,40 +624,15 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
     byte currentGPIORegister = ((currentVal % 2)==0) ? MCP23017_GPIOA : MCP23017_GPIOB ;
     byte currentIOModeRegister = ((currentVal % 2)==0) ? MCP23017_IODIRA : MCP23017_IODIRB ;
     byte writeGPIOValue=0;
-/*
-    log = String(F("2a. i="))+String(i);
-    addLog(LOG_LEVEL_INFO,log);
-    log = String(F("2b. currentVal="))+String(currentVal);
-    addLog(LOG_LEVEL_INFO,log);
-    log = String(F("2c. currentAddress="))+String(currentAddress);
-    addLog(LOG_LEVEL_INFO,log); */
-//    log = String(F("currentMask="))+String(currentMask);
-//    addLog(LOG_LEVEL_INFO,log);
-/*    log = String(F("2e. currentWrite="))+String(currentWrite);
-    addLog(LOG_LEVEL_INFO,log);
-    log = String(F("2f. currentRegister="))+String(currentGPIORegister);
-    addLog(LOG_LEVEL_INFO,log);
-*/
+
     if (GPIO_MCP_ReadRegister(currentAddress,currentIOModeRegister,&readValue)) {
-  //    log = String(F("3a. readValue register="))+String(readValue);
-  //    addLog(LOG_LEVEL_INFO,log);
-
-      byte writeModeValue = (readValue & currentInvertedMask);
- //     log = String(F("writeMODEValue="))+String(writeModeValue);
- //     addLog(LOG_LEVEL_INFO,log);
-
       // set type to output only for the pins of the mask
+      byte writeModeValue = (readValue & currentInvertedMask);
       GPIO_MCP_WriteRegister(currentAddress,currentIOModeRegister,writeModeValue);
-
       GPIO_MCP_ReadRegister(currentAddress,currentGPIORegister,&readValue);
-  //    log = String(F("4a. readValue register="))+String(readValue);
-  //    addLog(LOG_LEVEL_INFO,log);
-
-      writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
- //     log = String(F("writeGPIOValue="))+String(writeGPIOValue);
- //     addLog(LOG_LEVEL_INFO,log);
-      
+     
       // write to port
+      writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
       GPIO_MCP_WriteRegister(currentAddress,currentGPIORegister,writeGPIOValue);
 
       onLine=true;
@@ -671,6 +660,13 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   return onLine;
 }
 
+byte getPcfAddress(uint8_t pin)
+{
+  byte retValue=int((pin - 1)/8)+0x20;
+  if (retValue>0x27) retValue+=0x10;
+  return retValue;
+}
+
 bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern) {
 
   String log;
@@ -691,12 +687,8 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   byte lastPin      = int((event->Par2-1)/8)*8 + 8;
   byte numBytes     = (lastPin - firstPin + 1)/8;
   byte deltaStart   = event->Par1 - firstPin;
-  //byte deltaEnd     = lastPin - event->Par2;
   byte numBits      = event->Par2 - event->Par1 + 1;
-  byte firstAddress = int((event->Par1 - 1)/8)+0x20; 
-  if (firstAddress>0x27) firstAddress+=0x10;
-  //byte initVal      = firstAddress; 
-
+  
   if (isMask) {
     mask = event->Par4 & (byte(pow(256,numBytes))-1);
     mask &= (byte(pow(2,numBits))-1);
@@ -722,36 +714,20 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
       return false;
     }
   }  
-//  log = String(F("1c. write="))+String(write);
-//  addLog(LOG_LEVEL_INFO,log);
 
   bool onLine=false;
 
   for (byte i=0; i<numBytes; i++) {
     uint8_t readValue;
-    byte currentAddress = firstAddress + i; 
-    if (currentAddress>0x27) currentAddress+=0x10;
+    byte currentAddress = getPcfAddress(event->Par1+8*i);
 
     byte currentMask  = (mask  >> (8*i)) & 0xFF;
     byte currentInvertedMask  = 0xFF - currentMask;
     byte currentWrite = (write >> (8*i)) & 0xFF;
     byte writeGPIOValue=255;
-/*
-    log = String(F("2a. i="))+String(i);
-    addLog(LOG_LEVEL_INFO,log);
-    log = String(F("2b. currentVal="))+String(currentVal);
-    addLog(LOG_LEVEL_INFO,log);
-    log = String(F("2c. currentAddress="))+String(currentAddress);
-    addLog(LOG_LEVEL_INFO,log); */
-//    log = String(F("currentMask="))+String(currentMask);
-//    addLog(LOG_LEVEL_INFO,log);
-/*    log = String(F("2e. currentWrite="))+String(currentWrite);
-    addLog(LOG_LEVEL_INFO,log);
-    log = String(F("2f. currentRegister="))+String(currentGPIORegister);
-    addLog(LOG_LEVEL_INFO,log);
-*/
+
     onLine = GPIO_PCF_ReadAllPins(currentAddress,&readValue);
-    writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
+    if (onLine) writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
 
     byte mode = (onLine)? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
     int8_t state;
@@ -774,35 +750,10 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
       }
     }
     if (onLine) {
-      writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
-      log = String(F("A. currentAddress="))+String(currentAddress);
-      addLog(LOG_LEVEL_INFO,log);
-      log = String(F("B. readValue="))+String(readValue);
-      addLog(LOG_LEVEL_INFO,log);
-      log = String(F("C. writeGPIOValue="))+String(writeGPIOValue);
-      addLog(LOG_LEVEL_INFO,log);
-        
+      writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);        
       // write to port
-      //GPIO_PCF_WriteAllPins(currentAddress,writeGPIOValue);
+      GPIO_PCF_WriteAllPins(currentAddress,writeGPIOValue);
     }
   }
   return onLine;
-}
-
-String Command_GPIO_MonitorRange(struct EventStruct *event, const char* Line) 
-{
-  bool success=true;
-  for (byte i=event->Par2;i<=event->Par3;i++) {
-    success &= gpio_monitor_helper(i, event->Source, Line);
-  }
-  return success?return_command_success():return_command_failed();
-}
-
-String Command_GPIO_UnMonitorRange(struct EventStruct *event, const char* Line) 
-{
-  bool success=true;
-  for (byte i=event->Par2;i<=event->Par3;i++) {
-    success &= gpio_unmonitor_helper(i, event->Source, Line);
-  }
-  return success?return_command_success():return_command_failed();
 }
