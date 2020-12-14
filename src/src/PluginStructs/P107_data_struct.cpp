@@ -8,11 +8,7 @@
 
 bool P107_data_struct::begin()
 {
-  if (!initialized) {
-    initialized = uv.begin();
-  }
-
-  return initialized;
+  return uv.begin();
 }
 
 #endif // ifdef USES_P107

@@ -56,7 +56,7 @@ boolean Plugin_107(byte function, struct EventStruct *event, String& string)
       P107_data_struct *P107_data =
         static_cast<P107_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P107_data) {
+      if (nullptr != P107_data && P107_data->begin()) {
         success = true;
       }
       break;
@@ -70,15 +70,17 @@ boolean Plugin_107(byte function, struct EventStruct *event, String& string)
       if (nullptr == P107_data) {
         break;
       }
-      P107_data->begin();
 
-      if (!P107_data->initialized) {
+      if (!P107_data->begin()) {
         break;
       }
+      delay(8); // Measurement Rate: 255 * 31.25uS = 8ms
 
       UserVar[event->BaseVarIndex]     = P107_data->uv.readVisible();
       UserVar[event->BaseVarIndex + 1] = P107_data->uv.readIR();
       UserVar[event->BaseVarIndex + 2] = P107_data->uv.readUV() / 100.0f;
+
+      P107_data->uv.reset(); // Stop the sensor reading
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("SI1145: Visible: ");

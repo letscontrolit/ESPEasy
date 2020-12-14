@@ -11,7 +11,6 @@ struct P107_data_struct : public PluginTaskData_base {
   bool begin();
 
   Adafruit_SI1145 uv;
-  bool            initialized = false;
 };
 
 #endif // ifdef USES_P107
