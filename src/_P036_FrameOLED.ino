@@ -141,7 +141,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       int     optionValues[2];
       optionValues[0] = 0x3C;
       optionValues[1] = 0x3D;
-      addFormSelectorI2C(F("p036_adr"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       break;
     }
 
@@ -335,7 +335,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       // update now
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
-      P036_ADR        = getFormItemInt(F("p036_adr"));
+      P036_ADR        = getFormItemInt(F("i2c_addr"));
       P036_ROTATE     = getFormItemInt(F("p036_rotate"));
       P036_NLINES     = getFormItemInt(F("p036_nlines"));
       P036_SCROLL     = getFormItemInt(F("p036_scroll"));

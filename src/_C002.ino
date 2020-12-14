@@ -197,57 +197,59 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
     {
       if (event->idx != 0)
       {
-        DynamicJsonDocument root(200);
-        root[F("idx")]  = event->idx;
-        root[F("RSSI")] = mapRSSItoDomoticz();
-          #if FEATURE_ADC_VCC
-        root[F("Battery")] = mapVccToDomoticz();
-          #endif // if FEATURE_ADC_VCC
-
-        const Sensor_VType sensorType = event->getSensorType();
-
-        switch (sensorType)
-        {
-          case Sensor_VType::SENSOR_TYPE_SWITCH:
-            root[F("command")] = String(F("switchlight"));
-
-            if (UserVar[event->BaseVarIndex] == 0) {
-              root[F("switchcmd")] = String(F("Off"));
-            }
-            else {
-              root[F("switchcmd")] = String(F("On"));
-            }
-            break;
-          case Sensor_VType::SENSOR_TYPE_DIMMER:
-            root[F("command")] = String(F("switchlight"));
-
-            if (UserVar[event->BaseVarIndex] == 0) {
-              root[F("switchcmd")] = String(F("Off"));
-            }
-            else {
-              root[F("Set%20Level")] = UserVar[event->BaseVarIndex];
-            }
-            break;
-
-          case Sensor_VType::SENSOR_TYPE_SINGLE:
-          case Sensor_VType::SENSOR_TYPE_LONG:
-          case Sensor_VType::SENSOR_TYPE_DUAL:
-          case Sensor_VType::SENSOR_TYPE_TRIPLE:
-          case Sensor_VType::SENSOR_TYPE_QUAD:
-          case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
-          case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
-          case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
-          case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
-          case Sensor_VType::SENSOR_TYPE_WIND:
-          case Sensor_VType::SENSOR_TYPE_STRING:
-          default:
-            root[F("nvalue")] = 0;
-            root[F("svalue")] = formatDomoticzSensorType(event);
-            break;
-        }
-
         String json;
-        serializeJson(root, json);
+        {
+          DynamicJsonDocument root(200);
+          root[F("idx")]  = event->idx;
+          root[F("RSSI")] = mapRSSItoDomoticz();
+            #if FEATURE_ADC_VCC
+          root[F("Battery")] = mapVccToDomoticz();
+            #endif // if FEATURE_ADC_VCC
+
+          const Sensor_VType sensorType = event->getSensorType();
+
+          switch (sensorType)
+          {
+            case Sensor_VType::SENSOR_TYPE_SWITCH:
+              root[F("command")] = String(F("switchlight"));
+
+              if (UserVar[event->BaseVarIndex] == 0) {
+                root[F("switchcmd")] = String(F("Off"));
+              }
+              else {
+                root[F("switchcmd")] = String(F("On"));
+              }
+              break;
+            case Sensor_VType::SENSOR_TYPE_DIMMER:
+              root[F("command")] = String(F("switchlight"));
+
+              if (UserVar[event->BaseVarIndex] == 0) {
+                root[F("switchcmd")] = String(F("Off"));
+              }
+              else {
+                root[F("Set%20Level")] = UserVar[event->BaseVarIndex];
+              }
+              break;
+
+            case Sensor_VType::SENSOR_TYPE_SINGLE:
+            case Sensor_VType::SENSOR_TYPE_LONG:
+            case Sensor_VType::SENSOR_TYPE_DUAL:
+            case Sensor_VType::SENSOR_TYPE_TRIPLE:
+            case Sensor_VType::SENSOR_TYPE_QUAD:
+            case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
+            case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
+            case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
+            case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
+            case Sensor_VType::SENSOR_TYPE_WIND:
+            case Sensor_VType::SENSOR_TYPE_STRING:
+            default:
+              root[F("nvalue")] = 0;
+              root[F("svalue")] = formatDomoticzSensorType(event);
+              break;
+          }
+
+          serializeJson(root, json);
+        }
 #ifndef BUILD_NO_DEBUG
         String log = F("MQTT : ");
         log += json;
