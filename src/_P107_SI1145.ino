@@ -9,9 +9,9 @@
 
 # define PLUGIN_107
 # define PLUGIN_ID_107         107
-# define PLUGIN_NAME_107       "SI1145 UV index (Adafruit-QA)"
-# define PLUGIN_VALUENAME1_107 "VISIBLE"
-# define PLUGIN_VALUENAME2_107 "INFRA"
+# define PLUGIN_NAME_107       "UV - SI1145"
+# define PLUGIN_VALUENAME1_107 "Visible"
+# define PLUGIN_VALUENAME2_107 "Infra"
 # define PLUGIN_VALUENAME3_107 "UV"
 
 boolean Plugin_107(byte function, struct EventStruct *event, String& string)
