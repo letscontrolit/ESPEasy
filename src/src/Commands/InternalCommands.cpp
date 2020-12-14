@@ -236,7 +236,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'g': {
-      COMMAND_CASE_R("gateway", Command_Gateway, 1);        // Network Command
+      COMMAND_CASE_R(   "gateway", Command_Gateway,     1); // Network Command
       COMMAND_CASE_A(      "gpio", Command_GPIO,        2); // Gpio.h
       COMMAND_CASE_A("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
       break;
@@ -253,13 +253,13 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'l': {
-      COMMAND_CASE_A(          "let", Command_Rules_Let,     2); // Rules.h
-      COMMAND_CASE_A(         "load", Command_Settings_Load, 0); // Settings.h
-      COMMAND_CASE_A(     "logentry", Command_logentry,      1); // Diagnostic.h
+      COMMAND_CASE_A(            "let", Command_Rules_Let,         2); // Rules.h
+      COMMAND_CASE_A(           "load", Command_Settings_Load,     0); // Settings.h
+      COMMAND_CASE_A(       "logentry", Command_logentry,          1); // Diagnostic.h
       COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
       COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
-      COMMAND_CASE_A(    "longpulse", Command_GPIO_LongPulse,   3);    // GPIO.h
-      COMMAND_CASE_A( "longpulse_ms", Command_GPIO_LongPulse_Ms,3);    // GPIO.h
+      COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    3);    // GPIO.h
+      COMMAND_CASE_A(   "longpulse_ms", Command_GPIO_LongPulse_Ms, 3);    // GPIO.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A("logportstatus", Command_logPortStatus,    0); // Diagnostic.h
       COMMAND_CASE_A(       "lowmem", Command_Lowmem,           0); // Diagnostic.h
@@ -267,11 +267,12 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'm': {
-      if (data.cmd_lc[1] == 'c') {
+      if (data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(   "mcpgpiorange", Command_GPIO_McpGPIORange, -1); // Gpio.h
         COMMAND_CASE_A( "mcpgpiopattern", Command_GPIO_McpGPIOPattern, -1); // Gpio.h
         COMMAND_CASE_A(  "mcpgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
+      } else if (data.cmd_lc[1] == 'c') {
         COMMAND_CASE_A(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
         COMMAND_CASE_A("mcplongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
         //COMMAND_CASE_A(        "mcpmode", Command_GPIO_Mode,              2); // Gpio.h   ************
@@ -296,28 +297,29 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'p': {
-      if (data.cmd_lc[1] == 'c') {
-        COMMAND_CASE_A(        "pcfgpio", Command_GPIO,              2); // Gpio.h
-        //COMMAND_CASE_A(   "pcfgpiorange", Command_GPIO_PcfGPIORange, -1); // Gpio.h
-        //COMMAND_CASE_A(   "pcfgpiopattern", Command_GPIO_PcfGPIOPattern, -1); // Gpio.h
-        COMMAND_CASE_A(  "pcfgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
-        COMMAND_CASE_A(   "pcflongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
-        COMMAND_CASE_A("pcflongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
+      if (data.cmd_lc[3] == 'g') {
+        COMMAND_CASE_A(        "pcfgpio", Command_GPIO,                 2); // Gpio.h
+        COMMAND_CASE_A(   "pcfgpiorange", Command_GPIO_PcfGPIORange,   -1); // Gpio.h
+        COMMAND_CASE_A( "pcfgpiopattern", Command_GPIO_PcfGPIOPattern, -1); // Gpio.h
+        COMMAND_CASE_A(  "pcfgpiotoggle", Command_GPIO_Toggle,          1); // Gpio.h
+      } else if (data.cmd_lc[1] == 'c') {
+        COMMAND_CASE_A(   "pcflongpulse", Command_GPIO_LongPulse,       3); // GPIO.h
+        COMMAND_CASE_A("pcflongpulse_ms", Command_GPIO_LongPulse_Ms,    3); // GPIO.h
         //COMMAND_CASE_A(        "pcfmode", Command_GPIO_Mode,              2); // Gpio.h   ************
         //COMMAND_CASE_A(   "pcfmoderange", Command_GPIO_McpModeRange, 4); // Gpio.h   ************
-        COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,        3); // GPIO.h
+        COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
       }
       COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
 #ifdef USES_MQTT
-      COMMAND_CASE_A("publish", Command_MQTT_Publish, 2);                // MQTT.h
+      COMMAND_CASE_A( "publish", Command_MQTT_Publish,      2);                // MQTT.h
 #endif // USES_MQTT
-      COMMAND_CASE_A(    "pwm", Command_GPIO_PWM,        4); // GPIO.h
+      COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
     }
     case 'r': {
-      COMMAND_CASE_A("reboot", Command_System_Reboot, 0);                              // System.h
-      COMMAND_CASE_R("reset", Command_Settings_Reset, 0);                              // Settings.h
+      COMMAND_CASE_A(                "reboot", Command_System_Reboot,              0); // System.h
+      COMMAND_CASE_R(                 "reset", Command_Settings_Reset,             0); // Settings.h
       COMMAND_CASE_A("resetflashwritecounter", Command_RTC_resetFlashWriteCounter, 0); // RTC.h
       COMMAND_CASE_A(               "restart", Command_System_Reboot,              0); // System.h
       COMMAND_CASE_A(                 "rtttl", Command_GPIO_RTTTL,                -1); // GPIO.h

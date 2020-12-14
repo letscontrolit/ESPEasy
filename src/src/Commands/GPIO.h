@@ -28,6 +28,9 @@ String Command_GPIO_Status(struct EventStruct *event, const char* Line);
 String Command_GPIO_McpGPIORange(struct EventStruct *event, const char* Line);
 String Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char* Line);
 
+String Command_GPIO_PcfGPIORange(struct EventStruct *event, const char* Line);
+String Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char* Line);
+
 //String Command_GPIO_mcptest_write(struct EventStruct *event, const char* Line);
 //String Command_GPIO_mcptest_read(struct EventStruct *event, const char* Line);
 

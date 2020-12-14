@@ -475,7 +475,6 @@ bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefi
   return success;
 }
 
-String Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char* Line) 
 /******************************************************************************
 ** Par1=starting pin
 ** Par2=ending pin (must be higher of starting pin; and maximum 16 pin per command)
@@ -502,11 +501,17 @@ String Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char* Line)
 **     mask = 973 = '1111001101'
 **     write pattern after mask = '1000xx11x1' where x indicates that the pin will not be changed
 ******************************************************************************/
+String Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char* Line) 
 {
   return mcpgpio_range_pattern_helper(event, Line, true)?return_command_success():return_command_failed();
 }
 
-String Command_GPIO_McpGPIORange(struct EventStruct *event, const char* Line) 
+String Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char* Line) 
+{
+  return pcfgpio_range_pattern_helper(event, Line, true)?return_command_success():return_command_failed();
+}
+
+
 /******************************************************************************
 ** Par1=starting pin
 ** Par2=ending pin (must be higher of starting pin; and maximum 16 pin per command)
@@ -526,8 +531,14 @@ String Command_GPIO_McpGPIORange(struct EventStruct *event, const char* Line)
 **     mask = 973 = '1111001101'
 **     write pattern after mask = '1111xx11x1' where x indicates that the pin will not be changed
 ******************************************************************************/
+String Command_GPIO_McpGPIORange(struct EventStruct *event, const char* Line) 
 {
   return mcpgpio_range_pattern_helper(event, Line, false)?return_command_success():return_command_failed();
+}
+
+String Command_GPIO_PcfGPIORange(struct EventStruct *event, const char* Line) 
+{
+  return pcfgpio_range_pattern_helper(event, Line, false)?return_command_success():return_command_failed();
 }
 
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern) {
@@ -656,6 +667,121 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
         SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
       }
     }
+  }
+  return onLine;
+}
+
+bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern) {
+
+  String log;
+  String logPrefix = isWritePattern?String(F("PcfGPIOPattern")):String(F("PcfGPIORange"));
+
+  if ((event->Par2 < event->Par1) || !checkValidPortRange(PLUGIN_PCF, event->Par1) || !checkValidPortRange(PLUGIN_PCF, event->Par2) || (event->Par2 - event->Par1 + 1)>16 ) {
+    log=logPrefix + String(F(": pin numbers out of range."));
+    addLog(LOG_LEVEL_INFO,log);
+    return false;
+  }
+  
+  bool isMask = (parseString(Line, 5) == "")? false : true;
+
+  uint32_t write;
+  uint32_t mask;  
+  
+  byte firstPin     = int((event->Par1-1)/8)*8 + 1;
+  byte lastPin      = int((event->Par2-1)/8)*8 + 8;
+  byte numBytes     = (lastPin - firstPin + 1)/8;
+  byte deltaStart   = event->Par1 - firstPin;
+  //byte deltaEnd     = lastPin - event->Par2;
+  byte numBits      = event->Par2 - event->Par1 + 1;
+  byte firstAddress = int((event->Par1 - 1)/8)+0x20; 
+  if (firstAddress>0x27) firstAddress+=0x10;
+  byte initVal      = firstAddress; 
+
+  if (isMask) {
+    mask = event->Par4 & (byte(pow(256,numBytes))-1);
+    mask &= (byte(pow(2,numBits))-1);
+    mask = mask << deltaStart;
+  } else {
+    mask = (1 << numBits) - 1;
+    mask = mask << (deltaStart); 
+  }
+
+  if (isWritePattern) { //write pattern is present
+    write = event->Par3 & (byte(pow(256,numBytes))-1); //limit number of bytes
+    write &= (byte(pow(2,numBits))-1); //limit to number of bits
+    write = write << deltaStart; //shift to start from starting pin
+  } else { //write pattern not present
+    if (event->Par3 == 0) {
+      write = 0;
+    } else if (event->Par3 == 1) {
+      write = (1 << numBits) - 1;
+      write = write << deltaStart;
+    } else {
+      log=logPrefix + String(F(": Write value must be 0 or 1."));
+      addLog(LOG_LEVEL_INFO,log);
+      return false;
+    }
+  }  
+//  log = String(F("1c. write="))+String(write);
+//  addLog(LOG_LEVEL_INFO,log);
+
+  bool onLine;
+
+  for (byte i=0; i<numBytes; i++) {
+    uint8_t readValue;
+    byte currentAddress = firstAddress + i; ********
+    if (currentAddress>0x27) currentAddress+=0x10;
+
+    byte currentMask  = (mask  >> (8*i)) & 0xFF;
+    byte currentInvertedMask  = 0xFF - currentMask;
+    byte currentWrite = (write >> (8*i)) & 0xFF;
+    byte writeGPIOValue;
+/*
+    log = String(F("2a. i="))+String(i);
+    addLog(LOG_LEVEL_INFO,log);
+    log = String(F("2b. currentVal="))+String(currentVal);
+    addLog(LOG_LEVEL_INFO,log);
+    log = String(F("2c. currentAddress="))+String(currentAddress);
+    addLog(LOG_LEVEL_INFO,log); */
+//    log = String(F("currentMask="))+String(currentMask);
+//    addLog(LOG_LEVEL_INFO,log);
+/*    log = String(F("2e. currentWrite="))+String(currentWrite);
+    addLog(LOG_LEVEL_INFO,log);
+    log = String(F("2f. currentRegister="))+String(currentGPIORegister);
+    addLog(LOG_LEVEL_INFO,log);
+*/
+    onLine = GPIO_PCF_ReadAllPins(currentAddress,&readValue);
+
+    byte mode = (onLine)? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
+    int8_t state;
+
+    for (byte j=0; j<8; j++) {
+      byte currentPin = firstPin + j + 8*i;
+      const uint32_t key = createKey(PLUGIN_PCF,currentPin);
+
+      if ((currentMask & byte(pow(2,j))) >> j) { //only for the pins in the mask
+        state = onLine ? ((writeGPIOValue & byte(pow(2,j))) >> j) : -1;
+
+        createAndSetPortStatus_Mode_State(key,mode,state);
+        log = logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
+        addLog(LOG_LEVEL_INFO, log);
+        SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+      } else {
+        //set to 1 the INPUT pins and the PIN that have not been initialized yet.
+        if (!existPortStatus(key) || (existPortStatus(key) && (globalMapPortStatus[key].mode == PIN_MODE_INPUT || globalMapPortStatus[key].mode == PIN_MODE_INPUT_PULLUP)))
+          readValue |= byte(pow(2,j)); //set port j = 1        
+      }
+    }
+    writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
+    log = String(F("A. currentAddress="))+String(currentAddress);
+    addLog(LOG_LEVEL_INFO,log);
+    log = String(F("B. readValue="))+String(readValue);
+    addLog(LOG_LEVEL_INFO,log);
+    log = String(F("C. writeGPIOValue="))+String(writeGPIOValue);
+    addLog(LOG_LEVEL_INFO,log);
+      
+    // write to port
+    //GPIO_PCF_WriteAllPins(currentAddress,writeGPIOValue);
   }
   return onLine;
 }

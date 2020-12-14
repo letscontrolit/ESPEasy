@@ -1,3 +1,4 @@
+
 #include "ESPEasyGPIO.h"
 
 /****************************************************************************/
@@ -285,8 +286,8 @@ uint8_t GPIO_PCF_ReadAllPins(uint8_t address)
 
 //********************************************************************************
 // PCF8574 write
-//********************************************************************************
-void GPIO_PCF_WriteAllPins(uint8_t address, uint8_t value) 
+//*******************************************************************************
+void GPIO_PCF_WriteAllPins(uint8_t address, uint8_t value)
 {
   Wire.beginTransmission(address);
   Wire.write(value);
@@ -311,8 +312,6 @@ bool GPIO_PCF_Write(int Par1, byte Par2)
   uint32_t key;
 
   //REMEMBER: all input pins must be set to 1 when writing to the unit
-
-
   for(i=0; i<8; i++){
     key = createKey(PLUGIN_PCF,unit+i);
 
