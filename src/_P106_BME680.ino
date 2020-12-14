@@ -103,6 +103,7 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
         static_cast<P106_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P106_data) {
+        P106_data->initialized = false; // Force re-init just in case the address changed.
         P106_data->begin(PCONFIG(0));
         success = P106_data->initialized;
       }
