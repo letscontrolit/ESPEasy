@@ -7,30 +7,11 @@
 
 // MCP registers
 #define MCP23017_IODIRA 0x00   //!< I/O direction register A
-#define MCP23017_IPOLA 0x02    //!< Input polarity port register A
-#define MCP23017_GPINTENA 0x04 //!< Interrupt-on-change pins A
-#define MCP23017_DEFVALA 0x06  //!< Default value register A
-#define MCP23017_INTCONA 0x08  //!< Interrupt-on-change control register A
-#define MCP23017_IOCONA 0x0A   //!< I/O expander configuration register A
-#define MCP23017_GPPUA 0x0C    //!< GPIO pull-up resistor register A
-#define MCP23017_INTFA 0x0E    //!< Interrupt flag register A
-#define MCP23017_INTCAPA 0x10  //!< Interrupt captured value for port register A
-#define MCP23017_GPIOA 0x12    //!< General purpose I/O port register A
-#define MCP23017_OLATA 0x14    //!< Output latch register 0 A
-
+#define MCP23017_GPPUA  0x0C   //!< Pullup resistor register A
+#define MCP23017_GPIOA  0x12   //!< General purpose I/O port register A
 #define MCP23017_IODIRB 0x01   //!< I/O direction register B
-#define MCP23017_IPOLB 0x03    //!< Input polarity port register B
-#define MCP23017_GPINTENB 0x05 //!< Interrupt-on-change pins B
-#define MCP23017_DEFVALB 0x07  //!< Default value register B
-#define MCP23017_INTCONB 0x09  //!< Interrupt-on-change control register B
-#define MCP23017_IOCONB 0x0B   //!< I/O expander configuration register B
-#define MCP23017_GPPUB 0x0D    //!< GPIO pull-up resistor register B
-#define MCP23017_INTFB 0x0F    //!< Interrupt flag register B
-#define MCP23017_INTCAPB 0x11  //!< Interrupt captured value for port register B
-#define MCP23017_GPIOB 0x13    //!< General purpose I/O port register B
-#define MCP23017_OLATB 0x15    //!< Output latch register 0 B
-
-#define MCP23017_INT_ERR 255 //!< Interrupt error
+#define MCP23017_GPPUB  0x0D   //!< Pullup resistor register B
+#define MCP23017_GPIOB  0x13   //!< General purpose I/O port register B
 
 //********************************************************************************
 // Internal GPIO write
@@ -41,9 +22,7 @@ void GPIO_Internal_Write(int pin, byte value);
 // Internal GPIO read
 //********************************************************************************
 bool GPIO_Internal_Read(int pin);
-
 bool GPIO_Read_Switch_State(struct EventStruct *event);
-
 bool GPIO_Read_Switch_State(int pinNumber, byte pinMode);
 
 //********************************************************************************
@@ -59,9 +38,8 @@ bool GPIO_MCP_Write(int Par1, byte Par2);
 void GPIO_MCP_WriteRegister(byte mcpAddr, uint8_t regAddr, uint8_t regValue);
 
 //********************************************************************************
-// MCP23017 config
+// MCP23017 pullUP
 //********************************************************************************
-void GPIO_MCP_Config(int Par1, byte Par2);
 
 //********************************************************************************
 // PCF8574 read
@@ -93,7 +71,10 @@ void sendMonitorEvent(const char* prefix, int port, int8_t state);
 bool checkValidPortRange(pluginID_t pluginID, int port);
 bool checkValidPortAddress(pluginID_t pluginID, byte address);
 
-void setInternalGPIOPullupMode(int port);
+void setInternalGPIOPullupMode(uint8_t port);
+bool setMCPInputAndPullupMode(uint8_t Par1, bool enablePullUp);
+bool setMCPOutputMode(uint8_t Par1);
+bool setPCFInputMode(uint8_t pin);
 
 bool GPIO_Write(pluginID_t pluginID, int port, byte value, byte pinMode=PIN_MODE_OUTPUT);
 bool GPIO_Read(pluginID_t pluginID, int port, int8_t &value);

@@ -23,11 +23,17 @@ bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefi
 void logErrorGpioOffline(const String& prefix, int port);
 void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line = nullptr);
 void logErrorGpioNotOutput(const String& prefix, int port);
+void logErrorModeOutOfRange(const String& prefix, int port);
 bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Line);
 bool gpio_unmonitor_helper(int port, EventValueSource::Enum source, const char* Line);
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
 bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
+bool gpio_mode_range_helper(byte pin, byte pinMode, EventValueSource::Enum source, const char* Line);
 byte getPcfAddress(uint8_t pin);
+bool setGPIOMode(byte pin, byte mode);
+bool setPCFMode(byte pin, byte mode);
+bool setMCPMode(byte pin, byte mode);
+
 
 /*************************************************************************/
 
@@ -390,8 +396,11 @@ String Command_GPIO(struct EventStruct *event, const char* Line)
           state = GPIO_Read_Switch_State(event->Par1, PIN_MODE_INPUT_PULLUP);
           break;
         case PLUGIN_MCP:
+          setMCPInputAndPullupMode(event->Par1,true);
+          GPIO_Read(PLUGIN_MCP, event->Par1, state);
+          break;
         case PLUGIN_PCF:
-          // PCF8574/MCP specific: only can read 0/low state, so we must send 1
+          // PCF8574 specific: only can read 0/low state, so we must send 1
           state = 1;
           break;
 		  }
@@ -412,7 +421,7 @@ String Command_GPIO(struct EventStruct *event, const char* Line)
       }
 
       createAndSetPortStatus_Mode_State(key,mode,state);
-      GPIO_Write(pluginID,event->Par1,state,mode);
+      if (mode==PIN_MODE_OUTPUT || pluginID==PLUGIN_PCF) GPIO_Write(pluginID,event->Par1,state,mode);
 
   		String log = logPrefix + String(F(" : port#")) + String(event->Par1) + String(F(": set to ")) + String(state);
   		addLog(LOG_LEVEL_INFO, log);
@@ -433,6 +442,11 @@ void logErrorGpio(const String& prefix, int port, const String& description)
   if (port >= 0) {
     addLog(LOG_LEVEL_ERROR, prefix + String(F(" : port#")) + String(port) + description);
   }
+}
+
+void logErrorModeOutOfRange(const String& prefix, int port)
+{
+  logErrorGpio(prefix, port, F(" mode selection is incorrect. Valid values are: 0, 1 or 2."));
 }
 
 void logErrorGpioOffline(const String& prefix, int port)
@@ -562,8 +576,8 @@ String Command_GPIO_PcfGPIORange(struct EventStruct *event, const char* Line)
   return pcfgpio_range_pattern_helper(event, Line, false)?return_command_success():return_command_failed();
 }
 
-bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern) {
-
+bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern) 
+{
   String log;
   String logPrefix = isWritePattern?String(F("McpGPIOPattern")):String(F("McpGPIORange"));
 
@@ -589,8 +603,9 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   bool onLine       = false;
 
   if (isMask) {
-    mask = event->Par4 & (byte(pow(256,numBytes))-1);
-    mask &= (byte(pow(2,numBits))-1);
+    mask = event->Par4 & ((1 << numBytes*8)-1);
+    //mask &= (byte(pow(2,numBits))-1);
+    mask &= ((1 << numBits)-1);
     mask = mask << deltaStart;
   } else {
     mask = (1 << numBits) - 1;
@@ -598,8 +613,8 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   }
 
   if (isWritePattern) { //write pattern is present
-    write = event->Par3 & (byte(pow(256,numBytes))-1); //limit number of bytes
-    write &= (byte(pow(2,numBits))-1); //limit to number of bits
+    write = event->Par3 & ((1 << numBytes*8)-1); //limit number of bytes
+    write &= ((1 << numBits)-1); //limit to number of bits
     write = write << deltaStart; //shift to start from starting pin
   } else { //write pattern not present
     if (event->Par3 == 0) {
@@ -644,11 +659,13 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
     int8_t state;
 
     for (byte j=0; j<8; j++) {
-      if ((currentMask & byte(pow(2,j))) >> j) { //only for the pins in the mask
+      //if ((currentMask & (byte(pow(2,j)))) >> j) { //only for the pins in the mask
+      if ((currentMask & (1 << j)) >> j) { //only for the pins in the mask
         byte currentPin = firstPin + j + 8*i;
         const uint32_t key = createKey(PLUGIN_MCP,currentPin);
 
-        state = onLine ? ((writeGPIOValue & byte(pow(2,j))) >> j) : -1;
+        //state = onLine ? ((writeGPIOValue & byte(pow(2,j))) >> j) : -1;
+        state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key,mode,state);
         log = logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
@@ -667,8 +684,8 @@ byte getPcfAddress(uint8_t pin)
   return retValue;
 }
 
-bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern) {
-
+bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern) 
+{
   String log;
   String logPrefix = isWritePattern?String(F("PcfGPIOPattern")):String(F("PcfGPIORange"));
 
@@ -690,8 +707,9 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   byte numBits      = event->Par2 - event->Par1 + 1;
   
   if (isMask) {
-    mask = event->Par4 & (byte(pow(256,numBytes))-1);
-    mask &= (byte(pow(2,numBits))-1);
+//    mask = event->Par4 & (byte(pow(256,numBytes))-1);
+    mask = event->Par4 & ((1 << numBytes*8)-1);
+    mask &= ((1 << numBits)-1);
     mask = mask << deltaStart;
   } else {
     mask = (1 << numBits) - 1;
@@ -699,8 +717,8 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
   }
 
   if (isWritePattern) { //write pattern is present
-    write = event->Par3 & (byte(pow(256,numBytes))-1); //limit number of bytes
-    write &= (byte(pow(2,numBits))-1); //limit to number of bits
+    write = event->Par3 & ((1 << numBytes*8)-1); //limit number of bytes
+    write &= ((1 << numBits)-1); //limit to number of bits
     write = write << deltaStart; //shift to start from starting pin
   } else { //write pattern not present
     if (event->Par3 == 0) {
@@ -736,8 +754,8 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
       byte currentPin = firstPin + j + 8*i;
       const uint32_t key = createKey(PLUGIN_PCF,currentPin);
 
-      if ((currentMask & byte(pow(2,j))) >> j) { //only for the pins in the mask
-        state = onLine ? ((writeGPIOValue & byte(pow(2,j))) >> j) : -1;
+      if ((currentMask & (1 << j)) >> j) { //only for the pins in the mask
+        state = onLine ? ((writeGPIOValue & (1 << j) ) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key,mode,state);
         log = logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
@@ -746,7 +764,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
       } else {
         //set to 1 the INPUT pins and the PIN that have not been initialized yet.
         if (!existPortStatus(key) || (existPortStatus(key) && (globalMapPortStatus[key].mode == PIN_MODE_INPUT || globalMapPortStatus[key].mode == PIN_MODE_INPUT_PULLUP)))
-          readValue |= byte(pow(2,j)); //set port j = 1   
+          readValue |= (1 << j); //set port j = 1   
       }
     }
     if (onLine) {
@@ -756,4 +774,159 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
     }
   }
   return onLine;
+}
+
+bool setGPIOMode(byte pin, byte mode) 
+{
+  if (checkValidPortRange(PLUGIN_GPIO, pin)) {
+    switch (mode) {
+      case PIN_MODE_OUTPUT:
+        pinMode(pin, OUTPUT);
+        break;
+      case PIN_MODE_INPUT_PULLUP:
+        setInternalGPIOPullupMode(pin);
+        break;
+      case PIN_MODE_INPUT:
+        pinMode(pin, INPUT);
+        break;
+    }
+    return true;
+  } else 
+    return false;
+}
+
+bool setMCPMode(byte pin, byte mode) 
+{
+  if (checkValidPortRange(PLUGIN_MCP, pin)) {
+    switch (mode) {
+      case PIN_MODE_OUTPUT:
+        setMCPOutputMode(pin); 
+        break;
+      case PIN_MODE_INPUT_PULLUP:
+        setMCPInputAndPullupMode(pin,true);
+        break;
+      case PIN_MODE_INPUT:
+        setMCPInputAndPullupMode(pin,false);
+        break;
+    }
+    return true;
+  } else 
+    return false;
+}
+
+bool setPCFMode(byte pin, byte mode) 
+{
+  if (checkValidPortRange(PLUGIN_PCF, pin)) {
+    switch (mode) {
+      case PIN_MODE_OUTPUT:
+      //do nothing
+        break;
+      case PIN_MODE_INPUT_PULLUP:
+      case PIN_MODE_INPUT:
+        setPCFInputMode(pin); 
+        break;
+    }
+    return true;
+  } else 
+    return false;
+}
+
+/***********************************************
+ *event->Par1: PIN to be set
+ *event->Par2: MODE to be set:
+ *             0 = OUTPUT
+ *             1 = INPUT PULLUP or INPUT PULLDOWN (only for GPIO16)
+ *             2 = INPUT
+ **********************************************/
+String Command_GPIO_Mode(struct EventStruct *event, const char* Line)
+{
+  if (gpio_mode_range_helper(event->Par1, event->Par2, event->Source, Line))
+    return return_command_success();
+  else 
+    return return_command_failed();
+}
+
+String Command_GPIO_ModeRange(struct EventStruct *event, const char* Line)
+{
+  bool success=true;
+  for (byte i=event->Par1;i<=event->Par2;i++) {
+    success &= gpio_mode_range_helper(i, event->Par3, event->Source, Line);
+  }
+  return success?return_command_success():return_command_failed();
+}
+
+bool gpio_mode_range_helper(byte pin, byte pinMode, EventValueSource::Enum source, const char* Line)
+{
+  String logPrefix;// = new char;
+  String logPostfix;// = new char;
+  pluginID_t pluginID=INVALID_PLUGIN_ID;
+  //Line[0]='g':gpio; ='p':pcfgpio; ='m':mcpgpio
+  bool success = getPluginIDAndPrefix(Line[0], pluginID, logPrefix);
+
+  if (success && checkValidPortRange(pluginID, pin))
+  {
+	  int8_t state=0;
+	  byte mode=255;
+    bool setSuccess=false;
+
+    switch (pinMode) {
+      case 0:
+        mode = PIN_MODE_OUTPUT;
+        logPostfix = F("OUTPUT");
+        break;
+      case 1:
+        mode = PIN_MODE_INPUT_PULLUP;
+        logPostfix = F("INPUT PULLUP");
+        break;
+      case 2:
+        mode = PIN_MODE_INPUT;
+        logPostfix = F("INPUT");
+        break;
+    }
+    
+    if (mode < 255) { 
+      switch(pluginID) {
+        case PLUGIN_GPIO:
+          setSuccess = setGPIOMode(pin, mode);
+          break;
+        case PLUGIN_PCF:
+          //set pin = 1 when INPUT
+          setSuccess = setPCFMode(pin, mode);
+          break;
+        case PLUGIN_MCP:
+          setSuccess = setMCPMode(pin, mode);
+          break;
+      }
+
+      const uint32_t key = createKey(pluginID,pin);
+
+      if (globalMapPortStatus[key].mode != PIN_MODE_OFFLINE)
+      {
+        int8_t currentState;
+        GPIO_Read(pluginID, pin, currentState);
+        //state = currentState;
+
+        if (currentState==-1) {
+          mode=PIN_MODE_OFFLINE;
+          //state = -1;
+        }
+
+        createAndSetPortStatus_Mode_State(key,mode,currentState);
+        
+        String log = logPrefix + String(F(" : port#")) + String(pin) + String(F(": MODE set to ")) + logPostfix + String(F(". Value = ")) + String(currentState);
+        addLog(LOG_LEVEL_INFO, log);
+        SendStatusOnlyIfNeeded(source, SEARCH_PIN_STATE, key, log, 0);
+        return return_command_success();
+      } else {
+        logErrorGpioOffline(logPrefix,pin);
+        return return_command_failed();
+      }
+    } else {
+      logErrorModeOutOfRange(logPrefix,pin);
+      return return_command_failed();
+    }
+  } else {
+    logErrorGpioOutOfRange(logPrefix,pin, Line);
+    return return_command_failed();
+  }
 }

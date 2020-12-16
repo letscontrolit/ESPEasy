@@ -245,63 +245,6 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    /*
-          case PLUGIN_UNCONDITIONAL_POLL:
-            {
-              // port monitoring, generates an event by rule command 'monitor,pcf,port#'
-              for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-                if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_009) {
-                  const uint16_t port = getPortFromKey(it->first);
-                  int8_t state = Plugin_009_Read(port);
-                  if (it->second.state != state || it->second.forceMonitor) {
-                    if (it->second.mode == PIN_MODE_OFFLINE) it->second.mode=PIN_MODE_UNDEFINED; //changed from offline to online
-                    if (state == -1) it->second.mode=PIN_MODE_OFFLINE; //changed from online to offline
-                    if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up
-                       by 10xSEC function
-                    if (it->second.monitor) {
-                      it->second.forceMonitor=0; //reset flag
-                      String eventString = F("MCP#");
-                      eventString += port;
-                      eventString += '=';
-                      eventString += state;
-                      rulesProcessing(eventString);
-                    }
-                  }
-                }
-              }
-              break;
-            }
-          }
-          break;
-        }
-     */
-    /*
-          case PLUGIN_MONITOR:
-            {
-              // port monitoring, generates an event by rule command 'monitor,gpio,port#'
-              const uint32_t key = createKey(PLUGIN_ID_009,event->Par1);
-              const portStatusStruct currentStatus = globalMapPortStatus[key];
-
-          //if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
-            const int8_t state = Plugin_009_Read(event->Par1);
-            if (currentStatus.state != state || currentStatus.forceMonitor) {
-              if (!currentStatus.task) globalMapPortStatus[key].state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
-              if (currentStatus.monitor) {
-                globalMapPortStatus[key].forceMonitor=0; //reset flag
-                String eventString = F("MCP#");
-                    eventString += event->Par1;
-                    eventString += '=';
-                    eventString += state;
-                    rulesProcessing(eventString);
-                  }
-                }
-          //}
-
-      if ((currentStatus.state != state) || currentStatus.forceMonitor) {
-        if (!currentStatus.task) { globalMapPortStatus[key].state = state; // do not update state if task flag=1 otherwise it will not be
-                                                                           // picked up by 10xSEC function
-        }
-*/
     case PLUGIN_TEN_PER_SECOND:
          {
         const int8_t state = GPIO_MCP_Read(CONFIG_PORT);
