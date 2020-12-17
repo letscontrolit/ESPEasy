@@ -76,10 +76,10 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormNumericBox(F("Debounce Time (mSec)"), F("p003")
-                        , Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+                        , PCONFIG(0));
 
-      byte   choice     = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-      byte   choice2    = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+      byte   choice     = PCONFIG(1);
+      byte   choice2    = PCONFIG(2);
       String options[4] = { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total") };
       addFormSelector(F("Counter Type"), F("p003_countertype"), 4, options, NULL, choice);
 
@@ -106,9 +106,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p003"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p003_countertype"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("p003_raisetype"));
+      PCONFIG(0) = getFormItemInt(F("p003"));
+      PCONFIG(1) = getFormItemInt(F("p003_countertype"));
+      PCONFIG(2) = getFormItemInt(F("p003_raisetype"));
       success                                              = true;
       break;
     }
@@ -135,7 +135,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // Restore any value that may have been read from the RTC.
-      switch (Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+      switch (PCONFIG(1))
       {
         case 0:
         {
@@ -173,7 +173,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
       success =
         Plugin_003_pulseinit(Settings.TaskDevicePin1[event->TaskIndex], event->TaskIndex,
-                             Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+                             PCONFIG(2));
 
       break;
     }
@@ -189,7 +189,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
       UserVar[event->BaseVarIndex + 3] = Plugin_003_pulseTotalCounter[event->TaskIndex];
 
-      switch (Settings.TaskDevicePluginConfig[event->TaskIndex][1])
+      switch (PCONFIG(1))
       {
         case 0:
         {
