@@ -49,14 +49,16 @@ void P037_data_struct::parseMappings() {
 #ifdef P037_FILTER_SUPPORT
     _maxFilter = 0; // Initialize to empty
 #endif
-    for (int8_t i = 0; i < P037_MAX_MAPPINGS; i++) {
 #ifdef P037_MAPPING_SUPPORT
+    for (int8_t i = 0; i < P037_MAX_MAPPINGS; i++) {
       _mapping[i] = F("");
+    }
 #endif
 #ifdef P037_FILTER_SUPPORT
+    for (int8_t i = 0; i < P037_MAX_FILTERS; i++) {
       _filter[i] = F("");
-#endif
     }
+#endif
 
     String filterMap;
     String valueMap = String(StoredSettings.valueMappings);
@@ -119,8 +121,11 @@ void P037_data_struct::parseMappings() {
 #endif // P037_MAPPING_SUPPORT
 
 #ifdef P037_FILTER_SUPPORT
+#ifdef P037_FILTER_PER_TOPIC
+    uint8_t countFilters = 0;
+#endif
     String filters = P037_FILTER_LIST; // Anticipate more filters
-    while (filterMap.length() > 0 && _maxFilter < P037_MAX_MAPPINGS * 3) {
+    while (filterMap.length() > 0 && _maxFilter < P037_MAX_FILTERS * 3) {
       int16_t comma   = filterMap.indexOf(F(","));
       int16_t equals  = filterMap.indexOf(filters.substring(0, 1));
       int16_t dash    = filterMap.indexOf(filters.substring(1, 2));
@@ -135,6 +140,9 @@ void P037_data_struct::parseMappings() {
       _filter[_maxFilter + 0] = filterMap.substring(0, parse);
       _filter[_maxFilter + 1] = filters.substring(operandIndex, operandIndex + 1);
       _filter[_maxFilter + 2] = filterMap.substring(parse + 1, comma);
+#ifdef P037_FILTER_PER_TOPIC
+      countFilters += (_filter[_maxFilter + 0].length() > 0 && _filter[_maxFilter + 2].length() > 0 ? 1 : 0);
+#endif
       #ifdef PLUGIN_037_DEBUG
       if (debug.length() > 50) {
         addLog(LOG_LEVEL_DEBUG, debug);
@@ -160,6 +168,13 @@ void P037_data_struct::parseMappings() {
       addLog(LOG_LEVEL_DEBUG, debug);
     }
     #endif
+#ifdef P037_FILTER_PER_TOPIC
+    if (countFilters > 0) {
+      _maxFilter = (P037_MAX_FILTERS * 3) - 1;
+    } else {
+      _maxFilter = 0;
+    }
+#endif
 #endif // P037_FILTER_SUPPORT
   }
 } // parseMappings
@@ -231,6 +246,119 @@ bool P037_data_struct::webform_load(
 #if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
   parseMappings();
 #endif
+
+#ifdef P037_FILTER_SUPPORT
+  if (filterEnabled) {
+    addFormSubHeader(F("Name - value filters"));
+    addFormNote(F("Name - value filters are case-sensitive. Do not use ',' or '|'."));
+
+#ifdef P037_FILTER_PER_TOPIC
+    addRowLabel(F("Filter for MQTT Topic"), F(""));
+#else
+    addRowLabel(F("Filter"), F(""));
+#endif
+    html_table(F(""), false);  // Sub-table
+    html_table_header(F("&nbsp;#&nbsp;"));
+    html_table_header(F("Name[;Index]"));
+    html_table_header(F("Operand"), 180);
+    html_table_header(F("Value"));
+
+    String filterOptions[P037_FILTER_COUNT];
+    filterOptions[0] = F("equals");     // map name to value
+    filterOptions[1] = F("range");      // between 2 values
+    #if P037_FILTER_COUNT >= 3
+    filterOptions[2] = F("list");       // list of multiple values
+    #endif
+    int filterIndices[P037_FILTER_COUNT] = { 0, 1
+    #if P037_FILTER_COUNT >= 3
+    , 2
+    #endif
+    };
+
+    String filters = P037_FILTER_LIST; // Anticipate more filters
+    int8_t filterIndex;
+
+    String info;
+    info.reserve(25);
+
+    int8_t idx;
+    int8_t filterNr = 1;
+    for (idx = 0; idx < _maxFilter; idx += 3) {
+
+      html_TR_TD();
+      addHtml(F("&nbsp;"));
+      addHtml(String(filterNr));
+      html_TD();
+      addTextBox(getPluginCustomArgName(idx + 100 + 0),
+                _filter[idx + 0],
+                32,
+                false, false, F("[^,|]{0,32}"), F(""));
+      html_TD();
+      filterIndex = filters.indexOf(_filter[idx + 1]);
+      addSelector(getPluginCustomArgName(idx + 100 + 1), P037_FILTER_COUNT, filterOptions, filterIndices, NULL, filterIndex, false, true);
+      html_TD();
+      addTextBox(getPluginCustomArgName(idx + 100 + 2),
+                _filter[idx + 2],
+                32,
+                false, false, F("[^,|]{0,32}"), F(""));
+      addUnit(F("Range/List: separate values with ; "));
+      html_TD();
+      filterNr++;
+    }
+    #ifdef PLUGIN_037_DEBUG
+    info = F("P037 maxFilter: ");
+    info += _maxFilter;
+    info += F(" idx: ");
+    info += idx;
+    addLog(LOG_LEVEL_INFO, info);
+    #endif
+#ifndef P037_FILTER_PER_TOPIC
+    filterIndex = 0;
+    uint8_t extraFilters = 0;
+    while (extraFilters < P037_EXTRA_VALUES && idx < P037_MAX_FILTERS * 3) {
+      html_TR_TD();
+      addHtml(F("&nbsp;"));
+      addHtml(String(filterNr));
+      html_TD();
+      addTextBox(getPluginCustomArgName(idx + 100 + 0),
+                F(""),
+                32,
+                false, false, F("[^,|]{0,32}"), F(""));
+      html_TD();
+      addSelector(getPluginCustomArgName(idx + 100 + 1), P037_FILTER_COUNT, filterOptions, filterIndices, NULL, filterIndex, false, true);
+      html_TD();
+      addTextBox(getPluginCustomArgName(idx + 100 + 2),
+                F(""),
+                32,
+                false, false, F("[^,|]{0,32}"), F(""));
+      addUnit(F("Range/List: separate values with ; "));
+      html_TD();
+      idx += 3;
+      extraFilters++;
+      filterNr++;
+    }
+#endif // ifndef P037_FILTER_PER_TOPIC
+    html_end_table();
+#ifndef P037_FILTER_PER_TOPIC
+    #ifdef PLUGIN_037_DEBUG
+    info = F("P037 extraFilters: ");
+    info += extraFilters;
+    info += F(" idx: ");
+    info += idx;
+    addLog(LOG_LEVEL_INFO, info);
+    #endif
+#endif
+    addFormNote(F("Both Name and Value must be filled for a valid filter."));
+#ifndef P037_FILTER_PER_TOPIC
+    if (extraFilters == P037_EXTRA_VALUES) {
+      String moreMessage = F("After filling all filters, submitting this page will make extra filters available (up to ");
+      moreMessage += P037_MAX_FILTERS;
+      moreMessage += F(").");
+      addFormNote(moreMessage);
+    }
+#endif // ifndef P037_FILTER_PER_TOPIC
+  }
+#endif  // P037_FILTER_SUPPORT
 
 #ifdef P037_MAPPING_SUPPORT
   if (mappingEnabled) {
@@ -326,110 +454,6 @@ bool P037_data_struct::webform_load(
   }
 #endif // P037_MAPPING_SUPPORT
 
-#ifdef P037_FILTER_SUPPORT
-  if (filterEnabled) {
-    addFormSubHeader(F("Name - value filters"));
-    addFormNote(F("Name - value filters are case-sensitive. Do not use ',' or '|'."));
-
-    addRowLabel(F("Filter"), F(""));
-    html_table(F(""), false);  // Sub-table
-    html_table_header(F("&nbsp;#&nbsp;"));
-    html_table_header(F("Name[;Index]"));
-    //TODO: tonhuisman html_table_header(F("Name[;Index][#TopicId]"));
-    html_table_header(F("Operand"), 180);
-    html_table_header(F("Value"));
-
-    String filterOptions[P037_FILTER_COUNT];
-    filterOptions[0] = F("equals");     // map name to value
-    filterOptions[1] = F("range");      // between 2 values
-    #if P037_FILTER_COUNT >= 3
-    filterOptions[2] = F("list");       // list of multiple values
-    #endif
-    int filterIndices[P037_FILTER_COUNT] = { 0, 1
-    #if P037_FILTER_COUNT >= 3
-    , 2
-    #endif
-    };
-
-    String filters = P037_FILTER_LIST; // Anticipate more filters
-    int8_t filterIndex;
-
-    String info;
-    info.reserve(25);
-
-    int8_t idx;
-    int8_t filterNr = 1;
-    for (idx = 0; idx < _maxFilter; idx += 3) {
-
-      html_TR_TD();
-      addHtml(F("&nbsp;"));
-      addHtml(String(filterNr));
-      html_TD();
-      addTextBox(getPluginCustomArgName(idx + 100 + 0),
-                _filter[idx + 0],
-                32,
-                false, false, F("[^,|]{0,32}"), F(""));
-      html_TD();
-      filterIndex = filters.indexOf(_filter[idx + 1]);
-      addSelector(getPluginCustomArgName(idx + 100 + 1), P037_FILTER_COUNT, filterOptions, filterIndices, NULL, filterIndex, false, true);
-      html_TD();
-      addTextBox(getPluginCustomArgName(idx + 100 + 2),
-                _filter[idx + 2],
-                32,
-                false, false, F("[^,|]{0,32}"), F(""));
-      addUnit(F("Range/List: separate values with ; "));
-      html_TD();
-      filterNr++;
-    }
-    #ifdef PLUGIN_037_DEBUG
-    info = F("P037 maxFilter: ");
-    info += _maxFilter;
-    info += F(" idx: ");
-    info += idx;
-    addLog(LOG_LEVEL_INFO, info);
-    #endif
-    filterIndex = 0;
-    uint8_t extraFilters = 0;
-    while (extraFilters < P037_EXTRA_VALUES && idx < P037_MAX_FILTERS * 3) {
-      html_TR_TD();
-      addHtml(F("&nbsp;"));
-      addHtml(String(filterNr));
-      html_TD();
-      addTextBox(getPluginCustomArgName(idx + 100 + 0),
-                F(""),
-                32,
-                false, false, F("[^,|]{0,32}"), F(""));
-      html_TD();
-      addSelector(getPluginCustomArgName(idx + 100 + 1), P037_FILTER_COUNT, filterOptions, filterIndices, NULL, filterIndex, false, true);
-      html_TD();
-      addTextBox(getPluginCustomArgName(idx + 100 + 2),
-                F(""),
-                32,
-                false, false, F("[^,|]{0,32}"), F(""));
-      addUnit(F("Range/List: separate values with ; "));
-      html_TD();
-      idx += 3;
-      extraFilters++;
-      filterNr++;
-    }
-    html_end_table();
-    #ifdef PLUGIN_037_DEBUG
-    info = F("P037 extraFilters: ");
-    info += extraFilters;
-    info += F(" idx: ");
-    info += idx;
-    addLog(LOG_LEVEL_INFO, info);
-    #endif
-    addFormNote(F("Both Name and Value must be filled for a valid filter."));
-    if (extraFilters == P037_EXTRA_VALUES) {
-      String moreMessage = F("After filling all filters, submitting this page will make extra filters available (up to ");
-      moreMessage += P037_MAX_FILTERS;
-      moreMessage += F(").");
-      addFormNote(moreMessage);
-    }
-  }
-#endif  // P037_FILTER_SUPPORT
-
   success = true;
   return success;
 } // webform_load
@@ -474,6 +498,7 @@ bool P037_data_struct::webform_save(
   bool firstError = true;
 #endif
 
+// Mapping must be processed first, then Filtering, because they are parsed in that order
 #ifdef P037_MAPPING_SUPPORT
   String operands = P037_OPERAND_LIST;
   uint8_t mapNr = 1;
@@ -510,6 +535,7 @@ bool P037_data_struct::webform_save(
   }
 #endif
 
+// Filtering must be processed second, after Mapping, because they are parsed in that order
 #ifdef P037_FILTER_SUPPORT
   String filters = P037_FILTER_LIST;
   firstError = true;
@@ -521,7 +547,11 @@ bool P037_data_struct::webform_save(
     left.trim();
     right = web_server.arg(getPluginCustomArgName(idx + 100 + 2));
     right.trim();
-    if (left.length() > 0 || right.length() > 0) {
+    if (left.length() > 0 || right.length() > 0
+#ifdef P037_FILTER_PER_TOPIC
+     || true  // Store all filters and in the same order, including empty filters
+#endif
+       ) {
       if (filterMap.length() > 0) {
         filterMap += ',';
       }
@@ -530,6 +560,7 @@ bool P037_data_struct::webform_save(
       filterMap += filters.substring(oper, oper + 1);
       filterMap += right;
     }
+#ifndef P037_FILTER_PER_TOPIC
     if ((left.length() == 0 && right.length() > 0) || (left.length() > 0 && right.length() == 0)) {
       if (firstError) {
         error += F("Name and value should both be filled for filter ");
@@ -539,12 +570,15 @@ bool P037_data_struct::webform_save(
       }
       error += filterNr;
     }
+#endif // ifndef P037_FILTER_PER_TOPIC
     filterNr++;
     delay(0); // leave some yield
   }
+#ifndef P037_FILTER_PER_TOPIC
   if (!firstError) {
     error += '\n';
   }
+#endif // ifndef P037_FILTER_PER_TOPIC
   if (filterMap.length() > 0) { // Append filters to mappings if used
     valueMap += '|';
     valueMap += filterMap;
@@ -657,6 +691,22 @@ bool P037_data_struct::hasFilters() {
   return _maxFilter > 0;
 } // hasFilters
 
+#ifdef P037_FILTER_PER_TOPIC
+String P037_data_struct::getFilterAsTopic(uint8_t topicId) {
+  String result;
+  if (hasFilters() && topicId > 0 && topicId <= VARS_PER_TASK) {
+    uint8_t fltBase = (topicId - 1) * 3;
+    if (_filter[fltBase + 0].length() > 0 && _filter[fltBase + 2].length() > 0) {
+      result  = '/';
+      result += _filter[fltBase + 0];
+      result += '/';
+      result += _filter[fltBase + 2];
+    }
+  }
+  return result;
+}
+#endif // P037_FILTER_PER_TOPIC
+
 #ifdef PLUGIN_037_DEBUG
 void P037_data_struct::logFilterValue(String text, String key, String value, String match) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -691,21 +741,16 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
     float from, to, floatValue;
     int8_t rangeSeparator;
     bool accept, matchTopicId = true;
+    uint8_t fltFrom = 0, fltMax = _maxFilter;
+#ifdef P037_FILTER_PER_TOPIC
+    if (topicId > 0) {
+      fltFrom = (topicId - 1) * 3;
+      fltMax  = topicId * 3;
+    }
+#endif
 
-    for (uint8_t flt = 0; flt < _maxFilter; flt += 3) {
+    for (uint8_t flt = fltFrom; flt < fltMax; flt += 3) {
       fltKey = _filter[flt + 0];
-      //TODO: tonhuisman Parse filter name[;index][#topicId] for optional TopicId to see if this filter is specific to a TopicID
-      rangeSeparator = fltKey.indexOf('#');
-      if (rangeSeparator > -1) {
-        fltIndex = fltKey.substring(rangeSeparator + 1);
-        fltKey = fltKey.substring(0, rangeSeparator); // Remove #topicId part
-        // if (topicId > 0) {
-        //   matchTopicId = (fltIndex.toInt() == topicId);
-        //   // #ifdef PLUGIN_037_DEBUG
-        //   // logFilterValue(F("P037 filter TopicId match on key: "), key, _filter[flt + 0], String(topicId) + (matchTopicId ? F(": true") : F(": false")));
-        //   // #endif
-        // }
-      }
       // Parse filter name[;index] into name and index
       fltKey.replace(';', ',');
       fltIndex = parseString(fltKey, 2);

@@ -2,10 +2,9 @@
 #define PLUGINSTRUCTS_P037_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-#include "../CustomBuild/StorageLayout.h"
-
 #ifdef USES_P037
+
+#include "../CustomBuild/StorageLayout.h"
 
 // # define PLUGIN_037_DEBUG     // Additional debugging information
 
@@ -29,8 +28,14 @@
 #endif
 
 # define P037_MAX_MAPPINGS  25
-# define P037_MAX_FILTERS   25
+# define P037_MAX_FILTERS   VARS_PER_TASK // When VARS_PER_TASK is used, the filter is 1:1 mapped to a MQTT topic
 # define P037_EXTRA_VALUES  5
+
+#if defined(P037_FILTER_SUPPORT) && P037_MAX_FILTERS == VARS_PER_TASK  // Only 1 filter per topic
+  #ifndef P037_FILTER_PER_TOPIC
+    #define P037_FILTER_PER_TOPIC
+  #endif // ifndef P037_FILTER_PER_TOPIC
+#endif
 
 # define P037_OPERAND_COUNT 2
 # define P037_OPERAND_LIST  F("=%")
@@ -79,6 +84,9 @@ struct P037_data_struct : public PluginTaskData_base
 #ifdef P037_FILTER_SUPPORT
   bool   hasFilters();
   bool   checkFilters(String key, String value, int8_t topicId);
+#ifdef P037_FILTER_PER_TOPIC
+  String getFilterAsTopic(uint8_t topicId);
+#endif // P037_FILTER_PER_TOPIC
 #ifdef PLUGIN_037_DEBUG
   void   logFilterValue(String text, String key, String value, String match);
 #endif // PLUGIN_037_DEBUG
@@ -90,12 +98,16 @@ struct P037_data_struct : public PluginTaskData_base
     char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics, leave as first element for backward compatibility
     char jsonAttributes[VARS_PER_TASK][21];		// variable for saving the json attribute to use
 #if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+#ifdef P037_FILTER_PER_TOPIC
+#define MAP_FILTER_SIZE (DAT_TASKS_CUSTOM_SIZE / 2) // Use half of available size
+#else
+#define MAP_FILTER_SIZE DAT_TASKS_CUSTOM_SIZE // Use entire space
+#endif
     // All saved in a single string for most efficient storage
-    char valueMappings[DAT_TASKS_CUSTOM_SIZE - ((VARS_PER_TASK * 41) + (VARS_PER_TASK * 21))];      // name=num,name2=num,name3%num,... mappings + | + name=value,name2=value2,... Json filters
+    char valueMappings[MAP_FILTER_SIZE - ((VARS_PER_TASK * 41) + (VARS_PER_TASK * 21))];      // name=num,name2=num,name3%num,... mappings + | + name=value,name2=value2,... Json filters
 #endif
   };
 
-  // int maxMappings = DAT_TASKS_CUSTOM_SIZE - ((VARS_PER_TASK * 41) + (VARS_PER_TASK * 21));
   // Stored settings data:
   tP037_StoredSettings_struct StoredSettings;
 
