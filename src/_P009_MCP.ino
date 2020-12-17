@@ -182,7 +182,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // Turn on Pullup resistor
-      Plugin_009_Config(CONFIG_PORT, 1);
+      setMCPInputAndPullupMode(CONFIG_PORT, true);
 
       // apply INIT only if PIN is in range. Do not start INIT if pin not set in the device page.
       if (CONFIG_PORT >= 0)
@@ -195,7 +195,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
         // read and store current state to prevent switching at boot time
         // "state" could be -1, 0 or 1
-        newStatus.state                          = Plugin_009_Read(CONFIG_PORT);
+        newStatus.state                          = GPIO_MCP_Read(CONFIG_PORT);
         newStatus.output                         = newStatus.state;
         (newStatus.state == -1) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the
                                                                                                               // device list we assume it's
@@ -517,7 +517,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TIMER_IN:
     {
-      Plugin_009_Write(event->Par1, event->Par2);
+      GPIO_MCP_Write(event->Par1, event->Par2);
 
       // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
       portStatusStruct tempStatus;
@@ -535,7 +535,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONLY_TIMER_IN:
     {
-      Plugin_009_Write(event->Par1, event->Par2);
+      GPIO_MCP_Write(event->Par1, event->Par2);
 
       // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
       portStatusStruct tempStatus;
@@ -557,6 +557,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 // ********************************************************************************
 // MCP23017 read
 // ********************************************************************************
+/*
 int8_t Plugin_009_Read(byte Par1)
 {
   int8_t state        = -1;
@@ -583,10 +584,12 @@ int8_t Plugin_009_Read(byte Par1)
   }
   return state;
 }
+*/
 
 // ********************************************************************************
 // MCP23017 write
 // ********************************************************************************
+/*
 boolean Plugin_009_Write(byte Par1, byte Par2)
 {
   boolean success      = false;
@@ -648,10 +651,11 @@ boolean Plugin_009_Write(byte Par1, byte Par2)
   }
   return success;
 }
-
+*/
 // ********************************************************************************
 // MCP23017 config
 // ********************************************************************************
+/*
 void Plugin_009_Config(byte Par1, byte Par2)
 {
   // boolean success = false;
@@ -691,5 +695,5 @@ void Plugin_009_Config(byte Par1, byte Par2)
     Wire.endTransmission();
   }
 }
-
+*/
 #endif // USES_P009

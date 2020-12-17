@@ -865,7 +865,7 @@ bool gpio_mode_range_helper(byte pin, byte pinMode, EventValueSource::Enum sourc
 
   if (success && checkValidPortRange(pluginID, pin))
   {
-	  int8_t state=0;
+	  //int8_t state=0;
 	  byte mode=255;
     bool setSuccess=false;
 
