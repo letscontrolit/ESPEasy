@@ -34,4 +34,7 @@ String Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char* Line);
 String Command_GPIO_Mode(struct EventStruct *event, const char* Line);
 String Command_GPIO_ModeRange(struct EventStruct *event, const char* Line);
 
+String Command_GPIO_MonitorRange(struct EventStruct *event, const char* Line);
+String Command_GPIO_UnMonitorRange(struct EventStruct *event, const char* Line);
+
 #endif // COMMAND_GPIO_H

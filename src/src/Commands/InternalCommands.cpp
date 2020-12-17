@@ -280,7 +280,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
       }
       COMMAND_CASE_A(          "monitor", Command_GPIO_Monitor,      2); // GPIO.h
-      COMMAND_CASE_A(     "monitorrange", Command_GPIO_MonitorRange,      3); // GPIO.h   
+      COMMAND_CASE_A(     "monitorrange", Command_GPIO_MonitorRange, 3); // GPIO.h   
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A(          "malloc", Command_Malloc,         1);        // Diagnostic.h
       COMMAND_CASE_A(         "meminfo", Command_MemInfo,        0);        // Diagnostic.h
