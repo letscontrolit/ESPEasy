@@ -9,6 +9,7 @@
 #define MCP23017_IODIRA 0x00   //!< I/O direction register A
 #define MCP23017_GPPUA  0x0C   //!< Pullup resistor register A
 #define MCP23017_GPIOA  0x12   //!< General purpose I/O port register A
+
 #define MCP23017_IODIRB 0x01   //!< I/O direction register B
 #define MCP23017_GPPUB  0x0D   //!< Pullup resistor register B
 #define MCP23017_GPIOB  0x13   //!< General purpose I/O port register B
