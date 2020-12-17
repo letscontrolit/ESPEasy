@@ -56,7 +56,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       int Plugin_27_i2c_addresses[4] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
-      addFormSelectorI2C(F("p027_i2c"), 4, Plugin_27_i2c_addresses, P027_I2C_ADDR);
+      addFormSelectorI2C(F("i2c_addr"), 4, Plugin_27_i2c_addresses, P027_I2C_ADDR);
       break;
     }
 
@@ -87,7 +87,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PCONFIG(0) = getFormItemInt(F("p027_range"));
-      PCONFIG(1) = getFormItemInt(F("p027_i2c"));
+      PCONFIG(1) = getFormItemInt(F("i2c_addr"));
       PCONFIG(2) = getFormItemInt(F("p027_measuretype"));
       success    = true;
       break;
