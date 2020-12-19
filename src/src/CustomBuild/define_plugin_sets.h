@@ -887,6 +887,7 @@ To create/register a plugin, you have to :
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
     #define USES_P106   // BME680
+    #define USES_P107   // SI1145 UV index
 #endif
 
 
