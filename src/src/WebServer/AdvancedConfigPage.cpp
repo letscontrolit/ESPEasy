@@ -1,10 +1,10 @@
 #include "../WebServer/AdvancedConfigPage.h"
 
-#include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
+#include "../WebServer/WebServer.h"
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
@@ -54,7 +54,7 @@ void handle_advanced() {
     TimeChangeRule dst_end(dstendweek, dstenddow, dstendmonth, dstendhour, timezone);
 
     if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
-    str2ip(web_server.arg(F("syslogip")).c_str(), Settings.Syslog_IP);
+    webArg2ip(F("syslogip"), Settings.Syslog_IP);
     Settings.WebserverPort = getFormItemInt(F("webport"));
     Settings.UDPPort = getFormItemInt(F("udpport"));
 
