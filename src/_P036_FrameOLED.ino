@@ -14,6 +14,14 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2020-10-19
+// CHG: ressouce-saving string calculation
+// @uwekaditz: 2020-10-211
+// NEW: Support for 128x32 displays (see https://www.letscontrolit.com/forum/viewtopic.php?p=39840#p39840)
+// NEW: Option to hide the header
+// CHG: Calculate font setting, if necessary reduce lines per page (fonts are not longer a fixed setting)
+// CHG: Reduce espeasy_logo to 32x32 to fit all displays
+// CHG: Calculate font setting for splash screen
 // @uwekaditz: 2020-06-22
 // BUG: MaxFramesToDisplay was not updated if all display lines were empty -> display_indicator() crashed due to memory overflow
 // CHG: MaxFramesToDisplay will be updated after receiving command with new line content
@@ -133,7 +141,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       int     optionValues[2];
       optionValues[0] = 0x3C;
       optionValues[1] = 0x3D;
-      addFormSelectorI2C(F("p036_adr"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       break;
     }
 
@@ -180,6 +188,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                           1,
                           P036_data_struct::getDisplaySizeSettings(tOLEDIndex).MaxLines);
       }
+      addFormNote(F("Will be automatically reduced if there is no font to fit this setting."));
 
       {
         uint8_t choice = P036_SCROLL;
@@ -201,6 +210,28 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
       bool tbPin3Invers = bitRead(PCONFIG_LONG(0), 16);      // Bit 16
+
+      {
+        uint8_t choice = uint8_t(bitRead(PCONFIG_LONG(0), 26)); // Bit 26 Input PullUp
+        int Opcount = 2;
+#ifdef INPUT_PULLDOWN
+        choice += uint8_t(bitRead(PCONFIG_LONG(0), 27)) * 2;    // Bit 27 Input PullDown
+        if (choice > 2) {
+          choice = 2;
+        }
+        Opcount = 3;
+#endif
+        String  options[3];
+        options[0] = F("Input");
+        options[1] = F("Input pullup");
+        options[2] = F("Input pulldown");
+        int optionValues[3] =
+        { static_cast<int>(eP036pinmode::ePPM_Input),
+          static_cast<int>(eP036pinmode::ePPM_InputPullUp),
+          static_cast<int>(eP036pinmode::ePPM_InputPullDown) };
+        addFormSelector(F("Pin mode"), F("p036_pinmode"), Opcount, options, optionValues, choice);
+      }
+
       addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"), tbPin3Invers);
       bool bStepThroughPages = bitRead(PCONFIG_LONG(0), 19); // Bit 19
       addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bStepThroughPages);
@@ -227,6 +258,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("When checked, all scrollings (pages and lines) are disabled as long as WiFi is not connected."));
 
       addFormSubHeader(F("Content"));
+
+      bool tbHideHeader = bitRead(PCONFIG_LONG(0), 25);             // Bit 25
+      addFormCheckBox(F("Hide header"), F("p036_HideHeader"), tbHideHeader);
 
       {
         uint8_t choice9      = get8BitFromUL(PCONFIG_LONG(0), 8); // Bit15-8 HeaderContent
@@ -271,9 +305,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
           P036_data->loadDisplayLines(event->TaskIndex, version);
 
+          String strLabel;
+
           for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
           {
-            addFormTextBox(String(F("Line ")) + (varNr + 1),
+            strLabel = F("Line ");
+            strLabel += (varNr + 1);
+            addFormTextBox(strLabel,
                            getPluginCustomArgName(varNr),
                            String(P036_data->DisplayLinesV1[varNr].Content),
                            P36_NcharsV1 - 1);
@@ -297,7 +335,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       // update now
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
-      P036_ADR        = getFormItemInt(F("p036_adr"));
+      P036_ADR        = getFormItemInt(F("i2c_addr"));
       P036_ROTATE     = getFormItemInt(F("p036_rotate"));
       P036_NLINES     = getFormItemInt(F("p036_nlines"));
       P036_SCROLL     = getFormItemInt(F("p036_scroll"));
@@ -317,6 +355,21 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, 20, 0x01);                                                     // Bit23-20 Version CustomTaskSettings ->
                                                                                             // version V1
       bitWrite(lSettings, 24, !isFormItemChecked(F("p036_ScrollWithoutWifi")));             // Bit 24 ScrollWithoutWifi
+      bitWrite(lSettings, 25, isFormItemChecked(F("p036_HideHeader")));                     // Bit 25 Hide header
+
+      int P036pinmode = getFormItemInt(F("p036_pinmode"));
+      switch (P036pinmode) {
+        case 1:
+        {
+          bitWrite(lSettings, 26, true);                                                    // Bit 26 Input PullUp
+          break;
+        }
+        case 2:
+        {
+          bitWrite(lSettings, 27, true);                                                    // Bit 27 Input PullDown
+          break;
+        }
+      }
 
       PCONFIG_LONG(0) = lSettings;
 
@@ -358,7 +411,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         // After saving, make sure the active lines are updated.
         P036_data->frameCounter       = 0;
         P036_data->MaxFramesToDisplay = 0xFF;
-        P036_data->_disp_resolution   = static_cast<p036_resolution>(P036_RESOLUTION);
+        P036_data->disp_resolution   = static_cast<p036_resolution>(P036_RESOLUTION);
         P036_data->loadDisplayLines(event->TaskIndex, 1);
       }
 
@@ -381,6 +434,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       // Load the custom settings from flash
       uint8_t version = get4BitFromUL(PCONFIG_LONG(0), 20); // Bit23-20 Version CustomTaskSettings
+
+      P036_data->bHideHeader = bitRead(PCONFIG_LONG(0), 25); // Bit 25 Hide header
 
       // Init the display and turn it on
       if (!(P036_data->init(event->TaskIndex,
@@ -406,7 +461,22 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       if (CONFIG_PIN3 != -1) // Button related setup
       {
-        pinMode(CONFIG_PIN3, INPUT_PULLUP);
+
+#ifdef INPUT_PULLDOWN
+        if (bitRead(PCONFIG_LONG(0), 27)) {      // Bit 27 Input PullDown
+          pinMode(CONFIG_PIN3, INPUT_PULLDOWN); // Reset pinstate to PIN_MODE_INPUT_PULLDOWN
+        }
+        else
+#endif
+        {
+          if (bitRead(PCONFIG_LONG(0), 26)) {      // Bit 26 Input PullUp
+            pinMode(CONFIG_PIN3, INPUT_PULLUP);   // Reset pinstate to PIN_MODE_INPUT_PULLUP
+          }
+          else {
+            pinMode(CONFIG_PIN3, INPUT);          // Reset pinstate to PIN_MODE_INPUT
+          }
+        }
+
         P036_data->DebounceCounter = 0;
         P036_data->RepeatCounter   = 0;
         P036_data->ButtonState     = false;
@@ -487,7 +557,22 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           P036_data->P036_JumpToPage(event, 0); //  Start to display the first page, function needs 65ms!
         }
         P036_data->markButtonStateProcessed();
-        pinMode(CONFIG_PIN3, INPUT_PULLUP);     //  Reset pinstate
+
+#ifdef INPUT_PULLDOWN
+        if (bitRead(PCONFIG_LONG(0), 27)) {      // Bit 27 Input PullDown
+          pinMode(CONFIG_PIN3, INPUT_PULLDOWN); // Reset pinstate to PIN_MODE_INPUT_PULLDOWN
+        }
+        else
+#endif
+        {
+          if (bitRead(PCONFIG_LONG(0), 26)) {      // Bit 26 Input PullUp
+            pinMode(CONFIG_PIN3, INPUT_PULLUP);   // Reset pinstate to PIN_MODE_INPUT_PULLUP
+          }
+          else {
+            pinMode(CONFIG_PIN3, INPUT);          // Reset pinstate to PIN_MODE_INPUT
+          }
+        }
+
       }
 
       if (P036_data->bLineScrollEnabled) {
@@ -722,7 +807,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           uint16_t PixLength = P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content));
 
           if (PixLength > 255) {
-            addHtmlError(String(F("Pixel length of ")) + String(PixLength) + String(F(" too long for line! Max. 255 pix!")));
+            String str_error = F("Pixel length of ");
+            str_error += PixLength;
+            str_error += F(" too long for line! Max. 255 pix!");
+            addHtmlError(str_error);
 
             int   strlen         = String(P036_data->DisplayLinesV1[LineNo - 1].Content).length();
             float fAvgPixPerChar = ((float)PixLength) / strlen;
@@ -749,12 +837,20 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
 
 #ifdef PLUGIN_036_DEBUG
-          String log = String(F("[P36] Line: ")) + String(LineNo);
-          log += String(F(" NewContent:")) + String(NewContent);
-          log += String(F(" Content:")) + String(P036_data->DisplayLinesV1[LineNo - 1].Content);
-          log += String(F(" Length:")) + String(String(P036_data->DisplayLinesV1[LineNo - 1].Content).length());
-          log += String(F(" Pix: ")) + String(P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content)));
-          log += String(F(" Reserved:")) + String(P036_data->DisplayLinesV1[LineNo - 1].reserved);
+          String log;
+          log.reserve(200); // estimated
+          log = F("[P36] Line: ");
+          log += LineNo;
+          log += F(" NewContent:");
+          log += NewContent;
+          log += F(" Content:");
+          log += String(P036_data->DisplayLinesV1[LineNo - 1].Content);
+          log += F(" Length:");
+          log += P036_data->DisplayLinesV1[LineNo - 1].Content).length();
+          log += F(" Pix: ");
+          log += P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content));
+          log += F(" Reserved:");
+          log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
           addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_036_DEBUG
         }
@@ -762,9 +858,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 #ifdef PLUGIN_036_DEBUG
 
       if (!success) {
-        String log = String(F("[P36] Cmd: ")) + String(command);
-        log += String(F(" SubCmd:")) + String(subcommand);
-        log += String(F(" Success:")) + jsonBool(success);
+        String log = F("[P36] Cmd: ");
+        log += command;
+        log += F(" SubCmd:");
+        log += subcommand;
+        log += F(" Success:"):
+        log += jsonBool(success);
         addLog(LOG_LEVEL_INFO, log);
       }
 #endif // PLUGIN_036_DEBUG

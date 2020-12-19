@@ -60,14 +60,14 @@
 #include "src/PluginStructs/P090_data_struct.h"
 
 
-#define P090_I2C_ADDR                 Settings.TaskDevicePluginConfig[event->TaskIndex][0]
-#define P090_COMPENSATE_ENABLE        Settings.TaskDevicePluginConfig[event->TaskIndex][1]
-#define P090_TEMPERATURE_TASK_INDEX   Settings.TaskDevicePluginConfig[event->TaskIndex][2]
-#define P090_TEMPERATURE_TASK_VALUE   Settings.TaskDevicePluginConfig[event->TaskIndex][3]
-#define P090_HUMIDITY_TASK_INDEX      Settings.TaskDevicePluginConfig[event->TaskIndex][4]
-#define P090_HUMIDITY_TASK_VALUE      Settings.TaskDevicePluginConfig[event->TaskIndex][5]
-#define P090_TEMPERATURE_SCALE        Settings.TaskDevicePluginConfig[event->TaskIndex][6] // deg C/F
-#define P090_READ_INTERVAL            Settings.TaskDevicePluginConfigLong[event->TaskIndex][0]
+#define P090_I2C_ADDR                 PCONFIG(0)
+#define P090_COMPENSATE_ENABLE        PCONFIG(1)
+#define P090_TEMPERATURE_TASK_INDEX   PCONFIG(2)
+#define P090_TEMPERATURE_TASK_VALUE   PCONFIG(3)
+#define P090_HUMIDITY_TASK_INDEX      PCONFIG(4)
+#define P090_HUMIDITY_TASK_VALUE      PCONFIG(5)
+#define P090_TEMPERATURE_SCALE        PCONFIG(6) // deg C/F
+#define P090_READ_INTERVAL            PCONFIG_LONG(0)
 
 
 boolean Plugin_090(byte function, struct EventStruct *event, String& string)
@@ -109,7 +109,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
       // I2C address choice
       String options[2]      = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
       int    optionValues[2] = { 0x5A, 0x5B };
-      addFormSelector(F("I2C Address"), F("p090_i2c_address"), 2, options, optionValues, P090_I2C_ADDR);
+      addFormSelector(F("I2C Address"), F("i2c_addr"), 2, options, optionValues, P090_I2C_ADDR);
       break;
     }
 
@@ -165,7 +165,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P090_I2C_ADDR               = getFormItemInt(F("p090_i2c_address"));
+      P090_I2C_ADDR               = getFormItemInt(F("i2c_addr"));
       P090_COMPENSATE_ENABLE      = isFormItemChecked(F("p090_enable_compensation"));
       P090_TEMPERATURE_TASK_INDEX = getFormItemInt(F("p090_temperature_task"));
       P090_TEMPERATURE_TASK_VALUE = getFormItemInt(F("p090_temperature_value"));

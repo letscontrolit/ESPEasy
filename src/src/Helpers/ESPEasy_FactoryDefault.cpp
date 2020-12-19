@@ -253,7 +253,7 @@ void ResetFactory()
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ResetFactory2"));
   #endif
-  serialPrintln(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));
+  serialPrintln(F("RESET: Successful, rebooting. (you might need to press the reset button if you've just flashed the firmware)"));
 
   // NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);

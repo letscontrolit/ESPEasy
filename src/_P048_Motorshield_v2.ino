@@ -58,7 +58,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      addFormTextBox(F("I2C Address (Hex)"), F("p048_adr"),
+      addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"),
                      formatToHex_decimal(Plugin_048_MotorShield_address), 4);
 
       // FIXME TD-er: Why not using addFormSelectorI2C here?
@@ -87,7 +87,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      String plugin1 = web_server.arg(F("p048_adr"));
+      String plugin1 = web_server.arg(F("i2c_addr"));
       Plugin_048_MotorShield_address = (int)strtol(plugin1.c_str(), 0, 16);
 
       Plugin_048_MotorStepsPerRevolution = getFormItemInt(F("p048_MotorStepsPerRevolution"));
