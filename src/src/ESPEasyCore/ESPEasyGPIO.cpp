@@ -11,10 +11,12 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/PortStatus.h"
 
+
+
 //********************************************************************************
 // Internal GPIO write
 //********************************************************************************
-void GPIO_Internal_Write(byte pin, byte value)
+void GPIO_Internal_Write(int pin, byte value)
 {
   if (checkValidPortRange(PLUGIN_GPIO, pin)) {
     const uint32_t key = createKey(PLUGIN_GPIO, pin);
@@ -35,75 +37,79 @@ void GPIO_Internal_Write(byte pin, byte value)
 //********************************************************************************
 // Internal GPIO read
 //********************************************************************************
-bool GPIO_Internal_Read(byte pin)
+bool GPIO_Internal_Read(int pin)
 {
   if (checkValidPortRange(PLUGIN_GPIO, pin))
     return digitalRead(pin)==HIGH;
-  else
-    return false;
+  return false;
 }
 
 bool GPIO_Read_Switch_State(struct EventStruct *event) {
-  const byte pinNumber     = CONFIG_PIN1;
-  const uint32_t key = createKey(PLUGIN_GPIO, pinNumber);
+  const int pin     = CONFIG_PIN1;
+  if (checkValidPortRange(PLUGIN_GPIO, pin)) {
+    const uint32_t key = createKey(PLUGIN_GPIO, pin);
 
-  if (existPortStatus(key)) {
-    return GPIO_Read_Switch_State(pinNumber, globalMapPortStatus[key].mode);
+    if (existPortStatus(key)) {
+      return GPIO_Read_Switch_State(pin, globalMapPortStatus[key].mode);
+    }
   }
   return false;
 }
 
-bool GPIO_Read_Switch_State(byte pinNumber, byte pinMode) {
+bool GPIO_Read_Switch_State(int pin, byte pinMode) {
   bool canRead = false;
-
-  switch (pinMode)
-  {
-    case PIN_MODE_UNDEFINED:
-    case PIN_MODE_INPUT:
-    case PIN_MODE_INPUT_PULLUP:
-    case PIN_MODE_OUTPUT:
-      canRead = true;
-      break;
-    case PIN_MODE_PWM:
-      break;
-    case PIN_MODE_SERVO:
-      break;
-    case PIN_MODE_OFFLINE:
-      break;
-    default:
-      break;
+  if (checkValidPortRange(PLUGIN_GPIO, pin)) {
+    switch (pinMode)
+    {
+      case PIN_MODE_UNDEFINED:
+      case PIN_MODE_INPUT:
+      case PIN_MODE_INPUT_PULLUP:
+      case PIN_MODE_OUTPUT:
+        canRead = true;
+        break;
+      case PIN_MODE_PWM:
+        break;
+      case PIN_MODE_SERVO:
+        break;
+      case PIN_MODE_OFFLINE:
+        break;
+      default:
+        break;
+    }
   }
 
   if (!canRead) { return false; }
 
   // Do not read from the pin while mode is set to PWM or servo.
   // See https://github.com/letscontrolit/ESPEasy/issues/2117#issuecomment-443516794
-  return digitalRead(pinNumber) == HIGH;
+  return digitalRead(pin) == HIGH;
 }
 
 //********************************************************************************
 // MCP23017 read
 //********************************************************************************
-int8_t GPIO_MCP_Read(byte Par1)
+int8_t GPIO_MCP_Read(int Par1)
 {
   int8_t state = -1;
-  byte unit = (Par1 - 1) / 16;
-  byte port = Par1 - (unit * 16);
-  uint8_t address = 0x20 + unit;
-  byte IOBankValueReg = 0x12;
-  if (port > 8)
-  {
-    port = port - 8;
-    IOBankValueReg++;
-  }
-  // get the current pin status
-  Wire.beginTransmission(address);
-  Wire.write(IOBankValueReg); // IO data register
-  Wire.endTransmission();
-  Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available())
-  {
-    state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
+  if (checkValidPortRange(PLUGIN_MCP, Par1)) {
+    byte unit = (Par1 - 1) / 16;
+    byte port = Par1 - (unit * 16);
+    uint8_t address = 0x20 + unit;
+    byte IOBankValueReg = 0x12;
+    if (port > 8)
+    {
+      port = port - 8;
+      IOBankValueReg++;
+    }
+    // get the current pin status
+    Wire.beginTransmission(address);
+    Wire.write(IOBankValueReg); // IO data register
+    Wire.endTransmission();
+    Wire.requestFrom(address, (uint8_t)0x1);
+    if (Wire.available())
+    {
+      state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
+    }
   }
   return state;
 }
@@ -112,9 +118,12 @@ int8_t GPIO_MCP_Read(byte Par1)
 //********************************************************************************
 // MCP23017 write
 //********************************************************************************
-bool GPIO_MCP_Write(byte Par1, byte Par2)
+bool GPIO_MCP_Write(int Par1, byte Par2)
 {
-  boolean success = false;
+  if (!checkValidPortRange(PLUGIN_MCP, Par1)) {
+    return false;
+  }
+  bool success = false;
   byte portvalue = 0;
   byte unit = (Par1 - 1) / 16;
   byte port = Par1 - (unit * 16);
@@ -170,9 +179,13 @@ bool GPIO_MCP_Write(byte Par1, byte Par2)
 //********************************************************************************
 // MCP23017 config
 //********************************************************************************
-void GPIO_MCP_Config(byte Par1, byte Par2)
+void GPIO_MCP_Config(int Par1, byte Par2)
 {
-  // boolean success = false;
+  if (!checkValidPortRange(PLUGIN_MCP, Par1)) {
+    return;
+  }
+
+  // bool success = false;
   byte portvalue = 0;
   byte unit = (Par1 - 1) / 16;
   byte port = Par1 - (unit * 16);
@@ -208,19 +221,21 @@ void GPIO_MCP_Config(byte Par1, byte Par2)
 // PCF8574 read
 //********************************************************************************
 //@giig1967g-20181023: changed to int8_t
-int8_t GPIO_PCF_Read(byte Par1)
+int8_t GPIO_PCF_Read(int Par1)
 {
   int8_t state = -1;
-  byte unit = (Par1 - 1) / 8;
-  byte port = Par1 - (unit * 8);
-  uint8_t address = 0x20 + unit;
-  if (unit > 7) address += 0x10;
+  if (checkValidPortRange(PLUGIN_PCF, Par1)) {
+    byte unit = (Par1 - 1) / 8;
+    byte port = Par1 - (unit * 8);
+    uint8_t address = 0x20 + unit;
+    if (unit > 7) address += 0x10;
 
-  // get the current pin status
-  Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available())
-  {
-    state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
+    // get the current pin status
+    Wire.requestFrom(address, (uint8_t)0x1);
+    if (Wire.available())
+    {
+      state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
+    }
   }
   return state;
 }
@@ -240,8 +255,11 @@ uint8_t GPIO_PCF_ReadAllPins(uint8_t address)
 //********************************************************************************
 // PCF8574 write
 //********************************************************************************
-bool GPIO_PCF_Write(byte Par1, byte Par2)
+bool GPIO_PCF_Write(int Par1, byte Par2)
 {
+  if (!checkValidPortRange(PLUGIN_PCF, Par1)) {
+    return false;
+  }
   uint8_t unit = (Par1 - 1) / 8;
   uint8_t port = Par1 - (unit * 8);
   uint8_t address = 0x20 + unit;
@@ -337,7 +355,7 @@ void GPIO_Monitor10xSec()
 }
 
 // prefix should be either "GPIO", "PCF", "MCP"
-void sendMonitorEvent(const char* prefix, byte port, int8_t state)
+void sendMonitorEvent(const char* prefix, int port, int8_t state)
 {
   String eventString = prefix;
   eventString += '#';
@@ -347,42 +365,41 @@ void sendMonitorEvent(const char* prefix, byte port, int8_t state)
   rulesProcessing(eventString);
 }
 
-bool checkValidPortRange(pluginID_t pluginID, byte port)
+bool checkValidPortRange(pluginID_t pluginID, int port)
 {
-  bool returnValue = false;
   switch (pluginID)
   {
     case PLUGIN_GPIO:
     {
       int  pinnr = -1;
       bool input, output, warning;
-      returnValue=getGpioInfo(port, pinnr, input, output, warning);
+      return getGpioInfo(port, pinnr, input, output, warning);
     }
-    break;
 
     case PLUGIN_MCP:
     case PLUGIN_PCF:
-      returnValue=(port>=1 && port<=128);
-    break;
+      return (port>=1 && port<=128);
   }
-  return returnValue;
+  return false;
 }
 
-void setInternalGPIOPullupMode(byte port)
+void setInternalGPIOPullupMode(int port)
 {
-#if defined(ESP8266)
-  if (port == 16) {
-    pinMode(port, INPUT_PULLDOWN_16);
-  }
-  else {
+  if (checkValidPortRange(PLUGIN_GPIO, port)) {
+  #if defined(ESP8266)
+    if (port == 16) {
+      pinMode(port, INPUT_PULLDOWN_16);
+    }
+    else {
+      pinMode(port, INPUT_PULLUP);
+    }
+  #else // if defined(ESP8266)
     pinMode(port, INPUT_PULLUP);
+  #endif // if defined(ESP8266)
   }
-#else // if defined(ESP8266)
-  pinMode(port, INPUT_PULLUP);
-#endif // if defined(ESP8266)
 }
 
-bool GPIO_Write(pluginID_t pluginID, byte port, byte value, byte pinMode)
+bool GPIO_Write(pluginID_t pluginID, int port, byte value, byte pinMode)
 {
   bool success=true;
   switch (pluginID)
@@ -405,7 +422,7 @@ bool GPIO_Write(pluginID_t pluginID, byte port, byte value, byte pinMode)
   return success;
 }
 
-bool GPIO_Read(pluginID_t pluginID, byte port, int8_t &value)
+bool GPIO_Read(pluginID_t pluginID, int port, int8_t &value)
 {
   bool success=true;
   switch (pluginID)

@@ -33,7 +33,9 @@ void handle_upload() {
 // Web Interface upload page
 // ********************************************************************************
 void handle_upload_post() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_upload_post"));
+  #endif
 
   if (!isLoggedIn()) { return; }
 
@@ -66,7 +68,9 @@ void handle_upload_post() {
 
 #ifdef WEBSERVER_NEW_UI
 void handle_upload_json() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_upload_post"));
+  #endif
   uint8_t result = uploadResult;
 
   if (!isLoggedIn()) { result = 255; }
@@ -86,7 +90,9 @@ void handle_upload_json() {
 // ********************************************************************************
 fs::File uploadFile;
 void handleFileUpload() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handleFileUpload"));
+  #endif
 
   if (!isLoggedIn()) { return; }
 

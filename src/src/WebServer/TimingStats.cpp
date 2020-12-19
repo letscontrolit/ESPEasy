@@ -18,7 +18,9 @@
 #define TIMING_STATS_THRESHOLD 100000
 
 void handle_timingstats() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_timingstats"));
+  #endif
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);

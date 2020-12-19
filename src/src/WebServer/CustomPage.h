@@ -3,10 +3,11 @@
 
 #include "../WebServer/common.h"
 
-
+#ifdef WEBSERVER_CUSTOM
 // ********************************************************************************
 // Web Interface custom page handler
 // ********************************************************************************
 boolean handle_custom(String path);
+#endif
 
 #endif

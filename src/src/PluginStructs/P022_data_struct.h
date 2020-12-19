@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P022
 
-#include "../../ESPEasy_common.h"
-
 
 # define PLUGIN_022_PCA9685_MODE1   0x00 // location for Mode1 register address
 # define PCA9685_MODE2              0x01 // location for Mode2 register address

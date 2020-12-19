@@ -924,97 +924,146 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             userVarIndex_t userVarIndex = event->BaseVarIndex + taskVarIndex;
             String topic                = F(CPLUGIN_014_PUBLISH);
             topic.replace(F("%sysname%"), Settings.Name);
-            int deviceIndex = event->Par1; // parseString(string, 2).toInt();
-            LoadTaskSettings(deviceIndex - 1);
-            String deviceName = ExtraTaskSettings.TaskDeviceName;
-            topic.replace(F("%tskname%"), deviceName);
-            String valueName = ExtraTaskSettings.TaskDeviceValueNames[event->Par2 - 1]; // parseString(string, 3).toInt()-1];
-            topic.replace(F("%valname%"), valueName);
-            String valueStr;
-            int    valueInt = 0;
+            topic.replace(F("%tskname%"), CPLUGIN_014_SYSTEM_DEVICE);
+            topic.replace(F("%valname%"), CPLUGIN_014_GPIO_VALUE + toString(port,0));
 
-            if ((commandName == F("taskvalueset")) || (commandName == F("dummyvalueset")))                         // should work for both
-            {
-              valueStr = toString(UserVar[userVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex]); // parseString(string,
-                                                                                                                   // 4);
-              success  = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
+            success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueBool.c_str(), false);
+            if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
+              String log = F("C014 : Acknowledged GPIO");
+              log += port;
+              log += F(" value:");
+              log += valueBool;
+              log += F(" (");
+              log += valueInt;
+              log += F(")");
+              addLog(LOG_LEVEL_INFO, log+" success!");
+            }
+            if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
+              String log = F("C014 : Acknowledged GPIO");
+              log += port;
+              log += F(" value:");
+              log += valueBool;
+              log += F(" (");
+              log += valueInt;
+              log += F(")");
+              addLog(LOG_LEVEL_ERROR, log+" ERROR!");
+            }
+          } else // not gpio
+          {
+            taskVarIndex_t taskVarIndex = event->Par2 - 1;
+            if (validTaskVarIndex(taskVarIndex)) {
+              userVarIndex_t userVarIndex = event->BaseVarIndex + taskVarIndex;
+              String topic = CPLUGIN_014_PUBLISH;
+              topic.replace(F("%sysname%"), Settings.Name);
+              int deviceIndex = event->Par1; //parseString(string, 2).toInt();
+              LoadTaskSettings(deviceIndex-1);
+              String deviceName = ExtraTaskSettings.TaskDeviceName;
+              topic.replace(F("%tskname%"), deviceName);
+              String valueName = ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1]; //parseString(string, 3).toInt()-1];
+              topic.replace(F("%valname%"), valueName);
+              String valueStr = "";
+              int valueInt = 0;
 
-              if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
-                String log = F("C014 : Acknowledged: ");
-                log += deviceName;
-                log += F(" var: ");
-                log += valueName;
-                log += F(" topic: ");
-                log += topic;
-                log += F(" value: ");
-                log += F(" success!");
-                addLog(LOG_LEVEL_INFO, log);
-              }
-
-              if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
-                String log = F("C014 : Aacknowledged: ");
-                log += deviceName;
-                log += F(" var: ");
-                log += valueName;
-                log += F(" topic: ");
-                log += topic;
-                log += F(" value: ");
-                log += valueStr;
-                log += F(" ERROR!");
-                addLog(LOG_LEVEL_ERROR, log);
-              }
-            } else if (parseString(commandName, 1) == F("homievalueset")) { // acknolages value form P086 Homie Receiver
-              switch (Settings.TaskDevicePluginConfig[deviceIndex - 1][taskVarIndex]) {
-                case 0:                                                     // PLUGIN_085_VALUE_INTEGER
-                  valueInt = static_cast<int>(UserVar[userVarIndex]);
-                  valueStr = toString(UserVar[userVarIndex], 0);
-                  break;
-                case 1: // PLUGIN_085_VALUE_FLOAT
-                  valueStr = toString(UserVar[userVarIndex], ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex]);
-                  break;
-                case 2: // PLUGIN_085_VALUE_BOOLEAN
-
-                  if (UserVar[userVarIndex] == 1) { valueStr = F("true"); }
-                  else { valueStr = F("false"); }
-                  break;
-                case 3: // PLUGIN_085_VALUE_STRING
-                  // valueStr = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
-                  valueStr = parseStringToEndKeepCase(string, 4);
-                  break;
-                case 4: // PLUGIN_085_VALUE_ENUM
-                  valueInt = static_cast<int>(UserVar[userVarIndex]);
-                  valueStr = parseStringKeepCase(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], valueInt);
-                  break;
-                case 5: // PLUGIN_085_VALUE_RGB
-                  // valueStr = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
-                  valueStr = parseStringToEnd(string, 4);
-                  break;
-                case 6: // PLUGIN_085_VALUE_HSV
-                  // valueStr = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
-                  valueStr = parseStringToEnd(string, 4);
-                  break;
-              }
-              success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
-
-              if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
-                String log = F("C014 : homie acknowledge: ");
-                log += deviceName;
-                log += F(" taskIndex:");
-                log += deviceIndex;
-                log += F(" valueNr:");
-                log += event->Par2;
-                log += F(" valueName:");
-                log += valueName;
-                log += F(" valueType:");
-                log += Settings.TaskDevicePluginConfig[deviceIndex - 1][taskVarIndex];
-                log += F(" topic:");
-                log += topic;
-                log += F(" valueInt:");
-                log += valueInt;
-                log += F(" valueStr:");
-                log += valueStr;
-                log += F(" success!");
-                addLog(LOG_LEVEL_INFO, log);
+              if ((commandName == F("taskvalueset")) || (commandName == F("dummyvalueset"))) // should work for both
+              {
+                valueStr = formatUserVarNoCheck(event, taskVarIndex); //parseString(string, 4);
+                success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
+                if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
+                  String log = F("C014 : Acknowledged: ");
+                  log += deviceName;
+                  log += F(" var: ");
+                  log += valueName;
+                  log += F(" topic: ");
+                  log += topic;
+                  log += F(" value: ");
+                  log += valueStr;
+                  addLog(LOG_LEVEL_INFO, log+" success!");
+                }
+                if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
+                  String log = F("C014 : Aacknowledged: ");
+                  log += deviceName;
+                  log += F(" var: ");
+                  log += valueName;
+                  log += F(" topic: ");
+                  log += topic;
+                  log += F(" value: ");
+                  log += valueStr;
+                  addLog(LOG_LEVEL_ERROR, log+" ERROR!");
+                }
+              } else if (parseString(commandName, 1) == F("homievalueset")) { // acknolages value form P086 Homie Receiver
+                switch (Settings.TaskDevicePluginConfig[deviceIndex-1][taskVarIndex]) {
+                  case 0: // PLUGIN_085_VALUE_INTEGER
+                    valueInt = static_cast<int>(UserVar[userVarIndex]);
+                    valueStr = toString(UserVar[userVarIndex],0);
+                    break;
+                  case 1: // PLUGIN_085_VALUE_FLOAT
+                    valueStr = formatUserVarNoCheck(event, taskVarIndex);
+                    break;
+                  case 2: // PLUGIN_085_VALUE_BOOLEAN
+                    if ( UserVar[userVarIndex] == 1) valueStr="true";
+                      else valueStr = "false";
+                    break;
+                  case 3: // PLUGIN_085_VALUE_STRING
+                    //valueStr = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
+                    valueStr = parseStringToEndKeepCase(string,4);
+                    break;
+                  case 4: // PLUGIN_085_VALUE_ENUM
+                    valueInt = static_cast<int>(UserVar[userVarIndex]);
+                    valueStr = parseStringKeepCase(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex],valueInt);
+                    break;
+                  case 5: // PLUGIN_085_VALUE_RGB
+                    //valueStr = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
+                    valueStr = parseStringToEnd(string,4);
+                    break;
+                  case 6: // PLUGIN_085_VALUE_HSV
+                    //valueStr = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
+                    valueStr = parseStringToEnd(string,4);
+                    break;
+                }
+                success = MQTTpublish(CPLUGIN_ID_014, topic.c_str(), valueStr.c_str(), false);
+                if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
+                  String log = F("C014 : homie acknowledge: ");
+                  log += deviceName;
+                  log += F(" taskIndex:");
+                  log += deviceIndex;
+                  log += F(" valueNr:");
+                  log += event->Par2;
+                  log += F(" valueName:");
+                  log += valueName;
+                  log += F(" valueType:");
+                  log += Settings.TaskDevicePluginConfig[deviceIndex-1][taskVarIndex];
+                  log += F(" topic:");
+                  log += topic;
+                  log += F(" valueInt:");
+                  log += valueInt;
+                  log += F(" valueStr:");
+                  log += valueStr;
+                  addLog(LOG_LEVEL_INFO, log+" success!");
+                }
+                if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
+                  String log = F("C014 : homie acknowledge: ");
+                  log += deviceName;
+                  log += F(" var: ");
+                  log += valueName;
+                  log += F(" topic: ");
+                  log += topic;
+                  log += F(" value: ");
+                  log += valueStr;
+                  addLog(LOG_LEVEL_ERROR, log+" failed!");
+                }
+              } else // Acknowledge not implemented yet
+              {
+  /*              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log = F("C014 : Plugin acknowledged: ");
+                  log+=function;
+                  log+=F(" / ");
+                  log+=commandName;
+                  log+=F(" cmd: ");
+                  log+=string;
+                  log+=F(" not implemented!");
+                  addLog(LOG_LEVEL_ERROR, log);
+                } */
+                success = false;
               }
 
               if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {

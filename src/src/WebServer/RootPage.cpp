@@ -29,7 +29,9 @@
 // Web Interface root page
 // ********************************************************************************
 void handle_root() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_root"));
+  #endif
 
   // if Wifi setup, launch setup wizard
   if (WiFiEventData.wifiSetup)
@@ -123,11 +125,13 @@ void handle_root() {
       String html;
       html.reserve(64);
       html += freeMem;
+      #ifndef BUILD_NO_RAM_TRACKER
       html += " (";
       html += lowestRAM;
       html += F(" - ");
       html += lowestRAMfunction;
       html += ')';
+      #endif
       addHtml(html);
     }
     {
@@ -135,11 +139,13 @@ void handle_root() {
       String html;
       html.reserve(64);
       html += String(getCurrentFreeStack());
+      #ifndef BUILD_NO_RAM_TRACKER
       html += " (";
       html += String(lowestFreeStack);
       html += F(" - ");
       html += String(lowestFreeStackfunction);
       html += ')';
+      #endif
       addHtml(html);
     }
 

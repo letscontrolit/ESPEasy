@@ -1,4 +1,4 @@
-#include "P036_data_struct.h"
+#include "../PluginStructs/P036_data_struct.h"
 
 #ifdef USES_P036
 
@@ -10,8 +10,8 @@
 # include "../Helpers/StringParser.h"
 # include "../Helpers/SystemVariables.h"
 
-# include "Dialog_Plain_12_font.h"
-# include "OLED_SSD1306_SH1106_images.h"
+# include <Dialog_Plain_12_font.h>
+# include <OLED_SSD1306_SH1106_images.h>
 
 P036_data_struct::P036_data_struct() : display(nullptr) {}
 
@@ -28,39 +28,25 @@ void P036_data_struct::reset() {
   }
 }
 
+const tFontSizes FontSizes[P36_MaxFontCount] = {
+  { ArialMT_Plain_24, 24, 28},
+  { ArialMT_Plain_16, 16, 19},
+  { Dialog_plain_12,  13, 15},
+  { ArialMT_Plain_10, 10, 13}
+};
+
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
   { P36_MaxDisplayWidth, P36_MaxDisplayHeight, 0, // 128x64
-       4,
-
-       // page scrolling height = 42
-       { 19,                  ArialMT_Plain_24,     28  }, //  Width: 24 Height: 28
-       { 15,                  ArialMT_Plain_16,     19  }, //  Width: 16 Height: 19
-       { 12,                  Dialog_plain_12,      14  }, //  Width: 13 Height: 15
-       { 12,                  ArialMT_Plain_10,     10  }, //  Width: 10 Height: 13
-       113,
-       15
+       4,               // max. line count
+       113, 15          // WiFi indicator
   },
   { P36_MaxDisplayWidth, 32,                   0, // 128x32
-       2,
-
-       // page scrolling height = 20
-       { 14,                  Dialog_plain_12,      15  }, //  Width: 13 Height: 15
-       { 12,                  ArialMT_Plain_10,     10  }, //  Width: 10 Height: 13
-       {  0,                  ArialMT_Plain_10,     0   }, //  Width: 10 Height: 13 not used!
-       {  0,                  ArialMT_Plain_10,     0   }, //  Width: 10 Height: 13 not used!
-       113,
-       15
+       2,               // max. line count
+       113, 15          // WiFi indicator
   },
   { 64,                  48,                   32, // 64x48
-       3,
-
-       // page scrolling height = 36
-       { 20,                  ArialMT_Plain_24,     28  }, //  Width: 24 Height: 28
-       { 14,                  Dialog_plain_12,      17  }, //  Width: 13 Height: 15
-       { 13,                  ArialMT_Plain_10,     11  }, //  Width: 10 Height: 13
-       {  0,                  ArialMT_Plain_10,     0   }, //  Width: 10 Height: 13 not used!
-       32,
-       10
+       3,               // max. line count
+       32,  10          // WiFi indicator
   }
 };
 
@@ -75,19 +61,19 @@ const tSizeSettings& P036_data_struct::getDisplaySizeSettings(p036_resolution di
 
 bool P036_data_struct::init(taskIndex_t     taskIndex,
                             uint8_t         LoadVersion,
-                            uint8_t         _type,
-                            uint8_t         _address,
-                            uint8_t         _sda,
-                            uint8_t         _scl,
-                            p036_resolution disp_resolution,
-                            bool            _rotated,
-                            uint8_t         contrast,
-                            uint8_t         _displayTimer,
-                            uint8_t         nrLines) {
+                            uint8_t         Type,
+                            uint8_t         Address,
+                            uint8_t         Sda,
+                            uint8_t         Scl,
+                            p036_resolution Disp_resolution,
+                            bool            Rotated,
+                            uint8_t         Contrast,
+                            uint8_t         DisplayTimer,
+                            uint8_t         NrLines) {
   reset();
 
   lastWiFiState       = P36_WIFI_STATE_UNSET;
-  _disp_resolution    = p036_resolution::pix128x64;
+  disp_resolution     = p036_resolution::pix128x64;
   bAlternativHeader   = false; // start with first header content
   HeaderCount         = 0;
   bPageScrollDisabled = true;  // first page after INIT without scrolling
@@ -104,16 +90,16 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
   DebounceCounter = 0;             // debounce counter
   RepeatCounter   = 0;             // Repeat delay counter when holding button pressed
 
-  displayTimer          = _displayTimer;
+  displayTimer          = DisplayTimer;
   frameCounter          = 0;       // need to keep track of framecounter from call to call
   disableFrameChangeCnt = 0;       // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
 
-  switch (_type) {
+  switch (Type) {
     case 1:
-      display = new (std::nothrow) SSD1306Wire(_address, _sda, _scl);
+      display = new (std::nothrow) SSD1306Wire(Address, Sda, Scl);
       break;
     case 2:
-      display = new (std::nothrow) SH1106Wire(_address, _sda, _scl);
+      display = new (std::nothrow) SH1106Wire(Address, Sda, Scl);
       break;
     default:
       return false;
@@ -121,17 +107,25 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
 
   if (display != nullptr) {
     display->init(); // call to local override of init function
+
+    disp_resolution = Disp_resolution;
+    bHideFooter = !(getDisplaySizeSettings(disp_resolution).Height == P36_MaxDisplayHeight);
+
+    if (disp_resolution == p036_resolution::pix128x32) {
+      display->displayOff();
+      display->SetComPins(0x02); // according to the adafruit lib, sometimes this may need to be 0x02
+      bHideFooter = true;
+    }
+
     display->displayOn();
     loadDisplayLines(taskIndex, LoadVersion);
-    _disp_resolution = disp_resolution;
 
     // Flip screen if required
-    setOrientationRotated(_rotated);
+    setOrientationRotated(Rotated);
 
-    setContrast(contrast);
+    setContrast(Contrast);
 
     //      Display the device name, logo, time and wifi
-    display_header();
     display_logo();
     update_display();
 
@@ -140,7 +134,7 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
     currentFrameToDisplay        = 0;
     nextFrameToDisplay           = 0;
     bPageScrollDisabled          = true;  // first page after INIT without scrolling
-    ScrollingPages.linesPerFrame = nrLines;
+    ScrollingPages.linesPerFrame = NrLines;
     bLineScrollEnabled           = false; // start without line scrolling
 
     //    Clear scrolling line data
@@ -215,7 +209,7 @@ void P036_data_struct::setContrast(uint8_t OLED_contrast) {
 void P036_data_struct::setOrientationRotated(bool rotated) {
   if (rotated) {
     display->flipScreenVertically();
-    TopLineOffset = P36_MaxDisplayHeight - getDisplaySizeSettings(_disp_resolution).Height;
+    TopLineOffset = P36_MaxDisplayHeight - getDisplaySizeSettings(disp_resolution).Height;
   } else {
     TopLineOffset = 0;
   }
@@ -225,19 +219,22 @@ void P036_data_struct::display_header() {
   if (!isInitialized()) {
     return;
   }
+  if (bHideHeader) {  //  hide header
+    return;
+  }
 
-  eHeaderContent _HeaderContent;
+  eHeaderContent iHeaderContent;
   String newString, strHeader;
 
   if ((HeaderContentAlternative == HeaderContent) || !bAlternativHeader) {
-    _HeaderContent = HeaderContent;
+    iHeaderContent = HeaderContent;
   }
   else
   {
-    _HeaderContent = HeaderContentAlternative;
+    iHeaderContent = HeaderContentAlternative;
   }
 
-  switch (_HeaderContent) {
+  switch (iHeaderContent) {
     case eHeaderContent::eSSID:
 
       if (NetworkConnected()) {
@@ -306,7 +303,7 @@ void P036_data_struct::display_header() {
   display_title(strHeader);
 
   // Display time and wifibars both clear area below, so paint them after the title.
-  if (getDisplaySizeSettings(_disp_resolution).Width == P36_MaxDisplayWidth) {
+  if (getDisplaySizeSettings(disp_resolution).Width == P36_MaxDisplayWidth) {
     display_time(); // only for 128pix wide displays
   }
   display_wifibars();
@@ -323,7 +320,7 @@ void P036_data_struct::display_time() {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
   display->setColor(BLACK);
-  display->fillRect(0, TopLineOffset, 28, P36_HeaderHeight - 2);
+  display->fillRect(0, TopLineOffset, 28, GetHeaderHeight() - 2);
   display->setColor(WHITE);
   display->drawString(0, TopLineOffset, dtime.substring(0, 5));
 }
@@ -334,16 +331,16 @@ void P036_data_struct::display_title(const String& title) {
   }
   display->setFont(ArialMT_Plain_10);
   display->setColor(BLACK);
-  display->fillRect(0, TopLineOffset, P36_MaxDisplayWidth, P36_HeaderHeight); // don't clear line under title.
+  display->fillRect(0, TopLineOffset, P36_MaxDisplayWidth, GetHeaderHeight()); // don't clear line under title.
   display->setColor(WHITE);
 
-  if (getDisplaySizeSettings(_disp_resolution).Width == P36_MaxDisplayWidth) {
+  if (getDisplaySizeSettings(disp_resolution).Width == P36_MaxDisplayWidth) {
     display->setTextAlignment(TEXT_ALIGN_CENTER);
     display->drawString(P36_DisplayCentre, TopLineOffset, title);
   }
   else {
     display->setTextAlignment(TEXT_ALIGN_LEFT); // Display right of WiFi bars
-    display->drawString(getDisplaySizeSettings(_disp_resolution).PixLeft + getDisplaySizeSettings(_disp_resolution).WiFiIndicatorWidth + 3,
+    display->drawString(getDisplaySizeSettings(disp_resolution).PixLeft + getDisplaySizeSettings(disp_resolution).WiFiIndicatorWidth + 3,
                         TopLineOffset,
                         title);
   }
@@ -353,20 +350,27 @@ void P036_data_struct::display_logo() {
   if (!isInitialized()) {
     return;
   }
+  # ifdef PLUGIN_036_DEBUG
+  addLog(LOG_LEVEL_INFO, F("P036_DisplayLogo"));
+  # endif // PLUGIN_036_DEBUG
 
   int left = 24;
+  int top;
+  tFontSettings iFontsettings = CalculateFontSettings(2); // get font with max. height for displaying "ESP Easy"
 
+  bDisplayingLogo = true; // next time the display must be cleared completely
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(ArialMT_Plain_16);
-  display->setColor(BLACK);
-  display->fillRect(0, P36_HeaderHeight + 1 + TopLineOffset, P36_MaxDisplayWidth, P36_MaxDisplayHeight);
+  display->setFont(iFontsettings.fontData);
+  display->clear(); // resets all pixels to black
   display->setColor(WHITE);
-  display->drawString(65, 15 + TopLineOffset, F("ESP"));
-  display->drawString(65, 34 + TopLineOffset, F("Easy"));
+  display->drawString(65, iFontsettings.Top + TopLineOffset, F("ESP"));
+  display->drawString(65, iFontsettings.Top + iFontsettings.Height + iFontsettings.Space + TopLineOffset, F("Easy"));
 
-  if (getDisplaySizeSettings(_disp_resolution).PixLeft < left) { left = getDisplaySizeSettings(_disp_resolution).PixLeft; }
+  if (getDisplaySizeSettings(disp_resolution).PixLeft < left) { left = getDisplaySizeSettings(disp_resolution).PixLeft; }
+  top = (getDisplaySizeSettings(disp_resolution).Height-espeasy_logo_height)/2;
+  if (top < 0) { top = 0; }
   display->drawXbm(left,
-                   P36_HeaderHeight + 1 + TopLineOffset,
+                   top+TopLineOffset,
                    espeasy_logo_width,
                    espeasy_logo_height,
                    espeasy_logo_bits); // espeasy_logo_width=espeasy_logo_height=36
@@ -378,6 +382,10 @@ void P036_data_struct::display_indicator() {
   if (!isInitialized()) {
     return;
   }
+  if (bHideFooter) {  //  hide footer
+    return;
+  }
+
   int frameCount = MaxFramesToDisplay + 1;
 
   //  Erase Indicator Area
@@ -425,41 +433,133 @@ void P036_data_struct::display_indicator() {
   }
 }
 
+int16_t P036_data_struct::GetHeaderHeight()
+{
+  if (bHideHeader) {
+    // no header
+    return 0;
+  }
+  return P36_HeaderHeight;
+
+}
+int16_t P036_data_struct::GetIndicatorTop()
+{
+  if (bHideFooter) {
+    // no footer (indicator) -> returm max. display height
+    return getDisplaySizeSettings(disp_resolution).Height;
+  }
+  return P036_IndicatorTop;
+}
+
+tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines)
+{
+  tFontSettings result;
+  int iHeight;
+  int8_t iFontIndex = -1;
+  uint8_t iMaxHeightForFont;
+  uint8_t iLinesPerFrame;
+
+  if (lDefaultLines == 0) 
+  {
+    // number of lines can be reduced if no font fits the setting
+    iLinesPerFrame = ScrollingPages.linesPerFrame;
+    iHeight = GetIndicatorTop() - GetHeaderHeight();
+  }
+  else
+  {
+    // number of lines is fixed (e.g. for splash screen)
+    iLinesPerFrame = lDefaultLines;
+    iHeight = getDisplaySizeSettings(disp_resolution).Height;
+  }
+  
+  while (iFontIndex < 0) {
+    iMaxHeightForFont = (iHeight - (iLinesPerFrame - 1)) / iLinesPerFrame;  // at least 1 pixel space between lines
+
+    for (uint8_t i = P36_MaxFontCount; i > 0; i--) {
+      // check available fonts for the line setting  
+      if (FontSizes[i-1].Height > iMaxHeightForFont) {
+        // height of font is to big
+        break;
+      }
+      iFontIndex = i-1; // save the current index
+      if (FontSizes[iFontIndex].Height == iMaxHeightForFont) {
+        // height of font just fits the line setting
+        break;
+      }
+    }
+    if (iFontIndex < 0) {
+      // no font fits -> reduce number of lines per page
+      iLinesPerFrame--;
+      if (iLinesPerFrame == 0) {
+        // lines per frame is at minimum
+        break;
+      }
+    }
+  }
+  if (iFontIndex >= 0) {
+    // font found -> calculate top position and space between lines
+    iMaxHeightForFont = FontSizes[iFontIndex].Height * iLinesPerFrame;
+    if (iLinesPerFrame > 1) {
+      // more than one lines per frame -> calculate space inbetween
+      result.Space = (iHeight-iMaxHeightForFont) / iLinesPerFrame;
+    }
+    else {
+      // just one lines per frame -> no space inbetween
+      result.Space = 0;
+    }
+    result.Top = (iHeight - (iMaxHeightForFont + (result.Space * (iLinesPerFrame-1)))) / 2;
+  }
+  else {
+    // no font found -> return font with shortest height
+    result.Top = 0;
+    result.Space = 1;
+    iLinesPerFrame = 1;
+    iFontIndex = P36_MaxFontCount-1;
+ }
+  result.fontData = FontSizes[iFontIndex].fontData;
+  result.Height = FontSizes[iFontIndex].Height;
+
+# ifdef PLUGIN_036_DEBUG
+  String log;
+  log.reserve(128); // estimated
+  log = F("CalculateFontSettings: FontIndex:");
+  log += iFontIndex;
+  log += F(" Top:");
+  log += result.Top;
+  log += F(" FontHeight:");
+  log += result.Height;
+  log += F(" Space:");
+  log += result.Space;
+  log += F(" Height:");
+  log += iHeight;
+  log += F(" LinesPerFrame:");
+  log += iLinesPerFrame;
+  log += F(" DefaultLines:");
+  log += lDefaultLines;
+  addLog(LOG_LEVEL_INFO, log);
+# endif // PLUGIN_036_DEBUG
+  
+  if (lDefaultLines == 0) 
+    ScrollingPages.linesPerFrame = iLinesPerFrame;
+  return result;
+}
+
 void P036_data_struct::prepare_pagescrolling()
 {
   if (!isInitialized()) {
     return;
   }
 
-  switch (ScrollingPages.linesPerFrame) {
-    case 1:
-      ScrollingPages.Font    = getDisplaySizeSettings(_disp_resolution).L1.fontData;
-      ScrollingPages.ypos[0] = getDisplaySizeSettings(_disp_resolution).L1.Top + TopLineOffset;
-      ScrollingLines.Space   = getDisplaySizeSettings(_disp_resolution).L1.Space + 1;
-      break;
-    case 2:
-      ScrollingPages.Font    = getDisplaySizeSettings(_disp_resolution).L2.fontData;
-      ScrollingPages.ypos[0] = getDisplaySizeSettings(_disp_resolution).L2.Top + TopLineOffset;
-      ScrollingPages.ypos[1] = ScrollingPages.ypos[0] + getDisplaySizeSettings(_disp_resolution).L2.Space;
-      ScrollingLines.Space   = getDisplaySizeSettings(_disp_resolution).L2.Space + 1;
-      break;
-    case 3:
-      ScrollingPages.Font    = getDisplaySizeSettings(_disp_resolution).L3.fontData;
-      ScrollingPages.ypos[0] = getDisplaySizeSettings(_disp_resolution).L3.Top + TopLineOffset;
-      ScrollingPages.ypos[1] = ScrollingPages.ypos[0] + getDisplaySizeSettings(_disp_resolution).L3.Space;
-      ScrollingPages.ypos[2] = ScrollingPages.ypos[1] + getDisplaySizeSettings(_disp_resolution).L3.Space;
-      ScrollingLines.Space   = getDisplaySizeSettings(_disp_resolution).L3.Space + 1;
-      break;
-    default:
-      ScrollingPages.linesPerFrame = 4;
-      ScrollingPages.Font          = getDisplaySizeSettings(_disp_resolution).L4.fontData;
-      ScrollingPages.ypos[0]       = getDisplaySizeSettings(_disp_resolution).L4.Top + TopLineOffset;
-      ScrollingPages.ypos[1]       = ScrollingPages.ypos[0] + getDisplaySizeSettings(_disp_resolution).L4.Space;
-      ScrollingPages.ypos[2]       = ScrollingPages.ypos[1] + getDisplaySizeSettings(_disp_resolution).L4.Space;
-      ScrollingPages.ypos[3]       = ScrollingPages.ypos[2] + getDisplaySizeSettings(_disp_resolution).L4.Space;
-      ScrollingLines.Space         = getDisplaySizeSettings(_disp_resolution).L4.Space + 1;
-  }
-  ScrollingLines.Font = ScrollingPages.Font;
+  tFontSettings iFontsettings = CalculateFontSettings(0);
+
+  ScrollingPages.Font    = iFontsettings.fontData;
+  ScrollingPages.ypos[0] = iFontsettings.Top + GetHeaderHeight() + TopLineOffset;
+  ScrollingPages.ypos[1] = ScrollingPages.ypos[0] + iFontsettings.Height + iFontsettings.Space;
+  ScrollingPages.ypos[2] = ScrollingPages.ypos[1] + iFontsettings.Height + iFontsettings.Space;
+  ScrollingPages.ypos[3] = ScrollingPages.ypos[2] + iFontsettings.Height + iFontsettings.Space;
+
+  ScrollingLines.Font  = ScrollingPages.Font;
+  ScrollingLines.Space = iFontsettings.Height + iFontsettings.Space + 1;
 
   for (uint8_t i = 0; i < P36_MAX_LinesPerPage; i++) {
     ScrollingLines.Line[i].ypos = ScrollingPages.ypos[i];
@@ -479,8 +579,10 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   int iCharToRemove;
 
 # ifdef PLUGIN_036_DEBUG
-  String log = F("Start Scrolling: Speed: ");
-  log += lscrollspeed;
+  String log;
+  log.reserve(128); // estimated
+  log = F("Start Scrolling: Speed: ");
+  log += ((int) lscrollspeed);
   addLog(LOG_LEVEL_INFO, log);
 # endif // PLUGIN_036_DEBUG
 
@@ -495,7 +597,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   } else {
     iPageScrollTime = (P36_MaxDisplayWidth / (P36_PageScrollPix * static_cast<int>(lscrollspeed))) * P36_PageScrollTick;
   }
-  float fScrollTime = (float)(lTaskTimer * 1000 - iPageScrollTime - 2 * P36_WaitScrollLines * 100) / 100.0f;
+  int iScrollTime = (float)(lTaskTimer * 1000 - iPageScrollTime - 2 * P36_WaitScrollLines * 100) / 100; // scrollTime in ms
 
 # ifdef PLUGIN_036_DEBUG
   log  = F("PageScrollTime: ");
@@ -507,7 +609,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 
   if (bLineScrollEnabled) {
     // Reduced scrolling width because line is displayed left or right aligned
-    MaxPixWidthForPageScrolling -= getDisplaySizeSettings(_disp_resolution).PixLeft;
+    MaxPixWidthForPageScrolling -= getDisplaySizeSettings(disp_resolution).PixLeft;
   }
 
   for (uint8_t j = 0; j < ScrollingPages.linesPerFrame; j++)
@@ -540,20 +642,20 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 
     if (bLineScrollEnabled) {
       // settings for following line scrolling
-      if (PixLengthLineOut > getDisplaySizeSettings(_disp_resolution).Width) {
+      if (PixLengthLineOut > getDisplaySizeSettings(disp_resolution).Width) {
         ScrollingLines.Line[j].LastWidth = PixLengthLineOut; // while page scrolling this line is right aligned
       }
 
-      if ((PixLengthLineIn > getDisplaySizeSettings(_disp_resolution).Width) && (fScrollTime > 0.0f))
+      if ((PixLengthLineIn > getDisplaySizeSettings(disp_resolution).Width) && (iScrollTime > 0))
       {
         // width of the line > display width -> scroll line
         ScrollingLines.Line[j].LineContent = ScrollingPages.LineIn[j];
         ScrollingLines.Line[j].Width       = PixLengthLineIn; // while page scrolling this line is left aligned
-        ScrollingLines.Line[j].CurrentLeft = getDisplaySizeSettings(_disp_resolution).PixLeft;
-        ScrollingLines.Line[j].fPixSum     = (float)getDisplaySizeSettings(_disp_resolution).PixLeft;
+        ScrollingLines.Line[j].CurrentLeft = getDisplaySizeSettings(disp_resolution).PixLeft;
+        ScrollingLines.Line[j].fPixSum     = (float)getDisplaySizeSettings(disp_resolution).PixLeft;
 
         // pix change per scrolling line tick
-        ScrollingLines.Line[j].dPix = ((float)(PixLengthLineIn - getDisplaySizeSettings(_disp_resolution).Width)) / fScrollTime;
+        ScrollingLines.Line[j].dPix = ((float)(PixLengthLineIn - getDisplaySizeSettings(disp_resolution).Width)) / iScrollTime;
 
 # ifdef PLUGIN_036_DEBUG
         log  = String(F("Line: ")) + String(j + 1);
@@ -648,15 +750,17 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   ScrollingPages.dPixSum = ScrollingPages.dPix;
 
   display->setColor(BLACK);
-
   // We allow 12 pixels at the top because otherwise the wifi indicator gets too squashed!!
   // scrolling window is 42 pixels high - ie 64 less margin of 12 at top and 10 at bottom
-  display->fillRect(0, P36_HeaderHeight + TopLineOffset, P36_MaxDisplayWidth, P036_IndicatorTop - P36_HeaderHeight);
+  display->fillRect(0, GetHeaderHeight() + TopLineOffset, P36_MaxDisplayWidth, GetIndicatorTop() - GetHeaderHeight());
   display->setColor(WHITE);
-  display->drawLine(0,
-                    P36_HeaderHeight + TopLineOffset,
-                    P36_MaxDisplayWidth,
-                    P36_HeaderHeight + TopLineOffset); // line below title
+
+  if (!bHideHeader) {
+    display->drawLine(0,
+                      GetHeaderHeight() + TopLineOffset,
+                      P36_MaxDisplayWidth,
+                      GetHeaderHeight() + TopLineOffset); // line below title
+  }
 
   for (uint8_t j = 0; j < ScrollingPages.linesPerFrame; j++)
   {
@@ -664,7 +768,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
       if (ScrollingLines.Line[j].LastWidth > 0) {
         // width of LineOut[j] > display width -> line at beginning of scrolling page is right aligned
         display->setTextAlignment(TEXT_ALIGN_RIGHT);
-        display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(_disp_resolution).PixLeft + ScrollingPages.dPixSum,
+        display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
                             ScrollingPages.ypos[j],
                             ScrollingPages.LineOut[j]);
       }
@@ -680,7 +784,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     if (ScrollingLines.Line[j].Width > 0) {
       // width of LineIn[j] > display width -> line at end of scrolling page should be left aligned
       display->setTextAlignment(TEXT_ALIGN_LEFT);
-      display->drawString(-P36_MaxDisplayWidth + getDisplaySizeSettings(_disp_resolution).PixLeft + ScrollingPages.dPixSum,
+      display->drawString(-P36_MaxDisplayWidth + getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
                           ScrollingPages.ypos[j],
                           ScrollingPages.LineIn[j]);
     }
@@ -720,7 +824,7 @@ uint8_t P036_data_struct::display_scroll_timer() {
 
   // We allow 13 pixels (including underline) at the top because otherwise the wifi indicator gets too squashed!!
   // scrolling window is 42 pixels high - ie 64 less margin of 12 at top and 10 at bottom
-  display->fillRect(0, P36_HeaderHeight + 1 + TopLineOffset, P36_MaxDisplayWidth, P036_IndicatorTop - P36_HeaderHeight);
+  display->fillRect(0, GetHeaderHeight() + 1 + TopLineOffset, P36_MaxDisplayWidth, GetIndicatorTop() - GetHeaderHeight());
   display->setColor(WHITE);
   display->setFont(ScrollingPages.Font);
 
@@ -729,7 +833,7 @@ uint8_t P036_data_struct::display_scroll_timer() {
     if (ScrollingLines.Line[j].LastWidth > 0) {
       // width of LineOut[j] > display width -> line is right aligned while scrolling page
       display->setTextAlignment(TEXT_ALIGN_RIGHT);
-      display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(_disp_resolution).PixLeft + ScrollingPages.dPixSum,
+      display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
                           ScrollingPages.ypos[j],
                           ScrollingPages.LineOut[j]);
     }
@@ -744,7 +848,7 @@ uint8_t P036_data_struct::display_scroll_timer() {
     if (ScrollingLines.Line[j].Width > 0) {
       // width of LineIn[j] > display width -> line is left aligned while scrolling page
       display->setTextAlignment(TEXT_ALIGN_LEFT);
-      display->drawString(-P36_MaxDisplayWidth + getDisplaySizeSettings(_disp_resolution).PixLeft + ScrollingPages.dPixSum,
+      display->drawString(-P36_MaxDisplayWidth + getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
                           ScrollingPages.ypos[j],
                           ScrollingPages.LineIn[j]);
     }
@@ -815,8 +919,8 @@ void P036_data_struct::display_scrolling_lines() {
                             ScrollingLines.Space + 1); // clearing window was too high
           display->setColor(WHITE);
 
-          if (((ScrollingLines.Line[i].CurrentLeft - getDisplaySizeSettings(_disp_resolution).PixLeft) +
-               ScrollingLines.Line[i].Width) >= getDisplaySizeSettings(_disp_resolution).Width) {
+          if (((ScrollingLines.Line[i].CurrentLeft - getDisplaySizeSettings(disp_resolution).PixLeft) +
+               ScrollingLines.Line[i].Width) >= getDisplaySizeSettings(disp_resolution).Width) {
             display->setTextAlignment(TEXT_ALIGN_LEFT);
             display->drawString(ScrollingLines.Line[i].CurrentLeft,
                                 ScrollingLines.Line[i].ypos,
@@ -825,7 +929,7 @@ void P036_data_struct::display_scrolling_lines() {
           else {
             // line scrolling finished -> line is shown as aligned right
             display->setTextAlignment(TEXT_ALIGN_RIGHT);
-            display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(_disp_resolution).PixLeft,
+            display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(disp_resolution).PixLeft,
                                 ScrollingPages.ypos[i],
                                 ScrollingLines.Line[i].LineContent);
             ScrollingLines.Line[i].Width = 0; // Stop scrolling
@@ -843,6 +947,9 @@ bool P036_data_struct::display_wifibars() {
   if (!isInitialized()) {
     return false;
   }
+  if (bHideHeader) {  //  hide header
+    return false;
+  }
 
   const bool connected    = NetworkConnected();
   const int  nbars_filled = (WiFi.RSSI() + 100) / 12; // all bars filled if RSSI better than -46dB
@@ -851,10 +958,10 @@ bool P036_data_struct::display_wifibars() {
   if (newState == lastWiFiState) {
     return false; // nothing to do.
   }
-  int x         = getDisplaySizeSettings(_disp_resolution).WiFiIndicatorLeft;
+  int x         = getDisplaySizeSettings(disp_resolution).WiFiIndicatorLeft;
   int y         = TopLineOffset;
-  int size_x    = getDisplaySizeSettings(_disp_resolution).WiFiIndicatorWidth;
-  int size_y    = P36_HeaderHeight - 2;
+  int size_x    = getDisplaySizeSettings(disp_resolution).WiFiIndicatorWidth;
+  int size_y    = GetHeaderHeight() - 2;
   int nbars     = 5;
   int16_t width = (size_x / nbars);
 
@@ -1024,13 +1131,16 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
     }
 
     //      Update display
+    if (bDisplayingLogo) {
+      bDisplayingLogo = false;
+      display->clear(); // resets all pixels to black
+    }
+
     bAlternativHeader = false; // start with first header content
     HeaderCount       = 0;     // reset header count
     display_header();
 
-    if (getDisplaySizeSettings(_disp_resolution).Width == P36_MaxDisplayWidth) {
-      display_indicator();
-    }
+    display_indicator();
 
     update_display();
 
