@@ -18,6 +18,8 @@
 
 #include "../../_Plugin_Helper.h"
 
+#ifdef WEBSERVER_CUSTOM
+
 // ********************************************************************************
 // Web Interface custom page handler
 // ********************************************************************************
@@ -200,3 +202,5 @@ boolean handle_custom(String path) {
   TXBuffer.endStream();
   return true;
 }
+
+#endif

@@ -213,6 +213,11 @@ class OLEDDisplay : public Print {
     // Normal display mode
     void normalDisplay(void);
 
+    // Command to set the COM signals pin configuration to match the OLED panel hardware layout
+    // 128x64 and 64x48 _compins should be 0x12 (alread set during init())
+    // 128x32           _compins should be 0x02
+    void SetComPins(uint8_t _compins);
+
     // Set display contrast
     // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
     // normal brightness & contrast:  contrast = 100

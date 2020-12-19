@@ -36,13 +36,13 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     eventQueue.add(parseStringToEnd(webrequest, 2));
     handledCmd = true;
     sendOK     = true;
-  } else if (command.equalsIgnoreCase(F("taskrun")) ||
-             command.equalsIgnoreCase(F("taskvalueset")) ||
-             command.equalsIgnoreCase(F("taskvaluetoggle")) ||
-             command.equalsIgnoreCase(F("let")) ||
-             command.equalsIgnoreCase(F("logPortStatus")) ||
-             command.equalsIgnoreCase(F("jsonportstatus")) ||
-             command.equalsIgnoreCase(F("rules"))) {
+  } else if (command.equals(F("taskrun")) ||
+             command.equals(F("taskvalueset")) ||
+             command.equals(F("taskvaluetoggle")) ||
+             command.equals(F("let")) ||
+             command.equals(F("logPortStatus")) ||
+             command.equals(F("jsonportstatus")) ||
+             command.equals(F("rules"))) {
     handledCmd = ExecuteCommand_internal(source, webrequest.c_str());
     sendOK     = true;
 
@@ -57,7 +57,8 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     if (sendOK) {
       if (printToWebJSON) {
         // Format "OK" to JSON format
-        DynamicJsonDocument root(1024);
+        const int capacity = JSON_OBJECT_SIZE(2);
+        StaticJsonDocument<capacity> root;
         root[F("return")]  = F("OK");
         root[F("command")] = webrequest;
         serializeJson(root, printWebString);
@@ -70,7 +71,8 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 
   if (printToWebJSON) {
     // Format error to JSON format
-    DynamicJsonDocument root(1024);
+    const int capacity = JSON_OBJECT_SIZE(2);
+    StaticJsonDocument<capacity> root;
     root[F("return")]  = F("Unknown or restricted command");
     root[F("command")] = webrequest;
     serializeJson(root, printWebString);

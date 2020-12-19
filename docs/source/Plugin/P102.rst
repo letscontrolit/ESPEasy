@@ -1,0 +1,115 @@
+.. include:: ../Plugin/_plugin_substitutions_p10x.repl
+.. _P102_page:
+
+|P102_typename|
+==================================================
+
+|P102_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P102_type|
+
+Name: |P102_name|
+
+Status: |P102_status|
+
+GitHub: |P102_github|_
+
+Maintainer: |P102_maintainer|
+
+Used libraries: |P102_usedlibraries|
+
+Description
+-----------
+
+PZEM-004T V3.0 or Version 3.0 is the upgraded version to replace the old PZEM004T V1.0. 
+The old version has been sold out in most of the online store and is no longer being produced.
+
+Improvements over V1:
+
+* Higher resolution
+* More samples per second
+* Increased stability
+
+
+Specifications
+--------------
+
+Voltage
+^^^^^^^
+
+* Measuring range: 80 - 260V
+* Resolution: 0.1V
+* Measurement accuracy: 0.5%
+
+Power factor
+^^^^^^^^^^^^
+
+* Measuring range: 0.00 - 1.00
+* Resolution: 0.01
+* Measurement accuracy: 1%
+
+Frequency
+^^^^^^^^^
+
+* Measuring range: 45Hz - 65Hz
+* Resolution: 0.1Hz
+* Measurement accuracy: 0.5%
+
+Current
+^^^^^^^
+
+* Measuring range:
+
+  * 0 - 10A(PZEM-004T-10A)
+  * 0 - 100A(PZEM-004T-100A)
+
+* Starting measure current: 
+
+  * 0.01A(PZEM-004T-10A)
+  * 0.02A(PZEM-004T-100A)
+
+* Resolution: 0.001A 
+
+  * 0.001A(PZEM-004T-10A)
+  * 0.01A(PZEM-004T-100A)
+
+* Measurement accuracy: 0.5%
+
+
+Active power
+^^^^^^^^^^^^
+
+* Measuring range: 
+
+  * 0 - 2.3kW(PZEM-004T-10A)
+  * 0 - 23kW(PZEM-004T-100A)
+
+* Starting measure power: 0.4W
+* Resolution: 0.1W
+* Measurement accuracy: 0.5%
+
+
+Active Energy
+^^^^^^^^^^^^^
+
+* Measuring range: 0 - 9999.99kWh
+* Resolution: 1Wh
+* Measurement accuracy: 0.5%
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P102_events.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-04-25
