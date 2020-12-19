@@ -1220,6 +1220,18 @@ just as an example we want to publish these as custom messages with a unique IDX
 to your server IP and PORT number. If the HTTP publishing is not working,
 please refer to this [ADD_LINK] for a workaround.)
 
+Authentication to Domoticz via SendToHTTP
+-----------------------------------------
+
+It is possible to use authentication in Domoticz and use it via SendToHTTP.
+
+* MkE= is the base64 encoded username ('2A' in this example)
+* OVM= is the base64 encoded password ('9S' in this example)
+
+``SendToHTTP xx.xx.xx.xx,8080,/json.htm?username=MkE=&password=OVM&type=command&param=switchlight&idx=36&switchcmd=On``
+
+See also `Domoticz Wiki <https://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Authorization>`_
+
 One button, multiple actions using long press
 ---------------------------------------------
 

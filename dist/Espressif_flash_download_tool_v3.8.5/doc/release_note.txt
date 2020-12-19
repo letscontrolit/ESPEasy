@@ -1,0 +1,4 @@
+v3.8.5
+1. Divided into development mode and mass production mode, mass production mode can drag more
+2. Delete the RF parameter configuration interface
+3. Support ESP32-S2 chip download
