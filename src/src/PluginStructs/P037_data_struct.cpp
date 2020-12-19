@@ -283,6 +283,9 @@ bool P037_data_struct::webform_load(
 
     int8_t idx;
     int8_t filterNr = 1;
+#ifdef P037_FILTER_PER_TOPIC
+    if (_maxFilter <= 0) _maxFilter = (VARS_PER_TASK * 3);
+#endif
     for (idx = 0; idx < _maxFilter; idx += 3) {
 
       html_TR_TD();

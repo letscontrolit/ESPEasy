@@ -35,7 +35,6 @@
 # define P037_APPLY_MAPPINGS  PCONFIG(2)  // Apply mapping strings to numbers
 # define P037_APPLY_FILTERS   PCONFIG(3)  // Apply filtering on data values
 # define P037_SEND_EVENTS     PCONFIG(4)  // Send event for each received topic
-# define P037_EXTRA_LOGGING   PCONFIG(5)  // Additional logging for each topic/subjext
 
 #if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT)
 String P037_getMQTTLastTopicPart(String topic) {
@@ -450,7 +449,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
               if (!checkJson || (checkJson && key.length() > 0)) {
                 float floatPayload;
                 if (!string2float(Payload, floatPayload)) {
-                  if (!checkJson && !P037_SEND_EVENTS) { // If we want all values as events, then no error logged and don't stop here
+                  if (!checkJson && P037_SEND_EVENTS == 0) { // If we want all values as events, then no error logged and don't stop here
                     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                       log = F("IMPT : Bad Import MQTT Command ");
                       log += event->String1;
