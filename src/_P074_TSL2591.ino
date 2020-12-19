@@ -148,7 +148,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       int optionValues[1] = { TSL2591_ADDR };
-      addFormSelectorI2C(F("p074_i2c_addr"), 1, optionValues,
+      addFormSelectorI2C(F("i2c_addr"), 1, optionValues,
                          TSL2591_ADDR); // Only for display I2C address
       break;
     }
@@ -190,7 +190,7 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      // PCONFIG(0) = getFormItemInt(F("p074_i2c_addr"));
+      // PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p074_itime"));
       PCONFIG(2) = getFormItemInt(F("p074_gain"));
 

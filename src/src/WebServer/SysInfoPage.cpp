@@ -20,6 +20,7 @@
 #include "../Globals/RTC.h"
 
 #include "../Helpers/CompiletimeDefines.h"
+#include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
@@ -31,8 +32,8 @@
 #include "../Static/WebStaticData.h"
 
 #ifdef ESP32
-#include <esp_partition.h>
-#endif
+# include <esp_partition.h>
+#endif // ifdef ESP32
 
 
 #ifdef WEBSERVER_NEW_UI
@@ -41,7 +42,9 @@
 // Web Interface sysinfo page
 // ********************************************************************************
 void handle_sysinfo_json() {
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_sysinfo"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
@@ -58,11 +61,35 @@ void handle_sysinfo_json() {
   int freeMem = ESP.getFreeHeap();
   json_open(false, F("mem"));
   json_number(F("free"),    String(freeMem));
-  json_number(F("low_ram"), String(lowestRAM));
-  json_prop(F("low_ram_fn"), String(lowestRAMfunction));
+  json_number(F("low_ram"), String(
+  # ifndef BUILD_NO_RAM_TRACKER
+                lowestRAM
+  # else // ifndef BUILD_NO_RAM_TRACKER
+                0
+  # endif // ifndef BUILD_NO_RAM_TRACKER
+                ));
+  json_prop(F("low_ram_fn"),
+  # ifndef BUILD_NO_RAM_TRACKER
+            lowestRAMfunction
+  # else // ifndef BUILD_NO_RAM_TRACKER
+            0
+  # endif // ifndef BUILD_NO_RAM_TRACKER
+            );
   json_number(F("stack"),     String(getCurrentFreeStack()));
-  json_number(F("low_stack"), String(lowestFreeStack));
-  json_prop(F("low_stack_fn"), lowestFreeStackfunction);
+  json_number(F("low_stack"), String(
+  # ifndef BUILD_NO_RAM_TRACKER
+                lowestFreeStack
+  # else // ifndef BUILD_NO_RAM_TRACKER
+                0
+  # endif // ifndef BUILD_NO_RAM_TRACKER
+                ));
+  json_prop(F("low_stack_fn"),
+  # ifndef BUILD_NO_RAM_TRACKER
+            lowestFreeStackfunction
+  # else // ifndef BUILD_NO_RAM_TRACKER
+            0
+  # endif // ifndef BUILD_NO_RAM_TRACKER
+            );
   json_close();
   json_open(false, F("boot"));
   json_prop(F("last_cause"), getLastBootCauseString());
@@ -92,69 +119,51 @@ void handle_sysinfo_json() {
   }
   json_number(F("rssi"), String(WiFi.RSSI()));
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
-  json_prop(F("ip"),            formatIP(NetworkLocalIP()));
-  json_prop(F("subnet"),        formatIP(NetworkSubnetMask()));
-  json_prop(F("gw"),            formatIP(NetworkGatewayIP()));
-  json_prop(F("dns1"),          formatIP(NetworkDnsIP(0)));
-  json_prop(F("dns2"),          formatIP(NetworkDnsIP(1)));
+  json_prop(F("ip"),            getValue(LabelType::IP_ADDRESS));
+  json_prop(F("subnet"),        getValue(LabelType::IP_SUBNET));
+  json_prop(F("gw"),            getValue(LabelType::GATEWAY));
+  json_prop(F("dns1"),          getValue(LabelType::DNS_1));
+  json_prop(F("dns2"),          getValue(LabelType::DNS_2));
   json_prop(F("allowed_range"), describeAllowedIPrange());
-  json_prop(F("sta_mac"),       NetworkMacAddress());
-  json_prop(F("ap_mac"),        WifiSoftAPmacAddress());
-  json_prop(F("ssid"),          WiFi.SSID());
-  json_prop(F("bssid"),         WiFi.BSSIDstr());
-  json_number(F("channel"),     String(WiFi.channel()));
-  json_prop(F("connected"),    format_msec_duration(timeDiff(lastConnectMoment, millis())));
-  json_prop(F("ldr"),          getLastDisconnectReason());
-  json_number(F("reconnects"), String(wifi_reconnects));
+  json_prop(F("sta_mac"),       getValue(LabelType::STA_MAC));
+  json_prop(F("ap_mac"),        getValue(LabelType::AP_MAC));
+  json_prop(F("ssid"),          getValue(LabelType::SSID));
+  json_prop(F("bssid"),         getValue(LabelType::BSSID));
+  json_number(F("channel"),     getValue(LabelType::CHANNEL));
+  json_prop(F("connected"),     getValue(LabelType::CONNECTED));
+  json_prop(F("ldr"),           getValue(LabelType::LAST_DISC_REASON_STR));
+  json_number(F("reconnects"),  getValue(LabelType::NUMBER_RECONNECTS));
   json_close();
 
-#ifdef HAS_ETHERNET
+# ifdef HAS_ETHERNET
   json_open(false, F("ethernet"));
-  json_prop(F("ethwifimode"), getValue(LabelType::ETH_WIFI_MODE));
-  json_prop(F("ethconnected"), getValue(LabelType::ETH_CONNECTED);
-  json_prop(F("ethduplex"), getValue(LabelType::ETH_DUPLEX);
-  json_prop(F("ethspeed"), getValue(LabelType::ETH_SPEED);
-  json_prop(F("ethstate"), getValue(LabelType::ETH_STATE);
-  json_prop(F("ethspeedstate"), getValue(LabelType::ETH_SPEED_STATE);
-  json.close();
-#endif
+  json_prop(F("ethwifimode"),   getValue(LabelType::ETH_WIFI_MODE));
+  json_prop(F("ethconnected"),  getValue(LabelType::ETH_CONNECTED));
+  json_prop(F("ethduplex"),     getValue(LabelType::ETH_DUPLEX));
+  json_prop(F("ethspeed"),      getValue(LabelType::ETH_SPEED));
+  json_prop(F("ethstate"),      getValue(LabelType::ETH_STATE));
+  json_prop(F("ethspeedstate"), getValue(LabelType::ETH_SPEED_STATE));
+  json_close();
+# endif // ifdef HAS_ETHERNET
 
   json_open(false, F("firmware"));
-  json_prop(F("build"),       String(BUILD));
-  json_prop(F("notes"),       F(BUILD_NOTES));
-  json_prop(F("libraries"),   getSystemLibraryString());
-  json_prop(F("git_version"), F(BUILD_GIT));
-  json_prop(F("plugins"),     getPluginDescriptionString());
-  json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
-  json_number(F("md5_check"), String(CRCValues.checkPassed()));
-  json_prop(F("build_time"), get_build_time());
-  json_prop(F("filename"),   getValue(LabelType::BINARY_FILENAME));
+  json_prop(F("build"),          String(BUILD));
+  json_prop(F("notes"),          F(BUILD_NOTES));
+  json_prop(F("libraries"),      getSystemLibraryString());
+  json_prop(F("git_version"),    F(BUILD_GIT));
+  json_prop(F("plugins"),        getPluginDescriptionString());
+  json_prop(F("md5"),            String(CRCValues.compileTimeMD5[0], HEX));
+  json_number(F("md5_check"),    String(CRCValues.checkPassed()));
+  json_prop(F("build_time"),     get_build_time());
+  json_prop(F("filename"),       getValue(LabelType::BINARY_FILENAME));
   json_prop(F("build_platform"), getValue(LabelType::BUILD_PLATFORM));
-  json_prop(F("git_head"), getValue(LabelType::GIT_HEAD));
+  json_prop(F("git_head"),       getValue(LabelType::GIT_HEAD));
   json_close();
 
   json_open(false, F("esp"));
+  json_prop(F("chip_id"), getValue(LabelType::ESP_CHIP_ID));
+  json_number(F("cpu"),   getValue(LabelType::ESP_CHIP_FREQ));
 
-  # if defined(ESP8266)
-  json_prop(F("chip_id"), String(ESP.getChipId(), HEX));
-  json_number(F("cpu"), String(ESP.getCpuFreqMHz()));
-  # endif // if defined(ESP8266)
-  # if defined(ESP32)
-
-
-  uint64_t chipid  = ESP.getEfuseMac(); // The chip ID is essentially its MAC address(length: 6 bytes).
-  uint32_t ChipId1 = (uint16_t)(chipid >> 32);
-  String   espChipIdS(ChipId1, HEX);
-  espChipIdS.toUpperCase();
-
-  json_prop(F("chip_id"), espChipIdS);
-  json_prop(F("cpu"),     String(ESP.getCpuFreqMHz()));
-
-  String espChipIdS1(ChipId1, HEX);
-  espChipIdS1.toUpperCase();
-  json_prop(F("chip_id1"), espChipIdS1);
-
-  # endif // if defined(ESP32)
   # ifdef ARDUINO_BOARD
   json_prop(F("board"), ARDUINO_BOARD);
   # endif // ifdef ARDUINO_BOARD
@@ -216,7 +225,9 @@ void handle_sysinfo_json() {
 #ifdef WEBSERVER_SYSINFO
 
 void handle_sysinfo() {
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_sysinfo"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -254,9 +265,9 @@ void handle_sysinfo() {
 
   handle_sysinfo_Network();
 
-#ifdef HAS_ETHERNET
+# ifdef HAS_ETHERNET
   handle_sysinfo_Ethernet();
-#endif
+# endif // ifdef HAS_ETHERNET
 
   handle_sysinfo_WiFiSettings();
 
@@ -317,16 +328,15 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::RESET_REASON);
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
   addRowLabelValue(LabelType::SW_WD_COUNT);
-
 }
 
 void handle_sysinfo_memory() {
   addTableSeparator(F("Memory"), 2, 3);
 
-#ifdef ESP32
+# ifdef ESP32
   addRowLabelValue(LabelType::HEAP_SIZE);
   addRowLabelValue(LabelType::HEAP_MIN_FREE);
-#endif
+# endif // ifdef ESP32
 
   int freeMem = ESP.getFreeHeap();
   addRowLabel(getLabel(LabelType::FREE_MEM));
@@ -335,19 +345,19 @@ void handle_sysinfo_memory() {
     html.reserve(64);
 
     html += freeMem;
-#ifndef BUILD_NO_RAM_TRACKER
+# ifndef BUILD_NO_RAM_TRACKER
     html += " (";
     html += lowestRAM;
     html += F(" - ");
     html += lowestRAMfunction;
     html += ')';
-#endif
+# endif // ifndef BUILD_NO_RAM_TRACKER
     addHtml(html);
   }
-#if defined(CORE_POST_2_5_0) || defined(ESP32)
+# if defined(CORE_POST_2_5_0) || defined(ESP32)
   addRowLabelValue(LabelType::HEAP_MAX_FREE_BLOCK);
-#endif
-#if defined(CORE_POST_2_5_0)
+# endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
+# if defined(CORE_POST_2_5_0)
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
   addHtml("%");
 # endif // ifdef CORE_POST_2_5_0
@@ -358,54 +368,55 @@ void handle_sysinfo_memory() {
     String html;
     html.reserve(64);
     html += getCurrentFreeStack();
-#ifndef BUILD_NO_RAM_TRACKER
+# ifndef BUILD_NO_RAM_TRACKER
     html += " (";
     html += lowestFreeStack;
     html += F(" - ");
     html += lowestFreeStackfunction;
     html += ')';
-#endif
+# endif // ifndef BUILD_NO_RAM_TRACKER
     addHtml(html);
   }
 
-#ifdef ESP32
+# ifdef ESP32
+
   if (ESP.getPsramSize() > 0) {
     addRowLabelValue(LabelType::PSRAM_SIZE);
     addRowLabelValue(LabelType::PSRAM_FREE);
     addRowLabelValue(LabelType::PSRAM_MIN_FREE);
     addRowLabelValue(LabelType::PSRAM_MAX_FREE_BLOCK);
   }
-#endif
-
+# endif // ifdef ESP32
 }
 
-#ifdef HAS_ETHERNET
+# ifdef HAS_ETHERNET
 void handle_sysinfo_Ethernet() {
-    if(active_network_medium == NetworkMedium_t::Ethernet) {
-      addTableSeparator(F("Ethernet"), 2, 3);
-      addRowLabelValue(LabelType::ETH_STATE);
-      addRowLabelValue(LabelType::ETH_SPEED);
-      addRowLabelValue(LabelType::ETH_DUPLEX);
-      addRowLabelValue(LabelType::ETH_MAC);
-      addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
-      addRowLabelValue(LabelType::ETH_IP_GATEWAY);
-      addRowLabelValue(LabelType::ETH_IP_DNS);
-    }
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    addTableSeparator(F("Ethernet"), 2, 3);
+    addRowLabelValue(LabelType::ETH_STATE);
+    addRowLabelValue(LabelType::ETH_SPEED);
+    addRowLabelValue(LabelType::ETH_DUPLEX);
+    addRowLabelValue(LabelType::ETH_MAC);
+    addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
+    addRowLabelValue(LabelType::ETH_IP_GATEWAY);
+    addRowLabelValue(LabelType::ETH_IP_DNS);
+  }
 }
-#endif
+
+# endif // ifdef HAS_ETHERNET
 
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3, F("Wifi"));
 
-  #ifdef HAS_ETHERNET
+  # ifdef HAS_ETHERNET
   addRowLabelValue(LabelType::ETH_WIFI_MODE);
-  #endif
+  # endif // ifdef HAS_ETHERNET
 
 
   if (
-    #ifdef HAS_ETHERNET
+    # ifdef HAS_ETHERNET
     active_network_medium == NetworkMedium_t::WIFI &&
-    #endif
+    # endif // ifdef HAS_ETHERNET
     NetworkConnected())
   {
     addRowLabel(F("Wifi"));
@@ -550,6 +561,7 @@ void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
   uint32_t flashChipId = getFlashChipId();
+
   if (flashChipId != 0) {
     addRowLabel(getLabel(LabelType::FLASH_CHIP_ID));
 
@@ -635,9 +647,9 @@ void handle_sysinfo_Storage() {
     uint32_t maxSketchSize;
     bool     use2step;
     # if defined(ESP8266)
-    bool     otaEnabled = 
-    #endif
-      OTA_possible(maxSketchSize, use2step);
+    bool otaEnabled =
+    # endif // if defined(ESP8266)
+    OTA_possible(maxSketchSize, use2step);
     addRowLabel(getLabel(LabelType::MAX_OTA_SKETCH_SIZE));
     {
       String html;
@@ -657,7 +669,6 @@ void handle_sysinfo_Storage() {
     addRowLabel(getLabel(LabelType::OTA_2STEP));
     addHtml(boolToString(use2step));
     # endif // if defined(ESP8266)
-
   }
 
   addRowLabel(getLabel(LabelType::FS_SIZE));

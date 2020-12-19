@@ -4,8 +4,6 @@
 //#################################### Plugin 070: NeoPixel ring clock #######################################
 //#######################################################################################################
 
-//This plugin is disabled, change it to PLUGIN_BUILD_NORMAL to re-enable it.
-#ifdef PLUGIN_BUILD_DISABLED
 
 //A clock that uses a strip/ring of 60 WS2812 NeoPixel LEDs as display for a classic clock.
 //The hours are RED, the minutes are GREEN, the seconds are BLUE and the hour marks are WHITE.
@@ -111,7 +109,7 @@ struct P070_data_struct : public PluginTaskData_base {
       }
     }
     uint32_t currentColor;
-    uint8_t r_val, g_val, b_val;
+    uint8_t r_val, g_val; //, b_val;
     for (int i = 0; i < NUMBER_LEDS; i++) {	//draw the clock hands, adding the colors together
       if (i == hours) {	//hours hand is RED
         Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(brightness, 0, 0));
@@ -253,7 +251,10 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
       {
-        Clock_update();
+        P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
+        if (nullptr != P070_data) {
+          P070_data->Clock_update();
+        }
         success = true;
         break;
       }
@@ -312,9 +313,9 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
       {
         P070_data_struct* P070_data = static_cast<P070_data_struct*>(getPluginTaskData(event->TaskIndex));
         if (nullptr != P070_data) {
-          UserVar[event->BaseVarIndex] = display_enabled;
-          UserVar[event->BaseVarIndex + 1] = brightness;
-          UserVar[event->BaseVarIndex + 2] = brightness_hour_marks;
+          UserVar[event->BaseVarIndex] = P070_data->display_enabled;
+          UserVar[event->BaseVarIndex + 1] = P070_data->brightness;
+          UserVar[event->BaseVarIndex + 2] = P070_data->brightness_hour_marks;
 
           success = true;
         }
@@ -325,5 +326,4 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 }
 
 
-#endif // PLUGIN_BUILD_DISABLED
 #endif // USES_P070

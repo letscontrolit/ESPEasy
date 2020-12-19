@@ -1,9 +1,9 @@
-#include "P004_data_struct.h"
+#include "../PluginStructs/P004_data_struct.h"
 
 #ifdef USES_P004
 
 
-P004_data_struct::P004_data_struct(int8_t pin, const uint8_t addr[], uint8_t res) : _gpio(pin), _res(res)
+P004_data_struct::P004_data_struct(int8_t pin_rx, int8_t pin_tx, const uint8_t addr[], uint8_t res) : _gpio_rx(pin_rx), _gpio_tx(pin_tx), _res(res)
 {
   if ((_res < 9) || (_res > 12)) { _res = 12; }
 
@@ -23,7 +23,7 @@ void P004_data_struct::add_addr(const uint8_t addr[], uint8_t index) {
         }
       }
     }
-    _sensors[index].check_sensor(_gpio, _res);
+    _sensors[index].check_sensor(_gpio_rx, _gpio_tx, _res);
   }
 }
 
@@ -31,7 +31,7 @@ bool P004_data_struct::initiate_read() {
   _measurementStart = millis();
 
   for (byte i = 0; i < 4; ++i) {
-    if (_sensors[i].initiate_read(_gpio, _res)) {
+    if (_sensors[i].initiate_read(_gpio_rx, _gpio_tx, _res)) {
       if (!measurement_active()) {
         // Set the timer right after initiating the first sensor
 
@@ -59,7 +59,7 @@ bool P004_data_struct::collect_values() {
   bool success = false;
 
   for (byte i = 0; i < 4; ++i) {
-    if (_sensors[i].collect_value(_gpio)) {
+    if (_sensors[i].collect_value(_gpio_rx, _gpio_tx)) {
       success = true;
     }
   }

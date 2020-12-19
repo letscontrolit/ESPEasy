@@ -1,4 +1,4 @@
-#include "InternalCommands.h"
+#include "../Commands/InternalCommands.h"
 
 #include "../../ESPEasy_common.h"
 
@@ -120,22 +120,29 @@ bool checkSourceFlags(EventValueSource::Enum source, EventValueSourceGroup::Enum
   return false;
 }
 
-bool do_command_case(const String              & cmd_lc,
-                     const char                 *cmd,
-                     struct EventStruct         *event,
-                     const char                 *line,
-                     String                    & status,
+command_case_data::command_case_data(const char *cmd, struct EventStruct *event, const char *line) :
+  cmd(cmd), event(event), line(line)
+{
+  cmd_lc = cmd;
+  cmd_lc.toLowerCase();
+}
+
+
+bool do_command_case(command_case_data         & data,
                      const String              & cmd_test,
                      command_function            pFunc,
                      int                         nrArguments,
-                     EventValueSourceGroup::Enum group,
-                     bool                      & retval)
+                     EventValueSourceGroup::Enum group)
 {
-  if (!cmd_lc.equals(cmd_test)) {
+  // The data struct is re-used on each attempt to process an internal command.
+  // Re-initialize the only two members that may have been altered by a previous call.
+  data.retval = false;
+  data.status = "";
+  if (!data.cmd_lc.equals(cmd_test)) {
     return false;
   }
-  if (!checkSourceFlags(event->Source, group)) {
-    status = return_incorrect_source();
+  if (!checkSourceFlags(data.event->Source, group)) {
+    data.status = return_incorrect_source();
     return false;
   } 
   // FIXME TD-er: Do not check nr arguments from MQTT source.
@@ -143,42 +150,36 @@ bool do_command_case(const String              & cmd_lc,
   // C005 does recreate command partly from topic and published message
   // e.g. ESP_Easy/Bathroom_pir_env/GPIO/14 with data 0 or 1
   // This only allows for 2 parameters, but some commands need more arguments (default to "0")
-  const bool mustCheckNrArguments = event->Source != EventValueSource::Enum::VALUE_SOURCE_MQTT;
+  const bool mustCheckNrArguments = data.event->Source != EventValueSource::Enum::VALUE_SOURCE_MQTT;
   if (mustCheckNrArguments) {
-    if (!checkNrArguments(cmd, line, nrArguments)) {
-      status = return_incorrect_nr_arguments();
-      retval = false;
+    if (!checkNrArguments(data.cmd, data.line, nrArguments)) {
+      data.status = return_incorrect_nr_arguments();
+      data.retval = false;
       return true; // Command is handled
     }
   } 
-  status = pFunc(event, line);
-  retval = true;
+  data.status = pFunc(data.event, data.line);
+  data.retval = true;
   return true; // Command is handled
 }
 
-bool executeInternalCommand(const char *cmd, struct EventStruct *event, const char *line, String& status)
+bool executeInternalCommand(command_case_data & data)
 {
-  String cmd_lc;
-
-  cmd_lc = cmd;
-  cmd_lc.toLowerCase();
-  bool retval;
-
   // Simple macro to match command to function call.
 
   // EventValueSourceGroup::Enum::ALL
   #define COMMAND_CASE_A(S, C, NARGS) \
-  if (do_command_case(cmd_lc, cmd, event, line, status, F(S), &C, NARGS, EventValueSourceGroup::Enum::ALL, retval)) { return retval; }
+  if (do_command_case(data, F(S), &C, NARGS, EventValueSourceGroup::Enum::ALL)) { return data.retval; }
 
   // EventValueSourceGroup::Enum::RESTRICTED
   #define COMMAND_CASE_R(S, C, NARGS) \
-  if (do_command_case(cmd_lc, cmd, event, line, status, F(S), &C, NARGS, EventValueSourceGroup::Enum::RESTRICTED, retval)) { return retval; }
+  if (do_command_case(data, F(S), &C, NARGS, EventValueSourceGroup::Enum::RESTRICTED)) { return data.retval; }
 
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
 
   // FIXME TD-er: must determine nr arguments where NARGS is set to -1
 
-  switch (cmd_lc[0]) {
+  switch (data.cmd_lc[0]) {
     case 'a': {
       COMMAND_CASE_A("accessinfo", Command_AccessInfo_Ls,       0); // Network Command
       COMMAND_CASE_A("asyncevent", Command_Rules_Async_Events, -1); // Rule.h
@@ -266,7 +267,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'm': {
-      if (cmd_lc[1] == 'c') {
+      if (data.cmd_lc[1] == 'c') {
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(  "mcpgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
         COMMAND_CASE_A(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
@@ -290,7 +291,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 'p': {
-      if (cmd_lc[1] == 'c') {
+      if (data.cmd_lc[1] == 'c') {
         COMMAND_CASE_A(        "pcfgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(  "pcfgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
         COMMAND_CASE_A(   "pcflongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
@@ -310,7 +311,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_R("reset", Command_Settings_Reset, 0);                              // Settings.h
       COMMAND_CASE_A("resetflashwritecounter", Command_RTC_resetFlashWriteCounter, 0); // RTC.h
       COMMAND_CASE_A(               "restart", Command_System_Reboot,              0); // System.h
-      COMMAND_CASE_A(                 "rtttl", Command_GPIO_RTTTL,                 0); // GPIO.h
+      COMMAND_CASE_A(                 "rtttl", Command_GPIO_RTTTL,                -1); // GPIO.h
       COMMAND_CASE_A(                 "rules", Command_Rules_UseRules,             1); // Rule.h
       break;
     }
@@ -321,7 +322,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_R("sdremove", Command_SD_Remove,     1); // SDCARDS.h
     #endif // ifdef FEATURE_SD
 
-      if (cmd_lc[1] == 'e') {
+      if (data.cmd_lc[1] == 'e') {
         COMMAND_CASE_A(    "sendto", Command_UPD_SendTo,      2); // UDP.h    // FIXME TD-er: These send commands, can we determine the nr
                                                                   // of
                                                                   // arguments?
@@ -344,7 +345,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       break;
     }
     case 't': {
-      if (cmd_lc[1] == 'a') {
+      if (data.cmd_lc[1] == 'a') {
         COMMAND_CASE_R(   "taskclear", Command_Task_Clear,    1);             // Tasks.h
         COMMAND_CASE_R("taskclearall", Command_Task_ClearAll, 0);             // Tasks.h
         COMMAND_CASE_R( "taskdisable", Command_Task_Disable,  1);             // Tasks.h
@@ -353,7 +354,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
         COMMAND_CASE_A(      "taskvalueset", Command_Task_ValueSet,       3); // Tasks.h
         COMMAND_CASE_A(   "taskvaluetoggle", Command_Task_ValueToggle,    2); // Tasks.h
         COMMAND_CASE_A("taskvaluesetandrun", Command_Task_ValueSetAndRun, 3); // Tasks.h
-      } else if (cmd_lc[1] == 'i') {
+      } else if (data.cmd_lc[1] == 'i') {
         COMMAND_CASE_A( "timerpause", Command_Timer_Pause,  1);               // Timers.h
         COMMAND_CASE_A("timerresume", Command_Timer_Resume, 1);               // Timers.h
         COMMAND_CASE_A(   "timerset", Command_Timer_Set,    2);               // Timers.h
@@ -375,7 +376,7 @@ bool executeInternalCommand(const char *cmd, struct EventStruct *event, const ch
       COMMAND_CASE_R("wdconfig", Command_WD_Config, 3);               // WD.h
       COMMAND_CASE_R(  "wdread", Command_WD_Read,   2);               // WD.h
 
-      if (cmd_lc[1] == 'i') {
+      if (data.cmd_lc[1] == 'i') {
         COMMAND_CASE_R(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
         COMMAND_CASE_A(   "wificonnect", Command_Wifi_Connect,    0); // WiFi.h
         COMMAND_CASE_A("wifidisconnect", Command_Wifi_Disconnect, 0); // WiFi.h
@@ -450,7 +451,9 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
                     bool                   tryInternal,
                     bool                   tryRemoteConfig)
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ExecuteCommand"));
+  #endif
   String cmd;
 
   if (!GetArgv(Line, cmd, 1)) {
@@ -511,12 +514,12 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
 
 
   if (tryInternal) {
-    String status;
-    bool   handled = executeInternalCommand(cmd.c_str(), &TempEvent, action.c_str(), status);
+    command_case_data data(cmd.c_str(), &TempEvent, action.c_str());
+    bool   handled = executeInternalCommand(data);
 
-    if (status.length() > 0) {
+    if (data.status.length() > 0) {
       delay(0);
-      SendStatus(source, status);
+      SendStatus(source, data.status);
       delay(0);
     }
 
@@ -530,7 +533,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     // alter the string.
     String tmpAction(action);
     bool   handled = PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction);
-
+    
+    #ifndef BUILD_NO_DEBUG
     if (!tmpAction.equals(action)) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = F("PLUGIN_WRITE altered the string: ");
@@ -540,6 +544,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
         addLog(LOG_LEVEL_ERROR, log);
       }
     }
+    #endif
 
     if (handled) {
       SendStatus(source, return_command_success());

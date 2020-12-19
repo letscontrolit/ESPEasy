@@ -21,7 +21,9 @@ void addSysVar_enum_html(SystemVariables::Enum enumval) {
 
 
 void handle_sysvars() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_sysvars"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startStream();
@@ -128,7 +130,7 @@ void handle_sysvars() {
   for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
     addSysVar_html("%v" + toString(i + 1, 0) + '%');
   }
-
+#ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   addTableSeparator(F("Special Characters"), 3, 2);
   addTableSeparator(F("Degree"),             3, 3);
   addSysVar_html(F("{D}"));
@@ -183,7 +185,7 @@ void handle_sysvars() {
   addFormSeparator(3);
   addSysVar_html(F("{..}"));
   addSysVar_html(F("&divide;"));
-
+#endif
   addTableSeparator(F("Standard Conversions"), 3, 2);
 
   addSysVar_html(F("Wind Dir.:    %c_w_dir%(123.4)"));

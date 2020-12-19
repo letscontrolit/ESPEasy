@@ -47,7 +47,9 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
  \*********************************************************************************************/
 void ArduinoOTAInit()
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ArduinoOTAInit"));
+  #endif
 
   ArduinoOTA.setPort(ARDUINO_OTA_PORT);
   ArduinoOTA.setHostname(Settings.getHostname().c_str());

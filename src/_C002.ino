@@ -12,6 +12,8 @@
 #define CPLUGIN_NAME_002       "Domoticz MQTT"
 
 #include "src/Commands/InternalCommands.h"
+#include "src/Commands/GPIO.h"
+#include "src/ESPEasyCore/ESPEasyGPIO.h"
 #include "src/ESPEasyCore/ESPEasyRules.h"
 #include "src/Globals/Settings.h"
 #include "src/Helpers/PeriodicalActions.h"
@@ -105,6 +107,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
             if (Settings.TaskDeviceEnabled[x] && (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
             {
               String action;
+              bool mustSendEvent = false;
 
               switch (Settings.TaskDeviceNumber[x]) {
                 case 1: // temp solution, if input switch, update state
@@ -121,10 +124,8 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
 
                   if (strcasecmp_P(switchtype, PSTR("dimmer")) == 0)
                   {
+                    mustSendEvent = true;
                     int pwmValue = UserVar[baseVar];
-                    action  = F("pwm,");
-                    action += Settings.TaskDevicePin1[x];
-                    action += ',';
 
                     switch ((int)nvalue)
                     {
@@ -138,13 +139,21 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                         UserVar[baseVar] = pwmValue;
                         break;
                     }
-                    action += pwmValue;
+                    if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
+                      action  = F("pwm,");
+                      action += Settings.TaskDevicePin1[x];
+                      action += ',';
+                      action += pwmValue;
+                    }
                   } else {
+                    mustSendEvent = true;
                     UserVar[baseVar] = nvalue;
-                    action           = F("gpio,");
-                    action          += Settings.TaskDevicePin1[x];
-                    action          += ',';
-                    action          += static_cast<int>(nvalue);
+                    if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
+                      action  = F("gpio,");
+                      action += Settings.TaskDevicePin1[x];
+                      action += ',';
+                      action += static_cast<int>(nvalue);
+                    }
                   }
                   break;
                 }
@@ -161,10 +170,14 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                   break;
               }
 
-              if (action.length() > 0) {
+              const bool validCommand = action.length() > 0;
+              if (validCommand) {
+                mustSendEvent = true;
                 // Try plugin and internal
                 ExecuteCommand(x, EventValueSource::Enum::VALUE_SOURCE_MQTT, action.c_str(), true, true, false);
+              }
 
+              if (mustSendEvent) {
                 // trigger rulesprocessing
                 if (Settings.UseRules) {
                   struct EventStruct TempEvent(x);
@@ -184,57 +197,59 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
     {
       if (event->idx != 0)
       {
-        DynamicJsonDocument root(200);
-        root[F("idx")]  = event->idx;
-        root[F("RSSI")] = mapRSSItoDomoticz();
-          #if FEATURE_ADC_VCC
-        root[F("Battery")] = mapVccToDomoticz();
-          #endif // if FEATURE_ADC_VCC
-
-        const Sensor_VType sensorType = event->getSensorType();
-
-        switch (sensorType)
-        {
-          case Sensor_VType::SENSOR_TYPE_SWITCH:
-            root[F("command")] = String(F("switchlight"));
-
-            if (UserVar[event->BaseVarIndex] == 0) {
-              root[F("switchcmd")] = String(F("Off"));
-            }
-            else {
-              root[F("switchcmd")] = String(F("On"));
-            }
-            break;
-          case Sensor_VType::SENSOR_TYPE_DIMMER:
-            root[F("command")] = String(F("switchlight"));
-
-            if (UserVar[event->BaseVarIndex] == 0) {
-              root[F("switchcmd")] = String(F("Off"));
-            }
-            else {
-              root[F("Set%20Level")] = UserVar[event->BaseVarIndex];
-            }
-            break;
-
-          case Sensor_VType::SENSOR_TYPE_SINGLE:
-          case Sensor_VType::SENSOR_TYPE_LONG:
-          case Sensor_VType::SENSOR_TYPE_DUAL:
-          case Sensor_VType::SENSOR_TYPE_TRIPLE:
-          case Sensor_VType::SENSOR_TYPE_QUAD:
-          case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
-          case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
-          case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
-          case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
-          case Sensor_VType::SENSOR_TYPE_WIND:
-          case Sensor_VType::SENSOR_TYPE_STRING:
-          default:
-            root[F("nvalue")] = 0;
-            root[F("svalue")] = formatDomoticzSensorType(event);
-            break;
-        }
-
         String json;
-        serializeJson(root, json);
+        {
+          DynamicJsonDocument root(200);
+          root[F("idx")]  = event->idx;
+          root[F("RSSI")] = mapRSSItoDomoticz();
+            #if FEATURE_ADC_VCC
+          root[F("Battery")] = mapVccToDomoticz();
+            #endif // if FEATURE_ADC_VCC
+
+          const Sensor_VType sensorType = event->getSensorType();
+
+          switch (sensorType)
+          {
+            case Sensor_VType::SENSOR_TYPE_SWITCH:
+              root[F("command")] = String(F("switchlight"));
+
+              if (UserVar[event->BaseVarIndex] == 0) {
+                root[F("switchcmd")] = String(F("Off"));
+              }
+              else {
+                root[F("switchcmd")] = String(F("On"));
+              }
+              break;
+            case Sensor_VType::SENSOR_TYPE_DIMMER:
+              root[F("command")] = String(F("switchlight"));
+
+              if (UserVar[event->BaseVarIndex] == 0) {
+                root[F("switchcmd")] = String(F("Off"));
+              }
+              else {
+                root[F("Set%20Level")] = UserVar[event->BaseVarIndex];
+              }
+              break;
+
+            case Sensor_VType::SENSOR_TYPE_SINGLE:
+            case Sensor_VType::SENSOR_TYPE_LONG:
+            case Sensor_VType::SENSOR_TYPE_DUAL:
+            case Sensor_VType::SENSOR_TYPE_TRIPLE:
+            case Sensor_VType::SENSOR_TYPE_QUAD:
+            case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
+            case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
+            case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
+            case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
+            case Sensor_VType::SENSOR_TYPE_WIND:
+            case Sensor_VType::SENSOR_TYPE_STRING:
+            default:
+              root[F("nvalue")] = 0;
+              root[F("svalue")] = formatDomoticzSensorType(event);
+              break;
+          }
+
+          serializeJson(root, json);
+        }
 #ifndef BUILD_NO_DEBUG
         String log = F("MQTT : ");
         log += json;

@@ -28,8 +28,9 @@
 void ResetFactory()
 {
   const GpioFactorySettingsStruct gpio_settings(ResetFactoryDefaultPreference.getDeviceModel());
-
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ResetFactory"));
+  #endif
 
   // Direct Serial is allowed here, since this is only an emergency task.
   serialPrint(F("RESET: Resetting factory defaults... using "));
@@ -75,19 +76,13 @@ void ResetFactory()
 
 
   // pad files with extra zeros for future extensions
-  String fname;
-
-  fname = FILE_CONFIG;
-  InitFile(fname.c_str(), CONFIG_FILE_SIZE);
-
-  fname = FILE_SECURITY;
-  InitFile(fname.c_str(), 4096);
-
+  InitFile(SettingsType::SettingsFileEnum::FILE_CONFIG_type);
+  InitFile(SettingsType::SettingsFileEnum::FILE_SECURITY_type);
   #ifdef USES_NOTIFIER
-  fname = FILE_NOTIFICATION;
-  InitFile(fname.c_str(), 4096);
-  #endif // ifdef USES_NOTIFIER
-  fname = FILE_RULES;
+  InitFile(SettingsType::SettingsFileEnum::FILE_NOTIFICATION_type);
+  #endif
+
+  String fname = F(FILE_RULES);
   InitFile(fname.c_str(), 0);
 
   Settings.clearMisc();
@@ -255,9 +250,10 @@ void ResetFactory()
 #endif // if DEFAULT_CONTROLLER
 
   SaveSettings();
-
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ResetFactory2"));
-  serialPrintln(F("RESET: Succesful, rebooting. (you might need to press the reset button if you've justed flashed the firmware)"));
+  #endif
+  serialPrintln(F("RESET: Successful, rebooting. (you might need to press the reset button if you've just flashed the firmware)"));
 
   // NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);

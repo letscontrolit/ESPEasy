@@ -1,4 +1,4 @@
-#include "P028_data_struct.h"
+#include "../PluginStructs/P028_data_struct.h"
 
 #ifdef USES_P028
 
