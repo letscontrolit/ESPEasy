@@ -66,6 +66,9 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_CONTROLLERS
         #define WEBSERVER_CONTROLLERS
     #endif
+    #ifndef WEBSERVER_CUSTOM
+        #define WEBSERVER_CUSTOM
+    #endif
     #ifndef WEBSERVER_DEVICES
         #define WEBSERVER_DEVICES
     #endif
@@ -332,6 +335,10 @@ To create/register a plugin, you have to :
         #ifdef WEBSERVER_WIFI_SCANNER
             #undef WEBSERVER_WIFI_SCANNER
         #endif
+        #ifdef WEBSERVER_CUSTOM
+            #undef WEBSERVER_CUSTOM
+        #endif
+
     #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
 
     #ifndef LIMIT_BUILD_SIZE
@@ -882,6 +889,8 @@ To create/register a plugin, you have to :
     #define USES_P103   // Atlas Scientific EZO Ph sensor
     #define USES_P104   // Atlas Scientific EC EZO
     #define USES_P105   // Atlas Scientific EZO ORP
+    #define USES_P106   // BME680
+    #define USES_P107   // SI1145 UV index
 #endif
 
 
