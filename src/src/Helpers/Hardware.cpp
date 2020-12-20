@@ -533,7 +533,10 @@ String getDeviceModelBrandString(DeviceModel model) {
     case DeviceModel_ShellyPLUG_S:   return F("Shelly");
     case DeviceMode_Olimex_ESP32_PoE:
     case DeviceMode_Olimex_ESP32_EVB:
-    case DeviceMode_Olimex_ESP32_GATEWAY:  return F("Olimex");
+    case DeviceMode_Olimex_ESP32_GATEWAY:  
+    #ifdef ESP32
+      return F("Olimex");
+    #endif
 
     case DeviceModel_default:
     case DeviceModel_MAX:      break;
@@ -561,9 +564,15 @@ String getDeviceModelString(DeviceModel model) {
     case DeviceModel_Sonoff_POWr2:   result      += F(" POW-r2");  break;
     case DeviceModel_Shelly1:        result      += '1';           break;
     case DeviceModel_ShellyPLUG_S:   result      += F(" PLUG S");  break;
+    #ifdef ESP32
     case DeviceMode_Olimex_ESP32_PoE: result     += F(" ESP32-PoE"); break;
     case DeviceMode_Olimex_ESP32_EVB: result     += F(" ESP32-EVB"); break;
     case DeviceMode_Olimex_ESP32_GATEWAY: result += F(" ESP32-GATEWAY"); break;
+    #else
+    case DeviceMode_Olimex_ESP32_PoE:
+    case DeviceMode_Olimex_ESP32_EVB:
+    case DeviceMode_Olimex_ESP32_GATEWAY:
+    #endif
 
     case DeviceModel_default:
     case DeviceModel_MAX:            result += F("default");  break;
