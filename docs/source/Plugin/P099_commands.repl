@@ -1,0 +1,59 @@
+.. csv-table::
+   :header: "Command", "Extra information"
+   :widths: 20, 30
+
+   "
+   ``touch,rot,<rotation>``
+
+   Set the rotation to 0, 90, 180 or 270 degrees. The rotation angle should match with the display it is mounted on.
+
+   Values:
+
+   ``0       180 degrees``
+
+   ``1       270 degrees``
+
+   ``2       0 degrees (Normal)``
+
+   ``3       90 degrees``
+
+   (NB: I only have 1 display with a touchscreen mounted, and it is possible that mine is mounted 180 degrees rotated. It may be needed later to add a setting for this, we'll see.)
+   ","
+   Examples:
+
+   ``touch,rot,1``           Rotate the device to 270 degrees.
+ 
+   "
+   "
+   ``touch,flip,<0|1>``
+
+   Flip the rotation setting by 0 (default, value 0) or 180 degrees (numeric value > 0)
+
+   ","
+   Examples:
+
+   ``touch,flip,1``           Flip the touchscreen rotation by 180 degrees.
+   "
+   "
+   ``touch,enable,<objectname>``
+
+   Enable a disabled touchobject by name.
+
+   ","
+   Examples:
+
+   ``touch,enable,sun``       Enable all touchobjects with the name 'sun'.
+
+   "
+   "
+   ``touch,disable,<objectname>``
+
+   Disable an enabled touchobject by name.
+
+   ","
+   Examples:
+
+   ``touch,disable,sun``       Disable all touchobjects with the name 'sun'.
+
+   "
+ 

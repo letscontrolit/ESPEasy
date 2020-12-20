@@ -1,0 +1,44 @@
+.. include:: ../Plugin/_plugin_substitutions_p10x.repl
+.. _P105_page:
+
+|P105_typename|
+==================================================
+
+|P105_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P105_type|
+
+Name: |P105_name|
+
+Status: |P105_status|
+
+GitHub: |P105_github|_
+
+Maintainer: |P105_maintainer|
+
+Used libraries: |P105_usedlibraries|
+
+Datasheet: |P105_datasheet|
+
+Description
+-----------
+
+
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P105_events.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-04-25
