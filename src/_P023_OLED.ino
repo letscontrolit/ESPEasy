@@ -59,7 +59,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
       /*String options[2] = { F("3C"), F("3D") };*/
       int optionValues[2] = { 0x3C, 0x3D };
-      addFormSelectorI2C(F("p023_adr"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       break;
     }
 
@@ -104,7 +104,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p023_adr"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p023_rotate"));
       PCONFIG(2) = getFormItemInt(F("plugin_23_timer"));
       PCONFIG(3) = getFormItemInt(F("p023_size"));

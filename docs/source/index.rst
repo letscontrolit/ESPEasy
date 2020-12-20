@@ -33,6 +33,7 @@ Welcome to ESP Easy's documentation!
    Participate/ArduinoIDE.rst
    Participate/Documentation.rst
    Participate/ProjectStructure.rst
+   Reference/Flashing.rst
    Reference/Safety.rst
    Reference/Command.rst
    Reference/Events.rst

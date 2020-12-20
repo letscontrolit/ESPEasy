@@ -83,7 +83,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         // options[x] = F("0x");
         // options[x] += String(optionValues[x], HEX);
       }
-      addFormSelectorI2C(F("p012_adr"), 16, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 16, optionValues, choice);
       break;
     }
 
@@ -124,7 +124,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P012_I2C_ADDR = getFormItemInt(F("p012_adr"));
+      P012_I2C_ADDR = getFormItemInt(F("i2c_addr"));
       P012_SIZE     = getFormItemInt(F("p012_size"));
       P012_TIMER    = getFormItemInt(F("p012_timer"));
       P012_MODE     = getFormItemInt(F("p012_mode"));

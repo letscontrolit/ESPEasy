@@ -75,10 +75,10 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
       addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
 
-      addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), Settings.TaskDevicePluginConfig[event->TaskIndex][0]);
+      addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), PCONFIG(0));
 
 
-      byte   choice2 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+      byte   choice2 = PCONFIG(1);
       String options2[3];
       options2[0] = F("None");
       options2[1] = F("Generic");
@@ -96,8 +96,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       ExtraTaskSettings.TaskDevicePluginConfigLong[2]      = getFormItemInt(F("p020_data"));
       ExtraTaskSettings.TaskDevicePluginConfigLong[3]      = getFormItemInt(F("p020_parity"));
       ExtraTaskSettings.TaskDevicePluginConfigLong[4]      = getFormItemInt(F("p020_stop"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("p020_rxwait"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("p020_events"));
+      PCONFIG(0) = getFormItemInt(F("p020_rxwait"));
+      PCONFIG(1) = getFormItemInt(F("p020_events"));
       success                                              = true;
       break;
     }
@@ -147,7 +147,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
         Plugin_020_init = true;
       }
-      Plugin_020_SerialProcessing = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+      Plugin_020_SerialProcessing = PCONFIG(1);
       success                     = true;
       break;
     }
@@ -230,7 +230,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       if (Plugin_020_init)
       {
         uint8_t serial_buf[P020_BUFFER_SIZE];
-        int     RXWait = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+        int     RXWait = PCONFIG(0);
 
         if (RXWait == 0) {
           RXWait = 1;
