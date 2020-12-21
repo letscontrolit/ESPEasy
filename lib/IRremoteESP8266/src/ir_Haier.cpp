@@ -33,8 +33,14 @@ using irutils::addModeToString;
 using irutils::addFanToString;
 using irutils::addTempToString;
 using irutils::minsToString;
-using irutils::setBit;
-using irutils::setBits;
+
+#define GETTIME(x) _.x##Hours * 60 + _.x##Mins
+#define SETTIME(x, n) do { \
+  uint16_t mins = n;\
+  if (n > kHaierAcMaxTime) mins = kHaierAcMaxTime;\
+  _.x##Hours = mins / 60;\
+  _.x##Mins = mins % 60;\
+} while (0)
 
 #if (SEND_HAIER_AC || SEND_HAIER_AC_YRW02)
 /// Send a Haier A/C formatted message. (HSU07-HEA03 remote)
@@ -92,7 +98,7 @@ void IRHaierAC::send(const uint16_t repeat) {
 
 /// Calculate and set the checksum values for the internal state.
 void IRHaierAC::checksum(void) {
-  remote_state[8] = sumBytes(remote_state, kHaierACStateLength - 1);
+  _.Sum = sumBytes(_.remote_state, kHaierACStateLength - 1);
 }
 
 /// Verify the checksum is valid for a given state.
@@ -106,29 +112,26 @@ bool IRHaierAC::validChecksum(uint8_t state[], const uint16_t length) {
 
 /// Reset the internal state to a fixed known good state.
 void IRHaierAC::stateReset(void) {
-  for (uint8_t i = 1; i < kHaierACStateLength; i++) remote_state[i] = 0x0;
-  remote_state[0] = kHaierAcPrefix;
-  remote_state[2] = 0x20;
-  remote_state[4] = 0x0C;
-  remote_state[5] = 0xC0;
-
-  setTemp(kHaierAcDefTemp);
-  setFan(kHaierAcFanAuto);
-  setMode(kHaierAcAuto);
-  setCommand(kHaierAcCmdOn);
+  std::memset(_.remote_state, 0, sizeof _.remote_state);
+  _.Prefix = kHaierAcPrefix;
+  _.unknown = 1;  // const value
+  _.OffHours = 12;  // default initial state
+  _.Temp = kHaierAcDefTemp - kHaierAcMinTemp;
+  _.Fan = 3;  // kHaierAcFanLow;
+  _.Command = kHaierAcCmdOn;
 }
 
 /// Get a PTR to the internal state/code for this protocol.
 /// @return PTR to a code for this protocol based on the current internal state.
 uint8_t* IRHaierAC::getRaw(void) {
   checksum();
-  return remote_state;
+  return _.remote_state;
 }
 
 /// Set the internal state from a valid code for this protocol.
 /// @param[in] new_code A valid code for this protocol.
 void IRHaierAC::setRaw(const uint8_t new_code[]) {
-  memcpy(remote_state, new_code, kHaierACStateLength);
+  std::memcpy(_.remote_state, new_code, kHaierACStateLength);
 }
 
 /// Set the Command/Button setting of the A/C.
@@ -146,14 +149,14 @@ void IRHaierAC::setCommand(const uint8_t command) {
     case kHaierAcCmdTimerCancel:
     case kHaierAcCmdHealth:
     case kHaierAcCmdSwing:
-      setBits(&remote_state[1], kLowNibble, kNibbleSize, command);
+      _.Command = command;
   }
 }
 
 /// Get the Command/Button setting of the A/C.
 /// @return The value of the command/button that was pressed.
-uint8_t IRHaierAC::getCommand(void) {
-  return GETBITS8(remote_state[1], kLowNibble, kNibbleSize);
+uint8_t IRHaierAC::getCommand(void) const {
+  return _.Command;
 }
 
 /// Set the speed of the fan.
@@ -162,22 +165,22 @@ void IRHaierAC::setFan(const uint8_t speed) {
   uint8_t new_speed = kHaierAcFanAuto;
   switch (speed) {
     case kHaierAcFanLow:  new_speed = 3; break;
-    case kHaierAcFanMed:  new_speed = 1; break;
-    case kHaierAcFanHigh: new_speed = 2; break;
+    case kHaierAcFanMed:  new_speed = 2; break;
+    case kHaierAcFanHigh: new_speed = 1; break;
     // Default to auto for anything else.
     default:              new_speed = kHaierAcFanAuto;
   }
 
-  if (speed != getFan()) setCommand(kHaierAcCmdFan);
-  setBits(&remote_state[5], kLowNibble, kHaierAcSwingSize, new_speed);
+  if (speed != getFan()) _.Command = kHaierAcCmdFan;
+  _.Fan = new_speed;
 }
 
 /// Get the current fan speed setting.
 /// @return The current fan speed.
-uint8_t IRHaierAC::getFan(void) {
-  switch (GETBITS8(remote_state[5], kLowNibble, kHaierAcSwingSize)) {
-    case 1:  return kHaierAcFanMed;
-    case 2:  return kHaierAcFanHigh;
+uint8_t IRHaierAC::getFan(void) const {
+  switch (_.Fan) {
+    case 1:  return kHaierAcFanHigh;
+    case 2:  return kHaierAcFanMed;
     case 3:  return kHaierAcFanLow;
     default: return kHaierAcFanAuto;
   }
@@ -185,18 +188,18 @@ uint8_t IRHaierAC::getFan(void) {
 
 /// Set the operating mode of the A/C.
 /// @param[in] mode The desired operating mode.
-void IRHaierAC::setMode(uint8_t mode) {
+void IRHaierAC::setMode(const uint8_t mode) {
   uint8_t new_mode = mode;
-  setCommand(kHaierAcCmdMode);
+  _.Command = kHaierAcCmdMode;
   // If out of range, default to auto mode.
   if (mode > kHaierAcFan) new_mode = kHaierAcAuto;
-  setBits(&remote_state[6], kHaierAcModeOffset, kModeBitsSize, new_mode);
+  _.Mode = new_mode;
 }
 
 /// Get the operating mode setting of the A/C.
 /// @return The current operating mode setting.
-uint8_t IRHaierAC::getMode(void) {
-  return GETBITS8(remote_state[6], kHaierAcModeOffset, kModeBitsSize);
+uint8_t IRHaierAC::getMode(void) const {
+  return _.Mode;
 }
 
 /// Set the temperature.
@@ -211,137 +214,123 @@ void IRHaierAC::setTemp(const uint8_t degrees) {
   uint8_t old_temp = getTemp();
   if (old_temp == temp) return;
   if (old_temp > temp)
-    setCommand(kHaierAcCmdTempDown);
+    _.Command = kHaierAcCmdTempDown;
   else
-    setCommand(kHaierAcCmdTempUp);
-  setBits(&remote_state[1], kHighNibble, kNibbleSize, temp - kHaierAcMinTemp);
+    _.Command = kHaierAcCmdTempUp;
+  _.Temp = temp - kHaierAcMinTemp;
 }
 
 /// Get the current temperature setting.
 /// @return The current setting for temp. in degrees celsius.
-uint8_t IRHaierAC::getTemp(void) {
-  return GETBITS8(remote_state[1], kHighNibble, kNibbleSize) + kHaierAcMinTemp;
+uint8_t IRHaierAC::getTemp(void) const {
+  return _.Temp + kHaierAcMinTemp;
 }
 
 /// Set the Health (filter) setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRHaierAC::setHealth(const bool on) {
-  setCommand(kHaierAcCmdHealth);
-  setBit(&remote_state[4], kHaierAcHealthBitOffset, on);
+  _.Command = kHaierAcCmdHealth;
+  _.Health = on;
 }
 
 /// Get the Health (filter) setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRHaierAC::getHealth(void) {
-  return GETBIT8(remote_state[4], kHaierAcHealthBitOffset);
+bool IRHaierAC::getHealth(void) const {
+  return _.Health;
 }
 
 /// Set the Sleep setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRHaierAC::setSleep(const bool on) {
-  setCommand(kHaierAcCmdSleep);
-  setBit(&remote_state[7], kHaierAcSleepBitOffset, on);
+  _.Command = kHaierAcCmdSleep;
+  _.Sleep = on;
 }
 
 /// Get the Sleep setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRHaierAC::getSleep(void) {
-  return GETBIT8(remote_state[7], kHaierAcSleepBitOffset);
-}
-
-/// Get the Time value at the given pointer.
-/// @param[in] ptr A Ptr to a location in the internal state to get the time.
-uint16_t IRHaierAC::getTime(const uint8_t ptr[]) {
-  return GETBITS8(ptr[0], kHaierAcTimeOffset, kHaierAcHoursSize) * 60 +
-         GETBITS8(ptr[1], kHaierAcTimeOffset, kHaierAcMinsSize);
+bool IRHaierAC::getSleep(void) const {
+  return _.Sleep;
 }
 
 /// Get the On Timer value/setting of the A/C.
 /// @return Nr of minutes the timer is set to. -1 is Off/not set etc.
-int16_t IRHaierAC::getOnTimer(void) {
+int16_t IRHaierAC::getOnTimer(void) const {
   // Check if the timer is turned on.
-  if (GETBIT8(remote_state[3], kHaierAcOnTimerOffset))
-    return getTime(remote_state + 6);
+  if (_.OnTimer)
+    return GETTIME(On);
   else
     return -1;
 }
 
 /// Get the Off Timer value/setting of the A/C.
 /// @return Nr of minutes the timer is set to. -1 is Off/not set etc.
-int16_t IRHaierAC::getOffTimer(void) {
+int16_t IRHaierAC::getOffTimer(void) const {
   // Check if the timer is turned on.
-  if (GETBIT8(remote_state[3], kHaierAcOffTimerOffset))
-    return getTime(remote_state + 4);
+  if (_.OffTimer)
+    return GETTIME(Off);
   else
     return -1;
 }
 
 /// Get the clock value of the A/C.
 /// @return The clock time, in Nr of minutes past midnight.
-uint16_t IRHaierAC::getCurrTime(void) { return getTime(remote_state + 2); }
-
-/// Set the Time value at the given pointer.
-/// @param[out] ptr A Ptr to a location in the internal state to set the time.
-/// @param[in] nr_mins The time expressed in total number of minutes.
-void IRHaierAC::setTime(uint8_t ptr[], const uint16_t nr_mins) {
-  uint16_t mins = nr_mins;
-  if (nr_mins > kHaierAcMaxTime) mins = kHaierAcMaxTime;
-  setBits(ptr, kHaierAcTimeOffset, kHaierAcHoursSize, mins / 60);  // Hours
-  setBits(ptr + 1, kHaierAcTimeOffset, kHaierAcMinsSize, mins % 60);  // Minutes
-}
+uint16_t IRHaierAC::getCurrTime(void) const { return GETTIME(Curr); }
 
 /// Set & enable the On Timer.
 /// @param[in] nr_mins The time expressed in total number of minutes.
 void IRHaierAC::setOnTimer(const uint16_t nr_mins) {
-  setCommand(kHaierAcCmdTimerSet);
-  setBit(&remote_state[3], kHaierAcOnTimerOffset);
-  setTime(remote_state + 6, nr_mins);
+  _.Command = kHaierAcCmdTimerSet;
+  _.OnTimer = 1;
+
+  SETTIME(On, nr_mins);
 }
 
 /// Set & enable the Off Timer.
 /// @param[in] nr_mins The time expressed in total number of minutes.
 void IRHaierAC::setOffTimer(const uint16_t nr_mins) {
-  setCommand(kHaierAcCmdTimerSet);
-  setBit(&remote_state[3], kHaierAcOffTimerOffset);
-  setTime(remote_state + 4, nr_mins);
+  _.Command = kHaierAcCmdTimerSet;
+  _.OffTimer = 1;
+
+  SETTIME(Off, nr_mins);
 }
 
 /// Cancel/disable the On & Off timers.
 void IRHaierAC::cancelTimers(void) {
-  setCommand(kHaierAcCmdTimerCancel);
-  setBits(&remote_state[3], kHaierAcOffTimerOffset, 2, 0);
+  _.Command = kHaierAcCmdTimerCancel;
+  _.OffTimer = 0;
+  _.OnTimer = 0;
 }
 
 /// Set the clock value for the A/C.
 /// @param[in] nr_mins The clock time, in Nr of minutes past midnight.
 void IRHaierAC::setCurrTime(const uint16_t nr_mins) {
-  setTime(remote_state + 2, nr_mins);
+  SETTIME(Curr, nr_mins);
 }
 
 /// Get the Vertical Swing position setting of the A/C.
 /// @return The native swing mode.
-uint8_t IRHaierAC::getSwing(void) {
-  return GETBITS8(remote_state[2], kHaierAcSwingOffset, kHaierAcSwingSize);
+uint8_t IRHaierAC::getSwing(void) const {
+  return _.Swing;
 }
 
 /// Set the Vertical Swing mode of the A/C.
-/// @param[in] cmd The mode to set the vanes to.
-void IRHaierAC::setSwing(const uint8_t cmd) {
-  if (cmd == getSwing()) return;  // Nothing to do.
-  switch (cmd) {
+/// @param[in] state The mode to set the vanes to.
+void IRHaierAC::setSwing(const uint8_t state) {
+  if (state == _.Swing) return;  // Nothing to do.
+  switch (state) {
     case kHaierAcSwingOff:
     case kHaierAcSwingUp:
     case kHaierAcSwingDown:
     case kHaierAcSwingChg:
-      setCommand(kHaierAcCmdSwing);
-      setBits(&remote_state[2], kHaierAcSwingOffset, kHaierAcSwingSize, cmd);
+      _.Command = kHaierAcCmdSwing;
+      _.Swing = state;
       break;
   }
 }
 
 /// Convert a stdAc::opmode_t enum into its native mode.
 /// @param[in] mode The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 uint8_t IRHaierAC::convertMode(const stdAc::opmode_t mode) {
   switch (mode) {
     case stdAc::opmode_t::kCool: return kHaierAcCool;
@@ -354,7 +343,7 @@ uint8_t IRHaierAC::convertMode(const stdAc::opmode_t mode) {
 
 /// Convert a stdAc::fanspeed_t enum into it's native speed.
 /// @param[in] speed The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 uint8_t IRHaierAC::convertFan(const stdAc::fanspeed_t speed) {
   switch (speed) {
     case stdAc::fanspeed_t::kMin:
@@ -368,7 +357,7 @@ uint8_t IRHaierAC::convertFan(const stdAc::fanspeed_t speed) {
 
 /// Convert a stdAc::swingv_t enum into it's native setting.
 /// @param[in] position The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 uint8_t IRHaierAC::convertSwingV(const stdAc::swingv_t position) {
   switch (position) {
     case stdAc::swingv_t::kHighest:
@@ -381,9 +370,9 @@ uint8_t IRHaierAC::convertSwingV(const stdAc::swingv_t position) {
   }
 }
 
-/// Convert a native mode into its stdAc equivilant.
+/// Convert a native mode into its stdAc equivalent.
 /// @param[in] mode The native setting to be converted.
-/// @return The stdAc equivilant of the native setting.
+/// @return The stdAc equivalent of the native setting.
 stdAc::opmode_t IRHaierAC::toCommonMode(const uint8_t mode) {
   switch (mode) {
     case kHaierAcCool: return stdAc::opmode_t::kCool;
@@ -394,9 +383,9 @@ stdAc::opmode_t IRHaierAC::toCommonMode(const uint8_t mode) {
   }
 }
 
-/// Convert a native fan speed into its stdAc equivilant.
+/// Convert a native fan speed into its stdAc equivalent.
 /// @param[in] speed The native setting to be converted.
-/// @return The stdAc equivilant of the native setting.
+/// @return The stdAc equivalent of the native setting.
 stdAc::fanspeed_t IRHaierAC::toCommonFanSpeed(const uint8_t speed) {
   switch (speed) {
     case kHaierAcFanHigh: return stdAc::fanspeed_t::kMax;
@@ -408,7 +397,7 @@ stdAc::fanspeed_t IRHaierAC::toCommonFanSpeed(const uint8_t speed) {
 
 /// Convert a stdAc::swingv_t enum into it's native setting.
 /// @param[in] pos The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 stdAc::swingv_t IRHaierAC::toCommonSwingV(const uint8_t pos) {
   switch (pos) {
     case kHaierAcSwingUp:   return stdAc::swingv_t::kHighest;
@@ -418,21 +407,21 @@ stdAc::swingv_t IRHaierAC::toCommonSwingV(const uint8_t pos) {
   }
 }
 
-/// Convert the current internal state into its stdAc::state_t equivilant.
-/// @return The stdAc equivilant of the native settings.
-stdAc::state_t IRHaierAC::toCommon(void) {
+/// Convert the current internal state into its stdAc::state_t equivalent.
+/// @return The stdAc equivalent of the native settings.
+stdAc::state_t IRHaierAC::toCommon(void) const {
   stdAc::state_t result;
   result.protocol = decode_type_t::HAIER_AC;
   result.model = -1;  // No models used.
   result.power = true;
-  if (this->getCommand() == kHaierAcCmdOff) result.power = false;
-  result.mode = this->toCommonMode(this->getMode());
+  if (_.Command == kHaierAcCmdOff) result.power = false;
+  result.mode = toCommonMode(_.Mode);
   result.celsius = true;
-  result.degrees = this->getTemp();
-  result.fanspeed = this->toCommonFanSpeed(this->getFan());
-  result.swingv = this->toCommonSwingV(this->getSwing());
-  result.filter = this->getHealth();
-  result.sleep = this->getSleep() ? 0 : -1;
+  result.degrees = getTemp();
+  result.fanspeed = toCommonFanSpeed(getFan());
+  result.swingv = toCommonSwingV(_.Swing);
+  result.filter = _.Health;
+  result.sleep = _.Sleep ? 0 : -1;
   // Not supported.
   result.swingh = stdAc::swingh_t::kOff;
   result.quiet = false;
@@ -447,10 +436,10 @@ stdAc::state_t IRHaierAC::toCommon(void) {
 
 /// Convert the current internal state into a human readable string.
 /// @return A human readable string.
-String IRHaierAC::toString(void) {
+String IRHaierAC::toString(void) const {
   String result = "";
   result.reserve(150);  // Reserve some heap for the string to reduce fragging.
-  uint8_t cmd = getCommand();
+  uint8_t cmd = _.Command;
   result += addIntToString(cmd, kCommandStr, false);
   result += kSpaceLBraceStr;
   switch (cmd) {
@@ -495,14 +484,14 @@ String IRHaierAC::toString(void) {
       result += kUnknownStr;
   }
   result += ')';
-  result += addModeToString(getMode(), kHaierAcAuto, kHaierAcCool, kHaierAcHeat,
+  result += addModeToString(_.Mode, kHaierAcAuto, kHaierAcCool, kHaierAcHeat,
                             kHaierAcDry, kHaierAcFan);
   result += addTempToString(getTemp());
   result += addFanToString(getFan(), kHaierAcFanHigh, kHaierAcFanLow,
                            kHaierAcFanAuto, kHaierAcFanAuto, kHaierAcFanMed);
-  result += addIntToString(getSwing(), kSwingStr);
+  result += addIntToString(_.Swing, kSwingStr);
   result += kSpaceLBraceStr;
-  switch (getSwing()) {
+  switch (_.Swing) {
     case kHaierAcSwingOff:
       result += kOffStr;
       break;
@@ -519,8 +508,8 @@ String IRHaierAC::toString(void) {
       result += kUnknownStr;
   }
   result += ')';
-  result += addBoolToString(getSleep(), kSleepStr);
-  result += addBoolToString(getHealth(), kHealthStr);
+  result += addBoolToString(_.Sleep, kSleepStr);
+  result += addBoolToString(_.Health, kHealthStr);
   result += addLabeledString(minsToString(getCurrTime()), kClockStr);
   result += addLabeledString(
       getOnTimer() >= 0 ? minsToString(getOnTimer()) : kOffStr, kOnTimerStr);
@@ -552,8 +541,7 @@ void IRHaierACYRW02::send(const uint16_t repeat) {
 
 /// Calculate and set the checksum values for the internal state.
 void IRHaierACYRW02::checksum(void) {
-  remote_state[kHaierACYRW02StateLength - 1] =
-      sumBytes(remote_state, kHaierACYRW02StateLength - 1);
+  _.Sum = sumBytes(_.raw, kHaierACYRW02StateLength - 1);
 }
 
 /// Verify the checksum is valid for a given state.
@@ -567,30 +555,27 @@ bool IRHaierACYRW02::validChecksum(uint8_t state[], const uint16_t length) {
 
 /// Reset the internal state to a fixed known good state.
 void IRHaierACYRW02::stateReset(void) {
-  for (uint8_t i = 1; i < kHaierACYRW02StateLength; i++) remote_state[i] = 0x0;
-  remote_state[0] = kHaierAcYrw02Prefix;
+  std::memset(_.raw, 0, sizeof _.raw);
 
-  setTemp(kHaierAcDefTemp);
-  setHealth(true);
-  setTurbo(kHaierAcYrw02TurboOff);
-  setSleep(false);
-  setFan(kHaierAcYrw02FanAuto);
-  setSwing(kHaierAcYrw02SwingOff);
-  setMode(kHaierAcYrw02Auto);
-  setPower(true);
+  _.Prefix = kHaierAcYrw02Prefix;
+  _.Temp = kHaierAcDefTemp - kHaierAcMinTemp;
+  _.Health = true;
+  _.Fan = kHaierAcYrw02FanAuto;
+  _.Power = true;
+  _.Button = kHaierAcYrw02ButtonPower;
 }
 
 /// Get a PTR to the internal state/code for this protocol.
 /// @return PTR to a code for this protocol based on the current internal state.
 uint8_t* IRHaierACYRW02::getRaw(void) {
   checksum();
-  return remote_state;
+  return _.raw;
 }
 
 /// Set the internal state from a valid code for this protocol.
 /// @param[in] new_code A valid code for this protocol.
 void IRHaierACYRW02::setRaw(const uint8_t new_code[]) {
-  memcpy(remote_state, new_code, kHaierACYRW02StateLength);
+  memcpy(_.raw, new_code, kHaierACYRW02StateLength);
 }
 
 /// Set the Button/Command setting of the A/C.
@@ -606,21 +591,21 @@ void IRHaierACYRW02::setButton(uint8_t button) {
     case kHaierAcYrw02ButtonHealth:
     case kHaierAcYrw02ButtonTurbo:
     case kHaierAcYrw02ButtonSleep:
-      setBits(&remote_state[12], kLowNibble, kNibbleSize, button);
+      _.Button = button;
   }
 }
 
 /// Get the Button/Command setting of the A/C.
 /// @return The value of the button/command that was pressed.
-uint8_t IRHaierACYRW02::getButton(void) {
-  return GETBITS8(remote_state[12], kLowNibble, kNibbleSize);
+uint8_t IRHaierACYRW02::getButton(void) const {
+  return _.Button;
 }
 
 /// Set the operating mode of the A/C.
 /// @param[in] mode The desired operating mode.
 void IRHaierACYRW02::setMode(uint8_t mode) {
   uint8_t new_mode = mode;
-  setButton(kHaierAcYrw02ButtonMode);
+  _.Button = kHaierAcYrw02ButtonMode;
   switch (mode) {
     case kHaierAcYrw02Auto:
     case kHaierAcYrw02Cool:
@@ -629,13 +614,13 @@ void IRHaierACYRW02::setMode(uint8_t mode) {
     case kHaierAcYrw02Fan: break;
     default: new_mode = kHaierAcYrw02Auto;  // Unexpected, default to auto mode.
   }
-  setBits(&remote_state[7], kHaierAcYrw02ModeOffset, kModeBitsSize, new_mode);
+  _.Mode = new_mode;
 }
 
 /// Get the operating mode setting of the A/C.
 /// @return The current operating mode setting.
-uint8_t IRHaierACYRW02::getMode(void) {
-  return GETBITS8(remote_state[7], kHaierAcYrw02ModeOffset, kModeBitsSize);
+uint8_t IRHaierACYRW02::getMode(void) const {
+  return _.Mode;
 }
 
 /// Set the temperature.
@@ -650,42 +635,42 @@ void IRHaierACYRW02::setTemp(const uint8_t celsius) {
   uint8_t old_temp = getTemp();
   if (old_temp == temp) return;
   if (old_temp > temp)
-    setButton(kHaierAcYrw02ButtonTempDown);
+    _.Button = kHaierAcYrw02ButtonTempDown;
   else
-    setButton(kHaierAcYrw02ButtonTempUp);
-  setBits(&remote_state[1], kHighNibble, kNibbleSize, temp - kHaierAcMinTemp);
+    _.Button = kHaierAcYrw02ButtonTempUp;
+  _.Temp = temp - kHaierAcMinTemp;
 }
 
 /// Get the current temperature setting.
 /// @return The current setting for temp. in degrees celsius.
-uint8_t IRHaierACYRW02::getTemp(void) {
-  return GETBITS8(remote_state[1], kHighNibble, kNibbleSize) + kHaierAcMinTemp;
+uint8_t IRHaierACYRW02::getTemp(void) const {
+  return _.Temp + kHaierAcMinTemp;
 }
 
 /// Set the Health (filter) setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRHaierACYRW02::setHealth(const bool on) {
-  setButton(kHaierAcYrw02ButtonHealth);
-  setBit(&remote_state[3], kHaierAcYrw02HealthOffset, on);
+  _.Button = kHaierAcYrw02ButtonHealth;
+  _.Health = on;
 }
 
 /// Get the Health (filter) setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRHaierACYRW02::getHealth(void) {
-  return GETBIT8(remote_state[3], kHaierAcYrw02HealthOffset);
+bool IRHaierACYRW02::getHealth(void) const {
+  return _.Health;
 }
 
 /// Get the value of the current power setting.
 /// @return true, the setting is on. false, the setting is off.
-bool IRHaierACYRW02::getPower(void) {
-  return GETBIT8(remote_state[4], kHaierAcYrw02PowerOffset);
+bool IRHaierACYRW02::getPower(void) const {
+  return _.Power;
 }
 
 /// Change the power setting.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRHaierACYRW02::setPower(const bool on) {
-  setButton(kHaierAcYrw02ButtonPower);
-  setBit(&remote_state[4], kHaierAcYrw02PowerOffset, on);
+  _.Button = kHaierAcYrw02ButtonPower;
+  _.Power = on;
 }
 
 /// Change the power setting to On.
@@ -696,22 +681,21 @@ void IRHaierACYRW02::off(void) { setPower(false); }
 
 /// Get the Sleep setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRHaierACYRW02::getSleep(void) {
-  return GETBIT8(remote_state[8], kHaierAcYrw02SleepOffset);
+bool IRHaierACYRW02::getSleep(void) const {
+  return _.Sleep;
 }
 
 /// Set the Sleep setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRHaierACYRW02::setSleep(const bool on) {
-  setButton(kHaierAcYrw02ButtonSleep);
-  setBit(&remote_state[8], kHaierAcYrw02SleepOffset, on);
+  _.Button = kHaierAcYrw02ButtonSleep;
+  _.Sleep = on;
 }
 
 /// Get the Turbo setting of the A/C.
 /// @return The current turbo speed setting.
-uint8_t IRHaierACYRW02::getTurbo(void) {
-  return GETBITS8(remote_state[6], kHaierAcYrw02TurboOffset,
-                  kHaierAcYrw02TurboSize);
+uint8_t IRHaierACYRW02::getTurbo(void) const {
+  return _.Turbo;
 }
 
 /// Set the Turbo setting of the A/C.
@@ -723,17 +707,15 @@ void IRHaierACYRW02::setTurbo(uint8_t speed) {
     case kHaierAcYrw02TurboOff:
     case kHaierAcYrw02TurboLow:
     case kHaierAcYrw02TurboHigh:
-      setBits(&remote_state[6], kHaierAcYrw02TurboOffset,
-              kHaierAcYrw02TurboSize, speed);
-      setButton(kHaierAcYrw02ButtonTurbo);
+      _.Turbo = speed;
+      _.Button = kHaierAcYrw02ButtonTurbo;
   }
 }
 
 /// Get the current fan speed setting.
 /// @return The current fan speed.
-uint8_t IRHaierACYRW02::getFan(void) {
-  return GETBITS8(remote_state[5], kHaierAcYrw02FanOffset,
-                  kHaierAcYrw02FanSize);
+uint8_t IRHaierACYRW02::getFan(void) const {
+  return _.Fan;
 }
 
 /// Set the speed of the fan.
@@ -744,16 +726,15 @@ void IRHaierACYRW02::setFan(uint8_t speed) {
     case kHaierAcYrw02FanMed:
     case kHaierAcYrw02FanHigh:
     case kHaierAcYrw02FanAuto:
-      setBits(&remote_state[5], kHaierAcYrw02FanOffset, kHaierAcYrw02FanSize,
-              speed);
-      setButton(kHaierAcYrw02ButtonFan);
+      _.Fan = speed;
+      _.Button = kHaierAcYrw02ButtonFan;
   }
 }
 
 /// Get the Vertical Swing position setting of the A/C.
 /// @return The native position/mode.
-uint8_t IRHaierACYRW02::getSwing(void) {
-  return GETBITS8(remote_state[1], kLowNibble, kNibbleSize);
+uint8_t IRHaierACYRW02::getSwing(void) const {
+  return _.Swing;
 }
 
 /// Set the Vertical Swing mode of the A/C.
@@ -766,21 +747,21 @@ void IRHaierACYRW02::setSwing(uint8_t pos) {
     case kHaierAcYrw02SwingTop:
     case kHaierAcYrw02SwingMiddle:
     case kHaierAcYrw02SwingBottom:
-    case kHaierAcYrw02SwingDown: setButton(kHaierAcYrw02ButtonSwing); break;
+    case kHaierAcYrw02SwingDown: _.Button = kHaierAcYrw02ButtonSwing; break;
     default: return;  // Unexpected value so don't do anything.
   }
   // Heat mode has no MIDDLE setting, use BOTTOM instead.
-  if (pos == kHaierAcYrw02SwingMiddle && getMode() == kHaierAcYrw02Heat)
+  if (pos == kHaierAcYrw02SwingMiddle && _.Mode == kHaierAcYrw02Heat)
     newpos = kHaierAcYrw02SwingBottom;
   // BOTTOM is only allowed if we are in Heat mode, otherwise MIDDLE.
-  if (pos == kHaierAcYrw02SwingBottom && getMode() != kHaierAcYrw02Heat)
+  if (pos == kHaierAcYrw02SwingBottom && _.Mode != kHaierAcYrw02Heat)
     newpos = kHaierAcYrw02SwingMiddle;
-  setBits(&remote_state[1], kLowNibble, kNibbleSize, newpos);
+  _.Swing = newpos;
 }
 
 /// Convert a stdAc::opmode_t enum into its native mode.
 /// @param[in] mode The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 uint8_t IRHaierACYRW02::convertMode(const stdAc::opmode_t mode) {
   switch (mode) {
     case stdAc::opmode_t::kCool: return kHaierAcYrw02Cool;
@@ -793,7 +774,7 @@ uint8_t IRHaierACYRW02::convertMode(const stdAc::opmode_t mode) {
 
 /// Convert a stdAc::fanspeed_t enum into it's native speed.
 /// @param[in] speed The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 uint8_t IRHaierACYRW02::convertFan(const stdAc::fanspeed_t speed) {
   switch (speed) {
     case stdAc::fanspeed_t::kMin:
@@ -807,7 +788,7 @@ uint8_t IRHaierACYRW02::convertFan(const stdAc::fanspeed_t speed) {
 
 /// Convert a stdAc::swingv_t enum into it's native setting.
 /// @param[in] position The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 uint8_t IRHaierACYRW02::convertSwingV(const stdAc::swingv_t position) {
   switch (position) {
     case stdAc::swingv_t::kHighest:
@@ -820,9 +801,9 @@ uint8_t IRHaierACYRW02::convertSwingV(const stdAc::swingv_t position) {
   }
 }
 
-/// Convert a native mode into its stdAc equivilant.
+/// Convert a native mode into its stdAc equivalent.
 /// @param[in] mode The native setting to be converted.
-/// @return The stdAc equivilant of the native setting.
+/// @return The stdAc equivalent of the native setting.
 stdAc::opmode_t IRHaierACYRW02::toCommonMode(const uint8_t mode) {
   switch (mode) {
     case kHaierAcYrw02Cool: return stdAc::opmode_t::kCool;
@@ -833,9 +814,9 @@ stdAc::opmode_t IRHaierACYRW02::toCommonMode(const uint8_t mode) {
   }
 }
 
-/// Convert a native fan speed into its stdAc equivilant.
+/// Convert a native fan speed into its stdAc equivalent.
 /// @param[in] speed The native setting to be converted.
-/// @return The stdAc equivilant of the native setting.
+/// @return The stdAc equivalent of the native setting.
 stdAc::fanspeed_t IRHaierACYRW02::toCommonFanSpeed(const uint8_t speed) {
   switch (speed) {
     case kHaierAcYrw02FanHigh: return stdAc::fanspeed_t::kMax;
@@ -847,7 +828,7 @@ stdAc::fanspeed_t IRHaierACYRW02::toCommonFanSpeed(const uint8_t speed) {
 
 /// Convert a stdAc::swingv_t enum into it's native setting.
 /// @param[in] pos The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 stdAc::swingv_t IRHaierACYRW02::toCommonSwingV(const uint8_t pos) {
   switch (pos) {
     case kHaierAcYrw02SwingTop:    return stdAc::swingv_t::kHighest;
@@ -859,20 +840,20 @@ stdAc::swingv_t IRHaierACYRW02::toCommonSwingV(const uint8_t pos) {
   }
 }
 
-/// Convert the current internal state into its stdAc::state_t equivilant.
-/// @return The stdAc equivilant of the native settings.
-stdAc::state_t IRHaierACYRW02::toCommon(void) {
+/// Convert the current internal state into its stdAc::state_t equivalent.
+/// @return The stdAc equivalent of the native settings.
+stdAc::state_t IRHaierACYRW02::toCommon(void) const {
   stdAc::state_t result;
   result.protocol = decode_type_t::HAIER_AC_YRW02;
   result.model = -1;  // No models used.
-  result.power = this->getPower();
-  result.mode = this->toCommonMode(this->getMode());
+  result.power = _.Power;
+  result.mode = toCommonMode(_.Mode);
   result.celsius = true;
-  result.degrees = this->getTemp();
-  result.fanspeed = this->toCommonFanSpeed(this->getFan());
-  result.swingv = this->toCommonSwingV(this->getSwing());
-  result.filter = this->getHealth();
-  result.sleep = this->getSleep() ? 0 : -1;
+  result.degrees = getTemp();
+  result.fanspeed = toCommonFanSpeed(_.Fan);
+  result.swingv = toCommonSwingV(_.Swing);
+  result.filter = _.Health;
+  result.sleep = _.Sleep ? 0 : -1;
   // Not supported.
   result.swingh = stdAc::swingh_t::kOff;
   result.quiet = false;
@@ -887,11 +868,11 @@ stdAc::state_t IRHaierACYRW02::toCommon(void) {
 
 /// Convert the current internal state into a human readable string.
 /// @return A human readable string.
-String IRHaierACYRW02::toString(void) {
+String IRHaierACYRW02::toString(void) const {
   String result = "";
   result.reserve(130);  // Reserve some heap for the string to reduce fragging.
-  result += addBoolToString(getPower(), kPowerStr, false);
-  uint8_t cmd = getButton();
+  result += addBoolToString(_.Power, kPowerStr, false);
+  uint8_t cmd = _.Button;
   result += addIntToString(cmd, kButtonStr);
   result += kSpaceLBraceStr;
   switch (cmd) {
@@ -926,16 +907,16 @@ String IRHaierACYRW02::toString(void) {
       result += kUnknownStr;
   }
   result += ')';
-  result += addModeToString(getMode(), kHaierAcYrw02Auto, kHaierAcYrw02Cool,
+  result += addModeToString(_.Mode, kHaierAcYrw02Auto, kHaierAcYrw02Cool,
                             kHaierAcYrw02Heat, kHaierAcYrw02Dry,
                             kHaierAcYrw02Fan);
   result += addTempToString(getTemp());
-  result += addFanToString(getFan(), kHaierAcYrw02FanHigh, kHaierAcYrw02FanLow,
+  result += addFanToString(_.Fan, kHaierAcYrw02FanHigh, kHaierAcYrw02FanLow,
                            kHaierAcYrw02FanAuto, kHaierAcYrw02FanAuto,
                            kHaierAcYrw02FanMed);
-  result += addIntToString(getTurbo(), kTurboStr);
+  result += addIntToString(_.Turbo, kTurboStr);
   result += kSpaceLBraceStr;
-  switch (getTurbo()) {
+  switch (_.Turbo) {
     case kHaierAcYrw02TurboOff:
       result += kOffStr;
       break;
@@ -949,9 +930,9 @@ String IRHaierACYRW02::toString(void) {
       result += kUnknownStr;
   }
   result += ')';
-  result += addIntToString(getSwing(), kSwingStr);
+  result += addIntToString(_.Swing, kSwingStr);
   result += kSpaceLBraceStr;
-  switch (getSwing()) {
+  switch (_.Swing) {
     case kHaierAcYrw02SwingOff:
       result += kOffStr;
       break;
@@ -974,8 +955,8 @@ String IRHaierACYRW02::toString(void) {
       result += kUnknownStr;
   }
   result += ')';
-  result += addBoolToString(getSleep(), kSleepStr);
-  result += addBoolToString(getHealth(), kHealthStr);
+  result += addBoolToString(_.Sleep, kSleepStr);
+  result += addBoolToString(_.Health, kHealthStr);
   return result;
 }
 // End of IRHaierACYRW02 class.

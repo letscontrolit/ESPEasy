@@ -52,7 +52,7 @@
 #endif  // UNIT_TEST
 
 // Library Version
-#define _IRREMOTEESP8266_VERSION_ "2.7.9"
+#define _IRREMOTEESP8266_VERSION_ "2.7.13"
 
 // Set the language & locale for the library. See the `locale` dir for options.
 #ifndef _IR_LOCALE_
@@ -502,6 +502,13 @@
 #define SEND_PANASONIC_AC      _IR_ENABLE_DEFAULT_
 #endif  // SEND_PANASONIC_AC
 
+#ifndef DECODE_PANASONIC_AC32
+#define DECODE_PANASONIC_AC32  _IR_ENABLE_DEFAULT_
+#endif  // DECODE_PANASONIC_AC32
+#ifndef SEND_PANASONIC_AC32
+#define SEND_PANASONIC_AC32    _IR_ENABLE_DEFAULT_
+#endif  // SEND_PANASONIC_AC32
+
 #ifndef DECODE_MWM
 #define DECODE_MWM             _IR_ENABLE_DEFAULT_
 #endif  // DECODE_MWM
@@ -656,6 +663,13 @@
 #define SEND_MULTIBRACKETS     _IR_ENABLE_DEFAULT_
 #endif  // SEND_MULTIBRACKETS
 
+#ifndef DECODE_TECHNIBEL_AC
+#define DECODE_TECHNIBEL_AC     _IR_ENABLE_DEFAULT_
+#endif  // DECODE_TECHNIBEL_AC
+#ifndef SEND_TECHNIBEL_AC
+#define SEND_TECHNIBEL_AC       _IR_ENABLE_DEFAULT_
+#endif  // SEND_TECHNIBEL_AC
+
 #ifndef DECODE_CORONA_AC
 #define DECODE_CORONA_AC       _IR_ENABLE_DEFAULT_
 #endif  // DECODE_CORONA_AC
@@ -670,6 +684,41 @@
 #define SEND_ZEPEAL            _IR_ENABLE_DEFAULT_
 #endif  // SEND_ZEPEAL
 
+#ifndef DECODE_VOLTAS
+#define DECODE_VOLTAS          _IR_ENABLE_DEFAULT_
+#endif  // DECODE_VOLTAS
+#ifndef SEND_VOLTAS
+#define SEND_VOLTAS            _IR_ENABLE_DEFAULT_
+#endif  // SEND_VOLTAS
+
+#ifndef DECODE_METZ
+#define DECODE_METZ            _IR_ENABLE_DEFAULT_
+#endif  // DECODE_METZ
+#ifndef SEND_METZ
+#define SEND_METZ              _IR_ENABLE_DEFAULT_
+#endif  // SEND_METZ
+
+#ifndef DECODE_TRANSCOLD
+#define DECODE_TRANSCOLD       _IR_ENABLE_DEFAULT_
+#endif  // DECODE_TRANSCOLD
+#ifndef SEND_TRANSCOLD
+#define SEND_TRANSCOLD         _IR_ENABLE_DEFAULT_
+#endif  // SEND_TRANSCOLD
+
+#ifndef DECODE_MIRAGE
+#define DECODE_MIRAGE          _IR_ENABLE_DEFAULT_
+#endif  // DECODE_MIRAGE
+#ifndef SEND_MIRAGE
+#define SEND_MIRAGE            _IR_ENABLE_DEFAULT_
+#endif  // SEND_MIRAGE
+
+#ifndef DECODE_ELITESCREENS
+#define DECODE_ELITESCREENS    _IR_ENABLE_DEFAULT_
+#endif  // DECODE_ELITESCREENS
+#ifndef SEND_ELITESCREENS
+#define SEND_ELITESCREENS      _IR_ENABLE_DEFAULT_
+#endif  // SEND_ELITESCREENS
+
 #if (DECODE_ARGO || DECODE_DAIKIN || DECODE_FUJITSU_AC || DECODE_GREE || \
      DECODE_KELVINATOR || DECODE_MITSUBISHI_AC || DECODE_TOSHIBA_AC || \
      DECODE_TROTEC || DECODE_HAIER_AC || DECODE_HITACHI_AC || \
@@ -681,7 +730,8 @@
      DECODE_NEOCLIMA || DECODE_DAIKIN176 || DECODE_DAIKIN128 || \
      DECODE_AMCOR || DECODE_DAIKIN152 || DECODE_MITSUBISHI136 || \
      DECODE_MITSUBISHI112 || DECODE_HITACHI_AC424 || DECODE_HITACHI_AC3 || \
-     DECODE_HITACHI_AC344 || DECODE_CORONA_AC || DECODE_SANYO_AC)
+     DECODE_HITACHI_AC344 || DECODE_CORONA_AC || DECODE_SANYO_AC || \
+     DECODE_VOLTAS || DECODE_MIRAGE)
   // Add any DECODE to the above if it uses result->state (see kStateSizeMax)
   // you might also want to add the protocol to hasACState function
 #define DECODE_AC true  // We need some common infrastructure for decoding A/Cs.
@@ -810,8 +860,15 @@ enum decode_type_t {
   MIDEA24,
   ZEPEAL,
   SANYO_AC,
+  VOLTAS,  // 90
+  METZ,
+  TRANSCOLD,
+  TECHNIBEL_AC,
+  MIRAGE,
+  ELITESCREENS,  // 95
+  PANASONIC_AC32,
   // Add new entries before this one, and update it to point to the last entry.
-  kLastDecodeType = SANYO_AC,
+  kLastDecodeType = PANASONIC_AC32,
 };
 
 // Message lengths & required repeat values
@@ -868,6 +925,8 @@ const uint16_t kDaikin216Bits = kDaikin216StateLength * 8;
 const uint16_t kDaikin216DefaultRepeat = kNoRepeat;
 const uint16_t kDelonghiAcBits = 64;
 const uint16_t kDelonghiAcDefaultRepeat = kNoRepeat;
+const uint16_t kTechnibelAcBits = 56;
+const uint16_t kTechnibelAcDefaultRepeat = kNoRepeat;
 const uint16_t kDenonBits = 15;
 const uint16_t kDenon48Bits = 48;
 const uint16_t kDenonLegacyBits = 14;
@@ -879,6 +938,8 @@ const uint16_t kEpsonMinRepeat = 2;
 const uint16_t kElectraAcStateLength = 13;
 const uint16_t kElectraAcBits = kElectraAcStateLength * 8;
 const uint16_t kElectraAcMinRepeat = kNoRepeat;
+const uint16_t kEliteScreensBits = 32;
+const uint16_t kEliteScreensDefaultRepeat = kSingleRepeat;
 const uint16_t kFujitsuAcMinRepeat = kNoRepeat;
 const uint16_t kFujitsuAcStateLength = 16;
 const uint16_t kFujitsuAcStateLengthShort = 7;
@@ -927,10 +988,15 @@ const uint16_t kLg32Bits = 32;
 const uint16_t kLgDefaultRepeat = kNoRepeat;
 const uint16_t kLutronBits = 35;
 const uint16_t kMagiquestBits = 56;
+const uint16_t kMetzBits = 19;
+const uint16_t kMetzMinRepeat = kNoRepeat;
 const uint16_t kMideaBits = 48;
 const uint16_t kMideaMinRepeat = kNoRepeat;
 const uint16_t kMidea24Bits = 24;
 const uint16_t kMidea24MinRepeat = kSingleRepeat;
+const uint16_t kMirageStateLength = 15;
+const uint16_t kMirageBits = kMirageStateLength * 8;
+const uint16_t kMirageMinRepeat = kNoRepeat;
 const uint16_t kMitsubishiBits = 16;
 // TODO(anyone): Verify that the Mitsubishi repeat is really needed.
 //               Based on marcosamarinho's code.
@@ -964,6 +1030,7 @@ const uint16_t kPanasonicAcStateShortLength = 16;
 const uint16_t kPanasonicAcBits = kPanasonicAcStateLength * 8;
 const uint16_t kPanasonicAcShortBits = kPanasonicAcStateShortLength * 8;
 const uint16_t kPanasonicAcDefaultRepeat = kNoRepeat;
+const uint16_t kPanasonicAc32Bits = 32;
 const uint16_t kPioneerBits = 64;
 const uint16_t kProntoMinLength = 6;
 const uint16_t kRC5RawBits = 14;
@@ -1013,6 +1080,8 @@ const uint16_t kToshibaACStateLengthShort = kToshibaACStateLength - 2;
 const uint16_t kToshibaACBitsShort = kToshibaACStateLengthShort * 8;
 const uint16_t kToshibaACStateLengthLong = kToshibaACStateLength + 1;
 const uint16_t kToshibaACBitsLong = kToshibaACStateLengthLong * 8;
+const uint16_t kTranscoldBits = 24;
+const uint16_t kTranscoldDefaultRepeat = kNoRepeat;
 const uint16_t kTrotecStateLength = 9;
 const uint16_t kTrotecBits = kTrotecStateLength * 8;
 const uint16_t kTrotecDefaultRepeat = kNoRepeat;
@@ -1023,6 +1092,8 @@ const uint16_t kWhynterBits = 32;
 const uint8_t  kVestelAcBits = 56;
 const uint16_t kZepealBits = 16;
 const uint16_t kZepealMinRepeat = 4;
+const uint16_t kVoltasBits = 80;
+const uint16_t kVoltasStateLength = 10;
 
 
 // Legacy defines. (Deprecated)

@@ -1,6 +1,6 @@
 /*
  * Send & receive arbitrary IR codes via a web server or MQTT.
- * Copyright David Conran 2016, 2017, 2018, 2019
+ * Copyright David Conran 2016, 2017, 2018, 2019, 2020
  *
  * Copyright:
  *   Code for this has been borrowed from lots of other OpenSource projects &
@@ -32,13 +32,10 @@
  * - Arduino IDE:
  *   o Install the following libraries via Library Manager
  *     - ArduinoJson (https://arduinojson.org/) (Version >= 6.0)
- *     - PubSubClient (https://pubsubclient.knolleary.net/)
+ *     - PubSubClient (https://pubsubclient.knolleary.net/) (Version >= 2.8.0)
  *     - WiFiManager (https://github.com/tzapu/WiFiManager)
  *                   (ESP8266: Version >= 0.14, ESP32: 'development' branch.)
- *   o You MUST change <PubSubClient.h> to have the following (or larger) value:
- *     (with REPORT_RAW_UNKNOWNS 1024 or more is recommended)
- *     #define MQTT_MAX_PACKET_SIZE 768
- *   o Use the smallest non-zero SPIFFS size you can for your board.
+ *   o Use the smallest non-zero FILESYSTEM size you can for your board.
  *     (See the Tools -> Flash Size menu)
  *
  * - PlatformIO IDE:
@@ -333,7 +330,7 @@
 
 #include "IRMQTTServer.h"
 #include <Arduino.h>
-#include <FS.h>
+
 #include <ArduinoJson.h>
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
@@ -344,7 +341,6 @@
 #include <ESPmDNS.h>
 #include <WebServer.h>
 #include <WiFi.h>
-#include <SPIFFS.h>
 #include <Update.h>
 #endif  // ESP32
 #include <WiFiClient.h>
@@ -359,16 +355,6 @@
 #include <IRac.h>
 #if MQTT_ENABLE
 #include <PubSubClient.h>
-// --------------------------------------------------------------------
-// * * * IMPORTANT * * *
-// You must change <PubSubClient.h> to have the following value.
-// #define MQTT_MAX_PACKET_SIZE 768
-// --------------------------------------------------------------------
-// Check that the user has set MQTT_MAX_PACKET_SIZE to an appropriate size.
-#if MQTT_MAX_PACKET_SIZE < 768
-#error "MQTT_MAX_PACKET_SIZE in <PubSubClient.h> is too small. "\
-  "Increase the value per comments."
-#endif  // MQTT_MAX_PACKET_SIZE < 768
 #endif  // MQTT_ENABLE
 #include <algorithm>  // NOLINT(build/include)
 #include <memory>
@@ -381,6 +367,7 @@ using irutils::msToString;
 #endif  // REPORT_VCC
 
 // Globals
+uint8_t _sanity = 0;
 #if defined(ESP8266)
 ESP8266WebServer server(kHttpPort);
 #endif  // ESP8266
@@ -515,18 +502,20 @@ void saveWifiConfigCallback(void) {
   flagSaveWifiConfig = true;
 }
 
-// Forcibly mount the SPIFFS. Formatting the SPIFFS if needed.
+// Forcibly mount the FILESYSTEM. Formatting the FILESYSTEM if needed.
 //
 // Returns:
 //   A boolean indicating success or failure.
 bool mountSpiffs(void) {
-  debug("Mounting SPIFFS...");
-  if (SPIFFS.begin()) return true;  // We mounted it okay.
+  debug("Mounting " FILESYSTEMSTR " ...");
+  if (FILESYSTEM.begin()) return true;  // We mounted it okay.
   // We failed the first time.
-  debug("Failed to mount SPIFFS!\nFormatting SPIFFS and trying again...");
-  SPIFFS.format();
-  if (!SPIFFS.begin()) {  // Did we fail?
-    debug("DANGER: Failed to mount SPIFFS even after formatting!");
+  debug("Failed to mount " FILESYSTEMSTR "!\n"
+        "Formatting SPIFFS and trying again...");
+  FILESYSTEM.format();
+  if (!FILESYSTEM.begin()) {  // Did we fail?
+    debug("DANGER: Failed to mount " FILESYSTEMSTR " even after formatting!");
+
     delay(10000);  // Make sure the debug message doesn't just float by.
     return false;
   }
@@ -556,7 +545,7 @@ bool saveConfig(void) {
   }
 
   if (mountSpiffs()) {
-    File configFile = SPIFFS.open(kConfigFile, "w");
+    File configFile = FILESYSTEM.open(kConfigFile, "w");
     if (!configFile) {
       debug("Failed to open config file for writing.");
     } else {
@@ -566,7 +555,7 @@ bool saveConfig(void) {
       debug("Finished writing config file.");
       success = true;
     }
-    SPIFFS.end();
+    FILESYSTEM.end();
   }
   return success;
 }
@@ -575,10 +564,9 @@ bool loadConfigFile(void) {
   bool success = false;
   if (mountSpiffs()) {
     debug("mounted the file system");
-    if (SPIFFS.exists(kConfigFile)) {
+    if (FILESYSTEM.exists(kConfigFile)) {
       debug("config file exists");
-
-      File configFile = SPIFFS.open(kConfigFile, "r");
+      File configFile = FILESYSTEM.open(kConfigFile, "r");
       if (configFile) {
         debug("Opened config file");
         size_t size = configFile.size();
@@ -619,8 +607,8 @@ bool loadConfigFile(void) {
     } else {
       debug("Config file doesn't exist!");
     }
-    debug("Unmounting SPIFFS.");
-    SPIFFS.end();
+    debug("Unmounting " FILESYSTEMSTR);
+    FILESYSTEM.end();
   }
   return success;
 }
@@ -1260,6 +1248,7 @@ void handleInfo(void) {
     "ESP32 SDK Version: " + ESP.getSdkVersion() + "<br>"
 #endif  // ESP32
     "Cpu Freq: " + String(ESP.getCpuFreqMHz()) + "MHz<br>"
+    "Sanity Check: " + String((_sanity == 0) ? "Ok" : "FAILED") + "<br>"
     "IR Send GPIO(s): " + listOfTxGpios() + "<br>"
     + irutils::addBoolToString(kInvertTxOutput,
                                "Inverting GPIO output", false) + "<br>"
@@ -1305,7 +1294,7 @@ void handleInfo(void) {
                              : "Disconnected " + timeSince(lastConnectedTime)) +
     ")</i><br>"
     "Disconnections: " + String(mqttDisconnectCounter - 1) + "<br>"
-    "Max Packet Size: " + MQTT_MAX_PACKET_SIZE + " bytes<br>"
+    "Buffer Size: " + String(mqtt_client.getBufferSize()) + " bytes<br>"
     "Client id: " + MqttClientId + "<br>"
     "Command topic(s): " + listOfCommandTopics() + "<br>"
     "Acknowledgements topic: " + MqttAck + "<br>"
@@ -1454,8 +1443,8 @@ void handleReset(void) {
 #endif  // MQTT_ENABLE
   if (mountSpiffs()) {
     debug("Removing JSON config file");
-    SPIFFS.remove(kConfigFile);
-    SPIFFS.end();
+    FILESYSTEM.remove(kConfigFile);
+    FILESYSTEM.end();
   }
   delay(1000);
   debug("Reseting wifiManager's settings.");
@@ -1767,7 +1756,7 @@ bool parseStringAndSendPronto(IRsend *irsend, const String str,
 #endif  // SEND_PRONTO
 
 #if SEND_RAW
-// Parse an IRremote Raw Hex String/code and send it.
+// Parse an IRremote Raw String/code and send it.
 // Args:
 //   irsend: A ptr to the IRsend object to transmit via.
 //   str: A comma-separated String containing the freq and raw IR data.
@@ -2081,6 +2070,9 @@ void init_vars(void) {
 }
 
 void setup(void) {
+  // Perform a low level sanity checks that the compiler performs bit field
+  // packing as we expect and Endianness is as we expect.
+  _sanity = irutils::lowLevelSanityCheck();
 #if DEBUG
   if (!isSerialGpioUsedByIr()) {
 #if defined(ESP8266)
@@ -2186,6 +2178,8 @@ void setup(void) {
   server.on(kUrlSendDiscovery, handleSendMqttDiscovery);
 #endif  // MQTT_DISCOVERY_ENABLE
   // Finish setup of the mqtt clent object.
+  if (!mqtt_client.setBufferSize(kMqttBufferSize))
+    debug("Can't fully allocate MQTT buffer! Try a smaller value.");
   mqtt_client.setServer(MqttServer, atoi(MqttPort));
   mqtt_client.setCallback(mqttCallback);
   // Set various variables
