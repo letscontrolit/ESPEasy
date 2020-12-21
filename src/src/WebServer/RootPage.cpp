@@ -96,7 +96,7 @@ void handle_root() {
 
     addRowLabelValue(LabelType::UNIT_NR);
     addRowLabelValue(LabelType::GIT_BUILD);
-    addRowLabel(getLabel(LabelType::LOCAL_TIME));
+    addRowLabel(LabelType::LOCAL_TIME);
 
     if (node_time.systemTimePresent())
     {
@@ -106,11 +106,11 @@ void handle_root() {
       addHtml(F("<font color='red'>No system time source</font>"));
     }
 
-    addRowLabel(getLabel(LabelType::UPTIME));
+    addRowLabel(LabelType::UPTIME);
     {
       addHtml(getExtendedValue(LabelType::UPTIME));
     }
-    addRowLabel(getLabel(LabelType::LOAD_PCT));
+    addRowLabel(LabelType::LOAD_PCT);
 
     if (wdcounter > 0)
     {
@@ -123,7 +123,7 @@ void handle_root() {
       addHtml(html);
     }
     {
-      addRowLabel(getLabel(LabelType::FREE_MEM));
+      addRowLabel(LabelType::FREE_MEM);
       String html;
       html.reserve(64);
       html += freeMem;
@@ -137,7 +137,7 @@ void handle_root() {
       addHtml(html);
     }
     {
-      addRowLabel(getLabel(LabelType::FREE_STACK));
+      addRowLabel(LabelType::FREE_STACK);
       String html;
       html.reserve(64);
       html += String(getCurrentFreeStack());
@@ -152,7 +152,7 @@ void handle_root() {
     }
 
     addRowLabelValue(LabelType::IP_ADDRESS);
-    addRowLabel(getLabel(LabelType::WIFI_RSSI));
+    addRowLabel(LabelType::WIFI_RSSI);
 
     if (NetworkConnected())
     {
@@ -175,7 +175,7 @@ void handle_root() {
 
     #ifdef FEATURE_MDNS
     {
-      addRowLabel(getLabel(LabelType::M_DNS));
+      addRowLabel(LabelType::M_DNS);
       String html;
       html.reserve(64);
       html += F("<a href='http://");

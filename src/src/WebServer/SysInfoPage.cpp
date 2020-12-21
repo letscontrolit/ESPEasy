@@ -293,12 +293,12 @@ void handle_sysinfo_basicInfo() {
     addRowLabelValue(LabelType::LOCAL_TIME);
   }
 
-  addRowLabel(getLabel(LabelType::UPTIME));
+  addRowLabel(LabelType::UPTIME);
   {
     addHtml(getExtendedValue(LabelType::UPTIME));
   }
 
-  addRowLabel(getLabel(LabelType::LOAD_PCT));
+  addRowLabel(LabelType::LOAD_PCT);
 
   if (wdcounter > 0)
   {
@@ -338,7 +338,7 @@ void handle_sysinfo_memory() {
 # endif // ifdef ESP32
 
   int freeMem = ESP.getFreeHeap();
-  addRowLabel(getLabel(LabelType::FREE_MEM));
+  addRowLabel(LabelType::FREE_MEM);
   {
     String html;
     html.reserve(64);
@@ -362,7 +362,7 @@ void handle_sysinfo_memory() {
 # endif // ifdef CORE_POST_2_5_0
 
 
-  addRowLabel(getLabel(LabelType::FREE_STACK));
+  addRowLabel(LabelType::FREE_STACK);
   {
     String html;
     html.reserve(64);
@@ -457,7 +457,7 @@ void handle_sysinfo_Network() {
   addRowLabelValue(LabelType::STA_MAC);
   addRowLabelValue(LabelType::AP_MAC);
 
-  addRowLabel(getLabel(LabelType::SSID));
+  addRowLabel(LabelType::SSID);
   {
     String html;
     html.reserve(64);
@@ -471,7 +471,7 @@ void handle_sysinfo_Network() {
 
   addRowLabelValue(LabelType::CHANNEL);
   addRowLabelValue(LabelType::CONNECTED);
-  addRowLabel(getLabel(LabelType::LAST_DISCONNECT_REASON));
+  addRowLabel(LabelType::LAST_DISCONNECT_REASON);
   addHtml(getValue(LabelType::LAST_DISC_REASON_STR));
   addRowLabelValue(LabelType::NUMBER_RECONNECTS);
 }
@@ -526,7 +526,7 @@ void handle_sysinfo_ESP_Board() {
   addTableSeparator(F("ESP Board"), 2, 3);
 
 
-  addRowLabel(getLabel(LabelType::ESP_CHIP_ID));
+  addRowLabel(LabelType::ESP_CHIP_ID);
   {
     String html;
     html.reserve(32);
@@ -539,7 +539,7 @@ void handle_sysinfo_ESP_Board() {
     addHtml(html);
   }
 
-  addRowLabel(getLabel(LabelType::ESP_CHIP_FREQ));
+  addRowLabel(LabelType::ESP_CHIP_FREQ);
   addHtml(String(ESP.getCpuFreqMHz()));
   addHtml(F(" MHz"));
 
@@ -551,7 +551,7 @@ void handle_sysinfo_ESP_Board() {
   addRowLabelValue(LabelType::ESP_CHIP_CORES);
 
   # ifdef ARDUINO_BOARD
-  addRowLabel(getLabel(LabelType::ESP_BOARD_NAME));
+  addRowLabel(LabelType::ESP_BOARD_NAME);
   addHtml(ARDUINO_BOARD);
   # endif // ifdef ARDUINO_BOARD
 }
@@ -562,7 +562,7 @@ void handle_sysinfo_Storage() {
   uint32_t flashChipId = getFlashChipId();
 
   if (flashChipId != 0) {
-    addRowLabel(getLabel(LabelType::FLASH_CHIP_ID));
+    addRowLabel(LabelType::FLASH_CHIP_ID);
 
 
     // Set to HEX may be something like 0x1640E0.
@@ -588,22 +588,22 @@ void handle_sysinfo_Storage() {
   uint32_t realSize = getFlashRealSizeInBytes();
   uint32_t ideSize  = ESP.getFlashChipSize();
 
-  addRowLabel(getLabel(LabelType::FLASH_CHIP_REAL_SIZE));
+  addRowLabel(LabelType::FLASH_CHIP_REAL_SIZE);
   addHtml(String(realSize / 1024));
   addHtml(F(" kB"));
 
-  addRowLabel(getLabel(LabelType::FLASH_IDE_SIZE));
+  addRowLabel(LabelType::FLASH_IDE_SIZE);
   addHtml(String(ideSize / 1024));
   addHtml(F(" kB"));
 
   // Please check what is supported for the ESP32
   # if defined(ESP8266)
-  addRowLabel(getLabel(LabelType::FLASH_IDE_SPEED));
+  addRowLabel(LabelType::FLASH_IDE_SPEED);
   addHtml(String(ESP.getFlashChipSpeed() / 1000000));
   addHtml(F(" MHz"));
 
   FlashMode_t ideMode = ESP.getFlashChipMode();
-  addRowLabel(getLabel(LabelType::FLASH_IDE_MODE));
+  addRowLabel(LabelType::FLASH_IDE_MODE);
   {
     String html;
 
@@ -619,7 +619,7 @@ void handle_sysinfo_Storage() {
   }
   # endif // if defined(ESP8266)
 
-  addRowLabel(getLabel(LabelType::FLASH_WRITE_COUNT));
+  addRowLabel(LabelType::FLASH_WRITE_COUNT);
   {
     String html;
     html.reserve(32);
@@ -632,7 +632,7 @@ void handle_sysinfo_Storage() {
 
   {
     // FIXME TD-er: Must also add this for ESP32.
-    addRowLabel(getLabel(LabelType::SKETCH_SIZE));
+    addRowLabel(LabelType::SKETCH_SIZE);
     {
       String html;
       html.reserve(32);
@@ -649,7 +649,7 @@ void handle_sysinfo_Storage() {
     bool otaEnabled =
     # endif // if defined(ESP8266)
     OTA_possible(maxSketchSize, use2step);
-    addRowLabel(getLabel(LabelType::MAX_OTA_SKETCH_SIZE));
+    addRowLabel(LabelType::MAX_OTA_SKETCH_SIZE);
     {
       String html;
       html.reserve(32);
@@ -662,15 +662,15 @@ void handle_sysinfo_Storage() {
     }
 
     # if defined(ESP8266)
-    addRowLabel(getLabel(LabelType::OTA_POSSIBLE));
+    addRowLabel(LabelType::OTA_POSSIBLE);
     addHtml(boolToString(otaEnabled));
 
-    addRowLabel(getLabel(LabelType::OTA_2STEP));
+    addRowLabel(LabelType::OTA_2STEP);
     addHtml(boolToString(use2step));
     # endif // if defined(ESP8266)
   }
 
-  addRowLabel(getLabel(LabelType::FS_SIZE));
+  addRowLabel(LabelType::FS_SIZE);
   {
     String html;
     html.reserve(32);

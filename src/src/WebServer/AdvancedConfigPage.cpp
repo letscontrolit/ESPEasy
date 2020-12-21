@@ -30,28 +30,18 @@ void handle_advanced() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  int timezone      = getFormItemInt(F("timezone"));
-  int dststartweek  = getFormItemInt(F("dststartweek"));
-  int dststartdow   = getFormItemInt(F("dststartdow"));
-  int dststartmonth = getFormItemInt(F("dststartmonth"));
-  int dststarthour  = getFormItemInt(F("dststarthour"));
-  int dstendweek    = getFormItemInt(F("dstendweek"));
-  int dstenddow     = getFormItemInt(F("dstenddow"));
-  int dstendmonth   = getFormItemInt(F("dstendmonth"));
-  int dstendhour    = getFormItemInt(F("dstendhour"));
   String edit       = web_server.arg(F("edit"));
-
 
   if (edit.length() != 0)
   {
 //    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
     Settings.IP_Octet     = web_server.arg(F("ip")).toInt();
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
-    Settings.TimeZone = timezone;
-    TimeChangeRule dst_start(dststartweek, dststartdow, dststartmonth, dststarthour, timezone);
+    Settings.TimeZone = getFormItemInt(F("timezone"));
+    TimeChangeRule dst_start(getFormItemInt(F("dststartweek")), getFormItemInt(F("dststartdow")), getFormItemInt(F("dststartmonth")), getFormItemInt(F("dststarthour")), Settings.TimeZone);
 
     if (dst_start.isValid()) { Settings.DST_Start = dst_start.toFlashStoredValue(); }
-    TimeChangeRule dst_end(dstendweek, dstenddow, dstendmonth, dstendhour, timezone);
+    TimeChangeRule dst_end(getFormItemInt(F("dstendweek")), getFormItemInt(F("dstenddow")), getFormItemInt(F("dstendmonth")), getFormItemInt(F("dstendhour")), Settings.TimeZone);
 
     if (dst_end.isValid()) { Settings.DST_End = dst_end.toFlashStoredValue(); }
     webArg2ip(F("syslogip"), Settings.Syslog_IP);
