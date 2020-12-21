@@ -118,8 +118,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       // @giig1967g: set current task value for taking actions after changes in the task gpio
       const uint32_t key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
 
-      if (existPortStatus(key)) {
-        globalMapPortStatus[key].previousTask = event->TaskIndex;
+      auto it = globalMapPortStatus.find(key);
+      if (it != globalMapPortStatus.end()) {
+        it->second.previousTask = event->TaskIndex;
       }
 
       {

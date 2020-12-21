@@ -37,59 +37,70 @@ void hardwareInit()
     if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
       if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
-        switch (Settings.getPinBootState(gpio))
-        {
-          case PinBootState::Default_state:
-            // At startup, pins are configured as INPUT
-            break;
-          case PinBootState::Output_low:
-            pinMode(gpio, OUTPUT);
-            digitalWrite(gpio, LOW);
-            globalMapPortStatus[key].state = LOW;
-            globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
-            globalMapPortStatus[key].init  = 1;
+        const PinBootState bootState = Settings.getPinBootState(gpio);
+        if (bootState != PinBootState::Default_state) {
+          int8_t state = -1;
+          uint8_t mode = PIN_MODE_UNDEFINED;
+          int8_t init = 0;
+          switch (bootState)
+          {
+            case PinBootState::Default_state:
+              // At startup, pins are configured as INPUT
+              break;
+            case PinBootState::Output_low:
+              pinMode(gpio, OUTPUT);
+              digitalWrite(gpio, LOW);
+              state = LOW;
+              mode  = PIN_MODE_OUTPUT;
+              init  = 1;
 
-            // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
-            break;
-          case PinBootState::Output_high:
-            pinMode(gpio, OUTPUT);
-            digitalWrite(gpio, HIGH);
-            globalMapPortStatus[key].state = HIGH;
-            globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
-            globalMapPortStatus[key].init  = 1;
+              // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
+              break;
+            case PinBootState::Output_high:
+              pinMode(gpio, OUTPUT);
+              digitalWrite(gpio, HIGH);
+              state = HIGH;
+              mode  = PIN_MODE_OUTPUT;
+              init  = 1;
 
-            // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
-            break;
-          case PinBootState::Input_pullup:
-            if (hasPullUp) {
-              pinMode(gpio, INPUT_PULLUP);
-              globalMapPortStatus[key].state = 0;
-              globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLUP;
-              globalMapPortStatus[key].init  = 1;
-            }
-            break;
-          case PinBootState::Input_pulldown:
-            if (hasPullDown) {
-              #ifdef ESP8266
-              if (gpio == 16) {
-                pinMode(gpio, INPUT_PULLDOWN_16);
+              // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
+              break;
+            case PinBootState::Input_pullup:
+              if (hasPullUp) {
+                pinMode(gpio, INPUT_PULLUP);
+                state = 0;
+                mode  = PIN_MODE_INPUT_PULLUP;
+                init  = 1;
               }
-              #endif
-              #ifdef ESP32
-              pinMode(gpio, INPUT_PULLDOWN);
-              #endif
-              globalMapPortStatus[key].state = 0;
-              globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLDOWN;
-              globalMapPortStatus[key].init  = 1;
-            }
-            break;
-          case PinBootState::Input:
-            pinMode(gpio, INPUT);
-            globalMapPortStatus[key].state = 0;
-            globalMapPortStatus[key].mode  = PIN_MODE_INPUT;
-            globalMapPortStatus[key].init  = 1;
-            break;
+              break;
+            case PinBootState::Input_pulldown:
+              if (hasPullDown) {
+                #ifdef ESP8266
+                if (gpio == 16) {
+                  pinMode(gpio, INPUT_PULLDOWN_16);
+                }
+                #endif
+                #ifdef ESP32
+                pinMode(gpio, INPUT_PULLDOWN);
+                #endif
+                state = 0;
+                mode  = PIN_MODE_INPUT_PULLDOWN;
+                init  = 1;
+              }
+              break;
+            case PinBootState::Input:
+              pinMode(gpio, INPUT);
+              state = 0;
+              mode  = PIN_MODE_INPUT;
+              init  = 1;
+              break;
 
+          }
+          if (init == 1) {
+            globalMapPortStatus[key].state = state;
+            globalMapPortStatus[key].mode  = mode;
+            globalMapPortStatus[key].init  = init;
+          }
         }
       }
     }
