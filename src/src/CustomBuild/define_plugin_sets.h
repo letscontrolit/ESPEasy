@@ -390,6 +390,7 @@ To create/register a plugin, you have to :
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
     #define USES_P088      // ToniA IR plugin
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
     #define USES_P029      // Output - Domoticz MQTT Helper
     #define PLUGIN_SET_ONLY_TEMP_HUM
 #endif
@@ -414,12 +415,14 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "Sonoff Basic"
 
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_TH1x
     #define PLUGIN_DESCR  "Sonoff TH10/TH16"
 
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
     #define PLUGIN_SET_ONLY_TEMP_HUM
 #endif
 
@@ -430,6 +433,7 @@ To create/register a plugin, you have to :
 
     #define CONTROLLER_SET_STABLE
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
     #define USES_P076   // HWL8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     #define USES_P077	  // CSE7766   in POW R2
@@ -440,16 +444,19 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "Sonoff S20/22/26"
 
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_4CH
     #define PLUGIN_DESCR  "Sonoff 4CH"
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
 #endif
 
 #ifdef PLUGIN_SET_SONOFF_TOUCH
     #define PLUGIN_DESCR  "Sonoff Touch"
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
 #endif
 
 // Shelly ----------------------------
@@ -493,16 +500,19 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_SET_EASY_OLED1
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
     #define USES_P036   // FrameOLED
 #endif
 
 #ifdef PLUGIN_SET_EASY_OLED2
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
     #define USES_P023   // OLED
 #endif
 
 #ifdef PLUGIN_SET_EASY_RELAY
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
 #endif
 
 // LedStrips ----------------------------
@@ -531,6 +541,7 @@ To create/register a plugin, you have to :
         #undef ESP8266
     #endif
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
     #define USES_P036   // FrameOLED
     #define USES_P027   // INA219
     #define USES_P028   // BME280
@@ -573,6 +584,7 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_LC_TECH_RELAY_X2
     #define CONTROLLER_SET_STABLE
     #define PLUGIN_SET_ONLY_SWITCH
+    #define NOTIFIER_SET_STABLE
     #define USES_P026    // Sysinfo
     #define USES_P029    // Domoticz MQTT Helper
     #define USES_P033    // Dummy
@@ -876,7 +888,7 @@ To create/register a plugin, you have to :
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Ping
-    #define USES_P090   // CCS811 TVOC/eCO2 Sensor
+    //#define USES_P090   // CCS811 TVOC/eCO2 Sensor
     #define USES_P091	// SerSwitch
     #define USES_P092   // DL-Bus
     #define USES_P093   // Mitsubishi Heat Pump
@@ -884,6 +896,7 @@ To create/register a plugin, you have to :
     //#define USES_P095  // TFT ILI9341
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
+    //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
     #define USES_P103   // Atlas Scientific EZO Ph sensor
