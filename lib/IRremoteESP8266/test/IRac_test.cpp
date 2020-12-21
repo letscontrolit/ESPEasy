@@ -29,6 +29,7 @@
 #include "ir_Toshiba.h"
 #include "ir_Trotec.h"
 #include "ir_Vestel.h"
+#include "ir_Voltas.h"
 #include "ir_Whirlpool.h"
 #include "IRac.h"
 #include "IRrecv.h"
@@ -96,7 +97,7 @@ TEST(TestIRac, Argo) {
             stdAc::opmode_t::kHeat,      // Mode
             21,                          // Celsius
             stdAc::fanspeed_t::kHigh,    // Fan speed
-            stdAc::swingv_t::kOff,       // Veritcal swing
+            stdAc::swingv_t::kOff,       // Vertical swing
             false,                       // Turbo
             -1);                         // Sleep
   EXPECT_TRUE(ac.getPower());
@@ -122,8 +123,8 @@ TEST(TestIRac, Carrier64) {
             stdAc::opmode_t::kHeat,      // Mode
             21,                          // Celsius
             stdAc::fanspeed_t::kHigh,    // Fan speed
-            stdAc::swingv_t::kAuto,      // Veritcal swing
-            1);                         // Sleep
+            stdAc::swingv_t::kAuto,      // Vertical swing
+            1);                          // Sleep
   EXPECT_TRUE(ac.getPower());  // Power.
   EXPECT_EQ(kCarrierAc64Heat, ac.getMode());  // Operating mode.
   EXPECT_EQ(21, ac.getTemp());  // Temperature.
@@ -155,7 +156,7 @@ TEST(TestIRac, Coolix) {
               stdAc::opmode_t::kHeat,      // Mode
               21,                          // Celsius
               stdAc::fanspeed_t::kHigh,    // Fan speed
-              stdAc::swingv_t::kOff,       // Veritcal swing
+              stdAc::swingv_t::kOff,       // Vertical swing
               stdAc::swingh_t::kOff,       // Horizontal swing
               false,                       // Turbo
               false,                       // Light
@@ -224,7 +225,7 @@ TEST(TestIRac, Corona) {
               stdAc::opmode_t::kHeat,      // Mode
               21,                          // Celsius
               stdAc::fanspeed_t::kHigh,    // Fan speed
-              stdAc::swingv_t::kAuto,      // Veritcal swing
+              stdAc::swingv_t::kAuto,      // Vertical swing
               true);                       // Econo (PowerSave)
   EXPECT_TRUE(ac.getPower());  // Power.
   EXPECT_TRUE(ac.getPowerButton());  // Power.button
@@ -261,7 +262,7 @@ TEST(TestIRac, Daikin) {
               stdAc::opmode_t::kCool,      // Mode
               19,                          // Celsius
               stdAc::fanspeed_t::kMax,     // Fan speed
-              stdAc::swingv_t::kOff,       // Veritcal swing
+              stdAc::swingv_t::kOff,       // Vertical swing
               stdAc::swingh_t::kOff,       // Horizontal swing
               false,                       // Quiet
               false,                       // Turbo
@@ -293,7 +294,7 @@ TEST(TestIRac, Daikin128) {
                  stdAc::opmode_t::kHeat,      // Mode
                  27,                          // Celsius
                  stdAc::fanspeed_t::kMin,     // Fan speed
-                 stdAc::swingv_t::kAuto,       // Veritcal swing
+                 stdAc::swingv_t::kAuto,      // Vertical swing
                  true,                        // Quiet
                  false,                       // Turbo
                  true,                        // Light
@@ -324,7 +325,7 @@ TEST(TestIRac, Daikin152) {
                  stdAc::opmode_t::kCool,      // Mode
                  27,                          // Celsius
                  stdAc::fanspeed_t::kMedium,  // Fan speed
-                 stdAc::swingv_t::kAuto,      // Veritcal swing
+                 stdAc::swingv_t::kAuto,      // Vertical swing
                  false,                       // Quiet
                  false,                       // Turbo
                  true);                       // Econo
@@ -352,7 +353,7 @@ TEST(TestIRac, Daikin160) {
                  stdAc::opmode_t::kDry,       // Mode
                  23,                          // Celsius
                  stdAc::fanspeed_t::kMin,     // Fan speed
-                 stdAc::swingv_t::kMiddle);   // Veritcal swing
+                 stdAc::swingv_t::kMiddle);   // Vertical swing
   ASSERT_EQ(expected, ac.toString());
   ac._irsend.makeDecodeResult();
   EXPECT_TRUE(capture.decode(&ac._irsend.capture));
@@ -368,7 +369,7 @@ TEST(TestIRac, Daikin176) {
   IRac irac(kGpioUnused);
   IRrecv capture(kGpioUnused);
   char expected[] =
-      "Power: On, Mode: 7 (Cool), Temp: 26C, Fan: 1 (Low), Swing(H): 5 (Auto)";
+      "Power: On, Mode: 2 (Cool), Temp: 26C, Fan: 1 (Low), Swing(H): 5 (Auto)";
 
   ac.begin();
   irac.daikin176(&ac,
@@ -404,7 +405,7 @@ TEST(TestIRac, Daikin2) {
                stdAc::opmode_t::kCool,      // Mode
                19,                          // Celsius
                stdAc::fanspeed_t::kLow,     // Fan speed
-               stdAc::swingv_t::kOff,       // Veritcal swing
+               stdAc::swingv_t::kOff,       // Vertical swing
                stdAc::swingh_t::kMiddle,    // Horizontal swing
                false,                       // Quiet
                false,                       // Turbo
@@ -439,7 +440,7 @@ TEST(TestIRac, Daikin216) {
                  stdAc::opmode_t::kHeat,      // Mode
                  31,                          // Celsius
                  stdAc::fanspeed_t::kMedium,  // Fan speed
-                 stdAc::swingv_t::kAuto,      // Veritcal swing
+                 stdAc::swingv_t::kAuto,      // Vertical swing
                  stdAc::swingh_t::kLeft,      // Horizontal swing
                  true,                        // Quiet
                  false);                      // Turbo (Powerful)
@@ -468,7 +469,7 @@ TEST(TestIRac, Daikin64) {
                 stdAc::opmode_t::kCool,      // Mode
                 27,                          // Celsius
                 stdAc::fanspeed_t::kLow,     // Fan Speed
-                stdAc::swingv_t::kAuto,      // Veritcal swing
+                stdAc::swingv_t::kAuto,      // Vertical swing
                 false,                       // Quiet
                 false,                       // Turbo
                 360,                         // Sleep
@@ -520,7 +521,7 @@ TEST(TestIRac, Electra) {
                stdAc::opmode_t::kFan,       // Mode
                26,                          // Celsius
                stdAc::fanspeed_t::kHigh,    // Fan speed
-               stdAc::swingv_t::kAuto,      // Veritcal swing
+               stdAc::swingv_t::kAuto,      // Vertical swing
                stdAc::swingh_t::kLeft,      // Horizontal swing
                true,                        // Turbo
                true,                        // Light (toggle)
@@ -543,7 +544,8 @@ TEST(TestIRac, Fujitsu) {
       "Fan: 2 (Medium), Command: N/A";
   std::string arrah2e_expected =
       "Model: 1 (ARRAH2E), Power: On, Mode: 1 (Cool), Temp: 19C, "
-      "Fan: 2 (Medium), Clean: Off, Filter: Off, Swing: 0 (Off), Command: N/A";
+      "Fan: 2 (Medium), Clean: Off, Filter: Off, Swing: 0 (Off), Command: N/A, "
+      "Sleep Timer: 03:00";
   std::string arry4_expected =
       "Model: 5 (ARRY4), Power: On, Mode: 1 (Cool), Temp: 19C, "
       "Fan: 2 (Medium), Clean: On, Filter: On, Swing: 0 (Off), Command: N/A";
@@ -554,7 +556,7 @@ TEST(TestIRac, Fujitsu) {
                stdAc::opmode_t::kCool,      // Mode
                19,                          // Celsius
                stdAc::fanspeed_t::kMedium,  // Fan speed
-               stdAc::swingv_t::kOff,       // Veritcal swing
+               stdAc::swingv_t::kOff,       // Vertical swing
                stdAc::swingh_t::kOff,       // Horizontal swing
                false,                       // Quiet
                false,                       // Turbo (Powerful)
@@ -577,13 +579,14 @@ TEST(TestIRac, Fujitsu) {
                stdAc::opmode_t::kCool,      // Mode
                19,                          // Celsius
                stdAc::fanspeed_t::kMedium,  // Fan speed
-               stdAc::swingv_t::kOff,       // Veritcal swing
+               stdAc::swingv_t::kOff,       // Vertical swing
                stdAc::swingh_t::kOff,       // Horizontal swing
                false,                       // Quiet
                false,                       // Turbo (Powerful)
                false,                       // Econo
                true,                        // Filter
-               true);                       // Clean
+               true,                        // Clean
+               3 * 60);                     // Sleep
   ASSERT_EQ(arrah2e_expected, ac.toString());
   ac._irsend.makeDecodeResult();
   EXPECT_TRUE(capture.decode(&ac._irsend.capture));
@@ -598,7 +601,7 @@ TEST(TestIRac, Fujitsu) {
                stdAc::opmode_t::kCool,      // Mode
                19,                          // Celsius
                stdAc::fanspeed_t::kMedium,  // Fan speed
-               stdAc::swingv_t::kOff,       // Veritcal swing
+               stdAc::swingv_t::kOff,       // Vertical swing
                stdAc::swingh_t::kOff,       // Horizontal swing
                false,                       // Quiet
                false,                       // Turbo (Powerful)
@@ -628,7 +631,7 @@ TEST(TestIRac, Goodweather) {
                    stdAc::opmode_t::kCool,      // Mode
                    19,                          // Celsius
                    stdAc::fanspeed_t::kMedium,  // Fan speed
-                   stdAc::swingv_t::kHigh,      // Veritcal swing
+                   stdAc::swingv_t::kHigh,      // Vertical swing
                    true,                        // Turbo
                    true,                        // Light
                    8 * 60 + 0);                 // Sleep time
@@ -660,7 +663,7 @@ TEST(TestIRac, Gree) {
             false,                          // Celsius
             71,                             // Degrees (F)
             stdAc::fanspeed_t::kMedium,     // Fan speed
-            stdAc::swingv_t::kHigh,         // Veritcal swing
+            stdAc::swingv_t::kHigh,         // Vertical swing
             false,                          // Turbo
             true,                           // Light
             true,                           // Clean (aka Mold/XFan)
@@ -690,7 +693,7 @@ TEST(TestIRac, Haier) {
              stdAc::opmode_t::kCool,      // Mode
              24,                          // Celsius
              stdAc::fanspeed_t::kMedium,  // Fan speed
-             stdAc::swingv_t::kHigh,      // Veritcal swing
+             stdAc::swingv_t::kHigh,      // Vertical swing
              true,                        // Filter
              8 * 60 + 0,                  // Sleep time
              13 * 60 + 45);               // Clock
@@ -720,7 +723,7 @@ TEST(TestIRac, HaierYrwo2) {
              stdAc::opmode_t::kCool,      // Mode
              23,                          // Celsius
              stdAc::fanspeed_t::kMedium,  // Fan speed
-             stdAc::swingv_t::kHigh,      // Veritcal swing
+             stdAc::swingv_t::kHigh,      // Vertical swing
              true,                        // Turbo
              true,                        // Filter
              8 * 60 + 0);                 // Sleep time
@@ -748,7 +751,7 @@ TEST(TestIRac, Hitachi) {
                stdAc::opmode_t::kAuto,      // Mode
                22,                          // Celsius
                stdAc::fanspeed_t::kMedium,  // Fan speed
-               stdAc::swingv_t::kOff,       // Veritcal swing
+               stdAc::swingv_t::kOff,       // Vertical swing
                stdAc::swingh_t::kAuto);     // Horizontal swing
 
   ASSERT_EQ(expected, ac.toString());
@@ -904,7 +907,7 @@ TEST(TestIRac, Kelvinator) {
                   stdAc::opmode_t::kCool,      // Mode
                   19,                          // Celsius
                   stdAc::fanspeed_t::kMedium,  // Fan speed
-                  stdAc::swingv_t::kOff,       // Veritcal swing
+                  stdAc::swingv_t::kOff,       // Vertical swing
                   stdAc::swingh_t::kOff,       // Horizontal swing
                   false,                       // Quiet
                   false,                       // Turbo
@@ -953,8 +956,10 @@ TEST(TestIRac, Midea) {
   IRac irac(kGpioUnused);
   IRrecv capture(kGpioUnused);
   char expected[] =
-      "Power: On, Mode: 1 (Dry), Celsius: On, Temp: 27C/80F, Fan: 2 (Medium), "
-      "Sleep: On, Swing(V) Toggle: Off, Econo Toggle: Off";
+      "Type: 1 (Command), Power: On, Mode: 1 (Dry), Celsius: On, "
+      "Temp: 27C/80F, On Timer: Off, Off Timer: Off, Fan: 2 (Medium), "
+      "Sleep: On, Swing(V) Toggle: Off, Econo Toggle: Off, "
+      "Turbo Toggle: Off, Light Toggle: Off";
 
   ac.begin();
   irac.midea(&ac,
@@ -964,7 +969,9 @@ TEST(TestIRac, Midea) {
              27,                          // Degrees
              stdAc::fanspeed_t::kMedium,  // Fan speed
              stdAc::swingv_t::kOff,       // Swing(V)
+             false,                       // Turbo
              false,                       // Econo
+             false,                       // Light
              8 * 60 + 0);                 // Sleep time
 
   ASSERT_EQ(expected, ac.toString());
@@ -992,7 +999,7 @@ TEST(TestIRac, Mitsubishi) {
                   stdAc::opmode_t::kCool,      // Mode
                   20,                          // Celsius
                   stdAc::fanspeed_t::kMedium,  // Fan speed
-                  stdAc::swingv_t::kOff,       // Veritcal swing
+                  stdAc::swingv_t::kOff,       // Vertical swing
                   stdAc::swingh_t::kOff,       // Horizontal swing
                   false,                       // Silent
                   14 * 60 + 35);               // Clock
@@ -1020,7 +1027,7 @@ TEST(TestIRac, Mitsubishi136) {
                      stdAc::opmode_t::kDry,       // Mode
                      22,                          // Celsius
                      stdAc::fanspeed_t::kMax,     // Fan speed
-                     stdAc::swingv_t::kHighest,   // Veritcal swing
+                     stdAc::swingv_t::kHighest,   // Vertical swing
                      false);                      // Quiet
   ASSERT_EQ(expected, ac.toString());
   ac._irsend.makeDecodeResult();
@@ -1047,7 +1054,7 @@ TEST(TestIRac, MitsubishiHeavy88) {
                          stdAc::opmode_t::kCool,      // Mode
                          21,                          // Celsius
                          stdAc::fanspeed_t::kMedium,  // Fan speed
-                         stdAc::swingv_t::kAuto,      // Veritcal swing
+                         stdAc::swingv_t::kAuto,      // Vertical swing
                          stdAc::swingh_t::kOff,       // Horizontal swing
                          false,                       // Turbo
                          false,                       // Econo
@@ -1077,7 +1084,7 @@ TEST(TestIRac, MitsubishiHeavy152) {
                           stdAc::opmode_t::kCool,      // Mode
                           20,                          // Celsius
                           stdAc::fanspeed_t::kLow,     // Fan speed
-                          stdAc::swingv_t::kOff,       // Veritcal swing
+                          stdAc::swingv_t::kOff,       // Vertical swing
                           stdAc::swingh_t::kAuto,      // Horizontal swing
                           true,                        // Silent
                           false,                       // Turbo
@@ -1101,19 +1108,21 @@ TEST(TestIRac, Neoclima) {
   IRrecv capture(kGpioUnused);
   char expected[] =
       "Power: On, Mode: 1 (Cool), Temp: 20C, Fan: 3 (Low), "
-      "Swing(V): Off, Swing(H): On, Sleep: On, Turbo: Off, Hold: Off, Ion: On, "
-      "Eye: Off, Light: On, Follow: Off, 8C Heat: Off, Fresh: Off, "
-      "Button: 0 (Power)";
+      "Swing(V): Off, Swing(H): On, Sleep: On, Turbo: Off, Econo: On, "
+      "Hold: Off, Ion: On, Eye: Off, Light: On, Follow: Off, 8C Heat: Off, "
+      "Fresh: Off, Button: 0 (Power)";
 
   ac.begin();
   irac.neoclima(&ac,
                 true,                        // Power
                 stdAc::opmode_t::kCool,      // Mode
-                20,                          // Celsius
+                true,                        // Celsius
+                20,                          // Degrees
                 stdAc::fanspeed_t::kLow,     // Fan speed
-                stdAc::swingv_t::kOff,       // Veritcal swing
+                stdAc::swingv_t::kOff,       // Vertical swing
                 stdAc::swingh_t::kAuto,      // Horizontal swing
                 false,                       // Turbo
+                true,                        // Econo
                 true,                        // Light
                 true,                        // Filter
                 8 * 60);                     // Sleep
@@ -1143,7 +1152,7 @@ TEST(TestIRac, Panasonic) {
                  stdAc::opmode_t::kHeat,      // Mode
                  28,                          // Celsius
                  stdAc::fanspeed_t::kMedium,  // Fan speed
-                 stdAc::swingv_t::kAuto,      // Veritcal swing
+                 stdAc::swingv_t::kAuto,      // Vertical swing
                  stdAc::swingh_t::kLeft,      // Horizontal swing
                  true,                        // Quiet
                  false,                       // Turbo
@@ -1170,7 +1179,7 @@ TEST(TestIRac, Panasonic) {
                stdAc::opmode_t::kCool,      // Mode
                18,                          // Celsius
                stdAc::fanspeed_t::kMax,     // Fan speed
-               stdAc::swingv_t::kHigh,      // Veritcal swing
+               stdAc::swingv_t::kHigh,      // Vertical swing
                stdAc::swingh_t::kMiddle,    // Horizontal swing
                false,                       // Quiet
                true,                        // Turbo
@@ -1200,7 +1209,7 @@ TEST(TestIRac, Samsung) {
                stdAc::opmode_t::kAuto,      // Mode
                28,                          // Celsius
                stdAc::fanspeed_t::kMedium,  // Fan speed
-               stdAc::swingv_t::kAuto,      // Veritcal swing
+               stdAc::swingv_t::kAuto,      // Vertical swing
                true,                        // Quiet
                false,                       // Turbo
                true,                        // Light (Display)
@@ -1224,7 +1233,7 @@ TEST(TestIRac, Samsung) {
                stdAc::opmode_t::kAuto,      // Mode
                28,                          // Celsius
                stdAc::fanspeed_t::kMedium,  // Fan speed
-               stdAc::swingv_t::kAuto,      // Veritcal swing
+               stdAc::swingv_t::kAuto,      // Vertical swing
                true,                        // Quiet
                false,                       // Turbo
                true,                        // Light (Display)
@@ -1281,20 +1290,22 @@ TEST(TestIRac, Sharp) {
   IRac irac(kGpioUnused);
   IRrecv capture(kGpioUnused);
   char expected[] =
-      "Power: On, Mode: 2 (Cool), Temp: 28C, Fan: 3 (Medium), "
+      "Model: 1 (A907), Power: On, Mode: 2 (Cool), Temp: 28C, Fan: 3 (Medium), "
       "Turbo: Off, Swing(V) Toggle: On, Ion: On, Econo: -, Clean: Off";
 
   ac.begin();
   irac.sharp(&ac,
-             true,                         // Power
-             true,                         // Previous Power
-             stdAc::opmode_t::kCool,       // Mode
-             28,                           // Celsius
-             stdAc::fanspeed_t::kMedium,   // Fan speed
-             stdAc::swingv_t::kAuto,       // Veritcal swing
-             false,                        // Turbo
-             true,                         // Filter (Ion)
-             false);                       // Clean
+             sharp_ac_remote_model_t::A907,  // Model
+             true,                           // Power
+             true,                           // Previous Power
+             stdAc::opmode_t::kCool,         // Mode
+             28,                             // Celsius
+             stdAc::fanspeed_t::kMedium,     // Fan speed
+             stdAc::swingv_t::kAuto,         // Vertical swing
+             false,                          // Turbo
+             false,                          // Light
+             true,                           // Filter (Ion)
+             false);                         // Clean
   ASSERT_EQ(expected, ac.toString());
   ac._irsend.makeDecodeResult();
   EXPECT_TRUE(capture.decode(&ac._irsend.capture));
@@ -1319,7 +1330,7 @@ TEST(TestIRac, Tcl112) {
               stdAc::opmode_t::kCool,      // Mode
               20,                          // Celsius
               stdAc::fanspeed_t::kMedium,  // Fan speed
-              stdAc::swingv_t::kOff,       // Veritcal swing
+              stdAc::swingv_t::kOff,       // Vertical swing
               stdAc::swingh_t::kAuto,      // Horizontal swing
               false,                       // Turbo
               true,                        // Light
@@ -1330,6 +1341,33 @@ TEST(TestIRac, Tcl112) {
   EXPECT_TRUE(capture.decode(&ac._irsend.capture));
   ASSERT_EQ(TCL112AC, ac._irsend.capture.decode_type);
   ASSERT_EQ(kTcl112AcBits, ac._irsend.capture.bits);
+  ASSERT_EQ(expected, IRAcUtils::resultAcToString(&ac._irsend.capture));
+  stdAc::state_t r, p;
+  ASSERT_TRUE(IRAcUtils::decodeToState(&ac._irsend.capture, &r, &p));
+}
+
+TEST(TestIRac, Technibel) {
+  IRTechnibelAc ac(kGpioUnused);
+  IRac irac(kGpioUnused);
+  IRrecv capture(kGpioUnused);
+  char expected[] =
+      "Power: On, Mode: 8 (Heat), Fan: 2 (Medium), Temp: 72F, Sleep: On, "
+      "Swing(V): On, Timer: Off";
+
+  ac.begin();
+  irac.technibel(&ac,
+                 true,                        // Power
+                 stdAc::opmode_t::kHeat,      // Mode
+                 false,                       // Celsius
+                 72,                          // Degrees
+                 stdAc::fanspeed_t::kMedium,  // Fan speed
+                 stdAc::swingv_t::kAuto,      // Vertical swing
+                 8 * 60 + 30);                // Sleep
+  ASSERT_EQ(expected, ac.toString());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(decode_type_t::TECHNIBEL_AC, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kTechnibelAcBits, ac._irsend.capture.bits);
   ASSERT_EQ(expected, IRAcUtils::resultAcToString(&ac._irsend.capture));
   stdAc::state_t r, p;
   ASSERT_TRUE(IRAcUtils::decodeToState(&ac._irsend.capture, &r, &p));
@@ -1349,7 +1387,7 @@ TEST(TestIRac, Teco) {
             stdAc::opmode_t::kAuto,      // Mode
             21,                          // Celsius
             stdAc::fanspeed_t::kMedium,  // Fan speed
-            stdAc::swingv_t::kAuto,      // Veritcal swing
+            stdAc::swingv_t::kAuto,      // Vertical swing
             true,                        // Light
             8 * 60 + 30);                // Sleep
   ASSERT_EQ(expected, ac.toString());
@@ -1435,6 +1473,36 @@ TEST(TestIRac, Toshiba) {
       ac._irsend.outputStr());
 }
 
+TEST(TestIRac, Transcold) {
+  IRTranscoldAc ac(kGpioUnused);
+  IRac irac(kGpioUnused);
+  IRrecv capture(kGpioUnused);
+  char expected[] =
+      "Power: On, Mode: 6 (Cool), Fan: 11 (Max), Temp: 19C";
+
+  ac.begin();
+  irac.transcold(&ac,
+              true,                        // Power
+              stdAc::opmode_t::kCool,      // Mode
+              19,                          // Celsius
+              stdAc::fanspeed_t::kMax,     // Fan speed
+              stdAc::swingv_t::kOff,       // Vertical swing
+              stdAc::swingh_t::kOff);      // Horizontal swing
+  EXPECT_TRUE(ac.getPower());
+  EXPECT_EQ(kTranscoldCool, ac.getMode());
+  EXPECT_EQ(19, ac.getTemp());
+  EXPECT_EQ(kTranscoldFanMax, ac.getFan());
+  EXPECT_FALSE(ac.getSwing());
+  ASSERT_EQ(expected, ac.toString());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(decode_type_t::TRANSCOLD, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kTranscoldBits, ac._irsend.capture.bits);
+  ASSERT_EQ(expected, IRAcUtils::resultAcToString(&ac._irsend.capture));
+  stdAc::state_t r, p;
+  ASSERT_TRUE(IRAcUtils::decodeToState(&ac._irsend.capture, &r, &p));
+}
+
 TEST(TestIRac, Trotec) {
   IRTrotecESP ac(kGpioUnused);
   IRac irac(kGpioUnused);
@@ -1478,7 +1546,7 @@ TEST(TestIRac, Vestel) {
               stdAc::opmode_t::kAuto,    // Mode
               22,                        // Celsius
               stdAc::fanspeed_t::kLow,   // Fan speed
-              stdAc::swingv_t::kHigh,    // Veritcal swing
+              stdAc::swingv_t::kHigh,    // Vertical swing
               false,                     // Turbo
               true,                      // Filter
               8 * 60 + 0);               // Sleep time
@@ -1502,7 +1570,7 @@ TEST(TestIRac, Vestel) {
               stdAc::opmode_t::kAuto,    // Mode
               22,                        // Celsius
               stdAc::fanspeed_t::kLow,   // Fan speed
-              stdAc::swingv_t::kHigh,    // Veritcal swing
+              stdAc::swingv_t::kHigh,    // Vertical swing
               false,                     // Turbo
               true,                      // Filter
               8 * 60 + 0,                // Sleep time
@@ -1526,7 +1594,7 @@ TEST(TestIRac, Vestel) {
               stdAc::opmode_t::kAuto,    // Mode
               22,                        // Celsius
               stdAc::fanspeed_t::kLow,   // Fan speed
-              stdAc::swingv_t::kHigh,    // Veritcal swing
+              stdAc::swingv_t::kHigh,    // Vertical swing
               false,                     // Turbo
               true,                      // Filter
               8 * 60 + 0,                // Sleep time
@@ -1554,6 +1622,83 @@ TEST(TestIRac, Vestel) {
       "m520s100000", ac._irsend.outputStr());
 }
 
+TEST(TestIRac, Voltas) {
+  IRVoltas ac(kGpioUnused);
+  IRac irac(kGpioUnused);
+  IRrecv capture(kGpioUnused);
+  ac.begin();
+
+  // Test the UNKNOWN model type
+  char expected_unknown[] =
+      "Model: 0 (UNKNOWN), Power: On, Mode: 8 (Cool), Temp: 18C, "
+      "Fan: 1 (High), Swing(V): On, Swing(H): On, "
+      "Turbo: Off, Econo: Off, WiFi: Off, Light: On, Sleep: On, "
+      "On Timer: Off, Off Timer: Off";
+  irac.voltas(&ac,
+              voltas_ac_remote_model_t::kVoltasUnknown,  // Model
+              true,                                      // Power
+              stdAc::opmode_t::kCool,                    // Mode
+              18,                                        // Celsius
+              stdAc::fanspeed_t::kHigh,                  // Fan speed
+              stdAc::swingv_t::kAuto,                    // Vertical Swing
+              stdAc::swingh_t::kAuto,                    // Horizontal Swing
+              false,                                     // Turbo
+              false,                                     // Econo
+              true,                                      // Light
+              3 * 60);                                   // Sleep
+  EXPECT_EQ(voltas_ac_remote_model_t::kVoltasUnknown, ac.getModel());
+  EXPECT_TRUE(ac.getPower());
+  EXPECT_EQ(kVoltasCool, ac.getMode());
+  EXPECT_EQ(18, ac.getTemp());
+  EXPECT_EQ(kVoltasFanHigh, ac.getFan());
+  EXPECT_FALSE(ac.getTurbo());
+  EXPECT_FALSE(ac.getEcono());
+  EXPECT_TRUE(ac.getLight());
+  EXPECT_TRUE(ac.getSleep());
+  ASSERT_EQ(expected_unknown, ac.toString());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(VOLTAS, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kVoltasBits, ac._irsend.capture.bits);
+  ASSERT_EQ(expected_unknown, IRAcUtils::resultAcToString(&ac._irsend.capture));
+  stdAc::state_t r, p;
+  ASSERT_TRUE(IRAcUtils::decodeToState(&ac._irsend.capture, &r, &p));
+
+  ac._irsend.reset();
+  // Test the UNKNOWN model type
+  char expected_122LZF[] =
+      "Model: 1 (122LZF), Power: On, Mode: 8 (Cool), Temp: 18C, "
+      "Fan: 1 (High), Swing(V): On, Swing(H): N/A, "
+      "Turbo: Off, Econo: Off, WiFi: Off, Light: On, Sleep: On, "
+      "On Timer: Off, Off Timer: Off";
+  irac.voltas(&ac,
+              voltas_ac_remote_model_t::kVoltas122LZF,   // Model
+              true,                                      // Power
+              stdAc::opmode_t::kCool,                    // Mode
+              18,                                        // Celsius
+              stdAc::fanspeed_t::kHigh,                  // Fan speed
+              stdAc::swingv_t::kAuto,                    // Vertical Swing
+              stdAc::swingh_t::kAuto,                    // Horizontal Swing
+              false,                                     // Turbo
+              false,                                     // Econo
+              true,                                      // Light
+              3 * 60);                                   // Sleep
+  EXPECT_EQ(voltas_ac_remote_model_t::kVoltas122LZF, ac.getModel());
+  EXPECT_TRUE(ac.getPower());
+  EXPECT_EQ(kVoltasCool, ac.getMode());
+  EXPECT_EQ(18, ac.getTemp());
+  EXPECT_EQ(kVoltasFanHigh, ac.getFan());
+  EXPECT_FALSE(ac.getTurbo());
+  EXPECT_FALSE(ac.getEcono());
+  EXPECT_TRUE(ac.getLight());
+  EXPECT_TRUE(ac.getSleep());
+  ASSERT_EQ(expected_122LZF, ac.toString());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(VOLTAS, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kVoltasBits, ac._irsend.capture.bits);
+  ASSERT_EQ(expected_122LZF, IRAcUtils::resultAcToString(&ac._irsend.capture));
+}
 
 TEST(TestIRac, Whirlpool) {
   IRWhirlpoolAc ac(kGpioUnused);
@@ -1571,7 +1716,7 @@ TEST(TestIRac, Whirlpool) {
                  stdAc::opmode_t::kAuto,      // Mode
                  21,                          // Celsius
                  stdAc::fanspeed_t::kMedium,  // Fan speed
-                 stdAc::swingv_t::kAuto,      // Veritcal swing
+                 stdAc::swingv_t::kAuto,      // Vertical swing
                  false,                       // Turbo
                  true,                        // Light
                  8 * 60 + 30,                 // Sleep
@@ -1873,7 +2018,7 @@ TEST(TestIRac, Issue821) {
               result.mode,      // Mode
               result.degrees,   // Celsius
               result.fanspeed,  // Fan speed
-              result.swingv,       // Veritcal swing
+              result.swingv,       // Vertical swing
               result.swingh,       // Horizontal swing
               result.turbo,                       // Turbo
               result.light,                       // Light
@@ -1965,7 +2110,7 @@ TEST(TestIRac, Issue1001) {
                  result.mode,      // Mode
                  result.degrees,   // Celsius
                  result.fanspeed,  // Fan speed
-                 result.swingv,    // Veritcal swing
+                 result.swingv,    // Vertical swing
                  result.turbo,     // Turbo
                  result.light,     // Light
                  result.sleep);    // Sleep
@@ -1996,7 +2141,7 @@ TEST(TestIRac, Issue1001) {
                  result.mode,      // Mode
                  result.degrees,   // Celsius
                  result.fanspeed,  // Fan speed
-                 result.swingv,    // Veritcal swing
+                 result.swingv,    // Vertical swing
                  result.turbo,     // Turbo
                  result.light,     // Light
                  result.sleep);    // Sleep
@@ -2004,7 +2149,7 @@ TEST(TestIRac, Issue1001) {
   EXPECT_TRUE(capture.decode(&ac._irsend.capture));
   ASSERT_EQ(WHIRLPOOL_AC, ac._irsend.capture.decode_type);
   ASSERT_EQ(kWhirlpoolAcBits, ac._irsend.capture.bits);
-  ASSERT_EQ("Model: 1 (DG11J13A), Power Toggle: On, Mode: 1 (Auto), Temp: 24C, "
+  ASSERT_EQ("Model: 1 (DG11J13A), Power Toggle: On, Mode: 2 (Cool), Temp: 24C, "
             "Fan: 0 (Auto), Swing: Off, Light: Off, Clock: 00:00, "
             "On Timer: Off, Off Timer: Off, Sleep: Off, Super: Off, "
             "Command: 1 (Power)",
@@ -2071,4 +2216,99 @@ TEST(TestIRac, Issue1035) {
   ASSERT_TRUE(prev.power);
   ASSERT_TRUE(IRAcUtils::decodeToState(&ac._irsend.capture, &result, &prev));
   ASSERT_FALSE(result.power);
+}
+
+TEST(TestIRac, Issue1250) {
+  IRToshibaAC ac(kGpioUnused);
+  IRac irac(kGpioUnused);
+  IRrecv capture(kGpioUnused);
+
+  ac.begin();
+  irac.next.protocol = decode_type_t::TOSHIBA_AC;  // Set a protocol to use.
+  irac.next.model = 1;  // Some A/Cs have different models. Try just the first.
+  irac.next.mode = stdAc::opmode_t::kFan;  // Run in Fan mode initially.
+  irac.next.celsius = true;  // Use Celsius for temp units. False = Fahrenheit
+  irac.next.degrees = 19;  // 19 degrees.
+  irac.next.fanspeed = stdAc::fanspeed_t::kAuto;  // Start the fan at Auto.
+  irac.next.swingv = stdAc::swingv_t::kOff;  // Don't swing the fan up or down.
+  irac.next.swingh = stdAc::swingh_t::kOff;  // Don't swing the fan left/right.
+  irac.next.light = true;  // Turn off any LED/Lights/Display that we can.
+  irac.next.beep = false;  // Turn off any beep from the A/C if we can.
+  irac.next.econo = false;  // Turn off any economy modes if we can.
+  irac.next.filter = false;  // Turn off any Ion/Mold/Health filters if we can.
+  irac.next.turbo = false;  // Don't use any turbo/powerful/etc modes.
+  irac.next.quiet = false;  // Don't use any quiet/silent/etc modes.
+  irac.next.sleep = -1;  // Don't set any sleep time or modes.
+  irac.next.clean = false;  // Turn off any Cleaning options if we can.
+  irac.next.clock = -1;  // Don't set any current time if we can avoid it.
+  irac.next.power = true;  // Initially start with the unit on.
+
+  stdAc::state_t copy_of_next_pre_send = irac.next;
+  irac.sendAc();
+  // Confirm nothing in the state changed with the send.
+  ASSERT_FALSE(IRac::cmpStates(irac.next, copy_of_next_pre_send));
+
+  // Now send the state so we can actually decode/capture what we sent.
+  char expected_on[] =
+      "Temp: 19C, Power: On, Mode: 4 (Fan), Fan: 0 (Auto), "
+      "Turbo: Off, Econo: Off";
+  ac._irsend.reset();
+  irac.toshiba(&ac,
+               irac.next.power,     // Power
+               irac.next.mode,      // Mode
+               irac.next.degrees,   // Celsius
+               irac.next.fanspeed,  // Fan speed
+               irac.next.swingv,    // Vertical Swing
+               irac.next.turbo,     // Turbo
+               irac.next.econo);    // Econo
+  ASSERT_EQ(expected_on, ac.toString());
+  ASSERT_EQ(kToshibaACStateLength, ac.getStateLength());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(TOSHIBA_AC, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kToshibaACBits, ac._irsend.capture.bits);
+  ASSERT_EQ(expected_on, IRAcUtils::resultAcToString(&ac._irsend.capture));
+
+
+  irac.next.power = false;
+  ASSERT_TRUE(IRac::cmpStates(irac.next, copy_of_next_pre_send));
+  copy_of_next_pre_send = irac.next;
+  irac.sendAc();
+  // Now send the state so we can actually decode/capture what we sent.
+  char expected_off[] =
+      "Temp: 19C, Power: Off, Fan: 0 (Auto), Turbo: Off, Econo: Off";
+  ac._irsend.reset();
+  irac.toshiba(&ac,
+               irac.next.power,     // Power
+               irac.next.mode,      // Mode
+               irac.next.degrees,   // Celsius
+               irac.next.fanspeed,  // Fan speed
+               irac.next.swingv,    // Vertical Swing
+               irac.next.turbo,     // Turbo
+               irac.next.econo);    // Econo
+  ASSERT_EQ(expected_off, ac.toString());
+  ASSERT_EQ(kToshibaACStateLength, ac.getStateLength());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(TOSHIBA_AC, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kToshibaACBits, ac._irsend.capture.bits);
+  ASSERT_EQ(expected_off, IRAcUtils::resultAcToString(&ac._irsend.capture));
+  // Confirm nothing in the state changed with the send.
+  ASSERT_FALSE(IRac::cmpStates(irac.next, copy_of_next_pre_send));
+}
+
+// Ensure Protocols that expect the IRac::sendAC() call to have a prev value set
+// still works when it is NULL. i.e. It doesn't crash.
+// Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/1339
+TEST(TestIRac, Issue1339) {
+  IRac irac(kGpioUnused);
+  stdAc::state_t to_send;
+  IRac::initState(&to_send);
+
+  to_send.protocol = decode_type_t::SAMSUNG_AC;
+  ASSERT_TRUE(irac.sendAc(to_send, NULL));
+  to_send.protocol = decode_type_t::SHARP_AC;
+  ASSERT_TRUE(irac.sendAc(to_send, NULL));
+  to_send.protocol = decode_type_t::HITACHI_AC1;
+  ASSERT_TRUE(irac.sendAc(to_send, NULL));
 }

@@ -1,5 +1,5 @@
-/****************************************************************************************************************************\
- * Arduino project "ESP Easy" � Copyright www.esp8266.nu
+/*****************************************************************************************************************************\
+ * Arduino project "ESP Easy" © Copyright 2018-2020 github.com/letscontrolit
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -8,12 +8,18 @@
  * You received a copy of the GNU General Public License along with this program in file 'License.txt'.
  *
  * Additional information about licensing can be found at : http://www.gnu.org/licenses
-\*************************************************************************************************************************/
+\*****************************************************************************************************************************/
 
-// This file incorporates work covered by the following copyright and permission notice:  
+ // This project incorporates work covered by the following copyrights and permission notices:
+ //
+ // Notes:
+ // - Parts of the source files in this repository are made available under different licenses.
+ //   Refer to each individual source file/directory for more details.
+ // - Your copy of this product may not contain code covered by one or more of the licenses listed here,
+ //   depending on the exact product and version you choose.
 
-/****************************************************************************************************************************\
-* Arduino project "Nodo" � Copyright 2010..2015 Paul Tonkes 
+/*****************************************************************************************************************************\
+* Arduino project "Nodo" © Copyright 2010..2015 Paul Tonkes 
 * 
 * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
 * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -26,7 +32,100 @@
 * bugs kunnen worden gelogd op                      : https://code.google.com/p/arduino-nodo/
 * Compiler voor deze programmacode te downloaden op : http://arduino.cc
 * Voor vragen of suggesties, mail naar              : p.k.tonkes@gmail.com
-\*************************************************************************************************************************/
+\*****************************************************************************************************************************/
+
+/*****************************************************************************************************************************\
+ * esp8266/Arduino is licensed under the
+ * GNU Lesser General Public License v2.1
+ *
+ * Additional information about licensing can be found at : https://github.com/esp8266/Arduino/blob/master/LICENSE
+\*****************************************************************************************************************************/
+
+/*****************************************************************************************************************************\
+ * espressif/arduino-esp32 is licensed under the
+ * GNU Lesser General Public License v2.1
+ *
+ * Additional information about licensing can be found at : https://github.com/espressif/arduino-esp32/blob/master/LICENSE.md
+\*****************************************************************************************************************************/
+
+/*****************************************************************************************************************************\
+ * platformio/platformio-core        © Copyright 2014-present PlatformIO <contact@platformio.org>
+ * platformio/platform-espressif8266 © Copyright 2014-present PlatformIO <contact@platformio.org>
+ * platformio/platform-espressif32   © Copyright 2014-present PlatformIO <contact@platformio.org>
+ *
+ * is licensed under the Apache License 2.0
+ *
+ * Additional information about licensing can be found at : https://github.com/platformio/platformio-core/blob/develop/LICENSE
+\*****************************************************************************************************************************/
+
+/*****************************************************************************************************************************\
+ * espressif/esptool is licensed under the
+ * GNU General Public License v2.0
+ *
+ * Additional information about licensing can be found at : https://github.com/espressif/esptool/blob/master/LICENSE
+\*****************************************************************************************************************************/
+
+/*****************************************************************************************************************************\
+ * Grovkillen/ESP_Easy_Flasher is licensed under the
+ * GNU General Public License v3.0
+ *
+ * Additional information about licensing can be found at : https://github.com/Grovkillen/ESP_Easy_Flasher/blob/master/LICENSE
+\*****************************************************************************************************************************/
+
+/*****************************************************************************************************************************\
+ * ESPRESSIF MIT License
+ *
+ * Copyright (c) 2018 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
+ *
+ * Permission is hereby granted for use on all ESPRESSIF SYSTEMS products, in which case,
+ * it is free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Additional information about licensing can be found at : https://github.com/espressif/esp-at/blob/master/LICENSE
+\*****************************************************************************************************************************/
+
+/*****************************************************************************************************************************\
+ * sphinx-doc/sphinx © Copyright 2007-2020 by the Sphinx team (see AUTHORS file). All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Additional information about licensing can be found at : https://github.com/sphinx-doc/sphinx/blob/3.x/LICENSE
+\*****************************************************************************************************************************/
+
 
                      GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
