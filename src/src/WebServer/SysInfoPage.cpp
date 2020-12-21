@@ -251,9 +251,8 @@ void handle_sysinfo() {
   addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard"));
 
   TXBuffer += githublogo;
-  html_add_script(false);
-  TXBuffer += DATA_GITHUB_CLIPBOARD_JS;
-  html_add_script_end();
+  serve_JS(JSfiles_e::GitHubClipboard);
+
   # else // ifdef WEBSERVER_GITHUB_COPY
   addFormHeader(F("System Info"));
 
@@ -682,7 +681,7 @@ void handle_sysinfo_Storage() {
     html += F(" kB free)");
     addHtml(html);
   }
-
+  #ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));
   addHtml(String(SpiffsPagesize()));
 
@@ -704,6 +703,7 @@ void handle_sysinfo_Storage() {
 
   # endif // if defined(ESP8266)
   }
+  #endif
 
 # ifndef BUILD_MINIMAL_OTA
 

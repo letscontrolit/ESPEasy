@@ -95,9 +95,7 @@ void handle_rules() {
   addButton(fileName, F("Download to file"));
   html_end_table();
 
-  html_add_script(true);
-  TXBuffer += jsSaveRules;
-  html_add_script_end();
+  serve_JS(JSfiles_e::SaveRulesFile);
 
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();

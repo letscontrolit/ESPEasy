@@ -45,6 +45,12 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_FAVICON
         #define WEBSERVER_FAVICON
     #endif
+    #ifndef WEBSERVER_CSS
+        #define WEBSERVER_CSS
+    #endif
+    #ifndef WEBSERVER_INCLUDE_JS
+        #define WEBSERVER_INCLUDE_JS
+    #endif
     #ifndef WEBSERVER_LOG
         #define WEBSERVER_LOG
     #endif
@@ -322,6 +328,12 @@ To create/register a plugin, you have to :
         #endif
         #ifdef WEBSERVER_FAVICON
             #undef WEBSERVER_FAVICON
+        #endif
+        #ifdef WEBSERVER_CSS
+            #undef WEBSERVER_CSS
+        #endif
+        #ifdef WEBSERVER_INCLUDE_JS
+            #undef WEBSERVER_INCLUDE_JS
         #endif
         #ifdef WEBSERVER_LOG
             #undef WEBSERVER_LOG
@@ -1037,7 +1049,10 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P082) || defined(USES_P087) || defined(USES_P094)
+#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P094) || defined(USES_P102)
+  #ifndef PLUGIN_USES_SERIAL
+    #define PLUGIN_USES_SERIAL
+  #endif
 // At least one plugin uses serial.
 #else
   // No plugin uses serial, so make sure software serial is not included.
@@ -1113,6 +1128,11 @@ To create/register a plugin, you have to :
     #undef WEBSERVER_TIMINGSTATS
   #endif
 
+  // Do not include large blobs but fetch them from CDN
+  #ifndef WEBSERVER_USE_CDN_JS_CSS
+    #define WEBSERVER_USE_CDN_JS_CSS
+  #endif
+
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
   #endif
@@ -1179,7 +1199,21 @@ To create/register a plugin, you have to :
   #ifndef BUILD_NO_RAM_TRACKER
     #define BUILD_NO_RAM_TRACKER
   #endif
+#endif
 
+  // Do not include large blobs but fetch them from CDN
+#ifdef WEBSERVER_USE_CDN_JS_CSS
+  #ifdef WEBSERVER_FAVICON
+    #ifndef WEBSERVER_FAVICON_CDN
+      #define WEBSERVER_FAVICON_CDN
+    #endif
+  #endif
+  #ifdef WEBSERVER_CSS
+    #undef WEBSERVER_CSS
+  #endif
+  #ifdef WEBSERVER_INCLUDE_JS
+    #undef WEBSERVER_INCLUDE_JS
+  #endif
 #endif
 
 #if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)

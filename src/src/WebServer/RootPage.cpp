@@ -45,12 +45,14 @@ void handle_root() {
 
   // if index.htm exists on FS serve that one (first check if gziped version exists)
   if (loadFromFS(true, F("/index.htm.gz"))) { return; }
-
+  #ifdef FEATURE_SD
   if (loadFromFS(false, F("/index.htm.gz"))) { return; }
+  #endif
 
   if (loadFromFS(true, F("/index.htm"))) { return; }
-
+  #ifdef FEATURE_SD
   if (loadFromFS(false, F("/index.htm"))) { return; }
+  #endif
 
   TXBuffer.startStream();
   String  sCommand  = web_server.arg(F("cmd"));
