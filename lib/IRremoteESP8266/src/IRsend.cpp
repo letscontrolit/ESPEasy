@@ -560,6 +560,7 @@ uint16_t IRsend::minRepeats(const decode_type_t protocol) {
     case AIWA_RC_T501:
     case AMCOR:
     case COOLIX:
+    case ELITESCREENS:
     case GICABLE:
     case INAX:
     case MIDEA24:
@@ -617,6 +618,8 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
     case MITSUBISHI2:
     case ZEPEAL:
       return 16;
+    case METZ:
+      return 19;
     case RC6:
     case SONY:
     case SONY_38K:
@@ -626,14 +629,17 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
     case MIDEA24:
     case NIKAI:
     case RCMM:
+    case TRANSCOLD:
       return 24;
     case LG:
     case LG2:
       return 28;
     case CARRIER_AC:
+    case ELITESCREENS:
     case EPSON:
     case NEC:
     case NEC_LIKE:
+    case PANASONIC_AC32:
     case SAMSUNG:
     case SHERWOOD:
     case WHYNTER:
@@ -657,6 +663,7 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
       return 48;
     case MAGIQUEST:
     case VESTEL_AC:
+    case TECHNIBEL_AC:
       return 56;
     case AMCOR:
     case CARRIER_AC64:
@@ -705,6 +712,8 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
       return kHitachiAc424Bits;
     case KELVINATOR:
       return kKelvinatorBits;
+    case MIRAGE:
+      return kMirageBits;
     case MITSUBISHI_AC:
       return kMitsubishiACBits;
     case MITSUBISHI136:
@@ -718,7 +727,7 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
     case NEOCLIMA:
       return kNeoclimaBits;
     case PANASONIC_AC:
-      return kNeoclimaBits;
+      return kPanasonicAcBits;
     case SAMSUNG_AC:
       return kSamsungAcBits;
     case SANYO_AC:
@@ -731,6 +740,8 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
       return kToshibaACBits;
     case TROTEC:
       return kTrotecBits;
+    case VOLTAS:
+      return kVoltasBits;
     case WHIRLPOOL_AC:
       return kWhirlpoolAcBits;
     // No default amount of bits.
@@ -808,6 +819,11 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
       sendDoshisha(data, nbits, min_repeat);
       break;
 #endif
+#if SEND_ELITESCREENS
+    case ELITESCREENS:
+      sendElitescreens(data, nbits, min_repeat);
+      break;
+#endif  // SEND_ELITESCREENS
 #if SEND_EPSON
     case EPSON:
       sendEpson(data, nbits, min_repeat);
@@ -865,7 +881,12 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
     case MAGIQUEST:
       sendMagiQuest(data, nbits, min_repeat);
       break;
-#endif
+#endif  // SEND_MAGIQUEST
+#if SEND_METZ
+    case METZ:
+      sendMetz(data, nbits, min_repeat);
+      break;
+#endif  // SEND_METZ
 #if SEND_MIDEA
     case MIDEA:
       sendMidea(data, nbits, min_repeat);
@@ -906,7 +927,12 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
     case PANASONIC:
       sendPanasonic64(data, nbits, min_repeat);
       break;
-#endif
+#endif  // SEND_PANASONIC
+#if SEND_PANASONIC_AC32
+    case PANASONIC_AC32:
+      sendPanasonicAC32(data, nbits, min_repeat);
+      break;
+#endif  // SEND_PANASONIC_AC32
 #if SEND_PIONEER
     case PIONEER:
       sendPioneer(data, nbits, min_repeat);
@@ -966,11 +992,21 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
       sendSymphony(data, nbits, min_repeat);
       break;
 #endif
+#if SEND_TECHNIBEL_AC
+    case TECHNIBEL_AC:
+      sendTechnibelAc(data, nbits, min_repeat);
+      break;
+#endif
 #if SEND_TECO
     case TECO:
       sendTeco(data, nbits, min_repeat);
       break;
-#endif
+#endif  // SEND_TECO
+#if SEND_TRANSCOLD
+    case TRANSCOLD:
+      sendTranscold(data, nbits, min_repeat);
+      break;
+#endif  // SEND_TRANSCOLD
 #if SEND_VESTEL_AC
     case VESTEL_AC:
       sendVestelAc(data, nbits, min_repeat);
@@ -985,7 +1021,7 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
     case ZEPEAL:
       sendZepeal(data, nbits, min_repeat);
       break;
-#endif
+#endif  // SEND_ZEPEAL
     default:
       return false;
   }
@@ -1001,6 +1037,11 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
 bool IRsend::send(const decode_type_t type, const uint8_t *state,
                   const uint16_t nbytes) {
   switch (type) {
+#if SEND_VOLTAS
+    case VOLTAS:
+      sendVoltas(state, nbytes);
+      break;
+#endif  // SEND_VOLTAS
 #if SEND_AMCOR
     case AMCOR:
       sendAmcor(state, nbytes);
@@ -1111,6 +1152,11 @@ bool IRsend::send(const decode_type_t type, const uint8_t *state,
       sendKelvinator(state, nbytes);
       break;
 #endif  // SEND_KELVINATOR
+#if SEND_MIRAGE
+    case MIRAGE:
+      sendMirage(state, nbytes);
+      break;
+#endif  // SEND_MIRAGE
 #if SEND_MITSUBISHI_AC
     case MITSUBISHI_AC:
       sendMitsubishiAC(state, nbytes);

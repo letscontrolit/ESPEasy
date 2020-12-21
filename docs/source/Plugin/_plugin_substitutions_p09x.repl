@@ -59,9 +59,9 @@
 .. |P094_compileinfo| replace:: `.`
 .. |P094_usedlibraries| replace:: `.`
 
-.. |P095_name| replace:: :cyan:`TFT 2.4 inches ILI9341/XPT2046`
+.. |P095_name| replace:: :cyan:`TFT 2.4 inches ILI9341`
 .. |P095_type| replace:: :cyan:`Display`
-.. |P095_typename| replace:: :cyan:`Display - TFT 2.4 inches ILI9341/XPT2046`
+.. |P095_typename| replace:: :cyan:`Display - TFT 2.4 inches ILI9341`
 .. |P095_porttype| replace:: `.`
 .. |P095_status| replace:: :yellow:`TESTING`
 .. |P095_github| replace:: _P095_ILI9341.ino
@@ -84,3 +84,16 @@
 .. |P097_maintainer| replace:: `TD-er`
 .. |P097_compileinfo| replace:: `.`
 .. |P097_usedlibraries| replace:: `.`
+
+.. |P099_name| replace:: :cyan:`XPT2046 touchscreen on TFT display`
+.. |P099_type| replace:: :cyan:`Touch`
+.. |P099_typename| replace:: :cyan:`Touch - XPT2046 touchscreen on TFT display`
+.. |P099_porttype| replace:: `SPI`
+.. |P099_status| replace:: :yellow:`TESTING`
+.. |P099_github| replace:: _P099_XPT2046Touch.ino
+.. _P099_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P099_XPT2046Touch.ino
+.. |P099_usedby| replace:: `.`
+.. |P099_shortinfo| replace:: `.`
+.. |P099_maintainer| replace:: `tonhuisman`
+.. |P099_compileinfo| replace:: `.`
+.. |P099_usedlibraries| replace:: `XPT2046_Touchscreen`

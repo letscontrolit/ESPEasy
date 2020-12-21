@@ -129,7 +129,7 @@ String typeToString(const decode_type_t protocol, const bool isRepeat) {
 /// @return True if the protocol uses a state array. False if just an integer.
 bool hasACState(const decode_type_t protocol) {
   switch (protocol) {
-    // This is keept sorted by name
+    // This is kept sorted by name
     case AMCOR:
     case ARGO:
     case CORONA_AC:
@@ -152,6 +152,7 @@ bool hasACState(const decode_type_t protocol) {
     case HITACHI_AC344:
     case HITACHI_AC424:
     case KELVINATOR:
+    case MIRAGE:
     case MITSUBISHI136:
     case MITSUBISHI112:
     case MITSUBISHI_AC:
@@ -166,6 +167,7 @@ bool hasACState(const decode_type_t protocol) {
     case TCL112AC:
     case TOSHIBA_AC:
     case TROTEC:
+    case VOLTAS:
     case WHIRLPOOL_AC:
       return true;
     default:
@@ -274,7 +276,7 @@ String resultToSourceCode(const decode_results * const results) {
 /// @deprecated This is only for those that want this legacy format.
 String resultToTimingInfo(const decode_results * const results) {
   String output = "";
-  String value;
+  String value = "";
   // Reserve some space for the string to reduce heap fragmentation.
   output.reserve(2048);  // 2KB should cover most cases.
   value.reserve(6);  // Max value should be 2^17 = 131072
@@ -532,6 +534,13 @@ namespace irutils {
           default: return kUnknownStr;
         }
         break;
+      case decode_type_t::SHARP_AC:
+        switch (model) {
+          case sharp_ac_remote_model_t::A907: return F("A907");
+          case sharp_ac_remote_model_t::A705: return F("A705");
+          default: return kUnknownStr;
+        }
+        break;
       case decode_type_t::PANASONIC_AC:
         switch (model) {
           case panasonic_ac_remote_model_t::kPanasonicLke: return F("LKE");
@@ -540,6 +549,12 @@ namespace irutils {
           case panasonic_ac_remote_model_t::kPanasonicJke: return F("JKE");
           case panasonic_ac_remote_model_t::kPanasonicCkp: return F("CKP");
           case panasonic_ac_remote_model_t::kPanasonicRkr: return F("RKR");
+          default: return kUnknownStr;
+        }
+        break;
+      case decode_type_t::VOLTAS:
+        switch (model) {
+          case voltas_ac_remote_model_t::kVoltas122LZF: return F("122LZF");
           default: return kUnknownStr;
         }
         break;
@@ -866,7 +881,7 @@ namespace irutils {
       *data &= ~mask;
   }
 
-  /// Alter an uint8_t value by overwriting an arbitary given number of bits.
+  /// Alter an uint8_t value by overwriting an arbitrary given number of bits.
   /// @param[in,out] dst A pointer to the value to be changed.
   /// @param[in] offset Nr. of bits from the Least Significant Bit to be ignored
   /// @param[in] nbits Nr of bits of data to be placed into the destination.
@@ -883,7 +898,7 @@ namespace irutils {
     *dst |= ((data & mask) << offset);
   }
 
-  /// Alter an uint32_t value by overwriting an arbitary given number of bits.
+  /// Alter an uint32_t value by overwriting an arbitrary given number of bits.
   /// @param[in,out] dst A pointer to the value to be changed.
   /// @param[in] offset Nr. of bits from the Least Significant Bit to be ignored
   /// @param[in] nbits Nr of bits of data to be placed into the destination.
@@ -900,7 +915,7 @@ namespace irutils {
     *dst |= ((data & mask) << offset);
   }
 
-  /// Alter an uint64_t value by overwriting an arbitary given number of bits.
+  /// Alter an uint64_t value by overwriting an arbitrary given number of bits.
   /// @param[in,out] dst A pointer to the value to be changed.
   /// @param[in] offset Nr. of bits from the Least Significant Bit to be ignored
   /// @param[in] nbits Nr of bits of data to be placed into the destination.
@@ -946,5 +961,58 @@ namespace irutils {
       if (*(ptr + i) != inv) return false;
     }
     return true;
+  }
+
+  /// Perform a low level bit manipulation sanity check for the given cpu
+  /// architecture and the compiler operation. Calls to this should return
+  /// 0 if everything is as expected, anything else means the library won't work
+  /// as expected.
+  /// @return A bit mask value of potential issues.
+  ///   0: (e.g. 0b00000000) Everything appears okay.
+  ///   0th bit set: (0b1) Unexpected bit field/packing encountered.
+  ///                Try a different compiler.
+  ///   1st bit set: (0b10) Unexpected Endianness. Try a different compiler flag
+  ///                or use a CPU different architecture.
+  ///  e.g. A result of 3 (0b11) would mean both a bit field and an Endianness
+  ///       issue has been found.
+  uint8_t lowLevelSanityCheck(void) {
+    const uint64_t kExpectedBitFieldResult = 0x8000012340000039ULL;
+    volatile uint32_t EndianTest = 0x12345678;
+    const uint8_t kBitFieldError =   0b01;
+    const uint8_t kEndiannessError = 0b10;
+    uint8_t result = 0;
+    union bitpackdata {
+      struct {
+        uint64_t lowestbit:1;     // 0th bit
+        uint64_t next7bits:7;     // 1-7th bits
+        uint64_t _unused_1:20;    // 8-27th bits
+        // Cross the 32 bit boundary.
+        uint64_t crossbits:16;    // 28-43rd bits
+        uint64_t _usused_2:18;    // 44-61st bits
+        uint64_t highest2bits:2;  // 62-63rd bits
+      };
+     uint64_t all;
+    };
+
+    bitpackdata data;
+    data.lowestbit = true;
+    data.next7bits = 0b0011100;  // 0x1C
+    data._unused_1 = 0;
+    data.crossbits = 0x1234;
+    data._usused_2 = 0;
+    data.highest2bits = 0b10;  // 2
+
+    if (data.all != kExpectedBitFieldResult) result |= kBitFieldError;
+    // Check that we are using Little Endian for integers
+#if defined(BYTE_ORDER) && defined(LITTLE_ENDIAN)
+    if (BYTE_ORDER != LITTLE_ENDIAN) result |= kEndiannessError;
+#endif
+#if defined(__IEEE_BIG_ENDIAN) || defined(__IEEE_BYTES_BIG_ENDIAN)
+    result |= kEndiannessError;
+#endif
+    // Brute force check for little endian.
+    if (*((uint8_t*)(&EndianTest)) != 0x78)  // NOLINT(readability/casting)
+      result |= kEndiannessError;
+    return result;
   }
 }  // namespace irutils
