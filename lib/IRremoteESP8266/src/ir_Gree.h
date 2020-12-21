@@ -28,69 +28,83 @@
 #include "IRsend_test.h"
 #endif
 
+/// Native representation of a Gree A/C message.
+union GreeProtocol{
+  uint8_t remote_state[kGreeStateLength];  ///< The state in native IR code form
+  struct {
+    // Byte 0
+    uint8_t Mode      :3;
+    uint8_t Power     :1;
+    uint8_t Fan       :2;
+    uint8_t SwingAuto :1;
+    uint8_t Sleep     :1;
+    // Byte 1
+    uint8_t Temp        :4;
+    uint8_t TimerHalfHr :1;
+    uint8_t TimerTensHr :2;
+    uint8_t TimerEnabled:1;
+    // Byte 2
+    uint8_t TimerHours:4;
+    uint8_t Turbo     :1;
+    uint8_t Light     :1;
+    uint8_t ModelA    :1;  // model==YAW1F
+    uint8_t Xfan      :1;
+    // Byte 3
+    uint8_t :2;
+    uint8_t TempExtraDegreeF:1;
+    uint8_t UseFahrenheit   :1;
+    uint8_t unknown1        :4;  // value=0b0101
+    // Byte 4
+    uint8_t Swing:4;
+    uint8_t :0;
+    // Byte 5
+    uint8_t DisplayTemp :2;
+    uint8_t IFeel       :1;
+    uint8_t unknown2    :3;  // value = 0b100
+    uint8_t WiFi        :1;
+    uint8_t :0;
+    // Byte 6
+    uint8_t :8;
+    // Byte 7
+    uint8_t :4;
+    uint8_t Sum:4;
+  };
+};
+
 // Constants
 
 const uint8_t kGreeAuto = 0;
 const uint8_t kGreeCool = 1;
-const uint8_t kGreeDry = 2;
-const uint8_t kGreeFan = 3;
+const uint8_t kGreeDry  = 2;
+const uint8_t kGreeFan  = 3;
 const uint8_t kGreeHeat = 4;
 
-// Byte[0]
-const uint8_t kGreePower1Offset = 3;
-const uint8_t kGreeFanOffset = 4;
-const uint8_t kGreeFanSize = 2;  // Bits
 const uint8_t kGreeFanAuto = 0;
-const uint8_t kGreeFanMin = 1;
-const uint8_t kGreeFanMed = 2;
-const uint8_t kGreeFanMax = 3;
-const uint8_t kGreeSwingAutoOffset = 6;
-const uint8_t kGreeSleepOffset = 7;
-// Byte[1]
-const uint8_t kGreeTempOffset = 0;
-const uint8_t kGreeTempSize = 4;            // Mask 0b0000xxxx
+const uint8_t kGreeFanMin  = 1;
+const uint8_t kGreeFanMed  = 2;
+const uint8_t kGreeFanMax  = 3;
+
 const uint8_t kGreeMinTempC = 16;  // Celsius
 const uint8_t kGreeMaxTempC = 30;  // Celsius
 const uint8_t kGreeMinTempF = 61;  // Fahrenheit
 const uint8_t kGreeMaxTempF = 86;  // Fahrenheit
-const uint8_t kGreeTimerHalfHrOffset = 4;   // Mask 0b000x0000
-const uint8_t kGreeTimerTensHrOffset = 5;
-const uint8_t kGreeTimerTensHrSize = 2;     // Mask 0b0xx00000
 const uint16_t kGreeTimerMax = 24 * 60;
-const uint8_t kGreeTimerEnabledOffset = 7;  // Mask 0bx0000000
-// Byte[2]
-const uint8_t kGreeTimerHoursOffset = 0;
-const uint8_t kGreeTimerHoursSize = 4;  // Bits
-const uint8_t kGreeTurboOffset = 4;
-const uint8_t kGreeLightOffset = 5;
-// This might not be used. See #814
-const uint8_t kGreePower2Offset = 6;
-const uint8_t kGreeXfanOffset = 7;
-// Byte[3]
-const uint8_t kGreeTempExtraDegreeFOffset = 2;  // Mask 0b00000x00
-const uint8_t kGreeUseFahrenheitOffset = 3;     // Mask 0b0000x000
-// Byte[4]
-const uint8_t kGreeSwingSize = 4;  // Bits
-const uint8_t kGreeSwingLastPos =    0b0000;
-const uint8_t kGreeSwingAuto =       0b0001;
-const uint8_t kGreeSwingUp =         0b0010;
-const uint8_t kGreeSwingMiddleUp =   0b0011;
-const uint8_t kGreeSwingMiddle =     0b0100;
-const uint8_t kGreeSwingMiddleDown = 0b0101;
-const uint8_t kGreeSwingDown =       0b0110;
-const uint8_t kGreeSwingDownAuto =   0b0111;
-const uint8_t kGreeSwingMiddleAuto = 0b1001;
-const uint8_t kGreeSwingUpAuto =     0b1011;
-// Byte[5]
-const uint8_t kGreeWiFiOffset = 6;       // Mask 0b0x000000
-const uint8_t kGreeIFeelOffset = 2;      // Mask 0b00000x00
-const uint8_t kGreeDisplayTempOffset = 0;
-const uint8_t kGreeDisplayTempSize = 2;  // Mask 0b000000xx
-const uint8_t kGreeDisplayTempOff =                    0b00;  // 0
-const uint8_t kGreeDisplayTempSet =                    0b01;  // 1
-const uint8_t kGreeDisplayTempInside =                 0b10;  // 2
-const uint8_t kGreeDisplayTempOutside =                0b11;  // 3
 
+const uint8_t kGreeSwingLastPos    = 0b0000;
+const uint8_t kGreeSwingAuto       = 0b0001;
+const uint8_t kGreeSwingUp         = 0b0010;
+const uint8_t kGreeSwingMiddleUp   = 0b0011;
+const uint8_t kGreeSwingMiddle     = 0b0100;
+const uint8_t kGreeSwingMiddleDown = 0b0101;
+const uint8_t kGreeSwingDown       = 0b0110;
+const uint8_t kGreeSwingDownAuto   = 0b0111;
+const uint8_t kGreeSwingMiddleAuto = 0b1001;
+const uint8_t kGreeSwingUpAuto     = 0b1011;
+
+const uint8_t kGreeDisplayTempOff     = 0b00;  // 0
+const uint8_t kGreeDisplayTempSet     = 0b01;  // 1
+const uint8_t kGreeDisplayTempInside  = 0b10;  // 2
+const uint8_t kGreeDisplayTempOutside = 0b11;  // 3
 
 // Legacy defines.
 #define GREE_AUTO kGreeAuto
@@ -133,39 +147,39 @@ class IRGreeAC {
   void on(void);
   void off(void);
   void setModel(const gree_ac_remote_model_t model);
-  gree_ac_remote_model_t getModel(void);
+  gree_ac_remote_model_t getModel(void) const;
   void setPower(const bool on);
-  bool getPower(void);
+  bool getPower(void) const;
   void setTemp(const uint8_t temp, const bool fahrenheit = false);
-  uint8_t getTemp(void);
+  uint8_t getTemp(void) const;
   void setUseFahrenheit(const bool on);
-  bool getUseFahrenheit(void);
+  bool getUseFahrenheit(void) const;
   void setFan(const uint8_t speed);
-  uint8_t getFan(void);
+  uint8_t getFan(void) const;
   void setMode(const uint8_t new_mode);
-  uint8_t getMode(void);
+  uint8_t getMode(void) const;
   void setLight(const bool on);
-  bool getLight(void);
+  bool getLight(void) const;
   void setXFan(const bool on);
-  bool getXFan(void);
+  bool getXFan(void) const;
   void setSleep(const bool on);
-  bool getSleep(void);
+  bool getSleep(void) const;
   void setTurbo(const bool on);
-  bool getTurbo(void);
+  bool getTurbo(void) const;
   void setIFeel(const bool on);
-  bool getIFeel(void);
+  bool getIFeel(void) const;
   void setWiFi(const bool on);
-  bool getWiFi(void);
+  bool getWiFi(void) const;
   void setSwingVertical(const bool automatic, const uint8_t position);
-  bool getSwingVerticalAuto(void);
-  uint8_t getSwingVerticalPosition(void);
-  uint16_t getTimer(void);
+  bool getSwingVerticalAuto(void) const;
+  uint8_t getSwingVerticalPosition(void) const;
+  uint16_t getTimer(void) const;
   void setTimer(const uint16_t minutes);
   void setDisplayTempSource(const uint8_t mode);
-  uint8_t getDisplayTempSource(void);
-  uint8_t convertMode(const stdAc::opmode_t mode);
-  uint8_t convertFan(const stdAc::fanspeed_t speed);
-  uint8_t convertSwingV(const stdAc::swingv_t swingv);
+  uint8_t getDisplayTempSource(void) const;
+  static uint8_t convertMode(const stdAc::opmode_t mode);
+  static uint8_t convertFan(const stdAc::fanspeed_t speed);
+  static uint8_t convertSwingV(const stdAc::swingv_t swingv);
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   static stdAc::swingv_t toCommonSwingV(const uint8_t pos);
@@ -184,12 +198,12 @@ class IRGreeAC {
   IRsendTest _irsend;  ///< Instance of the testing IR send class
   /// @endcond
 #endif  // UNIT_TEST
-  uint8_t remote_state[kGreeStateLength];  ///< The state in native IR code form
+  GreeProtocol _;
   gree_ac_remote_model_t _model;
   void checksum(const uint16_t length = kGreeStateLength);
   void fixup(void);
   void setTimerEnabled(const bool on);
-  bool getTimerEnabled(void);
+  bool getTimerEnabled(void) const;
 };
 
 #endif  // IR_GREE_H_
