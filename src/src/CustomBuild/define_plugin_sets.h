@@ -111,6 +111,9 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_WIFI_SCANNER
         #define WEBSERVER_WIFI_SCANNER
     #endif
+    #ifndef WEBSERVER_NEW_RULES
+        #define WEBSERVER_NEW_RULES
+    #endif
 #endif
 
 #ifndef USE_CUSTOM_H
@@ -350,6 +353,10 @@ To create/register a plugin, you have to :
         #ifdef WEBSERVER_CUSTOM
             #undef WEBSERVER_CUSTOM
         #endif
+        #ifdef WEBSERVER_NEW_RULES
+            #undef WEBSERVER_NEW_RULES
+        #endif
+
 
     #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
 
@@ -1049,7 +1056,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P094) || defined(USES_P102)
+#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P094) || defined(USES_P102) || defined(USES_C018)
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
   #endif

@@ -77,7 +77,9 @@ void handle_advanced() {
 //    Settings.uniqueMQTTclientIdReconnect(isFormItemChecked(F("uniquemqttclientidreconnect")));
     Settings.Latitude  = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
+    #ifdef WEBSERVER_NEW_RULES
     Settings.OldRulesEngine(isFormItemChecked(F("oldrulesengine")));
+    #endif // WEBSERVER_NEW_RULES
     Settings.TolerantLastArgParse(isFormItemChecked(F("tolerantargparse")));
     Settings.SendToHttp_ack(isFormItemChecked(F("sendtohttp_ack")));
     Settings.ForceWiFi_bg_mode(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_BG)));
@@ -103,7 +105,9 @@ void handle_advanced() {
   addFormSubHeader(F("Rules Settings"));
 
   addFormCheckBox(F("Rules"),      F("userules"),       Settings.UseRules);
+  #ifdef WEBSERVER_NEW_RULES
   addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
+  #endif // WEBSERVER_NEW_RULES
   addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
   addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
   addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());

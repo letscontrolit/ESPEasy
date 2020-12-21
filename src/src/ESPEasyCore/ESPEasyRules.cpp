@@ -138,6 +138,7 @@ void rulesProcessing(String& event) {
       }
     }
   } else {
+    #ifdef WEBSERVER_NEW_RULES
     String fileName = EventToFileName(event);
 
     // if exists processed the rule file
@@ -151,6 +152,7 @@ void rulesProcessing(String& event) {
              String(F(" not found.")));
     }
 #endif // ifndef BUILD_NO_DEBUG
+    #endif // WEBSERVER_NEW_RULES
   }
 
 #ifndef BUILD_NO_DEBUG
