@@ -682,7 +682,8 @@ boolean Plugin_019_Write(byte Par1, byte Par2)
     auto it = globalMapPortStatus.find(key);
     if (it != globalMapPortStatus.end()) {
       if ((it->second.mode == PIN_MODE_OUTPUT) && (it->second.state == 0)) {
-      portmask &= ~(1 << i); // set port i = 0
+        portmask &= ~(1 << i); // set port i = 0
+      }
     }
   }
 
