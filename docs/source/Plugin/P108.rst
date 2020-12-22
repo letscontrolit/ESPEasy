@@ -1,0 +1,42 @@
+.. include:: ../Plugin/_plugin_substitutions_p10x.repl
+.. _P108_page:
+
+|P108_typename|
+==================================================
+
+|P108_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P108_type|
+
+Name: |P108_name|
+
+Status: |P108_status|
+
+GitHub: |P108_github|_
+
+Maintainer: |P108_maintainer|
+
+Used libraries: |P108_usedlibraries|
+
+Description
+-----------
+
+
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P108_events.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-12-22

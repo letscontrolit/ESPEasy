@@ -106,3 +106,16 @@
 .. |P107_maintainer| replace:: TD-er
 .. |P107_compileinfo| replace:: `.`
 .. |P107_usedlibraries| replace::  https://github.com/adafruit/Adafruit_SI1145_Library
+
+.. |P108_name| replace:: :cyan:`DDS238-x`
+.. |P108_type| replace:: :cyan:`Energy (AC)`
+.. |P108_typename| replace:: :cyan:`Energy (AC) - DDS238-x`
+.. |P108_porttype| replace:: `.`
+.. |P108_status| replace:: :yellow:`TESTING`
+.. |P108_github| replace:: P108_DDS238.ino
+.. _P108_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P108_DDS238.ino
+.. |P108_usedby| replace:: `.`
+.. |P108_shortinfo| replace:: `.`
+.. |P108_maintainer| replace:: TD-er
+.. |P108_compileinfo| replace:: `.`
+.. |P108_usedlibraries| replace::  `.`

@@ -29,7 +29,7 @@ DF - Below doesn't look right; needs a RS485 to TTL(3.3v) level converter (see h
 
 #define PLUGIN_108
 #define PLUGIN_ID_108 108
-#define PLUGIN_NAME_108 "Energy Meter - DDS238-x ZN [TESTING]"
+#define PLUGIN_NAME_108 "Energy (AC) - DDS238-x ZN [TESTING]"
 #define PLUGIN_VALUENAME1_108 ""
 
 #define P108_DEV_ID         PCONFIG(0)
