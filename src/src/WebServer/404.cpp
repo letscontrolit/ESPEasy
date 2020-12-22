@@ -16,11 +16,11 @@ void handleNotFound() {
   checkRAM(F("handleNotFound"));
   #endif
 
-  if (WiFiEventData.wifiSetup)
-  {
-    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
-    return;
-  }
+//  if (WiFiEventData.wifiSetup)
+//  {
+//    web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
+//    return;
+//  }
 
   if (!isLoggedIn()) { return; }
 
