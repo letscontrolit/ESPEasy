@@ -924,6 +924,76 @@ To create/register a plugin, you have to :
 #endif
 
 
+// Collection of all energy related plugins.
+#ifdef PLUGIN_ENERGY_COLLECTION
+   #ifndef USES_P025
+     #define USES_P025   // ADS1115
+   #endif
+   #ifndef USES_P027
+     #define USES_P027   // INA219
+   #endif
+   #ifndef USES_P076 
+     #define USES_P076   // HWL8012   in POW r1
+   #endif
+   #ifndef USES_P077 
+     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
+     #define USES_P077	  // CSE7766   in POW R2
+   #endif
+   #ifndef USES_P078 
+     #define USES_P078   // Eastron Modbus Energy meters
+   #endif
+   #ifndef USES_P085
+     #define USES_P085   // AcuDC24x
+   #endif
+   #ifndef USES_P102
+     #define USES_P102   // PZEM-004Tv30
+   #endif
+   #ifndef USES_P108 
+     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+   #endif
+#endif
+
+// Collection of all display plugins. (also NeoPixel)
+#ifdef PLUGIN_DISPLAY_COLLECTION
+   #ifndef USES_P012
+     #define USES_P012   // LCD
+   #endif
+   #ifndef USES_P023
+    #define USES_P023   // OLED
+   #endif
+   #ifndef USES_P036 
+    #define USES_P036   // FrameOLED
+   #endif
+   #ifndef USES_P038 
+    #define USES_P038   // NeoPixel
+   #endif
+   #ifndef USES_P041 
+    #define USES_P041   // NeoClock
+   #endif
+   #ifndef USES_P042 
+    #define USES_P042   // Candle
+   #endif
+   #ifndef USES_P057 
+    #define USES_P057   // HT16K33_LED
+   #endif
+   #ifndef USES_P070 
+    #define USES_P070   // NeoPixel_Clock
+   #endif
+   #ifndef USES_P075 
+    #define USES_P075   // Nextion
+   #endif
+   #ifndef USES_P095 
+    #define USES_P095  // TFT ILI9341
+   #endif
+   #ifndef USES_P096 
+    #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
+   #endif
+   #ifndef USES_P099
+    #define USES_P099   // XPT2046 Touchscreen
+   #endif
+#endif
+
+
 #ifdef CONTROLLER_SET_TESTING
     #define USES_C011   // Generic HTTP Advanced
     #define USES_C012   // Blynk HTTP
