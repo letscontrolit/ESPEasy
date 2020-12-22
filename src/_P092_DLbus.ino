@@ -22,26 +22,40 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
+    @uwekaditz 2020-12-028 documentation for UVR61-3 (v8.3 or higher)
+
+    @uwekaditz 2020-10-28 P092_data->init() is always done if P092_init == false, not depending on P092_data == nullptr
+    CHG: changes variable name DeviceIndex to P092DeviceIndex
+
+    @uwekaditz 2020-10-27 integrate the changes of PR #3345 (created by pez3)
+    CHG: removed internal pullup (at least for devices UVR61-3 (V8.3) upwards)
+    BUG: fixed setting of interrupt. so changing of GPIO should work now
+    BUG: fixed decoding of UVR61-3 frames. UVR61-3 (V8.3) devices have two analog outputs
+
+    @uwekaditz 2020-10-05 reduce memory usage when plugin not used PR #3248
+    CHG: all functions and variables moved to P092_data_struct()
+    CHG: keeping only global values needed for all tasks
+
     @uwekaditz 2020-10-05 Exception solved
     CHG: Interrupt will be only enabled after network is connected
     CHG: usecPassedSince() not longer used in ISR_PinChanged(), caused the exception ???
     CHG: in case no DLbus is connected, the next reading attempt happens only after the next PLUGIN_092_READ was called
           (reduces load and log messages)
 
-   @uwekaditz 2020-03-01 Memory usage optimized
-         CHG: Moved arrays into the class DLBus
-   CHG: Moved arrays to PLUGIN_092_DEBUG
+    @uwekaditz 2020-03-01 Memory usage optimized
+    CHG: Moved arrays into the class DLBus
+    CHG: Moved arrays to PLUGIN_092_DEBUG
 
-         @uwekaditz 2019-12-15 Memory usage optimized
-         CHG: Moved the array for the received bit changes to stativ uint_8t, the ISR call uses only a volatile pointer to it
-         CHG: some more defines and name changes for better explanation
+    @uwekaditz 2019-12-15 Memory usage optimized
+    CHG: Moved the array for the received bit changes to stativ uint_8t, the ISR call uses only a volatile pointer to it
+    CHG: some more defines and name changes for better explanation
 
-         @uwekaditz 2019-12-14 Timing optimized
-         CHG: Removed the while (P092_receiving) loop.
-         CHG: Starting of the receiving and processing of the received bit stream are now done in the PLUGIN_ONCE_A_SECOND call
-                          PLUGIN_READ call just uses the already processed data
+    @uwekaditz 2019-12-14 Timing optimized
+    CHG: Removed the while (P092_receiving) loop.
+    CHG: Starting of the receiving and processing of the received bit stream are now done in the PLUGIN_ONCE_A_SECOND call
+                    PLUGIN_READ call just uses the already processed data
 
-         @uwekaditz 2019-12-08 Inital commit to mega
+    @uwekaditz 2019-12-08 Inital commit to mega
 
 \**************************************************/
 
@@ -54,89 +68,10 @@
 #define PLUGIN_NAME_092       "Heating - DL-Bus (Technische Alternative)  [TESTING]"
 #define PLUGIN_VALUENAME1_092 "Value"
 
-#define P092_DLbus_OptionCount 8
-#define P092_DLbus_ValueCount 1
-#define P092_DLbus_DeviceCount 5
-
-uint8_t  P092_Last_DLB_Pin;
-boolean  P092_init         = false;
-boolean  P092_ReceivedOK   = false;
-uint32_t P092_LastReceived = 0;
-struct _P092_DataStruct
-{
-  uint8_t DataBytes;
-  uint8_t DeviceByte0;
-  uint8_t DeviceByte1;
-  uint8_t DeviceBytes;
-  uint8_t DontCareBytes;
-  uint8_t TimeStampBytes;
-  uint8_t MaxSensors;
-  uint8_t MaxExtSensors;
-  uint8_t OutputBytes;
-  uint8_t SpeedBytes;
-  uint8_t AnalogBytes;
-  uint8_t VolumeBytes;
-  uint8_t MaxHeatMeters;
-  uint8_t CurrentHmBytes;
-  uint8_t MWhBytes;
-
-  uint16_t DLbus_MinPulseWidth;
-  uint16_t DLbus_MaxPulseWidth;
-  uint16_t DLbus_MinDoublePulseWidth;
-  uint16_t DLbus_MaxDoublePulseWidth;
-  uint8_t  IdxSensor;
-  uint8_t  IdxExtSensor;
-  uint8_t  IdxOutput;
-  uint8_t  IdxDrehzahl;
-  uint8_t  IdxAnalog;
-  uint8_t  IdxHmRegister;
-  uint8_t  IdxVolume;
-  uint8_t  IdxHeatMeter1;
-  uint8_t  IdxkWh1;
-  uint8_t  IdxMWh1;
-  uint8_t  IdxHeatMeter2;
-  uint8_t  IdxkWh2;
-  uint8_t  IdxMWh2;
-  uint8_t  IdxHeatMeter3;
-  uint8_t  IdxkWh3;
-  uint8_t  IdxMWh3;
-  uint8_t  IdxCRC;
-} P092_DataSettings;
-
-typedef struct {
-  uint8_t Idx;
-  uint8_t mode;
-  float   value;
-} sP092_ReadData;
-
-DLBus *DLbus_Data = nullptr;
-
-// decoding the manchester code
-// pulse width @ 488hz: 1000ms/488 = 2,048ms = 2048µs
-// 2048µs / 2 = 1024µs (2 pulses for one bit)
-// pulse width @ 50hz: 1000ms/50 = 20ms = 20000µs
-// 20000µs / 2 = 10000µs (2 pulses for one bit)
-#define P092_pulse_width_488        1024  // µs
-#define P092_pulse_width_50         10000 // µs
-
-// % tolerance for variances at the pulse width
-#define P092_percentage_variance    10
-
-// 1001 or 0110 are two sequential pulses without transition
-#define P092_double_pulse_width_488 (P092_pulse_width_488 * 2)
-#define P092_double_pulse_width_50  (P092_pulse_width_50 * 2)
-
-// calculating the tolerance limits for variances
-#define P092_min_width_488          (P092_pulse_width_488 - (P092_pulse_width_488 *  P092_percentage_variance / 100))
-#define P092_max_width_488          (P092_pulse_width_488 + (P092_pulse_width_488 * P092_percentage_variance / 100))
-#define P092_double_min_width_488   (P092_double_pulse_width_488 - (P092_pulse_width_488 * P092_percentage_variance / 100))
-#define P092_double_max_width_488   (P092_double_pulse_width_488 + (P092_pulse_width_488 * P092_percentage_variance / 100))
-#define P092_min_width_50           (P092_pulse_width_50 - (P092_pulse_width_50 *  P092_percentage_variance / 100))
-#define P092_max_width_50           (P092_pulse_width_50 + (P092_pulse_width_50 * P092_percentage_variance / 100))
-#define P092_double_min_width_50    (P092_double_pulse_width_50 - (P092_pulse_width_50 * P092_percentage_variance / 100))
-#define P092_double_max_width_50    (P092_double_pulse_width_50 + (P092_pulse_width_50 * P092_percentage_variance / 100))
-
-boolean P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData *ReadData);
+// global values needed for all tasks
+uint8_t  P092_Last_DLB_Pin;             // check if DL bus pin has been changed by one task -> change requires new init because of interrupt
+boolean P092_init = false;              // P092_data_struct can be initialized only once, even if several tasks running
+P092_data_struct *P092_data = nullptr;  // pointer to P092_data_struct, must be the same for all tasks
 
 boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -158,7 +93,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = P092_DLbus_ValueCount;
+      Device[deviceCount].ValueCount         = 1;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
@@ -181,8 +116,36 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const String Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (bis V8.2)"), F(
-                                                           "UVR 61-3 (ab V8.3)") };
+        uint8_t choice = PCONFIG(2);  // Input mode
+        if (choice == 0) {
+          // pinmode was never set -> use default settings (as it was before)
+          if ((PCONFIG(0) == 6133) || (PCONFIG(0) == 6132)) {
+            // UVR61-3 does not need the pullup resistor
+            choice = static_cast<uint8_t>(eP092pinmode::ePPM_Input);
+          }
+          else {
+            // for the other types pullup is activated (as it was before)
+            choice = static_cast<uint8_t>(eP092pinmode::ePPM_InputPullUp);
+          }
+        }
+#ifdef INPUT_PULLDOWN
+        int Opcount = 3;
+#else
+        int Opcount = 2;
+#endif
+        String  options[3];
+        options[0] = F("Input");
+        options[1] = F("Input pullup");
+        options[2] = F("Input pulldown");
+        int optionValues[3] =
+        { static_cast<int>(eP092pinmode::ePPM_Input),
+          static_cast<int>(eP092pinmode::ePPM_InputPullUp),
+          static_cast<int>(eP092pinmode::ePPM_InputPullDown) };
+        addFormSelector(F("Pin mode"), F("p092_pinmode"), Opcount, options, optionValues, choice);
+      }
+      {
+        const String Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (up to v8.2)"), F(
+                                                           "UVR 61-3 (v8.3 or higher)") };
         const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 1611, 6132, 6133 };
 
         addFormSelector(F("DL-Bus Type"), F("p092_dlbtype"), P092_DLbus_DeviceCount, Devices, DevTypes, NULL, PCONFIG(0), true);
@@ -262,32 +225,30 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         addFormSubHeader(F("Inputs"));
 
-        for (int i = 0; i < P092_DLbus_ValueCount; i++) {
-          P092_ValueType = PCONFIG(i + 1) >> 8;
-          P092_ValueIdx  = PCONFIG(i + 1) & 0x00FF;
+        P092_ValueType = PCONFIG(1) >> 8;
+        P092_ValueIdx  = PCONFIG(1) & 0x00FF;
 
-          addFormSelector(plugin_092_DefValueName,
-                          plugin_092_ValStr,
-                          P092_DLbus_OptionCount,
-                          Options,
-                          P092_OptionTypes,
-                          NULL,
-                          P092_ValueType,
-                          true);
+        addFormSelector(plugin_092_DefValueName,
+                        plugin_092_ValStr,
+                        P092_DLbus_OptionCount,
+                        Options,
+                        P092_OptionTypes,
+                        NULL,
+                        P092_ValueType,
+                        true);
 
-          if (P092_MaxIdx[P092_ValueType] > 1) {
-            int CurIdx = P092_ValueIdx;
+        if (P092_MaxIdx[P092_ValueType] > 1) {
+          int CurIdx = P092_ValueIdx;
 
-            if (CurIdx < 1) {
-              CurIdx = 1;
-            }
-
-            if (CurIdx > P092_MaxIdx[P092_ValueType]) {
-              CurIdx = P092_MaxIdx[P092_ValueType];
-            }
-            addHtml(F(" Index: "));
-            addNumericBox(plugin_092_IdxStr, CurIdx, 1, P092_MaxIdx[P092_ValueType]);
+          if (CurIdx < 1) {
+            CurIdx = 1;
           }
+
+          if (CurIdx > P092_MaxIdx[P092_ValueType]) {
+            CurIdx = P092_MaxIdx[P092_ValueType];
+          }
+          addHtml(F(" Index: "));
+          addNumericBox(plugin_092_IdxStr, CurIdx, 1, P092_MaxIdx[P092_ValueType]);
         }
       }
 
@@ -317,18 +278,18 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_OptionValueDecimals[6] = 2;
       }
 
-      for (int i = 0; i < P092_DLbus_ValueCount; i++) {
-        int OptionIdx = getFormItemInt(plugin_092_ValStr);
-        int CurIdx    = getFormItemInt(plugin_092_IdxStr);
+      int OptionIdx = getFormItemInt(plugin_092_ValStr);
+      int CurIdx    = getFormItemInt(plugin_092_IdxStr);
 
-        if (CurIdx < 1) {
-          CurIdx = 1;
-        }
-        PCONFIG(i + 1)                                                     = (OptionIdx << 8) + CurIdx;
-        ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex + i] = P092_OptionValueDecimals[OptionIdx];
+      if (CurIdx < 1) {
+        CurIdx = 1;
       }
+      PCONFIG(1)                                                     = (OptionIdx << 8) + CurIdx;
+      ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = P092_OptionValueDecimals[OptionIdx];
 
-      if (DLbus_Data == nullptr) {
+      PCONFIG(2) = getFormItemInt(F("p092_pinmode"));
+
+      if (nullptr == P092_data) {
         addLog(LOG_LEVEL_ERROR, F("## P092_save: Error DL-Bus: Class not initialized!"));
         return false;
       }
@@ -337,9 +298,10 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         // pin number is changed -> run a new init
         P092_init = false;
 
-        if (DLbus_Data->ISR_DLB_Pin != 0xFF) {
+        if (P092_data->DLbus_Data->IsISRset) {
           // interrupt was already attached to P092_DLB_Pin
-          detachInterrupt(digitalPinToInterrupt(DLbus_Data->ISR_DLB_Pin));
+          P092_data->DLbus_Data->IsISRset = false;  //to ensure that a new interrupt is attached in P092_data->init()
+          detachInterrupt(digitalPinToInterrupt(P092_data->DLbus_Data->ISR_DLB_Pin));
           addLog(LOG_LEVEL_INFO, F("P092_save: detachInterrupt"));
         }
       }
@@ -351,68 +313,68 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         log += F(" DLB_Pin:");
         log += CONFIG_PIN1;
         log += F(" DLbus_MinPulseWidth:");
-        log += P092_DataSettings.DLbus_MinPulseWidth;
+        log += P092_data->P092_DataSettings.DLbus_MinPulseWidth;
         log += F(" DLbus_MaxPulseWidth:");
-        log += P092_DataSettings.DLbus_MaxPulseWidth;
+        log += P092_data->P092_DataSettings.DLbus_MaxPulseWidth;
         log += F(" DLbus_MinDoublePulseWidth:");
-        log += P092_DataSettings.DLbus_MinDoublePulseWidth;
+        log += P092_data->P092_DataSettings.DLbus_MinDoublePulseWidth;
         log += F(" DLbus_MaxDoublePulseWidth:");
-        log += P092_DataSettings.DLbus_MaxDoublePulseWidth;
+        log += P092_data->P092_DataSettings.DLbus_MaxDoublePulseWidth;
         log += F(" IdxSensor:");
-        log += P092_DataSettings.IdxSensor;
+        log += P092_data->P092_DataSettings.IdxSensor;
         log += F(" IdxExtSensor:");
-        log += P092_DataSettings.IdxExtSensor;
+        log += P092_data->P092_DataSettings.IdxExtSensor;
         log += F(" IdxOutput:");
-        log += P092_DataSettings.IdxOutput;
+        log += P092_data->P092_DataSettings.IdxOutput;
 
-        if (P092_DataSettings.SpeedBytes > 0) {
+        if (P092_data->P092_DataSettings.SpeedBytes > 0) {
           log += F(" IdxDrehzahl:");
-          log += P092_DataSettings.IdxDrehzahl;
+          log += P092_data->P092_DataSettings.IdxDrehzahl;
         }
 
-        if (P092_DataSettings.AnalogBytes > 0) {
+        if (P092_data->P092_DataSettings.AnalogBytes > 0) {
           log += F(" IdxAnalog:");
-          log += P092_DataSettings.IdxAnalog;
+          log += P092_data->P092_DataSettings.IdxAnalog;
         }
 
-        if (P092_DataSettings.MaxHeatMeters > 0) {
+        if (P092_data->P092_DataSettings.MaxHeatMeters > 0) {
           log += F(" IdxHmRegister:");
-          log += P092_DataSettings.IdxHmRegister;
+          log += P092_data->P092_DataSettings.IdxHmRegister;
         }
 
-        if (P092_DataSettings.VolumeBytes > 0) {
+        if (P092_data->P092_DataSettings.VolumeBytes > 0) {
           log += F(" IdxVolume:");
-          log += P092_DataSettings.IdxVolume;
+          log += P092_data->P092_DataSettings.IdxVolume;
         }
 
-        if (P092_DataSettings.MaxHeatMeters > 0) {
+        if (P092_data->P092_DataSettings.MaxHeatMeters > 0) {
           log += F(" IdxHM1:");
-          log += P092_DataSettings.IdxHeatMeter1;
+          log += P092_data->P092_DataSettings.IdxHeatMeter1;
           log += F(" IdxkWh1:");
-          log += P092_DataSettings.IdxkWh1;
+          log += P092_data->P092_DataSettings.IdxkWh1;
           log += F(" IdxMWh1:");
-          log += P092_DataSettings.IdxMWh1;
+          log += P092_data->P092_DataSettings.IdxMWh1;
         }
 
-        if (P092_DataSettings.MaxHeatMeters > 1) {
+        if (P092_data->P092_DataSettings.MaxHeatMeters > 1) {
           log += F(" IdxHM2:");
-          log += P092_DataSettings.IdxHeatMeter2;
+          log += P092_data->P092_DataSettings.IdxHeatMeter2;
           log += F(" IdxkWh2:");
-          log += P092_DataSettings.IdxkWh2;
+          log += P092_data->P092_DataSettings.IdxkWh2;
           log += F(" IdxMWh2:");
-          log += P092_DataSettings.IdxMWh2;
+          log += P092_data->P092_DataSettings.IdxMWh2;
         }
 
-        if (P092_DataSettings.MaxHeatMeters > 2) {
+        if (P092_data->P092_DataSettings.MaxHeatMeters > 2) {
           log += F(" IdxHM3:");
-          log += P092_DataSettings.IdxHeatMeter3;
+          log += P092_data->P092_DataSettings.IdxHeatMeter3;
           log += F(" IdxkWh3:");
-          log += P092_DataSettings.IdxkWh3;
+          log += P092_data->P092_DataSettings.IdxkWh3;
           log += F(" IdxMWh3:");
-          log += P092_DataSettings.IdxMWh3;
+          log += P092_data->P092_DataSettings.IdxMWh3;
         }
         log += F(" IdxCRC:");
-        log += P092_DataSettings.IdxCRC;
+        log += P092_data->P092_DataSettings.IdxCRC;
         addLog(LOG_LEVEL_INFO, log);
       }
 #endif // PLUGIN_092_DEBUG
@@ -423,34 +385,43 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      String log = F("PLUGIN_092_INIT Task:");
+      log += event->TaskIndex;
+      addLog(LOG_LEVEL_INFO, log);
       if (P092_init) {
-        addLog(LOG_LEVEL_ERROR, F("P092_init -> Already done!"));
+        addLog(LOG_LEVEL_INFO, F("INIT -> Already done!"));
       }
       else {
-        addLog(LOG_LEVEL_INFO, F("P092_init ..."));
+        if (P092_data == nullptr) {
+          addLog(LOG_LEVEL_INFO, F("Create P092_data_struct ..."));
 
-        if (DLbus_Data == nullptr) {
-          DLbus_Data = new (std::nothrow) DLBus;
+          P092_data = new (std::nothrow) P092_data_struct();
+          initPluginTaskData(event->TaskIndex, P092_data);
 
-          if (DLbus_Data == nullptr) {
-            addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
+          if (P092_data == nullptr) {
+            addLog(LOG_LEVEL_ERROR, F("## P092_init: Create P092_data_struct failed!"));
             return false;
           }
-          DLbus_Data->LogLevelInfo   = LOG_LEVEL_INFO;
-          DLbus_Data->LogLevelError  = LOG_LEVEL_ERROR;
-          DLbus_Data->IsLogLevelInfo = loglevelActiveFor(LOG_LEVEL_INFO);
         }
-        P092_init       = true;
-        P092_ReceivedOK = false;
-        addLog(LOG_LEVEL_INFO, F("P092_init: Set pin"));
-        DLbus_Data->ISR_DLB_Pin = CONFIG_PIN1;
-        pinMode(CONFIG_PIN1, INPUT_PULLUP);
+        else {
+          addLog(LOG_LEVEL_INFO, F("P092_data_struct -> Already created"));
+        }
+          P092_data_struct *P092_data =
+            static_cast<P092_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-//        // on a CHANGE on the data pin P092_Pin_changed is called
-//        DLbus_Data->attachDLBusInterrupt();
-        UserVar[event->BaseVarIndex] = NAN;
-      }
-      success = true;
+            addLog(LOG_LEVEL_INFO, F("Init P092_data_struct ..."));
+
+        if (!P092_data->init(CONFIG_PIN1, PCONFIG(0), eP092pinmode PCONFIG(2))) {
+              addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
+              clearPluginTaskData(event->TaskIndex);
+              return false;
+            }
+
+            P092_init       = true;
+          }
+      
+      success                      = true;
+      UserVar[event->BaseVarIndex] = NAN;
       break;
     }
 
@@ -464,48 +435,50 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         return false;
       }
 
-      if (DLbus_Data == nullptr) {
+      if (nullptr == P092_data) {
         return false;
       }
 
-      if (!DLbus_Data->IsISRset) {
+      if (!P092_data->DLbus_Data->IsISRset) {
         // on a CHANGE on the data pin P092_Pin_changed is called
-        DLbus_Data->attachDLBusInterrupt();
+        P092_data->DLbus_Data->attachDLBusInterrupt();
         addLog(LOG_LEVEL_INFO, F("P092 ISR set"));
       }
 
-      if (DLbus_Data->ISR_Receiving) {
+      if (P092_data->DLbus_Data->ISR_Receiving) {
         return false;
       }
 
-      Plugin_092_SetIndices(PCONFIG(0));
+      P092_data->Plugin_092_SetIndices(PCONFIG(0));
 
-      if (DLbus_Data->ISR_AllBitsReceived) {
-        DLbus_Data->ISR_AllBitsReceived = false;
-        success                         = DLbus_Data->CheckTimings();
+      if (P092_data->DLbus_Data->ISR_AllBitsReceived) {
+        P092_data->DLbus_Data->ISR_AllBitsReceived = false;
+        success                                    = P092_data->DLbus_Data->CheckTimings();
 
         if (success) {
-          success = DLbus_Data->Processing();
+          success = P092_data->DLbus_Data->Processing();
         }
 
         if (success) {
-          success = DLbus_Data->CheckCRC(P092_DataSettings.IdxCRC);
+          success = P092_data->DLbus_Data->CheckCRC(P092_data->P092_DataSettings.IdxCRC);
         }
 
         if (success) {
-          addLog(LOG_LEVEL_INFO, F("Received data OK"));
-          P092_LastReceived = millis();
+          P092_data->P092_LastReceived = millis();
+          String log = F("Received data OK TI:");
+          log += event->TaskIndex;
+          addLog(LOG_LEVEL_INFO, log);
         }
-        P092_ReceivedOK = success;
+        P092_data->P092_ReceivedOK = success;
       }
       else {
-        success = P092_ReceivedOK;
+        success = P092_data->P092_ReceivedOK;
       }
 
-      if ((DLbus_Data->IsNoData == false) &&
-          ((P092_ReceivedOK == false) ||
-          (timePassedSince(P092_LastReceived) > (static_cast<long>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000 / 2))))) {
-        Plugin_092_StartReceiving();
+      if ((P092_data->DLbus_Data->IsNoData == false) &&
+          ((P092_data->P092_ReceivedOK == false) ||
+          (timePassedSince(P092_data->P092_LastReceived) > (static_cast<long>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000 / 2))))) {
+        P092_data->Plugin_092_StartReceiving(event->TaskIndex);
         success = true;
       }
       break;
@@ -513,7 +486,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      addLog(LOG_LEVEL_ERROR, F("PLUGIN_092_READ"));
+      String log = F("PLUGIN_092_READ Task:");
+      log += event->TaskIndex;
+      addLog(LOG_LEVEL_INFO, log);
 
       if (!NetworkConnected()) {
         // too busy for DLbus while wifi connect is running
@@ -526,550 +501,55 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         return false;
       }
 
-      if (DLbus_Data == nullptr) {
+      if (nullptr == P092_data) {
         addLog(LOG_LEVEL_ERROR, F("## P092_read: Error DL-Bus: Class not initialized!"));
         return false;
       }
 
-      if (DLbus_Data->ISR_DLB_Pin != CONFIG_PIN1) {
+      if (P092_data->DLbus_Data->ISR_DLB_Pin != CONFIG_PIN1) {
         String log = F("## P092_read: Error DL-Bus: Device Pin setting not correct!");
         log += F(" DLB_Pin:");
-        log += DLbus_Data->ISR_DLB_Pin;
+        log += P092_data->DLbus_Data->ISR_DLB_Pin;
         log += F(" Setting:");
         log += CONFIG_PIN1;
         addLog(LOG_LEVEL_ERROR, log);
         return false;
       }
 
-      if (!DLbus_Data->IsISRset) {
-        // on a CHANGE on the data pin P092_Pin_changed is called
+      if (!P092_data->DLbus_Data->IsISRset) {
         addLog(LOG_LEVEL_ERROR, F("## P092_read: Error DL-Bus: ISR not set"));
-        return false;
-      }
-
-      if (DLbus_Data->IsNoData) {
-        // start new receiving attempt
-        DLbus_Data->IsNoData = false;
         return true;
       }
 
-      success = P092_ReceivedOK;
+      if (P092_data->DLbus_Data->IsNoData) {
+        // start new receiving attempt
+        P092_data->DLbus_Data->IsNoData = false;
+        return true;
+      }
 
-      if (P092_ReceivedOK == false) {
+      success = P092_data->P092_ReceivedOK;
+
+      if (P092_data->P092_ReceivedOK == false) {
         addLog(LOG_LEVEL_INFO, F("P092_read: Still receiving DL-Bus bits!"));
         return true;
       }
       else {
-        sP092_ReadData P092_ReadData;
+        P092_data_struct::sP092_ReadData P092_ReadData;
 
-        for (int i = 0; i < P092_DLbus_ValueCount; i++) {
-          int OptionIdx = PCONFIG(i + 1) >> 8;
-          int CurIdx    = PCONFIG(i + 1) & 0x00FF;
+        int OptionIdx = PCONFIG(1) >> 8;
+        int CurIdx    = PCONFIG(1) & 0x00FF;
 
-          if (P092_GetData(OptionIdx, CurIdx, &P092_ReadData)) {
-            UserVar[event->BaseVarIndex + i] = P092_ReadData.value;
-          }
-          else {
-            addLog(LOG_LEVEL_ERROR, F("## P092_read: Error: No readings!"));
-          }
+        if (P092_data->P092_GetData(OptionIdx, CurIdx, &P092_ReadData)) {
+          UserVar[event->BaseVarIndex] = P092_ReadData.value;
+        }
+        else {
+          addLog(LOG_LEVEL_ERROR, F("## P092_read: Error: No readings!"));
         }
       }
       break;
     }
   }
   return success;
-}
-
-void Plugin_092_SetIndices(int DeviceIndex) {
-  // Set the indices for the DL bus packet
-  int iDeviceBytes, iDontCareBytes, iTimeStampBytes;
-
-  // default settings for ESR21
-  P092_DataSettings.DataBytes                 = 31;
-  P092_DataSettings.DLbus_MinPulseWidth       = P092_min_width_488;
-  P092_DataSettings.DLbus_MaxPulseWidth       = P092_max_width_488;
-  P092_DataSettings.DLbus_MinDoublePulseWidth = P092_double_min_width_488;
-  P092_DataSettings.DLbus_MaxDoublePulseWidth = P092_double_max_width_488;
-
-  P092_DataSettings.DeviceByte0    = 0x70;
-  P092_DataSettings.DeviceByte1    = 0x8F;
-  iDeviceBytes                     = 2;
-  iDontCareBytes                   = 0;
-  iTimeStampBytes                  = 0;
-  P092_DataSettings.MaxSensors     = 3;
-  P092_DataSettings.MaxExtSensors  = 6;
-  P092_DataSettings.OutputBytes    = 1;
-  P092_DataSettings.SpeedBytes     = 1;
-  P092_DataSettings.AnalogBytes    = 1;
-  P092_DataSettings.VolumeBytes    = 0;
-  P092_DataSettings.MaxHeatMeters  = 1;
-  P092_DataSettings.CurrentHmBytes = 2;
-  P092_DataSettings.MWhBytes       = 2;
-  P092_DataSettings.IdxCRC         = 30;
-
-  switch (DeviceIndex) {
-    case 31: // UVR31
-      P092_DataSettings.DataBytes                 = 8;
-      P092_DataSettings.DLbus_MinPulseWidth       = P092_min_width_50;
-      P092_DataSettings.DLbus_MaxPulseWidth       = P092_max_width_50;
-      P092_DataSettings.DLbus_MinDoublePulseWidth = P092_double_min_width_50;
-      P092_DataSettings.DLbus_MaxDoublePulseWidth = P092_double_max_width_50;
-
-      P092_DataSettings.DeviceByte0    = 0x30;
-      P092_DataSettings.DeviceByte1    = 0;
-      iDeviceBytes                     = 1;
-      P092_DataSettings.MaxExtSensors  = 0;
-      P092_DataSettings.SpeedBytes     = 0;
-      P092_DataSettings.AnalogBytes    = 0;
-      P092_DataSettings.MaxHeatMeters  = 0;
-      P092_DataSettings.CurrentHmBytes = 0;
-      P092_DataSettings.MWhBytes       = 0;
-      P092_DataSettings.IdxCRC         = 0;
-      break;
-    case 1611: // UVR1611
-      P092_DataSettings.DataBytes = 64;
-
-      P092_DataSettings.DeviceByte0    = 0x80;
-      P092_DataSettings.DeviceByte1    = 0x7F;
-      iDontCareBytes                   = 1;
-      iTimeStampBytes                  = 5;
-      P092_DataSettings.MaxSensors     = 16;
-      P092_DataSettings.MaxExtSensors  = 0;
-      P092_DataSettings.OutputBytes    = 2;
-      P092_DataSettings.SpeedBytes     = 4;
-      P092_DataSettings.AnalogBytes    = 0;
-      P092_DataSettings.MaxHeatMeters  = 2;
-      P092_DataSettings.CurrentHmBytes = 4;
-      P092_DataSettings.IdxCRC         = P092_DataSettings.DataBytes - 1;
-
-      break;
-    case 6132: // UVR 61-3 (up to V8.2)
-      P092_DataSettings.DataBytes = 35;
-
-      P092_DataSettings.DeviceByte0   = 0x90;
-      P092_DataSettings.DeviceByte1   = 0x6F;
-      iDontCareBytes                  = 1;
-      iTimeStampBytes                 = 5;
-      P092_DataSettings.MaxSensors    = 6;
-      P092_DataSettings.MaxExtSensors = 0;
-      P092_DataSettings.VolumeBytes   = 2;
-      P092_DataSettings.MWhBytes      = 4;
-      P092_DataSettings.IdxCRC        = P092_DataSettings.DataBytes - 1;
-
-      break;
-    case 6133: // UVR 61-3 (from V8.3)
-      P092_DataSettings.DataBytes = 62;
-
-      P092_DataSettings.DeviceByte0   = 0x90;
-      P092_DataSettings.DeviceByte1   = 0x9F;
-      iDontCareBytes                  = 1;
-      iTimeStampBytes                 = 5;
-      P092_DataSettings.MaxSensors    = 6;
-      P092_DataSettings.MaxExtSensors = 9;
-      P092_DataSettings.MaxHeatMeters = 3;
-      P092_DataSettings.IdxCRC        = P092_DataSettings.DataBytes - 1;
-
-      break;
-  }
-  P092_DataSettings.IdxSensor     = iDeviceBytes + iDontCareBytes + iTimeStampBytes;
-  P092_DataSettings.IdxExtSensor  = P092_DataSettings.IdxSensor + 2 * P092_DataSettings.MaxSensors;
-  P092_DataSettings.IdxOutput     = P092_DataSettings.IdxExtSensor + 2 * P092_DataSettings.MaxExtSensors;
-  P092_DataSettings.IdxDrehzahl   = P092_DataSettings.IdxOutput + P092_DataSettings.OutputBytes;
-  P092_DataSettings.IdxAnalog     = P092_DataSettings.IdxDrehzahl + P092_DataSettings.SpeedBytes;
-  P092_DataSettings.IdxHmRegister = P092_DataSettings.IdxAnalog + P092_DataSettings.AnalogBytes;
-  P092_DataSettings.IdxVolume     = P092_DataSettings.IdxHmRegister + 1;
-  P092_DataSettings.IdxHeatMeter1 = P092_DataSettings.IdxVolume + P092_DataSettings.VolumeBytes;
-  P092_DataSettings.IdxkWh1       = P092_DataSettings.IdxHeatMeter1 + P092_DataSettings.CurrentHmBytes;
-  P092_DataSettings.IdxMWh1       = P092_DataSettings.IdxkWh1 + 2;
-  P092_DataSettings.IdxHeatMeter2 = P092_DataSettings.IdxMWh1 + P092_DataSettings.MWhBytes;
-  P092_DataSettings.IdxkWh2       = P092_DataSettings.IdxHeatMeter2 + P092_DataSettings.CurrentHmBytes;
-  P092_DataSettings.IdxMWh2       = P092_DataSettings.IdxkWh2 + 2;
-  P092_DataSettings.IdxHeatMeter3 = P092_DataSettings.IdxMWh2 + P092_DataSettings.MWhBytes;
-  P092_DataSettings.IdxkWh3       = P092_DataSettings.IdxHeatMeter3 + P092_DataSettings.CurrentHmBytes;
-  P092_DataSettings.IdxMWh3       = P092_DataSettings.IdxkWh3 + 2;
-
-  return;
-}
-
-/*********************************************************************************************\
-   DLBus subs to get values from the P092_receiving bitstream
-\*********************************************************************************************/
-
-// sensor types
-#define DLbus_UNUSED              0b000
-#define DLbus_Sensor_DIGITAL      0b001
-#define DLbus_Sensor_TEMP         0b010
-#define DLbus_Sensor_VOLUME_FLOW  0b011
-#define DLbus_Sensor_RAYS         0b110
-#define DLbus_Sensor_ROOM         0b111
-
-// room sensor modes
-#define DLbus_RSM_AUTO            0b00
-#define DLbus_RSM_NORMAL          0b01
-#define DLbus_RSM_LOWER           0b10
-#define DLbus_RSM_STANDBY         0b11
-
-boolean P092_fetch_sensor(int number, sP092_ReadData *ReadData);
-boolean P092_fetch_output(int number, sP092_ReadData *ReadData);    // digital output byte(s)
-boolean P092_fetch_speed(int number, sP092_ReadData *ReadData);     // speed byte(s)
-boolean P092_fetch_analog(int number, sP092_ReadData *ReadData);    // analog byte(s)
-boolean P092_fetch_heatpower(int  number, sP092_ReadData *ReadData); // heat power(s)
-boolean P092_fetch_heatmeter(int number, sP092_ReadData *ReadData); // heat meters(s)
-
-// heat meter
-typedef struct {
-  uint8_t IndexIsValid;
-  int32_t power_index;
-  int32_t kwh_index;
-  int32_t mwh_index;
-} sDLbus_HMindex;
-sDLbus_HMindex P092_CheckHmRegister(int number);
-
-/****************\
-   DLBus P092_receiving
-\****************/
-void           Plugin_092_StartReceiving(void) {
-  DLbus_Data->ISR_Receiving   = false;
-  DLbus_Data->DeviceBytes[0]  = P092_DataSettings.DeviceByte0;
-  DLbus_Data->DeviceBytes[1]  = P092_DataSettings.DeviceByte1;
-  DLbus_Data->ISR_PulseNumber =
-    (((P092_DataSettings.DataBytes + DLbus_AdditionalRecBytes) * (DLbus_StartBits + 8 +  DLbus_StopBits) + DLBus_SyncBits) *
-     DLBus_BitChangeFactor) + DLBus_ReserveBytes;
-  DLbus_Data->ISR_MinPulseWidth       = P092_DataSettings.DLbus_MinPulseWidth;
-  DLbus_Data->ISR_MaxPulseWidth       = P092_DataSettings.DLbus_MaxPulseWidth;
-  DLbus_Data->ISR_MinDoublePulseWidth = P092_DataSettings.DLbus_MinDoublePulseWidth;
-  DLbus_Data->ISR_MaxDoublePulseWidth = P092_DataSettings.DLbus_MaxDoublePulseWidth;
-  DLbus_Data->StartReceiving();
-  uint32_t start = millis();
-
-  addLog(LOG_LEVEL_INFO, F("P092_receiving ..."));
-
-  while ((timePassedSince(start) < 100) && (DLbus_Data->ISR_PulseCount == 0)) {
-    // wait for first pulse received (timeout 100ms)
-    yield();
-  }
-
-  if (DLbus_Data->ISR_PulseCount == 0) {
-    // nothing received
-    DLbus_Data->ISR_Receiving = false;
-    DLbus_Data->IsNoData = true;  // stop receiving until next PLUGIN_092_READ
-    addLog(LOG_LEVEL_ERROR, F("## StartReceiving: Error: Nothing received! No DL bus connected!"));
-  }
-}
-
-/****************\
-   DLBus get data
-\****************/
-boolean P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData *ReadData) {
-  String  log;
-  boolean result = false;
-
-  switch (OptionIdx) {
-    case 1: // F("Sensor")
-      log  = F("Get Sensor");
-      log += CurIdx;
-
-      if (CurIdx > P092_DataSettings.MaxSensors) {
-        result = false;
-        break;
-      }
-      ReadData->Idx = P092_DataSettings.IdxSensor;
-      result        = P092_fetch_sensor(CurIdx, ReadData);
-      break;
-    case 2: // F("Sensor")
-      log  = F("Get ExtSensor");
-      log += CurIdx;
-
-      if (CurIdx > P092_DataSettings.MaxExtSensors) {
-        result = false;
-        break;
-      }
-      ReadData->Idx = P092_DataSettings.IdxExtSensor;
-      result        = P092_fetch_sensor(CurIdx, ReadData);
-      break;
-    case 3: // F("Digital output")
-      log  = F("Get DigitalOutput");
-      log += CurIdx;
-
-      if (CurIdx > (8 * P092_DataSettings.OutputBytes)) {
-        result = false;
-        break;
-      }
-      result = P092_fetch_output(CurIdx, ReadData);
-      break;
-    case 4: // F("Speed step")
-      log  = F("Get SpeedStep");
-      log += CurIdx;
-
-      if (CurIdx > P092_DataSettings.SpeedBytes) {
-        result = false;
-        break;
-      }
-      result = P092_fetch_speed(CurIdx, ReadData);
-      break;
-    case 5: // F("Analog output")
-      log  = F("Get AnalogOutput");
-      log += CurIdx;
-
-      if (CurIdx > P092_DataSettings.AnalogBytes) {
-        result = false;
-        break;
-      }
-      result = P092_fetch_analog(CurIdx, ReadData);
-      break;
-    case 6: // F("Heat power (kW)")
-      log  = F("Get HeatPower");
-      log += CurIdx;
-
-      if (CurIdx > P092_DataSettings.MaxHeatMeters) {
-        result = false;
-        break;
-      }
-      result = P092_fetch_heatpower(CurIdx, ReadData);
-      break;
-    case 7: // F("Heat meter (MWh)"
-      log  = F("Get HeatMeter");
-      log += CurIdx;
-
-      if (CurIdx > P092_DataSettings.MaxHeatMeters) {
-        result = false;
-        break;
-      }
-      result = P092_fetch_heatmeter(CurIdx, ReadData);
-      break;
-  }
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    log += F(": ");
-
-    if (result) {
-      log += String(ReadData->value, 1);
-    }
-    else {
-      log += F("nan");
-    }
-    addLog(LOG_LEVEL_INFO, log);
-  }
-  return result;
-}
-
-boolean P092_fetch_sensor(int number, sP092_ReadData *ReadData) {
-  float value;
-
-  ReadData->mode = -1;
-  number         = ReadData->Idx + (number - 1) * 2;
-  int32_t sensorvalue = (DLbus_Data->ByteStream[number + 1] << 8) | DLbus_Data->ByteStream[number];
-
-  if (sensorvalue == 0) {
-    return false;
-  }
-  uint8_t sensortype = (sensorvalue & 0x7000) >> 12;
-
-  if (!(sensorvalue & 0x8000)) { // sign positive
-    sensorvalue &= 0xfff;
-
-    // calculations for different sensor types
-    switch (sensortype) {
-      case DLbus_Sensor_DIGITAL:
-        value = false;
-        break;
-      case DLbus_Sensor_TEMP:
-        value = sensorvalue * 0.1;
-        break;
-      case DLbus_Sensor_RAYS:
-        value = sensorvalue;
-        break;
-      case DLbus_Sensor_VOLUME_FLOW:
-        value = sensorvalue * 4;
-        break;
-      case DLbus_Sensor_ROOM:
-        ReadData->mode = (sensorvalue & 0x600) >> 9;
-        value          = (sensorvalue & 0x1ff) * 0.1;
-        break;
-      default:
-        return false;
-    }
-  }
-  else { // sign negative
-    sensorvalue |= 0xf000;
-
-    // calculations for different sensor types
-    switch (sensortype) {
-      case DLbus_Sensor_DIGITAL:
-        value = true;
-        break;
-      case DLbus_Sensor_TEMP:
-        value = (sensorvalue - 0x10000) * 0.1;
-        break;
-      case DLbus_Sensor_RAYS:
-        value = sensorvalue - 0x10000;
-        break;
-      case DLbus_Sensor_VOLUME_FLOW:
-        value = (sensorvalue - 0x10000) * 4;
-        break;
-      case DLbus_Sensor_ROOM:
-        ReadData->mode = (sensorvalue & 0x600) >> 9;
-        value          = ((sensorvalue & 0x1ff) - 0x10000) * 0.1;
-        break;
-      default:
-        return false;
-    }
-  }
-  ReadData->value = value;
-  return true;
-}
-
-boolean P092_fetch_output(int number, sP092_ReadData *ReadData) {
-  int32_t outputs;
-
-  if (P092_DataSettings.OutputBytes > 1) {
-    outputs = (DLbus_Data->ByteStream[P092_DataSettings.IdxOutput + 1] << 8) | DLbus_Data->ByteStream[P092_DataSettings.IdxOutput];
-  }
-  else {
-    outputs = DLbus_Data->ByteStream[P092_DataSettings.IdxOutput];
-  }
-
-  if (outputs & (1 << (number - 1))) {
-    ReadData->value = 1;
-  }
-  else {
-    ReadData->value = 0;
-  }
-  return true;
-}
-
-boolean P092_fetch_speed(int number, sP092_ReadData *ReadData) {
-  uint8_t speedbyte;
-
-  if ((P092_DataSettings.IdxDrehzahl + (number - 1)) >= P092_DataSettings.IdxAnalog) {
-    // wrong index for speed, overlapping next index (IdxAnalog)
-    return false;
-  }
-  speedbyte = DLbus_Data->ByteStream[P092_DataSettings.IdxDrehzahl + (number - 1)];
-
-  if (speedbyte & 0x80) {
-    return false;
-  }
-  ReadData->value = (speedbyte & 0x1f);
-  return true;
-}
-
-boolean P092_fetch_analog(int number, sP092_ReadData *ReadData) {
-  uint8_t analogbyte;
-
-  if ((P092_DataSettings.IdxAnalog + (number - 1)) >= P092_DataSettings.IdxHmRegister) {
-    // wrong index for analog, overlapping next index (IdxHmRegister)
-    return false;
-  }
-  analogbyte = DLbus_Data->ByteStream[P092_DataSettings.IdxAnalog + (number - 1)];
-
-  if (analogbyte & 0x80) {
-    return false;
-  }
-  ReadData->value = (analogbyte * 0.1);
-  return true;
-}
-
-sDLbus_HMindex P092_CheckHmRegister(int number) {
-  sDLbus_HMindex result;
-
-  result.IndexIsValid = 0;
-
-  switch (number) {
-    case 1:
-
-      if ((DLbus_Data->ByteStream[P092_DataSettings.IdxHmRegister] & 0x1) == 0) {
-        return result;
-      }
-      result.power_index = P092_DataSettings.IdxHeatMeter1;
-      result.kwh_index   = P092_DataSettings.IdxkWh1;
-      result.mwh_index   = P092_DataSettings.IdxMWh1;
-      break;
-    case 2:
-
-      if ((DLbus_Data->ByteStream[P092_DataSettings.IdxHmRegister] & 0x2) == 0) {
-        return result;
-      }
-      result.power_index = P092_DataSettings.IdxHeatMeter2;
-      result.kwh_index   = P092_DataSettings.IdxkWh2;
-      result.mwh_index   = P092_DataSettings.IdxMWh2;
-      break;
-    case 3:
-
-      if ((DLbus_Data->ByteStream[P092_DataSettings.IdxHmRegister] & 0x4) == 0) {
-        return result;
-      }
-      result.power_index = P092_DataSettings.IdxHeatMeter3;
-      result.kwh_index   = P092_DataSettings.IdxkWh3;
-      result.mwh_index   = P092_DataSettings.IdxMWh3;
-      break;
-    default:
-      return result;
-  }
-  result.IndexIsValid = 1;
-  return result;
-}
-
-boolean P092_fetch_heatpower(int number, sP092_ReadData *ReadData) {
-  // current power
-  int32_t high;
-  sDLbus_HMindex HMindex = P092_CheckHmRegister(number);
-
-  if (HMindex.IndexIsValid == 0) {
-    return false;
-  }
-  uint8_t b1 = DLbus_Data->ByteStream[HMindex.power_index];
-  uint8_t b2 = DLbus_Data->ByteStream[HMindex.power_index + 1];
-
-  if (P092_DataSettings.CurrentHmBytes > 2) {
-    uint8_t b3 = DLbus_Data->ByteStream[HMindex.power_index + 2];
-    uint8_t b4 = DLbus_Data->ByteStream[HMindex.power_index + 3];
-    high = 0x10000 * b4 + 0x100 * b3 + b2;
-    int low = (b1 * 10) / 0x100;
-
-    if (!(b4 & 0x80)) { // sign positive
-      ReadData->value = (10 * high + low) / 100;
-    }
-    else {              // sign negative
-      ReadData->value = (10 * (high - 0x10000) - low) / 100;
-    }
-  }
-  else {
-    high = (b2 << 8) | b1;
-
-    if ((b2 & 0x80) == 0) { // sign positive
-      ReadData->value = high / 10;
-    }
-    else {                  // sign negative
-      ReadData->value = (high - 0x10000) / 10;
-    }
-  }
-  return true;
-}
-
-boolean P092_fetch_heatmeter(int number, sP092_ReadData *ReadData) {
-  // heat meter
-  int32_t heat_meter;
-  float   heat_meter_mwh;
-
-  sDLbus_HMindex HMindex = P092_CheckHmRegister(number);
-
-  if (HMindex.IndexIsValid == 0) {
-    return false;
-  }
-  heat_meter     = (DLbus_Data->ByteStream[HMindex.kwh_index + 1] << 8) | DLbus_Data->ByteStream[HMindex.kwh_index];
-  heat_meter_mwh = (heat_meter * 0.1f) / 1000.0f; // in MWh
-
-  if (heat_meter_mwh > 1.0f) {
-    // in kWh
-    heat_meter      = heat_meter_mwh;
-    heat_meter_mwh -= heat_meter;
-  }
-
-  // MWh
-  heat_meter      = (DLbus_Data->ByteStream[HMindex.mwh_index + 1] << 8) | DLbus_Data->ByteStream[HMindex.mwh_index];
-  ReadData->value = heat_meter_mwh + heat_meter;
-  return true;
 }
 
 #endif // USES_P092

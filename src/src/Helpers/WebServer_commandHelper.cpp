@@ -57,7 +57,8 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     if (sendOK) {
       if (printToWebJSON) {
         // Format "OK" to JSON format
-        DynamicJsonDocument root(1024);
+        const int capacity = JSON_OBJECT_SIZE(2);
+        StaticJsonDocument<capacity> root;
         root[F("return")]  = F("OK");
         root[F("command")] = webrequest;
         serializeJson(root, printWebString);
@@ -70,7 +71,8 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 
   if (printToWebJSON) {
     // Format error to JSON format
-    DynamicJsonDocument root(1024);
+    const int capacity = JSON_OBJECT_SIZE(2);
+    StaticJsonDocument<capacity> root;
     root[F("return")]  = F("Unknown or restricted command");
     root[F("command")] = webrequest;
     serializeJson(root, printWebString);

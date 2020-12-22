@@ -79,7 +79,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      addFormTextBox(F("I2C Address (Hex)"), F("p047_i2cSoilMoisture_i2cAddress"),
+      addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"),
                      formatToHex_decimal(P047_I2C_ADDR), 4);
 
       // FIXME TD-er: Why not using addFormSelectorI2C here?
@@ -106,7 +106,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      String plugin1 = web_server.arg(F("p047_i2cSoilMoisture_i2cAddress"));
+      String plugin1 = web_server.arg(F("i2c_addr"));
       P047_I2C_ADDR = (int)strtol(plugin1.c_str(), 0, 16);
 
       P047_SENSOR_SLEEP = isFormItemChecked(F("p047_sleep"));

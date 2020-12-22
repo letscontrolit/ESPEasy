@@ -1,0 +1,72 @@
+.. csv-table::
+   :header: "Event", "Example"
+   :widths: 30, 20
+
+   "
+   ``<taskname>#<objectname>``
+
+   The regular events like in every other task. It is fired if the configuration is set to send events for objectnames. Has 3 eventvalues, the X, Y and Z values of the touch event.
+
+   When the setting On/Off button is checked for a touchobject, then the new state (On or Off) will be sent as the only ``%eventvalue%`` argument.
+   ","
+
+   .. code-block:: none
+
+      on System#Boot do
+        let,1,0
+        let,2,0
+      endon
+
+      // With debouncing in the script
+      on XPT2046#sun do
+        if %v2%=0
+          let,2,1
+          if %v1%=0
+            let,1,1
+          else
+            let,1,0
+          endif
+          timerSet_ms,1,300 // Debouncing timer
+        endif
+      endon
+
+      on Rules#Timer=1 do
+        if %v2%=1
+          if %v1%=1
+            GPIO,2,1 //LED on
+          else
+            GPIO,2,0 //LED off
+          endif
+          let,2,0
+        endif
+      endon
+
+      // Alternatively, using the On/Off button setting, the on/off state can also be inverted, if desired.
+      on XPT2046#sun do
+        GPIO,2,%eventvalue%
+      endon
+
+   "
+   "
+   ``<taskname>#X=``
+
+   ``<taskname>#Y=``
+
+   ``<taskname>#Z=``
+   
+   When enabled, these events will be sent on touch of the touchscreen. The event variable is the current x/y/z value of the touched position.
+   ","
+
+   .. code-block:: none
+   
+      on XPT2046#X do
+         LogEntry,'Touch X position %eventvalue%'
+      endon
+      on XPT2046#Y do
+         LogEntry,'Touch Y position %eventvalue%'
+      endon
+      on XPT2046#Z do
+         LogEntry,'Touch Z pressure %eventvalue%'
+      endon
+   
+   "

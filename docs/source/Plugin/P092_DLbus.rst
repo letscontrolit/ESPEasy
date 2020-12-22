@@ -10,14 +10,13 @@ The DL-Bus is a bidirectional data line and only compatible with products of Tec
 The data transmission looks as follows:
 
 * In an infinite loop, a logging data frame is created by the control one after the others on the data line.
-
-Up to 4 sensor measured value queries (master/slave) can be made between the individual logging data frames on the DL bus.
-
 * So that the beginning of a data frame can be detected, a SYNC of 16 high bits is sent before the first data byte.
 * The data transmission is carried out as Manchester code (EXOR linked) with a display clock of 50 or 488Hz (depending on control type).
 
 This is necessary to ensure the supply voltage of the logger and DL sensors from the data signal.
 If the receiver is synchronized to the display clock, the correct bit value appears always during the second half period of the data bit (inverted in the first half period).
+
+.. note:: A new device task must be created for each value to be read from the DL bus!
 
 Wiring
 ------
