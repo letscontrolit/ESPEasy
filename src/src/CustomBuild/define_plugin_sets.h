@@ -886,7 +886,7 @@ To create/register a plugin, you have to :
     #define USES_P097   // Touch (ESP32)
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
-    #define USES_P103   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+    #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
 #endif
 
 
@@ -1023,7 +1023,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P082) || defined(USES_P087) || defined(USES_P094)
+#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P082) || defined(USES_P087) || defined(USES_P094) || defined(USES_P108)
 // At least one plugin uses serial.
 #else
   // No plugin uses serial, so make sure software serial is not included.
@@ -1042,7 +1042,7 @@ To create/register a plugin, you have to :
   #define USES_PACKED_RAW_DATA
 #endif
 
-#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P103)
+#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)
   // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
   #define USES_MODBUS
 #endif
