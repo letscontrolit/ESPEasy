@@ -1,5 +1,104 @@
 # Release Notes
 
+## _v2.7.13 (20201125)_
+
+**[Bug Fixes]**
+- Fix crash when IRac::sendAc(state_t, *state_t) called with SAMSUNG_AC & NULL (#1341 #1339)
+- Mitsubishi112 & 136: `setSwingV()` incorrectly sets mode. (#1337)
+- Typo preventing RC6 from compiling when other protocols disabled. (#1332 #1331)
+
+**[Features]**
+- Coolix: Improve Sensor(ZoneFollow) and add Vane Step support. (#1340 #1318)
+
+**[Misc]**
+- refactor ir_Coolix (#1340)
+- refactor ir_Mitsubishi (#1336)
+- refactor ir_MitsubishiHeavy (#1333)
+
+
+## _v2.7.12 (20201113)_
+
+**[Bug Fixes]**
+- `defaultBits()` returned incorrect result for `PANASONIC_AC` (#1307 #1314)
+- Fix LG2 timings and refactor `decodeLG()` (#1298 #1304)
+
+**[Features]**
+- Midea: Add support for "Follow Me"/Sensor, Turbo, Light, & Timers (#1318 #1327)
+- SharpAc: Add model support for A705 (#1309 #1313)
+- Add basic support for Panasonic A/C 32bit/16bit protocol. (#1307 #1316)
+- Add support for Elite Screens protocol. (#1306 #1310)
+- IRrecvDumpV2+: Add tolerance setting. (#1292)
+- Add basic support for the Mirage Protocol. (#1289 #1291)
+- Internationalisation Support
+  - pt-BR: Add Portuguese/Brazilian support. (#1303)
+  - de-DE: Backfill missing strings (#1294)
+  - de-DE: update for recent addition of 'tolerance' (#1293)
+  - de-DE: Translate root README.md into German (#1297)
+
+**[Misc]**
+- refactor ir_LG (#1325)
+- refactor ir_Kelvinator (#1317)
+- refactor ir_Hitachi (#1308)
+- refactor ir_Goodweather (#1295)
+- refactor ir_Electra (#1290)
+- refactor ir_Daikin (#1288)
+- Update Kaysun supported models. (#1322)
+- fix typos/spelling mistakes (#1301)
+- Add some missing Doxygen class/data-type descriptions. (#1287)
+
+
+## _v2.7.11 (20201002)_
+
+**[Features]**
+- Transcold: Add detailed support. (#1256 #1278)
+- Airwell/Whirlpool: Add handling of previous state to `.toCommon()` (#1275 #1276)
+- IRMQTTServer: Change how MQTT packet/buffer size is set. (#1271)
+- Fujitsu: Add support for timers. (#1255 #1261 #1262)
+- Neoclima: Add Economy & Fahrenheit support (#1260 #1265)
+- Technibel: Cleanup and code fixes/improvements. (#1259 #1266)
+- Technibel: Add detailed A/C support (#1259)
+- Transcold: Add basic support. (#1256 #1258)
+
+**[Misc]**
+- refactor ir_Delonghi (#1285)
+- Whirlpool: Change default mode in `convertMode()` (#1283 #1284)
+- SamsungAC: Unit tests to help debug poor signal (#1277 #1280)
+- Add question & note about VS1838b use to issue template. (#1281)
+- rewrite ir_Corona (#1274)
+- tools/mkkeywords: Fix minor parsing issue. (#1272)
+- Add Zhongxian Li to Contributers.md (#1270)
+- rewrite Carrier (#1269)
+- rewrite ir_Argo by using bit field (#1264)
+- rewrite ir_Amcor by using bit field (#1263)
+- Update Fujitsu supported model info.
+- Clarify the scope of the LittleFS breaking change.
+
+
+## _v2.7.10 (20200831)_
+
+**[BREAKING CHANGES]**
+- IRMQTTServer & Web-AC-Control: move SPIFFS to LittleFS for ESP8266 (#1182 #1226)
+- Daikin176: Change & increase operating mode values. (#1233 #1235)
+
+**[Bug Fixes]**
+- TOSHIBA_AC: not turning off when using `IRac` class. (#1250 #1251)
+- Haier: change position of Fan speed bits. (#1246 #1247)
+
+**[Features]**
+- Voltas: Add detailed support for Voltas A/Cs (#1238 #1248)
+- Add support for Metz protocol. (#1241 #1242)
+- Basic support for Voltas A/C protocol (#1238 #1243)
+- Add low level bit formatting sanity checks. (#1232)
+
+**[Misc]**
+- Rewrite Airwell by using bit fields (#1254)
+- Rewrite Haier YRW02 using bit fields (#1253)
+- rewrite Haier HSU07-HEA03 (#1246 #1247)
+- rewrite ir_Gree & ir_Midea by using bit field (#1240)
+- Incorrect usage of `assert()` (#1244 #1245 #1232)
+- rewrite Gree (#1210)
+
+
 ## _v2.7.9 (20200730)_
 
 **[Bug Fixes]**
