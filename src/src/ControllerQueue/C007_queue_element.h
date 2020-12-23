@@ -2,9 +2,10 @@
 #define CONTROLLERQUEUE_C007_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+#include "../DataStructs/DeviceStruct.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
-#include "../DataStructs/DeviceStruct.h"
+
 
 struct EventStruct;
 
@@ -19,7 +20,7 @@ public:
 
   C007_queue_element();
 
-  C007_queue_element(const struct EventStruct *event);
+  C007_queue_element(struct EventStruct *event);
 
   size_t getSize() const;
 

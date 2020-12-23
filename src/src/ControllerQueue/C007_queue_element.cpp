@@ -8,7 +8,7 @@
 
 C007_queue_element::C007_queue_element() {}
 
-C007_queue_element::C007_queue_element(const struct EventStruct *event) :
+C007_queue_element::C007_queue_element(EventStruct *event) :
   idx(event->idx),
   TaskIndex(event->TaskIndex),
   controller_idx(event->ControllerIndex),
@@ -17,7 +17,7 @@ C007_queue_element::C007_queue_element(const struct EventStruct *event) :
   valueCount = getValueCountForTask(TaskIndex);
 
   for (byte i = 0; i < valueCount; ++i) {
-    txt[i] = formatUserVarNoCheck(TaskIndex, i);
+    txt[i] = formatUserVarNoCheck(event, i);
   }
 }
 
