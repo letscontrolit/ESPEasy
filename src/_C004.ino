@@ -100,16 +100,15 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
 
   if (element.sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
       postDataStr += F("&status=");
-      postDataStr += element.txt;    // FIXME TD-er: Is this correct?
+      postDataStr += element.txt[0];    // FIXME TD-er: Is this correct?
       // See: https://nl.mathworks.com/help/thingspeak/writedata.html
   } else {
-    byte valueCount = getValueCountForTask(element.TaskIndex);
-    for (byte x = 0; x < valueCount; x++)
+    for (byte x = 0; x < element.valueCount; x++)
     {
       postDataStr += F("&field");
       postDataStr += element.idx + x;
       postDataStr += '=';
-      postDataStr += formatUserVarNoCheck(element.TaskIndex, x);
+      postDataStr += element.txt[x];
     }
   }
   String hostName = F("api.thingspeak.com"); // PM_CZ: HTTP requests must contain host headers.
