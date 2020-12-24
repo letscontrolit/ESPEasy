@@ -120,8 +120,16 @@ There's three different released versions of ESP Easy:
    ":ref:`P094_page`","|P094_status|","P094"
    ":ref:`P095_page`","|P095_status|","P095"
    ":ref:`P097_page`","|P097_status|","P097"
+   ":ref:`P099_page`","|P099_status|","P099"
    ":ref:`P100_page`","|P100_status|","P100"
    ":ref:`P101_page`","|P101_status|","P101"
+   ":ref:`P102_page`","|P102_status|","P102"
+   ":ref:`P103_page`","|P103_status|","P103"
+   ":ref:`P104_page`","|P104_status|","P104"
+   ":ref:`P105_page`","|P105_status|","P105"
+   ":ref:`P106_page`","|P106_status|","P106"
+   ":ref:`P107_page`","|P107_status|","P107"
+   ":ref:`P108_page`","|P108_status|","P108"
 
 
 Internal GPIO handling
@@ -269,6 +277,11 @@ Switch input
 Plugins: |Plugin_Switch_input|
 
 Hardware: |P001_usedby|
+
+Touch
+-----
+
+Plugins: |Plugin_Touch|
 
 Weight
 ------

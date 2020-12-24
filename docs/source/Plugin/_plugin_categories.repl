@@ -2,10 +2,10 @@
 .. |Plugin_Communication| replace:: :ref:`P016_page`, :ref:`P020_page`, :ref:`P035_page`, :ref:`P044_page`, :ref:`P054_page`, :ref:`P071_page`, :ref:`P087_page`, :ref:`P089_page`, :ref:`P094_page`, :ref:`P101_page`
 .. |Plugin_Display| replace:: :ref:`P012_page`, :ref:`P023_page`, :ref:`P036_page`, :ref:`P057_page`, :ref:`P073_page`, :ref:`P075_page`, :ref:`P095_page`
 .. |Plugin_Dust| replace:: :ref:`P018_page`, :ref:`P053_page`, :ref:`P056_page`
-.. |Plugin_Energy_AC| replace:: :ref:`P076_page`, :ref:`P077_page`, :ref:`P078_page`
+.. |Plugin_Energy_AC| replace:: :ref:`P076_page`, :ref:`P077_page`, :ref:`P078_page`, :ref:`P102_page`, :ref:`P108_page`
 .. |Plugin_Energy_DC| replace:: :ref:`P027_page`, :ref:`P085_page`
 .. |Plugin_Energy_Heat| replace:: :ref:`P088_page`, :ref:`P093_page`
-.. |Plugin_Environment| replace:: :ref:`P004_page`, :ref:`P005_page`, :ref:`P006_page`, :ref:`P014_page`, :ref:`P024_page`, :ref:`P028_page`, :ref:`P030_page`, :ref:`P031_page`, :ref:`P032_page`, :ref:`P034_page`, :ref:`P039_page`, :ref:`P047_page`, :ref:`P051_page`, :ref:`P068_page`, :ref:`P069_page`, :ref:`P072_page`
+.. |Plugin_Environment| replace:: :ref:`P004_page`, :ref:`P005_page`, :ref:`P006_page`, :ref:`P014_page`, :ref:`P024_page`, :ref:`P028_page`, :ref:`P030_page`, :ref:`P031_page`, :ref:`P032_page`, :ref:`P034_page`, :ref:`P039_page`, :ref:`P047_page`, :ref:`P051_page`, :ref:`P068_page`, :ref:`P069_page`, :ref:`P072_page`, :ref:`P103_page`, :ref:`P104_page`, :ref:`P105_page`, :ref:`P106_page`
 .. |Plugin_Extra_IO| replace:: :ref:`P011_page`, :ref:`P022_page`
 .. |Plugin_Gases| replace:: :ref:`P049_page`, :ref:`P052_page`, :ref:`P083_page`, :ref:`P090_page`
 .. |Plugin_Generic| replace:: :ref:`P003_page`, :ref:`P026_page`, :ref:`P033_page`, :ref:`P037_page`, :ref:`P081_page`, :ref:`P100_page`
@@ -14,7 +14,7 @@
 .. |Plugin_Hardware| replace:: :ref:`P046_page`
 .. |Plugin_Keypad| replace:: :ref:`P058_page`, :ref:`P061_page`, :ref:`P062_page`, :ref:`P063_page`
 .. |Plugin_Light_Color| replace:: :ref:`P050_page`, :ref:`P066_page`
-.. |Plugin_Light_UV| replace:: :ref:`P084_page`
+.. |Plugin_Light_UV| replace:: :ref:`P084_page`, :ref:`P107_page`
 .. |Plugin_Light_Lux| replace:: :ref:`P010_page`, :ref:`P015_page`, :ref:`P074_page`
 .. |Plugin_Motor| replace:: :ref:`P048_page`, :ref:`P079_page`
 .. |Plugin_Notify| replace:: :ref:`P055_page`, :ref:`P065_page`
@@ -23,5 +23,6 @@
 .. |Plugin_Regulator| replace:: :ref:`P021_page`
 .. |Plugin_RFID| replace:: :ref:`P008_page`, :ref:`P017_page`, :ref:`P040_page`
 .. |Plugin_Switch_input| replace:: :ref:`P001_page`, :ref:`P009_page`, :ref:`P019_page`, :ref:`P059_page`, :ref:`P080_page`, :ref:`P091_page`, :ref:`P097_page`
+.. |Plugin_Touch| replace:: :ref:`P097_page`, :ref:`P099_page`
 .. |Plugin_Weight| replace:: :ref:`P067_page`
 
