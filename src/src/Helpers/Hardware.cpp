@@ -1098,23 +1098,23 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
 
   if (fadeDuration_ms != 0)
   {
+    const int32_t resolution_factor = (1 << 12);
     const byte prev_mode  = tempStatus.mode;
-    uint16_t   prev_value = tempStatus.getDutyCycle();
+    int32_t   prev_value = tempStatus.getDutyCycle();
 
     // getPinState(pluginID, gpio, &prev_mode, &prev_value);
     if (prev_mode != PIN_MODE_PWM) {
       prev_value = 0;
     }
 
-    int32_t step_value = ((dutyCycle - prev_value) << 12) / fadeDuration_ms;
-    int32_t curr_value = prev_value << 12;
+    const int32_t step_value = ((static_cast<int32_t>(dutyCycle) - prev_value) * resolution_factor) / static_cast<int32_t>(fadeDuration_ms);
+    int32_t curr_value = prev_value * resolution_factor;
 
     int i = fadeDuration_ms;
 
     while (i--) {
       curr_value += step_value;
-      int16_t new_value;
-      new_value = (uint16_t)(curr_value >> 12);
+      const int16_t new_value = curr_value / resolution_factor;
             #if defined(ESP8266)
       analogWrite(gpio, new_value);
             #endif // if defined(ESP8266)
