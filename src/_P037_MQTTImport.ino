@@ -618,6 +618,18 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
   if (tmpTopic[0] == '/') { tmpTopic = tmpTopic.substring(1); }
   if (tmpSub[0] == '/') { tmpSub = tmpSub.substring(1); }
 
+  // Test for multi-level wildcard (#) see: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718107 (for MQTT 3 and MQTT 5)
+
+  if (tmpSub == F("#")) return true; // If the subscription is for '#' then all topics are accepted
+  if (tmpSub.endsWith(F("/#"))) { // A valid MQTT multi-level wildcard is a # at the end of the topic that's preceded by a /
+    bool multiLevelWildcard = tmpTopic.startsWith(tmpSub.substring(0, tmpSub.length() - 1));
+    if (tmpSub.indexOf('+') != -1) {
+      tmpSub = tmpSub.substring(0, tmpSub.length() - 1); // Keep searching, can still match with single-level wildcard
+    } else {
+      return multiLevelWildcard; // It matched, or not
+    }
+  }
+
   // Add trailing / if required
 
   int lenTopic = tmpTopic.length();
@@ -660,8 +672,8 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
     tmpSub = tmpSub.substring(SlashSub + 1);
 
     //  If the subtopics match then OK - otherwise fail
-    if (pSub == "#")  return true;
-    if ((pTopic != pSub) && (pSub != "+"))return false;
+    // if (pSub == "#")  return true; // Removed unneeded check, multi-level wildcard only allowed as the last topic part, already tested above
+    if ((pTopic != pSub) && (pSub != F("+"))) return false;
 
     count = count + 1;
   }
