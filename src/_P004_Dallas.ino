@@ -229,9 +229,15 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       uint8_t addr[8];
       Dallas_plugin_get_addr(addr, event->TaskIndex);
 
-      if ((addr[0] != 0) && (CONFIG_PIN1 != -1) && (CONFIG_PIN2 != -1)) {
+      int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
+      int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
+      if(Plugin_004_DallasPin_TX == -1) {
+        Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
+      }
+
+      if ((addr[0] != 0) && (Plugin_004_DallasPin_RX != -1) && (Plugin_004_DallasPin_TX != -1)) {
         const uint8_t res = P004_RESOLUTION;
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(CONFIG_PIN1, CONFIG_PIN2, addr, res));
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, addr, res));
         P004_data_struct *P004_data =
           static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
