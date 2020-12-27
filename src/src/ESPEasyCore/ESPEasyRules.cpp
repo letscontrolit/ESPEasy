@@ -479,6 +479,12 @@ void parse_string_commands(String &line) {
         if (validIntFromString(arg1, iarg1)) {
           replacement = String(iarg1, HEX);
         }
+      } else if (cmd_s_lower.equals(F("abs"))) {
+        // Turn number into positive value
+        // Syntax like {abs:-1} -> '1'
+        if (validIntFromString(arg1, iarg1)) {
+          replacement = String((iarg1 < 0) ? iarg1 * -1 : iarg1);
+        }
       } else  if (cmd_s_lower.equals(F("ord"))) {
         // Give the ordinal/integer value of the first character of a string
         // Syntax like let 1,{ord:B}

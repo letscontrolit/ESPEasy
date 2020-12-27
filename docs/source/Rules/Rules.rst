@@ -668,6 +668,10 @@ Usage: ``{bitRead:<bitpos>:<string>}``
 
 .. note::
 
+  Bitwise operators act on ``uint32_t`` types, so be careful with negative numbers.
+
+.. note::
+
   The order of parameters differs from the "Arduino" command ``bitRead()``
 
 For example:
@@ -698,6 +702,10 @@ With:
 
 .. note::
 
+  Bitwise operators act on ``uint32_t`` types, so be careful with negative numbers.
+
+.. note::
+
   The order of parameters differs from the "Arduino" commands ``bitSet()`` and ``bitClear()``
 
 For example:
@@ -725,6 +733,10 @@ Usage: ``{bitWrite:<bitpos>:<bitval>:<string>}``
 
 .. note::
 
+  Bitwise operators act on ``uint32_t`` types, so be careful with negative numbers.
+
+.. note::
+
   The order of parameters differs from the "Arduino" command bitSet()
 
 For example:
@@ -741,6 +753,11 @@ XOR / AND / OR
 (Added: 2020-12-28)
 
 Perform bitwise logic operations XOR/AND/OR
+
+.. note::
+
+  Bitwise operators act on ``uint32_t`` types, so be careful with negative numbers.
+
 
 Usage: 
 
@@ -778,8 +795,56 @@ With:
 
 For example:
 
-* ``{div:254:15}`` Perform integer division => 15
-* ``{mod:254:15}`` Perform integer mod => 14
+* ``{div:254:16}`` Perform integer division => 15
+* ``{mod:254:16}`` Perform integer mod => 14
+
+Abs
+^^^
+
+(Added: 2020-12-28)
+
+Perform ABS on integer values.
+
+Usage:  ``{abs:<string>}``
+
+With:
+
+* ``<string>`` The number to convert into an absolute value, if it is representing a valid integer value.
+
+For example:
+
+* ``{abs:-1}`` Return the absolute value => 1
+
+.. note::
+
+  Bitwise operators act on ``uint32_t`` types, so be careful with negative numbers.
+
+.. code-block:: none
+
+ on eventname do
+   let,1,%eventvalue1%
+   let,2,{bitset:9:{abs:%eventvalue1%}}
+   LogEntry,'Values {tobin:[int#1]} {tohex:[int#1]}'
+   LogEntry,'Values {tobin:[int#2]} {tohex:[int#2]}'
+ endon
+
+Called with ``Event,eventname=-123`` :
+
+.. code-block:: none
+  
+ 75370: EVENT: eventname=-123
+ 75378: ACT : let,1,-123
+ 75387: ACT : let,2,635
+ 75399: ACT : LogEntry,'Values 11111111111111111111111110000101 ffffff85'
+ 75406: Values 11111111111111111111111110000101 ffffff85
+ 75416: ACT : LogEntry,'Values 1001111011 27b'
+ 75421: Values 1001111011 27b
+ 78991: EVENT: Clock#Time=Sun,16:04
+ 83467: DS : Temperature: 22.50 (28-97-b5-75-d0-01-3
+
+As can be seen in the logs, when calling bitwise operators with negative numbers, the value is being cast to an unsigned int first.
+Thus it may have a lot of leading binary '1' digits.
+Therefore make sure to use the ``abs`` function before handing the value over to binary logical operators.
 
 
 System variables
