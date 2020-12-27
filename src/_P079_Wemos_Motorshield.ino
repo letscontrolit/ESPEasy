@@ -119,7 +119,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
         I2C_ADDR_PCFG_P079 = DEF_I2C_ADDRESS_079;
       }
       String i2c_addres_string = formatToHex(I2C_ADDR_PCFG_P079);
-      addFormTextBox(F("I2C Address (Hex)"), F("p079_adr"), i2c_addres_string, 4);
+      addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"), i2c_addres_string, 4);
 
       // Validate Shield Type.
       bool valid = false;
@@ -155,7 +155,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      String i2c_address = web_server.arg(F("p079_adr"));
+      String i2c_address = web_server.arg(F("i2c_addr"));
       I2C_ADDR_PCFG_P079   = (int)strtol(i2c_address.c_str(), 0, 16);
       SHIELD_VER_PCFG_P079 = getFormItemInt(F("p079_shield_type"));
 

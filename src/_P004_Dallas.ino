@@ -50,7 +50,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number           = PLUGIN_ID_004;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
@@ -114,17 +114,22 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
-      event->String1 = formatGpioName_bidirectional(F("1-Wire"));
+      event->String1 = formatGpioName_RX(false);
+      event->String2 = formatGpioName_TX(true);
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
       // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
-      int8_t Plugin_004_DallasPin = CONFIG_PIN1;
+      int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
+      int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
+      if(Plugin_004_DallasPin_TX == -1) {
+        Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
+      }
 
-      if (Plugin_004_DallasPin != -1) {
-        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin, P004_NR_OUTPUT_VALUES);
+      if (Plugin_004_DallasPin_RX != -1 && Plugin_004_DallasPin_TX != -1) {
+        Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
 
         {
           // Device Resolution select
@@ -134,7 +139,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           Dallas_plugin_get_addr(savedAddress, event->TaskIndex);
 
           if (savedAddress[0] != 0) {
-            activeRes = Dallas_getResolution(savedAddress, Plugin_004_DallasPin);
+            activeRes = Dallas_getResolution(savedAddress, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX);
           }
 
           int resolutionChoice = P004_RESOLUTION;
@@ -176,11 +181,15 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      int8_t Plugin_004_DallasPin = CONFIG_PIN1;
+      int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
+      int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
+      if(Plugin_004_DallasPin_TX == -1) {
+        Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
+      }
 
-      if (Plugin_004_DallasPin != -1) {
+      if (Plugin_004_DallasPin_RX != -1 && Plugin_004_DallasPin_TX != -1) {
         // save the address for selected device and store into extra tasksettings
-        Dallas_addr_selector_webform_save(event->TaskIndex, Plugin_004_DallasPin, P004_NR_OUTPUT_VALUES);
+        Dallas_addr_selector_webform_save(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
 
         uint8_t res = getFormItemInt(F("p004_res"));
 
@@ -189,7 +198,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
         uint8_t savedAddress[8];
         Dallas_plugin_get_addr(savedAddress, event->TaskIndex);
-        Dallas_setResolution(savedAddress, res, Plugin_004_DallasPin);
+        Dallas_setResolution(savedAddress, res, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX);
       }
       P004_ERROR_STATE_OUTPUT = getFormItemInt(F("p004_err"));
       success                 = true;
@@ -220,9 +229,15 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       uint8_t addr[8];
       Dallas_plugin_get_addr(addr, event->TaskIndex);
 
-      if ((addr[0] != 0) && (CONFIG_PIN1 != -1)) {
+      int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
+      int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
+      if(Plugin_004_DallasPin_TX == -1) {
+        Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
+      }
+
+      if ((addr[0] != 0) && (Plugin_004_DallasPin_RX != -1) && (Plugin_004_DallasPin_TX != -1)) {
         const uint8_t res = P004_RESOLUTION;
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(CONFIG_PIN1, addr, res));
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, addr, res));
         P004_data_struct *P004_data =
           static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 

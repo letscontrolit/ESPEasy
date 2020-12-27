@@ -179,6 +179,8 @@ void preinit() {
   // No global object methods or C++ exceptions can be called in here!
   //The below is a static class method, which is similar to a function, so it's ok.
   ESP8266WiFiClass::preinitWiFiOff();
+  system_phy_set_powerup_option(RF_NO_CAL);
+
 }
 #endif
 
@@ -276,12 +278,14 @@ void setup()
     }
 
     log += RTC.bootCounter;
+    #ifndef BUILD_NO_DEBUG
     log += F(" Last Action before Reboot: ");
     log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     log += F(" Last systime: ");
     log += RTC.lastSysTime;
     log += F(" repeatReset #");
     log += RTC.repeatResetCount;
+    #endif
   }
   //cold boot (RTC memory empty)
   else

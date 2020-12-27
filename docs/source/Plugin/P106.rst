@@ -1,0 +1,42 @@
+.. include:: ../Plugin/_plugin_substitutions_p10x.repl
+.. _P106_page:
+
+|P106_typename|
+==================================================
+
+|P106_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P106_type|
+
+Name: |P106_name|
+
+Status: |P106_status|
+
+GitHub: |P106_github|_
+
+Maintainer: |P106_maintainer|
+
+Used libraries: |P106_usedlibraries|
+
+Description
+-----------
+
+
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P106_events.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-04-25

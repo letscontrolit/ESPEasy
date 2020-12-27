@@ -118,4 +118,3 @@ function loopDeLoop(timeForNext, activeRequests) {
         check = 1;
     }, timeForNext);
 }
-

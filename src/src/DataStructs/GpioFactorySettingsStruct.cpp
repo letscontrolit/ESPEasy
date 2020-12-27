@@ -88,6 +88,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda    = -1;            // GPIO4 conflicts with relay control.
       i2c_scl    = -1;            // GPIO5 conflicts with SW input
       break;
+#ifdef ESP32
     case DeviceMode_Olimex_ESP32_PoE:
       button[0]             = 34; // BUT1 Button
       relais[0]             = -1; // No LED's or relays on board
@@ -152,6 +153,11 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       // N.B. GPIO 35 and up are input only.
 
       break;
+  #else
+      case DeviceMode_Olimex_ESP32_PoE:
+      case DeviceMode_Olimex_ESP32_EVB:
+      case DeviceMode_Olimex_ESP32_GATEWAY:
+  #endif
 
     case DeviceModel_default:
     case DeviceModel_MAX:

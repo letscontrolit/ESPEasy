@@ -35,7 +35,11 @@ void SettingsStruct_tmpl<N_TASKS>::uniqueMQTTclientIdReconnect_unused(bool value
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::OldRulesEngine() const {
+  #ifdef WEBSERVER_NEW_RULES
   return !bitRead(VariousBits1, 3);
+  #else
+  return true;
+  #endif
 }
 
 template<unsigned int N_TASKS>
