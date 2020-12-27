@@ -161,11 +161,15 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       break;
     default:
     {
-      String log = F("Domoticz Controller: Not yet implemented sensor type: ");
-      log += static_cast<byte>(event->sensorType);
-      log += F(" idx: ");
-      log += event->idx;
-      addLog(LOG_LEVEL_ERROR, log);
+      #ifndef BUILD_NO_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log = F("Domoticz Controller: Not yet implemented sensor type: ");
+        log += static_cast<byte>(event->sensorType);
+        log += F(" idx: ");
+        log += event->idx;
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+      #endif
       break;
     }
   }
@@ -178,13 +182,17 @@ String formatDomoticzSensorType(struct EventStruct *event) {
   }
   values.trim();
   {
-    String log = F(" Domoticz: Sensortype: ");
-    log += static_cast<byte>(event->sensorType);
-    log += F(" idx: ");
-    log += event->idx;
-    log += F(" values: ");
-    log += values;
-    addLog(LOG_LEVEL_INFO, log);
+    #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F(" Domoticz: Sensortype: ");
+      log += static_cast<byte>(event->sensorType);
+      log += F(" idx: ");
+      log += event->idx;
+      log += F(" values: ");
+      log += values;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    #endif
   }
   return values;
 }

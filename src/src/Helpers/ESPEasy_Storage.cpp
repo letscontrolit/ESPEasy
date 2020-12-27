@@ -117,7 +117,14 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
 }
 
 bool fileExists(const String& fname) {
-  return ESPEASY_FS.exists(patch_fname(fname));
+  const String patched_fname = patch_fname(fname);
+  auto search = Cache.fileExistsMap.find(patched_fname);
+  if (search != Cache.fileExistsMap.end()) {
+    return search->second;
+  }
+  bool res = ESPEASY_FS.exists(patched_fname);
+  Cache.fileExistsMap[patched_fname] = res;
+  return res;
 }
 
 fs::File tryOpenFile(const String& fname, const String& mode) {
@@ -129,8 +136,11 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
 
   bool exists = fileExists(fname);
 
-  if ((mode == F("r")) && !exists) {
-    return f;
+  if (!exists) {
+    if (mode == F("r")) {
+      return f;
+    }
+    Cache.fileExistsMap.clear();
   }
   f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
   STOP_TIMER(TRY_OPEN_FILE);
@@ -138,7 +148,9 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
 }
 
 bool tryRenameFile(const String& fname_old, const String& fname_new) {
+  Cache.fileExistsMap.clear();
   if (fileExists(fname_old) && !fileExists(fname_new)) {
+    clearAllCaches();
     return ESPEASY_FS.rename(patch_fname(fname_old), patch_fname(fname_new));
   }
   return false;
@@ -148,6 +160,7 @@ bool tryDeleteFile(const String& fname) {
   if (fname.length() > 0)
   {
     bool res = ESPEASY_FS.remove(patch_fname(fname));
+    clearAllCaches();
 
     // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
     // A deleted file may have covered more than a single block, so try to clear multiple blocks.
@@ -277,6 +290,7 @@ void fileSystemCheck()
 
   if (ESPEASY_FS.begin())
   {
+    clearAllCaches();
     #if defined(ESP8266)
     fs::FSInfo fs_info;
     ESPEASY_FS.info(fs_info);
