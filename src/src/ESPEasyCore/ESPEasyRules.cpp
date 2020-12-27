@@ -22,6 +22,8 @@
 
 #include "../../ESPEasy_fdwdecl.h"
 
+#include <math.h>
+
 boolean activeRuleSets[RULESETS_MAX];
 
 String EventToFileName(const String& eventName) {
@@ -415,6 +417,60 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
   return argument.length() > 0;
 }
 
+bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, double& result) {
+  if (cmd_s_lower.length() < 3) {
+    return false;
+  }
+  float farg1;
+  if (!validFloatFromString(arg1, farg1)) {
+    return false;
+  }
+  const bool angle_in_deg = cmd_s_lower.endsWith(F("_d"));
+  if (cmd_s_lower[0] == 'a') {
+    // acos, asin, atan, atan2
+    if (cmd_s_lower.startsWith(F("acos"))) {
+      result = acos(farg1);
+    } else if (cmd_s_lower.startsWith(F("asin"))) {
+      result = asin(farg1);
+    } else if (cmd_s_lower.startsWith(F("atan2"))) {
+      // Syntax like {atan:x:y} to give the angle with the X-axis given a coordinate in the XY-plane
+      float x = farg1;
+      float y;
+      if (validFloatFromString(arg2, y)) {
+        result = atan2(y, x); // Note the swapped order of y,x parameters
+      } else {
+        // No 2nd parameter
+        return false;
+      }
+    } else if (cmd_s_lower.startsWith(F("atan"))) {
+      result = atan(farg1);
+    } else {
+      return false;
+    }
+    if (angle_in_deg) {
+      result *= 180.0;
+      result /= M_PI;
+    }
+    return true;    
+  }
+  // cos, sin, tan
+  // These functions have the angle as input, so convert the argument to radians first (if needed)
+  if (angle_in_deg) {
+    farg1 *=  M_PI;
+    farg1 /= 180.0;
+  }
+  if (cmd_s_lower.startsWith(F("cos"))) {
+    result = cos(farg1);
+  } else if (cmd_s_lower.startsWith(F("sin"))) {
+    result = sin(farg1);
+  } else if (cmd_s_lower.startsWith(F("tan"))) {
+    result = tan(farg1);
+  } else {
+    return false;
+  }
+  return true;
+}
+
 void parse_string_commands(String &line) {
   int startIndex, closingIndex;
 
@@ -436,7 +492,10 @@ void parse_string_commands(String &line) {
 //      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
 
       int iarg1, iarg2, iarg3 = 0;
-      if (cmd_s_lower.equals(F("substring"))) {
+      double result = 0.0;
+      if (parse_trigonometric_functions(cmd_s_lower, arg1, arg2, result)) {
+        replacement = String(result, 6);
+      } else if (cmd_s_lower.equals(F("substring"))) {
         // substring arduino style (first char included, last char excluded)
         // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
         if (validIntFromString(arg1, iarg1)
@@ -478,12 +537,6 @@ void parse_string_commands(String &line) {
         // Syntax like 1234{tohex:15}7890
         if (validIntFromString(arg1, iarg1)) {
           replacement = String(iarg1, HEX);
-        }
-      } else if (cmd_s_lower.equals(F("abs"))) {
-        // Turn number into positive value
-        // Syntax like {abs:-1} -> '1'
-        if (validIntFromString(arg1, iarg1)) {
-          replacement = String((iarg1 < 0) ? iarg1 * -1 : iarg1);
         }
       } else  if (cmd_s_lower.equals(F("ord"))) {
         // Give the ordinal/integer value of the first character of a string
@@ -548,7 +601,15 @@ void parse_string_commands(String &line) {
             && validIntFromString(arg2, iarg2)) {
           replacement = String(iarg1 % iarg2);
         }
+      } else if (cmd_s_lower.equals(F("abs"))) {
+        // Turn number into positive value
+        // Syntax like {abs:-1} -> '1'
+        float farg1;
+        if (validFloatFromString(arg1, farg1)) {
+          replacement = String((farg1 < 0) ? farg1 * -1 : farg1);
+        }
       }
+
       if (replacement.length() == 0) {
         // part in braces is not a supported command.
         // replace the {} with other characters to mask the braces so we can continue parsing.

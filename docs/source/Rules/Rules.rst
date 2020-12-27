@@ -809,7 +809,7 @@ Usage:  ``{abs:<string>}``
 
 With:
 
-* ``<string>`` The number to convert into an absolute value, if it is representing a valid integer value.
+* ``<string>`` The number to convert into an absolute value, if it is representing a valid numerical value.
 
 For example:
 
@@ -845,6 +845,60 @@ Called with ``Event,eventname=-123`` :
 As can be seen in the logs, when calling bitwise operators with negative numbers, the value is being cast to an unsigned int first.
 Thus it may have a lot of leading binary '1' digits.
 Therefore make sure to use the ``abs`` function before handing the value over to binary logical operators.
+
+
+Cos / Sin / Tan
+^^^^^^^^^^^^^^^
+
+(Added: 2020-12-28)
+
+Perform trigonometry on numerical values (both integer and floating point).
+
+.. note::
+
+  Trigonometry functions without trailing '_d' consider the angle in radians.
+  To use degrees, add '_d' to the command.
+
+Usage:
+
+* ``{cos:<string>}`` Compute ``cos`` on an angle in radians.
+* ``{sin:<string>}`` Compute ``sin`` on an angle in radians.
+* ``{tan:<string>}`` Compute ``tan`` on an angle in radians.
+* ``{acos:<string>}`` Inverse function of ``cos``, returns angle in radians.
+* ``{asin:<string>}`` Inverse function of ``sin``, returns angle in radians.
+* ``{atan:<string>}`` Inverse function of ``tan``, returns angle in radians.
+* ``{atan2:<x>:<y>}`` Compute the angle in radians between the line from (0,0) to (x,y) and the X-axis.
+* ``{cos_d:<string>}`` Compute ``cos`` on an angle in degrees.
+* ``{sin_d:<string>}`` Compute ``sin`` on an angle in degrees.
+* ``{tan_d:<string>}`` Compute ``tan`` on an angle in degrees.
+* ``{acos_d:<string>}`` Inverse function of ``cos``, returns angle in degrees.
+* ``{asin_d:<string>}`` Inverse function of ``sin``, returns angle in degrees.
+* ``{atan_d:<string>}`` Inverse function of ``tan``, returns angle in degrees.
+* ``{atan2_d:<x>:<y>}`` Compute the angle in degrees between the line from (0,0) to (x,y) and the X-axis.
+
+With:
+
+* ``<string>`` The value to use, if it is representing a valid numerical value.
+
+.. note::
+
+  Order of parameters of atan2 differ from the ``atan2()`` function in C++.
+
+Example:
+
+.. code-block:: none
+
+ on eventname do
+   let,1,%eventvalue1%
+   LogEntry,'cos([var#1]) = {cos_d:[var#1]} Inverse: {acos_d:{cos_d:[var#1]}}'
+ endon
+
+.. code-block:: none
+
+ 48820: EVENT: eventname=-45
+ 48829: ACT : let,1,-45
+ 48841: ACT : LogEntry,'cos(-45.00) = 0.707107 Inverse: 44.999982'
+ 48846: cos(-45.00) = 0.707107 Inverse: 44.999982
 
 
 System variables
