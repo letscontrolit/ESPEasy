@@ -189,6 +189,10 @@ void addRowLabel_copy(const String& label) {
   html_copyText_TD();
 }
 
+void addRowLabel(LabelType::Enum label) {
+  addRowLabel(getLabel(label));
+}
+
 void addRowLabelValue(LabelType::Enum label) {
   addRowLabel(getLabel(label));
   addHtml(getValue(label));

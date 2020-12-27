@@ -37,59 +37,70 @@ void hardwareInit()
     if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
       if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
-        switch (Settings.getPinBootState(gpio))
-        {
-          case PinBootState::Default_state:
-            // At startup, pins are configured as INPUT
-            break;
-          case PinBootState::Output_low:
-            pinMode(gpio, OUTPUT);
-            digitalWrite(gpio, LOW);
-            globalMapPortStatus[key].state = LOW;
-            globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
-            globalMapPortStatus[key].init  = 1;
+        const PinBootState bootState = Settings.getPinBootState(gpio);
+        if (bootState != PinBootState::Default_state) {
+          int8_t state = -1;
+          uint8_t mode = PIN_MODE_UNDEFINED;
+          int8_t init = 0;
+          switch (bootState)
+          {
+            case PinBootState::Default_state:
+              // At startup, pins are configured as INPUT
+              break;
+            case PinBootState::Output_low:
+              pinMode(gpio, OUTPUT);
+              digitalWrite(gpio, LOW);
+              state = LOW;
+              mode  = PIN_MODE_OUTPUT;
+              init  = 1;
 
-            // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
-            break;
-          case PinBootState::Output_high:
-            pinMode(gpio, OUTPUT);
-            digitalWrite(gpio, HIGH);
-            globalMapPortStatus[key].state = HIGH;
-            globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
-            globalMapPortStatus[key].init  = 1;
+              // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
+              break;
+            case PinBootState::Output_high:
+              pinMode(gpio, OUTPUT);
+              digitalWrite(gpio, HIGH);
+              state = HIGH;
+              mode  = PIN_MODE_OUTPUT;
+              init  = 1;
 
-            // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
-            break;
-          case PinBootState::Input_pullup:
-            if (hasPullUp) {
-              pinMode(gpio, INPUT_PULLUP);
-              globalMapPortStatus[key].state = 0;
-              globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLUP;
-              globalMapPortStatus[key].init  = 1;
-            }
-            break;
-          case PinBootState::Input_pulldown:
-            if (hasPullDown) {
-              #ifdef ESP8266
-              if (gpio == 16) {
-                pinMode(gpio, INPUT_PULLDOWN_16);
+              // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
+              break;
+            case PinBootState::Input_pullup:
+              if (hasPullUp) {
+                pinMode(gpio, INPUT_PULLUP);
+                state = 0;
+                mode  = PIN_MODE_INPUT_PULLUP;
+                init  = 1;
               }
-              #endif
-              #ifdef ESP32
-              pinMode(gpio, INPUT_PULLDOWN);
-              #endif
-              globalMapPortStatus[key].state = 0;
-              globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLDOWN;
-              globalMapPortStatus[key].init  = 1;
-            }
-            break;
-          case PinBootState::Input:
-            pinMode(gpio, INPUT);
-            globalMapPortStatus[key].state = 0;
-            globalMapPortStatus[key].mode  = PIN_MODE_INPUT;
-            globalMapPortStatus[key].init  = 1;
-            break;
+              break;
+            case PinBootState::Input_pulldown:
+              if (hasPullDown) {
+                #ifdef ESP8266
+                if (gpio == 16) {
+                  pinMode(gpio, INPUT_PULLDOWN_16);
+                }
+                #endif
+                #ifdef ESP32
+                pinMode(gpio, INPUT_PULLDOWN);
+                #endif
+                state = 0;
+                mode  = PIN_MODE_INPUT_PULLDOWN;
+                init  = 1;
+              }
+              break;
+            case PinBootState::Input:
+              pinMode(gpio, INPUT);
+              state = 0;
+              mode  = PIN_MODE_INPUT;
+              init  = 1;
+              break;
 
+          }
+          if (init == 1) {
+            globalMapPortStatus[key].state = state;
+            globalMapPortStatus[key].mode  = mode;
+            globalMapPortStatus[key].init  = init;
+          }
         }
       }
     }
@@ -533,7 +544,10 @@ String getDeviceModelBrandString(DeviceModel model) {
     case DeviceModel_ShellyPLUG_S:   return F("Shelly");
     case DeviceMode_Olimex_ESP32_PoE:
     case DeviceMode_Olimex_ESP32_EVB:
-    case DeviceMode_Olimex_ESP32_GATEWAY:  return F("Olimex");
+    case DeviceMode_Olimex_ESP32_GATEWAY:  
+    #ifdef ESP32
+      return F("Olimex");
+    #endif
 
     case DeviceModel_default:
     case DeviceModel_MAX:      break;
@@ -561,9 +575,15 @@ String getDeviceModelString(DeviceModel model) {
     case DeviceModel_Sonoff_POWr2:   result      += F(" POW-r2");  break;
     case DeviceModel_Shelly1:        result      += '1';           break;
     case DeviceModel_ShellyPLUG_S:   result      += F(" PLUG S");  break;
+    #ifdef ESP32
     case DeviceMode_Olimex_ESP32_PoE: result     += F(" ESP32-PoE"); break;
     case DeviceMode_Olimex_ESP32_EVB: result     += F(" ESP32-EVB"); break;
     case DeviceMode_Olimex_ESP32_GATEWAY: result += F(" ESP32-GATEWAY"); break;
+    #else
+    case DeviceMode_Olimex_ESP32_PoE:
+    case DeviceMode_Olimex_ESP32_EVB:
+    case DeviceMode_Olimex_ESP32_GATEWAY:
+    #endif
 
     case DeviceModel_default:
     case DeviceModel_MAX:            result += F("default");  break;
@@ -1078,23 +1098,23 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
 
   if (fadeDuration_ms != 0)
   {
+    const int32_t resolution_factor = (1 << 12);
     const byte prev_mode  = tempStatus.mode;
-    uint16_t   prev_value = tempStatus.getDutyCycle();
+    int32_t   prev_value = tempStatus.getDutyCycle();
 
     // getPinState(pluginID, gpio, &prev_mode, &prev_value);
     if (prev_mode != PIN_MODE_PWM) {
       prev_value = 0;
     }
 
-    int32_t step_value = ((dutyCycle - prev_value) << 12) / fadeDuration_ms;
-    int32_t curr_value = prev_value << 12;
+    const int32_t step_value = ((static_cast<int32_t>(dutyCycle) - prev_value) * resolution_factor) / static_cast<int32_t>(fadeDuration_ms);
+    int32_t curr_value = prev_value * resolution_factor;
 
     int i = fadeDuration_ms;
 
     while (i--) {
       curr_value += step_value;
-      int16_t new_value;
-      new_value = (uint16_t)(curr_value >> 12);
+      const int16_t new_value = curr_value / resolution_factor;
             #if defined(ESP8266)
       analogWrite(gpio, new_value);
             #endif // if defined(ESP8266)
