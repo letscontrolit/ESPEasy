@@ -75,15 +75,8 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
           break;
         }
 
-        byte valueCount = getValueCountForTask(event->TaskIndex);
-        C009_queue_element element(event);
-
-        for (byte x = 0; x < valueCount; x++)
-        {
-          element.txt[x] = formatUserVarNoCheck(event, x);
-        }
         // FIXME TD-er must define a proper move operator
-        success = C009_DelayHandler->addToQueue(C009_queue_element(element));
+        success = C009_DelayHandler->addToQueue(C009_queue_element(event));
         Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
         break;
       }
@@ -144,9 +137,8 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
 
     // Create nested SENSOR json object
     JsonObject SENSOR = data.createNestedObject(String(F("SENSOR")));
-    byte valueCount = getValueCountForTask(element.TaskIndex);
     // char itemNames[valueCount][2];
-    for (byte x = 0; x < valueCount; x++)
+    for (byte x = 0; x < element.valueCount; x++)
     {
       // Each sensor value get an own object (0..n)
       // sprintf(itemNames[x],"%d",x);
