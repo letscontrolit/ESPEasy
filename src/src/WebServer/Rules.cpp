@@ -95,9 +95,7 @@ void handle_rules() {
   addButton(fileName, F("Download to file"));
   html_end_table();
 
-  html_add_script(true);
-  TXBuffer += jsSaveRules;
-  html_add_script_end();
+  serve_JS(JSfiles_e::SaveRulesFile);
 
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
@@ -118,6 +116,7 @@ void handle_rules_new() {
     handle_rules();
     return;
   }
+  #ifdef WEBSERVER_NEW_RULES
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules"));
   #endif
@@ -260,6 +259,7 @@ void handle_rules_new() {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules"));
   #endif
+  #endif // WEBSERVER_NEW_RULES
 }
 
 void handle_rules_backup() {
@@ -268,6 +268,7 @@ void handle_rules_backup() {
     Goto_Rules_Root();
     return;
   }
+  #ifdef WEBSERVER_NEW_RULES
   #ifdef WEBSERVER_RULES_DEBUG
   Serial.println(F("handle rules backup"));
   #endif // ifdef WEBSERVER_RULES_DEBUG
@@ -320,6 +321,7 @@ void handle_rules_backup() {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_backup"));
   #endif
+  #endif // WEBSERVER_NEW_RULES
 }
 
 void handle_rules_delete() {
@@ -332,6 +334,7 @@ void handle_rules_delete() {
     Goto_Rules_Root();
     return;
   }
+  #ifdef WEBSERVER_NEW_RULES
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_delete"));
   #endif
@@ -367,6 +370,7 @@ void handle_rules_delete() {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_delete"));
   #endif
+  #endif // WEBSERVER_NEW_RULES
 }
 
 bool handle_rules_edit(const String& originalUri)
@@ -395,6 +399,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
       Goto_Rules_Root();
       return true;
     }
+    #ifdef WEBSERVER_NEW_RULES
 
     String eventName;
     String fileName;
@@ -525,6 +530,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
     sendHeadandTail(F("TmplStd"), true);
     TXBuffer.endStream();
+    #endif // WEBSERVER_NEW_RULES
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_edit2"));

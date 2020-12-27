@@ -218,6 +218,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
   if (valueCount <= rel_index) {
     isvalid = false;
 
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("No sensor value for TaskIndex: ");
       log += event->TaskIndex + 1;
@@ -227,6 +228,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
       log += getSensorTypeLabel(sensorType);
       addLog(LOG_LEVEL_ERROR, log);
     }
+    #endif
     return "";
   }
 

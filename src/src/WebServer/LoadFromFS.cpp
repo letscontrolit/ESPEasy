@@ -62,6 +62,9 @@ bool loadFromFS(boolean spiffs, String path) {
 
   if (spiffs)
   {
+    if (!fileExists(path)) {
+      return false;
+    }
     fs::File dataFile = tryOpenFile(path.c_str(), "r");
 
     if (!dataFile) {

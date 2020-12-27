@@ -8,8 +8,6 @@
 #include "../WebServer/AccessControl.h"
 
 
-#include <ArduinoJson.h>
-
 HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, String& webrequest)
 {
   if (!clientIPallowed()) { return HandledWebCommand_result::IP_not_allowed; }
@@ -57,11 +55,11 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     if (sendOK) {
       if (printToWebJSON) {
         // Format "OK" to JSON format
-        const int capacity = JSON_OBJECT_SIZE(2);
-        StaticJsonDocument<capacity> root;
-        root[F("return")]  = F("OK");
-        root[F("command")] = webrequest;
-        serializeJson(root, printWebString);
+        printWebString = F("{\"return\": \"");
+        printWebString += F("OK");
+        printWebString += F("\",\"command\": \"");
+        printWebString += webrequest;
+        printWebString += F("\"}");
       } else {
         printWebString = F("OK");
       }
@@ -71,11 +69,11 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 
   if (printToWebJSON) {
     // Format error to JSON format
-    const int capacity = JSON_OBJECT_SIZE(2);
-    StaticJsonDocument<capacity> root;
-    root[F("return")]  = F("Unknown or restricted command");
-    root[F("command")] = webrequest;
-    serializeJson(root, printWebString);
+    printWebString = F("{\"return\": \"");
+    printWebString += F("Unknown or restricted command");
+    printWebString += F("\",\"command\": \"");
+    printWebString += webrequest;
+    printWebString += F("\"}");
   }
   return HandledWebCommand_result::Unknown_or_restricted_command;
 }

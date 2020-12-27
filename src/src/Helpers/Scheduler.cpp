@@ -132,6 +132,7 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
   const unsigned long id  = decodeSchedulerId(mixed_id, timerType);
   String idStr = String(id);
   String result = String(timerType);
+#ifndef BUILD_NO_DEBUG
   result.reserve(64);
   switch (timerType) {
     case CONST_INTERVAL_TIMER:
@@ -208,6 +209,7 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
       return result;
     }
   }
+#endif
   result += F(" timer, id: ");
   result += idStr;
   return result;

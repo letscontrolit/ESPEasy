@@ -20,8 +20,9 @@ void GPIO_Internal_Write(int pin, byte value)
 {
   if (checkValidPortRange(PLUGIN_GPIO, pin)) {
     const uint32_t key = createKey(PLUGIN_GPIO, pin);
-    if (existPortStatus(key)) {
-      switch (globalMapPortStatus[key].mode) {
+    auto it = globalMapPortStatus.find(key);
+    if (it != globalMapPortStatus.end()) {
+      switch (it->second.mode) {
         case PIN_MODE_PWM:
           set_Gpio_PWM(pin, value);
           break;
@@ -49,8 +50,9 @@ bool GPIO_Read_Switch_State(struct EventStruct *event) {
   if (checkValidPortRange(PLUGIN_GPIO, pin)) {
     const uint32_t key = createKey(PLUGIN_GPIO, pin);
 
-    if (existPortStatus(key)) {
-      return GPIO_Read_Switch_State(pin, globalMapPortStatus[key].mode);
+    auto it = globalMapPortStatus.find(key);
+    if (it != globalMapPortStatus.end()) {
+      return GPIO_Read_Switch_State(pin, it->second.mode);
     }
   }
   return false;
@@ -275,8 +277,12 @@ bool GPIO_PCF_Write(int Par1, byte Par2)
   for(i=0; i<8; i++){
     key = createKey(PLUGIN_PCF,unit+i);
 
-    if (existPortStatus(key) && globalMapPortStatus[key].mode == PIN_MODE_OUTPUT && globalMapPortStatus[key].state == 0)
-      portmask &= ~(1 << i); //set port i = 0
+    auto it = globalMapPortStatus.find(key);
+    if (it != globalMapPortStatus.end()) {
+      if (it->second.mode == PIN_MODE_OUTPUT && it->second.state == 0) {
+        portmask &= ~(1 << i); //set port i = 0
+      }
+    }
   }
 
   key = createKey(PLUGIN_PCF,Par1);

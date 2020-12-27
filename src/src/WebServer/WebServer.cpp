@@ -144,9 +144,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
 
   if (shouldReboot) {
     // we only add this here as a seperate chunk to prevent using too much memory at once
-    html_add_script(false);
-    TXBuffer += DATA_REBOOT_JS;
-    html_add_script_end();
+    serve_JS(JSfiles_e::Reboot);
   }
   STOP_TIMER(HANDLE_SERVING_WEBPAGE);
 }
@@ -159,6 +157,7 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
       addHtmlError(F("Warning: Connected via AP"));
     }
 
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       const int nrArgs = web_server.args();
 
@@ -176,6 +175,7 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
         addLog(LOG_LEVEL_INFO, log);
       }
     }
+    #endif
   }
 }
 
@@ -278,12 +278,14 @@ void WebServerInit()
   #ifdef WEBSERVER_RULES
   web_server.on(F("/rules"),           handle_rules_new);
   web_server.on(F("/rules/"),          Goto_Rules_Root);
+  #ifdef WEBSERVER_NEW_RULES
   web_server.on(F("/rules/add"),       []()
   {
     handle_rules_edit(web_server.uri(), true);
   });
   web_server.on(F("/rules/backup"), handle_rules_backup);
   web_server.on(F("/rules/delete"), handle_rules_delete);
+  #endif // WEBSERVER_NEW_RULES
   #endif // WEBSERVER_RULES
 #ifdef FEATURE_SD
   web_server.on(F("/SDfilelist"),   handle_SDfilelist);
@@ -562,11 +564,7 @@ void getWebPageTemplateVar(const String& varName)
 
       addHtml(F("<a "));
 
-      if (i == navMenuIndex) {
-        addHtmlAttribute(F("class"), F("menu active"));
-      } else {
-        addHtmlAttribute(F("class"), F("menu"));
-      }
+      addHtmlAttribute(F("class"), (i == navMenuIndex) ? F("menu active") : F("menu"));
       addHtmlAttribute(F("href"), getGpMenuURL(i));
       addHtml('>');
       addHtml(getGpMenuIcon(i));
@@ -588,25 +586,17 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("css"))
   {
-    if (fileExists(F("esp.css"))) // now css is written in writeDefaultCSS() to FS and always present
-    // if (0) //TODO
-    {
-      addHtml(F("<link rel=\"stylesheet\" type=\"text/css\" href=\"esp.css\">"));
-    }
-    else
-    {
-      addHtml(F("<style>"));
-
-      // Send CSS per chunk to avoid sending either too short or too large strings.
-      TXBuffer += DATA_ESPEASY_DEFAULT_MIN_CSS;
-      addHtml(F("</style>"));
-    }
+    serve_favicon();
+    serve_CSS();
   }
 
 
   else if (varName == F("js"))
   {
     html_add_autosubmit_form();
+
+    // FIXME TD-er: Can only call this after tag has been set for the file.
+    //serve_JS(JSfiles_e::Toasting);
     html_add_script(false);
     TXBuffer += jsToastMessageBegin;
 
@@ -629,11 +619,13 @@ void getWebPageTemplateVar(const String& varName)
 
   else
   {
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("Templ: Unknown Var : ");
       log += varName;
       addLog(LOG_LEVEL_ERROR, log);
     }
+    #endif
 
     // no return string - eat var name
   }

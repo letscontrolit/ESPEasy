@@ -45,12 +45,14 @@ void handle_root() {
 
   // if index.htm exists on FS serve that one (first check if gziped version exists)
   if (loadFromFS(true, F("/index.htm.gz"))) { return; }
-
+  #ifdef FEATURE_SD
   if (loadFromFS(false, F("/index.htm.gz"))) { return; }
+  #endif
 
   if (loadFromFS(true, F("/index.htm"))) { return; }
-
+  #ifdef FEATURE_SD
   if (loadFromFS(false, F("/index.htm"))) { return; }
+  #endif
 
   TXBuffer.startStream();
   String  sCommand  = web_server.arg(F("cmd"));
@@ -94,7 +96,7 @@ void handle_root() {
 
     addRowLabelValue(LabelType::UNIT_NR);
     addRowLabelValue(LabelType::GIT_BUILD);
-    addRowLabel(getLabel(LabelType::LOCAL_TIME));
+    addRowLabel(LabelType::LOCAL_TIME);
 
     if (node_time.systemTimePresent())
     {
@@ -105,11 +107,11 @@ void handle_root() {
     }
     addRowLabelValue(LabelType::TIME_SOURCE);
 
-    addRowLabel(getLabel(LabelType::UPTIME));
+    addRowLabel(LabelType::UPTIME);
     {
       addHtml(getExtendedValue(LabelType::UPTIME));
     }
-    addRowLabel(getLabel(LabelType::LOAD_PCT));
+    addRowLabel(LabelType::LOAD_PCT);
 
     if (wdcounter > 0)
     {
@@ -122,7 +124,7 @@ void handle_root() {
       addHtml(html);
     }
     {
-      addRowLabel(getLabel(LabelType::FREE_MEM));
+      addRowLabel(LabelType::FREE_MEM);
       String html;
       html.reserve(64);
       html += freeMem;
@@ -136,7 +138,7 @@ void handle_root() {
       addHtml(html);
     }
     {
-      addRowLabel(getLabel(LabelType::FREE_STACK));
+      addRowLabel(LabelType::FREE_STACK);
       String html;
       html.reserve(64);
       html += String(getCurrentFreeStack());
@@ -151,7 +153,7 @@ void handle_root() {
     }
 
     addRowLabelValue(LabelType::IP_ADDRESS);
-    addRowLabel(getLabel(LabelType::WIFI_RSSI));
+    addRowLabel(LabelType::WIFI_RSSI);
 
     if (NetworkConnected())
     {
@@ -174,7 +176,7 @@ void handle_root() {
 
     #ifdef FEATURE_MDNS
     {
-      addRowLabel(getLabel(LabelType::M_DNS));
+      addRowLabel(LabelType::M_DNS);
       String html;
       html.reserve(64);
       html += F("<a href='http://");

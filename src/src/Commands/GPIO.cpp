@@ -292,10 +292,10 @@ String Command_GPIO_Toggle(struct EventStruct *event, const char* Line)
     byte mode;
     int8_t state;
 
-    if (existPortStatus(key))
-    {
-      mode=globalMapPortStatus.at(key).mode;
-      state=globalMapPortStatus.at(key).state;
+    auto it = globalMapPortStatus.find(key);
+    if (it != globalMapPortStatus.end()) {
+      mode  = it->second.mode;
+      state = it->second.state;
     } else {
       GPIO_Read(pluginID, event->Par1, state);
       mode = (state==-1)?PIN_MODE_OFFLINE:PIN_MODE_OUTPUT;
@@ -418,15 +418,19 @@ void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newSta
 {
   // WARNING: operator [] creates an entry in the map if key does not exist
 
+  // If it doesn't exist, it is now created.
   globalMapPortStatus[key].mode     = newMode;
-  globalMapPortStatus[key].command  = 1; //set to 1 in order to display the status in the PinStatus page
-
-  //only force events if state has changed
-  if (globalMapPortStatus[key].state != newState) {
-    globalMapPortStatus[key].state        = newState;
-    globalMapPortStatus[key].output       = newState;
-    globalMapPortStatus[key].forceEvent   = 1;
-    globalMapPortStatus[key].forceMonitor = 1;
+  auto it = globalMapPortStatus.find(key);
+  if (it != globalMapPortStatus.end()) {
+    // Should always be true, as it would be created if it didn't exist.
+    it->second.command  = 1; //set to 1 in order to display the status in the PinStatus page
+    //only force events if state has changed
+    if (it->second.state != newState) {
+      it->second.state        = newState;
+      it->second.output       = newState;
+      it->second.forceEvent   = 1;
+      it->second.forceMonitor = 1;
+    }
   }
 }
 
