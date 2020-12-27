@@ -418,7 +418,7 @@ String ESPEasy_time::getDateString(const struct tm& ts, char delimiter) {
   char DateString[20]; // 19 digits plus the null char
   const int year = 1970 + ts.tm_year;
 
-  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.tm_mon, delimiter, ts.tm_mday);
+  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.tm_mon+1, delimiter, ts.tm_mday);
   return DateString;
 }
 
