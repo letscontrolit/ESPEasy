@@ -522,8 +522,10 @@ strtol
 
 Strings or substrings can be converted from just about any base value (binary, octal, hexadecimal) into an integer value.
 
-Usage: ``{strtol:16:<string>}``  to convert HEX (base 16) into an integer value.
+Usage:
 
+* ``{strtol:16:<string>}``  to convert HEX (base 16) into an integer value.
+* ``{strtol:2:<string>}``  to convert BIN (base 2) into an integer value.
 
 Example of extracting sub strings from a value and interpreting as if they were HEX values:
 
@@ -586,6 +588,44 @@ Complete rule used to parse this and set a variable in a dummy device:
  endon
 
 
+toBin / toHex
+^^^^^^^^^^^^^
+
+(Added: 2020-12-28)
+
+Convert an integer value into a binary or hexadecimal representation.
+
+Usage: 
+
+* ``{toBin:<string>}`` Convert the number into binary representation.
+* ``{toHex:<string>}`` Convert the number into hexadecimal representation.
+
+* ``<string>`` The number to convert, if it is representing a valid integer value.
+
+
+For example:
+
+.. code-block:: none
+
+ on myevent do
+   let,1,%eventvalue1%
+   let,2,{bitset:9:%eventvalue1%}
+   LogEntry,'Values {tobin:[int#1]} {tohex:[int#1]}'
+   LogEntry,'Values {tobin:[int#2]} {tohex:[int#2]}'
+ endon
+
+
+.. code-block:: none
+
+ 320528: HTTP: Event,eventname=123
+ 320586: EVENT: eventname=123
+ 320594: ACT : let,1,123
+ 320603: ACT : let,2,635
+ 320612: ACT : LogEntry,'Values 1111011 7b'
+ 320618: Values 1111011 7b
+ 320631: ACT : LogEntry,'Values 1001111011 27b'
+ 320635: Values 1001111011 27b
+
 ord
 ^^^
 
@@ -613,6 +653,133 @@ For example:
  2982493 : Info  : Command: logentry
  2982494 : Info  : 46
 
+
+bitread
+^^^^^^^
+
+(Added: 2020-12-28)
+
+Read a specific bit of a number.
+
+Usage: ``{bitRead:<bitpos>:<string>}``
+
+* ``<bitpos>`` Which bit to read, starting at 0 for the least-significant (rightmost) bit.
+* ``<string>`` The number from which to read, if it is representing a valid integer value.
+
+.. note::
+
+  The order of parameters differs from the "Arduino" command ``bitRead()``
+
+For example:
+
+.. code-block:: none
+
+ on myevent do
+   logentry,{bitread:0:123}   // Get least significant bit of the given nr '123' => '1'
+   logentry,{bitread:%eventvalue1%:%eventvalue1%}  // Get bit nr given by 1st eventvalue from 2nd eventvalue => Either '0' or '1'
+ endon
+
+bitset / bitclear
+^^^^^^^^^^^^^^^^^
+
+(Added: 2020-12-28)
+
+To set or clear a specific bit of a number to resp. '1' or '0'.
+
+Usage:
+
+* ``{bitSet:<bitpos>:<string>}``  Set a specific bit of a number to '1'.
+* ``{bitClear:<bitpos>:<string>}``  Set a specific bit of a number to '0'.
+
+With:
+
+* ``<bitpos>`` Which bit to set, starting at 0 for the least-significant (rightmost) bit.
+* ``<string>`` The number from which to read, if it is representing a valid integer value.
+
+.. note::
+
+  The order of parameters differs from the "Arduino" commands ``bitSet()`` and ``bitClear()``
+
+For example:
+
+.. code-block:: none
+
+ on myevent do
+   logentry,{bitset:0:122}     // Set least significant bit of the given nr '122' to '1' => '123'
+   logentry,{bitclear:0:123}   // Set least significant bit of the given nr '123' to '0' => '122'
+   logentry,{bitset:%eventvalue1%:%eventvalue1%}  // Set bit nr given by 1st eventvalue to '1' from 2nd eventvalue
+ endon
+
+bitwrite
+^^^^^^^^
+
+(Added: 2020-12-28)
+
+To set a specific bit of a number to a given value.
+
+Usage: ``{bitWrite:<bitpos>:<bitval>:<string>}``
+
+* ``<bitpos>`` Which bit to set, starting at 0 for the least-significant (rightmost) bit.
+* ``<bitval>`` The value to set in the given number. N.B. only the last bit of this integer parameter is used. (Thus '0' and '2' as parameter will give the same result)
+* ``<string>`` The number from which to read, if it is representing a valid integer value.
+
+.. note::
+
+  The order of parameters differs from the "Arduino" command bitSet()
+
+For example:
+
+.. code-block:: none
+
+ on myevent do
+   logentry,{bitwrite:0:1:122}   // Set least significant bit of the given nr '122' to '1' => '123'
+ endon
+
+XOR / AND / OR
+^^^^^^^^^^^^^^
+
+(Added: 2020-12-28)
+
+Perform bitwise logic operations XOR/AND/OR
+
+Usage: 
+
+* ``{XOR:<string1>:<string2>}``
+* ``{AND:<string1>:<string2>}``
+* ``{OR:<string1>:<string2>}``
+
+With:
+
+* ``<string1>`` The first number, if it is representing a valid integer value.
+* ``<string2>`` The second number, if it is representing a valid integer value.
+
+For example:
+
+* ``{xor:127:15}`` to XOR the binary values ``1111111`` and ``1111`` => ``1110000``
+* ``{and:254:15}`` to AND the binary values ``11111110`` and ``1111`` => ``1110``
+* ``{or:254:15}`` to OR the binary values ``11111110`` and ``1111`` => ``11111111``
+
+Div / Mod
+^^^^^^^^^
+
+(Added: 2020-12-28)
+
+Perform DIV/MOD on integer values.
+
+Usage: 
+
+* ``{div:<string1>:<string2>}``
+* ``{mod:<string1>:<string2>}``
+
+With:
+
+* ``<string1>`` The first number, if it is representing a valid integer value.
+* ``<string2>`` The second number, if it is representing a valid integer value.
+
+For example:
+
+* ``{div:254:15}`` Perform integer division => 15
+* ``{mod:254:15}`` Perform integer mod => 14
 
 
 System variables

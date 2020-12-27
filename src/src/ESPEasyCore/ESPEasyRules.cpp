@@ -435,30 +435,30 @@ void parse_string_commands(String &line) {
       cmd_s_lower.toLowerCase();
 //      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
 
-      int iarg1, iarg2;
+      int iarg1, iarg2, iarg3 = 0;
       if (cmd_s_lower.equals(F("substring"))) {
         // substring arduino style (first char included, last char excluded)
-        // Syntax like 12345[substring:8:12:ANOTHER HELLO WORLD]67890
+        // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
         if (validIntFromString(arg1, iarg1)
             && validIntFromString(arg2, iarg2)) {
           replacement = arg3.substring(iarg1, iarg2);
         }
       } else if (cmd_s_lower.equals(F("strtol"))) {
         // string to long integer (from cstdlib)
-        // Syntax like 1234[strtol:16:38]7890
+        // Syntax like 1234{strtol:16:38}7890
         if (validIntFromString(arg1, iarg1)
             && validIntFromString(arg2, iarg2)) {
           replacement = String(strtol(arg2.c_str(), NULL, iarg1));
         }
         // FIXME TD-er: removed for now as it is too specific.
-        // Maybe introduce one using 2 or 3 parameters ([div:100:255:3] for *100/255 3 decimals)
+        // Maybe introduce one using 2 or 3 parameters ({div:100:255:3} for *100/255 3 decimals)
         /*
       } else if (cmd_s_lower.equals(F("div100ths"))) {
         // division and giving the 100ths as integer
         // 5 / 100 would yield 5
         // useful for fractions that use a full byte gaining a
         // precision/granularity of 1/256 instead of only 1/100
-        // Syntax like XXX[div100ths:24:256]XXX
+        // Syntax like XXX{div100ths:24:256}XXX
         if (validIntFromString(arg1, iarg1)
             && validIntFromString(arg2, iarg2)) {
           float val = (100.0 * iarg1) / (1.0 * iarg2);
@@ -467,11 +467,81 @@ void parse_string_commands(String &line) {
           replacement = String(sval);
         }
         */
+      } else if (cmd_s_lower.equals(F("tobin"))) {
+        // Convert to binary string
+        // Syntax like 1234{tobin:15}7890
+        if (validIntFromString(arg1, iarg1)) {
+          replacement = String(iarg1, BIN);
+        }
+      } else if (cmd_s_lower.equals(F("tohex"))) {
+        // Convert to HEX string
+        // Syntax like 1234{tohex:15}7890
+        if (validIntFromString(arg1, iarg1)) {
+          replacement = String(iarg1, HEX);
+        }
       } else  if (cmd_s_lower.equals(F("ord"))) {
         // Give the ordinal/integer value of the first character of a string
-        // Syntax like let 1,[ord:B]
+        // Syntax like let 1,{ord:B}
         uint8_t uval = arg1.c_str()[0];
         replacement = String(uval);
+      } else if (cmd_s_lower.equals(F("bitread"))) {
+        // Syntax like {bitread:0:123} to get a single decimal '1' 
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(bitRead(iarg2, iarg1));
+        }
+      } else if (cmd_s_lower.equals(F("bitset"))) {
+        // Syntax like {bitset:0:122} to set least significant bit of the given nr '122' to '1' => '123'
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(bitSet(iarg2, iarg1));
+        }
+      } else if (cmd_s_lower.equals(F("bitclear"))) {
+        // Syntax like {bitclear:0:123} to set least significant bit of the given nr '123' to '0' => '122'
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(bitClear(iarg2, iarg1));
+        }
+      } else if (cmd_s_lower.equals(F("bitwrite"))) {
+        // Syntax like {bitwrite:0,1:122} to set least significant bit of the given nr '122' to '1' => '123'
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)
+            && validIntFromString(arg3, iarg3)) {
+          const int bitvalue = (iarg2 & 1); // Only use the last bit of the given parameter
+          replacement = String(bitWrite(iarg3, iarg1, bitvalue));
+        }
+      } else if (cmd_s_lower.equals(F("xor"))) {
+        // Syntax like {xor:127:15} to XOR the binary values 1111111 and 1111 => 1110000
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(iarg1 ^ iarg2);
+        }
+      } else if (cmd_s_lower.equals(F("and"))) {
+        // Syntax like {and:254:15} to AND the binary values 11111110 and 1111 => 1110
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(iarg1 & iarg2);
+        }
+      } else if (cmd_s_lower.equals(F("or"))) {
+        // Syntax like {or:254:15} to OR the binary values 11111110 and 1111 => 11111111
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(iarg1 | iarg2);
+        }
+      } else if (cmd_s_lower.equals(F("div"))) {
+        // Perform an integer div.
+        // Syntax like {div:254:16} => 15
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(iarg1 / iarg2);
+        }
+      } else if (cmd_s_lower.equals(F("mod"))) {
+        // Perform an integer mod.
+        // Syntax like {div:254:16} => 14
+        if (validIntFromString(arg1, iarg1)
+            && validIntFromString(arg2, iarg2)) {
+          replacement = String(iarg1 % iarg2);
+        }
       }
       if (replacement.length() == 0) {
         // part in braces is not a supported command.
