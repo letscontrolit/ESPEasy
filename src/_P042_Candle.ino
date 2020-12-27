@@ -188,7 +188,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
         // Color Selection
         char hexvalue[7] = {0};
-        sprintf_P(hexvalue, F("%02X%02X%02X"),     // Create Hex value for color
+        sprintf_P(hexvalue, PSTR("%02X%02X%02X"),     // Create Hex value for color
                   PCONFIG(0),
                   PCONFIG(1),
                   PCONFIG(2));

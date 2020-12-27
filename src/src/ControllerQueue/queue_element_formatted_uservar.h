@@ -1,26 +1,23 @@
-#ifndef CONTROLLERQUEUE_C009_QUEUE_ELEMENT_H
-#define CONTROLLERQUEUE_C009_QUEUE_ELEMENT_H
+#ifndef CONTROLLERQUEUE_QUEUE_ELEMENT_FORMATTED_USERVAR_H
+#define CONTROLLERQUEUE_QUEUE_ELEMENT_FORMATTED_USERVAR_H
 
 #include "../../ESPEasy_common.h"
-#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
+
 struct EventStruct;
 
-
-#ifdef USES_C009
-
 /*********************************************************************************************\
-* C009_queue_element for queueing requests for C009: FHEM HTTP.
+* For queueing task values already formatted according to the task settings
 \*********************************************************************************************/
-class C009_queue_element {
+class queue_element_formatted_uservar {
 public:
 
-  C009_queue_element();
+  queue_element_formatted_uservar();
 
-  C009_queue_element(const struct EventStruct *event);
+  queue_element_formatted_uservar(struct EventStruct *event);
 
   size_t getSize() const;
 
@@ -29,9 +26,7 @@ public:
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
+  byte valueCount                  = 0;
 };
 
-#endif //USES_C009
-
-
-#endif // CONTROLLERQUEUE_C009_QUEUE_ELEMENT_H
+#endif // CONTROLLERQUEUE_QUEUE_ELEMENT_FORMATTED_USERVAR_H
