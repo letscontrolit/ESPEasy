@@ -26,6 +26,15 @@ bool validIntFromString(const String& tBuf, int& result) {
   return isvalid;
 }
 
+bool validInt64FromString(const String& tBuf, int64_t& result) {
+  const String numerical = getNumerical(tBuf, true);
+  const bool isvalid = numerical.length() > 0;
+  if (isvalid) {
+    result = atoll(numerical.c_str());
+  }
+  return isvalid;
+}
+
 bool validUIntFromString(const String& tBuf, unsigned int& result) {
   int tmp;
   if (!validIntFromString(tBuf, tmp)) return false;
@@ -34,6 +43,13 @@ bool validUIntFromString(const String& tBuf, unsigned int& result) {
   return true;
 }
 
+bool validUInt64FromString(const String& tBuf, uint64_t& result) {
+  int64_t tmp;
+  if (!validInt64FromString(tBuf, tmp)) return false;
+  if (tmp < 0) return false;
+  result = static_cast<uint64_t>(tmp);
+  return true;
+}
 
 bool validFloatFromString(const String& tBuf, float& result) {
   // DO not call validDoubleFromString and then cast to float.
@@ -118,3 +134,27 @@ bool isNumerical(const String& tBuf, bool mustBeInteger) {
   }
   return true;
 }
+
+String ull2String(uint64_t value, uint8_t base) {
+  String res;
+  if (value == 0) {
+    res = '0';
+    return res;
+  }
+  while (value > 0) {
+    res += String(static_cast<uint32_t>(value % base), base);
+    value /= base;
+  }
+
+  int endpos = res.length() - 1;
+  int beginpos = 0;
+  while (endpos > beginpos) {
+    const char c = res[beginpos];
+    res[beginpos] = res[endpos];
+    res[endpos] = c;
+    ++beginpos;
+    --endpos;
+  }
+
+}
+

@@ -14,7 +14,11 @@ bool isInt(const String& tBuf);
 
 bool validIntFromString(const String& tBuf, int& result);
 
+bool validInt64FromString(const String& tBuf, int64_t& result);
+
 bool validUIntFromString(const String& tBuf, unsigned int& result);
+
+bool validUInt64FromString(const String& tBuf, uint64_t& result);
 
 bool validFloatFromString(const String& tBuf, float& result);
 
@@ -23,5 +27,7 @@ bool validDoubleFromString(const String& tBuf, double& result);
 String getNumerical(const String& tBuf, bool mustBeInteger);
 
 bool isNumerical(const String& tBuf, bool mustBeInteger);
+
+String ull2String(uint64_t value, uint8_t base = 10);
 
 #endif // HELPERS_NUMERICAL_H

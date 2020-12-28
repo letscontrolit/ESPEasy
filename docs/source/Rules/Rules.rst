@@ -668,7 +668,7 @@ Usage: ``{bitRead:<bitpos>:<string>}``
 
 .. note::
 
-  Bitwise operators act on ``uint32_t`` types, so be careful with negative numbers.
+  Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
 
 .. note::
 
@@ -702,7 +702,7 @@ With:
 
 .. note::
 
-  Bitwise operators act on ``uint32_t`` types, so be careful with negative numbers.
+  Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
 
 .. note::
 
@@ -733,7 +733,7 @@ Usage: ``{bitWrite:<bitpos>:<bitval>:<string>}``
 
 .. note::
 
-  Bitwise operators act on ``uint32_t`` types, so be careful with negative numbers.
+  Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
 
 .. note::
 
@@ -756,7 +756,7 @@ Perform bitwise logic operations XOR/AND/OR
 
 .. note::
 
-  Bitwise operators act on ``uint32_t`` types, so be careful with negative numbers.
+  Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
 
 
 Usage: 
@@ -775,6 +775,23 @@ For example:
 * ``{xor:127:15}`` to XOR the binary values ``1111111`` and ``1111`` => ``1110000``
 * ``{and:254:15}`` to AND the binary values ``11111110`` and ``1111`` => ``1110``
 * ``{or:254:15}`` to OR the binary values ``11111110`` and ``1111`` => ``11111111``
+
+.. code-block:: none
+
+ on eventname do
+   let,1,%eventvalue1%
+   let,2,{abs:%eventvalue2%}
+   let,3,{and:[int#1]:[int#2]}
+   LogEntry,'Values {tobin:[int#1]} AND {tobin:[int#2]} -> {tobin:[int#3]}'
+ endon
+
+ 
+ 1021591: EVENT: eventname=127,15
+ 1021601: ACT : let,1,127
+ 1021611: ACT : let,2,15.00
+ 1021622: ACT : let,3,15
+ 1021639: ACT : LogEntry,'Values 1111111 AND 1111 -> 1111'
+ 1021643: Values 1111111 AND 1111 -> 1111
 
 Div / Mod
 ^^^^^^^^^
@@ -817,33 +834,30 @@ For example:
 
 .. note::
 
-  Bitwise operators act on ``uint32_t`` types, so be careful with negative numbers.
+  Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
 
 .. code-block:: none
 
  on eventname do
-   let,1,%eventvalue1%
-   let,2,{bitset:9:{abs:%eventvalue1%}}
+   let,1,%eventvalue1%                   // Don't change the value
+   let,2,{bitset:9:{abs:%eventvalue1%}}  // Convert to positive and set bit '9'
    LogEntry,'Values {tobin:[int#1]} {tohex:[int#1]}'
    LogEntry,'Values {tobin:[int#2]} {tohex:[int#2]}'
  endon
 
 Called with ``Event,eventname=-123`` :
 
-.. code-block:: none
-  
- 75370: EVENT: eventname=-123
- 75378: ACT : let,1,-123
- 75387: ACT : let,2,635
- 75399: ACT : LogEntry,'Values 11111111111111111111111110000101 ffffff85'
- 75406: Values 11111111111111111111111110000101 ffffff85
- 75416: ACT : LogEntry,'Values 1001111011 27b'
- 75421: Values 1001111011 27b
- 78991: EVENT: Clock#Time=Sun,16:04
- 83467: DS : Temperature: 22.50 (28-97-b5-75-d0-01-3
+.. code-block:: none  
 
-As can be seen in the logs, when calling bitwise operators with negative numbers, the value is being cast to an unsigned int first.
-Thus it may have a lot of leading binary '1' digits.
+ 110443: EVENT: eventname=-123
+ 110452: ACT : let,1,-123
+ 110462: ACT : let,2,635
+ 110475: ACT : LogEntry,'Values {tobin:-123} {tohex:-123}'
+ 110484: Values {tobin:-123} {tohex:-123}
+ 110496: ACT : LogEntry,'Values 1001111011 27b'
+ 110500: Values 1001111011 27b
+
+As can be seen in the logs, when calling bitwise operators with negative numbers, the value is ignored and thus the expression is still visible in the output.
 Therefore make sure to use the ``abs`` function before handing the value over to binary logical operators.
 
 

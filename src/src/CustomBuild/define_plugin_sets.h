@@ -123,6 +123,12 @@ To create/register a plugin, you have to :
     #ifndef USES_TIMING_STATS
         #define USES_TIMING_STATS
     #endif
+    #ifndef FEATURE_I2CMULTIPLEXER
+        #define FEATURE_I2CMULTIPLEXER
+    #endif
+    #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+        #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif
 #endif
 
 
@@ -240,7 +246,9 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_I2CMULTIPLEXER
         #define FEATURE_I2CMULTIPLEXER
     #endif
-
+    #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+        #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif
 #endif
 
 #ifdef USES_FHEM
@@ -1256,6 +1264,9 @@ To create/register a plugin, you have to :
   #endif
   #ifdef USES_C018
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
+  #endif
+  #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #undef USE_TRIGONOMETRIC_FUNCTIONS_RULES
   #endif
 #endif
 
