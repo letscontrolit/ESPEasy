@@ -138,6 +138,7 @@ void rulesProcessing(String& event) {
       }
     }
   } else {
+    #ifdef WEBSERVER_NEW_RULES
     String fileName = EventToFileName(event);
 
     // if exists processed the rule file
@@ -151,6 +152,7 @@ void rulesProcessing(String& event) {
              String(F(" not found.")));
     }
 #endif // ifndef BUILD_NO_DEBUG
+    #endif // WEBSERVER_NEW_RULES
   }
 
 #ifndef BUILD_NO_DEBUG
@@ -188,7 +190,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
 #endif // ifndef BUILD_NO_DEBUG
 
   static byte nestingLevel = 0;
-  String log               = "";
+  String log;
 
   nestingLevel++;
 
@@ -584,7 +586,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
   String lineOrg = line; // store original line for future use
   line.toLowerCase();    // convert all to lower case to make checks easier
 
-  String eventTrigger = "";
+  String eventTrigger;
   action = "";
 
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
