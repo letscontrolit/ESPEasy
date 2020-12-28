@@ -65,6 +65,7 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
 
 bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, float& result);
 bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, uint32_t& result);
+bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, float& result);
 
 void parse_string_commands(String &line);
 

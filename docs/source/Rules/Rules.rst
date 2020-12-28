@@ -597,10 +597,10 @@ Convert an integer value into a binary or hexadecimal representation.
 
 Usage: 
 
-* ``{toBin:<string>}`` Convert the number into binary representation.
-* ``{toHex:<string>}`` Convert the number into hexadecimal representation.
+* ``{toBin:<value>}`` Convert the number into binary representation.
+* ``{toHex:<value>}`` Convert the number into hexadecimal representation.
 
-* ``<string>`` The number to convert, if it is representing a valid integer value.
+* ``<value>`` The number to convert, if it is representing a valid unsigned integer value.
 
 
 For example:
@@ -664,7 +664,7 @@ Read a specific bit of a number.
 Usage: ``{bitRead:<bitpos>:<string>}``
 
 * ``<bitpos>`` Which bit to read, starting at 0 for the least-significant (rightmost) bit.
-* ``<string>`` The number from which to read, if it is representing a valid integer value.
+* ``<string>`` The number from which to read, if it is representing a valid unsigned integer value.
 
 .. note::
 
@@ -698,7 +698,7 @@ Usage:
 With:
 
 * ``<bitpos>`` Which bit to set, starting at 0 for the least-significant (rightmost) bit.
-* ``<string>`` The number from which to read, if it is representing a valid integer value.
+* ``<string>`` The number from which to read, if it is representing a valid unsigned integer value.
 
 .. note::
 
@@ -725,11 +725,11 @@ bitwrite
 
 To set a specific bit of a number to a given value.
 
-Usage: ``{bitWrite:<bitpos>:<bitval>:<string>}``
+Usage: ``{bitWrite:<bitpos>:<string>:<bitval>}``
 
 * ``<bitpos>`` Which bit to set, starting at 0 for the least-significant (rightmost) bit.
+* ``<string>`` The number from which to read, if it is representing a valid unsigned integer value.
 * ``<bitval>`` The value to set in the given number. N.B. only the last bit of this integer parameter is used. (Thus '0' and '2' as parameter will give the same result)
-* ``<string>`` The number from which to read, if it is representing a valid integer value.
 
 .. note::
 
@@ -744,7 +744,7 @@ For example:
 .. code-block:: none
 
  on myevent do
-   logentry,{bitwrite:0:1:122}   // Set least significant bit of the given nr '122' to '1' => '123'
+   logentry,{bitwrite:0:122:1}   // Set least significant bit of the given nr '122' to '1' => '123'
  endon
 
 XOR / AND / OR
@@ -761,14 +761,14 @@ Perform bitwise logic operations XOR/AND/OR
 
 Usage: 
 
-* ``{XOR:<string1>:<string2>}``
-* ``{AND:<string1>:<string2>}``
-* ``{OR:<string1>:<string2>}``
+* ``{XOR:<uintA>:<uintB>}``
+* ``{AND:<uintA>:<uintB>}``
+* ``{OR:<uintA>:<uintB>}``
 
 With:
 
-* ``<string1>`` The first number, if it is representing a valid integer value.
-* ``<string2>`` The second number, if it is representing a valid integer value.
+* ``<uintA>`` The first number, if it is representing a valid unsigned integer value.
+* ``<uintB>`` The second number, if it is representing a valid unsigned integer value.
 
 For example:
 
@@ -802,13 +802,13 @@ Perform DIV/MOD on integer values.
 
 Usage: 
 
-* ``{div:<string1>:<string2>}``
-* ``{mod:<string1>:<string2>}``
+* ``{div:<uintA>:<uintB>}``
+* ``{mod:<uintA>:<uintB>}``
 
 With:
 
-* ``<string1>`` The first number, if it is representing a valid integer value.
-* ``<string2>`` The second number, if it is representing a valid integer value.
+* ``<uintA>`` The first number, if it is representing a valid unsigned integer value.
+* ``<uintB>`` The second number, if it is representing a valid unsigned integer value.
 
 For example:
 
@@ -822,11 +822,11 @@ Abs
 
 Perform ABS on integer values.
 
-Usage:  ``{abs:<string>}``
+Usage:  ``{abs:<value>}``
 
 With:
 
-* ``<string>`` The number to convert into an absolute value, if it is representing a valid numerical value.
+* ``<value>`` The number to convert into an absolute value, if it is representing a valid numerical value.
 
 For example:
 
@@ -835,6 +835,7 @@ For example:
 .. note::
 
   Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
+  This makes the use of ''abs'' necessary for using bitwise operators if the value may become negative. 
 
 .. code-block:: none
 
@@ -860,6 +861,21 @@ Called with ``Event,eventname=-123`` :
 As can be seen in the logs, when calling bitwise operators with negative numbers, the value is ignored and thus the expression is still visible in the output.
 Therefore make sure to use the ``abs`` function before handing the value over to binary logical operators.
 
+Constrain
+^^^^^^^^^
+
+(Added: 2020-12-28)
+
+Constrains a number to be within a range.
+
+Usage:  ``{constrain:<value>:<low>:<high>}``
+
+With:
+
+* ``<value>`` The number to constrain, if it is representing a valid numerical value.
+* ``<low>`` Lower end of range, if it is representing a valid numerical value.
+* ``<high>`` Higher end of range, if it is representing a valid numerical value.
+
 
 Cos / Sin / Tan
 ^^^^^^^^^^^^^^^
@@ -875,24 +891,24 @@ Perform trigonometry on numerical values (both integer and floating point).
 
 Usage:
 
-* ``{cos:<string>}`` Compute ``cos`` on an angle in radians.
-* ``{sin:<string>}`` Compute ``sin`` on an angle in radians.
-* ``{tan:<string>}`` Compute ``tan`` on an angle in radians.
-* ``{acos:<string>}`` Inverse function of ``cos``, returns angle in radians.
-* ``{asin:<string>}`` Inverse function of ``sin``, returns angle in radians.
-* ``{atan:<string>}`` Inverse function of ``tan``, returns angle in radians.
+* ``{cos:<value>}`` Compute ``cos`` on an angle in radians.
+* ``{sin:<value>}`` Compute ``sin`` on an angle in radians.
+* ``{tan:<value>}`` Compute ``tan`` on an angle in radians.
+* ``{acos:<value>}`` Inverse function of ``cos``, returns angle in radians.
+* ``{asin:<value>}`` Inverse function of ``sin``, returns angle in radians.
+* ``{atan:<value>}`` Inverse function of ``tan``, returns angle in radians.
 * ``{atan2:<x>:<y>}`` Compute the angle in radians between the line from (0,0) to (x,y) and the X-axis.
-* ``{cos_d:<string>}`` Compute ``cos`` on an angle in degrees.
-* ``{sin_d:<string>}`` Compute ``sin`` on an angle in degrees.
-* ``{tan_d:<string>}`` Compute ``tan`` on an angle in degrees.
-* ``{acos_d:<string>}`` Inverse function of ``cos``, returns angle in degrees.
-* ``{asin_d:<string>}`` Inverse function of ``sin``, returns angle in degrees.
-* ``{atan_d:<string>}`` Inverse function of ``tan``, returns angle in degrees.
+* ``{cos_d:<value>}`` Compute ``cos`` on an angle in degrees.
+* ``{sin_d:<value>}`` Compute ``sin`` on an angle in degrees.
+* ``{tan_d:<value>}`` Compute ``tan`` on an angle in degrees.
+* ``{acos_d:<value>}`` Inverse function of ``cos``, returns angle in degrees.
+* ``{asin_d:<value>}`` Inverse function of ``sin``, returns angle in degrees.
+* ``{atan_d:<value>}`` Inverse function of ``tan``, returns angle in degrees.
 * ``{atan2_d:<x>:<y>}`` Compute the angle in degrees between the line from (0,0) to (x,y) and the X-axis.
 
 With:
 
-* ``<string>`` The value to use, if it is representing a valid numerical value.
+* ``<value>`` The value to use, if it is representing a valid numerical value.
 
 .. note::
 

@@ -403,6 +403,9 @@ bool get_next_inner_bracket(const String& line, int& startIndex, int& closingInd
 
 bool get_next_argument(const String& fullCommand, int& index, String& argument, char separator)
 {
+  if (index == -1) {
+    return false;
+  }
   int newIndex = fullCommand.indexOf(separator, index);
   if (newIndex == -1) {
     argument = fullCommand.substring(index);
@@ -413,7 +416,10 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
     argument = argument.substring(1);
   }
 //  addLog(LOG_LEVEL_INFO, String("get_next_argument: ") + String(index) + " " + fullCommand + " " + argument);
-  index = newIndex + 1;
+  index = newIndex;
+  if (index != -1) {
+    ++index;
+  }
   return argument.length() > 0;
 }
 
@@ -449,16 +455,14 @@ bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1
       return false;
     }
     if (angle_in_deg) {
-      result *= 180.0;
-      result /= M_PI;
+      farg1 = degrees(farg1);
     }
     return true;    
   }
   // cos, sin, tan
   // These functions have the angle as input, so convert the argument to radians first (if needed)
   if (angle_in_deg) {
-    farg1 *=  M_PI;
-    farg1 /= 180.0;
+    farg1 = radians(farg1);
   }
   if (cmd_s_lower.startsWith(F("cos"))) {
     result = cos(farg1);
@@ -476,6 +480,22 @@ bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1
 }
 
 bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, int64_t& result) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("Bitwise: {");
+    log += cmd_s_lower;
+    log += ':';
+    log += arg1;
+    if (arg2.length() > 0) {
+      log += ':';
+      log += arg2;
+      if (arg3.length() > 0) {
+        log += ':';
+        log += arg3;
+      }
+    }
+    log += '}';
+    addLog(LOG_LEVEL_INFO, log);
+  }
   if (cmd_s_lower.length() < 2) {
     return false;
   }
@@ -498,11 +518,11 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
       result = iarg2;
       bitClear(result, bitnr);
     } else if (cmd_s_lower.equals(F("bitwrite"))) {
-      uint64_t iarg3 = 0;
-      // Syntax like {bitwrite:0:1:122} to set least significant bit of the given nr '122' to '1' => '123'
-      if (validUInt64FromString(arg3, iarg3)) {
-        const int bitvalue = (iarg2 & 1); // Only use the last bit of the given parameter
-        result = iarg3;
+      uint32_t iarg3 = 0;
+      // Syntax like {bitwrite:0:122:1} to set least significant bit of the given nr '122' to '1' => '123'
+      if (validUIntFromString(arg3, iarg3)) {
+        const int bitvalue = (iarg3 & 1); // Only use the last bit of the given parameter
+        result = iarg2;
         bitWrite(result, bitnr, bitvalue);
       } else {
         // Need 3 parameters, but 3rd one is not a valid uint
@@ -537,6 +557,35 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
   return true;
 }
 
+bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, float& result) {
+  float farg1, farg2, farg3 = 0.0f;
+  if (!validFloatFromString(arg1, farg1)) {
+    return false;
+  }
+  if (cmd_s_lower.equals(F("abs"))) {
+    // Turn number into positive value
+    // Syntax like {abs:-1} -> '1'
+    result = farg1 < 0.0f ? farg1 * -1.0f : farg1;
+  } else if (cmd_s_lower.equals(F("constrain"))) {
+    // Contrain a value X to be within range of A to B
+    // Syntax like {contrain:x:a:b} to constrain x in range a...b
+    if (validFloatFromString(arg2, farg2) && validFloatFromString(arg3, farg3)) {
+      if (farg2 > farg3) {
+        const float tmp = farg2;
+        farg2 = farg3;
+        farg3 = tmp;
+      }
+      result = constrain(farg1, farg2, farg3);
+    } else {
+      return false;
+    }
+  } else {
+    // No matching function found
+    return false;
+  }
+  return true;
+}
+
 void parse_string_commands(String &line) {
   int startIndex, closingIndex;
 
@@ -561,6 +610,8 @@ void parse_string_commands(String &line) {
       float fresult = 0.0f;
       int64_t iresult = 0;
       if (parse_trigonometric_functions(cmd_s_lower, arg1, arg2, fresult)) {
+        replacement = String(fresult, 6);
+      } else if (parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
         replacement = String(fresult, 6);
       } else if (parse_bitwise_functions(cmd_s_lower, arg1, arg2, arg3, iresult)) {
         replacement = ull2String(iresult);
