@@ -156,5 +156,6 @@ String ull2String(uint64_t value, uint8_t base) {
     --endpos;
   }
 
+  return res;
 }
 
