@@ -738,7 +738,7 @@ void substitute_eventvalue(String& line, const String& event) {
                                               // literal event string if
                                               // starting with '!'
     } else {
-      int equalsPos = event.indexOf("=");
+      int equalsPos = event.indexOf('=');
 
       if (equalsPos > 0) {
         // Replace %eventvalueX% with the actual value of the event.
@@ -1035,8 +1035,8 @@ bool ruleMatch(const String& event, const String& rule) {
   if (event.startsWith(
         F("Clock#Time"))) // clock events need different handling...
   {
-    int pos1 = event.indexOf("=");
-    int pos2 = rule.indexOf("=");
+    int pos1 = event.indexOf('=');
+    int pos2 = rule.indexOf('=');
 
     if ((pos1 > 0) && (pos2 > 0)) {
       if (event.substring(0, pos1).equalsIgnoreCase(rule.substring(0, pos2))) // if this is a clock rule
@@ -1054,7 +1054,7 @@ bool ruleMatch(const String& event, const String& rule) {
 
   // parse event into verb and value
   float value = 0;
-  int   pos   = event.indexOf("=");
+  int   pos   = event.indexOf('=');
 
   if (pos >= 0) {
     if (!validFloatFromString(event.substring(pos + 1), value)) {
@@ -1200,21 +1200,21 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
     found = true;
   }
 
-  if (((comparePos = check.indexOf("<")) > 0) && (comparePos < posStart)) {
+  if (((comparePos = check.indexOf('<')) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '<';
     found = true;
   }
 
-  if (((comparePos = check.indexOf(">")) > 0) && (comparePos < posStart)) {
+  if (((comparePos = check.indexOf('>')) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '>';
     found = true;
   }
 
-  if (((comparePos = check.indexOf("=")) > 0) && (comparePos < posStart)) {
+  if (((comparePos = check.indexOf('=')) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '=';
@@ -1226,12 +1226,12 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
 bool compareValues(char compare, float Value1, float Value2)
 {
   switch (compare) {
-    case '>' + '=': return Value1 >= Value2;
-    case '<' + '=': return Value1 <= Value2;
-    case '!' + '=': return Value1 != Value2;
-    case '>':       return Value1 > Value2;
-    case '<':       return Value1 < Value2;
-    case '=':       return Value1 == Value2;
+    case '>' + '=': return !definitelyLessThan(Value1, Value2);
+    case '<' + '=': return !definitelyGreaterThan(Value1, Value2);
+    case '!' + '=': return !essentiallyEqual(Value1, Value2);
+    case '>':       return definitelyGreaterThan(Value1, Value2);
+    case '<':       return definitelyLessThan(Value1, Value2);
+    case '=':       return essentiallyEqual(Value1, Value2);
   }
   return false;
 }
