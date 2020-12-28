@@ -114,17 +114,6 @@ String getTaskDeviceName(taskIndex_t TaskIndex);
 void emergencyReset();
 
 
-void logtimeStringToSeconds(const String& tBuf,
-                            int           hours,
-                            int           minutes,
-                            int           seconds);
-
-// convert old and new time string to nr of seconds
-// return whether it should be considered a time string.
-bool timeStringToSeconds(const String& tBuf,
-                         int         & time_seconds);
-
-
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
  \*********************************************************************************************/

@@ -100,9 +100,25 @@ bool conditionMatchExtended(String& check);
 // @param posEnd   = first position rest of the string, right after the compare condition.
 bool findCompareCondition(const String& check, char& compare, int& posStart, int& posEnd);
 
-bool compareValues(char compare, float Value1, float Value2);
+bool compareIntValues(char compare, const int& Value1, const int& Value2);
+bool compareDoubleValues(char compare, const double& Value1, const double& Value2);
 
 bool conditionMatch(const String& check);
+
+/********************************************************************************************\
+   Matching time notations HH:MM:SS and HH:MM:SS and HH
+ \*********************************************************************************************/
+
+void logtimeStringToSeconds(const String& tBuf,
+                            int           hours,
+                            int           minutes,
+                            int           seconds);
+
+// convert old and new time string to nr of seconds
+// return whether it should be considered a time string.
+bool timeStringToSeconds(const String& tBuf,
+                         int         & time_seconds);
+
 
 /********************************************************************************************\
    Generate rule events based on task refresh

@@ -612,7 +612,7 @@ void parse_string_commands(String &line) {
       if (parse_trigonometric_functions(cmd_s_lower, arg1, arg2, fresult) || 
           parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
         const bool trimTralingZeros = true;
-        replacement = doubleToString(fresult, 6, trimTralingZeros);
+        replacement = doubleToString(fresult, ESPEASY_DOUBLE_NR_DECIMALS, trimTralingZeros);
       } else if (parse_bitwise_functions(cmd_s_lower, arg1, arg2, arg3, iresult)) {
         replacement = ull2String(iresult);
       } else if (cmd_s_lower.equals(F("substring"))) {
@@ -1032,8 +1032,8 @@ bool ruleMatch(const String& event, const String& rule) {
     return tmpEvent.equalsIgnoreCase(tmpRule);
   }
 
-  if (event.startsWith(
-        F("Clock#Time"))) // clock events need different handling...
+  // clock events need different handling...
+  if (event.substring(0, 10).equalsIgnoreCase(F("Clock#Time"))) 
   {
     int pos1 = event.indexOf('=');
     int pos2 = rule.indexOf('=');
@@ -1053,11 +1053,11 @@ bool ruleMatch(const String& event, const String& rule) {
   }
 
   // parse event into verb and value
-  float value = 0;
-  int   pos   = event.indexOf('=');
+  double value = 0;
+  int    pos   = event.indexOf('=');
 
   if (pos >= 0) {
-    if (!validFloatFromString(event.substring(pos + 1), value)) {
+    if (!validDoubleFromString(event.substring(pos + 1), value)) {
       return false;
 
       // FIXME TD-er: What to do when trying to match NaN values?
@@ -1075,9 +1075,9 @@ bool ruleMatch(const String& event, const String& rule) {
   }
 
   const bool stringMatch = tmpEvent.equalsIgnoreCase(rule.substring(0, posStart));
-  float ruleValue        = 0;
+  double ruleValue        = 0;
 
-  if (!validFloatFromString(rule.substring(posEnd), ruleValue)) {
+  if (!validDoubleFromString(rule.substring(posEnd), ruleValue)) {
     return false;
 
     // FIXME TD-er: What to do when trying to match NaN values?
@@ -1086,7 +1086,7 @@ bool ruleMatch(const String& event, const String& rule) {
   bool match = false;
 
   if (stringMatch) {
-    match = compareValues(compare, value, ruleValue);
+    match = compareDoubleValues(compare, value, ruleValue);
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ruleMatch2"));
@@ -1223,7 +1223,20 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
   return found;
 }
 
-bool compareValues(char compare, float Value1, float Value2)
+bool compareIntValues(char compare, const int& Value1, const int& Value2)
+{
+  switch (compare) {
+    case '>' + '=': return Value1 >= Value2;
+    case '<' + '=': return Value1 <= Value2;
+    case '!' + '=': return Value1 != Value2;
+    case '>':       return Value1 > Value2;	
+    case '<':       return Value1 < Value2;	
+    case '=':       return Value1 == Value2;
+  }
+  return false;
+}
+
+bool compareDoubleValues(char compare, const double& Value1, const double& Value2)
 {
   switch (compare) {
     case '>' + '=': return !definitelyLessThan(Value1, Value2);
@@ -1236,6 +1249,77 @@ bool compareValues(char compare, float Value1, float Value2)
   return false;
 }
 
+
+void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seconds)
+{
+  #ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log;
+    log  = F("timeStringToSeconds: ");
+    log += tBuf;
+    log += F(" -> ");
+    log += hours;
+    log += ':';
+    log += minutes;
+    log += ':';
+    log += seconds;
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+
+  #endif // ifndef BUILD_NO_DEBUG
+}
+
+// convert old and new time string to nr of seconds
+// return whether it should be considered a time string.
+bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
+  time_seconds = -1;
+  int hours              = 0;
+  int minutes            = 0;
+  int seconds            = 0;
+
+  int tmpIndex = 0;
+  String hours_str, minutes_str, seconds_str;
+  bool validTime = false;
+  if (get_next_argument(tBuf, tmpIndex, hours_str, ':')) {
+    if (validIntFromString(hours_str, hours)) {
+      validTime = true;
+      if (hours < 0 || hours > 24) {
+        validTime = false;
+      } else {
+        time_seconds = hours * 60 * 60;
+      }
+      if (validTime && get_next_argument(tBuf, tmpIndex, minutes_str, ':')) {
+        if (validIntFromString(minutes_str, minutes)) {
+          if ((minutes < 0) || (minutes > 59)) { 
+            validTime = false; 
+          } else {
+            time_seconds += minutes * 60;
+          }
+          if (validTime && get_next_argument(tBuf, tmpIndex, seconds_str, ':')) {
+            // New format, only HH:MM:SS
+            if (validIntFromString(seconds_str, seconds)) {
+              if ((seconds < 0) || (seconds > 59)) {
+                validTime = false; 
+              } else {
+                time_seconds += seconds;
+              }
+            }
+          } else {
+            // Old format, only HH:MM
+          } 
+        }
+      } else {
+        // It is a valid time string, but could also be just a numerical.
+        // We mark it here as invalid, meaning the 'other' time to compare it to must contain more than just the hour.
+        validTime = false;
+      }
+    }
+  }
+  logtimeStringToSeconds(tBuf, hours, minutes, seconds);
+  return validTime;
+}
+
 bool conditionMatch(const String& check) {
   int  posStart, posEnd;
   char compare;
@@ -1246,37 +1330,55 @@ bool conditionMatch(const String& check) {
 
   String tmpCheck1 = check.substring(0, posStart);
   String tmpCheck2 = check.substring(posEnd);
-  float  Value1    = 0;
-  float  Value2    = 0;
+  tmpCheck1.trim();
+  tmpCheck2.trim();
+  double Value1    = 0;
+  double Value2    = 0;
 
   int  timeInSec1 = 0;
   int  timeInSec2 = 0;
   bool validTime1 = timeStringToSeconds(tmpCheck1, timeInSec1);
   bool validTime2 = timeStringToSeconds(tmpCheck2, timeInSec2);
+  bool result = false;
+
+  bool compareTimes = false;
 
   if ((validTime1 || validTime2) && (timeInSec1 != -1) && (timeInSec2 != -1))
   {
     // At least one is a time containing ':' separator
     // AND both can be considered a time, so use it as a time and compare seconds.
-    Value1 = timeInSec1;
-    Value2 = timeInSec2;
+    compareTimes = true;
+    result = compareIntValues(compare, timeInSec1, timeInSec2);
   } else {
-    if (!validFloatFromString(tmpCheck1, Value1) ||
-        !validFloatFromString(tmpCheck2, Value2))
+    if (!validDoubleFromString(tmpCheck1, Value1) ||
+        !validDoubleFromString(tmpCheck2, Value2))
     {
       return false;
     }
+    result = compareDoubleValues(compare, Value1, Value2);
   }
 
-  bool result = compareValues(compare, Value1, Value2);
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("compareValues: _");
+    String log = F("conditionMatch: _");
     log += check;
     log += F("_ val1: ");
-    log += Value1;
-    log += F(" val2: ");
-    log += Value2;
+    if (compareTimes) { 
+      log += timeInSec1; 
+    } else {
+      log += Value1;
+    }
+    log += F(" \"");
+    log += tmpCheck1;
+    log += F("\" val2: ");
+    if (compareTimes) { 
+      log += timeInSec2; 
+    } else {
+      log += Value2;
+    }    
+    log += F(" \"");
+    log += tmpCheck2;
+    log += F("\" ");
     log += F(" = ");
     log += boolToString(result);
     addLog(LOG_LEVEL_DEBUG, log);
