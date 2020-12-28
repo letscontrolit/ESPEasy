@@ -219,10 +219,14 @@ String doubleToString(const double& value, int decimals, bool trimTralingZeros) 
   if (trimTralingZeros) {
     int dot_pos = res.lastIndexOf('.');
     if (dot_pos != -1) {
+      bool someTrimmed = false;
       for (int i = res.length()-1; i > dot_pos && res[i] == '0'; --i) {
+        someTrimmed = true;
         res[i] = ' ';
       }
-      res.trim();
+      if (someTrimmed) {
+        res.trim();
+      }
       if (res.endsWith(F("."))) {
         res[dot_pos] = ' ';
         res.trim();

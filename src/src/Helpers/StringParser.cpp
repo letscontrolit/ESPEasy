@@ -93,7 +93,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 
       if (validIntFromString(valueName, varNum)) {
         if ((varNum > 0) && (varNum <= CUSTOM_VARS_MAX)) {
-          unsigned char nr_decimals = 6;
+          unsigned char nr_decimals = 10;
           bool trimTralingZeros = true;
 
           if (deviceName.equals(F("int"))) {
