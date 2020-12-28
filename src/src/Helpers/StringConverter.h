@@ -19,11 +19,15 @@ class IPAddress;
 // FIXME: change original code so it uses String and String.toInt()
 unsigned long str2int(const char *string);
 
+String ull2String(uint64_t value, uint8_t base = 10);
+
 /********************************************************************************************\
    Check if valid float and convert string to float.
  \*********************************************************************************************/
 bool          string2float(const String& string,
                            float       & floatvalue);
+
+
 
 /********************************************************************************************\
    Convert a char string to IP byte array

@@ -10,9 +10,9 @@
    Calculate function for simple expressions
  \*********************************************************************************************/
 
-float  globalstack[STACK_SIZE];
-float *sp     = globalstack - 1;
-float *sp_max = &globalstack[STACK_SIZE - 1];
+double  globalstack[STACK_SIZE];
+double *sp     = globalstack - 1;
+double *sp_max = &globalstack[STACK_SIZE - 1];
 
 bool is_operator(char c)
 {
@@ -24,7 +24,7 @@ bool is_unary_operator(char c)
   return (c == '!');
 }
 
-int push(float value)
+int push(double value)
 {
   if (sp != sp_max) // Full
   {
@@ -36,7 +36,7 @@ int push(float value)
   }
 }
 
-float pop()
+double pop()
 {
   if (sp != (globalstack - 1)) { // empty
     return *(sp--);
@@ -46,7 +46,7 @@ float pop()
   }
 }
 
-float apply_operator(char op, float first, float second)
+double apply_operator(char op, double first, double second)
 {
   switch (op)
   {
@@ -67,7 +67,7 @@ float apply_operator(char op, float first, float second)
   }
 }
 
-float apply_unary_operator(char op, float first)
+double apply_unary_operator(char op, double first)
 {
   switch (op)
   {
@@ -94,15 +94,15 @@ int RPNCalculate(char *token)
 
   if (is_operator(token[0]) && (token[1] == 0))
   {
-    float second = pop();
-    float first  = pop();
+    double second = pop();
+    double first  = pop();
 
     if (push(apply_operator(token[0], first, second))) {
       return CALCULATE_ERROR_STACK_OVERFLOW;
     }
   } else if (is_unary_operator(token[0]) && (token[1] == 0))
   {
-    float first = pop();
+    double first = pop();
 
     if (push(apply_unary_operator(token[0], first))) {
       return CALCULATE_ERROR_STACK_OVERFLOW;
@@ -173,7 +173,7 @@ unsigned int op_arg_count(const char c)
   return 0;
 }
 
-int Calculate(const char *input, float *result)
+int Calculate(const char *input, double *result)
 {
   #define TOKEN_LENGTH 25
   #ifndef BUILD_NO_RAM_TRACKER
@@ -357,7 +357,7 @@ int CalculateParam(const char *TmpStr) {
   if (TmpStr[0] != '=') {
     returnValue = str2int(TmpStr);
   } else {
-    float param = 0;
+    double param = 0;
 
     // Starts with an '=', so Calculate starting at next position
     int returnCode = Calculate(&TmpStr[1], &param);

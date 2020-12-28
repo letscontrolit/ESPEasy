@@ -206,10 +206,28 @@ float ul2float(unsigned long ul)
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
 \*********************************************************************************************/
-String toString(float value, byte decimals)
+String toString(const float& value, byte decimals)
 {
   String sValue = String(value, decimals);
 
   sValue.trim();
   return sValue;
+}
+
+String doubleToString(const double& value, int decimals, bool trimTralingZeros) {
+  String res(value, decimals);
+  if (trimTralingZeros) {
+    int dot_pos = res.lastIndexOf('.');
+    if (dot_pos != -1) {
+      for (int i = res.length()-1; i > dot_pos && res[i] == '0'; --i) {
+        res[i] = ' ';
+      }
+      res.trim();
+      if (res.endsWith(F("."))) {
+        res[dot_pos] = ' ';
+        res.trim();
+      }
+    }
+  }
+  return res;
 }

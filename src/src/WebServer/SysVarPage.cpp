@@ -128,7 +128,7 @@ void handle_sysvars() {
   addTableSeparator(F("Custom Variables"), 3, 3);
 
   for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-    addSysVar_html("%v" + toString(i + 1, 0) + '%');
+    addSysVar_html("%v" + String(i + 1) + '%');
   }
 #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   addTableSeparator(F("Special Characters"), 3, 2);

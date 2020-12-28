@@ -13,24 +13,24 @@
 #define STACK_SIZE 10 // was 50
 #define TOKEN_MAX 20
 
-extern float  globalstack[STACK_SIZE];
-extern float *sp;
-extern float *sp_max;
+extern double  globalstack[STACK_SIZE];
+extern double *sp;
+extern double *sp_max;
 
-int   push(float value);
+int    push(double value);
 
-float pop();
+double pop();
 
-float apply_operator(char  op,
-                     float first,
-                     float second);
+double apply_operator(char   op,
+                      double first,
+                      double second);
 
-float apply_unary_operator(char  op,
-                           float first);
+double apply_unary_operator(char   op,
+                            double first);
 
-char* next_token(char *linep);
+char * next_token(char *linep);
 
-int   RPNCalculate(char *token);
+int    RPNCalculate(char *token);
 
 // operators
 // precedence   operators         associativity
@@ -44,9 +44,9 @@ bool         op_left_assoc(const char c);
 unsigned int op_arg_count(const char c);
 
 int          Calculate(const char *input,
-                       float      *result);
+                       double     *result);
 
 int          CalculateParam(const char *TmpStr);
 
 
-#endif
+#endif // ifndef HELPERS_RULES_CALCULATE_H

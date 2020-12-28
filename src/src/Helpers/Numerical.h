@@ -28,6 +28,5 @@ String getNumerical(const String& tBuf, bool mustBeInteger);
 
 bool isNumerical(const String& tBuf, bool mustBeInteger);
 
-String ull2String(uint64_t value, uint8_t base = 10);
 
 #endif // HELPERS_NUMERICAL_H

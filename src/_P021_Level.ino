@@ -88,7 +88,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         if (command == F("setlevel"))
         {
           String value = parseString(string, 2);
-          float result=0;
+          double result=0;
           Calculate(value.c_str(), &result);
           PCONFIG_FLOAT(0) = result;
           SaveSettings();

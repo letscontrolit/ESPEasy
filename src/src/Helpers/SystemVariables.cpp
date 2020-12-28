@@ -201,7 +201,8 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       String key = "%v" + String(i + 1) + '%';
 
       if (s.indexOf(key) != -1) {
-        String value = String(customFloatVar[i]);
+        const bool trimTralingZeros = true;
+        String value = doubleToString(customFloatVar[i], 6, trimTralingZeros);
 
         if (useURLencode) {
           value = URLEncode(value.c_str());

@@ -423,7 +423,7 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
   return argument.length() > 0;
 }
 
-bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, float& result) {
+bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, double& result) {
   #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
   if (cmd_s_lower.length() < 3) {
     return false;
@@ -557,7 +557,7 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
   return true;
 }
 
-bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, float& result) {
+bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, double& result) {
   float farg1, farg2, farg3 = 0.0f;
   if (!validFloatFromString(arg1, farg1)) {
     return false;
@@ -607,12 +607,12 @@ void parse_string_commands(String &line) {
 //      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
 
       uint64_t iarg1, iarg2 = 0;
-      float fresult = 0.0f;
+      double fresult = 0.0;
       int64_t iresult = 0;
-      if (parse_trigonometric_functions(cmd_s_lower, arg1, arg2, fresult)) {
-        replacement = String(fresult, 6);
-      } else if (parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
-        replacement = String(fresult, 6);
+      if (parse_trigonometric_functions(cmd_s_lower, arg1, arg2, fresult) || 
+          parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
+        const bool trimTralingZeros = true;
+        replacement = doubleToString(fresult, 6, trimTralingZeros);
       } else if (parse_bitwise_functions(cmd_s_lower, arg1, arg2, arg3, iresult)) {
         replacement = ull2String(iresult);
       } else if (cmd_s_lower.equals(F("substring"))) {
@@ -677,13 +677,6 @@ void parse_string_commands(String &line) {
         if (validUInt64FromString(arg1, iarg1)
             && validUInt64FromString(arg2, iarg2)) {
           replacement = ull2String(iarg1 % iarg2);
-        }
-      } else if (cmd_s_lower.equals(F("abs"))) {
-        // Turn number into positive value
-        // Syntax like {abs:-1} -> '1'
-        float farg1;
-        if (validFloatFromString(arg1, farg1)) {
-          replacement = String((farg1 < 0) ? farg1 * -1 : farg1);
         }
       }
 

@@ -135,27 +135,4 @@ bool isNumerical(const String& tBuf, bool mustBeInteger) {
   return true;
 }
 
-String ull2String(uint64_t value, uint8_t base) {
-  String res;
-  if (value == 0) {
-    res = '0';
-    return res;
-  }
-  while (value > 0) {
-    res += String(static_cast<uint32_t>(value % base), base);
-    value /= base;
-  }
-
-  int endpos = res.length() - 1;
-  int beginpos = 0;
-  while (endpos > beginpos) {
-    const char c = res[beginpos];
-    res[beginpos] = res[endpos];
-    res[endpos] = c;
-    ++beginpos;
-    --endpos;
-  }
-
-  return res;
-}
 

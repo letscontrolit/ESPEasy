@@ -92,7 +92,7 @@ String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
 
   if (GetArgv(Line, TmpStr1, 4)) {
     // Perform calculation with float result.
-    float result = 0;
+    double result = 0;
     Calculate(TmpStr1.c_str(), &result);
 
     // FIXME TD-er: The return code of Calculate is not used.
@@ -130,7 +130,7 @@ String Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
     if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
     unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 
-    float result = 0;
+    double result = 0;
     Calculate(TmpStr1.c_str(), &result);
     UserVar[uservarIndex] = result;
     SensorSendTask(taskIndex);

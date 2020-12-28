@@ -93,16 +93,17 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 
       if (validIntFromString(valueName, varNum)) {
         if ((varNum > 0) && (varNum <= CUSTOM_VARS_MAX)) {
-          unsigned char nr_decimals = 2;
+          unsigned char nr_decimals = 6;
+          bool trimTralingZeros = true;
 
           if (deviceName.equals(F("int"))) {
             nr_decimals = 0;
           } else if (format.length() != 0)
           {
             // There is some formatting here, so do not throw away decimals
-            nr_decimals = 6;
+            trimTralingZeros = false;
           }
-          String value = String(customFloatVar[varNum - 1], nr_decimals);
+          String value = doubleToString(customFloatVar[varNum - 1], nr_decimals, trimTralingZeros);
           value.trim();
           transformValue(newString, minimal_lineSize, value, format, tmpString);
         }
@@ -218,10 +219,10 @@ void transformValue(
     // valueJust="justification"
     if (valueFormat.length() > 0) // do the checks only if a Format is defined to optimize loop
     {
-      int   logicVal = 0;
-      float valFloat = 0.0f;
+      int    logicVal = 0;
+      double valFloat = 0.0;
 
-      if (validFloatFromString(value, valFloat))
+      if (validDoubleFromString(value, valFloat))
       {
         // to be used for binary values (0 or 1)
         logicVal = static_cast<int>(roundf(valFloat)) == 0 ? 0 : 1;
@@ -360,7 +361,8 @@ void transformValue(
               default: // any other combination x=0; y=0;
                 break;
             }
-            value = toString(valFloat, y);
+            bool trimTralingZeros = false;
+            value = doubleToString(valFloat, y, trimTralingZeros);
             int indexDot = value.indexOf('.');
 
             if (indexDot == -1) {
