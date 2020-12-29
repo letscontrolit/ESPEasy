@@ -279,6 +279,10 @@ void addHtml(const String& html) {
   TXBuffer += html;
 }
 
+void addHtmlInt(int int_val) {
+  addHtml(String(int_val));
+}
+
 void addEncodedHtml(const String& html) {
   // FIXME TD-er: What about the function htmlStrongEscape ??
   String copy(html);
@@ -315,6 +319,25 @@ void addHtmlLink(const String& htmlclass, const String& url, const String& label
   addHtml('>');
   addHtml(label);
   addHtml(F("</a>"));
+}
+
+void addHtmlDiv(const String& htmlclass) {
+  addHtmlDiv(htmlclass, F(""));
+}
+
+void addHtmlDiv(const String& htmlclass, const String& content) {
+  addHtmlDiv(htmlclass, content, F(""));
+}
+
+void addHtmlDiv(const String& htmlclass, const String& content, const String& id) {
+  addHtml(F(" <div "));
+  addHtmlAttribute(F("class"), htmlclass);
+  if (id.length() > 0) {
+    addHtmlAttribute(F("id"), id);
+  }
+  addHtml('>');
+  addHtml(content);
+  addHtml(F("</div>"));
 }
 
 void addEnabled(boolean enabled)

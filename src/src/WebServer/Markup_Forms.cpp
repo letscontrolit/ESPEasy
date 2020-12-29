@@ -32,13 +32,7 @@ void addFormSeparator(int clspan)
 void addFormNote(const String& text, const String& id)
 {
   addRowLabel_tr_id("", id);
-  String html;
-
-  html.reserve(40 + text.length());
-  html += F("<div class='note'>Note: ");
-  html += text;
-  html += F("</div>");
-  addHtml(html);
+  addHtmlDiv(F("note"), text);
 }
 
 // ********************************************************************************

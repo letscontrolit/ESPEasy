@@ -103,9 +103,9 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         uint32_t success, error, length_last;
         P087_data->getSentencesReceived(success, error, length_last);
         byte varNr = VARS_PER_TASK;
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true);
 
         // success = true;
       }

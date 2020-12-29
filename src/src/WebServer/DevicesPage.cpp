@@ -716,7 +716,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
           {
             if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
             {
-              addHtml(pluginWebformShowValue(x, varNr, ExtraTaskSettings.TaskDeviceValueNames[varNr], formatUserVarNoCheck(x, varNr)));
+              pluginWebformShowValue(x, varNr, ExtraTaskSettings.TaskDeviceValueNames[varNr], formatUserVarNoCheck(x, varNr));
             }
           }
         }

@@ -115,10 +115,10 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 
       if ((nullptr != P082_data) && P082_data->isInitialized()) {
         byte varNr = VARS_PER_TASK;
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Fix"),     String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),
-                                       String(P082_data->gps->satellitesStats.nrSatsTracked())));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Best SNR"), String(P082_data->gps->satellitesStats.getBestSNR()), true));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Fix"),     String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),
+                                       String(P082_data->gps->satellitesStats.nrSatsTracked()));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Best SNR"), String(P082_data->gps->satellitesStats.getBestSNR()), true);
 
         // success = true;
       }

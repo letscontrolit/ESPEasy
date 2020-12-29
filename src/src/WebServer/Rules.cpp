@@ -90,7 +90,7 @@ void handle_rules() {
   html_TR_TD();
   html_end_form();
   addHtml(F("<button id='save_button' class='button' onClick='saveRulesFile()'>Save</button>"));
-  addHtml(F("<div id='toastmessage'>Saved!</div>"));
+  addHtmlDiv(F(""), F("Saved!"), F("toastmessage"));
 
   addButton(fileName, F("Download to file"));
   html_end_table();
