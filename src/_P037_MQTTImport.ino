@@ -158,35 +158,26 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
           parseSystemVariables(subscriptionTopic, false);
           if (MQTTCheckSubscription_037(event->String1, subscriptionTopic))
           {
-            // FIXME TD-er: It may be useful to generate events with string values.
             float floatPayload;
             if (!string2float(event->String2, floatPayload)) {
-              String log = F("IMPT : Bad Import MQTT Command ");
-              log += event->String1;
-              addLog(LOG_LEVEL_ERROR, log);
-              log = F("ERR  : Illegal Payload ");
-              log += event->String2;
-              log += ' ';
-              log += getTaskDeviceName(event->TaskIndex);
-              addLog(LOG_LEVEL_INFO, log);
-              success = false;
-              break;
+              // report NaN if not number, just as _P004_Dallas
+              floatPayload = NAN;
             }
 
             UserVar[event->BaseVarIndex + x] = floatPayload;							// Save the new value
 
-            // Log the event
+            // Log the event with Payload
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log = F("IMPT : [");
               log += getTaskDeviceName(event->TaskIndex);
               log += F("#");
               log += ExtraTaskSettings.TaskDeviceValueNames[x];
               log += F("] : ");
-              log += floatPayload;
+              log += event->String2;
               addLog(LOG_LEVEL_INFO, log);
             }
 
-            // Generate event for rules processing - proposed by TridentTD
+            // Generate event with Payload for rules processing - proposed by TridentTD
 
             if (Settings.UseRules)
             {
@@ -195,7 +186,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
               RuleEvent += '#';
               RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[x];
               RuleEvent += '=';
-              RuleEvent += floatPayload;
+              RuleEvent += event->String2;
               eventQueue.add(RuleEvent);
             }
 
