@@ -16,6 +16,7 @@
 #define PLUGIN_037
 #define PLUGIN_ID_037         37
 #define PLUGIN_NAME_037       "Generic - MQTT Import"
+#define PLUGIN_037_TOPIC_LEN  128
 
 #define PLUGIN_VALUENAME1_037 "Value1"
 #define PLUGIN_VALUENAME2_037 "Value2"
@@ -99,7 +100,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  char deviceTemplate[4][41];		// variable for saving the subscription topics
+  char deviceTemplate[4][PLUGIN_037_TOPIC_LEN + 1];		// variable for saving the subscription topics
 
   switch (function)
   {
@@ -142,7 +143,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         for (byte varNr = 0; varNr < 4; varNr++)
         {
         	addFormTextBox(String(F("MQTT Topic ")) + (varNr + 1), String(F("p037_template")) +
-        			(varNr + 1), deviceTemplate[varNr], 40);
+        			(varNr + 1), deviceTemplate[varNr], PLUGIN_037_TOPIC_LEN);
         }
         success = true;
         break;
@@ -312,7 +313,7 @@ boolean MQTTSubscribe_037()
   // Subscribe to the topics requested by ALL calls to this plugin.
   // We do this because if the connection to the broker is lost, we want to resubscribe for all instances.
 
-  char deviceTemplate[4][41];
+  char deviceTemplate[4][PLUGIN_037_TOPIC_LEN + 1];
 
   //	Loop over all tasks looking for a 037 instance
 
