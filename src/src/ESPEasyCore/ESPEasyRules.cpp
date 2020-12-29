@@ -1383,6 +1383,8 @@ bool conditionMatch(const String& check) {
     log += boolToString(result);
     addLog(LOG_LEVEL_DEBUG, log);
   }
+  #else
+  (void)compareTimes; // To avoid compiler warning
   #endif
   return result;
 }

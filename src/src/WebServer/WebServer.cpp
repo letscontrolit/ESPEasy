@@ -591,17 +591,7 @@ void getWebPageTemplateVar(const String& varName)
   else if (varName == F("js"))
   {
     html_add_autosubmit_form();
-
-    // FIXME TD-er: Can only call this after tag has been set for the file.
-    //serve_JS(JSfiles_e::Toasting);
-    html_add_script(false);
-    TXBuffer += jsToastMessageBegin;
-
-    // we can push custom messages here in future releases...
-    addHtml(F("Submitted"));
-    TXBuffer += jsToastMessageEnd;
-
-    html_add_script_end();
+    serve_JS(JSfiles_e::Toasting);
   }
 
   else if (varName == F("error"))

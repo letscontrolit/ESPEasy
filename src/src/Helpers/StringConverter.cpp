@@ -740,10 +740,12 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
     }
 
     if (vname_found) {
-      repl(F("%vname1%"), ExtraTaskSettings.TaskDeviceValueNames[0], s, useURLencode);
-      repl(F("%vname2%"), ExtraTaskSettings.TaskDeviceValueNames[1], s, useURLencode);
-      repl(F("%vname3%"), ExtraTaskSettings.TaskDeviceValueNames[2], s, useURLencode);
-      repl(F("%vname4%"), ExtraTaskSettings.TaskDeviceValueNames[3], s, useURLencode);
+      for (byte i = 0; i < 4; ++i) {
+        String vname = F("%vname");
+        vname += (i + 1);
+        vname += '%';
+        repl(vname, ExtraTaskSettings.TaskDeviceValueNames[i], s, useURLencode);
+      }
     }
   }
 }
