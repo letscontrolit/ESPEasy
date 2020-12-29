@@ -374,11 +374,6 @@ To create/register a plugin, you have to :
     #ifndef NOTIFIER_SET_NONE
         #define NOTIFIER_SET_NONE
     #endif
-
-    #ifdef USES_SSDP
-      #undef USES_SSDP
-    #endif
-
 #endif
 
 
@@ -829,6 +824,8 @@ To create/register a plugin, you have to :
     #define USES_P049   // MHZ19
 
     #define USES_P052   // SenseAir
+    #define USES_P053   // PMSx003
+
     #define USES_P056   // SDS011-Dust
     #define USES_P059   // Encoder
 
@@ -880,7 +877,6 @@ To create/register a plugin, you have to :
 
     #define USES_P051   // AM2320
 
-    #define USES_P053   // PMSx003
     #define USES_P054   // DMX512
     #define USES_P055   // Chiming
     #define USES_P057   // HT16K33_LED
@@ -1268,6 +1264,10 @@ To create/register a plugin, you have to :
   #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
     #undef USE_TRIGONOMETRIC_FUNCTIONS_RULES
   #endif
+  #ifdef USES_SSDP
+    #undef USES_SSDP
+  #endif
+
 #endif
 
 // Timing stats page needs timing stats
