@@ -119,10 +119,10 @@ void handle_notifications() {
       html_TR_TD();
       html_add_button_prefix();
       addHtml(F("notifications?index="));
-      addHtml(String(x + 1));
+      addHtmlInt(x + 1);
       addHtml(F("'>Edit</a>"));
       html_TD();
-      addHtml(String(x + 1));
+      addHtmlInt(x + 1);
       html_TD();
 
       if (Settings.Notification[x] != 0)
@@ -141,7 +141,7 @@ void handle_notifications() {
         html_TD();
         addHtml(NotificationSettings.Server);
         html_TD();
-        addHtml(String(NotificationSettings.Port));
+        addHtmlInt(NotificationSettings.Port);
       }
       else {
         html_TD(3);

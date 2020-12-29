@@ -251,7 +251,7 @@ void handle_controllers_ShowAllControllersTable()
         }
 
         html_TD();
-        addHtml(String(ControllerSettings.Port));
+        addHtmlInt(ControllerSettings.Port);
       }
       else {
         html_TD(3);

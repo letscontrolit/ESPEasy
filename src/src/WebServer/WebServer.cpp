@@ -195,7 +195,7 @@ size_t streamFile_htmlEscape(const String& fileName)
       if (htmlEscapeChar(c, escaped)) {
         addHtml(escaped);
       } else {
-        addHtml(String(c));
+        addHtml(c);
       }
       ++size;
     }
@@ -540,7 +540,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("unit"))
   {
-    addHtml(String(Settings.Unit));
+    addHtmlInt(Settings.Unit);
   }
 
   else if (varName == F("menu"))

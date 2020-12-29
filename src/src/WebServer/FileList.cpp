@@ -251,7 +251,7 @@ void handle_filelist_add_file(const String& filename, int filesize, int startIdx
     if (startIdx > 0)
     {
       addHtml(F("&start="));
-      addHtml(String(startIdx));
+      addHtmlInt(startIdx);
     }
     addHtml(F("'>Del</a>"));
   }

@@ -616,9 +616,9 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       if (C018_data != nullptr) {
         // Some information on detected device
         addRowLabel(F("Hardware DevEUI"));
-        addHtml(String(C018_data->hweui()));
+        addHtml(C018_data->hweui());
         addRowLabel(F("Version Number"));
-        addHtml(String(C018_data->sysver()));
+        addHtml(C018_data->sysver());
 
         addRowLabel(F("Voltage"));
         addHtml(String(static_cast<float>(C018_data->getVbat()) / 1000.0, 3));
@@ -640,7 +640,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         addHtml(C018_data->getLastError());
 
         addRowLabel(F("Sample Set Counter"));
-        addHtml(String(C018_data->getSampleSetCount()));
+        addHtmlInt(C018_data->getSampleSetCount());
 
         {
           RN2xx3_status status = C018_data->getStatus();

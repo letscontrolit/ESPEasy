@@ -84,7 +84,7 @@ void html_add_script_end();
 // if there is an error-string, add it to the html code with correct formatting
 void addHtmlError(const String& error);
 
-void addHtml(char html);
+void addHtml(const char& html);
 void addHtml(const String& html);
 void addHtmlInt(int int_val);
 

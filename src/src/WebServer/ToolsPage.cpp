@@ -148,9 +148,9 @@ void handle_tools() {
         addHtml(F(" <b>WARNING</b> OTA not possible."));
       }
       addHtml(F(" Max sketch size: "));
-      addHtml(String(maxSketchSize / 1024));
+      addHtmlInt(maxSketchSize / 1024);
       addHtml(F(" kB ("));
-      addHtml(String(maxSketchSize));
+      addHtmlInt(maxSketchSize);
       addHtml(F(" bytes)"));
     }
     # endif // ifndef NO_HTTP_UPDATER

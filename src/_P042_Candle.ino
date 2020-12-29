@@ -203,7 +203,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
         // Brightness Selection
         addHtml(F("<TR><TD>Brightness:<TD>min<input type='range' id='web_Bright_Slide' min='0' max='255' value='"));
-        addHtml(String(PCONFIG(3)));
+        addHtmlInt(PCONFIG(3));
         addHtml(F("'> max"));
 
         {

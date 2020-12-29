@@ -230,7 +230,7 @@ void handle_root() {
         }
 
         addHtml(F("Unit "));
-        addHtml(String(it->first));
+        addHtmlInt(it->first);
         html_TD();
 
         if (isThisUnit) {
@@ -242,7 +242,7 @@ void handle_root() {
         html_TD();
 
         if (it->second.build) {
-          addHtml(String(it->second.build));
+          addHtmlInt(it->second.build);
         }
         html_TD();
         addHtml(getNodeTypeDisplayString(it->second.nodeType));
@@ -265,7 +265,7 @@ void handle_root() {
           addHtml(html);
         }
         html_TD();
-        addHtml(String(it->second.age));
+        addHtmlInt(it->second.age);
       }
     }
 

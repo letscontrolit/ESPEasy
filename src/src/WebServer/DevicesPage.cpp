@@ -732,7 +732,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
 
 void format_originating_node(byte remoteUnit) {
   addHtml(F("Unit "));
-  addHtml(String(remoteUnit));
+  addHtmlInt(remoteUnit);
 
   if (remoteUnit != 255) {
     NodesMap::iterator it = Nodes.find(remoteUnit);
@@ -1257,7 +1257,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     for (byte varNr = 0; varNr < valueCount; varNr++)
     {
       html_TR_TD();
-      addHtml(String(varNr + 1));
+      addHtmlInt(varNr + 1);
       html_TD();
       String id = F("TDVN"); // ="taskdevicevaluename"
       id += (varNr + 1);

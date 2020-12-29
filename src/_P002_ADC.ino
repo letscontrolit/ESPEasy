@@ -297,7 +297,7 @@ void P002_performRead(struct EventStruct *event, int& value) {
 
 void P002_formatStatistics(const String& label, int raw, float float_value) {
   addRowLabel(label);
-  addHtml(String(raw));
+  addHtmlInt(raw);
   html_add_estimate_symbol();
   addHtml(String(float_value, 3));
 }

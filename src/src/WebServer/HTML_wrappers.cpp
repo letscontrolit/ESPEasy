@@ -271,7 +271,7 @@ void addHtmlError(const String& error) {
   {}
 }
 
-void addHtml(char html) {
+void addHtml(const char& html) {
   TXBuffer += html;
 }
 
@@ -295,7 +295,7 @@ void addHtmlAttribute(const String& label, int value) {
   addHtml(' ');
   addHtml(label);
   addHtml('=');
-  addHtml(String(value));
+  addHtmlInt(value);
   addHtml(' ');
 }
 

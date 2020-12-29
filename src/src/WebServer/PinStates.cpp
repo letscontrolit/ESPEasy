@@ -95,21 +95,21 @@ void handle_pinstates() {
     {
       addHtml("0");
     }
-    addHtml(String(plugin));
+    addHtmlInt(plugin);
     html_TD();
-    addHtml(String(port));
+    addHtmlInt(port);
     html_TD();
     addHtml(getPinModeString(it->second.mode));
     html_TD();
-    addHtml(String(it->second.getValue()));
+    addHtmlInt(it->second.getValue());
     html_TD();
-    addHtml(String(it->second.task));
+    addHtmlInt(it->second.task);
     html_TD();
-    addHtml(String(it->second.monitor));
+    addHtmlInt(it->second.monitor);
     html_TD();
-    addHtml(String(it->second.command));
+    addHtmlInt(it->second.command);
     html_TD();
-    addHtml(String(it->second.init));
+    addHtmlInt(it->second.init);
   }
 
   html_end_table();

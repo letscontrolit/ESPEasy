@@ -540,7 +540,7 @@ void handle_sysinfo_ESP_Board() {
   }
 
   addRowLabel(LabelType::ESP_CHIP_FREQ);
-  addHtml(String(ESP.getCpuFreqMHz()));
+  addHtmlInt(ESP.getCpuFreqMHz());
   addHtml(F(" MHz"));
 
   addRowLabelValue(LabelType::ESP_CHIP_MODEL);
@@ -589,17 +589,17 @@ void handle_sysinfo_Storage() {
   uint32_t ideSize  = ESP.getFlashChipSize();
 
   addRowLabel(LabelType::FLASH_CHIP_REAL_SIZE);
-  addHtml(String(realSize / 1024));
+  addHtmlInt(realSize / 1024);
   addHtml(F(" kB"));
 
   addRowLabel(LabelType::FLASH_IDE_SIZE);
-  addHtml(String(ideSize / 1024));
+  addHtmlInt(ideSize / 1024);
   addHtml(F(" kB"));
 
   // Please check what is supported for the ESP32
   # if defined(ESP8266)
   addRowLabel(LabelType::FLASH_IDE_SPEED);
-  addHtml(String(ESP.getFlashChipSpeed() / 1000000));
+  addHtmlInt(ESP.getFlashChipSpeed() / 1000000);
   addHtml(F(" MHz"));
 
   FlashMode_t ideMode = ESP.getFlashChipMode();
@@ -683,23 +683,23 @@ void handle_sysinfo_Storage() {
   }
   #ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));
-  addHtml(String(SpiffsPagesize()));
+  addHtmlInt(SpiffsPagesize());
 
   addRowLabel(F("Block size"));
-  addHtml(String(SpiffsBlocksize()));
+  addHtmlInt(SpiffsBlocksize());
 
   addRowLabel(F("Number of blocks"));
-  addHtml(String(SpiffsTotalBytes() / SpiffsBlocksize()));
+  addHtmlInt(SpiffsTotalBytes() / SpiffsBlocksize());
 
   {
   # if defined(ESP8266)
     fs::FSInfo fs_info;
     ESPEASY_FS.info(fs_info);
     addRowLabel(F("Maximum open files"));
-    addHtml(String(fs_info.maxOpenFiles));
+    addHtmlInt(fs_info.maxOpenFiles);
 
     addRowLabel(F("Maximum path length"));
-    addHtml(String(fs_info.maxPathLength));
+    addHtmlInt(fs_info.maxPathLength);
 
   # endif // if defined(ESP8266)
   }
