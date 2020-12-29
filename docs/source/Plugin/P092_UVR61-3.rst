@@ -1,8 +1,8 @@
 .. include:: ../Plugin/_plugin_substitutions_p09x.repl
 .. _P092_UVR61-3_page:
 
-UVR61-3
-=======
+UVR61-3 (up to v8.2)
+====================
 
 |P092_typename|
 |P092_status|
@@ -16,6 +16,7 @@ The UVR61-3 unit is designed for an energy-saving and cost-effective drying of c
 
 The UVR61-3 three-circuit controllers has various thermostat, differential temperature and speed control functions for use in solar and heating systems, too.
 
+* This data frame for UVR61-3 is only valid for firmware up to v8.2.
 * The DL bus runs at 12 volts.
 * The data frame consist of 34 bytes (excluding sync and CRC).
 * The data are transmitted @ 488Hz, therefore the transmission of one data set takes about 0.8 seconds.
@@ -50,7 +51,7 @@ Sensor
 ^^^^^^
 
 * **1st GPIO**: DL bus input e.g. **GPIO 14 (D5)**
-* **DL-Bus Type**: **UVR61-3 v8.2**
+* **DL-Bus Type**: **UVR61-3 (up to v8.2)**
 
 .. note:: The settings for **1st GPIO** and **DL-Bus Type** must be the same for all used DL bus tasks!
 
