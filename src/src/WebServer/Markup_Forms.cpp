@@ -32,7 +32,7 @@ void addFormSeparator(int clspan)
 void addFormNote(const String& text, const String& id)
 {
   addRowLabel_tr_id("", id);
-  addHtmlDiv(F("note"), text);
+  addHtmlDiv(F("note"), String(F("Note: ")) + text);
 }
 
 // ********************************************************************************
