@@ -65,7 +65,7 @@ The JSON Attribute column, when used, can be used to specify what data element t
 
 When receiving multiple-value attributes, like ``"svalue":"28.1;17.8;2;1010.3;0"``, an index can be appended to the attribute like ``svalue;4`` to get the 4th value, in this example ``1010.3`` (1-based index).
 
-When receiving a JSON payload, an event is generated for the received Attribute, or for all attributes if no specific attribute is configured.
+When receiving a JSON payload, an event is (in addition to the standard event when receiving a numeric value) generated for the received Attribute, or for all attributes if no specific attribute is configured.
 
 The event for such attribute looks like ``<topic>#<attribute>=<attribute_value>``, for example, when, on MQTT Topic ``zigbee2mqtt/eria_dimswitch_1``, receiving this JSON payload: ``{"action":"on","linkquality":5}`` will generate these events: ``zigbee2mqtt/eria_dimswitch_1#action=on`` and ``zigbee2mqtt/eria_dimswitch_1#linkquality=5``. If Mappings are configured, then the value *after* applying the mappings will be used!
 
@@ -132,7 +132,7 @@ Option: Apply mappings
 
 **Mappings** are a variable length list of ``Name`` ``Operand`` ``Value`` sets.
 
-**Name**: The received value (payload or JSON attribute value), for example the Adurosmart Eria dimmer switch (Zigbee) sends values 'on', 'off', 'up' and 'down' for the respective buttons. Normally ESPEasy wouldn't be able to process those values, but by mapping them to numeric values, the become usable with ESPEasy:
+**Name**: The received value (payload or JSON attribute value), for example the Adurosmart Eria dimmer switch (Zigbee) sends values 'on', 'off', 'up' and 'down' for the respective buttons. Normally ESPEasy wouldn't be able to process those values, but by mapping them to numeric values, the become usable with ESPEasy.
 
 **Operand**:
 
@@ -140,7 +140,7 @@ Option: Apply mappings
 
 * Percentage
 
-**Map**: Simple replacement of the input to the Value
+**Map**: Simple replacement of the input by the Value
 
 **Percentage**: Convert the input to a percentage. Value is the 100% value. This allows to convert f.e. a 0 to 1024 input range to 0 to 100%. If the input exceeds the max. value, the percentage will be > 100, so an input of 2048 for this value will result in 200%. The % sign isn't part of the output.
 
@@ -153,9 +153,9 @@ The number of mappings is currently limited to 25, but only the number of used m
 Option: Generate events for accepted topics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Generate events for accepted topics**: Enabling this option will generate an event for every incoming, and accepted if Filtering is used, non-JSON payload that has non-numeric value. The event generated is: ``<devicename>#<valuename>=<value>``, for example ``MQTT_Import#Value1=on``.
+**Generate events for accepted topics**: Enabling this option will generate an event for every incoming, and accepted if Filtering is used, non-JSON payload even when that has a non-numeric value. The event generated is: ``<devicename>#<valuename>=<value>``, for example ``MQTT_Import#Value1=on``.
 
-When this option is disabled it has the backward-compatible behavior of discarding that invalid message.
+When this option is disabled it has the backward-compatible behavior of discarding that message as invalid.
 
 Topic Subscriptions
 -------------------
@@ -164,12 +164,12 @@ By configuring a MQTT Topic, the plugin will subscribe to that Topic so the MQTT
 
 Subscribing to high-trafic topics will cause quite some load on the ESP, so either use an ESP32 unit, or limit trafic by subscribing to more specific topics or use filtering to limit the number of accepted messages, and thus limit the number of events fired. F.e. subscribing to ``domoticz/out`` is such a high-trafic topic, when using Domoticz and an MQTT server. Filtering on the idx values that are of interest is then highly advised.
 
-Do not use any wildcard MQTT Topic subscriptions (using ``+`` or ``#``), as they currently are not supported by the plugin.
+Wildcard MQTT Topic subscriptions (using ``+`` or ``#``) can be used, but please be aware this may cause a high load because of a high number of topics accepted. NB: The ``#`` wildcard, when used, *must* be the last element in a topic (according to MQTT specifiacations).
 
 Supported hardware
 ------------------
 
-No ESPEasy related hardware is needed, though a MQTT server, and a matching Controller configuration is required to be able to use this plugin, as it 'piggy-backs' on that connection to subscribe to the topics.
+No ESPEasy related hardware is needed, though a MQTT server, and a matching Controller configuration is required to be able to use this plugin, as it 'piggy-backs' on that connection to subscribe to, and receive, the topics.
 
 Useful links
 ------------
@@ -219,6 +219,9 @@ Change log
 
   |added|
   Mapping of incoming values
+
+  |added|
+  Generate (optional) events for non-numeric payloads
 
 .. versionadded:: 1.0
   ...

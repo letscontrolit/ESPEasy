@@ -40,8 +40,8 @@
 # define P037_OPERAND_COUNT 2
 # define P037_OPERAND_LIST  F("=%")
 
-# define P037_FILTER_COUNT  3 // 3rd option not implemented yet
-# define P037_FILTER_LIST   F("=-:")
+# define P037_FILTER_COUNT  3
+# define P037_FILTER_LIST   F("=-:")  // Length should at least match P037_FILTER_COUNT
 
 // Data structure
 struct P037_data_struct : public PluginTaskData_base

@@ -13,10 +13,18 @@
         GPIO,2,%eventvalue% // Turn on based on an MQTT message
       endon
 
+   When option **Generate events for accepted topics** is enabled:
+
+   .. code-block:: none
+
+     on MQTTimport#Value1=on do
+       event,switchToggle // See next example
+     endon
+
    "
    "
    ``{mqtttopic}#{json_attribute}={attribute_value}``
-   Will trigger when the JSON option is available, and a JSON message is received, for each JSON attribute, or the Attribute specified.
+   Will trigger when the JSON option is available and enabled, and a JSON message is received, for each JSON attribute, or the Attribute specified.
 
    Should best be used combined with the Filtering option.
    ","
@@ -27,4 +35,17 @@
         TaskValueSet,2,1,%eventvalue%
       endon
 
+   .. code-block:: none
+
+      on zigbee2mqtt/eria_dimswitch_1#action=on do
+        event,switchToggle
+      endon
+      on switchToggle do // Sonoff switch here
+        if [Relay#State]=1
+          gpio,12,0 // Relay off
+        else
+          gpio,12,1 // Relay on
+        endif
+      endon
+   
    "

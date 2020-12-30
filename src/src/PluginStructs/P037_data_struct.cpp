@@ -697,6 +697,7 @@ bool P037_data_struct::hasFilters() {
 #ifdef P037_FILTER_PER_TOPIC
 String P037_data_struct::getFilterAsTopic(uint8_t topicId) {
   String result;
+  result.reserve(32);
   if (hasFilters() && topicId > 0 && topicId <= VARS_PER_TASK) {
     uint8_t fltBase = (topicId - 1) * 3;
     if (_filter[fltBase + 0].length() > 0 && _filter[fltBase + 2].length() > 0) {
@@ -758,7 +759,7 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
       fltKey.replace(';', ',');
       fltIndex = parseString(fltKey, 2);
       rangeSeparator = fltIndex.toInt();
-      if (rangeSeparator > 1) {
+      if (rangeSeparator > 0) {
         valueData.replace(';', ',');
         valueData = parseString(valueData, rangeSeparator);
       }
