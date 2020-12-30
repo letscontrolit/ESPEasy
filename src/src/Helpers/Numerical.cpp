@@ -4,7 +4,7 @@
   Check if string is valid float
   \*********************************************************************************************/
 bool isFloat(const String& tBuf) {
-  return isNumerical(tBuf, false);
+  return isNumerical(tBuf, NumericalType::FloatingPoint);
 }
 
 bool isValidFloat(float f) {
@@ -14,11 +14,15 @@ bool isValidFloat(float f) {
 }
 
 bool isInt(const String& tBuf) {
-  return isNumerical(tBuf, true);
+  return isNumerical(tBuf, NumericalType::Integer);
+}
+
+bool isHex(const String& tBuf) {
+  return isNumerical(tBuf, NumericalType::HexadecimalUInt);
 }
 
 bool validIntFromString(const String& tBuf, int& result) {
-  const String numerical = getNumerical(tBuf, true);
+  const String numerical = getNumerical(tBuf, NumericalType::Integer);
   const bool isvalid = numerical.length() > 0;
   if (isvalid) {
     result = numerical.toInt();
@@ -27,7 +31,7 @@ bool validIntFromString(const String& tBuf, int& result) {
 }
 
 bool validInt64FromString(const String& tBuf, int64_t& result) {
-  const String numerical = getNumerical(tBuf, true);
+  const String numerical = getNumerical(tBuf, NumericalType::Integer);
   const bool isvalid = numerical.length() > 0;
   if (isvalid) {
     result = atoll(numerical.c_str());
@@ -36,26 +40,38 @@ bool validInt64FromString(const String& tBuf, int64_t& result) {
 }
 
 bool validUIntFromString(const String& tBuf, unsigned int& result) {
-  int tmp;
-  if (!validIntFromString(tBuf, tmp)) return false;
-  if (tmp < 0) return false;
-  result = static_cast<unsigned int>(tmp);
-  return true;
+  String numerical = getNumerical(tBuf, NumericalType::HexadecimalUInt);
+  const bool isvalid = numerical.length() > 0;
+  if (isvalid) {
+    int base = DEC;
+    if (numerical.startsWith(F("0x"))) {
+      numerical = numerical.substring(2);
+      base = HEX;
+    }
+    result = strtoul(numerical.c_str(), NULL, base);
+  }
+  return isvalid;
 }
 
 bool validUInt64FromString(const String& tBuf, uint64_t& result) {
-  int64_t tmp;
-  if (!validInt64FromString(tBuf, tmp)) return false;
-  if (tmp < 0) return false;
-  result = static_cast<uint64_t>(tmp);
-  return true;
+  String numerical = getNumerical(tBuf, NumericalType::HexadecimalUInt);
+  const bool isvalid = numerical.length() > 0;
+  if (isvalid) {
+    int base = DEC;
+    if (numerical.startsWith(F("0x"))) {
+      numerical = numerical.substring(2);
+      base = HEX;
+    }
+    result = strtoull(numerical.c_str(), NULL, base);
+  }
+  return isvalid;
 }
 
 bool validFloatFromString(const String& tBuf, float& result) {
   // DO not call validDoubleFromString and then cast to float.
   // Working with double values is quite CPU intensive as it must be done in software 
   // since the ESP does not have large enough registers for handling double values in hardware.
-  const String numerical = getNumerical(tBuf, false);
+  const String numerical = getNumerical(tBuf, NumericalType::FloatingPoint);
   const bool isvalid = numerical.length() > 0;
   if (isvalid) {
     result = numerical.toFloat();
@@ -66,7 +82,7 @@ bool validFloatFromString(const String& tBuf, float& result) {
 bool validDoubleFromString(const String& tBuf, double& result) {
   #ifdef CORE_POST_2_5_0
   // String.toDouble() is introduced in core 2.5.0
-  const String numerical = getNumerical(tBuf, false);
+  const String numerical = getNumerical(tBuf, NumericalType::FloatingPoint);
   const bool isvalid = numerical.length() > 0;
   if (isvalid) {
     result = numerical.toDouble();
@@ -81,7 +97,7 @@ bool validDoubleFromString(const String& tBuf, double& result) {
 }
 
 
-String getNumerical(const String& tBuf, bool mustBeInteger) {
+String getNumerical(const String& tBuf, NumericalType numericalType) {
   String result = "";
   const unsigned int bufLength = tBuf.length();
   unsigned int firstDec = 0;
@@ -93,25 +109,60 @@ String getNumerical(const String& tBuf, bool mustBeInteger) {
   bool decPt = false;
   
   char c = tBuf.charAt(firstDec);
-  if(c == '+' || c == '-') {
-    result += c;
-    ++firstDec;
+  switch (numericalType) {
+    case NumericalType::FloatingPoint:
+    case NumericalType::Integer:
+      if(c == '+' || c == '-') {
+        result += c;
+        ++firstDec;
+      }
+      break;
+    case NumericalType::HexadecimalUInt:
+      {
+        if (c == '0') {
+          ++firstDec;
+          result += c;
+          if (firstDec < bufLength) {
+            c = tBuf.charAt(firstDec);
+            if (c == 'x') {
+              ++firstDec;
+              result += c;
+            }
+          }
+        }
+      }
+      break;
   }
+
   for(unsigned int x=firstDec; x < bufLength; ++x) {
     c = tBuf.charAt(x);
     if(c == '.') {
-      if (mustBeInteger) return result;
+      if (NumericalType::FloatingPoint != numericalType) return result;
       // Only one decimal point allowed
       if(decPt) return result;
       else decPt = true;
     }
-    else if(c < '0' || c > '9') return result;
+    switch (numericalType) {
+      case NumericalType::FloatingPoint:
+      case NumericalType::Integer:
+        if (!isdigit(c)) {
+          return result;
+        }
+        break;
+      case NumericalType::HexadecimalUInt:
+        {
+          if (!isxdigit(c)) {
+            return result;
+          }
+        }
+        break;
+    }
     result += c;
   }
   return result;
 }
 
-bool isNumerical(const String& tBuf, bool mustBeInteger) {
+bool isNumerical(const String& tBuf, NumericalType numericalType) {
   const unsigned int bufLength = tBuf.length();
   unsigned int firstDec = 0;
   while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {
@@ -120,17 +171,54 @@ bool isNumerical(const String& tBuf, bool mustBeInteger) {
   if (firstDec >= bufLength) return false;
   bool decPt = false;
   char c = tBuf.charAt(firstDec);
-  if(c == '+' || c == '-')
-    ++firstDec;
+
+  switch (numericalType) {
+    case NumericalType::FloatingPoint:
+    case NumericalType::Integer:
+      if(c == '+' || c == '-') {
+        ++firstDec;
+      }
+      break;
+    case NumericalType::HexadecimalUInt:
+      {
+        if (c == '0') {
+          ++firstDec;
+          if (firstDec < bufLength) {
+            c = tBuf.charAt(firstDec);
+            if (c == 'x') {
+              ++firstDec;
+            }
+          }
+        }
+      }
+      break;
+  }
+  
   for(unsigned int x=firstDec; x < bufLength; ++x) {
     c = tBuf.charAt(x);
     if(c == '.') {
-      if (mustBeInteger) return false;
+      if (NumericalType::FloatingPoint != numericalType) return false;
       // Only one decimal point allowed
       if(decPt) return false;
       else decPt = true;
     }
-    else if(c < '0' || c > '9') return false;
+    else {
+      switch (numericalType) {
+        case NumericalType::FloatingPoint:
+        case NumericalType::Integer:
+          if (!isdigit(c)) {
+            return false;
+          }
+          break;
+        case NumericalType::HexadecimalUInt:
+          {
+            if (!isxdigit(c)) {
+              return false;
+            }
+          }
+          break;
+      }
+    }
   }
   return true;
 }

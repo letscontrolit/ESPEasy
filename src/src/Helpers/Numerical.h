@@ -12,6 +12,8 @@ bool isValidFloat(float f);
 
 bool isInt(const String& tBuf);
 
+bool isHex(const String& tBuf);
+
 bool validIntFromString(const String& tBuf, int& result);
 
 bool validInt64FromString(const String& tBuf, int64_t& result);
@@ -24,9 +26,15 @@ bool validFloatFromString(const String& tBuf, float& result);
 
 bool validDoubleFromString(const String& tBuf, double& result);
 
-String getNumerical(const String& tBuf, bool mustBeInteger);
+enum class NumericalType {
+  Integer,
+  FloatingPoint,
+  HexadecimalUInt
+};
 
-bool isNumerical(const String& tBuf, bool mustBeInteger);
+String getNumerical(const String& tBuf, NumericalType numericalType);
+
+bool isNumerical(const String& tBuf, NumericalType numericalType);
 
 
 #endif // HELPERS_NUMERICAL_H
