@@ -98,7 +98,7 @@ bool validDoubleFromString(const String& tBuf, double& result) {
 
 
 String getNumerical(const String& tBuf, NumericalType numericalType) {
-  String result = "";
+  String result;
   const unsigned int bufLength = tBuf.length();
   unsigned int firstDec = 0;
   while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {

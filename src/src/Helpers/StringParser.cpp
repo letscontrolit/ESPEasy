@@ -205,7 +205,7 @@ void transformValue(
   // valueFormat="transformation#justification"
   if (valueFormat.length() > 0) // do the checks only if a Format is defined to optimize loop
   {
-    String valueJust = "";
+    String valueJust;
 
     int hashtagIndex = valueFormat.indexOf('#');
 

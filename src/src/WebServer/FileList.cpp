@@ -327,11 +327,11 @@ void handle_SDfilelist() {
   sendHeadandTail_stdtemplate();
 
 
-  String fdelete       = "";
-  String ddelete       = "";
-  String change_to_dir = "";
-  String current_dir   = "";
-  String parent_dir    = "";
+  String fdelete;
+  String ddelete;
+  String change_to_dir;
+  String current_dir;
+  String parent_dir;
 
   for (uint8_t i = 0; i < web_server.args(); i++) {
     if (web_server.argName(i) == F("delete"))

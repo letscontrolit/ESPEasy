@@ -252,7 +252,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
           if (!Plugin_055_Data)
             break;
 
-          String tokens = "";
+          String tokens;
           byte hours = node_time.hour();
           byte minutes = node_time.minute();
 

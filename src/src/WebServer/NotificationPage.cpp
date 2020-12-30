@@ -161,7 +161,7 @@ void handle_notifications() {
 
     for (byte x = 0; x <= notificationCount; x++)
     {
-      String NotificationName = "";
+      String NotificationName;
       NPlugin_ptr[x](NPlugin::Function::NPLUGIN_GET_DEVICENAME, 0, NotificationName);
       addSelector_Item(NotificationName,
                        Notification[x].Number,

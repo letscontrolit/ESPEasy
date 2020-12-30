@@ -147,7 +147,7 @@ boolean handle_custom(String path) {
 
   if (dataFile)
   {
-    String page = "";
+    String page;
     page.reserve(dataFile.size());
 
     while (dataFile.available()) {

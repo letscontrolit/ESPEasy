@@ -132,9 +132,9 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 {
   bool success = false;
   int errorCounter = 0;
-  String log = "";
-  String pubname = "";
-  String tmppubname = "";
+  String log;
+  String pubname;
+  String tmppubname;
 
   switch (function)
   {
@@ -229,11 +229,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         {
           String nodename = CPLUGIN_014_BASE_VALUE; // Scheme to form node messages
           nodename.replace(F("%sysname%"), Settings.Name);
-          String nodesList = ""; // build comma separated List for nodes
-          String valuesList = ""; // build comma separated List for values
-          String deviceName = ""; // current Device Name nr:name
-          String valueName = ""; // current Value Name
-          String unitName = ""; // estaimate Units
+          String nodesList; // build comma separated List for nodes
+          String valuesList; // build comma separated List for values
+          String deviceName; // current Device Name nr:name
+          String valueName; // current Value Name
+          String unitName; // estaimate Units
 
           // init: this is the state the device is in when it is connected to the MQTT broker, but has not yet sent all Homie messages and is not yet ready to operate. This is the first message that must that must be sent.
           CPlugin_014_sendMQTTdevice(pubname,"$state","init",errorCounter);
@@ -813,7 +813,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               topic.replace(F("%tskname%"), deviceName);
               String valueName = ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1]; //parseString(string, 3).toInt()-1];
               topic.replace(F("%valname%"), valueName);
-              String valueStr = "";
+              String valueStr;
               int valueInt = 0;
 
               if ((commandName == F("taskvalueset")) || (commandName == F("dummyvalueset"))) // should work for both

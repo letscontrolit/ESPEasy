@@ -75,7 +75,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String log     = "";
+      String log;
       String command = parseString(string, 1);
 
       if (command == F("extgpio"))

@@ -180,9 +180,9 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       if (nullptr == P022_data) {
         break;
       }
-      String log            = "";
+      String log;
       String line           = String(string);
-      String command        = "";
+      String command;
       int    dotPos         = line.indexOf('.');
       bool   istanceCommand = false;
 

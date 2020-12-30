@@ -288,7 +288,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
           if (NewLinePos > 0) {
             message = message.substring(0, NewLinePos);
           }
-          String eventString = "";
+          String eventString;
 
           switch (Plugin_020_SerialProcessing)
           {

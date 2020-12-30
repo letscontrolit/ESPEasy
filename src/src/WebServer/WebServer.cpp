@@ -76,7 +76,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
   }
   #endif // ifdef USES_TIMING_STATS
 
-  String pageTemplate = "";
+  String pageTemplate;
   String fileName     = tmplName;
 
   fileName += F(".htm");

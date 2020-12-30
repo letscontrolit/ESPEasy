@@ -174,7 +174,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       char   ipString[IP_BUFF_SIZE_P101]   = "";
       char   macString[MAC_BUFF_SIZE_P101] = "";
       char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101];
-      String errorStr = "";
+      String errorStr;
       String msgStr;
       const String wolStr = F(LOG_NAME_P101);
 

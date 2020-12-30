@@ -12,7 +12,7 @@
 
 String Command_Notifications_Notify(struct EventStruct *event, const char* Line)
 {
-	String message = "";
+	String message;
 	GetArgv(Line, message, 3);
 
 	if (event->Par1 > 0) {
