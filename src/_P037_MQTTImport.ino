@@ -465,10 +465,8 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
                   }
                   numericPayload = false; // No, it isn't numeric
                   floatPayload = NAN;     // Invalid value
-                } else {
-
-                  UserVar[event->BaseVarIndex + x] = floatPayload;							// Save the new value
                 }
+                UserVar[event->BaseVarIndex + x] = floatPayload;							// Save the new value
 
                 if (!checkJson && P037_SEND_EVENTS && Settings.UseRules) { // Generate event of all non-json topic/payloads
                   String RuleEvent;
