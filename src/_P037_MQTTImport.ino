@@ -464,7 +464,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
                     break;
                   }
                   numericPayload = false; // No, it isn't numeric
-                  floatPayload = 0.0f;
+                  floatPayload = NAN;     // Invalid value
                 } else {
 
                   UserVar[event->BaseVarIndex + x] = floatPayload;							// Save the new value
