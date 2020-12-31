@@ -5,6 +5,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/RamTracker.h"
 #include "../Helpers/ESPEasy_math.h"
+#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 
 /********************************************************************************************\
@@ -90,7 +91,7 @@ char* next_token(char *linep)
 int RPNCalculate(char *token)
 {
   if (token[0] == 0) {
-    return 0; // geen moeite doen voor een lege string
+    return 0; // Don't bother for an empty string
   }
 
   if (is_operator(token[0]) && (token[1] == 0))
@@ -108,9 +109,14 @@ int RPNCalculate(char *token)
     if (push(apply_unary_operator(token[0], first))) {
       return CALCULATE_ERROR_STACK_OVERFLOW;
     }
-  } else // Als er nog een is, dan deze ophalen
-  if (push(atof(token))) { // is het een waarde, dan op de stack plaatsen
-    return CALCULATE_ERROR_STACK_OVERFLOW;
+  } else {
+    // Fetch next if there is any
+    double value = 0.0;
+    validDoubleFromString(token, value);
+
+    if (push(value)) { // If it is a value, push to the stack
+      return CALCULATE_ERROR_STACK_OVERFLOW;
+    }
   }
 
   return 0;
@@ -208,7 +214,7 @@ int Calculate(const char *input, double *result)
     if (c != ' ')
     {
       // If the token is a number (identifier), then add it to the token queue.
-      if (((c >= '0') && (c <= '9')) || (c == '.') || ((c == '-') && is_operator(oc)))
+      if (isxdigit(c) || ((c == 'x') && (oc == '0')) || (c == '.') || ((c == '-') && is_operator(oc)))
       {
         *TokenPos = c;
         ++TokenPos;

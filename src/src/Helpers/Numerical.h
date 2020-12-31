@@ -6,13 +6,8 @@
 /********************************************************************************************\
   Check if string is valid float
   \*********************************************************************************************/
-bool isFloat(const String& tBuf);
 
 bool isValidFloat(float f);
-
-bool isInt(const String& tBuf);
-
-bool isHex(const String& tBuf);
 
 bool validIntFromString(const String& tBuf, int& result);
 
@@ -32,9 +27,9 @@ enum class NumericalType {
   HexadecimalUInt
 };
 
-String getNumerical(const String& tBuf, NumericalType numericalType);
+String getNumerical(const String& tBuf, NumericalType numericalType, bool& isHex);
 
-bool isNumerical(const String& tBuf, NumericalType numericalType);
+bool isNumerical(const String& tBuf, NumericalType numericalType, bool& isHex);
 
 
 #endif // HELPERS_NUMERICAL_H

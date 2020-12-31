@@ -94,7 +94,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
           }
           else
           {
-            cmd += event->String2.toFloat(); // Par2
+            cmd += event->String2; // Par2
           }
           ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());
         }

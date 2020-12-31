@@ -10,6 +10,7 @@
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
 
+#include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
@@ -93,7 +94,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 
       if (validIntFromString(valueName, varNum)) {
         if ((varNum > 0) && (varNum <= CUSTOM_VARS_MAX)) {
-          unsigned char nr_decimals = ESPEASY_DOUBLE_NR_DECIMALS;
+          unsigned char nr_decimals = maxNrDecimals_double(customFloatVar[varNum - 1]);
           bool trimTralingZeros = true;
 
           if (deviceName.equals(F("int"))) {

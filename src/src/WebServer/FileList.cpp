@@ -9,6 +9,7 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Numerical.h"
 
 
 
@@ -50,7 +51,7 @@ void handle_filelist_json() {
 
   if (fstart.length() > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    validIntFromString(fstart, startIdx);
   }
   int endIdx = startIdx + pageSize - 1;
 
@@ -164,7 +165,7 @@ void handle_filelist() {
 
   if (fstart.length() > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    validIntFromString(fstart, startIdx);
   }
   int endIdx = startIdx + pageSize - 1;
   html_table_class_multirow();

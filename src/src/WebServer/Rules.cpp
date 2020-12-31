@@ -13,6 +13,7 @@
 
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Static/WebStaticData.h"
 
@@ -137,11 +138,11 @@ void handle_rules_new() {
   const int rulesListPageSize = 25;
   int startIdx                = 0;
 
-  String fstart = web_server.arg(F("start"));
+  const String fstart = web_server.arg(F("start"));
 
   if (fstart.length() > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    validIntFromString(fstart, startIdx);
   }
   int endIdx = startIdx + rulesListPageSize - 1;
 

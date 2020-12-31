@@ -34,9 +34,10 @@
 // FIXME: change original code so it uses String and String.toInt()
 unsigned long str2int(const char *string)
 {
-  unsigned long temp = atof(string);
+  unsigned int temp = 0;
+  validUIntFromString(string, temp);
 
-  return temp;
+  return static_cast<unsigned long>(temp);
 }
 
 String ull2String(uint64_t value, uint8_t base) {
@@ -357,8 +358,13 @@ String to_json_object_value(const String& object, const String& value) {
   if (value.length() == 0) {
     // Empty string
     result += F("\"\"");
-  } else if (!isFloat(value)) {
-    // Is not a numerical value, thus wrap with quotes
+    return result;
+  }
+  bool isHex;
+  bool isNum = isNumerical(value, NumericalType::FloatingPoint, isHex);
+
+  if (!isNum || isHex) {
+    // Is not a numerical value, or HEX notation, thus wrap with quotes
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
       // Must replace characters, so make a deepcopy
       String tmpValue(value);
@@ -756,9 +762,7 @@ bool getConvertArgument(const String& marker, const String& s, float& argument, 
   String argumentString;
 
   if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
-    if (!isFloat(argumentString)) { return false; }
-    argument = argumentString.toFloat();
-    return true;
+    return validFloatFromString(argumentString, argument);
   }
   return false;
 }
@@ -770,15 +774,9 @@ bool getConvertArgument2(const String& marker, const String& s, float& arg1, flo
     int pos_comma = argumentString.indexOf(',');
 
     if (pos_comma == -1) { return false; }
-    String arg1_s = argumentString.substring(0, pos_comma);
-
-    if (!isFloat(arg1_s)) { return false; }
-    String arg2_s = argumentString.substring(pos_comma + 1);
-
-    if (!isFloat(arg2_s)) { return false; }
-    arg1 = arg1_s.toFloat();
-    arg2 = arg2_s.toFloat();
-    return true;
+    if (validFloatFromString(argumentString.substring(0, pos_comma), arg1)) { 
+      return validFloatFromString(argumentString.substring(pos_comma + 1), arg2);
+    }
   }
   return false;
 }

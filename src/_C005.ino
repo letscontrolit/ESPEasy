@@ -95,13 +95,16 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
             // Full command:  gpio,14,0
             if (lastindex > 0) {
               // Topic has at least one separator
-              if (isFloat(event->String2) && isInt(lastPartTopic)) {
+              int lastPartTopic_int;
+              float value_f;
+              if (validFloatFromString(event->String2, value_f) &&
+                  validIntFromString(lastPartTopic, lastPartTopic_int)) {
                 int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
                 cmd = event->String1.substring(prevLastindex + 1, lastindex);
                 cmd += ',';
-                cmd += lastPartTopic;
+                cmd += lastPartTopic_int;
                 cmd += ',';
-                cmd += event->String2;
+                cmd += event->String2; // Just use the original format
                 validTopic = true;
               }
             }

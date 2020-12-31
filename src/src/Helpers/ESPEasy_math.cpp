@@ -2,6 +2,17 @@
 
 #include <cmath>
 
+int maxNrDecimals_double(const double& value)
+{
+    int res = ESPEASY_DOUBLE_NR_DECIMALS;
+    double factor = 1;
+    while ((value / factor) > 10 && res > 2) {
+        factor *= 10.0;
+        --res;
+    }
+    return res;
+}
+
 bool approximatelyEqual(const double& a, const double& b, double epsilon)
 {
     return std::abs(a - b) <= ( (std::abs(a) < std::abs(b) ? std::abs(b) : std::abs(a)) * epsilon);

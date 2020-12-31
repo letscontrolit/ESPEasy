@@ -500,7 +500,11 @@ void handle_buildinfo() {
    Streaming versions directly to TXBuffer
 \*********************************************************************************************/
 void stream_to_json_value(const String& value) {
-  if ((value.length() == 0) || !isFloat(value)) {
+  bool isHex;
+  bool isNum = isNumerical(value, NumericalType::FloatingPoint, isHex);
+
+  if ((value.length() == 0) || !isNum || isHex) {
+    // Either empty, not a numerical or a HEX notation.
     String html;
     html.reserve(value.length() + 2);
     html += '\"';

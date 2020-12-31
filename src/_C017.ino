@@ -122,7 +122,9 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
       JsonObject block = data.createNestedObject();
       block[F("host")] = Settings.Name;                            // Zabbix hostname, Unit Name for the ESP easy
       block[F("key")] = ExtraTaskSettings.TaskDeviceValueNames[i]; // Zabbix item key // Value Name for the ESP easy
-      block[F("value")] = static_cast<float>(atof(element.txt[i].c_str())); // ESPeasy supports only floats
+      float value = 0.0f;
+      validFloatFromString(element.txt[i], value);
+      block[F("value")] = value; // ESPeasy supports only floats
     }
     serializeJson(root, JSON_packet_content);
   }

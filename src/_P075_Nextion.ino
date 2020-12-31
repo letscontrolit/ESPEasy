@@ -502,8 +502,10 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               }
 
               if (GotPipeCmd) {
-                  UserVar[event->BaseVarIndex] = Vidx.toFloat();
-                  UserVar[event->BaseVarIndex+1] = Svalue.toFloat();
+                  UserVar[event->BaseVarIndex] = 0.0f;
+                  UserVar[event->BaseVarIndex+1] = 0.0f;
+                  validFloatFromString(Vidx, UserVar[event->BaseVarIndex]);
+                  validFloatFromString(Svalue, UserVar[event->BaseVarIndex+1]);
                   sendData(event);
 
                   #ifdef DEBUG_LOG

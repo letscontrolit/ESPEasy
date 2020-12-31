@@ -135,7 +135,10 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                         break;
                       case 1: // On
                       case 2: // Update dimmer value
-                        pwmValue         = 10 * atol(svalue1);
+                        pwmValue = 0;
+                        if (validIntFromString(svalue1, pwmValue)) {
+                          pwmValue *= 10;
+                        }
                         UserVar[baseVar] = pwmValue;
                         break;
                     }

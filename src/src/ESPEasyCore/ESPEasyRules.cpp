@@ -612,7 +612,7 @@ void parse_string_commands(String &line) {
       if (parse_trigonometric_functions(cmd_s_lower, arg1, arg2, fresult) || 
           parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
         const bool trimTralingZeros = true;
-        replacement = doubleToString(fresult, ESPEASY_DOUBLE_NR_DECIMALS, trimTralingZeros);
+        replacement = doubleToString(fresult, maxNrDecimals_double(fresult), trimTralingZeros);
       } else if (parse_bitwise_functions(cmd_s_lower, arg1, arg2, arg3, iresult)) {
         replacement = ull2String(iresult);
       } else if (cmd_s_lower.equals(F("substring"))) {
