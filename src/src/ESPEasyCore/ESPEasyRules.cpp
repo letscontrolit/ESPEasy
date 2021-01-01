@@ -1175,14 +1175,14 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
   if (((comparePos = check.indexOf("!=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
-    compare  = '!' + '=';
+    compare  = '<' + '>';
     found = true;
   }
 
   if (((comparePos = check.indexOf("<>")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
-    compare  = '!' + '=';
+    compare  = '<' + '>';
     found = true;
   }
 
@@ -1228,7 +1228,7 @@ bool compareIntValues(char compare, const int& Value1, const int& Value2)
   switch (compare) {
     case '>' + '=': return Value1 >= Value2;
     case '<' + '=': return Value1 <= Value2;
-    case '!' + '=': return Value1 != Value2;
+    case '<' + '>': return Value1 != Value2;
     case '>':       return Value1 > Value2;	
     case '<':       return Value1 < Value2;	
     case '=':       return Value1 == Value2;
@@ -1241,7 +1241,7 @@ bool compareDoubleValues(char compare, const double& Value1, const double& Value
   switch (compare) {
     case '>' + '=': return !definitelyLessThan(Value1, Value2);
     case '<' + '=': return !definitelyGreaterThan(Value1, Value2);
-    case '!' + '=': return !essentiallyEqual(Value1, Value2);
+    case '<' + '>': return !essentiallyEqual(Value1, Value2);
     case '>':       return definitelyGreaterThan(Value1, Value2);
     case '<':       return definitelyLessThan(Value1, Value2);
     case '=':       return essentiallyEqual(Value1, Value2);
