@@ -93,8 +93,9 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       // @giig1967g: set current task value for taking actions after changes
       const uint32_t key = createKey(PLUGIN_ID_009, CONFIG_PORT);
 
-      if (existPortStatus(key)) {
-        globalMapPortStatus[key].previousTask = event->TaskIndex;
+      auto it = globalMapPortStatus.find(key);
+      if (it != globalMapPortStatus.end()) {
+        it->second.previousTask = event->TaskIndex;
       }
 
       addFormCheckBox(F("Send Boot state"), F("p009_boot"), PCONFIG(0));

@@ -276,10 +276,12 @@ void setup()
     }
 
     log += RTC.bootCounter;
+    #ifndef BUILD_NO_DEBUG
     log += F(" Last Action before Reboot: ");
     log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     log += F(" Last systime: ");
     log += RTC.lastSysTime;
+    #endif
   }
   //cold boot (RTC memory empty)
   else

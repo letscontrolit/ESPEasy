@@ -914,6 +914,7 @@ String getLastDisconnectReason() {
   reason += WiFiEventData.lastDisconnectReason;
   reason += F(") ");
 
+  #ifndef LIMIT_BUILD_SIZE
   switch (WiFiEventData.lastDisconnectReason) {
     case WIFI_DISCONNECT_REASON_UNSPECIFIED:                reason += F("Unspecified");              break;
     case WIFI_DISCONNECT_REASON_AUTH_EXPIRE:                reason += F("Auth expire");              break;
@@ -945,5 +946,6 @@ String getLastDisconnectReason() {
     case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:          reason += F("Handshake timeout");        break;
     default:  reason                                               += getUnknownString();       break;
   }
+  #endif
   return reason;
 }
