@@ -37,4 +37,6 @@ String Command_GPIO_ModeRange(struct EventStruct *event, const char* Line);
 String Command_GPIO_MonitorRange(struct EventStruct *event, const char* Line);
 String Command_GPIO_UnMonitorRange(struct EventStruct *event, const char* Line);
 
+bool getGPIOPinStateValues(String& str);
+
 #endif // COMMAND_GPIO_H

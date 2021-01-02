@@ -197,6 +197,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         // read and store current state to prevent switching at boot time
         // "state" could be -1, 0 or 1
         newStatus.state                          = GPIO_MCP_Read(CONFIG_PORT);
+addLog(LOG_LEVEL_INFO,"MCP INIT="+String(newStatus.state));        
         newStatus.output                         = newStatus.state;
         (newStatus.state == -1) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the
                                                                                                               // device list we assume it's

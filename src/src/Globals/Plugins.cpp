@@ -345,7 +345,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
 
     // Call to all plugins. Return at first match
     case PLUGIN_WRITE:
-    case PLUGIN_REQUEST:
+//    case PLUGIN_REQUEST: @giig1967g: replaced by new function getGPIOPluginValues()
     {
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {

@@ -80,5 +80,4 @@ bool setPCFInputMode(uint8_t pin);
 bool GPIO_Write(pluginID_t pluginID, int port, byte value, byte pinMode=PIN_MODE_OUTPUT);
 bool GPIO_Read(pluginID_t pluginID, int port, int8_t &value);
 
-
 #endif

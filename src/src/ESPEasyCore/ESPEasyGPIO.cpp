@@ -93,7 +93,7 @@ bool GPIO_Read_Switch_State(int pin, byte pinMode) {
 //********************************************************************************
 int8_t GPIO_MCP_Read(int Par1)
 {
-  int8_t state = -1;
+  int8_t pinState = -1;
   if (checkValidPortRange(PLUGIN_MCP, Par1)) {
     byte unit = (Par1 - 1) / 16;
     byte port = Par1 - (unit * 16) - 1;
@@ -104,8 +104,8 @@ int8_t GPIO_MCP_Read(int Par1)
     byte retValue;
     if (GPIO_MCP_ReadRegister(address,IOBankValueReg,&retValue)) {
       retValue = (retValue & (1 << port)) >> port;
+      pinState = (retValue==0)?0:1;
 
-      GPIO_MCP_WriteRegister(address,IOBankValueReg,retValue);
       /*
       // get the current pin status
       Wire.beginTransmission(address);
@@ -119,7 +119,7 @@ int8_t GPIO_MCP_Read(int Par1)
       */
     }
   }
-  return state;
+  return pinState;
 }
 
 //********************************************************************************
@@ -556,3 +556,4 @@ bool GPIO_Read(pluginID_t pluginID, int port, int8_t &value)
   }
   return success;
 }
+

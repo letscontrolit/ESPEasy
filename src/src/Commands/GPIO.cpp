@@ -15,6 +15,7 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/PortStatus.h"
+#include "../Helpers/Numerical.h"
 
 
 //predeclaration of functions used in this module
@@ -33,7 +34,8 @@ byte getPcfAddress(uint8_t pin);
 bool setGPIOMode(byte pin, byte mode);
 bool setPCFMode(byte pin, byte mode);
 bool setMCPMode(byte pin, byte mode);
-
+bool mcpgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t &result);
+bool pcfgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t &result);
 
 /*************************************************************************/
 
@@ -933,4 +935,164 @@ bool gpio_mode_range_helper(byte pin, byte pinMode, EventValueSource::Enum sourc
     logErrorGpioOutOfRange(logPrefix,pin, Line);
     return return_command_failed();
   }
+}
+
+bool getGPIOPinStateValues(String& str) {
+  // parseString(string, 1) = device (gpio,mcpgpio,pcfgpio) that can be shortened to g, m or p
+  // parseString(string, 2) = command (pinstate,pinrange)
+  // parseString(string, 3) = gpio 1st number or a range separated by '-'
+  bool success=false;
+  String logPrefix="";
+
+  if ((parseString(str, 2).length() >= 8) && parseString(str, 2).equalsIgnoreCase(F("pinstate"))) {
+    // returns pin value using syntax: [plugin#xxxxxxx#pinstate#x]
+    int par1;
+    switch (parseString(str, 1)[0]) {
+      case 'g':
+        if (validIntFromString(parseString(str, 3), par1)) {
+          str = String(digitalRead(par1));
+          logPrefix="GPIO";
+          success=true;
+        }
+        break;
+
+      case 'm':
+        if (validIntFromString(parseString(str, 3), par1)) {
+          str = String(GPIO_MCP_Read(par1));
+          logPrefix="MCP";
+          success=true;
+        }
+        break;
+
+      case 'p':
+        if (validIntFromString(parseString(str, 3), par1)) {
+          str = GPIO_PCF_Read(par1);
+          logPrefix="PCF";
+          success=true;
+        }
+        break;
+    } 
+    if (success) {
+      addLog(LOG_LEVEL_DEBUG,logPrefix+String(F(" PLUGIN PINSTATE pin ="))+String(par1)+String(F("; value="))+str);
+    } else {
+      str="0";
+      addLog(LOG_LEVEL_INFO,logPrefix+String(F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric")));
+    }
+  } else if ((parseString(str, 2).length() >= 8) && parseString(str, 2).equalsIgnoreCase(F("pinrange"))) {
+    // returns pin value using syntax: [plugin#xxxxxxx#pinrange#x-y]
+    int par1,par2;
+    bool successPar = false;
+    int dashpos = parseString(str, 3).indexOf('-');
+
+    if (dashpos != -1) {
+      // Found an extra '-' in the 4th param, will split.
+      successPar = validIntFromString(parseString(str, 3).substring(dashpos + 1),par2);
+      successPar &= validIntFromString(parseString(str, 3).substring(0, dashpos),par1);
+    } 
+
+    if (successPar) {
+      uint16_t tempValue = 0;
+      switch (parseString(str, 1)[0]) {
+        case 'm':
+          logPrefix="MCP";
+          success=mcpgpio_plugin_range_helper(par1,par2,tempValue);
+          str = String(tempValue);
+          break;
+          
+        case 'p':
+          logPrefix="PCF";
+          success=mcpgpio_plugin_range_helper(par1,par2,tempValue);
+          str = String(tempValue);
+          break;
+      } 
+      if (success) {
+        addLog(LOG_LEVEL_DEBUG,logPrefix+String(F(" PLUGIN RANGE pin start="))+String(par1)+String(F("; pin end="))+String(par2)+String(F("; value="))+str);
+      } else {
+        str="0";
+        addLog(LOG_LEVEL_INFO,logPrefix+String(F("IS OFFLINE. PLUGIN RANGE pin start="))+String(par1)+String(F("; pin end="))+String(par2)+String(F("; value="))+str);
+      }
+    } else {
+      str="0";
+      addLog(LOG_LEVEL_INFO,logPrefix+String(F(" PLUGIN PINRANGE. Syntax error. Pin parameters are not numeric.")));
+    }
+  } else {
+    str="0";
+    addLog(LOG_LEVEL_INFO,String(F("Syntax error. Invalid command. Valid commands are 'pinstate' and 'pinrange'.")));
+  }
+  return success;
+}
+
+bool mcpgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t &result) 
+{
+  String log;
+  String logPrefix = String(F("McpPluginRead"));
+
+  if ((pin2 < pin1) || !checkValidPortRange(PLUGIN_MCP, pin1) || !checkValidPortRange(PLUGIN_MCP, pin2) || (pin2 - pin1 + 1)>16 ) {
+    log=logPrefix + String(F(": pin numbers out of range."));
+    addLog(LOG_LEVEL_INFO,log);
+    return false;
+  }
+    
+  byte firstPin     = int((pin1-1)/8)*8 + 1;
+  byte lastPin      = int((pin2-1)/8)*8 + 8;
+  byte numBytes     = (lastPin - firstPin + 1)/8;
+  byte deltaStart   = pin1 - firstPin;
+  byte numBits      = pin2 - pin1 + 1;
+  byte firstAddress = int((pin1 - 1)/16)+0x20; 
+  byte firstBank    = (((firstPin-1)/8)+2) % 2;
+  byte initVal      = 2 * firstAddress + firstBank;
+  bool onLine       = false;
+
+  uint32_t tempResult=0;
+
+  for (byte i=0; i<numBytes; i++) {
+    uint8_t readValue;
+    byte currentVal = initVal + i;
+    byte currentAddress = int(currentVal/2);
+    byte currentGPIORegister = ((currentVal % 2)==0) ? MCP23017_GPIOA : MCP23017_GPIOB ;
+
+    onLine = GPIO_MCP_ReadRegister(currentAddress,currentGPIORegister,&readValue);
+    if (onLine) tempResult += (readValue << (8*i));
+  }
+
+  tempResult = tempResult >> deltaStart;
+  tempResult &= ((1 << numBits)-1);
+  result = uint16_t(tempResult);
+
+  return onLine;
+}
+
+bool pcfgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t &result)
+{
+  String log;
+  String logPrefix = String(F("PcfPluginRead"));
+
+  if ((pin2 < pin1) || !checkValidPortRange(PLUGIN_PCF, pin1) || !checkValidPortRange(PLUGIN_PCF, pin2) || (pin2 - pin1 + 1)>16 ) {
+    log=logPrefix + String(F(": pin numbers out of range."));
+    addLog(LOG_LEVEL_INFO,log);
+    return false;
+  }
+  
+  byte firstPin     = int((pin1-1)/8)*8 + 1;
+  byte lastPin      = int((pin2-1)/8)*8 + 8;
+  byte numBytes     = (lastPin - firstPin + 1)/8;
+  byte deltaStart   = pin1 - firstPin;
+  byte numBits      = pin2 - pin1 + 1;
+  bool onLine=false;
+
+  uint32_t tempResult=0;
+
+  for (byte i=0; i<numBytes; i++) {
+    uint8_t readValue;
+    byte currentAddress = getPcfAddress(pin1+8*i);
+    
+    onLine = GPIO_PCF_ReadAllPins(currentAddress,&readValue);
+    if (onLine) tempResult += (readValue << (8*i));
+  }
+
+  tempResult = tempResult >> deltaStart;
+  tempResult &= ((1 << numBits)-1);
+  result = uint16_t(tempResult);
+
+  return onLine;
 }
