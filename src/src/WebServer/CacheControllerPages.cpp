@@ -11,6 +11,7 @@
 #include "../DataTypes/TaskIndex.h"
 #include "../Globals/C016_ControllerCache.h"
 #include "../Globals/ExtraTaskSettings.h"
+#include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
 
 
@@ -79,7 +80,7 @@ void handle_dumpcache() {
       html.reserve(12);
       html += ';';
 
-      if (csv_values[i] == 0.0f) {
+      if (essentiallyEqual(csv_values[i], 0.0f)) {
         html += '0';
       } else {
         html += String(csv_values[i], 6);

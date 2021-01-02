@@ -24,6 +24,7 @@
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
 
+#include "src/Helpers/ESPEasy_math.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
 #include "src/Helpers/PortStatus.h"
