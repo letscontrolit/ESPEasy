@@ -63,7 +63,7 @@ bool get_next_inner_bracket(const String& line, int& startIndex, int& closingInd
 
 bool get_next_argument(const String& fullCommand, int& index, String& argument, char separator);
 
-bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, double& result);
+//bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, double& result);
 bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, uint32_t& result);
 bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, double& result);
 

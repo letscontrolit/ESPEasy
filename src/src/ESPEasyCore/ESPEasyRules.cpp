@@ -423,6 +423,7 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
   return argument.length() > 0;
 }
 
+/*  TD-er: Disabled for now, have to try and make the notation more intuitive.
 bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, double& result) {
   #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
   if (cmd_s_lower.length() < 3) {
@@ -478,6 +479,7 @@ bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1
   return false;
   #endif
 }
+*/
 
 bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, int64_t& result) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -558,17 +560,18 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
 }
 
 bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, double& result) {
-  float farg1, farg2, farg3 = 0.0f;
-  if (!validFloatFromString(arg1, farg1)) {
+  double farg1; 
+  float farg2, farg3 = 0.0f;
+  if (!validDoubleFromString(arg1, farg1)) {
     return false;
   }
   if (cmd_s_lower.equals(F("abs"))) {
     // Turn number into positive value
     // Syntax like {abs:-1} -> '1'
-    result = farg1 < 0.0f ? farg1 * -1.0f : farg1;
+    result = farg1 < 0.0 ? farg1 * -1.0 : farg1;
   } else if (cmd_s_lower.equals(F("constrain"))) {
     // Contrain a value X to be within range of A to B
-    // Syntax like {contrain:x:a:b} to constrain x in range a...b
+    // Syntax like {constrain:x:a:b} to constrain x in range a...b
     if (validFloatFromString(arg2, farg2) && validFloatFromString(arg3, farg3)) {
       if (farg2 > farg3) {
         const float tmp = farg2;
@@ -609,7 +612,7 @@ void parse_string_commands(String &line) {
       uint64_t iarg1, iarg2 = 0;
       double fresult = 0.0;
       int64_t iresult = 0;
-      if (parse_trigonometric_functions(cmd_s_lower, arg1, arg2, fresult) || 
+      if (/*parse_trigonometric_functions(cmd_s_lower, arg1, arg2, fresult) ||*/ 
           parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
         const bool trimTralingZeros = true;
         replacement = doubleToString(fresult, maxNrDecimals_double(fresult), trimTralingZeros);
@@ -664,20 +667,6 @@ void parse_string_commands(String &line) {
         // Syntax like let 1,{ord:B}
         uint8_t uval = arg1.c_str()[0];
         replacement = String(uval);
-      } else if (cmd_s_lower.equals(F("div"))) {
-        // Perform an integer div.
-        // Syntax like {div:254:16} => 15
-        if (validUInt64FromString(arg1, iarg1)
-            && validUInt64FromString(arg2, iarg2)) {
-          replacement = ull2String(iarg1 / iarg2);
-        }
-      } else if (cmd_s_lower.equals(F("mod"))) {
-        // Perform an integer mod.
-        // Syntax like {div:254:16} => 14
-        if (validUInt64FromString(arg1, iarg1)
-            && validUInt64FromString(arg2, iarg2)) {
-          replacement = ull2String(iarg1 % iarg2);
-        }
       }
 
       if (replacement.length() == 0) {
