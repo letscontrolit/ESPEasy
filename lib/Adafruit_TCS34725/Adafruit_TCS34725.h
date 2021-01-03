@@ -44,9 +44,9 @@
 
 #include <Wire.h>
 
-#define TCS34725_ADDRESS          (0x29)
+#define TCS34725_ADDRESS          (0x29)    /* < I2C address */
 
-#define TCS34725_COMMAND_BIT      (0x80)
+#define TCS34725_COMMAND_BIT      (0x80)    /* < Command bit */
 
 #define TCS34725_ENABLE           (0x00)
 #define TCS34725_ENABLE_AIEN      (0x10)    /* RGBC Interrupt Enable */
@@ -123,7 +123,9 @@ class Adafruit_TCS34725 {
   void     setIntegrationTime(tcs34725IntegrationTime_t it);
   void     setGain(tcs34725Gain_t gain);
   void     getRawData(uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *c);
+
   uint16_t calculateColorTemperature(uint16_t r, uint16_t g, uint16_t b);
+  uint16_t calculateColorTemperature_dn40(uint16_t r, uint16_t g, uint16_t b, uint16_t c);
   uint16_t calculateLux(uint16_t r, uint16_t g, uint16_t b);
   void     write8 (uint8_t reg, uint32_t value);
   uint8_t  read8 (uint8_t reg);

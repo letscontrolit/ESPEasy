@@ -10,6 +10,7 @@
 // based on this library: https://github.com/adafruit/Adafruit_TCS34725
 // this code is based on 20170331 date version of the above library
 // this code is UNTESTED, because my TCS34725 sensor is still not shipped :(
+// 2021-01-03 tonhuisman: Merged most of the changes in the library, for adding the getRGB() and calculateColorTemperature_dn40(0 functions)
 //
 
 #include "Adafruit_TCS34725.h"
@@ -21,7 +22,7 @@
 #define PLUGIN_VALUENAME1_050 "Red"
 #define PLUGIN_VALUENAME2_050 "Green"
 #define PLUGIN_VALUENAME3_050 "Blue"
-#define PLUGIN_VALUENAME4_050 "Color Temperature"
+#define PLUGIN_VALUENAME4_050 "ColorTemperature"
 
 
 boolean Plugin_050(byte function, struct EventStruct *event, String& string)
@@ -66,12 +67,12 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
     {
       byte   choiceMode = PCONFIG(0);
       String optionsMode[6];
-      optionsMode[0] = F("TCS34725_INTEGRATIONTIME_2_4MS");
-      optionsMode[1] = F("TCS34725_INTEGRATIONTIME_24MS");
-      optionsMode[2] = F("TCS34725_INTEGRATIONTIME_50MS");
-      optionsMode[3] = F("TCS34725_INTEGRATIONTIME_101MS");
-      optionsMode[4] = F("TCS34725_INTEGRATIONTIME_154MS");
-      optionsMode[5] = F("TCS34725_INTEGRATIONTIME_700MS");
+      optionsMode[0] = F("2.4 ms");
+      optionsMode[1] = F("24 ms");
+      optionsMode[2] = F("50 ms");
+      optionsMode[3] = F("101 ms");
+      optionsMode[4] = F("154 ms");
+      optionsMode[5] = F("700 ms");
       int optionValuesMode[6];
       optionValuesMode[0] = TCS34725_INTEGRATIONTIME_2_4MS;
       optionValuesMode[1] = TCS34725_INTEGRATIONTIME_24MS;
@@ -83,10 +84,10 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
       byte   choiceMode2 = PCONFIG(1);
       String optionsMode2[4];
-      optionsMode2[0] = F("TCS34725_GAIN_1X");
-      optionsMode2[1] = F("TCS34725_GAIN_4X");
-      optionsMode2[2] = F("TCS34725_GAIN_16X");
-      optionsMode2[3] = F("TCS34725_GAIN_60X");
+      optionsMode2[0] = F("1x");
+      optionsMode2[1] = F("4x");
+      optionsMode2[2] = F("16x");
+      optionsMode2[3] = F("60x");
       int optionValuesMode2[4];
       optionValuesMode2[0] = TCS34725_GAIN_1X;
       optionValuesMode2[1] = TCS34725_GAIN_4X;
@@ -94,16 +95,29 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       optionValuesMode2[3] = TCS34725_GAIN_60X;
       addFormSelector(F("Gain"), F("p050_gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
 
+      addFormSubHeader(F("Output settings"));
+
+      addFormCheckBox(F("Output calibrated RGB values"), F("p050_calibratedrgb"), PCONFIG(2) == 1, false);
+
+      String optionsOutput[4];
+      optionsOutput[0] = F("Color Temperature");
+      optionsOutput[1] = F("Color Temperature (DN40)");
+      optionsOutput[2] = F("Lux");
+      optionsOutput[3] = F("Clear");
+      int optionValuesOutput[4] = { 0, 1, 2, 3};
+      addFormSelector(F("Output at Values #4"), F("p050_output4"), 4, optionsOutput, optionValuesOutput, PCONFIG(3));
+      addFormNote(F("Optionally adjust Values #4 name accordingly."));
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      String plugin1 = web_server.arg(F("p050_integrationTime"));
-      PCONFIG(0) = plugin1.toInt();
-      String plugin2 = web_server.arg(F("p050_gain"));
-      PCONFIG(1) = plugin2.toInt();
+      PCONFIG(0) = getFormItemInt(F("p050_integrationTime"));
+      PCONFIG(1) = getFormItemInt(F("p050_gain"));
+      PCONFIG(2) = isFormItemChecked(F("p050_calibratedrgb")) ? 1 : 0;
+      PCONFIG(3) = getFormItemInt(F("p050_output4"));
 
       success = true;
       break;
@@ -162,17 +176,48 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_DEBUG, F("Found TCS34725 sensor"));
 
         uint16_t r, g, b, c;
+        float value4 = 0.0f;
 
         tcs.getRawData(&r, &g, &b, &c);
-        tcs.calculateColorTemperature(r, g, b);
-        tcs.calculateLux(r, g, b);
+        switch (PCONFIG(3)) {
+          case 0:
+            value4 = tcs.calculateColorTemperature(r, g, b);
+            break;
+          case 1:
+            value4 = tcs.calculateColorTemperature_dn40(r, g, b, c);
+            break;
+          case 2:
+            value4 = tcs.calculateLux(r, g, b);
+            break;
+          case 3:
+            value4 = c;
+            break;
+        }
 
-        UserVar[event->BaseVarIndex]     = r;
-        UserVar[event->BaseVarIndex + 1] = g;
-        UserVar[event->BaseVarIndex + 2] = b;
-        UserVar[event->BaseVarIndex + 3] = tcs.calculateColorTemperature(r, g, b);
+        if (PCONFIG(2) == 1 && c != 0) { // R/G/B normalized to 0..255 (but avoid divide by 0)
+          UserVar[event->BaseVarIndex]     = (float)r / c * 255.0;
+          UserVar[event->BaseVarIndex + 1] = (float)g / c * 255.0;
+          UserVar[event->BaseVarIndex + 2] = (float)b / c * 255.0;
+        } else {
+          UserVar[event->BaseVarIndex]     = r;
+          UserVar[event->BaseVarIndex + 1] = g;
+          UserVar[event->BaseVarIndex + 2] = b;
+        }
+        UserVar[event->BaseVarIndex + 3] = value4;
 
-        String log = F("TCS34725: Color Temp (K): ");
+        String log = F("TCS34725: ");
+        switch (PCONFIG(3)) {
+          case 0:
+          case 1:
+            log += F("Color Temp (K): ");
+            break;
+          case 2:
+            log += F("Lux : ");
+            break;
+          case 3:
+            log += F("Clear : ");
+            break;
+        }
         log += String(UserVar[event->BaseVarIndex + 3], DEC);
         log += F(" R: ");
         log += String(UserVar[event->BaseVarIndex], DEC);
