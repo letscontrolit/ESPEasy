@@ -123,6 +123,7 @@
 #include "src/ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "src/ESPEasyCore/Serial.h"
 
+#include "src/Globals/Cache.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
@@ -365,13 +366,7 @@ void setup()
     ResetFactory();
   }
 
-  if (Settings.UseSerial)
-  {
-    //make sure previous serial buffers are flushed before resetting baudrate
-    Serial.flush();
-    Serial.begin(Settings.BaudRate);
-//    Serial.setDebugOutput(true);
-  }
+  initSerial();
 
   if (Settings.Build != BUILD)
     BuildFixes();
@@ -408,6 +403,8 @@ void setup()
   if (deviceCount + 1 >= PLUGIN_MAX) {
     addLog(LOG_LEVEL_ERROR, F("Programming error! - Increase PLUGIN_MAX"));
   }
+
+  clearAllCaches();
 
   if (Settings.UseRules && isDeepSleepEnabled())
   {
@@ -488,13 +485,10 @@ void RTOS_TaskServers( void * parameter )
 
 void RTOS_TaskSerial( void * parameter )
 {
- while (true){
+  while (true){
     delay(100);
-    if (Settings.UseSerial)
-    if (Serial.available())
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
-        serial();
- }
+    serial();
+  }
 }
 
 void RTOS_Task10ps( void * parameter )
@@ -701,12 +695,7 @@ void backgroundtasks()
   }
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
-    if (Settings.UseSerial && Serial.available()) {
-      String dummy;
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
-        serial();
-      }
-    }
+    serial();
     if (webserverRunning) {
       web_server.handleClient();
     }

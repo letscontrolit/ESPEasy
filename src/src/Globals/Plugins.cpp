@@ -10,7 +10,9 @@
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/Serial.h"
 
+#include "../Globals/Cache.h"
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ExtraTaskSettings.h"
@@ -472,6 +474,10 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
           }
         }
       }
+      if (Function == PLUGIN_INIT) {
+        updateTaskCaches();
+      }
+
       return true;
     }
 
@@ -509,15 +515,19 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_INIT) {
           // Schedule the plugin to be read.
           Scheduler.schedule_task_device_timer_at_init(TempEvent.TaskIndex);
+          updateTaskCaches();
           queueTaskEvent(F("TaskInit"), event->TaskIndex, retval);
         }
         if (Function == PLUGIN_EXIT) {
           clearPluginTaskData(event->TaskIndex);
+          updateTaskCaches();
+          initSerial();
           queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
         }
         STOP_TIMER_TASK(DeviceIndex, Function);
         post_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
         delay(0); // SMY: call delay(0) unconditionally
+
         return retval;
       }
       return false;

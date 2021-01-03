@@ -244,7 +244,6 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
         addLog(LOG_LEVEL_INFO, P075_data->getLogString());
-        serialHelper_plugin_init(event);
         success = true;
       }
       break;

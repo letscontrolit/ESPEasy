@@ -5,6 +5,12 @@
 
 void clearAllCaches();
 
+void updateTaskCaches();
+
+void updateActiveTaskUseSerial0();
+
+bool activeTaskUseSerial0();
+
 extern Caches Cache;
 
 #endif // GLOBALS_CACHE_H
