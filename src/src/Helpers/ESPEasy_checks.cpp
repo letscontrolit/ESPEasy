@@ -157,6 +157,7 @@ bool SettingsCheck(String& error) {
   return error.length() == 0;
 }
 
+#include "Numerical.h"
 
 String checkTaskSettings(taskIndex_t taskIndex) {
   String err = LoadTaskSettings(taskIndex);
@@ -166,9 +167,12 @@ String checkTaskSettings(taskIndex_t taskIndex) {
     return F("Use unique value names");
   }
   if (!ExtraTaskSettings.checkInvalidCharInNames()) {
-    return F("Invalid character in names. Do not use ',-+/*=^%!#[]{}()' or space.");
+    return F("Invalid character in name. Do not use ',-+/*=^%!#[]{}()' or space.");
   }
   String deviceName = ExtraTaskSettings.TaskDeviceName;
+  if (isFloat(deviceName)) {
+    return F("Invalid name. Should not be numeric.");
+  }
   if (deviceName.length() == 0) {
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       // Decide what to do here, for now give a warning when task is enabled.
