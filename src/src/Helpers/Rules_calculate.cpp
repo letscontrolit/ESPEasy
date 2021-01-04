@@ -4,6 +4,7 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/RamTracker.h"
+#include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/StringConverter.h"
 
 /********************************************************************************************\
@@ -72,7 +73,7 @@ float apply_unary_operator(char op, float first)
   switch (op)
   {
     case '!':
-      return (round(first) == 0) ? 1 : 0;
+      return (approximatelyEqual(round(first), 0)) ? 1 : 0;
     default:
       return 0;
   }
