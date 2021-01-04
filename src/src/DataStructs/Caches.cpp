@@ -4,6 +4,5 @@ void Caches::clearAllCaches()
 {
   taskIndexName.clear();
   taskIndexValueName.clear();
-
-
+  fileExistsMap.clear();
 }

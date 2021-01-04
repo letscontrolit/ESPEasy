@@ -45,6 +45,12 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_FAVICON
         #define WEBSERVER_FAVICON
     #endif
+    #ifndef WEBSERVER_CSS
+        #define WEBSERVER_CSS
+    #endif
+    #ifndef WEBSERVER_INCLUDE_JS
+        #define WEBSERVER_INCLUDE_JS
+    #endif
     #ifndef WEBSERVER_LOG
         #define WEBSERVER_LOG
     #endif
@@ -104,6 +110,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef WEBSERVER_WIFI_SCANNER
         #define WEBSERVER_WIFI_SCANNER
+    #endif
+    #ifndef WEBSERVER_NEW_RULES
+        #define WEBSERVER_NEW_RULES
     #endif
 #endif
 
@@ -323,6 +332,12 @@ To create/register a plugin, you have to :
         #ifdef WEBSERVER_FAVICON
             #undef WEBSERVER_FAVICON
         #endif
+        #ifdef WEBSERVER_CSS
+            #undef WEBSERVER_CSS
+        #endif
+        #ifdef WEBSERVER_INCLUDE_JS
+            #undef WEBSERVER_INCLUDE_JS
+        #endif
         #ifdef WEBSERVER_LOG
             #undef WEBSERVER_LOG
         #endif
@@ -338,6 +353,10 @@ To create/register a plugin, you have to :
         #ifdef WEBSERVER_CUSTOM
             #undef WEBSERVER_CUSTOM
         #endif
+        #ifdef WEBSERVER_NEW_RULES
+            #undef WEBSERVER_NEW_RULES
+        #endif
+
 
     #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
 
@@ -888,7 +907,7 @@ To create/register a plugin, you have to :
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Ping
-    //#define USES_P090   // CCS811 TVOC/eCO2 Sensor
+    #define USES_P090   // CCS811 TVOC/eCO2 Sensor
     #define USES_P091	// SerSwitch
     #define USES_P092   // DL-Bus
     #define USES_P093   // Mitsubishi Heat Pump
@@ -904,6 +923,77 @@ To create/register a plugin, you have to :
     #define USES_P105   // Atlas Scientific EZO ORP
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
+    #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+#endif
+
+
+// Collection of all energy related plugins.
+#ifdef PLUGIN_ENERGY_COLLECTION
+   #ifndef USES_P025
+     #define USES_P025   // ADS1115
+   #endif
+   #ifndef USES_P027
+     #define USES_P027   // INA219
+   #endif
+   #ifndef USES_P076 
+     #define USES_P076   // HWL8012   in POW r1
+   #endif
+   #ifndef USES_P077 
+     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
+     #define USES_P077	  // CSE7766   in POW R2
+   #endif
+   #ifndef USES_P078 
+     #define USES_P078   // Eastron Modbus Energy meters
+   #endif
+   #ifndef USES_P085
+     #define USES_P085   // AcuDC24x
+   #endif
+   #ifndef USES_P102
+     #define USES_P102   // PZEM-004Tv30
+   #endif
+   #ifndef USES_P108 
+     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+   #endif
+#endif
+
+// Collection of all display plugins. (also NeoPixel)
+#ifdef PLUGIN_DISPLAY_COLLECTION
+   #ifndef USES_P012
+     #define USES_P012   // LCD
+   #endif
+   #ifndef USES_P023
+    #define USES_P023   // OLED
+   #endif
+   #ifndef USES_P036 
+    #define USES_P036   // FrameOLED
+   #endif
+   #ifndef USES_P038 
+    #define USES_P038   // NeoPixel
+   #endif
+   #ifndef USES_P041 
+    #define USES_P041   // NeoClock
+   #endif
+   #ifndef USES_P042 
+    #define USES_P042   // Candle
+   #endif
+   #ifndef USES_P057 
+    #define USES_P057   // HT16K33_LED
+   #endif
+   #ifndef USES_P070 
+    #define USES_P070   // NeoPixel_Clock
+   #endif
+   #ifndef USES_P075 
+    #define USES_P075   // Nextion
+   #endif
+   #ifndef USES_P095 
+    #define USES_P095  // TFT ILI9341
+   #endif
+   #ifndef USES_P096 
+    #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
+   #endif
+   #ifndef USES_P099
+    #define USES_P099   // XPT2046 Touchscreen
+   #endif
 #endif
 
 
@@ -1040,8 +1130,11 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P082) || defined(USES_P087) || defined(USES_P094)
-// At least one plugin uses serial.
+#if defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P094) || defined(USES_P102) || defined(USES_P108) || defined(USES_C018)
+  // At least one plugin uses serial.
+  #ifndef PLUGIN_USES_SERIAL
+    #define PLUGIN_USES_SERIAL
+  #endif
 #else
   // No plugin uses serial, so make sure software serial is not included.
   #define DISABLE_SOFTWARE_SERIAL
@@ -1059,7 +1152,7 @@ To create/register a plugin, you have to :
   #define USES_PACKED_RAW_DATA
 #endif
 
-#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078)
+#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)
   // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
   #define USES_MODBUS
 #endif
@@ -1114,6 +1207,11 @@ To create/register a plugin, you have to :
 #ifdef LIMIT_BUILD_SIZE
   #ifdef WEBSERVER_TIMINGSTATS
     #undef WEBSERVER_TIMINGSTATS
+  #endif
+
+  // Do not include large blobs but fetch them from CDN
+  #ifndef WEBSERVER_USE_CDN_JS_CSS
+    #define WEBSERVER_USE_CDN_JS_CSS
   #endif
 
   #ifndef BUILD_NO_DEBUG
@@ -1182,7 +1280,21 @@ To create/register a plugin, you have to :
   #ifndef BUILD_NO_RAM_TRACKER
     #define BUILD_NO_RAM_TRACKER
   #endif
+#endif
 
+  // Do not include large blobs but fetch them from CDN
+#ifdef WEBSERVER_USE_CDN_JS_CSS
+  #ifdef WEBSERVER_FAVICON
+    #ifndef WEBSERVER_FAVICON_CDN
+      #define WEBSERVER_FAVICON_CDN
+    #endif
+  #endif
+  #ifdef WEBSERVER_CSS
+    #undef WEBSERVER_CSS
+  #endif
+  #ifdef WEBSERVER_INCLUDE_JS
+    #undef WEBSERVER_INCLUDE_JS
+  #endif
 #endif
 
 #if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)

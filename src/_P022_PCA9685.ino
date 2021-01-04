@@ -180,11 +180,11 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       if (nullptr == P022_data) {
         break;
       }
-      String log            = "";
-      String line           = String(string);
-      String command        = "";
-      int    dotPos         = line.indexOf('.');
-      bool   istanceCommand = false;
+      String log             = "";
+      String line            = String(string);
+      String command         = "";
+      int    dotPos          = line.indexOf('.');
+      bool   instanceCommand = false;
 
       if (dotPos > -1)
       {
@@ -193,19 +193,16 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         name.replace("[", "");
         name.replace("]", "");
 
-        if (name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
-        {
-          line           = line.substring(dotPos + 1);
-          istanceCommand = true;
-        }
-        else
-        {
+        if (name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
+          line            = line.substring(dotPos + 1);
+          instanceCommand = true;
+        } else {
           break;
         }
       }
       command = parseString(line, 1);
 
-      if ((command == F("pcapwm")) || (istanceCommand && (command == F("pwm"))))
+      if ((command == F("pcapwm")) || (instanceCommand && (command == F("pwm"))))
       {
         success = true;
         log     = String(F("PCA 0x")) + String(address, HEX) + String(F(": PWM ")) + String(event->Par1);
@@ -247,7 +244,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         }
       }
 
-      if ((command == F("pcafrq")) || (istanceCommand && (command == F("frq"))))
+      if ((command == F("pcafrq")) || (instanceCommand && (command == F("frq"))))
       {
         success = true;
 
@@ -284,7 +281,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         }
       }
 
-      if (istanceCommand && (command == F("mode2")))
+      if (instanceCommand && (command == F("mode2")))
       {
         success = true;
 
@@ -323,7 +320,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         }
       }
 
-      if (istanceCommand && (command == F("gpio")))
+      if (instanceCommand && (command == F("gpio")))
       {
         success = true;
         log     = String(F("PCA 0x")) + String(address, HEX) + String(F(": GPIO "));
@@ -379,7 +376,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         }
       }
 
-      if (istanceCommand && (command == F("pulse")))
+      if (instanceCommand && (command == F("pulse")))
       {
         success = true;
         log     = String(F("PCA 0x")) + String(address, HEX) + String(F(": GPIO ")) + String(event->Par1);
