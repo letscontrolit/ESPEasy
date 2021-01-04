@@ -170,7 +170,8 @@ String checkTaskSettings(taskIndex_t taskIndex) {
     return F("Invalid character in name. Do not use ',-+/*=^%!#[]{}()' or space.");
   }
   String deviceName = ExtraTaskSettings.TaskDeviceName;
-  if (isFloat(deviceName)) {
+  bool isHex;
+  if (isNumerical(deviceName, NumericalType::FloatingPoint, isHex)) {
     return F("Invalid name. Should not be numeric.");
   }
   if (deviceName.length() == 0) {
