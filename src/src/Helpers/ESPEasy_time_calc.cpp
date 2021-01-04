@@ -12,7 +12,6 @@
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24UL)
 
 
-
 bool isLeapYear(int year) {
   return (((1970 + year) > 0) && !((1970 + year) % 4) && (((1970 + year) % 100) || !((1970 + year) % 400)));
 }
