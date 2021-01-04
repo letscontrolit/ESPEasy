@@ -1,4 +1,169 @@
 -------------------------------------------------
+Changes in release mega-20201227 (since mega-20201130)
+-------------------------------------------------
+
+Release date: zo 27 dec 2020 11:18:00 CET
+
+CurlyMoo (4):
+      Support for Shelly 1 temp. addon
+      Added documentation
+      Small typo in documentation
+      Small comment about potential serial port conflicts
+
+Joerg Heinemann (1):
+      Add copyrights and permission notices
+
+TD-er (91):
+      [Cleanup] Wemos motor shield, reduce resources used.
+      [docs] Minor Sphinx warnings fixed.
+      [Playground] Move BME680 from playground
+      [Cleanup] Uncrustify P106 BME680
+      Make sure notifications (Email/Buzzer) are included in 1M normal build
+      [IRTX] Use parse argument functions for IR TX command arguments
+      [NeoClock] Fix building P070 NeoPixelClock
+      [PVS-Studio] Allow testing IR builds for coding errors
+      [IRTX] Convert more commands to use parse string functions
+      Fix missing defines to allow "Periodical send Gratuitous ARP"
+      [Cleanup] PluginStructs/*.cpp include prepend PluginStrucs dir
+      [PIO] Concatenate .cpp files to prevent linking errors
+      [PIO] Concat *.cpp files in ControllerQueue/ and PluginStructs/
+      [PIO] Add Commands/*.cpp to the files to be concatenated in single .cpp
+      Fix build error in Linux build environment
+      [PIO] Separate appended .cpp files with newline
+      [PIO] Concatenate all WebServer/*.cpp files into temp file.
+      [PIO] Make sure library includes are present in .cpp
+      [MQTT] Prevent high CPU load when not connected to MQTT broker (#3410)
+      [Web UI] Proper encoding for HTML attribute values
+      [Cleanup] Uncrustify of web page code
+      [MQTT import] Share MQTT client with active MQTT controller
+      [Dallas] Fix P100 DS2423 counter plugin matching new changes.
+      [MQTT import] Fix missing return statement
+      [Dallas] Fix P100 DS2423 counter plugin matching new changes.
+      [NeoClock] Fix building P070 NeoPixelClock
+      [PVS-Studio] Allow testing IR builds for coding errors
+      Make sure notifications (Email/Buzzer) are included in 1M normal build
+      Fix missing defines to allow "Periodical send Gratuitous ARP"
+      [Cleanup] PluginStructs/*.cpp include prepend PluginStrucs dir
+      [PIO] Concatenate .cpp files to prevent linking errors
+      [PIO] Concat *.cpp files in ControllerQueue/ and PluginStructs/
+      [PIO] Add Commands/*.cpp to the files to be concatenated in single .cpp
+      Fix build error in Linux build environment
+      [Cleanup] Wemos motor shield, reduce resources used.
+      [docs] Minor Sphinx warnings fixed.
+      [PIO] Separate appended .cpp files with newline
+      [PIO] Concatenate all WebServer/*.cpp files into temp file.
+      [PIO] Make sure library includes are present in .cpp
+      [IRTX] Use parse argument functions for IR TX command arguments
+      [IRTX] Convert more commands to use parse string functions
+      [Web UI] Proper encoding for HTML attribute values
+      [Cleanup] Uncrustify of web page code
+      [MQTT import] Only process incoming messages if topic matches and enabled
+      Fix %isntp% and %ismqttimp% states + MQTTimport connected events
+      Remove ICACHE_RAM_ATTR from LongTermTimer and move to .h only
+      [Webserver] Don't use temp variables for webserver arguments
+      Exclude special characters from system variable page in minimal builds
+      [WebServer] Do not include custom page on minimal OTA builds
+      Reduce build size by wrapping all parameters for internal commands
+      [ESP32] Remove warning for GPIO-15 to use PNP transistor on ESP32
+      [Custom build] Reduce Custom build size
+      [Deep Sleep] Make wake from deep sleep more reliable
+      [Playground] Plugin-107: SI1145 - UV index / IR / visible (#3426)
+      [Docs] Document Domoticz authethication via SendToHTTP
+      Fix build issues P107
+      [Cleanup] Use PCONFIG macros where possible
+      [Domoticz MQTT] Reduce memory usage when sending message
+      Use small stack allocated Json objects when processing web command
+      [BME680] Make address config uniform for all I2C plugins
+      [Cleanup] Rename I2C address label to reduce build size
+      [BME680] Use the selected I2C address
+      Delete _Custom.h
+      [Travis] Disable test_alt_wifi_ESP8266_4M1M_VCC in CI builds
+      [Typo] Fix 'succesful' typo
+      Fix init check on P106 BME680
+      [BME680] Force reinit after change settings
+      [P107: SI1145] initialise sensor and stop sensor at each reading
+      [P107_Si1145] Rename default value names and plugin name
+      [BME680] Add to I2C scanner
+      [Flashing] Include Espressif Download Tool in our repository
+      [Docs] Document flashing, especially ESP32
+      [Docs] Add stubs for not yet documented plugins
+      Add XPT2046 touchscreen to Custom-sample.h
+      Include Notifiers on hardware specific builds
+      [Cleanup] Exclude unused code to reduce build size
+      [Cleanup] Reduce build size by using CDN for CSS and JS
+      [Cleanup] Reduce build size by using iterators for globalMapPortStatus
+      Fix build issue for P019 (missing brace)
+      Rename toasting,js to toasting.js
+      [Cleanup] Reduce build size of WebPages
+      [Cleanup] Disable "New Rules" on Limit build size builds
+      Remove _custom.h
+      Rename plugin ID to P108 because of ID conflict with pending PR
+      [Doc] Add documentation stubs for P108 DDS238-x
+      [PIO] Add "display" and "energy" build collections
+      [Dallas] Fix Dallas sensor not being read if optional pin unset
+      [EmonCMS]  Allow sending 4 values per task (#3438)
+      [EmonCMS] Fix build issue
+      [Controller Queue] Optimize C004, C009 and C017
+      [PWM] Fix fade down (#3434)
+
+Ton Huisman (14):
+      [P099] Touch XPT2046 new plugin - Adds Touch support for XPT2046 (often combined with ILI9341 TFT) - Space for up to 40 user defined touchobjects by name - Allows several types of events, X/Y, X/Y/X, objectname [TaskName#ObjectName] - Calibration to map to screen coordinates (optional)
+      [P099] Code improvements - Avoid using unicode in source - Less scope braces - Memory optimizations - Improve data struct definition - Pointer initializations - Cleanup on `PLUGIN_EXIT`
+      [P099] Cut off x/y coordinate outside calibration
+      [P099] Documentation for TouchScreen - Device configuration - Setup calibration - Define TouchObjects
+      [Docs] Add Touch plugin category - [P099] Improvements and corrections - [P095] Adjust documententation title (remove XPT2046)
+      [P099] Events only fired when Rules enabled Show note in Device settings page if Rules disabled Add USES_P099 to `define_plugin_sets.h` (disabled)
+      [P099] Fixed an issue in x/y scaling function
+      [P099] Add On/Off button to touchobjects - Add On/Off button and Inverted settings per touchobject - Updated documentation and screenshots
+      [P099] Settings page to show when task is disabled
+      [P099] Adjust #include to new structure, enable plugin in test build
+      [P099] Improve string allocation, add options, source formatting - Source formatting and String allocation using reserve() for longer strings - Add option and command for flipping the rotation setting - Improved rotation setting to conform to ILI9341 setting - Add option for setting the debounce delay for On/Off buttons
+      [P099] Add updated file
+      [P099] Fix casting and rounding in calculations
+      Adjust #include path to fix build
+
+denisfrench (4):
+      Add #includes required since PR #3139
+      Update to work with recent builds, lifted from P085
+      Copy in _P103_DDS238.ino
+      Move P224 in from Playground as P103
+
+jimmys01 (1):
+      Update the IR library
+
+josemariaaraujo (1):
+      Plugin for DDS238 Energy Meters
+
+juliokele (1):
+      [P069] Fixed LM75A logging
+
+uwekaditz (23):
+      [P036] Support for 128x32 display
+      Files for [P092] replaced with original ones from mega
+      [P092] Reduce memory usage when plugin not used PR #3248
+      [P016] Improvement: a received IR code can be saved and a command can be assigned to it
+      Undo changes for PR #3323 in this branch OLED_P036
+      ressouce-saving string calculation
+      not using the _ prefix anymore, use reserve() for long log strings
+      Update P036_data_struct.h
+      BUG: #endif missing in P092_data_struct.h
+      Copy and Paste error
+      integrate the changes of PR #3345 (created by pez3)
+      [P092] P092_data->init() is always done if P092_init == false
+      Update _P036_FrameOLED.ino
+      Update P092_data_struct.cpp
+      [P036] PinMode in Web interface adjustable (even InputPullDown if available)
+      [P092] PinMode in Web interface adjustable (even InputPullDown if available)
+      wrong comment sign
+      [P092] Documentation for UVR61-3 (v8.3 or higher) added
+      Delete P092_data_struct.cpp
+      Delete P092_data_struct.h
+      Changes requested by TDer
+      Update P092_DLbus.ino from mega
+      Changes requested by TD-er
+
+
+-------------------------------------------------
 Changes in release mega-20201130 (since mega-20201125)
 -------------------------------------------------
 
