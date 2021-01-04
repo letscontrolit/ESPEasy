@@ -66,47 +66,63 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       byte   choiceMode = PCONFIG(0);
-      String optionsMode[6];
-      optionsMode[0] = F("2.4 ms");
-      optionsMode[1] = F("24 ms");
-      optionsMode[2] = F("50 ms");
-      optionsMode[3] = F("101 ms");
-      optionsMode[4] = F("154 ms");
-      optionsMode[5] = F("700 ms");
-      int optionValuesMode[6];
-      optionValuesMode[0] = TCS34725_INTEGRATIONTIME_2_4MS;
-      optionValuesMode[1] = TCS34725_INTEGRATIONTIME_24MS;
-      optionValuesMode[2] = TCS34725_INTEGRATIONTIME_50MS;
-      optionValuesMode[3] = TCS34725_INTEGRATIONTIME_101MS;
-      optionValuesMode[4] = TCS34725_INTEGRATIONTIME_154MS;
-      optionValuesMode[5] = TCS34725_INTEGRATIONTIME_700MS;
-      addFormSelector(F("Integration Time"), F("p050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
+      {
+        String optionsMode[6];
+        optionsMode[0] = F("2.4 ms");
+        optionsMode[1] = F("24 ms");
+        optionsMode[2] = F("50 ms");
+        optionsMode[3] = F("101 ms");
+        optionsMode[4] = F("154 ms");
+        optionsMode[5] = F("700 ms");
+        int optionValuesMode[6];
+        optionValuesMode[0] = TCS34725_INTEGRATIONTIME_2_4MS;
+        optionValuesMode[1] = TCS34725_INTEGRATIONTIME_24MS;
+        optionValuesMode[2] = TCS34725_INTEGRATIONTIME_50MS;
+        optionValuesMode[3] = TCS34725_INTEGRATIONTIME_101MS;
+        optionValuesMode[4] = TCS34725_INTEGRATIONTIME_154MS;
+        optionValuesMode[5] = TCS34725_INTEGRATIONTIME_700MS;
+        addFormSelector(F("Integration Time"), F("p050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
+      }
 
       byte   choiceMode2 = PCONFIG(1);
-      String optionsMode2[4];
-      optionsMode2[0] = F("1x");
-      optionsMode2[1] = F("4x");
-      optionsMode2[2] = F("16x");
-      optionsMode2[3] = F("60x");
-      int optionValuesMode2[4];
-      optionValuesMode2[0] = TCS34725_GAIN_1X;
-      optionValuesMode2[1] = TCS34725_GAIN_4X;
-      optionValuesMode2[2] = TCS34725_GAIN_16X;
-      optionValuesMode2[3] = TCS34725_GAIN_60X;
-      addFormSelector(F("Gain"), F("p050_gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
+      {
+        String optionsMode2[4];
+        optionsMode2[0] = F("1x");
+        optionsMode2[1] = F("4x");
+        optionsMode2[2] = F("16x");
+        optionsMode2[3] = F("60x");
+        int optionValuesMode2[4];
+        optionValuesMode2[0] = TCS34725_GAIN_1X;
+        optionValuesMode2[1] = TCS34725_GAIN_4X;
+        optionValuesMode2[2] = TCS34725_GAIN_16X;
+        optionValuesMode2[3] = TCS34725_GAIN_60X;
+        addFormSelector(F("Gain"), F("p050_gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
+      }
 
       addFormSubHeader(F("Output settings"));
 
-      addFormCheckBox(F("Output calibrated RGB values"), F("p050_calibratedrgb"), PCONFIG(2) == 1, false);
+      {
+        #define P050_RGB_OPTIONS 3
+        String optionsRGB[P050_RGB_OPTIONS];
+        optionsRGB[0] = F("Raw RGB");
+        optionsRGB[1] = F("Normalized RGB (0..255)");
+        optionsRGB[2] = F("Normalized sRGB (0.00000..1.00000)");
+        int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1, 2};
+        addFormSelector(F("Output RGB Values"), F("p050_outputrgb"), P050_RGB_OPTIONS, optionsRGB, optionValuesRGB, PCONFIG(2));
+        addFormNote(F("For sRGB, the Red/Green/Blue values Decimals should best be increased to 5."));
+      }
 
-      String optionsOutput[4];
-      optionsOutput[0] = F("Color Temperature");
-      optionsOutput[1] = F("Color Temperature (DN40)");
-      optionsOutput[2] = F("Lux");
-      optionsOutput[3] = F("Clear");
-      int optionValuesOutput[4] = { 0, 1, 2, 3};
-      addFormSelector(F("Output at Values #4"), F("p050_output4"), 4, optionsOutput, optionValuesOutput, PCONFIG(3));
-      addFormNote(F("Optionally adjust Values #4 name accordingly."));
+      {
+        #define P050_VALUE4_OPTIONS 4
+        String optionsOutput[P050_VALUE4_OPTIONS];
+        optionsOutput[0] = F("Color Temperature");
+        optionsOutput[1] = F("Color Temperature (DN40)");
+        optionsOutput[2] = F("Lux");
+        optionsOutput[3] = F("Clear");
+        int optionValuesOutput[P050_VALUE4_OPTIONS] = { 0, 1, 2, 3};
+        addFormSelector(F("Output at Values #4"), F("p050_output4"), P050_VALUE4_OPTIONS, optionsOutput, optionValuesOutput, PCONFIG(3));
+        addFormNote(F("Optionally adjust Values #4 name accordingly."));
+      }
 
       success = true;
       break;
@@ -116,7 +132,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
     {
       PCONFIG(0) = getFormItemInt(F("p050_integrationTime"));
       PCONFIG(1) = getFormItemInt(F("p050_gain"));
-      PCONFIG(2) = isFormItemChecked(F("p050_calibratedrgb")) ? 1 : 0;
+      PCONFIG(2) = getFormItemInt(F("p050_outputrgb"));
       PCONFIG(3) = getFormItemInt(F("p050_output4"));
 
       success = true;
@@ -194,14 +210,31 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             break;
         }
 
-        if (PCONFIG(2) == 1 && c != 0) { // R/G/B normalized to 0..255 (but avoid divide by 0)
-          UserVar[event->BaseVarIndex]     = (float)r / c * 255.0;
-          UserVar[event->BaseVarIndex + 1] = (float)g / c * 255.0;
-          UserVar[event->BaseVarIndex + 2] = (float)b / c * 255.0;
-        } else {
-          UserVar[event->BaseVarIndex]     = r;
-          UserVar[event->BaseVarIndex + 1] = g;
-          UserVar[event->BaseVarIndex + 2] = b;
+        if (c == 0) {
+          UserVar[event->BaseVarIndex]     = 0.0f;
+          UserVar[event->BaseVarIndex + 1] = 0.0f;
+          UserVar[event->BaseVarIndex + 2] = 0.0f;
+        }
+        switch (PCONFIG(2)) {
+          case 0:
+            UserVar[event->BaseVarIndex]     = r;
+            UserVar[event->BaseVarIndex + 1] = g;
+            UserVar[event->BaseVarIndex + 2] = b;
+            break;
+          case 1:
+            if (c != 0) { // R/G/B normalized to 0..255 (but avoid divide by 0)
+              UserVar[event->BaseVarIndex]     = (float)r / c * 255.0f;
+              UserVar[event->BaseVarIndex + 1] = (float)g / c * 255.0f;
+              UserVar[event->BaseVarIndex + 2] = (float)b / c * 255.0f;
+            }
+            break;
+          case 2:
+            if (c != 0) { // sR/G/B (normalized to 0.00..1.00 (but avoid divide by 0)
+              UserVar[event->BaseVarIndex]     = (float)r / c * 1.0f;
+              UserVar[event->BaseVarIndex + 1] = (float)g / c * 1.0f;
+              UserVar[event->BaseVarIndex + 2] = (float)b / c * 1.0f;
+            }
+            break;
         }
         UserVar[event->BaseVarIndex + 3] = value4;
 
