@@ -194,7 +194,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         uint16_t r, g, b, c;
         float value4 = 0.0f;
 
-        tcs.getRawData(&r, &g, &b, &c);
+        tcs.getRawData(&r, &g, &b, &c, true);
         switch (PCONFIG(3)) {
           case 0:
             value4 = tcs.calculateColorTemperature(r, g, b);

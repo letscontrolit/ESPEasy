@@ -127,32 +127,17 @@ void Adafruit_TCS34725::enable(void)
   write8(TCS34725_ENABLE, TCS34725_ENABLE_PON);
   delay(3);
   write8(TCS34725_ENABLE, TCS34725_ENABLE_PON | TCS34725_ENABLE_AEN);
-  /* Set a delay for the integration time.
-    This is only necessary in the case where enabling and then
-    immediately trying to read values back. This is because setting
-    AEN triggers an automatic integration, so if a read RGBC is
-    performed too quickly, the data is not yet valid and all 0's are
-    returned */
-  switch (_tcs34725IntegrationTime) {
-  case TCS34725_INTEGRATIONTIME_2_4MS:
-    delay(3);
-    break;
-  case TCS34725_INTEGRATIONTIME_24MS:
-    delay(24);
-    break;
-  case TCS34725_INTEGRATIONTIME_50MS:
-    delay(50);
-    break;
-  case TCS34725_INTEGRATIONTIME_101MS:
-    delay(101);
-    break;
-  case TCS34725_INTEGRATIONTIME_154MS:
-    delay(154);
-    break;
-  case TCS34725_INTEGRATIONTIME_700MS:
-    delay(700);
-    break;
-  }
+}
+
+/*!
+ *  @brief  Briefly disable integration to activate new settings
+ */
+void Adafruit_TCS34725::reset() {
+  uint8_t reg = 0;
+  reg = read8(TCS34725_ENABLE);
+  write8(TCS34725_ENABLE, reg & ~(TCS34725_ENABLE_AEN));
+  delay(3);
+  write8(TCS34725_ENABLE, reg);
 }
 
 /**************************************************************************/
@@ -216,22 +201,52 @@ boolean Adafruit_TCS34725::begin(void)
   return true;
 }
 
+/*!
+ *  @brief  Sets the integration time for the TC34725
+ *  @param  it_msec
+ *          Desired integration time in milliseconds
+ *  @return Actual integration time in milliseconds
+ */
+float Adafruit_TCS34725::setIntegrationTimeMsec(float it_msec) {
+  if (!_tcs34725Initialised)
+    begin();
+
+  uint8_t atime = calculateIntegrationConstant(it_msec);
+  setIntegrationTime(atime);
+  float actual_it_msec = calculateIntegrationTime(atime);
+  return actual_it_msec;
+}
+
 /**************************************************************************/
 /*!
  *  @brief  Sets the integration time for the TC34725
  *  @param  it
- *          Integration Time
+ *          Integration time constant (0-255; see ATIME in the datasheet)
 */
 /**************************************************************************/
-void Adafruit_TCS34725::setIntegrationTime(tcs34725IntegrationTime_t it)
+void Adafruit_TCS34725::setIntegrationTime(uint8_t it)
 {
   if (!_tcs34725Initialised) begin();
 
   /* Update the timing register */
   write8(TCS34725_ATIME, it);
 
+  /* Restart integration so we don't have to wait for the previous
+   * integration to finish.
+   */
+  reset();
+
   /* Update value placeholders */
   _tcs34725IntegrationTime = it;
+}
+
+/*!
+ *  @brief  (deprecated) Sets the integration time for the TC34725
+ *  @param  it
+ *          Integration Time
+ */
+void Adafruit_TCS34725::setIntegrationTime(tcs34725IntegrationTime_t it) {
+    setIntegrationTime((uint8_t)it);
 }
 
 /**************************************************************************/
@@ -248,13 +263,18 @@ void Adafruit_TCS34725::setGain(tcs34725Gain_t gain)
   /* Update the timing register */
   write8(TCS34725_CONTROL, gain);
 
+  /* Restart integration so we don't have to wait for the previous
+   * integration to finish.
+   */
+  reset();
+
   /* Update value placeholders */
   _tcs34725Gain = gain;
 }
 
 /**************************************************************************/
 /*!
- *  @brief  Reads the raw red, green, blue and clear channel values
+ *  @brief  Reads the raw red, green, blue and clear channel values immediately
  *  @param  *r
  *          Red value
  *  @param  *g
@@ -263,39 +283,34 @@ void Adafruit_TCS34725::setGain(tcs34725Gain_t gain)
  *          Blue value
  *  @param  *c
  *          Clear channel value
+ *  @param  wait
+ *          If true, delay before reading to ensure integration has completed
 */
 /**************************************************************************/
-void Adafruit_TCS34725::getRawData (uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *c)
+void Adafruit_TCS34725::getRawData (uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *c, bool wait)
 {
   if (!_tcs34725Initialised) begin();
+
+  if( wait ) {
+    float int_time_ms = calculateIntegrationTime(_tcs34725IntegrationTime);
+    delay(int_time_ms + 4);
+  }
 
   *c = read16(TCS34725_CDATAL);
   *r = read16(TCS34725_RDATAL);
   *g = read16(TCS34725_GDATAL);
   *b = read16(TCS34725_BDATAL);
 
-  /* Set a delay for the integration time */
-  switch (_tcs34725IntegrationTime)
-  {
-    case TCS34725_INTEGRATIONTIME_2_4MS:
-      delay(3);
-      break;
-    case TCS34725_INTEGRATIONTIME_24MS:
-      delay(24);
-      break;
-    case TCS34725_INTEGRATIONTIME_50MS:
-      delay(50);
-      break;
-    case TCS34725_INTEGRATIONTIME_101MS:
-      delay(101);
-      break;
-    case TCS34725_INTEGRATIONTIME_154MS:
-      delay(154);
-      break;
-    case TCS34725_INTEGRATIONTIME_700MS:
-      delay(700);
-      break;
-  }
+}
+
+/*!
+ *  @brief  Returns the maximum value that could be reported by getRawData,
+ *          given the currently set integration time
+ */
+uint16_t Adafruit_TCS34725::getRawDataMax() {
+    long mx = ((long)256 - (long)_tcs34725IntegrationTime) * 1024;
+    mx = mx > 65535 ? 65535 : mx;
+    return (uint16_t) mx;
 }
 
 /**************************************************************************/
@@ -457,8 +472,36 @@ uint16_t Adafruit_TCS34725::calculateLux(uint16_t r, uint16_t g, uint16_t b)
   /* This only uses RGB ... how can we integrate clear or calculate lux */
   /* based exclusively on clear since this might be more reliable?      */
   illuminance = (-0.32466F * r) + (1.57837F * g) + (-0.73191F * b);
+  if (illuminance < 0) { // patched to avoid spurious 65535 results
+    illuminance = 0.0f;
+  }
 
   return (uint16_t)illuminance;
+}
+
+/*!
+ *  @brief  Calculate the ATIME value (argument to setIntegrationTime) needed to achieve a certain integration time
+ *  @param  it_msec
+ *          Desired integration time in milliseconds
+ *  @return ATIME value
+ */
+uint8_t Adafruit_TCS34725::calculateIntegrationConstant(float it_msec) {
+  int atime = 258.59 - it_msec / 2.475;
+  atime = atime < 0 ? 0 : atime;
+  atime = atime > 255 ? 255 : atime;
+  return (uint8_t) atime;
+}
+
+/*!
+ *  @brief  Calculate the integration time in seconds corresponding to sn ATIME value
+ *  @param  it
+ *          ATIME value
+ *  @return Integration time in milliseconds
+ */
+float Adafruit_TCS34725::calculateIntegrationTime(uint8_t atime) {
+  /* equation according to datasheet is 2.4 * (256 - atime), but that seems to be inaccurate
+   */
+  return 2.475 * (258.59 - atime);
 }
 
 /*!
