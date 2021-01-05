@@ -574,7 +574,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
 
         // During (and only ever at) sensor boot, 'u' is reported as 15000
         // We log but don't process readings during that time
-        if (u == 15000) {
+        if (approximatelyEqual(u, 15000)) {
           log += F("Bootup detected! ");
 
           if (P049_data->ABC_Disable) {
