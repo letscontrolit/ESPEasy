@@ -360,11 +360,11 @@ String to_json_object_value(const String& object, const String& value) {
     result += F("\"\"");
     return result;
   }
-  bool isHex;
-  bool isNum = isNumerical(value, NumericalType::FloatingPoint, isHex);
+  NumericalType detectedType;
+  bool isNum = isNumerical(value, detectedType);
 
-  if (!isNum || isHex) {
-    // Is not a numerical value, or HEX notation, thus wrap with quotes
+  if (!isNum || mustConsiderAsString(detectedType)) {
+    // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
       // Must replace characters, so make a deepcopy
       String tmpValue(value);

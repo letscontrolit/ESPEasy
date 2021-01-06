@@ -21,15 +21,19 @@ bool validFloatFromString(const String& tBuf, float& result);
 
 bool validDoubleFromString(const String& tBuf, double& result);
 
+// Numerical types sorted from least specific to most specific.
 enum class NumericalType {
-  Integer,
   FloatingPoint,
-  HexadecimalUInt
+  Integer,
+  HexadecimalUInt,
+  BinaryUint
 };
 
-String getNumerical(const String& tBuf, NumericalType numericalType, bool& isHex);
+bool mustConsiderAsString(NumericalType detectedType);
 
-bool isNumerical(const String& tBuf, NumericalType numericalType, bool& isHex);
+String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType);
+
+bool isNumerical(const String& tBuf, NumericalType& detectedType);
 
 
 #endif // HELPERS_NUMERICAL_H
