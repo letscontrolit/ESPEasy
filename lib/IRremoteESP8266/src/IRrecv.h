@@ -262,6 +262,12 @@ class IRrecv {
                            const bool GEThomas = true);
   void crudeNoiseFilter(decode_results *results, const uint16_t floor = 0);
   bool decodeHash(decode_results *results);
+#if DECODE_VOLTAS
+  bool decodeVoltas(decode_results *results,
+                         uint16_t offset = kStartOffset,
+                         const uint16_t nbits = kVoltasBits,
+                         const bool strict = true);
+#endif  // DECODE_VOLTAS
 #if (DECODE_NEC || DECODE_SHERWOOD || DECODE_AIWA_RC_T501 || DECODE_SANYO)
   bool decodeNEC(decode_results *results, uint16_t offset = kStartOffset,
                  const uint16_t nbits = kNECBits, const bool strict = true);
@@ -326,7 +332,7 @@ class IRrecv {
                              const uint16_t nbits = kMitsubishiHeavy152Bits,
                              const bool strict = true);
 #endif
-#if (DECODE_RC5 || DECODE_R6 || DECODE_LASERTAG || DECODE_MWM)
+#if (DECODE_RC5 || DECODE_RC6 || DECODE_LASERTAG || DECODE_MWM)
   int16_t getRClevel(decode_results *results, uint16_t *offset, uint16_t *used,
                      uint16_t bitTime, const uint8_t tolerance = kUseDefTol,
                      const int16_t excess = kMarkExcess,
@@ -590,7 +596,13 @@ class IRrecv {
                          uint16_t offset = kStartOffset,
                          const uint16_t nbits = kPanasonicAcBits,
                          const bool strict = true);
-#endif
+#endif  // DECODE_PANASONIC_AC
+#if DECODE_PANASONIC_AC32
+  bool decodePanasonicAC32(decode_results *results,
+                         uint16_t offset = kStartOffset,
+                         const uint16_t nbits = kPanasonicAc32Bits,
+                         const bool strict = true);
+#endif  // DECODE_PANASONIC_AC32
 #if DECODE_PIONEER
   bool decodePioneer(decode_results *results, uint16_t offset = kStartOffset,
                      const uint16_t nbits = kPioneerBits,
@@ -657,16 +669,44 @@ class IRrecv {
                            const uint16_t nbits = kMultibracketsBits,
                            const bool strict = true);
 #endif  // DECODE_MULTIBRACKETS
+#if DECODE_TECHNIBEL_AC
+  bool decodeTechnibelAc(decode_results *results,
+                         uint16_t offset = kStartOffset,
+                         const uint16_t nbits = kTechnibelAcBits,
+                         const bool strict = true);
+#endif  // DECODE_TECHNIBEL_AC
 #if DECODE_CORONA_AC
   bool decodeCoronaAc(decode_results *results, uint16_t offset = kStartOffset,
                       const uint16_t nbits = kCoronaAcBitsShort,
                       const bool strict = true);
 #endif  // DECODE_CORONA_AC
 #if DECODE_ZEPEAL
-bool decodeZepeal(decode_results *results, uint16_t offset = kStartOffset,
-                  const uint16_t nbits = kZepealBits,
-                  const bool strict = true);
+  bool decodeZepeal(decode_results *results, uint16_t offset = kStartOffset,
+                    const uint16_t nbits = kZepealBits,
+                    const bool strict = true);
 #endif  // DECODE_ZEPEAL
+#if DECODE_METZ
+  bool decodeMetz(decode_results *results, uint16_t offset = kStartOffset,
+                  const uint16_t nbits = kMetzBits,
+                  const bool strict = true);
+#endif  // DECODE_METZ
+#if DECODE_TRANSCOLD
+  bool decodeTranscold(decode_results *results, uint16_t offset = kStartOffset,
+                       const uint16_t nbits = kTranscoldBits,
+                       const bool strict = true);
+#endif  // DECODE_TRANSCOLD
+#if DECODE_MIRAGE
+  bool decodeMirage(decode_results *results,
+                    uint16_t offset = kStartOffset,
+                    const uint16_t nbits = kMirageBits,
+                    const bool strict = true);
+#endif  // DECODE_MIRAGE
+#if DECODE_ELITESCREENS
+  bool decodeElitescreens(decode_results *results,
+                          uint16_t offset = kStartOffset,
+                          const uint16_t nbits = kEliteScreensBits,
+                          const bool strict = true);
+#endif  // DECODE_ELITESCREENS
 };
 
 #endif  // IRRECV_H_

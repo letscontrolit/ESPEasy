@@ -8,8 +8,6 @@
 #include "../WebServer/AccessControl.h"
 
 
-#include <ArduinoJson.h>
-
 HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, String& webrequest)
 {
   if (!clientIPallowed()) { return HandledWebCommand_result::IP_not_allowed; }
@@ -36,13 +34,13 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     eventQueue.add(parseStringToEnd(webrequest, 2));
     handledCmd = true;
     sendOK     = true;
-  } else if (command.equalsIgnoreCase(F("taskrun")) ||
-             command.equalsIgnoreCase(F("taskvalueset")) ||
-             command.equalsIgnoreCase(F("taskvaluetoggle")) ||
-             command.equalsIgnoreCase(F("let")) ||
-             command.equalsIgnoreCase(F("logPortStatus")) ||
-             command.equalsIgnoreCase(F("jsonportstatus")) ||
-             command.equalsIgnoreCase(F("rules"))) {
+  } else if (command.equals(F("taskrun")) ||
+             command.equals(F("taskvalueset")) ||
+             command.equals(F("taskvaluetoggle")) ||
+             command.equals(F("let")) ||
+             command.equals(F("logPortStatus")) ||
+             command.equals(F("jsonportstatus")) ||
+             command.equals(F("rules"))) {
     handledCmd = ExecuteCommand_internal(source, webrequest.c_str());
     sendOK     = true;
 
@@ -57,10 +55,11 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     if (sendOK) {
       if (printToWebJSON) {
         // Format "OK" to JSON format
-        DynamicJsonDocument root(1024);
-        root[F("return")]  = F("OK");
-        root[F("command")] = webrequest;
-        serializeJson(root, printWebString);
+        printWebString = F("{\"return\": \"");
+        printWebString += F("OK");
+        printWebString += F("\",\"command\": \"");
+        printWebString += webrequest;
+        printWebString += F("\"}");
       } else {
         printWebString = F("OK");
       }
@@ -70,10 +69,11 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 
   if (printToWebJSON) {
     // Format error to JSON format
-    DynamicJsonDocument root(1024);
-    root[F("return")]  = F("Unknown or restricted command");
-    root[F("command")] = webrequest;
-    serializeJson(root, printWebString);
+    printWebString = F("{\"return\": \"");
+    printWebString += F("Unknown or restricted command");
+    printWebString += F("\",\"command\": \"");
+    printWebString += webrequest;
+    printWebString += F("\"}");
   }
   return HandledWebCommand_result::Unknown_or_restricted_command;
 }

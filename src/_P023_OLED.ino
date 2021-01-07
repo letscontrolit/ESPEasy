@@ -59,7 +59,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
       /*String options[2] = { F("3C"), F("3D") };*/
       int optionValues[2] = { 0x3C, 0x3D };
-      addFormSelectorI2C(F("p023_adr"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       break;
     }
 
@@ -104,7 +104,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p023_adr"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p023_rotate"));
       PCONFIG(2) = getFormItemInt(F("plugin_23_timer"));
       PCONFIG(3) = getFormItemInt(F("p023_size"));
@@ -241,54 +241,27 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P023_data) {
-        String arguments = String(string);
+        String cmd = parseString(string, 1); // Changes to lowercase
 
-        // Fixed bug #1864
-        // this was to manage multiple instances of the plug-in.
-        // You can also call it this way:
-        // [TaskName].OLED, 1,1, Temp. is 19.9
-        int dotPos = arguments.indexOf('.');
-
-        if ((dotPos > -1) && arguments.substring(dotPos, dotPos + 4).equalsIgnoreCase(F("oled")))
-        {
-          LoadTaskSettings(event->TaskIndex);
-          String name = arguments.substring(0, dotPos);
-          name.replace("[", "");
-          name.replace("]", "");
-
-          if (name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
-          {
-            arguments = arguments.substring(dotPos + 1);
-          }
-          else
-          {
-            return false;
-          }
-        }
-
-        // We now continue using 'arguments' and not 'string' as full command line.
-        // If there was any prefix to address a specific task, it is now removed from 'arguments'
-        String cmd = parseString(arguments, 1);
-
-        if (cmd.equalsIgnoreCase(F("OLEDCMD")))
+        if (cmd.equals(F("oledcmd")))
         {
           success = true;
-          String param = parseString(arguments, 2);
+          String param = parseString(string, 2);
 
-          if (param.equalsIgnoreCase(F("Off"))) {
+          if (param.equals(F("off"))) {
             P023_data->displayOff();
           }
-          else if (param.equalsIgnoreCase(F("On"))) {
+          else if (param.equals(F("on"))) {
             P023_data->displayOn();
           }
-          else if (param.equalsIgnoreCase(F("Clear"))) {
+          else if (param.equals(F("clear"))) {
             P023_data->clearDisplay();
           }
         }
-        else if (cmd.equalsIgnoreCase(F("OLED")))
+        else if (cmd.equals(F("oled")))
         {
           success = true;
-          String text = parseStringToEndKeepCase(arguments, 4);
+          String text = parseStringToEndKeepCase(string, 4);
           text = P023_data->parseTemplate(text, 16);
           P023_data->sendStrXY(text.c_str(), event->Par1 - 1, event->Par2 - 1);
         }

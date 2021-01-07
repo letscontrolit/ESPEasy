@@ -23,3 +23,99 @@
 .. |P101_maintainer| replace:: thomastech
 .. |P101_compileinfo| replace:: `.`
 .. |P101_usedlibraries| replace::  https://github.com/a7md0/WakeOnLan
+
+.. |P102_name| replace:: :cyan:`PZEM-004Tv30-Multiple`
+.. |P102_type| replace:: :cyan:`Energy (AC)`
+.. |P102_typename| replace:: :cyan:`Energy (AC) - PZEM-004Tv30-Multiple`
+.. |P102_porttype| replace:: `.`
+.. |P102_status| replace:: :yellow:`TESTING`
+.. |P102_github| replace:: P102_PZEM004Tv3.ino
+.. _P102_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P102_PZEM004Tv3.ino
+.. |P102_usedby| replace:: `.`
+.. |P102_shortinfo| replace:: `.`
+.. |P102_maintainer| replace:: TD-er
+.. |P102_compileinfo| replace:: `.`
+.. |P102_usedlibraries| replace::  https://github.com/olehs/PZEM004T
+
+.. |P103_name| replace:: :cyan:`Atlas Scientific EZO pH`
+.. |P103_type| replace:: :cyan:`Environment`
+.. |P103_typename| replace:: :cyan:`Environment - Atlas Scientific EZO pH`
+.. |P103_porttype| replace:: `.`
+.. |P103_status| replace:: :yellow:`TESTING`
+.. |P103_github| replace:: P103_Atlas_EZO_pH.ino 
+.. _P103_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P103_Atlas_EZO_pH.ino 
+.. |P103_usedby| replace:: `.`
+.. |P103_shortinfo| replace:: `.`
+.. |P103_maintainer| replace:: TD-er
+.. |P103_compileinfo| replace:: `.`
+.. |P103_usedlibraries| replace::  `.`
+.. |P103_datasheet| replace::  https://atlas-scientific.com/files/pH_EZO_Datasheet.pdf
+
+.. |P104_name| replace:: :cyan:`Atlas Scientific EC EZO`
+.. |P104_type| replace:: :cyan:`Environment`
+.. |P104_typename| replace:: :cyan:`Environment - Atlas Scientific EC EZO`
+.. |P104_porttype| replace:: `.`
+.. |P104_status| replace:: :yellow:`TESTING`
+.. |P104_github| replace:: P104_Atlas_EZO_EC.ino
+.. _P104_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P104_Atlas_EZO_EC.ino 
+.. |P104_usedby| replace:: `.`
+.. |P104_shortinfo| replace:: `.`
+.. |P104_maintainer| replace:: TD-er
+.. |P104_compileinfo| replace:: `.`
+.. |P104_usedlibraries| replace::  `.`
+.. |P104_datasheet| replace::  https://atlas-scientific.com/files/electrically-isolated-ezo-carrier-board.pdf
+
+
+.. |P105_name| replace:: :cyan:`Atlas Scientific EZO ORP`
+.. |P105_type| replace:: :cyan:`Environment`
+.. |P105_typename| replace:: :cyan:`Environment - Atlas Scientific EZO ORP`
+.. |P105_porttype| replace:: `.`
+.. |P105_status| replace:: :yellow:`TESTING`
+.. |P105_github| replace:: P105_Atlas_EZO_ORP.ino
+.. _P105_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P105_Atlas_EZO_ORP.ino
+.. |P105_usedby| replace:: `.`
+.. |P105_shortinfo| replace:: `.`
+.. |P105_maintainer| replace:: TD-er
+.. |P105_compileinfo| replace:: `.`
+.. |P105_usedlibraries| replace::  `.`
+.. |P105_datasheet| replace::  https://atlas-scientific.com/files/ORP_EZO_Datasheet.pdf
+
+
+.. |P106_name| replace:: :cyan:`BME680`
+.. |P106_type| replace:: :cyan:`Environment`
+.. |P106_typename| replace:: :cyan:`Environment - BME680`
+.. |P106_porttype| replace:: `.`
+.. |P106_status| replace:: :yellow:`TESTING`
+.. |P106_github| replace:: P106_BME680.ino
+.. _P106_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P106_BME680.ino
+.. |P106_usedby| replace:: `.`
+.. |P106_shortinfo| replace:: `.`
+.. |P106_maintainer| replace:: TD-er
+.. |P106_compileinfo| replace:: `.`
+.. |P106_usedlibraries| replace::  https://github.com/adafruit/Adafruit_BME680
+
+.. |P107_name| replace:: :cyan:`SI1145`
+.. |P107_type| replace:: :cyan:`UV`
+.. |P107_typename| replace:: :cyan:`UV - SI1145`
+.. |P107_porttype| replace:: `.`
+.. |P107_status| replace:: :yellow:`TESTING`
+.. |P107_github| replace:: P107_Si1145.ino
+.. _P107_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P107_Si1145.ino
+.. |P107_usedby| replace:: `.`
+.. |P107_shortinfo| replace:: `.`
+.. |P107_maintainer| replace:: TD-er
+.. |P107_compileinfo| replace:: `.`
+.. |P107_usedlibraries| replace::  https://github.com/adafruit/Adafruit_SI1145_Library
+
+.. |P108_name| replace:: :cyan:`DDS238-x`
+.. |P108_type| replace:: :cyan:`Energy (AC)`
+.. |P108_typename| replace:: :cyan:`Energy (AC) - DDS238-x`
+.. |P108_porttype| replace:: `.`
+.. |P108_status| replace:: :yellow:`TESTING`
+.. |P108_github| replace:: P108_DDS238.ino
+.. _P108_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P108_DDS238.ino
+.. |P108_usedby| replace:: `.`
+.. |P108_shortinfo| replace:: `.`
+.. |P108_maintainer| replace:: TD-er
+.. |P108_compileinfo| replace:: `.`
+.. |P108_usedlibraries| replace::  `.`

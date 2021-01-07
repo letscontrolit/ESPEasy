@@ -129,7 +129,9 @@ struct P073_data_struct : public PluginTaskData_base {
   void FillBufferWithTemp(long temperature) {
     ClearBuffer();
     char p073_digit[8];
-    sprintf_P(p073_digit, PSTR("%7d"), static_cast<int>(temperature));
+    bool between10and0 = (temperature < 10 && temperature >= 0);      // To have a zero prefix (0.x and -0.x) display between 0.9 and -0.9 degrees,
+    bool between0andMinus10 = (temperature < 0 && temperature > -10); // as all display types use 1 digit for temperatures between 10.0 and -10.0
+    sprintf_P(p073_digit, (between10and0 ? PSTR("     %02d") : (between0andMinus10 ? PSTR("    %03d") : PSTR("%7d"))), static_cast<int>(temperature));
     int p073_numlenght = strlen(p073_digit);
 
     for (int i = 0; i < p073_numlenght; i++) {

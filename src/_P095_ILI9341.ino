@@ -38,7 +38,7 @@ Price : ~ 5.40€/$ (https://fr.aliexpress.com/item/32919729730.html)
 
 
 ## Dependencies
-Plugin lib_deps = Adafruit GFX, Adafruit ILI9341
+Plugin lib_deps = Adafruit GFX, adafruit/Adafruit ILI9341 @ ^1.5.6
 
 ## API Documentation
 
@@ -275,23 +275,6 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
       {
         String tmpString = String(string);
         String arguments = String(string);
-
-        int dotPos = arguments.indexOf('.');
-        if(dotPos > -1 && arguments.substring(dotPos,dotPos+3).equalsIgnoreCase(F("tft")))
-        {
-          LoadTaskSettings(event->TaskIndex);
-          String name = arguments.substring(0,dotPos);
-          name.replace(F("["),F(""));
-          name.replace(F("]"),F(""));
-          if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
-          {
-            arguments = arguments.substring(dotPos+1);
-          }
-          else
-          {
-             return false;
-          }
-        }
 
         String command = F("");
         String subcommand = F("");
