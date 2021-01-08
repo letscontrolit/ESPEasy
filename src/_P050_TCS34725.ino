@@ -17,8 +17,8 @@
 
 
 #define PLUGIN_050
-#define PLUGIN_ID_050        50
-#define PLUGIN_NAME_050       "Color - TCS34725  [DEVELOPMENT]"
+#define PLUGIN_ID_050         50
+#define PLUGIN_NAME_050       "Color - TCS34725  [TESTING]"
 #define PLUGIN_VALUENAME1_050 "Red"
 #define PLUGIN_VALUENAME2_050 "Green"
 #define PLUGIN_VALUENAME3_050 "Blue"
@@ -115,7 +115,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       {
         #define P050_VALUE4_OPTIONS 4
         String optionsOutput[P050_VALUE4_OPTIONS];
-        optionsOutput[0] = F("Color Temperature");
+        optionsOutput[0] = F("Color Temperature (deprecated, inaccurate)");
         optionsOutput[1] = F("Color Temperature (DN40)");
         optionsOutput[2] = F("Lux");
         optionsOutput[3] = F("Clear");
@@ -197,7 +197,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         tcs.getRawData(&r, &g, &b, &c, true);
         switch (PCONFIG(3)) {
           case 0:
-            value4 = tcs.calculateColorTemperature(r, g, b);
+            value4 = tcs.calculateColorTemperature(r, g, b); // Deprecated because of deemed inaccurate calculation, kept for backward compatibility
             break;
           case 1:
             value4 = tcs.calculateColorTemperature_dn40(r, g, b, c);
@@ -214,6 +214,8 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex]     = 0.0f;
           UserVar[event->BaseVarIndex + 1] = 0.0f;
           UserVar[event->BaseVarIndex + 2] = 0.0f;
+        } else if ((r + g + b) > c) { // Check if the Clear value is in the correct range for a proper Normalized (s)RGB calculation
+          c = r + g + b; // Adjust Clear value here to not interfere with the ColorTemperatire DN40 calculation
         }
         switch (PCONFIG(2)) {
           case 0:
