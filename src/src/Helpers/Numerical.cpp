@@ -132,11 +132,12 @@ bool mustConsiderAsString(NumericalType detectedType) {
   switch (detectedType) {
     case NumericalType::FloatingPoint:
     case NumericalType::Integer:
-      return false;
+      break;
     case NumericalType::HexadecimalUInt:
     case NumericalType::BinaryUint:
       return true;  // Has '0x' or '0b' as prefix    
   }
+  return false;
 }
 
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {

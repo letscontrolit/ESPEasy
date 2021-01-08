@@ -1102,7 +1102,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Remove incompatible plugins ************************************************
 \******************************************************************************/
-#ifdef PLUGIN_SET_TEST_ESP32
+#ifdef ESP32
 //  #undef USES_P010   // BH1750          (doesn't work yet on ESP32)
 //  #undef USES_P049   // MHZ19           (doesn't work yet on ESP32)
 
@@ -1112,9 +1112,15 @@ To create/register a plugin, you have to :
 //  #undef USES_P056   // SDS011-Dust     (doesn't work yet on ESP32)
 //  #undef USES_P065   // DRF0299
 //  #undef USES_P071   // Kamstrup401
-  #undef USES_P075   // Nextion
+//  #undef USES_P075   // Nextion
 //  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
 //  #undef USES_P082   // GPS
+
+  #ifdef USES_C016
+    // Cache controller uses RTC memory which we do not yet support on ESP32.
+    #undef USES_C016 // Cache controller
+  #endif
+
 
 #endif
 

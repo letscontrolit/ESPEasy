@@ -34,10 +34,6 @@ std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
 std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;
 std::vector<deviceIndex_t> DeviceIndex_sorted;
 
-double customFloatVar[CUSTOM_VARS_MAX];
-
-float UserVar[VARS_PER_TASK * TASKS_MAX];
-
 int deviceCount = -1;
 
 boolean (*Plugin_ptr[PLUGIN_MAX])(byte,

@@ -12,6 +12,7 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Globals/EventQueue.h"
+#include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
@@ -72,10 +73,10 @@ String Command_Rules_Let(struct EventStruct *event, const char *Line)
   String TmpStr1;
 
   if (GetArgv(Line, TmpStr1, 3)) {
-    if (CUSTOM_VARS_MAX >= event->Par1) {
+    if (event->Par1 >= 0) {
       double result = 0.0;
       Calculate(TmpStr1.c_str(), &result);
-      customFloatVar[event->Par1 - 1] = result;
+      setCustomFloatVar(event->Par1, result);
       return return_command_success();
     }
   }

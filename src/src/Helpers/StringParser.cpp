@@ -9,6 +9,7 @@
 
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
+#include "../Globals/RuntimeData.h"
 
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -90,24 +91,22 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
     {
       // Address an internal variable either as float or as int
       // For example: Let,10,[VAR#9]
-      int varNum;
+      unsigned int varNum;
 
-      if (validIntFromString(valueName, varNum)) {
-        if ((varNum > 0) && (varNum <= CUSTOM_VARS_MAX)) {
-          unsigned char nr_decimals = maxNrDecimals_double(customFloatVar[varNum - 1]);
-          bool trimTralingZeros = true;
+      if (validUIntFromString(valueName, varNum)) {
+        unsigned char nr_decimals = maxNrDecimals_double(getCustomFloatVar(varNum));
+        bool trimTralingZeros = true;
 
-          if (deviceName.equals(F("int"))) {
-            nr_decimals = 0;
-          } else if (format.length() != 0)
-          {
-            // There is some formatting here, so do not throw away decimals
-            trimTralingZeros = false;
-          }
-          String value = doubleToString(customFloatVar[varNum - 1], nr_decimals, trimTralingZeros);
-          value.trim();
-          transformValue(newString, minimal_lineSize, value, format, tmpString);
+        if (deviceName.equals(F("int"))) {
+          nr_decimals = 0;
+        } else if (format.length() != 0)
+        {
+          // There is some formatting here, so do not throw away decimals
+          trimTralingZeros = false;
         }
+        String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTralingZeros);
+        value.trim();
+        transformValue(newString, minimal_lineSize, value, format, tmpString);
       }
     }
     else

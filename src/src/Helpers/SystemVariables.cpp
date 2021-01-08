@@ -17,10 +17,12 @@
 # include "../Globals/MQTT.h"
 #endif // ifdef USES_MQTT
 #include "../Globals/NetworkState.h"
+#include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
 
@@ -196,13 +198,13 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
   const int v_index = s.indexOf("%v");
 
-  if ((v_index != -1) && isDigit(s[v_index + 2])) {
-    for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-      String key = "%v" + String(i + 1) + '%';
-
+  if ((v_index != -1)) {
+    unsigned int i;
+    if (validUIntFromString(s.substring(v_index + 2), i)) {
+      String key = "%v" + String(i) + '%';
       if (s.indexOf(key) != -1) {
         const bool trimTralingZeros = true;
-        String value = doubleToString(customFloatVar[i], 6, trimTralingZeros);
+        String value = doubleToString(getCustomFloatVar(i), 6, trimTralingZeros);
 
         if (useURLencode) {
           value = URLEncode(value.c_str());

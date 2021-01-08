@@ -22,6 +22,7 @@
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/I2Cdev.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/RuntimeData.h"
 #include "src/Globals/Settings.h"
 
 #include "src/Helpers/ESPEasy_math.h"

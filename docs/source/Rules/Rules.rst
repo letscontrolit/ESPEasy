@@ -1017,16 +1017,27 @@ You could then use the command "ToggleGPIO" with dynamic GPIO numbers and state.
 Internal variables
 ------------------
 
-A really great feature to use is the 16 internal variables. You set them like this:
+A really great feature to use is the internal variables. You set them like this:
 
 .. code-block:: none
 
  Let,<n>,<value>
 
-Where n can be 1 to 16 and the value an float. To use the values in strings you can
+Where n must be a positive integer (type ``uint32_t``) and the value a floating point value. To use the values in strings you can
 either use the ``%v7%`` syntax or ``[var#7]``. BUT for formulas you need to use the square
 brackets in order for it to compute, i.e. ``[var#12]``.
 
+.. note: The number for ``n`` used to be limited to 1 ... 16, but this limit has been removed in builds made after 2021-01-09.
+
+If you need to make sure the stored value is an integer value, use the ``[int#n]`` syntax. (i.e. ``[int#12]``)
+The index ``n`` is shared among ``[var#n]`` and ``[int#n]``.
+
+On the "System Variables" page of the web interface all set values can be inspected including their values.
+If none is set, "No variables set" will be shown.
+
+If a specific system variable was never set (using the ``Let`` command), its value will be considered to be ``0.0``.
+
+.. note: Interval variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without loosing power), please use a dummy task for this.
 
 Averaging filters
 -----------------

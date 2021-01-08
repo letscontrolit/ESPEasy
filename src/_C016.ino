@@ -26,6 +26,7 @@ The controller can deliver the data to:
 */
 
 #include "src/Globals/C016_ControllerCache.h"
+#include "src/Globals/ESPEasy_time.h"
 
 #define CPLUGIN_016
 #define CPLUGIN_ID_016         16

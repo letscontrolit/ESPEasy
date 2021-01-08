@@ -92,9 +92,6 @@
 #ifndef UNIT_NUMBER_MAX
   #define UNIT_NUMBER_MAX                   254 // Stored in Settings.Unit  unit 255 = broadcast
 #endif
-#ifndef CUSTOM_VARS_MAX
-  #define CUSTOM_VARS_MAX                    16
-#endif
 
 
 // ***********************************************************************
