@@ -678,7 +678,7 @@ int parseCommandArgumentInt(const String& string, unsigned int argc)
     String TmpStr;
 
     if (GetArgv(string.c_str(), TmpStr, argc + 1)) {
-      value = CalculateParam(TmpStr.c_str());
+      value = CalculateParam(TmpStr);
     }
   }
   return value;

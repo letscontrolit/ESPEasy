@@ -89,10 +89,11 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         {
           String value = parseString(string, 2);
           double result=0;
-          Calculate(value.c_str(), &result);
-          PCONFIG_FLOAT(0) = result;
-          SaveSettings();
-          success = true;
+          if (!isError(Calculate(value, result))) {
+            PCONFIG_FLOAT(0) = result;
+            SaveSettings();
+            success = true;
+          }
         }
         break;
       }

@@ -583,8 +583,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
             formula.replace(F("%pvalue%"), String(preValue[varNr]));
             formula.replace(F("%value%"), String(UserVar[TempEvent.BaseVarIndex + varNr]));
             double result = 0;
-            byte error = Calculate(formula.c_str(), &result);
-            if (error == 0)
+            if (!isError(Calculate(formula, result)))
               UserVar[TempEvent.BaseVarIndex + varNr] = result;
           }
         }

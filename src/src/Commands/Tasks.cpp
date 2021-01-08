@@ -10,6 +10,8 @@
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/Serial.h"
 
+#include "../Globals/RuntimeData.h"
+
 #include "../Helpers/Misc.h"
 #include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
@@ -33,6 +35,28 @@ bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned i
 
   taskIndex = tmp_taskIndex;
 
+  return true;
+}
+
+bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& taskIndex) 
+{
+  String TmpStr1;
+  unsigned int varNr;
+
+  if (!validTaskVars(event, taskIndex, varNr)) { return false; }
+  unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
+
+  if (GetArgv(Line, TmpStr1, 4)) {
+    // Perform calculation with float result.
+    double result = 0;
+    if (isError(Calculate(TmpStr1, result))) {
+      return false;
+    }
+    UserVar[uservarIndex] = result;
+  } else  {
+    // TODO: Get Task description and var name
+    serialPrintln(String(UserVar[uservarIndex]));
+  }
   return true;
 }
 
@@ -83,25 +107,9 @@ String Command_Task_Enable(struct EventStruct *event, const char *Line)
 
 String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
 {
-  String TmpStr1;
   taskIndex_t  taskIndex;
-  unsigned int varNr;
-
-  if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
-  unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
-
-  if (GetArgv(Line, TmpStr1, 4)) {
-    // Perform calculation with float result.
-    double result = 0;
-    Calculate(TmpStr1.c_str(), &result);
-
-    // FIXME TD-er: The return code of Calculate is not used.
-    UserVar[uservarIndex] = result;
-  } else  {
-    // TODO: Get Task description and var name
-    serialPrintln(String(UserVar[uservarIndex]));
-  }
-  return return_command_success();
+  if (taskValueSet(event, Line, taskIndex)) return return_command_success();
+  return return_command_failed();
 }
 
 String Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
@@ -121,21 +129,13 @@ String Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
 
 String Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
 {
-  String TmpStr1;
-
-  if (GetArgv(Line, TmpStr1, 4)) {
-    taskIndex_t  taskIndex;
-    unsigned int varNr;
-
-    if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
-    unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
-
-    double result = 0;
-    Calculate(TmpStr1.c_str(), &result);
-    UserVar[uservarIndex] = result;
+  taskIndex_t taskIndex;
+  if (taskValueSet(event, Line, taskIndex))
+  {
     SensorSendTask(taskIndex);
+    return return_command_success();
   }
-  return return_command_success();
+  return return_command_failed();
 }
 
 String Command_Task_Run(struct EventStruct *event, const char *Line)

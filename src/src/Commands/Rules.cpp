@@ -75,9 +75,10 @@ String Command_Rules_Let(struct EventStruct *event, const char *Line)
   if (GetArgv(Line, TmpStr1, 3)) {
     if (event->Par1 >= 0) {
       double result = 0.0;
-      Calculate(TmpStr1.c_str(), &result);
-      setCustomFloatVar(event->Par1, result);
-      return return_command_success();
+      if (!isError(Calculate(TmpStr1, result))) {
+        setCustomFloatVar(event->Par1, result);
+        return return_command_success();
+      }
     }
   }
   return return_command_failed();

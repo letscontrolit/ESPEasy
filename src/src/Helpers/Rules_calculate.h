@@ -2,22 +2,29 @@
 #define HELPERS_RULES_CALCULATE_H
 
 
+#include "../../ESPEasy_common.h"
+
 /********************************************************************************************\
    Calculate function for simple expressions
  \*********************************************************************************************/
-#define CALCULATE_OK                            0
-#define CALCULATE_ERROR_STACK_OVERFLOW          1
-#define CALCULATE_ERROR_BAD_OPERATOR            2
-#define CALCULATE_ERROR_PARENTHESES_MISMATCHED  3
-#define CALCULATE_ERROR_UNKNOWN_TOKEN           4
 #define STACK_SIZE 10 // was 50
 #define TOKEN_MAX 20
+
+enum class CalculateReturnCode {
+ OK                           = 0,
+ ERROR_STACK_OVERFLOW         = 1,
+ ERROR_BAD_OPERATOR           = 2,
+ ERROR_PARENTHESES_MISMATCHED = 3,
+ ERROR_UNKNOWN_TOKEN          = 4
+};
+
+bool isError(CalculateReturnCode returnCode);
 
 extern double  globalstack[STACK_SIZE];
 extern double *sp;
 extern double *sp_max;
 
-int    push(double value);
+CalculateReturnCode push(double value);
 
 double pop();
 
@@ -30,7 +37,7 @@ double apply_unary_operator(char   op,
 
 char * next_token(char *linep);
 
-int    RPNCalculate(char *token);
+CalculateReturnCode  RPNCalculate(char *token);
 
 // operators
 // precedence   operators         associativity
@@ -43,10 +50,14 @@ bool         op_left_assoc(const char c);
 
 unsigned int op_arg_count(const char c);
 
-int          Calculate(const char *input,
-                       double     *result);
+CalculateReturnCode Calculate(const String& input,
+                              double     &result);
 
-int          CalculateParam(const char *TmpStr);
+
+CalculateReturnCode doCalculate(const char *input,
+                              double     *result);
+
+int          CalculateParam(const String& TmpStr);
 
 
 #endif // ifndef HELPERS_RULES_CALCULATE_H

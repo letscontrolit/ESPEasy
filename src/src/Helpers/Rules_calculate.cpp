@@ -16,6 +16,10 @@ double  globalstack[STACK_SIZE];
 double *sp     = globalstack - 1;
 double *sp_max = &globalstack[STACK_SIZE - 1];
 
+bool isError(CalculateReturnCode returnCode) {
+  return returnCode != CalculateReturnCode::OK; 
+}
+
 bool is_operator(char c)
 {
   return (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%');
@@ -26,16 +30,14 @@ bool is_unary_operator(char c)
   return (c == '!');
 }
 
-int push(double value)
+CalculateReturnCode push(double value)
 {
   if (sp != sp_max) // Full
   {
     *(++sp) = value;
-    return 0;
+    return CalculateReturnCode::OK;
   }
-  else {
-    return CALCULATE_ERROR_STACK_OVERFLOW;
-  }
+  return CalculateReturnCode::ERROR_STACK_OVERFLOW;
 }
 
 double pop()
@@ -88,10 +90,11 @@ char* next_token(char *linep)
   return linep;
 }
 
-int RPNCalculate(char *token)
+CalculateReturnCode RPNCalculate(char *token)
 {
+  CalculateReturnCode ret = CalculateReturnCode::OK;
   if (token[0] == 0) {
-    return 0; // Don't bother for an empty string
+    return ret; // Don't bother for an empty string
   }
 
   if (is_operator(token[0]) && (token[1] == 0))
@@ -99,27 +102,24 @@ int RPNCalculate(char *token)
     double second = pop();
     double first  = pop();
 
-    if (push(apply_operator(token[0], first, second))) {
-      return CALCULATE_ERROR_STACK_OVERFLOW;
-    }
+    ret = push(apply_operator(token[0], first, second));
+    if (isError(ret)) return ret;
   } else if (is_unary_operator(token[0]) && (token[1] == 0))
   {
     double first = pop();
 
-    if (push(apply_unary_operator(token[0], first))) {
-      return CALCULATE_ERROR_STACK_OVERFLOW;
-    }
+    ret = push(apply_unary_operator(token[0], first));
+    if (isError(ret)) return ret;
   } else {
     // Fetch next if there is any
     double value = 0.0;
     validDoubleFromString(token, value);
 
-    if (push(value)) { // If it is a value, push to the stack
-      return CALCULATE_ERROR_STACK_OVERFLOW;
-    }
+    ret = push(value); // If it is a value, push to the stack
+    if (isError(ret)) return ret;
   }
 
-  return 0;
+  return ret;
 }
 
 // operators
@@ -180,7 +180,48 @@ unsigned int op_arg_count(const char c)
   return 0;
 }
 
-int Calculate(const char *input, double *result)
+CalculateReturnCode Calculate(const String& input,
+                              double     &result)
+{
+  CalculateReturnCode returnCode = doCalculate(input.c_str(), &result);
+  if (isError(returnCode)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("Calculate: ");
+
+      switch (returnCode) {
+        case CalculateReturnCode::ERROR_STACK_OVERFLOW:
+          log += F("Stack Overflow");
+          break;
+        case CalculateReturnCode::ERROR_BAD_OPERATOR:
+          log += F("Bad Operator");
+          break;
+        case CalculateReturnCode::ERROR_PARENTHESES_MISMATCHED:
+          log += F("Parenthesis mismatch");
+          break;
+        case CalculateReturnCode::ERROR_UNKNOWN_TOKEN:
+          log += F("Unknown token");
+          break;
+        case CalculateReturnCode::OK:
+          // Already handled, but need to have all cases here so the compiler can warn if we're missing one.
+          break;
+      }
+
+      #ifndef BUILD_NO_DEBUG
+      log += F(" input: ");
+      log += input;
+      log += F(" = ");
+
+      const bool trimTralingZeros = true;
+      log += doubleToString(&result, 6, trimTralingZeros);
+      #endif
+
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+  }
+  return returnCode;
+}
+
+CalculateReturnCode doCalculate(const char *input, double *result)
 {
   #define TOKEN_LENGTH 25
   #ifndef BUILD_NO_RAM_TRACKER
@@ -192,7 +233,7 @@ int Calculate(const char *input, double *result)
   char stack[32];      // operator stack
   unsigned int sl = 0; // stack length
   char sc;             // used for record stack element
-  int  error = 0;
+  CalculateReturnCode error = CalculateReturnCode::OK;
 
   // *sp=0; // bug, it stops calculating after 50 times
   sp = globalstack - 1;
@@ -205,7 +246,7 @@ int Calculate(const char *input, double *result)
 
   while (strpos < strend)
   {
-    if ((TokenPos - &token[0]) >= (TOKEN_LENGTH - 1)) { return CALCULATE_ERROR_STACK_OVERFLOW; }
+    if ((TokenPos - &token[0]) >= (TOKEN_LENGTH - 1)) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
 
     // read one token from the input stream
     oc = c;
@@ -227,7 +268,7 @@ int Calculate(const char *input, double *result)
         error       = RPNCalculate(token);
         TokenPos    = token;
 
-        if (error) { return error; }
+        if (isError(error)) { return error; }
 
         while (sl > 0 && sl < 31)
         {
@@ -247,7 +288,7 @@ int Calculate(const char *input, double *result)
             error       = RPNCalculate(token);
             TokenPos    = token;
 
-            if (error) { return error; }
+            if (isError(error)) { return error; }
             sl--;
           }
           else {
@@ -263,7 +304,7 @@ int Calculate(const char *input, double *result)
       // If the token is a left parenthesis, then push it onto the stack.
       else if (c == '(')
       {
-        if (sl >= 32) { return CALCULATE_ERROR_STACK_OVERFLOW; }
+        if (sl >= 32) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
         stack[sl] = c;
         ++sl;
       }
@@ -281,9 +322,9 @@ int Calculate(const char *input, double *result)
           error       = RPNCalculate(token);
           TokenPos    = token;
 
-          if (error) { return error; }
+          if (isError(error)) { return error; }
 
-          if (sl > 32) { return CALCULATE_ERROR_STACK_OVERFLOW; }
+          if (sl > 32) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
           sc = stack[sl - 1];
 
           if (sc == '(')
@@ -301,7 +342,7 @@ int Calculate(const char *input, double *result)
 
         // If the stack runs out without finding a left parenthesis, then there are mismatched parentheses.
         if (!pe) {
-          return CALCULATE_ERROR_PARENTHESES_MISMATCHED;
+          return CalculateReturnCode::ERROR_PARENTHESES_MISMATCHED;
         }
 
         // Pop the left parenthesis from the stack, but not onto the token queue.
@@ -314,7 +355,7 @@ int Calculate(const char *input, double *result)
         }
       }
       else {
-        return CALCULATE_ERROR_UNKNOWN_TOKEN;
+        return CalculateReturnCode::ERROR_UNKNOWN_TOKEN;
       }
     }
     ++strpos;
@@ -327,14 +368,14 @@ int Calculate(const char *input, double *result)
     sc = stack[sl - 1];
 
     if ((sc == '(') || (sc == ')')) {
-      return CALCULATE_ERROR_PARENTHESES_MISMATCHED;
+      return CalculateReturnCode::ERROR_PARENTHESES_MISMATCHED;
     }
 
     *(TokenPos) = 0;
     error       = RPNCalculate(token);
     TokenPos    = token;
 
-    if (error) { return error; }
+    if (isError(error)) { return error; }
     *TokenPos = sc;
     ++TokenPos;
     --sl;
@@ -344,7 +385,7 @@ int Calculate(const char *input, double *result)
   error       = RPNCalculate(token);
   TokenPos    = token;
 
-  if (error)
+  if (isError(error))
   {
     *result = 0;
     return error;
@@ -353,55 +394,23 @@ int Calculate(const char *input, double *result)
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("Calculate2"));
   #endif
-  return CALCULATE_OK;
+  return CalculateReturnCode::OK;
 }
 
-int CalculateParam(const char *TmpStr) {
+int CalculateParam(const String& TmpStr) {
   int returnValue;
 
   // Minimize calls to the Calulate function.
   // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
   if (TmpStr[0] != '=') {
-    returnValue = str2int(TmpStr);
+    validIntFromString(TmpStr, returnValue);
   } else {
     double param = 0;
 
     // Starts with an '=', so Calculate starting at next position
-    int returnCode = Calculate(&TmpStr[1], &param);
-
-    if (returnCode != CALCULATE_OK) {
-      String errorDesc;
-
-      switch (returnCode) {
-        case CALCULATE_ERROR_STACK_OVERFLOW:
-          errorDesc = F("Stack Overflow");
-          break;
-        case CALCULATE_ERROR_BAD_OPERATOR:
-          errorDesc = F("Bad Operator");
-          break;
-        case CALCULATE_ERROR_PARENTHESES_MISMATCHED:
-          errorDesc = F("Parenthesis mismatch");
-          break;
-        case CALCULATE_ERROR_UNKNOWN_TOKEN:
-          errorDesc = F("Unknown token");
-          break;
-        default:
-          errorDesc = F("Unknown error");
-          break;
-      }
-
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log = String(F("CALCULATE PARAM ERROR: ")) + errorDesc;
-        addLog(LOG_LEVEL_ERROR, log);
-        log  = F("CALCULATE PARAM ERROR details: ");
-        log += TmpStr;
-        log += F(" = ");
-        log += round(param);
-        addLog(LOG_LEVEL_ERROR, log);
-      }
-    }
+    CalculateReturnCode returnCode = Calculate(TmpStr.substring(1), param);
 #ifndef BUILD_NO_DEBUG
-    else {
+    if (!isError(returnCode)) {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CALCULATE PARAM: ");
         log += TmpStr;
