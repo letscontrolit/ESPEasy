@@ -26,12 +26,21 @@ Description
 
 The Wiegand plugin reads the Wiegand protocol, either the 26 or 34 bit variant, transmitted over a 2-wire serial connection. The RFID reader or keypad has to be connected to two GPIO pins on the ESP module. The plugin uses an interrupt routine to decode the bitstream. A RFID reader will send a message containing the unique RFID Tag ID. A keypad will send the input after pressing the #, or another configured, confirmation key.
 
-Data is transmitted in hexadecimal format.
-For numeric keypads an option is provided to transform the hex value into a decimal representation, so that when entering value 1234# (# is the confirmation key here), not the result 4660 (0x1234) is made available, but actually 1234. This for easier processing/validating of the entered value. Any input of A-F is replaced by 0 when this option is enabled! It should not be enabled when using a RFID reader, as the Tag ID won't be correct.
+Data is transmitted in hexadecimal format. (See below for an option to transform to decimal when using a decimal numeric keypad.)
 
 The value is placed in the Tag variable (this name can be changed).
 
 .. image:: P008_Settings.png
+
+**Present hex as decimal value** (Disabled by default) For decimal numeric keypads this option is provided to transform the hex value into a decimal representation, so that when entering value 1234# (# is the confirmation key here), not the result 4660 (0x1234) is made available, but actually 1234. This for easier processing/validating of the entered value. Any input of A-F is replaced by 0 when this option is enabled! It should not be enabled when using a RFID reader, as the Tag ID won't be correct!
+
+**Automatic Tag removal** (Enabled by default) after scanning a tag, it can be automatically removed (reset).
+
+**Automatic Tag removal after** (Default 500 mSec) The timeout in milli seconds (range 250 - 60000) after which the last Tag will be automatically removed, if that option is enabled.
+
+**Value to set on Tag removal** (Default 0) Set a value to the Tag when the previous tag is removed. (Range 0 to 2147483647 as larger values are difficult to store in settings.)
+
+**Event on Tag removal** (Disabled by default) When enabled sends the removed Tag value as an event and to all enabled controllers.
 
 Supported hardware
 ------------------
