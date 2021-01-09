@@ -8,6 +8,10 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 
+
+RulesCalculate_t RulesCalculate;
+
+
 /********************************************************************************************\
    Calculate function for simple expressions
  \*********************************************************************************************/
@@ -17,20 +21,20 @@ double *sp     = globalstack - 1;
 double *sp_max = &globalstack[STACK_SIZE - 1];
 
 bool isError(CalculateReturnCode returnCode) {
-  return returnCode != CalculateReturnCode::OK; 
+  return returnCode != CalculateReturnCode::OK;
 }
 
-bool is_operator(char c)
+bool RulesCalculate_t::is_operator(char c)
 {
-  return (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%');
+  return c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%';
 }
 
-bool is_unary_operator(char c) 
+bool RulesCalculate_t::is_unary_operator(char c)
 {
-  return (c == '!');
+  return c == '!';
 }
 
-CalculateReturnCode push(double value)
+CalculateReturnCode RulesCalculate_t::push(double value)
 {
   if (sp != sp_max) // Full
   {
@@ -40,7 +44,7 @@ CalculateReturnCode push(double value)
   return CalculateReturnCode::ERROR_STACK_OVERFLOW;
 }
 
-double pop()
+double RulesCalculate_t::pop()
 {
   if (sp != (globalstack - 1)) { // empty
     return *(sp--);
@@ -50,7 +54,7 @@ double pop()
   }
 }
 
-double apply_operator(char op, double first, double second)
+double RulesCalculate_t::apply_operator(char op, double first, double second)
 {
   switch (op)
   {
@@ -71,7 +75,7 @@ double apply_operator(char op, double first, double second)
   }
 }
 
-double apply_unary_operator(char op, double first)
+double RulesCalculate_t::apply_unary_operator(char op, double first)
 {
   switch (op)
   {
@@ -82,17 +86,19 @@ double apply_unary_operator(char op, double first)
   }
 }
 
-char* next_token(char *linep)
-{
-  while (isspace(*(linep++))) {}
+/*
+   char * RulesCalculate_t::next_token(char *linep)
+   {
+   while (isspace(*(linep++))) {}
 
-  while (*linep && !isspace(*(linep++))) {}
-  return linep;
-}
-
-CalculateReturnCode RPNCalculate(char *token)
+   while (*linep && !isspace(*(linep++))) {}
+   return linep;
+   }
+ */
+CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
 {
   CalculateReturnCode ret = CalculateReturnCode::OK;
+
   if (token[0] == 0) {
     return ret; // Don't bother for an empty string
   }
@@ -103,20 +109,23 @@ CalculateReturnCode RPNCalculate(char *token)
     double first  = pop();
 
     ret = push(apply_operator(token[0], first, second));
-    if (isError(ret)) return ret;
+
+    if (isError(ret)) { return ret; }
   } else if (is_unary_operator(token[0]) && (token[1] == 0))
   {
     double first = pop();
 
     ret = push(apply_unary_operator(token[0], first));
-    if (isError(ret)) return ret;
+
+    if (isError(ret)) { return ret; }
   } else {
     // Fetch next if there is any
     double value = 0.0;
     validDoubleFromString(token, value);
 
     ret = push(value); // If it is a value, push to the stack
-    if (isError(ret)) return ret;
+
+    if (isError(ret)) { return ret; }
   }
 
   return ret;
@@ -127,7 +136,7 @@ CalculateReturnCode RPNCalculate(char *token)
 // 3            !                 right to left
 // 2            * / %             left to right
 // 1            + - ^             left to right
-int op_preced(const char c)
+int RulesCalculate_t::op_preced(const char c)
 {
   switch (c)
   {
@@ -146,7 +155,7 @@ int op_preced(const char c)
   return 0;
 }
 
-bool op_left_assoc(const char c)
+bool RulesCalculate_t::op_left_assoc(const char c)
 {
   switch (c)
   {
@@ -163,7 +172,7 @@ bool op_left_assoc(const char c)
   return false;
 }
 
-unsigned int op_arg_count(const char c)
+unsigned int RulesCalculate_t::op_arg_count(const char c)
 {
   switch (c)
   {
@@ -180,53 +189,12 @@ unsigned int op_arg_count(const char c)
   return 0;
 }
 
-CalculateReturnCode Calculate(const String& input,
-                              double     &result)
-{
-  CalculateReturnCode returnCode = doCalculate(input.c_str(), &result);
-  if (isError(returnCode)) {
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("Calculate: ");
-
-      switch (returnCode) {
-        case CalculateReturnCode::ERROR_STACK_OVERFLOW:
-          log += F("Stack Overflow");
-          break;
-        case CalculateReturnCode::ERROR_BAD_OPERATOR:
-          log += F("Bad Operator");
-          break;
-        case CalculateReturnCode::ERROR_PARENTHESES_MISMATCHED:
-          log += F("Parenthesis mismatch");
-          break;
-        case CalculateReturnCode::ERROR_UNKNOWN_TOKEN:
-          log += F("Unknown token");
-          break;
-        case CalculateReturnCode::OK:
-          // Already handled, but need to have all cases here so the compiler can warn if we're missing one.
-          break;
-      }
-
-      #ifndef BUILD_NO_DEBUG
-      log += F(" input: ");
-      log += input;
-      log += F(" = ");
-
-      const bool trimTralingZeros = true;
-      log += doubleToString(&result, 6, trimTralingZeros);
-      #endif
-
-      addLog(LOG_LEVEL_ERROR, log);
-    }
-  }
-  return returnCode;
-}
-
-CalculateReturnCode doCalculate(const char *input, double *result)
+CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *result)
 {
   #define TOKEN_LENGTH 25
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("Calculate"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   const char *strpos = input, *strend = input + strlen(input);
   char token[TOKEN_LENGTH];
   char c, oc, *TokenPos = token;
@@ -246,7 +214,7 @@ CalculateReturnCode doCalculate(const char *input, double *result)
 
   while (strpos < strend)
   {
-    if ((TokenPos - &token[0]) >= (TOKEN_LENGTH - 1)) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
+    if ((TokenPos - &token[0]) >= (TOKEN_LENGTH - 1)) { return CalculateReturnCode::ERROR_TOKEN_LENGTH_EXCEEDED; }
 
     // read one token from the input stream
     oc = c;
@@ -255,7 +223,11 @@ CalculateReturnCode doCalculate(const char *input, double *result)
     if (c != ' ')
     {
       // If the token is a number (identifier), then add it to the token queue.
-      if (isxdigit(c) || ((c == 'x') && (oc == '0')) || (c == '.') || ((c == '-') && is_operator(oc)))
+      if (isxdigit(c)  ||                                // HEX digit also includes normal decimal numbers
+          ((oc == '0') && ((c == 'x') || (c == 'b'))) || // HEX (0x) or BIN (0b) prefixes.
+          (c == '.')   ||                                // A decimal point of a floating point number.
+          (is_operator(oc) && (c == '-'))                // Beginning of a negative number after an operator.
+          )
       {
         *TokenPos = c;
         ++TokenPos;
@@ -264,7 +236,7 @@ CalculateReturnCode doCalculate(const char *input, double *result)
       // If the token is an operator, op1, then:
       else if (is_operator(c) || is_unary_operator(c))
       {
-        *(TokenPos) = 0;
+        *(TokenPos) = 0; // Mark end of token string
         error       = RPNCalculate(token);
         TokenPos    = token;
 
@@ -279,12 +251,17 @@ CalculateReturnCode doCalculate(const char *input, double *result)
           // or op1 has precedence less than that of op2,
           // The differing operator priority decides pop / push
           // If 2 operators have equal priority then associativity decides.
-          if (is_operator(sc) && ((op_left_assoc(c) && (op_preced(c) <= op_preced(sc))) || (op_preced(c) < op_preced(sc))))
+          if (is_operator(sc) && 
+              (
+                (op_left_assoc(c) && (op_preced(c) <= op_preced(sc))) || 
+                (op_preced(c) < op_preced(sc))
+              )
+             )
           {
             // Pop op2 off the stack, onto the token queue;
             *TokenPos = sc;
             ++TokenPos;
-            *(TokenPos) = 0;
+            *(TokenPos) = 0; // Mark end of token string
             error       = RPNCalculate(token);
             TokenPos    = token;
 
@@ -318,7 +295,7 @@ CalculateReturnCode doCalculate(const char *input, double *result)
         // pop operators off the stack onto the token queue
         while (sl > 0)
         {
-          *(TokenPos) = 0;
+          *(TokenPos) = 0; // Mark end of token string
           error       = RPNCalculate(token);
           TokenPos    = token;
 
@@ -371,7 +348,7 @@ CalculateReturnCode doCalculate(const char *input, double *result)
       return CalculateReturnCode::ERROR_PARENTHESES_MISMATCHED;
     }
 
-    *(TokenPos) = 0;
+    *(TokenPos) = 0; // Mark end of token string
     error       = RPNCalculate(token);
     TokenPos    = token;
 
@@ -381,7 +358,7 @@ CalculateReturnCode doCalculate(const char *input, double *result)
     --sl;
   }
 
-  *(TokenPos) = 0;
+  *(TokenPos) = 0; // Mark end of token string
   error       = RPNCalculate(token);
   TokenPos    = token;
 
@@ -393,10 +370,13 @@ CalculateReturnCode doCalculate(const char *input, double *result)
   *result = *sp;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("Calculate2"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   return CalculateReturnCode::OK;
 }
 
+/*******************************************************************************************
+* Helper functions to actually interact with the rules calculation functions.
+* *****************************************************************************************/
 int CalculateParam(const String& TmpStr) {
   int returnValue;
 
@@ -410,6 +390,7 @@ int CalculateParam(const String& TmpStr) {
     // Starts with an '=', so Calculate starting at next position
     CalculateReturnCode returnCode = Calculate(TmpStr.substring(1), param);
 #ifndef BUILD_NO_DEBUG
+
     if (!isError(returnCode)) {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CALCULATE PARAM: ");
@@ -423,4 +404,49 @@ int CalculateParam(const String& TmpStr) {
     returnValue = round(param); // return integer only as it's valid only for device and task id
   }
   return returnValue;
+}
+
+CalculateReturnCode Calculate(const String& input,
+                              double      & result)
+{
+  CalculateReturnCode returnCode = RulesCalculate.doCalculate(input.c_str(), &result);
+
+  if (isError(returnCode)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("Calculate: ");
+
+      switch (returnCode) {
+        case CalculateReturnCode::ERROR_STACK_OVERFLOW:
+          log += F("Stack Overflow");
+          break;
+        case CalculateReturnCode::ERROR_BAD_OPERATOR:
+          log += F("Bad Operator");
+          break;
+        case CalculateReturnCode::ERROR_PARENTHESES_MISMATCHED:
+          log += F("Parenthesis mismatch");
+          break;
+        case CalculateReturnCode::ERROR_UNKNOWN_TOKEN:
+          log += F("Unknown token");
+          break;
+        case CalculateReturnCode::ERROR_TOKEN_LENGTH_EXCEEDED:
+          log += String(F("Exceeded token length (")) + TOKEN_LENGTH + ')';
+          break;
+        case CalculateReturnCode::OK:
+          // Already handled, but need to have all cases here so the compiler can warn if we're missing one.
+          break;
+      }
+
+      #ifndef BUILD_NO_DEBUG
+      log += F(" input: ");
+      log += input;
+      log += F(" = ");
+
+      const bool trimTralingZeros = true;
+      log += doubleToString(result, 6, trimTralingZeros);
+      #endif // ifndef BUILD_NO_DEBUG
+
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+  }
+  return returnCode;
 }

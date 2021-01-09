@@ -11,53 +11,66 @@
 #define TOKEN_MAX 20
 
 enum class CalculateReturnCode {
- OK                           = 0,
- ERROR_STACK_OVERFLOW         = 1,
- ERROR_BAD_OPERATOR           = 2,
- ERROR_PARENTHESES_MISMATCHED = 3,
- ERROR_UNKNOWN_TOKEN          = 4
+  OK                           = 0,
+  ERROR_STACK_OVERFLOW         = 1,
+  ERROR_BAD_OPERATOR           = 2,
+  ERROR_PARENTHESES_MISMATCHED = 3,
+  ERROR_UNKNOWN_TOKEN          = 4,
+  ERROR_TOKEN_LENGTH_EXCEEDED  = 5
 };
 
 bool isError(CalculateReturnCode returnCode);
 
-extern double  globalstack[STACK_SIZE];
-extern double *sp;
-extern double *sp_max;
+struct RulesCalculate_t {
+  double  globalstack[STACK_SIZE];
+  double *sp;
+  double *sp_max;
 
-CalculateReturnCode push(double value);
+  bool                is_operator(char c);
 
-double pop();
+  bool                is_unary_operator(char c);
 
-double apply_operator(char   op,
-                      double first,
-                      double second);
+  CalculateReturnCode push(double value);
 
-double apply_unary_operator(char   op,
-                            double first);
+  double              pop();
 
-char * next_token(char *linep);
+  double              apply_operator(char   op,
+                                     double first,
+                                     double second);
 
-CalculateReturnCode  RPNCalculate(char *token);
+  double              apply_unary_operator(char   op,
+                                           double first);
 
-// operators
-// precedence   operators         associativity
-// 3            !                 right to left
-// 2            * / %             left to right
-// 1            + - ^             left to right
-int          op_preced(const char c);
+//  char              * next_token(char *linep);
 
-bool         op_left_assoc(const char c);
+  CalculateReturnCode RPNCalculate(char *token);
 
-unsigned int op_arg_count(const char c);
+  // operators
+  // precedence   operators         associativity
+  // 3            !                 right to left
+  // 2            * / %             left to right
+  // 1            + - ^             left to right
+  int                 op_preced(const char c);
+
+  bool                op_left_assoc(const char c);
+
+  unsigned int        op_arg_count(const char c);
+
+
+  CalculateReturnCode doCalculate(const char *input,
+                                  double     *result);
+};
+
+extern RulesCalculate_t RulesCalculate;
+
+/*******************************************************************************************
+* Helper functions to actually interact with the rules calculation functions.
+* *****************************************************************************************/
+
+int                 CalculateParam(const String& TmpStr);
 
 CalculateReturnCode Calculate(const String& input,
-                              double     &result);
-
-
-CalculateReturnCode doCalculate(const char *input,
-                              double     *result);
-
-int          CalculateParam(const String& TmpStr);
+                              double      & result);
 
 
 #endif // ifndef HELPERS_RULES_CALCULATE_H
