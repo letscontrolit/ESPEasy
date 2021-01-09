@@ -10,6 +10,8 @@
 // based on this library: https://github.com/adafruit/Adafruit_TCS34725
 // this code is based on 20170331 date version of the above library
 // this code is UNTESTED, because my TCS34725 sensor is still not shipped :(
+//
+// 2021-01-09 tonhuisman: Add R/G/B calibration factors, improved/corrected normalization
 // 2021-01-03 tonhuisman: Merged most of the changes in the library, for adding the getRGB() and calculateColorTemperature_dn40(0 functions)
 //
 
@@ -106,16 +108,16 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         String optionsRGB[P050_RGB_OPTIONS];
         optionsRGB[0] = F("Raw RGB");
         optionsRGB[1] = F("Normalized RGB (0..255)");
-        optionsRGB[2] = F("Normalized sRGB (0.00000..1.00000)");
+        optionsRGB[2] = F("Normalized rgb (0.00000..1.00000)");
         int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1, 2};
         addFormSelector(F("Output RGB Values"), F("p050_outputrgb"), P050_RGB_OPTIONS, optionsRGB, optionValuesRGB, PCONFIG(2));
-        addFormNote(F("For sRGB, the Red/Green/Blue values Decimals should best be increased to 5."));
+        addFormNote(F("For 'Normalized RGB/rgb', the Red/Green/Blue values Decimals should best be increased."));
       }
 
       {
         #define P050_VALUE4_OPTIONS 4
         String optionsOutput[P050_VALUE4_OPTIONS];
-        optionsOutput[0] = F("Color Temperature (deprecated, inaccurate)");
+        optionsOutput[0] = F("Color Temperature (deprecated)");
         optionsOutput[1] = F("Color Temperature (DN40)");
         optionsOutput[2] = F("Lux");
         optionsOutput[3] = F("Clear");
@@ -123,6 +125,13 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         addFormSelector(F("Output at Values #4"), F("p050_output4"), P050_VALUE4_OPTIONS, optionsOutput, optionValuesOutput, PCONFIG(3));
         addFormNote(F("Optionally adjust Values #4 name accordingly."));
       }
+
+      addFormSubHeader(F("Calibration settings"));
+
+      addFormFloatNumberBox(F("Calibration factor R"), F("p050_calibration_red"),   PCONFIG_FLOAT(0), 0.0f, 100000.0f); // 
+      addFormFloatNumberBox(F("Calibration factor G"), F("p050_calibration_green"), PCONFIG_FLOAT(1), 0.0f, 100000.0f); // 
+      addFormFloatNumberBox(F("Calibration factor B"), F("p050_calibration_blue"),  PCONFIG_FLOAT(2), 0.0f, 100000.0f); // 
+      addFormNote(F("Check plugin documentation (i) on how to calibrate. Use 0.0 to ignore calibration."));
 
       success = true;
       break;
@@ -134,6 +143,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       PCONFIG(1) = getFormItemInt(F("p050_gain"));
       PCONFIG(2) = getFormItemInt(F("p050_outputrgb"));
       PCONFIG(3) = getFormItemInt(F("p050_output4"));
+      PCONFIG_FLOAT(0) = getFormItemFloat(F("p050_calibration_red"));
+      PCONFIG_FLOAT(1) = getFormItemFloat(F("p050_calibration_green"));
+      PCONFIG_FLOAT(2) = getFormItemFloat(F("p050_calibration_blue"));
 
       success = true;
       break;
@@ -210,13 +222,21 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             break;
         }
 
-        if (c == 0) {
+        uint32_t t = r + g + b; // Normalization factor
+        if (t == 0) {
           UserVar[event->BaseVarIndex]     = 0.0f;
           UserVar[event->BaseVarIndex + 1] = 0.0f;
           UserVar[event->BaseVarIndex + 2] = 0.0f;
-        } else if ((r + g + b) > c) { // Check if the Clear value is in the correct range for a proper Normalized (s)RGB calculation
-          c = r + g + b; // Adjust Clear value here to not interfere with the ColorTemperatire DN40 calculation
         }
+
+        // Calibration factors
+        float calRed   = 1.0f;
+        float calGreen = 1.0f;
+        float calBlue  = 1.0f;
+        if (PCONFIG_FLOAT(0) > 0.0f) calRed   = PCONFIG_FLOAT(0); // TODO: Needs different compare?
+        if (PCONFIG_FLOAT(1) > 0.0f) calGreen = PCONFIG_FLOAT(1);
+        if (PCONFIG_FLOAT(2) > 0.0f) calBlue  = PCONFIG_FLOAT(2);
+
         switch (PCONFIG(2)) {
           case 0:
             UserVar[event->BaseVarIndex]     = r;
@@ -224,17 +244,17 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex + 2] = b;
             break;
           case 1:
-            if (c != 0) { // R/G/B normalized to 0..255 (but avoid divide by 0)
-              UserVar[event->BaseVarIndex]     = (float)r / c * 255.0f;
-              UserVar[event->BaseVarIndex + 1] = (float)g / c * 255.0f;
-              UserVar[event->BaseVarIndex + 2] = (float)b / c * 255.0f;
+            if (t != 0) { // R/G/B normalized to 0..255 (but avoid divide by 0)
+              UserVar[event->BaseVarIndex]     = (float)r / t * 255.0f * calRed;
+              UserVar[event->BaseVarIndex + 1] = (float)g / t * 255.0f * calGreen;
+              UserVar[event->BaseVarIndex + 2] = (float)b / t * 255.0f * calBlue;
             }
             break;
           case 2:
-            if (c != 0) { // sR/G/B (normalized to 0.00..1.00 (but avoid divide by 0)
-              UserVar[event->BaseVarIndex]     = (float)r / c * 1.0f;
-              UserVar[event->BaseVarIndex + 1] = (float)g / c * 1.0f;
-              UserVar[event->BaseVarIndex + 2] = (float)b / c * 1.0f;
+            if (t != 0) { // r/g/b (normalized to 0.00..1.00 (but avoid divide by 0)
+              UserVar[event->BaseVarIndex]     = (float)r / t * 1.0f * calRed;
+              UserVar[event->BaseVarIndex + 1] = (float)g / t * 1.0f * calGreen;
+              UserVar[event->BaseVarIndex + 2] = (float)b / t * 1.0f * calBlue;
             }
             break;
         }
