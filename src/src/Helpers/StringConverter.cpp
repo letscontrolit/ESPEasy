@@ -345,6 +345,17 @@ void wrap_String(const String& string, const String& wrap, String& result) {
   result += wrap;
 }
 
+String wrapIfContains(const String& value, char contains, char wrap) {
+  if (value.indexOf(contains) != -1) {
+    String result(wrap);
+    result += value;
+    result += wrap;
+    return result;
+  }
+  return value;
+}
+
+
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
@@ -460,31 +471,31 @@ String to_internal_string(const String& input, char replaceSpace) {
    IndexFind = 1 => command.
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
-String parseString(const String& string, byte indexFind) {
-  String result = parseStringKeepCase(string, indexFind);
+String parseString(const String& string, byte indexFind, char separator) {
+  String result = parseStringKeepCase(string, indexFind, separator);
 
   result.toLowerCase();
   return result;
 }
 
-String parseStringKeepCase(const String& string, byte indexFind) {
+String parseStringKeepCase(const String& string, byte indexFind, char separator) {
   String result;
 
-  if (!GetArgv(string.c_str(), result, indexFind)) {
+  if (!GetArgv(string.c_str(), result, indexFind, separator)) {
     return "";
   }
   result.trim();
   return stripQuotes(result);
 }
 
-String parseStringToEnd(const String& string, byte indexFind) {
-  String result = parseStringToEndKeepCase(string, indexFind);
+String parseStringToEnd(const String& string, byte indexFind, char separator) {
+  String result = parseStringToEndKeepCase(string, indexFind, separator);
 
   result.toLowerCase();
   return result;
 }
 
-String parseStringToEndKeepCase(const String& string, byte indexFind) {
+String parseStringToEndKeepCase(const String& string, byte indexFind, char separator) {
   // Loop over the arguments to find the first and last pos of the arguments.
   int  pos_begin = string.length();
   int  pos_end = pos_begin;
@@ -492,7 +503,7 @@ String parseStringToEndKeepCase(const String& string, byte indexFind) {
   byte nextArgument = indexFind;
   bool hasArgument  = false;
 
-  while (GetArgvBeginEnd(string.c_str(), nextArgument, tmppos_begin, tmppos_end))
+  while (GetArgvBeginEnd(string.c_str(), nextArgument, tmppos_begin, tmppos_end, separator))
   {
     hasArgument = true;
 
@@ -514,12 +525,12 @@ String parseStringToEndKeepCase(const String& string, byte indexFind) {
   return stripQuotes(result);
 }
 
-String tolerantParseStringKeepCase(const String& string, byte indexFind)
+String tolerantParseStringKeepCase(const String& string, byte indexFind, char separator)
 {
   if (Settings.TolerantLastArgParse()) {
-    return parseStringToEndKeepCase(string, indexFind);
+    return parseStringToEndKeepCase(string, indexFind, separator);
   }
-  return parseStringKeepCase(string, indexFind);
+  return parseStringKeepCase(string, indexFind, separator);
 }
 
 // escapes special characters in strings for use in html-forms
@@ -850,9 +861,9 @@ bool HasArgv(const char *string, unsigned int argc) {
   return GetArgv(string, argvString, argc);
 }
 
-bool GetArgv(const char *string, String& argvString, unsigned int argc) {
+bool GetArgv(const char *string, String& argvString, unsigned int argc, char separator) {
   int pos_begin, pos_end;
-  bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end);
+  bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end, separator);
   argvString = "";
   if (!hasArgument) return false;
   if (pos_begin >= 0 && pos_end >= 0 && pos_end > pos_begin) {
@@ -866,7 +877,7 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc) {
   return argvString.length() > 0;
 }
 
-bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end) {
+bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end, char separator) {
   pos_begin = -1;
   pos_end   = -1;
   size_t string_len = strlen(string);
@@ -885,10 +896,10 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
     }
 
     if       (!parenthesis && (c == ' ') && (d == ' ')) {}
-    else if  (!parenthesis && (c == ' ') && (d == ',')) {}
-    else if  (!parenthesis && (c == ',') && (d == ' ')) {}
+    else if  (!parenthesis && (c == ' ') && (d == separator)) {}
+    else if  (!parenthesis && (c == separator) && (d == ' ')) {}
     else if  (!parenthesis && (c == ' ') && (d >= 33) && (d <= 126)) {}
-    else if  (!parenthesis && (c == ',') && (d >= 33) && (d <= 126)) {}
+    else if  (!parenthesis && (c == separator) && (d >= 33) && (d <= 126)) {}
     else
     {
       if (!parenthesis && (isQuoteChar(c) || (c == '['))) {
@@ -908,7 +919,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
       }
       ++pos_end;
 
-      if (!parenthesis && (isParameterSeparatorChar(d) || (d == 0))) // end of word
+      if (!parenthesis && (isParameterSeparatorChar(d) || d == separator || (d == 0))) // end of word
       {
         argc_pos++;
 

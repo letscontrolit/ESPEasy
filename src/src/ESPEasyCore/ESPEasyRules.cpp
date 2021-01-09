@@ -481,18 +481,19 @@ bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1
 }
 */
 
+
 bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, int64_t& result) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("Bitwise: {");
-    log += cmd_s_lower;
+    log += wrapIfContains(cmd_s_lower, ':', '\"');
     log += ':';
-    log += arg1;
+    log += wrapIfContains(arg1, ':', '\"');;
     if (arg2.length() > 0) {
       log += ':';
-      log += arg2;
+      log += wrapIfContains(arg2, ':', '\"');;
       if (arg3.length() > 0) {
         log += ':';
-        log += arg3;
+        log += wrapIfContains(arg3, ':', '\"');;
       }
     }
     log += '}';
@@ -595,18 +596,12 @@ void parse_string_commands(String &line) {
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
     String fullCommand = line.substring(startIndex + 1, closingIndex);
-    int tmpIndex = 0;
-    String cmd_s_lower, arg1, arg2, arg3;
-    if (get_next_argument(fullCommand, tmpIndex, cmd_s_lower, ':')) {
-      if (get_next_argument(fullCommand, tmpIndex, arg1, ':')) {
-        if (get_next_argument(fullCommand, tmpIndex, arg2, ':')) {
-          get_next_argument(fullCommand, tmpIndex, arg3, ':');
-        }
-      }
-    }
+    String cmd_s_lower = parseString(fullCommand, 1, ':');
+    String arg1 = parseStringKeepCase(fullCommand, 2, ':');
+    String arg2 = parseStringKeepCase(fullCommand, 3, ':');
+    String arg3 = parseStringKeepCase(fullCommand, 4, ':');
     if (cmd_s_lower.length() > 0) {
       String replacement; // maybe just replace with empty to avoid looping?
-      cmd_s_lower.toLowerCase();
 //      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
 
       uint64_t iarg1, iarg2 = 0;

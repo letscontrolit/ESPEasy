@@ -117,6 +117,8 @@ void wrap_String(const String& string,
                  const String& wrap,
                  String      & result);
 
+String wrapIfContains(const String& value, char contains, char wrap = '\"');
+
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
@@ -156,19 +158,24 @@ String to_internal_string(const String& input,
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
 String parseString(const String& string,
-                   byte          indexFind);
+                   byte          indexFind,
+                   char separator = ',');
 
 String parseStringKeepCase(const String& string,
-                           byte          indexFind);
+                           byte          indexFind,
+                           char separator = ',');
 
 String parseStringToEnd(const String& string,
-                        byte          indexFind);
+                        byte          indexFind,
+                        char separator = ',');
 
 String parseStringToEndKeepCase(const String& string,
-                                byte          indexFind);
+                                byte          indexFind,
+                                char separator = ',');
 
 String tolerantParseStringKeepCase(const String& string,
-                                   byte          indexFind);
+                                   byte          indexFind,
+                                   char separator = ',');
 
 // escapes special characters in strings for use in html-forms
 bool   htmlEscapeChar(char    c,
@@ -234,9 +241,9 @@ void parseStandardConversions(String& s,
 
 bool HasArgv(const char *string, unsigned int argc);
 
-bool GetArgv(const char *string, String& argvString, unsigned int argc);
+bool GetArgv(const char *string, String& argvString, unsigned int argc, char separator = ',');
 
-bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end);
+bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end, char separator = ',');
 
 
 #endif // HELPERS_STRINGCONVERTER_H
