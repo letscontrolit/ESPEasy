@@ -9,13 +9,19 @@
 #include "../Helpers/StringConverter.h"
 
 
+/********************************************************************************************\
+   Instance of the RulesCalculate to perform calculations
+   These functions are wrapped in a class to
+    - make it more clear what external functions to use
+    - Make sure generic function names will not cause conflicts
+    - Prevent external access to calculate only variables.
+ \*********************************************************************************************/
 RulesCalculate_t RulesCalculate;
 
 
 /********************************************************************************************\
    Calculate function for simple expressions
  \*********************************************************************************************/
-
 bool isError(CalculateReturnCode returnCode) {
   return returnCode != CalculateReturnCode::OK;
 }
@@ -23,12 +29,12 @@ bool isError(CalculateReturnCode returnCode) {
 bool RulesCalculate_t::is_number(char oc, char c)
 {
   // Check if it matches part of a number (identifier)
-  return (
+  return
     isxdigit(c)  ||                                // HEX digit also includes normal decimal numbers
     ((oc == '0') && ((c == 'x') || (c == 'b'))) || // HEX (0x) or BIN (0b) prefixes.
     (c == '.')   ||                                // A decimal point of a floating point number.
     (is_operator(oc) && (c == '-'))                // Beginning of a negative number after an operator.
-    );
+  ;
 }
 
 bool RulesCalculate_t::is_operator(char c)
@@ -38,7 +44,22 @@ bool RulesCalculate_t::is_operator(char c)
 
 bool RulesCalculate_t::is_unary_operator(char c)
 {
-  return c == '!';
+  const UnaryOperator op = static_cast<UnaryOperator>(c);
+
+  switch (op) {
+    case UnaryOperator::Not:
+    case UnaryOperator::Log:
+    case UnaryOperator::Ln:
+    case UnaryOperator::Sqrt:
+    case UnaryOperator::Sin:
+    case UnaryOperator::Cos:
+    case UnaryOperator::Tan:
+    case UnaryOperator::ArcSin:
+    case UnaryOperator::ArcCos:
+    case UnaryOperator::ArcTan:
+      return true;
+  }
+  return false;
 }
 
 CalculateReturnCode RulesCalculate_t::push(double value)
@@ -84,13 +105,32 @@ double RulesCalculate_t::apply_operator(char op, double first, double second)
 
 double RulesCalculate_t::apply_unary_operator(char op, double first)
 {
-  switch (op)
-  {
-    case '!':
+  const UnaryOperator un_op = static_cast<UnaryOperator>(op);
+
+  switch (un_op) {
+    case UnaryOperator::Not:
       return (approximatelyEqual(round(first), 0)) ? 1 : 0;
-    default:
-      return 0;
+    case UnaryOperator::Log:
+    case UnaryOperator::Ln:
+      // FIXME TD-er: Must implement log and ln
+      break;
+      // FIXME TD-er: Must implement rad/deg conversions.
+    case UnaryOperator::Sqrt:
+      return sqrt(first);
+    case UnaryOperator::Sin:
+      return sin(first);
+    case UnaryOperator::Cos:
+      return cos(first);
+    case UnaryOperator::Tan:
+      return tan(first);
+    case UnaryOperator::ArcSin:
+      return asin(first);
+    case UnaryOperator::ArcCos:
+      return acos(first);
+    case UnaryOperator::ArcTan:
+      return atan(first);
   }
+  return 0;
 }
 
 /*
@@ -140,15 +180,17 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
 
 // operators
 // precedence   operators         associativity
-// 3            !                 right to left
+// 4            !                 right to left
+// 3            ^                 left to right
 // 2            * / %             left to right
-// 1            + - ^             left to right
+// 1            + -               left to right
 int RulesCalculate_t::op_preced(const char c)
 {
+  if (is_unary_operator(c)) { return 4; // right to left
+  }
+
   switch (c)
   {
-    case '!':
-      return 4;
     case '^':
       return 3;
     case '*':
@@ -164,35 +206,19 @@ int RulesCalculate_t::op_preced(const char c)
 
 bool RulesCalculate_t::op_left_assoc(const char c)
 {
-  switch (c)
-  {
-    case '^':
-    case '*':
-    case '/':
-    case '+':
-    case '-':
-    case '%':
-      return true;  // left to right
-    case '!':
-      return false; // right to left
+  if (is_operator(c)) { return true;        // left to right
+  }
+
+  if (is_unary_operator(c)) { return false; // right to left
   }
   return false;
 }
 
 unsigned int RulesCalculate_t::op_arg_count(const char c)
 {
-  switch (c)
-  {
-    case '^':
-    case '*':
-    case '/':
-    case '+':
-    case '-':
-    case '%':
-      return 2;
-    case '!':
-      return 1;
-  }
+  if (is_unary_operator(c)) { return 1; }
+
+  if (is_operator(c)) { return 2; }
   return 0;
 }
 
@@ -206,9 +232,9 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
   const char *strpos = input, *strend = input + strlen(input);
   char token[TOKEN_LENGTH];
   char c, oc, *TokenPos = token;
-  char stack[OPERATOR_STACK_SIZE];      // operator stack
-  unsigned int sl = 0; // stack length
-  char sc;             // used for record stack element
+  char stack[OPERATOR_STACK_SIZE]; // operator stack
+  unsigned int sl = 0;             // stack length
+  char sc;                         // used for record stack element
   CalculateReturnCode error = CalculateReturnCode::OK;
 
   // *sp=0; // bug, it stops calculating after 50 times
@@ -263,7 +289,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
                 (op_left_assoc(c) && (op_preced(c) <= op_preced(sc))) ||
                 (op_preced(c) < op_preced(sc))
               )
-             )
+              )
           {
             // Pop op2 off the stack, onto the token queue;
             *TokenPos = sc;
@@ -381,6 +407,72 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
   return CalculateReturnCode::OK;
 }
 
+void preProcessReplace(String& input, UnaryOperator op) {
+  String find = toString(op);
+
+  if (find.length() == 0) { return; }
+  find += '('; // Add opening parenthesis.
+
+  const String replace = String(static_cast<char>(op)) + '(';
+
+  input.replace(find, replace);
+}
+
+String toString(UnaryOperator op)
+{
+  String find;
+
+  switch (op) {
+    case UnaryOperator::Not:
+      break; // No need to replace
+    case UnaryOperator::Log:
+      find = F("log");
+      break;
+    case UnaryOperator::Ln:
+      find = F("ln");
+      break;
+    case UnaryOperator::Sqrt:
+      find = F("sqrt");
+      break;
+    case UnaryOperator::Sin:
+      find = F("sin");
+      break;
+    case UnaryOperator::Cos:
+      find = F("cos");
+      break;
+    case UnaryOperator::Tan:
+      find = F("tan");
+      break;
+    case UnaryOperator::ArcSin:
+      find = F("asin");
+      break;
+    case UnaryOperator::ArcCos:
+      find = F("acos");
+      break;
+    case UnaryOperator::ArcTan:
+      find = F("atan");
+      break;
+  }
+  return find;
+}
+
+String RulesCalculate_t::preProces(const String& input)
+{
+  String preprocessed = input;
+
+  preProcessReplace(preprocessed, UnaryOperator::Not);
+  preProcessReplace(preprocessed, UnaryOperator::Log);
+  preProcessReplace(preprocessed, UnaryOperator::Ln);
+  preProcessReplace(preprocessed, UnaryOperator::Sqrt);
+  preProcessReplace(preprocessed, UnaryOperator::Sin);
+  preProcessReplace(preprocessed, UnaryOperator::Cos);
+  preProcessReplace(preprocessed, UnaryOperator::Tan);
+  preProcessReplace(preprocessed, UnaryOperator::ArcSin);
+  preProcessReplace(preprocessed, UnaryOperator::ArcCos);
+  preProcessReplace(preprocessed, UnaryOperator::ArcTan);
+  return preprocessed;
+}
+
 /*******************************************************************************************
 * Helper functions to actually interact with the rules calculation functions.
 * *****************************************************************************************/
@@ -416,7 +508,9 @@ int CalculateParam(const String& TmpStr) {
 CalculateReturnCode Calculate(const String& input,
                               double      & result)
 {
-  CalculateReturnCode returnCode = RulesCalculate.doCalculate(input.c_str(), &result);
+  CalculateReturnCode returnCode = RulesCalculate.doCalculate(
+    RulesCalculate_t::preProces(input).c_str(),
+    &result);
 
   if (isError(returnCode)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

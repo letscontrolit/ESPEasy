@@ -21,7 +21,31 @@ enum class CalculateReturnCode {
 
 bool isError(CalculateReturnCode returnCode);
 
-struct RulesCalculate_t {
+/********************************************************************************************\
+   Special char definitions to represent multi character operators
+   like: log, sin, cos, tan, etc.
+ \*********************************************************************************************/
+
+enum class UnaryOperator  {
+  Not = '!',
+  Log = 192, // Start at some ASCII code we don't expect in the rules.
+  Ln,
+  Sqrt,
+  Sin,
+  Cos,
+  Tan,
+  ArcSin,
+  ArcCos,
+  ArcTan
+};
+
+void preProcessReplace(String& input, UnaryOperator op);
+
+String toString(UnaryOperator op);
+
+class RulesCalculate_t {
+private:
+
   double  globalstack[STACK_SIZE];
   double *sp     = globalstack - 1;
   double *sp_max = &globalstack[STACK_SIZE - 1];
@@ -29,7 +53,8 @@ struct RulesCalculate_t {
   // Check if it matches part of a number (identifier)
   // @param oc  Previous character
   // @param c   Current character
-  bool                is_number(char oc, char c);
+  bool                is_number(char oc,
+                                char c);
 
   bool                is_operator(char c);
 
@@ -43,10 +68,10 @@ struct RulesCalculate_t {
                                      double first,
                                      double second);
 
-  double              apply_unary_operator(char   op,
-                                           double first);
+  double apply_unary_operator(char   op,
+                              double first);
 
-//  char              * next_token(char *linep);
+  //  char              * next_token(char *linep);
 
   CalculateReturnCode RPNCalculate(char *token);
 
@@ -55,15 +80,20 @@ struct RulesCalculate_t {
   // 3            !                 right to left
   // 2            * / %             left to right
   // 1            + - ^             left to right
-  int                 op_preced(const char c);
+  int          op_preced(const char c);
 
-  bool                op_left_assoc(const char c);
+  bool         op_left_assoc(const char c);
 
-  unsigned int        op_arg_count(const char c);
+  unsigned int op_arg_count(const char c);
 
+public:
 
   CalculateReturnCode doCalculate(const char *input,
                                   double     *result);
+
+  // Try to replace multi byte operators with single character ones.
+  // For example log, sin, cos, tan.
+  static String preProces(const String& input);
 };
 
 extern RulesCalculate_t RulesCalculate;
