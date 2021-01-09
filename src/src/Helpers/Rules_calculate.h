@@ -32,21 +32,28 @@ enum class UnaryOperator  {
   Ln,
   Sqrt,
   Sin,
+  Sin_d,
   Cos,
+  Cos_d,
   Tan,
+  Tan_d,
   ArcSin,
+  ArcSin_d,
   ArcCos,
-  ArcTan
+  ArcCos_d,
+  ArcTan,
+  ArcTan_d
 };
 
-void preProcessReplace(String& input, UnaryOperator op);
-
+void   preProcessReplace(String      & input,
+                         UnaryOperator op);
+bool   angleDegree(UnaryOperator op);
 String toString(UnaryOperator op);
 
 class RulesCalculate_t {
 private:
 
-  double  globalstack[STACK_SIZE];
+  double globalstack[STACK_SIZE];
   double *sp     = globalstack - 1;
   double *sp_max = &globalstack[STACK_SIZE - 1];
 

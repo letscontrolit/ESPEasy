@@ -57,6 +57,12 @@ bool RulesCalculate_t::is_unary_operator(char c)
     case UnaryOperator::ArcSin:
     case UnaryOperator::ArcCos:
     case UnaryOperator::ArcTan:
+    case UnaryOperator::Sin_d:
+    case UnaryOperator::Cos_d:
+    case UnaryOperator::Tan_d:
+    case UnaryOperator::ArcSin_d:
+    case UnaryOperator::ArcCos_d:
+    case UnaryOperator::ArcTan_d:
       return true;
   }
   return false;
@@ -105,32 +111,83 @@ double RulesCalculate_t::apply_operator(char op, double first, double second)
 
 double RulesCalculate_t::apply_unary_operator(char op, double first)
 {
+  double ret                = 0.0;
   const UnaryOperator un_op = static_cast<UnaryOperator>(op);
 
   switch (un_op) {
     case UnaryOperator::Not:
       return (approximatelyEqual(round(first), 0)) ? 1 : 0;
     case UnaryOperator::Log:
+      return log10(first);
     case UnaryOperator::Ln:
-      // FIXME TD-er: Must implement log and ln
-      break;
-      // FIXME TD-er: Must implement rad/deg conversions.
+      return log(first);
     case UnaryOperator::Sqrt:
       return sqrt(first);
+    default:
+      break;
+  }
+
+#ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+  const bool useDegree = angleDegree(un_op);
+
+  // First the trigonometric functions with angle as output
+  switch (un_op) {
+    case UnaryOperator::ArcSin:
+    case UnaryOperator::ArcSin_d:
+      ret = asin(first);
+      return useDegree ? degrees(ret) : ret;
+    case UnaryOperator::ArcCos:
+    case UnaryOperator::ArcCos_d:
+      ret = acos(first);
+      return useDegree ? degrees(ret) : ret;
+    case UnaryOperator::ArcTan:
+    case UnaryOperator::ArcTan_d:
+      ret = atan(first);
+      return useDegree ? degrees(ret) : ret;
+    default:
+      break;
+  }
+
+  // Now the trigonometric functions with angle as input
+  if (useDegree) {
+    first = radians(first);
+  }
+
+  switch (un_op) {
     case UnaryOperator::Sin:
+    case UnaryOperator::Sin_d:
       return sin(first);
     case UnaryOperator::Cos:
+    case UnaryOperator::Cos_d:
       return cos(first);
     case UnaryOperator::Tan:
+    case UnaryOperator::Tan_d:
       return tan(first);
-    case UnaryOperator::ArcSin:
-      return asin(first);
-    case UnaryOperator::ArcCos:
-      return acos(first);
-    case UnaryOperator::ArcTan:
-      return atan(first);
+    default:
+      break;
   }
-  return 0;
+#else // ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+
+  switch (op) {
+    case UnaryOperator::Sin:
+    case UnaryOperator::Sin_d:
+    case UnaryOperator::Cos:
+    case UnaryOperator::Cos_d:
+    case UnaryOperator::Tan:
+    case UnaryOperator::Tan_d:
+    case UnaryOperator::ArcSin:
+    case UnaryOperator::ArcSin_d:
+    case UnaryOperator::ArcCos:
+    case UnaryOperator::ArcCos_d:
+    case UnaryOperator::ArcTan:
+    case UnaryOperator::ArcTan_d:
+      addLog(LOG_LEVEL_ERROR, F("USE_TRIGONOMETRIC_FUNCTIONS_RULES not defined in build"));
+      break;
+    default:
+      break;
+  }
+#endif // ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+  return ret;
 }
 
 /*
@@ -418,6 +475,22 @@ void preProcessReplace(String& input, UnaryOperator op) {
   input.replace(find, replace);
 }
 
+bool angleDegree(UnaryOperator op)
+{
+  switch (op) {
+    case UnaryOperator::Sin_d:
+    case UnaryOperator::Cos_d:
+    case UnaryOperator::Tan_d:
+    case UnaryOperator::ArcSin_d:
+    case UnaryOperator::ArcCos_d:
+    case UnaryOperator::ArcTan_d:
+      return true;
+    default:
+      break;
+  }
+  return false;
+}
+
 String toString(UnaryOperator op)
 {
   String find;
@@ -435,23 +508,33 @@ String toString(UnaryOperator op)
       find = F("sqrt");
       break;
     case UnaryOperator::Sin:
+    case UnaryOperator::Sin_d:
       find = F("sin");
       break;
     case UnaryOperator::Cos:
+    case UnaryOperator::Cos_d:
       find = F("cos");
       break;
     case UnaryOperator::Tan:
+    case UnaryOperator::Tan_d:
       find = F("tan");
       break;
     case UnaryOperator::ArcSin:
+    case UnaryOperator::ArcSin_d:
       find = F("asin");
       break;
     case UnaryOperator::ArcCos:
+    case UnaryOperator::ArcCos_d:
       find = F("acos");
       break;
     case UnaryOperator::ArcTan:
+    case UnaryOperator::ArcTan_d:
       find = F("atan");
       break;
+  }
+
+  if (angleDegree(op)) {
+    find += F("_d");
   }
   return find;
 }
@@ -464,12 +547,26 @@ String RulesCalculate_t::preProces(const String& input)
   preProcessReplace(preprocessed, UnaryOperator::Log);
   preProcessReplace(preprocessed, UnaryOperator::Ln);
   preProcessReplace(preprocessed, UnaryOperator::Sqrt);
-  preProcessReplace(preprocessed, UnaryOperator::Sin);
-  preProcessReplace(preprocessed, UnaryOperator::Cos);
-  preProcessReplace(preprocessed, UnaryOperator::Tan);
-  preProcessReplace(preprocessed, UnaryOperator::ArcSin);
-  preProcessReplace(preprocessed, UnaryOperator::ArcCos);
-  preProcessReplace(preprocessed, UnaryOperator::ArcTan);
+#ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+  if (preprocessed.indexOf(F("sin")) != -1) {
+    preProcessReplace(preprocessed, UnaryOperator::Sin);
+    preProcessReplace(preprocessed, UnaryOperator::ArcSin);
+    preProcessReplace(preprocessed, UnaryOperator::Sin_d);
+    preProcessReplace(preprocessed, UnaryOperator::ArcSin_d);
+  }
+  if (preprocessed.indexOf(F("cos")) != -1) {
+    preProcessReplace(preprocessed, UnaryOperator::Cos);
+    preProcessReplace(preprocessed, UnaryOperator::ArcCos);
+    preProcessReplace(preprocessed, UnaryOperator::Cos_d);
+    preProcessReplace(preprocessed, UnaryOperator::ArcCos_d);
+  }
+  if (preprocessed.indexOf(F("tan")) != -1) {
+    preProcessReplace(preprocessed, UnaryOperator::Tan);
+    preProcessReplace(preprocessed, UnaryOperator::ArcTan);
+    preProcessReplace(preprocessed, UnaryOperator::Tan_d);
+    preProcessReplace(preprocessed, UnaryOperator::ArcTan_d);
+  }
+#endif
   return preprocessed;
 }
 
