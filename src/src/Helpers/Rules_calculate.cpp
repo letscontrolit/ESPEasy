@@ -16,12 +16,19 @@ RulesCalculate_t RulesCalculate;
    Calculate function for simple expressions
  \*********************************************************************************************/
 
-double  globalstack[STACK_SIZE];
-double *sp     = globalstack - 1;
-double *sp_max = &globalstack[STACK_SIZE - 1];
-
 bool isError(CalculateReturnCode returnCode) {
   return returnCode != CalculateReturnCode::OK;
+}
+
+bool RulesCalculate_t::is_number(char oc, char c)
+{
+  // Check if it matches part of a number (identifier)
+  return (
+    isxdigit(c)  ||                                // HEX digit also includes normal decimal numbers
+    ((oc == '0') && ((c == 'x') || (c == 'b'))) || // HEX (0x) or BIN (0b) prefixes.
+    (c == '.')   ||                                // A decimal point of a floating point number.
+    (is_operator(oc) && (c == '-'))                // Beginning of a negative number after an operator.
+    );
 }
 
 bool RulesCalculate_t::is_operator(char c)
@@ -192,13 +199,14 @@ unsigned int RulesCalculate_t::op_arg_count(const char c)
 CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *result)
 {
   #define TOKEN_LENGTH 25
+  #define OPERATOR_STACK_SIZE 32
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("Calculate"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
   const char *strpos = input, *strend = input + strlen(input);
   char token[TOKEN_LENGTH];
   char c, oc, *TokenPos = token;
-  char stack[32];      // operator stack
+  char stack[OPERATOR_STACK_SIZE];      // operator stack
   unsigned int sl = 0; // stack length
   char sc;             // used for record stack element
   CalculateReturnCode error = CalculateReturnCode::OK;
@@ -209,7 +217,10 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
 
   if (input[0] == '=') {
     ++strpos;
-    c = *strpos;
+
+    if (strpos < strend) {
+      c = *strpos;
+    }
   }
 
   while (strpos < strend)
@@ -223,11 +234,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
     if (c != ' ')
     {
       // If the token is a number (identifier), then add it to the token queue.
-      if (isxdigit(c)  ||                                // HEX digit also includes normal decimal numbers
-          ((oc == '0') && ((c == 'x') || (c == 'b'))) || // HEX (0x) or BIN (0b) prefixes.
-          (c == '.')   ||                                // A decimal point of a floating point number.
-          (is_operator(oc) && (c == '-'))                // Beginning of a negative number after an operator.
-          )
+      if (is_number(oc, c))
       {
         *TokenPos = c;
         ++TokenPos;
@@ -242,7 +249,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
 
         if (isError(error)) { return error; }
 
-        while (sl > 0 && sl < 31)
+        while (sl > 0 && sl < (OPERATOR_STACK_SIZE - 1))
         {
           sc = stack[sl - 1];
 
@@ -251,9 +258,9 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
           // or op1 has precedence less than that of op2,
           // The differing operator priority decides pop / push
           // If 2 operators have equal priority then associativity decides.
-          if (is_operator(sc) && 
+          if (is_operator(sc) &&
               (
-                (op_left_assoc(c) && (op_preced(c) <= op_preced(sc))) || 
+                (op_left_assoc(c) && (op_preced(c) <= op_preced(sc))) ||
                 (op_preced(c) < op_preced(sc))
               )
              )
@@ -281,7 +288,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
       // If the token is a left parenthesis, then push it onto the stack.
       else if (c == '(')
       {
-        if (sl >= 32) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
+        if (sl >= OPERATOR_STACK_SIZE) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
         stack[sl] = c;
         ++sl;
       }
@@ -301,7 +308,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
 
           if (isError(error)) { return error; }
 
-          if (sl > 32) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
+          if (sl > OPERATOR_STACK_SIZE) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
           sc = stack[sl - 1];
 
           if (sc == '(')
@@ -327,7 +334,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
 
         // If the token at the top of the stack is a function token, pop it onto the token queue.
         // FIXME TD-er: This sc value is never used, it is re-assigned a new value before it is being checked.
-        if ((sl > 0) && (sl < 32)) {
+        if ((sl > 0) && (sl < OPERATOR_STACK_SIZE)) {
           sc = stack[sl - 1];
         }
       }

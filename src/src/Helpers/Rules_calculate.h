@@ -23,8 +23,13 @@ bool isError(CalculateReturnCode returnCode);
 
 struct RulesCalculate_t {
   double  globalstack[STACK_SIZE];
-  double *sp;
-  double *sp_max;
+  double *sp     = globalstack - 1;
+  double *sp_max = &globalstack[STACK_SIZE - 1];
+
+  // Check if it matches part of a number (identifier)
+  // @param oc  Previous character
+  // @param c   Current character
+  bool                is_number(char oc, char c);
 
   bool                is_operator(char c);
 
