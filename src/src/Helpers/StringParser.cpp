@@ -95,16 +95,16 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 
       if (validUIntFromString(valueName, varNum)) {
         unsigned char nr_decimals = maxNrDecimals_double(getCustomFloatVar(varNum));
-        bool trimTralingZeros = true;
+        bool trimTrailingZeros = true;
 
         if (deviceName.equals(F("int"))) {
           nr_decimals = 0;
         } else if (format.length() != 0)
         {
           // There is some formatting here, so do not throw away decimals
-          trimTralingZeros = false;
+          trimTrailingZeros = false;
         }
-        String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTralingZeros);
+        String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
         value.trim();
         transformValue(newString, minimal_lineSize, value, format, tmpString);
       }
@@ -361,8 +361,8 @@ void transformValue(
               default: // any other combination x=0; y=0;
                 break;
             }
-            bool trimTralingZeros = false;
-            value = doubleToString(valFloat, y, trimTralingZeros);
+            bool trimTrailingZeros = false;
+            value = doubleToString(valFloat, y, trimTrailingZeros);
             int indexDot = value.indexOf('.');
 
             if (indexDot == -1) {

@@ -214,9 +214,9 @@ String toString(const float& value, byte decimals)
   return sValue;
 }
 
-String doubleToString(const double& value, int decimals, bool trimTralingZeros) {
+String doubleToString(const double& value, int decimals, bool trimTrailingZeros) {
   String res(value, decimals);
-  if (trimTralingZeros) {
+  if (trimTrailingZeros) {
     int dot_pos = res.lastIndexOf('.');
     if (dot_pos != -1) {
       bool someTrimmed = false;

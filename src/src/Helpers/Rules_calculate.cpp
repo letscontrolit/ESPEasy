@@ -542,8 +542,8 @@ CalculateReturnCode Calculate(const String& input,
       log += input;
       log += F(" = ");
 
-      const bool trimTralingZeros = true;
-      log += doubleToString(result, 6, trimTralingZeros);
+      const bool trimTrailingZeros = true;
+      log += doubleToString(result, 6, trimTrailingZeros);
       #endif // ifndef BUILD_NO_DEBUG
 
       addLog(LOG_LEVEL_ERROR, log);

@@ -203,8 +203,8 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
     if (validUIntFromString(s.substring(v_index + 2), i)) {
       String key = "%v" + String(i) + '%';
       if (s.indexOf(key) != -1) {
-        const bool trimTralingZeros = true;
-        String value = doubleToString(getCustomFloatVar(i), 6, trimTralingZeros);
+        const bool trimTrailingZeros = true;
+        String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
 
         if (useURLencode) {
           value = URLEncode(value.c_str());

@@ -54,7 +54,7 @@ float ul2float(unsigned long ul);
 \*********************************************************************************************/
 String toString(const float& value, byte decimals);
 
-String doubleToString(const double& value, int decimals = 2, bool trimTralingZeros = false);
+String doubleToString(const double& value, int decimals = 2, bool trimTrailingZeros = false);
 
 
 #endif // HELPERS_CONVERT_H
