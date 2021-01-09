@@ -548,23 +548,24 @@ String RulesCalculate_t::preProces(const String& input)
   preProcessReplace(preprocessed, UnaryOperator::Ln);
   preProcessReplace(preprocessed, UnaryOperator::Sqrt);
 #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+  // Try the "arc" functions first, or else "sin" is already replaced when "asin" is tried.
   if (preprocessed.indexOf(F("sin")) != -1) {
-    preProcessReplace(preprocessed, UnaryOperator::Sin);
     preProcessReplace(preprocessed, UnaryOperator::ArcSin);
-    preProcessReplace(preprocessed, UnaryOperator::Sin_d);
     preProcessReplace(preprocessed, UnaryOperator::ArcSin_d);
+    preProcessReplace(preprocessed, UnaryOperator::Sin);
+    preProcessReplace(preprocessed, UnaryOperator::Sin_d);
   }
   if (preprocessed.indexOf(F("cos")) != -1) {
-    preProcessReplace(preprocessed, UnaryOperator::Cos);
     preProcessReplace(preprocessed, UnaryOperator::ArcCos);
-    preProcessReplace(preprocessed, UnaryOperator::Cos_d);
     preProcessReplace(preprocessed, UnaryOperator::ArcCos_d);
+    preProcessReplace(preprocessed, UnaryOperator::Cos);
+    preProcessReplace(preprocessed, UnaryOperator::Cos_d);
   }
   if (preprocessed.indexOf(F("tan")) != -1) {
-    preProcessReplace(preprocessed, UnaryOperator::Tan);
     preProcessReplace(preprocessed, UnaryOperator::ArcTan);
-    preProcessReplace(preprocessed, UnaryOperator::Tan_d);
     preProcessReplace(preprocessed, UnaryOperator::ArcTan_d);
+    preProcessReplace(preprocessed, UnaryOperator::Tan);
+    preProcessReplace(preprocessed, UnaryOperator::Tan_d);
   }
 #endif
   return preprocessed;
