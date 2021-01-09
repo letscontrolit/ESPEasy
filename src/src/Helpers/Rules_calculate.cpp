@@ -168,7 +168,7 @@ double RulesCalculate_t::apply_unary_operator(char op, double first)
   }
 #else // ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
 
-  switch (op) {
+  switch (un_op) {
     case UnaryOperator::Sin:
     case UnaryOperator::Sin_d:
     case UnaryOperator::Cos:
