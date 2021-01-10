@@ -1213,9 +1213,13 @@ void tm1637_ShowBuffer(struct EventStruct *event, byte firstPos, byte lastPos) {
   bytesToPrint[0] = 0xC0;
   byte length = 1;
 
+  if (P073_data->dotpos > -1) {
+    P073_data->showperiods[P073_data->dotpos] = true;
+  }
+
   for (int i = firstPos; i < lastPos; i++) {
     byte p073_datashowpos1 = tm1637_separator(
-      CharTableTM1637[P073_data->showbuffer[i]], P073_data->dotpos == i);
+      CharTableTM1637[P073_data->showbuffer[i]], P073_data->showperiods[i]);
     bytesToPrint[length] = p073_datashowpos1;
     ++length;
   }
