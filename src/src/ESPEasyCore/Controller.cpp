@@ -412,9 +412,9 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
 /*********************************************************************************************\
 * Send status info to request source
 \*********************************************************************************************/
-void SendStatusOnlyIfNeeded(EventValueSource::Enum eventSource, bool param1, uint32_t key, const String& param2, int16_t param3) {
-  if (SourceNeedsStatusUpdate(eventSource)) {
-    SendStatus(eventSource, getPinStateJSON(param1, key, param2, param3));
+void SendStatusOnlyIfNeeded(struct EventStruct *event, bool param1, uint32_t key, const String& param2, int16_t param3) {
+  if (SourceNeedsStatusUpdate(event->Source)) {
+    SendStatus(event, getPinStateJSON(param1, key, param2, param3));
     printToWeb=false; //SP: 2020-06-12: to avoid to add more info to a JSON structure
   }
 }
@@ -434,10 +434,10 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
   return false;
 }
 
-void SendStatus(EventValueSource::Enum source, const String& status)
+void SendStatus(struct EventStruct *event, const String& status)
 {
   if (status.length() == 0) return;
-  switch (source)
+  switch (event->Source)
   {
     case EventValueSource::Enum::VALUE_SOURCE_HTTP:
     case EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND:
@@ -448,7 +448,7 @@ void SendStatus(EventValueSource::Enum source, const String& status)
       break;
 #ifdef USES_MQTT
     case EventValueSource::Enum::VALUE_SOURCE_MQTT:
-      MQTTStatus(status);
+      MQTTStatus(event, status);
       break;
 #endif //USES_MQTT
     case EventValueSource::Enum::VALUE_SOURCE_SERIAL:
@@ -492,7 +492,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char
 /*********************************************************************************************\
 * Send status info back to channel where request came from
 \*********************************************************************************************/
-void MQTTStatus(const String& status)
+void MQTTStatus(struct EventStruct *event, const String& status)
 {
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
@@ -517,8 +517,19 @@ void MQTTStatus(const String& status)
       mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
     }
 
+    // FIXME TD-er: Why check for "/#" suffix on a publish topic?
+    // It makes no sense to have a subscribe wildcard on a publish topic.
     pubname.replace(F("/#"), F("/status"));
-    parseSystemVariables(pubname, false);
+
+    parseControllerVariables(pubname, event, false);
+    if (!pubname.endsWith(F("/status"))) {
+      pubname += F("/status");
+    }
+    // some may have been replaced by empty strings, 
+    // or "/status" may have been appended to a topic ending with a "/"
+    // Get rid of "//"
+    pubname.replace(F("//"), F("/")); 
+
     MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(), mqtt_retainFlag);
   }
 }

@@ -736,15 +736,17 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
   LoadTaskSettings(event->TaskIndex);
   SMART_REPL(F("%id%"), String(event->idx))
 
-  if (s.indexOf(F("%val")) != -1) {
-    if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
-      SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
-    } else {
-      for (byte i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
-        String valstr = F("%val");
-        valstr += (i + 1);
-        valstr += '%';
-        SMART_REPL(valstr, formatUserVarNoCheck(event, i));
+  if (validTaskIndex(event->TaskIndex)) {
+    if (s.indexOf(F("%val")) != -1) {
+      if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
+        SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
+      } else {
+        for (byte i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
+          String valstr = F("%val");
+          valstr += (i + 1);
+          valstr += '%';
+          SMART_REPL(valstr, formatUserVarNoCheck(event, i));
+        }
       }
     }
   }

@@ -353,7 +353,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
           log = F("NEXTION075 : WRITE = ");
           log += nextionArguments;
           addLog(LOG_LEVEL_DEBUG, log);
-          SendStatus(event->Source, log);              // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, log);              // Reply (echo) to sender. This will print message on browser.
         }
 
 // Enable addLog() code below to help debug plugin write problems.

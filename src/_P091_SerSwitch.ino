@@ -757,7 +757,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_INFO, log);
             } else {
               log = F("\nYDim not supported");
-              SendStatus(event->Source, log);
+              SendStatus(event, log);
             }
           }
 

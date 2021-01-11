@@ -456,8 +456,11 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   #endif
   String cmd;
 
+  // We first try internal commands, which should not have a taskIndex set.
+  struct EventStruct TempEvent;
+
   if (!GetArgv(Line, cmd, 1)) {
-    SendStatus(source, return_command_failed());
+    SendStatus(&TempEvent, return_command_failed());
     return false;
   }
 
@@ -470,11 +473,6 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     }
   }
 
-  // FIXME TD-er: Not sure what happens now, but TaskIndex cannot always be set here
-  // since commands can originate from anywhere.
-  struct EventStruct TempEvent;
-  TempEvent.setTaskIndex(taskIndex);
-  checkDeviceVTypeForTask(&TempEvent);
   TempEvent.Source = source;
 
   String action(Line);
@@ -519,7 +517,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
 
     if (data.status.length() > 0) {
       delay(0);
-      SendStatus(source, data.status);
+      SendStatus(&TempEvent, data.status);
       delay(0);
     }
 
@@ -527,6 +525,11 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       return true;
     }
   }
+
+  // When trying a task command, set the task index, even if it is not a valid task index.
+  // For example commands from elsewhere may not have a proper task index.
+  TempEvent.setTaskIndex(taskIndex);
+  checkDeviceVTypeForTask(&TempEvent);
 
   if (tryPlugin) {
     // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly
@@ -547,21 +550,21 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     #endif
 
     if (handled) {
-      SendStatus(source, return_command_success());
+      SendStatus(&TempEvent, return_command_success());
       return true;
     }
   }
 
   if (tryRemoteConfig) {
     if (remoteConfig(&TempEvent, action)) {
-      SendStatus(source, return_command_success());
+      SendStatus(&TempEvent, return_command_success());
       return true;
     }
   }
   String errorUnknown = F("Command unknown: ");
   errorUnknown += action;
   addLog(LOG_LEVEL_INFO, errorUnknown);
-  SendStatus(source, errorUnknown);
+  SendStatus(&TempEvent, errorUnknown);
   delay(0);
   return false;
 }

@@ -89,9 +89,9 @@ String Command_Servo(struct EventStruct *event, const char *Line)
     log += F(" Servo set to ");
     log += event->Par3;
     addLog(LOG_LEVEL_INFO, log);
-    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+    SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
-    // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, log, 0));
+    // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, log, 0));
     return return_command_success();
   }
     #else // ifdef USE_SERVO

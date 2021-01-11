@@ -232,8 +232,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
             addLog(LOG_LEVEL_INFO, log);
 
-            // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+            // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+            SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
           }
           else {
             addLog(LOG_LEVEL_ERROR, log + String(F(" the pwm value ")) + String(event->Par2) + String(F(" is invalid value.")));
@@ -271,8 +271,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           log = String(F("PCA 0x")) + String(address, HEX) + String(F(": FREQ ")) + String(event->Par1);
           addLog(LOG_LEVEL_INFO, log);
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
           addLog(LOG_LEVEL_ERROR,
@@ -315,8 +315,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           }
           success = true;
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, createKey(PLUGIN_ID_022, event->Par2), dummyString, 0);
+          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, createKey(PLUGIN_ID_022, event->Par2), dummyString, 0);
         }
       }
 
@@ -368,8 +368,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           newStatus.state   = event->Par2;
           savePortStatus(key, newStatus);
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, pin, log, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, pin, log, 0));
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
           addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
@@ -442,8 +442,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
           addLog(LOG_LEVEL_INFO, log);
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
           addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
@@ -499,8 +499,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         newStatus.state   = event->Par2;
         savePortStatus(key, newStatus);
 
-        // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
-        SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+        // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+        SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
       break;
     }
