@@ -104,14 +104,13 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Output settings"));
 
       {
-        #define P050_RGB_OPTIONS 3
+        #define P050_RGB_OPTIONS 2
         String optionsRGB[P050_RGB_OPTIONS];
-        optionsRGB[0] = F("Raw RGB");
-        optionsRGB[1] = F("Normalized RGB (0..255)");
-        optionsRGB[2] = F("Normalized rgb (0.00000..1.00000)");
-        int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1, 2};
+        optionsRGB[0] = F("Raw RGB (uncalibrated)");
+        optionsRGB[1] = F("Normalized RGB (0.0000..255.0000)");
+        int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1};
         addFormSelector(F("Output RGB Values"), F("p050_outputrgb"), P050_RGB_OPTIONS, optionsRGB, optionValuesRGB, PCONFIG(2));
-        addFormNote(F("For 'Normalized RGB/rgb', the Red/Green/Blue values Decimals should best be increased."));
+        addFormNote(F("For 'Normalized RGB', the Red/Green/Blue values Decimals should best be increased."));
       }
 
       {
@@ -248,13 +247,6 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex]     = (float)r / t * 255.0f * calRed;
               UserVar[event->BaseVarIndex + 1] = (float)g / t * 255.0f * calGreen;
               UserVar[event->BaseVarIndex + 2] = (float)b / t * 255.0f * calBlue;
-            }
-            break;
-          case 2:
-            if (t != 0) { // r/g/b (normalized to 0.00..1.00 (but avoid divide by 0)
-              UserVar[event->BaseVarIndex]     = (float)r / t * 1.0f * calRed;
-              UserVar[event->BaseVarIndex + 1] = (float)g / t * 1.0f * calGreen;
-              UserVar[event->BaseVarIndex + 2] = (float)b / t * 1.0f * calBlue;
             }
             break;
         }
