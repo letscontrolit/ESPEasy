@@ -566,11 +566,7 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
   if (!validDoubleFromString(arg1, farg1)) {
     return false;
   }
-  if (cmd_s_lower.equals(F("abs"))) {
-    // Turn number into positive value
-    // Syntax like {abs:-1} -> '1'
-    result = farg1 < 0.0 ? farg1 * -1.0 : farg1;
-  } else if (cmd_s_lower.equals(F("constrain"))) {
+  if (cmd_s_lower.equals(F("constrain"))) {
     // Contrain a value X to be within range of A to B
     // Syntax like {constrain:x:a:b} to constrain x in range a...b
     if (validFloatFromString(arg2, farg2) && validFloatFromString(arg3, farg3)) {

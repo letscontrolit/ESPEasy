@@ -801,7 +801,7 @@ Abs
 
 Perform ABS on integer values.
 
-Usage:  ``{abs:<value>}``
+Usage:  ``abs(<value>)``
 
 With:
 
@@ -809,7 +809,7 @@ With:
 
 For example:
 
-* ``{abs:-1}`` Return the absolute value => 1
+* ``abs(-1)`` Return the absolute value => 1
 
 .. note::
 
@@ -820,7 +820,7 @@ For example:
 
  on eventname do
    let,1,%eventvalue1%                   // Don't change the value
-   let,2,{bitset:9:{abs:%eventvalue1%}}  // Convert to positive and set bit '9'
+   let,2,{bitset:9:abs(%eventvalue1%)}   // Convert to positive and set bit '9'
    LogEntry,'Values {tobin:[int#1]} {tohex:[int#1]}'
    LogEntry,'Values {tobin:[int#2]} {tohex:[int#2]}'
  endon
@@ -854,6 +854,81 @@ With:
 * ``<value>`` The number to constrain, if it is representing a valid numerical value.
 * ``<low>`` Lower end of range, if it is representing a valid numerical value.
 * ``<high>`` Higher end of range, if it is representing a valid numerical value.
+
+Math Functions
+--------------
+
+(Added: 2021-01-10)
+
+ESPEasy also supports some math functions, like trigonometric functions, but also some more basic functions.
+
+Basic Math Functions
+^^^^^^^^^^^^^^^^^^^^
+
+* ``log(x)`` Logarithm of x to base 10.
+* ``ln(x)`` Natural logarithm of x.
+* ``abs(x)`` Absolute value of x.
+* ``exp(x)`` Exponential value, e^x.
+* ``sqrt(x)`` Square root of x. (x^0.5)
+* ``sq(x)`` Square of x, x^2.
+* ``round(x)`` Rounds to the nearest integer, but rounds halfway cases away from zero (instead of to the nearest even integer). 
+
+Rules example:
+
+.. code-block:: none  
+
+ on eventname2 do
+   let,1,sq(%eventvalue1%)
+   let,2,sqrt([var#1])
+   let,3,=log(%eventvalue2%)
+   let,4,ln(%eventvalue2%)
+   LogEntry,'sqrt of [var#1] = [var#2]'
+   LogEntry,'log of %eventvalue2% = [var#3]'
+   LogEntry,'ln of %eventvalue2% = [var#4]'   
+ endon
+
+Called with event ``eventname2=1.234,100``
+
+.. code-block:: none  
+
+ 213293 : Info   : EVENT: eventname2=1.234,100
+ 213307 : Info   : ACT  : let,1,sq(1.234)
+ 213316 : Info   : ACT  : let,2,sqrt(1.522756)
+ 213328 : Info   : ACT  : let,3,=log(100)
+ 213337 : Info   : ACT  : let,4,ln(100)
+ 213346 : Info   : ACT  : LogEntry,'sqrt of 1.522756 = 1.234'
+ 213351 : Info   : sqrt of 1.522756 = 1.234
+ 213357 : Info   : ACT  : LogEntry,'log of 100 = 2'
+ 213361 : Info   : log of 100 = 2
+ 213369 : Info   : ACT  : LogEntry,'ln of 100 = 4.60517018598809'
+ 213374 : Info   : ln of 100 = 4.60517018598809
+
+
+
+Trigonometric Functions
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Since the trigonometric functions add quite a bit to the compiled binary, these functions are not included in builds which have a flag defined to limit their build size.
+
+All trigonometric functions are present in 2 versions, for angles in radian and with the ``_d`` suffix for angles in degree.
+
+Radian Angle:
+
+* ``sin(x)`` Sine of x (radian)
+* ``cos(x)`` Cosine of x (radian)
+* ``tan(x)`` Tangent of x (radian)
+* ``arcSin(x)`` Arc Sine of x (radian)
+* ``arcCos(x)`` Arc Cosine of x (radian)
+* ``arcTan(x)`` Arc Tangent of x (radian)
+
+Degree Angle:
+
+* ``sin_d(x)`` Sine of x (degree)
+* ``cos_d(x)`` Cosine of x (degree)
+* ``tan_d(x)`` Tangent of x (degree)
+* ``arcSin_d(x)`` Arc Sine of x (degree)
+* ``arcCos_d(x)`` Arc Cosine of x (degree)
+* ``arcTan_d(x)`` Arc Tangent of x (degree)
 
 
 

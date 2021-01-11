@@ -50,7 +50,11 @@ bool RulesCalculate_t::is_unary_operator(char c)
     case UnaryOperator::Not:
     case UnaryOperator::Log:
     case UnaryOperator::Ln:
+    case UnaryOperator::Abs:
+    case UnaryOperator::Exp:
     case UnaryOperator::Sqrt:
+    case UnaryOperator::Sq:
+    case UnaryOperator::Round:
     case UnaryOperator::Sin:
     case UnaryOperator::Cos:
     case UnaryOperator::Tan:
@@ -121,8 +125,16 @@ double RulesCalculate_t::apply_unary_operator(char op, double first)
       return log10(first);
     case UnaryOperator::Ln:
       return log(first);
+    case UnaryOperator::Abs:
+      return fabs(first);
+    case UnaryOperator::Exp:
+      return exp(first);
     case UnaryOperator::Sqrt:
       return sqrt(first);
+    case UnaryOperator::Sq:
+      return first * first;
+    case UnaryOperator::Round:
+      return round(first);
     default:
       break;
   }
@@ -504,8 +516,20 @@ String toString(UnaryOperator op)
     case UnaryOperator::Ln:
       find = F("ln");
       break;
+    case UnaryOperator::Abs:
+      find = F("abs");
+      break;
+    case UnaryOperator::Exp:
+      find = F("exp");
+      break;
     case UnaryOperator::Sqrt:
       find = F("sqrt");
+      break;
+    case UnaryOperator::Sq:
+      find = F("sq");
+      break;
+    case UnaryOperator::Round:
+      find = F("round");
       break;
     case UnaryOperator::Sin:
     case UnaryOperator::Sin_d:
@@ -546,7 +570,11 @@ String RulesCalculate_t::preProces(const String& input)
   preProcessReplace(preprocessed, UnaryOperator::Not);
   preProcessReplace(preprocessed, UnaryOperator::Log);
   preProcessReplace(preprocessed, UnaryOperator::Ln);
+  preProcessReplace(preprocessed, UnaryOperator::Abs);
+  preProcessReplace(preprocessed, UnaryOperator::Exp);
   preProcessReplace(preprocessed, UnaryOperator::Sqrt);
+  preProcessReplace(preprocessed, UnaryOperator::Sq);
+  preProcessReplace(preprocessed, UnaryOperator::Round);
 #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
   // Try the "arc" functions first, or else "sin" is already replaced when "asin" is tried.
   if (preprocessed.indexOf(F("sin")) != -1) {
