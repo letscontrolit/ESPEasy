@@ -318,6 +318,154 @@ It can also be used in rules. Every occurance of this text will then be replaced
 N.B. these references to task values only yield a value when the task is enabled and its value is valid.
 
 
+
+
+Event value (%eventvalue%)
+--------------------------
+
+Rules engine specific:
+
+%eventvalue% - substitutes the event value (everything that comes after
+the '=' sign, up to four values are possible).
+
+Sample rules section:
+
+.. code-block:: none
+
+ on remoteTimerControl do
+   timerSet,1,%eventvalue%
+ endon
+
+Now send this command to the ESP:
+
+.. code-block:: none
+
+ http://<espeasyip>/control?cmd=event,remoteTimerControl=5
+
+and it will set rules timer no 1 to 5 seconds. Using this technique you can
+parse a value from an event to the rule engine.
+
+It is possible to use multiple event values. Some system events generate multiple event values.
+
+For example, the ``Rules#Timer`` event has 2 event values (since build 2020/08/12):
+
+* ``%eventvalue1%`` has the timer number (1 ... max timer ID)
+* ``%eventvalue2%`` has the loop count for loop timers (since build 2020/08/12)
+
+.. note::
+ 'timerSet' is a rule command and cannot be run directly from a remote command.
+
+If you want to check the transferred value within rules on the receiving ESP
+(condition in if-statement), you will need to write the transferred value into
+a Dummy device using the TaskValueSet command. It is then possible to check
+the value of the Dummy device as condition in if-statement within rules.
+
+Multiple event values:
+
+.. code-block:: none
+
+ on ToggleGPIO do
+   GPIO,%eventvalue1%,%eventvalue2%
+ endon
+
+You could then use the command "ToggleGPIO" with dynamic GPIO numbers and state.
+
+.. code-block:: none
+
+ http://<espeasyip>/control?cmd=event,ToggleGPIO=12,1
+
+Task value events
+-----------------
+
+Tasks also send out events when a read was successful.
+
+There is a number of triggers for a task to perform a read:
+
+* Periodical read. A task calls its own read function every <interval> number of seconds. (Setting per task)
+* ``TaskRun`` command. A task can be forced to take a reading via a command. This can be sent from rules, HTTP calls, etc.
+* Some task reschedule their own read calls right after the sensor is done collecting data. (e.g. the BME280)
+
+Event per task value
+^^^^^^^^^^^^^^^^^^^^
+
+By default, an event is created per read task value.
+For example a task called "bme" (using BMx280 plugin) may output upto 3 values:
+
+* Temperature
+* Humidity
+* Pressure
+
+This would then generate upto 3 events:
+
+* ``bme#Temperature=21.12``
+* ``bme#Humidity=49.23``
+* ``bme#Pressure=1010.34``
+
+Single event with all values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+(Added: 2021-01-11)
+
+Each task may be configured to combine all task values in a single event, by checking "Single event with all values".
+
+This will create a single event with variable name "All" like this:
+
+* ``bme#All=21.12,49.23,1010.34``
+
+To access all event values in the rules:
+
+.. code-block:: none
+
+ on bme#All do
+   LogEntry,"temp: %eventvalue1% hum: %eventvalue2% press: %eventvalue3%"
+ endon
+
+There is a number of reasons to combine all task values in a single event:
+
+* Less events to process, as the rules have to be parsed for each event.
+* All task values of the same read are present at the same time.
+
+Especially the last reason, to have all values present when handling an event, is very useful.
+When you need to take an action based on 2 values of the same sensor, you must make sure they both belong to the same sample.
+
+A typical example is to compute the dew point, which is a relation between temperature and (relative) humidity.
+
+.. code-block:: none
+
+ on bme#All do
+   LogEntry,"Dew point: %c_dew_th%(%eventvalue1%,%eventvalue2%)"
+ endon
+
+
+
+
+Internal variables
+------------------
+
+A really great feature to use is the internal variables. You set them like this:
+
+.. code-block:: none
+
+ Let,<n>,<value>
+
+Where n must be a positive integer (type ``uint32_t``) and the value a floating point value. To use the values in strings you can
+either use the ``%v7%`` syntax or ``[var#7]``. BUT for formulas you need to use the square
+brackets in order for it to compute, i.e. ``[var#12]``.
+
+.. note: The number for ``n`` used to be limited to 1 ... 16, but this limit has been removed in builds made after 2021-01-09.
+
+If you need to make sure the stored value is an integer value, use the ``[int#n]`` syntax. (i.e. ``[int#12]``)
+The index ``n`` is shared among ``[var#n]`` and ``[int#n]``.
+
+On the "System Variables" page of the web interface all set values can be inspected including their values.
+If none is set, "No variables set" will be shown.
+
+If a specific system variable was never set (using the ``Let`` command), its value will be considered to be ``0.0``.
+
+.. note: Interval variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without loosing power), please use a dummy task for this.
+
+
+
 Special task names
 ------------------
 
@@ -1033,86 +1181,6 @@ The values stored in the Dummy variables will be kept and restored on a crash/re
   event,Irrigate
  endif
 
-
-
-Event value (%eventvalue%)
---------------------------
-
-Rules engine specific:
-
-%eventvalue% - substitutes the event value (everything that comes after
-the '=' sign, up to four values are possible).
-
-Sample rules section:
-
-.. code-block:: none
-
- on remoteTimerControl do
-   timerSet,1,%eventvalue%
- endon
-
-Now send this command to the ESP:
-
-.. code-block:: none
-
- http://<espeasyip>/control?cmd=event,remoteTimerControl=5
-
-and it will set rules timer no 1 to 5 seconds. Using this technique you can
-parse a value from an event to the rule engine.
-
-It is possible to use multiple event values. Some system events generate multiple event values.
-
-For example, the ``Rules#Timer`` event has 2 event values (since build 2020/08/12):
-
-* ``%eventvalue1%`` has the timer number (1 ... max timer ID)
-* ``%eventvalue2%`` has the loop count for loop timers (since build 2020/08/12)
-
-.. note::
- 'timerSet' is a rule command and cannot be run directly from a remote command.
-
-If you want to check the transferred value within rules on the receiving ESP
-(condition in if-statement), you will need to write the transferred value into
-a Dummy device using the TaskValueSet command. It is then possible to check
-the value of the Dummy device as condition in if-statement within rules.
-
-Multiple event values:
-
-.. code-block:: none
-
- on ToggleGPIO do
-   GPIO,%eventvalue1%,%eventvalue2%
- endon
-
-You could then use the command "ToggleGPIO" with dynamic GPIO numbers and state.
-
-.. code-block:: none
-
- http://<espeasyip>/control?cmd=event,ToggleGPIO=12,1
-
-Internal variables
-------------------
-
-A really great feature to use is the internal variables. You set them like this:
-
-.. code-block:: none
-
- Let,<n>,<value>
-
-Where n must be a positive integer (type ``uint32_t``) and the value a floating point value. To use the values in strings you can
-either use the ``%v7%`` syntax or ``[var#7]``. BUT for formulas you need to use the square
-brackets in order for it to compute, i.e. ``[var#12]``.
-
-.. note: The number for ``n`` used to be limited to 1 ... 16, but this limit has been removed in builds made after 2021-01-09.
-
-If you need to make sure the stored value is an integer value, use the ``[int#n]`` syntax. (i.e. ``[int#12]``)
-The index ``n`` is shared among ``[var#n]`` and ``[int#n]``.
-
-On the "System Variables" page of the web interface all set values can be inspected including their values.
-If none is set, "No variables set" will be shown.
-
-If a specific system variable was never set (using the ``Let`` command), its value will be considered to be ``0.0``.
-
-.. note: Interval variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without loosing power), please use a dummy task for this.
 
 Averaging filters
 -----------------

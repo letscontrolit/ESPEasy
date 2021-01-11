@@ -337,6 +337,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
                      pin1, pin2, pin3);
   Settings.TaskDevicePort[taskIndex] = getFormItemInt(F("TDP"), 0);
   update_whenset_FormItemInt(F("remoteFeed"), Settings.TaskDeviceDataFeed[taskIndex]);
+  Settings.CombineTaskValues_SingleEvent(taskIndex, isFormItemChecked(F("TVSE")));
 
   for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
   {
@@ -1183,6 +1184,11 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
   if (Device[DeviceIndex].SendDataOption)
   {
     addFormSubHeader(F("Data Acquisition"));
+
+    addRowLabel(F("Single event with all values"));
+    addCheckBox(F("TVSE"), Settings.CombineTaskValues_SingleEvent(taskIndex));
+    addFormNote(F("Unchecked: Send event per value. Checked: Send single event containing all values"));
+    addFormSeparator(2);
 
     for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
     {

@@ -1384,29 +1384,28 @@ void createRuleEvents(struct EventStruct *event) {
 
   const byte valueCount = getValueCountForTask(event->TaskIndex);
 
-  for (byte varNr = 0; varNr < valueCount; varNr++) {
+  if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
     String eventString;
-    eventString.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
+    eventString.reserve(128); // Enough for most use cases, prevent lots of memory allocations.
     eventString  = getTaskDeviceName(event->TaskIndex);
-    eventString += F("#");
-    eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-    eventString += F("=");
-
-    switch (event->getSensorType()) {
-      case Sensor_VType::SENSOR_TYPE_LONG:
-        eventString += (unsigned long)UserVar[event->BaseVarIndex] +
-                       ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
-        break;
-      case Sensor_VType::SENSOR_TYPE_STRING:
-
-        // FIXME TD-er: What to add here? length of string?
-        break;
-      default:
-
-        // FIXME TD-er: Do we need to call formatUserVarNoCheck here? (or with check)
-        eventString += formatUserVarNoCheck(event, varNr);
-        break;
+    eventString += F("#All=");
+    for (byte varNr = 0; varNr < valueCount; varNr++) {
+      if (varNr != 0) {
+        eventString += ',';
+      }
+      eventString += formatUserVarNoCheck(event, varNr);
     }
     eventQueue.add(eventString);
+  } else {
+    for (byte varNr = 0; varNr < valueCount; varNr++) {
+      String eventString;
+      eventString.reserve(64); // Enough for most use cases, prevent lots of memory allocations.
+      eventString  = getTaskDeviceName(event->TaskIndex);
+      eventString += F("#");
+      eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+      eventString += F("=");
+      eventString += formatUserVarNoCheck(event, varNr);
+      eventQueue.add(eventString);
+    }    
   }
 }
