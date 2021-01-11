@@ -718,6 +718,16 @@ void parseControllerVariables(String& s, struct EventStruct *event, boolean useU
   parseEventVariables(s, event, useURLencode);
 }
 
+void parseSingleControllerVariable(String            & s,
+                                   struct EventStruct *event,
+                                   byte                taskValueIndex,
+                                   boolean             useURLencode) {
+  LoadTaskSettings(event->TaskIndex);
+  repl(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[taskValueIndex], s, useURLencode);
+}
+
+
+
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T, S) \
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }

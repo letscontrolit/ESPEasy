@@ -522,6 +522,9 @@ void MQTTStatus(struct EventStruct *event, const String& status)
     pubname.replace(F("/#"), F("/status"));
 
     parseControllerVariables(pubname, event, false);
+    parseSingleControllerVariable(pubname, event, 0, false);
+
+
     if (!pubname.endsWith(F("/status"))) {
       pubname += F("/status");
     }

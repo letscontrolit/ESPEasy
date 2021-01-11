@@ -207,6 +207,11 @@ void parseControllerVariables(String            & s,
                               struct EventStruct *event,
                               boolean             useURLencode);
 
+void parseSingleControllerVariable(String            & s,
+                                   struct EventStruct *event,
+                                   byte                taskValueIndex,
+                                   boolean             useURLencode);
+
 void parseSystemVariables(String& s,
                           boolean useURLencode);
 

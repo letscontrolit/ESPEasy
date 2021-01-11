@@ -705,7 +705,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         for (byte x = 0; x < valueCount; x++)
         {
           String tmppubname = pubname;
-          tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+          parseSingleControllerVariable(tmppubname, event, x, false);
 
           // Small optimization so we don't try to copy potentially large strings
           if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {

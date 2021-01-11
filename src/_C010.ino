@@ -73,10 +73,9 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
             bool isvalid;
             String formattedValue = formatUserVar(event, x, isvalid);
             if (isvalid) {
-              element.txt[x] = "";
-              element.txt[x] += ControllerSettings.Publish;
+              element.txt[x] = ControllerSettings.Publish;
               parseControllerVariables(element.txt[x], event, false);
-              element.txt[x].replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+              parseSingleControllerVariable(element.txt[x], event, x, false);
               element.txt[x].replace(F("%value%"), formattedValue);
               addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
             }

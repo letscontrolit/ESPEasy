@@ -187,10 +187,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
         break;
       default:
 
-        if (useURLencode) {
-          value = URLEncode(value.c_str());
-        }
-        s.replace(SystemVariables::toString(enumval), value);
+        repl(SystemVariables::toString(enumval), value, s, useURLencode);
         break;
     }
   }
@@ -204,12 +201,8 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       String key = "%v" + String(i) + '%';
       if (s.indexOf(key) != -1) {
         const bool trimTrailingZeros = true;
-        String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
-
-        if (useURLencode) {
-          value = URLEncode(value.c_str());
-        }
-        s.replace(key, value);
+        const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        repl(key, value, s, useURLencode);
       }
     }
   }
