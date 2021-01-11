@@ -83,16 +83,17 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 
           // Collect the values at the same run, to make sure all are from the same sample
           LoadTaskSettings(event->TaskIndex);
+          parseControllerVariables(pubname, event, true);
 
           for (byte x = 0; x < valueCount; x++)
           {
+            String tmppubname = pubname;
             bool isvalid;
             String formattedValue = formatUserVar(event, x, isvalid);
             if (isvalid) {
               element.txt[x] = "/";
-              element.txt[x] += pubname;
+              element.txt[x] += tmppubname;
               parseSingleControllerVariable(element.txt[x], event, x, true);
-              parseControllerVariables(element.txt[x], event, true);
               element.txt[x].replace(F("%value%"), formattedValue);
 #ifndef BUILD_NO_DEBUG
               addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);

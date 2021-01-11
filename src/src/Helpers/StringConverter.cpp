@@ -722,8 +722,12 @@ void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
                                    byte                taskValueIndex,
                                    boolean             useURLencode) {
-  LoadTaskSettings(event->TaskIndex);
-  repl(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[taskValueIndex], s, useURLencode);
+  if (validTaskIndex(event->TaskIndex)) {
+    LoadTaskSettings(event->TaskIndex);
+    repl(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[taskValueIndex], s, useURLencode);
+  } else {
+    repl(F("%valname%"), F(""), s, useURLencode);
+  }
 }
 
 
@@ -742,9 +746,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
 
 void parseEventVariables(String& s, struct EventStruct *event, boolean useURLencode)
 {
-  // These replacements use ExtraTaskSettings, so make sure the correct TaskIndex is set in the event.
-  LoadTaskSettings(event->TaskIndex);
-  SMART_REPL(F("%id%"), String(event->idx))
+  repl(F("%id%"), String(event->idx), s, useURLencode);
 
   if (validTaskIndex(event->TaskIndex)) {
     if (s.indexOf(F("%val")) != -1) {
@@ -760,20 +762,24 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
       }
     }
   }
-  const bool tskname_found = s.indexOf(F("%tskname%")) != -1;
-  const bool vname_found = s.indexOf(F("%vname")) != -1;
-  if (tskname_found || vname_found) {
+  if (validTaskIndex(event->TaskIndex)) {
+    // These replacements use ExtraTaskSettings, so make sure the correct TaskIndex is set in the event.
     LoadTaskSettings(event->TaskIndex);
-    if (tskname_found) {
-      repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
-    }
+    repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+  } else {
+    repl(F("%tskname%"), F(""), s, useURLencode);
+  }
 
-    if (vname_found) {
-      for (byte i = 0; i < 4; ++i) {
-        String vname = F("%vname");
-        vname += (i + 1);
-        vname += '%';
+  const bool vname_found = s.indexOf(F("%vname")) != -1;
+  if (vname_found) {
+    for (byte i = 0; i < 4; ++i) {
+      String vname = F("%vname");
+      vname += (i + 1);
+      vname += '%';
+      if (validTaskIndex(event->TaskIndex)) {
         repl(vname, ExtraTaskSettings.TaskDeviceValueNames[i], s, useURLencode);
+      } else {
+        repl(vname, F(""), s, useURLencode);
       }
     }
   }

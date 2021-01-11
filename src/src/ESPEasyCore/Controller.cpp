@@ -521,8 +521,8 @@ void MQTTStatus(struct EventStruct *event, const String& status)
     // It makes no sense to have a subscribe wildcard on a publish topic.
     pubname.replace(F("/#"), F("/status"));
 
-    parseControllerVariables(pubname, event, false);
     parseSingleControllerVariable(pubname, event, 0, false);
+    parseControllerVariables(pubname, event, false);
 
 
     if (!pubname.endsWith(F("/status"))) {

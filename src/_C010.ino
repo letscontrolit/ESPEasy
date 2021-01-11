@@ -56,25 +56,34 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
         if (C010_DelayHandler == nullptr) {
           break;
         }
+        const byte valueCount = getValueCountForTask(event->TaskIndex);
+        if (valueCount == 0) {
+          break;
+        }
 
         LoadTaskSettings(event->TaskIndex);
-        byte valueCount = getValueCountForTask(event->TaskIndex);
         C010_queue_element element(event, valueCount);
 
         {
-          MakeControllerSettings(ControllerSettings);
-          if (!AllocatedControllerSettings()) {
-            break;
+          String pubname;
+          {
+            MakeControllerSettings(ControllerSettings);
+            if (!AllocatedControllerSettings()) {
+              break;
+            }
+            LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+            pubname = ControllerSettings.Publish;
           }
-          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+
+          parseControllerVariables(pubname, event, false);
 
           for (byte x = 0; x < valueCount; x++)
           {
             bool isvalid;
             String formattedValue = formatUserVar(event, x, isvalid);
             if (isvalid) {
-              element.txt[x] = ControllerSettings.Publish;
-              parseControllerVariables(element.txt[x], event, false);
+              String tmppubname = pubname;
+              element.txt[x] = tmppubname;
               parseSingleControllerVariable(element.txt[x], event, x, false);
               element.txt[x].replace(F("%value%"), formattedValue);
               addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);

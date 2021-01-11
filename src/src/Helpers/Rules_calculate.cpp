@@ -614,9 +614,9 @@ int CalculateParam(const String& TmpStr) {
 
     // Starts with an '=', so Calculate starting at next position
     CalculateReturnCode returnCode = Calculate(TmpStr.substring(1), param);
-#ifndef BUILD_NO_DEBUG
 
     if (!isError(returnCode)) {
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CALCULATE PARAM: ");
         log += TmpStr;
@@ -624,8 +624,8 @@ int CalculateParam(const String& TmpStr) {
         log += round(param);
         addLog(LOG_LEVEL_DEBUG, log);
       }
-    }
 #endif // ifndef BUILD_NO_DEBUG
+    }
     returnValue = round(param); // return integer only as it's valid only for device and task id
   }
   return returnValue;
