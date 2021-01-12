@@ -1187,7 +1187,7 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
 
     addRowLabel(F("Single event with all values"));
     addCheckBox(F("TVSE"), Settings.CombineTaskValues_SingleEvent(taskIndex));
-    addFormNote(F("Unchecked: Send event per value. Checked: Send single event containing all values"));
+    addFormNote(F("Unchecked: Send event per value. Checked: Send single event (taskname#All) containing all values "));
     addFormSeparator(2);
 
     for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
