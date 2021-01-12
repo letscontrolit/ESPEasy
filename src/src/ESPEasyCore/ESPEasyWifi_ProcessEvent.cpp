@@ -232,8 +232,14 @@ void processGotIP() {
 
   IPAddress ip = NetworkLocalIP();
 
-  if (!useStaticIP() && !ip.isSet()) {
-    return;
+  if (!useStaticIP()) {
+    #ifdef ESP8266
+    if (!ip.isSet()) {
+    #else
+    if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
+    #endif
+      return;
+    }
   }
   const IPAddress gw       = NetworkGatewayIP();
   const IPAddress subnet   = NetworkSubnetMask();
