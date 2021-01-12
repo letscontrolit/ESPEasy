@@ -41,4 +41,4 @@ void serialPrintln();
  */
 
 
-#endif
+#endif // ifndef ESPEASYCORE_SERIAL_H

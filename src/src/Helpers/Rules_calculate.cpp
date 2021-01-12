@@ -576,6 +576,7 @@ String RulesCalculate_t::preProces(const String& input)
   preProcessReplace(preprocessed, UnaryOperator::Sq);
   preProcessReplace(preprocessed, UnaryOperator::Round);
 #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+
   // Try the "arc" functions first, or else "sin" is already replaced when "asin" is tried.
   if (preprocessed.indexOf(F("sin")) != -1) {
     preProcessReplace(preprocessed, UnaryOperator::ArcSin);
@@ -583,19 +584,21 @@ String RulesCalculate_t::preProces(const String& input)
     preProcessReplace(preprocessed, UnaryOperator::Sin);
     preProcessReplace(preprocessed, UnaryOperator::Sin_d);
   }
+
   if (preprocessed.indexOf(F("cos")) != -1) {
     preProcessReplace(preprocessed, UnaryOperator::ArcCos);
     preProcessReplace(preprocessed, UnaryOperator::ArcCos_d);
     preProcessReplace(preprocessed, UnaryOperator::Cos);
     preProcessReplace(preprocessed, UnaryOperator::Cos_d);
   }
+
   if (preprocessed.indexOf(F("tan")) != -1) {
     preProcessReplace(preprocessed, UnaryOperator::ArcTan);
     preProcessReplace(preprocessed, UnaryOperator::ArcTan_d);
     preProcessReplace(preprocessed, UnaryOperator::Tan);
     preProcessReplace(preprocessed, UnaryOperator::Tan_d);
   }
-#endif
+#endif // ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
   return preprocessed;
 }
 
@@ -617,6 +620,7 @@ int CalculateParam(const String& TmpStr) {
 
     if (!isError(returnCode)) {
 #ifndef BUILD_NO_DEBUG
+
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CALCULATE PARAM: ");
         log += TmpStr;

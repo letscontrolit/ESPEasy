@@ -1,7 +1,6 @@
 #include "../Commands/Tasks.h"
 
 
-
 #include "../../ESPEasy_common.h"
 
 
@@ -21,9 +20,11 @@
 bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned int& varNr)
 {
   if (event == nullptr) { return false; }
+
   if (event->Par1 <= 0) { return false; }
   taskIndex_t tmp_taskIndex = static_cast<taskIndex_t>(event->Par1 - 1);
-  varNr     = 0;
+
+  varNr = 0;
 
   if (event->Par2 > 0) {
     varNr = event->Par2 - 1;
@@ -38,7 +39,7 @@ bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned i
   return true;
 }
 
-bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& taskIndex) 
+bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& taskIndex)
 {
   String TmpStr1;
   unsigned int varNr;
@@ -49,6 +50,7 @@ bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& task
   if (GetArgv(Line, TmpStr1, 4)) {
     // Perform calculation with float result.
     double result = 0;
+
     if (isError(Calculate(TmpStr1, result))) {
       return false;
     }
@@ -88,6 +90,7 @@ String Command_Task_EnableDisable(struct EventStruct *event, bool enable)
   if (validTaskVars(event, taskIndex, varNr)) {
     // This is a command so no guarantee the taskIndex is correct in the event
     event->setTaskIndex(taskIndex);
+
     if (setTaskEnableStatus(event, enable)) {
       return return_command_success();
     }
@@ -107,8 +110,9 @@ String Command_Task_Enable(struct EventStruct *event, const char *Line)
 
 String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
 {
-  taskIndex_t  taskIndex;
-  if (taskValueSet(event, Line, taskIndex)) return return_command_success();
+  taskIndex_t taskIndex;
+
+  if (taskValueSet(event, Line, taskIndex)) { return return_command_success(); }
   return return_command_failed();
 }
 
@@ -130,6 +134,7 @@ String Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
 String Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
 {
   taskIndex_t taskIndex;
+
   if (taskValueSet(event, Line, taskIndex))
   {
     SensorSendTask(taskIndex);

@@ -92,16 +92,17 @@ bool processNextEvent() {
   if (Settings.UseRules)
   {
     String nextEvent;
+
     if (eventQueue.getNext(nextEvent)) {
       rulesProcessing(nextEvent);
       return true;
     }
   }
+
   // Just make sure any (accidentally) added or remaining events are not kept.
   eventQueue.clear();
   return false;
 }
-
 
 /********************************************************************************************\
    Rules processing
@@ -113,7 +114,7 @@ void rulesProcessing(String& event) {
   START_TIMER
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessing"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifndef BUILD_NO_DEBUG
   unsigned long timer = millis();
 #endif // ifndef BUILD_NO_DEBUG
@@ -147,13 +148,13 @@ void rulesProcessing(String& event) {
     if (fileExists(fileName)) {
       rulesProcessingFile(fileName, event);
     }
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
     else {
       addLog(LOG_LEVEL_DEBUG, String(F("EVENT: ")) + event +
              String(F(" is ingnored. File ")) + fileName +
              String(F(" not found.")));
     }
-#endif // ifndef BUILD_NO_DEBUG
+# endif    // ifndef BUILD_NO_DEBUG
     #endif // WEBSERVER_NEW_RULES
   }
 
@@ -181,7 +182,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifndef BUILD_NO_DEBUG
 
   if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV) {
@@ -308,10 +309,9 @@ String rulesProcessingFile(const String& fileName, String& event) {
   nestingLevel--;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   return "";
 }
-
 
 /********************************************************************************************\
    Strip comment from the line.
@@ -319,7 +319,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
  \*********************************************************************************************/
 bool rules_strip_trailing_comments(String& line)
 {
-   // Strip trailing comments
+  // Strip trailing comments
   int comment = line.indexOf(F("//"));
 
   if (comment >= 0) {
@@ -327,7 +327,7 @@ bool rules_strip_trailing_comments(String& line)
     line.trim();
     return true;
   }
-  return false; 
+  return false;
 }
 
 /********************************************************************************************\
@@ -339,10 +339,11 @@ bool rules_replace_common_mistakes(const String& from, const String& to, String&
   if (line.indexOf(from) == -1) {
     return false; // Nothing replaced
   }
+
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log;
     log.reserve(32 + from.length() + to.length() + line.length());
-    log = F("Rules (Syntax Error, auto-corrected): '");
+    log  = F("Rules (Syntax Error, auto-corrected): '");
     log += from;
     log += F("' => '");
     log += to;
@@ -362,9 +363,11 @@ bool rules_replace_common_mistakes(const String& from, const String& to, String&
 bool check_rules_line_user_errors(String& line)
 {
   bool res = true;
+
   if (rules_replace_common_mistakes(F("if["), F("if ["), line)) {
     res = false;
   }
+
   if (rules_replace_common_mistakes(F("if%"), F("if %"), line)) {
     res = false;
   }
@@ -372,15 +375,13 @@ bool check_rules_line_user_errors(String& line)
   return res;
 }
 
-
-
 /********************************************************************************************\
    Parse string commands
  \*********************************************************************************************/
-
 bool get_next_inner_bracket(const String& line, int& startIndex, int& closingIndex, char closingBracket)
 {
   char openingBracket = closingIndex;
+
   switch (closingBracket) {
     case ']': openingBracket = '['; break;
     case '}': openingBracket = '{'; break;
@@ -390,8 +391,9 @@ bool get_next_inner_bracket(const String& line, int& startIndex, int& closingInd
       return false;
   }
   closingIndex = line.indexOf(closingBracket);
-  if (closingIndex == -1) return false;
-  
+
+  if (closingIndex == -1) { return false; }
+
   for (int i = closingIndex; i >= 0; --i) {
     if (line[i] == openingBracket) {
       startIndex = i;
@@ -407,16 +409,20 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
     return false;
   }
   int newIndex = fullCommand.indexOf(separator, index);
+
   if (newIndex == -1) {
     argument = fullCommand.substring(index);
   } else {
     argument = fullCommand.substring(index, newIndex);
   }
+
   if (argument.startsWith(String(separator))) {
     argument = argument.substring(1);
   }
-//  addLog(LOG_LEVEL_INFO, String("get_next_argument: ") + String(index) + " " + fullCommand + " " + argument);
+
+  //  addLog(LOG_LEVEL_INFO, String("get_next_argument: ") + String(index) + " " + fullCommand + " " + argument);
   index = newIndex;
+
   if (index != -1) {
     ++index;
   }
@@ -424,17 +430,17 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
 }
 
 /*  TD-er: Disabled for now, have to try and make the notation more intuitive.
-bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, double& result) {
-  #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
-  if (cmd_s_lower.length() < 3) {
+   bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, double& result) {
+ #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+   if (cmd_s_lower.length() < 3) {
     return false;
-  }
-  float farg1;
-  if (!validFloatFromString(arg1, farg1)) {
+   }
+   float farg1;
+   if (!validFloatFromString(arg1, farg1)) {
     return false;
-  }
-  const bool angle_in_deg = cmd_s_lower.endsWith(F("_d"));
-  if (cmd_s_lower[0] == 'a') {
+   }
+   const bool angle_in_deg = cmd_s_lower.endsWith(F("_d"));
+   if (cmd_s_lower[0] == 'a') {
     // acos, asin, atan, atan2
     if (cmd_s_lower.startsWith(F("acos"))) {
       result = acos(farg1);
@@ -458,59 +464,62 @@ bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1
     if (angle_in_deg) {
       farg1 = degrees(farg1);
     }
-    return true;    
-  }
-  // cos, sin, tan
-  // These functions have the angle as input, so convert the argument to radians first (if needed)
-  if (angle_in_deg) {
+    return true;
+   }
+   // cos, sin, tan
+   // These functions have the angle as input, so convert the argument to radians first (if needed)
+   if (angle_in_deg) {
     farg1 = radians(farg1);
-  }
-  if (cmd_s_lower.startsWith(F("cos"))) {
+   }
+   if (cmd_s_lower.startsWith(F("cos"))) {
     result = cos(farg1);
-  } else if (cmd_s_lower.startsWith(F("sin"))) {
+   } else if (cmd_s_lower.startsWith(F("sin"))) {
     result = sin(farg1);
-  } else if (cmd_s_lower.startsWith(F("tan"))) {
+   } else if (cmd_s_lower.startsWith(F("tan"))) {
     result = tan(farg1);
-  } else {
+   } else {
     return false;
-  }
-  return true;
-  #else
-  return false;
-  #endif
-}
-*/
-
-
+   }
+   return true;
+ #else
+   return false;
+ #endif
+   }
+ */
 bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, int64_t& result) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("Bitwise: {");
     log += wrapIfContains(cmd_s_lower, ':', '\"');
     log += ':';
-    log += wrapIfContains(arg1, ':', '\"');;
+    log += wrapIfContains(arg1, ':', '\"');
+
     if (arg2.length() > 0) {
       log += ':';
-      log += wrapIfContains(arg2, ':', '\"');;
+      log += wrapIfContains(arg2, ':', '\"');
+
       if (arg3.length() > 0) {
         log += ':';
-        log += wrapIfContains(arg3, ':', '\"');;
+        log += wrapIfContains(arg3, ':', '\"');
       }
     }
     log += '}';
     addLog(LOG_LEVEL_INFO, log);
   }
+
   if (cmd_s_lower.length() < 2) {
     return false;
   }
+
   if (cmd_s_lower.startsWith(F("bit"))) {
     uint32_t bitnr = 0;
     uint64_t iarg2 = 0;
+
     if (!validUIntFromString(arg1, bitnr) || !validUInt64FromString(arg2, iarg2)) {
-      return false;    
+      return false;
     }
 
     if (cmd_s_lower.equals(F("bitread"))) {
-      // Syntax like {bitread:0:123} to get a single decimal '1' 
+      // Syntax like {bitread:0:123} to get a single decimal '1'
       result = bitRead(iarg2, bitnr);
     } else if (cmd_s_lower.equals(F("bitset"))) {
       // Syntax like {bitset:0:122} to set least significant bit of the given nr '122' to '1' => '123'
@@ -522,6 +531,7 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
       bitClear(result, bitnr);
     } else if (cmd_s_lower.equals(F("bitwrite"))) {
       uint32_t iarg3 = 0;
+
       // Syntax like {bitwrite:0:122:1} to set least significant bit of the given nr '122' to '1' => '123'
       if (validUIntFromString(arg3, iarg3)) {
         const int bitvalue = (iarg3 & 1); // Only use the last bit of the given parameter
@@ -535,11 +545,13 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
       // Starts with "bit", but no matching function found
       return false;
     }
+
     // all functions starting with "bit" are checked
     return true;
   }
 
   uint64_t iarg1, iarg2 = 0;
+
   if (!validUInt64FromString(arg1, iarg1) || !validUInt64FromString(arg2, iarg2)) {
     return false;
   }
@@ -561,11 +573,13 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
 }
 
 bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, double& result) {
-  double farg1; 
-  float farg2, farg3 = 0.0f;
+  double farg1;
+  float  farg2, farg3 = 0.0f;
+
   if (!validDoubleFromString(arg1, farg1)) {
     return false;
   }
+
   if (cmd_s_lower.equals(F("constrain"))) {
     // Contrain a value X to be within range of A to B
     // Syntax like {constrain:x:a:b} to constrain x in range a...b
@@ -586,25 +600,27 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
   return true;
 }
 
-void parse_string_commands(String &line) {
+void parse_string_commands(String& line) {
   int startIndex, closingIndex;
 
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
     String fullCommand = line.substring(startIndex + 1, closingIndex);
     String cmd_s_lower = parseString(fullCommand, 1, ':');
-    String arg1 = parseStringKeepCase(fullCommand, 2, ':');
-    String arg2 = parseStringKeepCase(fullCommand, 3, ':');
-    String arg3 = parseStringKeepCase(fullCommand, 4, ':');
+    String arg1        = parseStringKeepCase(fullCommand, 2, ':');
+    String arg2        = parseStringKeepCase(fullCommand, 3, ':');
+    String arg3        = parseStringKeepCase(fullCommand, 4, ':');
+
     if (cmd_s_lower.length() > 0) {
       String replacement; // maybe just replace with empty to avoid looping?
-//      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
+      //      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
 
       uint64_t iarg1, iarg2 = 0;
-      double fresult = 0.0;
-      int64_t iresult = 0;
-      if (/*parse_trigonometric_functions(cmd_s_lower, arg1, arg2, fresult) ||*/ 
-          parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
+      double   fresult = 0.0;
+      int64_t  iresult = 0;
+
+      if ( /*parse_trigonometric_functions(cmd_s_lower, arg1, arg2, fresult) ||*/
+        parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
         const bool trimTrailingZeros = true;
         replacement = doubleToString(fresult, maxNrDecimals_double(fresult), trimTrailingZeros);
       } else if (parse_bitwise_functions(cmd_s_lower, arg1, arg2, arg3, iresult)) {
@@ -613,6 +629,7 @@ void parse_string_commands(String &line) {
         // substring arduino style (first char included, last char excluded)
         // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
         int startpos, endpos = -1;
+
         if (validIntFromString(arg1, startpos)
             && validIntFromString(arg2, endpos)) {
           replacement = arg3.substring(startpos, endpos);
@@ -624,23 +641,25 @@ void parse_string_commands(String &line) {
             && validUInt64FromString(arg2, iarg2)) {
           replacement = String(strtoul(arg2.c_str(), NULL, iarg1));
         }
+
         // FIXME TD-er: removed for now as it is too specific.
         // Maybe introduce one using 2 or 3 parameters ({div:100:255:3} for *100/255 3 decimals)
+
         /*
-      } else if (cmd_s_lower.equals(F("div100ths"))) {
-        // division and giving the 100ths as integer
-        // 5 / 100 would yield 5
-        // useful for fractions that use a full byte gaining a
-        // precision/granularity of 1/256 instead of only 1/100
-        // Syntax like XXX{div100ths:24:256}XXX
-        if (validUInt64FromString(arg1, iarg1)
+           } else if (cmd_s_lower.equals(F("div100ths"))) {
+           // division and giving the 100ths as integer
+           // 5 / 100 would yield 5
+           // useful for fractions that use a full byte gaining a
+           // precision/granularity of 1/256 instead of only 1/100
+           // Syntax like XXX{div100ths:24:256}XXX
+           if (validUInt64FromString(arg1, iarg1)
             && validUInt64FromString(arg2, iarg2)) {
-          float val = (100.0 * iarg1) / (1.0 * iarg2);
-          char sval[10];
-          sprintf_P(sval, PSTR("%02d"), (int)val);
-          replacement = String(sval);
-        }
-        */
+           float val = (100.0 * iarg1) / (1.0 * iarg2);
+           char sval[10];
+           sprintf_P(sval, PSTR("%02d"), (int)val);
+           replacement = String(sval);
+           }
+         */
       } else if (cmd_s_lower.equals(F("tobin"))) {
         // Convert to binary string
         // Syntax like 1234{tobin:15}7890
@@ -653,7 +672,7 @@ void parse_string_commands(String &line) {
         if (validUInt64FromString(arg1, iarg1)) {
           replacement = ull2String(iarg1, HEX);
         }
-      } else  if (cmd_s_lower.equals(F("ord"))) {
+      } else if (cmd_s_lower.equals(F("ord"))) {
         // Give the ordinal/integer value of the first character of a string
         // Syntax like let 1,{ord:B}
         uint8_t uval = arg1.c_str()[0];
@@ -669,22 +688,23 @@ void parse_string_commands(String &line) {
         replacement.replace('{', static_cast<char>(0x02));
         replacement.replace('}', static_cast<char>(0x03));
       }
+
       // Replace the full command including opening and closing brackets.
       line.replace(line.substring(startIndex, closingIndex + 1), replacement);
 
       /*
-      if (replacement.length() > 0) {
-        addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + fullCommand + String(F(" -> ")) + replacement);
-      }
-      */
+         if (replacement.length() > 0) {
+         addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + fullCommand + String(F(" -> ")) + replacement);
+         }
+       */
     }
   }
+
   // We now have to check if we did mask some parts and unmask them.
   // Let's hope we don't mess up any Unicode here.
   line.replace(static_cast<char>(0x02), '{');
   line.replace(static_cast<char>(0x03), '}');
 }
-
 
 void replace_EventValueN_Argv(String& line, const String& argString, unsigned int argc)
 {
@@ -708,10 +728,11 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
   }
 }
 
-
 void substitute_eventvalue(String& line, const String& event) {
-  if (substitute_eventvalue_CallBack_ptr != nullptr)
+  if (substitute_eventvalue_CallBack_ptr != nullptr) {
     substitute_eventvalue_CallBack_ptr(line, event);
+  }
+
   if (line.indexOf(F("%eventvalue")) != -1) {
     if (event.charAt(0) == '!') {
       line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
@@ -771,9 +792,11 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
 
   String lineOrg = line; // store original line for future use
+
   line.toLowerCase();    // convert all to lower case to make checks easier
 
   String eventTrigger;
+
   action = "";
 
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
@@ -886,7 +909,7 @@ void processMatchedRule(String& action, String& event,
       }
     }
   } else {
-     // check for optional "if" condition
+    // check for optional "if" condition
     split = lcAction.indexOf(F("if "));
 
     if (split != -1) {
@@ -977,7 +1000,7 @@ void processMatchedRule(String& action, String& event,
 bool ruleMatch(const String& event, const String& rule) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ruleMatch"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   String tmpEvent = event;
   String tmpRule  = rule;
@@ -1013,7 +1036,7 @@ bool ruleMatch(const String& event, const String& rule) {
   }
 
   // clock events need different handling...
-  if (event.substring(0, 10).equalsIgnoreCase(F("Clock#Time"))) 
+  if (event.substring(0, 10).equalsIgnoreCase(F("Clock#Time")))
   {
     int pos1 = event.indexOf('=');
     int pos2 = rule.indexOf('=');
@@ -1055,7 +1078,7 @@ bool ruleMatch(const String& event, const String& rule) {
   }
 
   const bool stringMatch = tmpEvent.equalsIgnoreCase(rule.substring(0, posStart));
-  double ruleValue        = 0;
+  double     ruleValue   = 0;
 
   if (!validDoubleFromString(rule.substring(posEnd), ruleValue)) {
     return false;
@@ -1070,7 +1093,7 @@ bool ruleMatch(const String& event, const String& rule) {
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ruleMatch2"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   return match;
 }
 
@@ -1078,19 +1101,22 @@ bool ruleMatch(const String& event, const String& rule) {
    Check expression
  \*********************************************************************************************/
 bool conditionMatchExtended(String& check) {
-  int    condAnd   = -1;
-  int    condOr    = -1;
-  bool   rightcond = false;
-  bool   leftcond  = conditionMatch(check); // initial check
+  int  condAnd   = -1;
+  int  condOr    = -1;
+  bool rightcond = false;
+  bool leftcond  = conditionMatch(check); // initial check
+
   #ifndef BUILD_NO_DEBUG
   String debugstr;
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     debugstr += boolToString(leftcond);
   }
-  #endif
+  #endif // ifndef BUILD_NO_DEBUG
 
   do {
     #ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("conditionMatchExtended: ");
       log += debugstr;
@@ -1098,7 +1124,7 @@ bool conditionMatchExtended(String& check) {
       log += check;
       addLog(LOG_LEVEL_DEBUG, log);
     }
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
     condAnd = check.indexOf(F(" and "));
     condOr  = check.indexOf(F(" or "));
 
@@ -1110,35 +1136,39 @@ bool conditionMatchExtended(String& check) {
         leftcond  = (leftcond && rightcond);
 
         #ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           debugstr += F(" && ");
         }
-        #endif
+        #endif // ifndef BUILD_NO_DEBUG
       } else { // OR is first
         check     = check.substring(condOr + 4);
         rightcond = conditionMatch(check);
         leftcond  = (leftcond || rightcond);
 
         #ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           debugstr += F(" || ");
         }
-        #endif
+        #endif // ifndef BUILD_NO_DEBUG
       }
-      
+
       #ifndef BUILD_NO_DEBUG
+
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         debugstr += boolToString(rightcond);
       }
-      #endif
+      #endif // ifndef BUILD_NO_DEBUG
     }
   } while (condAnd > 0 || condOr > 0);
 
   #ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     check = debugstr;
   }
-  #endif
+  #endif // ifndef BUILD_NO_DEBUG
   return leftcond;
 }
 
@@ -1149,56 +1179,56 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
 {
   posStart = check.length();
   posEnd   = posStart;
-  int comparePos = 0;
-  bool found = false;
+  int  comparePos = 0;
+  bool found      = false;
 
   if (((comparePos = check.indexOf("!=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '>';
-    found = true;
+    found    = true;
   }
 
   if (((comparePos = check.indexOf("<>")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '>';
-    found = true;
+    found    = true;
   }
 
   if (((comparePos = check.indexOf(">=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '>' + '=';
-    found = true;
+    found    = true;
   }
 
   if (((comparePos = check.indexOf("<=")) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '=';
-    found = true;
+    found    = true;
   }
 
   if (((comparePos = check.indexOf('<')) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '<';
-    found = true;
+    found    = true;
   }
 
   if (((comparePos = check.indexOf('>')) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '>';
-    found = true;
+    found    = true;
   }
 
   if (((comparePos = check.indexOf('=')) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
     compare  = '=';
-    found = true;
+    found    = true;
   }
   return found;
 }
@@ -1209,8 +1239,8 @@ bool compareIntValues(char compare, const int& Value1, const int& Value2)
     case '>' + '=': return Value1 >= Value2;
     case '<' + '=': return Value1 <= Value2;
     case '<' + '>': return Value1 != Value2;
-    case '>':       return Value1 > Value2;	
-    case '<':       return Value1 < Value2;	
+    case '>':       return Value1 > Value2;
+    case '<':       return Value1 < Value2;
     case '=':       return Value1 == Value2;
   }
   return false;
@@ -1228,7 +1258,6 @@ bool compareDoubleValues(char compare, const double& Value1, const double& Value
   }
   return false;
 }
-
 
 void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seconds)
 {
@@ -1254,40 +1283,44 @@ void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seco
 // return whether it should be considered a time string.
 bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
   time_seconds = -1;
-  int hours              = 0;
-  int minutes            = 0;
-  int seconds            = 0;
+  int hours   = 0;
+  int minutes = 0;
+  int seconds = 0;
 
   int tmpIndex = 0;
   String hours_str, minutes_str, seconds_str;
-  bool validTime = false;
+  bool   validTime = false;
+
   if (get_next_argument(tBuf, tmpIndex, hours_str, ':')) {
     if (validIntFromString(hours_str, hours)) {
       validTime = true;
-      if (hours < 0 || hours > 24) {
+
+      if ((hours < 0) || (hours > 24)) {
         validTime = false;
       } else {
         time_seconds = hours * 60 * 60;
       }
+
       if (validTime && get_next_argument(tBuf, tmpIndex, minutes_str, ':')) {
         if (validIntFromString(minutes_str, minutes)) {
-          if ((minutes < 0) || (minutes > 59)) { 
-            validTime = false; 
+          if ((minutes < 0) || (minutes > 59)) {
+            validTime = false;
           } else {
             time_seconds += minutes * 60;
           }
+
           if (validTime && get_next_argument(tBuf, tmpIndex, seconds_str, ':')) {
             // New format, only HH:MM:SS
             if (validIntFromString(seconds_str, seconds)) {
               if ((seconds < 0) || (seconds > 59)) {
-                validTime = false; 
+                validTime = false;
               } else {
                 time_seconds += seconds;
               }
             }
           } else {
             // Old format, only HH:MM
-          } 
+          }
         }
       } else {
         // It is a valid time string, but could also be just a numerical.
@@ -1310,16 +1343,17 @@ bool conditionMatch(const String& check) {
 
   String tmpCheck1 = check.substring(0, posStart);
   String tmpCheck2 = check.substring(posEnd);
+
   tmpCheck1.trim();
   tmpCheck2.trim();
-  double Value1    = 0;
-  double Value2    = 0;
+  double Value1 = 0;
+  double Value2 = 0;
 
   int  timeInSec1 = 0;
   int  timeInSec2 = 0;
   bool validTime1 = timeStringToSeconds(tmpCheck1, timeInSec1);
   bool validTime2 = timeStringToSeconds(tmpCheck2, timeInSec2);
-  bool result = false;
+  bool result     = false;
 
   bool compareTimes = false;
 
@@ -1328,7 +1362,7 @@ bool conditionMatch(const String& check) {
     // At least one is a time containing ':' separator
     // AND both can be considered a time, so use it as a time and compare seconds.
     compareTimes = true;
-    result = compareIntValues(compare, timeInSec1, timeInSec2);
+    result       = compareIntValues(compare, timeInSec1, timeInSec2);
   } else {
     if (!validDoubleFromString(tmpCheck1, Value1) ||
         !validDoubleFromString(tmpCheck2, Value2))
@@ -1339,23 +1373,26 @@ bool conditionMatch(const String& check) {
   }
 
   #ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("conditionMatch: _");
     log += check;
     log += F("_ val1: ");
-    if (compareTimes) { 
-      log += timeInSec1; 
+
+    if (compareTimes) {
+      log += timeInSec1;
     } else {
       log += Value1;
     }
     log += F(" \"");
     log += tmpCheck1;
     log += F("\" val2: ");
-    if (compareTimes) { 
-      log += timeInSec2; 
+
+    if (compareTimes) {
+      log += timeInSec2;
     } else {
       log += Value2;
-    }    
+    }
     log += F(" \"");
     log += tmpCheck2;
     log += F("\" ");
@@ -1363,9 +1400,9 @@ bool conditionMatch(const String& check) {
     log += boolToString(result);
     addLog(LOG_LEVEL_DEBUG, log);
   }
-  #else
+  #else // ifndef BUILD_NO_DEBUG
   (void)compareTimes; // To avoid compiler warning
-  #endif
+  #endif // ifndef BUILD_NO_DEBUG
   return result;
 }
 
@@ -1389,6 +1426,7 @@ void createRuleEvents(struct EventStruct *event) {
     eventString.reserve(128); // Enough for most use cases, prevent lots of memory allocations.
     eventString  = getTaskDeviceName(event->TaskIndex);
     eventString += F("#All=");
+
     for (byte varNr = 0; varNr < valueCount; varNr++) {
       if (varNr != 0) {
         eventString += ',';
@@ -1406,6 +1444,6 @@ void createRuleEvents(struct EventStruct *event) {
       eventString += F("=");
       eventString += formatUserVarNoCheck(event, varNr);
       eventQueue.add(eventString);
-    }    
+    }
   }
 }

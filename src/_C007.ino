@@ -1,7 +1,7 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C007
 
-#include "src/ESPEasyCore/Serial.h"
+# include "src/ESPEasyCore/Serial.h"
 
 // #######################################################################################################
 // ########################### Controller Plugin 007: Emoncms ############################################

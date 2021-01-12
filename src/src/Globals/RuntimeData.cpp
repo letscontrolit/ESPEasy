@@ -21,9 +21,11 @@ void setCustomFloatVar(uint32_t index, const double& value) {
 
 bool getNextCustomFloatVar(uint32_t& index, double& value) {
   auto it = customFloatVar.find(index);
-  if (it == customFloatVar.end()) return false;
+
+  if (it == customFloatVar.end()) { return false; }
   ++it;
-  if (it == customFloatVar.end()) return false;
+
+  if (it == customFloatVar.end()) { return false; }
   index = it->first;
   value = it->second;
   return true;

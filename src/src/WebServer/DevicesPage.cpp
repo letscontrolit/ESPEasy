@@ -356,12 +356,11 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   if ((Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL) ||
       (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1))
   {
-    #ifdef PLUGIN_USES_SERIAL
+    # ifdef PLUGIN_USES_SERIAL
     serialHelper_webformSave(&TempEvent);
-    #else
-    addLog(LOG_LEVEL_ERROR,  F("PLUGIN_USES_SERIAL not defined"));
-    #endif
-
+    # else // ifdef PLUGIN_USES_SERIAL
+    addLog(LOG_LEVEL_ERROR, F("PLUGIN_USES_SERIAL not defined"));
+    # endif // ifdef PLUGIN_USES_SERIAL
   }
 
   const byte valueCount = getValueCountForTask(taskIndex);
@@ -526,11 +525,11 @@ void handle_devicess_ShowAllTasksTable(byte page)
               }
               case DEVICE_TYPE_SERIAL:
               case DEVICE_TYPE_SERIAL_PLUS1:
-                #ifdef PLUGIN_USES_SERIAL
+                # ifdef PLUGIN_USES_SERIAL
                 addHtml(serialHelper_getSerialTypeLabel(&TempEvent));
-                #else
+                # else // ifdef PLUGIN_USES_SERIAL
                 addHtml(F("PLUGIN_USES_SERIAL not defined"));
-                #endif
+                # endif // ifdef PLUGIN_USES_SERIAL
 
                 break;
 
@@ -635,12 +634,12 @@ void handle_devicess_ShowAllTasksTable(byte page)
             // fallthrough
             case DEVICE_TYPE_SERIAL:
             {
-              #ifdef PLUGIN_USES_SERIAL
+              # ifdef PLUGIN_USES_SERIAL
               addHtml(serialHelper_getGpioDescription(static_cast<ESPEasySerialPort>(Settings.TaskDevicePort[x]), Settings.TaskDevicePin1[x],
                                                       Settings.TaskDevicePin2[x], F("<BR>")));
-              #else
+              # else // ifdef PLUGIN_USES_SERIAL
               addHtml(F("PLUGIN_USES_SERIAL not defined"));
-              #endif
+              # endif // ifdef PLUGIN_USES_SERIAL
 
               if (showpin3) {
                 html_BR();
@@ -905,11 +904,11 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
       case DEVICE_TYPE_SERIAL:
       case DEVICE_TYPE_SERIAL_PLUS1:
       {
-        #ifdef PLUGIN_USES_SERIAL
+        # ifdef PLUGIN_USES_SERIAL
         devicePage_show_serial_config(taskIndex);
-        #else
+        # else // ifdef PLUGIN_USES_SERIAL
         addHtml(F("PLUGIN_USES_SERIAL not defined"));
-        #endif
+        # endif // ifdef PLUGIN_USES_SERIAL
 
         break;
       }

@@ -42,7 +42,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate_padded"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   START_TIMER
 
   // Keep current loaded taskSettings to restore at the end.
@@ -95,7 +95,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 
       if (validUIntFromString(valueName, varNum)) {
         unsigned char nr_decimals = maxNrDecimals_double(getCustomFloatVar(varNum));
-        bool trimTrailingZeros = true;
+        bool trimTrailingZeros    = true;
 
         if (deviceName.equals(F("int"))) {
           nr_decimals = 0;
@@ -156,7 +156,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   newString += tmpString.substring(lastStartpos);
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate2"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Restore previous loaded taskSettings
   if (currentTaskIndex != 255)
@@ -177,7 +177,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   STOP_TIMER(PARSE_TEMPLATE_PADDED);
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate3"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   return newString;
 }
 
@@ -198,7 +198,7 @@ void transformValue(
   // Is this the way it is intended to use?
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("transformValue"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // start changes by giig1967g - 2018-04-20
   // Syntax: [task#value#transformation#justification]
@@ -219,7 +219,7 @@ void transformValue(
     // valueJust="justification"
     if (valueFormat.length() > 0) // do the checks only if a Format is defined to optimize loop
     {
-      int    logicVal = 0;
+      int logicVal    = 0;
       double valFloat = 0.0;
 
       if (validDoubleFromString(value, valFloat))
@@ -523,7 +523,7 @@ void transformValue(
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("transformValue2"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 }
 
 // Find the first (enabled) task with given name
@@ -650,7 +650,6 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
   return true;
 }
 
-
 /********************************************************************************************\
    Check to see if a given argument is a valid taskIndex (argc = 0 => command)
  \*********************************************************************************************/
@@ -691,7 +690,7 @@ void parseCommandString(struct EventStruct *event, const String& string)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseCommandString"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   event->Par1 = parseCommandArgumentInt(string, 1);
   event->Par2 = parseCommandArgumentInt(string, 2);
   event->Par3 = parseCommandArgumentInt(string, 3);

@@ -38,11 +38,11 @@ void clearPluginTaskData(taskIndex_t taskIndex) {
 }
 
 void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
-  if (!validTaskIndex(taskIndex)) { 
+  if (!validTaskIndex(taskIndex)) {
     if (data != nullptr) {
       delete data;
     }
-    return; 
+    return;
   }
 
   clearPluginTaskData(taskIndex);
@@ -101,11 +101,13 @@ void pluginWebformShowValue(const String& valName, const String& value, bool add
 
 void pluginWebformShowValue(const String& valName, const String& valName_id, const String& value, const String& value_id, bool addBR) {
   String valName_tmp(valName);
+
   if (!valName_tmp.endsWith(F(":"))) {
     valName_tmp += ':';
   }
   addHtmlDiv(F("div_l"), valName_tmp, valName_id);
-  addHtmlDiv(F("div_r"), value, value_id);
+  addHtmlDiv(F("div_r"), value,       value_id);
+
   if (addBR) {
     addHtmlDiv(F("div_br"));
   }
@@ -124,17 +126,19 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
   return found_taskIndex == taskIndex;
 }
 
-int getValueCountForTask(taskIndex_t   taskIndex) {
+int getValueCountForTask(taskIndex_t taskIndex) {
   struct EventStruct TempEvent(taskIndex);
   String dummy;
+
   PluginCall(PLUGIN_GET_DEVICEVALUECOUNT, &TempEvent, dummy);
   return TempEvent.Par1;
 }
 
-int checkDeviceVTypeForTask(struct EventStruct* event) {
+int checkDeviceVTypeForTask(struct EventStruct *event) {
   if (event->sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET) {
     if (validTaskIndex(event->TaskIndex)) {
       String dummy;
+
       if (PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy)) {
         return event->idx; // pconfig_index
       }

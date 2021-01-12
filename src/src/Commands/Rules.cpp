@@ -41,6 +41,7 @@ String Command_Rules_UseRules(struct EventStruct *event, const char *Line)
 String Command_Rules_Async_Events(struct EventStruct *event, const char *Line)
 {
   String eventName = parseStringToEndKeepCase(Line, 2);
+
   eventName.replace('$', '#');
 
   if (Settings.UseRules) {
@@ -49,18 +50,19 @@ String Command_Rules_Async_Events(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-
 String Command_Rules_Events(struct EventStruct *event, const char *Line)
 {
   String eventName = parseStringToEndKeepCase(Line, 2);
+
   eventName.replace('$', '#');
 
   if (Settings.UseRules) {
-    const bool executeImmediately = 
-        SourceNeedsStatusUpdate(event->Source) ||
-        event->Source == EventValueSource::Enum::VALUE_SOURCE_RULES;
+    const bool executeImmediately =
+      SourceNeedsStatusUpdate(event->Source) ||
+      event->Source == EventValueSource::Enum::VALUE_SOURCE_RULES;
+
     if (executeImmediately) {
-      rulesProcessing(eventName); // TD-er: Process right now 
+      rulesProcessing(eventName); // TD-er: Process right now
     } else {
       eventQueue.add(eventName);
     }
@@ -75,6 +77,7 @@ String Command_Rules_Let(struct EventStruct *event, const char *Line)
   if (GetArgv(Line, TmpStr1, 3)) {
     if (event->Par1 >= 0) {
       double result = 0.0;
+
       if (!isError(Calculate(TmpStr1, result))) {
         setCustomFloatVar(event->Par1, result);
         return return_command_success();

@@ -10,7 +10,6 @@
 #include "../Helpers/Memory.h"
 
 
-
 /********************************************************************************************\
  * Get data from Serial Interface
  \*********************************************************************************************/
@@ -24,9 +23,11 @@ void initSerial()
   if (log_to_serial_disabled || !Settings.UseSerial || activeTaskUseSerial0()) {
     return;
   }
-  //make sure previous serial buffers are flushed before resetting baudrate
+
+  // make sure previous serial buffers are flushed before resetting baudrate
   Serial.flush();
   Serial.begin(Settings.BaudRate);
+
   // Serial.setDebugOutput(true);
 }
 
@@ -35,12 +36,13 @@ void serial()
   if (Serial.available())
   {
     String dummy;
+
     if (PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
       return;
     }
   }
 
-  if (!Settings.UseSerial || activeTaskUseSerial0()) return;
+  if (!Settings.UseSerial || activeTaskUseSerial0()) { return; }
 
   while (Serial.available())
   {
@@ -87,10 +89,12 @@ void addToSerialBuffer(const char *line) {
     roomLeft -= 4000;                          // leave some free for normal use.
   }
 
-  const char* c = line;
+  const char *c = line;
+
   while (roomLeft > 0) {
     // Must use PROGMEM aware functions here.
     char ch = pgm_read_byte(c++);
+
     if (ch == '\0') {
       return;
     } else {

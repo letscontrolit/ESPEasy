@@ -10,7 +10,6 @@ typedef std::map<String, byte>       TaskIndexValueNameMap;
 typedef std::map<String, bool>       FilePresenceMap;
 
 struct Caches {
-
   void clearAllCaches();
 
   void updateTaskCaches();

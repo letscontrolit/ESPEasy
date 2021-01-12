@@ -35,6 +35,7 @@
 unsigned long str2int(const char *string)
 {
   unsigned int temp = 0;
+
   validUIntFromString(string, temp);
 
   return static_cast<unsigned long>(temp);
@@ -42,28 +43,30 @@ unsigned long str2int(const char *string)
 
 String ull2String(uint64_t value, uint8_t base) {
   String res;
+
   if (value == 0) {
     res = '0';
     return res;
   }
+
   while (value > 0) {
-    res += String(static_cast<uint32_t>(value % base), base);
+    res   += String(static_cast<uint32_t>(value % base), base);
     value /= base;
   }
 
-  int endpos = res.length() - 1;
+  int endpos   = res.length() - 1;
   int beginpos = 0;
+
   while (endpos > beginpos) {
     const char c = res[beginpos];
     res[beginpos] = res[endpos];
-    res[endpos] = c;
+    res[endpos]   = c;
     ++beginpos;
     --endpos;
   }
 
   return res;
 }
-
 
 /********************************************************************************************\
    Check if valid float and convert string to float.
@@ -131,6 +134,7 @@ unsigned long hexToUL(const String& input_c, size_t nrHexDecimals) {
     nr_decimals = inputLength;
   }
   String tmp = input_c.substring(0, nr_decimals);
+
   return strtoul(tmp.c_str(), 0, 16);
 }
 
@@ -207,7 +211,6 @@ String formatToHex_decimal(unsigned long value, unsigned long factor) {
   return result;
 }
 
-
 String boolToString(bool value) {
   return value ? F("true") : F("false");
 }
@@ -238,13 +241,14 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     return "0";
   }
 
-  const byte valueCount = getValueCountForTask(event->TaskIndex);
+  const byte   valueCount = getValueCountForTask(event->TaskIndex);
   Sensor_VType sensorType = event->getSensorType();
 
   if (valueCount <= rel_index) {
     isvalid = false;
 
     #ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("No sensor value for TaskIndex: ");
       log += event->TaskIndex + 1;
@@ -254,7 +258,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
       log += getSensorTypeLabel(sensorType);
       addLog(LOG_LEVEL_ERROR, log);
     }
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
     return "";
   }
 
@@ -285,8 +289,9 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     f = 0;
   }
   LoadTaskSettings(event->TaskIndex);
-  
+
   byte nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
+
   if (!Device[DeviceIndex].configurableDecimals()) {
     nrDecimals = 0;
   }
@@ -301,12 +306,14 @@ String formatUserVarNoCheck(taskIndex_t TaskIndex, byte rel_index) {
 
   // FIXME TD-er: calls to this function cannot handle Sensor_VType::SENSOR_TYPE_STRING
   struct EventStruct TempEvent(TaskIndex);
+
   return doFormatUserVar(&TempEvent, rel_index, false, isvalid);
 }
 
 String formatUserVar(taskIndex_t TaskIndex, byte rel_index, bool& isvalid) {
   // FIXME TD-er: calls to this function cannot handle Sensor_VType::SENSOR_TYPE_STRING
   struct EventStruct TempEvent(TaskIndex);
+
   return doFormatUserVar(&TempEvent, rel_index, true, isvalid);
 }
 
@@ -335,7 +342,6 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
   return result;
 }
 
-
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.
 \*********************************************************************************************/
@@ -354,7 +360,6 @@ String wrapIfContains(const String& value, char contains, char wrap) {
   }
   return value;
 }
-
 
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
@@ -444,6 +449,7 @@ bool safe_strncpy(char *dest, const char *source, size_t max_size) {
 
   if (source == NULL) { return false; }
   bool result = true;
+
   memset(dest, 0, max_size);
   size_t str_length = strlen(source);
 
@@ -521,6 +527,7 @@ String parseStringToEndKeepCase(const String& string, byte indexFind, char separ
     return "";
   }
   String result = string.substring(pos_begin, pos_end);
+
   result.trim();
   return stripQuotes(result);
 }
@@ -708,7 +715,8 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
     repl(F("&divide;"), divide, s, useURLencode);
   }
 }
-#endif
+
+#endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 
 /********************************************************************************************\
    replace other system variables like %sysname%, %systime%, %ip%
@@ -730,8 +738,6 @@ void parseSingleControllerVariable(String            & s,
   }
 }
 
-
-
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T, S) \
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
@@ -739,7 +745,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
 {
   #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   parseSpecialCharacters(s, useURLencode);
-  #endif
+  #endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 
   SystemVariables::parseSystemVariables(s, useURLencode);
 }
@@ -762,6 +768,7 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
       }
     }
   }
+
   if (validTaskIndex(event->TaskIndex)) {
     // These replacements use ExtraTaskSettings, so make sure the correct TaskIndex is set in the event.
     LoadTaskSettings(event->TaskIndex);
@@ -771,11 +778,13 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
   }
 
   const bool vname_found = s.indexOf(F("%vname")) != -1;
+
   if (vname_found) {
     for (byte i = 0; i < 4; ++i) {
       String vname = F("%vname");
       vname += (i + 1);
       vname += '%';
+
       if (validTaskIndex(event->TaskIndex)) {
         repl(vname, ExtraTaskSettings.TaskDeviceValueNames[i], s, useURLencode);
       } else {
@@ -803,7 +812,8 @@ bool getConvertArgument2(const String& marker, const String& s, float& arg1, flo
     int pos_comma = argumentString.indexOf(',');
 
     if (pos_comma == -1) { return false; }
-    if (validFloatFromString(argumentString.substring(0, pos_comma), arg1)) { 
+
+    if (validFloatFromString(argumentString.substring(0, pos_comma), arg1)) {
       return validFloatFromString(argumentString.substring(pos_comma + 1), arg2);
     }
   }
@@ -868,24 +878,26 @@ void parseStandardConversions(String& s, boolean useURLencode) {
   #undef SMART_CONV
 }
 
-
-
 /********************************************************************************************\
-  Find positional parameter in a char string
-  \*********************************************************************************************/
-
+   Find positional parameter in a char string
+ \*********************************************************************************************/
 bool HasArgv(const char *string, unsigned int argc) {
   String argvString;
+
   return GetArgv(string, argvString, argc);
 }
 
 bool GetArgv(const char *string, String& argvString, unsigned int argc, char separator) {
-  int pos_begin, pos_end;
+  int  pos_begin, pos_end;
   bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end, separator);
+
   argvString = "";
-  if (!hasArgument) return false;
-  if (pos_begin >= 0 && pos_end >= 0 && pos_end > pos_begin) {
+
+  if (!hasArgument) { return false; }
+
+  if ((pos_begin >= 0) && (pos_end >= 0) && (pos_end > pos_begin)) {
     argvString.reserve(pos_end - pos_begin);
+
     for (int i = pos_begin; i < pos_end; ++i) {
       argvString += string[i];
     }
@@ -937,7 +949,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
       }
       ++pos_end;
 
-      if (!parenthesis && (isParameterSeparatorChar(d) || d == separator || (d == 0))) // end of word
+      if (!parenthesis && (isParameterSeparatorChar(d) || (d == separator) || (d == 0))) // end of word
       {
         argc_pos++;
 
@@ -954,4 +966,3 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
   }
   return false;
 }
-

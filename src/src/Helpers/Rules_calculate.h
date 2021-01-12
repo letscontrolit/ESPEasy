@@ -29,24 +29,24 @@ bool isError(CalculateReturnCode returnCode);
 enum class UnaryOperator  {
   Not = '!',
   Log = 192, // Start at some ASCII code we don't expect in the rules.
-  Ln,    // Natural logarithm
-  Abs,   // Absolute value
-  Exp,   // exponential value, e^x
-  Sqrt,  // Square Root
-  Sq,    // Square, x^2
-  Round, // Rounds to the nearest integer, but rounds halfway cases away from zero (instead of to the nearest even integer). 
-  Sin,   // Sine (radian)
-  Sin_d, // Sine (degree)
-  Cos,   // Cosine (radian)
-  Cos_d, // Cosine (degree)
-  Tan,   // Tangent (radian)
-  Tan_d, // Tangent (degree)
-  ArcSin,   // Arc Sine (radian)
-  ArcSin_d, // Arc Sine (degree)
-  ArcCos,   // Arc Cosine (radian)
-  ArcCos_d, // Arc Cosine (degree)
-  ArcTan,   // Arc Tangent (radian)
-  ArcTan_d  // Arc Tangent (degree)
+  Ln,        // Natural logarithm
+  Abs,       // Absolute value
+  Exp,       // exponential value, e^x
+  Sqrt,      // Square Root
+  Sq,        // Square, x^2
+  Round,     // Rounds to the nearest integer, but rounds halfway cases away from zero (instead of to the nearest even integer).
+  Sin,       // Sine (radian)
+  Sin_d,     // Sine (degree)
+  Cos,       // Cosine (radian)
+  Cos_d,     // Cosine (degree)
+  Tan,       // Tangent (radian)
+  Tan_d,     // Tangent (degree)
+  ArcSin,    // Arc Sine (radian)
+  ArcSin_d,  // Arc Sine (degree)
+  ArcCos,    // Arc Cosine (radian)
+  ArcCos_d,  // Arc Cosine (degree)
+  ArcTan,    // Arc Tangent (radian)
+  ArcTan_d   // Arc Tangent (degree)
 };
 
 void   preProcessReplace(String      & input,

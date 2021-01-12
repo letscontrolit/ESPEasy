@@ -129,10 +129,10 @@ void handle_sysinfo_json() {
   json_prop(F("ap_mac"),        getValue(LabelType::AP_MAC));
   json_prop(F("ssid"),          getValue(LabelType::SSID));
   json_prop(F("bssid"),         getValue(LabelType::BSSID));
-  json_number(F("channel"),     getValue(LabelType::CHANNEL));
-  json_prop(F("connected"),     getValue(LabelType::CONNECTED));
-  json_prop(F("ldr"),           getValue(LabelType::LAST_DISC_REASON_STR));
-  json_number(F("reconnects"),  getValue(LabelType::NUMBER_RECONNECTS));
+  json_number(F("channel"), getValue(LabelType::CHANNEL));
+  json_prop(F("connected"), getValue(LabelType::CONNECTED));
+  json_prop(F("ldr"),       getValue(LabelType::LAST_DISC_REASON_STR));
+  json_number(F("reconnects"), getValue(LabelType::NUMBER_RECONNECTS));
   json_close();
 
 # ifdef HAS_ETHERNET
@@ -147,13 +147,13 @@ void handle_sysinfo_json() {
 # endif // ifdef HAS_ETHERNET
 
   json_open(false, F("firmware"));
-  json_prop(F("build"),          String(BUILD));
-  json_prop(F("notes"),          F(BUILD_NOTES));
-  json_prop(F("libraries"),      getSystemLibraryString());
-  json_prop(F("git_version"),    F(BUILD_GIT));
-  json_prop(F("plugins"),        getPluginDescriptionString());
-  json_prop(F("md5"),            String(CRCValues.compileTimeMD5[0], HEX));
-  json_number(F("md5_check"),    String(CRCValues.checkPassed()));
+  json_prop(F("build"),       String(BUILD));
+  json_prop(F("notes"),       F(BUILD_NOTES));
+  json_prop(F("libraries"),   getSystemLibraryString());
+  json_prop(F("git_version"), F(BUILD_GIT));
+  json_prop(F("plugins"),     getPluginDescriptionString());
+  json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
+  json_number(F("md5_check"), String(CRCValues.checkPassed()));
   json_prop(F("build_time"),     get_build_time());
   json_prop(F("filename"),       getValue(LabelType::BINARY_FILENAME));
   json_prop(F("build_platform"), getValue(LabelType::BUILD_PLATFORM));
@@ -162,7 +162,7 @@ void handle_sysinfo_json() {
 
   json_open(false, F("esp"));
   json_prop(F("chip_id"), getValue(LabelType::ESP_CHIP_ID));
-  json_number(F("cpu"),   getValue(LabelType::ESP_CHIP_FREQ));
+  json_number(F("cpu"), getValue(LabelType::ESP_CHIP_FREQ));
 
   # ifdef ARDUINO_BOARD
   json_prop(F("board"), ARDUINO_BOARD);
@@ -681,7 +681,7 @@ void handle_sysinfo_Storage() {
     html += F(" kB free)");
     addHtml(html);
   }
-  #ifndef LIMIT_BUILD_SIZE
+  # ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));
   addHtmlInt(SpiffsPagesize());
 
@@ -692,7 +692,7 @@ void handle_sysinfo_Storage() {
   addHtmlInt(SpiffsTotalBytes() / SpiffsBlocksize());
 
   {
-  # if defined(ESP8266)
+  #  if defined(ESP8266)
     fs::FSInfo fs_info;
     ESPEASY_FS.info(fs_info);
     addRowLabel(F("Maximum open files"));
@@ -701,9 +701,9 @@ void handle_sysinfo_Storage() {
     addRowLabel(F("Maximum path length"));
     addHtmlInt(fs_info.maxPathLength);
 
-  # endif // if defined(ESP8266)
+  #  endif // if defined(ESP8266)
   }
-  #endif
+  # endif // ifndef LIMIT_BUILD_SIZE
 
 # ifndef BUILD_MINIMAL_OTA
 
