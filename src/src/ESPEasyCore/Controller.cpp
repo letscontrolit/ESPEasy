@@ -528,10 +528,6 @@ void MQTTStatus(struct EventStruct *event, const String& status)
     if (!pubname.endsWith(F("/status"))) {
       pubname += F("/status");
     }
-    // some may have been replaced by empty strings, 
-    // or "/status" may have been appended to a topic ending with a "/"
-    // Get rid of "//"
-    pubname.replace(F("//"), F("/")); 
 
     MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(), mqtt_retainFlag);
   }
