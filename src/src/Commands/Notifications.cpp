@@ -1,5 +1,7 @@
 #include "../Commands/Notifications.h"
 
+#ifdef USES_NOTIFIER
+
 #include "../Commands/Common.h"
 
 #include "../../ESPEasy_common.h"
@@ -30,3 +32,5 @@ String Command_Notifications_Notify(struct EventStruct *event, const char* Line)
 	}
 	return return_command_success();
 }
+
+#endif

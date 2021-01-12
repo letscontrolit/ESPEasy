@@ -232,10 +232,8 @@ void processGotIP() {
 
   IPAddress ip = NetworkLocalIP();
 
-  if (!useStaticIP()) {
-    if ((ip[0] == 0) && (ip[1] == 0) && (ip[2] == 0) && (ip[3] == 0)) {
-      return;
-    }
+  if (!useStaticIP() && !ip.isSet()) {
+    return;
   }
   const IPAddress gw       = NetworkGatewayIP();
   const IPAddress subnet   = NetworkSubnetMask();

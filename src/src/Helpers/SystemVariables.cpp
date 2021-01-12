@@ -193,12 +193,12 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
   }
   while (enumval != SystemVariables::Enum::UNKNOWN);
 
-  const int v_index = s.indexOf("%v");
+  const int v_index = s.indexOf(F("%v"));
 
   if ((v_index != -1)) {
     unsigned int i;
     if (validUIntFromString(s.substring(v_index + 2), i)) {
-      String key = "%v" + String(i) + '%';
+      const String key = String(F("%v")) + String(i) + '%';
       if (s.indexOf(key) != -1) {
         const bool trimTrailingZeros = true;
         const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);

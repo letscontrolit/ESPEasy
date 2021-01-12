@@ -190,8 +190,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       {
         LoadTaskSettings(event->TaskIndex);
         String name = line.substring(0, dotPos);
-        name.replace("[", "");
-        name.replace("]", "");
+        name.replace(F("["), F(""));
+        name.replace(F("]"), F(""));
 
         if (name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
           line            = line.substring(dotPos + 1);

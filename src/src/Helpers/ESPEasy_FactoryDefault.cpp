@@ -220,8 +220,10 @@ void ResetFactory()
   strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));
 #endif // ifdef PLUGIN_DESCR
 
+#ifndef LIMIT_BUILD_SIZE
   addPredefinedPlugins(gpio_settings);
   addPredefinedRules(gpio_settings);
+#endif
 
 #if DEFAULT_CONTROLLER
   {

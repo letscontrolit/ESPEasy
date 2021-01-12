@@ -218,7 +218,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         addHtml(F("    document.getElementById('web_RGB_Red').value = Math.round(picker.rgb[0]);"));
         addHtml(F("    document.getElementById('web_RGB_Green').value = Math.round(picker.rgb[1]);"));
         addHtml(F("    document.getElementById('web_RGB_Blue').value = Math.round(picker.rgb[2]);"));
-        addHtml("}");
+        addHtml('}');
         addHtml(F("</script>"));
 
         addHtml(F("<script type='text/javascript'>window.addEventListener('load', function(){"));

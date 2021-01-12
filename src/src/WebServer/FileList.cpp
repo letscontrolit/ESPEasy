@@ -120,7 +120,7 @@ void handle_filelist_json() {
   }
 
   if (firstentry) {
-    addHtml("}");
+    addHtml('}');
   }
 
   # endif // if defined(ESP8266)

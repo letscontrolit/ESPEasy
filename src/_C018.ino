@@ -526,7 +526,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         addHtml(c018_add_joinChanged_script_element_line(F("devaddr"), false));
         addHtml(c018_add_joinChanged_script_element_line(F("nskey"), false));
         addHtml(c018_add_joinChanged_script_element_line(F("appskey"), false));
-        addHtml("}");
+        addHtml('}');
         html_add_script_end();
       }
 

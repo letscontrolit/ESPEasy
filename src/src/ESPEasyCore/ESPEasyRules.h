@@ -71,7 +71,6 @@ bool get_next_argument(const String& fullCommand,
                        String      & argument,
                        char          separator);
 
-// bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, double& result);
 bool parse_bitwise_functions(const String& cmd_s_lower,
                              const String& arg1,
                              const String& arg2,

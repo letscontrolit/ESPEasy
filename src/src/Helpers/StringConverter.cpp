@@ -368,7 +368,7 @@ String to_json_object_value(const String& object, const String& value) {
   String result;
 
   result.reserve(object.length() + value.length() + 6);
-  wrap_String(object, "\"", result);
+  wrap_String(object, F("\""), result);
   result += F(":");
 
   if (value.length() == 0) {
@@ -387,9 +387,9 @@ String to_json_object_value(const String& object, const String& value) {
       tmpValue.replace('\n', '^');
       tmpValue.replace('\r', '^');
       tmpValue.replace('"',  '\'');
-      wrap_String(tmpValue, "\"", result);
+      wrap_String(tmpValue, F("\""), result);
     } else {
-      wrap_String(value, "\"", result);
+      wrap_String(value, F("\""), result);
     }
   } else {
     // It is a numerical
@@ -738,6 +738,7 @@ void parseSingleControllerVariable(String            & s,
   }
 }
 
+// FIXME TD-er: These macros really increase build size.
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T, S) \
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
@@ -841,6 +842,9 @@ bool getConvertArgumentString(const String& marker, const String& s, String& arg
   ++endIndex; // Must also strip ')' from the original string.
   return true;
 }
+
+
+// FIXME TD-er: These macros really increase build size
 
 // Parse conversions marked with "%conv_marker%(float)"
 // Must be called last, since all sensor values must be converted, processed, etc.

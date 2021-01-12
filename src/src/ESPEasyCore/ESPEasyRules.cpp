@@ -178,7 +178,7 @@ void rulesProcessing(String& event) {
  \*********************************************************************************************/
 String rulesProcessingFile(const String& fileName, String& event) {
   if (!Settings.UseRules || !fileExists(fileName)) {
-    return "";
+    return F("");
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile"));
@@ -260,7 +260,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
           }
 
           // Prepare for new line
-          line = "";
+          line = F("");
           line.reserve(longestLineSize);
           firstNonSpaceRead = false;
           commentFound      = false;
@@ -282,7 +282,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
           if (!commentFound) {
             line += '/';
 
-            if (line.endsWith("//")) {
+            if (line.endsWith(F("//"))) {
               // consider the rest of the line a comment
               commentFound = true;
             }
@@ -310,7 +310,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  return "";
+  return F("");
 }
 
 /********************************************************************************************\
@@ -429,63 +429,6 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
   return argument.length() > 0;
 }
 
-/*  TD-er: Disabled for now, have to try and make the notation more intuitive.
-   bool parse_trigonometric_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, double& result) {
- #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
-   if (cmd_s_lower.length() < 3) {
-    return false;
-   }
-   float farg1;
-   if (!validFloatFromString(arg1, farg1)) {
-    return false;
-   }
-   const bool angle_in_deg = cmd_s_lower.endsWith(F("_d"));
-   if (cmd_s_lower[0] == 'a') {
-    // acos, asin, atan, atan2
-    if (cmd_s_lower.startsWith(F("acos"))) {
-      result = acos(farg1);
-    } else if (cmd_s_lower.startsWith(F("asin"))) {
-      result = asin(farg1);
-    } else if (cmd_s_lower.startsWith(F("atan2"))) {
-      // Syntax like {atan:x:y} to give the angle with the X-axis given a coordinate in the XY-plane
-      float x = farg1;
-      float y;
-      if (validFloatFromString(arg2, y)) {
-        result = atan2(y, x); // Note the swapped order of y,x parameters
-      } else {
-        // No 2nd parameter
-        return false;
-      }
-    } else if (cmd_s_lower.startsWith(F("atan"))) {
-      result = atan(farg1);
-    } else {
-      return false;
-    }
-    if (angle_in_deg) {
-      farg1 = degrees(farg1);
-    }
-    return true;
-   }
-   // cos, sin, tan
-   // These functions have the angle as input, so convert the argument to radians first (if needed)
-   if (angle_in_deg) {
-    farg1 = radians(farg1);
-   }
-   if (cmd_s_lower.startsWith(F("cos"))) {
-    result = cos(farg1);
-   } else if (cmd_s_lower.startsWith(F("sin"))) {
-    result = sin(farg1);
-   } else if (cmd_s_lower.startsWith(F("tan"))) {
-    result = tan(farg1);
-   } else {
-    return false;
-   }
-   return true;
- #else
-   return false;
- #endif
-   }
- */
 bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, int64_t& result) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("Bitwise: {");
@@ -619,8 +562,7 @@ void parse_string_commands(String& line) {
       double   fresult = 0.0;
       int64_t  iresult = 0;
 
-      if ( /*parse_trigonometric_functions(cmd_s_lower, arg1, arg2, fresult) ||*/
-        parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
+      if (parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
         const bool trimTrailingZeros = true;
         replacement = doubleToString(fresult, maxNrDecimals_double(fresult), trimTrailingZeros);
       } else if (parse_bitwise_functions(cmd_s_lower, arg1, arg2, arg3, iresult)) {
@@ -797,7 +739,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
   String eventTrigger;
 
-  action = "";
+  action = F("");
 
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
@@ -1008,8 +950,8 @@ bool ruleMatch(const String& event, const String& rule) {
   tmpRule.trim();
 
   // Ignore escape char
-  tmpRule.replace("[", "");
-  tmpRule.replace("]", "");
+  tmpRule.replace(F("["), F(""));
+  tmpRule.replace(F("]"), F(""));
 
   if (tmpEvent.equalsIgnoreCase(tmpRule)) {
     return true;
@@ -1182,28 +1124,28 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
   int  comparePos = 0;
   bool found      = false;
 
-  if (((comparePos = check.indexOf("!=")) > 0) && (comparePos < posStart)) {
+  if (((comparePos = check.indexOf(F("!="))) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '>';
     found    = true;
   }
 
-  if (((comparePos = check.indexOf("<>")) > 0) && (comparePos < posStart)) {
+  if (((comparePos = check.indexOf(F("<>"))) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '>';
     found    = true;
   }
 
-  if (((comparePos = check.indexOf(">=")) > 0) && (comparePos < posStart)) {
+  if (((comparePos = check.indexOf(F(">="))) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '>' + '=';
     found    = true;
   }
 
-  if (((comparePos = check.indexOf("<=")) > 0) && (comparePos < posStart)) {
+  if (((comparePos = check.indexOf(F("<="))) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 2;
     compare  = '<' + '=';

@@ -23,16 +23,16 @@ void handle_pinstates_json() {
   TXBuffer.startJsonStream();
 
   bool first = true;
-  addHtml(F("["));
+  addHtml('[');
 
   for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
   {
     if (!first) {
-      addHtml(",");
+      addHtml(',');
     } else {
       first = false;
     }
-    addHtml("{");
+    addHtml('{');
 
 
     const uint16_t plugin = getPluginFromKey(it->first);
@@ -47,7 +47,7 @@ void handle_pinstates_json() {
     stream_last_json_object_value(F("init"), String(it->second.init));
   }
 
-  addHtml(F("]"));
+  addHtml(']');
 
   TXBuffer.endStream();
 }
@@ -71,29 +71,29 @@ void handle_pinstates() {
   html_table_class_multirow();
   html_TR();
   html_table_header(F("Plugin"), F("Official_plugin_list"), 0);
-  html_table_header("GPIO");
-  html_table_header("Mode");
+  html_table_header(F("GPIO"));
+  html_table_header(F("Mode"));
   html_table_header(F("Value/State"));
   html_table_header(F("Task"));
   html_table_header(F("Monitor"));
   html_table_header(F("Command"));
-  html_table_header("Init");
+  html_table_header(F("Init"));
 
   for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
   {
     html_TR_TD();
-    addHtml("P");
+    addHtml('P');
     const uint16_t plugin = getPluginFromKey(it->first);
     const uint16_t port   = getPortFromKey(it->first);
 
     if (plugin < 100)
     {
-      addHtml("0");
+      addHtml('0');
     }
 
     if (plugin < 10)
     {
-      addHtml("0");
+      addHtml('0');
     }
     addHtmlInt(plugin);
     html_TD();

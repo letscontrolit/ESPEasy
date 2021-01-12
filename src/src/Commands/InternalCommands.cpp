@@ -48,6 +48,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
 
   // 0 arguments means argument on pos1 is valid (the command) and argpos 2 should not be there.
   if (HasArgv(Line, nrArguments + 2)) {
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
       log.reserve(128);
@@ -103,6 +104,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
       log += F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724");
       addLog(LOG_LEVEL_ERROR, log);
     }
+    #endif
 
     if (Settings.TolerantLastArgParse()) {
       return true;
@@ -286,7 +288,9 @@ bool executeInternalCommand(command_case_data & data)
     case 'n': {
       COMMAND_CASE_R(   "name", Command_Settings_Name,        1); // Settings.h
       COMMAND_CASE_R("nosleep", Command_System_NoSleep,       1); // System.h
+#ifdef USES_NOTIFIER
       COMMAND_CASE_R( "notify", Command_Notifications_Notify, 2); // Notifications.h
+#endif
       COMMAND_CASE_R("ntphost", Command_NTPHost,              1); // Time.h
       break;
     }
@@ -373,8 +377,10 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'w': {
+      #ifndef LIMIT_BUILD_SIZE
       COMMAND_CASE_R("wdconfig", Command_WD_Config, 3);               // WD.h
       COMMAND_CASE_R(  "wdread", Command_WD_Read,   2);               // WD.h
+      #endif
 
       if (data.cmd_lc[1] == 'i') {
         COMMAND_CASE_R(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h

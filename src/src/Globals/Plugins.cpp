@@ -403,15 +403,15 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
       taskIndex_t firstTask = 0;
       taskIndex_t lastTask = TASKS_MAX;
       String command = String(str);                           // Local copy to avoid warning in ExecuteCommand
-      int dotPos = command.indexOf(".");                      // Find first period
+      int dotPos = command.indexOf('.');                      // Find first period
       if (Function == PLUGIN_WRITE                            // Only applicable on PLUGIN_WRITE function
         && dotPos > -1) {                                     // First precondition is just a quick check for a period (fail-fast strategy)
         String arg0 = parseString(command, 1);                // Get first argument
-        dotPos = arg0.indexOf(".");
+        dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
           String thisTaskName = command.substring(0, dotPos); // Extract taskname prefix
-          thisTaskName.replace("[", "");                      // Remove the optional square brackets
-          thisTaskName.replace("]", "");
+          thisTaskName.replace(F("["), F(""));                      // Remove the optional square brackets
+          thisTaskName.replace(F("]"), F(""));
           if (thisTaskName.length() > 0) {                    // Second precondition
             taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
             if (!validTaskIndex(thisTask)) {                  // Taskname not found or invalid, check for a task number?

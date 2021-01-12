@@ -5,18 +5,22 @@
 
 #ifdef FEATURE_ARDUINO_OTA
   #include <ArduinoOTA.h>
-  #ifdef FEATURE_MDNS
-    #ifdef ESP8266
-      #include <ESP8266mDNS.h>
-    #endif
-    #ifdef ESP32
-      #include <ESPmDNS.h>
-    #endif
-  #endif
 
   extern bool ArduinoOTAtriggered;
+
+  #ifndef FEATURE_MDNS
+    #define FEATURE_MDNS
+  #endif
 #endif
 
+#ifdef FEATURE_MDNS
+  #ifdef ESP8266
+    #include <ESP8266mDNS.h>
+  #endif
+  #ifdef ESP32
+    #include <ESPmDNS.h>
+  #endif
+#endif
 
 #ifdef ESP8266
 
