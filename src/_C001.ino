@@ -139,9 +139,9 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
 bool do_process_c001_delay_queue(int controller_number, const C001_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-// *INDENT-ON*
 
 bool do_process_c001_delay_queue(int controller_number, const C001_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+// *INDENT-ON*
   WiFiClient client;
 
   if (!try_connect_host(controller_number, client, ControllerSettings)) {

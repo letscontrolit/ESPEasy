@@ -121,9 +121,9 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
 bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-// *INDENT-ON*
 
 bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+// *INDENT-ON*
   while (element.txt[element.valuesSent] == "") {
     // A non valid value, which we are not going to send.
     // Increase sent counter until a valid value is found.
