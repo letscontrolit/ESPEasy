@@ -156,9 +156,10 @@ bool mustConsiderAsString(NumericalType detectedType) {
 }
 
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
-  String result;
   const unsigned int bufLength = tBuf.length();
   unsigned int firstDec        = 0;
+  String result;
+  result.reserve(bufLength);
 
   while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {
     ++firstDec;
@@ -177,8 +178,12 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         result += c;
       }
       ++firstDec;
+      if (firstDec < bufLength) {
+        c = tBuf.charAt(firstDec);
+      }
     }
-  } else if (c == '0') {
+  } 
+  if (c == '0') {
     ++firstDec;
     result += c;
 
@@ -193,9 +198,14 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         ++firstDec;
         result      += c;
         detectedType = NumericalType::BinaryUint;
-      } else if (NumericalType::FloatingPoint != requestedType) {
+      } else if (NumericalType::FloatingPoint == requestedType && c == '.') {
         // Only floating point numbers should start with '0.'
         // All other combinations are not valid.
+        ++firstDec;
+        result      += c;
+        decPt        = true;
+        detectedType = NumericalType::FloatingPoint;
+      } else {
         return result;
       }
     }
@@ -244,6 +254,16 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
 bool isNumerical(const String& tBuf, NumericalType& detectedType) {
   NumericalType requestedType = NumericalType::FloatingPoint;
   const String  result        = getNumerical(tBuf, requestedType, detectedType);
+  if (result.length() > 0)
+  {
+    String tmp(tBuf);
+    tmp.trim(); // remove leading and trailing spaces
 
-  return result.length() > 0;
+    // Resulting size should be the same size as the given string.
+    // Not sure if it is possible to have a longer result, but better be sure to also allow for larger resulting strings.
+    // For example ".123" -> "0.123"
+    return result.length() >= tmp.length();
+  }
+
+  return false;
 }
