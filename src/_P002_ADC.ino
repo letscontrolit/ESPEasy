@@ -226,7 +226,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
             String log = F("ADC  : Analog value: ");
             log += String(raw_value);
             log += F(" = ");
-            log += String(UserVar[event->BaseVarIndex], 3);
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
 
             if (P002_OVERSAMPLING) {
               log += F(" (");

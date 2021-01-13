@@ -157,7 +157,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           if (i != 0) {
             log += ',';
           }
-          log += UserVar[event->BaseVarIndex + i];
+          log += formatUserVarNoCheck(event->TaskIndex, i);
         }
         addLog(LOG_LEVEL_INFO, log);
       }

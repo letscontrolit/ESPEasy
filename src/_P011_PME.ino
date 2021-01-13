@@ -66,9 +66,11 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       UserVar[event->BaseVarIndex] = Plugin_011_Read(PCONFIG(0), CONFIG_PORT);
-      String log = F("PME  : PortValue: ");
-      log += UserVar[event->BaseVarIndex];
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("PME  : PortValue: ");
+        log += formatUserVarNoCheck(event->TaskIndex, 0);
+        addLog(LOG_LEVEL_INFO, log);
+      }
       success = true;
       break;
     }

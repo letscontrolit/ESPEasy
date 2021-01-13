@@ -87,22 +87,24 @@ boolean Plugin_034(byte function, struct EventStruct *event, String& string)
 
           UserVar[event->BaseVarIndex]     = temperature;
           UserVar[event->BaseVarIndex + 1] = humidity;
-          String log = F("DHT12: Temperature: ");
-          log += UserVar[event->BaseVarIndex];
-          addLog(LOG_LEVEL_INFO, log);
-          log  = F("DHT12: Humidity: ");
-          log += UserVar[event->BaseVarIndex + 1];
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("DHT12: Temperature: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
+            addLog(LOG_LEVEL_INFO, log);
+            log  = F("DHT12: Humidity: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 1);
+            addLog(LOG_LEVEL_INFO, log);
 
-          /*
-                      log = F("DHT12: Data: ");
-                      for (int i=0; i < 5; i++)
-                      {
-                        log +=  dht_dat[i];
-                        log += ", ";
-                      }
-                      addLog(LOG_LEVEL_INFO, log);
-           */
+            /*
+                        log = F("DHT12: Data: ");
+                        for (int i=0; i < 5; i++)
+                        {
+                          log +=  dht_dat[i];
+                          log += ", ";
+                        }
+                        addLog(LOG_LEVEL_INFO, log);
+            */
+          }
           success = true;
         } // checksum
       }   // error
