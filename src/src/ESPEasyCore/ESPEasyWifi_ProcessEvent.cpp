@@ -14,6 +14,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
+#include "../Globals/Services.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
