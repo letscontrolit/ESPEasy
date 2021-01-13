@@ -1246,7 +1246,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
     // table header
     addHtml(F("<TR><TH style='width:30px;' align='center'>#"));
-    html_table_header("Name");
+    html_table_header(F("Name"));
 
     if (Device[DeviceIndex].FormulaOption)
     {

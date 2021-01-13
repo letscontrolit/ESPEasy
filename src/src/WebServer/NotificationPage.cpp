@@ -104,11 +104,11 @@ void handle_notifications() {
     html_table_class_multirow();
     html_TR();
     html_table_header("",           70);
-    html_table_header("Nr",         50);
+    html_table_header(F("Nr"),      50);
     html_table_header(F("Enabled"), 100);
     html_table_header(F("Service"));
     html_table_header(F("Server"));
-    html_table_header("Port");
+    html_table_header(F("Port"));
 
     MakeNotificationSettings(NotificationSettings);
 

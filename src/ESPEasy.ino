@@ -709,9 +709,12 @@ void backgroundtasks()
     }
   }
 
+  #ifdef FEATURE_DNS_SERVER
   // process DNS, only used if the ESP has no valid WiFi config
-  if (dnsServerActive)
+  if (dnsServerActive) {
     dnsServer.processNextRequest();
+  }
+  #endif
 
   #ifdef FEATURE_ARDUINO_OTA
   if(Settings.ArduinoOTAEnable && networkConnected)
@@ -731,7 +734,10 @@ void backgroundtasks()
   #ifdef FEATURE_MDNS
   // Allow MDNS processing
   if (networkConnected) {
+    #ifdef ESP8266
+    // ESP32 does not have an update() function
     MDNS.update();
+    #endif
   }
   #endif
 

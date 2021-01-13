@@ -210,11 +210,11 @@ void handle_root() {
     html_table_class_multirow_noborder();
     html_TR();
     html_table_header(F("Node List"));
-    html_table_header("Name");
+    html_table_header(F("Name"));
     html_table_header(getLabel(LabelType::BUILD_DESC));
-    html_table_header("Type");
-    html_table_header("IP", 160); // Should fit "255.255.255.255"
-    html_table_header("Age");
+    html_table_header(F("Type"));
+    html_table_header(F("IP"), 160); // Should fit "255.255.255.255"
+    html_table_header(F("Age"));
 
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {

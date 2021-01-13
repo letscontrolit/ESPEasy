@@ -15,12 +15,7 @@
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
 #ifdef USE_SERVO
-# ifdef ESP32
-#  include <Servo.h>
-# endif // ifdef ESP32
-#endif
-
-#ifdef USE_SERVO
+# include <Servo.h>
 ServoPinMap_t ServoPinMap;
 #endif // ifdef USE_SERVO
 

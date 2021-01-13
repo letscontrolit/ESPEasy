@@ -81,8 +81,6 @@ namespace std
   #endif
   #include <ESP8266WiFi.h>
   //#include <ESP8266Ping.h>
-  #include <DNSServer.h>
-  #include <Servo.h>
   #ifndef LWIP_OPEN_SRC
   #define LWIP_OPEN_SRC
   #endif
@@ -119,7 +117,6 @@ namespace std
 #endif
 
 #include <WiFiUdp.h>
-#include <DNSServer.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <FS.h>

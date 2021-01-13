@@ -1346,5 +1346,17 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifdef FEATURE_ARDUINO_OTA
+  #ifndef FEATURE_MDNS
+    #define FEATURE_MDNS
+  #endif
+#endif
+
+#ifdef FEATURE_MDNS
+  #ifndef FEATURE_DNS_SERVER
+    #define FEATURE_DNS_SERVER
+  #endif
+#endif
+
 
 #endif // DEFINE_PLUGIN_SETS_H

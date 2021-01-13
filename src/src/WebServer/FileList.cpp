@@ -394,8 +394,8 @@ void handle_SDfilelist() {
   html_BR();
   html_table_class_multirow();
   html_table_header("", 50);
-  html_table_header("Name");
-  html_table_header("Size");
+  html_table_header(F("Name"));
+  html_table_header(F("Size"));
   html_TR_TD();
   {
     String html;
