@@ -40,19 +40,6 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
       break;
     }
 
-    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
-    {
-      event->String1 = "";
-      event->String2 = "";
-      break;
-    }
-
-    case CPlugin::Function::CPLUGIN_INIT:
-    {
-      // C013_portUDP.begin(Settings.UDPPort);
-      break;
-    }
-
     case CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION:
     {
       C013_SendUDPTaskInfo(0, event->TaskIndex, event->TaskIndex);

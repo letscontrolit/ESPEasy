@@ -30,9 +30,7 @@ void handle_advanced() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  String edit       = web_server.arg(F("edit"));
-
-  if (edit.length() != 0)
+  if (web_server.arg(F("edit")).length() != 0)
   {
 //    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
     Settings.IP_Octet     = web_server.arg(F("ip")).toInt();

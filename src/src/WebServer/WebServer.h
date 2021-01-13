@@ -27,9 +27,11 @@ extern byte navMenuIndex;
 
 // Uncrustify must not be used on macros, so turn it off.
 // *INDENT-OFF*
-#define strncpy_webserver_arg(D, N) if (web_server.hasArg(N)) { safe_strncpy(D, web_server.arg(N).c_str(), sizeof(D)); }
+#define strncpy_webserver_arg(D, N) safe_strncpy_webserver_arg(D, N, sizeof(D));
 // Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
 // *INDENT-ON*
+
+void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size);
 
 void sendHeadandTail(const String& tmplName,
                      boolean       Tail      = false,

@@ -63,6 +63,11 @@
 
 #include "../Static/WebStaticData.h"
 
+void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
+  if (web_server.hasArg(arg)) { 
+    safe_strncpy(dest, web_server.arg(arg).c_str(), max_size); 
+  }
+}
 
 void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
   // This function is called twice per serving a web page.
