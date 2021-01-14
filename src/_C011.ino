@@ -60,6 +60,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
     {
       {
         MakeControllerSettings(ControllerSettings);
+
         if (AllocatedControllerSettings()) {
           LoadControllerSettings(event->ControllerIndex, ControllerSettings);
           C011_sendBinary = ControllerSettings.sendBinary();
@@ -112,9 +113,9 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         }
       }
       {
-        
         // Place in scope to delete ControllerSettings as soon as it is no longer needed
         MakeControllerSettings(ControllerSettings);
+
         if (!AllocatedControllerSettings()) {
           addHtmlError(F("Out of memory, cannot load page"));
         } else {
@@ -182,9 +183,9 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-// *INDENT-ON*
 
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+// *INDENT-ON*
   WiFiClient client;
 
   if (!NetworkConnected()) { return false; }
@@ -258,7 +259,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
       return false;
     }
 
-    ReplaceTokenByValue(element.uri, event, false);
+    ReplaceTokenByValue(element.uri,    event, false);
     ReplaceTokenByValue(element.header, event, false);
 
     if (element.postStr.length() > 0)

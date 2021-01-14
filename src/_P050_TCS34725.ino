@@ -265,14 +265,15 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             log += F("Clear : ");
             break;
         }
-        log += String(UserVar[event->BaseVarIndex + 3], DEC);
+        log += formatUserVarNoCheck(event->TaskIndex, 3);
         log += F(" R: ");
-        log += String(UserVar[event->BaseVarIndex], DEC);
+        log += formatUserVarNoCheck(event->TaskIndex, 0);
         log += F(" G: ");
-        log += String(UserVar[event->BaseVarIndex + 1], DEC);
+        log += formatUserVarNoCheck(event->TaskIndex, 1);
         log += F(" B: ");
-        log += String(UserVar[event->BaseVarIndex + 2], DEC);
+        log += formatUserVarNoCheck(event->TaskIndex, 2);
         addLog(LOG_LEVEL_INFO, log);
+
         success = true;
       } else {
         addLog(LOG_LEVEL_DEBUG, F("No TCS34725 found"));

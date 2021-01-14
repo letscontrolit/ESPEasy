@@ -296,7 +296,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
         String description = getKnownI2Cdevice(address);
 
         if (description.length() > 0) {
-          description.replace(",", "<BR>");
+          description.replace(F(","), F("<BR>"));
           addHtml(description);
         }
         nDevices++;

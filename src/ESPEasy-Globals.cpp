@@ -29,7 +29,7 @@ boolean WebLoggedIn = false;
 int WebLoggedInTimer = 300;
 
 
-String dummyString = "";  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
+String dummyString;  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
 
 
 

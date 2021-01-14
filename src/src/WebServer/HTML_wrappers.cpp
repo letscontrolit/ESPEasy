@@ -271,12 +271,16 @@ void addHtmlError(const String& error) {
   {}
 }
 
-void addHtml(char html) {
+void addHtml(const char& html) {
   TXBuffer += html;
 }
 
 void addHtml(const String& html) {
   TXBuffer += html;
+}
+
+void addHtmlInt(int int_val) {
+  addHtml(String(int_val));
 }
 
 void addEncodedHtml(const String& html) {
@@ -291,7 +295,7 @@ void addHtmlAttribute(const String& label, int value) {
   addHtml(' ');
   addHtml(label);
   addHtml('=');
-  addHtml(String(value));
+  addHtmlInt(value);
   addHtml(' ');
 }
 
@@ -315,6 +319,25 @@ void addHtmlLink(const String& htmlclass, const String& url, const String& label
   addHtml('>');
   addHtml(label);
   addHtml(F("</a>"));
+}
+
+void addHtmlDiv(const String& htmlclass) {
+  addHtmlDiv(htmlclass, F(""));
+}
+
+void addHtmlDiv(const String& htmlclass, const String& content) {
+  addHtmlDiv(htmlclass, content, F(""));
+}
+
+void addHtmlDiv(const String& htmlclass, const String& content, const String& id) {
+  addHtml(F(" <div "));
+  addHtmlAttribute(F("class"), htmlclass);
+  if (id.length() > 0) {
+    addHtmlAttribute(F("id"), id);
+  }
+  addHtml('>');
+  addHtml(content);
+  addHtml(F("</div>"));
 }
 
 void addEnabled(boolean enabled)

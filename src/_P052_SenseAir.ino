@@ -319,21 +319,21 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
 
           if (errorcode == 0) {
             addRowLabel(F("Measurement Count"));
-            addHtml(String(value));
+            addHtmlInt(value);
           }
 
           value = P052_data->modbus.readInputRegister(0x07, errorcode);
 
           if (errorcode == 0) {
             addRowLabel(F("Measurement Cycle time"));
-            addHtml(String(value * 2));
+            addHtmlInt(value * 2);
           }
 
           value = P052_data->modbus.readInputRegister(0x08, errorcode);
 
           if (errorcode == 0) {
             addRowLabel(F("Unfiltered CO2"));
-            addHtml(String(value));
+            addHtmlInt(value);
           }
         }
 

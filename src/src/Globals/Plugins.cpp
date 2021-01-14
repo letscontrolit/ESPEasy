@@ -10,7 +10,9 @@
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/Serial.h"
 
+#include "../Globals/Cache.h"
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ExtraTaskSettings.h"
@@ -31,10 +33,6 @@
 std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
 std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;
 std::vector<deviceIndex_t> DeviceIndex_sorted;
-
-float customFloatVar[CUSTOM_VARS_MAX];
-
-float UserVar[VARS_PER_TASK * TASKS_MAX];
 
 int deviceCount = -1;
 
@@ -405,15 +403,15 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
       taskIndex_t firstTask = 0;
       taskIndex_t lastTask = TASKS_MAX;
       String command = String(str);                           // Local copy to avoid warning in ExecuteCommand
-      int dotPos = command.indexOf(".");                      // Find first period
+      int dotPos = command.indexOf('.');                      // Find first period
       if (Function == PLUGIN_WRITE                            // Only applicable on PLUGIN_WRITE function
         && dotPos > -1) {                                     // First precondition is just a quick check for a period (fail-fast strategy)
         String arg0 = parseString(command, 1);                // Get first argument
-        dotPos = arg0.indexOf(".");
+        dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
           String thisTaskName = command.substring(0, dotPos); // Extract taskname prefix
-          thisTaskName.replace("[", "");                      // Remove the optional square brackets
-          thisTaskName.replace("]", "");
+          thisTaskName.replace(F("["), F(""));                      // Remove the optional square brackets
+          thisTaskName.replace(F("]"), F(""));
           if (thisTaskName.length() > 0) {                    // Second precondition
             taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
             if (!validTaskIndex(thisTask)) {                  // Taskname not found or invalid, check for a task number?
@@ -512,6 +510,10 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
       {
         PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
       }
+      if (Function == PLUGIN_INIT) {
+        updateTaskCaches();
+      }
+
       return true;
     }
 
@@ -549,15 +551,19 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_INIT) {
           // Schedule the plugin to be read.
           Scheduler.schedule_task_device_timer_at_init(TempEvent.TaskIndex);
+          updateTaskCaches();
           queueTaskEvent(F("TaskInit"), event->TaskIndex, retval);
         }
         if (Function == PLUGIN_EXIT) {
           clearPluginTaskData(event->TaskIndex);
+          updateTaskCaches();
+          initSerial();
           queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
         }
         STOP_TIMER_TASK(DeviceIndex, Function);
         post_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
         delay(0); // SMY: call delay(0) unconditionally
+
         return retval;
       }
       return false;

@@ -174,8 +174,8 @@ String NetworkCreateRFCCompliantHostname(bool force_add_unitnr) {
 String createRFCCompliantHostname(const String& oldString) {
   String result(oldString);
 
-  result.replace(" ", "-");
-  result.replace("_", "-"); // See RFC952
+  result.replace(' ', '-');
+  result.replace('_', '-'); // See RFC952
   return result;
 }
 

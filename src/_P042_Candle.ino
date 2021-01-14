@@ -203,7 +203,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
         // Brightness Selection
         addHtml(F("<TR><TD>Brightness:<TD>min<input type='range' id='web_Bright_Slide' min='0' max='255' value='"));
-        addHtml(String(PCONFIG(3)));
+        addHtmlInt(PCONFIG(3));
         addHtml(F("'> max"));
 
         {
@@ -218,7 +218,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         addHtml(F("    document.getElementById('web_RGB_Red').value = Math.round(picker.rgb[0]);"));
         addHtml(F("    document.getElementById('web_RGB_Green').value = Math.round(picker.rgb[1]);"));
         addHtml(F("    document.getElementById('web_RGB_Blue').value = Math.round(picker.rgb[2]);"));
-        addHtml("}");
+        addHtml('}');
         addHtml(F("</script>"));
 
         addHtml(F("<script type='text/javascript'>window.addEventListener('load', function(){"));

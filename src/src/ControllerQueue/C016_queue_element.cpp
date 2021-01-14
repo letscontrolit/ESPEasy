@@ -2,6 +2,7 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/RuntimeData.h"
 
 #ifdef USES_C016
 
