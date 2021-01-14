@@ -12,10 +12,14 @@ typedef std::map<String, bool>       FilePresenceMap;
 struct Caches {
   void clearAllCaches();
 
+  void updateTaskCaches();
+
+  void updateActiveTaskUseSerial0();
 
   TaskIndexNameMap      taskIndexName;
   TaskIndexValueNameMap taskIndexValueName;
   FilePresenceMap       fileExistsMap;
+  bool                  activeTaskUseSerial0 = false;
 };
 
 

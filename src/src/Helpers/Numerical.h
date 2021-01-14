@@ -6,22 +6,34 @@
 /********************************************************************************************\
   Check if string is valid float
   \*********************************************************************************************/
-bool isFloat(const String& tBuf);
 
 bool isValidFloat(float f);
 
-bool isInt(const String& tBuf);
-
 bool validIntFromString(const String& tBuf, int& result);
 
+bool validInt64FromString(const String& tBuf, int64_t& result);
+
 bool validUIntFromString(const String& tBuf, unsigned int& result);
+
+bool validUInt64FromString(const String& tBuf, uint64_t& result);
 
 bool validFloatFromString(const String& tBuf, float& result);
 
 bool validDoubleFromString(const String& tBuf, double& result);
 
-String getNumerical(const String& tBuf, bool mustBeInteger);
+// Numerical types sorted from least specific to most specific.
+enum class NumericalType {
+  FloatingPoint,
+  Integer,
+  HexadecimalUInt,
+  BinaryUint
+};
 
-bool isNumerical(const String& tBuf, bool mustBeInteger);
+bool mustConsiderAsString(NumericalType detectedType);
+
+String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType);
+
+bool isNumerical(const String& tBuf, NumericalType& detectedType);
+
 
 #endif // HELPERS_NUMERICAL_H

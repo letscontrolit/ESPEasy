@@ -564,6 +564,7 @@ String getDeviceModelString(DeviceModel model) {
   result = getDeviceModelBrandString(model);
 
   switch (model) {
+#if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
     case DeviceModel_Sonoff_Basic:   result      += F(" Basic");   break;
     case DeviceModel_Sonoff_TH1x:    result      += F(" TH1x");    break;
     case DeviceModel_Sonoff_S2x:     result      += F(" S2x");     break;
@@ -575,15 +576,29 @@ String getDeviceModelString(DeviceModel model) {
     case DeviceModel_Sonoff_POWr2:   result      += F(" POW-r2");  break;
     case DeviceModel_Shelly1:        result      += '1';           break;
     case DeviceModel_ShellyPLUG_S:   result      += F(" PLUG S");  break;
-    #ifdef ESP32
+#else
+    case DeviceModel_Sonoff_Basic:
+    case DeviceModel_Sonoff_TH1x:
+    case DeviceModel_Sonoff_S2x:
+    case DeviceModel_Sonoff_TouchT1:
+    case DeviceModel_Sonoff_TouchT2:
+    case DeviceModel_Sonoff_TouchT3:
+    case DeviceModel_Sonoff_4ch:
+    case DeviceModel_Sonoff_POW:
+    case DeviceModel_Sonoff_POWr2:
+    case DeviceModel_Shelly1:
+    case DeviceModel_ShellyPLUG_S:
+      result += F("default");  break;
+#endif
+#ifdef ESP32
     case DeviceMode_Olimex_ESP32_PoE: result     += F(" ESP32-PoE"); break;
     case DeviceMode_Olimex_ESP32_EVB: result     += F(" ESP32-EVB"); break;
     case DeviceMode_Olimex_ESP32_GATEWAY: result += F(" ESP32-GATEWAY"); break;
-    #else
+#else
     case DeviceMode_Olimex_ESP32_PoE:
     case DeviceMode_Olimex_ESP32_EVB:
     case DeviceMode_Olimex_ESP32_GATEWAY:
-    #endif
+#endif
 
     case DeviceModel_default:
     case DeviceModel_MAX:            result += F("default");  break;

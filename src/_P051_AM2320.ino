@@ -85,12 +85,14 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex]     = th.t;
           UserVar[event->BaseVarIndex + 1] = th.h;
 
-          String log = F("AM2320: Temperature: ");
-          log += UserVar[event->BaseVarIndex];
-          addLog(LOG_LEVEL_INFO, log);
-          log  = F("AM2320: Humidity: ");
-          log += UserVar[event->BaseVarIndex + 1];
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("AM2320: Temperature: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
+            addLog(LOG_LEVEL_INFO, log);
+            log  = F("AM2320: Humidity: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 1);
+            addLog(LOG_LEVEL_INFO, log);
+          }
           success = true;
           break;
         }

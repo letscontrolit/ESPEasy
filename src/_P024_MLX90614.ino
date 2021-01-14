@@ -101,11 +101,12 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 
       if (nullptr != P024_data) {
         UserVar[event->BaseVarIndex] = (float)P024_data->readTemperature(PCONFIG(0));
-        String log = F("MLX90614  : Temperature: ");
-        log += UserVar[event->BaseVarIndex];
-
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("MLX90614  : Temperature: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
+          addLog(LOG_LEVEL_INFO, log);
+        }
         //        send(msgObjTemp024->set(UserVar[event->BaseVarIndex], 1)); // Mysensors
-        addLog(LOG_LEVEL_INFO, log);
         success = true;
       }
       break;

@@ -20,8 +20,7 @@ public:
 
   C015_queue_element();
 
-  C015_queue_element(const struct EventStruct *event,
-                     byte                      value_count);
+  C015_queue_element(const struct EventStruct *event, byte value_count);
 
   bool   checkDone(bool succesfull) const;
 

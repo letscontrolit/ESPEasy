@@ -752,8 +752,8 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
-
   if (!validTaskIndex(TaskIndex)) {
+    ExtraTaskSettings.clear();
     return String(); // Un-initialized task index.
   }
   #ifndef BUILD_NO_RAM_TRACKER

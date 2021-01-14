@@ -63,6 +63,11 @@
 
 #include "../Static/WebStaticData.h"
 
+void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
+  if (web_server.hasArg(arg)) { 
+    safe_strncpy(dest, web_server.arg(arg).c_str(), max_size); 
+  }
+}
 
 void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
   // This function is called twice per serving a web page.
@@ -76,8 +81,8 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
   }
   #endif // ifdef USES_TIMING_STATS
 
-  String pageTemplate = "";
-  String fileName     = tmplName;
+  String pageTemplate;
+  String fileName = tmplName;
 
   fileName += F(".htm");
   fs::File f = tryOpenFile(fileName, "r");
@@ -158,6 +163,7 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
     }
 
     #ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       const int nrArgs = web_server.args();
 
@@ -175,7 +181,7 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
         addLog(LOG_LEVEL_INFO, log);
       }
     }
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
   }
 }
 
@@ -195,7 +201,7 @@ size_t streamFile_htmlEscape(const String& fileName)
       if (htmlEscapeChar(c, escaped)) {
         addHtml(escaped);
       } else {
-        addHtml(String(c));
+        addHtml(c);
       }
       ++size;
     }
@@ -275,39 +281,39 @@ void WebServerInit()
   #ifdef WEBSERVER_RULES
   web_server.on(F("/rules"),           handle_rules_new);
   web_server.on(F("/rules/"),          Goto_Rules_Root);
-  #ifdef WEBSERVER_NEW_RULES
+  # ifdef WEBSERVER_NEW_RULES
   web_server.on(F("/rules/add"),       []()
   {
     handle_rules_edit(web_server.uri(), true);
   });
   web_server.on(F("/rules/backup"), handle_rules_backup);
   web_server.on(F("/rules/delete"), handle_rules_delete);
-  #endif // WEBSERVER_NEW_RULES
-  #endif // WEBSERVER_RULES
+  # endif // WEBSERVER_NEW_RULES
+  #endif  // WEBSERVER_RULES
 #ifdef FEATURE_SD
-  web_server.on(F("/SDfilelist"),   handle_SDfilelist);
+  web_server.on(F("/SDfilelist"),  handle_SDfilelist);
 #endif   // ifdef FEATURE_SD
 #ifdef WEBSERVER_SETUP
-  web_server.on(F("/setup"),        handle_setup);
+  web_server.on(F("/setup"),       handle_setup);
 #endif // ifdef WEBSERVER_SETUP
 #ifdef WEBSERVER_SYSINFO
-  web_server.on(F("/sysinfo"),      handle_sysinfo);
+  web_server.on(F("/sysinfo"),     handle_sysinfo);
 #endif // ifdef WEBSERVER_SYSINFO
 #ifdef WEBSERVER_SYSVARS
-  web_server.on(F("/sysvars"),      handle_sysvars);
+  web_server.on(F("/sysvars"),     handle_sysvars);
 #endif // WEBSERVER_SYSVARS
 #ifdef WEBSERVER_TIMINGSTATS
-  web_server.on(F("/timingstats"),  handle_timingstats);
+  web_server.on(F("/timingstats"), handle_timingstats);
 #endif // WEBSERVER_TIMINGSTATS
 #ifdef WEBSERVER_TOOLS
-  web_server.on(F("/tools"),        handle_tools);
+  web_server.on(F("/tools"),       handle_tools);
 #endif // ifdef WEBSERVER_TOOLS
 #ifdef WEBSERVER_UPLOAD
-  web_server.on(F("/upload"),       HTTP_GET,  handle_upload);
-  web_server.on(F("/upload"),       HTTP_POST, handle_upload_post, handleFileUpload);
+  web_server.on(F("/upload"),      HTTP_GET,  handle_upload);
+  web_server.on(F("/upload"),      HTTP_POST, handle_upload_post, handleFileUpload);
 #endif // ifdef WEBSERVER_UPLOAD
 #ifdef WEBSERVER_WIFI_SCANNER
-  web_server.on(F("/wifiscanner"),  handle_wifiscanner);
+  web_server.on(F("/wifiscanner"), handle_wifiscanner);
 #endif // ifdef WEBSERVER_WIFI_SCANNER
 
 #ifdef WEBSERVER_NEW_UI
@@ -540,7 +546,7 @@ void getWebPageTemplateVar(const String& varName)
 
   else if (varName == F("unit"))
   {
-    addHtml(String(Settings.Unit));
+    addHtmlInt(Settings.Unit);
   }
 
   else if (varName == F("menu"))
@@ -562,7 +568,7 @@ void getWebPageTemplateVar(const String& varName)
       addHtml(F("<a "));
 
       addHtmlAttribute(F("class"), (i == navMenuIndex) ? F("menu active") : F("menu"));
-      addHtmlAttribute(F("href"), getGpMenuURL(i));
+      addHtmlAttribute(F("href"),  getGpMenuURL(i));
       addHtml('>');
       addHtml(getGpMenuIcon(i));
       addHtml(F("<span class='showmenulabel'>"));
@@ -591,17 +597,7 @@ void getWebPageTemplateVar(const String& varName)
   else if (varName == F("js"))
   {
     html_add_autosubmit_form();
-
-    // FIXME TD-er: Can only call this after tag has been set for the file.
-    //serve_JS(JSfiles_e::Toasting);
-    html_add_script(false);
-    TXBuffer += jsToastMessageBegin;
-
-    // we can push custom messages here in future releases...
-    addHtml(F("Submitted"));
-    TXBuffer += jsToastMessageEnd;
-
-    html_add_script_end();
+    serve_JS(JSfiles_e::Toasting);
   }
 
   else if (varName == F("error"))
@@ -617,12 +613,13 @@ void getWebPageTemplateVar(const String& varName)
   else
   {
     #ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("Templ: Unknown Var : ");
       log += varName;
       addLog(LOG_LEVEL_ERROR, log);
     }
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
 
     // no return string - eat var name
   }
