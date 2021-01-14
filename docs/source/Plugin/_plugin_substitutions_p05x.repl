@@ -41,7 +41,7 @@
 .. |P053_type| replace:: :cyan:`Dust`
 .. |P053_typename| replace:: :cyan:`Dust - PMSx003`
 .. |P053_porttype| replace:: `Serial`
-.. |P053_status| replace:: :yellow:`TESTING`
+.. |P053_status| replace:: :green:`NORMAL`
 .. |P053_github| replace:: P053_PMSx003.ino
 .. _P053_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P053_PMSx003.ino
 .. |P053_usedby| replace:: `.`

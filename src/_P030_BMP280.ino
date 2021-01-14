@@ -159,15 +159,16 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure(idx)) / 100;
         }
 
-        String log = F("BMP280  : Address: 0x");
-        log += String(bmp280_i2caddr, HEX);
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("BMP280  : Temperature: ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("BMP280  : Barometric Pressure: ");
-        log += UserVar[event->BaseVarIndex + 1];
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("BMP280  : Address: 0x");
+          log += String(bmp280_i2caddr, HEX);
+          addLog(LOG_LEVEL_INFO, log);
+          log  = F("BMP280  : Temperature: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
+          addLog(LOG_LEVEL_INFO, log);
+          log  = F("BMP280  : Barometric Pressure: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 1);
+          addLog(LOG_LEVEL_INFO, log);
 
         /*
                   log = F("BMP280  : Coefficients [T]: ");
@@ -197,6 +198,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
                   log += _bmp280_calib[idx].dig_P9;
                   addLog(LOG_LEVEL_INFO, log);
          */
+        }
         success = true;
       }
       break;

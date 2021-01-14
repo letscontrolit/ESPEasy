@@ -115,10 +115,10 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 
       if ((nullptr != P082_data) && P082_data->isInitialized()) {
         byte varNr = VARS_PER_TASK;
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Fix"),     String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),
-                                       String(P082_data->gps->satellitesStats.nrSatsTracked())));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Best SNR"), String(P082_data->gps->satellitesStats.getBestSNR()), true));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Fix"),     String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),
+                                       String(P082_data->gps->satellitesStats.nrSatsTracked()));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Best SNR"), String(P082_data->gps->satellitesStats.getBestSNR()), true);
 
         // success = true;
       }
@@ -520,11 +520,11 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
         } else {
           addHtml(", ");
         }
-        addHtml(String(id));
+        addHtmlInt(id);
 
         if (tracked) {
           addHtml(" (");
-          addHtml(String(snr));
+          addHtmlInt(snr);
           addHtml(")");
         }
       }
@@ -547,7 +547,7 @@ void P082_html_show_stats(struct EventStruct *event) {
     return;
   }
   addRowLabel(F("Fix"));
-  addHtml(String(P082_data->hasFix(P082_TIMEOUT)));
+  addHtmlInt(P082_data->hasFix(P082_TIMEOUT));
 
   addRowLabel(F("Fix Quality"));
 
@@ -567,13 +567,13 @@ void P082_html_show_stats(struct EventStruct *event) {
   }
 
   addRowLabel(F("Satellites tracked"));
-  addHtml(String(P082_data->gps->satellitesStats.nrSatsTracked()));
+  addHtmlInt(P082_data->gps->satellitesStats.nrSatsTracked());
 
   addRowLabel(F("Satellites visible"));
-  addHtml(String(P082_data->gps->satellitesStats.nrSatsVisible()));
+  addHtmlInt(P082_data->gps->satellitesStats.nrSatsVisible());
 
   addRowLabel(F("Best SNR"));
-  addHtml(String(P082_data->gps->satellitesStats.getBestSNR()));
+  addHtmlInt(P082_data->gps->satellitesStats.getBestSNR());
   addHtml(F(" dBHz"));
 
   // Satellites tracked or in view.
@@ -598,12 +598,12 @@ void P082_html_show_stats(struct EventStruct *event) {
   }
 
   addRowLabel(F("Distance Travelled"));
-  addHtml(String(static_cast<int>(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DISTANCE)])));
+  addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DISTANCE)]));
   addUnit(F("m"));
 
   if (P082_referencePointSet(event)) {
     addRowLabel(F("Distance from Ref. Point"));
-    addHtml(String(static_cast<int>(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DIST_REF)])));
+    addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DIST_REF)]));
     addUnit(F("m"));
   }
 

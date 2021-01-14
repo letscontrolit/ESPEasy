@@ -115,19 +115,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_VALUES:
     {
-      addHtml(F("<div class=\"div_l\">"));
-      addHtml(String(ExtraTaskSettings.TaskDeviceValueNames[0]));
-      addHtml(F(":</div><div class=\"div_r\">"));
-      addHtml(String(Plugin_003_pulseCounter[event->TaskIndex]));
-      addHtml(F("</div><div class=\"div_br\"></div><div class=\"div_l\">"));
-      addHtml(String(ExtraTaskSettings.TaskDeviceValueNames[1]));
-      addHtml(F(":</div><div class=\"div_r\">"));
-      addHtml(String(Plugin_003_pulseTotalCounter[event->TaskIndex]));
-      addHtml(F("</div><div class=\"div_br\"></div><div class=\"div_l\">"));
-      addHtml(String(ExtraTaskSettings.TaskDeviceValueNames[2]));
-      addHtml(F(":</div><div class=\"div_r\">"));
-      addHtml(String(Plugin_003_pulseTime[event->TaskIndex]));
-      addHtml(F("</div>"));
+      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[0], String(Plugin_003_pulseCounter[event->TaskIndex]));
+      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[1], String(Plugin_003_pulseTotalCounter[event->TaskIndex]));
+      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[2], String(Plugin_003_pulseTime[event->TaskIndex]), false);
       success = true;
       break;
     }

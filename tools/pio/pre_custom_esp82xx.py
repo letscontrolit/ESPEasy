@@ -50,11 +50,12 @@ else:
 
     "-DUSES_C016",  # Cache Controller
     "-DUSES_C018",  # TTN/RN2483
-#    "-DUSES_C015",  # TTN/RN2483
+#   "-DUSES_C015",  # Blynk
 
     "-DFEATURE_MDNS",
     "-DFEATURE_SD",
     "-DFEATURE_I2CMULTIPLEXER",
+    "-DUSE_TRIGONOMETRIC_FUNCTIONS_RULES",
 
     "-DUSE_SETTINGS_ARCHIVE"
   ]

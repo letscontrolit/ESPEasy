@@ -3,6 +3,7 @@
 #include "../Globals/Plugins.h"
 #include "../../ESPEasy_common.h"
 
+#ifdef USES_C013
 
 C013_SensorInfoStruct::C013_SensorInfoStruct()
 {
@@ -44,3 +45,5 @@ bool C013_SensorDataStruct::isValid() const
   }
   return true;
 }
+
+#endif

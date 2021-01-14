@@ -252,15 +252,8 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_SHOW_VALUES:
     {
-      addHtml(F("<div class=\"div_l\">"));
-      addHtml(ExtraTaskSettings.TaskDeviceValueNames[0]);
-      addHtml(F(":</div><div class=\"div_r\">"));
-      addHtml(P081_formatExecTime(LASTEXECUTION));
-      addHtml(F("</div><div class=\"div_br\"></div><div class=\"div_l\">"));
-      addHtml(ExtraTaskSettings.TaskDeviceValueNames[1]);
-      addHtml(F(":</div><div class=\"div_r\">"));
-      addHtml(P081_formatExecTime(NEXTEXECUTION));
-      addHtml(F("</div>"));
+      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[0], P081_formatExecTime(LASTEXECUTION));
+      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[1], P081_formatExecTime(NEXTEXECUTION), false);
       success = true;
       break;
     }
