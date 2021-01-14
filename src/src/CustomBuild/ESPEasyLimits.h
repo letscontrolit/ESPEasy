@@ -72,7 +72,7 @@
     # define DEVICES_MAX                      95
   #else    // if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
     # ifdef ESP32
-      #  define DEVICES_MAX                      85
+      #  define DEVICES_MAX                      100
     # else // ifdef ESP32
       #  define DEVICES_MAX                      60
     # endif // ifdef ESP32
