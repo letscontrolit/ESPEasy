@@ -135,40 +135,60 @@ struct P073_data_struct : public PluginTaskData_base {
 
   void FillBufferWithTemp(long temperature) {
     ClearBuffer();
-    char p073_digit[8];
-    bool between10and0 = (temperature < 10 && temperature >= 0);      // To have a zero prefix (0.x and -0.x) display between 0.9 and -0.9 degrees,
-    bool between0andMinus10 = (temperature < 0 && temperature > -10); // as all display types use 1 digit for temperatures between 10.0 and -10.0
-    sprintf_P(p073_digit, (between10and0 ? PSTR("     %02d") : (between0andMinus10 ? PSTR("    %03d") : PSTR("%7d"))), static_cast<int>(temperature));
+    char   p073_digit[8];
+    bool   between10and0 = (temperature < 10 && temperature >= 0);      // To have a zero prefix (0.x and -0.x) display between 0.9 and -0.9 degrees,
+    bool   between0andMinus10 = (temperature < 0 && temperature > -10); // as all display types use 1 digit for temperatures between 10.0 and -10.0
+    String format;
+    if (hideDegree) {
+      format = (between10and0 ? F("      %02d") : (between0andMinus10 ? F("     %03d") : F("%8d")));
+    } else {
+      format = (between10and0 ? F("     %02d") : (between0andMinus10 ? F("    %03d") : F("%7d")));
+    }
+    sprintf_P(p073_digit, format.c_str(), static_cast<int>(temperature));
     int p073_numlenght = strlen(p073_digit);
 
     for (int i = 0; i < p073_numlenght; i++) {
       showbuffer[i] = P073_mapCharToFontPosition(p073_digit[i]);
     }
-    showbuffer[7] = 12; // degree "°"
+    if (!hideDegree) {
+      showbuffer[7] = 12; // degree "°"
+    }
   }
 
 #ifdef P073_7DDT_COMMAND
 /**
  * FillBufferWithDualTemp()
- * leftTemperature of rightTempareature < -100.0 then shows dashes
+ * leftTemperature or rightTempareature < -100.0 then shows dashes
  */
   void FillBufferWithDualTemp(long leftTemperature, bool leftWithDecimal, long rightTemperature, bool rightWithDecimal) {
     ClearBuffer();
     char   p073_digit[8];
+    String format;
     bool   leftBetween10and0       = (leftWithDecimal && leftTemperature < 10 && leftTemperature >= 0);    // To have a zero prefix (0.x and -0.x) display between 0.9 and -0.9 degrees,
     bool   leftBetween0andMinus10  = (leftWithDecimal && leftTemperature < 0 && leftTemperature > -10);    // as all display types use 1 digit for temperatures between 10.0 and -10.0
-    String format                  = (leftBetween10and0 ? F(" %02d ") : (leftBetween0andMinus10 ? F("%03d ") : leftTemperature < -100.0 ? F("----") : F("%3d "))); // Include a space for compensation of the degree sym,bol
+    if (hideDegree) {
+           format                  = (leftBetween10and0 ? F("  %02d") : (leftBetween0andMinus10 ? F(" %03d") : leftTemperature < -1000 ? F("----") : F("%4d"))); // Include a space for compensation of the degree sym,bol
+    } else {
+           format                  = (leftBetween10and0 ? F(" %02d ") : (leftBetween0andMinus10 ? F("%03d ") : leftTemperature < -100 ? F("----") : F("%3d "))); // Include a space for compensation of the degree sym,bol
+    }
     bool   rightBetween10and0      = (rightWithDecimal && rightTemperature < 10 && rightTemperature >= 0); // To have a zero prefix (0.x and -0.x) display between 0.9 and -0.9 degrees,
     bool   rightBetween0andMinus10 = (rightWithDecimal && rightTemperature < 0 && rightTemperature > -10); // as all display types use 1 digit for temperatures between 10.0 and -10.0
-    format                        += (rightBetween10and0 ? F(" %02d") : (rightBetween0andMinus10 ? F("%03d") : rightTemperature < -100.0 ? F("----") : F("%3d")));
+    if (hideDegree) {
+           format                 += (rightBetween10and0 ? F("  %02d") : (rightBetween0andMinus10 ? F(" %03d") : rightTemperature < -1000 ? F("----") : F("%4d")));
+    } else {
+           format                 += (rightBetween10and0 ? F(" %02d") : (rightBetween0andMinus10 ? F("%03d") : rightTemperature < -100 ? F("----") : F("%3d")));
+    }
     sprintf_P(p073_digit, format.c_str(), static_cast<int>(leftTemperature), static_cast<int>(rightTemperature));
     int p073_numlenght = strlen(p073_digit);
 
     for (int i = 0; i < p073_numlenght; i++) {
       showbuffer[i] = P073_mapCharToFontPosition(p073_digit[i]);
     }
-    if (leftTemperature  > -100.0) showbuffer[3] = 12; // degree "°"
-    if (rightTemperature > -100.0) showbuffer[7] = 12; // degree "°"
+    if (!hideDegree) {
+      if (leftTemperature  > -100.0) showbuffer[3] = 12; // degree "°"
+      if (rightTemperature > -100.0) showbuffer[7] = 12; // degree "°"
+    }
+// addLog(LOG_LEVEL_INFO, String(F("7dgt format")) + format);
   }
 #endif
 
@@ -242,6 +262,8 @@ void LogBufferContent(String prefix) {
   bool    timesep;
   bool    shift;
   bool    periods;
+  bool    hideDegree;
+  bool    rightAlignTempMAX7219;
 };
 
 #define TM1637_POWER_ON B10001000
@@ -343,7 +365,16 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
                       NULL, PCONFIG(1));
       addFormNumericBox(F("Brightness"), F("plugin_073_brightness"), PCONFIG(2),
                         0, 15);
+
+      addFormSubHeader(F("Options"));
+
       addFormCheckBox(F("Text show periods as dot"), F("plugin_073_periods"), PCONFIG(3) == 1);
+
+      addFormCheckBox(F("Hide &deg; for Temperatures"), F("plugin_073_hide_degree"), PCONFIG(4) == 1);
+      addFormNote(F("Commands 7dt,&lt;temp&gt; and 7ddt,&lt;temp1&gt;,&lt;temp2&gt;"));
+
+      addFormCheckBox(F("Right-align Temperature (7dt)"), F("plugin_073_temp_rightalign"), PCONFIG(5) == 1);
+      addFormNote(F("Only applicable for MAX7219 - 8 digit"));
 
       success = true;
       break;
@@ -354,6 +385,8 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
       PCONFIG(1) = getFormItemInt(F("plugin_073_displout"));
       PCONFIG(2) = getFormItemInt(F("plugin_073_brightness"));
       PCONFIG(3) = isFormItemChecked(F("plugin_073_periods")) ? 1 : 0;
+      PCONFIG(4) = isFormItemChecked(F("plugin_073_hide_degree")) ? 1 : 0;
+      PCONFIG(5) = isFormItemChecked(F("plugin_073_temp_rightalign")) ? 1 : 0;
 
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -366,6 +399,8 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
         P073_data->output       = PCONFIG(1);
         P073_data->brightness   = PCONFIG(2);
         P073_data->periods      = PCONFIG(3) == 1;
+        P073_data->hideDegree   = PCONFIG(4) == 1;
+        P073_data->rightAlignTempMAX7219 = PCONFIG(5) == 1;
         P073_data->timesep      = true;
 
         switch (PCONFIG(0)) {
@@ -417,6 +452,8 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
       P073_data->output       = PCONFIG(1);
       P073_data->brightness   = PCONFIG(2);
       P073_data->periods      = PCONFIG(3) == 1;
+      P073_data->hideDegree   = PCONFIG(4) == 1;
+      P073_data->rightAlignTempMAX7219 = PCONFIG(5) == 1;
       P073_data->timesep      = true;
 
       switch (PCONFIG(0)) {
@@ -710,7 +747,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event, const String& text) {
       p073_temptemp = int(p073_temptemp * 10);
       P073_data->FillBufferWithTemp(p073_temptemp);
 
-      max7219_ShowTemp(event, P073_data->pin1, P073_data->pin2, P073_data->pin3, 5, -1);
+      max7219_ShowTemp(event, P073_data->pin1, P073_data->pin2, P073_data->pin3, P073_data->hideDegree ? 6 : 5, -1);
       break;
     }
   }
@@ -763,32 +800,50 @@ bool p073_plugin_write_7ddt(struct EventStruct *event, const String& text) {
       break;
     }
     case P073_MAX7219_8DGT: {
-      uint8_t firstDot  = -1; // No decimals is no dots
-      uint8_t secondDot = -1;
+      uint8_t firstDot       = -1; // No decimals is no dots
+      uint8_t secondDot      = -1;
+      double  hideFactor         = P073_data->hideDegree ? 10.0 : 1.0;
+      bool    firstDecimals  = false;
+      bool    secondDecimals = false;
 
-      if ((p073_lefttemp > 999) || (p073_lefttemp < -99.9)) {
-        p073_lefttemp = -101.0; // Triggers on -100
+      if ((p073_lefttemp > 999.99 * hideFactor) || (p073_lefttemp < -99.99 * hideFactor)) {
+        p073_lefttemp = -101.0 * hideFactor; // Triggers on -100
       }
       else {
-        if ((p073_lefttemp < 100) && (p073_lefttemp > -10)) {
-          p073_lefttemp = int(p073_lefttemp * 10);
-          firstDot      = 1;
+        if ((p073_lefttemp < 100.0 * hideFactor) && (p073_lefttemp > -10.0 * hideFactor)) {
+          p073_lefttemp = int(p073_lefttemp * 10.0);
+          firstDot      = P073_data->hideDegree ? 2 : 1;
+          firstDecimals = true;
         }
       }
 
-      if ((p073_righttemp > 999) || (p073_righttemp < -99.9)) {
-        p073_righttemp = -101.0;
+      if ((p073_righttemp > 999.99 * hideFactor) || (p073_righttemp < -99.99 * hideFactor)) {
+        p073_righttemp = -101.0 * hideFactor;
       }
       else {
-        if ((p073_righttemp < 100) && (p073_righttemp > -10)) {
-          p073_righttemp = int(p073_righttemp * 10);
-          secondDot      = 5;
+        if ((p073_righttemp < 100.0 * hideFactor) && (p073_righttemp > -10.0 * hideFactor)) {
+          p073_righttemp = int(p073_righttemp * 10.0);
+          secondDot      = P073_data->hideDegree ? 6 : 5;
+          secondDecimals = true;
         }
       }
+      // #ifdef P073_DEBUG
+      // String log = F("7DGT : preprocessed 1st=");
+      // log += p073_lefttemp;
+      // log += F(" 2nd=");
+      // log += p073_righttemp;
+      // addLog(LOG_LEVEL_INFO, log);
+      // #endif
 
-      P073_data->FillBufferWithDualTemp(p073_lefttemp, firstDot == 1, p073_righttemp, secondDot == 5);
+      P073_data->FillBufferWithDualTemp(p073_lefttemp, firstDecimals, p073_righttemp, secondDecimals);
+
+      bool alignSave = P073_data->rightAlignTempMAX7219; // Save setting
+      P073_data->rightAlignTempMAX7219 = false;
 
       max7219_ShowTemp(event, P073_data->pin1, P073_data->pin2, P073_data->pin3, firstDot, secondDot);
+
+      P073_data->rightAlignTempMAX7219 = alignSave; // Restore
+
       break;
     }
   }
@@ -1329,9 +1384,10 @@ void max7219_ShowTemp(struct EventStruct *event, uint8_t din_pin,
   if (firstDot  > -1) P073_data->showperiods[firstDot] = true;
   if (secondDot > -1) P073_data->showperiods[secondDot] = true;
 
-  for (int i = 1; i < 8; i++) {
+  int alignRight = P073_data->rightAlignTempMAX7219 ? 0 : 1;
+  for (int i = alignRight; i < 8; i++) {
     max7219_SetDigit(event, din_pin, clk_pin, cs_pin, i,
-                     P073_data->showbuffer[8 - i], P073_data->showperiods[8 - i]);
+                     P073_data->showbuffer[(7 + alignRight) - i], P073_data->showperiods[(7 + alignRight) - i]);
   }
 }
 
