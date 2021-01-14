@@ -4,7 +4,6 @@
 #include <Arduino.h>
 
 #include <IPAddress.h>
-#include <DNSServer.h>
 #include <WiFiUdp.h>
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
@@ -18,8 +17,6 @@ extern bool webserverRunning;
 extern bool webserver_init;
 
 
-extern bool dnsServerActive;
-
 // NTP status
 extern bool statusNTPInitialized;
 
@@ -27,7 +24,6 @@ extern bool statusNTPInitialized;
 // Setup DNS, only used if the ESP has no valid WiFi config
 extern const byte DNS_PORT;
 extern IPAddress  apIP;
-extern DNSServer  dnsServer;
 
 // udp protocol stuff (syslog, global sync, node info list, ntp time)
 extern WiFiUDP portUDP;

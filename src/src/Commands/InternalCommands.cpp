@@ -48,6 +48,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
 
   // 0 arguments means argument on pos1 is valid (the command) and argpos 2 should not be there.
   if (HasArgv(Line, nrArguments + 2)) {
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
       log.reserve(128);
@@ -103,6 +104,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
       log += F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724");
       addLog(LOG_LEVEL_ERROR, log);
     }
+    #endif
 
     if (Settings.TolerantLastArgParse()) {
       return true;
@@ -286,7 +288,9 @@ bool executeInternalCommand(command_case_data & data)
     case 'n': {
       COMMAND_CASE_R(   "name", Command_Settings_Name,        1); // Settings.h
       COMMAND_CASE_R("nosleep", Command_System_NoSleep,       1); // System.h
+#ifdef USES_NOTIFIER
       COMMAND_CASE_R( "notify", Command_Notifications_Notify, 2); // Notifications.h
+#endif
       COMMAND_CASE_R("ntphost", Command_NTPHost,              1); // Time.h
       break;
     }
@@ -373,8 +377,10 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'w': {
+      #ifndef LIMIT_BUILD_SIZE
       COMMAND_CASE_R("wdconfig", Command_WD_Config, 3);               // WD.h
       COMMAND_CASE_R(  "wdread", Command_WD_Read,   2);               // WD.h
+      #endif
 
       if (data.cmd_lc[1] == 'i') {
         COMMAND_CASE_R(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
@@ -456,8 +462,11 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   #endif
   String cmd;
 
+  // We first try internal commands, which should not have a taskIndex set.
+  struct EventStruct TempEvent;
+
   if (!GetArgv(Line, cmd, 1)) {
-    SendStatus(source, return_command_failed());
+    SendStatus(&TempEvent, return_command_failed());
     return false;
   }
 
@@ -470,11 +479,6 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     }
   }
 
-  // FIXME TD-er: Not sure what happens now, but TaskIndex cannot always be set here
-  // since commands can originate from anywhere.
-  struct EventStruct TempEvent;
-  TempEvent.setTaskIndex(taskIndex);
-  checkDeviceVTypeForTask(&TempEvent);
   TempEvent.Source = source;
 
   String action(Line);
@@ -519,7 +523,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
 
     if (data.status.length() > 0) {
       delay(0);
-      SendStatus(source, data.status);
+      SendStatus(&TempEvent, data.status);
       delay(0);
     }
 
@@ -527,6 +531,11 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       return true;
     }
   }
+
+  // When trying a task command, set the task index, even if it is not a valid task index.
+  // For example commands from elsewhere may not have a proper task index.
+  TempEvent.setTaskIndex(taskIndex);
+  checkDeviceVTypeForTask(&TempEvent);
 
   if (tryPlugin) {
     // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly
@@ -547,21 +556,21 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     #endif
 
     if (handled) {
-      SendStatus(source, return_command_success());
+      SendStatus(&TempEvent, return_command_success());
       return true;
     }
   }
 
   if (tryRemoteConfig) {
     if (remoteConfig(&TempEvent, action)) {
-      SendStatus(source, return_command_success());
+      SendStatus(&TempEvent, return_command_success());
       return true;
     }
   }
   String errorUnknown = F("Command unknown: ");
   errorUnknown += action;
   addLog(LOG_LEVEL_INFO, errorUnknown);
-  SendStatus(source, errorUnknown);
+  SendStatus(&TempEvent, errorUnknown);
   delay(0);
   return false;
 }

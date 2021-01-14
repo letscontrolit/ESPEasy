@@ -520,7 +520,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
         log.reserve(110);                           // Prevent re-allocation
         log = F("P096-eInk : WRITE = ");
         log += tmpString;
-        SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.  
+        SendStatus(event, log);             // Reply (echo) to sender. This will print message on browser.  
 #endif
         break;        
       }

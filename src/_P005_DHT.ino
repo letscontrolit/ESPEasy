@@ -110,12 +110,12 @@ void P005_log(struct EventStruct *event, int logNr)
     case P005_error_invalid_NAN_reading: text += F("Invalid NAN reading"); break;
     case P005_info_temperature:
       text += F("Temperature: ");
-      text += UserVar[event->BaseVarIndex];
+      text += formatUserVarNoCheck(event->TaskIndex, 0);
       isError = false;
       break;
     case P005_info_humidity:
       text += F("Humidity: ");
-      text += UserVar[event->BaseVarIndex + 1];
+      text += formatUserVarNoCheck(event->TaskIndex, 1);
       isError = false;
       break;
   }
