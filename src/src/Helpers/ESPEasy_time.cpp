@@ -538,10 +538,11 @@ int ESPEasy_time::getSecOffset(const String& format) {
   if (position_percent == -1) {
     return 0;
   }
-  String valueStr = getNumerical(format.substring(sign_position, position_percent), true);
 
-  if (!isInt(valueStr)) { return 0; }
-  int value = valueStr.toInt();
+  int value;
+  if (!validIntFromString(format.substring(sign_position, position_percent), value)) {
+    return 0;
+  }
 
   switch (format.charAt(position_percent - 1)) {
     case 'm':

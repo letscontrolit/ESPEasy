@@ -129,10 +129,10 @@ void handle_sysinfo_json() {
   json_prop(F("ap_mac"),        getValue(LabelType::AP_MAC));
   json_prop(F("ssid"),          getValue(LabelType::SSID));
   json_prop(F("bssid"),         getValue(LabelType::BSSID));
-  json_number(F("channel"),     getValue(LabelType::CHANNEL));
-  json_prop(F("connected"),     getValue(LabelType::CONNECTED));
-  json_prop(F("ldr"),           getValue(LabelType::LAST_DISC_REASON_STR));
-  json_number(F("reconnects"),  getValue(LabelType::NUMBER_RECONNECTS));
+  json_number(F("channel"), getValue(LabelType::CHANNEL));
+  json_prop(F("connected"), getValue(LabelType::CONNECTED));
+  json_prop(F("ldr"),       getValue(LabelType::LAST_DISC_REASON_STR));
+  json_number(F("reconnects"), getValue(LabelType::NUMBER_RECONNECTS));
   json_close();
 
 # ifdef HAS_ETHERNET
@@ -147,13 +147,13 @@ void handle_sysinfo_json() {
 # endif // ifdef HAS_ETHERNET
 
   json_open(false, F("firmware"));
-  json_prop(F("build"),          String(BUILD));
-  json_prop(F("notes"),          F(BUILD_NOTES));
-  json_prop(F("libraries"),      getSystemLibraryString());
-  json_prop(F("git_version"),    F(BUILD_GIT));
-  json_prop(F("plugins"),        getPluginDescriptionString());
-  json_prop(F("md5"),            String(CRCValues.compileTimeMD5[0], HEX));
-  json_number(F("md5_check"),    String(CRCValues.checkPassed()));
+  json_prop(F("build"),       String(BUILD));
+  json_prop(F("notes"),       F(BUILD_NOTES));
+  json_prop(F("libraries"),   getSystemLibraryString());
+  json_prop(F("git_version"), F(BUILD_GIT));
+  json_prop(F("plugins"),     getPluginDescriptionString());
+  json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
+  json_number(F("md5_check"), String(CRCValues.checkPassed()));
   json_prop(F("build_time"),     get_build_time());
   json_prop(F("filename"),       getValue(LabelType::BINARY_FILENAME));
   json_prop(F("build_platform"), getValue(LabelType::BUILD_PLATFORM));
@@ -162,7 +162,7 @@ void handle_sysinfo_json() {
 
   json_open(false, F("esp"));
   json_prop(F("chip_id"), getValue(LabelType::ESP_CHIP_ID));
-  json_number(F("cpu"),   getValue(LabelType::ESP_CHIP_FREQ));
+  json_number(F("cpu"), getValue(LabelType::ESP_CHIP_FREQ));
 
   # ifdef ARDUINO_BOARD
   json_prop(F("board"), ARDUINO_BOARD);
@@ -540,7 +540,7 @@ void handle_sysinfo_ESP_Board() {
   }
 
   addRowLabel(LabelType::ESP_CHIP_FREQ);
-  addHtml(String(ESP.getCpuFreqMHz()));
+  addHtmlInt(ESP.getCpuFreqMHz());
   addHtml(F(" MHz"));
 
   addRowLabelValue(LabelType::ESP_CHIP_MODEL);
@@ -589,17 +589,17 @@ void handle_sysinfo_Storage() {
   uint32_t ideSize  = ESP.getFlashChipSize();
 
   addRowLabel(LabelType::FLASH_CHIP_REAL_SIZE);
-  addHtml(String(realSize / 1024));
+  addHtmlInt(realSize / 1024);
   addHtml(F(" kB"));
 
   addRowLabel(LabelType::FLASH_IDE_SIZE);
-  addHtml(String(ideSize / 1024));
+  addHtmlInt(ideSize / 1024);
   addHtml(F(" kB"));
 
   // Please check what is supported for the ESP32
   # if defined(ESP8266)
   addRowLabel(LabelType::FLASH_IDE_SPEED);
-  addHtml(String(ESP.getFlashChipSpeed() / 1000000));
+  addHtmlInt(ESP.getFlashChipSpeed() / 1000000);
   addHtml(F(" MHz"));
 
   FlashMode_t ideMode = ESP.getFlashChipMode();
@@ -681,29 +681,29 @@ void handle_sysinfo_Storage() {
     html += F(" kB free)");
     addHtml(html);
   }
-  #ifndef LIMIT_BUILD_SIZE
+  # ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));
-  addHtml(String(SpiffsPagesize()));
+  addHtmlInt(SpiffsPagesize());
 
   addRowLabel(F("Block size"));
-  addHtml(String(SpiffsBlocksize()));
+  addHtmlInt(SpiffsBlocksize());
 
   addRowLabel(F("Number of blocks"));
-  addHtml(String(SpiffsTotalBytes() / SpiffsBlocksize()));
+  addHtmlInt(SpiffsTotalBytes() / SpiffsBlocksize());
 
   {
-  # if defined(ESP8266)
+  #  if defined(ESP8266)
     fs::FSInfo fs_info;
     ESPEASY_FS.info(fs_info);
     addRowLabel(F("Maximum open files"));
-    addHtml(String(fs_info.maxOpenFiles));
+    addHtmlInt(fs_info.maxOpenFiles);
 
     addRowLabel(F("Maximum path length"));
-    addHtml(String(fs_info.maxPathLength));
+    addHtmlInt(fs_info.maxPathLength);
 
-  # endif // if defined(ESP8266)
+  #  endif // if defined(ESP8266)
   }
-  #endif
+  # endif // ifndef LIMIT_BUILD_SIZE
 
 # ifndef BUILD_MINIMAL_OTA
 

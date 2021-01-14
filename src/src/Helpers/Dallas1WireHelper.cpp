@@ -186,16 +186,16 @@ void Dallas_show_sensor_stats_webform_load(const Dallas_SensorData& sensor_data)
   addHtml(sensor_data.get_formatted_address());
 
   addRowLabel(F("Resolution"));
-  addHtml(String(sensor_data.actual_res));
+  addHtmlInt(sensor_data.actual_res);
 
   addRowLabel(F("Parasite Powered"));
   addHtml(jsonBool(sensor_data.parasitePowered));
 
   addRowLabel(F("Samples Read Success"));
-  addHtml(String(sensor_data.read_success));
+  addHtmlInt(sensor_data.read_success);
 
   addRowLabel(F("Samples Read Failed"));
-  addHtml(String(sensor_data.read_failed));
+  addHtmlInt(sensor_data.read_failed);
 }
 
 void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx, int8_t gpio_pin_tx, uint8_t nrVariables)

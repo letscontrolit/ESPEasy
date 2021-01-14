@@ -78,9 +78,9 @@ void handle_upload_json() {
   if (!isLoggedIn()) { result = 255; }
 
   TXBuffer.startJsonStream();
-  addHtml("{");
+  addHtml('{');
   stream_next_json_object_value(F("status"), String(result));
-  addHtml("}");
+  addHtml('}');
 
   TXBuffer.endStream();
 }

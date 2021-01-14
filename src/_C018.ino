@@ -337,9 +337,7 @@ private:
   }
 
   void triggerAutobaud() {
-    if ((C018_easySerial == nullptr) || (myLora == nullptr)) {
-      return;
-    }
+    if ((C018_easySerial == nullptr) || (myLora == nullptr)) {}
     int retries = 2;
 
     while (retries > 0 && !autobaud_success) {
@@ -482,7 +480,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
     {
-      if (C018_data != nullptr && C018_data->isInitialized()) {
+      if ((C018_data != nullptr) && C018_data->isInitialized()) {
         string  = F("Dev addr: ");
         string += C018_data->getDevaddr();
         string += C018_data->useOTAA() ? F(" (OTAA)") : F(" (ABP)");
@@ -528,7 +526,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         addHtml(c018_add_joinChanged_script_element_line(F("devaddr"), false));
         addHtml(c018_add_joinChanged_script_element_line(F("nskey"), false));
         addHtml(c018_add_joinChanged_script_element_line(F("appskey"), false));
-        addHtml("}");
+        addHtml('}');
         html_add_script_end();
       }
 
@@ -560,8 +558,10 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         {
           addFormTextBox(F("Device EUI"), F("deveui"), customConfig->DeviceEUI, C018_DEVICE_EUI_LEN - 1);
           String deveui_note = F("Leave empty to use HW DevEUI: ");
-          if (C018_data != nullptr)
+
+          if (C018_data != nullptr) {
             deveui_note += C018_data->hweui();
+          }
           addFormNote(deveui_note, F("deveui_note"));
         }
 
@@ -616,9 +616,9 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       if (C018_data != nullptr) {
         // Some information on detected device
         addRowLabel(F("Hardware DevEUI"));
-        addHtml(String(C018_data->hweui()));
+        addHtml(C018_data->hweui());
         addRowLabel(F("Version Number"));
-        addHtml(String(C018_data->sysver()));
+        addHtml(C018_data->sysver());
 
         addRowLabel(F("Voltage"));
         addHtml(String(static_cast<float>(C018_data->getVbat()) / 1000.0, 3));
@@ -640,7 +640,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         addHtml(C018_data->getLastError());
 
         addRowLabel(F("Sample Set Counter"));
-        addHtml(String(C018_data->getSampleSetCount()));
+        addHtmlInt(C018_data->getSampleSetCount());
 
         {
           RN2xx3_status status = C018_data->getStatus();
@@ -716,10 +716,12 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       if (C018_DelayHandler == nullptr) {
         break;
       }
+
       if (C018_data != nullptr) {
         success = C018_DelayHandler->addToQueue(
           C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
-        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C018_DELAY_QUEUE, C018_DelayHandler->getNextScheduleTime());
+        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C018_DELAY_QUEUE,
+                                         C018_DelayHandler->getNextScheduleTime());
 
         if (!C018_data->isInitialized()) {
           // Sometimes the module does need some time after power on to respond.
@@ -741,8 +743,9 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:
     {
-      if (C018_data != nullptr)
+      if (C018_data != nullptr) {
         C018_data->async_loop();
+      }
 
       // FIXME TD-er: Handle reading error state or return values.
       break;
@@ -766,8 +769,10 @@ bool C018_init(struct EventStruct *event) {
   String AppKey;
   taskIndex_t  SampleSetInitiator = INVALID_TASK_INDEX;
   unsigned int Port               = 0;
+
   if (C018_data == nullptr) {
     C018_data = new (std::nothrow) C018_data_struct;
+
     if (C018_data == nullptr) {
       return false;
     }
@@ -797,8 +802,8 @@ bool C018_init(struct EventStruct *event) {
   customConfig->validate();
 
   if (!C018_data->init(customConfig->serialPort, customConfig->rxpin, customConfig->txpin, customConfig->baudrate,
-                      (customConfig->joinmethod == C018_USE_OTAA),
-                      SampleSetInitiator, customConfig->resetpin))
+                       (customConfig->joinmethod == C018_USE_OTAA),
+                       SampleSetInitiator, customConfig->resetpin))
   {
     return false;
   }
@@ -838,9 +843,9 @@ bool C018_init(struct EventStruct *event) {
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-// *INDENT-ON*
 
 bool do_process_c018_delay_queue(int controller_number, const C018_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+// *INDENT-ON*
   uint8_t pl           = (element.packed.length() / 2);
   float   airtime_ms   = C018_data->getLoRaAirTime(pl);
   bool    mustSetDelay = false;

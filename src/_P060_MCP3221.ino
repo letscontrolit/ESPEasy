@@ -137,7 +137,7 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex] = P060_data->getValue();
 
         String log = F("ADMCP: Analog value: ");
-        log += String(UserVar[event->BaseVarIndex], 3);
+        log += formatUserVarNoCheck(event->TaskIndex, 0);
 
         if (PCONFIG(3)) // Calibration?
         {
@@ -152,7 +152,7 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
             log += F(" = ");
-            log += String(UserVar[event->BaseVarIndex], 3);
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
           }
         }
 

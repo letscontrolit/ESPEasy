@@ -172,15 +172,17 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 2] = b;
         UserVar[event->BaseVarIndex + 3] = tcs.calculateColorTemperature(r, g, b);
 
-        String log = F("TCS34725: Color Temp (K): ");
-        log += String(UserVar[event->BaseVarIndex + 3], DEC);
-        log += F(" R: ");
-        log += String(UserVar[event->BaseVarIndex], DEC);
-        log += F(" G: ");
-        log += String(UserVar[event->BaseVarIndex + 1], DEC);
-        log += F(" B: ");
-        log += String(UserVar[event->BaseVarIndex + 2], DEC);
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("TCS34725: Color Temp (K): ");
+          log += formatUserVarNoCheck(event->TaskIndex, 3);
+          log += F(" R: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
+          log += F(" G: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 1);
+          log += F(" B: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 2);
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
       } else {
         addLog(LOG_LEVEL_DEBUG, F("No TCS34725 found"));
