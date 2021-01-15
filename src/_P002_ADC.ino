@@ -226,7 +226,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
             String log = F("ADC  : Analog value: ");
             log += String(raw_value);
             log += F(" = ");
-            log += String(UserVar[event->BaseVarIndex], 3);
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
 
             if (P002_OVERSAMPLING) {
               log += F(" (");
@@ -297,7 +297,7 @@ void P002_performRead(struct EventStruct *event, int& value) {
 
 void P002_formatStatistics(const String& label, int raw, float float_value) {
   addRowLabel(label);
-  addHtml(String(raw));
+  addHtmlInt(raw);
   html_add_estimate_symbol();
   addHtml(String(float_value, 3));
 }

@@ -7,9 +7,7 @@
 #include <map>
 
 #ifdef USE_SERVO
-# ifdef ESP32
-#  include <Servo.h>
-# endif // ifdef ESP32
+# include <Servo.h>
 
 // IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
 

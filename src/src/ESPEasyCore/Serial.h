@@ -9,6 +9,8 @@ extern byte SerialInByte;
 extern int  SerialInByteCounter;
 extern char InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
 
+void initSerial();
+
 void serial();
 
 void addToSerialBuffer(const char *line);
@@ -39,4 +41,4 @@ void serialPrintln();
  */
 
 
-#endif
+#endif // ifndef ESPEASYCORE_SERIAL_H

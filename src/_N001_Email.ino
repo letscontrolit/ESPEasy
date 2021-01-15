@@ -38,7 +38,7 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 		// Edwin: NPlugin::Function::NPLUGIN_WRITE seems to be not implemented/not used yet? Disabled because its confusing now.
 		// case NPlugin::Function::NPLUGIN_WRITE:
 		//   {
-		//     String log = "";
+		//     String log;
 		//     String command = parseString(string, 1);
 		//
 		//     if (command == F("email"))
@@ -57,7 +57,7 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 			LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
 			NotificationSettings.validate();
 			String subject = NotificationSettings.Subject;
-			String body = "";
+			String body;
 			if (event->String1.length() > 0)
 				body = event->String1;
 			else
@@ -110,10 +110,10 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
 		} else {
 			String senderName = email_address.substring(0, pos_less);
-			senderName.replace("\"", ""); // Remove quotes
+			senderName.replace(F("\""), F("")); // Remove quotes
 			String address = email_address.substring(pos_less + 1);
-			address.replace("<", "");
-			address.replace(">", "");
+			address.replace(F("<"), F(""));
+			address.replace(F(">"), F(""));
 			address.trim();
 			senderName.trim();
 			mailheader.replace(String(F("$nodename")), senderName);
@@ -125,7 +125,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 		mailheader.replace(String(F("$ato")), notificationsettings.Receiver);
 		mailheader.replace(String(F("$subject")), aSub);
 		mailheader.replace(String(F("$espeasyversion")), String(BUILD));
-		aMesg.replace("\r", F("<br/>")); // re-write line breaks for Content-type: text/html
+		aMesg.replace(F("\r"), F("<br/>")); // re-write line breaks for Content-type: text/html
 
 		// Wait for Client to Start Sending
 		// The MTA Exchange
@@ -137,7 +137,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 
 			bool nextAddressAvailable = true;
 			int i = 0;
-			String emailTo = "";
+			String emailTo;
 			if (!getNextMailAddress(notificationsettings.Receiver, emailTo, i)) {
 				addLog(LOG_LEVEL_ERROR, F("Email: No recipient given"));
 				break;

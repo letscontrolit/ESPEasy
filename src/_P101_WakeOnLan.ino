@@ -174,7 +174,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       char   ipString[IP_BUFF_SIZE_P101]   = "";
       char   macString[MAC_BUFF_SIZE_P101] = "";
       char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101];
-      String errorStr = "";
+      String errorStr;
       String msgStr;
       const String wolStr = F(LOG_NAME_P101);
 
@@ -305,7 +305,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
         if (!taskEnable) {
           // String ErrorStr = F("Plugin is Disabled, Command Ignored. ");
           // addLog(LOG_LEVEL_INFO, wolStr + ErrorStr);
-          // SendStatus(event->Source, ErrorStr); // Reply (echo) to sender. This will print message on browser.
+          // SendStatus(event, ErrorStr); // Reply (echo) to sender. This will print message on browser.
           break;
         }
 
@@ -368,7 +368,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
           msgStr = F("CMD Syntax Error");
           addLog(LOG_LEVEL_INFO, wolStr + msgStr);
           msgStr += F(" <br>");
-          SendStatus(event->Source, msgStr); // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, msgStr); // Reply (echo) to sender. This will print message on browser.
         }
         else {                               // No parsing errors, Send Magic Packet (Wake Up the MAC).
           msgStr  = wolStr;

@@ -42,6 +42,7 @@ Welcome to ESP Easy's documentation!
    Reference/URLs.rst
    Reference/RTC.rst
    Reference/ChangeLog.rst
+   Reference/ExternalHostedStaticFiles.rst
 
 .. toctree::
    :glob:

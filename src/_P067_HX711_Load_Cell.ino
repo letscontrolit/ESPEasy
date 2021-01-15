@@ -399,7 +399,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
             int2float(PCONFIG(1), PCONFIG(2), &valFloat);
             UserVar[event->BaseVarIndex] = UserVar[event->BaseVarIndex + 2] + valFloat;   //Offset
 
-            log += String(UserVar[event->BaseVarIndex], 3);
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
 
             if (PCONFIG(0) & (1 << BIT_POS_CALIB_CHAN_A))  //Calibration channel A?
             {
@@ -413,7 +413,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
                 log += F(" = ");
-                log += String(UserVar[event->BaseVarIndex], 3);
+                log += formatUserVarNoCheck(event->TaskIndex, 0);
               }
             }
           }
@@ -439,7 +439,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
             int2float(PCONFIG(3), PCONFIG(4), &valFloat);
             UserVar[event->BaseVarIndex + 1] = UserVar[event->BaseVarIndex + 3] + valFloat;   //Offset
 
-            log += String(UserVar[event->BaseVarIndex + 1], 3);
+            log += formatUserVarNoCheck(event->TaskIndex, 1);
 
             if (PCONFIG(0) & (1 << BIT_POS_CALIB_CHAN_B))  //Calibration channel B?
             {
@@ -453,7 +453,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex + 1] = normalized * (out2 - out1) + out1;
 
                 log += F(" = ");
-                log += String(UserVar[event->BaseVarIndex + 1], 3);
+                log += formatUserVarNoCheck(event->TaskIndex, 1);
               }
             }
           }

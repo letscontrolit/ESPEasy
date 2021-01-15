@@ -182,7 +182,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
             log += ' ';
-            log += UserVar[event->BaseVarIndex];
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
           }
         }
 
