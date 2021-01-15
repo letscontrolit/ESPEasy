@@ -25,11 +25,11 @@ void logErrorGpioOffline(const String& prefix, int port);
 void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line = nullptr);
 void logErrorGpioNotOutput(const String& prefix, int port);
 void logErrorModeOutOfRange(const String& prefix, int port);
-bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Line);
-bool gpio_unmonitor_helper(int port, EventValueSource::Enum source, const char* Line);
+bool gpio_monitor_helper(int port, struct EventStruct *event, const char* Line);
+bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char* Line);
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
 bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
-bool gpio_mode_range_helper(byte pin, byte pinMode, EventValueSource::Enum source, const char* Line);
+bool gpio_mode_range_helper(byte pin, byte pinMode, struct EventStruct *event, const char* Line);
 byte getPcfAddress(uint8_t pin);
 bool setGPIOMode(byte pin, byte mode);
 bool setPCFMode(byte pin, byte mode);
@@ -41,7 +41,7 @@ bool pcfgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t &result);
 
 String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
 {
-  if (gpio_monitor_helper(event->Par2, event->Source, Line))
+  if (gpio_monitor_helper(event->Par2, event, Line))
     return return_command_success();
   else 
     return return_command_failed();
@@ -51,12 +51,12 @@ String Command_GPIO_MonitorRange(struct EventStruct *event, const char* Line)
 {
   bool success=true;
   for (byte i=event->Par2;i<=event->Par3;i++) {
-    success &= gpio_monitor_helper(i, event->Source, Line);
+    success &= gpio_monitor_helper(i, event, Line);
   }
   return success?return_command_success():return_command_failed();
 }
 
-bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Line)
+bool gpio_monitor_helper(int port, struct EventStruct *event, const char* Line)
 {
   String logPrefix;
   pluginID_t pluginID = INVALID_PLUGIN_ID;
@@ -88,7 +88,7 @@ bool gpio_monitor_helper(int port, EventValueSource::Enum source, const char* Li
 
 String Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line)
 {
-  if (gpio_unmonitor_helper(event->Par2, event->Source, Line))
+  if (gpio_unmonitor_helper(event->Par2, event, Line))
     return return_command_success();
   else 
     return return_command_failed();
@@ -98,12 +98,12 @@ String Command_GPIO_UnMonitorRange(struct EventStruct *event, const char* Line)
 {
   bool success=true;
   for (byte i=event->Par2;i<=event->Par3;i++) {
-    success &= gpio_unmonitor_helper(i, event->Source, Line);
+    success &= gpio_unmonitor_helper(i, event, Line);
   }
   return success?return_command_success():return_command_failed();
 }
 
-bool gpio_unmonitor_helper(int port, EventValueSource::Enum source, const char* Line)
+bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char* Line)
 {
   String logPrefix;
   pluginID_t pluginID = INVALID_PLUGIN_ID;
@@ -676,7 +676,7 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
         createAndSetPortStatus_Mode_State(key,mode,state);
         log = logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
         addLog(LOG_LEVEL_INFO, log);
-        SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+        SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
     }
   }
@@ -766,7 +766,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, b
         createAndSetPortStatus_Mode_State(key,mode,state);
         log = logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
         addLog(LOG_LEVEL_INFO, log);
-        SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+        SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       } else {
         //set to 1 the INPUT pins and the PIN that have not been initialized yet.
         if (!existPortStatus(key) || (existPortStatus(key) && (globalMapPortStatus[key].mode == PIN_MODE_INPUT || globalMapPortStatus[key].mode == PIN_MODE_INPUT_PULLUP)))
@@ -846,7 +846,7 @@ bool setPCFMode(byte pin, byte mode)
  **********************************************/
 String Command_GPIO_Mode(struct EventStruct *event, const char* Line)
 {
-  if (gpio_mode_range_helper(event->Par1, event->Par2, event->Source, Line))
+  if (gpio_mode_range_helper(event->Par1, event->Par2, event, Line))
     return return_command_success();
   else 
     return return_command_failed();
@@ -856,12 +856,12 @@ String Command_GPIO_ModeRange(struct EventStruct *event, const char* Line)
 {
   bool success=true;
   for (byte i=event->Par1;i<=event->Par2;i++) {
-    success &= gpio_mode_range_helper(i, event->Par3, event->Source, Line);
+    success &= gpio_mode_range_helper(i, event->Par3, event, Line);
   }
   return success?return_command_success():return_command_failed();
 }
 
-bool gpio_mode_range_helper(byte pin, byte pinMode, EventValueSource::Enum source, const char* Line)
+bool gpio_mode_range_helper(byte pin, byte pinMode, struct EventStruct *event, const char* Line)
 {
   String logPrefix;// = new char;
   String logPostfix;// = new char;
@@ -921,7 +921,7 @@ bool gpio_mode_range_helper(byte pin, byte pinMode, EventValueSource::Enum sourc
         
         String log = logPrefix + String(F(" : port#")) + String(pin) + String(F(": MODE set to ")) + logPostfix + String(F(". Value = ")) + String(currentState);
         addLog(LOG_LEVEL_INFO, log);
-        SendStatusOnlyIfNeeded(source, SEARCH_PIN_STATE, key, log, 0);
+        SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         return return_command_success();
       } else {
         logErrorGpioOffline(logPrefix,pin);
