@@ -3,6 +3,7 @@
 #ifdef USES_P037
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Numerical.h"
 #include "../WebServer/Markup_Forms.h"
 #include "../WebServer/WebServer.h"
 #include "../WebServer/Markup.h"
@@ -657,18 +658,19 @@ String P037_data_struct::mapValue(String input, String attribute) {
           }
           case 1: // % => percentage of mapping
           {
-            float inputFloat;
-            float mappingFloat;
-            if (string2float(input, inputFloat) && string2float(_mapping[idx + 2], mappingFloat)) {
-              if (compareDoubleValues('>', mappingFloat, 0.0)) {
-                float resultFloat = (100.0f / mappingFloat) * inputFloat; // Simple calculation to percentage
+            double inputDouble;
+            double mappingDouble;
+            if (validDoubleFromString(input, inputDouble)
+             && validDoubleFromString(_mapping[idx + 2], mappingDouble)) {
+              if (compareDoubleValues('>', mappingDouble, 0.0)) {
+                double resultDouble = (100.0 / mappingDouble) * inputDouble; // Simple calculation to percentage
                 int8_t decimals = 0;
                 int8_t dotPos = input.indexOf('.');
                 if (dotPos > -1) {
                   String decPart = input.substring(dotPos + 1);
                   decimals = decPart.length(); // Take the number of decimals to the output value
                 }
-                result = toString(resultFloat, decimals); // Percentage with same decimals as input
+                result = toString(resultDouble, decimals); // Percentage with same decimals as input
                 logMapValue(input, result);
               }
             }
@@ -742,7 +744,7 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
     String filters = P037_FILTER_LIST;
     String valueData = value;
     String fltKey, fltIndex, filterData;
-    float from, to, floatValue;
+    double from, to, doubleValue;
     int8_t rangeSeparator;
     bool accept, matchTopicId = true;
     uint8_t fltFrom = 0, fltMax = _maxFilter;
@@ -789,15 +791,17 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
             }
             if (rangeSeparator > -1) {
               accept = false;;
-              if (string2float(filterData.substring(0, rangeSeparator),  from) 
-               && string2float(filterData.substring(rangeSeparator + 1), to)
-               && string2float(valueData,                                floatValue)) {
+              if (validDoubleFromString(filterData.substring(0, rangeSeparator),  from) 
+               && validDoubleFromString(filterData.substring(rangeSeparator + 1), to)
+               && validDoubleFromString(valueData,                                doubleValue)) {
                 if (compareDoubleValues('>' + '=', to, from)) { // Normal low - high range: between low and high
-                  if (compareDoubleValues('>' + '=', floatValue, from) && compareDoubleValues('<' + '=', floatValue, to)) {
+                  if (compareDoubleValues('>' + '=', doubleValue, from)
+                   && compareDoubleValues('<' + '=', doubleValue, to)) {
                     accept = true;
                   }
                 } else { // Alternative high - low range: outside low and high values
-                  if (compareDoubleValues('>' + '=', floatValue, from) || compareDoubleValues('<' + '=', floatValue, to)) {
+                  if (compareDoubleValues('>' + '=', doubleValue, from)
+                   || compareDoubleValues('<' + '=', doubleValue, to)) {
                     accept = true;
                   }
                 }
@@ -820,7 +824,7 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
           {
             String item;
             rangeSeparator = filterData.indexOf(';');
-            if (rangeSeparator > -1 && string2float(valueData, floatValue)) {
+            if (rangeSeparator > -1 && validDoubleFromString(valueData, doubleValue)) {
               accept = false;
               do {
                 item = filterData.substring(0, rangeSeparator);
@@ -829,7 +833,7 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
                 filterData.trim();
                 rangeSeparator = filterData.indexOf(';');
                 if (rangeSeparator == -1) rangeSeparator = filterData.length(); // Last value
-                if (string2float(item, from) && compareDoubleValues('=', floatValue, from)) {
+                if (validDoubleFromString(item, from) && compareDoubleValues('=', doubleValue, from)) {
                   accept = true;
                 }
               } while (filterData.length() > 0 && !accept);
