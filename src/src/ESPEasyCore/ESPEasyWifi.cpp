@@ -13,6 +13,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
+#include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Networking.h"
@@ -552,10 +553,12 @@ void setAPinternal(bool enable)
     #endif // ifdef ESP32
     WiFiEventData.timerAPoff.setNow();
   } else {
+    #ifdef FEATURE_DNS_SERVER
     if (dnsServerActive) {
       dnsServerActive = false;
       dnsServer.stop();
     }
+    #endif
   }
 }
 
@@ -624,7 +627,10 @@ void setWifiMode(WiFiMode_t wifimode) {
     setAPinternal(new_mode_AP_enabled);
   }
   #ifdef FEATURE_MDNS
+  #ifdef ESP8266
+  // notifyAPChange() is not present in the ESP32 MDNSResponder
   MDNS.notifyAPChange();
+  #endif
   #endif
 }
 
@@ -798,6 +804,9 @@ String formatScanResult(int i, const String& separator, int32_t& rssi) {
 
 #ifndef ESP32
 String SDKwifiStatusToString(uint8_t sdk_wifistatus) {
+  #ifdef LIMIT_BUILD_SIZE
+  return String(sdk_wifistatus);
+  #else
   switch (sdk_wifistatus) {
     case STATION_IDLE:           return F("STATION_IDLE");
     case STATION_CONNECTING:     return F("STATION_CONNECTING");
@@ -807,11 +816,15 @@ String SDKwifiStatusToString(uint8_t sdk_wifistatus) {
     case STATION_GOT_IP:         return F("STATION_GOT_IP");
   }
   return getUnknownString();
+  #endif
 }
 
 #endif // ifndef ESP32
 
 String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
+  #ifdef LIMIT_BUILD_SIZE
+  return String(arduino_corelib_wifistatus);
+  #else
   String log;
 
   switch (arduino_corelib_wifistatus) {
@@ -826,6 +839,7 @@ String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
     default:  log                += arduino_corelib_wifistatus; break;
   }
   return log;
+  #endif
 }
 
 String ESPeasyWifiStatusToString() {
@@ -847,7 +861,8 @@ String ESPeasyWifiStatusToString() {
 }
 
 void logConnectionStatus() {
-  #ifdef esp8266
+#ifndef BUILD_NO_DEBUG
+  #ifdef ESP8266
   const uint8_t arduino_corelib_wifistatus = WiFi.status();
   const uint8_t sdk_wifistatus             = wifi_station_get_connect_status();
 
@@ -861,7 +876,6 @@ void logConnectionStatus() {
     }
   }
   #endif
-#ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WIFI  : Arduino wifi status: ");

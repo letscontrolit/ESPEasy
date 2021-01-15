@@ -14,6 +14,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
+#include "../Globals/Services.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -233,7 +234,11 @@ void processGotIP() {
   IPAddress ip = NetworkLocalIP();
 
   if (!useStaticIP()) {
-    if ((ip[0] == 0) && (ip[1] == 0) && (ip[2] == 0) && (ip[3] == 0)) {
+    #ifdef ESP8266
+    if (!ip.isSet()) {
+    #else
+    if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
+    #endif
       return;
     }
   }
@@ -343,6 +348,7 @@ void processConnectAPmode() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
+  #ifdef FEATURE_DNS_SERVER
   // Start DNS, only used if the ESP has no valid WiFi config
   // It will reply with it's own address on all DNS requests
   // (captive portal concept)
@@ -350,6 +356,7 @@ void processConnectAPmode() {
     dnsServerActive = true;
     dnsServer.start(DNS_PORT, "*", apIP);
   }
+  #endif
 }
 
 // Switch of AP mode when timeout reached and no client connected anymore.

@@ -6,6 +6,7 @@
 #include "../DataTypes/NetworkMedium.h"
 
 
+
 struct GpioFactorySettingsStruct {
   GpioFactorySettingsStruct(DeviceModel model = DeviceModel_default);
 

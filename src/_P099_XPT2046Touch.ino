@@ -262,7 +262,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
           for (int objectNr = 0; objectNr < P099_CONFIG_OBJECTCOUNT; objectNr++) {
             html_TR_TD();
             addHtml(F("&nbsp;"));
-            addHtml(String(objectNr + 1));
+            addHtmlInt(objectNr + 1);
             html_TD();
             addTextBox(getPluginCustomArgName(objectNr),
                       String(P099_data->StoredSettings.TouchObjects[objectNr].objectname),

@@ -221,7 +221,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
           log += event->TaskIndex +1;
           log += F(" Distance: ");
           UserVar[event->BaseVarIndex] = value;
-          log += UserVar[event->BaseVarIndex];
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
           log += (measuringUnit == UNIT_CM) ? F(" cm ") : F(" inch ");
           if (value == NO_ECHO)
           {

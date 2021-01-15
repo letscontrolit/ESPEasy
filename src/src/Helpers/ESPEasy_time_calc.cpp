@@ -60,7 +60,7 @@ uint32_t makeTime(const struct tm& tm) {
 String timeLong2String(unsigned long lngTime)
 {
   unsigned long x = 0;
-  String time     = "";
+  String time;
 
   x = (lngTime >> 16) & 0xf;
 

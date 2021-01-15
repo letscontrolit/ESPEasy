@@ -115,7 +115,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_038_pixels)
         {
-          String log = "";
+          String log;
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             log = F("P038 : ");
             log += string;

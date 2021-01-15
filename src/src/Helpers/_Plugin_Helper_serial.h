@@ -41,8 +41,6 @@ void serialHelper_webformSave(byte& port, int8_t &rxPin, int8_t &txPin);
 
 void serialHelper_webformSave(struct EventStruct *event);
 
-void serialHelper_plugin_init(struct EventStruct *event);
-
 bool serialHelper_isValid_serialconfig(byte serialconfig);
 
 void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte currentSelection);
