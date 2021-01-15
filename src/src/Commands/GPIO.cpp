@@ -1009,7 +1009,7 @@ bool getGPIOPinStateValues(String& str) {
         addLog(LOG_LEVEL_DEBUG,logPrefix+String(F(" PLUGIN RANGE pin start="))+String(par1)+String(F("; pin end="))+String(par2)+String(F("; value="))+str);
       } else {
         str="0";
-        addLog(LOG_LEVEL_INFO,logPrefix+String(F("IS OFFLINE. PLUGIN RANGE pin start="))+String(par1)+String(F("; pin end="))+String(par2)+String(F("; value="))+str);
+        addLog(LOG_LEVEL_INFO,logPrefix+String(F(" IS OFFLINE. PLUGIN RANGE pin start="))+String(par1)+String(F("; pin end="))+String(par2)+String(F("; value="))+str);
       }
     } else {
       str="0";
