@@ -660,7 +660,7 @@ String P037_data_struct::mapValue(String input, String attribute) {
             float inputFloat;
             float mappingFloat;
             if (string2float(input, inputFloat) && string2float(_mapping[idx + 2], mappingFloat)) {
-              if (compareValues('>', mappingFloat, 0.0)) {
+              if (compareDoubleValues('>', mappingFloat, 0.0)) {
                 float resultFloat = (100.0f / mappingFloat) * inputFloat; // Simple calculation to percentage
                 int8_t decimals = 0;
                 int8_t dotPos = input.indexOf('.');
@@ -792,12 +792,12 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
               if (string2float(filterData.substring(0, rangeSeparator),  from) 
                && string2float(filterData.substring(rangeSeparator + 1), to)
                && string2float(valueData,                                floatValue)) {
-                if (compareValues('>' + '=', to, from)) { // Normal low - high range: between low and high
-                  if (compareValues('>' + '=', floatValue, from) && compareValues('<' + '=', floatValue, to)) {
+                if (compareDoubleValues('>' + '=', to, from)) { // Normal low - high range: between low and high
+                  if (compareDoubleValues('>' + '=', floatValue, from) && compareDoubleValues('<' + '=', floatValue, to)) {
                     accept = true;
                   }
                 } else { // Alternative high - low range: outside low and high values
-                  if (compareValues('>' + '=', floatValue, from) || compareValues('<' + '=', floatValue, to)) {
+                  if (compareDoubleValues('>' + '=', floatValue, from) || compareDoubleValues('<' + '=', floatValue, to)) {
                     accept = true;
                   }
                 }
@@ -829,7 +829,7 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
                 filterData.trim();
                 rangeSeparator = filterData.indexOf(';');
                 if (rangeSeparator == -1) rangeSeparator = filterData.length(); // Last value
-                if (string2float(item, from) && compareValues('=', floatValue, from)) {
+                if (string2float(item, from) && compareDoubleValues('=', floatValue, from)) {
                   accept = true;
                 }
               } while (filterData.length() > 0 && !accept);
