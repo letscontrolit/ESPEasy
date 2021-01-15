@@ -32,13 +32,7 @@ void addFormSeparator(int clspan)
 void addFormNote(const String& text, const String& id)
 {
   addRowLabel_tr_id("", id);
-  String html;
-
-  html.reserve(40 + text.length());
-  html += F("<div class='note'>Note: ");
-  html += text;
-  html += F("</div>");
-  addHtml(html);
+  addHtmlDiv(F("note"), String(F("Note: ")) + text);
 }
 
 // ********************************************************************************
@@ -324,11 +318,9 @@ int getFormItemInt(const String& key, int defaultValue) {
 }
 
 bool getCheckWebserverArg_int(const String& key, int& value) {
-  String valueStr = web_server.arg(key);
-
-  if (!isInt(valueStr)) { return false; }
-  value = valueStr.toInt();
-  return true;
+  const String valueStr = web_server.arg(key);
+  if (valueStr.length() == 0) return false;
+  return validIntFromString(valueStr, value);
 }
 
 bool update_whenset_FormItemInt(const String& key, int& value) {
@@ -365,10 +357,12 @@ int getFormItemInt(const String& id)
 
 float getFormItemFloat(const String& id)
 {
-  String val = web_server.arg(id);
-
-  if (!isFloat(val)) { return 0.0f; }
-  return val.toFloat();
+  const String val = web_server.arg(id);
+  float res = 0.0;
+  if (val.length() > 0) {
+    validFloatFromString(val, res);
+  }
+  return res;
 }
 
 bool isFormItem(const String& id)

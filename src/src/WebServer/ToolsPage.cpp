@@ -11,12 +11,10 @@
 #include "../../ESPEasy-Globals.h"
 
 
-
-
 #ifdef WEBSERVER_TOOLS
 
-#include "../Commands/InternalCommands.h"
-#include "../Helpers/WebServer_commandHelper.h"
+# include "../Commands/InternalCommands.h"
+# include "../Helpers/WebServer_commandHelper.h"
 
 // ********************************************************************************
 // Web Interface Tools page
@@ -28,6 +26,7 @@ void handle_tools() {
   sendHeadandTail_stdtemplate(_HEAD);
 
   String webrequest = web_server.arg(F("cmd"));
+
   handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND, webrequest);
   printToWeb     = false;
   printToWebJSON = false;
@@ -42,11 +41,11 @@ void handle_tools() {
   addHtml(F("<TR><TD colspan='2'>"));
   addHtml(F("<input "));
   addHtmlAttribute(F("style"), F("width: 98%"));
-  addHtmlAttribute(F("type"), F("text"));
-  addHtmlAttribute(F("name"), F("cmd"));
+  addHtmlAttribute(F("type"),  F("text"));
+  addHtmlAttribute(F("name"),  F("cmd"));
   addHtmlAttribute(F("value"), webrequest);
   addHtml('>');
-  
+
   html_TR_TD();
   addSubmitButton();
   addHelpButton(F("ESPEasy_Command_Reference"));
@@ -64,32 +63,32 @@ void handle_tools() {
 
   addFormSubHeader(F("System"));
 
-  addWideButtonPlusDescription(F("/?cmd=reboot"), F("Reboot"),           F("Reboots ESP"));
+  addWideButtonPlusDescription(F("/?cmd=reboot"), F("Reboot"), F("Reboots ESP"));
 
   # ifdef WEBSERVER_LOG
-  addWideButtonPlusDescription(F("log"),          F("Log"),              F("Open log output"));
+  addWideButtonPlusDescription(F("log"),          F("Log"),    F("Open log output"));
   # endif // ifdef WEBSERVER_LOG
 
-  #ifdef WEBSERVER_SYSINFO
-  addWideButtonPlusDescription(F("sysinfo"),      F("Info"),             F("Open system info page"));
-  #endif
+  # ifdef WEBSERVER_SYSINFO
+  addWideButtonPlusDescription(F("sysinfo"), F("Info"), F("Open system info page"));
+  # endif // ifdef WEBSERVER_SYSINFO
 
-  #ifdef WEBSERVER_ADVANCED
-  addWideButtonPlusDescription(F("advanced"),     F("Advanced"),         F("Open advanced settings"));
-  #endif
+  # ifdef WEBSERVER_ADVANCED
+  addWideButtonPlusDescription(F("advanced"),    F("Advanced"),     F("Open advanced settings"));
+  # endif // ifdef WEBSERVER_ADVANCED
 
-  addWideButtonPlusDescription(F("json"),         F("Show JSON"),        F("Open JSON output"));
+  addWideButtonPlusDescription(F("json"),        F("Show JSON"),    F("Open JSON output"));
 
   # ifdef WEBSERVER_TIMINGSTATS
-  addWideButtonPlusDescription(F("timingstats"),  F("Timing stats"),     F("Open timing statistics of system"));
+  addWideButtonPlusDescription(F("timingstats"), F("Timing stats"), F("Open timing statistics of system"));
   # endif // WEBSERVER_TIMINGSTATS
 
-  #ifdef WEBSERVER_PINSTATES
-  addWideButtonPlusDescription(F("pinstates"),    F("Pin state buffer"), F("Show Pin state buffer"));
-  #endif
+  # ifdef WEBSERVER_PINSTATES
+  addWideButtonPlusDescription(F("pinstates"), F("Pin state buffer"), F("Show Pin state buffer"));
+  # endif // ifdef WEBSERVER_PINSTATES
 
   # ifdef WEBSERVER_SYSVARS
-  addWideButtonPlusDescription(F("sysvars"),      F("System Variables"), F("Show all system variables and conversions"));
+  addWideButtonPlusDescription(F("sysvars"), F("System Variables"), F("Show all system variables and conversions"));
   # endif // ifdef WEBSERVER_SYSVARS
 
   addFormSubHeader(F("Wifi"));
@@ -97,15 +96,15 @@ void handle_tools() {
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
   addWideButtonPlusDescription(F("/?cmd=wifidisconnect"), F("Disconnect"), F("Disconnect from wifi network"));
 
-  #ifdef WEBSERVER_WIFI_SCANNER
+  # ifdef WEBSERVER_WIFI_SCANNER
   addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
-  #endif // ifdef WEBSERVER_WIFI_SCANNER
+  # endif // ifdef WEBSERVER_WIFI_SCANNER
 
-  #ifdef WEBSERVER_I2C_SCANNER
+  # ifdef WEBSERVER_I2C_SCANNER
   addFormSubHeader(F("Interfaces"));
 
   addWideButtonPlusDescription(F("i2cscanner"), F("I2C Scan"), F("Scan for I2C devices"));
-  #endif // ifdef WEBSERVER_I2C_SCANNER
+  # endif // ifdef WEBSERVER_I2C_SCANNER
 
   addFormSubHeader(F("Settings"));
 
@@ -113,8 +112,8 @@ void handle_tools() {
   addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!)"));
   addWideButtonPlusDescription(F("download"), F("Save"), F("Saves a settings file"));
 
-#ifdef WEBSERVER_NEW_UI
-  # if defined(ESP8266)
+# ifdef WEBSERVER_NEW_UI
+  #  if defined(ESP8266)
 
   if ((SpiffsFreeSpace() / 1024) > 50) {
     html_TR_TD();
@@ -123,19 +122,19 @@ void handle_tools() {
     addHtml(F("<a class=\"button link wide\" onclick=\"downloadUI()\">Download new UI</a>"));
     addHtml(F("</TD><TD>Download new UI(alpha)</TD></TR>"));
   }
-  # endif // if defined(ESP8266)
-#endif     // WEBSERVER_NEW_UI
+  #  endif // if defined(ESP8266)
+# endif    // WEBSERVER_NEW_UI
 
-#if defined(ESP8266) || defined(ESP32)
+# if defined(ESP8266) || defined(ESP32)
   {
-    # ifndef NO_HTTP_UPDATER
+    #  ifndef NO_HTTP_UPDATER
     {
       uint32_t maxSketchSize;
       bool     use2step;
       bool     otaEnabled = OTA_possible(maxSketchSize, use2step);
       addFormSubHeader(F("Firmware"));
       html_TR_TD_height(30);
-      addWideButton(F("update"), F("Update Firmware"), "", otaEnabled);
+      addWideButton(F("update"), F("Update Firmware"), F(""), otaEnabled);
       addHelpButton(F("EasyOTA"));
       html_TD();
       addHtml(F("Load a new firmware"));
@@ -148,25 +147,25 @@ void handle_tools() {
         addHtml(F(" <b>WARNING</b> OTA not possible."));
       }
       addHtml(F(" Max sketch size: "));
-      addHtml(String(maxSketchSize / 1024));
+      addHtmlInt(maxSketchSize / 1024);
       addHtml(F(" kB ("));
-      addHtml(String(maxSketchSize));
+      addHtmlInt(maxSketchSize);
       addHtml(F(" bytes)"));
     }
-    # endif // ifndef NO_HTTP_UPDATER
+    #  endif // ifndef NO_HTTP_UPDATER
   }
-#endif      // if defined(ESP8266)
+# endif     // if defined(ESP8266)
 
   addFormSubHeader(F("Filesystem"));
 
   addWideButtonPlusDescription(F("filelist"),         F("File browser"),     F("Show files on internal flash file system"));
   addWideButtonPlusDescription(F("/factoryreset"),    F("Factory Reset"),    F("Select pre-defined configuration or full erase of settings"));
-  #ifdef USE_SETTINGS_ARCHIVE
+  # ifdef USE_SETTINGS_ARCHIVE
   addWideButtonPlusDescription(F("/settingsarchive"), F("Settings Archive"), F("Download settings from some archive"));
-  #endif // ifdef USE_SETTINGS_ARCHIVE
-#ifdef FEATURE_SD
+  # endif // ifdef USE_SETTINGS_ARCHIVE
+# ifdef FEATURE_SD
   addWideButtonPlusDescription(F("SDfilelist"),       F("SD Card"),          F("Show files on SD-Card"));
-#endif   // ifdef FEATURE_SD
+# endif   // ifdef FEATURE_SD
 
   html_end_table();
   html_end_form();

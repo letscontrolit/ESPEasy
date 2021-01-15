@@ -130,7 +130,7 @@ extern unsigned long timingstats_last_reset;
 
 #else // ifdef USES_TIMING_STATS
 
-# define START_TIMER
+# define START_TIMER ;
 # define STOP_TIMER_TASK(T, F) ;
 # define STOP_TIMER_CONTROLLER(T, F) ;
 # define STOP_TIMER(L) ;

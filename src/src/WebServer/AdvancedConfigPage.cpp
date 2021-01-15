@@ -30,9 +30,7 @@ void handle_advanced() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  String edit       = web_server.arg(F("edit"));
-
-  if (edit.length() != 0)
+  if (web_server.arg(F("edit")).length() != 0)
   {
 //    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
     Settings.IP_Octet     = web_server.arg(F("ip")).toInt();
@@ -234,7 +232,8 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   }
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
   {
-    String weeklabel = isStart ? F("Start (week, dow, month)")  : F("End (week, dow, month)");
+    String weeklabel = isStart ? F("Start")  : F("End");
+    weeklabel += F(" (week, dow, month)");
     String weekid  = isStart ? F("dststartweek")  : F("dstendweek");
     String week[5]       = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
     int    weekValues[5] = { 0, 1, 2, 3, 4 };
