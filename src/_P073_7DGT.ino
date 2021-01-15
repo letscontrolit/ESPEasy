@@ -370,11 +370,12 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
 
       addFormCheckBox(F("Text show periods as dot"), F("plugin_073_periods"), PCONFIG(3) == 1);
 
+      addFormSubHeader(F("Options for MAX7219 - 8 digit"));
+
       addFormCheckBox(F("Hide &deg; for Temperatures"), F("plugin_073_hide_degree"), PCONFIG(4) == 1);
       addFormNote(F("Commands 7dt,&lt;temp&gt; and 7ddt,&lt;temp1&gt;,&lt;temp2&gt;"));
 
       addFormCheckBox(F("Right-align Temperature (7dt)"), F("plugin_073_temp_rightalign"), PCONFIG(5) == 1);
-      addFormNote(F("Only applicable for MAX7219 - 8 digit"));
 
       success = true;
       break;
