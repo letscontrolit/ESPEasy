@@ -11,11 +11,12 @@
 // this code is based on 20170331 date version of the above library
 // this code is UNTESTED, because my TCS34725 sensor is still not shipped :(
 //
+// 2021-01-16 tonhuisman: Move stuff to PluginStructs, add 3x3 matrix calibration
 // 2021-01-09 tonhuisman: Add R/G/B calibration factors, improved/corrected normalization
 // 2021-01-03 tonhuisman: Merged most of the changes in the library, for adding the getRGB() and calculateColorTemperature_dn40(0 functions)
 //
 
-#include "Adafruit_TCS34725.h"
+#include "src/PluginStructs/P050_data_struct.h"
 
 
 #define PLUGIN_050
@@ -64,7 +65,20 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(2) = 1; // RGB values: Calibrated RGB
+      PCONFIG(3) = 1; // Value #4: Color Temperature (DN40)
 
+      P050_data_struct *P050_data = new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1));
+
+      if (nullptr != P050_data) {
+        P050_data->resetCalibration(); // Explicit reset
+        P050_data->saveSettings(event->TaskIndex);
+        delete P050_data;
+      }
+      break;
+    }
     case PLUGIN_WEBFORM_LOAD:
     {
       byte   choiceMode = PCONFIG(0);
@@ -107,10 +121,10 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         #define P050_RGB_OPTIONS 2
         String optionsRGB[P050_RGB_OPTIONS];
         optionsRGB[0] = F("Raw RGB (uncalibrated)");
-        optionsRGB[1] = F("Normalized RGB (0.0000..255.0000)");
+        optionsRGB[1] = F("Calibrated RGB (3x3 matrix, below)");
         int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1};
         addFormSelector(F("Output RGB Values"), F("p050_outputrgb"), P050_RGB_OPTIONS, optionsRGB, optionValuesRGB, PCONFIG(2));
-        addFormNote(F("For 'Normalized RGB', the Red/Green/Blue values Decimals should best be increased."));
+        addFormNote(F("For 'Calibrated RGB', the Red/Green/Blue values Decimals should best be increased."));
       }
 
       {
@@ -123,15 +137,40 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         int optionValuesOutput[P050_VALUE4_OPTIONS] = { 0, 1, 2, 3};
         addFormSelector(F("Output at Values #4"), F("p050_output4"), P050_VALUE4_OPTIONS, optionsOutput, optionValuesOutput, PCONFIG(3));
         addFormNote(F("Optionally adjust Values #4 name accordingly."));
+
+        addFormCheckBox(F("Generate all as events"), F("p050_generate_all_events"), PCONFIG(4) == 1);
+        addFormNote(F("Eventnames: &lt;taskname&gt;+ #CCT, #CCT_DN40, #Lux, #Clear"));
       }
 
-      addFormSubHeader(F("Calibration settings"));
+      {
+        P050_data_struct *P050_data = new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1));
 
-      addFormFloatNumberBox(F("Calibration factor R"), F("p050_calibration_red"),   PCONFIG_FLOAT(0), 0.0f, 100000.0f); // 
-      addFormFloatNumberBox(F("Calibration factor G"), F("p050_calibration_green"), PCONFIG_FLOAT(1), 0.0f, 100000.0f); // 
-      addFormFloatNumberBox(F("Calibration factor B"), F("p050_calibration_blue"),  PCONFIG_FLOAT(2), 0.0f, 100000.0f); // 
-      addFormNote(F("Check plugin documentation (i) on how to calibrate. Use 0.0 to ignore calibration."));
+        if (nullptr != P050_data) {
+          addFormSubHeader(F("Calibration matrix"));
 
+          P050_data->loadSettings(event->TaskIndex);
+
+          // Display current settings
+          const String RGB = F("RGB");
+          for (int i = 0; i < 3; i++) {
+            String label = F("Calibration - ");
+            label += RGB.charAt(i);
+            addRowLabel(label);
+            String id = F("p050_cal_");
+            for (int j = 0; j < 3; j++) {
+              addHtml(String(static_cast<char>('a' + i)) + String(F("<sub>")) + String(j + 1) + String(F("</sub>")) + ':');
+              addFloatNumberBox(id + static_cast<char>('a' + i) + '_' + String(j), P050_data->CalibrationSettings.matrix[i][j], -255.999f, 255.999f);
+            }
+          }
+          addFormNote(F("Check plugin documentation (i) on how to calibrate."));
+
+          addFormCheckBox(F("Reset calibration matrix"), F("p050_reset_calibration"), false);
+          addFormNote(F("Select then Submit to confirm. Reset calibration matrix can't be un-done!"));
+
+          // Need to delete the allocated object here
+          delete P050_data;
+        }
+      }
       success = true;
       break;
     }
@@ -142,79 +181,87 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       PCONFIG(1) = getFormItemInt(F("p050_gain"));
       PCONFIG(2) = getFormItemInt(F("p050_outputrgb"));
       PCONFIG(3) = getFormItemInt(F("p050_output4"));
-      PCONFIG_FLOAT(0) = getFormItemFloat(F("p050_calibration_red"));
-      PCONFIG_FLOAT(1) = getFormItemFloat(F("p050_calibration_green"));
-      PCONFIG_FLOAT(2) = getFormItemFloat(F("p050_calibration_blue"));
+      PCONFIG(4) = isFormItemChecked(F("p050_generate_all_events")) ? 1 : 0;
+      bool resetCalibration = isFormItemChecked(F("p050_reset_calibration"));
+      {
+        P050_data_struct *P050_data = new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1));
 
+        if (nullptr != P050_data) {
+
+          P050_data->loadSettings(event->TaskIndex);
+
+          if (resetCalibration) {
+            // Clear calibration settings
+            P050_data->resetCalibration();
+          } else {
+            // Save new settings
+            for (int i = 0; i < 3; i++) {
+              String id = F("p050_cal_");
+              for (int j = 0; j < 3; j++) {
+                P050_data->CalibrationSettings.matrix[i][j] = getFormItemFloat(id + static_cast<char>('a' + i) + '_' + String(j));
+              }
+            }
+          }
+          P050_data->saveSettings(event->TaskIndex);
+
+          // Need to delete the allocated object here
+          delete P050_data;
+        }
+      }
       success = true;
+      break;
+    }
+
+    case PLUGIN_INIT:
+    {
+      /* Initialise with specific int time and gain values */
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1)));
+      P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P050_data) {
+        success = true;
+      }
+      break;
+    }
+
+    case PLUGIN_EXIT:
+    {
+      P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P050_data) {
+        delete P050_data; // call destructor
+        success = true;
+      }
       break;
     }
 
     case PLUGIN_READ:
     {
-      tcs34725IntegrationTime_t integrationTime;
 
-      if (PCONFIG(0) == TCS34725_INTEGRATIONTIME_2_4MS) {
-        integrationTime = TCS34725_INTEGRATIONTIME_2_4MS;
+      P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P050_data) {
+        return success;
       }
 
-      if (PCONFIG(0) == TCS34725_INTEGRATIONTIME_24MS) {
-        integrationTime = TCS34725_INTEGRATIONTIME_24MS;
-      }
-
-      if (PCONFIG(0) == TCS34725_INTEGRATIONTIME_50MS) {
-        integrationTime = TCS34725_INTEGRATIONTIME_50MS;
-      }
-
-      if (PCONFIG(0) == TCS34725_INTEGRATIONTIME_101MS) {
-        integrationTime = TCS34725_INTEGRATIONTIME_101MS;
-      }
-
-      if (PCONFIG(0) == TCS34725_INTEGRATIONTIME_154MS) {
-        integrationTime = TCS34725_INTEGRATIONTIME_154MS;
-      }
-
-      if (PCONFIG(0) == TCS34725_INTEGRATIONTIME_700MS) {
-        integrationTime = TCS34725_INTEGRATIONTIME_700MS;
-      }
-
-      tcs34725Gain_t gain;
-
-      if (PCONFIG(1) == TCS34725_GAIN_1X) {
-        gain = TCS34725_GAIN_1X;
-      }
-
-      if (PCONFIG(1) == TCS34725_GAIN_4X) {
-        gain = TCS34725_GAIN_4X;
-      }
-
-      if (PCONFIG(1) == TCS34725_GAIN_16X) {
-        gain = TCS34725_GAIN_16X;
-      }
-
-      if (PCONFIG(1) == TCS34725_GAIN_60X) {
-        gain = TCS34725_GAIN_60X;
-      }
-
-      /* Initialise with specific int time and gain values */
-      Adafruit_TCS34725 tcs = Adafruit_TCS34725(integrationTime, gain);
-
-      if (tcs.begin()) {
+      if (P050_data->tcs.begin()) {
         addLog(LOG_LEVEL_DEBUG, F("Found TCS34725 sensor"));
 
         uint16_t r, g, b, c;
         float value4 = 0.0f;
 
-        tcs.getRawData(&r, &g, &b, &c, true);
+        P050_data->loadSettings(event->TaskIndex);
+
+        P050_data->tcs.getRawData(&r, &g, &b, &c, true);
         switch (PCONFIG(3)) {
           case 0:
-            value4 = tcs.calculateColorTemperature(r, g, b); // Deprecated because of deemed inaccurate calculation, kept for backward compatibility
+            value4 = P050_data->tcs.calculateColorTemperature(r, g, b); // Deprecated because of deemed inaccurate calculation, kept for backward compatibility
             break;
           case 1:
-            value4 = tcs.calculateColorTemperature_dn40(r, g, b, c);
+            value4 = P050_data->tcs.calculateColorTemperature_dn40(r, g, b, c);
             break;
           case 2:
-            value4 = tcs.calculateLux(r, g, b);
+            value4 = P050_data->tcs.calculateLux(r, g, b);
             break;
           case 3:
             value4 = c;
@@ -228,27 +275,19 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 2] = 0.0f;
         }
 
-        // Calibration factors
-        float calRed   = 1.0f;
-        float calGreen = 1.0f;
-        float calBlue  = 1.0f;
-        if (PCONFIG_FLOAT(0) > 0.0f) calRed   = PCONFIG_FLOAT(0); // TODO: Needs different compare?
-        if (PCONFIG_FLOAT(1) > 0.0f) calGreen = PCONFIG_FLOAT(1);
-        if (PCONFIG_FLOAT(2) > 0.0f) calBlue  = PCONFIG_FLOAT(2);
-
         switch (PCONFIG(2)) {
           case 0:
-            UserVar[event->BaseVarIndex]     = r;
+            UserVar[event->BaseVarIndex + 0] = r;
             UserVar[event->BaseVarIndex + 1] = g;
             UserVar[event->BaseVarIndex + 2] = b;
             break;
           case 1:
-            if (t != 0) { // R/G/B normalized to 0..255 (but avoid divide by 0)
-              UserVar[event->BaseVarIndex]     = (float)r / t * 255.0f * calRed;
-              UserVar[event->BaseVarIndex + 1] = (float)g / t * 255.0f * calGreen;
-              UserVar[event->BaseVarIndex + 2] = (float)b / t * 255.0f * calBlue;
-            }
-            break;
+            if (t != 0) { // R/G/B normalized
+              P050_data->applyCalibration(r, g, b,
+                                          &UserVar[event->BaseVarIndex + 0],
+                                          &UserVar[event->BaseVarIndex + 1],
+                                          &UserVar[event->BaseVarIndex + 2]);
+            }            break;
         }
         UserVar[event->BaseVarIndex + 3] = value4;
 
@@ -273,6 +312,39 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         log += F(" B: ");
         log += formatUserVarNoCheck(event->TaskIndex, 2);
         addLog(LOG_LEVEL_INFO, log);
+
+        if (PCONFIG(4) == 1) {
+          String RuleEvent;
+          RuleEvent.reserve(48);
+          for (int i = 0; i < 4; i++) {
+            RuleEvent  = getTaskDeviceName(event->TaskIndex);
+            RuleEvent += '#';
+            switch (i) {
+            case 0:
+              RuleEvent += F("CCT=");
+              RuleEvent += P050_data->tcs.calculateColorTemperature(r, g, b);
+              break;
+            case 1:
+              RuleEvent += F("CCT_DN40=");
+              RuleEvent += P050_data->tcs.calculateColorTemperature_dn40(r, g, b, c);
+              break;
+            case 2:
+              RuleEvent += F("Lux=");
+              RuleEvent += P050_data->tcs.calculateLux(r, g, b);
+              break;
+            case 3:
+              RuleEvent += F("Clear=");
+              RuleEvent += c;
+              break;
+            default:
+              RuleEvent = F("");
+              break;
+            }
+            if (RuleEvent.length() != 0) {
+              eventQueue.add(RuleEvent);
+            }
+          }
+        }
 
         success = true;
       } else {
