@@ -1,11 +1,14 @@
+// Needed also here for PlatformIO's library finder as the .h file 
+// is in a directory which is excluded in the src_filter
+
 #include "../PluginStructs/P050_data_struct.h"
 
 
-// Needed also here for PlatformIO's library finder as the .h file 
-// is in a directory which is excluded in the src_filter
-# include <Adafruit_TCS34725.h>
-
 #ifdef USES_P050
+
+# include "../Helpers/ESPEasy_Storage.h"
+
+# include <Adafruit_TCS34725.h>
 
 P050_data_struct::P050_data_struct(uint16_t integrationSetting, uint16_t gainSetting) {
 
