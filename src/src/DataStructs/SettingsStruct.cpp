@@ -119,6 +119,19 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
+  if (validTaskIndex(taskIndex))
+    return bitRead(TaskDeviceSendDataFlags[taskIndex], 0);
+  return false;
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value) {
+  if (validTaskIndex(taskIndex))
+    bitWrite(TaskDeviceSendDataFlags[taskIndex], 0, value);
+}
+
+template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (UDPPort > 65535) { UDPPort = 0; }
 
@@ -324,7 +337,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
     TaskDevicePluginConfigLong[task][cv] = 0;
   }
-  OLD_TaskDeviceSendData[task]  = 0;
+  TaskDeviceSendDataFlags[task]  = 0;
   OLD_TaskDeviceGlobalSync[task]= 0;
   TaskDeviceDataFeed[task]      = 0;
   TaskDeviceTimer[task]         = 0;

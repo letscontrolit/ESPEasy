@@ -178,7 +178,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
       {
         if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
-            String log = "";
+            String log;
             String command = parseString(string, 1);
             if (command == F("encwrite"))
             {

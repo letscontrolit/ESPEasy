@@ -165,18 +165,18 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, log);
           log  = P028_data->getDeviceName();
           log += F(" : Temperature: ");
-          log += UserVar[event->BaseVarIndex];
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
           addLog(LOG_LEVEL_INFO, log);
 
           if (P028_data->hasHumidity()) {
             log  = P028_data->getDeviceName();
             log += F(" : Humidity: ");
-            log += UserVar[event->BaseVarIndex + 1];
+            log += formatUserVarNoCheck(event->TaskIndex, 1);
             addLog(LOG_LEVEL_INFO, log);
           }
           log  = P028_data->getDeviceName();
           log += F(" : Barometric Pressure: ");
-          log += UserVar[event->BaseVarIndex + 2];
+          log += formatUserVarNoCheck(event->TaskIndex, 2);
           addLog(LOG_LEVEL_INFO, log);
         }
         success = true;

@@ -223,7 +223,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
 
           if (errorcode == 0) {
             addRowLabel(F("Mode of data logging"));
-            addHtml(String(value));
+            addHtmlInt(value);
           }
           value = P085_data->modbus.readHoldingRegister(0x502, errorcode);
 
