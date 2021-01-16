@@ -1,4 +1,94 @@
 -------------------------------------------------
+Changes in release mega-20210114 (since mega-20201227)
+-------------------------------------------------
+
+Release date: do 14 jan 2021 23:00:32 CET
+
+Gijs Noorlander (3):
+      [Floats] Use proper compare functions to compare float values
+      [PVS-Studio] Add braces to some defines to make them more predictable
+      [PVS-Studio] Simple hints from PVS-Studio applied
+
+TD-er (59):
+      Fix merge issue as Misc.ino was moved
+      Small optimization changing char arrays to char
+      Fix merge issues
+      Fix missing include for CacheControllerPages
+      [Rules] Add operators to convert integer values
+      [Docs] Document the effects of external hosted CSS/JS files
+      Add ABS function
+      [Rules] Add trigonometric functions
+      [Rules] Use bitwise operators only on unsigned ints
+      Fix build warning
+      [Rules] Change order parameters bitwrite
+      [Rules] Increase accuracy in Calculate and variables from float to double
+      Include P090 CCS811 in the builds again
+      Increase accuracy in rules computation by using more decimals
+      [Rules] Improve calculation resolution and compares.
+      [Build] Reduce build size of OTA builds including new rules operators
+      [Build] Move PMSx003 to 'normal' builds
+      [Cleanup] Wrap <div> markup in a separate function
+      [Cleanup] Reduce build size by replacing addHtml(String(....)) to addHtmlInt
+      Restore accidentally removed "Note:" prefix for notes
+      [Rules] Parse hex numbers when prefixed with 0x (uint only)
+      [Cleanup] Remove String construction with = "";
+      [Rules] Allow HEX values in formula, rules, etc.
+      [Rules] Change '!' + '=' into '<' + '>' to avoid conflict with '^'
+      [Rules] Disable math functions for now to make them more intuitive
+      [Serial] Only parse commands from serial when no task uses Serial0
+      [PIO] Fix building 'beta' builds toolchain update
+      Fix build  issue after merging other PRs
+      [Rules] Add support for binary numbers with 0b prefix
+      [Rules] Remove limit of nr. of variables
+      [Rules] Improve readability of Rules Calculate function
+      [Rules] Wrap rules calculation functions in a struct + cleanup
+      [Rules] Fix out of bound crash with calculate ending with '=' + cleanup
+      [Rules] Add preliminary support for math functions like sqrt, sin, etc.
+      [Cleanup] Change typo trimTrailingZeros
+      [Rules] Add missing functions (sin/cos etc)
+      [Rules] Fix typo on limited size builds
+      [Rules] Fix order of parsing "arc" functions
+      [Rules] use parseString on string operation commands
+      [Rules] Add some basic math functions + documentation
+      [MQTT] Fix status update over MQTT for internal commands
+      [MQTT] Also strip %valname% in topic if task index is invalid
+      [MQTT] Small optimizations in parsing publish topics
+      [Rules] Add option to each task to combine all values in a single event
+      [MQTT] Fix remove of '//' in topic
+      [Rules] Add hint about changed event when combining all event values
+      [Cleanup] Uncrustify changed files of this PR
+      [Cleanup] Fix issues compile caused by uncrustify
+      [Minimal OTA] Make minimal OTA build fit again
+      Fix build issue on ESP32
+      Accidentally removed C013 from the minimal OTA build
+      [JSON] Fix a bug in generated JSON, not wrapping '00' as a string
+      [Build] Reduce build size for minimal OTA builds
+      [Logs] Format task values in logs with set nr of decimals
+      [Cleanup] Fix MDNS builds on ESP32 and reduce minimal OTA build size
+      [ESP32] Fix build issue due to missing include
+      [Build] ESP32 factory bin files are 64k larger so don't reject those
+      [Build] Rename test_ESP32_4M316k_lolin_d32_pro to match build script checks
+      [ESP32] Increase DEVICES_MAX for ESP32 builds (> 85 plugins in build)
+
+Ton Huisman (8):
+      [P023] Fix merge conflict
+      [Commands] Improvements, refactoring and added feature of [<TaskNumber>]. prefix
+      [Docs] Updated for [<TaskNumber>]. prefix
+      [Checks] Don't allow numeric (float) device name
+      [TaskName] Define is no longer available
+      [P090] Re-enable plugin for TESTING  build
+      [P008] Wiegand add options for Tag removal
+      [P073] Display a zero-prefix for temperatures between 0.9 and -0.9
+
+tonhuisman (5):
+      [Commands] Add global `[<TaskName>].` prefix for all PLUGIN_WRITE commands
+      [Commands] Remove local taskname-prefix impl., exclude P022
+      [Commands] Remove requirement for [ and ] on <TaskName>. prefix
+      [Commands] Improve documentation on [<TaskName>]. prefixing
+      [Commands] Add extra safeguard check for DeviceIndex
+
+
+-------------------------------------------------
 Changes in release mega-20201227 (since mega-20201130)
 -------------------------------------------------
 
