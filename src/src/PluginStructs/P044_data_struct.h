@@ -7,9 +7,7 @@
 
 #include <ESPeasySerial.h>
 
-#ifndef PLUGIN_044_DEBUG
-  # define PLUGIN_044_DEBUG                 false // extra logging in serial out
-#endif // ifndef PLUGIN_044_DEBUG
+// #define PLUGIN_044_DEBUG  // extra logging in serial out
 
 #define P044_STATUS_LED                    12
 #define P044_CHECKSUM_LENGTH               4
@@ -97,6 +95,7 @@ struct P044_Task : public PluginTaskData_base {
   boolean        CRCcheck          = false;
   ESPeasySerial *P1EasySerial      = nullptr;
   unsigned long  blinkLEDStartTime = 0;
+  size_t         maxMessageSize    = P044_DATAGRAM_MAX_SIZE / 4;
 };
 
 #endif
