@@ -75,9 +75,8 @@ bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& task
   String TmpStr1;
   unsigned int varNr;
 
-  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) return return_command_failed(); 
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) { return false; }
 
-  if (!validTaskVars(event, taskIndex, varNr)) { return false; }
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 
   if (GetArgv(Line, TmpStr1, 4)) {
@@ -99,18 +98,8 @@ String Command_Task_Clear(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
-  String taskName;
 
-  if (!validTaskVars(event, taskIndex, varNr))
-  { 
-    taskIndex_t tmpTaskIndex = taskIndex;
-    if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
-      tmpTaskIndex = findTaskIndexByName(taskName);
-      if (tmpTaskIndex != INVALID_TASK_INDEX)
-        event->Par1 = tmpTaskIndex + 1;
-    }
-    if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
-  }
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) { return return_command_failed(); }
 
   taskClear(taskIndex, true);
   return return_command_success();
@@ -128,19 +117,8 @@ String Command_Task_EnableDisable(struct EventStruct *event, bool enable, const 
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
-  String taskName;
 
-  if (!validTaskVars(event, taskIndex, varNr))
-  { 
-    taskIndex_t tmpTaskIndex = taskIndex;
-    if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
-      tmpTaskIndex = findTaskIndexByName(taskName);
-      if (tmpTaskIndex != INVALID_TASK_INDEX)
-        event->Par1 = tmpTaskIndex + 1;
-    }
-  }
-
-  if (validTaskVars(event, taskIndex, varNr)) {
+  if (validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
     // This is a command so no guarantee the taskIndex is correct in the event
     event->setTaskIndex(taskIndex);
 
@@ -201,18 +179,8 @@ String Command_Task_Run(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
-  String taskName;
 
-  if (!validTaskVars(event, taskIndex, varNr))
-  { 
-    taskIndex_t tmpTaskIndex = taskIndex;
-    if (event->Par1 <= 0 && GetArgv(Line, taskName, 2)) {
-      tmpTaskIndex = findTaskIndexByName(taskName);
-      if (tmpTaskIndex != INVALID_TASK_INDEX)
-        event->Par1 = tmpTaskIndex + 1;
-    }
-    if (!validTaskVars(event, taskIndex, varNr)) return return_command_failed();
-  }
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) { return return_command_failed(); }
 
   SensorSendTask(taskIndex);
   return return_command_success();
