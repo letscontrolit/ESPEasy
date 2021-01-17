@@ -15,7 +15,7 @@
 #define P044_CHECKSUM_LENGTH               4
 #define P044_DATAGRAM_START_CHAR           '/'
 #define P044_DATAGRAM_END_CHAR             '!'
-#define P044_DATAGRAM_MAX_SIZE             1024
+#define P044_DATAGRAM_MAX_SIZE             2048
 
 
 struct P044_Task : public PluginTaskData_base {
