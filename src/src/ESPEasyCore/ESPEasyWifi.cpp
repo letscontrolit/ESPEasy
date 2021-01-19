@@ -200,6 +200,12 @@ void WiFiConnectRelaxed() {
     return;
   }
 
+
+  // FIXME TD-er: Should not try to prepare when a scan is still busy.
+  // This is a logic error which may lead to strange issues if some kind of timeout happens and/or RF calibration was not OK.
+  // Split this function into separate parts, with the last part being the actual connect attempt either after a scan is complete or quick connect is possible.
+
+
   // Start connect attempt now, so no longer needed to attempt new connection.
   WiFiEventData.wifiConnectAttemptNeeded = false;
 
@@ -213,7 +219,7 @@ void WiFiConnectRelaxed() {
   if (WiFiEventData.wifiSetupConnect) {
     // wifiSetupConnect is when run from the setup page.
     RTC.lastWiFiSettingsIndex     = 0; // Force to load the first settings.
-    RTC.lastWiFiChannel = 0; // Force slow connect
+    RTC.clearLastWiFi(); // Force slow connect
     WiFiEventData.wifi_connect_attempt = 0;
     WiFiEventData.wifiSetupConnect     = false;
   }
@@ -222,14 +228,14 @@ void WiFiConnectRelaxed() {
   if ((WiFiEventData.wifi_connect_attempt != 0) && ((WiFiEventData.wifi_connect_attempt % 2) == 0)) {
     if (selectNextWiFiSettings()) {
       // Switch WiFi settings, so the last known BSSID cannot be used for a quick reconnect.
-      RTC.lastBSSID[0] = 0;
+      RTC.clearLastWiFi();
     }
   }
   const char *ssid       = getLastWiFiSettingsSSID();
   const char *passphrase = getLastWiFiSettingsPassphrase();
 
   // First try quick reconnect using last known BSSID and channel.
-  bool useQuickConnect = RTC.lastBSSID[0] != 0 && RTC.lastWiFiChannel != 0 && WiFiEventData.wifi_connect_attempt < 3;
+  bool useQuickConnect = RTC.lastWiFi_set() && WiFiEventData.wifi_connect_attempt < 3;
   WiFiEventData.markWiFiBegin();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -278,7 +284,7 @@ bool prepareWiFi() {
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   #endif // if defined(ESP32)
 
-  const bool canSkipScan = RTC.lastWiFiChannel != 0 && WiFiEventData.wifi_connect_attempt <= 1;
+  const bool canSkipScan = RTC.lastWiFi_set() && WiFiEventData.wifi_connect_attempt <= 1;
 
   if (!canSkipScan) {
     WifiScan(false, true);

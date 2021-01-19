@@ -343,7 +343,7 @@ void setup()
   }
   if (!selectValidWiFiSettings()) {
     WiFiEventData.wifiSetup = true;
-    RTC.lastWiFiChannel = 0; // Must scan all channels
+    RTC.clearLastWiFi(); // Must scan all channels
     // Wait until scan has finished to make sure as many as possible are found
     // We're still in the setup phase, so nothing else is taking resources of the ESP.
     WifiScan(false, false); 

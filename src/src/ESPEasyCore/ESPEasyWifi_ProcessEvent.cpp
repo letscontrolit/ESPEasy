@@ -189,7 +189,7 @@ void processConnect() {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const LongTermTimer::Duration connect_duration = WiFiEventData.last_wifi_connect_attempt_moment.timeDiff(WiFiEventData.lastConnectMoment);
-    String     log              = F("WIFI : Connected! AP: ");
+    String log = F("WIFI : Connected! AP: ");
     log += WiFi.SSID();
     log += " (";
     log += WiFi.BSSIDstr();
@@ -440,6 +440,7 @@ void processScanDone() {
         log += formatScanResult(bestScanID, " ");
         addLog(LOG_LEVEL_INFO, log);
       }
+      RTC.lastWiFiChannel = WiFi.channel(bestScanID);
       RTC.lastWiFiSettingsIndex = bestWiFiSettings;
       uint8_t *scanbssid = WiFi.BSSID(bestScanID);
 
