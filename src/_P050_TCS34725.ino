@@ -118,13 +118,17 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Output settings"));
 
       {
-        #define P050_RGB_OPTIONS 2
+        #define P050_RGB_OPTIONS 6
         String optionsRGB[P050_RGB_OPTIONS];
-        optionsRGB[0] = F("Raw RGB (uncalibrated)");
-        optionsRGB[1] = F("Calibrated RGB (3x3 matrix, below)");
-        int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1};
+        optionsRGB[0] = F("Raw RGB");
+        optionsRGB[1] = F("Raw RGB transformed (3x3 matrix, below)");
+        optionsRGB[2] = F("Normalized RGB (0..255)");
+        optionsRGB[3] = F("Normalized RGB transformed (3x3 matrix, below)");
+        optionsRGB[4] = F("Normalized RGB (0.0000..1.0000)");
+        optionsRGB[5] = F("Normalized RGB (0.0000..1.0000) transformed (3x3 matrix, below)");
+        int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1, 2, 3, 4, 5};
         addFormSelector(F("Output RGB Values"), F("p050_outputrgb"), P050_RGB_OPTIONS, optionsRGB, optionValuesRGB, PCONFIG(2));
-        addFormNote(F("For 'Calibrated RGB', the Red/Green/Blue values Decimals should best be increased."));
+        addFormNote(F("For 'normalized' or 'transformed' options, the Red/Green/Blue Decimals should best be increased."));
       }
 
       {
@@ -139,23 +143,21 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         addFormNote(F("Optionally adjust Values #4 name accordingly."));
 
         addFormCheckBox(F("Generate all as events"), F("p050_generate_all_events"), PCONFIG(4) == 1);
-        addFormNote(F("Eventnames: &lt;taskname&gt;+ #CCT, #CCT_DN40, #Lux, #Clear"));
+        addFormNote(F("Eventnames: taskname + #CCT, #CCT_DN40, #Lux, #Clear"));
       }
 
       {
         P050_data_struct *P050_data = new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1));
 
         if (nullptr != P050_data) {
-          addFormSubHeader(F("Calibration matrix"));
+          addFormSubHeader(F("Transformation matrix"));
 
           P050_data->loadSettings(event->TaskIndex);
 
           // Display current settings
           const String RGB = F("RGB");
           for (int i = 0; i < 3; i++) {
-            String label = F("Calibration - ");
-            label += RGB.charAt(i);
-            addRowLabel(label);
+            addRowLabel(RGB.substring(i, i + 1));
             String id = F("p050_cal_");
             for (int j = 0; j < 3; j++) {
               addHtml(String(static_cast<char>('a' + i)) + String(F("<sub>")) + String(j + 1) + String(F("</sub>")) + ':');
@@ -268,9 +270,10 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             break;
         }
 
-        uint32_t t = r + g + b; // Normalization factor
+        float sRGBFactor = 1.0f; // (s)RGB factor 1.0 or 255.0
+        uint32_t t = r + g + b;  // Normalization factor
         if (t == 0) {
-          UserVar[event->BaseVarIndex]     = 0.0f;
+          UserVar[event->BaseVarIndex + 0] = 0.0f;
           UserVar[event->BaseVarIndex + 1] = 0.0f;
           UserVar[event->BaseVarIndex + 2] = 0.0f;
         }
@@ -282,12 +285,37 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex + 2] = b;
             break;
           case 1:
-            if (t != 0) { // R/G/B normalized
+            if (t != 0) { // R/G/B transformed
               P050_data->applyCalibration(r, g, b,
                                           &UserVar[event->BaseVarIndex + 0],
                                           &UserVar[event->BaseVarIndex + 1],
                                           &UserVar[event->BaseVarIndex + 2]);
-            }            break;
+            }
+            break;
+          case 2:
+            sRGBFactor = 255.0f;
+            // Fall through
+          case 4:
+            if (t != 0) { // r/g/b (normalized to 0.00..255.00 (but avoid divide by 0)
+              UserVar[event->BaseVarIndex + 0] = (float)r / t * sRGBFactor;
+              UserVar[event->BaseVarIndex + 1] = (float)g / t * sRGBFactor;
+              UserVar[event->BaseVarIndex + 2] = (float)b / t * sRGBFactor;
+            }
+            break;
+          case 3:
+            sRGBFactor = 255.0f;
+            // Fall through
+          case 5:
+            if (t != 0) { // R/G/B normalized & transformed
+              float nr = (float)r / t * sRGBFactor;
+              float ng = (float)g / t * sRGBFactor;
+              float nb = (float)b / t * sRGBFactor;
+              P050_data->applyCalibration(nr, ng, nb,
+                                          &UserVar[event->BaseVarIndex + 0],
+                                          &UserVar[event->BaseVarIndex + 1],
+                                          &UserVar[event->BaseVarIndex + 2]);
+            }
+            break;
         }
         UserVar[event->BaseVarIndex + 3] = value4;
 

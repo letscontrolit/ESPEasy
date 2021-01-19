@@ -20,6 +20,7 @@ public:
   bool saveSettings(taskIndex_t taskIndex);
   void resetCalibration();
   void applyCalibration(uint16_t r, uint16_t g, uint16_t b, float *rc, float *gc, float *bc);
+  void applyCalibration(float nr, float ng, float nb, float *rc, float *gc, float *bc);
 
   Adafruit_TCS34725         tcs;
 

@@ -46,8 +46,17 @@ void P050_data_struct::resetCalibration() {
  */
 void P050_data_struct::applyCalibration(uint16_t r, uint16_t g, uint16_t b, float *rc, float *gc, float *bc) {
   *rc = CalibrationSettings.matrix[0][0] * (float)r + CalibrationSettings.matrix[0][1] * (float)g + CalibrationSettings.matrix[0][2] * (float)b;
-  *gc = CalibrationSettings.matrix[1][0] * (float)r + CalibrationSettings.matrix[1][1] * (float)g + CalibrationSettings.matrix[2][2] * (float)b;
+  *gc = CalibrationSettings.matrix[1][0] * (float)r + CalibrationSettings.matrix[1][1] * (float)g + CalibrationSettings.matrix[1][2] * (float)b;
   *bc = CalibrationSettings.matrix[2][0] * (float)r + CalibrationSettings.matrix[2][1] * (float)g + CalibrationSettings.matrix[2][2] * (float)b;
+}
+
+/**
+ * applyCalibration : calibrate normalized r/g/b inputs (float) to rc/gc/bc outputs (float, by reference)
+ */
+void P050_data_struct::applyCalibration(float nr, float ng, float nb, float *rc, float *gc, float *bc) {
+  *rc = CalibrationSettings.matrix[0][0] * (float)nr + CalibrationSettings.matrix[0][1] * (float)ng + CalibrationSettings.matrix[0][2] * (float)nb;
+  *gc = CalibrationSettings.matrix[1][0] * (float)nr + CalibrationSettings.matrix[1][1] * (float)ng + CalibrationSettings.matrix[1][2] * (float)nb;
+  *bc = CalibrationSettings.matrix[2][0] * (float)nr + CalibrationSettings.matrix[2][1] * (float)ng + CalibrationSettings.matrix[2][2] * (float)nb;
 }
 
 bool P050_data_struct::loadSettings(taskIndex_t taskIndex) {
