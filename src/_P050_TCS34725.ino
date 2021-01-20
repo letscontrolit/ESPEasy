@@ -11,6 +11,9 @@
 // this code is based on 20170331 date version of the above library
 // this code is UNTESTED, because my TCS34725 sensor is still not shipped :(
 //
+// 2021-01-20 tonhuisman: Renamed Calibration to Transformation, fix some textual issues
+// 2021-01-20 tonhuisman: Added optional events for not selected RGB outputs, compile-time optional
+// 2021-01-19 tonhuisman: (Re)Added additional transformation & calculation options
 // 2021-01-16 tonhuisman: Move stuff to PluginStructs, add 3x3 matrix calibration
 // 2021-01-09 tonhuisman: Add R/G/B calibration factors, improved/corrected normalization
 // 2021-01-03 tonhuisman: Merged most of the changes in the library, for adding the getRGB() and calculateColorTemperature_dn40(0 functions)
@@ -27,6 +30,9 @@
 #define PLUGIN_VALUENAME3_050 "Blue"
 #define PLUGIN_VALUENAME4_050 "ColorTemperature"
 
+// #ifndef LIMIT_BUILD_SIZE
+#define P050_OPTION_RGB_EVENTS
+// #endif
 
 boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 {
@@ -73,7 +79,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       P050_data_struct *P050_data = new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1));
 
       if (nullptr != P050_data) {
-        P050_data->resetCalibration(); // Explicit reset
+        P050_data->resetTransformation(); // Explicit reset
         P050_data->saveSettings(event->TaskIndex);
         delete P050_data;
       }
@@ -129,15 +135,21 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1, 2, 3, 4, 5};
         addFormSelector(F("Output RGB Values"), F("p050_outputrgb"), P050_RGB_OPTIONS, optionsRGB, optionValuesRGB, PCONFIG(2));
         addFormNote(F("For 'normalized' or 'transformed' options, the Red/Green/Blue Decimals should best be increased."));
+
+#ifdef P050_OPTION_RGB_EVENTS
+        addFormCheckBox(F("Generate RGB events"), F("p050_generate_rgb_events"), PCONFIG(5) == 1);
+        addFormNote(F("Eventnames: taskname + #RawRGB, #RawRGBtransformed, #NormRGB, #NormRGBtransformed, #NormSRGB, #NormSRGBtransformed"));
+        addFormNote(F("Only generated for not selected outputs, 3 values per event, =&lt;r&gt;,&lt;g&gt;,&lt;b&gt;"));
+#endif
       }
 
       {
         #define P050_VALUE4_OPTIONS 4
         String optionsOutput[P050_VALUE4_OPTIONS];
-        optionsOutput[0] = F("Color Temperature (deprecated)");
-        optionsOutput[1] = F("Color Temperature (DN40)");
-        optionsOutput[2] = F("Lux");
-        optionsOutput[3] = F("Clear");
+        optionsOutput[0] = F("Color Temperature (deprecated) [K]");
+        optionsOutput[1] = F("Color Temperature (DN40) [K]");
+        optionsOutput[2] = F("Ambient Light [Lux]");
+        optionsOutput[3] = F("Clear Channel");
         int optionValuesOutput[P050_VALUE4_OPTIONS] = { 0, 1, 2, 3};
         addFormSelector(F("Output at Values #4"), F("p050_output4"), P050_VALUE4_OPTIONS, optionsOutput, optionValuesOutput, PCONFIG(3));
         addFormNote(F("Optionally adjust Values #4 name accordingly."));
@@ -161,13 +173,13 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             String id = F("p050_cal_");
             for (int j = 0; j < 3; j++) {
               addHtml(String(static_cast<char>('a' + i)) + String(F("<sub>")) + String(j + 1) + String(F("</sub>")) + ':');
-              addFloatNumberBox(id + static_cast<char>('a' + i) + '_' + String(j), P050_data->CalibrationSettings.matrix[i][j], -255.999f, 255.999f);
+              addFloatNumberBox(id + static_cast<char>('a' + i) + '_' + String(j), P050_data->TransformationSettings.matrix[i][j], -255.999f, 255.999f);
             }
           }
-          addFormNote(F("Check plugin documentation (i) on how to calibrate."));
+          addFormNote(F("Check plugin documentation (i) on how to calibrate and how to calculate transformation matrix."));
 
-          addFormCheckBox(F("Reset calibration matrix"), F("p050_reset_calibration"), false);
-          addFormNote(F("Select then Submit to confirm. Reset calibration matrix can't be un-done!"));
+          addFormCheckBox(F("Reset transformation matrix"), F("p050_reset_transformation"), false);
+          addFormNote(F("Select then Submit to confirm. Reset transformation matrix can't be un-done!"));
 
           // Need to delete the allocated object here
           delete P050_data;
@@ -184,7 +196,10 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       PCONFIG(2) = getFormItemInt(F("p050_outputrgb"));
       PCONFIG(3) = getFormItemInt(F("p050_output4"));
       PCONFIG(4) = isFormItemChecked(F("p050_generate_all_events")) ? 1 : 0;
-      bool resetCalibration = isFormItemChecked(F("p050_reset_calibration"));
+#ifdef P050_OPTION_RGB_EVENTS
+      PCONFIG(5) = isFormItemChecked(F("p050_generate_rgb_events")) ? 1 : 0;
+#endif
+      bool resetTransformation = isFormItemChecked(F("p050_reset_transformation"));
       {
         P050_data_struct *P050_data = new (std::nothrow) P050_data_struct(PCONFIG(0), PCONFIG(1));
 
@@ -192,15 +207,15 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
           P050_data->loadSettings(event->TaskIndex);
 
-          if (resetCalibration) {
-            // Clear calibration settings
-            P050_data->resetCalibration();
+          if (resetTransformation) {
+            // Clear Transformation settings
+            P050_data->resetTransformation();
           } else {
             // Save new settings
             for (int i = 0; i < 3; i++) {
               String id = F("p050_cal_");
               for (int j = 0; j < 3; j++) {
-                P050_data->CalibrationSettings.matrix[i][j] = getFormItemFloat(id + static_cast<char>('a' + i) + '_' + String(j));
+                P050_data->TransformationSettings.matrix[i][j] = getFormItemFloat(id + static_cast<char>('a' + i) + '_' + String(j));
               }
             }
           }
@@ -286,10 +301,10 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             break;
           case 1:
             if (t != 0) { // R/G/B transformed
-              P050_data->applyCalibration(r, g, b,
-                                          &UserVar[event->BaseVarIndex + 0],
-                                          &UserVar[event->BaseVarIndex + 1],
-                                          &UserVar[event->BaseVarIndex + 2]);
+              P050_data->applyTransformation(r, g, b,
+                                             &UserVar[event->BaseVarIndex + 0],
+                                             &UserVar[event->BaseVarIndex + 1],
+                                             &UserVar[event->BaseVarIndex + 2]);
             }
             break;
           case 2:
@@ -310,10 +325,10 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
               float nr = (float)r / t * sRGBFactor;
               float ng = (float)g / t * sRGBFactor;
               float nb = (float)b / t * sRGBFactor;
-              P050_data->applyCalibration(nr, ng, nb,
-                                          &UserVar[event->BaseVarIndex + 0],
-                                          &UserVar[event->BaseVarIndex + 1],
-                                          &UserVar[event->BaseVarIndex + 2]);
+              P050_data->applyTransformation(nr, ng, nb,
+                                             &UserVar[event->BaseVarIndex + 0],
+                                             &UserVar[event->BaseVarIndex + 1],
+                                             &UserVar[event->BaseVarIndex + 2]);
             }
             break;
         }
@@ -341,6 +356,79 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         log += formatUserVarNoCheck(event->TaskIndex, 2);
         addLog(LOG_LEVEL_INFO, log);
 
+#ifdef P050_OPTION_RGB_EVENTS
+        // First RGB events
+        if (PCONFIG(5) == 1 && t != 0) { // Not if invalid read/data
+          String RuleEvent;
+          float tr, tg, tb, nr, ng, nb;
+          RuleEvent.reserve(48);
+          for (int i = 0; i < 6; i++) {
+            if (i != PCONFIG(2)) { // Skip currently selected RGB output to keep nr. of events a bit limited
+              sRGBFactor = 1.0f;
+              RuleEvent  = getTaskDeviceName(event->TaskIndex);
+              RuleEvent += '#';
+              switch (i) {
+              case 0:
+                RuleEvent += F("RawRGB=");
+                RuleEvent += r;
+                RuleEvent += ',';
+                RuleEvent += g;
+                RuleEvent += ',';
+                RuleEvent += b;
+                break;
+              case 3:
+                sRGBFactor = 255.0f;
+                // Fall through
+              case 1:
+              case 5:
+                if (i == 1) {
+                  RuleEvent += F("RawRGBtransformed=");
+                  P050_data->applyTransformation(r, g, b, &tr, &tg, &tb);
+                } else {
+                  if (i == 3) {
+                    RuleEvent += F("NormRGBtransformed=");
+                  } else {
+                    RuleEvent += F("NormSRGBtransformed=");
+                  }
+                  nr = (float)r / t * sRGBFactor;
+                  ng = (float)g / t * sRGBFactor;
+                  nb = (float)b / t * sRGBFactor;
+                  P050_data->applyTransformation(nr, ng, nb, &tr, &tg, &tb);
+                }
+                RuleEvent += String(tr, 4);
+                RuleEvent += ',';
+                RuleEvent += String(tg, 4);
+                RuleEvent += ',';
+                RuleEvent += String(tb, 4);
+                break;
+              case 2:
+                sRGBFactor = 255.0f;
+                // Fall through
+              case 4:
+                if (i == 2) {
+                  RuleEvent += F("NormRGB=");
+                } else {
+                  RuleEvent += F("NormSRGB=");
+                }
+                RuleEvent += String((float)r / t * sRGBFactor, 4);
+                RuleEvent += ',';
+                RuleEvent += String((float)g / t * sRGBFactor, 4);
+                RuleEvent += ',';
+                RuleEvent += String((float)b / t * sRGBFactor, 4);
+                break;
+              default:
+                RuleEvent = F("");
+                break;
+              }
+              if (RuleEvent.length() != 0) {
+                eventQueue.add(RuleEvent);
+              }
+            }
+          }
+        }
+#endif
+
+        // Then Values #4 events
         if (PCONFIG(4) == 1) {
           String RuleEvent;
           RuleEvent.reserve(48);
