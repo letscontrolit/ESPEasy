@@ -33,6 +33,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/StringGenerator_WiFi.h"
 #include "../Helpers/StringProvider.h"
 
 

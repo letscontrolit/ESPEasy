@@ -119,7 +119,6 @@
 #include "src/ESPEasyCore/ESPEasyNetwork.h"
 #include "src/ESPEasyCore/ESPEasyRules.h"
 #include "src/ESPEasyCore/ESPEasyWifi.h"
-#include "src/ESPEasyCore/ESPEasyWiFi_credentials.h"
 #include "src/ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "src/ESPEasyCore/Serial.h"
 
@@ -142,6 +141,7 @@
 #include "src/Globals/Services.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/Statistics.h"
+#include "src/Globals/WiFi_AP_Candidates.h"
 
 #include "src/Helpers/DeepSleep.h"
 #include "src/Helpers/ESPEasyRTC.h"
@@ -341,7 +341,7 @@ void setup()
       toDisable = disableNotification(toDisable);
     }
   }
-  if (!selectValidWiFiSettings()) {
+  if (!WiFi_AP_Candidates.hasKnownCredentials()) {
     WiFiEventData.wifiSetup = true;
     RTC.clearLastWiFi(); // Must scan all channels
     // Wait until scan has finished to make sure as many as possible are found

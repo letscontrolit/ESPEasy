@@ -20,6 +20,7 @@
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/StringGenerator_WiFi.h"
 
 #include "../WebServer/JSON.h"
 #include "../WebServer/AccessControl.h"
