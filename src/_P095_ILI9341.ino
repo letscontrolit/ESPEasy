@@ -38,7 +38,7 @@ Price : ~ 5.40€/$ (https://fr.aliexpress.com/item/32919729730.html)
 
 
 ## Dependencies
-Plugin lib_deps = Adafruit GFX, adafruit/Adafruit ILI9341 @ ^1.5.6
+Plugin lib_deps = Adafruit GFX, Adafruit ILI9341
 
 ## API Documentation
 
