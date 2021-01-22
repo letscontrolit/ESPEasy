@@ -123,12 +123,12 @@ boolean handle_custom(String path) {
     html_add_button_prefix();
     addHtml(path);
     addHtml(F("?btnunit="));
-    addHtml(String(prev));
+    addHtmlInt(prev);
     addHtml(F("'>&lt;</a>"));
     html_add_button_prefix();
     addHtml(path);
     addHtml(F("?btnunit="));
-    addHtml(String(next));
+    addHtmlInt(next);
     addHtml(F("'>&gt;</a>"));
   }
 
@@ -146,7 +146,7 @@ boolean handle_custom(String path) {
 
   if (dataFile)
   {
-    String page = "";
+    String page;
     page.reserve(dataFile.size());
 
     while (dataFile.available()) {

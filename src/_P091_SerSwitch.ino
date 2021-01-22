@@ -219,7 +219,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        String log = "";
+        String log;
         LoadTaskSettings(event->TaskIndex);
         Plugin_091_ownindex = event->TaskIndex;
         Settings.UseSerial = true;         // make sure that serial enabled
@@ -575,7 +575,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        String log = "";
+        String log;
         String command = parseString(string, 1);
         byte rnum = 0;
         byte rcmd = 0;
@@ -757,7 +757,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_INFO, log);
             } else {
               log = F("\nYDim not supported");
-              SendStatus(event->Source, log);
+              SendStatus(event, log);
             }
           }
 

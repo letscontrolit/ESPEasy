@@ -34,6 +34,7 @@ void handle_factoryreset() {
   html_TR();
   addFormHeader(F("Factory Reset"));
 
+#ifndef LIMIT_BUILD_SIZE
   if (web_server.hasArg("fdm")) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
 
@@ -41,6 +42,7 @@ void handle_factoryreset() {
       setFactoryDefault(model);
     }
   }
+
 
   if (web_server.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
@@ -52,6 +54,7 @@ void handle_factoryreset() {
     applyFactoryDefaultPref();
     addHtmlError(SaveSettings());
   }
+#endif
 
   if (web_server.hasArg(F("performfactoryreset"))) {
     // User confirmed to really perform the reset.
@@ -60,6 +63,7 @@ void handle_factoryreset() {
     // No need to call SaveSettings(); ResetFactory() will save the new settings.
     ResetFactory();
   } else {
+    #ifndef LIMIT_BUILD_SIZE
     // Nothing chosen yet, show options.
     addTableSeparator(F("Settings to keep"), 2, 3);
 
@@ -86,7 +90,7 @@ void handle_factoryreset() {
     html_TR_TD();
     html_TD();
     addSubmitButton(F("Save Preferences"), F("savepref"));
-
+    #endif
 
     html_TR_TD_height(30);
 
@@ -128,8 +132,8 @@ void addPreDefinedConfigSelector() {
 void handle_factoryreset_json() {
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
-  addHtml("{");
-
+  addHtml('{');
+#ifndef LIMIT_BUILD_SIZE
   if (web_server.hasArg("fdm")) {
     DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
 
@@ -157,6 +161,7 @@ void handle_factoryreset_json() {
   if (web_server.hasArg("klog")) {
     ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
   }
+#endif
   String error;
   bool   performReset = false;
   bool   savePref     = false;
@@ -184,7 +189,7 @@ void handle_factoryreset_json() {
   }
 
   stream_last_json_object_value(F("status"), error);
-  addHtml("}");
+  addHtml('}');
   TXBuffer.endStream();
 
   if (performReset) {

@@ -191,12 +191,12 @@ void handle_controllers_ShowAllControllersTable()
 {
   html_table_class_multirow();
   html_TR();
-  html_table_header("",           70);
-  html_table_header("Nr",         50);
+  html_table_header(F(""),           70);
+  html_table_header(F("Nr"),         50);
   html_table_header(F("Enabled"), 100);
   html_table_header(F("Protocol"));
-  html_table_header("Host");
-  html_table_header("Port");
+  html_table_header(F("Host"));
+  html_table_header(F("Port"));
 
   MakeControllerSettings(ControllerSettings);
   if (AllocatedControllerSettings()) {
@@ -251,7 +251,7 @@ void handle_controllers_ShowAllControllersTable()
         }
 
         html_TD();
-        addHtml(String(ControllerSettings.Port));
+        addHtmlInt(ControllerSettings.Port);
       }
       else {
         html_TD(3);

@@ -49,14 +49,15 @@ else:
     "-DUSES_P107",  # SI1145 UV index
     "-DUSES_P098",  # ESPEasy-Now Reader
 
+#   "-DUSES_C015",  # Blynk
     "-DUSES_C016",  # Cache Controller
     "-DUSES_C018",  # TTN/RN2483
-    "-DUSES_C015",  # Blynk
     "-DUSES_C019",  # ESPEasy-Now
 
     "-DFEATURE_MDNS",
     "-DFEATURE_SD",
     "-DFEATURE_I2CMULTIPLEXER",
+    "-DUSE_TRIGONOMETRIC_FUNCTIONS_RULES",
 
     "-DUSE_SETTINGS_ARCHIVE"
   ]

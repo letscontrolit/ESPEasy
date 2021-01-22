@@ -126,7 +126,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
           String log = F("DS   : iButton: ");
 
           if (success) {
-            log += UserVar[event->BaseVarIndex];
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
           } else {
             log += F("Not Present!");
           }

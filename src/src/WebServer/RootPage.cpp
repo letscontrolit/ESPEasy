@@ -211,15 +211,15 @@ void handle_root() {
     html_table_class_multirow_noborder();
     html_TR();
     html_table_header(F("Node List"));
-    html_table_header("Name");
+    html_table_header(F("Name"));
     html_table_header(getLabel(LabelType::BUILD_DESC));
-    html_table_header("Type");
-    html_table_header("IP", 160); // Should fit "255.255.255.255"
-    html_table_header("Load");
-    html_table_header("Age (s)");
+    html_table_header(F("Type"));
+    html_table_header(F("IP"), 160); // Should fit "255.255.255.255"
+    html_table_header(F("Load"));
+    html_table_header(F("Age (s)"));
     #ifdef USES_ESPEASY_NOW
-    html_table_header("Dist");
-    html_table_header("Peer Info", 160);
+    html_table_header(F("Dist"));
+    html_table_header(F("Peer Info"), 160);
     #endif
 
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
@@ -236,7 +236,7 @@ void handle_root() {
         }
 
         addHtml(F("Unit "));
-        addHtml(String(it->first));
+        addHtmlInt(it->first);
         html_TD();
 
         if (isThisUnit) {
@@ -248,7 +248,7 @@ void handle_root() {
         html_TD();
 
         if (it->second.build) {
-          addHtml(String(it->second.build));
+          addHtmlInt(it->second.build);
         }
         html_TD();
         addHtml(it->second.getNodeTypeDisplayString());

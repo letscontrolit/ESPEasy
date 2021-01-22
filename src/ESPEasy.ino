@@ -124,6 +124,7 @@
 #include "src/ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "src/ESPEasyCore/Serial.h"
 
+#include "src/Globals/Cache.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasy_now_handler.h"
@@ -368,13 +369,7 @@ void setup()
     ResetFactory();
   }
 
-  if (Settings.UseSerial)
-  {
-    //make sure previous serial buffers are flushed before resetting baudrate
-    Serial.flush();
-    Serial.begin(Settings.BaudRate);
-//    Serial.setDebugOutput(true);
-  }
+  initSerial();
 
   if (Settings.Build != BUILD)
     BuildFixes();
@@ -409,8 +404,10 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
-    addLog(LOG_LEVEL_ERROR, F("Programming error! - Increase PLUGIN_MAX"));
+    addLog(LOG_LEVEL_ERROR, String(F("Programming error! - Increase PLUGIN_MAX (")) + deviceCount + ')');
   }
+
+  clearAllCaches();
 
   if (Settings.UseRules && isDeepSleepEnabled())
   {
@@ -498,13 +495,10 @@ void RTOS_TaskServers( void * parameter )
 
 void RTOS_TaskSerial( void * parameter )
 {
- while (true){
+  while (true){
     delay(100);
-    if (Settings.UseSerial)
-    if (Serial.available())
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
-        serial();
- }
+    serial();
+  }
 }
 
 void RTOS_Task10ps( void * parameter )
@@ -711,12 +705,7 @@ void backgroundtasks()
   }
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
-    if (Settings.UseSerial && Serial.available()) {
-      String dummy;
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
-        serial();
-      }
-    }
+    serial();
     if (webserverRunning) {
       web_server.handleClient();
     }
@@ -730,9 +719,12 @@ void backgroundtasks()
     }
   }
 
+  #ifdef FEATURE_DNS_SERVER
   // process DNS, only used if the ESP has no valid WiFi config
-  if (dnsServerActive)
+  if (dnsServerActive) {
     dnsServer.processNextRequest();
+  }
+  #endif
 
   #ifdef FEATURE_ARDUINO_OTA
   if(Settings.ArduinoOTAEnable && networkConnected)
@@ -752,7 +744,10 @@ void backgroundtasks()
   #ifdef FEATURE_MDNS
   // Allow MDNS processing
   if (networkConnected) {
+    #ifdef ESP8266
+    // ESP32 does not have an update() function
     MDNS.update();
+    #endif
   }
   #endif
 

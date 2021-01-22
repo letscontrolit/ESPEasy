@@ -59,7 +59,7 @@ void handle_log_JSON() {
       if (i != 0) {
         addHtml(",");
       }
-      addHtml("{");
+      addHtml('{');
       int loglevel;
       stream_next_json_object_value(F("label"), getLogLevelDisplayStringFromIndex(i, loglevel));
       stream_last_json_object_value(F("loglevel"), String(loglevel));

@@ -209,12 +209,14 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
       sht3x->readFromSensor();
       UserVar[event->BaseVarIndex + 0] = sht3x->tmp;
       UserVar[event->BaseVarIndex + 1] = sht3x->hum;
-      String log = F("SHT3x: Temperature: ");
-      log += UserVar[event->BaseVarIndex + 0];
-      addLog(LOG_LEVEL_INFO, log);
-      log  = F("SHT3x: Humidity: ");
-      log += UserVar[event->BaseVarIndex + 1];
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("SHT3x: Temperature: ");
+        log += formatUserVarNoCheck(event->TaskIndex, 0);
+        addLog(LOG_LEVEL_INFO, log);
+        log  = F("SHT3x: Humidity: ");
+        log += formatUserVarNoCheck(event->TaskIndex, 1);
+        addLog(LOG_LEVEL_INFO, log);
+      }
       success = true;
       break;
     }
