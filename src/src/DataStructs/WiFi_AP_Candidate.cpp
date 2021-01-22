@@ -45,6 +45,13 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
   return rssi > other.rssi;
 }
 
+bool WiFi_AP_Candidate::operator==(const WiFi_AP_Candidate& other) const {
+  for (byte i = 0; i < 6; ++i) {
+    if (bssid[i] != other.bssid[i]) return false;
+  }
+  return ssid.equals(other.ssid) && key.equals(other.key);
+}
+
 WiFi_AP_Candidate& WiFi_AP_Candidate::operator=(const WiFi_AP_Candidate& other) {
   if (this != &other) { // not a self-assignment
     ssid    = other.ssid;

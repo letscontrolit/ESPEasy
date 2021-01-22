@@ -15,6 +15,9 @@ struct WiFi_AP_CandidatesList {
     mustLoadCredentials = true;
   }
 
+  // Called after WiFi credentials have changed.
+  void force_reload();
+
   // Add found WiFi access points to the list if they are possible candidates.
   void process_WiFiscan(uint8_t scancount);
 
@@ -27,6 +30,10 @@ struct WiFi_AP_CandidatesList {
   WiFi_AP_Candidate        getBestScanResult() const;
 
   bool                     hasKnownCredentials();
+
+  // Make sure the current connection (from RTC) is set as first next candidate.
+  // This will force a reconnect to the current AP if connection is lost.
+  void markCurrentConnectionStable();
 
 private:
 

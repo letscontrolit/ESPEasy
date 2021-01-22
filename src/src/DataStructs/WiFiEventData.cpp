@@ -10,6 +10,7 @@
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;
+  if (wifiSetupConnect) return true;
   if (lastDisconnectMoment.isSet()) {
     // TODO TD-er: Make this time more dynamic.
     if (!lastDisconnectMoment.timeoutReached(1000)) {

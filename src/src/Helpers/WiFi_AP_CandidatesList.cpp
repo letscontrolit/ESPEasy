@@ -29,9 +29,16 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
   purge_unusable();
 }
 
+void WiFi_AP_CandidatesList::force_reload() {
+  clearCache();
+  RTC.clearLastWiFi(); // Invalidate the RTC WiFi data.
+  process_WiFiscan(WiFi.scanComplete());
+}
+
 void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   if (mustLoadCredentials) { load_knownCredentials(); }
   candidates.clear();
+
   addFromRTC();
 
   known_it = known.begin();
@@ -41,14 +48,15 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
     add(i);
   }
   purge_unusable();
-  candidates.sort();
 
+#ifndef BUILD_NO_DEBUG
 
   for (auto it = candidates.begin(); it != candidates.end(); ++it) {
     String log = F("WIFI  : Scan result: ");
     log += it->toString();
     addLog(LOG_LEVEL_INFO, log);
   }
+#endif // ifndef BUILD_NO_DEBUG
 }
 
 bool WiFi_AP_CandidatesList::getNext() {
@@ -110,6 +118,11 @@ bool WiFi_AP_CandidatesList::hasKnownCredentials() {
   return !known.empty();
 }
 
+void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
+  addFromRTC();
+  purge_unusable();
+}
+
 void WiFi_AP_CandidatesList::add(uint8_t networkItem) {
   WiFi_AP_Candidate tmp(networkItem);
 
@@ -135,7 +148,7 @@ void WiFi_AP_CandidatesList::add(uint8_t networkItem) {
 }
 
 void WiFi_AP_CandidatesList::addFromRTC() {
-  if (RTC.lastWiFiSettingsIndex == 0) { return; }
+  if (!RTC.lastWiFi_set()) { return; }
 
   String ssid, key;
 
@@ -150,7 +163,7 @@ void WiFi_AP_CandidatesList::addFromRTC() {
   tmp.rssi    = -1; // Set to best possible RSSI so it is tried first.
 
   if (tmp.usable() && tmp.allowQuickConnect()) {
-    currentCandidate = tmp;
+    candidates.push_front(tmp);
   }
 }
 
@@ -162,6 +175,8 @@ void WiFi_AP_CandidatesList::purge_unusable() {
       it = known.erase(it);
     }
   }
+  known.sort();
+  known.unique();
 
   for (auto it = candidates.begin(); it != candidates.end();) {
     if (it->usable()) {
@@ -170,6 +185,8 @@ void WiFi_AP_CandidatesList::purge_unusable() {
       it = candidates.erase(it);
     }
   }
+  candidates.sort();
+  candidates.unique();
 }
 
 bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key) const {

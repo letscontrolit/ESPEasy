@@ -17,6 +17,7 @@
 
 # include "../Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/SecuritySettings.h"
+# include "../Globals/WiFi_AP_Candidates.h"
 
 # include "../Helpers/Networking.h"
 # include "../Helpers/ESPEasy_Storage.h"
@@ -59,6 +60,7 @@ void handle_setup() {
       safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
       WiFiEventData.wifiSetupConnect         = true;
       WiFiEventData.wifiConnectAttemptNeeded = true;
+      WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
@@ -67,6 +69,7 @@ void handle_setup() {
       }
       status       = HANDLE_SETUP_CONNECTING_STAGE;
       refreshCount = 0;
+      AttemptWiFiConnect();
     }
     html_BR();
     wrap_html_tag(F("h1"), F("Wifi Setup wizard"));

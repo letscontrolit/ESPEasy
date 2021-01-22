@@ -22,6 +22,8 @@ struct WiFi_AP_Candidate {
   // Return true when this one has the best RSSI.
   bool               operator<(const WiFi_AP_Candidate& other) const;
 
+  bool               operator==(const WiFi_AP_Candidate& other) const;
+
   WiFi_AP_Candidate& operator=(const WiFi_AP_Candidate& other);
 
   void               setBSSID(const uint8_t *bssid_c);

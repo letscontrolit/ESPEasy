@@ -20,7 +20,8 @@
 
 bool WiFiConnected();
 void WiFiConnectRelaxed();
-bool prepareWiFi();
+void AttemptWiFiConnect();
+bool prepareWiFi(bool performScan);
 bool checkAndResetWiFi();
 void resetWiFi();
 void initWiFi();

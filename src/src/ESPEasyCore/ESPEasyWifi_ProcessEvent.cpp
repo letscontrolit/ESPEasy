@@ -128,6 +128,7 @@ void handle_unprocessedWiFiEvents()
         // Connection considered stable
         WiFiEventData.wifi_connect_attempt = 0;
         WiFiEventData.wifi_considered_stable = true;
+        WiFi_AP_Candidates.markCurrentConnectionStable();
 
         if (!WiFi.getAutoConnect()) {
           WiFi.setAutoConnect(true);

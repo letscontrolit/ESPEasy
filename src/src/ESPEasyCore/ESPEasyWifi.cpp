@@ -206,13 +206,15 @@ void WiFiConnectRelaxed() {
   // This is a logic error which may lead to strange issues if some kind of timeout happens and/or RF calibration was not OK.
   // Split this function into separate parts, with the last part being the actual connect attempt either after a scan is complete or quick connect is possible.
 
+  AttemptWiFiConnect();
+}
 
+void AttemptWiFiConnect() {
   // Start connect attempt now, so no longer needed to attempt new connection.
   WiFiEventData.wifiConnectAttemptNeeded = false;
 
   if (WiFiEventData.wifiSetupConnect) {
     // wifiSetupConnect is when run from the setup page.
-    RTC.lastWiFiSettingsIndex     = 0; // Force to load the first settings.
     RTC.clearLastWiFi(); // Force slow connect
     WiFiEventData.wifi_connect_attempt = 0;
     WiFiEventData.wifiSetupConnect     = false;
@@ -229,17 +231,18 @@ void WiFiConnectRelaxed() {
       addLog(LOG_LEVEL_INFO, log);
     }
     WiFiEventData.markWiFiBegin();
-    if (candidate.allowQuickConnect()) {
-      WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid);
-    } else {
-      WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
+    if (prepareWiFi(false)) {
+      if (candidate.allowQuickConnect()) {
+        WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid);
+      } else {
+        WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
+      }
     }
   } else {
-    if (!prepareWiFi()) {
-      addLog(LOG_LEVEL_ERROR, F("WIFI : Could not prepare WiFi!"));
-      WiFiEventData.last_wifi_connect_attempt_moment.clear();
-      WiFiEventData.wifi_connect_attempt             = 1;
-      return;
+    if (!wifiAPmodeActivelyUsed()) {
+      if (!prepareWiFi(true)) {
+        return;
+      }
     }
   }
 
@@ -249,9 +252,11 @@ void WiFiConnectRelaxed() {
 // ********************************************************************************
 // Set Wifi config
 // ********************************************************************************
-bool prepareWiFi() {
+bool prepareWiFi(bool performScan) {
   if (!WiFi_AP_Candidates.hasKnownCredentials()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
+    WiFiEventData.last_wifi_connect_attempt_moment.clear();
+    WiFiEventData.wifi_connect_attempt             = 1;
 
     // No need to wait longer to start AP mode.
     setAP(true);
@@ -277,7 +282,9 @@ bool prepareWiFi() {
   setConnectionSpeed();
   setupStaticIPconfig();
 
-  WifiScan(false, false);
+  if (performScan) {
+    WifiScan(false, false);
+  }
 
   return true;
 }
@@ -334,6 +341,7 @@ bool checkAndResetWiFi() {
 
 
 void resetWiFi() {
+  if (wifiAPmodeActivelyUsed()) return;
   if (WiFiEventData.lastWiFiResetMoment.isSet() && !WiFiEventData.lastWiFiResetMoment.timeoutReached(1000)) {
     // Don't reset WiFi too often
     return;
