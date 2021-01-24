@@ -38,10 +38,12 @@ void set_mDNS() {
       MDNS.addService(F("http"), F("tcp"), Settings.WebserverPort);
     }
   } else {
+    #ifdef ESP8266
     if (mDNS_init) {
       MDNS.close();
     }
     mDNS_init = false;
+    #endif
   }
   #endif // ifdef FEATURE_MDNS
 }
