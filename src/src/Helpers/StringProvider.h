@@ -65,6 +65,7 @@ struct LabelType {
     SSID,                    // mynetwork
     BSSID,
     CHANNEL,                 // 1
+    ENCRYPTION_TYPE_STA,     // WPA2
     CONNECTED,               // 1h16m
     CONNECTED_MSEC,          // 1h16m
     LAST_DISCONNECT_REASON,  // 200

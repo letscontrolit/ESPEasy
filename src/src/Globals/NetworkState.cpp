@@ -9,6 +9,7 @@ bool eth_connected = false;
 
 bool webserverRunning(false);
 bool webserver_init(false);
+bool mDNS_init(false);
 
 
 // NTP status

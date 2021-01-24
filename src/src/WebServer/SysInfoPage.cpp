@@ -129,10 +129,11 @@ void handle_sysinfo_json() {
   json_prop(F("ap_mac"),        getValue(LabelType::AP_MAC));
   json_prop(F("ssid"),          getValue(LabelType::SSID));
   json_prop(F("bssid"),         getValue(LabelType::BSSID));
-  json_number(F("channel"), getValue(LabelType::CHANNEL));
-  json_prop(F("connected"), getValue(LabelType::CONNECTED));
-  json_prop(F("ldr"),       getValue(LabelType::LAST_DISC_REASON_STR));
-  json_number(F("reconnects"), getValue(LabelType::NUMBER_RECONNECTS));
+  json_number(F("channel"),     getValue(LabelType::CHANNEL));
+  json_prop(F("encryption"),    getValue(LabelType::ENCRYPTION_TYPE_STA));
+  json_prop(F("connected"),     getValue(LabelType::CONNECTED));
+  json_prop(F("ldr"),           getValue(LabelType::LAST_DISC_REASON_STR));
+  json_number(F("reconnects"),  getValue(LabelType::NUMBER_RECONNECTS));
   json_close();
 
 # ifdef HAS_ETHERNET
@@ -470,6 +471,7 @@ void handle_sysinfo_Network() {
   }
 
   addRowLabelValue(LabelType::CHANNEL);
+  addRowLabelValue(LabelType::ENCRYPTION_TYPE_STA);
   addRowLabelValue(LabelType::CONNECTED);
   addRowLabel(LabelType::LAST_DISCONNECT_REASON);
   addHtml(getValue(LabelType::LAST_DISC_REASON_STR));

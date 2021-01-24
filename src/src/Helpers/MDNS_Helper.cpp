@@ -4,6 +4,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
@@ -13,15 +14,17 @@
 void set_mDNS() {
   #ifdef FEATURE_MDNS
 
+  if (!WiFiEventData.WiFiServicesInitialized()) { return; }
+
   if (webserverRunning) {
     addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
-    bool mdns_started = MDNS.begin(NetworkGetHostname().c_str());
+    mDNS_init = MDNS.begin(NetworkGetHostname().c_str());
     MDNS.setInstanceName(NetworkGetHostname()); // Needed for when the hostname has changed.
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("WIFI : ");
 
-      if (mdns_started) {
+      if (mDNS_init) {
         log += F("mDNS started, with name: ");
         log += getValue(LabelType::M_DNS);
       }
@@ -31,9 +34,14 @@ void set_mDNS() {
       addLog(LOG_LEVEL_INFO, log);
     }
 
-    if (mdns_started) {
+    if (mDNS_init) {
       MDNS.addService(F("http"), F("tcp"), Settings.WebserverPort);
     }
+  } else {
+    if (mDNS_init) {
+      MDNS.close();
+    }
+    mDNS_init = false;
   }
   #endif // ifdef FEATURE_MDNS
 }

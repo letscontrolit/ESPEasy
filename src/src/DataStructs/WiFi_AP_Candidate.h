@@ -37,8 +37,12 @@ struct WiFi_AP_Candidate {
   // Check to see if the BSSID is set
   bool               bssid_set() const;
 
+  bool               bssid_match(const uint8_t *bssid_c) const;
+
   // Create a formatted string
   String             toString(const String& separator = " ") const;
+
+  String             encryption_type() const;
 
   String  ssid;
   String  key;

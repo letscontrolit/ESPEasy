@@ -25,6 +25,7 @@ bool prepareWiFi(bool performScan);
 bool checkAndResetWiFi();
 void resetWiFi();
 void initWiFi();
+void settxpower(float dBm); // 0-20.5
 void WifiDisconnect();
 void WifiScan(bool async, bool quick);
 void WifiScan();

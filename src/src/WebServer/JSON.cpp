@@ -183,6 +183,7 @@ void handle_json()
       stream_next_json_object_value(LabelType::SSID);
       stream_next_json_object_value(LabelType::BSSID);
       stream_next_json_object_value(LabelType::CHANNEL);
+      stream_next_json_object_value(LabelType::ENCRYPTION_TYPE_STA);
       stream_next_json_object_value(LabelType::CONNECTED_MSEC);
       stream_next_json_object_value(LabelType::LAST_DISCONNECT_REASON);
       stream_next_json_object_value(LabelType::LAST_DISC_REASON_STR);

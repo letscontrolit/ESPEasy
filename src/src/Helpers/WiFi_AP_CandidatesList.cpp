@@ -39,14 +39,13 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   if (mustLoadCredentials) { load_knownCredentials(); }
   candidates.clear();
 
-  addFromRTC();
-
   known_it = known.begin();
 
   // Now try to merge the known SSIDs, or add a new one if it is a hidden SSID
   for (uint8_t i = 0; i < scancount; ++i) {
     add(i);
   }
+  addFromRTC();
   purge_unusable();
 
 #ifndef BUILD_NO_DEBUG
@@ -159,8 +158,22 @@ void WiFi_AP_CandidatesList::addFromRTC() {
   WiFi_AP_Candidate tmp(RTC.lastWiFiSettingsIndex, ssid, key);
 
   tmp.setBSSID(RTC.lastBSSID);
+  if (!tmp.bssid_set()) return;
   tmp.channel = RTC.lastWiFiChannel;
   tmp.rssi    = -1; // Set to best possible RSSI so it is tried first.
+
+  bool matchfound = false;
+  for (auto it = candidates.begin(); !matchfound && it != candidates.end(); ++it) {
+    if (it->bssid_match(tmp.bssid)) {
+      matchfound = true;
+      tmp.enc_type = it->enc_type;
+      // We may have gotten the enc_type of the active used candidate
+      // Make sure to store the enc type there too.
+      if (currentCandidate.bssid_match(tmp.bssid)) {
+        currentCandidate.enc_type = tmp.enc_type;
+      }
+    }
+  }
 
   if (tmp.usable() && tmp.allowQuickConnect()) {
     candidates.push_front(tmp);

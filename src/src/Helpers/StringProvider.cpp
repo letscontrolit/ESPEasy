@@ -14,6 +14,7 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Memory.h"
@@ -89,6 +90,7 @@ String getLabel(LabelType::Enum label) {
     case LabelType::SSID:                   return F("SSID");
     case LabelType::BSSID:                  return F("BSSID");
     case LabelType::CHANNEL:                return F("Channel");
+    case LabelType::ENCRYPTION_TYPE_STA:    return F("Encryption Type");
     case LabelType::CONNECTED:              return F("Connected");
     case LabelType::CONNECTED_MSEC:         return F("Connected msec");
     case LabelType::LAST_DISCONNECT_REASON: return F("Last Disconnect Reason");
@@ -227,6 +229,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::SSID:                   return WiFi.SSID();
     case LabelType::BSSID:                  return WiFi.BSSIDstr();
     case LabelType::CHANNEL:                return String(WiFi.channel());
+    case LabelType::ENCRYPTION_TYPE_STA:    return WiFi_AP_Candidates.getCurrent().encryption_type();
     case LabelType::CONNECTED:              return format_msec_duration(WiFiEventData.lastConnectMoment.millisPassedSince());
 
     // Use only the nr of seconds to fit it in an int32, plus append '000' to have msec format again.

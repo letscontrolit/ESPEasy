@@ -389,6 +389,39 @@ void initWiFi()
 }
 
 // ********************************************************************************
+// Configure WiFi TX power
+// ********************************************************************************
+void settxpower(float dBm) { 
+  // Range ESP32  : 2dBm - 20dBm
+  // Range ESP8266: 0dBm - 20.5dBm
+  #ifdef ESP32
+  if(dBm > 20.5) {
+    dBm = 20.5;
+  } else if(dBm < 0) {
+    dBm = 0;
+  }
+  int8_t val = (dBm*4.0f);
+
+  esp_wifi_set_max_tx_power(val);
+  esp_wifi_get_max_tx_power(&val);
+  dBm = static_cast<float>(val);
+  dBm /= 4.0f;
+  #endif
+
+  #ifdef ESP8266
+  WiFi.setOutputPower(dBm);
+  #endif
+
+  delay(1);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("WiFi : Set TX power to ");
+    log += String(dBm, 1);
+    log += F("dBm");
+    addLog(LOG_LEVEL_INFO, log);
+  }
+}
+
+// ********************************************************************************
 // Disconnect from Wifi AP
 // ********************************************************************************
 void WifiDisconnect()
@@ -403,6 +436,7 @@ void WifiDisconnect()
   #endif // if defined(ESP32)
   WiFiEventData.setWiFiDisconnected();
   WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_ASSOC_LEAVE);
+  delay(1);
 }
 
 // ********************************************************************************
@@ -584,13 +618,17 @@ void setWifiMode(WiFiMode_t wifimode) {
     return;
   }
 
-  if (wifimode != WIFI_OFF) {
+  if (cur_mode == WIFI_OFF) {
+    #if defined(ESP32)
+    esp_wifi_set_ps(WIFI_PS_NONE);
+    #endif
     #ifdef ESP8266
 
     // See: https://github.com/esp8266/Arduino/issues/6172#issuecomment-500457407
     WiFi.forceSleepWake(); // Make sure WiFi is really active.
     #endif // ifdef ESP8266
     delay(100);
+    settxpower(17.5); // FIXME TD-er: Must make this a setting.
   }
 
   addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
@@ -610,7 +648,10 @@ void setWifiMode(WiFiMode_t wifimode) {
 
 
   if (wifimode == WIFI_OFF) {
-    delay(1000);
+    delay(100);
+    #if defined(ESP32)
+    esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
+    #endif
     #ifdef ESP8266
     WiFi.forceSleepBegin();
     #endif // ifdef ESP8266
@@ -618,7 +659,7 @@ void setWifiMode(WiFiMode_t wifimode) {
   } else {
     delay(100); // Must allow for some time to init.
   }
-  bool new_mode_AP_enabled = WifiIsAP(wifimode);
+  const bool new_mode_AP_enabled = WifiIsAP(wifimode);
 
   if (WifiIsAP(cur_mode) && !new_mode_AP_enabled) {
     eventQueue.add(F("WiFi#APmodeDisabled"));
@@ -806,7 +847,7 @@ void logConnectionStatus() {
   #endif
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI  : Arduino wifi status: ");
+    String log = F("WIFI : Arduino wifi status: ");
     log += ArduinoWifiStatusToString(WiFi.status());
     log += F(" ESPeasy internal wifi status: ");
     log += ESPeasyWifiStatusToString();

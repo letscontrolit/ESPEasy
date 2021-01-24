@@ -18,6 +18,7 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/MDNS_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
@@ -391,7 +392,7 @@ void processScanDone() {
     case -1: // WIFI_SCAN_RUNNING
       return;
     case -2: // WIFI_SCAN_FAILED
-      addLog(LOG_LEVEL_ERROR, F("WiFi  : Scan failed"));
+      addLog(LOG_LEVEL_ERROR, F("WiFi : Scan failed"));
       WiFiEventData.processedScanDone = true;
       return;
   }
@@ -464,6 +465,7 @@ void markWiFi_services_initialized() {
   }
   WiFiEventData.processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
   WiFiEventData.setWiFiServicesInitialized();
+  set_mDNS();
 }
 
 #ifdef HAS_ETHERNET

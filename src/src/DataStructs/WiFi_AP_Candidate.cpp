@@ -25,6 +25,7 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
   rssi    = WiFi.RSSI(networkItem);
   channel = WiFi.channel(networkItem);
   setBSSID(WiFi.BSSID(networkItem));
+  enc_type = WiFi.encryptionType(networkItem);
   #ifdef ESP8266
   isHidden = WiFi.isHidden(networkItem);
   #endif // ifdef ESP8266
@@ -46,10 +47,7 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
 }
 
 bool WiFi_AP_Candidate::operator==(const WiFi_AP_Candidate& other) const {
-  for (byte i = 0; i < 6; ++i) {
-    if (bssid[i] != other.bssid[i]) return false;
-  }
-  return ssid.equals(other.ssid) && key.equals(other.key);
+  return bssid_match(other.bssid) && ssid.equals(other.ssid) && key.equals(other.key);
 }
 
 WiFi_AP_Candidate& WiFi_AP_Candidate::operator=(const WiFi_AP_Candidate& other) {
@@ -61,6 +59,7 @@ WiFi_AP_Candidate& WiFi_AP_Candidate::operator=(const WiFi_AP_Candidate& other) 
     setBSSID(other.bssid);
     isHidden = other.isHidden;
     index    = other.index;
+    enc_type = other.enc_type;
   }
   return *this;
 }
@@ -90,16 +89,20 @@ bool WiFi_AP_Candidate::bssid_set() const {
   return false;
 }
 
+bool WiFi_AP_Candidate::bssid_match(const uint8_t *bssid_c) const {
+  for (byte i = 0; i < 6; ++i) {
+    if (bssid[i] != bssid_c[i]) { return false; }
+  }
+  return true;
+}
+
 String WiFi_AP_Candidate::toString(const String& separator) const {
   String result = ssid;
 
   htmlEscape(result);
-  #ifndef ESP32
-
   if (isHidden) {
     result += F("#Hidden#");
   }
-  #endif // ifndef ESP32
   result += separator;
   result += formatMAC(bssid);
   result += separator;
@@ -114,6 +117,10 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
     result += F("dBm) ");
   }
 
-  result += WiFi_encryptionType(enc_type);
+  result += encryption_type();
   return result;
+}
+
+String WiFi_AP_Candidate::encryption_type() const {
+  return WiFi_encryptionType(enc_type);
 }
