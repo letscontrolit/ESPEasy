@@ -18,7 +18,6 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/MDNS_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
@@ -465,7 +464,7 @@ void markWiFi_services_initialized() {
   }
   WiFiEventData.processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
   WiFiEventData.setWiFiServicesInitialized();
-  set_mDNS();
+  CheckRunningServices();
 }
 
 #ifdef HAS_ETHERNET

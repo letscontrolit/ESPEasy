@@ -119,6 +119,26 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow() const {
+  return bitRead(VariousBits1, 11);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow(bool value) {
+  bitWrite(VariousBits1, 11, value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::IncludeHiddenSSID() const {
+  return bitRead(VariousBits1, 12);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::IncludeHiddenSSID(bool value) {
+  bitWrite(VariousBits1, 12, value);
+}
+
+template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
   if (validTaskIndex(taskIndex))
     return bitRead(TaskDeviceSendDataFlags[taskIndex], 0);

@@ -1,4 +1,4 @@
-#include "ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
@@ -6,6 +6,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/MDNS_Helper.h"
 
 #ifdef HAS_ETHERNET
 #include "ETH.h"
@@ -40,6 +41,18 @@ bool NetworkConnected() {
   }
   #else
   return WiFiConnected();
+  #endif
+}
+
+void PrepareSend() {
+  #ifdef HAS_ETHERNET
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
+    return;
+  } else {
+    return settxpower(30); // Just some max, will be limited in settxpower
+  }
+  #else
+  return settxpower(30); // Just some max, will be limited in settxpower
   #endif
 }
 
@@ -185,4 +198,9 @@ String WifiSoftAPmacAddress() {
     char     macaddress[20];
     formatMAC(macread, macaddress);
     return String(macaddress);
+}
+
+void CheckRunningServices() {
+  set_mDNS();
+  settxpower();
 }

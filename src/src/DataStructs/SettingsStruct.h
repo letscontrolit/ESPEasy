@@ -86,6 +86,16 @@ class SettingsStruct_tmpl
   bool SendToHttp_ack() const;
   void SendToHttp_ack(bool value);
 
+  // Enable/disable ESPEasyNow protocol
+  bool UseESPEasyNow() const;
+  void UseESPEasyNow(bool value);
+
+  // Whether to try to connect to a hidden SSID network
+  bool IncludeHiddenSSID() const;
+  void IncludeHiddenSSID(bool value);
+
+
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
@@ -244,6 +254,8 @@ class SettingsStruct_tmpl
   #ifdef ESP32
   int8_t        PinBootStates_ESP32[24]; // pins 17 ... 39
   #endif
+  uint8_t       WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
+  int8_t        WiFi_sensitivity_margin = 5;  // Margin in dBm on top of sensitivity.
 };
 
 /*

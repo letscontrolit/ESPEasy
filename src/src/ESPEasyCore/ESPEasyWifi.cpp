@@ -132,7 +132,8 @@ bool WiFiConnected() {
 
 
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
-  bool validWiFi = (WiFi.RSSI() < 0) && wifi_isconnected && hasIPaddr();
+  const int32_t wifi_rssi = WiFi.RSSI();
+  bool validWiFi = (wifi_rssi < 0) && wifi_isconnected && hasIPaddr();
   if (validWiFi != WiFiEventData.WiFiServicesInitialized()) {
     // else wifiStatus is no longer in sync.
     if (checkAndResetWiFi()) {
@@ -149,6 +150,7 @@ bool WiFiConnected() {
     STOP_TIMER(WIFI_ISCONNECTED_STATS);
     recursiveCall = false;
     // Only return true after some time since it got connected.
+    settxpower();
     return WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
   }
 
@@ -231,7 +233,7 @@ void AttemptWiFiConnect() {
       addLog(LOG_LEVEL_INFO, log);
     }
     WiFiEventData.markWiFiBegin();
-    if (prepareWiFi(false)) {
+    if (prepareWiFi()) {
       if (candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid);
       } else {
@@ -240,9 +242,12 @@ void AttemptWiFiConnect() {
     }
   } else {
     if (!wifiAPmodeActivelyUsed()) {
-      if (!prepareWiFi(true)) {
+      if (!prepareWiFi()) {
         return;
       }
+      // Maybe not scan async to give the ESP some slack in power consumption?
+      const bool async = true;
+      WifiScan(async);
     }
   }
 
@@ -252,7 +257,7 @@ void AttemptWiFiConnect() {
 // ********************************************************************************
 // Set Wifi config
 // ********************************************************************************
-bool prepareWiFi(bool performScan) {
+bool prepareWiFi() {
   if (!WiFi_AP_Candidates.hasKnownCredentials()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
     WiFiEventData.last_wifi_connect_attempt_moment.clear();
@@ -281,10 +286,6 @@ bool prepareWiFi(bool performScan) {
   #endif // if defined(ESP32)
   setConnectionSpeed();
   setupStaticIPconfig();
-
-  if (performScan) {
-    WifiScan(false, false);
-  }
 
   return true;
 }
@@ -391,21 +392,110 @@ void initWiFi()
 // ********************************************************************************
 // Configure WiFi TX power
 // ********************************************************************************
+void settxpower() {
+  const WiFiMode_t cur_mode = WiFi.getMode();
+  if (cur_mode != WIFI_OFF) {
+    settxpower(0.0f); // Just some minimal value, will be adjusted in settxpower
+  }
+}
+
 void settxpower(float dBm) { 
   // Range ESP32  : 2dBm - 20dBm
   // Range ESP8266: 0dBm - 20.5dBm
-  #ifdef ESP32
-  if(dBm > 20.5) {
-    dBm = 20.5;
-  } else if(dBm < 0) {
-    dBm = 0;
-  }
-  int8_t val = (dBm*4.0f);
+  const float cur_rssi = WiFi.RSSI();
+  float maxTXpwr = Settings.WiFi_TX_power / 4.0f;
+  float threshold = -80;
+  if (cur_rssi < 0) {
+    float minTXpwr = 0;
+    #ifdef ESP8266
+    switch (wifi_get_phy_mode()) {
+      case PHY_MODE_11B:
+        threshold = -91;
+        break;
+      case PHY_MODE_11G:
+        threshold = -75;
+        if (maxTXpwr > 17) maxTXpwr = 17;
+        break;
+      case PHY_MODE_11N:
+        threshold = -72;
+        if (maxTXpwr > 14) maxTXpwr = 14;
+        break;
+    }
+    #endif
+    #ifdef ESP32
+    uint8_t protocol;
+    esp_wifi_get_protocol(WIFI_IF_STA, &protocol);
+    if (protocol & WIFI_PROTOCOL_11N) {
+      threshold = -72;
+      if (maxTXpwr > 14) maxTXpwr = 14;
+    } else if (protocol & WIFI_PROTOCOL_11G) {
+      threshold = -75;
+      if (maxTXpwr > 17) maxTXpwr = 17;
+    } else {
+      threshold = -91;
+    }
+    #endif
 
+    threshold += Settings.WiFi_sensitivity_margin; // Margin in dBm on top of threshold
+
+    const float newrssi = cur_rssi - maxTXpwr;
+    if (newrssi < threshold) {
+      minTXpwr = threshold - newrssi;
+    }
+    if (dBm > maxTXpwr) {
+      dBm = maxTXpwr;
+    } else if (dBm < minTXpwr) {
+      dBm = minTXpwr;
+    }
+  }
+
+  static float last_val = -1;
+  if (dBm == last_val) return;
+  last_val = dBm;
+
+  #ifdef ESP32
+  wifi_power_t val = WIFI_POWER_MINUS_1dBm;
+  if (dBm < 0) { 
+    val = WIFI_POWER_MINUS_1dBm;
+    dBm = -1;
+  } else if (dBm < 3.5) {
+    val = WIFI_POWER_2dBm;
+    dBm = 2;
+  } else if (dBm < 6) {
+    val = WIFI_POWER_5dBm;
+    dBm = 5;
+  } else if (dBm < 8) {
+    val = WIFI_POWER_7dBm;
+    dBm = 7;
+  } else if (dBm < 10) {
+    val = WIFI_POWER_8_5dBm;
+    dBm = 8.5;
+  } else if (dBm < 12) {
+    val = WIFI_POWER_11dBm;
+    dBm = 11;
+  } else if (dBm < 14) {
+    val = WIFI_POWER_13dBm;
+    dBm = 13;
+  } else if (dBm < 16) {
+    val = WIFI_POWER_15dBm;
+    dBm = 15;
+  } else if (dBm < 17.75) {
+    val = WIFI_POWER_17dBm;
+    dBm = 17;
+  } else if (dBm < 18.75) {
+    val = WIFI_POWER_18_5dBm;
+    dBm = 18.5;
+  } else if (dBm < 19.25) {
+    val = WIFI_POWER_19dBm;
+    dBm = 19;
+  } else {
+    val = WIFI_POWER_19_5dBm;
+    dBm = 19.5;
+  }
   esp_wifi_set_max_tx_power(val);
-  esp_wifi_get_max_tx_power(&val);
-  dBm = static_cast<float>(val);
-  dBm /= 4.0f;
+  //esp_wifi_get_max_tx_power(&val);
+//  dBm = static_cast<float>(val);
+//  dBm /= 4.0f;
   #endif
 
   #ifdef ESP8266
@@ -414,10 +504,19 @@ void settxpower(float dBm) {
 
   delay(1);
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WiFi : Set TX power to ");
-    log += String(dBm, 1);
-    log += F("dBm");
-    addLog(LOG_LEVEL_INFO, log);
+    if (last_val != maxTXpwr) {
+      static float last_log = -1;
+      if (last_val != last_log) {
+        last_log = last_val;
+        String log = F("WiFi : Set TX power to ");
+        log += String(dBm, 2);
+        log += F("dBm");
+        log += F(" sensitivity: ");
+        log += String(threshold, 2);
+        log += F("dBm");
+        addLog(LOG_LEVEL_INFO, log);
+      }
+    }
   }
 }
 
@@ -442,8 +541,8 @@ void WifiDisconnect()
 // ********************************************************************************
 // Scan WiFi network
 // ********************************************************************************
-void WifiScan(bool async, bool quick) {
-  if (WiFi.scanComplete() == -1) { 
+void WifiScan(bool async, uint8_t channel) {
+  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING) { 
     // Scan still busy
     return;
   }
@@ -451,16 +550,14 @@ void WifiScan(bool async, bool quick) {
   bool show_hidden         = true;
   WiFiEventData.processedScanDone = false;
   WiFiEventData.lastGetScanMoment.setNow();
-  if (quick) {
-    #ifdef ESP8266
-    // Only scan a single channel if the RTC.lastWiFiChannel is known to speed up connection time.
-    WiFi.scanNetworks(async, show_hidden, RTC.lastWiFiChannel);
-    #else
-    WiFi.scanNetworks(async, show_hidden);
-    #endif
-  } else {
-    WiFi.scanNetworks(async, show_hidden);
-  }
+  #ifdef ESP8266
+  WiFi.scanNetworks(async, show_hidden, channel);
+  #endif
+  #ifdef ESP32
+  const bool passive = false;
+  const uint32_t max_ms_per_chan = 300;
+  WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
+  #endif
 }
 
 // ********************************************************************************
@@ -470,7 +567,7 @@ void WifiScan()
 {
   // Direct Serial is allowed here, since this function will only be called from serial input.
   serialPrintln(F("WIFI : SSID Scan start"));
-  WifiScan(false, false);
+  WifiScan(false);
   const int8_t scanCompleteStatus = WiFi.scanComplete();
   if (scanCompleteStatus <= 0) {
     serialPrintln(F("WIFI : No networks found"));
@@ -628,8 +725,8 @@ void setWifiMode(WiFiMode_t wifimode) {
     WiFi.forceSleepWake(); // Make sure WiFi is really active.
     #endif // ifdef ESP8266
     delay(100);
-    settxpower(17.5); // FIXME TD-er: Must make this a setting.
   }
+  settxpower();
 
   addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
 

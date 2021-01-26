@@ -7,6 +7,7 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
@@ -29,7 +30,6 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
-#include "../Helpers/MDNS_Helper.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
@@ -430,7 +430,7 @@ void afterloadSettings() {
   if (!Settings.UseRules) {
     eventQueue.clear();
   }
-  set_mDNS(); // To update changes in hostname.
+  CheckRunningServices(); // To update changes in hostname.
 }
 
 /********************************************************************************************\

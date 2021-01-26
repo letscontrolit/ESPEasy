@@ -346,7 +346,7 @@ void setup()
     RTC.clearLastWiFi(); // Must scan all channels
     // Wait until scan has finished to make sure as many as possible are found
     // We're still in the setup phase, so nothing else is taking resources of the ESP.
-    WifiScan(false, false); 
+    WifiScan(false); 
   }
 
 //  setWifiMode(WIFI_STA);

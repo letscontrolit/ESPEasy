@@ -87,6 +87,8 @@ void handle_advanced() {
 #ifdef SUPPORT_ARP
     Settings.gratuitousARP(isFormItemChecked(getInternalLabel(LabelType::PERIODICAL_GRAT_ARP)));
 #endif // ifdef SUPPORT_ARP
+    Settings.WiFi_TX_power = static_cast<uint8_t>(getFormItemFloat(getInternalLabel(LabelType::WIFI_TX_PWR)) * 4);
+    Settings.WiFi_sensitivity_margin = getFormItemInt(getInternalLabel(LabelType::WIFI_SENS_MARGIN));
 
     addHtmlError(SaveSettings());
 
@@ -211,6 +213,11 @@ void handle_advanced() {
 #endif // ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
+  addFormFloatNumberBox(LabelType::WIFI_TX_PWR, Settings.WiFi_TX_power/4.0f, 0.0f, 20.5f, 2, 0.25f);
+  addUnit(F("dBm"));
+  addFormNote(F("Preferred: 17.5 dBm"));
+  addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
+  addUnit(F("dBm"));
   addFormSeparator(2);
 
   html_TR_TD();

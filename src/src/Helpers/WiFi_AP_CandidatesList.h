@@ -11,9 +11,7 @@ struct WiFi_AP_CandidatesList {
   // Load the known credentials from the settings
   void load_knownCredentials();
 
-  void clearCache() {
-    mustLoadCredentials = true;
-  }
+  void clearCache();
 
   // Called after WiFi credentials have changed.
   void force_reload();

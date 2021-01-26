@@ -56,7 +56,6 @@
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
-#include "../Helpers/MDNS_Helper.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
@@ -375,7 +374,7 @@ void setWebserverRunning(bool state) {
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
   }
   webserverRunning = state;
-  set_mDNS(); // Uses webserverRunning state.
+  CheckRunningServices(); // Uses webserverRunning state.
 }
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)

@@ -21,13 +21,14 @@
 bool WiFiConnected();
 void WiFiConnectRelaxed();
 void AttemptWiFiConnect();
-bool prepareWiFi(bool performScan);
+bool prepareWiFi();
 bool checkAndResetWiFi();
 void resetWiFi();
 void initWiFi();
+void settxpower();
 void settxpower(float dBm); // 0-20.5
 void WifiDisconnect();
-void WifiScan(bool async, bool quick);
+void WifiScan(bool async, uint8_t channel = 0);
 void WifiScan();
 void setSTA(bool enable);
 void setAP(bool enable);

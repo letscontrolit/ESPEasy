@@ -17,25 +17,26 @@ void set_mDNS() {
   if (!WiFiEventData.WiFiServicesInitialized()) { return; }
 
   if (webserverRunning) {
-    addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
-    mDNS_init = MDNS.begin(NetworkGetHostname().c_str());
-    MDNS.setInstanceName(NetworkGetHostname()); // Needed for when the hostname has changed.
+    if (!mDNS_init) {
+      addLog(LOG_LEVEL_INFO, F("WIFI : Starting mDNS..."));
+      mDNS_init = MDNS.begin(NetworkGetHostname().c_str());
+      MDNS.setInstanceName(NetworkGetHostname()); // Needed for when the hostname has changed.
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WIFI : ");
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("WIFI : ");
 
+        if (mDNS_init) {
+          log += F("mDNS started, with name: ");
+          log += getValue(LabelType::M_DNS);
+        }
+        else {
+          log += F("mDNS failed");
+        }
+        addLog(LOG_LEVEL_INFO, log);
+      }
       if (mDNS_init) {
-        log += F("mDNS started, with name: ");
-        log += getValue(LabelType::M_DNS);
+        MDNS.addService(F("http"), F("tcp"), Settings.WebserverPort);
       }
-      else {
-        log += F("mDNS failed");
-      }
-      addLog(LOG_LEVEL_INFO, log);
-    }
-
-    if (mDNS_init) {
-      MDNS.addService(F("http"), F("tcp"), Settings.WebserverPort);
     }
   } else {
     #ifdef ESP8266

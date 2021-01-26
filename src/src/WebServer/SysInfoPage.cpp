@@ -489,6 +489,8 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
 # endif // ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
+  addRowLabelValue(LabelType::WIFI_TX_PWR);
+  addRowLabelValue(LabelType::WIFI_SENS_MARGIN);
 }
 
 void handle_sysinfo_Firmware() {
