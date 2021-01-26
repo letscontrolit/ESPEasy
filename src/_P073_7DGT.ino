@@ -803,7 +803,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event, const String& text) {
     case P073_MAX7219_8DGT: {
       uint8_t firstDot       = -1; // No decimals is no dots
       uint8_t secondDot      = -1;
-      double  hideFactor         = P073_data->hideDegree ? 10.0 : 1.0;
+      double  hideFactor     = P073_data->hideDegree ? 10.0 : 1.0;
       bool    firstDecimals  = false;
       bool    secondDecimals = false;
 
@@ -839,7 +839,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event, const String& text) {
       P073_data->FillBufferWithDualTemp(p073_lefttemp, firstDecimals, p073_righttemp, secondDecimals);
 
       bool alignSave = P073_data->rightAlignTempMAX7219; // Save setting
-      P073_data->rightAlignTempMAX7219 = false;
+      P073_data->rightAlignTempMAX7219 = true;
 
       max7219_ShowTemp(event, P073_data->pin1, P073_data->pin2, P073_data->pin3, firstDot, secondDot);
 
