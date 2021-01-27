@@ -62,6 +62,9 @@
                                                    // See: https://github.com/letscontrolit/ESPEasy/issues/2724
 #define DEFAULT_SEND_TO_HTTP_ACK             false // Wait for ack with SendToHttp command.
 
+//#define AP_DONT_FORCE_SETUP            false     // Allow optional usage of Sensor without WIFI avaiable 
+                                                   // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false                                          // true or false enabled or disabled, set 1st controller
                                                                             // defaults
