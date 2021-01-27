@@ -180,32 +180,29 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       if (nullptr == P022_data) {
         break;
       }
-      String log            = "";
-      String line           = String(string);
-      String command        = "";
-      int    dotPos         = line.indexOf('.');
-      bool   istanceCommand = false;
+      String log;
+      String line           = string;
+      String command;
+      int    dotPos          = line.indexOf('.');
+      bool   instanceCommand = false;
 
       if (dotPos > -1)
       {
         LoadTaskSettings(event->TaskIndex);
         String name = line.substring(0, dotPos);
-        name.replace("[", "");
-        name.replace("]", "");
+        name.replace(F("["), F(""));
+        name.replace(F("]"), F(""));
 
-        if (name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
-        {
-          line           = line.substring(dotPos + 1);
-          istanceCommand = true;
-        }
-        else
-        {
+        if (name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
+          line            = line.substring(dotPos + 1);
+          instanceCommand = true;
+        } else {
           break;
         }
       }
       command = parseString(line, 1);
 
-      if ((command == F("pcapwm")) || (istanceCommand && (command == F("pwm"))))
+      if ((command == F("pcapwm")) || (instanceCommand && (command == F("pwm"))))
       {
         success = true;
         log     = String(F("PCA 0x")) + String(address, HEX) + String(F(": PWM ")) + String(event->Par1);
@@ -235,8 +232,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
             addLog(LOG_LEVEL_INFO, log);
 
-            // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+            // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+            SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
           }
           else {
             addLog(LOG_LEVEL_ERROR, log + String(F(" the pwm value ")) + String(event->Par2) + String(F(" is invalid value.")));
@@ -247,7 +244,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         }
       }
 
-      if ((command == F("pcafrq")) || (istanceCommand && (command == F("frq"))))
+      if ((command == F("pcafrq")) || (instanceCommand && (command == F("frq"))))
       {
         success = true;
 
@@ -274,8 +271,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           log = String(F("PCA 0x")) + String(address, HEX) + String(F(": FREQ ")) + String(event->Par1);
           addLog(LOG_LEVEL_INFO, log);
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
           addLog(LOG_LEVEL_ERROR,
@@ -284,7 +281,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         }
       }
 
-      if (istanceCommand && (command == F("mode2")))
+      if (instanceCommand && (command == F("mode2")))
       {
         success = true;
 
@@ -318,12 +315,12 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           }
           success = true;
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, createKey(PLUGIN_ID_022, event->Par2), dummyString, 0);
+          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, createKey(PLUGIN_ID_022, event->Par2), dummyString, 0);
         }
       }
 
-      if (istanceCommand && (command == F("gpio")))
+      if (instanceCommand && (command == F("gpio")))
       {
         success = true;
         log     = String(F("PCA 0x")) + String(address, HEX) + String(F(": GPIO "));
@@ -371,15 +368,15 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           newStatus.state   = event->Par2;
           savePortStatus(key, newStatus);
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, pin, log, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, pin, log, 0));
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
           addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
         }
       }
 
-      if (istanceCommand && (command == F("pulse")))
+      if (instanceCommand && (command == F("pulse")))
       {
         success = true;
         log     = String(F("PCA 0x")) + String(address, HEX) + String(F(": GPIO ")) + String(event->Par1);
@@ -445,8 +442,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
           addLog(LOG_LEVEL_INFO, log);
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
           addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
@@ -502,8 +499,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         newStatus.state   = event->Par2;
         savePortStatus(key, newStatus);
 
-        // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
-        SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+        // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
+        SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
       break;
     }

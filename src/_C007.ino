@@ -1,7 +1,7 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C007
 
-#include "src/ESPEasyCore/Serial.h"
+# include "src/ESPEasyCore/Serial.h"
 
 // #######################################################################################################
 // ########################### Controller Plugin 007: Emoncms ############################################
@@ -84,9 +84,9 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
 bool do_process_c007_delay_queue(int controller_number, const C007_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-// *INDENT-ON*
 
 bool do_process_c007_delay_queue(int controller_number, const C007_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+// *INDENT-ON*
   WiFiClient client;
 
   if (!try_connect_host(controller_number, client, ControllerSettings)) {

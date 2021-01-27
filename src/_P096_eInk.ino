@@ -298,23 +298,6 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
 #endif
         String arguments = String(string);
 
-        int dotPos = arguments.indexOf('.');
-        if(dotPos > -1 && arguments.substring(dotPos,dotPos+3).equalsIgnoreCase(F("epd")))
-        {
-          LoadTaskSettings(event->TaskIndex);
-          String name = arguments.substring(0,dotPos);
-          name.replace(F("["),F(""));
-          name.replace(F("]"),F(""));
-          if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
-          {
-            arguments = arguments.substring(dotPos+1);
-          }
-          else
-          {
-             return false;
-          }
-        }
-
         String command = F("");
         String subcommand = F("");
 
@@ -537,7 +520,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
         log.reserve(110);                           // Prevent re-allocation
         log = F("P096-eInk : WRITE = ");
         log += tmpString;
-        SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.  
+        SendStatus(event, log);             // Reply (echo) to sender. This will print message on browser.  
 #endif
         break;        
       }

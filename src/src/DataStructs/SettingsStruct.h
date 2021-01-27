@@ -86,6 +86,10 @@ class SettingsStruct_tmpl
   bool SendToHttp_ack() const;
   void SendToHttp_ack(bool value);
 
+  // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
+  bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
+  void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
+
   void validate();
 
   bool networkSettingsEmpty() const;
@@ -182,7 +186,7 @@ class SettingsStruct_tmpl
   boolean       TaskDevicePin1Inversed[N_TASKS];
   float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
   long          TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
-  byte          OLD_TaskDeviceSendData[N_TASKS];
+  byte          TaskDeviceSendDataFlags[N_TASKS];
   byte          OLD_TaskDeviceGlobalSync[N_TASKS];
   byte          TaskDeviceDataFeed[N_TASKS];    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[N_TASKS];

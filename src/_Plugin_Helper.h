@@ -22,8 +22,10 @@
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/I2Cdev.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/RuntimeData.h"
 #include "src/Globals/Settings.h"
 
+#include "src/Helpers/ESPEasy_math.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
 #include "src/Helpers/PortStatus.h"
@@ -104,11 +106,20 @@ String               getPluginCustomArgName(int varNr);
 // if the regular values should also be displayed.
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-String pluginWebformShowValue(taskIndex_t   taskIndex,
-                              byte          varNr,
-                              const String& label,
-                              const String& value,
-                              bool          addTrailingBreak = false);
+void pluginWebformShowValue(taskIndex_t   taskIndex,
+                            byte          varNr,
+                            const String& label,
+                            const String& value,
+                            bool          addTrailingBreak = false);
+
+void pluginWebformShowValue(const String& valName,
+                            const String& value,
+                            bool          addBR = true);
+void pluginWebformShowValue(const String& valName,
+                            const String& valName_id,
+                            const String& value,
+                            const String& value_id,
+                            bool          addBR = true);
 
 // Check if given parameter nr matches with given taskIndex.
 // paramNr == 0 -> command, paramNr == 1 -> 1st parameter
@@ -119,10 +130,10 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
                                           const String& string,
                                           byte          paramNr);
 
-int getValueCountForTask(taskIndex_t   taskIndex);
+int getValueCountForTask(taskIndex_t taskIndex);
 
 // Check if the DeviceVType is set and update if it isn't.
 // Return pconfig_index
-int checkDeviceVTypeForTask(struct EventStruct* event);
+int checkDeviceVTypeForTask(struct EventStruct *event);
 
 #endif // PLUGIN_HELPER_H

@@ -264,7 +264,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
             }
           }
           addLog(LOG_LEVEL_INFO, ModeStr);
-          SendStatus(event->Source, ModeStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, ModeStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
           return true;                                             // Exit now. Info Log shows Lolin Info.
         }
         else {
@@ -329,7 +329,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
         if (parse_error == true) {
           String ErrorStr = ModeStr + String(F(": CMD Syntax Error"));
           addLog(LOG_LEVEL_INFO, ErrorStr);
-          SendStatus(event->Source, ErrorStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, ErrorStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
         }
         else {
           switch (motor_dir) {

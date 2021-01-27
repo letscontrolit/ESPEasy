@@ -212,7 +212,7 @@ bool handle_setup_connectingStage(byte refreshCount) {
   addHtml(F("}, 1000);"));
   addHtml(F("};"));
   addHtml(F("timedRefresh("));
-  addHtml(String(wait));
+  addHtmlInt(wait);
   addHtml(F(");"));
   html_add_script_end();
   addHtml(F("seconds while trying to connect"));

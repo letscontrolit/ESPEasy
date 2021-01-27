@@ -12,7 +12,6 @@
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24UL)
 
 
-
 bool isLeapYear(int year) {
   return (((1970 + year) > 0) && !((1970 + year) % 4) && (((1970 + year) % 100) || !((1970 + year) % 400)));
 }
@@ -61,7 +60,7 @@ uint32_t makeTime(const struct tm& tm) {
 String timeLong2String(unsigned long lngTime)
 {
   unsigned long x = 0;
-  String time     = "";
+  String time;
 
   x = (lngTime >> 16) & 0xf;
 

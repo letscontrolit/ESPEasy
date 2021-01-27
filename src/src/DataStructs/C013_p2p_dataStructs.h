@@ -8,7 +8,7 @@
 
 // These structs are sent to other nodes, so make sure not to change order or offset in struct.
 
-
+#ifdef USES_C013
 struct C013_SensorInfoStruct
 {
   C013_SensorInfoStruct();
@@ -41,5 +41,6 @@ struct C013_SensorDataStruct
   float       Values[VARS_PER_TASK];
 };
 
+#endif
 
 #endif // DATASTRUCTS_C013_P2P_DATASTRUCTS_H

@@ -5,6 +5,7 @@
 #include "../DataStructs/RTCCacheStruct.h"
 #include "../DataStructs/RTC_cache_handler_struct.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/RuntimeData.h"
 #include "../Helpers/CRC_functions.h"
 
 #ifdef ESP8266

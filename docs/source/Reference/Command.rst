@@ -568,7 +568,27 @@ P079 :ref:`P079_page`
 
 .. .. include:: ../Plugin/P082_commands.repl
 
-P101 :ref:`P101_page`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. P101 :ref:`P101_page`
+.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../Plugin/P101_commands.repl
+
+Plugins installed multiple times
+--------------------------------
+
+In case 2 or more of the same plugins are installed, and you want to send a command to either of them, the commands supported by these plugins can be prefixed with ``[<TaskName>].`` or ``[<TaskNumber>].`` (square brackets are optional) to address a specific instance. This requires the plugin names to be unique (if the TaskName variant is used).
+
+Examples:
+
+``[Display1].oledframedcmd,3,'Hello World'``
+
+``[Display2].oledframedcmd,4,'From the other side'``
+
+This will display 'Hello World' on the 3rd line of the display with name 'Display1', and 'From the other side' on line 4 of the display named 'Display2'.
+
+
+``[AC1].irsendac,{<some_json_to_control_AC>}``
+
+``[AC2].irsendac,{<some_json_to_control_AC>}``
+
+This allows to control multiple IR controlled AC's from one ESP.

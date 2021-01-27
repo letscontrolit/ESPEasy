@@ -106,13 +106,15 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TIMER_IN:
       {
-        if (Plugin_008_init) {
-            // Reset card id on timeout
-            UserVar[event->BaseVarIndex] = 0;
-            UserVar[event->BaseVarIndex + 1] = 0;
-            addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
+        if (Plugin_008_init && PCONFIG(2) == 0) { // PCONFIG(2) check uses inversed logic!
+          // Reset card id on timeout
+          UserVar[event->BaseVarIndex] = PCONFIG_LONG(0) & 0xFFFF;
+          UserVar[event->BaseVarIndex + 1] = (PCONFIG_LONG(0) >> 16) & 0xFFFF;
+          addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
+          if (PCONFIG(3) == 1) {
             sendData(event);
-            success = true;
+          }
+          success = true;
         }
         break;
       }
@@ -185,7 +187,9 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
             Plugin_008_timeoutCount = 0;
 
             if (new_key) sendData(event);
-            Scheduler.setPluginTaskTimer(500, event->TaskIndex, event->Par1);
+            uint32_t resetTimer = PCONFIG_LONG(1);
+            if (resetTimer < 500) resetTimer = 500;
+            Scheduler.setPluginTaskTimer(resetTimer, event->TaskIndex, event->Par1);
 
           //   String info = "";
           //   uint64_t invalue = 0x1234;
@@ -213,14 +217,32 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
           bool presentHexToDec = PCONFIG(1) == 1;
           addFormCheckBox(F("Present hex as decimal value"), F("p008_hexasdec"), presentHexToDec);
           addFormNote(F("Useful only for numeric keypad input!"));
+
+          bool autoTagRemoval = PCONFIG(2) == 0; // Inverted state!
+          addFormCheckBox(F("Automatic Tag removal"), F("p008_autotagremoval"), autoTagRemoval);
+
+          if (PCONFIG_LONG(1) == 0) PCONFIG_LONG(1) = 500; // Defaulty 500 mSec (was hardcoded value)
+          addFormNumericBox(F("Automatic Tag removal after"),F("p008_removaltimeout"), PCONFIG_LONG(1), 250, 60000); // 0.25 to 60 seconds
+          addUnit(F("mSec."));
+
+          addFormNumericBox(F("Value to set on Tag removal"),F("p008_removalvalue"), PCONFIG_LONG(0), 0, 2147483647); // Max allowed is int = 0x7FFFFFFF ...
+
+          bool eventOnRemoval = PCONFIG(3) == 1; // Normal state!
+          addFormCheckBox(F("Event on Tag removal"), F("p008_sendreset"), eventOnRemoval);
+
           success = true;
           break;
         }
 
       case PLUGIN_WEBFORM_SAVE:
         {
-          PCONFIG(0) = getFormItemInt(F("p008_type"));
-          PCONFIG(1) = isFormItemChecked(F("p008_hexasdec")) ? 1 : 0;
+          PCONFIG(0)      = getFormItemInt(F("p008_type"));
+          PCONFIG(1)      = isFormItemChecked(F("p008_hexasdec")) ? 1 : 0;
+          PCONFIG(2)      = isFormItemChecked(F("p008_autotagremoval")) ? 0 : 1; // Inverted logic!
+          PCONFIG(3)      = isFormItemChecked(F("p008_sendreset")) ? 1 : 0;
+          PCONFIG_LONG(0) = getFormItemInt(F("p008_removalvalue"));
+          PCONFIG_LONG(1) = getFormItemInt(F("p008_removaltimeout"));
+
           success = true;
           break;
         }

@@ -538,10 +538,11 @@ int ESPEasy_time::getSecOffset(const String& format) {
   if (position_percent == -1) {
     return 0;
   }
-  String valueStr = getNumerical(format.substring(sign_position, position_percent), true);
 
-  if (!isInt(valueStr)) { return 0; }
-  int value = valueStr.toInt();
+  int value;
+  if (!validIntFromString(format.substring(sign_position, position_percent), value)) {
+    return 0;
+  }
 
   switch (format.charAt(position_percent - 1)) {
     case 'm':
@@ -590,7 +591,7 @@ float ESPEasy_time::diurnalArc(float dec, float lat) {
   float height = -50.0f / 60.0f * rad;
   float latRad = lat * rad;
 
-  return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / 3.1415926536f;
+  return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / M_PI;
 }
 
 float ESPEasy_time::equationOfTime(int doy) {
