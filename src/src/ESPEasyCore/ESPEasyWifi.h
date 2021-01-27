@@ -12,6 +12,7 @@
   # include <WebServer.h>
 #endif // if defined(ESP32)
 
+#include "../DataTypes/WiFiConnectionProtocol.h"
 
 #define WIFI_RECONNECT_WAIT                20000  // in milliSeconds
 #define WIFI_AP_OFF_TIMER_DURATION         60000  // in milliSeconds
@@ -25,8 +26,11 @@ bool prepareWiFi();
 bool checkAndResetWiFi();
 void resetWiFi();
 void initWiFi();
-void settxpower();
-void settxpower(float dBm); // 0-20.5
+void SetWiFiTXpower();
+void SetWiFiTXpower(float dBm); // 0-20.5
+void SetWiFiTXpower(float dBm, float rssi);
+float GetRSSIthreshold(float& maxTXpwr);
+WiFiConnectionProtocol getConnectionProtocol();
 void WifiDisconnect();
 void WifiScan(bool async, uint8_t channel = 0);
 void WifiScan();

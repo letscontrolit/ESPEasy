@@ -1,4 +1,4 @@
-#include "ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../../ESPEasy-Globals.h"
 #include "../DataStructs/TimingStats.h"
@@ -150,7 +150,7 @@ bool WiFiConnected() {
     STOP_TIMER(WIFI_ISCONNECTED_STATS);
     recursiveCall = false;
     // Only return true after some time since it got connected.
-    settxpower();
+    SetWiFiTXpower();
     return WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
   }
 
@@ -234,6 +234,7 @@ void AttemptWiFiConnect() {
     }
     WiFiEventData.markWiFiBegin();
     if (prepareWiFi()) {
+      SetWiFiTXpower(Settings.WiFi_TX_power, candidate.rssi);
       if (candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid);
       } else {
@@ -392,66 +393,38 @@ void initWiFi()
 // ********************************************************************************
 // Configure WiFi TX power
 // ********************************************************************************
-void settxpower() {
+void SetWiFiTXpower() {
   const WiFiMode_t cur_mode = WiFi.getMode();
   if (cur_mode != WIFI_OFF) {
-    settxpower(0.0f); // Just some minimal value, will be adjusted in settxpower
+    SetWiFiTXpower(0.0f); // Just some minimal value, will be adjusted in SetWiFiTXpower
   }
 }
 
-void settxpower(float dBm) { 
+void SetWiFiTXpower(float dBm) { 
+  SetWiFiTXpower(dBm, WiFi.RSSI());
+}
+
+void SetWiFiTXpower(float dBm, float rssi) {
   // Range ESP32  : 2dBm - 20dBm
   // Range ESP8266: 0dBm - 20.5dBm
-  const float cur_rssi = WiFi.RSSI();
-  float maxTXpwr = Settings.WiFi_TX_power / 4.0f;
-  float threshold = -80;
-  if (cur_rssi < 0) {
-    float minTXpwr = 0;
-    #ifdef ESP8266
-    switch (wifi_get_phy_mode()) {
-      case PHY_MODE_11B:
-        threshold = -91;
-        break;
-      case PHY_MODE_11G:
-        threshold = -75;
-        if (maxTXpwr > 17) maxTXpwr = 17;
-        break;
-      case PHY_MODE_11N:
-        threshold = -72;
-        if (maxTXpwr > 14) maxTXpwr = 14;
-        break;
-    }
-    #endif
-    #ifdef ESP32
-    uint8_t protocol;
-    esp_wifi_get_protocol(WIFI_IF_STA, &protocol);
-    if (protocol & WIFI_PROTOCOL_11N) {
-      threshold = -72;
-      if (maxTXpwr > 14) maxTXpwr = 14;
-    } else if (protocol & WIFI_PROTOCOL_11G) {
-      threshold = -75;
-      if (maxTXpwr > 17) maxTXpwr = 17;
-    } else {
-      threshold = -91;
-    }
-    #endif
+  float maxTXpwr;
+  float threshold = GetRSSIthreshold(maxTXpwr);
+  float minTXpwr = 0;
 
-    threshold += Settings.WiFi_sensitivity_margin; // Margin in dBm on top of threshold
+  threshold += Settings.WiFi_sensitivity_margin; // Margin in dBm on top of threshold
 
-    const float newrssi = cur_rssi - maxTXpwr;
-    if (newrssi < threshold) {
-      minTXpwr = threshold - newrssi;
-    }
-    if (dBm > maxTXpwr) {
-      dBm = maxTXpwr;
-    } else if (dBm < minTXpwr) {
-      dBm = minTXpwr;
-    }
+  const float newrssi = rssi - maxTXpwr;
+  if (newrssi < threshold) {
+    minTXpwr = threshold - newrssi;
   }
-
-  static float last_val = -1;
-  if (dBm == last_val) return;
-  last_val = dBm;
+  if (minTXpwr > maxTXpwr) {
+    minTXpwr = maxTXpwr;
+  }
+  if (dBm > maxTXpwr) {
+    dBm = maxTXpwr;
+  } else if (dBm < minTXpwr) {
+    dBm = minTXpwr;
+  }
 
   #ifdef ESP32
   wifi_power_t val = WIFI_POWER_MINUS_1dBm;
@@ -502,12 +475,14 @@ void settxpower(float dBm) {
   WiFi.setOutputPower(dBm);
   #endif
 
+  WiFiEventData.wifi_TX_pwr = dBm;
+
   delay(1);
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    if (last_val != maxTXpwr) {
+    if (WiFiEventData.wifi_TX_pwr != maxTXpwr) {
       static float last_log = -1;
-      if (last_val != last_log) {
-        last_log = last_val;
+      if (WiFiEventData.wifi_TX_pwr != last_log) {
+        last_log = WiFiEventData.wifi_TX_pwr;
         String log = F("WiFi : Set TX power to ");
         log += String(dBm, 2);
         log += F("dBm");
@@ -518,6 +493,56 @@ void settxpower(float dBm) {
       }
     }
   }
+}
+
+float GetRSSIthreshold(float& maxTXpwr) {
+  maxTXpwr = Settings.WiFi_TX_power / 4.0f;
+  float threshold = -72;
+  switch (getConnectionProtocol()) {
+    case WiFiConnectionProtocol::WiFi_Protocol_11b:
+      threshold = -91;
+      break;
+    case WiFiConnectionProtocol::WiFi_Protocol_11g:
+      threshold = -75;
+      if (maxTXpwr > 17) maxTXpwr = 17;
+      break;
+    case WiFiConnectionProtocol::WiFi_Protocol_11n:
+      threshold = -72;
+      if (maxTXpwr > 14) maxTXpwr = 14;
+      break;
+    case WiFiConnectionProtocol::Unknown:
+      break;
+  }
+  return threshold;
+}
+
+WiFiConnectionProtocol getConnectionProtocol() {
+  if (WiFi.RSSI() < 0) {
+    #ifdef ESP8266
+    switch (wifi_get_phy_mode()) {
+      case PHY_MODE_11B:
+        return WiFiConnectionProtocol::WiFi_Protocol_11b;
+      case PHY_MODE_11G:
+        return WiFiConnectionProtocol::WiFi_Protocol_11g;
+      case PHY_MODE_11N:
+        return WiFiConnectionProtocol::WiFi_Protocol_11n;
+    }
+    #endif
+    #ifdef ESP32
+    uint8_t protocol;
+    esp_wifi_get_protocol(WIFI_IF_STA, &protocol);
+    if (protocol & WIFI_PROTOCOL_11N) {
+      return WiFiConnectionProtocol::WiFi_Protocol_11n;
+    }
+    if (protocol & WIFI_PROTOCOL_11G) {
+      return WiFiConnectionProtocol::WiFi_Protocol_11g;
+    }
+    if (protocol & WIFI_PROTOCOL_11B) {
+      return WiFiConnectionProtocol::WiFi_Protocol_11b;
+    }
+    #endif
+  }
+  return WiFiConnectionProtocol::Unknown;
 }
 
 // ********************************************************************************
@@ -726,7 +751,7 @@ void setWifiMode(WiFiMode_t wifimode) {
     #endif // ifdef ESP8266
     delay(100);
   }
-  settxpower();
+  SetWiFiTXpower();
 
   addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
 

@@ -197,7 +197,8 @@ void handle_json()
       stream_next_json_object_value(LabelType::PERIODICAL_GRAT_ARP);
 #endif // ifdef SUPPORT_ARP
       stream_next_json_object_value(LabelType::CONNECTION_FAIL_THRESH);
-      stream_next_json_object_value(LabelType::WIFI_TX_PWR);
+      stream_next_json_object_value(LabelType::WIFI_TX_MAX_PWR);
+      stream_next_json_object_value(LabelType::WIFI_CUR_TX_PWR);
       stream_next_json_object_value(LabelType::WIFI_SENS_MARGIN);
       stream_last_json_object_value(LabelType::WIFI_RSSI);
       // TODO: PKR: Add ETH Objects

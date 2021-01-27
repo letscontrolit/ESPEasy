@@ -18,8 +18,9 @@ struct LabelType {
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
     CPU_ECO_MODE,        // true
-    WIFI_TX_PWR,         // Unit: 0.25 dBm, 0 = use default (do not set)
-    WIFI_SENS_MARGIN,    // Margin in dBm on top of sensitivity
+    WIFI_TX_MAX_PWR,     // Unit: 0.25 dBm, 0 = use default (do not set)
+    WIFI_CUR_TX_PWR,     // Unit dBm of current WiFi TX power.
+    WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
 
     FREE_MEM,            // 9876
     FREE_STACK,          // 3456

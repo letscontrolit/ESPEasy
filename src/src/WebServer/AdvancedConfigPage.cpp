@@ -6,6 +6,8 @@
 #include "../WebServer/Markup_Forms.h"
 #include "../WebServer/WebServer.h"
 
+#include "../ESPEasyCore/ESPEasyWifi.h"
+
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
@@ -87,7 +89,7 @@ void handle_advanced() {
 #ifdef SUPPORT_ARP
     Settings.gratuitousARP(isFormItemChecked(getInternalLabel(LabelType::PERIODICAL_GRAT_ARP)));
 #endif // ifdef SUPPORT_ARP
-    Settings.WiFi_TX_power = static_cast<uint8_t>(getFormItemFloat(getInternalLabel(LabelType::WIFI_TX_PWR)) * 4);
+    Settings.WiFi_TX_power = static_cast<uint8_t>(getFormItemFloat(getInternalLabel(LabelType::WIFI_TX_MAX_PWR)) * 4);
     Settings.WiFi_sensitivity_margin = getFormItemInt(getInternalLabel(LabelType::WIFI_SENS_MARGIN));
 
     addHtmlError(SaveSettings());
@@ -213,11 +215,25 @@ void handle_advanced() {
 #endif // ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
-  addFormFloatNumberBox(LabelType::WIFI_TX_PWR, Settings.WiFi_TX_power/4.0f, 0.0f, 20.5f, 2, 0.25f);
-  addUnit(F("dBm"));
-  addFormNote(F("Preferred: 17.5 dBm"));
-  addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
-  addUnit(F("dBm"));
+  {
+    float maxTXpwr;
+    float threshold = GetRSSIthreshold(maxTXpwr);
+    addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.WiFi_TX_power/4.0f, 0.0f, 20.5f, 2, 0.25f);
+    addUnit(F("dBm"));
+    String note;
+    note = F("Current max: ");
+    note += String(maxTXpwr, 2);
+    note += F(" dBm");
+    addFormNote(note);
+
+    addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
+    addUnit(F("dB")); // Relative, thus the unit is dB, not dBm
+    note = F("Adjust TX power to target the AP with (threshold + margin) dBm signal strength. Current threshold: ");
+    note += String(threshold, 2);
+    note += F(" dBm");
+    addFormNote(note);
+  }
+
   addFormSeparator(2);
 
   html_TR_TD();

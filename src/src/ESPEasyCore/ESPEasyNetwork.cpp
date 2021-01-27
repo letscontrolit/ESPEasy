@@ -49,10 +49,10 @@ void PrepareSend() {
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     return;
   } else {
-    return settxpower(30); // Just some max, will be limited in settxpower
+    return SetWiFiTXpower(30); // Just some max, will be limited in SetWiFiTXpower
   }
   #else
-  return settxpower(30); // Just some max, will be limited in settxpower
+  return SetWiFiTXpower(30); // Just some max, will be limited in SetWiFiTXpower
   #endif
 }
 
@@ -202,5 +202,5 @@ String WifiSoftAPmacAddress() {
 
 void CheckRunningServices() {
   set_mDNS();
-  settxpower();
+  SetWiFiTXpower();
 }

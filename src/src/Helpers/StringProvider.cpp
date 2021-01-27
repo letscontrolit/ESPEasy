@@ -42,7 +42,8 @@ String getLabel(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
     case LabelType::CPU_ECO_MODE:           return F("CPU Eco Mode");
-    case LabelType::WIFI_TX_PWR:            return F("Max WiFi TX Power");
+    case LabelType::WIFI_TX_MAX_PWR:        return F("Max WiFi TX Power");
+    case LabelType::WIFI_CUR_TX_PWR:        return F("Current WiFi TX Power");
     case LabelType::WIFI_SENS_MARGIN:       return F("WiFi Sensitivity Margin");
 
     case LabelType::FREE_MEM:               return F("Free RAM");
@@ -179,7 +180,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return String(getCPUload());
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
     case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
-    case LabelType::WIFI_TX_PWR:            return String(Settings.WiFi_TX_power / 4.0f, 2);
+    case LabelType::WIFI_TX_MAX_PWR:        return String(Settings.WiFi_TX_power / 4.0f, 2);
+    case LabelType::WIFI_CUR_TX_PWR:        return String(WiFiEventData.wifi_TX_pwr, 2);
     case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());

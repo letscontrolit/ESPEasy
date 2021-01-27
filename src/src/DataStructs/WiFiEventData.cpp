@@ -49,6 +49,7 @@ void WiFiEventData_t::clearAll() {
   processedDisconnectAPmode = true;
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
+  wifi_TX_pwr = 0;
 }
 
 void WiFiEventData_t::markWiFiBegin() {
