@@ -94,6 +94,10 @@ class SettingsStruct_tmpl
   bool IncludeHiddenSSID() const;
   void IncludeHiddenSSID(bool value);
 
+  // When sending, the TX power may be boosted to max TX power.
+  bool UseMaxTXpowerForSending() const;
+  void UseMaxTXpowerForSending(bool value);
+
 
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
@@ -133,7 +137,8 @@ class SettingsStruct_tmpl
   PinBootState getPinBootState(uint8_t gpio_pin) const;
   void setPinBootState(uint8_t gpio_pin, PinBootState state);
 
-
+  float getWiFi_TX_power() const;
+  void setWiFi_TX_power(float dBm);
 
 
   unsigned long PID;

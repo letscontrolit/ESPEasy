@@ -139,6 +139,16 @@ void SettingsStruct_tmpl<N_TASKS>::IncludeHiddenSSID(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::UseMaxTXpowerForSending() const {
+  return bitRead(VariousBits1, 13);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::UseMaxTXpowerForSending(bool value) {
+  bitWrite(VariousBits1, 13, value);
+}
+
+template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
   if (validTaskIndex(taskIndex))
     return bitRead(TaskDeviceSendDataFlags[taskIndex], 0);
@@ -412,3 +422,14 @@ void SettingsStruct_tmpl<N_TASKS>::setPinBootState(uint8_t gpio_pin, PinBootStat
   }
   #endif
 }
+
+template<unsigned int N_TASKS>
+float SettingsStruct_tmpl<N_TASKS>::getWiFi_TX_power() const {
+  return WiFi_TX_power / 4.0f;
+}
+  
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setWiFi_TX_power(float dBm) {
+  WiFi_TX_power = dBm * 4.0f;
+}
+

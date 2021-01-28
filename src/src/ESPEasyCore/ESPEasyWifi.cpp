@@ -234,7 +234,12 @@ void AttemptWiFiConnect() {
     }
     WiFiEventData.markWiFiBegin();
     if (prepareWiFi()) {
-      SetWiFiTXpower(Settings.WiFi_TX_power, candidate.rssi);
+      float tx_pwr = 0; // Will be set higher based on RSSI when needed.
+      // FIXME TD-er: Must check WiFiEventData.wifi_connect_attempt to increase TX power
+      if (Settings.UseMaxTXpowerForSending()) {
+        tx_pwr = Settings.getWiFi_TX_power();
+      }
+      SetWiFiTXpower(tx_pwr, candidate.rssi);
       if (candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid);
       } else {
@@ -413,7 +418,11 @@ void SetWiFiTXpower(float dBm, float rssi) {
 
   threshold += Settings.WiFi_sensitivity_margin; // Margin in dBm on top of threshold
 
-  const float newrssi = rssi - maxTXpwr;
+  // Assume AP sends with max set by ETSI standard.
+  // 2.4 GHz: 100 mWatt (20 dBm)
+  // US and some other countries allow 1000 mW (30 dBm)
+  // We cannot send with over 20 dBm, thus it makes no sense to force higher TX power all the time.
+  const float newrssi = rssi - 20;
   if (newrssi < threshold) {
     minTXpwr = threshold - newrssi;
   }
@@ -475,6 +484,11 @@ void SetWiFiTXpower(float dBm, float rssi) {
   WiFi.setOutputPower(dBm);
   #endif
 
+  if (WiFiEventData.wifi_TX_pwr < dBm) {
+    // Will increase the TX power, give power supply of the unit some rest
+    delay(1);
+  }
+
   WiFiEventData.wifi_TX_pwr = dBm;
 
   delay(1);
@@ -484,10 +498,13 @@ void SetWiFiTXpower(float dBm, float rssi) {
       if (WiFiEventData.wifi_TX_pwr != last_log) {
         last_log = WiFiEventData.wifi_TX_pwr;
         String log = F("WiFi : Set TX power to ");
-        log += String(dBm, 2);
+        log += String(dBm, 0);
         log += F("dBm");
         log += F(" sensitivity: ");
-        log += String(threshold, 2);
+        log += String(threshold, 0);
+        log += F("dBm");
+        log += F(" RSSI: ");
+        log += String(rssi, 0);
         log += F("dBm");
         addLog(LOG_LEVEL_INFO, log);
       }
@@ -496,7 +513,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
 }
 
 float GetRSSIthreshold(float& maxTXpwr) {
-  maxTXpwr = Settings.WiFi_TX_power / 4.0f;
+  maxTXpwr = Settings.getWiFi_TX_power();
   float threshold = -72;
   switch (getConnectionProtocol()) {
     case WiFiConnectionProtocol::WiFi_Protocol_11b:

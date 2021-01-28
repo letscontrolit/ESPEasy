@@ -89,8 +89,9 @@ void handle_advanced() {
 #ifdef SUPPORT_ARP
     Settings.gratuitousARP(isFormItemChecked(getInternalLabel(LabelType::PERIODICAL_GRAT_ARP)));
 #endif // ifdef SUPPORT_ARP
-    Settings.WiFi_TX_power = static_cast<uint8_t>(getFormItemFloat(getInternalLabel(LabelType::WIFI_TX_MAX_PWR)) * 4);
+    Settings.setWiFi_TX_power(getFormItemFloat(getInternalLabel(LabelType::WIFI_TX_MAX_PWR)));
     Settings.WiFi_sensitivity_margin = getFormItemInt(getInternalLabel(LabelType::WIFI_SENS_MARGIN));
+    Settings.UseMaxTXpowerForSending(isFormItemChecked(getInternalLabel(LabelType::WIFI_SEND_AT_MAX_TX_PWR)));
 
     addHtmlError(SaveSettings());
 
@@ -218,7 +219,7 @@ void handle_advanced() {
   {
     float maxTXpwr;
     float threshold = GetRSSIthreshold(maxTXpwr);
-    addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.WiFi_TX_power/4.0f, 0.0f, 20.5f, 2, 0.25f);
+    addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, 20.5f, 2, 0.25f);
     addUnit(F("dBm"));
     String note;
     note = F("Current max: ");
@@ -233,6 +234,8 @@ void handle_advanced() {
     note += F(" dBm");
     addFormNote(note);
   }
+  addFormCheckBox(LabelType::WIFI_SEND_AT_MAX_TX_PWR, Settings.UseMaxTXpowerForSending());
+
 
   addFormSeparator(2);
 

@@ -458,6 +458,7 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::WIFI_TX_MAX_PWR);
   addRowLabelValue(LabelType::WIFI_CUR_TX_PWR);
   addRowLabelValue(LabelType::WIFI_SENS_MARGIN);
+  addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
 }
 
 void handle_sysinfo_Firmware() {
