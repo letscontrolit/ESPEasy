@@ -86,6 +86,10 @@ class SettingsStruct_tmpl
   bool SendToHttp_ack() const;
   void SendToHttp_ack(bool value);
 
+  // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+  bool ApDontForceSetup() const;
+  void ApDontForceSetup(bool value);
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);

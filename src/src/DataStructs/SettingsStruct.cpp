@@ -119,6 +119,16 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup() const {
+  return bitRead(VariousBits1, 14);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
+  bitWrite(VariousBits1, 14, value);
+}
+
+template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
   if (validTaskIndex(taskIndex))
     return bitRead(TaskDeviceSendDataFlags[taskIndex], 0);
@@ -295,6 +305,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   gratuitousARP(DEFAULT_GRATUITOUS_ARP);
   TolerantLastArgParse(DEFAULT_TOLERANT_LAST_ARG_PARSE);
   SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
+  ApDontForceSetup(DEFAULT_ApDontForceSetup);
 }
 
 template<unsigned int N_TASKS>

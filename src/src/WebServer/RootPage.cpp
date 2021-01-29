@@ -34,7 +34,7 @@ void handle_root() {
   #endif
 
   // if Wifi setup, launch setup wizard
- if (WiFiEventData.wifiSetup && !AP_DONT_FORCE_SETUP)
+ if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
   {
     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
    return;
