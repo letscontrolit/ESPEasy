@@ -18,7 +18,11 @@
 //                     "7ddt,<temperature>,<temperature>"   (Dual temperatures on Max7219 (8 digits) only, temperature can be negative or positive and containing decimals)
 //                     "7dst,<hh>,<mm>,<ss>" (show manual time -not current-, no checks done on numbers validity!)
 //                     "7dsd,<dd>,<mm>,<yy>" (show manual date -not current-, no checks done on numbers validity!)
-//                     "7dtext,<text>"       (show free text - supported chars 0-9,a-z,A-Z," ","-","=","_","/","^")
+//                     "7dtext,<text>"       (show free text - supported chars 0-9,a-z,A-Z," ","-","=","_","/","^") Depending on Font used
+//                     "7dfont,<font>"       (select the used font: 0/7DGT/Default = default, 1/Siekoo = Siekoo, 2/Siekoo_Upper = Siekoo with uppercase CNORUX, 3/dSEG7 = dSEG7)
+//                                           Siekoo: https://www.fakoo.de/siekoo (uppercase CNORUX is a local extension)
+//                                           dSEG7 : https://www.keshikan.net/fonts-e.html
+//                     "7dbin,[byte],..."    (show data binary formatted, bits clock-wise from left to right, dot, top, right 2x, bottom, left 2x, center), scroll-enabled
 //  - Clock-Blink     -- display is automatically updated with current time and blinking dot/lines
 //  - Clock-NoBlink   -- display is automatically updated with current time and steady dot/lines
 //  - Clock12-Blink   -- display is automatically updated with current time (12h clock) and blinking dot/lines
@@ -30,6 +34,18 @@
 //  - "7doff"     -- turn OFF the display
 //  - "7db,<0-15> -- set brightness to specific value between 0 and 15
 //
+// History
+// 2021-01-30, tonhuisman: Added font support for 7Dgt (default), Siekoo, Siekoo with uppercase CNORUX, dSEG7 fonts. Default/7Dgt comes with these special characters: " -^=/_
+//                         Siekoo comes _without_ AOU with umlauts and Eszett characters, has many extra special characters "%@.,;:+*#!?'\"<>\\()|", and optional uppercase "CNORUX",
+//                         "^" displays as degree symbol and "|" displays overscsore (top-line only).
+//                         'Merged' fontdata for TM1637 by converting the data for MAX7219 (bits 0-6 are swapped around), to save a little space and maintanance burden.
+//                         Added 7dfont,<font> command for changing the font dynamically runtime. NB: The numbers digits are equal for all fonts!
+//                         Added Scroll Text option for scrolling texts longer then the display is wide
+//                         Added 7dbin,<byte>[,...] for displaying binary formatted data bits clock-wise from left to right, dot, top, right 2x, bottom, left 2x, center), scroll-enabled
+// 2021-01-10, tonhuisman: Added optional . as dot display (7dtext)
+//                         Added 7ddt,<temp1>,<temp2> dual temperature display
+//                         Added optional removal of degree symbol on temperature display
+//                         Added optional right-shift of 7dt,<temp> on MAX7219 display (is normally shifted to left by 1 digit, so last digit is blank)
 
 #define PLUGIN_073
 #define PLUGIN_ID_073           73
@@ -47,18 +63,29 @@
 #define P073_DISP_CLOCK12       4
 #define P073_DISP_DATE          5
 
+#define P073_OPTION_PERIOD      0 // Period as dot
+#define P073_OPTION_HIDEDEGREE  1 // Hide degree symbol for temperatures
+#define P073_OPTION_RIGHTALIGN  2 // Align 7dt output right on MAX7219 display
+#define P073_OPTION_SCROLLTEXT  3 // Scroll text > 8 characters
+
 #define P073_7DDT_COMMAND         // Enable 7ddt by default
+#define P073_EXTRA_FONTS          // Enable extra fonts
+#define P073_SCROLL_TEXT          // Enable scrolling of 7dtext by default
+#define P073_7DBIN_COMMAND        // Enable input of binary data via 7dbin,byte,... command
 
 #ifndef LIMIT_BUILD_SIZE
-#define P073_DEBUG                // Leave out some debugging on demnand, activate extra log info in the debug
-// #else
+// #define P073_DEBUG                // Leave out some debugging on demnand, activates extra log info in the debug
+#else
 // #undef P073_7DDT_COMMAND          // Optionally activate if .bin file space is really problematic, to remove the 7ddt command
+// #undef P073_EXTRA_FONTS           // Optionally activate if .bin file space is really problematic, to remove the font selection and 7dfont command
+// #undef P073_SCROLL_TEXT           // Optionally activate if .bin file space is really problematic, to remove the scrolling text feature
+// #undef P073_7DBIN_COMMAND         // Optionally activate if .bin file space is really problematic, to remove the 7dbin command
 #endif
 
 struct P073_data_struct : public PluginTaskData_base {
   P073_data_struct()
     : dotpos(-1), pin1(-1), pin2(-1), pin3(-1), displayModel(0), output(0),
-    brightness(0), timesep(false), shift(false) {
+    brightness(0), timesep(false), shift(false), fontset(0) {
     ClearBuffer();
   }
 
@@ -127,7 +154,7 @@ struct P073_data_struct : public PluginTaskData_base {
       if (p073_tmpchar == '.') { // dot
         dotpos = p073_index;
       } else {
-        showbuffer[p073_index] = P073_mapCharToFontPosition(p073_tmpchar);
+        showbuffer[p073_index] = P073_mapCharToFontPosition(p073_tmpchar, fontset);
         p073_index--;
       }
     }
@@ -148,7 +175,7 @@ struct P073_data_struct : public PluginTaskData_base {
     int p073_numlenght = strlen(p073_digit);
 
     for (int i = 0; i < p073_numlenght; i++) {
-      showbuffer[i] = P073_mapCharToFontPosition(p073_digit[i]);
+      showbuffer[i] = P073_mapCharToFontPosition(p073_digit[i], fontset);
     }
     if (!hideDegree) {
       showbuffer[7] = 12; // degree "°"
@@ -182,7 +209,7 @@ struct P073_data_struct : public PluginTaskData_base {
     int p073_numlenght = strlen(p073_digit);
 
     for (int i = 0; i < p073_numlenght; i++) {
-      showbuffer[i] = P073_mapCharToFontPosition(p073_digit[i]);
+      showbuffer[i] = P073_mapCharToFontPosition(p073_digit[i], fontset);
     }
     if (!hideDegree) {
       if (leftTemperature  > -100.0) showbuffer[3] = 12; // degree "°"
@@ -192,13 +219,21 @@ struct P073_data_struct : public PluginTaskData_base {
   }
 #endif
 
-  void FillBufferWithString(const String& textToShow) {
+  void FillBufferWithString(const String& textToShow, bool useBinaryData = false) {
+#ifdef P073_7DBIN_COMMAND
+    binaryData = useBinaryData;
+#endif // P073_7DBIN_COMMAND
     ClearBuffer();
     int p073_txtlength = textToShow.length();
 
     int p = 0;
     for (int i = 0; i < p073_txtlength && p <= 8; i++) { // p <= 8 to allow a period after last digit
-      if (periods && textToShow.charAt(i) == '.') { // If setting periods true
+      if (periods
+          && textToShow.charAt(i) == '.'
+#ifdef P073_7DBIN_COMMAND
+          && !useBinaryData
+#endif // P073_7DBIN_COMMAND
+         ) { // If setting periods true
         if (p == 0) { // Text starts with a period, becomes a space with a dot
           showperiods[p] = true;
           p++;
@@ -211,7 +246,11 @@ struct P073_data_struct : public PluginTaskData_base {
           showperiods[p - 1] = true; // The period displays as a dot on the previous digit!
         }
       } else if (p < 8) {
-        showbuffer[p] = P073_mapCharToFontPosition(textToShow.charAt(i));
+#ifdef P073_7DBIN_COMMAND
+        showbuffer[p] = useBinaryData ? textToShow.charAt(i) : P073_mapCharToFontPosition(textToShow.charAt(i), fontset);
+#else // P073_7DBIN_COMMAND
+        showbuffer[p] = P073_mapCharToFontPosition(textToShow.charAt(i), fontset);
+#endif // P073_7DBIN_COMMAND
         p++;
       }
     }
@@ -219,6 +258,116 @@ struct P073_data_struct : public PluginTaskData_base {
     LogBufferContent(F("7dtext"));
 #endif
   }
+
+#ifdef P073_SCROLL_TEXT
+  uint8_t getBufferLength(uint8_t displayModel) {
+    uint8_t bufLen = 0;
+    switch(displayModel) {
+      case P073_TM1637_4DGTCOLON:
+      case P073_TM1637_4DGTDOTS:
+        bufLen = 4;
+        break;
+      case P073_TM1637_6DGT:
+        bufLen = 6;
+        break;
+      case P073_MAX7219_8DGT:
+        bufLen = 8;
+        break;
+    }
+    return bufLen;
+  }
+
+  int getEffectiveTextLength(const String& text) {
+    int textLength = text.length();
+    int p = 0;
+    for (int i = 0; i < textLength; i++) {
+      if (periods && text.charAt(i) == '.') { // If setting periods true
+        if (p == 0) { // Text starts with a period, becomes a space with a dot
+          p++;
+        }
+        if (i > 0 && text.charAt(i - 1) == '.') { // Handle consecutive periods
+          p++;
+        }
+      } else {
+        p++;
+      }
+    }
+    return p;
+  }
+
+  void NextScroll() {
+    if (txtScrolling && _textToScroll.length() > 0) {
+      if (scrollCount > 0 && scrollCount < 0xFF) scrollCount--;
+      if (scrollCount == 0) {
+        scrollCount = 0xFF; // Max value to avoid interference when scrolling long texts
+        int bufToFill = getBufferLength(displayModel);
+        ClearBuffer();
+        String textToShow;
+        textToShow.reserve(_textToScroll.length() + bufToFill);
+        textToShow = _textToScroll;
+        for (int i = 0; i < bufToFill; i++) { // Scroll text off completely before restarting
+          textToShow += ' ';
+        }
+        int p073_txtlength = textToShow.length();
+
+        int p = 0;
+        for (int i = scrollPos; i < p073_txtlength && p <= bufToFill; i++) { // p <= 8 to allow a period after last digit
+          if (periods && textToShow.charAt(i) == '.') { // If setting periods true
+            if (p == 0) { // Text starts with a period, becomes a space with a dot
+              showperiods[p] = true;
+              p++;
+            } else {
+              showperiods[p - 1] = true; // The period displays as a dot on the previous digit!
+            }
+            if (i > scrollPos && textToShow.charAt(i - 1) == '.') { // Handle consecutive periods
+              showperiods[p - 1] = true; // The period displays as a dot on the previous digit!
+              p++;
+            }
+          } else if (p < bufToFill) {
+#ifdef P073_7DBIN_COMMAND
+            showbuffer[p] = binaryData ? textToShow.charAt(i) : P073_mapCharToFontPosition(textToShow.charAt(i), fontset);
+#else // P073_7DBIN_COMMAND
+            showbuffer[p] = P073_mapCharToFontPosition(textToShow.charAt(i), fontset);
+#endif // P073_7DBIN_COMMAND
+            p++;
+          }
+        }
+        scrollPos++;
+        if (scrollPos > _textToScroll.length()) scrollPos = 0; // Restart
+        scrollCount = _scrollSpeed; // Restart countdown
+        #ifdef P073_DEBUG
+        LogBufferContent(F("nextScroll"));
+        #endif
+      }
+    }
+  }
+
+  void setTextToScroll(const String& text) {
+    _textToScroll = text;
+    scrollCount   = _scrollSpeed;
+    scrollPos     = 0;
+#ifdef P073_7DBIN_COMMAND
+    binaryData = false;
+#endif // P073_7DBIN_COMMAND
+  }
+
+  void setScrollSpeed(uint8_t speed) {
+    _scrollSpeed = speed;
+    scrollCount  = _scrollSpeed;
+    scrollPos    = 0;
+  }
+#endif // P073_SCROLL_TEXT
+
+#ifdef P073_7DBIN_COMMAND
+  void setBinaryData(const String& data) {
+    _textToScroll = data;
+#ifdef P073_SCROLL_TEXT
+    scrollCount   = _scrollSpeed;
+    scrollPos     = 0;
+#endif // P073_SCROLL_TEXT
+    binaryData = true;
+  }
+#endif // P073_7DBIN_COMMAND
 
 #ifdef P073_DEBUG
 void LogBufferContent(String prefix) {
@@ -245,7 +394,11 @@ void LogBufferContent(String prefix) {
   }
 
   void ClearBuffer() {
-    memset(showbuffer, 10, sizeof(showbuffer));
+    memset(showbuffer, 
+#ifdef P073_7DBIN_COMMAND
+    binaryData ? 0 :
+#endif // P073_7DBIN_COMMAND
+    10, sizeof(showbuffer));
     for (int i = 0; i < 8; i++) {
       showperiods[i] = false;
     }
@@ -264,6 +417,20 @@ void LogBufferContent(String prefix) {
   bool    periods;
   bool    hideDegree;
   bool    rightAlignTempMAX7219;
+  uint8_t fontset;
+#ifdef P073_7DBIN_COMMAND
+  bool    binaryData;
+#endif // P073_7DBIN_COMMAND
+#ifdef P073_SCROLL_TEXT
+  bool    txtScrolling;
+  uint8_t scrollCount;
+  uint8_t scrollPos;
+private:
+  uint8_t _scrollSpeed;
+#endif
+#if defined(P073_SCROLL_TEXT) || defined(P073_7DBIN_COMMAND)
+  String  _textToScroll;
+#endif // P073_SCROLL_TEXT
 };
 
 #define TM1637_POWER_ON B10001000
@@ -282,14 +449,14 @@ void LogBufferContent(String prefix) {
 //   - pos 14    - triple lines "/"
 //   - pos 15    - underscore "_"
 //   - pos 16-41 - Letters from A to Z
-static const byte CharTableTM1637[42]  = {
-  B00111111, B00000110, B01011011, B01001111, B01100110, B01101101,
-  B01111101, B00000111, B01111111, B01101111, B00000000, B01000000,
-  B01100011, B01001000, B01001001, B00001000, B01110111, B01111100,
-  B00111001, B01011110, B01111001, B01110001, B00111101, B01110110,
-  B00110000, B00011110, B01110101, B00111000, B00010101, B00110111,
-  B00111111, B01110011, B01101011, B00110011, B01101101, B01111000,
-  B00111110, B00111110, B00101010, B01110110, B01101110, B01011011 };
+// static const byte CharTableTM1637[42]  = {
+//   B00111111, B00000110, B01011011, B01001111, B01100110, B01101101,
+//   B01111101, B00000111, B01111111, B01101111, B00000000, B01000000,
+//   B01100011, B01001000, B01001001, B00001000, B01110111, B01111100,
+//   B00111001, B01011110, B01111001, B01110001, B00111101, B01110110,
+//   B00110000, B00011110, B01110101, B00111000, B00010101, B00110111,
+//   B00111111, B01110011, B01101011, B00110011, B01101101, B01111000,
+//   B00111110, B00111110, B00101010, B01110110, B01101110, B01011011 };
 static const byte CharTableMAX7219[42] = {
   B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
   B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
@@ -299,26 +466,158 @@ static const byte CharTableMAX7219[42] = {
   B01111110, B01100111, B01101011, B01100110, B01011011, B00001111,
   B00111110, B00111110, B00101010, B00110111, B00111011, B01101101 };
 
-uint8_t P073_mapCharToFontPosition(char character) {
-  uint8_t position = 10;
+#ifdef P073_EXTRA_FONTS
+// Siekoo alphabet https://www.fakoo.de/siekoo
+// as the 'over score' character isn't normally available, the pipe "|" is used for that, and for degree the "^"" is used
+// specials:
+//   - pos 0-9   - Numbers from 0 to 9
+//   - pos 10    - Space " "
+//   - pos 11    - minus symbol "-"
+//   - pos 12    - degree symbol "°" (specially handled "^" into a degree)
+//   - pos 13    - equal "="
+//   - pos 14    - slash "/"                            
+//   - pos 15    - underscore "_"
+//   - pos 16-40 - Special characters not handled yet -- MAX7219 -- -- TM1637 --
+//   - pos 16    - percent "%"                          B00010010
+//   - pos 17    - at "@"                               B01110100
+//   - pos 18    - period "."                           B00000100
+//   - pos 10    - comma ","                            B00011000
+//   - pos 20    - semicolon ";"                        B00101000
+//   - pos 21    - colon ":"                            B01001000
+//   - pos 22    - plus "+"                             B00110001
+//   - pos 23    - asterisk "*"                         B01001001
+//   - pos 24    - hash "#"                             B00110110
+//   - pos 25    - exclamation mark "!"                 B01101011
+//   - pos 26    - question mark "?"                    B01101001
+//   - pos 27    - single quote "'"                     B00000010
+//   - pos 28    - double quote '"'                     B00100010
+//   - pos 29    - left sharp bracket "<"               B01000010
+//   - pos 30    - right sharp bracket ">"              B01100000
+//   - pos 31    - backslash "\"                        B00010011
+//   - pos 32    - left round bracket "("               B01001110
+//   - pos 33    - right round bracket ")"              B01111000
+//   - pos 34    - overscore "|" (the top-most line)    B01000000
+//   - pos 35    - uppercase C "C" (optionally enabled) B01001110
+//   - pos 36    - uppercase N "N"                      B01110110
+//   - pos 37    - uppercase O "O"                      B01111110
+//   - pos 38    - uppercase R "R"                      B01100110
+//   - pos 39    - uppercase U "U"                      B00111110
+//   - pos 40    - uppercase X "X"                      B00110111
+//   - pos 41-66 - Letters from A to Z Siekoo style
+// static const byte SiekooTableTM1637[67] = {
+//   B00111111, B00000110, B01011011, B01001111, B01100110, B01101101,
+//   B01111101, B00000111, B01111111, B01101111, B00000000, B01000000,
+//   B01100011, B01001000, B01010010, B00001000, B00100100, B00010111,
+//   B00010000, B00001100, B00001010, B00001001, B01000110, B01001001,
+//   B00110110, B01101011, B01001011, B00100000, B00100010, B00100001,
+//   B00000011, B01100100, B00111001, B00001111, B00000001, B00111001,
+//   B00110111, B00111111, B00110011, B00111110, B01110110, B01011111, /* A */
+//   B01111100, B01011000, B01011110, B01111001, B01110001, B00111101,
+//   B01110100, B00010001, B00001101, B01110101, B00111000, B01010101,
+//   B01010100, B01011100, B01110011, B01100111, B01010000, B00101101,
+//   B01111000, B00011100, B00101010, B01101010, B00010100, B01101110,
+//   B00011011 };
+static const byte SiekooTableMAX7219[67] = {
+  B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
+  B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
+  B01100011, B00001001, B00100101, B00001000, B00010010, B01110100,
+  B00000100, B00011000, B00101000, B01001000, B00110001, B01001001,
+  B00110110, B01101011, B01101001, B00000010, B00100010, B01000010,
+  B01100000, B00010011, B01001110, B01111000, B01000000, B01001110,
+  B01110110, B01111110, B01100110, B00111110, B00110111, B01111101, /* A */
+  B00011111, B00001101, B00111101, B01001111, B01000111, B01011110,
+  B00010111, B01000100, B01011000, B01010111, B00001110, B01010101,
+  B00010101, B00011101, B01100111, B01110011, B00000101, B01011010,
+  B00001111, B00011100, B00101010, B00101011, B00010100, B00111011,
+  B01101100 };
 
-  if ((character >= '0') && (character <= '9')) {
-    position = character - '0';
-  } else if ((character >= 'A') && (character <= 'Z')) {
-    position = character - 'A' + 16;
-  } else if ((character >= 'a') && (character <= 'z')) {
-    position = character - 'a' + 16;
-  } else {
-    switch (character) {
-      case ' ': position = 10; break;
-      case '-': position = 11; break;
-      case '^': position = 12; break; // degree
-      case '=': position = 13; break;
-      case '/': position = 14; break;
-      case '_': position = 15; break;
+// dSEG7 https://www.keshikan.net/fonts-e.html
+// as the 'over score' character isn't normally available, the pipe "|" is used for that, and for degree the "^"" is used
+// specials:
+//   - pos 0-9   - Numbers from 0 to 9
+//   - pos 10    - Space " "
+//   - pos 11    - minus symbol "-"
+//   - pos 12    - degree symbol "°" (specially handled "^" into a degree)
+//   - pos 13    - equal "="
+//   - pos 14    - slash "/"                            
+//   - pos 15    - underscore "_"
+//   - pos 16-41 - Letters from A to Z dSEG7 style
+// static const byte Dseg7TableTM1637[42] = {
+//   B00111111, B00000110, B01011011, B01001111, B01100110, B01101101,
+//   B01111101, B00000111, B01111111, B01101111, B00000000, B01000000,
+//   B01100011, B01001000, B01001001, B00001000, B01110111, B01111100, /* AB */
+//   B01011000, B01011110, B01111001, B01110001, B00111101, B01110100,
+//   B00000100, B00011110, B01110101, B00111000, B00110111, B01010100,
+//   B01011100, B01110011, B01100111, B01010000, B01101100, B01111000,
+//   B00011100, B00111110, B01111110, B01110110, B01101110, B00011011 };
+static const byte Dseg7TableMAX7219[42] = {
+  B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
+  B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
+  B01100011, B00001001, B01001001, B00001000, B01110111, B00011111, /* AB */
+  B00001101, B00111101, B01001111, B01000111, B01011110, B00010111,
+  B00010000, B00111100, B01010111, B00001110, B01110110, B00010101,
+  B00011101, B01100111, B01110011, B00000101, B00011011, B00001111,
+  B00011100, B00111110, B00111111, B00110111, B00111011, B01101100 };
+
+#endif // P073_EXTRA_FONTS
+
+uint8_t P073_mapCharToFontPosition(char character, uint8_t fontset) {
+  uint8_t position = 10;
+#ifdef P073_EXTRA_FONTS
+  String specialChars = F(" -^=/_%@.,;:+*#!?'\"<>\\()|");
+  String cnorux = F("CNORUX");
+
+  switch(fontset) {
+    case 1: // Siekoo
+    case 2: // Siekoo with uppercase 'CNORUX'
+      if (fontset == 2 && cnorux.indexOf(character) > -1) {
+        position = cnorux.indexOf(character) + 35;
+      } else if ((character >= '0') && (character <= '9')) {
+        position = character - '0';
+      } else if ((character >= 'A') && (character <= 'Z')) {
+        position = character - 'A' + 41;
+      } else if ((character >= 'a') && (character <= 'z')) {
+        position = character - 'a' + 41;
+      } else {
+        uint8_t idx = specialChars.indexOf(character);
+        if (idx > -1) {
+          position = idx + 10;
+        }
+      }
+      break;
+    case 3: // dSEG7 (same table size)
+    default: // Original fontset (7Dgt)
+#endif // P073_EXTRA_FONTS
+      if ((character >= '0') && (character <= '9')) {
+        position = character - '0';
+      } else if ((character >= 'A') && (character <= 'Z')) {
+        position = character - 'A' + 16;
+      } else if ((character >= 'a') && (character <= 'z')) {
+        position = character - 'a' + 16;
+      } else {
+        switch (character) {
+          case ' ': position = 10; break;
+          case '-': position = 11; break;
+          case '^': position = 12; break; // degree
+          case '=': position = 13; break;
+          case '/': position = 14; break;
+          case '_': position = 15; break;
+        }
+      }
+#ifdef P073_EXTRA_FONTS
+  }
+#endif // P073_EXTRA_FONTS
+  return position;
+}
+
+uint8_t P073_mapMAX7219FontToTM1673Font(uint8_t character) {
+  uint8_t newCharacter = character & 0x80; // Keep dot-bit if passed in
+  for (int b = 0; b < 7; b++) {
+    if (character & (0x01 << b)) {
+      newCharacter |= character &= (0x40 >> b);
     }
   }
-  return position;
+  return newCharacter;
 }
 
 boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
@@ -346,36 +645,67 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
+#ifdef P073_SCROLL_TEXT
+    case PLUGIN_SET_DEFAULTS: {
+      PCONFIG(3) = 10;  // Default 10 * 0.1 sec scroll speed
+      break;
+    }
+#endif // P073_SCROLL_TEXT
+
     case PLUGIN_WEBFORM_LOAD: {
       addFormNote(F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
       addFormNote(F("MAX7219: 1st=DIN-Pin, 2nd=CLK-Pin, 3rd=CS-Pin"));
-      String displtype[5] = { F("TM1637 - 4 digit (colon)"),
-                              F("TM1637 - 4 digit (dots)"),
-                              F("TM1637 - 6 digit"),
-                              F("MAX7219 - 8 digit") };
-      addFormSelector(F("Display Type"), F("plugin_073_displtype"), 4, displtype,
-                      NULL, PCONFIG(0));
-      String displout[6] = { F("Manual"),
-                             F("Clock 24h - Blink"),
-                             F("Clock 24h - No Blink"),
-                             F("Clock 12h - Blink"),
-                             F("Clock 12h - No Blink"),
-                             F("Date") };
-      addFormSelector(F("Display Output"), F("plugin_073_displout"), 6, displout,
-                      NULL, PCONFIG(1));
-      addFormNumericBox(F("Brightness"), F("plugin_073_brightness"), PCONFIG(2),
-                        0, 15);
+      {
+        String displtype[4] = { F("TM1637 - 4 digit (colon)"),
+                                F("TM1637 - 4 digit (dots)"),
+                                F("TM1637 - 6 digit"),
+                                F("MAX7219 - 8 digit") };
+        addFormSelector(F("Display Type"), F("plugin_073_displtype"), 4, displtype, NULL, PCONFIG(0));
+      }
+      {
+        String displout[6] = { F("Manual"),
+                              F("Clock 24h - Blink"),
+                              F("Clock 24h - No Blink"),
+                              F("Clock 12h - Blink"),
+                              F("Clock 12h - No Blink"),
+                              F("Date") };
+        addFormSelector(F("Display Output"), F("plugin_073_displout"), 6, displout, NULL, PCONFIG(1));
+      }
+
+      addFormNumericBox(F("Brightness"), F("plugin_073_brightness"), PCONFIG(2), 0, 15);
+
+#ifdef P073_EXTRA_FONTS
+      {
+        String fontset[4] = { F("Default"),
+                              F("Siekoo"),
+                              F("Siekoo with uppercase 'CNORUX'"),
+                              F("dSEG7") };
+        addFormSelector(F("Font set"), F("plugin_073_fontset"), 4, fontset, NULL, PCONFIG(4));
+        addFormNote(F("Check documentation for examples of the font sets."));
+      }
+#endif // P073_EXTRA_FONTS
 
       addFormSubHeader(F("Options"));
 
-      addFormCheckBox(F("Text show periods as dot"), F("plugin_073_periods"), PCONFIG(3) == 1);
+      bool bPeriodsAsDots = bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD);
+      addFormCheckBox(F("Text show periods as dot"), F("plugin_073_periods"), bPeriodsAsDots);
+
+      bool bHideDegree = bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE);
+      addFormCheckBox(F("Hide &deg; for Temperatures"), F("plugin_073_hide_degree"), bHideDegree);
+      addFormNote(F("Commands 7dt,&lt;temp&gt; and 7ddt,&lt;temp1&gt;,&lt;temp2&gt;"));
+
+#ifdef P073_SCROLL_TEXT
+      bool bScrollText = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
+      addFormCheckBox(F("Scroll 7dtext &gt; display width"), F("plugin_073_scroll_text"), bScrollText);
+      if (PCONFIG(3) == 0) PCONFIG(3) = 10;
+      addFormNumericBox(F("Scroll speed (0.1 sec/step)"), F("plugin_073_scrollspeed"), PCONFIG(3), 1, 600);
+      addUnit(F("1..600 = 0.1..60 sec/step"));
+#endif // P073_SCROLL_TEXT
 
       addFormSubHeader(F("Options for MAX7219 - 8 digit"));
 
-      addFormCheckBox(F("Hide &deg; for Temperatures"), F("plugin_073_hide_degree"), PCONFIG(4) == 1);
-      addFormNote(F("Commands 7dt,&lt;temp&gt; and 7ddt,&lt;temp1&gt;,&lt;temp2&gt;"));
-
-      addFormCheckBox(F("Right-align Temperature (7dt)"), F("plugin_073_temp_rightalign"), PCONFIG(5) == 1);
+      bool bRightAlign = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
+      addFormCheckBox(F("Right-align Temperature (7dt)"), F("plugin_073_temp_rightalign"), bRightAlign);
 
       success = true;
       break;
@@ -385,9 +715,18 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
       PCONFIG(0) = getFormItemInt(F("plugin_073_displtype"));
       PCONFIG(1) = getFormItemInt(F("plugin_073_displout"));
       PCONFIG(2) = getFormItemInt(F("plugin_073_brightness"));
-      PCONFIG(3) = isFormItemChecked(F("plugin_073_periods")) ? 1 : 0;
-      PCONFIG(4) = isFormItemChecked(F("plugin_073_hide_degree")) ? 1 : 0;
-      PCONFIG(5) = isFormItemChecked(F("plugin_073_temp_rightalign")) ? 1 : 0;
+      uint32_t lSettings = 0;
+      bitWrite(lSettings, P073_OPTION_PERIOD,     isFormItemChecked(F("plugin_073_periods")));
+      bitWrite(lSettings, P073_OPTION_HIDEDEGREE, isFormItemChecked(F("plugin_073_hide_degree")));
+      bitWrite(lSettings, P073_OPTION_RIGHTALIGN, isFormItemChecked(F("plugin_073_temp_rightalign")));
+#ifdef P073_SCROLL_TEXT
+      bitWrite(lSettings, P073_OPTION_SCROLLTEXT, isFormItemChecked(F("plugin_073_scroll_text")));
+      PCONFIG(3) = getFormItemInt(F("plugin_073_scrollspeed"));
+#endif // P073_SCROLL_TEXT
+#ifdef P073_EXTRA_FONTS
+      PCONFIG(4) = getFormItemInt(F("plugin_073_fontset"));
+#endif // P073_EXTRA_FONTS
+      PCONFIG_LONG(0) = lSettings;
 
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -399,10 +738,17 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
         P073_data->displayModel = PCONFIG(0);
         P073_data->output       = PCONFIG(1);
         P073_data->brightness   = PCONFIG(2);
-        P073_data->periods      = PCONFIG(3) == 1;
-        P073_data->hideDegree   = PCONFIG(4) == 1;
-        P073_data->rightAlignTempMAX7219 = PCONFIG(5) == 1;
+        P073_data->periods      = bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD);
+        P073_data->hideDegree   = bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE);
+#ifdef P073_SCROLL_TEXT
+        P073_data->txtScrolling = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
+        P073_data->setScrollSpeed(PCONFIG(3));
+#endif // P073_SCROLL_TEXT
+        P073_data->rightAlignTempMAX7219 = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
         P073_data->timesep      = true;
+#ifdef P073_EXTRA_FONTS
+        P073_data->fontset      = PCONFIG(4);
+#endif // P073_EXTRA_FONTS
 
         switch (PCONFIG(0)) {
           case P073_TM1637_4DGTCOLON: // set brightness of TM1637
@@ -452,10 +798,17 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
       P073_data->displayModel = PCONFIG(0);
       P073_data->output       = PCONFIG(1);
       P073_data->brightness   = PCONFIG(2);
-      P073_data->periods      = PCONFIG(3) == 1;
-      P073_data->hideDegree   = PCONFIG(4) == 1;
-      P073_data->rightAlignTempMAX7219 = PCONFIG(5) == 1;
+      P073_data->periods      = bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD);
+      P073_data->hideDegree   = bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE);
+#ifdef P073_SCROLL_TEXT
+      P073_data->txtScrolling = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
+      P073_data->setScrollSpeed(PCONFIG(3));
+#endif // P073_SCROLL_TEXT
+      P073_data->rightAlignTempMAX7219 = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
       P073_data->timesep      = true;
+#ifdef P073_EXTRA_FONTS
+      P073_data->fontset      = PCONFIG(4);
+#endif // P073_EXTRA_FONTS
 
       switch (PCONFIG(0)) {
         case P073_TM1637_4DGTCOLON:
@@ -464,12 +817,19 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
           tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
           int tm1637_bright = PCONFIG(2) / 2;
           tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, tm1637_bright, true);
+          if (PCONFIG(1) == P073_DISP_MANUAL) {
+            tm1637_ClearDisplay(CONFIG_PIN1, CONFIG_PIN2);
+          }
           break;
         }
         case P073_MAX7219_8DGT: {
           max7219_InitDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+          delay(10); // small poweroff/poweron delay
           max7219_SetPowerBrightness(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3,
                                      PCONFIG(2), true);
+          if (PCONFIG(1) == P073_DISP_MANUAL) {
+            max7219_ClearDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
+          }
           break;
         }
       }
@@ -539,7 +899,45 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
           break;
         }
       }
+      break;
     }
+
+#ifdef P073_SCROLL_TEXT
+    case PLUGIN_TEN_PER_SECOND: {
+      P073_data_struct *P073_data =
+        static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P073_data) {
+        break;
+      }
+
+      if (P073_data->output != P073_DISP_MANUAL || !P073_data->txtScrolling) {
+        break;
+      }
+
+      P073_data->NextScroll();
+
+      switch (P073_data->displayModel) {
+        case P073_TM1637_4DGTCOLON:
+        case P073_TM1637_4DGTDOTS: {
+          tm1637_ShowBuffer(event, 0, 4);
+          break;
+        }
+        case P073_TM1637_6DGT: {
+          tm1637_SwapDigitInBuffer(event, 0); // only needed for 6-digits displays
+          tm1637_ShowBuffer(event, 0, 6);
+          break;
+        }
+        case P073_MAX7219_8DGT: {
+          P073_data->dotpos = -1; // avoid to display the dot
+          max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2,
+                            P073_data->pin3);
+          break;
+        }
+      }
+      break;
+    }
+#endif // P073_SCROLL_TEXT
   }
   return success;
 }
@@ -569,6 +967,14 @@ bool p073_plugin_write(struct EventStruct *event, const String& string) {
     return p073_plugin_write_7dsd(event);
   } else if (cmd.equals("7dtext")) {
     return p073_plugin_write_7dtext(event, text);
+#ifdef P073_EXTRA_FONTS
+  } else if (cmd.equals("7dfont")) {
+    return p073_plugin_write_7dfont(event, text);
+#endif // P073_EXTRA_FONTS
+#ifdef P073_7DBIN_COMMAND
+  } else if (cmd.equals("7dbin")) {
+    return p073_plugin_write_7dbin(event, text);
+#endif // P073_7DBIN_COMMAND
   } else {
     bool p073_validcmd = false;
     bool p073_displayon;
@@ -955,28 +1361,137 @@ bool p073_plugin_write_7dtext(struct EventStruct *event, const String& text) {
     log += text;
     addLog(LOG_LEVEL_INFO, log);
   }
-  P073_data->FillBufferWithString(text);
+#ifdef P073_SCROLL_TEXT
+  P073_data->setTextToScroll("");
+  uint8_t bufLen = P073_data->getBufferLength(P073_data->displayModel);
+  if (P073_data->txtScrolling && P073_data->getEffectiveTextLength(text) > bufLen) {
+    P073_data->setTextToScroll(text);
+  } else 
+#endif // P073_SCROLL_TEXT
+  {
+    P073_data->FillBufferWithString(text);
 
-  switch (P073_data->displayModel) {
-    case P073_TM1637_4DGTCOLON:
-    case P073_TM1637_4DGTDOTS: {
-      tm1637_ShowBuffer(event, 0, 4);
-      break;
-    }
-    case P073_TM1637_6DGT: {
-      tm1637_SwapDigitInBuffer(event, 0); // only needed for 6-digits displays
-      tm1637_ShowBuffer(event, 0, 6);
-      break;
-    }
-    case P073_MAX7219_8DGT: {
-      P073_data->dotpos = -1; // avoid to display the dot
-      max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2,
-                         P073_data->pin3);
-      break;
+    switch (P073_data->displayModel) {
+      case P073_TM1637_4DGTCOLON:
+      case P073_TM1637_4DGTDOTS: {
+        tm1637_ShowBuffer(event, 0, 4);
+        break;
+      }
+      case P073_TM1637_6DGT: {
+        tm1637_SwapDigitInBuffer(event, 0); // only needed for 6-digits displays
+        tm1637_ShowBuffer(event, 0, 6);
+        break;
+      }
+      case P073_MAX7219_8DGT: {
+        P073_data->dotpos = -1; // avoid to display the dot
+        max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2,
+                          P073_data->pin3);
+        break;
+      }
     }
   }
   return true;
 }
+
+#ifdef P073_EXTRA_FONTS
+bool p073_plugin_write_7dfont(struct EventStruct *event, const String& text) {
+  P073_data_struct *P073_data =
+    static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+  if (nullptr == P073_data) {
+    return false;
+  }
+
+  if (text.length() > 0) {
+    String fontArg = parseString(text, 1);
+    int fontNr = -1;
+    if (fontArg == F("default") || fontArg == F("7dgt")) {
+      fontNr = 0;
+    } else if (fontArg == F("siekoo")) {
+      fontNr = 1;
+    } else if (fontArg == F("siekoo_upper")) {
+      fontNr = 2;
+    } else if (fontArg == F("dseg7")) {
+      fontNr = 3;
+    } else if (!validIntFromString(text, fontNr)) {
+      fontNr = -1; // reset if invalid
+    }
+#ifdef P073_DEBUG
+  String info = F("P037 7dfont,");
+  info += fontArg;
+  info += F(" -> ");
+  info += fontNr;
+  addLog(LOG_LEVEL_INFO, info);
+#endif // P073_DEBUG
+
+    if (fontNr >= 0 && fontNr <= 3) {
+      P073_data->fontset = fontNr;
+      PCONFIG(4) = fontNr;
+      return true;
+    }
+  }
+  return false;
+}
+#endif // P073_EXTRA_FONTS
+
+#ifdef P073_7DBIN_COMMAND
+bool p073_plugin_write_7dbin(struct EventStruct *event, const String& text) {
+  P073_data_struct *P073_data =
+    static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+  if (nullptr == P073_data) {
+    return false;
+  }
+
+  if (text.length() > 0) {
+    String data;
+    int byteValue;
+    int arg = 1;
+    String argValue = parseString(text, arg);
+    while (argValue.length() > 0) {
+      if (validIntFromString(argValue, byteValue) && byteValue < 256 && byteValue > -1) {
+        data += static_cast<char>(P073_data->displayModel == P073_MAX7219_8DGT ? byteValue : P073_mapMAX7219FontToTM1673Font(byteValue));
+      }
+      arg++;
+      argValue = parseString(text, arg);
+    }
+#ifdef P073_SCROLL_TEXT
+    uint8_t bufLen = P073_data->getBufferLength(P073_data->displayModel);
+#endif // P073_SCROLL_TEXT
+    if (data.length() > 0) {
+#ifdef P073_SCROLL_TEXT
+      if (P073_data->txtScrolling && data.length() > bufLen) {
+        P073_data->setBinaryData(data);
+      } else
+#endif // P073_SCROLL_TEXT
+      {
+        P073_data->FillBufferWithString(data, true);
+
+        switch (P073_data->displayModel) {
+          case P073_TM1637_4DGTCOLON:
+          case P073_TM1637_4DGTDOTS: {
+            tm1637_ShowBuffer(event, 0, 4);
+            break;
+          }
+          case P073_TM1637_6DGT: {
+            tm1637_SwapDigitInBuffer(event, 0); // only needed for 6-digits displays
+            tm1637_ShowBuffer(event, 0, 6);
+            break;
+          }
+          case P073_MAX7219_8DGT: {
+            P073_data->dotpos = -1; // avoid to display the dot
+            max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2,
+                              P073_data->pin3);
+            break;
+          }
+        }
+      }
+      return true;
+    }
+  }
+  return false;
+}
+#endif // P073_7DBIN_COMMAND
 
 // ===================================
 // ---- TM1637 specific functions ----
@@ -1130,6 +1645,22 @@ uint8_t tm1637_separator(uint8_t value, bool sep) {
   return value;
 }
 
+byte tm1637_getFontChar(byte index, uint8_t fontset) {
+#ifdef P073_EXTRA_FONTS
+  switch (fontset) {
+    case 1: // Siekoo
+    case 2: // Siekoo uppercase CNORUX
+      return P073_mapMAX7219FontToTM1673Font(SiekooTableMAX7219[index]); // SiekooTableTM1637[index];
+    case 3: // dSEG7
+      return P073_mapMAX7219FontToTM1673Font(Dseg7TableMAX7219[index]); // Dseg7TableTM1637[index];
+    default: // Standard fontset
+#endif // P073_EXTRA_FONTS
+      return P073_mapMAX7219FontToTM1673Font(CharTableMAX7219[index]); // CharTableTM1637[index];
+#ifdef P073_EXTRA_FONTS
+  }
+#endif // P073_EXTRA_FONTS
+}
+
 void tm1637_ShowTime6(struct EventStruct *event) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -1143,14 +1674,14 @@ void tm1637_ShowTime6(struct EventStruct *event) {
   bool    sep             = P073_data->timesep;
   uint8_t bytesToPrint[7] = { 0 };
   bytesToPrint[0] = 0xC0;
-  bytesToPrint[1] = CharTableTM1637[P073_data->showbuffer[2]];
+  bytesToPrint[1] = tm1637_getFontChar(P073_data->showbuffer[2], P073_data->fontset);
   bytesToPrint[2] =
-    tm1637_separator(CharTableTM1637[P073_data->showbuffer[1]], sep);
-  bytesToPrint[3] = CharTableTM1637[P073_data->showbuffer[0]];
-  bytesToPrint[4] = CharTableTM1637[P073_data->showbuffer[5]];
-  bytesToPrint[5] = CharTableTM1637[P073_data->showbuffer[4]];
+    tm1637_separator(tm1637_getFontChar(P073_data->showbuffer[1], P073_data->fontset), sep);
+  bytesToPrint[3] = tm1637_getFontChar(P073_data->showbuffer[0], P073_data->fontset);
+  bytesToPrint[4] = tm1637_getFontChar(P073_data->showbuffer[5], P073_data->fontset);
+  bytesToPrint[5] = tm1637_getFontChar(P073_data->showbuffer[4], P073_data->fontset);
   bytesToPrint[6] =
-    tm1637_separator(CharTableTM1637[P073_data->showbuffer[3]], sep);
+    tm1637_separator(tm1637_getFontChar(P073_data->showbuffer[3], P073_data->fontset), sep);
   tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 7);
 }
 
@@ -1167,14 +1698,14 @@ void tm1637_ShowDate6(struct EventStruct *event) {
 
   uint8_t bytesToPrint[7] = { 0 };
   bytesToPrint[0] = 0xC0;
-  bytesToPrint[1] = CharTableTM1637[P073_data->showbuffer[2]];
+  bytesToPrint[1] = tm1637_getFontChar(P073_data->showbuffer[2], P073_data->fontset);
   bytesToPrint[2] =
-    tm1637_separator(CharTableTM1637[P073_data->showbuffer[1]], sep);
-  bytesToPrint[3] = CharTableTM1637[P073_data->showbuffer[0]];
-  bytesToPrint[4] = CharTableTM1637[P073_data->showbuffer[7]];
-  bytesToPrint[5] = CharTableTM1637[P073_data->showbuffer[6]];
+    tm1637_separator(tm1637_getFontChar(P073_data->showbuffer[1], P073_data->fontset), sep);
+  bytesToPrint[3] = tm1637_getFontChar(P073_data->showbuffer[0], P073_data->fontset);
+  bytesToPrint[4] = tm1637_getFontChar(P073_data->showbuffer[7], P073_data->fontset);
+  bytesToPrint[5] = tm1637_getFontChar(P073_data->showbuffer[6], P073_data->fontset);
   bytesToPrint[6] =
-    tm1637_separator(CharTableTM1637[P073_data->showbuffer[3]], sep);
+    tm1637_separator(tm1637_getFontChar(P073_data->showbuffer[3], P073_data->fontset), sep);
   tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 7);
 }
 
@@ -1191,12 +1722,12 @@ void tm1637_ShowTemp6(struct EventStruct *event, bool sep) {
   uint8_t bytesToPrint[7] = { 0 };
   bytesToPrint[0] = 0xC0;
   bytesToPrint[1] =
-    tm1637_separator(CharTableTM1637[P073_data->showbuffer[5]], sep);
-  bytesToPrint[2] = CharTableTM1637[P073_data->showbuffer[4]];
-  bytesToPrint[3] = CharTableTM1637[10];
-  bytesToPrint[4] = CharTableTM1637[10];
-  bytesToPrint[5] = CharTableTM1637[P073_data->showbuffer[7]];
-  bytesToPrint[6] = CharTableTM1637[P073_data->showbuffer[6]];
+    tm1637_separator(tm1637_getFontChar(P073_data->showbuffer[5], P073_data->fontset), sep);
+  bytesToPrint[2] = tm1637_getFontChar(P073_data->showbuffer[4], P073_data->fontset);
+  bytesToPrint[3] = tm1637_getFontChar(10, P073_data->fontset);
+  bytesToPrint[4] = tm1637_getFontChar(10, P073_data->fontset);
+  bytesToPrint[5] = tm1637_getFontChar(P073_data->showbuffer[7], P073_data->fontset);
+  bytesToPrint[6] = tm1637_getFontChar(P073_data->showbuffer[6], P073_data->fontset);
   tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 7);
 }
 
@@ -1212,11 +1743,11 @@ void tm1637_ShowTimeTemp4(struct EventStruct *event, bool sep, byte bufoffset) {
 
   uint8_t bytesToPrint[7] = { 0 };
   bytesToPrint[0] = 0xC0;
-  bytesToPrint[1] = CharTableTM1637[P073_data->showbuffer[0 + bufoffset]];
+  bytesToPrint[1] = tm1637_getFontChar(P073_data->showbuffer[0 + bufoffset], P073_data->fontset);
   bytesToPrint[2] = tm1637_separator(
-    CharTableTM1637[P073_data->showbuffer[1 + bufoffset]], sep);
-  bytesToPrint[3] = CharTableTM1637[P073_data->showbuffer[2 + bufoffset]];
-  bytesToPrint[4] = CharTableTM1637[P073_data->showbuffer[3 + bufoffset]];
+    tm1637_getFontChar(P073_data->showbuffer[1 + bufoffset], P073_data->fontset), sep);
+  bytesToPrint[3] = tm1637_getFontChar(P073_data->showbuffer[2 + bufoffset], P073_data->fontset);
+  bytesToPrint[4] = tm1637_getFontChar(P073_data->showbuffer[3 + bufoffset], P073_data->fontset);
   tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 5);
 }
 
@@ -1275,7 +1806,7 @@ void tm1637_ShowBuffer(struct EventStruct *event, byte firstPos, byte lastPos) {
 
   for (int i = firstPos; i < lastPos; i++) {
     byte p073_datashowpos1 = tm1637_separator(
-      CharTableTM1637[P073_data->showbuffer[i]], P073_data->showperiods[i]);
+      tm1637_getFontChar(P073_data->showbuffer[i], P073_data->fontset), P073_data->showperiods[i]);
     bytesToPrint[length] = p073_datashowpos1;
     ++length;
   }
@@ -1327,14 +1858,29 @@ void max7219_SetPowerBrightness(struct EventStruct *event, uint8_t din_pin,
 
 void max7219_SetDigit(struct EventStruct *event, uint8_t din_pin,
                       uint8_t clk_pin, uint8_t cs_pin, int dgtpos,
-                      byte dgtvalue, boolean showdot) {
+                      byte dgtvalue, boolean showdot, bool binaryData = false) {
   byte p073_tempvalue;
 
-  p073_tempvalue = CharTableMAX7219[dgtvalue];
+#ifdef P073_EXTRA_FONTS
+  switch (PCONFIG(4)) {
+    case 1: // Siekoo
+    case 2: // Siekoo with uppercase CNORUX
+      p073_tempvalue = SiekooTableMAX7219[dgtvalue];
+      break;
+    case 3: // dSEG7
+      p073_tempvalue = Dseg7TableMAX7219[dgtvalue];
+      break;
+    default: // Default fontset
+#endif // P073_EXTRA_FONTS
+      p073_tempvalue = CharTableMAX7219[dgtvalue];
+#ifdef P073_EXTRA_FONTS
+  }
+#endif // P073_EXTRA_FONTS
 
   if (showdot) {
     p073_tempvalue |= 0b10000000;
   }
+  if (binaryData) p073_tempvalue = dgtvalue; // Overwrite if binary data
   max7219_spiTransfer(event, din_pin, clk_pin, cs_pin, dgtpos + 1,
                       p073_tempvalue);
 }
@@ -1367,7 +1913,7 @@ void max7219_ShowTime(struct EventStruct *event, uint8_t din_pin,
   max7219_SetDigit(event, din_pin, clk_pin, cs_pin, 4, P073_data->showbuffer[2], false);
   max7219_SetDigit(event, din_pin, clk_pin, cs_pin, 6, P073_data->showbuffer[1], false);
   max7219_SetDigit(event, din_pin, clk_pin, cs_pin, 7, P073_data->showbuffer[0], false);
-  uint8_t sepChar = P073_mapCharToFontPosition(sep ? '-' : ' ');
+  uint8_t sepChar = P073_mapCharToFontPosition(sep ? '-' : ' ', P073_data->fontset);
   max7219_SetDigit(event, din_pin, clk_pin, cs_pin, 2,   sepChar,                false);
   max7219_SetDigit(event, din_pin, clk_pin, cs_pin, 5,   sepChar,                false);
 }
@@ -1424,7 +1970,11 @@ void max7219_ShowBuffer(struct EventStruct *event, uint8_t din_pin,
 
   for (int i = 0; i < 8; i++) {
     max7219_SetDigit(event, din_pin, clk_pin, cs_pin, i,
-                     P073_data->showbuffer[7 - i], P073_data->showperiods[7 - i]);
+                     P073_data->showbuffer[7 - i], P073_data->showperiods[7 - i]
+#ifdef P073_7DBIN_COMMAND
+                     , P073_data->binaryData
+#endif // P073_7DBIN_COMMAND
+                     );
   }
 }
 
