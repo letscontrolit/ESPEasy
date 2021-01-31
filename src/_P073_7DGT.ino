@@ -19,8 +19,8 @@
 //                     "7dst,<hh>,<mm>,<ss>" (show manual time -not current-, no checks done on numbers validity!)
 //                     "7dsd,<dd>,<mm>,<yy>" (show manual date -not current-, no checks done on numbers validity!)
 //                     "7dtext,<text>"       (show free text - supported chars 0-9,a-z,A-Z," ","-","=","_","/","^") Depending on Font used
-//                     "7dfont,<font>"       (select the used font: 0/7DGT/Default = default, 1/Siekoo = Siekoo, 2/Siekoo_Upper = Siekoo with uppercase CNORUX, 3/dSEG7 = dSEG7)
-//                                           Siekoo: https://www.fakoo.de/siekoo (uppercase CNORUX is a local extension)
+//                     "7dfont,<font>"       (select the used font: 0/7DGT/Default = default, 1/Siekoo = Siekoo, 2/Siekoo_Upper = Siekoo with uppercase CHNORUX, 3/dSEG7 = dSEG7)
+//                                           Siekoo: https://www.fakoo.de/siekoo (uppercase CHNORUX is a local extension)
 //                                           dSEG7 : https://www.keshikan.net/fonts-e.html
 //                     "7dbin,[byte],..."    (show data binary formatted, bits clock-wise from left to right, dot, top, right 2x, bottom, left 2x, center), scroll-enabled
 //  - Clock-Blink     -- display is automatically updated with current time and blinking dot/lines
@@ -35,8 +35,8 @@
 //  - "7db,<0-15> -- set brightness to specific value between 0 and 15
 //
 // History
-// 2021-01-30, tonhuisman: Added font support for 7Dgt (default), Siekoo, Siekoo with uppercase CNORUX, dSEG7 fonts. Default/7Dgt comes with these special characters: " -^=/_
-//                         Siekoo comes _without_ AOU with umlauts and Eszett characters, has many extra special characters "%@.,;:+*#!?'\"<>\\()|", and optional uppercase "CNORUX",
+// 2021-01-30, tonhuisman: Added font support for 7Dgt (default), Siekoo, Siekoo with uppercase CHNORUX, dSEG7 fonts. Default/7Dgt comes with these special characters: " -^=/_
+//                         Siekoo comes _without_ AOU with umlauts and Eszett characters, has many extra special characters "%@.,;:+*#!?'\"<>\\()|", and optional uppercase "CHNORUX",
 //                         "^" displays as degree symbol and "|" displays overscsore (top-line only).
 //                         'Merged' fontdata for TM1637 by converting the data for MAX7219 (bits 0-6 are swapped around), to save a little space and maintanance burden.
 //                         Added 7dfont,<font> command for changing the font dynamically runtime. NB: The numbers digits are equal for all fonts!
@@ -67,6 +67,7 @@
 #define P073_OPTION_HIDEDEGREE  1 // Hide degree symbol for temperatures
 #define P073_OPTION_RIGHTALIGN  2 // Align 7dt output right on MAX7219 display
 #define P073_OPTION_SCROLLTEXT  3 // Scroll text > 8 characters
+#define P073_OPTION_SCROLLFULL  4 // Scroll text from the right in, starting with a blank display
 
 #define P073_7DDT_COMMAND         // Enable 7ddt by default
 #define P073_EXTRA_FONTS          // Enable extra fonts
@@ -231,7 +232,7 @@ struct P073_data_struct : public PluginTaskData_base {
       if (periods
           && textToShow.charAt(i) == '.'
 #ifdef P073_7DBIN_COMMAND
-          && !useBinaryData
+          && !binaryData
 #endif // P073_7DBIN_COMMAND
          ) { // If setting periods true
         if (p == 0) { // Text starts with a period, becomes a space with a dot
@@ -297,22 +298,30 @@ struct P073_data_struct : public PluginTaskData_base {
 
   void NextScroll() {
     if (txtScrolling && _textToScroll.length() > 0) {
-      if (scrollCount > 0 && scrollCount < 0xFF) scrollCount--;
+      if (scrollCount > 0 && scrollCount < 0xFFFF) scrollCount--;
       if (scrollCount == 0) {
-        scrollCount = 0xFF; // Max value to avoid interference when scrolling long texts
+        scrollCount = 0xFFFF; // Max value to avoid interference when scrolling long texts
         int bufToFill = getBufferLength(displayModel);
         ClearBuffer();
         String textToShow;
-        textToShow.reserve(_textToScroll.length() + bufToFill);
-        textToShow = _textToScroll;
+        textToShow.reserve(_textToScroll.length() + bufToFill + (scrollFull ? bufToFill : 0));
+        for (int i = 0; scrollFull && i < bufToFill; i++) { // Scroll text in from the right, so start with all spaces
+          textToShow += ' ';
+        }
+        textToShow += _textToScroll;
         for (int i = 0; i < bufToFill; i++) { // Scroll text off completely before restarting
           textToShow += ' ';
         }
         int p073_txtlength = textToShow.length();
 
         int p = 0;
-        for (int i = scrollPos; i < p073_txtlength && p <= bufToFill; i++) { // p <= 8 to allow a period after last digit
-          if (periods && textToShow.charAt(i) == '.') { // If setting periods true
+        for (int i = scrollPos; i < p073_txtlength && p <= bufToFill; i++) { // p <= bufToFill to allow a period after last digit
+          if (periods
+              && textToShow.charAt(i) == '.'
+#ifdef P073_7DBIN_COMMAND
+              && !binaryData
+#endif // P073_7DBIN_COMMAND
+             ) { // If setting periods true
             if (p == 0) { // Text starts with a period, becomes a space with a dot
               showperiods[p] = true;
               p++;
@@ -333,11 +342,11 @@ struct P073_data_struct : public PluginTaskData_base {
           }
         }
         scrollPos++;
-        if (scrollPos > _textToScroll.length()) scrollPos = 0; // Restart
+        if (scrollPos > _textToScroll.length() + (scrollFull ? bufToFill : 0)) scrollPos = 0; // Restart
         scrollCount = _scrollSpeed; // Restart countdown
         #ifdef P073_DEBUG
         LogBufferContent(F("nextScroll"));
-        #endif
+        #endif // P073_DEBUG
       }
     }
   }
@@ -386,7 +395,7 @@ void LogBufferContent(String prefix) {
   }
   addLog(LOG_LEVEL_INFO, log);
 }
-#endif
+#endif // P073_DEBUG
 
   // in case of error show all dashes
   void FillBufferWithDash() {
@@ -404,32 +413,33 @@ void LogBufferContent(String prefix) {
     }
   }
 
-  int     dotpos;
-  uint8_t showbuffer[8];
-  bool    showperiods[8];
-  byte    spidata[2];
-  uint8_t pin1, pin2, pin3;
-  byte    displayModel;
-  byte    output;
-  byte    brightness;
-  bool    timesep;
-  bool    shift;
-  bool    periods;
-  bool    hideDegree;
-  bool    rightAlignTempMAX7219;
-  uint8_t fontset;
+  int      dotpos;
+  uint8_t  showbuffer[8];
+  bool     showperiods[8];
+  byte     spidata[2];
+  uint8_t  pin1, pin2, pin3;
+  byte     displayModel;
+  byte     output;
+  byte     brightness;
+  bool     timesep;
+  bool     shift;
+  bool     periods;
+  bool     hideDegree;
+  bool     rightAlignTempMAX7219;
+  uint8_t  fontset;
 #ifdef P073_7DBIN_COMMAND
-  bool    binaryData;
+  bool     binaryData;
 #endif // P073_7DBIN_COMMAND
 #ifdef P073_SCROLL_TEXT
-  bool    txtScrolling;
-  uint8_t scrollCount;
-  uint8_t scrollPos;
+  bool     txtScrolling;
+  uint16_t scrollCount;
+  uint16_t scrollPos;
+  bool     scrollFull;
 private:
-  uint8_t _scrollSpeed;
-#endif
+  uint8_t  _scrollSpeed;
+#endif // P073_SCROLL_TEXT
 #if defined(P073_SCROLL_TEXT) || defined(P073_7DBIN_COMMAND)
-  String  _textToScroll;
+  String   _textToScroll;
 #endif // P073_SCROLL_TEXT
 };
 
@@ -457,7 +467,7 @@ private:
 //   B00110000, B00011110, B01110101, B00111000, B00010101, B00110111,
 //   B00111111, B01110011, B01101011, B00110011, B01101101, B01111000,
 //   B00111110, B00111110, B00101010, B01110110, B01101110, B01011011 };
-static const byte CharTableMAX7219[42] = {
+static const byte CharTableMAX7219[42] PROGMEM = {
   B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
   B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
   B01100011, B00001001, B01001001, B00001000, B01110111, B00011111,
@@ -498,12 +508,13 @@ static const byte CharTableMAX7219[42] = {
 //   - pos 33    - right round bracket ")"              B01111000
 //   - pos 34    - overscore "|" (the top-most line)    B01000000
 //   - pos 35    - uppercase C "C" (optionally enabled) B01001110
-//   - pos 36    - uppercase N "N"                      B01110110
-//   - pos 37    - uppercase O "O"                      B01111110
-//   - pos 38    - uppercase R "R"                      B01100110
-//   - pos 39    - uppercase U "U"                      B00111110
-//   - pos 40    - uppercase X "X"                      B00110111
-//   - pos 41-66 - Letters from A to Z Siekoo style
+//   - pos 36    - uppercase H "H"                      B00110111
+//   - pos 37    - uppercase N "N"                      B01110110
+//   - pos 38    - uppercase O "O"                      B01111110
+//   - pos 39    - uppercase R "R"                      B01100110
+//   - pos 40    - uppercase U "U"                      B00111110
+//   - pos 41    - uppercase X "X"                      B00110111
+//   - pos 42-67 - Letters from A to Z Siekoo style
 // static const byte SiekooTableTM1637[67] = {
 //   B00111111, B00000110, B01011011, B01001111, B01100110, B01101101,
 //   B01111101, B00000111, B01111111, B01101111, B00000000, B01000000,
@@ -517,19 +528,19 @@ static const byte CharTableMAX7219[42] = {
 //   B01010100, B01011100, B01110011, B01100111, B01010000, B00101101,
 //   B01111000, B00011100, B00101010, B01101010, B00010100, B01101110,
 //   B00011011 };
-static const byte SiekooTableMAX7219[67] = {
+static const byte SiekooTableMAX7219[68] PROGMEM = {
   B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
   B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
   B01100011, B00001001, B00100101, B00001000, B00010010, B01110100,
   B00000100, B00011000, B00101000, B01001000, B00110001, B01001001,
   B00110110, B01101011, B01101001, B00000010, B00100010, B01000010,
   B01100000, B00010011, B01001110, B01111000, B01000000, B01001110,
-  B01110110, B01111110, B01100110, B00111110, B00110111, B01111101, /* A */
-  B00011111, B00001101, B00111101, B01001111, B01000111, B01011110,
-  B00010111, B01000100, B01011000, B01010111, B00001110, B01010101,
-  B00010101, B00011101, B01100111, B01110011, B00000101, B01011010,
-  B00001111, B00011100, B00101010, B00101011, B00010100, B00111011,
-  B01101100 };
+  B00110111, B01110110, B01111110, B01100110, B00111110, B00110111,
+  B01111101, B00011111, B00001101, B00111101, B01001111, B01000111, /* ABCDEF */
+  B01011110, B00010111, B01000100, B01011000, B01010111, B00001110,
+  B01010101, B00010101, B00011101, B01100111, B01110011, B00000101,
+  B01011010, B00001111, B00011100, B00101010, B00101011, B00010100,
+  B00111011, B01101100 };
 
 // dSEG7 https://www.keshikan.net/fonts-e.html
 // as the 'over score' character isn't normally available, the pipe "|" is used for that, and for degree the "^"" is used
@@ -550,7 +561,7 @@ static const byte SiekooTableMAX7219[67] = {
 //   B00000100, B00011110, B01110101, B00111000, B00110111, B01010100,
 //   B01011100, B01110011, B01100111, B01010000, B01101100, B01111000,
 //   B00011100, B00111110, B01111110, B01110110, B01101110, B00011011 };
-static const byte Dseg7TableMAX7219[42] = {
+static const byte Dseg7TableMAX7219[42] PROGMEM = {
   B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
   B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
   B01100011, B00001001, B01001001, B00001000, B01110111, B00011111, /* AB */
@@ -565,19 +576,19 @@ uint8_t P073_mapCharToFontPosition(char character, uint8_t fontset) {
   uint8_t position = 10;
 #ifdef P073_EXTRA_FONTS
   String specialChars = F(" -^=/_%@.,;:+*#!?'\"<>\\()|");
-  String cnorux = F("CNORUX");
+  String chnorux = F("CHNORUX");
 
   switch(fontset) {
     case 1: // Siekoo
-    case 2: // Siekoo with uppercase 'CNORUX'
-      if (fontset == 2 && cnorux.indexOf(character) > -1) {
-        position = cnorux.indexOf(character) + 35;
+    case 2: // Siekoo with uppercase 'CHNORUX'
+      if (fontset == 2 && chnorux.indexOf(character) > -1) {
+        position = chnorux.indexOf(character) + 35;
       } else if ((character >= '0') && (character <= '9')) {
         position = character - '0';
       } else if ((character >= 'A') && (character <= 'Z')) {
-        position = character - 'A' + 41;
+        position = character - 'A' + 42;
       } else if ((character >= 'a') && (character <= 'z')) {
-        position = character - 'a' + 41;
+        position = character - 'a' + 42;
       } else {
         uint8_t idx = specialChars.indexOf(character);
         if (idx > -1) {
@@ -678,7 +689,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
       {
         String fontset[4] = { F("Default"),
                               F("Siekoo"),
-                              F("Siekoo with uppercase 'CNORUX'"),
+                              F("Siekoo with uppercase 'CHNORUX'"),
                               F("dSEG7") };
         addFormSelector(F("Font set"), F("plugin_073_fontset"), 4, fontset, NULL, PCONFIG(4));
         addFormNote(F("Check documentation for examples of the font sets."));
@@ -696,7 +707,9 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
 
 #ifdef P073_SCROLL_TEXT
       bool bScrollText = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
-      addFormCheckBox(F("Scroll 7dtext &gt; display width"), F("plugin_073_scroll_text"), bScrollText);
+      bool bScrollFull = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL);
+      addFormCheckBox(F("Scroll text &gt; display width"), F("plugin_073_scroll_text"), bScrollText);
+      addFormCheckBox(F("Scroll text in from right"), F("plugin_073_scroll_full"), bScrollFull);
       if (PCONFIG(3) == 0) PCONFIG(3) = 10;
       addFormNumericBox(F("Scroll speed (0.1 sec/step)"), F("plugin_073_scrollspeed"), PCONFIG(3), 1, 600);
       addUnit(F("1..600 = 0.1..60 sec/step"));
@@ -721,6 +734,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
       bitWrite(lSettings, P073_OPTION_RIGHTALIGN, isFormItemChecked(F("plugin_073_temp_rightalign")));
 #ifdef P073_SCROLL_TEXT
       bitWrite(lSettings, P073_OPTION_SCROLLTEXT, isFormItemChecked(F("plugin_073_scroll_text")));
+      bitWrite(lSettings, P073_OPTION_SCROLLFULL, isFormItemChecked(F("plugin_073_scroll_full")));
       PCONFIG(3) = getFormItemInt(F("plugin_073_scrollspeed"));
 #endif // P073_SCROLL_TEXT
 #ifdef P073_EXTRA_FONTS
@@ -742,6 +756,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
         P073_data->hideDegree   = bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE);
 #ifdef P073_SCROLL_TEXT
         P073_data->txtScrolling = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
+        P073_data->scrollFull   = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL);
         P073_data->setScrollSpeed(PCONFIG(3));
 #endif // P073_SCROLL_TEXT
         P073_data->rightAlignTempMAX7219 = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
@@ -802,6 +817,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
       P073_data->hideDegree   = bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE);
 #ifdef P073_SCROLL_TEXT
       P073_data->txtScrolling = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
+      P073_data->scrollFull   = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL);
       P073_data->setScrollSpeed(PCONFIG(3));
 #endif // P073_SCROLL_TEXT
       P073_data->rightAlignTempMAX7219 = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
@@ -1649,13 +1665,13 @@ byte tm1637_getFontChar(byte index, uint8_t fontset) {
 #ifdef P073_EXTRA_FONTS
   switch (fontset) {
     case 1: // Siekoo
-    case 2: // Siekoo uppercase CNORUX
-      return P073_mapMAX7219FontToTM1673Font(SiekooTableMAX7219[index]); // SiekooTableTM1637[index];
+    case 2: // Siekoo uppercase CHNORUX
+      return P073_mapMAX7219FontToTM1673Font(pgm_read_byte(&(SiekooTableMAX7219[index]))); // SiekooTableTM1637[index];
     case 3: // dSEG7
-      return P073_mapMAX7219FontToTM1673Font(Dseg7TableMAX7219[index]); // Dseg7TableTM1637[index];
+      return P073_mapMAX7219FontToTM1673Font(pgm_read_byte(&(Dseg7TableMAX7219[index]))); // Dseg7TableTM1637[index];
     default: // Standard fontset
 #endif // P073_EXTRA_FONTS
-      return P073_mapMAX7219FontToTM1673Font(CharTableMAX7219[index]); // CharTableTM1637[index];
+      return P073_mapMAX7219FontToTM1673Font(pgm_read_byte(&(CharTableMAX7219[index]))); // CharTableTM1637[index];
 #ifdef P073_EXTRA_FONTS
   }
 #endif // P073_EXTRA_FONTS
@@ -1864,15 +1880,15 @@ void max7219_SetDigit(struct EventStruct *event, uint8_t din_pin,
 #ifdef P073_EXTRA_FONTS
   switch (PCONFIG(4)) {
     case 1: // Siekoo
-    case 2: // Siekoo with uppercase CNORUX
-      p073_tempvalue = SiekooTableMAX7219[dgtvalue];
+    case 2: // Siekoo with uppercase CHNORUX
+      p073_tempvalue = pgm_read_byte(&(SiekooTableMAX7219[dgtvalue]));
       break;
     case 3: // dSEG7
-      p073_tempvalue = Dseg7TableMAX7219[dgtvalue];
+      p073_tempvalue = pgm_read_byte(&(Dseg7TableMAX7219[dgtvalue]));
       break;
     default: // Default fontset
 #endif // P073_EXTRA_FONTS
-      p073_tempvalue = CharTableMAX7219[dgtvalue];
+      p073_tempvalue = pgm_read_byte(&(CharTableMAX7219[dgtvalue]));
 #ifdef P073_EXTRA_FONTS
   }
 #endif // P073_EXTRA_FONTS
@@ -1964,7 +1980,7 @@ void max7219_ShowBuffer(struct EventStruct *event, uint8_t din_pin,
     return;
   }
 
-  if (P073_data->dotpos >= 0) {
+  if (P073_data->dotpos > -1) {
     P073_data->showperiods[P073_data->dotpos] = true;
   }
 
