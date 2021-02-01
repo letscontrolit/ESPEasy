@@ -9,8 +9,6 @@
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
-  // First give the unit some time to boot.....
-  if (millis() < 2000) return false;
   if (!wifiConnectAttemptNeeded) return false;
   if (wifiSetupConnect) return true;
   if (lastDisconnectMoment.isSet()) {

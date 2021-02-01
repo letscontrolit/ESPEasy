@@ -279,12 +279,6 @@ bool prepareWiFi() {
   #if defined(ESP8266)
   wifi_station_set_hostname(hostname);
 
-  if (Settings.WifiNoneSleep()) {
-    // Only set this mode during setup.
-    // Reset to default power mode requires a reboot since setting it to WIFI_LIGHT_SLEEP will cause a crash.
-    WiFi.setSleepMode(WIFI_NONE_SLEEP);
-  }
-
   #endif // if defined(ESP8266)
   #if defined(ESP32)
   WiFi.setHostname(hostname);
@@ -375,7 +369,6 @@ void initWiFi()
 #endif // ifdef ESP8266
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  WiFi.setAutoReconnect(true);
   // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
   // those WiFi connections will take a long time to make or sometimes will not work at all.
   WiFi.disconnect(true);
@@ -399,10 +392,7 @@ void initWiFi()
 // Configure WiFi TX power
 // ********************************************************************************
 void SetWiFiTXpower() {
-  const WiFiMode_t cur_mode = WiFi.getMode();
-  if (cur_mode != WIFI_OFF) {
-    SetWiFiTXpower(0.0f); // Just some minimal value, will be adjusted in SetWiFiTXpower
-  }
+  SetWiFiTXpower(0.0f); // Just some minimal value, will be adjusted in SetWiFiTXpower
 }
 
 void SetWiFiTXpower(float dBm) { 
@@ -410,6 +400,11 @@ void SetWiFiTXpower(float dBm) {
 }
 
 void SetWiFiTXpower(float dBm, float rssi) {
+  const WiFiMode_t cur_mode = WiFi.getMode();
+  if (cur_mode == WIFI_OFF) {
+    return;
+  }
+
   // Range ESP32  : 2dBm - 20dBm
   // Range ESP8266: 0dBm - 20.5dBm
   float maxTXpwr;
@@ -503,9 +498,11 @@ void SetWiFiTXpower(float dBm, float rssi) {
         log += F(" sensitivity: ");
         log += String(threshold, 0);
         log += F("dBm");
-        log += F(" RSSI: ");
-        log += String(rssi, 0);
-        log += F("dBm");
+        if (rssi < 0) {
+          log += F(" RSSI: ");
+          log += String(rssi, 0);
+          log += F("dBm");
+        }
         addLog(LOG_LEVEL_INFO, log);
       }
     }
@@ -768,7 +765,6 @@ void setWifiMode(WiFiMode_t wifimode) {
     #endif // ifdef ESP8266
     delay(100);
   }
-  SetWiFiTXpower();
 
   addLog(LOG_LEVEL_INFO, String(F("WIFI : Set WiFi to ")) + getWifiModeString(wifimode));
 
@@ -796,6 +792,26 @@ void setWifiMode(WiFiMode_t wifimode) {
     #endif // ifdef ESP8266
     delay(1);
   } else {
+    // Only set power mode when AP is not enabled
+    // When AP is enabled, the sleep mode is already set to WIFI_NONE_SLEEP
+    if (!WifiIsAP(wifimode)) {
+      if (Settings.WifiNoneSleep()) {
+        WiFi.setSleepMode(WIFI_NONE_SLEEP);
+      } else if (Settings.EcoPowerMode()) {
+        // Allow light sleep during idle times
+        WiFi.setSleepMode(WIFI_LIGHT_SLEEP);
+      } else {
+        // Default
+        WiFi.setSleepMode(WIFI_MODEM_SLEEP);
+      }
+    }
+
+    SetWiFiTXpower();
+    if (WifiIsSTA(wifimode)) {
+      if (!WiFi.getAutoConnect()) {
+        WiFi.setAutoConnect(true); 
+      }
+    }
     delay(100); // Must allow for some time to init.
   }
   const bool new_mode_AP_enabled = WifiIsAP(wifimode);
