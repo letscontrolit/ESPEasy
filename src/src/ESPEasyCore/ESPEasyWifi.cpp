@@ -796,13 +796,33 @@ void setWifiMode(WiFiMode_t wifimode) {
     // When AP is enabled, the sleep mode is already set to WIFI_NONE_SLEEP
     if (!WifiIsAP(wifimode)) {
       if (Settings.WifiNoneSleep()) {
+        #ifdef ESP8266
         WiFi.setSleepMode(WIFI_NONE_SLEEP);
+        #endif
+        #ifdef ESP32
+        WiFi.setSleep(WIFI_PS_NONE);
+        #endif
       } else if (Settings.EcoPowerMode()) {
         // Allow light sleep during idle times
+        #ifdef ESP8266
         WiFi.setSleepMode(WIFI_LIGHT_SLEEP);
+        #endif
+        #ifdef ESP32
+        // Maximum modem power saving. 
+        // In this mode, interval to receive beacons is determined by the listen_interval parameter in wifi_sta_config_t
+        // FIXME TD-er: Must test if this is desired behavior in ESP32.
+        WiFi.setSleep(WIFI_PS_MAX_MODEM);
+        #endif
       } else {
         // Default
+        #ifdef ESP8266
         WiFi.setSleepMode(WIFI_MODEM_SLEEP);
+        #endif
+        #ifdef ESP32
+        // Minimum modem power saving. 
+        // In this mode, station wakes up to receive beacon every DTIM period
+        WiFi.setSleep(WIFI_PS_MIN_MODEM);
+        #endif
       }
     }
 
