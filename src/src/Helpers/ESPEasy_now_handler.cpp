@@ -11,7 +11,6 @@
 # include "../DataStructs/TimingStats.h"
 # include "../ESPEasyCore/Controller.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
-# include "../ESPEasyCore/ESPEasyWiFi_credentials.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 # include "../Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/ESPEasy_time.h"
@@ -109,6 +108,8 @@ bool ESPEasy_now_handler_t::begin()
   const String passphrase = F(ESPEASY_NOW_TMP_PASSPHRASE);
 
   setAP(true);
+  /*
+  // FIXME TD-er: Must use standard WiFi connection setup.
   if (WiFiEventData.espeasy_now_only) {
     if (bssid.all_zero()) {
       WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel);
@@ -116,6 +117,7 @@ bool ESPEasy_now_handler_t::begin()
       WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel, bssid.mac);
     }
   }
+  */
 
   int ssid_hidden    = 1;
   int max_connection = 6;

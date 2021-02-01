@@ -104,6 +104,7 @@ bool ControllerSettingsStruct::checkHostReachable(bool quick) {
   }
   delay(1);       // Make sure the Watchdog will not trigger a reset.
 
+  PrepareSend();
   if (quick && ipSet()) { return true; }
 
   if (UseDNS) {
