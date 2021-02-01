@@ -487,7 +487,8 @@ void SetWiFiTXpower(float dBm, float rssi) {
   WiFiEventData.wifi_TX_pwr = dBm;
 
   delay(1);
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     if (WiFiEventData.wifi_TX_pwr != maxTXpwr) {
       static float last_log = -1;
       if (WiFiEventData.wifi_TX_pwr != last_log) {
@@ -503,10 +504,11 @@ void SetWiFiTXpower(float dBm, float rssi) {
           log += String(rssi, 0);
           log += F("dBm");
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_DEBUG, log);
       }
     }
   }
+  #endif
 }
 
 float GetRSSIthreshold(float& maxTXpwr) {
