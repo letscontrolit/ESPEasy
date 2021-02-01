@@ -13,6 +13,7 @@
 #include "../DataStructs/RTCStruct.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/ESPEasy_time.h"
@@ -91,32 +92,15 @@ void handle_sysinfo_json() {
   # endif // ifndef BUILD_NO_RAM_TRACKER
             );
   json_close();
+
   json_open(false, F("boot"));
   json_prop(F("last_cause"), getLastBootCauseString());
   json_number(F("counter"), String(RTC.bootCounter));
   json_prop(F("reset_reason"), getResetReasonString());
   json_close();
+
   json_open(false, F("wifi"));
-
-  # if defined(ESP8266)
-  byte PHYmode = wifi_get_phy_mode();
-  # endif // if defined(ESP8266)
-  # if defined(ESP32)
-  byte PHYmode = 3; // wifi_get_phy_mode();
-  # endif // if defined(ESP32)
-
-  switch (PHYmode)
-  {
-    case 1:
-      json_prop(F("type"), F("802.11B"));
-      break;
-    case 2:
-      json_prop(F("type"), F("802.11G"));
-      break;
-    case 3:
-      json_prop(F("type"), F("802.11N"));
-      break;
-  }
+  json_prop(F("type"), toString(getConnectionProtocol()));
   json_number(F("rssi"), String(WiFi.RSSI()));
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
   json_prop(F("ip"),            getValue(LabelType::IP_ADDRESS));
@@ -130,6 +114,7 @@ void handle_sysinfo_json() {
   json_prop(F("ssid"),          getValue(LabelType::SSID));
   json_prop(F("bssid"),         getValue(LabelType::BSSID));
   json_number(F("channel"),     getValue(LabelType::CHANNEL));
+  json_prop(F("encryption"),    getValue(LabelType::ENCRYPTION_TYPE_STA));
   json_prop(F("connected"),     getValue(LabelType::CONNECTED));
   json_prop(F("ldr"),           getValue(LabelType::LAST_DISC_REASON_STR));
   json_number(F("reconnects"),  getValue(LabelType::NUMBER_RECONNECTS));
@@ -147,13 +132,13 @@ void handle_sysinfo_json() {
 # endif // ifdef HAS_ETHERNET
 
   json_open(false, F("firmware"));
-  json_prop(F("build"),          String(BUILD));
-  json_prop(F("notes"),          F(BUILD_NOTES));
-  json_prop(F("libraries"),      getSystemLibraryString());
-  json_prop(F("git_version"),    F(BUILD_GIT));
-  json_prop(F("plugins"),        getPluginDescriptionString());
-  json_prop(F("md5"),            String(CRCValues.compileTimeMD5[0], HEX));
-  json_number(F("md5_check"),    String(CRCValues.checkPassed()));
+  json_prop(F("build"),       String(BUILD));
+  json_prop(F("notes"),       F(BUILD_NOTES));
+  json_prop(F("libraries"),   getSystemLibraryString());
+  json_prop(F("git_version"), F(BUILD_GIT));
+  json_prop(F("plugins"),     getPluginDescriptionString());
+  json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
+  json_number(F("md5_check"), String(CRCValues.checkPassed()));
   json_prop(F("build_time"),     get_build_time());
   json_prop(F("filename"),       getValue(LabelType::BINARY_FILENAME));
   json_prop(F("build_platform"), getValue(LabelType::BUILD_PLATFORM));
@@ -162,7 +147,7 @@ void handle_sysinfo_json() {
 
   json_open(false, F("esp"));
   json_prop(F("chip_id"), getValue(LabelType::ESP_CHIP_ID));
-  json_number(F("cpu"),   getValue(LabelType::ESP_CHIP_FREQ));
+  json_number(F("cpu"), getValue(LabelType::ESP_CHIP_FREQ));
 
   # ifdef ARDUINO_BOARD
   json_prop(F("board"), ARDUINO_BOARD);
@@ -419,32 +404,14 @@ void handle_sysinfo_Network() {
     NetworkConnected())
   {
     addRowLabel(F("Wifi"));
-    # if defined(ESP8266)
-    byte PHYmode = wifi_get_phy_mode();
-    # endif // if defined(ESP8266)
-    # if defined(ESP32)
-    byte PHYmode = 3; // wifi_get_phy_mode();
-    # endif // if defined(ESP32)
-
     {
       String html;
       html.reserve(64);
 
-      switch (PHYmode)
-      {
-        case 1:
-          html += F("802.11B");
-          break;
-        case 2:
-          html += F("802.11G");
-          break;
-        case 3:
-          html += F("802.11N");
-          break;
-      }
+      html += toString(getConnectionProtocol());
       html += F(" (RSSI ");
       html += WiFi.RSSI();
-      html += F(" dB)");
+      html += F(" dBm)");
       addHtml(html);
     }
   }
@@ -470,6 +437,7 @@ void handle_sysinfo_Network() {
   }
 
   addRowLabelValue(LabelType::CHANNEL);
+  addRowLabelValue(LabelType::ENCRYPTION_TYPE_STA);
   addRowLabelValue(LabelType::CONNECTED);
   addRowLabel(LabelType::LAST_DISCONNECT_REASON);
   addHtml(getValue(LabelType::LAST_DISC_REASON_STR));
@@ -487,6 +455,10 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
 # endif // ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
+  addRowLabelValue(LabelType::WIFI_TX_MAX_PWR);
+  addRowLabelValue(LabelType::WIFI_CUR_TX_PWR);
+  addRowLabelValue(LabelType::WIFI_SENS_MARGIN);
+  addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
 }
 
 void handle_sysinfo_Firmware() {
@@ -540,7 +512,7 @@ void handle_sysinfo_ESP_Board() {
   }
 
   addRowLabel(LabelType::ESP_CHIP_FREQ);
-  addHtml(String(ESP.getCpuFreqMHz()));
+  addHtmlInt(ESP.getCpuFreqMHz());
   addHtml(F(" MHz"));
 
   addRowLabelValue(LabelType::ESP_CHIP_MODEL);
@@ -589,17 +561,17 @@ void handle_sysinfo_Storage() {
   uint32_t ideSize  = ESP.getFlashChipSize();
 
   addRowLabel(LabelType::FLASH_CHIP_REAL_SIZE);
-  addHtml(String(realSize / 1024));
+  addHtmlInt(realSize / 1024);
   addHtml(F(" kB"));
 
   addRowLabel(LabelType::FLASH_IDE_SIZE);
-  addHtml(String(ideSize / 1024));
+  addHtmlInt(ideSize / 1024);
   addHtml(F(" kB"));
 
   // Please check what is supported for the ESP32
   # if defined(ESP8266)
   addRowLabel(LabelType::FLASH_IDE_SPEED);
-  addHtml(String(ESP.getFlashChipSpeed() / 1000000));
+  addHtmlInt(ESP.getFlashChipSpeed() / 1000000);
   addHtml(F(" MHz"));
 
   FlashMode_t ideMode = ESP.getFlashChipMode();
@@ -681,29 +653,29 @@ void handle_sysinfo_Storage() {
     html += F(" kB free)");
     addHtml(html);
   }
-  #ifndef LIMIT_BUILD_SIZE
+  # ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));
-  addHtml(String(SpiffsPagesize()));
+  addHtmlInt(SpiffsPagesize());
 
   addRowLabel(F("Block size"));
-  addHtml(String(SpiffsBlocksize()));
+  addHtmlInt(SpiffsBlocksize());
 
   addRowLabel(F("Number of blocks"));
-  addHtml(String(SpiffsTotalBytes() / SpiffsBlocksize()));
+  addHtmlInt(SpiffsTotalBytes() / SpiffsBlocksize());
 
   {
-  # if defined(ESP8266)
+  #  if defined(ESP8266)
     fs::FSInfo fs_info;
     ESPEASY_FS.info(fs_info);
     addRowLabel(F("Maximum open files"));
-    addHtml(String(fs_info.maxOpenFiles));
+    addHtmlInt(fs_info.maxOpenFiles);
 
     addRowLabel(F("Maximum path length"));
-    addHtml(String(fs_info.maxPathLength));
+    addHtmlInt(fs_info.maxPathLength);
 
-  # endif // if defined(ESP8266)
+  #  endif // if defined(ESP8266)
   }
-  #endif
+  # endif // ifndef LIMIT_BUILD_SIZE
 
 # ifndef BUILD_MINIMAL_OTA
 

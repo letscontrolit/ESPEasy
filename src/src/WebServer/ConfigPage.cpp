@@ -45,9 +45,6 @@ void handle_config() {
     Settings.deepSleep_wakeTime = getFormItemInt(F("awaketime"), Settings.deepSleep_wakeTime);
     Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
 
-    // String apkey = web_server.arg(F("apkey"));
-    String ssid = web_server.arg(F("ssid"));
-
     if (strcmp(Settings.Name, name.c_str()) != 0) {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
 
@@ -69,12 +66,15 @@ void handle_config() {
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
 
     // SSID 1
-    safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
+    safe_strncpy(SecuritySettings.WifiSSID, web_server.arg(F("ssid")).c_str(), sizeof(SecuritySettings.WifiSSID));
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
 
     // SSID 2
     strncpy_webserver_arg(SecuritySettings.WifiSSID2, F("ssid2"));
     copyFormPassword(F("key2"),  SecuritySettings.WifiKey2,  sizeof(SecuritySettings.WifiKey2));
+
+    // Hidden SSID
+    Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
 
     // Access point password.
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
@@ -135,6 +135,10 @@ void handle_config() {
   addFormPasswordBox(F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox(F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox(F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
+
+  addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
+  addFormNote(F("Must be checked to connect to a hidden SSID"));
+
   addFormSeparator(2);
   addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
 

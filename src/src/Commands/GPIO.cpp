@@ -45,7 +45,7 @@ String Command_GPIO_Monitor(struct EventStruct *event, const char* Line)
     String log = logPrefix + String(F(" port #")) + String(event->Par2) + String(F(": added to monitor list."));
     addLog(LOG_LEVEL_INFO, log);
     String dummy;
-    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummy, 0);
+    SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
 
     return return_command_success();
   } else {
@@ -65,7 +65,7 @@ String Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line)
   {
     const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'monitor' uses Par2 instead of Par1
     String dummy;
-    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummy, 0);
+    SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
 
     removeMonitorFromPort(key);
     String log = logPrefix + String(F(" port #")) + String(event->Par2) + String(F(": removed from monitor list."));
@@ -101,7 +101,7 @@ String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char* Line)
     String log = logPrefix + String(F(" : port ")) + String(event->Par1);
     log += String(F(". Pulse set for ")) + String(event->Par3)+String(F(" ms"));
     addLog(LOG_LEVEL_INFO, log);
-    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+    SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
     return return_command_success();
   } else {
@@ -138,7 +138,7 @@ String Command_GPIO_Status(struct EventStruct *event, const char* Line)
   {
     const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
 	  String dummy;
-	  SendStatusOnlyIfNeeded(event->Source, sendStatusFlag, key, dummy, 0);
+	  SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, 0);
     return return_command_success();
   } else {
     return return_command_failed();
@@ -173,9 +173,9 @@ String Command_GPIO_PWM(struct EventStruct *event, const char *Line)
       log += F(" Hz");
     }
     addLog(LOG_LEVEL_INFO, log);
-    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+    SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
-    // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, pluginID, event->Par1, log, 0));
+    // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, pluginID, event->Par1, log, 0));
 
     return return_command_success();
   } 
@@ -269,7 +269,7 @@ String Command_GPIO_Pulse(struct EventStruct *event, const char* Line)
     String log = logPrefix + String(F(" : port ")) + String(event->Par1);
     log += String(F(". Pulse set for ")) + String(event->Par3)+String(F(" ms"));
     addLog(LOG_LEVEL_INFO, log);
-    SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+    SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
     return return_command_success();
   } else {
@@ -310,7 +310,7 @@ String Command_GPIO_Toggle(struct EventStruct *event, const char* Line)
 
           String log = logPrefix + String(F(" toggle: port#")) + String(event->Par1) + String(F(": set to ")) + String(!state);
           addLog(LOG_LEVEL_ERROR, log);
-      	  SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+      	  SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
           return return_command_success();
         }
@@ -375,7 +375,7 @@ String Command_GPIO(struct EventStruct *event, const char* Line)
 
   		String log = logPrefix + String(F(" : port#")) + String(event->Par1) + String(F(": set to ")) + String(state);
   		addLog(LOG_LEVEL_INFO, log);
-  		SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+  		SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
   		return return_command_success();
   	} else {
       logErrorGpioOffline(logPrefix,event->Par1);

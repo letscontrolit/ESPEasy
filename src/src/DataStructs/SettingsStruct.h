@@ -86,6 +86,24 @@ class SettingsStruct_tmpl
   bool SendToHttp_ack() const;
   void SendToHttp_ack(bool value);
 
+  // Enable/disable ESPEasyNow protocol
+  bool UseESPEasyNow() const;
+  void UseESPEasyNow(bool value);
+
+  // Whether to try to connect to a hidden SSID network
+  bool IncludeHiddenSSID() const;
+  void IncludeHiddenSSID(bool value);
+
+  // When sending, the TX power may be boosted to max TX power.
+  bool UseMaxTXpowerForSending() const;
+  void UseMaxTXpowerForSending(bool value);
+
+
+
+  // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
+  bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
+  void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
+
   void validate();
 
   bool networkSettingsEmpty() const;
@@ -119,7 +137,8 @@ class SettingsStruct_tmpl
   PinBootState getPinBootState(uint8_t gpio_pin) const;
   void setPinBootState(uint8_t gpio_pin, PinBootState state);
 
-
+  float getWiFi_TX_power() const;
+  void setWiFi_TX_power(float dBm);
 
 
   unsigned long PID;
@@ -182,7 +201,7 @@ class SettingsStruct_tmpl
   boolean       TaskDevicePin1Inversed[N_TASKS];
   float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
   long          TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
-  byte          OLD_TaskDeviceSendData[N_TASKS];
+  byte          TaskDeviceSendDataFlags[N_TASKS];
   byte          OLD_TaskDeviceGlobalSync[N_TASKS];
   byte          TaskDeviceDataFeed[N_TASKS];    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[N_TASKS];
@@ -240,6 +259,8 @@ class SettingsStruct_tmpl
   #ifdef ESP32
   int8_t        PinBootStates_ESP32[24]; // pins 17 ... 39
   #endif
+  uint8_t       WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
+  int8_t        WiFi_sensitivity_margin = 3;  // Margin in dBm on top of sensitivity.
 };
 
 /*

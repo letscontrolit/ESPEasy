@@ -17,10 +17,12 @@
 # include "../Globals/MQTT.h"
 #endif // ifdef USES_MQTT
 #include "../Globals/NetworkState.h"
+#include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
 
@@ -185,28 +187,22 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
         break;
       default:
 
-        if (useURLencode) {
-          value = URLEncode(value.c_str());
-        }
-        s.replace(SystemVariables::toString(enumval), value);
+        repl(SystemVariables::toString(enumval), value, s, useURLencode);
         break;
     }
   }
   while (enumval != SystemVariables::Enum::UNKNOWN);
 
-  const int v_index = s.indexOf("%v");
+  const int v_index = s.indexOf(F("%v"));
 
-  if ((v_index != -1) && isDigit(s[v_index + 2])) {
-    for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-      String key = "%v" + String(i + 1) + '%';
-
+  if ((v_index != -1)) {
+    unsigned int i;
+    if (validUIntFromString(s.substring(v_index + 2), i)) {
+      const String key = String(F("%v")) + String(i) + '%';
       if (s.indexOf(key) != -1) {
-        String value = String(customFloatVar[i]);
-
-        if (useURLencode) {
-          value = URLEncode(value.c_str());
-        }
-        s.replace(key, value);
+        const bool trimTrailingZeros = true;
+        const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        repl(key, value, s, useURLencode);
       }
     }
   }

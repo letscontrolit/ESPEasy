@@ -318,6 +318,154 @@ It can also be used in rules. Every occurance of this text will then be replaced
 N.B. these references to task values only yield a value when the task is enabled and its value is valid.
 
 
+
+
+Event value (%eventvalue%)
+--------------------------
+
+Rules engine specific:
+
+%eventvalue% - substitutes the event value (everything that comes after
+the '=' sign, up to four values are possible).
+
+Sample rules section:
+
+.. code-block:: none
+
+ on remoteTimerControl do
+   timerSet,1,%eventvalue%
+ endon
+
+Now send this command to the ESP:
+
+.. code-block:: none
+
+ http://<espeasyip>/control?cmd=event,remoteTimerControl=5
+
+and it will set rules timer no 1 to 5 seconds. Using this technique you can
+parse a value from an event to the rule engine.
+
+It is possible to use multiple event values. Some system events generate multiple event values.
+
+For example, the ``Rules#Timer`` event has 2 event values (since build 2020/08/12):
+
+* ``%eventvalue1%`` has the timer number (1 ... max timer ID)
+* ``%eventvalue2%`` has the loop count for loop timers (since build 2020/08/12)
+
+.. note::
+ 'timerSet' is a rule command and cannot be run directly from a remote command.
+
+If you want to check the transferred value within rules on the receiving ESP
+(condition in if-statement), you will need to write the transferred value into
+a Dummy device using the TaskValueSet command. It is then possible to check
+the value of the Dummy device as condition in if-statement within rules.
+
+Multiple event values:
+
+.. code-block:: none
+
+ on ToggleGPIO do
+   GPIO,%eventvalue1%,%eventvalue2%
+ endon
+
+You could then use the command "ToggleGPIO" with dynamic GPIO numbers and state.
+
+.. code-block:: none
+
+ http://<espeasyip>/control?cmd=event,ToggleGPIO=12,1
+
+Task value events
+-----------------
+
+Tasks also send out events when a read was successful.
+
+There is a number of triggers for a task to perform a read:
+
+* Periodical read. A task calls its own read function every <interval> number of seconds. (Setting per task)
+* ``TaskRun`` command. A task can be forced to take a reading via a command. This can be sent from rules, HTTP calls, etc.
+* Some task reschedule their own read calls right after the sensor is done collecting data. (e.g. the BME280)
+
+Event per task value
+^^^^^^^^^^^^^^^^^^^^
+
+By default, an event is created per read task value.
+For example a task called "bme" (using BMx280 plugin) may output upto 3 values:
+
+* Temperature
+* Humidity
+* Pressure
+
+This would then generate upto 3 events:
+
+* ``bme#Temperature=21.12``
+* ``bme#Humidity=49.23``
+* ``bme#Pressure=1010.34``
+
+Single event with all values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+(Added: 2021-01-11)
+
+Each task may be configured to combine all task values in a single event, by checking "Single event with all values".
+
+This will create a single event with variable name "All" like this:
+
+* ``bme#All=21.12,49.23,1010.34``
+
+To access all event values in the rules:
+
+.. code-block:: none
+
+ on bme#All do
+   LogEntry,"temp: %eventvalue1% hum: %eventvalue2% press: %eventvalue3%"
+ endon
+
+There is a number of reasons to combine all task values in a single event:
+
+* Less events to process, as the rules have to be parsed for each event.
+* All task values of the same read are present at the same time.
+
+Especially the last reason, to have all values present when handling an event, is very useful.
+When you need to take an action based on 2 values of the same sensor, you must make sure they both belong to the same sample.
+
+A typical example is to compute the dew point, which is a relation between temperature and (relative) humidity.
+
+.. code-block:: none
+
+ on bme#All do
+   LogEntry,"Dew point: %c_dew_th%(%eventvalue1%,%eventvalue2%)"
+ endon
+
+
+
+
+Internal variables
+------------------
+
+A really great feature to use is the internal variables. You set them like this:
+
+.. code-block:: none
+
+ Let,<n>,<value>
+
+Where n must be a positive integer (type ``uint32_t``) and the value a floating point value. To use the values in strings you can
+either use the ``%v7%`` syntax or ``[var#7]``. BUT for formulas you need to use the square
+brackets in order for it to compute, i.e. ``[var#12]``.
+
+.. note: The number for ``n`` used to be limited to 1 ... 16, but this limit has been removed in builds made after 2021-01-09.
+
+If you need to make sure the stored value is an integer value, use the ``[int#n]`` syntax. (i.e. ``[int#12]``)
+The index ``n`` is shared among ``[var#n]`` and ``[int#n]``.
+
+On the "System Variables" page of the web interface all set values can be inspected including their values.
+If none is set, "No variables set" will be shown.
+
+If a specific system variable was never set (using the ``Let`` command), its value will be considered to be ``0.0``.
+
+.. note: Interval variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without loosing power), please use a dummy task for this.
+
+
+
 Special task names
 ------------------
 
@@ -522,8 +670,10 @@ strtol
 
 Strings or substrings can be converted from just about any base value (binary, octal, hexadecimal) into an integer value.
 
-Usage: ``{strtol:16:<string>}``  to convert HEX (base 16) into an integer value.
+Usage:
 
+* ``{strtol:16:<string>}``  to convert HEX (base 16) into an integer value.
+* ``{strtol:2:<string>}``  to convert BIN (base 2) into an integer value.
 
 Example of extracting sub strings from a value and interpreting as if they were HEX values:
 
@@ -586,6 +736,44 @@ Complete rule used to parse this and set a variable in a dummy device:
  endon
 
 
+toBin / toHex
+^^^^^^^^^^^^^
+
+(Added: 2020-12-28)
+
+Convert an integer value into a binary or hexadecimal representation.
+
+Usage: 
+
+* ``{toBin:<value>}`` Convert the number into binary representation.
+* ``{toHex:<value>}`` Convert the number into hexadecimal representation.
+
+* ``<value>`` The number to convert, if it is representing a valid unsigned integer value.
+
+
+For example:
+
+.. code-block:: none
+
+ on myevent do
+   let,1,%eventvalue1%
+   let,2,{bitset:9:%eventvalue1%}
+   LogEntry,'Values {tobin:[int#1]} {tohex:[int#1]}'
+   LogEntry,'Values {tobin:[int#2]} {tohex:[int#2]}'
+ endon
+
+
+.. code-block:: none
+
+ 320528: HTTP: Event,eventname=123
+ 320586: EVENT: eventname=123
+ 320594: ACT : let,1,123
+ 320603: ACT : let,2,635
+ 320612: ACT : LogEntry,'Values 1111011 7b'
+ 320618: Values 1111011 7b
+ 320631: ACT : LogEntry,'Values 1001111011 27b'
+ 320635: Values 1001111011 27b
+
 ord
 ^^^
 
@@ -612,6 +800,284 @@ For example:
  2982492 : Info  : ACT  : logentry,46
  2982493 : Info  : Command: logentry
  2982494 : Info  : 46
+
+
+bitread
+^^^^^^^
+
+(Added: 2020-12-28)
+
+Read a specific bit of a number.
+
+Usage: ``{bitRead:<bitpos>:<string>}``
+
+* ``<bitpos>`` Which bit to read, starting at 0 for the least-significant (rightmost) bit.
+* ``<string>`` The number from which to read, if it is representing a valid unsigned integer value.
+
+.. note::
+
+  Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
+
+.. note::
+
+  The order of parameters differs from the "Arduino" command ``bitRead()``
+
+For example:
+
+.. code-block:: none
+
+ on myevent do
+   logentry,{bitread:0:123}   // Get least significant bit of the given nr '123' => '1'
+   logentry,{bitread:%eventvalue1%:%eventvalue1%}  // Get bit nr given by 1st eventvalue from 2nd eventvalue => Either '0' or '1'
+ endon
+
+bitset / bitclear
+^^^^^^^^^^^^^^^^^
+
+(Added: 2020-12-28)
+
+To set or clear a specific bit of a number to resp. '1' or '0'.
+
+Usage:
+
+* ``{bitSet:<bitpos>:<string>}``  Set a specific bit of a number to '1'.
+* ``{bitClear:<bitpos>:<string>}``  Set a specific bit of a number to '0'.
+
+With:
+
+* ``<bitpos>`` Which bit to set, starting at 0 for the least-significant (rightmost) bit.
+* ``<string>`` The number from which to read, if it is representing a valid unsigned integer value.
+
+.. note::
+
+  Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
+
+.. note::
+
+  The order of parameters differs from the "Arduino" commands ``bitSet()`` and ``bitClear()``
+
+For example:
+
+.. code-block:: none
+
+ on myevent do
+   logentry,{bitset:0:122}     // Set least significant bit of the given nr '122' to '1' => '123'
+   logentry,{bitclear:0:123}   // Set least significant bit of the given nr '123' to '0' => '122'
+   logentry,{bitset:%eventvalue1%:%eventvalue1%}  // Set bit nr given by 1st eventvalue to '1' from 2nd eventvalue
+ endon
+
+bitwrite
+^^^^^^^^
+
+(Added: 2020-12-28)
+
+To set a specific bit of a number to a given value.
+
+Usage: ``{bitWrite:<bitpos>:<string>:<bitval>}``
+
+* ``<bitpos>`` Which bit to set, starting at 0 for the least-significant (rightmost) bit.
+* ``<string>`` The number from which to read, if it is representing a valid unsigned integer value.
+* ``<bitval>`` The value to set in the given number. N.B. only the last bit of this integer parameter is used. (Thus '0' and '2' as parameter will give the same result)
+
+.. note::
+
+  Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
+
+.. note::
+
+  The order of parameters differs from the "Arduino" command bitSet()
+
+For example:
+
+.. code-block:: none
+
+ on myevent do
+   logentry,{bitwrite:0:122:1}   // Set least significant bit of the given nr '122' to '1' => '123'
+ endon
+
+XOR / AND / OR
+^^^^^^^^^^^^^^
+
+(Added: 2020-12-28)
+
+Perform bitwise logic operations XOR/AND/OR
+
+.. note::
+
+  Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
+
+
+Usage: 
+
+* ``{XOR:<uintA>:<uintB>}``
+* ``{AND:<uintA>:<uintB>}``
+* ``{OR:<uintA>:<uintB>}``
+
+With:
+
+* ``<uintA>`` The first number, if it is representing a valid unsigned integer value.
+* ``<uintB>`` The second number, if it is representing a valid unsigned integer value.
+
+For example:
+
+* ``{xor:127:15}`` to XOR the binary values ``1111111`` and ``1111`` => ``1110000``
+* ``{and:254:15}`` to AND the binary values ``11111110`` and ``1111`` => ``1110``
+* ``{or:254:15}`` to OR the binary values ``11111110`` and ``1111`` => ``11111111``
+
+.. code-block:: none
+
+ on eventname do
+   let,1,%eventvalue1%
+   let,2,{abs:%eventvalue2%}
+   let,3,{and:[int#1]:[int#2]}
+   LogEntry,'Values {tobin:[int#1]} AND {tobin:[int#2]} -> {tobin:[int#3]}'
+ endon
+
+ 
+ 1021591: EVENT: eventname=127,15
+ 1021601: ACT : let,1,127
+ 1021611: ACT : let,2,15.00
+ 1021622: ACT : let,3,15
+ 1021639: ACT : LogEntry,'Values 1111111 AND 1111 -> 1111'
+ 1021643: Values 1111111 AND 1111 -> 1111
+
+
+Abs
+^^^
+
+(Added: 2020-12-28)
+
+Perform ABS on integer values.
+
+Usage:  ``abs(<value>)``
+
+With:
+
+* ``<value>`` The number to convert into an absolute value, if it is representing a valid numerical value.
+
+For example:
+
+* ``abs(-1)`` Return the absolute value => 1
+
+.. note::
+
+  Bitwise operators act on ``unsigned integer`` types, thus negative numbers will be ignored.
+  This makes the use of ''abs'' necessary for using bitwise operators if the value may become negative. 
+
+.. code-block:: none
+
+ on eventname do
+   let,1,%eventvalue1%                   // Don't change the value
+   let,2,{bitset:9:abs(%eventvalue1%)}   // Convert to positive and set bit '9'
+   LogEntry,'Values {tobin:[int#1]} {tohex:[int#1]}'
+   LogEntry,'Values {tobin:[int#2]} {tohex:[int#2]}'
+ endon
+
+Called with ``Event,eventname=-123`` :
+
+.. code-block:: none  
+
+ 110443: EVENT: eventname=-123
+ 110452: ACT : let,1,-123
+ 110462: ACT : let,2,635
+ 110475: ACT : LogEntry,'Values {tobin:-123} {tohex:-123}'
+ 110484: Values {tobin:-123} {tohex:-123}
+ 110496: ACT : LogEntry,'Values 1001111011 27b'
+ 110500: Values 1001111011 27b
+
+As can be seen in the logs, when calling bitwise operators with negative numbers, the value is ignored and thus the expression is still visible in the output.
+Therefore make sure to use the ``abs`` function before handing the value over to binary logical operators.
+
+Constrain
+^^^^^^^^^
+
+(Added: 2020-12-28)
+
+Constrains a number to be within a range.
+
+Usage:  ``{constrain:<value>:<low>:<high>}``
+
+With:
+
+* ``<value>`` The number to constrain, if it is representing a valid numerical value.
+* ``<low>`` Lower end of range, if it is representing a valid numerical value.
+* ``<high>`` Higher end of range, if it is representing a valid numerical value.
+
+Math Functions
+--------------
+
+(Added: 2021-01-10)
+
+ESPEasy also supports some math functions, like trigonometric functions, but also some more basic functions.
+
+Basic Math Functions
+^^^^^^^^^^^^^^^^^^^^
+
+* ``log(x)`` Logarithm of x to base 10.
+* ``ln(x)`` Natural logarithm of x.
+* ``abs(x)`` Absolute value of x.
+* ``exp(x)`` Exponential value, e^x.
+* ``sqrt(x)`` Square root of x. (x^0.5)
+* ``sq(x)`` Square of x, x^2.
+* ``round(x)`` Rounds to the nearest integer, but rounds halfway cases away from zero (instead of to the nearest even integer). 
+
+Rules example:
+
+.. code-block:: none  
+
+ on eventname2 do
+   let,1,sq(%eventvalue1%)
+   let,2,sqrt([var#1])
+   let,3,=log(%eventvalue2%)
+   let,4,ln(%eventvalue2%)
+   LogEntry,'sqrt of [var#1] = [var#2]'
+   LogEntry,'log of %eventvalue2% = [var#3]'
+   LogEntry,'ln of %eventvalue2% = [var#4]'   
+ endon
+
+Called with event ``eventname2=1.234,100``
+
+.. code-block:: none  
+
+ 213293 : Info   : EVENT: eventname2=1.234,100
+ 213307 : Info   : ACT  : let,1,sq(1.234)
+ 213316 : Info   : ACT  : let,2,sqrt(1.522756)
+ 213328 : Info   : ACT  : let,3,=log(100)
+ 213337 : Info   : ACT  : let,4,ln(100)
+ 213346 : Info   : ACT  : LogEntry,'sqrt of 1.522756 = 1.234'
+ 213351 : Info   : sqrt of 1.522756 = 1.234
+ 213357 : Info   : ACT  : LogEntry,'log of 100 = 2'
+ 213361 : Info   : log of 100 = 2
+ 213369 : Info   : ACT  : LogEntry,'ln of 100 = 4.60517018598809'
+ 213374 : Info   : ln of 100 = 4.60517018598809
+
+
+
+Trigonometric Functions
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Since the trigonometric functions add quite a bit to the compiled binary, these functions are not included in builds which have a flag defined to limit their build size.
+
+All trigonometric functions are present in 2 versions, for angles in radian and with the ``_d`` suffix for angles in degree.
+
+Radian Angle:
+
+* ``sin(x)`` Sine of x (radian)
+* ``cos(x)`` Cosine of x (radian)
+* ``tan(x)`` Tangent of x (radian)
+* ``arcSin(x)`` Arc Sine of x (radian)
+* ``arcCos(x)`` Arc Cosine of x (radian)
+* ``arcTan(x)`` Arc Tangent of x (radian)
+
+Degree Angle:
+
+* ``sin_d(x)`` Sine of x (degree)
+* ``cos_d(x)`` Cosine of x (degree)
+* ``tan_d(x)`` Tangent of x (degree)
+* ``arcSin_d(x)`` Arc Sine of x (degree)
+* ``arcCos_d(x)`` Arc Cosine of x (degree)
+* ``arcTan_d(x)`` Arc Tangent of x (degree)
+
 
 
 
@@ -714,75 +1180,6 @@ The values stored in the Dummy variables will be kept and restored on a crash/re
  if %v4%>[Config#MinWateringDelay] 
   event,Irrigate
  endif
-
-
-
-Event value (%eventvalue%)
---------------------------
-
-Rules engine specific:
-
-%eventvalue% - substitutes the event value (everything that comes after
-the '=' sign, up to four values are possible).
-
-Sample rules section:
-
-.. code-block:: none
-
- on remoteTimerControl do
-   timerSet,1,%eventvalue%
- endon
-
-Now send this command to the ESP:
-
-.. code-block:: none
-
- http://<espeasyip>/control?cmd=event,remoteTimerControl=5
-
-and it will set rules timer no 1 to 5 seconds. Using this technique you can
-parse a value from an event to the rule engine.
-
-It is possible to use multiple event values. Some system events generate multiple event values.
-
-For example, the ``Rules#Timer`` event has 2 event values (since build 2020/08/12):
-
-* ``%eventvalue1%`` has the timer number (1 ... max timer ID)
-* ``%eventvalue2%`` has the loop count for loop timers (since build 2020/08/12)
-
-.. note::
- 'timerSet' is a rule command and cannot be run directly from a remote command.
-
-If you want to check the transferred value within rules on the receiving ESP
-(condition in if-statement), you will need to write the transferred value into
-a Dummy device using the TaskValueSet command. It is then possible to check
-the value of the Dummy device as condition in if-statement within rules.
-
-Multiple event values:
-
-.. code-block:: none
-
- on ToggleGPIO do
-   GPIO,%eventvalue1%,%eventvalue2%
- endon
-
-You could then use the command "ToggleGPIO" with dynamic GPIO numbers and state.
-
-.. code-block:: none
-
- http://<espeasyip>/control?cmd=event,ToggleGPIO=12,1
-
-Internal variables
-------------------
-
-A really great feature to use is the 16 internal variables. You set them like this:
-
-.. code-block:: none
-
- Let,<n>,<value>
-
-Where n can be 1 to 16 and the value an float. To use the values in strings you can
-either use the ``%v7%`` syntax or ``[var#7]``. BUT for formulas you need to use the square
-brackets in order for it to compute, i.e. ``[var#12]``.
 
 
 Averaging filters

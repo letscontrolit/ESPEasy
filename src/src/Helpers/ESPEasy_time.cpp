@@ -1,9 +1,7 @@
 #include "ESPEasy_time.h"
 
-
-
-
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
@@ -386,6 +384,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       }
       udp.stop();
       timeSource = NTP_time_source;
+      CheckRunningServices(); // FIXME TD-er: Sometimes services can only be started after NTP is successful
       return true;
     }
     delay(10);
@@ -538,10 +537,11 @@ int ESPEasy_time::getSecOffset(const String& format) {
   if (position_percent == -1) {
     return 0;
   }
-  String valueStr = getNumerical(format.substring(sign_position, position_percent), true);
 
-  if (!isInt(valueStr)) { return 0; }
-  int value = valueStr.toInt();
+  int value;
+  if (!validIntFromString(format.substring(sign_position, position_percent), value)) {
+    return 0;
+  }
 
   switch (format.charAt(position_percent - 1)) {
     case 'm':

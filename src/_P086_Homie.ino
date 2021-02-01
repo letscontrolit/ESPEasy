@@ -162,7 +162,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
           String log = F("P086 : Value ");
           log += x+1;
           log += F(": ");
-          log += UserVar[event->BaseVarIndex+x];
+          log += formatUserVarNoCheck(event->TaskIndex, x);
           addLog(LOG_LEVEL_INFO,log);
         }
         success = true;
