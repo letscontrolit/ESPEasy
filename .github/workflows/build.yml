@@ -9,7 +9,7 @@ jobs:
    steps:
      - uses: actions/checkout@v2
      - run: |
-         git fetch --tags --force # see https://github.com/actions/checkout/issues/290
+         git fetch --force origin ${GITHUB_REF} # see https://github.com/actions/checkout/issues/290
          git --no-pager tag -l --format="%(contents)" ${GITHUB_REF:10}
          blahblahblah
   generate-matrix:
