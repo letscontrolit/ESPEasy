@@ -5,7 +5,6 @@
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/ESPEasyWiFiEvent.h"
-#include "../ESPEasyCore/ESPEasyWiFi_credentials.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
@@ -15,6 +14,7 @@
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Services.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -23,6 +23,7 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_WiFi.h"
 
 
 // ********************************************************************************
@@ -127,6 +128,7 @@ void handle_unprocessedWiFiEvents()
         // Connection considered stable
         WiFiEventData.wifi_connect_attempt = 0;
         WiFiEventData.wifi_considered_stable = true;
+        WiFi_AP_Candidates.markCurrentConnectionStable();
 
         if (!WiFi.getAutoConnect()) {
           WiFi.setAutoConnect(true);
@@ -189,7 +191,7 @@ void processConnect() {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const LongTermTimer::Duration connect_duration = WiFiEventData.last_wifi_connect_attempt_moment.timeDiff(WiFiEventData.lastConnectMoment);
-    String     log              = F("WIFI : Connected! AP: ");
+    String log = F("WIFI : Connected! AP: ");
     log += WiFi.SSID();
     log += " (";
     log += WiFi.BSSIDstr();
@@ -389,7 +391,7 @@ void processScanDone() {
     case -1: // WIFI_SCAN_RUNNING
       return;
     case -2: // WIFI_SCAN_FAILED
-      addLog(LOG_LEVEL_ERROR, F("WiFi  : Scan failed"));
+      addLog(LOG_LEVEL_ERROR, F("WiFi : Scan failed"));
       WiFiEventData.processedScanDone = true;
       return;
   }
@@ -403,52 +405,13 @@ void processScanDone() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  int bestScanID           = -1;
-  int32_t bestRssi         = -1000;
-  uint8_t bestWiFiSettings = RTC.lastWiFiSettingsIndex;
+  WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
 
-  if (selectValidWiFiSettings() && scanCompleteStatus > 0) {
-    const uint8_t startWiFiSettings = RTC.lastWiFiSettingsIndex;
-    bool done = false;
-    while (!done) {
-      String ssid_to_check = getLastWiFiSettingsSSID(); 
-      for (int i = 0; i < scanCompleteStatus; ++i) {
-        if (WiFi.SSID(i) == ssid_to_check) {
-          int32_t rssi = WiFi.RSSI(i);
-
-          if (bestRssi < rssi) {
-            bestRssi         = rssi;
-            bestScanID       = i;
-            bestWiFiSettings = RTC.lastWiFiSettingsIndex;
-          }
-        }
-      }
-
-      // Select the next WiFi settings.
-      // RTC.lastWiFiSettingsIndex may be updated.
-      if (!selectNextWiFiSettings()) {
-        done = true; 
-      }
-      if (startWiFiSettings == RTC.lastWiFiSettingsIndex) {
-        done = true; 
-      }
-    }
-
-    if (bestScanID >= 0) {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("WIFI  : Selected: ");
-        log += formatScanResult(bestScanID, " ");
-        addLog(LOG_LEVEL_INFO, log);
-      }
-      RTC.lastWiFiSettingsIndex = bestWiFiSettings;
-      uint8_t *scanbssid = WiFi.BSSID(bestScanID);
-
-      if (scanbssid) {
-        for (int i = 0; i < 6; ++i) {
-          RTC.lastBSSID[i] = *(scanbssid + i);
-        }
-      }
-    }
+  const WiFi_AP_Candidate bestCandidate = WiFi_AP_Candidates.getBestScanResult();
+  if (bestCandidate.usable() && loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("WIFI  : Selected: ");
+    log += bestCandidate.toString();
+    addLog(LOG_LEVEL_INFO, log);
   }
 }
 
@@ -501,6 +464,7 @@ void markWiFi_services_initialized() {
   }
   WiFiEventData.processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
   WiFiEventData.setWiFiServicesInitialized();
+  CheckRunningServices();
 }
 
 #ifdef HAS_ETHERNET

@@ -18,6 +18,10 @@ struct LabelType {
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
     CPU_ECO_MODE,        // true
+    WIFI_TX_MAX_PWR,     // Unit: 0.25 dBm, 0 = use default (do not set)
+    WIFI_CUR_TX_PWR,     // Unit dBm of current WiFi TX power.
+    WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
+    WIFI_SEND_AT_MAX_TX_PWR,
 
     FREE_MEM,            // 9876
     FREE_STACK,          // 3456
@@ -65,6 +69,7 @@ struct LabelType {
     SSID,                    // mynetwork
     BSSID,
     CHANNEL,                 // 1
+    ENCRYPTION_TYPE_STA,     // WPA2
     CONNECTED,               // 1h16m
     CONNECTED_MSEC,          // 1h16m
     LAST_DISCONNECT_REASON,  // 200

@@ -60,6 +60,7 @@ struct WiFiEventData_t {
   bool          wifi_considered_stable = false;
   int           wifi_reconnects        = -1; // First connection attempt is not a reconnect.
   String        last_ssid;
+  float         wifi_TX_pwr            = 0;
   bool          bssid_changed   = false;
   bool          channel_changed = false;
 
