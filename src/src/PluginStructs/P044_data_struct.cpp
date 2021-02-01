@@ -262,6 +262,7 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
   } while (true);
 
   if (done) {
+    PrepareSend();
     P1GatewayClient.print(serial_buffer);
     P1GatewayClient.flush();
 
