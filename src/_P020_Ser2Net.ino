@@ -238,6 +238,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         int timeOut       = RXWait;
         size_t bytes_read = 0;
 
+        PrepareSend();
         while (timeOut > 0)
         {
           while (Serial.available()) {

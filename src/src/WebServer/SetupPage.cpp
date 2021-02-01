@@ -16,7 +16,9 @@
 
 
 # include "../Globals/ESPEasyWiFiEvent.h"
+# include "../Globals/Settings.h"
 # include "../Globals/SecuritySettings.h"
+# include "../Globals/WiFi_AP_Candidates.h"
 
 # include "../Helpers/Networking.h"
 # include "../Helpers/ESPEasy_Storage.h"
@@ -41,7 +43,7 @@ void handle_setup() {
   if (!NetworkConnected())
   {
     sendHeadandTail(F("TmplAP"));
-    static byte status       = 0;
+    static byte status       = HANDLE_SETUP_SCAN_STAGE;
     static byte refreshCount = 0;
     String ssid              = web_server.arg(F("ssid"));
     String other             = web_server.arg(F("other"));
@@ -53,12 +55,15 @@ void handle_setup() {
     }
 
     // if ssid config not set and params are both provided
-    if ((status == 0) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
+    if ((status == HANDLE_SETUP_SCAN_STAGE) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
     {
       safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
       safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
+      // Hidden SSID
+      Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
       WiFiEventData.wifiSetupConnect         = true;
       WiFiEventData.wifiConnectAttemptNeeded = true;
+      WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
@@ -67,6 +72,7 @@ void handle_setup() {
       }
       status       = HANDLE_SETUP_CONNECTING_STAGE;
       refreshCount = 0;
+      AttemptWiFiConnect();
     }
     html_BR();
     wrap_html_tag(F("h1"), F("Wifi Setup wizard"));
@@ -100,9 +106,9 @@ void handle_setup() {
 }
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
-  if (WiFi.scanComplete() <= 0) {
+  if (WiFi.scanComplete() <= WIFI_SCAN_FAILED) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
-    WifiScan(false, false);
+    WifiScan(false);
     setWifiMode(cur_wifimode);
   }
 
@@ -179,6 +185,9 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
   addHtml('>');
   html_BR();
   html_BR();
+  addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
+  addFormNote(F("Must be checked to connect to a hidden SSID"));
+
 
   addSubmitButton(F("Connect"), "");
 }
