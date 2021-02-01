@@ -1,9 +1,7 @@
 #include "ESPEasy_time.h"
 
-
-
-
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
@@ -386,6 +384,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       }
       udp.stop();
       timeSource = NTP_time_source;
+      CheckRunningServices(); // FIXME TD-er: Sometimes services can only be started after NTP is successful
       return true;
     }
     delay(10);
