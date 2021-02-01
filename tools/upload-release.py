@@ -9,18 +9,14 @@ def find_zip(directory):
 
 
 if __name__ == "__main__":
-    tag = os.environ["GITHUB_REF"][len("refs/tags/") :]
-
-    # TODO: does not really work :(
-    # see the workflow generating this artifact
-    with open("artifact/ReleaseNotes.txt", "r") as f:
-        message = f.read()
-
     # Binaries/ - .elf + .bin
     # artifact/ - docs, upload tools, etc.
     archives = [
         str(zip_file) for zip_file in chain(find_zip("Binaries"), find_zip("artifact"))
     ]
+
+    tag = os.environ["GITHUB_REF"][len("refs/tags/") :]
+    message = os.environ.get("RELEASE_NOTES", tag)
 
     print("Prepared for tag={} and archives={}".format(tag, archives))
 
@@ -28,5 +24,6 @@ if __name__ == "__main__":
     repo = gh.get_repo(os.environ["GITHUB_REPOSITORY"])
 
     release = repo.create_git_release(tag=tag, name=tag, message=message)
+
     for path in archives:
         release.upload_asset(path)

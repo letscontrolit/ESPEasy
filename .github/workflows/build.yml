@@ -15,7 +15,7 @@ jobs:
       - id: set-matrix
         run: |
           pip install platformio
-          python tools/pio/generate-ci-matrix.py
+          python tools/generate-ci-matrix.py
   build:
     needs: generate-matrix
     runs-on: ubuntu-20.04
@@ -58,6 +58,8 @@ jobs:
   release-files:
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-20.04
+    outputs:
+      message: ${{ steps.release-notes.outputs.message }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -81,17 +83,16 @@ jobs:
           zip -r -qq ../ESPEasy_dist.zip *
           cd ..
       - name: Extract release notes
+        id: release-notes
         run: |
-          echo $GITHUB_REF
-          git --no-pager tag -l --format="%(contents)" ${GITHUB_REF:10}
-          git --no-pager tag -l --format="%(contents)" ${GITHUB_REF:10} > ReleaseNotes.txt
+          git fetch --depth=1 origin ${GITHUB_REF}
+          echo ::set-output name=message::$(git --no-pager tag -l --format="%(contents)" ${GITHUB_REF:10})
       - uses: actions/upload-artifact@v2
         with:
           path: |
             tools/upload-release.py
             ESPEasy_docs.zip
             ESPEasy_dist.zip
-            ReleaseNotes.txt
   release:
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-20.04
@@ -106,6 +107,7 @@ jobs:
       - name: Create release
         working-directory: artifacts/
         env:
+          RELEASE_NOTES: ${{ needs.release-files.outputs.message }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ls -R
