@@ -260,7 +260,7 @@ void P036_data_struct::display_header() {
       newString = F("%mac%");
       break;
     case eHeaderContent::eRSSI:
-      newString = F("%rssi%dB");
+      newString = F("%rssi%dBm");
       break;
     case eHeaderContent::eBSSID:
       newString = F("%bssid%");

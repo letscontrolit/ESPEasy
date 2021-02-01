@@ -186,6 +186,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
   }
+  PrepareSend();
   updateMQTTclient_connected();
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
@@ -360,6 +361,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
 
     if (MQTTclient_must_send_LWT_connected) {
       if (mqtt_sendLWT) {
+        PrepareSend();
         if (MQTTclient.publish(LWTTopic.c_str(), LWTMessageConnect.c_str(), willRetain)) {
           MQTTclient_must_send_LWT_connected = false;
         }
