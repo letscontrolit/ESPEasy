@@ -86,7 +86,9 @@
 struct P073_data_struct : public PluginTaskData_base {
   P073_data_struct()
     : dotpos(-1), pin1(-1), pin2(-1), pin3(-1), displayModel(0), output(0),
-    brightness(0), timesep(false), shift(false), fontset(0) {
+    brightness(0), timesep(false), shift(false), periods(false), hideDegree(false),
+    rightAlignTempMAX7219(false), fontset(0), binaryData(false), txtScrolling(false),
+    scrollCount(0), scrollPos(0), scrollFull(false), _scrollSpeed(0), _textToScroll(F("")) {
     ClearBuffer();
   }
 
@@ -436,7 +438,7 @@ void LogBufferContent(String prefix) {
   uint16_t scrollPos;
   bool     scrollFull;
 private:
-  uint8_t  _scrollSpeed;
+  uint16_t _scrollSpeed;
 #endif // P073_SCROLL_TEXT
 #if defined(P073_SCROLL_TEXT) || defined(P073_7DBIN_COMMAND)
   String   _textToScroll;
