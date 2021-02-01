@@ -10,6 +10,7 @@
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;
+  if (wifiSetupConnect) return true;
   if (lastDisconnectMoment.isSet()) {
     // TODO TD-er: Make this time more dynamic.
     if (!lastDisconnectMoment.timeoutReached(1000)) {
@@ -48,6 +49,7 @@ void WiFiEventData_t::clearAll() {
   processedDisconnectAPmode = true;
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
+  wifi_TX_pwr = 0;
 }
 
 void WiFiEventData_t::markWiFiBegin() {
