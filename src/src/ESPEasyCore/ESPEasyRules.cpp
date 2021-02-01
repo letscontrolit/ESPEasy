@@ -430,7 +430,8 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
 }
 
 bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, int64_t& result) {
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Bitwise: {");
     log += wrapIfContains(cmd_s_lower, ':', '\"');
     log += ':';
@@ -446,8 +447,9 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
       }
     }
     log += '}';
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_DEBUG, log);
   }
+  #endif
 
   if (cmd_s_lower.length() < 2) {
     return false;
