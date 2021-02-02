@@ -198,6 +198,13 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         ++firstDec;
         result      += c;
         detectedType = NumericalType::BinaryUint;
+      } else if (NumericalType::Integer == requestedType) {
+        // Allow leading zeroes in Integer types (e.g. in time notation)
+        while (c == '0' && firstDec < bufLength) {
+          // N.B. intentional "reverse order" of reading char and ++firstDec
+          c = tBuf.charAt(firstDec);
+          ++firstDec;
+        }      
       } else if (NumericalType::FloatingPoint == requestedType && c == '.') {
         // Only floating point numbers should start with '0.'
         // All other combinations are not valid.
