@@ -986,6 +986,7 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
   if (!NetworkConnected()) {
     return false;
   }
+  PrepareSend();
   // In case of domain name resolution error result can be negative.
   // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
   // Thus must match the result with 1.
@@ -1012,6 +1013,7 @@ bool resolveHostByName(const char *aHostname, IPAddress& aResult) {
   if (!NetworkConnected()) {
     return false;
   }
+  PrepareSend();
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
 #else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
@@ -1062,6 +1064,8 @@ void sendGratuitousARP() {
     return;
   }
 #ifdef SUPPORT_ARP
+
+  PrepareSend();
 
   // See https://github.com/letscontrolit/ESPEasy/issues/2374
   START_TIMER;

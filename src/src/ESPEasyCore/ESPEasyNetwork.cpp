@@ -1,4 +1,4 @@
-#include "ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
@@ -6,6 +6,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/MDNS_Helper.h"
 
 #ifdef HAS_ETHERNET
 #include "ETH.h"
@@ -35,12 +36,20 @@ bool NetworkConnected() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     return ETHConnected();
-  } else {
-    return WiFiConnected();
   }
-  #else
-  return WiFiConnected();
   #endif
+  return WiFiConnected();
+}
+
+void PrepareSend() {
+  #ifdef HAS_ETHERNET
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    return;
+  }
+  #endif
+  if (Settings.UseMaxTXpowerForSending()) {
+    SetWiFiTXpower(30); // Just some max, will be limited in SetWiFiTXpower
+  }
 }
 
 IPAddress NetworkLocalIP() {
@@ -52,12 +61,9 @@ IPAddress NetworkLocalIP() {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkLocalIP() only on connected Ethernet!"));
       return IPAddress();
     }
-  } else {
-    return WiFi.localIP();
   }
-  #else
-  return WiFi.localIP();
   #endif
+  return WiFi.localIP();
 }
 
 IPAddress NetworkSubnetMask() {
@@ -69,12 +75,9 @@ IPAddress NetworkSubnetMask() {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkSubnetMask() only on connected Ethernet!"));
       return IPAddress();
     }
-  } else {
-    return WiFi.subnetMask();
   }
-  #else
-  return WiFi.subnetMask();
   #endif
+  return WiFi.subnetMask();
 }
 
 IPAddress NetworkGatewayIP() {
@@ -86,12 +89,9 @@ IPAddress NetworkGatewayIP() {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkGatewayIP() only on connected Ethernet!"));
       return IPAddress();
     }
-  } else {
-    return WiFi.gatewayIP();
   }
-  #else
-  return WiFi.gatewayIP();
   #endif
+  return WiFi.gatewayIP();
 }
 
 IPAddress NetworkDnsIP (uint8_t dns_no) {
@@ -103,12 +103,9 @@ IPAddress NetworkDnsIP (uint8_t dns_no) {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkDnsIP(uint8_t dns_no) only on connected Ethernet!"));
       return IPAddress();
     }
-  } else {
-    return WiFi.dnsIP(dns_no);
   }
-  #else
-  return WiFi.dnsIP(dns_no);
   #endif
+  return WiFi.dnsIP(dns_no);
 }
 
 String NetworkMacAddress() {
@@ -134,12 +131,9 @@ uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     return ETHMacAddress(mac);
-  } else {
-    return WiFi.macAddress(mac);
   }
-  #else
-  return WiFi.macAddress(mac);
   #endif
+  return WiFi.macAddress(mac);
 }
 
 String NetworkGetHostname() {
@@ -148,10 +142,8 @@ String NetworkGetHostname() {
       if(Settings.NetworkMedium == NetworkMedium_t::Ethernet) {
         return String(ETH.getHostname());
       }
-        return String(WiFi.getHostname());
-      #else
-        return String(WiFi.getHostname());
       #endif
+      return String(WiFi.getHostname());
     #else
       return String(WiFi.hostname());
     #endif
@@ -185,4 +177,9 @@ String WifiSoftAPmacAddress() {
     char     macaddress[20];
     formatMAC(macread, macaddress);
     return String(macaddress);
+}
+
+void CheckRunningServices() {
+  set_mDNS();
+  SetWiFiTXpower();
 }
