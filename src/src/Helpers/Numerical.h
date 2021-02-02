@@ -23,6 +23,7 @@ bool validDoubleFromString(const String& tBuf, double& result);
 
 // Numerical types sorted from least specific to most specific.
 enum class NumericalType {
+  Unknown,
   FloatingPoint,
   Integer,
   HexadecimalUInt,
