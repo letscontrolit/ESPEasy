@@ -40,8 +40,6 @@ struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLoca
 
 
 void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
-  const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
   uint32_t time = (uint32_t)timeInput;
   tm.tm_sec  = time % 60;
   time      /= 60;                   // now it is minutes
@@ -63,11 +61,7 @@ void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
 
   uint8_t month = 0;
   for (month = 0; month < 12; month++) {
-    uint8_t monthLength = monthDays[month];
-    if (month == 1 && isLeapYear(year)) { // February
-      monthLength = 29;
-    }
-
+    const uint8_t monthLength = getMonthDays(year, month);
     if (time >= monthLength) {
       time -= monthLength;
     } else {

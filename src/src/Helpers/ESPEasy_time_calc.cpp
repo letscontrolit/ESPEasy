@@ -16,6 +16,17 @@ bool isLeapYear(int year) {
   return ((year > 0) && !(year % 4) && ((year % 100) || !(year % 400)));
 }
 
+uint8_t getMonthDays(int year, uint8_t month) {
+  const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+  if (month == 1 && isLeapYear(year)) {
+    return 29;
+  }
+  if (month > 11) {
+    return 0;
+  }
+  return monthDays[month];
+}
+
 /********************************************************************************************\
    Unix Time computations
  \*********************************************************************************************/
@@ -24,32 +35,34 @@ uint32_t makeTime(const struct tm& tm) {
   // assemble time elements into uint32_t
   // note year argument is offset from 1970 (see macros in time.h to convert to other formats)
   // previous version used full four digit year (or digits since 2000),i.e. 2009 was 2009 or 9
-  const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+  const int tm_year = tm.tm_year + 1900;
 
   // seconds from 1970 till 1 jan 00:00:00 of the given year
   // tm_year starts at 1900
   uint32_t seconds = 1577836800; // 01/01/2020 @ 12:00am (UTC)
-  for (int i = 2020; i < (tm.tm_year + 1900); ++i) {
+  int year = 2020;
+  if (tm_year < year) {
+    // Just in case this function is called on old dates
+    year = 1970;
+    seconds = 0;
+  }
+
+  for (; year < tm_year; ++year) {
     seconds += SECS_PER_DAY * 365;
-    if (isLeapYear(i)) {
+    if (isLeapYear(year)) {
       seconds += SECS_PER_DAY; // add extra days for leap years
     }
   }
 
   // add days for this year, months start from 0
   for (int i = 0; i < tm.tm_mon; i++) {
-    // Check for February
-    if ((i == 1) && isLeapYear(tm.tm_year + 1900)) {
-      seconds += SECS_PER_DAY * 29;
-    } else {
-      seconds += SECS_PER_DAY * monthDays[i]; 
-    }
+    seconds += SECS_PER_DAY * getMonthDays(tm_year, i);
   }
   seconds += (tm.tm_mday - 1) * SECS_PER_DAY;
   seconds += tm.tm_hour * SECS_PER_HOUR;
   seconds += tm.tm_min * SECS_PER_MIN;
   seconds += tm.tm_sec;
-  return (uint32_t)seconds;
+  return seconds;
 }
 
 
