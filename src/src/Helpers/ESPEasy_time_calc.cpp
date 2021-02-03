@@ -13,7 +13,7 @@
 
 
 bool isLeapYear(int year) {
-  return (((1970 + year) > 0) && !((1970 + year) % 4) && (((1970 + year) % 100) || !((1970 + year) % 400)));
+  return ((year > 0) && !(year % 4) && ((year % 100) || !(year % 400)));
 }
 
 /********************************************************************************************\
@@ -25,24 +25,24 @@ uint32_t makeTime(const struct tm& tm) {
   // note year argument is offset from 1970 (see macros in time.h to convert to other formats)
   // previous version used full four digit year (or digits since 2000),i.e. 2009 was 2009 or 9
   const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-  int i;
-  uint32_t seconds;
 
   // seconds from 1970 till 1 jan 00:00:00 of the given year
-  seconds = tm.tm_year * (SECS_PER_DAY * 365);
-
-  for (i = 0; i < tm.tm_year; i++) {
+  // tm_year starts at 1900
+  uint32_t seconds = 1577836800; // 01/01/2020 @ 12:00am (UTC)
+  for (int i = 2020; i < (tm.tm_year + 1900); ++i) {
+    seconds += SECS_PER_DAY * 365;
     if (isLeapYear(i)) {
-      seconds +=  SECS_PER_DAY; // add extra days for leap years
+      seconds += SECS_PER_DAY; // add extra days for leap years
     }
   }
 
-  // add days for this year, months start from 1
-  for (i = 1; i < tm.tm_mon; i++) {
-    if ((i == 2) && isLeapYear(tm.tm_year)) {
+  // add days for this year, months start from 0
+  for (int i = 0; i < tm.tm_mon; i++) {
+    // Check for February
+    if ((i == 1) && isLeapYear(tm.tm_year + 1900)) {
       seconds += SECS_PER_DAY * 29;
     } else {
-      seconds += SECS_PER_DAY * monthDays[i - 1]; // monthDay array starts from 0
+      seconds += SECS_PER_DAY * monthDays[i]; 
     }
   }
   seconds += (tm.tm_mday - 1) * SECS_PER_DAY;
