@@ -345,6 +345,16 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.
 \*********************************************************************************************/
+String wrap_String(const String& string, char wrap) {
+  String result;
+  result.reserve(string.length() + 2);
+  result += wrap;
+  result += string;
+  result += wrap;
+  return result;
+}
+
+
 void wrap_String(const String& string, const String& wrap, String& result) {
   result += wrap;
   result += string;
