@@ -59,6 +59,10 @@ bool usecTimeOutReached(unsigned long timer);
  \*********************************************************************************************/
 bool isLeapYear(int year);
 
+// Get number of days in a month.
+// Month starts at 0 for January.
+uint8_t getMonthDays(int year, uint8_t month);
+
 uint32_t makeTime(const struct tm& tm);
 
 /********************************************************************************************\

@@ -77,7 +77,7 @@ private:
 union timeToFloat
 {
   time_t time;
-  float  value;
+  long long  value;
 };
 
 
@@ -120,7 +120,7 @@ time_t P081_computeNextCronTime(taskIndex_t taskIndex, time_t last)
   return CRON_INVALID_INSTANT;
 }
 
-time_t P081_getCronExecTime(float execTime)
+time_t P081_getCronExecTime(long long execTime)
 {
   timeToFloat converter;
 
@@ -386,7 +386,7 @@ void PrintCronExp(struct cron_expr_t e) {
 #endif // if PLUGIN_081_DEBUG
 
 
-String P081_formatExecTime(float execTime_f) {
+String P081_formatExecTime(long long execTime_f) {
   time_t exec_time = P081_getCronExecTime(execTime_f);
 
   if (exec_time != CRON_INVALID_INSTANT) {
