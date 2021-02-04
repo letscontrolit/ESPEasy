@@ -147,11 +147,11 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string)
       LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
       addFormTextBox(F("Temperature "), F("Plugin_104_temperature_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
       addFormNote(F("You can use a formulae (and idealy refer to a temp sensor). "));
-      float value;
+      double value;
       char strValue[5];
       addHtml(F("<div class='note'>"));
 
-      if (Calculate(deviceTemperatureTemplate, &value) == CALCULATE_OK) {
+      if (Calculate(deviceTemperatureTemplate, value) == CalculateReturnCode::OK) {
         addHtml(F("Actual value : "));
         dtostrf(value, 5, 2, strValue);
         addHtml(strValue);
@@ -233,9 +233,9 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string)
       LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
 
       String setTemperature = F("T,");
-      float  temperatureReading;
+      double temperatureReading;
 
-      if (Calculate(deviceTemperatureTemplate, &temperatureReading) == CALCULATE_OK) {
+      if (Calculate(deviceTemperatureTemplate, temperatureReading) == CalculateReturnCode::OK) {
         setTemperature += temperatureReading;
       } else {
         success = false;

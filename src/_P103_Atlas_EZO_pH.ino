@@ -229,13 +229,13 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
       addFormTextBox(F("Temperature "), F("Plugin_103_temperature_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
       addFormNote(F(
                     "You can use a formulae and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import) ,e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' for 25°."));
-      float value;
+      double value;
       char strValue[5];
       String deviceTemperatureTemplateString(deviceTemperatureTemplate);
       String pooltempString(parseTemplate(deviceTemperatureTemplateString, 40));
       addHtml(F("<div class='note'>"));
 
-      if (Calculate(pooltempString.c_str(), &value) != CALCULATE_OK) {
+      if (Calculate(pooltempString.c_str(), value) != CalculateReturnCode::OK) {
         addHtml(F("It seems I can't parse your formulae. Fixed value will be used!"));
         value = FIXED_TEMP_VALUE;
       }
@@ -324,9 +324,9 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
 
       // String setTemperature = F("T,");
       String setTemperature = F("RT,");
-      float  temperatureReading;
+      double  temperatureReading;
 
-      if (Calculate(pooltempString.c_str(), &temperatureReading) != CALCULATE_OK) {
+      if (Calculate(pooltempString.c_str(), temperatureReading) != CalculateReturnCode::OK) {
         temperatureReading = FIXED_TEMP_VALUE;
       }
 
