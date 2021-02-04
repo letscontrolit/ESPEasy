@@ -875,6 +875,7 @@ To create/register a plugin, you have to :
     #define USES_P047   // I2C_soil_misture
     #define USES_P048   // Motoshield_v2
 
+    #define USES_P050   // TCS34725
     #define USES_P051   // AM2320
 
     #define USES_P054   // DMX512

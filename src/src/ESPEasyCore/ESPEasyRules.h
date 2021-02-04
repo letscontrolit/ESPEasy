@@ -150,12 +150,14 @@ bool conditionMatch(const String& check);
 void logtimeStringToSeconds(const String& tBuf,
                             int           hours,
                             int           minutes,
-                            int           seconds);
+                            int           seconds,
+                            bool          valid);
 
 // convert old and new time string to nr of seconds
 // return whether it should be considered a time string.
 bool timeStringToSeconds(const String& tBuf,
-                         int         & time_seconds);
+                         int   & time_seconds,
+                         String& timeString);
 
 
 /********************************************************************************************\
