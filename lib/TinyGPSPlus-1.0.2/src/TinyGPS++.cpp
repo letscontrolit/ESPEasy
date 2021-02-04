@@ -486,7 +486,7 @@ void TinyGPSDate::commit()
    }
    {
      const uint16_t newyear = year();
-     if (newyear < 2020) {
+     if (newyear < 2021) {
        // Looks like it is an old GPS unit not working well with the 1024 week rollover.
        struct tm tm;
        tm.tm_year = newyear - 1900;
