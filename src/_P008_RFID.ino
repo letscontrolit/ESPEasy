@@ -188,7 +188,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
 
             if (new_key) sendData(event);
             uint32_t resetTimer = PCONFIG_LONG(1);
-            if (resetTimer < 500) resetTimer = 500;
+            if (resetTimer < 250) resetTimer = 250;
             Scheduler.setPluginTaskTimer(resetTimer, event->TaskIndex, event->Par1);
 
           //   String info = "";
