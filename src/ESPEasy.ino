@@ -297,6 +297,7 @@ void setup()
   #endif // ESP8266
 
   #ifdef ESP32
+  #ifndef ESP32S2
   if (rtc_get_reset_reason( (RESET_REASON) 0) == DEEPSLEEP_RESET) {
     log = F("INIT : Rebooted from deepsleep #");
     lastBootCause = BOOT_CAUSE_DEEP_SLEEP;
@@ -306,6 +307,7 @@ void setup()
       lastBootCause = BOOT_CAUSE_COLD_BOOT;
     log = F("INIT : Cold Boot");
   }
+  #endif
 
   #endif // ESP32
 

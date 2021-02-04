@@ -20,6 +20,10 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#ifdef ESP32
+#include <WiFiGeneric.h>
+#endif
+
 
 // ********************************************************************************
 // WiFi state

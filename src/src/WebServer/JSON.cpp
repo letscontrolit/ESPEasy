@@ -157,10 +157,12 @@ void handle_json()
       }
       stream_next_json_object_value(LabelType::CPU_ECO_MODE);
 
-      #ifdef CORE_POST_2_5_0
+    #ifdef CORE_POST_2_5_0
+     #ifndef LIMIT_BUILD_SIZE
       stream_next_json_object_value(LabelType::HEAP_MAX_FREE_BLOCK);
       stream_next_json_object_value(LabelType::HEAP_FRAGMENTATION);
-      #endif // ifdef CORE_POST_2_5_0
+     #endif
+    #endif // ifdef CORE_POST_2_5_0
       stream_last_json_object_value(LabelType::FREE_MEM);
       addHtml(F(",\n"));
     }

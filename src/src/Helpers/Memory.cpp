@@ -80,11 +80,13 @@ unsigned long getMaxFreeBlock()
   unsigned long freemem = FreeMem();
 
   #ifdef CORE_POST_2_5_0
+  #ifndef LIMIT_BUILD_SIZE
 
   // computing max free block is a rather extensive operation, so only perform when free memory is already low.
   if (freemem < 6144) {
     return ESP.getMaxFreeBlockSize();
   }
+  #endif
   #endif // ifdef CORE_POST_2_5_0
   return freemem;
 }

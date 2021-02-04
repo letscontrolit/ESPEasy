@@ -56,6 +56,7 @@ String getLastBootCauseString() {
 
 // See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
 String getResetReasonString(byte icore) {
+  #ifndef ESP32S2
   bool isDEEPSLEEP_RESET(false);
 
   switch (rtc_get_reset_reason((RESET_REASON)icore)) {
@@ -84,6 +85,7 @@ String getResetReasonString(byte icore) {
     reason += ')';
     return reason;
   }
+  #endif
   return getUnknownString();
 }
 

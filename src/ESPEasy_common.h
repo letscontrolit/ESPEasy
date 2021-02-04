@@ -110,7 +110,9 @@ namespace std
   #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
 //  #include  "esp32_ping.h"
-  #include <rom/rtc.h>
+  #ifndef ESP32S2
+    #include <rom/rtc.h>
+  #endif
   #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
   #define PIN_D_MAX        39
   #define MAX_SKETCH_SIZE 1900544   // 0x1d0000 look at partitions in csv file
