@@ -15,6 +15,7 @@ extern bool    eth_connected;
 
 extern bool webserverRunning;
 extern bool webserver_init;
+extern bool mDNS_init;
 
 
 // NTP status

@@ -5,6 +5,7 @@
 #include "../WebServer/HTML_wrappers.h"
 
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../Helpers/StringGenerator_WiFi.h"
 
 
 #ifdef WEBSERVER_NEW_UI
@@ -28,27 +29,7 @@ void handle_wifiscanner_json() {
   {
     if (firstentry) { firstentry = false; }
     else { addHtml(F(",{")); }
-    String authType;
-
-    switch (WiFi.encryptionType(i)) {
-    # ifdef ESP32
-      case WIFI_AUTH_OPEN: authType            = F("open"); break;
-      case WIFI_AUTH_WEP:  authType            = F("WEP"); break;
-      case WIFI_AUTH_WPA_PSK: authType         = F("WPA/PSK"); break;
-      case WIFI_AUTH_WPA2_PSK: authType        = F("WPA2/PSK"); break;
-      case WIFI_AUTH_WPA_WPA2_PSK: authType    = F("WPA/WPA2/PSK"); break;
-      case WIFI_AUTH_WPA2_ENTERPRISE: authType = F("WPA2 Enterprise"); break;
-    # else // ifdef ESP32
-      case ENC_TYPE_WEP:  authType = F("WEP"); break;
-      case ENC_TYPE_TKIP: authType = F("WPA/PSK"); break;
-      case ENC_TYPE_CCMP: authType = F("WPA2/PSK"); break;
-      case ENC_TYPE_NONE: authType = F("open"); break;
-      case ENC_TYPE_AUTO: authType = F("WPA/WPA2/PSK"); break;
-    # endif // ifdef ESP32
-      default:
-        break;
-    }
-
+    String authType = WiFi_encryptionType(WiFi.encryptionType(i));
     if (authType.length() > 0) {
       stream_next_json_object_value(F("auth"), authType);
     }
@@ -76,7 +57,7 @@ void handle_wifiscanner() {
   if (!isLoggedIn()) { return; }
 
   WiFiMode_t cur_wifimode = WiFi.getMode();
-  WifiScan(false, false);
+  WifiScan(false);
   setWifiMode(cur_wifimode);
 
   navMenuIndex = MENU_INDEX_TOOLS;
