@@ -1502,6 +1502,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event, const String& text) {
     #endif // P073_SCROLL_TEXT
     if (data.length() > 0) {
       #ifdef P073_SCROLL_TEXT
+      P073_data->setTextToScroll(F("")); // Clear any scrolling text
       if (P073_data->txtScrolling && data.length() > bufLen) {
         P073_data->setBinaryData(data);
       } else
