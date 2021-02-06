@@ -1,0 +1,13 @@
+.. |P110_name| replace:: :cyan:`VL53L0X`
+.. |P110_type| replace:: :cyan:`Distance`
+.. |P110_typename| replace:: :cyan:`Distance - VL53L0X`
+.. |P110_porttype| replace:: `.`
+.. |P110_status| replace:: :yellow:`TESTING`
+.. |P110_github| replace:: P110_VL53L0X.ino
+.. _P110_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P110_VL53L0X.ino
+.. |P110_usedby| replace:: `.`
+.. |P110_shortinfo| replace:: `Time-of-Flight Distance sensor`
+.. |P110_maintainer| replace:: `TD-er, clumsy-stefan, tonhuisman`
+.. |P110_compileinfo| replace:: `.`
+.. |P110_usedlibraries| replace:: `https://github.com/pololu/vl53l0x-arduino (local copy)`
+
