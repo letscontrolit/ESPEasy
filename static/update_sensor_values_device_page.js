@@ -39,15 +39,12 @@ function loopDeLoop(timeForNext, activeRequests) {
                                     valueEntry = err.name;
                                 } finally {
                                     if (valueEntry !== 'TypeError') {
-                                        tempValue = data.Sensors[c].TaskValues[k].Value;
-                                        decimalsValue = data.Sensors[c].TaskValues[k].NrDecimals;
-                                        tempValue = parseFloat(tempValue).toFixed(decimalsValue);
                                         var valueID = 'value_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1);
                                         var valueNameID = 'valuename_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1);
                                         var valueElement = document.getElementById(valueID);
                                         var valueNameElement = document.getElementById(valueNameID);
                                         if (valueElement !== null) {
-                                            valueElement.innerHTML = tempValue;
+                                            valueElement.innerHTML = data.Sensors[c].TaskValues[k].Value;
                                         }
                                         if (valueNameElement !== null) {
                                             valueNameElement.innerHTML = data.Sensors[c].TaskValues[k].Name + ':';

@@ -76,8 +76,8 @@ private:
 
 union timeToFloat
 {
-  time_t time;
-  float  value;
+  uint32_t time;
+  float    value;
 };
 
 
@@ -125,16 +125,16 @@ time_t P081_getCronExecTime(float execTime)
   timeToFloat converter;
 
   converter.value = execTime;
-  return converter.time;
+  return static_cast<time_t>(converter.time);
 }
 
 void P081_setCronExecTimes(struct EventStruct *event, time_t lastExecTime, time_t nextExecTime) {
   timeToFloat converter;
 
-  converter.time = lastExecTime;
+  converter.time = static_cast<uint32_t>(lastExecTime);
   LASTEXECUTION  = converter.value;
 
-  converter.time = nextExecTime;
+  converter.time = static_cast<uint32_t>(nextExecTime);
   NEXTEXECUTION  = converter.value;
 }
 
@@ -250,11 +250,18 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-    case PLUGIN_WEBFORM_SHOW_VALUES:
+
+    case PLUGIN_FORMAT_USERVAR:
     {
-      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[0], P081_formatExecTime(LASTEXECUTION));
-      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[1], P081_formatExecTime(NEXTEXECUTION), false);
-      success = true;
+      switch (event->idx) {
+        case 0:
+          string = P081_formatExecTime(LASTEXECUTION);
+          break;
+        case 1:
+          string = P081_formatExecTime(NEXTEXECUTION);
+          break;
+      }
+      success = string.length() > 0;
       break;
     }
 

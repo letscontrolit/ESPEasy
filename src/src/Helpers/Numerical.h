@@ -31,6 +31,7 @@ enum class NumericalType {
 };
 
 bool mustConsiderAsString(NumericalType detectedType);
+bool mustConsiderAsString(const String& value);
 
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType);
 
