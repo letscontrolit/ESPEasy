@@ -8,6 +8,7 @@
 
 void NetworkConnectRelaxed();
 bool NetworkConnected();
+void PrepareSend();
 IPAddress NetworkLocalIP();
 IPAddress NetworkSubnetMask();
 IPAddress NetworkGatewayIP();
@@ -19,6 +20,8 @@ String NetworkGetHostname();
 String NetworkCreateRFCCompliantHostname(bool force_add_unitnr = false);
 String createRFCCompliantHostname(const String& oldString);
 String WifiSoftAPmacAddress();
+
+void CheckRunningServices();
 
 
 #endif 

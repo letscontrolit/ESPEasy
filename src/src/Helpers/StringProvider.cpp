@@ -14,12 +14,14 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/StringGenerator_WiFi.h"
 
 #include "../WebServer/JSON.h"
 #include "../WebServer/AccessControl.h"
@@ -40,6 +42,10 @@ String getLabel(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
     case LabelType::CPU_ECO_MODE:           return F("CPU Eco Mode");
+    case LabelType::WIFI_TX_MAX_PWR:        return F("Max WiFi TX Power");
+    case LabelType::WIFI_CUR_TX_PWR:        return F("Current WiFi TX Power");
+    case LabelType::WIFI_SENS_MARGIN:       return F("WiFi Sensitivity Margin");
+    case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return F("Send With Max TX Power");
 
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
@@ -88,6 +94,7 @@ String getLabel(LabelType::Enum label) {
     case LabelType::SSID:                   return F("SSID");
     case LabelType::BSSID:                  return F("BSSID");
     case LabelType::CHANNEL:                return F("Channel");
+    case LabelType::ENCRYPTION_TYPE_STA:    return F("Encryption Type");
     case LabelType::CONNECTED:              return F("Connected");
     case LabelType::CONNECTED_MSEC:         return F("Connected msec");
     case LabelType::LAST_DISCONNECT_REASON: return F("Last Disconnect Reason");
@@ -174,6 +181,10 @@ String getValue(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return String(getCPUload());
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
     case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
+    case LabelType::WIFI_TX_MAX_PWR:        return String(Settings.getWiFi_TX_power(), 2);
+    case LabelType::WIFI_CUR_TX_PWR:        return String(WiFiEventData.wifi_TX_pwr, 2);
+    case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
+    case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return jsonBool(Settings.UseMaxTXpowerForSending());
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
@@ -226,6 +237,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::SSID:                   return WiFi.SSID();
     case LabelType::BSSID:                  return WiFi.BSSIDstr();
     case LabelType::CHANNEL:                return String(WiFi.channel());
+    case LabelType::ENCRYPTION_TYPE_STA:    return WiFi_AP_Candidates.getCurrent().encryption_type();
     case LabelType::CONNECTED:              return format_msec_duration(WiFiEventData.lastConnectMoment.millisPassedSince());
 
     // Use only the nr of seconds to fit it in an int32, plus append '000' to have msec format again.

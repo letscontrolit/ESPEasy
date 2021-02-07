@@ -117,8 +117,12 @@ void P044_Task::checkBlinkLED() {
 }
 
 void P044_Task::clearBuffer() {
+  if (serial_buffer.length() > maxMessageSize) {
+    maxMessageSize = serial_buffer.length();
+  }
+
   serial_buffer = "";
-  serial_buffer.reserve(P044_DATAGRAM_MAX_SIZE);
+  serial_buffer.reserve(maxMessageSize);
 }
 
 void P044_Task::addChar(char ch) {
@@ -143,11 +147,11 @@ bool P044_Task::checkDatagram() const {
 
   const int checksumStartIndex = endChar + 1;
 
-  if (PLUGIN_044_DEBUG) {
+  #ifdef PLUGIN_044_DEBUG
     for (unsigned int cnt = 0; cnt < serial_buffer.length(); ++cnt) {
       serialPrint(serial_buffer.substring(cnt, 1));
     }
-  }
+  #endif
 
   // calculate the CRC and check if it equals the hexadecimal one attached to the datagram
   unsigned int crc = CRC16(serial_buffer, checksumStartIndex);
@@ -258,6 +262,7 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
   } while (true);
 
   if (done) {
+    PrepareSend();
     P1GatewayClient.print(serial_buffer);
     P1GatewayClient.flush();
 
@@ -332,11 +337,11 @@ bool P044_Task::handleChar(char ch) {
     // input is not a datagram char
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
 
-    if (PLUGIN_044_DEBUG) {
+    #ifdef PLUGIN_044_DEBUG
       serialPrint(F("faulty char>"));
       serialPrint(String(ch));
       serialPrintln("<");
-    }
+    #endif
     state = ParserState::WAITING; // reset
   }
 
