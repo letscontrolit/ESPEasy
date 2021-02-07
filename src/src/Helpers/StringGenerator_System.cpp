@@ -51,8 +51,11 @@ String getLastBootCauseString() {
 }
 
 #ifdef ESP32
-
-#include <rom/rtc.h>
+ #ifdef ESP32S2
+  #include <esp32s2/rom/rtc.h>
+ #else
+  #include <rom/rtc.h>
+ #endif
 
 // See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
 String getResetReasonString(byte icore) {

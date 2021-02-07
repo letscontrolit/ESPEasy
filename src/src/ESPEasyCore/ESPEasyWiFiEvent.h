@@ -39,7 +39,12 @@ void setUseStaticIP(bool enabled);
 // Make sure not to call anything in these functions that result in delay() or yield()
 // ********************************************************************************
 #ifdef ESP32
-void WiFiEvent(system_event_id_t event, system_event_info_t info);
+
+//#ifdef ESP32S2
+//void WiFiEvent_cb(arduino_event_id_t event, arduino_event_info_t info);
+//#else
+void WiFiEvent_cb(system_event_id_t event, system_event_info_t info);
+//#endif
 
 #endif
 

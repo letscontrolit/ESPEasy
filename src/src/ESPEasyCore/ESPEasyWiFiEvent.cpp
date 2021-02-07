@@ -53,7 +53,13 @@ void setUseStaticIP(bool enabled) {
 
 static bool ignoreDisconnectEvent = false;
 
-void WiFiEvent(system_event_id_t event, system_event_info_t info) {
+
+
+//#ifdef ESP32S2
+//void WiFiEvent_cb(arduino_event_id_t event, arduino_event_info_t info)
+//#else
+void WiFiEvent_cb(system_event_id_t event, system_event_info_t info)
+{
   switch (event) {
     case SYSTEM_EVENT_STA_CONNECTED:
     {

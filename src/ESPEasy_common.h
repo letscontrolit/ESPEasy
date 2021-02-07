@@ -103,14 +103,18 @@ namespace std
   #define ARDUINO_ESP8266_RELEASE "2_4_0"
 
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
+  #ifndef ESP32S2
   #define ICACHE_RAM_ATTR IRAM_ATTR
+  #endif
   #define FILE_CONFIG       "/config.dat"
   #define FILE_SECURITY     "/security.dat"
   #define FILE_NOTIFICATION "/notification.dat"
   #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
 //  #include  "esp32_ping.h"
-  #ifndef ESP32S2
+  #ifdef ESP32S2
+    #include <esp32s2/rom/rtc.h>
+  #else
     #include <rom/rtc.h>
   #endif
   #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....

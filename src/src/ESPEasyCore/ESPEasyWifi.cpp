@@ -379,7 +379,9 @@ void initWiFi()
   setWifiMode(WIFI_OFF);
 
 #if defined(ESP32)
-  WiFiEventData.wm_event_id = WiFi.onEvent(WiFiEvent);
+#ifndef ESP32S2
+  WiFiEventData.wm_event_id = WiFi.onEvent(WiFiEvent_cb);
+#endif
 #endif
 #ifdef ESP8266
   // WiFi event handlers
