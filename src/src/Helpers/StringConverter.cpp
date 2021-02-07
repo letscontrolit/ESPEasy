@@ -276,7 +276,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 
   switch (sensorType) {
     case Sensor_VType::SENSOR_TYPE_LONG:
-      return String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
+      return String(UserVar.getSensorTypeLong(event->TaskIndex));
     case Sensor_VType::SENSOR_TYPE_STRING:
       return event->String2;
 
@@ -777,7 +777,7 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
   if (validTaskIndex(event->TaskIndex)) {
     if (s.indexOf(F("%val")) != -1) {
       if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
-        SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
+        SMART_REPL(F("%val1%"), String(UserVar.getSensorTypeLong(event->TaskIndex)))
       } else {
         for (byte i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
           String valstr = F("%val");
