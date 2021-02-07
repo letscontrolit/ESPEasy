@@ -69,6 +69,10 @@ Internal GPIO handling and ringtones
 
 .. include:: ../Plugin/P001_commands_RTTTL.repl
 
+.. include:: ../Plugin/P009_commands_GPIO.repl
+
+.. include:: ../Plugin/P019_commands_GPIO.repl
+
 Plugin based commands
 ~~~~~~~~~~~~~~~~~~~~~
 

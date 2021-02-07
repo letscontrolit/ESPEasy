@@ -32,6 +32,9 @@ Commands available
 
 .. include:: P001_commands_GPIO.repl
 .. include:: P001_commands_RTTTL.repl
+.. include:: P009_commands_GPIO.repl
+.. include:: P019_commands_GPIO.repl
+
 
 .. Events
 .. ~~~~~~
