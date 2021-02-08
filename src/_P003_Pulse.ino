@@ -113,20 +113,12 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_FORMAT_USERVAR:
+    case PLUGIN_WEBFORM_SHOW_VALUES:
     {
-      switch (event->idx) {
-        case 0:
-          string = String(Plugin_003_pulseCounter[event->TaskIndex]);
-          break;
-        case 1:
-          string = String(Plugin_003_pulseTotalCounter[event->TaskIndex]);
-          break;
-        case 2:
-          string = String(Plugin_003_pulseTime[event->TaskIndex]);
-          break;
-      }
-      success = string.length() > 0;
+      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[0], String(Plugin_003_pulseCounter[event->TaskIndex]));
+      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[1], String(Plugin_003_pulseTotalCounter[event->TaskIndex]));
+      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[2], String(Plugin_003_pulseTime[event->TaskIndex]), false);
+      success = true;
       break;
     }
 
