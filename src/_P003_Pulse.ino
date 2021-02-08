@@ -30,6 +30,7 @@ volatile unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 volatile unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
 volatile unsigned long Plugin_003_pulseTime[TASKS_MAX];
 volatile unsigned long Plugin_003_pulseTimePrevious[TASKS_MAX];
+volatile unsigned long Plugin_003_debounce[TASKS_MAX];
 
 boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 {
@@ -117,7 +118,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     {
       pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[0], String(Plugin_003_pulseCounter[event->TaskIndex]));
       pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[1], String(Plugin_003_pulseTotalCounter[event->TaskIndex]));
-      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[2], String(Plugin_003_pulseTime[event->TaskIndex]), false);
+      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[2], String(Plugin_003_pulseTime[event->TaskIndex]/1000.0f), false);
       success = true;
       break;
     }
@@ -136,7 +137,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         {
           Plugin_003_pulseCounter[event->TaskIndex]      = UserVar[event->BaseVarIndex];
           Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex + 1];
-          Plugin_003_pulseTime[event->TaskIndex]         = UserVar[event->BaseVarIndex + 2];
+          Plugin_003_pulseTime[event->TaskIndex]         = UserVar[event->BaseVarIndex + 2]*1000L;
           break;
         }
         case 2:
@@ -156,6 +157,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // It may be using a formula to generate the output, which makes it impossible to restore
       // the true internal state.
       Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex + 3];
+      Plugin_003_debounce[event->TaskIndex] = (unsigned long)Settings.TaskDevicePluginConfig[event->TaskIndex][0]*1000L;
 
       String log = F("INIT : Pulse ");
       log += Settings.TaskDevicePin1[event->TaskIndex];
@@ -173,7 +175,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // FIXME TD-er: Is it correct to write the first 3  UserVar values, regardless the set counter type?
       UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
       UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
-      UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex];
+      UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex]/1000.0f;
 
       // Store the raw value in the unused 4th position.
       // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
@@ -192,7 +194,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           event->sensorType                = Sensor_VType::SENSOR_TYPE_TRIPLE;
           UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
           UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
-          UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex];
+          UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex]/1000.0f;
           break;
         }
         case 2:
@@ -279,7 +281,7 @@ void Plugin_003_pulsecheck(byte Index)
   // ISR!
   const unsigned long PulseTime = micros() - Plugin_003_pulseTimePrevious[Index];
 
-  if (PulseTime > (unsigned long)Settings.TaskDevicePluginConfig[Index][0]) // check with debounce time for this task
+  if (PulseTime > Plugin_003_debounce[Index]) // check with debounce time for this task
   {
     Plugin_003_pulseCounter[Index]++;
     Plugin_003_pulseTotalCounter[Index]++;
