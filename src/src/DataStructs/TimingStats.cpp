@@ -78,6 +78,7 @@ String getPluginFunctionName(int function) {
     case PLUGIN_WEBFORM_SAVE:          return F("WEBFORM_SAVE");
     case PLUGIN_WEBFORM_LOAD:          return F("WEBFORM_LOAD");
     case PLUGIN_WEBFORM_SHOW_VALUES:   return F("WEBFORM_SHOW_VALUES");
+    case PLUGIN_FORMAT_USERVAR:        return F("FORMAT_USERVAR");
     case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME");
     case PLUGIN_GET_DEVICEVALUENAMES:  return F("GET_DEVICEVALUENAMES");
     case PLUGIN_WRITE:                 return F("WRITE");
@@ -110,6 +111,7 @@ bool mustLogFunction(int function) {
     case PLUGIN_WEBFORM_SAVE:          return false;
     case PLUGIN_WEBFORM_LOAD:          return false;
     case PLUGIN_WEBFORM_SHOW_VALUES:   return false;
+    case PLUGIN_FORMAT_USERVAR:        return false;
     case PLUGIN_GET_DEVICENAME:        return false;
     case PLUGIN_GET_DEVICEVALUENAMES:  return false;
     case PLUGIN_WRITE:                 return true;

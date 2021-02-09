@@ -52,110 +52,103 @@ public:
 
 public:
 
-  // Format the current Date separated by the given delimiter
-  // Default date format example: 20161231 (YYYYMMDD)
-  String getDateString(char delimiter = '\0') const;
 
-  // Format given Date separated by the given delimiter
-  // date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
-  static String getDateString(const struct tm& ts,
-                              char             delimiter);
+// Format the current Date separated by the given delimiter
+// Default date format example: 20161231 (YYYYMMDD)
+String getDateString(char delimiter = '\0') const;
 
-  // Formats the current Time
-  // Default time format example: 235959 (HHMMSS)
-  String getTimeString(char delimiter    = '\0',
-                       bool show_seconds = true) const;
+// Format given Date separated by the given delimiter
+// date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
+static String getDateString(const struct tm& ts, char delimiter);
 
-  String getTimeString_ampm(char delimiter    = '\0',
-                            bool show_seconds = true) const;
+// Formats the current Time
+// Default time format example: 235959 (HHMMSS)
+String getTimeString(char delimiter = '\0', bool show_seconds=true) const;
 
-  // returns the current Time separated by the given delimiter
-  // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-  static String getTimeString(const struct tm& ts,
-                              char             delimiter,
-                              bool             am_pm,
-                              bool             show_seconds);
+String getTimeString_ampm(char delimiter = '\0', bool show_seconds=true) const;
+
+// returns the current Time separated by the given delimiter
+// time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
+static String getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds);
 
 
-  String getDateTimeString(char dateDelimiter          = '-',
-                           char timeDelimiter          = ':',
-                           char dateTimeDelimiter      = ' ') const;
-  String getDateTimeString_ampm(char dateDelimiter     = '-',
-                                char timeDelimiter     = ':',
-                                char dateTimeDelimiter = ' ') const;
-
-  // returns the current Date and Time separated by the given delimiter
-  // if called like this: getDateTimeString('\0', '\0', '\0');
-  // it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
-  static String getDateTimeString(const struct tm& ts,
-                                  char             dateDelimiter     = '-',
-                                  char             timeDelimiter     = ':',
-                                  char             dateTimeDelimiter = ' ',
-                                  bool             am_pm             = false);
 
 
-  /********************************************************************************************\
-     Get current time/date
-   \*********************************************************************************************/
+String getDateTimeString(char dateDelimiter = '-', char timeDelimiter = ':',  char dateTimeDelimiter = ' ') const;
+String getDateTimeString_ampm(char dateDelimiter = '-', char timeDelimiter = ':',  char dateTimeDelimiter = ' ') const;
 
-  // Get the year given a Unix time stamp
-  static int    year(unsigned long t);
-
-  // Get the weekday, given a Unix time stamp
-  static int    weekday(unsigned long t);
-
-  // Convert a weekday number (Sun = 1 ... Sat = 7) to a 3 letter string
-  static String weekday_str(int wday);
+// returns the current Date and Time separated by the given delimiter
+// if called like this: getDateTimeString('\0', '\0', '\0');
+// it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
+static String getDateTimeString(const struct tm& ts, char dateDelimiter = '-', char timeDelimiter = ':',  char dateTimeDelimiter = ' ', bool am_pm = false);
 
 
-  // Get current year.
-  int year() const
-  {
-    return 1970 + tm.tm_year;
-  }
+/********************************************************************************************\
+   Get current time/date
+ \*********************************************************************************************/
 
-  // Get current month
-  byte month() const
-  {
-    return tm.tm_mon;
-  }
+// Get the year given a Unix time stamp
+static int year(unsigned long t);
 
-  // Get current day of the month
-  byte day() const
-  {
-    return tm.tm_mday;
-  }
+// Get the weekday, given a Unix time stamp
+static int weekday(unsigned long t);
 
-  // Get current hour
-  byte hour() const
-  {
-    return tm.tm_hour;
-  }
-
-  // Get current minute
-  byte minute() const
-  {
-    return tm.tm_min;
-  }
-
-  // Get current second
-  byte second() const
-  {
-    return tm.tm_sec;
-  }
-
-  // day of week, sunday is day 1
-  int weekday() const
-  {
-    return tm.tm_wday;
-  }
-
-  String weekday_str() const;
+// Convert a weekday number (Sun = 1 ... Sat = 7) to a 3 letter string
+static String weekday_str(int wday); 
 
 
-  /********************************************************************************************\
-     Sunrise/Sunset calculations
-   \*********************************************************************************************/
+// Get current year.
+int year() const 
+{
+  return 1900 + tm.tm_year;
+}
+
+// Get current month
+byte month() const 
+{
+  return tm.tm_mon + 1; // tm_mon starts at 0
+}
+
+// Get current day of the month
+byte day() const 
+{
+  return tm.tm_mday;
+}
+
+// Get current hour
+byte hour() const 
+{
+  return tm.tm_hour;
+}
+
+// Get current minute
+byte minute() const 
+{
+  return tm.tm_min;
+}
+
+// Get current second
+byte second() const 
+{
+  return tm.tm_sec;
+}
+
+// day of week, sunday is day 1
+int weekday() const 
+{
+  return tm.tm_wday;
+}
+
+String weekday_str() const;
+
+
+
+
+
+
+/********************************************************************************************\
+   Sunrise/Sunset calculations
+ \*********************************************************************************************/
 
 public:
 
