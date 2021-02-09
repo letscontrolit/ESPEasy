@@ -157,6 +157,35 @@ bool mustConsiderAsString(NumericalType detectedType) {
   return false;
 }
 
+bool mustConsiderAsString(const String& value) {
+  const unsigned int length = value.length();
+  if (length == 0) return true;
+  unsigned int i = 0;
+  char c = value[i];
+  if (c == '+' || c == '-') {
+    ++i;
+    if (length == i) return true;
+    c = value[i];
+  }
+
+  bool dotFound = false;
+  for (; i < length; ++i) {
+    if (c == '.') {
+      if (dotFound) {
+        return true;
+      } else {
+        dotFound = true;
+      }
+    } else {
+      if (!isdigit(c)) {
+        return true;
+      }
+    }
+    c = value[i];
+  }
+  return i < length;
+}
+
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
   detectedType = NumericalType::Unknown;
   const unsigned int bufLength = tBuf.length();
@@ -286,5 +315,7 @@ bool isNumerical(const String& tBuf, NumericalType& detectedType) {
   if (NumericalType::Unknown == detectedType) {
     return false;
   }
+
+
   return result.length() > 0;
 }
