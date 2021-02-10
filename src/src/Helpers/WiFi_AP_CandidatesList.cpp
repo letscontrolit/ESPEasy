@@ -176,30 +176,47 @@ void WiFi_AP_CandidatesList::addFromRTC() {
     return;
   }
 
-  WiFi_AP_Candidate tmp(RTC.lastWiFiSettingsIndex, ssid, key);
+  bool matchfound  = false;
+  bool mustAdd     = false;
+  int32_t channel  = 0;
+  byte    enc_type = 0;
+  {
+    WiFi_AP_Candidate tmp(RTC.lastWiFiSettingsIndex, ssid, key);
 
-  tmp.setBSSID(RTC.lastBSSID);
-  if (!tmp.bssid_set()) return;
+    tmp.setBSSID(RTC.lastBSSID);
+    if (!tmp.bssid_set()) return;
 
-  // This is not taken from a scan, so no idea of the used encryption.
-  // Try to find a matching BSSID to get the encryption.
-  bool matchfound = false;
-  for (auto it = candidates.begin(); !matchfound && it != candidates.end(); ++it) {
-    if (tmp == *it) {
-      matchfound = true;
-      tmp = *it;
+    // This is not taken from a scan, so no idea of the used encryption.
+    // Try to find a matching BSSID to get the encryption.
+    for (auto it = candidates.begin(); !matchfound && it != candidates.end(); ++it) {
+      if (tmp == *it) {
+        matchfound = true;
+        channel = it->channel;
+        enc_type = it->enc_type;
+      }
+    }
+    if (!matchfound) {
+      if (currentCandidate == tmp) {
+        matchfound = true;
+        channel = currentCandidate.channel;
+        enc_type = currentCandidate.enc_type;
+      }
+    }
+    if (tmp.usable() && tmp.allowQuickConnect()) {
+      mustAdd = true;
     }
   }
-  if (!matchfound) {
-    if (currentCandidate == tmp) {
-      tmp = currentCandidate;
-    }
-  }
 
-  tmp.channel = RTC.lastWiFiChannel;
-  tmp.rssi    = -1; // Set to best possible RSSI so it is tried first.
-  if (tmp.usable() && tmp.allowQuickConnect()) {
-    candidates.push_front(tmp);
+  if (mustAdd) {
+    // TD-er: Recreate the object here. Otherwise removal of the RTC added candidate causes crashes.
+    candidates.emplace_front(RTC.lastWiFiSettingsIndex, ssid, key);
+    candidates.front().setBSSID(RTC.lastBSSID);
+    candidates.front().channel = RTC.lastWiFiChannel;
+    candidates.front().rssi    = -1; // Set to best possible RSSI so it is tried first.
+    if (matchfound) {
+      candidates.front().enc_type = enc_type;
+      candidates.front().channel = channel;
+    }
   }
 }
 
