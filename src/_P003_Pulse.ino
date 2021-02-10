@@ -28,9 +28,9 @@ void Plugin_003_pulsecheck(byte Index) ICACHE_RAM_ATTR;
 
 volatile unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 volatile unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
-volatile unsigned long Plugin_003_pulseTime[TASKS_MAX];
-volatile unsigned long Plugin_003_pulseTimePrevious[TASKS_MAX];
-volatile unsigned long Plugin_003_debounce[TASKS_MAX];
+volatile uint64_t Plugin_003_pulseTime[TASKS_MAX];
+volatile uint64_t Plugin_003_pulseTimePrevious[TASKS_MAX];
+volatile uint64_t Plugin_003_debounce[TASKS_MAX];
 
 boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 {
@@ -157,7 +157,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // It may be using a formula to generate the output, which makes it impossible to restore
       // the true internal state.
       Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex + 3];
-      Plugin_003_debounce[event->TaskIndex] = (unsigned long)Settings.TaskDevicePluginConfig[event->TaskIndex][0]*1000L;
+      Plugin_003_debounce[event->TaskIndex] = (uint64_t)Settings.TaskDevicePluginConfig[event->TaskIndex][0]*1000L;
 
       String log = F("INIT : Pulse ");
       log += Settings.TaskDevicePin1[event->TaskIndex];
@@ -175,7 +175,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // FIXME TD-er: Is it correct to write the first 3  UserVar values, regardless the set counter type?
       UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
       UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
-      UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex]/1000.0f;
+      UserVar[event->BaseVarIndex + 2] = (unsigned long)(Plugin_003_pulseTime[event->TaskIndex]/1000.0f);
 
       // Store the raw value in the unused 4th position.
       // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
@@ -194,7 +194,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           event->sensorType                = Sensor_VType::SENSOR_TYPE_TRIPLE;
           UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
           UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
-          UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex]/1000.0f;
+          UserVar[event->BaseVarIndex + 2] = (unsigned long)(Plugin_003_pulseTime[event->TaskIndex]/1000.0f);
           break;
         }
         case 2:
@@ -279,14 +279,14 @@ void Plugin_003_pulsecheck(byte Index)
   // time. Very rare.
   //  Alternatively there is timePassedSince(Plugin_003_pulseTimePrevious[Index]); but this is not in IRAM at this time, so do not use in a
   // ISR!
-  const unsigned long PulseTime = micros() - Plugin_003_pulseTimePrevious[Index];
+  const uint64_t PulseTime = micros64() - Plugin_003_pulseTimePrevious[Index];
 
   if (PulseTime > Plugin_003_debounce[Index]) // check with debounce time for this task
   {
     Plugin_003_pulseCounter[Index]++;
     Plugin_003_pulseTotalCounter[Index]++;
     Plugin_003_pulseTime[Index]         = PulseTime;
-    Plugin_003_pulseTimePrevious[Index] = micros();
+    Plugin_003_pulseTimePrevious[Index] = micros64();
   }
   interrupts(); // enable interrupts again.
 }
