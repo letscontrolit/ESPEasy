@@ -150,7 +150,7 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
 
 #ifdef USES_ESPEASY_NOW
 bool WiFi_AP_CandidatesList::isESPEasy_now_only() const {
-  RTC.lastWiFiSettingsIndex == 3;
+  return RTC.lastWiFiSettingsIndex == 3;
 }
 #endif
 
