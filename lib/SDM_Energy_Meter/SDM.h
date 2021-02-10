@@ -39,7 +39,7 @@
 #endif
 
 #ifndef MAX_MILLIS_TO_WAIT
-  #define MAX_MILLIS_TO_WAIT                200                                 //default max time to wait for response from SDM
+  #define MAX_MILLIS_TO_WAIT                500                                 //default max time to wait for response from SDM. Try to get as low as possible with higest possible Baud Rate to decrease loop time. 
 #endif
 //------------------------------------------------------------------------------
 
