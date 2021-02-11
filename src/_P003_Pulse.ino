@@ -4,7 +4,11 @@
 // #######################################################################################################
 // #################################### Plugin 003: Pulse  ###############################################
 // #######################################################################################################
+//
+// Make sure physical connections are electrically well sepparated so no crossover of the signals happen.
+// Especially at rates above ~5'000 RPM with longer lines. Best use a cable with ground and signal twisted.
 
+#include "src/Helpers/ESPEasy_time_calc.h"
 
 #define PLUGIN_003
 #define PLUGIN_ID_003         3
@@ -175,7 +179,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // FIXME TD-er: Is it correct to write the first 3  UserVar values, regardless the set counter type?
       UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
       UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
-      UserVar[event->BaseVarIndex + 2] = (unsigned long)(Plugin_003_pulseTime[event->TaskIndex]/1000.0f);
+      UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex]/1000.0f;
 
       // Store the raw value in the unused 4th position.
       // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
@@ -194,7 +198,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           event->sensorType                = Sensor_VType::SENSOR_TYPE_TRIPLE;
           UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
           UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
-          UserVar[event->BaseVarIndex + 2] = (unsigned long)(Plugin_003_pulseTime[event->TaskIndex]/1000.0f);
+          UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex]/1000.0f;
           break;
         }
         case 2:
@@ -279,14 +283,14 @@ void Plugin_003_pulsecheck(byte Index)
   // time. Very rare.
   //  Alternatively there is timePassedSince(Plugin_003_pulseTimePrevious[Index]); but this is not in IRAM at this time, so do not use in a
   // ISR!
-  const uint64_t PulseTime = micros64() - Plugin_003_pulseTimePrevious[Index];
+  const uint64_t PulseTime = getMicros64() - Plugin_003_pulseTimePrevious[Index];
 
   if (PulseTime > Plugin_003_debounce[Index]) // check with debounce time for this task
   {
     Plugin_003_pulseCounter[Index]++;
     Plugin_003_pulseTotalCounter[Index]++;
     Plugin_003_pulseTime[Index]         = PulseTime;
-    Plugin_003_pulseTimePrevious[Index] = micros64();
+    Plugin_003_pulseTimePrevious[Index] = getMicros64();
   }
   interrupts(); // enable interrupts again.
 }
