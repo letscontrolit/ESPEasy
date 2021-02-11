@@ -83,12 +83,12 @@ size_t ESPEasy_Now_packet::getMaxPayloadSize()
 
 ESPEasy_now_hdr ESPEasy_Now_packet::getHeader() const
 {
-  ESPEasy_now_hdr header;
-
   if (getSize() >= sizeof(ESPEasy_now_hdr)) {
-    memcpy(&header, &_buf[0], sizeof(ESPEasy_now_hdr));
+    ESPEasy_now_hdr header(&_buf[0]);
+    return header;
   }
 
+  ESPEasy_now_hdr header;
   return header;
 }
 

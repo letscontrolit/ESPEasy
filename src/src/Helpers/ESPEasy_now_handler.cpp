@@ -55,8 +55,7 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
     STOP_TIMER(INVALID_ESPEASY_NOW_LOOP);
     return; // Too small
   }
-  ESPEasy_now_hdr header;
-  memcpy(&header, buf, sizeof(ESPEasy_now_hdr));
+  ESPEasy_now_hdr header(buf);
 
   if (header.header_version != ESPEASY_NOW_HEADER_VERSION) {
     STOP_TIMER(INVALID_ESPEASY_NOW_LOOP);

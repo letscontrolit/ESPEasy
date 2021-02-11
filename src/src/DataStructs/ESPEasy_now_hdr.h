@@ -33,6 +33,8 @@ public:
 
   ESPEasy_now_hdr(message_t messageType);
 
+  ESPEasy_now_hdr(const uint8_t *buf);
+
   ESPEasy_now_hdr& operator=(const ESPEasy_now_hdr& other);
 
 
