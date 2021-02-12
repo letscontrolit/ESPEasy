@@ -105,7 +105,9 @@ bool WiFi_AP_CandidatesList::getNext() {
 
   if (mustPop) {
     known_it = known.begin();
-    candidates.pop_front();
+    if (!candidates.empty()) {
+      candidates.pop_front();
+    }
   }
   return true;
 }
@@ -176,47 +178,26 @@ void WiFi_AP_CandidatesList::addFromRTC() {
     return;
   }
 
-  bool matchfound  = false;
-  bool mustAdd     = false;
-  int32_t channel  = 0;
-  byte    enc_type = 0;
-  {
-    WiFi_AP_Candidate tmp(RTC.lastWiFiSettingsIndex, ssid, key);
+  candidates.emplace_front(RTC.lastWiFiSettingsIndex, ssid, key);
+  candidates.front().setBSSID(RTC.lastBSSID);
+  candidates.front().rssi = -1; // Set to best possible RSSI so it is tried first.
+  candidates.front().channel = RTC.lastWiFiChannel;
 
-    tmp.setBSSID(RTC.lastBSSID);
-    if (!tmp.bssid_set()) return;
-
-    // This is not taken from a scan, so no idea of the used encryption.
-    // Try to find a matching BSSID to get the encryption.
-    for (auto it = candidates.begin(); !matchfound && it != candidates.end(); ++it) {
-      if (tmp == *it) {
-        matchfound = true;
-        channel = it->channel;
-        enc_type = it->enc_type;
-      }
-    }
-    if (!matchfound) {
-      if (currentCandidate == tmp) {
-        matchfound = true;
-        channel = currentCandidate.channel;
-        enc_type = currentCandidate.enc_type;
-      }
-    }
-    if (tmp.usable() && tmp.allowQuickConnect()) {
-      mustAdd = true;
-    }
+  if (!candidates.front().usable() || !candidates.front().allowQuickConnect()) {
+    candidates.pop_front();
+    return;
   }
 
-  if (mustAdd) {
-    // TD-er: Recreate the object here. Otherwise removal of the RTC added candidate causes crashes.
-    candidates.emplace_front(RTC.lastWiFiSettingsIndex, ssid, key);
-    candidates.front().setBSSID(RTC.lastBSSID);
-    candidates.front().channel = RTC.lastWiFiChannel;
-    candidates.front().rssi    = -1; // Set to best possible RSSI so it is tried first.
-    if (matchfound) {
-      candidates.front().enc_type = enc_type;
-      candidates.front().channel = channel;
+  // This is not taken from a scan, so no idea of the used encryption.
+  // Try to find a matching BSSID to get the encryption.
+  for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+    if ((it->rssi != -1) && candidates.front() == *it) {
+      candidates.front().enc_type = it->enc_type;
+      return;
     }
+  }
+  if (currentCandidate == candidates.front()) {
+    candidates.front().enc_type = currentCandidate.enc_type;
   }
 }
 
