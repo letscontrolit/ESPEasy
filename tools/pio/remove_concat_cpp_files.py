@@ -24,4 +24,4 @@ def clear_all_concat_cpp_files(source, target, env):
     print("\u001b[32m ------------------------------ \u001b[0m")
 
 
-env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", [clear_all_concat_cpp_files])
+#env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", [clear_all_concat_cpp_files])

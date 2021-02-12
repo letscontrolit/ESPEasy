@@ -151,14 +151,40 @@ bool mustConsiderAsString(NumericalType detectedType) {
     case NumericalType::HexadecimalUInt:
     case NumericalType::BinaryUint:
       return true; // Has '0x' or '0b' as prefix
-    case NumericalType::Unknown:
-      return true; // Apparently it is not a numerical, when printed consider it a string
   }
   return false;
 }
 
+bool mustConsiderAsString(const String& value) {
+  const unsigned int length = value.length();
+  if (length == 0) return true;
+  unsigned int i = 0;
+  char c = value[i];
+  if (c == '+' || c == '-') {
+    ++i;
+    if (length == i) return true;
+    c = value[i];
+  }
+
+  bool dotFound = false;
+  for (; i < length; ++i) {
+    if (c == '.') {
+      if (dotFound) {
+        return true;
+      } else {
+        dotFound = true;
+      }
+    } else {
+      if (!isdigit(c)) {
+        return true;
+      }
+    }
+    c = value[i];
+  }
+  return i < length;
+}
+
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
-  detectedType = NumericalType::Unknown;
   const unsigned int bufLength = tBuf.length();
   unsigned int firstDec        = 0;
   String result;
@@ -170,12 +196,13 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
 
   if (firstDec >= bufLength) { return result; }
   bool decPt = false;
+
+  detectedType = NumericalType::Integer;
   char c = tBuf.charAt(firstDec);
 
   if ((c == '+') || (c == '-')) {
     if ((requestedType != NumericalType::HexadecimalUInt) &&
         (requestedType != NumericalType::BinaryUint)) {
-      detectedType = NumericalType::Integer;
       if (c == '-') {
         result += c;
       }
@@ -187,53 +214,36 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
   } 
   if (c == '0') {
     ++firstDec;
+    result += c;
 
     if (firstDec < bufLength) {
       c = tBuf.charAt(firstDec);
 
       if ((c == 'x') || (c == 'X')) {
         ++firstDec;
-        result      += '0';
         result      += c;
         detectedType = NumericalType::HexadecimalUInt;
       } else if ((c == 'b') || (c == 'B')) {
         ++firstDec;
-        result      += '0';
         result      += c;
         detectedType = NumericalType::BinaryUint;
       } else if (NumericalType::Integer == requestedType) {
         // Allow leading zeroes in Integer types (e.g. in time notation)
-        detectedType = NumericalType::Integer;
         while (c == '0' && firstDec < bufLength) {
           // N.B. intentional "reverse order" of reading char and ++firstDec
           c = tBuf.charAt(firstDec);
           ++firstDec;
-        }
-        if (firstDec >= bufLength) {
-          result += '0';
-        }
+        }      
       } else if (NumericalType::FloatingPoint == requestedType && c == '.') {
         // Only floating point numbers should start with '0.'
         // All other combinations are not valid.
         ++firstDec;
-        result      += '0';
         result      += c;
         decPt        = true;
         detectedType = NumericalType::FloatingPoint;
       } else {
-        detectedType = NumericalType::Integer;
-        result      += '0';
         return result;
       }
-    }
-  } else if (NumericalType::Unknown == detectedType) {
-    if (NumericalType::HexadecimalUInt == requestedType && isxdigit(c)) {
-      // Should be careful here, as we're patching a string, 
-      // which may yield different result when the requested type is not specifically hex.
-      detectedType = NumericalType::HexadecimalUInt;
-      result = F("0x");
-    } else if (isdigit(c)) {
-      detectedType = NumericalType::Integer;
     }
   }
 
@@ -270,9 +280,6 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
             return result;
           }
           break;
-        case NumericalType::Unknown:
-          // If we still have no clue what it is by now, return it.
-          return result;
       }
     }
     result += c;
@@ -283,8 +290,17 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
 bool isNumerical(const String& tBuf, NumericalType& detectedType) {
   NumericalType requestedType = NumericalType::FloatingPoint;
   const String  result        = getNumerical(tBuf, requestedType, detectedType);
-  if (NumericalType::Unknown == detectedType) {
-    return false;
+  if (result.length() > 0)
+  {
+    String tmp(tBuf);
+    tmp.trim(); // remove leading and trailing spaces
+
+    // Resulting size should be the same size as the given string.
+    // Not sure if it is possible to have a longer result, but better be sure to also allow for larger resulting strings.
+    // For example ".123" -> "0.123"
+    return result.length() >= tmp.length();
   }
+
+
   return result.length() > 0;
 }

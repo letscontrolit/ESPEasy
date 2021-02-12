@@ -310,10 +310,16 @@ void handle_json()
         for (byte x = 0; x < valueCount; x++)
         {
           addHtml('{');
+          const String value = formatUserVarNoCheck(TaskIndex, x);
+          byte nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[x];
+          if (mustConsiderAsString(value)) {
+            // Flag as not to treat as a float
+            nrDecimals = 255;
+          }
           stream_next_json_object_value(F("ValueNumber"), String(x + 1));
           stream_next_json_object_value(F("Name"),        String(ExtraTaskSettings.TaskDeviceValueNames[x]));
-          stream_next_json_object_value(F("NrDecimals"),  String(ExtraTaskSettings.TaskDeviceValueDecimals[x]));
-          stream_last_json_object_value(F("Value"), formatUserVarNoCheck(TaskIndex, x));
+          stream_next_json_object_value(F("NrDecimals"),  String(nrDecimals));
+          stream_last_json_object_value(F("Value"),       value);
 
           if (x < (valueCount - 1)) {
             addHtml(F(",\n"));

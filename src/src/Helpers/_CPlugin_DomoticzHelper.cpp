@@ -83,7 +83,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       values = formatUserVarDomoticz(event, 0);
       break;
     case Sensor_VType::SENSOR_TYPE_LONG:   // single LONG value, stored in two floats (rfid tags)
-      values = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+      values = UserVar.getSensorTypeLong(event->TaskIndex);
       break;
     case Sensor_VType::SENSOR_TYPE_DUAL:   // any sensor that uses two simple values
       values  = formatUserVarDomoticz(event, 0);

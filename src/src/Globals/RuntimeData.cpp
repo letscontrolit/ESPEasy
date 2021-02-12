@@ -3,7 +3,9 @@
 
 std::map<uint32_t, double> customFloatVar;
 
-float UserVar[VARS_PER_TASK * TASKS_MAX];
+//float UserVar[VARS_PER_TASK * TASKS_MAX];
+
+UserVarStruct UserVar;
 
 
 double getCustomFloatVar(uint32_t index) {
