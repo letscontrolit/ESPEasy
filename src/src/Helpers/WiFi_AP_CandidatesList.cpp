@@ -105,7 +105,9 @@ bool WiFi_AP_CandidatesList::getNext() {
 
   if (mustPop) {
     known_it = known.begin();
-    candidates.pop_front();
+    if (!candidates.empty()) {
+      candidates.pop_front();
+    }
   }
   return true;
 }
