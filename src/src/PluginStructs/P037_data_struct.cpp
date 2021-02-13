@@ -21,7 +21,17 @@ P037_data_struct::~P037_data_struct() {}
  */
 bool P037_data_struct::loadSettings() {
   if (_taskIndex < TASKS_MAX) {
+    String tmp;
+    tmp.reserve(45);
     LoadCustomTaskSettings(_taskIndex, (byte*)&StoredSettings, sizeof(StoredSettings));
+    for (uint8_t i = 0; i < VARS_PER_TASK; i++) {
+      tmp = StoredSettings.deviceTemplate[i];
+      tmp.trim();
+      deviceTemplate[i] = tmp;
+      tmp = StoredSettings.jsonAttributes[i];
+      tmp.trim();
+      jsonAttributes[i] = tmp;
+    }
     return true;
   }
   return false;
@@ -34,32 +44,29 @@ bool P037_data_struct::loadSettings() {
 void P037_data_struct::parseMappings() {
 
   if (
-#ifdef P037_MAPPING_SUPPORT
+    #ifdef P037_MAPPING_SUPPORT
     _maxIdx == -1
-#endif
-#if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
+    #endif
+    #if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
     ||
-#endif
-#ifdef P037_FILTER_SUPPORT
+    #endif
+    #ifdef P037_FILTER_SUPPORT
     _maxFilter == -1
-#endif
+    #endif
     ) {
-#ifdef P037_MAPPING_SUPPORT
+    #ifdef P037_MAPPING_SUPPORT
     _maxIdx = 0; // Initialize to empty
-#endif
-#ifdef P037_FILTER_SUPPORT
+    #endif
+    #ifdef P037_FILTER_SUPPORT
     _maxFilter = 0; // Initialize to empty
-#endif
-#ifdef P037_MAPPING_SUPPORT
-    for (int8_t i = 0; i < P037_MAX_MAPPINGS; i++) {
-      _mapping[i] = F("");
-    }
-#endif
-#ifdef P037_FILTER_SUPPORT
-    for (int8_t i = 0; i < P037_MAX_FILTERS; i++) {
-      _filter[i] = F("");
-    }
-#endif
+    #endif
+    #ifdef P037_MAPPING_SUPPORT
+    _mapping.clear();
+    #endif
+    #ifdef P037_FILTER_SUPPORT
+    _filter.clear();
+    _filterIdx.clear();
+    #endif
 
     String filterMap;
     String valueMap = String(StoredSettings.valueMappings);
@@ -75,7 +82,7 @@ void P037_data_struct::parseMappings() {
 
     int16_t parse;
     int8_t operandIndex;
-#ifdef P037_MAPPING_SUPPORT
+    #ifdef P037_MAPPING_SUPPORT
     String operands = P037_OPERAND_LIST; // Anticipate more operations
 
     while (valueMap.length() > 0 && _maxIdx < P037_MAX_MAPPINGS * 3) {
@@ -119,12 +126,12 @@ void P037_data_struct::parseMappings() {
       debug = F("");
     }
     #endif
-#endif // P037_MAPPING_SUPPORT
+    #endif // P037_MAPPING_SUPPORT
 
-#ifdef P037_FILTER_SUPPORT
-#ifdef P037_FILTER_PER_TOPIC
+    #ifdef P037_FILTER_SUPPORT
+    #ifdef P037_FILTER_PER_TOPIC
     uint8_t countFilters = 0;
-#endif
+    #endif
     String filters = P037_FILTER_LIST; // Anticipate more filters
     while (filterMap.length() > 0 && _maxFilter < P037_MAX_FILTERS * 3) {
       int16_t comma   = filterMap.indexOf(F(","));
@@ -139,11 +146,18 @@ void P037_data_struct::parseMappings() {
         parse = equals;
       }
       _filter[_maxFilter + 0] = filterMap.substring(0, parse);
+      _filter[_maxFilter + 0].replace(';', ',');
+      String _idx = parseString(_filter[_maxFilter + 0], 2);
+      if (_idx.length() > 0) {
+        _filterIdx[_maxFilter + 0] = _idx.toInt();
+        _filter[_maxFilter + 0] = parseString(_filter[_maxFilter + 0], 1);
+      }
       _filter[_maxFilter + 1] = filters.substring(operandIndex, operandIndex + 1);
       _filter[_maxFilter + 2] = filterMap.substring(parse + 1, comma);
-#ifdef P037_FILTER_PER_TOPIC
+      _filter[_maxFilter + 2].replace(';', ',');
+      #ifdef P037_FILTER_PER_TOPIC
       countFilters += (_filter[_maxFilter + 0].length() > 0 && _filter[_maxFilter + 2].length() > 0 ? 1 : 0);
-#endif
+      #endif // P037_FILTER_PER_TOPIC
       #ifdef PLUGIN_037_DEBUG
       if (debug.length() > 50) {
         addLog(LOG_LEVEL_DEBUG, debug);
@@ -169,41 +183,41 @@ void P037_data_struct::parseMappings() {
       addLog(LOG_LEVEL_DEBUG, debug);
     }
     #endif
-#ifdef P037_FILTER_PER_TOPIC
+    #ifdef P037_FILTER_PER_TOPIC
     if (countFilters > 0) {
       _maxFilter = (P037_MAX_FILTERS * 3) - 1;
     } else {
       _maxFilter = 0;
     }
-#endif
-#endif // P037_FILTER_SUPPORT
+    #endif //P037_FILTER_PER_TOPIC
+    #endif // P037_FILTER_SUPPORT
   }
 } // parseMappings
 #endif // P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
 
 bool P037_data_struct::webform_load(
-#ifdef P037_MAPPING_SUPPORT
+  #ifdef P037_MAPPING_SUPPORT
                                     bool mappingEnabled
-#endif
-#if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
+  #endif
+  #if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
                                     ,
-#endif
-#ifdef P037_FILTER_SUPPORT
+  #endif
+  #ifdef P037_FILTER_SUPPORT
                                     bool filterEnabled
-#endif
-#if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
+  #endif
+  #if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
                                     ,
-#endif
-#ifdef P037_JSON_SUPPORT
+  #endif
+  #ifdef P037_JSON_SUPPORT
                                     bool jsonEnabled
-#endif
+  #endif
                                    ) {
 
   bool success = false;
 
   addFormSubHeader(F("Topic subscriptions"));
 
-#ifdef P037_JSON_SUPPORT
+  #ifdef P037_JSON_SUPPORT
   if (jsonEnabled) {
       addRowLabel(F("MQTT Topic"), F(""));
       html_table(F(""), false);  // Sub-table
@@ -211,10 +225,10 @@ bool P037_data_struct::webform_load(
       html_table_header(F("Topic"), 500);
       html_table_header(F("JSON Attribute"), 200);
   }
-#endif
+  #endif
   for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
   {
-#ifdef P037_JSON_SUPPORT
+    #ifdef P037_JSON_SUPPORT
     if (jsonEnabled) { // Add a column with the json attribute to use for value
       html_TR_TD();
       addHtml(F("&nbsp;"));
@@ -231,33 +245,33 @@ bool P037_data_struct::webform_load(
                 false, false, F(""), F(""));
       html_TD();
     } else {
-#endif
+    #endif
       addFormTextBox(String(F("MQTT Topic ")) + (varNr + 1), String(F("p037_template")) +
           (varNr + 1), StoredSettings.deviceTemplate[varNr], 40);
-#ifdef P037_JSON_SUPPORT
+    #ifdef P037_JSON_SUPPORT
     }
-#endif
+    #endif
   }
-#ifdef P037_JSON_SUPPORT
+  #ifdef P037_JSON_SUPPORT
   if (jsonEnabled) {
     html_end_table();
   }
-#endif
+  #endif
 
-#if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+  #if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
   parseMappings();
-#endif
+  #endif
 
-#ifdef P037_FILTER_SUPPORT
+  #ifdef P037_FILTER_SUPPORT
   if (filterEnabled) {
     addFormSubHeader(F("Name - value filters"));
     addFormNote(F("Name - value filters are case-sensitive. Do not use ',' or '|'."));
 
-#ifdef P037_FILTER_PER_TOPIC
+    #ifdef P037_FILTER_PER_TOPIC
     addRowLabel(F("Filter for MQTT Topic"), F(""));
-#else
+    #else
     addRowLabel(F("Filter"), F(""));
-#endif
+    #endif
     html_table(F(""), false);  // Sub-table
     html_table_header(F("&nbsp;#&nbsp;"));
     html_table_header(F("Name[;Index]"));
@@ -284,9 +298,9 @@ bool P037_data_struct::webform_load(
 
     int8_t idx;
     int8_t filterNr = 1;
-#ifdef P037_FILTER_PER_TOPIC
+    #ifdef P037_FILTER_PER_TOPIC
     if (_maxFilter <= 0) _maxFilter = (VARS_PER_TASK * 3);
-#endif
+    #endif
     for (idx = 0; idx < _maxFilter; idx += 3) {
 
       html_TR_TD();
@@ -316,7 +330,7 @@ bool P037_data_struct::webform_load(
     info += idx;
     addLog(LOG_LEVEL_INFO, info);
     #endif
-#ifndef P037_FILTER_PER_TOPIC
+    #ifndef P037_FILTER_PER_TOPIC
     filterIndex = 0;
     uint8_t extraFilters = 0;
     while (extraFilters < P037_EXTRA_VALUES && idx < P037_MAX_FILTERS * 3) {
@@ -341,9 +355,9 @@ bool P037_data_struct::webform_load(
       extraFilters++;
       filterNr++;
     }
-#endif // ifndef P037_FILTER_PER_TOPIC
+    #endif // ifndef P037_FILTER_PER_TOPIC
     html_end_table();
-#ifndef P037_FILTER_PER_TOPIC
+    #ifndef P037_FILTER_PER_TOPIC
     #ifdef PLUGIN_037_DEBUG
     info = F("P037 extraFilters: ");
     info += extraFilters;
@@ -351,20 +365,20 @@ bool P037_data_struct::webform_load(
     info += idx;
     addLog(LOG_LEVEL_INFO, info);
     #endif
-#endif
+    #endif
     addFormNote(F("Both Name and Value must be filled for a valid filter."));
-#ifndef P037_FILTER_PER_TOPIC
+    #ifndef P037_FILTER_PER_TOPIC
     if (extraFilters == P037_EXTRA_VALUES) {
       String moreMessage = F("After filling all filters, submitting this page will make extra filters available (up to ");
       moreMessage += P037_MAX_FILTERS;
       moreMessage += F(").");
       addFormNote(moreMessage);
     }
-#endif // ifndef P037_FILTER_PER_TOPIC
+    #endif // ifndef P037_FILTER_PER_TOPIC
   }
-#endif  // P037_FILTER_SUPPORT
+  #endif  // P037_FILTER_SUPPORT
 
-#ifdef P037_MAPPING_SUPPORT
+  #ifdef P037_MAPPING_SUPPORT
   if (mappingEnabled) {
     addFormSubHeader(F("Name - value mappings"));
     addFormNote(F("Name - value mappings are case-sensitive. Do not use ',' or '|'."));
@@ -456,22 +470,22 @@ bool P037_data_struct::webform_load(
       addFormNote(moreMessage);
     }
   }
-#endif // P037_MAPPING_SUPPORT
+  #endif // P037_MAPPING_SUPPORT
 
   success = true;
   return success;
 } // webform_load
 
 bool P037_data_struct::webform_save(
-#ifdef P037_FILTER_SUPPORT
+  #ifdef P037_FILTER_SUPPORT
                                     bool filterEnabled
-#endif
-#if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
+  #endif
+  #if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
                                     ,
-#endif
-#ifdef P037_JSON_SUPPORT
+  #endif
+  #ifdef P037_JSON_SUPPORT
                                     bool jsonEnabled
-#endif
+  #endif
                                    ) {
   bool success = false;
 
@@ -483,7 +497,7 @@ bool P037_data_struct::webform_save(
     if (!safe_strncpy(StoredSettings.deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(StoredSettings.deviceTemplate[varNr]))) {
       error += getCustomTaskSettingsError(varNr);
     }
-#ifdef P037_JSON_SUPPORT
+    #ifdef P037_JSON_SUPPORT
     if (jsonEnabled) {
       argName = F("p037_attribute");
       argName += varNr + 1;
@@ -491,19 +505,19 @@ bool P037_data_struct::webform_save(
         error += getCustomTaskSettingsError(varNr);
       }
     }
-#endif // P037_JSON_SUPPORT
+    #endif // P037_JSON_SUPPORT
   }
 
-#if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+  #if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
   String valueMap;
   valueMap.reserve(sizeof(StoredSettings.valueMappings) / 2);
 
   String left, right;
   bool firstError = true;
-#endif
+  #endif
 
 // Mapping must be processed first, then Filtering, because they are parsed in that order
-#ifdef P037_MAPPING_SUPPORT
+  #ifdef P037_MAPPING_SUPPORT
   String operands = P037_OPERAND_LIST;
   uint8_t mapNr = 1;
   left.reserve(32);
@@ -537,10 +551,10 @@ bool P037_data_struct::webform_save(
   if (!firstError) {
     error += '\n';
   }
-#endif
+  #endif
 
 // Filtering must be processed second, after Mapping, because they are parsed in that order
-#ifdef P037_FILTER_SUPPORT
+  #ifdef P037_FILTER_SUPPORT
   String filters = P037_FILTER_LIST;
   firstError = true;
   String filterMap;
@@ -552,9 +566,9 @@ bool P037_data_struct::webform_save(
     right = web_server.arg(getPluginCustomArgName(idx + 100 + 2));
     right.trim();
     if (left.length() > 0 || right.length() > 0
-#ifdef P037_FILTER_PER_TOPIC
+    #ifdef P037_FILTER_PER_TOPIC
      || true  // Store all filters and in the same order, including empty filters
-#endif
+    #endif
        ) {
       if (filterMap.length() > 0) {
         filterMap += ',';
@@ -564,7 +578,7 @@ bool P037_data_struct::webform_save(
       filterMap += filters.substring(oper, oper + 1);
       filterMap += right;
     }
-#ifndef P037_FILTER_PER_TOPIC
+    #ifndef P037_FILTER_PER_TOPIC
     if ((left.length() == 0 && right.length() > 0) || (left.length() > 0 && right.length() == 0)) {
       if (firstError) {
         error += F("Name and value should both be filled for filter ");
@@ -574,31 +588,31 @@ bool P037_data_struct::webform_save(
       }
       error += filterNr;
     }
-#endif // ifndef P037_FILTER_PER_TOPIC
+    #endif // ifndef P037_FILTER_PER_TOPIC
     filterNr++;
     delay(0); // leave some yield
   }
-#ifndef P037_FILTER_PER_TOPIC
+  #ifndef P037_FILTER_PER_TOPIC
   if (!firstError) {
     error += '\n';
   }
-#endif // ifndef P037_FILTER_PER_TOPIC
+  #endif // ifndef P037_FILTER_PER_TOPIC
   if (filterMap.length() > 0) { // Append filters to mappings if used
     valueMap += '|';
     valueMap += filterMap;
   }
-#endif // P037_FILTER_SUPPORT
+  #endif // P037_FILTER_SUPPORT
 
-#if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+  #if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
   if (!safe_strncpy(StoredSettings.valueMappings, valueMap.c_str(), sizeof(StoredSettings.valueMappings))) {
     error += F("Total combination of mappings/filters too long to store.\n");
   }
-#endif
+  #endif
 
   if (error.length() > 0) {
     addHtmlError(error);
   }
-#if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+  #if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
   #ifdef PLUGIN_037_DEBUG
   String info = F("P037 Saved mappings/filters, length: ");
   info += valueMap.length();
@@ -607,15 +621,15 @@ bool P037_data_struct::webform_save(
   addLog(LOG_LEVEL_INFO, info);
   addLog(LOG_LEVEL_INFO, valueMap);
   #endif
-#endif
+  #endif
   SaveCustomTaskSettings(_taskIndex, (byte*)&StoredSettings, sizeof(StoredSettings));
 
-#ifdef P037_MAPPING_SUPPORT
+  #ifdef P037_MAPPING_SUPPORT
   _maxIdx = -1; // Invalidate current mappings and filters
-#endif
-#ifdef P037_FILTER_SUPPORT
+  #endif
+  #ifdef P037_FILTER_SUPPORT
   _maxFilter = -1;
-#endif
+  #endif
 
   success = true;
 
@@ -748,19 +762,16 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
     int8_t rangeSeparator;
     bool accept, matchTopicId = true;
     uint8_t fltFrom = 0, fltMax = _maxFilter;
-#ifdef P037_FILTER_PER_TOPIC
+    #ifdef P037_FILTER_PER_TOPIC
     if (topicId > 0) {
       fltFrom = (topicId - 1) * 3;
       fltMax  = topicId * 3;
     }
-#endif
+    #endif
 
     for (uint8_t flt = fltFrom; flt < fltMax; flt += 3) {
-      fltKey = _filter[flt + 0];
-      // Parse filter name[;index] into name and index
-      fltKey.replace(';', ',');
-      fltIndex = parseString(fltKey, 2);
-      rangeSeparator = fltIndex.toInt();
+      fltKey         = _filter[flt + 0];
+      rangeSeparator = _filterIdx[flt + 0];
       if (rangeSeparator > 0) {
         valueData.replace(';', ',');
         valueData = parseString(valueData, rangeSeparator);
@@ -785,7 +796,7 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
           }
           case 1: // - => range x-y (inside) or y-x (outside)
           {
-            rangeSeparator = filterData.indexOf(';');
+            rangeSeparator = filterData.indexOf(','); // Semicolons are replace with comma during init
             if (rangeSeparator == -1) {
               rangeSeparator = filterData.indexOf('-'); // Fall-back test for dash
             }
@@ -820,10 +831,10 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
             break;
           }
           #if P037_FILTER_COUNT >= 3
-          case 2: // : => Match against a semicolon-separated list
+          case 2: // : => Match against a semicolon-separated list (semicolon is replaced by comma during initialization)
           {
             String item;
-            rangeSeparator = filterData.indexOf(';');
+            rangeSeparator = filterData.indexOf(',');
             if (rangeSeparator > -1 && validDoubleFromString(valueData, doubleValue)) {
               accept = false;
               do {
@@ -831,7 +842,7 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
                 item.trim();
                 filterData = filterData.substring(rangeSeparator + 1);
                 filterData.trim();
-                rangeSeparator = filterData.indexOf(';');
+                rangeSeparator = filterData.indexOf(',');
                 if (rangeSeparator == -1) rangeSeparator = filterData.length(); // Last value
                 if (validDoubleFromString(item, from) && compareDoubleValues('=', doubleValue, from)) {
                   accept = true;
@@ -861,5 +872,39 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
   return result;
 }
 #endif  // P037_FILTER_SUPPORT
+
+#ifdef P037_JSON_SUPPORT
+/**
+ * Allocate a DynamicJsonDocument and parse the message.
+ * Returns true if the operation succeeded, and doc and iter can be used, when n ot successful the state of those variables is undefined.
+ */
+bool P037_data_struct::parseJSONMessage(const String& message) {
+  bool result = false;
+
+  if (nullptr == root) {
+    root = new (std::nothrow) DynamicJsonDocument(512);
+  }
+
+  if (nullptr != root) {
+    deserializeJson(*root, message.c_str());
+
+    if (!root->isNull()) {
+      result = true;
+      doc    = root->as<JsonObject>();
+      iter   = doc.begin();
+    }
+  }
+  return result;
+}
+
+/**
+ * Release the created DynamicJsonDocument (if it was allocated)
+ */
+void P037_data_struct::cleanupJSON() {
+  if (nullptr != root) {
+    root->clear();
+  }
+}
+#endif // P037_JSON_SUPPORT
 
 #endif  // ifdef USES_P037

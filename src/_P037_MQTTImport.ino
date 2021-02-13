@@ -10,14 +10,10 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2021-02-13, tonhuisman: Refactoring to reduce memory use and String re-allocations
  * 2020-12-10, tonhuisman: Add name-value mapping, filtering and json parsing
  * 2020-12-17, tonhuisman: Bugfixes, filter per MQTT Topic, reorganized Device page
  */
-
-#include "src/Globals/MQTT.h"
-#include "src/Globals/CPlugins.h"
-#include "src/Globals/Plugins.h"
-#include "src/Helpers/StringParser.h"
 
 #include "src/PluginStructs/P037_data_struct.h"
 
@@ -243,39 +239,37 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         if (nullptr == P037_data) {
           return success;
         }
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&P037_data->StoredSettings, sizeof(P037_data->StoredSettings));
 
         bool checkJson = false;
 
-#if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT) || defined(P037_JSON_SUPPORT)
+        #if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT) || defined(P037_JSON_SUPPORT)
         bool processData = false; // Don't do the for loop again if we're not going to match
         // As we can receive quite a lot of topics not intended for this plugin,
         // first do a quick check if the topic matches here, to try and avoid a bunch of unneeded mapping, filtering and logging
         bool matchedTopic = false; // Ignore by default
         for (byte x = 0; x < VARS_PER_TASK; x++)
         {
-          String subscriptionTopic = P037_data->StoredSettings.deviceTemplate[x];
-          subscriptionTopic.trim();
-          if (subscriptionTopic.length() == 0) continue;							// skip blank subscriptions
+          if (P037_data->deviceTemplate[x].length() == 0) continue;							// skip blank subscriptions
 
           // Now check if the incoming topic matches one of our subscriptions
-          parseSystemVariables(subscriptionTopic, false);
-          if (MQTTCheckSubscription_037(event->String1, subscriptionTopic)) {
+          String subscriptionTopicParsed = P037_data->deviceTemplate[x];
+          parseSystemVariables(subscriptionTopicParsed, false);
+          if (MQTTCheckSubscription_037(event->String1, subscriptionTopicParsed)) {
             matchedTopic = true; // Yes we should process it here
             processData = true; // Allow going into second for loop
           }
         }
-#else
+        #else
         bool processData = true;
-#endif
-#ifdef P037_JSON_SUPPORT
+        #endif // P037_MAPPING_SUPPORT or P037_FILTER_SUPPORT or P037_JSON_SUPPORT
+        #ifdef P037_JSON_SUPPORT
         if (matchedTopic && P037_PARSE_JSON && Payload.substring(0, 1) == F("{")) { // With JSON enabled and rudimentary check for JSon content
           #ifdef PLUGIN_037_DEBUG
           addLog(LOG_LEVEL_INFO, F("IMPT : MQTT 037 JSON data detected."));
           #endif
           checkJson = true;
         }
-#endif // P037_JSON_SUPPORT
+        #endif // P037_JSON_SUPPORT
         if (!checkJson) { // Avoid storing any json in an extra copy in memory
           unparsedPayload = event->String2;
         }
@@ -286,69 +280,57 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         bool continueProcessing = false;
         String key;
 
-#ifdef P037_MAPPING_SUPPORT
+        #ifdef P037_MAPPING_SUPPORT
         if (matchedTopic && !checkJson && P037_APPLY_MAPPINGS) { // Apply mappings?
           key = P037_getMQTTLastTopicPart(event->String1);
           Payload = P037_data->mapValue(Payload, key);
         }
-#endif // P037_MAPPING_SUPPORT
+        #endif // P037_MAPPING_SUPPORT
 
-#ifdef P037_JSON_SUPPORT
-        DynamicJsonDocument root(512); // Rough estimate
-        JsonObject doc;
-        JsonObject::iterator iter;
+        #ifdef P037_JSON_SUPPORT
         if (checkJson) {
-          deserializeJson(root, event->String2.c_str());
-
-          if (!root.isNull())
-          {
-            continueProcessing = true;
-            doc = root.as<JsonObject>();
-            iter = doc.begin();
-          }
+          continueProcessing = P037_data->parseJSONMessage(event->String2);
         }
-#endif // P037_JSON_SUPPORT
+        #endif // P037_JSON_SUPPORT
 
-#ifdef P037_FILTER_SUPPORT
-#ifdef P037_FILTER_PER_TOPIC
+        #ifdef P037_FILTER_SUPPORT
+        #ifdef P037_FILTER_PER_TOPIC
         for (byte x = 0; x < VARS_PER_TASK && matchedTopic; x++) {
-          String subscriptionTopic = P037_data->StoredSettings.deviceTemplate[x];
-          subscriptionTopic.trim();
-          if (subscriptionTopic.length() == 0) continue;							// skip blank subscriptions
-#else
+          if (P037_data->deviceTemplate[x].length() == 0) continue;							// skip blank subscriptions
+        #else
         int8_t x = -1;
         if (matchedTopic) {
-#endif // P037_FILTER_PER_TOPIC
+        #endif // P037_FILTER_PER_TOPIC
           // non-json filter check
           if (!checkJson && P037_data->hasFilters()) { // See if we pass the filters
             key = P037_getMQTTLastTopicPart(event->String1);
-#ifdef P037_MAPPING_SUPPORT
+            #ifdef P037_MAPPING_SUPPORT
             if (P037_APPLY_MAPPINGS) {
               Payload = P037_data->mapValue(Payload, key);
             }
-#endif
+            #endif // P037_MAPPING_SUPPORT
             processData = P037_data->checkFilters(key, Payload, x + 1); // Will return true unless key matches *and* Payload doesn't
           }
-#ifdef P037_JSON_SUPPORT
+          #ifdef P037_JSON_SUPPORT
 
-#ifndef P037_FILTER_PER_TOPIC
+          #ifndef P037_FILTER_PER_TOPIC
           // json filter check
           if (checkJson && P037_data->hasFilters()) { // See if we pass the filters for all json attributes
             do {
-              key = iter->key().c_str();
-              Payload = iter->value().as<String>();
-#ifdef P037_MAPPING_SUPPORT
+              key = P037_data->iter->key().c_str();
+              Payload = P037_data->iter->value().as<String>();
+              #ifdef P037_MAPPING_SUPPORT
               if (P037_APPLY_MAPPINGS) {
                 Payload = P037_data->mapValue(Payload, key);
               }
-#endif
+              #endif // P037_MAPPING_SUPPORT
               processData = P037_data->checkFilters(key, Payload, x + 1); // Will return true unless key matches *and* Payload doesn't
-              ++iter;
-            } while (processData && iter != doc.end());
-            iter = doc.begin();
+              ++P037_data->iter;
+            } while (processData && P037_data->iter != P037_data->doc.end());
+            P037_data->iter = P037_data->doc.begin();
           }
-#endif // ifndef P037_FILTER_PER_TOPIC
-#endif // P037_JSON_SUPPORT
+          #endif // P037_FILTER_PER_TOPIC
+          #endif // P037_JSON_SUPPORT
         }
         if (matchedTopic && P037_data->hasFilters()) { // Single log statement
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -357,42 +339,41 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_INFO, log);
           }
         }
-#endif // P037_FILTER_SUPPORT
+        #endif // P037_FILTER_SUPPORT
 
         // Get the Topic and see if it matches any of the subscriptions
         for (byte x = 0; x < VARS_PER_TASK && processData; x++)
         {
-          String subscriptionTopic = P037_data->StoredSettings.deviceTemplate[x];
-          subscriptionTopic.trim();
-          if (subscriptionTopic.length() == 0) continue;							// skip blank subscriptions
+          if (P037_data->deviceTemplate[x].length() == 0) continue;							// skip blank subscriptions
 
           // Now check if the incoming topic matches one of our subscriptions
-          parseSystemVariables(subscriptionTopic, false);
-          if (MQTTCheckSubscription_037(event->String1, subscriptionTopic)) {
-#ifdef P037_JSON_SUPPORT
-#ifdef P037_FILTER_PER_TOPIC
+          String subscriptionTopicParsed = P037_data->deviceTemplate[x];
+          parseSystemVariables(subscriptionTopicParsed, false);
+          if (MQTTCheckSubscription_037(event->String1, subscriptionTopicParsed)) {
+            #ifdef P037_JSON_SUPPORT
+            #ifdef P037_FILTER_PER_TOPIC
             // json filter check
             bool passFilter = true;
             if (checkJson && P037_data->hasFilters()) { // See if we pass the filters for all json attributes
               do {
-                key = iter->key().c_str();
-                Payload = iter->value().as<String>();
-#ifdef P037_MAPPING_SUPPORT
+                key = P037_data->iter->key().c_str();
+                Payload = P037_data->iter->value().as<String>();
+                #ifdef P037_MAPPING_SUPPORT
                 if (P037_APPLY_MAPPINGS) {
                   Payload = P037_data->mapValue(Payload, key);
                 }
-#endif
+                #endif // P037_MAPPING_SUPPORT
                 passFilter = P037_data->checkFilters(key, Payload, x + 1); // Will return true unless key matches *and* Payload doesn't
-                ++iter;
-              } while (passFilter && iter != doc.end());
-              iter = doc.begin();
+                ++P037_data->iter;
+              } while (passFilter && P037_data->iter != P037_data->doc.end());
+              P037_data->iter = P037_data->doc.begin();
             }
             if (passFilter) // Watch it, no curly braces, so only 1 statement processed: (do {...) !
-#endif // P037_FILTER_PER_TOPIC
-#endif // P037_JSON_SUPPORT
+            #endif // P037_FILTER_PER_TOPIC
+            #endif // P037_JSON_SUPPORT
             do {
-#ifdef P037_JSON_SUPPORT
-              if (checkJson && iter != doc.end()) {
+              #ifdef P037_JSON_SUPPORT
+              if (checkJson && P037_data->iter != P037_data->doc.end()) {
                 String jsonAttribute = P037_data->StoredSettings.jsonAttributes[x];
                 jsonAttribute.replace(';', ',');
                 String jsonIndex = parseString(jsonAttribute, 2);
@@ -400,7 +381,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
                 jsonAttribute.trim();
                 if (jsonAttribute.length() > 0) {
                   key = jsonAttribute;
-                  Payload = doc[key].as<String>();
+                  Payload = P037_data->doc[key].as<String>();
                   unparsedPayload = Payload;
                   int8_t jIndex = jsonIndex.toInt();
                   if (jIndex > 1) {
@@ -420,8 +401,8 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
                   }
                   continueProcessing = false; // no need to loop over all attributes, the configured one is found
                 } else {
-                  key = iter->key().c_str();
-                  Payload = iter->value().as<String>();
+                  key = P037_data->iter->key().c_str();
+                  Payload = P037_data->iter->value().as<String>();
                   unparsedPayload = Payload;
                 }
                 #ifdef PLUGIN_037_DEBUG
@@ -429,22 +410,22 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
                   log = F("P037 json key: ");
                   log += key;
                   log += F(" payload: ");
-#ifdef P037_MAPPING_SUPPORT
+                  #ifdef P037_MAPPING_SUPPORT
                   log += (P037_APPLY_MAPPINGS ? P037_data->mapValue(Payload, key) : Payload);
-#else
+                  #else
                   log += Payload;
-#endif // P037_MAPPING_SUPPORT
+                  #endif // P037_MAPPING_SUPPORT
                   addLog(LOG_LEVEL_INFO, log);
                 }
                 #endif
-                ++iter;
+                ++P037_data->iter;
               }
-#ifdef P037_MAPPING_SUPPORT
+              #ifdef P037_MAPPING_SUPPORT
               if (P037_APPLY_MAPPINGS) {
                 Payload = P037_data->mapValue(Payload, key);
               }
-#endif // P037_MAPPING_SUPPORT
-#endif // P037_JSON_SUPPORT
+              #endif // P037_MAPPING_SUPPORT
+              #endif // P037_JSON_SUPPORT
               bool numericPayload = true; // Unless it's not
               if (!checkJson || (checkJson && key.length() > 0)) {
                 float floatPayload;
@@ -500,9 +481,9 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
                   if (checkJson) {
                     // For JSON payloads generate <Topic>#<Attribute>=<Payload> event
                     RuleEvent  = event->String1;
-#if defined(P037_FILTER_SUPPORT) && defined(P037_FILTER_PER_TOPIC)
+                    #if defined(P037_FILTER_SUPPORT) && defined(P037_FILTER_PER_TOPIC)
                     RuleEvent += P037_data->getFilterAsTopic(x + 1);
-#endif
+                    #endif
                     RuleEvent += '#';
                     RuleEvent += key;
                     RuleEvent += '=';
@@ -530,17 +511,22 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
                   }
                   eventQueue.add(RuleEvent);
                 }
-#ifdef P037_JSON_SUPPORT
-                if (checkJson && iter == doc.end()) {
+                #ifdef P037_JSON_SUPPORT
+                if (checkJson && P037_data->iter == P037_data->doc.end()) {
                   continueProcessing = false;
                 }
-#endif // P037_JSON_SUPPORT
+                #endif // P037_JSON_SUPPORT
               }
             } while (continueProcessing);
 
             success = true;
           }
         }
+        #ifdef P037_JSON_SUPPORT
+        if (checkJson) {
+          P037_data->cleanupJSON(); // Free/cleanup memory
+        }
+        #endif // P037_JSON_SUPPORT
 
         break;
 
