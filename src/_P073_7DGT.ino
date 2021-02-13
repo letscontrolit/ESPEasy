@@ -35,6 +35,7 @@
 //  - "7db,<0-15> -- set brightness to specific value between 0 and 15
 //
 // History
+// 2021-02-13, tonhuisman: Fixed self-introduced bug of conversion from MAX7219 to TM1637 bit mapping, removed now unused TM1637 character maps, moved some logging to DEBUG level
 // 2021-01-30, tonhuisman: Added font support for 7Dgt (default), Siekoo, Siekoo with uppercase CHNORUX, dSEG7 fonts. Default/7Dgt comes with these special characters: " -^=/_
 //                         Siekoo comes _without_ AOU with umlauts and Eszett characters, has many extra special characters "%@.,;:+*#!?'\"<>\\()|", and optional uppercase "CHNORUX",
 //                         "^" displays as degree symbol and "|" displays overscsore (top-line only).
@@ -481,15 +482,7 @@ private:
 //   - pos 14    - triple lines "/"
 //   - pos 15    - underscore "_"
 //   - pos 16-41 - Letters from A to Z
-// static const byte CharTableTM1637[42] PROGMEM = {
-//   B00111111, B00000110, B01011011, B01001111, B01100110, B01101101,
-//   B01111101, B00000111, B01111111, B01101111, B00000000, B01000000,
-//   B01100011, B01001000, B01001001, B00001000, B01110111, B01111100,
-//   B00111001, B01011110, B01111001, B01110001, B00111101, B01110110,
-//   B00110000, B00011110, B01110101, B00111000, B00010101, B00110111,
-//   B00111111, B01110011, B01101011, B00110011, B01101101, B01111000,
-//   B00111110, B00111110, B00101010, B01110110, B01101110, B01011011 };
-static const byte CharTableMAX7219[42] PROGMEM = {
+static const byte DefaultCharTable[42] PROGMEM = {
   B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
   B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
   B01100011, B00001001, B01001001, B00001000, B01110111, B00011111,
@@ -537,20 +530,7 @@ static const byte CharTableMAX7219[42] PROGMEM = {
 //   - pos 40    - uppercase U "U"                      B00111110
 //   - pos 41    - uppercase X "X"                      B00110111
 //   - pos 42-67 - Letters from A to Z Siekoo style
-// static const byte SiekooTableTM1637[67] PROGMEM = { // FIXME or remove me
-//   B00111111, B00000110, B01011011, B01001111, B01100110, B01101101,
-//   B01111101, B00000111, B01111111, B01101111, B00000000, B01000000,
-//   B01100011, B01001000, B01010010, B00001000, B00100100, B00010111,
-//   B00010000, B00001100, B00001010, B00001001, B01000110, B01001001,
-//   B00110110, B01101011, B01001011, B00100000, B00100010, B00100001,
-//   B00000011, B01100100, B00111001, B00001111, B00000001, B00111001,
-//   B00110111, B00111111, B00110011, B00111110, B01110110, B01011111, /* A */
-//   B01111100, B01011000, B01011110, B01111001, B01110001, B00111101,
-//   B01110100, B00010001, B00001101, B01110101, B00111000, B01010101,
-//   B01010100, B01011100, B01110011, B01100111, B01010000, B00101101,
-//   B01111000, B00011100, B00101010, B01101010, B00010100, B01101110,
-//   B00011011 };
-static const byte SiekooTableMAX7219[68] PROGMEM = {
+static const byte SiekooCharTable[68] PROGMEM = {
   B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
   B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
   B01100011, B00001001, B00100101, B00001000, B00010010, B01110100,
@@ -565,7 +545,6 @@ static const byte SiekooTableMAX7219[68] PROGMEM = {
   B00111011, B01101100 };
 
 // dSEG7 https://www.keshikan.net/fonts-e.html
-// as the 'over score' character isn't normally available, the pipe "|" is used for that, and for degree the "^"" is used
 // specials:
 //   - pos 0-9   - Numbers from 0 to 9
 //   - pos 10    - Space " "
@@ -575,15 +554,7 @@ static const byte SiekooTableMAX7219[68] PROGMEM = {
 //   - pos 14    - slash "/"                            
 //   - pos 15    - underscore "_"
 //   - pos 16-41 - Letters from A to Z dSEG7 style
-// static const byte Dseg7TableTM1637[42] PROGMEM = {
-//   B00111111, B00000110, B01011011, B01001111, B01100110, B01101101,
-//   B01111101, B00000111, B01111111, B01101111, B00000000, B01000000,
-//   B01100011, B01001000, B01001001, B00001000, B01110111, B01111100, /* AB */
-//   B01011000, B01011110, B01111001, B01110001, B00111101, B01110100,
-//   B00000100, B00011110, B01110101, B00111000, B00110111, B01010100,
-//   B01011100, B01110011, B01100111, B01010000, B01101100, B01111000,
-//   B00011100, B00111110, B01111110, B01110110, B01101110, B00011011 };
-static const byte Dseg7TableMAX7219[42] PROGMEM = {
+static const byte Dseg7CharTable[42] PROGMEM = {
   B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
   B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
   B01100011, B00001001, B01001001, B00001000, B01110111, B00011111, /* AB */
@@ -647,7 +618,7 @@ uint8_t P073_mapMAX7219FontToTM1673Font(uint8_t character) {
   uint8_t newCharacter = character & 0x80; // Keep dot-bit if passed in
   for (int b = 0; b < 7; b++) {
     if (character & (0x01 << b)) {
-      newCharacter |= character &= (0x40 >> b);
+      newCharacter |= (0x40 >> b);
     }
   }
   return newCharacter;
@@ -1548,7 +1519,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event, const String& text) {
 void tm1637_i2cStart(uint8_t clk_pin, uint8_t dio_pin) {
   #ifdef P073_DEBUG
   String log = F("7DGT : Comm Start");
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
   #endif
   DIO_HIGH();
   CLK_HIGH();
@@ -1559,7 +1530,7 @@ void tm1637_i2cStart(uint8_t clk_pin, uint8_t dio_pin) {
 void tm1637_i2cStop(uint8_t clk_pin, uint8_t dio_pin) {
 #ifdef P073_DEBUG
   String log = F("7DGT : Comm Stop");
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
 #endif
   CLK_LOW();
   delayMicroseconds(TM1637_CLOCKDELAY);
@@ -1595,7 +1566,7 @@ void tm1637_i2cAck(uint8_t clk_pin, uint8_t dio_pin) {
   } else {
     log += "FALSE";
   }
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
   #endif
   CLK_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
@@ -1622,7 +1593,7 @@ void tm1637_i2cWrite_ack(uint8_t clk_pin, uint8_t dio_pin,
 void tm1637_i2cWrite(uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint) {
   #ifdef P073_DEBUG
   String log = F("7DGT : WriteByte");
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_DEBUG, log);
   #endif
   uint8_t i;
 
@@ -1693,12 +1664,12 @@ byte tm1637_getFontChar(byte index, uint8_t fontset) {
   switch (fontset) {
     case 1: // Siekoo
     case 2: // Siekoo uppercase CHNORUX
-      return P073_mapMAX7219FontToTM1673Font(pgm_read_byte(&(SiekooTableMAX7219[index]))); // SiekooTableTM1637[index];
+      return P073_mapMAX7219FontToTM1673Font(pgm_read_byte(&(SiekooCharTable[index]))); // SiekooTableTM1637[index];
     case 3: // dSEG7
-      return P073_mapMAX7219FontToTM1673Font(pgm_read_byte(&(Dseg7TableMAX7219[index]))); // Dseg7TableTM1637[index];
+      return P073_mapMAX7219FontToTM1673Font(pgm_read_byte(&(Dseg7CharTable[index]))); // Dseg7TableTM1637[index];
     default: // Standard fontset
   #endif // P073_EXTRA_FONTS
-      return P073_mapMAX7219FontToTM1673Font(pgm_read_byte(&(CharTableMAX7219[index]))); // CharTableTM1637[index];
+      return P073_mapMAX7219FontToTM1673Font(pgm_read_byte(&(DefaultCharTable[index]))); // CharTableTM1637[index];
   #ifdef P073_EXTRA_FONTS
   }
   #endif // P073_EXTRA_FONTS
@@ -1908,14 +1879,14 @@ void max7219_SetDigit(struct EventStruct *event, uint8_t din_pin,
   switch (PCONFIG(4)) {
     case 1: // Siekoo
     case 2: // Siekoo with uppercase CHNORUX
-      p073_tempvalue = pgm_read_byte(&(SiekooTableMAX7219[dgtvalue]));
+      p073_tempvalue = pgm_read_byte(&(SiekooCharTable[dgtvalue]));
       break;
     case 3: // dSEG7
-      p073_tempvalue = pgm_read_byte(&(Dseg7TableMAX7219[dgtvalue]));
+      p073_tempvalue = pgm_read_byte(&(Dseg7CharTable[dgtvalue]));
       break;
     default: // Default fontset
   #endif // P073_EXTRA_FONTS
-      p073_tempvalue = pgm_read_byte(&(CharTableMAX7219[dgtvalue]));
+      p073_tempvalue = pgm_read_byte(&(DefaultCharTable[dgtvalue]));
   #ifdef P073_EXTRA_FONTS
   }
   #endif // P073_EXTRA_FONTS
