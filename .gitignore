@@ -51,3 +51,5 @@ tools/vagrant/pio_envlist.txt
 build_output/
 
 **/__tmpfile.cpp
+
+src/_Custom.h

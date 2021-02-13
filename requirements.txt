@@ -21,7 +21,7 @@ pathtools==0.1.2
 platformio>=5.0.1
 port-for==0.3.1
 pycparser==2.20
-pyelftools==0.26
+pyelftools==0.27
 pygit2==1.2.1
 Pygments==2.6.1
 pyparsing==2.4.7

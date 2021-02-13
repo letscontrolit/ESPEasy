@@ -121,8 +121,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
     {
       // Reset card id on timeout
       if (PCONFIG(0) == 0) {
-        UserVar[event->BaseVarIndex + 0] = PCONFIG_LONG(0) && 0xFFFF;
-        UserVar[event->BaseVarIndex + 1] = (PCONFIG_LONG(0) >> 16) & 0xFFFF;
+        UserVar.setSensorTypeLong(event->TaskIndex, PCONFIG_LONG(0));
         addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
         if (PCONFIG(1) == 1) {
           sendData(event);
@@ -180,12 +179,11 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
             key <<= 8;
             key  += uid[i];
           }
-          unsigned long old_key = ((uint32_t)UserVar[event->BaseVarIndex]) | ((uint32_t)UserVar[event->BaseVarIndex + 1]) << 16;
+          unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);
           bool new_key          = false;
 
           if (old_key != key) {
-            UserVar[event->BaseVarIndex]     = (key & 0xFFFF);
-            UserVar[event->BaseVarIndex + 1] = ((key >> 16) & 0xFFFF);
+            UserVar.setSensorTypeLong(event->TaskIndex, key);
             new_key                          = true;
           }
 
