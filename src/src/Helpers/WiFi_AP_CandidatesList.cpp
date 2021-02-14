@@ -105,7 +105,9 @@ bool WiFi_AP_CandidatesList::getNext() {
 
   if (mustPop) {
     known_it = known.begin();
-    candidates.pop_front();
+    if (!candidates.empty()) {
+      candidates.pop_front();
+    }
   }
   return true;
 }
@@ -176,30 +178,26 @@ void WiFi_AP_CandidatesList::addFromRTC() {
     return;
   }
 
-  WiFi_AP_Candidate tmp(RTC.lastWiFiSettingsIndex, ssid, key);
+  candidates.emplace_front(RTC.lastWiFiSettingsIndex, ssid, key);
+  candidates.front().setBSSID(RTC.lastBSSID);
+  candidates.front().rssi = -1; // Set to best possible RSSI so it is tried first.
+  candidates.front().channel = RTC.lastWiFiChannel;
 
-  tmp.setBSSID(RTC.lastBSSID);
-  if (!tmp.bssid_set()) return;
+  if (!candidates.front().usable() || !candidates.front().allowQuickConnect()) {
+    candidates.pop_front();
+    return;
+  }
 
   // This is not taken from a scan, so no idea of the used encryption.
   // Try to find a matching BSSID to get the encryption.
-  bool matchfound = false;
-  for (auto it = candidates.begin(); !matchfound && it != candidates.end(); ++it) {
-    if (tmp == *it) {
-      matchfound = true;
-      tmp = *it;
+  for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+    if ((it->rssi != -1) && candidates.front() == *it) {
+      candidates.front().enc_type = it->enc_type;
+      return;
     }
   }
-  if (!matchfound) {
-    if (currentCandidate == tmp) {
-      tmp = currentCandidate;
-    }
-  }
-
-  tmp.channel = RTC.lastWiFiChannel;
-  tmp.rssi    = -1; // Set to best possible RSSI so it is tried first.
-  if (tmp.usable() && tmp.allowQuickConnect()) {
-    candidates.push_front(tmp);
+  if (currentCandidate == candidates.front()) {
+    candidates.front().enc_type = currentCandidate.enc_type;
   }
 }
 
