@@ -21,12 +21,14 @@
 
 
 #define BUILD                           20112    // git version e.g. "20103" can be read as "2.1.03" (stored in int16_t)
+#ifndef BUILD_NOTES
 #if defined(ESP8266)
   # define BUILD_NOTES                 " - Mega"
 #endif // if defined(ESP8266)
 #if defined(ESP32)
   # define BUILD_NOTES                 " - Mega32"
 #endif // if defined(ESP32)
+#endif
 
 #ifndef BUILD_GIT
 # define BUILD_GIT "(custom)"

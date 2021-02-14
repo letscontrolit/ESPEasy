@@ -108,8 +108,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_008_init && PCONFIG(2) == 0) { // PCONFIG(2) check uses inversed logic!
           // Reset card id on timeout
-          UserVar[event->BaseVarIndex] = PCONFIG_LONG(0) & 0xFFFF;
-          UserVar[event->BaseVarIndex + 1] = (PCONFIG_LONG(0) >> 16) & 0xFFFF;
+          UserVar.setSensorTypeLong(event->TaskIndex, PCONFIG_LONG(0));
           addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
           if (PCONFIG(3) == 1) {
             sendData(event);
@@ -156,15 +155,14 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
               break;
             }
 
-            unsigned long old_key = ((uint32_t) UserVar[event->BaseVarIndex]) | ((uint32_t) UserVar[event->BaseVarIndex + 1])<<16;
+            unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);
             bool new_key = false;
             if (PCONFIG(1) == 1) {
               Plugin_008_keyBuffer = castHexAsDec(Plugin_008_keyBuffer);
             }
             
             if (old_key != Plugin_008_keyBuffer) {
-              UserVar[event->BaseVarIndex] = (Plugin_008_keyBuffer & 0xFFFF);
-              UserVar[event->BaseVarIndex + 1] = ((Plugin_008_keyBuffer >> 16) & 0xFFFF);
+              UserVar.setSensorTypeLong(event->TaskIndex, Plugin_008_keyBuffer);
               new_key = true;
             }
             

@@ -160,6 +160,10 @@
 
 #include "src/WebServer/WebServer.h"
 
+#ifdef PHASE_LOCKED_WAVEFORM
+#include <core_esp8266_waveform.h>
+#endif
+
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
 #endif
@@ -203,6 +207,9 @@ void setup()
 {
 #ifdef ESP8266_DISABLE_EXTRA4K
   disable_extra4k_at_link_time();
+#endif
+#ifdef PHASE_LOCKED_WAVEFORM
+  enablePhaseLockedWaveform();
 #endif
   initWiFi();
   
