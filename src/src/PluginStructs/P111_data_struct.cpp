@@ -8,12 +8,12 @@
 
 #include <MFRC522.h>
 
-P111_data_struct::P111_data_struct(byte csPin, byte rstPin) : csPin(csPin), rstPin(rstPin)
+P111_data_struct::P111_data_struct(byte csPin, byte rstPin) : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin)
 {}
 
 void P111_data_struct::init() {
   if (mfrc522 == nullptr){
-    mfrc522 = new MFRC522 (csPin, rstPin);   // Instantiate a MFRC522
+    mfrc522 = new MFRC522 (_csPin, _rstPin);   // Instantiate a MFRC522
     mfrc522->PCD_Init();  // Initialize MFRC522 reader
   }
 }
@@ -55,7 +55,7 @@ byte P111_data_struct::readCardStatus(unsigned long *key, bool *removedTag) {
   }
 
   if (errorCount > 2) { // if three consecutive read errors, reset MFRC522
-    reset(csPin,rstPin);
+    reset(_csPin,_rstPin);
   }
   unsigned long tmpKey = uid[0];
   for (uint8_t i = 1; i < 4; i++) {

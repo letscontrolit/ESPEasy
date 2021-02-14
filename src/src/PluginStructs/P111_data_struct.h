@@ -13,16 +13,16 @@ struct P111_data_struct : public PluginTaskData_base {
   byte readCardStatus(unsigned long *key, bool *removedTag);
   String getCardName();
 
-  MFRC522 *mfrc522 = nullptr;
+  MFRC522 *mfrc522;
 
-  byte counter      = 0;  // Allow throtteling
+  byte counter = 0;
 
 private:
   bool reset(int8_t csPin, int8_t resetPin);
   byte readPassiveTargetID(uint8_t *uid, uint8_t *uidLength);
 
-  byte csPin;
-  byte rstPin;
+  byte _csPin;
+  byte _rstPin;
 
   byte errorCount   = 0;
   bool removedState = true; // On startup, there will usually not be a tag nearby
