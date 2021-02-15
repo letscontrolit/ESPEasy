@@ -34,7 +34,7 @@ void ESPEasy_now_merger::addPacket(
 
 bool ESPEasy_now_merger::messageComplete() const
 {
-  return _queue.size() >= getFirstHeader().nr_packets;
+  return _queue.size() >= getExpectedNrPackets();
 }
 
 bool ESPEasy_now_merger::expired() const
@@ -52,26 +52,29 @@ bool ESPEasy_now_merger::valid() const
   return true;
 }
 
-uint8_t ESPEasy_now_merger::receivedCount(uint8_t& nr_packets) const
-{
-  nr_packets = getFirstHeader().nr_packets;
-  return _queue.size();
-}
-
 ESPEasy_Now_packet_map::const_iterator ESPEasy_now_merger::find(uint8_t packet_nr) const
 {
   return _queue.find(packet_nr);
 }
 
-ESPEasy_now_hdr ESPEasy_now_merger::getFirstHeader() const
+uint8_t ESPEasy_now_merger::getExpectedNrPackets() const
 {
-  ESPEasy_now_hdr header;
-  auto it = _queue.find(0);
-
-  if (it != _queue.end()) {
-    header = it->second.getHeader();
+  for (auto it = _queue.begin(); it != _queue.end(); ++it) {
+    if (it->second.valid()) {
+      return it->second.getHeader().nr_packets;
+    }
   }
-  return header;
+  return 255;
+}
+
+ESPEasy_now_hdr::message_t ESPEasy_now_merger::getMessageType() const
+{
+  for (auto it = _queue.begin(); it != _queue.end(); ++it) {
+    if (it->second.valid()) {
+      return it->second.getHeader().message_type;
+    }
+  }
+  return ESPEasy_now_hdr::message_t::NotSet;
 }
 
 unsigned long ESPEasy_now_merger::getFirstPacketTimestamp() const
@@ -107,7 +110,7 @@ String ESPEasy_now_merger::getLogString() const
   log += F(" (");
   log += _queue.size();
   log += '/';
-  log += getFirstHeader().nr_packets;
+  log += getExpectedNrPackets();
   log += ')';
   return log;
 }
@@ -206,7 +209,7 @@ size_t ESPEasy_now_merger::getBinaryData(uint8_t *data, size_t length, size_t& p
   size_t  payload_pos_in_packet;
   uint8_t packet_nr = findPacketWithPayloadPos(payload_pos, payload_pos_in_packet);
 
-  if (packet_nr >= getFirstHeader().nr_packets) {
+  if (packet_nr >= getExpectedNrPackets()) {
     return 0;
   }
 

@@ -28,8 +28,6 @@ public:
   // Check if all parts of the packet have been received
   bool                                   messageComplete() const;
 
-  uint8_t                                receivedCount(uint8_t& nr_packets) const;
-
   // Check of set has expired (not all packets received within timeout)
   bool                                   expired() const;
 
@@ -54,7 +52,8 @@ public:
                        size_t   length,
                        size_t & payload_pos) const;
 
-  ESPEasy_now_hdr getFirstHeader() const;
+  uint8_t         getExpectedNrPackets() const;
+  ESPEasy_now_hdr::message_t getMessageType() const;
 
   bool            getMac(uint8_t *mac) const;
   bool            getMac(MAC_address& mac) const;

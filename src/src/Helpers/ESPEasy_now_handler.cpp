@@ -342,7 +342,7 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
   mustKeep = true;
   bool considerActive = false;
 
-  switch (message.getFirstHeader().message_type)
+  switch (message.getMessageType())
   {
     case ESPEasy_now_hdr::message_t::NotSet:
     case ESPEasy_now_hdr::message_t::ChecksumError:
