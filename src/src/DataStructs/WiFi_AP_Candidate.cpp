@@ -42,6 +42,11 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
 
   if (other.rssi >= 0) { return true; }
 
+  // Prefer non hidden over hidden.
+  if (isHidden != other.isHidden) {
+    return !isHidden;
+  }
+
   // RSSI values are negative, so the larger value is the better one.
   return rssi > other.rssi;
 }

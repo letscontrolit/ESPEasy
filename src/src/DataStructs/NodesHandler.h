@@ -52,6 +52,8 @@ public:
 
   bool isEndpoint() const;
 
+  uint8_t getESPEasyNOW_channel() const;
+
 private:
 
   unsigned long _lastTimeValidDistance = 0;

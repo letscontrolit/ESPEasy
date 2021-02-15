@@ -159,7 +159,13 @@ bool WiFi_AP_CandidatesList::isESPEasy_now_only() const {
 void WiFi_AP_CandidatesList::add(uint8_t networkItem) {
   WiFi_AP_Candidate tmp(networkItem);
 
-  if (tmp.isHidden && Settings.IncludeHiddenSSID()) {
+  const bool inclHiddenSSID =
+  #ifdef USES_ESPEASY_NOW
+    Settings.UseESPEasyNow() || 
+  #endif
+    Settings.IncludeHiddenSSID();
+
+  if (tmp.isHidden && inclHiddenSSID) {
     candidates.push_back(tmp);
     return;
   }

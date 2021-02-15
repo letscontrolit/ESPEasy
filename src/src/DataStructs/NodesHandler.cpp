@@ -8,6 +8,7 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/MQTT.h"
+#include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 
 void NodesHandler::addNode(const NodeStruct& node)
@@ -139,10 +140,19 @@ void NodesHandler::updateThisNode() {
   WiFi.macAddress(thisNode.sta_mac);
   WiFi.softAPmacAddress(thisNode.ap_mac);
   {
-    IPAddress localIP = NetworkLocalIP();
+    bool addIP = true;
+    #ifdef USES_ESPEASY_NOW
+    if (RTC.lastWiFiSettingsIndex == 3) {
+      // Connected via 'virtual ESPEasy-now AP'
+      addIP = false;
+    }
+    #endif
+    if (addIP) {
+      IPAddress localIP = NetworkLocalIP();
 
-    for (byte i = 0; i < 4; ++i) {
-      thisNode.ip[i] = localIP[i];
+      for (byte i = 0; i < 4; ++i) {
+        thisNode.ip[i] = localIP[i];
+      }
     }
   }
   thisNode.channel = WiFi.channel();
@@ -176,6 +186,7 @@ void NodesHandler::updateThisNode() {
   if (isEndpoint()) {
     _distance = 0;
   } else {
+    const uint8_t lastDistance = _distance;
     _distance = 255;
     const NodeStruct *preferred = getPreferredNode_notMatching(thisNode.sta_mac);
 
@@ -183,6 +194,14 @@ void NodesHandler::updateThisNode() {
       if (preferred->distance < 255 && !preferred->isExpired()) {
         _distance = preferred->distance + 1;
         _lastTimeValidDistance = millis();
+        if (_distance != lastDistance) {
+          #ifdef USES_ESPEASY_NOW
+          if (RTC.lastWiFiSettingsIndex == 3 && WiFiConnected()) {
+            RTC.clearLastWiFi(); // Force a WiFi scan
+            WifiDisconnect();
+          }
+          #endif
+        }
       }
     }
   }
@@ -248,6 +267,15 @@ bool NodesHandler::isEndpoint() const
   if (!WiFiConnected()) return false;
 
   return false;
+}
+
+uint8_t NodesHandler::getESPEasyNOW_channel() const
+{
+  const NodeStruct *preferred = getPreferredNode();
+  if (preferred != nullptr) {
+    return preferred->channel;
+  }
+  return 0;
 }
 
 bool NodesHandler::lastTimeValidDistanceExpired() const

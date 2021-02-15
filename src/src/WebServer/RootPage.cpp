@@ -266,9 +266,9 @@ void handle_root() {
             html += ':';
             html += String(port);
           }
-          html += "'>";
+          html += F("'>");
           html += it->second.IP().toString();
-          html += "</a>";
+          html += F("</a>");
           addHtml(html);
         } 
         html_TD();
@@ -291,10 +291,10 @@ void handle_root() {
           addHtml(String(it->second.channel));
           int8_t rssi = it->second.getRSSI();
           if (rssi < 0) {
-            addHtml(F(" "));
+            addHtml(' ');
             addHtml(String(rssi));
           }
-          addHtml(F(")"));
+          addHtml(')');
         }
         #endif
       }
