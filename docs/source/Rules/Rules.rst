@@ -480,7 +480,7 @@ You must not use the task names ``Plugin``, ``var`` ``int`` as these have specia
 
 For expanders you can use also the following:
 
-``[Plugin#MPC#PinRange#x-y]`` to get the pin state of a range of MCP pins from x o y.
+``[Plugin#MCP#PinRange#x-y]`` to get the pin state of a range of MCP pins from x o y.
 
 ``[Plugin#PCF#PinRange#x-y]`` to get the pin state of a range of PCF pins from x o y.
 
