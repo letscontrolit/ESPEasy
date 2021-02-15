@@ -3,8 +3,10 @@
 #ifdef USES_ESPEASY_NOW
 
 # include "../ESPEasyCore/ESPEasy_Log.h"
+# include "../ESPEasyCore/ESPEasyWifi.h"
 # include "../DataStructs/TimingStats.h"
 # include "../Globals/Nodes.h"
+# include "../Globals/Settings.h"
 # include "../Helpers/ESPEasy_time_calc.h"
 
 static uint8_t ESPEasy_now_message_count = 1;
@@ -69,12 +71,7 @@ void ESPEasy_now_splitter::createNextPacket()
 
 bool ESPEasy_now_splitter::sendToBroadcast()
 {
-  uint8_t mac[6];
-
-  for (int i = 0; i < 6; ++i) {
-    mac[i] = 0xFF;
-  }
-  return send(mac, 0);
+  return send(getBroadcastMAC(), 0);
 }
 
 bool ESPEasy_now_splitter::send(const MAC_address& mac,
@@ -165,6 +162,17 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(const MAC_address& mac, size_t t
 bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet, int channel)
 {
   START_TIMER;
+  int8_t rssi = 0;
+  const MAC_address mac(packet._mac);
+  const NodeStruct *nodeInfo = Nodes.getNodeByMac(packet._mac);
+  if (nodeInfo != nullptr) {
+    if (mac != getBroadcastMAC()) {
+      rssi = nodeInfo->getRSSI();
+    }
+    if (channel == 0) {
+      channel = nodeInfo->channel;
+    }
+  }
 
   if (!WifiEspNow.hasPeer(packet._mac)) {
     // Only have a single temp peer added, so we don't run out of slots for peers.
@@ -177,20 +185,25 @@ bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet, int channel)
       last_tmp_mac.set(packet._mac);
     }
 
-    // Check to see if we know its channel
-    if (channel == 0) {
-      const NodeStruct *nodeInfo = Nodes.getNodeByMac(packet._mac);
-
-      if (nodeInfo != nullptr) {
-        channel = nodeInfo->channel;
-      }
-    }
-
     // FIXME TD-er: Not sure why, but setting the channel does not work well.
     WifiEspNow.addPeer(packet._mac, channel);
 
     //    WifiEspNow.addPeer(packet._mac, 0);
   }
+
+  {
+    // Set TX power based on RSSI of other ESPEasy NOW node.
+    // For broadcast messages power must be max.
+    float tx_pwr = 0; // Will be set higher based on RSSI when needed.
+    // FIXME TD-er: Must check WiFiEventData.wifi_connect_attempt to increase TX power
+    if (Settings.UseMaxTXpowerForSending() || rssi == 0) {
+      // Force highest power here, so assume the worst RSSI
+      rssi = -90;
+      tx_pwr = Settings.getWiFi_TX_power();
+    }
+    SetWiFiTXpower(tx_pwr, rssi);
+  }
+
   bool res = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
 
   STOP_TIMER(ESPEASY_NOW_SEND_PCKT);
@@ -233,6 +246,17 @@ bool ESPEasy_now_splitter::prepareForSend(const MAC_address& mac)
     }
   }
   return true;
+}
+
+MAC_address ESPEasy_now_splitter::getBroadcastMAC()
+{
+  static MAC_address ESPEasy_now_broadcast_MAC;
+  if (ESPEasy_now_broadcast_MAC.mac[0] != 0xFF) {
+    for (int i = 0; i < 6; ++i) {
+      ESPEasy_now_broadcast_MAC.mac[i] = 0xFF;
+    }
+  }
+  return ESPEasy_now_broadcast_MAC;
 }
 
 #endif // ifdef USES_ESPEASY_NOW

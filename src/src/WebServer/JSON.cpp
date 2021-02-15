@@ -249,6 +249,10 @@ void handle_json()
           if (it->second.nodeType) {
             stream_next_json_object_value(F("platform"), it->second.getNodeTypeDisplayString());
           }
+          const int8_t rssi = it->second.getRSSI();
+          if (rssi < 0) {
+            stream_next_json_object_value(F("rssi"), String(rssi));
+          }
           stream_next_json_object_value(F("ip"), it->second.IP().toString());
           stream_last_json_object_value(F("age"), String(it->second.getAge() / 1000)); // time in seconds
         } // if node info exists

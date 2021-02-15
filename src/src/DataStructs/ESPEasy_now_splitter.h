@@ -39,6 +39,8 @@ private:
 
   WifiEspNowSendStatus waitForSendStatus(size_t timeout) const;
 
+  static MAC_address   getBroadcastMAC();
+
   std::vector<ESPEasy_Now_packet>_queue;
   ESPEasy_now_hdr _header;
   size_t _payload_pos     = 255; // Position in the last packet where we left of.

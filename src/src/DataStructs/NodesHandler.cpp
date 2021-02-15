@@ -17,7 +17,9 @@ void NodesHandler::addNode(const NodeStruct& node)
   // Erase any existing node with matching MAC address
   for (auto it = _nodes.begin(); it != _nodes.end(); )
   {
-    if (node.match(it->second.sta_mac) || node.match(it->second.ap_mac)) {
+    const MAC_address sta(it->second.sta_mac);
+    const MAC_address ap(it->second.ap_mac);
+    if ((!sta.all_zero() && node.match(sta)) || (!ap.all_zero() && node.match(ap))) {
       rssi = it->second.getRSSI();
       it = _nodes.erase(it);
     } else {
