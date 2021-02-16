@@ -385,7 +385,8 @@ void refreshNodeList()
   const unsigned long max_age_allowed = 10 * 60 * 1000; // 10 minutes
   Nodes.refreshNodeList(max_age_allowed, max_age);
 
-  #ifdef USES_ESPEASY_NOW
+  #if defined(USES_ESPEASY_NOW) && defined(ESP8266)
+  // ESP32 does not (yet) allow to scan a single channel so may take too long
   const uint8_t channel = Nodes.getESPEasyNOW_channel();
   if (channel != 0) {
     WifiScan(true, channel);

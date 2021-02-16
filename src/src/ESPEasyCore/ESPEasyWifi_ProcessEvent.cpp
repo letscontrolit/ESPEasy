@@ -450,7 +450,10 @@ void processScanDone() {
   
   #ifdef USES_ESPEASY_NOW
   ESPEasy_now_handler.addPeerFromWiFiScan();
-  if (WiFiEventData.espeasy_now_only) { return; }
+  if (WiFi_AP_Candidates.isESPEasy_now_only() && WiFi_AP_Candidates.addedKnownCandidate() && WiFiConnected()) {
+    RTC.clearLastWiFi(); // Force a WiFi scan
+    WifiDisconnect();
+  } else if (WiFiEventData.espeasy_now_only) { return; }
   #endif
 
   const WiFi_AP_Candidate bestCandidate = WiFi_AP_Candidates.getBestScanResult();

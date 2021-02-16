@@ -10,6 +10,7 @@
 #include "../Globals/MQTT.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 
 void NodesHandler::addNode(const NodeStruct& node)
 {
@@ -142,7 +143,7 @@ void NodesHandler::updateThisNode() {
   {
     bool addIP = true;
     #ifdef USES_ESPEASY_NOW
-    if (RTC.lastWiFiSettingsIndex == 3) {
+    if (WiFi_AP_Candidates.isESPEasy_now_only()) {
       // Connected via 'virtual ESPEasy-now AP'
       addIP = false;
     }
@@ -196,7 +197,9 @@ void NodesHandler::updateThisNode() {
         _lastTimeValidDistance = millis();
         if (_distance != lastDistance) {
           #ifdef USES_ESPEASY_NOW
-          if (RTC.lastWiFiSettingsIndex == 3 && WiFiConnected()) {
+          if (WiFi_AP_Candidates.isESPEasy_now_only() && WiFiConnected()) {
+            // We are connected to a 'fake AP' for ESPEasy-NOW, but found a known AP
+            // Try to reconnect to it.
             RTC.clearLastWiFi(); // Force a WiFi scan
             WifiDisconnect();
           }

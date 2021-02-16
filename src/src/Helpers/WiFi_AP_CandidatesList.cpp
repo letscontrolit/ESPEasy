@@ -16,10 +16,11 @@ WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
 }
 
 void WiFi_AP_CandidatesList::load_knownCredentials() {
-  if (!mustLoadCredentials) { return; }
-  mustLoadCredentials = false;
+  if (!_mustLoadCredentials) { return; }
+  _mustLoadCredentials = false;
   known.clear();
   candidates.clear();
+  _addedKnownCandidate = false;
   addFromRTC();
 
   {
@@ -37,7 +38,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
 }
 
 void WiFi_AP_CandidatesList::clearCache() {
-  mustLoadCredentials = true;
+  _mustLoadCredentials = true;
   known.clear();
   known_it = known.begin();
 }
@@ -52,6 +53,7 @@ void WiFi_AP_CandidatesList::force_reload() {
 void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   load_knownCredentials();
   candidates.clear();
+  _addedKnownCandidate = false;
 
   known_it = known.begin();
 
@@ -147,6 +149,7 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
     }
   }
   candidates.clear();
+  _addedKnownCandidate = false;
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
 }
 
@@ -179,6 +182,7 @@ void WiFi_AP_CandidatesList::add(uint8_t networkItem) {
 
       if (tmp.usable()) {
         candidates.push_back(tmp);
+        _addedKnownCandidate = true;
 
         // Do not return as we may have several AP's with the same SSID and different passwords.
       }

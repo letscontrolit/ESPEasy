@@ -38,6 +38,8 @@ struct WiFi_AP_CandidatesList {
   bool isESPEasy_now_only() const;
 #endif
 
+  bool addedKnownCandidate() const { return _addedKnownCandidate; }
+
 private:
 
   // Add item from WiFi scan.
@@ -60,7 +62,9 @@ private:
 
   WiFi_AP_Candidate currentCandidate;
 
-  bool mustLoadCredentials = true;
+  bool _mustLoadCredentials = true;
+
+  bool _addedKnownCandidate = false;
 };
 
 #endif // ifndef HELPERS_WIFI_AP_CANDIDATESLIST_H
