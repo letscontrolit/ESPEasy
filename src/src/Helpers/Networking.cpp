@@ -991,7 +991,7 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
   // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
   // Thus must match the result with 1.
   bool connected = (client.connect(ip, port) == 1);
-  yield();
+  delay(0);
 
   if (!connected) {
     Scheduler.sendGratuitousARP_now();
@@ -1019,7 +1019,7 @@ bool resolveHostByName(const char *aHostname, IPAddress& aResult) {
 #else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult, CONTROLLER_CLIENTTIMEOUT_DFLT) == 1;
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-  yield();
+  delay(0);
 
   if (!resolvedIP) {
     Scheduler.sendGratuitousARP_now();
