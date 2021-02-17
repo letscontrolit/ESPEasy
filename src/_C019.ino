@@ -1,7 +1,7 @@
 #ifdef USES_C019
 
 // #######################################################################################################
-// ################### Controller Plugin 019: ESPEasy-Now ################################################
+// ################### Controller Plugin 019: ESPEasy-NOW ################################################
 // #######################################################################################################
 
 #include "ESPEasy_fdwdecl.h"
@@ -13,7 +13,7 @@
 
 #define CPLUGIN_019
 #define CPLUGIN_ID_019         19
-#define CPLUGIN_NAME_019       "ESPEasy-Now"
+#define CPLUGIN_NAME_019       "ESPEasy-NOW"
 
 bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& string)
 {

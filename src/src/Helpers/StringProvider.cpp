@@ -110,8 +110,8 @@ String getLabel(LabelType::Enum label) {
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
 
     #ifdef USES_ESPEASY_NOW
-    case LabelType::USE_ESPEASY_NOW:        return F("Use ESPEasy-Now");
-    case LabelType::TEMP_DISABLE_ESPEASY_NOW: return F("Temporary disable ESPEasy-Now");
+    case LabelType::USE_ESPEASY_NOW:        return F("Use ESPEasy-NOW");
+    case LabelType::TEMP_DISABLE_ESPEASY_NOW: return F("Temporary disable ESPEasy-NOW");
     #endif
 
 

@@ -203,7 +203,7 @@ void handle_config() {
 #endif
 
 #ifdef USES_ESPEASY_NOW
-  addFormSubHeader(F("ESPEasy Now"));
+  addFormSubHeader(F("ESPEasy-NOW"));
   for (int peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
     String label = F("Peer ");
     label += String(peer + 1);

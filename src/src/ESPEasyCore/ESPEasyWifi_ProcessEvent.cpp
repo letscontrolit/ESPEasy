@@ -363,7 +363,7 @@ void processProbeRequestAPmode() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  // FIXME TD-er: Must create an answer for ESPEasy-now node discovery
+  // FIXME TD-er: Must create an answer for ESPEasy-NOW node discovery
   #ifdef USES_ESPEASY_NOW
   ESPEasy_now_handler.sendDiscoveryAnnounce();
   #endif

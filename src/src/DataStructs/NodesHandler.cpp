@@ -164,7 +164,7 @@ void NodesHandler::updateThisNode() {
     bool addIP = true;
     #ifdef USES_ESPEASY_NOW
     if (WiFi_AP_Candidates.isESPEasy_now_only()) {
-      // Connected via 'virtual ESPEasy-now AP'
+      // Connected via 'virtual ESPEasy-NOW AP'
       addIP = false;
     }
     #endif
@@ -282,7 +282,7 @@ bool NodesHandler::isEndpoint() const
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
   if (validControllerIndex(enabledMqttController)) {
     // FIXME TD-er: Must call updateMQTTclient_connected() and see what effect
-    // the MQTTclient_connected state has when using ESPEasy-now.
+    // the MQTTclient_connected state has when using ESPEasy-NOW.
     return MQTTclient.connected();
   }
   #endif

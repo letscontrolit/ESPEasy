@@ -124,7 +124,7 @@ void ESPEasy_Now_NTP_query::find_best_NTP(const MAC_address& mac,
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(64);
-      log  = F("ESPEasy Now: Best NTP peer: ");
+      log  = F("ESPEasy-NOW: Best NTP peer: ");
       log += MAC_address(_mac).toString();
       log += F(" Wander ");
       log += _expectedWander_ms;
@@ -210,7 +210,7 @@ void ESPEasy_Now_NTP_query::createReply(unsigned long queryReceiveTimestamp)
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     log.reserve(64);
-    log  = F("ESPEasy Now: Create NTP reply to: ");
+    log  = F("ESPEasy-NOW: Create NTP reply to: ");
     log += MAC_address(_mac).toString();
     log += F(" Wander ");
     log += _expectedWander_ms;

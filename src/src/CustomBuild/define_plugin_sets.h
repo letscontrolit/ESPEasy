@@ -920,7 +920,7 @@ To create/register a plugin, you have to :
     //#define USES_P095  // TFT ILI9341
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
-    #define USES_P098   // ESPEasy-Now Reader
+    #define USES_P098   // ESPEasy-NOW Reader
     //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
@@ -1007,7 +1007,7 @@ To create/register a plugin, you have to :
     //#define USES_C015   // Blynk
     #define USES_C017   // Zabbix
     // #define USES_C018 // TTN RN2483
-    // #define USES_C019   // ESPEasy-Now
+    // #define USES_C019   // ESPEasy-NOW
 #endif
 
 

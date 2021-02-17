@@ -2,7 +2,7 @@
 #ifdef USES_P098
 
 // #######################################################################################################
-// #################################### Plugin 098: ESPEasy-Now Receiver #################################
+// #################################### Plugin 098: ESPEasy-NOW Receiver #################################
 // #######################################################################################################
 
 
@@ -11,7 +11,7 @@
 
 #define PLUGIN_098
 #define PLUGIN_ID_098         98
-#define PLUGIN_NAME_098       "Generic - ESPEasy-Now Receiver"
+#define PLUGIN_NAME_098       "Generic - ESPEasy-NOW Receiver"
 #define PLUGIN_VALUENAME1_098 "Value"
 
 

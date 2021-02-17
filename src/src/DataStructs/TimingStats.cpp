@@ -230,14 +230,14 @@ String getMiscStatsName(int stat) {
     case PARSE_SYSVAR:            return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
-    case HANDLE_ESPEASY_NOW_LOOP: return F("Handle Received ESPEasy Now message");
-    case EXPIRED_ESPEASY_NOW_LOOP: return F("ESPEasy Now incomplete expired");
-    case INVALID_ESPEASY_NOW_LOOP: return F("ESPEasy Now incomplete invalid");
+    case HANDLE_ESPEASY_NOW_LOOP: return F("Handle Received ESPEasy-NOW message");
+    case EXPIRED_ESPEASY_NOW_LOOP: return F("ESPEasy-NOW incomplete expired");
+    case INVALID_ESPEASY_NOW_LOOP: return F("ESPEasy-NOW incomplete invalid");
     case RECEIVE_ESPEASY_NOW_LOOP: return F("ESPEasy_now_onReceive()");
-    case ESPEASY_NOW_SEND_MSG_SUC: return F("ESPEasy Now send Message Success");
-    case ESPEASY_NOW_SEND_MSG_FAIL: return F("ESPEasy Now send Message Fail");
-    case ESPEASY_NOW_SEND_PCKT:    return F("ESPEasy Now send Packet");
-    case ESPEASY_NOW_DEDUP_LOOP:   return F("ESPEasy Now DuplicateCheck loop");
+    case ESPEASY_NOW_SEND_MSG_SUC: return F("ESPEasy-NOW send Message Success");
+    case ESPEASY_NOW_SEND_MSG_FAIL: return F("ESPEasy-NOW send Message Fail");
+    case ESPEASY_NOW_SEND_PCKT:    return F("ESPEasy-NOW send Packet");
+    case ESPEASY_NOW_DEDUP_LOOP:   return F("ESPEasy-NOW DuplicateCheck loop");
     case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");
     case C001_DELAY_QUEUE:
     case C002_DELAY_QUEUE:

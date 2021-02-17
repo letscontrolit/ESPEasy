@@ -118,17 +118,17 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(const MAC_address& mac, size_t t
         switch (sendStatus) {
           case WifiEspNowSendStatus::NONE:
           {
-            log = F("ESPEasy Now: TIMEOUT to: ");
+            log = F("ESPEasy-NOW: TIMEOUT to: ");
             break;
           }
           case WifiEspNowSendStatus::FAIL:
           {
-            log = F("ESPEasy Now: Sent FAILED to: ");
+            log = F("ESPEasy-NOW: Sent FAILED to: ");
             break;
           }
           case WifiEspNowSendStatus::OK:
           {
-            log = F("ESPEasy Now: Sent to: ");
+            log = F("ESPEasy-NOW: Sent to: ");
             break;
           }
         }
@@ -192,7 +192,7 @@ bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet, int channel)
   }
 
   {
-    // Set TX power based on RSSI of other ESPEasy NOW node.
+    // Set TX power based on RSSI of other ESPEasy-NOW node.
     // For broadcast messages power must be max.
     float tx_pwr = 0; // Will be set higher based on RSSI when needed.
     // FIXME TD-er: Must check WiFiEventData.wifi_connect_attempt to increase TX power
@@ -241,7 +241,7 @@ bool ESPEasy_now_splitter::prepareForSend(const MAC_address& mac)
     _queue[i].setHeader(header);
     _queue[i].setMac(mac);
     if (!_queue[i].valid()) {
-      addLog(LOG_LEVEL_ERROR, F("ESPEasy Now: Could not prepare for send"));
+      addLog(LOG_LEVEL_ERROR, F("ESPEasy-NOW: Could not prepare for send"));
       return false;
     }
   }

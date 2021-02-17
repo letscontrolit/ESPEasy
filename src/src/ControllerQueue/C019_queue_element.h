@@ -10,7 +10,7 @@
 // #ifdef USES_C019
 
 /*********************************************************************************************\
-* C019_queue_element for queueing requests for C019: ESPEasy-Now
+* C019_queue_element for queueing requests for C019: ESPEasy-NOW
 \*********************************************************************************************/
 
 

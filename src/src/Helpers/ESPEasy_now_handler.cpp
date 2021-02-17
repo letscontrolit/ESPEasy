@@ -125,13 +125,13 @@ bool ESPEasy_now_handler_t::begin()
   //    WiFi.softAPdisconnect(false);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("ESPEasy-Now: begin on channel ");
+    String log = F("ESPEasy-NOW: begin on channel ");
     log += channel;
     addLog(LOG_LEVEL_INFO, log);
   }
 
   if (!WifiEspNow.begin()) {
-    addLog(LOG_LEVEL_ERROR, F("ESPEasy-Now: Failed to initialize ESPEasy-Now"));
+    addLog(LOG_LEVEL_ERROR, F("ESPEasy-NOW: Failed to initialize ESPEasy-NOW"));
     return false;
   }
 
@@ -154,7 +154,7 @@ bool ESPEasy_now_handler_t::begin()
   sendDiscoveryAnnounce();
 
   use_EspEasy_now = true;
-  addLog(LOG_LEVEL_INFO, F("ESPEasy-Now enabled"));
+  addLog(LOG_LEVEL_INFO, F("ESPEasy-NOW enabled"));
   return true;
 }
 
@@ -167,7 +167,7 @@ void ESPEasy_now_handler_t::end()
     WifiEspNow.end();
     _last_used = 0;
   }
-  addLog(LOG_LEVEL_INFO, F("ESPEasy-Now disabled"));
+  addLog(LOG_LEVEL_INFO, F("ESPEasy-NOW disabled"));
 }
 
 bool ESPEasy_now_handler_t::loop()
@@ -304,7 +304,7 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
     nodeInfo->setRSSI(WiFi.RSSI(scanIndex));
     nodeInfo->channel = WiFi.channel(scanIndex);
   } else {
-    // FIXME TD-er: For now we assume the other node uses AP for ESPEasy-now
+    // FIXME TD-er: For now we assume the other node uses AP for ESPEasy-NOW
     NodeStruct tmpNodeInfo;
     tmpNodeInfo.setRSSI(WiFi.RSSI(scanIndex));
     tmpNodeInfo.channel = WiFi.channel(scanIndex);
@@ -314,7 +314,7 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
     if (tmpNodeInfo.markedAsPriorityPeer()) {
       if (Nodes.addNode(tmpNodeInfo)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("ESPEasy-Now: Found node via WiFi scan: ");
+          String log = F("ESPEasy-NOW: Found node via WiFi scan: ");
           log += peer_mac.toString();
           log += F(" ");
           log += tmpNodeInfo.getRSSI();
@@ -333,7 +333,7 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
 bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bool& mustKeep)
 {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("ESPEasy-Now received ");
+    String log = F("ESPEasy-NOW received ");
     log += message.getLogString();
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -476,7 +476,7 @@ void ESPEasy_now_handler_t::sendNTPquery()
   if (!_best_NTP_candidate.getMac(mac)) { return; }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("ESPEasy-Now: Send NTP query to: ");
+    String log = F("ESPEasy-NOW: Send NTP query to: ");
     log += mac.toString();
     addLog(LOG_LEVEL_INFO, log);
   }

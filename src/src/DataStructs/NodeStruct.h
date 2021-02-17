@@ -28,9 +28,9 @@ struct __attribute__((__packed__)) NodeStruct
   bool          validate();
 
   // Compare nodes.
-  // Return true when this node has better credentials to be used as ESPEasy-Now neighbor
+  // Return true when this node has better credentials to be used as ESPEasy-NOW neighbor
   // - Shorter distance to a network connected gateway node.
-  // - confirmed ESPEasy-Now peer
+  // - confirmed ESPEasy-NOW peer
   // - better RSSI
   // - lower load (TODO TD-er)
   bool operator<(const NodeStruct &other) const;
@@ -95,8 +95,8 @@ struct __attribute__((__packed__)) NodeStruct
   uint8_t  distance          = 255;   // Administrative distance for routing
   uint8_t  timeSource        = static_cast<uint8_t>(timeSource_t::No_time_source);
   uint8_t  channel           = 0;     // The WiFi channel used
-  uint8_t  ESPEasyNowPeer   : 1;      // Signalling if the node is an ESPEasy-Now peer
-  uint8_t  useAP_ESPEasyNow : 1;      // ESPEasy-Now can either use STA or AP for communications.
+  uint8_t  ESPEasyNowPeer   : 1;      // Signalling if the node is an ESPEasy-NOW peer
+  uint8_t  useAP_ESPEasyNow : 1;      // ESPEasy-NOW can either use STA or AP for communications.
   uint8_t  scaled_rssi      : 6;      // "shortened" RSSI value
 
   // When sending system info, this value contains the time since last time sync.
