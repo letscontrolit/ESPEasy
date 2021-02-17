@@ -288,7 +288,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 
   if (!NetworkConnected()) { return false; }
   client.setTimeout(ControllerSettings.ClientTimeout);
-  yield();
+  delay(0);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
@@ -310,7 +310,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   if (!NetworkConnected()) { return false; }
 
   // Use WiFiClient class to create TCP connections
-  yield();
+  delay(0);
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(loglabel, controller_number, ControllerSettings);
@@ -525,7 +525,7 @@ String send_via_http(const String& logIdentifier,
 
   PrepareSend();
 
-  yield();
+  delay(0);
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
 #else
