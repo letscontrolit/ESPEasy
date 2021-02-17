@@ -65,6 +65,8 @@ struct __attribute__((__packed__)) NodeStruct
 
   bool          match(const MAC_address& mac) const;
 
+  void          setAP_MAC(const MAC_address& mac);
+
 
   // Do not change the order of this data, as it is being sent via P2P UDP.
   // 6 byte mac  (STA interface)

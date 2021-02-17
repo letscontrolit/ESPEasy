@@ -8,7 +8,9 @@
 class NodesHandler {
 public:
 
-  void                     addNode(const NodeStruct& node);
+  // Add node to the list of known nodes.
+  // @retval true when the node was not yet present in the list.
+  bool                     addNode(const NodeStruct& node);
 
   bool                     hasNode(uint8_t unit_nr) const;
 

@@ -312,21 +312,20 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
     tmpNodeInfo.setESPEasyNow_mac(peer_mac);
 
     if (tmpNodeInfo.markedAsPriorityPeer()) {
-      Nodes.addNode(tmpNodeInfo);
+      if (Nodes.addNode(tmpNodeInfo)) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("ESPEasy-Now: Found node via WiFi scan: ");
+          log += peer_mac.toString();
+          log += F(" ");
+          log += tmpNodeInfo.getRSSI();
+          log += F(" dBm ch: ");
+          log += tmpNodeInfo.channel;
+          addLog(LOG_LEVEL_INFO, log);
+        }
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("ESPEasy-Now: Found node via WiFi scan: ");
-        log += peer_mac.toString();
-        log += F(" ");
-        log += tmpNodeInfo.getRSSI();
-        log += F(" dBm ch: ");
-        log += tmpNodeInfo.channel;
-        addLog(LOG_LEVEL_INFO, log);
+        // Must trigger a discovery request from the node.
+        sendDiscoveryAnnounce(peer_mac, WiFi.channel(scanIndex));
       }
-
-      // Must trigger a discovery request from the node.
-      // FIXME TD-er: Disable auto discovery for now
-      //    sendDiscoveryAnnounce(peer_mac, WiFi.channel(scanIndex));
     }
   }
 }
@@ -427,17 +426,14 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
   if (!received.setESPEasyNow_mac(mac)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
-      log  = F("ESPEasy Now: Received discovery message from MAC not stated in message: ");
+      log  = F("ESPEasy-NOW: Received discovery message from MAC not stated in message: ");
       log += mac.toString();
       addLog(LOG_LEVEL_ERROR, log);
     }
     return false;
   }
 
-  // FIXME TD-er: Disable auto discovery for now
-  //  bool isNewNode = Nodes.getNodeByMac(mac) == nullptr;
-
-  Nodes.addNode(received);
+  bool isNewNode = Nodes.addNode(received);
 
   // Test to see if the discovery announce could be a good candidate for next NTP query.
   _best_NTP_candidate.find_best_NTP(
@@ -449,20 +445,16 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     String log;
     size_t payloadSize = message.getPayloadSize();
     log.reserve(payloadSize + 40);
-    log  = F("ESPEasy Now discovery: ");
+    log  = F("ESPEasy-NOW discovery: ");
     log += message.getLogString();
     log += '\n';
     log += received.getSummary();
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  // FIXME TD-er: Disable auto discovery for now
-
-  /*
-     if (isNewNode) {
-      sendDiscoveryAnnounce(mac);
-     }
-   */
+  if (isNewNode) {
+    sendDiscoveryAnnounce(mac);
+  }
 
   const uint8_t new_distance = Nodes.getDistance();
   if (new_distance != cur_distance) {
@@ -633,7 +625,7 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
       query.setState(queue_full);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO) && queue_full) {
-        addLog(LOG_LEVEL_INFO, F("ESPEasy Now: After MQTT message received: Full"));
+        addLog(LOG_LEVEL_INFO, F("ESPEasy-NOW: After MQTT message received: Full"));
       }
       sendMQTTCheckControllerQueue(mac, 0, query.state);
     }
@@ -716,7 +708,7 @@ bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_me
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
         String log;
-        log  = F("ESPEasy Now: Received Queue state: ");
+        log  = F("ESPEasy-NOW: Received Queue state: ");
         log += _preferredNodeMQTTqueueState.isFull() ? F("Full") : F("not Full");
         addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
@@ -729,7 +721,7 @@ bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_me
         // We have to give our own queue state and reply
         query.setState(MQTT_queueFull(controllerIndex));
 
-        //        addLog(LOG_LEVEL_INFO, F("ESPEasy Now: reply to queue state query"));
+        //        addLog(LOG_LEVEL_INFO, F("ESPEasy-NOW: reply to queue state query"));
         size_t len = sizeof(ESPEasy_Now_MQTT_queue_check_packet);
         ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::MQTTCheckControllerQueue, len);
         msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);

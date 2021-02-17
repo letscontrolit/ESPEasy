@@ -12,17 +12,29 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 
-void NodesHandler::addNode(const NodeStruct& node)
+bool NodesHandler::addNode(const NodeStruct& node)
 {
   int8_t rssi = 0;
+  MAC_address match_sta;
+  MAC_address match_ap;
+  MAC_address ESPEasy_NOW_MAC;
+
+  bool isNewNode = true;
 
   // Erase any existing node with matching MAC address
   for (auto it = _nodes.begin(); it != _nodes.end(); )
   {
-    const MAC_address sta(it->second.sta_mac);
-    const MAC_address ap(it->second.ap_mac);
+    const MAC_address sta = it->second.sta_mac;
+    const MAC_address ap  = it->second.ap_mac;
     if ((!sta.all_zero() && node.match(sta)) || (!ap.all_zero() && node.match(ap))) {
       rssi = it->second.getRSSI();
+      if (!sta.all_zero())
+        match_sta = sta;
+      if (!ap.all_zero())
+        match_ap = ap;
+      ESPEasy_NOW_MAC = it->second.ESPEasy_Now_MAC();
+
+      isNewNode = false;
       it = _nodes.erase(it);
     } else {
       ++it;
@@ -30,9 +42,17 @@ void NodesHandler::addNode(const NodeStruct& node)
   }
   _nodes[node.unit]             = node;
   _nodes[node.unit].lastUpdated = millis();
-  if (node.getRSSI() >= 0) {
+  if (node.getRSSI() >= 0 && rssi < 0) {
     _nodes[node.unit].setRSSI(rssi);
   }
+  const MAC_address node_ap(node.ap_mac);
+  if (node_ap.all_zero()) {
+    _nodes[node.unit].setAP_MAC(node_ap);
+  }
+  if (node.ESPEasy_Now_MAC().all_zero()) {
+    _nodes[node.unit].setESPEasyNow_mac(ESPEasy_NOW_MAC);
+  }
+  return isNewNode;
 }
 
 bool NodesHandler::hasNode(uint8_t unit_nr) const

@@ -121,6 +121,7 @@ MAC_address NodeStruct::STA_MAC() const {
 }
 
 MAC_address NodeStruct::ESPEasy_Now_MAC() const {
+  if (ESPEasyNowPeer == 0) return MAC_address();
   if (useAP_ESPEasyNow) {
     return MAC_address(ap_mac);
   }
@@ -161,6 +162,7 @@ String NodeStruct::getSummary() const {
 
 bool NodeStruct::setESPEasyNow_mac(const MAC_address& received_mac)
 {
+  if (received_mac.all_zero()) return false;
   if (received_mac == sta_mac) {
     ESPEasyNowPeer   = 1;
     useAP_ESPEasyNow = 0;
@@ -234,4 +236,9 @@ bool NodeStruct::markedAsPriorityPeer() const
 bool NodeStruct::match(const MAC_address& mac) const
 {
   return (mac == sta_mac || mac == ap_mac);
+}
+
+void NodeStruct::setAP_MAC(const MAC_address& mac)
+{
+  mac.get(ap_mac);
 }
