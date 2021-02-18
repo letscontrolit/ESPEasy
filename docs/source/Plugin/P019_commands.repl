@@ -1,8 +1,8 @@
 .. These P009 commands should be moved to core (P000)...
 
-:ref:`P000_page` |P000_status|
+.. .. :ref:`P000_page` |P000_status|
 
-Supported hardware: |P000_usedby_GPIO|
+.. .. Supported hardware: |P000_usedby_GPIO|
 
 .. csv-table::
   :header: "Command (PCFGPIO/Value)", "Extra information"
