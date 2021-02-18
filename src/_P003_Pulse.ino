@@ -4,7 +4,11 @@
 // #######################################################################################################
 // #################################### Plugin 003: Pulse  ###############################################
 // #######################################################################################################
+//
+// Make sure physical connections are electrically well sepparated so no crossover of the signals happen.
+// Especially at rates above ~5'000 RPM with longer lines. Best use a cable with ground and signal twisted.
 
+#include "src/Helpers/ESPEasy_time_calc.h"
 
 #define PLUGIN_003
 #define PLUGIN_ID_003         3
@@ -28,8 +32,9 @@ void Plugin_003_pulsecheck(byte Index) ICACHE_RAM_ATTR;
 
 volatile unsigned long Plugin_003_pulseCounter[TASKS_MAX];
 volatile unsigned long Plugin_003_pulseTotalCounter[TASKS_MAX];
-volatile unsigned long Plugin_003_pulseTime[TASKS_MAX];
-volatile unsigned long Plugin_003_pulseTimePrevious[TASKS_MAX];
+volatile uint64_t Plugin_003_pulseTime[TASKS_MAX];
+volatile uint64_t Plugin_003_pulseTimePrevious[TASKS_MAX];
+volatile uint64_t Plugin_003_debounce[TASKS_MAX];
 
 // Mx: 2021-01: additions for enhanced Mode Types PULSE_HIGH and PULSE_LOW
 // special Mode Type. Note: only lower 3 bits are significant for GPIO Interupt. upper 4 bits are flag for new modes
@@ -136,7 +141,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
     {
       pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[0], String(Plugin_003_pulseCounter[event->TaskIndex]));
       pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[1], String(Plugin_003_pulseTotalCounter[event->TaskIndex]));
-      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[2], String(Plugin_003_pulseTime[event->TaskIndex]), false);
+      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[2], String(Plugin_003_pulseTime[event->TaskIndex]/1000.0f), false);
       success = true;
       break;
     }
@@ -155,7 +160,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         {
           Plugin_003_pulseCounter[event->TaskIndex]      = UserVar[event->BaseVarIndex];
           Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex + 1];
-          Plugin_003_pulseTime[event->TaskIndex]         = UserVar[event->BaseVarIndex + 2];
+          Plugin_003_pulseTime[event->TaskIndex]         = UserVar[event->BaseVarIndex + 2]*1000L;
           break;
         }
         case 2:
@@ -175,6 +180,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // It may be using a formula to generate the output, which makes it impossible to restore
       // the true internal state.
       Plugin_003_pulseTotalCounter[event->TaskIndex] = UserVar[event->BaseVarIndex + 3];
+      Plugin_003_debounce[event->TaskIndex] = (uint64_t)Settings.TaskDevicePluginConfig[event->TaskIndex][0]*1000L;
 
       // Mx: 2021-01: Initialize pinState from previos interrupt with "no pulse" depending on Mode Type
       Plugin_003_pinStatePrevious[event->TaskIndex] = ((PCONFIG(2) == P003_MODE_TYPE_PULSE_LOW) ? HIGH : LOW );
@@ -197,7 +203,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // FIXME TD-er: Is it correct to write the first 3  UserVar values, regardless the set counter type?
       UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
       UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
-      UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex];
+      UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex]/1000.0f;
 
       // Store the raw value in the unused 4th position.
       // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
@@ -216,7 +222,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           event->sensorType                = Sensor_VType::SENSOR_TYPE_TRIPLE;
           UserVar[event->BaseVarIndex]     = Plugin_003_pulseCounter[event->TaskIndex];
           UserVar[event->BaseVarIndex + 1] = Plugin_003_pulseTotalCounter[event->TaskIndex];
-          UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex];
+          UserVar[event->BaseVarIndex + 2] = Plugin_003_pulseTime[event->TaskIndex]/1000.0f;
           break;
         }
         case 2:
@@ -297,11 +303,7 @@ void Plugin_003_pulsecheck(byte Index)
 {
   noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
 
-  //  s0170071: the following gives a glitch if millis() rolls over (every 50 days) and there is a bouncing to be avoided at the exact same
-  // time. Very rare.
-  //  Alternatively there is timePassedSince(Plugin_003_pulseTimePrevious[Index]); but this is not in IRAM at this time, so do not use in a
-  // ISR!
-  const unsigned long PulseTime = millis() - Plugin_003_pulseTimePrevious[Index];
+  const uint64_t PulseTime = getMicros64() - Plugin_003_pulseTimePrevious[Index];
   int pinState;
 
   // Mx: 2021-01: added processing for new mode types PULSE_LOW and PULSE_HIGH
@@ -312,7 +314,7 @@ void Plugin_003_pulsecheck(byte Index)
     pinState = digitalRead(Settings.TaskDevicePin1[Index]);
 
     // Was the previous pulse longer than debounce time? (else ignore previous pulse)
-    if (PulseTime > (unsigned long)Settings.TaskDevicePluginConfig[Index][0])
+    if (PulseTime > Plugin_003_debounce[Index])
     {
       // Has pin state changed ? (else ignore prev. pulse (possibly we missed (disabled) interupt))
       if (pinState != (int)Plugin_003_pinStatePrevious[Index] )
@@ -329,18 +331,18 @@ void Plugin_003_pulsecheck(byte Index)
     
     // save current pinState for next call
     Plugin_003_pinStatePrevious[Index] = pinState;
-    Plugin_003_pulseTimePrevious[Index] = millis();  // reset for each received interupt to determine previous pulse's length (counted or not)
+    Plugin_003_pulseTimePrevious[Index] = getMicros64();  // reset for each received interupt to determine previous pulse's length (counted or not)
 
   }
   else
   // Mx: 2021-01: end 
   {
-    if (PulseTime > (unsigned long)Settings.TaskDevicePluginConfig[Index][0]) // check with debounce time for this task
+    if (PulseTime > Plugin_003_debounce[Index]) // check with debounce time for this task
     {
       Plugin_003_pulseCounter[Index]++;
       Plugin_003_pulseTotalCounter[Index]++;
       Plugin_003_pulseTime[Index]         = PulseTime;
-      Plugin_003_pulseTimePrevious[Index] = millis();  // reset when counted only to determine interval between counted pulses
+      Plugin_003_pulseTimePrevious[Index] = getMicros64();  // reset when counted only to determine interval between counted pulses
     }
   }
 

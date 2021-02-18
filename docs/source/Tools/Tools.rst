@@ -265,6 +265,126 @@ then this is a great way to save energy and also reduce heat.
 
 See also :any:`cpu-eco-mode-explanation`
 
+WiFi TX Power
+^^^^^^^^^^^^^
+
+(Added: 2021-01-26)
+
+The default TX power of an ESP unit is:
+
+* 802.11 b: +20 dBm
+* 802.11 g: +17 dBm
+* 802.11 n: +14 dBm
+
+For some units it can help to reduce the TX power of the WiFi.
+As of now the exact reason why this may improve stability is a bit unclear.
+For example, the power supply may be slightly underdimensioned, or the antenna impedance isn't perfect. (can be affected by a lot of factors)
+
+The effect of a reduction in TX power is of course lower energy consumption, but also a reduction in WiFi range as the received signal strength on the access point will be lower.
+The unit for WiFi TX power is expressed in dBm, which makes it very easy to calculate the effect.
+
+.. note:: dBm represents an absolute power level (in mWatt) while dB is a relative index.
+          RSSI is a bit confusing in its unit of measure as both dBm and dB are used.
+          As a rule of thumb, if the RSSI is expressed as a negative value, it is usually referring to dBm. 
+          For positive values (i.e. 0 .. 100) it is in dB.
+          To further confuse the understanding, our ESPs use an RSSI of +31 as an error code.
+
+
+The relation between TX power in dBm and Watt:
+
+* 20 dBm = 0.1 Watt  (= 30 mA @3.3V)
+* 10 dBm = 0.01 Watt
+* 0 dBm = 0.001 Watt
+* -10 dBm = 0.0001 Watt
+
+Every 10 dBm lower is a factor 10 less energy sent from the antenna.
+N.B. Since most ESP boards use a linear voltage regulator from 5V to 3.3V, the power reduction can be as high as 0.15 Watt.
+
+See also "WiFi Sensitivity Margin"
+
+For example the AP does receive the signal from your ESP node with an RSSI of -60 dBm.
+If we lower the TX power from 20 dBm to 10 dBm, the access point will receive our signal with an RSSI of -70 dBm.
+
+Lowering the TX power can also be useful to make it more likely a node will connect to an access point close to the node in a setup with a number of access points using the same SSID.
+Most access points will disconnect a node if its signal drops below a certain RSSI value.  (some brands of access points allow to set this threshold)
+
+
+WiFi Sensitivity Margin
+^^^^^^^^^^^^^^^^^^^^^^^
+
+(Added: 2021-01-26)
+
+See also WiFi TX Power.
+
+The ESP boards have a RX sensitivity depending on the used WiFi connection protocol:
+
+* 802.11 b: –91 dbm (11 Mbps)
+* 802.11 g: –75 dbm (54 Mbps)
+* 802.11 n: –72 dbm (MCS7)
+
+These are the numbers for an ESP8266.
+
+N.B. The ESP32 is more sensitive for lower bit rates, but we use these more conservative ones.
+
+The WiFi Sensitivity Margin is added to these RX sensitivity numbers above.
+
+Our dynamic WiFi TX power strategy is based on the following assumptions:
+
+* Without any changes in TX power on both the ESP as well as the access point (AP), we can assume the signal strength attenuates the same from the AP to the ESP as the return path from the ESP to the AP.
+  Meaning if we see the signal from an AP has an RSSI value of -60 dBm, we can assume the AP receiving our signal has a similar signal strength with an RSSI of -60 dBm.
+* An access point usually has a better RX sensitivity than an ESP board.
+
+With these assumptions in mind, we can lower our WiFi TX power.
+
+Let's assume the ESP is connected to an access point using 802.11N and we see an RSSI of -60 dBm.
+Without lowering TX power on the ESP, the access point will receive the ESP with an RSSI of -60 dBm.
+
+When the TX power on this ESP is lowered from 14 dBm to 4 dBm, the access point will receive the ESP with an RSSI of -70 dBm.
+This is still within the stated -72 dBm RX sensitivity.
+
+However for improved stability, it is wise to add some margin. For example a margin of 5 dBm.
+When applying this margin of +5 dBm, the ESP must try to match its output power to make sure the access point will receive the ESP with an RSSI of at least - 67 dBm.
+The set TX output power will then be (-60 dBm - -67 dBm =) +7 dBm, which is still a significant improvement in power consumption.
+
+This margin can also be used to compensate for an access point which is set to a non default TX power.
+For example, it is good practice to lower the TX power of an access point to improve separation and take over in a network with multiple APs set to use the same SSID to provide roaming.
+Since these offsets are also expressed in dBm, they can be used without conversion for correcting this margin.
+
+* Negative margin: Used for access point with better RX sensitivity (high SNR) and/or lowered TX power
+* Positive margin: Used for access point with lower RX sensitivity (low SNR) and/or increased TX power
+
+.. note:: It is almost always a bad idea to increase TX power of an access point. The signal from the access point may cover a longer range, but the RX sensitivity is not improved thus the client can not reply.  It also affects other WiFi networks in the neighborhood, causing more interference.
+
+.. note:: Changing the antenna of an access point for a "High Gain Antenna" does improve TX range as well as RX sensitivity and thus cancel each other out regarding this margin setting. A high gain antenna is more directional than traditional antennas.
+
+To get a feeling of RSSI values (in dBm) in relation to the experienced link quality:
+
+* -30 dBm: Amazing
+* -67 dBm: Very Good
+* -70 dBm: Okay
+* -80 dBm: Not Good
+* -90 dBm: Likely Unstable
+
+Link quality depends on more then just the RSSI.
+For example a connection with lower band width (e.g. 802.11g compared to 802.11n) is usually more forgiving.
+
+The actual link quality depends on the ratio between received signal strength (RSSI) and the noise floor.
+The noise floor is simply erroneous background transmissions that are emitted from either other devices that are too far away for the signal to be intelligible, or by devices that are inadvertently creating interference on the same frequency. 
+Some brands of access points can show the current noise floor and/or the SNR.
+
+For example, if a signal is received at -80 dBm and the noise floor is -100 dBm, the effective signal-to-noise ratio (SNR) is 20 dB, which is still very usable for ESP nodes as we don't send lots of data.
+
+For a stable link the SNR should be > 15 dB.
+The SNR does have big of impact on how responsive an ESPEasy node will 'feel' when operating it.
+
+Sending with a very strong signal may also affect the link stability of other nodes as it will increase the noise floor for all access points in the neighborhood.
+
+For best link stability of all nodes, it is best to target somewhere between -67 and -70 dBm.
+Therefore the default value of +3dB margin will attempt to let the access point receive with a signal strength of roughly that sweet spot.
+
+Of course nodes with an already high signal attenuation cannot send with more than the max allowed TX power of roughly 20.5 dBm.
+Trying to reach this sweet spot in signal strength is just a best effort and not a guarantee.
+
 
 
 Show JSON

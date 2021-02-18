@@ -3,6 +3,7 @@
 #include "../DataStructs/tcp_cleanup.h"
 #include "../DataTypes/ESPEasyTimeSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 // FIXME TD-er: Should keep a pointer to the webserver as a member, not use the global defined one.
 #include "../Globals/Services.h"
@@ -138,7 +139,8 @@ void Web_StreamingBuffer::startStream(bool json, const String& origin) {
   beforeTXRam  = initialRam;
   sentBytes    = 0;
   buf          = "";
-
+  
+  PrepareSend();
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
     web_server.send(200, "text/plain", "Low memory. Cannot display webpage :-(");
@@ -207,6 +209,7 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
     beforeTXRam = freeBeforeSend;
   }
   duringTXRam = freeBeforeSend;
+  PrepareSend();
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   String size = formatToHex(length) + "\r\n";
 
@@ -246,6 +249,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendHeaderBlocking"));
   #endif
+  PrepareSend();
   web_server.client().flush();
   String contenttype;
 
