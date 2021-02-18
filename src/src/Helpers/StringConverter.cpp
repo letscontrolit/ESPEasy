@@ -241,6 +241,18 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
     return "0";
   }
 
+  {
+    // First try to format using the plugin specific formatting.
+    String result;
+    EventStruct tempEvent(*event);
+    tempEvent.idx = rel_index;
+    PluginCall(PLUGIN_FORMAT_USERVAR, &tempEvent, result);
+    if (result.length() > 0) {
+      return result;
+    }
+  }
+
+
   const byte   valueCount = getValueCountForTask(event->TaskIndex);
   Sensor_VType sensorType = event->getSensorType();
 
@@ -264,7 +276,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
 
   switch (sensorType) {
     case Sensor_VType::SENSOR_TYPE_LONG:
-      return String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
+      return String(UserVar.getSensorTypeLong(event->TaskIndex));
     case Sensor_VType::SENSOR_TYPE_STRING:
       return event->String2;
 
@@ -386,10 +398,7 @@ String to_json_object_value(const String& object, const String& value) {
     result += F("\"\"");
     return result;
   }
-  NumericalType detectedType;
-  bool isNum = isNumerical(value, detectedType);
-
-  if (!isNum || mustConsiderAsString(detectedType)) {
+  if (mustConsiderAsString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
       // Must replace characters, so make a deepcopy
@@ -461,13 +470,13 @@ bool safe_strncpy(char *dest, const char *source, size_t max_size) {
   bool result = true;
 
   memset(dest, 0, max_size);
-  size_t str_length = strlen(source);
+  size_t str_length = strlen_P(source);
 
   if (str_length >= max_size) {
     str_length = max_size;
     result     = false;
   }
-  strncpy(dest, source, str_length);
+  strncpy_P(dest, source, str_length);
   dest[max_size - 1] = 0;
   return result;
 }
@@ -768,7 +777,7 @@ void parseEventVariables(String& s, struct EventStruct *event, boolean useURLenc
   if (validTaskIndex(event->TaskIndex)) {
     if (s.indexOf(F("%val")) != -1) {
       if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
-        SMART_REPL(F("%val1%"), String((unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16)))
+        SMART_REPL(F("%val1%"), String(UserVar.getSensorTypeLong(event->TaskIndex)))
       } else {
         for (byte i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
           String valstr = F("%val");
