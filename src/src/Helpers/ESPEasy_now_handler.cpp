@@ -33,7 +33,7 @@
 # define ESPEASY_NOW_TMP_SSID       "ESPEASY_NOW"
 # define ESPEASY_NOW_TMP_PASSPHRASE "random_passphrase"
 
-static uint64_t mac_to_key(const uint8_t *mac, ESPEasy_now_hdr::message_t messageType, uint8_t message_count)
+static uint64_t ICACHE_FLASH_ATTR mac_to_key(const uint8_t *mac, ESPEasy_now_hdr::message_t messageType, uint8_t message_count)
 {
   uint64_t key = message_count;
 
@@ -51,10 +51,12 @@ std::map<uint64_t, ESPEasy_now_merger> ESPEasy_now_in_queue;
 
 void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
   START_TIMER;
-  if (count < sizeof(ESPEasy_now_hdr)) {
+  size_t payload_length  = count - sizeof(ESPEasy_now_hdr);
+  if (count < sizeof(ESPEasy_now_hdr) || (payload_length > ESPEasy_Now_packet::getMaxPayloadSize())) {
     STOP_TIMER(INVALID_ESPEASY_NOW_LOOP);
     return; // Too small
   }
+
   ESPEasy_now_hdr header(buf);
 
   if (header.header_version != ESPEASY_NOW_HEADER_VERSION) {
@@ -62,9 +64,7 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
     return;
   }
 
-  size_t payload_length  = count - sizeof(ESPEasy_now_hdr);
   const uint8_t *payload = buf + sizeof(ESPEasy_now_hdr);
-
   const uint16_t checksum = calc_CRC16(reinterpret_cast<const char *>(payload), payload_length);
 
   if (header.checksum != checksum) {
