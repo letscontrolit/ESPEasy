@@ -75,6 +75,7 @@ bool ESPEasy_Now_p2p_data::addBinaryData(uint8_t *binaryData, size_t size) {
 
 const uint8_t * ESPEasy_Now_p2p_data::getBinaryData(size_t offset, size_t& size) const {
   if (offset >= dataSize) {
+    size = 0;
     return nullptr;
   }
 
@@ -92,6 +93,7 @@ uint8_t * ESPEasy_Now_p2p_data::prepareBinaryData(size_t& size) {
   data     = nullptr;
 
   if (!allocate(size, oldSize)) {
+    size = 0;
     return nullptr;
   }
   size = dataSize;

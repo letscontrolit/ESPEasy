@@ -400,10 +400,11 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
     // Should not happen
     return;
   }
-  size_t len = sizeof(NodeStruct);
+  const size_t len = sizeof(NodeStruct);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::Announcement, len);
-  msg.addBinaryData(reinterpret_cast<const uint8_t *>(thisNode), len);
-  msg.send(mac, channel);
+  if (len == msg.addBinaryData(reinterpret_cast<const uint8_t *>(thisNode), len)) {
+    msg.send(mac, channel);
+  }
 }
 
 bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& message, bool& mustKeep)
@@ -483,10 +484,12 @@ void ESPEasy_now_handler_t::sendNTPquery()
 
   _best_NTP_candidate.markSendTime();
   ESPEasy_Now_NTP_query query;
-  size_t len = sizeof(ESPEasy_Now_NTP_query);
+  const size_t len = sizeof(ESPEasy_Now_NTP_query);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::NTP_Query, len);
-  msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
-  msg.send(mac.mac);
+
+  if (len == msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len)) {
+    msg.send(mac.mac);
+  }
 }
 
 void ESPEasy_now_handler_t::sendNTPbroadcast()
@@ -494,10 +497,11 @@ void ESPEasy_now_handler_t::sendNTPbroadcast()
   ESPEasy_Now_NTP_query query;
 
   query.createBroadcastNTP();
-  size_t len = sizeof(ESPEasy_Now_NTP_query);
+  const size_t len = sizeof(ESPEasy_Now_NTP_query);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::NTP_Query, len);
-  msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
-  msg.send(query._mac);
+  if (len == msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len)) {
+    msg.send(query._mac);
+  }
 }
 
 bool ESPEasy_now_handler_t::handle_NTPquery(const ESPEasy_now_merger& message, bool& mustKeep)
@@ -519,11 +523,13 @@ bool ESPEasy_now_handler_t::handle_NTPquery(const ESPEasy_now_merger& message, b
     // Fill the reply
     query.createReply(message.getFirstPacketTimestamp());
 
-    size_t len = sizeof(ESPEasy_Now_NTP_query);
+    const size_t len = sizeof(ESPEasy_Now_NTP_query);
     ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::NTP_Query, len);
-    msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
-    msg.send(query._mac);
-    return true;
+    if (len == msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len)) {
+      msg.send(query._mac);
+      return true;
+    }
+    return false;
   }
 
   // Received a reply on our own query
@@ -576,8 +582,12 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
 
       ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::MQTTControllerMessage, len);
 
-      msg.addString(topic);
-      msg.addString(payload);
+      if (topic_length != msg.addString(topic)) {
+        return false;
+      }
+      if (payload_length != msg.addString(payload)) {
+        return false;
+      }
 
       MAC_address mac                 = preferred->ESPEasy_Now_MAC();
       WifiEspNowSendStatus sendStatus = msg.send(mac, millis() + 2 * _ClientTimeout, preferred->channel);
@@ -668,9 +678,11 @@ bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(const MAC_address      
   ESPEasy_Now_MQTT_queue_check_packet query;
 
   query.state = state;
-  size_t len = sizeof(ESPEasy_Now_MQTT_queue_check_packet);
+  const size_t len = sizeof(ESPEasy_Now_MQTT_queue_check_packet);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::MQTTCheckControllerQueue, len);
-  msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
+  if (len != msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len)) {
+    return false;
+  }
   size_t timeout                  = 10;
   WifiEspNowSendStatus sendStatus = msg.send(mac, timeout, channel);
 
@@ -722,11 +734,12 @@ bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_me
         query.setState(MQTT_queueFull(controllerIndex));
 
         //        addLog(LOG_LEVEL_INFO, F("ESPEasy-NOW: reply to queue state query"));
-        size_t len = sizeof(ESPEasy_Now_MQTT_queue_check_packet);
+        const size_t len = sizeof(ESPEasy_Now_MQTT_queue_check_packet);
         ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::MQTTCheckControllerQueue, len);
-        msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len);
-        msg.send(mac);
-        return true;
+        if (len == msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len)) {
+          msg.send(mac);
+          return true;
+        }
       }
     }
   }
@@ -744,10 +757,12 @@ void ESPEasy_now_handler_t::sendSendData_DuplicateCheck(uint32_t                
                                                         const MAC_address                   & mac)
 {
   ESPEasy_Now_DuplicateCheck check(key, message_type);
-  size_t len = sizeof(ESPEasy_Now_DuplicateCheck);
+  const size_t len = sizeof(ESPEasy_Now_DuplicateCheck);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::SendData_DuplicateCheck, len);
 
-  msg.addBinaryData(reinterpret_cast<uint8_t *>(&check), len);
+  if (len != msg.addBinaryData(reinterpret_cast<uint8_t *>(&check), len)) {
+    return;
+  }
 
   switch (message_type) {
     case ESPEasy_Now_DuplicateCheck::message_t::KeyToCheck:
@@ -857,14 +872,18 @@ void ESPEasy_now_handler_t::load_ControllerSettingsCache(controllerIndex_t contr
 bool ESPEasy_now_handler_t::sendESPEasyNow_p2p(controllerIndex_t controllerIndex, const MAC_address& mac, const ESPEasy_Now_p2p_data& data) {
   if (!use_EspEasy_now) { return false; }
 
-  size_t size = data.getTotalSize();
-  ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::P2P_data, size);
+  ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::P2P_data, data.getTotalSize());
   // Add the first part of the data object, without the data array.
-  msg.addBinaryData(reinterpret_cast<const uint8_t *>(&data), data.dataOffset);
+  if (data.dataOffset != msg.addBinaryData(reinterpret_cast<const uint8_t *>(&data), data.dataOffset)) {
+    return false;
+  }
   
   // Fetch the data array information, will also update size.
+  size_t size = 0;
   const uint8_t* data_ptr = data.getBinaryData(0, size);
-  msg.addBinaryData(data_ptr, size);
+  if (size != msg.addBinaryData(data_ptr, size)) {
+    return false;
+  }
 
   return msg.send(mac);
 }

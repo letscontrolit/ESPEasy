@@ -19,7 +19,7 @@ ESPEasy_Now_packet::ESPEasy_Now_packet(const MAC_address& mac, const uint8_t *bu
 {
   setSize(packetSize);
   mac.get(_mac);
-  size_t bufsize = _buf.size();
+  const size_t bufsize = _buf.size();
   if (packetSize > bufsize) {
     // Cannot store the whole packet, so consider it as invalid.
     packetSize = bufsize;

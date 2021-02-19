@@ -19,11 +19,17 @@ ESPEasy_now_splitter::ESPEasy_now_splitter(ESPEasy_now_hdr::message_t message_ty
 
 size_t ESPEasy_now_splitter::addBinaryData(const uint8_t *data, size_t length)
 {
+  if (data == nullptr) {
+    return 0;
+  }
   size_t data_left = length;
 
   while ((data_left > 0) && (_totalSize > _bytesStored)) {
     createNextPacket();
-    size_t bytesAdded = _queue.back().addBinaryData(data, data_left, _payload_pos);
+    const size_t bytesAdded = _queue.back().addBinaryData(data, data_left, _payload_pos);
+    if (bytesAdded == 0) {
+      return length - data_left;
+    }
     data_left    -= bytesAdded;
     data         += bytesAdded;
     _bytesStored += bytesAdded;
