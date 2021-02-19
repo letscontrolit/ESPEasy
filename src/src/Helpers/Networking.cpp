@@ -209,90 +209,91 @@ void checkUDP()
     if ((packetSize >= 2) && (packetSize < UDP_PACKETSIZE_MAX)) {
       // Allocate buffer to process packet.
       std::vector<char> packetBuffer;
-      packetBuffer.resize(packetSize + 1);
-      memset(&packetBuffer[0], 0, packetSize + 1);
+      packetBuffer.resize(packetSize + 1, 0);
 
-      int len = portUDP.read(&packetBuffer[0], packetSize);
+      if (packetBuffer.size() >= packetSize) {
+        int len = portUDP.read(&packetBuffer[0], packetSize);
 
-      if (len >= 2) {
-        if (reinterpret_cast<unsigned char&>(packetBuffer[0]) != 255)
-        {
-          packetBuffer[len] = 0;
-          addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
-          ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
-        }
-        else
-        {
-          // binary data!
-          switch (packetBuffer[1])
+        if (len >= 2) {
+          if (reinterpret_cast<unsigned char&>(packetBuffer[0]) != 255)
           {
-            case 1: // sysinfo message
+            packetBuffer[len] = 0;
+            addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
+            ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
+          }
+          else
+          {
+            // binary data!
+            switch (packetBuffer[1])
             {
-              if (len < 13) {
-                break;
-              }
-              byte unit = packetBuffer[12];
-#ifndef BUILD_NO_DEBUG
-              byte mac[6];
-              byte ip[4];
-
-              for (byte x = 0; x < 6; x++) {
-                mac[x] = packetBuffer[x + 2];
-              }
-
-              for (byte x = 0; x < 4; x++) {
-                ip[x] = packetBuffer[x + 8];
-              }
-#endif // ifndef BUILD_NO_DEBUG
-              Nodes[unit].age = 0; // Create a new element when not present
-              NodesMap::iterator it = Nodes.find(unit);
-
-              if (it != Nodes.end()) {
-                for (byte x = 0; x < 4; x++) {
-                  it->second.ip[x] = packetBuffer[x + 8];
+              case 1: // sysinfo message
+              {
+                if (len < 13) {
+                  break;
                 }
-                it->second.age = 0; // reset 'age counter'
+                byte unit = packetBuffer[12];
+#ifndef BUILD_NO_DEBUG
+                byte mac[6];
+                byte ip[4];
 
-                if (len >= 41)      // extended packet size
-                {
-                  it->second.build = makeWord(packetBuffer[14], packetBuffer[13]);
-                  char tmpNodeName[26] = { 0 };
-                  memcpy(&tmpNodeName[0], reinterpret_cast<byte *>(&packetBuffer[15]), 25);
-                  tmpNodeName[25]     = 0;
-                  it->second.nodeName = tmpNodeName;
-                  it->second.nodeName.trim();
-                  it->second.nodeType          = packetBuffer[40];
-                  it->second.webgui_portnumber = 80;
+                for (byte x = 0; x < 6; x++) {
+                  mac[x] = packetBuffer[x + 2];
+                }
 
-                  if ((len >= 43) && (it->second.build >= 20107)) {
-                    it->second.webgui_portnumber = makeWord(packetBuffer[42], packetBuffer[41]);
+                for (byte x = 0; x < 4; x++) {
+                  ip[x] = packetBuffer[x + 8];
+                }
+#endif // ifndef BUILD_NO_DEBUG
+                Nodes[unit].age = 0; // Create a new element when not present
+                NodesMap::iterator it = Nodes.find(unit);
+
+                if (it != Nodes.end()) {
+                  for (byte x = 0; x < 4; x++) {
+                    it->second.ip[x] = packetBuffer[x + 8];
+                  }
+                  it->second.age = 0; // reset 'age counter'
+
+                  if (len >= 41)      // extended packet size
+                  {
+                    it->second.build = makeWord(packetBuffer[14], packetBuffer[13]);
+                    char tmpNodeName[26] = { 0 };
+                    memcpy(&tmpNodeName[0], reinterpret_cast<byte *>(&packetBuffer[15]), 25);
+                    tmpNodeName[25]     = 0;
+                    it->second.nodeName = tmpNodeName;
+                    it->second.nodeName.trim();
+                    it->second.nodeType          = packetBuffer[40];
+                    it->second.webgui_portnumber = 80;
+
+                    if ((len >= 43) && (it->second.build >= 20107)) {
+                      it->second.webgui_portnumber = makeWord(packetBuffer[42], packetBuffer[41]);
+                    }
                   }
                 }
-              }
 
 #ifndef BUILD_NO_DEBUG
 
-              if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-                char macaddress[20];
-                formatMAC(mac, macaddress);
-                char log[80] = { 0 };
-                sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, formatIP(ip).c_str(), unit);
-                addLog(LOG_LEVEL_DEBUG_MORE, log);
-              }
+                if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+                  char macaddress[20];
+                  formatMAC(mac, macaddress);
+                  char log[80] = { 0 };
+                  sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, formatIP(ip).c_str(), unit);
+                  addLog(LOG_LEVEL_DEBUG_MORE, log);
+                }
 #endif // ifndef BUILD_NO_DEBUG
-              break;
-            }
+                break;
+              }
 
-            default:
-            {
-              struct EventStruct TempEvent;
-              TempEvent.Data = reinterpret_cast<byte *>(&packetBuffer[0]);
-              TempEvent.Par1 = remoteIP[3];
-              TempEvent.Par2 = len;
-              String dummy;
-              PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
-              CPluginCall(CPlugin::Function::CPLUGIN_UDP_IN, &TempEvent);
-              break;
+              default:
+              {
+                struct EventStruct TempEvent;
+                TempEvent.Data = reinterpret_cast<byte *>(&packetBuffer[0]);
+                TempEvent.Par1 = remoteIP[3];
+                TempEvent.Par2 = len;
+                String dummy;
+                PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
+                CPluginCall(CPlugin::Function::CPLUGIN_UDP_IN, &TempEvent);
+                break;
+              }
             }
           }
         }
