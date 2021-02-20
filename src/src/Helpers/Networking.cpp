@@ -212,7 +212,7 @@ void checkUDP()
       std::vector<char> packetBuffer;
       packetBuffer.resize(packetSize + 1, 0);
 
-      if (packetBuffer.size() >= packetSize) {
+      if (packetBuffer.size() >= static_cast<size_t>(packetSize)) {
         int len = portUDP.read(&packetBuffer[0], packetSize);
 
         if (len >= 2) {

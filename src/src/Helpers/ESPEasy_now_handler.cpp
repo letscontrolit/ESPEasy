@@ -14,6 +14,7 @@
 # include "../ESPEasyCore/ESPEasy_Log.h"
 # include "../Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/ESPEasy_time.h"
+# include "../Globals/MQTT.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Globals/SendData_DuplicateChecker.h"
@@ -197,13 +198,12 @@ bool ESPEasy_now_handler_t::loop()
   if (!ESPEasy_now_in_queue.empty()) {
     unsigned long timeout = millis() + 50;
     for (auto it = ESPEasy_now_in_queue.begin(); !timeOutReached(timeout) && it != ESPEasy_now_in_queue.end();) {
+      const bool expired = it->second.expired();
       bool removeMessage = true;
       START_TIMER;
 
       bool valid = it->second.valid();
       if (!valid || !it->second.messageComplete()) {
-        bool expired = it->second.expired();
-
         if (!valid || expired) {
           if (expired) {
             STOP_TIMER(EXPIRED_ESPEASY_NOW_LOOP);
@@ -221,9 +221,11 @@ bool ESPEasy_now_handler_t::loop()
             addLog(LOG_LEVEL_ERROR, log);
           }
         } else {
-          removeMessage = false;
+          if (!expired) {
+            removeMessage = false;
+          }
         }
-      } else {
+      } else if (!expired) {
         // Process it
         bool mustKeep = !removeMessage;
         somethingProcessed = processMessage(it->second, mustKeep);
@@ -546,9 +548,9 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
 
   const uint8_t distance = Nodes.getDistance();
 
-  if ((distance == 0) || (distance == 255)) {
+  if (((distance == 0) && MQTTclient_connected) || (distance == 255)) {
     // No need to send via ESPEasy_Now.
-    // We're either connected (distance == 0)
+    // We're either connected ((distance == 0) && MQTTclient_connected)
     // or have no neighbor that can forward the message (distance == 255)
     return false;
   }

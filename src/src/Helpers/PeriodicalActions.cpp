@@ -297,9 +297,17 @@ void schedule_all_tasks_using_MQTT_controller() {
 }
 
 void processMQTTdelayQueue() {
-  if (MQTTDelayHandler == nullptr || !MQTTclient_connected) {
+  if (MQTTDelayHandler == nullptr) {
     return;
   }
+
+  #ifndef USES_ESPEASY_NOW
+  // When using ESPEasy_NOW we may still send MQTT messages even when we're not connected.
+  // For all other situations no need to continue.
+  if (!MQTTclient_connected) {
+    return;
+  }
+  #endif
 
   START_TIMER;
   MQTT_queue_element *element(MQTTDelayHandler->getNext());
@@ -321,7 +329,7 @@ void processMQTTdelayQueue() {
   bool processed = false;
 
   #ifdef USES_ESPEASY_NOW
-  if (!MQTTclient.connected()) {
+  if (!MQTTclient_connected) {
     processed = ESPEasy_now_handler.sendToMQTT(element->controller_idx, element->_topic, element->_payload);
   }
   #endif
