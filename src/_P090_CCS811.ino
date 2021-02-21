@@ -316,10 +316,12 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
       }
       else if (P090_data->myCCS811.checkForStatusError())
       {
+        // get error and also clear it
+        String errorMsg = P090_data->myCCS811.getSensorError();
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           // If the CCS811 found an internal error, print it.
           String log = F("CCS811 : Error: ");
-          log += P090_data->myCCS811.getSensorError();
+          log += errorMsg;
           addLog(LOG_LEVEL_ERROR, log);
         }
       }
