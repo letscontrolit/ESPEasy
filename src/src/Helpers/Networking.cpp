@@ -209,9 +209,10 @@ void checkUDP()
     if ((packetSize >= 2) && (packetSize < UDP_PACKETSIZE_MAX)) {
       // Allocate buffer to process packet.
       std::vector<char> packetBuffer;
-      packetBuffer.resize(packetSize + 1, 0);
+      packetBuffer.resize(packetSize + 1);
 
       if (packetBuffer.size() >= packetSize) {
+        memset(&packetBuffer[0], 0, packetSize + 1);
         int len = portUDP.read(&packetBuffer[0], packetSize);
 
         if (len >= 2) {
