@@ -6,13 +6,15 @@
 #include "../Globals/Settings.h"
 
 WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
+  known.clear();
+  candidates.clear();
   known_it = known.begin();
   load_knownCredentials();
 }
 
 void WiFi_AP_CandidatesList::load_knownCredentials() {
-  if (!mustLoadCredentials) { return; }
-  mustLoadCredentials = false;
+  if (!_mustLoadCredentials) { return; }
+  _mustLoadCredentials = false;
   known.clear();
   candidates.clear();
   addFromRTC();
@@ -32,7 +34,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
 }
 
 void WiFi_AP_CandidatesList::clearCache() {
-  mustLoadCredentials = true;
+  _mustLoadCredentials = true;
   known.clear();
   known_it = known.begin();
 }
@@ -68,9 +70,9 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
 }
 
 bool WiFi_AP_CandidatesList::getNext() {
-  if (candidates.empty()) { return false; }
-
   load_knownCredentials();
+
+  if (candidates.empty()) { return false; }
 
   bool mustPop = true;
 
@@ -109,7 +111,7 @@ bool WiFi_AP_CandidatesList::getNext() {
       candidates.pop_front();
     }
   }
-  return true;
+  return currentCandidate.usable();
 }
 
 const WiFi_AP_Candidate& WiFi_AP_CandidatesList::getCurrent() const {
@@ -228,13 +230,18 @@ bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key)
     case 1:
       ssid = SecuritySettings.WifiSSID;
       key  = SecuritySettings.WifiKey;
-      return true;
+      break;
     case 2:
       ssid = SecuritySettings.WifiSSID2;
       key  = SecuritySettings.WifiKey2;
-      return true;
+      break;
+    default:
+      return false;
   }
 
   // TODO TD-er: Read other credentials from extra file.
-  return false;
+
+  ssid.trim();
+  key.trim();
+  return true;
 }
