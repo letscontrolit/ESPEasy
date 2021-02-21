@@ -11,6 +11,8 @@
 #endif
 
 WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
+  known.clear();
+  candidates.clear();
   known_it = known.begin();
   load_knownCredentials();
 }
@@ -75,9 +77,9 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
 }
 
 bool WiFi_AP_CandidatesList::getNext() {
-  if (candidates.empty()) { return false; }
-
   load_knownCredentials();
+
+  if (candidates.empty()) { return false; }
 
   bool mustPop = true;
 
@@ -116,7 +118,7 @@ bool WiFi_AP_CandidatesList::getNext() {
       candidates.pop_front();
     }
   }
-  return true;
+  return currentCandidate.usable();
 }
 
 const WiFi_AP_Candidate& WiFi_AP_CandidatesList::getCurrent() const {
@@ -249,19 +251,24 @@ bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key)
     case 1:
       ssid = SecuritySettings.WifiSSID;
       key  = SecuritySettings.WifiKey;
-      return true;
+      break;
     case 2:
       ssid = SecuritySettings.WifiSSID2;
       key  = SecuritySettings.WifiKey2;
-      return true;
+      break;
   #ifdef USES_ESPEASY_NOW
     case 3: 
       ssid = F(ESPEASY_NOW_TMP_SSID);
       key  = F(ESPEASY_NOW_TMP_PASSPHRASE);
-      return true;
+      break;
   #endif
+    default:
+      return false;
   }
 
   // TODO TD-er: Read other credentials from extra file.
-  return false;
+
+  ssid.trim();
+  key.trim();
+  return true;
 }

@@ -63,7 +63,6 @@ private:
   WiFi_AP_Candidate currentCandidate;
 
   bool _mustLoadCredentials = true;
-
   bool _addedKnownCandidate = false;
 };
 
