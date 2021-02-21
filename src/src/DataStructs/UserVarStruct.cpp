@@ -5,7 +5,10 @@
 
 UserVarStruct::UserVarStruct()
 {
-  _data.resize(VARS_PER_TASK * TASKS_MAX, 0.0f);
+  _data.resize(VARS_PER_TASK * TASKS_MAX);
+  for (size_t i = 0; i < (VARS_PER_TASK * TASKS_MAX); ++i) {
+    _data[i] = 0.0f;
+  }
 }
 
 // Implementation of [] operator.  This function must return a
