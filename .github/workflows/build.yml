@@ -54,6 +54,7 @@ jobs:
         run: |
           sudo apt install binutils
           pip install -r requirements.txt
+          platformio update
       - name: Build
         env:
           CHIP: ${{ matrix.chip }}
@@ -96,7 +97,7 @@ jobs:
       - name: Extract release notes
         id: release-notes
         run: |
-          git fetch --depth=1 origin ${GITHUB_REF}
+          git fetch --force origin ${GITHUB_REF}:${GITHUB_REF} # see https://github.com/actions/checkout/issues/290
           echo ::set-output name=message::$(git --no-pager tag -l --format="%(contents)" ${GITHUB_REF:10})
       - uses: actions/upload-artifact@v2
         with:
