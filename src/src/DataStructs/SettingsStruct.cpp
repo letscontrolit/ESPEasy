@@ -118,6 +118,7 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
   bitWrite(VariousBits1, 10, value);
 }
 
+template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow() const {
   return bitRead(VariousBits1, 11);
 }
