@@ -3,6 +3,7 @@ from platformio.project.config import ProjectConfig
 
 # This will select the same environments as tools/build_ESPeasy.sh
 
+
 def get_jobs(cfg):
     for env in cfg.envs():
         platform = cfg.get("env:{}".format(env), "platform")
@@ -11,7 +12,10 @@ def get_jobs(cfg):
         elif "espressif32" in platform:
             yield {"chip": "esp32", "env": env}
         else:
-            raise ValueError("Unknown `platform = {}` for `[env:{}]`".format(platform, env))
+            raise ValueError(
+                "Unknown `platform = {}` for `[env:{}]`".format(platform, env)
+            )
+
 
 def filter_jobs(jobs, ignore=("spec_",)):
     for job in jobs:
@@ -19,6 +23,7 @@ def filter_jobs(jobs, ignore=("spec_",)):
             continue
 
         yield job
+
 
 # ref. https://github.blog/changelog/2020-04-15-github-actions-new-workflow-features/
 # we need to echo something like this:
