@@ -33,8 +33,5 @@ if __name__ == "__main__":
             sort.append(job["env"])
         sort.sort(key=str.casefold)
 
-    for s in sort:
-        print(s)
-
     serialized = json.dumps({"include": jobs})
     print("::set-output name=matrix::{}".format(serialized))
