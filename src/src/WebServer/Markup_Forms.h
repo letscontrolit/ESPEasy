@@ -33,9 +33,11 @@ void addFormCheckBox_disabled(LabelType::Enum label, boolean checked);
 // ********************************************************************************
 // Add a Numeric Box form
 // ********************************************************************************
+void addFormNumericBox(LabelType::Enum label, int value, int min = INT_MIN, int max = INT_MAX);
 void addFormNumericBox(const String& label, const String& id, int value, int min = INT_MIN, int max = INT_MAX);
 
-void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max);
+void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals = 6, float stepsize = 0.0f);
+void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, byte nrDecimals = 6, float stepsize = 0.0f);
 
 // ********************************************************************************
 // Add a task selector form

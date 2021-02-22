@@ -2,6 +2,7 @@
 
 #include "../Globals/Device.h"
 #include "../Globals/Settings.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 
 #include <ESPeasySerial.h>
 
@@ -10,6 +11,7 @@ void Caches::clearAllCaches()
 {
   fileExistsMap.clear();
   updateTaskCaches();
+  WiFi_AP_Candidates.clearCache();
 }
 
 void Caches::updateTaskCaches() {

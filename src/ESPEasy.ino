@@ -119,7 +119,6 @@
 #include "src/ESPEasyCore/ESPEasyNetwork.h"
 #include "src/ESPEasyCore/ESPEasyRules.h"
 #include "src/ESPEasyCore/ESPEasyWifi.h"
-#include "src/ESPEasyCore/ESPEasyWiFi_credentials.h"
 #include "src/ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "src/ESPEasyCore/Serial.h"
 
@@ -142,6 +141,7 @@
 #include "src/Globals/Services.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/Statistics.h"
+#include "src/Globals/WiFi_AP_Candidates.h"
 
 #include "src/Helpers/DeepSleep.h"
 #include "src/Helpers/ESPEasyRTC.h"
@@ -159,6 +159,10 @@
 #include "src/Helpers/StringGenerator_System.h"
 
 #include "src/WebServer/WebServer.h"
+
+#ifdef PHASE_LOCKED_WAVEFORM
+#include <core_esp8266_waveform.h>
+#endif
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
@@ -203,6 +207,9 @@ void setup()
 {
 #ifdef ESP8266_DISABLE_EXTRA4K
   disable_extra4k_at_link_time();
+#endif
+#ifdef PHASE_LOCKED_WAVEFORM
+  enablePhaseLockedWaveform();
 #endif
   initWiFi();
   
@@ -341,12 +348,12 @@ void setup()
       toDisable = disableNotification(toDisable);
     }
   }
-  if (!selectValidWiFiSettings()) {
+  if (!WiFi_AP_Candidates.hasKnownCredentials()) {
     WiFiEventData.wifiSetup = true;
-    RTC.lastWiFiChannel = 0; // Must scan all channels
+    RTC.clearLastWiFi(); // Must scan all channels
     // Wait until scan has finished to make sure as many as possible are found
     // We're still in the setup phase, so nothing else is taking resources of the ESP.
-    WifiScan(false, false); 
+    WifiScan(false); 
   }
 
 //  setWifiMode(WIFI_STA);

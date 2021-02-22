@@ -90,7 +90,7 @@ void ESPEasy_time_zone::logTimeZoneInfo() {
 // *----------------------------------------------------------------------*/
 uint32_t ESPEasy_time_zone::calcTimeChangeForRule(const TimeChangeRule& r, int yr)
 {
-  uint8_t m = r.month; // temp copies of r.month and r.week
+  uint8_t m = r.month;
   uint8_t w = r.week;
 
   if (w == 0)          // is this a "Last week" rule?
@@ -109,8 +109,8 @@ uint32_t ESPEasy_time_zone::calcTimeChangeForRule(const TimeChangeRule& r, int y
   tm.tm_min  = 0;
   tm.tm_sec  = 0;
   tm.tm_mday = 1;
-  tm.tm_mon  = m;
-  tm.tm_year = yr - 1970;
+  tm.tm_mon  = m - 1; // TimeChangeRule month starts at 1
+  tm.tm_year = yr - 1900;
   uint32_t t = makeTime(tm);
 
   // add offset from the first of the month to r.dow, and offset for the given week
