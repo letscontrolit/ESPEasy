@@ -165,7 +165,16 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
     String reply;
     reply.reserve(128);
     reply += F("{\n\"log\": \"");
-    reply += log.substring(7, 32); // truncate to 25 chars, max MQTT message size = 128 including header...
+    {
+      // truncate to 25 chars, max MQTT message size = 128 including header...
+      int colonPos = log.indexOf(':');
+      if (colonPos == -1) {
+        colonPos = 0;
+      }
+      String tmp = log.substring(colonPos, colonPos + 25);
+      tmp.trim();      
+      reply += tmp;
+    }
     reply += F("\",\n\"plugin\": ");
     reply += getPluginFromKey(key);
     reply += F(",\n\"pin\": ");

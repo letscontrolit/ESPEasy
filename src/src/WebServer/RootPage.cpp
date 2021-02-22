@@ -159,7 +159,7 @@ void handle_root() {
       String html;
       html.reserve(32);
       html += String(WiFi.RSSI());
-      html += F(" dB (");
+      html += F(" dBm (");
       html += WiFi.SSID();
       html += ')';
       addHtml(html);

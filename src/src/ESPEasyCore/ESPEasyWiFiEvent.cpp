@@ -94,6 +94,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       processEthernetConnected();
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
+      eth_connected = true;
       if (loglevelActiveFor(LOG_LEVEL_INFO))
       {
         String log = F("ETH MAC: ");
@@ -114,7 +115,6 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
         log += F("Mbps");
         addLog(LOG_LEVEL_INFO, log);
       }
-      eth_connected = true;
       break;
     case SYSTEM_EVENT_ETH_DISCONNECTED:
       addLog(LOG_LEVEL_ERROR, F("ETH Disconnected"));
@@ -130,6 +130,11 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
 #endif //HAS_ETHERNET
     default:
+      {
+        String log = F("UNKNOWN EVENT: ");
+        log += event;
+        addLog(LOG_LEVEL_ERROR, log);
+      }
       break;
   }
 }

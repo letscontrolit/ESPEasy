@@ -183,6 +183,7 @@ void handle_json()
       stream_next_json_object_value(LabelType::SSID);
       stream_next_json_object_value(LabelType::BSSID);
       stream_next_json_object_value(LabelType::CHANNEL);
+      stream_next_json_object_value(LabelType::ENCRYPTION_TYPE_STA);
       stream_next_json_object_value(LabelType::CONNECTED_MSEC);
       stream_next_json_object_value(LabelType::LAST_DISCONNECT_REASON);
       stream_next_json_object_value(LabelType::LAST_DISC_REASON_STR);
@@ -196,6 +197,10 @@ void handle_json()
       stream_next_json_object_value(LabelType::PERIODICAL_GRAT_ARP);
 #endif // ifdef SUPPORT_ARP
       stream_next_json_object_value(LabelType::CONNECTION_FAIL_THRESH);
+      stream_next_json_object_value(LabelType::WIFI_TX_MAX_PWR);
+      stream_next_json_object_value(LabelType::WIFI_CUR_TX_PWR);
+      stream_next_json_object_value(LabelType::WIFI_SENS_MARGIN);
+      stream_next_json_object_value(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
       stream_last_json_object_value(LabelType::WIFI_RSSI);
       // TODO: PKR: Add ETH Objects
       addHtml(F(",\n"));
@@ -305,10 +310,16 @@ void handle_json()
         for (byte x = 0; x < valueCount; x++)
         {
           addHtml('{');
+          const String value = formatUserVarNoCheck(TaskIndex, x);
+          byte nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[x];
+          if (mustConsiderAsString(value)) {
+            // Flag as not to treat as a float
+            nrDecimals = 255;
+          }
           stream_next_json_object_value(F("ValueNumber"), String(x + 1));
           stream_next_json_object_value(F("Name"),        String(ExtraTaskSettings.TaskDeviceValueNames[x]));
-          stream_next_json_object_value(F("NrDecimals"),  String(ExtraTaskSettings.TaskDeviceValueDecimals[x]));
-          stream_last_json_object_value(F("Value"), formatUserVarNoCheck(TaskIndex, x));
+          stream_next_json_object_value(F("NrDecimals"),  String(nrDecimals));
+          stream_last_json_object_value(F("Value"),       value);
 
           if (x < (valueCount - 1)) {
             addHtml(F(",\n"));

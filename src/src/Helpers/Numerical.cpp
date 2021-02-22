@@ -155,6 +155,35 @@ bool mustConsiderAsString(NumericalType detectedType) {
   return false;
 }
 
+bool mustConsiderAsString(const String& value) {
+  const unsigned int length = value.length();
+  if (length == 0) return true;
+  unsigned int i = 0;
+  char c = value[i];
+  if (c == '+' || c == '-') {
+    ++i;
+    if (length == i) return true;
+    c = value[i];
+  }
+
+  bool dotFound = false;
+  for (; i < length; ++i) {
+    if (c == '.') {
+      if (dotFound) {
+        return true;
+      } else {
+        dotFound = true;
+      }
+    } else {
+      if (!isdigit(c)) {
+        return true;
+      }
+    }
+    c = value[i];
+  }
+  return i < length;
+}
+
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
   const unsigned int bufLength = tBuf.length();
   unsigned int firstDec        = 0;
@@ -198,6 +227,13 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         ++firstDec;
         result      += c;
         detectedType = NumericalType::BinaryUint;
+      } else if (NumericalType::Integer == requestedType) {
+        // Allow leading zeroes in Integer types (e.g. in time notation)
+        while (c == '0' && firstDec < bufLength) {
+          // N.B. intentional "reverse order" of reading char and ++firstDec
+          c = tBuf.charAt(firstDec);
+          ++firstDec;
+        }      
       } else if (NumericalType::FloatingPoint == requestedType && c == '.') {
         // Only floating point numbers should start with '0.'
         // All other combinations are not valid.
@@ -265,5 +301,6 @@ bool isNumerical(const String& tBuf, NumericalType& detectedType) {
     return result.length() >= tmp.length();
   }
 
-  return false;
+
+  return result.length() > 0;
 }
