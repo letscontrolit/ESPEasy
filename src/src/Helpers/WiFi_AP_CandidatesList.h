@@ -34,10 +34,6 @@ struct WiFi_AP_CandidatesList {
   // This will force a reconnect to the current AP if connection is lost.
   void markCurrentConnectionStable();
 
-#ifdef USES_ESPEASY_NOW
-  bool isESPEasy_now_only() const;
-#endif
-
   bool addedKnownCandidate() const { return _addedKnownCandidate; }
 
 private:

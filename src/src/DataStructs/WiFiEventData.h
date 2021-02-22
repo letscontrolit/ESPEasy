@@ -1,6 +1,8 @@
 #ifndef DATASTRUCTS_WIFIEVENTDATA_H
 #define DATASTRUCTS_WIFIEVENTDATA_H
 
+#include "../../ESPEasy-Globals.h"
+
 #include "../DataStructs/MAC_address.h"
 #include "../DataTypes/WiFiDisconnectReason.h"
 #include "../Helpers/LongTermTimer.h"
@@ -51,6 +53,11 @@ struct WiFiEventData_t {
   void markConnectedAPmode(const uint8_t mac[6]);
   void markDisconnectedAPmode(const uint8_t mac[6]);
 
+#ifdef USES_ESPEASY_NOW
+  bool isESPEasy_now_only() const;
+#endif
+
+
 
   // WiFi related data
   bool          wifiSetup        = false;
@@ -64,7 +71,6 @@ struct WiFiEventData_t {
   float         wifi_TX_pwr            = 0;
   bool          bssid_changed          = false;
   bool          channel_changed        = false;
-  bool          espeasy_now_only       = false;
 
   WiFiDisconnectReason    lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
   LongTermTimer           lastConnectMoment;

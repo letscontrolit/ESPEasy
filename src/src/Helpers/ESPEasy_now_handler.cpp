@@ -16,6 +16,7 @@
 # include "../Globals/ESPEasy_time.h"
 # include "../Globals/MQTT.h"
 # include "../Globals/Nodes.h"
+# include "../Globals/RTC.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Globals/SendData_DuplicateChecker.h"
 # include "../Globals/Settings.h"
@@ -90,8 +91,8 @@ bool ESPEasy_now_handler_t::begin()
   MAC_address bssid;
   _controllerIndex = INVALID_CONTROLLER_INDEX;
 
-  if (WiFiEventData.espeasy_now_only) {
-    WifiScan(false, false);
+  if (WiFiEventData.isESPEasy_now_only()) {
+    WifiScan(false, 0);
     addPeerFromWiFiScan();
   }
 
@@ -110,7 +111,7 @@ bool ESPEasy_now_handler_t::begin()
   setAP(true);
   /*
   // FIXME TD-er: Must use standard WiFi connection setup.
-  if (WiFiEventData.espeasy_now_only) {
+  if (WiFiEventData.isESPEasy_now_only()) {
     if (bssid.all_zero()) {
       WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel);
     } else {
@@ -163,11 +164,13 @@ void ESPEasy_now_handler_t::end()
 {
   _controllerIndex = INVALID_CONTROLLER_INDEX;
   use_EspEasy_now  = false;
+  RTC.clearLastWiFi(); // Force a WiFi scan
   if (_last_used != 0) {
     // Only call WifiEspNow.end() if it was started.
     WifiEspNow.end();
     _last_used = 0;
   }
+  setAP(false);
   addLog(LOG_LEVEL_INFO, F("ESPEasy-NOW disabled"));
 }
 
@@ -250,7 +253,7 @@ bool ESPEasy_now_handler_t::loop()
 
   if (_send_failed_count > 30 /*|| !active()*/) {
     _send_failed_count = 0;
-    WiFiEventData.espeasy_now_only   = true;
+    // FIXME TD-er: Must check/mark so this becomes true: WiFiEventData.isESPEasy_now_only()
 
     // Start scanning the next channel to see if we may end up with a new found node
     //    WifiScan(false, false);

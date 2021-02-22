@@ -155,12 +155,6 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
 }
 
-#ifdef USES_ESPEASY_NOW
-bool WiFi_AP_CandidatesList::isESPEasy_now_only() const {
-  return RTC.lastWiFiSettingsIndex == 3;
-}
-#endif
-
 void WiFi_AP_CandidatesList::add(uint8_t networkItem) {
   WiFi_AP_Candidate tmp(networkItem);
 
@@ -232,8 +226,10 @@ void WiFi_AP_CandidatesList::purge_unusable() {
       it = known.erase(it);
     }
   }
-  known.sort();
-  known.unique();
+  if (known.size() > 1) {
+    known.sort();
+    known.unique();
+  }
 
   for (auto it = candidates.begin(); it != candidates.end();) {
     if (it->usable()) {
@@ -242,8 +238,10 @@ void WiFi_AP_CandidatesList::purge_unusable() {
       it = candidates.erase(it);
     }
   }
-  candidates.sort();
-  candidates.unique();
+  if (candidates.size() > 1) {
+    candidates.sort();
+    candidates.unique();
+  }
 }
 
 bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key) const {
@@ -268,7 +266,7 @@ bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key)
 
   // TODO TD-er: Read other credentials from extra file.
 
-  ssid.trim();
-  key.trim();
+
+  // Spaces are allowed in both SSID and pass phrase, so make sure to not trim the ssid and key.
   return true;
 }

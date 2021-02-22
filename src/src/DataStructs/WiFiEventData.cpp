@@ -151,3 +151,10 @@ void WiFiEventData_t::markDisconnectedAPmode(const uint8_t mac[6]) {
   lastMacDisconnectedAPmode.set(mac);
   processedDisconnectAPmode = false;
 }
+
+
+#ifdef USES_ESPEASY_NOW
+  bool WiFiEventData_t::isESPEasy_now_only() const {
+    return RTC.lastWiFiSettingsIndex == 3;
+  }
+#endif

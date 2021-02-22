@@ -876,6 +876,14 @@ bool hasIPaddr() {
 
 // Check connection. Maximum timeout 500 msec.
 bool NetworkConnected(uint32_t timeout_ms) {
+
+#ifdef USES_ESPEASY_NOW
+  if (WiFiEventData.isESPEasy_now_only()) {
+    return false;
+  }
+#endif
+
+
   uint32_t timer     = millis() + (timeout_ms > 500 ? 500 : timeout_ms);
   uint32_t min_delay = timeout_ms / 20;
 
