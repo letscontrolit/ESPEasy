@@ -40,13 +40,7 @@ struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLoca
 
 
 void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
-  uint8_t  year;
-  uint8_t  month, monthLength;
-  uint32_t time;
-  unsigned long days;
-  const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
-  time       = (uint32_t)timeInput;
+  uint32_t time = (uint32_t)timeInput;
   tm.tm_sec  = time % 60;
   time      /= 60;                   // now it is minutes
   tm.tm_min  = time % 60;
@@ -55,40 +49,27 @@ void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
   time      /= 24;                   // now it is days
   tm.tm_wday = ((time + 4) % 7) + 1; // Sunday is day 1
 
-  year = 0;
-  days = 0;
-
+  int      year = 1970;
+  unsigned long days = 0;
   while ((unsigned)(days += (isLeapYear(year) ? 366 : 365)) <= time) {
     year++;
   }
-  tm.tm_year = year; // year is offset from 1970
+  tm.tm_year = year - 1900; // tm_year starts at 1900
 
   days -= isLeapYear(year) ? 366 : 365;
   time -= days;      // now it is days in this year, starting at 0
 
-  days        = 0;
-  month       = 0;
-  monthLength = 0;
-
+  uint8_t month = 0;
   for (month = 0; month < 12; month++) {
-    if (month == 1) { // february
-      if (isLeapYear(year)) {
-        monthLength = 29;
-      } else {
-        monthLength = 28;
-      }
-    } else {
-      monthLength = monthDays[month];
-    }
-
+    const uint8_t monthLength = getMonthDays(year, month);
     if (time >= monthLength) {
       time -= monthLength;
     } else {
       break;
     }
   }
-  tm.tm_mon  = month + 1; // jan is month 1
-  tm.tm_mday = time + 1;  // day of month
+  tm.tm_mon  = month;     // Jan is month 0
+  tm.tm_mday = time + 1;  // day of month start at 1
 }
 
 
@@ -415,9 +396,9 @@ String ESPEasy_time::getDateString(char delimiter) const
 String ESPEasy_time::getDateString(const struct tm& ts, char delimiter) {
   // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
   char DateString[20]; // 19 digits plus the null char
-  const int year = 1970 + ts.tm_year;
+  const int year = 1900 + ts.tm_year;
 
-  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.tm_mon, delimiter, ts.tm_mday);
+  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.tm_mon + 1, delimiter, ts.tm_mday);
   return DateString;
 }
 
@@ -494,7 +475,7 @@ int ESPEasy_time::year(unsigned long t)
   struct tm tmp;
 
   breakTime(t, tmp);
-  return 1970 + tmp.tm_year;
+  return 1900 + tmp.tm_year;
 }
 
 int ESPEasy_time::weekday(unsigned long t)
@@ -615,7 +596,7 @@ int ESPEasy_time::dayOfYear(int year, int month, int day) {
 }
 
 void ESPEasy_time::calcSunRiseAndSet() {
-  int   doy  = dayOfYear(tm.tm_year, tm.tm_mon, tm.tm_mday);
+  int   doy  = dayOfYear(tm.tm_year, tm.tm_mon + 1, tm.tm_mday);
   float eqt  = equationOfTime(doy);
   float dec  = sunDeclination(doy);
   float da   = diurnalArc(dec, Settings.Latitude);

@@ -6,13 +6,15 @@
 #include "../Globals/Settings.h"
 
 WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
+  known.clear();
+  candidates.clear();
   known_it = known.begin();
   load_knownCredentials();
 }
 
 void WiFi_AP_CandidatesList::load_knownCredentials() {
-  if (!mustLoadCredentials) { return; }
-  mustLoadCredentials = false;
+  if (!_mustLoadCredentials) { return; }
+  _mustLoadCredentials = false;
   known.clear();
   candidates.clear();
   addFromRTC();
@@ -32,7 +34,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
 }
 
 void WiFi_AP_CandidatesList::clearCache() {
-  mustLoadCredentials = true;
+  _mustLoadCredentials = true;
   known.clear();
   known_it = known.begin();
 }
@@ -68,9 +70,9 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
 }
 
 bool WiFi_AP_CandidatesList::getNext() {
-  if (candidates.empty()) { return false; }
-
   load_knownCredentials();
+
+  if (candidates.empty()) { return false; }
 
   bool mustPop = true;
 
@@ -105,9 +107,11 @@ bool WiFi_AP_CandidatesList::getNext() {
 
   if (mustPop) {
     known_it = known.begin();
-    candidates.pop_front();
+    if (!candidates.empty()) {
+      candidates.pop_front();
+    }
   }
-  return true;
+  return currentCandidate.usable();
 }
 
 const WiFi_AP_Candidate& WiFi_AP_CandidatesList::getCurrent() const {
@@ -176,30 +180,26 @@ void WiFi_AP_CandidatesList::addFromRTC() {
     return;
   }
 
-  WiFi_AP_Candidate tmp(RTC.lastWiFiSettingsIndex, ssid, key);
+  candidates.emplace_front(RTC.lastWiFiSettingsIndex, ssid, key);
+  candidates.front().setBSSID(RTC.lastBSSID);
+  candidates.front().rssi = -1; // Set to best possible RSSI so it is tried first.
+  candidates.front().channel = RTC.lastWiFiChannel;
 
-  tmp.setBSSID(RTC.lastBSSID);
-  if (!tmp.bssid_set()) return;
+  if (!candidates.front().usable() || !candidates.front().allowQuickConnect()) {
+    candidates.pop_front();
+    return;
+  }
 
   // This is not taken from a scan, so no idea of the used encryption.
   // Try to find a matching BSSID to get the encryption.
-  bool matchfound = false;
-  for (auto it = candidates.begin(); !matchfound && it != candidates.end(); ++it) {
-    if (tmp == *it) {
-      matchfound = true;
-      tmp = *it;
+  for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+    if ((it->rssi != -1) && candidates.front() == *it) {
+      candidates.front().enc_type = it->enc_type;
+      return;
     }
   }
-  if (!matchfound) {
-    if (currentCandidate == tmp) {
-      tmp = currentCandidate;
-    }
-  }
-
-  tmp.channel = RTC.lastWiFiChannel;
-  tmp.rssi    = -1; // Set to best possible RSSI so it is tried first.
-  if (tmp.usable() && tmp.allowQuickConnect()) {
-    candidates.push_front(tmp);
+  if (currentCandidate == candidates.front()) {
+    candidates.front().enc_type = currentCandidate.enc_type;
   }
 }
 
@@ -230,13 +230,19 @@ bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key)
     case 1:
       ssid = SecuritySettings.WifiSSID;
       key  = SecuritySettings.WifiKey;
-      return true;
+      break;
     case 2:
       ssid = SecuritySettings.WifiSSID2;
       key  = SecuritySettings.WifiKey2;
-      return true;
+      break;
+    default:
+      return false;
   }
 
   // TODO TD-er: Read other credentials from extra file.
-  return false;
+
+
+
+  // Spaces are allowed in both SSID and pass phrase, so make sure to not trim the ssid and key.
+  return true;
 }

@@ -636,7 +636,7 @@ void P092_data_struct::Plugin_092_StartReceiving(taskIndex_t taskindex) {
 
   while ((timePassedSince(start) < 100) && (DLbus_Data->ISR_PulseCount == 0)) {
     // wait for first pulse received (timeout 100ms)
-    yield();
+    delay(0);
   }
 
   if (DLbus_Data->ISR_PulseCount == 0) {
