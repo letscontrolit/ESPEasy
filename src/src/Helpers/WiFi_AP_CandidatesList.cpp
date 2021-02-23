@@ -266,7 +266,6 @@ bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key)
 
   // TODO TD-er: Read other credentials from extra file.
 
-
   // Spaces are allowed in both SSID and pass phrase, so make sure to not trim the ssid and key.
   return true;
 }
