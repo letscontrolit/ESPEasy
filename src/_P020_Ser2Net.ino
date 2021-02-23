@@ -20,6 +20,7 @@
 # define P020_SERVER_PORT          ExtraTaskSettings.TaskDevicePluginConfigLong[0]
 # define P020_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
 
+// #define P020_BAUDRATE             ExtraTaskSettings.TaskDevicePluginConfigLong[1]
 # define P020_RX_WAIT              PCONFIG(4)
 # define P020_SERIAL_CONFIG        PCONFIG(1)
 # define P020_SERIAL_PROCESSING    PCONFIG(5)
@@ -80,14 +81,15 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_GET_DEVICEGPIONAMES: {
+    case PLUGIN_GET_DEVICEGPIONAMES: 
+    {
       serialHelper_getGpioNames(event);
       break;
     }
 
 
     case PLUGIN_WEBFORM_LOAD:
-    {
+    { 
       addFormNumericBox(F("TCP Port"),  F("p020_port"), P020_SERVER_PORT, 0);
       addFormNumericBox(F("Baud Rate"), F("p020_baud"), P020_BAUDRATE,    0);
       byte serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
@@ -102,7 +104,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       }
       addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0);
       success = true;
-      break;
+      break; 
     }
 
     case PLUGIN_WEBFORM_SAVE:
@@ -191,7 +193,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == task) {
-        break;
+         break; 
       }
       task->checkServer();
       success = true;
@@ -202,8 +204,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
     {
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) {
-        break;
+      if (nullptr == task) { 
+        break; 
       }
 
       if (task->hasClientConnected()) {
@@ -218,33 +220,41 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
     {
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) {
-        break;
+      if (nullptr == task) { 
+        break; 
       }
 
-      if (task->hasClientConnected()) {
-        task->handleSerialIn(event);
-      } else {
-        task->discardSerialIn();
+      if (task->hasClientConnected()) { 
+        task->handleSerialIn(event); 
+      } else { 
+        task->discardSerialIn(); 
       }
       success = true;
       break;
     }
 
-      /*
-         case PLUGIN_WRITE:
-         {
-          String command = parseString(string, 1);
+    case PLUGIN_WRITE:
+    {
+      String command  = parseString(string, 1);
+      P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
-          if (command == F("serialsend"))
-          {
-            success = true;
-            String tmpString = string.substring(11);
-            Serial.println(tmpString); // FIXME TD-er: Should this also use the serial write buffer?
-          }
-          break;
-         }
-       */
+      if (nullptr == task) { 
+        break; 
+      }
+      success = true;
+
+      if (command == F("serialsend")) {
+        const char *tmpBuf = string.substring(11).c_str();
+        task->ser2netSerial->write(tmpBuf);
+        task->ser2netSerial->flush();
+      }
+
+      if ((command == F("ser2netclientsend")) && (task->hasClientConnected())) {
+        task->ser2netClient.print(string.substring(18));
+        task->ser2netClient.flush();
+      }
+      break;
+    }
   }
   return success;
 }

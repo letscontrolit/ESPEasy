@@ -104,36 +104,23 @@ void P020_Task::discardClientIn() {
   }
 }
 
-void P020_Task::blinkLED() {
-  blinkLEDStartTime = millis();
-  digitalWrite(P020_STATUS_LED, 1);
-}
-
-void P020_Task::checkBlinkLED() {
-  if ((blinkLEDStartTime > 0) && (timePassedSince(blinkLEDStartTime) >= 500)) {
-    digitalWrite(P020_STATUS_LED, 0);
-    blinkLEDStartTime = 0;
-  }
-}
-
 void P020_Task::clearBuffer() {
   serial_buffer = "";
   serial_buffer.reserve(P020_DATAGRAM_MAX_SIZE);
 }
 
-void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin,
-                            unsigned long baud, byte config) {
+void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin, unsigned long baud, byte config) {
   serialEnd();
 
   if (rxPin >= 0) {
     ser2netSerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin);
 
     if (nullptr != ser2netSerial) {
-# if defined(ESP8266)
+        # if defined(ESP8266)
       ser2netSerial->begin(baud, (SerialConfig)config);
-# elif defined(ESP32)
+        # elif defined(ESP32)
       ser2netSerial->begin(baud, config);
-# endif // if defined(ESP8266)
+        # endif // if defined(ESP8266)
       addLog(LOG_LEVEL_DEBUG, F("Ser2net   : Serial opened"));
     }
   }
@@ -156,20 +143,9 @@ void P020_Task::handleClientIn(struct EventStruct *event) {
   if (count > 0) {
     if (count > P020_DATAGRAM_MAX_SIZE) { count = P020_DATAGRAM_MAX_SIZE; }
     bytes_read = ser2netClient.read(net_buf, count);
-
-    /*
-       if (Settings.TaskDevicePin2[event->TaskIndex] != -1) {
-                digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], HIGH); // Activate the TX Enable
-                }
-     */
     ser2netSerial->write(net_buf, bytes_read);
     ser2netSerial->flush();             // Waits for the transmission of outgoing serial data to
 
-    /*
-              if (Settings.TaskDevicePin2[event->TaskIndex] != -1){
-                digitalWrite(Settings.TaskDevicePin2[event->TaskIndex], LOW); // Deactivate the TX Enable
-              }
-     */
     while (ser2netClient.available()) { // flush overflow data if available
       ser2netClient.read();
     }
@@ -183,14 +159,11 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
 
   do {
     if (ser2netSerial->available()) {
-      // digitalWrite(P020_STATUS_LED, 1);
       if (serial_buffer.length() >= P020_DATAGRAM_MAX_SIZE) {
         addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : Error: Buffer overflow, discarded input."));
         ser2netSerial->read();
       }
       else { serial_buffer += (char)ser2netSerial->read(); }
-
-      // digitalWrite(P020_STATUS_LED, 0);
       timeOut = RXWait; // if serial received, reset timeout counter
     } else {
       if (timeOut <= 0) { break; }
@@ -205,8 +178,6 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
     ser2netClient.flush();
     clearBuffer();
     addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : data send!"));
-
-    // blinkLED();
   } // done
 }
 

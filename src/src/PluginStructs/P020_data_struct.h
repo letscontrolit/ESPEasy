@@ -23,19 +23,14 @@ struct P020_Task : public PluginTaskData_base {
   void               startServer(uint16_t portnumber);
 
   void               checkServer();
-
+  
   void               stopServer();
-
+  
   bool               hasClientConnected();
-
+  
   void               discardClientIn();
-
-  void               blinkLED();
-
-  void               checkBlinkLED();
-
+  
   void               clearBuffer();
-
 
   void               serialBegin(const ESPEasySerialPort port,
                                  int16_t                 rxPin,
@@ -61,7 +56,6 @@ struct P020_Task : public PluginTaskData_base {
   String         net_buffer;
   int            checkI            = 0;
   ESPeasySerial *ser2netSerial     = nullptr;
-  unsigned long  blinkLEDStartTime = 0;
   byte           serial_processing = 0;
 };
 
