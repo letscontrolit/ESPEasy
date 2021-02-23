@@ -119,15 +119,6 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
 }
 
 template<unsigned int N_TASKS>
-<<<<<<< HEAD
-bool SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup() const {
-  return bitRead(VariousBits1, 14);
-}
-
-template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
-  bitWrite(VariousBits1, 14, value);
-=======
 bool SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow() const {
   return bitRead(VariousBits1, 11);
 }
@@ -155,7 +146,16 @@ bool SettingsStruct_tmpl<N_TASKS>::UseMaxTXpowerForSending() const {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::UseMaxTXpowerForSending(bool value) {
   bitWrite(VariousBits1, 13, value);
->>>>>>> 060d03157f3f90474fa5b94644539e599ab53192
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup() const {
+  return bitRead(VariousBits1, 14);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
+  bitWrite(VariousBits1, 14, value);
 }
 
 template<unsigned int N_TASKS>

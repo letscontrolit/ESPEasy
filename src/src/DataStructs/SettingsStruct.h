@@ -86,11 +86,6 @@ class SettingsStruct_tmpl
   bool SendToHttp_ack() const;
   void SendToHttp_ack(bool value);
 
-<<<<<<< HEAD
-  // When set you can use the Sensor in AP-Mode without beeing forced to /setup
-  bool ApDontForceSetup() const;
-  void ApDontForceSetup(bool value);
-=======
   // Enable/disable ESPEasyNow protocol
   bool UseESPEasyNow() const;
   void UseESPEasyNow(bool value);
@@ -103,8 +98,10 @@ class SettingsStruct_tmpl
   bool UseMaxTXpowerForSending() const;
   void UseMaxTXpowerForSending(bool value);
 
+  // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+  bool ApDontForceSetup() const;
+  void ApDontForceSetup(bool value);
 
->>>>>>> 060d03157f3f90474fa5b94644539e599ab53192
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
