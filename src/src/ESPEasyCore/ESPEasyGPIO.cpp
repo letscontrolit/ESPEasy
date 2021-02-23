@@ -1,3 +1,4 @@
+
 #include "ESPEasyGPIO.h"
 
 /****************************************************************************/
@@ -88,37 +89,73 @@ bool GPIO_Read_Switch_State(int pin, byte pinMode) {
 }
 
 //********************************************************************************
-// MCP23017 read
+// MCP23017 PIN read
 //********************************************************************************
 int8_t GPIO_MCP_Read(int Par1)
 {
-  int8_t state = -1;
+  int8_t pinState = -1;
   if (checkValidPortRange(PLUGIN_MCP, Par1)) {
     byte unit = (Par1 - 1) / 16;
-    byte port = Par1 - (unit * 16);
+    byte port = Par1 - (unit * 16) - 1;
     uint8_t address = 0x20 + unit;
-    byte IOBankValueReg = 0x12;
-    if (port > 8)
-    {
-      port = port - 8;
-      IOBankValueReg++;
-    }
-    // get the current pin status
-    Wire.beginTransmission(address);
-    Wire.write(IOBankValueReg); // IO data register
-    Wire.endTransmission();
-    Wire.requestFrom(address, (uint8_t)0x1);
-    if (Wire.available())
-    {
-      state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
+    byte IOBankValueReg = (port<8)? MCP23017_GPIOA : MCP23017_GPIOB;
+    port = port % 8;
+
+    byte retValue;
+    if (GPIO_MCP_ReadRegister(address,IOBankValueReg,&retValue)) {
+      retValue = (retValue & (1 << port)) >> port;
+      pinState = (retValue==0)?0:1;
+
+      /*
+      // get the current pin status
+      Wire.beginTransmission(address);
+      Wire.write(IOBankValueReg); // IO data register
+      Wire.endTransmission();
+      Wire.requestFrom(address, (uint8_t)0x1);
+      if (Wire.available())
+      {
+        state = (Wire.read() & (1 << port)) >> port;
+      }
+      */
     }
   }
-  return state;
+  return pinState;
+}
+
+//********************************************************************************
+// MCP23017 read register
+//********************************************************************************
+
+bool GPIO_MCP_ReadRegister(byte mcpAddr, uint8_t regAddr, uint8_t *retValue) {
+  bool success = false;
+  // Read the register
+  Wire.beginTransmission(mcpAddr);
+  Wire.write(regAddr);
+  Wire.endTransmission();
+
+  Wire.requestFrom(mcpAddr, (uint8_t)0x1);
+  if (Wire.available()) {
+    success=true;
+    *retValue = Wire.read();
+  }
+  return success;
+}
+
+//********************************************************************************
+// MCP23017 write register
+//********************************************************************************
+
+void GPIO_MCP_WriteRegister(byte mcpAddr, uint8_t regAddr, uint8_t regValue) {
+  // Write the register
+  Wire.beginTransmission(mcpAddr);
+  Wire.write(regAddr);
+  Wire.write(regValue);
+  Wire.endTransmission();
 }
 
 
 //********************************************************************************
-// MCP23017 write
+// MCP23017 write pin
 //********************************************************************************
 bool GPIO_MCP_Write(int Par1, byte Par2)
 {
@@ -126,18 +163,34 @@ bool GPIO_MCP_Write(int Par1, byte Par2)
     return false;
   }
   bool success = false;
-  byte portvalue = 0;
   byte unit = (Par1 - 1) / 16;
-  byte port = Par1 - (unit * 16);
-  uint8_t address = 0x20 + unit;
-  byte IOBankConfigReg = 0;
-  byte IOBankValueReg = 0x12;
-  if (port > 8)
-  {
-    port = port - 8;
-    IOBankConfigReg++;
-    IOBankValueReg++;
+  byte port = Par1 - (unit * 16) - 1;
+  uint8_t address = int((Par1-1) / 16) + 0x20;
+  byte IOBankConfigReg = (port<8)? MCP23017_IODIRA : MCP23017_IODIRB;
+  byte IOBankValueReg = (port<8)? MCP23017_GPIOA : MCP23017_GPIOB;
+  port = port % 8;
+
+  byte retValue;
+
+  // turn this port into output, first read current config
+  if (GPIO_MCP_ReadRegister(address,IOBankConfigReg,&retValue)) {
+    retValue &= ~(1 << port ); // change pin to output (0)
+
+    // write new IO config
+    GPIO_MCP_WriteRegister(address,IOBankConfigReg,retValue);
+
+    if (GPIO_MCP_ReadRegister(address,IOBankValueReg,&retValue)) {
+      (Par2 == 1) ? retValue |= (1 << port) : retValue &= ~(1 << port);
+      
+      // write new IO config
+      GPIO_MCP_WriteRegister(address,IOBankValueReg,retValue);
+      success = true;
+    }
   }
+  return(success);
+
+/*
+  byte portvalue = 0;
   // turn this port into output, first read current config
   Wire.beginTransmission(address);
   Wire.write(IOBankConfigReg); // IO config register
@@ -146,7 +199,7 @@ bool GPIO_MCP_Write(int Par1, byte Par2)
   if (Wire.available())
   {
     portvalue = Wire.read();
-    portvalue &= ~(1 << (port - 1)); // change pin from (default) input to output
+    portvalue &= ~(1 << port ); // change pin from (default) input to output
 
     // write new IO config
     Wire.beginTransmission(address);
@@ -163,9 +216,9 @@ bool GPIO_MCP_Write(int Par1, byte Par2)
   {
     portvalue = Wire.read();
     if (Par2 == 1)
-      portvalue |= (1 << (port - 1));
+      portvalue |= (1 << port);
     else
-      portvalue &= ~(1 << (port - 1));
+      portvalue &= ~(1 << port);
 
     // write back new data
     Wire.beginTransmission(address);
@@ -175,52 +228,70 @@ bool GPIO_MCP_Write(int Par1, byte Par2)
     success = true;
   }
   return(success);
+  */
 }
-
 
 //********************************************************************************
 // MCP23017 config
+// Par2: 0: Pullup disabled
+// Par2: 1: Pullup enabled
 //********************************************************************************
-void GPIO_MCP_Config(int Par1, byte Par2)
+bool setMCPInputAndPullupMode(uint8_t Par1, bool enablePullUp)
 {
   if (!checkValidPortRange(PLUGIN_MCP, Par1)) {
-    return;
+    return false;
   }
 
-  // bool success = false;
-  byte portvalue = 0;
+  bool success = false;
   byte unit = (Par1 - 1) / 16;
-  byte port = Par1 - (unit * 16);
+  byte port = Par1 - (unit * 16) -1;
   uint8_t address = 0x20 + unit;
-  byte IOBankConfigReg = 0xC;
-  if (port > 8)
-  {
-    port = port - 8;
-    IOBankConfigReg++;
-  }
-  // turn this port pullup on
-  Wire.beginTransmission(address);
-  Wire.write(IOBankConfigReg);
-  Wire.endTransmission();
-  Wire.requestFrom(address, (uint8_t)0x1);
-  if (Wire.available())
-  {
-    portvalue = Wire.read();
-    if (Par2 == 1)
-      portvalue |= (1 << (port - 1));
-    else
-      portvalue &= ~(1 << (port - 1));
+  byte IOBankPullUpReg = (port<8)? MCP23017_GPPUA : MCP23017_GPPUB;
+  byte IOBankIODirReg = (port<8)? MCP23017_IODIRA : MCP23017_IODIRB;
+  port = port % 8;
 
-    // write new IO config
-    Wire.beginTransmission(address);
-    Wire.write(IOBankConfigReg); // IO config register
-    Wire.write(portvalue);
-    Wire.endTransmission();
+  byte retValue;
+  // set this port mode to INPUT (bit=1)
+  if (GPIO_MCP_ReadRegister(address, IOBankIODirReg, &retValue)) {
+    retValue |= (1 << port);
+    GPIO_MCP_WriteRegister(address, IOBankIODirReg, retValue);
+
+    // turn this port pullup on or off
+    if (GPIO_MCP_ReadRegister(address, IOBankPullUpReg, &retValue)) {
+    enablePullUp ? retValue |= (1 << port) : retValue &= ~(1 << port);
+    GPIO_MCP_WriteRegister(address, IOBankPullUpReg, retValue);
+
+    success=true;
+    }
   }
+  return success;
+}
+
+bool setMCPOutputMode(uint8_t Par1)
+{
+  if (!checkValidPortRange(PLUGIN_MCP, Par1)) {
+    return false;
+  }
+
+  bool success = false;
+  byte retValue;
+  byte unit = (Par1 - 1) / 16;
+  byte port = Par1 - (unit * 16) - 1;
+  uint8_t address = 0x20 + unit;
+  byte IOBankIODirReg = (port<8)? MCP23017_IODIRA : MCP23017_IODIRB;
+  port = port % 8;
+
+  // set this port mode to OUTPUT (bit=0)
+  if (GPIO_MCP_ReadRegister(address, IOBankIODirReg, &retValue)) {
+   retValue &= ~(1 << port);
+   GPIO_MCP_WriteRegister(address, IOBankIODirReg, retValue);
+   success=true;
+  }
+  return success;
 }
 
 //********************************************************************************
-// PCF8574 read
+// PCF8574 read pin
 //********************************************************************************
 //@giig1967g-20181023: changed to int8_t
 int8_t GPIO_PCF_Read(int Par1)
@@ -228,7 +299,7 @@ int8_t GPIO_PCF_Read(int Par1)
   int8_t state = -1;
   if (checkValidPortRange(PLUGIN_PCF, Par1)) {
     byte unit = (Par1 - 1) / 8;
-    byte port = Par1 - (unit * 8);
+    byte port = Par1 - (unit * 8) - 1;
     uint8_t address = 0x20 + unit;
     if (unit > 7) address += 0x10;
 
@@ -236,34 +307,43 @@ int8_t GPIO_PCF_Read(int Par1)
     Wire.requestFrom(address, (uint8_t)0x1);
     if (Wire.available())
     {
-      state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
+      state = ((Wire.read() & _BV(port)) >> (port));
     }
   }
   return state;
 }
 
-uint8_t GPIO_PCF_ReadAllPins(uint8_t address)
+bool GPIO_PCF_ReadAllPins(uint8_t address, uint8_t *retValue)
 {
-  uint8_t rawState = 0;
+  bool success = false;
 
   Wire.requestFrom(address, (uint8_t)0x1);
   if (Wire.available())
   {
-    rawState =Wire.read();
+    success=true;
+    *retValue = Wire.read();
   }
-  return rawState;
+  return success;
 }
 
+
 //********************************************************************************
-// PCF8574 write
-//********************************************************************************
+// PCF8574 write pin
+//*******************************************************************************
+void GPIO_PCF_WriteAllPins(uint8_t address, uint8_t value)
+{
+  Wire.beginTransmission(address);
+  Wire.write(value);
+  Wire.endTransmission();
+}
+
 bool GPIO_PCF_Write(int Par1, byte Par2)
 {
   if (!checkValidPortRange(PLUGIN_PCF, Par1)) {
     return false;
   }
   uint8_t unit = (Par1 - 1) / 8;
-  uint8_t port = Par1 - (unit * 8);
+  uint8_t port = Par1 - (unit * 8) - 1;
   uint8_t address = 0x20 + unit;
   if (unit > 7) address += 0x10;
 
@@ -274,6 +354,7 @@ bool GPIO_PCF_Write(int Par1, byte Par2)
 
   uint32_t key;
 
+  //REMEMBER: all input pins must be set to 1 when writing to the unit
   for(i=0; i<8; i++){
     key = createKey(PLUGIN_PCF,unit+i);
 
@@ -285,20 +366,48 @@ bool GPIO_PCF_Write(int Par1, byte Par2)
     }
   }
 
-  key = createKey(PLUGIN_PCF,Par1);
-
   if (Par2 == 1)
-    portmask |= (1 << (port-1));
+    portmask |= (1 << port);
   else
-    portmask &= ~(1 << (port-1));
+    portmask &= ~(1 << port);
 
-  Wire.beginTransmission(address);
-  Wire.write(portmask);
-  Wire.endTransmission();
-
+  GPIO_PCF_WriteAllPins(address,portmask);
   return true;
 }
 
+bool setPCFInputMode(uint8_t pin) 
+{
+  if (!checkValidPortRange(PLUGIN_PCF, pin)) {
+    return false;
+  }
+  uint8_t unit = (pin - 1) / 8;
+  uint8_t port = pin - (unit * 8)-1;
+  uint8_t address = 0x20 + unit;
+  if (unit > 7) address += 0x10;
+
+  //generate bitmask
+  int i = 0;
+  uint8_t portmask;
+  if (GPIO_PCF_ReadAllPins(address, &portmask)) {
+    unit = unit * 8 + 1; // calculate first pin
+    uint32_t key;
+
+    //REMEMBER: all input pins must be set to 1 when writing to the unit
+    for(i=0; i<8; i++){
+      key = createKey(PLUGIN_PCF,unit+i);
+
+      if (!existPortStatus(key) || 
+          (existPortStatus(key) && (globalMapPortStatus[key].mode == PIN_MODE_INPUT_PULLUP || globalMapPortStatus[key].mode == PIN_MODE_INPUT)) ||
+          port==i) //set to 1 the PIN to be set as INPUT
+        portmask |= (1 << i); //set port i = 1
+    }
+
+    GPIO_PCF_WriteAllPins(address,portmask);
+
+    return true;
+  } else
+    return false;  
+}
 //*********************************************************
 // GPIO_Monitor10xSec:
 // What it does:
@@ -389,7 +498,7 @@ bool checkValidPortRange(pluginID_t pluginID, int port)
   return false;
 }
 
-void setInternalGPIOPullupMode(int port)
+void setInternalGPIOPullupMode(uint8_t port)
 {
   if (checkValidPortRange(PLUGIN_GPIO, port)) {
   #if defined(ESP8266)
@@ -447,3 +556,4 @@ bool GPIO_Read(pluginID_t pluginID, int port, int8_t &value)
   }
   return success;
 }
+
