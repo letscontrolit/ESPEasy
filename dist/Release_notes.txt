@@ -1,4 +1,96 @@
 -------------------------------------------------
+Changes in release mega-20210223 (since mega-20210114)
+-------------------------------------------------
+
+Release date: di 23 feb 2021 12:08:25 CET
+
+Henri de Jong (1):
+      Increase buffer size
+
+TD-er (43):
+      Use max seen P1 message length to allocate buffer
+      [cleanup] Mark "Bitwise:" log as debug log
+      [ESP32 PIO] Update to espressif32@2.1.0
+      [WiFi] Try to use the strongest known SSID after a scan. (#3463)
+      [Build] Fix custom IR build #3469
+      [WiFi] Simplify credentials manager
+      [WiFi] Fix setup procedure
+      [WiFi] Reduce TX power to 17.5 dBm and tune timings + fix mDNS start
+      [mDNS ESP32] Fix build issue ESP32 (does not have MDNS.close())
+      [WiFi] Allow to limit TX power and make TX power dynamic
+      [WiFi] Cleanup code + add settings transition for new parameters
+      [WiFi] Make sending at max TX power optional
+      [Pulse] Pulse Counter P003 enhancement
+      [WiFi] Introduce 2 seconds delay at boot before starting WiFi
+      [WiFi] Set sleep mode after switching wifi mode
+      [WiFi] Fix build issues on ESP32 (different sleep mode function)
+      [WiFi] Change log level of TX power to debug
+      [Rules] Fix bug in time parsing (leading 0)
+      [Rules] Make parsing numerical a bit more robust
+      [Rules] Fix complex time matching
+      [Time] Fix tm_mon starting at 0 and tm_year at 1900
+      [Time] Cleanup time calculation code
+      Rename default variable names in P084 VEML6070 UV
+      [Cron] Fix cron resolution + value updates
+      Move to UserVar struct to have universal conversion of task variable types
+      [P003 Pulse] Revert changes (See #3500)
+      Revert "[Rules] Make parsing numerical a bit more robust"
+      [PIO] Update to espressif8266@2.6.3
+      [PWM] Set PHASE_LOCKED_WAVEFORM for new esp8266/Arduino core
+      [WiFi] Fix crash when trying to reconnect while low on memory
+      [PIO] Only update tmp files when changed to reduce build time
+      safe_strncpy should not crash on FlashStringHelper strings
+      [WiFi] Fix WiFi AP candidate from RTC causing crash
+      [WiFi] Fix crash when deleting element from empty list
+      [WD reboot] Change yield() into delay(0) for network connections
+      [Cleanup] Uncrustify Networking.cpp
+      [ESPEasy p2p] Add check on buffer allocation  received UDP data
+      [MQTT] PubSubClient checks when callback + publish happen simultaneous
+      [MQTT] Fix rejecting QoS=0 messages with 0 or 1 byte length
+      [ESPEasy p2p] Fix WD reboots due to not initialising array
+      [Cleanup] Explicit init UserVar with 0.0f
+      [WiFi] Fix bogus RTC settings loaded to connect to WiFi
+      [WiFi] Allow spaces in SSID and pass phrase
+
+Ton Huisman (26):
+      [P050] Additional output settings - Add Color Temperature DN40 calculation - Add Lux calculation - Add Clear output option - Add Normalized RGB calculation
+      [P050] Add Normalized sRGB calculation
+      [P050] Apply suggested patches to the Adafruit library
+      [P050] Minor calculation adjustment, added to TESTING build
+      [P050] Adjusted Normalization calculation, added R/G/B Calibration factors
+      [P073] Improve display of periods in 7dtext Add 7ddt command (dual temnperatures on Max7219 display)
+      [P073] Periods in 7dtext also for TM1637 display
+      [P050] Removed unneeded output selection option
+      [P037] Options for hide degrees symbol, right align temperature
+      [P073] Options currently only applicable for MAX7219
+      [P050] Added 3x3 matrix calibration, added opt. event for all values, adjusted device settings
+      [P050] Fix missing include
+      [P050] Add extra transformation options, fixed a typo
+      [P050] Rename Calibration to Transformation, added optional events for RGB values
+      [P017] Add options for tag reset, delay and reset event
+      [P017] Added documentation explaining the new settings
+      [P008] Fix typo in minimal reset timer check
+      [P073] Bugfix for 7ddt command being leftshifted by 1
+      [P073] Add fonts Siekoo/dSEG7, scrolling text and 7dbin command
+      [P073] Optimizations and bugfixes, extra text scroll option
+      [P073] Initialization optimizations
+      [P073] Optimizations and minor code cleanup
+      [Documentation] Update copyright year to 2021
+      [P073] Clear scroll text when setting 7dbin data
+      [P073] Add documentation
+      [P073] Fixed TM1637 mapping bug, moved log to DEBUG level, some source cleanup
+
+sakinit (1):
+      Clear error by reading the error register loglevel independent
+
+stefan (4):
+      P003 Pulse Microseconds
+      P003 µSec backward compatibility
+      P003 use micros64()
+      P003 use getMicros64() function
+
+
+-------------------------------------------------
 Changes in release mega-20210114 (since mega-20201227)
 -------------------------------------------------
 
