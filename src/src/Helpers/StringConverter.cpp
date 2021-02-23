@@ -470,13 +470,13 @@ bool safe_strncpy(char *dest, const char *source, size_t max_size) {
   bool result = true;
 
   memset(dest, 0, max_size);
-  size_t str_length = strlen(source);
+  size_t str_length = strlen_P(source);
 
   if (str_length >= max_size) {
     str_length = max_size;
     result     = false;
   }
-  strncpy(dest, source, str_length);
+  strncpy_P(dest, source, str_length);
   dest[max_size - 1] = 0;
   return result;
 }
