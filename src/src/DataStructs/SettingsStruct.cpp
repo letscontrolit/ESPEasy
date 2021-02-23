@@ -149,11 +149,6 @@ void SettingsStruct_tmpl<N_TASKS>::UseMaxTXpowerForSending(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup() const {
-  return bitRead(VariousBits1, 14);
-}
-
-template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
   bitWrite(VariousBits1, 14, value);
 }
