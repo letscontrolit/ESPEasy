@@ -1,0 +1,216 @@
+.. These P009 commands should be moved to core (P000)...
+
+.. .. :ref:`P000_page` |P000_status|
+
+.. .. Supported hardware: |P000_usedby_GPIO|
+
+.. csv-table::
+  :header: "Command (PCFGPIO/Value)", "Extra information"
+  :widths: 20, 30
+
+  "
+  ``PCFGPIO,<PCFGPIO>,<state>``
+
+  PCFGPIO: 0 ... 255
+
+  State:
+
+  **2** (HIGH-Z, input)
+
+  **1** (HIGH, output)
+
+  **0** (LOW, output)
+
+  **-1** (OFFLINE, disconnected)
+  ","
+  **Basic on/off.**.
+  We can control a pin with simple http URL commands. To change the pin to high or low steady output. Setting PCFGPIO to **2** means
+  that it will be able to detect low level relays (with high impedance, Z).
+  "
+  "
+  ``PCFGPIOtoggle,<PCFGPIO>``
+
+  PCFGPIO: 0 ... 255
+
+  ","
+  **Toggle on/off.**.
+  Toggle the current (output) state of the given PCFGPIO pin.
+  When executed, it changes the pin mode to output.
+  "
+  "
+  ``PCFLongPulse,<PCFGPIO>,<state>,<duration>``
+
+  PCFGPIO: 0 ... 255
+
+  State: 1/0
+
+  Duration: 1 ... 999 S
+  ","
+  **To send a *long* pulse to a certain pin.**.
+  A long pulse is basically the same as the plain pulse.  Duration is defined in seconds, which makes it more suitable for longer duration.
+  This command is not blocking, but will send 2 events to start and stop the pulse. This may have some variation depending on the system load of the module.
+  Variation is typically up-to 10 msec, but may be up-to a second, depending on active plugins and controllers performing blocking operations.
+  "
+  "
+  ``PCFLongPulse_mS,<PCFGPIO>,<state>,<duration>``
+
+  PCFGPIO: 0 ... 255
+
+  State: 1/0
+
+  Duration: 10 ... 15000 msec
+  ","
+  **To send a *long* pulse to a certain pin.**
+  A ``LongPulse_mS`` is the same as the regular ``LongPulse``. The only difference is the time base in milliseconds rather than in seconds.
+  "
+  "
+  ``PCFPulse,<PCFGPIO>,<state>,<duration>``
+
+  PCFGPIO: 0 ... 255
+
+  State: 1/0
+
+  Duration: 0 ... 1000 msec
+  ","
+  **To send a *short* pulse to a certain pin.**
+  Example to send an active high (1) pulse on PCFGPIO 14 for 500 mSeconds. Pulse duration is in milliseconds. State is 1 or 0.
+  N.B. this is a blocking call, meaning no other actions will be performed during the pulse.
+  "
+  "
+  ``Status,PCF,<PCFGPIO>``
+
+  PCFGPIO: 0 ... 255
+  ","
+  **Returns the status of a pin.**
+  By the use of the command you will receive the status of the relevant pin.
+  "
+  "
+  ``Monitor,PCF,<PCFGPIO>``
+
+  PCFGPIO: 0 ... 255
+  ","
+  **To monitor a PCFGPIO state.**
+  By the use of the command you will receive events when the state of that pin is changed from 1 to 0 and from 0 to 1.
+  "
+  "
+  ``UnMonitor,PCF,<PCFGPIO>``
+
+  PCFGPIO: 0 ... 255
+  ","
+  **To cancel the monitor of a PCFGPIO state.**
+  By the use of the command you will stop receiving events when the state of that pin is changed from 1 to 0 and from 0 to 1.
+  "
+  "
+  ``MonitorRange,PCF,<PCFGPIO>``
+
+  PCFGPIO: 0 ... 255
+  ","
+  **To monitor a PCFGPIO state.**
+  By the use of the command you will receive events when the state of that pin is changed from 1 to 0 and from 0 to 1.
+  "
+  "
+  ``UnMonitorRange,PCF,<PCFGPIO>``
+
+  PCFGPIO: 0 ... 255
+  ","
+  **To cancel the monitor of a PCFGPIO state.**
+  By the use of the command you will stop receiving events when the state of that pin is changed from 1 to 0 and from 0 to 1.
+  "
+  "
+  ``PCFGPIOrange,<PCFGPIO start pin>,<PCFGPIO end pin>,<value> [,optional bitmask]``
+
+  | PCFGPIO start pin: 0 ... 255
+  |
+  | PCFGPIO end pin: 0 ... 255
+  |
+  | value: 0 or 1
+  |
+  | bitmask: 
+  | - if not present assume to operate in all pins
+  | - if present is used as a mask (1=update, 0=do not update)
+  | - if number of bit lower than number of pins, then padded with 0
+  | - if number of bit higher than number of pins, then it's truncated
+  ","
+  | **Change the status of a pin for a given range applying the given mask**
+  |
+  | examples:
+  | - pcfgpioRange,1,8,1  -> set pins 1 to 8 to 1
+  | - pcfgpioRange,3,12,1 -> set pins 3 to 12 to 1
+  | - pcfgpioRange,5,17,0 -> set pins 5 to 17 to 0
+  |
+  | - pcfgpioRange,3,12,1,525 or pcfgpioRange,3,12,1,0b0100001101
+  | mask = '0100001101'
+  | write pattern after mask = 'x1xxxx11x1' where x indicates that the pin will not be changed
+  |
+  | - pcfgpioRange,3,12,1,973 or pcfgpioRange,3,12,1,0b1111001101
+  | mask = 973 = '1111001101'
+  | write pattern after mask = '1111xx11x1' where x indicates that the pin will not be changed  
+  "
+  "
+  ``PCFGPIOrange,<PCFGPIO start pin>,<PCFGPIO end pin>,<write pattern> [,optional bitmask]``
+
+  | PCFGPIO start pin: 0 ... 255
+  |
+  | PCFGPIO end pin: 0 ... 255
+  |
+  | write pattern: it's a write pattern. Write 0 or 1.
+  | - Example: use decimal number 15 (in binary is 00001111) to set to 1 pin 1,2,3 and 4 and to set to 0 pins 5,6,7,8
+  | - if number of bit lower than number of pins, then padded with 0;
+  | - if number of bit higher than number of pins, then it's truncated.
+  |
+  | bitmask: 
+  | - if not present assume to operate in all pins
+  | - if present is used as a mask (1=update, 0=do not update)
+  | - if number of bit lower than number of pins, then padded with 0
+  | - if number of bit higher than number of pins, then it's truncated
+  ","
+  | **Change the status of a pin for a given range applying the given mask**
+  |
+  | examples:
+  | - pcfgpioPattern,1,8,13
+  | write pattern = '1101' that will be padded as: '0000001101'
+  | mask not present, assume mask = '1111111111'
+  |
+  | - pcfgpioPattern,3,12,13
+  | write pattern = '1101' that will be padded as: '0000001101'
+  | mask not present, assume mask = '1111111111'
+  |
+  | - pcfgpioPattern,3,12,525
+  | write pattern = 525 = '100001101'
+  | mask not present, assume mask = '1111111111'
+  |
+  | - pcfgpioPattern, 3, 12, 525, 973
+  | write pattern = 525 = '100001101'
+  | mask = 973 = '1111001101'
+  | write pattern after mask = '1000xx11x1' where x indicates that the pin will not be changed
+  "
+  "
+  ``PCFmode,<PCFGPIO>,<mode>``
+
+  | PCFGPIO: 0 ... 255
+  | 
+  | mode: 
+  | 0 = OUTPUT
+  | 1 = INPUT PULLUP
+  | 2 = INPUT
+  ","
+  **To change the mode of an PCFGPIO pin.**
+
+  | example: pcfMode,1,0 (set pin 1 as output)
+  "
+  "
+  ``PCFmodeRange,<PCFGPIO start pin>,<PCFGPIO end pin>, <mode>``
+
+  | PCFGPIO start pin: 0 ... 255
+  | 
+  | PCFGPIO end pin: 0 ... 255
+  |
+  | mode: 
+  | 0 = OUTPUT
+  | 1 = INPUT PULLUP
+  | 2 = INPUT
+  ","
+  **To change the mode of an PCFGPIO range of pin.**
+
+  | example: pcfModeRange,1,8,0 (set pin 1 to 8 as output)
+  "
