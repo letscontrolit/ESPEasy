@@ -117,9 +117,9 @@ void P044_Task::checkBlinkLED() {
 }
 
 void P044_Task::clearBuffer() {
-  if (serial_buffer.length() > maxMessageSize) {
-    maxMessageSize = serial_buffer.length();
-  }
+  // if (serial_buffer.length() > maxMessageSize) {
+    // maxMessageSize = serial_buffer.length();
+  // }
 
   serial_buffer = "";
   serial_buffer.reserve(maxMessageSize);
