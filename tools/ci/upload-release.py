@@ -4,6 +4,10 @@ from itertools import chain
 from github import Github
 
 
+class NoZipFilesFound(Exception):
+    pass
+
+
 def find_zip(directory):
     return pathlib.Path(directory).glob("**/*.zip")
 
@@ -14,6 +18,8 @@ if __name__ == "__main__":
     archives = [
         str(zip_file) for zip_file in chain(find_zip("Binaries"), find_zip("artifact"))
     ]
+    if not archives:
+        raise NoZipFilesFound
 
     tag = os.environ["GITHUB_REF"][len("refs/tags/") :]
     message = os.environ.get("RELEASE_NOTES", tag)

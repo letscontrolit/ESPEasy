@@ -50,6 +50,7 @@ jobs:
         env:
           CHIP: ${{ matrix.chip }}
           ENV: ${{ matrix.env }}
+        continue-on-error: true
         run: |
           python tools/ci/build-and-archive.py
       - uses: actions/upload-artifact@v2
