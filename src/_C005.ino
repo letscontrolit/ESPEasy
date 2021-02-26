@@ -142,35 +142,9 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 
       for (byte x = 0; x < valueCount; x++)
       {
-        statusLED(true);
-
-        byte valueCount = getValueCountForTask(event->TaskIndex);
-        for (byte x = 0; x < valueCount; x++)
-        {
-          //MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
-          if (ExtraTaskSettings.TaskDeviceValueNames[x][0]==0)
-             continue; //we skip values with empty labels
-
-          String tmppubname = pubname;
-          tmppubname.replace(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-          String value;
-          // Small optimization so we don't try to copy potentially large strings
-          if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
-            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
-            value = event->String2.substring(0, 20); // For the log
-          } else {
-            value = formatUserVarNoCheck(event, x);
-            MQTTpublish(event->ControllerIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag);
-          }
-#ifndef BUILD_NO_DEBUG
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log = F("MQTT : ");
-            log += tmppubname;
-            log += ' ';
-            log += value;
-            addLog(LOG_LEVEL_DEBUG, log);
-          }
-#endif
+        // MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
+        if (ExtraTaskSettings.TaskDeviceValueNames[x][0] == 0) {
+          continue; // we skip values with empty labels
         }
         String tmppubname = pubname;
         parseSingleControllerVariable(tmppubname, event, x, false);
