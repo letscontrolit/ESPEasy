@@ -23,7 +23,12 @@ public:
 
   size_t getSize() const;
 
+  bool isDuplicate(const C019_queue_element& other) const;
+
+
   String packed;
+  unsigned long _timestamp         = millis();
+  taskIndex_t TaskIndex       = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   pluginID_t plugin_id = INVALID_PLUGIN_ID;
   EventStruct event;

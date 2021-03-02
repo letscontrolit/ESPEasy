@@ -140,14 +140,13 @@ struct ControllerSettingsStruct
   bool      enableESPEasyNowFallback() const;
   void      enableESPEasyNowFallback(bool value);
 
-  bool         UseDNS;
   bool      allowExpire() const;
   void      allowExpire(bool value);
 
   bool      deduplicate() const;
   void      deduplicate(bool value);
 
-  boolean      UseDNS;
+  bool         UseDNS;
   byte         IP[4];
   unsigned int Port;
   char         HostName[65];

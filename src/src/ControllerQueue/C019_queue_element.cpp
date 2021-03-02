@@ -32,3 +32,15 @@ C019_queue_element::C019_queue_element(struct EventStruct *event_p) :
 size_t C019_queue_element::getSize() const {
   return sizeof(*this) + packed.length();
 }
+
+
+bool C019_queue_element::isDuplicate(const C019_queue_element& other) const {
+  if (other.controller_idx != controller_idx || 
+      other.TaskIndex != TaskIndex ||
+      other.plugin_id != plugin_id ||
+      other.packed != packed) {
+    return false;
+  }
+  // FIXME TD-er: Must check event too?
+  return false;
+}
