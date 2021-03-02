@@ -19,6 +19,9 @@
 #include <memory> // For std::shared_ptr
 #include <new>    // std::nothrow
 
+#ifndef CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME
+  #define CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME 10000
+#endif
 
 /*********************************************************************************************\
 * ControllerDelayHandlerStruct
@@ -45,6 +48,11 @@ struct ControllerDelayHandlerStruct {
     deduplicate            = settings.deduplicate();
     if (settings.allowExpire()) {
       expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
+      if (expire_timeout < CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME) {
+        expire_timeout = CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME;
+      }
+    } else {
+      expire_timeout = 0;
     }
 
     // Set some sound limits when not configured
@@ -95,19 +103,26 @@ struct ControllerDelayHandlerStruct {
     return true;
   }
 
-  // Try to add to the queue, if permitted by "delete_oldest"
-  // Return false when no item was added.
-  bool addToQueue(T&& element) {
+  // Return true if last element was removed
+  bool removeLastIfDuplicate() {
     if (deduplicate && !sendQueue.empty()) {
-      // If message is already present consider adding to be a success.
-      for (auto it = sendQueue.begin(); it != sendQueue.end(); ++it) {
-        if (it->TaskIndex == element.TaskIndex && validTaskIndex(it->TaskIndex)) {
-          if (element.isDuplicate(*it)) {
-            return true;
-          }
+      auto back = sendQueue.back();
+      // Use reverse iterator here, as it is more likely a duplicate is added shortly after another.
+      auto it = sendQueue.rbegin(); // Same as back()
+      ++it;                         // The last element before back()
+      for (; it != sendQueue.rend(); ++it) {
+        if (back.isDuplicate(*it)) {
+          sendQueue.pop_back();
+          return true;
         }
       }
     }
+    return false;
+  }
+
+  // Try to add to the queue, if permitted by "delete_oldest"
+  // Return false when no item was added.
+  bool addToQueue(T&& element, bool checkDuplicate = true) {
     if (delete_oldest) {
       // Force add to the queue.
       // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
@@ -116,11 +131,19 @@ struct ControllerDelayHandlerStruct {
         attempt = 0;
       }
       sendQueue.emplace_back(element);
+      if (checkDuplicate) {
+        // If message is already present consider adding to be a success.
+        removeLastIfDuplicate();
+      }
       return true;
     }
 
     if (!queueFull(element)) {
       sendQueue.emplace_back(element);
+      if (checkDuplicate) {
+        // If message is already present consider adding to be a success.
+        removeLastIfDuplicate();
+      }
       return true;
     }
 #ifndef BUILD_NO_DEBUG
@@ -209,7 +232,7 @@ struct ControllerDelayHandlerStruct {
   std::list<T>  sendQueue;
   unsigned long lastSend;
   unsigned int  minTimeBetweenMessages;
-  unsigned long expire_timeout;
+  unsigned long expire_timeout = 0;
   byte          max_queue_depth;
   byte          attempt;
   byte          max_retries;
