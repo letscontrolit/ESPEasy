@@ -74,7 +74,7 @@ bool MQTT_queueFull(controllerIndex_t controller_idx);
 bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, bool retained);
 #endif
 
-bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained);
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  const char *topic, const char *payload, bool retained);
 
 
 /*********************************************************************************************\

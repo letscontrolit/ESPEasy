@@ -45,6 +45,7 @@ String getControllerParameterName(protocolIndex_t                   ProtocolInde
     case ControllerSettingsStruct::CONTROLLER_MAX_RETRIES:              name = F("Max Retries");            break;
     case ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION:        name = F("Full Queue Action");      break;
     case ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE:             name = F("Allow Expire");           break;
+    case ControllerSettingsStruct::CONTROLLER_DEDUPLICATE:              name = F("De-duplicate");           break;
     
     case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:              name = F("Check Reply");            break;
 
@@ -198,6 +199,9 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE:
       addFormCheckBox(displayName, internalName, ControllerSettings.allowExpire());
       break;
+    case ControllerSettingsStruct::CONTROLLER_DEDUPLICATE:
+      addFormCheckBox(displayName, internalName, ControllerSettings.deduplicate());
+      break;
     case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:
     {
       String options[2];
@@ -324,6 +328,9 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
       break;
     case ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE:
       ControllerSettings.allowExpire(isFormItemChecked(internalName));
+      break;
+    case ControllerSettingsStruct::CONTROLLER_DEDUPLICATE:
+      ControllerSettings.deduplicate(isFormItemChecked(internalName));
       break;
     case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:
       ControllerSettings.MustCheckReply = getFormItemInt(internalName, ControllerSettings.MustCheckReply);

@@ -70,6 +70,7 @@ struct ControllerSettingsStruct
     CONTROLLER_MAX_RETRIES,
     CONTROLLER_FULL_QUEUE_ACTION,
     CONTROLLER_ALLOW_EXPIRE,
+    CONTROLLER_DEDUPLICATE,
     CONTROLLER_CHECK_REPLY,
     CONTROLLER_CLIENT_ID,
     CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT,
@@ -143,6 +144,8 @@ struct ControllerSettingsStruct
   bool      allowExpire() const;
   void      allowExpire(bool value);
 
+  bool      deduplicate() const;
+  void      deduplicate(bool value);
 
   boolean      UseDNS;
   byte         IP[4];

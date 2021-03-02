@@ -546,7 +546,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
 
 #endif
 
-bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained)
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const char *topic, const char *payload, bool retained)
 {
   if (MQTTDelayHandler == nullptr) {
     return false;
@@ -555,7 +555,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler->addToQueue(MQTT_queue_element(controller_idx, topic, payload, retained));
+  const bool success = MQTTDelayHandler->addToQueue(MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained));
 
   scheduleNextMQTTdelayQueue();
   return success;
@@ -603,7 +603,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
       pubname += F("/status");
     }
 
-    MQTTpublish(enabledMqttController, pubname.c_str(), status.c_str(), mqtt_retainFlag);
+    MQTTpublish(enabledMqttController, event->TaskIndex, pubname.c_str(), status.c_str(), mqtt_retainFlag);
   }
 }
 

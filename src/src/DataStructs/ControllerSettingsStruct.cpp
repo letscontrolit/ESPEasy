@@ -275,3 +275,13 @@ void ControllerSettingsStruct::allowExpire(bool value)
 {
   bitWrite(VariousFlags, 8, value);
 }
+
+bool ControllerSettingsStruct::deduplicate() const
+{
+  return bitRead(VariousFlags, 9);
+}
+
+void ControllerSettingsStruct::deduplicate(bool value)
+{
+  bitWrite(VariousFlags, 9, value);
+}
