@@ -21,8 +21,7 @@ size_t MQTT_queue_element::getSize() const {
 }
 
 bool MQTT_queue_element::isDuplicate(const MQTT_queue_element& other) const {
-  if (other.controller_idx != controller_idx || 
-      other.TaskIndex != TaskIndex ||
+  if (other.controller_idx != controller_idx ||
       other._retained != _retained) {
     return false;
   }

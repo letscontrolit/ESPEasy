@@ -525,19 +525,21 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
   bool success = false;
   if (!MQTT_queueFull(controller_idx))
   {
-    success = MQTTDelayHandler->addToQueue(MQTT_queue_element());
+    success = MQTTDelayHandler->addToQueue(MQTT_queue_element(), false);
     if (success) {
       size_t pos = 0;
       MQTTDelayHandler->sendQueue.back().controller_idx = controller_idx;
       MQTTDelayHandler->sendQueue.back()._retained = retained;
       message.getString(MQTTDelayHandler->sendQueue.back()._topic,   pos);
       message.getString(MQTTDelayHandler->sendQueue.back()._payload, pos);
-    }
-
-    size_t payloadSize = message.getPayloadSize();
-    if ((MQTTDelayHandler->sendQueue.back()._topic.length() + MQTTDelayHandler->sendQueue.back()._payload.length() + 2) < payloadSize) {
-      success = false;
-      MQTTDelayHandler->sendQueue.pop_back();
+      // Check to see if it was successful.
+      size_t payloadSize = message.getPayloadSize();
+      if ((MQTTDelayHandler->sendQueue.back()._topic.length() + MQTTDelayHandler->sendQueue.back()._payload.length() + 2) < payloadSize) {
+        success = false;
+        MQTTDelayHandler->sendQueue.pop_back();
+      } else {
+        MQTTDelayHandler->removeLastIfDuplicate();
+      }
     }
   }
   scheduleNextMQTTdelayQueue();
