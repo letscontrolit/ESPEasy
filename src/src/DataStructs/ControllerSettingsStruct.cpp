@@ -268,20 +268,20 @@ void ControllerSettingsStruct::enableESPEasyNowFallback(bool value)
 
 bool ControllerSettingsStruct::allowExpire() const
 {
-  return bitRead(VariousFlags, 8);
+  return bitRead(VariousFlags, 9);
 }
 
 void ControllerSettingsStruct::allowExpire(bool value)
 {
-  bitWrite(VariousFlags, 8, value);
+  bitWrite(VariousFlags, 9, value);
 }
 
 bool ControllerSettingsStruct::deduplicate() const
 {
-  return bitRead(VariousFlags, 9);
+  return bitRead(VariousFlags, 10);
 }
 
 void ControllerSettingsStruct::deduplicate(bool value)
 {
-  bitWrite(VariousFlags, 9, value);
+  bitWrite(VariousFlags, 10, value);
 }
