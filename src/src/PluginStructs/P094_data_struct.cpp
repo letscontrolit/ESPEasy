@@ -8,6 +8,7 @@
 
 #ifdef USES_P094
 
+#include "../Globals/ESPEasy_time.h"
 #include "../Helpers/StringConverter.h"
 
 
@@ -145,9 +146,17 @@ bool P094_data_struct::loop() {
   return fullSentenceReceived;
 }
 
-void P094_data_struct::getSentence(String& string) {
-  string        = sentence_part;
-  sentence_part = "";
+void P094_data_struct::getSentence(String& string, bool appendSysTime) {
+  if (appendSysTime) {
+    // Unix timestamp = 10 decimals + separator
+    string.reserve(sentence_part.length() + 11);
+    string        = sentence_part;
+    string += ';';
+    string += node_time.getUnixTime();
+    sentence_part = "";
+  } else {
+    string = std::move(sentence_part);
+  }
 }
 
 void P094_data_struct::getSentencesReceived(uint32_t& succes, uint32_t& error, uint32_t& length_last) const {

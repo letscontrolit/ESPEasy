@@ -26,6 +26,8 @@
 #define P094_DEBUG_SENTENCE_LENGTH  PCONFIG_LONG(1)
 #define P094_DEBUG_SENTENCE_LABEL   PCONFIG_LABEL(1)
 
+#define P094_APPEND_RECEIVE_SYSTIME PCONFIG(0)
+
 #define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 #define P094_NR_OUTPUT_OPTIONS  1
 
@@ -150,6 +152,8 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
 
       addFormNumericBox(F("(debug) Generated length"), P094_DEBUG_SENTENCE_LABEL, P094_DEBUG_SENTENCE_LENGTH, 0, 1024);
 
+      addFormCheckBox(F("Append system time"), F("systime"), P094_APPEND_RECEIVE_SYSTIME);
+
       success = true;
       break;
     }
@@ -170,6 +174,8 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         addHtmlError(SaveCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0));
         success = true;
       }
+
+      P094_APPEND_RECEIVE_SYSTIME = isFormItemChecked(F("systime"));
 
       break;
     }
@@ -207,7 +213,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
           // Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
           delay(0); // Processing a full sentence may take a while, run some
                     // background tasks.
-          P094_data->getSentence(event->String2);
+          P094_data->getSentence(event->String2, P094_APPEND_RECEIVE_SYSTIME);
 
           if (event->String2.length() > 0) {
             if (Plugin_094_match_all(event->TaskIndex, event->String2)) {
@@ -434,7 +440,7 @@ void P094_html_show_stats(struct EventStruct *event) {
   {
     addRowLabel(F("Current Sentence"));
     String sentencePart;
-    P094_data->getSentence(sentencePart);
+    P094_data->getSentence(sentencePart, false);
     addHtml(sentencePart);
   }
 

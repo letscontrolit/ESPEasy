@@ -75,7 +75,7 @@ public:
 
   bool loop();
 
-  void getSentence(String& string);
+  void getSentence(String& string, bool appendSysTime);
 
   void getSentencesReceived(uint32_t& succes,
                             uint32_t& error,
