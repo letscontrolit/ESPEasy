@@ -37,3 +37,18 @@ size_t queue_element_single_value_base::getSize() const {
   }
   return total;
 }
+
+bool queue_element_single_value_base::isDuplicate(const queue_element_single_value_base& other) const {
+  if (other.controller_idx != controller_idx || 
+      other.TaskIndex != TaskIndex ||
+      other.valueCount != valueCount ||
+      other.idx != idx) {
+    return false;
+  }
+  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+    if (other.txt[i] != txt[i]) {
+      return false;
+    }
+  }
+  return true;
+}

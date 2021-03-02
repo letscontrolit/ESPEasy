@@ -28,11 +28,13 @@ struct ControllerDelayHandlerStruct {
   ControllerDelayHandlerStruct() :
     lastSend(0),
     minTimeBetweenMessages(CONTROLLER_DELAY_QUEUE_DELAY_DFLT),
+    expire_timeout(0),
     max_queue_depth(CONTROLLER_DELAY_QUEUE_DEPTH_DFLT),
     attempt(0),
     max_retries(CONTROLLER_DELAY_QUEUE_RETRY_DFLT),
     delete_oldest(false),
-    must_check_reply(false) {}
+    must_check_reply(false),
+    deduplicate(false) {}
 
   void configureControllerSettings(const ControllerSettingsStruct& settings) {
     minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
@@ -40,6 +42,10 @@ struct ControllerDelayHandlerStruct {
     max_retries            = settings.MaxRetry;
     delete_oldest          = settings.DeleteOldest;
     must_check_reply       = settings.MustCheckReply;
+    deduplicate            = settings.deduplicate();
+    if (settings.allowExpire()) {
+      expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
+    }
 
     // Set some sound limits when not configured
     if (max_queue_depth == 0) { max_queue_depth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT; }
@@ -92,11 +98,22 @@ struct ControllerDelayHandlerStruct {
   // Try to add to the queue, if permitted by "delete_oldest"
   // Return false when no item was added.
   bool addToQueue(T&& element) {
+    if (deduplicate && !sendQueue.empty()) {
+      // If message is already present consider adding to be a success.
+      for (auto it = sendQueue.begin(); it != sendQueue.end(); ++it) {
+        if (it->TaskIndex == element.TaskIndex && validTaskIndex(it->TaskIndex)) {
+          if (element.isDuplicate(*it)) {
+            return true;
+          }
+        }
+      }
+    }
     if (delete_oldest) {
       // Force add to the queue.
       // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
       while (queueFull(element)) {
         sendQueue.pop_front();
+        attempt = 0;
       }
       sendQueue.emplace_back(element);
       return true;
@@ -126,9 +143,21 @@ struct ControllerDelayHandlerStruct {
     if (attempt > max_retries) {
       sendQueue.pop_front();
       attempt = 0;
-
-      if (sendQueue.empty()) { return NULL; }
     }
+
+    if (expire_timeout != 0) {
+      bool done = false;
+      while (!done && !sendQueue.empty()) {
+        if (timePassedSince(sendQueue.front()._timestamp) < expire_timeout) {
+          done = true;
+        } else {
+          sendQueue.pop_front();
+          attempt = 0;
+        }
+      }
+    }
+
+    if (sendQueue.empty()) { return NULL; }
     return &sendQueue.front();
   }
 
@@ -180,11 +209,13 @@ struct ControllerDelayHandlerStruct {
   std::list<T>  sendQueue;
   unsigned long lastSend;
   unsigned int  minTimeBetweenMessages;
+  unsigned long expire_timeout;
   byte          max_queue_depth;
   byte          attempt;
   byte          max_retries;
   bool          delete_oldest;
   bool          must_check_reply;
+  bool          deduplicate;
 };
 
 

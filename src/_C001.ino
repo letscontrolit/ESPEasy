@@ -112,7 +112,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
         url += mapVccToDomoticz();
           # endif // if FEATURE_ADC_VCC
 
-        success = C001_DelayHandler->addToQueue(C001_queue_element(event->ControllerIndex, url));
+        success = C001_DelayHandler->addToQueue(C001_queue_element(event->ControllerIndex, event->TaskIndex, url));
         Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C001_DELAY_QUEUE,
                                          C001_DelayHandler->getNextScheduleTime());
       } // if ixd !=0
