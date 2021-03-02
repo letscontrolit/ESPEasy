@@ -265,3 +265,13 @@ void ControllerSettingsStruct::enableESPEasyNowFallback(bool value)
 {
   bitWrite(VariousFlags, 8, value);
 }
+
+bool ControllerSettingsStruct::allowExpire() const
+{
+  return bitRead(VariousFlags, 8);
+}
+
+void ControllerSettingsStruct::allowExpire(bool value)
+{
+  bitWrite(VariousFlags, 8, value);
+}

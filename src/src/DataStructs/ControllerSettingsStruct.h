@@ -69,6 +69,7 @@ struct ControllerSettingsStruct
     CONTROLLER_MAX_QUEUE_DEPTH,
     CONTROLLER_MAX_RETRIES,
     CONTROLLER_FULL_QUEUE_ACTION,
+    CONTROLLER_ALLOW_EXPIRE,
     CONTROLLER_CHECK_REPLY,
     CONTROLLER_CLIENT_ID,
     CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT,
@@ -139,6 +140,11 @@ struct ControllerSettingsStruct
   void      enableESPEasyNowFallback(bool value);
 
   bool         UseDNS;
+  bool      allowExpire() const;
+  void      allowExpire(bool value);
+
+
+  boolean      UseDNS;
   byte         IP[4];
   unsigned int Port;
   char         HostName[65];
