@@ -167,6 +167,7 @@ void NodesHandler::updateThisNode() {
     if (WiFi_AP_Candidates.isESPEasy_now_only()) {
       // Connected via 'virtual ESPEasy-NOW AP'
       addIP = false;
+      thisNode.useAP_ESPEasyNow = 1;
     }
     #endif
     if (addIP) {

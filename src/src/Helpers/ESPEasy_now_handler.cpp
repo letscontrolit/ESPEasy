@@ -280,6 +280,20 @@ bool ESPEasy_now_handler_t::active() const
   return timePassedSince(_last_used) < ESPEASY_NOW_ACTIVITY_TIMEOUT;
 }
 
+MAC_address ESPEasy_now_handler_t::getActiveESPEasyNOW_MAC() const
+{
+  MAC_address this_mac;
+
+  if (use_EspEasy_now) {
+    if (WifiIsAP(WiFi.getMode())) {
+      WiFi.softAPmacAddress(this_mac.mac);
+    } else {
+      WiFi.macAddress(this_mac.mac);
+    }
+  }
+  return this_mac;
+}
+
 void ESPEasy_now_handler_t::addPeerFromWiFiScan()
 {
   const int8_t scanCompleteStatus = WiFi.scanComplete();
@@ -836,12 +850,15 @@ bool ESPEasy_now_handler_t::handle_SendData_DuplicateCheck(const ESPEasy_now_mer
 
 bool ESPEasy_now_handler_t::add_peer(const MAC_address& mac, int channel) const
 {
-  MAC_address this_mac;
+  {
+    // Don't add yourself as a peer
+    MAC_address this_mac;
+    WiFi.macAddress(this_mac.mac);
+    if (this_mac == mac) { return false; }
 
-  WiFi.macAddress(this_mac.mac);
-
-  // Don't add yourself as a peer
-  if (this_mac == mac) { return false; }
+    WiFi.softAPmacAddress(this_mac.mac);
+    if (this_mac == mac) { return false; }
+  }
 
   if (!WifiEspNow.addPeer(mac.mac, channel)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

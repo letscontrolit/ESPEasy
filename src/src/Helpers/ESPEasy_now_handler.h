@@ -29,6 +29,8 @@ public:
 
   bool active() const;
 
+  MAC_address getActiveESPEasyNOW_MAC() const;
+
   void addPeerFromWiFiScan();
   void addPeerFromWiFiScan(uint8_t scanIndex);
 

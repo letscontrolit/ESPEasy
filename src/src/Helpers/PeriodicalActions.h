@@ -36,6 +36,11 @@ void schedule_all_tasks_using_MQTT_controller();
 
 void processMQTTdelayQueue();
 
+bool processMQTT_message(controllerIndex_t controllerIndex,
+                        const String    & topic,
+                        const String    & payload,
+                        bool retained);
+
 void updateMQTTclient_connected();
 
 void runPeriodicalMQTT();

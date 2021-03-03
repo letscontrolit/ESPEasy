@@ -329,20 +329,24 @@ void processMQTTdelayQueue() {
   bool processed = false;
 
   #ifdef USES_ESPEASY_NOW
-  if (!MQTTclient_connected) {
-    processed = ESPEasy_now_handler.sendToMQTT(element->controller_idx, element->_topic, element->_payload);
-  }
+  if (element->_topic.startsWith(F("traceroute/")) || element->_topic.startsWith(F("/traceroute/"))) {
+    // Special debug feature for ESPEasy-NOW to perform a traceroute of packets.
+    // Topic should start with the MAC used on this node for ESPEasy-NOW.
+    String replacement = F("traceroute/");
+    replacement += ESPEasy_now_handler.getActiveESPEasyNOW_MAC().toString();
+    replacement += '/';
+    String topic;
+    topic.reserve(element->_topic.length() + replacement.length());
+    topic = element->_topic;
+    topic.replace(F("traceroute/"), replacement);
+    processed = processMQTT_message(element->controller_idx, topic, element->_payload, element->_retained);
+  } else 
   #endif
-
-  if (!processed) {
-    PrepareSend();
-    if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
-      if (WiFiEventData.connectionFailures > 0) {
-        --WiFiEventData.connectionFailures;
-      }
-      processed = true;
-    }
+  {
+    processed = processMQTT_message(element->controller_idx, element->_topic, element->_payload, element->_retained);
   }
+
+
   MQTTDelayHandler->markProcessed(processed);
   if (processed) {
     statusLED(true);
@@ -360,6 +364,31 @@ void processMQTTdelayQueue() {
   Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
+}
+
+bool processMQTT_message(controllerIndex_t controllerIndex,
+                  const String    & topic,
+                  const String    & payload,
+                  bool retained) 
+{
+  bool processed = false;
+
+  #ifdef USES_ESPEASY_NOW
+  if (!MQTTclient_connected) {
+    processed = ESPEasy_now_handler.sendToMQTT(controllerIndex, topic, payload);
+  }
+  #endif
+
+  if (!processed) {
+    PrepareSend();
+    if (MQTTclient.publish(topic.c_str(), payload.c_str(), retained)) {
+      if (WiFiEventData.connectionFailures > 0) {
+        --WiFiEventData.connectionFailures;
+      }
+      processed = true;
+    }
+  }
+  return processed;
 }
 
 void updateMQTTclient_connected() {
