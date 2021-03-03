@@ -13,6 +13,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Settings.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Network.h"
@@ -878,7 +879,7 @@ bool hasIPaddr() {
 bool NetworkConnected(uint32_t timeout_ms) {
 
 #ifdef USES_ESPEASY_NOW
-  if (WiFiEventData.isESPEasy_now_only()) {
+  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
     return false;
   }
 #endif

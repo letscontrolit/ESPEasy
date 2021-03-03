@@ -1,14 +1,18 @@
 #include "../Helpers/WiFi_AP_CandidatesList.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+
 
 #ifdef USES_ESPEASY_NOW
 #define ESPEASY_NOW_TMP_SSID       "ESPEASY_NOW"
 #define ESPEASY_NOW_TMP_PASSPHRASE "random_passphrase"
 #endif
+
+#define WIFI_AP_CANDIDATE_ESPEASY_NOW_INDEX   3
 
 WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
   known.clear();
@@ -29,9 +33,16 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
     // Add the known SSIDs
     String ssid, key;
     byte   index = 1; // Index 0 is the "unset" value
+    bool done = false;
 
-    while (get_SSID_key(index, ssid, key)) {
-      known.emplace_back(index, ssid, key);
+    while (!done) {
+      if (get_SSID_key(index, ssid, key)) {
+        known.emplace_back(index, ssid, key);
+      } else if (index != WIFI_AP_CANDIDATE_ESPEASY_NOW_INDEX) {
+        // There may be other credentials so don't stop at ESPEasy-now index 
+        // For example on builds without ESPEasy-NOW these credentials will not be returned.
+        done = true;
+      }
       ++index;
     }
   }
@@ -155,6 +166,13 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
 }
 
+#ifdef USES_ESPEASY_NOW
+bool WiFi_AP_CandidatesList::isESPEasy_now_only() const {
+  return RTC.lastWiFiSettingsIndex == WIFI_AP_CANDIDATE_ESPEASY_NOW_INDEX;
+}
+#endif
+
+
 void WiFi_AP_CandidatesList::add(uint8_t networkItem) {
   WiFi_AP_Candidate tmp(networkItem);
 
@@ -188,6 +206,15 @@ void WiFi_AP_CandidatesList::add(uint8_t networkItem) {
 
 void WiFi_AP_CandidatesList::addFromRTC() {
   if (!RTC.lastWiFi_set()) { return; }
+
+  #ifdef USES_ESPEASY_NOW
+  if (isESPEasy_now_only()) {
+    // Connected via 'virtual ESPEasy-NOW AP'
+    // This should be a last resort.
+    return;
+  }
+  #endif
+
 
   String ssid, key;
 
@@ -255,7 +282,7 @@ bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key)
       key  = SecuritySettings.WifiKey2;
       break;
   #ifdef USES_ESPEASY_NOW
-    case 3: 
+    case WIFI_AP_CANDIDATE_ESPEASY_NOW_INDEX: 
       ssid = F(ESPEASY_NOW_TMP_SSID);
       key  = F(ESPEASY_NOW_TMP_PASSPHRASE);
       break;

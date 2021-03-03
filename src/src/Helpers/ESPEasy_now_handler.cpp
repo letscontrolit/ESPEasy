@@ -20,6 +20,7 @@
 # include "../Globals/SecuritySettings.h"
 # include "../Globals/SendData_DuplicateChecker.h"
 # include "../Globals/Settings.h"
+# include "../Globals/WiFi_AP_Candidates.h"
 # include "../Helpers/CRC_functions.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/ESPEasy_time_calc.h"
@@ -91,7 +92,7 @@ bool ESPEasy_now_handler_t::begin()
   MAC_address bssid;
   _controllerIndex = INVALID_CONTROLLER_INDEX;
 
-  if (WiFiEventData.isESPEasy_now_only()) {
+  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
     WifiScan(false, 0);
     addPeerFromWiFiScan();
   }
@@ -111,7 +112,7 @@ bool ESPEasy_now_handler_t::begin()
   setAP(true);
   /*
   // FIXME TD-er: Must use standard WiFi connection setup.
-  if (WiFiEventData.isESPEasy_now_only()) {
+  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
     if (bssid.all_zero()) {
       WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel);
     } else {
@@ -253,7 +254,7 @@ bool ESPEasy_now_handler_t::loop()
 
   if (_send_failed_count > 30 /*|| !active()*/) {
     _send_failed_count = 0;
-    // FIXME TD-er: Must check/mark so this becomes true: WiFiEventData.isESPEasy_now_only()
+    // FIXME TD-er: Must check/mark so this becomes true: WiFi_AP_Candidates.isESPEasy_now_only()
 
     // Start scanning the next channel to see if we may end up with a new found node
     //    WifiScan(false, false);

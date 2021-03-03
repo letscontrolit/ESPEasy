@@ -36,6 +36,10 @@ struct WiFi_AP_CandidatesList {
 
   bool addedKnownCandidate() const { return _addedKnownCandidate; }
 
+#ifdef USES_ESPEASY_NOW
+  bool isESPEasy_now_only() const;
+#endif
+
 private:
 
   // Add item from WiFi scan.

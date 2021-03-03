@@ -53,10 +53,6 @@ struct WiFiEventData_t {
   void markConnectedAPmode(const uint8_t mac[6]);
   void markDisconnectedAPmode(const uint8_t mac[6]);
 
-#ifdef USES_ESPEASY_NOW
-  bool isESPEasy_now_only() const;
-#endif
-
 
 
   // WiFi related data

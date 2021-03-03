@@ -180,7 +180,7 @@ void processDisconnect() {
 
   // FIXME TD-er: Disconnect processing is done in several places.
   #ifdef USES_ESPEASY_NOW
-  if (WiFiEventData.isESPEasy_now_only()) return;
+  if (WiFi_AP_Candidates.isESPEasy_now_only()) return;
   ESPEasy_now_handler.end();
   #endif
 
@@ -450,7 +450,7 @@ void processScanDone() {
   
   #ifdef USES_ESPEASY_NOW
   ESPEasy_now_handler.addPeerFromWiFiScan();
-  if (WiFiEventData.isESPEasy_now_only()) {
+  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
     if (WiFi_AP_Candidates.addedKnownCandidate() && WiFiConnected()) {
       WiFi_AP_Candidates.force_reload();
       WifiDisconnect();

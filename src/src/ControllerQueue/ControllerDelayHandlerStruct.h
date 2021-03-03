@@ -88,15 +88,15 @@ struct ControllerDelayHandlerStruct {
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = "Controller-";
+      String log = F("Controller-");
       log += element.controller_idx + 1;
-      log += " : Memory used: ";
+      log += F(" : Memory used: ");
       log += getQueueMemorySize();
-      log += " bytes ";
+      log += F(" bytes ");
       log += sendQueue.size();
-      log += " items ";
+      log += F(" items ");
       log += freeHeap;
-      log += " free";
+      log += F(" free");
       addLog(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
@@ -112,6 +112,15 @@ struct ControllerDelayHandlerStruct {
       ++it;                         // The last element before back()
       for (; it != sendQueue.rend(); ++it) {
         if (back.isDuplicate(*it)) {
+#ifndef BUILD_NO_DEBUG
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(element.controller_idx);
+            String log = get_formatted_Controller_number(cpluginID);
+            log += F(" : Remove duplicate");
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+#endif // ifndef BUILD_NO_DEBUG
+
           sendQueue.pop_back();
           return true;
         }
@@ -151,7 +160,7 @@ struct ControllerDelayHandlerStruct {
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(element.controller_idx);
       String log = get_formatted_Controller_number(cpluginID);
-      log += " : queue full";
+      log += F(" : queue full");
       addLog(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
