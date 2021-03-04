@@ -329,11 +329,12 @@ void processMQTTdelayQueue() {
   bool processed = false;
 
   #ifdef USES_ESPEASY_NOW
-  if (element->_topic.startsWith(F("traceroute/")) || element->_topic.startsWith(F("/traceroute/"))) {
+  if (element->_topic.startsWith(F("traceroute/")) || element->_topic.indexOf(F("/traceroute/")) != -1) {
     // Special debug feature for ESPEasy-NOW to perform a traceroute of packets.
     // Topic should start with the MAC used on this node for ESPEasy-NOW.
     String replacement = F("traceroute/");
-    replacement += ESPEasy_now_handler.getActiveESPEasyNOW_MAC().toString();
+    replacement += getValue(LabelType::UNIT_NR);
+//    replacement += ESPEasy_now_handler.getActiveESPEasyNOW_MAC().toString();
     replacement += '/';
     String topic;
     topic.reserve(element->_topic.length() + replacement.length());
