@@ -82,6 +82,10 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       addLog(LOG_LEVEL_INFO, F("WiFi  : AP got probed"));
       break;
 
+    case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
+      WiFiEventData.setAuthMode(info.auth_change.new_mode);
+      break;
+
     case SYSTEM_EVENT_STA_CONNECTED:
     {
       char ssid_copy[33] = { 0 }; // Ensure space for maximum len SSID (32) plus trailing 0
@@ -197,6 +201,10 @@ void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
 
 void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
   WiFiEventData.markDisconnectedAPmode(event.mac);
+}
+
+void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event) {
+  WiFiEventData.setAuthMode(event.newMode);
 }
 
 #endif // ifdef ESP8266
