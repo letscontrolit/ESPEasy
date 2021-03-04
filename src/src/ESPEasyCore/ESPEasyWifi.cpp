@@ -386,6 +386,8 @@ void initWiFi()
   stationModeAuthModeChangeHandler = WiFi.onStationModeAuthModeChanged(onStationModeAuthModeChanged);
   APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
   APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisconnectedAPmode);
+  APModeProbeRequestReceivedHandler = WiFi.onSoftAPModeProbeRequestReceived(onProbeRequestAPmode);
+
 #endif
 }
 

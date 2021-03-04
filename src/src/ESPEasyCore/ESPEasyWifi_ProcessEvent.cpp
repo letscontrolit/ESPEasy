@@ -16,6 +16,7 @@
 #include "../Globals/EventQueue.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/NetworkState.h"
+#include "../Globals/Nodes.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Services.h"
@@ -353,6 +354,11 @@ void processProbeRequestAPmode() {
 
   const MAC_address mac(APModeProbeRequestReceived_list.front().mac);
   const int rssi = APModeProbeRequestReceived_list.front().rssi;
+
+  NodeStruct* matchingNode = Nodes.getNodeByMac(mac);
+  if (matchingNode != nullptr) {
+    matchingNode->setRSSI(rssi);
+  }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String    log                 = F("AP Mode: Probe Request: ");
