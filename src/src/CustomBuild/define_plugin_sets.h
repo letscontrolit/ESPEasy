@@ -952,6 +952,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P085
      #define USES_P085   // AcuDC24x
    #endif
+   #ifndef USES_P093
+     #define USES_P093   // Mitsubishi Heat Pump
+   #endif
    #ifndef USES_P102
      #define USES_P102   // PZEM-004Tv30
    #endif
