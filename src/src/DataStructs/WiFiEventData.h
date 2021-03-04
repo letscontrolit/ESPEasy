@@ -46,6 +46,7 @@ struct WiFiEventData_t {
 
 
   void markGotIP();
+  void markLostIP();
   void markDisconnect(WiFiDisconnectReason reason);
   void markConnected(const String& ssid,
                      const uint8_t bssid[6],

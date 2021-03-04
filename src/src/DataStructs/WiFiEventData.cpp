@@ -113,6 +113,11 @@ void WiFiEventData_t::markGotIP() {
   processedGotIP = false;
 }
 
+void WiFiEventData_t::markLostIP() {
+  bitClear(wifiStatus, ESPEASY_WIFI_GOT_IP);
+  bitClear(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
+}
+
 void WiFiEventData_t::markDisconnect(WiFiDisconnectReason reason) {
   lastDisconnectMoment.setNow();
 

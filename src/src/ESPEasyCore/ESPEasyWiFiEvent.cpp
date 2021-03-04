@@ -55,6 +55,33 @@ static bool ignoreDisconnectEvent = false;
 
 void WiFiEvent(system_event_id_t event, system_event_info_t info) {
   switch (event) {
+    case SYSTEM_EVENT_WIFI_READY:
+      // ESP32 WiFi ready
+      break;
+    case SYSTEM_EVENT_STA_START:
+      addLog(LOG_LEVEL_INFO, F("WiFi  : STA Started"));
+      break;
+    case SYSTEM_EVENT_STA_STOP:
+      addLog(LOG_LEVEL_INFO, F("WiFi  : STA Stopped"));
+      break;
+    case SYSTEM_EVENT_AP_START:
+      addLog(LOG_LEVEL_INFO, F("WiFi  : AP Started"));
+      break;
+    case SYSTEM_EVENT_AP_STOP:
+      addLog(LOG_LEVEL_INFO, F("WiFi  : AP Stopped"));
+      break;
+    case SYSTEM_EVENT_STA_LOST_IP:
+      // ESP32 station lost IP and the IP is reset to 0
+      WiFiEventData.markLostIP();
+      addLog(LOG_LEVEL_INFO, F("WiFi  : Lost IP"));
+      break;
+
+    case SYSTEM_EVENT_AP_PROBEREQRECVED:
+      // Receive probe request packet in soft-AP interface
+      // TODO TD-er: Must implement like onProbeRequestAPmode for ESP8266
+      addLog(LOG_LEVEL_INFO, F("WiFi  : AP got probed"));
+      break;
+
     case SYSTEM_EVENT_STA_CONNECTED:
     {
       char ssid_copy[33] = { 0 }; // Ensure space for maximum len SSID (32) plus trailing 0
@@ -131,7 +158,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 #endif //HAS_ETHERNET
     default:
       {
-        String log = F("UNKNOWN EVENT: ");
+        String log = F("UNKNOWN WIFI/ETH EVENT: ");
         log += event;
         addLog(LOG_LEVEL_ERROR, log);
       }
