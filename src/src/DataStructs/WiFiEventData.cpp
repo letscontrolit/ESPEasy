@@ -2,6 +2,7 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/RTC.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 
 // Bit numbers for WiFi status
 #define ESPEASY_WIFI_CONNECTED               0
@@ -138,6 +139,7 @@ void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], 
   RTC.lastWiFiChannel = channel;
   last_ssid           = ssid;
   bssid_changed       = false;
+  auth_mode           = WiFi_AP_Candidates.getCurrent().enc_type;
 
   for (byte i = 0; i < 6; ++i) {
     if (RTC.lastBSSID[i] != bssid[i]) {
@@ -157,3 +159,6 @@ void WiFiEventData_t::markDisconnectedAPmode(const uint8_t mac[6]) {
   processedDisconnectAPmode = false;
 }
 
+void WiFiEventData_t::setAuthMode(uint8_t newMode) {
+  auth_mode = newMode;
+}
