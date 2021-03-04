@@ -112,6 +112,15 @@ struct ControllerDelayHandlerStruct {
       ++it;                         // The last element before back()
       for (; it != sendQueue.rend(); ++it) {
         if (back.isDuplicate(*it)) {
+#ifndef BUILD_NO_DEBUG
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(it->controller_idx);
+            String log = get_formatted_Controller_number(cpluginID);
+            log += F(" : Remove duplicate");
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+#endif // ifndef BUILD_NO_DEBUG
+
           sendQueue.pop_back();
           return true;
         }
@@ -171,7 +180,7 @@ struct ControllerDelayHandlerStruct {
     if (expire_timeout != 0) {
       bool done = false;
       while (!done && !sendQueue.empty()) {
-        if (timePassedSince(sendQueue.front()._timestamp) < expire_timeout) {
+        if (timePassedSince(sendQueue.front()._timestamp) < static_cast<long>(expire_timeout)) {
           done = true;
         } else {
           sendQueue.pop_front();
