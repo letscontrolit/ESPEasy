@@ -51,7 +51,7 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event);
 
 void onGotIP(const WiFiEventStationModeGotIP& event);
 
-void ICACHE_RAM_ATTR onDHCPTimeout();
+void onDHCPTimeout();
 
 void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event);
 
