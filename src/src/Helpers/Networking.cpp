@@ -414,7 +414,12 @@ void refreshNodeList()
   }
   sendSysInfoUDP(1);
   #ifdef USES_ESPEASY_NOW
-  ESPEasy_now_handler.sendDiscoveryAnnounce();
+  if (Nodes.recentlyBecameDistanceZero()) {
+    // Send to all channels
+    ESPEasy_now_handler.sendDiscoveryAnnounce(-1);
+  } else {
+    ESPEasy_now_handler.sendDiscoveryAnnounce();
+  }
   ESPEasy_now_handler.sendNTPquery();
   #endif // ifdef USES_ESPEASY_NOW
 }

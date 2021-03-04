@@ -42,7 +42,7 @@ public:
 
   // Send out the discovery announcement via broadcast.
   // This may be picked up by others
-  void sendDiscoveryAnnounce();
+  void sendDiscoveryAnnounce(int channel = 0);
   void sendDiscoveryAnnounce(const MAC_address& mac, int channel = 0);
 
   void sendNTPquery();

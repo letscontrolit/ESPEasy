@@ -37,15 +37,19 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
 WiFi_AP_Candidate::WiFi_AP_Candidate() {}
 
 bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
-  // RSSI values >= 0 are invalid
-  if (rssi >= 0) { return false; }
-
-  if (other.rssi >= 0) { return true; }
+  if (lowPrio != other.lowPrio) {
+    return !lowPrio;
+  }
 
   // Prefer non hidden over hidden.
   if (isHidden != other.isHidden) {
     return !isHidden;
   }
+
+  // RSSI values >= 0 are invalid
+  if (rssi >= 0) { return false; }
+
+  if (other.rssi >= 0) { return true; }
 
   // RSSI values are negative, so the larger value is the better one.
   return rssi > other.rssi;

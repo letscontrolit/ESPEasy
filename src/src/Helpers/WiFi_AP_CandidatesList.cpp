@@ -38,6 +38,9 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
     while (!done) {
       if (get_SSID_key(index, ssid, key)) {
         known.emplace_back(index, ssid, key);
+        if (index == WIFI_AP_CANDIDATE_ESPEASY_NOW_INDEX) {
+          known.back().lowPrio = true;
+        }
       } else if (index != WIFI_AP_CANDIDATE_ESPEASY_NOW_INDEX) {
         // There may be other credentials so don't stop at ESPEasy-now index 
         // For example on builds without ESPEasy-NOW these credentials will not be returned.

@@ -35,8 +35,6 @@ struct __attribute__((__packed__)) NodeStruct
   // - lower load (TODO TD-er)
   bool operator<(const NodeStruct &other) const;
 
-  void          setLocalData();
-  
   String        getNodeTypeDisplayString() const;
 
   String        getNodeName() const;

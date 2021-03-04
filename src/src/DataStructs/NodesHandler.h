@@ -56,6 +56,8 @@ public:
 
   uint8_t getESPEasyNOW_channel() const;
 
+  bool recentlyBecameDistanceZero();
+
 private:
 
   unsigned long _lastTimeValidDistance = 0;
@@ -63,6 +65,8 @@ private:
   uint8_t _distance = 255;  // Cached value
 
   NodesMap _nodes;
+
+  bool _recentlyBecameDistanceZero = false;
 };
 
 

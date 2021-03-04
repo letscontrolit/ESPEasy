@@ -402,14 +402,14 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
 // * Discovery Announcement
 // *************************************************************
 
-void ESPEasy_now_handler_t::sendDiscoveryAnnounce()
+void ESPEasy_now_handler_t::sendDiscoveryAnnounce(int channel)
 {
   MAC_address broadcast;
 
   for (int i = 0; i < 6; ++i) {
     broadcast.mac[i] = 0xFF;
   }
-  sendDiscoveryAnnounce(broadcast);
+  sendDiscoveryAnnounce(broadcast, channel);
 }
 
 void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int channel)
@@ -423,7 +423,25 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
   const size_t len = sizeof(NodeStruct);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::Announcement, len);
   if (len == msg.addBinaryData(reinterpret_cast<const uint8_t *>(thisNode), len)) {
-    msg.send(mac, channel);
+    if (channel < 0) {
+      // Send to all channels
+
+      const unsigned long start = millis();
+
+      // FIXME TD-er: Not sure whether we can send to channels > 11 in all countries.
+      for (int ch = 1; ch < 11; ++ch) {
+        msg.send(mac, ch);
+        delay(0);
+      }
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("ESPEasy-NOW : Sent discovery to all channels in ");
+        log += String(timePassedSince(start));
+        log += F(" ms");
+        addLog(LOG_LEVEL_INFO, log);
+      }
+    } else {
+      msg.send(mac, channel);
+    }
   }
 }
 
@@ -479,7 +497,11 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 
   const uint8_t new_distance = Nodes.getDistance();
   if (new_distance != cur_distance) {
-    sendDiscoveryAnnounce();
+    if (new_distance == 0) {
+      sendDiscoveryAnnounce(-1);  // Send to all channels
+    } else {
+      sendDiscoveryAnnounce();
+    }
   }
 
   return true;

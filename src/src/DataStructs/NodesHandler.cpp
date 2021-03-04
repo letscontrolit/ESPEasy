@@ -206,10 +206,14 @@ void NodesHandler::updateThisNode() {
     }
   }
 
+  const uint8_t lastDistance = _distance;
   if (isEndpoint()) {
     _distance = 0;
+    _lastTimeValidDistance = millis();
+    if (lastDistance != _distance) {
+      _recentlyBecameDistanceZero = true;
+    }
   } else {
-    const uint8_t lastDistance = _distance;
     _distance = 255;
     const NodeStruct *preferred = getPreferredNode_notMatching(thisNode.sta_mac);
 
@@ -301,6 +305,14 @@ uint8_t NodesHandler::getESPEasyNOW_channel() const
     return preferred->channel;
   }
   return 0;
+}
+
+bool NodesHandler::recentlyBecameDistanceZero() {
+  if (!_recentlyBecameDistanceZero) {
+    return false;
+  }
+  _recentlyBecameDistanceZero = false;
+  return true;
 }
 
 bool NodesHandler::lastTimeValidDistanceExpired() const
