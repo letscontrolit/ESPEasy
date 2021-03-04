@@ -57,6 +57,8 @@ void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event);
 
 void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event);
 
+void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event);
+
 #endif // ifdef ESP32
 
 
