@@ -160,7 +160,7 @@ void onGotIP(const WiFiEventStationModeGotIP& event) {
   WiFiEventData.markGotIP();
 }
 
-void ICACHE_RAM_ATTR onDHCPTimeout() {
+void onDHCPTimeout() {
   WiFiEventData.processedDHCPTimeout = false;
 }
 
