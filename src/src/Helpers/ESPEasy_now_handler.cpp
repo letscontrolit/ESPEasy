@@ -491,14 +491,11 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (isNewNode) {
-    sendDiscoveryAnnounce(mac);
-  }
-
   const uint8_t new_distance = Nodes.getDistance();
-  if (new_distance != cur_distance) {
+  if (new_distance != cur_distance || isNewNode) {
     if (new_distance == 0) {
-      sendDiscoveryAnnounce(-1);  // Send to all channels
+      //sendDiscoveryAnnounce(-1);  // Send to all channels
+      sendDiscoveryAnnounce(); // For now disable sending the announce to all channels.
     } else {
       sendDiscoveryAnnounce();
     }
