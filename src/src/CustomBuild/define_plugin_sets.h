@@ -588,6 +588,24 @@ To create/register a plugin, you have to :
     // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
+#ifdef PLUGIN_BUILD_MAX_ESP32
+    #define PLUGIN_DESCR  "MAX ESP32"
+    #ifndef ESP32
+        #define ESP32
+    #endif
+    #ifdef ESP8266
+        #undef ESP8266
+    #endif
+
+    #define  PLUGIN_SET_MAX
+    #define  CONTROLLER_SET_ALL
+    #define  NOTIFIER_SET_ALL
+    // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
+    // See also PLUGIN_SET_TEST_ESP32 section at end,
+    // where incompatible plugins will be disabled.
+    // TODO : Check compatibility of plugins for ESP32 board.
+#endif
+
 
 // Generic ------------------------------------
 #ifdef PLUGIN_SET_GENERIC_1M
@@ -761,6 +779,19 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
+// MAX ###########################################
+#ifdef PLUGIN_SET_MAX
+    #ifndef PLUGIN_SET_STABLE
+        #define PLUGIN_SET_STABLE
+    #endif
+    #ifndef PLUGIN_SET_TESTING
+        #define PLUGIN_SET_TESTING
+    #endif
+    // #ifndef PLUGIN_SET_EXPERIMENTAL
+    //     #define PLUGIN_SET_EXPERIMENTAL
+    // #endif
+#endif
+
 
 
 
@@ -863,13 +894,14 @@ To create/register a plugin, you have to :
 
 // TESTING #####################################
 #ifdef PLUGIN_SET_TESTING
-  #ifndef LIMIT_BUILD_SIZE
-    #define LIMIT_BUILD_SIZE
-  #endif
-  #ifndef NOTIFIER_SET_NONE
-    #define NOTIFIER_SET_NONE
-  #endif
-
+  #ifndef PLUGIN_SET_MAX
+    #ifndef LIMIT_BUILD_SIZE
+      #define LIMIT_BUILD_SIZE
+    #endif
+    #ifndef NOTIFIER_SET_NONE
+      #define NOTIFIER_SET_NONE
+    #endif
+  #endif // PLUGIN_SET_MAX
 
     #define USES_P045   // MPU6050
     #define USES_P047   // I2C_soil_misture
@@ -1104,6 +1136,63 @@ To create/register a plugin, you have to :
 #endif
 
 
+// Maximized build definition for an ESP(32) with 16MB Flash and 4MB sketch partition
+// Add all plugins, controllers and features that don't fit in the TESTING set
+#ifdef PLUGIN_SET_MAX
+  // Plugins
+  #ifndef USES_P016
+    #define USES_P016   // IR
+  #endif
+  #ifndef USES_P035
+    #define USES_P035   // IRTX
+  #endif
+  #ifndef USES_P041
+    #define USES_P041   // NeoClock
+  #endif
+  #ifndef USES_P042
+    #define USES_P042   // Candle
+  #endif
+  #ifndef USES_P087
+    #define USES_P087   // Serial Proxy
+  #endif
+  #ifndef USES_P094
+    #define USES_P094  // CUL Reader
+  #endif
+  #ifndef USES_P095
+    #define USES_P095  // TFT ILI9341
+  #endif
+  #ifndef USES_P096
+    #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
+  #endif
+  #ifndef USES_P099
+    #define USES_P099   // XPT2046 Touchscreen
+  #endif
+  #ifndef USES_P102
+    #define USES_P102   // PZEM004Tv3
+  #endif
+  #ifndef USES_P111
+    #define USES_P111   // RC522 RFID reader
+  #endif
+
+  // Controllers
+  #ifndef USES_C015
+    #ifndef ESP32
+      #define USES_C015   // Blynk (?doesn't compile on ESP32?)
+    #endif
+  #endif
+  #ifndef USES_C016
+    #ifndef ESP32         // Not implemented yet for ESP32
+      #define USES_C016   // Cache controller
+    #endif
+  #endif
+  #ifndef USES_C018
+    #define USES_C018 // TTN RN2483
+  #endif
+
+  // Notifiers
+
+#endif // PLUGIN_SET_MAX
+
 
 /******************************************************************************\
  * Remove incompatible plugins ************************************************
@@ -1195,7 +1284,7 @@ To create/register a plugin, you have to :
 #endif
 
 // VCC builds need a bit more, disable timing stats to make it fit.
-#ifdef FEATURE_ADC_VCC
+#if defined(FEATURE_ADC_VCC) && !defined(PLUGIN_SET_MAX)
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
   #endif
