@@ -169,6 +169,9 @@ void NodesHandler::updateThisNode() {
       addIP = false;
       thisNode.useAP_ESPEasyNow = 1;
     }
+    if (!isEndpoint()) {
+      addIP = false;
+    }
     #endif
     if (addIP) {
       IPAddress localIP = NetworkLocalIP();

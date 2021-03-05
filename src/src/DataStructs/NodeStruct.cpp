@@ -84,7 +84,7 @@ bool NodeStruct::operator<(const NodeStruct &other) const {
     score_this -= (thisRssi + 38) * 2;
     score_other -= (otherRssi + 38) * 2;
   }
-  return score_this > score_other;
+  return score_this < score_other;
 }
 
 String NodeStruct::getNodeTypeDisplayString() const {
