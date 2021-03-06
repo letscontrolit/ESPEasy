@@ -789,7 +789,7 @@ To create/register a plugin, you have to :
     #endif
     #ifndef PLUGIN_SET_EXPERIMENTAL
         #define PLUGIN_SET_EXPERIMENTAL
-#endif
+    #endif
 #endif
 
 
@@ -1148,6 +1148,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USE_SETTINGS_ARCHIVE
     #define USE_SETTINGS_ARCHIVE
+  #endif
+  #ifndef FEATURE_SD
+    #define FEATURE_SD
   #endif
 
   // Plugins
