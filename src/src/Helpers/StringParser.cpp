@@ -6,6 +6,7 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
+#include "../Commands/GPIO.h"
 
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
@@ -80,12 +81,17 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
       command += format;
       command.replace('#', ',');
 
+      if (getGPIOPinStateValues(command)) {
+        newString += command;
+      }
+/* @giig1967g
       if (PluginCall(PLUGIN_REQUEST, 0, command))
       {
         // Do not call transformValue here.
         // The "format" is not empty so must not call the formatter function.
         newString += command;
       }
+*/
     }
     else if (deviceName.equals(F("var")) || deviceName.equals(F("int")))
     {

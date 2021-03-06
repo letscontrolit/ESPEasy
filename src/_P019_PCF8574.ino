@@ -552,7 +552,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-
+/*
     case PLUGIN_REQUEST:
     {
       // parseString(string, 1) = device
@@ -571,7 +571,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
       }
       break;
     }
-
+*/
     case PLUGIN_WRITE:
     {
       //String log;

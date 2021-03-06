@@ -33,7 +33,7 @@ Supported hardware: |P000_usedby_GPIO|
   ","
   **Toggle on/off.**.
   Toggle the current (output) state of the given GPIO pin.
-  This will only be executed on pins set to be in output mode.
+  When executed, it changes the pin mode to output.
   "
   "
   ``LongPulse,<GPIO>,<state>,<duration>``
@@ -117,7 +117,7 @@ Supported hardware: |P000_usedby_GPIO|
   This can be useful to save energy on servos which do not need power to remain at the same position.
   "
   "
-  ``Monitor,<GPIO>``
+  ``Monitor,G,<GPIO>``
 
   GPIO: 0 ... 16
   ","
@@ -125,10 +125,18 @@ Supported hardware: |P000_usedby_GPIO|
   By the use of the command you will receive events when the GPIO state of that pin is changed from 1 to 0 and from 0 to 1.
   "
   "
-  ``GPIOtoggle,<GPIO>``
+  ``UnMonitor,G,<GPIO>``
 
   GPIO: 0 ... 16
   ","
-  **To toggle a GPIO state.**
-  With this command you can change the given state of a pin from either 1 to 0 or from 0 to 1.
+  **To cancel the monitor of a GPIO state.**
+  By the use of the command you will stop receiving events when the GPIO state of that pin is changed from 1 to 0 and from 0 to 1.
+  "
+  "
+  ``Status,G,<GPIO>``
+
+  GPIO: 0 ... 16
+  ","
+  **Returns the status of a pin.**
+  By the use of the command you will receive the status of the relevant pin.
   "

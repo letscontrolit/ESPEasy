@@ -10,6 +10,7 @@ WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
 WiFiEventHandler stationGotIpHandler;
 WiFiEventHandler stationModeDHCPTimeoutHandler;
+WiFiEventHandler stationModeAuthModeChangeHandler;
 WiFiEventHandler APModeStationConnectedHandler;
 WiFiEventHandler APModeStationDisconnectedHandler;
 #endif // ifdef ESP8266
