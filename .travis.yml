@@ -79,7 +79,7 @@ env:
   #- ENV=test_alt_wifi_ESP8266_4M1M_VCC
   #- ENV=test_beta_ESP8266_16M_LittleFS
   - ENV=test_beta_ESP8266_4M1M
-  - ENV=max_ESP32_16M8124k
+  - ENV=max_ESP32_16M4M
 
 script:
   - PLATFORMIO_BUILD_FLAGS="-D CONTINUOUS_INTEGRATION" platformio run -e $ENV

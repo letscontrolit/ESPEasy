@@ -787,9 +787,9 @@ To create/register a plugin, you have to :
     #ifndef PLUGIN_SET_TESTING
         #define PLUGIN_SET_TESTING
     #endif
-    // #ifndef PLUGIN_SET_EXPERIMENTAL
-    //     #define PLUGIN_SET_EXPERIMENTAL
-    // #endif
+    #ifndef PLUGIN_SET_EXPERIMENTAL
+        #define PLUGIN_SET_EXPERIMENTAL
+#endif
 #endif
 
 
@@ -1139,6 +1139,17 @@ To create/register a plugin, you have to :
 // Maximized build definition for an ESP(32) with 16MB Flash and 4MB sketch partition
 // Add all plugins, controllers and features that don't fit in the TESTING set
 #ifdef PLUGIN_SET_MAX
+  // Features
+  #ifndef USE_SERVO
+    #define USE_SERVO
+  #endif
+  #ifndef USE_RTTTL
+    #define USE_RTTTL
+  #endif
+  #ifndef USE_SETTINGS_ARCHIVE
+    #define USE_SETTINGS_ARCHIVE
+  #endif
+
   // Plugins
   #ifndef USES_P016
     #define USES_P016   // IR
