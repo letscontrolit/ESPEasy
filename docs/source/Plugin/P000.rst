@@ -30,8 +30,27 @@ Supported hardware
 Commands available
 ------------------
 
+Internal GPIO
+^^^^^^^^^^^^^
+
 .. include:: P001_commands_GPIO.repl
+
+External MCPGPIO
+^^^^^^^^^^^^^^^^
+
+.. include:: P009_commands.repl
+
+External PCFGPIO
+^^^^^^^^^^^^^^^^
+
+.. include:: P019_commands.repl
+
+
+Ringtone Internal GPIO
+~~~~~~~~~~~~~~~~~~~~~~~
+
 .. include:: P001_commands_RTTTL.repl
+
 
 .. Events
 .. ~~~~~~

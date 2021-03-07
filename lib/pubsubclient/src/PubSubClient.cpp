@@ -330,16 +330,23 @@ bool PubSubClient::loop_read() {
         case MQTTPUBLISH: 
         {
             if (callback) {
-                uint16_t tl = (buffer[llen+1]<<8)+buffer[llen+2]; /* topic length in bytes */
-                memmove(buffer+llen+2,buffer+llen+3,tl); /* move topic inside buffer 1 byte to front */
-                buffer[llen+2+tl] = 0; /* end the topic as a 'C' string with \x00 */
-                char *topic = (char*) buffer+llen+2;
+                const bool msgId_present = (buffer[0]&0x06) == MQTTQOS1;
+                const uint16_t tl_offset = llen+1;
+                const uint16_t tl = (buffer[tl_offset]<<8)+buffer[tl_offset+1]; /* topic length in bytes */
+                const uint16_t topic_offset = tl_offset+2;
+                const uint16_t msgId_offset = topic_offset+tl;
+                const uint16_t payload_offset = msgId_present ? msgId_offset+2 : msgId_offset;
+                if (payload_offset >= MQTT_MAX_PACKET_SIZE) return false;
+                if (len < payload_offset) return false;
+                memmove(buffer+topic_offset-1,buffer+topic_offset,tl); /* move topic inside buffer 1 byte to front */
+                buffer[topic_offset-1+tl] = 0; /* end the topic as a 'C' string with \x00 */
+                char *topic = (char*) buffer+topic_offset-1;
                 uint8_t *payload;
                 // msgId only present for QOS>0
-                if ((buffer[0]&0x06) == MQTTQOS1) {
-                    const uint16_t msgId = (buffer[llen+3+tl]<<8)+buffer[llen+3+tl+1];
-                    payload = buffer+llen+3+tl+2;
-                    callback(topic,payload,len-llen-3-tl-2);
+                if (msgId_present) {
+                    const uint16_t msgId = (buffer[msgId_offset]<<8)+buffer[msgId_offset+1];
+                    payload = buffer+payload_offset;
+                    callback(topic,payload,len-payload_offset);
                     if (_client->connected()) {
                         buffer[0] = MQTTPUBACK;
                         buffer[1] = 2;
@@ -350,8 +357,9 @@ bool PubSubClient::loop_read() {
                         }
                     }
                 } else {
-                    payload = buffer+llen+3+tl;
-                    callback(topic,payload,len-llen-3-tl);
+                    // No msgId
+                    payload = buffer+payload_offset;
+                    callback(topic,payload,len-payload_offset);
                 }
             }
             break;
