@@ -1249,6 +1249,9 @@ To create/register a plugin, you have to :
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
+  #ifdef USES_P076
+    #undef USES_P076   // HWL8012   in POW r1
+  #endif
   #ifdef USES_P092
     #undef USES_P092   // DL-Bus
   #endif
