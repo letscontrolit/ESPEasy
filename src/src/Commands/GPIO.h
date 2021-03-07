@@ -25,5 +25,18 @@ String Command_GPIO_Monitor(struct EventStruct *event, const char* Line);
 String Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line);
 String Command_GPIO_Status(struct EventStruct *event, const char* Line);
 
+String Command_GPIO_McpGPIORange(struct EventStruct *event, const char* Line);
+String Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char* Line);
+
+String Command_GPIO_PcfGPIORange(struct EventStruct *event, const char* Line);
+String Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char* Line);
+
+String Command_GPIO_Mode(struct EventStruct *event, const char* Line);
+String Command_GPIO_ModeRange(struct EventStruct *event, const char* Line);
+
+String Command_GPIO_MonitorRange(struct EventStruct *event, const char* Line);
+String Command_GPIO_UnMonitorRange(struct EventStruct *event, const char* Line);
+
+bool getGPIOPinStateValues(String& str);
 
 #endif // COMMAND_GPIO_H

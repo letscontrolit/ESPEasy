@@ -938,7 +938,9 @@ To create/register a plugin, you have to :
      #define USES_P027   // INA219
    #endif
    #ifndef USES_P076 
-     #define USES_P076   // HWL8012   in POW r1
+//     TD-er: Disabled as it causes this 'energy' build to fail due to low iRAM.
+//     It is still present in the POW builds.
+//     #define USES_P076   // HWL8012   in POW r1
    #endif
    #ifndef USES_P077 
      // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
@@ -949,6 +951,9 @@ To create/register a plugin, you have to :
    #endif
    #ifndef USES_P085
      #define USES_P085   // AcuDC24x
+   #endif
+   #ifndef USES_P093
+     #define USES_P093   // Mitsubishi Heat Pump
    #endif
    #ifndef USES_P102
      #define USES_P102   // PZEM-004Tv30
