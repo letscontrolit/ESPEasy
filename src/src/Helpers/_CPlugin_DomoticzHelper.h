@@ -5,6 +5,8 @@
 
 #ifdef USES_DOMOTICZ
 
+#include "../Helpers/_CPlugin_Helper.h"
+
 // HUM_STAT can be one of:
 
 // 0=Normal

@@ -1,6 +1,8 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P079
 
+# include "src/PluginStructs/P079_data_struct.h"
+
 // #######################################################################################################
 // ################################## Plugin 079: Wemos / Lolin Motorshield ##############################
 // #######################################################################################################
@@ -50,166 +52,35 @@
 //
 // ************************************************************************************************
 
-#define PLUGIN_079
-#define PLUGIN_ID_079         79
-#define PLUGIN_NAME_079       "Motor - Wemos/Lolin Motorshield"
-#define PLUGIN_VALUENAME1_079 "Motorshield"
-#define PLUGIN_DEF_NAME1_079  "Wemos_DC_Motor"
-#define PLUGIN_DEF_NAME2_079  "Lolin_DC_Motor"
+# define PLUGIN_079
+# define PLUGIN_ID_079         79
+# define PLUGIN_NAME_079       "Motor - Wemos/Lolin Motorshield"
+# define PLUGIN_VALUENAME1_079 "Motorshield"
+# define PLUGIN_DEF_NAME1_079  "Wemos_DC_Motor"
+# define PLUGIN_DEF_NAME2_079  "Lolin_DC_Motor"
 
-#define DEF_I2C_ADDRESS_079  0x30
-#define I2C_ADDR_PCFG_P079   PCONFIG(0)
-#define SHIELD_VER_PCFG_P079 PCONFIG(1)
-#define MOTOR_FREQ_P079      1000
-#define PRODUCT_ID_I2C_LOLIN 0x02
+# define I2C_ADDR_PCFG_P079   PCONFIG(0)
+# define SHIELD_VER_PCFG_P079 PCONFIG(1)
+# define Plugin_079_MotorShield_type  static_cast<P079_BoardType>(SHIELD_VER_PCFG_P079)
+
 
 // Command keywords: The two Command Names are interchangeable.
-#define CMD_NAME_LOLIN "LolinMotorShieldCMD"
-#define CMD_NAME_WEMOS "WemosMotorShieldCMD"
+# define CMD_NAME_LOLIN "LolinMotorShieldCMD"
+# define CMD_NAME_WEMOS "WemosMotorShieldCMD"
+
 
 // Compiler Options
 // #define VERBOSE_P079                 // Uncomment to enable Verbose info log status messages.
 
 // ************************************************************************************************
 
-enum BOARD_TYPE
-{
-  WEMOS_P079 = 0x01,
-  LOLIN_P079
-};
-
-enum MOTOR_STATES
-{
-  MOTOR_STOP = 0x00,
-  MOTOR_FWD,
-  MOTOR_REV,
-  MOTOR_STBY,
-  MOTOR_BRAKE
-};
-
-static uint8_t Plugin_079_MotorShield_address = DEF_I2C_ADDRESS_079;
-static uint8_t Plugin_079_MotorShield_type    = WEMOS_P079;
-
-// copied from <WEMOS_Motor.h>
-#ifndef __WEMOS_MOTOR_H
-# define __WEMOS_MOTOR_H
-
-# if (ARDUINO >= 100)
- #  include "Arduino.h"
-# else // if (ARDUINO >= 100)
- #  include "WProgram.h"
-# endif  // if (ARDUINO >= 100)
-
-# include "Wire.h"
-# include "_Plugin_Helper.h"
-
-# define P079_MOTOR_A     0
-# define P079_MOTOR_B     1
-# define P079_SHORT_BRAKE 0
-# define P079_CCW         1
-# define P079_CW          2
-# define P079_STOP        3
-# define P079_STANDBY     4
-
-class WemosMotor {
-public:
-
-  WemosMotor(uint8_t  address,
-             uint8_t  motor,
-             uint32_t freq);
-  WemosMotor(uint8_t  address,
-             uint8_t  motor,
-             uint32_t freq,
-             uint8_t  STBY_IO);
-  void setfreq(uint32_t freq);
-  void setmotor(uint8_t dir,
-                float   pwm_val);
-  void setmotor(uint8_t dir);
-
-private:
-
-  uint8_t _address;
-  uint8_t _motor;
-  bool _use_STBY_IO = false;
-  uint8_t _STBY_IO  = 0;
-};
-
-#endif // ifndef __WEMOS_MOTOR_H
-
-// end copied from <WEMOS_Motor.h>
-
-// ************************************************************************************************
-
-// Copied from <LOLIN_I2C_MOTOR.h>
-#ifndef __LOLIN_I2C_MOTOR_H
-# define __LOLIN_I2C_MOTOR_H
-
-enum LOLIN_I2C_CMD
-{
-  GET_SLAVE_STATUS = 0x01,
-  RESET_SLAVE,
-  CHANGE_I2C_ADDRESS,
-  CHANGE_STATUS,
-  CHANGE_FREQ,
-  CHANGE_DUTY
-};
-
-enum LOLIN_MOTOR_STATUS
-{
-  MOTOR_STATUS_STOP = 0x00,
-  MOTOR_STATUS_CCW,
-  MOTOR_STATUS_CW,
-  MOTOR_STATUS_SHORT_BRAKE,
-  MOTOR_STATUS_STANDBY
-};
-
-enum LOLIN_MOTOR_CHANNEL
-{
-  MOTOR_CH_A = 0x00,
-  MOTOR_CH_B,
-  MOTOR_CH_BOTH
-};
-
-class LOLIN_I2C_MOTOR {
-public:
-
-  LOLIN_I2C_MOTOR(unsigned char address = Plugin_079_MotorShield_address);
-  unsigned char reset(void);
-  unsigned char getInfo(void);
-  unsigned char changeStatus(unsigned char ch,
-                             unsigned char sta);
-  unsigned char changeFreq(unsigned char ch,
-                           uint32_t      freq);
-  unsigned char changeDuty(unsigned char ch,
-                           float         duty);
-  unsigned char changeAddress(unsigned char address);
-
-  unsigned char VERSION_ID = 0;
-  unsigned char PRODUCT_ID = 0;
-
-private:
-
-  unsigned char _address;
-  unsigned char send_data[5] = { 0 };
-  unsigned char get_data[2]  = { 0 };
-  unsigned char sendData(unsigned char *data,
-                         unsigned char  len);
-};
-
-#endif // ifndef __LOLIN_I2C_MOTOR_H
-
-// end copied from <LOLIN_I2C_MOTOR.h>
-
-// ************************************************************************************************
-
 boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 {
-  boolean success      = false;
-  uint8_t motor_dir    = P079_CCW;
-  uint8_t motor_number = P079_MOTOR_A;
-  int16_t motor_speed  = 100;
-  String p079_adr_str  = String(F("p079_adr"));
-  String p079_shield_type_str = String(F("p079_shield_type"));
+  boolean success        = false;
+  MOTOR_STATES motor_dir = MOTOR_STATES::MOTOR_FWD;
+  uint8_t motor_number   = P079_MOTOR_A;
+  int16_t motor_speed    = 100;
+
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
@@ -247,22 +118,32 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
       if ((I2C_ADDR_PCFG_P079 < 0x01) || (I2C_ADDR_PCFG_P079 > 0x7f)) { // Validate I2C Addr.
         I2C_ADDR_PCFG_P079 = DEF_I2C_ADDRESS_079;
       }
-      Plugin_079_MotorShield_address = (I2C_ADDR_PCFG_P079);
-      String i2c_addres_string = formatToHex(Plugin_079_MotorShield_address);
-      addFormTextBox(F("I2C Address (Hex)"), p079_adr_str, i2c_addres_string, 4);
+      String i2c_addres_string = formatToHex(I2C_ADDR_PCFG_P079);
+      addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"), i2c_addres_string, 4);
 
-      if ((SHIELD_VER_PCFG_P079 != WEMOS_P079) && (SHIELD_VER_PCFG_P079 != LOLIN_P079)) { // Validate Shield Type.
-        SHIELD_VER_PCFG_P079 = WEMOS_P079;
+      // Validate Shield Type.
+      bool valid = false;
+
+      switch (Plugin_079_MotorShield_type) {
+        case P079_BoardType::WemosMotorshield:
+        case P079_BoardType::LolinMotorshield:
+          valid = true;
+          break;
+
+          // TD-er: Do not use defaul: here, as the compiler can now warn if we're missing a newly added option
       }
-      Plugin_079_MotorShield_type = SHIELD_VER_PCFG_P079;
+
+      if (!valid) {
+        SHIELD_VER_PCFG_P079 = static_cast<int>(P079_BoardType::WemosMotorshield);
+      }
+
 
       const String options[] = { F("WEMOS V1.0"), F("LOLIN V2.0") };
-      int indices[]          = { WEMOS_P079, LOLIN_P079 };
-      addFormSelector(F("Motor Shield Type"), p079_shield_type_str, 2, options, indices, SHIELD_VER_PCFG_P079);
+      int indices[]          = { static_cast<int>(P079_BoardType::WemosMotorshield), static_cast<int>(P079_BoardType::LolinMotorshield) };
+      addFormSelector(F("Motor Shield Type"), F("p079_shield_type"), 2, options, indices, SHIELD_VER_PCFG_P079);
 
-      if (SHIELD_VER_PCFG_P079 == WEMOS_P079) {
-        addFormNote(F(
-                      "WEMOS V1.0 Motor Shield requires updated firmware, see <a href='https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield'>wiki</a>"));
+      if (Plugin_079_MotorShield_type == P079_BoardType::WemosMotorshield) {
+        addFormNote(F("WEMOS V1.0 Motor Shield requires updated firmware, see <a href='https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield'>wiki</a>"));
       }
 
       break;
@@ -274,21 +155,35 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      String i2c_address = web_server.arg(p079_adr_str);
+      String i2c_address = web_server.arg(F("i2c_addr"));
       I2C_ADDR_PCFG_P079   = (int)strtol(i2c_address.c_str(), 0, 16);
-      SHIELD_VER_PCFG_P079 = getFormItemInt(p079_shield_type_str);
+      SHIELD_VER_PCFG_P079 = getFormItemInt(F("p079_shield_type"));
 
-      if ((SHIELD_VER_PCFG_P079 != WEMOS_P079) && (SHIELD_VER_PCFG_P079 != LOLIN_P079)) { // Invalid Motor Shield Type.
-        SHIELD_VER_PCFG_P079 = WEMOS_P079;
+      // Validate Shield Type.
+      bool valid = false;
+
+      switch (Plugin_079_MotorShield_type) {
+        case P079_BoardType::WemosMotorshield:
+        case P079_BoardType::LolinMotorshield:
+          valid = true;
+          break;
+
+          // TD-er: Do not use defaul: here, as the compiler can now warn if we're missing a newly added option
       }
-      Plugin_079_MotorShield_type = SHIELD_VER_PCFG_P079;
+
+      if (!valid) {
+        SHIELD_VER_PCFG_P079 = static_cast<int>(P079_BoardType::WemosMotorshield);
+      }
+
 
       if (getTaskDeviceName(event->TaskIndex) == "") {                    // Check to see if user entered device name.
-        if (Plugin_079_MotorShield_type == WEMOS_P079) {
-          strcpy(ExtraTaskSettings.TaskDeviceName, PLUGIN_DEF_NAME1_079); // Name missing, populate default name.
-        }
-        else {
-          strcpy(ExtraTaskSettings.TaskDeviceName, PLUGIN_DEF_NAME2_079); // Name missing, populate default name.
+        switch (Plugin_079_MotorShield_type) {
+          case P079_BoardType::WemosMotorshield:
+            safe_strncpy(ExtraTaskSettings.TaskDeviceName, F(PLUGIN_DEF_NAME1_079), sizeof(ExtraTaskSettings.TaskDeviceName)); // Name missing, populate default name.
+            break;
+          case P079_BoardType::LolinMotorshield:
+            safe_strncpy(ExtraTaskSettings.TaskDeviceName, F(PLUGIN_DEF_NAME2_079), sizeof(ExtraTaskSettings.TaskDeviceName)); // Name missing, populate default name.
+            break;
         }
       }
 
@@ -297,13 +192,21 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_INIT: {
-      Plugin_079_MotorShield_address = I2C_ADDR_PCFG_P079;
+      // Validate Shield Type.
+      bool valid = false;
 
-      if ((SHIELD_VER_PCFG_P079 != WEMOS_P079) && (SHIELD_VER_PCFG_P079 != LOLIN_P079)) { // Validate Shield Type, for newly upgraded
-                                                                                          // devices.
-        SHIELD_VER_PCFG_P079 = WEMOS_P079;
+      switch (Plugin_079_MotorShield_type) {
+        case P079_BoardType::WemosMotorshield:
+        case P079_BoardType::LolinMotorshield:
+          valid = true;
+          break;
+
+          // TD-er: Do not use defaul: here, as the compiler can now warn if we're missing a newly added option
       }
-      Plugin_079_MotorShield_type = SHIELD_VER_PCFG_P079;
+
+      if (!valid) {
+        SHIELD_VER_PCFG_P079 = static_cast<int>(P079_BoardType::WemosMotorshield);
+      }
 
       success = true;
       break;
@@ -315,7 +218,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WRITE: {
-      Plugin_079_MotorShield_type = SHIELD_VER_PCFG_P079;
+
       byte   parse_error = false;
       String tmpString   = string;
       String ModeStr;
@@ -323,11 +226,13 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
       String cmd = parseString(tmpString, 1);
 
       if (cmd.equalsIgnoreCase(F(CMD_NAME_WEMOS)) || cmd.equalsIgnoreCase(F(CMD_NAME_LOLIN))) {
-        if (Plugin_079_MotorShield_type == WEMOS_P079) {
-          ModeStr = F("WemosV1");
-        }
-        else {
-          ModeStr = F("LolinV2");
+        switch (Plugin_079_MotorShield_type) {
+          case P079_BoardType::WemosMotorshield:
+            ModeStr = F("WemosV1");
+            break;
+          case P079_BoardType::LolinMotorshield:
+            ModeStr = F("LolinV2");
+            break;
         }
         ModeStr += F(" MotorShield");
 
@@ -336,69 +241,77 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
         String paramSpeed     = parseString(tmpString, 4); // Speed, 0-100
 
         if ((paramMotor == "") && (paramDirection == "") && (paramSpeed == "")) {
-          if (Plugin_079_MotorShield_type == WEMOS_P079) {
-            #ifdef VERBOSE_P079
-            ModeStr += String(F(": Unknown CMD"));
-            #else // ifdef VERBOSE_P079
-            ModeStr += String(F(": ?"));
-            #endif  // ifdef VERBOSE_P079
-          }
-          else {
-            LOLIN_I2C_MOTOR lolin;
-            lolin.getInfo();
+          switch (Plugin_079_MotorShield_type) {
+            case P079_BoardType::WemosMotorshield:
+            # ifdef VERBOSE_P079
+              ModeStr += F(": Unknown CMD");
+            # else // ifdef VERBOSE_P079
+              ModeStr += F(": ?");
+            # endif // ifdef VERBOSE_P079
+              break;
+            case P079_BoardType::LolinMotorshield:
+            {
+              LOLIN_I2C_MOTOR lolin(I2C_ADDR_PCFG_P079);
+              lolin.getInfo();
 
-            if (lolin.PRODUCT_ID != PRODUCT_ID_I2C_LOLIN) {
-              ModeStr += String(F(": Fail"));
-            }
-            else {
-              ModeStr += String(F(": Pass, ID=")) + lolin.PRODUCT_ID + String(F(", Ver=")) + lolin.VERSION_ID;
+              if (lolin.PRODUCT_ID != PRODUCT_ID_I2C_LOLIN) {
+                ModeStr += String(F(": Fail"));
+              }
+              else {
+                ModeStr += String(F(": Pass, ID=")) + lolin.PRODUCT_ID + String(F(", Ver=")) + lolin.VERSION_ID;
+              }
+              break;
             }
           }
           addLog(LOG_LEVEL_INFO, ModeStr);
-          SendStatus(event->Source, ModeStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, ModeStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
           return true;                                             // Exit now. Info Log shows Lolin Info.
         }
         else {
-          if ((paramMotor == "0") || (paramMotor == "1")) {
+          if ((paramMotor == F("0")) || (paramMotor == F("1"))) {
             motor_number = paramMotor.toInt();
           }
           else {
             if (paramMotor == "") {
-              paramMotor = F("?");
+              paramMotor = '?';
             }
             motor_number = 0;
             parse_error  = true;
           }
 
           if (paramDirection.equalsIgnoreCase(F("Stop"))) {
-            motor_dir = MOTOR_STOP;
+            motor_dir = MOTOR_STATES::MOTOR_STOP;
           }
           else if (paramDirection.equalsIgnoreCase(F("Forward"))) {
-            motor_dir = MOTOR_FWD;
+            motor_dir = MOTOR_STATES::MOTOR_FWD;
           }
           else if ((paramDirection.equalsIgnoreCase(F("Backward")))) {
-            motor_dir = MOTOR_REV;
+            motor_dir = MOTOR_STATES::MOTOR_REV;
           }
           else if (paramDirection.equalsIgnoreCase(F("Standby"))) {
-            motor_dir = MOTOR_STBY;
+            motor_dir = MOTOR_STATES::MOTOR_STBY;
           }
           else if (paramDirection.equalsIgnoreCase(F("Brake"))) {
-            motor_dir = MOTOR_BRAKE;
+            motor_dir = MOTOR_STATES::MOTOR_BRAKE;
           }
           else {
-            paramDirection = F("?");
-            motor_dir      = MOTOR_STOP;
+            paramDirection = '?';
+            motor_dir      = MOTOR_STATES::MOTOR_STOP;
             parse_error    = true;
           }
 
           if (paramSpeed == "") {
-            if ((motor_dir == MOTOR_STOP) || (motor_dir == MOTOR_STBY || (motor_dir == MOTOR_BRAKE))) {
-              paramSpeed  = F("0");
-              motor_speed = 0;
-            }
-            else {
-              parse_error = true;
-              paramSpeed  = F("?");
+            switch (motor_dir) {
+              case MOTOR_STATES::MOTOR_STOP:
+              case MOTOR_STATES::MOTOR_STBY:
+              case MOTOR_STATES::MOTOR_BRAKE:
+                paramSpeed  = '0';
+                motor_speed = 0;
+                break;
+              default:
+                parse_error = true;
+                paramSpeed  = '?';
+                break;
             }
           }
           else {
@@ -406,9 +319,9 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 
             if ((motor_speed < 0) || (motor_speed > 100)) {
               motor_speed = 100;
-              #ifdef VERBOSE_P079
+              # ifdef VERBOSE_P079
               addLog(LOG_LEVEL_INFO, ModeStr + String(F(": Warning, invalid speed: Now using 100")));
-              #endif // ifdef VERBOSE_P079
+              # endif // ifdef VERBOSE_P079
             }
           }
         }
@@ -416,42 +329,82 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
         if (parse_error == true) {
           String ErrorStr = ModeStr + String(F(": CMD Syntax Error"));
           addLog(LOG_LEVEL_INFO, ErrorStr);
-          SendStatus(event->Source, ErrorStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, ErrorStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
         }
         else {
-          WemosMotor Wemos(Plugin_079_MotorShield_address, motor_number, MOTOR_FREQ_P079);
-          LOLIN_I2C_MOTOR lolin;
-          lolin.changeFreq(MOTOR_CH_BOTH, MOTOR_FREQ_P079);
+          switch (motor_dir) {
+            case MOTOR_STATES::MOTOR_STOP:
+            case MOTOR_STATES::MOTOR_STBY:
+            case MOTOR_STATES::MOTOR_BRAKE:
+              paramSpeed = '0';
+              break;
+            default:
+              break;
+          }
 
-          if (motor_dir == MOTOR_FWD) {
-            Wemos.setmotor(P079_CW, motor_speed);
-            lolin.changeStatus(motor_number, MOTOR_STATUS_CW);
-            lolin.changeDuty(motor_number, motor_speed);
-          }
-          else if (motor_dir == MOTOR_REV) {
-            Wemos.setmotor(P079_CCW, motor_speed);
-            lolin.changeStatus(motor_number, MOTOR_STATUS_CCW);
-            lolin.changeDuty(motor_number, motor_speed);
-          }
-          else if (motor_dir == MOTOR_STOP) {
-            paramSpeed = F("0");
-            Wemos.setmotor(P079_STOP);
-            lolin.changeStatus(motor_number, MOTOR_STATUS_STOP);
-          }
-          else if (motor_dir == MOTOR_STBY) {
-            paramSpeed = F("0");
-            Wemos.setmotor(P079_STANDBY);
-            lolin.changeStatus(motor_number, MOTOR_STATUS_STANDBY);
-          }
-          else if (motor_dir == MOTOR_BRAKE) {
-            paramSpeed = F("0");
-            Wemos.setmotor(P079_SHORT_BRAKE);
-            lolin.changeStatus(motor_number, MOTOR_STATUS_SHORT_BRAKE);
+          switch (Plugin_079_MotorShield_type) {
+            case P079_BoardType::WemosMotorshield: {
+              WemosMotor Wemos(I2C_ADDR_PCFG_P079, motor_number, MOTOR_FREQ_P079);
+
+              switch (motor_dir) {
+                case MOTOR_STATES::MOTOR_FWD:
+                  Wemos.setmotor(P079_CW,  motor_speed);
+                  break;
+                case MOTOR_STATES::MOTOR_REV:
+                  Wemos.setmotor(P079_CCW, motor_speed);
+                  break;
+                case MOTOR_STATES::MOTOR_STOP:
+                  Wemos.setmotor(P079_STOP);
+                  break;
+                case MOTOR_STATES::MOTOR_STBY:
+                  Wemos.setmotor(P079_STANDBY);
+                  break;
+                case MOTOR_STATES::MOTOR_BRAKE:
+                  Wemos.setmotor(P079_SHORT_BRAKE);
+                  break;
+              }
+
+              break;
+            }
+            case P079_BoardType::LolinMotorshield: {
+              LOLIN_I2C_MOTOR lolin(I2C_ADDR_PCFG_P079);
+              lolin.changeFreq(MOTOR_CH_BOTH, MOTOR_FREQ_P079);
+
+              switch (motor_dir) {
+                case MOTOR_STATES::MOTOR_FWD:
+                  lolin.changeStatus(motor_number, MOTOR_STATUS_CW);
+                  lolin.changeDuty(motor_number, motor_speed);
+                  break;
+                case MOTOR_STATES::MOTOR_REV:
+                  lolin.changeStatus(motor_number, MOTOR_STATUS_CCW);
+                  lolin.changeDuty(motor_number, motor_speed);
+                  break;
+                case MOTOR_STATES::MOTOR_STOP:
+                  lolin.changeStatus(motor_number, MOTOR_STATUS_STOP);
+                  break;
+                case MOTOR_STATES::MOTOR_STBY:
+                  lolin.changeStatus(motor_number, MOTOR_STATUS_STANDBY);
+                  break;
+                case MOTOR_STATES::MOTOR_BRAKE:
+                  lolin.changeStatus(motor_number, MOTOR_STATUS_SHORT_BRAKE);
+                  break;
+              }
+
+              break;
+            }
           }
         }
-        addLog(LOG_LEVEL_INFO,
-               ModeStr + String(F(": Addr=")) + formatToHex(Plugin_079_MotorShield_address) + String(F(": Mtr=")) + paramMotor +
-               String(F(", Dir=")) + paramDirection + String(F(", Spd=")) + paramSpeed);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          ModeStr += F(": Addr=");
+          ModeStr += formatToHex(I2C_ADDR_PCFG_P079);
+          ModeStr += F(": Mtr=");
+          ModeStr += paramMotor;
+          ModeStr += F(", Dir=");
+          ModeStr += paramDirection;
+          ModeStr += F(", Spd=");
+          ModeStr += paramSpeed;
+          addLog(LOG_LEVEL_INFO, ModeStr);          
+        }
 
         success = true;
       }
@@ -460,347 +413,5 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-// ************************************************************************************************
-
-// copied from <WEMOS_Motor.cpp>
-
-WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq)
-{
-  if (Plugin_079_MotorShield_type != WEMOS_P079) {
-    return;
-  }
-
-  _use_STBY_IO = false;
-
-  if (motor == P079_MOTOR_A) {
-    _motor = P079_MOTOR_A;
-  }
-  else {
-    _motor = P079_MOTOR_B;
-  }
-
-  // Wire.begin();   Called in ESPEasy framework
-
-  _address = address;
-
-  setfreq(freq);
-}
-
-WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq, uint8_t STBY_IO)
-{
-  if (Plugin_079_MotorShield_type != WEMOS_P079) {
-    return;
-  }
-
-  _use_STBY_IO = true;
-  _STBY_IO     = STBY_IO;
-
-  if (motor == P079_MOTOR_A) {
-    _motor = P079_MOTOR_A;
-  }
-  else {
-    _motor = P079_MOTOR_B;
-  }
-
-  // Wire.begin();   Called in ESPEasy framework
-
-  _address = address;
-
-  setfreq(freq);
-
-  pinMode(_STBY_IO, OUTPUT);
-  digitalWrite(_STBY_IO, LOW);
-}
-
-/* setfreq() -- set PWM's frequency
-   freq: PWM's frequency
-
-   total 4bytes
- |0.5byte CMD     | 3.5byte Parm|
- |CMD             | parm        |
- |0x0X  set freq  | uint32  freq|
- */
-void WemosMotor::setfreq(uint32_t freq)
-{
-  if (Plugin_079_MotorShield_type != WEMOS_P079) {
-    return;
-  }
-  Wire.beginTransmission(_address);
-  Wire.write(((byte)(freq >> 24)) & (byte)0x0f);
-  Wire.write((byte)(freq >> 16));
-  Wire.write((byte)(freq >> 8));
-  Wire.write((byte)freq);
-  Wire.endTransmission(); // stop transmitting
-  delay(0);
-}
-
-/* setmotor() -- set motor
-   motor:
-        P079_MOTOR_A    0   Motor A
-        P079_MOTOR_B    1   Motor B
-
-   dir:
-        P079_SHORT_BRAKE  0
-        P079_CCW          1
-        P079_CW               2
-        P079_STOP         3
-        P079_STANDBY      4
-
-   pwm_val:
-        0.00 - 100.00  (%)
-
-   total 4bytes
- |0.5byte CMD      | 3.5byte Parm         |
- |CMD              | parm                 |
- |0x10  set motorA | uint8 dir  uint16 pwm|
- |0x11  set motorB | uint8 dir  uint16 pwm|
- */
-void WemosMotor::setmotor(uint8_t dir, float pwm_val)
-{
-  uint16_t _pwm_val;
-
-  if (Plugin_079_MotorShield_type != WEMOS_P079) {
-    return;
-  }
-
-  if (_use_STBY_IO == true) {
-    if (dir == P079_STANDBY) {
-      digitalWrite(_STBY_IO, LOW);
-      return;
-    } else {
-      digitalWrite(_STBY_IO, HIGH);
-    }
-  }
-
-  Wire.beginTransmission(_address);
-  Wire.write(_motor | (byte)0x10); // CMD either 0x10 or 0x11
-  Wire.write(dir);
-
-  // PWM in %
-  _pwm_val = uint16_t(pwm_val * 100);
-
-  if (_pwm_val > 10000) { // _pwm_val > 100.00
-    _pwm_val = 10000;
-  }
-
-  Wire.write((byte)(_pwm_val >> 8));
-  Wire.write((byte)_pwm_val);
-  Wire.endTransmission(); // stop transmitting
-
-  delay(0);
-}
-
-void WemosMotor::setmotor(uint8_t dir)
-{
-  if (Plugin_079_MotorShield_type != WEMOS_P079) {
-    return;
-  }
-  setmotor(dir, 100);
-}
-
-// end copy from <WEMOS_Motor.cpp>
-
-// ************************************************************************************************
-
-// copied from <LOLIN_I2C_MOTOR.cpp>
-
-/*
-        Init
- */
-LOLIN_I2C_MOTOR::LOLIN_I2C_MOTOR(uint8_t address)
-{
-  if (Plugin_079_MotorShield_type != LOLIN_P079) {
-    return;
-  }
-
-  // Wire.begin();   Called in ESPEasy framework
-  _address = address;
-}
-
-/*
-    Change Motor Status.
-    ch: Motor Channel
-        MOTOR_CH_A
-        MOTOR_CH_B
-        MOTOR_CH_BOTH
-
-    sta: Motor Status
-        MOTOR_STATUS_STOP
-        MOTOR_STATUS_CCW
-        MOTOR_STATUS_CW
-        MOTOR_STATUS_SHORT_BRAKE
-        MOTOR_STATUS_STANDBY
- */
-unsigned char LOLIN_I2C_MOTOR::changeStatus(unsigned char ch, unsigned char sta)
-{
-  send_data[0] = CHANGE_STATUS;
-  send_data[1] = ch;
-  send_data[2] = sta;
-  unsigned char result = sendData(send_data, 3);
-
-  return result;
-}
-
-/*
-    Change Motor Frequency
-        ch: Motor Channel
-            MOTOR_CH_A
-            MOTOR_CH_B
-            MOTOR_CH_BOTH
-
-        freq: PWM frequency (Hz)
-            1 - 80KHz, typically 1000Hz
- */
-unsigned char LOLIN_I2C_MOTOR::changeFreq(unsigned char ch, uint32_t freq)
-{
-  if (Plugin_079_MotorShield_type != LOLIN_P079) {
-    return 0;
-  }
-
-  send_data[0] = CHANGE_FREQ;
-  send_data[1] = ch;
-
-  send_data[2] = (uint8_t)(freq & 0xff);
-  send_data[3] = (uint8_t)((freq >> 8) & 0xff);
-  send_data[4] = (uint8_t)((freq >> 16) & 0xff);
-  unsigned char result = sendData(send_data, 5);
-
-  return result;
-}
-
-/*
-    Change Motor Duty.
-    ch: Motor Channel
-        MOTOR_CH_A
-        MOTOR_CH_B
-        MOTOR_CH_BOTH
-
-    duty: PWM Duty (%)
-        0.01 - 100.00 (%)
- */
-unsigned char LOLIN_I2C_MOTOR::changeDuty(unsigned char ch, float duty)
-{
-  if (Plugin_079_MotorShield_type != LOLIN_P079) {
-    return 0;
-  }
-
-  uint16_t _duty;
-  _duty = (uint16_t)(duty * 100);
-
-  send_data[0] = CHANGE_DUTY;
-  send_data[1] = ch;
-
-  send_data[2] = (uint8_t)(_duty & 0xff);
-  send_data[3] = (uint8_t)((_duty >> 8) & 0xff);
-  unsigned char result = sendData(send_data, 4);
-
-  return result;
-}
-
-/*
-    Reset Device.
- */
-unsigned char LOLIN_I2C_MOTOR::reset()
-{
-  if (Plugin_079_MotorShield_type != LOLIN_P079) {
-    return 0;
-  }
-
-  send_data[0] = RESET_SLAVE;
-  unsigned char result = sendData(send_data, 1);
-
-  return result;
-}
-
-/*
-    Change Device I2C address
-    address: when address=0, address>=127, will change address to default I2C address 0x31
- */
-unsigned char LOLIN_I2C_MOTOR::changeAddress(unsigned char address)
-   {
-        if (Plugin_079_MotorShield_type != LOLIN_P079) {
-            return 0;
-        }
-
-        send_data[0] = CHANGE_I2C_ADDRESS;
-        send_data[1] = address;
-        unsigned char result = sendData(send_data, 2);
-
-        return result;
-   }
-
-/*
-    Get PRODUCT_ID and Firmwave VERSION
- */
-unsigned char LOLIN_I2C_MOTOR::getInfo(void)
-{
-  if (Plugin_079_MotorShield_type != LOLIN_P079) {
-    return 0;
-  }
-
-  send_data[0] = GET_SLAVE_STATUS;
-  unsigned char result = sendData(send_data, 1);
-
-  if (result == 0)
-  {
-    PRODUCT_ID = get_data[0];
-    VERSION_ID = get_data[1];
-  }
-  else
-  {
-    PRODUCT_ID = 0;
-    VERSION_ID = 0;
-  }
-
-  return result;
-}
-
-/*
-    Send and Get I2C Data
- */
-unsigned char LOLIN_I2C_MOTOR::sendData(unsigned char *data, unsigned char len)
-{
-  unsigned char i;
-
-  if (Plugin_079_MotorShield_type != LOLIN_P079) {
-    return 0;
-  }
-
-  if ((_address == 0) || (_address >= 127))
-  {
-    return 1;
-  }
-  else
-  {
-    Wire.beginTransmission(_address);
-
-    for (i = 0; i < len; i++) {
-      Wire.write(data[i]);
-    }
-    Wire.endTransmission();
-    delay(50);
-
-    if (data[0] == GET_SLAVE_STATUS) {
-      Wire.requestFrom((int)_address, 2);
-    }
-    else {
-      Wire.requestFrom((int)_address, 1);
-    }
-
-    i = 0;
-
-    while (Wire.available())
-    {
-      get_data[i] = Wire.read();
-      i++;
-    }
-
-    return 0;
-  }
-}
-
-// ************************************************************************************************
-// end copy from <LOLIN_I2C_MOTOR.cpp>
 
 #endif // USES_P079

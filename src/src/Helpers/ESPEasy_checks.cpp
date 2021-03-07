@@ -3,7 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/C013_p2p_dataStructs.h"
 #include "../DataStructs/CRCStruct.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/DeviceStruct.h"
@@ -15,7 +14,6 @@
 #include "../DataStructs/LogStruct.h"
 #include "../DataStructs/NodeStruct.h"
 #include "../DataStructs/NodeStruct.h"
-#include "../DataStructs/NotificationSettingsStruct.h"
 #include "../DataStructs/PortStatusStruct.h"
 #include "../DataStructs/ProtocolStruct.h"
 #include "../DataStructs/RTCStruct.h"
@@ -30,9 +28,13 @@
 
 #include <cstddef>
 
+#ifdef USES_C013
+#include "../DataStructs/C013_p2p_dataStructs.h"
+#endif
 
 #ifdef USES_NOTIFIER
 #include "../DataStructs/NotificationStruct.h"
+#include "../DataStructs/NotificationSettingsStruct.h"
 #endif
 
 
@@ -90,11 +92,13 @@ void run_compiletime_checks() {
   check_size<NodeStruct,                            28u>();
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
-  check_size<portStatusStruct,                      4u>();
+  check_size<portStatusStruct,                      6u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
+  #ifdef USES_C013
   check_size<C013_SensorInfoStruct,                 137u>();
   check_size<C013_SensorDataStruct,                 24u>();
+  #endif
   #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
     static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
   #endif
@@ -157,6 +161,7 @@ bool SettingsCheck(String& error) {
   return error.length() == 0;
 }
 
+#include "Numerical.h"
 
 String checkTaskSettings(taskIndex_t taskIndex) {
   String err = LoadTaskSettings(taskIndex);
@@ -166,9 +171,13 @@ String checkTaskSettings(taskIndex_t taskIndex) {
     return F("Use unique value names");
   }
   if (!ExtraTaskSettings.checkInvalidCharInNames()) {
-    return F("Invalid character in names. Do not use ',-+/*=^%!#[]{}()' or space.");
+    return F("Invalid character in name. Do not use ',-+/*=^%!#[]{}()' or space.");
   }
   String deviceName = ExtraTaskSettings.TaskDeviceName;
+  NumericalType detectedType;
+  if (isNumerical(deviceName, detectedType)) {
+    return F("Invalid name. Should not be numeric.");
+  }
   if (deviceName.length() == 0) {
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       // Decide what to do here, for now give a warning when task is enabled.

@@ -18,7 +18,9 @@
 #define TIMING_STATS_THRESHOLD 100000
 
 void handle_timingstats() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_timingstats"));
+  #endif
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
@@ -72,7 +74,7 @@ void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset)
   const unsigned int  c = stats.getMinMax(minVal, maxVal);
 
   html_TD();
-  addHtml(String(c));
+  addHtmlInt(c);
   html_TD();
   const float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0f;
   const float avg = stats.getAvg();

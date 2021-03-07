@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P064
 
-#include "../../ESPEasy_common.h"
-
 #include <SparkFun_APDS9960.h> // Lib is modified to work with ESP
 
 

@@ -9,6 +9,7 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Numerical.h"
 
 
 
@@ -23,7 +24,9 @@
 // Web Interface file list
 // ********************************************************************************
 void handle_filelist_json() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_filelist"));
+  #endif
 
   if (!clientIPallowed()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -48,7 +51,7 @@ void handle_filelist_json() {
 
   if (fstart.length() > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    validIntFromString(fstart, startIdx);
   }
   int endIdx = startIdx + pageSize - 1;
 
@@ -117,7 +120,7 @@ void handle_filelist_json() {
   }
 
   if (firstentry) {
-    addHtml("}");
+    addHtml('}');
   }
 
   # endif // if defined(ESP8266)
@@ -129,7 +132,9 @@ void handle_filelist_json() {
 
 #ifdef WEBSERVER_FILELIST
 void handle_filelist() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_filelist"));
+  #endif
 
   if (!clientIPallowed()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -160,7 +165,7 @@ void handle_filelist() {
 
   if (fstart.length() > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    validIntFromString(fstart, startIdx);
   }
   int endIdx = startIdx + pageSize - 1;
   html_table_class_multirow();
@@ -247,7 +252,7 @@ void handle_filelist_add_file(const String& filename, int filesize, int startIdx
     if (startIdx > 0)
     {
       addHtml(F("&start="));
-      addHtml(String(startIdx));
+      addHtmlInt(startIdx);
     }
     addHtml(F("'>Del</a>"));
   }
@@ -313,7 +318,9 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
 // ********************************************************************************
 #ifdef FEATURE_SD
 void handle_SDfilelist() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_SDfilelist"));
+  #endif
 
   if (!clientIPallowed()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -321,11 +328,11 @@ void handle_SDfilelist() {
   sendHeadandTail_stdtemplate();
 
 
-  String fdelete       = "";
-  String ddelete       = "";
-  String change_to_dir = "";
-  String current_dir   = "";
-  String parent_dir    = "";
+  String fdelete;
+  String ddelete;
+  String change_to_dir;
+  String current_dir;
+  String parent_dir;
 
   for (uint8_t i = 0; i < web_server.args(); i++) {
     if (web_server.argName(i) == F("delete"))
@@ -387,8 +394,8 @@ void handle_SDfilelist() {
   html_BR();
   html_table_class_multirow();
   html_table_header("", 50);
-  html_table_header("Name");
-  html_table_header("Size");
+  html_table_header(F("Name"));
+  html_table_header(F("Size"));
   html_TR_TD();
   {
     String html;

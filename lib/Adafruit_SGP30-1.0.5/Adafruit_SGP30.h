@@ -1,3 +1,6 @@
+#ifndef LIB_ADAFRUIT_SGP30_1_0_5
+#define LIB_ADAFRUIT_SGP30_1_0_5
+
 /*!
  * @file Adafruit_SGP30.h
  *
@@ -77,3 +80,5 @@ private:
                               uint8_t readlen = 0);
   uint8_t generateCRC(uint8_t data[], uint8_t datalen);
 };
+
+#endif

@@ -2,8 +2,9 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/RuntimeData.h"
 
-
+#ifdef USES_C016
 
 C016_queue_element::C016_queue_element() : timestamp(0), TaskIndex(INVALID_TASK_INDEX), controller_idx(0), sensorType(
     Sensor_VType::SENSOR_TYPE_NONE) {}
@@ -27,3 +28,5 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, byte val
 size_t C016_queue_element::getSize() const {
   return sizeof(*this);
 }
+
+#endif

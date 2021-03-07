@@ -33,7 +33,11 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/StringGenerator_WiFi.h"
 #include "../Helpers/StringProvider.h"
+
+
+#define PLUGIN_ID_MQTT_IMPORT         37
 
 
 /*********************************************************************************************\
@@ -110,7 +114,7 @@ void runOncePerSecond()
   }
 
   if (Settings.ConnectionFailuresThreshold)
-    if (connectionFailures > Settings.ConnectionFailuresThreshold)
+    if (WiFiEventData.connectionFailures > Settings.ConnectionFailuresThreshold)
       delayedReboot(60, ESPEasy_Scheduler::IntendedRebootReason_e::DelayedReboot);
 
   if (cmd_within_mainloop != 0)
@@ -188,7 +192,9 @@ void runOncePerSecond()
 \*********************************************************************************************/
 void runEach30Seconds()
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAMtoLog();
+  #endif
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
@@ -196,7 +202,7 @@ void runEach30Seconds()
     log = F("WD   : Uptime ");
     log += wdcounter / 2;
     log += F(" ConnectFailures ");
-    log += connectionFailures;
+    log += WiFiEventData.connectionFailures;
     log += F(" FreeMem ");
     log += FreeMem();
     #ifdef HAS_ETHERNET
@@ -232,7 +238,7 @@ void runEach30Seconds()
   #endif // USES_SSDP
   #endif
 #if FEATURE_ADC_VCC
-  if (!wifiConnectInProgress) {
+  if (!WiFiEventData.wifiConnectInProgress) {
     vcc = ESP.getVcc() / 1000.0f;
   }
 #endif
@@ -255,6 +261,18 @@ void schedule_all_tasks_using_MQTT_controller() {
 
   if (!validControllerIndex(ControllerIndex)) { return; }
 
+  deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_ID_MQTT_IMPORT); // Check if P037_MQTTimport is present in the build
+  if (validDeviceIndex(DeviceIndex)) {
+    for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
+      if (Settings.TaskDeviceNumber[task] == PLUGIN_ID_MQTT_IMPORT) {
+        // Schedule a call to each MQTT import plugin to notify the broker connection state
+        EventStruct event(task);
+        event.Par1 = MQTTclient_connected ? 1 : 0;
+        Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, &event);
+      }
+    }
+  }
+
   for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
     if (Settings.TaskDeviceSendData[ControllerIndex][task] &&
         Settings.ControllerEnabled[ControllerIndex] &&
@@ -266,7 +284,7 @@ void schedule_all_tasks_using_MQTT_controller() {
 }
 
 void processMQTTdelayQueue() {
-  if (MQTTDelayHandler == nullptr) {
+  if (MQTTDelayHandler == nullptr || !MQTTclient_connected) {
     return;
   }
 
@@ -275,9 +293,10 @@ void processMQTTdelayQueue() {
 
   if (element == NULL) { return; }
 
+  PrepareSend();
   if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
-    if (connectionFailures > 0) {
-      --connectionFailures;
+    if (WiFiEventData.connectionFailures > 0) {
+      --WiFiEventData.connectionFailures;
     }
     MQTTDelayHandler->markProcessed(true);
   } else {
@@ -308,6 +327,7 @@ void updateMQTTclient_connected() {
       }
       MQTTclient_must_send_LWT_connected = false;
     } else {
+      // Now schedule all tasks using the MQTT controller.
       schedule_all_tasks_using_MQTT_controller();
     }
     if (Settings.UseRules) {
@@ -338,6 +358,7 @@ void runPeriodicalMQTT() {
   //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
   if (validControllerIndex(enabledMqttController)) {
+    PrepareSend();
     if (!MQTTclient.loop()) {
       updateMQTTclient_connected();
       if (MQTTCheck(enabledMqttController)) {

@@ -54,7 +54,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
         #define ADS1115_I2C_OPTION 4
       byte addr                            = PCONFIG(0);
       int optionValues[ADS1115_I2C_OPTION] = { 0x48, 0x49, 0x4A, 0x4B };
-      addFormSelectorI2C(F("p025_i2c"), ADS1115_I2C_OPTION, optionValues, addr);
+      addFormSelectorI2C(F("i2c_addr"), ADS1115_I2C_OPTION, optionValues, addr);
       break;
     }
 
@@ -120,7 +120,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p025_i2c"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
 
       PCONFIG(1) = getFormItemInt(F("p025_gain"));
 
@@ -182,7 +182,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
             log += ' ';
-            log += UserVar[event->BaseVarIndex];
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
           }
         }
 

@@ -3,35 +3,39 @@
 
 #ifdef WEBSERVER_SETUP
 
-#include "../WebServer/WebServer.h"
-#include "../WebServer/AccessControl.h"
-#include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
-#include "../WebServer/Markup_Forms.h"
-#include "../WebServer/SysInfoPage.h"
+# include "../WebServer/WebServer.h"
+# include "../WebServer/AccessControl.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/Markup.h"
+# include "../WebServer/Markup_Buttons.h"
+# include "../WebServer/Markup_Forms.h"
+# include "../WebServer/SysInfoPage.h"
 
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../ESPEasyCore/ESPEasyWifi.h"
 
 
-#include "../Globals/ESPEasyWiFiEvent.h"
-#include "../Globals/SecuritySettings.h"
+# include "../Globals/ESPEasyWiFiEvent.h"
+# include "../Globals/Settings.h"
+# include "../Globals/SecuritySettings.h"
+# include "../Globals/WiFi_AP_Candidates.h"
 
-#include "../Helpers/Networking.h"
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/StringConverter.h"
+# include "../Helpers/Networking.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/StringConverter.h"
 
 
 // ********************************************************************************
 // Web Interface Setup Wizard
 // ********************************************************************************
 
-#define HANDLE_SETUP_SCAN_STAGE       0
-#define HANDLE_SETUP_CONNECTING_STAGE 1
+# define HANDLE_SETUP_SCAN_STAGE       0
+# define HANDLE_SETUP_CONNECTING_STAGE 1
 
 void handle_setup() {
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_setup"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Do not check client IP range allowed.
   TXBuffer.startStream();
@@ -39,7 +43,7 @@ void handle_setup() {
   if (!NetworkConnected())
   {
     sendHeadandTail(F("TmplAP"));
-    static byte status       = 0;
+    static byte status       = HANDLE_SETUP_SCAN_STAGE;
     static byte refreshCount = 0;
     String ssid              = web_server.arg(F("ssid"));
     String other             = web_server.arg(F("other"));
@@ -51,12 +55,15 @@ void handle_setup() {
     }
 
     // if ssid config not set and params are both provided
-    if ((status == 0) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
+    if ((status == HANDLE_SETUP_SCAN_STAGE) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
     {
       safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
       safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
-      wifiSetupConnect         = true;
-      wifiConnectAttemptNeeded = true;
+      // Hidden SSID
+      Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
+      WiFiEventData.wifiSetupConnect         = true;
+      WiFiEventData.wifiConnectAttemptNeeded = true;
+      WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
@@ -65,6 +72,7 @@ void handle_setup() {
       }
       status       = HANDLE_SETUP_CONNECTING_STAGE;
       refreshCount = 0;
+      AttemptWiFiConnect();
     }
     html_BR();
     wrap_html_tag(F("h1"), F("Wifi Setup wizard"));
@@ -98,9 +106,9 @@ void handle_setup() {
 }
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
-  if (WiFi.scanComplete() <= 0) {
+  if (WiFi.scanComplete() <= WIFI_SCAN_FAILED) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
-    WifiScan(false, false);
+    WifiScan(false);
     setWifiMode(cur_wifimode);
   }
 
@@ -141,29 +149,57 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
     html_end_table();
   }
 
-  addHtml(F(
-            "<BR><label class='container2'>other SSID:<input type='radio' name='ssid' id='other_ssid' value='other' ><span class='dotmark'></span></label>"));
-  addHtml(F("<input class='wide' type ='text' name='other' value='"));
-  addHtml(other);
-  addHtml(F("'><BR><BR>"));
+  html_BR();
+  addHtml(F("<label "));
+  addHtmlAttribute(F("class"), F("container2"));
+  addHtml('>');
+  addHtml(F("other SSID:"));
+  addHtml(F("<input "));
+  addHtmlAttribute(F("type"),  F("radio"));
+  addHtmlAttribute(F("name"),  F("ssid"));
+  addHtmlAttribute(F("id"),    F("other_ssid"));
+  addHtmlAttribute(F("value"), F("other"));
+  addHtml('>');
+  addHtml(F("<span class='dotmark'></span></label>"));
+
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), F("wide"));
+  addHtmlAttribute(F("type"),  F("text"));
+  addHtmlAttribute(F("name"),  F("other"));
+  addHtmlAttribute(F("value"), other);
+  addHtml('>');
+  html_BR();
+  html_BR();
 
   addFormSeparator(2);
 
-  addHtml(F("<BR>Password:<BR><input class='wide' type ='text' name='pass' value='"));
-  addHtml(password);
-  addHtml(F("'><BR><BR>"));
+  html_BR();
+
+  addHtml(F("Password:"));
+  html_BR();
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), F("wide"));
+  addHtmlAttribute(F("type"),  F("text"));
+  addHtmlAttribute(F("name"),  F("pass"));
+  addHtmlAttribute(F("value"), password);
+  addHtml('>');
+  html_BR();
+  html_BR();
+  addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
+  addFormNote(F("Must be checked to connect to a hidden SSID"));
+
 
   addSubmitButton(F("Connect"), "");
 }
 
-bool handle_setup_connectingStage(byte& refreshCount) {
+bool handle_setup_connectingStage(byte refreshCount) {
   if (refreshCount > 0)
   {
     //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
     //      SecuritySettings.WifiKey[0] = 0;
     addButton(F("/setup"), F("Back to Setup"));
     html_BR();
-    wifiSetupConnect = false;
+    WiFiEventData.wifiSetupConnect = false;
     return false;
   }
   int wait = WIFI_RECONNECT_WAIT / 1000;
@@ -185,7 +221,7 @@ bool handle_setup_connectingStage(byte& refreshCount) {
   addHtml(F("}, 1000);"));
   addHtml(F("};"));
   addHtml(F("timedRefresh("));
-  addHtml(String(wait));
+  addHtmlInt(wait);
   addHtml(F(");"));
   html_add_script_end();
   addHtml(F("seconds while trying to connect"));
@@ -219,7 +255,7 @@ void handle_setup_finish() {
   html_end_table();
   html_end_form();
 
-  wifiSetup = false;
+  WiFiEventData.wifiSetup = false;
   sendHeadandTail_stdtemplate(_TAIL);
 }
 

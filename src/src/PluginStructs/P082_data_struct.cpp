@@ -1,5 +1,10 @@
-#include "P082_data_struct.h"
+#include "../PluginStructs/P082_data_struct.h"
 
+
+// Needed also here for PlatformIO's library finder as the .h file 
+// is in a directory which is excluded in the src_filter
+# include <TinyGPS++.h>
+# include <ESPeasySerial.h>
 
 #ifdef USES_P082
 
@@ -83,6 +88,10 @@ bool P082_data_struct::loop() {
         _currentSentence = "";
 # endif // ifdef P082_SEND_GPS_TO_LOG
         completeSentence = true;
+      } else {
+        if (available == 0) {
+          available = easySerial->available();
+        }
       }
     }
   }
@@ -152,8 +161,8 @@ bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps
   if (!gps->date.isValid() || !gps->time.isValid()) {
     return false;
   }
-  dateTime.tm_year = gps->date.year() - 1970;
-  dateTime.tm_mon  = gps->date.month();
+  dateTime.tm_year = gps->date.year() - 1900;
+  dateTime.tm_mon  = gps->date.month() - 1; // GPS month starts at 1, tm_mon at 0
   dateTime.tm_mday = gps->date.day();
 
   dateTime.tm_hour = gps->time.hour();

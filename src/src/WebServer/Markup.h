@@ -35,8 +35,6 @@ void addSelector(const String& id,
 
 void addSelector_options(int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex);
 
-void addSelector_option(const int index, const String& option, const String& attr, bool isSelected);
-
 void addSelector_Head(const String& id);
 
 void addSelector_Head_reloadOnChange(const String& id);
@@ -59,6 +57,8 @@ void addRowLabel(const String& label, const String& id = "");
 
 // Add a row label and mark it with copy markers to copy it to clipboard.
 void addRowLabel_copy(const String& label);
+
+void addRowLabel(LabelType::Enum label);
 
 void addRowLabelValue(LabelType::Enum label);
 
@@ -87,7 +87,7 @@ void addCheckBox(const String& id, boolean checked, bool disabled = false);
 // ********************************************************************************
 void addNumericBox(const String& id, int value, int min, int max);
 
-void addFloatNumberBox(const String& id, float value, float min, float max);
+void addFloatNumberBox(const String& id, float value, float min, float max, byte nrDecimals = 6, float stepsize = 0.0f);
 
 // ********************************************************************************
 // Add Textbox

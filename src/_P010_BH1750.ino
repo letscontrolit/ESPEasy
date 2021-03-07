@@ -7,10 +7,7 @@
 // #######################################################################################################
 
 
-// #ifdef ESP8266  // Needed for precompile issues.
 # include "AS_BH1750.h"
-
-// #endif
 
 # define PLUGIN_010
 # define PLUGIN_ID_010         10
@@ -64,7 +61,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
       int optionValues[2];
       optionValues[0] = BH1750_DEFAULT_I2CADDR;
       optionValues[1] = BH1750_SECOND_I2CADDR;
-      addFormSelectorI2C(F("p010"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       addFormNote(F("ADDR Low=0x23, High=0x5c"));
       break;
     }
@@ -93,7 +90,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p010"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p010_mode"));
       PCONFIG(2) = isFormItemChecked(F("p010_sleep"));
       success    = true;
@@ -131,7 +128,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
         log += F(" Mode: 0x");
         log += String(mode);
         log += F(" : Light intensity: ");
-        log += UserVar[event->BaseVarIndex];
+        log += formatUserVarNoCheck(event->TaskIndex, 0);
         addLog(LOG_LEVEL_INFO, log);
         success = true;
       }

@@ -2,12 +2,12 @@
 
 #ifdef WEBSERVER_CONFIG
 
-#include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
+#include "../WebServer/WebServer.h"
 
 #include "../ESPEasyCore/Controller.h"
 
@@ -26,7 +26,9 @@
 // Web Interface config page
 // ********************************************************************************
 void handle_config() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_config"));
+  #endif
 
   if (!isLoggedIn()) { return; }
 
@@ -39,26 +41,9 @@ void handle_config() {
     String name = web_server.arg(F("name"));
     name.trim();
 
-    // String password = web_server.arg(F("password"));
-    String iprangelow  = web_server.arg(F("iprangelow"));
-    String iprangehigh = web_server.arg(F("iprangehigh"));
-
     Settings.Delay              = getFormItemInt(F("delay"), Settings.Delay);
     Settings.deepSleep_wakeTime = getFormItemInt(F("awaketime"), Settings.deepSleep_wakeTime);
-    String espip      = web_server.arg(F("espip"));
-    String espgateway = web_server.arg(F("espgateway"));
-    String espsubnet  = web_server.arg(F("espsubnet"));
-    String espdns     = web_server.arg(F("espdns"));
-#ifdef HAS_ETHERNET
-    String espethip      = web_server.arg(F("espethip"));
-    String espethgateway = web_server.arg(F("espethgateway"));
-    String espethsubnet  = web_server.arg(F("espethsubnet"));
-    String espethdns     = web_server.arg(F("espethdns"));
-#endif
     Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
-
-    // String apkey = web_server.arg(F("apkey"));
-    String ssid = web_server.arg(F("ssid"));
 
     if (strcmp(Settings.Name, name.c_str()) != 0) {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
@@ -81,12 +66,15 @@ void handle_config() {
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
 
     // SSID 1
-    safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
+    safe_strncpy(SecuritySettings.WifiSSID, web_server.arg(F("ssid")).c_str(), sizeof(SecuritySettings.WifiSSID));
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
 
     // SSID 2
     strncpy_webserver_arg(SecuritySettings.WifiSSID2, F("ssid2"));
     copyFormPassword(F("key2"),  SecuritySettings.WifiKey2,  sizeof(SecuritySettings.WifiKey2));
+
+    // Hidden SSID
+    Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
 
     // Access point password.
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
@@ -110,24 +98,21 @@ void handle_config() {
       case ONLY_IP_RANGE_ALLOWED:
       case ALL_ALLOWED:
 
-        // iprangelow.toCharArray(tmpString, 26);
-        str2ip(iprangelow,  SecuritySettings.AllowedIPrangeLow);
-
-        // iprangehigh.toCharArray(tmpString, 26);
-        str2ip(iprangehigh, SecuritySettings.AllowedIPrangeHigh);
+        webArg2ip(F("iprangelow"),  SecuritySettings.AllowedIPrangeLow);
+        webArg2ip(F("iprangehigh"), SecuritySettings.AllowedIPrangeHigh);
         break;
     }
 
     Settings.deepSleepOnFail = isFormItemChecked(F("deepsleeponfail"));
-    str2ip(espip,      Settings.IP);
-    str2ip(espgateway, Settings.Gateway);
-    str2ip(espsubnet,  Settings.Subnet);
-    str2ip(espdns,     Settings.DNS);
+    webArg2ip(F("espip"),      Settings.IP);
+    webArg2ip(F("espgateway"), Settings.Gateway);
+    webArg2ip(F("espsubnet"),  Settings.Subnet);
+    webArg2ip(F("espdns"),     Settings.DNS);
 #ifdef HAS_ETHERNET
-    str2ip(espethip,      Settings.ETH_IP);
-    str2ip(espethgateway, Settings.ETH_Gateway);
-    str2ip(espethsubnet,  Settings.ETH_Subnet);
-    str2ip(espethdns,     Settings.ETH_DNS);
+    webArg2ip(F("espethip"),      Settings.ETH_IP);
+    webArg2ip(F("espethgateway"), Settings.ETH_Gateway);
+    webArg2ip(F("espethsubnet"),  Settings.ETH_Subnet);
+    webArg2ip(F("espethdns"),     Settings.ETH_DNS);
 #endif
     addHtmlError(SaveSettings());
   }
@@ -150,6 +135,10 @@ void handle_config() {
   addFormPasswordBox(F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox(F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox(F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
+
+  addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
+  addFormNote(F("Must be checked to connect to a hidden SSID"));
+
   addFormSeparator(2);
   addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
 

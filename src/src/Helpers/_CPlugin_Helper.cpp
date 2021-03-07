@@ -260,7 +260,7 @@ void log_connecting_fail(const String& prefix, int controller_number) {
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
     log += F(" connection failed (");
-    log += connectionFailures;
+    log += WiFiEventData.connectionFailures;
     log += F("/");
     log += Settings.ConnectionFailuresThreshold;
     log += F(")");
@@ -271,14 +271,14 @@ void log_connecting_fail(const String& prefix, int controller_number) {
 bool count_connection_results(bool success, const String& prefix, int controller_number) {
   if (!success)
   {
-    ++connectionFailures;
+    ++WiFiEventData.connectionFailures;
     log_connecting_fail(prefix, controller_number);
     return false;
   }
   statusLED(true);
 
-  if (connectionFailures > 0) {
-    --connectionFailures;
+  if (WiFiEventData.connectionFailures > 0) {
+    --WiFiEventData.connectionFailures;
   }
   return true;
 }
@@ -288,7 +288,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
 
   if (!NetworkConnected()) { return false; }
   client.setTimeout(ControllerSettings.ClientTimeout);
-  yield();
+  delay(0);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
@@ -310,7 +310,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   if (!NetworkConnected()) { return false; }
 
   // Use WiFiClient class to create TCP connections
-  yield();
+  delay(0);
   client.setTimeout(ControllerSettings.ClientTimeout);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(loglabel, controller_number, ControllerSettings);
@@ -523,7 +523,9 @@ String send_via_http(const String& logIdentifier,
   // "if you have XXX, send it; or failing that, just give me what you've got."
   http.addHeader(F("Accept"), F("*/*;q=0.1"));
 
-  yield();
+  PrepareSend();
+
+  delay(0);
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
 #else

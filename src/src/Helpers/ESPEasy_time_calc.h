@@ -27,9 +27,23 @@ inline int32_t timeDiff(const unsigned long prev, const unsigned long next) {
 
 // Compute the number of milliSeconds passed since timestamp given.
 // N.B. value can be negative if the timestamp has not yet been reached.
-long timePassedSince(unsigned long timestamp);
+inline long timePassedSince(unsigned long timestamp) {
+  return timeDiff(timestamp, millis());
+}
 
-long usecPassedSince(unsigned long timestamp);
+inline long usecPassedSince(unsigned long timestamp) {
+  return timeDiff(timestamp, micros());
+}
+
+// Check if a certain timeout has been reached.
+inline bool timeOutReached(unsigned long timer) {
+  return timePassedSince(timer) >= 0;
+}
+
+inline bool usecTimeOutReached(unsigned long timer) {
+  return usecPassedSince(timer) >= 0;
+}
+
 
 // Check if a certain timeout has been reached.
 bool timeOutReached(unsigned long timer);
@@ -44,6 +58,10 @@ bool usecTimeOutReached(unsigned long timer);
    Unix Time computations
  \*********************************************************************************************/
 bool isLeapYear(int year);
+
+// Get number of days in a month.
+// Month starts at 0 for January.
+uint8_t getMonthDays(int year, uint8_t month);
 
 uint32_t makeTime(const struct tm& tm);
 

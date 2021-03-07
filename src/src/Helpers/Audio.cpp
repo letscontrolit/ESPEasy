@@ -1,55 +1,31 @@
 #include "Audio.h"
 
 #include "../Globals/RamTracker.h"
-
-#ifdef ESP32
-
-void noToneESP32(uint8_t pin, uint8_t channel)
-{
-  ledcDetachPin(pin);
-  ledcWrite(channel, 0);
-}
-
-void toneESP32(uint8_t pin, unsigned int frequency, unsigned long duration, uint8_t channel)
-{
-  if (ledcRead(channel)) {
-    log_e("Tone channel %d is already in use", ledcRead(channel));
-    return;
-  }
-  ledcAttachPin(pin, channel);
-  ledcWriteTone(channel, frequency);
-
-  if (duration) {
-    delay(duration);
-    noToneESP32(pin, channel);
-  }
-}
-
-#endif // ifdef ESP32
+#include "../Helpers/Hardware.h"
 
 
 /********************************************************************************************\
    Generate a tone of specified frequency on pin
  \*********************************************************************************************/
-void tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
-  #ifdef ESP32
-  toneESP32(_pin, frequency, duration);
-  #else // ifdef ESP32
-  analogWriteFreq(frequency);
-
-  // NOTE: analogwrite reserves IRAM and uninitalized ram.
-  analogWrite(_pin, 100);
-  delay(duration);
-  analogWrite(_pin, 0);
-  #endif // ifdef ESP32
+bool tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
+  // Duty cycle can be used as some kind of volume.
+  if (!set_Gpio_PWM_pct(_pin, 50, frequency)) return false;
+  if (duration > 0) {
+    delay(duration);
+    return set_Gpio_PWM(_pin, 0, frequency);
+  }
+  return true;
 }
 
 /********************************************************************************************\
    Play RTTTL string on specified pin
  \*********************************************************************************************/
-void play_rtttl(uint8_t _pin, const char *p)
+#ifdef USE_RTTTL
+bool play_rtttl(uint8_t _pin, const char *p)
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("play_rtttl"));
+  #endif
   #define OCTAVE_OFFSET 0
 
   // FIXME: Absolutely no error checking in here
@@ -74,7 +50,9 @@ void play_rtttl(uint8_t _pin, const char *p)
   // format: d=N,o=N,b=NNN:
   // find the start (skip name, etc)
 
-  while (*p != ':') { p++; // ignore name
+  while (*p != ':') { 
+    p++; // ignore name
+    if (*p == 0) return false;
   }
   p++;                     // skip ':'
 
@@ -199,13 +177,18 @@ void play_rtttl(uint8_t _pin, const char *p)
     // now play the note
     if (note)
     {
-      tone_espEasy(_pin, notes[(scale - 4) * 12 + note], duration);
+      if (!tone_espEasy(_pin, notes[(scale - 4) * 12 + note], duration)) {
+        return false;
+      }
     }
     else
     {
       delay(duration / 10);
     }
   }
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("play_rtttl2"));
+  #endif
+  return true;
 }
-
+#endif

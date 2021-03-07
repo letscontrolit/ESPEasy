@@ -1,4 +1,4 @@
-#include "P032_data_struct.h"
+#include "../PluginStructs/P032_data_struct.h"
 
 #ifdef USES_P032
 
@@ -84,37 +84,37 @@ void P032_data_struct::readout() {
   unsigned long D1 = 0, D2 = 0;
 
   double dT;
-  double OFF;
+  double Offset;
   double SENS;
 
   D2 = read_adc(MS5xxx_CMD_ADC_D2 + MS5xxx_CMD_ADC_4096);
   D1 = read_adc(MS5xxx_CMD_ADC_D1 + MS5xxx_CMD_ADC_4096);
 
   // calculate 1st order pressure and temperature (MS5611 1st order algorithm)
-  dT                 = D2 - ms5611_prom[5] * pow(2, 8);
-  OFF                = ms5611_prom[2] * pow(2, 16) + dT * ms5611_prom[4] / pow(2, 7);
-  SENS               = ms5611_prom[1] * pow(2, 15) + dT * ms5611_prom[3] / pow(2, 8);
-  ms5611_temperature = (2000 + (dT * ms5611_prom[6]) / pow(2, 23));
-  ms5611_pressure    = (((D1 * SENS) / pow(2, 21) - OFF) / pow(2, 15));
+  dT                 = D2 - ms5611_prom[5] * (1 << 8);
+  Offset             = ms5611_prom[2] * (1 << 16) + dT * ms5611_prom[4] / (1 << 7);
+  SENS               = ms5611_prom[1] * (1 << 15) + dT * ms5611_prom[3] / (1 << 8);
+  ms5611_temperature = (2000 + (dT * ms5611_prom[6]) / (1 << 23));
+  ms5611_pressure    = (((D1 * SENS) / (1 << 21) - Offset) / (1 << 15));
 
   // perform higher order corrections
   double T2 = 0., OFF2 = 0., SENS2 = 0.;
 
   if (ms5611_temperature < 2000) {
-    T2    = dT * dT / pow(2, 31);
-    OFF2  = 5 * (ms5611_temperature - 2000) * (ms5611_temperature - 2000) / pow(2, 1);
-    SENS2 = 5 * (ms5611_temperature - 2000) * (ms5611_temperature - 2000) / pow(2, 2);
+    T2    = dT * dT / (1 << 31);
+    OFF2  = 5 * (ms5611_temperature - 2000) * (ms5611_temperature - 2000) / (1 << 1);
+    SENS2 = 5 * (ms5611_temperature - 2000) * (ms5611_temperature - 2000) / (1 << 2);
 
     if (ms5611_temperature < -1500) {
       OFF2  += 7 * (ms5611_temperature + 1500) * (ms5611_temperature + 1500);
-      SENS2 += 11 * (ms5611_temperature + 1500) * (ms5611_temperature + 1500) / pow(2, 1);
+      SENS2 += 11 * (ms5611_temperature + 1500) * (ms5611_temperature + 1500) / (1 << 1);
     }
   }
 
   ms5611_temperature -= T2;
-  OFF                -= OFF2;
+  Offset             -= OFF2;
   SENS               -= SENS2;
-  ms5611_pressure     = (((D1 * SENS) / pow(2, 21) - OFF) / pow(2, 15)); // FIXME TD-er: This is computed twice, is that correct?
+  ms5611_pressure     = (((D1 * SENS) / (1 << 21) - Offset) / (1 << 15)); // FIXME TD-er: This is computed twice, is that correct?
 }
 
 // **************************************************************************/

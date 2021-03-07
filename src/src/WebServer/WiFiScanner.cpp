@@ -5,6 +5,7 @@
 #include "../WebServer/HTML_wrappers.h"
 
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../Helpers/StringGenerator_WiFi.h"
 
 
 #ifdef WEBSERVER_NEW_UI
@@ -13,40 +14,22 @@
 // Web Interface Wifi scanner
 // ********************************************************************************
 void handle_wifiscanner_json() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_wifiscanner"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
-  addHtml("[{");
+  addHtml(F("[{"));
   bool firstentry = true;
   int  n          = WiFi.scanNetworks(false, true);
 
   for (int i = 0; i < n; ++i)
   {
     if (firstentry) { firstentry = false; }
-    else { addHtml(",{"); }
-    String authType;
-
-    switch (WiFi.encryptionType(i)) {
-    # ifdef ESP32
-      case WIFI_AUTH_OPEN: authType            = F("open"); break;
-      case WIFI_AUTH_WEP:  authType            = F("WEP"); break;
-      case WIFI_AUTH_WPA_PSK: authType         = F("WPA/PSK"); break;
-      case WIFI_AUTH_WPA2_PSK: authType        = F("WPA2/PSK"); break;
-      case WIFI_AUTH_WPA_WPA2_PSK: authType    = F("WPA/WPA2/PSK"); break;
-      case WIFI_AUTH_WPA2_ENTERPRISE: authType = F("WPA2 Enterprise"); break;
-    # else // ifdef ESP32
-      case ENC_TYPE_WEP:  authType = F("WEP"); break;
-      case ENC_TYPE_TKIP: authType = F("WPA/PSK"); break;
-      case ENC_TYPE_CCMP: authType = F("WPA2/PSK"); break;
-      case ENC_TYPE_NONE: authType = F("open"); break;
-      case ENC_TYPE_AUTO: authType = F("WPA/WPA2/PSK"); break;
-    # endif // ifdef ESP32
-      default:
-        break;
-    }
-
+    else { addHtml(F(",{")); }
+    String authType = WiFi_encryptionType(WiFi.encryptionType(i));
     if (authType.length() > 0) {
       stream_next_json_object_value(F("auth"), authType);
     }
@@ -56,9 +39,9 @@ void handle_wifiscanner_json() {
     stream_last_json_object_value(getLabel(LabelType::WIFI_RSSI), String(WiFi.RSSI(i)));
   }
   if (firstentry) {
-    addHtml("}");
+    addHtml('}');
   }
-  addHtml("]");
+  addHtml(']');
   TXBuffer.endStream();
 }
 
@@ -67,12 +50,14 @@ void handle_wifiscanner_json() {
 #ifdef WEBSERVER_WIFI_SCANNER
 
 void handle_wifiscanner() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_wifiscanner"));
+  #endif
 
   if (!isLoggedIn()) { return; }
 
   WiFiMode_t cur_wifimode = WiFi.getMode();
-  WifiScan(false, false);
+  WifiScan(false);
   setWifiMode(cur_wifimode);
 
   navMenuIndex = MENU_INDEX_TOOLS;

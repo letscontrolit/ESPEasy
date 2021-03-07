@@ -36,7 +36,15 @@ namespace std
 #include <string.h>
 
 
+#ifdef ESP8266
+  # if !defined(ARDUINO_ESP8266_RELEASE_2_4_0) && !defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+    #  define SUPPORT_ARP
+  # endif
+#endif
 
+#ifdef ESP32
+# define SUPPORT_ARP
+#endif
 
 // User configuration
 // Include Custom.h before ESPEasyDefaults.h. 
@@ -73,8 +81,6 @@ namespace std
   #endif
   #include <ESP8266WiFi.h>
   //#include <ESP8266Ping.h>
-  #include <DNSServer.h>
-  #include <Servo.h>
   #ifndef LWIP_OPEN_SRC
   #define LWIP_OPEN_SRC
   #endif
@@ -87,9 +93,6 @@ namespace std
    #include "user_interface.h"
   }
 
-  #ifdef FEATURE_MDNS
-    #include <ESP8266mDNS.h>
-  #endif
   #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
   #define MAX_SKETCH_SIZE 1044464   // 1020 kB - 16 bytes
   #define PIN_D_MAX        16
@@ -109,15 +112,11 @@ namespace std
 //  #include  "esp32_ping.h"
   #include <rom/rtc.h>
   #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
-  #ifdef FEATURE_MDNS
-    #include <ESPmDNS.h>
-  #endif
   #define PIN_D_MAX        39
   #define MAX_SKETCH_SIZE 1900544   // 0x1d0000 look at partitions in csv file
 #endif
 
 #include <WiFiUdp.h>
-#include <DNSServer.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <FS.h>
@@ -156,6 +155,8 @@ using namespace fs;
 
 
 String getUnknownString();
+
+extern const String EMPTY_STRING;
 
 
 

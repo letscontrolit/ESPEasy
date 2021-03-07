@@ -12,9 +12,11 @@
 // Web Interface handle other requests
 // ********************************************************************************
 void handleNotFound() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handleNotFound"));
+  #endif
 
-  if (wifiSetup)
+  if (WiFiEventData.wifiSetup)
   {
     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;

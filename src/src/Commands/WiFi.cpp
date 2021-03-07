@@ -8,6 +8,7 @@
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/StringConverter.h"
@@ -60,13 +61,15 @@ String Command_Wifi_Scan(struct EventStruct *event, const char *Line)
 
 String Command_Wifi_Connect(struct EventStruct *event, const char *Line)
 {
-  wifiConnectAttemptNeeded = true;
+  WiFiEventData.wifiConnectAttemptNeeded = true;
   return return_command_success();
 }
 
 String Command_Wifi_Disconnect(struct EventStruct *event, const char *Line)
 {
+  RTC.clearLastWiFi(); // Force a WiFi scan
   WifiDisconnect();
+
   return return_command_success();
 }
 

@@ -2,6 +2,7 @@
 
 #include "../DataStructs/LogStruct.h"
 #include "../ESPEasyCore/Serial.h"
+#include "../Globals/Cache.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/Logging.h"
 #include "../Globals/Settings.h"
@@ -32,17 +33,19 @@ void initLog()
   Logging
   \*********************************************************************************************/
 String getLogLevelDisplayString(int logLevel) {
+  String res;
   switch (logLevel) {
-    case LOG_LEVEL_NONE:       return F("None");
-    case LOG_LEVEL_ERROR:      return F("Error");
-    case LOG_LEVEL_INFO:       return F("Info");
-    case LOG_LEVEL_DEBUG:      return F("Debug");
-    case LOG_LEVEL_DEBUG_MORE: return F("Debug More");
-    case LOG_LEVEL_DEBUG_DEV:  return F("Debug dev");
+    case LOG_LEVEL_NONE:       res = F("None"); break;
+    case LOG_LEVEL_ERROR:      res = F("Error"); break;
+    case LOG_LEVEL_INFO:       res = F("Info"); break;
+    case LOG_LEVEL_DEBUG:      res = F("Debug"); break;
+    case LOG_LEVEL_DEBUG_MORE: res = F("Debug More"); break;
+    case LOG_LEVEL_DEBUG_DEV:  res = F("Debug dev"); break;
 
     default:
-      return "";
+    break;
   }
+  return res;
 }
 
 String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
@@ -81,14 +84,15 @@ void setLogLevelFor(byte destination, byte logLevel) {
 
 void updateLogLevelCache() {
   byte max_lvl = 0;
+  const bool useSerial = Settings.UseSerial && !activeTaskUseSerial0();
   if (log_to_serial_disabled) {
-    if (Settings.UseSerial) {
+    if (useSerial) {
       Serial.setDebugOutput(false);
     }
   } else {
     max_lvl = _max(max_lvl, Settings.SerialLogLevel);
 #ifndef BUILD_NO_DEBUG
-    if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
+    if (useSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
       Serial.setDebugOutput(true);
     }
 #endif
@@ -108,8 +112,8 @@ bool loglevelActiveFor(byte logLevel) {
 }
 
 byte getSerialLogLevel() {
-  if (log_to_serial_disabled || !Settings.UseSerial) return 0;
-  if (!(bitRead(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED))){
+  if (log_to_serial_disabled || !Settings.UseSerial || activeTaskUseSerial0()) return 0;
+  if (!(WiFiEventData.WiFiServicesInitialized())){
     if (Settings.SerialLogLevel < LOG_LEVEL_INFO) {
       return LOG_LEVEL_INFO;
     }
@@ -161,6 +165,12 @@ bool loglevelActive(byte logLevel, byte logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
+void addToLog(byte loglevel, const __FlashStringHelper *str)
+{
+  String copy = str;
+  addToLog(loglevel, copy.c_str());
+}
+
 void addToLog(byte loglevel, const String& string)
 {
   addToLog(loglevel, string.c_str());
@@ -171,13 +181,13 @@ void addToLog(byte logLevel, const char *line)
   // Please note all functions called from here handling line must be PROGMEM aware.
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     addToSerialBuffer(String(millis()).c_str());
-    addToSerialBuffer(" : ");
+    addToSerialBuffer(String(F(" : ")).c_str());
     String loglevelDisplayString = getLogLevelDisplayString(logLevel);
     while (loglevelDisplayString.length() < 6) {
       loglevelDisplayString += ' ';
     }
     addToSerialBuffer(loglevelDisplayString.c_str());
-    addToSerialBuffer(": ");
+    addToSerialBuffer(String(F(" : ")).c_str());
     addToSerialBuffer(line);
     addNewlineToSerialBuffer();
   }

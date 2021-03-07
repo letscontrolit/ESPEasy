@@ -56,7 +56,7 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
       /*String options[2] = { F("0x77 - default I2C address"), F("0x76 - alternate I2C address") };*/
       int optionValues[2] = { 0x77, 0x76 };
-      addFormSelectorI2C(F("p032_ms5611_i2c"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       break;
     }
 
@@ -70,7 +70,7 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p032_ms5611_i2c"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p032_ms5611_elev"));
       success    = true;
       break;
@@ -110,12 +110,14 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex + 1] = P032_data->ms5611_pressure;
           }
 
-          String log = F("MS5611  : Temperature: ");
-          log += UserVar[event->BaseVarIndex];
-          addLog(LOG_LEVEL_INFO, log);
-          log  = F("MS5611  : Barometric Pressure: ");
-          log += UserVar[event->BaseVarIndex + 1];
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("MS5611  : Temperature: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
+            addLog(LOG_LEVEL_INFO, log);
+            log  = F("MS5611  : Barometric Pressure: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 1);
+            addLog(LOG_LEVEL_INFO, log);
+          }
           success = true;
         }
       }

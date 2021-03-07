@@ -8,7 +8,16 @@
 // ********************************************************************************
 // Web Interface upload page
 // ********************************************************************************
-extern byte uploadResult;
+enum class uploadResult_e {
+    // Int values are used in JSON, so keep them numbered like this.
+    UploadStarted = 0,
+    Success = 1,
+    InvalidFile = 2,
+    NoFilename = 3
+};
+
+extern uploadResult_e uploadResult;
+
 void handle_upload();
 
 // ********************************************************************************

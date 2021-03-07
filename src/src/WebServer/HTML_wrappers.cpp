@@ -4,6 +4,8 @@
 
 #include "../WebServer/Markup.h"
 
+#include "../Helpers/StringConverter.h"
+
 
 // ********************************************************************************
 // HTML string re-use to keep the executable smaller
@@ -58,6 +60,7 @@ void html_TR_TD_height(int height) {
   html_TR();
 
   String html;
+
   html.reserve(20);
 
   html += F("<TD HEIGHT=\"");
@@ -86,6 +89,7 @@ void html_copyText_TD() {
   ++copyTextCounter;
 
   String html;
+
   html.reserve(24);
 
   html += F("<TD id='copyText_");
@@ -120,19 +124,15 @@ void html_table(const String& tableclass) {
 }
 
 void html_table(const String& tableclass, bool boxed) {
-  String html;
-
-  html.reserve(16 + tableclass.length());
-
-  html += F("<table class='");
-  html += tableclass;
-  html += '\'';
-  addHtml(html);
+  addHtml(F("<table "));
+  addHtmlAttribute(F("class"), tableclass);
 
   if (boxed) {
-    addHtml(F("' border=1px frame='box' rules='all'"));
+    addHtmlAttribute(F("border"), F("1px"));
+    addHtmlAttribute(F("frame"),  F("box"));
+    addHtmlAttribute(F("rules"),  F("all"));
   }
-  addHtml(">");
+  addHtml('>');
 }
 
 void html_table_header(const String& label) {
@@ -166,6 +166,7 @@ void html_table_header(const String& label, const String& helpButton, const Stri
   if (helpButton.length() > 0) {
     addHelpButton(helpButton);
   }
+
   if (rtdHelpButton.length() > 0) {
     addRTDHelpButton(rtdHelpButton);
   }
@@ -261,18 +262,49 @@ void addHtmlError(const String& error) {
     } else {
       html += F("alert");
     }
-    addHtml( html);
-    addHtml(    F("\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>"));
+    addHtml(html);
+    addHtml(F("\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>"));
     addHtml(error);
-    addHtml(    F("</div>"));
+    addHtml(F("</div>"));
   }
   else
-  {
-  }
+  {}
+}
+
+void addHtml(const char& html) {
+  TXBuffer += html;
 }
 
 void addHtml(const String& html) {
   TXBuffer += html;
+}
+
+void addHtmlInt(int int_val) {
+  addHtml(String(int_val));
+}
+
+void addEncodedHtml(const String& html) {
+  // FIXME TD-er: What about the function htmlStrongEscape ??
+  String copy(html);
+
+  htmlEscape(copy);
+  addHtml(copy);
+}
+
+void addHtmlAttribute(const String& label, int value) {
+  addHtml(' ');
+  addHtml(label);
+  addHtml('=');
+  addHtmlInt(value);
+  addHtml(' ');
+}
+
+void addHtmlAttribute(const String& label, const String& value) {
+  addHtml(' ');
+  addHtml(label);
+  addHtml(F("='"));
+  addEncodedHtml(value);
+  addHtml(F("' "));
 }
 
 void addDisabled() {
@@ -280,18 +312,32 @@ void addDisabled() {
 }
 
 void addHtmlLink(const String& htmlclass, const String& url, const String& label) {
-  String html;
+  addHtml(F(" <a "));
+  addHtmlAttribute(F("class"),  htmlclass);
+  addHtmlAttribute(F("href"),   url);
+  addHtmlAttribute(F("target"), F("_blank"));
+  addHtml('>');
+  addHtml(label);
+  addHtml(F("</a>"));
+}
 
-  html.reserve(44 + htmlclass.length() + url.length() + label.length());
+void addHtmlDiv(const String& htmlclass) {
+  addHtmlDiv(htmlclass, F(""));
+}
 
-  html += F(" <a class='");
-  html += htmlclass;
-  html += F("' href='");
-  html += url;
-  html += F("' target='_blank'>");
-  html += label;
-  html += F("</a>");
-  addHtml(html);
+void addHtmlDiv(const String& htmlclass, const String& content) {
+  addHtmlDiv(htmlclass, content, F(""));
+}
+
+void addHtmlDiv(const String& htmlclass, const String& content, const String& id) {
+  addHtml(F(" <div "));
+  addHtmlAttribute(F("class"), htmlclass);
+  if (id.length() > 0) {
+    addHtmlAttribute(F("id"), id);
+  }
+  addHtml('>');
+  addHtml(content);
+  addHtml(F("</div>"));
 }
 
 void addEnabled(boolean enabled)

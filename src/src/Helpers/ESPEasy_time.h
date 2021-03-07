@@ -94,13 +94,13 @@ static String weekday_str(int wday);
 // Get current year.
 int year() const 
 {
-  return 1970 + tm.tm_year;
+  return 1900 + tm.tm_year;
 }
 
 // Get current month
 byte month() const 
 {
-  return tm.tm_mon;
+  return tm.tm_mon + 1; // tm_mon starts at 0
 }
 
 // Get current day of the month

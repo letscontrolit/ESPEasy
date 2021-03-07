@@ -19,7 +19,7 @@ bool validUserVar(struct EventStruct *event);
 \*********************************************************************************************/
 
 // handle MQTT messages
-void callback(char *c_topic, byte *b_payload, unsigned int length);
+void incoming_mqtt_callback(char *c_topic, byte *b_payload, unsigned int length);
 
 /*********************************************************************************************\
 * Disconnect from MQTT message broker
@@ -50,11 +50,11 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
 /*********************************************************************************************\
 * Send status info to request source
 \*********************************************************************************************/
-void SendStatusOnlyIfNeeded(EventValueSource::Enum eventSource, bool param1, uint32_t key, const String& param2, int16_t param3);
+void SendStatusOnlyIfNeeded(struct EventStruct *event, bool param1, uint32_t key, const String& param2, int16_t param3);
 
 bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource);
 
-void SendStatus(EventValueSource::Enum source, const String& status);
+void SendStatus(struct EventStruct *event, const String& status);
 
 #ifdef USES_MQTT
 bool MQTT_queueFull(controllerIndex_t controller_idx);
@@ -65,7 +65,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char
 /*********************************************************************************************\
 * Send status info back to channel where request came from
 \*********************************************************************************************/
-void MQTTStatus(const String& status);
+void MQTTStatus(struct EventStruct *event, const String& status);
 #endif //USES_MQTT
 
 

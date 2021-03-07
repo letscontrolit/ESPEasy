@@ -33,6 +33,7 @@ Welcome to ESP Easy's documentation!
    Participate/ArduinoIDE.rst
    Participate/Documentation.rst
    Participate/ProjectStructure.rst
+   Reference/Flashing.rst
    Reference/Safety.rst
    Reference/Command.rst
    Reference/Events.rst
@@ -41,6 +42,7 @@ Welcome to ESP Easy's documentation!
    Reference/URLs.rst
    Reference/RTC.rst
    Reference/ChangeLog.rst
+   Reference/ExternalHostedStaticFiles.rst
 
 .. toctree::
    :glob:

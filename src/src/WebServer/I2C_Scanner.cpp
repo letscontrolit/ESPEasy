@@ -101,7 +101,9 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
 }
 
 void handle_i2cscanner_json() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_i2cscanner"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -162,7 +164,7 @@ String getKnownI2Cdevice(byte address) {
       result =  F("PCF8574,MCP23017,LCD,PN532");
       break;
     case 0x29:
-      result =  F("TSL2561");
+      result =  F("TSL2561,TCS34725");
       break;
     case 0x38:
     case 0x3A:
@@ -237,10 +239,10 @@ String getKnownI2Cdevice(byte address) {
       result =  F("HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x76:
-      result =  F("BME280,BMP280,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
+      result =  F("BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x77:
-      result =  F("BMP085,BMP180,BME280,BMP280,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
+      result =  F("BMP085,BMP180,BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x7f:
       result =  F("Arduino PME");
@@ -294,7 +296,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
         String description = getKnownI2Cdevice(address);
 
         if (description.length() > 0) {
-          description.replace(",", "<BR>");
+          description.replace(F(","), F("<BR>"));
           addHtml(description);
         }
         nDevices++;
@@ -314,7 +316,9 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
 
 // FIXME TD-er: Query all included plugins for their supported addresses (return name of plugin)
 void handle_i2cscanner() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_i2cscanner"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;

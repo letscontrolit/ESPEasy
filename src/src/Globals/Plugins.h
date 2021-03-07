@@ -43,17 +43,6 @@
 
 
 
-
-/*********************************************************************************************\
-* Custom Variables for usage in rules and http.
-* Syntax: %vX%
-* usage:
-* let,1,10
-* if %v1%=10 do ...
-\*********************************************************************************************/
-extern float customFloatVar[CUSTOM_VARS_MAX];
-extern float UserVar[VARS_PER_TASK * TASKS_MAX];
-
 extern int deviceCount;
 
 // Array of function pointers to call plugins.
@@ -104,7 +93,13 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 /*********************************************************************************************\
 * Function call to all or specific plugins
 \*********************************************************************************************/
-byte PluginCall(byte Function, struct EventStruct *event, String& str);
+bool PluginCall(byte Function, struct EventStruct *event, String& str);
+
+
+/*********************************************************************************************\
+* Adding plugins at boot
+\*********************************************************************************************/
+bool addPlugin(pluginID_t pluginID, deviceIndex_t x);
 
 
 #endif // GLOBALS_PLUGIN_H

@@ -15,7 +15,9 @@
 // ********************************************************************************
 bool loadFromFS(boolean spiffs, String path) {
   // path is a deepcopy, since it will be changed here.
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("loadFromFS"));
+  #endif
 
   if (!isLoggedIn()) { return false; }
 
@@ -23,7 +25,11 @@ bool loadFromFS(boolean spiffs, String path) {
 
   String dataType = F("text/plain");
 
-  if (path.endsWith("/")) { path += F("index.htm"); }
+  if (!path.startsWith(F("/"))) {
+    path = String(F("/")) + path;
+  }
+
+  if (path.endsWith(F("/"))) { path += F("index.htm"); }
 
   if (path.endsWith(F(".src"))) { path = path.substring(0, path.lastIndexOf(".")); }
   else if (path.endsWith(F(".htm")) || path.endsWith(F(".html")) || path.endsWith(F(".htm.gz")) || path.endsWith(F(".html.gz"))) { dataType = F("text/html"); }
@@ -37,7 +43,9 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(F(".json"))) { dataType = F("application/json"); }
   else if (path.endsWith(F(".txt")) ||
            path.endsWith(F(".dat"))) { dataType = F("application/octet-stream"); }
+#ifdef WEBSERVER_CUSTOM
   else if (path.endsWith(F(".esp"))) { return handle_custom(path); }
+#endif
 
 #ifndef BUILD_NO_DEBUG
 
@@ -54,6 +62,9 @@ bool loadFromFS(boolean spiffs, String path) {
 
   if (spiffs)
   {
+    if (!fileExists(path)) {
+      return false;
+    }
     fs::File dataFile = tryOpenFile(path.c_str(), "r");
 
     if (!dataFile) {

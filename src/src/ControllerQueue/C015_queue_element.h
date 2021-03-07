@@ -8,7 +8,7 @@
 
 struct EventStruct;
 
-// #ifdef USES_C015
+#ifdef USES_C015
 
 /*********************************************************************************************\
 * C015_queue_element for queueing requests for 015: Blynk
@@ -20,8 +20,7 @@ public:
 
   C015_queue_element();
 
-  C015_queue_element(const struct EventStruct *event,
-                     byte                      value_count);
+  C015_queue_element(const struct EventStruct *event, byte value_count);
 
   bool   checkDone(bool succesfull) const;
 
@@ -36,7 +35,7 @@ public:
   byte valueCount                  = 0;
 };
 
-// #endif //USES_C015
+#endif //USES_C015
 
 
 #endif // CONTROLLERQUEUE_C015_QUEUE_ELEMENT_H

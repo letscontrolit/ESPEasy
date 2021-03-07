@@ -21,7 +21,9 @@
 // Web Interface hardware page
 // ********************************************************************************
 void handle_hardware() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_hardware"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_HARDWARE;

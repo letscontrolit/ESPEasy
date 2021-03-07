@@ -13,6 +13,7 @@
 
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Static/WebStaticData.h"
 
@@ -24,25 +25,27 @@
 // Web Interface rules page
 // ********************************************************************************
 void handle_rules() {
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (!isLoggedIn() || !Settings.UseRules) { return; }
   navMenuIndex = MENU_INDEX_RULES;
   const byte rulesSet = getFormItemInt(F("set"), 1);
 
-  #if defined(ESP8266)
+  # if defined(ESP8266)
   String fileName = F("rules");
-  #endif // if defined(ESP8266)
-  #if defined(ESP32)
+  # endif // if defined(ESP8266)
+  # if defined(ESP32)
   String fileName = F("/rules");
-  #endif // if defined(ESP32)
+  # endif // if defined(ESP32)
   fileName += rulesSet;
   fileName += F(".txt");
 
   String error;
 
   // Make sure file exists
-  if (!ESPEASY_FS.exists(fileName))
+  if (!fileExists(fileName))
   {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Rules : Create new file: ");
@@ -88,14 +91,12 @@ void handle_rules() {
   html_TR_TD();
   html_end_form();
   addHtml(F("<button id='save_button' class='button' onClick='saveRulesFile()'>Save</button>"));
-  addHtml(F("<div id='toastmessage'>Saved!</div>"));
+  addHtmlDiv(F(""), F("Saved!"), F("toastmessage"));
 
   addButton(fileName, F("Download to file"));
   html_end_table();
 
-  html_add_script(true);
-  TXBuffer += jsSaveRules;
-  html_add_script_end();
+  serve_JS(JSfiles_e::SaveRulesFile);
 
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
@@ -116,29 +117,32 @@ void handle_rules_new() {
     handle_rules();
     return;
   }
+  # ifdef WEBSERVER_NEW_RULES
+  #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules"));
+  #  endif // ifndef BUILD_NO_RAM_TRACKER
   navMenuIndex = 5;
   TXBuffer.startStream();
   sendHeadandTail(F("TmplStd"), _HEAD);
 
   // define macro
-  #if defined(ESP8266)
+  #  if defined(ESP8266)
   String rootPath = F("rules");
-  #endif // if defined(ESP8266)
-  #if defined(ESP32)
+  #  endif // if defined(ESP8266)
+  #  if defined(ESP32)
 
   String rootPath = F("/rules");
-  #endif // if defined(ESP32)
+  #  endif // if defined(ESP32)
 
   // Pagionation of rules list
   const int rulesListPageSize = 25;
   int startIdx                = 0;
 
-  String fstart = web_server.arg(F("start"));
+  const String fstart = web_server.arg(F("start"));
 
   if (fstart.length() > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    validIntFromString(fstart, startIdx);
   }
   int endIdx = startIdx + rulesListPageSize - 1;
 
@@ -156,75 +160,75 @@ void handle_rules_new() {
 
   // Build table detail
   int count = -1;
-  HandlerFileInfo renderDetail = [/*&buffer,*/ &count, endIdx](fileInfo fi) 
-  {
-#ifdef WEBSERVER_RULES_DEBUG
-    Serial.print(F("Start generation of: "));
-    Serial.println(fi.Name);
-#endif // ifdef WEBSERVER_RULES_DEBUG
+  HandlerFileInfo renderDetail = [/*&buffer,*/ &count, endIdx](fileInfo fi)
+                                 {
+#  ifdef WEBSERVER_RULES_DEBUG
+                                   Serial.print(F("Start generation of: "));
+                                   Serial.println(fi.Name);
+#  endif // ifdef WEBSERVER_RULES_DEBUG
 
-    if (fi.isDirectory)
-    {
-      html_TR_TD();
-    }
-    else
-    {
-      count++;
-      addHtml(F("<TR><TD style='text-align:right'>"));
-    }
+                                   if (fi.isDirectory)
+                                   {
+                                     html_TR_TD();
+                                   }
+                                   else
+                                   {
+                                     count++;
+                                     addHtml(F("<TR><TD style='text-align:right'>"));
+                                   }
 
-    // Event Name
-    addHtml(FileNameToEvent(fi.Name));
+                                   // Event Name
+                                   addHtml(FileNameToEvent(fi.Name));
 
-    if (fi.isDirectory)
-    {
-      addHtml(F("</TD><TD></TD><TD></TD><TD>"));
-      addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
-                    , F("Backup")
-                    );
-    }
-    else
-    {
-      String encodedPath =  URLEncode((fi.Name + F(".txt")).c_str());
+                                   if (fi.isDirectory)
+                                   {
+                                     addHtml(F("</TD><TD></TD><TD></TD><TD>"));
+                                     addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
+                                                   , F("Backup")
+                                                   );
+                                   }
+                                   else
+                                   {
+                                     String encodedPath =  URLEncode((fi.Name + F(".txt")).c_str());
 
-      // File Name
-      {
-        String html;
-        html.reserve(128);
+                                     // File Name
+                                     {
+                                       String html;
+                                       html.reserve(128);
 
-        html += F("</TD><TD><a href='");
-        html += fi.Name;
-        html += F(".txt");
-        html += "'>";
-        html += fi.Name;
-        html += F(".txt");
-        html += F("</a></TD>");
+                                       html += F("</TD><TD><a href='");
+                                       html += fi.Name;
+                                       html += F(".txt");
+                                       html += "'>";
+                                       html += fi.Name;
+                                       html += F(".txt");
+                                       html += F("</a></TD>");
 
-        // File size
-        html += F("<TD>");
-        html += fi.Size;
-        html += F("</TD>");
-        addHtml(html);
-      }
+                                       // File size
+                                       html += F("<TD>");
+                                       html += fi.Size;
+                                       html += F("</TD>");
+                                       addHtml(html);
+                                     }
 
-      // Actions
-      html_TD();
-      addSaveButton(String(F("/rules/backup?fileName=")) + encodedPath
-                    , F("Backup")
-                    );
+                                     // Actions
+                                     html_TD();
+                                     addSaveButton(String(F("/rules/backup?fileName=")) + encodedPath
+                                                   , F("Backup")
+                                                   );
 
-      addDeleteButton(String(F("/rules/delete?fileName=")) + encodedPath
-                      , F("Delete")
-                      );
-    }
-    addHtml(F("</TD></TR>"));
-#ifdef WEBSERVER_RULES_DEBUG
-    Serial.print(F("End generation of: "));
-    Serial.println(fi.Name);
-#endif // ifdef WEBSERVER_RULES_DEBUG
+                                     addDeleteButton(String(F("/rules/delete?fileName=")) + encodedPath
+                                                     , F("Delete")
+                                                     );
+                                   }
+                                   addHtml(F("</TD></TR>"));
+#  ifdef WEBSERVER_RULES_DEBUG
+                                   Serial.print(F("End generation of: "));
+                                   Serial.println(fi.Name);
+#  endif // ifdef WEBSERVER_RULES_DEBUG
 
-    return count < endIdx;
-  };
+                                   return count < endIdx;
+                                 };
 
 
   bool hasMore = EnumerateFileAndDirectory(rootPath
@@ -253,7 +257,10 @@ void handle_rules_new() {
   // TXBuffer += F("<BR><BR>");
   sendHeadandTail(F("TmplStd"), _TAIL);
   TXBuffer.endStream();
+  #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules"));
+  #  endif // ifndef BUILD_NO_RAM_TRACKER
+  # endif  // WEBSERVER_NEW_RULES
 }
 
 void handle_rules_backup() {
@@ -262,14 +269,17 @@ void handle_rules_backup() {
     Goto_Rules_Root();
     return;
   }
-  #ifdef WEBSERVER_RULES_DEBUG
+  # ifdef WEBSERVER_NEW_RULES
+  #  ifdef WEBSERVER_RULES_DEBUG
   Serial.println(F("handle rules backup"));
-  #endif // ifdef WEBSERVER_RULES_DEBUG
+  #  endif // ifdef WEBSERVER_RULES_DEBUG
 
   if (!isLoggedIn() || !Settings.UseRules) { return; }
 
   if (!clientIPallowed()) { return; }
+  #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_backup"));
+  #  endif // ifndef BUILD_NO_RAM_TRACKER
   String directory = web_server.arg(F("directory"));
   String fileName  = web_server.arg(F("fileName"));
   String error;
@@ -309,8 +319,10 @@ void handle_rules_backup() {
     addHtmlError(error);
     TXBuffer.endStream();
   }
-
+  #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_backup"));
+  #  endif // ifndef BUILD_NO_RAM_TRACKER
+  # endif  // WEBSERVER_NEW_RULES
 }
 
 void handle_rules_delete() {
@@ -323,19 +335,22 @@ void handle_rules_delete() {
     Goto_Rules_Root();
     return;
   }
+  # ifdef WEBSERVER_NEW_RULES
+  #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_delete"));
+  #  endif // ifndef BUILD_NO_RAM_TRACKER
   String fileName = web_server.arg(F("fileName"));
   fileName = fileName.substring(0, fileName.length() - 4);
   bool removed = false;
-  #ifdef WEBSERVER_RULES_DEBUG
+  #  ifdef WEBSERVER_RULES_DEBUG
   Serial.println(F("handle_rules_delete"));
   Serial.print(F("File name: "));
   Serial.println(fileName);
-  #endif // ifdef WEBSERVER_RULES_DEBUG
+  #  endif // ifdef WEBSERVER_RULES_DEBUG
 
   if (fileName.length() > 0)
   {
-    removed = ESPEASY_FS.remove(fileName);
+    removed = tryDeleteFile(fileName);
   }
 
   if (removed)
@@ -353,7 +368,10 @@ void handle_rules_delete() {
     sendHeadandTail(F("TmplMsg"), _TAIL);
     TXBuffer.endStream();
   }
+  #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_delete"));
+  #  endif // ifndef BUILD_NO_RAM_TRACKER
+  # endif  // WEBSERVER_NEW_RULES
 }
 
 bool handle_rules_edit(const String& originalUri)
@@ -365,13 +383,15 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
   // originalUri is passed via deepcopy, since it will be converted to lower case.
   if (!isLoggedIn() || !Settings.UseRules) { return false; }
   originalUri.toLowerCase();
-  checkRAM(F("handle_rules"));
+  # ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handle_rules_edit"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
   bool handle = false;
 
-  #ifdef WEBSERVER_RULES_DEBUG
+  # ifdef WEBSERVER_RULES_DEBUG
   Serial.println(originalUri);
   Serial.println(F("handle_rules_edit"));
-  #endif // ifdef WEBSERVER_RULES_DEBUG
+  # endif // ifdef WEBSERVER_RULES_DEBUG
 
   if (isAddNew || (originalUri.startsWith(F("/rules/"))
                    && originalUri.endsWith(F(".txt")))) {
@@ -380,6 +400,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
       Goto_Rules_Root();
       return true;
     }
+    # ifdef WEBSERVER_NEW_RULES
 
     String eventName;
     String fileName;
@@ -395,20 +416,20 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     }
     else
     {
-        #if defined(ESP8266)
+        #  if defined(ESP8266)
       fileName = F("rules/");
-        #endif // if defined(ESP8266)
-        #if defined(ESP32)
+        #  endif // if defined(ESP8266)
+        #  if defined(ESP32)
       fileName = F("/rules/");
-        #endif // if defined(ESP32)
+        #  endif // if defined(ESP32)
       fileName += originalUri.substring(7, originalUri.length() - 4);
       eventName = FileNameToEvent(fileName);
     }
-      #ifdef WEBSERVER_RULES_DEBUG
+      #  ifdef WEBSERVER_RULES_DEBUG
     Serial.print(F("File name: "));
     Serial.println(fileName);
-      #endif // ifdef WEBSERVER_RULES_DEBUG
-    bool isEdit = ESPEASY_FS.exists(fileName);
+      #  endif // ifdef WEBSERVER_RULES_DEBUG
+    bool isEdit = fileExists(fileName);
 
     if (web_server.args() > 0)
     {
@@ -466,14 +487,15 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     addHtml(F("<form name = 'editRule' method = 'post'><table class='normal'><TR><TH align='left' colspan='2'>Edit Rule"));
 
     // hidden field to check Overwrite
-    addHtml(F("<input type='hidden' id='IsNew' name='IsNew' value='"));
-    addHtml(isAddNew
-            ? F("yes")
-            : F("no"));
-    addHtml(F("'>"));
+    addHtml(F("<input "));
+    addHtmlAttribute(F("type"),  F("hidden"));
+    addHtmlAttribute(F("id"),    F("IsNew"));
+    addHtmlAttribute(F("name"),  F("IsNew"));
+    addHtmlAttribute(F("value"), isAddNew ? F("yes") : F("no"));
+    addHtml('>');
 
     bool isReadOnly = !isOverwrite && ((isEdit && !isAddNew && !isNew) || (isAddNew && isNew));
-      #ifdef WEBSERVER_RULES_DEBUG
+      #  ifdef WEBSERVER_RULES_DEBUG
     Serial.print(F("Is Overwrite: "));
     Serial.println(isOverwrite);
     Serial.print(F("Is edit: "));
@@ -484,7 +506,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     Serial.println(isNew);
     Serial.print(F("Is Read Only: "));
     Serial.println(isReadOnly);
-      #endif // ifdef WEBSERVER_RULES_DEBUG
+      #  endif // ifdef WEBSERVER_RULES_DEBUG
 
     addFormTextBox(F("Event name")            // Label
                    , F("eventName")           // field name
@@ -509,9 +531,11 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
     sendHeadandTail(F("TmplStd"), true);
     TXBuffer.endStream();
+    # endif // WEBSERVER_NEW_RULES
   }
-
-  checkRAM(F("handle_rules"));
+  # ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handle_rules_edit2"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
   return handle;
 }
 
@@ -544,10 +568,10 @@ void Rule_showRuleTextArea(const String& fileName) {
 
 bool Rule_Download(const String& path)
 {
-  #ifdef WEBSERVER_RULES_DEBUG
+  # ifdef WEBSERVER_RULES_DEBUG
   Serial.print(F("Rule_Download path: "));
   Serial.println(path);
-  #endif // ifdef WEBSERVER_RULES_DEBUG
+  # endif // ifdef WEBSERVER_RULES_DEBUG
   fs::File dataFile = tryOpenFile(path, "r");
 
   if (!dataFile)
@@ -581,7 +605,7 @@ bool EnumerateFileAndDirectory(String          & rootPath
   int  count   = 0;
   bool next    = true;
 
-  #ifdef ESP8266
+  # ifdef ESP8266
   fs::Dir dir = ESPEASY_FS.openDir(rootPath);
   Serial.print(F("Enumerate files of "));
   Serial.println(rootPath);
@@ -604,8 +628,8 @@ bool EnumerateFileAndDirectory(String          & rootPath
     next = handler(fi);
   }
   hasMore = dir.next();
-  #endif // ifdef ESP8266
-  #ifdef ESP32
+  # endif // ifdef ESP8266
+  # ifdef ESP32
   File root = ESPEASY_FS.open(rootPath);
 
   if (root)
@@ -632,7 +656,7 @@ bool EnumerateFileAndDirectory(String          & rootPath
   {
     addLog(LOG_LEVEL_ERROR, F("Invalid root."));
   }
-  #endif // ifdef ESP32
+  # endif // ifdef ESP32
   return hasMore;
 }
 

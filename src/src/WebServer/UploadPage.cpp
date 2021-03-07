@@ -4,6 +4,7 @@
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 
+#include "../Globals/Cache.h"
 #include "../Helpers/ESPEasy_Storage.h"
 
 #include "../../ESPEasy-Globals.h"
@@ -14,7 +15,8 @@
 // ********************************************************************************
 // Web Interface upload page
 // ********************************************************************************
-byte uploadResult = 0;
+uploadResult_e uploadResult = uploadResult_e::UploadStarted;
+
 void handle_upload() {
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -33,7 +35,9 @@ void handle_upload() {
 // Web Interface upload page
 // ********************************************************************************
 void handle_upload_post() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_upload_post"));
+  #endif
 
   if (!isLoggedIn()) { return; }
 
@@ -41,21 +45,21 @@ void handle_upload_post() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-
-  if (uploadResult == 1)
-  {
-    addHtml(F("Upload OK!<BR>You may need to reboot to apply all settings..."));
-    LoadSettings();
+  switch (uploadResult) {
+    case uploadResult_e::Success:
+      addHtml(F("Upload OK!<BR>You may need to reboot to apply all settings..."));
+      clearAllCaches();
+      LoadSettings();
+      break;
+    case uploadResult_e::InvalidFile:
+      addHtml(F("<font color=\"red\">Upload file invalid!</font>"));
+      break;
+    case uploadResult_e::NoFilename:
+      addHtml(F("<font color=\"red\">No filename!</font>"));
+      break;
+    case uploadResult_e::UploadStarted:
+      break;
   }
-
-  if (uploadResult == 2) {
-    addHtml(F("<font color=\"red\">Upload file invalid!</font>"));
-  }
-
-  if (uploadResult == 3) {
-    addHtml(F("<font color=\"red\">No filename!</font>"));
-  }
-
 
   addHtml(F("Upload finished"));
   sendHeadandTail_stdtemplate(true);
@@ -66,15 +70,17 @@ void handle_upload_post() {
 
 #ifdef WEBSERVER_NEW_UI
 void handle_upload_json() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_upload_post"));
-  uint8_t result = uploadResult;
+  #endif
+  uint8_t result = static_cast<int>(uploadResult);
 
   if (!isLoggedIn()) { result = 255; }
 
   TXBuffer.startJsonStream();
-  addHtml("{");
+  addHtml('{');
   stream_next_json_object_value(F("status"), String(result));
-  addHtml("}");
+  addHtml('}');
 
   TXBuffer.endStream();
 }
@@ -86,7 +92,9 @@ void handle_upload_json() {
 // ********************************************************************************
 fs::File uploadFile;
 void handleFileUpload() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handleFileUpload"));
+  #endif
 
   if (!isLoggedIn()) { return; }
 
@@ -96,7 +104,7 @@ void handleFileUpload() {
 
   if (upload.filename.c_str()[0] == 0)
   {
-    uploadResult = 3;
+    uploadResult = uploadResult_e::NoFilename;
     return;
   }
 
@@ -108,7 +116,7 @@ void handleFileUpload() {
       addLog(LOG_LEVEL_INFO, log);
     }
     valid        = false;
-    uploadResult = 0;
+    uploadResult = uploadResult_e::UploadStarted;
   }
   else if (upload.status == UPLOAD_FILE_WRITE)
   {
@@ -174,10 +182,10 @@ void handleFileUpload() {
   }
 
   if (valid) {
-    uploadResult = 1;
+    uploadResult = uploadResult_e::Success;
   }
   else {
-    uploadResult = 2;
+    uploadResult = uploadResult_e::InvalidFile;
   }
 }
 

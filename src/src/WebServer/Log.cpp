@@ -33,9 +33,7 @@ void handle_log() {
   addCheckBox(F("autoscroll"), true);
   addHtml(F("<BR></body>"));
 
-  html_add_script(true);
-  TXBuffer += DATA_FETCH_AND_PARSE_LOG_JS;
-  html_add_script_end();
+  serve_JS(JSfiles_e::FetchAndParseLog);
 
   #else // ifdef WEBSERVER_LOG
   addHtml(F("Not included in build"));
@@ -61,7 +59,7 @@ void handle_log_JSON() {
       if (i != 0) {
         addHtml(",");
       }
-      addHtml("{");
+      addHtml('{');
       int loglevel;
       stream_next_json_object_value(F("label"), getLogLevelDisplayStringFromIndex(i, loglevel));
       stream_last_json_object_value(F("loglevel"), String(loglevel));

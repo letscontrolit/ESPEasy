@@ -6,6 +6,8 @@
 #include "../WebServer/Markup_Forms.h"
 #include "../WebServer/HTML_wrappers.h"
 
+#include "../Globals/RuntimeData.h"
+
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/SystemVariables.h"
 
@@ -21,7 +23,9 @@ void addSysVar_enum_html(SystemVariables::Enum enumval) {
 
 
 void handle_sysvars() {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_sysvars"));
+  #endif
 
   if (!isLoggedIn()) { return; }
   TXBuffer.startStream();
@@ -125,10 +129,18 @@ void handle_sysvars() {
 
   addTableSeparator(F("Custom Variables"), 3, 3);
 
-  for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-    addSysVar_html("%v" + toString(i + 1, 0) + '%');
+  bool customVariablesAdded = false;
+  for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
+    addSysVar_html("%v" + String(it->first) + '%');
+    customVariablesAdded = true;
   }
-
+  if (!customVariablesAdded) {
+    html_TR_TD();
+    addHtml(F("No variables set"));
+    html_TD();
+    html_TD();
+  }
+#ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   addTableSeparator(F("Special Characters"), 3, 2);
   addTableSeparator(F("Degree"),             3, 3);
   addSysVar_html(F("{D}"));
@@ -183,7 +195,7 @@ void handle_sysvars() {
   addFormSeparator(3);
   addSysVar_html(F("{..}"));
   addSysVar_html(F("&divide;"));
-
+#endif
   addTableSeparator(F("Standard Conversions"), 3, 2);
 
   addSysVar_html(F("Wind Dir.:    %c_w_dir%(123.4)"));
@@ -200,6 +212,8 @@ void handle_sysvars() {
   addSysVar_html(F("Secs to dhms: %c_s2dhms%(100000)"));
   addFormSeparator(3);
   addSysVar_html(F("To HEX: %c_2hex%(100000)"));
+  addFormSeparator(3);
+  addSysVar_html(F("Unit to IP: %c_u2ip%(%unit%, 2)"));
 
   html_end_table();
   html_end_form();

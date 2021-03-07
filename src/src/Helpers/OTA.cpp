@@ -1,8 +1,5 @@
 #include "OTA.h"
 
-#include <ArduinoOTA.h>
-
-
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/SecuritySettings.h"
@@ -47,7 +44,9 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
  \*********************************************************************************************/
 void ArduinoOTAInit()
 {
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ArduinoOTAInit"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
   ArduinoOTA.setPort(ARDUINO_OTA_PORT);
   ArduinoOTA.setHostname(Settings.getHostname().c_str());
@@ -90,7 +89,12 @@ void ArduinoOTAInit()
     delay(100);
     reboot(ESPEasy_Scheduler::IntendedRebootReason_e::OTA_error);
   });
+
+  #if defined(ESP8266) && defined(FEATURE_MDNS)
+  ArduinoOTA.begin(true);
+  #else
   ArduinoOTA.begin();
+  #endif
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("OTA  : Arduino OTA enabled on port ");

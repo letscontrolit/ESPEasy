@@ -84,11 +84,22 @@ void html_add_script_end();
 // if there is an error-string, add it to the html code with correct formatting
 void addHtmlError(const String& error);
 
+void addHtml(const char& html);
 void addHtml(const String& html);
+void addHtmlInt(int int_val);
+
+void addEncodedHtml(const String& html);
+
+void addHtmlAttribute(const String& label, int value);
+void addHtmlAttribute(const String& label, const String& value);
 
 void addDisabled();
 
 void addHtmlLink(const String& htmlclass, const String& url, const String& label);
+
+void addHtmlDiv(const String& htmlclass);
+void addHtmlDiv(const String& htmlclass, const String& content);
+void addHtmlDiv(const String& htmlclass, const String& content, const String& id);
 
 void addEnabled(boolean enabled);
 

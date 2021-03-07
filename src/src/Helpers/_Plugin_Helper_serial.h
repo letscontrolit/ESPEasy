@@ -24,7 +24,9 @@ ESPEasySerialPort serialHelper_getSerialType(struct EventStruct *event);
 
 String serialHelper_getSerialTypeLabel(struct EventStruct *event);
 
+#ifndef DISABLE_SC16IS752_Serial
 void serialHelper_addI2CuartSelectors(int address, int channel);
+#endif
 
 void serialHelper_webformLoad(struct EventStruct *event);
 
@@ -38,8 +40,6 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 void serialHelper_webformSave(byte& port, int8_t &rxPin, int8_t &txPin);
 
 void serialHelper_webformSave(struct EventStruct *event);
-
-void serialHelper_plugin_init(struct EventStruct *event);
 
 bool serialHelper_isValid_serialconfig(byte serialconfig);
 

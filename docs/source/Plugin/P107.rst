@@ -1,0 +1,42 @@
+.. include:: ../Plugin/_plugin_substitutions_p10x.repl
+.. _P107_page:
+
+|P107_typename|
+==================================================
+
+|P107_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P107_type|
+
+Name: |P107_name|
+
+Status: |P107_status|
+
+GitHub: |P107_github|_
+
+Maintainer: |P107_maintainer|
+
+Used libraries: |P107_usedlibraries|
+
+Description
+-----------
+
+
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P107_events.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-04-25

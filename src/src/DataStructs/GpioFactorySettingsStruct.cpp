@@ -1,4 +1,4 @@
-#include "GpioFactorySettingsStruct.h"
+#include "../DataStructs/GpioFactorySettingsStruct.h"
 
 #include "../CustomBuild/ESPEasyDefaults.h"
 
@@ -22,6 +22,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
   }
 
   switch (model) {
+#if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
     case DeviceModel_Sonoff_Basic:
     case DeviceModel_Sonoff_TH1x:
     case DeviceModel_Sonoff_S2x:
@@ -88,6 +89,23 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda    = -1;            // GPIO4 conflicts with relay control.
       i2c_scl    = -1;            // GPIO5 conflicts with SW input
       break;
+#else
+    case DeviceModel_Sonoff_Basic:
+    case DeviceModel_Sonoff_TH1x:
+    case DeviceModel_Sonoff_S2x:
+    case DeviceModel_Sonoff_TouchT1:
+    case DeviceModel_Sonoff_POWr2:
+    case DeviceModel_Sonoff_POW:
+    case DeviceModel_Sonoff_TouchT2:
+    case DeviceModel_Sonoff_TouchT3:
+    case DeviceModel_Sonoff_4ch:
+    case DeviceModel_Shelly1:
+    case DeviceModel_ShellyPLUG_S:
+      break;
+#endif
+
+
+#ifdef ESP32
     case DeviceMode_Olimex_ESP32_PoE:
       button[0]             = 34; // BUT1 Button
       relais[0]             = -1; // No LED's or relays on board
@@ -152,6 +170,11 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       // N.B. GPIO 35 and up are input only.
 
       break;
+  #else
+      case DeviceMode_Olimex_ESP32_PoE:
+      case DeviceMode_Olimex_ESP32_EVB:
+      case DeviceMode_Olimex_ESP32_GATEWAY:
+  #endif
 
     case DeviceModel_default:
     case DeviceModel_MAX:

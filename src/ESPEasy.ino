@@ -103,9 +103,6 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 
 
-#include "ESPEasyWiFi_credentials.h"
-#include "ESPEasyWifi_ProcessEvent.h"
-
 #include "src/DataStructs/ControllerSettingsStruct.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
@@ -122,8 +119,10 @@
 #include "src/ESPEasyCore/ESPEasyNetwork.h"
 #include "src/ESPEasyCore/ESPEasyRules.h"
 #include "src/ESPEasyCore/ESPEasyWifi.h"
+#include "src/ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 #include "src/ESPEasyCore/Serial.h"
 
+#include "src/Globals/Cache.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
@@ -142,6 +141,7 @@
 #include "src/Globals/Services.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/Statistics.h"
+#include "src/Globals/WiFi_AP_Candidates.h"
 
 #include "src/Helpers/DeepSleep.h"
 #include "src/Helpers/ESPEasyRTC.h"
@@ -159,6 +159,10 @@
 #include "src/Helpers/StringGenerator_System.h"
 
 #include "src/WebServer/WebServer.h"
+
+#ifdef PHASE_LOCKED_WAVEFORM
+#include <core_esp8266_waveform.h>
+#endif
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
@@ -179,6 +183,8 @@ void preinit() {
   // No global object methods or C++ exceptions can be called in here!
   //The below is a static class method, which is similar to a function, so it's ok.
   ESP8266WiFiClass::preinitWiFiOff();
+  system_phy_set_powerup_option(RF_NO_CAL);
+
 }
 #endif
 
@@ -202,11 +208,16 @@ void setup()
 #ifdef ESP8266_DISABLE_EXTRA4K
   disable_extra4k_at_link_time();
 #endif
+#ifdef PHASE_LOCKED_WAVEFORM
+  enablePhaseLockedWaveform();
+#endif
   initWiFi();
   
   run_compiletime_checks();
+#ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
+#endif
 #ifndef ESP32
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif
@@ -218,21 +229,15 @@ void setup()
   vcc = ESP.getVcc() / 1000.0f;
 #endif
 #ifdef ESP8266
-  lastADCvalue = analogRead(A0);
+  espeasy_analogRead(A0);
 #endif
 
-#ifdef ESP8266
-  // See https://github.com/esp8266/Arduino/commit/a67986915512c5304bd7c161cf0d9c65f66e0892
-  analogWriteRange(1023);
-#endif
-
+  initAnalogWrite();
 
   resetPluginTaskData();
 
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
-  #if defined(ESP32)
-    for(byte x = 0; x < 16; x++)
-      ledChannelPin[x] = -1;
   #endif
 
   Serial.begin(115200);
@@ -279,10 +284,12 @@ void setup()
     }
 
     log += RTC.bootCounter;
+    #ifndef BUILD_NO_DEBUG
     log += F(" Last Action before Reboot: ");
     log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     log += F(" Last systime: ");
     log += RTC.lastSysTime;
+    #endif
   }
   //cold boot (RTC memory empty)
   else
@@ -341,12 +348,12 @@ void setup()
       toDisable = disableNotification(toDisable);
     }
   }
-  if (!selectValidWiFiSettings()) {
-    wifiSetup = true;
-    RTC.lastWiFiChannel = 0; // Must scan all channels
+  if (!WiFi_AP_Candidates.hasKnownCredentials()) {
+    WiFiEventData.wifiSetup = true;
+    RTC.clearLastWiFi(); // Must scan all channels
     // Wait until scan has finished to make sure as many as possible are found
     // We're still in the setup phase, so nothing else is taking resources of the ESP.
-    WifiScan(false, false); 
+    WifiScan(false); 
   }
 
 //  setWifiMode(WIFI_STA);
@@ -366,13 +373,7 @@ void setup()
     ResetFactory();
   }
 
-  if (Settings.UseSerial)
-  {
-    //make sure previous serial buffers are flushed before resetting baudrate
-    Serial.flush();
-    Serial.begin(Settings.BaudRate);
-//    Serial.setDebugOutput(true);
-  }
+  initSerial();
 
   if (Settings.Build != BUILD)
     BuildFixes();
@@ -384,8 +385,10 @@ void setup()
 
   if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
-
+  
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("hardwareInit"));
+  #endif
   hardwareInit();
 
   timermqtt_interval = 250; // Interval for checking MQTT
@@ -405,8 +408,10 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
-    addLog(LOG_LEVEL_ERROR, F("Programming error! - Increase PLUGIN_MAX"));
+    addLog(LOG_LEVEL_ERROR, String(F("Programming error! - Increase PLUGIN_MAX (")) + deviceCount + ')');
   }
+
+  clearAllCaches();
 
   if (Settings.UseRules && isDeepSleepEnabled())
   {
@@ -487,13 +492,10 @@ void RTOS_TaskServers( void * parameter )
 
 void RTOS_TaskSerial( void * parameter )
 {
- while (true){
+  while (true){
     delay(100);
-    if (Settings.UseSerial)
-    if (Serial.available())
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
-        serial();
- }
+    serial();
+  }
 }
 
 void RTOS_Task10ps( void * parameter )
@@ -700,12 +702,7 @@ void backgroundtasks()
   }
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
-    if (Settings.UseSerial && Serial.available()) {
-      String dummy;
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
-        serial();
-      }
-    }
+    serial();
     if (webserverRunning) {
       web_server.handleClient();
     }
@@ -719,9 +716,12 @@ void backgroundtasks()
     }
   }
 
+  #ifdef FEATURE_DNS_SERVER
   // process DNS, only used if the ESP has no valid WiFi config
-  if (dnsServerActive)
+  if (dnsServerActive) {
     dnsServer.processNextRequest();
+  }
+  #endif
 
   #ifdef FEATURE_ARDUINO_OTA
   if(Settings.ArduinoOTAEnable && networkConnected)
@@ -741,7 +741,10 @@ void backgroundtasks()
   #ifdef FEATURE_MDNS
   // Allow MDNS processing
   if (networkConnected) {
+    #ifdef ESP8266
+    // ESP32 does not have an update() function
     MDNS.update();
+    #endif
   }
   #endif
 

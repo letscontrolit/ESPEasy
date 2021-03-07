@@ -1,4 +1,4 @@
-#include "DelayQueueElements.h"
+#include "../ControllerQueue/DelayQueueElements.h"
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
@@ -56,6 +56,7 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  4)
 #endif // ifdef USES_C004
 
 #ifdef USES_C007
+# define C007_queue_element queue_element_formatted_uservar
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  7)
 #endif // ifdef USES_C007
 
@@ -71,6 +72,7 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  8)
 #endif // ifdef USES_C008
 
 #ifdef USES_C009
+# define C009_queue_element queue_element_formatted_uservar
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  9)
 #endif // ifdef USES_C009
 
