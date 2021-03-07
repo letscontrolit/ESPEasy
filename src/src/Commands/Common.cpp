@@ -148,8 +148,9 @@ String Command_GetORSetBool(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (isInt(TmpStr1)) {
-        *value = atoi(TmpStr1.c_str()) > 0;
+      int tmp_int = 0;
+      if (validIntFromString(TmpStr1, tmp_int)) {
+        *value = tmp_int > 0;
       }
       else if (strcmp_P(PSTR("on"), TmpStr1.c_str()) == 0) { *value = true; }
       else if (strcmp_P(PSTR("true"), TmpStr1.c_str()) == 0) { *value = true; }
@@ -181,8 +182,9 @@ String Command_GetORSetUint8_t(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (isInt(TmpStr1)) {
-        *value = (uint8_t)atoi(TmpStr1.c_str());
+      int tmp_int = 0;
+      if (validIntFromString(TmpStr1, tmp_int)) {
+        *value = static_cast<uint8_t>(tmp_int);
       }
       else if (strcmp_P(PSTR("WIFI"), TmpStr1.c_str()) == 0) { *value = 0; }
       else if (strcmp_P(PSTR("ETHERNET"), TmpStr1.c_str()) == 0) { *value = 1; }
@@ -212,8 +214,9 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (isInt(TmpStr1)) {
-        *value = (int8_t)atoi(TmpStr1.c_str());
+      int tmp_int = 0;
+      if (validIntFromString(TmpStr1, tmp_int)) {
+        *value = static_cast<int8_t>(tmp_int);
       }
     }
   }

@@ -44,7 +44,7 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
     {
       case Sensor_VType::SENSOR_TYPE_LONG:
       {
-        unsigned long longval = (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16);
+        unsigned long longval = UserVar.getSensorTypeLong(event->TaskIndex);
         packed += LoRa_addInt(longval, PackedData_uint32);
         break;
       }

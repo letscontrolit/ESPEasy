@@ -142,6 +142,9 @@
 
 
 // #define USE_SETTINGS_ARCHIVE
+// #define FEATURE_I2CMULTIPLEXER
+// #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 
 /*
  #######################################################################################################

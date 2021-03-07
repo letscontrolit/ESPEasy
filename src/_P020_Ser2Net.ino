@@ -238,6 +238,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         int timeOut       = RXWait;
         size_t bytes_read = 0;
 
+        PrepareSend();
         while (timeOut > 0)
         {
           while (Serial.available()) {
@@ -283,12 +284,12 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         if (Settings.UseRules)
         {
           String message    = (char *)serial_buf;
-          int    NewLinePos = message.indexOf("\r\n");
+          int    NewLinePos = message.indexOf(F("\r\n"));
 
           if (NewLinePos > 0) {
             message = message.substring(0, NewLinePos);
           }
-          String eventString = "";
+          String eventString;
 
           switch (Plugin_020_SerialProcessing)
           {

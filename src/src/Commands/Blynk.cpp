@@ -145,8 +145,8 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
         byte   pos      = strValue.indexOf('"', 2);
         strValue = strValue.substring(2, pos);
         strValue.trim();
-        float value = strValue.toFloat();
-        *data   = value;
+        *data   = 0.0f;
+        validFloatFromString(strValue, *data);
         success = true;
 
         char value_char[5] = { 0 };

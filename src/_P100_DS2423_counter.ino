@@ -135,7 +135,7 @@ boolean Plugin_100(byte function, struct EventStruct *event, String& string)
             log += F(": ");
 
             if (success) {
-              log += UserVar[event->BaseVarIndex];
+              log += formatUserVarNoCheck(event->TaskIndex, 0);
             } else {
               log += F("Error!");
             }

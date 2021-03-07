@@ -244,7 +244,6 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
         addLog(LOG_LEVEL_INFO, P075_data->getLogString());
-        serialHelper_plugin_init(event);
         success = true;
       }
       break;
@@ -318,9 +317,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
              String log;
              log.reserve(120);                          // Prevent re-allocation
              log = F("NEXTION075: Interval values data enabled, resending idx=");
-             log += String(UserVar[event->BaseVarIndex]);
+             log += formatUserVarNoCheck(event->TaskIndex, 0);
              log += F(", value=");
-             log += String(UserVar[event->BaseVarIndex+1]);
+             log += formatUserVarNoCheck(event->TaskIndex, 1);
              addLog(LOG_LEVEL_INFO, log);
             #endif
 
@@ -354,7 +353,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
           log = F("NEXTION075 : WRITE = ");
           log += nextionArguments;
           addLog(LOG_LEVEL_DEBUG, log);
-          SendStatus(event->Source, log);              // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, log);              // Reply (echo) to sender. This will print message on browser.
         }
 
 // Enable addLog() code below to help debug plugin write problems.
@@ -502,8 +501,10 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               }
 
               if (GotPipeCmd) {
-                  UserVar[event->BaseVarIndex] = Vidx.toFloat();
-                  UserVar[event->BaseVarIndex+1] = Svalue.toFloat();
+                  UserVar[event->BaseVarIndex] = 0.0f;
+                  UserVar[event->BaseVarIndex+1] = 0.0f;
+                  validFloatFromString(Vidx, UserVar[event->BaseVarIndex]);
+                  validFloatFromString(Svalue, UserVar[event->BaseVarIndex+1]);
                   sendData(event);
 
                   #ifdef DEBUG_LOG
@@ -511,7 +512,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
                   log.reserve(80);                       // Prevent re-allocation
                   log = F("NEXTION075 : Pipe Command Sent: ");
                   log += __buffer;
-                  log += UserVar[event->BaseVarIndex];
+                  log += formatUserVarNoCheck(event->TaskIndex, 0);
                   addLog(LOG_LEVEL_INFO, log);
                   #endif
               }

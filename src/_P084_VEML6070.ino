@@ -14,9 +14,9 @@
 #define PLUGIN_084
 #define PLUGIN_ID_084         84
 #define PLUGIN_NAME_084       "UV - VEML6070 [TESTING]"
-#define PLUGIN_VALUENAME1_084 "UV-Raw"
-#define PLUGIN_VALUENAME2_084 "UV-Risk"
-#define PLUGIN_VALUENAME3_084 "UV-Power"
+#define PLUGIN_VALUENAME1_084 "Raw"
+#define PLUGIN_VALUENAME2_084 "Risk"
+#define PLUGIN_VALUENAME3_084 "Power"
 
 #define VEML6070_ADDR_H             0x39
 #define VEML6070_ADDR_L             0x38
@@ -121,7 +121,7 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("VEML6070: UV: ");
-          log += UserVar[event->BaseVarIndex];
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
           addLog(LOG_LEVEL_INFO, log);
         }
 

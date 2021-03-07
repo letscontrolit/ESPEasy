@@ -6,7 +6,10 @@
 
 
 #include "src/DataStructs/ESPEasy_packed_raw_data.h"
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Helpers/Memory.h"
+#include "ESPEasy-Globals.h"
 
 #define PLUGIN_026
 #define PLUGIN_ID_026         26
@@ -17,7 +20,7 @@
 #define P026_SENSOR_TYPE_INDEX  (P026_QUERY1_CONFIG_POS + VARS_PER_TASK)
 #define P026_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P026_SENSOR_TYPE_INDEX)))
 
-#define P026_NR_OUTPUT_OPTIONS  12
+#define P026_NR_OUTPUT_OPTIONS  13
 
 String Plugin_026_valuename(byte value_nr, bool displayString) {
   switch (value_nr) {
@@ -33,6 +36,7 @@ String Plugin_026_valuename(byte value_nr, bool displayString) {
     case 9:  return displayString ? F("Web activity") : F("web");
     case 10: return displayString ? F("Free Stack") : F("freestack");
     case 11: return displayString ? F("None") : F("");
+    case 12: return displayString ? F("WiFi TX pwr") : F("txpwr");
     default:
       break;
   }
@@ -111,14 +115,23 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       String options[P026_NR_OUTPUT_OPTIONS];
+      int indices[P026_NR_OUTPUT_OPTIONS];
 
-      for (byte i = 0; i < P026_NR_OUTPUT_OPTIONS; ++i) {
-        options[i] = Plugin_026_valuename(i, true);
+      int index = 0;
+      for (byte option = 0; option < P026_NR_OUTPUT_OPTIONS; ++option) {
+        if (option != 11) {
+          options[index] = Plugin_026_valuename(option, true);
+          indices[index] = option;
+          ++index;
+        }
       }
+      // Work around to get the "none" at the end.
+      options[index] = Plugin_026_valuename(11, true);
+      indices[index] = 11;
 
       for (byte i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
         const byte pconfigIndex = i + P026_QUERY1_CONFIG_POS;
-        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P026_NR_OUTPUT_OPTIONS, options);
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P026_NR_OUTPUT_OPTIONS, options, indices);
       }
       success = true;
       break;
@@ -155,7 +168,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           if (i != 0) {
             log += ',';
           }
-          log += UserVar[event->BaseVarIndex + i];
+          log += formatUserVarNoCheck(event->TaskIndex, i);
         }
         addLog(LOG_LEVEL_INFO, log);
       }
@@ -226,23 +239,11 @@ float P026_get_value(int type)
       break;
     }
     case 5:
-    {
-      value = NetworkLocalIP()[0];
-      break;
-    }
     case 6:
-    {
-      value = NetworkLocalIP()[1];
-      break;
-    }
     case 7:
-    {
-      value = NetworkLocalIP()[2];
-      break;
-    }
     case 8:
     {
-      value = NetworkLocalIP()[3];
+      value = NetworkLocalIP()[type - 5];
       break;
     }
     case 9:
@@ -255,6 +256,12 @@ float P026_get_value(int type)
       value = getCurrentFreeStack();
       break;
     }
+    case 12:
+    {
+      value = WiFiEventData.wifi_TX_pwr;
+      break;
+    }
+
   }
   return value;
 }
