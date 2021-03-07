@@ -875,6 +875,7 @@ To create/register a plugin, you have to :
     #define USES_P047   // I2C_soil_misture
     #define USES_P048   // Motoshield_v2
 
+    #define USES_P050   // TCS34725
     #define USES_P051   // AM2320
 
     #define USES_P054   // DMX512
@@ -937,7 +938,9 @@ To create/register a plugin, you have to :
      #define USES_P027   // INA219
    #endif
    #ifndef USES_P076 
-     #define USES_P076   // HWL8012   in POW r1
+//     TD-er: Disabled as it causes this 'energy' build to fail due to low iRAM.
+//     It is still present in the POW builds.
+//     #define USES_P076   // HWL8012   in POW r1
    #endif
    #ifndef USES_P077 
      // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
@@ -948,6 +951,9 @@ To create/register a plugin, you have to :
    #endif
    #ifndef USES_P085
      #define USES_P085   // AcuDC24x
+   #endif
+   #ifndef USES_P093
+     #define USES_P093   // Mitsubishi Heat Pump
    #endif
    #ifndef USES_P102
      #define USES_P102   // PZEM-004Tv30
@@ -1242,6 +1248,9 @@ To create/register a plugin, you have to :
   #endif
   #ifdef USES_BLYNK
     #undef USES_BLYNK
+  #endif
+  #ifdef USES_P076
+    #undef USES_P076   // HWL8012   in POW r1
   #endif
   #ifdef USES_P092
     #undef USES_P092   // DL-Bus

@@ -190,7 +190,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   updateMQTTclient_connected();
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
-  yield();
+  delay(0);
   mqtt.setTimeout(ControllerSettings.ClientTimeout);
   MQTTclient.setClient(mqtt);
 
@@ -386,7 +386,7 @@ String getLWT_topic(const ControllerSettingsStruct& ControllerSettings) {
       LWTTopic  = ControllerSettings.Subscribe;
       LWTTopic += F("/LWT");
     }
-    LWTTopic.replace(F("/#"), F("/status"));
+    LWTTopic.replace(String(F("/#")), String(F("/status")));
     parseSystemVariables(LWTTopic, false);
   }
   return LWTTopic;

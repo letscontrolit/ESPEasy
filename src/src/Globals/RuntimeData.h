@@ -3,6 +3,8 @@
 
 #include "../CustomBuild/ESPEasyLimits.h"
 
+#include "../DataStructs/UserVarStruct.h"
+
 #include <map>
 
 /*********************************************************************************************\
@@ -28,7 +30,9 @@ bool getNextCustomFloatVar(uint32_t& index, double& value);
 * let,1,10
 * if %v1%=10 do ...
 \*********************************************************************************************/
-extern float UserVar[VARS_PER_TASK * TASKS_MAX];
+//extern float UserVar[VARS_PER_TASK * TASKS_MAX];
+
+extern UserVarStruct UserVar;
 
 
 

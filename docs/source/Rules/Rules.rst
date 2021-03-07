@@ -474,6 +474,16 @@ You must not use the task names ``Plugin``, ``var`` ``int`` as these have specia
 ``Plugin`` can be used in a so called ``PLUGIN_REQUEST``, for example: 
 ``[Plugin#GPIO#Pinstate#N]`` to get the pin state of a GPIO pin.
 
+``[Plugin#MCP#Pinstate#N]`` to get the pin state of a MCP pin.
+
+``[Plugin#PCF#Pinstate#N]`` to get the pin state of a PCF pin.
+
+For expanders you can use also the following:
+
+``[Plugin#MCP#PinRange#x-y]`` to get the pin state of a range of MCP pins from x o y.
+
+``[Plugin#PCF#PinRange#x-y]`` to get the pin state of a range of PCF pins from x o y.
+
 ``Var`` and ``int`` are used for internal variables. 
 The variables set with the ``Let`` command will be available in rules
 as ``var#N`` or ``int#N`` where ``N`` is 1..16.

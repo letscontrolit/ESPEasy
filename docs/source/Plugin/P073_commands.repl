@@ -1,0 +1,102 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``7dn,<number>``
+
+        Example:
+
+        ``7dn,[BME280#Humidity]`` to display the humidity measured by a BME280 sensor.
+
+        ","
+        Displays a numeric value on the display, with 1 decimal position if space allows.
+        "
+        "
+        ``7dt,<temperature>``
+
+        Example:
+
+        ``7dt,[BME280#Temperature]``
+
+        ","
+        To display the temperature measured by a BME280 sensor. By default includes a ° symbol, unless option 'Hide ° for Temperatures' is enabled.
+        "
+        "
+        ``7ddt,<temperature1>,<temperature2>``
+
+        Example:
+
+        ``7ddt,[BME280#Temperature],[DS18b20#Temperature]``
+
+        ","
+        To display two temperatures measured by a BME280 sensor and a DS18b20 sensor. Only applicable for the MAX7219 - 8 digit display, as the other devices don't have enough digits to show 2 temperatures.
+        "
+        "
+        ``7dst,<hh>,<mm>,<ss>``
+
+        Example:
+
+        ``7dst,%syshour%+6,%sysmin%,%syssec%``
+
+        ","
+        To display the time for a different time zone.
+
+        Can also be used to f.e. set the next appointment time externally.
+        "
+        "
+        ``7dsd,<dd>,<mm>,<yy>``
+
+        ","
+        To display a date.
+        "
+        "
+        ``7dtext,<text>``
+
+        Examples:
+
+        ``7dtext,OUT [BLK#Temperature#d2.1]^``
+
+        ``7dtext,HU. [BLK#Humidity#d2.1]^o`` Will result in 'HU. 57.2°o' being displayed (MAX7219 display and Siekoo with uppercase 'CHNORUX' font)
+        ","
+        To display a text on the display. Any variable can be used. Unsupported characters (like accented letters) will show as a space (empty digit).
+
+        With the Scroll Text option disabled, the first n characters the display can show are displayed, if the Scroll Text option is enabled, longer texts will scroll from right to left across the display, at the set speed.
+        "
+        "
+        ``7dfont,<font>``
+
+        ","
+        Select a different font, either by name: ``Default`` or ``7dgt`` for the original font (0), ``Siekoo`` for standard Siekoo font (1), ``Siekoo_Upper`` for the Siekoo font with uppercase 'CHNORUX' characters (2), and ``dSEG7`` for the dSEG7 font (3). Numbers can also be used, 0, 1, 2, or 3 as noted. Fontnames are not case-sensitive.
+        "
+        "
+        ``7dbin,<byte>,...``
+
+        Example:
+
+        ``7dbin,0x40,0x20,0x10,0x08,0x04,0x02,0x01,0x80``
+        ","
+        To display any bit pattern on the display.
+
+        The example shows each digit with a different segment on, including the dot/colon, and assuming either a MAX7219 - 8 digit, or Scroll Text enabled.
+
+        See explanation on how the bits map to segments, below.
+        "
+        "
+        ``7don``
+
+        ","
+        Turn the display on.
+        "
+        "
+        ``7doff``
+
+        ","
+        Turn the display off.
+        "
+        "
+        ``7db,<0..15>``
+
+        ","
+        Set the brightness to the provided level.
+        "
