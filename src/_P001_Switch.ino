@@ -317,7 +317,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-
+/*
     case PLUGIN_REQUEST:
     {
       // String device = parseString(string, 1);
@@ -336,7 +336,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       }
       break;
     }
-
+*/
     /*
           case PLUGIN_UNCONDITIONAL_POLL:
             {

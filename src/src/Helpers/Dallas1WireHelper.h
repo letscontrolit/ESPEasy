@@ -167,7 +167,8 @@ void    Dallas_write(uint8_t ByteToWrite,
 *  Dallas Read bit
 *  See https://github.com/espressif/arduino-esp32/issues/1335
 \*********************************************************************************************/
-uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx) ICACHE_RAM_ATTR;
+uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx);
+uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start) ICACHE_RAM_ATTR;
 
 /*********************************************************************************************\
 *  Dallas Write bit
@@ -175,7 +176,14 @@ uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx) ICACHE_RAM_ATTR;
 \*********************************************************************************************/
 void Dallas_write_bit(uint8_t v,
                       int8_t  gpio_pin_rx,
-                      int8_t  gpio_pin_tx) ICACHE_RAM_ATTR;
+                      int8_t  gpio_pin_tx);
+
+void Dallas_write_bit_ISR(uint8_t v,
+                      int8_t  gpio_pin_rx,
+                      int8_t  gpio_pin_tx,
+                      long low_time,
+                      long high_time,
+                      unsigned long &start) ICACHE_RAM_ATTR;
 
 /*********************************************************************************************\
 *  Standard function to initiate addressing a sensor.
