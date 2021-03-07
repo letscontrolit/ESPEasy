@@ -43,12 +43,15 @@ struct WiFiEventData_t {
 
 
   void markGotIP();
+  void markLostIP();
   void markDisconnect(WiFiDisconnectReason reason);
   void markConnected(const String& ssid,
                      const uint8_t bssid[6],
                      byte          channel);
   void markConnectedAPmode(const uint8_t mac[6]);
   void markDisconnectedAPmode(const uint8_t mac[6]);
+
+  void setAuthMode(uint8_t newMode);
 
 
   // WiFi related data
@@ -63,6 +66,8 @@ struct WiFiEventData_t {
   float         wifi_TX_pwr            = 0;
   bool          bssid_changed   = false;
   bool          channel_changed = false;
+
+  uint8_t       auth_mode = 0;
 
   WiFiDisconnectReason    lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
   LongTermTimer           lastConnectMoment;

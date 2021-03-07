@@ -237,7 +237,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::SSID:                   return WiFi.SSID();
     case LabelType::BSSID:                  return WiFi.BSSIDstr();
     case LabelType::CHANNEL:                return String(WiFi.channel());
-    case LabelType::ENCRYPTION_TYPE_STA:    return WiFi_AP_Candidates.getCurrent().encryption_type();
+    case LabelType::ENCRYPTION_TYPE_STA:    return // WiFi_AP_Candidates.getCurrent().encryption_type();
+                                                   WiFi_encryptionType(WiFiEventData.auth_mode);
     case LabelType::CONNECTED:              return format_msec_duration(WiFiEventData.lastConnectMoment.millisPassedSince());
 
     // Use only the nr of seconds to fit it in an int32, plus append '000' to have msec format again.
