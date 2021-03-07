@@ -882,35 +882,8 @@ uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   if (gpio_pin_rx == -1) { return 0; }
   if (gpio_pin_tx == -1) { return 0; }
-  uint8_t r;
   unsigned long start = micros();
-
-    #if defined(ESP32)
-  ESP32noInterrupts();
-    #endif // if defined(ESP32)
-  digitalWrite(gpio_pin_tx, LOW);
-  if(gpio_pin_rx == gpio_pin_tx) {
-    pinMode(gpio_pin_rx, OUTPUT);
-  }
-
-  while (usecPassedSince(start) < 6) {
-    // Wait for 6 usec
-  }
-  unsigned long startwait = micros();
-  if(gpio_pin_rx == gpio_pin_tx) {
-    pinMode(gpio_pin_rx, INPUT); // let pin float, pull up will raise
-  } else {
-    digitalWrite(gpio_pin_tx, HIGH);
-  }
-
-  while (usecPassedSince(startwait) < 9) {
-    // Wait for another 9 usec
-  }
-  r = digitalRead(gpio_pin_rx);
-
-    #if defined(ESP32)
-  ESP32interrupts();
-    #endif // if defined(ESP32)
+  uint8_t r = Dallas_read_bit_ISR(gpio_pin_rx, gpio_pin_tx, start);
 
   while (usecPassedSince(start) < 70) {
     // Wait for another 55 usec
@@ -922,6 +895,41 @@ uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   }
   return r;
 }
+
+uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start)
+{
+  uint8_t r;
+  {
+      #if defined(ESP32)
+    ESP32noInterrupts();
+      #endif // if defined(ESP32)
+    digitalWrite(gpio_pin_tx, LOW);
+    if(gpio_pin_rx == gpio_pin_tx) {
+      pinMode(gpio_pin_rx, OUTPUT);
+    }
+
+    while (usecPassedSince(start) < 6) {
+      // Wait for 6 usec
+    }
+    unsigned long startwait = micros();
+    if(gpio_pin_rx == gpio_pin_tx) {
+      pinMode(gpio_pin_rx, INPUT); // let pin float, pull up will raise
+    } else {
+      digitalWrite(gpio_pin_tx, HIGH);
+    }
+
+    while (usecPassedSince(startwait) < 9) {
+      // Wait for another 9 usec
+    }
+    r = digitalRead(gpio_pin_rx);
+
+      #if defined(ESP32)
+    ESP32interrupts();
+      #endif // if defined(ESP32)
+  }
+  return r;
+}
+
 
 /*********************************************************************************************\
 *  Dallas Write bit
@@ -937,6 +945,20 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   const long high_time = (v & 1) ? 64 : 10;
   unsigned long start  = micros();
 
+  Dallas_write_bit_ISR(v, gpio_pin_rx, gpio_pin_tx, low_time, high_time, start);
+
+  while (usecPassedSince(start) < high_time) {
+    // output remains high
+  }
+}
+
+void Dallas_write_bit_ISR(uint8_t v,
+                      int8_t  gpio_pin_rx,
+                      int8_t  gpio_pin_tx,
+                      long low_time,
+                      long high_time,
+                      unsigned long &start)
+{
   #if defined(ESP32)
   ESP32noInterrupts();
   #endif // if defined(ESP32)
@@ -953,10 +975,6 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   #if defined(ESP32)
   ESP32interrupts();
   #endif // if defined(ESP32)
-
-  while (usecPassedSince(start) < high_time) {
-    // output remains high
-  }
 }
 
 /*********************************************************************************************\
