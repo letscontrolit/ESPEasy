@@ -17,6 +17,7 @@ bool P110_data_struct::begin() {
     String log = F("VL53L0X: Sensor not found, init failed for 0x");
     log += String(i2cAddress, HEX);
     addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, sensor.getInitResult());
     initState = false;
     return initState;
   }

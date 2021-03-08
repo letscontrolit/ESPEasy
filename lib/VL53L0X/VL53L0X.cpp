@@ -60,8 +60,14 @@ void VL53L0X::setAddress(uint8_t new_addr)
 // mode.
 bool VL53L0X::init(bool io_2v8)
 {
+  initResult = F(""); // Clear any previous result
   // check model ID register (value specified in datasheet)
-  if (readReg(IDENTIFICATION_MODEL_ID) != 0xEE) { return false; }
+  uint8_t modelId = readReg(IDENTIFICATION_MODEL_ID);
+  if (modelId != 0xEE) {
+    initResult  = F("VL53L0X: Init: unrecognized Model-ID: 0x");
+    initResult += String(modelId, HEX);
+    return false;
+  }
 
   // VL53L0X_DataInit() begin
 
@@ -1035,4 +1041,9 @@ bool VL53L0X::performSingleRefCalibration(uint8_t vhv_init_byte)
   writeReg(SYSRANGE_START, 0x00);
 
   return true;
+}
+
+// Simply return the string, it is cleared and could be set during init
+String VL53L0X::getInitResult() {
+  return initResult;
 }
