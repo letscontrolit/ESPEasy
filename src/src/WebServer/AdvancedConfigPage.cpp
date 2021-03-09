@@ -82,7 +82,6 @@ void handle_advanced() {
     #endif // WEBSERVER_NEW_RULES
     Settings.TolerantLastArgParse(isFormItemChecked(F("tolerantargparse")));
     Settings.SendToHttp_ack(isFormItemChecked(F("sendtohttp_ack")));
-    Settings.ApDontForceSetup(isFormItemChecked(F("ApDontForceSetup")));
     Settings.ForceWiFi_bg_mode(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_BG)));
     Settings.WiFiRestart_connection_lost(isFormItemChecked(getInternalLabel(LabelType::RESTART_WIFI_LOST_CONN)));
     Settings.EcoPowerMode(isFormItemChecked(getInternalLabel(LabelType::CPU_ECO_MODE)));
@@ -112,6 +111,9 @@ void handle_advanced() {
   #ifdef WEBSERVER_NEW_RULES
   addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
   #endif // WEBSERVER_NEW_RULES
+  addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
+  addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
+  addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
 
   /*
   // MQTT settings now moved to the controller settings.
@@ -171,21 +173,12 @@ void handle_advanced() {
 
   addFormNumericBox(F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
-  
-
-  addFormSubHeader(F("Webserver Settings"));
+  // TODO sort settings in groups or move to other pages/groups
+  addFormSubHeader(F("Special and Experimental Settings"));
 
   addFormNumericBox(F("Webserver port"), F("webport"), Settings.WebserverPort, 0, 65535);
   addFormNote(F("Requires reboot to activate"));
-  addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
-  addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
-  addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
-  addFormCheckBox(F("Don't force /setup in AP-Mode"), F("ApDontForceSetup"), Settings.ApDontForceSetup());
-  addFormNote(F("When set you can use the Sensor in AP-Mode without beeing forced to /setup. /setup can still be called."));
- 
 
-// TODO sort settings in groups or move to other pages/groups
-  addFormSubHeader(F("Special and Experimental Settings"));
   addFormNumericBox(F("Fixed IP Octet"), F("ip"),           Settings.IP_Octet,     0, 255);
 
   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
