@@ -276,14 +276,19 @@ float P002_applyCalibration(struct EventStruct *event, float float_value) {
     int   adc2 = P002_CALIBRATION_POINT2;
     float out1 = P002_CALIBRATION_VALUE1;
     float out2 = P002_CALIBRATION_VALUE2;
-
-    if (adc1 != adc2)
+    float val  = float_value;
+	
+	  // Solve basic lineair equation:
+	  // y=ax+b
+	  // a = (out1 - out2) / (adc1 - adc2)
+	  // b = ((adc2 * out1) - (adc1 * out2)) / (adc2 - adc1)	
+	
+    if ((adc1 != adc2) && (out1 != out2))
     {
-      const float normalized = static_cast<float>(float_value - adc1) / static_cast<float>(adc2 - adc1);
-      float_value = normalized * (out2 - out1) + out1;
+      val = float_value * ((ou1-out2) / (adc1-adc2)) + (((adc2*out1)-(adc1*out2))/(out2-out1))
     }
   }
-  return float_value;
+  return val;
 }
 
 void P002_performRead(struct EventStruct *event, int& value) {
