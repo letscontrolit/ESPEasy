@@ -63,7 +63,7 @@ bool VL53L0X::init(bool io_2v8)
   initResult = F(""); // Clear any previous result
   // check model ID register (value specified in datasheet)
   uint8_t modelId = readReg(IDENTIFICATION_MODEL_ID);
-  if (!(modelId == 0xEE || modelId == 0xEA)) { // Recognize VL53L0X (0xEE) and VL53L1X (0xEA)
+  if (modelId != 0xEE && modelId != 0xEA) { // Recognize VL53L0X (0xEE) and VL53L1X (0xEA)
     initResult  = F("VL53L0X: Init: unrecognized Model-ID: 0x");
     initResult += String(modelId, HEX);
     return false;
