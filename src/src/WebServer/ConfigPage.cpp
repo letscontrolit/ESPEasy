@@ -79,6 +79,9 @@ void handle_config() {
     // Access point password.
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
 
+    // When set you can use the Sensor in AP-Mode without being forced to /setup
+    Settings.ApDontForceSetup(isFormItemChecked(F("ApDontForceSetup")));
+
 
     // TD-er Read access control from form.
     SecuritySettings.IPblockLevel = getFormItemInt(F("ipblocklevel"));
