@@ -50,8 +50,8 @@ int mapVccToDomoticz() {
   #if FEATURE_ADC_VCC
 
   // Voltage range from 2.6V .. 3.6V => 0..100%
-  if (vcc < 2.6) { return 0; }
-  return (vcc - 2.6) * 100;
+  if (vcc < 2.6f) { return 0; }
+  return (vcc - 2.6f) * 100;
   #else // if FEATURE_ADC_VCC
   return 255;
   #endif // if FEATURE_ADC_VCC
