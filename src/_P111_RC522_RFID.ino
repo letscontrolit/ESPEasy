@@ -5,6 +5,10 @@
 //#######################################################################################################
 
 // Changelog:
+// 2021-03-13, tonhuisman: Disabled tag removal detection, as it seems impossible to achieve with the MFRC522.
+//                         Other takers to try and solve this challenge are welcome.
+//                         If this feature is desired, use a PN532 RFID detector, that does support removal detection properly and easily.
+//                         Set TimerOption to false as nothing is processed during PLUGIN_READ stage.
 // 2021-02-10, tonhuisman: Add tag removal detection, can be combined with time-out
 // 2021-02-07, tonhuisman: Rework to adhere to current plugin requirements, make pin settings user-selectable
 //                         Add options for tag removal time-out, as implemented before in P008 (Wiegand RFID) and P017 (PN532 RFID)
@@ -13,14 +17,14 @@
 
 #define PLUGIN_111
 #define PLUGIN_ID_111         111
-#define PLUGIN_NAME_111       "RFID - RC522 SPI [TESTING]"
+#define PLUGIN_NAME_111       "RFID - RC522 [TESTING]"
 #define PLUGIN_VALUENAME1_111 "Tag"
 
 #include "src/PluginStructs/P111_data_struct.h"
 
 #define P111_NO_KEY           0xFFFFFFFF
 
-#define P111_USE_REMOVAL      // Enable (real) Tag Removal detection options
+// #define P111_USE_REMOVAL      // Enable (real) Tag Removal detection options
 
 boolean Plugin_111(byte function, struct EventStruct *event, String& string)
 {
@@ -39,7 +43,7 @@ boolean Plugin_111(byte function, struct EventStruct *event, String& string)
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].ValueCount         = 1;
       Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOption        = false;
       Device[deviceCount].GlobalSyncOption   = true;
       break;
     }
@@ -134,7 +138,11 @@ boolean Plugin_111(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TIMER_IN:
     {
       // Reset card id on timeout
-      if (PCONFIG(0) == 0 || PCONFIG(0) == 2) {
+      if (PCONFIG(0) == 0
+       #ifdef P111_USE_REMOVAL
+       || PCONFIG(0) == 2
+       #endif // P111_USE_REMOVAL
+         ) {
         UserVar.setSensorTypeLong(event->TaskIndex, PCONFIG_LONG(0));
         addLog(LOG_LEVEL_INFO, F("MFRC522: Removed Tag"));
         if (PCONFIG(1) == 1) {
