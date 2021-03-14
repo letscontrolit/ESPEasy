@@ -692,7 +692,7 @@ void backgroundtasks()
     return;
   }
   START_TIMER
-  #ifdef FEATURE_ARDUINO_OTA
+  #if defined(FEATURE_ARDUINO_OTA) || defined(FEATURE_MDNS)
   const bool networkConnected = 
   #endif
   NetworkConnected();
