@@ -223,6 +223,7 @@ String getMiscStatsName(int stat) {
     case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
     case RULES_PROCESSING:        return F("rulesProcessing()");
     case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
+    case SAVE_TO_RTC:             return F("saveToRTC()");
     case BACKGROUND_TASKS:        return F("backgroundtasks()");
     case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
     case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");

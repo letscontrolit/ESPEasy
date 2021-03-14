@@ -489,7 +489,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
 
   WiFiEventData.wifi_TX_pwr = dBm;
 
-  delay(1);
+  delay(0);
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     if (WiFiEventData.wifi_TX_pwr != maxTXpwr) {
