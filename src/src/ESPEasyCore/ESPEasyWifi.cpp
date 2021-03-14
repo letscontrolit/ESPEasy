@@ -383,6 +383,7 @@ void initWiFi()
 	stationDisconnectedHandler = WiFi.onStationModeDisconnected(onDisconnect);
 	stationGotIpHandler = WiFi.onStationModeGotIP(onGotIP);
   stationModeDHCPTimeoutHandler = WiFi.onStationModeDHCPTimeout(onDHCPTimeout);
+  stationModeAuthModeChangeHandler = WiFi.onStationModeAuthModeChanged(onStationModeAuthModeChanged);
   APModeStationConnectedHandler = WiFi.onSoftAPModeStationConnected(onConnectedAPmode);
   APModeStationDisconnectedHandler = WiFi.onSoftAPModeStationDisconnected(onDisconnectedAPmode);
 #endif
@@ -486,7 +487,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
 
   WiFiEventData.wifi_TX_pwr = dBm;
 
-  delay(1);
+  delay(0);
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     if (WiFiEventData.wifi_TX_pwr != maxTXpwr) {

@@ -692,14 +692,21 @@ void backgroundtasks()
     return;
   }
   START_TIMER
-  const bool networkConnected = NetworkConnected();
+  #if defined(FEATURE_ARDUINO_OTA) || defined(FEATURE_MDNS)
+  const bool networkConnected = 
+  #endif
+  NetworkConnected();
   runningBackgroundTasks=true;
 
+  /*
+  // Not needed anymore, see: https://arduino-esp8266.readthedocs.io/en/latest/faq/readme.html#how-to-clear-tcp-pcbs-in-time-wait-state
   if (networkConnected) {
     #if defined(ESP8266)
       tcpCleanup();
     #endif
   }
+  */
+
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
     serial();
