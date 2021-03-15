@@ -408,6 +408,13 @@ void SetWiFiTXpower(float dBm, float rssi) {
     return;
   }
 
+#ifdef USES_ESPEASY_NOW
+  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
+    // Force using max. TX power.
+    dBm = 30; // Some high number which will be corrected below
+  }
+#endif
+
   // Range ESP32  : 2dBm - 20dBm
   // Range ESP8266: 0dBm - 20.5dBm
   float maxTXpwr;
@@ -923,6 +930,12 @@ bool wifiAPmodeActivelyUsed()
 
 void setConnectionSpeed() {
   #ifdef ESP8266
+  #ifdef USES_ESPEASY_NOW
+  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
+    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+    return;
+  }
+  #endif
 
   if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.wifi_connect_attempt > 10)) {
     WiFi.setPhyMode(WIFI_PHY_MODE_11N);
