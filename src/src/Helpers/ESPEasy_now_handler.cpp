@@ -89,7 +89,6 @@ bool ESPEasy_now_handler_t::begin()
 
   _last_used = millis();
   int channel = WiFi.channel();
-  MAC_address bssid;
   _controllerIndex = INVALID_CONTROLLER_INDEX;
 
   if (WiFi_AP_Candidates.isESPEasy_now_only()) {
@@ -98,28 +97,13 @@ bool ESPEasy_now_handler_t::begin()
   }
 
   if (!Nodes.isEndpoint()) {
-    const NodeStruct *preferred = Nodes.getPreferredNode();
-
-    if (preferred != nullptr) {
-      channel = preferred->channel;
-      bssid.set(preferred->ap_mac);
-    }
+    channel = Nodes.getESPEasyNOW_channel();
   }
 
   const String ssid       = F(ESPEASY_NOW_TMP_SSID);
   const String passphrase = F(ESPEASY_NOW_TMP_PASSPHRASE);
 
   setAP(true);
-  /*
-  // FIXME TD-er: Must use standard WiFi connection setup.
-  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
-    if (bssid.all_zero()) {
-      WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel);
-    } else {
-      WiFi.begin(getLastWiFiSettingsSSID(), getLastWiFiSettingsPassphrase(), channel, bssid.mac);
-    }
-  }
-  */
 
   int ssid_hidden    = 1;
   int max_connection = 6;
@@ -601,7 +585,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
   if (_enableESPEasyNowFallback /*&& !WiFiConnected(10) */) {
     const NodeStruct *preferred = Nodes.getPreferredNode();
 
-    if (preferred != nullptr) {
+    if (preferred != nullptr && Nodes.getDistance() > preferred->distance) {
       switch (_preferredNodeMQTTqueueState.state) {
         case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset:
         case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Full:
@@ -705,7 +689,7 @@ bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(controllerIndex_t contr
   }
   const NodeStruct *preferred = Nodes.getPreferredNode();
 
-  if (preferred != nullptr) {
+  if (preferred != nullptr && Nodes.getDistance() > preferred->distance) {
     return sendMQTTCheckControllerQueue(preferred->ESPEasy_Now_MAC(), preferred->channel);
   }
   return false;
