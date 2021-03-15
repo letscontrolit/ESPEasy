@@ -899,9 +899,9 @@ To create/register a plugin, you have to :
     #define USES_P072   // HDC1080
     #define USES_P074   // TSL2561
     #define USES_P075   // Nextion
-    #define USES_P076   // HWL8012   in POW r1
+    //#define USES_P076   // HWL8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
-    #define USES_P077	  // CSE7766   in POW R2
+    //#define USES_P077	  // CSE7766   in POW R2
     #define USES_P078   // Eastron Modbus Energy meters
     #define USES_P080   // iButton Sensor  DS1990A
     #define USES_P081   // Cron
@@ -938,9 +938,7 @@ To create/register a plugin, you have to :
      #define USES_P027   // INA219
    #endif
    #ifndef USES_P076 
-//     TD-er: Disabled as it causes this 'energy' build to fail due to low iRAM.
-//     It is still present in the POW builds.
-//     #define USES_P076   // HWL8012   in POW r1
+     #define USES_P076   // HWL8012   in POW r1
    #endif
    #ifndef USES_P077 
      // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
