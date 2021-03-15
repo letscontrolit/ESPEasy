@@ -908,7 +908,7 @@ To create/register a plugin, you have to :
     #define USES_P082   // GPS
     #define USES_P083   // SGP30
     #define USES_P084   // VEML6070
-    #define USES_P085   // AcuDC24x
+    //#define USES_P085   // AcuDC24x
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Ping
@@ -925,7 +925,7 @@ To create/register a plugin, you have to :
     #define USES_P101   // Wake On Lan
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
-    #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+    //#define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
 #endif
 
 
