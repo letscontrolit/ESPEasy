@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 
+#include "../../ESPEasy_common.h"
+
 
 String toString(timeSource_t timeSource)
 {
@@ -10,7 +12,7 @@ String toString(timeSource_t timeSource)
     case timeSource_t::GPS_time_source:         return F("GPS");
     case timeSource_t::NTP_time_source:         return F("NTP");
     case timeSource_t::Manual_set:              return F("Manual");
-    case timeSource_t::ESP_now_peer:            return F("ESPEasy-NOW peer");
+    case timeSource_t::ESP_now_peer:            return String(F(ESPEASY_NOW_NAME)) + F(" peer");
     case timeSource_t::Restore_RTC_time_source: return F("RTC at boot");
     case timeSource_t::No_time_source:          return F("No time set");
   }

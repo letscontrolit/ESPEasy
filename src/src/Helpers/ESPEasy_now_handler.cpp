@@ -128,13 +128,13 @@ bool ESPEasy_now_handler_t::begin()
   //    WiFi.softAPdisconnect(false);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("ESPEasy-NOW: begin on channel ");
+    String log = String(F(ESPEASY_NOW_NAME)) + F(": begin on channel ");
     log += channel;
     addLog(LOG_LEVEL_INFO, log);
   }
 
   if (!WifiEspNow.begin()) {
-    addLog(LOG_LEVEL_ERROR, F("ESPEasy-NOW: Failed to initialize ESPEasy-NOW"));
+    addLog(LOG_LEVEL_ERROR, String(F(ESPEASY_NOW_NAME)) + F(": Failed to initialize ESPEasy-NOW"));
     return false;
   }
 
@@ -157,7 +157,7 @@ bool ESPEasy_now_handler_t::begin()
   sendDiscoveryAnnounce();
 
   use_EspEasy_now = true;
-  addLog(LOG_LEVEL_INFO, F("ESPEasy-NOW enabled"));
+  addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(" enabled"));
   return true;
 }
 
@@ -172,7 +172,7 @@ void ESPEasy_now_handler_t::end()
     _last_used = 0;
   }
   setAP(false);
-  addLog(LOG_LEVEL_INFO, F("ESPEasy-NOW disabled"));
+  addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(" disabled"));
 }
 
 bool ESPEasy_now_handler_t::loop()
@@ -334,7 +334,7 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
     if (tmpNodeInfo.markedAsPriorityPeer()) {
       if (Nodes.addNode(tmpNodeInfo)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("ESPEasy-NOW: Found node via WiFi scan: ");
+          String log = String(F(ESPEASY_NOW_NAME)) + F(": Found node via WiFi scan: ");
           log += peer_mac.toString();
           log += F(" ");
           log += tmpNodeInfo.getRSSI();
@@ -353,7 +353,7 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
 bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bool& mustKeep)
 {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("ESPEasy-NOW received ");
+    String log = String(F(ESPEASY_NOW_NAME)) + F(" received ");
     log += message.getLogString();
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -434,7 +434,7 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
         delay(0);
       }
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("ESPEasy-NOW : Sent discovery to all channels in ");
+        String log = String(F(ESPEASY_NOW_NAME)) + F(" : Sent discovery to all channels in ");
         log += String(timePassedSince(start));
         log += F(" ms");
         addLog(LOG_LEVEL_INFO, log);
@@ -465,7 +465,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
   if (!received.setESPEasyNow_mac(mac)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
-      log  = F("ESPEasy-NOW: Received discovery message from MAC not stated in message: ");
+      log  = String(F(ESPEASY_NOW_NAME)) + F(": Received discovery message from MAC not stated in message: ");
       log += mac.toString();
       addLog(LOG_LEVEL_ERROR, log);
     }
@@ -484,7 +484,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     String log;
     size_t payloadSize = message.getPayloadSize();
     log.reserve(payloadSize + 40);
-    log  = F("ESPEasy-NOW discovery: ");
+    log  = String(F(ESPEASY_NOW_NAME)) + F(" discovery: ");
     log += message.getLogString();
     log += '\n';
     log += received.getSummary();
@@ -516,7 +516,7 @@ void ESPEasy_now_handler_t::sendNTPquery()
   if (!_best_NTP_candidate.getMac(mac)) { return; }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("ESPEasy-NOW: Send NTP query to: ");
+    String log = String(F(ESPEASY_NOW_NAME)) + F(": Send NTP query to: ");
     log += mac.toString();
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -674,7 +674,7 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
       query.setState(queue_full);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO) && queue_full) {
-        addLog(LOG_LEVEL_INFO, F("ESPEasy-NOW: After MQTT message received: Full"));
+        addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(": After MQTT message received: Full"));
       }
       sendMQTTCheckControllerQueue(mac, 0, query.state);
     }
@@ -759,7 +759,7 @@ bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_me
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
         String log;
-        log  = F("ESPEasy-NOW: Received Queue state: ");
+        log  = String(F(ESPEASY_NOW_NAME)) + F(": Received Queue state: ");
         log += _preferredNodeMQTTqueueState.isFull() ? F("Full") : F("not Full");
         addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
@@ -772,7 +772,7 @@ bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_me
         // We have to give our own queue state and reply
         query.setState(MQTT_queueFull(controllerIndex));
 
-        //        addLog(LOG_LEVEL_INFO, F("ESPEasy-NOW: reply to queue state query"));
+        //        addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(": reply to queue state query"));
         const size_t len = sizeof(ESPEasy_Now_MQTT_queue_check_packet);
         ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::MQTTCheckControllerQueue, len);
         if (len == msg.addBinaryData(reinterpret_cast<uint8_t *>(&query), len)) {

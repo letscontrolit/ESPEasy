@@ -13,7 +13,7 @@
 
 #define CPLUGIN_019
 #define CPLUGIN_ID_019         19
-#define CPLUGIN_NAME_019       "ESPEasy-NOW"
+#define CPLUGIN_NAME_019       ESPEASY_NOW_NAME
 
 bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& string)
 {

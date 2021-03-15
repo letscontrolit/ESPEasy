@@ -68,7 +68,11 @@ void SendData_DuplicateChecker_struct::remove(uint32_t key)
   auto it = _queue.find(key);
 
   if (it != _queue.end()) {
-    addLog(LOG_LEVEL_DEBUG, F("ESPEasy-NOW message not sent as processed elsewhere"));
+    #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG, String(F(ESPEASY_NOW_NAME)) + F(": message not sent as processed elsewhere"));
+    }
+    #endif
     _queue.erase(it);
   }
 }

@@ -285,7 +285,7 @@ void handle_root() {
         }
         html_TD();
         if (it->second.ESPEasyNowPeer) {
-          addHtml(F("ESPEasy-NOW "));
+          addHtml(String(F(ESPEASY_NOW_NAME)) + F(" "));
           addHtml(it->second.ESPEasy_Now_MAC().toString());
           addHtml(F(" (ch: "));
           addHtml(String(it->second.channel));

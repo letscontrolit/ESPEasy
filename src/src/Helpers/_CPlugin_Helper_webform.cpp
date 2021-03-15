@@ -64,7 +64,9 @@ String getControllerParameterName(protocolIndex_t                   ProtocolInde
     case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:              name = F("Send Binary");            break;
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:                  name = F("Client Timeout");         break;
     case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:     name = F("Sample Set Initiator");   break;
-    case ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK: name = F("Enable ESPEasy-NOW Fallback");   break;
+    case ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK: name = F("Enable ");
+                                                                           name += F(ESPEASY_NOW_NAME);
+                                                                           name += F(" Fallback");   break;
 
     case ControllerSettingsStruct::CONTROLLER_ENABLED:
 

@@ -124,17 +124,20 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(const MAC_address& mac, size_t t
         switch (sendStatus) {
           case WifiEspNowSendStatus::NONE:
           {
-            log = F("ESPEasy-NOW: TIMEOUT to: ");
+            log += F(ESPEASY_NOW_NAME);
+            log += F(": TIMEOUT to: ");
             break;
           }
           case WifiEspNowSendStatus::FAIL:
           {
-            log = F("ESPEasy-NOW: Sent FAILED to: ");
+            log += F(ESPEASY_NOW_NAME);
+            log += F(": Sent FAILED to: ");
             break;
           }
           case WifiEspNowSendStatus::OK:
           {
-            log = F("ESPEasy-NOW: Sent to: ");
+            log += F(ESPEASY_NOW_NAME);
+            log += F(": Sent to: ");
             break;
           }
         }
@@ -247,7 +250,9 @@ bool ESPEasy_now_splitter::prepareForSend(const MAC_address& mac)
     _queue[i].setHeader(header);
     _queue[i].setMac(mac);
     if (!_queue[i].valid()) {
-      addLog(LOG_LEVEL_ERROR, F("ESPEasy-NOW: Could not prepare for send"));
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        addLog(LOG_LEVEL_ERROR, String(F(ESPEASY_NOW_NAME)) + F(": Could not prepare for send"));
+      }
       return false;
     }
   }
