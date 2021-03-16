@@ -163,9 +163,18 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
         mustSet = true;
       } else {
         #ifdef USES_ESPEASY_NOW
-        if (getTraceRoute(it->second.unit) < getTraceRoute(res->unit))
-        {
-          mustSet = true;  
+
+        const int penalty_new = it->second.distance;
+        const int penalty_res = res->distance;
+
+        if (penalty_new < penalty_res) {
+          mustSet = true;
+        } else if (penalty_new == penalty_res) {
+          if (res->getAge() > 30000) {
+            if (it->second.getAge() < res->getAge()) {
+              mustSet = true;
+            }
+          }
         }
         #else
         if (it->second < *res) {
@@ -338,6 +347,10 @@ bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long&
 
   for (auto it = _nodes.begin(); it != _nodes.end();) {
     unsigned long age = it->second.getAge();
+    if (it->second.ESPEasyNowPeer) {
+      // ESPEasy-NOW peers should see updates every 30 seconds.
+      if (age > 70000) age = max_age_allowed + 1;
+    }
 
     if (age > max_age_allowed) {
       #ifdef USES_ESPEASY_NOW

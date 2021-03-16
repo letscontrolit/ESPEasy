@@ -67,10 +67,14 @@ int ESPEasy_now_traceroute_struct::compute_penalty() const
 {
   const uint8_t max_distance = getDistance();
 
+  // FIXME TD-er: for now just base it on the distance, not on the combination of RSSI & distance
+  return max_distance;
+/*
   if (max_distance == 255) {
     // No values stored, so huge penalty
     return max_distance * 100;
   }
+
 
   int penalty = 0;
 
@@ -82,7 +86,7 @@ int ESPEasy_now_traceroute_struct::compute_penalty() const
       // Some "average" RSSI values for unknown RSSI
       rssi = -75;
     } else if (rssi < -80) {
-      // Some extra penaly for low quality signals
+      // Some extra penalty for low quality signals
       rssi -= 10;
     }
 
@@ -90,6 +94,7 @@ int ESPEasy_now_traceroute_struct::compute_penalty() const
     penalty -= rssi;
   }
   return penalty;
+  */
 }
 
 void ESPEasy_now_traceroute_struct::sanetize()
@@ -136,7 +141,7 @@ void ESPEasy_now_traceroute_struct::sanetize()
   unit_vector = new_unit_vector;
 }
 
-String ESPEasy_now_traceroute_struct::toString()
+String ESPEasy_now_traceroute_struct::toString() const
 {
   const uint8_t max_distance = getDistance();
 

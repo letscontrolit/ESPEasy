@@ -41,12 +41,12 @@ struct ESPEasy_now_traceroute_struct
   void     sanetize();
 
   // For debugging purposes
-  String toString();
-
-private:
+  String toString() const;
 
   // Compute penalty. Higher value means less preferred.
   int compute_penalty() const;
+
+private:
 
   // Node with distance 0 at front, so index/2 equals distance.
   // index%2 == 0 is unit
