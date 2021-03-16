@@ -2,6 +2,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_fdwdecl.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -55,6 +56,20 @@ bool NodesHandler::addNode(const NodeStruct& node)
   }
   return isNewNode;
 }
+
+#ifdef USES_ESPEASY_NOW
+bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_struct& traceRoute)
+{
+  const bool isNewNode = addNode(node);
+  _traceRoutes[node.unit] = traceRoute;
+  
+  _traceRoutes[node.unit].addUnit(node.unit, 0); // Will update the RSSI of the last node in getTraceRoute
+  _traceRoutes[node.unit].sanetize();
+
+  addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(": traceroute received ") + _traceRoutes[node.unit].toString());
+  return isNewNode;
+}
+#endif
 
 bool NodesHandler::hasNode(uint8_t unit_nr) const
 {
@@ -143,17 +158,52 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
   for (auto it = _nodes.begin(); it != _nodes.end(); ++it)
   {
     if ((&(it->second) != reject) && (&(it->second) != thisNode)) {
+      bool mustSet = false;
       if (res == nullptr) {
-        res = &(it->second);
+        mustSet = true;
       } else {
+        #ifdef USES_ESPEASY_NOW
+        if (getTraceRoute(it->second.unit) < getTraceRoute(res->unit))
+        {
+          mustSet = true;  
+        }
+        #else
         if (it->second < *res) {
+            mustSet = true;
+        }
+        #endif
+      }
+      if (mustSet) {
+        #ifdef USES_ESPEASY_NOW
+        if (it->second.ESPEasyNowPeer && hasTraceRoute(it->second.unit)) {
           res = &(it->second);
         }
+        #else
+        res = &(it->second);
+        #endif
       }
     }
   }
   return res;
 }
+
+#ifdef USES_ESPEASY_NOW
+const ESPEasy_now_traceroute_struct* NodesHandler::getTraceRoute(uint8_t unit) const
+{
+  auto trace_it = _traceRoutes.find(unit);
+  if (trace_it == _traceRoutes.end()) {
+    return nullptr;
+  }
+
+  auto node_it = _nodes.find(unit);
+  if (node_it != _nodes.end()) {
+    trace_it->second.setRSSI_last_node(node_it->second.getRSSI());
+  }
+
+  return &(trace_it->second);
+}
+#endif
+
 
 void NodesHandler::updateThisNode() {
   NodeStruct thisNode;
@@ -208,37 +258,57 @@ void NodesHandler::updateThisNode() {
       break;
     }
   }
+  #ifdef USES_ESPEASY_NOW
+  if (Settings.UseESPEasyNow()) {
+    thisNode.ESPEasyNowPeer = 1;
+  }
+  #endif
 
   const uint8_t lastDistance = _distance;
+  #ifdef USES_ESPEASY_NOW
+  ESPEasy_now_traceroute_struct thisTraceRoute;
+  #endif
   if (isEndpoint()) {
     _distance = 0;
     _lastTimeValidDistance = millis();
     if (lastDistance != _distance) {
       _recentlyBecameDistanceZero = true;
     }
+    #ifdef USES_ESPEASY_NOW
+    thisTraceRoute.addUnit(thisNode.unit);
+    #endif
   } else {
     _distance = 255;
+    #ifdef USES_ESPEASY_NOW
     const NodeStruct *preferred = getPreferredNode_notMatching(thisNode.sta_mac);
 
     if (preferred != nullptr) {
-      if (preferred->distance < 255 && !preferred->isExpired()) {
-        _distance = preferred->distance + 1;
-        _lastTimeValidDistance = millis();
+      if (!preferred->isExpired()) {
+        const ESPEasy_now_traceroute_struct* tracert_ptr = getTraceRoute(preferred->unit);
+        if (tracert_ptr != nullptr && tracert_ptr->getDistance() < 255) {
+          // Make a copy of the traceroute
+          thisTraceRoute = *tracert_ptr;
+          _distance = thisTraceRoute.getDistance() + 1;
+          _lastTimeValidDistance = millis();
+        }
         if (_distance != lastDistance) {
-          #ifdef USES_ESPEASY_NOW
           if (WiFi_AP_Candidates.isESPEasy_now_only() && WiFiConnected()) {
             // We are connected to a 'fake AP' for ESPEasy-NOW, but found a known AP
             // Try to reconnect to it.
             RTC.clearLastWiFi(); // Force a WiFi scan
             WifiDisconnect();
           }
-          #endif
         }
       }
     }
+    #endif
   }
   thisNode.distance = _distance;
+  #ifdef USES_ESPEASY_NOW
+  addNode(thisNode, thisTraceRoute);
+  #else
   addNode(thisNode);
+  #endif
 }
 
 const NodeStruct * NodesHandler::getThisNode() {
@@ -270,6 +340,12 @@ bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long&
     unsigned long age = it->second.getAge();
 
     if (age > max_age_allowed) {
+      #ifdef USES_ESPEASY_NOW
+      auto route_it = _traceRoutes.find(it->second.unit);
+      if (route_it != _traceRoutes.end()) {
+        _traceRoutes.erase(route_it);
+      }
+      #endif
       it          = _nodes.erase(it);
       nodeRemoved = true;
     } else {
@@ -323,3 +399,10 @@ bool NodesHandler::lastTimeValidDistanceExpired() const
 //  if (_lastTimeValidDistance == 0) return false;
   return timePassedSince(_lastTimeValidDistance) > 120000; // 2 minutes
 }
+
+#ifdef USES_ESPEASY_NOW
+bool NodesHandler::hasTraceRoute(uint8_t unit) const
+{
+  return _traceRoutes.find(unit) != _traceRoutes.end();  
+}
+#endif

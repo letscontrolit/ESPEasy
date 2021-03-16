@@ -337,7 +337,7 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
 bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bool& mustKeep)
 {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = String(F(ESPEASY_NOW_NAME)) + F(" received ");
+    String log = String(F(ESPEASY_NOW_NAME)) + F(": received ");
     log += message.getLogString();
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -404,28 +404,48 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
     // Should not happen
     return;
   }
-  const size_t len = sizeof(NodeStruct);
+
+  // Append traceroute (if available)
+  const ESPEasy_now_traceroute_struct* thisTraceRoute = Nodes.getTraceRoute(thisNode->unit);
+
+  size_t len = sizeof(NodeStruct) + 1; // Append length indicator for traceroute
+  uint8_t traceroute_size = 0;
+  const uint8_t* traceroute_data = nullptr;
+  if (thisTraceRoute != nullptr) {
+    traceroute_data = thisTraceRoute->getData(traceroute_size);
+    len += traceroute_size;
+  }
+
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::Announcement, len);
-  if (len == msg.addBinaryData(reinterpret_cast<const uint8_t *>(thisNode), len)) {
-    if (channel < 0) {
-      // Send to all channels
-
-      const unsigned long start = millis();
-
-      // FIXME TD-er: Not sure whether we can send to channels > 11 in all countries.
-      for (int ch = 1; ch < 11; ++ch) {
-        msg.send(mac, ch);
-        delay(0);
-      }
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = String(F(ESPEASY_NOW_NAME)) + F(" : Sent discovery to all channels in ");
-        log += String(timePassedSince(start));
-        log += F(" ms");
-        addLog(LOG_LEVEL_INFO, log);
-      }
-    } else {
-      msg.send(mac, channel);
+  if (sizeof(NodeStruct) != msg.addBinaryData(reinterpret_cast<const uint8_t *>(thisNode), sizeof(NodeStruct))) {
+    return;
+  }
+  if (sizeof(uint8_t) != msg.addBinaryData(reinterpret_cast<const uint8_t *>(&traceroute_size), sizeof(uint8_t))) {
+    return;
+  }
+  if (traceroute_data != nullptr) {
+    if (traceroute_size != msg.addBinaryData(traceroute_data, traceroute_size)) {
+      return;
     }
+  }
+  if (channel < 0) {
+    // Send to all channels
+
+    const unsigned long start = millis();
+
+    // FIXME TD-er: Not sure whether we can send to channels > 11 in all countries.
+    for (int ch = 1; ch < 11; ++ch) {
+      msg.send(mac, ch);
+      delay(0);
+    }
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = String(F(ESPEASY_NOW_NAME)) + F(": Sent discovery to all channels in ");
+      log += String(timePassedSince(start));
+      log += F(" ms");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  } else {
+    msg.send(mac, channel);
   }
 }
 
@@ -433,6 +453,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 {
   mustKeep = false;
   NodeStruct received;
+  ESPEasy_now_traceroute_struct traceRoute;
 
   const uint8_t cur_distance = Nodes.getDistance();
 
@@ -456,7 +477,22 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     return false;
   }
 
-  bool isNewNode = Nodes.addNode(received);
+  uint8_t traceroute_size = 0;
+  bool isNewNode = false;
+  bool nodeAdded = false;
+  if (message.getBinaryData(reinterpret_cast<uint8_t *>(&traceroute_size), sizeof(uint8_t), payload_pos) != 0) {
+    if (traceroute_size != 0) {
+      ESPEasy_now_traceroute_struct traceroute(traceroute_size);
+      if (message.getBinaryData(traceroute.get(), traceroute_size, payload_pos) == traceroute_size) {
+        isNewNode = Nodes.addNode(received, traceroute);
+        nodeAdded = true;
+      }
+    }
+  }
+  if (!nodeAdded) {
+    isNewNode = Nodes.addNode(received, ESPEasy_now_traceroute_struct());
+    nodeAdded = true;
+  }
 
   // Test to see if the discovery announce could be a good candidate for next NTP query.
   _best_NTP_candidate.find_best_NTP(
@@ -468,7 +504,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     String log;
     size_t payloadSize = message.getPayloadSize();
     log.reserve(payloadSize + 40);
-    log  = String(F(ESPEASY_NOW_NAME)) + F(" discovery: ");
+    log  = String(F(ESPEASY_NOW_NAME)) + F(": discovery: ");
     log += message.getLogString();
     log += '\n';
     log += received.getSummary();

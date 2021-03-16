@@ -254,7 +254,8 @@ bool ESPEasy_Now_NTP_query::processReply(const ESPEasy_Now_NTP_query& received, 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     log.reserve(64);
-    log  = F("ESPEasy_Now_NTP: air time: ");
+    log  = F(ESPEASY_NOW_NAME);
+    log += F(": NTP air time: ");
     log += air_time;
     log += F(" Compensation: ");
     log += String(compensation_ms, 1);

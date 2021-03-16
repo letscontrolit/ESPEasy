@@ -5,12 +5,21 @@
 
 #include "MAC_address.h"
 
+#ifdef USES_ESPEASY_NOW
+#include "ESPEasy_now_traceroute.h"
+#endif
+
 class NodesHandler {
 public:
 
   // Add node to the list of known nodes.
   // @retval true when the node was not yet present in the list.
   bool                     addNode(const NodeStruct& node);
+
+#ifdef USES_ESPEASY_NOW
+  bool                     addNode(const NodeStruct& node, const ESPEasy_now_traceroute_struct& traceRoute);
+#endif
+
 
   bool                     hasNode(uint8_t unit_nr) const;
 
@@ -37,6 +46,10 @@ public:
   const NodeStruct* getPreferredNode() const;
   const NodeStruct* getPreferredNode_notMatching(const MAC_address& not_matching) const;
 
+#ifdef USES_ESPEASY_NOW
+  const ESPEasy_now_traceroute_struct* getTraceRoute(uint8_t unit) const;
+#endif
+
   // Update the node referring to this unit with the most recent info.
   void updateThisNode();
 
@@ -60,11 +73,19 @@ public:
 
 private:
 
+#ifdef USES_ESPEASY_NOW
+  bool hasTraceRoute(uint8_t unit) const;
+#endif
+
   unsigned long _lastTimeValidDistance = 0;
 
   uint8_t _distance = 255;  // Cached value
 
   NodesMap _nodes;
+
+#ifdef USES_ESPEASY_NOW
+  TraceRouteMap _traceRoutes;
+#endif
 
   bool _recentlyBecameDistanceZero = false;
 };
