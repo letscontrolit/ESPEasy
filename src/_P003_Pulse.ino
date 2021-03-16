@@ -60,7 +60,7 @@ void Plugin_003_pulse_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt2() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt3() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt4() ICACHE_RAM_ATTR;
-void Plugin_003_pulsecheck(byte taskID) ICACHE_RAM_ATTR;
+void Plugin_003_pulsecheck(taskIndex_t taskID) ICACHE_RAM_ATTR;
 
 // this takes 20 bytes of IRAM per handler
 // void Plugin_003_pulse_interrupt5() ICACHE_RAM_ATTR;
@@ -408,7 +408,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // if initialization step is needed for any task with Pulse Mode
       if( P003_initStepsFlags )
       {
-        for ( int taskID = 0; taskID < TASKS_MAX; taskID++ )
+        for ( taskIndex_t taskID = 0; taskID < TASKS_MAX; taskID++ )
         {
           if( bitRead(P003_initStepsFlags, taskID) )
           {
@@ -611,7 +611,7 @@ void doStatisticLogging(taskIndex_t TaskIndex, String logPrefix)
 /*********************************************************************************************\
 * Check Pulse Counters (called from irq handler)
 \*********************************************************************************************/
-void Plugin_003_pulsecheck(byte taskID)
+void Plugin_003_pulsecheck(taskIndex_t taskID)
 {
   noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
    
@@ -694,7 +694,7 @@ void Plugin_003_pulse_interrupt8()
 /*********************************************************************************************\
 * Init Pulse Counters
 \*********************************************************************************************/
-bool Plugin_003_pulseinit(byte Par1, byte taskID, byte Mode)
+bool Plugin_003_pulseinit(byte Par1, taskIndex_t taskID, byte Mode)
 {
   switch (taskID)
   {
