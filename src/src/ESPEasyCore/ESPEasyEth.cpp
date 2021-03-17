@@ -15,7 +15,11 @@ bool ethUseStaticIP() {
 }
 
 void ethSetupStaticIPconfig() {
-  if (!ethUseStaticIP()) { return; }
+  if (!ethUseStaticIP()) { 
+    const IPAddress IP_zero(0, 0, 0, 0); 
+    ETH.config(IP_zero, IP_zero, IP_zero);
+    return; 
+  }
   const IPAddress ip     = Settings.ETH_IP;
   const IPAddress gw     = Settings.ETH_Gateway;
   const IPAddress subnet = Settings.ETH_Subnet;
@@ -36,32 +40,20 @@ void ethSetupStaticIPconfig() {
 }
 
 bool ethCheckSettings() {
-  bool result = true;
-  if (!isValid(Settings.ETH_Phy_Type))
-    result = false;
-  if (!isValid(Settings.ETH_Clock_Mode))
-    result = false;
-  if (!isValid(Settings.NetworkMedium))
-    result = false;
-  if (Settings.ETH_Pin_mdc > MAX_GPIO)
-    result = false;
-  if (Settings.ETH_Pin_mdio > MAX_GPIO)
-    result = false;
-  if (Settings.ETH_Pin_power > MAX_GPIO)
-    result = false;
-  return result;
+  return isValid(Settings.ETH_Phy_Type) 
+      && isValid(Settings.ETH_Clock_Mode)
+      && isValid(Settings.NetworkMedium)
+      && (Settings.ETH_Pin_mdc   <= MAX_GPIO)
+      && (Settings.ETH_Pin_mdio  <= MAX_GPIO)
+      && (Settings.ETH_Pin_power <= MAX_GPIO);
 }
 
 bool ethPrepare() {
-  if (!ethCheckSettings())
   {
-    addLog(LOG_LEVEL_ERROR, F("ETH: Settings not correct!!!"));
-    return false;
+    char hostname[40];
+    safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
+    ETH.setHostname(hostname);
   }
-  char hostname[40];
-  safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
-  ETH.setHostname(hostname);
-//  ETH.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   ethSetupStaticIPconfig();
   return true;
 }
@@ -95,6 +87,12 @@ uint8_t * ETHMacAddress(uint8_t* mac) {
 
 bool ETHConnectRelaxed() {
   ethPrintSettings();
+  if (!ethCheckSettings())
+  {
+    addLog(LOG_LEVEL_ERROR, F("ETH: Settings not correct!!!"));
+
+    return false;
+  }
   if (!ETH.begin( Settings.ETH_Phy_Addr,
                   Settings.ETH_Pin_power,
                   Settings.ETH_Pin_mdc,
@@ -104,14 +102,6 @@ bool ETHConnectRelaxed() {
   {
     return false;
   }
-  addLog(LOG_LEVEL_INFO, F("After ETH.begin"));
-  /*
-  if (!ethPrepare()) {
-    // Dead code for now...
-    addLog(LOG_LEVEL_ERROR, F("ETH : Could not prepare ETH!"));
-    return false;
-  }
-  */
   return true;
 }
 
