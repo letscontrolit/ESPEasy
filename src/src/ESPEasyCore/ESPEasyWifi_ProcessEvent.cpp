@@ -527,6 +527,7 @@ void markWiFi_services_initialized() {
 #ifdef HAS_ETHERNET
 
 void processEthernetConnected() {
+  ++WiFiEventData.wifi_reconnects;
   if (Settings.UseRules)
   {
     eventQueue.add(F("ETHERNET#Connected"));

@@ -331,15 +331,6 @@ void setup()
 //  progMemMD5check();
   LoadSettings();
 
-  #ifdef HAS_ETHERNET
-  // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
-  // This only works after LoadSettings();
-  active_network_medium = Settings.NetworkMedium;
-  log = F("INIT : ETH_WIFI_MODE:");
-  log += toString(active_network_medium);
-  addLog(LOG_LEVEL_INFO, log);
-  #endif
-
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
   if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
     byte toDisable = RTC.bootFailedCount - 10;
@@ -351,12 +342,19 @@ void setup()
       toDisable = disableNotification(toDisable);
     }
   }
-  if (!WiFi_AP_Candidates.hasKnownCredentials()) {
-    WiFiEventData.wifiSetup = true;
-    RTC.clearLastWiFi(); // Must scan all channels
-    // Wait until scan has finished to make sure as many as possible are found
-    // We're still in the setup phase, so nothing else is taking resources of the ESP.
-    WifiScan(false); 
+  #ifdef HAS_ETHERNET
+  // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
+  // This only works after LoadSettings();
+  setNetworkMedium(Settings.NetworkMedium);
+  #endif
+  if (active_network_medium == NetworkMedium_t::WIFI) {
+    if (!WiFi_AP_Candidates.hasKnownCredentials()) {
+      WiFiEventData.wifiSetup = true;
+      RTC.clearLastWiFi(); // Must scan all channels
+      // Wait until scan has finished to make sure as many as possible are found
+      // We're still in the setup phase, so nothing else is taking resources of the ESP.
+      WifiScan(false); 
+    }
   }
 
 //  setWifiMode(WIFI_STA);
@@ -378,8 +376,9 @@ void setup()
 
   initSerial();
 
-  if (Settings.Build != BUILD)
+  if (Settings.Build != BUILD) {
     BuildFixes();
+  }
 
 
   log = F("INIT : Free RAM:");

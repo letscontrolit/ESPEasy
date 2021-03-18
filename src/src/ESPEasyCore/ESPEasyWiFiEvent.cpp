@@ -8,6 +8,7 @@
 
 #include "../DataTypes/ESPEasyTimeSource.h"
 
+#include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -117,11 +118,15 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
 #ifdef HAS_ETHERNET
     case SYSTEM_EVENT_ETH_START:
-      addLog(LOG_LEVEL_INFO, F("ETH Started"));
+      if (ethPrepare()) {
+        addLog(LOG_LEVEL_INFO, F("ETH Started"));
+      } else {
+        addLog(LOG_LEVEL_ERROR, F("ETH : Could not prepare ETH!"));
+      }
       break;
     case SYSTEM_EVENT_ETH_CONNECTED:
       addLog(LOG_LEVEL_INFO, F("ETH Connected"));
-      eth_connected = true;
+      //eth_connected = true;
       processEthernetConnected();
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
