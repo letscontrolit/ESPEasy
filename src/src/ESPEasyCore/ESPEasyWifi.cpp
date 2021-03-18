@@ -411,12 +411,14 @@ void SetWiFiTXpower(float dBm, float rssi) {
     return;
   }
 
+  if (Settings.UseMaxTXpowerForSending()
 #ifdef USES_ESPEASY_NOW
-  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
+      || WiFi_AP_Candidates.isESPEasy_now_only()
+#endif
+  ) {
     // Force using max. TX power.
     dBm = 30; // Some high number which will be corrected below
   }
-#endif
 
   // Range ESP32  : 2dBm - 20dBm
   // Range ESP8266: 0dBm - 20.5dBm
@@ -610,7 +612,7 @@ void WifiScan(bool async, uint8_t channel) {
   #ifdef ESP32
   const bool passive = false;
   const uint32_t max_ms_per_chan = 300;
-  WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
+  WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan, channel);
   #endif
 }
 

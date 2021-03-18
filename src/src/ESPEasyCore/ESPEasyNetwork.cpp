@@ -23,6 +23,10 @@ void setNetworkMedium(NetworkMedium_t medium) {
     case NetworkMedium_t::WIFI:
       WiFi.mode(WIFI_OFF);
       break;
+    case NetworkMedium_t::ESPEasyNOW_only:
+      break;
+    case NetworkMedium_t::NotSet:
+      break;
   }
   active_network_medium = medium;
   addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
@@ -54,17 +58,6 @@ bool NetworkConnected() {
   }
   #endif
   return WiFiConnected();
-}
-
-void PrepareSend() {
-  #ifdef HAS_ETHERNET
-  if (active_network_medium == NetworkMedium_t::Ethernet) {
-    return;
-  }
-  #endif
-  if (Settings.UseMaxTXpowerForSending()) {
-    SetWiFiTXpower(30); // Just some max, will be limited in SetWiFiTXpower
-  }
 }
 
 IPAddress NetworkLocalIP() {

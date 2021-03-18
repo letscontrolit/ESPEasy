@@ -4,7 +4,7 @@
 
 
 // Ethernet Connection status
-NetworkMedium_t active_network_medium = DEFAULT_NETWORK_MEDIUM;
+NetworkMedium_t active_network_medium = NetworkMedium_t::NotSet;
 bool eth_connected = false;
 
 

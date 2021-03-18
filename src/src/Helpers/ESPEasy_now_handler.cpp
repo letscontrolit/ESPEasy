@@ -93,7 +93,6 @@ bool ESPEasy_now_handler_t::begin()
 
   if (WiFi_AP_Candidates.isESPEasy_now_only()) {
     WifiScan(false, 0);
-    addPeerFromWiFiScan();
   }
 
   if (!Nodes.isEndpoint()) {

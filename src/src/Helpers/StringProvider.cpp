@@ -5,6 +5,7 @@
 #endif // ifdef HAS_ETHERNET
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_common.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -110,8 +111,8 @@ String getLabel(LabelType::Enum label) {
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
 
     #ifdef USES_ESPEASY_NOW
-    case LabelType::USE_ESPEASY_NOW:        return F("Use ESPEasy-NOW");
-    case LabelType::TEMP_DISABLE_ESPEASY_NOW: return F("Temporary disable ESPEasy-NOW");
+    case LabelType::USE_ESPEASY_NOW:        return String(F("Enable ")) + F(ESPEASY_NOW_NAME);
+    case LabelType::TEMP_DISABLE_ESPEASY_NOW: return String(F("Temporary disable ")) + F(ESPEASY_NOW_NAME);
     #endif
 
 

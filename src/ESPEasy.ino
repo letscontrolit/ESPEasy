@@ -584,6 +584,11 @@ void loop()
         updateUDPport();
       }
       break;
+    case NetworkMedium_t::ESPEasyNOW_only:
+      // FIXME TD-er: Should ESPEasy-NOW handler be stopped?
+      break;
+    case NetworkMedium_t::NotSet:
+      break;
   }
 
   bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;

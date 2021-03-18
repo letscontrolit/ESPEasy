@@ -379,7 +379,6 @@ bool processMQTT_message(controllerIndex_t controllerIndex,
   #endif
 
   if (!processed) {
-    PrepareSend();
     if (MQTTclient.publish(topic.c_str(), payload.c_str(), retained)) {
       if (WiFiEventData.connectionFailures > 0) {
         --WiFiEventData.connectionFailures;
@@ -432,7 +431,6 @@ void runPeriodicalMQTT() {
   //dont do this in backgroundtasks(), otherwise causes crashes. (https://github.com/letscontrolit/ESPEasy/issues/683)
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
   if (validControllerIndex(enabledMqttController)) {
-    PrepareSend();
     if (!MQTTclient.loop()) {
       updateMQTTclient_connected();
       if (MQTTCheck(enabledMqttController)) {
