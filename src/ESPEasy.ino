@@ -429,7 +429,7 @@ void setup()
   }
 
 #ifdef USES_ESPEASY_NOW
-  if (WiFi_AP_Candidates.isESPEasy_now_only() || Settings.UseESPEasyNow()) {
+  if (isESPEasy_now_only() || Settings.UseESPEasyNow()) {
     RTC.lastWiFiSettingsIndex     = 0; // Force to load the first settings.
     RTC.lastWiFiChannel = 0; // Force slow connect
   }

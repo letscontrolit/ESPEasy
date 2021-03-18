@@ -20,6 +20,10 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#ifdef USES_ESPEASY_NOW
+# include "../Globals/ESPEasy_now_handler.h"
+#endif
+
 
 // ********************************************************************************
 // WiFi state
@@ -254,6 +258,10 @@ void AttemptWiFiConnect() {
       // Maybe not scan async to give the ESP some slack in power consumption?
       const bool async = true;
       WifiScan(async);
+    } else {
+      if (!WiFi_AP_Candidates.addedKnownCandidate()) {
+        setNetworkMedium(NetworkMedium_t::ESPEasyNOW_only);
+      }
     }
   }
 
@@ -413,7 +421,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
 
   if (Settings.UseMaxTXpowerForSending()
 #ifdef USES_ESPEASY_NOW
-      || WiFi_AP_Candidates.isESPEasy_now_only()
+      || isESPEasy_now_only()
 #endif
   ) {
     // Force using max. TX power.
@@ -676,6 +684,12 @@ void setSTA(bool enable) {
 void setAP(bool enable) {
   WiFiMode_t wifimode = WiFi.getMode();
 
+  #ifdef USES_ESPEASY_NOW
+  if (!enable && use_EspEasy_now) {
+    ESPEasy_now_handler.end();
+  }
+  #endif
+
   switch (wifimode) {
     case WIFI_OFF:
 
@@ -927,6 +941,16 @@ bool wifiAPmodeActivelyUsed()
     // AP not active or soon to be disabled in processDisableAPmode()
     return false;
   }
+  #ifdef USES_ESPEASY_NOW
+  if (isESPEasy_now_only() &&
+        last_network_medium_set_moment.timeoutReached(600 * 1000)) 
+  {
+    // Only allow the ESPEasy_NOW_only mode for 10 minutes
+    setNetworkMedium(Settings.NetworkMedium);
+  } else if (ESPEasy_now_handler.active()) {
+    return true;
+  }
+  #endif
   return WiFi.softAPgetStationNum() != 0;
 
   // FIXME TD-er: is effectively checking for AP active enough or must really check for connected clients to prevent automatic wifi
@@ -936,7 +960,7 @@ bool wifiAPmodeActivelyUsed()
 void setConnectionSpeed() {
   #ifdef ESP8266
   #ifdef USES_ESPEASY_NOW
-  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
+  if (isESPEasy_now_only()) {
     WiFi.setPhyMode(WIFI_PHY_MODE_11G);
     return;
   }

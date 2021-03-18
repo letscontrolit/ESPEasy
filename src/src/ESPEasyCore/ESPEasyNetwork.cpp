@@ -13,6 +13,16 @@
 #endif
 
 void setNetworkMedium(NetworkMedium_t medium) {
+  if (medium == NetworkMedium_t::ESPEasyNOW_only) {
+    if (!Settings.UseESPEasyNow()) {
+      return;
+    }
+    if (active_network_medium != NetworkMedium_t::WIFI) {
+      // Only allow to set to ESPEasyNOW_only from WiFi
+      return;
+    }
+  }
+
   switch (active_network_medium) {
     case NetworkMedium_t::Ethernet:
       #ifdef HAS_ETHERNET
@@ -29,7 +39,16 @@ void setNetworkMedium(NetworkMedium_t medium) {
       break;
   }
   active_network_medium = medium;
+  last_network_medium_set_moment.setNow();
   addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
+}
+
+bool isESPEasy_now_only() {
+  #ifdef USES_EASPEASY_NOW
+    return active_network_medium == NetworkMedium_t::ESPEasyNOW_only;
+  #else
+    return false;
+  #endif
 }
 
 

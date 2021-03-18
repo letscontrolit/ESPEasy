@@ -223,7 +223,7 @@ void NodesHandler::updateThisNode() {
   {
     bool addIP = true;
     #ifdef USES_ESPEASY_NOW
-    if (WiFi_AP_Candidates.isESPEasy_now_only()) {
+    if (isESPEasy_now_only()) {
       // Connected via 'virtual ESPEasy-NOW AP'
       addIP = false;
       thisNode.useAP_ESPEasyNow = 1;
@@ -301,7 +301,7 @@ void NodesHandler::updateThisNode() {
           _lastTimeValidDistance = millis();
         }
         if (_distance != lastDistance) {
-          if (WiFi_AP_Candidates.isESPEasy_now_only() && WiFiConnected()) {
+          if (isESPEasy_now_only() && WiFiConnected()) {
             // We are connected to a 'fake AP' for ESPEasy-NOW, but found a known AP
             // Try to reconnect to it.
             RTC.clearLastWiFi(); // Force a WiFi scan

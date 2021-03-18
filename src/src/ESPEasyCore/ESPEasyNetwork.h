@@ -8,6 +8,8 @@
 
 void setNetworkMedium(NetworkMedium_t medium);
 
+bool isESPEasy_now_only();
+
 void NetworkConnectRelaxed();
 bool NetworkConnected();
 IPAddress NetworkLocalIP();

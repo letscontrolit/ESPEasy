@@ -181,7 +181,7 @@ void processDisconnect() {
 
   // FIXME TD-er: Disconnect processing is done in several places.
   #ifdef USES_ESPEASY_NOW
-  //if (WiFi_AP_Candidates.isESPEasy_now_only()) return;
+  //if (isESPEasy_now_only()) return;
   ESPEasy_now_handler.end();
   #endif
 
@@ -408,13 +408,9 @@ void processConnectAPmode() {
 void processDisableAPmode() {
   if (!WiFiEventData.timerAPoff.isSet()) { return; }
 
-  #ifdef USES_ESPEASY_NOW
-  if (Settings.UseESPEasyNow()) { return;}
-  #endif
-
   if (WifiIsAP(WiFi.getMode())) {
     // disable AP after timeout and no clients connected.
-    if (WiFiEventData.timerAPoff.timeoutReached(WIFI_AP_OFF_TIMER_DURATION) && (WiFi.softAPgetStationNum() == 0)) {
+    if (WiFiEventData.timerAPoff.timeoutReached(WIFI_AP_OFF_TIMER_DURATION) && !wifiAPmodeActivelyUsed()) {
       setAP(false);
     }
   }
@@ -456,7 +452,7 @@ void processScanDone() {
   
   #ifdef USES_ESPEASY_NOW
   ESPEasy_now_handler.addPeerFromWiFiScan();
-  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
+  if (isESPEasy_now_only()) {
     if (WiFi_AP_Candidates.addedKnownCandidate()) {
       WiFi_AP_Candidates.force_reload();
       WifiDisconnect();

@@ -884,7 +884,7 @@ bool hasIPaddr() {
 bool NetworkConnected(uint32_t timeout_ms) {
 
 #ifdef USES_ESPEASY_NOW
-  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
+  if (isESPEasy_now_only()) {
     return false;
   }
 #endif

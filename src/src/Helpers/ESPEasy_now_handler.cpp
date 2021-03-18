@@ -91,7 +91,7 @@ bool ESPEasy_now_handler_t::begin()
   int channel = WiFi.channel();
   _controllerIndex = INVALID_CONTROLLER_INDEX;
 
-  if (WiFi_AP_Candidates.isESPEasy_now_only()) {
+  if (isESPEasy_now_only()) {
     WifiScan(false, 0);
   }
 
@@ -154,7 +154,6 @@ void ESPEasy_now_handler_t::end()
     WifiEspNow.end();
     _last_used = 0;
   }
-  setAP(false);
   addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(" disabled"));
 }
 
@@ -237,7 +236,7 @@ bool ESPEasy_now_handler_t::loop()
 
   if (_send_failed_count > 30 /*|| !active()*/) {
     _send_failed_count = 0;
-    // FIXME TD-er: Must check/mark so this becomes true: WiFi_AP_Candidates.isESPEasy_now_only()
+    // FIXME TD-er: Must check/mark so this becomes true: isESPEasy_now_only()
 
     // Start scanning the next channel to see if we may end up with a new found node
     //    WifiScan(false, false);

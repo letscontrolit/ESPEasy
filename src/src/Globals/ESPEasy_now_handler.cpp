@@ -1,4 +1,4 @@
-#include "ESPEasy_now_handler.h"
+#include "../Globals/ESPEasy_now_handler.h"
 
 #ifdef USES_ESPEASY_NOW
 
