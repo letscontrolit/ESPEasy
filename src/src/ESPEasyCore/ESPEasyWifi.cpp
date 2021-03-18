@@ -417,7 +417,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
 #endif
   ) {
     // Force using max. TX power.
-    dBm = 30; // Some high number which will be corrected below
+    dBm = 30; // Just some max, will be limited later
   }
 
   // Range ESP32  : 2dBm - 20dBm

@@ -208,6 +208,7 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
     beforeTXRam = freeBeforeSend;
   }
   duringTXRam = freeBeforeSend;
+  
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   String size = formatToHex(length) + "\r\n";
 
@@ -247,6 +248,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendHeaderBlocking"));
   #endif
+  
   web_server.client().flush();
   String contenttype;
 
