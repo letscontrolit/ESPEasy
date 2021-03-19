@@ -942,7 +942,7 @@ boolean isLoggedIn()
 
 String getControllerSymbol(byte index)
 {
-  String ret = F("<p style='font-size:20px'>&#");
+  String ret = F("<p style='font-size:20px; background: #00000000;'>&#");
 
   ret += 10102 + index;
   ret += F(";</p>");
@@ -977,11 +977,12 @@ void addSVG_param(const String& key, const String& value) {
   addHtml(html);
 }
 
-void createSvgRect_noStroke(unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
-  createSvgRect(fillColor, fillColor, xoffset, yoffset, width, height, 0, rx, ry);
+void createSvgRect_noStroke(const String& classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
+  createSvgRect(classname, fillColor, fillColor, xoffset, yoffset, width, height, 0, rx, ry);
 }
 
-void createSvgRect(unsigned int fillColor,
+void createSvgRect(const String& classname,
+                   unsigned int fillColor,
                    unsigned int strokeColor,
                    float        xoffset,
                    float        yoffset,
@@ -991,6 +992,9 @@ void createSvgRect(unsigned int fillColor,
                    float        rx,
                    float        ry) {
   addHtml(F("<rect"));
+  if (classname.length() != 0) {
+    addSVG_param(F("class"), classname);
+  }
   addSVG_param(F("fill"), formatToHex(fillColor, F("#")));
 
   if (!approximatelyEqual(strokeWidth, 0)) {
@@ -1094,8 +1098,9 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
 
   for (int i = 0; i < nbars; ++i) {
     unsigned int color = i < nbars_filled ? 0x0 : 0xa1a1a1; // Black/Grey
+    String classname = i < nbars_filled ? F("bar_highlight") : F("bar_dimmed");
     int barHeight      = (i + 1) * bar_height_step;
-    createSvgRect_noStroke(color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
+    createSvgRect_noStroke(classname, color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
   }
   addHtml(F("</svg>\n"));
 }

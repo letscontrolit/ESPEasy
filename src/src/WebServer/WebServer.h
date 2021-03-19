@@ -141,7 +141,8 @@ void    addSVG_param(const String& key,
 void    addSVG_param(const String& key,
                      const String& value);
 
-void    createSvgRect_noStroke(unsigned int fillColor,
+void    createSvgRect_noStroke(const String& classname,
+                               unsigned int fillColor,
                                float        xoffset,
                                float        yoffset,
                                float        width,
@@ -149,7 +150,8 @@ void    createSvgRect_noStroke(unsigned int fillColor,
                                float        rx,
                                float        ry);
 
-void createSvgRect(unsigned int fillColor,
+void createSvgRect(const String& classname,
+                   unsigned int fillColor,
                    unsigned int strokeColor,
                    float        xoffset,
                    float        yoffset,
