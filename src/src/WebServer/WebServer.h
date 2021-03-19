@@ -69,6 +69,8 @@ String getGpMenuLabel(byte index);
 
 String getGpMenuURL(byte index);
 
+bool   GpMenuVisible(byte index);
+
 void   getWebPageTemplateVar(const String& varName);
 
 void   writeDefaultCSS(void);

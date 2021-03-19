@@ -39,6 +39,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
+#include "../../ESPEasy_common.h"
 
 #include "../DataStructs/TimingStats.h"
 
@@ -61,6 +62,46 @@
 #include "../Helpers/StringConverter.h"
 
 #include "../Static/WebStaticData.h"
+
+
+#ifndef MENU_INDEX_MAIN_VISIBLE
+  # define MENU_INDEX_MAIN_VISIBLE true
+#endif // ifndef MENU_INDEX_MAIN_VISIBLE
+
+#ifndef MENU_INDEX_CONFIG_VISIBLE
+  # define MENU_INDEX_CONFIG_VISIBLE true
+#endif // ifndef MENU_INDEX_CONFIG_VISIBLE
+
+#ifndef MENU_INDEX_CONTROLLERS_VISIBLE
+  # define MENU_INDEX_CONTROLLERS_VISIBLE true
+#endif // ifndef MENU_INDEX_CONTROLLERS_VISIBLE
+
+#ifndef MENU_INDEX_HARDWARE_VISIBLE
+  # define MENU_INDEX_HARDWARE_VISIBLE true
+#endif // ifndef MENU_INDEX_HARDWARE_VISIBLE
+
+#ifndef MENU_INDEX_DEVICES_VISIBLE
+  # define MENU_INDEX_DEVICES_VISIBLE true
+#endif // ifndef MENU_INDEX_DEVICES_VISIBLE
+
+#ifndef MENU_INDEX_RULES_VISIBLE
+  # define MENU_INDEX_RULES_VISIBLE true
+#endif // ifndef MENU_INDEX_RULES_VISIBLE
+
+#ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
+  # define MENU_INDEX_NOTIFICATIONS_VISIBLE true
+#endif // ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
+
+#ifndef MENU_INDEX_TOOLS_VISIBLE
+  # define MENU_INDEX_TOOLS_VISIBLE true
+#endif // ifndef MENU_INDEX_TOOLS_VISIBLE
+
+
+#if defined(NOTIFIER_SET_NONE) && defined(MENU_INDEX_NOTIFICATIONS_VISIBLE)
+  #undef MENU_INDEX_NOTIFICATIONS_VISIBLE
+  #define MENU_INDEX_NOTIFICATIONS_VISIBLE false
+#endif
+
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
   if (web_server.hasArg(arg)) { 
@@ -386,10 +427,16 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
   if (tmplName == F("TmplAP"))
   {
     getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
-    tmpl += F("<body>"
-              "<header class='apheader'>"
-              "<h1>Welcome to ESP Easy Mega AP</h1>"
-              "</header>");
+    tmpl += F("<body>");
+
+    #ifndef WEBPAGE_TEMPLATE_AP_HEADER
+    tmpl += F("<header class='apheader'>"
+              "<h1>Welcome to ESP Easy Mega AP</h1>");
+    #else
+    tmpl += F(WEBPAGE_TEMPLATE_AP_HEADER);
+    #endif
+
+    tmpl += F("</header>");
     getWebPageTemplateDefaultContentSection(tmpl);
     getWebPageTemplateDefaultFooter(tmpl);
   }
@@ -437,10 +484,17 @@ void getWebPageTemplateDefaultHead(String& tmpl, bool addMeta, bool addJS) {
 }
 
 void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool addMenu) {
-  tmpl += F("<header class='headermenu'>"
-            "<h1>ESP Easy Mega: ");
-  tmpl += title;
-  tmpl += F("</h1><BR>");
+  {
+    String tmp;
+  #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
+    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}</h1><BR>");
+  #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
+    tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
+  #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
+
+    tmp.replace(F("{{title}}"), title);
+    tmpl += tmp;
+  }
 
   if (addMenu) { tmpl += F("{{menu}}"); }
   tmpl += F("</header>");
@@ -457,12 +511,16 @@ void getWebPageTemplateDefaultContentSection(String& tmpl) {
 }
 
 void getWebPageTemplateDefaultFooter(String& tmpl) {
+  #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   tmpl += F("<footer>"
             "<br>"
             "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community</h6>"
             "</footer>"
             "</body></html>"
             );
+#else // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
+  tmpl += F(WEBPAGE_TEMPLATE_DEFAULT_FOOTER);
+#endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
 }
 
 void getErrorNotifications() {
@@ -532,6 +590,21 @@ String getGpMenuURL(byte index) {
   return "";
 }
 
+
+bool GpMenuVisible(byte index) {
+  switch (index) {
+    case MENU_INDEX_MAIN: return MENU_INDEX_MAIN_VISIBLE;
+    case MENU_INDEX_CONFIG: return MENU_INDEX_CONFIG_VISIBLE;
+    case MENU_INDEX_CONTROLLERS: return MENU_INDEX_CONTROLLERS_VISIBLE;
+    case MENU_INDEX_HARDWARE: return MENU_INDEX_HARDWARE_VISIBLE;
+    case MENU_INDEX_DEVICES: return MENU_INDEX_DEVICES_VISIBLE;
+    case MENU_INDEX_RULES: return MENU_INDEX_RULES_VISIBLE;
+    case MENU_INDEX_NOTIFICATIONS: return MENU_INDEX_NOTIFICATIONS_VISIBLE;
+    case MENU_INDEX_TOOLS: return MENU_INDEX_TOOLS_VISIBLE;
+  }
+  return false;
+}
+
 void getWebPageTemplateVar(const String& varName)
 {
   // serialPrint(varName); serialPrint(" : free: "); serialPrint(ESP.getFreeHeap());   serialPrint("var len before:  "); serialPrint
@@ -554,6 +627,10 @@ void getWebPageTemplateVar(const String& varName)
 
     for (byte i = 0; i < 8; i++)
     {
+      if (!GpMenuVisible(i)) {
+        // hide menu item
+        continue;
+      }
       if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
         continue;
       }
