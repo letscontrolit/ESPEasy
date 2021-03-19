@@ -296,8 +296,11 @@ bool checkAndResetWiFi() {
 
   switch(status) {
     case STATION_GOT_IP:
-      // This is a valid status, no need to reset
-      return false;
+      if (WiFi.RSSI() < 0) {
+        // This is a valid status, no need to reset
+        return false;
+      }
+      break;
     case STATION_NO_AP_FOUND:
     case STATION_CONNECT_FAIL:
     case STATION_WRONG_PASSWORD:
@@ -406,6 +409,10 @@ void SetWiFiTXpower(float dBm, float rssi) {
     return;
   }
 
+  if (Settings.UseMaxTXpowerForSending()) {
+    dBm = 30; // Just some max, will be limited later
+  }
+
   // Range ESP32  : 2dBm - 20dBm
   // Range ESP8266: 0dBm - 20.5dBm
   float maxTXpwr;
@@ -487,7 +494,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
 
   WiFiEventData.wifi_TX_pwr = dBm;
 
-  delay(1);
+  delay(0);
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     if (WiFiEventData.wifi_TX_pwr != maxTXpwr) {

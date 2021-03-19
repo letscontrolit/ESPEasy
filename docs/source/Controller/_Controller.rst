@@ -61,6 +61,8 @@ before WiFi connection is made or during lost connection.
 - **Max Queue Depth** - Maximum length of the buffer queue to keep unsent messages.
 - **Max Retries** - Maximum number of retries to send a message.
 - **Full Queue Action** - How to handle when queue is full, ignore new or delete oldest message.
+- **Allow Expire** - Remove a queued message from the queue after <timeout> x <queue depth> x <retries>.
+- **De-duplicate** - Do not add a message to the queue if the same message from the same task is already present.
 - **Check Reply** - When set to false, a sent message is considered always successful.
 - **Client Timeout** - Timeout in msec for an network connection used by the controller.
 - **Sample Set Initiator** - Some controllers (e.g. C018 LoRa/TTN) can mark samples to belong to a set of samples. A new sample from set task index will increment this counter.

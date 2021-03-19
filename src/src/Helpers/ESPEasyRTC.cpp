@@ -4,6 +4,7 @@
 #include "../DataStructs/RTCStruct.h"
 #include "../DataStructs/RTCCacheStruct.h"
 #include "../DataStructs/RTC_cache_handler_struct.h"
+#include "../DataStructs/TimingStats.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RuntimeData.h"
 #include "../Helpers/CRC_functions.h"
@@ -65,6 +66,7 @@ bool saveToRTC()
   return false;
   #else // if defined(ESP32)
 
+  START_TIMER
   if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte *)&RTC, sizeof(RTC)) || !readFromRTC())
   {
       # ifdef RTC_STRUCT_DEBUG
@@ -74,6 +76,7 @@ bool saveToRTC()
   }
   else
   {
+    STOP_TIMER(SAVE_TO_RTC);
     return true;
   }
   #endif // if defined(ESP32)
