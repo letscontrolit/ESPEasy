@@ -8,6 +8,7 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Globals/ESPEasy_time.h"
+#include "../Globals/ESPEasy_now_state.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/RTC.h"
@@ -221,15 +222,10 @@ void NodesHandler::updateThisNode() {
   WiFi.macAddress(thisNode.sta_mac);
   WiFi.softAPmacAddress(thisNode.ap_mac);
   {
-    bool addIP = true;
+    bool addIP = NetworkConnected();
     #ifdef USES_ESPEASY_NOW
-    if (isESPEasy_now_only()) {
-      // Connected via 'virtual ESPEasy-NOW AP'
-      addIP = false;
+    if (use_EspEasy_now) {
       thisNode.useAP_ESPEasyNow = 1;
-    }
-    if (!isEndpoint()) {
-      addIP = false;
     }
     #endif
     if (addIP) {

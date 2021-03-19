@@ -452,19 +452,29 @@ void processScanDone() {
   
   #ifdef USES_ESPEASY_NOW
   ESPEasy_now_handler.addPeerFromWiFiScan();
-  if (isESPEasy_now_only()) {
-    if (WiFi_AP_Candidates.addedKnownCandidate()) {
-      WiFi_AP_Candidates.force_reload();
-      WifiDisconnect();
-    } else { return; }
+  if (use_EspEasy_now) {
+    if (!WiFiConnected()) {
+      if (WiFi_AP_Candidates.addedKnownCandidate()) {
+        WiFi_AP_Candidates.force_reload();
+        if (isESPEasy_now_only()) {
+          setNetworkMedium(NetworkMedium_t::WIFI);
+          WifiDisconnect();
+          setAP(false);
+        }
+      } else {
+        setNetworkMedium(NetworkMedium_t::ESPEasyNOW_only);
+      }
+    }
   }
   #endif
 
   const WiFi_AP_Candidate bestCandidate = WiFi_AP_Candidates.getBestScanResult();
-  if (bestCandidate.usable() && loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI  : Selected: ");
-    log += bestCandidate.toString();
-    addLog(LOG_LEVEL_INFO, log);
+  if (bestCandidate.usable()) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("WIFI  : Selected: ");
+      log += bestCandidate.toString();
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
 }
 

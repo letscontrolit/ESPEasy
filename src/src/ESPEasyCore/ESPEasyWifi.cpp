@@ -207,6 +207,11 @@ void WiFiConnectRelaxed() {
     return;
   }
 
+  #ifdef USES_ESPEASY_NOW
+  // Disable ESPEasy_now for 10 seconds to give opportunity to connect to WiFi.
+  temp_disable_EspEasy_now_timer = millis() + 10000;
+  #endif
+
 
   // FIXME TD-er: Should not try to prepare when a scan is still busy.
   // This is a logic error which may lead to strange issues if some kind of timeout happens and/or RF calibration was not OK.
@@ -610,7 +615,16 @@ void WifiScan(bool async, uint8_t channel) {
     // Scan still busy
     return;
   }
-  addLog(LOG_LEVEL_INFO, F("WIFI  : Start network scan"));
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log;
+    log = F("WIFI  : Start network scan");
+    if (channel != 0) {
+      log += F(" ch. ");
+      log += channel;
+    }
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  
   bool show_hidden         = true;
   WiFiEventData.processedScanDone = false;
   WiFiEventData.lastGetScanMoment.setNow();
@@ -937,10 +951,6 @@ bool wifiConnectTimeoutReached() {
 
 bool wifiAPmodeActivelyUsed()
 {
-  if (!WifiIsAP(WiFi.getMode()) || (!WiFiEventData.timerAPoff.isSet())) {
-    // AP not active or soon to be disabled in processDisableAPmode()
-    return false;
-  }
   #ifdef USES_ESPEASY_NOW
   if (isESPEasy_now_only() &&
         last_network_medium_set_moment.timeoutReached(600 * 1000)) 
@@ -951,6 +961,12 @@ bool wifiAPmodeActivelyUsed()
     return true;
   }
   #endif
+
+  if (!WifiIsAP(WiFi.getMode()) || (!WiFiEventData.timerAPoff.isSet())) {
+    // AP not active or soon to be disabled in processDisableAPmode()
+    return false;
+  }
+
   return WiFi.softAPgetStationNum() != 0;
 
   // FIXME TD-er: is effectively checking for AP active enough or must really check for connected clients to prevent automatic wifi

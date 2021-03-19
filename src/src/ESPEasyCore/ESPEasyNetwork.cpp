@@ -22,6 +22,12 @@ void setNetworkMedium(NetworkMedium_t medium) {
       return;
     }
   }
+  #ifndef HAS_ETHERNET
+  if (medium == NetworkMedium_t::Ethernet) {
+    // When no ethernet is present in the build, make sure to fall-back on WiFi.
+    medium = NetworkMedium_t::WIFI;
+  }
+  #endif
 
   switch (active_network_medium) {
     case NetworkMedium_t::Ethernet:
@@ -31,7 +37,7 @@ void setNetworkMedium(NetworkMedium_t medium) {
       #endif
       break;
     case NetworkMedium_t::WIFI:
-      WiFi.mode(WIFI_OFF);
+      setSTA(false);
       break;
     case NetworkMedium_t::ESPEasyNOW_only:
       break;

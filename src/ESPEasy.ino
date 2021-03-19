@@ -342,11 +342,9 @@ void setup()
       toDisable = disableNotification(toDisable);
     }
   }
-  #ifdef HAS_ETHERNET
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
   setNetworkMedium(Settings.NetworkMedium);
-  #endif
   if (active_network_medium == NetworkMedium_t::WIFI) {
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
       WiFiEventData.wifiSetup = true;

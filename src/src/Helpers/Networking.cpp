@@ -399,15 +399,13 @@ void refreshNodeList()
 
   Nodes.refreshNodeList(max_age_allowed, max_age);
 
-  #if defined(USES_ESPEASY_NOW) && defined(ESP8266)
-
-  // ESP32 does not (yet) allow to scan a single channel so may take too long
+  #ifdef USES_ESPEASY_NOW
   const uint8_t channel = Nodes.getESPEasyNOW_channel();
 
   if (channel != 0) {
     WifiScan(true, channel);
   }
-  #endif // if defined(USES_ESPEASY_NOW) && defined(ESP8266)
+  #endif
 
   if (max_age > (0.75 * max_age_allowed)) {
     Scheduler.sendGratuitousARP_now();
