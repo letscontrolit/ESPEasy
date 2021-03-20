@@ -25,7 +25,7 @@
         "
         ``LogPulseStatistic,<taskindex>``
         ","
-        Initiate a single log file entry with statistical information of current counter parameters (see description below).
+        Initiate a single log entry with statistical information of current PULSE counter parameters (only if PULSE mode type is being used. Cf. special chapter about ``Statistical logging`` in P003 plugin documentation).
         
         The taskIndex parameter is optional. When not given, only the total count of the first task with this plugin will be set.
         
