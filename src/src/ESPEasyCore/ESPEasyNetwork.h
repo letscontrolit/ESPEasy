@@ -10,7 +10,6 @@ void setNetworkMedium(NetworkMedium_t medium);
 
 void NetworkConnectRelaxed();
 bool NetworkConnected();
-void PrepareSend();
 IPAddress NetworkLocalIP();
 IPAddress NetworkSubnetMask();
 IPAddress NetworkGatewayIP();

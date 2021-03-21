@@ -56,17 +56,6 @@ bool NetworkConnected() {
   return WiFiConnected();
 }
 
-void PrepareSend() {
-  #ifdef HAS_ETHERNET
-  if (active_network_medium == NetworkMedium_t::Ethernet) {
-    return;
-  }
-  #endif
-  if (Settings.UseMaxTXpowerForSending()) {
-    SetWiFiTXpower(30); // Just some max, will be limited in SetWiFiTXpower
-  }
-}
-
 IPAddress NetworkLocalIP() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {

@@ -409,6 +409,10 @@ void SetWiFiTXpower(float dBm, float rssi) {
     return;
   }
 
+  if (Settings.UseMaxTXpowerForSending()) {
+    dBm = 30; // Just some max, will be limited later
+  }
+
   // Range ESP32  : 2dBm - 20dBm
   // Range ESP8266: 0dBm - 20.5dBm
   float maxTXpwr;
