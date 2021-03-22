@@ -19,13 +19,24 @@ uint8_t ESPEasy_now_traceroute_struct::getUnit(uint8_t distance, int8_t& rssi) c
   return unit_vector[distance * 2];
 }
 
-void ESPEasy_now_traceroute_struct::addUnit(uint8_t unit, int8_t rssi)
+void ESPEasy_now_traceroute_struct::addUnit(const NodeStruct& node)
 {
+  if (node.distance == 255) {
+    // No distance set, so don't add the traceroute.
+    return;
+  }
+
+  // Only add the unit if it isn't already part of the traceroute.
   const uint8_t index = unit_vector.size();
+  for (size_t i = 0; i < index; i+=2) {
+    if (unit_vector[i] == node.unit) {
+      unit_vector[i + 1] = static_cast<uint8_t>(static_cast<int>(node.getRSSI() + 127));
+      return;
+    }
+  }
 
   unit_vector.resize(index + 2);
-  unit_vector[index]     = unit;
-  unit_vector[index + 1] = static_cast<uint8_t>(static_cast<int>(rssi + 127));
+  unit_vector[index]     = node.unit;
 }
 
 uint8_t ESPEasy_now_traceroute_struct::getDistance() const
@@ -48,14 +59,19 @@ uint8_t * ESPEasy_now_traceroute_struct::get()
   return &(unit_vector[0]);
 }
 
-void ESPEasy_now_traceroute_struct::setRSSI_last_node(int8_t rssi) const
+void ESPEasy_now_traceroute_struct::setRSSI_last_node(byte unit, int8_t rssi) const
 {
-  const uint8_t index = unit_vector.size();
+  int index = unit_vector.size() - 2;
+  int attempt = 0;
 
-  if (index == 0) {
-    return;
+  while (index >= 0 && attempt < 2) {
+    if (unit_vector[index] == unit) {
+      unit_vector[index + 1] = static_cast<uint8_t>(static_cast<int>(rssi + 127));
+      return;
+    }
+    index -= 2;
+    ++attempt;
   }
-  unit_vector[index - 1] = static_cast<uint8_t>(static_cast<int>(rssi + 127));
 }
 
 bool ESPEasy_now_traceroute_struct::operator<(const ESPEasy_now_traceroute_struct& other) const
@@ -95,50 +111,6 @@ int ESPEasy_now_traceroute_struct::compute_penalty() const
   }
   return penalty;
   */
-}
-
-void ESPEasy_now_traceroute_struct::sanetize()
-{
-  std::list<uint8_t> units;
-
-  for (size_t i = 0; i < unit_vector.size(); i += 2) {
-    units.push_back(unit_vector[i]);
-  }
-
-  // Remove duplicates by sort and unique
-  units.sort();
-  units.unique();
-
-  if (units.size() == (unit_vector.size() / 2)) {
-    // No loops
-    return;
-  }
-
-  std::vector<uint8_t> new_unit_vector;
-
-  new_unit_vector.reserve(units.size() * 2);
-
-  const uint8_t max_distance = getDistance();
-
-  for (uint8_t distance = 0; distance <= max_distance; ++distance) {
-    const uint8_t unit = unit_vector[distance * 2];
-    bool found         = false;
-
-    for (auto it = units.begin(); !found && it != units.end(); ++it) {
-      if (*it == unit) {
-        // Present in the unique list so remove it
-        units.erase(it);
-        found = true;
-      }
-    }
-
-    if (found) {
-      // It was present in the unique list, so we can add it to the new vector
-      new_unit_vector.push_back(unit);
-      new_unit_vector.push_back(unit_vector[(distance * 2) + 1]);
-    }
-  }
-  unit_vector = new_unit_vector;
 }
 
 String ESPEasy_now_traceroute_struct::toString() const

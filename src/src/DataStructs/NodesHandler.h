@@ -71,6 +71,8 @@ public:
 
   bool recentlyBecameDistanceZero();
 
+  void setRSSI(const MAC_address& mac, int rssi);
+
 private:
 
 #ifdef USES_ESPEASY_NOW

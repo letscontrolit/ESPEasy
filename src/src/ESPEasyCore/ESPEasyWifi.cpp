@@ -207,11 +207,6 @@ void WiFiConnectRelaxed() {
     return;
   }
 
-  #ifdef USES_ESPEASY_NOW
-  // Disable ESPEasy_now for 10 seconds to give opportunity to connect to WiFi.
-  temp_disable_EspEasy_now_timer = millis() + 10000;
-  #endif
-
 
   // FIXME TD-er: Should not try to prepare when a scan is still busy.
   // This is a logic error which may lead to strange issues if some kind of timeout happens and/or RF calibration was not OK.

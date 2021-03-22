@@ -433,6 +433,11 @@ void setup()
   }
 #endif
 
+  #ifdef USES_ESPEASY_NOW
+  // Disable ESPEasy_now for 10 seconds to give opportunity to connect to WiFi.
+  temp_disable_EspEasy_now_timer = millis() + 10000;
+  #endif
+
   NetworkConnectRelaxed();
 
   setWebserverRunning(true);

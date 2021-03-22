@@ -148,6 +148,7 @@ void ESPEasy_now_handler_t::end()
 {
   _controllerIndex = INVALID_CONTROLLER_INDEX;
   use_EspEasy_now  = false;
+  ESPEasy_now_in_queue.clear();
   RTC.clearLastWiFi(); // Force a WiFi scan
   if (_last_used != 0) {
     // Only call WifiEspNow.end() if it was started.
@@ -176,6 +177,7 @@ bool ESPEasy_now_handler_t::loop()
         begin();
       } else {
         end();
+        return false;
       }
     }
   }
@@ -445,6 +447,7 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
   } else {
     msg.send(mac, channel);
   }
+//  WifiScan(true, channel);
 }
 
 bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& message, bool& mustKeep)

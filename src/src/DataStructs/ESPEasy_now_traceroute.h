@@ -21,8 +21,7 @@ struct ESPEasy_now_traceroute_struct
                   int8_t& rssi) const;
 
   // Append unit at the end (thus furthest distance)
-  void           addUnit(uint8_t unit,
-                         int8_t  rssi = 0);
+  void           addUnit(const NodeStruct& node);
 
   uint8_t        getDistance() const;
 
@@ -32,13 +31,10 @@ struct ESPEasy_now_traceroute_struct
   // Make sure the array is large enough to store the data.
   uint8_t* get();
 
-  void     setRSSI_last_node(int8_t rssi) const;
+  void     setRSSI_last_node(byte unit, int8_t rssi) const;
 
   // Return true when this traceroute has lower penalty (thus more favorable)
   bool     operator<(const ESPEasy_now_traceroute_struct& other) const;
-
-  // Remove duplicate entries (e.g. loops)
-  void     sanetize();
 
   // For debugging purposes
   String toString() const;

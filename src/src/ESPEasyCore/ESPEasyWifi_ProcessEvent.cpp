@@ -355,10 +355,7 @@ void processProbeRequestAPmode() {
   const MAC_address mac(APModeProbeRequestReceived_list.front().mac);
   const int rssi = APModeProbeRequestReceived_list.front().rssi;
 
-  NodeStruct* matchingNode = Nodes.getNodeByMac(mac);
-  if (matchingNode != nullptr) {
-    matchingNode->setRSSI(rssi);
-  }
+  Nodes.setRSSI(mac, rssi);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String    log                 = F("AP Mode: Probe Request: ");
@@ -460,6 +457,8 @@ void processScanDone() {
           setNetworkMedium(NetworkMedium_t::WIFI);
           WifiDisconnect();
           setAP(false);
+          // Disable ESPEasy_now for 10 seconds to give opportunity to connect to WiFi.
+          temp_disable_EspEasy_now_timer = millis() + 10000;
         }
       } else {
         setNetworkMedium(NetworkMedium_t::ESPEasyNOW_only);

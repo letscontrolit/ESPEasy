@@ -64,8 +64,7 @@ bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_
   const bool isNewNode = addNode(node);
   _traceRoutes[node.unit] = traceRoute;
   
-  _traceRoutes[node.unit].addUnit(node.unit, 0); // Will update the RSSI of the last node in getTraceRoute
-  _traceRoutes[node.unit].sanetize();
+  _traceRoutes[node.unit].addUnit(node);
 
   addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(": traceroute received ") + _traceRoutes[node.unit].toString());
   return isNewNode;
@@ -207,7 +206,7 @@ const ESPEasy_now_traceroute_struct* NodesHandler::getTraceRoute(uint8_t unit) c
 
   auto node_it = _nodes.find(unit);
   if (node_it != _nodes.end()) {
-    trace_it->second.setRSSI_last_node(node_it->second.getRSSI());
+    trace_it->second.setRSSI_last_node(node_it->second.unit, node_it->second.getRSSI());
   }
 
   return &(trace_it->second);
@@ -280,7 +279,8 @@ void NodesHandler::updateThisNode() {
       _recentlyBecameDistanceZero = true;
     }
     #ifdef USES_ESPEASY_NOW
-    thisTraceRoute.addUnit(thisNode.unit);
+    thisNode.distance = _distance;
+    thisTraceRoute.addUnit(thisNode);
     #endif
   } else {
     _distance = 255;
@@ -345,7 +345,7 @@ bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long&
     unsigned long age = it->second.getAge();
     if (it->second.ESPEasyNowPeer) {
       // ESPEasy-NOW peers should see updates every 30 seconds.
-      if (age > 70000) age = max_age_allowed + 1;
+      if (age > 125000) age = max_age_allowed + 1;
     }
 
     if (age > max_age_allowed) {
@@ -401,6 +401,20 @@ bool NodesHandler::recentlyBecameDistanceZero() {
   }
   _recentlyBecameDistanceZero = false;
   return true;
+}
+
+void NodesHandler::setRSSI(const MAC_address& mac, int rssi)
+{
+  NodeStruct* matchingNode = getNodeByMac(mac);
+  if (matchingNode != nullptr) {
+    matchingNode->setRSSI(rssi);
+    #ifdef USES_ESPEASY_NOW
+    auto it = _traceRoutes.find(matchingNode->unit);
+    if (it != _traceRoutes.end()) {
+      it->second.setRSSI_last_node(matchingNode->unit, rssi);
+    }
+    #endif
+  }
 }
 
 bool NodesHandler::lastTimeValidDistanceExpired() const
