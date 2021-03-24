@@ -523,8 +523,6 @@ String send_via_http(const String& logIdentifier,
   // "if you have XXX, send it; or failing that, just give me what you've got."
   http.addHeader(F("Accept"), F("*/*;q=0.1"));
 
-  PrepareSend();
-
   delay(0);
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP

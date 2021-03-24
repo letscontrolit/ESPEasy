@@ -13,7 +13,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
   eth_mdio(DEFAULT_ETH_PIN_MDIO),
   eth_power(DEFAULT_ETH_PIN_POWER),
   eth_clock_mode(DEFAULT_ETH_CLOCK_MODE),
-  active_network_medium(DEFAULT_NETWORK_MEDIUM)
+  network_medium(DEFAULT_NETWORK_MEDIUM)
 
 {
   for (int i = 0; i < 4; ++i) {
@@ -118,7 +118,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       eth_mdio              = 18;
       eth_power             = 12;
       eth_clock_mode        = EthClockMode_t::Int_50MHz_GPIO_17_inv;
-      active_network_medium = NetworkMedium_t::Ethernet;
+      network_medium = NetworkMedium_t::Ethernet;
       break;
     case DeviceMode_Olimex_ESP32_EVB:
       button[0] = 34; // BUT1 Button
@@ -134,7 +134,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       eth_mdio              = 18;
       eth_power             = -1; // No Ethernet power pin
       eth_clock_mode        = EthClockMode_t::Ext_crystal_osc;
-      active_network_medium = NetworkMedium_t::Ethernet;
+      network_medium = NetworkMedium_t::Ethernet;
       break;
 
     case DeviceMode_Olimex_ESP32_GATEWAY:
@@ -149,7 +149,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       eth_mdio              = 18;
       eth_power             = 5;
       eth_clock_mode        = EthClockMode_t::Int_50MHz_GPIO_17_inv;
-      active_network_medium = NetworkMedium_t::Ethernet;
+      network_medium = NetworkMedium_t::Ethernet;
       // Rev A to E:
       // GPIO 5, 17 can be used only if Ethernet functionality is not used
       // GPIO 6, 7, 8, 9, 10, 11 used for internal flash and SD card

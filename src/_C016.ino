@@ -54,6 +54,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesPort       = false;
       Protocol[protocolCount].usesSampleSets = false;
       Protocol[protocolCount].needsNetwork   = false;
+      Protocol[protocolCount].allowsExpire   = false;
       break;
     }
 

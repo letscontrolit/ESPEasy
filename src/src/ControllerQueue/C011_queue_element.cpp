@@ -21,4 +21,18 @@ size_t C011_queue_element::getSize() const {
   return total;
 }
 
+bool C011_queue_element::isDuplicate(const C011_queue_element& other) const {
+  if (other.controller_idx != controller_idx || 
+      other.TaskIndex != TaskIndex ||
+      other.sensorType != sensorType ||
+      other.idx != idx) {
+    return false;
+  }
+  return (other.uri.equals(uri) && 
+          other.HttpMethod.equals(HttpMethod) && 
+          other.header.equals(header) && 
+          other.postStr.equals(postStr));
+}
+
+
 #endif
