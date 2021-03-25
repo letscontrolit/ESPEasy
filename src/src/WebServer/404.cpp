@@ -5,6 +5,7 @@
 #include "../WebServer/Rules.h"
 
 #include "../Globals/Services.h"
+#include "../Globals/Settings.h"
 
 #include "../Globals/ESPEasyWiFiEvent.h"
 
