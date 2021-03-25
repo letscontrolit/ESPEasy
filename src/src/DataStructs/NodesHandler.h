@@ -25,6 +25,7 @@ public:
 
   bool                     hasNode(const uint8_t *mac) const;
 
+  NodeStruct             * getNode(uint8_t unit_nr);
   const NodeStruct       * getNode(uint8_t unit_nr) const;
 
   NodeStruct             * getNodeByMac(const MAC_address& mac);
@@ -73,7 +74,11 @@ public:
 
   void setRSSI(const MAC_address& mac, int rssi);
 
+  void setRSSI(uint8_t unit, int rssi);
+
 private:
+
+  void setRSSI(NodeStruct * node, int rssi);
 
 #ifdef USES_ESPEASY_NOW
   bool hasTraceRoute(uint8_t unit) const;

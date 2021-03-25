@@ -37,6 +37,7 @@ void ESPEasy_now_traceroute_struct::addUnit(const NodeStruct& node)
 
   unit_vector.resize(index + 2);
   unit_vector[index]     = node.unit;
+  unit_vector[index + 1] = static_cast<uint8_t>(static_cast<int>(node.getRSSI() + 127));
 }
 
 uint8_t ESPEasy_now_traceroute_struct::getDistance() const
@@ -59,8 +60,11 @@ uint8_t * ESPEasy_now_traceroute_struct::get()
   return &(unit_vector[0]);
 }
 
-void ESPEasy_now_traceroute_struct::setRSSI_last_node(byte unit, int8_t rssi) const
+void ESPEasy_now_traceroute_struct::setRSSI_last_node(byte unit, int8_t rssi)
 {
+  if (rssi > 0) {
+    rssi = 0;
+  }
   int index = unit_vector.size() - 2;
   int attempt = 0;
 

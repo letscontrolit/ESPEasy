@@ -63,6 +63,8 @@ struct __attribute__((__packed__)) NodeStruct
 
   bool          match(const MAC_address& mac) const;
 
+  bool          isThisNode() const;
+
   void          setAP_MAC(const MAC_address& mac);
 
 

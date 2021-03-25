@@ -31,7 +31,7 @@ struct ESPEasy_now_traceroute_struct
   // Make sure the array is large enough to store the data.
   uint8_t* get();
 
-  void     setRSSI_last_node(byte unit, int8_t rssi) const;
+  void     setRSSI_last_node(byte unit, int8_t rssi);
 
   // Return true when this traceroute has lower penalty (thus more favorable)
   bool     operator<(const ESPEasy_now_traceroute_struct& other) const;
@@ -47,8 +47,7 @@ private:
   // Node with distance 0 at front, so index/2 equals distance.
   // index%2 == 0 is unit
   // index%2 == 1 is RSSI
-  // Made mutable so setRSSI_last_node can remain const.
-  mutable std::vector<uint8_t>unit_vector;
+  std::vector<uint8_t>unit_vector;
 };
 
 typedef std::map<byte, ESPEasy_now_traceroute_struct> TraceRouteMap;

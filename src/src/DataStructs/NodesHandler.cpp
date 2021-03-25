@@ -66,7 +66,9 @@ bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_
   
   _traceRoutes[node.unit].addUnit(node);
 
-  addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(": traceroute received ") + _traceRoutes[node.unit].toString());
+  if (traceRoute.getDistance() != 255 && !node.isThisNode()) {
+    addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(": Node: ") + String(node.unit) + F(" Traceroute received: ") + _traceRoutes[node.unit].toString());
+  }
   return isNewNode;
 }
 #endif
@@ -79,6 +81,16 @@ bool NodesHandler::hasNode(uint8_t unit_nr) const
 bool NodesHandler::hasNode(const uint8_t *mac) const
 {
   return getNodeByMac(mac) != nullptr;
+}
+
+NodeStruct * NodesHandler::getNode(uint8_t unit_nr)
+{
+  auto it = _nodes.find(unit_nr);
+
+  if (it == _nodes.end()) {
+    return nullptr;
+  }
+  return &(it->second);
 }
 
 const NodeStruct * NodesHandler::getNode(uint8_t unit_nr) const
@@ -203,12 +215,6 @@ const ESPEasy_now_traceroute_struct* NodesHandler::getTraceRoute(uint8_t unit) c
   if (trace_it == _traceRoutes.end()) {
     return nullptr;
   }
-
-  auto node_it = _nodes.find(unit);
-  if (node_it != _nodes.end()) {
-    trace_it->second.setRSSI_last_node(node_it->second.unit, node_it->second.getRSSI());
-  }
-
   return &(trace_it->second);
 }
 #endif
@@ -280,7 +286,9 @@ void NodesHandler::updateThisNode() {
     }
     #ifdef USES_ESPEASY_NOW
     thisNode.distance = _distance;
+    thisNode.setRSSI(WiFi.RSSI());
     thisTraceRoute.addUnit(thisNode);
+    thisTraceRoute.setRSSI_last_node(thisNode.unit, WiFi.RSSI());
     #endif
   } else {
     _distance = 255;
@@ -291,8 +299,11 @@ void NodesHandler::updateThisNode() {
       if (!preferred->isExpired()) {
         const ESPEasy_now_traceroute_struct* tracert_ptr = getTraceRoute(preferred->unit);
         if (tracert_ptr != nullptr && tracert_ptr->getDistance() < 255) {
-          // Make a copy of the traceroute
+          // Make a copy of the traceroute          
           thisTraceRoute = *tracert_ptr;
+          thisTraceRoute.addUnit(thisNode);
+          thisTraceRoute.setRSSI_last_node(thisNode.unit, preferred->getRSSI());
+
           _distance = thisTraceRoute.getDistance() + 1;
           _lastTimeValidDistance = millis();
         }
@@ -309,6 +320,7 @@ void NodesHandler::updateThisNode() {
     #endif
   }
   thisNode.distance = _distance;
+
   #ifdef USES_ESPEASY_NOW
   addNode(thisNode, thisTraceRoute);
   #else
@@ -405,13 +417,22 @@ bool NodesHandler::recentlyBecameDistanceZero() {
 
 void NodesHandler::setRSSI(const MAC_address& mac, int rssi)
 {
-  NodeStruct* matchingNode = getNodeByMac(mac);
-  if (matchingNode != nullptr) {
-    matchingNode->setRSSI(rssi);
+  setRSSI(getNodeByMac(mac), rssi);
+}
+
+void NodesHandler::setRSSI(uint8_t unit, int rssi)
+{
+  setRSSI(getNode(unit), rssi);
+}
+
+void NodesHandler::setRSSI(NodeStruct * node, int rssi)
+{
+  if (node != nullptr) {
+    node->setRSSI(rssi);
     #ifdef USES_ESPEASY_NOW
-    auto it = _traceRoutes.find(matchingNode->unit);
+    auto it = _traceRoutes.find(node->unit);
     if (it != _traceRoutes.end()) {
-      it->second.setRSSI_last_node(matchingNode->unit, rssi);
+      it->second.setRSSI_last_node(node->unit, rssi);
     }
     #endif
   }

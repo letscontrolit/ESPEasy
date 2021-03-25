@@ -238,6 +238,18 @@ bool NodeStruct::match(const MAC_address& mac) const
   return (mac == sta_mac || mac == ap_mac);
 }
 
+bool NodeStruct::isThisNode() const
+{
+    // Check to see if we process a node we've sent ourselves.
+    MAC_address tmp;
+    WiFi.softAPmacAddress(tmp.mac);
+    if (tmp == ap_mac) return true;
+    WiFi.macAddress(tmp.mac);
+    if (tmp == sta_mac) return true;
+
+    return false;
+}
+
 void NodeStruct::setAP_MAC(const MAC_address& mac)
 {
   mac.get(ap_mac);

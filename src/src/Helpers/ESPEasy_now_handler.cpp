@@ -305,17 +305,17 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
   auto nodeInfo        = Nodes.getNodeByMac(peer_mac);
 
   if (nodeInfo != nullptr) {
-    nodeInfo->setRSSI(WiFi.RSSI(scanIndex));
+    Nodes.setRSSI(peer_mac, WiFi.RSSI(scanIndex));
     nodeInfo->channel = WiFi.channel(scanIndex);
   } else {
-    // FIXME TD-er: For now we assume the other node uses AP for ESPEasy-NOW
     NodeStruct tmpNodeInfo;
     tmpNodeInfo.setRSSI(WiFi.RSSI(scanIndex));
     tmpNodeInfo.channel = WiFi.channel(scanIndex);
     peer_mac.get(tmpNodeInfo.ap_mac);
-    tmpNodeInfo.setESPEasyNow_mac(peer_mac);
 
     if (tmpNodeInfo.markedAsPriorityPeer()) {
+      // FIXME TD-er: For now we assume the other node uses AP for ESPEasy-NOW
+      tmpNodeInfo.setESPEasyNow_mac(peer_mac);
       if (Nodes.addNode(tmpNodeInfo)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = String(F(ESPEASY_NOW_NAME)) + F(": Found node via WiFi scan: ");
@@ -467,6 +467,11 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 
   MAC_address mac;
   message.getMac(mac);
+
+  // Check to see if we process a node we've sent ourselves.
+  if (received.isThisNode()) {
+    return false;
+  }
 
   if (!received.setESPEasyNow_mac(mac)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
