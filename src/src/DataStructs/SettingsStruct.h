@@ -98,6 +98,9 @@ class SettingsStruct_tmpl
   bool UseMaxTXpowerForSending() const;
   void UseMaxTXpowerForSending(bool value);
 
+  // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+  bool ApDontForceSetup() const;
+  void ApDontForceSetup(bool value);
 
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
