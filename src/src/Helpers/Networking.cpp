@@ -977,7 +977,7 @@ bool hostReachable(const IPAddress& ip) {
      }
      if (ip[1] == 0 && ip[2] == 0 && ip[3] == 0) {
       // Work-around to fix connected but not able to communicate.
-      addLog(LOG_LEVEL_ERROR, F("Wifi  : Detected strange behavior, reconnect wifi."));
+      addLog(LOG_LEVEL_ERROR, F("WiFi : Detected strange behavior, reconnect wifi."));
       WifiDisconnect();
      }
      logConnectionStatus();
