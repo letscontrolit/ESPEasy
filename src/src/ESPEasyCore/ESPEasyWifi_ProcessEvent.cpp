@@ -440,7 +440,7 @@ void processScanDone() {
   WiFiEventData.processedScanDone = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI  : Scan finished, found: ");
+    String log = F("WiFi : Scan finished, found: ");
     log += scanCompleteStatus;
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -468,12 +468,10 @@ void processScanDone() {
   #endif
 
   const WiFi_AP_Candidate bestCandidate = WiFi_AP_Candidates.getBestScanResult();
-  if (bestCandidate.usable()) {
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WIFI  : Selected: ");
-      log += bestCandidate.toString();
-      addLog(LOG_LEVEL_INFO, log);
-    }
+  if (bestCandidate.usable() && loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("WiFi : Selected: ");
+    log += bestCandidate.toString();
+    addLog(LOG_LEVEL_INFO, log);
   }
 }
 

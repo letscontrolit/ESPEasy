@@ -193,9 +193,9 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
   }
   while (enumval != SystemVariables::Enum::UNKNOWN);
 
-  const int v_index = s.indexOf(F("%v"));
+  int v_index = s.indexOf(F("%v"));
 
-  if ((v_index != -1)) {
+  while ((v_index != -1)) {
     unsigned int i;
     if (validUIntFromString(s.substring(v_index + 2), i)) {
       const String key = String(F("%v")) + String(i) + '%';
@@ -205,6 +205,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
         repl(key, value, s, useURLencode);
       }
     }
+    v_index = s.indexOf(F("%v"), v_index + 1); // Find next occurance
   }
 
   STOP_TIMER(PARSE_SYSVAR);
