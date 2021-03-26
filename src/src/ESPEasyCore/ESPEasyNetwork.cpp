@@ -3,6 +3,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/StringConverter.h"
@@ -40,6 +41,7 @@ void setNetworkMedium(NetworkMedium_t medium) {
       setSTA(false);
       break;
     case NetworkMedium_t::ESPEasyNOW_only:
+      WiFiEventData.clearAll();
       break;
     case NetworkMedium_t::NotSet:
       break;

@@ -956,6 +956,7 @@ bool wifiAPmodeActivelyUsed()
   {
     // Only allow the ESPEasy_NOW_only mode for 10 minutes
     setNetworkMedium(Settings.NetworkMedium);
+    return false;
   } else if (ESPEasy_now_handler.active()) {
     return true;
   }

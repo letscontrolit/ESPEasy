@@ -458,6 +458,7 @@ void processScanDone() {
           WifiDisconnect();
           setAP(false);
           // Disable ESPEasy_now for 10 seconds to give opportunity to connect to WiFi.
+          WiFiEventData.wifiConnectAttemptNeeded = true;
           temp_disable_EspEasy_now_timer = millis() + 10000;
         }
       } else {
