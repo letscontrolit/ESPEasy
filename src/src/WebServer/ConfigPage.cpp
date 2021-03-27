@@ -79,6 +79,9 @@ void handle_config() {
     // Access point password.
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
 
+    // When set you can use the Sensor in AP-Mode without being forced to /setup
+    Settings.ApDontForceSetup(isFormItemChecked(F("ApDontForceSetup")));
+
 
     // TD-er Read access control from form.
     SecuritySettings.IPblockLevel = getFormItemInt(F("ipblocklevel"));
@@ -141,6 +144,9 @@ void handle_config() {
 
   addFormSeparator(2);
   addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
+
+  addFormCheckBox(F("Don't force /setup in AP-Mode"), F("ApDontForceSetup"), Settings.ApDontForceSetup());
+  addFormNote(F("When set you can use the Sensor in AP-Mode without being forced to /setup. /setup can still be called."));
 
   // TD-er add IP access box F("ipblocklevel")
   addFormSubHeader(F("Client IP filtering"));

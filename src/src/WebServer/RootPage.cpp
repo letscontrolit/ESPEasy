@@ -33,11 +33,11 @@ void handle_root() {
   checkRAM(F("handle_root"));
   #endif
 
-  // if Wifi setup, launch setup wizard
-  if (WiFiEventData.wifiSetup)
+  // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
+ if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
   {
     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
-    return;
+   return;
   }
 
   if (!isLoggedIn()) { return; }
@@ -151,11 +151,16 @@ void handle_root() {
       addHtml(html);
     }
 
-    addRowLabelValue(LabelType::IP_ADDRESS);
-    addRowLabel(LabelType::WIFI_RSSI);
+#ifdef HAS_ETHERNET
+    addRowLabelValue(LabelType::ETH_WIFI_MODE);
+#endif
 
-    if (NetworkConnected())
+    if (
+      active_network_medium == NetworkMedium_t::WIFI &&
+      NetworkConnected())
     {
+      addRowLabelValue(LabelType::IP_ADDRESS);
+      addRowLabel(LabelType::WIFI_RSSI);
       String html;
       html.reserve(32);
       html += String(WiFi.RSSI());
@@ -166,7 +171,6 @@ void handle_root() {
     }
 
 #ifdef HAS_ETHERNET
-    addRowLabelValue(LabelType::ETH_WIFI_MODE);
     if(active_network_medium == NetworkMedium_t::Ethernet) {
       addRowLabelValue(LabelType::ETH_SPEED_STATE);
       addRowLabelValue(LabelType::ETH_IP_ADDRESS);
