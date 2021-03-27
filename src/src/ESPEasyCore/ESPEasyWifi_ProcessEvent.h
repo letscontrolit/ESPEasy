@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-void handle_unprocessedWiFiEvents();
+void handle_unprocessedNetworkEvents();
 void processDisconnect();
 void processConnect();
 void processGotIP();
@@ -16,6 +16,7 @@ void markWiFi_services_initialized();
 #ifdef HAS_ETHERNET
 void processEthernetConnected();
 void processEthernetDisconnected();
+void processEthernetGotIP();
 #endif
 
 #endif //ESPEASYWIFI_PROCESSEVENT_H
