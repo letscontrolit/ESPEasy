@@ -78,7 +78,10 @@ bool P082_data_struct::loop() {
       --available;
       char c = easySerial->read();
 # ifdef P082_SEND_GPS_TO_LOG
-      _currentSentence += c;
+      if (_currentSentence.length() <= 80) {
+        // No need to capture more than 80 bytes as a NMEA message is never that long.
+        _currentSentence += c;
+      }
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
       if (gps->encode(c)) {

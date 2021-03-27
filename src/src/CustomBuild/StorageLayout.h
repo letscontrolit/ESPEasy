@@ -143,9 +143,16 @@
   #  ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   #   define DAT_OFFSET_CUSTOM_CONTROLLER    32768 // each custom controller config = 1k, 4 max.
   #  endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
-  #  ifndef CONFIG_FILE_SIZE
-  #   define CONFIG_FILE_SIZE                65536
-  #  endif // ifndef CONFIG_FILE_SIZE
+  #  ifdef LIMIT_BUILD_SIZE
+  // Limit the config size for 1M builds, since their file system is also quite small
+  #   ifndef CONFIG_FILE_SIZE
+  #    define CONFIG_FILE_SIZE               36864 // DAT_OFFSET_CUSTOM_CONTROLLER + 4x DAT_CUSTOM_CONTROLLER_SIZE
+  #   endif // ifndef CONFIG_FILE_SIZE
+  #  else
+  #   ifndef CONFIG_FILE_SIZE
+  #    define CONFIG_FILE_SIZE               65536
+  #   endif // ifndef CONFIG_FILE_SIZE
+  #  endif
   # endif // ifdef USE_NON_STANDARD_24_TASKS
 #endif     // if defined(ESP8266)
 

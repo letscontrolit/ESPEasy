@@ -11,6 +11,7 @@
 C018_queue_element::C018_queue_element() {}
 
 C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sampleSetCount) :
+  TaskIndex(event->TaskIndex),
   controller_idx(event->ControllerIndex)
 {
     #ifdef USES_PACKED_RAW_DATA
@@ -26,5 +27,19 @@ C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sample
 size_t C018_queue_element::getSize() const {
   return sizeof(*this) + packed.length();
 }
+
+bool C018_queue_element::isDuplicate(const C018_queue_element& other) const {
+  if (other.controller_idx != controller_idx || 
+      other.TaskIndex != TaskIndex) {
+    return false;
+  }
+  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+    if (other.packed[i] != packed[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 
 #endif

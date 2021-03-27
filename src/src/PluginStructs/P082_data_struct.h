@@ -7,8 +7,9 @@
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
 
-
+#ifndef LIMIT_BUILD_SIZE
 # define P082_SEND_GPS_TO_LOG
+#endif
 
 # define P082_TIMESTAMP_AGE       1500
 # define P082_DEFAULT_FIX_TIMEOUT 2500 // TTL of fix status in ms since last update

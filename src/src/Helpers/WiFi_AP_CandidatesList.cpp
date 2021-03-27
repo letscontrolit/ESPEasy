@@ -62,7 +62,7 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
 #ifndef BUILD_NO_DEBUG
 
   for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-    String log = F("WIFI  : Scan result: ");
+    String log = F("WiFi : Scan result: ");
     log += it->toString();
     addLog(LOG_LEVEL_INFO, log);
   }
