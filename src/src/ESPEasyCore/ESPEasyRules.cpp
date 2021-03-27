@@ -15,6 +15,7 @@
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
@@ -1307,6 +1308,34 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds, String& timeStri
   return validTime;
 }
 
+// Balance the count of parentheses (aka round braces) by adding the missing left or right parentheses, if any
+// Returns the number of added parentheses, < 0 is left parentheses added, > 0 is right parentheses added
+int balanceParentheses(String& string) {
+  int left = 0;
+  int right = 0;
+  for (unsigned int i = 0; i < string.length(); i++) {
+    switch (string[i]) {
+      case '(':
+        left++;
+        break;
+      case ')':
+        right++;
+        break;
+    }
+  }
+  if (left > right) {
+    for (int i = 0; i < left - right; i++) {
+      string += ')';
+    }
+  } else if (right > left) {
+    string.reserve(string.length() + (right - left)); // Re-allocate max. once
+    for (int i = 0; i < right - left; i++) {
+      string = String(F("(")) + string; // This is quite 'expensive'
+    }
+  }
+  return left - right;
+}
+
 bool conditionMatch(const String& check) {
   int  posStart, posEnd;
   char compare;
@@ -1341,8 +1370,20 @@ bool conditionMatch(const String& check) {
     tmpCheck1    = timeString1;
     tmpCheck2    = timeString2;
   } else {
-    if (!validDoubleFromString(tmpCheck1, Value1) ||
-        !validDoubleFromString(tmpCheck2, Value2))
+    int condAnd = tmpCheck2.indexOf(F(" and "));
+    int condOr  = tmpCheck2.indexOf(F(" or "));
+    if (condAnd > -1 || condOr > -1) {            // Only parse first condition, rest will be parsed 'later'
+      if (condAnd > -1 && (condOr == -1 || condAnd < condOr)) {
+        tmpCheck2 = tmpCheck2.substring(0, condAnd);
+      } else if (condOr > -1) {
+        tmpCheck2 = tmpCheck2.substring(0, condOr);
+      }
+      tmpCheck2.trim();
+    }
+    balanceParentheses(tmpCheck1);
+    balanceParentheses(tmpCheck2);
+    if (isError(Calculate(tmpCheck1, Value1)) ||
+        isError(Calculate(tmpCheck2, Value2)))
     {
       return false;
     }
