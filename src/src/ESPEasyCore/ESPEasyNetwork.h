@@ -24,6 +24,12 @@ String WifiSoftAPmacAddress();
 
 void CheckRunningServices();
 
+#ifdef HAS_ETHERNET
+bool EthFullDuplex();
+bool EthLinkUp();
+uint8_t EthLinkSpeed();
+#endif
+
 
 #endif 
 #endif
