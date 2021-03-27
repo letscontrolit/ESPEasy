@@ -21,7 +21,7 @@
 .. |Plugin_Output| replace:: :ref:`P029_page`, :ref:`P038_page`, :ref:`P041_page`, :ref:`P042_page`, :ref:`P043_page`, :ref:`P070_page`
 .. |Plugin_Position| replace:: :ref:`P013_page`, :ref:`P082_page`
 .. |Plugin_Regulator| replace:: :ref:`P021_page`
-.. |Plugin_RFID| replace:: :ref:`P008_page`, :ref:`P017_page`, :ref:`P040_page`
+.. |Plugin_RFID| replace:: :ref:`P008_page`, :ref:`P017_page`, :ref:`P040_page`, :ref:`P111_page`
 .. |Plugin_Switch_input| replace:: :ref:`P001_page`, :ref:`P009_page`, :ref:`P019_page`, :ref:`P059_page`, :ref:`P080_page`, :ref:`P091_page`, :ref:`P097_page`
 .. |Plugin_Touch| replace:: :ref:`P097_page`, :ref:`P099_page`
 .. |Plugin_Weight| replace:: :ref:`P067_page`

@@ -1,0 +1,13 @@
+
+.. |P111_name| replace:: :cyan:`MFRC5222`
+.. |P111_type| replace:: :cyan:`RFID`
+.. |P111_typename| replace:: :cyan:`RFID - MFRC522`
+.. |P111_porttype| replace:: `.`
+.. |P111_status| replace:: :yellow:`TESTING`
+.. |P111_github| replace:: P111_RC522_RFID.ino
+.. _P111_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P111_RC522_RFID.ino
+.. |P111_usedby| replace:: `.`
+.. |P111_shortinfo| replace:: `RFID Reader`
+.. |P111_maintainer| replace:: `TD-er, twinbee77, tonhuisman`
+.. |P111_compileinfo| replace:: `.`
+.. |P111_usedlibraries| replace:: `https://github.com/miguelbalboa/rfid (local copy)`
