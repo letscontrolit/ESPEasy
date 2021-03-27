@@ -5,8 +5,6 @@
 
 // Ethernet Connection status
 NetworkMedium_t active_network_medium = DEFAULT_NETWORK_MEDIUM;
-bool eth_connected = false;
-
 
 bool webserverRunning(false);
 bool webserver_init(false);
