@@ -268,7 +268,10 @@ void AttemptWiFiConnect() {
 // ********************************************************************************
 bool prepareWiFi() {
   if (!WiFi_AP_Candidates.hasKnownCredentials()) {
-    addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
+    if (!WiFiEventData.warnedNoValidWiFiSettings) {
+      addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
+      WiFiEventData.warnedNoValidWiFiSettings = true;
+    }
     WiFiEventData.last_wifi_connect_attempt_moment.clear();
     WiFiEventData.wifi_connect_attempt     = 1;
     WiFiEventData.wifiConnectAttemptNeeded = false;
@@ -277,6 +280,7 @@ bool prepareWiFi() {
     setAP(true);
     return false;
   }
+  WiFiEventData.warnedNoValidWiFiSettings = false;
   setSTA(true);
   char hostname[40];
   safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
@@ -382,7 +386,7 @@ void initWiFi()
   setWifiMode(WIFI_OFF);
 
 #if defined(ESP32)
-  WiFiEventData.wm_event_id = WiFi.onEvent(WiFiEvent);
+  wm_event_id = WiFi.onEvent(WiFiEvent);
 #endif
 #ifdef ESP8266
   // WiFi event handlers
@@ -580,7 +584,7 @@ void WifiDisconnect()
 {
   #if defined(ESP32)
   WiFi.disconnect();
-  WiFi.removeEvent(WiFiEventData.wm_event_id);
+  WiFi.removeEvent(wm_event_id);
   #else // if defined(ESP32)
   ETS_UART_INTR_DISABLE();
   wifi_station_disconnect();
