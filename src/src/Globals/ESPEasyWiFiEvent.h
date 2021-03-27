@@ -6,8 +6,13 @@
 #include <stdint.h>
 #include <list>
 
+#include "../../ESPEasy_common.h"
+
 #include "../DataStructs/WiFiEventData.h"
 #include "../DataStructs/MAC_address.h"
+#ifdef HAS_ETHERNET
+#include "../DataStructs/EthernetEventData.h"
+#endif
 
 #ifdef ESP32
 # include <esp_event.h>
@@ -37,5 +42,14 @@ extern std::list<system_event_ap_probe_req_rx_t> APModeProbeRequestReceived_list
 #endif
 
 extern WiFiEventData_t WiFiEventData;
+
+#ifdef HAS_ETHERNET
+extern EthernetEventData_t EthEventData;
+#endif
+
+#ifdef ESP32
+extern WiFiEventId_t wm_event_id;
+#endif // ifdef ESP32
+
 
 #endif // GLOBALS_ESPEASYWIFIEVENT_H

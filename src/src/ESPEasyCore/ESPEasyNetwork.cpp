@@ -6,14 +6,19 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
+
+#include "../Helpers/Network.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/MDNS_Helper.h"
 
 #ifdef HAS_ETHERNET
-#include "ETH.h"
+#include <ETH.h>
 #endif
 
 void setNetworkMedium(NetworkMedium_t medium) {
+  if (active_network_medium == medium) {
+    return;
+  }
   if (medium == NetworkMedium_t::ESPEasyNOW_only) {
     if (!Settings.UseESPEasyNow()) {
       return;
@@ -23,13 +28,6 @@ void setNetworkMedium(NetworkMedium_t medium) {
       return;
     }
   }
-  #ifndef HAS_ETHERNET
-  if (medium == NetworkMedium_t::Ethernet) {
-    // When no ethernet is present in the build, make sure to fall-back on WiFi.
-    medium = NetworkMedium_t::WIFI;
-  }
-  #endif
-
   switch (active_network_medium) {
     case NetworkMedium_t::Ethernet:
       #ifdef HAS_ETHERNET
@@ -38,7 +36,9 @@ void setNetworkMedium(NetworkMedium_t medium) {
       #endif
       break;
     case NetworkMedium_t::WIFI:
-      setSTA(false);
+      WiFiEventData.timerAPoff.setNow();
+      WiFiEventData.timerAPstart.clear();
+      WifiDisconnect();
       break;
     case NetworkMedium_t::ESPEasyNOW_only:
       WiFiEventData.clearAll();
@@ -46,6 +46,7 @@ void setNetworkMedium(NetworkMedium_t medium) {
     case NetworkMedium_t::NotSet:
       break;
   }
+  statusLED(true);
   active_network_medium = medium;
   last_network_medium_set_moment.setNow();
   addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
@@ -90,7 +91,7 @@ bool NetworkConnected() {
 IPAddress NetworkLocalIP() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(eth_connected) {
+    if(EthEventData.ethInitSuccess) {
       return ETH.localIP();
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkLocalIP() only on connected Ethernet!"));
@@ -104,7 +105,7 @@ IPAddress NetworkLocalIP() {
 IPAddress NetworkSubnetMask() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(eth_connected) {
+    if(EthEventData.ethInitSuccess) {
       return ETH.subnetMask();
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkSubnetMask() only on connected Ethernet!"));
@@ -118,7 +119,7 @@ IPAddress NetworkSubnetMask() {
 IPAddress NetworkGatewayIP() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(eth_connected) {
+    if(EthEventData.ethInitSuccess) {
       return ETH.gatewayIP();
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkGatewayIP() only on connected Ethernet!"));
@@ -132,7 +133,7 @@ IPAddress NetworkGatewayIP() {
 IPAddress NetworkDnsIP (uint8_t dns_no) {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(eth_connected) {
+    if(EthEventData.ethInitSuccess) {
       return ETH.dnsIP();
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkDnsIP(uint8_t dns_no) only on connected Ethernet!"));
@@ -146,7 +147,7 @@ IPAddress NetworkDnsIP (uint8_t dns_no) {
 String NetworkMacAddress() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(!eth_connected) {
+    if(!EthEventData.ethInitSuccess) {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddress() only on connected Ethernet!"));
     } else {
       return ETH.macAddress();
@@ -174,7 +175,7 @@ uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
 String NetworkGetHostname() {
     #ifdef ESP32
       #ifdef HAS_ETHERNET 
-      if(Settings.NetworkMedium == NetworkMedium_t::Ethernet) {
+      if(Settings.NetworkMedium == NetworkMedium_t::Ethernet && EthEventData.ethInitSuccess) {
         return String(ETH.getHostname());
       }
       #endif
@@ -218,3 +219,26 @@ void CheckRunningServices() {
   set_mDNS();
   SetWiFiTXpower();
 }
+
+#ifdef HAS_ETHERNET
+bool EthFullDuplex()
+{
+  if (EthEventData.ethInitSuccess)
+    return ETH.fullDuplex();
+  return false;
+}
+
+bool EthLinkUp()
+{
+  if (EthEventData.ethInitSuccess)
+    return ETH.linkUp();
+  return false;
+}
+
+uint8_t EthLinkSpeed()
+{
+  if (EthEventData.ethInitSuccess)
+    return ETH.linkSpeed();
+  return 0;
+}
+#endif

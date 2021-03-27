@@ -14,7 +14,6 @@
 // Ethernet Connectiopn status
 extern NetworkMedium_t active_network_medium;
 extern LongTermTimer last_network_medium_set_moment;;
-extern bool    eth_connected;
 
 extern bool webserverRunning;
 extern bool webserver_init;

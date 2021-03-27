@@ -6,8 +6,6 @@
 // Ethernet Connection status
 NetworkMedium_t active_network_medium = NetworkMedium_t::NotSet;
 LongTermTimer last_network_medium_set_moment; 
-bool eth_connected = false;
-
 
 bool webserverRunning(false);
 bool webserver_init(false);

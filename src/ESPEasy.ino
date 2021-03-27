@@ -578,21 +578,7 @@ void loop()
 
   updateLoopStats();
 
-  switch (active_network_medium) {
-    case NetworkMedium_t::WIFI:
-      handle_unprocessedWiFiEvents();
-      break;
-    case NetworkMedium_t::Ethernet:
-      if (NetworkConnected()) {
-        updateUDPport();
-      }
-      break;
-    case NetworkMedium_t::ESPEasyNOW_only:
-      // FIXME TD-er: Should ESPEasy-NOW handler be stopped?
-      break;
-    case NetworkMedium_t::NotSet:
-      break;
-  }
+  handle_unprocessedNetworkEvents();
 
   bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
   if (firstLoopConnectionsEstablished) {
@@ -709,10 +695,7 @@ void backgroundtasks()
     return;
   }
   START_TIMER
-  #if defined(FEATURE_ARDUINO_OTA) || defined(FEATURE_MDNS)
-  const bool networkConnected = 
-  #endif
-  NetworkConnected();
+  const bool networkConnected = NetworkConnected();
   runningBackgroundTasks=true;
 
   /*
@@ -730,12 +713,7 @@ void backgroundtasks()
     if (webserverRunning) {
       web_server.handleClient();
     }
-    if (WiFi.getMode() != WIFI_OFF
-    // This makes UDP working for ETHERNET
-    #ifdef HAS_ETHERNET
-                       || eth_connected
-    #endif
-                       ) {
+    if (networkConnected) {
       checkUDP();
     }
   }
