@@ -6,9 +6,10 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+void setNetworkMedium(NetworkMedium_t medium);
+
 void NetworkConnectRelaxed();
 bool NetworkConnected();
-void PrepareSend();
 IPAddress NetworkLocalIP();
 IPAddress NetworkSubnetMask();
 IPAddress NetworkGatewayIP();

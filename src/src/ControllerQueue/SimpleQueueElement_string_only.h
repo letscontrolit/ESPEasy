@@ -13,12 +13,18 @@ public:
 
   simple_queue_element_string_only();
 
-  simple_queue_element_string_only(int           ctrl_idx,
-                                   const String& req);
+  explicit simple_queue_element_string_only(int           ctrl_idx,
+                                            taskIndex_t   TaskIndex,
+                                            const String& req);
 
   size_t getSize() const;
 
+  bool isDuplicate(const simple_queue_element_string_only& other) const;
+
+
   String txt;
+  unsigned long _timestamp         = millis();
+  taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
 };
 

@@ -104,7 +104,6 @@ bool ControllerSettingsStruct::checkHostReachable(bool quick) {
   }
   delay(1);       // Make sure the Watchdog will not trigger a reset.
 
-  PrepareSend();
   if (quick && ipSet()) { return true; }
 
   if (UseDNS) {
@@ -254,4 +253,24 @@ bool ControllerSettingsStruct::sendBinary() const
 void ControllerSettingsStruct::sendBinary(bool value)
 {
   bitWrite(VariousFlags, 7, value);
+}
+
+bool ControllerSettingsStruct::allowExpire() const
+{
+  return bitRead(VariousFlags, 9);
+}
+
+void ControllerSettingsStruct::allowExpire(bool value)
+{
+  bitWrite(VariousFlags, 9, value);
+}
+
+bool ControllerSettingsStruct::deduplicate() const
+{
+  return bitRead(VariousFlags, 10);
+}
+
+void ControllerSettingsStruct::deduplicate(bool value)
+{
+  bitWrite(VariousFlags, 10, value);
 }
