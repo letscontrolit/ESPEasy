@@ -5,6 +5,7 @@
 #include "../WebServer/Rules.h"
 
 #include "../Globals/Services.h"
+#include "../Globals/Settings.h"
 
 #include "../Globals/ESPEasyWiFiEvent.h"
 
@@ -16,10 +17,11 @@ void handleNotFound() {
   checkRAM(F("handleNotFound"));
   #endif
 
-  if (WiFiEventData.wifiSetup)
+  // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
+ if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
   {
     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
-    return;
+   return;
   }
 
   if (!isLoggedIn()) { return; }
