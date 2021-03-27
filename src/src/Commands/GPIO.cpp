@@ -873,7 +873,7 @@ bool gpio_mode_range_helper(byte pin, byte pinMode, struct EventStruct *event, c
   {
 	  //int8_t state=0;
 	  byte mode=255;
-    bool setSuccess=false;
+    //bool setSuccess=false;
 
     switch (pinMode) {
       case 0:
@@ -893,14 +893,14 @@ bool gpio_mode_range_helper(byte pin, byte pinMode, struct EventStruct *event, c
     if (mode < 255) { 
       switch(pluginID) {
         case PLUGIN_GPIO:
-          setSuccess = setGPIOMode(pin, mode);
+          /* setSuccess = */ setGPIOMode(pin, mode);
           break;
         case PLUGIN_PCF:
           //set pin = 1 when INPUT
-          setSuccess = setPCFMode(pin, mode);
+          /* setSuccess = */ setPCFMode(pin, mode);
           break;
         case PLUGIN_MCP:
-          setSuccess = setMCPMode(pin, mode);
+          /* setSuccess = */ setMCPMode(pin, mode);
           break;
       }
 

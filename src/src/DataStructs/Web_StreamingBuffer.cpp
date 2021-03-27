@@ -140,7 +140,6 @@ void Web_StreamingBuffer::startStream(bool json, const String& origin) {
   sentBytes    = 0;
   buf          = "";
   
-  PrepareSend();
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
     web_server.send(200, "text/plain", "Low memory. Cannot display webpage :-(");
@@ -209,7 +208,7 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
     beforeTXRam = freeBeforeSend;
   }
   duringTXRam = freeBeforeSend;
-  PrepareSend();
+  
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   String size = formatToHex(length) + "\r\n";
 
@@ -249,7 +248,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendHeaderBlocking"));
   #endif
-  PrepareSend();
+  
   web_server.client().flush();
   String contenttype;
 

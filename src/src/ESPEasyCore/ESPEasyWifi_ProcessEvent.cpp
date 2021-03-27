@@ -400,7 +400,7 @@ void processScanDone() {
   WiFiEventData.processedScanDone = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI  : Scan finished, found: ");
+    String log = F("WiFi : Scan finished, found: ");
     log += scanCompleteStatus;
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -409,7 +409,7 @@ void processScanDone() {
 
   const WiFi_AP_Candidate bestCandidate = WiFi_AP_Candidates.getBestScanResult();
   if (bestCandidate.usable() && loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI  : Selected: ");
+    String log = F("WiFi : Selected: ");
     log += bestCandidate.toString();
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -470,6 +470,7 @@ void markWiFi_services_initialized() {
 #ifdef HAS_ETHERNET
 
 void processEthernetConnected() {
+  ++WiFiEventData.wifi_reconnects;
   if (Settings.UseRules)
   {
     eventQueue.add(F("ETHERNET#Connected"));

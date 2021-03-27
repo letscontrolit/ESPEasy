@@ -381,50 +381,51 @@ void handle_sysinfo_Ethernet() {
     addRowLabelValue(LabelType::ETH_SPEED);
     addRowLabelValue(LabelType::ETH_DUPLEX);
     addRowLabelValue(LabelType::ETH_MAC);
-    addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
-    addRowLabelValue(LabelType::ETH_IP_GATEWAY);
-    addRowLabelValue(LabelType::ETH_IP_DNS);
+//    addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
+//    addRowLabelValue(LabelType::ETH_IP_GATEWAY);
+//    addRowLabelValue(LabelType::ETH_IP_DNS);
   }
 }
 
 # endif // ifdef HAS_ETHERNET
 
 void handle_sysinfo_Network() {
-  addTableSeparator(F("Network"), 2, 3, F("Wifi"));
+  addTableSeparator(F("Network"), 2, 3);
 
   # ifdef HAS_ETHERNET
   addRowLabelValue(LabelType::ETH_WIFI_MODE);
   # endif // ifdef HAS_ETHERNET
 
-
-  if (
-    # ifdef HAS_ETHERNET
-    active_network_medium == NetworkMedium_t::WIFI &&
-    # endif // ifdef HAS_ETHERNET
-    NetworkConnected())
-  {
-    addRowLabel(F("Wifi"));
-    {
-      String html;
-      html.reserve(64);
-
-      html += toString(getConnectionProtocol());
-      html += F(" (RSSI ");
-      html += WiFi.RSSI();
-      html += F(" dBm)");
-      addHtml(html);
-    }
-  }
   addRowLabelValue(LabelType::IP_CONFIG);
   addRowLabelValue(LabelType::IP_ADDRESS_SUBNET);
   addRowLabelValue(LabelType::GATEWAY);
   addRowLabelValue(LabelType::CLIENT_IP);
   addRowLabelValue(LabelType::DNS);
   addRowLabelValue(LabelType::ALLOWED_IP_RANGE);
-  addRowLabelValue(LabelType::STA_MAC);
-  addRowLabelValue(LabelType::AP_MAC);
+  addRowLabelValue(LabelType::CONNECTED);
+  addRowLabelValue(LabelType::NUMBER_RECONNECTS);
+
+  addTableSeparator(F("WiFi"), 2, 3, F("Wifi"));
+
+  const bool showWiFiConnectionInfo = 
+    active_network_medium == NetworkMedium_t::WIFI &&
+    NetworkConnected();
+
+  addRowLabel(F("Wifi Connection"));
+  if (showWiFiConnectionInfo)
+  {
+    String html;
+    html.reserve(64);
+
+    html += toString(getConnectionProtocol());
+    html += F(" (RSSI ");
+    html += WiFi.RSSI();
+    html += F(" dBm)");
+    addHtml(html);
+  } else addHtml('-');
 
   addRowLabel(LabelType::SSID);
+  if (showWiFiConnectionInfo)
   {
     String html;
     html.reserve(64);
@@ -434,14 +435,26 @@ void handle_sysinfo_Network() {
     html += WiFi.BSSIDstr();
     html += ')';
     addHtml(html);
+  } else addHtml('-');
+
+  addRowLabel(getLabel(LabelType::CHANNEL));
+  if (showWiFiConnectionInfo) {
+    addHtml(getValue(LabelType::CHANNEL));
+  } else addHtml('-');
+
+  addRowLabel(getLabel(LabelType::ENCRYPTION_TYPE_STA));
+  if (showWiFiConnectionInfo) {
+    addHtml(getValue(LabelType::ENCRYPTION_TYPE_STA));
+  } else addHtml('-');
+
+  if (active_network_medium == NetworkMedium_t::WIFI)
+  {
+    addRowLabel(LabelType::LAST_DISCONNECT_REASON);
+    addHtml(getValue(LabelType::LAST_DISC_REASON_STR));
   }
 
-  addRowLabelValue(LabelType::CHANNEL);
-  addRowLabelValue(LabelType::ENCRYPTION_TYPE_STA);
-  addRowLabelValue(LabelType::CONNECTED);
-  addRowLabel(LabelType::LAST_DISCONNECT_REASON);
-  addHtml(getValue(LabelType::LAST_DISC_REASON_STR));
-  addRowLabelValue(LabelType::NUMBER_RECONNECTS);
+  addRowLabelValue(LabelType::STA_MAC);
+  addRowLabelValue(LabelType::AP_MAC);
 }
 
 void handle_sysinfo_WiFiSettings() {

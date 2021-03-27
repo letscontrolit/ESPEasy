@@ -22,6 +22,8 @@ public:
 
   C011_queue_element(const struct EventStruct *event);
 
+  bool isDuplicate(const C011_queue_element& other) const;
+
   size_t getSize() const;
 
   String uri;
@@ -29,6 +31,7 @@ public:
   String header;
   String postStr;
   int idx                          = 0;
+  unsigned long _timestamp         = millis();
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;

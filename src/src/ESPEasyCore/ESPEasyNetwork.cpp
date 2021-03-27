@@ -12,21 +12,36 @@
 #include "ETH.h"
 #endif
 
+void setNetworkMedium(NetworkMedium_t medium) {
+  switch (active_network_medium) {
+    case NetworkMedium_t::Ethernet:
+      #ifdef HAS_ETHERNET
+      // FIXME TD-er: How to 'end' ETH?
+//      ETH.end();
+      #endif
+      break;
+    case NetworkMedium_t::WIFI:
+      WiFi.mode(WIFI_OFF);
+      break;
+  }
+  active_network_medium = medium;
+  addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
+}
+
+
 /*********************************************************************************************\
    Ethernet or Wifi Support for ESP32 Build flag HAS_ETHERNET
 \*********************************************************************************************/
 void NetworkConnectRelaxed() {
   if (NetworkConnected()) return;
 #ifdef HAS_ETHERNET
-  addLog(LOG_LEVEL_INFO, F("Connect to: "));
-  addLog(LOG_LEVEL_INFO, toString(active_network_medium));
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     if (ETHConnectRelaxed()) {
       return;
     }
     // Failed to start the Ethernet network, probably not present of wrong parameters.
     // So set the runtime active medium to WiFi to try connecting to WiFi or at least start the AP.
-    active_network_medium = NetworkMedium_t::WIFI;
+    setNetworkMedium(NetworkMedium_t::WIFI);
   }
 #endif
   WiFiConnectRelaxed();
@@ -39,17 +54,6 @@ bool NetworkConnected() {
   }
   #endif
   return WiFiConnected();
-}
-
-void PrepareSend() {
-  #ifdef HAS_ETHERNET
-  if (active_network_medium == NetworkMedium_t::Ethernet) {
-    return;
-  }
-  #endif
-  if (Settings.UseMaxTXpowerForSending()) {
-    SetWiFiTXpower(30); // Just some max, will be limited in SetWiFiTXpower
-  }
 }
 
 IPAddress NetworkLocalIP() {

@@ -212,8 +212,9 @@ void WiFiConnectRelaxed() {
 }
 
 void AttemptWiFiConnect() {
-  // Start connect attempt now, so no longer needed to attempt new connection.
-  WiFiEventData.wifiConnectAttemptNeeded = false;
+  if (!WiFiEventData.wifiConnectAttemptNeeded) {
+    return;
+  }
 
   if (WiFiEventData.wifiSetupConnect) {
     // wifiSetupConnect is when run from the setup page.
@@ -245,9 +246,11 @@ void AttemptWiFiConnect() {
       } else {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
       }
+      // Start connect attempt now, so no longer needed to attempt new connection.
+      WiFiEventData.wifiConnectAttemptNeeded = false;
     }
   } else {
-    if (!wifiAPmodeActivelyUsed()) {
+    if (!wifiAPmodeActivelyUsed() || WiFiEventData.wifiSetupConnect) {
       if (!prepareWiFi()) {
         return;
       }
@@ -267,7 +270,8 @@ bool prepareWiFi() {
   if (!WiFi_AP_Candidates.hasKnownCredentials()) {
     addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
     WiFiEventData.last_wifi_connect_attempt_moment.clear();
-    WiFiEventData.wifi_connect_attempt             = 1;
+    WiFiEventData.wifi_connect_attempt     = 1;
+    WiFiEventData.wifiConnectAttemptNeeded = false;
 
     // No need to wait longer to start AP mode.
     setAP(true);
@@ -296,8 +300,11 @@ bool checkAndResetWiFi() {
 
   switch(status) {
     case STATION_GOT_IP:
-      // This is a valid status, no need to reset
-      return false;
+      if (WiFi.RSSI() < 0) {
+        // This is a valid status, no need to reset
+        return false;
+      }
+      break;
     case STATION_NO_AP_FOUND:
     case STATION_CONNECT_FAIL:
     case STATION_WRONG_PASSWORD:
@@ -310,7 +317,7 @@ bool checkAndResetWiFi() {
       }
       break;
   }
-  String log = F("WIFI  : WiFiConnected() out of sync: ");
+  String log = F("WiFi : WiFiConnected() out of sync: ");
   log += ESPeasyWifiStatusToString();
   log += F(" RSSI: ");
   log += String(WiFi.RSSI());
@@ -328,7 +335,7 @@ bool checkAndResetWiFi() {
     if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
       return false;
     }
-    String log = F("WIFI  : WiFiConnected() out of sync: ");
+    String log = F("WiFi : WiFiConnected() out of sync: ");
     log += ESPeasyWifiStatusToString();
     log += F(" RSSI: ");
     log += String(WiFi.RSSI());
@@ -404,6 +411,10 @@ void SetWiFiTXpower(float dBm, float rssi) {
   const WiFiMode_t cur_mode = WiFi.getMode();
   if (cur_mode == WIFI_OFF) {
     return;
+  }
+
+  if (Settings.UseMaxTXpowerForSending()) {
+    dBm = 30; // Just some max, will be limited later
   }
 
   // Range ESP32  : 2dBm - 20dBm
@@ -487,7 +498,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
 
   WiFiEventData.wifi_TX_pwr = dBm;
 
-  delay(1);
+  delay(0);
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     if (WiFiEventData.wifi_TX_pwr != maxTXpwr) {
@@ -588,7 +599,7 @@ void WifiScan(bool async, uint8_t channel) {
     // Scan still busy
     return;
   }
-  addLog(LOG_LEVEL_INFO, F("WIFI  : Start network scan"));
+  addLog(LOG_LEVEL_INFO, F("WiFi : Start network scan"));
   bool show_hidden         = true;
   WiFiEventData.processedScanDone = false;
   WiFiEventData.lastGetScanMoment.setNow();
@@ -1015,7 +1026,7 @@ void logConnectionStatus() {
 
   if ((arduino_corelib_wifistatus == WL_CONNECTED) != (sdk_wifistatus == STATION_GOT_IP)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("WIFI  : SDK station status differs from Arduino status. SDK-status: ");
+      String log = F("WiFi : SDK station status differs from Arduino status. SDK-status: ");
       log += SDKwifiStatusToString(sdk_wifistatus);
       log += F(" Arduino status: ");
       log += ArduinoWifiStatusToString(arduino_corelib_wifistatus);
