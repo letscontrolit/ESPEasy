@@ -1323,12 +1323,14 @@ int balanceParentheses(String& string) {
         break;
     }
   }
+  if (left != right) {
+    string.reserve(string.length() + abs(right - left)); // Re-allocate max. once
+  }
   if (left > right) {
     for (int i = 0; i < left - right; i++) {
       string += ')';
     }
   } else if (right > left) {
-    string.reserve(string.length() + (right - left)); // Re-allocate max. once
     for (int i = 0; i < right - left; i++) {
       string = String(F("(")) + string; // This is quite 'expensive'
     }
