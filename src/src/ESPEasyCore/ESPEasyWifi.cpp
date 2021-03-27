@@ -977,7 +977,7 @@ void setConnectionSpeed() {
   #ifdef ESP8266
   #ifdef USES_ESPEASY_NOW
   if (isESPEasy_now_only()) {
-    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+    WiFi.setPhyMode(WIFI_PHY_MODE_11B);
     return;
   }
   #endif

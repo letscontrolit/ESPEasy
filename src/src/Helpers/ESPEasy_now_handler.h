@@ -91,6 +91,7 @@ private:
   ESPEasy_Now_MQTT_queue_check_packet _preferredNodeMQTTqueueState;
 
   unsigned int _ClientTimeout = 0;
+  uint8_t      _usedWiFiChannel = 0;
   controllerIndex_t _controllerIndex = INVALID_CONTROLLER_INDEX;
   bool _enableESPEasyNowFallback = false;
   bool _mqtt_retainFlag = false;

@@ -82,13 +82,10 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
 bool ESPEasy_now_handler_t::begin()
 {
   if (!Settings.UseESPEasyNow()) { return false; }
-
-  if (use_EspEasy_now) {
-    return true;
-  }
+  if (use_EspEasy_now) { return true; }
 
   _last_used = millis();
-  int channel = WiFi.channel();
+  _usedWiFiChannel = WiFi.channel();
   _controllerIndex = INVALID_CONTROLLER_INDEX;
 
   if (isESPEasy_now_only()) {
@@ -96,7 +93,7 @@ bool ESPEasy_now_handler_t::begin()
   }
 
   if (!Nodes.isEndpoint()) {
-    channel = Nodes.getESPEasyNOW_channel();
+    _usedWiFiChannel = Nodes.getESPEasyNOW_channel();
   }
 
   const String ssid       = F(ESPEASY_NOW_TMP_SSID);
@@ -106,13 +103,13 @@ bool ESPEasy_now_handler_t::begin()
 
   int ssid_hidden    = 1;
   int max_connection = 6;
-  WiFi.softAP(ssid.c_str(), passphrase.c_str(), channel, ssid_hidden, max_connection);
+  WiFi.softAP(ssid.c_str(), passphrase.c_str(), _usedWiFiChannel, ssid_hidden, max_connection);
 
   //    WiFi.softAPdisconnect(false);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = String(F(ESPEASY_NOW_NAME)) + F(": begin on channel ");
-    log += channel;
+    log += _usedWiFiChannel;
     addLog(LOG_LEVEL_INFO, log);
   }
 
@@ -147,6 +144,7 @@ bool ESPEasy_now_handler_t::begin()
 void ESPEasy_now_handler_t::end()
 {
   _controllerIndex = INVALID_CONTROLLER_INDEX;
+  _usedWiFiChannel = 0;
   use_EspEasy_now  = false;
   ESPEasy_now_in_queue.clear();
   RTC.clearLastWiFi(); // Force a WiFi scan
@@ -160,6 +158,13 @@ void ESPEasy_now_handler_t::end()
 
 bool ESPEasy_now_handler_t::loop()
 {
+  if (!WifiIsAP(WiFi.getMode())) {
+    // AP mode may be turned off externally, and if so restart ESPEasy-now handler
+    if (use_EspEasy_now) {
+      end();
+    }
+  }
+
   if (temp_disable_EspEasy_now_timer != 0) {
     if (timeOutReached(temp_disable_EspEasy_now_timer)) {
       if (begin()) {
@@ -244,6 +249,7 @@ bool ESPEasy_now_handler_t::loop()
     //    WifiScan(false, false);
     //    addPeerFromWiFiScan();
     //    _last_used = millis();
+    end();
     begin();
   }
   return somethingProcessed;
@@ -517,6 +523,13 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     addLog(LOG_LEVEL_INFO, log);
   }
 
+  const NodeStruct * preferred = Nodes.getPreferredNode();
+  if (preferred != nullptr) {
+    if (preferred->unit == received.unit) {
+      Nodes.updateThisNode();
+    }
+  }
+
   const uint8_t new_distance = Nodes.getDistance();
   if (new_distance != cur_distance || isNewNode) {
     if (new_distance == 0) {
@@ -627,7 +640,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
   if (_enableESPEasyNowFallback /*&& !WiFiConnected(10) */) {
     const NodeStruct *preferred = Nodes.getPreferredNode();
 
-    if (preferred != nullptr && Nodes.getDistance() > preferred->distance) {
+    if (preferred != nullptr /* && Nodes.getDistance() > preferred->distance */) {
       switch (_preferredNodeMQTTqueueState.state) {
         case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset:
         case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Full:
