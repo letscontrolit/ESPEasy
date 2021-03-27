@@ -1183,6 +1183,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P102
     #define USES_P102   // PZEM004Tv3
   #endif
+  #ifndef USES_P108
+    #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+  #endif
   #ifndef USES_P111
     #define USES_P111   // RC522 RFID reader
   #endif
