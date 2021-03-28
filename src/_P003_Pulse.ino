@@ -16,7 +16,8 @@
 
 // additional debug/tuning messages from PULSE mode into the logfile
 #define P003_PULSE_STATISTIC
-#define P003_PULSE_STATS_LOG_LEVEL     LOG_LEVEL_DEBUG
+#define P003_PULSE_STATS_DEFAULT_LOG_LEVEL  LOG_LEVEL_DEBUG
+#define P003_PULSE_STATS_ADHOC_LOG_LEVEL    LOG_LEVEL_INFO
 
 #define PLUGIN_003
 #define PLUGIN_ID_003                  3
@@ -52,15 +53,19 @@
 #define P003_CT_INDEX_TOTAL                2
 #define P003_CT_INDEX_COUNTER_TOTAL        3
 // processing Steps in PLUGIN_TIMER_IN
+#define P003_PROCESSING_STEP_0             0
 #define P003_PROCESSING_STEP_1             1
 #define P003_PROCESSING_STEP_2             2
 #define P003_PROCESSING_STEP_3             3
+#define P003_PSTEP_MAX                     P003_PROCESSING_STEP_3
+
+bool validIntFromString(const String& tBuf, int& result);
 
 void Plugin_003_pulse_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt2() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt3() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt4() ICACHE_RAM_ATTR;
-void Plugin_003_pulsecheck(taskIndex_t taskID) ICACHE_RAM_ATTR;
+void Plugin_003_pulsecheck(byte taskID) ICACHE_RAM_ATTR;
 
 // this takes 20 bytes of IRAM per handler
 // void Plugin_003_pulse_interrupt5() ICACHE_RAM_ATTR;
@@ -83,23 +88,27 @@ unsigned long           P003_pulseLowTime[TASKS_MAX];           // indicates the
 unsigned long           P003_pulseHighTime[TASKS_MAX];          // indicates the length of the most recent stable high pulse (in ms)
 int                     P003_currentStableState[TASKS_MAX];     // stores current stable pin state. Set in Step 3 when new stable pulse started
 int                     P003_lastCheckState[TASKS_MAX];         // most recent pin state, that was read. Set in Step1,2,3
+String                  P003_log;                               // log message 
 
 #ifdef P003_PULSE_STATISTIC
 // debug/tuning variables for PULSE mode statistical logging
-volatile unsigned int P003_Step0counter[TASKS_MAX]; // counts how often step 0 was entered (volatile <- in ISR)
-unsigned int P003_Step1counter[TASKS_MAX];          // counts how often step 1 was entered
-unsigned int P003_Step2OKcounter[TASKS_MAX];        // counts how often step 2 detected the expected pin state (first verification)
-unsigned int P003_Step2NOKcounter[TASKS_MAX];       // counts how often step 2 detected the wrong pin state (first verification failed)
-unsigned int P003_Step3OKcounter[TASKS_MAX];        // counts how often step 3 detected the expected pin state (2nd verification)
-unsigned int P003_Step3NOKcounter[TASKS_MAX];       // counts how often step 3 detected the wrong pin state (2nd verification failed)
-unsigned int P003_Step3IGNcounter[TASKS_MAX];       // counts how often step 3 detected the wrong pin state (2nd verification failed)
+volatile unsigned int P003_Step0counter[TASKS_MAX];    // counts how often step 0 was entered (volatile <- in ISR)
+unsigned int P003_Step1counter[TASKS_MAX];             // counts how often step 1 was entered
+unsigned int P003_Step2OKcounter[TASKS_MAX];           // counts how often step 2 detected the expected pin state (first verification)
+unsigned int P003_Step2NOKcounter[TASKS_MAX];          // counts how often step 2 detected the wrong pin state (first verification failed)
+unsigned int P003_Step3OKcounter[TASKS_MAX];           // counts how often step 3 detected the expected pin state (2nd verification)
+unsigned int P003_Step3NOKcounter[TASKS_MAX];          // counts how often step 3 detected the wrong pin state (2nd verification failed)
+unsigned int P003_Step3IGNcounter[TASKS_MAX];          // counts how often step 3 detected the wrong pin state (2nd verification failed)
+unsigned int P003_Step0ODcounter[TASKS_MAX];           // counts how often the debounce time timed out before step 0 was reached
+long P003_StepOverdueMax[TASKS_MAX][P003_PSTEP_MAX+1]; // longest recognised overdue time per step in ms
+byte P003_StatsLogLevel[TASKS_MAX];                    // log level for regular statistics logging (default = P003_PULSE_STATS_ADHOC_LOG_LEVEL)
+
 #endif // P003_PULSE_STATISTIC
 
 
 boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  String log;
 
   switch (function)
   {
@@ -237,8 +246,8 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // task indexes larger than 32 should never happen
       if ( event->TaskIndex > sizeof(P003_initStepsFlags)*8 ) {
         // P003_initStepsFlags and P003_processingFlags can only serve as much tasks as their size in bits (32)
-        log =  F("P003: Error! TaskIndex "); log += event->TaskIndex; log += F("is too large");
-        addLog(LOG_LEVEL_ERROR, log);
+        P003_log =  F("P003: Error! TaskIndex "); P003_log += event->TaskIndex; P003_log += F("is too large");
+        addLog(LOG_LEVEL_ERROR, P003_log);
         break;
       }    
 
@@ -252,19 +261,17 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       P003_lastCheckState[event->TaskIndex]         = HIGH;    
 
       #ifdef P003_PULSE_STATISTIC
-      // initialize statistical step counters from TotalCounter and error counters with 0
-      P003_Step0counter[event->TaskIndex]     = P003_pulseTotalCounter[event->TaskIndex];
-      P003_Step1counter[event->TaskIndex]     = P003_pulseTotalCounter[event->TaskIndex];
-      P003_Step2OKcounter[event->TaskIndex]   = P003_pulseTotalCounter[event->TaskIndex];
-      P003_Step2NOKcounter[event->TaskIndex]  = 0;
-      P003_Step3OKcounter[event->TaskIndex]   = P003_pulseTotalCounter[event->TaskIndex];
-      P003_Step3NOKcounter[event->TaskIndex]  = 0;
-      P003_Step3IGNcounter[event->TaskIndex]  = 0;
+        P003_StatsLogLevel[event->TaskIndex]    = P003_PULSE_STATS_DEFAULT_LOG_LEVEL;
+        P003_Step0counter[event->TaskIndex]     = P003_pulseTotalCounter[event->TaskIndex];
+        P003_Step1counter[event->TaskIndex]     = P003_pulseTotalCounter[event->TaskIndex];
+        P003_Step2OKcounter[event->TaskIndex]   = P003_pulseTotalCounter[event->TaskIndex];
+        P003_Step3OKcounter[event->TaskIndex]   = P003_pulseTotalCounter[event->TaskIndex];
+        resetStatsErrorVars(event->TaskIndex);
       #endif // P003_PULSE_STATISTIC
 
-      log = F("INIT : PulsePin: ");
-      log += Settings.TaskDevicePin1[event->TaskIndex];
-      addLog(LOG_LEVEL_INFO, log);
+      P003_log = F("INIT : PulsePin: ");
+      P003_log += Settings.TaskDevicePin1[event->TaskIndex];
+      addLog(LOG_LEVEL_INFO, P003_log);
       
       // set up device pin and estabish interupt handlers
       pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
@@ -380,15 +387,27 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       {
         #ifdef P003_PULSE_STATISTIC
           // Valid commands:
-          // - logpulsestatistic
-          // - logpulsestatistic,taskindex
+          // - logpulsestatistic{,command}{,taskindex}
+          // optional parameters:
+          //    command = command (r,i,ri)
+          //       r=reset error and overdue counters after logging
+          //       i=increase the log level for regular statstic logs to "info"
+          //    taskindex - task index (1,2,3) (if 0 or ommitted: first task 1)
 
+          String par1 = parseString(string, 2); // Reset command ?
+
+          int idx = 1;         
+          if (par1 == "r" || par1 == "ri" ) idx = 2;
           // Allow for an optional taskIndex parameter. When not given it will take the first task of this plugin.
-          if (!pluginOptionalTaskIndexArgumentMatch(event->TaskIndex, string, 1)) {
+          if (!pluginOptionalTaskIndexArgumentMatch(event->TaskIndex, string, idx)) {
             break;
           }
 
-          doStatisticLogging(event->TaskIndex, F("P003+"));
+          doStatisticLogging(event->TaskIndex, F("P003+"), P003_PULSE_STATS_ADHOC_LOG_LEVEL);
+          doTimingLogging(event->TaskIndex, F("P003+"), P003_PULSE_STATS_ADHOC_LOG_LEVEL);
+          if (par1 == "i" || par1 == "ri") P003_StatsLogLevel[event->TaskIndex] = LOG_LEVEL_INFO;
+          if (par1 == "r" || par1 == "ri") resetStatsErrorVars(event->TaskIndex);
+
           success = true; // Command is handled.
         #else
           success = false; // Command not available
@@ -405,179 +424,15 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_FIFTY_PER_SECOND:             // ** called 50 times per second **
     {
-      // if initialization step is needed for any task with Pulse Mode
-      if( P003_initStepsFlags )
-      {
-        for ( taskIndex_t taskID = 0; taskID < TASKS_MAX; taskID++ )
-        {
-          if( bitRead(P003_initStepsFlags, taskID) )
-          {
-            // schedule step 1 in remaining milliseconds from debounce time
-            Scheduler.setPluginTaskTimer((long)(P003_debounceTime[taskID]-(getMicros64()-P003_triggerTimestamp[taskID]))/1000L, \
-                                         taskID, P003_PROCESSING_STEP_1);
-            // initialization done 
-            bitClear(P003_initStepsFlags, taskID);
-          }
-        }
-      }
+      // step 0 will check if a new signal edge is to be processed for any task and then schedule step 1
+      doPulseStepProcessing(P003_PROCESSING_STEP_0, INVALID_TASK_INDEX, 0);
       break;
     }
  
     case PLUGIN_TIMER_IN:                     // ** process scheduled task timer event **
     {
-      // this function is called when the next processing step is scheduled
-      int pinState;
-      int processingStep = event->Par1;
-
-      switch (processingStep)
-      {
-        case P003_PROCESSING_STEP_1:   // read pin status
-        {
-          #ifdef P003_PULSE_STATISTIC
-          P003_Step1counter[event->TaskIndex]++;
-          #endif // P003_PULSE_STATISTIC
-          //  read current state from this tasks's GPIO
-          P003_lastCheckState[event->TaskIndex] = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
-          // after debounceTime/2, do step 2          
-          Scheduler.setPluginTaskTimer(PCONFIG(P003_IDX_DEBOUNCETIME) >> 1, event->TaskIndex, P003_PROCESSING_STEP_2);
-          break;  
-        }
-        
-        case P003_PROCESSING_STEP_2:   // 1st validation of pin status
-        {
-          //  read current state from this tasks's GPIO
-          pinState = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
-
-          if (pinState == (int)P003_lastCheckState[event->TaskIndex] )
-          // we found stable state
-          {
-            #ifdef P003_PULSE_STATISTIC
-            P003_Step2OKcounter[event->TaskIndex]++;
-            #endif // P003_PULSE_STATISTIC
-            // after debounceTime/2, do step 3          
-            Scheduler.setPluginTaskTimer(PCONFIG(P003_IDX_DEBOUNCETIME >> 1), event->TaskIndex, P003_PROCESSING_STEP_3);
-          }
-          else
-          // we found unexpected different pin state
-          {
-            #ifdef P003_PULSE_STATISTIC
-            P003_Step2NOKcounter[event->TaskIndex]++;
-            #endif // P003_PULSE_STATISTIC
-            // lets ignore previous pin status. It might have been a spike. Try to detect stable signal
-            P003_lastCheckState [event->TaskIndex] = pinState;    // now trust the new state
-            // after debounceTime/2, do step 2 again     
-            Scheduler.setPluginTaskTimer(PCONFIG(P003_IDX_DEBOUNCETIME >> 1), event->TaskIndex, P003_PROCESSING_STEP_2);
-          }      
-          break;  
-        }
-
-        case P003_PROCESSING_STEP_3:  // 2nd validation of pin status and counting
-        {
-          // determine earliest effective start time of current stable pulse (= NOW - 2 * DebounceTime )
-          uint64_t pulseChangeTime = getMicros64() - (P003_debounceTime[event->TaskIndex] << 1);
-
-          // determine how long the current stable pulse was lasting
-          if ( P003_currentStableState[event->TaskIndex] == HIGH )  // pulse was HIGH
-              { P003_pulseHighTime[event->TaskIndex] = pulseChangeTime - P003_currentStableStartTime[event->TaskIndex]; }
-          else    // pulse was LOW
-               { P003_pulseLowTime[event->TaskIndex]  = pulseChangeTime - P003_currentStableStartTime[event->TaskIndex]; }  
-              
-          //  read current state from this tasks's GPIO
-          pinState = digitalRead(Settings.TaskDevicePin1[event->TaskIndex]);
-
-          if (pinState == P003_lastCheckState[event->TaskIndex] )
-          // we found the same state as in step 2. It is stable and valid.
-          {
-            if (pinState != P003_currentStableState[event->TaskIndex] )
-            // The state changed. Previous sable pulse ends, new starts
-            {
-              #ifdef P003_PULSE_STATISTIC
-              P003_Step3OKcounter[event->TaskIndex]++;
-              #endif // P003_PULSE_STATISTIC
-
-              // lets terminate the previous pulse and setup start point for new stable one
-              P003_currentStableState[event->TaskIndex]     = !P003_currentStableState[event->TaskIndex];
-              P003_currentStableStartTime[event->TaskIndex] = pulseChangeTime;       
-
-              // now provide the counter result values for the ended pulse ( depending on mode type)
-              switch (Settings.TaskDevicePluginConfig[event->TaskIndex][P003_IDX_MODETYPE])
-              {
-                case PULSE_CHANGE:
-                {
-                  if (P003_currentStableState[event->TaskIndex] == LOW )  // HIGH had ended
-                    P003_pulseTime[event->TaskIndex] = P003_pulseHighTime[event->TaskIndex];
-                  else    // LOW has ended
-                    P003_pulseTime[event->TaskIndex] = P003_pulseLowTime[event->TaskIndex];
-
-                  P003_pulseCounter[event->TaskIndex]++;
-                  P003_pulseTotalCounter[event->TaskIndex]++;
-                  break;
-                }
-                case PULSE_HIGH:
-                {
-                  if ( P003_currentStableState[event->TaskIndex] == LOW )  // HIGH had ended (else do nothing)
-                  {
-                    P003_pulseTime[event->TaskIndex] = P003_pulseLowTime[event->TaskIndex] + P003_pulseHighTime[event->TaskIndex];
-                    P003_pulseCounter[event->TaskIndex]++;
-                    P003_pulseTotalCounter[event->TaskIndex]++;
-                  }
-                  break;
-                }
-                case PULSE_LOW:
-                {
-                  if ( P003_currentStableState[event->TaskIndex] == HIGH )  // LOW had ended (else do nothing)
-                  {
-                    P003_pulseTime[event->TaskIndex] = P003_pulseLowTime[event->TaskIndex] + P003_pulseHighTime[event->TaskIndex];
-                    P003_pulseCounter[event->TaskIndex]++;
-                    P003_pulseTotalCounter[event->TaskIndex]++;
-                  }
-                  break;
-                }
-                default:
-                {
-                  log = F("_P003:PLUGIN_TIMER_IN: Invalid modeType: ");
-                  log += Settings.TaskDevicePluginConfig[event->TaskIndex][P003_IDX_MODETYPE];
-                  addLog(LOG_LEVEL_ERROR, log);
-                  break;
-                }
-              }
-            }
-            else 
-            // we found the same stable state as before
-            {
-              #ifdef P003_PULSE_STATISTIC
-              P003_Step3IGNcounter[event->TaskIndex]++;
-              #endif // P003_PULSE_STATISTIC
-              // do nothing. Ignore interupt. previous stable state was confirmed probably after a spike
-            }
-
-            #ifdef P003_PULSE_STATISTIC
-            doStatisticLogging(event->TaskIndex, F("P003:"));
-            #endif // P003_PULSE_STATISTIC
-
-            // allow next pulse check call from interrupt
-            bitClear(P003_processingFlags, event->TaskIndex);
-          }
-          else
-          // we found unexpected different pin state
-          {
-            #ifdef P003_PULSE_STATISTIC
-            P003_Step3NOKcounter[event->TaskIndex]++;
-            #endif // P003_PULSE_STATISTIC
-            // ignore spike from previous step. It is regarded as spike within previous=current signal. Again try to detect stable signal
-            P003_lastCheckState [event->TaskIndex] = pinState;    // now trust the previous=new state
-            Scheduler.setPluginTaskTimer(PCONFIG(P003_IDX_DEBOUNCETIME) >> 1, event->TaskIndex, P003_PROCESSING_STEP_2);
-          }
-          break;  
-        }
-        default:
-        {
-          log = F("_P003:PLUGIN_TIMER_IN: Invalid processingStep: ");
-          log += processingStep;
-          addLog(LOG_LEVEL_ERROR, log);
-          break;
-        }
-      }
+      // this function is called when the next (1,2,3) processing step (Par1) is scheduled
+          doPulseStepProcessing(event->Par1, event->TaskIndex, PCONFIG(P003_IDX_DEBOUNCETIME));
       break;
     }
 
@@ -585,26 +440,287 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
+/*********************************************************************************************\
+ *  Process pulse mode steps
+\*********************************************************************************************/
+void doPulseStepProcessing(int pStep, taskIndex_t taskIndex, uint16_t debounceTime)
+{
+  int pinState;
+  #ifdef P003_PULSE_STATISTIC
+  long overdueTime;
+  #endif
+
+  switch (pStep)
+  {
+    case P003_PROCESSING_STEP_0:   
+    // regularily called to check if the trigger has flagged the next signal edge
+    {
+      // check if flag for any task
+      if( P003_initStepsFlags )
+      {
+        for ( int i_taskID = 0; i_taskID < TASKS_MAX; i_taskID++ )
+        {
+          if( bitRead(P003_initStepsFlags, i_taskID) )
+          {
+            // schedule step 1 in remaining milliseconds from debounce time
+            long delayTime = (long) (P003_debounceTime[i_taskID]-(getMicros64()-P003_triggerTimestamp[i_taskID]))/1000L;
+            if(delayTime < 0)
+            {              
+              // if debounce time was too short or we were called too late by Scheduler
+              #ifdef P003_PULSE_STATISTIC
+                P003_Step0ODcounter[i_taskID]++;  // count occurences
+                P003_StepOverdueMax[i_taskID][pStep] = max(P003_StepOverdueMax[i_taskID][pStep], -delayTime);
+              #endif // P003_PULSE_STATISTIC
+              delayTime = 0;
+            }
+            Scheduler.setPluginTaskTimer(delayTime, i_taskID, P003_PROCESSING_STEP_1);
+            
+            #ifdef P003_PULSE_STATISTIC
+              P003_triggerTimestamp[i_taskID] = getMicros64() + delayTime*1000L;
+            #endif // P003_PULSE_STATISTIC
+
+            // initialization done 
+            bitClear(P003_initStepsFlags, i_taskID);
+          }
+        }
+      }
+      break; 
+    }
+    
+    case P003_PROCESSING_STEP_1:   // read pin status
+    {
+      #ifdef P003_PULSE_STATISTIC
+        P003_Step1counter[taskIndex]++;
+        overdueTime = (long) (getMicros64()-P003_triggerTimestamp[taskIndex])/1000L;
+        P003_StepOverdueMax[taskIndex][pStep] = max(P003_StepOverdueMax[taskIndex][pStep], overdueTime);
+      #endif // P003_PULSE_STATISTIC
+      
+      //  read current state from this tasks's GPIO
+      P003_lastCheckState[taskIndex] = digitalRead(Settings.TaskDevicePin1[taskIndex]);
+      // after debounceTime/2, do step 2   
+      Scheduler.setPluginTaskTimer(debounceTime >> 1, taskIndex, P003_PROCESSING_STEP_2);
+      
+      #ifdef P003_PULSE_STATISTIC
+        P003_triggerTimestamp[taskIndex] = getMicros64() + (debounceTime >>1 )*1000L;
+      #endif // P003_PULSE_STATISTIC
+      break;  
+    }
+    
+    case P003_PROCESSING_STEP_2:   // 1st validation of pin status
+    {
+      #ifdef P003_PULSE_STATISTIC
+        overdueTime = (long) (getMicros64()-P003_triggerTimestamp[taskIndex])/1000L;
+        P003_StepOverdueMax[taskIndex][pStep] = max(P003_StepOverdueMax[taskIndex][pStep], overdueTime);
+      #endif // P003_PULSE_STATISTIC
+
+      //  read current state from this tasks's GPIO
+      pinState = digitalRead(Settings.TaskDevicePin1[taskIndex]);
+
+      if (pinState == (int)P003_lastCheckState[taskIndex] )
+      // we found stable state
+      {
+        #ifdef P003_PULSE_STATISTIC
+          P003_Step2OKcounter[taskIndex]++;
+        #endif // P003_PULSE_STATISTIC
+        // after debounceTime/2, do step 3          
+        Scheduler.setPluginTaskTimer(debounceTime >> 1, taskIndex, P003_PROCESSING_STEP_3);
+      }
+      else
+      // we found unexpected different pin state
+      {
+        #ifdef P003_PULSE_STATISTIC
+          P003_Step2NOKcounter[taskIndex]++;
+        #endif // P003_PULSE_STATISTIC
+        // lets ignore previous pin status. It might have been a spike. Try to detect stable signal
+        P003_lastCheckState [taskIndex] = pinState;    // now trust the new state
+        // after debounceTime/2, do step 2 again      
+        Scheduler.setPluginTaskTimer(debounceTime >> 1, taskIndex, P003_PROCESSING_STEP_2);
+      }      
+      
+      #ifdef P003_PULSE_STATISTIC
+        P003_triggerTimestamp[taskIndex] = getMicros64() + (debounceTime >>1)*1000L;
+      #endif // P003_PULSE_STATISTIC
+      break;  
+    }
+
+    case P003_PROCESSING_STEP_3:  // 2nd validation of pin status and counting
+    {
+      #ifdef P003_PULSE_STATISTIC
+        overdueTime = (long) (getMicros64()-P003_triggerTimestamp[taskIndex])/1000L;
+        P003_StepOverdueMax[taskIndex][pStep] = max(P003_StepOverdueMax[taskIndex][pStep], overdueTime);
+      #endif // P003_PULSE_STATISTIC
+
+      // determine earliest effective start time of current stable pulse (= NOW - 2 * DebounceTime )
+      uint64_t pulseChangeTime = getMicros64() - (P003_debounceTime[taskIndex] << 1);
+
+      // determine how long the current stable pulse was lasting
+      if ( P003_currentStableState[taskIndex] == HIGH )  // pulse was HIGH
+          { P003_pulseHighTime[taskIndex] = pulseChangeTime - P003_currentStableStartTime[taskIndex]; }
+      else    // pulse was LOW
+            { P003_pulseLowTime[taskIndex]  = pulseChangeTime - P003_currentStableStartTime[taskIndex]; }  
+          
+      //  read current state from this tasks's GPIO
+      pinState = digitalRead(Settings.TaskDevicePin1[taskIndex]);
+
+      if (pinState == P003_lastCheckState[taskIndex] )
+      // we found the same state as in step 2. It is stable and valid.
+      {
+        processStablePulse(taskIndex, pinState, pulseChangeTime);
+      }
+      else
+      // we found unexpected different pin state
+      {
+        #ifdef P003_PULSE_STATISTIC
+          P003_Step3NOKcounter[taskIndex]++;
+        #endif // P003_PULSE_STATISTIC
+
+        // ignore spike from previous step. It is regarded as spike within previous=current signal. Again try to detect stable signal
+        P003_lastCheckState [taskIndex] = pinState;    // now trust the previous=new state
+        Scheduler.setPluginTaskTimer(debounceTime >> 1, taskIndex, P003_PROCESSING_STEP_2);
+
+        #ifdef P003_PULSE_STATISTIC
+          P003_triggerTimestamp[taskIndex] = getMicros64() + (debounceTime >> 1)*1000L;
+        #endif // P003_PULSE_STATISTIC
+      }
+      break;  
+    }
+    default:
+    {
+      P003_log = F("_P003:PLUGIN_TIMER_IN: Invalid processingStep: ");
+      P003_log += pStep;
+      addLog(LOG_LEVEL_ERROR, P003_log);
+      break;
+    }
+  }
+}
+
+/*********************************************************************************************\
+ *  Processing for found stable pulse
+\*********************************************************************************************/
+void processStablePulse(taskIndex_t taskIndex, int pinState, uint64_t pulseChangeTime)
+{
+  if (pinState != P003_currentStableState[taskIndex] )
+  // The state changed. Previous sable pulse ends, new starts
+  {
+    #ifdef P003_PULSE_STATISTIC
+      P003_Step3OKcounter[taskIndex]++;
+    #endif // P003_PULSE_STATISTIC
+
+    // lets terminate the previous pulse and setup start point for new stable one
+    P003_currentStableState[taskIndex]     = !P003_currentStableState[taskIndex];
+    P003_currentStableStartTime[taskIndex] = pulseChangeTime;       
+
+    // now provide the counter result values for the ended pulse ( depending on mode type)
+    switch (Settings.TaskDevicePluginConfig[taskIndex][P003_IDX_MODETYPE])
+    {
+      case PULSE_CHANGE:
+      {
+        if (P003_currentStableState[taskIndex] == LOW )  // HIGH had ended
+          P003_pulseTime[taskIndex] = P003_pulseHighTime[taskIndex];
+        else    // LOW has ended
+          P003_pulseTime[taskIndex] = P003_pulseLowTime[taskIndex];
+
+        P003_pulseCounter[taskIndex]++;
+        P003_pulseTotalCounter[taskIndex]++;
+        break;
+      }
+      case PULSE_HIGH:
+      {
+        if ( P003_currentStableState[taskIndex] == LOW )  // HIGH had ended (else do nothing)
+        {
+          P003_pulseTime[taskIndex] = P003_pulseLowTime[taskIndex] + P003_pulseHighTime[taskIndex];
+          P003_pulseCounter[taskIndex]++;
+          P003_pulseTotalCounter[taskIndex]++;
+        }
+        break;
+      }
+      case PULSE_LOW:
+      {
+        if ( P003_currentStableState[taskIndex] == HIGH )  // LOW had ended (else do nothing)
+        {
+          P003_pulseTime[taskIndex] = P003_pulseLowTime[taskIndex] + P003_pulseHighTime[taskIndex];
+          P003_pulseCounter[taskIndex]++;
+          P003_pulseTotalCounter[taskIndex]++;
+        }
+        break;
+      }
+      default:
+      {
+        P003_log = F("_P003:PLUGIN_TIMER_IN: Invalid modeType: ");
+        P003_log += Settings.TaskDevicePluginConfig[taskIndex][P003_IDX_MODETYPE];
+        addLog(LOG_LEVEL_ERROR, P003_log);
+        break;
+      }
+    }
+  }
+  else 
+  // we found the same stable state as before
+  {
+    #ifdef P003_PULSE_STATISTIC
+      P003_Step3IGNcounter[taskIndex]++;
+    #endif // P003_PULSE_STATISTIC
+    // do nothing. Ignore interupt. previous stable state was confirmed probably after a spike
+  }
+
+  #ifdef P003_PULSE_STATISTIC
+    doStatisticLogging(taskIndex, F("P003:"), P003_StatsLogLevel[taskIndex]);
+  #endif // P003_PULSE_STATISTIC
+
+  // allow next pulse check call from interrupt
+  bitClear(P003_processingFlags, taskIndex);
+}
+
 #ifdef P003_PULSE_STATISTIC
 /*********************************************************************************************\
-* write statistic counters to logfile
+ *  reset statistical error cunters and overview variables
 \*********************************************************************************************/
-void doStatisticLogging(taskIndex_t TaskIndex, String logPrefix)
+void resetStatsErrorVars(taskIndex_t taskIndex) {
+  // initialize statistical step counters from TotalCounter and error counters with 0
+  P003_Step2NOKcounter[taskIndex]  = 0;
+  P003_Step3NOKcounter[taskIndex]  = 0;
+  P003_Step3IGNcounter[taskIndex]  = 0;
+  P003_Step0ODcounter[taskIndex]   = 0;
+  for ( int pStep = 0; pStep <= P003_PSTEP_MAX; pStep++ ) P003_StepOverdueMax[taskIndex][pStep] = 0;
+}
+
+/*********************************************************************************************\
+ *  write statistic counters to logfile
+\*********************************************************************************************/
+void doStatisticLogging(taskIndex_t taskIndex, String logPrefix, byte logLevel)
 {
-  // Statistic to logfile. E.g: ... [123|111|100/5|80/3/4|40] [12243|3244]
-  String log = logPrefix;
-  log += F("Stats[step0|1|2|3|tot(ok/nok/ign)] [lo|hi]: [");
-  log += P003_Step0counter[TaskIndex];        log += "|";
-  log += P003_Step1counter[TaskIndex];        log += "|";
-  log += P003_Step2OKcounter[TaskIndex];      log += "/";
-  log += P003_Step2NOKcounter[TaskIndex];     log += "|";
-  log += P003_Step3OKcounter[TaskIndex];      log += "/";
-  log += P003_Step3NOKcounter[TaskIndex];     log += "/";
-  log += P003_Step3IGNcounter[TaskIndex];     log += "|";
-  log += P003_pulseTotalCounter[TaskIndex];   log += "] [";
-  log += P003_pulseLowTime[TaskIndex]/1000L;  log += "|";
-  log += P003_pulseHighTime[TaskIndex]/1000L; log += "]";
-  addLog(P003_PULSE_STATS_LOG_LEVEL, log);
+  // Statistic to logfile. E.g: ... [123/1|111|100/5|80/3/4|40] [12243|3244]
+  P003_log = logPrefix;
+  P003_log += F("Stats (taskId) [step0|1|2|3|tot(ok/nok/ign)] [lo|hi]= (");
+  P003_log += taskIndex;                           P003_log += ") [";
+  P003_log += P003_Step0counter[taskIndex];        P003_log += "|";
+  P003_log += P003_Step1counter[taskIndex];        P003_log += "|";
+  P003_log += P003_Step2OKcounter[taskIndex];      P003_log += "/";
+  P003_log += P003_Step2NOKcounter[taskIndex];     P003_log += "|";
+  P003_log += P003_Step3OKcounter[taskIndex];      P003_log += "/";
+  P003_log += P003_Step3NOKcounter[taskIndex];     P003_log += "/";
+  P003_log += P003_Step3IGNcounter[taskIndex];     P003_log += "|";
+  P003_log += P003_pulseTotalCounter[taskIndex];   P003_log += "] [";
+  P003_log += P003_pulseLowTime[taskIndex]/1000L;  P003_log += "|";
+  P003_log += P003_pulseHighTime[taskIndex]/1000L; P003_log += "]";
+  addLog(logLevel, P003_log);
+}
+/*********************************************************************************************\
+ *  write collected timing values to logfile
+\*********************************************************************************************/
+void doTimingLogging(taskIndex_t taskIndex, String logPrefix, byte logLevel)
+{
+  // Timer to logfile. E.g: ... [4|12000|13444|12243|3244]
+  P003_log = logPrefix;
+  P003_log += F("OverDueStats (taskId) [dbTim] {step0OdCnt} [maxOdTimeStep0|1|2|3]= (");
+  P003_log += taskIndex;  P003_log += ") [";
+  P003_log += Settings.TaskDevicePluginConfig[taskIndex][P003_IDX_DEBOUNCETIME];  P003_log += "] {";
+  P003_log += P003_Step0ODcounter[taskIndex]; ;  P003_log += "} [";
+  for ( int pStep = 0; pStep <= P003_PSTEP_MAX; pStep++ ) {
+    P003_log += P003_StepOverdueMax[taskIndex][pStep];
+    if (pStep < P003_PSTEP_MAX) P003_log += "|";   
+  }
+  P003_log += "]";
+  addLog(logLevel, P003_log);
 }
 #endif // P003_PULSE_STATISTIC
 

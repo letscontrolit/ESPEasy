@@ -23,11 +23,13 @@
         N.B. The set value is the internal value, so any present formula will be processed after this value is set.
         "
         "
-        ``LogPulseStatistic,<taskindex>``
+        ``LogPulseStatistic,<cmd>,<taskindex>``
         ","
         Initiate a single log entry with statistical information of current PULSE counter parameters (only if PULSE mode type is being used. Cf. special chapter about ``Statistical logging`` in P003 plugin documentation).
         
+        <cmd> is an optional command parameter. ``r,i,ri`` are valid commands. ``r`` = reset error and overdue counters. ``i`` temporary increases the log level for regular statisticel log entries from ``Debug`` to ``Info``, so you can switch the log level to ``Info`` and suppress other unwanted ``Debug`` messages.
+        
         The taskIndex parameter is optional. When not given, only the total count of the first task with this plugin will be set.
         
-        N.B. Note that logging is only done, when Serial/Web Log Level is set to ``Debug``.
+        N.B. Note that this single log entry is done, when Serial/Web Log Level is set to ``Info``. The regular statistical logging is done by default on level ``Debug``, but can be temporary increased to ``Info`` with the above ``i`` command.
         "

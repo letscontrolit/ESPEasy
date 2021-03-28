@@ -130,9 +130,10 @@ But its use may be helpful, if you want to get an explanation for unexpected cou
 It gives an indication for the signal quality and helps to adjust the debounceTime. 
 You can ignore it, if your counter works well.
 
-The information is provided, when the log level is Debug or lower (cf. "Advanced Settings" dialog).
+The information is provided, when the log level is ``Debug`` or lower (cf. "Advanced Settings" dialog). 
+It is temporary possible to output the logging in log level ``Info`` by use of the Pulse Counter command ``LogPulseStatistic,i`` (see "Commands available").
 
-.. image:: P003_Statistics_.jpg
+.. image:: P003_Statistics.png
     :width: 688px
     :height: 20px
     :scale: 100 %
@@ -140,15 +141,17 @@ The information is provided, when the log level is Debug or lower (cf. "Advanced
     :align: center
 
 Records like the above are written to log output, whenever a new valid pulse level was detected.
-Additional writing of such a record can also be triggered through the ``LogPulseStatistic`` command (see above).
+Additional writing of such a record can also be triggered through the ``LogPulseStatistic`` command (see "Commands available").
 This allows you to generate a log output for inspection in situations, where no regular pulse is counted,
 because no pulse is currently generated or when no stable pulse can be determined because of a heavily floating signal. 
 
 The meaning of the numbers is explained using the following example:
 
-+----------------------------------------------------------------+
-| [2046017|2045826|2045826/1|2045821/0/5|2045810] [11979|104201] |
-+----------------------------------------------------------------+
++----------------------------------------------------------------------+
+| = (0) [2046017|2045826|2045826/1|2045821/0/5|2045810] [11979|104201] |
++----------------------------------------------------------------------+
+
+The **single number** ``(0)`` is the task index.
 
 The **first array** ``[ 2046017 | 2045826 | 2045826/1 | 2045821/0/5 | 2045810 ]`` contains five number
 groups from the following processing steps:
@@ -174,6 +177,40 @@ Note that the plugin's ``Time`` value reflects in ``PUSE change`` the tile betwe
 the high or low time of the most recently ended pulse, while in ``PULSE low`` it's always the distance
 between the most recent and the previous low signal and thus the sum of the most recent high and
 low time. For ``PULSE high`` respectively.
+
+As already mentioned above, additional writing of the above log record can also be triggered through the ``LogPulseStatistic`` command. 
+Together with that, a further ``OverdueStats`` record like the following is written to the log:
+
+.. image:: P003_Statistics_2.png
+    :width: 688px
+    :height: 20px
+    :scale: 100 %
+    :alt: Pule statistic log record
+    :align: center
+
+This provides information about the timing behaviour and if the Pulse Counter could do his working steps without too long delays through other ESPEasy processes.
+
+The meaning of the numbers is explained using the following example:
+
++---------------------------+
+| = (0) [30] {1} [20|3|2|1] |
++---------------------------+
+
+The ``(0)`` is the task index.
+
+The ``[30]`` is the set debounce time in ms.
+
+The ``{1}`` indicate that it was once not possible to timely complete the debounce in step 0. 
+This means, that the debounce time was over, before the pulse check processing could start because of other blocking ESPEasy processes. 
+This counter sums up these occurences since last reset, thus showing, how often this happened. 
+Values > 0 here, in combination with significant overdue time for step 0 (see next) may explain missing pulses.
+
+``[20|3|2|1]`` these are the maximum overdue times in milliseconds for each of the processing steps (0-3) that happened since last reset.
+When you here encounter delays longer than half of the debounce time, it explains missing pulses because of other blocking ESPEasy processes or processor overload.
+
+Note: These counters can, during runtime, be reset to 0 by the Pulse Counter command ``LogPulseStatistic,r`` (see "Commands available").
+
+
 
 Commands available
 ------------------
