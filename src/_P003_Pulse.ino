@@ -15,7 +15,9 @@
 #include "src/Helpers/ESPEasy_time_calc.h"
 
 // additional debug/tuning messages from PULSE mode into the logfile
-#define P003_PULSE_STATISTIC
+#ifndef LIMIT_BUILD_SIZE 
+  #define P003_PULSE_STATISTIC
+#endif
 #define P003_PULSE_STATS_DEFAULT_LOG_LEVEL  LOG_LEVEL_DEBUG
 #define P003_PULSE_STATS_ADHOC_LOG_LEVEL    LOG_LEVEL_INFO
 
@@ -65,7 +67,7 @@ void Plugin_003_pulse_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt2() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt3() ICACHE_RAM_ATTR;
 void Plugin_003_pulse_interrupt4() ICACHE_RAM_ATTR;
-void Plugin_003_pulsecheck(byte taskID) ICACHE_RAM_ATTR;
+void Plugin_003_pulsecheck(taskIndex_t taskID) ICACHE_RAM_ATTR;
 
 // this takes 20 bytes of IRAM per handler
 // void Plugin_003_pulse_interrupt5() ICACHE_RAM_ATTR;
@@ -88,7 +90,6 @@ unsigned long           P003_pulseLowTime[TASKS_MAX];           // indicates the
 unsigned long           P003_pulseHighTime[TASKS_MAX];          // indicates the length of the most recent stable high pulse (in ms)
 int                     P003_currentStableState[TASKS_MAX];     // stores current stable pin state. Set in Step 3 when new stable pulse started
 int                     P003_lastCheckState[TASKS_MAX];         // most recent pin state, that was read. Set in Step1,2,3
-String                  P003_log;                               // log message 
 
 #ifdef P003_PULSE_STATISTIC
 // debug/tuning variables for PULSE mode statistical logging
@@ -246,8 +247,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       // task indexes larger than 32 should never happen
       if ( event->TaskIndex > sizeof(P003_initStepsFlags)*8 ) {
         // P003_initStepsFlags and P003_processingFlags can only serve as much tasks as their size in bits (32)
-        P003_log =  F("P003: Error! TaskIndex "); P003_log += event->TaskIndex; P003_log += F("is too large");
-        addLog(LOG_LEVEL_ERROR, P003_log);
+        String log;
+        log =  F("P003: Error! TaskIndex "); log += event->TaskIndex; log += F("is too large");
+        addLog(LOG_LEVEL_ERROR, log);
         break;
       }    
 
@@ -268,10 +270,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         P003_Step3OKcounter[event->TaskIndex]   = P003_pulseTotalCounter[event->TaskIndex];
         resetStatsErrorVars(event->TaskIndex);
       #endif // P003_PULSE_STATISTIC
-
-      P003_log = F("INIT : PulsePin: ");
-      P003_log += Settings.TaskDevicePin1[event->TaskIndex];
-      addLog(LOG_LEVEL_INFO, P003_log);
+      String log;
+      log = F("INIT : PulsePin: "); log += Settings.TaskDevicePin1[event->TaskIndex];
+      addLog(LOG_LEVEL_INFO, log);
       
       // set up device pin and estabish interupt handlers
       pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
@@ -325,6 +326,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:                        // ** execute functional command **
     {
+      // KP: FixIt: better is the elatively new way of addressing a command to a specific task,
+      // as implemented in _P036. But do not forget to update the docu (P003.rst, P003_commands.repl)
+      // cf. https://espeasy.readthedocs.io/en/latest/Reference/Command.html?#command-a-specific-task-for-multiple-instances-of-a-plugin
       String command            = parseString(string, 1);
       bool   mustCallPluginRead = false;
 
@@ -397,7 +401,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           String par1 = parseString(string, 2); // Reset command ?
 
           int idx = 1;         
-          if (par1 == "r" || par1 == "ri" ) idx = 2;
+          if (par1 == F("r") || par1 == F("ri") ) idx = 2;
           // Allow for an optional taskIndex parameter. When not given it will take the first task of this plugin.
           if (!pluginOptionalTaskIndexArgumentMatch(event->TaskIndex, string, idx)) {
             break;
@@ -405,8 +409,8 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
           doStatisticLogging(event->TaskIndex, F("P003+"), P003_PULSE_STATS_ADHOC_LOG_LEVEL);
           doTimingLogging(event->TaskIndex, F("P003+"), P003_PULSE_STATS_ADHOC_LOG_LEVEL);
-          if (par1 == "i" || par1 == "ri") P003_StatsLogLevel[event->TaskIndex] = LOG_LEVEL_INFO;
-          if (par1 == "r" || par1 == "ri") resetStatsErrorVars(event->TaskIndex);
+          if (par1 == F("i") || par1 == F("ri")) P003_StatsLogLevel[event->TaskIndex] = LOG_LEVEL_INFO;
+          if (par1 == F("r") || par1 == F("ri")) resetStatsErrorVars(event->TaskIndex);
 
           success = true; // Command is handled.
         #else
@@ -424,15 +428,15 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_FIFTY_PER_SECOND:             // ** called 50 times per second **
     {
-      // step 0 will check if a new signal edge is to be processed for any task and then schedule step 1
-      doPulseStepProcessing(P003_PROCESSING_STEP_0, INVALID_TASK_INDEX, 0);
+      // step 0 will check if a new signal edge is to be processed and then schedule step 1
+      doPulseStepProcessing(P003_PROCESSING_STEP_0, event->TaskIndex, PCONFIG(P003_IDX_DEBOUNCETIME));
       break;
     }
  
     case PLUGIN_TIMER_IN:                     // ** process scheduled task timer event **
     {
       // this function is called when the next (1,2,3) processing step (Par1) is scheduled
-          doPulseStepProcessing(event->Par1, event->TaskIndex, PCONFIG(P003_IDX_DEBOUNCETIME));
+      doPulseStepProcessing(event->Par1, event->TaskIndex, PCONFIG(P003_IDX_DEBOUNCETIME));
       break;
     }
 
@@ -455,34 +459,27 @@ void doPulseStepProcessing(int pStep, taskIndex_t taskIndex, uint16_t debounceTi
     case P003_PROCESSING_STEP_0:   
     // regularily called to check if the trigger has flagged the next signal edge
     {
-      // check if flag for any task
-      if( P003_initStepsFlags )
+      if( bitRead(P003_initStepsFlags, taskIndex) )
       {
-        for ( int i_taskID = 0; i_taskID < TASKS_MAX; i_taskID++ )
-        {
-          if( bitRead(P003_initStepsFlags, i_taskID) )
-          {
-            // schedule step 1 in remaining milliseconds from debounce time
-            long delayTime = (long) (P003_debounceTime[i_taskID]-(getMicros64()-P003_triggerTimestamp[i_taskID]))/1000L;
-            if(delayTime < 0)
-            {              
-              // if debounce time was too short or we were called too late by Scheduler
-              #ifdef P003_PULSE_STATISTIC
-                P003_Step0ODcounter[i_taskID]++;  // count occurences
-                P003_StepOverdueMax[i_taskID][pStep] = max(P003_StepOverdueMax[i_taskID][pStep], -delayTime);
-              #endif // P003_PULSE_STATISTIC
-              delayTime = 0;
-            }
-            Scheduler.setPluginTaskTimer(delayTime, i_taskID, P003_PROCESSING_STEP_1);
-            
-            #ifdef P003_PULSE_STATISTIC
-              P003_triggerTimestamp[i_taskID] = getMicros64() + delayTime*1000L;
-            #endif // P003_PULSE_STATISTIC
-
-            // initialization done 
-            bitClear(P003_initStepsFlags, i_taskID);
-          }
+        // schedule step 1 in remaining milliseconds from debounce time
+        long delayTime = (long) (P003_debounceTime[taskIndex]-(getMicros64()-P003_triggerTimestamp[taskIndex]))/1000L;
+        if(delayTime < 0)
+        {              
+          // if debounce time was too short or we were called too late by Scheduler
+          #ifdef P003_PULSE_STATISTIC
+            P003_Step0ODcounter[taskIndex]++;  // count occurences
+            P003_StepOverdueMax[taskIndex][pStep] = max(P003_StepOverdueMax[taskIndex][pStep], -delayTime);
+          #endif // P003_PULSE_STATISTIC
+          delayTime = 0;
         }
+        Scheduler.setPluginTaskTimer(delayTime, taskIndex, P003_PROCESSING_STEP_1);
+        
+        #ifdef P003_PULSE_STATISTIC
+          P003_triggerTimestamp[taskIndex] = getMicros64() + delayTime*1000L;
+        #endif // P003_PULSE_STATISTIC
+
+        // initialization done 
+        bitClear(P003_initStepsFlags, taskIndex);
       }
       break; 
     }
@@ -586,9 +583,9 @@ void doPulseStepProcessing(int pStep, taskIndex_t taskIndex, uint16_t debounceTi
     }
     default:
     {
-      P003_log = F("_P003:PLUGIN_TIMER_IN: Invalid processingStep: ");
-      P003_log += pStep;
-      addLog(LOG_LEVEL_ERROR, P003_log);
+      String log;
+      log = F("_P003:PLUGIN_TIMER_IN: Invalid processingStep: "); log += pStep;
+      addLog(LOG_LEVEL_ERROR, log);
       break;
     }
   }
@@ -646,9 +643,10 @@ void processStablePulse(taskIndex_t taskIndex, int pinState, uint64_t pulseChang
       }
       default:
       {
-        P003_log = F("_P003:PLUGIN_TIMER_IN: Invalid modeType: ");
-        P003_log += Settings.TaskDevicePluginConfig[taskIndex][P003_IDX_MODETYPE];
-        addLog(LOG_LEVEL_ERROR, P003_log);
+        String log;
+        log = F("_P003:PLUGIN_TIMER_IN: Invalid modeType: ");
+        log += Settings.TaskDevicePluginConfig[taskIndex][P003_IDX_MODETYPE];
+        addLog(LOG_LEVEL_ERROR, log);
         break;
       }
     }
@@ -689,20 +687,21 @@ void resetStatsErrorVars(taskIndex_t taskIndex) {
 void doStatisticLogging(taskIndex_t taskIndex, String logPrefix, byte logLevel)
 {
   // Statistic to logfile. E.g: ... [123/1|111|100/5|80/3/4|40] [12243|3244]
-  P003_log = logPrefix;
-  P003_log += F("Stats (taskId) [step0|1|2|3|tot(ok/nok/ign)] [lo|hi]= (");
-  P003_log += taskIndex;                           P003_log += ") [";
-  P003_log += P003_Step0counter[taskIndex];        P003_log += "|";
-  P003_log += P003_Step1counter[taskIndex];        P003_log += "|";
-  P003_log += P003_Step2OKcounter[taskIndex];      P003_log += "/";
-  P003_log += P003_Step2NOKcounter[taskIndex];     P003_log += "|";
-  P003_log += P003_Step3OKcounter[taskIndex];      P003_log += "/";
-  P003_log += P003_Step3NOKcounter[taskIndex];     P003_log += "/";
-  P003_log += P003_Step3IGNcounter[taskIndex];     P003_log += "|";
-  P003_log += P003_pulseTotalCounter[taskIndex];   P003_log += "] [";
-  P003_log += P003_pulseLowTime[taskIndex]/1000L;  P003_log += "|";
-  P003_log += P003_pulseHighTime[taskIndex]/1000L; P003_log += "]";
-  addLog(logLevel, P003_log);
+  String log; log.reserve(125);
+  log = logPrefix;
+  log += F("Stats (taskId) [step0|1|2|3|tot(ok/nok/ign)] [lo|hi]= (");
+  log += taskIndex;                           log += ") [";
+  log += P003_Step0counter[taskIndex];        log += "|";
+  log += P003_Step1counter[taskIndex];        log += "|";
+  log += P003_Step2OKcounter[taskIndex];      log += "/";
+  log += P003_Step2NOKcounter[taskIndex];     log += "|";
+  log += P003_Step3OKcounter[taskIndex];      log += "/";
+  log += P003_Step3NOKcounter[taskIndex];     log += "/";
+  log += P003_Step3IGNcounter[taskIndex];     log += "|";
+  log += P003_pulseTotalCounter[taskIndex];   log += "] [";
+  log += P003_pulseLowTime[taskIndex]/1000L;  log += "|";
+  log += P003_pulseHighTime[taskIndex]/1000L; log += "]";
+  addLog(logLevel, log);
 }
 /*********************************************************************************************\
  *  write collected timing values to logfile
@@ -710,17 +709,18 @@ void doStatisticLogging(taskIndex_t taskIndex, String logPrefix, byte logLevel)
 void doTimingLogging(taskIndex_t taskIndex, String logPrefix, byte logLevel)
 {
   // Timer to logfile. E.g: ... [4|12000|13444|12243|3244]
-  P003_log = logPrefix;
-  P003_log += F("OverDueStats (taskId) [dbTim] {step0OdCnt} [maxOdTimeStep0|1|2|3]= (");
-  P003_log += taskIndex;  P003_log += ") [";
-  P003_log += Settings.TaskDevicePluginConfig[taskIndex][P003_IDX_DEBOUNCETIME];  P003_log += "] {";
-  P003_log += P003_Step0ODcounter[taskIndex]; ;  P003_log += "} [";
+  String log; log.reserve(120);
+  log = logPrefix;
+  log += F("OverDueStats (taskId) [dbTim] {step0OdCnt} [maxOdTimeStep0|1|2|3]= (");
+  log += taskIndex;  log += ") [";
+  log += Settings.TaskDevicePluginConfig[taskIndex][P003_IDX_DEBOUNCETIME];  log += "] {";
+  log += P003_Step0ODcounter[taskIndex];  log += "} [";
   for ( int pStep = 0; pStep <= P003_PSTEP_MAX; pStep++ ) {
-    P003_log += P003_StepOverdueMax[taskIndex][pStep];
-    if (pStep < P003_PSTEP_MAX) P003_log += "|";   
+    log += P003_StepOverdueMax[taskIndex][pStep];
+    if (pStep < P003_PSTEP_MAX) log += "|";   
   }
-  P003_log += "]";
-  addLog(logLevel, P003_log);
+  log += "]";
+  addLog(logLevel, log);
 }
 #endif // P003_PULSE_STATISTIC
 

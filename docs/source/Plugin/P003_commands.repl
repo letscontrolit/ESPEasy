@@ -31,5 +31,5 @@
         
         The taskIndex parameter is optional. When not given, only the total count of the first task with this plugin will be set.
         
-        N.B. Note that this single log entry is done, when Serial/Web Log Level is set to ``Info``. The regular statistical logging is done by default on level ``Debug``, but can be temporary increased to ``Info`` with the above ``i`` command.
+        N.B. Note that this single log entry is done, when Log Level is set to ``Info``. The regular statistical logging is done by default on level ``Debug``, but can be temporary increased to ``Info`` with the above ``i`` command.
         "
