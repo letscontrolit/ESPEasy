@@ -1,43 +1,44 @@
-#include "ESPEasy_now_traceroute.h"
+#include "../DataStructs/ESPEasy_now_traceroute.h"
 
 #include <list>
 
-ESPEasy_now_traceroute_struct::ESPEasy_now_traceroute_struct() {}
+ESPEasy_now_traceroute_struct::ESPEasy_now_traceroute_struct() {
+//  unit_vector.reserve(32); // prevent re-allocations
+}
 
 ESPEasy_now_traceroute_struct::ESPEasy_now_traceroute_struct(uint8_t size) {
   unit_vector.resize(size);
 }
 
-uint8_t ESPEasy_now_traceroute_struct::getUnit(uint8_t distance, int8_t& rssi) const
+void ESPEasy_now_traceroute_struct::clear()
+{
+  unit_vector.clear();
+}
+
+uint8_t ESPEasy_now_traceroute_struct::getUnit(uint8_t distance, uint8_t& successRate) const
 {
   if (unit_vector.size() < static_cast<size_t>((distance + 1) * 2)) {
+    successRate = 0;
     return 0;
   }
-  const int temp_rssi = unit_vector[(distance * 2) + 1];
-
-  rssi = temp_rssi - 127;
+  successRate = unit_vector[(distance * 2) + 1];
   return unit_vector[distance * 2];
 }
 
-void ESPEasy_now_traceroute_struct::addUnit(const NodeStruct& node)
+void ESPEasy_now_traceroute_struct::addUnit(byte unit)
 {
-  if (node.distance == 255) {
-    // No distance set, so don't add the traceroute.
-    return;
-  }
-
   // Only add the unit if it isn't already part of the traceroute.
   const uint8_t index = unit_vector.size();
   for (size_t i = 0; i < index; i+=2) {
-    if (unit_vector[i] == node.unit) {
-      unit_vector[i + 1] = static_cast<uint8_t>(static_cast<int>(node.getRSSI() + 127));
+    if (unit_vector[i] == unit) {
       return;
     }
   }
 
   unit_vector.resize(index + 2);
-  unit_vector[index]     = node.unit;
-  unit_vector[index + 1] = static_cast<uint8_t>(static_cast<int>(node.getRSSI() + 127));
+  unit_vector[index]     = unit;
+  // Set default success rate to average
+  unit_vector[index + 1] = 127;
 }
 
 uint8_t ESPEasy_now_traceroute_struct::getDistance() const
@@ -60,17 +61,14 @@ uint8_t * ESPEasy_now_traceroute_struct::get()
   return &(unit_vector[0]);
 }
 
-void ESPEasy_now_traceroute_struct::setRSSI_last_node(byte unit, int8_t rssi)
+void ESPEasy_now_traceroute_struct::setSuccessRate_last_node(byte unit, uint8_t successRate)
 {
-  if (rssi > 0) {
-    rssi = 0;
-  }
   int index = unit_vector.size() - 2;
   int attempt = 0;
 
   while (index >= 0 && attempt < 2) {
     if (unit_vector[index] == unit) {
-      unit_vector[index + 1] = static_cast<uint8_t>(static_cast<int>(rssi + 127));
+      unit_vector[index + 1] = successRate;
       return;
     }
     index -= 2;
@@ -80,41 +78,48 @@ void ESPEasy_now_traceroute_struct::setRSSI_last_node(byte unit, int8_t rssi)
 
 bool ESPEasy_now_traceroute_struct::operator<(const ESPEasy_now_traceroute_struct& other) const
 {
-  return compute_penalty() < other.compute_penalty();
+  return computeSuccessRate() > other.computeSuccessRate();
 }
 
-int ESPEasy_now_traceroute_struct::compute_penalty() const
+int ESPEasy_now_traceroute_struct::computeSuccessRate() const
 {
   const uint8_t max_distance = getDistance();
-
-  // FIXME TD-er: for now just base it on the distance, not on the combination of RSSI & distance
-  return max_distance;
-/*
   if (max_distance == 255) {
     // No values stored, so huge penalty
-    return max_distance * 100;
+    return 0;
+  }
+  if (max_distance == 0) {
+    // End point, so assume best success rate
+    return 255;
   }
 
-
-  int penalty = 0;
-
+  int res = 0;
   for (uint8_t distance = 0; distance <= max_distance; ++distance) {
-    int8_t rssi = 0;
-    getUnit(distance, rssi);
+    uint8_t successRate = 0;
+    getUnit(distance, successRate);
 
-    if (rssi >= 0) {
-      // Some "average" RSSI values for unknown RSSI
-      rssi = -75;
-    } else if (rssi < -80) {
-      // Some extra penalty for low quality signals
-      rssi -= 10;
+    if (successRate < 10) {
+      return 0;
     }
 
-    // RSSI values are negative, with lower value being a worse signal
-    penalty -= rssi;
+    res += successRate;
   }
-  return penalty;
-  */
+  if (max_distance > 0) {
+    res /= max_distance;
+  }
+  return res;
+}
+
+bool ESPEasy_now_traceroute_struct::unitInTraceRoute(byte unit) const
+{
+  const uint8_t max_distance = getDistance();
+  for (uint8_t distance = 0; distance <= max_distance; ++distance) {
+    uint8_t success_rate = 0;
+    if (getUnit(distance, success_rate) == unit) {
+      return true;
+    }
+  }
+  return false;
 }
 
 String ESPEasy_now_traceroute_struct::toString() const
@@ -127,10 +132,10 @@ String ESPEasy_now_traceroute_struct::toString() const
   String res;
   res.reserve(4*unit_vector.size());
   for (uint8_t distance = 0; distance <= max_distance; ++distance) {
-    int8_t rssi = 0;
-    res += getUnit(distance, rssi);
+    uint8_t success_rate = 0;
+    res += getUnit(distance, success_rate);
     res += '/';
-    res += rssi;
+    res += success_rate;
     res += ' ';
   }
   return res;

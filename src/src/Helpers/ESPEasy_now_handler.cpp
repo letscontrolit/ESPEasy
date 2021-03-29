@@ -342,14 +342,25 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
 
 bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bool& mustKeep)
 {
+  bool handled = false;
+  bool considerActive = false;
+  mustKeep = false;
+
+  {
+    // Check if message is sent by this node
+    MAC_address receivedMAC;
+    message.getMac(receivedMAC.mac);
+    MAC_address tmp;
+    WiFi.softAPmacAddress(tmp.mac);
+    if (tmp == receivedMAC) return handled;
+    WiFi.macAddress(tmp.mac);
+    if (tmp == receivedMAC) return handled;
+  }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = String(F(ESPEASY_NOW_NAME)) + F(": received ");
     log += message.getLogString();
     addLog(LOG_LEVEL_INFO, log);
   }
-  bool handled = false;
-  mustKeep = true;
-  bool considerActive = false;
 
   switch (message.getMessageType())
   {
@@ -377,6 +388,10 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
       break;
     case ESPEasy_now_hdr::message_t::P2P_data:
       handled = handle_ESPEasyNow_p2p(message, mustKeep);
+      considerActive = true;
+      break;
+    case ESPEasy_now_hdr::message_t::TraceRoute:
+      handled = handle_TraceRoute(message, mustKeep);
       considerActive = true;
       break;
   }
@@ -455,6 +470,7 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
   }
 //  WifiScan(true, channel);
 }
+
 
 bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& message, bool& mustKeep)
 {
@@ -540,6 +556,75 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     }
   }
 
+  return true;
+}
+
+
+// *************************************************************
+// * Trace Route
+// *************************************************************
+void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& traceRoute, int channel)
+{
+  MAC_address broadcast;
+  for (int i = 0; i < 6; ++i) {
+    broadcast.mac[i] = 0xFF;
+  }
+
+  size_t len = 1;
+  uint8_t traceroute_size = 0;
+  const uint8_t* traceroute_data = traceRoute.getData(traceroute_size);
+  len += traceroute_size;
+
+  ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::TraceRoute, len);
+  if (sizeof(uint8_t) != msg.addBinaryData(reinterpret_cast<const uint8_t *>(&traceroute_size), sizeof(uint8_t))) {
+    return;
+  }
+  if (traceroute_size != msg.addBinaryData(traceroute_data, traceroute_size)) {
+    return;
+  }
+  if (channel < 0) {
+    // Send to all channels
+
+    const unsigned long start = millis();
+
+    // FIXME TD-er: Not sure whether we can send to channels > 11 in all countries.
+    for (int ch = 1; ch < 11; ++ch) {
+      msg.send(broadcast, ch);
+      delay(0);
+    }
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = String(F(ESPEASY_NOW_NAME)) + F(": Sent Traceroute to all channels in ");
+      log += String(timePassedSince(start));
+      log += F(" ms");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  } else {
+    msg.send(broadcast, channel);
+  }
+}
+
+bool ESPEasy_now_handler_t::handle_TraceRoute(const ESPEasy_now_merger& message, bool& mustKeep)
+{
+  size_t payload_pos = 0;
+  uint8_t traceroute_size = 0;
+  if (message.getBinaryData(reinterpret_cast<uint8_t *>(&traceroute_size), sizeof(uint8_t), payload_pos) != 0) {
+    if (traceroute_size != 0) {
+      ESPEasy_now_traceroute_struct traceroute(traceroute_size);
+      if (message.getBinaryData(traceroute.get(), traceroute_size, payload_pos) == traceroute_size) {
+        const uint8_t thisunit = Settings.Unit;
+        if (!traceroute.unitInTraceRoute(thisunit)) {
+          MAC_address mac;
+          message.getMac(mac);
+          Nodes.setTraceRoute(mac, traceroute);
+          if (thisunit != 0 && thisunit != 255) {
+            traceroute.addUnit(thisunit);
+            sendTraceRoute(traceroute);
+          }
+        }
+      }
+    }
+  }
+  mustKeep = false;
   return true;
 }
 
@@ -679,6 +764,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
         case WifiEspNowSendStatus::NONE:
         case WifiEspNowSendStatus::FAIL:
         {
+          _preferredNodeMQTTqueueState.state = ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset;
           ++_send_failed_count;
           break;
         }

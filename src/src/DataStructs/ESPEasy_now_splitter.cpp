@@ -155,11 +155,13 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(const MAC_address& mac, size_t t
       case WifiEspNowSendStatus::NONE:
       case WifiEspNowSendStatus::FAIL:
       {
+        Nodes.updateSuccessRate(mac, false);
         STOP_TIMER(ESPEASY_NOW_SEND_MSG_FAIL);
         return sendStatus;
       }
       case WifiEspNowSendStatus::OK:
       {
+        Nodes.updateSuccessRate(mac, true);
         break;
       }
     }

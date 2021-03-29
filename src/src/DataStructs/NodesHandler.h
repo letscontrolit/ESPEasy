@@ -1,12 +1,13 @@
 #ifndef DATASTRUCTS_NODESHANDLER_H
 #define DATASTRUCTS_NODESHANDLER_H
 
-#include "NodeStruct.h"
+#include "../DataStructs/NodeStruct.h"
 
-#include "MAC_address.h"
+#include "../DataStructs/MAC_address.h"
 
 #ifdef USES_ESPEASY_NOW
-#include "ESPEasy_now_traceroute.h"
+#include "../DataStructs/ESPEasy_now_traceroute.h"
+#include "../DataStructs/ESPEasy_now_Node_statistics.h"
 #endif
 
 class NodesHandler {
@@ -49,6 +50,8 @@ public:
 
 #ifdef USES_ESPEASY_NOW
   const ESPEasy_now_traceroute_struct* getTraceRoute(uint8_t unit) const;
+
+  void setTraceRoute(const MAC_address& mac, const ESPEasy_now_traceroute_struct& traceRoute);
 #endif
 
   // Update the node referring to this unit with the most recent info.
@@ -76,6 +79,13 @@ public:
 
   void setRSSI(uint8_t unit, int rssi);
 
+#ifdef USES_ESPEASY_NOW
+  void updateSuccessRate(byte unit, bool success);
+  void updateSuccessRate(const MAC_address& mac, bool success);
+
+  int getSuccessRate(byte unit) const;
+#endif
+
 private:
 
   void setRSSI(NodeStruct * node, int rssi);
@@ -91,7 +101,7 @@ private:
   NodesMap _nodes;
 
 #ifdef USES_ESPEASY_NOW
-  TraceRouteMap _traceRoutes;
+  ESPEasy_now_Node_statisticsMap _nodeStats;
 #endif
 
   bool _recentlyBecameDistanceZero = false;

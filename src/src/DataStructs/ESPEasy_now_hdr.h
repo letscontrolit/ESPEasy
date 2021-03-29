@@ -25,6 +25,7 @@ public:
     SendData_DuplicateCheck,
     MQTTCheckControllerQueue,
     P2P_data,
+    TraceRoute,
 
     ChecksumError = 255
   };

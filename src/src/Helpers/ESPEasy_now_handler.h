@@ -12,6 +12,7 @@
 # include "../DataStructs/ESPEasy_Now_NTP_query.h"
 # include "../DataStructs/ESPEasy_Now_MQTT_queue_check_packet.h"
 # include "../DataStructs/ESPEasy_Now_p2p_data.h"
+# include "../DataStructs/ESPEasy_now_traceroute.h"
 # include "../DataStructs/MAC_address.h"
 # include "../Globals/CPlugins.h"
 
@@ -45,6 +46,8 @@ public:
   void sendDiscoveryAnnounce(int channel = 0);
   void sendDiscoveryAnnounce(const MAC_address& mac, int channel = 0);
 
+  void sendTraceRoute(const ESPEasy_now_traceroute_struct& traceRoute, int channel = 0);
+
   void sendNTPquery();
 
   void sendNTPbroadcast();
@@ -67,6 +70,8 @@ public:
 private:
 
   bool handle_DiscoveryAnnounce(const ESPEasy_now_merger& message, bool& mustKeep);
+
+  bool handle_TraceRoute(const ESPEasy_now_merger& message, bool& mustKeep);
 
   bool handle_NTPquery(const ESPEasy_now_merger& message, bool& mustKeep);
 
