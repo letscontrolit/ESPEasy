@@ -98,15 +98,17 @@ int ESPEasy_now_traceroute_struct::computeSuccessRate() const
     uint8_t successRate = 0;
     getUnit(distance, successRate);
 
-    if (successRate < 10) {
+    if (successRate < 50) {
       return 0;
     }
 
-    res += (successRate / (distance + 1));
+    res += successRate;
   }
   if (max_distance > 0) {
     res /= max_distance;
   }
+  res -= 10* max_distance;
+  if (res < 0) res = 0;
   return res;
 }
 

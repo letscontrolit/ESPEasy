@@ -65,6 +65,11 @@ void ESPEasy_now_Node_statistics_t::updateSuccessRate(byte unit, bool success)
   }
 }
 
+uint8_t ESPEasy_now_Node_statistics_t::getNodeSuccessRate() const
+{
+  return success_rate;
+}
+
 ESPEasy_now_traceroute_struct& ESPEasy_now_Node_statistics_t::latestRoute()
 {
   return routes[last_route_index];

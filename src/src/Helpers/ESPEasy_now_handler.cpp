@@ -52,6 +52,8 @@ static uint64_t ICACHE_FLASH_ATTR mac_to_key(const uint8_t *mac, ESPEasy_now_hdr
 
 std::map<uint64_t, ESPEasy_now_merger> ESPEasy_now_in_queue;
 
+std::list<ESPEasy_now_traceroute_struct> ESPEasy_now_traceroute_queue;
+
 void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
   START_TIMER;
   size_t payload_length  = count - sizeof(ESPEasy_now_hdr);
@@ -239,6 +241,11 @@ bool ESPEasy_now_handler_t::loop()
         ++it;
       }
     }
+  }
+
+  if (!ESPEasy_now_traceroute_queue.empty()) {
+    sendTraceRoute(ESPEasy_now_traceroute_queue.front());
+    ESPEasy_now_traceroute_queue.pop_front();
   }
 
   if (_send_failed_count > 30 /*|| !active()*/) {
@@ -621,7 +628,8 @@ bool ESPEasy_now_handler_t::handle_TraceRoute(const ESPEasy_now_merger& message,
             if (thisunit != 0 && thisunit != 255 && !Nodes.isEndpoint()) {
               // Do not forward the trace route if we're an endpoint.
               traceroute.addUnit(thisunit);
-              sendTraceRoute(traceroute);
+              traceroute.setSuccessRate_last_node(thisunit, Nodes.getSuccessRate(thisunit));
+              ESPEasy_now_traceroute_queue.push_back(traceroute);
             }
           }
         }

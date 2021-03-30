@@ -174,8 +174,8 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
       } else {
         #ifdef USES_ESPEASY_NOW
 
-        const int penalty_new = getSuccessRate(it->second.unit);
-        const int penalty_res = getSuccessRate(res->unit);
+        const int penalty_new = getRouteSuccessRate(it->second.unit);
+        const int penalty_res = getRouteSuccessRate(res->unit);
 
         if (penalty_new < penalty_res) {
           mustSet = true;
@@ -488,7 +488,7 @@ void NodesHandler::updateSuccessRate(const MAC_address& mac, bool success)
   updateSuccessRate(node->unit, success);
 }
 
-int NodesHandler::getSuccessRate(byte unit) const
+int NodesHandler::getRouteSuccessRate(byte unit) const
 {
   auto it = _nodeStats.find(unit);
   if (it != _nodeStats.end()) {
@@ -500,5 +500,13 @@ int NodesHandler::getSuccessRate(byte unit) const
   return 0;
 }
 
+uint8_t NodesHandler::getSuccessRate(byte unit) const
+{
+  auto it = _nodeStats.find(unit);
+  if (it != _nodeStats.end()) {
+    return it->second.getNodeSuccessRate();
+  }
+  return 127;
+}
 
 #endif

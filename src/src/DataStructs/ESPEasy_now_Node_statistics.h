@@ -20,6 +20,8 @@ struct ESPEasy_now_Node_statistics_t {
 
   void updateSuccessRate(byte unit, bool success);
 
+  uint8_t getNodeSuccessRate() const;
+
   ESPEasy_now_traceroute_struct      & latestRoute();
 
   const ESPEasy_now_traceroute_struct& latestRoute() const;
