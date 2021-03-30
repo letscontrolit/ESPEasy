@@ -299,7 +299,7 @@ void handle_root() {
             addHtml(String(rssi));
           }
           addHtml(')');
-          const ESPEasy_now_traceroute_struct* trace = Nodes.getTraceRoute(it->second.unit);
+          const ESPEasy_now_traceroute_struct* trace = Nodes.getDiscoveryRoute(it->second.unit);
           if (trace != nullptr) {
             addHtml(' ');
             addHtml(trace->toString());

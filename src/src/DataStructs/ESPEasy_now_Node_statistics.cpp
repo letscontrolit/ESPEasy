@@ -13,10 +13,9 @@ void ESPEasy_now_Node_statistics_t::addRoute(byte unit, const ESPEasy_now_tracer
   if (route.getDistance() == 255) {
     return;
   }
-
-  if (timePassedSince(last_update_route) < 10000) {
+  if (timePassedSince(last_update_route[last_route_index]) < 10000) {
     // Handling a burst of updates, only add those which have a higher success rate.
-    if (bestRouteSuccessRate > route.computeSuccessRate()) {
+    if (routes[last_route_index].computeSuccessRate() > route.computeSuccessRate()) {
       return;
     }
   }
@@ -29,19 +28,8 @@ void ESPEasy_now_Node_statistics_t::addRoute(byte unit, const ESPEasy_now_tracer
   routes[last_route_index] = route;
   routes[last_route_index].addUnit(unit);
   routes[last_route_index].setSuccessRate_last_node(unit, success_rate);
-  last_update_route = millis();
+  last_update_route[last_route_index] = millis();
   last_update       = millis();
-
-  bestRouteSuccessRate = 0;
-
-  for (unsigned int i = 0; i < ESPEASY_NOW_NODE_STATISTICS_NR_ROUTES; ++i) {
-    const int successRate = routes[i].computeSuccessRate();
-
-    if (successRate > bestRouteSuccessRate) {
-      bestRouteSuccessRate = successRate;
-    }
-  }
-
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F(ESPEASY_NOW_NAME);
@@ -49,6 +37,13 @@ void ESPEasy_now_Node_statistics_t::addRoute(byte unit, const ESPEasy_now_tracer
     log += route.toString();
     addLog(LOG_LEVEL_INFO, log);
   }
+}
+
+void ESPEasy_now_Node_statistics_t::setDiscoveryRoute(byte unit, const ESPEasy_now_traceroute_struct& route)
+{
+  discovery_route = route;
+  discovery_route.addUnit(unit);
+  discovery_route.setSuccessRate_last_node(unit, success_rate);
 }
 
 void ESPEasy_now_Node_statistics_t::updateSuccessRate(byte unit, bool success)
@@ -61,7 +56,12 @@ void ESPEasy_now_Node_statistics_t::updateSuccessRate(byte unit, bool success)
   }
 
   for (unsigned int i = 0; i < ESPEASY_NOW_NODE_STATISTICS_NR_ROUTES; ++i) {
-    routes[i].setSuccessRate_last_node(unit, success_rate);
+      if (timePassedSince(last_update_route[i]) > 125000) {
+          last_update_route[i] = 0;
+          routes[i].clear();
+      } else {
+        routes[i].setSuccessRate_last_node(unit, success_rate);
+      }
   }
 }
 
@@ -77,9 +77,9 @@ const ESPEasy_now_traceroute_struct& ESPEasy_now_Node_statistics_t::latestRoute(
 
 const ESPEasy_now_traceroute_struct * ESPEasy_now_Node_statistics_t::bestRoute() const
 {
-  if (timePassedSince(last_update_route) < 125000) {
+//  if (timePassedSince(last_update_route[last_route_index]) < 125000) {
     int bestIndex       = -1;
-    int bestSuccessRate = -1;
+    int bestSuccessRate = 0;
 
     for (int i = 0; i < ESPEASY_NOW_NODE_STATISTICS_NR_ROUTES; ++i) {
       const int successRate = routes[i].computeSuccessRate();
@@ -93,7 +93,12 @@ const ESPEasy_now_traceroute_struct * ESPEasy_now_Node_statistics_t::bestRoute()
     if (bestIndex >= 0) {
       return &routes[bestIndex];
     }
-  }
+//  }
 
   return nullptr;
+}
+
+const ESPEasy_now_traceroute_struct& ESPEasy_now_Node_statistics_t::discoveryRoute() const
+{
+    return discovery_route;
 }

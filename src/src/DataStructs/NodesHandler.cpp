@@ -62,7 +62,7 @@ bool NodesHandler::addNode(const NodeStruct& node)
 bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_struct& traceRoute)
 {
   const bool isNewNode = addNode(node);
-  _nodeStats[node.unit].addRoute(node.unit, traceRoute);
+  _nodeStats[node.unit].setDiscoveryRoute(node.unit, traceRoute);
 
   if (traceRoute.getDistance() != 255 && !node.isThisNode()) {
     addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(": Node: ") + String(node.unit) + F(" Traceroute received: ") + _nodeStats[node.unit].latestRoute().toString());
@@ -179,7 +179,7 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
 
         if (penalty_new < penalty_res) {
           mustSet = true;
-        } else if (penalty_new == penalty_res) {
+        } else {
           if (res->getAge() > 30000) {
             if (it->second.getAge() < res->getAge()) {
               mustSet = true;
@@ -214,6 +214,15 @@ const ESPEasy_now_traceroute_struct* NodesHandler::getTraceRoute(uint8_t unit) c
     return nullptr;
   }
   return trace_it->second.bestRoute();
+}
+
+const ESPEasy_now_traceroute_struct* NodesHandler::getDiscoveryRoute(uint8_t unit) const
+{
+  auto trace_it = _nodeStats.find(unit);
+  if (trace_it == _nodeStats.end()) {
+    return nullptr;
+  }
+  return &(trace_it->second.discoveryRoute());
 }
 
 void NodesHandler::setTraceRoute(const MAC_address& mac, const ESPEasy_now_traceroute_struct& traceRoute)
@@ -319,6 +328,7 @@ void NodesHandler::updateThisNode() {
           _distance = thisTraceRoute.getDistance();  // This node is already included in the traceroute.
           _lastTimeValidDistance = millis();
         }
+/*
         if (_distance != lastDistance) {
           if (isESPEasy_now_only() && WiFiConnected()) {
             // We are connected to a 'fake AP' for ESPEasy-NOW, but found a known AP
@@ -327,6 +337,7 @@ void NodesHandler::updateThisNode() {
             WifiDisconnect();
           }
         }
+        */
       }
     }
     #endif

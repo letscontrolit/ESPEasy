@@ -50,6 +50,7 @@ public:
 
 #ifdef USES_ESPEASY_NOW
   const ESPEasy_now_traceroute_struct* getTraceRoute(uint8_t unit) const;
+  const ESPEasy_now_traceroute_struct* getDiscoveryRoute(uint8_t unit) const;
 
   void setTraceRoute(const MAC_address& mac, const ESPEasy_now_traceroute_struct& traceRoute);
 #endif

@@ -463,6 +463,12 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 
 
 void logTimerStatistics() {
+  static bool firstRun = true;
+  if (firstRun) {
+    Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_STATISTICS, 1000);
+    firstRun = false;
+  }
+
   byte loglevel = LOG_LEVEL_DEBUG;
   updateLoopStats_30sec(loglevel);
 #ifndef BUILD_NO_DEBUG

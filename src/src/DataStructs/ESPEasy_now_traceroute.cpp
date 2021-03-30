@@ -102,7 +102,7 @@ int ESPEasy_now_traceroute_struct::computeSuccessRate() const
       return 0;
     }
 
-    res += successRate;
+    res += (successRate / (distance + 1));
   }
   if (max_distance > 0) {
     res /= max_distance;

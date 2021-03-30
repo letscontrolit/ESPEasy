@@ -427,7 +427,7 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
   }
 
   // Append traceroute (if available)
-  const ESPEasy_now_traceroute_struct* thisTraceRoute = Nodes.getTraceRoute(thisNode->unit);
+  const ESPEasy_now_traceroute_struct* thisTraceRoute = Nodes.getDiscoveryRoute(thisNode->unit);
 
   size_t len = sizeof(NodeStruct) + 1; // Append length indicator for traceroute
   uint8_t traceroute_size = 0;
@@ -605,26 +605,29 @@ void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& 
 
 bool ESPEasy_now_handler_t::handle_TraceRoute(const ESPEasy_now_merger& message, bool& mustKeep)
 {
+  mustKeep = false;
   size_t payload_pos = 0;
   uint8_t traceroute_size = 0;
   if (message.getBinaryData(reinterpret_cast<uint8_t *>(&traceroute_size), sizeof(uint8_t), payload_pos) != 0) {
     if (traceroute_size != 0) {
       ESPEasy_now_traceroute_struct traceroute(traceroute_size);
       if (message.getBinaryData(traceroute.get(), traceroute_size, payload_pos) == traceroute_size) {
-        const uint8_t thisunit = Settings.Unit;
-        if (!traceroute.unitInTraceRoute(thisunit)) {
-          MAC_address mac;
-          message.getMac(mac);
-          Nodes.setTraceRoute(mac, traceroute);
-          if (thisunit != 0 && thisunit != 255) {
-            traceroute.addUnit(thisunit);
-            sendTraceRoute(traceroute);
+        if (traceroute.getDistance() < 255) {
+          const uint8_t thisunit = Settings.Unit;
+          if (!traceroute.unitInTraceRoute(thisunit)) {
+            MAC_address mac;
+            message.getMac(mac);
+            Nodes.setTraceRoute(mac, traceroute);
+            if (thisunit != 0 && thisunit != 255 && !Nodes.isEndpoint()) {
+              // Do not forward the trace route if we're an endpoint.
+              traceroute.addUnit(thisunit);
+              sendTraceRoute(traceroute);
+            }
           }
         }
       }
     }
   }
-  mustKeep = false;
   return true;
 }
 
