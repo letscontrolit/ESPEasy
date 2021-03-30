@@ -165,7 +165,19 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       }
       break;
     }
+    case PLUGIN_TEN_PER_SECOND:
+    {
+      P112_data_struct *P112_data =
+        static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
 
+      if (nullptr != P112_data) {
+        if (P112_data->sensor.dataAvailable()) {
+          // Measurement was succesfull, schedule a read.
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+        }
+      }
+      break;
+    }
     case PLUGIN_READ:
     {
       P112_data_struct *P112_data =
@@ -174,9 +186,17 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       if (P112_data->begin()) {
         if (PCONFIG(3)) // Integrated LEDs?
         {
-          P112_data->sensor.takeMeasurementsWithBulb();
+//          P112_data->sensor.takeMeasurementsWithBulb();
+          P112_data->sensor.enableBulb(AS7265x_LED_WHITE);
+          P112_data->sensor.enableBulb(AS7265x_LED_IR);
+          P112_data->sensor.enableBulb(AS7265x_LED_UV);
+          P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
+          P112_data->sensor.disableBulb(AS7265x_LED_WHITE);
+          P112_data->sensor.disableBulb(AS7265x_LED_IR);
+          P112_data->sensor.disableBulb(AS7265x_LED_UV);
         } else {
-          P112_data->sensor.takeMeasurements();
+//          P112_data->sensor.takeMeasurements();
+          P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
         }
 
         String RuleEvent;
