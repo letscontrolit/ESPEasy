@@ -22,6 +22,12 @@ struct P112_data_struct : public PluginTaskData_base {
   bool begin();
   AS7265X sensor;
   bool initialized = false;
+
+  // MeasurementStatus:
+  // 0 : Not running
+  // 1 : Running
+  // 2 : Sensor data available
+  byte MeasurementStatus = 0;
 };
 
 #endif // ifdef USES_P112

@@ -28,8 +28,6 @@
 boolean Plugin_112(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  String MeasurementStatus;
-  MeasurementStatus = String("Not running");
 
   switch (function)
   {
@@ -167,7 +165,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       }
       break;
     }
-    case PLUGIN_ONCE_A_SECOND:
+    case PLUGIN_TEN_PER_SECOND:
     {
       P112_data_struct *P112_data =
         static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -175,11 +173,11 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       if (nullptr != P112_data) {
         if (P112_data->sensor.dataAvailable()) {
           // Measurement was succesfull, schedule a read.
-          MeasurementStatus = String("Ready");
-          eventQueue.add("PLUGIN_ONCE_A_SECOND: MeasurementStatus = " + MeasurementStatus);
+          P112_data->MeasurementStatus = 2;
           Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
-        } else {
-          eventQueue.add("PLUGIN_ONCE_A_SECOND: No sensor data available");
+          P112_data->sensor.disableBulb(AS7265x_LED_WHITE);
+          P112_data->sensor.disableBulb(AS7265x_LED_IR);
+          P112_data->sensor.disableBulb(AS7265x_LED_UV);
         }
       }
       break;
@@ -189,12 +187,8 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       P112_data_struct *P112_data =
         static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      eventQueue.add("PLUGIN_READ: MeasurementStatus = " + MeasurementStatus);
-
-      if (MeasurementStatus == "Ready") {
-
-        MeasurementStatus = "Done";
-        eventQueue.add("PLUGIN_READ: MeasurementStatus = " + MeasurementStatus);
+      if (P112_data->MeasurementStatus == 2) {
+        P112_data->MeasurementStatus = 0;
         String RuleEvent;
         RuleEvent  = getTaskDeviceName(event->TaskIndex);
         RuleEvent += '#';
@@ -259,9 +253,8 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 2] = P112_data->sensor.getR();
           UserVar[event->BaseVarIndex + 3] = P112_data->sensor.getW();
         }
-      } else if (MeasurementStatus != "Running") {
-        MeasurementStatus = String("Running");
-        eventQueue.add("PLUGIN_READ: MeasurementStatus = " + MeasurementStatus);
+      } else if (P112_data->MeasurementStatus != 1) {
+        P112_data->MeasurementStatus = 1;
         if (P112_data->begin()) {
           if (PCONFIG(3)) // Integrated LEDs?
           {
@@ -270,9 +263,6 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
             P112_data->sensor.enableBulb(AS7265x_LED_IR);
             P112_data->sensor.enableBulb(AS7265x_LED_UV);
             P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
-            P112_data->sensor.disableBulb(AS7265x_LED_WHITE);
-            P112_data->sensor.disableBulb(AS7265x_LED_IR);
-            P112_data->sensor.disableBulb(AS7265x_LED_UV);
           } else {
 //            P112_data->sensor.takeMeasurements();
             P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
