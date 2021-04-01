@@ -171,13 +171,176 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P112_data) {
-        if (P112_data->sensor.dataAvailable()) {
-          // Measurement was succesfull, schedule a read.
-          P112_data->MeasurementStatus = 2;
-          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
-          P112_data->sensor.disableBulb(AS7265x_LED_WHITE);
-          P112_data->sensor.disableBulb(AS7265x_LED_IR);
-          P112_data->sensor.disableBulb(AS7265x_LED_UV);
+        if ((P112_data->sensor.dataAvailable()) or (P112_data->MeasurementStatus >= 2)) {
+
+          String RuleEvent;
+          RuleEvent  = getTaskDeviceName(event->TaskIndex);
+          RuleEvent += '#';
+
+          switch (P112_data->MeasurementStatus) {
+            case 1:
+              P112_data->sensor.disableBulb(AS7265x_LED_WHITE);
+              P112_data->sensor.disableBulb(AS7265x_LED_IR);
+              P112_data->sensor.disableBulb(AS7265x_LED_UV);
+
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "410=" + P112_data->sensor.getCalibratedA());
+              } else {
+                eventQueue.add(RuleEvent + "410=" + P112_data->sensor.getA());
+              }
+              break;
+            case 2:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "435=" + P112_data->sensor.getCalibratedB());
+              } else {
+                eventQueue.add(RuleEvent + "435=" + P112_data->sensor.getB());
+              }
+              break;
+            case 3:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "460=" + P112_data->sensor.getCalibratedC());
+              } else {
+                eventQueue.add(RuleEvent + "460=" + P112_data->sensor.getC());
+              }
+              break;
+            case 4:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "485=" + P112_data->sensor.getCalibratedD());
+              } else {
+                eventQueue.add(RuleEvent + "485=" + P112_data->sensor.getD());
+              }
+              break;
+            case 5:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "510=" + P112_data->sensor.getCalibratedE());
+              } else {
+                eventQueue.add(RuleEvent + "510=" + P112_data->sensor.getE());
+              }
+              break;
+            case 6:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "535=" + P112_data->sensor.getCalibratedF());
+              } else {
+                eventQueue.add(RuleEvent + "535=" + P112_data->sensor.getF());
+              }
+              break;
+            case 7:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "560=" + P112_data->sensor.getCalibratedG());
+              } else {
+                eventQueue.add(RuleEvent + "560=" + P112_data->sensor.getG());
+              }
+              break;
+            case 8:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "585=" + P112_data->sensor.getCalibratedH());
+              } else {
+                eventQueue.add(RuleEvent + "585=" + P112_data->sensor.getH());
+              }
+              break;
+            case 9:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "610=" + P112_data->sensor.getCalibratedR());
+              } else {
+                eventQueue.add(RuleEvent + "610=" + P112_data->sensor.getR());
+              }
+              break;
+            case 10:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "645=" + P112_data->sensor.getCalibratedI());
+              } else {
+                eventQueue.add(RuleEvent + "645=" + P112_data->sensor.getI());
+              }
+              break;
+            case 11:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "680=" + P112_data->sensor.getCalibratedS());
+              } else {
+                eventQueue.add(RuleEvent + "680=" + P112_data->sensor.getS());
+              }
+              break;
+            case 12:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "705=" + P112_data->sensor.getCalibratedJ());
+              } else {
+                eventQueue.add(RuleEvent + "705=" + P112_data->sensor.getJ());
+              }
+              break;
+            case 13:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "730=" + P112_data->sensor.getCalibratedT());
+              } else {
+                eventQueue.add(RuleEvent + "730=" + P112_data->sensor.getT());
+              }
+              break;
+            case 14:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "760=" + P112_data->sensor.getCalibratedU());
+              } else {
+                eventQueue.add(RuleEvent + "760=" + P112_data->sensor.getU());
+              }
+              break;
+            case 15:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "810=" + P112_data->sensor.getCalibratedV());
+              } else {
+                eventQueue.add(RuleEvent + "810=" + P112_data->sensor.getV());
+              }
+              break;
+            case 16:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "860=" + P112_data->sensor.getCalibratedW());
+              } else {
+                eventQueue.add(RuleEvent + "860=" + P112_data->sensor.getW());
+              }
+              break;
+            case 17:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "900=" + P112_data->sensor.getCalibratedK());
+              } else {
+                eventQueue.add(RuleEvent + "900=" + P112_data->sensor.getK());
+              }
+              break;
+            case 18:
+              if (PCONFIG(3)) {
+                eventQueue.add(RuleEvent + "940=" + P112_data->sensor.getCalibratedL());
+              } else {
+                eventQueue.add(RuleEvent + "940=" + P112_data->sensor.getL());
+              }
+
+              Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+              break;
+            case 19:
+              if (PCONFIG(3)) {
+                UserVar[event->BaseVarIndex + 0] = P112_data->sensor.getCalibratedC();
+              } else {
+                UserVar[event->BaseVarIndex + 0] = P112_data->sensor.getC();
+              }
+              break;
+            case 20:
+              if (PCONFIG(3)) {
+                UserVar[event->BaseVarIndex + 1] = P112_data->sensor.getCalibratedF();
+              } else {
+                UserVar[event->BaseVarIndex + 1] = P112_data->sensor.getF();
+              }
+              break;
+            case 21:
+              if (PCONFIG(3)) {
+                UserVar[event->BaseVarIndex + 2] = P112_data->sensor.getCalibratedR();
+              } else {
+                UserVar[event->BaseVarIndex + 2] = P112_data->sensor.getR();
+              }
+              break;
+            case 22:
+              if (PCONFIG(3)) {
+                UserVar[event->BaseVarIndex + 3] = P112_data->sensor.getCalibratedW();
+              } else {
+                UserVar[event->BaseVarIndex + 3] = P112_data->sensor.getW();
+              }
+              Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+              break;
+          }
+          P112_data->MeasurementStatus = P112_data->MeasurementStatus + 1;
         }
       }
       break;
@@ -187,84 +350,18 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       P112_data_struct *P112_data =
         static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (P112_data->MeasurementStatus == 2) {
+      if (P112_data->MeasurementStatus == 23) {
         P112_data->MeasurementStatus = 0;
-        String RuleEvent;
-        RuleEvent  = getTaskDeviceName(event->TaskIndex);
-        RuleEvent += '#';
-
-        if (PCONFIG(3)) // Calibrated Measurements?
-        {
-          eventQueue.add(RuleEvent + "410=" + P112_data->sensor.getCalibratedA());
-          eventQueue.add(RuleEvent + "435=" + P112_data->sensor.getCalibratedB());
-          eventQueue.add(RuleEvent + "460=" + P112_data->sensor.getCalibratedC());
-
-          eventQueue.add(RuleEvent + "485=" + P112_data->sensor.getCalibratedD());
-          eventQueue.add(RuleEvent + "510=" + P112_data->sensor.getCalibratedE());
-          eventQueue.add(RuleEvent + "535=" + P112_data->sensor.getCalibratedF());
-
-          eventQueue.add(RuleEvent + "560=" + P112_data->sensor.getCalibratedG());
-          eventQueue.add(RuleEvent + "585=" + P112_data->sensor.getCalibratedH());
-          eventQueue.add(RuleEvent + "610=" + P112_data->sensor.getCalibratedR());
-
-          eventQueue.add(RuleEvent + "645=" + P112_data->sensor.getCalibratedI());
-          eventQueue.add(RuleEvent + "680=" + P112_data->sensor.getCalibratedS());
-          eventQueue.add(RuleEvent + "705=" + P112_data->sensor.getCalibratedJ());
-
-          eventQueue.add(RuleEvent + "730=" + P112_data->sensor.getCalibratedT());
-          eventQueue.add(RuleEvent + "760=" + P112_data->sensor.getCalibratedU());
-          eventQueue.add(RuleEvent + "810=" + P112_data->sensor.getCalibratedV());
-
-          eventQueue.add(RuleEvent + "860=" + P112_data->sensor.getCalibratedW());
-          eventQueue.add(RuleEvent + "900=" + P112_data->sensor.getCalibratedK());
-          eventQueue.add(RuleEvent + "940=" + P112_data->sensor.getCalibratedL());
-
-          UserVar[event->BaseVarIndex + 0] = P112_data->sensor.getCalibratedC();
-          UserVar[event->BaseVarIndex + 1] = P112_data->sensor.getCalibratedF();
-          UserVar[event->BaseVarIndex + 2] = P112_data->sensor.getCalibratedR();
-          UserVar[event->BaseVarIndex + 3] = P112_data->sensor.getCalibratedW();
-        } else {
-          eventQueue.add(RuleEvent + "410=" + P112_data->sensor.getA());
-          eventQueue.add(RuleEvent + "435=" + P112_data->sensor.getB());
-          eventQueue.add(RuleEvent + "460=" + P112_data->sensor.getC());
-
-          eventQueue.add(RuleEvent + "485=" + P112_data->sensor.getD());
-          eventQueue.add(RuleEvent + "510=" + P112_data->sensor.getE());
-          eventQueue.add(RuleEvent + "535=" + P112_data->sensor.getF());
-
-          eventQueue.add(RuleEvent + "560=" + P112_data->sensor.getG());
-          eventQueue.add(RuleEvent + "585=" + P112_data->sensor.getH());
-          eventQueue.add(RuleEvent + "610=" + P112_data->sensor.getR());
-
-          eventQueue.add(RuleEvent + "645=" + P112_data->sensor.getI());
-          eventQueue.add(RuleEvent + "680=" + P112_data->sensor.getS());
-          eventQueue.add(RuleEvent + "705=" + P112_data->sensor.getJ());
-
-          eventQueue.add(RuleEvent + "730=" + P112_data->sensor.getT());
-          eventQueue.add(RuleEvent + "760=" + P112_data->sensor.getU());
-          eventQueue.add(RuleEvent + "810=" + P112_data->sensor.getV());
-
-          eventQueue.add(RuleEvent + "860=" + P112_data->sensor.getW());
-          eventQueue.add(RuleEvent + "900=" + P112_data->sensor.getK());
-          eventQueue.add(RuleEvent + "940=" + P112_data->sensor.getL());
-
-          UserVar[event->BaseVarIndex + 0] = P112_data->sensor.getC();
-          UserVar[event->BaseVarIndex + 1] = P112_data->sensor.getF();
-          UserVar[event->BaseVarIndex + 2] = P112_data->sensor.getR();
-          UserVar[event->BaseVarIndex + 3] = P112_data->sensor.getW();
-        }
-      } else if (P112_data->MeasurementStatus != 1) {
+      } else if (P112_data->MeasurementStatus == 0) {
         P112_data->MeasurementStatus = 1;
         if (P112_data->begin()) {
           if (PCONFIG(3)) // Integrated LEDs?
           {
-//            P112_data->sensor.takeMeasurementsWithBulb();
             P112_data->sensor.enableBulb(AS7265x_LED_WHITE);
             P112_data->sensor.enableBulb(AS7265x_LED_IR);
             P112_data->sensor.enableBulb(AS7265x_LED_UV);
             P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
           } else {
-//            P112_data->sensor.takeMeasurements();
             P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
           }
         }
