@@ -473,6 +473,14 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
       addLog(LOG_LEVEL_INFO, log);
     }
   } else {
+    if (mac.all_one()) {
+      for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
+        if (it->second.getAge() > 65000) {
+          msg.send(it->second.ESPEasy_Now_MAC(), channel);
+        }
+      }
+    }
+
     msg.send(mac, channel);
   }
 //  WifiScan(true, channel);
@@ -572,11 +580,22 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 // *************************************************************
 void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& traceRoute, int channel)
 {
+  for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
+    if (it->second.getAge() > 65000) {
+      sendTraceRoute(it->second.ESPEasy_Now_MAC(), traceRoute, channel);
+    }
+  }
+
   MAC_address broadcast;
   for (int i = 0; i < 6; ++i) {
     broadcast.mac[i] = 0xFF;
   }
+  sendTraceRoute(broadcast, traceRoute, channel);
+}
 
+
+void ESPEasy_now_handler_t::sendTraceRoute(const MAC_address& mac, const ESPEasy_now_traceroute_struct& traceRoute, int channel)
+{
   size_t len = 1;
   uint8_t traceroute_size = 0;
   const uint8_t* traceroute_data = traceRoute.getData(traceroute_size);
@@ -596,7 +615,7 @@ void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& 
 
     // FIXME TD-er: Not sure whether we can send to channels > 11 in all countries.
     for (int ch = 1; ch < 11; ++ch) {
-      msg.send(broadcast, ch);
+      msg.send(mac, ch);
       delay(0);
     }
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -606,7 +625,7 @@ void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& 
       addLog(LOG_LEVEL_INFO, log);
     }
   } else {
-    msg.send(broadcast, channel);
+    msg.send(mac, channel);
   }
 }
 

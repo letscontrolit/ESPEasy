@@ -84,7 +84,7 @@ public:
   void updateSuccessRate(byte unit, bool success);
   void updateSuccessRate(const MAC_address& mac, bool success);
 
-  int getRouteSuccessRate(byte unit) const;
+  int getRouteSuccessRate(byte unit, uint8_t& distance) const;
 
   uint8_t getSuccessRate(byte unit) const;
 #endif

@@ -174,17 +174,17 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
       } else {
         #ifdef USES_ESPEASY_NOW
 
-        const int penalty_new = getRouteSuccessRate(it->second.unit);
-        const int penalty_res = getRouteSuccessRate(res->unit);
+        uint8_t distance_new, distance_res = 0;
 
-        if (penalty_new < penalty_res) {
-          mustSet = true;
-        } else {
-          if (res->getAge() > 30000) {
-            if (it->second.getAge() < res->getAge()) {
-              mustSet = true;
-            }
+        const int successRate_new = getRouteSuccessRate(it->second.unit, distance_new);
+        const int successRate_res = getRouteSuccessRate(res->unit, distance_res);
+
+        if (distance_new == distance_res) {
+          if (successRate_new > successRate_res) {
+            mustSet = true;
           }
+        } else if (distance_new < distance_res) {
+          mustSet = true;
         }
         #else
         if (it->second < *res) {
@@ -488,12 +488,14 @@ void NodesHandler::updateSuccessRate(const MAC_address& mac, bool success)
   updateSuccessRate(node->unit, success);
 }
 
-int NodesHandler::getRouteSuccessRate(byte unit) const
+int NodesHandler::getRouteSuccessRate(byte unit, uint8_t& distance) const
 {
+  distance = 255;
   auto it = _nodeStats.find(unit);
   if (it != _nodeStats.end()) {
     const ESPEasy_now_traceroute_struct* route = it->second.bestRoute();
     if (route != nullptr) {
+      distance = route->getDistance();
       return route->computeSuccessRate();
     }
   }

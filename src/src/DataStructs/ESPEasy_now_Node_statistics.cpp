@@ -13,9 +13,9 @@ void ESPEasy_now_Node_statistics_t::addRoute(byte unit, const ESPEasy_now_tracer
   if (route.getDistance() == 255) {
     return;
   }
-  if (timePassedSince(last_update_route[last_route_index]) < 10000) {
+  if (timePassedSince(last_update_route[last_route_index]) < 1000) {
     // Handling a burst of updates, only add those which have a higher success rate.
-    if (routes[last_route_index].computeSuccessRate() > route.computeSuccessRate()) {
+    if (routes[last_route_index] < route) {
       return;
     }
   }
@@ -49,7 +49,10 @@ void ESPEasy_now_Node_statistics_t::setDiscoveryRoute(byte unit, const ESPEasy_n
 void ESPEasy_now_Node_statistics_t::updateSuccessRate(byte unit, bool success)
 {
   if (success) {
-    if (success_rate < 255) { ++success_rate; }
+    if (timePassedSince(last_update) < 200) {
+        // Apply some rate limiter.
+        if (success_rate > 100) { --success_rate; }
+    } else if (success_rate < 255) { ++success_rate; }
     last_update = millis();
   } else {
     if (success_rate > 0) { --success_rate; }
@@ -63,6 +66,7 @@ void ESPEasy_now_Node_statistics_t::updateSuccessRate(byte unit, bool success)
         routes[i].setSuccessRate_last_node(unit, success_rate);
       }
   }
+  discovery_route.setSuccessRate_last_node(unit, success_rate);
 }
 
 uint8_t ESPEasy_now_Node_statistics_t::getNodeSuccessRate() const
@@ -85,13 +89,20 @@ const ESPEasy_now_traceroute_struct * ESPEasy_now_Node_statistics_t::bestRoute()
 //  if (timePassedSince(last_update_route[last_route_index]) < 125000) {
     int bestIndex       = -1;
     int bestSuccessRate = 0;
+    uint8_t bestDistance = 255;
 
     for (int i = 0; i < ESPEASY_NOW_NODE_STATISTICS_NR_ROUTES; ++i) {
+      const uint8_t distance = routes[i].getDistance();
       const int successRate = routes[i].computeSuccessRate();
-
-      if (successRate > bestSuccessRate) {
+      if (distance == bestDistance) {
+        if (successRate > bestSuccessRate) {
+          bestSuccessRate = successRate;
+          bestIndex       = i;
+        }
+      } else if (distance < bestDistance) {
+        bestIndex = i;
+        bestDistance = distance;
         bestSuccessRate = successRate;
-        bestIndex       = i;
       }
     }
 

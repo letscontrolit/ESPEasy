@@ -47,6 +47,7 @@ public:
   void sendDiscoveryAnnounce(const MAC_address& mac, int channel = 0);
 
   void sendTraceRoute(const ESPEasy_now_traceroute_struct& traceRoute, int channel = 0);
+  void sendTraceRoute(const MAC_address& mac, const ESPEasy_now_traceroute_struct& traceRoute, int channel = 0);
 
   void sendNTPquery();
 

@@ -35,7 +35,7 @@ struct ESPEasy_now_traceroute_struct
 
   void     setSuccessRate_last_node(byte unit, uint8_t successRate);
 
-  // Return true when this traceroute has lower penalty (thus more favorable)
+  // Return true when this tracerouteis more favorable
   bool     operator<(const ESPEasy_now_traceroute_struct& other) const;
 
   // For debugging purposes

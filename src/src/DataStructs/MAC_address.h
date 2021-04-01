@@ -37,6 +37,8 @@ public:
 
   bool   all_zero() const;
 
+  bool   all_one() const;
+
   String toString() const;
 
   void toString(char (& strMAC)[20]) const;

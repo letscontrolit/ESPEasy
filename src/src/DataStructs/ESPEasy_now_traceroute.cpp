@@ -78,8 +78,12 @@ void ESPEasy_now_traceroute_struct::setSuccessRate_last_node(byte unit, uint8_t 
 
 bool ESPEasy_now_traceroute_struct::operator<(const ESPEasy_now_traceroute_struct& other) const
 {
-  return computeSuccessRate() > other.computeSuccessRate();
+  if (getDistance() == other.getDistance()) {
+    return computeSuccessRate() > other.computeSuccessRate();
+  }
+  return getDistance() < other.getDistance();
 }
+
 
 int ESPEasy_now_traceroute_struct::computeSuccessRate() const
 {
@@ -98,7 +102,7 @@ int ESPEasy_now_traceroute_struct::computeSuccessRate() const
     uint8_t successRate = 0;
     getUnit(distance, successRate);
 
-    if (successRate < 50) {
+    if (successRate < 50 && distance < max_distance) {
       return 0;
     }
 
@@ -107,8 +111,10 @@ int ESPEasy_now_traceroute_struct::computeSuccessRate() const
   if (max_distance > 0) {
     res /= max_distance;
   }
-  res -= 10* max_distance;
-  if (res < 0) res = 0;
+  /*
+  res -= 10 * max_distance;
+  if (res < 50) res = 50;
+  */
   return res;
 }
 

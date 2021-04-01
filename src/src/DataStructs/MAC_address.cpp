@@ -45,6 +45,16 @@ bool MAC_address::all_zero() const
   return true;
 }
 
+bool MAC_address::all_one() const
+{
+  for (int i = 0; i < 6; ++i) {
+    if (mac[i] != 0xFF) {
+      return false;
+    }
+  }
+  return true;
+}
+
 String MAC_address::toString() const
 {
   char str[20] = { 0 };
