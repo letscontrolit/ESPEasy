@@ -18,11 +18,9 @@
 #define PLUGIN_112
 #define PLUGIN_ID_112         112
 #define PLUGIN_NAME_112       "Color - AS7265X [DEVELOPMENT]"
-#define PLUGIN_VALUENAME1_112 "460"
-#define PLUGIN_VALUENAME2_112 "535"
-#define PLUGIN_VALUENAME3_112 "610"
-#define PLUGIN_VALUENAME4_112 "860"
-
+#define PLUGIN_VALUENAME1_112 "TempMaster"
+#define PLUGIN_VALUENAME2_112 "TempAverage"
+#define PLUGIN_VALUENAME3_112 "State"
 #define AS7265X_ADDR 0x49
 
 boolean Plugin_112(byte function, struct EventStruct *event, String& string)
@@ -35,9 +33,9 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_112;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
       Device[deviceCount].Ports              = 0;
-      Device[deviceCount].ValueCount         = 4;
+      Device[deviceCount].ValueCount         = 3;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
@@ -60,7 +58,6 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_112));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_112));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_112));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_112));
       break;
     }
 
@@ -73,14 +70,23 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      // Set a default config here, which will be called when a plugin is assigned to a task.
+      PCONFIG_LONG(0) = AS7265X_GAIN_37X;               // Set Gain (AS7265X_GAIN_37X) => This is 3.7x
+      PCONFIG_LONG(1) = 254;                            // Set Integration Cycles => 254*2.8ms = 711ms per Reading
+      PCONFIG(0) = 0;                                   // Blue Status LED On
+      PCONFIG(1) = AS7265X_INDICATOR_CURRENT_LIMIT_8MA; // Blue Status LED Current Limit
+      PCONFIG(2) = AS7265X_LED_CURRENT_LIMIT_12_5MA;    // White LED Current Limit
+      PCONFIG(3) = AS7265X_LED_CURRENT_LIMIT_12_5MA;    // IR LED Current Limit
+      PCONFIG(4) = AS7265X_LED_CURRENT_LIMIT_12_5MA;    // UV LED Current Limit
+      PCONFIG(5) = 0;                                   // During Measurement turn White, IR and UV LEDs On
+      PCONFIG(6) = 1;                                   // Use Calibrated Readings
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte   choiceMode = PCONFIG(0);
+      byte   choiceMode = PCONFIG_LONG(0);
       {
         // sensor.setGain(AS7265X_GAIN_1X);  //Default
         // sensor.setGain(AS7265X_GAIN_37X); //This is 3.7x
@@ -88,7 +94,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         // sensor.setGain(AS7265X_GAIN_64X);
         String optionsMode[4];
         optionsMode[0] = F("1x");
-        optionsMode[1] = F("3.7x");
+        optionsMode[1] = F("3.7x (default)");
         optionsMode[2] = F("16x");
         optionsMode[3] = F("64x");
         int optionValuesMode[4];
@@ -98,7 +104,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         optionValuesMode[3] = AS7265X_GAIN_64X;
         addFormSelector(F("Gain"), F("p112_Gain"), 4, optionsMode, optionValuesMode, choiceMode);
       }
-      byte   choiceMode2 = PCONFIG(1);
+      byte   choiceMode2 = PCONFIG_LONG(1);
       {
         // Integration cycles from 0 (2.78ms) to 255 (711ms)
         // sensor.setIntegrationCycles(49); //Default: 50*2.8ms = 140ms per reading
@@ -109,7 +115,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         optionsMode2[2] = F("56 ms");
         optionsMode2[3] = F("140 ms");
         optionsMode2[4] = F("280 ms");
-        optionsMode2[5] = F("711 ms");
+        optionsMode2[5] = F("711 ms (default)");
         int optionValuesMode2[6];
         optionValuesMode2[0] = 0;
         optionValuesMode2[1] = 9;
@@ -119,27 +125,107 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         optionValuesMode2[5] = 254;
         addFormSelector(F("Integration Time"), F("p112_IntegrationTime"), 6, optionsMode2, optionValuesMode2, choiceMode2);
       }
-      // The status indicator (Blue LED)
-      // sensor.enableIndicator(); //Default
-      // sensor.disableIndicator();
-      addFormCheckBox(F("Blue Status LED"), F("p112_BlueStatusLED"), PCONFIG(2));
-      // sensor.takeMeasurementsWithBulb();
-      // sensor.takeMeasurements();
-      addFormCheckBox(F("Integrated UV, White, and IR LEDs"), F("p112_IntegratedLEDs"), PCONFIG(3));
-      // sensor.getCalibratedA();
-      // sensor.getA();
-      addFormCheckBox(F("Calibrated Measurements"), F("p112_CalibratedMeasurements"), PCONFIG(4));
+      addFormNote(F("Raw Readings shall not reach the upper limit of 65535 (Sensor Saturation)."));
+
+      addFormSubHeader(F("LED settings"));
+      addFormCheckBox(F("Blue"), F("p112_BlueStatusLED"), PCONFIG(0));
+      addHtml(F(" Status LED On"));
+      byte   choiceMode3 = PCONFIG(1);
+      {
+        // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_1MA);
+        // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_2MA);
+        // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_4MA);
+        // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_8MA); //Default
+        String optionsMode3[4];
+        optionsMode3[0] = F("1 mA");
+        optionsMode3[1] = F("2 mA");
+        optionsMode3[2] = F("4 mA");
+        optionsMode3[3] = F("8 mA (default)");
+        int optionValuesMode3[4];
+        optionValuesMode3[0] = AS7265X_INDICATOR_CURRENT_LIMIT_1MA;
+        optionValuesMode3[1] = AS7265X_INDICATOR_CURRENT_LIMIT_2MA;
+        optionValuesMode3[2] = AS7265X_INDICATOR_CURRENT_LIMIT_4MA;
+        optionValuesMode3[3] = AS7265X_INDICATOR_CURRENT_LIMIT_8MA;
+        addFormSelector(F(""), F("p112_BlueStatusLEDCurrentLimit"), 4, optionsMode3, optionValuesMode3, choiceMode3);
+      }
+      addHtml(F(" Current Limit"));
+      addFormNote(F("Activate Status LEDs only for debugging purpose."));
+
+      byte   choiceMode4 = PCONFIG(2);
+      {
+        // White LED has max forward current of 120mA
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_WHITE); //Default
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_25MA, AS7265x_LED_WHITE);   //Allowed
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_WHITE);   //Allowed 
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_WHITE);  //Allowed
+        String optionsMode4[4];
+        optionsMode4[0] = F("12.5 mA (default)");
+        optionsMode4[1] = F("25 mA");
+        optionsMode4[2] = F("50 mA");
+        optionsMode4[3] = F("100 mA");
+        int optionValuesMode4[4];
+        optionValuesMode4[0] = AS7265X_LED_CURRENT_LIMIT_12_5MA;
+        optionValuesMode4[1] = AS7265X_LED_CURRENT_LIMIT_25MA;
+        optionValuesMode4[2] = AS7265X_LED_CURRENT_LIMIT_50MA;
+        optionValuesMode4[3] = AS7265X_LED_CURRENT_LIMIT_100MA;
+        addFormSelector(F("White"), F("p112_WhiteLEDCurrentLimit"), 4, optionsMode4, optionValuesMode4, choiceMode4);
+      }
+      addHtml(F(" Current Limit"));
+
+      byte   choiceMode5 = PCONFIG(3);
+      {
+        // IR LED has max forward current of 65mA 
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_IR);    //Default
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_25MA, AS7265x_LED_IR);      //Allowed
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_IR);      //Allowed
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_IR-bad); //Not allowed
+        String optionsMode5[3];
+        optionsMode5[0] = F("12.5 mA (default)");
+        optionsMode5[1] = F("25 mA");
+        optionsMode5[2] = F("50 mA");
+        int optionValuesMode5[3];
+        optionValuesMode5[0] = AS7265X_LED_CURRENT_LIMIT_12_5MA;
+        optionValuesMode5[1] = AS7265X_LED_CURRENT_LIMIT_25MA;
+        optionValuesMode5[2] = AS7265X_LED_CURRENT_LIMIT_50MA;
+        addFormSelector(F("IR"), F("p112_IRLEDCurrentLimit"), 3, optionsMode5, optionValuesMode5, choiceMode5);
+      }
+
+      byte   choiceMode6 = PCONFIG(4);
+      {
+        // UV LED has max forward current of 30mA so do not set the drive current higher
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_UV);    //Default
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_25MA, AS7265x_LED_UV-bad);  //Not allowed
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_UV-bad);  //Not allowed
+        // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_UV-bad); //Not allowed
+        String optionsMode6[1];
+        optionsMode6[0] = F("12.5 mA (default)");
+        int optionValuesMode6[1];
+        optionValuesMode6[0] = AS7265X_LED_CURRENT_LIMIT_12_5MA;
+        addFormSelector(F("UV"), F("p112_UVLEDCurrentLimit"), 1, optionsMode6, optionValuesMode6, choiceMode6);
+      }
+      addFormNote(F("Control Gain and Integration Time after any change to avoid Sensor Saturation!"));
+
+      addFormSubHeader(F("Measurement settings"));
+      addFormCheckBox(F("LEDs"), F("p112_MeasurementWithLEDsOn"), PCONFIG(5));
+      addHtml(F(" White, IR and UV On"));
+      addFormCheckBox(F("Calibrated Readings"), F("p112_CalibratedReadings"), PCONFIG(6));
+      addFormNote(F("Unchecked (Raw Readings): Use only for the adjustment of Device and LED settings"));
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p112_Gain"));
-      PCONFIG(1) = getFormItemInt(F("p112_IntegrationTime"));
-      PCONFIG(2) = isFormItemChecked(F("p112_BlueStatusLED"));
-      PCONFIG(3) = isFormItemChecked(F("p112_IntegratedLEDs"));
-      PCONFIG(4) = isFormItemChecked(F("p112_CalibratedMeasurements"));
+      PCONFIG_LONG(0) = getFormItemInt(F("p112_Gain"));
+      PCONFIG_LONG(1) = getFormItemInt(F("p112_IntegrationTime"));
+      PCONFIG(0) = isFormItemChecked(F("p112_BlueStatusLED"));
+      PCONFIG(1) = getFormItemInt(F("p112_BlueStatusLEDCurrentLimit"));
+      PCONFIG(2) = getFormItemInt(F("p112_WhiteLEDCurrentLimit"));
+      PCONFIG(3) = getFormItemInt(F("p112_IRLEDCurrentLimit"));
+      PCONFIG(4) = getFormItemInt(F("p112_UVLEDCurrentLimit"));
+      PCONFIG(5) = isFormItemChecked(F("p112_MeasurementWithLEDsOn"));
+      PCONFIG(6) = isFormItemChecked(F("p112_CalibratedReadings"));
       success = true;
       break;
     }
@@ -152,15 +238,53 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
 
       if (nullptr != P112_data) {
         P112_data->initialized = false; // Force re-init just in case the address changed.
-        P112_data->begin();
-        success = P112_data->initialized;
-        P112_data->sensor.setGain(PCONFIG(0));
-        P112_data->sensor.setIntegrationCycles(PCONFIG(1));
-        if (PCONFIG(2)) // Blue Status LED?
-        {
-          P112_data->sensor.enableIndicator();
+
+        if (P112_data->begin()) {
+          addLog(LOG_LEVEL_INFO, F("AS7265X: Found sensor"));
+
+          success = P112_data->initialized;
+          P112_data->sensor.setGain(PCONFIG_LONG(0));
+          P112_data->sensor.setIntegrationCycles(PCONFIG_LONG(1));
+
+          if (PCONFIG(0)) // Blue Status LED
+          {
+            P112_data->sensor.enableIndicator();
+          } else {
+            P112_data->sensor.disableIndicator();
+          }
+          P112_data->sensor.setIndicatorCurrent(PCONFIG(1));
+
+          P112_data->sensor.disableBulb(AS7265x_LED_WHITE);
+          P112_data->sensor.disableBulb(AS7265x_LED_IR);
+          P112_data->sensor.disableBulb(AS7265x_LED_UV);
+          P112_data->sensor.setBulbCurrent(PCONFIG(2), AS7265x_LED_WHITE);
+          P112_data->sensor.setBulbCurrent(PCONFIG(3), AS7265x_LED_IR);
+          P112_data->sensor.setBulbCurrent(PCONFIG(4), AS7265x_LED_UV);
+
+          String log = F("AS7265X: AMS Device Type: 0x");
+          log += P112_data->sensor.getDeviceType();
+          addLog(LOG_LEVEL_INFO, log);
+
+          log = F("AS7265X: AMS Hardware Version: 0x");
+          log += P112_data->sensor.getHardwareVersion();
+          addLog(LOG_LEVEL_INFO, log);
+
+          log = F("AS7265X: AMS Major Firmware Version: 0x");
+          log += P112_data->sensor.getMajorFirmwareVersion();
+          addLog(LOG_LEVEL_INFO, log);
+
+          log = F("AS7265X: AMS Patch Firmware Version: 0x");
+          log += P112_data->sensor.getPatchFirmwareVersion();
+          addLog(LOG_LEVEL_INFO, log)
+
+          log = F("AS7265X: AMS Build Firmware Version: 0x");
+          log += P112_data->sensor.getBuildFirmwareVersion();
+          addLog(LOG_LEVEL_INFO, log)
+
+          success = true;
         } else {
-          P112_data->sensor.disableIndicator();
+          addLog(LOG_LEVEL_INFO, F("AS7265X: No sensor found"));
+          success = false;
         }
       }
       break;
@@ -171,7 +295,8 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P112_data) {
-        if ((P112_data->sensor.dataAvailable()) or (P112_data->MeasurementStatus >= 2)) {
+        if ((P112_data->sensor.dataAvailable()) or (P112_data->MeasurementStatus >= 1)) {
+          P112_data->MeasurementStatus = P112_data->MeasurementStatus + 1;
 
           String RuleEvent;
           RuleEvent  = getTaskDeviceName(event->TaskIndex);
@@ -183,164 +308,138 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
               P112_data->sensor.disableBulb(AS7265x_LED_IR);
               P112_data->sensor.disableBulb(AS7265x_LED_UV);
 
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "410=" + P112_data->sensor.getCalibratedA());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("410=")) + P112_data->sensor.getCalibratedA());
               } else {
-                eventQueue.add(RuleEvent + "410=" + P112_data->sensor.getA());
+                eventQueue.add(RuleEvent + String(F("410=")) + P112_data->sensor.getA());
               }
               break;
             case 2:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "435=" + P112_data->sensor.getCalibratedB());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("435=")) + P112_data->sensor.getCalibratedB());
               } else {
-                eventQueue.add(RuleEvent + "435=" + P112_data->sensor.getB());
+                eventQueue.add(RuleEvent + String(F("435=")) + P112_data->sensor.getB());
               }
               break;
             case 3:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "460=" + P112_data->sensor.getCalibratedC());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("460=")) + P112_data->sensor.getCalibratedC());
               } else {
-                eventQueue.add(RuleEvent + "460=" + P112_data->sensor.getC());
+                eventQueue.add(RuleEvent + String(F("460=")) + P112_data->sensor.getC());
               }
               break;
             case 4:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "485=" + P112_data->sensor.getCalibratedD());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("485=")) + P112_data->sensor.getCalibratedD());
               } else {
-                eventQueue.add(RuleEvent + "485=" + P112_data->sensor.getD());
+                eventQueue.add(RuleEvent + String(F("485=")) + P112_data->sensor.getD());
               }
               break;
             case 5:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "510=" + P112_data->sensor.getCalibratedE());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("510=")) + P112_data->sensor.getCalibratedE());
               } else {
-                eventQueue.add(RuleEvent + "510=" + P112_data->sensor.getE());
+                eventQueue.add(RuleEvent + String(F("510=")) + P112_data->sensor.getE());
               }
               break;
             case 6:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "535=" + P112_data->sensor.getCalibratedF());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("535=")) + P112_data->sensor.getCalibratedF());
               } else {
-                eventQueue.add(RuleEvent + "535=" + P112_data->sensor.getF());
+                eventQueue.add(RuleEvent + String(F("535=")) + P112_data->sensor.getF());
               }
               break;
             case 7:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "560=" + P112_data->sensor.getCalibratedG());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("560=")) + P112_data->sensor.getCalibratedG());
               } else {
-                eventQueue.add(RuleEvent + "560=" + P112_data->sensor.getG());
+                eventQueue.add(RuleEvent + String(F("560=")) + P112_data->sensor.getG());
               }
               break;
             case 8:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "585=" + P112_data->sensor.getCalibratedH());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("585=")) + P112_data->sensor.getCalibratedH());
               } else {
-                eventQueue.add(RuleEvent + "585=" + P112_data->sensor.getH());
+                eventQueue.add(RuleEvent + String(F("585=")) + P112_data->sensor.getH());
               }
               break;
             case 9:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "610=" + P112_data->sensor.getCalibratedR());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("610=")) + P112_data->sensor.getCalibratedR());
               } else {
-                eventQueue.add(RuleEvent + "610=" + P112_data->sensor.getR());
+                eventQueue.add(RuleEvent + String(F("610=")) + P112_data->sensor.getR());
               }
               break;
             case 10:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "645=" + P112_data->sensor.getCalibratedI());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("645=")) + P112_data->sensor.getCalibratedI());
               } else {
-                eventQueue.add(RuleEvent + "645=" + P112_data->sensor.getI());
+                eventQueue.add(RuleEvent + String(F("645=")) + P112_data->sensor.getI());
               }
               break;
             case 11:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "680=" + P112_data->sensor.getCalibratedS());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("680=")) + P112_data->sensor.getCalibratedS());
               } else {
-                eventQueue.add(RuleEvent + "680=" + P112_data->sensor.getS());
+                eventQueue.add(RuleEvent + String(F("680=")) + P112_data->sensor.getS());
               }
               break;
             case 12:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "705=" + P112_data->sensor.getCalibratedJ());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("705=")) + P112_data->sensor.getCalibratedJ());
               } else {
-                eventQueue.add(RuleEvent + "705=" + P112_data->sensor.getJ());
+                eventQueue.add(RuleEvent + String(F("705=")) + P112_data->sensor.getJ());
               }
               break;
             case 13:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "730=" + P112_data->sensor.getCalibratedT());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("730=")) + P112_data->sensor.getCalibratedT());
               } else {
-                eventQueue.add(RuleEvent + "730=" + P112_data->sensor.getT());
+                eventQueue.add(RuleEvent + String(F("730=")) + P112_data->sensor.getT());
               }
               break;
             case 14:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "760=" + P112_data->sensor.getCalibratedU());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("760=")) + P112_data->sensor.getCalibratedU());
               } else {
-                eventQueue.add(RuleEvent + "760=" + P112_data->sensor.getU());
+                eventQueue.add(RuleEvent + String(F("760=")) + P112_data->sensor.getU());
               }
               break;
             case 15:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "810=" + P112_data->sensor.getCalibratedV());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("810=")) + P112_data->sensor.getCalibratedV());
               } else {
-                eventQueue.add(RuleEvent + "810=" + P112_data->sensor.getV());
+                eventQueue.add(RuleEvent + String(F("810=")) + P112_data->sensor.getV());
               }
               break;
             case 16:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "860=" + P112_data->sensor.getCalibratedW());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("860=")) + P112_data->sensor.getCalibratedW());
               } else {
-                eventQueue.add(RuleEvent + "860=" + P112_data->sensor.getW());
+                eventQueue.add(RuleEvent + String(F("860=")) + P112_data->sensor.getW());
               }
               break;
             case 17:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "900=" + P112_data->sensor.getCalibratedK());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("900=")) + P112_data->sensor.getCalibratedK());
               } else {
-                eventQueue.add(RuleEvent + "900=" + P112_data->sensor.getK());
+                eventQueue.add(RuleEvent + String(F("900=")) + P112_data->sensor.getK());
               }
               break;
             case 18:
-              if (PCONFIG(3)) {
-                eventQueue.add(RuleEvent + "940=" + P112_data->sensor.getCalibratedL());
+              if (PCONFIG(6)) {
+                eventQueue.add(RuleEvent + String(F("940=")) + P112_data->sensor.getCalibratedL());
               } else {
-                eventQueue.add(RuleEvent + "940=" + P112_data->sensor.getL());
+                eventQueue.add(RuleEvent + String(F("940=")) + P112_data->sensor.getL());
               }
-
-              Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
-              break;
-            case 19:
-              if (PCONFIG(3)) {
-                UserVar[event->BaseVarIndex + 0] = P112_data->sensor.getCalibratedC();
-              } else {
-                UserVar[event->BaseVarIndex + 0] = P112_data->sensor.getC();
+              P112_data->MeasurementStatus = 0;
+              UserVar[event->BaseVarIndex + 2] = 0;
+              if (PCONFIG(0)) // Blue Status LED
+              {
+                P112_data->sensor.enableIndicator();
               }
-              break;
-            case 20:
-              if (PCONFIG(3)) {
-                UserVar[event->BaseVarIndex + 1] = P112_data->sensor.getCalibratedF();
-              } else {
-                UserVar[event->BaseVarIndex + 1] = P112_data->sensor.getF();
-              }
-              break;
-            case 21:
-              if (PCONFIG(3)) {
-                UserVar[event->BaseVarIndex + 2] = P112_data->sensor.getCalibratedR();
-              } else {
-                UserVar[event->BaseVarIndex + 2] = P112_data->sensor.getR();
-              }
-              break;
-            case 22:
-              if (PCONFIG(3)) {
-                UserVar[event->BaseVarIndex + 3] = P112_data->sensor.getCalibratedW();
-              } else {
-                UserVar[event->BaseVarIndex + 3] = P112_data->sensor.getW();
-              }
-              Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
               break;
           }
-          P112_data->MeasurementStatus = P112_data->MeasurementStatus + 1;
         }
       }
       break;
@@ -350,20 +449,29 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       P112_data_struct *P112_data =
         static_cast<P112_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (P112_data->MeasurementStatus == 23) {
-        P112_data->MeasurementStatus = 0;
-      } else if (P112_data->MeasurementStatus == 0) {
-        P112_data->MeasurementStatus = 1;
+      if (P112_data->MeasurementStatus == 0) {
         if (P112_data->begin()) {
-          if (PCONFIG(3)) // Integrated LEDs?
+          UserVar[event->BaseVarIndex + 2] = 1;
+
+          P112_data->sensor.disableIndicator(); // Blue Status LEDs Off
+          if (PCONFIG(5))                       // Measurement With LEDs On
           {
             P112_data->sensor.enableBulb(AS7265x_LED_WHITE);
             P112_data->sensor.enableBulb(AS7265x_LED_IR);
             P112_data->sensor.enableBulb(AS7265x_LED_UV);
-            P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
-          } else {
-            P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
           }
+
+          // There are four measurement modes - the datasheet describes it best
+          // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+          // sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_4CHAN); //Channels STUV on x51
+          // sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_4CHAN_2); //Channels RTUW on x51
+          // sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_CONTINUOUS); //All 6 channels on all devices
+          // sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT); //Default: All 6 channels, all devices, just once
+          //
+          P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
+
+          UserVar[event->BaseVarIndex + 0] = P112_data->sensor.getTemperature();
+          UserVar[event->BaseVarIndex + 1] = P112_data->sensor.getTemperatureAverage();
         }
       }
       success = true;
@@ -372,87 +480,5 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
-
-//
-// There are four measurement modes - the datasheet describes it best
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_4CHAN); //Channels STUV on x51
-// sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_4CHAN_2); //Channels RTUW on x51
-// sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_CONTINUOUS); //All 6 channels on all devices
-// sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT); //Default: All 6 channels, all devices, just once
-//
-// Drive current can be set for each LED
-// 4 levels: 12.5, 25, 50, and 100mA
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// White LED has max forward current of 120mA
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_WHITE); //Default
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_25MA, AS7265x_LED_WHITE); //Allowed
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_WHITE); //Allowed 
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_WHITE); //Allowed
-//
-// UV LED has max forward current of 30mA so do not set the drive current higher
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_UV); //Default
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_25MA, AS7265x_LED_UV-bad); //Not allowed
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_UV-bad); //Not allowed
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_UV-bad); //Not allowed
-//
-// IR LED has max forward current of 65mA 
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_IR); //Default
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_25MA, AS7265x_LED_IR); //Allowed
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_IR); //Allowed
-// sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_IR-bad); //Not allowed
-//
-// The status indicator (Blue LED) can be enabled/disabled and have its current set
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// sensor.enableIndicator(); //Default
-// sensor.disableIndicator();
-//
-// sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_1MA);
-// sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_2MA);
-// sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_4MA);
-// sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_8MA); //Default
-//
-// The interrupt pin is active low and can be enabled or disabled
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// sensor.enableInterrupt(); //Default
-// sensor.disableInterrupt();
-//
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// byte deviceType = sensor.getDeviceType();
-// Serial.print("AMS Device Type: 0x");
-// Serial.println(deviceType, HEX);
-//
-// byte hardwareVersion = sensor.getHardwareVersion();
-// Serial.print("AMS Hardware Version: 0x");
-// Serial.println(hardwareVersion, HEX);
-//
-// byte majorFirmwareVersion = sensor.getMajorFirmwareVersion();
-// Serial.print("Major Firmware Version: 0x");
-// Serial.println(majorFirmwareVersion, HEX);
-//
-// byte patchFirmwareVersion = sensor.getPatchFirmwareVersion();
-// Serial.print("Patch Firmware Version: 0x");
-// Serial.println(patchFirmwareVersion, HEX);
-//
-// byte buildFirmwareVersion = sensor.getBuildFirmwareVersion();
-// Serial.print("Build Firmware Version: 0x");
-// Serial.println(buildFirmwareVersion, HEX);
-//
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// sensor.getTemperature(); //Returns the temperature of master IC
-// Serial.print("Main IC temp: ");
-// Serial.println(oneSensorTemp);
-//
-// float threeSensorTemp = sensor.getTemperatureAverage(); //Returns the average temperature of all three ICs
-// Serial.print("Average IC temp: ");
-// Serial.println(threeSensorTemp, 2);
-//
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Rather than toggle the LEDs with each measurement, turn on LEDs all the time
-// sensor.enableBulb(AS7265x_LED_WHITE);
-// sensor.enableBulb(AS7265x_LED_IR);
-// sensor.enableBulb(AS7265x_LED_UV);
-//
 
 #endif // USES_P112

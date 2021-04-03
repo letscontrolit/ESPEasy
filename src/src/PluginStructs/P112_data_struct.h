@@ -24,9 +24,8 @@ struct P112_data_struct : public PluginTaskData_base {
   bool initialized = false;
 
   // MeasurementStatus:
-  // 0 : Not running
-  // 1 : Running
-  // 2 : Sensor data available
+  // 0      : Not running
+  // 1 - 18 : Running
   byte MeasurementStatus = 0;
 };
 
