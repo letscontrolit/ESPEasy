@@ -290,6 +290,7 @@
 // #define USES_P105   // Atlas_EZO_ORP
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
+// #define USES_P110   // VL53L0X Time of Flight sensor
 // #define USES_P111   // RF522 RFID reader
 
 
