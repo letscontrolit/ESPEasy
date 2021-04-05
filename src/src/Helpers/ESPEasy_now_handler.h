@@ -91,6 +91,7 @@ private:
   ESPEasy_Now_NTP_query _best_NTP_candidate;
 
   unsigned long _last_used = 0;
+  unsigned long _last_started = 0;
 
   uint8_t _send_failed_count = 0;
 

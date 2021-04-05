@@ -31,7 +31,8 @@
 # include <list>
 
 
-# define ESPEASY_NOW_ACTIVITY_TIMEOUT 120000 // 2 minutes
+# define ESPEASY_NOW_ACTIVITY_TIMEOUT      125000 // 2 minutes + 5 sec
+# define ESPEASY_NOW_SINCE_LAST_BROADCAST  65000 // 1 minute + 5 sec to start sending a node directly
 
 # define ESPEASY_NOW_TMP_SSID       "ESPEASY_NOW"
 # define ESPEASY_NOW_TMP_PASSPHRASE "random_passphrase"
@@ -87,6 +88,7 @@ bool ESPEasy_now_handler_t::begin()
   if (use_EspEasy_now) { return true; }
 
   _last_used = millis();
+  _last_started = millis();
   _usedWiFiChannel = WiFi.channel();
   _controllerIndex = INVALID_CONTROLLER_INDEX;
 
@@ -154,6 +156,7 @@ void ESPEasy_now_handler_t::end()
     // Only call WifiEspNow.end() if it was started.
     WifiEspNow.end();
     _last_used = 0;
+    _last_started = 0;
   }
   addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(" disabled"));
 }
@@ -268,8 +271,12 @@ bool ESPEasy_now_handler_t::active() const
     return false;
   }
 
-  if (_last_used == 0) {
+  if (_last_started == 0) {
     return false;
+  }
+  if (timePassedSince(_last_started) < ESPEASY_NOW_SINCE_LAST_BROADCAST) {
+    // Give the unit some time to find other nodes.
+    return true;
   }
   if (Nodes.lastTimeValidDistanceExpired()) {
     return false;
@@ -475,7 +482,7 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
   } else {
     if (mac.all_one()) {
       for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
-        if (it->second.getAge() > 65000) {
+        if (it->second.getAge() > ESPEASY_NOW_SINCE_LAST_BROADCAST) {
           msg.send(it->second.ESPEasy_Now_MAC(), channel);
         }
       }
@@ -581,7 +588,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& traceRoute, int channel)
 {
   for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
-    if (it->second.getAge() > 65000) {
+    if (it->second.getAge() > ESPEASY_NOW_SINCE_LAST_BROADCAST) {
       sendTraceRoute(it->second.ESPEasy_Now_MAC(), traceRoute, channel);
     }
   }

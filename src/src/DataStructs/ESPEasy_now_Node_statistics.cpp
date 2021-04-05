@@ -5,7 +5,7 @@
 
 unsigned long ESPEasy_now_Node_statistics_t::getAge() const
 {
-  return timePassedSince(last_update);
+  return timePassedSince(last_update_route[last_route_index]);
 }
 
 void ESPEasy_now_Node_statistics_t::addRoute(byte unit, const ESPEasy_now_traceroute_struct& route)

@@ -235,6 +235,7 @@ void NodesHandler::setTraceRoute(const MAC_address& mac, const ESPEasy_now_trace
   if (node != nullptr) {
     auto trace_it = _nodeStats.find(node->unit);
     if (trace_it != _nodeStats.end()) {
+      _lastTimeValidDistance = millis();
       trace_it->second.addRoute(node->unit, traceRoute);
     }
   }
@@ -326,7 +327,6 @@ void NodesHandler::updateThisNode() {
           thisTraceRoute.addUnit(thisNode.unit);
 
           _distance = thisTraceRoute.getDistance();  // This node is already included in the traceroute.
-          _lastTimeValidDistance = millis();
         }
 /*
         if (_distance != lastDistance) {
@@ -382,20 +382,22 @@ bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long&
 
   for (auto it = _nodes.begin(); it != _nodes.end();) {
     unsigned long age = it->second.getAge();
-    if (it->second.ESPEasyNowPeer) {
-      // ESPEasy-NOW peers should see updates every 30 seconds.
-      if (age > 125000) age = max_age_allowed + 1;
-    }
-
     if (age > max_age_allowed) {
+      bool mustErase = true;
       #ifdef USES_ESPEASY_NOW
       auto route_it = _nodeStats.find(it->second.unit);
       if (route_it != _nodeStats.end()) {
-        _nodeStats.erase(route_it);
+        if (route_it->second.getAge() > max_age_allowed) {
+          _nodeStats.erase(route_it);
+        } else {
+          mustErase = false;
+        }
       }
       #endif
-      it          = _nodes.erase(it);
-      nodeRemoved = true;
+      if (mustErase) {
+        it          = _nodes.erase(it);
+        nodeRemoved = true;
+      }
     } else {
       ++it;
 

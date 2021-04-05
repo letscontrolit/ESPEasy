@@ -5,7 +5,7 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
-#define NODE_STRUCT_AGE_TIMEOUT 120000  // 2 minutes
+#define NODE_STRUCT_AGE_TIMEOUT 300000  // 5 minutes
 
 NodeStruct::NodeStruct() : ESPEasyNowPeer(0), useAP_ESPEasyNow(0), scaled_rssi(0)
 {}
