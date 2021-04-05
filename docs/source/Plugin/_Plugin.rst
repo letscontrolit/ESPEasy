@@ -131,6 +131,7 @@ There's three different released versions of ESP Easy:
    ":ref:`P107_page`","|P107_status|","P107"
    ":ref:`P108_page`","|P108_status|","P108"
    ":ref:`P111_page`","|P111_status|","P111"
+   ":ref:`P113_page`","|P113_status|","P113"
 
 
 Internal GPIO handling
@@ -154,6 +155,11 @@ Display
 -------
 
 Plugins: |Plugin_Display|
+
+Distance
+--------
+
+Plugins: |Plugin_Distance|
 
 Dust
 ----

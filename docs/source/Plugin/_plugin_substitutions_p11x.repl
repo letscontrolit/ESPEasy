@@ -11,3 +11,16 @@
 .. |P111_maintainer| replace:: `TD-er, twinbee77, tonhuisman`
 .. |P111_compileinfo| replace:: `.`
 .. |P111_usedlibraries| replace:: `https://github.com/miguelbalboa/rfid (local copy)`
+
+.. |P113_name| replace:: :cyan:`VL53L1X`
+.. |P113_type| replace:: :cyan:`Distance`
+.. |P113_typename| replace:: :cyan:`Distance - VL53L1X (400cm)`
+.. |P113_porttype| replace:: `.`
+.. |P113_status| replace:: :yellow:`TESTING`
+.. |P113_github| replace:: P113_VL53L1X.ino
+.. _P113_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P113_VL53L1X.ino
+.. |P113_usedby| replace:: `.`
+.. |P113_shortinfo| replace:: `Laser distance (Time of Flight) sensor`
+.. |P113_maintainer| replace:: `TD-er, tonhuisman`
+.. |P113_compileinfo| replace:: `.`
+.. |P113_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library (local copy)`
