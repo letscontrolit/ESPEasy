@@ -1178,17 +1178,77 @@ To create/register a plugin, you have to :
   #ifndef USES_P096
     #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
   #endif
+  #ifndef USES_P098
+    #define USES_P098   // ESPEasy-NOW Receiver
+  #endif
   #ifndef USES_P099
     #define USES_P099   // XPT2046 Touchscreen
   #endif
   #ifndef USES_P102
     #define USES_P102   // PZEM004Tv3
   #endif
+  #ifndef USES_P103
+    #define USES_P103   // Atlas EZO pH
+  #endif
+  #ifndef USES_P104
+    #define USES_P104   // Atlas EZO EC
+  #endif
+  #ifndef USES_P105
+    #define USES_P105   // Atlas EZO_ORP
+  #endif
   #ifndef USES_P108
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
   #endif
+  // #ifndef USES_P109
+  //   #define USES_P109   // ThermOLED (unconfirmed yet)
+  // #endif
+  #ifndef USES_P110
+    #define USES_P110   // VL53L0X
+  #endif
   #ifndef USES_P111
     #define USES_P111   // RC522 RFID reader
+  #endif
+  #ifndef USES_P112
+    #define USES_P112   // AS7256x
+  #endif
+  #ifndef USES_P113
+    #define USES_P113   // VL53L1X
+  #endif
+  #ifndef USES_P114
+    #define USES_P114   // 
+  #endif
+  #ifndef USES_P115
+    #define USES_P115   // 
+  #endif
+  #ifndef USES_P116
+    #define USES_P116   // 
+  #endif
+  #ifndef USES_P117
+    #define USES_P117   // 
+  #endif
+  #ifndef USES_P118
+    #define USES_P118   // 
+  #endif
+  #ifndef USES_P119
+    #define USES_P119   // 
+  #endif
+  #ifndef USES_P120
+    #define USES_P120   // 
+  #endif
+  #ifndef USES_P121
+    #define USES_P121   // 
+  #endif
+  #ifndef USES_P122
+    #define USES_P122   // 
+  #endif
+  #ifndef USES_P123
+    #define USES_P123   // 
+  #endif
+  #ifndef USES_P124
+    #define USES_P124   // 
+  #endif
+  #ifndef USES_P125
+    #define USES_P125   // 
   #endif
 
   // Controllers
