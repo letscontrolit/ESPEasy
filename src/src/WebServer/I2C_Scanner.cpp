@@ -166,6 +166,9 @@ String getKnownI2Cdevice(byte address) {
     case 0x29:
       result =  F("TSL2561,TCS34725,VL53L1X");
       break;
+    case 0x30:
+      result =  F("VL53L1X");
+      break;
     case 0x38:
     case 0x3A:
     case 0x3B:
