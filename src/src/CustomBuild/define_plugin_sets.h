@@ -123,6 +123,12 @@ To create/register a plugin, you have to :
     #ifndef USES_TIMING_STATS
         #define USES_TIMING_STATS
     #endif
+    #ifndef FEATURE_I2CMULTIPLEXER
+        #define FEATURE_I2CMULTIPLEXER
+    #endif
+    #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+        #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif
 #endif
 
 
@@ -240,7 +246,9 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_I2CMULTIPLEXER
         #define FEATURE_I2CMULTIPLEXER
     #endif
-
+    #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+        #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif
 #endif
 
 #ifdef USES_FHEM
@@ -366,11 +374,6 @@ To create/register a plugin, you have to :
     #ifndef NOTIFIER_SET_NONE
         #define NOTIFIER_SET_NONE
     #endif
-
-    #ifdef USES_SSDP
-      #undef USES_SSDP
-    #endif
-
 #endif
 
 
@@ -821,6 +824,8 @@ To create/register a plugin, you have to :
     #define USES_P049   // MHZ19
 
     #define USES_P052   // SenseAir
+    #define USES_P053   // PMSx003
+
     #define USES_P056   // SDS011-Dust
     #define USES_P059   // Encoder
 
@@ -870,9 +875,9 @@ To create/register a plugin, you have to :
     #define USES_P047   // I2C_soil_misture
     #define USES_P048   // Motoshield_v2
 
+    #define USES_P050   // TCS34725
     #define USES_P051   // AM2320
 
-    #define USES_P053   // PMSx003
     #define USES_P054   // DMX512
     #define USES_P055   // Chiming
     #define USES_P057   // HT16K33_LED
@@ -894,16 +899,16 @@ To create/register a plugin, you have to :
     #define USES_P072   // HDC1080
     #define USES_P074   // TSL2561
     #define USES_P075   // Nextion
-    #define USES_P076   // HWL8012   in POW r1
+    //#define USES_P076   // HWL8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
-    #define USES_P077	  // CSE7766   in POW R2
+    //#define USES_P077	  // CSE7766   in POW R2
     #define USES_P078   // Eastron Modbus Energy meters
     #define USES_P080   // iButton Sensor  DS1990A
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P083   // SGP30
     #define USES_P084   // VEML6070
-    #define USES_P085   // AcuDC24x
+    //#define USES_P085   // AcuDC24x
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Ping
@@ -920,7 +925,9 @@ To create/register a plugin, you have to :
     #define USES_P101   // Wake On Lan
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
-    #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+    //#define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+    // #define USES_P110   // VL53L0X Time of Flight sensor
+    // #define USES_P111   // RC522 RFID reader
 #endif
 
 
@@ -944,6 +951,9 @@ To create/register a plugin, you have to :
    #endif
    #ifndef USES_P085
      #define USES_P085   // AcuDC24x
+   #endif
+   #ifndef USES_P093
+     #define USES_P093   // Mitsubishi Heat Pump
    #endif
    #ifndef USES_P102
      #define USES_P102   // PZEM-004Tv30
@@ -1098,7 +1108,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Remove incompatible plugins ************************************************
 \******************************************************************************/
-#ifdef PLUGIN_SET_TEST_ESP32
+#ifdef ESP32
 //  #undef USES_P010   // BH1750          (doesn't work yet on ESP32)
 //  #undef USES_P049   // MHZ19           (doesn't work yet on ESP32)
 
@@ -1108,9 +1118,15 @@ To create/register a plugin, you have to :
 //  #undef USES_P056   // SDS011-Dust     (doesn't work yet on ESP32)
 //  #undef USES_P065   // DRF0299
 //  #undef USES_P071   // Kamstrup401
-  #undef USES_P075   // Nextion
+//  #undef USES_P075   // Nextion
 //  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
 //  #undef USES_P082   // GPS
+
+  #ifdef USES_C016
+    // Cache controller uses RTC memory which we do not yet support on ESP32.
+    #undef USES_C016 // Cache controller
+  #endif
+
 
 #endif
 
@@ -1233,6 +1249,9 @@ To create/register a plugin, you have to :
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
+  #ifdef USES_P076
+    #undef USES_P076   // HWL8012   in POW r1
+  #endif
   #ifdef USES_P092
     #undef USES_P092   // DL-Bus
   #endif
@@ -1257,6 +1276,13 @@ To create/register a plugin, you have to :
   #ifdef USES_C018
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
   #endif
+  #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #undef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+  #endif
+  #ifdef USES_SSDP
+    #undef USES_SSDP
+  #endif
+
 #endif
 
 // Timing stats page needs timing stats
@@ -1326,6 +1352,18 @@ To create/register a plugin, you have to :
   #endif
   #ifdef USES_C015
     #undef USES_C015
+  #endif
+#endif
+
+#ifdef FEATURE_ARDUINO_OTA
+  #ifndef FEATURE_MDNS
+    #define FEATURE_MDNS
+  #endif
+#endif
+
+#ifdef FEATURE_MDNS
+  #ifndef FEATURE_DNS_SERVER
+    #define FEATURE_DNS_SERVER
   #endif
 #endif
 

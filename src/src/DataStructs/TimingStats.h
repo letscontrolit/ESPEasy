@@ -76,10 +76,11 @@
 # define PARSE_TEMPLATE_PADDED   55
 # define RULES_PROCESSING        56
 # define GRAT_ARP_STATS          57
-# define BACKGROUND_TASKS        58
-# define HANDLE_SCHEDULER_IDLE   59
-# define HANDLE_SCHEDULER_TASK   60
-# define HANDLE_SERVING_WEBPAGE  61
+# define SAVE_TO_RTC             58
+# define BACKGROUND_TASKS        59
+# define HANDLE_SCHEDULER_IDLE   60
+# define HANDLE_SCHEDULER_TASK   61
+# define HANDLE_SERVING_WEBPAGE  62
 
 
 class TimingStats {
@@ -130,7 +131,7 @@ extern unsigned long timingstats_last_reset;
 
 #else // ifdef USES_TIMING_STATS
 
-# define START_TIMER
+# define START_TIMER ;
 # define STOP_TIMER_TASK(T, F) ;
 # define STOP_TIMER_CONTROLLER(T, F) ;
 # define STOP_TIMER(L) ;

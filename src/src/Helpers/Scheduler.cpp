@@ -237,7 +237,7 @@ void ESPEasy_Scheduler::handle_schedule() {
     // No id ready to run right now.
     // Events are not that important to run immediately.
     // Make sure normal scheduled jobs run at higher priority.
-    backgroundtasks();
+    //backgroundtasks();
     process_system_event_queue();
     last_system_event_run = millis();
     STOP_TIMER(HANDLE_SCHEDULER_IDLE);

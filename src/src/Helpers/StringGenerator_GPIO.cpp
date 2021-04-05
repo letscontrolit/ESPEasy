@@ -99,8 +99,8 @@ String formatGpioName_ADC(int gpio_pin) {
       return F("Hall Effect");
     }
     String res = F("ADC# ch?");
-    res.replace("#", String(adc));
-    res.replace("?", String(ch));
+    res.replace(F("#"), String(adc));
+    res.replace(F("?"), String(ch));
 
     if (t >= 0) {
       res += F(" (T");

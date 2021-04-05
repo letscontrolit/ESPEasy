@@ -33,11 +33,11 @@ void handle_root() {
   checkRAM(F("handle_root"));
   #endif
 
-  // if Wifi setup, launch setup wizard
-  if (WiFiEventData.wifiSetup)
+  // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
+ if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
   {
     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
-    return;
+   return;
   }
 
   if (!isLoggedIn()) { return; }
@@ -151,22 +151,26 @@ void handle_root() {
       addHtml(html);
     }
 
-    addRowLabelValue(LabelType::IP_ADDRESS);
-    addRowLabel(LabelType::WIFI_RSSI);
+#ifdef HAS_ETHERNET
+    addRowLabelValue(LabelType::ETH_WIFI_MODE);
+#endif
 
-    if (NetworkConnected())
+    if (
+      active_network_medium == NetworkMedium_t::WIFI &&
+      NetworkConnected())
     {
+      addRowLabelValue(LabelType::IP_ADDRESS);
+      addRowLabel(LabelType::WIFI_RSSI);
       String html;
       html.reserve(32);
       html += String(WiFi.RSSI());
-      html += F(" dB (");
+      html += F(" dBm (");
       html += WiFi.SSID();
       html += ')';
       addHtml(html);
     }
 
 #ifdef HAS_ETHERNET
-    addRowLabelValue(LabelType::ETH_WIFI_MODE);
     if(active_network_medium == NetworkMedium_t::Ethernet) {
       addRowLabelValue(LabelType::ETH_SPEED_STATE);
       addRowLabelValue(LabelType::ETH_IP_ADDRESS);
@@ -210,11 +214,11 @@ void handle_root() {
     html_table_class_multirow_noborder();
     html_TR();
     html_table_header(F("Node List"));
-    html_table_header("Name");
+    html_table_header(F("Name"));
     html_table_header(getLabel(LabelType::BUILD_DESC));
-    html_table_header("Type");
-    html_table_header("IP", 160); // Should fit "255.255.255.255"
-    html_table_header("Age");
+    html_table_header(F("Type"));
+    html_table_header(F("IP"), 160); // Should fit "255.255.255.255"
+    html_table_header(F("Age"));
 
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
@@ -230,7 +234,7 @@ void handle_root() {
         }
 
         addHtml(F("Unit "));
-        addHtml(String(it->first));
+        addHtmlInt(it->first);
         html_TD();
 
         if (isThisUnit) {
@@ -242,7 +246,7 @@ void handle_root() {
         html_TD();
 
         if (it->second.build) {
-          addHtml(String(it->second.build));
+          addHtmlInt(it->second.build);
         }
         html_TD();
         addHtml(getNodeTypeDisplayString(it->second.nodeType));
@@ -265,7 +269,7 @@ void handle_root() {
           addHtml(html);
         }
         html_TD();
-        addHtml(String(it->second.age));
+        addHtmlInt(it->second.age);
       }
     }
 

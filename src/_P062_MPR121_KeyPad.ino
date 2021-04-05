@@ -134,7 +134,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         for (int objectNr = 0; objectNr < P062_MaxTouchObjects; objectNr++) {
           html_TR_TD();
           addHtml(F("&nbsp;"));
-          addHtml(String(objectNr + 1));
+          addHtmlInt(objectNr + 1);
           html_TD();
           addNumericBox(getPluginCustomArgName(objectNr + 100), P062_data->StoredSettings.TouchObjects[objectNr].touch,     0, 255);
           html_TD();
@@ -145,11 +145,11 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
             uint16_t max     = 0;
             P062_data->getCalibrationData(objectNr, &current, &min, &max);
             html_TD();
-            addHtml(String(current));
+            addHtmlInt(current);
             html_TD();
-            addHtml(String(min));
+            addHtmlInt(min);
             html_TD();
-            addHtml(String(max));
+            addHtmlInt(max);
           }
         }
         html_end_table();

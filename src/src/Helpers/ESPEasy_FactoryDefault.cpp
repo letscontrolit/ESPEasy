@@ -203,7 +203,7 @@ void ResetFactory()
   Settings.ETH_Pin_power  = gpio_settings.eth_power;
   Settings.ETH_Phy_Type   = gpio_settings.eth_phytype;
   Settings.ETH_Clock_Mode = gpio_settings.eth_clock_mode;
-  Settings.NetworkMedium  = gpio_settings.active_network_medium;
+  Settings.NetworkMedium  = gpio_settings.network_medium;
 
   /*
           Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
@@ -220,8 +220,10 @@ void ResetFactory()
   strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));
 #endif // ifdef PLUGIN_DESCR
 
+#ifndef LIMIT_BUILD_SIZE
   addPredefinedPlugins(gpio_settings);
   addPredefinedRules(gpio_settings);
+#endif
 
 #if DEFAULT_CONTROLLER
   {

@@ -4,7 +4,9 @@
 #include "../DataStructs/RTCStruct.h"
 #include "../DataStructs/RTCCacheStruct.h"
 #include "../DataStructs/RTC_cache_handler_struct.h"
+#include "../DataStructs/TimingStats.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/RuntimeData.h"
 #include "../Helpers/CRC_functions.h"
 
 #ifdef ESP8266
@@ -46,7 +48,7 @@
 // these offsets are in blocks, bytes = blocks * 4
 // 64   RTCStruct  max 40 bytes: ( 74 - 64 ) * 4
 // 74   UserVar
-// 122  UserVar checksum:  RTC_BASE_USERVAR + (sizeof(UserVar) / 4)
+// 122  UserVar checksum:  RTC_BASE_USERVAR + UserVar.getNrElements()
 // 128  Cache (C016) metadata  4 blocks
 // 132  Cache (C016) data  6 blocks per sample => max 10 samples
 
@@ -64,6 +66,7 @@ bool saveToRTC()
   return false;
   #else // if defined(ESP32)
 
+  START_TIMER
   if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte *)&RTC, sizeof(RTC)) || !readFromRTC())
   {
       # ifdef RTC_STRUCT_DEBUG
@@ -73,6 +76,7 @@ bool saveToRTC()
   }
   else
   {
+    STOP_TIMER(SAVE_TO_RTC);
     return true;
   }
   #endif // if defined(ESP32)
@@ -86,7 +90,7 @@ void initRTC()
   RTC.init();
   saveToRTC();
 
-  for (size_t i = 0; i < sizeof(UserVar) / sizeof(float); ++i) {
+  for (size_t i = 0; i < UserVar.getNrElements(); ++i) {
     UserVar[i] = 0.0f;
   }
   saveUserVarToRTC();
@@ -118,8 +122,8 @@ bool saveUserVarToRTC()
   #else // if defined(ESP32)
 
   // addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
-  byte    *buffer = (byte *)&UserVar;
-  size_t   size   = sizeof(UserVar);
+  byte    *buffer = UserVar.get();
+  size_t   size   = UserVar.getNrElements() * sizeof(float);
   uint32_t sum    = calc_CRC32(buffer, size);
   bool  ret    = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
   ret &= system_rtc_mem_write(RTC_BASE_USERVAR + (size >> 2), (byte *)&sum, 4);
@@ -137,8 +141,8 @@ bool readUserVarFromRTC()
   #else // if defined(ESP32)
 
   // addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
-  byte    *buffer = (byte *)&UserVar;
-  size_t   size   = sizeof(UserVar);
+  byte    *buffer = UserVar.get();
+  size_t   size   = UserVar.getNrElements() * sizeof(float);
   bool  ret    = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
   uint32_t sumRAM = calc_CRC32(buffer, size);
   uint32_t sumRTC = 0;

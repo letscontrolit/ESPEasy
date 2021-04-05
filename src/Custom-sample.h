@@ -62,6 +62,8 @@
                                                    // See: https://github.com/letscontrolit/ESPEasy/issues/2724
 #define DEFAULT_SEND_TO_HTTP_ACK             false // Wait for ack with SendToHttp command.
 
+#define DEFAULT_AP_DONT_FORCE_SETUP            false  // Allow optional usage of Sensor without WIFI avaiable // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+
 // --- Default Controller ------------------------------------------------------------------------------
 #define DEFAULT_CONTROLLER   false                                          // true or false enabled or disabled, set 1st controller
                                                                             // defaults
@@ -142,6 +144,9 @@
 
 
 // #define USE_SETTINGS_ARCHIVE
+// #define FEATURE_I2CMULTIPLEXER
+// #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 
 /*
  #######################################################################################################
@@ -285,6 +290,8 @@
 // #define USES_P105   // Atlas_EZO_ORP
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
+// #define USES_P110   // VL53L0X Time of Flight sensor
+// #define USES_P111   // RF522 RFID reader
 
 
 // Special plugins needing IR library

@@ -78,7 +78,10 @@ bool P082_data_struct::loop() {
       --available;
       char c = easySerial->read();
 # ifdef P082_SEND_GPS_TO_LOG
-      _currentSentence += c;
+      if (_currentSentence.length() <= 80) {
+        // No need to capture more than 80 bytes as a NMEA message is never that long.
+        _currentSentence += c;
+      }
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
       if (gps->encode(c)) {
@@ -161,8 +164,8 @@ bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps
   if (!gps->date.isValid() || !gps->time.isValid()) {
     return false;
   }
-  dateTime.tm_year = gps->date.year() - 1970;
-  dateTime.tm_mon  = gps->date.month();
+  dateTime.tm_year = gps->date.year() - 1900;
+  dateTime.tm_mon  = gps->date.month() - 1; // GPS month starts at 1, tm_mon at 0
   dateTime.tm_mday = gps->date.day();
 
   dateTime.tm_hour = gps->time.hour();

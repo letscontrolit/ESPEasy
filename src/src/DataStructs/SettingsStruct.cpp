@@ -119,6 +119,59 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow() const {
+  return bitRead(VariousBits1, 11);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow(bool value) {
+  bitWrite(VariousBits1, 11, value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::IncludeHiddenSSID() const {
+  return bitRead(VariousBits1, 12);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::IncludeHiddenSSID(bool value) {
+  bitWrite(VariousBits1, 12, value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::UseMaxTXpowerForSending() const {
+  return bitRead(VariousBits1, 13);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::UseMaxTXpowerForSending(bool value) {
+  bitWrite(VariousBits1, 13, value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup() const {
+  return bitRead(VariousBits1, 14);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
+  bitWrite(VariousBits1, 14, value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
+  if (validTaskIndex(taskIndex))
+    return bitRead(TaskDeviceSendDataFlags[taskIndex], 0);
+  return false;
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value) {
+  if (validTaskIndex(taskIndex))
+    bitWrite(TaskDeviceSendDataFlags[taskIndex], 0, value);
+}
+
+template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (UDPPort > 65535) { UDPPort = 0; }
 
@@ -282,6 +335,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   gratuitousARP(DEFAULT_GRATUITOUS_ARP);
   TolerantLastArgParse(DEFAULT_TOLERANT_LAST_ARG_PARSE);
   SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
+  ApDontForceSetup(DEFAULT_AP_DONT_FORCE_SETUP);
 }
 
 template<unsigned int N_TASKS>
@@ -324,7 +378,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   for (byte cv = 0; cv < PLUGIN_CONFIGLONGVAR_MAX; ++cv) {
     TaskDevicePluginConfigLong[task][cv] = 0;
   }
-  OLD_TaskDeviceSendData[task]  = 0;
+  TaskDeviceSendDataFlags[task]  = 0;
   OLD_TaskDeviceGlobalSync[task]= 0;
   TaskDeviceDataFeed[task]      = 0;
   TaskDeviceTimer[task]         = 0;
@@ -379,3 +433,14 @@ void SettingsStruct_tmpl<N_TASKS>::setPinBootState(uint8_t gpio_pin, PinBootStat
   }
   #endif
 }
+
+template<unsigned int N_TASKS>
+float SettingsStruct_tmpl<N_TASKS>::getWiFi_TX_power() const {
+  return WiFi_TX_power / 4.0f;
+}
+  
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setWiFi_TX_power(float dBm) {
+  WiFi_TX_power = dBm * 4.0f;
+}
+

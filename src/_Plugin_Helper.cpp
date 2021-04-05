@@ -38,11 +38,11 @@ void clearPluginTaskData(taskIndex_t taskIndex) {
 }
 
 void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
-  if (!validTaskIndex(taskIndex)) { 
+  if (!validTaskIndex(taskIndex)) {
     if (data != nullptr) {
       delete data;
     }
-    return; 
+    return;
   }
 
   clearPluginTaskData(taskIndex);
@@ -84,37 +84,33 @@ String getPluginCustomArgName(int varNr) {
 // if the regular values should also be displayed.
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-String pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak) {
-  String result;
-  size_t length   = 96 + label.length() + value.length();
-  String breakStr = F("<div class='div_br'></div>");
-
-  if (addTrailingBreak) {
-    length += breakStr.length();
-  }
-  result.reserve(length);
-
+void pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak) {
   if (varNr > 0) {
-    result += breakStr;
+    addHtmlDiv(F("div_br"));
   }
-  result += F("<div class='div_l' id='valuename_");
-  result += String(taskIndex);
-  result += '_';
-  result += String(varNr);
-  result += "'>";
-  result += label;
-  result += F(":</div><div class='div_r' id='value_");
-  result += String(taskIndex);
-  result += '_';
-  result += String(varNr);
-  result += "'>";
-  result += value;
-  result += "</div>";
 
-  if (addTrailingBreak) {
-    result += breakStr;
+  pluginWebformShowValue(
+    label, String(F("valuename_")) + taskIndex + '_' + varNr,
+    value, String(F("value_")) + taskIndex + '_' + varNr,
+    addTrailingBreak);
+}
+
+void pluginWebformShowValue(const String& valName, const String& value, bool addBR) {
+  pluginWebformShowValue(valName, F(""), value, F(""), addBR);
+}
+
+void pluginWebformShowValue(const String& valName, const String& valName_id, const String& value, const String& value_id, bool addBR) {
+  String valName_tmp(valName);
+
+  if (!valName_tmp.endsWith(F(":"))) {
+    valName_tmp += ':';
   }
-  return result;
+  addHtmlDiv(F("div_l"), valName_tmp, valName_id);
+  addHtmlDiv(F("div_r"), value,       value_id);
+
+  if (addBR) {
+    addHtmlDiv(F("div_br"));
+  }
 }
 
 bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& string, byte paramNr) {
@@ -130,17 +126,19 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
   return found_taskIndex == taskIndex;
 }
 
-int getValueCountForTask(taskIndex_t   taskIndex) {
+int getValueCountForTask(taskIndex_t taskIndex) {
   struct EventStruct TempEvent(taskIndex);
   String dummy;
+
   PluginCall(PLUGIN_GET_DEVICEVALUECOUNT, &TempEvent, dummy);
   return TempEvent.Par1;
 }
 
-int checkDeviceVTypeForTask(struct EventStruct* event) {
+int checkDeviceVTypeForTask(struct EventStruct *event) {
   if (event->sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET) {
     if (validTaskIndex(event->TaskIndex)) {
       String dummy;
+
       if (PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy)) {
         return event->idx; // pconfig_index
       }
