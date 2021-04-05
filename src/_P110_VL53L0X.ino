@@ -6,6 +6,7 @@
 //#######################################################################################################
 
 // Changelog:
+// 2021-04-05, tonhuisman: Removed check for VL53L1X as that is not compatible with this driver (Got its own plugin P113)
 // 2021-02-06, tonhuisman: Refactored to use PluginStruct to enable multiple-instance use with an I2C Multiplexer
 // 2021-01-07, tonhuisman: Moved from PluginPlayground (P133) to main repo (P110), fixed some issues
 
@@ -15,7 +16,7 @@
 
 #define PLUGIN_110
 #define PLUGIN_ID_110         110
-#define PLUGIN_NAME_110       "Distance - VL53L0X [TESTING]"
+#define PLUGIN_NAME_110       "Distance - VL53L0X (200cm) [TESTING]"
 #define PLUGIN_VALUENAME1_110 "Distance"
 
 

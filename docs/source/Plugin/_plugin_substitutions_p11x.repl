@@ -1,6 +1,6 @@
 .. |P110_name| replace:: :cyan:`VL53L0X`
 .. |P110_type| replace:: :cyan:`Distance`
-.. |P110_typename| replace:: :cyan:`Distance - VL53L0X`
+.. |P110_typename| replace:: :cyan:`Distance - VL53L0X (200cm)`
 .. |P110_porttype| replace:: `.`
 .. |P110_status| replace:: :yellow:`TESTING`
 .. |P110_github| replace:: P110_VL53L0X.ino
