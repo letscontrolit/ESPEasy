@@ -291,6 +291,7 @@
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
 // #define USES_P111   // RF522 RFID reader
+// #define USES_P113   // VL53L1X ToF
 
 
 // Special plugins needing IR library
