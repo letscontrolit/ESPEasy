@@ -201,7 +201,6 @@ class SettingsStruct_tmpl
   uint8_t       I2C_Flags[N_TASKS];
   uint32_t      I2C_clockSpeed_Slow;
   uint8_t       I2C_Multiplexer_ResetPin;
-  uint16_t      WebserverPort;
   uint16_t      unused;
 };
 
