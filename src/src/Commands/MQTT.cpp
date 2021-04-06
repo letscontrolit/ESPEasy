@@ -3,21 +3,22 @@
 
 #ifdef USES_MQTT
 
-#include "../Commands/MQTT.h"
+
 
 #include "../Commands/Common.h"
-#include "../Globals/Settings.h"
+#include "../Commands/MQTT.h"
+
+#include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
+
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/StringConverter.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/Scheduler.h"
-
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy_Log.h"
-
+#include "../Helpers/StringConverter.h"
 
 
 String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
@@ -46,7 +47,7 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
         return error;
       }
 
-      LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+      LoadControllerSettings(enabledMqttController, ControllerSettings);
       mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
     }
 
@@ -58,10 +59,10 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
 
     bool success = false;
     if (value[0] != '=') {
-      success = MQTTpublish(enabledMqttController, topic.c_str(), value.c_str(), mqtt_retainFlag);
+      success = MQTTpublish(enabledMqttController, INVALID_TASK_INDEX, topic.c_str(), value.c_str(), mqtt_retainFlag);
     }
     else {
-      success = MQTTpublish(enabledMqttController, topic.c_str(), String(event->Par2).c_str(), mqtt_retainFlag);
+      success = MQTTpublish(enabledMqttController, INVALID_TASK_INDEX,  topic.c_str(), String(event->Par2).c_str(), mqtt_retainFlag);
     }
     if (success) {
       return return_command_success();

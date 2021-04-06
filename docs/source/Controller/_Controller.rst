@@ -61,11 +61,18 @@ before WiFi connection is made or during lost connection.
 - **Max Queue Depth** - Maximum length of the buffer queue to keep unsent messages.
 - **Max Retries** - Maximum number of retries to send a message.
 - **Full Queue Action** - How to handle when queue is full, ignore new or delete oldest message.
+- **Allow Expire** - Remove a queued message from the queue after <timeout> x <queue depth> x <retries>.
+- **De-duplicate** - Do not add a message to the queue if the same message from the same task is already present.
 - **Check Reply** - When set to false, a sent message is considered always successful.
 - **Client Timeout** - Timeout in msec for an network connection used by the controller.
 - **Sample Set Initiator** - Some controllers (e.g. C018 LoRa/TTN) can mark samples to belong to a set of samples. A new sample from set task index will increment this counter.
   Especially useful for controllers which cannot send samples in a burst. This makes the receiving time stamp useless to detect what samples were taken around the same time.
   The sample set counter value can help matching received samples to a single set.
+
+.. note::
+  Be careful when setting the timeout too high.
+  For almost all controllers, sending data is a blocking call, so it may halt execution of other code on the node.
+  With timouts longer than 2 seconds, the ESP may reboot as the software watchdog may step in.
 
 
 

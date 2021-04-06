@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P072
 
 // ######################################################################################################
@@ -11,9 +12,6 @@
 #define PLUGIN_VALUENAME1_072 "Temperature"
 #define PLUGIN_VALUENAME2_072 "Humidity"
 
-#include "_Plugin_Helper.h"
-
-boolean Plugin_072_init = false;
 
 #define HDC1080_I2C_ADDRESS      0x40 // I2C address for the sensor
 
@@ -27,7 +25,7 @@ boolean Plugin_072(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_072;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_TEMP_HUM;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -87,12 +85,15 @@ boolean Plugin_072(byte function, struct EventStruct *event, String& string)
 
       UserVar[event->BaseVarIndex]     = hdc1080_temp;
       UserVar[event->BaseVarIndex + 1] = hdc1080_hum;
-      String log = F("HDC1080: Temperature: ");
-      log += UserVar[event->BaseVarIndex];
-      addLog(LOG_LEVEL_INFO, log);
-      log  = F("HDC1080: Humidity: ");
-      log += UserVar[event->BaseVarIndex + 1];
-      addLog(LOG_LEVEL_INFO, log);
+      
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("HDC1080: Temperature: ");
+        log += formatUserVarNoCheck(event->TaskIndex, 0);
+        addLog(LOG_LEVEL_INFO, log);
+        log  = F("HDC1080: Humidity: ");
+        log += formatUserVarNoCheck(event->TaskIndex, 1);
+        addLog(LOG_LEVEL_INFO, log);
+      }
       success = true;
       break;
     }

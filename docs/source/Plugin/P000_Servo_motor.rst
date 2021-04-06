@@ -52,11 +52,11 @@ Rules examples
 
   On Switch#State Do
    if [Switch#State]=1
-    Servo,12,1,-45
-    Servo,14,2,45
+    Servo,1,12,-45
+    Servo,2,14,45
    else
-    Servo,12,1,0
-    Servo,14,2,0
+    Servo,1,12,0
+    Servo,2,14,0
    endif
   EndOn
 

@@ -1,10 +1,9 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P028
 
 // #######################################################################################################
 // #################### Plugin 028 BME280 I2C Temp/Hum/Barometric Pressure Sensor  #######################
 // #######################################################################################################
-
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P028_data_struct.h"
 
@@ -28,7 +27,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_028;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_TEMP_HUM_BARO;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -56,7 +55,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new P028_data_struct(PCONFIG(0)));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P028_data_struct(PCONFIG(0)));
       P028_data_struct *P028_data =
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -68,17 +67,10 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_EXIT:
-    {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
-      break;
-    }
-
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       int Plugin_28_i2c_addresses[2] = { 0x76, 0x77 };
-      addFormSelectorI2C(F("p028_bme280_i2c"), 2, Plugin_28_i2c_addresses, PCONFIG(0));
+      addFormSelectorI2C(F("i2c_addr"), 2, Plugin_28_i2c_addresses, PCONFIG(0));
       break;
     }
 
@@ -101,7 +93,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Temperature offset"), F("p028_bme280_tempoffset"), PCONFIG(2));
       addUnit(F("x 0.1C"));
-      String offsetNote = F("Offset in units of 0.1 degree Celcius");
+      String offsetNote = F("Offset in units of 0.1 degree Celsius");
 
       if (nullptr != P028_data) {
         if (P028_data->hasHumidity()) {
@@ -116,7 +108,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p028_bme280_i2c"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p028_bme280_elev"));
       PCONFIG(2) = getFormItemInt(F("p028_bme280_tempoffset"));
       success    = true;
@@ -128,7 +120,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P028_data) {
-        const float tempOffset = PCONFIG(2) / 10.0;
+        const float tempOffset = PCONFIG(2) / 10.0f;
 
         if (P028_data->updateMeasurements(tempOffset, event->TaskIndex)) {
           // Update was succesfull, schedule a read.
@@ -152,7 +144,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
         if (!P028_data->hasHumidity()) {
           // Patch the sensor type to output only the measured values.
-          event->sensorType = SENSOR_TYPE_TEMP_EMPTY_BARO;
+          event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
         }
         UserVar[event->BaseVarIndex]     = P028_data->last_temp_val;
         UserVar[event->BaseVarIndex + 1] = P028_data->last_hum_val;
@@ -173,18 +165,18 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, log);
           log  = P028_data->getDeviceName();
           log += F(" : Temperature: ");
-          log += UserVar[event->BaseVarIndex];
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
           addLog(LOG_LEVEL_INFO, log);
 
           if (P028_data->hasHumidity()) {
             log  = P028_data->getDeviceName();
             log += F(" : Humidity: ");
-            log += UserVar[event->BaseVarIndex + 1];
+            log += formatUserVarNoCheck(event->TaskIndex, 1);
             addLog(LOG_LEVEL_INFO, log);
           }
           log  = P028_data->getDeviceName();
           log += F(" : Barometric Pressure: ");
-          log += UserVar[event->BaseVarIndex + 2];
+          log += formatUserVarNoCheck(event->TaskIndex, 2);
           addLog(LOG_LEVEL_INFO, log);
         }
         success = true;

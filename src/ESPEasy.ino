@@ -7,6 +7,18 @@
 #pragma GCC diagnostic warning "-Wall"
 #endif
 
+// Include this as first, to make sure all defines are active during the entire compile.
+// See: https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=7980
+// If Custom.h build from Arduino IDE is needed, uncomment #define USE_CUSTOM_H in ESPEasy_common.h
+#include "ESPEasy_common.h"
+
+#ifdef USE_CUSTOM_H
+// make the compiler show a warning to confirm that this file is inlcuded
+  #warning "**** Using Settings from Custom.h File ***"
+#endif
+
+
+
 // Needed due to preprocessor issues.
 #ifdef PLUGIN_SET_GENERIC_ESP32
   #ifndef ESP32
@@ -88,29 +100,34 @@
 // Must be included after all the defines, since it is using TASKS_MAX
 #include "_Plugin_Helper.h"
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
-#include "_CPlugin_Helper.h"
+#include "src/Helpers/_CPlugin_Helper.h"
 
-
-
-#include "ESPEasyWiFi_credentials.h"
-#include "ESPEasyWifi.h"
-#include "ESPEasyWifi_ProcessEvent.h"
 
 #include "src/DataStructs/ControllerSettingsStruct.h"
-#include "src/DataStructs/DeviceModel.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/PortStatusStruct.h"
 #include "src/DataStructs/ProtocolStruct.h"
 #include "src/DataStructs/RTCStruct.h"
-#include "src/DataStructs/SettingsType.h"
 #include "src/DataStructs/SystemTimerStruct.h"
 #include "src/DataStructs/TimingStats.h"
 #include "src/DataStructs/tcp_cleanup.h"
 
+#include "src/DataTypes/DeviceModel.h"
+#include "src/DataTypes/SettingsType.h"
+
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
+#include "src/ESPEasyCore/ESPEasyRules.h"
+#include "src/ESPEasyCore/ESPEasyWifi.h"
+#include "src/ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
+#include "src/ESPEasyCore/Serial.h"
+
+#include "src/Globals/Cache.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasyWiFiEvent.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Globals/ESPEasy_time.h"
 #include "src/Globals/EventQueue.h"
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/GlobalMapPortStatus.h"
@@ -124,14 +141,28 @@
 #include "src/Globals/Services.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/Statistics.h"
+#include "src/Globals/WiFi_AP_Candidates.h"
 
 #include "src/Helpers/DeepSleep.h"
+#include "src/Helpers/ESPEasyRTC.h"
+#include "src/Helpers/ESPEasy_FactoryDefault.h"
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_checks.h"
 #include "src/Helpers/Hardware.h"
+#include "src/Helpers/Memory.h"
+#include "src/Helpers/Misc.h"
+#include "src/Helpers/Network.h"
+#include "src/Helpers/Networking.h"
+#include "src/Helpers/OTA.h"
 #include "src/Helpers/PeriodicalActions.h"
 #include "src/Helpers/Scheduler.h"
+#include "src/Helpers/StringGenerator_System.h"
 
+#include "src/WebServer/WebServer.h"
+
+#ifdef PHASE_LOCKED_WAVEFORM
+#include <core_esp8266_waveform.h>
+#endif
 
 #if FEATURE_ADC_VCC
 ADC_MODE(ADC_VCC);
@@ -152,13 +183,15 @@ void preinit() {
   // No global object methods or C++ exceptions can be called in here!
   //The below is a static class method, which is similar to a function, so it's ok.
   ESP8266WiFiClass::preinitWiFiOff();
+  system_phy_set_powerup_option(RF_NO_CAL);
+
 }
 #endif
 
 /*********************************************************************************************\
  * ISR call back function for handling the watchdog.
 \*********************************************************************************************/
-void sw_watchdog_callback(void *arg) 
+void sw_watchdog_callback(void *arg)
 {
   yield(); // feed the WD
   ++sw_watchdog_callback_count;
@@ -175,11 +208,16 @@ void setup()
 #ifdef ESP8266_DISABLE_EXTRA4K
   disable_extra4k_at_link_time();
 #endif
+#ifdef PHASE_LOCKED_WAVEFORM
+  enablePhaseLockedWaveform();
+#endif
   initWiFi();
   
   run_compiletime_checks();
+#ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
+#endif
 #ifndef ESP32
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif
@@ -188,24 +226,18 @@ void setup()
   // Read ADC at boot, before WiFi tries to connect.
   // see https://github.com/letscontrolit/ESPEasy/issues/2646
 #if FEATURE_ADC_VCC
-  vcc = ESP.getVcc() / 1000.0;
+  vcc = ESP.getVcc() / 1000.0f;
 #endif
 #ifdef ESP8266
-  lastADCvalue = analogRead(A0);
+  espeasy_analogRead(A0);
 #endif
 
-#ifdef ESP8266
-  // See https://github.com/esp8266/Arduino/commit/a67986915512c5304bd7c161cf0d9c65f66e0892
-  analogWriteRange(1023);
-#endif
-
+  initAnalogWrite();
 
   resetPluginTaskData();
 
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
-  #if defined(ESP32)
-    for(byte x = 0; x < 16; x++)
-      ledChannelPin[x] = -1;
   #endif
 
   Serial.begin(115200);
@@ -252,10 +284,12 @@ void setup()
     }
 
     log += RTC.bootCounter;
-    log += F(" Last Task: ");
+    #ifndef BUILD_NO_DEBUG
+    log += F(" Last Action before Reboot: ");
     log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     log += F(" Last systime: ");
     log += RTC.lastSysTime;
+    #endif
   }
   //cold boot (RTC memory empty)
   else
@@ -294,15 +328,6 @@ void setup()
 //  progMemMD5check();
   LoadSettings();
 
-  #ifdef HAS_ETHERNET
-  // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
-  // This only works after LoadSettings();
-  active_network_medium = Settings.NetworkMedium;
-  log = F("INIT : ETH_WIFI_MODE:");
-  log += toString(active_network_medium);
-  addLog(LOG_LEVEL_INFO, log);
-  #endif
-
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
   if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
     byte toDisable = RTC.bootFailedCount - 10;
@@ -314,12 +339,19 @@ void setup()
       toDisable = disableNotification(toDisable);
     }
   }
-  if (!selectValidWiFiSettings()) {
-    wifiSetup = true;
-    RTC.lastWiFiChannel = 0; // Must scan all channels
-    // Wait until scan has finished to make sure as many as possible are found
-    // We're still in the setup phase, so nothing else is taking resources of the ESP.
-    WifiScan(false, false); 
+  #ifdef HAS_ETHERNET
+  // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
+  // This only works after LoadSettings();
+  setNetworkMedium(Settings.NetworkMedium);
+  #endif
+  if (active_network_medium == NetworkMedium_t::WIFI) {
+    if (!WiFi_AP_Candidates.hasKnownCredentials()) {
+      WiFiEventData.wifiSetup = true;
+      RTC.clearLastWiFi(); // Must scan all channels
+      // Wait until scan has finished to make sure as many as possible are found
+      // We're still in the setup phase, so nothing else is taking resources of the ESP.
+      WifiScan(false); 
+    }
   }
 
 //  setWifiMode(WIFI_STA);
@@ -339,16 +371,11 @@ void setup()
     ResetFactory();
   }
 
-  if (Settings.UseSerial)
-  {
-    //make sure previous serial buffers are flushed before resetting baudrate
-    Serial.flush();
-    Serial.begin(Settings.BaudRate);
-//    Serial.setDebugOutput(true);
-  }
+  initSerial();
 
-  if (Settings.Build != BUILD)
+  if (Settings.Build != BUILD) {
     BuildFixes();
+  }
 
 
   log = F("INIT : Free RAM:");
@@ -357,8 +384,10 @@ void setup()
 
   if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
     Serial.setDebugOutput(true);
-
+  
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("hardwareInit"));
+  #endif
   hardwareInit();
 
   timermqtt_interval = 250; // Interval for checking MQTT
@@ -378,8 +407,10 @@ void setup()
   addLog(LOG_LEVEL_INFO, log);
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
-    addLog(LOG_LEVEL_ERROR, F("Programming error! - Increase PLUGIN_MAX"));
+    addLog(LOG_LEVEL_ERROR, String(F("Programming error! - Increase PLUGIN_MAX (")) + deviceCount + ')');
   }
+
+  clearAllCaches();
 
   if (Settings.UseRules && isDeepSleepEnabled())
   {
@@ -460,13 +491,10 @@ void RTOS_TaskServers( void * parameter )
 
 void RTOS_TaskSerial( void * parameter )
 {
- while (true){
+  while (true){
     delay(100);
-    if (Settings.UseSerial)
-    if (Serial.available())
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummyString))
-        serial();
- }
+    serial();
+  }
 }
 
 void RTOS_Task10ps( void * parameter )
@@ -513,7 +541,7 @@ void updateLoopStats() {
 
 
 float getCPUload() {
-  return 100.0 - Scheduler.getIdleTimePct();
+  return 100.0f - Scheduler.getIdleTimePct();
 }
 
 int getLoopCountPerSec() {
@@ -537,16 +565,7 @@ void loop()
 
   updateLoopStats();
 
-  switch (active_network_medium) {
-    case NetworkMedium_t::WIFI:
-      handle_unprocessedWiFiEvents();
-      break;
-    case NetworkMedium_t::Ethernet:
-      if (NetworkConnected()) {
-        updateUDPport();
-      }
-      break;
-  }
+  handle_unprocessedNetworkEvents();
 
   bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
   if (firstLoopConnectionsEstablished) {
@@ -615,14 +634,14 @@ void flushAndDisconnectAllClients() {
       if (mqttControllerEnabled && MQTTclient.connected()) {
         MQTTclient.loop();
       }
-#endif //USES_MQTT      
+#endif //USES_MQTT
     }
-#ifdef USES_MQTT    
+#ifdef USES_MQTT
     if (mqttControllerEnabled && MQTTclient.connected()) {
       MQTTclient.disconnect();
       updateMQTTclient_connected();
     }
-#endif //USES_MQTT      
+#endif //USES_MQTT
     saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
@@ -666,35 +685,32 @@ void backgroundtasks()
   const bool networkConnected = NetworkConnected();
   runningBackgroundTasks=true;
 
+  /*
+  // Not needed anymore, see: https://arduino-esp8266.readthedocs.io/en/latest/faq/readme.html#how-to-clear-tcp-pcbs-in-time-wait-state
   if (networkConnected) {
     #if defined(ESP8266)
       tcpCleanup();
     #endif
   }
+  */
+
   process_serialWriteBuffer();
   if(!UseRTOSMultitasking){
-    if (Settings.UseSerial && Serial.available()) {
-      String dummy;
-      if (!PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
-        serial();
-      }
-    }
+    serial();
     if (webserverRunning) {
       web_server.handleClient();
     }
-    if (WiFi.getMode() != WIFI_OFF
-    // This makes UDP working for ETHERNET
-    #ifdef HAS_ETHERNET
-                       || eth_connected
-    #endif
-                       ) {
+    if (networkConnected) {
       checkUDP();
     }
   }
 
+  #ifdef FEATURE_DNS_SERVER
   // process DNS, only used if the ESP has no valid WiFi config
-  if (dnsServerActive)
+  if (dnsServerActive) {
     dnsServer.processNextRequest();
+  }
+  #endif
 
   #ifdef FEATURE_ARDUINO_OTA
   if(Settings.ArduinoOTAEnable && networkConnected)
@@ -714,7 +730,10 @@ void backgroundtasks()
   #ifdef FEATURE_MDNS
   // Allow MDNS processing
   if (networkConnected) {
+    #ifdef ESP8266
+    // ESP32 does not have an update() function
     MDNS.update();
+    #endif
   }
   #endif
 

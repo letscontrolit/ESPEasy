@@ -1,10 +1,9 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P030
 
 // #######################################################################################################
 // #################### Plugin 030 BMP280 I2C Temp/Barometric Pressure Sensor      #######################
 // #######################################################################################################
-
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_030
 #define PLUGIN_ID_030        30
@@ -78,7 +77,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_030;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_TEMP_BARO;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_BARO;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -109,7 +108,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 
       /*String options[2] = { F("0x76 - default settings (SDO Low)"), F("0x77 - alternate settings (SDO HIGH)") };*/
       int optionValues[2] = { 0x76, 0x77 };
-      addFormSelectorI2C(F("p030_bmp280_i2c"), 2, optionValues, choice);
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
       addFormNote(F("SDO Low=0x76, High=0x77"));
       break;
     }
@@ -125,7 +124,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p030_bmp280_i2c"));
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
       PCONFIG(1) = getFormItemInt(F("p030_bmp280_elev"));
       success    = true;
       break;
@@ -160,15 +159,16 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure(idx)) / 100;
         }
 
-        String log = F("BMP280  : Address: 0x");
-        log += String(bmp280_i2caddr, HEX);
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("BMP280  : Temperature: ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("BMP280  : Barometric Pressure: ");
-        log += UserVar[event->BaseVarIndex + 1];
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("BMP280  : Address: 0x");
+          log += String(bmp280_i2caddr, HEX);
+          addLog(LOG_LEVEL_INFO, log);
+          log  = F("BMP280  : Temperature: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
+          addLog(LOG_LEVEL_INFO, log);
+          log  = F("BMP280  : Barometric Pressure: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 1);
+          addLog(LOG_LEVEL_INFO, log);
 
         /*
                   log = F("BMP280  : Coefficients [T]: ");
@@ -198,6 +198,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
                   log += _bmp280_calib[idx].dig_P9;
                   addLog(LOG_LEVEL_INFO, log);
          */
+        }
         success = true;
       }
       break;
@@ -319,14 +320,14 @@ float Plugin_030_readAltitude(float seaLevel)
 {
   float atmospheric = Plugin_030_readPressure(bmp280_i2caddr & 0x01) / 100.0F;
 
-  return 44330.0 * (1.0 - pow(atmospheric / seaLevel, 0.1903));
+  return 44330.0f * (1.0f - pow(atmospheric / seaLevel, 0.1903f));
 }
 
 // **************************************************************************/
 // MSL pressure formula
 // **************************************************************************/
 float Plugin_030_pressureElevation(float atmospheric, int altitude) {
-  return atmospheric / pow(1.0 - (altitude / 44330.0), 5.255);
+  return atmospheric / pow(1.0f - (altitude / 44330.0f), 5.255f);
 }
 
 #endif // USES_P030

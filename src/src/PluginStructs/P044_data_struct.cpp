@@ -1,7 +1,14 @@
-#include "P044_data_struct.h"
+#include "../PluginStructs/P044_data_struct.h"
+
+#ifdef USES_P044
+
+#include "../ESPEasyCore/Serial.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+
+#include "../Globals/EventQueue.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Globals/EventQueue.h"
+#include "../Helpers/Misc.h"
 
 #define P044_RX_WAIT              PCONFIG(0)
 
@@ -110,8 +117,12 @@ void P044_Task::checkBlinkLED() {
 }
 
 void P044_Task::clearBuffer() {
+  if (serial_buffer.length() > maxMessageSize) {
+    maxMessageSize = _min(serial_buffer.length(), P044_DATAGRAM_MAX_SIZE);
+  }
+
   serial_buffer = "";
-  serial_buffer.reserve(P044_DATAGRAM_MAX_SIZE);
+  serial_buffer.reserve(maxMessageSize);
 }
 
 void P044_Task::addChar(char ch) {
@@ -136,11 +147,11 @@ bool P044_Task::checkDatagram() const {
 
   const int checksumStartIndex = endChar + 1;
 
-  if (PLUGIN_044_DEBUG) {
+  #ifdef PLUGIN_044_DEBUG
     for (unsigned int cnt = 0; cnt < serial_buffer.length(); ++cnt) {
       serialPrint(serial_buffer.substring(cnt, 1));
     }
-  }
+  #endif
 
   // calculate the CRC and check if it equals the hexadecimal one attached to the datagram
   unsigned int crc = CRC16(serial_buffer, checksumStartIndex);
@@ -202,12 +213,12 @@ bool P044_Task::validP1char(char ch) {
   return false;
 }
 
-void P044_Task::serialBegin(int16_t rxPin, int16_t txPin,
+void P044_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin,
                             unsigned long baud, byte config) {
   serialEnd();
 
   if (rxPin >= 0) {
-    P1EasySerial = new (std::nothrow) ESPeasySerial(rxPin, txPin);
+    P1EasySerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin);
 
     if (nullptr != P1EasySerial) {
 #if defined(ESP8266)
@@ -325,11 +336,11 @@ bool P044_Task::handleChar(char ch) {
     // input is not a datagram char
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
 
-    if (PLUGIN_044_DEBUG) {
+    #ifdef PLUGIN_044_DEBUG
       serialPrint(F("faulty char>"));
       serialPrint(String(ch));
       serialPrintln("<");
-    }
+    #endif
     state = ParserState::WAITING; // reset
   }
 
@@ -364,3 +375,5 @@ void P044_Task::discardSerialIn() {
 bool P044_Task::isInit() const {
   return nullptr != P1GatewayServer && nullptr != P1EasySerial;
 }
+
+#endif

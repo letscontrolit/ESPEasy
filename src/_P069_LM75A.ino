@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P069
 
 // #######################################################################################################
@@ -18,106 +19,7 @@
 #define PLUGIN_VALUENAME1_069 "Temperature"
 
 
-#ifndef LM75A_h
-# define LM75A_h
-
-# define INVALID_LM75A_TEMPERATURE 1000
-
-# include "_Plugin_Helper.h"
-namespace LM75AConstValues {
-const int   LM75A_BASE_ADDRESS       = 0x48;
-const float LM75A_DEGREES_RESOLUTION = 0.125;
-const int   LM75A_REG_ADDR_TEMP      = 0;
-}
-
-using namespace LM75AConstValues;
-
-class LM75A {
-public:
-
-  LM75A(bool A0_value = false, bool A1_value = false, bool A2_value = false)
-  {
-    _i2c_device_address = LM75A_BASE_ADDRESS;
-
-    if (A0_value) {
-      _i2c_device_address += 1;
-    }
-
-    if (A1_value) {
-      _i2c_device_address += 2;
-    }
-
-    if (A2_value) {
-      _i2c_device_address += 4;
-    }
-
-    // Wire.begin();   called in ESPEasy framework
-  }
-
-  LM75A(uint8_t addr)
-  {
-    _i2c_device_address = addr;
-
-    // Wire.begin();   called in ESPEasy framework
-  }
-
-  void setAddress(uint8_t addr)
-  {
-    _i2c_device_address = addr;
-  }
-
-  float getTemperatureInDegrees() const
-  {
-    float   real_result = INVALID_LM75A_TEMPERATURE;
-    int16_t value       = 0;
-
-    // Go to temperature data register
-    Wire.beginTransmission(_i2c_device_address);
-    Wire.write(LM75A_REG_ADDR_TEMP);
-
-    if (Wire.endTransmission())
-    {
-      // Transmission error
-      return real_result;
-    }
-
-    // Get content
-    Wire.requestFrom(_i2c_device_address, (uint8_t)2);
-
-    if (Wire.available() == 2)
-    {
-      value = (Wire.read() << 8) | Wire.read();
-    }
-    else
-    {
-      // Can't read temperature
-      return real_result;
-    }
-
-    // Shift data (left-aligned)
-    value >>= 5;
-
-    // Relocate negative bit (11th bit to 16th bit)
-    if (value & 0x0400) // negative?
-    {
-      value |= 0xFC00;  // expand to 16 bit
-    }
-
-    // Real value can be calculated with sensor resolution
-    real_result = (float)value * LM75A_DEGREES_RESOLUTION;
-
-    return real_result;
-  }
-
-private:
-
-  uint8_t _i2c_device_address;
-};
-
-#endif // ifndef LM75A_h
-
-
-LM75A *PLUGIN_069_LM75A = NULL;
+#include "src/PluginStructs/P069_data_struct.h"
 
 
 boolean Plugin_069(byte function, struct EventStruct *event, String& string)
@@ -130,7 +32,7 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_069;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -177,38 +79,44 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (PLUGIN_069_LM75A) {
-        delete PLUGIN_069_LM75A;
-      }
-      PLUGIN_069_LM75A = new (std::nothrow) LM75A((uint8_t)PCONFIG(0));
+      uint8_t address = PCONFIG(0);
 
-      success = true;
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P069_data_struct(address));
+      P069_data_struct *P069_data =
+        static_cast<P069_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P069_data) {
+        success = true;
+      }
       break;
     }
 
     case PLUGIN_READ:
     {
-      if (!PLUGIN_069_LM75A) {
+      P069_data_struct *P069_data =
+        static_cast<P069_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P069_data) {
         return success;
       }
 
-      PLUGIN_069_LM75A->setAddress((uint8_t)PCONFIG(0));
+      P069_data->setAddress((uint8_t)PCONFIG(0));
 
-      float tempC = PLUGIN_069_LM75A->getTemperatureInDegrees();
+      const float tempC = P069_data->getTemperatureInDegrees();
+      UserVar[event->BaseVarIndex] = tempC;
+      success                      = !isnan(tempC);
 
-      if (tempC == INVALID_LM75A_TEMPERATURE)
-      {
-        String log = F("LM75A: No reading!");
-        addLog(LOG_LEVEL_INFO, log);
-        UserVar[event->BaseVarIndex] = NAN;
-      }
-      else
-      {
-        UserVar[event->BaseVarIndex] = tempC;
-        String log = F("LM75A: Temperature: ");
-        log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
-        success = true;
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        if (!success) {
+          String log = F("LM75A: No reading!");
+          addLog(LOG_LEVEL_INFO, log);
+        }
+        else
+        {
+          String log = F("LM75A: Temperature: ");
+          log += tempC;
+          addLog(LOG_LEVEL_INFO, log);
+        }
       }
       break;
     }

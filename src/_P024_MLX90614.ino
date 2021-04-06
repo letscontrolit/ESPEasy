@@ -1,10 +1,12 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P024
 
 // #######################################################################################################
 // #################################### Plugin 024: MLX90614 IR temperature I2C 0x5A)  ###############################################
 // #######################################################################################################
 
-#include "_Plugin_Helper.h"
+
+#include "src/PluginStructs/P024_data_struct.h"
 
 // MyMessage *msgTemp024; // Mysensors
 
@@ -12,31 +14,6 @@
 #define PLUGIN_ID_024 24
 #define PLUGIN_NAME_024 "Environment - MLX90614"
 #define PLUGIN_VALUENAME1_024 "Temperature"
-
-boolean Plugin_024_init = false;
-
-uint16_t readRegister024(uint8_t i2cAddress, uint8_t reg) {
-  uint16_t ret;
-
-  Wire.beginTransmission(i2cAddress);
-  Wire.write(reg);
-  Wire.endTransmission(false);
-  Wire.requestFrom(i2cAddress, (uint8_t)3);
-  ret  = Wire.read();      // receive DATA
-  ret |= Wire.read() << 8; // receive DATA
-  Wire.read();
-  return ret;
-}
-
-float readTemp024(uint8_t i2c_addr, uint8_t i2c_reg)
-{
-  float temp;
-
-  temp  = readRegister024(i2c_addr, i2c_reg);
-  temp *= .02;
-  temp -= 273.15;
-  return temp;
-}
 
 boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 {
@@ -49,7 +26,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_024;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 16;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -93,40 +70,45 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PCONFIG(0)      = getFormItemInt(F("p024_option"));
-      Plugin_024_init = false; // Force device setup next time
       success         = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      Plugin_024_init = true;
+      byte unit       = CONFIG_PORT;
+      uint8_t address = 0x5A + unit;
 
-      //        if (!msgTemp024) // Mysensors
-      //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
-      //        present(event->BaseVarIndex, S_TEMP); //Mysensors
-      //        serialPrint("Present MLX90614: "); //Mysensors
-      //        serialPrintln(event->BaseVarIndex); //Mysensors
-      success = true;
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P024_data_struct(address));
+      P024_data_struct *P024_data =
+        static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P024_data) {
+        //        if (!msgTemp024) // Mysensors
+        //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
+        //        present(event->BaseVarIndex, S_TEMP); //Mysensors
+        //        serialPrint("Present MLX90614: "); //Mysensors
+        //        serialPrintln(event->BaseVarIndex); //Mysensors
+        success = true;
+      }
       break;
     }
 
     case PLUGIN_READ:
     {
-      //      noInterrupts();
-      // int value;
-      // value = 0;
-      byte unit       = CONFIG_PORT;
-      uint8_t address = 0x5A + unit;
-      UserVar[event->BaseVarIndex] = (float)readTemp024(address, PCONFIG(0));
-      String log = F("MLX90614  : Temperature: ");
-      log += UserVar[event->BaseVarIndex];
+      P024_data_struct *P024_data =
+        static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      //        send(msgObjTemp024->set(UserVar[event->BaseVarIndex], 1)); // Mysensors
-      addLog(LOG_LEVEL_INFO, log);
-      success = true;
-
-      //     interrupts();
+      if (nullptr != P024_data) {
+        UserVar[event->BaseVarIndex] = (float)P024_data->readTemperature(PCONFIG(0));
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("MLX90614  : Temperature: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
+          addLog(LOG_LEVEL_INFO, log);
+        }
+        //        send(msgObjTemp024->set(UserVar[event->BaseVarIndex], 1)); // Mysensors
+        success = true;
+      }
       break;
     }
   }

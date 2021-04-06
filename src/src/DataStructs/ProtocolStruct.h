@@ -11,6 +11,8 @@ struct ProtocolStruct
 {
   ProtocolStruct();
 
+  bool useCredentials() const;
+
   bool useExtendedCredentials() const;
 
   uint16_t defaultPort;
@@ -29,6 +31,7 @@ struct ProtocolStruct
   bool     usesSampleSets : 1;
   bool     usesExtCreds   : 1;
   bool     needsNetwork   : 1;
+  bool     allowsExpire   : 1;
 };
 
 typedef std::vector<ProtocolStruct> ProtocolVector;

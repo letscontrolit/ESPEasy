@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P014
 
 // #######################################################################################################
@@ -5,7 +6,6 @@
 // #######################################################################################################
 // 12-10-2015 Charles-Henri Hallard, see my projects and blog at https://hallard.me
 
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_014
 #define PLUGIN_ID_014        14
@@ -158,8 +158,8 @@ struct P014_data_struct : public PluginTaskData_base {
 
       case SI7021_state::New_values:
       {
-        temperature = si7021_temperature / 100.0;
-        humidity    = si7021_humidity / 10.0;
+        temperature = si7021_temperature / 100.0f;
+        humidity    = si7021_humidity / 10.0f;
         state       = SI7021_state::Values_read;
         success     = true;
 
@@ -384,7 +384,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_014;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_TEMP_HUM;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;

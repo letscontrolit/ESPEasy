@@ -1,20 +1,27 @@
 #ifndef CONTROLLERQUEUE_CONTROLLER_DELAY_HANDLER_STRUCT_H
 #define CONTROLLERQUEUE_CONTROLLER_DELAY_HANDLER_STRUCT_H
 
-
-#include "../../_CPlugin_Helper.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/Protocol.h"
+#include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 
+#include <Arduino.h>
 #include <list>
 #include <memory> // For std::shared_ptr
+#include <new>    // std::nothrow
+
+#ifndef CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME
+  #define CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME 10000
+#endif
 
 /*********************************************************************************************\
 * ControllerDelayHandlerStruct
@@ -24,11 +31,13 @@ struct ControllerDelayHandlerStruct {
   ControllerDelayHandlerStruct() :
     lastSend(0),
     minTimeBetweenMessages(CONTROLLER_DELAY_QUEUE_DELAY_DFLT),
+    expire_timeout(0),
     max_queue_depth(CONTROLLER_DELAY_QUEUE_DEPTH_DFLT),
     attempt(0),
     max_retries(CONTROLLER_DELAY_QUEUE_RETRY_DFLT),
     delete_oldest(false),
-    must_check_reply(false) {}
+    must_check_reply(false),
+    deduplicate(false) {}
 
   void configureControllerSettings(const ControllerSettingsStruct& settings) {
     minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
@@ -36,6 +45,15 @@ struct ControllerDelayHandlerStruct {
     max_retries            = settings.MaxRetry;
     delete_oldest          = settings.DeleteOldest;
     must_check_reply       = settings.MustCheckReply;
+    deduplicate            = settings.deduplicate();
+    if (settings.allowExpire()) {
+      expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
+      if (expire_timeout < CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME) {
+        expire_timeout = CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME;
+      }
+    } else {
+      expire_timeout = 0;
+    }
 
     // Set some sound limits when not configured
     if (max_queue_depth == 0) { max_queue_depth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT; }
@@ -85,21 +103,56 @@ struct ControllerDelayHandlerStruct {
     return true;
   }
 
+  // Return true if last element was removed
+  bool removeLastIfDuplicate() {
+    if (deduplicate && !sendQueue.empty()) {
+      auto back = sendQueue.back();
+      // Use reverse iterator here, as it is more likely a duplicate is added shortly after another.
+      auto it = sendQueue.rbegin(); // Same as back()
+      ++it;                         // The last element before back()
+      for (; it != sendQueue.rend(); ++it) {
+        if (back.isDuplicate(*it)) {
+#ifndef BUILD_NO_DEBUG
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(it->controller_idx);
+            String log = get_formatted_Controller_number(cpluginID);
+            log += F(" : Remove duplicate");
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+#endif // ifndef BUILD_NO_DEBUG
+
+          sendQueue.pop_back();
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   // Try to add to the queue, if permitted by "delete_oldest"
   // Return false when no item was added.
-  bool addToQueue(T&& element) {
+  bool addToQueue(T&& element, bool checkDuplicate = true) {
     if (delete_oldest) {
       // Force add to the queue.
       // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
       while (queueFull(element)) {
         sendQueue.pop_front();
+        attempt = 0;
       }
       sendQueue.emplace_back(element);
+      if (checkDuplicate) {
+        // If message is already present consider adding to be a success.
+        removeLastIfDuplicate();
+      }
       return true;
     }
 
     if (!queueFull(element)) {
       sendQueue.emplace_back(element);
+      if (checkDuplicate) {
+        // If message is already present consider adding to be a success.
+        removeLastIfDuplicate();
+      }
       return true;
     }
 #ifndef BUILD_NO_DEBUG
@@ -122,9 +175,21 @@ struct ControllerDelayHandlerStruct {
     if (attempt > max_retries) {
       sendQueue.pop_front();
       attempt = 0;
-
-      if (sendQueue.empty()) { return NULL; }
     }
+
+    if (expire_timeout != 0) {
+      bool done = false;
+      while (!done && !sendQueue.empty()) {
+        if (timePassedSince(sendQueue.front()._timestamp) < static_cast<long>(expire_timeout)) {
+          done = true;
+        } else {
+          sendQueue.pop_front();
+          attempt = 0;
+        }
+      }
+    }
+
+    if (sendQueue.empty()) { return NULL; }
     return &sendQueue.front();
   }
 
@@ -157,6 +222,13 @@ struct ControllerDelayHandlerStruct {
     return nextTime;
   }
 
+  // Set the "lastSend" to "now" + some additional delay.
+  // This will cause the next schedule time to be delayed to 
+  // msecFromNow + minTimeBetweenMessages
+  void setAdditionalDelay(unsigned long msecFromNow) {
+    lastSend = millis() + msecFromNow;
+  }
+
   size_t getQueueMemorySize() const {
     size_t totalSize = 0;
 
@@ -169,11 +241,13 @@ struct ControllerDelayHandlerStruct {
   std::list<T>  sendQueue;
   unsigned long lastSend;
   unsigned int  minTimeBetweenMessages;
+  unsigned long expire_timeout = 0;
   byte          max_queue_depth;
   byte          attempt;
   byte          max_retries;
   bool          delete_oldest;
   bool          must_check_reply;
+  bool          deduplicate;
 };
 
 
@@ -234,7 +308,7 @@ struct ControllerDelayHandlerStruct {
   }                                                                                                                    \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                             \
     if (C##NNN####M##_DelayHandler == nullptr) {                                                                       \
-      C##NNN####M##_DelayHandler = new (std::nothrow) C##NNN####M##_DelayHandler_t;                                                   \
+      C##NNN####M##_DelayHandler = new (std::nothrow) (C##NNN####M##_DelayHandler_t);                                  \
     }                                                                                                                  \
     if (C##NNN####M##_DelayHandler == nullptr) { return false; }                                                       \
     MakeControllerSettings(ControllerSettings);                                                                        \

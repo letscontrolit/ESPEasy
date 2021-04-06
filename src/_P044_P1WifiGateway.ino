@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P044
 //#################################### Plugin 044: P1WifiGateway ########################################
 //
@@ -9,8 +10,10 @@
 //    See also http://domoticx.com/p1-poort-slimme-meter-hardware/
 //#######################################################################################################
 
-#include "_Plugin_Helper.h"
+
+#include "src/Helpers/_Plugin_Helper_serial.h"
 #include "src/PluginStructs/P044_data_struct.h"
+#include <ESPeasySerial.h>
 
 #define PLUGIN_044
 #define PLUGIN_ID_044         44
@@ -103,9 +106,10 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
         int rxPin;
         int txPin;
-        ESPeasySerialType::getSerialTypePins(ESPeasySerialType::serial0, rxPin, txPin);
+        // FIXME TD-er: Must use proper pin settings and standard ESPEasySerial wrapper
+        ESPeasySerialType::getSerialTypePins(ESPEasySerialPort::serial0, rxPin, txPin);
         byte serialconfig = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
-        task->serialBegin(rxPin, txPin, P044_BAUDRATE, serialconfig);
+        task->serialBegin(ESPEasySerialPort::not_set,  rxPin, txPin, P044_BAUDRATE, serialconfig);
         task->startServer(P044_WIFI_SERVER_PORT);
 
         if (!task->isInit()) {
@@ -136,7 +140,6 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
       {
-        clearPluginTaskData(event->TaskIndex);
         success = true;
         break;
       }

@@ -2,15 +2,44 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_H
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
-#include "../DataStructs/EthernetParameters.h"
-#include "../DataStructs/ESPEasyLimits.h"
-#include "../DataStructs/NetworkMedium.h"
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataTypes/EthernetParameters.h"
+#include "../DataTypes/NetworkMedium.h"
 #include "../Globals/Plugins.h"
+#include "../../ESPEasy_common.h"
 
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
  #define DEFAULT_SPI 0
 #endif
+
+
+// FIXME TD-er: Move this PinBootState to DataTypes folder
+
+// State is stored, so don't change order
+enum class PinBootState {
+  Default_state  = 0,
+  Output_low     = 1,
+  Output_high    = 2,
+  Input_pullup   = 3,
+  Input_pulldown = 4,  // Only on ESP32 and GPIO16 on ESP82xx
+  Input          = 5,
+
+  // Options for later:
+  // ANALOG (only on ESP32)
+  // WAKEUP_PULLUP (only on ESP8266)
+  // WAKEUP_PULLDOWN (only on ESP8266)
+  // SPECIAL
+  // FUNCTION_0 (only on ESP8266)
+  // FUNCTION_1
+  // FUNCTION_2
+  // FUNCTION_3
+  // FUNCTION_4
+  // FUNCTION_5 (only on ESP32)
+  // FUNCTION_6 (only on ESP32)
+
+};
+
 
 /*********************************************************************************************\
  * SettingsStruct
@@ -57,6 +86,27 @@ class SettingsStruct_tmpl
   bool SendToHttp_ack() const;
   void SendToHttp_ack(bool value);
 
+  // Enable/disable ESPEasyNow protocol
+  bool UseESPEasyNow() const;
+  void UseESPEasyNow(bool value);
+
+  // Whether to try to connect to a hidden SSID network
+  bool IncludeHiddenSSID() const;
+  void IncludeHiddenSSID(bool value);
+
+  // When sending, the TX power may be boosted to max TX power.
+  bool UseMaxTXpowerForSending() const;
+  void UseMaxTXpowerForSending(bool value);
+
+  // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+  bool ApDontForceSetup() const;
+  void ApDontForceSetup(bool value);
+
+
+  // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
+  bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
+  void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
+
   void validate();
 
   bool networkSettingsEmpty() const;
@@ -87,6 +137,13 @@ class SettingsStruct_tmpl
   // Return hostname with explicit set append unit.
   String getHostname(bool appendUnit) const;
 
+  PinBootState getPinBootState(uint8_t gpio_pin) const;
+  void setPinBootState(uint8_t gpio_pin, PinBootState state);
+
+  float getWiFi_TX_power() const;
+  void setWiFi_TX_power(float dBm);
+
+
   unsigned long PID;
   int           Version;
   int16_t       Build;
@@ -104,7 +161,7 @@ class SettingsStruct_tmpl
   int8_t        Pin_i2c_scl;
   int8_t        Pin_status_led;
   int8_t        Pin_sd_cs;
-  int8_t        PinBootStates[17];  // FIXME TD-er: this is ESP8266 number of pins. ESP32 has double.
+  int8_t        PinBootStates[17];  // Only use getPinBootState and setPinBootState as multiple pins are packed for ESP32
   byte          Syslog_IP[4];
   unsigned int  UDPPort;
   byte          SyslogLevel;
@@ -147,8 +204,8 @@ class SettingsStruct_tmpl
   boolean       TaskDevicePin1Inversed[N_TASKS];
   float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
   long          TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
-  boolean       OLD_TaskDeviceSendData[N_TASKS];
-  boolean       TaskDeviceGlobalSync[N_TASKS];
+  byte          TaskDeviceSendDataFlags[N_TASKS];
+  byte          OLD_TaskDeviceGlobalSync[N_TASKS];
   byte          TaskDeviceDataFeed[N_TASKS];    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[N_TASKS];
   boolean       TaskDeviceEnabled[N_TASKS];
@@ -201,7 +258,12 @@ class SettingsStruct_tmpl
   uint8_t       I2C_Flags[N_TASKS];
   uint32_t      I2C_clockSpeed_Slow;
   uint8_t       I2C_Multiplexer_ResetPin;
-  uint16_t      unused;
+
+  #ifdef ESP32
+  int8_t        PinBootStates_ESP32[24]; // pins 17 ... 39
+  #endif
+  uint8_t       WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
+  int8_t        WiFi_sensitivity_margin = 3;  // Margin in dBm on top of sensitivity.
 };
 
 /*

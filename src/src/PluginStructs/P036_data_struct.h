@@ -2,8 +2,6 @@
 #define PLUGINSTRUCTS_P036_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-
 #ifdef USES_P036
 
 #include <SSD1306.h>
@@ -17,6 +15,7 @@
 #define P36_NcharsV0 32     // max chars per line up to 22.11.2019 (V0)
 #define P36_NcharsV1 64     // max chars per line from 22.11.2019 (V1)
 #define P36_MaxSizesCount 3 // number of different OLED sizes
+#define P36_MaxFontCount 4  // number of different fonts
 
 #define P36_MaxDisplayWidth 128
 #define P36_MaxDisplayHeight 64
@@ -42,7 +41,7 @@
 #define P36_DebounceTreshold          5                          // number of 20 msec (fifty per second) ticks before the button has settled
 #define P36_RepeatDelay               50                         // number of 20 msec ticks before repeating the button action when holding
 
-enum eHeaderContent {
+enum class eHeaderContent {
   eSSID     = 1,
   eSysName  = 2,
   eIP       = 3,
@@ -59,18 +58,24 @@ enum eHeaderContent {
   ePageNo   = 14,
 };
 
-enum p036_resolution {
+enum class p036_resolution {
   pix128x64 = 0,
   pix128x32 = 1,
   pix64x48  = 2
 };
 
-enum ePageScrollSpeed {
+enum class ePageScrollSpeed {
   ePSS_VerySlow = 1, // 800ms
   ePSS_Slow     = 2, // 400ms
   ePSS_Fast     = 4, // 200ms
   ePSS_VeryFast = 8, // 100ms
   ePSS_Instant  = 32 // 20ms
+};
+
+enum class eP036pinmode {
+  ePPM_Input          = 0,
+  ePPM_InputPullUp    = 1,
+  ePPM_InputPullDown  = 2
 };
 
 typedef struct {
@@ -80,8 +85,8 @@ typedef struct {
   uint8_t  Height      = 0;   // Height in Pix
   uint8_t  ypos        = 0;   // y position in pix
   int      CurrentLeft = 0;   // current left pix position
-  float    dPix        = 0.0; // pix change per scroll time (100ms)
-  float    fPixSum     = 0.0; // pix sum while scrolling (100ms)
+  float    dPix        = 0.0f; // pix change per scroll time (100ms)
+  float    fPixSum     = 0.0f; // pix sum while scrolling (100ms)
 } tScrollLine;
 
 typedef struct {
@@ -111,10 +116,16 @@ typedef struct {
   uint8_t reserved              = 0;
 } tDisplayLines;
 
+typedef struct {
+  const char  *fontData;  // font
+  uint8_t     Width;      // font width in pix
+  uint8_t     Height;     // font height in pix
+} tFontSizes;
 
 typedef struct {
   uint8_t     Top;      // top in pix for this line setting
   const char *fontData; // font for this line setting
+  uint8_t     Height;   // font height in pix
   uint8_t     Space;    // space in pix between lines for this line setting
 } tFontSettings;
 
@@ -123,10 +134,6 @@ typedef struct {
   uint8_t       Height;             // height in pix
   uint8_t       PixLeft;            // first left pix position
   uint8_t       MaxLines;           // max. line count
-  tFontSettings L1;                 // settings for 1 line
-  tFontSettings L2;                 // settings for 2 lines
-  tFontSettings L3;                 // settings for 3 lines
-  tFontSettings L4;                 // settings for 4 lines
   uint8_t       WiFiIndicatorLeft;  // left of WiFi indicator
   uint8_t       WiFiIndicatorWidth; // width of WiFi indicator
 } tSizeSettings;
@@ -134,7 +141,7 @@ typedef struct {
 struct P036_data_struct : public PluginTaskData_base {
   P036_data_struct();
 
-  ~P036_data_struct();
+  virtual ~P036_data_struct();
 
   void                        reset();
 
@@ -142,15 +149,15 @@ struct P036_data_struct : public PluginTaskData_base {
 
   bool init(taskIndex_t      taskIndex,
             uint8_t          LoadVersion,
-            uint8_t          _type,
-            uint8_t          _address,
-            uint8_t          _sda,
-            uint8_t          _scl,
-            p036_resolution disp_resolution,
-            bool             _rotated,
-            uint8_t          contrast,
-            uint8_t          _displayTimer,
-            uint8_t          nrLines);
+            uint8_t          Type,
+            uint8_t          Address,
+            uint8_t          Sda,
+            uint8_t          Scl,
+            p036_resolution  Disp_resolution,
+            bool             Rotated,
+            uint8_t          Contrast,
+            uint8_t          DisplayTimer,
+            uint8_t          NrLines);
 
   bool isInitialized() const;
 
@@ -176,7 +183,7 @@ struct P036_data_struct : public PluginTaskData_base {
   void    display_logo();
   void    display_indicator();
   void    prepare_pagescrolling();
-  uint8_t display_scroll(int lscrollspeed,
+  uint8_t display_scroll(ePageScrollSpeed lscrollspeed,
                          int lTaskTimer);
   uint8_t display_scroll_timer();
 
@@ -188,6 +195,11 @@ struct P036_data_struct : public PluginTaskData_base {
 
   // Perform the actual write to the display.
   void    update_display();
+
+  // get pixel positions
+  int16_t GetHeaderHeight();
+  int16_t GetIndicatorTop();
+  tFontSettings CalculateFontSettings(uint8_t _defaultLines);
 
   void    P036_JumpToPage(struct EventStruct *event,
                           uint8_t             nextFrame);
@@ -212,9 +224,10 @@ struct P036_data_struct : public PluginTaskData_base {
   tDisplayLines DisplayLinesV1[P36_Nlines]; // holds the CustomTaskSettings for V1
 
   int8_t lastWiFiState = 0;
+  bool bDisplayingLogo = false;
 
   // display
-  p036_resolution _disp_resolution   = pix128x64;
+  p036_resolution  disp_resolution   = p036_resolution::pix128x64;
   bool             bLineScrollEnabled = false;
   uint8_t          TopLineOffset      = 0; // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
   // Display button
@@ -224,10 +237,12 @@ struct P036_data_struct : public PluginTaskData_base {
   uint8_t RepeatCounter   = 0;             // Repeat delay counter when holding button pressed
   uint8_t displayTimer    = 0;             // counter for display OFF
   // frame header
+  bool           bHideHeader = false;
+  bool           bHideFooter = false;
   bool           bAlternativHeader = false;
   uint16_t       HeaderCount       = 0;
-  eHeaderContent HeaderContent;
-  eHeaderContent HeaderContentAlternative;
+  eHeaderContent HeaderContent = eHeaderContent::eSSID;
+  eHeaderContent HeaderContentAlternative = eHeaderContent::eSSID;
 
   // frames
   uint8_t MaxFramesToDisplay    = 0;    // total number of frames to display

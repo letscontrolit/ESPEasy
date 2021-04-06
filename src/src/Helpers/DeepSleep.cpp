@@ -1,13 +1,23 @@
 #include "DeepSleep.h"
 
-#include "ESPEasy_time_calc.h"
-#include "PeriodicalActions.h"
-#include "../Globals/Settings.h"
-#include "../Globals/Statistics.h"
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy-Globals.h"
+
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
+
 #include "../Globals/EventQueue.h"
 #include "../Globals/RTC.h"
-#include "../../ESPEasy_common.h"
-#include "../../ESPEasyNetwork.h"
+#include "../Globals/Settings.h"
+#include "../Globals/Statistics.h"
+
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/PeriodicalActions.h"
+
 #include <limits.h>
 
 
@@ -64,7 +74,9 @@ bool readyForSleep()
 
 void prepare_deepSleep(int dsdelay)
 {
+  #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("prepare_deepSleep"));
+  #endif
 
   if (!isDeepSleepEnabled())
   {
@@ -109,7 +121,7 @@ void deepSleepStart(int dsdelay)
 
   addLog(LOG_LEVEL_INFO, F("SLEEP: Powering down to deepsleep..."));
   RTC.deepSleepState = 1;
-  prepareShutdown();
+  prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e::DeepSleep);
 
   #if defined(ESP8266)
     # if defined(CORE_POST_2_5_0)
@@ -118,7 +130,38 @@ void deepSleepStart(int dsdelay)
   if ((deepSleep_usec > ESP.deepSleepMax()) || (dsdelay < 0)) {
     deepSleep_usec = ESP.deepSleepMax();
   }
-  ESP.deepSleepInstant(deepSleep_usec, WAKE_RF_DEFAULT);
+
+  // See: https://github.com/esp8266/Arduino/issues/6318#issuecomment-711389479
+  #include "c_types.h"
+  // system_phy_set_powerup_option:
+  // 1 = RF initialization only calibrate VDD33 and Tx power which will take about 18 ms
+  // 2 = RF initialization only calibrate VDD33 which will take about 2 ms
+  system_phy_set_powerup_option(2); // calibrate only 2ms;
+  system_deep_sleep_set_option(static_cast<int>(WAKE_RF_DEFAULT));
+  uint32_t*RT= (uint32_t *)0x60000700;
+  uint32 t_us = 1.31 * deepSleep_usec;
+  {
+    RT[4] = 0;
+    *RT = 0;
+    RT[1]=100;
+    RT[3] = 0x10010;
+    RT[6] = 8;
+    RT[17] = 4;
+    RT[2] = 1<<20;
+    ets_delay_us(10);
+    RT[1]=t_us>>3;
+    RT[3] = 0x640C8;
+    RT[4]= 0;
+    RT[6] = 0x18;
+    RT[16] = 0x7F;
+    RT[17] = 0x20;
+    RT[39] = 0x11;
+    RT[40] = 0x03;
+    RT[2] |= 1<<20;
+    __asm volatile ("waiti 0");
+  }
+  yield();
+  // ESP.deepSleepInstant(deepSleep_usec, WAKE_RF_DEFAULT);
     # else // if defined(CORE_POST_2_5_0)
 
   if ((dsdelay > 4294) || (dsdelay < 0)) {

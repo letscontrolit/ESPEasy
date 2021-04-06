@@ -1,7 +1,9 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P009
 
-#include "_Plugin_Helper.h"
+
 #include "src/DataStructs/PinMode.h"
+#include "src/Commands/GPIO.h"
 
 // #######################################################################################################
 // #################################### Plugin 009: MCP23017 input #######################################
@@ -61,7 +63,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_009;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_SWITCH;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
       Device[deviceCount].Ports              = 16;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = true;
@@ -91,8 +93,9 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       // @giig1967g: set current task value for taking actions after changes
       const uint32_t key = createKey(PLUGIN_ID_009, CONFIG_PORT);
 
-      if (existPortStatus(key)) {
-        globalMapPortStatus[key].previousTask = event->TaskIndex;
+      auto it = globalMapPortStatus.find(key);
+      if (it != globalMapPortStatus.end()) {
+        it->second.previousTask = event->TaskIndex;
       }
 
       addFormCheckBox(F("Send Boot state"), F("p009_boot"), PCONFIG(0));
@@ -180,7 +183,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // Turn on Pullup resistor
-      Plugin_009_Config(CONFIG_PORT, 1);
+      setMCPInputAndPullupMode(CONFIG_PORT, true);
 
       // apply INIT only if PIN is in range. Do not start INIT if pin not set in the device page.
       if (CONFIG_PORT >= 0)
@@ -193,7 +196,8 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
         // read and store current state to prevent switching at boot time
         // "state" could be -1, 0 or 1
-        newStatus.state                          = Plugin_009_Read(CONFIG_PORT);
+        newStatus.state                          = GPIO_MCP_Read(CONFIG_PORT);
+addLog(LOG_LEVEL_INFO,"MCP INIT="+String(newStatus.state));        
         newStatus.output                         = newStatus.state;
         (newStatus.state == -1) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the
                                                                                                               // device list we assume it's
@@ -243,76 +247,19 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    /*
-          case PLUGIN_UNCONDITIONAL_POLL:
-            {
-              // port monitoring, generates an event by rule command 'monitor,pcf,port#'
-              for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-                if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_009) {
-                  const uint16_t port = getPortFromKey(it->first);
-                  int8_t state = Plugin_009_Read(port);
-                  if (it->second.state != state || it->second.forceMonitor) {
-                    if (it->second.mode == PIN_MODE_OFFLINE) it->second.mode=PIN_MODE_UNDEFINED; //changed from offline to online
-                    if (state == -1) it->second.mode=PIN_MODE_OFFLINE; //changed from online to offline
-                    if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up
-                       by 10xSEC function
-                    if (it->second.monitor) {
-                      it->second.forceMonitor=0; //reset flag
-                      String eventString = F("MCP#");
-                      eventString += port;
-                      eventString += '=';
-                      eventString += state;
-                      rulesProcessing(eventString);
-                    }
-                  }
-                }
-              }
-              break;
-            }
-     */
-    case PLUGIN_MONITOR:
-    {
-      // port monitoring, generates an event by rule command 'monitor,gpio,port#'
-      const uint32_t key                   = createKey(PLUGIN_ID_009, event->Par1);
-      const portStatusStruct currentStatus = globalMapPortStatus[key];
-
-      // if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
-      const int8_t state = Plugin_009_Read(event->Par1);
-
-      if ((currentStatus.state != state) || currentStatus.forceMonitor) {
-        if (!currentStatus.task) { globalMapPortStatus[key].state = state; // do not update state if task flag=1 otherwise it will not be
-                                                                           // picked up by 10xSEC function
-        }
-
-        if (currentStatus.monitor) {
-          globalMapPortStatus[key].forceMonitor = 0; // reset flag
-          String eventString = F("MCP#");
-          eventString += event->Par1;
-          eventString += '=';
-          eventString += state;
-          rulesProcessing(eventString);
-        }
-      }
-
-      // }
-
-      break;
-    }
-
     case PLUGIN_TEN_PER_SECOND:
-    {
-      const int8_t state = Plugin_009_Read(CONFIG_PORT);
-
-      /**************************************************************************\
-         20181022 - @giig1967g: new doubleclick logic is:
-         if there is a 'state' change, check debounce period.
+         {
+        const int8_t state = GPIO_MCP_Read(CONFIG_PORT);
+        const String monitorEventString = F("MCP");
+        /**************************************************************************\
+        20181022 - @giig1967g: new doubleclick logic is:
+        if there is a 'state' change, check debounce period.
          Then if doubleclick interval exceeded, reset PCONFIG(7) to 0
          PCONFIG(7) contains the current status for doubleclick:
          0: start counting
          1: 1st click
          2: 2nd click
          3: 3rd click = doubleclick event if inside interval (calculated as: '3rd click time' minus '1st click time')
-
          Returned EVENT value is = 3 always for doubleclick
          In rules this can be checked:
          on Button#State=3 do //will fire if doubleclick
@@ -335,9 +282,6 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         // CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
         else if ((state != currentStatus.state) || currentStatus.forceEvent)
         {
-          // Reset forceEvent
-          currentStatus.forceEvent = 0;
-
           // Reset SafeButton counter
           PCONFIG_LONG(3) = 0;
 
@@ -403,13 +347,15 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
             }
-            event->sensorType = SENSOR_TYPE_SWITCH;
+            // send task event
             sendData(event);
+            // send monitor event
+            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value);
 
-            // reset Userdata so it displays the correct state value in the web page
-            UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+            // Reset forceEvent
+            currentStatus.forceEvent = 0;
 
-            PCONFIG_LONG(0) = millis();
+            savePortStatus(key, currentStatus);
           }
           savePortStatus(key, currentStatus);
         }
@@ -431,7 +377,6 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
              So if state = 0 => EVENT longpress = 10
              if state = 1 => EVENT longpress = 11
              So we can trigger longpress for high or low contact
-
              In rules this can be checked:
              on Button#State=10 do //will fire if longpress when state = 0
              on Button#State=11 do //will fire if longpress when state = 1
@@ -467,7 +412,10 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
             }
+            // send task event
             sendData(event);
+            // send monitor event
+            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value);
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -483,12 +431,15 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log = F("MCP : SafeButton: false positive detected. GPIO= ");
-              log += CONFIG_PIN1;
+              log += CONFIG_PORT;
               log += F(" State=");
               log += tempUserVar;
               addLog(LOG_LEVEL_INFO, log);
             }
+            // send task event
             sendData(event);
+            // send monitor event
+            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, 4);
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = tempUserVar;
@@ -506,7 +457,11 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
           log += F(" is offline (EVENT= -1)");
           addLog(LOG_LEVEL_INFO, log);
         }
+        // send task event
         sendData(event);
+        // send monitor event
+        if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, -1);
+
         savePortStatus(key, currentStatus);
       }
       success = true;
@@ -547,7 +502,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         int par1;
 
         if (validIntFromString(parseString(string, 3), par1)) {
-          string = Plugin_009_Read(par1);
+          string = GPIO_MCP_Read(par1);
         }
         success = true;
       }
@@ -556,207 +511,15 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String log     = "";
-      String command = parseString(string, 1);
+      //String log;
+      //String command = parseString(string, 1);
 
-      if (command == F("mcpgpio"))
-      {
-        success = true;
-
-        if ((event->Par1 > 0) && (event->Par1 <= 128))
-        {
-          portStatusStruct tempStatus;
-          const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
-
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus = globalMapPortStatus[key];
-
-          const int8_t currentState = Plugin_009_Read(event->Par1);
-
-          if (currentState == -1) {
-            tempStatus.mode  = PIN_MODE_OFFLINE;
-            tempStatus.state = -1;
-            log              = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" is offline (-1). Cannot set value."));
-          } else if (event->Par2 == 2) { // INPUT
-            // PCF8574 specific: only can read 0/low state, so we must send 1
-            // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_INPUT, 1);
-            tempStatus.mode  = PIN_MODE_INPUT_PULLUP;
-            tempStatus.state = currentState;
-            Plugin_009_Write(event->Par1, 1);
-            log = String(F("MCP  : GPIO INPUT ")) + String(event->Par1) + String(F(" Set to 1"));
-          } else { // OUTPUT
-            // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-            Plugin_009_Write(event->Par1, event->Par2);
-            tempStatus.mode  = PIN_MODE_OUTPUT;
-            tempStatus.state = event->Par2;
-            log              = String(F("MCP  : GPIO OUTPUT ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
-          }
-          tempStatus.command    = 1;                             // set to 1 in order to display the status in the PinStatus page
-          tempStatus.forceEvent = 1;
-
-          if (tempStatus.monitor) { tempStatus.forceMonitor = 1; // set to 1 in order to force an EVENT in case monitor is requested
-          }
-          savePortStatus(key, tempStatus);
-          addLog(LOG_LEVEL_INFO, log);
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
-        }
-      }  else if (command == F("mcpgpiotoggle")) {
-        success = true;
-
-        if ((event->Par1 > 0) && (event->Par1 <= 128))
-        {
-          portStatusStruct tempStatus;
-          const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
-
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus = globalMapPortStatus[key];
-          const int8_t currentState = Plugin_009_Read(event->Par1);
-          bool needToSave           = false;
-
-          if (currentState == -1) {
-            tempStatus.mode  = PIN_MODE_OFFLINE;
-            tempStatus.state = -1;
-            log              = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" is offline (-1). Cannot set value."));
-            needToSave       = true;
-          } else if ((tempStatus.mode == PIN_MODE_OUTPUT) || (tempStatus.mode == PIN_MODE_UNDEFINED)) { // toggle only output pins
-            tempStatus.state = !currentState;                                                           // toggle current state value
-            tempStatus.mode  = PIN_MODE_OUTPUT;
-            Plugin_009_Write(event->Par1, tempStatus.state);
-            log        = String(F("MCP  : Toggle GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(tempStatus.state);
-            needToSave = true;
-          }
-
-          if (needToSave) {
-            tempStatus.command    = 1;                             // set to 1 in order to display the status in the PinStatus page
-            tempStatus.forceEvent = 1;
-
-            if (tempStatus.monitor) { tempStatus.forceMonitor = 1; // set to 1 in order to force an EVENT in case monitor is requested
-            }
-
-            // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !currentState);
-            savePortStatus(key, tempStatus);
-            addLog(LOG_LEVEL_INFO, log);
-
-            // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-          }
-        }
-      }  else if (command == F("mcppulse")) {
-        success = true;
-
-        if ((event->Par1 > 0) && (event->Par1 <= 128))
-        {
-          portStatusStruct tempStatus;
-          const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
-
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus = globalMapPortStatus[key];
-
-          // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          Plugin_009_Write(event->Par1, event->Par2);
-          delay(event->Par3);
-          Plugin_009_Write(event->Par1, !event->Par2);
-
-          // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, !event->Par2);
-
-          tempStatus.mode    = PIN_MODE_OUTPUT;
-          tempStatus.state   = event->Par2;
-          tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
-          savePortStatus(key, tempStatus);
-
-          log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
-          addLog(LOG_LEVEL_INFO, log);
-
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-        }
-      }  else if (command == F("mcplongpulse")) {
-        success = true;
-
-        if ((event->Par1 > 0) && (event->Par1 <= 128))
-        {
-          portStatusStruct tempStatus;
-          const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
-
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus = globalMapPortStatus[key];
-
-          // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          Plugin_009_Write(event->Par1, event->Par2);
-
-          tempStatus.mode                                = PIN_MODE_OUTPUT;
-          tempStatus.state                               = event->Par2;
-          tempStatus.command                             = 1; // set to 1 in order to display the status in the PinStatus page
-          (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0;
-          savePortStatus(key, tempStatus);
-
-          // Scheduler.setPluginTaskTimer(event->Par3 * 1000, event->TaskIndex, event->Par1, !event->Par2);
-          Scheduler.setPluginTimer(event->Par3 * 1000, PLUGIN_ID_009, event->Par1, !event->Par2);
-
-          log = String(F("MCP  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
-          addLog(LOG_LEVEL_INFO, log);
-
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_019, event->Par1, log, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
-        }
-      }  else if (command == F("status")) {
-        if (parseString(string, 2) == F("mcp"))
-        {
-          success = true;
-          const uint32_t key = createKey(PLUGIN_ID_009, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
-
-          if (existPortStatus(key)) {
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-          }
-          else
-          {
-            const int8_t state = Plugin_009_Read(event->Par2); // report as input
-
-            if (state != -1) {
-              SendStatusOnlyIfNeeded(event->Source, NO_SEARCH_PIN_STATE, key, dummyString, state);
-            }
-          }
-        }
-      }  else if (command == F("monitor")) {
-        if (parseString(string, 2) == F("mcp"))
-        {
-          success = true;
-          const uint32_t key = createKey(PLUGIN_ID_009, event->Par2); // WARNING: 'monitor' uses Par2 instead of Par1
-
-          addMonitorToPort(key);
-
-          // giig1967g: Comment next line to receive an EVENT just after calling the monitor command
-          globalMapPortStatus[key].state = Plugin_009_Read(event->Par2); // set initial value to avoid an event just after calling the
-                                                                         // command
-
-          log = String(F("MCP  : GPIO ")) + String(event->Par2) + String(F(" added to monitor list."));
-          addLog(LOG_LEVEL_INFO, log);
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-        }
-      }  else if (command == F("unmonitor")) {
-        if (parseString(string, 2) == F("mcp"))
-        {
-          success = true;
-          const uint32_t key = createKey(PLUGIN_ID_009, event->Par2); // WARNING: 'monitor' uses Par2 instead of Par1
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
-
-          removeMonitorFromPort(key);
-          log = String(F("MCP  : GPIO ")) + String(event->Par2) + String(F(" removed from monitor list."));
-          addLog(LOG_LEVEL_INFO, log);
-        }
-      }
       break;
     }
 
     case PLUGIN_TIMER_IN:
     {
-      Plugin_009_Write(event->Par1, event->Par2);
+      GPIO_MCP_Write(event->Par1, event->Par2);
 
       // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
       portStatusStruct tempStatus;
@@ -774,7 +537,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONLY_TIMER_IN:
     {
-      Plugin_009_Write(event->Par1, event->Par2);
+      GPIO_MCP_Write(event->Par1, event->Par2);
 
       // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
       portStatusStruct tempStatus;
@@ -796,6 +559,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 // ********************************************************************************
 // MCP23017 read
 // ********************************************************************************
+/*
 int8_t Plugin_009_Read(byte Par1)
 {
   int8_t state        = -1;
@@ -822,10 +586,12 @@ int8_t Plugin_009_Read(byte Par1)
   }
   return state;
 }
+*/
 
 // ********************************************************************************
 // MCP23017 write
 // ********************************************************************************
+/*
 boolean Plugin_009_Write(byte Par1, byte Par2)
 {
   boolean success      = false;
@@ -887,10 +653,11 @@ boolean Plugin_009_Write(byte Par1, byte Par2)
   }
   return success;
 }
-
+*/
 // ********************************************************************************
 // MCP23017 config
 // ********************************************************************************
+/*
 void Plugin_009_Config(byte Par1, byte Par2)
 {
   // boolean success = false;
@@ -930,5 +697,5 @@ void Plugin_009_Config(byte Par1, byte Par2)
     Wire.endTransmission();
   }
 }
-
+*/
 #endif // USES_P009

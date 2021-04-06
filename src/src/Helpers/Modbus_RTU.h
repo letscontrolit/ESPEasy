@@ -50,12 +50,14 @@ struct ModbusRTU_struct  {
 
   void reset();
 
-  bool init(const int16_t serial_rx,
+  bool init(const ESPEasySerialPort port,
+            const int16_t serial_rx,
             const int16_t serial_tx,
             int16_t       baudrate,
             byte          address);
 
-  bool init(const int16_t serial_rx,
+  bool init(const ESPEasySerialPort port,
+            const int16_t serial_rx,
             const int16_t serial_tx,
             int16_t       baudrate,
             byte          address,

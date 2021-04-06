@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P066
 
 // #######################################################################################################
@@ -21,9 +22,7 @@
 
 #define VEML6040_ADDR 0x10
 
-// #include <*.h>   // no include needed
-#include <math.h> // no include needed
-#include "_Plugin_Helper.h"
+#include <math.h> 
 
 boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 {
@@ -36,7 +35,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number           = PLUGIN_ID_066;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
       Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = SENSOR_TYPE_QUAD;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = true;
@@ -133,17 +132,17 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
         }
         case 1:
         {
-          UserVar[event->BaseVarIndex + 0] = Plugin_066_CalcRelW(R, W) * 100.0;
-          UserVar[event->BaseVarIndex + 1] = Plugin_066_CalcRelW(G, W) * 100.0;
-          UserVar[event->BaseVarIndex + 2] = Plugin_066_CalcRelW(B, W) * 100.0;
+          UserVar[event->BaseVarIndex + 0] = Plugin_066_CalcRelW(R, W) * 100.0f;
+          UserVar[event->BaseVarIndex + 1] = Plugin_066_CalcRelW(G, W) * 100.0f;
+          UserVar[event->BaseVarIndex + 2] = Plugin_066_CalcRelW(B, W) * 100.0f;
           UserVar[event->BaseVarIndex + 3] = W;
           break;
         }
         case 2:
         {
-          UserVar[event->BaseVarIndex + 0] = pow(Plugin_066_CalcRelW(R, W), 0.4545) * 100.0;
-          UserVar[event->BaseVarIndex + 1] = pow(Plugin_066_CalcRelW(G, W), 0.4545) * 100.0;
-          UserVar[event->BaseVarIndex + 2] = pow(Plugin_066_CalcRelW(B, W), 0.4545) * 100.0;
+          UserVar[event->BaseVarIndex + 0] = pow(Plugin_066_CalcRelW(R, W), 0.4545) * 100.0f;
+          UserVar[event->BaseVarIndex + 1] = pow(Plugin_066_CalcRelW(G, W), 0.4545) * 100.0f;
+          UserVar[event->BaseVarIndex + 2] = pow(Plugin_066_CalcRelW(B, W), 0.4545) * 100.0f;
           UserVar[event->BaseVarIndex + 3] = W;
           break;
         }
@@ -167,7 +166,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
         {
           UserVar[event->BaseVarIndex + 0] = Plugin_066_CalcCCT(R, G, B);
           UserVar[event->BaseVarIndex + 1] = Plugin_066_CalcAmbientLight(G, PCONFIG(1));
-          UserVar[event->BaseVarIndex + 2] = (R + G + B) / 3.0; // 0.299*R + 0.587*G + 0.114*B;
+          UserVar[event->BaseVarIndex + 2] = (R + G + B) / 3.0f; // 0.299*R + 0.587*G + 0.114*B;
           UserVar[event->BaseVarIndex + 3] = W;
           break;
         }
@@ -203,7 +202,7 @@ float VEML6040_GetValue(byte reg)
     uint16_t msb = Wire.read();
     return (float)((msb << 8) | lsb);
   }
-  return -1.0;
+  return -1.0f;
 }
 
 void VEML6040_Init(byte it)
@@ -217,15 +216,15 @@ float Plugin_066_CalcCCT(float R, float G, float B)
     return 0;
   }
 
-  float CCTi = (R - B) / G + 0.5;
-  float CCT  = 4278.6 * pow(CCTi, -1.2455);
+  float CCTi = (R - B) / G + 0.5f;
+  float CCT  = 4278.6f * pow(CCTi, -1.2455f);
 
   return CCT;
 }
 
 float Plugin_066_CalcAmbientLight(float G, byte it)
 {
-  float Sensitivity[6] = { 0.25168, 0.12584, 0.06292, 0.03146, 0.01573, 0.007865 };
+  float Sensitivity[6] = { 0.25168f, 0.12584f, 0.06292f, 0.03146f, 0.01573f, 0.007865f };
 
   return G * Sensitivity[it];
 }

@@ -1,9 +1,9 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P029
 //#######################################################################################################
 //#################################### Plugin 029: Output ###############################################
 //#######################################################################################################
 
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_029
 #define PLUGIN_ID_029         29
@@ -20,7 +20,7 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_029;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE; // FIXME TD-er: Does this need a pin? Seems not to be used
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SWITCH;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -39,6 +39,7 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_029));
+        ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0;
         break;
       }
 

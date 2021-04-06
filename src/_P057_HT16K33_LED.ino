@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P057
 
 // #######################################################################################################
@@ -68,11 +69,8 @@
 #define PLUGIN_ID_057         57
 #define PLUGIN_NAME_057       "Display - HT16K33 [TESTING]"
 
-#include <HT16K33.h>
-#include "_Plugin_Helper.h"
 
-CHT16K33 *Plugin_057_M = NULL;
-
+#include "src/PluginStructs/P057_data_struct.h"
 
 boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 {
@@ -85,7 +83,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number           = PLUGIN_ID_057;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
       Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = SENSOR_TYPE_NONE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
@@ -153,21 +151,24 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte addr = PCONFIG(0);
+      byte address = PCONFIG(0);
 
-      if (!Plugin_057_M) {
-        Plugin_057_M = new CHT16K33;
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P057_data_struct(address));
+      P057_data_struct *P057_data =
+        static_cast<P057_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P057_data) {
+        success = true;
       }
-
-      Plugin_057_M->Init(addr);
-
-      success = true;
       break;
     }
 
     case PLUGIN_WRITE:
     {
-      if (!Plugin_057_M) {
+      P057_data_struct *P057_data =
+        static_cast<P057_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P057_data) {
         return false;
       }
 
@@ -180,16 +181,16 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         if (text.length() > 0) {
           byte seg = 0;
 
-          Plugin_057_M->ClearRowBuffer();
+          P057_data->ledMatrix.ClearRowBuffer();
 
           while (text[seg] && seg < 8)
           {
             // uint16_t value = 0;
             char c = text[seg];
-            Plugin_057_M->SetDigit(seg, c);
+            P057_data->ledMatrix.SetDigit(seg, c);
             seg++;
           }
-          Plugin_057_M->TransmitRowBuffer();
+          P057_data->ledMatrix.TransmitRowBuffer();
           success = true;
         }
       }
@@ -199,7 +200,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
         if (validIntFromString(param, brightness)) {
           if ((brightness >= 0) && (brightness <= 255)) {
-            Plugin_057_M->SetBrightness(brightness);
+            P057_data->ledMatrix.SetBrightness(brightness);
           }
         }
         success = true;
@@ -234,7 +235,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
                 for (byte i = 0; i < 8; i++)
                 {
-                  log += String(Plugin_057_M->GetRow(i), 16);
+                  log += String(P057_data->ledMatrix.GetRow(i), 16);
                   log += F("h, ");
                 }
                 addLog(LOG_LEVEL_INFO, log);
@@ -245,14 +246,14 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
             else if (param == F("test"))
             {
               for (byte i = 0; i < 8; i++) {
-                Plugin_057_M->SetRow(i, 1 << i);
+                P057_data->ledMatrix.SetRow(i, 1 << i);
               }
               success = true;
             }
 
             else if (param == F("clear"))
             {
-              Plugin_057_M->ClearRowBuffer();
+              P057_data->ledMatrix.ClearRowBuffer();
               success = true;
             }
 
@@ -276,22 +277,22 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
                 value = paramVal.toInt();
 
                 if (value < 16) {
-                  Plugin_057_M->SetDigit(seg, value);
+                  P057_data->ledMatrix.SetDigit(seg, value);
                 }
                 else {
-                  Plugin_057_M->SetRow(seg, value);
+                  P057_data->ledMatrix.SetRow(seg, value);
                 }
               }
               else if (command == F("mx"))
               {
                 char *ep;
                 value = strtol(paramVal.c_str(), &ep, 16);
-                Plugin_057_M->SetRow(seg, value);
+                P057_data->ledMatrix.SetRow(seg, value);
               }
               else
               {
                 value = paramVal.toInt();
-                Plugin_057_M->SetRow(seg, value);
+                P057_data->ledMatrix.SetRow(seg, value);
               }
 
               success = true;
@@ -307,7 +308,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         }
 
         if (success) {
-          Plugin_057_M->TransmitRowBuffer();
+          P057_data->ledMatrix.TransmitRowBuffer();
         }
         success = true;
       }
@@ -317,25 +318,28 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_CLOCK_IN:
     {
-      if (!Plugin_057_M || (PCONFIG(1) == 0)) {
+            P057_data_struct *P057_data =
+        static_cast<P057_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P057_data || (PCONFIG(1) == 0)) {
         break;
       }
 
       byte hours   = node_time.hour();
       byte minutes = node_time.minute();
 
-      // Plugin_057_M->ClearRowBuffer();
-      Plugin_057_M->SetDigit(PCONFIG(5), minutes % 10);
-      Plugin_057_M->SetDigit(PCONFIG(4), minutes / 10);
+      // P057_data->ledMatrix.ClearRowBuffer();
+      P057_data->ledMatrix.SetDigit(PCONFIG(5), minutes % 10);
+      P057_data->ledMatrix.SetDigit(PCONFIG(4), minutes / 10);
 
       if (PCONFIG(1) == 1) { // 24-hour clock
         // 24-hour clock shows leading zero
-        Plugin_057_M->SetDigit(PCONFIG(2), hours / 10);
-        Plugin_057_M->SetDigit(PCONFIG(3), hours % 10);
+        P057_data->ledMatrix.SetDigit(PCONFIG(2), hours / 10);
+        P057_data->ledMatrix.SetDigit(PCONFIG(3), hours % 10);
       } else if (PCONFIG(1) == 2) { // 12-hour clock
         if (hours < 12) {
           // to set AM marker, get buffer and add decimal to it.
-          Plugin_057_M->SetRow(PCONFIG(5), (Plugin_057_M->GetRow(PCONFIG(5)) | 0x80));
+          P057_data->ledMatrix.SetRow(PCONFIG(5), (P057_data->ledMatrix.GetRow(PCONFIG(5)) | 0x80));
         }
 
         hours = hours % 12;
@@ -344,19 +348,19 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
           hours = 12;
         }
 
-        Plugin_057_M->SetDigit(PCONFIG(3), hours % 10);
+        P057_data->ledMatrix.SetDigit(PCONFIG(3), hours % 10);
 
         if (hours < 10) {
           // 12-hour clock will show empty segment when hours < 10
-          Plugin_057_M->SetRow(PCONFIG(2), 0);
+          P057_data->ledMatrix.SetRow(PCONFIG(2), 0);
         } else {
-          Plugin_057_M->SetDigit(PCONFIG(2), hours / 10);
+          P057_data->ledMatrix.SetDigit(PCONFIG(2), hours / 10);
         }
       }
 
       // if (PCONFIG(6) >= 0)
-      //  Plugin_057_M->SetRow(PCONFIG(6), PCONFIG(7));
-      Plugin_057_M->TransmitRowBuffer();
+      //  P057_data->ledMatrix.SetRow(PCONFIG(6), PCONFIG(7));
+      P057_data->ledMatrix.TransmitRowBuffer();
 
       success = true;
 
@@ -365,7 +369,10 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (!Plugin_057_M || (PCONFIG(1) == 0)) { // clock enabled?
+                  P057_data_struct *P057_data =
+        static_cast<P057_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P057_data || (PCONFIG(1) == 0)) { // clock enabled?
         break;
       }
 
@@ -377,8 +384,8 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         if (act != last)
         {
           last = act;
-          Plugin_057_M->SetRow(PCONFIG(6), (act) ? PCONFIG(7) : 0);
-          Plugin_057_M->TransmitRowBuffer();
+          P057_data->ledMatrix.SetRow(PCONFIG(6), (act) ? PCONFIG(7) : 0);
+          P057_data->ledMatrix.TransmitRowBuffer();
         }
       }
     }

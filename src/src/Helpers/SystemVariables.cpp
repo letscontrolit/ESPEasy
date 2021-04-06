@@ -1,17 +1,30 @@
 #include "SystemVariables.h"
 
+
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy-Globals.h"
 
 #include "../DataStructs/TimingStats.h"
 
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+
 #include "../Globals/CRCValues.h"
+#include "../Globals/ESPEasy_time.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #ifdef USES_MQTT
 # include "../Globals/MQTT.h"
 #endif // ifdef USES_MQTT
 #include "../Globals/NetworkState.h"
+#include "../Globals/RuntimeData.h"
+#include "../Globals/Settings.h"
 
-#include "CompiletimeDefines.h"
-#include "StringConverter.h"
+#include "../Helpers/CompiletimeDefines.h"
+#include "../Helpers/Hardware.h"
+#include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringProvider.h"
 
 
 
@@ -49,7 +62,7 @@ void replSunSetTimeString(const String& format, String& s, boolean useURLencode)
 String timeReplacement_leadZero(int value) 
 {
   char valueString[5] = { 0 };
-  sprintf(valueString, "%02d", value);
+  sprintf_P(valueString, PSTR("%02d"), value);
   return valueString;
 }
 
@@ -74,7 +87,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
     switch (enumval)
     {
-      case BSSID:             value = String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
+      case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
       case CR:                value = "\r"; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
       case IP4:               value = String( (int) NetworkLocalIP()[3] ); break; // 4th IP octet
@@ -95,8 +108,8 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       #endif // USES_P037
 
 
-      case ISNTP:             value = String(statusNTPInitialized); break;
-      case ISWIFI:            value = String(wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 4=services initialized
+      case ISNTP:             value = String(statusNTPInitialized ? 1 : 0); break;
+      case ISWIFI:            value = String(WiFiEventData.wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 4=services initialized
       // TODO: PKR: Add ETH Objects
       #ifdef HAS_ETHERNET
       
@@ -111,14 +124,10 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case LCLTIME_AM:        value = node_time.getDateTimeString_ampm('-', ':', ' '); break;
       case LF:                value = "\n"; break;
       case MAC:               value = getValue(LabelType::STA_MAC); break;
-    #ifdef ESP8266
-      case MAC_INT:           value = String(ESP.getChipId()); break; // Last 24 bit of MAC address as integer, to be used in rules.
-    #else // ifdef ESP8266
-      case MAC_INT:           value = ""; break;                      // FIXME TD-er: Must find proper altrnative for ESP32.
-    #endif // ifdef ESP8266
+      case MAC_INT:           value = String(getChipId()); break; // Last 24 bit of MAC address as integer, to be used in rules.
       case RSSI:              value = getValue(LabelType::WIFI_RSSI); break;
       case SPACE:             value = " "; break;
-      case SSID:              value = (wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? F("--") : WiFi.SSID(); break;
+      case SSID:              value = (WiFiEventData.WiFiDisconnected()) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
       case SYSBUILD_DATE:     value = get_build_date(); break;
@@ -162,7 +171,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       #else // if FEATURE_ADC_VCC
       case VCC:               value = String(-1); break;
       #endif // if FEATURE_ADC_VCC
-      case WI_CH:             value = String((wifiStatus == ESPEASY_WIFI_DISCONNECTED) ? 0 : WiFi.channel()); break;
+      case WI_CH:             value = String((WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel()); break;
 
       case UNKNOWN:
         break;
@@ -178,30 +187,25 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
         break;
       default:
 
-        if (useURLencode) {
-          value = URLEncode(value.c_str());
-        }
-        s.replace(SystemVariables::toString(enumval), value);
+        repl(SystemVariables::toString(enumval), value, s, useURLencode);
         break;
     }
   }
   while (enumval != SystemVariables::Enum::UNKNOWN);
 
-  const int v_index = s.indexOf("%v");
+  int v_index = s.indexOf(F("%v"));
 
-  if ((v_index != -1) && isDigit(s[v_index + 2])) {
-    for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-      String key = "%v" + String(i + 1) + '%';
-
+  while ((v_index != -1)) {
+    unsigned int i;
+    if (validUIntFromString(s.substring(v_index + 2), i)) {
+      const String key = String(F("%v")) + String(i) + '%';
       if (s.indexOf(key) != -1) {
-        String value = String(customFloatVar[i]);
-
-        if (useURLencode) {
-          value = URLEncode(value.c_str());
-        }
-        s.replace(key, value);
+        const bool trimTrailingZeros = true;
+        const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        repl(key, value, s, useURLencode);
       }
     }
+    v_index = s.indexOf(F("%v"), v_index + 1); // Find next occurance
   }
 
   STOP_TIMER(PARSE_SYSVAR);

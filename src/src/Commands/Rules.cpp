@@ -1,14 +1,23 @@
 #include "../Commands/Rules.h"
 
-#include "../../ESPEasy_common.h"
-#include "../Commands/Common.h"
-#include "../DataStructs/EventValueSource.h"
-#include "../Globals/EventQueue.h"
-#include "../Globals/Settings.h"
-#include "../Helpers/StringConverter.h"
-#include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_fdwdecl.h"
 
+#include "../../ESPEasy_common.h"
+
+
+#include "../Commands/Common.h"
+
+#include "../DataTypes/EventValueSource.h"
+
+#include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
+
+#include "../Globals/EventQueue.h"
+#include "../Globals/RuntimeData.h"
+#include "../Globals/Settings.h"
+
+#include "../Helpers/Misc.h"
+#include "../Helpers/Rules_calculate.h"
+#include "../Helpers/StringConverter.h"
 
 String Command_Rules_Execute(struct EventStruct *event, const char *Line)
 {
@@ -32,6 +41,7 @@ String Command_Rules_UseRules(struct EventStruct *event, const char *Line)
 String Command_Rules_Async_Events(struct EventStruct *event, const char *Line)
 {
   String eventName = parseStringToEndKeepCase(Line, 2);
+
   eventName.replace('$', '#');
 
   if (Settings.UseRules) {
@@ -40,18 +50,19 @@ String Command_Rules_Async_Events(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-
 String Command_Rules_Events(struct EventStruct *event, const char *Line)
 {
   String eventName = parseStringToEndKeepCase(Line, 2);
+
   eventName.replace('$', '#');
 
   if (Settings.UseRules) {
-    const bool executeImmediately = 
-        SourceNeedsStatusUpdate(event->Source) ||
-        event->Source == EventValueSource::Enum::VALUE_SOURCE_RULES;
+    const bool executeImmediately =
+      SourceNeedsStatusUpdate(event->Source) ||
+      event->Source == EventValueSource::Enum::VALUE_SOURCE_RULES;
+
     if (executeImmediately) {
-      rulesProcessing(eventName); // TD-er: Process right now 
+      rulesProcessing(eventName); // TD-er: Process right now
     } else {
       eventQueue.add(eventName);
     }
@@ -64,9 +75,14 @@ String Command_Rules_Let(struct EventStruct *event, const char *Line)
   String TmpStr1;
 
   if (GetArgv(Line, TmpStr1, 3)) {
-    float result = 0.0;
-    Calculate(TmpStr1.c_str(), &result);
-    customFloatVar[event->Par1 - 1] = result;
+    if (event->Par1 >= 0) {
+      double result = 0.0;
+
+      if (!isError(Calculate(TmpStr1, result))) {
+        setCustomFloatVar(event->Par1, result);
+        return return_command_success();
+      }
+    }
   }
-  return return_command_success();
+  return return_command_failed();
 }

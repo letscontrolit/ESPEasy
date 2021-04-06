@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P094
 
 // #######################################################################################################
@@ -8,8 +9,8 @@
 // Allows to control the mode of the CUL receiver
 //
 
-#include "_Plugin_Helper.h"
 
+#include "src/Helpers/StringConverter.h"
 #include "src/PluginStructs/P094_data_struct.h"
 
 #include <Regexp.h>
@@ -56,7 +57,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_094;
       Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = SENSOR_TYPE_STRING;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_STRING;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -103,9 +104,9 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         uint32_t success, error, length_last;
         P094_data->getSentencesReceived(success, error, length_last);
         byte varNr = VARS_PER_TASK;
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true);
 
         // success = true;
       }
@@ -127,11 +128,15 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
       addFormNumericBox(F("Baudrate"), P094_BAUDRATE_LABEL, P094_BAUDRATE, 2400, 115200);
       addUnit(F("baud"));
+      break;
+    }
 
+    case PLUGIN_WEBFORM_LOAD: 
+    {
       addFormSubHeader(F("Filtering"));
       P094_html_show_matchForms(event);
 
@@ -143,7 +148,6 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
       P094_BAUDRATE = getFormItemInt(P094_BAUDRATE_LABEL);
 
       P094_data_struct *P094_data =
@@ -165,6 +169,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P094_data_struct());
       P094_data_struct *P094_data =
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -173,21 +178,15 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P094_data->init(serial_rx, serial_tx, P094_BAUDRATE)) {
+      if (P094_data->init(port, serial_rx, serial_tx, P094_BAUDRATE)) {
         LoadCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0);
         P094_data->post_init();
         success = true;
 
-        serialHelper_log_GpioDescription(serial_rx, serial_tx);
+        serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
       } else {
         clearPluginTaskData(event->TaskIndex);
       }
-      break;
-    }
-
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
       break;
     }
 

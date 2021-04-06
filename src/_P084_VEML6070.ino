@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P084
 
 // #######################################################################################################
@@ -9,14 +10,13 @@
 // Based on VEML6070 plugin from Sonoff-Tasmota (https://github.com/arendst/Sonoff-Tasmota)
 // Datasheet: https://www.vishay.com/docs/84277/veml6070.pdf
 
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_084
 #define PLUGIN_ID_084         84
 #define PLUGIN_NAME_084       "UV - VEML6070 [TESTING]"
-#define PLUGIN_VALUENAME1_084 "UV-Raw"
-#define PLUGIN_VALUENAME2_084 "UV-Risk"
-#define PLUGIN_VALUENAME3_084 "UV-Power"
+#define PLUGIN_VALUENAME1_084 "Raw"
+#define PLUGIN_VALUENAME2_084 "Risk"
+#define PLUGIN_VALUENAME3_084 "Power"
 
 #define VEML6070_ADDR_H             0x39
 #define VEML6070_ADDR_L             0x38
@@ -43,7 +43,7 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number           = PLUGIN_ID_084;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
       Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = true;
@@ -121,7 +121,7 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("VEML6070: UV: ");
-          log += UserVar[event->BaseVarIndex];
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
           addLog(LOG_LEVEL_INFO, log);
         }
 

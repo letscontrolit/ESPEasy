@@ -1,4 +1,9 @@
-#include "P094_data_struct.h"
+#include "../PluginStructs/P094_data_struct.h"
+
+// Needed also here for PlatformIO's library finder as the .h file 
+// is in a directory which is excluded in the src_filter
+#include <ESPeasySerial.h>
+#include <Regexp.h>
 
 
 #ifdef USES_P094
@@ -18,12 +23,15 @@ void P094_data_struct::reset() {
   }
 }
 
-bool P094_data_struct::init(const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate) {
+bool P094_data_struct::init(ESPEasySerialPort port, 
+                            const int16_t serial_rx, 
+                            const int16_t serial_tx, 
+                            unsigned long baudrate) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
   }
   reset();
-  easySerial = new (std::nothrow) ESPeasySerial(serial_rx, serial_tx);
+  easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
 
   if (isInitialized()) {
     easySerial->begin(baudrate);

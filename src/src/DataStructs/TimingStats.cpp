@@ -1,8 +1,9 @@
 #include "../DataStructs/TimingStats.h"
+
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_plugindefs.h"
-#include "../../_CPlugin_Helper.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../Globals/CPlugins.h"
+#include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/StringConverter.h"
 
 
@@ -17,7 +18,7 @@ unsigned long timingstats_last_reset(0);
 
 
 
-TimingStats::TimingStats() : _timeTotal(0.0), _count(0), _maxVal(0), _minVal(4294967295) {}
+TimingStats::TimingStats() : _timeTotal(0.0f), _count(0), _maxVal(0), _minVal(4294967295) {}
 
 void TimingStats::add(unsigned long time) {
   _timeTotal += static_cast<float>(time);
@@ -29,7 +30,7 @@ void TimingStats::add(unsigned long time) {
 }
 
 void TimingStats::reset() {
-  _timeTotal = 0.0;
+  _timeTotal = 0.0f;
   _count     = 0;
   _maxVal    = 0;
   _minVal    = 4294967295;
@@ -40,7 +41,7 @@ bool TimingStats::isEmpty() const {
 }
 
 float TimingStats::getAvg() const {
-  if (_count == 0) { return 0.0; }
+  if (_count == 0) { return 0.0f; }
   return _timeTotal / static_cast<float>(_count);
 }
 
@@ -77,6 +78,7 @@ String getPluginFunctionName(int function) {
     case PLUGIN_WEBFORM_SAVE:          return F("WEBFORM_SAVE");
     case PLUGIN_WEBFORM_LOAD:          return F("WEBFORM_LOAD");
     case PLUGIN_WEBFORM_SHOW_VALUES:   return F("WEBFORM_SHOW_VALUES");
+    case PLUGIN_FORMAT_USERVAR:        return F("FORMAT_USERVAR");
     case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME");
     case PLUGIN_GET_DEVICEVALUENAMES:  return F("GET_DEVICEVALUENAMES");
     case PLUGIN_WRITE:                 return F("WRITE");
@@ -109,6 +111,7 @@ bool mustLogFunction(int function) {
     case PLUGIN_WEBFORM_SAVE:          return false;
     case PLUGIN_WEBFORM_LOAD:          return false;
     case PLUGIN_WEBFORM_SHOW_VALUES:   return false;
+    case PLUGIN_FORMAT_USERVAR:        return false;
     case PLUGIN_GET_DEVICENAME:        return false;
     case PLUGIN_GET_DEVICEVALUENAMES:  return false;
     case PLUGIN_WRITE:                 return true;
@@ -220,6 +223,7 @@ String getMiscStatsName(int stat) {
     case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
     case RULES_PROCESSING:        return F("rulesProcessing()");
     case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
+    case SAVE_TO_RTC:             return F("saveToRTC()");
     case BACKGROUND_TASKS:        return F("backgroundtasks()");
     case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
     case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");
@@ -227,6 +231,7 @@ String getMiscStatsName(int stat) {
     case PARSE_SYSVAR:            return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
+    case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");
     case C001_DELAY_QUEUE:
     case C002_DELAY_QUEUE:
     case C003_DELAY_QUEUE:

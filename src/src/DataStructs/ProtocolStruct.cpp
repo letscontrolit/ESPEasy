@@ -4,12 +4,15 @@ ProtocolStruct::ProtocolStruct() :
     defaultPort(0), Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),
     usesTemplate(false), usesID(false), Custom(false), usesHost(true), usesPort(true),
     usesQueue(true), usesCheckReply(true), usesTimeout(true), usesSampleSets(false), 
-    usesExtCreds(false), needsNetwork(true) {}
+    usesExtCreds(false), needsNetwork(true), allowsExpire(true) {}
 
+bool ProtocolStruct::useCredentials() const {
+  return usesAccount || usesPassword;
+}
 
 bool ProtocolStruct::useExtendedCredentials() const {
   if (usesExtCreds) {
-    return usesAccount || usesPassword;
+    return useCredentials();
   }
   return false;
 }

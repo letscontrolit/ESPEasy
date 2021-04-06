@@ -3,8 +3,9 @@
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
+#include "../WebServer/AccessControl.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #ifdef HAS_ETHERNET
 #include "ETH.h"
 #endif

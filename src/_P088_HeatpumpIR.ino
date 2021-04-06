@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P088
 //#######################################################################################################
 //#################################### Plugin 088: Heatpump IR ##########################################
@@ -44,7 +45,6 @@
  */
 
 #include <HeatpumpIRFactory.h>
-#include "_Plugin_Helper.h"
 
 IRSenderIRremoteESP8266 *Plugin_088_irSender = NULL;
 int panasonicCKPTimer = 0;
@@ -59,7 +59,7 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_088;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_NONE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;

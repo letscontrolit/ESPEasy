@@ -2,7 +2,7 @@
 
 PATCH=puya_core2_4_x.patch
 
-for DIR in ~/.platformio/packages/framework-arduinoespressif8266*/; do
+for DIR in ~/.platformio/packages/framework-arduinoespressif8266/ ~/.platformio/packages/framework-arduinoespressif8266*/; do
 
   #not applied yet? (in upstream or otherwise)
   if ! grep "PUYA" $DIR/cores/esp8266/Esp.cpp >/dev/null; then

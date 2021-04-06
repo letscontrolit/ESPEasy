@@ -3,7 +3,7 @@
 
 
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
@@ -27,8 +27,11 @@ public:
 
   size_t getSize() const;
 
+  bool isDuplicate(const queue_element_single_value_base& other) const;
+
   String txt[VARS_PER_TASK];
   int idx                          = 0;
+  unsigned long _timestamp         = millis();
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   mutable byte valuesSent          = 0; // Value must be set by const function checkDone()

@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P048
 
 // #######################################################################################################
@@ -12,17 +13,16 @@
 
 
 #include <Adafruit_MotorShield.h>
-#include "_Plugin_Helper.h"
+
 
 #define PLUGIN_048
 #define PLUGIN_ID_048         48
 #define PLUGIN_NAME_048       "Motor - Adafruit Motorshield v2 [TESTING]"
 #define PLUGIN_VALUENAME1_048 "MotorShield v2"
 
-uint8_t Plugin_048_MotorShield_address = 0x60;
-
-int Plugin_048_MotorStepsPerRevolution = 200;
-int Plugin_048_StepperSpeed            = 10;
+#define Plugin_048_MotorShield_address     PCONFIG(0)
+#define Plugin_048_MotorStepsPerRevolution PCONFIG(1)
+#define Plugin_048_StepperSpeed            PCONFIG(2)
 
 boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
   boolean success = false;
@@ -34,7 +34,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_048;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_NONE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -58,41 +58,46 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      addFormTextBox(F("I2C Address (Hex)"), F("p048_adr"),
-                     formatToHex_decimal(PCONFIG(0)), 4);
+      addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"),
+                     formatToHex_decimal(Plugin_048_MotorShield_address), 4);
 
       // FIXME TD-er: Why not using addFormSelectorI2C here?
+      break;
+    }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      Plugin_048_MotorShield_address     = 0x60;
+      Plugin_048_MotorStepsPerRevolution = 200;
+      Plugin_048_StepperSpeed            = 10;
+
       break;
     }
 
 
     case PLUGIN_WEBFORM_LOAD: {
       addFormNumericBox(F("Stepper: steps per revolution"), F("p048_MotorStepsPerRevolution")
-                        , PCONFIG(1));
+                        , Plugin_048_MotorStepsPerRevolution);
 
       addFormNumericBox(F("Stepper speed (rpm)"),           F("p048_StepperSpeed")
-                        , PCONFIG(2));
+                        , Plugin_048_StepperSpeed);
 
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      String plugin1 = web_server.arg(F("p048_adr"));
-      PCONFIG(0) = (int)strtol(plugin1.c_str(), 0, 16);
+      String plugin1 = web_server.arg(F("i2c_addr"));
+      Plugin_048_MotorShield_address = (int)strtol(plugin1.c_str(), 0, 16);
 
-      PCONFIG(1) = getFormItemInt(F("p048_MotorStepsPerRevolution"));
+      Plugin_048_MotorStepsPerRevolution = getFormItemInt(F("p048_MotorStepsPerRevolution"));
 
-      PCONFIG(2) = getFormItemInt(F("p048_StepperSpeed"));
-      success    = true;
+      Plugin_048_StepperSpeed = getFormItemInt(F("p048_StepperSpeed"));
+      success                 = true;
       break;
     }
 
     case PLUGIN_INIT: {
-      Plugin_048_MotorShield_address     = PCONFIG(0);
-      Plugin_048_MotorStepsPerRevolution = PCONFIG(1);
-      Plugin_048_StepperSpeed            = PCONFIG(2);
-
       success = true;
       break;
     }

@@ -2,9 +2,8 @@
 #define PLUGINSTRUCTS_P028_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-
 #ifdef USES_P028
+
 
 # define BMx280_REGISTER_DIG_T1           0x88
 # define BMx280_REGISTER_DIG_T2           0x8A
@@ -172,10 +171,10 @@ struct P028_data_struct : public PluginTaskData_base {
 
   bme280_uncomp_data uncompensated;
   bme280_calib_data  calib;
-  float              last_hum_val      = 0.0;
-  float              last_press_val    = 0.0;
-  float              last_temp_val     = 0.0;
-  float              last_dew_temp_val = 0.0;
+  float              last_hum_val      = 0.0f;
+  float              last_press_val    = 0.0f;
+  float              last_temp_val     = 0.0f;
+  float              last_dew_temp_val = 0.0f;
   unsigned long      last_measurement  = 0;
   BMx_ChipId         sensorID          = Unknown_DEVICE;
   uint8_t            i2cAddress        = 0;

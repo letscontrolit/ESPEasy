@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P058
 
 // #######################################################################################################
@@ -33,10 +34,8 @@
 #define PLUGIN_NAME_058       "Keypad - HT16K33 [TESTING]"
 #define PLUGIN_VALUENAME1_058 "ScanCode"
 
-#include <HT16K33.h>
-#include "_Plugin_Helper.h"
 
-CHT16K33 *Plugin_058_K = NULL;
+#include "src/PluginStructs/P058_data_struct.h"
 
 
 boolean Plugin_058(byte function, struct EventStruct *event, String& string)
@@ -50,7 +49,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number           = PLUGIN_ID_058;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
       Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = SENSOR_TYPE_SWITCH;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
@@ -99,35 +98,36 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte addr = PCONFIG(0);
+      byte address = PCONFIG(0);
 
-      if (!Plugin_058_K) {
-        Plugin_058_K = new CHT16K33;
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P058_data_struct(address));
+      P058_data_struct *P058_data =
+        static_cast<P058_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P058_data) {
+        success = true;
       }
-
-      Plugin_058_K->Init(addr);
-
-      success = true;
       break;
     }
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (Plugin_058_K)
-      {
-        static uint8_t keyLast = 0;
+      P058_data_struct *P058_data =
+        static_cast<P058_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        uint8_t key = Plugin_058_K->ReadKeys();
+      if (nullptr != P058_data) {
+        uint8_t key;
 
-        if (keyLast != key)
+        if (P058_data->readKey(key))
         {
-          keyLast                      = key;
           UserVar[event->BaseVarIndex] = (float)key;
-          event->sensorType            = SENSOR_TYPE_SWITCH;
+          event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
-          String log = F("Mkey : key=0x");
-          log += String(key, 16);
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("Mkey : key=0x");
+            log += String(key, 16);
+            addLog(LOG_LEVEL_INFO, log);
+          }
 
           sendData(event);
         }
@@ -138,8 +138,6 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      if (Plugin_058_K)
-      {}
       success = true;
       break;
     }

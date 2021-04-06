@@ -1,8 +1,11 @@
 #include "../DataStructs/ControllerSettingsStruct.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../DataStructs/ESPEasyLimits.h"
+
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../Helpers/Networking.h"
+#include "../Helpers/StringConverter.h"
 
 
 #include <IPAddress.h>
@@ -25,7 +28,7 @@ void ControllerSettingsStruct::reset() {
   ClientTimeout              = CONTROLLER_CLIENTTIMEOUT_DFLT;
   MustCheckReply             = false;
   SampleSetInitiator         = INVALID_TASK_INDEX;
-  MQTT_flags                 = 0;
+  VariousFlags               = 0;
 
   for (byte i = 0; i < 4; ++i) {
     IP[i] = 0;
@@ -184,60 +187,90 @@ bool ControllerSettingsStruct::updateIPcache() {
 
 bool ControllerSettingsStruct::mqtt_cleanSession() const
 {
-  return bitRead(MQTT_flags, 1);
+  return bitRead(VariousFlags, 1);
 }
 
 void ControllerSettingsStruct::mqtt_cleanSession(bool value)
 {
-  bitWrite(MQTT_flags, 1, value);
+  bitWrite(VariousFlags, 1, value);
 }
 
 bool ControllerSettingsStruct::mqtt_sendLWT() const
 {
-  return !bitRead(MQTT_flags, 2);
+  return !bitRead(VariousFlags, 2);
 }
 
 void ControllerSettingsStruct::mqtt_sendLWT(bool value)
 {
-  bitWrite(MQTT_flags, 2, !value);
+  bitWrite(VariousFlags, 2, !value);
 }
 
 bool ControllerSettingsStruct::mqtt_willRetain() const
 {
-  return !bitRead(MQTT_flags, 3);
+  return !bitRead(VariousFlags, 3);
 }
 
 void ControllerSettingsStruct::mqtt_willRetain(bool value)
 {
-  bitWrite(MQTT_flags, 3, !value);
+  bitWrite(VariousFlags, 3, !value);
 }
 
 bool ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect() const
 {
-  return bitRead(MQTT_flags, 4);
+  return bitRead(VariousFlags, 4);
 }
 
 void ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect(bool value)
 {
-  bitWrite(MQTT_flags, 4, value);
+  bitWrite(VariousFlags, 4, value);
 }
 
 bool ControllerSettingsStruct::mqtt_retainFlag() const
 {
-  return bitRead(MQTT_flags, 5);
+  return bitRead(VariousFlags, 5);
 }
 
 void ControllerSettingsStruct::mqtt_retainFlag(bool value)
 {
-  bitWrite(MQTT_flags, 5, value);
+  bitWrite(VariousFlags, 5, value);
 }
 
 bool ControllerSettingsStruct::useExtendedCredentials() const
 {
-  return bitRead(MQTT_flags, 6);
+  return bitRead(VariousFlags, 6);
 }
 
 void ControllerSettingsStruct::useExtendedCredentials(bool value)
 {
-  bitWrite(MQTT_flags, 6, value);
+  bitWrite(VariousFlags, 6, value);
+}
+
+bool ControllerSettingsStruct::sendBinary() const
+{
+  return bitRead(VariousFlags, 7);
+}
+
+void ControllerSettingsStruct::sendBinary(bool value)
+{
+  bitWrite(VariousFlags, 7, value);
+}
+
+bool ControllerSettingsStruct::allowExpire() const
+{
+  return bitRead(VariousFlags, 9);
+}
+
+void ControllerSettingsStruct::allowExpire(bool value)
+{
+  bitWrite(VariousFlags, 9, value);
+}
+
+bool ControllerSettingsStruct::deduplicate() const
+{
+  return bitRead(VariousFlags, 10);
+}
+
+void ControllerSettingsStruct::deduplicate(bool value)
+{
+  bitWrite(VariousFlags, 10, value);
 }

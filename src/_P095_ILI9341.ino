@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P095
 //#######################################################################################################
 //#################################### Plugin 095: ILI9341 TFT 2.4inches display #################################
@@ -5,16 +6,23 @@
 
 #define PLUGIN_095
 #define PLUGIN_ID_095         95
-#define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341/XPT2046 [TESTING]"
+#define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341 [TESTING]"
 #define PLUGIN_VALUENAME1_095 "TFT"
 #define PLUGIN_095_MAX_DISPLAY 1
 
-#include "_Plugin_Helper.h"
 
 #if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
   #define PLUGIN_095_FONT_INCLUDED   // enable to use fonts in this plugin
 #endif
 
+/**
+ * Changelog:
+ * 2020-08-29 tonhuisman: Removed TS (Touchscreen) related stuff, XPT2046 will be a separate plugin
+ *                        Changed initial text from '--cdt--' to 'ESPEasy'
+ * 2020-08 tonhuisman: SPI improvements
+ * 2020-04 TD-er: Pull plugin into main repository and rework according to new plugin standards
+ * 2019 Jean-Michel Decoret: Initial plugin work
+ */
 /* README.MD
 
 ## INTRO
@@ -125,29 +133,27 @@ void Plugin_095_printText(const char *string, int X, int Y, unsigned int textSiz
 #ifdef ESP32
 //for D32 Pro with TFT connector
   #define TFT_CS 14
+  #define TFT_CS_HSPI 26  // when connected to Hardware-SPI GPIO-14 is already used
   #define TFT_DC 27
   #define TFT_RST 33
-  #define TS_CS 12
 #else
  //for D1 Mini with shield connection
   #define TFT_CS 16   // D0
   #define TFT_DC 15   // D8
   #define TFT_RST -1
-  #define TS_CS 0     // D3
 #endif
 
 //The setting structure
 struct Plugin_095_TFT_SettingStruct
 {
   Plugin_095_TFT_SettingStruct()
-  : address_tft_cs(TFT_CS), address_tft_dc(TFT_DC), address_tft_rst(TFT_RST), address_ts_cs(TS_CS), rotation(0)
+  : address_tft_cs(TFT_CS), address_tft_dc(TFT_DC), address_tft_rst(TFT_RST), rotation(0)
   {
 
   }
   byte address_tft_cs;
   byte address_tft_dc;
   byte address_tft_rst;
-  byte address_ts_cs;
   byte rotation;
 } TFT_Settings;
 
@@ -164,8 +170,8 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_095;
-        Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = SENSOR_TYPE_NONE;
+        Device[deviceCount].Type = DEVICE_TYPE_SPI3;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -191,9 +197,35 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("TFT CS"));
+        event->String2 = formatGpioName_output(F("TFT DC"));
+        event->String3 = formatGpioName_output(F("TFT RST"));
+        break;
+      }
+
+    case PLUGIN_SET_DEFAULTS:
+      {
+        byte init = PCONFIG(0);
+
+        //if already configured take it from settings, else use default values (only for pin values)
+        if(init != 1)
+        {
+          #ifdef ESP32
+          if (Settings.InitSPI == 2) {  // When using ESP32 H(ardware-)SPI
+            TFT_Settings.address_tft_cs = TFT_CS_HSPI; 
+          }
+          #endif
+          PIN(0) = TFT_Settings.address_tft_cs;
+          PIN(1) = TFT_Settings.address_tft_dc;
+          PIN(2) = TFT_Settings.address_tft_rst;
+        }
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-
         byte init = PCONFIG(0);
 
         //if already configured take it from settings, else use default values (only for pin values)
@@ -202,16 +234,10 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
           TFT_Settings.address_tft_cs = PIN(0);
           TFT_Settings.address_tft_dc = PIN(1);
           TFT_Settings.address_tft_rst = PIN(2);
-          TFT_Settings.address_ts_cs = PIN(3);
         }
 
-        addFormPinSelect(F("TFT CS"), F("p095_tft_cs"), TFT_Settings.address_tft_cs);
-        addFormPinSelect(F("TFT DC"), F("p095_tft_dc"), TFT_Settings.address_tft_dc);
-        addFormPinSelect(F("TFT RST"), F("p095_tft_rst"), TFT_Settings.address_tft_rst);
-        addFormPinSelect(F("TS CS"), F("p095_ts_cs"), TFT_Settings.address_ts_cs);
-
         byte choice2 = PCONFIG(1);
-        String options2[4] = { F("Normal"), F("+90°"), F("+180°"), F("+270°") };
+        String options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
         int optionValues2[4] = { 0, 1, 2, 3 };
         addFormSelector(F("Rotation"), F("p095_rotate"), 4, options2, optionValues2, choice2);
 
@@ -222,10 +248,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         PCONFIG(0) = 1; //mark config as already saved (next time, will not use default values)
-        PIN(0) = getFormItemInt(F("p095_tft_cs"));
-        PIN(1) = getFormItemInt(F("p095_tft_dc"));
-        PIN(2) = getFormItemInt(F("p095_tft_rst"));
-        PIN(3) = getFormItemInt(F("p095_ts_cs"));
+        // PIN(0)..(2) are already set
         PCONFIG(1) = getFormItemInt(F("p095_rotate"));
         success = true;
         break;
@@ -237,14 +260,13 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         TFT_Settings.address_tft_cs = PIN(0);
         TFT_Settings.address_tft_dc = PIN(1);
         TFT_Settings.address_tft_rst = PIN(2);
-        TFT_Settings.address_ts_cs = PIN(3);
         TFT_Settings.rotation = PCONFIG(1);
 
         tft = new Adafruit_ILI9341(TFT_Settings.address_tft_cs, TFT_Settings.address_tft_dc, TFT_Settings.address_tft_rst);
         tft->begin();
         tft->setRotation(TFT_Settings.rotation);
         tft->fillScreen(ILI9341_WHITE);
-        Plugin_095_printText("--cdt--", 1, 1);
+        Plugin_095_printText("ESPEasy", 1, 1);
         success = true;
         break;
       }
@@ -253,23 +275,6 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
       {
         String tmpString = String(string);
         String arguments = String(string);
-
-        int dotPos = arguments.indexOf('.');
-        if(dotPos > -1 && arguments.substring(dotPos,dotPos+3).equalsIgnoreCase(F("tft")))
-        {
-          LoadTaskSettings(event->TaskIndex);
-          String name = arguments.substring(0,dotPos);
-          name.replace(F("["),F(""));
-          name.replace(F("]"),F(""));
-          if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
-          {
-            arguments = arguments.substring(dotPos+1);
-          }
-          else
-          {
-             return false;
-          }
-        }
 
         String command = F("");
         String subcommand = F("");
@@ -314,7 +319,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
               ///control?cmd=tftcmd,rot,0
               //not working to verify
               arguments = arguments.substring(argIndex + 1);
-              tft->setRotation(arguments.toInt() %3);
+              tft->setRotation(arguments.toInt() % 4);
             }
             else
             {
@@ -465,7 +470,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_INFO, F("Fail to parse command correctly; please check API documentation"));
             String log2  = F("Parsed command = \"");
             log2 += string;
-            log2 += "\"";
+            log2 += F("\"");
             addLog(LOG_LEVEL_INFO, log2);
           }
         } 
@@ -475,7 +480,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             log.reserve(110);                           // Prevent re-allocation
             log = F("P095-ILI9341 : WRITE = ");
             log += tmpString;
-            SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.
+            SendStatus(event, log);             // Reply (echo) to sender. This will print message on browser.
         }
         break;
       }

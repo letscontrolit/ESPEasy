@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P068
 
 // #######################################################################################################
@@ -23,7 +24,6 @@
 // =============================================
 #ifndef SHT3X_H
 # define SHT3X_H
-# include "_Plugin_Helper.h"
 
 class SHT3X : public PluginTaskData_base {
 public:
@@ -88,8 +88,8 @@ void SHT3X::readFromSensor()
     if (CRC8(data[0], data[1], data[2]) &&
         CRC8(data[3], data[4], data[5]))
     {
-      tmp = ((((data[0] << 8) | data[1]) * 175.0) / 65535.0) - 45.0;
-      hum = ((((data[3] << 8) | data[4]) * 100.0) / 65535.0);
+      tmp = ((((data[0] << 8) | data[1]) * 175.0f) / 65535.0f) - 45.0f;
+      hum = ((((data[3] << 8) | data[4]) * 100.0f) / 65535.0f);
     }
   }
   else
@@ -144,7 +144,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_068;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_TEMP_HUM;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -209,12 +209,14 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
       sht3x->readFromSensor();
       UserVar[event->BaseVarIndex + 0] = sht3x->tmp;
       UserVar[event->BaseVarIndex + 1] = sht3x->hum;
-      String log = F("SHT3x: Temperature: ");
-      log += UserVar[event->BaseVarIndex + 0];
-      addLog(LOG_LEVEL_INFO, log);
-      log  = F("SHT3x: Humidity: ");
-      log += UserVar[event->BaseVarIndex + 1];
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("SHT3x: Temperature: ");
+        log += formatUserVarNoCheck(event->TaskIndex, 0);
+        addLog(LOG_LEVEL_INFO, log);
+        log  = F("SHT3x: Humidity: ");
+        log += formatUserVarNoCheck(event->TaskIndex, 1);
+        addLog(LOG_LEVEL_INFO, log);
+      }
       success = true;
       break;
     }

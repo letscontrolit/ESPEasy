@@ -42,7 +42,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_013;
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -120,7 +120,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
         // enable filtersize option if filter is used,
         if (filterType != FILTER_NONE)
-        	addFormNumericBox(F("Filter size"), F("p013_FilterSize"), filterSize, 2, 20);
+        	addFormNumericBox(F("Number of Pings"), F("p013_FilterSize"), filterSize, 2, 20);
 
         success = true;
         break;
@@ -221,7 +221,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
           log += event->TaskIndex +1;
           log += F(" Distance: ");
           UserVar[event->BaseVarIndex] = value;
-          log += UserVar[event->BaseVarIndex];
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
           log += (measuringUnit == UNIT_CM) ? F(" cm ") : F(" inch ");
           if (value == NO_ECHO)
           {
@@ -257,7 +257,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_INFO,log);
               switchstate[event->TaskIndex] = state;
               UserVar[event->BaseVarIndex] = state;
-              event->sensorType = SENSOR_TYPE_SWITCH;
+              event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
               sendData(event);
             }
           }

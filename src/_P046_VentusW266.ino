@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P046
 //#######################################################################################################
 //#################################### Plugin 046: Ventus W266 [Testing] ################################
@@ -76,7 +77,7 @@
 // CRC calculation is based on the works by Paul Stoffregen from the 1-Wire arduino library. Special
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
-#include "_Plugin_Helper.h"
+
 
 //edwin: Disabled for now: hardware is not generic enough and  uses lots of ram and iram,
 #ifdef PLUGIN_BUILD_DISABLED
@@ -139,7 +140,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_046;
         Device[deviceCount].Type = DEVICE_TYPE_DUMMY;           // Nothing else really fit the bill ...
-        Device[deviceCount].VType = SENSOR_TYPE_DUAL;           // New type, see ESPEasy.ino
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_DUAL;           // New type, see ESPEasy.ino
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -381,23 +382,23 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             {
               int myTemp = int((P046_data->Plugin_046_databuffer[5] * 256) + P046_data->Plugin_046_databuffer[4]);
               if (myTemp > 0x8000) { myTemp |= 0xffff0000; }                    // int @ esp8266 = 32 bits!
-              float temperature = float(myTemp) / 10.0; // Temperature
+              float temperature = float(myTemp) / 10.0f; // Temperature
               byte myHum = (P046_data->Plugin_046_databuffer[2] >> 4) * 10 + (P046_data->Plugin_046_databuffer[2] & 0x0f);
               float humidity = float(myHum);
               UserVar[event->BaseVarIndex] = temperature;
               UserVar[event->BaseVarIndex + 1] = humidity;
-              event->sensorType = SENSOR_TYPE_TEMP_HUM;
+              event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
               break;
             }
             case (1):
             {
               float average = float((P046_data->Plugin_046_databuffer[11] << 8) + P046_data->Plugin_046_databuffer[10]) / 10;   // Wind speed average in m/s
               float gust = float((P046_data->Plugin_046_databuffer[13] << 8) + P046_data->Plugin_046_databuffer[12]) / 10;      // Wind speed gust in m/s
-              float bearing = float(P046_data->Plugin_046_databuffer[9] & 0x0f) * 22.5;                              // Wind bearing (0-359)
+              float bearing = float(P046_data->Plugin_046_databuffer[9] & 0x0f) * 22.5f;                              // Wind bearing (0-359)
               UserVar[event->BaseVarIndex] = bearing;                                                     // degrees
               UserVar[event->BaseVarIndex + 1] = average;
               UserVar[event->BaseVarIndex + 2] = gust;
-              event->sensorType = SENSOR_TYPE_WIND;
+              event->sensorType = Sensor_VType::SENSOR_TYPE_WIND;
               break;
             }
             case (2):
@@ -447,7 +448,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
             }
             case (5):
             {
-              float distance = float(-1);
+              float distance = -1.0f;
               if (P046_data->Plugin_046_databuffer[18] != 0x3F )
               {
                 distance = float(P046_data->Plugin_046_databuffer[18]);

@@ -1,11 +1,28 @@
 #include "Hardware.h"
 
+#include "../Commands/GPIO.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
+
+#include "../Globals/Device.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 #include "../Globals/GlobalMapPortStatus.h"
 
+#include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/PortStatus.h"
+#include "../Helpers/StringConverter.h"
+
+//#include "../../ESPEasy-Globals.h"
+
+#ifdef ESP32
+#include <soc/soc.h>
+#include <soc/efuse_reg.h>
+#endif
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -13,49 +30,86 @@
 void hardwareInit()
 {
   // set GPIO pins state if not set to default
-  constexpr byte maxStates = sizeof(Settings.PinBootStates) / sizeof(Settings.PinBootStates[0]);
+  bool hasPullUp, hasPullDown;
 
-  for (byte gpio = 0; gpio < PIN_D_MAX; ++gpio) {
-    bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
-    const int8_t bootState = (gpio < maxStates) ? Settings.PinBootStates[gpio] : 0;
-
-    if (!serialPinConflict && (bootState != 0)) {
+  for (int gpio = 0; gpio <= PIN_D_MAX; ++gpio) {
+    const bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+    if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
+      if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
+        const PinBootState bootState = Settings.getPinBootState(gpio);
+        if (bootState != PinBootState::Default_state) {
+          int8_t state = -1;
+          uint8_t mode = PIN_MODE_UNDEFINED;
+          int8_t init = 0;
+          switch (bootState)
+          {
+            case PinBootState::Default_state:
+              // At startup, pins are configured as INPUT
+              break;
+            case PinBootState::Output_low:
+              pinMode(gpio, OUTPUT);
+              digitalWrite(gpio, LOW);
+              state = LOW;
+              mode  = PIN_MODE_OUTPUT;
+              init  = 1;
 
-      switch (bootState)
-      {
-        case 1:
-          pinMode(gpio, OUTPUT);
-          digitalWrite(gpio, LOW);
-          globalMapPortStatus[key].state = LOW;
-          globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
-          globalMapPortStatus[key].init  = 1;
+              // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
+              break;
+            case PinBootState::Output_high:
+              pinMode(gpio, OUTPUT);
+              digitalWrite(gpio, HIGH);
+              state = HIGH;
+              mode  = PIN_MODE_OUTPUT;
+              init  = 1;
 
-          // setPinState(1, gpio, PIN_MODE_OUTPUT, LOW);
-          break;
-        case 2:
-          pinMode(gpio, OUTPUT);
-          digitalWrite(gpio, HIGH);
-          globalMapPortStatus[key].state = HIGH;
-          globalMapPortStatus[key].mode  = PIN_MODE_OUTPUT;
-          globalMapPortStatus[key].init  = 1;
+              // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
+              break;
+            case PinBootState::Input_pullup:
+              if (hasPullUp) {
+                pinMode(gpio, INPUT_PULLUP);
+                state = 0;
+                mode  = PIN_MODE_INPUT_PULLUP;
+                init  = 1;
+              }
+              break;
+            case PinBootState::Input_pulldown:
+              if (hasPullDown) {
+                #ifdef ESP8266
+                if (gpio == 16) {
+                  pinMode(gpio, INPUT_PULLDOWN_16);
+                }
+                #endif
+                #ifdef ESP32
+                pinMode(gpio, INPUT_PULLDOWN);
+                #endif
+                state = 0;
+                mode  = PIN_MODE_INPUT_PULLDOWN;
+                init  = 1;
+              }
+              break;
+            case PinBootState::Input:
+              pinMode(gpio, INPUT);
+              state = 0;
+              mode  = PIN_MODE_INPUT;
+              init  = 1;
+              break;
 
-          // setPinState(1, gpio, PIN_MODE_OUTPUT, HIGH);
-          break;
-        case 3:
-          pinMode(gpio, INPUT_PULLUP);
-          globalMapPortStatus[key].state = 0;
-          globalMapPortStatus[key].mode  = PIN_MODE_INPUT_PULLUP;
-          globalMapPortStatus[key].init  = 1;
-
-          // setPinState(1, gpio, PIN_MODE_INPUT, 0);
-          break;
+          }
+          if (init == 1) {
+            globalMapPortStatus[key].state = state;
+            globalMapPortStatus[key].mode  = mode;
+            globalMapPortStatus[key].init  = init;
+          }
+        }
       }
     }
   }
 
-  if (Settings.Pin_Reset != -1) {
-    pinMode(Settings.Pin_Reset, INPUT_PULLUP);
+  if (getGpioPullResistor(Settings.Pin_Reset, hasPullUp, hasPullDown)) {
+    if (hasPullUp) {
+      pinMode(Settings.Pin_Reset, INPUT_PULLUP);
+    }
   }
 
   initI2C();
@@ -107,10 +161,10 @@ void hardwareInit()
 
 void initI2C() {
   // configure hardware pins according to eeprom settings.
-  if (Settings.Pin_i2c_sda != -1)
+  if (Settings.Pin_i2c_sda != -1 && Settings.Pin_i2c_scl != -1)
   {
     addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
-    Wire.setClock(Settings.I2C_clockSpeed);
+    I2CSelectClockSpeed(false); // Set normal clock speed
     Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
 
     if (Settings.WireClockStretchLimit)
@@ -159,7 +213,14 @@ void initI2C() {
 }
 
 void I2CSelectClockSpeed(bool setLowSpeed) {
-  Wire.setClock(setLowSpeed ? Settings.I2C_clockSpeed_Slow : Settings.I2C_clockSpeed);
+  static uint32_t lastI2CClockSpeed = 0;
+  const uint32_t newI2CClockSpeed = setLowSpeed ? Settings.I2C_clockSpeed_Slow : Settings.I2C_clockSpeed;
+  if (newI2CClockSpeed == lastI2CClockSpeed) {
+    // No need to change the clock speed.
+    return;
+  }
+  lastI2CClockSpeed = newI2CClockSpeed;  
+  Wire.setClock(newI2CClockSpeed);
 }
 
 #ifdef FEATURE_I2CMULTIPLEXER
@@ -203,8 +264,9 @@ byte I2CMultiplexerShiftBit(uint8_t i) {
 // As initially constructed by krikk in PR#254, quite adapted
 // utility method for the I2C multiplexer
 // select the multiplexer port given as parameter, if taskIndex < 0 then take that abs value as the port to select (to allow I2C scanner)
-void I2CMultiplexerSelectByTaskIndex(int8_t taskIndex) {
-  if (taskIndex >= INVALID_TASK_INDEX) { return; }
+void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex) {
+  if (!validTaskIndex(taskIndex)) { return; }
+  if (!I2CMultiplexerPortSelectedForTask(taskIndex)) { return; }
 
   byte toWrite = 0;
 
@@ -217,40 +279,28 @@ void I2CMultiplexerSelectByTaskIndex(int8_t taskIndex) {
     toWrite = Settings.I2C_Multiplexer_Channel[taskIndex]; // Bitpattern is already correctly stored
   }
 
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(true); // Set to slow
-  }
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(toWrite);
-  Wire.endTransmission();
+  SetI2CMultiplexer(toWrite);
 }
 
 void I2CMultiplexerSelect(uint8_t i) {
   if (i > 7) { return; }
 
   byte toWrite = I2CMultiplexerShiftBit(i);
-
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(toWrite);
-  Wire.endTransmission();
-}
-
-// utility method for the I2C multiplexer
-// disable all channels on a multiplexer, and restore I2C speed if it was connecting a slow device
-void I2CMultiplexerOffByTaskIndex(int8_t taskIndex) {
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(0); // no channel selected
-  Wire.endTransmission();
-
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(false); // Reset clockspeed
-  }
+  SetI2CMultiplexer(toWrite);
 }
 
 void I2CMultiplexerOff() {
-  Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
-  Wire.write(0); // no channel selected
-  Wire.endTransmission();
+  SetI2CMultiplexer(0); // no channel selected
+}
+
+void SetI2CMultiplexer(byte toWrite) {
+  if (isI2CMultiplexerEnabled()) {
+    // FIXME TD-er: Must check to see if we can cache the value so only change it when needed.
+    Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
+    Wire.write(toWrite);
+    Wire.endTransmission();
+    // FIXME TD-er: We must check if the chip needs some time to set the output. (delay?)
+  }
 }
 
 byte I2CMultiplexerMaxChannels() {
@@ -268,6 +318,8 @@ byte I2CMultiplexerMaxChannels() {
 // Has this taskIndex a channel selected? Checks for both Single channel and Multiple channel mode
 // taskIndex must already be validated! (0..MAX_TASKS)
 bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
+  if (!validTaskIndex(taskIndex)) { return false; }
+  if (!isI2CMultiplexerEnabled()) { return false; }
   return (!bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] != -1)
          || (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
 }
@@ -293,15 +345,17 @@ void checkResetFactoryPin() {
 
     if (factoryResetCounter > 3) {
       // normal reboot
-      reboot();
+      reboot(ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryPinActive);
     }
     factoryResetCounter = 0; // count was < 3, reset counter
   }
 }
 
 #ifdef ESP8266
+int lastADCvalue = 0;
+
 int espeasy_analogRead(int pin) {
-  if (!wifiConnectInProgress) {
+  if (!WiFiEventData.wifiConnectInProgress) {
     lastADCvalue = analogRead(A0);
   }
   return lastADCvalue;
@@ -356,12 +410,120 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 /********************************************************************************************\
    Hardware information
  \*********************************************************************************************/
+uint32_t getFlashChipId() {
+  uint32_t flashChipId = 0;
+  #ifdef ESP32
+  //esp_flash_read_id(nullptr, &flashChipId);
+  #elif defined(ESP8266)
+  flashChipId = ESP.getFlashChipId();
+  #endif
+  return flashChipId;
+}
+
 uint32_t getFlashRealSizeInBytes() {
   #if defined(ESP32)
   return ESP.getFlashChipSize();
   #else // if defined(ESP32)
   return ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
   #endif // if defined(ESP32)
+}
+
+
+bool puyaSupport() {
+  bool supported = false;
+
+#ifdef PUYA_SUPPORT
+
+  // New support starting core 2.5.0
+  if (PUYA_SUPPORT) { supported = true; }
+#endif // ifdef PUYA_SUPPORT
+#ifdef PUYASUPPORT
+
+  // Old patch
+  supported = true;
+#endif // ifdef PUYASUPPORT
+  return supported;
+}
+
+uint8_t getFlashChipVendorId() {
+#ifdef PUYA_SUPPORT
+  return ESP.getFlashChipVendorId();
+#else // ifdef PUYA_SUPPORT
+  # if defined(ESP8266)
+    uint32_t flashChipId = ESP.getFlashChipId();
+    return flashChipId & 0x000000ff;
+  # elif defined(ESP32)
+  
+  # endif // if defined(ESP8266)
+#endif // ifdef PUYA_SUPPORT
+  return 0xFF; // Not an existing function for ESP32
+}
+
+bool flashChipVendorPuya() {
+  uint8_t vendorId = getFlashChipVendorId();
+
+  return vendorId == 0x85; // 0x146085 PUYA
+}
+
+uint32_t getChipId() {
+  uint32_t chipId = 0;
+
+#ifdef ESP8266
+  chipId = ESP.getChipId();
+#endif
+#ifdef ESP32
+  for(int i=0; i<17; i=i+8) {
+	  chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+	}
+#endif
+
+  return chipId;
+}
+
+uint8_t getChipCores() {
+  uint8_t cores = 1;
+  #ifdef ESP32
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+    cores = chip_info.cores;
+  #endif
+  return cores;
+}
+
+String getChipModel() {
+#ifdef ESP32
+  {
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+    uint32_t pkg_ver = chip_ver & 0x7;
+    switch (pkg_ver) {
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6 :
+        return F("ESP32-D0WDQ6");
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5 :
+        return F("ESP32-D0WDQ5");
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5 :
+        return F("ESP32-D2WDQ5");
+      case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2 :
+        return F("ESP32-PICO-D2");
+      case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4 :
+        return F("ESP32-PICO-D4");
+      default:
+        break;
+    }
+  }
+#elif defined(ESP8285)
+  return F("ESP8285");
+#elif defined(ESP8266)
+  return F("ESP8266");
+#endif
+  return F("Unknown");
+}
+
+uint8_t getChipRevision() {
+  uint8_t rev = 0;
+  #ifdef ESP32
+    rev = ESP.getChipRevision();
+  #endif
+  return rev;
 }
 
 /********************************************************************************************\
@@ -382,7 +544,10 @@ String getDeviceModelBrandString(DeviceModel model) {
     case DeviceModel_ShellyPLUG_S:   return F("Shelly");
     case DeviceMode_Olimex_ESP32_PoE:
     case DeviceMode_Olimex_ESP32_EVB:
-    case DeviceMode_Olimex_ESP32_GATEWAY:  return F("Olimex");
+    case DeviceMode_Olimex_ESP32_GATEWAY:  
+    #ifdef ESP32
+      return F("Olimex");
+    #endif
 
     case DeviceModel_default:
     case DeviceModel_MAX:      break;
@@ -399,6 +564,7 @@ String getDeviceModelString(DeviceModel model) {
   result = getDeviceModelBrandString(model);
 
   switch (model) {
+#if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
     case DeviceModel_Sonoff_Basic:   result      += F(" Basic");   break;
     case DeviceModel_Sonoff_TH1x:    result      += F(" TH1x");    break;
     case DeviceModel_Sonoff_S2x:     result      += F(" S2x");     break;
@@ -410,9 +576,29 @@ String getDeviceModelString(DeviceModel model) {
     case DeviceModel_Sonoff_POWr2:   result      += F(" POW-r2");  break;
     case DeviceModel_Shelly1:        result      += '1';           break;
     case DeviceModel_ShellyPLUG_S:   result      += F(" PLUG S");  break;
+#else
+    case DeviceModel_Sonoff_Basic:
+    case DeviceModel_Sonoff_TH1x:
+    case DeviceModel_Sonoff_S2x:
+    case DeviceModel_Sonoff_TouchT1:
+    case DeviceModel_Sonoff_TouchT2:
+    case DeviceModel_Sonoff_TouchT3:
+    case DeviceModel_Sonoff_4ch:
+    case DeviceModel_Sonoff_POW:
+    case DeviceModel_Sonoff_POWr2:
+    case DeviceModel_Shelly1:
+    case DeviceModel_ShellyPLUG_S:
+      result += F("default");  break;
+#endif
+#ifdef ESP32
     case DeviceMode_Olimex_ESP32_PoE: result     += F(" ESP32-PoE"); break;
     case DeviceMode_Olimex_ESP32_EVB: result     += F(" ESP32-EVB"); break;
     case DeviceMode_Olimex_ESP32_GATEWAY: result += F(" ESP32-GATEWAY"); break;
+#else
+    case DeviceMode_Olimex_ESP32_PoE:
+    case DeviceMode_Olimex_ESP32_EVB:
+    case DeviceMode_Olimex_ESP32_GATEWAY:
+#endif
 
     case DeviceModel_default:
     case DeviceModel_MAX:            result += F("default");  break;
@@ -482,7 +668,7 @@ void setFactoryDefault(DeviceModel model) {
 /********************************************************************************************\
    Add pre defined plugins and rules.
  \*********************************************************************************************/
-void addSwitchPlugin(taskIndex_t taskIndex, byte gpio, const String& name, bool activeLow) {
+void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool activeLow) {
   setTaskDevice_to_TaskIndex(1, taskIndex);
   setBasicTaskValues(
     taskIndex,
@@ -520,7 +706,7 @@ void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings) {
   }
 }
 
-void addButtonRelayRule(byte buttonNumber, byte relay_gpio) {
+void addButtonRelayRule(byte buttonNumber, int relay_gpio) {
   Settings.UseRules = true;
   String fileName;
 
@@ -610,6 +796,30 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   return true;
 }
 
+bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
+  hasPullDown = false;
+  hasPullUp = false;
+
+  int pinnr;
+  bool input;
+  bool output;
+  bool warning;
+  if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
+    return false;
+  }
+  if (gpio >= 34) {
+    // For GPIO 34 .. 39, no pull-up nor pull-down.
+  } else if (gpio == 12) {
+    // No Pull-up on GPIO12
+    // compatible with the SDIO protocol.
+    // Just connect GPIO12 to VDD via a 10 kOhm resistor.
+  } else {
+    hasPullUp = true;
+    hasPullDown = true;
+  }
+  return true;
+}
+
 #else // ifdef ESP32
 
 // return true when pin can be used.
@@ -642,18 +852,54 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     case 15: pinnr =  8; input = false; break;
     case 16: pinnr =  0; break; // This is used by the deep-sleep mechanism
   }
-  # ifndef ESP8285
+  if (isFlashInterfacePin(gpio)) {
+    #ifdef ESP8285
+    
+    if ((gpio == 9) || (gpio == 10)) {
+      // Usable on ESP8285
+    } else {
+      warning = true;
+    }
 
-  if ((gpio == 9) || (gpio == 10)) {
-    // On ESP8266 used for flash
+    #else
+
     warning = true;
-  }
-  # endif // ifndef ESP8285
+    // On ESP8266 GPIO 9 & 10 are only usable if not connected to flash 
+    if (gpio == 9) {
+      // GPIO9 is internally used to control the flash memory.
+      input  = false;
+      output = false;
+    } else if (gpio == 10) {
+      // GPIO10 can be used as input only.
+      output = false;
+    }
 
-  if (pinnr < 0) {
+    #endif
+  }
+
+  if (pinnr < 0 || pinnr > 16) {
     input  = false;
     output = false;
     return false;
+  }
+  return true;
+}
+
+bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
+  hasPullDown = false;
+  hasPullUp = false;
+
+  int pinnr;
+  bool input;
+  bool output;
+  bool warning;
+  if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
+    return false;
+  }
+  if (gpio == 16) {
+    hasPullDown = true;
+  } else {
+    hasPullUp = true;
   }
   return true;
 }
@@ -719,14 +965,203 @@ int touchPinToGpio(int touch_pin)
 
 #endif // ifdef ESP32
 
+// ********************************************************************************
+// Manage PWM state of GPIO pins.
+// ********************************************************************************
+void initAnalogWrite()
+{
+  #if defined(ESP32)
+  for(byte x = 0; x < 16; x++) {
+    ledcSetup(x, 0, 10); // Clear the channel
+    ledChannelPin[x] = -1;
+    ledChannelFreq[x] = 0;
+  }
+  #endif
+  #ifdef ESP8266
+  // See https://github.com/esp8266/Arduino/commit/a67986915512c5304bd7c161cf0d9c65f66e0892
+  analogWriteRange(1023);
+  #endif
+}
+
+#if defined(ESP32)
+int8_t ledChannelPin[16];
+uint32_t ledChannelFreq[16];
+
+
+int8_t attachLedChannel(int pin, uint32_t frequency)
+{
+  // find existing channel if this pin has been used before
+  int8_t ledChannel = -1;
+  bool mustSetup = false;
+  for (byte x = 0; x < 16; x++) {
+    if (ledChannelPin[x] == pin) {
+      ledChannel = x;
+    }
+  }
+
+  if (ledChannel == -1)             // no channel set for this pin
+  {
+    for (byte x = 0; x < 16; x++) { // find free channel
+      if (ledChannelPin[x] == -1)
+      {
+        if (!ledcRead(x)) {
+          // Channel is not used by some other piece of code.
+          ledChannel = x;
+          mustSetup = true;
+          break;
+        }
+      }
+    }
+  }
+  if (ledChannel == -1) return ledChannel;
+  if (frequency != 0) {
+    if (ledChannelFreq[ledChannel] != frequency)
+    {
+      // Frequency is given and has changed
+      mustSetup = true;
+    }
+    ledChannelFreq[ledChannel] = frequency;
+  } else if (ledChannelFreq[ledChannel] == 0) {
+    mustSetup = true;
+    // Set some default frequency
+    ledChannelFreq[ledChannel] = 1000;
+  }
+
+  if (mustSetup) {
+    // setup channel to 10 bit and set frequency.
+    ledChannelFreq[ledChannel] = ledcSetup(ledChannel, ledChannelFreq[ledChannel], 10);
+    ledChannelPin[ledChannel] = pin; // store pin nr
+    ledcAttachPin(pin, ledChannel);  // attach to this pin
+  }
+
+  return ledChannel;
+}
+
+void detachLedChannel(int pin)
+{
+  int8_t ledChannel = -1;
+
+  for (byte x = 0; x < 16; x++) {
+    if (ledChannelPin[x] == pin) {
+      ledChannel = x;
+    }
+  }
+
+  if (ledChannel != -1) {
+    ledcWrite(ledChannel, 0);
+    ledcDetachPin(pin);
+    ledChannelPin[ledChannel] = -1;
+    ledChannelFreq[ledChannel] = 0;
+  }
+}
+
+
+uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
+{
+  if (value == 0) {
+    detachLedChannel(pin);
+    return 0;
+  }
+
+  // find existing channel if this pin has been used before
+  int8_t ledChannel = attachLedChannel(pin, frequency);
+
+  if (ledChannel != -1) {
+    ledcWrite(ledChannel, value);
+    return ledChannelFreq[ledChannel];
+  }
+  return 0;
+}
+
+#endif // if defined(ESP32)
+
+bool set_Gpio_PWM_pct(int gpio, float dutyCycle_f, uint32_t frequency) {
+  uint32_t dutyCycle = dutyCycle_f * 10.23f;
+  return set_Gpio_PWM(gpio, dutyCycle, frequency);
+}
+
+bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t frequency) {
+  uint32_t key;
+  return set_Gpio_PWM(gpio, dutyCycle, 0, frequency, key);
+}
+
+bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key)
+{
+  // For now, we only support the internal GPIO pins.
+  byte   pluginID  = PLUGIN_GPIO;
+  if (!checkValidPortRange(pluginID, gpio)) {
+    return false;
+  }
+  portStatusStruct tempStatus;
+
+  // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
+  key = createKey(pluginID, gpio);
+
+  // WARNING: operator [] creates an entry in the map if key does not exist
+  // So the next command should be part of each command:
+  tempStatus = globalMapPortStatus[key];
+
+        #if defined(ESP8266)
+  pinMode(gpio, OUTPUT);
+        #endif // if defined(ESP8266)
+
+  if ((frequency > 0) && (frequency <= 40000)) {
+        #if defined(ESP8266)
+    analogWriteFreq(frequency);
+        #endif // if defined(ESP8266)
+  }
+
+  if (fadeDuration_ms != 0)
+  {
+    const int32_t resolution_factor = (1 << 12);
+    const byte prev_mode  = tempStatus.mode;
+    int32_t   prev_value = tempStatus.getDutyCycle();
+
+    // getPinState(pluginID, gpio, &prev_mode, &prev_value);
+    if (prev_mode != PIN_MODE_PWM) {
+      prev_value = 0;
+    }
+
+    const int32_t step_value = ((static_cast<int32_t>(dutyCycle) - prev_value) * resolution_factor) / static_cast<int32_t>(fadeDuration_ms);
+    int32_t curr_value = prev_value * resolution_factor;
+
+    int i = fadeDuration_ms;
+
+    while (i--) {
+      curr_value += step_value;
+      const int16_t new_value = curr_value / resolution_factor;
+            #if defined(ESP8266)
+      analogWrite(gpio, new_value);
+            #endif // if defined(ESP8266)
+            #if defined(ESP32)
+      analogWriteESP32(gpio, new_value);
+            #endif // if defined(ESP32)
+      delay(1);
+    }
+  }
+
+        #if defined(ESP8266)
+  analogWrite(gpio, dutyCycle);
+        #endif // if defined(ESP8266)
+        #if defined(ESP32)
+  frequency = analogWriteESP32(gpio, dutyCycle, frequency);
+        #endif // if defined(ESP32)
+
+  // setPinState(pluginID, gpio, PIN_MODE_PWM, dutyCycle);
+  tempStatus.mode      = PIN_MODE_PWM;
+  tempStatus.dutyCycle = dutyCycle;
+  tempStatus.command   = 1; // set to 1 in order to display the status in the PinStatus page
+
+  savePortStatus(key, tempStatus);
+  return true;
+}
+
 
 // ********************************************************************************
 // change of device: cleanup old device and reset default settings
 // ********************************************************************************
 void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskIndex) {
-  struct EventStruct TempEvent;
-
-  TempEvent.TaskIndex = taskIndex;
+  struct EventStruct TempEvent(taskIndex);
   String dummy;
 
   // let the plugin do its cleanup by calling PLUGIN_EXIT with this TaskIndex
@@ -735,9 +1170,12 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
   ClearCustomTaskSettings(taskIndex);
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber;
-
   if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
   {
+    // FIXME TD-er: Must check if this is working (e.g. need to set nr. decimals?)
+    ExtraTaskSettings.clear();
+    ExtraTaskSettings.TaskIndex = taskIndex;
+
     // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
     PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.

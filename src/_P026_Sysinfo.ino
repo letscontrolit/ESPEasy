@@ -1,11 +1,15 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P026
 //#######################################################################################################
 //#################################### Plugin 026: System Info ##########################################
 //#######################################################################################################
 
-#include "_Plugin_Helper.h"
 
-#include "ESPEasy_packed_raw_data.h"
+#include "src/DataStructs/ESPEasy_packed_raw_data.h"
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
+#include "src/Globals/ESPEasyWiFiEvent.h"
+#include "src/Helpers/Memory.h"
+#include "ESPEasy-Globals.h"
 
 #define PLUGIN_026
 #define PLUGIN_ID_026         26
@@ -13,10 +17,10 @@
 
 // place sensor type selector right after the output value settings
 #define P026_QUERY1_CONFIG_POS  0
-#define P026_SENSOR_TYPE_INDEX  P026_QUERY1_CONFIG_POS + VARS_PER_TASK
-#define P026_NR_OUTPUT_VALUES   getValueCountFromSensorType(PCONFIG(P026_SENSOR_TYPE_INDEX))
+#define P026_SENSOR_TYPE_INDEX  (P026_QUERY1_CONFIG_POS + VARS_PER_TASK)
+#define P026_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P026_SENSOR_TYPE_INDEX)))
 
-#define P026_NR_OUTPUT_OPTIONS  12
+#define P026_NR_OUTPUT_OPTIONS  13
 
 String Plugin_026_valuename(byte value_nr, bool displayString) {
   switch (value_nr) {
@@ -32,6 +36,7 @@ String Plugin_026_valuename(byte value_nr, bool displayString) {
     case 9:  return displayString ? F("Web activity") : F("web");
     case 10: return displayString ? F("Free Stack") : F("freestack");
     case 11: return displayString ? F("None") : F("");
+    case 12: return displayString ? F("WiFi TX pwr") : F("txpwr");
     default:
       break;
   }
@@ -47,11 +52,12 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number       = PLUGIN_ID_026;
-      Device[deviceCount].VType          = SENSOR_TYPE_QUAD;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].ValueCount     = 4;
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].FormulaOption  = true;
+      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
       break;
     }
 
@@ -78,6 +84,22 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P026_NR_OUTPUT_VALUES;
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = static_cast<Sensor_VType>(PCONFIG(P026_SENSOR_TYPE_INDEX));
+      event->idx = P026_SENSOR_TYPE_INDEX;
+      success = true;
+      break;
+    }
+
+
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(0) = 0;    // "Uptime"
@@ -85,23 +107,31 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       for (byte i = 1; i < VARS_PER_TASK; ++i) {
         PCONFIG(i) = 11; // "None"
       }
-      PCONFIG(P026_SENSOR_TYPE_INDEX) = SENSOR_TYPE_QUAD;
+      PCONFIG(P026_SENSOR_TYPE_INDEX) = static_cast<byte>(Sensor_VType::SENSOR_TYPE_QUAD);
       success                         = true;
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      sensorTypeHelper_webformLoad_simple(event, P026_SENSOR_TYPE_INDEX);
       String options[P026_NR_OUTPUT_OPTIONS];
+      int indices[P026_NR_OUTPUT_OPTIONS];
 
-      for (byte i = 0; i < P026_NR_OUTPUT_OPTIONS; ++i) {
-        options[i] = Plugin_026_valuename(i, true);
+      int index = 0;
+      for (byte option = 0; option < P026_NR_OUTPUT_OPTIONS; ++option) {
+        if (option != 11) {
+          options[index] = Plugin_026_valuename(option, true);
+          indices[index] = option;
+          ++index;
+        }
       }
+      // Work around to get the "none" at the end.
+      options[index] = Plugin_026_valuename(11, true);
+      indices[index] = 11;
 
       for (byte i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
         const byte pconfigIndex = i + P026_QUERY1_CONFIG_POS;
-        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P026_NR_OUTPUT_OPTIONS, options);
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P026_NR_OUTPUT_OPTIONS, options, indices);
       }
       success = true;
       break;
@@ -115,14 +145,12 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
         const byte choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_026_valuename(choice, false));
       }
-      sensorTypeHelper_saveSensorType(event, P026_SENSOR_TYPE_INDEX);
       success = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      sensorTypeHelper_setSensorType(event, P026_SENSOR_TYPE_INDEX);
       success = true;
       break;
     }
@@ -140,7 +168,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
           if (i != 0) {
             log += ',';
           }
-          log += UserVar[event->BaseVarIndex + i];
+          log += formatUserVarNoCheck(event->TaskIndex, i);
         }
         addLog(LOG_LEVEL_INFO, log);
       }
@@ -201,7 +229,7 @@ float P026_get_value(int type)
 # if FEATURE_ADC_VCC
       value = vcc;
 # else // if FEATURE_ADC_VCC
-      value = -1.0;
+      value = -1.0f;
 # endif // if FEATURE_ADC_VCC
       break;
     }
@@ -211,23 +239,11 @@ float P026_get_value(int type)
       break;
     }
     case 5:
-    {
-      value = NetworkLocalIP()[0];
-      break;
-    }
     case 6:
-    {
-      value = NetworkLocalIP()[1];
-      break;
-    }
     case 7:
-    {
-      value = NetworkLocalIP()[2];
-      break;
-    }
     case 8:
     {
-      value = NetworkLocalIP()[3];
+      value = NetworkLocalIP()[type - 5];
       break;
     }
     case 9:
@@ -240,6 +256,12 @@ float P026_get_value(int type)
       value = getCurrentFreeStack();
       break;
     }
+    case 12:
+    {
+      value = WiFiEventData.wifi_TX_pwr;
+      break;
+    }
+
   }
   return value;
 }

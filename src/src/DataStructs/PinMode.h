@@ -1,6 +1,7 @@
 #ifndef DATASTRUCTS_PINMODE_H
 #define DATASTRUCTS_PINMODE_H
 
+// FIXME TD-er: Move this to DataTypes when GPIO PR is merged.
 
 #define PIN_MODE_UNDEFINED                  0
 #define PIN_MODE_INPUT                      1
@@ -9,6 +10,7 @@
 #define PIN_MODE_SERVO                      4
 #define PIN_MODE_INPUT_PULLUP               5
 #define PIN_MODE_OFFLINE                    6
+#define PIN_MODE_INPUT_PULLDOWN             7
 
 
 #define SEARCH_PIN_STATE                 true

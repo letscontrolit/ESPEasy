@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P051
 
 // #######################################################################################################
@@ -13,7 +14,6 @@
 
 
 #include <AM2320.h>
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_051
 #define PLUGIN_ID_051        51
@@ -32,7 +32,7 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_051;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_TEMP_HUM;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -85,12 +85,14 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex]     = th.t;
           UserVar[event->BaseVarIndex + 1] = th.h;
 
-          String log = F("AM2320: Temperature: ");
-          log += UserVar[event->BaseVarIndex];
-          addLog(LOG_LEVEL_INFO, log);
-          log  = F("AM2320: Humidity: ");
-          log += UserVar[event->BaseVarIndex + 1];
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("AM2320: Temperature: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
+            addLog(LOG_LEVEL_INFO, log);
+            log  = F("AM2320: Humidity: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 1);
+            addLog(LOG_LEVEL_INFO, log);
+          }
           success = true;
           break;
         }

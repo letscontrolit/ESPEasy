@@ -338,24 +338,24 @@ bool rn2xx3_handler::initOTAA(uint8_t *AppEUI, uint8_t *AppKey, uint8_t *DevEUI)
 
   for (uint8_t i = 0; i < 8; i++)
   {
-    sprintf(buff, "%02X", AppEUI[i]);
+    sprintf_P(buff, PSTR("%02X"), AppEUI[i]);
     app_eui += String(buff);
   }
 
   if (DevEUI == nullptr)
   {
-    dev_eui = "0";
+    dev_eui = '0';
   } else {
     for (uint8_t i = 0; i < 8; i++)
     {
-      sprintf(buff, "%02X", DevEUI[i]);
+      sprintf_P(buff, PSTR("%02X"), DevEUI[i]);
       dev_eui += String(buff);
     }
   }
 
   for (uint8_t i = 0; i < 16; i++)
   {
-    sprintf(buff, "%02X", AppKey[i]);
+    sprintf_P(buff, PSTR("%02X"), AppKey[i]);
     app_key += String(buff);
   }
 
@@ -441,6 +441,7 @@ bool rn2xx3_handler::setSF(uint8_t sf)
     if (dr >= 0)
     {
       _sf = sf;
+      _dr = dr;
       return setDR(dr);
     }
   }
@@ -590,10 +591,10 @@ bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
     default:
     {
       // set default channels 868.1, 868.3 and 868.5?
-      returnValue = false; // well we didn't do anything, so yes, false
-      break;
+      return false; // well we didn't do anything, so yes, false
     }
   }
+  _fp = fp;
 
   return returnValue;
 }
@@ -678,6 +679,10 @@ rn2xx3_handler::RN_state rn2xx3_handler::get_state() const {
   return _state;
 }
 
+uint8_t rn2xx3_handler::get_busy_count() const {
+  return _busy_count;
+}
+
 String rn2xx3_handler::sysver() {
   String ver = sendRawCommand(F("sys get ver"));
 
@@ -691,6 +696,56 @@ bool rn2xx3_handler::getRxDelayValues(uint32_t& rxdelay1,
   rxdelay1 = _rxdelay1;
   rxdelay2 = _rxdelay2;
   return _rxdelay1 != 0 && _rxdelay2 != 0;
+}
+
+float rn2xx3_handler::getLoRaAirTime(uint8_t  pl) const
+{
+  uint8_t  sf         = _sf;  // Spreading factor 7 - 12
+  uint16_t bw         = 125;  // Bandwidth 125 kHz default for LoRaWAN. 250 kHz also supported.
+  uint8_t  cr         = 1;    // Code Rate 4 / (CR + 4) = 4/5.  4/5 default for LoRaWAN
+  uint8_t  n_preamble = 8;    // Preamble length Default for frame = 8, beacon = 10
+  bool     header     = true; // Explicit header Default on for LoRaWAN
+  bool     crc        = true; // CRC Default on for LoRaWAN
+
+  if (sf > 12) {
+    sf = 12;
+  } else if (sf < 7) {
+    sf = 7;
+  }
+
+  if (cr > 4) {
+    cr = 4;
+  } else if (cr < 1) {
+    cr = 1;
+  }
+
+  // Symbols in frame
+  int payload_length = 8;
+  {
+    int beta_offset = 28;
+
+    if (crc) { beta_offset += 16; }
+
+    if (!header) { beta_offset -= 20; }
+    float beta_f                  = 8.0f * pl - 4.0f * sf + beta_offset;
+    bool  lowDataRateOptimization = (bw == 125 && sf >= 11);
+
+    if (lowDataRateOptimization) {
+      beta_f = beta_f / (4.0f * (sf - 2));
+    } else {
+      beta_f = beta_f / (4.0f * sf);
+    }
+    int beta = static_cast<int>(beta_f + 1.0f); // ceil
+
+    if (beta > 0) {
+      payload_length += (beta * (cr + 4));
+    }
+  }
+
+  // t_symbol and t_air in msec
+  float t_symbol = static_cast<float>(1 << sf) / bw;
+  float t_air    = ((n_preamble + 4.25f) + payload_length) * t_symbol;
+  return t_air;
 }
 
 void rn2xx3_handler::set_state(rn2xx3_handler::RN_state state) {
@@ -1014,7 +1069,7 @@ void rn2xx3_handler::handle_reply_received() {
       }
       else
       {
-        delay(1000);
+        delay(100);
       }
       break;
     }

@@ -1,10 +1,11 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P007
 
 // #######################################################################################################
 // #################################### Plugin 007: ExtWiredAnalog #######################################
 // #######################################################################################################
 
-#include "_Plugin_Helper.h"
+
 
 #define PLUGIN_007
 #define PLUGIN_ID_007         7
@@ -23,7 +24,7 @@ boolean Plugin_007(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_007;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 4;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -65,7 +66,7 @@ boolean Plugin_007(byte function, struct EventStruct *event, String& string)
         Wire.read();                                       // Read older value first (stored in chip)
         UserVar[event->BaseVarIndex] = (float)Wire.read(); // now read actual value and store into Nodo var
         String log = F("PCF  : Analog value: ");
-        log += UserVar[event->BaseVarIndex];
+        log += formatUserVarNoCheck(event->TaskIndex, 0);
         addLog(LOG_LEVEL_INFO, log);
         success = true;
       }

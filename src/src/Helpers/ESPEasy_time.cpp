@@ -1,8 +1,7 @@
 #include "ESPEasy_time.h"
 
-#include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_Log.h"
-#include "../../ESPEasy_fdwdecl.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
@@ -10,6 +9,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 
 #include "ESPEasy_time_calc.h"
@@ -40,13 +40,7 @@ struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLoca
 
 
 void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
-  uint8_t  year;
-  uint8_t  month, monthLength;
-  uint32_t time;
-  unsigned long days;
-  const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
-  time       = (uint32_t)timeInput;
+  uint32_t time = (uint32_t)timeInput;
   tm.tm_sec  = time % 60;
   time      /= 60;                   // now it is minutes
   tm.tm_min  = time % 60;
@@ -55,40 +49,27 @@ void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
   time      /= 24;                   // now it is days
   tm.tm_wday = ((time + 4) % 7) + 1; // Sunday is day 1
 
-  year = 0;
-  days = 0;
-
+  int      year = 1970;
+  unsigned long days = 0;
   while ((unsigned)(days += (isLeapYear(year) ? 366 : 365)) <= time) {
     year++;
   }
-  tm.tm_year = year; // year is offset from 1970
+  tm.tm_year = year - 1900; // tm_year starts at 1900
 
   days -= isLeapYear(year) ? 366 : 365;
   time -= days;      // now it is days in this year, starting at 0
 
-  days        = 0;
-  month       = 0;
-  monthLength = 0;
-
+  uint8_t month = 0;
   for (month = 0; month < 12; month++) {
-    if (month == 1) { // february
-      if (isLeapYear(year)) {
-        monthLength = 29;
-      } else {
-        monthLength = 28;
-      }
-    } else {
-      monthLength = monthDays[month];
-    }
-
+    const uint8_t monthLength = getMonthDays(year, month);
     if (time >= monthLength) {
       time -= monthLength;
     } else {
       break;
     }
   }
-  tm.tm_mon  = month + 1; // jan is month 1
-  tm.tm_mday = time + 1;  // day of month
+  tm.tm_mon  = month;     // Jan is month 0
+  tm.tm_mday = time + 1;  // day of month start at 1
 }
 
 
@@ -131,12 +112,12 @@ unsigned long ESPEasy_time::now() {
     // nextSyncTime & sysTime are in seconds
     double unixTime_d = -1.0;
 
-    if (externalTimeSource > 0.0) {
+    if (externalTimeSource > 0.0f) {
       unixTime_d         = externalTimeSource;
       externalTimeSource = -1.0;
     }
 
-    if ((unixTime_d > 0.0) || getNtpTime(unixTime_d)) {
+    if ((unixTime_d > 0.0f) || getNtpTime(unixTime_d)) {
       prevMillis = millis(); // restart counting from now (thanks to Korman for this fix)
       timeSynced = true;
 
@@ -148,9 +129,9 @@ unsigned long ESPEasy_time::now() {
         if (-86400 < time_offset && time_offset < 86400) {
           // Only useful to show adjustment if it is less than a day.
           log += F(" Time adjusted by ");
-          log += String(time_offset * 1000.0);
+          log += String(time_offset * 1000.0f);
           log += F(" msec. Wander: ");
-          log += String((time_offset * 1000.0) / syncInterval);
+          log += String((time_offset * 1000.0f) / syncInterval);
           log += F(" msec/second");
         }
         addLog(LOG_LEVEL_INFO, log)
@@ -220,7 +201,7 @@ bool ESPEasy_time::systemTimePresent() const {
     case Manual_set:
       return true;
   }
-  return nextSyncTime > 0 || Settings.UseNTP || externalTimeSource > 0.0;
+  return nextSyncTime > 0 || Settings.UseNTP || externalTimeSource > 0.0f;
 }
 
 
@@ -357,7 +338,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       unixTime_d = static_cast<double>(txTm);
 
       // Add fractional part.
-      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0);
+      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0f);
 
       long total_delay = timePassedSince(beginWait);
 
@@ -384,6 +365,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       }
       udp.stop();
       timeSource = NTP_time_source;
+      CheckRunningServices(); // FIXME TD-er: Sometimes services can only be started after NTP is successful
       return true;
     }
     delay(10);
@@ -414,9 +396,9 @@ String ESPEasy_time::getDateString(char delimiter) const
 String ESPEasy_time::getDateString(const struct tm& ts, char delimiter) {
   // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
   char DateString[20]; // 19 digits plus the null char
-  const int year = 1970 + ts.tm_year;
+  const int year = 1900 + ts.tm_year;
 
-  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.tm_mon, delimiter, ts.tm_mday);
+  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.tm_mon + 1, delimiter, ts.tm_mday);
   return DateString;
 }
 
@@ -493,7 +475,7 @@ int ESPEasy_time::year(unsigned long t)
   struct tm tmp;
 
   breakTime(t, tmp);
-  return 1970 + tmp.tm_year;
+  return 1900 + tmp.tm_year;
 }
 
 int ESPEasy_time::weekday(unsigned long t)
@@ -536,10 +518,11 @@ int ESPEasy_time::getSecOffset(const String& format) {
   if (position_percent == -1) {
     return 0;
   }
-  String valueStr = getNumerical(format.substring(sign_position, position_percent), true);
 
-  if (!isInt(valueStr)) { return 0; }
-  int value = valueStr.toInt();
+  int value;
+  if (!validIntFromString(format.substring(sign_position, position_percent), value)) {
+    return 0;
+  }
 
   switch (format.charAt(position_percent - 1)) {
     case 'm':
@@ -584,11 +567,11 @@ float ESPEasy_time::sunDeclination(int doy) {
 
 float ESPEasy_time::diurnalArc(float dec, float lat) {
   // Duration of the half sun path in hours (time from sunrise to the highest level in the south)
-  float rad    = 0.0174532925; // = pi/180.0
-  float height = -50.0 / 60.0 * rad;
+  float rad    = 0.0174532925f; // = pi/180.0
+  float height = -50.0f / 60.0f * rad;
   float latRad = lat * rad;
 
-  return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / 3.1415926536;
+  return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / M_PI;
 }
 
 float ESPEasy_time::equationOfTime(int doy) {
@@ -613,7 +596,7 @@ int ESPEasy_time::dayOfYear(int year, int month, int day) {
 }
 
 void ESPEasy_time::calcSunRiseAndSet() {
-  int   doy  = dayOfYear(tm.tm_year, tm.tm_mon, tm.tm_mday);
+  int   doy  = dayOfYear(tm.tm_year, tm.tm_mon + 1, tm.tm_mday);
   float eqt  = equationOfTime(doy);
   float dec  = sunDeclination(doy);
   float da   = diurnalArc(dec, Settings.Latitude);
@@ -621,15 +604,15 @@ void ESPEasy_time::calcSunRiseAndSet() {
   float set  = 12 + da - eqt;
 
   tsRise.tm_hour = (int)rise;
-  tsRise.tm_min  = (rise - (int)rise) * 60.0;
+  tsRise.tm_min  = (rise - (int)rise) * 60.0f;
   tsSet.tm_hour  = (int)set;
-  tsSet.tm_min   = (set - (int)set) * 60.0;
+  tsSet.tm_min   = (set - (int)set) * 60.0f;
   tsRise.tm_mday = tsSet.tm_mday = tm.tm_mday;
   tsRise.tm_mon  = tsSet.tm_mon = tm.tm_mon;
   tsRise.tm_year = tsSet.tm_year = tm.tm_year;
 
   // Now apply the longitude
-  int secOffset_longitude = -1.0 * (Settings.Longitude / 15.0) * 3600;
+  int secOffset_longitude = -1.0f * (Settings.Longitude / 15.0f) * 3600;
   tsSet  = addSeconds(tsSet, secOffset_longitude, false);
   tsRise = addSeconds(tsRise, secOffset_longitude, false);
 

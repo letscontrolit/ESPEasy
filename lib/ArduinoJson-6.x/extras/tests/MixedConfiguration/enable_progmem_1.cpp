@@ -53,33 +53,33 @@ TEST_CASE("Flash strings") {
 }
 
 TEST_CASE("strlen_P") {
-  CHECK(strlen_P(FC("")) == 0);
-  CHECK(strlen_P(FC("a")) == 1);
-  CHECK(strlen_P(FC("ac")) == 2);
+  CHECK(strlen_P(PSTR("")) == 0);
+  CHECK(strlen_P(PSTR("a")) == 1);
+  CHECK(strlen_P(PSTR("ac")) == 2);
 }
 
 TEST_CASE("strncmp_P") {
-  CHECK(strncmp_P("a", FC("b"), 0) == 0);
-  CHECK(strncmp_P("a", FC("b"), 1) == -1);
-  CHECK(strncmp_P("b", FC("a"), 1) == 1);
-  CHECK(strncmp_P("a", FC("a"), 0) == 0);
-  CHECK(strncmp_P("a", FC("b"), 2) == -1);
-  CHECK(strncmp_P("b", FC("a"), 2) == 1);
-  CHECK(strncmp_P("a", FC("a"), 2) == 0);
+  CHECK(strncmp_P("a", PSTR("b"), 0) == 0);
+  CHECK(strncmp_P("a", PSTR("b"), 1) == -1);
+  CHECK(strncmp_P("b", PSTR("a"), 1) == 1);
+  CHECK(strncmp_P("a", PSTR("a"), 0) == 0);
+  CHECK(strncmp_P("a", PSTR("b"), 2) == -1);
+  CHECK(strncmp_P("b", PSTR("a"), 2) == 1);
+  CHECK(strncmp_P("a", PSTR("a"), 2) == 0);
 }
 
 TEST_CASE("strcmp_P") {
-  CHECK(strcmp_P("a", FC("b")) == -1);
-  CHECK(strcmp_P("b", FC("a")) == 1);
-  CHECK(strcmp_P("a", FC("a")) == 0);
-  CHECK(strcmp_P("aa", FC("ab")) == -1);
-  CHECK(strcmp_P("ab", FC("aa")) == 1);
-  CHECK(strcmp_P("aa", FC("aa")) == 0);
+  CHECK(strcmp_P("a", PSTR("b")) == -1);
+  CHECK(strcmp_P("b", PSTR("a")) == 1);
+  CHECK(strcmp_P("a", PSTR("a")) == 0);
+  CHECK(strcmp_P("aa", PSTR("ab")) == -1);
+  CHECK(strcmp_P("ab", PSTR("aa")) == 1);
+  CHECK(strcmp_P("aa", PSTR("aa")) == 0);
 }
 
 TEST_CASE("memcpy_P") {
   char dst[4];
-  CHECK(memcpy_P(dst, FC("ABC"), 4) == dst);
+  CHECK(memcpy_P(dst, PSTR("ABC"), 4) == dst);
   CHECK(dst[0] == 'A');
   CHECK(dst[1] == 'B');
   CHECK(dst[2] == 'C');
@@ -164,4 +164,23 @@ TEST_CASE("Reader<const __FlashStringHelper*>") {
     REQUIRE(buffer[5] == 'F');
     REQUIRE(buffer[6] == 'g');
   }
+}
+
+static void testStringification(DeserializationError error,
+                                std::string expected) {
+  const __FlashStringHelper* s = error.f_str();
+  CHECK(reinterpret_cast<const char*>(convertFlashToPtr(s)) == expected);
+}
+
+#define TEST_STRINGIFICATION(symbol) \
+  testStringification(DeserializationError::symbol, #symbol)
+
+TEST_CASE("DeserializationError::f_str()") {
+  TEST_STRINGIFICATION(Ok);
+  TEST_STRINGIFICATION(EmptyInput);
+  TEST_STRINGIFICATION(IncompleteInput);
+  TEST_STRINGIFICATION(InvalidInput);
+  TEST_STRINGIFICATION(NoMemory);
+  TEST_STRINGIFICATION(NotSupported);
+  TEST_STRINGIFICATION(TooDeep);
 }
