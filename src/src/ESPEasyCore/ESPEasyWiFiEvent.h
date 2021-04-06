@@ -51,11 +51,13 @@ void onDisconnect(const WiFiEventStationModeDisconnected& event);
 
 void onGotIP(const WiFiEventStationModeGotIP& event);
 
-void ICACHE_RAM_ATTR onDHCPTimeout();
+void onDHCPTimeout();
 
 void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event);
 
 void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event);
+
+void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event);
 
 #endif // ifdef ESP32
 

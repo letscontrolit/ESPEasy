@@ -1,3 +1,5 @@
+.. _Hardware_page:
+
 Hardware page
 *************
 

@@ -2,13 +2,13 @@
 
 #include "../../ESPEasy_common.h"
 
-// Ethernet Connectiopn status
-NetworkMedium_t active_network_medium = DEFAULT_NETWORK_MEDIUM;
-bool eth_connected = false;
 
+// Ethernet Connection status
+NetworkMedium_t active_network_medium = DEFAULT_NETWORK_MEDIUM;
 
 bool webserverRunning(false);
 bool webserver_init(false);
+bool mDNS_init(false);
 
 
 // NTP status

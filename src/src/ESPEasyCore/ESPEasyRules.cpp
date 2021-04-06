@@ -15,6 +15,7 @@
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
@@ -430,7 +431,8 @@ bool get_next_argument(const String& fullCommand, int& index, String& argument, 
 }
 
 bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, int64_t& result) {
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Bitwise: {");
     log += wrapIfContains(cmd_s_lower, ':', '\"');
     log += ':';
@@ -446,8 +448,9 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
       }
     }
     log += '}';
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_DEBUG, log);
   }
+  #endif
 
   if (cmd_s_lower.length() < 2) {
     return false;
@@ -1062,8 +1065,8 @@ bool conditionMatchExtended(String& check) {
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("conditionMatchExtended: ");
       log += debugstr;
-      log += '_';
-      log += check;
+      log += ' ';
+      log += wrap_String(check, '"');
       addLog(LOG_LEVEL_DEBUG, log);
     }
     #endif // ifndef BUILD_NO_DEBUG
@@ -1152,6 +1155,13 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
     found    = true;
   }
 
+  if (((comparePos = check.indexOf(F("=="))) > 0) && (comparePos < posStart)) {
+    posStart = comparePos;
+    posEnd   = posStart + 2;
+    compare  = '=';
+    found    = true;
+  }
+
   if (((comparePos = check.indexOf('<')) > 0) && (comparePos < posStart)) {
     posStart = comparePos;
     posEnd   = posStart + 1;
@@ -1201,20 +1211,27 @@ bool compareDoubleValues(char compare, const double& Value1, const double& Value
   return false;
 }
 
-void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seconds)
+void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seconds, bool valid)
 {
   #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
     log  = F("timeStringToSeconds: ");
-    log += tBuf;
-    log += F(" -> ");
-    log += hours;
-    log += ':';
-    log += minutes;
-    log += ':';
-    log += seconds;
+    log += wrap_String(tBuf, '"');
+    log += F(" --> ");
+    if (valid) {
+      if (hours < 10) log += '0';
+      log += hours;
+      log += ':';
+      if (minutes < 10) log += '0';
+      log += minutes;
+      log += ':';
+      if (seconds < 10) log += '0';
+      log += seconds;
+    } else {
+      log += F("invalid");
+    }
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
@@ -1223,7 +1240,23 @@ void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seco
 
 // convert old and new time string to nr of seconds
 // return whether it should be considered a time string.
-bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
+bool timeStringToSeconds(const String& tBuf, int& time_seconds, String& timeString) {
+  {
+    // Make sure we only check for expected characters
+    // e.g. if 10:11:12 > 7:07 and 10:11:12 < 20:09:04
+    // Should only try to match "7:07", not "7:07 and 10:11:12" 
+    // Or else it will find "7:07:11"
+    bool done = false;
+    for (byte pos = 0; !done && timeString.length() < 8 && pos < tBuf.length(); ++pos) {
+      char c = tBuf[pos];
+      if (isdigit(c) || c == ':') {
+        timeString += c;
+      } else {
+        done = true;
+      }
+    }
+  }
+
   time_seconds = -1;
   int hours   = 0;
   int minutes = 0;
@@ -1233,7 +1266,7 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
   String hours_str, minutes_str, seconds_str;
   bool   validTime = false;
 
-  if (get_next_argument(tBuf, tmpIndex, hours_str, ':')) {
+  if (get_next_argument(timeString, tmpIndex, hours_str, ':')) {
     if (validIntFromString(hours_str, hours)) {
       validTime = true;
 
@@ -1243,7 +1276,7 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
         time_seconds = hours * 60 * 60;
       }
 
-      if (validTime && get_next_argument(tBuf, tmpIndex, minutes_str, ':')) {
+      if (validTime && get_next_argument(timeString, tmpIndex, minutes_str, ':')) {
         if (validIntFromString(minutes_str, minutes)) {
           if ((minutes < 0) || (minutes > 59)) {
             validTime = false;
@@ -1251,7 +1284,7 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
             time_seconds += minutes * 60;
           }
 
-          if (validTime && get_next_argument(tBuf, tmpIndex, seconds_str, ':')) {
+          if (validTime && get_next_argument(timeString, tmpIndex, seconds_str, ':')) {
             // New format, only HH:MM:SS
             if (validIntFromString(seconds_str, seconds)) {
               if ((seconds < 0) || (seconds > 59)) {
@@ -1271,8 +1304,38 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
       }
     }
   }
-  logtimeStringToSeconds(tBuf, hours, minutes, seconds);
+  logtimeStringToSeconds(timeString, hours, minutes, seconds, validTime);
   return validTime;
+}
+
+// Balance the count of parentheses (aka round braces) by adding the missing left or right parentheses, if any
+// Returns the number of added parentheses, < 0 is left parentheses added, > 0 is right parentheses added
+int balanceParentheses(String& string) {
+  int left = 0;
+  int right = 0;
+  for (unsigned int i = 0; i < string.length(); i++) {
+    switch (string[i]) {
+      case '(':
+        left++;
+        break;
+      case ')':
+        right++;
+        break;
+    }
+  }
+  if (left != right) {
+    string.reserve(string.length() + abs(right - left)); // Re-allocate max. once
+  }
+  if (left > right) {
+    for (int i = 0; i < left - right; i++) {
+      string += ')';
+    }
+  } else if (right > left) {
+    for (int i = 0; i < right - left; i++) {
+      string = String(F("(")) + string; // This is quite 'expensive'
+    }
+  }
+  return left - right;
 }
 
 bool conditionMatch(const String& check) {
@@ -1293,8 +1356,9 @@ bool conditionMatch(const String& check) {
 
   int  timeInSec1 = 0;
   int  timeInSec2 = 0;
-  bool validTime1 = timeStringToSeconds(tmpCheck1, timeInSec1);
-  bool validTime2 = timeStringToSeconds(tmpCheck2, timeInSec2);
+  String timeString1, timeString2;
+  bool validTime1 = timeStringToSeconds(tmpCheck1, timeInSec1, timeString1);
+  bool validTime2 = timeStringToSeconds(tmpCheck2, timeInSec2, timeString2);
   bool result     = false;
 
   bool compareTimes = false;
@@ -1305,9 +1369,23 @@ bool conditionMatch(const String& check) {
     // AND both can be considered a time, so use it as a time and compare seconds.
     compareTimes = true;
     result       = compareIntValues(compare, timeInSec1, timeInSec2);
+    tmpCheck1    = timeString1;
+    tmpCheck2    = timeString2;
   } else {
-    if (!validDoubleFromString(tmpCheck1, Value1) ||
-        !validDoubleFromString(tmpCheck2, Value2))
+    int condAnd = tmpCheck2.indexOf(F(" and "));
+    int condOr  = tmpCheck2.indexOf(F(" or "));
+    if (condAnd > -1 || condOr > -1) {            // Only parse first condition, rest will be parsed 'later'
+      if (condAnd > -1 && (condOr == -1 || condAnd < condOr)) {
+        tmpCheck2 = tmpCheck2.substring(0, condAnd);
+      } else if (condOr > -1) {
+        tmpCheck2 = tmpCheck2.substring(0, condOr);
+      }
+      tmpCheck2.trim();
+    }
+    balanceParentheses(tmpCheck1);
+    balanceParentheses(tmpCheck2);
+    if (isError(Calculate(tmpCheck1, Value1)) ||
+        isError(Calculate(tmpCheck2, Value2)))
     {
       return false;
     }
@@ -1317,29 +1395,24 @@ bool conditionMatch(const String& check) {
   #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("conditionMatch: _");
-    log += check;
-    log += F("_ val1: ");
+    String log = F("conditionMatch: ");
+    log += wrap_String(check, '"');
+    log += F(" --> ");
 
-    if (compareTimes) {
-      log += timeInSec1;
-    } else {
-      log += Value1;
-    }
-    log += F(" \"");
-    log += tmpCheck1;
-    log += F("\" val2: ");
+    log += wrap_String(tmpCheck1, '"');
+    log += wrap_String(check.substring(posStart, posEnd), ' '); // Compare
+    log += wrap_String(tmpCheck2, '"');
 
-    if (compareTimes) {
-      log += timeInSec2;
-    } else {
-      log += Value2;
-    }
-    log += F(" \"");
-    log += tmpCheck2;
-    log += F("\" ");
-    log += F(" = ");
+    log += F(" --> ");
     log += boolToString(result);
+    log += ' ';
+
+    log += '(';
+    const bool trimTrailingZeros = true;
+    log += compareTimes ? String(timeInSec1) : doubleToString(Value1, 6, trimTrailingZeros);
+    log += wrap_String(check.substring(posStart, posEnd), ' '); // Compare
+    log += compareTimes ? String(timeInSec2) : doubleToString(Value2, 6, trimTrailingZeros);
+    log += ')';
     addLog(LOG_LEVEL_DEBUG, log);
   }
   #else // ifndef BUILD_NO_DEBUG

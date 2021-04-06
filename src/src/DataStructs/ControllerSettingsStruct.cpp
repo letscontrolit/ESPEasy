@@ -254,3 +254,23 @@ void ControllerSettingsStruct::sendBinary(bool value)
 {
   bitWrite(VariousFlags, 7, value);
 }
+
+bool ControllerSettingsStruct::allowExpire() const
+{
+  return bitRead(VariousFlags, 9);
+}
+
+void ControllerSettingsStruct::allowExpire(bool value)
+{
+  bitWrite(VariousFlags, 9, value);
+}
+
+bool ControllerSettingsStruct::deduplicate() const
+{
+  return bitRead(VariousFlags, 10);
+}
+
+void ControllerSettingsStruct::deduplicate(bool value)
+{
+  bitWrite(VariousFlags, 10, value);
+}

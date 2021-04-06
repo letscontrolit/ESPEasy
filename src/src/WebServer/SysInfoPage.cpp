@@ -13,6 +13,7 @@
 #include "../DataStructs/RTCStruct.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/ESPEasy_time.h"
@@ -91,32 +92,15 @@ void handle_sysinfo_json() {
   # endif // ifndef BUILD_NO_RAM_TRACKER
             );
   json_close();
+
   json_open(false, F("boot"));
   json_prop(F("last_cause"), getLastBootCauseString());
   json_number(F("counter"), String(RTC.bootCounter));
   json_prop(F("reset_reason"), getResetReasonString());
   json_close();
+
   json_open(false, F("wifi"));
-
-  # if defined(ESP8266)
-  byte PHYmode = wifi_get_phy_mode();
-  # endif // if defined(ESP8266)
-  # if defined(ESP32)
-  byte PHYmode = 3; // wifi_get_phy_mode();
-  # endif // if defined(ESP32)
-
-  switch (PHYmode)
-  {
-    case 1:
-      json_prop(F("type"), F("802.11B"));
-      break;
-    case 2:
-      json_prop(F("type"), F("802.11G"));
-      break;
-    case 3:
-      json_prop(F("type"), F("802.11N"));
-      break;
-  }
+  json_prop(F("type"), toString(getConnectionProtocol()));
   json_number(F("rssi"), String(WiFi.RSSI()));
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
   json_prop(F("ip"),            getValue(LabelType::IP_ADDRESS));
@@ -129,10 +113,11 @@ void handle_sysinfo_json() {
   json_prop(F("ap_mac"),        getValue(LabelType::AP_MAC));
   json_prop(F("ssid"),          getValue(LabelType::SSID));
   json_prop(F("bssid"),         getValue(LabelType::BSSID));
-  json_number(F("channel"), getValue(LabelType::CHANNEL));
-  json_prop(F("connected"), getValue(LabelType::CONNECTED));
-  json_prop(F("ldr"),       getValue(LabelType::LAST_DISC_REASON_STR));
-  json_number(F("reconnects"), getValue(LabelType::NUMBER_RECONNECTS));
+  json_number(F("channel"),     getValue(LabelType::CHANNEL));
+  json_prop(F("encryption"),    getValue(LabelType::ENCRYPTION_TYPE_STA));
+  json_prop(F("connected"),     getValue(LabelType::CONNECTED));
+  json_prop(F("ldr"),           getValue(LabelType::LAST_DISC_REASON_STR));
+  json_number(F("reconnects"),  getValue(LabelType::NUMBER_RECONNECTS));
   json_close();
 
 # ifdef HAS_ETHERNET
@@ -396,68 +381,51 @@ void handle_sysinfo_Ethernet() {
     addRowLabelValue(LabelType::ETH_SPEED);
     addRowLabelValue(LabelType::ETH_DUPLEX);
     addRowLabelValue(LabelType::ETH_MAC);
-    addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
-    addRowLabelValue(LabelType::ETH_IP_GATEWAY);
-    addRowLabelValue(LabelType::ETH_IP_DNS);
+//    addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
+//    addRowLabelValue(LabelType::ETH_IP_GATEWAY);
+//    addRowLabelValue(LabelType::ETH_IP_DNS);
   }
 }
 
 # endif // ifdef HAS_ETHERNET
 
 void handle_sysinfo_Network() {
-  addTableSeparator(F("Network"), 2, 3, F("Wifi"));
+  addTableSeparator(F("Network"), 2, 3);
 
   # ifdef HAS_ETHERNET
   addRowLabelValue(LabelType::ETH_WIFI_MODE);
   # endif // ifdef HAS_ETHERNET
 
-
-  if (
-    # ifdef HAS_ETHERNET
-    active_network_medium == NetworkMedium_t::WIFI &&
-    # endif // ifdef HAS_ETHERNET
-    NetworkConnected())
-  {
-    addRowLabel(F("Wifi"));
-    # if defined(ESP8266)
-    byte PHYmode = wifi_get_phy_mode();
-    # endif // if defined(ESP8266)
-    # if defined(ESP32)
-    byte PHYmode = 3; // wifi_get_phy_mode();
-    # endif // if defined(ESP32)
-
-    {
-      String html;
-      html.reserve(64);
-
-      switch (PHYmode)
-      {
-        case 1:
-          html += F("802.11B");
-          break;
-        case 2:
-          html += F("802.11G");
-          break;
-        case 3:
-          html += F("802.11N");
-          break;
-      }
-      html += F(" (RSSI ");
-      html += WiFi.RSSI();
-      html += F(" dB)");
-      addHtml(html);
-    }
-  }
   addRowLabelValue(LabelType::IP_CONFIG);
   addRowLabelValue(LabelType::IP_ADDRESS_SUBNET);
   addRowLabelValue(LabelType::GATEWAY);
   addRowLabelValue(LabelType::CLIENT_IP);
   addRowLabelValue(LabelType::DNS);
   addRowLabelValue(LabelType::ALLOWED_IP_RANGE);
-  addRowLabelValue(LabelType::STA_MAC);
-  addRowLabelValue(LabelType::AP_MAC);
+  addRowLabelValue(LabelType::CONNECTED);
+  addRowLabelValue(LabelType::NUMBER_RECONNECTS);
+
+  addTableSeparator(F("WiFi"), 2, 3, F("Wifi"));
+
+  const bool showWiFiConnectionInfo = 
+    active_network_medium == NetworkMedium_t::WIFI &&
+    NetworkConnected();
+
+  addRowLabel(F("Wifi Connection"));
+  if (showWiFiConnectionInfo)
+  {
+    String html;
+    html.reserve(64);
+
+    html += toString(getConnectionProtocol());
+    html += F(" (RSSI ");
+    html += WiFi.RSSI();
+    html += F(" dBm)");
+    addHtml(html);
+  } else addHtml('-');
 
   addRowLabel(LabelType::SSID);
+  if (showWiFiConnectionInfo)
   {
     String html;
     html.reserve(64);
@@ -467,13 +435,26 @@ void handle_sysinfo_Network() {
     html += WiFi.BSSIDstr();
     html += ')';
     addHtml(html);
+  } else addHtml('-');
+
+  addRowLabel(getLabel(LabelType::CHANNEL));
+  if (showWiFiConnectionInfo) {
+    addHtml(getValue(LabelType::CHANNEL));
+  } else addHtml('-');
+
+  addRowLabel(getLabel(LabelType::ENCRYPTION_TYPE_STA));
+  if (showWiFiConnectionInfo) {
+    addHtml(getValue(LabelType::ENCRYPTION_TYPE_STA));
+  } else addHtml('-');
+
+  if (active_network_medium == NetworkMedium_t::WIFI)
+  {
+    addRowLabel(LabelType::LAST_DISCONNECT_REASON);
+    addHtml(getValue(LabelType::LAST_DISC_REASON_STR));
   }
 
-  addRowLabelValue(LabelType::CHANNEL);
-  addRowLabelValue(LabelType::CONNECTED);
-  addRowLabel(LabelType::LAST_DISCONNECT_REASON);
-  addHtml(getValue(LabelType::LAST_DISC_REASON_STR));
-  addRowLabelValue(LabelType::NUMBER_RECONNECTS);
+  addRowLabelValue(LabelType::STA_MAC);
+  addRowLabelValue(LabelType::AP_MAC);
 }
 
 void handle_sysinfo_WiFiSettings() {
@@ -487,6 +468,10 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
 # endif // ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
+  addRowLabelValue(LabelType::WIFI_TX_MAX_PWR);
+  addRowLabelValue(LabelType::WIFI_CUR_TX_PWR);
+  addRowLabelValue(LabelType::WIFI_SENS_MARGIN);
+  addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
 }
 
 void handle_sysinfo_Firmware() {

@@ -51,7 +51,7 @@ The NodeMCU boards have almost all usable pins made available and some which nee
      - :yellow:`Boot fail if pulled high`
    * - 16 (D0)
      - :red:`High at boot, pull down to GND`:yellow:`no interrupt`
-     - :yellow:`no PWM / I2C support`
+     - :yellow:`no I2C support`
      - Used to wake up from deep sleep
    * - 9 (SD2)
      - :red:`High at boot`

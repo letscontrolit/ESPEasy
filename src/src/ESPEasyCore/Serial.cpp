@@ -119,9 +119,11 @@ void process_serialWriteBuffer() {
 
     if (snip < bytes_to_write) { bytes_to_write = snip; }
 
-    while (bytes_to_write > 0) {
+    while (bytes_to_write > 0 && !serialWriteBuffer.empty()) {
       const char c = serialWriteBuffer.front();
-      Serial.write(c);
+      if (Settings.UseSerial) {
+        Serial.write(c);
+      }
       serialWriteBuffer.pop_front();
       --bytes_to_write;
     }
