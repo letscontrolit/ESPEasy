@@ -56,10 +56,10 @@ uint16_t P113_data_struct::readDistance() {
 
   success = false;
 
-#if defined(P113_DEBUG) || defined (P113_DEBUG_DEBUG)
+  #if defined(P113_DEBUG) || defined (P113_DEBUG_DEBUG)
   String log;
-#endif
-#ifdef P113_DEBUG_DEBUG
+  #endif
+  #ifdef P113_DEBUG_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     log  = F("VL53L1X  : idx: 0x");
     log += String(i2cAddress, HEX);
@@ -67,33 +67,30 @@ uint16_t P113_data_struct::readDistance() {
     log += String(initState, BIN);
     addLog(LOG_LEVEL_DEBUG, log);
   }
-#endif // P113_DEBUG_DEBUG
+  #endif // P113_DEBUG_DEBUG
 
-  // if (initState && readActive) {
-    success = true;
-    // distance = sensor.getDistance();
-    // sensor.clearInterrupt();
-    // sensor.stopRanging();
-    readActive = false;
-    if ( distance >= 8190 ) {
-      #ifdef P113_DEBUG_DEBUG
-      addLog(LOG_LEVEL_DEBUG, "VL53L1X: NO MEASUREMENT");
-      #endif // P113_DEBUG_DEBUG
-      success = false;
-    }
+  success = true;
+  readActive = false;
 
-#ifdef P113_DEBUG
-    log = F("VL53L1X: Address: 0x");
-    log += String(i2cAddress, HEX);
-    log += F(" / Timing: ");
-    log += String(timing, DEC);
-    log += F(" / Long Range: ");
-    log += String(range, BIN);
-    log += F(" / Distance: ");
-    log += distance;
-    addLog(LOG_LEVEL_INFO, log);
-#endif // P113_DEBUG
-  // }
+  if ( distance >= 8190 ) {
+    #ifdef P113_DEBUG_DEBUG
+    addLog(LOG_LEVEL_DEBUG, "VL53L1X: NO MEASUREMENT");
+    #endif // P113_DEBUG_DEBUG
+    success = false;
+  }
+
+  #ifdef P113_DEBUG
+  log = F("VL53L1X: Address: 0x");
+  log += String(i2cAddress, HEX);
+  log += F(" / Timing: ");
+  log += String(timing, DEC);
+  log += F(" / Long Range: ");
+  log += String(range, BIN);
+  log += F(" / Distance: ");
+  log += distance;
+  addLog(LOG_LEVEL_INFO, log);
+  #endif // P113_DEBUG
+
   return distance;
 };
 

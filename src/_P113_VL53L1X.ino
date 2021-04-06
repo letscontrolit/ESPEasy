@@ -5,6 +5,7 @@
 //#######################################################################################################
 
 // Changelog:
+// 2021-04-06, tonhuisman: Remove Interval optional attribute to avoid system overload, cleanup source
 // 2021-04-05, tonhuisman: Add VL53L1X Time of Flight sensor to main repo (similar to but not compatible with VL53L0X)
 
 // needs SparkFun_VL53L1X library from https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library
@@ -17,8 +18,6 @@
 #define PLUGIN_VALUENAME1_113 "Distance"
 #define PLUGIN_VALUENAME2_113 "Ambient"
 
-
-boolean Plugin_113_init[3] = {false, false, false};
 
 boolean Plugin_113(byte function, struct EventStruct *event, String& string)
 {
@@ -38,7 +37,6 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].ValueCount         = 2;
         Device[deviceCount].SendDataOption     = true;
         Device[deviceCount].TimerOption        = true;
-        Device[deviceCount].TimerOptional      = true;
         Device[deviceCount].GlobalSyncOption   = true;
         break;
       }
@@ -55,6 +53,7 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_113));
         break;
       }
+
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
       {
         byte choice = PCONFIG(0);
@@ -63,6 +62,7 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
         // addFormNote(F("SDO Low=0x29, High=0x30"));
         break;
       }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         unsigned int choiceMode2 = PCONFIG(1);
@@ -113,6 +113,7 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
+
     case PLUGIN_READ:
       {
         P113_data_struct *P113_data = static_cast<P113_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -128,6 +129,7 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
+
     case PLUGIN_FIFTY_PER_SECOND:
       {
         P113_data_struct *P113_data = static_cast<P113_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -140,9 +142,9 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
         }
         break;
       }
+
   }
   return success;
 }
 
-
-#endif
+#endif // USES_P113

@@ -9,7 +9,7 @@
 
 #ifdef LIMIT_BUILD_SIZE
   #ifdef P113_DEBUG_DEBUG
-  #undef P113_DEBUG_DEBUG
+    #undef P113_DEBUG_DEBUG
   #endif
 #endif
 
