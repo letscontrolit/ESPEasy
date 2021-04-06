@@ -216,4 +216,3 @@ void handle_hardware() {
 }
 
 #endif // ifdef WEBSERVER_HARDWARE
-

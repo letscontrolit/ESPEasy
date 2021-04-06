@@ -242,6 +242,9 @@ String BuildFixes()
     #endif // USES_MQTT
   }
   if (Settings.Build < 20107) {
+    Settings.WebserverPort = 80;
+  }
+  if (Settings.Build < 20108) {
     Settings.ETH_Phy_Addr   = DEFAULT_ETH_PHY_ADDR;
     Settings.ETH_Pin_mdc    = DEFAULT_ETH_PIN_MDC;
     Settings.ETH_Pin_mdio   = DEFAULT_ETH_PIN_MDIO;
