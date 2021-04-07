@@ -12,6 +12,7 @@
 # include "../ESPEasyCore/Controller.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
+# include "../Globals/ESPEasy_now_peermanager.h"
 # include "../Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/ESPEasy_time.h"
 # include "../Globals/MQTT.h"
@@ -428,7 +429,7 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(int channel)
   for (int i = 0; i < 6; ++i) {
     broadcast.mac[i] = 0xFF;
   }
-  sendDiscoveryAnnounce(broadcast, channel);
+  sendDiscoveryAnnounce(ESPEasy_now_peermanager.getBroadcastMAC(), channel);
 }
 
 void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int channel)
@@ -1041,7 +1042,7 @@ bool ESPEasy_now_handler_t::add_peer(const MAC_address& mac, int channel) const
     if (this_mac == mac) { return false; }
   }
 
-  if (!WifiEspNow.addPeer(mac.mac, channel)) {
+  if (!ESPEasy_now_peermanager.addPeer(mac.mac, channel)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
       log.reserve(48);

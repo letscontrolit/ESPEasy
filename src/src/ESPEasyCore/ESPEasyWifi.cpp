@@ -414,7 +414,12 @@ void initWiFi()
 // Configure WiFi TX power
 // ********************************************************************************
 void SetWiFiTXpower() {
-  SetWiFiTXpower(0.0f); // Just some minimal value, will be adjusted in SetWiFiTXpower
+  if (Settings.UseESPEasyNow()) {
+    // Set at max power for use with ESPEasy-NOW.
+    SetWiFiTXpower(30, -90);
+  } else {
+    SetWiFiTXpower(0.0f); // Just some minimal value, will be adjusted in SetWiFiTXpower
+  }
 }
 
 void SetWiFiTXpower(float dBm) { 
