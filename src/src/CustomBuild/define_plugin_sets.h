@@ -597,9 +597,15 @@ To create/register a plugin, you have to :
         #undef ESP8266
     #endif
 
-    #define  PLUGIN_SET_MAX
-    #define  CONTROLLER_SET_ALL
-    #define  NOTIFIER_SET_ALL
+    #define PLUGIN_SET_MAX
+    #define CONTROLLER_SET_ALL
+    #define NOTIFIER_SET_ALL
+    #ifndef PLUGIN_ENERGY_COLLECTION
+        #define PLUGIN_ENERGY_COLLECTION
+    #endif
+    #ifndef PLUGIN_DISPLAY_COLLECTION
+        #define PLUGIN_DISPLAY_COLLECTION
+    #endif
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_TEST_ESP32 section at end,
     // where incompatible plugins will be disabled.
@@ -787,9 +793,9 @@ To create/register a plugin, you have to :
     #ifndef PLUGIN_SET_TESTING
         #define PLUGIN_SET_TESTING
     #endif
-    #ifndef PLUGIN_SET_EXPERIMENTAL
-        #define PLUGIN_SET_EXPERIMENTAL
-    #endif
+    // #ifndef PLUGIN_SET_EXPERIMENTAL
+    //     #define PLUGIN_SET_EXPERIMENTAL
+    // #endif
 #endif
 
 
