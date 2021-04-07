@@ -79,5 +79,7 @@ def bin_elf_copy(source, target, env):
     for suff in [".elf", ".bin", ".bin.gz", "-factory.bin", ".env.txt"]:
         copy_to_build_output(split_path[0], variant, suff)
 
+    import datetime
+    print("\u001b[33m Timestamp:\u001b[0m", datetime.datetime.now())
 
 env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", [bin_elf_copy])
