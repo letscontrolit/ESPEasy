@@ -1,4 +1,4 @@
-#include "ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../DataStructs/LogStruct.h"
 #include "../ESPEasyCore/Serial.h"

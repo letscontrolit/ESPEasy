@@ -55,6 +55,7 @@ static uint64_t ICACHE_FLASH_ATTR mac_to_key(const uint8_t *mac, ESPEasy_now_hdr
 std::map<uint64_t, ESPEasy_now_merger> ESPEasy_now_in_queue;
 
 std::list<ESPEasy_now_traceroute_struct> ESPEasy_now_traceroute_queue;
+std::list<MAC_address> ESPEasy_now_MQTT_check_queue;
 
 void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
   START_TIMER;
@@ -122,19 +123,8 @@ bool ESPEasy_now_handler_t::begin()
     addLog(LOG_LEVEL_ERROR, String(F(ESPEASY_NOW_NAME)) + F(": Failed to initialize ESPEasy-NOW"));
     return false;
   }
-
-  for (byte peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
-    if (SecuritySettings.peerMacSet(peer)) {
-      add_peer(SecuritySettings.EspEasyNowPeerMAC[peer], 0);
-    }
-  }
-
-  for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
-    if (it->second.ESPEasyNowPeer) {
-      add_peer(it->second.ESPEasy_Now_MAC(), it->second.channel);
-    }
-  }
-
+  ESPEasy_now_peermanager.removeAllPeers();
+  ESPEasy_now_peermanager.addKnownPeers();
 
   // FIXME TD-er: Must check in settings if enabled
   WifiEspNow.onReceive(ESPEasy_now_onReceive, nullptr);
@@ -192,6 +182,7 @@ bool ESPEasy_now_handler_t::loop()
       }
     }
   }
+  if (!use_EspEasy_now) return false;
   bool somethingProcessed = false;
 
   if (!ESPEasy_now_in_queue.empty()) {
@@ -250,6 +241,10 @@ bool ESPEasy_now_handler_t::loop()
   if (!ESPEasy_now_traceroute_queue.empty()) {
     sendTraceRoute(ESPEasy_now_traceroute_queue.front());
     ESPEasy_now_traceroute_queue.pop_front();
+  } else if (!ESPEasy_now_MQTT_check_queue.empty()) {
+    const uint8_t channel = Nodes.getNodeByMac(ESPEasy_now_MQTT_check_queue.front())->channel;
+    sendMQTTCheckControllerQueue(ESPEasy_now_MQTT_check_queue.front(), channel);
+    ESPEasy_now_MQTT_check_queue.pop_front();
   }
 
   if (_send_failed_count > 30 /*|| !active()*/) {
@@ -657,6 +652,9 @@ bool ESPEasy_now_handler_t::handle_TraceRoute(const ESPEasy_now_merger& message,
               traceroute.addUnit(thisunit);
               traceroute.setSuccessRate_last_node(thisunit, Nodes.getSuccessRate(thisunit));
               ESPEasy_now_traceroute_queue.push_back(traceroute);
+              // Send MQTT queue check to the node we received the traceroute from
+              // It may be a viable path to send MQTT to, so stay informed of its MQTT queue state
+              ESPEasy_now_MQTT_check_queue.push_back(mac);
             }
           }
         }
@@ -764,7 +762,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
     const NodeStruct *preferred = Nodes.getPreferredNode();
 
     if (preferred != nullptr /* && Nodes.getDistance() > preferred->distance */) {
-      switch (_preferredNodeMQTTqueueState.state) {
+      switch (Nodes.getMQTTQueueState(preferred->unit)) {
         case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset:
         case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Full:
           sendMQTTCheckControllerQueue(controllerIndex);
@@ -802,7 +800,8 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
         case WifiEspNowSendStatus::NONE:
         case WifiEspNowSendStatus::FAIL:
         {
-          _preferredNodeMQTTqueueState.state = ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset;
+          Nodes.setMQTTQueueState(preferred->unit, ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset);
+          ESPEasy_now_MQTT_check_queue.push_back(mac);
           ++_send_failed_count;
           break;
         }
@@ -917,16 +916,19 @@ bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_me
   if (validControllerIndex(controllerIndex)) {
     if (query.isSet()) {
       // Got an answer from our query
-      _preferredNodeMQTTqueueState = query;
-      #  ifndef BUILD_NO_DEBUG
+      MAC_address mac;
+      if (message.getMac(mac)) {
+        Nodes.setMQTTQueueState(mac, query.state);
+        #  ifndef BUILD_NO_DEBUG
 
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-        String log;
-        log  = String(F(ESPEASY_NOW_NAME)) + F(": Received Queue state: ");
-        log += _preferredNodeMQTTqueueState.isFull() ? F("Full") : F("not Full");
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+          String log;
+          log  = String(F(ESPEASY_NOW_NAME)) + F(": Received Queue state: ");
+          log += query.isFull() ? F("Full") : F("not Full");
+          addLog(LOG_LEVEL_DEBUG_MORE, log);
+        }
+        #  endif // ifndef BUILD_NO_DEBUG
       }
-      #  endif // ifndef BUILD_NO_DEBUG
       return true;
     } else {
       MAC_address mac;
@@ -1028,31 +1030,6 @@ bool ESPEasy_now_handler_t::handle_SendData_DuplicateCheck(const ESPEasy_now_mer
       return true;
   }
   return false;
-}
-
-bool ESPEasy_now_handler_t::add_peer(const MAC_address& mac, int channel) const
-{
-  {
-    // Don't add yourself as a peer
-    MAC_address this_mac;
-    WiFi.macAddress(this_mac.mac);
-    if (this_mac == mac) { return false; }
-
-    WiFi.softAPmacAddress(this_mac.mac);
-    if (this_mac == mac) { return false; }
-  }
-
-  if (!ESPEasy_now_peermanager.addPeer(mac.mac, channel)) {
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log;
-      log.reserve(48);
-      log  = F("ESPEasy_Now: Failed to add peer ");
-      log += MAC_address(mac).toString();
-      addLog(LOG_LEVEL_ERROR, log);
-    }
-    return false;
-  }
-  return true;
 }
 
 void ESPEasy_now_handler_t::load_ControllerSettingsCache(controllerIndex_t controllerIndex)

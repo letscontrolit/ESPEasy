@@ -87,6 +87,12 @@ public:
   int getRouteSuccessRate(byte unit, uint8_t& distance) const;
 
   uint8_t getSuccessRate(byte unit) const;
+
+  ESPEasy_Now_MQTT_queue_check_packet::QueueState getMQTTQueueState(byte unit) const;
+
+  void setMQTTQueueState(byte unit, ESPEasy_Now_MQTT_queue_check_packet::QueueState state);
+  void setMQTTQueueState(const MAC_address& mac, ESPEasy_Now_MQTT_queue_check_packet::QueueState state);
+
 #endif
 
 private:

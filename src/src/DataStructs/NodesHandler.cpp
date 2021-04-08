@@ -513,4 +513,31 @@ uint8_t NodesHandler::getSuccessRate(byte unit) const
   return 127;
 }
 
+ESPEasy_Now_MQTT_queue_check_packet::QueueState NodesHandler::getMQTTQueueState(byte unit) const
+{
+  auto it = _nodeStats.find(unit);
+  if (it != _nodeStats.end()) {
+    return it->second.getMQTTQueueState();
+  }
+  return ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset;
+
+}
+
+void NodesHandler::setMQTTQueueState(byte unit, ESPEasy_Now_MQTT_queue_check_packet::QueueState state)
+{
+  auto it = _nodeStats.find(unit);
+  if (it != _nodeStats.end()) {
+    it->second.setMQTTQueueState(state);
+  }
+}
+
+void NodesHandler::setMQTTQueueState(const MAC_address& mac, ESPEasy_Now_MQTT_queue_check_packet::QueueState state)
+{
+  const NodeStruct * node = getNodeByMac(mac);
+  if (node != nullptr) {
+    setMQTTQueueState(node->unit, state);
+  }
+}
+
+
 #endif

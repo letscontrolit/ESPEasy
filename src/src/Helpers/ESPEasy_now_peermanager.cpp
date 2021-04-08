@@ -2,8 +2,10 @@
 
 #ifdef USES_ESPEASY_NOW
 
+# include "../ESPEasyCore/ESPEasy_Log.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
 # include "../Globals/Nodes.h"
+# include "../Globals/SecuritySettings.h"
 
 
 ESPEasy_now_peermanager_t::ESPEasy_now_peermanager_t() {
@@ -14,7 +16,7 @@ MAC_address ESPEasy_now_peermanager_t::getBroadcastMAC()
 {
   static MAC_address ESPEasy_now_broadcast_MAC;
 
-  if (ESPEasy_now_broadcast_MAC.mac[0] != 0xFF) {
+  if (!isBroadcastMAC(ESPEasy_now_broadcast_MAC)) {
     for (int i = 0; i < 6; ++i) {
       ESPEasy_now_broadcast_MAC.mac[i] = 0xFF;
     }
@@ -22,11 +24,28 @@ MAC_address ESPEasy_now_peermanager_t::getBroadcastMAC()
   return ESPEasy_now_broadcast_MAC;
 }
 
+bool ESPEasy_now_peermanager_t::isBroadcastMAC(const MAC_address& mac)
+{
+  return mac.all_one();
+}
+
 bool ESPEasy_now_peermanager_t::addPeer(const MAC_address& mac, int channel, const uint8_t key[WIFIESPNOW_KEYLEN])
 {
+  {
+    // Don't add yourself as a peer
+    MAC_address this_mac;
+    WiFi.macAddress(this_mac.mac);
+
+    if (this_mac == mac) { return false; }
+
+    WiFi.softAPmacAddress(this_mac.mac);
+
+    if (this_mac == mac) { return false; }
+  }
+
   bool res = true;
 
-  if (mac != getBroadcastMAC()) {
+  if (!isBroadcastMAC(mac)) {
     const NodeStruct *nodeInfo = Nodes.getNodeByMac(mac);
 
     if (nodeInfo != nullptr) {
@@ -46,6 +65,14 @@ bool ESPEasy_now_peermanager_t::addPeer(const MAC_address& mac, int channel, con
 
       if (res) {
         activePeers.push_back(mac);
+      } else {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log;
+          log.reserve(48);
+          log  = F("ESPEasy_Now: Failed to add peer ");
+          log += MAC_address(mac).toString();
+          addLog(LOG_LEVEL_ERROR, log);
+        }
       }
     } else {
       // Move the MAC address to the back of the list as it is actively used
@@ -76,6 +103,21 @@ void ESPEasy_now_peermanager_t::removeAllPeers() {
     WifiEspNow.removePeer(oldPeers[i].mac);
   }
   activePeers.clear();
+}
+
+void ESPEasy_now_peermanager_t::addKnownPeers()
+{
+  for (byte peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
+    if (SecuritySettings.peerMacSet(peer)) {
+      addPeer(SecuritySettings.EspEasyNowPeerMAC[peer], 0);
+    }
+  }
+
+  for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
+    if (it->second.ESPEasyNowPeer) {
+      addPeer(it->second.ESPEasy_Now_MAC(), it->second.channel);
+    }
+  }
 }
 
 #endif // ifdef USES_ESPEASY_NOW

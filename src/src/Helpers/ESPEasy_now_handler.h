@@ -84,8 +84,6 @@ private:
 
   bool handle_ESPEasyNow_p2p(const ESPEasy_now_merger& message, bool& mustKeep);
 
-  bool add_peer(const MAC_address& mac, int channel) const;
-
   void load_ControllerSettingsCache(controllerIndex_t controllerIndex);
 
   ESPEasy_Now_NTP_query _best_NTP_candidate;
@@ -94,8 +92,6 @@ private:
   unsigned long _last_started = 0;
 
   uint8_t _send_failed_count = 0;
-
-  ESPEasy_Now_MQTT_queue_check_packet _preferredNodeMQTTqueueState;
 
   unsigned int _ClientTimeout = 0;
   uint8_t      _usedWiFiChannel = 0;

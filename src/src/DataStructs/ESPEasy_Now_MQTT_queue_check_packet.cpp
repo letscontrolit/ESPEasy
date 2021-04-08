@@ -1,4 +1,4 @@
-#include "ESPEasy_Now_MQTT_queue_check_packet.h"
+#include "../DataStructs/ESPEasy_Now_MQTT_queue_check_packet.h"
 
 
 #ifdef USES_ESPEASY_NOW
@@ -15,7 +15,7 @@ void ESPEasy_Now_MQTT_queue_check_packet::setState(bool isFull)
 
 bool ESPEasy_Now_MQTT_queue_check_packet::isFull() const
 {
-  return state != QueueState::Empty;
+  return state == QueueState::Full;
 }
 
 bool ESPEasy_Now_MQTT_queue_check_packet::isSet() const
