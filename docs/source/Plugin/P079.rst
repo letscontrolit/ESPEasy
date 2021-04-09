@@ -32,7 +32,7 @@ The attached load must be able to tolerate polarity reversal.
 
 The Motor Shield connects to the i2c bus (default address is 0x30).
 The Shield is designed to plug directly onto a Wemos D1 mini (ESP8266).
-D1 mini details are found `HERE <https://docs.wemos.cc/en/latest/d1/d1_mini.html>`_
+D1 mini details are found `HERE2 <https://docs.wemos.cc/en/latest/d1/d1_mini.html>`_
 
 However, it can be installed on other ESP8266 variant devices using hard wire connections.
 It requires 3.3V, Ground, RST, D1 (GPIO5/SCL), and D2 (GPIO4/SDA).
