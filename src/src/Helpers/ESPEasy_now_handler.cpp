@@ -89,6 +89,8 @@ bool ESPEasy_now_handler_t::begin()
   if (!Settings.UseESPEasyNow()) { return false; }
   if (use_EspEasy_now) { return true; }
 
+  _last_traceroute_sent = 0;
+  _last_traceroute_received = 0;
   _last_used = millis();
   _last_started = millis();
   _usedWiFiChannel = WiFi.channel();
@@ -279,6 +281,7 @@ void ESPEasy_now_handler_t::loop_process_ESPEasyNOW_send_queue()
       ESPEasy_now_traceroute_queue.sort();
       const ESPEasy_now_traceroute_struct route = ESPEasy_now_traceroute_queue.front();
       sendTraceRoute(route);
+      _last_traceroute_received = millis();
       last_queue_processed = millis();
       // Remove possible duplicate routes and keep the best 2
       size_t nrRoutes = 0;
@@ -292,9 +295,12 @@ void ESPEasy_now_handler_t::loop_process_ESPEasyNOW_send_queue()
       }
     } else if (!ESPEasy_now_MQTT_check_queue.empty()) {
       const MAC_address mac = ESPEasy_now_MQTT_check_queue.front();
-      const uint8_t channel = Nodes.getNodeByMac(mac)->channel;
-      sendMQTTCheckControllerQueue(mac, channel);
-      last_queue_processed = millis();
+      const NodeStruct * node = Nodes.getNodeByMac(mac);
+      if (node != nullptr) {
+        const uint8_t channel = node->channel;
+        sendMQTTCheckControllerQueue(mac, channel);
+        last_queue_processed = millis();
+      }
       // Remove duplicate entries in the list.
       for (auto it = ESPEasy_now_MQTT_check_queue.begin(); it != ESPEasy_now_MQTT_check_queue.end();) {
         if (*it == mac) {
@@ -320,9 +326,26 @@ bool ESPEasy_now_handler_t::active() const
     // Give the unit some time to find other nodes.
     return true;
   }
+  /*
   if (Nodes.lastTimeValidDistanceExpired()) {
     return false;
   }
+  */
+  const bool traceroute_received_timeout = _last_traceroute_received != 0 && (timePassedSince(_last_traceroute_received) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
+  const bool traceroute_sent_timeout     = _last_traceroute_sent != 0 && (timePassedSince(_last_traceroute_sent) > ESPEASY_NOW_ACTIVITY_TIMEOUT);
+  if (traceroute_received_timeout || traceroute_sent_timeout) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      if (log.reserve(64)) {
+        log = F(ESPEASY_NOW_NAME);
+        log += F(": Inactive due to not receiving trace routes");
+        addLog(LOG_LEVEL_INFO, log);
+      }
+    }
+
+    return false;
+  }
+
   return timePassedSince(_last_used) < ESPEASY_NOW_ACTIVITY_TIMEOUT;
 }
 
@@ -632,6 +655,18 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 // *************************************************************
 // * Trace Route
 // *************************************************************
+void ESPEasy_now_handler_t::sendTraceRoute()
+{
+  if (Nodes.getDistance() == 0) {
+    ESPEasy_now_traceroute_struct thisTraceRoute;
+    thisTraceRoute.addUnit(Settings.Unit);
+    // Since we're the end node, claim highest success rate
+    thisTraceRoute.setSuccessRate_last_node(Settings.Unit, 255);
+    sendTraceRoute(thisTraceRoute);
+    _last_traceroute_sent = millis();
+  }
+}
+
 void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& traceRoute, int channel)
 {
   for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
@@ -640,10 +675,7 @@ void ESPEasy_now_handler_t::sendTraceRoute(const ESPEasy_now_traceroute_struct& 
     }
   }
 
-  MAC_address broadcast;
-  for (int i = 0; i < 6; ++i) {
-    broadcast.mac[i] = 0xFF;
-  }
+  MAC_address broadcast = ESPEasy_now_peermanager.getBroadcastMAC();
   sendTraceRoute(broadcast, traceRoute, channel);
 }
 

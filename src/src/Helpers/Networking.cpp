@@ -419,13 +419,7 @@ void refreshNodeList()
     ESPEasy_now_handler.sendDiscoveryAnnounce();
   }
   ESPEasy_now_handler.sendNTPquery();
-  if (Nodes.getDistance() == 0) {
-    ESPEasy_now_traceroute_struct thisTraceRoute;
-    thisTraceRoute.addUnit(Settings.Unit);
-    // Since we're the end node, claim highest success rate
-    thisTraceRoute.setSuccessRate_last_node(Settings.Unit, 255);
-    ESPEasy_now_handler.sendTraceRoute(thisTraceRoute);
-  }
+  ESPEasy_now_handler.sendTraceRoute();
   #endif // ifdef USES_ESPEASY_NOW
 }
 

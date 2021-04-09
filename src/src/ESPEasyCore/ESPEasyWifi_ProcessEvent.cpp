@@ -501,8 +501,7 @@ void processScanDone() {
     if (!WiFiConnected()) {
       if (WiFi_AP_Candidates.addedKnownCandidate()) {
         WiFi_AP_Candidates.force_reload();
-        if (isESPEasy_now_only()) {
-          setNetworkMedium(NetworkMedium_t::WIFI);
+        if (isESPEasy_now_only() || !ESPEasy_now_handler.active()) {
           WifiDisconnect();
           setAP(false);
           ESPEasy_now_handler.end();
@@ -510,6 +509,7 @@ void processScanDone() {
           // Disable ESPEasy_now for 10 seconds to give opportunity to connect to WiFi.
           WiFiEventData.wifiConnectAttemptNeeded = true;
           temp_disable_EspEasy_now_timer = millis() + 10000;
+          setNetworkMedium(Settings.NetworkMedium);
           NetworkConnectRelaxed();
         }
       } else {

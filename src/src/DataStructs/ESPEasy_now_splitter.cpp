@@ -214,6 +214,7 @@ WifiEspNowSendStatus ESPEasy_now_splitter::waitForSendStatus(size_t timeout) con
 
 bool ESPEasy_now_splitter::prepareForSend(const MAC_address& mac)
 {
+  if (!use_EspEasy_now) return false;
   size_t nr_packets = _queue.size();
 
   for (uint8_t i = 0; i < nr_packets; ++i) {

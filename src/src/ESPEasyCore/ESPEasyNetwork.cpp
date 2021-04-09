@@ -19,6 +19,7 @@ void setNetworkMedium(NetworkMedium_t medium) {
   if (active_network_medium == medium) {
     return;
   }
+  bool process_exit_active_medium = true;
   if (medium == NetworkMedium_t::ESPEasyNOW_only) {
     if (!Settings.UseESPEasyNow()) {
       return;
@@ -27,24 +28,40 @@ void setNetworkMedium(NetworkMedium_t medium) {
       // Only allow to set to ESPEasyNOW_only from WiFi
       return;
     }
-  }
-  switch (active_network_medium) {
-    case NetworkMedium_t::Ethernet:
-      #ifdef HAS_ETHERNET
-      // FIXME TD-er: How to 'end' ETH?
-//      ETH.end();
-      #endif
-      break;
-    case NetworkMedium_t::WIFI:
-      WiFiEventData.timerAPoff.setNow();
+    #ifdef USES_EASPEASY_NOW
+    if (use_EspEasy_now) {
+      // Work around to force the ESPEasy NOW mode in 802.11b mode.
+      // This allows for higher TX power and higher sensitivity.
+      WiFiEventData.timerAPoff.clear();
       WiFiEventData.timerAPstart.clear();
-      WifiDisconnect();
-      break;
-    case NetworkMedium_t::ESPEasyNOW_only:
-      WiFiEventData.clearAll();
-      break;
-    case NetworkMedium_t::NotSet:
-      break;
+      ESPEasy_now_handler.end();
+      active_network_medium = medium;
+      setConnectionSpeed();
+      ESPEasy_now_handler.begin();
+      process_exit_active_medium = false;
+    }
+
+    #endif
+  }
+  if (process_exit_active_medium) {
+    switch (active_network_medium) {
+      case NetworkMedium_t::Ethernet:
+        #ifdef HAS_ETHERNET
+        // FIXME TD-er: How to 'end' ETH?
+  //      ETH.end();
+        #endif
+        break;
+      case NetworkMedium_t::WIFI:
+        WiFiEventData.timerAPoff.setNow();
+        WiFiEventData.timerAPstart.clear();
+        WifiDisconnect();
+        break;
+      case NetworkMedium_t::ESPEasyNOW_only:
+        WiFiEventData.clearAll();
+        break;
+      case NetworkMedium_t::NotSet:
+        break;
+    }
   }
   statusLED(true);
   active_network_medium = medium;

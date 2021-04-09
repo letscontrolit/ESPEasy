@@ -57,6 +57,9 @@ public:
   void sendDiscoveryAnnounce(int channel = 0);
   void sendDiscoveryAnnounce(const MAC_address& mac, int channel = 0);
 
+  // Send trace route as 'connected' node
+  void sendTraceRoute();
+  
   void sendTraceRoute(const ESPEasy_now_traceroute_struct& traceRoute, int channel = 0);
   void sendTraceRoute(const MAC_address& mac, const ESPEasy_now_traceroute_struct& traceRoute, int channel = 0);
 
@@ -101,6 +104,12 @@ private:
 
   unsigned long _last_used = 0;
   unsigned long _last_started = 0;
+
+  // Trace route is only sent by 'connected' nodes (distance = 0)
+  unsigned long _last_traceroute_sent = 0;
+
+  // Trace route will be received only when at least one node in the connected mesh has distance = 0
+  unsigned long _last_traceroute_received = 0;
 
   uint8_t _send_failed_count = 0;
 

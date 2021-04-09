@@ -47,6 +47,7 @@ void ESPEasy_Now_packet::setSize(size_t packetSize)
   #endif
 
   _buf.resize(packetSize);
+  _valid = _buf.size() >= packetSize;
 }
 
 bool ESPEasy_Now_packet::valid() const
@@ -136,6 +137,7 @@ size_t ESPEasy_Now_packet::addBinaryData(const uint8_t *data, size_t length,
                                          size_t& payload_pos)
 {
   size_t bytes_left = getPayloadSize();
+  if (!_valid || bytes_left == 0) { return 0; }
 
   if (payload_pos > bytes_left) { return 0; }
   bytes_left -= payload_pos;
