@@ -121,6 +121,7 @@ WifiEspNowSendStatus ESPEasy_now_splitter::send(const MAC_address& mac, size_t t
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log;
+        log.reserve(85);
 
         switch (sendStatus) {
           case WifiEspNowSendStatus::NONE:
@@ -182,7 +183,9 @@ bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet, int channel)
     float tx_pwr = 30; // Will be set higher based on RSSI when needed.
     int8_t rssi = -99; // Assume worst RSSI for broadcast
     SetWiFiTXpower(tx_pwr, rssi);
-    res = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
+    if (packet.valid()) {
+      res = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
+    }
   }
 
   STOP_TIMER(ESPEASY_NOW_SEND_PCKT);

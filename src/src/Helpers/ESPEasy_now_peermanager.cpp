@@ -31,6 +31,9 @@ bool ESPEasy_now_peermanager_t::isBroadcastMAC(const MAC_address& mac)
 
 bool ESPEasy_now_peermanager_t::addPeer(const MAC_address& mac, int channel, const uint8_t key[WIFIESPNOW_KEYLEN])
 {
+  if (!use_EspEasy_now || mac.all_zero()) {
+    return false;
+  }
   {
     // Don't add yourself as a peer
     MAC_address this_mac;
@@ -68,10 +71,12 @@ bool ESPEasy_now_peermanager_t::addPeer(const MAC_address& mac, int channel, con
       } else {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log;
-          log.reserve(48);
-          log  = F("ESPEasy_Now: Failed to add peer ");
-          log += MAC_address(mac).toString();
-          addLog(LOG_LEVEL_ERROR, log);
+          if (log.reserve(64)) {
+            log = F(ESPEASY_NOW_NAME);
+            log += F(": Failed to add peer ");
+            log += MAC_address(mac).toString();
+            addLog(LOG_LEVEL_ERROR, log);
+          }
         }
       }
     } else {

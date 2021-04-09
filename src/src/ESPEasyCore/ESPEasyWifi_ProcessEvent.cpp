@@ -230,7 +230,7 @@ void processDisconnect() {
   // FIXME TD-er: Disconnect processing is done in several places.
   #ifdef USES_ESPEASY_NOW
   //if (isESPEasy_now_only()) return;
-  ESPEasy_now_handler.end();
+  //ESPEasy_now_handler.end();
   #endif
 
   if (Settings.WiFiRestart_connection_lost()) {
@@ -505,9 +505,12 @@ void processScanDone() {
           setNetworkMedium(NetworkMedium_t::WIFI);
           WifiDisconnect();
           setAP(false);
+          ESPEasy_now_handler.end();
+
           // Disable ESPEasy_now for 10 seconds to give opportunity to connect to WiFi.
           WiFiEventData.wifiConnectAttemptNeeded = true;
           temp_disable_EspEasy_now_timer = millis() + 10000;
+          NetworkConnectRelaxed();
         }
       } else {
         setNetworkMedium(NetworkMedium_t::ESPEasyNOW_only);

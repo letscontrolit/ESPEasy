@@ -28,6 +28,17 @@ public:
 
   bool loop();
 
+private:
+
+  void loop_check_ESPEasyNOW_run_state();
+
+  bool loop_process_ESPEasyNOW_in_queue();
+
+  void loop_process_ESPEasyNOW_send_queue();
+
+
+public:
+
   bool active() const;
 
   MAC_address getActiveESPEasyNOW_MAC() const;

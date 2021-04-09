@@ -894,8 +894,11 @@ bool NetworkConnected(uint32_t timeout_ms) {
   }
 #endif
 
+  if (timeout_ms > 500) {
+    timeout_ms = 500;
+  }
 
-  uint32_t timer     = millis() + (timeout_ms > 500 ? 500 : timeout_ms);
+  uint32_t timer     = millis() + timeout_ms;
   uint32_t min_delay = timeout_ms / 20;
 
   if (min_delay < 10) {

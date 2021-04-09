@@ -167,8 +167,11 @@ bool loglevelActive(byte logLevel, byte logLevelSettings) {
 
 void addToLog(byte loglevel, const __FlashStringHelper *str)
 {
-  String copy = str;
-  addToLog(loglevel, copy.c_str());
+  String copy;
+  if (copy.reserve(strlen_P((PGM_P)str))) {
+    copy = str;
+    addToLog(loglevel, copy.c_str());
+  }
 }
 
 void addToLog(byte loglevel, const String& string)

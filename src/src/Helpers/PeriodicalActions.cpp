@@ -59,6 +59,17 @@ void run50TimesPerSecond() {
     CPluginCall(CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_50PS);
   }
+  #ifdef USES_ESPEASY_NOW
+  {
+    if (ESPEasy_now_handler.loop()) {
+      // FIXME TD-er: Must check if enabled, etc.
+    }
+    START_TIMER;
+    SendData_DuplicateChecker.loop();
+    STOP_TIMER(ESPEASY_NOW_DEDUP_LOOP);
+  }
+  #endif
+
 }
 
 /*********************************************************************************************\
@@ -88,16 +99,6 @@ void run10TimesPerSecond() {
     CPluginCall(CPlugin::Function::CPLUGIN_TEN_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_10PS);
   }
-  #ifdef USES_ESPEASY_NOW
-  {
-    if (ESPEasy_now_handler.loop()) {
-      // FIXME TD-er: Must check if enabled, etc.
-    }
-    START_TIMER;
-    SendData_DuplicateChecker.loop();
-    STOP_TIMER(ESPEASY_NOW_DEDUP_LOOP);
-  }
-  #endif
   processNextEvent();
   
   #ifdef USES_C015

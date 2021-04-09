@@ -78,12 +78,35 @@ void ESPEasy_now_traceroute_struct::setSuccessRate_last_node(byte unit, uint8_t 
 
 bool ESPEasy_now_traceroute_struct::operator<(const ESPEasy_now_traceroute_struct& other) const
 {
+  const int this_success = computeSuccessRate();
+  const int other_success = other.computeSuccessRate();
   if (getDistance() == other.getDistance()) {
-    return computeSuccessRate() > other.computeSuccessRate();
+    // Same distance, just pick the highest success rate
+    return this_success > other_success;
   }
+
+  // If success rate of a route differs > 10 points, prefer the one with highest success rate
+  if (this_success > (other_success + 10)) return true;
+  if (other_success > (this_success + 10)) return false;
+
+  // Both have somewhat equal success rate, pick one with shortest distance.
   return getDistance() < other.getDistance();
 }
 
+bool ESPEasy_now_traceroute_struct::sameRoute(const ESPEasy_now_traceroute_struct& other) const
+{
+  const uint8_t max_distance = getDistance();
+  if (max_distance != other.getDistance()) {
+    return false;
+  }
+  for (uint8_t distance = 0; distance <= max_distance; ++distance) {
+    uint8_t success_rate = 0;
+    if (getUnit(distance, success_rate) != other.getUnit(distance, success_rate)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 int ESPEasy_now_traceroute_struct::computeSuccessRate() const
 {
@@ -108,7 +131,7 @@ int ESPEasy_now_traceroute_struct::computeSuccessRate() const
 
     res += successRate;
   }
-  if (max_distance > 0) {
+  if (max_distance > 1) {
     res /= max_distance;
   }
   /*

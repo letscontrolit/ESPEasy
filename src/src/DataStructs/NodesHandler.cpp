@@ -8,6 +8,7 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Globals/ESPEasy_time.h"
+#include "../Globals/ESPEasy_now_peermanager.h"
 #include "../Globals/ESPEasy_now_state.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/MQTT.h"
@@ -64,8 +65,22 @@ bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_
   const bool isNewNode = addNode(node);
   _nodeStats[node.unit].setDiscoveryRoute(node.unit, traceRoute);
 
-  if (traceRoute.getDistance() != 255 && !node.isThisNode()) {
-    addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(": Node: ") + String(node.unit) + F(" Traceroute received: ") + _nodeStats[node.unit].latestRoute().toString());
+  ESPEasy_now_peermanager.addPeer(node.ESPEasy_Now_MAC(), node.channel);  
+
+  if (!node.isThisNode()) {
+    if (traceRoute.getDistance() != 255) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log;
+        if (log.reserve(80)) {
+          log  = F(ESPEASY_NOW_NAME);
+          log += F(": Node: ");
+          log += String(node.unit);
+          log += F(" Traceroute received: ");
+          log += _nodeStats[node.unit].latestRoute().toString();
+          addLog(LOG_LEVEL_INFO, log);
+        }
+      }
+    } else {}
   }
   return isNewNode;
 }

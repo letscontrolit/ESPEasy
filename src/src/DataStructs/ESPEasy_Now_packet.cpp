@@ -14,20 +14,24 @@ ESPEasy_Now_packet::ESPEasy_Now_packet(const ESPEasy_now_hdr& header, size_t pay
   setHeader(header);
 }
 
+ESPEasy_Now_packet::ESPEasy_Now_packet() : _valid(false)
+{}
 
-ESPEasy_Now_packet::ESPEasy_Now_packet(const MAC_address& mac, const uint8_t *buf, size_t packetSize)
+bool ESPEasy_Now_packet::setReceivedPacket(const MAC_address& mac,
+                                           const uint8_t     *buf,
+                                           size_t             packetSize)
 {
   setSize(packetSize);
   mac.get(_mac);
   const size_t bufsize = _buf.size();
   if (packetSize > bufsize) {
     // Cannot store the whole packet, so consider it as invalid.
-    packetSize = bufsize;
     _valid = false;
   } else {
     _valid = true;
+    memcpy(&_buf[0], buf, packetSize);
   }
-  memcpy(&_buf[0], buf, packetSize);
+  return _valid;
 }
 
 void ESPEasy_Now_packet::setSize(size_t packetSize)
@@ -52,6 +56,7 @@ bool ESPEasy_Now_packet::valid() const
 
 uint16_t ESPEasy_Now_packet::computeChecksum() const
 {
+  if (!_valid) return 0u;
   return calc_CRC16(reinterpret_cast<const char *>(begin()), getPayloadSize());
 }
 
@@ -62,7 +67,10 @@ bool ESPEasy_Now_packet::checksumValid() const
 
 size_t ESPEasy_Now_packet::getSize() const
 {
-  return _buf.size();
+  if (_valid) {
+    return _buf.size();
+  }
+  return 0u;
 }
 
 size_t ESPEasy_Now_packet::getPayloadSize() const
@@ -83,7 +91,7 @@ size_t ESPEasy_Now_packet::getMaxPayloadSize()
 
 ESPEasy_now_hdr ESPEasy_Now_packet::getHeader() const
 {
-  if (getSize() >= sizeof(ESPEasy_now_hdr)) {
+  if (_valid && getSize() >= sizeof(ESPEasy_now_hdr)) {
     ESPEasy_now_hdr header(&_buf[0]);
     return header;
   }
@@ -208,7 +216,9 @@ String ESPEasy_Now_packet::getLogString() const
 
 const uint8_t * ESPEasy_Now_packet::begin() const
 {
+  if (!_valid) return nullptr;
   return &_buf[sizeof(ESPEasy_now_hdr)];
 }
+
 
 #endif // ifdef USES_ESPEASY_NOW

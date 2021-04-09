@@ -19,10 +19,11 @@ public:
   explicit ESPEasy_Now_packet(const ESPEasy_now_hdr& header,
                               size_t                 payloadSize);
 
-  // Constructor for receiving a packet
-  explicit ESPEasy_Now_packet(const MAC_address& mac,
-                              const uint8_t     *buf,
-                              size_t             packetSize);
+  ESPEasy_Now_packet();
+
+  bool setReceivedPacket(const MAC_address& mac,
+                         const uint8_t     *buf,
+                         size_t             packetSize);
 
   // A packet may become invalid if it was not possible to allocate enough memory for the buffer
   bool            valid() const;
@@ -71,7 +72,10 @@ public:
   const uint8_t * begin() const;
 
   const uint8_t * operator[](size_t idx) const {
-    return &_buf[idx];
+    if (_valid) {
+      return &_buf[idx];
+    }
+    return nullptr;
   }
 
   String getLogString() const;

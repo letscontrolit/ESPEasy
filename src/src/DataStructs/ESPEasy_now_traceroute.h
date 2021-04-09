@@ -38,6 +38,7 @@ struct ESPEasy_now_traceroute_struct
   // Return true when this tracerouteis more favorable
   bool     operator<(const ESPEasy_now_traceroute_struct& other) const;
 
+  bool sameRoute(const ESPEasy_now_traceroute_struct& other) const;
   // For debugging purposes
   String toString() const;
 

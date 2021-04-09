@@ -8,11 +8,12 @@
 #include "../Commands/Common.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
-
+#include "../Globals/ESPEasy_now_handler.h"
 
 String Command_ESPEasy_Now_Disable(struct EventStruct *event, const char *Line)
 {
   temp_disable_EspEasy_now_timer = millis() + (5*60*1000);
+  ESPEasy_now_handler.end();
   return return_command_success();
 }
 

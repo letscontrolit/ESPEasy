@@ -30,6 +30,8 @@ public:
     ChecksumError = 255
   };
 
+  static String toString(message_t messageType);
+
   ESPEasy_now_hdr();
 
   ESPEasy_now_hdr(message_t messageType);

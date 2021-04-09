@@ -379,6 +379,9 @@ void resetWiFi() {
 
 void initWiFi()
 {
+#ifdef USES_ESPEASY_NOW
+  ESPEasy_now_handler.end();
+#endif
 #ifdef ESP8266
 
   // See https://github.com/esp8266/Arduino/issues/5527#issuecomment-460537616
@@ -553,6 +556,7 @@ float GetRSSIthreshold(float& maxTXpwr) {
   switch (getConnectionProtocol()) {
     case WiFiConnectionProtocol::WiFi_Protocol_11b:
       threshold = -91;
+      if (maxTXpwr > 20.5) maxTXpwr = 20.5;
       break;
     case WiFiConnectionProtocol::WiFi_Protocol_11g:
       threshold = -75;

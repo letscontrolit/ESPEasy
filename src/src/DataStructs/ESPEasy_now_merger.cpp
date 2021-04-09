@@ -28,7 +28,8 @@ void ESPEasy_now_merger::addPacket(
   }
   #endif
 
-  _queue.emplace(std::make_pair(packet_nr, ESPEasy_Now_packet(mac, buf, packetSize)));
+  _queue.emplace(std::make_pair(packet_nr, ESPEasy_Now_packet()));
+  _queue[packet_nr].setReceivedPacket(mac, buf, packetSize);
   _firstPacketTimestamp = millis();
 }
 
@@ -104,9 +105,12 @@ String ESPEasy_now_merger::getLogString() const
 
   getMac(mac);
   String log;
+  log.reserve(64);
   log += mac.toString();
   log += F(" payload: ");
   log += getPayloadSize();
+  log += F(" type: ");
+  log += ESPEasy_now_hdr::toString(getMessageType());
   log += F(" (");
   log += _queue.size();
   log += '/';
