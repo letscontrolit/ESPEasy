@@ -461,3 +461,20 @@ References
 * CIE Color Calculator: http://www.brucelindbloom.com/index.html?ColorCalculator.html
 * CIE Color Difference Calculator: http://www.brucelindbloom.com/ColorDifferenceCalc.html
 * Useful Color Equations: http://www.brucelindbloom.com/index.html?Math.html
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
