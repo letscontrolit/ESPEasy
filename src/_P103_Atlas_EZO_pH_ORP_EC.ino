@@ -347,11 +347,12 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     if (board_type == PH || board_type == EC)
     {
       double value;
-      char strValue[5];
+      char strValue[6] = {0};
 
       addFormSubHeader(F("Temperature compensation"));
       char deviceTemperatureTemplate[40] = {0};
       LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
+      ZERO_TERMINATE(deviceTemperatureTemplate);
       addFormTextBox(F("Temperature "), F("Plugin_103_temperature_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
       addFormNote(F(
           "You can use a formulae and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import) ,e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' for '25.5'."));
@@ -483,7 +484,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     {
       char deviceTemperatureTemplate[40] = {0};
       String tmpString = web_server.arg(F("Plugin_103_temperature_template"));
-      strncpy(deviceTemperatureTemplate, tmpString.c_str(), sizeof(deviceTemperatureTemplate) - 1);
+      safe_strncpy(deviceTemperatureTemplate, tmpString.c_str(), sizeof(deviceTemperatureTemplate) - 1);
       ZERO_TERMINATE(deviceTemperatureTemplate); // be sure that our string ends with a \0
 
       addHtmlError(SaveCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate)));
@@ -508,8 +509,9 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     if (board_type == PH || board_type == EC)
     {
       // first set the temperature of reading
-      char deviceTemperatureTemplate[40];
+      char deviceTemperatureTemplate[40] = {0};
       LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
+      ZERO_TERMINATE(deviceTemperatureTemplate);
 
       String deviceTemperatureTemplateString(deviceTemperatureTemplate);
       String pooltempString(parseTemplate(deviceTemperatureTemplateString, 40));
@@ -577,7 +579,7 @@ bool _P103_send_I2C_command(uint8_t I2Caddress, const String &cmd, char *sensord
   byte in_char = 0;
 
   String log = F("> cmd = ");
-  log += String(cmd);
+  log += cmd;
   addLog(LOG_LEVEL_DEBUG, log);
 
   addLog(LOG_LEVEL_DEBUG, String(cmd));
