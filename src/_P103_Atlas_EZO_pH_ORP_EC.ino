@@ -101,18 +101,18 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
         PCONFIG(0) = board_type;
 
         if (board_type == UNKNOWN) {
-          addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC', check your i2c Address ? </span>"));
+          addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC', check your i2c address?</span>"));
         }
         addRowLabel(F("Board version"));
-        
-        addHtml(version);
+        addTextBox(F("plugin_103_sensorVersion"), version, 32, true);
+        /*addHtml(version);
         addHtml(F("<input type='hidden' name='plugin_103_sensorVersion' value='"));
         addHtml(version);
-        addHtml(F("'>"));
+        addHtml(F("'>"));*/
       } else {
         addHtml(F("<span style='color:red;'>Unable to send command to device</span>"));
         if (board_type == UNKNOWN) {
-          addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC', check your i2c Address ? </span>"));
+          addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC', check your i2c address?</span>"));
         }
         success = false;
         break;
