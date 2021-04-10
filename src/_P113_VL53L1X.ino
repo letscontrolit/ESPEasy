@@ -87,6 +87,11 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
           addFormSelector(F("Range"), F("plugin_113_vl53l1x_range"), 2, optionsMode3, optionValuesMode3, choiceMode3);
         }
         addFormCheckBox(F("Send event when value unchanged"), F("plugin_113_vl53l1x_notchanged"), PCONFIG(3) == 1);
+        addFormNote(F("When checked, 'Trigger delta' setting is ignored!"));
+
+        addFormNumericBox(F("Trigger delta"), F("plugin_113_trigger_delta"), PCONFIG(4), 0, 100);
+        addUnit(F("0-100mm"));
+        addFormNote(F("Minimal change in Distance to trigger an event."));
 
         success = true;
         break;
@@ -98,6 +103,7 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
         PCONFIG(1) = getFormItemInt(F("plugin_113_vl53l1x_timing"));
         PCONFIG(2) = getFormItemInt(F("plugin_113_vl53l1x_range"));
         PCONFIG(3) = isFormItemChecked(F("plugin_113_vl53l1x_notchanged")) ? 1 : 0;
+        PCONFIG(4) = getFormItemInt(F("plugin_113_trigger_delta"));
 
         success = true;
         break;
@@ -114,6 +120,12 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_EXIT:
+      {
+        success = true;
+        break;
+      }
+
     case PLUGIN_READ:
       {
         P113_data_struct *P113_data = static_cast<P113_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -121,7 +133,8 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
         if (nullptr != P113_data) {
           uint16_t dist = P113_data->readDistance();
           uint16_t ambient = P113_data->readAmbient();
-          if (P113_data->isReadSuccessful() && (UserVar[event->BaseVarIndex] != dist || PCONFIG(3) == 1) && dist != 0xFFFF) {
+          bool triggered = (dist > UserVar[event->BaseVarIndex] + PCONFIG(4)) || (dist < UserVar[event->BaseVarIndex] - PCONFIG(4));
+          if (P113_data->isReadSuccessful() && (triggered || PCONFIG(3) == 1) && dist != 0xFFFF) {
             UserVar[event->BaseVarIndex + 0] = dist;
             UserVar[event->BaseVarIndex + 1] = ambient;
             success = true;

@@ -67,22 +67,27 @@ Device Settings
 
 .. image:: P113_RangeOptions.png
 
-*Normal* For measurements in the 0 to 1300 millimeter (130cm) range.
+*Normal (~130cm)* For measurements in the 0 to 1300 millimeter (130cm) range.
 
-*Long* For measurements in the 0 to 4000 millimeter (400cm) range (but somewhat less accurate).
+*Long (~400cm)* For measurements in the 0 to 4000 millimeter (400cm) range (but somewhat less accurate).
 
-**Send event when value unchanged** To avoid many of the same events when the measurement is stable, this option is off by default. When enabled, every measurement will cause an event, and send the data to any enabled Controllers.
+**Send event when value unchanged** To avoid many of the same events when the measurement is stable, this option is off by default. When enabled, every measurement will cause an event, and send the data to any enabled Controller.
+
+**Trigger delta** To avoid triggering many events with only a small difference in distance the 'Trigger delta' option is available. This can be set to only trigger an event when the new distance is at least the delta less or more than the previous measurement.
+
+NB: This setting is ignored if 'Send event when value unchanged' is checked!
+
 
 The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
 
-**Interval** By default, Interval will be set to 0, meaning that once a measurement is completed, it will be read. This implies that quite a lot of events will be generated, possibly putting quite some load on the ESP. Setting this to 1 or 2 seconds, usually offers a reasonable response time.
+**Interval** By default, Interval will be set to 60 sec. Setting this to 1 or 2 seconds, usually offers a reasonable response time.
 
 Values
 ^^^^^^
 
 The measured distance is available in ``Distance``. A formula can be set to recalculate, f.e. to centimeters using ``%value%/10``. The number of decimals is by default set to 2, but for use with millimeters distance it can be set to 0, as no decimals are provided from the measurement.
 
-The Ambient ligthing condition during measurement is available in ``Ambient``. The unit is kcps (Photons per second, recalculated to kilo count per second)
+The Ambient lighting condition during measurement is available in ``Ambient``. The unit is kcps (Photons per second, recalculated to kilo count per second)
 
 .. Events
 .. ~~~~~~
@@ -95,6 +100,5 @@ Change log
 ----------
 
 .. versionchanged:: 2.0
-  ...
 
-  |added| 2021-04-05 Added to main repository Plugin 113, based on a copy of Plugin 110 Distance - VL53L0X
+  |added| 2021-04-05 Added to main repository as Plugin 113 Distance - VL53L1X (400cm), based on a copy of Plugin 110 Distance - VL53L0X (200cm)
