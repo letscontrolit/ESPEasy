@@ -419,7 +419,7 @@ void initWiFi()
 void SetWiFiTXpower() {
   if (Settings.UseESPEasyNow()) {
     // Set at max power for use with ESPEasy-NOW.
-    SetWiFiTXpower(30, -90);
+    SetWiFiTXpower(30, -99);
   } else {
     SetWiFiTXpower(0.0f); // Just some minimal value, will be adjusted in SetWiFiTXpower
   }
@@ -433,15 +433,6 @@ void SetWiFiTXpower(float dBm, float rssi) {
   const WiFiMode_t cur_mode = WiFi.getMode();
   if (cur_mode == WIFI_OFF) {
     return;
-  }
-
-  if (Settings.UseMaxTXpowerForSending()
-#ifdef USES_ESPEASY_NOW
-      || isESPEasy_now_only()
-#endif
-  ) {
-    // Force using max. TX power.
-    dBm = 30; // Just some max, will be limited later
   }
 
   // Range ESP32  : 2dBm - 20dBm
@@ -551,7 +542,15 @@ void SetWiFiTXpower(float dBm, float rssi) {
 }
 
 float GetRSSIthreshold(float& maxTXpwr) {
-  maxTXpwr = Settings.getWiFi_TX_power();
+    if (Settings.UseMaxTXpowerForSending()
+#ifdef USES_ESPEASY_NOW
+      || isESPEasy_now_only()
+#endif
+  ) {
+    maxTXpwr = 30.0;
+  } else {
+    maxTXpwr = Settings.getWiFi_TX_power();
+  }
   float threshold = -72;
   switch (getConnectionProtocol()) {
     case WiFiConnectionProtocol::WiFi_Protocol_11b:
@@ -988,13 +987,6 @@ bool wifiAPmodeActivelyUsed()
 
 void setConnectionSpeed() {
   #ifdef ESP8266
-  #ifdef USES_ESPEASY_NOW
-  if (isESPEasy_now_only()) {
-    WiFi.setPhyMode(WIFI_PHY_MODE_11B);
-    return;
-  }
-  #endif
-
   if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.wifi_connect_attempt > 10)) {
     WiFi.setPhyMode(WIFI_PHY_MODE_11N);
   } else {
@@ -1021,6 +1013,7 @@ void setConnectionSpeed() {
   }
   */
   #endif // ifdef ESP32
+  SetWiFiTXpower();
 }
 
 void setupStaticIPconfig() {

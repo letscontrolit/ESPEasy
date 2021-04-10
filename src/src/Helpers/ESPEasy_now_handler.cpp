@@ -93,7 +93,7 @@ bool ESPEasy_now_handler_t::begin()
   _last_traceroute_received = 0;
   _last_used = millis();
   _last_started = millis();
-  _usedWiFiChannel = WiFi.channel();
+  _usedWiFiChannel = Nodes.getESPEasyNOW_channel();
   _controllerIndex = INVALID_CONTROLLER_INDEX;
 
   if (isESPEasy_now_only()) {
@@ -101,14 +101,15 @@ bool ESPEasy_now_handler_t::begin()
     setConnectionSpeed();
   }
 
-  if (!Nodes.isEndpoint()) {
-    _usedWiFiChannel = Nodes.getESPEasyNOW_channel();
-  }
-
   const String ssid       = F(ESPEASY_NOW_TMP_SSID);
   const String passphrase = F(ESPEASY_NOW_TMP_PASSPHRASE);
 
   setAP(true);
+
+  // Make sure AP will not be turned off.
+  WiFiEventData.timerAPoff.clear();
+  WiFiEventData.timerAPstart.clear();
+
 
   int ssid_hidden    = 1;
   int max_connection = 6;
@@ -179,8 +180,9 @@ bool ESPEasy_now_handler_t::loop()
 
 void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
 {
-  if (!WifiIsAP(WiFi.getMode())) {
-    // AP mode may be turned off externally, and if so restart ESPEasy-now handler
+  if (!WifiIsAP(WiFi.getMode()) || _usedWiFiChannel != Nodes.getESPEasyNOW_channel()) {
+    // AP mode may be turned off externally, or WiFi channel may have changed.
+    // If so restart ESPEasy-now handler
     if (use_EspEasy_now) {
       end();
     }
@@ -391,7 +393,9 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
 
   if (nodeInfo != nullptr) {
     Nodes.setRSSI(peer_mac, WiFi.RSSI(scanIndex));
-    nodeInfo->channel = WiFi.channel(scanIndex);
+    // Sometimes a scan on one channel may see a node on another channel
+    // So don't set the channel of known node based on the WiFi scan
+    //nodeInfo->channel = WiFi.channel(scanIndex);
   } else {
     NodeStruct tmpNodeInfo;
     tmpNodeInfo.setRSSI(WiFi.RSSI(scanIndex));

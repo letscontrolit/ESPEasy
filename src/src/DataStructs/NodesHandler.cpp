@@ -444,6 +444,9 @@ bool NodesHandler::isEndpoint() const
 
 uint8_t NodesHandler::getESPEasyNOW_channel() const
 {
+  if (isEndpoint() == 0) {
+    return WiFi.channel();
+  }
   const NodeStruct *preferred = getPreferredNode();
   if (preferred != nullptr) {
     return preferred->channel;

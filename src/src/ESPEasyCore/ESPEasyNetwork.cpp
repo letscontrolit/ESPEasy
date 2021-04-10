@@ -15,12 +15,12 @@
 #include <ETH.h>
 #endif
 
-void setNetworkMedium(NetworkMedium_t medium) {
-  if (active_network_medium == medium) {
+void setNetworkMedium(NetworkMedium_t new_medium) {
+  if (active_network_medium == new_medium) {
     return;
   }
   bool process_exit_active_medium = true;
-  if (medium == NetworkMedium_t::ESPEasyNOW_only) {
+  if (new_medium == NetworkMedium_t::ESPEasyNOW_only) {
     if (!Settings.UseESPEasyNow()) {
       return;
     }
@@ -30,13 +30,8 @@ void setNetworkMedium(NetworkMedium_t medium) {
     }
     #ifdef USES_EASPEASY_NOW
     if (use_EspEasy_now) {
-      // Work around to force the ESPEasy NOW mode in 802.11b mode.
-      // This allows for higher TX power and higher sensitivity.
-      WiFiEventData.timerAPoff.clear();
-      WiFiEventData.timerAPstart.clear();
       ESPEasy_now_handler.end();
-      active_network_medium = medium;
-      setConnectionSpeed();
+      active_network_medium = new_medium;
       ESPEasy_now_handler.begin();
       process_exit_active_medium = false;
     }
@@ -64,7 +59,7 @@ void setNetworkMedium(NetworkMedium_t medium) {
     }
   }
   statusLED(true);
-  active_network_medium = medium;
+  active_network_medium = new_medium;
   last_network_medium_set_moment.setNow();
   addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
 }
