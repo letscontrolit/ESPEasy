@@ -367,6 +367,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
       }
 
       dtostrf(value, 5, 2, strValue);
+      ZERO_TERMINATE(strValue);
       String actualValueStr(F("Actual value: "));
       actualValueStr += strValue;
       addFormNote(actualValueStr);
