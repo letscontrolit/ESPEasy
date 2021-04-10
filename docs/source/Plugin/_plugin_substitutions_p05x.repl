@@ -2,14 +2,14 @@
 .. |P050_type| replace:: :cyan:`Color`
 .. |P050_typename| replace:: :cyan:`Color - TCS34725`
 .. |P050_porttype| replace:: `.`
-.. |P050_status| replace:: :red:`DEVELOPMENT`
+.. |P050_status| replace:: :yellow:`TESTING`
 .. |P050_github| replace:: P050_TCS34725.ino
 .. _P050_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P050_TCS34725.ino
 .. |P050_usedby| replace:: `.`
-.. |P050_shortinfo| replace:: `.`
-.. |P050_maintainer| replace:: `.`
+.. |P050_shortinfo| replace:: `RGB Color Sensor with IR filter and White LED`
+.. |P050_maintainer| replace:: `TD-er, tonhuisman (code), heinemannj (docs)`
 .. |P050_compileinfo| replace:: `.`
-.. |P050_usedlibraries| replace:: `.`
+.. |P050_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_TCS34725 (local copy)`
 
 .. |P051_name| replace:: :cyan:`AM2320`
 .. |P051_type| replace:: :cyan:`Environment`
@@ -80,7 +80,7 @@
 .. |P056_type| replace:: :cyan:`Dust`
 .. |P056_typename| replace:: :cyan:`Dust - SDS011/018/198`
 .. |P056_porttype| replace:: `Serial`
-.. |P056_status| replace:: :red:`DEVELOPMENT`
+.. |P056_status| replace:: :green:`NORMAL`
 .. |P056_github| replace:: P056_SDS011-Dust.ino
 .. _P056_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P056_SDS011-Dust.ino
 .. |P056_usedby| replace:: `.`
