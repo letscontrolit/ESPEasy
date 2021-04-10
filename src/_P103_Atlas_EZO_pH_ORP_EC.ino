@@ -15,7 +15,7 @@
 
 # define PLUGIN_103
 # define PLUGIN_ID_103           103
-# define PLUGIN_NAME_103         "Environment - Atlas EZO pH ORP EC"
+# define PLUGIN_NAME_103         "Environment - Atlas EZO pH ORP EC [TESTING]"
 # define PLUGIN_VALUENAME1_103   "SensorData"
 # define PLUGIN_VALUENAME2_103   "Voltage"
 # define UNKNOWN                 0
@@ -66,12 +66,12 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       I2Cchoice  = PCONFIG(1);
-      addHtml(F("<TR><TD>Default I2C Address:</TD><TD>pH: 0x63, ORP: 0x62, EC: 0x64. The plugin is able to detect the type of device automatically.</TD></TR>"));
       # define _P103_ATLASEZO_I2C_NB_OPTIONS 6
       int optionValues[_P103_ATLASEZO_I2C_NB_OPTIONS] = { 0x62, 0x63, 0x64, 0x65, 0x66, 0x67 };
       addFormSelectorI2C(F("plugin_103_i2c"), _P103_ATLASEZO_I2C_NB_OPTIONS, optionValues, I2Cchoice);
+      addFormNote(F("pH: 0x63, ORP: 0x62, EC: 0x64. The plugin is able to detect the type of device automatically."));
 
-      addFormSubHeader(F("General"));
+      addFormSubHeader(F("Board"));
 
       char sensordata[32];
       bool info;
@@ -79,8 +79,8 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
 
       if (info) {
         String boardInfo(sensordata);
+        addRowLabel(F("Board type"));
 
-        addHtml(F("<TR><TD>Board type : </TD><TD>"));
         String board = boardInfo.substring(boardInfo.indexOf(',') + 1, boardInfo.lastIndexOf(','));
         String version = boardInfo.substring(boardInfo.lastIndexOf(',') + 1);
         addHtml(board);
@@ -103,10 +103,9 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
         if (board_type == UNKNOWN) {
           addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC', check your i2c Address ? </span>"));
         }
-        addHtml(F("</TD></TR><TR><TD>Board version :</TD><TD>"));
+        addRowLabel(F("Board version"));
+        
         addHtml(version);
-        addHtml(F("</TD></TR>"));
-
         addHtml(F("<input type='hidden' name='plugin_103_sensorVersion' value='"));
         addHtml(version);
         addHtml(F("'>"));
@@ -128,11 +127,9 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
       if (status) {
         String boardStatus(statussensordata);
 
-        addHtml(F("<TR><TD>Board restart code: </TD><TD>"));
-        int pos1 = boardStatus.indexOf(',');
-        int pos2 = boardStatus.lastIndexOf(',');
+        addRowLabel(F("Board restart code"));
 
-        switch ((char)boardStatus.substring(pos1 + 1, pos2)[0])
+        switch ((char)boardStatus.substring(boardStatus.indexOf(',') + 1, boardStatus.lastIndexOf(','))[0])
         {
           case 'P':
           {
@@ -162,21 +159,12 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        addHtml(F("</TD></TR><TR><TD>Board voltage :</TD><TD>"));
-        addHtml(boardStatus.substring(pos2 + 1));
-        addHtml(F(" V</TD></TR>"));
+        addRowLabel(F("Board voltage"));
+        addHtml(boardStatus.substring(boardStatus.lastIndexOf(',') + 1));
+        addUnit(F("V"));
 
-        addHtml(F("<input type='hidden' name='plugin_103_sensorVoltage' value='"));
-        addHtml(boardStatus.substring(pos2 + 1));
-        addHtml(F("'>"));
-
-        addHtml(F("</TD></TR><TR><TD>Sensor Data :</TD><TD>"));
+        addRowLabel(F("Sensor Data"));
         addHtml(String(UserVar[event->BaseVarIndex]));
-        addHtml(F("</TD></TR>"));
-
-        addHtml(F("<input type='hidden' name='plugin_103_sensorVoltage' value='"));
-        addHtml(String(UserVar[event->BaseVarIndex]));
-        addHtml(F("'>"));
       } else {
         addHtml(F("<span style='color:red;'>Unable to send status command to device</span>"));
         success = false;
@@ -184,12 +172,11 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
       }
 
       // calibrate
-      addFormSubHeader(F("Calibration"));
-
       switch (board_type)
       {
           case PH:
           {
+            addFormSubHeader(F("pH Calibration"));
             int nb_calibration_points = -1;
             status = _P103_send_I2C_command(I2Cchoice, F("Cal,?"), sensordata);
 
@@ -272,6 +259,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
         
         case ORP:
         {
+            addFormSubHeader(F("ORP Calibration"));
             int nb_calibration_points = -1;
             status = _P103_send_I2C_command(I2Cchoice, F("Cal,?"), sensordata);
 
@@ -284,7 +272,6 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
                 }
             }
 
-            addRowLabel(F("<strong>ORP Calibration</strong>"));
             addFormFloatNumberBox(F("Ref ORP"), F("Plugin_103_ref_cal_O"), PCONFIG_FLOAT(1), 0, 1500, 1, 1);
 
             if (nb_calibration_points > 0) {
@@ -298,6 +285,8 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
 
         case EC:
         {
+            addFormSubHeader(F("EC Calibration"));
+
             addRowLabel(F("<strong>Dry calibration</strong>"));
             addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_dry"), false);
             addHtml(F(
@@ -347,33 +336,30 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-        // Temperature compensation
+      // Temperature compensation
       if(board_type == PH || board_type == EC) {
-        
+        double value;
+        char strValue[5];
+
         addFormSubHeader(F("Temperature compensation"));
         char deviceTemperatureTemplate[40];
         LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
             addFormTextBox(F("Temperature "), F("Plugin_103_temperature_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
             addFormNote(F(
                             "You can use a formulae and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import) ,e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' for '25.5'."));
-            double value;
-            char strValue[5];
+
             String deviceTemperatureTemplateString(deviceTemperatureTemplate);
             String pooltempString(parseTemplate(deviceTemperatureTemplateString, 40));
-            addHtml(F("<div class='note'>"));
 
             if (Calculate(pooltempString.c_str(), value) != CalculateReturnCode::OK) {
-                addHtml(F("It seems I can't parse your formulae. Fixed value will be used!"));
+                addFormNote(F("It seems I can't parse your formulae. Fixed value will be used!"));
                 value = FIXED_TEMP_VALUE;
             }
-            addHtml(F("</div>"));
 
-            addHtml(F("<div class='note'>"));
-            addHtml(F("Actual value : "));
             dtostrf(value, 5, 2, strValue);
-            addHtml(strValue);
-
-            addHtml(F("</div>"));
+            String actualValueStr(F("Actual value: "));
+            actualValueStr += strValue;
+            addFormNote(actualValueStr);
         }
 
       success = true;
@@ -399,7 +385,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String& string)
       }
       PCONFIG(2) = isFormItemChecked(F("Plugin_103_status_led"));
 
-      String cmd("Cal,");
+      String cmd(F("Cal,"));
       bool   triggerCalibrate = false;
 
       switch (board_type)
