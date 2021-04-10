@@ -1,4 +1,4 @@
-.. _P004_DS18b20_page:
+.. .. _P004_DS18b20_page:
 
 .. |br| raw:: html
 
