@@ -362,7 +362,7 @@ void handle_sysinfo_memory() {
     addHtml(html);
   }
 
-# ifdef ESP32
+# if defined(ESP32) && defined(ESP32_ENABLE_PSRAM)
 
   if (ESP.getPsramSize() > 0) {
     addRowLabelValue(LabelType::PSRAM_SIZE);
@@ -370,7 +370,7 @@ void handle_sysinfo_memory() {
     addRowLabelValue(LabelType::PSRAM_MIN_FREE);
     addRowLabelValue(LabelType::PSRAM_MAX_FREE_BLOCK);
   }
-# endif // ifdef ESP32
+# endif // if defined(ESP32) && defined(ESP32_ENABLE_PSRAM)
 }
 
 # ifdef HAS_ETHERNET

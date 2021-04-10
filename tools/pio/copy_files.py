@@ -23,6 +23,9 @@ def get_max_bin_size(env_name, file_suffix):
         if "factory" in file_suffix:
             # Factory bin files include a part which is not overwritten via OTA
             max_bin_size = max_bin_size + 65536
+    if "_ESP32_16M8M" in env_name or "_ESP32_16M2M" in env_name or "_ESP32_16M1M" in env_name:
+        # ESP32 with 4096k of sketch space.
+        max_bin_size = 4194304
     if "debug_" in env_name:
         # Debug env, used for analysis, not to be run on a node.
         max_bin_size = 0
