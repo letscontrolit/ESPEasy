@@ -208,8 +208,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     {
       char ecprobetypedata[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
 
-      //if (_P103_send_I2C_command(I2Cchoice, F("K,?"), ecprobetypedata))
-      if (_P103_send_I2C_command(I2Cchoice, F("Name,?"), ecprobetypedata))
+      if (_P103_send_I2C_command(I2Cchoice, F("K,?"), ecprobetypedata))
       {
         String ecProbeType(ecprobetypedata);
 
@@ -317,8 +316,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     if((board_type == EC) && isFormItemChecked(F("Plugin_103_enable_set_probe_type")))
     {
       addLog(LOG_LEVEL_DEBUG, F("isFormItemChecked"));
-      //String probeType(F("K,"));
-      String probeType(F("Name,"));
+      String probeType(F("K,"));
       probeType += web_server.arg(F("Plugin_103_ec_probe_type"));
       char setProbeTypeCmd[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
       _P103_send_I2C_command(I2Cchoice, probeType, setProbeTypeCmd);
