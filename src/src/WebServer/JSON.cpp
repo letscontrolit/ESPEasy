@@ -144,9 +144,11 @@ void handle_json()
       stream_next_json_object_value(LabelType::PLUGIN_COUNT);
       stream_next_json_object_value(LabelType::PLUGIN_DESCRIPTION);
       stream_next_json_object_value(LabelType::LOCAL_TIME);
+      stream_next_json_object_value(LabelType::ISNTP);
       stream_next_json_object_value(LabelType::UNIT_NR);
       stream_next_json_object_value(LabelType::UNIT_NAME);
       stream_next_json_object_value(LabelType::UPTIME);
+      stream_next_json_object_value(LabelType::UPTIME_MS);
       stream_next_json_object_value(LabelType::BOOT_TYPE);
       stream_next_json_object_value(LabelType::RESET_REASON);
 
@@ -162,12 +164,11 @@ void handle_json()
       stream_next_json_object_value(LabelType::HEAP_FRAGMENTATION);
       #endif // ifdef CORE_POST_2_5_0
       stream_next_json_object_value(LabelType::FREE_MEM);
-      String suntime = F("%sunrise%");
-      parseSystemVariables(suntime, false); // Not URL encoded
-      stream_next_json_object_value(F("Sunrise"),suntime);
-      suntime = F("%sunset%");
-      parseSystemVariables(suntime, false); // Not URL encoded
-      stream_last_json_object_value(F("Sunset"),suntime);
+      stream_next_json_object_value(LabelType::SUNRISE);
+      stream_next_json_object_value(LabelType::SUNSET);
+      stream_next_json_object_value(LabelType::TIMEZONE_OFFSET);
+      stream_next_json_object_value(LabelType::LATITUDE);
+      stream_last_json_object_value(LabelType::LONGITUDE);
       addHtml(F(",\n"));
     }
 

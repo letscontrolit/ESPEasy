@@ -169,6 +169,13 @@ String getLabel(LabelType::Enum label) {
     case LabelType::ETH_CONNECTED:          return F("Eth connected");
 #endif // ifdef HAS_ETHERNET
     case LabelType::ETH_WIFI_MODE:          return F("Network Type");
+    case LabelType::SUNRISE:                return F("Sunrise");
+    case LabelType::SUNSET:                 return F("Sunset");
+    case LabelType::ISNTP:                  return F("Use NTP");
+    case LabelType::UPTIME_MS:              return F("Uptime (ms)");
+    case LabelType::TIMEZONE_OFFSET:        return F("Timezone Offset");
+    case LabelType::LATITUDE:               return F("Latitude");
+    case LabelType::LONGITUDE:              return F("Longitude");
   }
   return F("MissingString");
 }
@@ -311,6 +318,13 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_CONNECTED:          return ETHConnected() ? F("CONNECTED") : F("DISCONNECTED"); // 0=disconnected, 1=connected
 #endif // ifdef HAS_ETHERNET
     case LabelType::ETH_WIFI_MODE:          return active_network_medium == NetworkMedium_t::WIFI ? F("WIFI") : F("ETHERNET");
+    case LabelType::SUNRISE:                return node_time.getSunriseTimeString(':');
+    case LabelType::SUNSET:                 return node_time.getSunsetTimeString(':');
+    case LabelType::ISNTP:                  return jsonBool(Settings.UseNTP);
+    case LabelType::UPTIME_MS:              return ull2String(getMicros64() / 1000);
+    case LabelType::TIMEZONE_OFFSET:        return String(Settings.TimeZone);
+    case LabelType::LATITUDE:               return String(Settings.Latitude);
+    case LabelType::LONGITUDE:              return String(Settings.Longitude);
   }
   return F("MissingString");
 }
