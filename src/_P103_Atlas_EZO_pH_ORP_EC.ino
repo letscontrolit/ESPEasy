@@ -107,7 +107,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
       }
       addRowLabel(F("Board version"));
       addHtml(version);
-          
+
       addHtml(F("<input type='hidden' name='plugin_214_sensorVersion' value='"));
       addHtml(version);
       addHtml(F("'>"));
@@ -123,8 +123,6 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
       break;
     }
 
-    addFormCheckBox(F("Status LED"), F("Plugin_103_status_led"), PCONFIG(2));
-
     char statussensordata[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
 
     if (_P103_send_I2C_command(I2Cchoice, F("Status"), statussensordata))
@@ -135,7 +133,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
 
       addLog(DEBUG, boardStatus);
 
-      char* statuschar = strchr(statussensordata, ',');
+      char *statuschar = strchr(statussensordata, ',');
 
       if (statuschar > 0)
       {
@@ -176,6 +174,24 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
 
       addRowLabel(F("Sensor Data"));
       addHtml(String(UserVar[event->BaseVarIndex]));
+      switch (board_type)
+      {
+      case PH:
+      {
+        addUnit(F("pH"));
+        break;
+      }
+      case ORP:
+      {
+        addUnit(F("mV"));
+        break;
+      }
+      case EC:
+      {
+        addUnit(F("&micro;S"));
+        break;
+      }
+      }
     }
     else
     {
@@ -184,77 +200,31 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
       break;
     }
 
+    // Ability to turn status LED of board on or off
+    addFormCheckBox(F("Status LED"), F("Plugin_103_status_led"), PCONFIG(2));
+
+    // Ability to see and change EC Probe Type (e.g., 0.1, 1.0, 10)
+    if (board_type == EC)
+    {
+      char ecprobetypedata[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
+
+      if (_P103_send_I2C_command(I2Cchoice, F("K,?"), ecprobetypedata))
+      {
+        String ecProbeType(ecprobetypedata);
+
+        addFormTextBox(F("EC Probe Type"), F("Plugin_103_ec_probe_type"), ecProbeType.substring(ecProbeType.lastIndexOf(',') + 1), 32);
+        addFormCheckBox(F("Set Probe Type"), F("Plugin_103_enable_set_probe_type"), false);
+      }
+    }
+
     // calibrate
     switch (board_type)
     {
     case PH:
     {
       addFormSubHeader(F("pH Calibration"));
-      int nb_calibration_points = getCalibrationPoints(I2Cchoice);
-
-      addRowLabel(F("<strong>Middle</strong>"));
-      addFormFloatNumberBox(F("Ref Ph"),
-                            F("Plugin_103_ref_cal_M'"),
-                            PCONFIG_FLOAT(1),
-                            0,
-                            14,
-                            2,
-                            0.01);
-
-      if (nb_calibration_points > 0)
-      {
-        addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
-      }
-      else
-      {
-        addHtml(F("&nbsp;<span style='color:red;'>Not yet calibrated</span>"));
-      }
-      addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_M"), false);
-      addHtml(F(
-          "\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_M\").onclick = function(){document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;};</script>\n"));
-
-      addRowLabel(F("<strong>Low</strong>"));
-      addFormFloatNumberBox(F("Ref Ph"),
-                            F("Plugin_103_ref_cal_L"),
-                            PCONFIG_FLOAT(2),
-                            0,
-                            14,
-                            2,
-                            0.01);
-
-      if (nb_calibration_points > 1)
-      {
-        addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
-      }
-      else
-      {
-        addHtml(F("&nbsp;<span style='color:red;'>Not yet calibrated</span>"));
-      }
-      addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_L"), false);
-      addHtml(F(
-          "\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_L\").onclick = function(){document.getElementById(\"Plugin_103_enable_cal_M\").checked = false;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;};</script>\n"));
-
-      addHtml(F("<TR><TD><strong>High</strong></TD>"));
-      addFormFloatNumberBox(F("Ref Ph"),
-                            F("Plugin_103_ref_cal_H"),
-                            PCONFIG_FLOAT(3),
-                            0,
-                            14,
-                            2,
-                            0.01);
-
-      if (nb_calibration_points > 2)
-      {
-        addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
-      }
-      else
-      {
-        addHtml(F("&nbsp;<span style='color:orange;'>Not yet calibrated</span>"));
-      }
-      addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_H"), false);
-      addHtml(F(
-          "\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_H\").onclick = function(){document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;document.getElementById(\"Plugin_103_enable_cal_M\").checked = false;};</script>\n"));
-
+      addFormNote(F("Calibration for pH-Probe could be 1 (single), 2 (single, low) or 3 point (single, low, high). The sequence is important."));
+      int nb_calibration_points = addCreate3PointCalibration(board_type, event, I2Cchoice, F("pH"), 0.0, 14.0, 2, 0.01);
       if (nb_calibration_points > 1)
       {
         char slopedata[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
@@ -272,76 +242,21 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     case ORP:
     {
       addFormSubHeader(F("ORP Calibration"));
-      int nb_calibration_points = getCalibrationPoints(I2Cchoice);
-
-      addFormFloatNumberBox(F("Ref ORP"), F("Plugin_103_ref_cal_O"), PCONFIG_FLOAT(1), 0, 1500, 1, 1);
-
-      if (nb_calibration_points > 0)
-      {
-        addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
-      }
-      else
-      {
-        addHtml(F("&nbsp;<span style='color:red;'>Not yet calibrated</span>"));
-      }
-      addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_O"), false);
+      addCreateSinglePointCalibration(board_type, event, I2Cchoice, F("mV"), 0.0, 1500.0, 0, 1.0);
       break;
     }
 
     case EC:
     {
       addFormSubHeader(F("EC Calibration"));
-
-      addRowLabel(F("<strong>Dry calibration</strong>"));
-      addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_dry"), false);
-      addHtml(F(
-          "\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_dry\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_single\").checked = false;document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;};</script>"));
-      addFormNote(F("Dry calibration must always be done first!"));
-
-      addRowLabel(F("<strong>Single point calibration</strong> "));
-      addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_single"), false);
-      addHtml(F(
-          "\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_single\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_dry\").checked = false;document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;};</script>"));
-      addFormNumericBox(F("Ref EC"), F("Plugin_103_ref_cal_single"), PCONFIG(3));
-      addUnit(F("&micro;S"));
-
-      addRowLabel(F("<strong>Low calibration</strong>"));
-      addFormCheckBox(F("Enable"),
-                      F(
-                          "Plugin_103_enable_cal_L' onClick='document.getElementById(\"Plugin_103_enable_cal_dry\").checked = false;document.getElementById(\"Plugin_103_enable_cal_single\").checked = false;;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;"),
-                      false);
-      addHtml(F(
-          "\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_L\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_dry\").checked = false;document.getElementById(\"Plugin_103_enable_cal_single\").checked = false;;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;};</script>"));
-      addFormNumericBox(F("Ref EC"), F("Plugin_103_ref_cal_L"), PCONFIG(4));
-      addUnit(F("&micro;S"));
-
-      addRowLabel(F("<strong>High calibration</strong>"));
-      addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_H"), false);
-      addHtml(F(
-          "\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_H\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_dry\").checked = false;document.getElementById(\"Plugin_103_enable_cal_single\").checked = false;;document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;};</script>"));
-      addFormNumericBox(F("Ref EC"), F("Plugin_103_ref_cal_H"), PCONFIG(5));
-      addUnit(F("&micro;S"));
-
-      char calibrationdata[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
-
-      if (_P103_send_I2C_command(I2Cchoice, F("Cal,?"), calibrationdata))
-      {
-        switch (calibrationdata[5])
-        {
-        case '0':
-          addFormNote(F("<span style='color:red'>Calibration needed</span>"));
-          break;
-        case '1':
-          addFormNote(F("<span style='color:green'>Single point calibration ok</span>"));
-          break;
-        case '2':
-          addFormNote(F("<span style='color:green'>Two points calibration ok</span>"));
-          break;
-        }
-      }
+      addCreateDryCalibration();
+      addCreate3PointCalibration(board_type, event, I2Cchoice, F("&micro;S"), 0.0, 500000.0, 0, 1.0);
     }
     break;
     }
+
+    // Clear calibration
+    addClearCalibration();
 
     // Temperature compensation
     if (board_type == PH || board_type == EC)
@@ -354,8 +269,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
       LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
       ZERO_TERMINATE(deviceTemperatureTemplate);
       addFormTextBox(F("Temperature "), F("Plugin_103_temperature_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
-      addFormNote(F(
-          "You can use a formulae and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import) ,e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' for '25.5'."));
+      addFormNote(F("You can use a formulae and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import) ,e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' for '25.5'."));
 
       String deviceTemperatureTemplateString(deviceTemperatureTemplate);
       String pooltempString(parseTemplate(deviceTemperatureTemplateString, 40));
@@ -399,80 +313,52 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     }
     PCONFIG(2) = isFormItemChecked(F("Plugin_103_status_led"));
 
+    if((board_type == EC) && isFormItemChecked(F("Plugin_103_enable_set_probe_type")))
+    {
+      addLog(LOG_LEVEL_DEBUG, F("isFormItemChecked"));
+      String probeType(F("K,"));
+      probeType += web_server.arg(F("Plugin_103_ec_probe_type"));
+      char setProbeTypeCmd[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
+      _P103_send_I2C_command(I2Cchoice, probeType, setProbeTypeCmd);
+    }
+
     String cmd(F("Cal,"));
     bool triggerCalibrate = false;
 
-    switch (board_type)
-    {
-    case PH:
-    {
-      PCONFIG_FLOAT(1) = getFormItemFloat(F("Plugin_103_ref_cal_M"));
-      PCONFIG_FLOAT(2) = getFormItemFloat(F("Plugin_103_ref_cal_L"));
-      PCONFIG_FLOAT(3) = getFormItemFloat(F("Plugin_103_ref_cal_H"));
+    PCONFIG_FLOAT(1) = getFormItemFloat(F("Plugin_103_ref_cal_single"));
+    PCONFIG_FLOAT(2) = getFormItemFloat(F("Plugin_103_ref_cal_L"));
+    PCONFIG_FLOAT(3) = getFormItemFloat(F("Plugin_103_ref_cal_H"));
 
-      if (isFormItemChecked(F("Plugin_103_enable_cal_M")))
+    if (isFormItemChecked(F("Plugin_103_enable_cal_clear")))
+    {
+      cmd += F("clear");
+      triggerCalibrate = true;
+    }
+    else if (isFormItemChecked(F("Plugin_103_enable_cal_dry")))
+    {
+      cmd += F("dry");
+      triggerCalibrate = true;
+    }
+    else if (isFormItemChecked(F("Plugin_103_enable_cal_single")))
+    {
+      if (board_type == PH)
       {
         cmd += F("mid,");
-        cmd += PCONFIG_FLOAT(1);
-        triggerCalibrate = true;
       }
-      else if (isFormItemChecked(F("Plugin_103_enable_cal_L")))
-      {
-        cmd += F("low,");
-        cmd += PCONFIG_FLOAT(2);
-        triggerCalibrate = true;
-      }
-      else if (isFormItemChecked(F("Plugin_103_enable_cal_H")))
-      {
-        cmd += F("high,");
-        cmd += PCONFIG_FLOAT(3);
-        triggerCalibrate = true;
-      }
-      break;
+      cmd += PCONFIG_FLOAT(1);
+      triggerCalibrate = true;
     }
-
-    case ORP:
+    else if (isFormItemChecked(F("Plugin_103_enable_cal_L")))
     {
-      PCONFIG_FLOAT(1) = getFormItemFloat(F("Plugin_103_ref_cal_O"));
-
-      if (isFormItemChecked(F("Plugin_103_enable_cal_O")))
-      {
-        cmd += PCONFIG_FLOAT(1);
-        triggerCalibrate = true;
-      }
-      break;
+      cmd += F("low,");
+      cmd += PCONFIG_FLOAT(2);
+      triggerCalibrate = true;
     }
-
-    case EC:
+    else if (isFormItemChecked(F("Plugin_103_enable_cal_H")))
     {
-      PCONFIG(3) = getFormItemInt(F("Plugin_103_ref_cal_single"));
-      PCONFIG(4) = getFormItemInt(F("Plugin_103_ref_cal_L"));
-      PCONFIG(5) = getFormItemInt(F("Plugin_103_ref_cal_H"));
-
-      if (isFormItemChecked(F("Plugin_103_enable_cal_dry")))
-      {
-        cmd += F("dry");
-        triggerCalibrate = true;
-      }
-      else if (isFormItemChecked(F("Plugin_103_enable_cal_single")))
-      {
-        cmd += PCONFIG(3);
-        triggerCalibrate = true;
-      }
-      else if (isFormItemChecked(F("Plugin_103_enable_cal_L")))
-      {
-        cmd += F("low,");
-        cmd += PCONFIG(4);
-        triggerCalibrate = true;
-      }
-      else if (isFormItemChecked(F("Plugin_103_enable_cal_H")))
-      {
-        cmd += F("high,");
-        cmd += PCONFIG(5);
-        triggerCalibrate = true;
-      }
-      break;
-    }
+      cmd += F("high,");
+      cmd += PCONFIG_FLOAT(3);
+      triggerCalibrate = true;
     }
 
     if (triggerCalibrate)
@@ -534,28 +420,20 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
 
     // ok, now we can read the sensor data
     char sensordata[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
+    UserVar[event->BaseVarIndex] = -1;
     if (_P103_send_I2C_command(I2Cchoice, readCommand, sensordata))
     {
       String sensorString(sensordata);
-      UserVar[event->BaseVarIndex] = sensorString.toFloat();
-    }
-    else
-    {
-      UserVar[event->BaseVarIndex] = -1;
+      string2float(sensorString, UserVar[event->BaseVarIndex]);
     }
 
     // we read the voltagedata
     char voltagedata[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
-
+    UserVar[event->BaseVarIndex + 1] = -1;
     if (_P103_send_I2C_command(I2Cchoice, F("Status"), voltagedata))
     {
       String voltage(voltagedata);
-      int pos = voltage.lastIndexOf(',');
-      UserVar[event->BaseVarIndex + 1] = voltage.substring(pos + 1).toFloat();
-    }
-    else
-    {
-      UserVar[event->BaseVarIndex + 1] = -1;
+      string2float(voltage.substring(voltage.lastIndexOf(',') + 1), UserVar[event->BaseVarIndex + 1]);
     }
 
     success = true;
@@ -606,7 +484,7 @@ bool _P103_send_I2C_command(uint8_t I2Caddress, const String &cmd, char *sensord
   while (i2c_response_code == 254)
   {
     Wire.requestFrom(I2Caddress, (uint8_t)(ATLAS_EZO_RETURN_ARRAY_SIZE - 1)); // call the circuit and request ATLAS_EZO_RETURN_ARRAY_SIZE - 1 = 32 bytes (this is more then we need).
-    i2c_response_code = Wire.read();           // read response code
+    i2c_response_code = Wire.read();                                          // read response code
 
     while (Wire.available())
     { // read response
@@ -623,7 +501,8 @@ bool _P103_send_I2C_command(uint8_t I2Caddress, const String &cmd, char *sensord
       }
       else
       {
-        if(sensor_bytes_received > ATLAS_EZO_RETURN_ARRAY_SIZE) {
+        if (sensor_bytes_received > ATLAS_EZO_RETURN_ARRAY_SIZE)
+        {
           addLog(LOG_LEVEL_ERROR, F("< result array to short!"));
           return false;
         }
@@ -675,9 +554,100 @@ int getCalibrationPoints(uint8_t i2cAddress)
       char tmp[2];
       tmp[0] = sensordata[5];
       tmp[1] = '\0',
-      nb_calibration_points = atoi(tmp);
+      nb_calibration_points = str2int(tmp);
     }
   }
+
+  return nb_calibration_points;
+}
+
+void addClearCalibration()
+{
+  addRowLabel(F("<strong>Clear calibration</strong>"));
+  addFormCheckBox(F("Clear"), F("Plugin_103_enable_cal_clear"), false);
+  addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_clear\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_single\").checked = false;document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;document.getElementById(\"Plugin_103_enable_cal_dry\").checked = false;};</script>"));
+  addFormNote(F("Attention! This will reset all calibrated data. New calibration will be needed!!!"));
+}
+
+void addCreateDryCalibration()
+{
+  addRowLabel(F("<strong>Dry calibration</strong>"));
+  addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_dry"), false);
+  addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_dry\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_single\").checked = false;document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;document.getElementById(\"Plugin_103_enable_cal_clear\").checked = false;};</script>"));
+  addFormNote(F("Dry calibration must always be done first!"));
+  addFormNote(F("Calibration for pH-Probe could be 1 (single) or 2 point (low, high)."));
+}
+
+int addCreateSinglePointCalibration(byte board_type, struct EventStruct *event, byte I2Cchoice, String unit, float min, float max, byte nrDecimals, float stepsize)
+{
+  int nb_calibration_points = getCalibrationPoints(I2Cchoice);
+
+  addRowLabel("Calibrated Points");
+  addHtmlInt(nb_calibration_points);
+  if (nb_calibration_points < 1)
+  {
+    addHtml(F("<span style='color:red'>   Calibration needed</span>"));
+  }
+
+  addRowLabel(F("<strong>Single point calibration</strong>"));
+  addFormFloatNumberBox(F("Ref single point"), F("Plugin_103_ref_cal_single'"), PCONFIG_FLOAT(1), min, max, nrDecimals, stepsize);
+  addUnit(unit);
+
+  if ((board_type != EC && nb_calibration_points > 0) || (board_type == EC && nb_calibration_points == 1))
+  {
+    addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
+  }
+  else
+  {
+    if ((board_type == EC) && (nb_calibration_points > 1))
+    {
+      addHtml(F("&nbsp;<span style='color:green;'>Not calibrated, because two point calibration is active.</span>"));
+    }
+    else
+    {
+      addHtml(F("&nbsp;<span style='color:red;'>Not yet calibrated</span>"));
+    }
+  }
+  addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_single"), false);
+  addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_single\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_clear\").checked = false;document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;document.getElementById(\"Plugin_103_enable_cal_dry\").checked = false;};</script>"));
+
+  return nb_calibration_points;
+}
+
+int addCreate3PointCalibration(byte board_type, struct EventStruct *event, byte I2Cchoice, String unit, float min, float max, byte nrDecimals, float stepsize)
+{
+  int nb_calibration_points = addCreateSinglePointCalibration(board_type, event, I2Cchoice, unit, min, max, nrDecimals, stepsize);
+
+  addRowLabel(F("<strong>Low calibration</strong>"));
+  addFormFloatNumberBox(F("Ref low point"), F("Plugin_103_ref_cal_L"), PCONFIG_FLOAT(2), min, max, nrDecimals, stepsize);
+  addUnit(unit);
+
+  if (nb_calibration_points > 1)
+  {
+    addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
+  }
+  else
+  {
+    addHtml(F("&nbsp;<span style='color:orange;'>Not yet calibrated</span>"));
+  }
+  addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_L"), false);
+  addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_L\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_clear\").checked = false;document.getElementById(\"Plugin_103_enable_cal_single\").checked = false;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;document.getElementById(\"Plugin_103_enable_cal_dry\").checked = false;};</script>"));
+
+  addHtml(F("<TR><TD><strong>High calibration</strong></TD>"));
+  addFormFloatNumberBox(F("Ref high point"), F("Plugin_103_ref_cal_H"), PCONFIG_FLOAT(3), min, max, nrDecimals, stepsize);
+  addUnit(unit);
+
+  // pH: low, high OK with 3 calibration points (single is the first one); EC: low high OK with 2 calibration points
+  if (nb_calibration_points > 2 || (board_type == EC && nb_calibration_points > 1))
+  {
+    addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
+  }
+  else
+  {
+    addHtml(F("&nbsp;<span style='color:orange;'>Not yet calibrated</span>"));
+  }
+  addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_H"), false);
+  addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_H\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_single\").checked = false;document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;document.getElementById(\"Plugin_103_enable_cal_clear\").checked = false;document.getElementById(\"Plugin_103_enable_cal_dry\").checked = false;};</script>"));
 
   return nb_calibration_points;
 }

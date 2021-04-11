@@ -28,7 +28,7 @@
 
 #if defined(ESP32)
   #ifdef USE_LITTLEFS
-    #include "LittleFS.h"
+    #include "LITTLEFS.h"
   #else
     #include "SPIFFS.h"
   #endif
