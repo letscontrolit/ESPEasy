@@ -119,6 +119,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY_S);
   addTableSeparator(F("System"), 3, 3);
   addSysVar_enum_html(SystemVariables::UPTIME);
+  addSysVar_enum_html(SystemVariables::UPTIME_MS);
   addSysVar_enum_html(SystemVariables::UNIXTIME);
   addSysVar_enum_html(SystemVariables::UNIXDAY);
   addSysVar_enum_html(SystemVariables::UNIXDAY_SEC);
