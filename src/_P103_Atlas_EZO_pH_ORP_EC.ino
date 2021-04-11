@@ -123,8 +123,6 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
       break;
     }
 
-    addFormCheckBox(F("Status LED"), F("Plugin_103_status_led"), PCONFIG(2));
-
     char statussensordata[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
 
     if (_P103_send_I2C_command(I2Cchoice, F("Status"), statussensordata))
@@ -202,13 +200,32 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
       break;
     }
 
+    // Ability to turn status LED of board on or off
+    addFormCheckBox(F("Status LED"), F("Plugin_103_status_led"), PCONFIG(2));
+
+    // Ability to see and change EC Probe Type (e.g., 0.1, 1.0, 10)
+    if (board_type == EC)
+    {
+      char ecprobetypedata[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
+
+      //if (_P103_send_I2C_command(I2Cchoice, F("K,?"), ecprobetypedata))
+      if (_P103_send_I2C_command(I2Cchoice, F("Name,?"), ecprobetypedata))
+      {
+        String ecProbeType(ecprobetypedata);
+
+        addFormTextBox(F("EC Probe Type"), F("Plugin_103_ec_probe_type"), ecProbeType.substring(ecProbeType.lastIndexOf(',') + 1), 32);
+        addFormCheckBox(F("Set Probe Type"), F("Plugin_103_enable_set_probe_type"), false);
+      }
+    }
+
     // calibrate
     switch (board_type)
     {
     case PH:
     {
       addFormSubHeader(F("pH Calibration"));
-      int nb_calibration_points = addCreate3PointCalibration(event, I2Cchoice, F("pH"), 0.0, 14.0, 2, 0.01);
+      addFormNote(F("Calibration for pH-Probe could be 1 (single), 2 (single, low) or 3 point (single, low, high). The sequence is important."));
+      int nb_calibration_points = addCreate3PointCalibration(board_type, event, I2Cchoice, F("pH"), 0.0, 14.0, 2, 0.01);
       if (nb_calibration_points > 1)
       {
         char slopedata[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
@@ -226,7 +243,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     case ORP:
     {
       addFormSubHeader(F("ORP Calibration"));
-      int nb_calibration_points = addCreateSinglePointCalibration(event, I2Cchoice, F("mV"), 0.0, 1500.0, 0, 1.0);
+      addCreateSinglePointCalibration(board_type, event, I2Cchoice, F("mV"), 0.0, 1500.0, 0, 1.0);
       break;
     }
 
@@ -234,12 +251,12 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     {
       addFormSubHeader(F("EC Calibration"));
       addCreateDryCalibration();
-      int nb_calibration_points = addCreate3PointCalibration(event, I2Cchoice, F("&micro;S"), 0.0, 500000.0, 0, 1.0);
+      addCreate3PointCalibration(board_type, event, I2Cchoice, F("&micro;S"), 0.0, 500000.0, 0, 1.0);
     }
     break;
     }
 
-    // Clear calibtion
+    // Clear calibration
     addClearCalibration();
 
     // Temperature compensation
@@ -296,6 +313,16 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
       _P103_send_I2C_command(I2Cchoice, F("L,0"), leddata);
     }
     PCONFIG(2) = isFormItemChecked(F("Plugin_103_status_led"));
+
+    if((board_type == EC) && isFormItemChecked(F("Plugin_103_enable_set_probe_type")))
+    {
+      addLog(LOG_LEVEL_DEBUG, F("isFormItemChecked"));
+      //String probeType(F("K,"));
+      String probeType(F("Name,"));
+      probeType += web_server.arg(F("Plugin_103_ec_probe_type"));
+      char setProbeTypeCmd[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
+      _P103_send_I2C_command(I2Cchoice, probeType, setProbeTypeCmd);
+    }
 
     String cmd(F("Cal,"));
     bool triggerCalibrate = false;
@@ -529,7 +556,7 @@ int getCalibrationPoints(uint8_t i2cAddress)
       char tmp[2];
       tmp[0] = sensordata[5];
       tmp[1] = '\0',
-      nb_calibration_points = atoi(tmp);
+      nb_calibration_points = str2int(tmp);
     }
   }
 
@@ -550,9 +577,10 @@ void addCreateDryCalibration()
   addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_dry"), false);
   addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_dry\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_single\").checked = false;document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;document.getElementById(\"Plugin_103_enable_cal_clear\").checked = false;};</script>"));
   addFormNote(F("Dry calibration must always be done first!"));
+  addFormNote(F("Calibration for pH-Probe could be 1 (single) or 2 point (low, high)."));
 }
 
-int addCreateSinglePointCalibration(struct EventStruct *event, byte I2Cchoice, String unit, float min, float max, byte nrDecimals, float stepsize)
+int addCreateSinglePointCalibration(byte board_type, struct EventStruct *event, byte I2Cchoice, String unit, float min, float max, byte nrDecimals, float stepsize)
 {
   int nb_calibration_points = getCalibrationPoints(I2Cchoice);
 
@@ -567,13 +595,20 @@ int addCreateSinglePointCalibration(struct EventStruct *event, byte I2Cchoice, S
   addFormFloatNumberBox(F("Ref single point"), F("Plugin_103_ref_cal_single'"), PCONFIG_FLOAT(1), min, max, nrDecimals, stepsize);
   addUnit(unit);
 
-  if (nb_calibration_points > 0)
+  if ((board_type != EC && nb_calibration_points > 0) || (board_type == EC && nb_calibration_points == 1))
   {
     addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
   }
   else
   {
-    addHtml(F("&nbsp;<span style='color:red;'>Not yet calibrated</span>"));
+    if ((board_type == EC) && (nb_calibration_points > 1))
+    {
+      addHtml(F("&nbsp;<span style='color:green;'>Not calibrated, because two point calibration is active.</span>"));
+    }
+    else
+    {
+      addHtml(F("&nbsp;<span style='color:red;'>Not yet calibrated</span>"));
+    }
   }
   addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_single"), false);
   addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_single\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_clear\").checked = false;document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;document.getElementById(\"Plugin_103_enable_cal_dry\").checked = false;};</script>"));
@@ -581,9 +616,9 @@ int addCreateSinglePointCalibration(struct EventStruct *event, byte I2Cchoice, S
   return nb_calibration_points;
 }
 
-int addCreate3PointCalibration(struct EventStruct *event, byte I2Cchoice, String unit, float min, float max, byte nrDecimals, float stepsize)
+int addCreate3PointCalibration(byte board_type, struct EventStruct *event, byte I2Cchoice, String unit, float min, float max, byte nrDecimals, float stepsize)
 {
-  int nb_calibration_points = addCreateSinglePointCalibration(event, I2Cchoice, unit, min, max, nrDecimals, stepsize);
+  int nb_calibration_points = addCreateSinglePointCalibration(board_type, event, I2Cchoice, unit, min, max, nrDecimals, stepsize);
 
   addRowLabel(F("<strong>Low calibration</strong>"));
   addFormFloatNumberBox(F("Ref low point"), F("Plugin_103_ref_cal_L"), PCONFIG_FLOAT(2), min, max, nrDecimals, stepsize);
@@ -604,7 +639,8 @@ int addCreate3PointCalibration(struct EventStruct *event, byte I2Cchoice, String
   addFormFloatNumberBox(F("Ref high point"), F("Plugin_103_ref_cal_H"), PCONFIG_FLOAT(3), min, max, nrDecimals, stepsize);
   addUnit(unit);
 
-  if (nb_calibration_points > 2)
+  // pH: low, high OK with 3 calibration points (single is the first one); EC: low high OK with 2 calibration points
+  if (nb_calibration_points > 2 || (board_type == EC && nb_calibration_points > 1))
   {
     addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
   }
