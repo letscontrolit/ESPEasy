@@ -136,6 +136,13 @@ struct LabelType {
     ETH_CONNECTED,
 #endif // ifdef HAS_ETHERNET
     ETH_WIFI_MODE,
+    SUNRISE,
+    SUNSET,
+    ISNTP,
+    UPTIME_MS,
+    TIMEZONE_OFFSET,
+    LATITUDE,
+    LONGITUDE,
   };
 };
 
