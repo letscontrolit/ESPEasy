@@ -61,7 +61,7 @@ PlatformIO with Atom
 PlatformIO with VS-Code
 =======================
 
-install
+Install
 -------
 
 For development of ESPeasy, a number of extensions has to be installed in VS-Code:
@@ -69,15 +69,17 @@ For development of ESPeasy, a number of extensions has to be installed in VS-Cod
 * PlatformIO IDE (by PlatformIO)
 * C/C++ IntelliSense (by Microsoft)
 * Arduino for Visual Studio Code (by Microsoft)
-* Uncrustify (by Laurent Tréguier)
+* Uncrustify (by Zachary Flower, originally by Laurent Tréguier)
 
 Optional:
+
 * Bookmarks (by Alessandro Fragnani)
 * Bracket Pair Colorizer 2 (by CoenraadS)
 * GitLens - Git supercharged (by Eric Amodio)
 * Todo Tree (by Gruntfuggly)
 * All Autocomplete (by Atishay Jain)
 * Excel Viewer (by GrapeCity)
+* esbonio - An extension for editing sphinx projects (by Swyddfa)
 
 
 Uncrustify

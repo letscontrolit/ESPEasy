@@ -1069,8 +1069,14 @@ String doSaveToFile(const char *fname, int index, const byte *memAddress, int da
     f.close();
     #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("FILE : Saved ");
-      log = log + fname;
+      String log;
+      log.reserve(48);
+      log += F("FILE : Saved ");
+      log += fname;
+      log += F(" offset: ");
+      log += index;
+      log += F(" size: ");
+      log += datasize;
       addLog(LOG_LEVEL_INFO, log);
     }
     #endif

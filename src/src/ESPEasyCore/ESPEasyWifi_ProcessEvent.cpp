@@ -1,5 +1,7 @@
 #include "ESPEasyWifi_ProcessEvent.h"
 
+// FIXME TD-er: Rename this to ESPEasyNetwork_ProcessEvent
+
 #include "../../ESPEasy-Globals.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -30,112 +32,158 @@
 // Called from the loop() to make sure events are processed as soon as possible.
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
-void handle_unprocessedWiFiEvents()
+void handle_unprocessedNetworkEvents()
 {
-  if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
-    if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
+#ifdef HAS_ETHERNET
+  // Must process the Ethernet Connected event regardless the active network medium.
+  // It may happen by plugging in the cable while WiFi was active.
+  if (!EthEventData.processedConnect) {
+    #ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processConnect()"));
+    #endif // ifndef BUILD_NO_DEBUG
+    processEthernetConnected();
+  }
+
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    if (!EthEventData.EthServicesInitialized() || EthEventData.unprocessedEthEvents())
+    {
+      if (!EthEventData.unprocessedEthEvents() && EthEventData.EthConnectAllowed()) {
+        NetworkConnectRelaxed();
+      }
+ 
+      // Process disconnect events before connect events.
+      if (!EthEventData.processedDisconnect) {
+        #ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processDisconnect()"));
+        #endif // ifndef BUILD_NO_DEBUG
+        processEthernetDisconnected();
+      }
+
+      if (!EthEventData.processedGotIP) {
+        #ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processGotIP()"));
+        #endif // ifndef BUILD_NO_DEBUG
+        processEthernetGotIP();
+      }
+
+      if (!EthEventData.processedDHCPTimeout) {
+        #ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, F("Eth  : DHCP timeout, Calling disconnect()"));
+        #endif // ifndef BUILD_NO_DEBUG
+        EthEventData.processedDHCPTimeout = true;
+        //WifiDisconnect();
+      }
+    }
+    EthEventData.setEthServicesInitialized();
+  }
+
+#endif
+  if (active_network_medium == NetworkMedium_t::WIFI) {
+    if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
+      if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
+        delay(10);
+      }
+
+      // WiFi connection is not yet available, so introduce some extra delays to
+      // help the background tasks managing wifi connections
+      delay(1);
+
+      NetworkConnectRelaxed();
+
+      // Process disconnect events before connect events.
+      if (!WiFiEventData.processedDisconnect) {
+        #ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
+        #endif // ifndef BUILD_NO_DEBUG
+        processDisconnect();
+      }
+
+      if (!WiFiEventData.processedConnect) {
+        #ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processConnect()"));
+        #endif // ifndef BUILD_NO_DEBUG
+        processConnect();
+      }
+
+      if (!WiFiEventData.processedGotIP) {
+        #ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processGotIP()"));
+        #endif // ifndef BUILD_NO_DEBUG
+        processGotIP();
+      }
+
+      if (!WiFiEventData.processedDHCPTimeout) {
+        #ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect()"));
+        #endif // ifndef BUILD_NO_DEBUG
+        WiFiEventData.processedDHCPTimeout = true;
+        WifiDisconnect();
+      }
+    }
+    const bool should_be_initialized = (WiFiEventData.WiFiGotIP() && WiFiEventData.WiFiConnected()) || NetworkConnected();
+    if (WiFiEventData.WiFiServicesInitialized() != should_be_initialized)
+    {
+      if (!WiFiEventData.WiFiServicesInitialized()) {
+        markWiFi_services_initialized();
+      }
+    }
+
+    if (WiFiEventData.WiFiDisconnected()) {
+      #ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        static LongTermTimer lastDisconnectMoment_log;
+        static uint8_t lastWiFiStatus_log = 0;
+        uint8_t cur_wifi_status = WiFi.status();
+        if (WiFiEventData.lastDisconnectMoment.get() != lastDisconnectMoment_log.get() || 
+            lastWiFiStatus_log != cur_wifi_status) {
+          lastDisconnectMoment_log.set(WiFiEventData.lastDisconnectMoment.get());
+          lastWiFiStatus_log = cur_wifi_status;
+          String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
+          wifilog += ESPeasyWifiStatusToString();
+          wifilog += F(" RSSI: ");
+          wifilog += String(WiFi.RSSI());
+          wifilog += F(" status: ");
+          #ifdef ESP8266
+          station_status_t status = wifi_station_get_connect_status();
+          wifilog += SDKwifiStatusToString(status);
+          #endif
+          #ifdef ESP32
+          wifilog += ArduinoWifiStatusToString(WiFi.status());
+          #endif
+          addLog(LOG_LEVEL_DEBUG, wifilog);
+        }
+      }
+      #endif // ifndef BUILD_NO_DEBUG
+
+      // While connecting to WiFi make sure the device has ample time to do so
       delay(10);
     }
 
-    // WiFi connection is not yet available, so introduce some extra delays to
-    // help the background tasks managing wifi connections
-    delay(1);
+    if (!WiFiEventData.processedDisconnectAPmode) { processDisconnectAPmode(); }
 
-    NetworkConnectRelaxed();
+    if (!WiFiEventData.processedConnectAPmode) { processConnectAPmode(); }
 
-    // Process disconnect events before connect events.
-    if (!WiFiEventData.processedDisconnect) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
-      #endif // ifndef BUILD_NO_DEBUG
-      processDisconnect();
-    }
+    if (WiFiEventData.timerAPoff.isSet()) { processDisableAPmode(); }
 
-    if (!WiFiEventData.processedConnect) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processConnect()"));
-      #endif // ifndef BUILD_NO_DEBUG
-      processConnect();
-    }
+    if (!WiFiEventData.processedScanDone) { processScanDone(); }
 
-    if (!WiFiEventData.processedGotIP) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processGotIP()"));
-      #endif // ifndef BUILD_NO_DEBUG
-      processGotIP();
-    }
+    if (WiFiEventData.wifi_connect_attempt > 0) {
+      // We only want to clear this counter if the connection is currently stable.
+      if (WiFiEventData.WiFiServicesInitialized()) {
+        if (WiFiEventData.lastConnectMoment.isSet() && WiFiEventData.lastConnectMoment.timeoutReached(WIFI_CONNECTION_CONSIDERED_STABLE)) {
+          // Connection considered stable
+          WiFiEventData.wifi_connect_attempt = 0;
+          WiFiEventData.wifi_considered_stable = true;
+          WiFi_AP_Candidates.markCurrentConnectionStable();
 
-    if (!WiFiEventData.processedDHCPTimeout) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WIFI : DHCP timeout, Calling disconnect()"));
-      #endif // ifndef BUILD_NO_DEBUG
-      WiFiEventData.processedDHCPTimeout = true;
-      WifiDisconnect();
-    }
-  }
-  const bool wifi_should_be_initialized = (WiFiEventData.WiFiGotIP() && WiFiEventData.WiFiConnected()) || NetworkConnected();
-  if (WiFiEventData.WiFiServicesInitialized() != wifi_should_be_initialized)
-  {
-    if (!WiFiEventData.WiFiServicesInitialized()) {
-      markWiFi_services_initialized();
-    }
-  }
-
-  if (WiFiEventData.WiFiDisconnected()) {
-    #ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      static LongTermTimer lastDisconnectMoment_log;
-      static uint8_t lastWiFiStatus_log = 0;
-      uint8_t cur_wifi_status = WiFi.status();
-      if (WiFiEventData.lastDisconnectMoment.get() != lastDisconnectMoment_log.get() || 
-          lastWiFiStatus_log != cur_wifi_status) {
-        lastDisconnectMoment_log.set(WiFiEventData.lastDisconnectMoment.get());
-        lastWiFiStatus_log = cur_wifi_status;
-        String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
-        wifilog += ESPeasyWifiStatusToString();
-        wifilog += F(" RSSI: ");
-        wifilog += String(WiFi.RSSI());
-        wifilog += F(" status: ");
-        #ifdef ESP8266
-        station_status_t status = wifi_station_get_connect_status();
-        wifilog += SDKwifiStatusToString(status);
-        #endif
-        #ifdef ESP32
-        wifilog += ArduinoWifiStatusToString(WiFi.status());
-        #endif
-        addLog(LOG_LEVEL_DEBUG, wifilog);
-      }
-    }
-    #endif // ifndef BUILD_NO_DEBUG
-
-    // While connecting to WiFi make sure the device has ample time to do so
-    delay(10);
-  }
-
-  if (!WiFiEventData.processedDisconnectAPmode) { processDisconnectAPmode(); }
-
-  if (!WiFiEventData.processedConnectAPmode) { processConnectAPmode(); }
-
-  if (WiFiEventData.timerAPoff.isSet()) { processDisableAPmode(); }
-
-  if (!WiFiEventData.processedScanDone) { processScanDone(); }
-
-  if (WiFiEventData.wifi_connect_attempt > 0) {
-    // We only want to clear this counter if the connection is currently stable.
-    if (WiFiEventData.WiFiServicesInitialized()) {
-      if (WiFiEventData.lastConnectMoment.isSet() && WiFiEventData.lastConnectMoment.timeoutReached(WIFI_CONNECTION_CONSIDERED_STABLE)) {
-        // Connection considered stable
-        WiFiEventData.wifi_connect_attempt = 0;
-        WiFiEventData.wifi_considered_stable = true;
-        WiFi_AP_Candidates.markCurrentConnectionStable();
-
-        if (!WiFi.getAutoConnect()) {
-          WiFi.setAutoConnect(true);
-        }
-      } else {
-        if (WiFi.getAutoConnect()) {
-          WiFi.setAutoConnect(false);
+          if (!WiFi.getAutoConnect()) {
+            WiFi.setAutoConnect(true);
+          }
+        } else {
+          if (WiFi.getAutoConnect()) {
+            WiFi.setAutoConnect(false);
+          }
         }
       }
     }
@@ -400,7 +448,7 @@ void processScanDone() {
   WiFiEventData.processedScanDone = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI  : Scan finished, found: ");
+    String log = F("WiFi : Scan finished, found: ");
     log += scanCompleteStatus;
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -409,7 +457,7 @@ void processScanDone() {
 
   const WiFi_AP_Candidate bestCandidate = WiFi_AP_Candidates.getBestScanResult();
   if (bestCandidate.usable() && loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI  : Selected: ");
+    String log = F("WiFi : Selected: ");
     log += bestCandidate.toString();
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -470,18 +518,95 @@ void markWiFi_services_initialized() {
 #ifdef HAS_ETHERNET
 
 void processEthernetConnected() {
+  if (EthEventData.processedConnect) return;
+  // FIXME TD-er: Must differentiate among reconnects for WiFi and Ethernet.
+  ++WiFiEventData.wifi_reconnects;
+  EthEventData.setEthConnected();
+  EthEventData.processedConnect = true;
   if (Settings.UseRules)
   {
-    eventQueue.add(F("ETHERNET#Connected"));
-  }
-  statusLED(true);
+    eventQueue.add(F("Ethernet#LinkUp"));
+  }  
+  setNetworkMedium(Settings.NetworkMedium);
 }
 
 void processEthernetDisconnected() {
+  EthEventData.setEthDisconnected();
+  EthEventData.processedDisconnect = true;
   if (Settings.UseRules)
   {
     eventQueue.add(F("ETHERNET#Disconnected"));
   }
+  setNetworkMedium(NetworkMedium_t::WIFI);
+}
+
+void processEthernetGotIP() {
+  if (EthEventData.processedGotIP) {
+    return;
+  }
+  IPAddress ip = NetworkLocalIP();
+  const IPAddress gw       = NetworkGatewayIP();
+  const IPAddress subnet   = NetworkSubnetMask();
+  const LongTermTimer::Duration dhcp_duration = EthEventData.lastConnectMoment.timeDiff(EthEventData.lastGetIPmoment);
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO))
+  {
+    String log = F("ETH MAC: ");
+    log += NetworkMacAddress();
+    if (useStaticIP()) {
+      log += F("Static IP: ");
+    } else {
+      log += F("DHCP IP: ");
+    }
+    log += NetworkLocalIP().toString();
+    log += " (";
+    log += NetworkGetHostname();
+    log += F(") GW: ");
+    log += NetworkGatewayIP().toString();
+    log += F(" SN: ");
+    log += NetworkSubnetMask().toString();
+    if (EthLinkUp()) {
+      if (EthFullDuplex()) {
+        log += F(" FULL_DUPLEX");
+      }
+      log += F(" ");
+      log += EthLinkSpeed();
+      log += F("Mbps");
+    } else {
+      log += F(" Link Down");
+    }
+    
+    if ((dhcp_duration > 0ll) && (dhcp_duration < 30000000ll)) {
+      // Just log times when they make sense.
+      log += F("   duration: ");
+      log += static_cast<int32_t>(dhcp_duration / 1000);
+      log += F(" ms");
+    }
+
+    addLog(LOG_LEVEL_INFO, log);
+  }
+
+  // First try to get the time, since that may be used in logs
+  if (node_time.systemTimePresent()) {
+    node_time.initTime();
+  }
+#ifdef USES_MQTT
+  mqtt_reconnect_count        = 0;
+  MQTTclient_should_reconnect = true;
+  timermqtt_interval          = 100;
+  Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
+#endif // USES_MQTT
+  Scheduler.sendGratuitousARP_now();
+
+  if (Settings.UseRules)
+  {
+    eventQueue.add(F("Ethernet#Connected"));
+  }
+  statusLED(true);
+  logConnectionStatus();
+
+  EthEventData.processedGotIP = true;
+  EthEventData.setEthGotIP();
 }
 
 #endif

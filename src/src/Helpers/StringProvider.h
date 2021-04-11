@@ -35,10 +35,12 @@ struct LabelType {
 #ifdef ESP32
     HEAP_SIZE,
     HEAP_MIN_FREE,
+    #ifdef ESP32_ENABLE_PSRAM
     PSRAM_SIZE,
     PSRAM_FREE,
     PSRAM_MIN_FREE,
     PSRAM_MAX_FREE_BLOCK,
+    #endif // ESP32_ENABLE_PSRAM
 #endif // ifdef ESP32
 
     BOOT_TYPE,               // Cold boot
@@ -131,9 +133,9 @@ struct LabelType {
     ETH_SPEED,
     ETH_STATE,
     ETH_SPEED_STATE,
-    ETH_WIFI_MODE,
     ETH_CONNECTED,
 #endif // ifdef HAS_ETHERNET
+    ETH_WIFI_MODE,
   };
 };
 
