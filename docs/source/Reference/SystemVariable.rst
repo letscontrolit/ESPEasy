@@ -105,7 +105,7 @@ More uses of these system variables can be seen in the rules section and formula
      - Uptime in minutes.
      - Yes
    * - ``%uptime_ms%``
-     - 3244
+     - 2095803
      - Uptime in milliseconds.
      -
    * - ``%rssi%``
