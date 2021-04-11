@@ -161,7 +161,15 @@ void handle_json()
       stream_next_json_object_value(LabelType::HEAP_MAX_FREE_BLOCK);
       stream_next_json_object_value(LabelType::HEAP_FRAGMENTATION);
       #endif // ifdef CORE_POST_2_5_0
-      stream_last_json_object_value(LabelType::FREE_MEM);
+      stream_next_json_object_value(LabelType::FREE_MEM);
+      String suntime = F("%sunrise%");
+      parseSystemVariables(suntime, false); // Not URL encoded
+      parseStandardConversions(suntime, false);
+      stream_next_json_object_value(F("Sunrise"),suntime);
+      suntime = F("%sunset%");
+      parseSystemVariables(suntime, false); // Not URL encoded
+      parseStandardConversions(suntime, false);
+      stream_last_json_object_value(F("Sunset"),suntime);
       addHtml(F(",\n"));
     }
 
