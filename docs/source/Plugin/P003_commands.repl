@@ -12,8 +12,8 @@
         ","
         Reset the counters (pulse counter and total counter) of P003 Pulse Counter.
         
-        When using multiple instances of Pulse Counter tasks, use the the taskNumber as prefix. E.g. ``2.ResetPulseCounter`` addresses task number 2.
-        When taskNumber is neither given as prefix nor as parameter, the first active Pulse Counter task will be affected.
+        When using multiple instances of Pulse Counter tasks, use a prefix to address the right one. E.g. ``2.ResetPulseCounter``, ``[GasZaehler].ResetPulseCounter`` or ``GasZaehler.ResetPulseCounter`` to address task number 2 or the task with the name ``GasZaehler``.
+        When task is neither identified as prefix nor as parameter, the first active Pulse Counter task will be affected.
 
         The command will also trigger a call to ``PLUGIN_READ`` as if it processes a normal successful read.
         "
@@ -27,8 +27,8 @@
         ","
         Set the value of the total count of P003 Pulse Counter.
         
-        When using multiple instances of Pulse Counter tasks, use the the taskNumber as prefix. E.g. ``2.SetPulseCounter,1000`` sets the value in task number 2.
-        When taskNumber is neither given as prefix nor as parameter, the first active Pulse Counter task will be affected.
+        When using multiple instances of Pulse Counter tasks, use a prefix to address the right one. E.g. ``2.SetPulseCounter,1000``, ``[GasZaehler].SetPulseCounter,1000`` or ``GasZaehler.SetPulseCounter,1000`` to address task number 2 or the task with the name ``GasZaehler``.
+        When task is neither identified as prefix nor as parameter, the first active Pulse Counter task will be affected.
         
         A call to set the counter total will also trigger a call to ``PLUGIN_READ`` as if it processes a normal successful read.
 
@@ -50,8 +50,8 @@
         
         The ``i`` subcommand allows you to increase the log level to ``Info`` and still see the Pulse Counter's statistical logings without other not needed ``Debug`` messages. This setting is valid until next reset.
 
-        When using multiple instances of Pulse Counter tasks, use the the taskNumber as prefix. E.g. ``2.LogPulseStatistic,i`` applies to task number 2.
-        When taskNumber-prefix is omitted, the first active Pulse Counter task will be affected.
+        When using multiple instances of Pulse Counter tasks, use a prefix to address the right one. E.g. ``2.LogPulseStatistic,i``, ``[GasZaehler].LogPulseStatistic,i`` or ``GasZaehler.LogPulseStatistic,i`` to address task number 2 or the task with the name ``GasZaehler``.
+        When the task-prefix is omitted, the first active Pulse Counter task will be affected.
         
         N.B. Note that this single log entry is done, when Log Level is set to ``Info``. Only the regular statistical logging is done by default on level ``Debug``, but can be temporary increased to ``Info`` with the above ``i`` command.
         "
