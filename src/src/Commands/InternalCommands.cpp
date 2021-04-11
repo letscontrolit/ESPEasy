@@ -35,6 +35,7 @@
 #include "../Commands/UPD.h"
 #include "../Commands/wd.h"
 #include "../Commands/WiFi.h"
+#include "../Commands/Serial.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
@@ -350,6 +351,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(      "servo", Command_Servo,          3); // Servo.h
       }
       COMMAND_CASE_A("status", Command_GPIO_Status,          2); // GPIO.h
+      COMMAND_CASE_A("serialwritehex", Command_Serial_WriteHex,  -1); // Serial.h
       COMMAND_CASE_R("subnet", Command_Subnet, 1);                // Network Command
     #ifdef USES_MQTT
       COMMAND_CASE_A("subscribe", Command_MQTT_Subscribe, 1);     // MQTT.h

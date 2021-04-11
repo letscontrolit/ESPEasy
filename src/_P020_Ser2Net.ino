@@ -339,6 +339,31 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         success = true;
         String tmpString = string.substring(11);
         Serial.println(tmpString); // FIXME TD-er: Should this also use the serial write buffer?
+      } else if (command == F("serialsendhex"))
+      {
+        success = true;
+        String tmpString = string.substring(14);
+        unsigned int len = tmpString.length();
+        const char* buf = tmpString.c_str();
+        for(unsigned int i=0; i < len / 2; i++){
+          uint8_t uc = buf[i * 2], dc = buf[i * 2 + 1];
+          if(uc >= 48 && uc <= 57) {
+              uc -= 48;
+          } else if(uc >= 65 && uc <= 70) {
+              uc -= 55;
+          } else if(uc >= 97 && uc <= 102) {
+              uc -= 87;
+          }
+
+          if(dc >= 48 && dc <= 57) {
+              dc -= 48;
+          } else if(dc >= 65 && dc <= 70) {
+              dc -= 55;
+          } else if(dc >= 97 && dc <= 102) {
+              dc -= 87;
+          }
+          Serial.write(uc << 4 | dc);
+        }
       }
       break;
     }
