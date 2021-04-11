@@ -104,6 +104,10 @@ More uses of these system variables can be seen in the rules section and formula
      - 3244
      - Uptime in minutes.
      - Yes
+   * - ``%uptime_ms%``
+     - 3244
+     - Uptime in milliseconds.
+     -
    * - ``%rssi%``
      - -45
      - WiFi signal strength (dBm).
