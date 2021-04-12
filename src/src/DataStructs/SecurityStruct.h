@@ -13,6 +13,8 @@ struct SecurityStruct
 
   void validate();
 
+  void clearWiFiCredentials();
+
   char          WifiSSID[32];
   char          WifiKey[64];
   char          WifiSSID2[32];

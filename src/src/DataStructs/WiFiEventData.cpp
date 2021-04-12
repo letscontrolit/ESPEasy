@@ -1,13 +1,21 @@
 #include "WiFiEventData.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+
 #include "../Globals/RTC.h"
+#include "../Globals/SecuritySettings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
+
+#include "../Helpers/ESPEasy_Storage.h"
+
+#include "../../ESPEasy_fdwdecl.h"
 
 // Bit numbers for WiFi status
 #define ESPEASY_WIFI_CONNECTED               0
 #define ESPEASY_WIFI_GOT_IP                  1
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    2
+
+#define WIFI_RECONNECT_WAIT                  20000  // in milliSeconds
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;
@@ -63,7 +71,7 @@ void WiFiEventData_t::markWiFiBegin() {
   wifiConnectInProgress  = true;
   ++wifi_connect_attempt;
   if (!timerAPstart.isSet()) {
-    timerAPstart.setNow();
+    timerAPstart.setMillisFromNow(WIFI_RECONNECT_WAIT);
   }
 }
 
@@ -135,15 +143,40 @@ void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], 
   lastConnectMoment.setNow();
   processedConnect    = false;
   channel_changed     = RTC.lastWiFiChannel != channel;
-  RTC.lastWiFiChannel = channel;
   last_ssid           = ssid;
   bssid_changed       = false;
   auth_mode           = WiFi_AP_Candidates.getCurrent().enc_type;
 
+  RTC.lastWiFiChannel = channel;
   for (byte i = 0; i < 6; ++i) {
     if (RTC.lastBSSID[i] != bssid[i]) {
       bssid_changed    = true;
       RTC.lastBSSID[i] = bssid[i];
+    }
+  }
+
+  if (WiFi_AP_Candidates.getCurrent().isEmergencyFallback) {
+    bool mustResetCredentials = false;
+    #ifdef CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS
+    mustResetCredentials = CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS;
+    #endif
+    bool mustStartAP = false;
+    #ifdef CUSTOM_EMERGENCY_FALLBACK_START_AP
+    mustStartAP = CUSTOM_EMERGENCY_FALLBACK_START_AP;
+    #endif
+    if (mustStartAP) {
+      int allowedUptimeMinutes = 10;
+      #ifdef CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME
+      allowedUptimeMinutes = CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME;
+      #endif
+      if (getUptimeMinutes() < allowedUptimeMinutes) {
+        timerAPstart.setNow();
+      }
+    }
+    if (mustResetCredentials) {
+      SecuritySettings.clearWiFiCredentials();
+      SaveSecuritySettings();
+      WiFi_AP_Candidates.force_reload();
     }
   }
 }

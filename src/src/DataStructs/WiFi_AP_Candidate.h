@@ -52,6 +52,8 @@ struct WiFi_AP_Candidate {
   byte    index    = 0;     // Index of the matching credentials
   byte    enc_type = 0;     // Encryption used (e.g. WPA2)
   bool    isHidden = false; // Hidden SSID
+  bool    lowPriority = false; // Try as last attempt
+  bool    isEmergencyFallback = false;
 };
 
 #endif // ifndef DATASTRUCTS_WIFI_AP_CANDIDATES_H

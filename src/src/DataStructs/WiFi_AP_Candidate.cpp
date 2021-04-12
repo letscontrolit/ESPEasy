@@ -2,6 +2,8 @@
 
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
 
 WiFi_AP_Candidate::WiFi_AP_Candidate(byte index_c, const String& ssid_c, const String& pass) :
   rssi(0), channel(0), index(index_c), isHidden(false)
@@ -37,6 +39,13 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
 WiFi_AP_Candidate::WiFi_AP_Candidate() {}
 
 bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
+  if (isEmergencyFallback != other.isEmergencyFallback) {
+    return isEmergencyFallback;
+  }
+  if (lowPriority != other.lowPriority) {
+    return !lowPriority;
+  }
+
   // RSSI values >= 0 are invalid
   if (rssi >= 0) { return false; }
 
@@ -60,6 +69,8 @@ WiFi_AP_Candidate& WiFi_AP_Candidate::operator=(const WiFi_AP_Candidate& other) 
     isHidden = other.isHidden;
     index    = other.index;
     enc_type = other.enc_type;
+    lowPriority = other.lowPriority;
+    isEmergencyFallback = other.isEmergencyFallback;
   }
   return *this;
 }
@@ -73,6 +84,15 @@ void WiFi_AP_Candidate::setBSSID(const uint8_t *bssid_c) {
 bool WiFi_AP_Candidate::usable() const {
   // Allow for empty pass
   // if (key.length() == 0) return false;
+  if (isEmergencyFallback) {
+    int allowedUptimeMinutes = 10;
+    #ifdef CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME
+    allowedUptimeMinutes = CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME;
+    #endif
+    if (getUptimeMinutes() > allowedUptimeMinutes) {
+      return false;
+    }
+  }
   if (!isHidden && (ssid.length() == 0)) { return false; }
   return true;
 }

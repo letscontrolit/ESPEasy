@@ -31,3 +31,10 @@ void SecurityStruct::validate() {
   }
   ZERO_TERMINATE(Password);
 }
+
+void SecurityStruct::clearWiFiCredentials() {
+  ZERO_FILL(WifiSSID);
+  ZERO_FILL(WifiKey);
+  ZERO_FILL(WifiSSID2);
+  ZERO_FILL(WifiKey2);
+}

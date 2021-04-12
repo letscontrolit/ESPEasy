@@ -142,6 +142,25 @@
 #define BUILD_NO_DEBUG
 
 
+// Special SSID/key setup only to be used in custom builds.
+
+// Deployment SSID will be used only when the configured SSIDs are not reachable and/or no credentials are set.
+// This to make deployment of large number of nodes easier
+#define CUSTOM_DEPLOYMENT_SSID                  ""                // Enter SSID not shown in UI, to be used on custom builds to ease deployment
+#define CUSTOM_DEPLOYMENT_KEY                   ""                // Enter key not shown in UI, to be used on custom builds to ease deployment
+
+// Emergency fallback SSID will only be attempted in the first 10 minutes after reboot.
+// When found, the unit will connect to it and depending on the built in flag, it will either just connect to it, or clear set credentials.
+// Use case: User connects to a public AP which does need to agree on an agreement page for the rules of conduct (e.g. open APs)
+// This is seen as a valid connection, so the unit will not reconnect to another node and thus becomes inaccessible.
+#define CUSTOM_EMERGENCY_FALLBACK_SSID          ""                // Enter SSID not shown in UI, to be used to regain access to the node
+#define CUSTOM_EMERGENCY_FALLBACK_KEY           ""                // Enter key not shown in UI, to be used to regain access to the node
+
+#define CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS  false
+#define CUSTOM_EMERGENCY_FALLBACK_START_AP           false
+
+#define CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME 10
+
 #define USES_SSDP
 
 

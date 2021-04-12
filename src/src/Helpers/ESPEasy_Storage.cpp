@@ -1,4 +1,4 @@
-#include "ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_Storage.h"
 
 #include "../../ESPEasy_common.h"
 
@@ -359,31 +359,32 @@ bool GarbageCollection() {
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
-String SaveSettings(void)
+String SaveSettings()
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveSettings"));
   #endif
-  MD5Builder md5;
-  uint8_t    tmp_md5[16] = { 0 };
   String     err;
+  {
+    Settings.StructSize = sizeof(Settings);
 
-  Settings.StructSize = sizeof(Settings);
+    // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 
-  // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
-
-  /*
-     memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
-     md5.begin();
-     md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
-     md5.calculate();
-     md5.getBytes(tmp_md5);
-     if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
-      // Settings have changed, save to file.
-      memcpy(Settings.md5, tmp_md5, 16);
-   */
-  Settings.validate();
-  err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, (byte *)&Settings, sizeof(Settings));
+    /*
+      MD5Builder md5;
+      uint8_t    tmp_md5[16] = { 0 };
+      memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
+      md5.begin();
+      md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
+      md5.calculate();
+      md5.getBytes(tmp_md5);
+      if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
+        // Settings have changed, save to file.
+        memcpy(Settings.md5, tmp_md5, 16);
+    */
+    Settings.validate();
+    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, (byte *)&Settings, sizeof(Settings));
+  }
 
   if (err.length()) {
     return err;
@@ -394,6 +395,15 @@ String SaveSettings(void)
   if (!SettingsCheck(err)) { return err; }
 
   //  }
+
+  err = SaveSecuritySettings();
+  return err;
+}
+
+String SaveSecuritySettings() {
+  MD5Builder md5;
+  uint8_t    tmp_md5[16] = { 0 };
+  String     err;
 
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);

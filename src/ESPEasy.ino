@@ -548,6 +548,9 @@ int getLoopCountPerSec() {
   return loopCounterLast / 30;
 }
 
+int getUptimeMinutes() {
+  return wdcounter / 2;
+}
 
 
 
