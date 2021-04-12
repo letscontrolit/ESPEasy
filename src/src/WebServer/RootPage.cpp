@@ -190,9 +190,17 @@ void handle_root() {
       addHtml(html);
     }
     #endif // ifdef FEATURE_MDNS
+
+    #if MAIN_PAGE_SHOW_SYSINFO_BUTTON
     html_TR_TD();
     html_TD();
     addButton(F("sysinfo"), F("More info"));
+    #endif
+    #if MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON
+    html_TR_TD();
+    html_TD();
+    addButton(F("setup"), F("WiFi Setup"));
+    #endif
 
     if (printWebString.length() > 0)
     {

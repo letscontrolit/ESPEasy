@@ -63,7 +63,7 @@
 
 #include "../Static/WebStaticData.h"
 
-
+// Determine what pages should be visible
 #ifndef MENU_INDEX_MAIN_VISIBLE
   # define MENU_INDEX_MAIN_VISIBLE true
 #endif // ifndef MENU_INDEX_MAIN_VISIBLE
@@ -100,6 +100,19 @@
 #if defined(NOTIFIER_SET_NONE) && defined(MENU_INDEX_NOTIFICATIONS_VISIBLE)
   #undef MENU_INDEX_NOTIFICATIONS_VISIBLE
   #define MENU_INDEX_NOTIFICATIONS_VISIBLE false
+#endif
+
+// Define main page elements present
+#ifndef MAIN_PAGE_SHOW_SYSINFO_BUTTON
+  #define MAIN_PAGE_SHOW_SYSINFO_BUTTON    true
+#endif
+
+#ifndef MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON
+  #define MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON   true
+#endif
+
+#ifndef SETUP_PAGE_SHOW_CONFIG_BUTTON
+  #define SETUP_PAGE_SHOW_CONFIG_BUTTON true
 #endif
 
 

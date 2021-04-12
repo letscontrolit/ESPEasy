@@ -168,6 +168,29 @@
 // #define FEATURE_I2CMULTIPLEXER
 // #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
 
+/*
+ #######################################################################################################
+   Defining web interface
+ #######################################################################################################
+ */
+
+#define MENU_INDEX_MAIN_VISIBLE          true
+/*
+#define MENU_INDEX_CONFIG_VISIBLE        false
+#define MENU_INDEX_CONTROLLERS_VISIBLE   false
+#define MENU_INDEX_HARDWARE_VISIBLE      false
+#define MENU_INDEX_DEVICES_VISIBLE       false
+#define MENU_INDEX_RULES_VISIBLE         false
+#define MENU_INDEX_NOTIFICATIONS_VISIBLE false
+#define MENU_INDEX_TOOLS_VISIBLE         false
+*/
+
+#define MAIN_PAGE_SHOW_SYSINFO_BUTTON    true
+#define MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON true
+#define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
+
+//#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
+
 
 /*
  #######################################################################################################

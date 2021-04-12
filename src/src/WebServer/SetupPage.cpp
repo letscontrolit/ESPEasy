@@ -14,8 +14,9 @@
 # include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
 
-
 # include "../Globals/ESPEasyWiFiEvent.h"
+# include "../Globals/NetworkState.h"
+# include "../Globals/RTC.h"
 # include "../Globals/Settings.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Globals/WiFi_AP_Candidates.h"
@@ -40,7 +41,7 @@ void handle_setup() {
   // Do not check client IP range allowed.
   TXBuffer.startStream();
 
-  if (!NetworkConnected())
+  if (active_network_medium == NetworkMedium_t::WIFI)
   {
     sendHeadandTail(F("TmplAP"));
     static byte status       = HANDLE_SETUP_SCAN_STAGE;
@@ -137,9 +138,13 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
       }
       addHtml("'");
 
-      if (WiFi.SSID(i) == ssid) {
-        addHtml(F(" checked "));
+      {
+        WiFi_AP_Candidate tmp(i);
+        if (tmp.bssid_match(RTC.lastBSSID)) {
+          addHtml(F(" checked "));  
+        }
       }
+
       addHtml(F("><span class='dotmark'></span></label><TD>"));
       int32_t rssi = 0;
       addHtml(formatScanResult(i, "<BR>", rssi));
@@ -190,6 +195,17 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
 
 
   addSubmitButton(F("Connect"), "");
+
+  if (NetworkConnected()) {
+    addFormSeparator(2);
+    html_table_class_normal();
+    html_TR();
+
+    addFormHeader(F("Current network configuration"));
+
+    handle_sysinfo_Network();
+  }
+
 }
 
 bool handle_setup_connectingStage(byte refreshCount) {
@@ -235,8 +251,12 @@ void handle_setup_finish() {
   html_add_form();
   html_table_class_normal();
   html_TR();
-
-  addFormHeader(F("WiFi Setup Complete"));
+  
+  if (active_network_medium == NetworkMedium_t::WIFI) {
+    addFormHeader(F("WiFi Setup Complete"));
+  } else {
+    addFormHeader(F("Ethernet Setup Complete"));
+  }
 
   handle_sysinfo_Network();
 
@@ -244,7 +264,8 @@ void handle_setup_finish() {
 
   html_TR_TD();
   html_TD();
-
+  
+  #if SETUP_PAGE_SHOW_CONFIG_BUTTON
   if (!clientIPinSubnet()) {
     String host = formatIP(NetworkLocalIP());
     String url  = F("http://");
@@ -252,6 +273,8 @@ void handle_setup_finish() {
     url += F("/config");
     addButton(url, host);
   }
+  #endif
+
   html_end_table();
   html_end_form();
 
