@@ -212,7 +212,7 @@ void addDeviceSelect(const String& name,  int choice)
         deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 
-  # ifdef PLUGIN_BUILD_DEV
+  # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
         String plugin = "P";
 
         if (pluginID < 10) { plugin += '0'; }
@@ -221,7 +221,7 @@ void addDeviceSelect(const String& name,  int choice)
         plugin    += pluginID;
         plugin    += F(" - ");
         deviceName = plugin + deviceName;
-  # endif // ifdef PLUGIN_BUILD_DEV
+  # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
         addSelector_Item(deviceName,
                          Device[deviceIndex].Number,
