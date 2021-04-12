@@ -3,16 +3,22 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
+
+#include "../Helpers/Network.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/MDNS_Helper.h"
 
 #ifdef HAS_ETHERNET
-#include "ETH.h"
+#include <ETH.h>
 #endif
 
 void setNetworkMedium(NetworkMedium_t medium) {
+  if (active_network_medium == medium) {
+    return;
+  }
   switch (active_network_medium) {
     case NetworkMedium_t::Ethernet:
       #ifdef HAS_ETHERNET
@@ -21,9 +27,12 @@ void setNetworkMedium(NetworkMedium_t medium) {
       #endif
       break;
     case NetworkMedium_t::WIFI:
-      WiFi.mode(WIFI_OFF);
+      WiFiEventData.timerAPoff.setNow();
+      WiFiEventData.timerAPstart.clear();
+      WifiDisconnect();
       break;
   }
+  statusLED(true);
   active_network_medium = medium;
   addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
 }
@@ -56,21 +65,10 @@ bool NetworkConnected() {
   return WiFiConnected();
 }
 
-void PrepareSend() {
-  #ifdef HAS_ETHERNET
-  if (active_network_medium == NetworkMedium_t::Ethernet) {
-    return;
-  }
-  #endif
-  if (Settings.UseMaxTXpowerForSending()) {
-    SetWiFiTXpower(30); // Just some max, will be limited in SetWiFiTXpower
-  }
-}
-
 IPAddress NetworkLocalIP() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(eth_connected) {
+    if(EthEventData.ethInitSuccess) {
       return ETH.localIP();
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkLocalIP() only on connected Ethernet!"));
@@ -84,7 +82,7 @@ IPAddress NetworkLocalIP() {
 IPAddress NetworkSubnetMask() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(eth_connected) {
+    if(EthEventData.ethInitSuccess) {
       return ETH.subnetMask();
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkSubnetMask() only on connected Ethernet!"));
@@ -98,7 +96,7 @@ IPAddress NetworkSubnetMask() {
 IPAddress NetworkGatewayIP() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(eth_connected) {
+    if(EthEventData.ethInitSuccess) {
       return ETH.gatewayIP();
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkGatewayIP() only on connected Ethernet!"));
@@ -112,7 +110,7 @@ IPAddress NetworkGatewayIP() {
 IPAddress NetworkDnsIP (uint8_t dns_no) {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(eth_connected) {
+    if(EthEventData.ethInitSuccess) {
       return ETH.dnsIP();
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkDnsIP(uint8_t dns_no) only on connected Ethernet!"));
@@ -126,7 +124,7 @@ IPAddress NetworkDnsIP (uint8_t dns_no) {
 String NetworkMacAddress() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(!eth_connected) {
+    if(!EthEventData.ethInitSuccess) {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddress() only on connected Ethernet!"));
     } else {
       return ETH.macAddress();
@@ -154,7 +152,7 @@ uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
 String NetworkGetHostname() {
     #ifdef ESP32
       #ifdef HAS_ETHERNET 
-      if(Settings.NetworkMedium == NetworkMedium_t::Ethernet) {
+      if(Settings.NetworkMedium == NetworkMedium_t::Ethernet && EthEventData.ethInitSuccess) {
         return String(ETH.getHostname());
       }
       #endif
@@ -198,3 +196,26 @@ void CheckRunningServices() {
   set_mDNS();
   SetWiFiTXpower();
 }
+
+#ifdef HAS_ETHERNET
+bool EthFullDuplex()
+{
+  if (EthEventData.ethInitSuccess)
+    return ETH.fullDuplex();
+  return false;
+}
+
+bool EthLinkUp()
+{
+  if (EthEventData.ethInitSuccess)
+    return ETH.linkUp();
+  return false;
+}
+
+uint8_t EthLinkSpeed()
+{
+  if (EthEventData.ethInitSuccess)
+    return ETH.linkSpeed();
+  return 0;
+}
+#endif

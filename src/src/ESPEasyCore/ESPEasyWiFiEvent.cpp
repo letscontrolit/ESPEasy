@@ -15,14 +15,12 @@
 #include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 
 #include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
 
 
-#ifdef HAS_ETHERNET
-extern bool eth_connected;
-#endif
 
 #ifdef ESP32
 void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
@@ -60,27 +58,35 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       // ESP32 WiFi ready
       break;
     case SYSTEM_EVENT_STA_START:
-      addLog(LOG_LEVEL_INFO, F("WiFi  : STA Started"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : STA Started"));
       break;
     case SYSTEM_EVENT_STA_STOP:
-      addLog(LOG_LEVEL_INFO, F("WiFi  : STA Stopped"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : STA Stopped"));
       break;
     case SYSTEM_EVENT_AP_START:
-      addLog(LOG_LEVEL_INFO, F("WiFi  : AP Started"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : AP Started"));
       break;
     case SYSTEM_EVENT_AP_STOP:
-      addLog(LOG_LEVEL_INFO, F("WiFi  : AP Stopped"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : AP Stopped"));
       break;
     case SYSTEM_EVENT_STA_LOST_IP:
       // ESP32 station lost IP and the IP is reset to 0
+      #ifdef HAS_ETHERNET
+      if (active_network_medium == NetworkMedium_t::Ethernet) {
+        EthEventData.markLostIP();
+      }
+      else
+      #endif
       WiFiEventData.markLostIP();
-      addLog(LOG_LEVEL_INFO, F("WiFi  : Lost IP"));
+      addLog(LOG_LEVEL_INFO, 
+        active_network_medium == NetworkMedium_t::Ethernet ?
+        F("ETH : Lost IP") : F("WiFi : Lost IP"));
       break;
 
     case SYSTEM_EVENT_AP_PROBEREQRECVED:
       // Receive probe request packet in soft-AP interface
       // TODO TD-er: Must implement like onProbeRequestAPmode for ESP8266
-      addLog(LOG_LEVEL_INFO, F("WiFi  : AP got probed"));
+      addLog(LOG_LEVEL_INFO, F("WiFi : AP got probed"));
       break;
 
     case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
@@ -119,47 +125,25 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 #ifdef HAS_ETHERNET
     case SYSTEM_EVENT_ETH_START:
       if (ethPrepare()) {
-        addLog(LOG_LEVEL_INFO, F("ETH Started"));
+        addLog(LOG_LEVEL_INFO, F("ETH  : Started"));
       } else {
-        addLog(LOG_LEVEL_ERROR, F("ETH : Could not prepare ETH!"));
+        addLog(LOG_LEVEL_ERROR, F("ETH  : Could not prepare ETH!"));
       }
       break;
     case SYSTEM_EVENT_ETH_CONNECTED:
-      addLog(LOG_LEVEL_INFO, F("ETH Connected"));
-      //eth_connected = true;
-      processEthernetConnected();
+      addLog(LOG_LEVEL_INFO, F("ETH  : Connected"));
+      EthEventData.markConnected();
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
-      eth_connected = true;
-      if (loglevelActiveFor(LOG_LEVEL_INFO))
-      {
-        String log = F("ETH MAC: ");
-        log += NetworkMacAddress();
-        log += F(" IPv4: ");
-        log += NetworkLocalIP().toString();
-        log += " (";
-        log += NetworkGetHostname();
-        log += F(") GW: ");
-        log += NetworkGatewayIP().toString();
-        log += F(" SN: ");
-        log += NetworkSubnetMask().toString();
-        if (ETH.fullDuplex()) {
-          log += F(" FULL_DUPLEX");
-        }
-        log += F(" ");
-        log += ETH.linkSpeed();
-        log += F("Mbps");
-        addLog(LOG_LEVEL_INFO, log);
-      }
+      EthEventData.markGotIP();
+      addLog(LOG_LEVEL_INFO, F("ETH  : Got IP"));
       break;
     case SYSTEM_EVENT_ETH_DISCONNECTED:
       addLog(LOG_LEVEL_ERROR, F("ETH Disconnected"));
-      eth_connected = false;
-      processEthernetDisconnected();
+      EthEventData.markDisconnect();
       break;
     case SYSTEM_EVENT_ETH_STOP:
       addLog(LOG_LEVEL_INFO, F("ETH Stopped"));
-      eth_connected = false;
       break;
     case SYSTEM_EVENT_GOT_IP6:
       addLog(LOG_LEVEL_INFO, F("ETH Got IP6"));
