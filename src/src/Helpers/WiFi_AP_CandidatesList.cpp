@@ -273,7 +273,7 @@ bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key)
       allowedUptimeMinutes = CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME;
       #endif
       
-      if (getUptimeMinutes() < allowedUptimeMinutes) {
+      if (getUptimeMinutes() < allowedUptimeMinutes && SecuritySettings.hasWiFiCredentials()) {
         ssid = F(CUSTOM_EMERGENCY_FALLBACK_SSID);
         key  = F(CUSTOM_EMERGENCY_FALLBACK_KEY);
       } else {

@@ -420,10 +420,12 @@ void addRTDHelpButton(const String& url)
 
 void addHelpButton(const String& url, bool isRTD)
 {
+  #ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
   addHtmlLink(
     F("button help"),
     makeDocLink(url, isRTD),
     isRTD ? F("&#8505;") : F("&#10068;"));
+  #endif
 }
 
 void addRTDPluginButton(pluginID_t taskDeviceNumber) {

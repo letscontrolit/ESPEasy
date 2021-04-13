@@ -20,6 +20,8 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#include "../../ESPEasy_fdwdecl.h"
+
 
 // ********************************************************************************
 // WiFi state
@@ -167,7 +169,7 @@ bool WiFiConnected() {
   if (!WiFiEventData.timerAPstart.isSet() && !WifiIsAP(WiFi.getMode())) {
     // First run we do not have WiFi connection any more, set timer to start AP mode
     // Only allow the automatic AP mode in the first N minutes after boot.
-    if ((wdcounter / 2) < WIFI_ALLOW_AP_AFTERBOOT_PERIOD) {
+    if (getUptimeMinutes() < WIFI_ALLOW_AP_AFTERBOOT_PERIOD) {
       WiFiEventData.timerAPstart.setMillisFromNow(WIFI_RECONNECT_WAIT);
       // Fixme TD-er: Make this more elegant as it now needs to know about the extra time needed for the AP start timer.
       WiFiEventData.timerAPoff.setMillisFromNow(WIFI_RECONNECT_WAIT + WIFI_AP_OFF_TIMER_DURATION);

@@ -9,11 +9,21 @@
 \*********************************************************************************************/
 struct SecurityStruct
 {
+  enum class WiFiCredentialsSlot {
+    first,
+    second
+  };
+
+
   SecurityStruct();
 
   void validate();
 
   void clearWiFiCredentials();
+
+  bool hasWiFiCredentials() const;
+
+  bool hasWiFiCredentials(WiFiCredentialsSlot slot) const;
 
   char          WifiSSID[32];
   char          WifiKey[64];

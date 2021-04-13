@@ -38,3 +38,18 @@ void SecurityStruct::clearWiFiCredentials() {
   ZERO_FILL(WifiSSID2);
   ZERO_FILL(WifiKey2);
 }
+
+bool SecurityStruct::hasWiFiCredentials() const {
+  return hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first) || 
+         hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::second);
+}
+
+bool SecurityStruct::hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot slot) const {
+  switch (slot) {
+    case SecurityStruct::WiFiCredentialsSlot::first:
+      return (WifiSSID[0] != 0 && !String(WifiSSID).equalsIgnoreCase(F("ssid")));
+    case SecurityStruct::WiFiCredentialsSlot::second:
+      return (WifiSSID2[0] != 0 && !String(WifiSSID2).equalsIgnoreCase(F("ssid")));
+  }
+  return false;
+}

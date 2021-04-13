@@ -176,6 +176,7 @@ void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], 
     if (mustResetCredentials) {
       SecuritySettings.clearWiFiCredentials();
       SaveSecuritySettings();
+      markDisconnect(WIFI_DISCONNECT_REASON_AUTH_EXPIRE);
       WiFi_AP_Candidates.force_reload();
     }
   }

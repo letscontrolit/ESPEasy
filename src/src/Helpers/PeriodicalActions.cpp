@@ -200,7 +200,7 @@ void runEach30Seconds()
     String log;
     log.reserve(80);
     log = F("WD   : Uptime ");
-    log += wdcounter / 2;
+    log += getUptimeMinutes();
     log += F(" ConnectFailures ");
     log += WiFiEventData.connectionFailures;
     log += F(" FreeMem ");

@@ -118,6 +118,8 @@ void handle_sysinfo_json() {
   json_prop(F("connected"),     getValue(LabelType::CONNECTED));
   json_prop(F("ldr"),           getValue(LabelType::LAST_DISC_REASON_STR));
   json_number(F("reconnects"),  getValue(LabelType::NUMBER_RECONNECTS));
+  json_prop(F("ssid1"),         getValue(LabelType::WIFI_STORED_SSID1));
+  json_prop(F("ssid2"),         getValue(LabelType::WIFI_STORED_SSID2));
   json_close();
 
 # ifdef HAS_ETHERNET
@@ -451,6 +453,8 @@ void handle_sysinfo_Network() {
   {
     addRowLabel(LabelType::LAST_DISCONNECT_REASON);
     addHtml(getValue(LabelType::LAST_DISC_REASON_STR));
+    addRowLabelValue(LabelType::WIFI_STORED_SSID1);
+    addRowLabelValue(LabelType::WIFI_STORED_SSID2);
   }
 
   addRowLabelValue(LabelType::STA_MAC);

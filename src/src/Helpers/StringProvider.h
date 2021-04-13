@@ -77,6 +77,8 @@ struct LabelType {
     LAST_DISCONNECT_REASON,  // 200
     LAST_DISC_REASON_STR,    // Beacon timeout
     NUMBER_RECONNECTS,       // 5
+    WIFI_STORED_SSID1,
+    WIFI_STORED_SSID2,
 
     FORCE_WIFI_BG,
     RESTART_WIFI_LOST_CONN,

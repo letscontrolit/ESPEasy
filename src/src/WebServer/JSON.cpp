@@ -195,6 +195,8 @@ void handle_json()
       stream_next_json_object_value(LabelType::LAST_DISCONNECT_REASON);
       stream_next_json_object_value(LabelType::LAST_DISC_REASON_STR);
       stream_next_json_object_value(LabelType::NUMBER_RECONNECTS);
+      stream_next_json_object_value(LabelType::WIFI_STORED_SSID1);
+      stream_next_json_object_value(LabelType::WIFI_STORED_SSID2);
       stream_next_json_object_value(LabelType::FORCE_WIFI_BG);
       stream_next_json_object_value(LabelType::RESTART_WIFI_LOST_CONN);
 #ifdef ESP8266

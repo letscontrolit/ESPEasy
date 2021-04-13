@@ -440,10 +440,9 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
   if (tmplName == F("TmplAP"))
   {
     getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
-    tmpl += F("<body>");
 
     #ifndef WEBPAGE_TEMPLATE_AP_HEADER
-    tmpl += F("<header class='apheader'>"
+    tmpl += F("<body><header class='apheader'>"
               "<h1>Welcome to ESP Easy Mega AP</h1>");
     #else
     tmpl += F(WEBPAGE_TEMPLATE_AP_HEADER);
