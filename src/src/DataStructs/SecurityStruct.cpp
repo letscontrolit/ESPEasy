@@ -39,6 +39,19 @@ void SecurityStruct::clearWiFiCredentials() {
   ZERO_FILL(WifiKey2);
 }
 
+void SecurityStruct::clearWiFiCredentials(SecurityStruct::WiFiCredentialsSlot slot) {
+  switch (slot) {
+    case SecurityStruct::WiFiCredentialsSlot::first:
+      ZERO_FILL(WifiSSID);
+      ZERO_FILL(WifiKey);
+      break;
+    case SecurityStruct::WiFiCredentialsSlot::second:
+      ZERO_FILL(WifiSSID2);
+      ZERO_FILL(WifiKey2);
+      break;
+  }
+}
+
 bool SecurityStruct::hasWiFiCredentials() const {
   return hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first) || 
          hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::second);

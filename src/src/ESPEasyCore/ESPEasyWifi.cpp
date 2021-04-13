@@ -600,12 +600,49 @@ void WifiDisconnect()
 // ********************************************************************************
 // Scan WiFi network
 // ********************************************************************************
+void WifiScanNextChannel() {
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    return;
+  }
+  if (!WifiIsAP(WiFi.getMode()) || wifiAPmodeActivelyUsed() || NetworkConnected()) {
+    // Only scan periodically when AP is enabled and not actively used
+    return;
+  }
+  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING || !WiFiEventData.processedScanDone) { 
+    // Scan still busy
+    return;
+  }
+  if (WiFiEventData.unprocessedWifiEvents()) {
+    return;
+  }
+
+  const uint32_t scaninterval = 10000;
+
+  if (!WiFiEventData.lastGetScanMoment.timeoutReached(scaninterval)) {
+    // last scan too recent
+    return;
+  }
+
+  const bool async = true;
+  WifiScan(async);
+}
+
+
 void WifiScan(bool async, uint8_t channel) {
   if (WiFi.scanComplete() == WIFI_SCAN_RUNNING) { 
     // Scan still busy
     return;
   }
-  addLog(LOG_LEVEL_INFO, F("WiFi : Start network scan"));
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    if (channel == 0) {
+      addLog(LOG_LEVEL_INFO, F("WiFi : Start network scan all channels"));
+    } else {
+      String log;
+      log = F("WiFi : Start network scan channel ");
+      log += channel;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  }
   bool show_hidden         = true;
   WiFiEventData.processedScanDone = false;
   WiFiEventData.lastGetScanMoment.setNow();

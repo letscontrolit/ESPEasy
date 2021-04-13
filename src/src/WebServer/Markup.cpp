@@ -173,6 +173,7 @@ void addRowLabel(const String& label, const String& id)
     html += ':';
     addHtml(html);
   }
+  addHtml(F("</td>"));
   html_TD();
 }
 

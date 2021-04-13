@@ -183,6 +183,8 @@ void runOncePerSecond()
     Wire.endTransmission();
   }
 
+  WifiScanNextChannel();
+
   checkResetFactoryPin();
   STOP_TIMER(PLUGIN_CALL_1PS);
 }

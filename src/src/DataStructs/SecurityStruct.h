@@ -21,6 +21,8 @@ struct SecurityStruct
 
   void clearWiFiCredentials();
 
+  void clearWiFiCredentials(WiFiCredentialsSlot slot);
+
   bool hasWiFiCredentials() const;
 
   bool hasWiFiCredentials(WiFiCredentialsSlot slot) const;

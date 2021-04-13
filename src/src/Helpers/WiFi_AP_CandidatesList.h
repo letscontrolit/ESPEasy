@@ -27,7 +27,7 @@ struct WiFi_AP_CandidatesList {
 
   const WiFi_AP_Candidate& getCurrent() const;
 
-  WiFi_AP_Candidate        getBestScanResult() const;
+  WiFi_AP_Candidate        getBestCandidate() const;
 
   bool                     hasKnownCredentials();
 

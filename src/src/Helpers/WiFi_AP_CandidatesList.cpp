@@ -141,7 +141,7 @@ const WiFi_AP_Candidate& WiFi_AP_CandidatesList::getCurrent() const {
   return currentCandidate;
 }
 
-WiFi_AP_Candidate WiFi_AP_CandidatesList::getBestScanResult() const {
+WiFi_AP_Candidate WiFi_AP_CandidatesList::getBestCandidate() const {
   for (auto it = candidates.begin(); it != candidates.end(); ++it) {
     if (it->rssi < -1) { return *it; }
   }
@@ -218,6 +218,14 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
         }
       }
       ++scan;
+    }
+  }
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    const WiFi_AP_Candidate bestCandidate = getBestCandidate();
+    if (bestCandidate.usable()) {
+      String log = F("WiFi : Best AP candidate: ");
+      log += bestCandidate.toString();
+      addLog(LOG_LEVEL_INFO, log);
     }
   }
   addFromRTC();

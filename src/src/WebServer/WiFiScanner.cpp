@@ -58,12 +58,12 @@ void handle_wifiscanner() {
   if (!isLoggedIn()) { return; }
 
   int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
-  if (scanCompleteStatus <= 0) {
+//  if (scanCompleteStatus <= 0) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
     WifiScan(false);
     scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
     setWifiMode(cur_wifimode);
-  }
+//  }
 
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();

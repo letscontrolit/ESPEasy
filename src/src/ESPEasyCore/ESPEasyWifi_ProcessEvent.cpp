@@ -454,13 +454,6 @@ void processScanDone() {
   }
 
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
-
-  const WiFi_AP_Candidate bestCandidate = WiFi_AP_Candidates.getBestScanResult();
-  if (bestCandidate.usable() && loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WiFi : Selected: ");
-    log += bestCandidate.toString();
-    addLog(LOG_LEVEL_INFO, log);
-  }
 }
 
 

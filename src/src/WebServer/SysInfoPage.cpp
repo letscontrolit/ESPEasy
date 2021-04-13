@@ -459,6 +459,7 @@ void handle_sysinfo_Network() {
 
   addRowLabelValue(LabelType::STA_MAC);
   addRowLabelValue(LabelType::AP_MAC);
+  html_TR();
 }
 
 void handle_sysinfo_WiFiSettings() {
