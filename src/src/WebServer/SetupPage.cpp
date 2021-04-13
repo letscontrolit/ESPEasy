@@ -41,6 +41,12 @@ void handle_setup() {
   // Do not check client IP range allowed.
   TXBuffer.startStream();
 
+  if (NetworkConnected()) {
+    // Connect Success
+    handle_setup_finish();
+  }
+
+
   if (active_network_medium == NetworkMedium_t::WIFI)
   {
     sendHeadandTail(F("TmplAP"));
@@ -97,23 +103,20 @@ void handle_setup() {
     }
     html_end_form();
     sendHeadandTail(F("TmplAP"), true);
-  } else {
-    // Connect Success
-    handle_setup_finish();
-  }
+  } 
 
   TXBuffer.endStream();
   delay(10);
 }
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
-  if (WiFi.scanComplete() <= WIFI_SCAN_FAILED) {
+  int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
+//  if (scanCompleteStatus <= 0) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
     WifiScan(false);
+    scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
     setWifiMode(cur_wifimode);
-  }
-
-  const int8_t scanCompleteStatus = WiFi.scanComplete();
+//  }
 
   if (scanCompleteStatus <= 0) {
     addHtml(F("No Access Points found"));
@@ -126,30 +129,28 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
     html_table_header(F("Network info"));
     html_table_header(F("RSSI"), 50);
 
-    for (int i = 0; i < scanCompleteStatus; ++i)
+    for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
     {
       html_TR_TD();
       addHtml(F("<label class='container2'>"));
       addHtml(F("<input type='radio' name='ssid' value='"));
       {
-        String escapeBuffer = WiFi.SSID(i);
+        String escapeBuffer = it->ssid;
         htmlStrongEscape(escapeBuffer);
         addHtml(escapeBuffer);
       }
       addHtml("'");
 
       {
-        WiFi_AP_Candidate tmp(i);
-        if (tmp.bssid_match(RTC.lastBSSID)) {
+        if (it->bssid_match(RTC.lastBSSID)) {
           addHtml(F(" checked "));  
         }
       }
 
       addHtml(F("><span class='dotmark'></span></label><TD>"));
-      int32_t rssi = 0;
-      addHtml(formatScanResult(i, "<BR>", rssi));
+      addHtml(it->toString(F("<BR>")));
       html_TD();
-      getWiFi_RSSI_icon(rssi, 45);
+      getWiFi_RSSI_icon(it->rssi, 45);
     }
     html_end_table();
   }

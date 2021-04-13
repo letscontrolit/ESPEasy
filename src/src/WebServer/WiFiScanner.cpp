@@ -5,6 +5,7 @@
 #include "../WebServer/HTML_wrappers.h"
 
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
 
@@ -56,9 +57,13 @@ void handle_wifiscanner() {
 
   if (!isLoggedIn()) { return; }
 
-  WiFiMode_t cur_wifimode = WiFi.getMode();
-  WifiScan(false);
-  setWifiMode(cur_wifimode);
+  int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
+  if (scanCompleteStatus <= 0) {
+    WiFiMode_t cur_wifimode = WiFi.getMode();
+    WifiScan(false);
+    scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
+    setWifiMode(cur_wifimode);
+  }
 
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startStream();
@@ -70,20 +75,17 @@ void handle_wifiscanner() {
   html_table_header(F("Network info"));
   html_table_header(F("RSSI"), 50);
 
-  const int8_t scanCompleteStatus = WiFi.scanComplete();
-
   if (scanCompleteStatus <= 0) {
     addHtml(F("No Access Points found"));
   }
   else
   {
-    for (int i = 0; i < scanCompleteStatus; ++i)
+    for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
     {
       html_TR_TD();
-      int32_t rssi = 0;
-      addHtml(formatScanResult(i, "<TD>", rssi));
+      addHtml(it->toString(F("<TD>")));
       html_TD();
-      getWiFi_RSSI_icon(rssi, 45);
+      getWiFi_RSSI_icon(it->rssi, 45);
     }
   }
 

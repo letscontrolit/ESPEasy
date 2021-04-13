@@ -609,6 +609,7 @@ void WifiScan(bool async, uint8_t channel) {
   bool show_hidden         = true;
   WiFiEventData.processedScanDone = false;
   WiFiEventData.lastGetScanMoment.setNow();
+  WiFiEventData.lastScanChannel = channel;
   #ifdef ESP8266
   WiFi.scanNetworks(async, show_hidden, channel);
   #endif
@@ -617,6 +618,9 @@ void WifiScan(bool async, uint8_t channel) {
   const uint32_t max_ms_per_chan = 300;
   WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
   #endif
+  if (!async) {
+    processScanDone();
+  }
 }
 
 // ********************************************************************************
@@ -626,8 +630,13 @@ void WifiScan()
 {
   // Direct Serial is allowed here, since this function will only be called from serial input.
   serialPrintln(F("WIFI : SSID Scan start"));
-  WifiScan(false);
-  const int8_t scanCompleteStatus = WiFi.scanComplete();
+  if (WiFi_AP_Candidates.scanComplete() <= 0) {
+    WiFiMode_t cur_wifimode = WiFi.getMode();
+    WifiScan(false);
+    setWifiMode(cur_wifimode);
+  }
+
+  const int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
   if (scanCompleteStatus <= 0) {
     serialPrintln(F("WIFI : No networks found"));
   }
@@ -637,13 +646,16 @@ void WifiScan()
     serialPrint(String(scanCompleteStatus));
     serialPrintln(F(" networks found"));
 
-    for (int i = 0; i < scanCompleteStatus; ++i)
+    int i = 0;
+
+    for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
     {
+      ++i;
       // Print SSID and RSSI for each network found
       serialPrint(F("WIFI : "));
-      serialPrint(String(i + 1));
+      serialPrint(String(i));
       serialPrint(": ");
-      serialPrintln(formatScanResult(i, " "));
+      serialPrintln(it->toString());
       delay(10);
     }
   }
@@ -682,7 +694,10 @@ void setAP(bool enable) {
   switch (wifimode) {
     case WIFI_OFF:
 
-      if (enable) { setWifiMode(WIFI_AP); }
+      if (enable) { 
+        WifiScan(false);
+        setWifiMode(WIFI_AP); 
+      }
       break;
     case WIFI_STA:
 

@@ -22,7 +22,6 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
   _mustLoadCredentials = false;
   known.clear();
   candidates.clear();
-  addFromRTC();
 
   {
     // Add the known SSIDs
@@ -50,6 +49,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
     }
   }
   known_it = known.begin();
+  loadCandidatesFromScanned();
   purge_unusable();
 }
 
@@ -63,30 +63,33 @@ void WiFi_AP_CandidatesList::clearCache() {
 void WiFi_AP_CandidatesList::force_reload() {
   clearCache();
   RTC.clearLastWiFi(); // Invalidate the RTC WiFi data.
-  process_WiFiscan(WiFi.scanComplete());
+  candidates.clear();
+  loadCandidatesFromScanned();
 }
 
 void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
-  load_knownCredentials();
-  candidates.clear();
-
-  known_it = known.begin();
-
-  // Now try to merge the known SSIDs, or add a new one if it is a hidden SSID
+  // Append or update found APs from scan.
   for (uint8_t i = 0; i < scancount; ++i) {
-    add(i);
+    const WiFi_AP_Candidate tmp(i);
+    // Remove previous scan result if present
+    for (auto it = scanned.begin(); it != scanned.end(); ) {
+      if (tmp == *it) {
+        it = scanned.erase(it);
+      } else {
+        ++it;
+      }
+    }
+    scanned.push_back(tmp);
+    #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("WiFi : Scan result: ");
+      log += tmp.toString();
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    #endif // ifndef BUILD_NO_DEBUG
   }
-  addFromRTC();
-  purge_unusable();
-
-#ifndef BUILD_NO_DEBUG
-
-  for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-    String log = F("WiFi : Scan result: ");
-    log += it->toString();
-    addLog(LOG_LEVEL_INFO, log);
-  }
-#endif // ifndef BUILD_NO_DEBUG
+  scanned.sort();
+  loadCandidatesFromScanned();
 }
 
 bool WiFi_AP_CandidatesList::getNext() {
@@ -167,28 +170,58 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
 }
 
-void WiFi_AP_CandidatesList::add(uint8_t networkItem) {
-  WiFi_AP_Candidate tmp(networkItem);
-
-  if (tmp.isHidden && Settings.IncludeHiddenSSID()) {
-    candidates.push_back(tmp);
-    return;
-  }
-
-  if (tmp.ssid.length() == 0) { return; }
-
-  for (auto it = known.begin(); it != known.end(); ++it) {
-    if (it->ssid.equals(tmp.ssid)) {
-      tmp.key   = it->key;
-      tmp.index = it->index;
-
-      if (tmp.usable()) {
-        candidates.push_back(tmp);
-
-        // Do not return as we may have several AP's with the same SSID and different passwords.
-      }
+int8_t WiFi_AP_CandidatesList::scanComplete() const {
+  size_t found = 0;
+  for (auto scan = scanned.begin(); scan != scanned.end(); ++scan) {
+    if (!scan->expired()) {
+      ++found;
     }
   }
+  if (found > 0) {    
+    return found;
+  }
+  const int8_t scanCompleteStatus = WiFi.scanComplete();
+  if (scanCompleteStatus <= 0) {
+    return scanCompleteStatus;
+  }
+  return 0;
+}
+
+void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
+  if (!candidates.empty()) {
+    // Do not mess with the current candidates order.
+    return;
+  }
+  known_it = known.begin();
+
+  for (auto scan = scanned.begin(); scan != scanned.end();) {
+    if (scan->expired()) {
+      scan = scanned.erase(scan);
+    } else {
+      if (scan->isHidden) {
+        if (Settings.IncludeHiddenSSID()) {
+          candidates.push_back(*scan);
+        }
+      } else if (scan->ssid.length() > 0) {
+        for (auto kn_it = known.begin(); kn_it != known.end(); ++kn_it) {
+          if (scan->ssid.equals(kn_it->ssid)) {
+            WiFi_AP_Candidate tmp = *scan;
+            tmp.key   = kn_it->key;
+            tmp.index = kn_it->index;
+
+            if (tmp.usable()) {
+              candidates.push_back(tmp);
+
+              // Check all knowns as we may have several AP's with the same SSID and different passwords.
+            }
+          }
+        }
+      }
+      ++scan;
+    }
+  }
+  addFromRTC();
+  purge_unusable();
 }
 
 void WiFi_AP_CandidatesList::addFromRTC() {

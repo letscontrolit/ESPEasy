@@ -1,10 +1,15 @@
 #include "../DataStructs/WiFi_AP_Candidate.h"
 
 #include "../Globals/SecuritySettings.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
+
+
+#define WIFI_AP_CANDIDATE_MAX_AGE   300000  // 5 minutes in msec
+
 
 WiFi_AP_Candidate::WiFi_AP_Candidate(byte index_c, const String& ssid_c, const String& pass) :
   rssi(0), channel(0), index(index_c), isHidden(false)
@@ -35,6 +40,7 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
   #ifdef ESP32
   isHidden = ssid.length() == 0;
   #endif // ifdef ESP32
+  last_seen = millis();
 }
 
 WiFi_AP_Candidate::WiFi_AP_Candidate() {}
@@ -45,6 +51,9 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
   }
   if (lowPriority != other.lowPriority) {
     return !lowPriority;
+  }
+  if (isHidden != other.isHidden) {
+    return !isHidden;
   }
 
   // RSSI values >= 0 are invalid
@@ -64,6 +73,7 @@ WiFi_AP_Candidate& WiFi_AP_Candidate::operator=(const WiFi_AP_Candidate& other) 
   if (this != &other) { // not a self-assignment
     ssid    = other.ssid;
     key     = other.key;
+    last_seen = other.last_seen;
     rssi    = other.rssi;
     channel = other.channel;
     setBSSID(other.bssid);
@@ -96,6 +106,14 @@ bool WiFi_AP_Candidate::usable() const {
   }
   if (!isHidden && (ssid.length() == 0)) { return false; }
   return true;
+}
+
+bool WiFi_AP_Candidate::expired() const {
+  if (last_seen == 0) {
+    // Not set, so cannot expire
+    return false;
+  }
+  return timePassedSince(last_seen) > WIFI_AP_CANDIDATE_MAX_AGE;
 }
 
 bool WiFi_AP_Candidate::allowQuickConnect() const {

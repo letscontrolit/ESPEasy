@@ -31,6 +31,9 @@ struct WiFi_AP_Candidate {
   // Check if the candidate data can be used to actually connect to an AP.
   bool               usable() const;
 
+  // Check if the candidate was recently seen
+  bool               expired() const;
+
   // For quick connection the channel and BSSID are needed
   bool               allowQuickConnect() const;
 
@@ -46,6 +49,8 @@ struct WiFi_AP_Candidate {
 
   String  ssid;
   String  key;
+
+  unsigned long last_seen = 0;
   int32_t rssi     = 0;
   int32_t channel  = 0;
   uint8_t bssid[6] = { 0 };
