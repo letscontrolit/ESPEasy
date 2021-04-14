@@ -59,6 +59,7 @@ void WiFiEventData_t::clearAll() {
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
   wifi_TX_pwr = 0;
+  usedChannel = 0;
 }
 
 void WiFiEventData_t::markWiFiBegin() {
@@ -69,6 +70,7 @@ void WiFiEventData_t::markWiFiBegin() {
   last_wifi_connect_attempt_moment.setNow();
   wifi_considered_stable = false;
   wifiConnectInProgress  = true;
+  usedChannel = 0;
   ++wifi_connect_attempt;
   if (!timerAPstart.isSet()) {
     timerAPstart.setMillisFromNow(WIFI_RECONNECT_WAIT);
@@ -128,6 +130,7 @@ void WiFiEventData_t::markLostIP() {
 
 void WiFiEventData_t::markDisconnect(WiFiDisconnectReason reason) {
   lastDisconnectMoment.setNow();
+  usedChannel = 0;
 
   if (last_wifi_connect_attempt_moment.isSet() && !lastConnectMoment.isSet()) {
     // There was an unsuccessful connection attempt
@@ -140,6 +143,7 @@ void WiFiEventData_t::markDisconnect(WiFiDisconnectReason reason) {
 }
 
 void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], byte channel) {
+  usedChannel = channel;
   lastConnectMoment.setNow();
   processedConnect    = false;
   channel_changed     = RTC.lastWiFiChannel != channel;

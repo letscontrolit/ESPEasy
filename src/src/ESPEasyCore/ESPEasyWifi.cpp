@@ -136,6 +136,9 @@ bool WiFiConnected() {
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   const int32_t wifi_rssi = WiFi.RSSI();
   bool validWiFi = (wifi_rssi < 0) && wifi_isconnected && hasIPaddr();
+  if (validWiFi && WiFi.channel() != WiFiEventData.usedChannel) {
+    validWiFi = false;
+  }
   if (validWiFi != WiFiEventData.WiFiServicesInitialized()) {
     // else wifiStatus is no longer in sync.
     if (checkAndResetWiFi()) {
@@ -307,8 +310,10 @@ bool checkAndResetWiFi() {
   switch(status) {
     case STATION_GOT_IP:
       if (WiFi.RSSI() < 0) {
-        // This is a valid status, no need to reset
-        return false;
+        if (WiFi.channel() == WiFiEventData.usedChannel) {
+          // This is a valid status, no need to reset
+          return false;
+        }
       }
       break;
     case STATION_NO_AP_FOUND:
@@ -323,33 +328,29 @@ bool checkAndResetWiFi() {
       }
       break;
   }
+  #endif
+  #ifdef ESP32
+  if (WiFi.isConnected()) {
+    if (WiFi.channel() == WiFiEventData.usedChannel) {
+      return false;
+    }
+  }
+  if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+    return false;
+  }
+  #endif
   String log = F("WiFi : WiFiConnected() out of sync: ");
   log += ESPeasyWifiStatusToString();
   log += F(" RSSI: ");
   log += String(WiFi.RSSI());
+  #ifdef ESP8266
   log += F(" status: ");
   log += SDKwifiStatusToString(status);
+  #endif
+
   // Call for reset first, to make sure a syslog call will not try to send.
   resetWiFi();
   addLog(LOG_LEVEL_INFO, log);
-
-  #endif
-  #ifdef ESP32
-  if (WiFi.isConnected()) {
-    return false;
-  } else {
-    if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
-      return false;
-    }
-    String log = F("WiFi : WiFiConnected() out of sync: ");
-    log += ESPeasyWifiStatusToString();
-    log += F(" RSSI: ");
-    log += String(WiFi.RSSI());
-    // Call for reset first, to make sure a syslog call will not try to send.
-    resetWiFi();
-    addLog(LOG_LEVEL_INFO, log);
-  }
-  #endif
   return true;
 }
 

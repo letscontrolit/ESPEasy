@@ -69,6 +69,8 @@ struct WiFiEventData_t {
 
   uint8_t       auth_mode = 0;
   uint8_t       lastScanChannel = 0;
+  uint8_t       usedChannel = 0;
+
 
   WiFiDisconnectReason    lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
   LongTermTimer           lastConnectMoment;
