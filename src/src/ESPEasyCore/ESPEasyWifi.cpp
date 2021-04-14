@@ -310,7 +310,7 @@ bool checkAndResetWiFi() {
   switch(status) {
     case STATION_GOT_IP:
       if (WiFi.RSSI() < 0) {
-        if (WiFi.channel() == WiFiEventData.usedChannel) {
+        if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
           // This is a valid status, no need to reset
           return false;
         }
@@ -331,7 +331,7 @@ bool checkAndResetWiFi() {
   #endif
   #ifdef ESP32
   if (WiFi.isConnected()) {
-    if (WiFi.channel() == WiFiEventData.usedChannel) {
+    if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
       return false;
     }
   }
