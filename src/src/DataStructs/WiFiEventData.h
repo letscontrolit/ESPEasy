@@ -98,7 +98,11 @@ struct WiFiEventData_t {
   bool wifiConnectInProgress     = false;
   bool warnedNoValidWiFiSettings = false;
 
+  bool performedClearWiFiCredentials = false;
+
   unsigned long connectionFailures = 0;
+
+
 };
 
 #endif   // ifndef DATASTRUCTS_WIFIEVENTDATA_H

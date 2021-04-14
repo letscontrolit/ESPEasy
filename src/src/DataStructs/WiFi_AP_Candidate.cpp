@@ -1,11 +1,14 @@
 #include "../DataStructs/WiFi_AP_Candidate.h"
 
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/SecuritySettings.h"
+#include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
+
 
 
 #define WIFI_AP_CANDIDATE_MAX_AGE   300000  // 5 minutes in msec
@@ -100,7 +103,10 @@ bool WiFi_AP_Candidate::usable() const {
     #ifdef CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME
     allowedUptimeMinutes = CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME;
     #endif
-    if (getUptimeMinutes() > allowedUptimeMinutes || !SecuritySettings.hasWiFiCredentials()) {
+    if (getUptimeMinutes() > allowedUptimeMinutes || 
+        !SecuritySettings.hasWiFiCredentials() || 
+        WiFiEventData.performedClearWiFiCredentials ||
+        lastBootCause != BOOT_CAUSE_COLD_BOOT) {
       return false;
     }
   }

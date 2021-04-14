@@ -2,6 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 
 SecurityStruct::SecurityStruct() {
@@ -37,6 +38,7 @@ void SecurityStruct::clearWiFiCredentials() {
   ZERO_FILL(WifiKey);
   ZERO_FILL(WifiSSID2);
   ZERO_FILL(WifiKey2);
+  addLog(LOG_LEVEL_INFO, F("WiFi : Clear WiFi credentials from settings"));
 }
 
 void SecurityStruct::clearWiFiCredentials(SecurityStruct::WiFiCredentialsSlot slot) {

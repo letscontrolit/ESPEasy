@@ -208,6 +208,8 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
             WiFi_AP_Candidate tmp = *scan;
             tmp.key   = kn_it->key;
             tmp.index = kn_it->index;
+            tmp.lowPriority = kn_it->lowPriority;
+            tmp.isEmergencyFallback = kn_it->isEmergencyFallback;
 
             if (tmp.usable()) {
               candidates.push_back(tmp);
@@ -234,6 +236,12 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 
 void WiFi_AP_CandidatesList::addFromRTC() {
   if (!RTC.lastWiFi_set()) { return; }
+
+  if (WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == RTC.lastWiFiSettingsIndex || 
+      WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     == RTC.lastWiFiSettingsIndex) 
+  { 
+    return;
+  }
 
   String ssid, key;
 
@@ -313,7 +321,6 @@ bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key)
       #ifdef CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME
       allowedUptimeMinutes = CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME;
       #endif
-      
       if (getUptimeMinutes() < allowedUptimeMinutes && SecuritySettings.hasWiFiCredentials()) {
         ssid = F(CUSTOM_EMERGENCY_FALLBACK_SSID);
         key  = F(CUSTOM_EMERGENCY_FALLBACK_KEY);
