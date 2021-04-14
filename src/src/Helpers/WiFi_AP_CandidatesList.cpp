@@ -77,20 +77,22 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
     const WiFi_AP_Candidate tmp(i);
     // Remove previous scan result if present
     for (auto it = scanned.begin(); it != scanned.end(); ) {
-      if (tmp == *it) {
+      if (tmp == *it || it->expired()) {
         it = scanned.erase(it);
       } else {
         ++it;
       }
     }
-    scanned.push_back(tmp);
-    #ifndef BUILD_NO_DEBUG
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WiFi : Scan result: ");
-      log += tmp.toString();
-      addLog(LOG_LEVEL_INFO, log);
+    if (Settings.IncludeHiddenSSID() || !tmp.isHidden) {
+      scanned.push_back(tmp);
+      #ifndef BUILD_NO_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("WiFi : Scan result: ");
+        log += tmp.toString();
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+      #endif // ifndef BUILD_NO_DEBUG
     }
-    #endif // ifndef BUILD_NO_DEBUG
   }
   scanned.sort();
   loadCandidatesFromScanned();
@@ -204,7 +206,9 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
     } else {
       if (scan->isHidden) {
         if (Settings.IncludeHiddenSSID()) {
-          candidates.push_back(*scan);
+          if (SecuritySettings.hasWiFiCredentials()) {
+            candidates.push_back(*scan);
+          }
         }
       } else if (scan->ssid.length() > 0) {
         for (auto kn_it = known.begin(); kn_it != known.end(); ++kn_it) {

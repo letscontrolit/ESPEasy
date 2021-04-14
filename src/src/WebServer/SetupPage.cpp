@@ -92,7 +92,7 @@ void handle_setup() {
           safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
           safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
           // Hidden SSID
-          Settings.IncludeHiddenSSID(true);
+          Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
           addHtmlError(SaveSettings());
           WiFiEventData.wifiSetupConnect         = true;
           WiFiEventData.wifiConnectAttemptNeeded = true;
@@ -172,6 +172,15 @@ void handle_setup() {
     html_BR();
 
     html_table_class_normal();
+
+    addFormHeader(F("Advanced WiFi settings"));
+
+    addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
+    addFormNote(F("Must be checked to connect to a hidden SSID"));
+
+    html_BR();
+    html_BR();
+
     addFormHeader(F("Clear WiFi credentials"));
     addFormCheckBox(F("Confirm clear"), F("clearcredentials"), false);
 
@@ -298,9 +307,6 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
 
   addFormCheckBox(F("Allow Empty Password"), F("emptypass"), false);
   
-//  addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
-//  addFormNote(F("Must be checked to connect to a hidden SSID"));
-
 /*
   if (SecuritySettings.hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first)) {
     addFormCheckBox(F("Clear Stored SSID1"), F("clearssid1"), false);

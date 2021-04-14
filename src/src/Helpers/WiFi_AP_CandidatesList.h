@@ -70,6 +70,7 @@ private:
   WiFi_AP_Candidate currentCandidate;
 
   bool _mustLoadCredentials = true;
+
 };
 
 #endif // ifndef HELPERS_WIFI_AP_CANDIDATESLIST_H
