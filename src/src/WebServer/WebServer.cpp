@@ -281,8 +281,6 @@ void WebServerInit()
   // Prepare webserver pages
   #ifdef WEBSERVER_ROOT
   web_server.on(F("/"),               handle_root);
-  web_server.on(F("/index.htm"),      handle_root);
-  web_server.on(F("/index.html"),     handle_root);
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
   web_server.on(F("/advanced"),    handle_advanced);
