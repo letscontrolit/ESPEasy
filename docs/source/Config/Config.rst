@@ -124,13 +124,16 @@ See the examples in `Custom-sample.h`:
 
 Custom builds can also be customized a bit more to allow for a deployment SSID configuration and an emergency fallback.
 
-Deployment SSID will be used only when the configured SSIDs are not reachable and/or no credentials are set.
-This to make deployment of large number of nodes easier.
+Deployment & Support SSID will be used only when the configured SSIDs are not reachable and/or no credentials are set.
+This to make deployment or support of large number of nodes easier.
 This configured set of credentials will be considered a "low priority" set, thus it will be tried as last resort.
 Therefore it may take a while for a unit to connect to it if there are lots of 'hidden SSID' APs and connecting to hidden SSIDs is allowed.
 
 * ``#define CUSTOM_DEPLOYMENT_SSID ""  // Enter SSID not shown in UI, to be used on custom builds to ease deployment``
 * ``#define CUSTOM_DEPLOYMENT_KEY  ""  // Enter key not shown in UI, to be used on custom builds to ease deployment``
+* ``#define CUSTOM_SUPPORT_SSID    ""  // Enter SSID not shown in UI, to be used on custom builds to ease support``
+* ``#define CUSTOM_SUPPORT_KEY     ""  // Enter key not shown in UI, to be used on custom builds to ease support``
+
 
 
 Emergency fallback SSID will only be attempted in the first 10 minutes after reboot.

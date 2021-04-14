@@ -137,7 +137,7 @@ void addSubmitButton(const String& value, const String& name, const String& clas
     fullClasses.reserve(12 + classes.length());
     fullClasses = F("button link");
 
-    if (classes.length() == 0) {
+    if (classes.length() > 0) {
       fullClasses += ' ';
       fullClasses += classes;
     }

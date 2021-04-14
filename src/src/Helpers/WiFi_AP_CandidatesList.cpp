@@ -8,7 +8,8 @@
 #include "../../ESPEasy_fdwdecl.h"
 
 #define WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     3
-#define WIFI_CREDENTIALS_FALLBACK_SSID_INDEX 4
+#define WIFI_CUSTOM_SUPPORT_KEY_INDEX        4
+#define WIFI_CREDENTIALS_FALLBACK_SSID_INDEX 5
 
 WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
   known.clear();
@@ -33,14 +34,17 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
     while (!done) {
       if (get_SSID_key(index, ssid, key)) {
         known.emplace_back(index, ssid, key);
-        if (index == WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX) {
+        if (index == WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX || 
+            index == WIFI_CUSTOM_SUPPORT_KEY_INDEX) {
           known.back().lowPriority = true;
         } else if (index == WIFI_CREDENTIALS_FALLBACK_SSID_INDEX) {
           known.back().isEmergencyFallback = true;
         }
         ++index;
       } else {
-        if (index == WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX || index == WIFI_CREDENTIALS_FALLBACK_SSID_INDEX) {
+        if (index == WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX || 
+            index == WIFI_CUSTOM_SUPPORT_KEY_INDEX    || 
+            index == WIFI_CREDENTIALS_FALLBACK_SSID_INDEX) {
           ++index;
         } else {
           done = true;
@@ -237,8 +241,9 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 void WiFi_AP_CandidatesList::addFromRTC() {
   if (!RTC.lastWiFi_set()) { return; }
 
-  if (WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == RTC.lastWiFiSettingsIndex || 
-      WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     == RTC.lastWiFiSettingsIndex) 
+  if (WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     == RTC.lastWiFiSettingsIndex ||
+      WIFI_CUSTOM_SUPPORT_KEY_INDEX        == RTC.lastWiFiSettingsIndex ||
+      WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == RTC.lastWiFiSettingsIndex) 
   { 
     return;
   }
@@ -310,6 +315,14 @@ bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key)
       #else
       ssid = F(CUSTOM_DEPLOYMENT_SSID);
       key  = F(CUSTOM_DEPLOYMENT_KEY);
+      #endif
+      break;
+    case WIFI_CUSTOM_SUPPORT_KEY_INDEX:
+      #if !defined(CUSTOM_SUPPORT_SSID) || !defined(CUSTOM_SUPPORT_KEY)
+      return false;
+      #else
+      ssid = F(CUSTOM_SUPPORT_SSID);
+      key  = F(CUSTOM_SUPPORT_KEY);
       #endif
       break;
     case WIFI_CREDENTIALS_FALLBACK_SSID_INDEX:

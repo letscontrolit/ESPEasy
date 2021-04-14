@@ -148,6 +148,9 @@
 // This to make deployment of large number of nodes easier
 #define CUSTOM_DEPLOYMENT_SSID                  ""                // Enter SSID not shown in UI, to be used on custom builds to ease deployment
 #define CUSTOM_DEPLOYMENT_KEY                   ""                // Enter key not shown in UI, to be used on custom builds to ease deployment
+#define CUSTOM_SUPPORT_SSID                     ""                // Enter SSID not shown in UI, to be used on custom builds to ease support
+#define CUSTOM_SUPPORT_KEY                      ""                // Enter key not shown in UI, to be used on custom builds to ease support
+
 
 // Emergency fallback SSID will only be attempted in the first 10 minutes after reboot.
 // When found, the unit will connect to it and depending on the built in flag, it will either just connect to it, or clear set credentials.
