@@ -24,8 +24,6 @@ void handleNotFound() {
    return;
   }
 
-  if (!isLoggedIn()) { return; }
-
 #ifdef WEBSERVER_RULES
   if (handle_rules_edit(web_server.uri())) { return; }
 #endif

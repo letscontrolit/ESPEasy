@@ -128,7 +128,7 @@ void addTaskValueSelect(const String& name,
 // ********************************************************************************
 // Login state check
 // ********************************************************************************
-boolean isLoggedIn();
+bool isLoggedIn(bool mustProvideLogin = true);
 
 String  getControllerSymbol(byte index);
 

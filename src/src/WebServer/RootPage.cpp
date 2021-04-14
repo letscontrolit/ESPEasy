@@ -40,7 +40,12 @@ void handle_root() {
    return;
   }
 
-  if (!isLoggedIn()) { return; }
+  if (!MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN) {
+    if (!isLoggedIn()) { return; }
+  }
+
+  const bool loggedIn = isLoggedIn(false);
+
   navMenuIndex = 0;
 
   // if index.htm exists on FS serve that one (first check if gziped version exists)
@@ -55,8 +60,13 @@ void handle_root() {
   #endif
 
   TXBuffer.startStream();
-  String  sCommand  = web_server.arg(F("cmd"));
-  boolean rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
+
+  String  sCommand;
+  boolean rebootCmd = false;
+  if (loggedIn) {
+    sCommand  = web_server.arg(F("cmd"));
+    rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
+  }
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
 
   int freeMem = ESP.getFreeHeap();
@@ -78,17 +88,21 @@ void handle_root() {
     addHtml(F("OK"));
   } else if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
   {
-    addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
-    cmd_within_mainloop = CMD_REBOOT;
-    addHtml(F(
-              "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
-    TXBuffer.endStream();
-    ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
-    return;
+    if (loggedIn) {
+      addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
+      cmd_within_mainloop = CMD_REBOOT;
+      addHtml(F(
+                "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
+      TXBuffer.endStream();
+      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
+      return;
+    }
   } else {
-    handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand);
-    printToWeb     = false;
-    printToWebJSON = false;
+    if (loggedIn) {
+      handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand);
+      printToWeb     = false;
+      printToWebJSON = false;
+    }
 
     addHtml(F("<form>"));
     html_table_class_normal();
@@ -202,18 +216,20 @@ void handle_root() {
     addButton(F("setup"), F("WiFi Setup"));
     #endif
 
-    if (printWebString.length() > 0)
-    {
-      html_BR();
-      html_BR();
-      addFormHeader(F("Command Argument"));
-      addRowLabel(F("Command"));
-      addHtml(sCommand);
+    if (loggedIn) {
+      if (printWebString.length() > 0)
+      {
+        html_BR();
+        html_BR();
+        addFormHeader(F("Command Argument"));
+        addRowLabel(F("Command"));
+        addHtml(sCommand);
 
-      addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
-      addHtml(printWebString);
-      addHtml(F("</textarea>"));
-      printWebString = "";
+        addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
+        addHtml(printWebString);
+        addHtml(F("</textarea>"));
+        printWebString = "";
+      }
     }
     html_end_table();
 

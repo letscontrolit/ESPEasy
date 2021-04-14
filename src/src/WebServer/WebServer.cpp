@@ -111,6 +111,10 @@
   #define MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON   true
 #endif
 
+#ifndef MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN
+  #define MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN false
+#endif
+
 #ifndef SETUP_PAGE_SHOW_CONFIG_BUTTON
   #define SETUP_PAGE_SHOW_CONFIG_BUTTON true
 #endif
@@ -276,7 +280,9 @@ void WebServerInit()
 
   // Prepare webserver pages
   #ifdef WEBSERVER_ROOT
-  web_server.on("/",               handle_root);
+  web_server.on(F("/"),               handle_root);
+  web_server.on(F("/index.htm"),      handle_root);
+  web_server.on(F("/index.html"),     handle_root);
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
   web_server.on(F("/advanced"),    handle_advanced);
@@ -918,7 +924,7 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 // ********************************************************************************
 // Login state check
 // ********************************************************************************
-boolean isLoggedIn()
+bool isLoggedIn(bool mustProvideLogin)
 {
   String www_username = F(DEFAULT_ADMIN_USERNAME);
 
@@ -926,6 +932,9 @@ boolean isLoggedIn()
 
   if (SecuritySettings.Password[0] == 0) { return true; }
 
+  if (!mustProvideLogin) {
+    return false;
+  }
   if (!web_server.authenticate(www_username.c_str(), SecuritySettings.Password))
 
   // Basic Auth Method with Custom realm and Failure Response
