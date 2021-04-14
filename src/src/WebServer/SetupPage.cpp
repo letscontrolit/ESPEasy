@@ -228,9 +228,10 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
     {
       html_TR_TD();
       const String id = it->toString("");
-      addHtml(F("<label class='container2' for='"));
-      addHtml(id);
-      addHtml(F("'>"));
+      addHtml(F("<label "));
+      addHtmlAttribute(F("class"), F("container2"));
+      addHtmlAttribute(F("for"), id);
+      addHtml('>');
 
       addHtml(F("<input type='radio' name='ssid' value='"));
       if (it->isHidden) {
@@ -242,9 +243,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
         addHtml('\'');
       }
 
-      addHtml(F(" id='"));
-      addHtml(id);
-      addHtml('\'');
+      addHtmlAttribute(F("id"), id);
 
       {
         if (it->bssid_match(RTC.lastBSSID)) {
@@ -252,10 +251,22 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
         }
       }
 
-      addHtml(F("><span class='dotmark'></span></label><TD>"));
-      addHtml(it->toString(F("<BR>")));
+      addHtml(F("><span class='dotmark'></span>"));
+      addHtml(F("</label>"));
+
       html_TD();
+      addHtml(F("<label "));
+      addHtmlAttribute(F("for"), id);
+      addHtml('>');
+      addHtml(it->toString(F("<BR>")));
+      addHtml(F("</label>"));
+
+      html_TD();
+      addHtml(F("<label "));
+      addHtmlAttribute(F("for"), id);
+      addHtml('>');
       getWiFi_RSSI_icon(it->rssi, 45);
+      addHtml(F("</label>"));
     }
     html_end_table();
   }
@@ -279,12 +290,18 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
 
   html_TD();
 
+  addHtml(F("<label "));
+  addHtmlAttribute(F("for"),    F("other_ssid"));
+  addHtml('>');
+
   addHtml(F("<input "));
   addHtmlAttribute(F("class"), F("wide"));
   addHtmlAttribute(F("type"),  F("text"));
   addHtmlAttribute(F("name"),  F("other"));
   addHtmlAttribute(F("value"), other);
   addHtml('>');
+  addHtml(F("</label>"));
+
 
   html_TR();
 

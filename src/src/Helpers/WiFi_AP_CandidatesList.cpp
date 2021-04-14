@@ -83,7 +83,7 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
         ++it;
       }
     }
-    if (Settings.IncludeHiddenSSID() || !tmp.isHidden) {
+//    if (Settings.IncludeHiddenSSID() || !tmp.isHidden) {
       scanned.push_back(tmp);
       #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -92,7 +92,7 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
         addLog(LOG_LEVEL_DEBUG, log);
       }
       #endif // ifndef BUILD_NO_DEBUG
-    }
+//    }
   }
   scanned.sort();
   loadCandidatesFromScanned();
