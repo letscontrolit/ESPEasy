@@ -18,6 +18,8 @@ struct WiFi_AP_CandidatesList {
   // Called after WiFi credentials have changed.
   void force_reload();
 
+  void begin_sync_scan();
+
   // Add found WiFi access points to the list if they are possible candidates.
   void process_WiFiscan(uint8_t scancount);
 

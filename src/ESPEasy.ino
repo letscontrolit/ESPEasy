@@ -351,6 +351,7 @@ void setup()
       // Wait until scan has finished to make sure as many as possible are found
       // We're still in the setup phase, so nothing else is taking resources of the ESP.
       WifiScan(false); 
+      WiFiEventData.lastScanMoment.clear();
     }
     // Start an extra async scan so we can continue, but we may find more APs by scanning twice.
     WifiScan(true); 

@@ -136,9 +136,11 @@ bool WiFiConnected() {
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   const int32_t wifi_rssi = WiFi.RSSI();
   bool validWiFi = (wifi_rssi < 0) && wifi_isconnected && hasIPaddr();
+  /*
   if (validWiFi && WiFi.channel() != WiFiEventData.usedChannel) {
     validWiFi = false;
   }
+  */
   if (validWiFi != WiFiEventData.WiFiServicesInitialized()) {
     // else wifiStatus is no longer in sync.
     if (checkAndResetWiFi()) {
@@ -226,6 +228,9 @@ void AttemptWiFiConnect() {
     RTC.clearLastWiFi(); // Force slow connect
     WiFiEventData.wifi_connect_attempt = 0;
     WiFiEventData.wifiSetupConnect     = false;
+    if (WiFiEventData.timerAPoff.isSet()) {
+      WiFiEventData.timerAPoff.setMillisFromNow(WIFI_RECONNECT_WAIT + WIFI_AP_OFF_TIMER_DURATION);
+    }
   }
 
   if (WiFi_AP_Candidates.getNext()) {
@@ -310,10 +315,10 @@ bool checkAndResetWiFi() {
   switch(status) {
     case STATION_GOT_IP:
       if (WiFi.RSSI() < 0) {
-        if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
+        //if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
           // This is a valid status, no need to reset
           return false;
-        }
+        //}
       }
       break;
     case STATION_NO_AP_FOUND:
@@ -331,9 +336,9 @@ bool checkAndResetWiFi() {
   #endif
   #ifdef ESP32
   if (WiFi.isConnected()) {
-    if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
+    //if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
       return false;
-    }
+    //}
   }
   if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
     return false;
@@ -634,6 +639,16 @@ void WifiScan(bool async, uint8_t channel) {
     // Scan still busy
     return;
   }
+  if (WiFiEventData.lastScanMoment.isSet()) {
+    const LongTermTimer::Duration scanInterval = wifiAPmodeActivelyUsed() ? WIFI_SCAN_INTERVAL_AP_USED : WIFI_SCAN_INTERVAL_MINIMAL;
+    if (WiFiEventData.lastScanMoment.millisPassedSince() < scanInterval) {
+      return;
+    }
+  }
+  WiFiEventData.lastScanMoment.setNow();
+  if (!async) {
+    WiFi_AP_Candidates.begin_sync_scan();
+  }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     if (channel == 0) {
       addLog(LOG_LEVEL_INFO, F("WiFi : Start network scan all channels"));
@@ -796,7 +811,7 @@ void setAPinternal(bool enable)
       }
     }
     #endif // ifdef ESP32
-    WiFiEventData.timerAPoff.setNow();
+    WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
   } else {
     #ifdef FEATURE_DNS_SERVER
     if (dnsServerActive) {

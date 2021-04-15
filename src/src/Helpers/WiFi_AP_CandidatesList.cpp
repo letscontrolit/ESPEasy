@@ -50,9 +50,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
       }
     }
   }
-  known_it = known.begin();
   loadCandidatesFromScanned();
-  purge_unusable();
 }
 
 void WiFi_AP_CandidatesList::clearCache() {
@@ -67,6 +65,10 @@ void WiFi_AP_CandidatesList::force_reload() {
   RTC.clearLastWiFi(); // Invalidate the RTC WiFi data.
   candidates.clear();
   loadCandidatesFromScanned();
+}
+
+void WiFi_AP_CandidatesList::begin_sync_scan() {
+  candidates.clear();
 }
 
 void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
@@ -294,6 +296,7 @@ void WiFi_AP_CandidatesList::purge_unusable() {
   }
   known.sort();
   known.unique();
+  known_it = known.begin();
 
   for (auto it = candidates.begin(); it != candidates.end();) {
     if (it->usable()) {

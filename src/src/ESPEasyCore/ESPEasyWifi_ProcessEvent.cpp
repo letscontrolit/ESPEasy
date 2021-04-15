@@ -418,7 +418,7 @@ void processConnectAPmode() {
   if (WiFiEventData.processedConnectAPmode) { return; }
   WiFiEventData.processedConnectAPmode = true;
   // Extend timer to switch off AP.
-  WiFiEventData.timerAPoff.setNow();
+  WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
@@ -445,7 +445,7 @@ void processDisableAPmode() {
 
   if (WifiIsAP(WiFi.getMode())) {
     // disable AP after timeout and no clients connected.
-    if (WiFiEventData.timerAPoff.timeoutReached(WIFI_AP_OFF_TIMER_DURATION) && (WiFi.softAPgetStationNum() == 0)) {
+    if (WiFiEventData.timerAPoff.timeReached() && (WiFi.softAPgetStationNum() == 0)) {
       setAP(false);
     }
   }

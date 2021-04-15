@@ -73,6 +73,7 @@ struct WiFiEventData_t {
 
 
   WiFiDisconnectReason    lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
+  LongTermTimer           lastScanMoment;
   LongTermTimer           lastConnectMoment;
   LongTermTimer           lastDisconnectMoment;
   LongTermTimer           lastWiFiResetMoment;
