@@ -142,6 +142,8 @@ void handle_setup() {
       //addFormHeader(F("Current network configuration"));
       html_TR();
       
+      handle_sysinfo_NetworkServices();
+      
       handle_sysinfo_Network();
 
       addFormSeparator(2);

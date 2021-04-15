@@ -25,6 +25,12 @@
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy-Globals.h"
 
+#ifdef USES_MQTT
+# include "../Globals/MQTT.h"
+# include "../Helpers/PeriodicalActions.h" // For finding enabled MQTT controller
+#endif
+
+
 // ********************************************************************************
 // Web Interface root page
 // ********************************************************************************
@@ -204,6 +210,16 @@ void handle_root() {
       addHtml(html);
     }
     #endif // ifdef FEATURE_MDNS
+
+    #ifdef USES_MQTT
+    {
+      if (validControllerIndex(firstEnabledMQTT_ControllerIndex())) {
+        addRowLabel(F("MQTT Client Connected"));
+        addEnabled(MQTTclient_connected);
+      }
+    }
+    #endif
+
 
     #if MAIN_PAGE_SHOW_SYSINFO_BUTTON
     html_TR_TD();
