@@ -32,6 +32,10 @@
 #include "../DataStructs/C013_p2p_dataStructs.h"
 #endif
 
+#ifdef USES_C016
+#include "../ControllerQueue/C016_queue_element.h"
+#endif
+
 #ifdef USES_NOTIFIER
 #include "../DataStructs/NotificationStruct.h"
 #include "../DataStructs/NotificationSettingsStruct.h"
@@ -99,6 +103,11 @@ void run_compiletime_checks() {
   check_size<C013_SensorInfoStruct,                 137u>();
   check_size<C013_SensorDataStruct,                 24u>();
   #endif
+  #ifdef USES_C016
+  check_size<C016_queue_element,                    24u>();
+  #endif
+
+
   #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
     static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
   #endif

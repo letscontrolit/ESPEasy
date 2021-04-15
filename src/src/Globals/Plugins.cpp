@@ -398,7 +398,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
 
     // Call to all plugins. Return at first match
     case PLUGIN_WRITE:
-    case PLUGIN_REQUEST:
+//    case PLUGIN_REQUEST: @giig1967g: replaced by new function getGPIOPluginValues()
     {
       taskIndex_t firstTask = 0;
       taskIndex_t lastTask = TASKS_MAX;
@@ -580,6 +580,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    case PLUGIN_FORMAT_USERVAR:
     case PLUGIN_SET_CONFIG:
     case PLUGIN_SET_DEFAULTS:
 

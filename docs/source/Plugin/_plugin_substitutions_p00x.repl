@@ -60,7 +60,7 @@
 .. |P004_status| replace:: :green:`NORMAL`
 .. |P004_github| replace:: P004_Dallas.ino
 .. _P004_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P004_Dallas.ino
-.. |P004_usedby| replace:: :ref:`P004_DS18b20_page`
+.. |P004_usedby| replace:: :ref:`P004_page`
 .. |P004_shortinfo| replace:: Temperature sensor that is easy to use in multiples, easy to fit too.
 .. |P004_maintainer| replace:: Core
 .. |P004_compileinfo| replace:: `.`

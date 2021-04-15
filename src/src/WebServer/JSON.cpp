@@ -144,9 +144,11 @@ void handle_json()
       stream_next_json_object_value(LabelType::PLUGIN_COUNT);
       stream_next_json_object_value(LabelType::PLUGIN_DESCRIPTION);
       stream_next_json_object_value(LabelType::LOCAL_TIME);
+      stream_next_json_object_value(LabelType::ISNTP);
       stream_next_json_object_value(LabelType::UNIT_NR);
       stream_next_json_object_value(LabelType::UNIT_NAME);
       stream_next_json_object_value(LabelType::UPTIME);
+      stream_next_json_object_value(LabelType::UPTIME_MS);
       stream_next_json_object_value(LabelType::BOOT_TYPE);
       stream_next_json_object_value(LabelType::RESET_REASON);
 
@@ -162,8 +164,13 @@ void handle_json()
       stream_next_json_object_value(LabelType::HEAP_MAX_FREE_BLOCK);
       stream_next_json_object_value(LabelType::HEAP_FRAGMENTATION);
      #endif
-    #endif // ifdef CORE_POST_2_5_0
-      stream_last_json_object_value(LabelType::FREE_MEM);
+      #endif // ifdef CORE_POST_2_5_0
+      stream_next_json_object_value(LabelType::FREE_MEM);
+      stream_next_json_object_value(LabelType::SUNRISE);
+      stream_next_json_object_value(LabelType::SUNSET);
+      stream_next_json_object_value(LabelType::TIMEZONE_OFFSET);
+      stream_next_json_object_value(LabelType::LATITUDE);
+      stream_last_json_object_value(LabelType::LONGITUDE);
       addHtml(F(",\n"));
     }
 
@@ -312,10 +319,16 @@ void handle_json()
         for (byte x = 0; x < valueCount; x++)
         {
           addHtml('{');
+          const String value = formatUserVarNoCheck(TaskIndex, x);
+          byte nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[x];
+          if (mustConsiderAsString(value)) {
+            // Flag as not to treat as a float
+            nrDecimals = 255;
+          }
           stream_next_json_object_value(F("ValueNumber"), String(x + 1));
           stream_next_json_object_value(F("Name"),        String(ExtraTaskSettings.TaskDeviceValueNames[x]));
-          stream_next_json_object_value(F("NrDecimals"),  String(ExtraTaskSettings.TaskDeviceValueDecimals[x]));
-          stream_last_json_object_value(F("Value"), formatUserVarNoCheck(TaskIndex, x));
+          stream_next_json_object_value(F("NrDecimals"),  String(nrDecimals));
+          stream_last_json_object_value(F("Value"),       value);
 
           if (x < (valueCount - 1)) {
             addHtml(F(",\n"));

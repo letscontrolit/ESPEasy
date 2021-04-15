@@ -99,6 +99,10 @@
 #define DEFAULT_SEND_TO_HTTP_ACK         false // Wait for ack with SendToHttp command.
 #endif
 
+#ifndef DEFAULT_AP_DONT_FORCE_SETUP                       
+#define DEFAULT_AP_DONT_FORCE_SETUP            false // Allow optional usage of Sensor without WIFI avaiable  // When set you can use the Sensor in AP-Mode without beeing forced to /setup                                                 
+#endif
+
 // --- Default Controller ------------------------------------------------------------------------------
 #ifndef DEFAULT_CONTROLLER
 #define DEFAULT_CONTROLLER   true              // true or false enabled or disabled, set 1st controller defaults
