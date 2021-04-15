@@ -31,6 +31,8 @@
 #endif
 
 
+
+
 // ********************************************************************************
 // Web Interface root page
 // ********************************************************************************
@@ -38,6 +40,10 @@ void handle_root() {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_root"));
   #endif
+
+ if (captivePortal()) { // If captive portal redirect instead of displaying the page.
+   return;
+ }
 
   // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
  if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())

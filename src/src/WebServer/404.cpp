@@ -17,6 +17,10 @@ void handleNotFound() {
   checkRAM(F("handleNotFound"));
   #endif
 
+  if (captivePortal()) { // If captive portal redirect instead of displaying the error page.
+    return;
+  }
+
   // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
  if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
   {

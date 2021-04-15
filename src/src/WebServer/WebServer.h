@@ -44,6 +44,12 @@ size_t streamFile_htmlEscape(const String& fileName);
 
 void   WebServerInit();
 
+// ********************************************************************************
+// Redirect to captive portal if we got a request for another domain. 
+// Return true in that case so the page handler does not try to handle the request again.
+// ********************************************************************************
+bool   captivePortal();
+
 void   setWebserverRunning(bool state);
 
 void   getWebPageTemplateDefault(const String& tmplName,

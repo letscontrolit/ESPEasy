@@ -32,10 +32,12 @@ bool string2float(const String& string,
 /********************************************************************************************\
    Convert a char string to IP byte array
  \*********************************************************************************************/
-boolean str2ip(const String& string,
+bool isIP(const String& string);
+
+bool str2ip(const String& string,
                byte         *IP);
 
-boolean str2ip(const char *string,
+bool str2ip(const char *string,
                byte       *IP);
 
 String  formatIP(const IPAddress& ip);
@@ -198,11 +200,11 @@ String URLEncode(const char *msg);
 void   repl(const String& key,
             const String& val,
             String      & s,
-            boolean       useURLencode);
+            bool       useURLencode);
 
 #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 void parseSpecialCharacters(String& s,
-                            boolean useURLencode);
+                            bool useURLencode);
 #endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 
 /********************************************************************************************\
@@ -210,19 +212,19 @@ void parseSpecialCharacters(String& s,
  \*********************************************************************************************/
 void parseControllerVariables(String            & s,
                               struct EventStruct *event,
-                              boolean             useURLencode);
+                              bool             useURLencode);
 
 void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
                                    byte                taskValueIndex,
-                                   boolean             useURLencode);
+                                   bool             useURLencode);
 
 void parseSystemVariables(String& s,
-                          boolean useURLencode);
+                          bool useURLencode);
 
 void parseEventVariables(String            & s,
                          struct EventStruct *event,
-                         boolean             useURLencode);
+                         bool             useURLencode);
 
 bool getConvertArgument(const String& marker,
                         const String& s,
@@ -246,7 +248,7 @@ bool getConvertArgumentString(const String& marker,
 // Parse conversions marked with "%conv_marker%(float)"
 // Must be called last, since all sensor values must be converted, processed, etc.
 void parseStandardConversions(String& s,
-                              boolean useURLencode);
+                              bool useURLencode);
 
 
 bool HasArgv(const char  *string,

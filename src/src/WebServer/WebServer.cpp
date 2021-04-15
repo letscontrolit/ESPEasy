@@ -267,6 +267,24 @@ size_t streamFile_htmlEscape(const String& fileName)
   return size;
 }
 
+
+bool captivePortal() {
+  if (!isIP(web_server.hostHeader()) && web_server.hostHeader() != (NetworkGetHostname() + F(".local"))) {
+    const bool fromAP = web_server.client().localIP() == apIP;
+    String redirectURL = F("http://");
+    redirectURL += web_server.client().localIP().toString();
+    if (fromAP && !SecuritySettings.hasWiFiCredentials()) {
+      redirectURL += F("/setup");
+    }
+    web_server.sendHeader(F("Location"), redirectURL, true);
+    web_server.send(302, F("text/plain"), "");   // Empty content inhibits Content-length header so we have to close the socket ourselves.
+    web_server.client().stop(); // Stop is needed because we sent no content length
+    return true;
+  }
+  return false;
+}
+
+
 // ********************************************************************************
 // Web Interface init
 // ********************************************************************************
@@ -280,7 +298,11 @@ void WebServerInit()
 
   // Prepare webserver pages
   #ifdef WEBSERVER_ROOT
-  web_server.on(F("/"),               handle_root);
+  web_server.on(F("/"),             handle_root);
+  // Entries for several captive portal URLs.
+  // Maybe not needed. Might be handled by notFound handler.
+  web_server.on(F("/generate_204"), handle_root);  //Android captive portal.
+  web_server.on(F("/fwlink"),       handle_root);  //Microsoft captive portal.
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
   web_server.on(F("/advanced"),    handle_advanced);
