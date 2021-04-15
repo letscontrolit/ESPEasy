@@ -27,6 +27,13 @@
 # include "../Helpers/StringConverter.h"
 
 
+
+#ifndef SETUP_PAGE_SHOW_CONFIG_BUTTON
+  #define SETUP_PAGE_SHOW_CONFIG_BUTTON true
+#endif
+
+
+
 // ********************************************************************************
 // Web Interface Setup Wizard
 // ********************************************************************************
