@@ -75,41 +75,48 @@ void handle_setup() {
       String password          = web_server.arg(F("pass"));
 
       bool emptyPass = isFormItemChecked(F("emptypass"));
+      const bool performRescan = web_server.hasArg(F("performrescan"));
+      if (performRescan) {
+        WiFiEventData.lastScanMoment.clear();
+        WifiScan(false);
+      }
 
       if (other.length() != 0)
       {
         ssid = other;
       }
 
-      // if ssid config not set and params are both provided
-      if ((status == HANDLE_SETUP_SCAN_STAGE) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
-      {
-        if (clearButtonPressed) {
-          addHtmlError(F("Warning: Need to confirm to clear WiFi credentials"));
-        } else if (password.length() == 0 && !emptyPass) {
-          addHtmlError(F("No password entered"));
-        } else {
-          safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
-          safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
-          // Hidden SSID
-          Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
-          addHtmlError(SaveSettings());
-          WiFiEventData.wifiSetupConnect         = true;
-          WiFiEventData.wifiConnectAttemptNeeded = true;
-          WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+      if (!performRescan) {
+        // if ssid config not set and params are both provided
+        if ((status == HANDLE_SETUP_SCAN_STAGE) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
+        {
+          if (clearButtonPressed) {
+            addHtmlError(F("Warning: Need to confirm to clear WiFi credentials"));
+          } else if (password.length() == 0 && !emptyPass) {
+            addHtmlError(F("No password entered"));
+          } else {
+            safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
+            safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
+            // Hidden SSID
+            Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
+            addHtmlError(SaveSettings());
+            WiFiEventData.wifiSetupConnect         = true;
+            WiFiEventData.wifiConnectAttemptNeeded = true;
+            WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
 
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
-            reconnectlog += ssid;
-            addLog(LOG_LEVEL_INFO, reconnectlog);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
+              reconnectlog += ssid;
+              addLog(LOG_LEVEL_INFO, reconnectlog);
+            }
+            status       = HANDLE_SETUP_CONNECTING_STAGE;
+            refreshCount = 0;
+            AttemptWiFiConnect();
           }
-          status       = HANDLE_SETUP_CONNECTING_STAGE;
-          refreshCount = 0;
-          AttemptWiFiConnect();
         }
       }
       html_BR();
-      wrap_html_tag(F("h1"), connected ? F("WiFi Setup Complete") : F("Wifi Setup wizard"));
+      wrap_html_tag(F("h1"), connected ? F("Connected to a network") : F("Wifi Setup wizard"));
       html_add_form();
 
       switch (status) {
@@ -208,12 +215,14 @@ void handle_setup() {
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
   int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
-  if (scanCompleteStatus <= 0) {
+  const bool needsRescan = scanCompleteStatus <= 0 || WiFiScanAllowed();
+  if (needsRescan) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
     WifiScan(false);
     scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
     setWifiMode(cur_wifimode);
   }
+
 
   if (scanCompleteStatus <= 0) {
     addHtml(F("No Access Points found"));
@@ -274,6 +283,10 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
     }
     html_end_table();
   }
+
+  html_BR();
+
+  addSubmitButton(F("Rescan"), F("performrescan"));
 
   html_BR();
 
