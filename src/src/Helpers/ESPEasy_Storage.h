@@ -53,7 +53,9 @@ bool GarbageCollection();
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
-String SaveSettings(void);
+String SaveSettings();
+
+String SaveSecuritySettings();
 
 void afterloadSettings();
 

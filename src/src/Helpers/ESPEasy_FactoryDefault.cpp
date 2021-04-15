@@ -137,6 +137,8 @@ void ResetFactory()
   if (!ResetFactoryDefaultPreference.keepWiFi()) {
     strcpy_P(SecuritySettings.WifiSSID,  PSTR(DEFAULT_SSID));
     strcpy_P(SecuritySettings.WifiKey,   PSTR(DEFAULT_KEY));
+    strcpy_P(SecuritySettings.WifiSSID2, PSTR(DEFAULT_SSID2));
+    strcpy_P(SecuritySettings.WifiKey2,  PSTR(DEFAULT_KEY2));
     strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
     SecuritySettings.WifiSSID2[0] = 0;
     SecuritySettings.WifiKey2[0]  = 0;
