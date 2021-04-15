@@ -45,6 +45,8 @@ struct WiFi_AP_CandidatesList {
     return scanned.end();
   }
 
+  static bool SettingsIndexMatchCustomCredentials(uint8_t index);
+
 private:
 
   // Pick the possible 

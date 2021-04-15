@@ -42,9 +42,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
         }
         ++index;
       } else {
-        if (index == WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX || 
-            index == WIFI_CUSTOM_SUPPORT_KEY_INDEX    || 
-            index == WIFI_CREDENTIALS_FALLBACK_SSID_INDEX) {
+        if (SettingsIndexMatchCustomCredentials(index)) {
           ++index;
         } else {
           done = true;
@@ -193,6 +191,13 @@ int8_t WiFi_AP_CandidatesList::scanComplete() const {
   return 0;
 }
 
+bool WiFi_AP_CandidatesList::SettingsIndexMatchCustomCredentials(uint8_t index)
+{
+  return (WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     == index ||
+          WIFI_CUSTOM_SUPPORT_KEY_INDEX        == index ||
+          WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == index);
+}
+
 void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
   if (!candidates.empty()) {
     // Do not mess with the current candidates order.
@@ -245,9 +250,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 void WiFi_AP_CandidatesList::addFromRTC() {
   if (!RTC.lastWiFi_set()) { return; }
 
-  if (WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     == RTC.lastWiFiSettingsIndex ||
-      WIFI_CUSTOM_SUPPORT_KEY_INDEX        == RTC.lastWiFiSettingsIndex ||
-      WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == RTC.lastWiFiSettingsIndex) 
+  if (SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) 
   { 
     return;
   }

@@ -136,14 +136,14 @@ void handle_setup() {
     }
 */
 
+    html_table_class_normal();
+    html_TR();
+    
+    handle_sysinfo_NetworkServices();
     if (connected) {
-      html_table_class_normal();
 
       //addFormHeader(F("Current network configuration"));
-      html_TR();
-      
-      handle_sysinfo_NetworkServices();
-      
+
       handle_sysinfo_Network();
 
       addFormSeparator(2);
@@ -161,10 +161,10 @@ void handle_setup() {
       }
       #endif
 
-      html_end_table();
-
       WiFiEventData.wifiSetup = false;
     } 
+    html_end_table();
+
     html_BR();
     html_BR();
     html_BR();
@@ -208,12 +208,12 @@ void handle_setup() {
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
   int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
-//  if (scanCompleteStatus <= 0) {
+  if (scanCompleteStatus <= 0) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
     WifiScan(false);
     scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
     setWifiMode(cur_wifimode);
-//  }
+  }
 
   if (scanCompleteStatus <= 0) {
     addHtml(F("No Access Points found"));
@@ -249,7 +249,9 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
 
       {
         if (it->bssid_match(RTC.lastBSSID)) {
-          addHtml(F(" checked "));  
+          if (!WiFi_AP_Candidates.SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) {
+            addHtml(F(" checked "));  
+          }
         }
       }
 
