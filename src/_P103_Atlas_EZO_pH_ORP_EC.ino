@@ -131,7 +131,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
 
       addRowLabel(F("Board restart code"));
 
-      addLog(DEBUG, boardStatus);
+      addLog(LOG_LEVEL_DEBUG, boardStatus);
 
       char *statuschar = strchr(statussensordata, ',');
 
