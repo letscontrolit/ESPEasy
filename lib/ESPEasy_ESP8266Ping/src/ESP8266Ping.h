@@ -20,6 +20,7 @@
 #ifndef ESP8266Ping_H
 #define ESP8266Ping_H
 
+#if defined(ESP8266)
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
@@ -56,4 +57,5 @@ class PingClass {
 #include "ESP8266Ping.impl.h"
 PingClass Ping;
 
+#endif
 #endif

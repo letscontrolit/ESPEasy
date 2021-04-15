@@ -142,7 +142,7 @@ class Node():
 
         self.log.info("Configuring wifi")
 
-        serial_str="wifissid {ssid}\nwifikey {password}\nip {ip}\nsave\nreboot\n".format(ssid=wificonfig.ssid, password=wificonfig.password, ip=self._config['ip'])
+        serial_str="wifissid {ssid}\nwifikey {password}\nip {ip}\nsubnet {subnet}\ngateway {gateway}\nsave\nreboot\n".format(ssid=wificonfig.ssid, password=wificonfig.password, ip=self._config['ip'], subnet=self._config['subnet'], gateway=self._config['gateway'])
         self._serial.write(bytes(serial_str, 'ascii'));
 
         self.pingwifi(timeout=timeout)

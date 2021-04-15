@@ -1,0 +1,46 @@
+.. These P001 commands should be moved to core (P000)...
+
+:ref:`P000_page` |P000_status|
+
+Supported hardware: |P000_usedby_RTTTL| (Ringtones etc.)
+
+.. csv-table::
+  :header: "Command (GPIO/Value)", "Extra information"
+  :widths: 20, 30
+
+  "
+  ``tone,<gpio>,<tone>,<duration>``
+
+  GPIO: 12 ... 16
+
+  Tone: 20 ... 13000 Hz
+
+  Duration: 100 ... 15000 msec
+  ","
+  You should try to use GPIO 12...16 since these generally aren't used.
+  The recommended tone range is 20 Hz ... 13 kHz.
+  Up-to 40 kHz should be possible to generate, but will be inaudible for humans.
+  Frequencies above 30 kHz are not stable and will likely crash the ESP.
+
+  Duration is set in ms.
+
+  N.B. tones with a duration less than 50 msec will be blocking.
+  Longer duration will use the scheduler, which may cause some fluctuations in the duration.
+  "
+  "
+  ``rtttl,<gpio>,<value>``
+
+  GPIO: 12 ... 16
+
+  Value: d=<duration>,o=<octave>,b=<tempo>,<notes...>
+  ","
+  You should try to use GPIO 12...16 since these generally aren't used by ESP internal functions.
+  N.B. Playing a tune is blocking for as long as the tune is playing.
+
+  Value can be defined like <name_of_melody:duration,octave,beat,notes....>
+
+  For example:
+  ``rtttl,14,test:d=8,o=5,b=180,c6,b,c6,p,g,g-``
+
+  `More RTTTL Ringtone Downloads <http://www.picaxe.com/RTTTL-Ringtones-for-Tune-Command/>`_
+  "

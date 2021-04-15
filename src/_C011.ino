@@ -1,259 +1,319 @@
-//#######################################################################################################
-//########################### Controller Plugin 011: Generic HTTP #######################################
-//#######################################################################################################
+#include "src/Helpers/_CPlugin_Helper.h"
+#ifdef USES_C011
 
-#ifdef PLUGIN_BUILD_TESTING
+// #######################################################################################################
+// ########################### Controller Plugin 011: Generic HTTP Advanced ##############################
+// #######################################################################################################
 
-#define CPLUGIN_011
-#define CPLUGIN_ID_011         11
-#define CPLUGIN_NAME_011       "Generic HTTP Advanced [TESTING]"
+# define CPLUGIN_011
+# define CPLUGIN_ID_011         11
+# define CPLUGIN_NAME_011       "Generic HTTP Advanced [TESTING]"
 
-#define C011_HTTP_METHOD_MAX_LEN          16
-#define C011_HTTP_URI_MAX_LEN             240
-#define C011_HTTP_HEADER_MAX_LEN          256
-#define C011_HTTP_BODY_MAX_LEN            512
+# define C011_HTTP_METHOD_MAX_LEN          16
+# define C011_HTTP_URI_MAX_LEN             240
+# define C011_HTTP_HEADER_MAX_LEN          256
+# define C011_HTTP_BODY_MAX_LEN            512
+
+
+bool C011_sendBinary = false;
 
 struct C011_ConfigStruct
 {
-  char          HttpMethod[C011_HTTP_METHOD_MAX_LEN];
-  char          HttpUri[C011_HTTP_URI_MAX_LEN];
-  char          HttpHeader[C011_HTTP_HEADER_MAX_LEN];
-  char          HttpBody[C011_HTTP_BODY_MAX_LEN];
+  void zero_last() {
+    HttpMethod[C011_HTTP_METHOD_MAX_LEN - 1] = 0;
+    HttpUri[C011_HTTP_URI_MAX_LEN - 1]       = 0;
+    HttpHeader[C011_HTTP_HEADER_MAX_LEN - 1] = 0;
+    HttpBody[C011_HTTP_BODY_MAX_LEN - 1]     = 0;
+  }
+
+  char HttpMethod[C011_HTTP_METHOD_MAX_LEN] = { 0 };
+  char HttpUri[C011_HTTP_URI_MAX_LEN]       = { 0 };
+  char HttpHeader[C011_HTTP_HEADER_MAX_LEN] = { 0 };
+  char HttpBody[C011_HTTP_BODY_MAX_LEN]     = { 0 };
 };
 
-boolean CPlugin_011(byte function, struct EventStruct *event, String& string)
+bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
+    {
+      Protocol[++protocolCount].Number     = CPLUGIN_ID_011;
+      Protocol[protocolCount].usesMQTT     = false;
+      Protocol[protocolCount].usesAccount  = true;
+      Protocol[protocolCount].usesPassword = true;
+      Protocol[protocolCount].usesExtCreds = true;
+      Protocol[protocolCount].defaultPort  = 80;
+      Protocol[protocolCount].usesID       = false;
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
+    {
+      string = F(CPLUGIN_NAME_011);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_INIT:
+    {
       {
-        Protocol[++protocolCount].Number = CPLUGIN_ID_011;
-        Protocol[protocolCount].usesMQTT = false;
-        Protocol[protocolCount].usesAccount = true;
-        Protocol[protocolCount].usesPassword = true;
-        Protocol[protocolCount].defaultPort = 80;
-        Protocol[protocolCount].usesID = false;
-        break;
+        MakeControllerSettings(ControllerSettings);
+
+        if (AllocatedControllerSettings()) {
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+          C011_sendBinary = ControllerSettings.sendBinary();
+        }
       }
+      success = init_c011_delay_queue(event->ControllerIndex);
+      break;
+    }
 
-    case CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_EXIT:
+    {
+      exit_c011_delay_queue();
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
+    {
       {
-        string = F(CPLUGIN_NAME_011);
-        break;
+        String HttpMethod;
+        String HttpUri;
+        String HttpHeader;
+        String HttpBody;
+
+        if (!load_C011_ConfigStruct(event->ControllerIndex, HttpMethod, HttpUri, HttpHeader, HttpBody))
+        {
+          return false;
+        }
+        addTableSeparator(F("HTTP Config"), 2, 3);
+        {
+          byte   choice    = 0;
+          String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+
+          for (byte i = 0; i < 5; i++)
+          {
+            if (methods[i].equals(HttpMethod)) {
+              choice = i;
+            }
+          }
+          addFormSelector(F("Method"), F("P011httpmethod"), 5, methods, NULL, choice);
+        }
+
+        addFormTextBox(F("URI"), F("P011httpuri"), HttpUri, C011_HTTP_URI_MAX_LEN - 1);
+        {
+          htmlEscape(HttpHeader);
+          addFormTextArea(F("Header"), F("P011httpheader"), HttpHeader, C011_HTTP_HEADER_MAX_LEN - 1, 4, 50);
+        }
+        {
+          htmlEscape(HttpBody);
+          addFormTextArea(F("Body"), F("P011httpbody"), HttpBody, C011_HTTP_BODY_MAX_LEN - 1, 8, 50);
+        }
       }
-
-    case CPLUGIN_WEBFORM_LOAD:
       {
-        String escapeBuffer;
+        // Place in scope to delete ControllerSettings as soon as it is no longer needed
+        MakeControllerSettings(ControllerSettings);
 
-        C011_ConfigStruct customConfig;
+        if (!AllocatedControllerSettings()) {
+          addHtmlError(F("Out of memory, cannot load page"));
+        } else {
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+          addControllerParameterForm(ControllerSettings, event->ControllerIndex, ControllerSettingsStruct::CONTROLLER_SEND_BINARY);
+          addFormNote(F("Do not 'percent escape' body when send binary checked"));
+        }
+      }
+      break;
+    }
 
-        LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
+    case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
+    {
+      std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
+
+      if (customConfig) {
+        byte   choice    = 0;
         String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
-        string += F("<TR><TD>HTTP Method :<TD><select name='P011httpmethod'>");
+
         for (byte i = 0; i < 5; i++)
         {
-          string += F("<option value='");
-          string += methods[i] + "'";
-          string += methods[i].equals(customConfig.HttpMethod) ? F(" selected='selected'") : F("");
-          string += F(">");
-          string += methods[i];
-          string += F("</option>");
+          if (methods[i].equals(customConfig->HttpMethod)) {
+            choice = i;
+          }
         }
-        string += F("</select>");
 
-        string += F("<TR><TD>HTTP URI:<TD><input type='text' name='P011httpuri' size=80 maxlength='");
-        string += C011_HTTP_URI_MAX_LEN-1;
-        string += F("' value='");
-        string += customConfig.HttpUri;
+        int httpmethod    = getFormItemInt(F("P011httpmethod"), choice);
+        String httpuri    = web_server.arg(F("P011httpuri"));
+        String httpheader = web_server.arg(F("P011httpheader"));
+        String httpbody   = web_server.arg(F("P011httpbody"));
 
-        string += F("'>");
-
-        string += F("<TR><TD>HTTP Header:<TD><textarea name='P011httpheader' rows='4' cols='50' maxlength='");
-        string += C011_HTTP_HEADER_MAX_LEN-1;
-        string += F("'>");
-        escapeBuffer=customConfig.HttpHeader;
-        htmlEscape(escapeBuffer);
-        string += escapeBuffer;
-        string += F("</textarea>");
-
-        string += F("<TR><TD>HTTP Body:<TD><textarea name='P011httpbody' rows='8' cols='50' maxlength='");
-        string += C011_HTTP_BODY_MAX_LEN-1;
-        string += F("'>");
-        escapeBuffer=customConfig.HttpBody;
-        htmlEscape(escapeBuffer);
-        string += escapeBuffer;
-        string += F("</textarea>");
-        break;
+        strlcpy(customConfig->HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig->HttpMethod));
+        strlcpy(customConfig->HttpUri,    httpuri.c_str(),             sizeof(customConfig->HttpUri));
+        strlcpy(customConfig->HttpHeader, httpheader.c_str(),          sizeof(customConfig->HttpHeader));
+        strlcpy(customConfig->HttpBody,   httpbody.c_str(),            sizeof(customConfig->HttpBody));
+        customConfig->zero_last();
+        SaveCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C011_ConfigStruct));
       }
+      break;
+    }
 
-    case CPLUGIN_WEBFORM_SAVE:
-      {
-        C011_ConfigStruct customConfig;
-        String httpmethod = WebServer.arg(F("P011httpmethod"));
-        String httpuri = WebServer.arg(F("P011httpuri"));
-        String httpheader = WebServer.arg(F("P011httpheader"));
-        String httpbody = WebServer.arg(F("P011httpbody"));
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
+    {
+      success = Create_schedule_HTTP_C011(event);
+      break;
+    }
 
-        strlcpy(customConfig.HttpMethod, httpmethod.c_str(), sizeof(customConfig.HttpMethod));
-        strlcpy(customConfig.HttpUri, httpuri.c_str(), sizeof(customConfig.HttpUri));
-        strlcpy(customConfig.HttpHeader, httpheader.c_str(), sizeof(customConfig.HttpHeader));
-        strlcpy(customConfig.HttpBody, httpbody.c_str(), sizeof(customConfig.HttpBody));
-        SaveCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
-        break;
-      }
+    case CPlugin::Function::CPLUGIN_FLUSH:
+    {
+      process_c011_delay_queue();
+      delay(0);
+      break;
+    }
 
-    case CPLUGIN_PROTOCOL_SEND:
-      {
-      	HTTPSend011(event);
-      }
-
+    default:
+      break;
   }
   return success;
 }
 
+// ********************************************************************************
+// Generic HTTP request
+// ********************************************************************************
 
-//********************************************************************************
-// Generic HTTP get request
-//********************************************************************************
-boolean HTTPSend011(struct EventStruct *event)
-{
-  if (!WiFiConnected(100)) {
-    return false;
-  }
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
+bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings);
 
-  String authHeader = "";
-  if ((SecuritySettings.ControllerUser[event->ControllerIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ControllerIndex][0] != 0))
-  {
-    base64 encoder;
-    String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
-    auth += ":";
-    auth += SecuritySettings.ControllerPassword[event->ControllerIndex];
-    authHeader = F("Authorization: Basic ");
-    authHeader += encoder.encode(auth);
-    authHeader += F(" \r\n");
-  }
-
-  C011_ConfigStruct customConfig;
-  LoadCustomControllerSettings(event->ControllerIndex,(byte*)&customConfig, sizeof(customConfig));
-
-  boolean success = false;
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+
-      ControllerSettings.getHostPortString());
-
-  // Use WiFiClient class to create TCP connections
+bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+// *INDENT-ON*
   WiFiClient client;
-  if (!ControllerSettings.connectToHost(client))
-  {
-    connectionFailures++;
-    addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
+
+  if (!NetworkConnected()) { return false; }
+
+  int httpCode = -1;
+
+  send_via_http(
+    controller_number,
+    ControllerSettings,
+    element.controller_idx,
+    client,
+    element.uri,
+    element.HttpMethod,
+    element.header,
+    element.postStr,
+    httpCode);
+
+  // HTTP codes:
+  // 1xx Informational response
+  // 2xx Success
+  return httpCode >= 100 && httpCode < 300;
+}
+
+bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMethod, String& HttpUri, String& HttpHeader, String& HttpBody) {
+  // Just copy the needed strings and destruct the C011_ConfigStruct as soon as possible
+  std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
+
+  if (!customConfig) {
     return false;
   }
-  statusLED(true);
-  if (connectionFailures)
-    connectionFailures--;
+  LoadCustomControllerSettings(ControllerIndex, (byte *)customConfig.get(), sizeof(C011_ConfigStruct));
+  customConfig->zero_last();
+  HttpMethod = customConfig->HttpMethod;
+  HttpUri    = customConfig->HttpUri;
+  HttpHeader = customConfig->HttpHeader;
+  HttpBody   =  customConfig->HttpBody;
+  return true;
+}
 
-  if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
-
-  String payload = String(customConfig.HttpMethod) + " /";
-  payload += customConfig.HttpUri;
-  payload += F(" HTTP/1.1\r\n");
-  payload += F("Host: ");
-  payload += ControllerSettings.getHostPortString();
-  payload += F("\r\n");
-  payload += authHeader;
-  payload += F("Connection: close\r\n");
-
-  if (strlen(customConfig.HttpHeader) > 0)
-    payload += customConfig.HttpHeader;
-  ReplaceTokenByValue(payload, event);
-
-  if (strlen(customConfig.HttpBody) > 0)
-  {
-    String body = String(customConfig.HttpBody);
-    ReplaceTokenByValue(body, event);
-    payload += F("\r\nContent-Length: ");
-    payload += String(body.length());
-    payload += F("\r\n\r\n");
-    payload += body;
+// ********************************************************************************
+// Create request
+// ********************************************************************************
+boolean Create_schedule_HTTP_C011(struct EventStruct *event)
+{
+  if (C011_DelayHandler == nullptr) {
+    addLog(LOG_LEVEL_ERROR, F("No C011_DelayHandler"));
+    return false;
   }
-  payload += F("\r\n");
+  LoadTaskSettings(event->TaskIndex);
 
-  // This will send the request to the server
-  client.print(payload);
-  addLog(LOG_LEVEL_DEBUG_MORE, payload);
+  // Add a new element to the queue with the minimal payload
+  bool success = C011_DelayHandler->addToQueue(C011_queue_element(event));
 
-  unsigned long timer = millis() + 200;
-  while (!client.available() && !timeOutReached(timer))
-    yield();
+  if (success) {
+    // Element was added.
+    // Now we try to append to the existing element
+    // and thus preventing the need to create a long string only to copy it to a queue element.
+    C011_queue_element& element = C011_DelayHandler->sendQueue.back();
 
-  // Read all the lines of the reply from server and print them to Serial
-  while (client.available()) {
-    // String line = client.readStringUntil('\n');
-    String line;
-    safeReadStringUntil(client, line, '\n');
-
-
-    // line.toCharArray(log, 80);
-    addLog(LOG_LEVEL_DEBUG_MORE, line);
-    if (line.startsWith(F("HTTP/1.1 2")))
+    if (!load_C011_ConfigStruct(event->ControllerIndex, element.HttpMethod, element.uri, element.header, element.postStr))
     {
-      addLog(LOG_LEVEL_DEBUG, F("HTTP : Success!"));
-      success = true;
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log = F("C011   : ");
+        log += element.HttpMethod;
+        log += element.uri;
+        log += element.header;
+        log += element.postStr;
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+      C011_DelayHandler->sendQueue.pop_back();
+      return false;
     }
-    yield();
+
+    ReplaceTokenByValue(element.uri,    event, false);
+    ReplaceTokenByValue(element.header, event, false);
+
+    if (element.postStr.length() > 0)
+    {
+      ReplaceTokenByValue(element.postStr, event, C011_sendBinary);
+    }
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("C011  : Could not add to delay handler"));
   }
-  addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection"));
 
-  client.flush();
-  client.stop();
-
-  return(success);
+  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C011_DELAY_QUEUE, C011_DelayHandler->getNextScheduleTime());
+  return success;
 }
 
 // parses the string and returns only the the number of name/values we want
 // according to the parameter numberOfValuesWanted
-void DeleteNotNeededValues(String &s, byte numberOfValuesWanted)
+void DeleteNotNeededValues(String& s, byte numberOfValuesWanted)
 {
-	numberOfValuesWanted++;
-	for (byte i=1; i < 5; i++)
-	{
-    String startToken=String(F("%")) + i + F("%");
-    String endToken=String(F("%/")) + i + F("%");
+  numberOfValuesWanted++;
 
-    //do we want to keep this one?
-    if (i<numberOfValuesWanted)
+  for (byte i = 1; i < 5; i++)
+  {
+    String startToken = String(F("%")) + i + F("%");
+    String endToken   = String(F("%/")) + i + F("%");
+
+    // do we want to keep this one?
+    if (i < numberOfValuesWanted)
     {
-      //yes, so just remove the tokens
+      // yes, so just remove the tokens
       s.replace(startToken, "");
-      s.replace(endToken, "");
+      s.replace(endToken,   "");
     }
     else
     {
-      //remove all the whole strings including tokes
-      int startIndex=s.indexOf(startToken);
-      int endIndex=s.indexOf(endToken);
-      while(startIndex != -1 && endIndex != -1  && endIndex>startIndex)
-  		{
-        String p = s.substring(startIndex,endIndex+4);
-        //remove the whole string including tokens
-				s.replace(p, F(""));
+      // remove all the whole strings including tokes
+      int startIndex = s.indexOf(startToken);
+      int endIndex   = s.indexOf(endToken);
 
-        //find next ones
-        startIndex=s.indexOf(startToken);
-        endIndex=s.indexOf(endToken);
-  		}
+      while (startIndex != -1 && endIndex != -1  && endIndex > startIndex)
+      {
+        String p = s.substring(startIndex, endIndex + 4);
+
+        // remove the whole string including tokens
+        s.replace(p, "");
+
+        // find next ones
+        startIndex = s.indexOf(startToken);
+        endIndex   = s.indexOf(endToken);
+      }
     }
-	}
+  }
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // Replace the token in a string by real value.
 //
 // Example:
@@ -262,24 +322,26 @@ void DeleteNotNeededValues(String &s, byte numberOfValuesWanted)
 // SENSORVALUENAME1____TASKNAME1____VALUE1  <- everything not between %1% and %/1% will be discarded
 // in case of a sensor with 2 values:
 // SENSORVALUENAME1____TASKNAME1____VALUE1__SENSORVALUENAME2____TASKNAME2____VALUE2
-//********************************************************************************
-void ReplaceTokenByValue(String& s, struct EventStruct *event)
+// ********************************************************************************
+void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary)
 {
-// example string:
-// write?db=testdb&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%
-//	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname% Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
-	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
-	addLog(LOG_LEVEL_DEBUG_MORE, s);
-  const byte valueCount = getValueCountFromSensorType(event->sensorType);
-  DeleteNotNeededValues(s,valueCount);
+  // example string:
+  // write?db=testdb&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%
+  //	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname%
+  //  Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
+  addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
+  addLog(LOG_LEVEL_DEBUG_MORE, s);
+  const byte valueCount = getValueCountForTask(event->TaskIndex);
 
-	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
-	addLog(LOG_LEVEL_DEBUG_MORE, s);
+  DeleteNotNeededValues(s, valueCount);
 
-  parseControllerVariables(s, event, true);
+  addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
+  addLog(LOG_LEVEL_DEBUG_MORE, s);
 
-	addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
-	addLog(LOG_LEVEL_DEBUG_MORE, s);
+  parseControllerVariables(s, event, !sendBinary);
+
+  addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
+  addLog(LOG_LEVEL_DEBUG_MORE, s);
 }
 
-#endif
+#endif // ifdef USES_C011

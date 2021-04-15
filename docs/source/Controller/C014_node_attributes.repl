@@ -1,0 +1,7 @@
+.. csv-table::
+        :header: "Attribute", "Description", "Example", "3.0.1","Spec.","4.0.0","Spec."
+        :widths: 10, 35, 15, 10, 5, 10, 5
+
+        "``$name``","Friendly name of the Node","SYSTEM", "YES",":green:`required`", "YES",":green:`required`"
+        "``$type``","Type of the node","System commands", "YES",":green:`required`", "YES",":green:`required`"
+        "``$properties``","Exposed properties. Separated by , for multiple ones.","value1,value2", "YES",":green:`required`", "YES",":green:`required`"

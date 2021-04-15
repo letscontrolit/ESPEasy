@@ -1,0 +1,19 @@
+.. csv-table::
+        :header: "Command (GPIO/Value)", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``senseair_setrelay,<value>``
+
+        Value:
+
+        ``1`` will set the relay to ON.
+
+        ``0`` will set the relay to OFF.
+
+        ``-1`` will remove control over relay.
+        ","
+        Used in **tSense (K70)** to set the relay to either ``1`` or ``0``.
+        Observe that using this command will take over the control of the relay from the
+        tSense. If you want to give the control back you use the ``-1`` value.
+        "

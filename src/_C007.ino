@@ -1,124 +1,121 @@
-//#######################################################################################################
-//########################### Controller Plugin 007: Emoncms ############################################
-//#######################################################################################################
+#include "src/Helpers/_CPlugin_Helper.h"
+#ifdef USES_C007
 
-#define CPLUGIN_007
-#define CPLUGIN_ID_007         7
-#define CPLUGIN_NAME_007       "Emoncms"
+# include "src/ESPEasyCore/Serial.h"
 
-boolean CPlugin_007(byte function, struct EventStruct *event, String& string)
+// #######################################################################################################
+// ########################### Controller Plugin 007: Emoncms ############################################
+// #######################################################################################################
+
+# define CPLUGIN_007
+# define CPLUGIN_ID_007         7
+# define CPLUGIN_NAME_007       "Emoncms"
+
+
+bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
-      {
-        Protocol[++protocolCount].Number = CPLUGIN_ID_007;
-        Protocol[protocolCount].usesMQTT = false;
-        Protocol[protocolCount].usesAccount = false;
-        Protocol[protocolCount].usesPassword = true;
-        Protocol[protocolCount].defaultPort = 80;
-        Protocol[protocolCount].usesID = true;
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
+    {
+      Protocol[++protocolCount].Number     = CPLUGIN_ID_007;
+      Protocol[protocolCount].usesMQTT     = false;
+      Protocol[protocolCount].usesAccount  = false;
+      Protocol[protocolCount].usesPassword = true;
+      Protocol[protocolCount].defaultPort  = 80;
+      Protocol[protocolCount].usesID       = true;
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
+    {
+      string = F(CPLUGIN_NAME_007);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_INIT:
+    {
+      success = init_c007_delay_queue(event->ControllerIndex);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+    {
+      exit_c007_delay_queue();
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
+    {
+      if (C007_DelayHandler == nullptr) {
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
-      {
-        string = F(CPLUGIN_NAME_007);
+      if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+        addLog(LOG_LEVEL_ERROR, F("emoncms : No support for Sensor_VType::SENSOR_TYPE_STRING"));
         break;
       }
+      const byte valueCount = getValueCountForTask(event->TaskIndex);
 
-    case CPLUGIN_PROTOCOL_SEND:
-      {
-        if (!WiFiConnected(100)) {
-          success = false;
-          break;
-        }
-        const byte valueCount = getValueCountFromSensorType(event->sensorType);
-        if (valueCount == 0 || valueCount > 3) {
-          addLog(LOG_LEVEL_ERROR, F("emoncms : Unknown sensortype or too many sensor values"));
-          break;
-        }
-
-        ControllerSettingsStruct ControllerSettings;
-        LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
-
-        // boolean success = false;
-        addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
-        char log[80];
-        // Use WiFiClient class to create TCP connections
-        WiFiClient client;
-        if (!ControllerSettings.connectToHost(client))
-        {
-          connectionFailures++;
-          strcpy_P(log, PSTR("HTTP : connection failed"));
-          addLog(LOG_LEVEL_ERROR, log);
-          return false;
-        }
-        statusLED(true);
-        if (connectionFailures)
-          connectionFailures--;
-
-        String postDataStr = F("GET /emoncms/input/post.json?node=");
-
-        postDataStr += Settings.Unit;
-        postDataStr += F("&json=");
-
-        for (byte i = 0; i < valueCount; ++i) {
-          postDataStr += (i == 0) ? F("{") : F(",");
-          postDataStr += F("field");
-          postDataStr += event->idx + i;
-          postDataStr += ":";
-          postDataStr += formatUserVar(event, i);
-        }
-        postDataStr += "}";
-        postDataStr += F("&apikey=");
-        postDataStr += SecuritySettings.ControllerPassword[event->ControllerIndex]; // "0UDNN17RW6XAS2E5" // api key
-
-        String postStr = F(" HTTP/1.1\r\n");
-        postStr += F("Host: ");
-        postStr += ControllerSettings.getHost();
-        postStr += F("\r\n");
-        postStr += F("Connection: close\r\n");
-        postStr += F("\r\n");
-
-        postDataStr += postStr;
-
-        if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
-          Serial.println(postDataStr);
-
-        // This will send the request to the server
-        client.print(postDataStr);
-
-        unsigned long timer = millis() + 200;
-        while (!client.available() && !timeOutReached(timer))
-          delay(1);
-
-        // Read all the lines of the reply from server and print them to Serial
-        while (client.available()) {
-          //   String line = client.readStringUntil('\n');
-          String line;
-          safeReadStringUntil(client, line, '\n');
-
-          line.toCharArray(log, 80);
-          addLog(LOG_LEVEL_DEBUG_MORE, log);
-          if (line.substring(0, 15) == F("HTTP/1.1 200 OK"))
-          {
-            strcpy_P(log, PSTR("HTTP : Succes!"));
-            addLog(LOG_LEVEL_DEBUG, log);
-            success = true;
-          }
-          delay(1);
-        }
-        strcpy_P(log, PSTR("HTTP : closing connection"));
-        addLog(LOG_LEVEL_DEBUG, log);
-
-        client.flush();
-        client.stop();
+      if ((valueCount == 0) || (valueCount > VARS_PER_TASK)) {
+        addLog(LOG_LEVEL_ERROR, F("emoncms : Unknown sensortype or too many sensor values"));
         break;
       }
+      success = C007_DelayHandler->addToQueue(C007_queue_element(event));
+      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C007_DELAY_QUEUE, C007_DelayHandler->getNextScheduleTime());
+      break;
+    }
 
+    case CPlugin::Function::CPLUGIN_FLUSH:
+    {
+      process_c007_delay_queue();
+      delay(0);
+      break;
+    }
+
+    default:
+      break;
   }
   return success;
 }
+
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
+bool do_process_c007_delay_queue(int controller_number, const C007_queue_element& element, ControllerSettingsStruct& ControllerSettings);
+
+bool do_process_c007_delay_queue(int controller_number, const C007_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+// *INDENT-ON*
+  WiFiClient client;
+
+  if (!try_connect_host(controller_number, client, ControllerSettings)) {
+    return false;
+  }
+
+  String url = F("/emoncms/input/post.json?node=");
+
+  url += Settings.Unit;
+  url += F("&json=");
+
+  for (byte i = 0; i < element.valueCount; ++i) {
+    url += (i == 0) ? F("{") : F(",");
+    url += F("field");
+    url += element.idx + i;
+    url += ":";
+    url += element.txt[i];
+  }
+  url += "}";
+  url += F("&apikey=");
+  url += getControllerPass(element.controller_idx, ControllerSettings); // "0UDNN17RW6XAS2E5" // api key
+
+  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
+    serialPrintln(url);
+  }
+
+  return send_via_http(controller_number, client,
+                       create_http_get_request(controller_number, ControllerSettings, url),
+                       ControllerSettings.MustCheckReply);
+}
+
+#endif // ifdef USES_C007

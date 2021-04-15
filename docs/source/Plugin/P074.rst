@@ -1,0 +1,59 @@
+.. include:: ../Plugin/_plugin_substitutions_p07x.repl
+.. _P074_page:
+
+|P074_typename|
+==================================================
+
+|P074_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P074_type|
+
+Port Type: |P074_porttype|
+
+Name: |P074_name|
+
+Status: |P074_status|
+
+GitHub: |P074_github|_
+
+Maintainer: |P074_maintainer|
+
+Used libraries: |P074_usedlibraries|
+
+Supported hardware
+------------------
+
+|P074_usedby|
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P074_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P074_events.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+
+
+

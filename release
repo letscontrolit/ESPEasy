@@ -29,7 +29,7 @@ cat "$NOTES" >> "$NOTES.new"
 mv "$NOTES.new" "$NOTES"
 
 git add "$NOTES"
-git commit -m "automaticly updated release notes for $NEW"
+git commit -m "automatically updated release notes for $NEW"
 
 
 ################ tag and add tag message

@@ -1,36 +1,32 @@
-//********************************************************************************
+#include "src/Globals/Plugins.h"
+#include "src/Globals/Settings.h"
+#include "ESPEasy_common.h"
+
+
+// ********************************************************************************
 // Initialize all plugins that where defined earlier
 // and initialize the function call pointer into the plugin array
-//********************************************************************************
+// ********************************************************************************
 
-static const char ADDPLUGIN_ERROR[] PROGMEM = "System: Error - To much Plugins";
 
-// Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
-/*
-#define ADDPLUGIN(NNN) \
-  if (x < PLUGIN_MAX) \
-  { \
-    Plugin_id[x] = PLUGIN_ID_##NNN; \
-    Plugin_ptr[x++] = &Plugin_##NNN; \
-  } \
-  else \
-    addLog(LOG_LEVEL_ERROR, FPSTR(ADDPLUGIN_ERROR));
-*/
-#define ADDPLUGIN(NNN) if (x < PLUGIN_MAX) { Plugin_id[x] = PLUGIN_ID_##NNN; Plugin_ptr[x++] = &Plugin_##NNN; } else addLog(LOG_LEVEL_ERROR, FPSTR(ADDPLUGIN_ERROR));
-
+// Uncrustify must not be used on macros, so turn it off.
+// *INDENT-OFF*
+#define ADDPLUGIN(NNN) if (addPlugin(PLUGIN_ID_##NNN, x)) Plugin_ptr[x++] = &Plugin_##NNN;
+// Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
+// *INDENT-ON*
 
 void PluginInit(void)
 {
-  byte x;
-
+  DeviceIndex_to_Plugin_id.resize(PLUGIN_MAX + 1); // INVALID_DEVICE_INDEX may be used as index for this array.
+  DeviceIndex_to_Plugin_id[PLUGIN_MAX] = INVALID_PLUGIN_ID;
   // Clear pointer table for all plugins
-  for (x = 0; x < PLUGIN_MAX; x++)
+  for (deviceIndex_t x = 0; x < PLUGIN_MAX; x++)
   {
-    Plugin_ptr[x] = 0;
-    Plugin_id[x] = 0;
+    Plugin_ptr[x] = nullptr;
+    DeviceIndex_to_Plugin_id[x] = INVALID_PLUGIN_ID;
+    // Do not initialize Plugin_id_to_DeviceIndex[x] to an invalid value. (it is map)
   }
-
-  x = 0;
+  uint32_t x = 0; // Used in ADDPLUGIN macro
 
 #ifdef PLUGIN_001
   ADDPLUGIN(001)
@@ -1052,127 +1048,16 @@ void PluginInit(void)
   ADDPLUGIN(255)
 #endif
 
-  PluginCall(PLUGIN_DEVICE_ADD, 0, dummyString);
-  PluginCall(PLUGIN_INIT_ALL, 0, dummyString);
+  String dummy;
+  PluginCall(PLUGIN_DEVICE_ADD, nullptr, dummy);
+    // Set all not supported plugins to disabled.
+  for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
+    if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex])) {
+      Settings.TaskDeviceEnabled[taskIndex] = false;
+    }
+  }
 
+  PluginCall(PLUGIN_INIT_ALL, nullptr, dummy);
+  sortDeviceIndexArray(); // Used in device selector dropdown.
 }
 
-
-/*********************************************************************************************\
-* Function call to all or specific plugins
-\*********************************************************************************************/
-byte PluginCall(byte Function, struct EventStruct *event, String& str)
-{
-  int x;
-  struct EventStruct TempEvent;
-
-  if (event == 0)
-    event = &TempEvent;
-
-  switch (Function)
-  {
-    // Unconditional calls to all plugins
-    case PLUGIN_DEVICE_ADD:
-      for (x = 0; x < PLUGIN_MAX; x++)
-        if (Plugin_id[x] != 0)
-          Plugin_ptr[x](Function, event, str);
-      return true;
-      break;
-
-    // Call to all plugins. Return at first match
-    case PLUGIN_WRITE:
-      for (x = 0; x < PLUGIN_MAX; x++)
-        if (Plugin_id[x] != 0)
-          if (Plugin_ptr[x](Function, event, str))
-            return true;
-      break;
-
-    // Call to all plugins used in a task. Return at first match
-    case PLUGIN_SERIAL_IN:
-    case PLUGIN_UDP_IN:
-      {
-        for (byte y = 0; y < TASKS_MAX; y++)
-        {
-          if (Settings.TaskDeviceEnabled[y] && Settings.TaskDeviceNumber[y] != 0)
-          {
-            for (x = 0; x < PLUGIN_MAX; x++)
-            {
-              if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
-              {
-                byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-                TempEvent.TaskIndex = y;
-                TempEvent.BaseVarIndex = y * VARS_PER_TASK;
-                //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
-                TempEvent.sensorType = Device[DeviceIndex].VType;
-                if (Plugin_ptr[x](Function, event, str))
-                  return true;
-              }
-            }
-          }
-        }
-        return false;
-        break;
-      }
-
-    // Call to all plugins that are used in a task
-    case PLUGIN_ONCE_A_SECOND:
-    case PLUGIN_TEN_PER_SECOND:
-    case PLUGIN_FIFTY_PER_SECOND:
-    case PLUGIN_INIT_ALL:
-    case PLUGIN_CLOCK_IN:
-    case PLUGIN_EVENT_OUT:
-      {
-        if (Function == PLUGIN_INIT_ALL)
-          Function = PLUGIN_INIT;
-        for (byte y = 0; y < TASKS_MAX; y++)
-        {
-          if (Settings.TaskDeviceEnabled[y] && Settings.TaskDeviceNumber[y] != 0)
-          {
-            if (Settings.TaskDeviceDataFeed[y] == 0) // these calls only to tasks with local feed
-            {
-              byte DeviceIndex = getDeviceIndex(Settings.TaskDeviceNumber[y]);
-              TempEvent.TaskIndex = y;
-              TempEvent.BaseVarIndex = y * VARS_PER_TASK;
-              //TempEvent.idx = Settings.TaskDeviceID[y]; todo check
-              TempEvent.sensorType = Device[DeviceIndex].VType;
-              TempEvent.OriginTaskIndex = event->TaskIndex;
-              for (x = 0; x < PLUGIN_MAX; x++)
-              {
-                if (Plugin_id[x] == Settings.TaskDeviceNumber[y])
-                {
-                  Plugin_ptr[x](Function, &TempEvent, str);
-                }
-              }
-            }
-          }
-        }
-        return true;
-        break;
-      }
-
-    // Call to specific plugin that is used for current task
-    case PLUGIN_INIT:
-    case PLUGIN_EXIT:
-    case PLUGIN_WEBFORM_LOAD:
-    case PLUGIN_WEBFORM_SAVE:
-    case PLUGIN_WEBFORM_SHOW_VALUES:
-    case PLUGIN_WEBFORM_SHOW_CONFIG:
-    case PLUGIN_GET_DEVICEVALUENAMES:
-    case PLUGIN_GET_DEVICEGPIONAMES:
-    case PLUGIN_READ:
-    case PLUGIN_SET_CONFIG:
-    case PLUGIN_GET_CONFIG:
-      for (x = 0; x < PLUGIN_MAX; x++)
-      {
-        if ((Plugin_id[x] != 0 ) && (Plugin_id[x] == Settings.TaskDeviceNumber[event->TaskIndex]))
-        {
-          event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-          return Plugin_ptr[x](Function, event, str);
-        }
-      }
-      return false;
-      break;
-
-  }// case
-  return false;
-}

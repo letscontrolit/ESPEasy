@@ -1,0 +1,39 @@
+.. include:: _controller_substitutions.repl
+
+.. _C010_page:
+
+|C010_typename|
+==================================================
+
+|C010_shortinfo|
+
+Controller details
+------------------
+
+Type: |C010_type|
+
+Name: |C010_name|
+
+Status: |C010_status|
+
+GitHub: |C010_github|_
+
+Maintainer: |C010_maintainer|
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+Description
+-----------

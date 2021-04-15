@@ -1,19 +1,26 @@
-//********************************************************************************
+#include "ESPEasy_common.h"
+
+#ifdef USES_NOTIFIER
+#include "src/Globals/NPlugins.h"
+
+// ********************************************************************************
+
 // Initialize all Controller NPlugins that where defined earlier
 // and initialize the function call pointer into the CNPlugin array
-//********************************************************************************
+// ********************************************************************************
 
-static const char ADDNPLUGIN_ERROR[] PROGMEM = "System: Error - To much N-Plugins";
+static const char ADDNPLUGIN_ERROR[] PROGMEM = "System: Error - Too many N-Plugins";
 
 
 // Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
+
 /*
-#define ADDNPLUGIN(NNN) \
-  if (x < NPLUGIN_MAX) \
-  { \
+ #define ADDNPLUGIN(NNN) \
+   if (x < NPLUGIN_MAX) \
+   { \
     NPlugin_id[x] = NPLUGIN_ID_##NNN; \
     NPlugin_ptr[x++] = &NPlugin_##NNN; \
-  } \
+   } \
   else \
     addLog(LOG_LEVEL_ERROR, FPSTR(ADDNPLUGIN_ERROR));
 */
@@ -27,8 +34,8 @@ void NPluginInit(void)
   // Clear pointer table for all plugins
   for (x = 0; x < NPLUGIN_MAX; x++)
   {
-    NPlugin_ptr[x] = 0;
-    NPlugin_id[x] = 0;
+    NPlugin_ptr[x] = nullptr;
+    NPlugin_id[x] = INVALID_N_PLUGIN_ID;
   }
 
   x = 0;
@@ -133,27 +140,41 @@ void NPluginInit(void)
   ADDNPLUGIN(025)
 #endif
 
-  NPluginCall(NPLUGIN_PROTOCOL_ADD, 0);
+  NPluginCall(NPlugin::Function::NPLUGIN_PROTOCOL_ADD, 0);
 }
 
-byte NPluginCall(byte Function, struct EventStruct *event)
+byte NPluginCall(NPlugin::Function Function, struct EventStruct *event)
 {
   int x;
   struct EventStruct TempEvent;
 
- if (event == 0)
-    event=&TempEvent;
+  if (event == 0) {
+    event = &TempEvent;
+  }
 
   switch (Function)
   {
     // Unconditional calls to all plugins
-    case NPLUGIN_PROTOCOL_ADD:
-      for (x = 0; x < NPLUGIN_MAX; x++)
-        if (NPlugin_id[x] != 0)
-          NPlugin_ptr[x](Function, event, dummyString);
+    case NPlugin::Function::NPLUGIN_PROTOCOL_ADD:
+
+      for (x = 0; x < NPLUGIN_MAX; x++) {
+        if (validNPluginID(NPlugin_id[x])) {
+          String dummy;
+          NPlugin_ptr[x](Function, event, dummy);
+        }
+      }
       return true;
+      break;
+
+    case NPlugin::Function::NPLUGIN_GET_DEVICENAME:
+    case NPlugin::Function::NPLUGIN_WEBFORM_SAVE:
+    case NPlugin::Function::NPLUGIN_WEBFORM_LOAD:
+    case NPlugin::Function::NPLUGIN_WRITE:
+    case NPlugin::Function::NPLUGIN_NOTIFY:
       break;
   }
 
   return false;
 }
+
+#endif

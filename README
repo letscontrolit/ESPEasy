@@ -1,0 +1,8 @@
+The scripts in this directory are so called GIT hooks.
+Purpose is to do automatic changes after merge, commit and checkout.
+
+Those files are for a Linux-like environment with basic tools ln, grep, sed and bash.
+
+Windows users can see them as template.
+
+To use them simply copy those files into your ESPEasy/.git/hooks directory.

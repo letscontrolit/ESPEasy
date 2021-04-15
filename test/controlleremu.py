@@ -14,6 +14,7 @@ SENSOR_TYPE_TEMP_HUM_BARO        =   4
 SENSOR_TYPE_DUAL                 =   5
 SENSOR_TYPE_TRIPLE               =   6
 SENSOR_TYPE_QUAD                 =   7
+SENSOR_TYPE_TEMP_EMPTY_BARO      =   8
 SENSOR_TYPE_SWITCH               =  10
 SENSOR_TYPE_DIMMER               =  11
 SENSOR_TYPE_LONG                 =  20
@@ -173,6 +174,8 @@ class ControllerEmu:
                             return [svalues[0], svalues[1]]
                         elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==4:
                             return [svalues[0], svalues[1]]
+                        elif sensor_type==SENSOR_TYPE_TEMP_EMPTY_BARO and len(svalues)==4:
+                            return [svalues[0], svalues[2]]
                         elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM_BARO and len(svalues)==5:
@@ -228,6 +231,8 @@ class ControllerEmu:
                             return [svalues[0], svalues[1]]
                         elif sensor_type==SENSOR_TYPE_TEMP_BARO and len(svalues)==4:
                             return [svalues[0], svalues[1]]
+                        elif sensor_type==SENSOR_TYPE_TEMP_EMPTY_BARO and len(svalues)==4:
+                            return [svalues[0], svalues[2]]
                         elif sensor_type==SENSOR_TYPE_TRIPLE and len(svalues)==3:
                             return svalues
                         elif sensor_type==SENSOR_TYPE_TEMP_HUM_BARO and len(svalues)==5:

@@ -1,0 +1,118 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-20.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - id: set-matrix
+        run: |
+          pip install platformio
+          python tools/ci/generate-matrix.py
+  build:
+    needs: generate-matrix
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+      - uses: actions/cache@v2
+        if: ${{ contains(matrix.env, 'esp32') }}
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-esp32-${{ hashFiles('platformio*.ini') }}
+      - uses: actions/cache@v2
+        if: ${{ contains(matrix.env, 'esp8266') }}
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-esp8266-${{ hashFiles('platformio*.ini') }}
+      - name: Dependencies
+        run: |
+          sudo apt install binutils
+          pip install -r requirements.txt
+          platformio update
+      - name: Build and archive
+        id: build-and-archive
+        env:
+          CHIP: ${{ matrix.chip }}
+          ENV: ${{ matrix.env }}
+        continue-on-error: true
+        run: |
+          python tools/ci/build-and-archive.py
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Binaries
+          path: ESPEasy_${{ matrix.env }}.zip
+          if-no-files-found: ignore
+  release-files:
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-20.04
+    outputs:
+      message: ${{ steps.release-notes.outputs.message }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-docs-${{ hashFiles('requirements.txt') }}
+      - name: Build documentation
+        run: |
+          cd docs
+          sudo apt install imagemagick zip
+          pip install -r requirements.txt
+          make html
+          cd ..
+          zip -r -qq ESPEasy_docs.zip docs/build/*
+      - name: Package utilities
+        run: |
+          cd dist
+          zip -r -qq ../ESPEasy_dist.zip *
+          cd ..
+      - name: Extract release notes
+        id: release-notes
+        run: |
+          git fetch --force origin ${GITHUB_REF}:${GITHUB_REF} # see https://github.com/actions/checkout/issues/290
+          echo ::set-output name=message::$(git --no-pager tag -l --format="%(contents)" ${GITHUB_REF:10})
+      - uses: actions/upload-artifact@v2
+        with:
+          path: |
+            tools/ci/upload-release.py
+            ESPEasy_docs.zip
+            ESPEasy_dist.zip
+  release:
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-20.04
+    needs: [release-files, build]
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - uses: actions/download-artifact@v2
+        with:
+          path: artifacts/
+      - name: Create release
+        working-directory: artifacts/
+        env:
+          RELEASE_NOTES: ${{ needs.release-files.outputs.message }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -R
+          pip install PyGithub
+          python3 artifact/tools/ci/upload-release.py

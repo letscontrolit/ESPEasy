@@ -1,0 +1,39 @@
+.. include:: _controller_substitutions.repl
+
+.. _C007_page:
+
+|C007_typename|
+==================================================
+
+|C007_shortinfo|
+
+Controller details
+------------------
+
+Type: |C007_type|
+
+Name: |C007_name|
+
+Status: |C007_status|
+
+GitHub: |C007_github|_
+
+Maintainer: |C007_maintainer|
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+Description
+-----------

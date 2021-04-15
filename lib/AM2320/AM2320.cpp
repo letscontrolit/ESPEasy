@@ -1,25 +1,25 @@
 #include "AM2320.h"
 #include <Wire.h>
-// 
+//
 // AM2321 Temperature & Humidity Sensor library for Arduino
 // Сделана Тимофеевым Е.Н. из AM2320-master
 
-unsigned int CRC16(byte *ptr, byte length) 
-{ 
-      unsigned int crc = 0xFFFF; 
-      uint8_t s = 0x00; 
+unsigned int CRC16(byte *ptr, byte length)
+{
+      unsigned int crc = 0xFFFF;
+      uint8_t s = 0x00;
 
       while(length--) {
-        crc ^= *ptr++; 
+        crc ^= *ptr++;
         for(s = 0; s < 8; s++) {
           if((crc & 0x01) != 0) {
-            crc >>= 1; 
-            crc ^= 0xA001; 
-          } else crc >>= 1; 
-        } 
-      } 
-      return crc; 
-} 
+            crc >>= 1;
+            crc ^= 0xA001;
+          } else crc >>= 1;
+        }
+      }
+      return crc;
+}
 
 AM2320::AM2320()
 {
@@ -28,7 +28,7 @@ AM2320::AM2320()
 int AM2320::Read()
 {
 	byte buf[8];
-	for(int s = 0; s < 8; s++) buf[s] = 0x00; 
+	for(int s = 0; s < 8; s++) buf[s] = 0x00;
 
 	Wire.beginTransmission(AM2320_address);
 	Wire.endTransmission();
@@ -37,10 +37,10 @@ int AM2320::Read()
 	Wire.write(0x03);// запрос
 	Wire.write(0x00); // с 0-го адреса
 	Wire.write(0x04); // 4 байта
-	if (Wire.endTransmission(1) != 0) return 1;
+	if (Wire.endTransmission(true) != 0) return 1;
 	delayMicroseconds(1600); //>1.5ms
 	// считываем результаты запроса
-	Wire.requestFrom(AM2320_address, 0x08); 
+	Wire.requestFrom(AM2320_address, 0x08);
 	for (int i = 0; i < 0x08; i++) buf[i] = Wire.read();
 
 	// CRC check

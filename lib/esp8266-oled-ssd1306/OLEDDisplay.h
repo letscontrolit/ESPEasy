@@ -50,7 +50,7 @@
 #ifndef DISPLAY_HEIGHT
   #define DISPLAY_HEIGHT 64
 #endif
-#define DISPLAY_BUFFER_SIZE DISPLAY_WIDTH * DISPLAY_HEIGHT / 8
+#define DISPLAY_BUFFER_SIZE ((DISPLAY_WIDTH) * (DISPLAY_HEIGHT) / 8)
 
 // Header Values
 #define JUMPTABLE_BYTES 4
@@ -212,6 +212,11 @@ class OLEDDisplay : public Print {
 
     // Normal display mode
     void normalDisplay(void);
+
+    // Command to set the COM signals pin configuration to match the OLED panel hardware layout
+    // 128x64 and 64x48 _compins should be 0x12 (alread set during init())
+    // 128x32           _compins should be 0x02
+    void SetComPins(uint8_t _compins);
 
     // Set display contrast
     // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0

@@ -1,0 +1,45 @@
+On StartTest2 Do
+ Event,Test=9
+ Event,Test=10
+ Event,Test=11
+EndOn
+
+On Test=10 Do
+ LogEntry,%eventvalue%=10
+EndOn
+
+On Test>10 Do
+ LogEntry,%eventvalue%>10
+EndOn
+
+On Test<10 Do
+ LogEntry,%eventvalue%<10
+EndOn
+
+On Test>=10 Do
+ LogEntry,%eventvalue%>=10
+EndOn
+
+On Test<=10 Do
+ LogEntry,%eventvalue%<=10
+EndOn
+
+On Test<>10 Do
+ LogEntry,%eventvalue%<>10
+EndOn
+
+On Test!=10 Do
+ LogEntry,%eventvalue%!=10
+EndOn
+
+On StartTest3 Do
+ Let,1,100
+ Let,2,99
+ Let,3,[VAR#2]+2
+ If [VAR#1]>[VAR#2]
+  LogEntry,[VAR#1]>[VAR#2]
+ EndIf
+ If [VAR#1]<[VAR#3]
+  LogEntry,[VAR#1]<[VAR#2]+2
+ EndIf
+EndOn

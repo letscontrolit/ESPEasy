@@ -26,6 +26,8 @@ Also there are more people on the forum that can help you with support.
 
  * Incomplete or unstable plugins should have a PLUGIN_BUILD_DEV #ifdef around them. Also add [DEVELOPMENT] to the name.
 
- * New plugins that seem to be working correctly should have a PLUGIN_BUILD_TESTING around until they are tested enough.
+ * Do not modify any of the variables passed to your PLUGIN_WRITE handler.
+
+ * New plugins that seem to be working correctly should have a PLUGIN_BUILD_TESTING around until they are tested enough. Also add [TESTING] to the name
 
  * Also see our general guidelines at: https://www.letscontrolit.com/wiki/index.php/ESPEasyDevelopmentGuidelines

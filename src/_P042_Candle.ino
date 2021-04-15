@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+#ifdef USES_P042
 //#######################################################################################################
 //######################################## Plugin 042: NeoPixel Candle ##################################
 //#######################################################################################################
@@ -11,7 +13,7 @@
 //   * Extract jscolor.min.js
 //   * Now open the Web UI of your ESPEasy with this URL:
 //     http://<IP-ESPEasy>/upload
-//   * Select Browse ... and choose the extracted jscolor.min.js File (ensure the ...min... verion !!)
+//   * Select Browse ... and choose the extracted jscolor.min.js File (ensure the ...min... version !!)
 //   * Press Upload und you are done.
 
 // Add the Adafruit Neopixel Library to your library path. You will find it here:
@@ -21,14 +23,14 @@
 // NOTES
 // Please keep in mind that you can add tasks which produce a very large delay while reading the sensor.
 // For example the DS18B20 is very slow in reading the values. This can slow down the simulation and you
-// will notice that the candle did not run smooth. So keep an eye on your tasks and donßt add to much other tasks.
+// will notice that the candle did not run smooth. So keep an eye on your tasks and don't add to much other tasks.
 
 // HARDWARE
 // The Wifi Candle uses 20 WS2812 RGB pixels. They are all connected in one row.
 // I build a wooden wick with 5 pixels on each side. (A picture is here : http://www.esp8266.nu/forum/viewtopic.php?f=2&t=2147)
 // The pixels are connected to 5V and the data pin I use is GPIO13 (but you can choose another one).
 // Please ensure that you use a strong power supply because the pixels consume a lot of power when they
-// shine in white with high brigthness!
+// shine in white with high brightness!
 // I also placed a 100µF capacitor at the end of the WS2812 chain on +5/GND just to ensure a good power stability.
 // btw ... My Testboard was a NodeMCU V3.
 
@@ -50,6 +52,7 @@
 // http://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both    Code Sammlung
 
 #include <Adafruit_NeoPixel.h>
+
 
 #define NUM_PIXEL       20         // Defines the amount of LED Pixel
 #define NUM_PIXEL_ROW    5         // Defines the amount of LED Pixel per Row
@@ -80,7 +83,7 @@ byte Candle_bright = 128;
 SimType Candle_type = TypeSimpleCandle;
 ColorType Candle_color = ColorDefault;
 
-// gloable Variables
+// global variables
 unsigned long Candle_Update = 0;
 word Candle_Temp[4] = { 0, 0, 0 };     // Temp variables
 int Candle_Temp4 = 0;
@@ -106,7 +109,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_042;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_TRIPLE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -132,88 +135,98 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("Data"));
+        break;
+      }
+      
     case PLUGIN_WEBFORM_LOAD:
       {
-        string += F("<script src=\"jscolor.min.js\"></script>\n");
+        addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));
 
-        char tmpString[128];
-        String options[8];
-        // int optionValues[8];
-
-        options[0] = F("Off");
-        options[1] = F("Static Light");
-        options[2] = F("Simple Candle");
-        options[3] = F("Advanced Candle");
-        options[4] = F("Police");
-        options[5] = F("Blink");
-        options[6] = F("Strobe");
-        options[7] = F("Color Fader");
-
-        byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
-        if (choice > sizeof(options) - 1)
         {
-          choice = 2;
-        }
+          String options[8];
+          // int optionValues[8];
 
-        // Candle Type Selection
-        addFormSelector(string, F("Flame Type"), F("web_Candle_Type"), 8, options, NULL, choice);
+          options[0] = F("Off");
+          options[1] = F("Static Light");
+          options[2] = F("Simple Candle");
+          options[3] = F("Advanced Candle");
+          options[4] = F("Police");
+          options[5] = F("Blink");
+          options[6] = F("Strobe");
+          options[7] = F("Color Fader");
+
+          byte choice = PCONFIG(4);
+          if (choice > sizeof(options) - 1)
+          {
+            choice = 2;
+          }
+
+          // Candle Type Selection
+          addFormSelector(F("Flame Type"), F("web_Candle_Type"), 8, options, NULL, choice);
+        }
 
         // Advanced Color options
-        Candle_color = (ColorType)Settings.TaskDevicePluginConfig[event->TaskIndex][5];
-        string += F("<TR><TD>Color Handling:<TD>"); // checked
-        string += F("<input type='radio' id='web_Color_Default' name='web_Color_Type' value='0'");
+        Candle_color = (ColorType)PCONFIG(5);
+        addHtml(F("<TR><TD>Color Handling:<TD>")); // checked
+        addHtml(F("<input type='radio' id='web_Color_Default' name='web_Color_Type' value='0'"));
         if (Candle_color == ColorDefault) {
-          string += F(" checked>");
+          addHtml(F(" checked>"));
         } else {
-          string += F(">");
+          addHtml('>');
         }
-        string += F("<label for='web_Color_Default'> Use default color</label><br>");
-        string += F("<input type='radio' id='web_Color_Selected' name='web_Color_Type' value='1'");
+        addHtml(F("<label for='web_Color_Default'> Use default color</label><br>"));
+        addHtml(F("<input type='radio' id='web_Color_Selected' name='web_Color_Type' value='1'"));
         if (Candle_color == ColorSelected) {
-          string += F(" checked>");
+          addHtml(F(" checked>"));
         } else {
-          string += F(">");
+          addHtml('>');
         }
-        string += F("<label for='web_Color_Selected'> Use selected color</label><br>");
+        addHtml(F("<label for='web_Color_Selected'> Use selected color</label><br>"));
 
         // Color Selection
         char hexvalue[7] = {0};
-        sprintf(hexvalue, "%02X%02X%02X",     // Create Hex value for color
-                Settings.TaskDevicePluginConfig[event->TaskIndex][0],
-                Settings.TaskDevicePluginConfig[event->TaskIndex][1],
-                Settings.TaskDevicePluginConfig[event->TaskIndex][2]);
+        sprintf_P(hexvalue, PSTR("%02X%02X%02X"),     // Create Hex value for color
+                  PCONFIG(0),
+                  PCONFIG(1),
+                  PCONFIG(2));
 
         // http://jscolor.com/examples/
-        string += F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='");
-        string += hexvalue;
-        string += F("'>");
-        addFormNumericBox(string, F("RGB Color"), F("web_RGB_Red"), Settings.TaskDevicePluginConfig[event->TaskIndex][0], 0, 255);
-        addNumericBox(string, F("web_RGB_Green"), Settings.TaskDevicePluginConfig[event->TaskIndex][1], 0, 255);
-        addNumericBox(string, F("web_RGB_Blue"), Settings.TaskDevicePluginConfig[event->TaskIndex][2], 0, 255);
+        addHtml(F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='"));
+        addHtml(hexvalue);
+        addHtml("'>");
+        addFormNumericBox(F("RGB Color"), F("web_RGB_Red"), PCONFIG(0), 0, 255);
+        addNumericBox(F("web_RGB_Green"), PCONFIG(1), 0, 255);
+        addNumericBox(F("web_RGB_Blue"), PCONFIG(2), 0, 255);
 
         // Brightness Selection
-        string += F("<TR><TD>Brightness:<TD>min<input type='range' id='web_Bright_Slide' min='0' max='255' value='");
-        string += Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-        string += F("'> max");
+        addHtml(F("<TR><TD>Brightness:<TD>min<input type='range' id='web_Bright_Slide' min='0' max='255' value='"));
+        addHtmlInt(PCONFIG(3));
+        addHtml(F("'> max"));
 
-        sprintf_P(tmpString, PSTR("<TR><TD>Brightness Value:<TD><input type='text' name='web_Bright_Text' id='web_Bright_Text' size='3' value='%u'>"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
-        string += tmpString;
+        {
+          char tmpString[128];
+          sprintf_P(tmpString, PSTR("<TR><TD>Brightness Value:<TD><input type='text' name='web_Bright_Text' id='web_Bright_Text' size='3' value='%u'>"), PCONFIG(3));
+          addHtml(tmpString);
+        }
 
         // Some Javascript we need to update the items
-        string += F("<script script type='text/javascript'>");
-        string += F("function update(picker) {");
-        string += F("    document.getElementById('web_RGB_Red').value = Math.round(picker.rgb[0]);");
-        string += F("    document.getElementById('web_RGB_Green').value = Math.round(picker.rgb[1]);");
-        string += F("    document.getElementById('web_RGB_Blue').value = Math.round(picker.rgb[2]);");
-        string += F("}");
-        string += F("</script>");
+        addHtml(F("<script script type='text/javascript'>"));
+        addHtml(F("function update(picker) {"));
+        addHtml(F("    document.getElementById('web_RGB_Red').value = Math.round(picker.rgb[0]);"));
+        addHtml(F("    document.getElementById('web_RGB_Green').value = Math.round(picker.rgb[1]);"));
+        addHtml(F("    document.getElementById('web_RGB_Blue').value = Math.round(picker.rgb[2]);"));
+        addHtml('}');
+        addHtml(F("</script>"));
 
-        string += F("<script type='text/javascript'>window.addEventListener('load', function(){");
-        string += F("var slider = document.getElementById('web_Bright_Slide');");
-        string += F("slider.addEventListener('change', function(){");
-        string += F("document.getElementById('web_Bright_Text').value = this.value;");
-        string += F("});");
-        string += F("});</script>");
+        addHtml(F("<script type='text/javascript'>window.addEventListener('load', function(){"));
+        addHtml(F("var slider = document.getElementById('web_Bright_Slide');"));
+        addHtml(F("slider.addEventListener('change', function(){"));
+        addHtml(F("document.getElementById('web_Bright_Text').value = this.value;"));
+        addHtml(F("});"));
+        addHtml(F("});</script>"));
 
         success = true;
         break;
@@ -221,22 +234,22 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("web_RGB_Red"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("web_RGB_Green"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("web_RGB_Blue"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][3] = getFormItemInt(F("web_Bright_Text"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][4] = getFormItemInt(F("web_Candle_Type"));
-        Settings.TaskDevicePluginConfig[event->TaskIndex][5] = getFormItemInt(F("web_Color_Type"));
+        PCONFIG(0) = getFormItemInt(F("web_RGB_Red"));
+        PCONFIG(1) = getFormItemInt(F("web_RGB_Green"));
+        PCONFIG(2) = getFormItemInt(F("web_RGB_Blue"));
+        PCONFIG(3) = getFormItemInt(F("web_Bright_Text"));
+        PCONFIG(4) = getFormItemInt(F("web_Candle_Type"));
+        PCONFIG(5) = getFormItemInt(F("web_Color_Type"));
 
-        Candle_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Candle_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        Candle_blue = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+        Candle_red = PCONFIG(0);
+        Candle_green = PCONFIG(1);
+        Candle_blue = PCONFIG(2);
         if (Candle_bright > 255) {
           Candle_bright = 255;
         }
-        Candle_bright = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-        Candle_type = (SimType)Settings.TaskDevicePluginConfig[event->TaskIndex][4];
-        Candle_color = (ColorType)Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        Candle_bright = PCONFIG(3);
+        Candle_type = (SimType)PCONFIG(4);
+        Candle_color = (ColorType)PCONFIG(5);
 
         success = true;
         break;
@@ -244,28 +257,28 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        Candle_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Candle_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-        Candle_blue = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-        Candle_bright = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+        Candle_red = PCONFIG(0);
+        Candle_green = PCONFIG(1);
+        Candle_blue = PCONFIG(2);
+        Candle_bright = PCONFIG(3);
         if (Candle_red == 0 && Candle_green == 0 && Candle_blue == 0) {
           Candle_bright = BRIGHT_START;
         }
-        Candle_type = (SimType)Settings.TaskDevicePluginConfig[event->TaskIndex][4];
-        Candle_color = (ColorType)Settings.TaskDevicePluginConfig[event->TaskIndex][5];
+        Candle_type = (SimType)PCONFIG(4);
+        Candle_color = (ColorType)PCONFIG(5);
 
         if (!Candle_pixels || GPIO_Set == false)
         {
-          GPIO_Set = Settings.TaskDevicePin1[event->TaskIndex] > -1;
+          GPIO_Set = CONFIG_PIN1 > -1;
           if (Candle_pixels) {
             delete Candle_pixels;
           }
-          Candle_pixels = new Adafruit_NeoPixel(NUM_PIXEL, Settings.TaskDevicePin1[event->TaskIndex], NEO_GRB + NEO_KHZ800);
+          Candle_pixels = new Adafruit_NeoPixel(NUM_PIXEL, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
           SetPixelsBlack();
           Candle_pixels->setBrightness(Candle_bright);
           Candle_pixels->begin();
           String log = F("CAND : Init WS2812 Pin : ");
-          log += Settings.TaskDevicePin1[event->TaskIndex];
+          log += CONFIG_PIN1;
           addLog(LOG_LEVEL_DEBUG, log);
         }
 
@@ -358,6 +371,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 2] = Candle_type;
 
         success = true;
+        break;
       }
 
     case PLUGIN_WRITE:
@@ -381,7 +395,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         //            CANDLE:0::              Candle OFF
         //            CANDLE:1::255           Candle ON - White and full brigthness
 
-        if (tmpString.startsWith("CANDLE:")){
+        if (tmpString.startsWith(F("CANDLE:"))){
           int idx1 = tmpString.indexOf(':');
           int idx2 = tmpString.indexOf(':', idx1+1);
           int idx3 = tmpString.indexOf(':', idx2+1);
@@ -392,8 +406,8 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
           if (val_Type != "") {
              if (val_Type.toInt() > -1 && val_Type.toInt() < 8) {
-                Settings.TaskDevicePluginConfig[event->TaskIndex][4] = val_Type.toInt();     // Type
-                Candle_type = (SimType)Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+                PCONFIG(4) = val_Type.toInt();     // Type
+                Candle_type = (SimType)PCONFIG(4);
                 String log = F("CAND : CMD - Type : ");
                 log += val_Type;
                 addLog(LOG_LEVEL_DEBUG, log);
@@ -402,8 +416,8 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
           if (val_Bright != "") {
              if (val_Bright.toInt() > -1 && val_Bright.toInt() < 256) {
-                Settings.TaskDevicePluginConfig[event->TaskIndex][3] = val_Bright.toInt();     // Brightness
-                Candle_bright = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+                PCONFIG(3) = val_Bright.toInt();     // Brightness
+                Candle_bright = PCONFIG(3);
                 String log = F("CAND : CMD - Bright : ");
                 log += val_Bright;
                 addLog(LOG_LEVEL_DEBUG, log);
@@ -417,14 +431,14 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
             byte g = number >> 8 & 0xFF;
             byte b = number & 0xFF;
 
-            Settings.TaskDevicePluginConfig[event->TaskIndex][0] = r;   // R
-            Settings.TaskDevicePluginConfig[event->TaskIndex][1] = g;   // G
-            Settings.TaskDevicePluginConfig[event->TaskIndex][2] = b;   // B
-            Candle_red = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-            Candle_green = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-            Candle_blue = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-            Settings.TaskDevicePluginConfig[event->TaskIndex][5] = 1;
-            Candle_color = (ColorType)Settings.TaskDevicePluginConfig[event->TaskIndex][5];   // ColorType (ColorSelected)
+            PCONFIG(0) = r;   // R
+            PCONFIG(1) = g;   // G
+            PCONFIG(2) = b;   // B
+            Candle_red = PCONFIG(0);
+            Candle_green = PCONFIG(1);
+            Candle_blue = PCONFIG(2);
+            PCONFIG(5) = 1;
+            Candle_color = (ColorType)PCONFIG(5);   // ColorType (ColorSelected)
 
             String log = F("CAND : CMD - R ");
             log += r;
@@ -434,8 +448,8 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
             log += b;
             addLog(LOG_LEVEL_DEBUG, log);
           } else {
-            Settings.TaskDevicePluginConfig[event->TaskIndex][5] = 0;
-            Candle_color = (ColorType)Settings.TaskDevicePluginConfig[event->TaskIndex][5];   // ColorType (ColorDefault)
+            PCONFIG(5) = 0;
+            Candle_color = (ColorType)PCONFIG(5);   // ColorType (ColorDefault)
             addLog(LOG_LEVEL_DEBUG, F("CAND : CMD - Color : DEFAULT"));
           }
 
@@ -718,3 +732,4 @@ void RGBtoHSV(byte r, byte g, byte b, double hsv[3]) {
     hsv[1] = s * 255;
     hsv[2] = v * 255;
 }
+#endif // USES_P042

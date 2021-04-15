@@ -1,0 +1,11 @@
+PPS pin
+~~~~~~~
+
+Some GPS receivers have a PPS pin.
+This can be used to get a very accurate time reference.
+According to `Wikipedia <https://en.wikipedia.org/wiki/Pulse-per-second_signal>`_ this signal could be considered a "stratum-1 time source".
+
+The signal on the PPS pin is a high pulse of +/- 100 msec and the rising edge signals the start of a second.
+The time reported after this pulse describes the past rising edge of the PPS pulse.
+
+.. note:: Currently the PPS feature is not thoroughly tested yet, so consider it experimental.

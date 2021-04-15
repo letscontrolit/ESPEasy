@@ -20,7 +20,7 @@ Adafruit_MPR121::Adafruit_MPR121() {
 }
 
 boolean Adafruit_MPR121::begin(uint8_t i2caddr) {
-  Wire.begin();
+  //Wire.begin();   called in ESPEasy framework
 
   _i2caddr = i2caddr;
 
@@ -80,6 +80,12 @@ void Adafruit_MPR121::setThresholds(uint8_t touch, uint8_t release) {
     writeRegister(MPR121_TOUCHTH_0 + 2*i, touch);
     writeRegister(MPR121_RELEASETH_0 + 2*i, release);
   }
+}
+
+void Adafruit_MPR121::setThreshold(uint8_t t, uint8_t touch, uint8_t release) {
+  if (t > 12) return;
+  writeRegister(MPR121_TOUCHTH_0 + 2 * t, touch);
+  writeRegister(MPR121_RELEASETH_0 + 2 * t, release);
 }
 
 uint16_t  Adafruit_MPR121::filteredData(uint8_t t) {

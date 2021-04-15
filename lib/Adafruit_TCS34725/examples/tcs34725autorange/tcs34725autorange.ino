@@ -163,7 +163,7 @@ void loop(void) {
   Serial.print(rgb_sensor.atime_ms); 
   Serial.print(F("ms (0x")); 
   Serial.print(rgb_sensor.atime, HEX);   
-  Serial.println(F(")"));
+  Serial.println(")");
   
   Serial.print(F("Raw R:")); 
   Serial.print(rgb_sensor.r); 
@@ -182,7 +182,7 @@ void loop(void) {
   Serial.print(rgb_sensor.saturation); 
   Serial.print(F(" Sat75:"));
   Serial.print(rgb_sensor.saturation75); 
-  Serial.print(F(" "));
+  Serial.print(" ");
   Serial.println(rgb_sensor.isSaturated ? "*SATURATED*" : "");
 
   Serial.print(F("CPL:")); 

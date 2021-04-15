@@ -1,0 +1,34 @@
+{"ESP_Easy_info":[
+ {
+   "MessageTitle":"Please support us",
+   "MessageBody":"We are in need for support. Currently we need to do a whole lot of consulting to keep us floating. If we could get funding for at least 50% of our time we could make a lot more than with our current 10-15%. Ideal would be 100% funding but we're realistic :) <br><br>We will add extra goodies for those who support us through monthly payments using Patreon.<br><br><br>Thanks for your support (from TD-er and Grovkillen)!",
+   "MessagePicture":"",
+   "MessageWriter":"Grovkillen",
+   "MessageColorBG":"",
+   "MessageColorFont":"",
+   "MessageDate":"2019-01-07",
+   "MessageType":"general",
+   "MessageLink1text":"Patreon",
+   "MessageLink1":"",
+   "MessageLink2text":"Ko-Fi",
+   "MessageLink2":"",
+   "MessageLink3text":"Paypal",
+   "MessageLink3":""
+ },{
+   "MessageTitle":"First announcement test",
+   "MessageBody":"We're planning on using the ESP Easy Flasher to push announcements to the users. Hopefully this will work out good and make more people aware of how things are evolving. This will be used as a channel for pretty much anything regarding the prject. Thanks for your support!",
+   "MessagePicture":"",
+   "MessageWriter":"Grovkillen",
+   "MessageColorBG":"",
+   "MessageColorFont":"",
+   "MessageDate":"2019-01-06",
+   "MessageType":"mega",
+   "MessageLink1text":"",
+   "MessageLink1":"",
+   "MessageLink2text":"",
+   "MessageLink2":"",
+   "MessageLink3text":"",
+   "MessageLink3":""
+ }
+]
+}

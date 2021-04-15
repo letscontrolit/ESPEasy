@@ -151,7 +151,7 @@ void QEIx4::begin(int16_t pinA, int16_t pinB, int16_t pinI, uint8_t mode)
 	_pinI = pinI;
 
 	_counter = 0;
-	_bHasChanged = true;
+	_bHasChanged = false;
 
 	if (mode == 1)
 		_eventMask = QEIx4_1x_MASK;
@@ -190,7 +190,7 @@ void QEIx4::loop()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void QEIx4::processStateMachine()
+void ICACHE_RAM_ATTR QEIx4::processStateMachine()
 {
 	DEB(".");
 
@@ -227,7 +227,7 @@ void QEIx4::processStateMachine()
 	}
 }
 
-void QEIx4::ISR()
+void ICACHE_RAM_ATTR QEIx4::ISR()
 {
 	for (byte i=0; i<4; i++)
 		if (__instance[i])

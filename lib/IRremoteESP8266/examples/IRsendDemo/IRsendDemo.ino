@@ -1,12 +1,16 @@
-/*
- * IRremoteESP8266: IRsendDemo - demonstrates sending IR codes with IRsend.
+/* IRremoteESP8266: IRsendDemo - demonstrates sending IR codes with IRsend.
  *
- * An IR LED circuit *MUST* be connected to ESP8266 pin 4 (D2).
+ * Version 1.1 January, 2019
+ * Based on Ken Shirriff's IrsendDemo Version 0.1 July, 2009,
+ * Copyright 2009 Ken Shirriff, http://arcfn.com
+ *
+ * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
+ * as specified by kIrLed below.
  *
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
- * 
+ *
  * Suggested circuit:
- *     https://github.com/markszabo/IRremoteESP8266/wiki#ir-sending
+ *     https://github.com/crankyoldgit/IRremoteESP8266/wiki#ir-sending
  *
  * Common mistakes & tips:
  *   * Don't just connect the IR LED directly to the pin, it won't
@@ -22,26 +26,49 @@
  *     * Pin 3/RX/RXD0: Any serial transmissions to the ESP8266 will interfere.
  *   * ESP-01 modules are tricky. We suggest you use a module with more GPIOs
  *     for your first time. e.g. ESP-12 etc.
- *
- * Version 1.0 April, 2017
- * Based on Ken Shirriff's IrsendDemo Version 0.1 July, 2009, Copyright 2009 Ken Shirriff, http://arcfn.com
  */
 
+#include <Arduino.h>
 #include <IRremoteESP8266.h>
+#include <IRsend.h>
 
-IRsend irsend(4); //an IR led is connected to GPIO pin 4 (D2)
+const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
 
-void setup()
-{
+IRsend irsend(kIrLed);  // Set the GPIO to be used to sending the message.
+
+// Example of data captured by IRrecvDumpV2.ino
+uint16_t rawData[67] = {9000, 4500, 650, 550, 650, 1650, 600, 550, 650, 550,
+                        600, 1650, 650, 550, 600, 1650, 650, 1650, 650, 1650,
+                        600, 550, 650, 1650, 650, 1650, 650, 550, 600, 1650,
+                        650, 1650, 650, 550, 650, 550, 650, 1650, 650, 550,
+                        650, 550, 650, 550, 600, 550, 650, 550, 650, 550,
+                        650, 1650, 600, 550, 650, 1650, 650, 1650, 650, 1650,
+                        650, 1650, 650, 1650, 650, 1650, 600};
+// Example Samsung A/C state captured from IRrecvDumpV2.ino
+uint8_t samsungState[kSamsungAcStateLength] = {
+    0x02, 0x92, 0x0F, 0x00, 0x00, 0x00, 0xF0,
+    0x01, 0xE2, 0xFE, 0x71, 0x40, 0x11, 0xF0};
+
+void setup() {
   irsend.begin();
+#if ESP8266
   Serial.begin(115200, SERIAL_8N1, SERIAL_TX_ONLY);
+#else  // ESP8266
+  Serial.begin(115200, SERIAL_8N1);
+#endif  // ESP8266
 }
 
 void loop() {
   Serial.println("NEC");
-  irsend.sendNEC(0x00FFE01FUL, 32);
+  irsend.sendNEC(0x00FFE01FUL);
   delay(2000);
   Serial.println("Sony");
-  irsend.sendSony(0xa90, 12, 2);
+  irsend.sendSony(0xa90, 12, 2);  // 12 bits & 2 repeats
+  delay(2000);
+  Serial.println("a rawData capture from IRrecvDumpV2");
+  irsend.sendRaw(rawData, 67, 38);  // Send a raw data capture at 38kHz.
+  delay(2000);
+  Serial.println("a Samsung A/C state from IRrecvDumpV2");
+  irsend.sendSamsungAC(samsungState);
   delay(2000);
 }

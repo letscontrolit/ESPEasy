@@ -1,0 +1,39 @@
+{
+    "name": "HLW8012", 
+    "license": "GPL-3.0", 
+    "platforms": [
+        "atmelavr", 
+        "espressif8266"
+    ], 
+    "repository": {
+        "url": "https://bitbucket.org/xoseperez/hlw8012.git", 
+        "type": "git"
+    }, 
+    "frameworks": [
+        "arduino"
+    ], 
+    "version": "1.0.0", 
+    "export": {
+        "exclude": "tests"
+    }, 
+    "examples": [
+        "examples/*/*.ino"
+    ], 
+    "dependencies": [], 
+    "authors": [
+        {
+            "maintainer": true, 
+            "name": "Xose Perez", 
+            "url": "http://tinkerman.cat", 
+            "email": "xose.perez@gmail.com"
+        }
+    ], 
+    "keywords": [
+        "current", 
+        "hlw8012", 
+        "power", 
+        "voltage"
+    ], 
+    "id": 1281, 
+    "description": "HLW8012 library for Arduino and ESP8266"
+}

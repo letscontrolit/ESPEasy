@@ -1,0 +1,116 @@
+.. include:: ../Plugin/_plugin_substitutions_p08x.repl
+.. _P081_page:
+
+|P081_typename|
+==================================================
+
+|P081_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P081_type|
+
+Name: |P081_name|
+
+Status: |P081_status|
+
+GitHub: |P081_github|_
+
+Maintainer: |P081_maintainer|
+
+Used libraries: |P081_usedlibraries|
+
+Description
+-----------
+
+Given a cron expression and a date, you can get the next date which satisfies the cron expression.
+
+Supports cron expressions with seconds field. 
+Based on implementation of `CronSequenceGenerator <https://github.com/spring-projects/spring-framework/blob/babbf6e8710ab937cd05ece20270f51490299270/spring-context/src/main/java/org/springframework/scheduling/support/CronSequenceGenerator.java>`_ from Spring Framework.
+
+For a given cron expression, the plugin will send out an event every time the expression matches the current time.
+
+The last execution time is stored as plugin output value and therefore it is also stored in RTC memory.
+This means the node is able to deduct whether the last matching time was already executed or not in case of a reboot or crash.
+
+
+Cron Expression Format
+----------------------
+
+The cron expression requires 6 positional arguments.
+
+Most cron implementations only have 5 argumnets and thus can only per minute be set to trigger an event.
+
+The extra argument handles seconds.
+
+See also `Wikipedia - Cron <https://en.wikipedia.org/wiki/Cron>`_ for more detailed information.
+
+.. code-block:: none
+
+ ┌───────────── seconds (0 - 59)
+ │ ┌───────────── minute (0 - 59)
+ │ │ ┌───────────── hour (0 - 23)
+ │ │ │ ┌───────────── day of the month (1 - 31)
+ │ │ │ │ ┌───────────── month (1 - 12)
+ │ │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday;
+ │ │ │ │ │ │                                       7 is also Sunday)
+ │ │ │ │ │ │
+ │ │ │ │ │ │
+ * * * * * * 
+
+For some arguments it can be useful to define a repeating pattern or a range.
+
+* ``*/15`` Whenever the field modulo 15 == 0  (e.g. for seconds 0, 15, 30, 45)
+* ``57/2`` for seconds or minutes equals ``57,59``. e.g. ``57,59 * * * * *`` == ``57/2 * * * * *``
+* ``1,3,5`` == ``1-6/2``. e.g. ``1,3,5 * * * * *`` == ``1-6/2 * * * * *``
+* Run every 4 hours except on midnight: ``* * 4,8,12,16,20 * * *`` == ``* * 4/4 * * *``
+* Day of week as a range, or list of named days: ``* * * * * 0-6`` == ``* * * * * TUE,WED,THU,FRI,SAT,SUN,MON``
+
+As a wildcard, ``*`` can be used.
+
+
+
+Examples of supported expressions
+---------------------------------
+
+Expression, input date, next date:
+
+.. code-block:: none
+
+ "*/15 * 1-4 * * *",  "2012-07-01_09:53:50", "2012-07-02_01:00:00"
+ "0 */2 1-4 * * *",   "2012-07-01_09:00:00", "2012-07-02_01:00:00"
+ "0 0 7 ? * MON-FRI", "2009-09-26_00:42:55", "2009-09-28_07:00:00"
+ "0 30 23 30 1/3 ?",  "2011-04-30_23:30:00", "2011-07-30_23:30:00"
+
+
+
+.. Commands available
+.. ^^^^^^^^^^^^^^^^^^
+
+.. .. include:: P081_commands.repl
+
+Events
+~~~~~~
+
+.. include:: P081_events.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+
+
+

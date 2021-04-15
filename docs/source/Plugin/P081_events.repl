@@ -1,0 +1,16 @@
+.. csv-table::
+   :header: "Event", "Example"
+   :widths: 30, 20
+
+   "
+   ``Cron#foo``
+   Will trigger when the cron expression of task named ``foo`` matches the current time.
+   ","
+
+   .. code-block:: none
+
+      on Cron#foo do
+       GPIO,2,1 //LED on
+      endon
+
+   "

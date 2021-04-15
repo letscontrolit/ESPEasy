@@ -1,0 +1,10 @@
+.. csv-table::
+        :header: "Attribute", "Description", "Example", "3.0.1","Spec.","4.0.0","Spec."
+        :widths: 10, 40, 10, 5, 15, 5, 15
+
+        "``$name``","Friendly name of the property.","Command", "YES",":green:`required`", "YES",":green:`required`"
+        "``$datatype``","Describes the format of data.	integer/float/boolean/string/enum/color","float", "YES",":green:`required`", "YES",":green:`required`"
+        "``$settable``","Specifies whether the property is settable (true) or read-only (default false). True for cmd, GPIO and dummy device values.","true", "YES",":yellow:`required true` for settable values", "YES",":yellow:`required true` for settable values"
+        "``$retained``","Specifies whether the property is retained (true) or non-retained (false).","false", "NO",":green:`required`", "NO",":blue:`optional`"
+        "``$unit``","A string containing the unit of this property.","°C", "NO",":blue:`optional`", "NO",":blue:`optional`"
+        "``$format``","Describes what are valid values for this property.","-30:40", "NO",":blue:`optional`", "NO",":blue:`optional`"

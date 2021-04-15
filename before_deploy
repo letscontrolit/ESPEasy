@@ -1,42 +1,88 @@
 #!/bin/bash
 
 VERSION=$(git describe)
+TMP_DIST=`mktemp -d`
+CURPATH=`pwd`
+BUILD_LOG=`echo "${TMP_DIST}/buildlog.txt"`
+
+# PIO 3.x :
+# BINARY_PATH=".pioenvs"
+
+# PIO 4.0 and newer:
+BINARY_PATH=".pio/build"
+
+while getopts d: option
+do
+case "${option}"
+in
+d) VERSION=${OPTARG};;
+esac
+done
+
+
+if [ ! -d ${TMP_DIST} ]; then
+  # Could not create temp dir, so exit
+  exit 1
+fi
+
+echo "### Creating zip archives"
 
 #Naming convention:
 # ESP_Easy_[github version]_[plugin set]_[chip type]_[flash memory].bin
 
+if [ -d "build_output/reject" ]; then
+  zip -qq ${CURPATH}/ESPEasy_ELF_files_$VERSION.zip build_output/reject/*
+fi
 
-for ENV in \
-  normal_ESP8266_1024 \
-  normal_ESP8266_4096 \
-  normal_ESP8285_1024 \
-  normal_ESP8266_1024_DOUT \
-  test_ESP8266_1024\
-  test_ESP8266_4096\
-  test_ESP8266_4096_VCC\
-  test_ESP8285_1024\
-  dev_ESP8266_1024\
-  dev_ESP8266_4096\
-  dev_ESP8285_1024\
-  dev_ESP8266PUYA_1024\
-  dev_ESP8266PUYA_1024_VCC;\
-do
-  echo
-  echo "### Deploying environment $ENV for version $VERSION"
-  BIN=.pioenvs/$ENV/firmware.bin
-  cp $BIN dist/"ESP_Easy_$VERSION""_$ENV.bin"
-done
+zip -qq ${CURPATH}/ESPEasy_ELF_files_$VERSION.zip build_output/debug/*
+echo "### Created ESPEasy_ELF_files_$VERSION.zip"
 
+
+mkdir -p ${TMP_DIST}
+cp -r dist/* ${TMP_DIST}/
+
+if [ -d "docs/build" ]; then
+  # Docs have been created
+  zip -r -qq ${CURPATH}/ESPEasy_docs_$VERSION.zip docs/build/*
+  echo "### Created ESPEasy_docs_$VERSION.zip"
+fi
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
-rm -rf dist/Source 2>/dev/null
-mkdir dist/Source
-cp -r lib dist/Source/
-cp -r src dist/Source/
-cp platformio.ini dist/Source/
+#rm -rf dist/Source 2>/dev/null
 
-cd dist
+mkdir -p ${TMP_DIST}/source
+cp -r lib ${TMP_DIST}/source/
+cp -r src ${TMP_DIST}/source/
+cp -r misc ${TMP_DIST}/source/
+cp -r static ${TMP_DIST}/source/
+cp -r tools ${TMP_DIST}/source/
+cp platformio*.ini ${TMP_DIST}/source/
+cp *.txt ${TMP_DIST}/source/
+cp *.csv ${TMP_DIST}/source/
+cp README* ${TMP_DIST}/source/
 
-echo
-echo "### Creating zip archive"
-zip ../ESPEasy_$VERSION.zip -r .
+cp -r build_output/bin/* ${TMP_DIST}/bin
+rm -f ${TMP_DIST}/bin/*ESP32*
+
+cd ${TMP_DIST}
+
+if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+  echo
+  zip -qq ${CURPATH}/ESPEasy_ESP82xx_$VERSION.zip -r .
+  echo "### Created ESPEasy_ESP82xx_$VERSION.zip"
+fi
+
+cd ${CURPATH}
+rm -f ${TMP_DIST}/bin/*
+cp -r build_output/bin/*ESP32* ${TMP_DIST}/bin
+
+cd ${TMP_DIST}
+
+if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+  echo
+  zip -qq ${CURPATH}/ESPEasy_ESP32_$VERSION.zip -r .
+  echo "### Created ESPEasy_ESP32_$VERSION.zip"
+fi
+
+rm -Rf ${TMP_DIST}/* 2>/dev/null
+rmdir ${TMP_DIST}

@@ -1,153 +1,155 @@
-//#######################################################################################################
-//########################### Controller Plugin 008: Generic HTTP #######################################
-//#######################################################################################################
+#include "src/Helpers/_CPlugin_Helper.h"
 
-#define CPLUGIN_008
-#define CPLUGIN_ID_008         8
-#define CPLUGIN_NAME_008       "Generic HTTP"
-#include <ArduinoJson.h>
+#ifdef USES_C008
 
-boolean CPlugin_008(byte function, struct EventStruct *event, String& string)
+// #######################################################################################################
+// ########################### Controller Plugin 008: Generic HTTP #######################################
+// #######################################################################################################
+
+# define CPLUGIN_008
+# define CPLUGIN_ID_008         8
+# define CPLUGIN_NAME_008       "Generic HTTP"
+# include <ArduinoJson.h>
+
+bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
-    case CPLUGIN_PROTOCOL_ADD:
-      {
-        Protocol[++protocolCount].Number = CPLUGIN_ID_008;
-        Protocol[protocolCount].usesMQTT = false;
-        Protocol[protocolCount].usesTemplate = true;
-        Protocol[protocolCount].usesAccount = true;
-        Protocol[protocolCount].usesPassword = true;
-        Protocol[protocolCount].defaultPort = 80;
-        Protocol[protocolCount].usesID = false;
+    case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
+    {
+      Protocol[++protocolCount].Number     = CPLUGIN_ID_008;
+      Protocol[protocolCount].usesMQTT     = false;
+      Protocol[protocolCount].usesTemplate = true;
+      Protocol[protocolCount].usesAccount  = true;
+      Protocol[protocolCount].usesPassword = true;
+      Protocol[protocolCount].usesExtCreds = true;
+      Protocol[protocolCount].defaultPort  = 80;
+      Protocol[protocolCount].usesID       = true;
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
+    {
+      string = F(CPLUGIN_NAME_008);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_INIT:
+    {
+      success = init_c008_delay_queue(event->ControllerIndex);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_EXIT:
+    {
+      exit_c008_delay_queue();
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
+    {
+      event->String1 = "";
+      event->String2 = F("demo.php?name=%sysname%&task=%tskname%&valuename=%valname%&value=%value%");
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
+    {
+      if (C008_DelayHandler == nullptr) {
         break;
       }
 
-    case CPLUGIN_GET_DEVICENAME:
+      String pubname;
       {
-        string = F(CPLUGIN_NAME_008);
-        break;
+        // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
+        MakeControllerSettings(ControllerSettings);
+
+        if (!AllocatedControllerSettings()) {
+          addLog(LOG_LEVEL_ERROR, F("C008 : Generic HTTP - Cannot send, out of RAM"));
+          break;
+        }
+        LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+        pubname = ControllerSettings.Publish;
       }
 
-    case CPLUGIN_PROTOCOL_TEMPLATE:
-      {
-        event->String1 = "";
-        event->String2 = F("demo.php?name=%sysname%&task=%tskname%&valuename=%valname%&value=%value%");
-        break;
-      }
+      // FIXME TD-er must define a proper move operator
+      byte valueCount = getValueCountForTask(event->TaskIndex);
+      success = C008_DelayHandler->addToQueue(C008_queue_element(event, valueCount));
 
-    case CPLUGIN_PROTOCOL_SEND:
-      {
-        byte valueCount = getValueCountFromSensorType(event->sensorType);
+      if (success) {
+        // Element was added.
+        // Now we try to append to the existing element
+        // and thus preventing the need to create a long string only to copy it to a queue element.
+        C008_queue_element& element = C008_DelayHandler->sendQueue.back();
+
+        // Collect the values at the same run, to make sure all are from the same sample
+        LoadTaskSettings(event->TaskIndex);
+        parseControllerVariables(pubname, event, true);
+
         for (byte x = 0; x < valueCount; x++)
         {
-          if (event->sensorType == SENSOR_TYPE_LONG)
-            HTTPSend(event, 0, 0, (unsigned long)UserVar[event->BaseVarIndex] + ((unsigned long)UserVar[event->BaseVarIndex + 1] << 16));
-          else
-            HTTPSend(event, x, UserVar[event->BaseVarIndex + x], 0);
-          if (valueCount > 1)
-          {
-            delayBackground(Settings.MessageDelay);
-            // unsigned long timer = millis() + Settings.MessageDelay;
-            // while (!timeOutReached(timer))
-            //   backgroundtasks();
+          String tmppubname = pubname;
+          bool   isvalid;
+          String formattedValue = formatUserVar(event, x, isvalid);
+
+          if (isvalid) {
+            element.txt[x]  = "/";
+            element.txt[x] += tmppubname;
+            parseSingleControllerVariable(element.txt[x], event, x, true);
+            element.txt[x].replace(F("%value%"), formattedValue);
+# ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+# endif // ifndef BUILD_NO_DEBUG
           }
         }
-        break;
       }
+      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C008_DELAY_QUEUE, C008_DelayHandler->getNextScheduleTime());
+      break;
+    }
 
+    case CPlugin::Function::CPLUGIN_FLUSH:
+    {
+      process_c008_delay_queue();
+      delay(0);
+      break;
+    }
+
+    default:
+      break;
   }
   return success;
 }
 
-
-//********************************************************************************
+// ********************************************************************************
 // Generic HTTP get request
-//********************************************************************************
-boolean HTTPSend(struct EventStruct *event, byte varIndex, float value, unsigned long longValue)
-{
-  if (!WiFiConnected(100)) {
-    return false;
-  }
-  ControllerSettingsStruct ControllerSettings;
-  LoadControllerSettings(event->ControllerIndex, (byte*)&ControllerSettings, sizeof(ControllerSettings));
+// ********************************************************************************
 
-  String authHeader = "";
-  if ((SecuritySettings.ControllerUser[event->ControllerIndex][0] != 0) && (SecuritySettings.ControllerPassword[event->ControllerIndex][0] != 0))
-  {
-    base64 encoder;
-    String auth = SecuritySettings.ControllerUser[event->ControllerIndex];
-    auth += ":";
-    auth += SecuritySettings.ControllerPassword[event->ControllerIndex];
-    authHeader = F("Authorization: Basic ");
-    authHeader += encoder.encode(auth) + " \r\n";
-  }
+// Uncrustify may change this into multi line, which will result in failed builds
+// *INDENT-OFF*
+bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings);
 
-  // boolean success = false;
-  addLog(LOG_LEVEL_DEBUG, String(F("HTTP : connecting to "))+ControllerSettings.getHostPortString());
-
-  // Use WiFiClient class to create TCP connections
-  WiFiClient client;
-  if (!ControllerSettings.connectToHost(client))
-  {
-    connectionFailures++;
-    addLog(LOG_LEVEL_ERROR, F("HTTP : connection failed"));
-    return false;
-  }
-  statusLED(true);
-  if (connectionFailures)
-    connectionFailures--;
-
-  if (ExtraTaskSettings.TaskDeviceValueNames[0][0] == 0)
-    PluginCall(PLUGIN_GET_DEVICEVALUENAMES, event, dummyString);
-
-  String url = "/";
-  url += ControllerSettings.Publish;
-  parseControllerVariables(url, event, true);
-
-  url.replace(F("%valname%"), URLEncode(ExtraTaskSettings.TaskDeviceValueNames[varIndex]));
-  if (longValue)
-    url.replace(F("%value%"), String(longValue));
-  else
-    url.replace(F("%value%"), toString(value, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]));
-
-  // url.toCharArray(log, 80);
-  addLog(LOG_LEVEL_DEBUG_MORE, url);
-
-  // This will send the request to the server
-  client.print(String(F("GET ")) + url + F(" HTTP/1.1\r\n") +
-               F("Host: ") + ControllerSettings.getHost() + F("\r\n") + authHeader +
-               F("Connection: close\r\n\r\n"));
-
-  unsigned long timer = millis() + 200;
-  while (!client.available() && !timeOutReached(timer))
-    yield();
-
-  // Read all the lines of the reply from server and print them to Serial
-  while (client.available()) {
-    // String line = client.readStringUntil('\n');
-    String line;
-    safeReadStringUntil(client, line, '\n');
-
-    // line.toCharArray(log, 80);
-    addLog(LOG_LEVEL_DEBUG_MORE, line);
-    if (line.startsWith(F("HTTP/1.1 200 OK")))
-    {
-      // strcpy_P(log, PSTR("HTTP : Succes!"));
-      // addLog(LOG_LEVEL_DEBUG, log);
-      addLog(LOG_LEVEL_DEBUG, F("HTTP : Success!"));
-      // success = true;
+bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
+// *INDENT-ON*
+  while (element.txt[element.valuesSent] == "") {
+    // A non valid value, which we are not going to send.
+    // Increase sent counter until a valid value is found.
+    if (element.checkDone(true)) {
+      return true;
     }
-    delay(1);
   }
-  // strcpy_P(log, PSTR("HTTP : closing connection"));
-  // addLog(LOG_LEVEL_DEBUG, log);
-  addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection"));
 
-  client.flush();
-  client.stop();
+  WiFiClient client;
 
-  return(true);
+  if (!try_connect_host(controller_number, client, ControllerSettings)) {
+    return false;
+  }
+
+  String request =
+    create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt[element.valuesSent]);
+
+  return element.checkDone(send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply));
 }
+
+#endif // ifdef USES_C008

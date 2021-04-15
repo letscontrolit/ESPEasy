@@ -1,0 +1,33 @@
+.. include:: _controller_substitutions.repl
+
+.. _C017_page:
+
+|C017_typename|
+==================================================
+
+|C017_shortinfo|
+
+Controller details
+------------------
+
+Type: |C017_type|
+
+Name: |C017_name|
+
+Status: |C017_status|
+
+GitHub: |C017_github|_
+
+Maintainer: |C017_maintainer|
+
+Change log
+----------
+
+.. versionadded:: 2.0 
+  ...
+
+  |added|
+  Initial release version.
+
+Description
+-----------
