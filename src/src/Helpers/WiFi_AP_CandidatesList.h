@@ -25,7 +25,7 @@ struct WiFi_AP_CandidatesList {
 
   // Get the next candidate to connect
   // Return true when a valid next candidate was found.
-  bool                     getNext();
+  bool                     getNext(bool scanAllowed);
 
   const WiFi_AP_Candidate& getCurrent() const;
 

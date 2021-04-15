@@ -183,8 +183,6 @@ void runOncePerSecond()
     Wire.endTransmission();
   }
 
-//  WifiScanNextChannel();
-
   checkResetFactoryPin();
   STOP_TIMER(PLUGIN_CALL_1PS);
 }
@@ -226,6 +224,7 @@ void runEach30Seconds()
 //    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);
   }
+  WiFiScanPeriodical();
   sendSysInfoUDP(1);
   refreshNodeList();
 

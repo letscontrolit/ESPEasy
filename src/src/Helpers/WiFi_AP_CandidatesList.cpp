@@ -98,10 +98,16 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   loadCandidatesFromScanned();
 }
 
-bool WiFi_AP_CandidatesList::getNext() {
+bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
   load_knownCredentials();
 
-  if (candidates.empty()) { return false; }
+  if (candidates.empty()) { 
+    if (scanAllowed) {
+      return false;
+    }
+    loadCandidatesFromScanned();
+    if (candidates.empty()) { return false; }
+  }
 
   bool mustPop = true;
 
@@ -201,10 +207,20 @@ bool WiFi_AP_CandidatesList::SettingsIndexMatchCustomCredentials(uint8_t index)
 }
 
 void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
-  if (!candidates.empty()) {
-    // Do not mess with the current candidates order.
+  if (candidates.size() > 1) {
+    // Do not mess with the current candidates order if > 1 present
     return;
   }
+  // Purge unusable from known list.
+  for (auto it = known.begin(); it != known.end();) {
+    if (it->usable()) {
+      ++it;
+    } else {
+      it = known.erase(it);
+    }
+  }
+  known.sort();
+  known.unique();
   known_it = known.begin();
 
   for (auto scan = scanned.begin(); scan != scanned.end();) {
@@ -245,6 +261,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
       addLog(LOG_LEVEL_INFO, log);
     }
   }
+  candidates.sort();
   addFromRTC();
   purge_unusable();
 }
@@ -263,41 +280,66 @@ void WiFi_AP_CandidatesList::addFromRTC() {
     return;
   }
 
-  candidates.emplace_front(RTC.lastWiFiSettingsIndex, ssid, key);
-  candidates.front().setBSSID(RTC.lastBSSID);
+  WiFi_AP_Candidate fromRTC(RTC.lastWiFiSettingsIndex, ssid, key);
+  fromRTC.setBSSID(RTC.lastBSSID);
+  fromRTC.channel = RTC.lastWiFiChannel;
+
+  if (candidates.size() > 0 && candidates.front().ssid.equals(fromRTC.ssid)) {
+    // Front candidate was already from RTC.
+    candidates.pop_front();
+  }
+
+  // See if we may have a better candidate for the current network, with a significant better RSSI.
+  auto bestMatch = candidates.end();
+  auto lastUsed  = candidates.end();
+  for (auto it = candidates.begin(); lastUsed == candidates.end() && it != candidates.end(); ++it) {
+    if (it->usable() && it->ssid.equals(fromRTC.ssid)) {
+      const bool foundLastUsed = fromRTC.bssid_match(it->bssid);
+      if (foundLastUsed) {
+        lastUsed = it;
+      } else if (bestMatch == candidates.end()) {
+        bestMatch = it;
+      }
+    }
+  }
+  bool matchAdded = false;
+  if (bestMatch != candidates.end()) {
+    // Found a best match, possibly better than the last used.
+    if (lastUsed == candidates.end() || (bestMatch->rssi > (lastUsed->rssi + 10))) {
+      // Last used was not found or
+      // Other candidate has significant better RSSI
+      matchAdded = true;
+      candidates.push_front(*bestMatch);
+    }
+  } else if (lastUsed != candidates.end()) {
+    matchAdded = true;
+    candidates.push_front(*lastUsed);
+  }
+  if (!matchAdded) {
+    candidates.push_front(fromRTC);
+    // This is not taken from a scan, so no idea of the used encryption.
+    // Try to find a matching BSSID to get the encryption.
+    for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+      if ((it->rssi != -1) && candidates.front() == *it) {
+        candidates.front().enc_type = it->enc_type;
+        return;
+      }
+    }
+  }
+
   candidates.front().rssi = -1; // Set to best possible RSSI so it is tried first.
-  candidates.front().channel = RTC.lastWiFiChannel;
 
   if (!candidates.front().usable() || !candidates.front().allowQuickConnect()) {
     candidates.pop_front();
     return;
   }
 
-  // This is not taken from a scan, so no idea of the used encryption.
-  // Try to find a matching BSSID to get the encryption.
-  for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-    if ((it->rssi != -1) && candidates.front() == *it) {
-      candidates.front().enc_type = it->enc_type;
-      return;
-    }
-  }
   if (currentCandidate == candidates.front()) {
     candidates.front().enc_type = currentCandidate.enc_type;
   }
 }
 
 void WiFi_AP_CandidatesList::purge_unusable() {
-  for (auto it = known.begin(); it != known.end();) {
-    if (it->usable()) {
-      ++it;
-    } else {
-      it = known.erase(it);
-    }
-  }
-  known.sort();
-  known.unique();
-  known_it = known.begin();
-
   for (auto it = candidates.begin(); it != candidates.end();) {
     if (it->usable()) {
       ++it;

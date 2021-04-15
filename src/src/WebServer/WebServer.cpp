@@ -273,9 +273,11 @@ bool captivePortal() {
     const bool fromAP = web_server.client().localIP() == apIP;
     String redirectURL = F("http://");
     redirectURL += web_server.client().localIP().toString();
+    #ifdef WEBSERVER_SETUP
     if (fromAP && !SecuritySettings.hasWiFiCredentials()) {
       redirectURL += F("/setup");
     }
+    #endif
     web_server.sendHeader(F("Location"), redirectURL, true);
     web_server.send(302, F("text/plain"), "");   // Empty content inhibits Content-length header so we have to close the socket ourselves.
     web_server.client().stop(); // Stop is needed because we sent no content length

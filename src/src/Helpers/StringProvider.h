@@ -22,6 +22,8 @@ struct LabelType {
     WIFI_CUR_TX_PWR,     // Unit dBm of current WiFi TX power.
     WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
     WIFI_SEND_AT_MAX_TX_PWR,
+    WIFI_NR_EXTRA_SCANS,
+    WIFI_PERIODICAL_SCAN,
 
     FREE_MEM,            // 9876
     FREE_STACK,          // 3456

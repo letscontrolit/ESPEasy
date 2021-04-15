@@ -277,6 +277,9 @@ String BuildFixes()
     Settings.WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
     Settings.WiFi_sensitivity_margin = 3; // Margin in dBm on top of sensitivity.
   }
+  if (Settings.Build < 20113) {
+    Settings.NumberExtraWiFiScans = 0;
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();

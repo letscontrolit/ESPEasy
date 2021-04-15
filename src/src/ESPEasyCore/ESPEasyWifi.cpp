@@ -233,7 +233,7 @@ void AttemptWiFiConnect() {
     }
   }
 
-  if (WiFi_AP_Candidates.getNext()) {
+  if (WiFi_AP_Candidates.getNext(WiFiScanAllowed())) {
     const WiFi_AP_Candidate& candidate = WiFi_AP_Candidates.getCurrent();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -606,26 +606,11 @@ void WifiDisconnect()
 // ********************************************************************************
 // Scan WiFi network
 // ********************************************************************************
-void WifiScanNextChannel() {
+void WiFiScanPeriodical() {
+  if (!Settings.PeriodicalScanWiFi()) {
+    return;
+  }
   if (active_network_medium == NetworkMedium_t::Ethernet) {
-    return;
-  }
-  if (!WifiIsAP(WiFi.getMode()) || wifiAPmodeActivelyUsed() || NetworkConnected()) {
-    // Only scan periodically when AP is enabled and not actively used
-    return;
-  }
-  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING || !WiFiEventData.processedScanDone) { 
-    // Scan still busy
-    return;
-  }
-  if (WiFiEventData.unprocessedWifiEvents()) {
-    return;
-  }
-
-  const uint32_t scaninterval = 10000;
-
-  if (!WiFiEventData.lastGetScanMoment.timeoutReached(scaninterval)) {
-    // last scan too recent
     return;
   }
 
@@ -633,22 +618,40 @@ void WifiScanNextChannel() {
   WifiScan(async);
 }
 
-
-void WifiScan(bool async, uint8_t channel) {
+bool WiFiScanAllowed() {
   if (WiFi.scanComplete() == WIFI_SCAN_RUNNING) { 
     // Scan still busy
-    return;
+    return false;
+  }
+  if (!WiFiEventData.processedScanDone) { 
+    processScanDone(); 
+  }
+  if (WiFiEventData.unprocessedWifiEvents()) {
+    return false;
+  }
+  /*
+  if (!wifiAPmodeActivelyUsed() && !NetworkConnected()) {
+    return true;
+  }
+  */
+  if (WiFi_AP_Candidates.scanComplete() <= 0) {
+    return true;
   }
   if (WiFiEventData.lastScanMoment.isSet()) {
     const LongTermTimer::Duration scanInterval = wifiAPmodeActivelyUsed() ? WIFI_SCAN_INTERVAL_AP_USED : WIFI_SCAN_INTERVAL_MINIMAL;
     if (WiFiEventData.lastScanMoment.millisPassedSince() < scanInterval) {
-      return;
+      return false;
     }
   }
-  WiFiEventData.lastScanMoment.setNow();
-  if (!async) {
-    WiFi_AP_Candidates.begin_sync_scan();
+  return true;
+}
+
+
+void WifiScan(bool async, uint8_t channel) {
+  if (!WiFiScanAllowed()) {
+    return;
   }
+  WiFiEventData.lastScanMoment.setNow();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     if (channel == 0) {
       addLog(LOG_LEVEL_INFO, F("WiFi : Start network scan all channels"));
@@ -663,16 +666,24 @@ void WifiScan(bool async, uint8_t channel) {
   WiFiEventData.processedScanDone = false;
   WiFiEventData.lastGetScanMoment.setNow();
   WiFiEventData.lastScanChannel = channel;
-  #ifdef ESP8266
-  WiFi.scanNetworks(async, show_hidden, channel);
-  #endif
-  #ifdef ESP32
-  const bool passive = false;
-  const uint32_t max_ms_per_chan = 300;
-  WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
-  #endif
-  if (!async) {
-    processScanDone();
+
+  unsigned int nrScans = 1 + (async ? 0 : Settings.NumberExtraWiFiScans);
+  while (nrScans > 0) {
+    if (!async) {
+      WiFi_AP_Candidates.begin_sync_scan();
+    }
+    --nrScans;
+    #ifdef ESP8266
+    WiFi.scanNetworks(async, show_hidden, channel);
+    #endif
+    #ifdef ESP32
+    const bool passive = false;
+    const uint32_t max_ms_per_chan = 300;
+    WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
+    #endif
+    if (!async) {
+      processScanDone();
+    }
   }
 }
 
