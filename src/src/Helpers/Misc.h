@@ -122,6 +122,7 @@ void delayedReboot(int rebootDelay, ESPEasy_Scheduler::IntendedRebootReason_e re
 
 void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason);
 
+void FeedSW_watchdog();
 
 void SendValueLogger(taskIndex_t TaskIndex);
 
