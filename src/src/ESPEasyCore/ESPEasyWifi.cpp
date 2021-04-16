@@ -16,6 +16,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
@@ -374,6 +375,7 @@ void resetWiFi() {
     // Don't reset WiFi too often
     return;
   }
+  FeedSW_watchdog();
   WiFiEventData.clearAll();
   WifiDisconnect();
 
@@ -696,6 +698,7 @@ void WifiScan(bool async, uint8_t channel) {
   while (nrScans > 0) {
     if (!async) {
       WiFi_AP_Candidates.begin_sync_scan();
+      FeedSW_watchdog();
     }
     --nrScans;
     #ifdef ESP8266
@@ -707,6 +710,7 @@ void WifiScan(bool async, uint8_t channel) {
     WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
     #endif
     if (!async) {
+      FeedSW_watchdog();
       processScanDone();
     }
   }
