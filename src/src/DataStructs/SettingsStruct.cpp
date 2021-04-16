@@ -158,6 +158,7 @@ void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
   bitWrite(VariousBits1, 14, value);
 }
 
+template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::PeriodicalScanWiFi() const {
   // Invert to enable it by default
   return !bitRead(VariousBits1, 15);
