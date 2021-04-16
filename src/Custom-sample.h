@@ -38,21 +38,21 @@
 #define DEFAULT_AP_KEY      "configesp"                              // Enter network WPA key for AP (config) mode
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
-#define DEFAULT_SSID                         "idefixn"               // Enter your network SSID
-#define DEFAULT_KEY                          "$Michaelstrasse28a0264507" // Enter your network WPA key
+#define DEFAULT_SSID                         ""               // Enter your network SSID
+#define DEFAULT_KEY                          "" // Enter your network WPA key
 #define DEFAULT_SSID2                        ""                      // Enter your fallback network SSID
 #define DEFAULT_KEY2                         ""                      // Enter your fallback network WPA key
 #define DEFAULT_USE_STATIC_IP                false                   // (true|false) enabled or disabled static IP
 #define DEFAULT_IP                           "192.168.0.50"          // Enter your IP address
-#define DEFAULT_DNS                          "192.168.39.1"           // Enter your DNS
-#define DEFAULT_GW                           "192.168.39.1"           // Enter your Gateway
+#define DEFAULT_DNS                          "192.168.1.1"           // Enter your DNS
+#define DEFAULT_GW                           "192.168.1.1"           // Enter your Gateway
 #define DEFAULT_SUBNET                       "255.255.255.0"         // Enter your Subnet
 #define DEFAULT_IPRANGE_LOW                  "0.0.0.0"               // Allowed IP range to access webserver
 #define DEFAULT_IPRANGE_HIGH                 "255.255.255.255"       // Allowed IP range to access webserver
 #define DEFAULT_IP_BLOCK_LEVEL               1                       // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2:
 // ONLY_IP_RANGE_ALLOWED
 #define DEFAULT_ADMIN_USERNAME               "admin"
-#define DEFAULT_ADMIN_PASS                   "$Admin789"
+#define DEFAULT_ADMIN_PASS                   ""
 
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT      10000 // minimum timeout in ms for WiFi to be connected.
 #define DEFAULT_WIFI_FORCE_BG_MODE           false // when set, only allow to connect in 802.11B or G mode (not N)
@@ -127,7 +127,7 @@
 #define DEFAULT_LATITUDE                        0.0f              // Default Latitude  
 #define DEFAULT_LONGITUDE                       0.0f              // Default Longitude
 
-#define DEFAULT_SYSLOG_IP                       "192.168.39.104"  // Syslog IP Address
+#define DEFAULT_SYSLOG_IP                       "192.168.1.104"  // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL                    LOG_LEVEL_DEBUG   // Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_DEBUG   // Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_DEBUG   // Web Log Level
