@@ -3,6 +3,8 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
+#ifdef USES_ESPEASY_NOW
+
 unsigned long ESPEasy_now_Node_statistics_t::getAge() const
 {
   return timePassedSince(last_update_route[last_route_index]);
@@ -129,3 +131,5 @@ void ESPEasy_now_Node_statistics_t::setMQTTQueueState(ESPEasy_Now_MQTT_queue_che
 {
   mqtt_queue_state = state;
 }
+
+#endif

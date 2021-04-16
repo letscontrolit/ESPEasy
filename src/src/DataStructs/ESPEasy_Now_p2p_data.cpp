@@ -113,7 +113,7 @@ bool ESPEasy_Now_p2p_data::allocate(size_t size, size_t& oldSize) {
 
   if (data != nullptr) {
     memcpy(tmp_ptr, data, oldSize);
-    delete data;
+    delete[] data;
   }
   data     = tmp_ptr;
   dataSize = newSize;

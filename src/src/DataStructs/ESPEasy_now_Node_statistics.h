@@ -10,6 +10,7 @@
 
 #define ESPEASY_NOW_NODE_STATISTICS_NR_ROUTES  3
 
+#ifdef USES_ESPEASY_NOW
 struct ESPEasy_now_Node_statistics_t {
   unsigned long getAge() const;
 
@@ -54,5 +55,6 @@ private:
 
 typedef std::map<byte, ESPEasy_now_Node_statistics_t> ESPEasy_now_Node_statisticsMap;
 
+#endif
 
 #endif // ifndef DATASTRUCTS_ESPEASY_NOW_NODE_STATISTICS_H

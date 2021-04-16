@@ -28,7 +28,7 @@ uint8_t ESPEasy_now_traceroute_struct::getUnit(uint8_t distance, uint8_t& succes
 void ESPEasy_now_traceroute_struct::addUnit(byte unit)
 {
   // Only add the unit if it isn't already part of the traceroute.
-  const uint8_t index = unit_vector.size();
+  const uint8_t index = static_cast<uint8_t>(unit_vector.size());
   for (size_t i = 0; i < index; i+=2) {
     if (unit_vector[i] == unit) {
       return;
@@ -49,7 +49,7 @@ uint8_t ESPEasy_now_traceroute_struct::getDistance() const
 
 const uint8_t * ESPEasy_now_traceroute_struct::getData(uint8_t& size) const
 {
-  size = unit_vector.size();
+  size = static_cast<uint8_t>(unit_vector.size());
   return &(unit_vector[0]);
 }
 
