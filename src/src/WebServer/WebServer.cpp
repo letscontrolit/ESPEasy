@@ -102,22 +102,6 @@
   #define MENU_INDEX_NOTIFICATIONS_VISIBLE false
 #endif
 
-// Define main page elements present
-#ifndef MAIN_PAGE_SHOW_SYSINFO_BUTTON
-  #define MAIN_PAGE_SHOW_SYSINFO_BUTTON    true
-#endif
-
-#ifndef MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON
-  #define MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON   true
-#endif
-
-#ifndef MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN
-  #define MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN false
-#endif
-
-#ifndef SETUP_PAGE_SHOW_CONFIG_BUTTON
-  #define SETUP_PAGE_SHOW_CONFIG_BUTTON true
-#endif
 
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {

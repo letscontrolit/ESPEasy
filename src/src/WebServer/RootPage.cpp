@@ -31,6 +31,18 @@
 #endif
 
 
+#ifndef MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN
+  #define MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN false
+#endif
+
+// Define main page elements present
+#ifndef MAIN_PAGE_SHOW_SYSINFO_BUTTON
+  #define MAIN_PAGE_SHOW_SYSINFO_BUTTON    true
+#endif
+
+#ifndef MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON
+  #define MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON   false
+#endif
 
 
 // ********************************************************************************
