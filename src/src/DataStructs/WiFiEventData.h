@@ -68,8 +68,12 @@ struct WiFiEventData_t {
   bool          channel_changed = false;
 
   uint8_t       auth_mode = 0;
+  uint8_t       lastScanChannel = 0;
+  uint8_t       usedChannel = 0;
+
 
   WiFiDisconnectReason    lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
+  LongTermTimer           lastScanMoment;
   LongTermTimer           lastConnectMoment;
   LongTermTimer           lastDisconnectMoment;
   LongTermTimer           lastWiFiResetMoment;
@@ -95,7 +99,11 @@ struct WiFiEventData_t {
   bool wifiConnectInProgress     = false;
   bool warnedNoValidWiFiSettings = false;
 
+  bool performedClearWiFiCredentials = false;
+
   unsigned long connectionFailures = 0;
+
+
 };
 
 #endif   // ifndef DATASTRUCTS_WIFIEVENTDATA_H

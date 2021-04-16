@@ -27,7 +27,7 @@ void setNetworkMedium(NetworkMedium_t medium) {
       #endif
       break;
     case NetworkMedium_t::WIFI:
-      WiFiEventData.timerAPoff.setNow();
+      WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
       WiFiEventData.timerAPstart.clear();
       WifiDisconnect();
       break;

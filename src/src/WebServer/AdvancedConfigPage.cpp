@@ -92,6 +92,8 @@ void handle_advanced() {
     Settings.setWiFi_TX_power(getFormItemFloat(getInternalLabel(LabelType::WIFI_TX_MAX_PWR)));
     Settings.WiFi_sensitivity_margin = getFormItemInt(getInternalLabel(LabelType::WIFI_SENS_MARGIN));
     Settings.UseMaxTXpowerForSending(isFormItemChecked(getInternalLabel(LabelType::WIFI_SEND_AT_MAX_TX_PWR)));
+    Settings.NumberExtraWiFiScans = getFormItemInt(getInternalLabel(LabelType::WIFI_NR_EXTRA_SCANS));
+    Settings.PeriodicalScanWiFi(isFormItemChecked(getInternalLabel(LabelType::WIFI_PERIODICAL_SCAN)));
 
     addHtmlError(SaveSettings());
 
@@ -235,6 +237,13 @@ void handle_advanced() {
     addFormNote(note);
   }
   addFormCheckBox(LabelType::WIFI_SEND_AT_MAX_TX_PWR, Settings.UseMaxTXpowerForSending());
+  {
+    addFormNumericBox(LabelType::WIFI_NR_EXTRA_SCANS, Settings.NumberExtraWiFiScans, 0, 5);
+    String note = F("Number of extra times to scan all channels to have higher chance of finding the desired AP");
+    addFormNote(note);
+  }
+  addFormCheckBox(LabelType::WIFI_PERIODICAL_SCAN, Settings.PeriodicalScanWiFi());
+
 
 
   addFormSeparator(2);

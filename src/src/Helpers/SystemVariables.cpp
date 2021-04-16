@@ -165,7 +165,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case UNIXDAY:           value = String(node_time.getUnixTime() / 86400); break;
       case UNIXDAY_SEC:       value = String(node_time.getUnixTime() % 86400); break;
       case UNIXTIME:          value = String(node_time.getUnixTime()); break;
-      case UPTIME:            value = String(wdcounter / 2); break;
+      case UPTIME:            value = String(getUptimeMinutes()); break;
       case UPTIME_MS:         value = ull2String(getMicros64() / 1000); break;
       #if FEATURE_ADC_VCC
       case VCC:               value = String(vcc); break;
