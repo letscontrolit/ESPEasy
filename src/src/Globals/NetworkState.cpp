@@ -1,4 +1,4 @@
-#include "NetworkState.h"
+#include "../Globals/NetworkState.h"
 
 #include "../../ESPEasy_common.h"
 

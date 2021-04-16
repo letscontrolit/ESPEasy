@@ -24,6 +24,8 @@
 # include "../Globals/ESPEasy_now_handler.h"
 #endif
 
+#include "../../ESPEasy_fdwdecl.h"
+
 
 // ********************************************************************************
 // WiFi state
@@ -138,6 +140,11 @@ bool WiFiConnected() {
   // For ESP82xx, do not rely on WiFi.status() with event based wifi.
   const int32_t wifi_rssi = WiFi.RSSI();
   bool validWiFi = (wifi_rssi < 0) && wifi_isconnected && hasIPaddr();
+  /*
+  if (validWiFi && WiFi.channel() != WiFiEventData.usedChannel) {
+    validWiFi = false;
+  }
+  */
   if (validWiFi != WiFiEventData.WiFiServicesInitialized()) {
     // else wifiStatus is no longer in sync.
     if (checkAndResetWiFi()) {
@@ -158,7 +165,7 @@ bool WiFiConnected() {
     return WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
   }
 
-  if ((WiFiEventData.timerAPstart.isSet()) && WiFiEventData.timerAPstart.timeoutReached(WIFI_RECONNECT_WAIT)) {
+  if ((WiFiEventData.timerAPstart.isSet()) && WiFiEventData.timerAPstart.timeReached()) {
     // Timer reached, so enable AP mode.
     if (!WifiIsAP(WiFi.getMode())) {
       setAP(true);
@@ -171,10 +178,10 @@ bool WiFiConnected() {
   if (!WiFiEventData.timerAPstart.isSet() && !WifiIsAP(WiFi.getMode())) {
     // First run we do not have WiFi connection any more, set timer to start AP mode
     // Only allow the automatic AP mode in the first N minutes after boot.
-    if ((wdcounter / 2) < WIFI_ALLOW_AP_AFTERBOOT_PERIOD) {
-      WiFiEventData.timerAPstart.setNow();
+    if (getUptimeMinutes() < WIFI_ALLOW_AP_AFTERBOOT_PERIOD) {
+      WiFiEventData.timerAPstart.setMillisFromNow(WIFI_RECONNECT_WAIT);
       // Fixme TD-er: Make this more elegant as it now needs to know about the extra time needed for the AP start timer.
-      WiFiEventData.timerAPoff.set(WiFiEventData.timerAPstart.get() + (WIFI_RECONNECT_WAIT * 1000ll));
+      WiFiEventData.timerAPoff.setMillisFromNow(WIFI_RECONNECT_WAIT + WIFI_AP_OFF_TIMER_DURATION);
     }
   }
 
@@ -225,9 +232,12 @@ void AttemptWiFiConnect() {
     RTC.clearLastWiFi(); // Force slow connect
     WiFiEventData.wifi_connect_attempt = 0;
     WiFiEventData.wifiSetupConnect     = false;
+    if (WiFiEventData.timerAPoff.isSet()) {
+      WiFiEventData.timerAPoff.setMillisFromNow(WIFI_RECONNECT_WAIT + WIFI_AP_OFF_TIMER_DURATION);
+    }
   }
 
-  if (WiFi_AP_Candidates.getNext()) {
+  if (WiFi_AP_Candidates.getNext(WiFiScanAllowed())) {
     const WiFi_AP_Candidate& candidate = WiFi_AP_Candidates.getCurrent();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -313,8 +323,10 @@ bool checkAndResetWiFi() {
   switch(status) {
     case STATION_GOT_IP:
       if (WiFi.RSSI() < 0) {
-        // This is a valid status, no need to reset
-        return false;
+        //if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
+          // This is a valid status, no need to reset
+          return false;
+        //}
       }
       break;
     case STATION_NO_AP_FOUND:
@@ -329,33 +341,29 @@ bool checkAndResetWiFi() {
       }
       break;
   }
+  #endif
+  #ifdef ESP32
+  if (WiFi.isConnected()) {
+    //if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
+      return false;
+    //}
+  }
+  if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+    return false;
+  }
+  #endif
   String log = F("WiFi : WiFiConnected() out of sync: ");
   log += ESPeasyWifiStatusToString();
   log += F(" RSSI: ");
   log += String(WiFi.RSSI());
+  #ifdef ESP8266
   log += F(" status: ");
   log += SDKwifiStatusToString(status);
+  #endif
+
   // Call for reset first, to make sure a syslog call will not try to send.
   resetWiFi();
   addLog(LOG_LEVEL_INFO, log);
-
-  #endif
-  #ifdef ESP32
-  if (WiFi.isConnected()) {
-    return false;
-  } else {
-    if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
-      return false;
-    }
-    String log = F("WiFi : WiFiConnected() out of sync: ");
-    log += ESPeasyWifiStatusToString();
-    log += F(" RSSI: ");
-    log += String(WiFi.RSSI());
-    // Call for reset first, to make sure a syslog call will not try to send.
-    resetWiFi();
-    addLog(LOG_LEVEL_INFO, log);
-  }
-  #endif
   return true;
 }
 
@@ -621,32 +629,85 @@ void WifiDisconnect()
 // ********************************************************************************
 // Scan WiFi network
 // ********************************************************************************
-void WifiScan(bool async, uint8_t channel) {
-  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING) { 
-    // Scan still busy
+void WiFiScanPeriodical() {
+  if (!Settings.PeriodicalScanWiFi()) {
     return;
   }
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log = F("WiFi : Start network scan");
-    if (channel != 0) {
-      log += F(" ch. ");
-      log += channel;
-    }
-    addLog(LOG_LEVEL_INFO, log);
+  if (active_network_medium == NetworkMedium_t::Ethernet) {
+    return;
   }
-  
+
+  const bool async = true;
+  WifiScan(async);
+}
+
+bool WiFiScanAllowed() {
+  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING) { 
+    // Scan still busy
+    return false;
+  }
+  if (!WiFiEventData.processedScanDone) { 
+    processScanDone(); 
+  }
+  if (WiFiEventData.unprocessedWifiEvents()) {
+    return false;
+  }
+  /*
+  if (!wifiAPmodeActivelyUsed() && !NetworkConnected()) {
+    return true;
+  }
+  */
+  if (WiFi_AP_Candidates.scanComplete() <= 0) {
+    return true;
+  }
+  if (WiFiEventData.lastScanMoment.isSet()) {
+    const LongTermTimer::Duration scanInterval = wifiAPmodeActivelyUsed() ? WIFI_SCAN_INTERVAL_AP_USED : WIFI_SCAN_INTERVAL_MINIMAL;
+    if (WiFiEventData.lastScanMoment.millisPassedSince() < scanInterval) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+void WifiScan(bool async, uint8_t channel) {
+  if (!WiFiScanAllowed()) {
+    return;
+  }
+  WiFiEventData.lastScanMoment.setNow();
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    if (channel == 0) {
+      addLog(LOG_LEVEL_INFO, F("WiFi : Start network scan all channels"));
+    } else {
+      String log;
+      log = F("WiFi : Start network scan channel ");
+      log += channel;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  }
   bool show_hidden         = true;
   WiFiEventData.processedScanDone = false;
   WiFiEventData.lastGetScanMoment.setNow();
-  #ifdef ESP8266
-  WiFi.scanNetworks(async, show_hidden, channel);
-  #endif
-  #ifdef ESP32
-  const bool passive = false;
-  const uint32_t max_ms_per_chan = 300;
-  WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan, channel);
-  #endif
+  WiFiEventData.lastScanChannel = channel;
+
+  unsigned int nrScans = 1 + (async ? 0 : Settings.NumberExtraWiFiScans);
+  while (nrScans > 0) {
+    if (!async) {
+      WiFi_AP_Candidates.begin_sync_scan();
+    }
+    --nrScans;
+    #ifdef ESP8266
+    WiFi.scanNetworks(async, show_hidden, channel);
+    #endif
+    #ifdef ESP32
+    const bool passive = false;
+    const uint32_t max_ms_per_chan = 300;
+    WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
+    #endif
+    if (!async) {
+      processScanDone();
+    }
+  }
 }
 
 // ********************************************************************************
@@ -656,8 +717,13 @@ void WifiScan()
 {
   // Direct Serial is allowed here, since this function will only be called from serial input.
   serialPrintln(F("WIFI : SSID Scan start"));
-  WifiScan(false);
-  const int8_t scanCompleteStatus = WiFi.scanComplete();
+  if (WiFi_AP_Candidates.scanComplete() <= 0) {
+    WiFiMode_t cur_wifimode = WiFi.getMode();
+    WifiScan(false);
+    setWifiMode(cur_wifimode);
+  }
+
+  const int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
   if (scanCompleteStatus <= 0) {
     serialPrintln(F("WIFI : No networks found"));
   }
@@ -667,13 +733,16 @@ void WifiScan()
     serialPrint(String(scanCompleteStatus));
     serialPrintln(F(" networks found"));
 
-    for (int i = 0; i < scanCompleteStatus; ++i)
+    int i = 0;
+
+    for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
     {
+      ++i;
       // Print SSID and RSSI for each network found
       serialPrint(F("WIFI : "));
-      serialPrint(String(i + 1));
+      serialPrint(String(i));
       serialPrint(": ");
-      serialPrintln(formatScanResult(i, " "));
+      serialPrintln(it->toString());
       delay(10);
     }
   }
@@ -718,7 +787,10 @@ void setAP(bool enable) {
   switch (wifimode) {
     case WIFI_OFF:
 
-      if (enable) { setWifiMode(WIFI_AP); }
+      if (enable) { 
+        WifiScan(false);
+        setWifiMode(WIFI_AP); 
+      }
       break;
     case WIFI_STA:
 
@@ -779,7 +851,7 @@ void setAPinternal(bool enable)
       }
     }
     #endif // ifdef ESP32
-    WiFiEventData.timerAPoff.setNow();
+    WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
   } else {
     #ifdef FEATURE_DNS_SERVER
     if (dnsServerActive) {

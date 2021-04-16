@@ -3,6 +3,7 @@
 // FIXME TD-er: Rename this to ESPEasyNetwork_ProcessEvent
 
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_fdwdecl.h"
 
 #include "../DataStructs/NodesHandler.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -20,6 +21,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/RTC.h"
+#include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Services.h"
 #include "../Globals/WiFi_AP_Candidates.h"
@@ -250,6 +252,34 @@ void processConnect() {
   WiFiEventData.setWiFiConnected();
   ++WiFiEventData.wifi_reconnects;
 
+  if (WiFi_AP_Candidates.getCurrent().isEmergencyFallback) {
+    bool mustResetCredentials = false;
+    #ifdef CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS
+    mustResetCredentials = CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS;
+    #endif
+    bool mustStartAP = false;
+    #ifdef CUSTOM_EMERGENCY_FALLBACK_START_AP
+    mustStartAP = CUSTOM_EMERGENCY_FALLBACK_START_AP;
+    #endif
+    if (mustStartAP) {
+      int allowedUptimeMinutes = 10;
+      #ifdef CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME
+      allowedUptimeMinutes = CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME;
+      #endif
+      if (getUptimeMinutes() < allowedUptimeMinutes) {
+        WiFiEventData.timerAPstart.setNow();
+      }
+    }
+    if (mustResetCredentials && !WiFiEventData.performedClearWiFiCredentials) {
+      WiFiEventData.performedClearWiFiCredentials = true;
+      SecuritySettings.clearWiFiCredentials();
+      SaveSecuritySettings();
+      WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_AUTH_EXPIRE);
+      WiFi_AP_Candidates.force_reload();
+    }
+  }
+
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const LongTermTimer::Duration connect_duration = WiFiEventData.last_wifi_connect_attempt_moment.timeDiff(WiFiEventData.lastConnectMoment);
     String log = F("WIFI : Connected! AP: ");
@@ -428,7 +458,7 @@ void processConnectAPmode() {
   if (WiFiEventData.processedConnectAPmode) { return; }
   WiFiEventData.processedConnectAPmode = true;
   // Extend timer to switch off AP.
-  WiFiEventData.timerAPoff.setNow();
+  WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
@@ -455,7 +485,7 @@ void processDisableAPmode() {
 
   if (WifiIsAP(WiFi.getMode())) {
     // disable AP after timeout and no clients connected.
-    if (WiFiEventData.timerAPoff.timeoutReached(WIFI_AP_OFF_TIMER_DURATION) && !wifiAPmodeActivelyUsed()) {
+    if (WiFiEventData.timerAPoff.timeReached() && !wifiAPmodeActivelyUsed()) {
       setAP(false);
     }
   }
@@ -519,13 +549,6 @@ void processScanDone() {
     }
   }
   #endif
-
-  const WiFi_AP_Candidate bestCandidate = WiFi_AP_Candidates.getBestScanResult();
-  if (bestCandidate.usable() && loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WiFi : Selected: ");
-    log += bestCandidate.toString();
-    addLog(LOG_LEVEL_INFO, log);
-  }
 }
 
 

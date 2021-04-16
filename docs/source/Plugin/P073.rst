@@ -147,7 +147,7 @@ Switching on all horizontal segments fot a digit can be done by the command ``7d
 .. Supported hardware
 .. ------------------
 
-.. |P073_usedby|
+.. .. |P073_usedby|
 
 Change log
 ----------

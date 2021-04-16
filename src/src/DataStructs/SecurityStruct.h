@@ -9,11 +9,25 @@
 \*********************************************************************************************/
 struct SecurityStruct
 {
+  enum class WiFiCredentialsSlot {
+    first,
+    second
+  };
+
+
   SecurityStruct();
 
   void validate();
 
   bool peerMacSet(byte peer_index) const;
+
+  void clearWiFiCredentials();
+
+  void clearWiFiCredentials(WiFiCredentialsSlot slot);
+
+  bool hasWiFiCredentials() const;
+
+  bool hasWiFiCredentials(WiFiCredentialsSlot slot) const;
 
   char          WifiSSID[32];
   char          WifiKey[64];

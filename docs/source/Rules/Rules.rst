@@ -1139,6 +1139,14 @@ Just create Generic - Dummy Device and variables inside it.
 
  TaskValueSet,TASKnr,VARnr,Value
 
+Alternatively, TASKname and/or VARname can be used instead of TASKnr and VARnr:
+
+ .. code-block:: html
+
+ TaskValueSet,TASKname,VARname,Value
+ TaskValueSet,TASKnr,VARname,Value
+ TaskValueSet,TASKname,VARnr,Value
+
 This example for two switches that toggle one device (LED and Relay on GPIO 13 and 16).
 
 
@@ -1159,6 +1167,27 @@ This example for two switches that toggle one device (LED and Relay on GPIO 13 a
     TaskValueSet 12,1,1
   else
     TaskValueSet 12,1,0
+  endif
+  gpio,16,[dummy#var1]
+  gpio,13,[dummy#var1]
+ endon
+
+ // Alternative for above example using TASKname/VARname
+ on sw1#state do
+  if [dummy#var1]=0
+    TaskValueSet dummy,var1,0
+  else
+    TaskValueSet dummy,var1,1
+  endif
+  gpio,16,[dummy#var1]
+  gpio,13,[dummy#var1]
+ endon
+
+ on sw1a#state do
+  if [dummy#var1]=0
+    TaskValueSet dummy,var1,1
+  else
+    TaskValueSet dummy,var1,0
   endif
   gpio,16,[dummy#var1]
   gpio,13,[dummy#var1]

@@ -49,6 +49,8 @@ boolean handle_custom(String path) {
     return false;    // unknown file that does not exist...
   }
 
+  if (!isLoggedIn()) { return false; }
+
   if (dashboardPage) // for the dashboard page, create a default unit dropdown selector
   {
     // handle page redirects to other unit's as requested by the unit dropdown selector
