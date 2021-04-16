@@ -253,13 +253,15 @@ void processConnect() {
   ++WiFiEventData.wifi_reconnects;
 
   if (WiFi_AP_Candidates.getCurrent().isEmergencyFallback) {
-    bool mustResetCredentials = false;
     #ifdef CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS
-    mustResetCredentials = CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS;
+    const bool mustResetCredentials = CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS;
+    #else
+    const bool mustResetCredentials = false;
     #endif
-    bool mustStartAP = false;
     #ifdef CUSTOM_EMERGENCY_FALLBACK_START_AP
-    mustStartAP = CUSTOM_EMERGENCY_FALLBACK_START_AP;
+    const boolmustStartAP = CUSTOM_EMERGENCY_FALLBACK_START_AP;
+    #else
+    const bool mustStartAP = false;
     #endif
     if (mustStartAP) {
       int allowedUptimeMinutes = 10;

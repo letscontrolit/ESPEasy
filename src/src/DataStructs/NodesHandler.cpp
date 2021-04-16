@@ -1,5 +1,6 @@
 #include "NodesHandler.h"
 
+#include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_fdwdecl.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
