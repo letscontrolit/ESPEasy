@@ -22,6 +22,8 @@ struct LabelType {
     WIFI_CUR_TX_PWR,     // Unit dBm of current WiFi TX power.
     WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
     WIFI_SEND_AT_MAX_TX_PWR,
+    WIFI_NR_EXTRA_SCANS,
+    WIFI_PERIODICAL_SCAN,
 
     FREE_MEM,            // 9876
     FREE_STACK,          // 3456
@@ -77,6 +79,8 @@ struct LabelType {
     LAST_DISCONNECT_REASON,  // 200
     LAST_DISC_REASON_STR,    // Beacon timeout
     NUMBER_RECONNECTS,       // 5
+    WIFI_STORED_SSID1,
+    WIFI_STORED_SSID2,
 
     FORCE_WIFI_BG,
     RESTART_WIFI_LOST_CONN,

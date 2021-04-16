@@ -211,7 +211,7 @@ float P026_get_value(int type)
   {
     case 0:
     {
-      value = (wdcounter / 2);
+      value = getUptimeMinutes();
       break;
     }
     case 1:
