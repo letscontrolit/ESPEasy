@@ -193,7 +193,7 @@ void handle_advanced() {
   addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif // if defined(ESP32)
 
-  addFormCheckBox(F("JSON bool output with quotes"), F("json_bool_with_quotes"), Settings.JSONBoolWithQuotes());
+  addFormCheckBox(F("JSON bool output without quotes"), F("json_bool_with_quotes"), Settings.JSONBoolWithQuotes());
 
   #ifdef USES_SSDP
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);

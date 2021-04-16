@@ -520,7 +520,7 @@ void handle_buildinfo() {
 void stream_to_json_value(const String& value) {
   NumericalType detectedType;
   bool isNum  = isNumerical(value, detectedType);
-  bool isBool = (!Settings.JSONBoolWithQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
+  bool isBool = (Settings.JSONBoolWithQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
   if (((value.length() == 0) || !isNum || mustConsiderAsString(detectedType)) && !isBool) {
     // Either empty, not a numerical or a BIN/HEX notation.

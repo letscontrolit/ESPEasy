@@ -388,7 +388,7 @@ String wrapIfContains(const String& value, char contains, char wrap) {
 \*********************************************************************************************/
 String to_json_object_value(const String& object, const String& value) {
   String result;
-  bool   isBool = (!Settings.JSONBoolWithQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
+  bool   isBool = (Settings.JSONBoolWithQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
   result.reserve(object.length() + value.length() + 6);
   wrap_String(object, F("\""), result);

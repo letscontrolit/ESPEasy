@@ -160,12 +160,12 @@ void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::JSONBoolWithQuotes() const {
-  return bitRead(VariousBits1, 15);
+  return bitRead(VariousBits1, 16);
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::JSONBoolWithQuotes(bool value) {
-  bitWrite(VariousBits1, 15, value);
+  bitWrite(VariousBits1, 16, value);
 }
 
 template<unsigned int N_TASKS>

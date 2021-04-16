@@ -216,7 +216,7 @@ void ResetFactory()
    */
   Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
 
-  Settings.JSONBoolWithQuotes(DEFAULT_JSON_USE_QUOTES);
+  Settings.JSONBoolWithQuotes(DEFAULT_JSON_BOOL_USE_NO_QUOTES);
 
 #ifdef PLUGIN_DESCR
   strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));

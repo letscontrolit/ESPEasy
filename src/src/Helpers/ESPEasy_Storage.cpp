@@ -278,10 +278,6 @@ String BuildFixes()
     Settings.WiFi_sensitivity_margin = 3; // Margin in dBm on top of sensitivity.
   }
 
-  if (Settings.Build < 20113) {
-    Settings.JSONBoolWithQuotes(true); // Set JSON output to backward compatible
-  }
-
   Settings.Build = BUILD;
   return SaveSettings();
 }

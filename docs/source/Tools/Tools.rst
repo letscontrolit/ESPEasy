@@ -190,10 +190,10 @@ WD I2C Address
 The Watchdog timer can be accessed via I2C.
 What can be read/set/changed must still be documented.
 
-JSON bool output with quotes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+JSON bool output without quotes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-ESPEasy JSON output has always used quoted bool values, ``"true"`` and ``"false"``, that are in fact string values. According to JSON standards, bool values should be ``true`` and ``false``, so this setting selects what type of bool values will be emitted. As existing functionality is to be left unaltered/backward compatible as much as possible, by default this setting is enabled.
+ESPEasy JSON output has always used quoted bool values, ``"true"`` and ``"false"``, that are in fact string values. According to JSON standards, bool values should be ``true`` and ``false``, so this setting selects what type of bool values will be emitted. As existing functionality is to be left unaltered/backward compatible as much as possible, by default this setting is unchecked.
 
 Use SSDP
 ^^^^^^^^

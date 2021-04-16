@@ -207,8 +207,8 @@
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
   #endif
 #endif
-#ifndef DEFAULT_JSON_USE_QUOTES
-#define DEFAULT_JSON_USE_QUOTES          true
+#ifndef DEFAULT_JSON_BOOL_USE_NO_QUOTES
+#define DEFAULT_JSON_BOOL_USE_NO_QUOTES  false
 #endif
 
 
