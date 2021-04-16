@@ -1540,5 +1540,12 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifdef WEBSERVER_SETUP
+  #ifndef FEATURE_DNS_SERVER
+    #define FEATURE_DNS_SERVER
+  #endif
+#endif
+
+
 
 #endif // DEFINE_PLUGIN_SETS_H
