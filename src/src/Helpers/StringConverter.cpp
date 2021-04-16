@@ -78,11 +78,16 @@ bool string2float(const String& string, float& floatvalue) {
 /********************************************************************************************\
    Convert a char string to IP byte array
  \*********************************************************************************************/
-boolean str2ip(const String& string, byte *IP) {
+bool isIP(const String& string) {
+  IPAddress tmpip;
+  return (tmpip.fromString(string));
+}
+
+bool str2ip(const String& string, byte *IP) {
   return str2ip(string.c_str(), IP);
 }
 
-boolean str2ip(const char *string, byte *IP)
+bool str2ip(const char *string, byte *IP)
 {
   IPAddress tmpip; // Default constructor => set to 0.0.0.0
 
@@ -645,7 +650,7 @@ String URLEncode(const char *msg)
   return encodedMsg;
 }
 
-void repl(const String& key, const String& val, String& s, boolean useURLencode)
+void repl(const String& key, const String& val, String& s, bool useURLencode)
 {
   if (useURLencode) {
     // URLEncode does take resources, so check first if needed.
@@ -657,7 +662,7 @@ void repl(const String& key, const String& val, String& s, boolean useURLencode)
 }
 
 #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
-void parseSpecialCharacters(String& s, boolean useURLencode)
+void parseSpecialCharacters(String& s, bool useURLencode)
 {
   bool no_accolades   = s.indexOf('{') == -1 || s.indexOf('}') == -1;
   bool no_html_entity = s.indexOf('&') == -1 || s.indexOf(';') == -1;
@@ -741,7 +746,7 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
 /********************************************************************************************\
    replace other system variables like %sysname%, %systime%, %ip%
  \*********************************************************************************************/
-void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
+void parseControllerVariables(String& s, struct EventStruct *event, bool useURLencode) {
   s = parseTemplate(s, useURLencode);
   parseEventVariables(s, event, useURLencode);
 }
@@ -749,7 +754,7 @@ void parseControllerVariables(String& s, struct EventStruct *event, boolean useU
 void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
                                    byte                taskValueIndex,
-                                   boolean             useURLencode) {
+                                   bool             useURLencode) {
   if (validTaskIndex(event->TaskIndex)) {
     LoadTaskSettings(event->TaskIndex);
     repl(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[taskValueIndex], s, useURLencode);
@@ -762,7 +767,7 @@ void parseSingleControllerVariable(String            & s,
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T, S) \
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
-void parseSystemVariables(String& s, boolean useURLencode)
+void parseSystemVariables(String& s, bool useURLencode)
 {
   #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   parseSpecialCharacters(s, useURLencode);
@@ -771,7 +776,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SystemVariables::parseSystemVariables(s, useURLencode);
 }
 
-void parseEventVariables(String& s, struct EventStruct *event, boolean useURLencode)
+void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode)
 {
   repl(F("%id%"), String(event->idx), s, useURLencode);
 
@@ -868,7 +873,7 @@ bool getConvertArgumentString(const String& marker, const String& s, String& arg
 
 // Parse conversions marked with "%conv_marker%(float)"
 // Must be called last, since all sensor values must be converted, processed, etc.
-void parseStandardConversions(String& s, boolean useURLencode) {
+void parseStandardConversions(String& s, bool useURLencode) {
   if (s.indexOf(F("%c_")) == -1) {
     return; // Nothing to replace
   }
