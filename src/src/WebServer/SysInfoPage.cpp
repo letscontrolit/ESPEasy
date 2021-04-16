@@ -32,6 +32,11 @@
 
 #include "../Static/WebStaticData.h"
 
+#ifdef USES_MQTT
+# include "../Globals/MQTT.h"
+# include "../Helpers/PeriodicalActions.h" // For finding enabled MQTT controller
+#endif
+
 #ifdef ESP32
 # include <esp_partition.h>
 #endif // ifdef ESP32
@@ -118,6 +123,8 @@ void handle_sysinfo_json() {
   json_prop(F("connected"),     getValue(LabelType::CONNECTED));
   json_prop(F("ldr"),           getValue(LabelType::LAST_DISC_REASON_STR));
   json_number(F("reconnects"),  getValue(LabelType::NUMBER_RECONNECTS));
+  json_prop(F("ssid1"),         getValue(LabelType::WIFI_STORED_SSID1));
+  json_prop(F("ssid2"),         getValue(LabelType::WIFI_STORED_SSID2));
   json_close();
 
 # ifdef HAS_ETHERNET
@@ -258,6 +265,8 @@ void handle_sysinfo() {
   handle_sysinfo_Firmware();
 
   handle_sysinfo_SystemStatus();
+
+  handle_sysinfo_NetworkServices();
 
   handle_sysinfo_ESP_Board();
 
@@ -451,10 +460,13 @@ void handle_sysinfo_Network() {
   {
     addRowLabel(LabelType::LAST_DISCONNECT_REASON);
     addHtml(getValue(LabelType::LAST_DISC_REASON_STR));
+    addRowLabelValue(LabelType::WIFI_STORED_SSID1);
+    addRowLabelValue(LabelType::WIFI_STORED_SSID2);
   }
 
   addRowLabelValue(LabelType::STA_MAC);
   addRowLabelValue(LabelType::AP_MAC);
+  html_TR();
 }
 
 void handle_sysinfo_WiFiSettings() {
@@ -472,6 +484,8 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::WIFI_CUR_TX_PWR);
   addRowLabelValue(LabelType::WIFI_SENS_MARGIN);
   addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
+  addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
+  addRowLabelValue(LabelType::WIFI_PERIODICAL_SCAN);
 }
 
 void handle_sysinfo_Firmware() {
@@ -505,6 +519,23 @@ void handle_sysinfo_SystemStatus() {
     # ifdef FEATURE_SD
   addRowLabelValue(LabelType::SD_LOG_LEVEL);
     # endif // ifdef FEATURE_SD
+}
+
+void handle_sysinfo_NetworkServices() {
+  addTableSeparator(F("Network Services"), 2, 3);
+
+  addRowLabel(F("Network Connected"));
+  addEnabled(NetworkConnected());
+
+  addRowLabel(F("NTP Initialized"));
+  addEnabled(statusNTPInitialized);
+
+  #ifdef USES_MQTT
+  if (validControllerIndex(firstEnabledMQTT_ControllerIndex())) {
+    addRowLabel(F("MQTT Client Connected"));
+    addEnabled(MQTTclient_connected);
+  }
+  #endif
 }
 
 void handle_sysinfo_ESP_Board() {

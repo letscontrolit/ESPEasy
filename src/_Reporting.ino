@@ -34,7 +34,7 @@ void ReportStatus()
 
   root[F("chipId")]  = ESP.getChipId();
   root[F("flashId")] = ESP.getFlashChipId();
-  root[F("uptime")]  = wdcounter / 2;
+  root[F("uptime")]  = getUptimeMinutes();
 
 
   String body;
