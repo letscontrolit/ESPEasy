@@ -374,32 +374,20 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan()
   }
 }
 
-void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
+void ESPEasy_now_handler_t::addPeerFromWiFiScan(const WiFi_AP_Candidate& peer)
 {
-  int8_t scanCompleteStatus = WiFi.scanComplete();
-
-  switch (scanCompleteStatus) {
-    case 0:  // Nothing (yet) found
-      return;
-    case -1: // WIFI_SCAN_RUNNING
-      return;
-    case -2: // WIFI_SCAN_FAILED
-      return;
-  }
-
-  if (scanIndex > scanCompleteStatus) { return; }
-  MAC_address peer_mac = WiFi.BSSID(scanIndex);
-  auto nodeInfo        = Nodes.getNodeByMac(peer_mac);
+  MAC_address peer_mac(peer.bssid);
+  auto nodeInfo = Nodes.getNodeByMac(peer_mac);
 
   if (nodeInfo != nullptr) {
-    Nodes.setRSSI(peer_mac, WiFi.RSSI(scanIndex));
+    Nodes.setRSSI(peer_mac, peer.rssi);
     // Sometimes a scan on one channel may see a node on another channel
     // So don't set the channel of known node based on the WiFi scan
     //nodeInfo->channel = WiFi.channel(scanIndex);
   } else {
     NodeStruct tmpNodeInfo;
-    tmpNodeInfo.setRSSI(WiFi.RSSI(scanIndex));
-    tmpNodeInfo.channel = WiFi.channel(scanIndex);
+    tmpNodeInfo.setRSSI(peer.rssi);
+    tmpNodeInfo.channel = peer.channel;
     peer_mac.get(tmpNodeInfo.ap_mac);
 
     if (tmpNodeInfo.markedAsPriorityPeer()) {
@@ -417,7 +405,7 @@ void ESPEasy_now_handler_t::addPeerFromWiFiScan(uint8_t scanIndex)
         }
 
         // Must trigger a discovery request from the node.
-        sendDiscoveryAnnounce(peer_mac, WiFi.channel(scanIndex));
+        sendDiscoveryAnnounce(peer_mac, peer.channel);
       }
     }
   }
