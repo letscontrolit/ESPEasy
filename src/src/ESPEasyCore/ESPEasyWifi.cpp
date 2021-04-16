@@ -513,10 +513,12 @@ void SetWiFiTXpower(float dBm, float rssi) {
   delay(0);
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    if (WiFiEventData.wifi_TX_pwr != maxTXpwr) {
-      static float last_log = -1;
-      if (WiFiEventData.wifi_TX_pwr != last_log) {
-        last_log = WiFiEventData.wifi_TX_pwr;
+    const int TX_pwr_int = WiFiEventData.wifi_TX_pwr * 4;
+    const int maxTXpwr_int = maxTXpwr * 4;
+    if (TX_pwr_int != maxTXpwr_int) {
+      static int last_log = -1;
+      if (TX_pwr_int != last_log) {
+        last_log = TX_pwr_int;
         String log = F("WiFi : Set TX power to ");
         log += String(dBm, 0);
         log += F("dBm");
