@@ -246,7 +246,7 @@ void processConnect() {
     const bool mustResetCredentials = false;
     #endif
     #ifdef CUSTOM_EMERGENCY_FALLBACK_START_AP
-    const boolmustStartAP = CUSTOM_EMERGENCY_FALLBACK_START_AP;
+    const bool mustStartAP = CUSTOM_EMERGENCY_FALLBACK_START_AP;
     #else
     const bool mustStartAP = false;
     #endif
