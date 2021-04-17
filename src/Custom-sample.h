@@ -19,8 +19,6 @@
     Here are some examples:
  */
 
-#warning "**** Using Settings from Custom.h File ***"
-
 #ifdef BUILD_GIT
 # undef BUILD_GIT
 #endif // ifdef BUILD_GIT
@@ -79,7 +77,7 @@
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
 #define DEFAULT_PUB         "/%sysname%/%tskname%/%valname%"                // Enter your pub
 #define DEFAULT_SUB         "/%sysname%/#"                                  // Enter your sub
-#define DEFAULT_SERVER      "192.168.39.104"                                // Enter your Server IP address
+#define DEFAULT_SERVER      "192.168.1.104"                                // Enter your Server IP address
 #define DEFAULT_SERVER_HOST ""                                              // Server hostname
 #define DEFAULT_SERVER_USEDNS false                                         // true: Use hostname.  false: use IP
 #define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
@@ -113,7 +111,7 @@
 #define DEFAULT_USE_RULES                       true              // (true|false) Enable Rules?
 #define DEFAULT_RULES_OLDENGINE                 true
 
-#define DEFAULT_MQTT_RETAIN                     false             // (true|false) Retain MQTT messages?
+#define DEFAULT_MQTT_RETAIN                     true              // (true|false) Retain MQTT messages?
 #define DEFAULT_MQTT_DELAY                      100               // Time in milliseconds to retain MQTT messages
 #define DEFAULT_MQTT_LWT_TOPIC                  ""                // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected"       // Default lwt message
@@ -129,9 +127,9 @@
 #define DEFAULT_LONGITUDE                       0.0f              // Default Longitude
 
 #define DEFAULT_SYSLOG_IP                       "192.168.1.104"  // Syslog IP Address
-#define DEFAULT_SYSLOG_LEVEL                    LOG_LEVEL_DEBUG   // Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_DEBUG   // Serial Log Level
-#define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_DEBUG   // Web Log Level
+#define DEFAULT_SYSLOG_LEVEL                    LOG_LEVEL_INFO    // Syslog Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level
+#define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_INFO    // Web Log Level
 #define DEFAULT_SD_LOG_LEVEL                    0                 // SD Card Log Level
 #define DEFAULT_USE_SD_LOG                      false             // (true|false) Enable Logging to the SD card
 
