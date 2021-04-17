@@ -26,7 +26,6 @@
 
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
-#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"

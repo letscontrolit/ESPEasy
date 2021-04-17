@@ -109,6 +109,7 @@ void ResetFactory()
     str2ip((char *)DEFAULT_GW,     Settings.Gateway);
     str2ip((char *)DEFAULT_SUBNET, Settings.Subnet);
     #endif // if DEFAULT_USE_STATIC_IP
+    Settings.IncludeHiddenSSID(DEFAULT_WIFI_INCLUDE_HIDDEN_SSID);
   }
 
   Settings.clearNotifications();
