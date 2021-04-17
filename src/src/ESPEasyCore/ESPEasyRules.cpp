@@ -457,6 +457,9 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
   }
 
   if (cmd_s_lower.startsWith(F("bit"))) {
+    #define bitSetULL(value, bit) ((value) |= (1ULL << (bit)))
+    #define bitClearULL(value, bit) ((value) &= ~(1ULL << (bit)))
+    #define bitWriteULL(value, bit, bitvalue) (bitvalue ? bitSetULL(value, bit) : bitClearULL(value, bit))
     uint32_t bitnr = 0;
     uint64_t iarg2 = 0;
 
@@ -470,11 +473,11 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
     } else if (cmd_s_lower.equals(F("bitset"))) {
       // Syntax like {bitset:0:122} to set least significant bit of the given nr '122' to '1' => '123'
       result = iarg2;
-      bitSet(result, bitnr);
+      bitSetULL(result, bitnr);
     } else if (cmd_s_lower.equals(F("bitclear"))) {
       // Syntax like {bitclear:0:123} to set least significant bit of the given nr '123' to '0' => '122'
       result = iarg2;
-      bitClear(result, bitnr);
+      bitClearULL(result, bitnr);
     } else if (cmd_s_lower.equals(F("bitwrite"))) {
       uint32_t iarg3 = 0;
 
@@ -482,7 +485,7 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
       if (validUIntFromString(arg3, iarg3)) {
         const int bitvalue = (iarg3 & 1); // Only use the last bit of the given parameter
         result = iarg2;
-        bitWrite(result, bitnr, bitvalue);
+        bitWriteULL(result, bitnr, bitvalue);
       } else {
         // Need 3 parameters, but 3rd one is not a valid uint
         return false;

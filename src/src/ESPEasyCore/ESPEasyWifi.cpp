@@ -16,6 +16,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
@@ -366,6 +367,7 @@ void resetWiFi() {
     // Don't reset WiFi too often
     return;
   }
+  FeedSW_watchdog();
   WiFiEventData.clearAll();
   WifiDisconnect();
 
@@ -513,10 +515,12 @@ void SetWiFiTXpower(float dBm, float rssi) {
   delay(0);
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    if (WiFiEventData.wifi_TX_pwr != maxTXpwr) {
-      static float last_log = -1;
-      if (WiFiEventData.wifi_TX_pwr != last_log) {
-        last_log = WiFiEventData.wifi_TX_pwr;
+    const int TX_pwr_int = WiFiEventData.wifi_TX_pwr * 4;
+    const int maxTXpwr_int = maxTXpwr * 4;
+    if (TX_pwr_int != maxTXpwr_int) {
+      static int last_log = -1;
+      if (TX_pwr_int != last_log) {
+        last_log = TX_pwr_int;
         String log = F("WiFi : Set TX power to ");
         log += String(dBm, 0);
         log += F("dBm");
@@ -671,6 +675,7 @@ void WifiScan(bool async, uint8_t channel) {
   while (nrScans > 0) {
     if (!async) {
       WiFi_AP_Candidates.begin_sync_scan();
+      FeedSW_watchdog();
     }
     --nrScans;
     #ifdef ESP8266
@@ -682,6 +687,7 @@ void WifiScan(bool async, uint8_t channel) {
     WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
     #endif
     if (!async) {
+      FeedSW_watchdog();
       processScanDone();
     }
   }
