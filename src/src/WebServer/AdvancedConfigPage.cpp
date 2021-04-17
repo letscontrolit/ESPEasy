@@ -94,7 +94,7 @@ void handle_advanced() {
     Settings.UseMaxTXpowerForSending(isFormItemChecked(getInternalLabel(LabelType::WIFI_SEND_AT_MAX_TX_PWR)));
     Settings.NumberExtraWiFiScans = getFormItemInt(getInternalLabel(LabelType::WIFI_NR_EXTRA_SCANS));
     Settings.PeriodicalScanWiFi(isFormItemChecked(getInternalLabel(LabelType::WIFI_PERIODICAL_SCAN)));
-    Settings.JSONBoolWithQuotes(isFormItemChecked(F("json_bool_with_quotes")));
+    Settings.JSONBoolWithoutQuotes(isFormItemChecked(F("json_bool_with_quotes")));
 
     addHtmlError(SaveSettings());
 
@@ -195,7 +195,7 @@ void handle_advanced() {
   addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif // if defined(ESP32)
 
-  addFormCheckBox(F("JSON bool output without quotes"), F("json_bool_with_quotes"), Settings.JSONBoolWithQuotes());
+  addFormCheckBox(F("JSON bool output without quotes"), F("json_bool_with_quotes"), Settings.JSONBoolWithoutQuotes());
 
   #ifdef USES_SSDP
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
