@@ -42,6 +42,7 @@
 #define DEFAULT_KEY                          "" // Enter your network WPA key
 #define DEFAULT_SSID2                        ""                      // Enter your fallback network SSID
 #define DEFAULT_KEY2                         ""                      // Enter your fallback network WPA key
+#define DEFAULT_WIFI_INCLUDE_HIDDEN_SSID     false                   // Allow to connect to hidden SSID APs
 #define DEFAULT_USE_STATIC_IP                false                   // (true|false) enabled or disabled static IP
 #define DEFAULT_IP                           "192.168.0.50"          // Enter your IP address
 #define DEFAULT_DNS                          "192.168.1.1"           // Enter your DNS
