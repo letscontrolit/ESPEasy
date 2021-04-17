@@ -181,7 +181,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
 #ifdef CPLUGIN_014_V3
           // $stats/uptime	Device → Controller	Time elapsed in seconds since the boot of the device	Yes	Yes
-          CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex,"$stats/uptime",toString((wdcounter / 2)*60,0).c_str(),errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex,"$stats/uptime",toString(getUptimeMinutes()*60,0).c_str(),errorCounter);
 
           // $stats/signal	Device → Controller	Signal strength in %	Yes	No
           float RssI = WiFi.RSSI();

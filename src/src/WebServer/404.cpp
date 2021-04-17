@@ -17,14 +17,16 @@ void handleNotFound() {
   checkRAM(F("handleNotFound"));
   #endif
 
+  if (captivePortal()) { // If captive portal redirect instead of displaying the error page.
+    return;
+  }
+
   // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
  if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
   {
     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
    return;
   }
-
-  if (!isLoggedIn()) { return; }
 
 #ifdef WEBSERVER_RULES
   if (handle_rules_edit(web_server.uri())) { return; }
