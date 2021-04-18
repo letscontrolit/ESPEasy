@@ -49,7 +49,9 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
       case NetworkMedium_t::WIFI:
         WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
         WiFiEventData.timerAPstart.clear();
-        WifiDisconnect();
+        if (new_medium == NetworkMedium_t::Ethernet) {
+          WifiDisconnect();
+        }
         break;
       case NetworkMedium_t::ESPEasyNOW_only:
         WiFiEventData.clearAll();

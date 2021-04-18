@@ -378,6 +378,18 @@ const NodeStruct * NodesHandler::getThisNode() {
   return getNodeByMac(this_mac.mac);
 }
 
+uint8_t NodesHandler::getDistance() const {
+  // Perform extra check since _distance is only updated once every 30 seconds.
+  // And we don't want to tell other nodes we have distance 0 when we haven't.
+  if (isEndpoint()) return 0;
+  if (_distance == 0) {
+    // Outdated info, so return "we don't know"
+    return 255;
+  }
+  return _distance;
+}
+
+
 NodesMap::const_iterator NodesHandler::begin() const {
   return _nodes.begin();
 }

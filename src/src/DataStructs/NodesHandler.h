@@ -60,9 +60,7 @@ public:
 
   const NodeStruct * getThisNode();
 
-  uint8_t getDistance() const {
-    return _distance;
-  }
+  uint8_t getDistance() const;
 
   bool lastTimeValidDistanceExpired() const;
 
