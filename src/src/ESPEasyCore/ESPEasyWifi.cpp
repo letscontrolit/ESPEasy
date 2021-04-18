@@ -184,9 +184,9 @@ bool WiFiConnected() {
 
   if (wifiConnectTimeoutReached() && !WiFiEventData.wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
-    if (!wifiAPmodeActivelyUsed()) {
+    //if (!wifiAPmodeActivelyUsed()) {
       WiFiEventData.wifiConnectAttemptNeeded = true;
-    }
+    //}
     WiFiEventData.wifiConnectInProgress = false;
   }
   delay(1);
@@ -982,6 +982,7 @@ bool useStaticIP() {
 bool wifiConnectTimeoutReached() {
   // For the first attempt, do not wait to start connecting.
   if (WiFiEventData.wifi_connect_attempt == 0) { return true; }
+  if (!WiFiEventData.wifiConnectInProgress) { return true; }
 
   if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
     // No attempt made

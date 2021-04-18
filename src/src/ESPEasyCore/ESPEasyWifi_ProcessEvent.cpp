@@ -469,6 +469,11 @@ void processScanDone() {
       }
       return;
     case -1: // WIFI_SCAN_RUNNING
+      // FIXME TD-er: Set timeout...
+      if (WiFiEventData.lastGetScanMoment.timeoutReached(5000)) {
+        addLog(LOG_LEVEL_ERROR, F("WiFi : Scan Running Timeout"));
+        WiFiEventData.processedScanDone = true;
+      }
       return;
     case -2: // WIFI_SCAN_FAILED
       addLog(LOG_LEVEL_ERROR, F("WiFi : Scan failed"));
