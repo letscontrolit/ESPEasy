@@ -323,7 +323,7 @@ bool checkAndResetWiFi() {
 
   switch(status) {
     case STATION_GOT_IP:
-      if (WiFi.RSSI() < 0) {
+      if (WiFi.RSSI() < 0 && NetworkLocalIP().isSet()) {
         //if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
           // This is a valid status, no need to reset
           return false;
@@ -370,7 +370,7 @@ bool checkAndResetWiFi() {
 
 
 void resetWiFi() {
-  if (wifiAPmodeActivelyUsed()) return;
+  //if (wifiAPmodeActivelyUsed()) return;
   if (WiFiEventData.lastWiFiResetMoment.isSet() && !WiFiEventData.lastWiFiResetMoment.timeoutReached(1000)) {
     // Don't reset WiFi too often
     return;
@@ -646,10 +646,6 @@ void WiFiScanPeriodical() {
 }
 
 bool WiFiScanAllowed() {
-  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING) { 
-    // Scan still busy
-    return false;
-  }
   if (!WiFiEventData.processedScanDone) { 
     processScanDone(); 
   }

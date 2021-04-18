@@ -88,7 +88,7 @@ bool ESPEasy_now_handler_t::begin()
 {
   if (!Settings.UseESPEasyNow()) { return false; }
   if (use_EspEasy_now) { return true; }
-  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING) { return false;}
+  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING || !WiFiEventData.processedScanDone) { return false;}
   if (WiFiEventData.wifiConnectInProgress) {
     return false;
   }
@@ -196,6 +196,26 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
       end();
     }
   }
+
+  if (use_EspEasy_now) {
+    const bool traceroute_received_timeout = _last_traceroute_received != 0 && (timePassedSince(_last_traceroute_received) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
+    const bool traceroute_sent_timeout     = _last_traceroute_sent != 0 && (timePassedSince(_last_traceroute_sent) > ESPEASY_NOW_ACTIVITY_TIMEOUT);
+    if (traceroute_received_timeout || traceroute_sent_timeout) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log;
+        if (log.reserve(64)) {
+          log = F(ESPEASY_NOW_NAME);
+          log += F(": Inactive due to not receiving trace routes");
+          addLog(LOG_LEVEL_INFO, log);
+        }
+      }
+      end();
+      temp_disable_EspEasy_now_timer = millis() + 10000;
+      WifiScan(true);
+      return;
+    }
+  }
+
 
   if (temp_disable_EspEasy_now_timer != 0) {
     if (timeOutReached(temp_disable_EspEasy_now_timer)) {

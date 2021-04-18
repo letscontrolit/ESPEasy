@@ -229,15 +229,22 @@ void processDisconnect() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  // FIXME TD-er: Disconnect processing is done in several places.
+
+  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
   #ifdef USES_ESPEASY_NOW
-  //if (isESPEasy_now_only()) return;
-  //ESPEasy_now_handler.end();
+  if (use_EspEasy_now) {
+    mustRestartWiFi = true;
+  }
   #endif
 
-  if (Settings.WiFiRestart_connection_lost()) {
+  if (mustRestartWiFi) {
     initWiFi();
     delay(100);
+    if (WiFiEventData.unprocessedWifiEvents()) {
+      handle_unprocessedNetworkEvents();
+    }
+
+    WifiScan(false);
   }
   logConnectionStatus();
 }

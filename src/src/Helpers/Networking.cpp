@@ -400,11 +400,7 @@ void refreshNodeList()
   Nodes.refreshNodeList(max_age_allowed, max_age);
 
   #ifdef USES_ESPEASY_NOW
-  const uint8_t channel = Nodes.getESPEasyNOW_channel();
-
-  if (channel != 0) {
-    WifiScan(true, channel);
-  }
+  WifiScan(true, Nodes.getESPEasyNOW_channel());
   #endif
 
   if (max_age > (0.75 * max_age_allowed)) {

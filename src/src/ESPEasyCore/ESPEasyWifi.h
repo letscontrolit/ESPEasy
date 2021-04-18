@@ -14,11 +14,11 @@
 
 #include "../DataTypes/WiFiConnectionProtocol.h"
 
-#define WIFI_RECONNECT_WAIT                20000  // in milliSeconds
-#define WIFI_AP_OFF_TIMER_DURATION         300000  // in milliSeconds
+#define WIFI_RECONNECT_WAIT                 20000 // in milliSeconds
+#define WIFI_AP_OFF_TIMER_DURATION         300000 // in milliSeconds
 #define WIFI_CONNECTION_CONSIDERED_STABLE  300000 // in milliSeconds
 #define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
-#define WIFI_SCAN_INTERVAL_AP_USED         180000 // in milliSeconds
+#define WIFI_SCAN_INTERVAL_AP_USED         125000 // in milliSeconds
 #define WIFI_SCAN_INTERVAL_MINIMAL          60000 // in milliSeconds
 
 bool WiFiConnected();
