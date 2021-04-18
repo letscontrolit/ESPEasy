@@ -88,6 +88,7 @@ bool ESPEasy_now_handler_t::begin()
 {
   if (!Settings.UseESPEasyNow()) { return false; }
   if (use_EspEasy_now) { return true; }
+  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING) { return false;}
 
   _last_traceroute_sent = 0;
   _last_traceroute_received = 0;

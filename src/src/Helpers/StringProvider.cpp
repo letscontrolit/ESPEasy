@@ -350,7 +350,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_SPEED_STATE:        return EthLinkUp() ? getEthLinkSpeedState() : F("Link Down");
     case LabelType::ETH_CONNECTED:          return ETHConnected() ? F("CONNECTED") : F("DISCONNECTED"); // 0=disconnected, 1=connected
 #endif // ifdef HAS_ETHERNET
-    case LabelType::ETH_WIFI_MODE:          return active_network_medium == NetworkMedium_t::WIFI ? F("WIFI") : F("ETHERNET");
+    case LabelType::ETH_WIFI_MODE:          return toString(active_network_medium);
     case LabelType::SUNRISE:                return node_time.getSunriseTimeString(':');
     case LabelType::SUNSET:                 return node_time.getSunsetTimeString(':');
     case LabelType::ISNTP:                  return jsonBool(Settings.UseNTP);

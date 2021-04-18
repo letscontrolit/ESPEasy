@@ -188,9 +188,9 @@ bool WiFiConnected() {
 
   if (wifiConnectTimeoutReached() && !WiFiEventData.wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
-    if (!wifiAPmodeActivelyUsed()) {
+    //if (!wifiAPmodeActivelyUsed()) {
       WiFiEventData.wifiConnectAttemptNeeded = true;
-    }
+    //}
     WiFiEventData.wifiConnectInProgress = false;
   }
   delay(1);
@@ -1011,6 +1011,7 @@ bool useStaticIP() {
 bool wifiConnectTimeoutReached() {
   // For the first attempt, do not wait to start connecting.
   if (WiFiEventData.wifi_connect_attempt == 0) { return true; }
+  if (!WiFiEventData.wifiConnectInProgress) { return true; }
 
   if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
     // No attempt made
@@ -1023,6 +1024,7 @@ bool wifiConnectTimeoutReached() {
   }
 
   if (WifiIsAP(WiFi.getMode())) {
+    // FIXME TD-er: What to do here when using ESPEasy-NOW mode?
     // Initial setup of WiFi, may take much longer since accesspoint is still active.
     return WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(20000);
   }
