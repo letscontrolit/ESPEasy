@@ -25,7 +25,7 @@ void P20_sendevent(taskIndex_t task, int val)
     String RuleEvent;
     RuleEvent += getTaskDeviceName(task);
     RuleEvent += '#';
-    RuleEvent += "Client";
+    RuleEvent += F("Client");
     RuleEvent += '=';
     RuleEvent += val;
     eventQueue.add(RuleEvent);
