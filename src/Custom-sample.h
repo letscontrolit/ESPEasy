@@ -1,6 +1,8 @@
 #ifndef ESPEASY_CUSTOM_H
 #define ESPEASY_CUSTOM_H
 
+#include <Arduino.h>
+
 /*
     To modify the stock configuration without changing the EspEasy.ino file :
     1) rename this file to "Custom.h" (It is ignored by Git)
@@ -209,6 +211,14 @@
 #define WEBPAGE_TEMPLATE_AP_HEADER      "<body><header class='apheader'><h1>Welcome to ESP Easy Mega AP</h1>"
 #define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 */
+// Embed Custom CSS in Custom.h:
+/*
+#define WEBSERVER_EMBED_CUSTOM_CSS
+static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
+...
+,0};
+*/
+
 
 /*
  #######################################################################################################
