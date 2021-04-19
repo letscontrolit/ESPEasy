@@ -18,7 +18,7 @@ byte    Plugin_020_SerialProcessing = 0;
 WiFiServer *ser2netServer;
 WiFiClient  ser2netClient;
 
-void P20_sendevent(int val)
+void P20_sendevent(taskIndex_t task, int val)
 {
   if (Settings.UseRules)
   {
@@ -176,7 +176,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         {
           if (ser2netClient) { ser2netClient.stop(); }
           ser2netClient = ser2netServer->available();
-          P20_sendevent(1);
+          P20_sendevent(event->TaskIndex, 1);
           addLog(LOG_LEVEL_ERROR, F("Ser2N: Client connected!"));
         }
 
@@ -227,7 +227,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
             // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
             //ser2netClient = WiFiClient();
             ser2netClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-            P20_sendevent(0);
+            P20_sendevent(event->TaskIndex, 0);
             addLog(LOG_LEVEL_ERROR, F("Ser2N: Client disconnected!"));
           }
 
