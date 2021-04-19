@@ -68,10 +68,14 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
 
 bool isESPEasy_now_only() {
   #ifdef USES_EASPEASY_NOW
-    return active_network_medium == NetworkMedium_t::ESPEasyNOW_only;
-  #else
-    return false;
+    if (active_network_medium == NetworkMedium_t::ESPEasyNOW_only) {
+      return true;
+    }
+    if (use_EspEasy_now) {
+      return !NetworkConnected();
+    }
   #endif
+  return false;
 }
 
 

@@ -89,6 +89,8 @@
 # define ESPEASY_NOW_SEND_MSG_FAIL 68
 # define ESPEASY_NOW_SEND_PCKT     69
 # define ESPEASY_NOW_DEDUP_LOOP    70
+# define WIFI_SCAN_ASYNC           71
+# define WIFI_SCAN_SYNC            72
 
 
 

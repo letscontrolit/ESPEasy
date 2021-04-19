@@ -650,6 +650,9 @@ bool WiFiScanAllowed() {
     processScanDone(); 
   }
   if (WiFiEventData.unprocessedWifiEvents()) {
+    handle_unprocessedNetworkEvents();
+  }
+  if (WiFiEventData.unprocessedWifiEvents()) {
     return false;
   }
   /*
@@ -659,6 +662,14 @@ bool WiFiScanAllowed() {
   */
   if (WiFi_AP_Candidates.scanComplete() <= 0) {
     return true;
+  }
+  if (WiFi_AP_Candidates.getBestCandidate().usable()) {
+    return false;
+  }
+  if (WiFiEventData.lastDisconnectMoment.isSet() && WiFiEventData.lastDisconnectMoment.millisPassedSince() < WIFI_RECONNECT_WAIT) {
+    if (!NetworkConnected()) {
+      return true;
+    }
   }
   if (WiFiEventData.lastScanMoment.isSet()) {
     const LongTermTimer::Duration scanInterval = wifiAPmodeActivelyUsed() ? WIFI_SCAN_INTERVAL_AP_USED : WIFI_SCAN_INTERVAL_MINIMAL;
@@ -674,6 +685,7 @@ void WifiScan(bool async, uint8_t channel) {
   if (!WiFiScanAllowed()) {
     return;
   }
+  START_TIMER;
   WiFiEventData.lastScanMoment.setNow();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     if (channel == 0) {
@@ -710,6 +722,7 @@ void WifiScan(bool async, uint8_t channel) {
       processScanDone();
     }
   }
+  STOP_TIMER(async ? WIFI_SCAN_ASYNC : WIFI_SCAN_SYNC);
 }
 
 // ********************************************************************************

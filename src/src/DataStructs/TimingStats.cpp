@@ -239,6 +239,8 @@ String getMiscStatsName(int stat) {
     case ESPEASY_NOW_SEND_MSG_FAIL: return String(F(ESPEASY_NOW_NAME)) + F(" send Message Fail");
     case ESPEASY_NOW_SEND_PCKT:    return String(F(ESPEASY_NOW_NAME)) + F(" send Packet");
     case ESPEASY_NOW_DEDUP_LOOP:   return String(F(ESPEASY_NOW_NAME)) + F(" DuplicateCheck loop");
+    case WIFI_SCAN_ASYNC:         return F("WiFi Scan Async");
+    case WIFI_SCAN_SYNC:          return F("WiFi Scan Sync (blocking)");
     case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");
     case C001_DELAY_QUEUE:
     case C002_DELAY_QUEUE:

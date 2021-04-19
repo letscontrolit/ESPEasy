@@ -410,15 +410,14 @@ void processGotIP() {
   if (WiFiEventData.wifiSetup) {
     // Wifi setup was active, Apparently these settings work.
     WiFiEventData.wifiSetup = false;
-    SaveSettings();
+    SaveSecuritySettings();
   }
-  refreshNodeList();
-  logConnectionStatus();
-
   if ((WiFiEventData.WiFiConnected() || WiFi.isConnected()) && hasIPaddr()) {
     WiFiEventData.processedGotIP = true;
     WiFiEventData.setWiFiGotIP();
   }
+  refreshNodeList();
+  logConnectionStatus();
 }
 
 // A client disconnected from the AP on this node.
@@ -540,12 +539,12 @@ void processScanDone() {
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
   
   #ifdef USES_ESPEASY_NOW
-  ESPEasy_now_handler.addPeerFromWiFiScan();
-  if (use_EspEasy_now) {
-    if (!WiFiConnected()) {
+  if (Settings.UseESPEasyNow()) {
+    ESPEasy_now_handler.addPeerFromWiFiScan();
+    if (!NetworkConnected()) {
       if (WiFi_AP_Candidates.addedKnownCandidate()) {
         WiFi_AP_Candidates.force_reload();
-        if (isESPEasy_now_only() || !ESPEasy_now_handler.active()) {
+  //        if (isESPEasy_now_only() || !ESPEasy_now_handler.active()) {
           WifiDisconnect();
           setAP(false);
           ESPEasy_now_handler.end();
@@ -556,7 +555,7 @@ void processScanDone() {
           setSTA(false);
           setNetworkMedium(Settings.NetworkMedium);
           NetworkConnectRelaxed();
-        }
+  //        }
       } else {
         setNetworkMedium(NetworkMedium_t::ESPEasyNOW_only);
       }
