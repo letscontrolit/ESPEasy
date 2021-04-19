@@ -139,6 +139,7 @@ void WiFiEventData_t::markDisconnect(WiFiDisconnectReason reason) {
   }
   lastDisconnectReason = reason;
   processedDisconnect  = false;
+  wifiConnectInProgress = false;
 }
 
 void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], byte channel) {

@@ -81,6 +81,8 @@
 # define HANDLE_SCHEDULER_IDLE   60
 # define HANDLE_SCHEDULER_TASK   61
 # define HANDLE_SERVING_WEBPAGE  62
+# define WIFI_SCAN_ASYNC         63
+# define WIFI_SCAN_SYNC          64
 
 
 class TimingStats {
