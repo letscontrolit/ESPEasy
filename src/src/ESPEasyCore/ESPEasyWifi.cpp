@@ -193,7 +193,7 @@ bool WiFiConnected() {
     //}
     WiFiEventData.wifiConnectInProgress = false;
   }
-  delay(1);
+  delay(0);
   STOP_TIMER(WIFI_NOTCONNECTED_STATS);
   recursiveCall = false;
   return false;
