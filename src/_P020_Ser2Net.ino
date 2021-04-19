@@ -23,7 +23,7 @@ void P20_sendevent(taskIndex_t task, int val)
   if (Settings.UseRules)
   {
     String RuleEvent;
-    RuleEvent += getTaskDeviceName(event->TaskIndex);
+    RuleEvent += getTaskDeviceName(task);
     RuleEvent += '#';
     RuleEvent += "Client";
     RuleEvent += '=';
