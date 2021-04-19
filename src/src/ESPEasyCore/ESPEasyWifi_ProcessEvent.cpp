@@ -225,6 +225,11 @@ void processDisconnect() {
   if (Settings.WiFiRestart_connection_lost()) {
     initWiFi();
     delay(100);
+    if (WiFiEventData.unprocessedWifiEvents()) {
+      handle_unprocessedNetworkEvents();
+    }
+
+    WifiScan(false);
   }
   logConnectionStatus();
 }
@@ -390,7 +395,7 @@ void processGotIP() {
   if (WiFiEventData.wifiSetup) {
     // Wifi setup was active, Apparently these settings work.
     WiFiEventData.wifiSetup = false;
-    SaveSettings();
+    SaveSecuritySettings();
   }
   logConnectionStatus();
 
@@ -398,6 +403,8 @@ void processGotIP() {
     WiFiEventData.processedGotIP = true;
     WiFiEventData.setWiFiGotIP();
   }
+  refreshNodeList();
+  logConnectionStatus();
 }
 
 // A client disconnected from the AP on this node.
