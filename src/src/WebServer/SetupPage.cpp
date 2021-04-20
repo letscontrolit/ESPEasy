@@ -79,9 +79,12 @@ void handle_setup() {
 
       String ssid              = web_server.arg(F("ssid"));
       String other             = web_server.arg(F("other"));
-      String password          = web_server.arg(F("pass"));
-
-      bool emptyPass = isFormItemChecked(F("emptypass"));
+      String password;
+      bool passwordGiven = getFormPassword(F("pass"), password);
+      if (passwordGiven) {
+        passwordGiven = password.length() != 0;
+      }
+      const bool emptyPassAllowed = isFormItemChecked(F("emptypass"));
       const bool performRescan = web_server.hasArg(F("performrescan"));
       if (performRescan) {
         WiFiEventData.lastScanMoment.clear();
@@ -99,7 +102,7 @@ void handle_setup() {
         {
           if (clearButtonPressed) {
             addHtmlError(F("Warning: Need to confirm to clear WiFi credentials"));
-          } else if (password.length() == 0 && !emptyPass) {
+          } else if (!passwordGiven && !emptyPassAllowed) {
             addHtmlError(F("No password entered"));
           } else {
             safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
@@ -336,16 +339,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
 
   html_BR();
 
-  html_TR_TD();
-  addHtml(F("Password:"));
-  html_TD();
-  addHtml(F("<input "));
-  addHtmlAttribute(F("class"), F("wide"));
-  addHtmlAttribute(F("type"),  F("text"));
-  addHtmlAttribute(F("name"),  F("pass"));
-  addHtmlAttribute(F("value"), password);
-  addHtml('>');
-
+  addFormPasswordBox(F("Password"), F("pass"), password, 63);
   addFormCheckBox(F("Allow Empty Password"), F("emptypass"), false);
   
 /*
