@@ -13,7 +13,7 @@
 # define P020_RX_WAIT              PCONFIG(4)
 
 
-P020_Task::P020_Task() {
+P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
   clearBuffer();
 }
 
@@ -78,6 +78,7 @@ bool P020_Task::hasClientConnected() {
     if (ser2netClient) { ser2netClient.stop(); }
     ser2netClient = ser2netServer->available();
     ser2netClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+    sendConnectedEvent(false);
     addLog(LOG_LEVEL_INFO, F("Ser2Net   : Client connected!"));
   }
 
@@ -90,6 +91,7 @@ bool P020_Task::hasClientConnected() {
     if (clientConnected) // there was a client connected before...
     {
       clientConnected = false;
+      sendConnectedEvent(false);
       addLog(LOG_LEVEL_INFO, F("Ser2net   : Client disconnected!"));
     }
   }
@@ -225,6 +227,20 @@ void P020_Task::rulesEngine(String message) {
 
 bool P020_Task::isInit() const {
   return nullptr != ser2netServer && nullptr != ser2netSerial;
+}
+
+void P020_Task::sendConnectedEvent(bool connected)
+{
+  if (Settings.UseRules)
+  {
+    String RuleEvent;
+    RuleEvent += getTaskDeviceName(_taskIndex);
+    RuleEvent += '#';
+    RuleEvent += F("Client");
+    RuleEvent += '=';
+    RuleEvent += (connected ? 1 : 0);
+    eventQueue.add(RuleEvent);
+  }
 }
 
 #endif // ifdef USES_P020

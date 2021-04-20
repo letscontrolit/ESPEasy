@@ -37,20 +37,6 @@
 # define P020_DEFAULT_BAUDRATE   115200
 
 
-void P20_sendevent(taskIndex_t task, int val)
-{
-  if (Settings.UseRules)
-  {
-    String RuleEvent;
-    RuleEvent += getTaskDeviceName(task);
-    RuleEvent += '#';
-    RuleEvent += F("Client");
-    RuleEvent += '=';
-    RuleEvent += val;
-    eventQueue.add(RuleEvent);
-  }
-}
-
 boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -148,7 +134,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         // It was already created and initialzed
         // So don't recreate to keep the webserver running.
       } else {
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P020_Task());
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P020_Task(event->TaskIndex));
         task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
       }
 

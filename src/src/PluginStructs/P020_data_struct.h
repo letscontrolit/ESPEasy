@@ -14,7 +14,7 @@
 # define P020_STATUS_LED                    12
 # define P020_DATAGRAM_MAX_SIZE             256
 struct P020_Task : public PluginTaskData_base {
-  P020_Task();
+  P020_Task(taskIndex_t taskIndex);
   ~P020_Task();
 
   inline static bool serverActive(WiFiServer *server);
@@ -48,6 +48,8 @@ struct P020_Task : public PluginTaskData_base {
 
   bool isInit() const;
 
+  void sendConnectedEvent(bool connected);
+
   WiFiServer    *ser2netServer = nullptr;
   uint16_t       gatewayPort   = 0;
   WiFiClient     ser2netClient;
@@ -57,6 +59,7 @@ struct P020_Task : public PluginTaskData_base {
   int            checkI            = 0;
   ESPeasySerial *ser2netSerial     = nullptr;
   byte           serial_processing = 0;
+  taskIndex_t    _taskIndex = INVALID_TASK_INDEX;
 };
 
 #endif // ifdef USES_P020
