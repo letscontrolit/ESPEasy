@@ -23,7 +23,7 @@ port-for==0.3.1
 pycparser==2.20
 pyelftools==0.27
 pygit2==1.2.1
-Pygments==2.6.1
+Pygments==2.7.4
 pyparsing==2.4.7
 pyserial==3.4
 pytz==2020.1
