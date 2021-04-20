@@ -98,11 +98,19 @@ class SettingsStruct_tmpl
   bool UseMaxTXpowerForSending() const;
   void UseMaxTXpowerForSending(bool value);
 
+  // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+  bool ApDontForceSetup() const;
+  void ApDontForceSetup(bool value);
+
+  // Perform periodical WiFi scans so that in case of a WiFi disconnect a node may reconnect to a better AP
+  bool PeriodicalScanWiFi() const;
+  void PeriodicalScanWiFi(bool value);
 
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
+
 
   void validate();
 
@@ -261,6 +269,7 @@ class SettingsStruct_tmpl
   #endif
   uint8_t       WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
   int8_t        WiFi_sensitivity_margin = 3;  // Margin in dBm on top of sensitivity.
+  uint8_t       NumberExtraWiFiScans = 0;
 };
 
 /*

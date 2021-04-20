@@ -27,3 +27,18 @@ size_t queue_element_formatted_uservar::getSize() const {
   }
   return total;
 }
+
+bool queue_element_formatted_uservar::isDuplicate(const queue_element_formatted_uservar& other) const {
+  if (other.controller_idx != controller_idx || 
+      other.TaskIndex != TaskIndex ||
+      other.sensorType != sensorType ||
+      other.valueCount != valueCount) {
+    return false;
+  }
+  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+    if (other.txt[i] != txt[i]) {
+      return false;
+    }
+  }
+  return true;
+}

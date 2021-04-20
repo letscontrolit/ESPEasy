@@ -16,8 +16,6 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
 
 bool handle_setup_connectingStage(byte refreshCount);
 
-void handle_setup_finish();
-
 #endif // ifdef WEBSERVER_SETUP
 
 

@@ -25,6 +25,33 @@
 #include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy-Globals.h"
 
+#ifdef USES_MQTT
+# include "../Globals/MQTT.h"
+# include "../Helpers/PeriodicalActions.h" // For finding enabled MQTT controller
+#endif
+
+
+#ifndef MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN
+  #define MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN false
+#endif
+
+// Define main page elements present
+#ifndef MAIN_PAGE_SHOW_SYSINFO_BUTTON
+  #define MAIN_PAGE_SHOW_SYSINFO_BUTTON    true
+#endif
+
+#ifndef MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON
+  #define MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON   false
+#endif
+
+#ifndef MAIN_PAGE_SHOW_NODE_LIST_BUILD
+  #define MAIN_PAGE_SHOW_NODE_LIST_BUILD   true
+#endif
+#ifndef MAIN_PAGE_SHOW_NODE_LIST_TYPE
+  #define MAIN_PAGE_SHOW_NODE_LIST_TYPE    true
+#endif
+
+
 // ********************************************************************************
 // Web Interface root page
 // ********************************************************************************
@@ -33,14 +60,23 @@ void handle_root() {
   checkRAM(F("handle_root"));
   #endif
 
-  // if Wifi setup, launch setup wizard
-  if (WiFiEventData.wifiSetup)
+ if (captivePortal()) { // If captive portal redirect instead of displaying the page.
+   return;
+ }
+
+  // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
+ if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
   {
     web_server.send(200, F("text/html"), F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
-    return;
+   return;
   }
 
-  if (!isLoggedIn()) { return; }
+  if (!MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN) {
+    if (!isLoggedIn()) { return; }
+  }
+
+  const bool loggedIn = isLoggedIn(false);
+
   navMenuIndex = 0;
 
   // if index.htm exists on FS serve that one (first check if gziped version exists)
@@ -55,8 +91,13 @@ void handle_root() {
   #endif
 
   TXBuffer.startStream();
-  String  sCommand  = web_server.arg(F("cmd"));
-  boolean rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
+
+  String  sCommand;
+  boolean rebootCmd = false;
+  if (loggedIn) {
+    sCommand  = web_server.arg(F("cmd"));
+    rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
+  }
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
 
   int freeMem = ESP.getFreeHeap();
@@ -78,17 +119,21 @@ void handle_root() {
     addHtml(F("OK"));
   } else if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
   {
-    addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
-    cmd_within_mainloop = CMD_REBOOT;
-    addHtml(F(
-              "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
-    TXBuffer.endStream();
-    ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
-    return;
+    if (loggedIn) {
+      addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
+      cmd_within_mainloop = CMD_REBOOT;
+      addHtml(F(
+                "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
+      TXBuffer.endStream();
+      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
+      return;
+    }
   } else {
-    handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand);
-    printToWeb     = false;
-    printToWebJSON = false;
+    if (loggedIn) {
+      handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand);
+      printToWeb     = false;
+      printToWebJSON = false;
+    }
 
     addHtml(F("<form>"));
     html_table_class_normal();
@@ -151,11 +196,16 @@ void handle_root() {
       addHtml(html);
     }
 
-    addRowLabelValue(LabelType::IP_ADDRESS);
-    addRowLabel(LabelType::WIFI_RSSI);
+#ifdef HAS_ETHERNET
+    addRowLabelValue(LabelType::ETH_WIFI_MODE);
+#endif
 
-    if (NetworkConnected())
+    if (
+      active_network_medium == NetworkMedium_t::WIFI &&
+      NetworkConnected())
     {
+      addRowLabelValue(LabelType::IP_ADDRESS);
+      addRowLabel(LabelType::WIFI_RSSI);
       String html;
       html.reserve(32);
       html += String(WiFi.RSSI());
@@ -166,7 +216,6 @@ void handle_root() {
     }
 
 #ifdef HAS_ETHERNET
-    addRowLabelValue(LabelType::ETH_WIFI_MODE);
     if(active_network_medium == NetworkMedium_t::Ethernet) {
       addRowLabelValue(LabelType::ETH_SPEED_STATE);
       addRowLabelValue(LabelType::ETH_IP_ADDRESS);
@@ -186,22 +235,42 @@ void handle_root() {
       addHtml(html);
     }
     #endif // ifdef FEATURE_MDNS
+
+    #ifdef USES_MQTT
+    {
+      if (validControllerIndex(firstEnabledMQTT_ControllerIndex())) {
+        addRowLabel(F("MQTT Client Connected"));
+        addEnabled(MQTTclient_connected);
+      }
+    }
+    #endif
+
+
+    #if MAIN_PAGE_SHOW_SYSINFO_BUTTON
     html_TR_TD();
     html_TD();
     addButton(F("sysinfo"), F("More info"));
+    #endif
+    #if MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON
+    html_TR_TD();
+    html_TD();
+    addButton(F("setup"), F("WiFi Setup"));
+    #endif
 
-    if (printWebString.length() > 0)
-    {
-      html_BR();
-      html_BR();
-      addFormHeader(F("Command Argument"));
-      addRowLabel(F("Command"));
-      addHtml(sCommand);
+    if (loggedIn) {
+      if (printWebString.length() > 0)
+      {
+        html_BR();
+        html_BR();
+        addFormHeader(F("Command Argument"));
+        addRowLabel(F("Command"));
+        addHtml(sCommand);
 
-      addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
-      addHtml(printWebString);
-      addHtml(F("</textarea>"));
-      printWebString = "";
+        addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
+        addHtml(printWebString);
+        addHtml(F("</textarea>"));
+        printWebString = "";
+      }
     }
     html_end_table();
 
@@ -211,8 +280,12 @@ void handle_root() {
     html_TR();
     html_table_header(F("Node List"));
     html_table_header(F("Name"));
-    html_table_header(getLabel(LabelType::BUILD_DESC));
-    html_table_header(F("Type"));
+    if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
+      html_table_header(getLabel(LabelType::BUILD_DESC));
+    }
+    if (MAIN_PAGE_SHOW_NODE_LIST_TYPE) {
+      html_table_header(F("Type"));
+    }
     html_table_header(F("IP"), 160); // Should fit "255.255.255.255"
     html_table_header(F("Age"));
 
@@ -241,12 +314,16 @@ void handle_root() {
         }
         html_TD();
 
-        if (it->second.build) {
-          addHtmlInt(it->second.build);
+        if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
+          if (it->second.build) {
+            addHtmlInt(it->second.build);
+          }
+          html_TD();
         }
-        html_TD();
-        addHtml(getNodeTypeDisplayString(it->second.nodeType));
-        html_TD();
+        if (MAIN_PAGE_SHOW_NODE_LIST_TYPE) {
+          addHtml(getNodeTypeDisplayString(it->second.nodeType));
+          html_TD();
+        }
         html_add_wide_button_prefix();
         {
           String html;

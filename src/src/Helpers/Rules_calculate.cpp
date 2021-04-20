@@ -9,6 +9,12 @@
 #include "../Helpers/StringConverter.h"
 
 
+RulesCalculate_t::RulesCalculate_t() {
+  for (int i = 0; i < STACK_SIZE; ++i) {
+    globalstack[i] = 0.0;
+  }
+}
+
 /********************************************************************************************\
    Instance of the RulesCalculate to perform calculations
    These functions are wrapped in a class to

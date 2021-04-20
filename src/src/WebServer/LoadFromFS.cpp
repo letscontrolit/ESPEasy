@@ -19,11 +19,10 @@ bool loadFromFS(boolean spiffs, String path) {
   checkRAM(F("loadFromFS"));
   #endif
 
-  if (!isLoggedIn()) { return false; }
-
   statusLED(true);
 
   String dataType = F("text/plain");
+  bool mustCheckCredentials = false;
 
   if (!path.startsWith(F("/"))) {
     path = String(F("/")) + path;
@@ -42,10 +41,19 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(F(".svg"))) { dataType = F("image/svg+xml"); }
   else if (path.endsWith(F(".json"))) { dataType = F("application/json"); }
   else if (path.endsWith(F(".txt")) ||
-           path.endsWith(F(".dat"))) { dataType = F("application/octet-stream"); }
+           path.endsWith(F(".dat"))) { 
+    mustCheckCredentials = true;
+    dataType = F("application/octet-stream"); 
+  }
 #ifdef WEBSERVER_CUSTOM
-  else if (path.endsWith(F(".esp"))) { return handle_custom(path); }
+  else if (path.endsWith(F(".esp"))) {
+    return handle_custom(path); 
+  }
 #endif
+
+  if (mustCheckCredentials) {
+    if (!isLoggedIn()) { return false; }
+  }
 
 #ifndef BUILD_NO_DEBUG
 

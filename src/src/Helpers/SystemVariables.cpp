@@ -165,7 +165,8 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case UNIXDAY:           value = String(node_time.getUnixTime() / 86400); break;
       case UNIXDAY_SEC:       value = String(node_time.getUnixTime() % 86400); break;
       case UNIXTIME:          value = String(node_time.getUnixTime()); break;
-      case UPTIME:            value = String(wdcounter / 2); break;
+      case UPTIME:            value = String(getUptimeMinutes()); break;
+      case UPTIME_MS:         value = ull2String(getMicros64() / 1000); break;
       #if FEATURE_ADC_VCC
       case VCC:               value = String(vcc); break;
       #else // if FEATURE_ADC_VCC
@@ -193,9 +194,9 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
   }
   while (enumval != SystemVariables::Enum::UNKNOWN);
 
-  const int v_index = s.indexOf(F("%v"));
+  int v_index = s.indexOf(F("%v"));
 
-  if ((v_index != -1)) {
+  while ((v_index != -1)) {
     unsigned int i;
     if (validUIntFromString(s.substring(v_index + 2), i)) {
       const String key = String(F("%v")) + String(i) + '%';
@@ -205,6 +206,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
         repl(key, value, s, useURLencode);
       }
     }
+    v_index = s.indexOf(F("%v"), v_index + 1); // Find next occurance
   }
 
   STOP_TIMER(PARSE_SYSVAR);
@@ -322,6 +324,7 @@ String SystemVariables::toString(SystemVariables::Enum enumval)
     case Enum::UNIXDAY_SEC:     return F("%unixday_sec%");
     case Enum::UNIXTIME:        return F("%unixtime%");
     case Enum::UPTIME:          return F("%uptime%");
+    case Enum::UPTIME_MS:       return F("%uptime_ms%");
     case Enum::VCC:             return F("%vcc%");
     case Enum::WI_CH:           return F("%wi_ch%");
     case Enum::UNKNOWN: break;

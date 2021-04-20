@@ -33,7 +33,7 @@ bool C016_getCSVline(
 {
   C016_queue_element element;
   bool result = ControllerCache.peek((uint8_t*)&element, sizeof(element));
-  timestamp = element.timestamp;
+  timestamp = element._timestamp;
   controller_idx = element.controller_idx;
   TaskIndex = element.TaskIndex;
   sensorType = element.sensorType;
