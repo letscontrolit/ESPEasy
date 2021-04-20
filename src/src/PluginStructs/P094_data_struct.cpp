@@ -8,7 +8,9 @@
 
 #ifdef USES_P094
 
+#include "../Globals/ESPEasy_time.h"
 #include "../Helpers/StringConverter.h"
+
 
 P094_data_struct::P094_data_struct() :  easySerial(nullptr) {}
 
@@ -144,9 +146,18 @@ bool P094_data_struct::loop() {
   return fullSentenceReceived;
 }
 
-void P094_data_struct::getSentence(String& string) {
-  string        = sentence_part;
-  sentence_part = "";
+void P094_data_struct::getSentence(String& string, bool appendSysTime) {
+  if (appendSysTime) {
+    // Unix timestamp = 10 decimals + separator
+    if (string.reserve(sentence_part.length() + 11)) {
+      string        = sentence_part;
+      string += ';';
+      string += node_time.getUnixTime();
+    }
+    sentence_part = "";
+  } else {
+    string = std::move(sentence_part);
+  }
 }
 
 void P094_data_struct::getSentencesReceived(uint32_t& succes, uint32_t& error, uint32_t& length_last) const {
@@ -456,6 +467,10 @@ bool P094_data_struct::max_length_reached() const {
 
 size_t P094_data_struct::P094_Get_filter_base_index(size_t filterLine) {
   return filterLine * P094_ITEMS_PER_FILTER + P094_FIRST_FILTER_POS;
+}
+
+uint32_t P094_data_struct::getDebugCounter() {
+  return debug_counter++;
 }
 
 #endif // USES_P094
