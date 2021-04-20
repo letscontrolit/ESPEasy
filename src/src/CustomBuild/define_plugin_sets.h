@@ -966,6 +966,7 @@ To create/register a plugin, you have to :
     //#define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
     // #define USES_P110   // VL53L0X Time of Flight sensor
     // #define USES_P111   // RC522 RFID reader
+    // #define USES_P113   // VL53L1X ToF
 #endif
 
 
