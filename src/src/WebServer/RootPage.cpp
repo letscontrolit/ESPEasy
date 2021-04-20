@@ -44,6 +44,13 @@
   #define MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON   false
 #endif
 
+#ifndef MAIN_PAGE_SHOW_NODE_LIST_BUILD
+  #define MAIN_PAGE_SHOW_NODE_LIST_BUILD   true
+#endif
+#ifndef MAIN_PAGE_SHOW_NODE_LIST_TYPE
+  #define MAIN_PAGE_SHOW_NODE_LIST_TYPE    true
+#endif
+
 
 // ********************************************************************************
 // Web Interface root page
@@ -274,8 +281,12 @@ void handle_root() {
     html_TR();
     html_table_header(F("Node List"));
     html_table_header(F("Name"));
-    html_table_header(getLabel(LabelType::BUILD_DESC));
-    html_table_header(F("Type"));
+    if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
+      html_table_header(getLabel(LabelType::BUILD_DESC));
+    }
+    if (MAIN_PAGE_SHOW_NODE_LIST_TYPE) {
+      html_table_header(F("Type"));
+    }
     html_table_header(F("IP"), 160); // Should fit "255.255.255.255"
     html_table_header(F("Load"));
     html_table_header(F("Age (s)"));
@@ -309,12 +320,16 @@ void handle_root() {
         }
         html_TD();
 
-        if (it->second.build) {
-          addHtmlInt(it->second.build);
+        if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
+          if (it->second.build) {
+            addHtmlInt(it->second.build);
+          }
+          html_TD();
         }
-        html_TD();
-        addHtml(it->second.getNodeTypeDisplayString());
-        html_TD();
+        if (MAIN_PAGE_SHOW_NODE_LIST_TYPE) {
+          addHtml(it->second.getNodeTypeDisplayString());
+          html_TD();
+        }
         if (it->second.ip[0] != 0)
         {
           html_add_wide_button_prefix();
