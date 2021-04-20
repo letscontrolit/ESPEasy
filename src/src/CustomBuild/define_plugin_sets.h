@@ -588,6 +588,30 @@ To create/register a plugin, you have to :
     // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
+#ifdef PLUGIN_BUILD_MAX_ESP32
+    #define PLUGIN_DESCR  "MAX ESP32"
+    #ifndef ESP32
+        #define ESP32
+    #endif
+    #ifdef ESP8266
+        #undef ESP8266
+    #endif
+
+    #define PLUGIN_SET_MAX
+    #define CONTROLLER_SET_ALL
+    #define NOTIFIER_SET_ALL
+    #ifndef PLUGIN_ENERGY_COLLECTION
+        #define PLUGIN_ENERGY_COLLECTION
+    #endif
+    #ifndef PLUGIN_DISPLAY_COLLECTION
+        #define PLUGIN_DISPLAY_COLLECTION
+    #endif
+    // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
+    // See also PLUGIN_SET_TEST_ESP32 section at end,
+    // where incompatible plugins will be disabled.
+    // TODO : Check compatibility of plugins for ESP32 board.
+#endif
+
 
 // Generic ------------------------------------
 #ifdef PLUGIN_SET_GENERIC_1M
@@ -761,6 +785,19 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
+// MAX ###########################################
+#ifdef PLUGIN_SET_MAX
+    #ifndef PLUGIN_SET_STABLE
+        #define PLUGIN_SET_STABLE
+    #endif
+    #ifndef PLUGIN_SET_TESTING
+        #define PLUGIN_SET_TESTING
+    #endif
+    // #ifndef PLUGIN_SET_EXPERIMENTAL
+    //     #define PLUGIN_SET_EXPERIMENTAL
+    // #endif
+#endif
+
 
 
 
@@ -863,13 +900,14 @@ To create/register a plugin, you have to :
 
 // TESTING #####################################
 #ifdef PLUGIN_SET_TESTING
-  #ifndef LIMIT_BUILD_SIZE
-    #define LIMIT_BUILD_SIZE
-  #endif
-  #ifndef NOTIFIER_SET_NONE
-    #define NOTIFIER_SET_NONE
-  #endif
-
+  #ifndef PLUGIN_SET_MAX
+    #ifndef LIMIT_BUILD_SIZE
+      #define LIMIT_BUILD_SIZE
+    #endif
+    #ifndef NOTIFIER_SET_NONE
+      #define NOTIFIER_SET_NONE
+    #endif
+  #endif // PLUGIN_SET_MAX
 
     #define USES_P045   // MPU6050
     #define USES_P047   // I2C_soil_misture
@@ -899,16 +937,16 @@ To create/register a plugin, you have to :
     #define USES_P072   // HDC1080
     #define USES_P074   // TSL2561
     #define USES_P075   // Nextion
-    #define USES_P076   // HWL8012   in POW r1
+    //#define USES_P076   // HWL8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
-    #define USES_P077	  // CSE7766   in POW R2
+    //#define USES_P077	  // CSE7766   in POW R2
     #define USES_P078   // Eastron Modbus Energy meters
     #define USES_P080   // iButton Sensor  DS1990A
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P083   // SGP30
     #define USES_P084   // VEML6070
-    #define USES_P085   // AcuDC24x
+    //#define USES_P085   // AcuDC24x
     #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
     //#define USES_P087   // Serial Proxy
     #define USES_P089   // Ping
@@ -925,7 +963,10 @@ To create/register a plugin, you have to :
     #define USES_P101   // Wake On Lan
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
-    #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+    //#define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+    // #define USES_P110   // VL53L0X Time of Flight sensor
+    // #define USES_P111   // RC522 RFID reader
+    // #define USES_P113   // VL53L1X ToF
 #endif
 
 
@@ -938,9 +979,7 @@ To create/register a plugin, you have to :
      #define USES_P027   // INA219
    #endif
    #ifndef USES_P076 
-//     TD-er: Disabled as it causes this 'energy' build to fail due to low iRAM.
-//     It is still present in the POW builds.
-//     #define USES_P076   // HWL8012   in POW r1
+     #define USES_P076   // HWL8012   in POW r1
    #endif
    #ifndef USES_P077 
      // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
@@ -1104,6 +1143,140 @@ To create/register a plugin, you have to :
 #endif
 
 
+// Maximized build definition for an ESP(32) with 16MB Flash and 4MB sketch partition
+// Add all plugins, controllers and features that don't fit in the TESTING set
+#ifdef PLUGIN_SET_MAX
+  // Features
+  #ifndef USE_SERVO
+    #define USE_SERVO
+  #endif
+  #ifndef USE_RTTTL
+    #define USE_RTTTL
+  #endif
+  #ifndef USE_SETTINGS_ARCHIVE
+    #define USE_SETTINGS_ARCHIVE
+  #endif
+  #ifndef FEATURE_SD
+    #define FEATURE_SD
+  #endif
+
+  // Plugins
+  #ifndef USES_P016
+    #define USES_P016   // IR
+  #endif
+  #ifndef USES_P035
+    #define USES_P035   // IRTX
+  #endif
+  #ifndef USES_P041
+    #define USES_P041   // NeoClock
+  #endif
+  #ifndef USES_P042
+    #define USES_P042   // Candle
+  #endif
+  #ifndef USES_P087
+    #define USES_P087   // Serial Proxy
+  #endif
+  #ifndef USES_P094
+    #define USES_P094  // CUL Reader
+  #endif
+  #ifndef USES_P095
+    #define USES_P095  // TFT ILI9341
+  #endif
+  #ifndef USES_P096
+    #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
+  #endif
+  #ifndef USES_P098
+    #define USES_P098   // ESPEasy-NOW Receiver
+  #endif
+  #ifndef USES_P099
+    #define USES_P099   // XPT2046 Touchscreen
+  #endif
+  #ifndef USES_P102
+    #define USES_P102   // PZEM004Tv3
+  #endif
+  #ifndef USES_P103
+    #define USES_P103   // Atlas EZO pH
+  #endif
+  #ifndef USES_P104
+    #define USES_P104   // Atlas EZO EC
+  #endif
+  #ifndef USES_P105
+    #define USES_P105   // Atlas EZO_ORP
+  #endif
+  #ifndef USES_P108
+    #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+  #endif
+  #ifndef USES_P109
+    #define USES_P109   // ThermOLED
+  #endif
+  #ifndef USES_P110
+    #define USES_P110   // VL53L0X
+  #endif
+  #ifndef USES_P111
+    #define USES_P111   // RC522 RFID reader
+  #endif
+  #ifndef USES_P112
+    #define USES_P112   // AS7256x
+  #endif
+  #ifndef USES_P113
+    #define USES_P113   // VL53L1X
+  #endif
+  #ifndef USES_P114
+    #define USES_P114   // 
+  #endif
+  #ifndef USES_P115
+    #define USES_P115   // 
+  #endif
+  #ifndef USES_P116
+    #define USES_P116   // 
+  #endif
+  #ifndef USES_P117
+    #define USES_P117   // 
+  #endif
+  #ifndef USES_P118
+    #define USES_P118   // 
+  #endif
+  #ifndef USES_P119
+    #define USES_P119   // 
+  #endif
+  #ifndef USES_P120
+    #define USES_P120   // 
+  #endif
+  #ifndef USES_P121
+    #define USES_P121   // 
+  #endif
+  #ifndef USES_P122
+    #define USES_P122   // 
+  #endif
+  #ifndef USES_P123
+    #define USES_P123   // 
+  #endif
+  #ifndef USES_P124
+    #define USES_P124   // 
+  #endif
+  #ifndef USES_P125
+    #define USES_P125   // 
+  #endif
+
+  // Controllers
+  #ifndef USES_C015
+    #ifndef ESP32
+      #define USES_C015   // Blynk (?doesn't compile on ESP32?)
+    #endif
+  #endif
+  #ifndef USES_C016
+    #ifndef ESP32         // Not implemented yet for ESP32
+      #define USES_C016   // Cache controller
+    #endif
+  #endif
+  #ifndef USES_C018
+    #define USES_C018 // TTN RN2483
+  #endif
+
+  // Notifiers
+
+#endif // PLUGIN_SET_MAX
+
 
 /******************************************************************************\
  * Remove incompatible plugins ************************************************
@@ -1195,7 +1368,7 @@ To create/register a plugin, you have to :
 #endif
 
 // VCC builds need a bit more, disable timing stats to make it fit.
-#ifdef FEATURE_ADC_VCC
+#if defined(FEATURE_ADC_VCC) && !defined(PLUGIN_SET_MAX)
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
   #endif
@@ -1366,6 +1539,13 @@ To create/register a plugin, you have to :
     #define FEATURE_DNS_SERVER
   #endif
 #endif
+
+#ifdef WEBSERVER_SETUP
+  #ifndef FEATURE_DNS_SERVER
+    #define FEATURE_DNS_SERVER
+  #endif
+#endif
+
 
 
 #endif // DEFINE_PLUGIN_SETS_H

@@ -223,6 +223,7 @@ String getMiscStatsName(int stat) {
     case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
     case RULES_PROCESSING:        return F("rulesProcessing()");
     case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
+    case SAVE_TO_RTC:             return F("saveToRTC()");
     case BACKGROUND_TASKS:        return F("backgroundtasks()");
     case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
     case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");
@@ -230,6 +231,8 @@ String getMiscStatsName(int stat) {
     case PARSE_SYSVAR:            return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
+    case WIFI_SCAN_ASYNC:         return F("WiFi Scan Async");
+    case WIFI_SCAN_SYNC:          return F("WiFi Scan Sync (blocking)");
     case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");
     case C001_DELAY_QUEUE:
     case C002_DELAY_QUEUE:
