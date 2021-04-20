@@ -15,8 +15,8 @@
 #include <ETH.h>
 #endif
 
-void setNetworkMedium(NetworkMedium_t medium) {
-  if (active_network_medium == medium) {
+void setNetworkMedium(NetworkMedium_t new_medium) {
+  if (active_network_medium == new_medium) {
     return;
   }
   switch (active_network_medium) {
@@ -29,11 +29,13 @@ void setNetworkMedium(NetworkMedium_t medium) {
     case NetworkMedium_t::WIFI:
       WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
       WiFiEventData.timerAPstart.clear();
-      WifiDisconnect();
+      if (new_medium == NetworkMedium_t::Ethernet) {
+        WifiDisconnect();
+      }
       break;
   }
   statusLED(true);
-  active_network_medium = medium;
+  active_network_medium = new_medium;
   addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
 }
 
