@@ -46,12 +46,13 @@
 # define PLUGIN_NAME_039       "Environment - Thermocouple"
 # define PLUGIN_VALUENAME1_039 "Temperature"
 
-uint8_t  Plugin_039_SPI_CS_Pin         = 15; // D8
-bool     Plugin_039_SensorAttached     = true;
-bool     Plugin_039_SensorUnconfigured = true;
-int      TCType                        = 3;
-uint32_t Plugin_039_Sensor_fault       = 0;
-float    Plugin_039_Celsius            = 0.0f;
+# define P039_MAX_TYPE         PCONFIG(0)
+# define P039_TC_TYPE          PCONFIG(1)
+
+# define P039_MAX_6675         1
+# define P039_MAX_31855        2
+# define P039_MAX_31856        3
+
 
 boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 {
@@ -95,20 +96,32 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      // Get CS Pin
-      // If no Pin is in Config we use 15 as default -> Hardware Chip Select on ESP8266
-      if (CONFIG_PIN1 != 0)
-      {
-        // Konvert the GPIO Pin to a Dogotal Puin Number first ...
-        Plugin_039_SPI_CS_Pin = CONFIG_PIN1;
-      }
-
       // set the slaveSelectPin as an output:
-      pinMode(Plugin_039_SPI_CS_Pin, OUTPUT);
+      pinMode(Plugin_039_Get_SPI_CS_Pin(event), OUTPUT);
 
       // initialize SPI:
       SPI.setHwCs(false);
       SPI.begin();
+
+      if (P039_MAX_TYPE == P039_MAX_31856) {
+        // FIXME TD-er: Must really look into those enormous long delays
+        digitalWrite(Plugin_039_Get_SPI_CS_Pin(event), LOW);
+        delay(650);
+        SPI.transfer(0x80);
+        SPI.transfer(0x01);         // noisefilter 50Hz (set this to 0x00 if You live in a 60Hz country)
+        SPI.transfer(P039_TC_TYPE); // thermocouple type
+        SPI.transfer(0xFF);
+        SPI.transfer(0x7F);
+        SPI.transfer(0xC0);
+        SPI.transfer(0x7F);
+        SPI.transfer(0xFF);
+        SPI.transfer(0x80);
+        SPI.transfer(0x00);
+        SPI.transfer(0x00);
+
+        digitalWrite(Plugin_039_Get_SPI_CS_Pin(event), HIGH);
+        delay(50);
+      }
 
       addLog(LOG_LEVEL_INFO, F("P039 : SPI Init"));
       success = true;
@@ -127,28 +140,18 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
       // addHtml(F("<TR><TD>Info GPIO:<TD><b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
 
-      byte   choice = PCONFIG(0);
-      String options[3];
-      options[0] = F("MAX 6675");
-      options[1] = F("MAX 31855");
-      options[2] = F("MAX 31856");
-      int optionValues[3] = { 1, 2, 3 };
-      addFormSelector(F("Adapter IC"), F("p039_maxtype"), 3, options, optionValues, choice);
+      const byte choice = P039_MAX_TYPE;
+      {
+        const String options[3]      = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
+        const int    optionValues[3] = { P039_MAX_6675, P039_MAX_31855, P039_MAX_31856 };
+        addFormSelector(F("Adapter IC"), F("p039_maxtype"), 3, options, optionValues, choice);
+      }
 
-      if (choice == 3) {
+      if (choice == P039_MAX_31856) {
         addFormNote(F("Set Thermocouple type for MAX31856"));
-        byte   Tchoice = PCONFIG(1);
-        String Toptions[8];
-        Toptions[0] = F("B");
-        Toptions[1] = F("E");
-        Toptions[2] = F("J");
-        Toptions[3] = F("K");
-        Toptions[4] = F("N");
-        Toptions[5] = F("R");
-        Toptions[6] = F("S");
-        Toptions[7] = F("T");
-        int ToptionValues[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-        addFormSelector(F("Thermocouple type"), F("p039_tctype"), 8, Toptions, ToptionValues, Tchoice);
+        const String Toptions[8]      = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T") };
+        const int    ToptionValues[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+        addFormSelector(F("Thermocouple type"), F("p039_tctype"), 8, Toptions, ToptionValues, P039_TC_TYPE);
       }
       success = true;
       break;
@@ -156,32 +159,28 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0)                    = getFormItemInt(F("p039_maxtype"));
-      PCONFIG(1)                    = getFormItemInt(F("p039_tctype"));
-      Plugin_039_SensorUnconfigured = true;
-      success                       = true;
+      P039_MAX_TYPE = getFormItemInt(F("p039_maxtype"));
+      P039_TC_TYPE  = getFormItemInt(F("p039_tctype"));
+      success       = true;
       break;
     }
 
     case PLUGIN_READ:
     {
       // Get the MAX Type (6675 / 31855 / 31856)
-      byte MaxType = PCONFIG(0);
+      byte MaxType = P039_MAX_TYPE;
 
-      // Get CS Pin
-      // Konvert the GPIO Pin to a Digital Pin Number first ...
-      Plugin_039_SPI_CS_Pin = CONFIG_PIN1;
+      float Plugin_039_Celsius = NAN;
 
       switch (MaxType) {
-        case 1: // MAX6675
-          Plugin_039_Celsius = readMax6675();
+        case P039_MAX_6675:
+          Plugin_039_Celsius = readMax6675(event);
           break;
-        case 2: // MAX31855
-          Plugin_039_Celsius = readMax31855();
+        case P039_MAX_31855:
+          Plugin_039_Celsius = readMax31855(event);
           break;
-        case 3: // MAX31856
-          TCType             = PCONFIG(1);
-          Plugin_039_Celsius = readMax31856();
+        case P039_MAX_31856:
+          Plugin_039_Celsius = readMax31856(event);
           break;
       }
 
@@ -210,36 +209,39 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-float readMax6675()
+float readMax6675(struct EventStruct *event)
 {
-  uint16_t rawvalue = 0;
-
   // take the SS pin low to select the chip:
-  digitalWrite(Plugin_039_SPI_CS_Pin, LOW);
+  digitalWrite(Plugin_039_Get_SPI_CS_Pin(event), LOW);
 
   // String log = F("P039 : CS Pin : ");
-  // log += Plugin_039_SPI_CS_Pin;
+  // log += Plugin_039_Get_SPI_CS_Pin(event);
   // addLog(LOG_LEVEL_INFO, log);
   // "transfer" 0x0 and read the Data from the Chip
-  rawvalue = SPI.transfer16(0x0);
+  uint16_t rawvalue = SPI.transfer16(0x0);
 
   // take the SS pin high to de-select the chip:
-  digitalWrite(Plugin_039_SPI_CS_Pin, HIGH);
+  digitalWrite(Plugin_039_Get_SPI_CS_Pin(event), HIGH);
 
-  String log = F("P039 : MAX6675 : RAW - BIN:");
+# ifndef BUILD_NO_DEBUG
 
-  log += String(rawvalue, BIN);
-  log += " HEX:";
-  log += String(rawvalue, HEX);
-  log += " DEC:";
-  log += String(rawvalue);
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("P039 : MAX6675 : RAW - BIN:");
+
+    log += String(rawvalue, BIN);
+    log += " HEX:";
+    log += String(rawvalue, HEX);
+    log += " DEC:";
+    log += String(rawvalue);
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+  # endif // ifndef BUILD_NO_DEBUG
 
   // Open Thermocouple
   // Bit D2 is normally low and goes high if the thermocouple input is open. In order to allow the operation of the
   // open  thermocouple  detector,  T-  must  be  grounded. Make  the  ground  connection  as  close  to  the  GND  pin
   // as possible.
-  Plugin_039_SensorAttached = !(rawvalue & 0x0004);
+  const bool Plugin_039_SensorAttached = !(rawvalue & 0x0004);
 
   if (Plugin_039_SensorAttached)
   {
@@ -255,15 +257,13 @@ float readMax6675()
   }
 }
 
-float readMax31855()
+float readMax31855(struct EventStruct *event)
 {
-  uint32_t rawvalue = 0;
-
   // take the SS pin low to select the chip:
-  digitalWrite(Plugin_039_SPI_CS_Pin, LOW);
+  digitalWrite(Plugin_039_Get_SPI_CS_Pin(event), LOW);
 
   // "transfer" 0x0 and read the MSB Data from the Chip
-  rawvalue = SPI.transfer16(0x0);
+  uint32_t rawvalue = SPI.transfer16(0x0);
 
   // Shift MSB 16 Bits to the left
   rawvalue <<= 16;
@@ -272,44 +272,56 @@ float readMax31855()
   rawvalue |= SPI.transfer16(0x0);
 
   // take the SS pin high to de-select the chip:
-  digitalWrite(Plugin_039_SPI_CS_Pin, HIGH);
+  digitalWrite(Plugin_039_Get_SPI_CS_Pin(event), HIGH);
 
-  String log = F("P039 : MAX31855 : RAW - BIN:");
+# ifndef BUILD_NO_DEBUG
 
-  log += String(rawvalue, BIN);
-  log += " HEX:";
-  log += String(rawvalue, HEX);
-  log += " DEC:";
-  log += String(rawvalue);
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("P039 : MAX31855 : RAW - BIN:");
 
-  if (Plugin_039_Sensor_fault != (rawvalue & 0x7)) {
-    // Fault code changed, log them
-    Plugin_039_Sensor_fault = (rawvalue & 0x7);
-    log                     = F("P039 : MAX31855");
-
-    if (Plugin_039_Sensor_fault == 0) {
-      log += F("Fault resolved");
-    } else {
-      log += F("Fault code:");
-
-      if (rawvalue & 0x01) {
-        log += F(" Open (no connection)");
-      }
-
-      if (rawvalue & 0x02) {
-        log += F(" Short-circuit to GND");
-      }
-
-      if (rawvalue & 0x04) {
-        log += F(" Short-circuit to Vcc");
-      }
-    }
+    log += String(rawvalue, BIN);
+    log += " HEX:";
+    log += String(rawvalue, HEX);
+    log += " DEC:";
+    log += String(rawvalue);
     addLog(LOG_LEVEL_DEBUG, log);
+  }
+# endif // ifndef BUILD_NO_DEBUG
+
+
+  // FIXME TD-er: This static flag is shared among all instances of this plugin
+  static bool sensorFault = false;
+
+  if (sensorFault != ((rawvalue & 0x7) == 0)) {
+    // Fault code changed, log them
+    sensorFault = ((rawvalue & 0x7) == 0);
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("P039 : MAX31855");
+
+      if (!sensorFault) {
+        log += F("Fault resolved");
+      } else {
+        log += F("Fault code:");
+
+        if (rawvalue & 0x01) {
+          log += F(" Open (no connection)");
+        }
+
+        if (rawvalue & 0x02) {
+          log += F(" Short-circuit to GND");
+        }
+
+        if (rawvalue & 0x04) {
+          log += F(" Short-circuit to Vcc");
+        }
+      }
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
 
   // D16 - This bit reads at 1 when any of the SCV, SCG, or OC faults are active. Default value is 0.
-  Plugin_039_SensorAttached = !(rawvalue & 0x00010000);
+  const bool Plugin_039_SensorAttached = !(rawvalue & 0x00010000);
 
   if (Plugin_039_SensorAttached)
   {
@@ -336,163 +348,121 @@ float readMax31855()
   }
 }
 
-float readMax31856()
+float readMax31856(struct EventStruct *event)
 {
-  uint32_t rawvalue = 0;
-  uint32_t cr0      = 0;
-  uint32_t cr1      = 0;
-  uint32_t mask     = 0;
-  uint32_t cjhf     = 0;
-  uint32_t cjlf     = 0;
-  uint32_t lthfth   = 0;
-  uint32_t lthftl   = 0;
-  uint32_t ltlfth   = 0;
-  uint32_t ltlftl   = 0;
-  uint32_t cjto     = 0;
-  uint32_t cjth     = 0;
-  uint32_t cjtl     = 0;
-  uint32_t ltcbh    = 0;
-  uint32_t ltcbm    = 0;
-  uint32_t ltcbl    = 0;
-  uint32_t sr       = 0;
+  digitalWrite(Plugin_039_Get_SPI_CS_Pin(event), LOW);
 
-  if (Plugin_039_SensorUnconfigured) {
-    digitalWrite(Plugin_039_SPI_CS_Pin, LOW);
-    delay(650);
-    SPI.transfer(0x80);
-    SPI.transfer(0x01);   // noisefilter 50Hz (set this to 0x00 if You live in a 60Hz country)
-    SPI.transfer(TCType); // thermocouple type
-    SPI.transfer(0xFF);
-    SPI.transfer(0x7F);
-    SPI.transfer(0xC0);
-    SPI.transfer(0x7F);
-    SPI.transfer(0xFF);
-    SPI.transfer(0x80);
-    SPI.transfer(0x00);
-    SPI.transfer(0x00);
 
-    Plugin_039_SensorUnconfigured = false;
-    digitalWrite(Plugin_039_SPI_CS_Pin, HIGH);
-    delay(50);
+  # define P039_RAWVALUE 0
+  # define P039_CR0      1
+  # define P039_CR1      2
+  # define P039_MASK     3
+  # define P039_CJHF     4
+  # define P039_CJLF     5
+  # define P039_LTHFTH   6
+  # define P039_LTHFTL   7
+  # define P039_LTLFTH   8
+  # define P039_LTLFTL   9
+  # define P039_CJTO    10
+  # define P039_CJTH    11
+  # define P039_CJTL    12
+  # define P039_LTCBH   13
+  # define P039_LTCBM   14
+  # define P039_LTCBL   15
+  # define P039_SR      16
+
+  uint32_t registers[17] = { 0 };
+
+  for (int i = 0; i < 17; ++i) {
+    registers[i] = SPI.transfer(0x0);
   }
-
-  digitalWrite(Plugin_039_SPI_CS_Pin, LOW);
-  rawvalue = SPI.transfer(0x0);
-  cr0      = SPI.transfer(0);
-  cr1      = SPI.transfer(0);
-  mask     = SPI.transfer(0);
-  cjhf     = SPI.transfer(0);
-  cjlf     = SPI.transfer(0);
-  lthfth   = SPI.transfer(0);
-  lthftl   = SPI.transfer(0);
-  ltlfth   = SPI.transfer(0);
-  ltlftl   = SPI.transfer(0);
-  cjto     = SPI.transfer(0);
-  cjth     = SPI.transfer(0);
-  cjtl     = SPI.transfer(0);
-  ltcbh    = SPI.transfer(0);
-  ltcbm    = SPI.transfer(0);
-  ltcbl    = SPI.transfer(0);
-  sr       = SPI.transfer(0);
 
   // take the SS pin high to de-select the chip:
-  digitalWrite(Plugin_039_SPI_CS_Pin, HIGH);
+  digitalWrite(Plugin_039_Get_SPI_CS_Pin(event), HIGH);
 
-  rawvalue = ltcbh;
-  rawvalue = (rawvalue << 8) | ltcbm;
-  rawvalue = (rawvalue << 8) | ltcbl;
 
-  String log = F("P039 : MAX31856 : ");
+  uint32_t rawvalue = registers[P039_LTCBH];
+  rawvalue = (rawvalue << 8) | registers[P039_LTCBM];
+  rawvalue = (rawvalue << 8) | registers[P039_LTCBL];
 
-  log += String(cr0, HEX);
-  log += " ";
-  log += String(cr1, HEX);
-  log += " ";
-  log += String(mask, HEX);
-  log += " ";
-  log += String(cjhf, HEX);
-  log += " ";
-  log += String(cjlf, HEX);
-  log += " ";
-  log += String(lthfth, HEX);
-  log += " ";
-  log += String(lthftl, HEX);
-  log += " ";
-  log += String(ltlfth, HEX);
-  log += " ";
-  log += String(ltlftl, HEX);
-  log += " ";
-  log += String(cjto, HEX);
-  log += " ";
-  log += String(cjth, HEX);
-  log += " ";
-  log += String(cjtl, HEX);
-  log += " ";
-  log += String(ltcbh, HEX);
-  log += " ";
-  log += String(ltcbm, HEX);
-  log += " ";
-  log += String(ltcbl, HEX);
-  log += " ";
-  log += String(sr, HEX);
+  # ifndef BUILD_NO_DEBUG
 
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log;
+    log.reserve(66);
+    log = F("P039 : MAX31856 :");
 
-  Plugin_039_Sensor_fault = (sr != 0);
-
-  if (Plugin_039_Sensor_fault) {
-    log = F("P039 : MAX31856");
-
-    if (Plugin_039_Sensor_fault == 0) {
-      log += F("Fault resolved");
-    } else {
-      log += F("Fault :");
-
-      if (sr & 0x01) {
-        log += F(" Open (no connection)");
-      }
-
-      if (sr & 0x02) {
-        log += F(" Over/Under Voltage");
-      }
-
-      if (sr & 0x04) {
-        log += F(" TC Low");
-      }
-
-      if (sr & 0x08) {
-        log += F(" TC High");
-      }
-
-      if (sr & 0x10) {
-        log += F(" CJ Low");
-      }
-
-      if (sr & 0x20) {
-        log += F(" CJ High");
-      }
-
-      if (sr & 0x40) {
-        log += F(" TC Range");
-      }
-
-      if (sr & 0x80) {
-        log += F(" CJ Range");
-      }
+    for (int i = 1; i < 17; ++i) {
+      log += ' ';
+      log += String(registers[i], HEX);
     }
-    addLog(LOG_LEVEL_INFO, log);
-  }
 
-  Plugin_039_SensorAttached = (sr == 0);
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+  # endif // ifndef BUILD_NO_DEBUG
+
+  const uint32_t sr = registers[P039_SR];
+
+  // FIXME TD-er: This static flag is shared among all instances of this plugin
+  static bool sensorFault = false;
+
+  const bool faultResolved = sensorFault && (sr == 0);
+  sensorFault = (sr != 0); // Set new state
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    if (sensorFault || faultResolved) {
+      String log = F("P039 : MAX31856");
+
+      if (sensorFault == 0) {
+        log += F("Fault resolved");
+      } else {
+        log += F("Fault :");
+
+        if (sr & 0x01) {
+          log += F(" Open (no connection)");
+        }
+
+        if (sr & 0x02) {
+          log += F(" Over/Under Voltage");
+        }
+
+        if (sr & 0x04) {
+          log += F(" TC Low");
+        }
+
+        if (sr & 0x08) {
+          log += F(" TC High");
+        }
+
+        if (sr & 0x10) {
+          log += F(" CJ Low");
+        }
+
+        if (sr & 0x20) {
+          log += F(" CJ High");
+        }
+
+        if (sr & 0x40) {
+          log += F(" TC Range");
+        }
+
+        if (sr & 0x80) {
+          log += F(" CJ Range");
+        }
+      }
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  }
+  const bool Plugin_039_SensorAttached = (sr == 0);
 
   if (Plugin_039_SensorAttached)
   {
-    rawvalue >>= 5; // bottom 5 bits are unused
+    registers[P039_RAWVALUE] >>= 5; // bottom 5 bits are unused
     // We're left with (24 - 5 =) 19 bits
-    int temperature = Plugin_039_convert_two_complement(rawvalue, 19);
+    float temperature = Plugin_039_convert_two_complement(registers[P039_RAWVALUE], 19);
 
     // Calculate Celsius
-    return temperature * 0.0078125;
+    return temperature / 128.0f;
   }
   else
   {
@@ -512,6 +482,14 @@ int Plugin_039_convert_two_complement(uint32_t value, int nr_bits) {
     nativeInt = value;
   }
   return nativeInt;
+}
+
+int Plugin_039_Get_SPI_CS_Pin(struct EventStruct *event) {
+  // If no Pin is in Config we use 15 as default -> Hardware Chip Select on ESP8266
+  if (CONFIG_PIN1 != 0) {
+    return CONFIG_PIN1;
+  }
+  return 15; // D8
 }
 
 #endif // USES_P039
