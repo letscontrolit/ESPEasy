@@ -171,6 +171,16 @@ void SettingsStruct_tmpl<N_TASKS>::PeriodicalScanWiFi(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::JSONBoolWithoutQuotes() const {
+  return bitRead(VariousBits1, 16);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::JSONBoolWithoutQuotes(bool value) {
+  bitWrite(VariousBits1, 16, value);
+}
+
+template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
   if (validTaskIndex(taskIndex)) {
     return bitRead(TaskDeviceSendDataFlags[taskIndex], 0);

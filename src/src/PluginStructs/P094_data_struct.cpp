@@ -149,10 +149,11 @@ bool P094_data_struct::loop() {
 void P094_data_struct::getSentence(String& string, bool appendSysTime) {
   if (appendSysTime) {
     // Unix timestamp = 10 decimals + separator
-    string.reserve(sentence_part.length() + 11);
-    string        = sentence_part;
-    string += ';';
-    string += node_time.getUnixTime();
+    if (string.reserve(sentence_part.length() + 11)) {
+      string        = sentence_part;
+      string += ';';
+      string += node_time.getUnixTime();
+    }
     sentence_part = "";
   } else {
     string = std::move(sentence_part);

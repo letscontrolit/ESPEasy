@@ -225,6 +225,9 @@
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
   #endif
 #endif
+#ifndef DEFAULT_JSON_BOOL_WITHOUT_QUOTES
+#define DEFAULT_JSON_BOOL_WITHOUT_QUOTES false
+#endif
 
 
 
