@@ -291,8 +291,10 @@ void handle_root() {
     html_table_header(F("Load"));
     html_table_header(F("Age (s)"));
     #ifdef USES_ESPEASY_NOW
-    html_table_header(F("Dist"));
-    html_table_header(F("Peer Info"), 160);
+    if (Settings.UseESPEasyNow()) {
+      html_table_header(F("Dist"));
+      html_table_header(F("Peer Info"), 160);
+    }
     #endif
 
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
@@ -356,27 +358,29 @@ void handle_root() {
         html_TD();
         addHtml(String(it->second.getAge()/1000)); // time in seconds
         #ifdef USES_ESPEASY_NOW
-        html_TD();
-        if (it->second.distance != 255) {
-          addHtml(String(it->second.distance)); 
-        }
-        html_TD();
-        if (it->second.ESPEasyNowPeer) {
-          addHtml(String(F(ESPEASY_NOW_NAME)) + F(" "));
-          addHtml(it->second.ESPEasy_Now_MAC().toString());
-          addHtml(F(" (ch: "));
-          addHtml(String(it->second.channel));
-          int8_t rssi = it->second.getRSSI();
-          if (rssi < 0) {
-            addHtml(' ');
-            addHtml(String(rssi));
+        if (Settings.UseESPEasyNow()) {
+          html_TD();
+          if (it->second.distance != 255) {
+            addHtml(String(it->second.distance)); 
           }
-          addHtml(')');
-          const ESPEasy_now_traceroute_struct* trace = Nodes.getDiscoveryRoute(it->second.unit);
-          if (trace != nullptr) {
-            addHtml(' ');
-            addHtml(trace->toString());
-          }          
+          html_TD();
+          if (it->second.ESPEasyNowPeer) {
+            addHtml(String(F(ESPEASY_NOW_NAME)) + F(" "));
+            addHtml(it->second.ESPEasy_Now_MAC().toString());
+            addHtml(F(" (ch: "));
+            addHtml(String(it->second.channel));
+            int8_t rssi = it->second.getRSSI();
+            if (rssi < 0) {
+              addHtml(' ');
+              addHtml(String(rssi));
+            }
+            addHtml(')');
+            const ESPEasy_now_traceroute_struct* trace = Nodes.getDiscoveryRoute(it->second.unit);
+            if (trace != nullptr) {
+              addHtml(' ');
+              addHtml(trace->toString());
+            }          
+          }
         }
         #endif
       }
