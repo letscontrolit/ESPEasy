@@ -75,7 +75,7 @@ public:
 
   bool loop();
 
-  void getSentence(String& string);
+  void getSentence(String& string, bool appendSysTime);
 
   void getSentencesReceived(uint32_t& succes,
                             uint32_t& error,
@@ -116,6 +116,9 @@ public:
 
   static size_t P094_Get_filter_base_index(size_t filterLine);
 
+  // Get (and increment) debug counter
+  uint32_t getDebugCounter();
+
 private:
 
   bool max_length_reached() const;
@@ -127,6 +130,7 @@ private:
   uint32_t       sentences_received_error = 0;
   uint32_t       length_last_received     = 0;
   unsigned long  disable_filter_window    = 0;
+  uint32_t       debug_counter            = 0;
 
   bool                   valueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS];
   P094_Filter_Value_Type valueType_index[P094_NR_FILTERS];

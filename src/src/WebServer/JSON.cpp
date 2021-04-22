@@ -523,9 +523,10 @@ void handle_buildinfo() {
 \*********************************************************************************************/
 void stream_to_json_value(const String& value) {
   NumericalType detectedType;
-  bool isNum = isNumerical(value, detectedType);
+  bool isNum  = isNumerical(value, detectedType);
+  bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
-  if ((value.length() == 0) || !isNum || mustConsiderAsString(detectedType)) {
+  if (!isBool && ((value.length() == 0) || !isNum || mustConsiderAsString(detectedType))) {
     // Either empty, not a numerical or a BIN/HEX notation.
     String html;
     html.reserve(value.length() + 2);
