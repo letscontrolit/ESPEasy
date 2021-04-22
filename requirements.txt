@@ -12,7 +12,7 @@ commonmark==0.9.1
 docutils==0.16
 idna==2.10
 imagesize==1.2.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 livereload==2.6.2
 MarkupSafe==1.1.1
 marshmallow==3.7.1
