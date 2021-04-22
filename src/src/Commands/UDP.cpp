@@ -56,6 +56,7 @@ String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
     IPAddress UDP_IP;
 
     if (UDP_IP.fromString(ip)) {
+      FeedSW_watchdog();
       portUDP.beginPacket(UDP_IP, port);
       #if defined(ESP8266)
       portUDP.write(message.c_str(),            message.length());
@@ -64,6 +65,8 @@ String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
       portUDP.write((uint8_t *)message.c_str(), message.length());
       #endif // if defined(ESP32)
       portUDP.endPacket();
+      FeedSW_watchdog();
+      delay(0);
     }
     return return_command_success();
   }

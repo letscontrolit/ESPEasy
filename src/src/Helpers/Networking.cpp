@@ -14,6 +14,7 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
@@ -72,6 +73,7 @@ void syslog(byte logLevel, const char *message)
   {
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
 
+    FeedSW_watchdog();
     if (portUDP.beginPacket(broadcastIP, Settings.SyslogPort) == 0) {
       // problem resolving the hostname or port
       return;
@@ -128,6 +130,8 @@ void syslog(byte logLevel, const char *message)
       }
     }
     portUDP.endPacket();
+    FeedSW_watchdog();
+    delay(0);
   }
 }
 
@@ -405,9 +409,12 @@ void sendUDP(byte unit, const byte *data, byte size)
 #endif // ifndef BUILD_NO_DEBUG
 
   statusLED(true);
+  FeedSW_watchdog();
   portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
   portUDP.write(data, size);
   portUDP.endPacket();
+  FeedSW_watchdog();
+  delay(0);
 }
 
 /*********************************************************************************************\
@@ -495,12 +502,14 @@ void sendSysInfoUDP(byte repeats)
     statusLED(true);
 
     IPAddress broadcastIP(255, 255, 255, 255);
+    FeedSW_watchdog();
     portUDP.beginPacket(broadcastIP, Settings.UDPPort);
     portUDP.write(data, 80);
     portUDP.endPacket();
 
     if (counter < (repeats - 1)) {
-      delay(500);
+      // FIXME TD-er: Must use scheduler to send out messages, not using delay
+      delay(100);
     }
   }
 
@@ -985,16 +994,16 @@ bool hostReachable(const IPAddress& ip) {
    */
 }
 
-bool connectClient(WiFiClient& client, const char *hostname, uint16_t port) {
+bool connectClient(WiFiClient& client, const char *hostname, uint16_t port, uint32_t timeout_ms) {
   IPAddress ip;
 
-  if (resolveHostByName(hostname, ip)) {
-    return connectClient(client, ip, port);
+  if (resolveHostByName(hostname, ip, timeout_ms)) {
+    return connectClient(client, ip, port, timeout_ms);
   }
   return false;
 }
 
-bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
+bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t timeout_ms)
 {
   START_TIMER;
 
@@ -1023,19 +1032,22 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port)
   return connected;
 }
 
-bool resolveHostByName(const char *aHostname, IPAddress& aResult) {
+bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms) {
   START_TIMER;
 
   if (!NetworkConnected()) {
     return false;
   }
 
+  FeedSW_watchdog();
+
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
 #else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-  bool resolvedIP = WiFi.hostByName(aHostname, aResult, CONTROLLER_CLIENTTIMEOUT_DFLT) == 1;
+  bool resolvedIP = WiFi.hostByName(aHostname, aResult, timeout_ms) == 1;
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
   delay(0);
+  FeedSW_watchdog();
 
   if (!resolvedIP) {
     Scheduler.sendGratuitousARP_now();
