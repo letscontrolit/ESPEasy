@@ -393,6 +393,7 @@ String wrapIfContains(const String& value, char contains, char wrap) {
 \*********************************************************************************************/
 String to_json_object_value(const String& object, const String& value) {
   String result;
+  bool   isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
   result.reserve(object.length() + value.length() + 6);
   wrap_String(object, F("\""), result);
@@ -403,7 +404,7 @@ String to_json_object_value(const String& object, const String& value) {
     result += F("\"\"");
     return result;
   }
-  if (mustConsiderAsString(value)) {
+  if (!isBool && mustConsiderAsString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
       // Must replace characters, so make a deepcopy

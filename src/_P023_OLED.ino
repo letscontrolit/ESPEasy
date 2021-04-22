@@ -65,6 +65,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormCheckBox(F("Use SH1106 controller"), F("p023_use_sh1106"), PCONFIG(5));
+
       {
         byte choice2         = PCONFIG(1);
         String options2[2]   = { F("Normal"), F("Rotated") };
@@ -109,6 +111,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       PCONFIG(2) = getFormItemInt(F("plugin_23_timer"));
       PCONFIG(3) = getFormItemInt(F("p023_size"));
       PCONFIG(4) = getFormItemInt(F("p023_font_spacing"));
+      PCONFIG(5) = isFormItemChecked(F("p023_use_sh1106"));
+
 
       // FIXME TD-er: This is a huge stack allocated object.
       char   deviceTemplate[P23_Nlines][P23_Nchars];
@@ -135,6 +139,8 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       byte type                              = 0;
       P023_data_struct::Spacing font_spacing = P023_data_struct::Spacing::normal;
       byte displayTimer                      = PCONFIG(2);
+      byte use_sh1106                        = PCONFIG(5);
+
 
       switch (PCONFIG(3)) {
         case 1:
@@ -161,7 +167,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
           break;
       }
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P023_data_struct(address, type, font_spacing, displayTimer));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P023_data_struct(address, type, font_spacing, displayTimer, use_sh1106));
       P023_data_struct *P023_data =
         static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 

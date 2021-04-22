@@ -106,6 +106,10 @@ class SettingsStruct_tmpl
   bool PeriodicalScanWiFi() const;
   void PeriodicalScanWiFi(bool value);
 
+  // When outputting JSON bools use quoted values (on, backward compatible) or use official JSON true/false unquoted
+  bool JSONBoolWithoutQuotes() const;
+  void JSONBoolWithoutQuotes(bool value);
+
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;

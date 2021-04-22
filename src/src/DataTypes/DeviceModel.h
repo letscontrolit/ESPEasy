@@ -22,6 +22,8 @@ enum DeviceModel {
   DeviceMode_Olimex_ESP32_PoE,
   DeviceMode_Olimex_ESP32_EVB,
   DeviceMode_Olimex_ESP32_GATEWAY,
+  DeviceMode_wESP32,
+  DeviceMode_WT32_ETH01,
   
 
   DeviceModel_MAX
