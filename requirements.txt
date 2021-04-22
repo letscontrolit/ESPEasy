@@ -1,7 +1,7 @@
 alabaster==0.7.12
 argh==0.26.2
 Babel==2.8.0
-bottle==0.12.18
+bottle==0.12.19
 cached-property==1.5.1
 certifi==2020.6.20
 cffi==1.14.1
