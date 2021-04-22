@@ -17,7 +17,7 @@ bool EventQueueStruct::getNext(String& event)
   if (_eventQueue.empty()) {
     return false;
   }
-  event = _eventQueue.front();
+  event = std::move(_eventQueue.front());
   _eventQueue.pop_front();
   return true;
 }

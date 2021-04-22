@@ -121,69 +121,70 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
     statisticsTimerStart = micros();
   }
   #endif // ifdef USES_TIMING_STATS
+  {
+    String pageTemplate;
+    String fileName = tmplName;
 
-  String pageTemplate;
-  String fileName = tmplName;
+    fileName += F(".htm");
+    fs::File f = tryOpenFile(fileName, "r");
 
-  fileName += F(".htm");
-  fs::File f = tryOpenFile(fileName, "r");
+    if (f) {
+      pageTemplate.reserve(f.size());
 
-  if (f) {
-    pageTemplate.reserve(f.size());
-
-    while (f.available()) { pageTemplate += (char)f.read(); }
-    f.close();
-  } else {
-    // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
-    getWebPageTemplateDefault(tmplName, pageTemplate);
-  }
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("sendWebPage"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-
-  // web activity timer
-  lastWeb = millis();
-
-  if (Tail) {
-    addHtml(pageTemplate.substring(
-              11 +                                      // Size of "{{content}}"
-              pageTemplate.indexOf(F("{{content}}")))); // advance beyond content key
-  } else {
-    int indexStart = 0;
-    int indexEnd   = 0;
-    int readPos    = 0; // Position of data sent to TXBuffer
-    String varName;     // , varValue;
-    String meta;
-
-    if (rebooting) {
-      meta = F("<meta http-equiv='refresh' content='10 url=/'>");
+      while (f.available()) { pageTemplate += (char)f.read(); }
+      f.close();
+    } else {
+      // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
+      getWebPageTemplateDefault(tmplName, pageTemplate);
     }
+    #ifndef BUILD_NO_RAM_TRACKER
+    checkRAM(F("sendWebPage"));
+    #endif // ifndef BUILD_NO_RAM_TRACKER
 
-    while ((indexStart = pageTemplate.indexOf(F("{{"), indexStart)) >= 0) {
-      addHtml(pageTemplate.substring(readPos, indexStart));
-      readPos = indexStart;
+    // web activity timer
+    lastWeb = millis();
 
-      if ((indexEnd = pageTemplate.indexOf(F("}}"), indexStart)) > 0) {
-        varName    = pageTemplate.substring(indexStart + 2, indexEnd);
-        indexStart = indexEnd + 2;
-        readPos    = indexEnd + 2;
-        varName.toLowerCase();
+    if (Tail) {
+      addHtml(pageTemplate.substring(
+                11 +                                      // Size of "{{content}}"
+                pageTemplate.indexOf(F("{{content}}")))); // advance beyond content key
+    } else {
+      int indexStart = 0;
+      int indexEnd   = 0;
+      int readPos    = 0; // Position of data sent to TXBuffer
+      String varName;     // , varValue;
+      String meta;
 
-        if (varName == F("content")) { // is var == page content?
-          break;                       // send first part of result only
-        } else if (varName == F("error")) {
-          getErrorNotifications();
+      if (rebooting) {
+        meta = F("<meta http-equiv='refresh' content='10 url=/'>");
+      }
+
+      while ((indexStart = pageTemplate.indexOf(F("{{"), indexStart)) >= 0) {
+        addHtml(pageTemplate.substring(readPos, indexStart));
+        readPos = indexStart;
+
+        if ((indexEnd = pageTemplate.indexOf(F("}}"), indexStart)) > 0) {
+          varName    = pageTemplate.substring(indexStart + 2, indexEnd);
+          indexStart = indexEnd + 2;
+          readPos    = indexEnd + 2;
+          varName.toLowerCase();
+
+          if (varName == F("content")) { // is var == page content?
+            break;                       // send first part of result only
+          } else if (varName == F("error")) {
+            getErrorNotifications();
+          }
+          else if (varName == F("meta")) {
+            addHtml(meta);
+          }
+          else {
+            getWebPageTemplateVar(varName);
+          }
+        } else { // no closing "}}"
+          // eat "{{"
+          readPos    += 2;
+          indexStart += 2;
         }
-        else if (varName == F("meta")) {
-          addHtml(meta);
-        }
-        else {
-          getWebPageTemplateVar(varName);
-        }
-      } else { // no closing "}}"
-        // eat "{{"
-        readPos    += 2;
-        indexStart += 2;
       }
     }
   }
@@ -449,7 +450,9 @@ void setWebserverRunning(bool state) {
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 {
-  tmpl.reserve(576);
+  static size_t expectedSize = 579;
+
+  tmpl.reserve(expectedSize);
   const bool addJS   = true;
   const bool addMeta = true;
 
@@ -494,6 +497,10 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
     getWebPageTemplateDefaultContentSection(tmpl);
     getWebPageTemplateDefaultFooter(tmpl);
   }
+  if (tmpl.length() > expectedSize) {
+    expectedSize = tmpl.length();
+  }
+//  addLog(LOG_LEVEL_INFO, String(F("tmpl.length(): ")) + String(tmpl.length()));
 }
 
 void getWebPageTemplateDefaultHead(String& tmpl, bool addMeta, bool addJS) {
