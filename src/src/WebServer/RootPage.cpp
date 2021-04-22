@@ -94,10 +94,8 @@ void handle_root() {
 
   String  sCommand;
   boolean rebootCmd = false;
-  if (loggedIn) {
-    sCommand  = web_server.arg(F("cmd"));
-    rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
-  }
+  sCommand  = web_server.arg(F("cmd"));
+  rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
   {
     int freeMem = ESP.getFreeHeap();
