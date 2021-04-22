@@ -343,15 +343,16 @@ bool rules_replace_common_mistakes(const String& from, const String& to, String&
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log;
-    log.reserve(32 + from.length() + to.length() + line.length());
-    log  = F("Rules (Syntax Error, auto-corrected): '");
-    log += from;
-    log += F("' => '");
-    log += to;
-    log += F("' in: '");
-    log += line;
-    log += '\'';
-    addLog(LOG_LEVEL_ERROR, log);
+    if (log.reserve(32 + from.length() + to.length() + line.length())) {
+      log  = F("Rules (Syntax Error, auto-corrected): '");
+      log += from;
+      log += F("' => '");
+      log += to;
+      log += F("' in: '");
+      log += line;
+      log += '\'';
+      addLog(LOG_LEVEL_ERROR, log);
+    }
   }
   line.replace(from, to);
   return true;
@@ -1451,7 +1452,7 @@ void createRuleEvents(struct EventStruct *event) {
       }
       eventString += formatUserVarNoCheck(event, varNr);
     }
-    eventQueue.add(eventString);
+    eventQueue.addMove(std::move(eventString));
   } else {
     for (byte varNr = 0; varNr < valueCount; varNr++) {
       String eventString;
@@ -1461,7 +1462,7 @@ void createRuleEvents(struct EventStruct *event) {
       eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
       eventString += F("=");
       eventString += formatUserVarNoCheck(event, varNr);
-      eventQueue.add(eventString);
+      eventQueue.addMove(std::move(eventString));
     }
   }
 }

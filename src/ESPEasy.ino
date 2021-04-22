@@ -596,7 +596,7 @@ void loop()
      {
         String event = F("System#NoSleep=");
         event += Settings.deepSleep_wakeTime;
-        eventQueue.add(event);
+        eventQueue.addMove(std::move(event));
      }
 
 

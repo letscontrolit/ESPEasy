@@ -25,20 +25,25 @@ void handle_wifiscanner_json() {
   TXBuffer.startJsonStream();
   addHtml(F("[{"));
   bool firstentry = true;
-  int  n          = WiFi.scanNetworks(false, true);
 
-  for (int i = 0; i < n; ++i)
+  if (WiFi_AP_Candidates.scanComplete() <= 0) {
+    WiFiMode_t cur_wifimode = WiFi.getMode();
+    WifiScan(false);
+    setWifiMode(cur_wifimode);
+  }
+
+  for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
   {
     if (firstentry) { firstentry = false; }
     else { addHtml(F(",{")); }
-    String authType = WiFi_encryptionType(WiFi.encryptionType(i));
+    const String authType = it->encryption_type();
     if (authType.length() > 0) {
       stream_next_json_object_value(F("auth"), authType);
     }
-    stream_next_json_object_value(getLabel(LabelType::SSID),      WiFi.SSID(i));
-    stream_next_json_object_value(getLabel(LabelType::BSSID),     WiFi.BSSIDstr(i));
-    stream_next_json_object_value(getLabel(LabelType::CHANNEL),   String(WiFi.channel(i)));
-    stream_last_json_object_value(getLabel(LabelType::WIFI_RSSI), String(WiFi.RSSI(i)));
+    stream_next_json_object_value(getLabel(LabelType::SSID),      it->ssid);
+    stream_next_json_object_value(getLabel(LabelType::BSSID),     formatMAC(it->bssid));
+    stream_next_json_object_value(getLabel(LabelType::CHANNEL),   String(it->channel));
+    stream_last_json_object_value(getLabel(LabelType::WIFI_RSSI), String(it->rssi));
   }
   if (firstentry) {
     addHtml('}');

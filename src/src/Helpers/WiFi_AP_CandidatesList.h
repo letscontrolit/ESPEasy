@@ -21,6 +21,8 @@ struct WiFi_AP_CandidatesList {
 
   void begin_sync_scan();
 
+  void purge_expired();
+
   // Add found WiFi access points to the list if they are possible candidates.
   void process_WiFiscan(uint8_t scancount);
 

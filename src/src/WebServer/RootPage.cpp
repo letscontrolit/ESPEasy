@@ -94,10 +94,8 @@ void handle_root() {
 
   String  sCommand;
   boolean rebootCmd = false;
-  if (loggedIn) {
-    sCommand  = web_server.arg(F("cmd"));
-    rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
-  }
+  sCommand  = web_server.arg(F("cmd"));
+  rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
 
   int freeMem = ESP.getFreeHeap();
@@ -123,7 +121,7 @@ void handle_root() {
       addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
       cmd_within_mainloop = CMD_REBOOT;
       addHtml(F(
-                "OK. Please wait > 1 min and connect to Acces point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
+                "OK. Please wait > 1 min and connect to Access point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
       TXBuffer.endStream();
       ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
       return;
