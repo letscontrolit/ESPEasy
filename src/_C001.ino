@@ -57,12 +57,11 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
       if (event->idx != 0)
       {
         // We now create a URI for the request
+        const Sensor_VType sensorType = event->getSensorType();
         String url;
-        if (url.reserve(128)) {
+        const size_t expectedSize = sensorType == Sensor_VType::SENSOR_TYPE_STRING ? 64 + event->String2.length() : 128;
+        if (url.reserve(expectedSize)) {
           url = F("/json.htm?type=command&param=");
-
-          const Sensor_VType sensorType = event->getSensorType();
-
 
           switch (sensorType)
           {

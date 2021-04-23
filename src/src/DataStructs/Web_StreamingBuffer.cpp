@@ -240,7 +240,8 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 #endif // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 
   sentBytes += length;
-  data                = "";
+  data       = "";
+  data.reserve(CHUNKED_BUFFER_SIZE);
   delay(0);
 }
 
