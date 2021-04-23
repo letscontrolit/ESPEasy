@@ -222,7 +222,7 @@ void P020_Task::rulesEngine(String message) {
     }
   } // switch
 
-  if (eventString.length() > 0) { eventQueue.add(eventString); }
+  if (eventString.length() > 0) { eventQueue.addMove(std::move(eventString)); }
 }
 
 bool P020_Task::isInit() const {
@@ -239,7 +239,7 @@ void P020_Task::sendConnectedEvent(bool connected)
     RuleEvent += F("Client");
     RuleEvent += '=';
     RuleEvent += (connected ? 1 : 0);
-    eventQueue.add(RuleEvent);
+    eventQueue.addMove(std::move(RuleEvent));
   }
 }
 
