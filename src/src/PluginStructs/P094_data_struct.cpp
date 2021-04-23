@@ -146,6 +146,10 @@ bool P094_data_struct::loop() {
   return fullSentenceReceived;
 }
 
+const String& P094_data_struct::peekSentence() const {
+  return sentence_part;
+}
+
 void P094_data_struct::getSentence(String& string, bool appendSysTime) {
   if (appendSysTime) {
     // Unix timestamp = 10 decimals + separator
@@ -239,7 +243,7 @@ bool P094_data_struct::disableFilterWindowActive() const {
   return false;
 }
 
-bool P094_data_struct::parsePacket(String& received) const {
+bool P094_data_struct::parsePacket(const String& received) const {
   size_t strlength = received.length();
 
   if (strlength == 0) {
