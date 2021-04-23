@@ -611,6 +611,7 @@ void WifiDisconnect()
 // Scan WiFi network
 // ********************************************************************************
 void WiFiScanPeriodical() {
+  WiFi_AP_Candidates.purge_expired();
   if (!Settings.PeriodicalScanWiFi()) {
     return;
   }

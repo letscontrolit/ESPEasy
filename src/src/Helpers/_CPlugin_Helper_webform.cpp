@@ -279,7 +279,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
       {
         strncpy_webserver_arg(ControllerSettings.HostName, internalName);
         IPAddress IP;
-        resolveHostByName(ControllerSettings.HostName, IP);
+        resolveHostByName(ControllerSettings.HostName, IP, ControllerSettings.ClientTimeout);
 
         for (byte x = 0; x < 4; x++) {
           ControllerSettings.IP[x] = IP[x];

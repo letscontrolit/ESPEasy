@@ -88,7 +88,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 	client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 	String aHost = notificationsettings.Server;
 	addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
-	if (!connectClient(client, aHost.c_str(), notificationsettings.Port)) {
+	if (!connectClient(client, aHost.c_str(), notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
 		addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
 		myStatus = false;
 	}else {

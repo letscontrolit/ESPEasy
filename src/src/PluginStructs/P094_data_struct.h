@@ -75,6 +75,8 @@ public:
 
   bool loop();
 
+  const String& peekSentence() const;
+
   void getSentence(String& string, bool appendSysTime);
 
   void getSentencesReceived(uint32_t& succes,
@@ -104,7 +106,7 @@ public:
 
   bool          disableFilterWindowActive() const;
 
-  bool          parsePacket(String& received) const;
+  bool          parsePacket(const String& received) const;
 
   static String MatchType_toString(P094_Match_Type matchType);
   static String P094_FilterValueType_toString(P094_Filter_Value_Type valueType);

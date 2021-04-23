@@ -120,7 +120,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 
           if ((command == F("event")) || (command == F("asyncevent"))) {
             if (Settings.UseRules) {
-              eventQueue.add(parseStringToEnd(cmd, 2));
+              eventQueue.addMove(parseStringToEnd(cmd, 2));
             }
           } else {
             ExecuteCommand(event->TaskIndex, EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str(), true, true, true);
