@@ -1440,7 +1440,35 @@ void createRuleEvents(struct EventStruct *event) {
 
   const byte valueCount = getValueCountForTask(event->TaskIndex);
 
-  if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
+  // Small optimization as sensor type string may result in large strings
+  // These also only yield a single value, so no need to check for combining task values.
+  if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+    size_t expectedSize = 2 + getTaskDeviceName(event->TaskIndex).length();
+    expectedSize += strlen(ExtraTaskSettings.TaskDeviceValueNames[0]);
+   
+    bool appendCompleteStringvalue = false;
+    String eventString;
+
+    if (eventString.reserve(expectedSize + event->String2.length())) {
+      appendCompleteStringvalue = true;
+    } else if (!eventString.reserve(expectedSize + 24)) {
+      // No need to continue as we can't even allocate the event, we probably also cannot process it
+      addLog(LOG_LEVEL_ERROR, F("Not enough memory for event"));
+      return;
+    }
+    eventString  = getTaskDeviceName(event->TaskIndex);
+    eventString += F("#");
+    eventString += ExtraTaskSettings.TaskDeviceValueNames[0];
+    eventString += F("=");
+    if (appendCompleteStringvalue) {
+      eventString += event->String2;
+    } else {
+      eventString += event->String2.substring(0, 10);
+      eventString += F("...");
+      eventString += event->String2.substring(event->String2.length() - 10);
+    }
+    eventQueue.addMove(std::move(eventString));    
+  } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
     String eventString;
     eventString.reserve(128); // Enough for most use cases, prevent lots of memory allocations.
     eventString  = getTaskDeviceName(event->TaskIndex);
