@@ -219,9 +219,20 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
           if (event->String2.length() > 0) {
             if (Plugin_094_match_all(event->TaskIndex, event->String2)) {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("CUL Reader: Sending: ");
-                log += event->String2;
-                addLog(LOG_LEVEL_INFO, log);
+                String log;
+                if (log.reserve(128)) {
+                  log = F("CUL Reader: Sending: ");
+                  const size_t messageLength = event->String2.length();
+                  if (messageLength < 100) {
+                    log += event->String2;
+                  } else {
+                    // Split string so we get start and end
+                    log += event->String2.substring(0, 40);
+                    log += F("...");
+                    log += event->String2.substring(messageLength - 40);
+                  }
+                  addLog(LOG_LEVEL_INFO, log);
+                }
               }
               // Filter length options:
               // - 22 char, for hash-value then we filter the exact meter including serial and meter type, (that will also prevent very quit sending meters, which normaly is a fault)
@@ -288,7 +299,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
   return success;
 }
 
-bool Plugin_094_match_all(taskIndex_t taskIndex, String& received)
+bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received)
 {
   P094_data_struct *P094_data =
     static_cast<P094_data_struct *>(getPluginTaskData(taskIndex));
@@ -440,9 +451,7 @@ void P094_html_show_stats(struct EventStruct *event) {
   }
   {
     addRowLabel(F("Current Sentence"));
-    String sentencePart;
-    P094_data->getSentence(sentencePart, false);
-    addHtml(sentencePart);
+    addHtml(P094_data->peekSentence());
   }
 
   {
