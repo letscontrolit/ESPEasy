@@ -46,6 +46,16 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
   last_seen = millis();
 }
 
+WiFi_AP_Candidate::WiFi_AP_Candidate(const WiFi_AP_Candidate& other)
+: ssid(other.ssid), key(other.key), last_seen(other.last_seen), 
+  rssi(other.rssi), channel(other.channel), index(other.index), 
+  enc_type(other.enc_type), isHidden(other.isHidden), 
+  lowPriority(other.lowPriority), 
+  isEmergencyFallback(other.isEmergencyFallback)
+{
+  setBSSID(other.bssid);
+}
+
 WiFi_AP_Candidate::WiFi_AP_Candidate() {}
 
 bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
