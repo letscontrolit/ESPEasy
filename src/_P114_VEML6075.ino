@@ -122,7 +122,6 @@ boolean Plugin_114(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-
       P114_data_struct *P114_data =
         static_cast<P114_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -131,7 +130,6 @@ boolean Plugin_114(byte function, struct EventStruct *event, String& string)
       }
 
       String log;
-      log.reserve(130);
 
       float UVA     = 0.0f;
       float UVB     = 0.0f;
@@ -143,6 +141,7 @@ boolean Plugin_114(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 2] = UVIndex;
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          log.reserve(130);
           log  = F("VEML6075: Address: 0x");
           log += String(PCONFIG(0), HEX);
           log += F(" / Integration Time: ");
