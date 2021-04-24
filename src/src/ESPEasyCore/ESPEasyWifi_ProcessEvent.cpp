@@ -88,7 +88,7 @@ void handle_unprocessedNetworkEvents()
 
       // WiFi connection is not yet available, so introduce some extra delays to
       // help the background tasks managing wifi connections
-      delay(1);
+      delay(0);
 
       NetworkConnectRelaxed();
 
