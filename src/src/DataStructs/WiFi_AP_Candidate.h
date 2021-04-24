@@ -16,6 +16,8 @@ struct WiFi_AP_Candidate {
   // Construct using index from WiFi scan result
   WiFi_AP_Candidate(uint8_t networkItem);
 
+  WiFi_AP_Candidate(const WiFi_AP_Candidate& other);
+
   // Default constructor
   WiFi_AP_Candidate();
 
