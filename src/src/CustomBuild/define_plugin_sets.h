@@ -967,6 +967,7 @@ To create/register a plugin, you have to :
     // #define USES_P110   // VL53L0X Time of Flight sensor
     // #define USES_P111   // RC522 RFID reader
     // #define USES_P113   // VL53L1X ToF
+    // #define USES_P114   // VEML6075 UVA/UVB sensor
 #endif
 
 
@@ -1222,7 +1223,7 @@ To create/register a plugin, you have to :
     #define USES_P113   // VL53L1X
   #endif
   #ifndef USES_P114
-    #define USES_P114   // 
+    #define USES_P114   // VEML6075 UVA/UVB sensor
   #endif
   #ifndef USES_P115
     #define USES_P115   // 
