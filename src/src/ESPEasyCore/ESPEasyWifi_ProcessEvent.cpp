@@ -93,7 +93,7 @@ void handle_unprocessedNetworkEvents()
 
       // WiFi connection is not yet available, so introduce some extra delays to
       // help the background tasks managing wifi connections
-      delay(1);
+      delay(0);
 
       NetworkConnectRelaxed();
 
@@ -231,6 +231,9 @@ void processDisconnect() {
 
 
   bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
+  if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
+    mustRestartWiFi = true;
+  }
   #ifdef USES_ESPEASY_NOW
   if (use_EspEasy_now) {
     mustRestartWiFi = true;
@@ -238,6 +241,9 @@ void processDisconnect() {
   #endif
 
   if (mustRestartWiFi) {
+    WifiDisconnect(); // Needed or else node may not reconnect reliably.
+    delay(100);
+    setWifiMode(WIFI_OFF);
     initWiFi();
     delay(100);
     if (WiFiEventData.unprocessedWifiEvents()) {

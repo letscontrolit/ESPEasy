@@ -1184,7 +1184,7 @@ String LoadFromFile(const char *fname, int offset, byte *memAddress, int datasiz
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
-  delay(1);
+  delay(0);
   START_TIMER;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadFromFile"));
@@ -1196,7 +1196,7 @@ String LoadFromFile(const char *fname, int offset, byte *memAddress, int datasiz
   f.close();
 
   STOP_TIMER(LOADFILE_STATS);
-  delay(1);
+  delay(0);
 
   return String();
 }
