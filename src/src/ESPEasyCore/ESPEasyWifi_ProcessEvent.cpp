@@ -234,6 +234,7 @@ void processDisconnect() {
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     mustRestartWiFi = true;
   }
+  
   #ifdef USES_ESPEASY_NOW
   if (use_EspEasy_now) {
     mustRestartWiFi = true;
