@@ -200,7 +200,8 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
   if (use_EspEasy_now) {
     const bool traceroute_received_timeout = _last_traceroute_received != 0 && (timePassedSince(_last_traceroute_received) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
     const bool traceroute_sent_timeout     = _last_traceroute_sent != 0 && (timePassedSince(_last_traceroute_sent) > ESPEASY_NOW_ACTIVITY_TIMEOUT);
-    if (traceroute_received_timeout || traceroute_sent_timeout) {
+    const bool first_traceroute_receive_timeout = _last_traceroute_received == 0 && (timePassedSince(_last_started) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
+    if (traceroute_received_timeout || traceroute_sent_timeout || first_traceroute_receive_timeout) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
         if (log.reserve(64)) {
@@ -364,7 +365,8 @@ bool ESPEasy_now_handler_t::active() const
   */
   const bool traceroute_received_timeout = _last_traceroute_received != 0 && (timePassedSince(_last_traceroute_received) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
   const bool traceroute_sent_timeout     = _last_traceroute_sent != 0 && (timePassedSince(_last_traceroute_sent) > ESPEASY_NOW_ACTIVITY_TIMEOUT);
-  if (traceroute_received_timeout || traceroute_sent_timeout) {
+  const bool first_traceroute_receive_timeout = _last_traceroute_received == 0 && (timePassedSince(_last_started) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
+  if (traceroute_received_timeout || traceroute_sent_timeout || first_traceroute_receive_timeout) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       if (log.reserve(64)) {
