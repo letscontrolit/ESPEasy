@@ -222,7 +222,16 @@ void processDisconnect() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (Settings.WiFiRestart_connection_lost()) {
+
+  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
+  if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
+    mustRestartWiFi = true;
+  }
+
+  if (mustRestartWiFi) {
+    WifiDisconnect(); // Needed or else node may not reconnect reliably.
+    delay(100);
+    setWifiMode(WIFI_OFF);
     initWiFi();
     delay(100);
     if (WiFiEventData.unprocessedWifiEvents()) {
