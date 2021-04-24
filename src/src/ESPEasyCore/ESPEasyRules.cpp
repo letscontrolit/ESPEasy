@@ -1460,6 +1460,7 @@ void createRuleEvents(struct EventStruct *event) {
     eventString += F("#");
     eventString += ExtraTaskSettings.TaskDeviceValueNames[0];
     eventString += F("=");
+    eventString += '`';
     if (appendCompleteStringvalue) {
       eventString += event->String2;
     } else {
@@ -1467,6 +1468,7 @@ void createRuleEvents(struct EventStruct *event) {
       eventString += F("...");
       eventString += event->String2.substring(event->String2.length() - 10);
     }
+    eventString += '`';
     eventQueue.addMove(std::move(eventString));    
   } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
     String eventString;
