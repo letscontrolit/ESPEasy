@@ -19,9 +19,9 @@ bool P114_data_struct::read_sensor(float& _UVA, float& _UVB, float& _UVIndex) {
 
   String log;
 
-  log.reserve(40);
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    log.reserve(40);
     log  = F("VEML6075: i2caddress: 0x");
     log += String(i2cAddress, HEX);
     addLog(LOG_LEVEL_DEBUG, log);
@@ -63,9 +63,9 @@ bool P114_data_struct::init_sensor() {
 
   String log;
 
-  log.reserve(60);
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    log.reserve(60);
     log  = F("VEML6075: ID: 0x");
     log += String(deviceID, HEX);
     log += F(" / checked Address: 0x");
@@ -76,11 +76,14 @@ bool P114_data_struct::init_sensor() {
   }
 
   if (deviceID != 0x26) {
+    log.reserve(60);
     log  = F("VEML6075: wrong deviceID: ");
     log += String(deviceID, HEX);
     addLog(LOG_LEVEL_ERROR, log);
     return false;
   } else {
+    log.reserve(60);
+
     // log  = F("VEML6075: found deviceID: 0x");
     // log += String(deviceID, HEX);
 

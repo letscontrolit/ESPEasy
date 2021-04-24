@@ -16,12 +16,12 @@
 # define VEML6075_UV_ID         0x0C // should retrn 0x26
 
 // Calculation factors
-# define ACoef 3.33
-# define BCoef 2.5
-# define CCoef 3.66
-# define DCoef 2.75
-# define UVAresponsivity  0.0011
-# define UVBresponsivity  0.00125
+# define ACoef 3.33f
+# define BCoef 2.5f
+# define CCoef 3.66f
+# define DCoef 2.75f
+# define UVAresponsivity  0.0011f
+# define UVBresponsivity  0.00125f
 
 
 enum IT {
