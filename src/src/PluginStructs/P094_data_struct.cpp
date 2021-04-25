@@ -1,7 +1,15 @@
-#include "P094_data_struct.h"
+#include "../PluginStructs/P094_data_struct.h"
+
+// Needed also here for PlatformIO's library finder as the .h file 
+// is in a directory which is excluded in the src_filter
+#include <ESPeasySerial.h>
+#include <Regexp.h>
 
 
 #ifdef USES_P094
+
+#include "../Globals/ESPEasy_time.h"
+#include "../Helpers/StringConverter.h"
 
 
 P094_data_struct::P094_data_struct() :  easySerial(nullptr) {}
@@ -17,12 +25,15 @@ void P094_data_struct::reset() {
   }
 }
 
-bool P094_data_struct::init(const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate) {
+bool P094_data_struct::init(ESPEasySerialPort port, 
+                            const int16_t serial_rx, 
+                            const int16_t serial_tx, 
+                            unsigned long baudrate) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
   }
   reset();
-  easySerial = new ESPeasySerial(serial_rx, serial_tx);
+  easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
 
   if (isInitialized()) {
     easySerial->begin(baudrate);
@@ -135,9 +146,21 @@ bool P094_data_struct::loop() {
   return fullSentenceReceived;
 }
 
-void P094_data_struct::getSentence(String& string) {
-  string        = sentence_part;
-  sentence_part = "";
+const String& P094_data_struct::peekSentence() const {
+  return sentence_part;
+}
+
+void P094_data_struct::getSentence(String& string, bool appendSysTime) {
+  string = std::move(sentence_part);
+  sentence_part = ""; // FIXME TD-er: Should not be needed as move already cleared it.
+  if (appendSysTime) {
+    // Unix timestamp = 10 decimals + separator
+    if (string.reserve(sentence_part.length() + 11)) {
+      string += ';';
+      string += node_time.getUnixTime();
+    }
+  }
+  sentence_part.reserve(string.length());
 }
 
 void P094_data_struct::getSentencesReceived(uint32_t& succes, uint32_t& error, uint32_t& length_last) const {
@@ -219,7 +242,7 @@ bool P094_data_struct::disableFilterWindowActive() const {
   return false;
 }
 
-bool P094_data_struct::parsePacket(String& received) const {
+bool P094_data_struct::parsePacket(const String& received) const {
   size_t strlength = received.length();
 
   if (strlength == 0) {
@@ -447,6 +470,10 @@ bool P094_data_struct::max_length_reached() const {
 
 size_t P094_data_struct::P094_Get_filter_base_index(size_t filterLine) {
   return filterLine * P094_ITEMS_PER_FILTER + P094_FIRST_FILTER_POS;
+}
+
+uint32_t P094_data_struct::getDebugCounter() {
+  return debug_counter++;
 }
 
 #endif // USES_P094

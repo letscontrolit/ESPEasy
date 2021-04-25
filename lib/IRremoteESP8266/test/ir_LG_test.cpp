@@ -6,30 +6,12 @@
 #include "IRsend_test.h"
 #include "gtest/gtest.h"
 
-// Tests for calcLGChecksum()
-TEST(TestCalcLGChecksum, General) {
-  EXPECT_EQ(0x0, calcLGChecksum(0x0));
-  EXPECT_EQ(0x1, calcLGChecksum(0x1));
-  EXPECT_EQ(0xF, calcLGChecksum(0xF));
-  EXPECT_EQ(0x4, calcLGChecksum(0x1111));
-  EXPECT_EQ(0x8, calcLGChecksum(0x2222));
-  EXPECT_EQ(0x0, calcLGChecksum(0x4444));
-  EXPECT_EQ(0xA, calcLGChecksum(0x1234));
-  EXPECT_EQ(0xA, calcLGChecksum(0x4321));
-  EXPECT_EQ(0xE, calcLGChecksum(0xABCD));
-  EXPECT_EQ(0x1, calcLGChecksum(0x4AE5));
-  EXPECT_EQ(0xC, calcLGChecksum(0xFFFF));
-  EXPECT_EQ(0x1, calcLGChecksum(0xC005));
-  EXPECT_EQ(0x1, IRLgAc::calcChecksum(0x88C0051));
-  EXPECT_EQ(0x4, calcLGChecksum(0xC035));
-  EXPECT_EQ(0x4, IRLgAc::calcChecksum(0x88C0354));
-}
 
 // Tests for sendLG().
 
 // Test sending typical data only.
 TEST(TestSendLG, SendDataOnly) {
-  IRsendTest irsend(4);
+  IRsendTest irsend(kGpioUnused);
   irsend.begin();
 
   irsend.reset();
@@ -60,7 +42,7 @@ TEST(TestSendLG, SendDataOnly) {
 
 // Test sending with different repeats.
 TEST(TestSendLG, SendWithRepeats) {
-  IRsendTest irsend(4);
+  IRsendTest irsend(kGpioUnused);
   irsend.begin();
 
   irsend.reset();
@@ -93,7 +75,7 @@ TEST(TestSendLG, SendWithRepeats) {
 
 // Test sending an atypical data size.
 TEST(TestSendLG, SendUnusualSize) {
-  IRsendTest irsend(4);
+  IRsendTest irsend(kGpioUnused);
   irsend.begin();
 
   irsend.reset();
@@ -129,7 +111,7 @@ TEST(TestSendLG, SendUnusualSize) {
 // Tests for encodeLG().
 
 TEST(TestEncodeLG, NormalEncoding) {
-  IRsendTest irsend(4);
+  IRsendTest irsend(kGpioUnused);
   EXPECT_EQ(0x0, irsend.encodeLG(0, 0));
   EXPECT_EQ(0x100011, irsend.encodeLG(1, 1));
   EXPECT_EQ(0x100022, irsend.encodeLG(1, 2));
@@ -143,15 +125,15 @@ TEST(TestEncodeLG, NormalEncoding) {
 
 // Decode normal LG messages.
 TEST(TestDecodeLG, NormalDecodeWithStrict) {
-  IRsendTest irsend(4);
-  IRrecv irrecv(4);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
   irsend.begin();
 
   // Normal LG 28-bit message.
   irsend.reset();
   irsend.sendLG(0x4B4AE51, kLgBits);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kStartOffset, kLgBits, true));
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(LG, irsend.capture.decode_type);
   EXPECT_EQ(kLgBits, irsend.capture.bits);
   EXPECT_EQ(0x4B4AE51, irsend.capture.value);
@@ -163,7 +145,7 @@ TEST(TestDecodeLG, NormalDecodeWithStrict) {
   irsend.reset();
   irsend.sendLG(0xB4B4AE51, kLg32Bits);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kStartOffset, kLg32Bits, false));
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(LG, irsend.capture.decode_type);
   EXPECT_EQ(kLg32Bits, irsend.capture.bits);
   EXPECT_EQ(0xB4B4AE51, irsend.capture.value);
@@ -175,7 +157,7 @@ TEST(TestDecodeLG, NormalDecodeWithStrict) {
   irsend.reset();
   irsend.sendLG(irsend.encodeLG(0x07, 0x99));
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kStartOffset, kLgBits, true));
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(LG, irsend.capture.decode_type);
   EXPECT_EQ(kLgBits, irsend.capture.bits);
   EXPECT_EQ(0x700992, irsend.capture.value);
@@ -187,7 +169,7 @@ TEST(TestDecodeLG, NormalDecodeWithStrict) {
   irsend.reset();
   irsend.sendLG(irsend.encodeLG(0x800, 0x8000), kLg32Bits);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kStartOffset, kLg32Bits, true));
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(LG, irsend.capture.decode_type);
   EXPECT_EQ(kLg32Bits, irsend.capture.bits);
   EXPECT_EQ(0x80080008, irsend.capture.value);
@@ -198,15 +180,15 @@ TEST(TestDecodeLG, NormalDecodeWithStrict) {
 
 // Decode normal repeated LG messages.
 TEST(TestDecodeLG, NormalDecodeWithRepeatAndStrict) {
-  IRsendTest irsend(4);
-  IRrecv irrecv(4);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
   irsend.begin();
 
   // Normal LG 28-bit message with 2 repeats.
   irsend.reset();
   irsend.sendLG(irsend.encodeLG(0x07, 0x99), kLgBits, 2);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kStartOffset, kLgBits, true));
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(LG, irsend.capture.decode_type);
   EXPECT_EQ(kLgBits, irsend.capture.bits);
   EXPECT_EQ(0x700992, irsend.capture.value);
@@ -218,7 +200,7 @@ TEST(TestDecodeLG, NormalDecodeWithRepeatAndStrict) {
   irsend.reset();
   irsend.sendLG(irsend.encodeLG(0x07, 0x99), kLg32Bits, 2);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kStartOffset, kLg32Bits, true));
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(LG, irsend.capture.decode_type);
   EXPECT_EQ(kLg32Bits, irsend.capture.bits);
   EXPECT_EQ(0x700992, irsend.capture.value);
@@ -229,8 +211,8 @@ TEST(TestDecodeLG, NormalDecodeWithRepeatAndStrict) {
 
 // Decode unsupported LG message values.
 TEST(TestDecodeLG, DecodeWithNonStrictValues) {
-  IRsendTest irsend(4);
-  IRrecv irrecv(4);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
   irsend.begin();
 
   // Illegal values should be rejected when strict is on.
@@ -267,8 +249,8 @@ TEST(TestDecodeLG, DecodeWithNonStrictValues) {
 
 // Decode unsupported LG message sizes.
 TEST(TestDecodeLG, DecodeWithNonStrictSizes) {
-  IRsendTest irsend(4);
-  IRrecv irrecv(4);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
   irsend.begin();
 
   // Illegal sizes should be rejected when strict is on.
@@ -313,8 +295,8 @@ TEST(TestDecodeLG, DecodeWithNonStrictSizes) {
 
 // Decode (non-standard) 64-bit messages.
 TEST(TestDecodeLG, Decode64BitMessages) {
-  IRsendTest irsend(4);
-  IRrecv irrecv(4);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
   irsend.begin();
 
   irsend.reset();
@@ -333,8 +315,8 @@ TEST(TestDecodeLG, Decode64BitMessages) {
 
 // Decode a 'real' example via GlobalCache
 TEST(TestDecodeLG, DecodeGlobalCacheExample) {
-  IRsendTest irsend(4);
-  IRrecv irrecv(4);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
   irsend.begin();
 
   // TODO(anyone): Find a Global Cache example of the LG 28-bit message.
@@ -360,8 +342,8 @@ TEST(TestDecodeLG, DecodeGlobalCacheExample) {
 
 // Fail to decode a non-LG example via GlobalCache
 TEST(TestDecodeLG, FailToDecodeNonLGExample) {
-  IRsendTest irsend(4);
-  IRrecv irrecv(4);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
   irsend.begin();
 
   irsend.reset();
@@ -381,32 +363,32 @@ TEST(TestDecodeLG, FailToDecodeNonLGExample) {
 
 // Test sending typical data only.
 TEST(TestSendLG2, SendDataOnly) {
-  IRsendTest irsend(0);
+  IRsendTest irsend(kGpioUnused);
   irsend.begin();
 
   irsend.reset();
   irsend.sendLG2(0x880094D);
   EXPECT_EQ(
-      "f38000d50"
-      "m3200s9850"
-      "m550s1600m550s550m550s550m550s550m550s1600m550s550m550s550m550s550"
-      "m550s550m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
-      "m550s1600m550s550m550s550m550s1600m550s550m550s1600m550s550m550s550"
-      "m550s1600m550s1600m550s550m550s1600"
-      "m550s55250",
+      "f38000d33"
+      "m3200s9900"
+      "m480s1600m480s550m480s550m480s550m480s1600m480s550m480s550m480s550"
+      "m480s550m480s550m480s550m480s550m480s550m480s550m480s550m480s550"
+      "m480s1600m480s550m480s550m480s1600m480s550m480s1600m480s550m480s550"
+      "m480s1600m480s1600m480s550m480s1600"
+      "m480s57230",
       irsend.outputStr());
 }
 
 TEST(TestDecodeLG2, SyntheticExample) {
-  IRsendTest irsend(0);
-  IRrecv irrecv(0);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
   irsend.begin();
 
   irsend.reset();
   irsend.sendLG2(0x880094D);
   irsend.makeDecodeResult();
 
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture));
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
   ASSERT_EQ(LG2, irsend.capture.decode_type);
   EXPECT_EQ(kLgBits, irsend.capture.bits);
   EXPECT_EQ(0x880094D, irsend.capture.value);
@@ -414,8 +396,8 @@ TEST(TestDecodeLG2, SyntheticExample) {
 
 // Verify decoding of LG variant 2 messages.
 TEST(TestDecodeLG2, RealLG2Example) {
-  IRsendTest irsend(0);
-  IRrecv irrecv(0);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
   irsend.begin();
 
   irsend.reset();
@@ -439,8 +421,8 @@ TEST(TestDecodeLG2, RealLG2Example) {
 // Tests for issue reported in
 // https://github.com/crankyoldgit/IRremoteESP8266/issues/620
 TEST(TestDecodeLG, Issue620) {
-  IRsendTest irsend(0);
-  IRrecv irrecv(0);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
   irsend.begin();
 
   // Raw data as reported in initial comment of Issue #620
@@ -466,7 +448,7 @@ TEST(TestDecodeLG, Issue620) {
 
   // Resend the same code as the report is a sent code doesn't decode
   // to the same message code.
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
   irsend.sendLG(0x8808721);
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
@@ -495,7 +477,7 @@ TEST(TestDecodeLG, Issue620) {
 }
 
 TEST(TestIRLgAcClass, SetAndGetPower) {
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
   ac.on();
   EXPECT_TRUE(ac.getPower());
   ac.off();
@@ -507,7 +489,7 @@ TEST(TestIRLgAcClass, SetAndGetPower) {
 }
 
 TEST(TestIRLgAcClass, SetAndGetTemp) {
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
   ac.setTemp(25);
   EXPECT_EQ(25, ac.getTemp());
   ac.setTemp(kLgAcMinTemp);
@@ -521,7 +503,7 @@ TEST(TestIRLgAcClass, SetAndGetTemp) {
 }
 
 TEST(TestIRLgAcClass, SetAndGetMode) {
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
   ac.setMode(kLgAcCool);
   ac.setFan(kLgAcFanAuto);
   ac.setTemp(25);
@@ -535,22 +517,22 @@ TEST(TestIRLgAcClass, SetAndGetMode) {
 }
 
 TEST(TestIRLgAcClass, SetAndGetFan) {
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
   ac.setMode(kLgAcCool);
   ac.setFan(kLgAcFanAuto);
   EXPECT_EQ(kLgAcFanAuto, ac.getFan());
-  ac.setFan(kLgAcFanLow);
-  EXPECT_EQ(kLgAcFanLow, ac.getFan());
+  ac.setFan(kLgAcFanLowest);
+  EXPECT_EQ(kLgAcFanLowest, ac.getFan());
   ac.setFan(kLgAcFanHigh);
   EXPECT_EQ(kLgAcFanHigh, ac.getFan());
   ac.setFan(kLgAcFanAuto + 1);
   EXPECT_EQ(kLgAcFanAuto, ac.getFan());
-  ac.setFan(kLgAcFanLow - 1);
+  ac.setFan(kLgAcFanLowest - 1);
   EXPECT_EQ(kLgAcFanAuto, ac.getFan());
 }
 
 TEST(TestIRLgAcClass, toCommon) {
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
   ac.setPower(true);
   ac.setMode(kLgAcCool);
   ac.setTemp(20);
@@ -582,7 +564,7 @@ TEST(TestIRLgAcClass, toCommon) {
 }
 
 TEST(TestIRLgAcClass, HumanReadable) {
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
 
   EXPECT_EQ(
       "Model: 1 (GE6711AR2853M), "
@@ -601,17 +583,17 @@ TEST(TestIRLgAcClass, HumanReadable) {
   ac.setTemp(kLgAcMinTemp);
   EXPECT_EQ(
       "Model: 1 (GE6711AR2853M), "
-      "Power: On, Mode: 0 (Cool), Temp: 16C, Fan: 0 (Low)",
+      "Power: On, Mode: 0 (Cool), Temp: 16C, Fan: 1 (Low)",
       ac.toString());
   ac.setTemp(ac.getTemp() + 1);
   EXPECT_EQ(
       "Model: 1 (GE6711AR2853M), "
-      "Power: On, Mode: 0 (Cool), Temp: 17C, Fan: 0 (Low)",
+      "Power: On, Mode: 0 (Cool), Temp: 17C, Fan: 1 (Low)",
       ac.toString());
   ac.setTemp(ac.getTemp() - 1);
   EXPECT_EQ(
       "Model: 1 (GE6711AR2853M), "
-      "Power: On, Mode: 0 (Cool), Temp: 16C, Fan: 0 (Low)",
+      "Power: On, Mode: 0 (Cool), Temp: 16C, Fan: 1 (Low)",
       ac.toString());
   ac.setPower(false);
   EXPECT_EQ(
@@ -621,7 +603,7 @@ TEST(TestIRLgAcClass, HumanReadable) {
 }
 
 TEST(TestIRLgAcClass, SetAndGetRaw) {
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
 
   ac.setRaw(0x8800A4E);
   ASSERT_EQ(0x8800A4E, ac.getRaw());
@@ -639,7 +621,7 @@ TEST(TestIRLgAcClass, SetAndGetRaw) {
 }
 
 TEST(TestIRLgAcClass, MessageConstruction) {
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
 
   ac.on();
   ac.setMode(kLgAcCool);
@@ -653,7 +635,7 @@ TEST(TestIRLgAcClass, MessageConstruction) {
 }
 
 TEST(TestIRLgAcClass, isValidLgAc) {
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
 
   ac.setRaw(0x8800A4E);
   ASSERT_TRUE(ac.isValidLgAc());
@@ -670,20 +652,29 @@ TEST(TestIRLgAcClass, isValidLgAc) {
   ASSERT_FALSE(ac.isValidLgAc());
 }
 
+TEST(TestIRLgAcClass, calcChecksum) {
+  EXPECT_EQ(0x1, IRLgAc::calcChecksum(0x88C0051));
+  EXPECT_EQ(0x4, IRLgAc::calcChecksum(0x88C0354));
+}
+
 TEST(TestUtils, Housekeeping) {
   ASSERT_EQ("LG", typeToString(decode_type_t::LG));
   ASSERT_EQ(decode_type_t::LG, strToDecodeType("LG"));
   ASSERT_FALSE(hasACState(decode_type_t::LG));
   ASSERT_TRUE(IRac::isProtocolSupported(decode_type_t::LG));
+  ASSERT_EQ(kLgBits, IRsendTest::defaultBits(decode_type_t::LG));
+  ASSERT_EQ(kLgDefaultRepeat, IRsendTest::minRepeats(decode_type_t::LG));
 
   ASSERT_EQ("LG2", typeToString(decode_type_t::LG2));
   ASSERT_EQ(decode_type_t::LG2, strToDecodeType("LG2"));
   ASSERT_FALSE(hasACState(decode_type_t::LG2));
   ASSERT_TRUE(IRac::isProtocolSupported(decode_type_t::LG2));
+  ASSERT_EQ(kLgBits, IRsendTest::defaultBits(decode_type_t::LG2));
+  ASSERT_EQ(kLgDefaultRepeat, IRsendTest::minRepeats(decode_type_t::LG2));
 }
 
 TEST(TestIRLgAcClass, KnownExamples) {
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
   // Ref:
   // https://github.com/crankyoldgit/IRremoteESP8266/issues/1008#issuecomment-570646648
 
@@ -707,7 +698,7 @@ TEST(TestIRLgAcClass, KnownExamples) {
   ASSERT_TRUE(ac.isValidLgAc());
   EXPECT_EQ(
       "Model: 1 (GE6711AR2853M), "
-      "Power: On, Mode: 1 (Dry), Temp: 21C, Fan: 0 (Low)",
+      "Power: On, Mode: 1 (Dry), Temp: 21C, Fan: 0 (Quiet)",
       ac.toString());
 
   ac.setRaw(0x880C758);
@@ -729,7 +720,7 @@ TEST(TestIRLgAcClass, KnownExamples) {
   ASSERT_TRUE(ac.isValidLgAc());
   EXPECT_EQ(
       "Model: 1 (GE6711AR2853M), "
-      "Power: On, Mode: 0 (Cool), Temp: 22C, Fan: 0 (Low)",
+      "Power: On, Mode: 0 (Cool), Temp: 22C, Fan: 0 (Quiet)",
       ac.toString());
 
   ac.setRaw(0x8808721);
@@ -807,8 +798,8 @@ TEST(TestIRLgAcClass, KnownExamples) {
 
 // Verify decoding of LG2 message.
 TEST(TestDecodeLG2, Issue1008) {
-  IRsendTest irsend(0);
-  IRrecv capture(0);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv capture(kGpioUnused);
   irsend.begin();
 
   irsend.reset();
@@ -829,7 +820,7 @@ TEST(TestDecodeLG2, Issue1008) {
   EXPECT_EQ(0x8800347, irsend.capture.value);
 
   irsend.reset();
-  IRLgAc ac(0);
+  IRLgAc ac(kGpioUnused);
   ac.setRaw(0x8800347);
   ac.setModel(lg_ac_remote_model_t::AKB75215403);  // aka. 2
   ac.send();
@@ -848,8 +839,8 @@ TEST(TestDecodeLG2, Issue1008) {
 }
 
 TEST(TestIRLgAcClass, DifferentModels) {
-  IRLgAc ac(0);
-  IRrecv capture(0);
+  IRLgAc ac(kGpioUnused);
+  IRrecv capture(kGpioUnused);
 
   ac.setRaw(0x8800347);
 
@@ -869,7 +860,6 @@ TEST(TestIRLgAcClass, DifferentModels) {
   stdAc::state_t r, p;
   ASSERT_TRUE(IRAcUtils::decodeToState(&ac._irsend.capture, &r, &p));
 
-
   ac.setModel(lg_ac_remote_model_t::AKB75215403);  // aka. 2
   ac._irsend.reset();
   ac.send();
@@ -884,4 +874,13 @@ TEST(TestIRLgAcClass, DifferentModels) {
   ASSERT_EQ(kLgBits, ac._irsend.capture.bits);
   ASSERT_EQ(expected2, IRAcUtils::resultAcToString(&ac._irsend.capture));
   ASSERT_TRUE(IRAcUtils::decodeToState(&ac._irsend.capture, &r, &p));
+}
+
+TEST(TestIRLgAcClass, FanSpeedIssue1214) {
+  EXPECT_EQ(kLgAcFanLowest, IRLgAc::convertFan(stdAc::fanspeed_t::kMin));
+  EXPECT_EQ(kLgAcFanLow, IRLgAc::convertFan(stdAc::fanspeed_t::kLow));
+  EXPECT_EQ(kLgAcFanMedium, IRLgAc::convertFan(stdAc::fanspeed_t::kMedium));
+  EXPECT_EQ(kLgAcFanHigh, IRLgAc::convertFan(stdAc::fanspeed_t::kHigh));
+  EXPECT_EQ(kLgAcFanHigh, IRLgAc::convertFan(stdAc::fanspeed_t::kMax));
+  EXPECT_EQ(kLgAcFanAuto, IRLgAc::convertFan(stdAc::fanspeed_t::kAuto));
 }

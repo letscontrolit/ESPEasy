@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P078
 
 //#######################################################################################################
@@ -38,10 +40,8 @@
 #define P078_NR_OUTPUT_OPTIONS        10
 #define P078_QUERY1_CONFIG_POS  3
 
-
-#include <SDM.h>    // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
+#include <SDM.h>    // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
 
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
@@ -60,7 +60,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_078;
         Device[deviceCount].Type = DEVICE_TYPE_SERIAL_PLUS1;     // connected through 3 datapins
-        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_QUAD;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -122,47 +122,52 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
+      if (P078_DEV_ID == 0 || P078_DEV_ID > 247 || P078_BAUDRATE >= 6) {
+        // Load some defaults
+        P078_DEV_ID = P078_DEV_ID_DFLT;
+        P078_MODEL = P078_MODEL_DFLT;
+        P078_BAUDRATE = P078_BAUDRATE_DFLT;
+        P078_QUERY1 = P078_QUERY1_DFLT;
+        P078_QUERY2 = P078_QUERY2_DFLT;
+        P078_QUERY3 = P078_QUERY3_DFLT;
+        P078_QUERY4 = P078_QUERY4_DFLT;
+      }
+      {
+        String options_baudrate[6];
+        for (int i = 0; i < 6; ++i) {
+          options_baudrate[i] = String(p078_storageValueToBaudrate(i));
+        }
+        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, NULL, P078_BAUDRATE );
+        addUnit(F("baud"));
+      }
+
+      if (P078_MODEL == 0 && P078_BAUDRATE > 3)
+        addFormNote(F("<span style=\"color:red\"> SDM120 only allows up to 9600 baud with default 2400!</span>"));
+
+      if (P078_MODEL == 3 && P078_BAUDRATE == 0)
+        addFormNote(F("<span style=\"color:red\"> SDM630 only allows 2400 to 38400 baud with default 9600!</span>"));
+
+      addFormNumericBox(F("Modbus Address"), P078_DEV_ID_LABEL, P078_DEV_ID, 1, 247);
+
+      if (Plugin_078_SDM != nullptr) {
+        addRowLabel(F("Checksum (pass/fail)"));
+        String chksumStats;
+        chksumStats = Plugin_078_SDM->getSuccCount();
+        chksumStats += '/';
+        chksumStats += Plugin_078_SDM->getErrCount();
+        addHtml(chksumStats);
+      }
+
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-        serialHelper_webformLoad(event);
-
-        if (P078_DEV_ID == 0 || P078_DEV_ID > 247 || P078_BAUDRATE >= 6) {
-          // Load some defaults
-          P078_DEV_ID = P078_DEV_ID_DFLT;
-          P078_MODEL = P078_MODEL_DFLT;
-          P078_BAUDRATE = P078_BAUDRATE_DFLT;
-          P078_QUERY1 = P078_QUERY1_DFLT;
-          P078_QUERY2 = P078_QUERY2_DFLT;
-          P078_QUERY3 = P078_QUERY3_DFLT;
-          P078_QUERY4 = P078_QUERY4_DFLT;
-        }
-        addFormNumericBox(F("Modbus Address"), P078_DEV_ID_LABEL, P078_DEV_ID, 1, 247);
-
         {
           String options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
           addFormSelector(F("Model Type"), P078_MODEL_LABEL, 4, options_model, NULL, P078_MODEL );
-        }
-        {
-          String options_baudrate[6];
-          for (int i = 0; i < 6; ++i) {
-            options_baudrate[i] = String(p078_storageValueToBaudrate(i));
-          }
-          addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, NULL, P078_BAUDRATE );
-        }
-
-        if (P078_MODEL == 0 && P078_BAUDRATE > 3)
-          addFormNote(F("<span style=\"color:red\"> SDM120 only allows up to 9600 baud with default 2400!</span>"));
-
-        if (P078_MODEL == 3 && P078_BAUDRATE == 0)
-          addFormNote(F("<span style=\"color:red\"> SDM630 only allows 2400 to 38400 baud with default 9600!</span>"));
-
-        if (Plugin_078_SDM != nullptr) {
-          addRowLabel(F("Checksum (pass/fail)"));
-          String chksumStats;
-          chksumStats = Plugin_078_SDM->getSuccCount();
-          chksumStats += '/';
-          chksumStats += Plugin_078_SDM->getErrCount();
-          addHtml(chksumStats);
         }
 
         {
@@ -185,7 +190,6 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-          serialHelper_webformSave(event);
           // Save output selector parameters.
           for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
             const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
@@ -209,7 +213,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           delete Plugin_078_SoftSerial;
           Plugin_078_SoftSerial=NULL;
         }
-        Plugin_078_SoftSerial = new ESPeasySerial(CONFIG_PIN1, CONFIG_PIN2);
+        Plugin_078_SoftSerial = new (std::nothrow) ESPeasySerial(static_cast<ESPEasySerialPort>(CONFIG_PORT), CONFIG_PIN1, CONFIG_PIN2);
+        if (Plugin_078_SoftSerial == nullptr) {
+          break;
+        }
         unsigned int baudrate = p078_storageValueToBaudrate(P078_BAUDRATE);
         Plugin_078_SoftSerial->begin(baudrate);
 
@@ -218,8 +225,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           Plugin_078_SDM=NULL;
         }
         Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
-        Plugin_078_SDM->begin();
-        success = true;
+        if (Plugin_078_SDM != nullptr) {
+          Plugin_078_SDM->begin();
+          success = true;
+        }
         break;
       }
 
@@ -257,7 +266,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 }
 
 float p078_readVal(byte query, byte node, unsigned int model) {
-  if (Plugin_078_SDM == NULL) return 0.0;
+  if (Plugin_078_SDM == NULL) return 0.0f;
 
   byte retry_count = 3;
   bool success = false;

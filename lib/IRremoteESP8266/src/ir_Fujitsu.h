@@ -1,21 +1,28 @@
 // Copyright 2017 Jonny Graham
 // Copyright 2018-2019 David Conran
 
+/// @file
+/// @brief Support for Fujitsu A/C protocols.
+/// Fujitsu A/C support added by Jonny Graham
+
 // Supports:
-//   Brand: Fujitsu,  Model: AR-RAH2E remote
-//   Brand: Fujitsu,  Model: ASYG30LFCA A/C
-//   Brand: Fujitsu,  Model: AR-DB1 remote
-//   Brand: Fujitsu,  Model: AST9RSGCW A/C
-//   Brand: Fujitsu,  Model: AR-REB1E remote
-//   Brand: Fujitsu,  Model: ASYG7LMCA A/C
-//   Brand: Fujitsu,  Model: AR-RAE1E remote
-//   Brand: Fujitsu,  Model: AGTV14LAC A/C
-//   Brand: Fujitsu,  Model: AR-RAC1E remote
-//   Brand: Fujitsu,  Model: ASTB09LBC A/C
-//   Brand: Fujitsu,  Model: AR-RY4 remote
-//   Brand: Fujitsu General,  Model: AR-JW2 remote
-//   Brand: Fujitsu,  Model: AR-DL10 remote
-//   Brand: Fujitsu,  Model: ASU30C1 A/C
+//   Brand: Fujitsu,  Model: AR-RAH2E remote (ARRAH2E)
+//   Brand: Fujitsu,  Model: ASYG30LFCA A/C (ARRAH2E)
+//   Brand: Fujitsu General,  Model: AR-RCE1E remote (ARRAH2E)
+//   Brand: Fujitsu General,  Model: ASHG09LLCA A/C (ARRAH2E)
+//   Brand: Fujitsu General,  Model: AOHG09LLC A/C (ARRAH2E)
+//   Brand: Fujitsu,  Model: AR-DB1 remote (ARDB1)
+//   Brand: Fujitsu,  Model: AST9RSGCW A/C (ARDB1)
+//   Brand: Fujitsu,  Model: AR-REB1E remote (ARREB1E)
+//   Brand: Fujitsu,  Model: ASYG7LMCA A/C (ARREB1E)
+//   Brand: Fujitsu,  Model: AR-RAE1E remote (ARRAH2E)
+//   Brand: Fujitsu,  Model: AGTV14LAC A/C (ARRAH2E)
+//   Brand: Fujitsu,  Model: AR-RAC1E remote (ARRAH2E)
+//   Brand: Fujitsu,  Model: ASTB09LBC A/C (ARRY4)
+//   Brand: Fujitsu,  Model: AR-RY4 remote (ARRY4)
+//   Brand: Fujitsu General,  Model: AR-JW2 remote (ARJW2)
+//   Brand: Fujitsu,  Model: AR-DL10 remote (ARDB1)
+//   Brand: Fujitsu,  Model: ASU30C1 A/C (ARDB1)
 
 #ifndef IR_FUJITSU_H_
 #define IR_FUJITSU_H_
@@ -32,7 +39,6 @@
 #include "IRsend_test.h"
 #endif
 
-// FUJITSU A/C support added by Jonny Graham
 
 // Constants
 const uint8_t kFujitsuAcModeAuto = 0x00;
@@ -71,6 +77,15 @@ const uint8_t kFujitsuAcOutsideQuietOffset = 7;
 const uint8_t kFujitsuAcCleanOffset = 3;
 const uint8_t kFujitsuAcFilterOffset = 3;
 
+const uint8_t kFujitsuAcTimerTypeByte = 9;
+const uint8_t kFujitsuAcTimerTypeOffset = 4;  ///< Mask: 0b00xx0000
+const uint8_t kFujitsuAcTimerTypeSize = 2;    ///< Mask: 0b00xx0000
+const uint8_t kFujitsuAcStopTimers =                       0b00;  // 0
+const uint8_t kFujitsuAcSleepTimer =                       0b01;  // 1
+const uint8_t kFujitsuAcOffTimer =                         0b10;  // 2
+const uint8_t kFujitsuAcOnTimer =                          0b11;  // 3
+const uint16_t kFujitsuAcTimerMax = 12 * 60;  ///< Minutes.
+
 // Legacy defines.
 #define FUJITSU_AC_MODE_AUTO kFujitsuAcModeAuto
 #define FUJITSU_AC_MODE_COOL kFujitsuAcModeCool
@@ -94,19 +109,22 @@ const uint8_t kFujitsuAcFilterOffset = 3;
 #define FUJITSU_AC_SWING_HORIZ kFujitsuAcSwingHoriz
 #define FUJITSU_AC_SWING_BOTH kFujitsuAcSwingBoth
 
-
+/// Class for handling detailed Fujitsu A/C messages.
 class IRFujitsuAC {
  public:
   explicit IRFujitsuAC(const uint16_t pin,
                        const fujitsu_ac_remote_model_t model = ARRAH2E,
                        const bool inverted = false,
                        const bool use_modulation = true);
-
   void setModel(const fujitsu_ac_remote_model_t model);
   fujitsu_ac_remote_model_t getModel(void);
   void stateReset(void);
 #if SEND_FUJITSU_AC
   void send(const uint16_t repeat = kFujitsuAcMinRepeat);
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
   int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_FUJITSU_AC
   void begin(void);
@@ -137,9 +155,14 @@ class IRFujitsuAC {
   void setFilter(const bool on);
   bool getFilter(const bool raw = false);
   void setOutsideQuiet(const bool on);
-
   bool getOutsideQuiet(const bool raw = false);
-
+  uint8_t getTimerType(const bool raw = false);
+  void setTimerType(const uint8_t timertype);
+  uint16_t getOnTimer(const bool raw = false);
+  void setOnTimer(const uint16_t nr_mins);
+  uint16_t getOffSleepTimer(const bool raw = false);
+  void setOffTimer(const uint16_t nr_mins);
+  void setSleepTimer(const uint16_t nr_mins);
   uint8_t convertMode(const stdAc::opmode_t mode);
   uint8_t convertFan(stdAc::fanspeed_t speed);
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
@@ -149,11 +172,13 @@ class IRFujitsuAC {
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
+  IRsend _irsend;  ///< Instance of the IR send class
 #else
-  IRsendTest _irsend;
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< Instance of the testing IR send class
+  /// @endcond
 #endif
-  uint8_t remote_state[kFujitsuAcStateLength];
+  uint8_t remote_state[kFujitsuAcStateLength];  ///< The state of the IR remote.
   uint8_t _temp;
   uint8_t _fanSpeed;
   uint8_t _mode;
@@ -165,8 +190,12 @@ class IRFujitsuAC {
   bool _outsideQuiet;
   bool _clean;
   bool _filter;
+  uint16_t _ontimer;
+  uint16_t _offtimer;  // Also is the sleep timer value
+  uint8_t _timertype;
   void buildState(void);
   void buildFromState(const uint16_t length);
+  void setOffSleepTimer(const uint16_t nr_mins);
 };
 
 #endif  // IR_FUJITSU_H_

@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P042
 //#######################################################################################################
 //######################################## Plugin 042: NeoPixel Candle ##################################
@@ -51,7 +52,7 @@
 // http://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both    Code Sammlung
 
 #include <Adafruit_NeoPixel.h>
-#include "_Plugin_Helper.h"
+
 
 #define NUM_PIXEL       20         // Defines the amount of LED Pixel
 #define NUM_PIXEL_ROW    5         // Defines the amount of LED Pixel per Row
@@ -108,7 +109,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_042;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_TRIPLE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -174,23 +175,23 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         if (Candle_color == ColorDefault) {
           addHtml(F(" checked>"));
         } else {
-          addHtml(">");
+          addHtml('>');
         }
         addHtml(F("<label for='web_Color_Default'> Use default color</label><br>"));
         addHtml(F("<input type='radio' id='web_Color_Selected' name='web_Color_Type' value='1'"));
         if (Candle_color == ColorSelected) {
           addHtml(F(" checked>"));
         } else {
-          addHtml(">");
+          addHtml('>');
         }
         addHtml(F("<label for='web_Color_Selected'> Use selected color</label><br>"));
 
         // Color Selection
         char hexvalue[7] = {0};
-        sprintf(hexvalue, "%02X%02X%02X",     // Create Hex value for color
-                PCONFIG(0),
-                PCONFIG(1),
-                PCONFIG(2));
+        sprintf_P(hexvalue, PSTR("%02X%02X%02X"),     // Create Hex value for color
+                  PCONFIG(0),
+                  PCONFIG(1),
+                  PCONFIG(2));
 
         // http://jscolor.com/examples/
         addHtml(F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='"));
@@ -202,7 +203,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
 
         // Brightness Selection
         addHtml(F("<TR><TD>Brightness:<TD>min<input type='range' id='web_Bright_Slide' min='0' max='255' value='"));
-        addHtml(String(PCONFIG(3)));
+        addHtmlInt(PCONFIG(3));
         addHtml(F("'> max"));
 
         {
@@ -217,7 +218,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         addHtml(F("    document.getElementById('web_RGB_Red').value = Math.round(picker.rgb[0]);"));
         addHtml(F("    document.getElementById('web_RGB_Green').value = Math.round(picker.rgb[1]);"));
         addHtml(F("    document.getElementById('web_RGB_Blue').value = Math.round(picker.rgb[2]);"));
-        addHtml("}");
+        addHtml('}');
         addHtml(F("</script>"));
 
         addHtml(F("<script type='text/javascript'>window.addEventListener('load', function(){"));

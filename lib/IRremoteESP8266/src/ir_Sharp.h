@@ -1,11 +1,23 @@
 // Copyright 2019 crankyoldgit
 
+/// @file
+/// @brief Support for Sharp protocols.
+/// @see http://www.sbprojects.com/knowledge/ir/sharp.htm
+/// @see http://lirc.sourceforge.net/remotes/sharp/GA538WJSA
+/// @see http://www.mwftr.com/ucF08/LEC14%20PIC%20IR.pdf
+/// @see http://www.hifi-remote.com/johnsfine/DecodeIR.html#Sharp
+/// @see GlobalCache's IR Control Tower data.
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/638
+/// @see https://github.com/ToniA/arduino-heatpumpir/blob/master/SharpHeatpumpIR.cpp
+
 // Supports:
 //   Brand: Sharp,  Model: LC-52D62U TV
-//   Brand: Sharp,  Model: AY-ZP40KR A/C
-//   Brand: Sharp,  Model: AH-AxSAY A/C
-//   Brand: Sharp,  Model: AH-XP10NRY A/C
-//   Brand: Sharp,  Model: CRMC-820JBEZ remote
+//   Brand: Sharp,  Model: AY-ZP40KR A/C (A907)
+//   Brand: Sharp,  Model: AH-AxSAY A/C (A907)
+//   Brand: Sharp,  Model: CRMC-A907 JBEZ remote (A907)
+//   Brand: Sharp,  Model: AH-XP10NRY A/C (A907)
+//   Brand: Sharp,  Model: CRMC-820 JBEZ remote (A907)
+//   Brand: Sharp,  Model: CRMC-A705 JBEZ remote (A705)
 
 #ifndef IR_SHARP_H_
 #define IR_SHARP_H_
@@ -30,6 +42,7 @@ const uint16_t kSharpAcOneSpace = 1400;
 const uint32_t kSharpAcGap = kDefaultMessageGap;
 
 // Byte[4]
+const uint8_t kSharpAcModelBit = 4;  // Mask 0b000x0000
 const uint8_t kSharpAcByteTemp = 4;
 const uint8_t kSharpAcMinTemp = 15;  // Celsius
 const uint8_t kSharpAcMaxTemp = 30;  // Celsius
@@ -47,10 +60,11 @@ const uint8_t kSharpAcPowerTimerSetting = 8;                // 0b1000
 // Byte[6]
 const uint8_t kSharpAcByteMode = 6;
 const uint8_t kSharpAcModeSize = 2;        // Mask 0b000000xx;
-const uint8_t kSharpAcAuto =                             0b00;
+const uint8_t kSharpAcAuto =                             0b00;  // A907 only
+const uint8_t kSharpAcFan =                              0b00;  // A705 only
 const uint8_t kSharpAcDry =                              0b11;
 const uint8_t kSharpAcCool =                             0b10;
-const uint8_t kSharpAcHeat =                             0b01;
+const uint8_t kSharpAcHeat =                             0b01;  // A907 only
 const uint8_t kSharpAcByteClean = kSharpAcByteMode;
 const uint8_t kSharpAcBitCleanOffset = 3;  // Mask 0b0000x000
 const uint8_t kSharpAcByteFan = kSharpAcByteMode;
@@ -59,7 +73,9 @@ const uint8_t kSharpAcFanSize = 3;  // Nr. of Bits
 const uint8_t kSharpAcFanAuto =                     0b010;  // 2
 const uint8_t kSharpAcFanMin =                      0b100;  // 4 (FAN1)
 const uint8_t kSharpAcFanMed =                      0b011;  // 3 (FAN2)
+const uint8_t kSharpAcFanA705Low =                  0b011;  // 3
 const uint8_t kSharpAcFanHigh =                     0b101;  // 5 (FAN3)
+const uint8_t kSharpAcFanA705Med =                  0b101;  // 5
 const uint8_t kSharpAcFanMax =                      0b111;  // 7 (FAN4)
 // Byte[7]
 const uint8_t kSharpAcByteTimer = 7;
@@ -92,17 +108,23 @@ const uint8_t kSharpAcByteIon = 11;
 const uint8_t kSharpAcBitIonOffset = 2;  // Mask 0b00000x00
 // Byte[12] (Checksum)
 
-
+// Classes
+/// Class for handling detailed Sharp A/C messages.
 class IRSharpAc {
  public:
   explicit IRSharpAc(const uint16_t pin, const bool inverted = false,
                      const bool use_modulation = true);
-
 #if SEND_SHARP_AC
   void send(const uint16_t repeat = kSharpAcDefaultRepeat);
+  /// Run the calibration to calculate uSec timing offsets for this platform.
+  /// @return The uSec timing offset needed per modulation of the IR Led.
+  /// @note This will produce a 65ms IR signal pulse at 38kHz.
+  ///   Only ever needs to be run once per object instantiation, if at all.
   int8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_SHARP_AC
   void begin(void);
+  void setModel(const sharp_ac_remote_model_t model);
+  sharp_ac_remote_model_t getModel(const bool raw = false);
   void on(void);
   void off(void);
   void setPower(const bool on, const bool prev_on = true);
@@ -124,6 +146,8 @@ class IRSharpAc {
   void setIon(const bool on);
   bool getEconoToggle(void);
   void setEconoToggle(const bool on);
+  bool getLightToggle(void);
+  void setLightToggle(const bool on);
   uint16_t getTimerTime(void);
   bool getTimerEnabled(void);
   bool getTimerType(void);
@@ -137,22 +161,24 @@ class IRSharpAc {
                             const uint16_t length = kSharpAcStateLength);
   static uint8_t convertMode(const stdAc::opmode_t mode);
   static uint8_t convertFan(const stdAc::fanspeed_t speed);
-  static stdAc::opmode_t toCommonMode(const uint8_t mode);
-  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
+  stdAc::opmode_t toCommonMode(const uint8_t mode);
+  stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
   stdAc::state_t toCommon(void);
   String toString(void);
 #ifndef UNIT_TEST
 
  private:
-  IRsend _irsend;
-#else
-  IRsendTest _irsend;
-#endif
-  // # of bytes per command
-  uint8_t remote[kSharpAcStateLength];
-  uint8_t _temp;  // Saved copy of the desired temp.
-  uint8_t _mode;  // Saved copy of the desired mode.
-  uint8_t _fan;  // Saved copy of the desired fan speed.
+  IRsend _irsend;  ///< Instance of the IR send class
+#else  // UNIT_TEST
+  /// @cond IGNORE
+  IRsendTest _irsend;  ///< Instance of the testing IR send class
+  /// @endcond
+#endif  // UNIT_TEST
+  uint8_t remote[kSharpAcStateLength];  ///< State of the remote in IR code form
+  uint8_t _temp;  ///< Saved copy of the desired temp.
+  uint8_t _mode;  ///< Saved copy of the desired mode.
+  uint8_t _fan;  ///< Saved copy of the desired fan speed.
+  sharp_ac_remote_model_t _model;  ///< Saved copy of the model.
   void stateReset(void);
   void checksum(void);
   static uint8_t calcChecksum(uint8_t state[],
@@ -160,6 +186,8 @@ class IRSharpAc {
   void setPowerSpecial(const uint8_t value);
   uint8_t getPowerSpecial(void);
   void clearPowerSpecial(void);
+  bool _getEconoToggle(void);
+  void _setEconoToggle(const bool on);
 };
 
 #endif  // IR_SHARP_H_

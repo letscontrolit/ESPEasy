@@ -17,7 +17,8 @@ def get_git_description():
     try:
         from pygit2 import Repository
         try:
-            return Repository('.').head.shorthand
+            repo = Repository('.')
+            return "'{0}_{1}'".format(repo.head.shorthand, repo.revparse_single('HEAD').short_id)
         except:
             return 'No_.git_dir'
     except ImportError:

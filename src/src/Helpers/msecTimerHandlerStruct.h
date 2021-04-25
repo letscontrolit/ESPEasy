@@ -2,28 +2,34 @@
 #define HELPERS_MSECTIMERHANDLERSTRUCT_H
 
 
+#include <Arduino.h>
 #include <list>
 
 #include "../DataStructs/timer_id_couple.h"
 
-class String;
 
 struct msecTimerHandlerStruct {
   msecTimerHandlerStruct();
 
   void setEcoMode(bool enabled);
 
-  void registerAt(unsigned long id, unsigned long timer);
+  void registerAt(unsigned long id,
+                  unsigned long timer);
 
   // Check if timeout has been reached and also return its set timer.
   // Return 0 if no item has reached timeout moment.
   unsigned long getNextId(unsigned long& timer);
 
+  // Check if a give ID is scheduled and if so, return the set timer.
+  // N.B. the ID is the mixed ID.
+  bool   getTimerForId(unsigned long  id,
+                       unsigned long& timer) const;
+
   String getQueueStats();
 
-  void updateIdleTimeStats();
+  void   updateIdleTimeStats();
 
-  float getIdleTimePct();
+  float  getIdleTimePct() const;
 
 private:
 

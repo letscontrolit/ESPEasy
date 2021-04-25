@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P088
 //#######################################################################################################
 //#################################### Plugin 088: Heatpump IR ##########################################
@@ -44,7 +45,6 @@
  */
 
 #include <HeatpumpIRFactory.h>
-#include "_Plugin_Helper.h"
 
 IRSenderIRremoteESP8266 *Plugin_088_irSender = NULL;
 int panasonicCKPTimer = 0;
@@ -59,7 +59,7 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_088;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_NONE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -122,9 +122,9 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
           {
             delete Plugin_088_irSender;
           }
-          Plugin_088_irSender = new IRSenderIRremoteESP8266(irPin);
+          Plugin_088_irSender = new (std::nothrow) IRSenderIRremoteESP8266(irPin);
         }
-        if (Plugin_088_irSender != 0 && irPin == -1)
+        if (Plugin_088_irSender != nullptr && irPin == -1)
         {
           addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR transmitter deactivated"));
           delete Plugin_088_irSender;
@@ -222,14 +222,15 @@ boolean Plugin_088(byte function, struct EventStruct *event, String& string)
           panasonicCKPTimer--;
           if (panasonicCKPTimer == 0)
           {
-            PanasonicCKPHeatpumpIR *panasonicHeatpumpIR = new PanasonicCKPHeatpumpIR();
+            PanasonicCKPHeatpumpIR *panasonicHeatpumpIR = new (std::nothrow) PanasonicCKPHeatpumpIR();
+            if (panasonicHeatpumpIR != nullptr) {
+              enableIR_RX(false);
+              panasonicHeatpumpIR->sendPanasonicCKPCancelTimer(*Plugin_088_irSender);
+              enableIR_RX(true);
 
-            enableIR_RX(false);
-            panasonicHeatpumpIR->sendPanasonicCKPCancelTimer(*Plugin_088_irSender);
-            enableIR_RX(true);
-
-            delete panasonicHeatpumpIR;
-            addLog(LOG_LEVEL_INFO, F("P088: The TIMER led on Panasonic CKP should now be OFF"));
+              delete panasonicHeatpumpIR;
+              addLog(LOG_LEVEL_INFO, F("P088: The TIMER led on Panasonic CKP should now be OFF"));
+            }
           }
         }
         success = true;

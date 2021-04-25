@@ -1,15 +1,14 @@
 #include "CPlugins.h"
-#include "../../ESPEasy_plugindefs.h"
+
+#include "../../_Plugin_Helper.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/TimingStats.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
-#include "../../ESPEasy_Log.h"
 
 
-protocolIndex_t   INVALID_PROTOCOL_INDEX   = CPLUGIN_MAX;
-controllerIndex_t INVALID_CONTROLLER_INDEX = CONTROLLER_MAX;
-cpluginID_t       INVALID_C_PLUGIN_ID      = 0;
 
 // FIXME TD-er: Make these private and add functions to access its content.
 std::map<cpluginID_t, protocolIndex_t> CPlugin_id_to_ProtocolIndex;
@@ -52,7 +51,9 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
             newSize = newSize + 8 - (newSize % 8);
             Protocol.resize(newSize);
           }
+          #ifndef BUILD_NO_RAM_TRACKER
           checkRAM(F("CPluginCallADD"), x);
+          #endif
           String dummy;
           CPluginCall(x, Function, event, dummy);
         }
@@ -101,6 +102,9 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
       if (Settings.ControllerEnabled[controllerindex] && supportedCPluginID(Settings.Protocol[controllerindex]))
       {
+        if (Function == CPlugin::Function::CPLUGIN_PROTOCOL_SEND) {
+          checkDeviceVTypeForTask(event);
+        }
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
         CPluginCall(ProtocolIndex, Function, event, str);
       }
@@ -208,7 +212,7 @@ protocolIndex_t getProtocolIndex(cpluginID_t cpluginID)
     if (it != CPlugin_id_to_ProtocolIndex.end())
     {
       if (!validProtocolIndex(it->second)) { return INVALID_PROTOCOL_INDEX; }
-
+      #ifndef BUILD_NO_DEBUG
       if (Protocol[it->second].Number != cpluginID) {
         // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
         String log = F("getProtocolIndex error in Protocol Vector. CPluginID: ");
@@ -217,6 +221,7 @@ protocolIndex_t getProtocolIndex(cpluginID_t cpluginID)
         log += String(it->second);
         addLog(LOG_LEVEL_ERROR, log);
       }
+      #endif
       return it->second;
     }
   }

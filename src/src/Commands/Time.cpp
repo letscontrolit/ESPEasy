@@ -1,13 +1,18 @@
 #include "../Commands/Time.h"
 
+
 #include "../../ESPEasy_common.h"
+
+
 #include "../Commands/Common.h"
+
+#include "../ESPEasyCore/Serial.h"
+
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
 
-#include "../../ESPEasy_fdwdecl.h"
-
-#include "../../ESPEasy-Globals.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 
 String Command_NTPHost(struct EventStruct *event, const char *Line)
@@ -66,8 +71,8 @@ String Command_DateTime(struct EventStruct *event, const char *Line)
     struct tm tm;
     int yr, mnth, d;
     sscanf(TmpStr1.c_str(), "%4d-%2d-%2d", &yr, &mnth, &d);
-    tm.tm_year = yr - 1970;
-    tm.tm_mon  = mnth;
+    tm.tm_year = yr - 1900;
+    tm.tm_mon  = mnth - 1; // tm_mon starts at 0
     tm.tm_mday = d;
 
     if (GetArgv(Line, TmpStr1, 3)) {

@@ -1,10 +1,18 @@
-#include "Controller.h"
-#include "../Commands/Common.h"
-#include "../../ESPEasy_fdwdecl.h"
+#include "../Commands/Controller.h"
+
+
 #include "../../ESPEasy_common.h"
 
-#include "../../ESPEasy-Globals.h"
 
+#include "../Commands/Common.h"
+
+#include "../DataStructs/ESPEasy_EventStruct.h"
+
+#include "../DataTypes/ControllerIndex.h"
+
+#include "../Globals/CPlugins.h"
+
+#include "../Helpers/Misc.h"
 
 //      controllerIndex = (event->Par1 - 1);   Par1 is here for 1 ... CONTROLLER_MAX
 bool validControllerVar(struct EventStruct *event, controllerIndex_t& controllerIndex)

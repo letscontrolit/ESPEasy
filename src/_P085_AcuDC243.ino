@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P085
 
 // #######################################################################################################
@@ -56,7 +57,7 @@
 #define P085_MEASUREMENT_INTERVAL 60000L
 
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
+#include "src/Helpers/Modbus_RTU.h"
 
 struct P085_data_struct : public PluginTaskData_base {
   P085_data_struct() {}
@@ -69,9 +70,9 @@ struct P085_data_struct : public PluginTaskData_base {
     modbus.reset();
   }
 
-  bool init(const int16_t serial_rx, const int16_t serial_tx, int8_t dere_pin,
+  bool init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, int8_t dere_pin,
             unsigned int baudrate, uint8_t modbusAddress) {
-    return modbus.init(serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
+    return modbus.init(port, serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
   }
 
   bool isInitialized() const {
@@ -90,7 +91,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_085;
       Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
-      Device[deviceCount].VType              = SENSOR_TYPE_QUAD;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -153,22 +154,20 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
+      String options_baudrate[6];
 
-      {
-        // Modbus parameters put in scope to make sure the String array will not keep memory occupied.
-        String options_baudrate[6];
-
-        for (int i = 0; i < 6; ++i) {
-          options_baudrate[i] = String(p085_storageValueToBaudrate(i));
-        }
-        addFormNumericBox(F("Modbus Address"), P085_DEV_ID_LABEL, P085_DEV_ID, 1,
-                          247);
-        addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate,
-                        NULL, P085_BAUDRATE);
+      for (int i = 0; i < 6; ++i) {
+        options_baudrate[i] = String(p085_storageValueToBaudrate(i));
       }
+      addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate, NULL, P085_BAUDRATE);
+      addUnit(F("baud"));
+      addFormNumericBox(F("Modbus Address"), P085_DEV_ID_LABEL, P085_DEV_ID, 1, 247);
+      break;
+    }
 
+    case PLUGIN_WEBFORM_LOAD: {
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -224,7 +223,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
 
           if (errorcode == 0) {
             addRowLabel(F("Mode of data logging"));
-            addHtml(String(value));
+            addHtmlInt(value);
           }
           value = P085_data->modbus.readHoldingRegister(0x502, errorcode);
 
@@ -267,7 +266,6 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
 
       // Save normal parameters
       for (int i = 0; i < P085_QUERY1_CONFIG_POS; ++i) {
@@ -323,7 +321,8 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P085_data_struct());
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P085_data_struct());
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -331,10 +330,10 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P085_data->init(serial_rx, serial_tx, P085_DEPIN,
+      if (P085_data->init(port, serial_rx, serial_tx, P085_DEPIN,
                           p085_storageValueToBaudrate(P085_BAUDRATE),
                           P085_DEV_ID)) {
-        serialHelper_log_GpioDescription(serial_rx, serial_tx);
+        serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
         success = true;
       } else {
         clearPluginTaskData(event->TaskIndex);
@@ -343,7 +342,6 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
       success = true;
       break;
     }
@@ -362,6 +360,31 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       }
       break;
     }
+#ifdef USES_PACKED_RAW_DATA
+    case PLUGIN_GET_PACKED_RAW_DATA:
+    {
+      P085_data_struct *P085_data =
+        static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P085_data) && P085_data->isInitialized()) {
+        // Matching JS code:
+        // return decode(bytes, [header, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4],
+        //   ['header', 'unit1', 'val_1', 'unit2', 'val_2', 'unit3', 'val_3', 'unit4', 'val_4']);
+        for (byte i = 0; i < VARS_PER_TASK; ++i) {
+          const byte pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+          const byte choice       = PCONFIG(pconfigIndex);
+          string += LoRa_addInt(choice, PackedData_uint8);
+          string += LoRa_addFloat(UserVar[event->BaseVarIndex + i], PackedData_int32_1e4);
+        }
+        event->Par1 = 8; // valuecount 
+        
+        success = true;
+      }
+      break;
+    }
+#endif // USES_PACKED_RAW_DATA
+
+
   }
   return success;
 }
@@ -410,13 +433,13 @@ float p085_readValue(byte query, struct EventStruct *event) {
       case P085_QUERY_A:
         return P085_data->modbus.read_float_HoldingRegister(0x202);
       case P085_QUERY_W:
-        return P085_data->modbus.read_float_HoldingRegister(0x204) * 1000.0; // power (kW => W)
+        return P085_data->modbus.read_float_HoldingRegister(0x204) * 1000.0f; // power (kW => W)
       case P085_QUERY_Wh_imp:
-        return P085_data->modbus.read_32b_HoldingRegister(0x300) * 10.0;     // 0.01 kWh => Wh
+        return P085_data->modbus.read_32b_HoldingRegister(0x300) * 10.0f;     // 0.01 kWh => Wh
       case P085_QUERY_Wh_exp:
-        return P085_data->modbus.read_32b_HoldingRegister(0x302) * 10.0;     // 0.01 kWh => Wh
+        return P085_data->modbus.read_32b_HoldingRegister(0x302) * 10.0f;     // 0.01 kWh => Wh
       case P085_QUERY_Wh_tot:
-        return P085_data->modbus.read_32b_HoldingRegister(0x304) * 10.0;     // 0.01 kWh => Wh
+        return P085_data->modbus.read_32b_HoldingRegister(0x304) * 10.0f;     // 0.01 kWh => Wh
       case P085_QUERY_Wh_net:
       {
         int64_t intvalue = P085_data->modbus.read_32b_HoldingRegister(0x306);
@@ -425,16 +448,16 @@ float p085_readValue(byte query, struct EventStruct *event) {
           intvalue = 4294967296ll - intvalue;
         }
         float value = static_cast<float>(intvalue);
-        value *= 10.0; // 0.01 kWh => Wh
+        value *= 10.0f; // 0.01 kWh => Wh
         return value;
       }
       case P085_QUERY_h_tot:
-        return P085_data->modbus.read_32b_HoldingRegister(0x280) / 100.0;
+        return P085_data->modbus.read_32b_HoldingRegister(0x280) / 100.0f;
       case P085_QUERY_h_load:
-        return P085_data->modbus.read_32b_HoldingRegister(0x282) / 100.0;
+        return P085_data->modbus.read_32b_HoldingRegister(0x282) / 100.0f;
     }
   }
-  return 0.0;
+  return 0.0f;
 }
 
 void p085_showValueLoadPage(byte query, struct EventStruct *event) {

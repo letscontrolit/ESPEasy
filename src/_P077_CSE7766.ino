@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P077
 //#######################################################################################################
 //###################### Plugin 077: CSE7766 - Energy (Sonoff S31 and Sonoff Pow R2) ####################
@@ -5,7 +6,7 @@
 //###################################### stefan@clumsy.ch      ##########################################
 //#######################################################################################################
 
-#include "_Plugin_Helper.h"
+
 
 #define PLUGIN_077
 #define PLUGIN_ID_077         77
@@ -180,7 +181,7 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
   switch (function) {
   case PLUGIN_DEVICE_ADD: {
     Device[++deviceCount].Number = PLUGIN_ID_077;
-    Device[deviceCount].VType = SENSOR_TYPE_QUAD;
+    Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_QUAD;
     Device[deviceCount].Ports = 0;
     Device[deviceCount].PullUpOption = false;
     Device[deviceCount].InverseLogicOption = false;
@@ -235,14 +236,8 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
     break;
   }
 
-  case PLUGIN_EXIT: {
-    clearPluginTaskData(event->TaskIndex);
-    success = true;
-    break;
-  }
-
   case PLUGIN_INIT: {
-    initPluginTaskData(event->TaskIndex, new P077_data_struct());
+    initPluginTaskData(event->TaskIndex, new (std::nothrow) P077_data_struct());
     if (PCONFIG(0) == 0) PCONFIG(0) = HLW_UREF_PULSE;
     if (PCONFIG(1) == 0) PCONFIG(1) = HLW_IREF_PULSE;
     if (PCONFIG(2) == 0) PCONFIG(2) = HLW_PREF_PULSE;

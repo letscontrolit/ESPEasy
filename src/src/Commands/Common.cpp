@@ -2,10 +2,17 @@
 
 #include <ctype.h>
 #include <IPAddress.h>
+
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/EventValueSource.h"
+#include "../DataTypes/EventValueSource.h"
+
+#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/Serial.h"
+
+#include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
 
 
 // Simple function to return "Ok", to avoid flash string duplication in the firmware.
@@ -22,6 +29,11 @@ String return_command_failed()
 String return_incorrect_nr_arguments()
 {
   return F("Too many arguments, try using quotes!");
+}
+
+String return_incorrect_source()
+{
+  return F("Command not allowed from this source!");
 }
 
 String return_not_connected()
@@ -136,8 +148,9 @@ String Command_GetORSetBool(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (isInt(TmpStr1)) {
-        *value = atoi(TmpStr1.c_str()) > 0;
+      int tmp_int = 0;
+      if (validIntFromString(TmpStr1, tmp_int)) {
+        *value = tmp_int > 0;
       }
       else if (strcmp_P(PSTR("on"), TmpStr1.c_str()) == 0) { *value = true; }
       else if (strcmp_P(PSTR("true"), TmpStr1.c_str()) == 0) { *value = true; }
@@ -169,8 +182,9 @@ String Command_GetORSetUint8_t(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (isInt(TmpStr1)) {
-        *value = (uint8_t)atoi(TmpStr1.c_str());
+      int tmp_int = 0;
+      if (validIntFromString(TmpStr1, tmp_int)) {
+        *value = static_cast<uint8_t>(tmp_int);
       }
       else if (strcmp_P(PSTR("WIFI"), TmpStr1.c_str()) == 0) { *value = 0; }
       else if (strcmp_P(PSTR("ETHERNET"), TmpStr1.c_str()) == 0) { *value = 1; }
@@ -200,8 +214,9 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (isInt(TmpStr1)) {
-        *value = (int8_t)atoi(TmpStr1.c_str());
+      int tmp_int = 0;
+      if (validIntFromString(TmpStr1, tmp_int)) {
+        *value = static_cast<int8_t>(tmp_int);
       }
     }
   }

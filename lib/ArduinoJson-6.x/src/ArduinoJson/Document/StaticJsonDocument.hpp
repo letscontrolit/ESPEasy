@@ -1,10 +1,10 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
-#include "JsonDocument.hpp"
+#include <ArduinoJson/Document/JsonDocument.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
@@ -42,6 +42,11 @@ class StaticJsonDocument : public JsonDocument {
   StaticJsonDocument operator=(const T& src) {
     set(src);
     return *this;
+  }
+
+  void garbageCollect() {
+    StaticJsonDocument tmp(*this);
+    set(tmp);
   }
 
  private:

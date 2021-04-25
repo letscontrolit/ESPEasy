@@ -1,11 +1,11 @@
 #ifndef PLUGINSTRUCTS_P094_DATA_STRUCT_H
 #define PLUGINSTRUCTS_P094_DATA_STRUCT_H
 
-#include <ESPeasySerial.h>
 #include "../../_Plugin_Helper.h"
-
 #ifdef USES_P094
-# include <Regexp.h>
+
+#include <ESPeasySerial.h>
+#include <Regexp.h>
 
 
 # define P094_REGEX_POS             0
@@ -62,7 +62,8 @@ public:
 
   void reset();
 
-  bool init(const int16_t serial_rx,
+  bool init(ESPEasySerialPort port, 
+            const int16_t serial_rx,
             const int16_t serial_tx,
             unsigned long baudrate);
 
@@ -74,7 +75,9 @@ public:
 
   bool loop();
 
-  void getSentence(String& string);
+  const String& peekSentence() const;
+
+  void getSentence(String& string, bool appendSysTime);
 
   void getSentencesReceived(uint32_t& succes,
                             uint32_t& error,
@@ -103,7 +106,7 @@ public:
 
   bool          disableFilterWindowActive() const;
 
-  bool          parsePacket(String& received) const;
+  bool          parsePacket(const String& received) const;
 
   static String MatchType_toString(P094_Match_Type matchType);
   static String P094_FilterValueType_toString(P094_Filter_Value_Type valueType);
@@ -114,6 +117,9 @@ public:
   String _lines[P94_Nlines];
 
   static size_t P094_Get_filter_base_index(size_t filterLine);
+
+  // Get (and increment) debug counter
+  uint32_t getDebugCounter();
 
 private:
 
@@ -126,6 +132,7 @@ private:
   uint32_t       sentences_received_error = 0;
   uint32_t       length_last_received     = 0;
   unsigned long  disable_filter_window    = 0;
+  uint32_t       debug_counter            = 0;
 
   bool                   valueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS];
   P094_Filter_Value_Type valueType_index[P094_NR_FILTERS];

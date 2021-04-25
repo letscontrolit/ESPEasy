@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P087
 
 // #######################################################################################################
@@ -8,7 +9,6 @@
 // Allows to redirect data to a controller
 //
 
-#include "_Plugin_Helper.h"
 
 #include "src/PluginStructs/P087_data_struct.h"
 
@@ -56,7 +56,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_087;
       Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = SENSOR_TYPE_STRING;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_STRING;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -103,9 +103,9 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         uint32_t success, error, length_last;
         P087_data->getSentencesReceived(success, error, length_last);
         byte varNr = VARS_PER_TASK;
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true);
 
         // success = true;
       }
@@ -127,11 +127,14 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
       addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 2400, 115200);
       addUnit(F("baud"));
+      break;
+    }
 
+    case PLUGIN_WEBFORM_LOAD: {
       addFormSubHeader(F("Filtering"));
       P087_html_show_matchForms(event);
 
@@ -143,7 +146,6 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
       P087_BAUDRATE = getFormItemInt(P087_BAUDRATE_LABEL);
 
       P087_data_struct *P087_data =
@@ -165,7 +167,8 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P087_data_struct());
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P087_data_struct());
       P087_data_struct *P087_data =
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -173,20 +176,14 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P087_data->init(serial_rx, serial_tx, P087_BAUDRATE)) {
+      if (P087_data->init(port, serial_rx, serial_tx, P087_BAUDRATE)) {
         LoadCustomTaskSettings(event->TaskIndex, P087_data->_lines, P87_Nlines, 0);
         P087_data->post_init();
         success = true;
-        serialHelper_log_GpioDescription(serial_rx, serial_tx);
+        serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
       } else {
         clearPluginTaskData(event->TaskIndex);
       }
-      break;
-    }
-
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
       break;
     }
 
@@ -196,7 +193,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if ((nullptr != P087_data) && P087_data->loop()) {
-          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
           delay(0); // Processing a full sentence may take a while, run some
                     // background tasks.
         }

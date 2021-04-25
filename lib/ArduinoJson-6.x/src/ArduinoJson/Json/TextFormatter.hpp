@@ -1,26 +1,29 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
 
 #include <stdint.h>
 #include <string.h>  // for strlen
-#include "../Numbers/FloatParts.hpp"
-#include "../Numbers/Integer.hpp"
-#include "../Polyfills/attributes.hpp"
-#include "EscapeSequence.hpp"
+
+#include <ArduinoJson/Json/EscapeSequence.hpp>
+#include <ArduinoJson/Numbers/FloatParts.hpp>
+#include <ArduinoJson/Numbers/Integer.hpp>
+#include <ArduinoJson/Polyfills/assert.hpp>
+#include <ArduinoJson/Polyfills/attributes.hpp>
+#include <ArduinoJson/Serialization/CountingDecorator.hpp>
 
 namespace ARDUINOJSON_NAMESPACE {
 
 template <typename TWriter>
 class TextFormatter {
  public:
-  explicit TextFormatter(TWriter &writer) : _writer(writer), _length(0) {}
+  explicit TextFormatter(TWriter writer) : _writer(writer) {}
 
   // Returns the number of bytes sent to the TWriter implementation.
   size_t bytesWritten() const {
-    return _length;
+    return _writer.count();
   }
 
   void writeBoolean(bool value) {
@@ -31,13 +34,10 @@ class TextFormatter {
   }
 
   void writeString(const char *value) {
-    if (!value) {
-      writeRaw("null");
-    } else {
-      writeRaw('\"');
-      while (*value) writeChar(*value++);
-      writeRaw('\"');
-    }
+    ARDUINOJSON_ASSERT(value != NULL);
+    writeRaw('\"');
+    while (*value) writeChar(*value++);
+    writeRaw('\"');
   }
 
   void writeChar(char c) {
@@ -52,7 +52,8 @@ class TextFormatter {
 
   template <typename T>
   void writeFloat(T value) {
-    if (isnan(value)) return writeRaw(ARDUINOJSON_ENABLE_NAN ? "NaN" : "null");
+    if (isnan(value))
+      return writeRaw(ARDUINOJSON_ENABLE_NAN ? "NaN" : "null");
 
 #if ARDUINOJSON_ENABLE_INFINITY
     if (value < 0.0) {
@@ -60,9 +61,11 @@ class TextFormatter {
       value = -value;
     }
 
-    if (isinf(value)) return writeRaw("Infinity");
+    if (isinf(value))
+      return writeRaw("Infinity");
 #else
-    if (isinf(value)) return writeRaw("null");
+    if (isinf(value))
+      return writeRaw("null");
 
     if (value < 0.0) {
       writeRaw('-');
@@ -73,7 +76,8 @@ class TextFormatter {
     FloatParts<T> parts(value);
 
     writePositiveInteger(parts.integral);
-    if (parts.decimalPlaces) writeDecimals(parts.decimal, parts.decimalPlaces);
+    if (parts.decimalPlaces)
+      writeDecimals(parts.decimal, parts.decimalPlaces);
 
     if (parts.exponent < 0) {
       writeRaw("e-");
@@ -125,28 +129,28 @@ class TextFormatter {
   }
 
   void writeRaw(const char *s) {
-    _length += _writer.write(reinterpret_cast<const uint8_t *>(s), strlen(s));
+    _writer.write(reinterpret_cast<const uint8_t *>(s), strlen(s));
   }
 
   void writeRaw(const char *s, size_t n) {
-    _length += _writer.write(reinterpret_cast<const uint8_t *>(s), n);
+    _writer.write(reinterpret_cast<const uint8_t *>(s), n);
   }
 
   void writeRaw(const char *begin, const char *end) {
-    _length += _writer.write(reinterpret_cast<const uint8_t *>(begin),
-                             static_cast<size_t>(end - begin));
+    _writer.write(reinterpret_cast<const uint8_t *>(begin),
+                  static_cast<size_t>(end - begin));
   }
 
   template <size_t N>
   void writeRaw(const char (&s)[N]) {
-    _length += _writer.write(reinterpret_cast<const uint8_t *>(s), N - 1);
+    _writer.write(reinterpret_cast<const uint8_t *>(s), N - 1);
   }
   void writeRaw(char c) {
-    _length += _writer.write(static_cast<uint8_t>(c));
+    _writer.write(static_cast<uint8_t>(c));
   }
 
  protected:
-  TWriter &_writer;
+  CountingDecorator<TWriter> _writer;
   size_t _length;
 
  private:

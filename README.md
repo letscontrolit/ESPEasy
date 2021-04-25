@@ -36,11 +36,14 @@ ESPEasy_mega-20190225_normal_ESP8285_1M.bin  | ESP8285 with 1MB flash  | Stable 
 ESPEasy_mega-20190225_test_ESP8285_1M.bin    | ESP8285 with 1MB flash  | Stable + Test               |
 ESPEasy_mega-20190225_dev_ESP8285_1M.bin     | ESP8285 with 1MB flash  | Stable + Test + Development |
 
-## More info
+## Documentation & more info
 
-Details and discussion are on the "Experimental" section of the forum: https://www.letscontrolit.com/forum/viewforum.php?f=18
+Our new, in-depth documentation can be found at [ESPEasy.readthedocs.io](https://espeasy.readthedocs.io/en/latest/). Automatically built, so always up-to-date according to the contributed contents. The old Wiki documention can be found at [letscontrolit.com/wiki](https://www.letscontrolit.com/wiki/index.php?title=ESPEasy).
 
-Automated builds of the (new) documentation can be found at [ESPEasy.readthedocs.io](https://espeasy.readthedocs.io/en/latest/)
+Additional details and discussion are on the "Experimental" section of the forum: https://www.letscontrolit.com/forum/viewforum.php?f=18
+
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/letscontrolit/ESPEasy) 
+
 
 ## Icons used
 

@@ -1,6 +1,8 @@
 #include "ExtendedControllerCredentialsStruct.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
+
+#include "../Helpers/ESPEasy_Storage.h"
 
 #define EXT_CONTR_CRED_USER_OFFSET 0
 #define EXT_CONTR_CRED_PASS_OFFSET 1
@@ -11,14 +13,14 @@ ExtendedControllerCredentialsStruct::ExtendedControllerCredentialsStruct() {}
 
 String ExtendedControllerCredentialsStruct::load()
 {
-  return LoadStringArray(SettingsType::ExtdControllerCredentials_Type,
+  return LoadStringArray(SettingsType::Enum::ExtdControllerCredentials_Type,
                            0,
                            _strings, CONTROLLER_MAX * 2, 0);
 }
 
 String ExtendedControllerCredentialsStruct::save() const
 {
-  return SaveStringArray(SettingsType::ExtdControllerCredentials_Type,
+  return SaveStringArray(SettingsType::Enum::ExtdControllerCredentials_Type,
                            0,
                            _strings, CONTROLLER_MAX * 2, 0);
 }

@@ -1,12 +1,20 @@
 #include "../Commands/Settings.h"
 
 #include "../../ESPEasy_common.h"
+
 #include "../Commands/Common.h"
-#include "../Globals/Settings.h"
+
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/Serial.h"
+
 #include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
 
-#include "../../ESPEasy_fdwdecl.h"
-
+#include "../Helpers/ESPEasy_FactoryDefault.h"
+#include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
 
 
 String Command_Settings_Build(struct EventStruct *event, const char* Line)
@@ -86,6 +94,6 @@ String Command_Settings_Print(struct EventStruct *event, const char* Line)
 String Command_Settings_Reset(struct EventStruct *event, const char* Line)
 {
 	ResetFactory();
-	reboot();
+	reboot(ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryCommand);
 	return return_command_success();
 }

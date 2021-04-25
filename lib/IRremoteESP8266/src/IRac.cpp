@@ -2,7 +2,7 @@
 
 // Provide a universal/standard interface for sending A/C nessages.
 // It does not provide complete and maximum granular control but tries
-// to off most common functionallity across all supported devices.
+// to offer most common functionality across all supported devices.
 
 #include "IRac.h"
 #ifndef UNIT_TEST
@@ -16,9 +16,12 @@
 #include "IRremoteESP8266.h"
 #include "IRtext.h"
 #include "IRutils.h"
+#include "ir_Airwell.h"
 #include "ir_Amcor.h"
 #include "ir_Argo.h"
+#include "ir_Carrier.h"
 #include "ir_Coolix.h"
+#include "ir_Corona.h"
 #include "ir_Daikin.h"
 #include "ir_Electra.h"
 #include "ir_Fujitsu.h"
@@ -32,14 +35,22 @@
 #include "ir_Neoclima.h"
 #include "ir_Panasonic.h"
 #include "ir_Samsung.h"
+#include "ir_Sanyo.h"
 #include "ir_Sharp.h"
 #include "ir_Tcl.h"
+#include "ir_Technibel.h"
 #include "ir_Teco.h"
 #include "ir_Toshiba.h"
+#include "ir_Transcold.h"
 #include "ir_Trotec.h"
 #include "ir_Vestel.h"
+#include "ir_Voltas.h"
 #include "ir_Whirlpool.h"
 
+/// Class constructor
+/// @param[in] pin Gpio pin to use when transmitting IR messages.
+/// @param[in] inverted true, gpio output defaults to high. false, to low.
+/// @param[in] use_modulation true means use frequency modulation. false, don't.
 IRac::IRac(const uint16_t pin, const bool inverted, const bool use_modulation) {
   _pin = pin;
   _inverted = inverted;
@@ -48,6 +59,29 @@ IRac::IRac(const uint16_t pin, const bool inverted, const bool use_modulation) {
   this->markAsSent();
 }
 
+/// Initialise the given state with the supplied settings.
+/// @param[out] state A Ptr to where the settings will be stored.
+/// @param[in] vendor The vendor/protocol type.
+/// @param[in] model The A/C model if applicable.
+/// @param[in] power The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] celsius Temperature units. True is Celsius, False is Fahrenheit.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
+/// @param[in] beep Enable/Disable beeps when receiving IR messages.
+/// @param[in] sleep Nr. of minutes for sleep mode.
+///  -1 is Off, >= 0 is on. Some devices it is the nr. of mins to run for.
+///  Others it may be the time to enter/exit sleep mode.
+///  i.e. Time in Nr. of mins since midnight.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
 void IRac::initState(stdAc::state_t *state,
                      const decode_type_t vendor, const int16_t model,
                      const bool power, const stdAc::opmode_t mode,
@@ -78,6 +112,9 @@ void IRac::initState(stdAc::state_t *state,
   state->clock = clock;
 }
 
+/// Initialise the given state with the supplied settings.
+/// @param[out] state A Ptr to where the settings will be stored.
+/// @note Sets all the parameters to reasonable base/automatic defaults.
 void IRac::initState(stdAc::state_t *state) {
   initState(state, decode_type_t::UNKNOWN, -1, false, stdAc::opmode_t::kOff,
             25, true,  // 25 degrees Celsius
@@ -86,21 +123,37 @@ void IRac::initState(stdAc::state_t *state) {
             false, -1, -1);
 }
 
+/// Get the current internal A/C climate state.
+/// @return A Ptr to a state containing the current (to be sent) settings.
 stdAc::state_t IRac::getState(void) { return next; }
 
+/// Get the previous internal A/C climate state that should have already been
+/// sent to the device. i.e. What the A/C unit should already be set to.
+/// @return A Ptr to a state containing the previously sent settings.
 stdAc::state_t IRac::getStatePrev(void) { return _prev; }
 
-// Is the given protocol supported by the IRac class?
+/// Is the given protocol supported by the IRac class?
+/// @param[in] protocol The vendor/protocol type.
+/// @return true if the protocol is supported by this class, otherwise false.
 bool IRac::isProtocolSupported(const decode_type_t protocol) {
   switch (protocol) {
+#if SEND_AIRWELL
+    case decode_type_t::AIRWELL:
+#endif
 #if SEND_AMCOR
     case decode_type_t::AMCOR:
 #endif
 #if SEND_ARGO
     case decode_type_t::ARGO:
 #endif
+#if SEND_CARRIER_AC64
+    case decode_type_t::CARRIER_AC64:
+#endif  // SEND_CARRIER_AC64
 #if SEND_COOLIX
     case decode_type_t::COOLIX:
+#endif
+#if SEND_CORONA_AC
+    case decode_type_t::CORONA_AC:
 #endif
 #if SEND_DAIKIN
     case decode_type_t::DAIKIN:
@@ -153,6 +206,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_HITACHI_AC1
     case decode_type_t::HITACHI_AC1:
 #endif
+#if SEND_HITACHI_AC344
+    case decode_type_t::HITACHI_AC344:
+#endif
 #if SEND_HITACHI_AC424
     case decode_type_t::HITACHI_AC424:
 #endif
@@ -188,11 +244,17 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_SAMSUNG_AC
     case decode_type_t::SAMSUNG_AC:
 #endif
+#if SEND_SANYO_AC
+    case decode_type_t::SANYO_AC:
+#endif
 #if SEND_SHARP_AC
     case decode_type_t::SHARP_AC:
 #endif
 #if SEND_TCL112AC
     case decode_type_t::TCL112AC:
+#endif
+#if SEND_TECHNIBEL_AC
+    case decode_type_t::TECHNIBEL_AC:
 #endif
 #if SEND_TECO
     case decode_type_t::TECO:
@@ -200,22 +262,68 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_TOSHIBA_AC
     case decode_type_t::TOSHIBA_AC:
 #endif
+#if SEND_TRANSCOLD
+    case decode_type_t::TRANSCOLD:
+#endif
 #if SEND_TROTEC
     case decode_type_t::TROTEC:
 #endif
 #if SEND_VESTEL_AC
     case decode_type_t::VESTEL_AC:
 #endif
+#if SEND_VOLTAS
+    case decode_type_t::VOLTAS:
+#endif
 #if SEND_WHIRLPOOL_AC
     case decode_type_t::WHIRLPOOL_AC:
 #endif
+// Note: Compiler Warning is disabled because someone could disable all
+//       the protocols before this and it is then unreachable.
+//       "-Wswitch-unreachable" not used as it appears to be an unknown option.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
       return true;
+#pragma GCC diagnostic pop
     default:
       return false;
   }
 }
 
+#if SEND_AIRWELL
+/// Send an Airwell A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRAirwellAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+void IRac::airwell(IRAirwellAc *ac,
+                   const bool on, const stdAc::opmode_t mode,
+                   const float degrees, const stdAc::fanspeed_t fan) {
+  ac->begin();
+  ac->setPowerToggle(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  // No Swing setting available.
+  // No Quiet setting available.
+  // No Light setting available.
+  // No Filter setting available.
+  // No Turbo setting available.
+  // No Economy setting available.
+  // No Clean setting available.
+  // No Beep setting available.
+  // No Sleep setting available.
+  ac->send();
+}
+#endif  // SEND_AIRWELL
+
 #if SEND_AMCOR
+/// Send an Amcor A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRAmcorAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
 void IRac::amcor(IRAmcorAc *ac,
                 const bool on, const stdAc::opmode_t mode, const float degrees,
                 const stdAc::fanspeed_t fan) {
@@ -238,6 +346,16 @@ void IRac::amcor(IRAmcorAc *ac,
 #endif  // SEND_AMCOR
 
 #if SEND_ARGO
+/// Send an Argo A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRArgoAC object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] sleep Nr. of minutes for sleep mode.
+/// @note -1 is Off, >= 0 is on.
 void IRac::argo(IRArgoAC *ac,
                 const bool on, const stdAc::opmode_t mode, const float degrees,
                 const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
@@ -260,7 +378,53 @@ void IRac::argo(IRArgoAC *ac,
 }
 #endif  // SEND_ARGO
 
+#if SEND_CARRIER_AC64
+/// Send a Carrier 64-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRCarrierAc64 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] sleep Nr. of minutes for sleep mode.
+/// @note -1 is Off, >= 0 is on.
+void IRac::carrier64(IRCarrierAc64 *ac,
+                     const bool on, const stdAc::opmode_t mode,
+                     const float degrees, const stdAc::fanspeed_t fan,
+                     const stdAc::swingv_t swingv, const int16_t sleep) {
+  ac->begin();
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingV((int8_t)swingv >= 0);
+  // No Quiet setting available.
+  // No Light setting available.
+  // No Filter setting available.
+  // No Turbo setting available.
+  // No Economy setting available.
+  // No Clean setting available.
+  // No Beep setting available.
+  ac->setSleep(sleep >= 0);  // Convert to a boolean.
+  ac->send();
+}
+#endif  // SEND_CARRIER_AC64
+
 #if SEND_COOLIX
+/// Send a Coolix A/C message with the supplied settings.
+/// @note May result in multiple messages being sent.
+/// @param[in, out] ac A Ptr to an IRCoolixAC object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
+/// @param[in] sleep Nr. of minutes for sleep mode.
+/// @note -1 is Off, >= 0 is on.
 void IRac::coolix(IRCoolixAC *ac,
                   const bool on, const stdAc::opmode_t mode,
                   const float degrees, const stdAc::fanspeed_t fan,
@@ -312,7 +476,51 @@ void IRac::coolix(IRCoolixAC *ac,
 }
 #endif  // SEND_COOLIX
 
+#if SEND_CORONA_AC
+/// Send a Corona A/C message with the supplied settings.
+/// @note May result in multiple messages being sent.
+/// @param[in, out] ac A Ptr to an IRCoronaAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] econo Run the device in economical mode.
+void IRac::corona(IRCoronaAc *ac,
+                  const bool on, const stdAc::opmode_t mode,
+                  const float degrees, const stdAc::fanspeed_t fan,
+                  const stdAc::swingv_t swingv, const bool econo) {
+  ac->begin();
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingVToggle(swingv != stdAc::swingv_t::kOff);
+  // No Quiet setting available.
+  // No Light setting available.
+  // No Filter setting available.
+  // No Turbo setting available.
+  ac->setEcono(econo);
+  // No Clean setting available.
+  // No Beep setting available.
+  // No Sleep setting available.
+  ac->send();
+}
+#endif  // SEND_CARRIER_AC64
+
 #if SEND_DAIKIN
+/// Send a Daikin A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRDaikinESP object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
 void IRac::daikin(IRDaikinESP *ac,
                   const bool on, const stdAc::opmode_t mode,
                   const float degrees, const stdAc::fanspeed_t fan,
@@ -340,6 +548,19 @@ void IRac::daikin(IRDaikinESP *ac,
 #endif  // SEND_DAIKIN
 
 #if SEND_DAIKIN128
+/// Send a Daikin 128-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRDaikin128 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
 void IRac::daikin128(IRDaikin128 *ac,
                   const bool on, const stdAc::opmode_t mode,
                   const float degrees, const stdAc::fanspeed_t fan,
@@ -367,6 +588,16 @@ void IRac::daikin128(IRDaikin128 *ac,
 #endif  // SEND_DAIKIN128
 
 #if SEND_DAIKIN152
+/// Send a Daikin 152-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRDaikin152 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] econo Run the device in economical mode.
 void IRac::daikin152(IRDaikin152 *ac,
                   const bool on, const stdAc::opmode_t mode,
                   const float degrees, const stdAc::fanspeed_t fan,
@@ -393,6 +624,13 @@ void IRac::daikin152(IRDaikin152 *ac,
 #endif  // SEND_DAIKIN152
 
 #if SEND_DAIKIN160
+/// Send a Daikin 160-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRDaikin160 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
 void IRac::daikin160(IRDaikin160 *ac,
                      const bool on, const stdAc::opmode_t mode,
                      const float degrees, const stdAc::fanspeed_t fan,
@@ -408,6 +646,13 @@ void IRac::daikin160(IRDaikin160 *ac,
 #endif  // SEND_DAIKIN160
 
 #if SEND_DAIKIN176
+/// Send a Daikin 176-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRDaikin176 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingh The horizontal swing setting.
 void IRac::daikin176(IRDaikin176 *ac,
                      const bool on, const stdAc::opmode_t mode,
                      const float degrees, const stdAc::fanspeed_t fan,
@@ -423,6 +668,23 @@ void IRac::daikin176(IRDaikin176 *ac,
 #endif  // SEND_DAIKIN176
 
 #if SEND_DAIKIN2
+/// Send a Daikin2 A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRDaikin2 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
+/// @param[in] beep Enable/Disable beeps when receiving IR messages.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
 void IRac::daikin2(IRDaikin2 *ac,
                    const bool on, const stdAc::opmode_t mode,
                    const float degrees, const stdAc::fanspeed_t fan,
@@ -452,6 +714,16 @@ void IRac::daikin2(IRDaikin2 *ac,
 #endif  // SEND_DAIKIN2
 
 #if SEND_DAIKIN216
+/// Send a Daikin 216-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRDaikin216 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
 void IRac::daikin216(IRDaikin216 *ac,
                      const bool on, const stdAc::opmode_t mode,
                      const float degrees, const stdAc::fanspeed_t fan,
@@ -471,6 +743,17 @@ void IRac::daikin216(IRDaikin216 *ac,
 #endif  // SEND_DAIKIN216
 
 #if SEND_DAIKIN64
+/// Send a Daikin 64-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRDaikin64 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
 void IRac::daikin64(IRDaikin64 *ac,
                   const bool on, const stdAc::opmode_t mode,
                   const float degrees, const stdAc::fanspeed_t fan,
@@ -492,6 +775,15 @@ void IRac::daikin64(IRDaikin64 *ac,
 #endif  // SEND_DAIKIN64
 
 #if SEND_DELONGHI_AC
+/// Send a Delonghi A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRDelonghiAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] celsius Temperature units. True is Celsius, False is Fahrenheit.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
 void IRac::delonghiac(IRDelonghiAc *ac,
                   const bool on, const stdAc::opmode_t mode, const bool celsius,
                   const float degrees, const stdAc::fanspeed_t fan,
@@ -508,6 +800,17 @@ void IRac::delonghiac(IRDelonghiAc *ac,
 #endif  // SEND_DELONGHI_AC
 
 #if SEND_ELECTRA_AC
+/// Send an Electra A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRElectraAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] lighttoggle Should we toggle the LED/Display?
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
 void IRac::electra(IRElectraAc *ac,
                    const bool on, const stdAc::opmode_t mode,
                    const float degrees, const stdAc::fanspeed_t fan,
@@ -536,12 +839,27 @@ void IRac::electra(IRElectraAc *ac,
 #endif  // SEND_ELECTRA_AC
 
 #if SEND_FUJITSU_AC
+/// Send a Fujitsu A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRFujitsuAC object to use.
+/// @param[in] model The A/C model to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
+/// @param[in] sleep Nr. of minutes for sleep mode. <= 0 is Off, > 0 is on.
 void IRac::fujitsu(IRFujitsuAC *ac, const fujitsu_ac_remote_model_t model,
                    const bool on, const stdAc::opmode_t mode,
                    const float degrees, const stdAc::fanspeed_t fan,
                    const stdAc::swingv_t swingv, const stdAc::swingh_t swingh,
                    const bool quiet, const bool turbo, const bool econo,
-                   const bool filter, const bool clean) {
+                   const bool filter, const bool clean, const int16_t sleep) {
   ac->begin();
   ac->setModel(model);
   if (on) {
@@ -577,6 +895,7 @@ void IRac::fujitsu(IRFujitsuAC *ac, const fujitsu_ac_remote_model_t model,
     ac->setFilter(filter);
     ac->setClean(clean);
     // No Beep setting available.
+    ac->setSleepTimer(sleep > 0 ? sleep : 0);
     // No Sleep setting available.
     // No Clock setting available.
     ac->on();  // Ref: Issue #860
@@ -589,6 +908,16 @@ void IRac::fujitsu(IRFujitsuAC *ac, const fujitsu_ac_remote_model_t model,
 #endif  // SEND_FUJITSU_AC
 
 #if SEND_GOODWEATHER
+/// Send a Goodweather A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRGoodweatherAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
 void IRac::goodweather(IRGoodweatherAc *ac,
                        const bool on, const stdAc::opmode_t mode,
                        const float degrees,
@@ -618,6 +947,19 @@ void IRac::goodweather(IRGoodweatherAc *ac,
 #endif  // SEND_GOODWEATHER
 
 #if SEND_GREE
+/// Send a Gree A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRGreeAC object to use.
+/// @param[in] model The A/C model to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] celsius Temperature units. True is Celsius, False is Fahrenheit.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
 void IRac::gree(IRGreeAC *ac, const gree_ac_remote_model_t model,
                 const bool on, const stdAc::opmode_t mode, const bool celsius,
                 const float degrees, const stdAc::fanspeed_t fan,
@@ -646,6 +988,16 @@ void IRac::gree(IRGreeAC *ac, const gree_ac_remote_model_t model,
 #endif  // SEND_GREE
 
 #if SEND_HAIER_AC
+/// Send a Haier A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRGreeAC object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
 void IRac::haier(IRHaierAC *ac,
                  const bool on, const stdAc::opmode_t mode, const float degrees,
                  const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
@@ -663,7 +1015,7 @@ void IRac::haier(IRHaierAC *ac,
   // No Clean setting available.
   // No Beep setting available.
   ac->setSleep(sleep >= 0);  // Sleep on this A/C is either on or off.
-  if (clock >=0) ac->setCurrTime(clock);
+  if (clock >= 0) ac->setCurrTime(clock);
   if (on)
     ac->setCommand(kHaierAcCmdOn);
   else
@@ -673,6 +1025,16 @@ void IRac::haier(IRHaierAC *ac,
 #endif  // SEND_HAIER_AC
 
 #if SEND_HAIER_AC_YRW02
+/// Send a Haier YRWO2 A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRHaierACYRW02 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
 void IRac::haierYrwo2(IRHaierACYRW02 *ac,
                       const bool on, const stdAc::opmode_t mode,
                       const float degrees, const stdAc::fanspeed_t fan,
@@ -697,6 +1059,14 @@ void IRac::haierYrwo2(IRHaierACYRW02 *ac,
 #endif  // SEND_HAIER_AC_YRW02
 
 #if SEND_HITACHI_AC
+/// Send a Hitachi A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRHitachiAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
 void IRac::hitachi(IRHitachiAc *ac,
                    const bool on, const stdAc::opmode_t mode,
                    const float degrees, const stdAc::fanspeed_t fan,
@@ -721,6 +1091,19 @@ void IRac::hitachi(IRHitachiAc *ac,
 #endif  // SEND_HITACHI_AC
 
 #if SEND_HITACHI_AC1
+/// Send a Hitachi1 A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRHitachiAc1 object to use.
+/// @param[in] model The A/C model to use.
+/// @param[in] on The power setting.
+/// @param[in] power_toggle The power toggle setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] swing_toggle The swing_toggle setting.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+/// @note The sleep mode used is the "Sleep 2" setting.
 void IRac::hitachi1(IRHitachiAc1 *ac, const hitachi_ac1_remote_model_t model,
                     const bool on, const bool power_toggle,
                     const stdAc::opmode_t mode,
@@ -751,7 +1134,49 @@ void IRac::hitachi1(IRHitachiAc1 *ac, const hitachi_ac1_remote_model_t model,
 }
 #endif  // SEND_HITACHI_AC1
 
+#if SEND_HITACHI_AC344
+/// Send a Hitachi 344-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRHitachiAc344 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+void IRac::hitachi344(IRHitachiAc344 *ac,
+                      const bool on, const stdAc::opmode_t mode,
+                      const float degrees, const stdAc::fanspeed_t fan,
+                      const stdAc::swingv_t swingv,
+                      const stdAc::swingh_t swingh) {
+  ac->begin();
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingH(ac->convertSwingH(swingh));
+  ac->setPower(on);
+  // No Quiet setting available.
+  // No Turbo setting available.
+  // No Light setting available.
+  // No Filter setting available.
+  // No Clean setting available.
+  // No Beep setting available.
+  // No Sleep setting available.
+  // No Clock setting available.
+
+  // SwingVToggle is special. Needs to be last method called.
+  ac->setSwingVToggle(swingv != stdAc::swingv_t::kOff);
+  ac->send();
+}
+#endif  // SEND_HITACHI_AC344
+
 #if SEND_HITACHI_AC424
+/// Send a Hitachi 424-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRHitachiAc424 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
 void IRac::hitachi424(IRHitachiAc424 *ac,
                       const bool on, const stdAc::opmode_t mode,
                       const float degrees, const stdAc::fanspeed_t fan,
@@ -777,6 +1202,19 @@ void IRac::hitachi424(IRHitachiAc424 *ac,
 #endif  // SEND_HITACHI_AC424
 
 #if SEND_KELVINATOR
+/// Send a Kelvinator A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRKelvinatorAC object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. XFan, dry filters etc
 void IRac::kelvinator(IRKelvinatorAC *ac,
                       const bool on, const stdAc::opmode_t mode,
                       const float degrees, const stdAc::fanspeed_t fan,
@@ -804,6 +1242,13 @@ void IRac::kelvinator(IRKelvinatorAC *ac,
 #endif  // SEND_KELVINATOR
 
 #if SEND_LG
+/// Send a LG A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRLgAc object to use.
+/// @param[in] model The A/C model to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
 void IRac::lg(IRLgAc *ac, const lg_ac_remote_model_t model,
               const bool on, const stdAc::opmode_t mode,
               const float degrees, const stdAc::fanspeed_t fan) {
@@ -828,10 +1273,24 @@ void IRac::lg(IRLgAc *ac, const lg_ac_remote_model_t model,
 #endif  // SEND_LG
 
 #if SEND_MIDEA
+/// Send a Midea A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRMideaAC object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] celsius Temperature units. True is Celsius, False is Fahrenheit.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] turbo Toggle the device's turbo/powerful mode.
+/// @param[in] econo Toggle the device's economical mode.
+/// @param[in] light Toggle the LED/Display mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+/// @note On Danby A/C units, swingv controls the Ion Filter instead.
 void IRac::midea(IRMideaAC *ac,
                  const bool on, const stdAc::opmode_t mode, const bool celsius,
                  const float degrees, const stdAc::fanspeed_t fan,
-                 const stdAc::swingv_t swingv, const int16_t sleep) {
+                 const stdAc::swingv_t swingv, const bool turbo,
+                 const bool econo, const bool light, const int16_t sleep) {
   ac->begin();
   ac->setPower(on);
   ac->setMode(ac->convertMode(mode));
@@ -841,8 +1300,9 @@ void IRac::midea(IRMideaAC *ac,
   ac->setSwingVToggle(swingv != stdAc::swingv_t::kOff);
   // No Horizontal swing setting available.
   // No Quiet setting available.
-  // No Turbo setting available.
-  // No Light setting available.
+  ac->setTurboToggle(turbo);
+  ac->setEconoToggle(econo);
+  ac->setLightToggle(light);
   // No Filter setting available.
   // No Clean setting available.
   // No Beep setting available.
@@ -853,6 +1313,17 @@ void IRac::midea(IRMideaAC *ac,
 #endif  // SEND_MIDEA
 
 #if SEND_MITSUBISHI_AC
+/// Send a Mitsubishi A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRMitsubishiAC object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
+/// @note Clock can only be set in 10 minute increments. i.e. % 10.
 void IRac::mitsubishi(IRMitsubishiAC *ac,
                       const bool on, const stdAc::opmode_t mode,
                       const float degrees,
@@ -879,6 +1350,15 @@ void IRac::mitsubishi(IRMitsubishiAC *ac,
 #endif  // SEND_MITSUBISHI_AC
 
 #if SEND_MITSUBISHI112
+/// Send a Mitsubishi 112-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRMitsubishi112 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
 void IRac::mitsubishi112(IRMitsubishi112 *ac,
                          const bool on, const stdAc::opmode_t mode,
                          const float degrees, const stdAc::fanspeed_t fan,
@@ -907,6 +1387,14 @@ void IRac::mitsubishi112(IRMitsubishi112 *ac,
 #endif  // SEND_MITSUBISHI112
 
 #if SEND_MITSUBISHI136
+/// Send a Mitsubishi 136-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRMitsubishi136 object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
 void IRac::mitsubishi136(IRMitsubishi136 *ac,
                          const bool on, const stdAc::opmode_t mode,
                          const float degrees, const stdAc::fanspeed_t fan,
@@ -931,6 +1419,17 @@ void IRac::mitsubishi136(IRMitsubishi136 *ac,
 #endif  // SEND_MITSUBISHI136
 
 #if SEND_MITSUBISHIHEAVY
+/// Send a Mitsubishi Heavy 88-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRMitsubishiHeavy88Ac object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
 void IRac::mitsubishiHeavy88(IRMitsubishiHeavy88Ac *ac,
                              const bool on, const stdAc::opmode_t mode,
                              const float degrees,
@@ -958,6 +1457,20 @@ void IRac::mitsubishiHeavy88(IRMitsubishiHeavy88Ac *ac,
   ac->send();
 }
 
+/// Send a Mitsubishi Heavy 152-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRMitsubishiHeavy152Ac object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
 void IRac::mitsubishiHeavy152(IRMitsubishiHeavy152Ac *ac,
                               const bool on, const stdAc::opmode_t mode,
                               const float degrees,
@@ -988,22 +1501,37 @@ void IRac::mitsubishiHeavy152(IRMitsubishiHeavy152Ac *ac,
 #endif  // SEND_MITSUBISHIHEAVY
 
 #if SEND_NEOCLIMA
+/// Send a Neoclima A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRNeoclimaAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] celsius Temperature units. True is Celsius, False is Fahrenheit.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
 void IRac::neoclima(IRNeoclimaAc *ac,
                     const bool on, const stdAc::opmode_t mode,
-                    const float degrees, const stdAc::fanspeed_t fan,
+                    const bool celsius, const float degrees,
+                    const stdAc::fanspeed_t fan,
                     const stdAc::swingv_t swingv, const stdAc::swingh_t swingh,
-                    const bool turbo, const bool light, const bool filter,
-                    const int16_t sleep) {
+                    const bool turbo, const bool econo, const bool light,
+                    const bool filter, const int16_t sleep) {
   ac->begin();
   ac->setMode(ac->convertMode(mode));
-  ac->setTemp(degrees);
+  ac->setTemp(degrees, celsius);
   ac->setFan(ac->convertFan(fan));
   ac->setSwingV(swingv != stdAc::swingv_t::kOff);
   ac->setSwingH(swingh != stdAc::swingh_t::kOff);
   // No Quiet setting available.
   ac->setTurbo(turbo);
   ac->setLight(light);
-  // No Econo setting available.
+  ac->setEcono(econo);
   ac->setIon(filter);
   // No Clean setting available.
   // No Beep setting available.
@@ -1015,6 +1543,19 @@ void IRac::neoclima(IRNeoclimaAc *ac,
 #endif  // SEND_NEOCLIMA
 
 #if SEND_PANASONIC_AC
+/// Send a Panasonic A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRPanasonicAc object to use.
+/// @param[in] model The A/C model to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
 void IRac::panasonic(IRPanasonicAc *ac, const panasonic_ac_remote_model_t model,
                      const bool on, const stdAc::opmode_t mode,
                      const float degrees, const stdAc::fanspeed_t fan,
@@ -1043,6 +1584,22 @@ void IRac::panasonic(IRPanasonicAc *ac, const panasonic_ac_remote_model_t model,
 #endif  // SEND_PANASONIC_AC
 
 #if SEND_SAMSUNG_AC
+/// Send a Samsung A/C message with the supplied settings.
+/// @note Multiple IR messages may be generated & sent.
+/// @param[in, out] ac A Ptr to an IRSamsungAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
+/// @param[in] beep Enable/Disable beeps when receiving IR messages.
+/// @param[in] prevpower The power setting from the previous A/C state.
+/// @param[in] forcepower Do we force send the special power message?
 void IRac::samsung(IRSamsungAc *ac,
                    const bool on, const stdAc::opmode_t mode,
                    const float degrees,
@@ -1074,25 +1631,79 @@ void IRac::samsung(IRSamsungAc *ac,
 }
 #endif  // SEND_SAMSUNG_AC
 
+#if SEND_SANYO_AC
+/// Send a Toshiba A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRSanyoAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] beep Enable/Disable beeps when receiving IR messages.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+void IRac::sanyo(IRSanyoAc *ac,
+                 const bool on, const stdAc::opmode_t mode,
+                 const float degrees, const stdAc::fanspeed_t fan,
+                 const stdAc::swingv_t swingv, const bool beep,
+                 const int16_t sleep) {
+  ac->begin();
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingV(ac->convertSwingV(swingv));
+  // No Horizontal swing setting available.
+  // No Quiet setting available.
+  // No Turbo setting available.
+  // No Econo setting available.
+  // No Light setting available.
+  // No Filter setting available.
+  // No Clean setting available.
+  ac->setBeep(beep);
+  ac->setSleep(sleep >= 0);  // Sleep is either on/off, so convert to boolean.
+  // No Clock setting available.
+
+  // Extra
+  ac->setSensor(true);  // Set the A/C to use the temp sensor in the Unit/Wall.
+  ac->setSensorTemp(degrees);  // Set the sensor temp to the desired temp.
+  ac->send();
+}
+#endif  // SEND_SANYO_AC
+
 #if SEND_SHARP_AC
-void IRac::sharp(IRSharpAc *ac,
+/// Send a Sharp A/C message with the supplied settings.
+/// @note Multiple IR messages may be generated & sent.
+/// @param[in, out] ac A Ptr to an IRSharpAc object to use.
+/// @param[in] model The A/C model to use.
+/// @param[in] on The power setting.
+/// @param[in] prev_power The power setting from the previous A/C state.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
+void IRac::sharp(IRSharpAc *ac, const sharp_ac_remote_model_t model,
                  const bool on, const bool prev_power,
                  const stdAc::opmode_t mode,
                  const float degrees, const stdAc::fanspeed_t fan,
                  const stdAc::swingv_t swingv, const bool turbo,
-                 const bool filter, const bool clean) {
+                 const bool light, const bool filter, const bool clean) {
   ac->begin();
+  ac->setModel(model);
   ac->setPower(on, prev_power);
   ac->setMode(ac->convertMode(mode));
   ac->setTemp(degrees);
   ac->setFan(ac->convertFan(fan));
   ac->setSwingToggle(swingv != stdAc::swingv_t::kOff);
-  // Econo  deliberately not used as it cycles through 3 modes uncontrolably.
+  // Econo  deliberately not used as it cycles through 3 modes uncontrollably.
   // ac->setEconoToggle(econo);
   ac->setIon(filter);
   // No Horizontal swing setting available.
   // No Quiet setting available.
-  // No Light setting available.
+  ac->setLightToggle(light);
   // No Beep setting available.
   // No Sleep setting available.
   // No Clock setting available.
@@ -1115,6 +1726,18 @@ void IRac::sharp(IRSharpAc *ac,
 #endif  // SEND_SHARP_AC
 
 #if SEND_TCL112AC
+/// Send a TCL 112-bit A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRTcl112Ac object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
 void IRac::tcl112(IRTcl112Ac *ac,
                   const bool on, const stdAc::opmode_t mode,
                   const float degrees, const stdAc::fanspeed_t fan,
@@ -1141,7 +1764,49 @@ void IRac::tcl112(IRTcl112Ac *ac,
 }
 #endif  // SEND_TCL112AC
 
+#if SEND_TECHNIBEL_AC
+/// Send a Technibel A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRTechnibelAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] celsius Temperature units. True is Celsius, False is Fahrenheit.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+void IRac::technibel(IRTechnibelAc *ac,
+                const bool on, const stdAc::opmode_t mode, const bool celsius,
+                const float degrees, const stdAc::fanspeed_t fan,
+                const stdAc::swingv_t swingv, const int16_t sleep) {
+  ac->begin();
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees, !celsius);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwing(swingv != stdAc::swingv_t::kOff);
+  // No Horizontal swing setting available.
+  // No Quiet setting available.
+  // No Turbo setting available.
+  // No Light setting available.
+  // No Filter setting available.
+  // No Clean setting available.
+  // No Beep setting available.
+  ac->setSleep(sleep >= 0);  // Sleep is either on/off, so convert to boolean.
+  // No Clock setting available.
+  ac->send();
+}
+#endif  // SEND_TECHNIBEL_AC
+
 #if SEND_TECO
+/// Send a Teco A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRTecoAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
 void IRac::teco(IRTecoAc *ac,
                 const bool on, const stdAc::opmode_t mode, const float degrees,
                 const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
@@ -1166,29 +1831,51 @@ void IRac::teco(IRTecoAc *ac,
 #endif  // SEND_TECO
 
 #if SEND_TOSHIBA_AC
+/// Send a Toshiba A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRToshibaAC object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] econo Run the device in economical mode.
 void IRac::toshiba(IRToshibaAC *ac,
                    const bool on, const stdAc::opmode_t mode,
-                   const float degrees, const stdAc::fanspeed_t fan) {
+                   const float degrees, const stdAc::fanspeed_t fan,
+                   const stdAc::swingv_t swingv,
+                   const bool turbo, const bool econo) {
   ac->begin();
-  ac->setPower(on);
   ac->setMode(ac->convertMode(mode));
   ac->setTemp(degrees);
   ac->setFan(ac->convertFan(fan));
-  // No Vertical swing setting available.
+  // The API has no "step" option, so off is off, anything else is on.
+  ac->setSwing((swingv == stdAc::swingv_t::kOff) ? kToshibaAcSwingOff
+                                                 : kToshibaAcSwingOn);
   // No Horizontal swing setting available.
   // No Quiet setting available.
-  // No Turbo setting available.
+  ac->setTurbo(turbo);
+  ac->setEcono(econo);
   // No Light setting available.
   // No Filter setting available.
   // No Clean setting available.
   // No Beep setting available.
   // No Sleep setting available.
   // No Clock setting available.
+  // Do this last because Toshiba A/C has an odd quirk with how power off works.
+  ac->setPower(on);
   ac->send();
 }
 #endif  // SEND_TOSHIBA_AC
 
 #if SEND_TROTEC
+/// Send a Trotec A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRTrotecESP object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
 void IRac::trotec(IRTrotecESP *ac,
                   const bool on, const stdAc::opmode_t mode,
                   const float degrees, const stdAc::fanspeed_t fan,
@@ -1213,6 +1900,19 @@ void IRac::trotec(IRTrotecESP *ac,
 #endif  // SEND_TROTEC
 
 #if SEND_VESTEL_AC
+/// Send a Vestel A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRVestelAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
+/// @param[in] sendNormal Do we send a Normal settings message at all?
+///  i.e In addition to the clock/time/timer message
 void IRac::vestel(IRVestelAc *ac,
                   const bool on, const stdAc::opmode_t mode,
                   const float degrees,
@@ -1241,7 +1941,61 @@ void IRac::vestel(IRVestelAc *ac,
 }
 #endif  // SEND_VESTEL_AC
 
+#if SEND_VOLTAS
+/// Send a Voltas A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRVoltas object to use.
+/// @param[in] model The A/C model to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+void IRac::voltas(IRVoltas *ac,
+                  const voltas_ac_remote_model_t model,
+                  const bool on, const stdAc::opmode_t mode,
+                  const float degrees, const stdAc::fanspeed_t fan,
+                  const stdAc::swingv_t swingv, const stdAc::swingh_t swingh,
+                  const bool turbo, const bool econo, const bool light,
+                  const int16_t sleep) {
+  ac->begin();
+  ac->setModel(model);
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingV(swingv != stdAc::swingv_t::kOff);
+  ac->setSwingH(swingh != stdAc::swingh_t::kOff);
+  // No Quiet setting available.
+  ac->setTurbo(turbo);
+  ac->setEcono(econo);
+  ac->setLight(light);
+  // No Filter setting available.
+  // No Clean setting available.
+  // No Beep setting available.
+  ac->setSleep(sleep >= 0);  // Sleep is either on/off, so convert to boolean.
+  // No Clock setting available.
+  ac->send();
+}
+#endif  // SEND_VOLTAS
+
 #if SEND_WHIRLPOOL_AC
+/// Send a Whirlpool A/C message with the supplied settings.
+/// @param[in, out] ac A Ptr to an IRWhirlpoolAc object to use.
+/// @param[in] model The A/C model to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] sleep Nr. of minutes for sleep mode. -1 is Off, >= 0 is on.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
 void IRac::whirlpool(IRWhirlpoolAc *ac, const whirlpool_ac_remote_model_t model,
                      const bool on, const stdAc::opmode_t mode,
                      const float degrees,
@@ -1268,12 +2022,53 @@ void IRac::whirlpool(IRWhirlpoolAc *ac, const whirlpool_ac_remote_model_t model,
 }
 #endif  // SEND_WHIRLPOOL_AC
 
-// Create a new state base on the provided state that has been suitably fixed.
-// Args:
-//   state: The state_t structure describing the desired a/c state.
-//
-// Returns:
-//   A stdAc::state_t with the needed settings.
+#if SEND_TRANSCOLD
+/// Send a Transcold A/C message with the supplied settings.
+/// @note May result in multiple messages being sent.
+/// @param[in, out] ac A Ptr to an IRTranscoldAc object to use.
+/// @param[in] on The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] fan The speed setting for the fan.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @note -1 is Off, >= 0 is on.
+void IRac::transcold(IRTranscoldAc *ac,
+                     const bool on, const stdAc::opmode_t mode,
+                     const float degrees, const stdAc::fanspeed_t fan,
+                     const stdAc::swingv_t swingv,
+                     const stdAc::swingh_t swingh)  {
+  ac->begin();
+  ac->setPower(on);
+  if (!on) {
+      // after turn off AC no more commands should
+      // be accepted
+      ac->send();
+      return;
+  }
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  // No Filter setting available.
+  // No Beep setting available.
+  // No Clock setting available.
+  // No Econo setting available.
+  // No Quiet setting available.
+  if (swingv != stdAc::swingv_t::kOff || swingh != stdAc::swingh_t::kOff) {
+    // Swing has a special command that needs to be sent independently.
+    ac->setSwing();
+    ac->send();
+  }
+
+  ac->send();
+}
+#endif  // SEND_TRANSCOLD
+
+/// Create a new state base on the provided state that has been suitably fixed.
+/// @note This is for use with Home Assistant, which requires mode to be off if
+///   the power is off.
+/// @param[in] state The state_t structure describing the desired a/c state.
+/// @return A stdAc::state_t with the needed settings.
 stdAc::state_t IRac::cleanState(const stdAc::state_t state) {
   stdAc::state_t result = state;
   // A hack for Home Assistant, it appears to need/want an Off opmode.
@@ -1282,14 +2077,11 @@ stdAc::state_t IRac::cleanState(const stdAc::state_t state) {
   return result;
 }
 
-// Create a new state base on desired & previous states but handle
-// any state changes for options that need to be toggled.
-// Args:
-//   desired: The state_t structure describing the desired a/c state.
-//   prev:    Ptr to the previous state_t structure.
-//
-// Returns:
-//   A stdAc::state_t with the needed settings.
+/// Create a new state base on desired & previous states but handle
+/// any state changes for options that need to be toggled.
+/// @param[in] desired The state_t structure describing the desired a/c state.
+/// @param[in] prev A Ptr to the previous state_t structure.
+/// @return A stdAc::state_t with the needed settings.
 stdAc::state_t IRac::handleToggles(const stdAc::state_t desired,
                                    const stdAc::state_t *prev) {
   stdAc::state_t result = desired;
@@ -1299,6 +2091,7 @@ stdAc::state_t IRac::handleToggles(const stdAc::state_t desired,
     // Check if we have to handle toggle settings for specific A/C protocols.
     switch (desired.protocol) {
       case decode_type_t::COOLIX:
+      case decode_type_t::TRANSCOLD:
         if ((desired.swingv == stdAc::swingv_t::kOff) ^
             (prev->swingv == stdAc::swingv_t::kOff))  // It changed, so toggle.
           result.swingv = stdAc::swingv_t::kAuto;
@@ -1316,15 +2109,33 @@ stdAc::state_t IRac::handleToggles(const stdAc::state_t desired,
       case decode_type_t::ELECTRA_AC:
         result.light = desired.light ^ prev->light;
         break;
-      case decode_type_t::HITACHI_AC424:
+      case decode_type_t::FUJITSU_AC:
+        result.turbo = desired.turbo ^ prev->turbo;
+        result.econo = desired.econo ^ prev->econo;
+        break;
       case decode_type_t::MIDEA:
-      case decode_type_t::SHARP_AC:
+        result.turbo = desired.turbo ^ prev->turbo;
+        result.econo = desired.econo ^ prev->econo;
+        result.light = desired.light ^ prev->light;
+        // FALL THRU
+      case decode_type_t::CORONA_AC:
+      case decode_type_t::HITACHI_AC344:
+      case decode_type_t::HITACHI_AC424:
         if ((desired.swingv == stdAc::swingv_t::kOff) ^
             (prev->swingv == stdAc::swingv_t::kOff))  // It changed, so toggle.
           result.swingv = stdAc::swingv_t::kAuto;
         else
           result.swingv = stdAc::swingv_t::kOff;  // No change, so no toggle.
         break;
+      case decode_type_t::SHARP_AC:
+        result.light = desired.light ^ prev->light;
+        if ((desired.swingv == stdAc::swingv_t::kOff) ^
+            (prev->swingv == stdAc::swingv_t::kOff))  // It changed, so toggle.
+          result.swingv = stdAc::swingv_t::kAuto;
+        else
+          result.swingv = stdAc::swingv_t::kOff;  // No change, so no toggle.
+        break;
+      case decode_type_t::AIRWELL:
       case decode_type_t::DAIKIN64:
       case decode_type_t::WHIRLPOOL_AC:
         result.power = desired.power ^ prev->power;
@@ -1341,29 +2152,30 @@ stdAc::state_t IRac::handleToggles(const stdAc::state_t desired,
   return result;
 }
 
-// Send A/C message for a given device using common A/C settings.
-// Args:
-//   vendor:  The type of A/C protocol to use.
-//   model:   The specific model of A/C if supported/applicable.
-//   on:      Should the unit be powered on? (or in some cases, toggled)
-//   mode:    What operating mode should the unit perform? e.g. Cool, Heat etc.
-//   degrees: What temperature should the unit be set to?
-//   celsius: Use degrees Celsius, otherwise Fahrenheit.
-//   fan:     Fan speed.
-// The following args are all "if supported" by the underlying A/C classes.
-//   swingv:  Control the vertical swing of the vanes.
-//   swingh:  Control the horizontal swing of the vanes.
-//   quiet:   Set the unit to quiet (fan) operation mode.
-//   turbo:   Set the unit to turbo operating mode. e.g. Max fan & cooling etc.
-//   econo:   Set the unit to economical operating mode.
-//   light:   Turn on the display/LEDs etc.
-//   filter:  Turn on any particle/ion/allergy filter etc.
-//   clean:   Turn on any settings to reduce mold etc. (Not self-clean mode.)
-//   beep:    Control if the unit beeps upon receiving commands.
-//   sleep:   Nr. of mins of sleep mode, or use sleep mode. (< 0 means off.)
-//   clock:   Nr. of mins past midnight to set the clock to. (< 0 means off.)
-// Returns:
-//   boolean: True, if accepted/converted/attempted. False, if unsupported.
+/// Send A/C message for a given device using common A/C settings.
+/// @param[in] vendor The vendor/protocol type.
+/// @param[in] model The A/C model if applicable.
+/// @param[in] power The power setting.
+/// @param[in] mode The operation mode setting.
+/// @param[in] degrees The temperature setting in degrees.
+/// @param[in] celsius Temperature units. True is Celsius, False is Fahrenheit.
+/// @param[in] fan The speed setting for the fan.
+/// @note The following are all "if supported" by the underlying A/C classes.
+/// @param[in] swingv The vertical swing setting.
+/// @param[in] swingh The horizontal swing setting.
+/// @param[in] quiet Run the device in quiet/silent mode.
+/// @param[in] turbo Run the device in turbo/powerful mode.
+/// @param[in] econo Run the device in economical mode.
+/// @param[in] light Turn on the LED/Display mode.
+/// @param[in] filter Turn on the (ion/pollen/etc) filter mode.
+/// @param[in] clean Turn on the self-cleaning mode. e.g. Mould, dry filters etc
+/// @param[in] beep Enable/Disable beeps when receiving IR messages.
+/// @param[in] sleep Nr. of minutes for sleep mode.
+///  -1 is Off, >= 0 is on. Some devices it is the nr. of mins to run for.
+///  Others it may be the time to enter/exit sleep mode.
+///  i.e. Time in Nr. of mins since midnight.
+/// @param[in] clock The time in Nr. of mins since midnight. < 0 is ignore.
+/// @return True, if accepted/converted/attempted etc. False, if unsupported.
 bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
                   const bool power, const stdAc::opmode_t mode,
                   const float degrees, const bool celsius,
@@ -1379,21 +2191,31 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
   return this->sendAc(to_send, &to_send);
 }
 
-// Send A/C message for a given device using state_t structures.
-// Args:
-//   desired: The state_t structure describing the desired new a/c state.
-//   prev:    Ptr to the previous state_t structure.
-//
-// Returns:
-//   boolean: True, if accepted/converted/attempted. False, if unsupported.
+/// Send A/C message for a given device using state_t structures.
+/// @param[in] desired The state_t structure describing the desired new ac state
+/// @param[in] prev A Ptr to the state_t structure containing the previous state
+/// @return True, if accepted/converted/attempted etc. False, if unsupported.
 bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
   // Convert the temp from Fahrenheit to Celsius if we are not in Celsius mode.
-  float degC = desired.celsius ? desired.degrees
-                               : fahrenheitToCelsius(desired.degrees);
+  float degC __attribute__((unused)) =
+      desired.celsius ? desired.degrees : fahrenheitToCelsius(desired.degrees);
   // special `state_t` that is required to be sent based on that.
   stdAc::state_t send = this->handleToggles(this->cleanState(desired), prev);
+  // Some protocols expect a previous state for power.
+  // Construct a pointer-safe previous power state incase prev is NULL/NULLPTR.
+#if (SEND_HITACHI_AC1 || SEND_SAMSUNG_AC || SEND_SHARP_AC)
+  const bool prev_power = (prev != NULL) ? prev->power : !send.power;
+#endif
   // Per vendor settings & setup.
   switch (send.protocol) {
+#if SEND_AIRWELL
+    case AIRWELL:
+    {
+      IRAirwellAc ac(_pin, _inverted, _modulation);
+      airwell(&ac, send.power, send.mode, degC, send.fanspeed);
+      break;
+    }
+#endif  // SEND_AIRWELL
 #if SEND_AMCOR
     case AMCOR:
     {
@@ -1411,6 +2233,15 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_ARGO
+#if SEND_CARRIER_AC64
+    case CARRIER_AC64:
+    {
+      IRCarrierAc64 ac(_pin, _inverted, _modulation);
+      carrier64(&ac, send.power, send.mode, degC, send.fanspeed, send.swingv,
+                send.sleep);
+      break;
+    }
+#endif  // SEND_CARRIER_AC64
 #if SEND_COOLIX
     case COOLIX:
     {
@@ -1420,6 +2251,15 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_COOLIX
+#if SEND_CORONA_AC
+    case CORONA_AC:
+    {
+      IRCoronaAc ac(_pin, _inverted, _modulation);
+      corona(&ac, send.power, send.mode, degC, send.fanspeed, send.swingv,
+             send.econo);
+      break;
+    }
+#endif  // SEND_CORONA_AC
 #if SEND_DAIKIN
     case DAIKIN:
     {
@@ -1585,6 +2425,15 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_HITACHI_AC1
+#if SEND_HITACHI_AC344
+    case HITACHI_AC344:
+    {
+      IRHitachiAc344 ac(_pin, _inverted, _modulation);
+      hitachi344(&ac, send.power, send.mode, degC, send.fanspeed,
+                 send.swingv, send.swingh);
+      break;
+    }
+#endif  // SEND_HITACHI_AC344
 #if SEND_HITACHI_AC424
     case HITACHI_AC424:
     {
@@ -1618,7 +2467,8 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
     {
       IRMideaAC ac(_pin, _inverted, _modulation);
       midea(&ac, send.power, send.mode, send.celsius, send.degrees,
-            send.fanspeed, send.swingv, send.sleep);
+            send.fanspeed, send.swingv, send.turbo, send.econo, send.light,
+            send.sleep);
       break;
     }
 #endif  // SEND_MIDEA
@@ -1671,8 +2521,9 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
     case NEOCLIMA:
     {
       IRNeoclimaAc ac(_pin, _inverted, _modulation);
-      neoclima(&ac, send.power, send.mode, degC, send.fanspeed, send.swingv,
-               send.swingh, send.turbo, send.light, send.filter, send.sleep);
+      neoclima(&ac, send.power, send.mode, send.celsius, send.degrees,
+               send.fanspeed, send.swingv, send.swingh, send.turbo,
+               send.econo, send.light, send.filter, send.sleep);
       break;
     }
 #endif  // SEND_NEOCLIMA
@@ -1692,18 +2543,26 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       IRSamsungAc ac(_pin, _inverted, _modulation);
       samsung(&ac, send.power, send.mode, degC, send.fanspeed, send.swingv,
               send.quiet, send.turbo, send.light, send.filter, send.clean,
-              send.beep, prev->power);
+              send.beep, prev_power);
       break;
     }
 #endif  // SEND_SAMSUNG_AC
+#if SEND_SANYO_AC
+    case SANYO_AC:
+    {
+      IRSanyoAc ac(_pin, _inverted, _modulation);
+      sanyo(&ac, send.power, send.mode, degC, send.fanspeed, send.swingv,
+            send.beep, send.sleep);
+      break;
+    }
+#endif  // SEND_SANYO_AC
 #if SEND_SHARP_AC
     case SHARP_AC:
     {
       IRSharpAc ac(_pin, _inverted, _modulation);
-      bool prev_power = !send.power;
-      if (prev != NULL) prev_power = prev->power;
-      sharp(&ac, send.power, prev_power, send.mode, degC, send.fanspeed,
-            send.swingv, send.turbo, send.filter, send.clean);
+      sharp(&ac, (sharp_ac_remote_model_t)send.model, send.power, prev_power,
+            send.mode, degC, send.fanspeed, send.swingv, send.turbo, send.light,
+            send.filter, send.clean);
       break;
     }
 #endif  // SEND_SHARP_AC
@@ -1716,6 +2575,15 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_TCL112AC
+#if SEND_TECHNIBEL_AC
+    case TECHNIBEL_AC:
+    {
+      IRTechnibelAc ac(_pin, _inverted, _modulation);
+      technibel(&ac, send.power, send.mode, send.celsius, send.degrees,
+                send.fanspeed, send.swingv, send.sleep);
+      break;
+    }
+#endif  // SEND_TECHNIBEL_AC
 #if SEND_TECO
     case TECO:
     {
@@ -1729,7 +2597,8 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
     case TOSHIBA_AC:
     {
       IRToshibaAC ac(_pin, _inverted, _modulation);
-      toshiba(&ac, send.power, send.mode, degC, send.fanspeed);
+      toshiba(&ac, send.power, send.mode, degC, send.fanspeed, send.swingv,
+              send.turbo, send.econo);
       break;
     }
 #endif  // SEND_TOSHIBA_AC
@@ -1750,6 +2619,16 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_VESTEL_AC
+#if SEND_VOLTAS
+    case VOLTAS:
+    {
+      IRVoltas ac(_pin, _inverted, _modulation);
+      voltas(&ac, (voltas_ac_remote_model_t)send.model, send.power, send.mode,
+             degC, send.fanspeed, send.swingv, send.swingh, send.turbo,
+             send.econo, send.light, send.sleep);
+      break;
+    }
+#endif  // SEND_VOLTAS
 #if SEND_WHIRLPOOL_AC
     case WHIRLPOOL_AC:
     {
@@ -1760,30 +2639,39 @@ bool IRac::sendAc(const stdAc::state_t desired, const stdAc::state_t *prev) {
       break;
     }
 #endif  // SEND_WHIRLPOOL_AC
+#if SEND_TRANSCOLD
+    case TRANSCOLD:
+    {
+      IRTranscoldAc ac(_pin, _inverted, _modulation);
+      transcold(&ac, send.power, send.mode, degC, send.fanspeed, send.swingv,
+                send.swingh);
+      break;
+    }
+#endif  // SEND_TRANSCOLD_AC
     default:
       return false;  // Fail, didn't match anything.
   }
   return true;  // Success.
 }
 
-// Update the previous state to the current one.
+/// Update the previous state to the current one.
 void IRac::markAsSent(void) {
   _prev = next;
 }
 
-// Send an A/C message based soley on our internal state.
-//
-// Returns:
-//   boolean: True, if accepted/converted/attempted. False, if unsupported.
+/// Send an A/C message based soley on our internal state.
+/// @return True, if accepted/converted/attempted. False, if unsupported.
 bool IRac::sendAc(void) {
   bool success = this->sendAc(next, &_prev);
   if (success) this->markAsSent();
   return success;
 }
 
-// Compare two AirCon states.
-// Returns: True if they differ, False if they don't.
-// Note: Excludes clock.
+/// Compare two AirCon states.
+/// @note The comparison excludes the clock.
+/// @param a A state_t to be compared.
+/// @param b A state_t to be compared.
+/// @return True if they differ, False if they don't.
 bool IRac::cmpStates(const stdAc::state_t a, const stdAc::state_t b) {
   return a.protocol != b.protocol || a.model != b.model || a.power != b.power ||
       a.mode != b.mode || a.degrees != b.degrees || a.celsius != b.celsius ||
@@ -1793,10 +2681,17 @@ bool IRac::cmpStates(const stdAc::state_t a, const stdAc::state_t b) {
       a.clean != b.clean || a.beep != b.beep || a.sleep != b.sleep;
 }
 
+/// Check if the internal state has changed from what was previously sent.
+/// @note The comparison excludes the clock.
+/// @return True if it has changed, False if not.
 bool IRac::hasStateChanged(void) { return cmpStates(next, _prev); }
 
+/// Convert the supplied str into the appropriate enum.
+/// @param[in] str A Ptr to a C-style string to be converted.
+/// @param[in] def The enum to return if no conversion was possible.
+/// @return The equivalent enum.
 stdAc::opmode_t IRac::strToOpmode(const char *str,
-                                const stdAc::opmode_t def) {
+                                  const stdAc::opmode_t def) {
   if (!strcasecmp(str, kAutoStr) ||
       !strcasecmp(str, kAutomaticStr))
     return stdAc::opmode_t::kAuto;
@@ -1821,6 +2716,10 @@ stdAc::opmode_t IRac::strToOpmode(const char *str,
     return def;
 }
 
+/// Convert the supplied str into the appropriate enum.
+/// @param[in] str A Ptr to a C-style string to be converted.
+/// @param[in] def The enum to return if no conversion was possible.
+/// @return The equivalent enum.
 stdAc::fanspeed_t IRac::strToFanspeed(const char *str,
                                       const stdAc::fanspeed_t def) {
   if (!strcasecmp(str, kAutoStr) ||
@@ -1848,6 +2747,10 @@ stdAc::fanspeed_t IRac::strToFanspeed(const char *str,
     return def;
 }
 
+/// Convert the supplied str into the appropriate enum.
+/// @param[in] str A Ptr to a C-style string to be converted.
+/// @param[in] def The enum to return if no conversion was possible.
+/// @return The equivalent enum.
 stdAc::swingv_t IRac::strToSwingV(const char *str,
                                   const stdAc::swingv_t def) {
   if (!strcasecmp(str, kAutoStr) ||
@@ -1885,6 +2788,10 @@ stdAc::swingv_t IRac::strToSwingV(const char *str,
     return def;
 }
 
+/// Convert the supplied str into the appropriate enum.
+/// @param[in] str A Ptr to a C-style string to be converted.
+/// @param[in] def The enum to return if no conversion was possible.
+/// @return The equivalent enum.
 stdAc::swingh_t IRac::strToSwingH(const char *str,
                                   const stdAc::swingh_t def) {
   if (!strcasecmp(str, kAutoStr) ||
@@ -1920,7 +2827,11 @@ stdAc::swingh_t IRac::strToSwingH(const char *str,
     return def;
 }
 
-// Assumes str is the model code or an integer >= 1.
+/// Convert the supplied str into the appropriate enum.
+/// @note Assumes str is the model code or an integer >= 1.
+/// @param[in] str A Ptr to a C-style string to be converted.
+/// @param[in] def The enum to return if no conversion was possible.
+/// @return The equivalent enum.
 int16_t IRac::strToModel(const char *str, const int16_t def) {
   // Gree
   if (!strcasecmp(str, "YAW1F")) {
@@ -1943,6 +2854,11 @@ int16_t IRac::strToModel(const char *str, const int16_t def) {
     return fujitsu_ac_remote_model_t::ARJW2;
   } else if (!strcasecmp(str, "ARRY4")) {
     return fujitsu_ac_remote_model_t::ARRY4;
+  // LG A/C models
+  } else if (!strcasecmp(str, "GE6711AR2853M")) {
+    return lg_ac_remote_model_t::GE6711AR2853M;
+  } else if (!strcasecmp(str, "AKB75215403")) {
+    return lg_ac_remote_model_t::AKB75215403;
   // Panasonic A/C families
   } else if (!strcasecmp(str, "LKE") || !strcasecmp(str, "PANASONICLKE")) {
     return panasonic_ac_remote_model_t::kPanasonicLke;
@@ -1957,6 +2873,9 @@ int16_t IRac::strToModel(const char *str, const int16_t def) {
     return panasonic_ac_remote_model_t::kPanasonicCkp;
   } else if (!strcasecmp(str, "RKR") || !strcasecmp(str, "PANASONICRKR")) {
     return panasonic_ac_remote_model_t::kPanasonicRkr;
+  // Voltas A/C models
+  } else if (!strcasecmp(str, "122LZF")) {
+    return voltas_ac_remote_model_t::kVoltas122LZF;
   // Whirlpool A/C models
   } else if (!strcasecmp(str, "DG11J13A") || !strcasecmp(str, "DG11J104") ||
              !strcasecmp(str, "DG11J1-04")) {
@@ -1972,6 +2891,10 @@ int16_t IRac::strToModel(const char *str, const int16_t def) {
   }
 }
 
+/// Convert the supplied str into the appropriate boolean value.
+/// @param[in] str A Ptr to a C-style string to be converted.
+/// @param[in] def The boolean value to return if no conversion was possible.
+/// @return The equivalent boolean value.
 bool IRac::strToBool(const char *str, const bool def) {
   if (!strcasecmp(str, kOnStr) ||
       !strcasecmp(str, "1") ||
@@ -1987,10 +2910,16 @@ bool IRac::strToBool(const char *str, const bool def) {
     return def;
 }
 
+/// Convert the supplied boolean into the appropriate String.
+/// @param[in] value The boolean value to be converted.
+/// @return The equivalent String for the locale.
 String IRac::boolToString(const bool value) {
   return value ? kOnStr : kOffStr;
 }
 
+/// Convert the supplied operation mode into the appropriate String.
+/// @param[in] mode The enum to be converted.
+/// @return The equivalent String for the locale.
 String IRac::opmodeToString(const stdAc::opmode_t mode) {
   switch (mode) {
     case stdAc::opmode_t::kOff:
@@ -2010,6 +2939,9 @@ String IRac::opmodeToString(const stdAc::opmode_t mode) {
   }
 }
 
+/// Convert the supplied fan speed enum into the appropriate String.
+/// @param[in] speed The enum to be converted.
+/// @return The equivalent String for the locale.
 String IRac::fanspeedToString(const stdAc::fanspeed_t speed) {
   switch (speed) {
     case stdAc::fanspeed_t::kAuto:
@@ -2029,6 +2961,9 @@ String IRac::fanspeedToString(const stdAc::fanspeed_t speed) {
   }
 }
 
+/// Convert the supplied enum into the appropriate String.
+/// @param[in] swingv The enum to be converted.
+/// @return The equivalent String for the locale.
 String IRac::swingvToString(const stdAc::swingv_t swingv) {
   switch (swingv) {
     case stdAc::swingv_t::kOff:
@@ -2050,6 +2985,9 @@ String IRac::swingvToString(const stdAc::swingv_t swingv) {
   }
 }
 
+/// Convert the supplied enum into the appropriate String.
+/// @param[in] swingh The enum to be converted.
+/// @return The equivalent String for the locale.
 String IRac::swinghToString(const stdAc::swingh_t swingh) {
   switch (swingh) {
     case stdAc::swingh_t::kOff:
@@ -2074,72 +3012,86 @@ String IRac::swinghToString(const stdAc::swingh_t swingh) {
 }
 
 namespace IRAcUtils {
-  // Display the human readable state of an A/C message if we can.
-  // Args:
-  //   result: A Ptr to the captured `decode_results` that contains an A/C mesg.
-  // Returns:
-  //   A string with the human description of the A/C message. "" if we can't.
+  /// Display the human readable state of an A/C message if we can.
+  /// @param[in] result A Ptr to the captured `decode_results` that contains an
+  ///   A/C mesg.
+  /// @return A string with the human description of the A/C message.
+  ///   An empty string if we can't.
   String resultAcToString(const decode_results * const result) {
     switch (result->decode_type) {
+#if DECODE_AIRWELL
+      case decode_type_t::AIRWELL: {
+        IRAirwellAc ac(kGpioUnused);
+        ac.setRaw(result->value);  // AIRWELL uses value instead of state.
+        return ac.toString();
+      }
+#endif  // DECODE_AIRWELL
 #if DECODE_AMCOR
       case decode_type_t::AMCOR: {
-        IRAmcorAc ac(0);
+        IRAmcorAc ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_AMCOR
 #if DECODE_ARGO
       case decode_type_t::ARGO: {
-        IRArgoAC ac(0);
+        IRArgoAC ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_ARGO
+#if DECODE_CARRIER_AC64
+      case decode_type_t::CARRIER_AC64: {
+        IRCarrierAc64 ac(kGpioUnused);
+        ac.setRaw(result->value);  // CARRIER_AC64 uses value instead of state.
+        return ac.toString();
+      }
+#endif  // DECODE_CARRIER_AC64
 #if DECODE_DAIKIN
       case decode_type_t::DAIKIN: {
-        IRDaikinESP ac(0);
+        IRDaikinESP ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_DAIKIN
 #if DECODE_DAIKIN128
       case decode_type_t::DAIKIN128: {
-        IRDaikin128 ac(0);
+        IRDaikin128 ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_DAIKIN128
 #if DECODE_DAIKIN152
       case decode_type_t::DAIKIN152: {
-        IRDaikin152 ac(0);
+        IRDaikin152 ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_DAIKIN152
 #if DECODE_DAIKIN160
       case decode_type_t::DAIKIN160: {
-        IRDaikin160 ac(0);
+        IRDaikin160 ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_DAIKIN160
 #if DECODE_DAIKIN176
       case decode_type_t::DAIKIN176: {
-        IRDaikin176 ac(0);
+        IRDaikin176 ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_DAIKIN160
 #if DECODE_DAIKIN2
       case decode_type_t::DAIKIN2: {
-        IRDaikin2 ac(0);
+        IRDaikin2 ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_DAIKIN2
 #if DECODE_DAIKIN216
       case decode_type_t::DAIKIN216: {
-        IRDaikin216 ac(0);
+        IRDaikin216 ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
@@ -2160,140 +3112,154 @@ namespace IRAcUtils {
 #endif  // DECODE_DELONGHI_AC
 #if DECODE_ELECTRA_AC
       case decode_type_t::ELECTRA_AC: {
-        IRElectraAc ac(0);
+        IRElectraAc ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_ELECTRA_AC
 #if DECODE_FUJITSU_AC
       case decode_type_t::FUJITSU_AC: {
-        IRFujitsuAC ac(0);
+        IRFujitsuAC ac(kGpioUnused);
         ac.setRaw(result->state, result->bits / 8);
         return ac.toString();
       }
 #endif  // DECODE_FUJITSU_AC
 #if DECODE_KELVINATOR
       case decode_type_t::KELVINATOR: {
-        IRKelvinatorAC ac(0);
+        IRKelvinatorAC ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_KELVINATOR
 #if DECODE_MITSUBISHI_AC
       case decode_type_t::MITSUBISHI_AC: {
-        IRMitsubishiAC ac(0);
+        IRMitsubishiAC ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_MITSUBISHI_AC
 #if DECODE_MITSUBISHI112
       case decode_type_t::MITSUBISHI112: {
-        IRMitsubishi112 ac(0);
+        IRMitsubishi112 ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_MITSUBISHI112
 #if DECODE_MITSUBISHI136
       case decode_type_t::MITSUBISHI136: {
-        IRMitsubishi136 ac(0);
+        IRMitsubishi136 ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_MITSUBISHI136
 #if DECODE_MITSUBISHIHEAVY
       case decode_type_t::MITSUBISHI_HEAVY_88: {
-        IRMitsubishiHeavy88Ac ac(0);
+        IRMitsubishiHeavy88Ac ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
       case decode_type_t::MITSUBISHI_HEAVY_152: {
-        IRMitsubishiHeavy152Ac ac(0);
+        IRMitsubishiHeavy152Ac ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_MITSUBISHIHEAVY
 #if DECODE_NEOCLIMA
       case decode_type_t::NEOCLIMA: {
-        IRNeoclimaAc ac(0);
+        IRNeoclimaAc ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_NEOCLIMA
 #if DECODE_TOSHIBA_AC
       case decode_type_t::TOSHIBA_AC: {
-        IRToshibaAC ac(0);
+        IRToshibaAC ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_TOSHIBA_AC
 #if DECODE_TROTEC
       case decode_type_t::TROTEC: {
-        IRTrotecESP ac(0);
+        IRTrotecESP ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_TROTEC
 #if DECODE_GOODWEATHER
       case decode_type_t::GOODWEATHER: {
-        IRGoodweatherAc ac(0);
+        IRGoodweatherAc ac(kGpioUnused);
         ac.setRaw(result->value);  // Goodweather uses value instead of state.
         return ac.toString();
       }
 #endif  // DECODE_GOODWEATHER
 #if DECODE_GREE
       case decode_type_t::GREE: {
-        IRGreeAC ac(0);
+        IRGreeAC ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_GREE
 #if DECODE_MIDEA
       case decode_type_t::MIDEA: {
-        IRMideaAC ac(0);
+        IRMideaAC ac(kGpioUnused);
         ac.setRaw(result->value);  // Midea uses value instead of state.
         return ac.toString();
       }
 #endif  // DECODE_MIDEA
 #if DECODE_HAIER_AC
       case decode_type_t::HAIER_AC: {
-        IRHaierAC ac(0);
+        IRHaierAC ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_HAIER_AC
 #if DECODE_HAIER_AC_YRW02
       case decode_type_t::HAIER_AC_YRW02: {
-        IRHaierACYRW02 ac(0);
+        IRHaierACYRW02 ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_HAIER_AC_YRW02
 #if DECODE_SAMSUNG_AC
       case decode_type_t::SAMSUNG_AC: {
-        IRSamsungAc ac(0);
+        IRSamsungAc ac(kGpioUnused);
         ac.setRaw(result->state, result->bits / 8);
         return ac.toString();
       }
 #endif  // DECODE_SAMSUNG_AC
+#if DECODE_SANYO_AC
+      case decode_type_t::SANYO_AC: {
+        IRSanyoAc ac(kGpioUnused);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_SANYO_AC
 #if DECODE_SHARP_AC
       case decode_type_t::SHARP_AC: {
-        IRSharpAc ac(0);
+        IRSharpAc ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_SHARP_AC
 #if DECODE_COOLIX
       case decode_type_t::COOLIX: {
-        IRCoolixAC ac(0);
+        IRCoolixAC ac(kGpioUnused);
         ac.on();
         ac.setRaw(result->value);  // Coolix uses value instead of state.
         return ac.toString();
       }
 #endif  // DECODE_COOLIX
+#if DECODE_CORONA_AC
+      case decode_type_t::CORONA_AC: {
+        IRCoronaAc ac(kGpioUnused);
+        ac.setRaw(result->state, result->bits / 8);
+        return ac.toString();
+      }
+#endif  // DECODE_CORONA_AC
 #if DECODE_PANASONIC_AC
       case decode_type_t::PANASONIC_AC: {
         if (result->bits > kPanasonicAcShortBits) {
-          IRPanasonicAc ac(0);
+          IRPanasonicAc ac(kGpioUnused);
           ac.setRaw(result->state);
           return ac.toString();
         }
@@ -2302,7 +3268,7 @@ namespace IRAcUtils {
 #endif  // DECODE_PANASONIC_AC
 #if DECODE_HITACHI_AC
       case decode_type_t::HITACHI_AC: {
-        IRHitachiAc ac(0);
+        IRHitachiAc ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
@@ -2314,37 +3280,58 @@ namespace IRAcUtils {
         return ac.toString();
       }
 #endif  // DECODE_HITACHI_AC1
+#if DECODE_HITACHI_AC344
+      case decode_type_t::HITACHI_AC344: {
+        IRHitachiAc344 ac(kGpioUnused);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_HITACHI_AC344
 #if DECODE_HITACHI_AC424
       case decode_type_t::HITACHI_AC424: {
-        IRHitachiAc424 ac(0);
+        IRHitachiAc424 ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_HITACHI_AC424
 #if DECODE_WHIRLPOOL_AC
       case decode_type_t::WHIRLPOOL_AC: {
-        IRWhirlpoolAc ac(0);
+        IRWhirlpoolAc ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
 #endif  // DECODE_WHIRLPOOL_AC
 #if DECODE_VESTEL_AC
       case decode_type_t::VESTEL_AC: {
-        IRVestelAc ac(0);
+        IRVestelAc ac(kGpioUnused);
         ac.setRaw(result->value);  // Like Coolix, use value instead of state.
         return ac.toString();
       }
 #endif  // DECODE_VESTEL_AC
+#if DECODE_TECHNIBEL_AC
+      case decode_type_t::TECHNIBEL_AC: {
+        IRTechnibelAc ac(kGpioUnused);
+        ac.setRaw(result->value);  // TechnibelAc uses value instead of state.
+        return ac.toString();
+      }
+#endif  // DECODE_TECHNIBEL_AC
+#if DECODE_VOLTAS
+      case decode_type_t::VOLTAS: {
+        IRVoltas ac(kGpioUnused);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_VOLTAS
 #if DECODE_TECO
       case decode_type_t::TECO: {
-        IRTecoAc ac(0);
+        IRTecoAc ac(kGpioUnused);
         ac.setRaw(result->value);  // Like Coolix, use value instead of state.
         return ac.toString();
       }
 #endif  // DECODE_TECO
 #if DECODE_TCL112AC
       case decode_type_t::TCL112AC: {
-        IRTcl112Ac ac(0);
+        IRTcl112Ac ac(kGpioUnused);
         ac.setRaw(result->state);
         return ac.toString();
       }
@@ -2352,7 +3339,7 @@ namespace IRAcUtils {
 #if DECODE_LG
       case decode_type_t::LG:
       case decode_type_t::LG2: {
-        IRLgAc ac(0);
+        IRLgAc ac(kGpioUnused);
         ac.setRaw(result->value);  // Like Coolix, use value instead of state.
         switch (result->decode_type) {
           case decode_type_t::LG2:
@@ -2364,24 +3351,43 @@ namespace IRAcUtils {
         return ac.isValidLgAc() ? ac.toString() : "";
       }
 #endif  // DECODE_LG
+#if DECODE_TRANSCOLD
+      case decode_type_t::TRANSCOLD: {
+        IRTranscoldAc ac(kGpioUnused);
+        ac.on();
+        ac.setRaw(result->value);  // TRANSCOLD uses value instead of state.
+        return ac.toString();
+      }
+#endif  // DECODE_TRANSCOLD
       default:
         return "";
     }
   }
 
-  // Convert a valid IR A/C remote message that we understand enough into a
-  // Common A/C state.
-  //
-  // Args:
-  //   decode: A PTR to a successful raw IR decode object.
-  //   result: A PTR to a state structure to store the result in.
-  //   prev:   A PTR to a state structure which has the prev. state. (optional)
-  // Returns:
-  //   A boolean indicating success or failure.
+  /// Convert a valid IR A/C remote message that we understand enough into a
+  /// Common A/C state.
+  /// @param[in] decode A PTR to a successful raw IR decode object.
+  /// @param[in] result A PTR to a state structure to store the result in.
+  /// @param[in] prev A PTR to a state structure which has the prev. state.
+  /// @return A boolean indicating success or failure.
   bool decodeToState(const decode_results *decode, stdAc::state_t *result,
-                     const stdAc::state_t *prev) {
+                     const stdAc::state_t *prev
+/// @cond IGNORE
+// *prev flagged as "unused" due to potential compiler warning when some
+// protocols that use it are disabled. It really is used.
+                                                __attribute__((unused))
+/// @endcond
+                    ) {
     if (decode == NULL || result == NULL) return false;  // Safety check.
     switch (decode->decode_type) {
+#if DECODE_AIRWELL
+      case decode_type_t::AIRWELL: {
+        IRAirwellAc ac(kGpioUnused);
+        ac.setRaw(decode->value);  // Uses value instead of state.
+        *result = ac.toCommon(prev);
+        break;
+      }
+#endif  // DECODE_AIRWELL
 #if DECODE_AMCOR
       case decode_type_t::AMCOR: {
         IRAmcorAc ac(kGpioUnused);
@@ -2406,6 +3412,22 @@ namespace IRAcUtils {
         break;
       }
 #endif  // DECODE_COOLIX
+#if DECODE_CORONA_AC
+      case decode_type_t::CORONA_AC: {
+        IRCoronaAc ac(kGpioUnused);
+        ac.setRaw(decode->state, decode->bits / 8);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_CARRIER_AC64
+#if DECODE_CARRIER_AC64
+      case decode_type_t::CARRIER_AC64: {
+        IRCarrierAc64 ac(kGpioUnused);
+        ac.setRaw(decode->value);  // Uses value instead of state.
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_CARRIER_AC64
 #if DECODE_DAIKIN
       case decode_type_t::DAIKIN: {
         IRDaikinESP ac(kGpioUnused);
@@ -2416,7 +3438,7 @@ namespace IRAcUtils {
 #endif  // DECODE_DAIKIN
 #if DECODE_DAIKIN128
       case decode_type_t::DAIKIN128: {
-        IRDaikin128 ac(0);
+        IRDaikin128 ac(kGpioUnused);
         ac.setRaw(decode->state);
         *result = ac.toCommon();
         break;
@@ -2424,7 +3446,7 @@ namespace IRAcUtils {
 #endif  // DECODE_DAIKIN128
 #if DECODE_DAIKIN152
       case decode_type_t::DAIKIN152: {
-        IRDaikin152 ac(0);
+        IRDaikin152 ac(kGpioUnused);
         ac.setRaw(decode->state);
         *result = ac.toCommon();
         break;
@@ -2542,6 +3564,14 @@ namespace IRAcUtils {
         break;
       }
 #endif  // DECODE_HITACHI_AC1
+#if DECODE_HITACHI_AC344
+      case decode_type_t::HITACHI_AC344: {
+        IRHitachiAc344 ac(kGpioUnused);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_HITACHI_AC344
 #if DECODE_HITACHI_AC424
       case decode_type_t::HITACHI_AC424: {
         IRHitachiAc424 ac(kGpioUnused);
@@ -2645,6 +3675,14 @@ namespace IRAcUtils {
         break;
       }
 #endif  // DECODE_SAMSUNG_AC
+#if DECODE_SANYO_AC
+      case decode_type_t::SANYO_AC: {
+        IRSanyoAc ac(kGpioUnused);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_SANYO_AC
 #if DECODE_SHARP_AC
       case decode_type_t::SHARP_AC: {
         IRSharpAc ac(kGpioUnused);
@@ -2661,6 +3699,14 @@ namespace IRAcUtils {
         break;
       }
 #endif  // DECODE_TCL112AC
+#if DECODE_TECHNIBEL_AC
+      case decode_type_t::TECHNIBEL_AC: {
+        IRTechnibelAc ac(kGpioUnused);
+        ac.setRaw(decode->value);  // Uses value instead of state.
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_TECHNIBEL_AC
 #if DECODE_TECO
       case decode_type_t::TECO: {
         IRTecoAc ac(kGpioUnused);
@@ -2693,14 +3739,30 @@ namespace IRAcUtils {
         break;
       }
 #endif  // DECODE_VESTEL_AC
+#if DECODE_VOLTAS
+      case decode_type_t::VOLTAS: {
+        IRVoltas ac(kGpioUnused);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon(prev);
+        break;
+      }
+#endif  // DECODE_VOLTAS
 #if DECODE_WHIRLPOOL_AC
       case decode_type_t::WHIRLPOOL_AC: {
         IRWhirlpoolAc ac(kGpioUnused);
         ac.setRaw(decode->state);
-        *result = ac.toCommon();
+        *result = ac.toCommon(prev);
         break;
       }
 #endif  // DECODE_WHIRLPOOL_AC
+#if DECODE_TRANSCOLD
+      case decode_type_t::TRANSCOLD: {
+        IRTranscoldAc ac(kGpioUnused);
+        ac.setRaw(decode->value);  // TRANSCOLD Uses value instead of state.
+        *result = ac.toCommon(prev);
+        break;
+      }
+#endif  // DECODE_TRANSCOLD
       default:
         return false;
     }

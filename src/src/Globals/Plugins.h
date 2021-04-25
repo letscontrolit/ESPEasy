@@ -3,7 +3,14 @@
 
 #include <map>
 #include <vector>
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
+
+#include "../DataTypes/PluginID.h"
+#include "../DataTypes/DeviceIndex.h"
+#include "../DataTypes/TaskIndex.h"
+
+#include "../../ESPEasy_common.h"
 
 
 /********************************************************************************************\
@@ -28,35 +35,12 @@
 
 
    UserVar has the output values for a task.
-   - BaseVarIndex = taskIndex + VARS_PER_TASK
-   - taskVarIndex = 0 ... VARS_PER_TASK
+   - BaseVarIndex = taskIndex * VARS_PER_TASK
+   - taskVarIndex = 0 ... (VARS_PER_TASK - 1)
    - userVarIndex = BaseVarIndex + taskVarIndex  => 0 ... USERVAR_MAX_INDEX
    - USERVAR_MAX_INDEX = (TASKS_MAX * VARS_PER_TASK)
  \*********************************************************************************************/
 
-
-typedef byte     deviceIndex_t;
-typedef byte     taskIndex_t;
-typedef uint8_t  pluginID_t;
-typedef uint16_t userVarIndex_t;
-typedef uint16_t taskVarIndex_t;
-
-extern deviceIndex_t  INVALID_DEVICE_INDEX;
-extern taskIndex_t    INVALID_TASK_INDEX;
-extern pluginID_t     INVALID_PLUGIN_ID;
-extern userVarIndex_t INVALID_USERVAR_INDEX;
-extern taskVarIndex_t INVALID_TASKVAR_INDEX;
-
-
-/*********************************************************************************************\
-* Custom Variables for usage in rules and http.
-* Syntax: %vX%
-* usage:
-* let,1,10
-* if %v1%=10 do ...
-\*********************************************************************************************/
-extern float customFloatVar[CUSTOM_VARS_MAX];
-extern float UserVar[VARS_PER_TASK * TASKS_MAX];
 
 
 extern int deviceCount;
@@ -65,6 +49,7 @@ extern int deviceCount;
 extern boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
                                          struct EventStruct *,
                                          String&);
+
 
 // Map to match a plugin ID to a "DeviceIndex"
 extern std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
@@ -100,6 +85,21 @@ String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
 void          sortDeviceIndexArray();
+
+
+void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+
+/*********************************************************************************************\
+* Function call to all or specific plugins
+\*********************************************************************************************/
+bool PluginCall(byte Function, struct EventStruct *event, String& str);
+
+
+/*********************************************************************************************\
+* Adding plugins at boot
+\*********************************************************************************************/
+bool addPlugin(pluginID_t pluginID, deviceIndex_t x);
 
 
 #endif // GLOBALS_PLUGIN_H

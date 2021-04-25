@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P076
 //#######################################################################################################
 //#################### Plugin 076 HLW8012 AC Current and Voltage measurement sensor #####################
@@ -17,7 +18,6 @@
 //
 
 #include <HLW8012.h>
-#include "_Plugin_Helper.h"
 
 HLW8012 *Plugin_076_hlw = NULL;
 
@@ -41,7 +41,7 @@ int StoredTaskIndex = -1;
 byte p076_read_stage = 0;
 unsigned long p076_timer = 0;
 
-double p076_hcurrent = 0.0;
+double p076_hcurrent = 0.0f;
 unsigned int p076_hvoltage = 0;
 unsigned int p076_hpower = 0;
 unsigned int p076_hpowfact = 0;
@@ -65,6 +65,10 @@ unsigned int p076_hpowfact = 0;
 // Keep values as they are stored and increase this when adding new ones.
 #define MAX_P076_DEVICE   11
 
+void ICACHE_RAM_ATTR p076_hlw8012_cf1_interrupt();
+void ICACHE_RAM_ATTR p076_hlw8012_cf_interrupt();
+
+
 bool p076_getDeviceString(int device, String& name) {
   switch(device) {
     case P076_Custom   : name = F("Custom");          break;
@@ -86,16 +90,16 @@ bool p076_getDeviceString(int device, String& name) {
 
 bool p076_getDeviceParameters(int device, byte &SEL_Pin, byte &CF_Pin, byte &CF1_Pin, byte &Cur_read, byte &CF_Trigger, byte &CF1_Trigger) {
   switch(device) {
-    case P076_Custom   : SEL_Pin =  0; CF_Pin =  0; CF1_Pin =  0; Cur_read =  LOW; CF_Trigger =     LOW; CF1_Trigger =    LOW; break;
-    case P076_Sonoff   : SEL_Pin =  5; CF_Pin = 14; CF1_Pin = 13; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_Huafan   : SEL_Pin = 13; CF_Pin = 14; CF1_Pin = 12; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_KMC      : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_Aplic    : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_SK03     : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_BlitzWolf: SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
-    case P076_Teckin   : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
-    case P076_TeckinUS : SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
-    case P076_Gosund   : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Custom        : SEL_Pin =  0; CF_Pin =  0; CF1_Pin =  0; Cur_read =  LOW; CF_Trigger =     LOW; CF1_Trigger =    LOW; break;
+    case P076_Sonoff        : SEL_Pin =  5; CF_Pin = 14; CF1_Pin = 13; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_Huafan        : SEL_Pin = 13; CF_Pin = 14; CF1_Pin = 12; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_KMC           : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_Aplic         : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_SK03          : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_BlitzWolf     : SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Teckin        : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_TeckinUS      : SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Gosund        : SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     case P076_Shelly_PLUG_S : SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     default:
       return false;
@@ -112,7 +116,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
   case PLUGIN_DEVICE_ADD: {
     Device[++deviceCount].Number = PLUGIN_ID_076;
     Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
-    Device[deviceCount].VType = SENSOR_TYPE_QUAD;
+    Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_QUAD;
     Device[deviceCount].Ports = 0;
     Device[deviceCount].PullUpOption = false;
     Device[deviceCount].InverseLogicOption = false;
@@ -200,12 +204,12 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       byte cf_trigger  = PCONFIG(5);
       byte cf1_trigger = PCONFIG(6);
       addFormSubHeader(F("Custom Pin settings (choose Custom above)"));
-      addFormSelector(F("Current (A) Reading"), F("p076_curr_read"), 2,
+      addFormSelector(F("SEL Current (A) Reading"), F("p076_curr_read"), 2,
                       modeCurr, modeCurrValues, currentRead );
-      addFormSelector(F("CF Interrupt Edge"), F("p076_cf_edge"), 4,
-                      modeRaise, modeValues, cf_trigger );
       addFormSelector(F("CF1  Interrupt Edge"), F("p076_cf1_edge"), 4,
                       modeRaise, modeValues, cf1_trigger);
+      addFormSelector(F("CF Interrupt Edge"), F("p076_cf_edge"), 4,
+                      modeRaise, modeValues, cf_trigger );
     }
 
 
@@ -252,7 +256,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     hlwMultipliers[0] = getFormItemFloat(F("p076_currmult"));
     hlwMultipliers[1] = getFormItemFloat(F("p076_voltmult"));
     hlwMultipliers[2] = getFormItemFloat(F("p076_powmult"));
-    if (hlwMultipliers[0] > 1.0 && hlwMultipliers[1] > 1.0 && hlwMultipliers[2] > 1.0) {
+    if (hlwMultipliers[0] > 1.0f && hlwMultipliers[1] > 1.0f && hlwMultipliers[2] > 1.0f) {
       SaveCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
                              sizeof(hlwMultipliers));
       if (PLUGIN_076_DEBUG) {
@@ -311,10 +315,10 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
         if (timeOutReached(p076_timer)) {
           p076_hvoltage = Plugin_076_hlw->getVoltage();
           p076_hpower = Plugin_076_hlw->getActivePower();
-          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor());
+          p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor());
           ++p076_read_stage;
           // Measurement is done, schedule a new PLUGIN_READ call
-          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
         break;
       default:
@@ -334,7 +338,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
           p076_hpower = Plugin_076_hlw->getActivePower();
           p076_hvoltage = Plugin_076_hlw->getVoltage();
           p076_hcurrent = Plugin_076_hlw->getCurrent();
-          p076_hpowfact = (int)(100 * Plugin_076_hlw->getPowerFactor());
+          p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor());
         
         // Measurement is complete.
         p076_read_stage = 0;
@@ -374,7 +378,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
     const byte SEL_PIN = CONFIG_PIN1;
 
     if (CF_PIN != -1 && CF1_PIN != -1 && SEL_PIN != -1) {
-      Plugin_076_hlw = new HLW8012;
+      Plugin_076_hlw = new (std::nothrow) HLW8012;
       if (Plugin_076_hlw) {
         byte currentRead = PCONFIG(4);
         byte cf_trigger  = PCONFIG(5);
@@ -453,7 +457,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
           Plugin_076_hlw->expectedVoltage(CalibVolt);
           changed = true;
         }
-        if (CalibCurr > 0.0) {
+        if (CalibCurr > 0.0f) {
           Plugin_076_hlw->expectedCurrent(CalibCurr);
           changed = true;
         }
@@ -495,9 +499,9 @@ void Plugin076_SaveMultipliers() {
 }
 
 bool Plugin076_ReadMultipliers(double& current, double& voltage, double& power) {
-  current = 0.0;
-  voltage = 0.0;
-  power   = 0.0;
+  current = 0.0f;
+  voltage = 0.0f;
+  power   = 0.0f;
   if (Plugin_076_hlw) {
     current = Plugin_076_hlw->getCurrentMultiplier();
     voltage = Plugin_076_hlw->getVoltageMultiplier();
@@ -517,16 +521,16 @@ bool Plugin076_LoadMultipliers(taskIndex_t TaskIndex, double& current, double& v
   double hlwMultipliers[3];
   LoadCustomTaskSettings(TaskIndex, (byte *)&hlwMultipliers,
                          sizeof(hlwMultipliers));
-  if (hlwMultipliers[0] > 1.0) {
+  if (hlwMultipliers[0] > 1.0f) {
     current = hlwMultipliers[0];
   }
-  if (hlwMultipliers[1] > 1.0) {
+  if (hlwMultipliers[1] > 1.0f) {
     voltage = hlwMultipliers[1];
   }
-  if (hlwMultipliers[2] > 1.0) {
+  if (hlwMultipliers[2] > 1.0f) {
     power = hlwMultipliers[2];
   }
-  return (current > 1.0) && (voltage > 1.0) && (power > 1.0);
+  return (current > 1.0f) && (voltage > 1.0f) && (power > 1.0f);
 }
 
 void Plugin076_Reset(taskIndex_t TaskIndex) {
@@ -542,7 +546,7 @@ void Plugin076_Reset(taskIndex_t TaskIndex) {
   p076_read_stage = 0;
   p076_timer = 0;
 
-  p076_hcurrent = 0.0;
+  p076_hcurrent = 0.0f;
   p076_hvoltage = 0;
   p076_hpower = 0;
   p076_hpowfact = 0;

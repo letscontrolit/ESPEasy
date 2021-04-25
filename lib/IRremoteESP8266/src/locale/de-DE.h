@@ -111,13 +111,22 @@
 #define D_STR_FALSE "Falsch"
 
 #define D_STR_REPEAT "Wiederholen"
+#define D_STR_PREVIOUS "Vorher"
+#define D_STR_FAHRENHEIT "Fahrenheit"
+#define D_STR_CELSIUS_FAHRENHEIT D_STR_CELSIUS "/" D_STR_FAHRENHEIT
+#define D_STR_DISPLAY "Anzeige"
+#define D_STR_INSIDE "Innen"
+#define D_STR_POWERBUTTON "Netzschalter"
+#define D_STR_PREVIOUSPOWER "Vorheriger Einschaltzustand"
+#define D_STR_DISPLAYTEMP "Anzeigetemperatur"
 
-// IRrecvDumpV2
+// IRrecvDumpV2+
 #define D_STR_TIMESTAMP "Zeitstempel"
 #define D_STR_LIBRARY "Bibliothek"
+#define D_STR_TOLERANCE "Toleranz"
 #define D_STR_MESGDESC "Nachr. Beschr."
 #define D_STR_IRRECVDUMP_STARTUP \
-    "IRrecvDumpV2 läuft und wartet auf IR Eingabe auf Pin %d"
+    "IRrecvDump läuft und wartet auf IR Eingabe auf Pin %d"
 #define D_WARN_BUFFERFULL \
     "WARNUNG: IR Code ist zu gross für Buffer (>= %d). " \
     "Dem Resultat sollte nicht vertraut werden bevor das behoben ist. " \

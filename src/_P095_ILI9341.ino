@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P095
 //#######################################################################################################
 //#################################### Plugin 095: ILI9341 TFT 2.4inches display #################################
@@ -5,10 +6,23 @@
 
 #define PLUGIN_095
 #define PLUGIN_ID_095         95
-#define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341/XPT2046 [TESTING]"
+#define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341 [TESTING]"
 #define PLUGIN_VALUENAME1_095 "TFT"
 #define PLUGIN_095_MAX_DISPLAY 1
 
+
+#if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
+  #define PLUGIN_095_FONT_INCLUDED   // enable to use fonts in this plugin
+#endif
+
+/**
+ * Changelog:
+ * 2020-08-29 tonhuisman: Removed TS (Touchscreen) related stuff, XPT2046 will be a separate plugin
+ *                        Changed initial text from '--cdt--' to 'ESPEasy'
+ * 2020-08 tonhuisman: SPI improvements
+ * 2020-04 TD-er: Pull plugin into main repository and rework according to new plugin standards
+ * 2019 Jean-Michel Decoret: Initial plugin work
+ */
 /* README.MD
 
 ## INTRO
@@ -48,15 +62,16 @@ TFT Subcommands:
 | lh | lh,<y>,<width>,<color> | Draw an horizontal line (width = Line width in pixels (positive = right of first point, negative = point of first corner). |
 | lv | lv,<x>,<height>,<color> | Draw a vertical line (height= Line height in pixels (positive = below first point, negative = above first point).|
 | r | r,<x>,<y>,<width>,<height>,<color> | Draw a rectangle |
-| rf | r,<x>,<y>,<width>,<height>,<bordercolor>,<innercolor> | Draw a filled rectangle |
+| rf | rf,<x>,<y>,<width>,<height>,<bordercolor>,<innercolor> | Draw a filled rectangle |
 | c | c,<x>,<y>,<radius>,<color> | Draw a circle |
-| cf | c,<x>,<y>,<radius>,<bordercolor>,<innercolor> | Draw a filled circle |
+| cf | cf,<x>,<y>,<radius>,<bordercolor>,<innercolor> | Draw a filled circle |
 | t | t,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<color>| Draw a triangle |
-| tf | t,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<bordercolor>,<innercolor> | Draw a filled triangle |
-| rr | r,<x>,<y>,<width>,<height>,<corner_radius>,<color> | Draw a round rectangle |
-| rrf | r,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor> | Draw a filled round rectangle |
+| tf | tf,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<bordercolor>,<innercolor> | Draw a filled triangle |
+| rr | rr,<x>,<y>,<width>,<height>,<corner_radius>,<color> | Draw a round rectangle |
+| rrf | rrf,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor> | Draw a filled round rectangle |
 | px | px,<x>,<y>,<color> | Print a single pixel |
-  
+| font| font,<fontname>  | Switch to font - SEVENSEG24, SEVENSEG18, FREESANS, DEFAULT |
+
 TFTCMD Subcommands:
 
 | TFT Subcommands | details | description |
@@ -72,7 +87,7 @@ Examples:
 
 	Write Text :
 		http://<espeasy_ip>/control?cmd=tft,txtfull,0,0,HelloWorld
-	
+
 	Write Text another place:
 		http://<espeasy_ip>/control?cmd=tft,txtfull,100,40,HelloWorld
 
@@ -87,7 +102,7 @@ Examples:
 
 	Write RED Text on YELLOW background (size is 1):
 		http://<espeasy_ip>/control?cmd=tft,txtfull,0,0,1,RED,YELLOW,HelloWorld
-		
+
 	Switch display ON
 		http://<espeasy_ip>/control?cmd=tftcmd,on
 
@@ -104,36 +119,41 @@ Examples:
 //plugin dependency
 #include <Adafruit_ILI9341.h>
 
+#ifdef PLUGIN_095_FONT_INCLUDED
+      #include "src/Static/Fonts/Seven_Segment24pt7b.h"
+      #include "src/Static/Fonts/Seven_Segment18pt7b.h"
+      #include "Fonts/FreeSans9pt7b.h"
+#endif   
+
+
 //declare functions for using default value parameters
 void Plugin_095_printText(const char *string, int X, int Y, unsigned int textSize = 1, unsigned short color = ILI9341_WHITE, unsigned short bkcolor = ILI9341_BLACK);
 
-//Define the default values for both ESP32/lolin32 and D1 Mini 
+//Define the default values for both ESP32/lolin32 and D1 Mini
 #ifdef ESP32
 //for D32 Pro with TFT connector
-  #define TFT_CS 14 
+  #define TFT_CS 14
+  #define TFT_CS_HSPI 26  // when connected to Hardware-SPI GPIO-14 is already used
   #define TFT_DC 27
   #define TFT_RST 33
-  #define TS_CS 12
 #else
  //for D1 Mini with shield connection
-  #define TFT_CS 16 // D0
-  #define TFT_DC 15 // D8
+  #define TFT_CS 16   // D0
+  #define TFT_DC 15   // D8
   #define TFT_RST -1
-  #define TS_CS 0   // D3
 #endif
 
 //The setting structure
 struct Plugin_095_TFT_SettingStruct
 {
   Plugin_095_TFT_SettingStruct()
-  : address_tft_cs(TFT_CS), address_tft_dc(TFT_DC), address_tft_rst(TFT_RST), address_ts_cs(TS_CS), rotation(0)
+  : address_tft_cs(TFT_CS), address_tft_dc(TFT_DC), address_tft_rst(TFT_RST), rotation(0)
   {
 
   }
   byte address_tft_cs;
   byte address_tft_dc;
   byte address_tft_rst;
-  byte address_ts_cs;
   byte rotation;
 } TFT_Settings;
 
@@ -150,8 +170,8 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_095;
-        Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = SENSOR_TYPE_NONE;
+        Device[deviceCount].Type = DEVICE_TYPE_SPI3;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -177,9 +197,35 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+      {
+        event->String1 = formatGpioName_output(F("TFT CS"));
+        event->String2 = formatGpioName_output(F("TFT DC"));
+        event->String3 = formatGpioName_output(F("TFT RST"));
+        break;
+      }
+
+    case PLUGIN_SET_DEFAULTS:
+      {
+        byte init = PCONFIG(0);
+
+        //if already configured take it from settings, else use default values (only for pin values)
+        if(init != 1)
+        {
+          #ifdef ESP32
+          if (Settings.InitSPI == 2) {  // When using ESP32 H(ardware-)SPI
+            TFT_Settings.address_tft_cs = TFT_CS_HSPI; 
+          }
+          #endif
+          PIN(0) = TFT_Settings.address_tft_cs;
+          PIN(1) = TFT_Settings.address_tft_dc;
+          PIN(2) = TFT_Settings.address_tft_rst;
+        }
+        break;
+      }
+
     case PLUGIN_WEBFORM_LOAD:
       {
-
         byte init = PCONFIG(0);
 
         //if already configured take it from settings, else use default values (only for pin values)
@@ -188,16 +234,10 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
           TFT_Settings.address_tft_cs = PIN(0);
           TFT_Settings.address_tft_dc = PIN(1);
           TFT_Settings.address_tft_rst = PIN(2);
-          TFT_Settings.address_ts_cs = PIN(3);
         }
-        
-        addFormPinSelect(F("TFT CS"), F("p095_tft_cs"), TFT_Settings.address_tft_cs);
-        addFormPinSelect(F("TFT DC"), F("p095_tft_dc"), TFT_Settings.address_tft_dc);
-        addFormPinSelect(F("TFT RST"), F("p095_tft_rst"), TFT_Settings.address_tft_rst);
-        addFormPinSelect(F("TS CS"), F("ts_cs"), TFT_Settings.address_ts_cs);
 
         byte choice2 = PCONFIG(1);
-        String options2[4] = { F("Normal"), F("+90°"), F("+180°"), F("+270°") };
+        String options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
         int optionValues2[4] = { 0, 1, 2, 3 };
         addFormSelector(F("Rotation"), F("p095_rotate"), 4, options2, optionValues2, choice2);
 
@@ -208,10 +248,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
         PCONFIG(0) = 1; //mark config as already saved (next time, will not use default values)
-        PIN(0) = getFormItemInt(F("p095_tft_cs"));
-        PIN(1) = getFormItemInt(F("p095_tft_dc"));
-        PIN(2) = getFormItemInt(F("p095_tft_rst"));
-        PIN(3) = getFormItemInt(F("p095_ts_cs"));
+        // PIN(0)..(2) are already set
         PCONFIG(1) = getFormItemInt(F("p095_rotate"));
         success = true;
         break;
@@ -223,14 +260,13 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         TFT_Settings.address_tft_cs = PIN(0);
         TFT_Settings.address_tft_dc = PIN(1);
         TFT_Settings.address_tft_rst = PIN(2);
-        TFT_Settings.address_ts_cs = PIN(3);
         TFT_Settings.rotation = PCONFIG(1);
 
         tft = new Adafruit_ILI9341(TFT_Settings.address_tft_cs, TFT_Settings.address_tft_dc, TFT_Settings.address_tft_rst);
         tft->begin();
         tft->setRotation(TFT_Settings.rotation);
         tft->fillScreen(ILI9341_WHITE);
-        Plugin_095_printText("--cdt--", 1, 1);  
+        Plugin_095_printText("ESPEasy", 1, 1);
         success = true;
         break;
       }
@@ -239,23 +275,6 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
       {
         String tmpString = String(string);
         String arguments = String(string);
-
-        int dotPos = arguments.indexOf('.');
-        if(dotPos > -1 && arguments.substring(dotPos,dotPos+3).equalsIgnoreCase(F("tft")))
-        {
-          LoadTaskSettings(event->TaskIndex);
-          String name = arguments.substring(0,dotPos);
-          name.replace(F("["),F(""));
-          name.replace(F("]"),F(""));
-          if(name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)) == true)
-          {
-            arguments = arguments.substring(dotPos+1);
-          }
-          else
-          {
-             return false;
-          }
-        }
 
         String command = F("");
         String subcommand = F("");
@@ -280,29 +299,29 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             if(subcommand.equalsIgnoreCase(F("ON")))
             {
               tft->sendCommand(ILI9341_DISPON);
-            } 
+            }
             else if(subcommand.equalsIgnoreCase(F("OFF")))
             {
               tft->sendCommand(ILI9341_DISPOFF);
-            } 
+            }
             else if(subcommand.equalsIgnoreCase(F("CLEAR")))
             {
               arguments = arguments.substring(argIndex + 1);
               tft->fillScreen(Plugin_095_ParseColor(arguments));
-            } 
+            }
             else if(subcommand.equalsIgnoreCase(F("INV")))
             {
               arguments = arguments.substring(argIndex + 1);
               tft->invertDisplay(arguments.toInt() == 1);
-            } 
+            }
             else if(subcommand.equalsIgnoreCase(F("ROT")))
             {
               ///control?cmd=tftcmd,rot,0
               //not working to verify
               arguments = arguments.substring(argIndex + 1);
-              tft->setRotation(arguments.toInt() %3);
-            } 
-            else 
+              tft->setRotation(arguments.toInt() % 4);
+            }
+            else
             {
               success = false;
             }
@@ -339,55 +358,70 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             {
               tft->setTextSize(sParams[0].toInt());
             }
+            #ifdef PLUGIN_095_FONT_INCLUDED
+                else if(subcommand.equalsIgnoreCase(F("font")) && argCount == 1) {
+                   if (sParams[0].equalsIgnoreCase(F("SEVENSEG24"))) {
+                      tft->setFont(&Seven_Segment24pt7b);
+                   } else if (sParams[0].equalsIgnoreCase(F("SEVENSEG18"))) {
+                      tft->setFont(&Seven_Segment18pt7b);
+                   } else if (sParams[0].equalsIgnoreCase(F("FREESANS"))) {
+                      tft->setFont(&FreeSans9pt7b);
+                   } else if (sParams[0].equalsIgnoreCase(F("DEFAULT"))) {
+                      tft->setFont(); 
+                   } else {
+                      success = false;
+                   }
+                }
+            #endif
             else if(subcommand.equalsIgnoreCase(F("txtfull")) && argCount >= 3 && argCount <= 6)
             {
               switch (argCount)
               {
               case 3: //single text
-                Plugin_095_printText(sParams[2].c_str(), sParams[0].toInt() - 1,sParams[1].toInt() - 1);  
+                Plugin_095_printText(sParams[2].c_str(), sParams[0].toInt() - 1,sParams[1].toInt() - 1);
                 break;
 
               case 4: //text + size
-                Plugin_095_printText(sParams[3].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());  
+                Plugin_095_printText(sParams[3].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());
                 break;
 
               case 5: //text + size + color
-                Plugin_095_printText(sParams[4].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]));  
+                Plugin_095_printText(sParams[4].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]));
                 break;
-              
+
               case 6: //text + size + color
-                Plugin_095_printText(sParams[5].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]), Plugin_095_ParseColor(sParams[4]));  
+                Plugin_095_printText(sParams[5].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]), Plugin_095_ParseColor(sParams[4]));
                 break;
               default:
                 success = false;
                 break;
-              }            
+              }
             }
             else if(subcommand.equalsIgnoreCase(F("l")) && argCount == 5)
             {
               tft->drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_095_ParseColor(sParams[4]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("lh")) && argCount == 3)
             {
               tft->drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), Plugin_095_ParseColor(sParams[2]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("lv")) && argCount == 3)
             {
               tft->drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), Plugin_095_ParseColor(sParams[2]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("r")) && argCount == 5)
             {
               tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_095_ParseColor(sParams[4]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("rf")) && argCount == 6)
             {
               tft->fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_095_ParseColor(sParams[5]));
               tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_095_ParseColor(sParams[4]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("c")) && argCount == 4)
             {
               tft->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("cf")) && argCount == 5)
             {
               tft->fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_095_ParseColor(sParams[4]));
@@ -396,31 +430,33 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             else if(subcommand.equalsIgnoreCase(F("t")) && argCount == 7)
             {
               tft->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_095_ParseColor(sParams[6]));
-            }           
+            }
             else if(subcommand.equalsIgnoreCase(F("tf")) && argCount == 8)
             {
               tft->fillTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_095_ParseColor(sParams[7]));
               tft->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_095_ParseColor(sParams[6]));
-            }           
+            }
             else if(subcommand.equalsIgnoreCase(F("rr")) && argCount == 6)
             {
               tft->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_095_ParseColor(sParams[5]));
-            }          
+            }
             else if(subcommand.equalsIgnoreCase(F("rrf")) && argCount == 7)
             {
               tft->fillRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_095_ParseColor(sParams[6]));
               tft->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_095_ParseColor(sParams[5]));
-            } 
+            }
             else if(subcommand.equalsIgnoreCase(F("px")) && argCount == 3)
             {
               tft->drawPixel(sParams[0].toInt(), sParams[1].toInt(), Plugin_095_ParseColor(sParams[2]));
-            } 
-            else 
+            }
+            else
             {
               success = false;
             }
           }
-                    
+          else {
+            success = false;
+          }                 
         }
         else
         {
@@ -428,25 +464,25 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
           success = false;
         }
 
-
         if(!success)
         {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLog(LOG_LEVEL_INFO, F("Fail to parse command correctly; please check API documentation"));
             String log2  = F("Parsed command = \"");
             log2 += string;
-            log2 += "\"";
+            log2 += F("\"");
             addLog(LOG_LEVEL_INFO, log2);
           }
+        } 
+        else 
+        {
+            String log;
+            log.reserve(110);                           // Prevent re-allocation
+            log = F("P095-ILI9341 : WRITE = ");
+            log += tmpString;
+            SendStatus(event, log);             // Reply (echo) to sender. This will print message on browser.
         }
-
-        String log;
-        log.reserve(110);                           // Prevent re-allocation
-        log = F("P095-ILI9341 : WRITE = ");
-        log += tmpString;
-        SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.  
-              
-        break;        
+        break;
       }
   }
 
@@ -514,7 +550,7 @@ unsigned short Plugin_095_ParseColor(String & s)
     return ILI9341_GREENYELLOW;
   if (s.equalsIgnoreCase(F("PINK")))
     return ILI9341_PINK;
-  
+
   if(s.length() == 7 && s[0] == '#')
   {
     // convrt to long value in base16, then split up into r, g, b values
@@ -545,7 +581,7 @@ int Plugin_095_StringSplit(String &s, char c, String op[], int limit)
     op[count] = String(pch);
     count++;
     pch = strtok (NULL, ",");
-  }  
+  }
   return count;
 }
 

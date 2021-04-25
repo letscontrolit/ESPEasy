@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P097
 
 // #######################################################################################################
@@ -13,7 +14,6 @@
 # define PLUGIN_NAME_097       "Touch (ESP32) - internal"
 # define PLUGIN_VALUENAME1_097 "Touch"
 
-# include "_Plugin_Helper.h"
 
 # ifdef ESP32
   #  define P097_MAX_ADC_VALUE    4095
@@ -44,7 +44,7 @@ boolean Plugin_097(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_097;
       Device[deviceCount].Type               = DEVICE_TYPE_ANALOG;
-      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -108,12 +108,6 @@ boolean Plugin_097(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
-      break;
-    }
-
     case PLUGIN_INIT:
     {
       P097_setEventParams(CONFIG_PIN1, P097_TOUCH_THRESHOLD);
@@ -142,13 +136,13 @@ boolean Plugin_097(byte function, struct EventStruct *event, String& string)
             if (touched) {
               if (P097_SEND_TOUCH_EVENT) {
                 // schedule a read to update output values and send to controllers
-                schedule_task_device_timer(event->TaskIndex, millis());
+                Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
               }
               bitSet(p097_pinTouchedPrev, t);
             } else {
               if (P097_SEND_RELEASE_EVENT) {
                 // schedule a read to update output values and send to controllers
-                schedule_task_device_timer(event->TaskIndex, millis());
+                Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
               }
 
               if (P097_SEND_DURATION_EVENT) {

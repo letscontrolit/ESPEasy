@@ -1,10 +1,10 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P093
 
 //#######################################################################################################
 //################################ Plugin 090: Mitsubishi Heat Pump #####################################
 //#######################################################################################################
 
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_093
 #define PLUGIN_ID_093         93
@@ -33,8 +33,8 @@ static const uint8_t INFOMODE[] = {
 };
 
 struct P093_data_struct : public PluginTaskData_base {
-  P093_data_struct(const int16_t serialRx, const int16_t serialTx) :
-    _serial(new ESPeasySerial(serialRx, serialTx)),
+  P093_data_struct(const ESPEasySerialPort port, const int16_t serialRx, const int16_t serialTx) :
+    _serial(new (std::nothrow) ESPeasySerial(port, serialRx, serialTx)),
     _state(NotConnected),
     _fastBaudRate(false),
     _readPos(0),
@@ -699,7 +699,7 @@ boolean Plugin_093(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number = PLUGIN_ID_093;
       Device[deviceCount].Type = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType = SENSOR_TYPE_STRING;
+      Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_STRING;
       Device[deviceCount].ValueCount = 1;
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption = true;
@@ -729,19 +729,18 @@ boolean Plugin_093(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
       success = true;
       break;
     }
 
     case PLUGIN_INIT: {
-      initPluginTaskData(event->TaskIndex, new P093_data_struct(CONFIG_PIN1, CONFIG_PIN2));
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P093_data_struct(port, CONFIG_PIN1, CONFIG_PIN2));
       success = getPluginTaskData(event->TaskIndex) != nullptr;
       break;
     }
@@ -765,16 +764,10 @@ boolean Plugin_093(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
-      break;
-    }
-
     case PLUGIN_TEN_PER_SECOND: {
       P093_data_struct* heatPump = static_cast<P093_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (heatPump != nullptr && heatPump->sync()) {
-        schedule_task_device_timer(event->TaskIndex, millis() + 10);
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
       }
       break;
     }

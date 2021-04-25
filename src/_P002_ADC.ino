@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P002
 
 // #######################################################################################################
@@ -9,7 +10,6 @@
 #define PLUGIN_NAME_002       "Analog input - internal"
 #define PLUGIN_VALUENAME1_002 "Analog"
 
-#include "_Plugin_Helper.h"
 
 #ifdef ESP32
   # define P002_MAX_ADC_VALUE    4095
@@ -99,7 +99,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_002;
       Device[deviceCount].Type               = DEVICE_TYPE_ANALOG;
-      Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -158,7 +158,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
           P002_formatStatistics(F("Minimum"),   0,                  P002_applyCalibration(event, 0));
           P002_formatStatistics(F("Maximum"),   P002_MAX_ADC_VALUE, P002_applyCalibration(event, P002_MAX_ADC_VALUE));
 
-          float stepsize = P002_applyCalibration(event, 1.0) - P002_applyCalibration(event, 0.0);
+          float stepsize = P002_applyCalibration(event, 1.0f) - P002_applyCalibration(event, 0.0f);
           P002_formatStatistics(F("Step size"), 1,                  stepsize);
         }
       }
@@ -183,15 +183,9 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
-      break;
-    }
-
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new P002_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P002_data_struct());
       P002_data_struct *P002_data =
         static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -219,7 +213,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       int   raw_value = 0;
-      float res_value = 0.0;
+      float res_value = 0.0f;
 
       if (P002_getOutputValue(event, raw_value, res_value)) {
         UserVar[event->BaseVarIndex] = res_value;
@@ -232,7 +226,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
             String log = F("ADC  : Analog value: ");
             log += String(raw_value);
             log += F(" = ");
-            log += String(UserVar[event->BaseVarIndex], 3);
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
 
             if (P002_OVERSAMPLING) {
               log += F(" (");
@@ -262,7 +256,7 @@ bool P002_getOutputValue(struct EventStruct *event, int& raw_value, float& res_v
   if (nullptr == P002_data) {
     return false;
   }
-  float float_value = 0.0;
+  float float_value = 0.0f;
 
   bool valueRead = P002_OVERSAMPLING && P002_data->getOversamplingValue(float_value, raw_value);
 
@@ -303,7 +297,7 @@ void P002_performRead(struct EventStruct *event, int& value) {
 
 void P002_formatStatistics(const String& label, int raw, float float_value) {
   addRowLabel(label);
-  addHtml(String(raw));
+  addHtmlInt(raw);
   html_add_estimate_symbol();
   addHtml(String(float_value, 3));
 }

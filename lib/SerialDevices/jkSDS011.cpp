@@ -25,7 +25,7 @@
 //#ifdef ESP8266  // Needed for precompile issues.
 #include "jkSDS011.h"
 
-CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
+CjkSDS011::CjkSDS011(ESPEasySerialPort port, int16_t pinRX, int16_t pinTX)
 {
   _sws = ! ( pinRX < 0 || pinRX == 3 );
   _pm2_5 = NAN;
@@ -38,8 +38,9 @@ CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
   _command.SetPacketLength(19);
   _working_period = -1;
   _sleepmode_active = false;
-  _serial = new ESPeasySerial(pinRX, pinTX);
-  _serial->begin(9600);
+  _serial = new (std::nothrow) ESPeasySerial(port, pinRX, pinTX);
+  if (_serial != nullptr)
+    _serial->begin(9600);
 }
 
 CjkSDS011::~CjkSDS011() {
@@ -93,6 +94,9 @@ void CjkSDS011::SetWorkingPeriod(int minutes) {
   const int currentWorkingPeriod = GetWorkingPeriod();
   if (minutes != currentWorkingPeriod)
     SendCommand(8, 1, minutes);
+  // In some cases the Sensor is set to "report query"-mode, this makes sure to set active reporting of values, otherwise the sensor won't work.
+  Process();
+  SendCommand(2, 1, 0);
 }
 
 int CjkSDS011::GetWorkingPeriod() {

@@ -4,76 +4,27 @@
 #include <limits.h>
 
 #include "../Globals/ESPEasy_time.h"
-
-// FIXME TD-er: Needed for GetArgv
-#include "../../ESPEasy_fdwdecl.h"
+#include "../Helpers/StringConverter.h"
 
 
 #define SECS_PER_MIN  (60UL)
 #define SECS_PER_HOUR (3600UL)
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24UL)
-#define LEAP_YEAR(Y) (((1970 + Y) > 0) && !((1970 + Y) % 4) && (((1970 + Y) % 100) || !((1970 + Y) % 400)))
-
-long ICACHE_RAM_ATTR timeDiff(const unsigned long prev, const unsigned long next)
-{
-  long signed_diff = 0;
-
-  // To cast a value to a signed long, the difference may not exceed half the ULONG_MAX
-  const unsigned long half_max_unsigned_long = 2147483647u; // = 2^31 -1
-
-  if (next >= prev) {
-    const unsigned long diff = next - prev;
-
-    if (diff <= half_max_unsigned_long) {
-      // Normal situation, just return the difference.
-      // Difference is a positive value.
-      signed_diff = static_cast<long>(diff);
-    } else {
-      // prev has overflow, return a negative difference value
-      signed_diff = static_cast<long>((ULONG_MAX - next) + prev + 1u);
-      signed_diff = -1 * signed_diff;
-    }
-  } else {
-    // next < prev
-    const unsigned long diff = prev - next;
-
-    if (diff <= half_max_unsigned_long) {
-      // Normal situation, return a negative difference value
-      signed_diff = static_cast<long>(diff);
-      signed_diff = -1 * signed_diff;
-    } else {
-      // next has overflow, return a positive difference value
-      signed_diff = static_cast<long>((ULONG_MAX - prev) + next + 1u);
-    }
-  }
-  return signed_diff;
-}
-
-
-long timePassedSince(unsigned long timestamp) {
-  return timeDiff(timestamp, millis());
-}
-
-long usecPassedSince(unsigned long timestamp) {
-  return timeDiff(timestamp, micros());
-}
-
-// Check if a certain timeout has been reached.
-bool timeOutReached(unsigned long timer) {
-  const long passed = timePassedSince(timer);
-
-  return passed >= 0;
-}
-
-bool usecTimeOutReached(unsigned long timer) {
-  const long passed = usecPassedSince(timer);
-
-  return passed >= 0;
-}
 
 
 bool isLeapYear(int year) {
-  return LEAP_YEAR(year);
+  return ((year > 0) && !(year % 4) && ((year % 100) || !(year % 400)));
+}
+
+uint8_t getMonthDays(int year, uint8_t month) {
+  const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+  if (month == 1 && isLeapYear(year)) {
+    return 29;
+  }
+  if (month > 11) {
+    return 0;
+  }
+  return monthDays[month];
 }
 
 /********************************************************************************************\
@@ -84,32 +35,34 @@ uint32_t makeTime(const struct tm& tm) {
   // assemble time elements into uint32_t
   // note year argument is offset from 1970 (see macros in time.h to convert to other formats)
   // previous version used full four digit year (or digits since 2000),i.e. 2009 was 2009 or 9
-  const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-  int i;
-  uint32_t seconds;
+  const int tm_year = tm.tm_year + 1900;
 
   // seconds from 1970 till 1 jan 00:00:00 of the given year
-  seconds = tm.tm_year * (SECS_PER_DAY * 365);
+  // tm_year starts at 1900
+  uint32_t seconds = 1577836800; // 01/01/2020 @ 12:00am (UTC)
+  int year = 2020;
+  if (tm_year < year) {
+    // Just in case this function is called on old dates
+    year = 1970;
+    seconds = 0;
+  }
 
-  for (i = 0; i < tm.tm_year; i++) {
-    if (isLeapYear(i)) {
-      seconds +=  SECS_PER_DAY; // add extra days for leap years
+  for (; year < tm_year; ++year) {
+    seconds += SECS_PER_DAY * 365;
+    if (isLeapYear(year)) {
+      seconds += SECS_PER_DAY; // add extra days for leap years
     }
   }
 
-  // add days for this year, months start from 1
-  for (i = 1; i < tm.tm_mon; i++) {
-    if ((i == 2) && isLeapYear(tm.tm_year)) {
-      seconds += SECS_PER_DAY * 29;
-    } else {
-      seconds += SECS_PER_DAY * monthDays[i - 1]; // monthDay array starts from 0
-    }
+  // add days for this year, months start from 0
+  for (int i = 0; i < tm.tm_mon; i++) {
+    seconds += SECS_PER_DAY * getMonthDays(tm_year, i);
   }
   seconds += (tm.tm_mday - 1) * SECS_PER_DAY;
   seconds += tm.tm_hour * SECS_PER_HOUR;
   seconds += tm.tm_min * SECS_PER_MIN;
   seconds += tm.tm_sec;
-  return (uint32_t)seconds;
+  return seconds;
 }
 
 
@@ -120,7 +73,7 @@ uint32_t makeTime(const struct tm& tm) {
 String timeLong2String(unsigned long lngTime)
 {
   unsigned long x = 0;
-  String time     = "";
+  String time;
 
   x = (lngTime >> 16) & 0xf;
 

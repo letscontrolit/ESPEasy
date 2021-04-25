@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #if defined(USES_P089) && defined(ESP8266)
 //#######################################################################################################
 //#################### Plugin 089 ICMP Ping probing ##############
@@ -19,7 +20,6 @@ extern "C"
 #include <lwip/netif.h>
 }
 
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_089
 #define PLUGIN_ID_089             89
@@ -44,10 +44,12 @@ public:
     destIPAddress.addr = 0;
     idseq = 0;
     if (nullptr == P089_data) {
-      P089_data = new P089_icmp_pcb();
-      P089_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
-      raw_recv(P089_data->m_IcmpPCB, PingReceiver, NULL);
-      raw_bind(P089_data->m_IcmpPCB, IP_ADDR_ANY);
+      P089_data = new (std::nothrow) P089_icmp_pcb();
+      if (P089_data != nullptr) {
+        P089_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
+        raw_recv(P089_data->m_IcmpPCB, PingReceiver, NULL);
+        raw_bind(P089_data->m_IcmpPCB, IP_ADDR_ANY);
+      }
     } else {
       P089_data->instances++;
     }
@@ -136,7 +138,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
   {
     Device[++deviceCount].Number = PLUGIN_ID_089;
     Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
-    Device[deviceCount].VType = DEVICE_TYPE_SINGLE;
+    Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
     Device[deviceCount].Ports = 0;
     Device[deviceCount].ValueCount = 1;
     Device[deviceCount].PullUpOption = false;
@@ -182,15 +184,9 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
 
   case PLUGIN_INIT:
   {
-    initPluginTaskData(event->TaskIndex, new P089_data_struct());
+    initPluginTaskData(event->TaskIndex, new (std::nothrow) P089_data_struct());
     UserVar[event->BaseVarIndex] = 0;
     success = true;
-    break;
-  }
-
-  case PLUGIN_EXIT:
-  {
-    clearPluginTaskData(event->TaskIndex);
     break;
   }
 

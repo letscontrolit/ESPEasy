@@ -2,10 +2,12 @@
 
 #include <Arduino.h>
 
+#ifndef BUILD_NO_RAM_TRACKER
 uint32_t lowestRAM = 0;
 String   lowestRAMfunction;
 uint32_t lowestFreeStack = 0;
 String   lowestFreeStackfunction;
+#endif
 
 uint8_t lastBootCause                           = BOOT_CAUSE_MANUAL_REBOOT;
 unsigned long lastMixedSchedulerId_beforereboot = 0;
@@ -21,7 +23,7 @@ unsigned long lastLoopStart     = 0;
 unsigned long shortestLoop      = 10000000;
 unsigned long longestLoop       = 0;
 unsigned long loopCounter_full  = 1;
-float loop_usec_duration_total  = 0.0;
+float loop_usec_duration_total  = 0.0f;
 
 
 unsigned long dailyResetCounter                   = 0;

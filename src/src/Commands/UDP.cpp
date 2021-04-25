@@ -1,11 +1,17 @@
 #include "../Commands/UPD.h"
 
-#include "../../ESPEasy_common.h"
-#include "../Commands/Common.h"
-#include "../Globals/Settings.h"
-#include "../../ESPEasy-Globals.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+#include "../../ESPEasy_common.h"
+
+#include "../Commands/Common.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../Globals/NetworkState.h"
+#include "../Globals/Settings.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/Network.h"
+#include "../Helpers/Networking.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringParser.h"
 
 String Command_UDP_Test(struct EventStruct *event, const char *Line)
 {
@@ -50,6 +56,7 @@ String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
     IPAddress UDP_IP;
 
     if (UDP_IP.fromString(ip)) {
+      FeedSW_watchdog();
       portUDP.beginPacket(UDP_IP, port);
       #if defined(ESP8266)
       portUDP.write(message.c_str(),            message.length());
@@ -58,6 +65,8 @@ String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
       portUDP.write((uint8_t *)message.c_str(), message.length());
       #endif // if defined(ESP32)
       portUDP.endPacket();
+      FeedSW_watchdog();
+      delay(0);
     }
     return return_command_success();
   }

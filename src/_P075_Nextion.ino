@@ -1,3 +1,7 @@
+#include "_Plugin_Helper.h"
+#ifdef USES_P075
+
+
 //#######################################################################################################
 //#######################################################################################################
 //################################### Plugin 075: Nextion <info@sensorio.cz>  ###########################
@@ -12,9 +16,8 @@
 // Added reserve() to minimize string memory allocations.
 //
 
-#ifdef USES_P075
 #include <ESPeasySerial.h>
-#include "_Plugin_Helper.h"
+
 
 // *****************************************************************************************************
 // Defines start here
@@ -34,13 +37,13 @@
 // Configuration Settings. Custom Configuration Memory must be less than 1024 Bytes (per TD'er findings).
 //#define P75_Nlines 12             // Custom Config, Number of user entered Command Statment Lines. DO NOT USE!
 //#define P75_Nchars 64           // Custom Config, Length of user entered Command Statment Lines. DO NOT USE!
-#define P75_Nlines 10               // Custom Config, Number of user entered Command Statments.
+#define P75_Nlines 10             // Custom Config, Number of user entered Command Statments.
 #define P75_Nchars 51             // Custom Config, Length of user entered Command Statments.
 
 // Nextion defines
-#define RXBUFFSZ  64            // Serial RxD buffer (Local staging buffer and ESPeasySerial).
-#define RXBUFFWARN RXBUFFSZ-16  // Warning, Rx buffer close to being full.
-#define TOUCH_BASE 500          // Base offset for 0X65 Touch Event Send Component ID.
+#define RXBUFFSZ  64              // Serial RxD buffer (Local staging buffer and ESPeasySerial).
+#define RXBUFFWARN (RXBUFFSZ-16)  // Warning, Rx buffer close to being full.
+#define TOUCH_BASE 500            // Base offset for 0X65 Touch Event Send Component ID.
 
 // Serial defines
 #define P075_B9600    0
@@ -54,11 +57,11 @@
 
 struct P075_data_struct : public PluginTaskData_base {
 
-  P075_data_struct(int rx, int tx, uint32_t baud) : rxPin(rx), txPin(tx), baudrate(baud) {
+  P075_data_struct(ESPEasySerialPort port, int rx, int tx, uint32_t baud) : rxPin(rx), txPin(tx), baudrate(baud) {
     if (baudrate < 9600 || baudrate > 115200) {
       baudrate = 9600;
     }
-    easySerial = new ESPeasySerial(rx, tx, false, RXBUFFSZ);
+    easySerial = new (std::nothrow) ESPeasySerial(port, rx, tx, false, RXBUFFSZ);
     if (easySerial != nullptr) {
       easySerial->begin(baudrate);
       easySerial->flush();
@@ -108,7 +111,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number = PLUGIN_ID_075;
       Device[deviceCount].Type = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType = SENSOR_TYPE_DUAL;
+      Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_DUAL;
       Device[deviceCount].Ports = 0;
       Device[deviceCount].PullUpOption = false;         // Pullup is not used.
       Device[deviceCount].InverseLogicOption = false;
@@ -148,23 +151,20 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
+      String options[4];
+      options[0] = F("9600");
+      options[1] = F("38400");
+      options[2] = F("57600");
+      options[3] = F("115200");
+
+      addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
+      addUnit(F("baud"));
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
-
-/*
-      addFormSeparator(2);
-      addFormSubHeader(F("Enhanced Serial Communication"));
-      addFormCheckBox(F("Use Hardware Serial"), F("AdvHwSerial"), PCONFIG(0));
-*/
-      {
-        String options[4];
-        options[0] = F("9600");
-        options[1] = F("38400");
-        options[2] = F("57600");
-        options[3] = F("115200");
-
-        addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
-      }
 
 //    ** DEVELOPER DEBUG MESSAGE AREA **
 //    int datax = (int)(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
@@ -200,7 +200,6 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
 
     case PLUGIN_WEBFORM_SAVE: {
-        serialHelper_webformSave(event);
 
         {
           // FIXME TD-er: This is a huge object allocated on the Stack.
@@ -239,12 +238,12 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
       if(BaudCode > P075_B115200) BaudCode = P075_B9600;
       const uint32_t BaudArray[4] = {9600UL, 38400UL, 57600UL, 115200UL};
-      initPluginTaskData(event->TaskIndex, new P075_data_struct(CONFIG_PIN1, CONFIG_PIN2, BaudArray[BaudCode]));
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P075_data_struct(port, CONFIG_PIN1, CONFIG_PIN2, BaudArray[BaudCode]));
       P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
         addLog(LOG_LEVEL_INFO, P075_data->getLogString());
-        serialHelper_plugin_init(event);
         success = true;
       }
       break;
@@ -266,7 +265,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             UcTmpString.toUpperCase();
             RssiIndex = UcTmpString.indexOf(F("RSSIBAR"));  // RSSI bargraph Keyword found, wifi value in dBm.
             if(RssiIndex >= 0) {
-              int barVal;
+              int barVal=0;
               newString.reserve(P75_Nchars+10);               // Prevent re-allocation
               newString = P075_data->displayLines[x].substring(0, RssiIndex);
               int nbars = WiFi.RSSI();
@@ -318,9 +317,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
              String log;
              log.reserve(120);                          // Prevent re-allocation
              log = F("NEXTION075: Interval values data enabled, resending idx=");
-             log += String(UserVar[event->BaseVarIndex]);
+             log += formatUserVarNoCheck(event->TaskIndex, 0);
              log += F(", value=");
-             log += String(UserVar[event->BaseVarIndex+1]);
+             log += formatUserVarNoCheck(event->TaskIndex, 1);
              addLog(LOG_LEVEL_INFO, log);
             #endif
 
@@ -354,7 +353,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
           log = F("NEXTION075 : WRITE = ");
           log += nextionArguments;
           addLog(LOG_LEVEL_DEBUG, log);
-          SendStatus(event->Source, log);              // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, log);              // Reply (echo) to sender. This will print message on browser.
         }
 
 // Enable addLog() code below to help debug plugin write problems.
@@ -374,13 +373,6 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       }
       break;
     }
-
-
-    case PLUGIN_EXIT: {
-        clearPluginTaskData(event->TaskIndex);
-        break;
-    }
-
 
     case PLUGIN_ONCE_A_SECOND: {
         success = true;
@@ -509,8 +501,10 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               }
 
               if (GotPipeCmd) {
-                  UserVar[event->BaseVarIndex] = Vidx.toFloat();
-                  UserVar[event->BaseVarIndex+1] = Svalue.toFloat();
+                  UserVar[event->BaseVarIndex] = 0.0f;
+                  UserVar[event->BaseVarIndex+1] = 0.0f;
+                  validFloatFromString(Vidx, UserVar[event->BaseVarIndex]);
+                  validFloatFromString(Svalue, UserVar[event->BaseVarIndex+1]);
                   sendData(event);
 
                   #ifdef DEBUG_LOG
@@ -518,7 +512,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
                   log.reserve(80);                       // Prevent re-allocation
                   log = F("NEXTION075 : Pipe Command Sent: ");
                   log += __buffer;
-                  log += UserVar[event->BaseVarIndex];
+                  log += formatUserVarNoCheck(event->TaskIndex, 0);
                   addLog(LOG_LEVEL_INFO, log);
                   #endif
               }

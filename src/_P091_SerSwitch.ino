@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 /*##########################################################################################
   ######################### Plugin 091: Serial MCU controlled switch #######################
   ##########################################################################################
@@ -49,7 +51,6 @@
 
 #ifdef USES_P091
 
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_091
 #define PLUGIN_ID_091         91
@@ -69,7 +70,7 @@
 static byte Plugin_091_switchstate[4];
 static byte Plugin_091_ostate[4];
 byte Plugin_091_commandstate = 0; // 0:no,1:inprogress,2:finished
-byte Plugin_091_type;
+Sensor_VType Plugin_091_type = Sensor_VType::SENSOR_TYPE_NONE;
 byte Plugin_091_numrelay = 1;
 byte Plugin_091_ownindex;
 byte Plugin_091_globalpar0;
@@ -88,7 +89,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_091;
         Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
-        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_QUAD;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -119,7 +120,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         {
-          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
+          byte choice = PCONFIG(0);
           String options[4];
           options[0] = F("Yewelink/TUYA");
           options[1] = F("Sonoff Dual");
@@ -129,9 +130,9 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
           addFormSelector(F("Switch Type"), F("plugin_091_type"), 4, options, optionValues, choice);
         }
 
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_YEWE)
+        if (PCONFIG(0) == SER_SWITCH_YEWE)
         {
-          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          byte choice = PCONFIG(1);
           String buttonOptions[4];
           buttonOptions[0] = F("1");
           buttonOptions[1] = F("2/Dimmer#2");
@@ -141,9 +142,9 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
           addFormSelector(F("Number of relays"), F("plugin_091_button"), 4, buttonOptions, buttonoptionValues, choice);
         }
 
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_SONOFFDUAL)
+        if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
-          byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          byte choice = PCONFIG(1);
           String modeoptions[3];
           modeoptions[0] = F("Normal");
           modeoptions[1] = F("Exclude/Blinds mode");
@@ -152,10 +153,10 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
           addFormSelector(F("Relay working mode"), F("plugin_091_mode"), 3, modeoptions, modeoptionValues, choice);
         }
 
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_LCTECH)
+        if (PCONFIG(0) == SER_SWITCH_LCTECH)
         {
           {
-            byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+            byte choice = PCONFIG(1);
             String buttonOptions[4];
             buttonOptions[0] = F("1");
             buttonOptions[1] = F("2");
@@ -166,7 +167,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
           }
 
           {
-            byte choice = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
+            byte choice = PCONFIG(2);
             String speedOptions[8];
             speedOptions[0] = F("9600");
             speedOptions[1] = F("19200");
@@ -179,8 +180,8 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             addFormSelector(F("Serial speed"), F("plugin_091_speed"), 8, speedOptions, NULL, choice);
           }
 
-          addFormCheckBox(F("Use command doubling"), F("plugin_091_dbl"), Settings.TaskDevicePluginConfig[event->TaskIndex][3]);
-          addFormCheckBox(F("Use IPD preamble"), F("plugin_091_ipd"), Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+          addFormCheckBox(F("Use command doubling"), F("plugin_091_dbl"), PCONFIG(3));
+          addFormCheckBox(F("Use IPD preamble"), F("plugin_091_ipd"), PCONFIG(4));
         }
 
         success = true;
@@ -190,27 +191,27 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
       {
 
-        Settings.TaskDevicePluginConfig[event->TaskIndex][0] = getFormItemInt(F("plugin_091_type"));
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_YEWE)
+        PCONFIG(0) = getFormItemInt(F("plugin_091_type"));
+        if (PCONFIG(0) == SER_SWITCH_YEWE)
         {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_091_button"));
+          PCONFIG(1) = getFormItemInt(F("plugin_091_button"));
         }
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_SONOFFDUAL)
+        if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_091_mode"));
+          PCONFIG(1) = getFormItemInt(F("plugin_091_mode"));
         }
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_LCTECH)
+        if (PCONFIG(0) == SER_SWITCH_LCTECH)
         {
-          Settings.TaskDevicePluginConfig[event->TaskIndex][1] = getFormItemInt(F("plugin_091_button"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][2] = getFormItemInt(F("plugin_091_speed"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][3] = isFormItemChecked(F("plugin_091_dbl"));
-          Settings.TaskDevicePluginConfig[event->TaskIndex][4] = isFormItemChecked(F("plugin_091_ipd"));
-          Plugin_091_cmddbl = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-          Plugin_091_ipd    = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+          PCONFIG(1) = getFormItemInt(F("plugin_091_button"));
+          PCONFIG(2) = getFormItemInt(F("plugin_091_speed"));
+          PCONFIG(3) = isFormItemChecked(F("plugin_091_dbl"));
+          PCONFIG(4) = isFormItemChecked(F("plugin_091_ipd"));
+          Plugin_091_cmddbl = PCONFIG(3);
+          Plugin_091_ipd    = PCONFIG(4);
         }
 
-        Plugin_091_globalpar0 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Plugin_091_globalpar1 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        Plugin_091_globalpar0 = PCONFIG(0);
+        Plugin_091_globalpar1 = PCONFIG(1);
 
         success = true;
         break;
@@ -218,16 +219,16 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        String log = "";
+        String log;
         LoadTaskSettings(event->TaskIndex);
         Plugin_091_ownindex = event->TaskIndex;
         Settings.UseSerial = true;         // make sure that serial enabled
         Settings.SerialLogLevel = 0;       // and logging disabled
         Serial.setDebugOutput(false);      // really, disable it!
         log = F("SerSW : Init ");
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_YEWE)
+        if (PCONFIG(0) == SER_SWITCH_YEWE)
         {
-          Plugin_091_numrelay = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+          Plugin_091_numrelay = PCONFIG(1);
           Serial.begin(9600, SERIAL_8N1);
           Serial.setRxBufferSize(BUFFER_SIZE); // Arduino core for ESP8266 WiFi chip 2.4.0
           delay(1);
@@ -236,19 +237,19 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
           log += Plugin_091_numrelay;
           log += F(" btn");
         }
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_SONOFFDUAL)
+        if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
           Plugin_091_numrelay = 3; // 3rd button is the "wifi" button
           Serial.begin(19230, SERIAL_8N1);
           log += F(" Sonoff Dual");
         }
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_LCTECH)
+        if (PCONFIG(0) == SER_SWITCH_LCTECH)
         {
-          Plugin_091_numrelay = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-          Plugin_091_cmddbl = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
-          Plugin_091_ipd    = Settings.TaskDevicePluginConfig[event->TaskIndex][4];
+          Plugin_091_numrelay = PCONFIG(1);
+          Plugin_091_cmddbl = PCONFIG(3);
+          Plugin_091_ipd    = PCONFIG(4);
           unsigned long Plugin_091_speed = 9600;
-          switch (Settings.TaskDevicePluginConfig[event->TaskIndex][2]) {
+          switch (PCONFIG(2)) {
             case 1: {
                 Plugin_091_speed = 19200;
                 break;
@@ -285,7 +286,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
           log += Plugin_091_numrelay;
           log += F(" btn");
         }
-        if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_WIFIDIMMER)
+        if (PCONFIG(0) == SER_SWITCH_WIFIDIMMER)
         {
           Plugin_091_numrelay = 2; // 2nd button is the dimvalue
           Plugin_091_switchstate[1] = 255;
@@ -294,21 +295,21 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
           log += F(" Wifi Dimmer");
         }
 
-        Plugin_091_globalpar0 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-        Plugin_091_globalpar1 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
+        Plugin_091_globalpar0 = PCONFIG(0);
+        Plugin_091_globalpar1 = PCONFIG(1);
         switch (Plugin_091_numrelay)
         {
           case 1:
-            Plugin_091_type = SENSOR_TYPE_SWITCH;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_SWITCH;
             break;
           case 2:
-            Plugin_091_type = SENSOR_TYPE_DUAL;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_DUAL;
             break;
           case 3:
-            Plugin_091_type = SENSOR_TYPE_TRIPLE;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_TRIPLE;
             break;
           case 4:
-            Plugin_091_type = SENSOR_TYPE_QUAD;
+            Plugin_091_type = Sensor_VType::SENSOR_TYPE_QUAD;
             break;
         }
         addLog(LOG_LEVEL_INFO, log);
@@ -335,7 +336,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               if (bytes_read == 0) { // packet start
 
                 Plugin_091_commandstate = 0;
-                switch (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+                switch (PCONFIG(0))
                 {
                   case SER_SWITCH_YEWE: //decode first byte of package
                     {
@@ -357,7 +358,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                 if (Plugin_091_commandstate == 1) {
 
                   if (bytes_read == 1) { // check if packet is valid
-                    switch (Settings.TaskDevicePluginConfig[event->TaskIndex][0])
+                    switch (PCONFIG(0))
                     {
                       case SER_SWITCH_YEWE:
                         {
@@ -378,7 +379,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                     }
                   }
 
-                  if ( (bytes_read == 2) && (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_SONOFFDUAL)) { // decode Sonoff Dual status changes
+                  if ( (bytes_read == 2) && (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)) { // decode Sonoff Dual status changes
                     Plugin_091_ostate[0] = Plugin_091_switchstate[0]; Plugin_091_ostate[1] = Plugin_091_switchstate[1]; Plugin_091_ostate[2] = Plugin_091_switchstate[2];
                     Plugin_091_switchstate[0] = 0; Plugin_091_switchstate[1] = 0; Plugin_091_switchstate[2] = 0;
                     if ((serial_buf[bytes_read] & 1) == 1) {
@@ -392,25 +393,25 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                     }
                     Plugin_091_commandstate = 2; bytes_read = 0;
 
-                    if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 1)
+                    if (PCONFIG(1) == 1)
                     { // exclusive on mode
                       if ((Plugin_091_ostate[0] == 1) && (Plugin_091_switchstate[1] == 1)) {
-                        sendmcucommand(0, 0, Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+                        sendmcucommand(0, 0, PCONFIG(0), PCONFIG(1));
                         Plugin_091_switchstate[0] = 0;
                       }
                       if ((Plugin_091_ostate[1] == 1) && (Plugin_091_switchstate[0] == 1)) {
-                        sendmcucommand(1, 0, Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+                        sendmcucommand(1, 0, PCONFIG(0), PCONFIG(1));
                         Plugin_091_switchstate[1] = 0;
                       }
                     }
-                    if (Settings.TaskDevicePluginConfig[event->TaskIndex][1] == 2)
+                    if (PCONFIG(1) == 2)
                     { // simultaneous mode
                       if ((Plugin_091_ostate[0] + Plugin_091_switchstate[0]) == 1) {
-                        sendmcucommand(1, Plugin_091_switchstate[0], Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+                        sendmcucommand(1, Plugin_091_switchstate[0], PCONFIG(0), PCONFIG(1));
                         Plugin_091_switchstate[1] = Plugin_091_switchstate[0];
                       } else {
                         if ((Plugin_091_ostate[1] + Plugin_091_switchstate[1]) == 1) {
-                          sendmcucommand(0, Plugin_091_switchstate[1], Settings.TaskDevicePluginConfig[event->TaskIndex][0], Settings.TaskDevicePluginConfig[event->TaskIndex][1]);
+                          sendmcucommand(0, Plugin_091_switchstate[1], PCONFIG(0), PCONFIG(1));
                           Plugin_091_switchstate[0] = Plugin_091_switchstate[1];
                         }
                       }
@@ -443,7 +444,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                       sendData(event);
                     }
                   }
-                  if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_YEWE) { // decode Tuya/Yewelink status report package
+                  if (PCONFIG(0) == SER_SWITCH_YEWE) { // decode Tuya/Yewelink status report package
                     if ((bytes_read == 3) && (serial_buf[bytes_read] != 7))
                     {
                       Plugin_091_commandstate = 0;  // command code 7 means status reporting, we do not need other packets
@@ -552,13 +553,13 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_091_init)
         {
-          if ((Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_YEWE) && (Plugin_091_commandstate != 1))
+          if ((PCONFIG(0) == SER_SWITCH_YEWE) && (Plugin_091_commandstate != 1))
           { // check Tuya state if anybody ask for it
             String log = F("SerSW   : ReadState");
             addLog(LOG_LEVEL_INFO, log);
             getmcustate();
           }
-          if (Settings.TaskDevicePluginConfig[event->TaskIndex][0] == SER_SWITCH_WIFIDIMMER) {
+          if (PCONFIG(0) == SER_SWITCH_WIFIDIMMER) {
             if (Plugin_091_switchstate[1] < 1)
             {
               UserVar[event->BaseVarIndex] = 0;
@@ -574,7 +575,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
       {
-        String log = "";
+        String log;
         String command = parseString(string, 1);
         byte rnum = 0;
         byte rcmd = 0;
@@ -594,12 +595,10 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             }
 
             LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
-            event->TaskIndex = Plugin_091_ownindex;
-            byte varIndex = Plugin_091_ownindex * VARS_PER_TASK;
-            event->BaseVarIndex = varIndex;
+            event->setTaskIndex(Plugin_091_ownindex);
 
             if (event->Par2 == 2) { // toggle
-              rcmd = 1 - UserVar[(varIndex + rnum)];
+              rcmd = 1 - UserVar[(event->BaseVarIndex + rnum)];
             }
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
@@ -607,17 +606,19 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             }
             sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3);
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
-              if (UserVar[(varIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-                UserVar[(varIndex + rnum)] = Plugin_091_switchstate[rnum];
+              if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
+                UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
                 if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
                 { // exclusive on mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = 0;
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
                 }
                 if (par3 == 2) { // simultaneous mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
                 }
                 if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-                  UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -641,9 +642,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               rcmd = event->Par2;
             }
             LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
-            event->TaskIndex = Plugin_091_ownindex;
-            byte varIndex = Plugin_091_ownindex * VARS_PER_TASK;
-            event->BaseVarIndex = varIndex;
+            event->setTaskIndex(Plugin_091_ownindex);
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
               par3 = Plugin_091_globalpar1;
@@ -653,17 +652,19 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             delay(event->Par3);
             sendmcucommand(rnum, !rcmd, Plugin_091_globalpar0, par3); // invert state
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
-              if (UserVar[(varIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-                UserVar[(varIndex + rnum)] = Plugin_091_switchstate[rnum];
+              if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
+                UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
                 if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
                 { // exclusive on mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = 0;
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
                 }
                 if (par3 == 2) { // simultaneous mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
                 }
                 if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-                  UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -691,9 +692,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               rcmd = event->Par2;
             }
             LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
-            event->TaskIndex = Plugin_091_ownindex;
-            byte varIndex = Plugin_091_ownindex * VARS_PER_TASK;
-            event->BaseVarIndex = varIndex;
+            event->setTaskIndex(Plugin_091_ownindex);
 
             if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
               par3 = Plugin_091_globalpar1;
@@ -701,20 +700,22 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             unsigned long timer = event->Par3 * 1000;
 
             sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3); // init state
-            //setPluginTimer(timer, PLUGIN_ID_091, rnum, !rcmd);
-            setPluginTaskTimer(timer, PLUGIN_ID_091, event->TaskIndex, rnum, !rcmd);
+            //Scheduler.setPluginTimer(timer, PLUGIN_ID_091, rnum, !rcmd);
+            Scheduler.setPluginTaskTimer(timer, PLUGIN_ID_091, event->TaskIndex, rnum, !rcmd);
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
-              if (UserVar[(varIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-                UserVar[(varIndex + rnum)] = Plugin_091_switchstate[rnum];
+              if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
+                UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
                 if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
                 { // exclusive on mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = 0;
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
                 }
                 if (par3 == 2) { // simultaneous mode for Dual
-                  UserVar[(varIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+                  // FIXME TD-er: Is this a valid UserVar index?
+                  UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
                 }
                 if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-                  UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -737,19 +738,17 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               success = true;
 
               LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
-              event->TaskIndex = Plugin_091_ownindex;
-              byte varIndex = Plugin_091_ownindex * VARS_PER_TASK;
-              event->BaseVarIndex = varIndex;
+              event->setTaskIndex(Plugin_091_ownindex);
 
               sendmcudim(event->Par1, Plugin_091_globalpar0);
               if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
                 if (Plugin_091_switchstate[1] < 1) // follow state
                 {
-                  UserVar[varIndex] = 0;
-                  UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar[event->BaseVarIndex] = 0;
+                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
                 } else {
-                  UserVar[varIndex] = 1;
-                  UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar[event->BaseVarIndex] = 1;
+                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -758,7 +757,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_INFO, log);
             } else {
               log = F("\nYDim not supported");
-              SendStatus(event->Source, log);
+              SendStatus(event, log);
             }
           }
 
@@ -772,9 +771,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         byte par3 = 0;
 
         LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
-        event->TaskIndex = Plugin_091_ownindex;
-        byte varIndex = Plugin_091_ownindex * VARS_PER_TASK;
-        event->BaseVarIndex = varIndex;
+        event->setTaskIndex(Plugin_091_ownindex);
 
         if ( Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
           par3 = Plugin_091_globalpar1;
@@ -785,17 +782,19 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
         sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3); // invert state
         if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
-          if (UserVar[(varIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-            UserVar[(varIndex + rnum)] = Plugin_091_switchstate[rnum];
+          if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
+            UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
             if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
             { // exclusive on mode for Dual
-              UserVar[(varIndex + 1 - rnum)] = 0;
+              // FIXME TD-er: Is this a valid UserVar index?
+              UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
             }
             if (par3 == 2) { // simultaneous mode for Dual
-              UserVar[(varIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+              // FIXME TD-er: Is this a valid UserVar index?
+              UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
             }
             if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-              UserVar[varIndex + 1] = Plugin_091_switchstate[1];
+              UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
             }
             event->sensorType = Plugin_091_type;
             sendData(event);

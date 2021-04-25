@@ -31,7 +31,12 @@ function Converter(decoded, port) {
 
                 case 4:
                     converted.name = "Dallas";
+                    // For compatibility reasons, also include temp.
                     converted.temp  = converted.val_1;
+                    converted.temp1  = converted.val_1;
+                    converted.temp2  = converted.val_2;
+                    converted.temp3  = converted.val_3;
+                    converted.temp4  = converted.val_4;
                     break;
 
                 case 5:
@@ -544,13 +549,9 @@ function Converter(decoded, port) {
 
                 case 82:
                     converted.name = "GPS";
-                    // The GPS plugin must be set first to output like this.
+                    // GPS data is already decoded in packed_decoder.js
                     // HDOP is needed by TTN mapper to weigh the quality of the data.
                     // When using TTN mapper, make sure to output these values.
-//                    converted.longitude  = converted.val_1;
-//                    converted.latitude  = converted.val_2;
-//                    converted.altitude  = converted.val_3;
-//                    converted.hdop  = converted.val_4;
                     break;
 
                 case 83:
@@ -568,11 +569,16 @@ function Converter(decoded, port) {
 
                 case 85:
                     converted.name = "AcuDC243";
-                    // This plugin can output any value, just using the default settings here.
-                    converted.volt  = converted.val_1;
-                    converted.current  = converted.val_2;
-                    converted.watt  = converted.val_3;
-                    converted.wh_total  = converted.val_4;
+                    // This plugin can output any value, so show string representation 
+                    // of the unit of measure
+                    converted.unit1 = getAcuDC243Unit(converted.unit1);
+                    converted.unit2 = getAcuDC243Unit(converted.unit2);
+                    converted.unit3 = getAcuDC243Unit(converted.unit3);
+                    converted.unit4 = getAcuDC243Unit(converted.unit4);
+                    converted.v1  = converted.val_1;
+                    converted.v2  = converted.val_2;
+                    converted.v3  = converted.val_3;
+                    converted.v4  = converted.val_4;
                     break;
 
                 case 86:
@@ -595,7 +601,61 @@ function Converter(decoded, port) {
                     */
                     break;
 
+                case 89:
+                    converted.name = "Ping";
+                    converted.fails = converted.val_1;
+                    break;
+    
+                case 90:
+                    converted.name = "CCS811";
+                    converted.TVOC  = converted.val_1;
+                    converted.eCO2  = converted.val_2;
+                    break;
+    
+                case 91:
+                    converted.name = "SerSwitch";
+                    // Can select a number of outputs
+                    converted.relay1  = converted.val_1;
+                    converted.relay2  = converted.val_2;
+                    converted.relay3  = converted.val_3;
+                    converted.relay4  = converted.val_4;
+                    break;
+    
+                case 92:
+                    converted.name = "DLbus";
+                    // Can select a number of outputs
+                    // TODO TD-er: Must add binary representation of all values
+                    converted.v1  = converted.val_1;
+                    converted.v2  = converted.val_2;
+                    converted.v3  = converted.val_3;
+                    converted.v4  = converted.val_4;
+                    break;
 
+                case 93:
+                    converted.name = "MitsubishiHP";
+                    // Outputs string
+                    // TODO TD-er: Must add binary representation of all values
+                    converted.v1  = converted.val_1;
+                    break;
+
+                case 94:
+                    converted.name = "CULreader";
+                    // Outputs string
+                    // TODO TD-er: Must add binary representation of all values
+                    converted.v1  = converted.val_1;
+                    break;
+
+                case 97:
+                    converted.name = "ESP32Touch";
+                    converted.touch  = converted.val_1;
+                    break;
+
+                case 100:
+                    converted.name = "DS2423counter";
+                    // TODO TD-er: This is probably the worst possible value to send over a LoRa network, as packets may get lost.
+                    converted.countdelta  = converted.val_1;
+                    break;
+                        
 
                 default:
                     converted.v1  = converted.val_1;
@@ -613,4 +673,28 @@ function Converter(decoded, port) {
     }
 
     return converted;
+}
+
+function getAcuDC243Unit(unit_id) {
+    switch (unit_id) {
+        case 0: // P085_QUERY_V       0
+            return "V";
+        case 1: // P085_QUERY_A       1
+            return "A";
+        case 2: // P085_QUERY_W       2
+            return "W";
+        case 3: // P085_QUERY_Wh_imp  3
+            return "Wh imp";
+        case 4: // P085_QUERY_Wh_exp  4
+            return "Wh exp";
+        case 5: // P085_QUERY_Wh_tot  5
+            return "Wh total";
+        case 6: // P085_QUERY_Wh_net  6
+            return "Wh net";
+        case 7: // P085_QUERY_h_tot   7
+            return "hours tot";
+        case 8: // P085_QUERY_h_load  8
+            return "hours load";
+    }
+    return "unknown" + unit_id;
 }

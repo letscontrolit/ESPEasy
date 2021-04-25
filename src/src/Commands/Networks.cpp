@@ -3,8 +3,9 @@
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
+#include "../WebServer/AccessControl.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #ifdef HAS_ETHERNET
 #include "ETH.h"
 #endif
@@ -95,7 +96,7 @@ String Command_ETH_DNS (struct EventStruct *event, const char* Line)
 
 String Command_ETH_Wifi_Mode (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetUint8_t(event, F("ETH_Wifi_Mode:"), Line, (uint8_t*)&Settings.ETH_Wifi_Mode,1);
+  return Command_GetORSetUint8_t(event, F("NetworkMedium:"), Line, (uint8_t*)&Settings.NetworkMedium,1);
 }
 
 #endif

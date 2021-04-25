@@ -160,6 +160,11 @@ rn2xx3_handler::RN_state rn2xx3::async_loop()
   return _rn2xx3_handler.get_state();
 }
 
+uint8_t rn2xx3::get_busy_count() const
+{
+  return _rn2xx3_handler.get_busy_count();
+}
+
 rn2xx3_handler::RN_state rn2xx3::wait_command_finished(unsigned long timeout)
 {
   return _rn2xx3_handler.wait_command_finished(timeout);
@@ -235,6 +240,11 @@ bool rn2xx3::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
 String rn2xx3::peekLastError() const
 {
   return _rn2xx3_handler.peekLastError();
+}
+
+float rn2xx3::getLoRaAirTime(uint8_t  pl) const
+{
+  return _rn2xx3_handler.getLoRaAirTime(pl);
 }
 
 String rn2xx3::getLastError()

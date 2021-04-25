@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 // #######################################################################################################
 // #################################### Plugin 081: CRON tasks Scheduler       ###########################
 // #######################################################################################################
@@ -8,7 +9,7 @@
 
 #include <ctype.h>
 #include <time.h>
-#include "_Plugin_Helper.h"
+
 
 extern "C"
 {
@@ -25,8 +26,8 @@ extern "C"
   # define PLUGIN_081_DEBUG  false // set to true for extra log info in the debug
 #endif  // ifndef PLUGIN_081_DEBUG
 #define PLUGIN_081_EXPRESSION_SIZE 41
-#define LASTEXECUTION UserVar[event->BaseVarIndex]
-#define NEXTEXECUTION UserVar[event->BaseVarIndex + 1]
+#define LASTEXECUTION         0
+#define NEXTEXECUTION         1
 
 
 struct P081_data_struct : public PluginTaskData_base {
@@ -73,12 +74,6 @@ private:
   bool      _initialized = false;
 };
 
-union timeToFloat
-{
-  time_t time;
-  float  value;
-};
-
 
 String P081_getCronExpr(taskIndex_t taskIndex)
 {
@@ -119,22 +114,14 @@ time_t P081_computeNextCronTime(taskIndex_t taskIndex, time_t last)
   return CRON_INVALID_INSTANT;
 }
 
-time_t P081_getCronExecTime(float execTime)
+time_t P081_getCronExecTime(taskIndex_t taskIndex, byte varNr)
 {
-  timeToFloat converter;
-
-  converter.value = execTime;
-  return converter.time;
+  return static_cast<time_t>(UserVar.getUint32(taskIndex, varNr));
 }
 
 void P081_setCronExecTimes(struct EventStruct *event, time_t lastExecTime, time_t nextExecTime) {
-  timeToFloat converter;
-
-  converter.time = lastExecTime;
-  LASTEXECUTION  = converter.value;
-
-  converter.time = nextExecTime;
-  NEXTEXECUTION  = converter.value;
+  UserVar.setUint32(event->TaskIndex, LASTEXECUTION, static_cast<uint32_t>(lastExecTime));
+  UserVar.setUint32(event->TaskIndex, NEXTEXECUTION, static_cast<uint32_t>(nextExecTime));
 }
 
 time_t P081_getCurrentTime()
@@ -150,8 +137,8 @@ void P081_check_or_init(struct EventStruct *event)
 {
   if (node_time.systemTimePresent()) {
     const time_t current_time = P081_getCurrentTime();
-    time_t last_exec_time     = P081_getCronExecTime(LASTEXECUTION);
-    time_t next_exec_time     = P081_getCronExecTime(NEXTEXECUTION);
+    time_t last_exec_time     = P081_getCronExecTime(event->TaskIndex, LASTEXECUTION);
+    time_t next_exec_time     = P081_getCronExecTime(event->TaskIndex, NEXTEXECUTION);
 
     // Must check if the values of LASTEXECUTION and NEXTEXECUTION make sense.
     // These can be invalid values from a reboot, or simply contain uninitialized values.
@@ -180,7 +167,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
       Device[++deviceCount].Number           = PLUGIN_ID_081;
       Device[deviceCount].Type               = DEVICE_TYPE_DUMMY; // how the device is connected
-      Device[deviceCount].VType              = SENSOR_TYPE_NONE;  // type of value the plugin will return, used only for Domoticz
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;  // type of value the plugin will return, used only for Domoticz
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -249,24 +236,24 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-    case PLUGIN_WEBFORM_SHOW_VALUES:
+
+    case PLUGIN_FORMAT_USERVAR:
     {
-      addHtml(F("<div class=\"div_l\">"));
-      addHtml(ExtraTaskSettings.TaskDeviceValueNames[0]);
-      addHtml(F(":</div><div class=\"div_r\">"));
-      addHtml(P081_formatExecTime(LASTEXECUTION));
-      addHtml(F("</div><div class=\"div_br\"></div><div class=\"div_l\">"));
-      addHtml(ExtraTaskSettings.TaskDeviceValueNames[1]);
-      addHtml(F(":</div><div class=\"div_r\">"));
-      addHtml(P081_formatExecTime(NEXTEXECUTION));
-      addHtml(F("</div>"));
-      success = true;
+      switch (event->idx) {
+        case 0:
+          string = P081_formatExecTime(event->TaskIndex, LASTEXECUTION);
+          break;
+        case 1:
+          string = P081_formatExecTime(event->TaskIndex, NEXTEXECUTION);
+          break;
+      }
+      success = string.length() > 0;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new P081_data_struct(P081_getCronExpr(event->TaskIndex)));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P081_data_struct(P081_getCronExpr(event->TaskIndex)));
       P081_data_struct *P081_data =
         static_cast<P081_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -280,12 +267,6 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       } else {
         clearPluginTaskData(event->TaskIndex);
       }
-      break;
-    }
-
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
       break;
     }
 
@@ -303,7 +284,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
       // code to be executed once a second. Tasks which do not require fast response can be added here
       if (node_time.systemTimePresent()) {
         P081_check_or_init(event);
-        time_t next_exec_time = P081_getCronExecTime(NEXTEXECUTION);
+        time_t next_exec_time = P081_getCronExecTime(event->TaskIndex, NEXTEXECUTION);
 
         if (next_exec_time != CRON_INVALID_INSTANT) {
           const time_t current_time = P081_getCurrentTime();
@@ -319,8 +300,10 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + ESPEasy_time::getDateTimeString(*gmtime(&next_exec_time)));
 
             if (function != PLUGIN_TIME_CHANGE) {
-              LoadTaskSettings(event->TaskIndex);
-              eventQueue.add(String(F("Cron#")) + String(ExtraTaskSettings.TaskDeviceName));
+              if (Settings.UseRules) {
+                LoadTaskSettings(event->TaskIndex);
+                eventQueue.add(String(F("Cron#")) + String(ExtraTaskSettings.TaskDeviceName));
+              }
               success = true;
             }
           }
@@ -396,8 +379,8 @@ void PrintCronExp(struct cron_expr_t e) {
 #endif // if PLUGIN_081_DEBUG
 
 
-String P081_formatExecTime(float execTime_f) {
-  time_t exec_time = P081_getCronExecTime(execTime_f);
+String P081_formatExecTime(taskIndex_t taskIndex, byte varNr) {
+  time_t exec_time = P081_getCronExecTime(taskIndex, varNr);
 
   if (exec_time != CRON_INVALID_INSTANT) {
     return ESPEasy_time::getDateTimeString(*gmtime(&exec_time));
@@ -417,9 +400,9 @@ void P081_html_show_cron_expr(struct EventStruct *event) {
       addHtml(error);
     } else {
       addRowLabel(F("Last Exec Time"));
-      addHtml(P081_formatExecTime(LASTEXECUTION));
+      addHtml(P081_formatExecTime(event->TaskIndex, LASTEXECUTION));
       addRowLabel(F("Next Exec Time"));
-      addHtml(P081_formatExecTime(NEXTEXECUTION));
+      addHtml(P081_formatExecTime(event->TaskIndex, NEXTEXECUTION));
     }
   }
 }

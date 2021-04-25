@@ -1,13 +1,13 @@
 #ifndef DELAY_QUEUE_ELEMENTS_H
 #define DELAY_QUEUE_ELEMENTS_H
 
+
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/ControllerSettingsStruct.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include "../ControllerQueue/ControllerDelayHandlerStruct.h"
-#include "../ControllerQueue/SimpleQueueElement_string_only.h"
-#include "../ControllerQueue/queue_element_single_value_base.h"
+
+#include "../DataStructs/ControllerSettingsStruct.h"
 
 
 // The most logical place to have these queue element handlers defined would be in their
@@ -28,7 +28,10 @@
 
 #ifdef USES_MQTT
 # include "../ControllerQueue/MQTT_queue_element.h"
-ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
+extern ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler;
+
+bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag);
+void exit_mqtt_delay_queue();
 #endif // USES_MQTT
 
 
@@ -36,6 +39,7 @@ ControllerDelayHandlerStruct<MQTT_queue_element> MQTTDelayHandler;
 * C001_queue_element for queueing requests for C001.
 \*********************************************************************************************/
 #ifdef USES_C001
+#include "../ControllerQueue/SimpleQueueElement_string_only.h"
 # define C001_queue_element simple_queue_element_string_only
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  1)
 #endif // ifdef USES_C001
@@ -44,17 +48,20 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  1)
 * C003_queue_element for queueing requests for C003 Nodo Telnet.
 \*********************************************************************************************/
 #ifdef USES_C003
+#include "../ControllerQueue/SimpleQueueElement_string_only.h"
 # define C003_queue_element simple_queue_element_string_only
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  3)
 #endif // ifdef USES_C003
 
 #ifdef USES_C004
-# include "../ControllerQueue/C004_queue_element.h"
+# include "../ControllerQueue/queue_element_formatted_uservar.h"
+# define C004_queue_element queue_element_formatted_uservar
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  4)
 #endif // ifdef USES_C004
 
 #ifdef USES_C007
-# include "../ControllerQueue/C007_queue_element.h"
+# include "../ControllerQueue/queue_element_formatted_uservar.h"
+# define C007_queue_element queue_element_formatted_uservar
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  7)
 #endif // ifdef USES_C007
 
@@ -65,12 +72,14 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  7)
 * Using queue_element_single_value_base
 \*********************************************************************************************/
 #ifdef USES_C008
+#include "../ControllerQueue/queue_element_single_value_base.h"
 # define C008_queue_element queue_element_single_value_base
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  8)
 #endif // ifdef USES_C008
 
 #ifdef USES_C009
-# include "../ControllerQueue/C009_queue_element.h"
+# include "../ControllerQueue/queue_element_formatted_uservar.h"
+# define C009_queue_element queue_element_formatted_uservar
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  9)
 #endif // ifdef USES_C009
 
@@ -80,6 +89,7 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  9)
 * Using queue_element_single_value_base
 \*********************************************************************************************/
 #ifdef USES_C010
+#include "../ControllerQueue/queue_element_single_value_base.h"
 # define C010_queue_element queue_element_single_value_base
 DEFINE_Cxxx_DELAY_QUEUE_MACRO( 0, 10)
 #endif // ifdef USES_C010
@@ -90,7 +100,7 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO( 0, 10)
 * C011_queue_element for queueing requests for 011: Generic HTTP Advanced
 \*********************************************************************************************/
 #ifdef USES_C011
-# define C011_queue_element simple_queue_element_string_only
+# include "../ControllerQueue/C011_queue_element.h"
 DEFINE_Cxxx_DELAY_QUEUE_MACRO( 0, 11)
 #endif // ifdef USES_C011
 
@@ -100,6 +110,7 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO( 0, 11)
 * Using queue_element_single_value_base
 \*********************************************************************************************/
 #ifdef USES_C012
+#include "../ControllerQueue/queue_element_single_value_base.h"
 # define C012_queue_element queue_element_single_value_base
 DEFINE_Cxxx_DELAY_QUEUE_MACRO( 0, 12)
 #endif // ifdef USES_C012
@@ -131,7 +142,8 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 16)
 
 
 #ifdef USES_C017
-# include "../ControllerQueue/C017_queue_element.h"
+# include "../ControllerQueue/queue_element_formatted_uservar.h"
+# define C017_queue_element queue_element_formatted_uservar
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 17)
 #endif // ifdef USES_C017
 
@@ -153,9 +165,39 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 18)
  #endif
  */
 
+/*
+ #ifdef USES_C021
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 21)
+ #endif
+ */
 
-// When extending this, also extend in Scheduler.ino:
-// void process_interval_timer(unsigned long id, unsigned long lasttimer)
+/*
+ #ifdef USES_C022
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 22)
+ #endif
+ */
+
+/*
+ #ifdef USES_C023
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 23)
+ #endif
+ */
+
+/*
+ #ifdef USES_C024
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 24)
+ #endif
+ */
+
+/*
+ #ifdef USES_C025
+   DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 25)
+ #endif
+ */
+
+
+// When extending this, search for EXTEND_CONTROLLER_IDS 
+// in the code to find all places that need to be updated too.
 
 
 #endif // ifndef DELAY_QUEUE_ELEMENTS_H

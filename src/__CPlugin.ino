@@ -1,3 +1,5 @@
+#include "ESPEasy_common.h"
+
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Protocol.h"
 #include "src/Globals/Settings.h"
@@ -5,9 +7,7 @@
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
-#include "ESPEasy_common.h"
-#include "ESPEasy_plugindefs.h"
-
+#include "src/DataTypes/ESPEasy_plugin_functions.h"
 
 // ********************************************************************************
 // Initialize all Controller CPlugins that where defined earlier
@@ -146,6 +146,10 @@ void CPluginInit(void)
 #ifdef CPLUGIN_025
   ADDCPLUGIN(025)
 #endif
+
+// When extending this, search for EXTEND_CONTROLLER_IDS 
+// in the code to find all places that need to be updated too.
+
 
   CPluginCall(CPlugin::Function::CPLUGIN_PROTOCOL_ADD, 0);
 

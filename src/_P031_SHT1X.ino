@@ -1,9 +1,10 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P031
 //#######################################################################################################
 //#################### Plugin 031: SHT10/SHT11/SHT15 Temp/Humidity Sensor ###############################
 //#######################################################################################################
 
-#include "_Plugin_Helper.h"
+
 
 #define PLUGIN_031
 #define PLUGIN_ID_031         31
@@ -57,8 +58,8 @@ public:
         if (digitalRead(_dataPin) == LOW) {
           float tempRaw = readData(16);
           // Temperature conversion coefficients from SHT1X datasheet for version 4
-          const float d1 = -39.7;  // 3.5V
-          const float d2 = 0.01;   // 14-bit
+          const float d1 = -39.7f;  // 3.5V
+          const float d2 = 0.01f;   // 14-bit
           tempC = d1 + (tempRaw * d2);
           state = P031_WAIT_HUM; // Wait for humidity
           sendCommand(SHT1X_CMD_MEASURE_RH);
@@ -71,11 +72,11 @@ public:
           float raw = readData(16);
 
           // Temperature conversion coefficients from SHT1X datasheet for version 4
-          const float c1 = -2.0468;
-          const float c2 = 0.0367;
-          const float c3 = -1.5955E-6;
-          const float t1 = 0.01;
-          const float t2 = 0.00008;
+          const float c1 = -2.0468f;
+          const float c2 = 0.0367f;
+          const float c3 = -1.5955E-6f;
+          const float t1 = 0.01f;
+          const float t2 = 0.00008f;
 
           float rhLinear = c1 + c2 * raw + c3 * raw * raw;
           rhTrue = (tempC - 25) * (t1 + t2 * raw) + rhLinear;
@@ -241,8 +242,8 @@ public:
   }
 
 
-  float tempC = 0.0;
-  float rhTrue = 0.0;
+  float tempC = 0.0f;
+  float rhTrue = 0.0f;
   unsigned long sendCommandTime = 0;
 
   int input_mode = 0;
@@ -264,7 +265,7 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_031;
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
-        Device[deviceCount].VType = SENSOR_TYPE_TEMP_HUM;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = true;
         Device[deviceCount].InverseLogicOption = false;
@@ -314,7 +315,7 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        initPluginTaskData(event->TaskIndex, new P031_data_struct());
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P031_data_struct());
         P031_data_struct *P031_data =
             static_cast<P031_data_struct *>(getPluginTaskData(event->TaskIndex));
         if (nullptr == P031_data) {
@@ -346,7 +347,7 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
       if (nullptr != P031_data) {
         if (P031_data->process()) {
           // Measurement ready, schedule new read.
-          schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
       }
       success = true;

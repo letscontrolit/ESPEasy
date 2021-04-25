@@ -20,3 +20,10 @@
   ESP32HTTPUpdateServer httpUpdater(true);
   #endif
 #endif
+
+
+#ifdef FEATURE_DNS_SERVER
+  #include <DNSServer.h>
+  DNSServer  dnsServer;
+  bool dnsServerActive = false;
+#endif

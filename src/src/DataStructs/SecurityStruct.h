@@ -2,16 +2,30 @@
 #define DATASTRUCTS_SECURITYSTRUCT_H
 
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/ESPEasyLimits.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 
 /*********************************************************************************************\
  * SecurityStruct
 \*********************************************************************************************/
 struct SecurityStruct
 {
+  enum class WiFiCredentialsSlot {
+    first,
+    second
+  };
+
+
   SecurityStruct();
 
   void validate();
+
+  void clearWiFiCredentials();
+
+  void clearWiFiCredentials(WiFiCredentialsSlot slot);
+
+  bool hasWiFiCredentials() const;
+
+  bool hasWiFiCredentials(WiFiCredentialsSlot slot) const;
 
   char          WifiSSID[32];
   char          WifiKey[64];

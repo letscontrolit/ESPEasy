@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P059
 //#######################################################################################################
 //#################################### Plugin 059: Rotary Encoder #######################################
@@ -21,7 +23,6 @@
 #define PLUGIN_VALUENAME1_059 "Counter"
 
 #include <QEIx4.h>
-#include "_Plugin_Helper.h"
 
 std::map<unsigned int, std::shared_ptr<QEIx4> > P_059_sensordefs;
 
@@ -36,7 +37,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_059;
         Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SWITCH;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
@@ -149,7 +150,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
           {
             long c = P_059_sensordefs[event->TaskIndex]->read();
             UserVar[event->BaseVarIndex] = (float)c;
-            event->sensorType = SENSOR_TYPE_SWITCH;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
             String log = F("QEI  : ");
             log += c;
@@ -177,7 +178,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
       {
         if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
-            String log = "";
+            String log;
             String command = parseString(string, 1);
             if (command == F("encwrite"))
             {
@@ -186,6 +187,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
                 log = String(F("QEI  : ")) + string;
                 addLog(LOG_LEVEL_INFO, log);
                 P_059_sensordefs[event->TaskIndex]->write(event->Par1);
+                Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
               }
               success = true; // Command is handled.
             }

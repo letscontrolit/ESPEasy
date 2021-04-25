@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P035
 //#######################################################################################################
 //#################################### Plugin 035: Output IR ############################################
@@ -27,7 +28,7 @@
 //                                                 - "wide"
 // "on" - "off" parameters are:
 // - "power" - "celsius" - "quiet" - "turbo" - "econo" - "light" - "filter" - "clean" - "light" - "beep"
-// If celcius is set to "off" then farenheit will be used
+// If Celsius is set to "off" then farenheit will be used
 // - "sleep" Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
 // - "clock" Nr. of mins past midnight to set the clock to. (< 0 means off.)
 // - "model" . Nr or string representation of the model. Better to find it throught P016 - IR RX (0 means default.)
@@ -36,8 +37,6 @@
 #include <IRac.h>
 #include <IRutils.h>
 #include <IRsend.h>
-
-#include "_Plugin_Helper.h"
 
 #ifdef P016_P035_Extended_AC
 #include <IRac.h>
@@ -59,7 +58,7 @@ IRsend *Plugin_035_irSender = nullptr;
 
 boolean Plugin_035(byte function, struct EventStruct *event, String &command)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
@@ -116,13 +115,13 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         }
 
 #ifdef P016_P035_Extended_AC
-        if (Plugin_035_commonAc == 0 && irPin != -1)
+        if (Plugin_035_commonAc == nullptr && irPin != -1)
         {
           addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
           addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols());
-          Plugin_035_commonAc = new IRac(irPin);
+          Plugin_035_commonAc = new (std::nothrow) IRac(irPin);
         }
-        if (Plugin_035_commonAc != 0 && irPin == -1)
+        if (Plugin_035_commonAc != nullptr && irPin == -1)
         {
           addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX Removed"));
           delete Plugin_035_commonAc;
@@ -154,7 +153,7 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         else if (cmdCode.equalsIgnoreCase(F("IRSENDAC")) && Plugin_035_commonAc != 0) {
           success = true;
           enableIR_RX(false);
-          handle_AC_IRremote(command);
+          handle_AC_IRremote(parseStringToEnd(command, 2));
         }
 #endif // P016_P035_Extended_AC
 
@@ -165,18 +164,18 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
   return success;
 } // Plugin_035 END
 
-boolean handleIRremote(const String &cmd) {
+bool handleIRremote(const String &cmd) {
 
-  String IrType = "";
-  String TmpStr1 = "";
+  String IrType;
+  String TmpStr1;
 
   uint64_t IrCode = 0;
   uint16_t IrBits = 0;
   uint16_t IrRepeat = 0;
-  String ircodestr = "";
+  String ircodestr;
 
   StaticJsonDocument<200> docTemp;
-  DeserializationError error = deserializeJson(docTemp, cmd.substring(cmd.indexOf(',') + 1, cmd.length()));
+  DeserializationError error = deserializeJson(docTemp, parseStringToEnd(cmd, 2));
   if (!error) // If the command is in JSON format
   {
     IrType =  docTemp[F("protocol")].as<String>();
@@ -186,19 +185,16 @@ boolean handleIRremote(const String &cmd) {
     IrRepeat = docTemp[F("repeats")] | 0;
   }
   else { // If the command is NOT in JSON format (legacy)
-    if (GetArgv(cmd.c_str(), TmpStr1, 2))
+    IrType = parseString(cmd, 2);
+    if (IrType.length() > 0)
     {
-      IrType = TmpStr1;
-
-      if (GetArgv(cmd.c_str(), ircodestr, 3))
+      ircodestr = parseString(cmd, 3);
+      if (ircodestr.length() > 0)
       {
         IrCode = strtoull(ircodestr.c_str(), NULL, 16);
       }
-      IrBits = 0; //Leave it to 0 for default protocol bits
-      if (GetArgv(cmd.c_str(), TmpStr1, 4))
-        IrBits = str2int(TmpStr1.c_str()); // Number of bits to be sent. USE 0 for default protocol bits
-      if (GetArgv(cmd.c_str(), TmpStr1, 5))
-        IrRepeat = str2int(TmpStr1.c_str());  // Nr. of times the message is to be repeated
+      IrBits = parseString(cmd, 4).toInt();   // Number of bits to be sent. USE 0 for default protocol bits
+      IrRepeat = parseString(cmd, 5).toInt(); // Nr. of times the message is to be repeated
     }
   }
 
@@ -207,16 +203,9 @@ boolean handleIRremote(const String &cmd) {
   return IRsent;
 }
 
-boolean handle_AC_IRremote(const String &cmd) {
-  String irData = "";
+#ifdef P016_P035_Extended_AC
+bool handle_AC_IRremote(const String &irData) {
   StaticJsonDocument<JSON_OBJECT_SIZE(18) + 190> doc;
-
-  int argIndex = cmd.indexOf(',') + 1;
-  if (argIndex)
-    irData = cmd.substring(argIndex, cmd.length());
-  //addLog(LOG_LEVEL_INFO, String(F("IRTX: JSON received: ")) + irData);
-  irData.toLowerCase(); // Circumvent the need to have case sensitive JSON keys
-
   DeserializationError error = deserializeJson(doc, irData);         // Deserialize the JSON document
   if (error)         // Test if parsing succeeds.
   {
@@ -231,12 +220,12 @@ boolean handle_AC_IRremote(const String &cmd) {
     return false; //do not continue with sending of the signal.
   }
 
-  String tempstr = "";
+  String tempstr;
   tempstr = doc[F("model")].as<String>();
   st.model = IRac::strToModel(tempstr.c_str(), -1); //The specific model of A/C if applicable. //strToModel();. Defaults to -1 (unknown) if missing from JSON
   tempstr = doc[F("power")].as<String>();
   st.power = IRac::strToBool(tempstr.c_str(), false); //POWER ON or OFF. Defaults to false if missing from JSON
-  st.degrees = doc[F("temp")] | 22.0;                //What temperature should the unit be set to?. Defaults to 22c if missing from JSON
+  st.degrees = doc[F("temp")] | 22.0f;                //What temperature should the unit be set to?. Defaults to 22c if missing from JSON
   tempstr = doc[F("use_celsius")].as<String>();
   st.celsius = IRac::strToBool(tempstr.c_str(), true); //Use degreees Celsius, otherwise Fahrenheit. Defaults to true if missing from JSON
   tempstr = doc[F("mode")].as<String>();
@@ -269,34 +258,25 @@ boolean handle_AC_IRremote(const String &cmd) {
   if (IRsent) printToLog(typeToString(st.protocol), irData, 0, 0);
   return IRsent;
 }
+#endif
 
 
-boolean handleRawRaw2Encoding(const String &cmd) {
-  boolean raw=true;
-  String IrType = "";
-  if (!GetArgv(cmd.c_str(), IrType, 2)) return false;
+bool handleRawRaw2Encoding(const String &cmd) {
+  bool raw=true;
+  String IrType = parseString(cmd, 2);
+  if (IrType.length() == 0) return false;
 
   if (IrType.equalsIgnoreCase(F("RAW"))) raw = true;
   else if (IrType.equalsIgnoreCase(F("RAW2")))  raw = false;
 
-
-  String IrRaw, TmpStr1;
-  uint16_t IrHz = 0;
-  unsigned int IrPLen = 0;
-  unsigned int IrBLen = 0;
-
-  if (GetArgv(cmd.c_str(), TmpStr1, 3))
-    IrRaw = TmpStr1; //Get the "Base32" encoded/compressed Ir signal
-  if (GetArgv(cmd.c_str(), TmpStr1, 4))
-    IrHz = str2int(TmpStr1.c_str()); //Get the base freguency of the signal (allways 38)
-  if (GetArgv(cmd.c_str(), TmpStr1, 5))
-    IrPLen = str2int(TmpStr1.c_str()); //Get the Pulse Length in ms
-  if (GetArgv(cmd.c_str(), TmpStr1, 6))
-    IrBLen = str2int(TmpStr1.c_str()); //Get the Blank Pulse Length in ms
+  String       IrRaw  = parseString(cmd, 3);         // Get the "Base32" encoded/compressed Ir signal
+  uint16_t     IrHz   = parseString(cmd, 4).toInt(); // Get the base freguency of the signal (allways 38)
+  unsigned int IrPLen = parseString(cmd, 5).toInt(); // Get the Pulse Length in ms
+  unsigned int IrBLen = parseString(cmd, 6).toInt(); // Get the Blank Pulse Length in ms
 
   uint16_t idx = 0; //If this goes above the buf.size then the esp will throw a 28 EXCCAUSE
   uint16_t *buf;
-  buf = new uint16_t[P35_Ntimings]; //The Raw Timings that we can buffer.
+  buf = new (std::nothrow) uint16_t[P35_Ntimings]; //The Raw Timings that we can buffer.
   if (buf == nullptr)
   { // error assigning memory.
     return false;
@@ -479,7 +459,7 @@ String listACProtocols() {
 }
 #endif
 
-boolean addErrorTrue()
+bool addErrorTrue()
 {
   addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));
   return true;
@@ -539,8 +519,7 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
     return false; // No input. Abort.
   }
 
-  switch (irType)
-  { // Get the correct state size for the protocol.
+   switch (irType) {  // Get the correct state size for the protocol.
     case DAIKIN:
       // Daikin has 2 different possible size states.
       // (The correct size, and a legacy shorter size.)
@@ -548,7 +527,7 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
       // the correct length/byte size.
       // This should provide backward compatiblity with legacy messages.
-      stateSize = inputLength / 2; // Every two hex chars is a byte.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
       // Use at least the minimum size.
       stateSize = std::max(stateSize, kDaikinStateLengthShort);
       // If we think it isn't a "short" message.
@@ -563,25 +542,42 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
       // the correct length/byte size.
-      stateSize = inputLength / 2; // Every two hex chars is a byte.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
       // Use at least the minimum size.
       stateSize = std::max(stateSize,
-                           (uint16_t)(kFujitsuAcStateLengthShort - 1));
+                           (uint16_t) (kFujitsuAcStateLengthShort - 1));
       // If we think it isn't a "short" message.
       if (stateSize > kFujitsuAcStateLengthShort)
         // Then it has to be at least the smaller version of the "normal" size.
-        stateSize = std::max(stateSize, (uint16_t)(kFujitsuAcStateLength - 1));
+        stateSize = std::max(stateSize, (uint16_t) (kFujitsuAcStateLength - 1));
       // Lastly, it should never exceed the maximum "normal" size.
       stateSize = std::min(stateSize, kFujitsuAcStateLength);
+      break;
+    case HITACHI_AC3:
+      // HitachiAc3 has two distinct & different size states, so make a best
+      // guess which one we are being presented with based on the number of
+      // hexadecimal digits provided. i.e. Zero-pad if you need to to get
+      // the correct length/byte size.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // Use at least the minimum size.
+      stateSize = std::max(stateSize,
+                           (uint16_t) (kHitachiAc3MinStateLength));
+      // If we think it isn't a "short" message.
+      if (stateSize > kHitachiAc3MinStateLength)
+        // Then it probably the "normal" size.
+        stateSize = std::max(stateSize,
+                             (uint16_t) (kHitachiAc3StateLength));
+      // Lastly, it should never exceed the maximum "normal" size.
+      stateSize = std::min(stateSize, kHitachiAc3StateLength);
       break;
     case MWM:
       // MWM has variable size states, so make a best guess
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
       // the correct length/byte size.
-      stateSize = inputLength / 2; // Every two hex chars is a byte.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
       // Use at least the minimum size.
-      stateSize = std::max(stateSize, (uint16_t)3);
+      stateSize = std::max(stateSize, (uint16_t) 3);
       // Cap the maximum size.
       stateSize = std::min(stateSize, kStateSizeMax);
       break;
@@ -590,18 +586,18 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
       // the correct length/byte size.
-      stateSize = inputLength / 2; // Every two hex chars is a byte.
+      stateSize = inputLength / 2;  // Every two hex chars is a byte.
       // Use at least the minimum size.
-      stateSize = std::max(stateSize, (uint16_t)(kSamsungAcStateLength));
+      stateSize = std::max(stateSize, (uint16_t) (kSamsungAcStateLength));
       // If we think it isn't a "normal" message.
       if (stateSize > kSamsungAcStateLength)
         // Then it probably the extended size.
         stateSize = std::max(stateSize,
-                             (uint16_t)(kSamsungAcExtendedStateLength));
+                             (uint16_t) (kSamsungAcExtendedStateLength));
       // Lastly, it should never exceed the maximum "extended" size.
       stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
       break;
-    default: // Everything else.
+    default:  // Everything else.
       stateSize = IRsend::defaultBits(irType) / 8;
       if (!stateSize || !hasACState(irType))
       {

@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P094
 
 // #######################################################################################################
@@ -8,8 +9,9 @@
 // Allows to control the mode of the CUL receiver
 //
 
-#include "_Plugin_Helper.h"
 
+#include "src/Helpers/ESPEasy_Storage.h"
+#include "src/Helpers/StringConverter.h"
 #include "src/PluginStructs/P094_data_struct.h"
 
 #include <Regexp.h>
@@ -21,6 +23,11 @@
 
 #define P094_BAUDRATE           PCONFIG_LONG(0)
 #define P094_BAUDRATE_LABEL     PCONFIG_LABEL(0)
+
+#define P094_DEBUG_SENTENCE_LENGTH  PCONFIG_LONG(1)
+#define P094_DEBUG_SENTENCE_LABEL   PCONFIG_LABEL(1)
+
+#define P094_APPEND_RECEIVE_SYSTIME PCONFIG(0)
 
 #define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 #define P094_NR_OUTPUT_OPTIONS  1
@@ -56,7 +63,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_DEVICE_ADD: {
       Device[++deviceCount].Number           = PLUGIN_ID_094;
       Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = SENSOR_TYPE_STRING;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_STRING;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -65,6 +72,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = false;
+//      Device[deviceCount].DuplicateDetection = true;
       break;
     }
 
@@ -103,9 +111,9 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         uint32_t success, error, length_last;
         P094_data->getSentencesReceived(success, error, length_last);
         byte varNr = VARS_PER_TASK;
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true);
 
         // success = true;
       }
@@ -115,6 +123,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_SET_DEFAULTS:
     {
       P094_BAUDRATE = P094_DEFAULT_BAUDRATE;
+      P094_DEBUG_SENTENCE_LENGTH = 0;
 
       success = true;
       break;
@@ -127,24 +136,32 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: {
-      serialHelper_webformLoad(event);
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
       addFormNumericBox(F("Baudrate"), P094_BAUDRATE_LABEL, P094_BAUDRATE, 2400, 115200);
       addUnit(F("baud"));
+      break;
+    }
 
+    case PLUGIN_WEBFORM_LOAD: 
+    {
       addFormSubHeader(F("Filtering"));
       P094_html_show_matchForms(event);
 
       addFormSubHeader(F("Statistics"));
       P094_html_show_stats(event);
 
+      addFormNumericBox(F("(debug) Generated length"), P094_DEBUG_SENTENCE_LABEL, P094_DEBUG_SENTENCE_LENGTH, 0, 1024);
+
+      addFormCheckBox(F("Append system time"), F("systime"), P094_APPEND_RECEIVE_SYSTIME);
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      serialHelper_webformSave(event);
       P094_BAUDRATE = getFormItemInt(P094_BAUDRATE_LABEL);
+      P094_DEBUG_SENTENCE_LENGTH = getFormItemInt(P094_DEBUG_SENTENCE_LABEL);
 
       P094_data_struct *P094_data =
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -159,13 +176,16 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         success = true;
       }
 
+      P094_APPEND_RECEIVE_SYSTIME = isFormItemChecked(F("systime"));
+
       break;
     }
 
     case PLUGIN_INIT: {
       const int16_t serial_rx = CONFIG_PIN1;
       const int16_t serial_tx = CONFIG_PIN2;
-      initPluginTaskData(event->TaskIndex, new P094_data_struct());
+      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P094_data_struct());
       P094_data_struct *P094_data =
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -173,21 +193,15 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P094_data->init(serial_rx, serial_tx, P094_BAUDRATE)) {
+      if (P094_data->init(port, serial_rx, serial_tx, P094_BAUDRATE)) {
         LoadCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0);
         P094_data->post_init();
         success = true;
 
-        serialHelper_log_GpioDescription(serial_rx, serial_tx);
+        serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
       } else {
         clearPluginTaskData(event->TaskIndex);
       }
-      break;
-    }
-
-    case PLUGIN_EXIT: {
-      clearPluginTaskData(event->TaskIndex);
-      success = true;
       break;
     }
 
@@ -197,18 +211,33 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
           static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if ((nullptr != P094_data) && P094_data->loop()) {
-          // schedule_task_device_timer(event->TaskIndex, millis() + 10);
+          // Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
           delay(0); // Processing a full sentence may take a while, run some
                     // background tasks.
-          P094_data->getSentence(event->String2);
+          P094_data->getSentence(event->String2, P094_APPEND_RECEIVE_SYSTIME);
 
           if (event->String2.length() > 0) {
             if (Plugin_094_match_all(event->TaskIndex, event->String2)) {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("CUL Reader: Sending: ");
-                log += event->String2;
-                addLog(LOG_LEVEL_INFO, log);
+                String log;
+                if (log.reserve(128)) {
+                  log = F("CUL Reader: Sending: ");
+                  const size_t messageLength = event->String2.length();
+                  if (messageLength < 100) {
+                    log += event->String2;
+                  } else {
+                    // Split string so we get start and end
+                    log += event->String2.substring(0, 40);
+                    log += F("...");
+                    log += event->String2.substring(messageLength - 40);
+                  }
+                  addLog(LOG_LEVEL_INFO, log);
+                }
               }
+              // Filter length options:
+              // - 22 char, for hash-value then we filter the exact meter including serial and meter type, (that will also prevent very quit sending meters, which normaly is a fault)
+              // - 38 char, The exact message, because we have 2 byte from the value payload
+              //sendData_checkDuplicates(event, event->String2.substring(0, 22));
               sendData(event);
             }
           }
@@ -219,10 +248,29 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_READ: {
-      P094_data_struct *P094_data =
-        static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (P094_DEBUG_SENTENCE_LENGTH > 0) {
+        P094_data_struct *P094_data =
+          static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P094_data)) {}
+        if ((nullptr != P094_data)) {
+          const uint32_t debug_count = P094_data->getDebugCounter();
+          event->String2.reserve(P094_DEBUG_SENTENCE_LENGTH);
+          event->String2 = String(debug_count);
+          event->String2 += '_';
+          const char c = '0' + debug_count % 10;
+          for (long i = event->String2.length(); i < P094_DEBUG_SENTENCE_LENGTH; ++i) {
+            event->String2 += c;
+          }
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("CUL Reader: Sending: ");
+            log += event->String2.substring(0, 20);
+            log += F("...");
+            addLog(LOG_LEVEL_INFO, log);
+          }
+//          sendData_checkDuplicates(event, event->String2.substring(0, 22));
+          sendData(event);
+        }
+      }
       break;
     }
 
@@ -251,7 +299,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
   return success;
 }
 
-bool Plugin_094_match_all(taskIndex_t taskIndex, String& received)
+bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received)
 {
   P094_data_struct *P094_data =
     static_cast<P094_data_struct *>(getPluginTaskData(taskIndex));
@@ -403,9 +451,7 @@ void P094_html_show_stats(struct EventStruct *event) {
   }
   {
     addRowLabel(F("Current Sentence"));
-    String sentencePart;
-    P094_data->getSentence(sentencePart);
-    addHtml(sentencePart);
+    addHtml(P094_data->peekSentence());
   }
 
   {

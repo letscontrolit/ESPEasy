@@ -72,10 +72,10 @@
 .. |P075_github| replace:: P075_Nextion.ino
 .. _P075_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P075_Nextion.ino
 .. |P075_usedby| replace:: `.`
-.. |P075_shortinfo| replace:: LCD Color Graphic Touch Screen. Plugin can update display and receive/send touch events.
-.. |P075_maintainer| replace:: `.`
+.. |P075_shortinfo| replace:: LCD Color Graphic Touch Screen. Plugin can update display and receive touch events.
+.. |P075_maintainer| replace:: Unassigned
 .. |P075_compileinfo| replace:: `.`
-.. |P075_usedlibraries| replace:: `.`
+.. |P075_usedlibraries| replace:: https://github.com/TD-er/ESPEasySerial
 
 .. |P076_name| replace:: :cyan:`HLW8012/BL0937`
 .. |P076_type| replace:: :cyan:`Energy (AC)`
@@ -116,15 +116,16 @@
 .. |P078_compileinfo| replace:: `.`
 .. |P078_usedlibraries| replace:: `.`
 
-.. |P079_name| replace:: :cyan:`Wemos Motorshield`
+.. |P079_name| replace:: :cyan:`Wemos / Lolin Motorshield`
 .. |P079_type| replace:: :cyan:`Motor`
-.. |P079_typename| replace:: :cyan:`Motor - Wemos Motorshield`
-.. |P079_porttype| replace:: `.`
+.. |P079_typename| replace:: :cyan:`Motor - Wemos / Lolin Motorshield`
+.. |P079_porttype| replace:: :cyan:`I2C`
 .. |P079_status| replace:: :green:`NORMAL`
 .. |P079_github| replace:: P079_Wemos_Motorshield.ino
 .. _P079_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P079_Wemos_Motorshield.ino
-.. |P079_usedby| replace:: :ref:`P079_WemosMotorshield_page`
+.. |P079_usedby_wemos| replace:: :ref:`P079_WemosMotorshield_page`
+.. |P079_usedby_lolin| replace:: :ref:`P079_LolinMotorshield_page`
 .. |P079_shortinfo| replace:: `.`
-.. |P079_maintainer| replace:: `.`
+.. |P079_maintainer| replace:: Unassigned
 .. |P079_compileinfo| replace:: `.`
 .. |P079_usedlibraries| replace:: `.`

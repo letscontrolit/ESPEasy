@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P038
 //#######################################################################################################
 //#################################### Plugin 038: NeoPixel Basic #######################################
@@ -28,7 +30,6 @@
 // Used functions HUE2RGB & HUE2RGBW can handle float and are precice but not optimized for speed!
 
 #include <Adafruit_NeoPixel.h>
-#include "_Plugin_Helper.h"
 
 Adafruit_NeoPixel *Plugin_038_pixels;
 
@@ -114,7 +115,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_038_pixels)
         {
-          String log = "";
+          String log;
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             log = F("P038 : ");
             log += string;

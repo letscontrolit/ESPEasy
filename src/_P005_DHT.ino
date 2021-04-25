@@ -1,9 +1,9 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P005
 //#######################################################################################################
 //######################## Plugin 005: Temperature and Humidity sensor DHT 11/22 ########################
 //#######################################################################################################
 
-#include "_Plugin_Helper.h"
 
 #define PLUGIN_005
 #define PLUGIN_ID_005         5
@@ -36,7 +36,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_005;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_TEMP_HUM;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -110,12 +110,12 @@ void P005_log(struct EventStruct *event, int logNr)
     case P005_error_invalid_NAN_reading: text += F("Invalid NAN reading"); break;
     case P005_info_temperature:
       text += F("Temperature: ");
-      text += UserVar[event->BaseVarIndex];
+      text += formatUserVarNoCheck(event->TaskIndex, 0);
       isError = false;
       break;
     case P005_info_humidity:
       text += F("Humidity: ");
-      text += UserVar[event->BaseVarIndex + 1];
+      text += formatUserVarNoCheck(event->TaskIndex, 1);
       isError = false;
       break;
   }
@@ -208,22 +208,22 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   switch (Par3) {
     case P005_DHT11:
     case P005_DHT12:
-      temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0; // Temperature
+      temperature = float(dht_dat[2]*10 + (dht_dat[3] & 0x7f)) / 10.0f; // Temperature
       if (dht_dat[3] & 0x80) { temperature = -temperature; } // Negative temperature
-      humidity = float(dht_dat[0]*10+dht_dat[1]) / 10.0; // Humidity
+      humidity = float(dht_dat[0]*10+dht_dat[1]) / 10.0f; // Humidity
       break;
     case P005_DHT22:
     case P005_AM2301:
     case P005_SI7021:
       if (dht_dat[2] & 0x80) // negative temperature
-        temperature = -0.1 * word(dht_dat[2] & 0x7F, dht_dat[3]);
+        temperature = -0.1f * word(dht_dat[2] & 0x7F, dht_dat[3]);
       else
-        temperature = 0.1 * word(dht_dat[2], dht_dat[3]);
-      humidity = 0.1 * word(dht_dat[0], dht_dat[1]); // Humidity
+        temperature = 0.1f * word(dht_dat[2], dht_dat[3]);
+      humidity = 0.1f * word(dht_dat[0], dht_dat[1]); // Humidity
       break;
   }
 
-  if (temperature == NAN || humidity == NAN)
+  if (isnan(temperature) || isnan(humidity))
   {     P005_log(event, P005_error_invalid_NAN_reading);
         return false;
   }

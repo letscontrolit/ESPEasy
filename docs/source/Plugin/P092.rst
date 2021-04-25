@@ -21,10 +21,19 @@ Maintainer: |P092_maintainer|
 
 Used libraries: |P092_usedlibraries|
 
+.. include:: P092_DLbus.rst
+
 Supported hardware
 ------------------
 
 |P092_usedby|
+
+* :ref:`P092_ESR21_page` Simple Solar Control.
+* :ref:`P092_UVR31_page` single-circuit universal control system.
+* :ref:`P092_UVR61-3_page` three-circuit universal control system (up to v8.2).
+* :ref:`P092_UVR61-3v8_3_page` three-circuit universal control system (v8.3 or higher).
+* :ref:`P092_UVR1611_page` freely programmable universal control system.
+
 
 Change log
 ----------

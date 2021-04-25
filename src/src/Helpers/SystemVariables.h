@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "../../ESPEasy_common.h"
+
 class SystemVariables {
 
 public:
@@ -75,6 +77,7 @@ public:
     UNIXDAY_SEC,
     UNIXTIME,
     UPTIME,
+    UPTIME_MS,
     VCC,
     WI_CH,
 

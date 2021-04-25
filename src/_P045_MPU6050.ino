@@ -1,7 +1,9 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P045
-//#######################################################################################################
-//#################################### Plugin 045: MPU6050 [Testing] ####################################
-//#######################################################################################################
+
+// #######################################################################################################
+// #################################### Plugin 045: MPU6050 [Testing] ####################################
+// #######################################################################################################
 
 // Based on the works of Nolan Gilley @ https://home-assistant.io/blog/2016/08/03/laundry-automation-update/
 // falling under the following license CC-BY-SA, https://creativecommons.org/licenses/by-sa/2.0/
@@ -38,11 +40,10 @@
 // Originally released in the PlayGround as Plugin 118.
 
 // Plugin var usage:
-// Globals    - int16_t _P045_axis[3][5][2] Array to store sensorvalues of the axis
-//              _P045_axis[0-2][x][x]  = x, y, z axis
-//              _P045_axis[x][0-4][x]  = min values, max values, range (max-min), a-values, g-values.
-//              _P045_axis[x][x][0-1]  = device address: 0=0x68, 1=0x69
-//            - long _P045_time[2] = Timer to check values each 5 seconds for each used device address.
+// Globals    - int16_t _axis[3][5] Array to store sensorvalues of the axis
+//              _axis[0-2][x]  = x, y, z axis
+//              _axis[x][0-4]  = min values, max values, range (max-min), a-values, g-values.
+//            - long _timer = Timer to check values each 5 seconds
 
 // Framework  - Settings.TaskDevicePluginConfig[x][0]     - Device address (0x68 | 0x69)
 //              Settings.TaskDevicePluginConfig[x][1]     - Instance function
@@ -62,30 +63,14 @@
 // https://github.com/letscontrolit/ESPEasy/commit/af20984079d3e7aa59e08fd9b232f6d17ba3b523#diff-ec860ac195fffa61ec11dd419fefa5b9
 // https://github.com/letscontrolit/ESPEasy/commit/6400c495e24f39ebac88eb634f29cfb73137fa2b#diff-ec860ac195fffa61ec11dd419fefa5b9
 
-#include "_Plugin_Helper.h"
 
-#define MPU6050_RA_GYRO_CONFIG              0x1B
-#define MPU6050_RA_ACCEL_CONFIG             0x1C
-#define MPU6050_RA_ACCEL_XOUT_H             0x3B
-#define MPU6050_RA_PWR_MGMT_1               0x6B
-#define MPU6050_ACONFIG_AFS_SEL_BIT         4
-#define MPU6050_ACONFIG_AFS_SEL_LENGTH      2
-#define MPU6050_GCONFIG_FS_SEL_BIT          4
-#define MPU6050_GCONFIG_FS_SEL_LENGTH       2
-#define MPU6050_CLOCK_PLL_XGYRO             0x01
-#define MPU6050_GYRO_FS_250                 0x00
-#define MPU6050_ACCEL_FS_2                  0x00
-#define MPU6050_PWR1_SLEEP_BIT              6
-#define MPU6050_PWR1_CLKSEL_BIT             2
-#define MPU6050_PWR1_CLKSEL_LENGTH          3
+#include "src/PluginStructs/P045_data_struct.h"
 
 #define PLUGIN_045
 #define PLUGIN_ID_045                       45
 #define PLUGIN_NAME_045                     "Gyro - MPU 6050 [TESTING]"
 #define PLUGIN_VALUENAME1_045               ""
 
-int16_t _P045_axis[3][5][2];                // [xyz], [min/max/range,a,g], [0x68/0x69]
-unsigned long _P045_time[2];
 
 boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 {
@@ -93,183 +78,157 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 
   switch (function)
   {
-
     case PLUGIN_DEVICE_ADD:
-      {
-        Device[++deviceCount].Number = PLUGIN_ID_045;
-        Device[deviceCount].Type = DEVICE_TYPE_I2C;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
-        Device[deviceCount].ValueCount = 1;                   // Unfortunatly domoticz has no custom multivalue sensors.
-        Device[deviceCount].SendDataOption = true;            //   and I use Domoticz ... so there.
-        Device[deviceCount].TimerOption = true;
-        Device[deviceCount].FormulaOption = false;
-        break;
-      }
+    {
+      Device[++deviceCount].Number       = PLUGIN_ID_045;
+      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      Device[deviceCount].ValueCount     = 1;    // Unfortunatly domoticz has no custom multivalue sensors.
+      Device[deviceCount].SendDataOption = true; //   and I use Domoticz ... so there.
+      Device[deviceCount].TimerOption    = true;
+      Device[deviceCount].FormulaOption  = false;
+      break;
+    }
 
     case PLUGIN_GET_DEVICENAME:
-      {
-        string = F(PLUGIN_NAME_045);
-        break;
-      }
+    {
+      string = F(PLUGIN_NAME_045);
+      break;
+    }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
-      {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_045));
-        break;
-      }
+    {
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_045));
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      byte choice = PCONFIG(0);
+
+      // Setup webform for address selection
+
+      /*
+         String options[10];
+         options[0] = F("0x68 - default settings (ADDR Low)");
+         options[1] = F("0x69 - alternate settings (ADDR High)");
+       */
+      int optionValues[2];
+      optionValues[0] = 0x68;
+      optionValues[1] = 0x69;
+      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
+      addFormNote(F("ADDR Low=0x68, High=0x69"));
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
+    {
+      byte choice = PCONFIG(1);
       {
-        byte choice = PCONFIG(0);
-        // Setup webform for address selection
-        {
-          /*
-          String options[10];
-          options[0] = F("0x68 - default settings (ADDR Low)");
-          options[1] = F("0x69 - alternate settings (ADDR High)");
-          */
-          int optionValues[2];
-          optionValues[0] = 0x68;
-          optionValues[1] = 0x69;
-          addFormSelectorI2C(F("p045_address"), 2, optionValues, choice);
-          addFormNote(F("ADDR Low=0x68, High=0x69"));
-        }
-        choice = PCONFIG(1);
-        {
-          String options[10];
-          options[0] = F("Movement detection");
-          options[1] = F("Range acceleration X");
-          options[2] = F("Range acceleration Y");
-          options[3] = F("Range acceleration Z");
-          options[4] = F("Acceleration X");
-          options[5] = F("Acceleration Y");
-          options[6] = F("Acceleration Z");
-          options[7] = F("G-force X");
-          options[8] = F("G-force Y");
-          options[9] = F("G-force Z");
-          addFormSelector(F("Function"), F("p045_function"), 10, options, NULL, choice);
-        }
-
-        if (choice == 0) {
-          // If this is instance function 0, setup webform for additional vars
-          // Show some user information about the webform and what the vars mean.
-          addHtml(F("<TR><TD><TD>The thresholdvalues (0-65535) can be used to set a threshold for one or more<br>"));
-          addHtml(F("axis. The axis will trigger when the range for that axis exceeds the threshold<br>"));
-          addHtml(F("value. A value of 0 disables movement detection for that axis."));
-
-        	addFormNumericBox(F("Detection threshold X"), F("p045_threshold_x"), PCONFIG(2), 0, 65535);
-        	addFormNumericBox(F("Detection threshold Y"), F("p045_threshold_y"), PCONFIG(3), 0, 65535);
-        	addFormNumericBox(F("Detection threshold Z"), F("p045_threshold_z"), PCONFIG(4), 0, 65535);
-
-          addHtml(F("<TR><TD><TD>Each 30 seconds a counter for the detection window is increased plus all axis<br>"));
-          addHtml(F("are checked and if they *all* exceeded the threshold values, a counter is increased.<br>"));
-          addHtml(F("Each period, defined by the [detection window], the counter is checked against<br>"));
-          addHtml(F("the [min. detection count] and if found equal or larger, movement is detected.<br>"));
-          addHtml(F("If in the next window the [min. detection count] value is not met, movement has stopped."));
-          addHtml(F("The [detection window] cannot be smaller than the [min. detection count]."));
-
-        	addFormNumericBox(F("Min. detection count"), F("p045_threshold_counter"), PCONFIG(5), 0, 999999);
-        	addFormNumericBox(F("Detection window"), F("p045_threshold_window"), PCONFIG(6), 0, 999999);
-
-        }
-        success = true;
-        break;
+        String options[10];
+        options[0] = F("Movement detection");
+        options[1] = F("Range acceleration X");
+        options[2] = F("Range acceleration Y");
+        options[3] = F("Range acceleration Z");
+        options[4] = F("Acceleration X");
+        options[5] = F("Acceleration Y");
+        options[6] = F("Acceleration Z");
+        options[7] = F("G-force X");
+        options[8] = F("G-force Y");
+        options[9] = F("G-force Z");
+        addFormSelector(F("Function"), F("p045_function"), 10, options, NULL, choice);
       }
+
+      if (choice == 0) {
+        // If this is instance function 0, setup webform for additional vars
+        // Show some user information about the webform and what the vars mean.
+        addHtml(F("<TR><TD><TD>The thresholdvalues (0-65535) can be used to set a threshold for one or more<br>"));
+        addHtml(F("axis. The axis will trigger when the range for that axis exceeds the threshold<br>"));
+        addHtml(F("value. A value of 0 disables movement detection for that axis."));
+
+        addFormNumericBox(F("Detection threshold X"), F("p045_threshold_x"), PCONFIG(2), 0, 65535);
+        addFormNumericBox(F("Detection threshold Y"), F("p045_threshold_y"), PCONFIG(3), 0, 65535);
+        addFormNumericBox(F("Detection threshold Z"), F("p045_threshold_z"), PCONFIG(4), 0, 65535);
+
+        addHtml(F("<TR><TD><TD>Each 30 seconds a counter for the detection window is increased plus all axis<br>"));
+        addHtml(F("are checked and if they *all* exceeded the threshold values, a counter is increased.<br>"));
+        addHtml(F("Each period, defined by the [detection window], the counter is checked against<br>"));
+        addHtml(F("the [min. detection count] and if found equal or larger, movement is detected.<br>"));
+        addHtml(F("If in the next window the [min. detection count] value is not met, movement has stopped."));
+        addHtml(F("The [detection window] cannot be smaller than the [min. detection count]."));
+
+        addFormNumericBox(F("Min. detection count"), F("p045_threshold_counter"), PCONFIG(5), 0, 999999);
+        addFormNumericBox(F("Detection window"),     F("p045_threshold_window"),  PCONFIG(6), 0, 999999);
+      }
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_SAVE:
-      {
-        // Save the vars
-        PCONFIG(0) = getFormItemInt(F("p045_address"));
-        PCONFIG(1) = getFormItemInt(F("p045_function"));
-        PCONFIG(2) = getFormItemInt(F("p045_threshold_x"));
-        PCONFIG(3) = getFormItemInt(F("p045_threshold_y"));
-        PCONFIG(4) = getFormItemInt(F("p045_threshold_z"));
-        PCONFIG(5) = getFormItemInt(F("p045_threshold_counter"));
-        PCONFIG(6) = getFormItemInt(F("p045_threshold_window"));
-        if (PCONFIG(6) < PCONFIG(5)) {
-          PCONFIG(6) = PCONFIG(5);
-        }
-        success = true;
-        break;
+    {
+      // Save the vars
+      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
+      PCONFIG(1) = getFormItemInt(F("p045_function"));
+      PCONFIG(2) = getFormItemInt(F("p045_threshold_x"));
+      PCONFIG(3) = getFormItemInt(F("p045_threshold_y"));
+      PCONFIG(4) = getFormItemInt(F("p045_threshold_z"));
+      PCONFIG(5) = getFormItemInt(F("p045_threshold_counter"));
+      PCONFIG(6) = getFormItemInt(F("p045_threshold_window"));
+
+      if (PCONFIG(6) < PCONFIG(5)) {
+        PCONFIG(6) = PCONFIG(5);
       }
+      success = true;
+      break;
+    }
 
     case PLUGIN_INIT:
-      {
-        // Initialize the MPU6050. This *can* be done multiple times per instance and device address.
-        // We could make sure that this is only done once per device address, but why bother?
-        uint8_t devAddr = PCONFIG(0);
-        if ((devAddr < 0x68) || (devAddr > 0x69)) { //  Just in case the address is not initialized, set it anyway.
-          devAddr = 0x68;
-          PCONFIG(0) = devAddr;
-        }
-        // Initialize the MPU6050, for details look at the MPU6050 library: MPU6050::Initialize
-        _P045_writeBits(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, MPU6050_CLOCK_PLL_XGYRO);
-        _P045_writeBits(devAddr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, MPU6050_GYRO_FS_250);
-        _P045_writeBits(devAddr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, MPU6050_ACCEL_FS_2);
-        _P045_writeBits(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 1, 0);
+    {
+      // Initialize the MPU6050. This *can* be done multiple times per instance and device address.
+      uint8_t devAddr = PCONFIG(0);
 
-        // Read the MPU6050 once to clear out zeros (1st time reading MPU6050 returns all 0s)
-        int16_t ax, ay, az, gx, gy, gz;
-        _P045_getMotion6(devAddr, &ax, &ay, &az, &gx, &gy, &gz);
-
-        // Reset vars
-        PCONFIG(7) = 0;       // Last known value of "switch" is off
-        UserVar[event->BaseVarIndex] = 0;                               // Switch is off
-        PCONFIG_LONG(0) = 0;   // Minimal detection counter is zero
-        PCONFIG_LONG(1) = 0;   // Detection window counter is zero
-        success = true;
-        break;
+      if ((devAddr < 0x68) || (devAddr > 0x69)) { //  Just in case the address is not initialized, set it anyway.
+        devAddr    = 0x68;
+        PCONFIG(0) = devAddr;
       }
 
-    case PLUGIN_ONCE_A_SECOND:
-      {
-        uint8_t devAddr = PCONFIG(0);
-        byte dev = devAddr & 1;
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P045_data_struct(devAddr));
+      P045_data_struct *P045_data =
+        static_cast<P045_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        // Read the sensorvalues, we run this bit every 1/10th of a second
-        _P045_getMotion6(devAddr, &_P045_axis[0][3][dev], &_P045_axis[1][3][dev], &_P045_axis[2][3][dev], &_P045_axis[0][4][dev], &_P045_axis[1][4][dev], &_P045_axis[2][4][dev]);
-        // Set the minimum and maximum value for each axis a-value, overwrite previous values if smaller/larger
-        _P045_trackMinMax(_P045_axis[0][3][dev], &_P045_axis[0][0][dev], &_P045_axis[0][1][dev]);
-        _P045_trackMinMax(_P045_axis[1][3][dev], &_P045_axis[1][0][dev], &_P045_axis[1][1][dev]);
-        _P045_trackMinMax(_P045_axis[2][3][dev], &_P045_axis[2][0][dev], &_P045_axis[2][1][dev]);
-        //                              ^ current value @ 3     ^ min val @ 0           ^ max val @ 1
-
-/*      // Uncomment this block if you want to debug your MPU6050, but be prepared for a log overload
-        String log = F("MPU6050 : axis values: ");
-        log += _P045_axis[0][3][dev];
-        log += F(", ");
-        log += _P045_axis[1][3][dev];
-        log += F(", ");
-        log += _P045_axis[2][3][dev];
-        log += F(", g values: ");
-        log += _P045_axis[0][4][dev];
-        log += F(", ");
-        log += _P045_axis[1][4][dev];
-        log += F(", ");
-        log += _P045_axis[2][4][dev];
-        addLog(LOG_LEVEL_INFO,log);
-*/
-        // Run this bit every 5 seconds per deviceaddress (not per instance)
-        if (timeOutReached(_P045_time[dev] + 5000))
-        {
-          _P045_time[dev] = millis();
-
-          // Determine the maximum measured range of each axis
-          for (uint8_t i=0; i<3; i++) {
-            _P045_axis[i][2][dev] = abs(_P045_axis[i][1][dev] - _P045_axis[i][0][dev]);
-            _P045_axis[i][0][dev] = _P045_axis[i][3][dev];
-            _P045_axis[i][1][dev] = _P045_axis[i][3][dev];
-          }
-        }
+      if (nullptr != P045_data) {
         success = true;
-        break;
       }
+
+      // Reset vars
+      PCONFIG(7) = 0;                   // Last known value of "switch" is off
+      UserVar[event->BaseVarIndex] = 0; // Switch is off
+      PCONFIG_LONG(0) = 0;              // Minimal detection counter is zero
+      PCONFIG_LONG(1) = 0;              // Detection window counter is zero
+      break;
+    }
+
+    case PLUGIN_ONCE_A_SECOND:  // FIXME TD-er: Is this fast enough? Earlier comments in the code suggest 10x per sec.
+    {
+      P045_data_struct *P045_data =
+        static_cast<P045_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P045_data) {
+        P045_data->loop();
+        success = true;
+      }
+      break;
+    }
 
     case PLUGIN_READ:
-      {
-        int devAddr = PCONFIG(0);
-        byte dev = devAddr & 1;
-        int _P045_Function = PCONFIG(1);
+    {
+      // Use const pointer here, as we don't want to change data, only read it
+      const P045_data_struct *P045_data =
+        static_cast<const P045_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P045_data) {
+        int  _P045_Function = PCONFIG(1);
+
         switch (_P045_Function)
         {
           // Function 0 is for movement detection
@@ -277,18 +236,21 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
           {
             // Check if all (enabled, so !=0) thresholds are exceeded, if one fails then thresexceed (thesholds exceeded) is reset to false;
             boolean thresexceed = true;
-            byte count = 0;                 // Counter to check if not all thresholdvalues are set to 0 or disabled
-            for (byte i=0; i<3; i++)
+            byte    count       = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
+
+            for (byte i = 0; i < 3; i++)
             {
               // for each axis:
-              if (PCONFIG(i + 2) != 0) {  // not disabled, check threshold
-                if (_P045_axis[i][2][dev] < PCONFIG(i + 2)) { thresexceed = false; }
-              } else { count++; } // If disabled count + 1
+              if (PCONFIG(i + 2) != 0) { // not disabled, check threshold
+                if (P045_data->_axis[i][2] < PCONFIG(i + 2)) { thresexceed = false; }
+              } else { count++; }        // If disabled count + 1
             }
-            if (count == 3) { thresexceed = false; }  // If we counted to three, all three axis are disabled.
+
+            if (count == 3) { thresexceed = false; } // If we counted to three, all three axis are disabled.
 
             // If all enabled thresholds are exceeded the increase the counter
             if (thresexceed) { PCONFIG_LONG(0)++; }
+
             // And increase the window counter
             PCONFIG_LONG(1)++;
 
@@ -306,99 +268,34 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
               // Check if UserVar changed so we do not overload homecontroller with the same readings
               if (PCONFIG(7) != UserVar[event->BaseVarIndex]) {
                 PCONFIG(7) = UserVar[event->BaseVarIndex];
-                success = true;
+                success    = true;
               } else {
                 success = false;
               }
               PCONFIG_LONG(0) = 0; // reset threshold exceeded counter
             }
+
             // The default sensorType of the device is a single sensor value. But for detection movement we want it to be
             // a switch so we change the sensortype here. Looks like a legal thing to do because _P001_Switch does it as well.
-            event->sensorType = SENSOR_TYPE_SWITCH;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
             break;
           }
+
           // All other functions are reading values. So extract xyz value and wanted type from function number:
-          default:  // [1-3]: range-values, [4-6]: a-values, [7-9]: g-values
+          default:                                            // [1-3]: range-values, [4-6]: a-values, [7-9]: g-values
           {
             uint8_t reqaxis = (_P045_Function - 1) % 3;       // xyz         -> eg: function 5(ay) (5-1) % 3 = 1           (y)
-            uint8_t reqvar = ((_P045_Function - 1) / 3) + 2;  // range, a, g -> eg: function 9(gz) ((9-1) / 3 = 2) + 2 = 4 (g)
-            UserVar[event->BaseVarIndex] = float(_P045_axis[reqaxis][reqvar][dev]);
-            success = true;
+            uint8_t reqvar  = ((_P045_Function - 1) / 3) + 2; // range, a, g -> eg: function 9(gz) ((9-1) / 3 = 2) + 2 = 4 (g)
+            UserVar[event->BaseVarIndex] = float(P045_data->_axis[reqaxis][reqvar]);
+            success                      = true;
             break;
           }
         }
-        break;
       }
+      break;
+    }
   }
   return success;
 }
 
-void _P045_trackMinMax(int16_t current, int16_t *min, int16_t *max)
-// From nodemcu-laundry.ino by Nolan Gilley
-{
-  if (current > *max)
-  {
-    *max = current;
-  }
-  else if (current < *min)
-  {
-    *min = current;
-  }
-}
-
-
-/** Get raw 6-axis motion sensor readings (accel/gyro).
- * Retrieves all currently available motion sensor values.
- * @param devAddr I2C slave device address
- * @param ax 16-bit signed integer container for accelerometer X-axis value
- * @param ay 16-bit signed integer container for accelerometer Y-axis value
- * @param az 16-bit signed integer container for accelerometer Z-axis value
- * @param gx 16-bit signed integer container for gyroscope X-axis value
- * @param gy 16-bit signed integer container for gyroscope Y-axis value
- * @param gz 16-bit signed integer container for gyroscope Z-axis value
- */
-void _P045_getMotion6(uint8_t devAddr, int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz) {
-    // From I2Cdev::readBytes and MPU6050::getMotion6, both by Jeff Rowberg
-    uint8_t buffer[14];
-    uint8_t count = 0;
-    I2C_write8(devAddr, MPU6050_RA_ACCEL_XOUT_H);
-    Wire.requestFrom(devAddr, (uint8_t)14);
-    for (; Wire.available(); count++) {
-        buffer[count] = Wire.read();
-    }
-    *ax = (((int16_t)buffer[0]) << 8) | buffer[1];
-    *ay = (((int16_t)buffer[2]) << 8) | buffer[3];
-    *az = (((int16_t)buffer[4]) << 8) | buffer[5];
-    *gx = (((int16_t)buffer[8]) << 8) | buffer[9];
-    *gy = (((int16_t)buffer[10]) << 8) | buffer[11];
-    *gz = (((int16_t)buffer[12]) << 8) | buffer[13];
-}
-
-/** Write multiple bits in an 8-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr Register regAddr to write to
- * @param bitStart First bit position to write (0-7)
- * @param length Number of bits to write (not more than 8)
- * @param data Right-aligned value to write
- */
-void _P045_writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t data) {
-    // From I2Cdev::writeBits by Jeff Rowberg
-    //      010 value to write
-    // 76543210 bit numbers
-    //    xxx   args: bitStart=4, length=3
-    // 00011100 mask byte
-    // 10101111 original value (sample)
-    // 10100011 original & ~mask
-    // 10101011 masked | value
-    bool is_ok = true;
-    uint8_t b = I2C_read8_reg(devAddr, regAddr, &is_ok);
-    if (is_ok) {
-      uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
-      data <<= (bitStart - length + 1); // shift data into correct position
-      data &= mask; // zero all non-important bits in data
-      b &= ~(mask); // zero all important bits in existing byte
-      b |= data; // combine data with existing byte
-      I2C_write8_reg(devAddr, regAddr, b);
-    }
-}
 #endif // USES_P045
