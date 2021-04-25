@@ -431,7 +431,7 @@ BLYNK_WRITE_DEFAULT() {
     eventCommand += vPin;
     eventCommand += F("=");
     eventCommand += pinValue;
-    eventQueue.add(eventCommand);
+    eventQueue.addMove(std::move(eventCommand));
   }
 }
 
@@ -440,8 +440,7 @@ BLYNK_CONNECTED() {
   // It’s common to call sync functions inside of this function.
   // Requests all stored on the server latest values for all widgets.
   if (Settings.UseRules) {
-    String eventCommand = F("blynk_connected");
-    eventQueue.add(eventCommand);
+    eventQueue.add(F("blynk_connected"));
   }
 
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "connected handler"));
@@ -450,8 +449,7 @@ BLYNK_CONNECTED() {
 // This is called when Smartphone App is opened
 BLYNK_APP_CONNECTED() {
   if (Settings.UseRules) {
-    String eventCommand = F("blynk_app_connected");
-    eventQueue.add(eventCommand);
+    eventQueue.add(F("blynk_app_connected"));
   }
 
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "app connected handler"));
@@ -460,8 +458,7 @@ BLYNK_APP_CONNECTED() {
 // This is called when Smartphone App is closed
 BLYNK_APP_DISCONNECTED() {
   if (Settings.UseRules) {
-    String eventCommand = F("blynk_app_disconnected");
-    eventQueue.add(eventCommand);
+    eventQueue.add(F("blynk_app_disconnected"));
   }
 
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "app disconnected handler"));

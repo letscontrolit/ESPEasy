@@ -170,10 +170,39 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       // N.B. GPIO 35 and up are input only.
 
       break;
+
+    case DeviceMode_wESP32:
+      status_led            = -1;
+      i2c_sda               = 15;
+      i2c_scl               = 4;
+      eth_phyaddr           = 0;
+      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_mdc               = 16;
+      eth_mdio              = 17;
+      eth_power             = -1;
+      eth_clock_mode        = EthClockMode_t::Ext_crystal_osc;
+      network_medium = NetworkMedium_t::Ethernet;
+      break;
+
+    case DeviceMode_WT32_ETH01:
+      status_led            = -1;
+      i2c_sda               = 21;
+      i2c_scl               = 22;
+      eth_phyaddr           = 1;
+      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_mdc               = 23;
+      eth_mdio              = 18;
+      eth_power             = 12;  // TODO TD-er: Better to use GPIO-16? as shown here: https://letscontrolit.com/forum/viewtopic.php?p=50133#p50133
+      eth_clock_mode        = EthClockMode_t::Ext_crystal_osc;
+      network_medium = NetworkMedium_t::Ethernet;
+      break;
+
   #else
       case DeviceMode_Olimex_ESP32_PoE:
       case DeviceMode_Olimex_ESP32_EVB:
       case DeviceMode_Olimex_ESP32_GATEWAY:
+      case DeviceMode_wESP32:
+      case DeviceMode_WT32_ETH01:
   #endif
 
     case DeviceModel_default:

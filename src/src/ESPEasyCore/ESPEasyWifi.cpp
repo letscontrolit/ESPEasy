@@ -184,12 +184,12 @@ bool WiFiConnected() {
 
   if (wifiConnectTimeoutReached() && !WiFiEventData.wifiSetup) {
     // It took too long to make a connection, set flag we need to try again
-    if (!wifiAPmodeActivelyUsed()) {
+    //if (!wifiAPmodeActivelyUsed()) {
       WiFiEventData.wifiConnectAttemptNeeded = true;
-    }
+    //}
     WiFiEventData.wifiConnectInProgress = false;
   }
-  delay(1);
+  delay(0);
   STOP_TIMER(WIFI_NOTCONNECTED_STATS);
   recursiveCall = false;
   return false;
@@ -315,7 +315,7 @@ bool checkAndResetWiFi() {
 
   switch(status) {
     case STATION_GOT_IP:
-      if (WiFi.RSSI() < 0) {
+      if (WiFi.RSSI() < 0 && NetworkLocalIP().isSet()) {
         //if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
           // This is a valid status, no need to reset
           return false;
@@ -362,7 +362,7 @@ bool checkAndResetWiFi() {
 
 
 void resetWiFi() {
-  if (wifiAPmodeActivelyUsed()) return;
+  //if (wifiAPmodeActivelyUsed()) return;
   if (WiFiEventData.lastWiFiResetMoment.isSet() && !WiFiEventData.lastWiFiResetMoment.timeoutReached(1000)) {
     // Don't reset WiFi too often
     return;
@@ -611,6 +611,7 @@ void WifiDisconnect()
 // Scan WiFi network
 // ********************************************************************************
 void WiFiScanPeriodical() {
+  WiFi_AP_Candidates.purge_expired();
   if (!Settings.PeriodicalScanWiFi()) {
     return;
   }
@@ -623,12 +624,11 @@ void WiFiScanPeriodical() {
 }
 
 bool WiFiScanAllowed() {
-  if (WiFi.scanComplete() == WIFI_SCAN_RUNNING) { 
-    // Scan still busy
-    return false;
-  }
   if (!WiFiEventData.processedScanDone) { 
     processScanDone(); 
+  }
+  if (WiFiEventData.unprocessedWifiEvents()) {
+    handle_unprocessedNetworkEvents();
   }
   if (WiFiEventData.unprocessedWifiEvents()) {
     return false;
@@ -640,6 +640,14 @@ bool WiFiScanAllowed() {
   */
   if (WiFi_AP_Candidates.scanComplete() <= 0) {
     return true;
+  }
+  if (WiFi_AP_Candidates.getBestCandidate().usable()) {
+    return false;
+  }
+  if (WiFiEventData.lastDisconnectMoment.isSet() && WiFiEventData.lastDisconnectMoment.millisPassedSince() < WIFI_RECONNECT_WAIT) {
+    if (!NetworkConnected()) {
+      return true;
+    }
   }
   if (WiFiEventData.lastScanMoment.isSet()) {
     const LongTermTimer::Duration scanInterval = wifiAPmodeActivelyUsed() ? WIFI_SCAN_INTERVAL_AP_USED : WIFI_SCAN_INTERVAL_MINIMAL;
@@ -655,6 +663,7 @@ void WifiScan(bool async, uint8_t channel) {
   if (!WiFiScanAllowed()) {
     return;
   }
+  START_TIMER;
   WiFiEventData.lastScanMoment.setNow();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     if (channel == 0) {
@@ -691,6 +700,7 @@ void WifiScan(bool async, uint8_t channel) {
       processScanDone();
     }
   }
+  STOP_TIMER(async ? WIFI_SCAN_ASYNC : WIFI_SCAN_SYNC);
 }
 
 // ********************************************************************************
@@ -982,6 +992,7 @@ bool useStaticIP() {
 bool wifiConnectTimeoutReached() {
   // For the first attempt, do not wait to start connecting.
   if (WiFiEventData.wifi_connect_attempt == 0) { return true; }
+  if (!WiFiEventData.wifiConnectInProgress) { return true; }
 
   if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
     // No attempt made

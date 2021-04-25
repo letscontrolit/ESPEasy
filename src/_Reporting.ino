@@ -23,7 +23,7 @@ void ReportStatus()
   WiFiClient client;
   client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 
-  if (!connectClient(client, host.c_str(), 80))
+  if (!connectClient(client, host.c_str(), 80, CONTROLLER_CLIENTTIMEOUT_DFLT))
   {
     addLog(LOG_LEVEL_ERROR, F("REP  : connection failed"));
     return;

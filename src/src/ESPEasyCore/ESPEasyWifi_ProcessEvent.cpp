@@ -88,7 +88,7 @@ void handle_unprocessedNetworkEvents()
 
       // WiFi connection is not yet available, so introduce some extra delays to
       // help the background tasks managing wifi connections
-      delay(1);
+      delay(0);
 
       NetworkConnectRelaxed();
 
@@ -222,9 +222,23 @@ void processDisconnect() {
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  if (Settings.WiFiRestart_connection_lost()) {
+
+  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
+  if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
+    mustRestartWiFi = true;
+  }
+
+  if (mustRestartWiFi) {
+    WifiDisconnect(); // Needed or else node may not reconnect reliably.
+    delay(100);
+    setWifiMode(WIFI_OFF);
     initWiFi();
     delay(100);
+    if (WiFiEventData.unprocessedWifiEvents()) {
+      handle_unprocessedNetworkEvents();
+    }
+
+    WifiScan(false);
   }
   logConnectionStatus();
 }
@@ -390,7 +404,7 @@ void processGotIP() {
   if (WiFiEventData.wifiSetup) {
     // Wifi setup was active, Apparently these settings work.
     WiFiEventData.wifiSetup = false;
-    SaveSettings();
+    SaveSecuritySettings();
   }
   logConnectionStatus();
 
@@ -398,6 +412,8 @@ void processGotIP() {
     WiFiEventData.processedGotIP = true;
     WiFiEventData.setWiFiGotIP();
   }
+  refreshNodeList();
+  logConnectionStatus();
 }
 
 // A client disconnected from the AP on this node.
@@ -469,6 +485,11 @@ void processScanDone() {
       }
       return;
     case -1: // WIFI_SCAN_RUNNING
+      // FIXME TD-er: Set timeout...
+      if (WiFiEventData.lastGetScanMoment.timeoutReached(5000)) {
+        addLog(LOG_LEVEL_ERROR, F("WiFi : Scan Running Timeout"));
+        WiFiEventData.processedScanDone = true;
+      }
       return;
     case -2: // WIFI_SCAN_FAILED
       addLog(LOG_LEVEL_ERROR, F("WiFi : Scan failed"));

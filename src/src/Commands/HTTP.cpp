@@ -43,7 +43,7 @@ String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 #endif
 		WiFiClient client;
 		client.setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX);
-		const bool connected = connectClient(client, host.c_str(), port);
+		const bool connected = connectClient(client, host.c_str(), port, CONTROLLER_CLIENTTIMEOUT_MAX);
 		if (connected) {
 			String hostportString = host;
 			if (port != 0 && port != 80) {

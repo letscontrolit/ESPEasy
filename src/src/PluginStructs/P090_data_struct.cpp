@@ -418,24 +418,32 @@ CCS811Core::status CCS811::setEnvironmentalData(float relativeHumidity, float te
 
   byte envData[4];
 
-  // Split value into 7-bit integer and 9-bit fractional
-  envData[0] = ((rH % 1000) / 100) > 7 ? (rH / 1000 + 1) << 1 : (rH / 1000) << 1;
-  envData[1] = 0; // CCS811 only supports increments of 0.5 so bits 7-0 will always be zero
+  //Split value into 7-bit integer and 9-bit fractional
 
-  if ((((rH % 1000) / 100) > 2) && (((rH % 1000) / 100) < 8))
-  {
-    envData[0] |= 1; // Set 9th bit of fractional to indicate 0.5%
-  }
+  //Incorrect way from datasheet.
+  //envData[0] = ((rH % 1000) / 100) > 7 ? (rH / 1000 + 1) << 1 : (rH / 1000) << 1;
+  //envData[1] = 0; //CCS811 only supports increments of 0.5 so bits 7-0 will always be zero
+  //if (((rH % 1000) / 100) > 2 && (((rH % 1000) / 100) < 8))
+  //{
+  //	envData[0] |= 1; //Set 9th bit of fractional to indicate 0.5%
+  //}
 
-  temp += 25000;     // Add the 25C offset
-  // Split value into 7-bit integer and 9-bit fractional
-  envData[2] = ((temp % 1000) / 100) > 7 ? (temp / 1000 + 1) << 1 : (temp / 1000) << 1;
+  //Correct rounding. See issue 8: https://github.com/sparkfun/Qwiic_BME280_CCS811_Combo/issues/8
+  envData[0] = (rH + 250) / 500;
+  envData[1] = 0; //CCS811 only supports increments of 0.5 so bits 7-0 will always be zero
+
+  temp += 25000; //Add the 25C offset
+  //Split value into 7-bit integer and 9-bit fractional
+  //envData[2] = ((temp % 1000) / 100) > 7 ? (temp / 1000 + 1) << 1 : (temp / 1000) << 1;
+  //envData[3] = 0;
+  //if (((temp % 1000) / 100) > 2 && (((temp % 1000) / 100) < 8))
+  //{
+  //	envData[2] |= 1;  //Set 9th bit of fractional to indicate 0.5C
+  //}
+
+  //Correct rounding
+  envData[2] = (temp + 250) / 500;
   envData[3] = 0;
-
-  if ((((temp % 1000) / 100) > 2) && (((temp % 1000) / 100) < 8))
-  {
-    envData[2] |= 1; // Set 9th bit of fractional to indicate 0.5C
-  }
 
   CCS811Core::status returnError = multiWriteRegister(CSS811_ENV_DATA, envData, 4);
 
