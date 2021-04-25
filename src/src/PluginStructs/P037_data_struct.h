@@ -15,7 +15,7 @@
 
 # include <ArduinoJson.h>
 
-# define PLUGIN_037_DEBUG     // Additional debugging information
+// # define PLUGIN_037_DEBUG     // Additional debugging information
 
 # define P037_MAPPING_SUPPORT // Enable Value mapping support
 # define P037_FILTER_SUPPORT  // Enable filtering support
