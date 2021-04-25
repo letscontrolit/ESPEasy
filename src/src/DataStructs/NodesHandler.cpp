@@ -462,7 +462,9 @@ uint8_t NodesHandler::getESPEasyNOW_channel() const
   }
   const NodeStruct *preferred = getPreferredNode();
   if (preferred != nullptr) {
-    return preferred->channel;
+    if (preferred->distance < 255) {
+      return preferred->channel;
+    }
   }
   return 0;
 }

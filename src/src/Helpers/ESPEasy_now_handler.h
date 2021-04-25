@@ -116,6 +116,7 @@ private:
 
   unsigned int _ClientTimeout = 0;
   uint8_t      _usedWiFiChannel = 0;
+  uint8_t      _lastScannedChannel = 0;
   controllerIndex_t _controllerIndex = INVALID_CONTROLLER_INDEX;
   bool _enableESPEasyNowFallback = false;
   bool _mqtt_retainFlag = false;

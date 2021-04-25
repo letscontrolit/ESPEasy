@@ -33,7 +33,8 @@
 
 
 # define ESPEASY_NOW_ACTIVITY_TIMEOUT      125000 // 2 minutes + 5 sec
-# define ESPEASY_NOW_SINCE_LAST_BROADCAST  65000 // 1 minute + 5 sec to start sending a node directly
+# define ESPEASY_NOW_SINCE_LAST_BROADCAST   65000 // 1 minute + 5 sec to start sending a node directly
+# define ESPEASY_NOW_CHANNEL_SEARCH_TIMEOUT 35000 // Time to wait for announcement packets on a single channel
 
 # define ESPEASY_NOW_TMP_SSID       "ESPEASY_NOW"
 # define ESPEASY_NOW_TMP_PASSPHRASE "random_passphrase"
@@ -98,15 +99,25 @@ bool ESPEasy_now_handler_t::begin()
     }
   }
 
+  _usedWiFiChannel = Nodes.getESPEasyNOW_channel();
+  if (_usedWiFiChannel == 0) {
+    ++_lastScannedChannel;
+    if (_lastScannedChannel > 14) {
+      _lastScannedChannel = 1;
+    }
+    _usedWiFiChannel = _lastScannedChannel;
+    if (isESPEasy_now_only()) {
+      WifiScan(false, _usedWiFiChannel);
+    }
+  }
+
   _last_traceroute_sent = 0;
   _last_traceroute_received = 0;
   _last_used = millis();
   _last_started = millis();
-  _usedWiFiChannel = Nodes.getESPEasyNOW_channel();
   _controllerIndex = INVALID_CONTROLLER_INDEX;
 
   if (isESPEasy_now_only()) {
-    WifiScan(false, 0);
     setConnectionSpeed();
   }
 
@@ -139,7 +150,6 @@ bool ESPEasy_now_handler_t::begin()
   ESPEasy_now_peermanager.removeAllPeers();
   ESPEasy_now_peermanager.addKnownPeers();
 
-  // FIXME TD-er: Must check in settings if enabled
   WifiEspNow.onReceive(ESPEasy_now_onReceive, nullptr);
 
   sendDiscoveryAnnounce();
@@ -189,11 +199,41 @@ bool ESPEasy_now_handler_t::loop()
 
 void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
 {
-  if (!WifiIsAP(WiFi.getMode()) || _usedWiFiChannel != Nodes.getESPEasyNOW_channel()) {
+  const uint8_t ESPEasyNOW_channel = Nodes.getESPEasyNOW_channel();
+  if (!WifiIsAP(WiFi.getMode()) || _usedWiFiChannel != ESPEasyNOW_channel) {
     // AP mode may be turned off externally, or WiFi channel may have changed.
     // If so restart ESPEasy-now handler
     if (use_EspEasy_now) {
-      end();
+      if (ESPEasyNOW_channel == 0) {
+        // We need to give it some time to receive announcement messages and maybe even a traceroute
+        if (timePassedSince(_last_started) > ESPEASY_NOW_CHANNEL_SEARCH_TIMEOUT) {
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log;
+            if (log.reserve(80)) {
+              log = F(ESPEASY_NOW_NAME);
+              log += F(": No peers with set distance on channel ");
+              log += _usedWiFiChannel;
+              addLog(LOG_LEVEL_INFO, log);
+            }
+          }
+
+          end();
+        }
+      } else {
+        if (_usedWiFiChannel != ESPEasyNOW_channel) {
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log;
+            if (log.reserve(64)) {
+              log = F(ESPEASY_NOW_NAME);
+              log += F(": Move to channel ");
+              log += ESPEasyNOW_channel;
+              addLog(LOG_LEVEL_INFO, log);
+            }
+          }
+        }
+
+        end();
+      }
     }
   }
 
