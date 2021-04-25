@@ -205,8 +205,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         const bool currentConnectedState = event->Par1 == 1;
         if (P037_MQTTImport_connected != currentConnectedState) {
           P037_MQTTImport_connected = currentConnectedState;
-          if (Settings.UseRules)
-          {
+          if (Settings.UseRules) {
             eventQueue.add(currentConnectedState ? F("MQTTimport#Connected") : F("MQTTimport#Disconnected"));
           }
         }
