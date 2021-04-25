@@ -22,9 +22,9 @@ P037_data_struct::~P037_data_struct() {}
 bool P037_data_struct::loadSettings() {
   if (_taskIndex < TASKS_MAX) {
     String tmp;
-    tmp.reserve(45);
     LoadCustomTaskSettings(_taskIndex, (byte*)&StoredSettings, sizeof(StoredSettings));
     for (uint8_t i = 0; i < VARS_PER_TASK; i++) {
+      tmp.reserve(45);
       tmp = StoredSettings.deviceTemplate[i];
       tmp.trim();
       deviceTemplate[i] = tmp;
@@ -637,7 +637,7 @@ bool P037_data_struct::webform_save(
 } // webform_save
 
 #ifdef P037_MAPPING_SUPPORT
-void P037_data_struct::logMapValue(String input, String result) {
+void P037_data_struct::logMapValue(const String& input, const String& result) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String info;
     info.reserve(45);
@@ -653,7 +653,7 @@ void P037_data_struct::logMapValue(String input, String result) {
 /**
  * Map a string to a (numeric) value, unchanged if no mapping found
  */
-String P037_data_struct::mapValue(String input, String attribute) {
+String P037_data_struct::mapValue(const String& input, const String& attribute) {
   String result = String(input); // clone
   if (input.length() > 0) {
     parseMappings();
@@ -728,7 +728,7 @@ String P037_data_struct::getFilterAsTopic(uint8_t topicId) {
 #endif // P037_FILTER_PER_TOPIC
 
 #ifdef PLUGIN_037_DEBUG
-void P037_data_struct::logFilterValue(String text, String key, String value, String match) {
+void P037_data_struct::logFilterValue(const String& text, const String& key, const String& value, const String& match) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     log.reserve(50);
@@ -751,7 +751,7 @@ void P037_data_struct::logFilterValue(String text, String key, String value, Str
  * - if key is found but value doesn't match, return false
  * key can be in the list multiple times
  */
-bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
+bool P037_data_struct::checkFilters(const String& key, const String& value, int8_t topicId) {
   bool result = true;
 
   if (key.length() > 0 && value.length() > 0) { // Ignore empty input(s)
@@ -881,8 +881,12 @@ bool P037_data_struct::checkFilters(String key, String value, int8_t topicId) {
 bool P037_data_struct::parseJSONMessage(const String& message) {
   bool result = false;
 
+  if (nullptr != root && message.length() > lastJsonMessageLength) {
+    cleanupJSON();
+  }
   if (nullptr == root) {
-    root = new (std::nothrow) DynamicJsonDocument(512);
+    lastJsonMessageLength = message.length();
+    root = new (std::nothrow) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
   }
 
   if (nullptr != root) {
@@ -903,6 +907,8 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
 void P037_data_struct::cleanupJSON() {
   if (nullptr != root) {
     root->clear();
+    delete root;
+    root = nullptr;
   }
 }
 #endif // P037_JSON_SUPPORT

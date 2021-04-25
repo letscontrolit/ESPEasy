@@ -15,7 +15,7 @@
 
 # include <ArduinoJson.h>
 
-// # define PLUGIN_037_DEBUG     // Additional debugging information
+# define PLUGIN_037_DEBUG     // Additional debugging information
 
 # define P037_MAPPING_SUPPORT // Enable Value mapping support
 # define P037_FILTER_SUPPORT  // Enable filtering support
@@ -87,17 +87,17 @@ struct P037_data_struct : public PluginTaskData_base
   #endif
                      );
   #ifdef P037_MAPPING_SUPPORT
-  String mapValue(String input, String attribute);
-  void   logMapValue(String input, String result);
+  String mapValue(const String& input, const String& attribute);
+  void   logMapValue(const String& input, const String& result);
   #endif // P037_MAPPING_SUPPORT
   #ifdef P037_FILTER_SUPPORT
   bool   hasFilters();
-  bool   checkFilters(String key, String value, int8_t topicId);
+  bool   checkFilters(const String& key, const String& value, int8_t topicId);
   #ifdef P037_FILTER_PER_TOPIC
   String getFilterAsTopic(uint8_t topicId);
   #endif // P037_FILTER_PER_TOPIC
   #ifdef PLUGIN_037_DEBUG
-  void   logFilterValue(String text, String key, String value, String match);
+  void   logFilterValue(const String& text, const String& key, const String& value, const String& match);
   #endif // PLUGIN_037_DEBUG
   #endif // P037_FILTER_SUPPORT
 
@@ -148,7 +148,8 @@ private:
   int8_t   _maxFilter = -1;
   #endif
   #ifdef P037_JSON_SUPPORT
-  DynamicJsonDocument  *root = nullptr;
+  DynamicJsonDocument *root                 = nullptr;
+  uint16_t            lastJsonMessageLength = 0;
   #endif // P037_JSON_SUPPORT
 };
 

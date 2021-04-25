@@ -275,7 +275,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         }
 
         String log;
-        log.reserve(50);
+        log.reserve(64);
 
         bool continueProcessing = false;
         String key;
@@ -451,6 +451,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
                 if (!checkJson && P037_SEND_EVENTS && Settings.UseRules) { // Generate event of all non-json topic/payloads
                   String RuleEvent;
+                  RuleEvent.reserve(64);
                   RuleEvent  = getTaskDeviceName(event->TaskIndex);
                   RuleEvent += '#';
                   RuleEvent += event->String1;
@@ -478,6 +479,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
                 if (Settings.UseRules) {
                   String RuleEvent;
+                  RuleEvent.reserve(64);
                   if (checkJson) {
                     // For JSON payloads generate <Topic>#<Attribute>=<Payload> event
                     RuleEvent  = event->String1;
