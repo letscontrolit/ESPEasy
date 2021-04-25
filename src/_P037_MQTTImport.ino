@@ -456,7 +456,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
                   RuleEvent += event->String1;
                   RuleEvent += '=';
                   RuleEvent += unparsedPayload;
-                  eventQueue.add(RuleEvent);
+                  eventQueue.addMove(std::move(RuleEvent));
                 }
 
                 // Log the event
@@ -497,7 +497,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
                     } else {
                       RuleEvent += Payload; // Pass mapped result
                     }
-                    eventQueue.add(RuleEvent);
+                    eventQueue.addMove(std::move(RuleEvent));
                   } 
                   // (Always) Generate <Taskname>#<Valuename>=<Payload> event
                   RuleEvent  = getTaskDeviceName(event->TaskIndex);
@@ -509,7 +509,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
                   } else {
                     RuleEvent += Payload;
                   }
-                  eventQueue.add(RuleEvent);
+                  eventQueue.addMove(std::move(RuleEvent));
                 }
                 #ifdef P037_JSON_SUPPORT
                 if (checkJson && P037_data->iter == P037_data->doc.end()) {
