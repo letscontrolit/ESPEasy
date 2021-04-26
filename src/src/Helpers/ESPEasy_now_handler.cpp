@@ -34,7 +34,9 @@
 
 # define ESPEASY_NOW_ACTIVITY_TIMEOUT      125000 // 2 minutes + 5 sec
 # define ESPEASY_NOW_SINCE_LAST_BROADCAST   65000 // 1 minute + 5 sec to start sending a node directly
-# define ESPEASY_NOW_CHANNEL_SEARCH_TIMEOUT 35000 // Time to wait for announcement packets on a single channel
+# define ESPEASY_NOW_CHANNEL_SEARCH_TIMEOUT  5000 // Time to wait for announcement packets on a single channel
+
+# define ESPEASY_NOW_MAX_CHANNEL               13
 
 # define ESPEASY_NOW_TMP_SSID       "ESPEASY_NOW"
 # define ESPEASY_NOW_TMP_PASSPHRASE "random_passphrase"
@@ -91,24 +93,36 @@ bool ESPEasy_now_handler_t::begin()
   if (use_EspEasy_now) { return true; }
   if (WiFi.scanComplete() == WIFI_SCAN_RUNNING || !WiFiEventData.processedScanDone) { return false;}
   if (WiFiEventData.wifiConnectInProgress) {
+    /*
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      if (log.reserve(64)) {
+        log = F(ESPEASY_NOW_NAME);
+        log += F(": wifiConnectInProgress");
+        addLog(LOG_LEVEL_INFO, log);
+      }
+    }
+*/
     return false;
   }
   if (temp_disable_EspEasy_now_timer != 0) {
     if (!timeOutReached(temp_disable_EspEasy_now_timer)) {
       return false;
+    } else {
+      temp_disable_EspEasy_now_timer = 0;
     }
   }
 
   _usedWiFiChannel = Nodes.getESPEasyNOW_channel();
   if (_usedWiFiChannel == 0) {
+    _scanChannelsMode = true;
     ++_lastScannedChannel;
-    if (_lastScannedChannel > 14) {
+    if (_lastScannedChannel > ESPEASY_NOW_MAX_CHANNEL) {
       _lastScannedChannel = 1;
     }
     _usedWiFiChannel = _lastScannedChannel;
-    if (isESPEasy_now_only()) {
-      WifiScan(false, _usedWiFiChannel);
-    }
+  } else {
+    _scanChannelsMode = false;
   }
 
   _last_traceroute_sent = 0;
@@ -152,10 +166,30 @@ bool ESPEasy_now_handler_t::begin()
 
   WifiEspNow.onReceive(ESPEasy_now_onReceive, nullptr);
 
-  sendDiscoveryAnnounce();
-
   use_EspEasy_now = true;
   addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(" enabled"));
+
+  if (_scanChannelsMode) {
+    WiFiEventData.lastScanMoment.clear();
+  }
+  WifiScan(false, _usedWiFiChannel);
+  if (_scanChannelsMode) {
+    // Send discovery announce to all found hidden APs using the current channel
+    for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it) {
+      if (it->isHidden && it->channel == _usedWiFiChannel) {
+        const MAC_address mac(it->bssid);
+        sendDiscoveryAnnounce(mac, _usedWiFiChannel);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = String(F(ESPEASY_NOW_NAME)) + F(": Send discovery to ");
+          log += mac.toString();
+          addLog(LOG_LEVEL_INFO, log);
+        }
+      }
+    }
+  } else {
+    sendDiscoveryAnnounce();
+  }
+  
   return true;
 }
 
@@ -200,7 +234,9 @@ bool ESPEasy_now_handler_t::loop()
 void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
 {
   const uint8_t ESPEasyNOW_channel = Nodes.getESPEasyNOW_channel();
-  if (!WifiIsAP(WiFi.getMode()) || _usedWiFiChannel != ESPEasyNOW_channel) {
+  const bool channelChanged =  _usedWiFiChannel != ESPEasyNOW_channel;
+
+  if (!WifiIsAP(WiFi.getMode()) || (channelChanged && !Nodes.isEndpoint())) {
     // AP mode may be turned off externally, or WiFi channel may have changed.
     // If so restart ESPEasy-now handler
     if (use_EspEasy_now) {
@@ -211,7 +247,7 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
             String log;
             if (log.reserve(80)) {
               log = F(ESPEASY_NOW_NAME);
-              log += F(": No peers with set distance on channel ");
+              log += F(": No peers with distance set on channel ");
               log += _usedWiFiChannel;
               addLog(LOG_LEVEL_INFO, log);
             }
@@ -220,7 +256,7 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
           end();
         }
       } else {
-        if (_usedWiFiChannel != ESPEasyNOW_channel) {
+        if (channelChanged) {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log;
             if (log.reserve(64)) {
@@ -238,43 +274,33 @@ void ESPEasy_now_handler_t::loop_check_ESPEasyNOW_run_state()
   }
 
   if (use_EspEasy_now) {
-    const bool traceroute_received_timeout = _last_traceroute_received != 0 && (timePassedSince(_last_traceroute_received) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
-    const bool traceroute_sent_timeout     = _last_traceroute_sent != 0 && (timePassedSince(_last_traceroute_sent) > ESPEASY_NOW_ACTIVITY_TIMEOUT);
-    const bool first_traceroute_receive_timeout = _last_traceroute_received == 0 && (timePassedSince(_last_started) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
-    if (traceroute_received_timeout || traceroute_sent_timeout || first_traceroute_receive_timeout) {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log;
-        if (log.reserve(64)) {
-          log = F(ESPEASY_NOW_NAME);
-          log += F(": Inactive due to not receiving trace routes");
-          addLog(LOG_LEVEL_INFO, log);
+    if (!Nodes.isEndpoint()) {
+      const bool traceroute_received_timeout = _last_traceroute_received != 0 && (timePassedSince(_last_traceroute_received) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
+      const bool traceroute_sent_timeout     = _last_traceroute_sent != 0 && (timePassedSince(_last_traceroute_sent) > ESPEASY_NOW_ACTIVITY_TIMEOUT);
+      const bool first_traceroute_receive_timeout = _last_traceroute_received == 0 && (timePassedSince(_last_started) > ESPEASY_NOW_ACTIVITY_TIMEOUT + 30000);
+      if (traceroute_received_timeout || traceroute_sent_timeout || first_traceroute_receive_timeout) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log;
+          if (log.reserve(64)) {
+            log = F(ESPEASY_NOW_NAME);
+            log += F(": Inactive due to not receiving trace routes");
+            addLog(LOG_LEVEL_INFO, log);
+          }
         }
+        end();
+        temp_disable_EspEasy_now_timer = millis() + 10000;
+        WifiScan(true);
+        return;
       }
-      end();
-      temp_disable_EspEasy_now_timer = millis() + 10000;
-      WifiScan(true);
-      return;
     }
   }
 
 
-  if (temp_disable_EspEasy_now_timer != 0) {
-    if (timeOutReached(temp_disable_EspEasy_now_timer)) {
-      if (begin()) {
-        temp_disable_EspEasy_now_timer = 0;
-      }
+  if (Settings.UseESPEasyNow() != use_EspEasy_now) {
+    if (!use_EspEasy_now) {
+      begin();
     } else {
-      if (use_EspEasy_now) {
-        end();
-      }
-    }
-  } else {
-    if (Settings.UseESPEasyNow() != use_EspEasy_now) {
-      if (!use_EspEasy_now) {
-        begin();
-      } else {
-        end();
-      }
+      end();
     }
   }
 }
@@ -601,7 +627,7 @@ void ESPEasy_now_handler_t::sendDiscoveryAnnounce(const MAC_address& mac, int ch
     const unsigned long start = millis();
 
     // FIXME TD-er: Not sure whether we can send to channels > 11 in all countries.
-    for (int ch = 1; ch < 11; ++ch) {
+    for (int ch = 1; ch < ESPEASY_NOW_MAX_CHANNEL; ++ch) {
       msg.send(mac, ch);
       delay(0);
     }
@@ -701,6 +727,21 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     }
   }
 
+  if (received.distance == 255 && Nodes.isEndpoint()) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      if (log.reserve(80)) {
+        log  = F(ESPEASY_NOW_NAME);
+        log += F(": Send announce back to unit: ");
+        log += String(received.unit);
+        addLog(LOG_LEVEL_INFO, log);
+      }
+    }
+
+    sendDiscoveryAnnounce(received.ESPEasy_Now_MAC(), received.channel);
+    sendTraceRoute();
+  }
+
   const uint8_t new_distance = Nodes.getDistance();
   if (new_distance != cur_distance || isNewNode) {
     if (new_distance == 0) {
@@ -763,7 +804,7 @@ void ESPEasy_now_handler_t::sendTraceRoute(const MAC_address& mac, const ESPEasy
     const unsigned long start = millis();
 
     // FIXME TD-er: Not sure whether we can send to channels > 11 in all countries.
-    for (int ch = 1; ch < 11; ++ch) {
+    for (int ch = 1; ch < ESPEASY_NOW_MAX_CHANNEL; ++ch) {
       msg.send(mac, ch);
       delay(0);
     }

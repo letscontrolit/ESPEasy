@@ -70,7 +70,9 @@ public:
 
   bool isEndpoint() const;
 
+#ifdef USES_ESPEASY_NOW
   uint8_t getESPEasyNOW_channel() const;
+#endif
 
   bool recentlyBecameDistanceZero();
 

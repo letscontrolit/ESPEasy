@@ -326,6 +326,10 @@ bool checkAndResetWiFi() {
       if (WiFi.RSSI() < 0 && NetworkLocalIP().isSet()) {
         //if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
           // This is a valid status, no need to reset
+          if (!WiFiEventData.WiFiServicesInitialized()) {
+            WiFiEventData.setWiFiServicesInitialized();
+          }
+
           return false;
         //}
       }
@@ -647,6 +651,9 @@ void WiFiScanPeriodical() {
 }
 
 bool WiFiScanAllowed() {
+  if (WiFi_AP_Candidates.scanComplete() == WIFI_SCAN_RUNNING) {
+    return false;
+  }
   if (!WiFiEventData.processedScanDone) { 
     processScanDone(); 
   }
@@ -654,6 +661,7 @@ bool WiFiScanAllowed() {
     handle_unprocessedNetworkEvents();
   }
   if (WiFiEventData.unprocessedWifiEvents()) {
+    addLog(LOG_LEVEL_ERROR, F("WiFi : Scan not allowed, unprocessed WiFi events"));
     return false;
   }
   /*
@@ -661,10 +669,8 @@ bool WiFiScanAllowed() {
     return true;
   }
   */
-  if (WiFi_AP_Candidates.scanComplete() <= 0) {
-    return true;
-  }
   if (WiFi_AP_Candidates.getBestCandidate().usable()) {
+    addLog(LOG_LEVEL_ERROR, F("WiFi : Scan not needed, good candidate present"));
     return false;
   }
   if (WiFiEventData.lastDisconnectMoment.isSet() && WiFiEventData.lastDisconnectMoment.millisPassedSince() < WIFI_RECONNECT_WAIT) {

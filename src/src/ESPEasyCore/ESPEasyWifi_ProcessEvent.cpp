@@ -461,7 +461,7 @@ void processProbeRequestAPmode() {
 
   // FIXME TD-er: Must create an answer for ESPEasy-NOW node discovery
   #ifdef USES_ESPEASY_NOW
-  ESPEasy_now_handler.sendDiscoveryAnnounce();
+  ESPEasy_now_handler.sendDiscoveryAnnounce(mac, WiFiEventData.usedChannel);
   #endif
 
   APModeProbeRequestReceived_list.pop_front();
@@ -619,7 +619,7 @@ void markWiFi_services_initialized() {
     }
   }
   WiFiEventData.processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
-  WiFiEventData.setWiFiServicesInitialized();
+  setNetworkMedium(NetworkMedium_t::WIFI);
   CheckRunningServices();
 }
 

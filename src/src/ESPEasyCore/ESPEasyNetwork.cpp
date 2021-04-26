@@ -24,6 +24,13 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
     if (!Settings.UseESPEasyNow()) {
       return;
     }
+    if (WiFiEventData.unprocessedWifiEvents() ||
+        WiFiEventData.wifiConnectInProgress) { 
+      return; 
+    }
+    if (WiFiEventData.WiFiServicesInitialized()) {
+      return;
+    }
     if (active_network_medium != NetworkMedium_t::WIFI) {
       // Only allow to set to ESPEasyNOW_only from WiFi
       return;
@@ -54,7 +61,13 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
         }
         break;
       case NetworkMedium_t::ESPEasyNOW_only:
-        WiFiEventData.clearAll();
+        #ifdef USES_EASPEASY_NOW
+        if (use_EspEasy_now) {
+          ESPEasy_now_handler.end();
+        }
+        #endif
+
+        //WiFiEventData.clearAll();
         break;
       case NetworkMedium_t::NotSet:
         break;

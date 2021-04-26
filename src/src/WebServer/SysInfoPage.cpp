@@ -17,6 +17,7 @@
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/ESPEasy_time.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 
@@ -402,9 +403,9 @@ void handle_sysinfo_Ethernet() {
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3);
 
-  # ifdef HAS_ETHERNET
+  # if defined(HAS_ETHERNET) || defined(USES_ESPEASY_NOW)
   addRowLabelValue(LabelType::ETH_WIFI_MODE);
-  # endif // ifdef HAS_ETHERNET
+  # endif 
 
   addRowLabelValue(LabelType::IP_CONFIG);
   addRowLabelValue(LabelType::IP_ADDRESS_SUBNET);
@@ -417,11 +418,10 @@ void handle_sysinfo_Network() {
 
   addTableSeparator(F("WiFi"), 2, 3, F("Wifi"));
 
-  const bool showWiFiConnectionInfo = 
-    active_network_medium == NetworkMedium_t::WIFI &&
-    NetworkConnected();
+  const bool showWiFiConnectionInfo = !WiFiEventData.WiFiDisconnected();
 
-  addRowLabel(F("Wifi Connection"));
+
+  addRowLabel(LabelType::WIFI_CONNECTION);
   if (showWiFiConnectionInfo)
   {
     String html;

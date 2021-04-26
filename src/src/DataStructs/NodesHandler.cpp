@@ -219,6 +219,20 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
       }
     }
   }
+
+/*
+  #ifdef USES_ESPEASY_NOW
+  if (res != nullptr)
+  {
+    uint8_t distance_res = 255;
+    const int successRate_res = getRouteSuccessRate(res->unit, distance_res);
+    if (distance_res == 255) {
+      return nullptr;
+    }
+  }
+  #endif
+*/
+
   return res;
 }
 
@@ -281,7 +295,10 @@ void NodesHandler::updateThisNode() {
       }
     }
   }
-  thisNode.channel = WiFi.channel();
+  thisNode.channel = WiFiEventData.usedChannel;
+  if (thisNode.channel == 0) {
+    thisNode.channel = WiFi.channel();
+  }
 
   thisNode.unit  = Settings.Unit;
   thisNode.build = Settings.Build;
@@ -455,19 +472,24 @@ bool NodesHandler::isEndpoint() const
   return false;
 }
 
+#ifdef USES_ESPEASY_NOW
 uint8_t NodesHandler::getESPEasyNOW_channel() const
 {
-  if (isEndpoint() == 0) {
+  if (isEndpoint()) {
     return WiFi.channel();
   }
   const NodeStruct *preferred = getPreferredNode();
   if (preferred != nullptr) {
-    if (preferred->distance < 255) {
+    uint8_t distance = 255;
+    getRouteSuccessRate(preferred->unit, distance);
+
+    if (distance < 255) {
       return preferred->channel;
     }
   }
   return 0;
 }
+#endif
 
 bool NodesHandler::recentlyBecameDistanceZero() {
   if (!_recentlyBecameDistanceZero) {
