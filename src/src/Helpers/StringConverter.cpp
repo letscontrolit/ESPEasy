@@ -904,6 +904,8 @@ void parseStandardConversions(String& s, bool useURLencode) {
   float arg2 = 0.0f;
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(arg1, arg2), 2))
   SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(arg1, arg2))
+  SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(arg1, arg2), 2))
+  SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(arg1, arg2), 2))
   #undef SMART_CONV
 }
 

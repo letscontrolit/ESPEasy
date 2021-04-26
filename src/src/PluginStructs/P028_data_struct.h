@@ -156,19 +156,6 @@ struct P028_data_struct : public PluginTaskData_base {
   // **************************************************************************/
   float readHumidity();
 
-  // **************************************************************************/
-  // Calculates the altitude (in meters) from the specified atmospheric
-  //    pressure (in hPa), and sea-level pressure (in hPa).
-  //    @param  seaLevel      Sea-level pressure in hPa
-  //    @param  atmospheric   Atmospheric pressure in hPa
-  // **************************************************************************/
-  float Plugin_028_readAltitude(float seaLevel);
-
-  // **************************************************************************/
-  // MSL pressure formula
-  // **************************************************************************/
-  float pressureElevation(int altitude);
-
   bme280_uncomp_data uncompensated;
   bme280_calib_data  calib;
   float              last_hum_val      = 0.0f;
