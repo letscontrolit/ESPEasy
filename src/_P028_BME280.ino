@@ -151,7 +151,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         const int elev = PCONFIG(1);
 
         if (elev != 0) {
-          UserVar[event->BaseVarIndex + 2] = P028_data->pressureElevation(elev);
+          UserVar[event->BaseVarIndex + 2] = pressureElevation(P028_data->last_press_val, elev);
         } else {
           UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
         }
