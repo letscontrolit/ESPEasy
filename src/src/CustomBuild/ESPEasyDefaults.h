@@ -42,6 +42,15 @@
 #ifndef DEFAULT_KEY
 #define DEFAULT_KEY         "wpakey"            // Enter your Wifi network WPA key
 #endif
+#ifndef DEFAULT_SSID2
+#define DEFAULT_SSID2        ""                 // Enter your fallback Wifi network SSID
+#endif
+#ifndef DEFAULT_KEY2
+#define DEFAULT_KEY2         ""                 // Enter your fallback Wifi network WPA key
+#endif
+#ifndef DEFAULT_WIFI_INCLUDE_HIDDEN_SSID  
+#define DEFAULT_WIFI_INCLUDE_HIDDEN_SSID false  // Allow to connect to hidden SSID APs
+#endif
 #ifndef DEFAULT_USE_STATIC_IP
 #define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP
 #endif
@@ -206,6 +215,9 @@
   #else
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
   #endif
+#endif
+#ifndef DEFAULT_JSON_BOOL_WITHOUT_QUOTES
+#define DEFAULT_JSON_BOOL_WITHOUT_QUOTES false
 #endif
 
 

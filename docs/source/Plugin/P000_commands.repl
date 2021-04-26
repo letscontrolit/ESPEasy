@@ -1,3 +1,4 @@
+.. include:: ../Plugin/_plugin_substitutions_p00x.repl
 
 
 **TODO** : Check commands M..Z and check for all commands whether the "class" is still valid.
@@ -365,7 +366,7 @@
     :red:`Internal`","
     Delete the given task/device
 
-    ``TaskClear,<task nr>``"
+    ``TaskClear,<task nr/task name>``"
     "
     TaskClearAll","
     :red:`Internal`","
@@ -378,32 +379,32 @@
     Disable a task.
     This will not save the settings, but if the settings get saved anyway the task will remain disabled at reboot.
 
-    ``TaskDisable,<task nr>``"
+    ``TaskDisable,<task nr/task name>``"
     "
     TaskEnable","
     :red:`Internal`","
     Enable a task. (only possible when a plugin is assigned to the task)
     This will not save the settings, but if the settings get saved anyway the task will remain enabled at reboot.
 
-    ``TaskEnable,<task nr>``"
+    ``TaskEnable,<task nr/task name>``"
     "
     TaskRun","
     :red:`Internal`","
     Run/excecute the given task/device, use to manually force an update/read of the task.
 
-    ``TaskRun,<task nr>``"
+    ``TaskRun,<task nr/task name>``"
     "
     TaskValueSet","
     :green:`Rules`","
-    Set values on a **Dummy Task** (device)
+    Set values on a **Dummy Task** (device).
 
-    ``TaskValueSet,<task nr>,<value nr>,<value/formula>``"
+    ``TaskValueSet,<task nr/task name>,<value nr/value name>,<value/formula>``"
     "
     TaskValueSetAndRun","
     :green:`Rules`","
-    Set values on a **Dummy Task** (device) and execute a TaskRun on it
+    Set values on a **Dummy Task** (device) and run/execute the task/device, to manually force an update/read of the task.
 
-    ``TaskValueSetAndRun,<task nr>,<value nr>,<value/formula>``"
+    ``TaskValueSetAndRun,<task nr/task name>,<value nr/value name>,<value/formula>``"
     "
     TimerPause","
     :green:`Rules`","
@@ -604,3 +605,4 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
         endif
       endon
     "
+

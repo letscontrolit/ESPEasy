@@ -14,15 +14,24 @@
 # include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
 
-
 # include "../Globals/ESPEasyWiFiEvent.h"
+# include "../Globals/NetworkState.h"
+# include "../Globals/RTC.h"
 # include "../Globals/Settings.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Globals/WiFi_AP_Candidates.h"
 
+# include "../Helpers/Misc.h"
 # include "../Helpers/Networking.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/StringConverter.h"
+
+
+
+#ifndef SETUP_PAGE_SHOW_CONFIG_BUTTON
+  #define SETUP_PAGE_SHOW_CONFIG_BUTTON true
+#endif
+
 
 
 // ********************************************************************************
@@ -40,79 +49,193 @@ void handle_setup() {
   // Do not check client IP range allowed.
   TXBuffer.startStream();
 
-  if (!NetworkConnected())
-  {
-    sendHeadandTail(F("TmplAP"));
-    static byte status       = HANDLE_SETUP_SCAN_STAGE;
-    static byte refreshCount = 0;
-    String ssid              = web_server.arg(F("ssid"));
-    String other             = web_server.arg(F("other"));
-    String password          = web_server.arg(F("pass"));
+  const bool connected = NetworkConnected();
 
-    if (other.length() != 0)
-    {
-      ssid = other;
-    }
 
-    // if ssid config not set and params are both provided
-    if ((status == HANDLE_SETUP_SCAN_STAGE) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
-    {
-      safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
-      safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
-      // Hidden SSID
-      Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
-      WiFiEventData.wifiSetupConnect         = true;
-      WiFiEventData.wifiConnectAttemptNeeded = true;
-      WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
-        reconnectlog += ssid;
-        addLog(LOG_LEVEL_INFO, reconnectlog);
-      }
-      status       = HANDLE_SETUP_CONNECTING_STAGE;
-      refreshCount = 0;
-      AttemptWiFiConnect();
-    }
-    html_BR();
-    wrap_html_tag(F("h1"), F("Wifi Setup wizard"));
-    html_add_form();
-
-    switch (status) {
-      case HANDLE_SETUP_SCAN_STAGE:
-      {
-        // first step, scan and show access points within reach...
-        handle_setup_scan_and_show(ssid, other, password);
-        break;
-      }
-      case  HANDLE_SETUP_CONNECTING_STAGE:
-      {
-        if (!handle_setup_connectingStage(refreshCount)) {
-          status = HANDLE_SETUP_SCAN_STAGE;
-        }
-        ++refreshCount;
-        break;
-      }
-    }
-    html_end_form();
-    sendHeadandTail(F("TmplAP"), true);
+  if (connected) {
+    navMenuIndex = MENU_INDEX_TOOLS;
+    sendHeadandTail_stdtemplate(_HEAD);
   } else {
-    // Connect Success
-    handle_setup_finish();
+    sendHeadandTail(F("TmplAP"));
+  }
+
+  const bool clearButtonPressed = web_server.hasArg(F("performclearcredentials"));
+  const bool clearWiFiCredentials = 
+    isFormItemChecked(F("clearcredentials")) && clearButtonPressed;
+
+  {
+    if (clearWiFiCredentials) {
+      SecuritySettings.clearWiFiCredentials();
+      addHtmlError(SaveSecuritySettings());
+
+      html_add_form();
+      html_table_class_normal();
+
+      addFormHeader(F("WiFi credentials cleared, reboot now"));
+      html_end_table();
+    } else {    
+  //    if (active_network_medium == NetworkMedium_t::WIFI)
+  //    {
+        static byte status       = HANDLE_SETUP_SCAN_STAGE;
+        static byte refreshCount = 0;
+
+        String ssid              = web_server.arg(F("ssid"));
+        String other             = web_server.arg(F("other"));
+        String password;
+        bool passwordGiven = getFormPassword(F("pass"), password);
+        if (passwordGiven) {
+          passwordGiven = password.length() != 0;
+        }
+        const bool emptyPassAllowed = isFormItemChecked(F("emptypass"));
+        const bool performRescan = web_server.hasArg(F("performrescan"));
+        if (performRescan) {
+          WiFiEventData.lastScanMoment.clear();
+          WifiScan(false);
+        }
+
+        if (other.length() != 0)
+        {
+          ssid = other;
+        }
+
+        if (!performRescan) {
+          // if ssid config not set and params are both provided
+          if ((status == HANDLE_SETUP_SCAN_STAGE) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
+          {
+            if (clearButtonPressed) {
+              addHtmlError(F("Warning: Need to confirm to clear WiFi credentials"));
+            } else if (!passwordGiven && !emptyPassAllowed) {
+              addHtmlError(F("No password entered"));
+            } else {
+              safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
+              safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
+              // Hidden SSID
+              Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
+              addHtmlError(SaveSettings());
+              WiFiEventData.wifiSetupConnect         = true;
+              WiFiEventData.wifiConnectAttemptNeeded = true;
+              WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
+                reconnectlog += ssid;
+                addLog(LOG_LEVEL_INFO, reconnectlog);
+              }
+              status       = HANDLE_SETUP_CONNECTING_STAGE;
+              refreshCount = 0;
+              AttemptWiFiConnect();
+            }
+          }
+        }
+        html_BR();
+        wrap_html_tag(F("h1"), connected ? F("Connected to a network") : F("Wifi Setup wizard"));
+        html_add_form();
+
+        switch (status) {
+          case HANDLE_SETUP_SCAN_STAGE:
+          {
+            // first step, scan and show access points within reach...
+            handle_setup_scan_and_show(ssid, other, password);
+            break;
+          }
+          case  HANDLE_SETUP_CONNECTING_STAGE:
+          {
+            if (!handle_setup_connectingStage(refreshCount)) {
+              status = HANDLE_SETUP_SCAN_STAGE;
+            }
+            ++refreshCount;
+            break;
+          }
+        }
+  /*
+      } else {
+        html_add_form();
+        addFormHeader(F("Ethernet Setup Complete"));
+
+      }
+  */
+
+      html_table_class_normal();
+      html_TR();
+      
+      handle_sysinfo_NetworkServices();
+      if (connected) {
+
+        //addFormHeader(F("Current network configuration"));
+
+        handle_sysinfo_Network();
+
+        addFormSeparator(2);
+
+        html_TR_TD();
+        html_TD();
+        
+        #if SETUP_PAGE_SHOW_CONFIG_BUTTON
+        if (!clientIPinSubnet()) {
+          String host = formatIP(NetworkLocalIP());
+          String url  = F("http://");
+          url += host;
+          url += F("/config");
+          addButton(url, host);
+        }
+        #endif
+
+        WiFiEventData.wifiSetup = false;
+      } 
+      html_end_table();
+
+      html_BR();
+      html_BR();
+      html_BR();
+      html_BR();
+      html_BR();
+      html_BR();
+      html_BR();
+
+      html_table_class_normal();
+
+      addFormHeader(F("Advanced WiFi settings"));
+
+      addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
+      addFormNote(F("Must be checked to connect to a hidden SSID"));
+
+      html_BR();
+      html_BR();
+
+      addFormHeader(F("Clear WiFi credentials"));
+      addFormCheckBox(F("Confirm clear"), F("clearcredentials"), false);
+
+      html_TR_TD();
+      html_TD();
+      addSubmitButton(F("Clear and Reboot"), F("performclearcredentials"), F("red"));
+      html_end_table();
+    }
+
+    html_end_form();
+  }
+  if (connected) {
+    sendHeadandTail_stdtemplate(_TAIL);
+  } else {
+    sendHeadandTail(F("TmplAP"), true);
   }
 
   TXBuffer.endStream();
   delay(10);
+  if (clearWiFiCredentials) {
+    reboot(ESPEasy_Scheduler::IntendedRebootReason_e::RestoreSettings);
+  }
 }
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
-  if (WiFi.scanComplete() <= WIFI_SCAN_FAILED) {
+  int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
+  const bool needsRescan = scanCompleteStatus <= 0 || WiFiScanAllowed();
+  if (needsRescan) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
     WifiScan(false);
+    scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
     setWifiMode(cur_wifimode);
   }
 
-  const int8_t scanCompleteStatus = WiFi.scanComplete();
 
   if (scanCompleteStatus <= 0) {
     addHtml(F("No Access Points found"));
@@ -125,31 +248,64 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
     html_table_header(F("Network info"));
     html_table_header(F("RSSI"), 50);
 
-    for (int i = 0; i < scanCompleteStatus; ++i)
+    for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
     {
       html_TR_TD();
-      addHtml(F("<label class='container2'>"));
+      const String id = it->toString("");
+      addHtml(F("<label "));
+      addHtmlAttribute(F("class"), F("container2"));
+      addHtmlAttribute(F("for"), id);
+      addHtml('>');
+
       addHtml(F("<input type='radio' name='ssid' value='"));
-      {
-        String escapeBuffer = WiFi.SSID(i);
+      if (it->isHidden) {
+        addHtml(F("#Hidden#' disabled"));
+      } else {
+        String escapeBuffer = it->ssid;
         htmlStrongEscape(escapeBuffer);
         addHtml(escapeBuffer);
+        addHtml('\'');
       }
-      addHtml("'");
 
-      if (WiFi.SSID(i) == ssid) {
-        addHtml(F(" checked "));
+      addHtmlAttribute(F("id"), id);
+
+      {
+        if (it->bssid_match(RTC.lastBSSID)) {
+          if (!WiFi_AP_Candidates.SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) {
+            addHtml(F(" checked "));  
+          }
+        }
       }
-      addHtml(F("><span class='dotmark'></span></label><TD>"));
-      int32_t rssi = 0;
-      addHtml(formatScanResult(i, "<BR>", rssi));
+
+      addHtml(F("><span class='dotmark'></span>"));
+      addHtml(F("</label>"));
+
       html_TD();
-      getWiFi_RSSI_icon(rssi, 45);
+      addHtml(F("<label "));
+      addHtmlAttribute(F("for"), id);
+      addHtml('>');
+      addHtml(it->toString(F("<BR>")));
+      addHtml(F("</label>"));
+
+      html_TD();
+      addHtml(F("<label "));
+      addHtmlAttribute(F("for"), id);
+      addHtml('>');
+      getWiFi_RSSI_icon(it->rssi, 45);
+      addHtml(F("</label>"));
     }
     html_end_table();
   }
 
   html_BR();
+
+  addSubmitButton(F("Rescan"), F("performrescan"));
+
+  html_BR();
+
+  html_table_class_normal();
+  html_TR_TD();
+
   addHtml(F("<label "));
   addHtmlAttribute(F("class"), F("container2"));
   addHtml('>');
@@ -162,12 +318,23 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
   addHtml('>');
   addHtml(F("<span class='dotmark'></span></label>"));
 
+  html_TD();
+
+  addHtml(F("<label "));
+  addHtmlAttribute(F("for"),    F("other_ssid"));
+  addHtml('>');
+
   addHtml(F("<input "));
   addHtmlAttribute(F("class"), F("wide"));
   addHtmlAttribute(F("type"),  F("text"));
   addHtmlAttribute(F("name"),  F("other"));
   addHtmlAttribute(F("value"), other);
   addHtml('>');
+  addHtml(F("</label>"));
+
+
+  html_TR();
+
   html_BR();
   html_BR();
 
@@ -175,21 +342,26 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
 
   html_BR();
 
-  addHtml(F("Password:"));
-  html_BR();
-  addHtml(F("<input "));
-  addHtmlAttribute(F("class"), F("wide"));
-  addHtmlAttribute(F("type"),  F("text"));
-  addHtmlAttribute(F("name"),  F("pass"));
-  addHtmlAttribute(F("value"), password);
-  addHtml('>');
-  html_BR();
-  html_BR();
-  addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
-  addFormNote(F("Must be checked to connect to a hidden SSID"));
+  addFormPasswordBox(F("Password"), F("pass"), password, 63);
+  addFormCheckBox(F("Allow Empty Password"), F("emptypass"), false);
+  
+/*
+  if (SecuritySettings.hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first)) {
+    addFormCheckBox(F("Clear Stored SSID1"), F("clearssid1"), false);
+    addFormNote(String(F("Current: ")) + getValue(LabelType::WIFI_STORED_SSID1));
+  }
+  if (SecuritySettings.hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::second)) {
+    addFormCheckBox(F("Clear Stored SSID2"), F("clearssid2"), false);
+    addFormNote(String(F("Current: ")) + getValue(LabelType::WIFI_STORED_SSID2));
+  }
+  */
 
-
+  html_TR_TD();
+  html_TD();
+  html_BR();
   addSubmitButton(F("Connect"), "");
+
+  html_end_table();
 }
 
 bool handle_setup_connectingStage(byte refreshCount) {
@@ -198,6 +370,7 @@ bool handle_setup_connectingStage(byte refreshCount) {
     //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
     //      SecuritySettings.WifiKey[0] = 0;
     addButton(F("/setup"), F("Back to Setup"));
+    html_TR_TD();
     html_BR();
     WiFiEventData.wifiSetupConnect = false;
     return false;
@@ -226,37 +399,6 @@ bool handle_setup_connectingStage(byte refreshCount) {
   html_add_script_end();
   addHtml(F("seconds while trying to connect"));
   return true;
-}
-
-void handle_setup_finish() {
-  navMenuIndex = MENU_INDEX_TOOLS;
-  sendHeadandTail_stdtemplate(_HEAD);
-  addHtmlError(SaveSettings());
-  html_add_form();
-  html_table_class_normal();
-  html_TR();
-
-  addFormHeader(F("WiFi Setup Complete"));
-
-  handle_sysinfo_Network();
-
-  addFormSeparator(2);
-
-  html_TR_TD();
-  html_TD();
-
-  if (!clientIPinSubnet()) {
-    String host = formatIP(NetworkLocalIP());
-    String url  = F("http://");
-    url += host;
-    url += F("/config");
-    addButton(url, host);
-  }
-  html_end_table();
-  html_end_form();
-
-  WiFiEventData.wifiSetup = false;
-  sendHeadandTail_stdtemplate(_TAIL);
 }
 
 #endif // ifdef WEBSERVER_SETUP

@@ -158,26 +158,27 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
-          log.reserve(40); // Prevent re-allocation
-          log  = P028_data->getDeviceName();
-          log += F(" : Address: 0x");
-          log += String(PCONFIG(0), HEX);
-          addLog(LOG_LEVEL_INFO, log);
-          log  = P028_data->getDeviceName();
-          log += F(" : Temperature: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLog(LOG_LEVEL_INFO, log);
-
-          if (P028_data->hasHumidity()) {
+          if (log.reserve(40)) { // Prevent re-allocation
             log  = P028_data->getDeviceName();
-            log += F(" : Humidity: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 1);
+            log += F(" : Address: 0x");
+            log += String(PCONFIG(0), HEX);
+            addLog(LOG_LEVEL_INFO, log);
+            log  = P028_data->getDeviceName();
+            log += F(" : Temperature: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
+            addLog(LOG_LEVEL_INFO, log);
+
+            if (P028_data->hasHumidity()) {
+              log  = P028_data->getDeviceName();
+              log += F(" : Humidity: ");
+              log += formatUserVarNoCheck(event->TaskIndex, 1);
+              addLog(LOG_LEVEL_INFO, log);
+            }
+            log  = P028_data->getDeviceName();
+            log += F(" : Barometric Pressure: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 2);
             addLog(LOG_LEVEL_INFO, log);
           }
-          log  = P028_data->getDeviceName();
-          log += F(" : Barometric Pressure: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 2);
-          addLog(LOG_LEVEL_INFO, log);
         }
         success = true;
       }

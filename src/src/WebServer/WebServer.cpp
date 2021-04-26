@@ -39,6 +39,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
+#include "../../ESPEasy_common.h"
 
 #include "../DataStructs/TimingStats.h"
 
@@ -62,6 +63,47 @@
 
 #include "../Static/WebStaticData.h"
 
+// Determine what pages should be visible
+#ifndef MENU_INDEX_MAIN_VISIBLE
+  # define MENU_INDEX_MAIN_VISIBLE true
+#endif // ifndef MENU_INDEX_MAIN_VISIBLE
+
+#ifndef MENU_INDEX_CONFIG_VISIBLE
+  # define MENU_INDEX_CONFIG_VISIBLE true
+#endif // ifndef MENU_INDEX_CONFIG_VISIBLE
+
+#ifndef MENU_INDEX_CONTROLLERS_VISIBLE
+  # define MENU_INDEX_CONTROLLERS_VISIBLE true
+#endif // ifndef MENU_INDEX_CONTROLLERS_VISIBLE
+
+#ifndef MENU_INDEX_HARDWARE_VISIBLE
+  # define MENU_INDEX_HARDWARE_VISIBLE true
+#endif // ifndef MENU_INDEX_HARDWARE_VISIBLE
+
+#ifndef MENU_INDEX_DEVICES_VISIBLE
+  # define MENU_INDEX_DEVICES_VISIBLE true
+#endif // ifndef MENU_INDEX_DEVICES_VISIBLE
+
+#ifndef MENU_INDEX_RULES_VISIBLE
+  # define MENU_INDEX_RULES_VISIBLE true
+#endif // ifndef MENU_INDEX_RULES_VISIBLE
+
+#ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
+  # define MENU_INDEX_NOTIFICATIONS_VISIBLE true
+#endif // ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
+
+#ifndef MENU_INDEX_TOOLS_VISIBLE
+  # define MENU_INDEX_TOOLS_VISIBLE true
+#endif // ifndef MENU_INDEX_TOOLS_VISIBLE
+
+
+#if defined(NOTIFIER_SET_NONE) && defined(MENU_INDEX_NOTIFICATIONS_VISIBLE)
+  #undef MENU_INDEX_NOTIFICATIONS_VISIBLE
+  #define MENU_INDEX_NOTIFICATIONS_VISIBLE false
+#endif
+
+
+
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
   if (web_server.hasArg(arg)) { 
     safe_strncpy(dest, web_server.arg(arg).c_str(), max_size); 
@@ -79,69 +121,70 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
     statisticsTimerStart = micros();
   }
   #endif // ifdef USES_TIMING_STATS
+  {
+    String pageTemplate;
+    String fileName = tmplName;
 
-  String pageTemplate;
-  String fileName = tmplName;
+    fileName += F(".htm");
+    fs::File f = tryOpenFile(fileName, "r");
 
-  fileName += F(".htm");
-  fs::File f = tryOpenFile(fileName, "r");
+    if (f) {
+      pageTemplate.reserve(f.size());
 
-  if (f) {
-    pageTemplate.reserve(f.size());
-
-    while (f.available()) { pageTemplate += (char)f.read(); }
-    f.close();
-  } else {
-    // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
-    getWebPageTemplateDefault(tmplName, pageTemplate);
-  }
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("sendWebPage"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-
-  // web activity timer
-  lastWeb = millis();
-
-  if (Tail) {
-    addHtml(pageTemplate.substring(
-              11 +                                      // Size of "{{content}}"
-              pageTemplate.indexOf(F("{{content}}")))); // advance beyond content key
-  } else {
-    int indexStart = 0;
-    int indexEnd   = 0;
-    int readPos    = 0; // Position of data sent to TXBuffer
-    String varName;     // , varValue;
-    String meta;
-
-    if (rebooting) {
-      meta = F("<meta http-equiv='refresh' content='10 url=/'>");
+      while (f.available()) { pageTemplate += (char)f.read(); }
+      f.close();
+    } else {
+      // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
+      getWebPageTemplateDefault(tmplName, pageTemplate);
     }
+    #ifndef BUILD_NO_RAM_TRACKER
+    checkRAM(F("sendWebPage"));
+    #endif // ifndef BUILD_NO_RAM_TRACKER
 
-    while ((indexStart = pageTemplate.indexOf(F("{{"), indexStart)) >= 0) {
-      addHtml(pageTemplate.substring(readPos, indexStart));
-      readPos = indexStart;
+    // web activity timer
+    lastWeb = millis();
 
-      if ((indexEnd = pageTemplate.indexOf(F("}}"), indexStart)) > 0) {
-        varName    = pageTemplate.substring(indexStart + 2, indexEnd);
-        indexStart = indexEnd + 2;
-        readPos    = indexEnd + 2;
-        varName.toLowerCase();
+    if (Tail) {
+      addHtml(pageTemplate.substring(
+                11 +                                      // Size of "{{content}}"
+                pageTemplate.indexOf(F("{{content}}")))); // advance beyond content key
+    } else {
+      int indexStart = 0;
+      int indexEnd   = 0;
+      int readPos    = 0; // Position of data sent to TXBuffer
+      String varName;     // , varValue;
+      String meta;
 
-        if (varName == F("content")) { // is var == page content?
-          break;                       // send first part of result only
-        } else if (varName == F("error")) {
-          getErrorNotifications();
+      if (rebooting) {
+        meta = F("<meta http-equiv='refresh' content='10 url=/'>");
+      }
+
+      while ((indexStart = pageTemplate.indexOf(F("{{"), indexStart)) >= 0) {
+        addHtml(pageTemplate.substring(readPos, indexStart));
+        readPos = indexStart;
+
+        if ((indexEnd = pageTemplate.indexOf(F("}}"), indexStart)) > 0) {
+          varName    = pageTemplate.substring(indexStart + 2, indexEnd);
+          indexStart = indexEnd + 2;
+          readPos    = indexEnd + 2;
+          varName.toLowerCase();
+
+          if (varName == F("content")) { // is var == page content?
+            break;                       // send first part of result only
+          } else if (varName == F("error")) {
+            getErrorNotifications();
+          }
+          else if (varName == F("meta")) {
+            addHtml(meta);
+          }
+          else {
+            getWebPageTemplateVar(varName);
+          }
+        } else { // no closing "}}"
+          // eat "{{"
+          readPos    += 2;
+          indexStart += 2;
         }
-        else if (varName == F("meta")) {
-          addHtml(meta);
-        }
-        else {
-          getWebPageTemplateVar(varName);
-        }
-      } else { // no closing "}}"
-        // eat "{{"
-        readPos    += 2;
-        indexStart += 2;
       }
     }
   }
@@ -209,6 +252,30 @@ size_t streamFile_htmlEscape(const String& fileName)
   return size;
 }
 
+
+bool captivePortal() {
+  const bool fromAP = web_server.client().localIP() == apIP;
+  const bool hasWiFiCredentials = SecuritySettings.hasWiFiCredentials();
+  if (hasWiFiCredentials && !fromAP) {
+    return false;
+  }
+  if (!isIP(web_server.hostHeader()) && web_server.hostHeader() != (NetworkGetHostname() + F(".local"))) {
+    String redirectURL = F("http://");
+    redirectURL += web_server.client().localIP().toString();
+    #ifdef WEBSERVER_SETUP
+    if (fromAP && !hasWiFiCredentials) {
+      redirectURL += F("/setup");
+    }
+    #endif
+    web_server.sendHeader(F("Location"), redirectURL, true);
+    web_server.send(302, F("text/plain"), "");   // Empty content inhibits Content-length header so we have to close the socket ourselves.
+    web_server.client().stop(); // Stop is needed because we sent no content length
+    return true;
+  }
+  return false;
+}
+
+
 // ********************************************************************************
 // Web Interface init
 // ********************************************************************************
@@ -222,7 +289,11 @@ void WebServerInit()
 
   // Prepare webserver pages
   #ifdef WEBSERVER_ROOT
-  web_server.on("/",               handle_root);
+  web_server.on(F("/"),             handle_root);
+  // Entries for several captive portal URLs.
+  // Maybe not needed. Might be handled by notFound handler.
+  web_server.on(F("/generate_204"), handle_root);  //Android captive portal.
+  web_server.on(F("/fwlink"),       handle_root);  //Microsoft captive portal.
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
   web_server.on(F("/advanced"),    handle_advanced);
@@ -379,17 +450,24 @@ void setWebserverRunning(bool state) {
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 {
-  tmpl.reserve(576);
+  static size_t expectedSize = 579;
+
+  tmpl.reserve(expectedSize);
   const bool addJS   = true;
   const bool addMeta = true;
 
   if (tmplName == F("TmplAP"))
   {
     getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
-    tmpl += F("<body>"
-              "<header class='apheader'>"
-              "<h1>Welcome to ESP Easy Mega AP</h1>"
-              "</header>");
+
+    #ifndef WEBPAGE_TEMPLATE_AP_HEADER
+    tmpl += F("<body><header class='apheader'>"
+              "<h1>Welcome to ESP Easy Mega AP</h1>");
+    #else
+    tmpl += F(WEBPAGE_TEMPLATE_AP_HEADER);
+    #endif
+
+    tmpl += F("</header>");
     getWebPageTemplateDefaultContentSection(tmpl);
     getWebPageTemplateDefaultFooter(tmpl);
   }
@@ -419,6 +497,10 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
     getWebPageTemplateDefaultContentSection(tmpl);
     getWebPageTemplateDefaultFooter(tmpl);
   }
+  if (tmpl.length() > expectedSize) {
+    expectedSize = tmpl.length();
+  }
+//  addLog(LOG_LEVEL_INFO, String(F("tmpl.length(): ")) + String(tmpl.length()));
 }
 
 void getWebPageTemplateDefaultHead(String& tmpl, bool addMeta, bool addJS) {
@@ -437,10 +519,17 @@ void getWebPageTemplateDefaultHead(String& tmpl, bool addMeta, bool addJS) {
 }
 
 void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool addMenu) {
-  tmpl += F("<header class='headermenu'>"
-            "<h1>ESP Easy Mega: ");
-  tmpl += title;
-  tmpl += F("</h1><BR>");
+  {
+    String tmp;
+  #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
+    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}</h1><BR>");
+  #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
+    tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
+  #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
+
+    tmp.replace(F("{{title}}"), title);
+    tmpl += tmp;
+  }
 
   if (addMenu) { tmpl += F("{{menu}}"); }
   tmpl += F("</header>");
@@ -457,12 +546,16 @@ void getWebPageTemplateDefaultContentSection(String& tmpl) {
 }
 
 void getWebPageTemplateDefaultFooter(String& tmpl) {
+  #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   tmpl += F("<footer>"
             "<br>"
             "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community</h6>"
             "</footer>"
             "</body></html>"
             );
+#else // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
+  tmpl += F(WEBPAGE_TEMPLATE_DEFAULT_FOOTER);
+#endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
 }
 
 void getErrorNotifications() {
@@ -532,6 +625,21 @@ String getGpMenuURL(byte index) {
   return "";
 }
 
+
+bool GpMenuVisible(byte index) {
+  switch (index) {
+    case MENU_INDEX_MAIN: return MENU_INDEX_MAIN_VISIBLE;
+    case MENU_INDEX_CONFIG: return MENU_INDEX_CONFIG_VISIBLE;
+    case MENU_INDEX_CONTROLLERS: return MENU_INDEX_CONTROLLERS_VISIBLE;
+    case MENU_INDEX_HARDWARE: return MENU_INDEX_HARDWARE_VISIBLE;
+    case MENU_INDEX_DEVICES: return MENU_INDEX_DEVICES_VISIBLE;
+    case MENU_INDEX_RULES: return MENU_INDEX_RULES_VISIBLE;
+    case MENU_INDEX_NOTIFICATIONS: return MENU_INDEX_NOTIFICATIONS_VISIBLE;
+    case MENU_INDEX_TOOLS: return MENU_INDEX_TOOLS_VISIBLE;
+  }
+  return false;
+}
+
 void getWebPageTemplateVar(const String& varName)
 {
   // serialPrint(varName); serialPrint(" : free: "); serialPrint(ESP.getFreeHeap());   serialPrint("var len before:  "); serialPrint
@@ -554,6 +662,10 @@ void getWebPageTemplateVar(const String& varName)
 
     for (byte i = 0; i < 8; i++)
     {
+      if (!GpMenuVisible(i)) {
+        // hide menu item
+        continue;
+      }
       if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
         continue;
       }
@@ -829,7 +941,7 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 // ********************************************************************************
 // Login state check
 // ********************************************************************************
-boolean isLoggedIn()
+bool isLoggedIn(bool mustProvideLogin)
 {
   String www_username = F(DEFAULT_ADMIN_USERNAME);
 
@@ -837,6 +949,9 @@ boolean isLoggedIn()
 
   if (SecuritySettings.Password[0] == 0) { return true; }
 
+  if (!mustProvideLogin) {
+    return false;
+  }
   if (!web_server.authenticate(www_username.c_str(), SecuritySettings.Password))
 
   // Basic Auth Method with Custom realm and Failure Response
@@ -865,7 +980,7 @@ boolean isLoggedIn()
 
 String getControllerSymbol(byte index)
 {
-  String ret = F("<p style='font-size:20px'>&#");
+  String ret = F("<p style='font-size:20px; background: #00000000;'>&#");
 
   ret += 10102 + index;
   ret += F(";</p>");
@@ -900,11 +1015,12 @@ void addSVG_param(const String& key, const String& value) {
   addHtml(html);
 }
 
-void createSvgRect_noStroke(unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
-  createSvgRect(fillColor, fillColor, xoffset, yoffset, width, height, 0, rx, ry);
+void createSvgRect_noStroke(const String& classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
+  createSvgRect(classname, fillColor, fillColor, xoffset, yoffset, width, height, 0, rx, ry);
 }
 
-void createSvgRect(unsigned int fillColor,
+void createSvgRect(const String& classname,
+                   unsigned int fillColor,
                    unsigned int strokeColor,
                    float        xoffset,
                    float        yoffset,
@@ -914,6 +1030,9 @@ void createSvgRect(unsigned int fillColor,
                    float        rx,
                    float        ry) {
   addHtml(F("<rect"));
+  if (classname.length() != 0) {
+    addSVG_param(F("class"), classname);
+  }
   addSVG_param(F("fill"), formatToHex(fillColor, F("#")));
 
   if (!approximatelyEqual(strokeWidth, 0)) {
@@ -1017,8 +1136,9 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
 
   for (int i = 0; i < nbars; ++i) {
     unsigned int color = i < nbars_filled ? 0x0 : 0xa1a1a1; // Black/Grey
+    String classname = i < nbars_filled ? F("bar_highlight") : F("bar_dimmed");
     int barHeight      = (i + 1) * bar_height_step;
-    createSvgRect_noStroke(color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
+    createSvgRect_noStroke(classname, color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
   }
   addHtml(F("</svg>\n"));
 }

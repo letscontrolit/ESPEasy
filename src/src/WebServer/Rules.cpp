@@ -381,7 +381,6 @@ bool handle_rules_edit(const String& originalUri)
 
 bool handle_rules_edit(String originalUri, bool isAddNew) {
   // originalUri is passed via deepcopy, since it will be converted to lower case.
-  if (!isLoggedIn() || !Settings.UseRules) { return false; }
   originalUri.toLowerCase();
   # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_edit"));
@@ -395,6 +394,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
   if (isAddNew || (originalUri.startsWith(F("/rules/"))
                    && originalUri.endsWith(F(".txt")))) {
+    if (!isLoggedIn() || !Settings.UseRules) { return false; }
     if (Settings.OldRulesEngine())
     {
       Goto_Rules_Root();

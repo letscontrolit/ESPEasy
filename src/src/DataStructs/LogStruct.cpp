@@ -16,13 +16,15 @@ void LogStruct::add(const byte loglevel, const char *line) {
   log_level[write_idx] = loglevel;
 
   // Must use PROGMEM aware functions here to process line
-  unsigned linelength = strlen_P(line);
+  unsigned int linelength = strlen_P(line);
 
   if (linelength > LOG_STRUCT_MESSAGE_SIZE - 1) {
     linelength = LOG_STRUCT_MESSAGE_SIZE - 1;
   }
   Message[write_idx] = "";
-  Message[write_idx].reserve(linelength);
+  if (!Message[write_idx].reserve(linelength)) {
+    return;
+  }
 
   const char* c = line;
   for (unsigned i = 0; i < linelength; ++i) {
