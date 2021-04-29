@@ -463,11 +463,11 @@ bool NodesHandler::isEndpoint() const
   if (validControllerIndex(enabledMqttController)) {
     // FIXME TD-er: Must call updateMQTTclient_connected() and see what effect
     // the MQTTclient_connected state has when using ESPEasy-NOW.
-    return MQTTclient.connected();
+    return MQTTclient_connected;
   }
   #endif
 
-  if (!WiFiConnected()) return false;
+  if (!NetworkConnected()) return false;
 
   return false;
 }

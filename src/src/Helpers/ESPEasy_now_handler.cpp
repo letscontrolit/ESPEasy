@@ -172,8 +172,9 @@ bool ESPEasy_now_handler_t::begin()
   if (_scanChannelsMode) {
     WiFiEventData.lastScanMoment.clear();
   }
-  WifiScan(false, _usedWiFiChannel);
+
   if (_scanChannelsMode) {
+    WifiScan(false, _usedWiFiChannel);
     // Send discovery announce to all found hidden APs using the current channel
     for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it) {
       if (it->isHidden && it->channel == _usedWiFiChannel) {
@@ -739,7 +740,15 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     }
 
     sendDiscoveryAnnounce(received.ESPEasy_Now_MAC(), received.channel);
-    sendTraceRoute();
+    {
+      if (Nodes.isEndpoint()) {
+        ESPEasy_now_traceroute_struct thisTraceRoute;
+        thisTraceRoute.addUnit(Settings.Unit);
+        // Since we're the end node, claim highest success rate
+        thisTraceRoute.setSuccessRate_last_node(Settings.Unit, 255);
+        sendTraceRoute(received.ESPEasy_Now_MAC(), thisTraceRoute, received.channel);
+      }
+    }
   }
 
   const uint8_t new_distance = Nodes.getDistance();
@@ -761,12 +770,18 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
 // *************************************************************
 void ESPEasy_now_handler_t::sendTraceRoute()
 {
-  if (Nodes.getDistance() == 0) {
+  if (Nodes.isEndpoint()) {
     ESPEasy_now_traceroute_struct thisTraceRoute;
     thisTraceRoute.addUnit(Settings.Unit);
     // Since we're the end node, claim highest success rate
     thisTraceRoute.setSuccessRate_last_node(Settings.Unit, 255);
-    sendTraceRoute(thisTraceRoute);
+ 
+    int channel = WiFiEventData.usedChannel;
+    if (channel == 0) {
+      channel = WiFi.channel();
+    }
+
+    sendTraceRoute(thisTraceRoute, channel);
     _last_traceroute_sent = millis();
   }
 }
@@ -793,9 +808,11 @@ void ESPEasy_now_handler_t::sendTraceRoute(const MAC_address& mac, const ESPEasy
 
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::TraceRoute, len);
   if (sizeof(uint8_t) != msg.addBinaryData(reinterpret_cast<const uint8_t *>(&traceroute_size), sizeof(uint8_t))) {
+    addLog(LOG_LEVEL_ERROR, String(F(ESPEASY_NOW_NAME)) + F(": sendTraceRoute error adding route size"));;
     return;
   }
   if (traceroute_size != msg.addBinaryData(traceroute_data, traceroute_size)) {
+    addLog(LOG_LEVEL_ERROR, String(F(ESPEASY_NOW_NAME)) + F(": sendTraceRoute error adding trace route"));;
     return;
   }
   if (channel < 0) {
@@ -815,6 +832,8 @@ void ESPEasy_now_handler_t::sendTraceRoute(const MAC_address& mac, const ESPEasy
       addLog(LOG_LEVEL_INFO, log);
     }
   } else {
+    addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(": sendTraceRoute ") + traceRoute.toString() + F(" ch: ") + String(channel));
+
     msg.send(mac, channel);
   }
 }
