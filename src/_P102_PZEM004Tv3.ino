@@ -298,24 +298,29 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
 #ifdef USES_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
-      // FIXME TD-er: Same code as in P085, share in LoRa code.
-      P102_data_struct *P102_data =
-        static_cast<P102_data_struct *>(getPluginTaskData(event->TaskIndex));
+      // Matching JS code:
+      // return decode(bytes, [header, int16_1e1, int32_1e3, int32_1e1, int32_1e1, uint16_1e2, uint8_1e1],
+      //   ['header', 'voltage', 'current', 'power', 'energy', 'powerfactor', 'frequency']);
+      //
+      // Resolutions:
+      //  Voltage:     0.1V     => int16_1e1  (range 80-260V)
+      //  Current:     0.001A   => int32_1e3
+      //  Power:       0.1W     => int32_1e1
+      //  Energy:      1Wh      => int32_1e1
+      //  PowerFactor: 0.01     => uint16_1e2 
+      //  Frequency:   0.1Hz    => uint8_1e1  (range 45Hz - 65Hz), offset 40Hz
 
-      if ((nullptr != P102_data) && P102_data->isInitialized()) {
-        // Matching JS code:
-        // return decode(bytes, [header, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4],
-        //   ['header', 'unit1', 'val_1', 'unit2', 'val_2', 'unit3', 'val_3', 'unit4', 'val_4']);
-        for (byte i = 0; i < VARS_PER_TASK; ++i) {
-          const byte pconfigIndex = i + P102_QUERY1_CONFIG_POS;
-          const byte choice       = PCONFIG(pconfigIndex);
-          string += LoRa_addInt(choice, PackedData_uint8);
-          string += LoRa_addFloat(UserVar[event->BaseVarIndex + i], PackedData_int32_1e4);
-        }
-        event->Par1 = 8; // valuecount 
-        
-        success = true;
-      }
+      // FIXME TD-er: Calling these functions is probably done within the 200 msec timeout used in the library.
+      // If not, this should be cached in a task data struct.
+      string += LoRa_addFloat(P102_PZEM_sensor->voltage(),       PackedData_int16_1e1);
+      string += LoRa_addFloat(P102_PZEM_sensor->current(),       PackedData_int32_1e3);
+      string += LoRa_addFloat(P102_PZEM_sensor->power(),         PackedData_int32_1e1);
+      string += LoRa_addFloat(P102_PZEM_sensor->energy(),        PackedData_int32_1e1);
+      string += LoRa_addFloat(P102_PZEM_sensor->pf(),            PackedData_uint16_1e2);
+      string += LoRa_addFloat(P102_PZEM_sensor->frequency() - 40, PackedData_uint8_1e1);
+      event->Par1 = 6; // valuecount 
+      
+      success = true;
       break;
     }
 #endif // USES_PACKED_RAW_DATA

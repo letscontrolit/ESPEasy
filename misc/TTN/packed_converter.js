@@ -658,16 +658,6 @@ function Converter(decoded, port) {
 
                 case 102:
                     converted.name = "PZEM004T v30";
-                    // This plugin can output any value, so show string representation 
-                    // of the unit of measure
-                    converted.unit1 = getPZEM004TUnit(converted.unit1);
-                    converted.unit2 = getPZEM004TUnit(converted.unit2);
-                    converted.unit3 = getPZEM004TUnit(converted.unit3);
-                    converted.unit4 = getPZEM004TUnit(converted.unit4);
-                    converted.v1 = converted.val_1;
-                    converted.v2 = converted.val_2;
-                    converted.v3 = converted.val_3;
-                    converted.v4 = converted.val_4;
                     break;
               
                 case 106:
@@ -760,24 +750,6 @@ function getAcuDC243Unit(unit_id) {
             return "hours tot";
         case 8: // P085_QUERY_h_load  8
             return "hours load";
-    }
-    return "unknown" + unit_id;
-};
-
-function getPZEM004TUnit(unit_id) {
-    switch (unit_id) {
-      case 0: // Voltage       0
-        return "V";
-      case 1: // Current       1
-        return "A";
-      case 2: // Power (Watt)  2
-        return "W";
-      case 3: // Energy (Wh)   3
-        return "Wh";
-      case 4: // Power Factor  4
-        return "cosphi";
-      case 5: // Frequency(Hz) 5
-        return "Hz";
     }
     return "unknown" + unit_id;
 };

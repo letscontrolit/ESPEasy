@@ -1,5 +1,5 @@
 // Decoder for device payload encoder "PACKED"
-// copy&paste to TTN Console V3 -> Applications -> Payload formatters -> Uplink -> Javascript
+// copy & paste to TTN Console V3 -> Applications -> Payload formatters -> Uplink -> Javascript
 function decodeUplink(input) {
   var data = {};
 
@@ -37,7 +37,7 @@ function decodeUplink(input) {
 
         case 85:
           // AcuDC243
-          // FIXME TD-er: Same code as in P102, Make new type for this with 4 selectable variables
+          // FIXME TD-er: Same code as in P108, Make new type for this with 4 selectable variables
           data = decode_plugin(input.fPort, input.bytes, [header, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4],
             ['header', 'unit1', 'val_1', 'unit2', 'val_2', 'unit3', 'val_3', 'unit4', 'val_4']);
           decoded = true;
@@ -45,9 +45,9 @@ function decodeUplink(input) {
 
         case 102:
           // PZEM004T v30
-          // FIXME TD-er: Same code as in P085, Make new type for this with 4 selectable variables
-          data = decode_plugin(input.fPort, input.bytes, [header, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4],
-            ['header', 'unit1', 'val_1', 'unit2', 'val_2', 'unit3', 'val_3', 'unit4', 'val_4']);
+          data = decode(bytes, [header, int16_1e1, int32_1e3, int32_1e1, int32_1e1, uint16_1e2, uint8_1e1],
+            ['header', 'voltage', 'current', 'power', 'energy', 'powerfactor', 'frequency']);
+          data.frequency += 40;
           decoded = true;
           break;
 
@@ -85,8 +85,8 @@ function decodeUplink(input) {
     }
 
   }
-  data.bytes = input.bytes; // comment out if you do not want to include the original payload
-  data.port = input.fPort; // comment out if you do not want to inlude the port
+  data.bytes = input.bytes; 
+  data.port  = input.fPort;
 
   return {
     data: data,
@@ -1138,16 +1138,6 @@ function Converter(decoded, fPort) {
 
         case 102:
           converted.name = "PZEM004T v30";
-          // This plugin can output any value, so show string representation 
-          // of the unit of measure
-          converted.unit1 = getPZEM004TUnit(converted.unit1);
-          converted.unit2 = getPZEM004TUnit(converted.unit2);
-          converted.unit3 = getPZEM004TUnit(converted.unit3);
-          converted.unit4 = getPZEM004TUnit(converted.unit4);
-          converted.v1 = converted.val_1;
-          converted.v2 = converted.val_2;
-          converted.v3 = converted.val_3;
-          converted.v4 = converted.val_4;
           break;
 
         case 106:
@@ -1240,24 +1230,6 @@ function getAcuDC243Unit(unit_id) {
   return "unknown" + unit_id;
 };
 
-
-function getPZEM004TUnit(unit_id) {
-  switch (unit_id) {
-    case 0: // Voltage       0
-      return "V";
-    case 1: // Current       1
-      return "A";
-    case 2: // Power (Watt)  2
-      return "W";
-    case 3: // Energy (Wh)   3
-      return "Wh";
-    case 4: // Power Factor  4
-      return "cosphi";
-    case 5: // Frequency(Hz) 5
-      return "Hz";
-  }
-  return "unknown" + unit_id;
-};
 
 function getDDS238_xUnit(unit_id) {
   switch (unit_id) {
