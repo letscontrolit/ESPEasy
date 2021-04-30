@@ -195,8 +195,19 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
         const int successRate_new = getRouteSuccessRate(it->second.unit, distance_new);
         const int successRate_res = getRouteSuccessRate(res->unit, distance_res);
 
+        if (successRate_new == 0 || successRate_res == 0) {
+          // One of the nodes does not (yet) have a route.
+          if (successRate_new == 0 && successRate_res == 0) {
+            distance_new = it->second.distance;
+            distance_res = res->distance;
+          } else if (successRate_res == 0) {
+            // The new one has a route, so must set the new one.
+            mustSet = true;
+          }
+        }
+
         if (distance_new == distance_res) {
-          if (successRate_new > successRate_res) {
+          if (successRate_new > successRate_res && distance_new < 255) {
             mustSet = true;
           }
         } else if (distance_new < distance_res) {
@@ -210,7 +221,7 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
       }
       if (mustSet) {
         #ifdef USES_ESPEASY_NOW
-        if (it->second.ESPEasyNowPeer && hasTraceRoute(it->second.unit)) {
+        if (it->second.ESPEasyNowPeer) {
           res = &(it->second);
         }
         #else
@@ -480,10 +491,7 @@ uint8_t NodesHandler::getESPEasyNOW_channel() const
   }
   const NodeStruct *preferred = getPreferredNode();
   if (preferred != nullptr) {
-    uint8_t distance = 255;
-    getRouteSuccessRate(preferred->unit, distance);
-
-    if (distance < 255) {
+    if (preferred->distance < 255) {
       return preferred->channel;
     }
   }

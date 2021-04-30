@@ -728,7 +728,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
     }
   }
 
-  if (received.distance == 255 && Nodes.isEndpoint()) {
+  if (received.distance == 255 && Nodes.getDistance() < 255) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       if (log.reserve(80)) {
