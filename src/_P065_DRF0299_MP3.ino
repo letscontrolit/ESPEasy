@@ -226,9 +226,7 @@ void Plugin_065_SetMode(int8_t mode)
 
 void Plugin_065_SetRepeat(int8_t repeat)
 {
-  repeat = (repeat <= 0) ? 0 : 1;
-
-  Plugin_065_SendCmd(0x11, repeat);
+  Plugin_065_SendCmd(0x11, (repeat <= 0) ? 0 : 1);
 }
 
 void Plugin_065_SendCmd(byte cmd, int16_t data)
