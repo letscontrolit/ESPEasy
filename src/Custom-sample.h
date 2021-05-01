@@ -194,6 +194,10 @@
 #define MAIN_PAGE_SHOW_SYSINFO_BUTTON    true
 #define MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON true
 #define MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN false
+
+#define MAIN_PAGE_SHOW_NODE_LIST_BUILD   true
+#define MAIN_PAGE_SHOW_NODE_LIST_TYPE    true
+
 #define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
 
 
@@ -364,6 +368,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P107   // Si1145
 // #define USES_P110   // VL53L0X Time of Flight sensor
 // #define USES_P111   // RF522 RFID reader
+// #define USES_P113   // VL53L1X ToF
 
 
 // Special plugins needing IR library
