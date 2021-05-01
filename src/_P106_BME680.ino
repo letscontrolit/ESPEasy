@@ -132,8 +132,15 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
 
         UserVar[event->BaseVarIndex + 0] = P106_data->bme.temperature;
         UserVar[event->BaseVarIndex + 1] = P106_data->bme.humidity;
-        UserVar[event->BaseVarIndex + 2] = P106_data->bme.pressure / 100.0f;
         UserVar[event->BaseVarIndex + 3] = P106_data->bme.gas_resistance / 1000.0f;
+
+        const int elev = PCONFIG(1);
+        if (elev != 0)
+        {
+          UserVar[event->BaseVarIndex + 2] = pressureElevation(P106_data->bme.pressure / 100.0f, elev);
+        } else {
+          UserVar[event->BaseVarIndex + 2] = P106_data->bme.pressure / 100.0f;
+        }
       }
 
       success = true;
