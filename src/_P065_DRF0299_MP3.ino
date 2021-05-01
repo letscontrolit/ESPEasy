@@ -226,9 +226,7 @@ void Plugin_065_SetMode(int8_t mode)
 
 void Plugin_065_SetRepeat(int8_t repeat)
 {
-  if (repeat < 0) { repeat = 0; }
-
-  if (repeat > 1) { repeat = 1; }
+  repeat = (repeat <= 0) ? 0 : 1;
 
   Plugin_065_SendCmd(0x11, repeat);
 }
@@ -252,9 +250,9 @@ void Plugin_065_SendCmd(byte cmd, int16_t data)
 
   P065_easySerial->write(buffer, 10); // Send the byte array
 
-  String log = F("MP3  : Send Cmd ");
-
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("MP3  : Send Cmd ");
+
     for (byte i = 0; i < 10; i++) {
       log += String(buffer[i], 16);
       log += ' ';
