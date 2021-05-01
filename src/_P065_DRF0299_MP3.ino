@@ -7,6 +7,9 @@
 // ESPEasy Plugin to controls a MP3-player-module DFPlayer-Mini SKU:DFR0299
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
+// Change history:
+// 2021-05-01, tonhuisman: Add mode and repeat commands, optimize string and log usage to reduce size
+
 // Important! The module WTV020-SD look similar to the module DFPlayer-Mini but is NOT pin nor command compatible!
 
 // Commands:
@@ -14,6 +17,8 @@
 // stop                Stops actual playing sound
 // vol,<volume>        Set volume level 1...30
 // eq,<type>           Set the equalizer type 0=Normal, 1=Pop, 2=Rock, 3=Jazz, 4=classic, 5=Base
+// mode,<mode>         Set the playback mode 0=Repeat, 1=Folder repeat, 2=Single repeat, 3=Random
+// repeat,<0/1>        Set repeat mode 0=Off, 1=On
 
 // Circuit wiring
 // 1st-GPIO -> ESP TX to module RX [Pin2]
@@ -119,57 +124,58 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
         String command = parseString(string, 1);
         String param = parseString(string, 2);
+        int value;
+        bool valueValid = validIntFromString(param, value);
 
-        if (command == F("play"))
+        if (valueValid && command == F("play"))
         {
-          int track;
-          if (validIntFromString(param, track)) {
-            Plugin_065_Play(track);
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("MP3  : play=");
-              log += track;
-              addLog(LOG_LEVEL_INFO, log);
-            }
-          }
+          Plugin_065_Play(value);
           success = true;
         }
 
         if (command == F("stop"))
         {
-          String log = F("MP3  : stop");
-
           Plugin_065_SendCmd(0x0E, 0);
-
-          addLog(LOG_LEVEL_INFO, log);
           success = true;
         }
 
-        if (command == F("vol"))
+        if (valueValid && command == F("vol"))
         {
-          String log = F("MP3  : vol=");
-
-          int8_t vol = param.toInt();
-          if (vol == 0) vol = 30;
-          PCONFIG(0) = vol;
-          Plugin_065_SetVol(vol);
-          log += vol;
-
-          addLog(LOG_LEVEL_INFO, log);
+          if (value == 0) value = 30;
+          PCONFIG(0) = value;
+          Plugin_065_SetVol(value);
           success = true;
         }
 
-        if (command == F("eq"))
+        if (valueValid && command == F("eq"))
         {
-          String log = F("MP3  : eq=");
-
-          int8_t eq = param.toInt();
-          Plugin_065_SetEQ(eq);
-          log += eq;
-
-          addLog(LOG_LEVEL_INFO, log);
+          Plugin_065_SetEQ(value);
           success = true;
         }
 
+        if (valueValid && command == F("mode"))
+        {
+          Plugin_065_SetMode(value);
+          success = true;
+        }
+
+        if (valueValid && command == F("repeat"))
+        {
+          Plugin_065_SetRepeat(value);
+          success = true;
+        }
+
+        if (success && loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log;
+          log.reserve(48);
+          log = F("MP3  : ");
+          log += command;
+          if (command != F("stop")) {
+            log += '=';
+            log += value;
+          }
+          addLog(LOG_LEVEL_INFO, log);
+        }
         break;
       }
   }
@@ -179,6 +185,8 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
 void Plugin_065_Play(uint16_t track)
 {
+  if (track < 0) track = 0;
+  if (track > 2999) track = 2999;
   Plugin_065_SendCmd(0x03, track);
 }
 
@@ -194,6 +202,20 @@ void Plugin_065_SetEQ(int8_t eq)
   if (eq < 0) eq = 0;
   if (eq > 5) eq = 5;
   Plugin_065_SendCmd(0x07, eq);
+}
+
+void Plugin_065_SetMode(int8_t mode)
+{
+  if (mode < 0) mode = 0;
+  if (mode > 3) mode = 3;
+  Plugin_065_SendCmd(0x08, mode);
+}
+
+void Plugin_065_SetRepeat(int8_t repeat)
+{
+  if (repeat < 0) repeat = 0;
+  if (repeat > 1) repeat = 1;
+  Plugin_065_SendCmd(0x11, repeat);
 }
 
 void Plugin_065_SendCmd(byte cmd, int16_t data)
