@@ -599,6 +599,24 @@ bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
   return returnValue;
 }
 
+bool rn2xx3_handler::setTTNstack(RN2xx3_datatypes::TTN_stack_version version)
+{
+  switch(version) {
+    case RN2xx3_datatypes::TTN_stack_version::TTN_v2:
+      _rxdelay1 = 1000;
+      _rxdelay2 = 2000;
+      break;
+    case RN2xx3_datatypes::TTN_stack_version::TTN_v3:
+      _rxdelay1 = 5000;
+      _rxdelay2 = 6000;
+      break;
+    default:
+      return false;
+  }
+  sendMacSet(F("rxdelay1"), String(_rxdelay1));
+  return true;
+}
+
 RN2xx3_datatypes::Model rn2xx3_handler::configureModuleType()
 {
   RN2xx3_datatypes::Firmware firmware;

@@ -363,6 +363,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
 #ifdef USES_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
+      // FIXME TD-er: Same code as in P102, share in LoRa code.
       P085_data_struct *P085_data =
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
