@@ -655,7 +655,62 @@ function Converter(decoded, port) {
                     // TODO TD-er: This is probably the worst possible value to send over a LoRa network, as packets may get lost.
                     converted.countdelta  = converted.val_1;
                     break;
-                        
+
+                case 102:
+                    converted.name = "PZEM004T v30";
+                    break;
+              
+                case 106:
+                    converted.name     = "BME680";
+                    converted.temp     = converted.val_1;
+                    converted.hum      = converted.val_2;
+                    converted.pressure = converted.val_3;
+                    converted.gas      = converted.val_4;
+                    break;
+
+                case 107:
+                    converted.name     = "SI1145";
+                    converted.visible  = converted.val_1;
+                    converted.infra    = converted.val_2;
+                    converted.uv       = converted.val_3;
+                    break;
+
+                case 108:
+                    converted.name = "DDS238-x ZN";
+                    // This plugin can output any value, so show string representation 
+                    // of the unit of measure
+                    converted.unit1 = getDDS238_xUnit(converted.unit1);
+                    converted.unit2 = getDDS238_xUnit(converted.unit2);
+                    converted.unit3 = getDDS238_xUnit(converted.unit3);
+                    converted.unit4 = getDDS238_xUnit(converted.unit4);
+                    converted.v1 = converted.val_1;
+                    converted.v2 = converted.val_2;
+                    converted.v3 = converted.val_3;
+                    converted.v4 = converted.val_4;
+                    break;
+
+                case 110:
+                    converted.name     = "VL53L0X";
+                    converted.distance = converted.val_1;
+                    break;
+    
+
+                case 111:
+                    converted.name = "RC522 RFID";
+                    {
+                        // Not sure if it is present, since the sensor only has a single output value in ESPeasy.
+                        var ulongvalue = converted.val_2 * 65536 + converted.val_1;
+                        converted.tag = ulongvalue.toFixed(0);
+                    }
+                    break;
+
+                case 113:
+                    converted.name     = "VL53L1X";
+                    converted.distance = converted.val_1;
+                    converted.ambient  = converted.val_2;
+                    break;
+    
+    
 
                 default:
                     converted.v1  = converted.val_1;
@@ -697,4 +752,30 @@ function getAcuDC243Unit(unit_id) {
             return "hours load";
     }
     return "unknown" + unit_id;
-}
+};
+
+function getDDS238_xUnit(unit_id) {
+    switch (unit_id) {
+        case 0: // P108_QUERY_V       0
+            return "V";
+        case 1: // P108_QUERY_A       1
+            return "A";
+        case 2: // P108_QUERY_W       2
+            return "W";
+        case 3: // P108_QUERY_VA      3
+            return "VA";
+        case 4: // P108_QUERY_PF      4
+            return "cosphi";
+        case 5: // P108_QUERY_F       5
+            return "Hz";
+        case 6: // P108_QUERY_Wh_imp  6
+            return "Wh imp";
+        case 7: // P108_QUERY_Wh_exp  7
+            return "Wh exp";
+        case 8: // P108_QUERY_Wh_tot  8
+            return "Wh total";
+    }
+    return "unknown" + unit_id;
+};
+
+  
