@@ -2,7 +2,7 @@
 .. |P080_type| replace:: :cyan:`Switch input`
 .. |P080_typename| replace:: :cyan:`Switch input - iButton`
 .. |P080_porttype| replace:: `.`
-.. |P080_status| replace:: :yellow:`TESTING`
+.. |P080_status| replace:: :yellow:`TESTING A`
 .. |P080_github| replace:: P080_DallasIButton.ino
 .. _P080_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P080_DallasIButton.ino
 .. |P080_usedby| replace:: `.`
@@ -41,7 +41,7 @@
 .. |P083_type| replace:: :cyan:`Gasses`
 .. |P083_typename| replace:: :cyan:`Gasses - SGP30`
 .. |P083_porttype| replace:: `.`
-.. |P083_status| replace:: :yellow:`TESTING`
+.. |P083_status| replace:: :yellow:`TESTING A`
 .. |P083_github| replace:: P083_SGP30.ino
 .. _P083_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P083_SGP30.ino
 .. |P083_usedby| replace:: `.`
@@ -54,7 +54,7 @@
 .. |P084_type| replace:: :cyan:`UV`
 .. |P084_typename| replace:: :cyan:`UV - VEML6070`
 .. |P084_porttype| replace:: `.`
-.. |P084_status| replace:: :yellow:`TESTING`
+.. |P084_status| replace:: :yellow:`TESTING A`
 .. |P084_github| replace:: P084_VEML6070.ino
 .. _P084_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P084_VEML6070.ino
 .. |P084_usedby| replace:: `.`
@@ -67,7 +67,7 @@
 .. |P085_type| replace:: :cyan:`Energy (DC)`
 .. |P085_typename| replace:: :cyan:`Energy (DC) - AcuDC243`
 .. |P085_porttype| replace:: `Serial`
-.. |P085_status| replace:: :yellow:`TESTING`
+.. |P085_status| replace:: :yellow:`ENERGY, TESTING C`
 .. |P085_github| replace:: P085_AcuDC243.ino
 .. _P085_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P085_AcuDC243.ino
 .. |P085_usedby| replace:: `.`
@@ -80,7 +80,7 @@
 .. |P086_type| replace:: :cyan:`Generic`
 .. |P086_typename| replace:: :cyan:`Generic - Homie receiver`
 .. |P086_porttype| replace:: `.`
-.. |P086_status| replace:: :yellow:`TESTING`
+.. |P086_status| replace:: :yellow:`TESTING A`
 .. |P086_github| replace:: P086_Homie.ino
 .. _P086_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P086_Homie.ino
 .. |P086_usedby| replace:: `.`
@@ -93,7 +93,7 @@
 .. |P087_type| replace:: :cyan:`Communication`
 .. |P087_typename| replace:: :cyan:`Communication - SerialProxy`
 .. |P087_porttype| replace:: `Serial`
-.. |P087_status| replace:: :yellow:`TESTING`
+.. |P087_status| replace:: :yellow:`TESTING C`
 .. |P087_github| replace:: P087_SerialProxy.ino
 .. _P087_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P087_SerialProxy.ino
 .. |P087_usedby| replace:: `.`
