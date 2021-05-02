@@ -93,7 +93,7 @@
 .. |P057_type| replace:: :cyan:`Display`
 .. |P057_typename| replace:: :cyan:`Display - HT16K33`
 .. |P057_porttype| replace:: `.`
-.. |P057_status| replace:: :yellow:`TESTING`
+.. |P057_status| replace:: :yellow:`DISPLAY, TESTING`
 .. |P057_github| replace:: P057_HT16K33_LED.ino
 .. _P057_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P057_HT16K33_LED.ino
 .. |P057_usedby| replace:: `.`
