@@ -145,6 +145,8 @@ The same for the plugins you need.
 
 The file is built in the ".pio/build/...." directory right under the main repository directory (the one with the platformio.ini in it)
 
+Instead of modifying "pre_custom_esp8266.py" (or "pre_custom_esp32.py" for that matter), one can also copy "src/Custom-sample.h" to "src/Custom.h" and make the desired changed in this file. This file is excluded from Github, so can be adjusted to your own requirements. When the Custom.h file is there (mind the uppercase C!), it will be used by the build scripts instead of the defaults set by "pre_custom_esp8266.py" (or "pre_custom_esp32.py").
+
 All builds will be made in a directory with the same name as the environment used.
 
 Once the build is successful, the .bin file(s) and .bin.gz file (where applicable) are copied to the ``build_output/bin`` folder.

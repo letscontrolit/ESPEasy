@@ -40,21 +40,6 @@ jobs:
         with:
           path: ~/.platformio
           key: ${{ runner.os }}-esp8266-${{ hashFiles('platformio*.ini') }}
-      - uses: actions/cache@v2
-        if: ${{ contains(matrix.env, 'esp8285') }}
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-esp8285-${{ hashFiles('platformio*.ini') }}
-      - uses: actions/cache@v2
-        if: ${{ contains(matrix.env, 'wroom02') }}
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-wroom02-${{ hashFiles('platformio*.ini') }}
-      - uses: actions/cache@v2
-        if: ${{ contains(matrix.env, 'hard') }}
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-hard-${{ hashFiles('platformio*.ini') }}
       - name: Dependencies
         run: |
           sudo apt install binutils
