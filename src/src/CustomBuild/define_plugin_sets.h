@@ -1527,6 +1527,12 @@ To create/register a plugin, you have to :
   #ifdef USES_C003
     #undef USES_C003
   #endif
+  #ifdef USES_C016
+    #undef USES_C016  // Cache controller
+  #endif
+  #ifdef FEATURE_SD
+    #undef FEATURE_SD  // Unlikely on 1M units
+  #endif
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
   #endif
