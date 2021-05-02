@@ -1,4 +1,4 @@
-#include "PeriodicalActions.h"
+#include "../Helpers/PeriodicalActions.h"
 
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
@@ -200,7 +200,7 @@ void runEach30Seconds()
     String log;
     log.reserve(80);
     log = F("WD   : Uptime ");
-    log += wdcounter / 2;
+    log += getUptimeMinutes();
     log += F(" ConnectFailures ");
     log += WiFiEventData.connectionFailures;
     log += F(" FreeMem ");
@@ -224,6 +224,7 @@ void runEach30Seconds()
 //    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);
   }
+  WiFiScanPeriodical();
   sendSysInfoUDP(1);
   refreshNodeList();
 
@@ -371,6 +372,7 @@ void runPeriodicalMQTT() {
   }
 }
 
+// FIXME TD-er: Must move to a more logical part of the code
 controllerIndex_t firstEnabledMQTT_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);

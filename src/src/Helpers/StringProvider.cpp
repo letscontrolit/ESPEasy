@@ -16,6 +16,7 @@
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
+#include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 
@@ -49,6 +50,8 @@ String getLabel(LabelType::Enum label) {
     case LabelType::WIFI_CUR_TX_PWR:        return F("Current WiFi TX Power");
     case LabelType::WIFI_SENS_MARGIN:       return F("WiFi Sensitivity Margin");
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return F("Send With Max TX Power");
+    case LabelType::WIFI_NR_EXTRA_SCANS:    return F("Extra WiFi scan loops");
+    case LabelType::WIFI_PERIODICAL_SCAN:   return F("Periodical Scan WiFi");
 
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
@@ -105,6 +108,9 @@ String getLabel(LabelType::Enum label) {
     case LabelType::LAST_DISCONNECT_REASON: return F("Last Disconnect Reason");
     case LabelType::LAST_DISC_REASON_STR:   return F("Last Disconnect Reason str");
     case LabelType::NUMBER_RECONNECTS:      return F("Number Reconnects");
+    case LabelType::WIFI_STORED_SSID1:      return F("Configured SSID1");
+    case LabelType::WIFI_STORED_SSID2:      return F("Configured SSID2");
+
 
     case LabelType::FORCE_WIFI_BG:          return F("Force WiFi B/G");
     case LabelType::RESTART_WIFI_LOST_CONN: return F("Restart WiFi Lost Conn");
@@ -189,7 +195,7 @@ String getValue(LabelType::Enum label) {
 
 
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-', ':', ' ');
-    case LabelType::UPTIME:                 return String(wdcounter / 2);
+    case LabelType::UPTIME:                 return String(getUptimeMinutes());
     case LabelType::LOAD_PCT:               return String(getCPUload());
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
     case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
@@ -197,6 +203,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::WIFI_CUR_TX_PWR:        return String(WiFiEventData.wifi_TX_pwr, 2);
     case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return jsonBool(Settings.UseMaxTXpowerForSending());
+    case LabelType::WIFI_NR_EXTRA_SCANS:    return String(Settings.NumberExtraWiFiScans);
+    case LabelType::WIFI_PERIODICAL_SCAN:   return jsonBool(Settings.PeriodicalScanWiFi());
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
@@ -260,6 +268,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::LAST_DISCONNECT_REASON: return String(WiFiEventData.lastDisconnectReason);
     case LabelType::LAST_DISC_REASON_STR:   return getLastDisconnectReason();
     case LabelType::NUMBER_RECONNECTS:      return String(WiFiEventData.wifi_reconnects);
+    case LabelType::WIFI_STORED_SSID1:      return String(SecuritySettings.WifiSSID);
+    case LabelType::WIFI_STORED_SSID2:      return String(SecuritySettings.WifiSSID2);
+
 
     case LabelType::FORCE_WIFI_BG:          return jsonBool(Settings.ForceWiFi_bg_mode());
     case LabelType::RESTART_WIFI_LOST_CONN: return jsonBool(Settings.WiFiRestart_connection_lost());
@@ -317,7 +328,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_SPEED_STATE:        return EthLinkUp() ? getEthLinkSpeedState() : F("Link Down");
     case LabelType::ETH_CONNECTED:          return ETHConnected() ? F("CONNECTED") : F("DISCONNECTED"); // 0=disconnected, 1=connected
 #endif // ifdef HAS_ETHERNET
-    case LabelType::ETH_WIFI_MODE:          return active_network_medium == NetworkMedium_t::WIFI ? F("WIFI") : F("ETHERNET");
+    case LabelType::ETH_WIFI_MODE:          return toString(active_network_medium);
     case LabelType::SUNRISE:                return node_time.getSunriseTimeString(':');
     case LabelType::SUNSET:                 return node_time.getSunsetTimeString(':');
     case LabelType::ISNTP:                  return jsonBool(Settings.UseNTP);
@@ -365,7 +376,7 @@ String getExtendedValue(LabelType::Enum label) {
     {
       String result;
       result.reserve(40);
-      int minutes = wdcounter / 2;
+      int minutes = getUptimeMinutes();
       int days    = minutes / 1440;
       minutes = minutes % 1440;
       int hrs = minutes / 60;

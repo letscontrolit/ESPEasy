@@ -5,6 +5,8 @@
 
 #include <list>
 
+typedef std::list<WiFi_AP_Candidate>::const_iterator WiFi_AP_Candidate_const_iterator;
+
 struct WiFi_AP_CandidatesList {
   WiFi_AP_CandidatesList();
 
@@ -16,16 +18,20 @@ struct WiFi_AP_CandidatesList {
   // Called after WiFi credentials have changed.
   void force_reload();
 
+  void begin_sync_scan();
+
+  void purge_expired();
+
   // Add found WiFi access points to the list if they are possible candidates.
   void process_WiFiscan(uint8_t scancount);
 
   // Get the next candidate to connect
   // Return true when a valid next candidate was found.
-  bool                     getNext();
+  bool                     getNext(bool scanAllowed);
 
   const WiFi_AP_Candidate& getCurrent() const;
 
-  WiFi_AP_Candidate        getBestScanResult() const;
+  WiFi_AP_Candidate        getBestCandidate() const;
 
   bool                     hasKnownCredentials();
 
@@ -33,10 +39,22 @@ struct WiFi_AP_CandidatesList {
   // This will force a reconnect to the current AP if connection is lost.
   void markCurrentConnectionStable();
 
+  int8_t scanComplete() const;
+
+  WiFi_AP_Candidate_const_iterator scanned_begin() const {
+    return scanned.begin();
+  }
+
+  WiFi_AP_Candidate_const_iterator scanned_end() const {
+    return scanned.end();
+  }
+
+  static bool SettingsIndexMatchCustomCredentials(uint8_t index);
+
 private:
 
-  // Add item from WiFi scan.
-  void add(uint8_t networkItem);
+  // Pick the possible 
+  void loadCandidatesFromScanned();
 
   void addFromRTC();
 
@@ -47,15 +65,18 @@ private:
                     String& ssid,
                     String& key) const;
 
-  std::list<WiFi_AP_Candidate>candidates;
+  std::list<WiFi_AP_Candidate> candidates;
 
-  std::list<WiFi_AP_Candidate>known;
+  std::list<WiFi_AP_Candidate> known;
 
-  std::list<WiFi_AP_Candidate>::const_iterator known_it;
+  std::list<WiFi_AP_Candidate> scanned;
+
+  WiFi_AP_Candidate_const_iterator known_it;
 
   WiFi_AP_Candidate currentCandidate;
 
   bool _mustLoadCredentials = true;
+
 };
 
 #endif // ifndef HELPERS_WIFI_AP_CANDIDATESLIST_H

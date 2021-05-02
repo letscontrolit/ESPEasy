@@ -1,7 +1,7 @@
 alabaster==0.7.12
 argh==0.26.2
 Babel==2.8.0
-bottle==0.12.18
+bottle==0.12.19
 cached-property==1.5.1
 certifi==2020.6.20
 cffi==1.14.1
@@ -12,7 +12,7 @@ commonmark==0.9.1
 docutils==0.16
 idna==2.10
 imagesize==1.2.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 livereload==2.6.2
 MarkupSafe==1.1.1
 marshmallow==3.7.1
@@ -23,11 +23,11 @@ port-for==0.3.1
 pycparser==2.20
 pyelftools==0.27
 pygit2==1.2.1
-Pygments==2.6.1
+Pygments==2.7.4
 pyparsing==2.4.7
 pyserial==3.4
 pytz==2020.1
-PyYAML==5.3.1
+PyYAML==5.4
 recommonmark==0.6.0
 requests==2.24.0
 semantic-version==2.8.5

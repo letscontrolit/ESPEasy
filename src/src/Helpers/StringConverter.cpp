@@ -78,11 +78,16 @@ bool string2float(const String& string, float& floatvalue) {
 /********************************************************************************************\
    Convert a char string to IP byte array
  \*********************************************************************************************/
-boolean str2ip(const String& string, byte *IP) {
+bool isIP(const String& string) {
+  IPAddress tmpip;
+  return (tmpip.fromString(string));
+}
+
+bool str2ip(const String& string, byte *IP) {
   return str2ip(string.c_str(), IP);
 }
 
-boolean str2ip(const char *string, byte *IP)
+bool str2ip(const char *string, byte *IP)
 {
   IPAddress tmpip; // Default constructor => set to 0.0.0.0
 
@@ -388,6 +393,7 @@ String wrapIfContains(const String& value, char contains, char wrap) {
 \*********************************************************************************************/
 String to_json_object_value(const String& object, const String& value) {
   String result;
+  bool   isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
   result.reserve(object.length() + value.length() + 6);
   wrap_String(object, F("\""), result);
@@ -398,7 +404,7 @@ String to_json_object_value(const String& object, const String& value) {
     result += F("\"\"");
     return result;
   }
-  if (mustConsiderAsString(value)) {
+  if (!isBool && mustConsiderAsString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
       // Must replace characters, so make a deepcopy
@@ -644,7 +650,7 @@ String URLEncode(const char *msg)
   return encodedMsg;
 }
 
-void repl(const String& key, const String& val, String& s, boolean useURLencode)
+void repl(const String& key, const String& val, String& s, bool useURLencode)
 {
   if (useURLencode) {
     // URLEncode does take resources, so check first if needed.
@@ -656,7 +662,7 @@ void repl(const String& key, const String& val, String& s, boolean useURLencode)
 }
 
 #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
-void parseSpecialCharacters(String& s, boolean useURLencode)
+void parseSpecialCharacters(String& s, bool useURLencode)
 {
   bool no_accolades   = s.indexOf('{') == -1 || s.indexOf('}') == -1;
   bool no_html_entity = s.indexOf('&') == -1 || s.indexOf(';') == -1;
@@ -740,7 +746,7 @@ void parseSpecialCharacters(String& s, boolean useURLencode)
 /********************************************************************************************\
    replace other system variables like %sysname%, %systime%, %ip%
  \*********************************************************************************************/
-void parseControllerVariables(String& s, struct EventStruct *event, boolean useURLencode) {
+void parseControllerVariables(String& s, struct EventStruct *event, bool useURLencode) {
   s = parseTemplate(s, useURLencode);
   parseEventVariables(s, event, useURLencode);
 }
@@ -748,7 +754,7 @@ void parseControllerVariables(String& s, struct EventStruct *event, boolean useU
 void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
                                    byte                taskValueIndex,
-                                   boolean             useURLencode) {
+                                   bool             useURLencode) {
   if (validTaskIndex(event->TaskIndex)) {
     LoadTaskSettings(event->TaskIndex);
     repl(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[taskValueIndex], s, useURLencode);
@@ -761,7 +767,7 @@ void parseSingleControllerVariable(String            & s,
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T, S) \
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
-void parseSystemVariables(String& s, boolean useURLencode)
+void parseSystemVariables(String& s, bool useURLencode)
 {
   #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   parseSpecialCharacters(s, useURLencode);
@@ -770,7 +776,7 @@ void parseSystemVariables(String& s, boolean useURLencode)
   SystemVariables::parseSystemVariables(s, useURLencode);
 }
 
-void parseEventVariables(String& s, struct EventStruct *event, boolean useURLencode)
+void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode)
 {
   repl(F("%id%"), String(event->idx), s, useURLencode);
 
@@ -867,7 +873,7 @@ bool getConvertArgumentString(const String& marker, const String& s, String& arg
 
 // Parse conversions marked with "%conv_marker%(float)"
 // Must be called last, since all sensor values must be converted, processed, etc.
-void parseStandardConversions(String& s, boolean useURLencode) {
+void parseStandardConversions(String& s, bool useURLencode) {
   if (s.indexOf(F("%c_")) == -1) {
     return; // Nothing to replace
   }
@@ -898,6 +904,8 @@ void parseStandardConversions(String& s, boolean useURLencode) {
   float arg2 = 0.0f;
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(arg1, arg2), 2))
   SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(arg1, arg2))
+  SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(arg1, arg2), 2))
+  SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(arg1, arg2), 2))
   #undef SMART_CONV
 }
 

@@ -1,4 +1,4 @@
-#include "EventQueue.h"
+#include "../Globals/EventQueue.h"
 
 
 EventQueueStruct eventQueue;

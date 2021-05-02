@@ -548,7 +548,14 @@ String getDeviceModelBrandString(DeviceModel model) {
     #ifdef ESP32
       return F("Olimex");
     #endif
-
+    case DeviceMode_wESP32:
+    #ifdef ESP32
+      return F("wESP32");
+    #endif
+    case DeviceMode_WT32_ETH01:
+    #ifdef ESP32
+      return F("WT32-ETH01");
+    #endif
     case DeviceModel_default:
     case DeviceModel_MAX:      break;
 
@@ -594,10 +601,14 @@ String getDeviceModelString(DeviceModel model) {
     case DeviceMode_Olimex_ESP32_PoE: result     += F(" ESP32-PoE"); break;
     case DeviceMode_Olimex_ESP32_EVB: result     += F(" ESP32-EVB"); break;
     case DeviceMode_Olimex_ESP32_GATEWAY: result += F(" ESP32-GATEWAY"); break;
+    case DeviceMode_wESP32:           break;
+    case DeviceMode_WT32_ETH01:           result += F(" add-on"); break;
 #else
     case DeviceMode_Olimex_ESP32_PoE:
     case DeviceMode_Olimex_ESP32_EVB:
     case DeviceMode_Olimex_ESP32_GATEWAY:
+    case DeviceMode_wESP32:
+    case DeviceMode_WT32_ETH01:
 #endif
 
     case DeviceModel_default:
@@ -646,6 +657,8 @@ bool modelMatchingFlashSize(DeviceModel model) {
     case DeviceMode_Olimex_ESP32_PoE:
     case DeviceMode_Olimex_ESP32_EVB:
     case DeviceMode_Olimex_ESP32_GATEWAY:
+    case DeviceMode_wESP32:
+    case DeviceMode_WT32_ETH01:
 #if  defined(ESP32) && defined(HAS_ETHERNET)
       return size_MB == 4;
 #else

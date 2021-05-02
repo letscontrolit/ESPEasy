@@ -9,6 +9,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 
@@ -270,7 +271,9 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   packetBuffer[14] = 49;
   packetBuffer[15] = 52;
 
+  FeedSW_watchdog();
   if (udp.beginPacket(timeServerIP, 123) == 0) { // NTP requests are to port 123
+    FeedSW_watchdog();
     udp.stop();
     return false;
   }

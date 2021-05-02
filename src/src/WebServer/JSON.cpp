@@ -195,6 +195,8 @@ void handle_json()
       stream_next_json_object_value(LabelType::LAST_DISCONNECT_REASON);
       stream_next_json_object_value(LabelType::LAST_DISC_REASON_STR);
       stream_next_json_object_value(LabelType::NUMBER_RECONNECTS);
+      stream_next_json_object_value(LabelType::WIFI_STORED_SSID1);
+      stream_next_json_object_value(LabelType::WIFI_STORED_SSID2);
       stream_next_json_object_value(LabelType::FORCE_WIFI_BG);
       stream_next_json_object_value(LabelType::RESTART_WIFI_LOST_CONN);
 #ifdef ESP8266
@@ -208,6 +210,8 @@ void handle_json()
       stream_next_json_object_value(LabelType::WIFI_CUR_TX_PWR);
       stream_next_json_object_value(LabelType::WIFI_SENS_MARGIN);
       stream_next_json_object_value(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
+      stream_next_json_object_value(LabelType::WIFI_NR_EXTRA_SCANS);
+      stream_next_json_object_value(LabelType::WIFI_PERIODICAL_SCAN);
       stream_last_json_object_value(LabelType::WIFI_RSSI);
       // TODO: PKR: Add ETH Objects
       addHtml(F(",\n"));
@@ -519,9 +523,10 @@ void handle_buildinfo() {
 \*********************************************************************************************/
 void stream_to_json_value(const String& value) {
   NumericalType detectedType;
-  bool isNum = isNumerical(value, detectedType);
+  bool isNum  = isNumerical(value, detectedType);
+  bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
-  if ((value.length() == 0) || !isNum || mustConsiderAsString(detectedType)) {
+  if (!isBool && ((value.length() == 0) || !isNum || mustConsiderAsString(detectedType))) {
     // Either empty, not a numerical or a BIN/HEX notation.
     String html;
     html.reserve(value.length() + 2);

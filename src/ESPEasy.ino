@@ -351,7 +351,10 @@ void setup()
       // Wait until scan has finished to make sure as many as possible are found
       // We're still in the setup phase, so nothing else is taking resources of the ESP.
       WifiScan(false); 
+      WiFiEventData.lastScanMoment.clear();
     }
+    // Start an extra async scan so we can continue, but we may find more APs by scanning twice.
+    WifiScan(true); 
   }
 
 //  setWifiMode(WIFI_STA);
@@ -548,6 +551,9 @@ int getLoopCountPerSec() {
   return loopCounterLast / 30;
 }
 
+int getUptimeMinutes() {
+  return wdcounter / 2;
+}
 
 
 
@@ -577,7 +583,7 @@ void loop()
      {
         String event = F("System#NoSleep=");
         event += Settings.deepSleep_wakeTime;
-        eventQueue.add(event);
+        eventQueue.addMove(std::move(event));
      }
 
 
@@ -586,7 +592,7 @@ void loop()
      sendSysInfoUDP(1);
   }
   // Work around for nodes that do not have WiFi connection for a long time and may reboot after N unsuccessful connect attempts
-  if ((wdcounter / 2) > 2) {
+  if (getUptimeMinutes() > 2) {
     // Apparently the uptime is already a few minutes. Let's consider it a successful boot.
      RTC.bootFailedCount = 0;
      saveToRTC();

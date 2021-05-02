@@ -237,6 +237,11 @@ bool rn2xx3::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
   return _rn2xx3_handler.setFrequencyPlan(fp);
 }
 
+bool rn2xx3::setTTNstack(RN2xx3_datatypes::TTN_stack_version version)
+{
+  return _rn2xx3_handler.setTTNstack(version);
+}
+
 String rn2xx3::peekLastError() const
 {
   return _rn2xx3_handler.peekLastError();
