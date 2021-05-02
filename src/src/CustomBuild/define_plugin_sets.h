@@ -869,6 +869,8 @@ To create/register a plugin, you have to :
     #define USES_P063   // TTP229_KeyPad
     #define USES_P073   // 7DG
     #define USES_P079   // Wemos Motoshield
+
+    #define USES_P250   // RTD Sensors, e.g. MAX38165
 #endif
 
 
