@@ -258,6 +258,13 @@ void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
   #endif // if defined(ESP32)
 }
 
+void FeedSW_watchdog()
+{
+  #ifdef ESP8266
+  ESP.wdtFeed();
+  #endif
+}
+
 void SendValueLogger(taskIndex_t TaskIndex)
 {
 #if !defined(BUILD_NO_DEBUG) || defined(FEATURE_SD)

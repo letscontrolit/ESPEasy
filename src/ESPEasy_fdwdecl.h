@@ -15,6 +15,7 @@ void flushAndDisconnectAllClients();
 
 float getCPUload();
 int getLoopCountPerSec();
+int getUptimeMinutes();
 
 
 

@@ -104,6 +104,10 @@ More uses of these system variables can be seen in the rules section and formula
      - 3244
      - Uptime in minutes.
      - Yes
+   * - ``%uptime_ms%``
+     - 2095803
+     - Uptime in milliseconds.
+     -
    * - ``%rssi%``
      - -45
      - WiFi signal strength (dBm).
@@ -168,6 +172,12 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - Dew point(T,H): ``%c_dew_th%(18.6,67)``
      - Dew point(T,H): ``12.31``
      - Compute dew point given 2 values, temperature and relative humidity
+   * - Altitude(air,sea): ``%c_alt_pres_sea%(850,1000)``
+     - Altitude(air,sea): ``1350.03``
+     - Compute Altitude (m) given 2 values, atmospheric pressure and pressure at sea level (hPa). (Added: 2021/04/27)
+   * - PressureElevation(air,alt): ``%c_sea_pres_alt%(850,1350.03)``
+     - PressureElevation(air,alt): ``1000.00``
+     - Compensate air pressure for measured atmospheric pressure (hPa) and given altitude (m). (Added: 2021/04/27)
    * - cm to imperial: ``%c_cm2imp%(190)``
      - cm to imperial: ``6'2.8"``
      - Centimeter to imperial units

@@ -190,6 +190,11 @@ WD I2C Address
 The Watchdog timer can be accessed via I2C.
 What can be read/set/changed must still be documented.
 
+JSON bool output without quotes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ESPEasy JSON output has always used quoted bool values, ``"true"`` and ``"false"``, that are in fact string values. According to JSON standards, bool values should be ``true`` and ``false``, so this setting selects what type of bool values will be emitted. As existing functionality is to be left unaltered/backward compatible as much as possible, by default this setting is unchecked.
+
 Use SSDP
 ^^^^^^^^
 
@@ -385,6 +390,47 @@ Therefore the default value of +3dB margin will attempt to let the access point 
 Of course nodes with an already high signal attenuation cannot send with more than the max allowed TX power of roughly 20.5 dBm.
 Trying to reach this sweet spot in signal strength is just a best effort and not a guarantee.
 
+Extra WiFi scan loops
+^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2021-04-16
+
+A single WiFi scan does loop over all channels only once and waits per channel only for a fixed amount of time for APs to reply.
+It is an "active" WiFi scan, meaning the node does send out a packet for access points to reply to.
+
+Per scan, an AP may be too busy handling other traffic so it may not even receive the request, or does not reply in due time and the node already switched over to another channel and thus does not receive the reply from the AP.
+This may lead to the situation where a node which is configured to connect to multiple APs, to connect to the least optimal AP as the AP which would be the better choice did not reply.
+
+A scan can be "sync" or "async". A "sync" scan is blocking, meaning it will halt execution of other code on the ESP.
+An "async" scan is just started and when finished it fires an event to fetch the scan results and thus is not blocking.
+Blocking code may affect timing critical actions, which are sometimes essential to interact with some sensors.
+
+This setting (default = 0) may help in finding the best AP when a sync scan needs to be performed, but it also may block execution of other code over a longer period.
+
+Sync scans are performed when:
+
+* No recent scan results are present and the node needs to (re)connect (thus always at a cold boot)
+* When loading the WiFi scanner and setup page with no recent scan results present.
+
+As an alternative, the next setting can be used to perform an async scan every minute and thus prevent blocking code on a reconnect.
+
+Periodical Scan WiFi
+^^^^^^^^^^^^^^^^^^^^
+
+Added: 2021-04-16
+
+
+When checked, the ESP will perform an async scan (see previous setting too) every minute to keep the list of known APs up-to-date.
+This has several advantages:
+
+* More likely the best AP will be known when the node needs to reconnect.
+* No "sync" scan is needed to reconnect.
+* The node remains known among other network devices, so it remains more responsive (see also Gratuitous ARP setting)
+
+The drawback may be that overall the node may consume slightly more energy as it may not enter the low power state when "ECO" mode is enabled.
+Also it is yet unknown if it does have a negative impact on overall WiFi performance if a lot of nodes perform Periodical scans. ("a lot" meaning several tens of nodes in a small area)
+
+During a scan the node is listening on a different channel, so it may not respond to requests sent to it for roughly a 1.6 seconds.
 
 
 Show JSON

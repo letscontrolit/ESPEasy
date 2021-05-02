@@ -16,10 +16,12 @@ struct WiFi_AP_Candidate {
   // Construct using index from WiFi scan result
   WiFi_AP_Candidate(uint8_t networkItem);
 
+  WiFi_AP_Candidate(const WiFi_AP_Candidate& other);
+
   // Default constructor
   WiFi_AP_Candidate();
 
-  // Return true when this one has the best RSSI.
+  // Return true when this one is preferred over 'other'.
   bool               operator<(const WiFi_AP_Candidate& other) const;
 
   bool               operator==(const WiFi_AP_Candidate& other) const;
@@ -30,6 +32,9 @@ struct WiFi_AP_Candidate {
 
   // Check if the candidate data can be used to actually connect to an AP.
   bool               usable() const;
+
+  // Check if the candidate was recently seen
+  bool               expired() const;
 
   // For quick connection the channel and BSSID are needed
   bool               allowQuickConnect() const;
@@ -46,12 +51,16 @@ struct WiFi_AP_Candidate {
 
   String  ssid;
   String  key;
+
+  unsigned long last_seen = 0;
   int32_t rssi     = 0;
   int32_t channel  = 0;
   uint8_t bssid[6] = { 0 };
   byte    index    = 0;     // Index of the matching credentials
   byte    enc_type = 0;     // Encryption used (e.g. WPA2)
   bool    isHidden = false; // Hidden SSID
+  bool    lowPriority = false; // Try as last attempt
+  bool    isEmergencyFallback = false;
 };
 
 #endif // ifndef DATASTRUCTS_WIFI_AP_CANDIDATES_H

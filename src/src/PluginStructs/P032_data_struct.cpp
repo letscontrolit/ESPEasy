@@ -117,11 +117,5 @@ void P032_data_struct::readout() {
   ms5611_pressure     = (((D1 * SENS) / (1 << 21) - Offset) / (1 << 15)); // FIXME TD-er: This is computed twice, is that correct?
 }
 
-// **************************************************************************/
-// MSL pressure formula
-// **************************************************************************/
-double P032_data_struct::pressureElevation(double atmospheric, int altitude) {
-  return atmospheric / pow(1.0f - (altitude / 44330.0f), 5.255f);
-}
 
 #endif // ifdef USES_P032

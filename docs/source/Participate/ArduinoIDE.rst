@@ -87,7 +87,7 @@ Locate the file ``platform.txt`` in the esp8266 platform directory of ArduinoIDE
 
 The exact location depends on the installation, usually in a directory below the main application called ``hardware/esp8266.com/``.
 
-In the same directory add an (untraced) file called ``platform.local.txt`` with the following lines:
+In the same directory add an (untracked) file called ``platform.local.txt`` with the following lines:
 
 .. code-block:: none
 
