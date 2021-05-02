@@ -286,6 +286,11 @@ public:
   bool                     setFrequencyPlan(RN2xx3_datatypes::Freq_plan);
 
   /*
+   * Set version of TTN stack to use.
+   */
+  bool                     setTTNstack(RN2xx3_datatypes::TTN_stack_version version);
+
+  /*
    * Returns the last downlink message HEX string.
    */
   String                   getRx();

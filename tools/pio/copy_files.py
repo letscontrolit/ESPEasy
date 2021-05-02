@@ -44,6 +44,7 @@ def copy_to_build_output(sourcedir, variant, file_suffix):
         if ".bin" in file_suffix:
             file_size = os.path.getsize(full_in_file)
             if file_size > get_max_bin_size(variant, file_suffix):
+                print("\u001b[31m file size:\u001b[0m {} > {}".format(file_size, get_max_bin_size(variant, file_suffix)))
                 out_file = "{}reject{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
                 if not os.path.isdir("{}{}".format(OUTPUT_DIR, "reject")):
                     os.mkdir("{}{}".format(OUTPUT_DIR, "reject"))
