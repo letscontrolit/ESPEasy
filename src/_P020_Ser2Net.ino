@@ -242,17 +242,18 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       if (nullptr == task) { 
         break; 
       }
-      success = true;
-
+      
       if (command == F("serialsend")) {
         const char *tmpBuf = string.substring(11).c_str();
         task->ser2netSerial->write(tmpBuf);
         task->ser2netSerial->flush();
+        success = true;
       }
 
       if ((command == F("ser2netclientsend")) && (task->hasClientConnected())) {
         task->ser2netClient.print(string.substring(18));
         task->ser2netClient.flush();
+        success = true;
       }
       break;
     }

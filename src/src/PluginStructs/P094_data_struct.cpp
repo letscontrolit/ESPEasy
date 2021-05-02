@@ -151,17 +151,16 @@ const String& P094_data_struct::peekSentence() const {
 }
 
 void P094_data_struct::getSentence(String& string, bool appendSysTime) {
+  string = std::move(sentence_part);
+  sentence_part = ""; // FIXME TD-er: Should not be needed as move already cleared it.
   if (appendSysTime) {
     // Unix timestamp = 10 decimals + separator
     if (string.reserve(sentence_part.length() + 11)) {
-      string        = sentence_part;
       string += ';';
       string += node_time.getUnixTime();
     }
-    sentence_part = "";
-  } else {
-    string = std::move(sentence_part);
   }
+  sentence_part.reserve(string.length());
 }
 
 void P094_data_struct::getSentencesReceived(uint32_t& succes, uint32_t& error, uint32_t& length_last) const {
