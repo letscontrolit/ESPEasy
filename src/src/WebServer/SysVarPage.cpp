@@ -119,6 +119,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY_S);
   addTableSeparator(F("System"), 3, 3);
   addSysVar_enum_html(SystemVariables::UPTIME);
+  addSysVar_enum_html(SystemVariables::UPTIME_MS);
   addSysVar_enum_html(SystemVariables::UNIXTIME);
   addSysVar_enum_html(SystemVariables::UNIXDAY);
   addSysVar_enum_html(SystemVariables::UNIXDAY_SEC);
@@ -202,6 +203,8 @@ void handle_sysvars() {
   addSysVar_html(F("{D}C to {D}F: %c_c2f%(20.4)"));
   addSysVar_html(F("m/s to Bft:   %c_ms2Bft%(5.1)"));
   addSysVar_html(F("Dew point(T,H): %c_dew_th%(18.6,67)"));
+  addSysVar_html(F("Altitude(air,sea): %c_alt_pres_sea%(850,1000)"));
+  addSysVar_html(F("PressureElevation(air,alt): %c_sea_pres_alt%(850,1350.03)"));
   addFormSeparator(3);
   addSysVar_html(F("cm to imperial: %c_cm2imp%(190)"));
   addSysVar_html(F("mm to imperial: %c_mm2imp%(1900)"));

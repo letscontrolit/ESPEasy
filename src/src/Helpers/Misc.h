@@ -10,8 +10,9 @@
 
 #include "../../ESPEasy_common.h"
 
-
-
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
 
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
@@ -121,6 +122,7 @@ void delayedReboot(int rebootDelay, ESPEasy_Scheduler::IntendedRebootReason_e re
 
 void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason);
 
+void FeedSW_watchdog();
 
 void SendValueLogger(taskIndex_t TaskIndex);
 

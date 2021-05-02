@@ -1,9 +1,21 @@
+.. |P110_name| replace:: :cyan:`VL53L0X`
+.. |P110_type| replace:: :cyan:`Distance`
+.. |P110_typename| replace:: :cyan:`Distance - VL53L0X (200cm)`
+.. |P110_porttype| replace:: `.`
+.. |P110_status| replace:: :yellow:`TESTING B`
+.. |P110_github| replace:: P110_VL53L0X.ino
+.. _P110_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P110_VL53L0X.ino
+.. |P110_usedby| replace:: `.`
+.. |P110_shortinfo| replace:: `Time-of-Flight Distance sensor`
+.. |P110_maintainer| replace:: `TD-er, clumsy-stefan, tonhuisman`
+.. |P110_compileinfo| replace:: `.`
+.. |P110_usedlibraries| replace:: `https://github.com/pololu/vl53l0x-arduino (local copy)`
 
 .. |P111_name| replace:: :cyan:`MFRC5222`
 .. |P111_type| replace:: :cyan:`RFID`
 .. |P111_typename| replace:: :cyan:`RFID - MFRC522`
 .. |P111_porttype| replace:: `.`
-.. |P111_status| replace:: :yellow:`TESTING`
+.. |P111_status| replace:: :yellow:`TESTING C`
 .. |P111_github| replace:: P111_RC522_RFID.ino
 .. _P111_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P111_RC522_RFID.ino
 .. |P111_usedby| replace:: `.`
@@ -11,3 +23,16 @@
 .. |P111_maintainer| replace:: `TD-er, twinbee77, tonhuisman`
 .. |P111_compileinfo| replace:: `.`
 .. |P111_usedlibraries| replace:: `https://github.com/miguelbalboa/rfid (local copy)`
+
+.. |P113_name| replace:: :cyan:`VL53L1X`
+.. |P113_type| replace:: :cyan:`Distance`
+.. |P113_typename| replace:: :cyan:`Distance - VL53L1X (400cm)`
+.. |P113_porttype| replace:: `.`
+.. |P113_status| replace:: :yellow:`TESTING B`
+.. |P113_github| replace:: P113_VL53L1X.ino
+.. _P113_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P113_VL53L1X.ino
+.. |P113_usedby| replace:: `.`
+.. |P113_shortinfo| replace:: `Laser distance (Time of Flight) sensor`
+.. |P113_maintainer| replace:: `TD-er, tonhuisman`
+.. |P113_compileinfo| replace:: `.`
+.. |P113_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library (local copy)`

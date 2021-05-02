@@ -1,6 +1,8 @@
 #ifndef ESPEASY_CUSTOM_H
 #define ESPEASY_CUSTOM_H
 
+#include <Arduino.h>
+
 /*
     To modify the stock configuration without changing the EspEasy.ino file :
     1) rename this file to "Custom.h" (It is ignored by Git)
@@ -38,6 +40,9 @@
 // --- Wifi Client Mode -----------------------------------------------------------------------------
 #define DEFAULT_SSID                         "MyHomeSSID"            // Enter your network SSID
 #define DEFAULT_KEY                          "MySuperSecretPassword" // Enter your network WPA key
+#define DEFAULT_SSID2                        ""                      // Enter your fallback network SSID
+#define DEFAULT_KEY2                         ""                      // Enter your fallback network WPA key
+#define DEFAULT_WIFI_INCLUDE_HIDDEN_SSID     false                   // Allow to connect to hidden SSID APs
 #define DEFAULT_USE_STATIC_IP                false                   // (true|false) enabled or disabled static IP
 #define DEFAULT_IP                           "192.168.0.50"          // Enter your IP address
 #define DEFAULT_DNS                          "192.168.0.1"           // Enter your DNS
@@ -140,12 +145,83 @@
 #define BUILD_NO_DEBUG
 
 
+// Special SSID/key setup only to be used in custom builds.
+
+// Deployment SSID will be used only when the configured SSIDs are not reachable and/or no credentials are set.
+// This to make deployment of large number of nodes easier
+#define CUSTOM_DEPLOYMENT_SSID                  ""                // Enter SSID not shown in UI, to be used on custom builds to ease deployment
+#define CUSTOM_DEPLOYMENT_KEY                   ""                // Enter key not shown in UI, to be used on custom builds to ease deployment
+#define CUSTOM_SUPPORT_SSID                     ""                // Enter SSID not shown in UI, to be used on custom builds to ease support
+#define CUSTOM_SUPPORT_KEY                      ""                // Enter key not shown in UI, to be used on custom builds to ease support
+
+
+// Emergency fallback SSID will only be attempted in the first 10 minutes after reboot.
+// When found, the unit will connect to it and depending on the built in flag, it will either just connect to it, or clear set credentials.
+// Use case: User connects to a public AP which does need to agree on an agreement page for the rules of conduct (e.g. open APs)
+// This is seen as a valid connection, so the unit will not reconnect to another node and thus becomes inaccessible.
+#define CUSTOM_EMERGENCY_FALLBACK_SSID          ""                // Enter SSID not shown in UI, to be used to regain access to the node
+#define CUSTOM_EMERGENCY_FALLBACK_KEY           ""                // Enter key not shown in UI, to be used to regain access to the node
+
+#define CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS  false
+#define CUSTOM_EMERGENCY_FALLBACK_START_AP           false
+
+#define CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME 10
+
 #define USES_SSDP
 
 
 // #define USE_SETTINGS_ARCHIVE
 // #define FEATURE_I2CMULTIPLEXER
 // #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+
+/*
+ #######################################################################################################
+   Defining web interface
+ #######################################################################################################
+ */
+
+#define MENU_INDEX_MAIN_VISIBLE          true
+/*
+#define MENU_INDEX_CONFIG_VISIBLE        false
+#define MENU_INDEX_CONTROLLERS_VISIBLE   false
+#define MENU_INDEX_HARDWARE_VISIBLE      false
+#define MENU_INDEX_DEVICES_VISIBLE       false
+#define MENU_INDEX_RULES_VISIBLE         false
+#define MENU_INDEX_NOTIFICATIONS_VISIBLE false
+#define MENU_INDEX_TOOLS_VISIBLE         false
+*/
+
+#define MAIN_PAGE_SHOW_SYSINFO_BUTTON    true
+#define MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON true
+#define MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN false
+
+#define MAIN_PAGE_SHOW_NODE_LIST_BUILD   true
+#define MAIN_PAGE_SHOW_NODE_LIST_TYPE    true
+
+#define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
+
+
+//#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
+
+
+/*
+ #######################################################################################################
+   CSS / template
+ #######################################################################################################
+ */
+/*
+#define WEBPAGE_TEMPLATE_DEFAULT_HEADER "<header class='headermenu'><h1>ESP Easy Mega: {{title}}</h1><BR>"
+#define WEBPAGE_TEMPLATE_DEFAULT_FOOTER "<footer><br><h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community</h6></footer></body></html>"
+#define WEBPAGE_TEMPLATE_AP_HEADER      "<body><header class='apheader'><h1>Welcome to ESP Easy Mega AP</h1>"
+#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
+*/
+// Embed Custom CSS in Custom.h:
+/*
+#define WEBSERVER_EMBED_CUSTOM_CSS
+static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
+...
+,0};
+*/
 
 
 /*
@@ -290,7 +366,9 @@
 // #define USES_P105   // Atlas_EZO_ORP
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
+// #define USES_P110   // VL53L0X Time of Flight sensor
 // #define USES_P111   // RF522 RFID reader
+// #define USES_P113   // VL53L1X ToF
 
 
 // Special plugins needing IR library

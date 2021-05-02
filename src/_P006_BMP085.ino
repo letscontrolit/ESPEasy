@@ -90,9 +90,7 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
 
           if (elev != 0)
           {
-            pressure = P006_data->pressureElevation(
-              pressure,
-              elev);
+            pressure = pressureElevation(pressure, elev);
           }
           UserVar[event->BaseVarIndex + 1] = pressure;
 

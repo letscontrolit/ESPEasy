@@ -4,6 +4,12 @@
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+#include "../../ESPEasy_common.h"
+#include "../../ESPEasy_fdwdecl.h"
+
+#define WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     3
+#define WIFI_CUSTOM_SUPPORT_KEY_INDEX        4
+#define WIFI_CREDENTIALS_FALLBACK_SSID_INDEX 5
 
 WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
   known.clear();
@@ -17,20 +23,34 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
   _mustLoadCredentials = false;
   known.clear();
   candidates.clear();
-  addFromRTC();
 
   {
     // Add the known SSIDs
     String ssid, key;
     byte   index = 1; // Index 0 is the "unset" value
 
-    while (get_SSID_key(index, ssid, key)) {
-      known.emplace_back(index, ssid, key);
-      ++index;
+    bool done = false;
+
+    while (!done) {
+      if (get_SSID_key(index, ssid, key)) {
+        known.emplace_back(index, ssid, key);
+        if (index == WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX || 
+            index == WIFI_CUSTOM_SUPPORT_KEY_INDEX) {
+          known.back().lowPriority = true;
+        } else if (index == WIFI_CREDENTIALS_FALLBACK_SSID_INDEX) {
+          known.back().isEmergencyFallback = true;
+        }
+        ++index;
+      } else {
+        if (SettingsIndexMatchCustomCredentials(index)) {
+          ++index;
+        } else {
+          done = true;
+        }
+      }
     }
   }
-  known_it = known.begin();
-  purge_unusable();
+  loadCandidatesFromScanned();
 }
 
 void WiFi_AP_CandidatesList::clearCache() {
@@ -43,36 +63,62 @@ void WiFi_AP_CandidatesList::clearCache() {
 void WiFi_AP_CandidatesList::force_reload() {
   clearCache();
   RTC.clearLastWiFi(); // Invalidate the RTC WiFi data.
-  process_WiFiscan(WiFi.scanComplete());
+  candidates.clear();
+  loadCandidatesFromScanned();
+}
+
+void WiFi_AP_CandidatesList::begin_sync_scan() {
+  candidates.clear();
+}
+
+void WiFi_AP_CandidatesList::purge_expired() {
+  for (auto it = scanned.begin(); it != scanned.end(); ) {
+    if (it->expired()) {
+      it = scanned.erase(it);
+    } else {
+      ++it;
+    }
+  }
 }
 
 void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
-  load_knownCredentials();
-  candidates.clear();
-
-  known_it = known.begin();
-
-  // Now try to merge the known SSIDs, or add a new one if it is a hidden SSID
+  // Append or update found APs from scan.
   for (uint8_t i = 0; i < scancount; ++i) {
-    add(i);
+    const WiFi_AP_Candidate tmp(i);
+    // Remove previous scan result if present
+    for (auto it = scanned.begin(); it != scanned.end(); ) {
+      if (tmp == *it || it->expired()) {
+        it = scanned.erase(it);
+      } else {
+        ++it;
+      }
+    }
+//    if (Settings.IncludeHiddenSSID() || !tmp.isHidden) {
+      scanned.push_back(tmp);
+      #ifndef BUILD_NO_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("WiFi : Scan result: ");
+        log += tmp.toString();
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+      #endif // ifndef BUILD_NO_DEBUG
+//    }
   }
-  addFromRTC();
-  purge_unusable();
-
-#ifndef BUILD_NO_DEBUG
-
-  for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-    String log = F("WiFi : Scan result: ");
-    log += it->toString();
-    addLog(LOG_LEVEL_INFO, log);
-  }
-#endif // ifndef BUILD_NO_DEBUG
+  scanned.sort();
+  loadCandidatesFromScanned();
+  WiFi.scanDelete();
 }
 
-bool WiFi_AP_CandidatesList::getNext() {
+bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
   load_knownCredentials();
 
-  if (candidates.empty()) { return false; }
+  if (candidates.empty()) { 
+    if (scanAllowed) {
+      return false;
+    }
+    loadCandidatesFromScanned();
+    if (candidates.empty()) { return false; }
+  }
 
   bool mustPop = true;
 
@@ -118,7 +164,7 @@ const WiFi_AP_Candidate& WiFi_AP_CandidatesList::getCurrent() const {
   return currentCandidate;
 }
 
-WiFi_AP_Candidate WiFi_AP_CandidatesList::getBestScanResult() const {
+WiFi_AP_Candidate WiFi_AP_CandidatesList::getBestCandidate() const {
   for (auto it = candidates.begin(); it != candidates.end(); ++it) {
     if (it->rssi < -1) { return *it; }
   }
@@ -147,63 +193,36 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
 }
 
-void WiFi_AP_CandidatesList::add(uint8_t networkItem) {
-  WiFi_AP_Candidate tmp(networkItem);
-
-  if (tmp.isHidden && Settings.IncludeHiddenSSID()) {
-    candidates.push_back(tmp);
-    return;
-  }
-
-  if (tmp.ssid.length() == 0) { return; }
-
-  for (auto it = known.begin(); it != known.end(); ++it) {
-    if (it->ssid.equals(tmp.ssid)) {
-      tmp.key   = it->key;
-      tmp.index = it->index;
-
-      if (tmp.usable()) {
-        candidates.push_back(tmp);
-
-        // Do not return as we may have several AP's with the same SSID and different passwords.
-      }
+int8_t WiFi_AP_CandidatesList::scanComplete() const {
+  size_t found = 0;
+  for (auto scan = scanned.begin(); scan != scanned.end(); ++scan) {
+    if (!scan->expired()) {
+      ++found;
     }
   }
+  if (found > 0) {    
+    return found;
+  }
+  const int8_t scanCompleteStatus = WiFi.scanComplete();
+  if (scanCompleteStatus <= 0) {
+    return scanCompleteStatus;
+  }
+  return 0;
 }
 
-void WiFi_AP_CandidatesList::addFromRTC() {
-  if (!RTC.lastWiFi_set()) { return; }
-
-  String ssid, key;
-
-  if (!get_SSID_key(RTC.lastWiFiSettingsIndex, ssid, key)) {
-    return;
-  }
-
-  candidates.emplace_front(RTC.lastWiFiSettingsIndex, ssid, key);
-  candidates.front().setBSSID(RTC.lastBSSID);
-  candidates.front().rssi = -1; // Set to best possible RSSI so it is tried first.
-  candidates.front().channel = RTC.lastWiFiChannel;
-
-  if (!candidates.front().usable() || !candidates.front().allowQuickConnect()) {
-    candidates.pop_front();
-    return;
-  }
-
-  // This is not taken from a scan, so no idea of the used encryption.
-  // Try to find a matching BSSID to get the encryption.
-  for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-    if ((it->rssi != -1) && candidates.front() == *it) {
-      candidates.front().enc_type = it->enc_type;
-      return;
-    }
-  }
-  if (currentCandidate == candidates.front()) {
-    candidates.front().enc_type = currentCandidate.enc_type;
-  }
+bool WiFi_AP_CandidatesList::SettingsIndexMatchCustomCredentials(uint8_t index)
+{
+  return (WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     == index ||
+          WIFI_CUSTOM_SUPPORT_KEY_INDEX        == index ||
+          WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == index);
 }
 
-void WiFi_AP_CandidatesList::purge_unusable() {
+void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
+  if (candidates.size() > 1) {
+    // Do not mess with the current candidates order if > 1 present
+    return;
+  }
+  // Purge unusable from known list.
   for (auto it = known.begin(); it != known.end();) {
     if (it->usable()) {
       ++it;
@@ -213,7 +232,125 @@ void WiFi_AP_CandidatesList::purge_unusable() {
   }
   known.sort();
   known.unique();
+  known_it = known.begin();
 
+  for (auto scan = scanned.begin(); scan != scanned.end();) {
+    if (scan->expired()) {
+      scan = scanned.erase(scan);
+    } else {
+      if (scan->isHidden) {
+        if (Settings.IncludeHiddenSSID()) {
+          if (SecuritySettings.hasWiFiCredentials()) {
+            candidates.push_back(*scan);
+          }
+        }
+      } else if (scan->ssid.length() > 0) {
+        for (auto kn_it = known.begin(); kn_it != known.end(); ++kn_it) {
+          if (scan->ssid.equals(kn_it->ssid)) {
+            WiFi_AP_Candidate tmp = *scan;
+            tmp.key   = kn_it->key;
+            tmp.index = kn_it->index;
+            tmp.lowPriority = kn_it->lowPriority;
+            tmp.isEmergencyFallback = kn_it->isEmergencyFallback;
+
+            if (tmp.usable()) {
+              candidates.push_back(tmp);
+
+              // Check all knowns as we may have several AP's with the same SSID and different passwords.
+            }
+          }
+        }
+      }
+      ++scan;
+    }
+  }
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    const WiFi_AP_Candidate bestCandidate = getBestCandidate();
+    if (bestCandidate.usable()) {
+      String log = F("WiFi : Best AP candidate: ");
+      log += bestCandidate.toString();
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  }
+  candidates.sort();
+  addFromRTC();
+  purge_unusable();
+}
+
+void WiFi_AP_CandidatesList::addFromRTC() {
+  if (!RTC.lastWiFi_set()) { return; }
+
+  if (SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) 
+  { 
+    return;
+  }
+
+  String ssid, key;
+
+  if (!get_SSID_key(RTC.lastWiFiSettingsIndex, ssid, key)) {
+    return;
+  }
+
+  WiFi_AP_Candidate fromRTC(RTC.lastWiFiSettingsIndex, ssid, key);
+  fromRTC.setBSSID(RTC.lastBSSID);
+  fromRTC.channel = RTC.lastWiFiChannel;
+
+  if (candidates.size() > 0 && candidates.front().ssid.equals(fromRTC.ssid)) {
+    // Front candidate was already from RTC.
+    candidates.pop_front();
+  }
+
+  // See if we may have a better candidate for the current network, with a significant better RSSI.
+  auto bestMatch = candidates.end();
+  auto lastUsed  = candidates.end();
+  for (auto it = candidates.begin(); lastUsed == candidates.end() && it != candidates.end(); ++it) {
+    if (it->usable() && it->ssid.equals(fromRTC.ssid)) {
+      const bool foundLastUsed = fromRTC.bssid_match(it->bssid);
+      if (foundLastUsed) {
+        lastUsed = it;
+      } else if (bestMatch == candidates.end()) {
+        bestMatch = it;
+      }
+    }
+  }
+  bool matchAdded = false;
+  if (bestMatch != candidates.end()) {
+    // Found a best match, possibly better than the last used.
+    if (lastUsed == candidates.end() || (bestMatch->rssi > (lastUsed->rssi + 10))) {
+      // Last used was not found or
+      // Other candidate has significant better RSSI
+      matchAdded = true;
+      candidates.push_front(*bestMatch);
+    }
+  } else if (lastUsed != candidates.end()) {
+    matchAdded = true;
+    candidates.push_front(*lastUsed);
+  }
+  if (!matchAdded) {
+    candidates.push_front(fromRTC);
+    // This is not taken from a scan, so no idea of the used encryption.
+    // Try to find a matching BSSID to get the encryption.
+    for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+      if ((it->rssi != -1) && candidates.front() == *it) {
+        candidates.front().enc_type = it->enc_type;
+        return;
+      }
+    }
+  }
+
+  candidates.front().rssi = -1; // Set to best possible RSSI so it is tried first.
+
+  if (!candidates.front().usable() || !candidates.front().allowQuickConnect()) {
+    candidates.pop_front();
+    return;
+  }
+
+  if (currentCandidate == candidates.front()) {
+    candidates.front().enc_type = currentCandidate.enc_type;
+  }
+}
+
+void WiFi_AP_CandidatesList::purge_unusable() {
   for (auto it = candidates.begin(); it != candidates.end();) {
     if (it->usable()) {
       ++it;
@@ -235,6 +372,40 @@ bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key)
       ssid = SecuritySettings.WifiSSID2;
       key  = SecuritySettings.WifiKey2;
       break;
+    case WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX:
+      #if !defined(CUSTOM_DEPLOYMENT_SSID) || !defined(CUSTOM_DEPLOYMENT_KEY)
+      return false;
+      #else
+      ssid = F(CUSTOM_DEPLOYMENT_SSID);
+      key  = F(CUSTOM_DEPLOYMENT_KEY);
+      #endif
+      break;
+    case WIFI_CUSTOM_SUPPORT_KEY_INDEX:
+      #if !defined(CUSTOM_SUPPORT_SSID) || !defined(CUSTOM_SUPPORT_KEY)
+      return false;
+      #else
+      ssid = F(CUSTOM_SUPPORT_SSID);
+      key  = F(CUSTOM_SUPPORT_KEY);
+      #endif
+      break;
+    case WIFI_CREDENTIALS_FALLBACK_SSID_INDEX:
+    {
+      #if !defined(CUSTOM_EMERGENCY_FALLBACK_SSID) || !defined(CUSTOM_EMERGENCY_FALLBACK_KEY)
+      return false;
+      #else
+      int allowedUptimeMinutes = 10;
+      #ifdef CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME
+      allowedUptimeMinutes = CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME;
+      #endif
+      if (getUptimeMinutes() < allowedUptimeMinutes && SecuritySettings.hasWiFiCredentials()) {
+        ssid = F(CUSTOM_EMERGENCY_FALLBACK_SSID);
+        key  = F(CUSTOM_EMERGENCY_FALLBACK_KEY);
+      } else {
+        return false;
+      }
+      #endif
+      break;
+    }
     default:
       return false;
   }

@@ -159,16 +159,40 @@ void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::PeriodicalScanWiFi() const {
+  // Invert to enable it by default
+  return !bitRead(VariousBits1, 15);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::PeriodicalScanWiFi(bool value) {
+  // Invert to enable it by default
+  bitWrite(VariousBits1, 15, !value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::JSONBoolWithoutQuotes() const {
+  return bitRead(VariousBits1, 16);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::JSONBoolWithoutQuotes(bool value) {
+  bitWrite(VariousBits1, 16, value);
+}
+
+template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
-  if (validTaskIndex(taskIndex))
+  if (validTaskIndex(taskIndex)) {
     return bitRead(TaskDeviceSendDataFlags[taskIndex], 0);
+  }
   return false;
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value) {
-  if (validTaskIndex(taskIndex))
+  if (validTaskIndex(taskIndex)) {
     bitWrite(TaskDeviceSendDataFlags[taskIndex], 0, value);
+  }
 }
 
 template<unsigned int N_TASKS>

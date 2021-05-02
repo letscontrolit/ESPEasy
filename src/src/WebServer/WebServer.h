@@ -44,6 +44,12 @@ size_t streamFile_htmlEscape(const String& fileName);
 
 void   WebServerInit();
 
+// ********************************************************************************
+// Redirect to captive portal if we got a request for another domain. 
+// Return true in that case so the page handler does not try to handle the request again.
+// ********************************************************************************
+bool   captivePortal();
+
 void   setWebserverRunning(bool state);
 
 void   getWebPageTemplateDefault(const String& tmplName,
@@ -68,6 +74,8 @@ String getGpMenuIcon(byte index);
 String getGpMenuLabel(byte index);
 
 String getGpMenuURL(byte index);
+
+bool   GpMenuVisible(byte index);
 
 void   getWebPageTemplateVar(const String& varName);
 
@@ -126,7 +134,7 @@ void addTaskValueSelect(const String& name,
 // ********************************************************************************
 // Login state check
 // ********************************************************************************
-boolean isLoggedIn();
+bool isLoggedIn(bool mustProvideLogin = true);
 
 String  getControllerSymbol(byte index);
 
@@ -139,7 +147,8 @@ void    addSVG_param(const String& key,
 void    addSVG_param(const String& key,
                      const String& value);
 
-void    createSvgRect_noStroke(unsigned int fillColor,
+void    createSvgRect_noStroke(const String& classname,
+                               unsigned int fillColor,
                                float        xoffset,
                                float        yoffset,
                                float        width,
@@ -147,7 +156,8 @@ void    createSvgRect_noStroke(unsigned int fillColor,
                                float        rx,
                                float        ry);
 
-void createSvgRect(unsigned int fillColor,
+void createSvgRect(const String& classname,
+                   unsigned int fillColor,
                    unsigned int strokeColor,
                    float        xoffset,
                    float        yoffset,

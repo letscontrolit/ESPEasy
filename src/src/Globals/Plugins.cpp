@@ -241,14 +241,16 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
 // Example:  TaskInit#bme=1,0    (taskindex = 0, return value = 0)
 void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, int value1) {
   if (Settings.UseRules) {
-    String event = eventName;
+    String event;
+    event.reserve(eventName.length() + 32);
+    event  = eventName;
     event += '#';
     event += getTaskDeviceName(taskIndex);
     event += '=';
     event += taskIndex + 1;
     event += ',';
     event += value1;
-    eventQueue.add(event);
+    eventQueue.addMove(std::move(event));
   }
 }
 

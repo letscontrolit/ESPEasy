@@ -26,7 +26,8 @@ struct P023_data_struct : public PluginTaskData_base {
   P023_data_struct(byte    _address,
                    byte    _type,
                    Spacing _font_spacing,
-                   byte    _displayTimer);
+                   byte    _displayTimer,
+                   byte    _use_sh1106);
 
   void   setDisplayTimer(byte _displayTimer);
   void   checkDisplayTimer();
@@ -75,6 +76,8 @@ struct P023_data_struct : public PluginTaskData_base {
   byte    type         = 0;
   Spacing font_spacing = Spacing::normal;
   byte    displayTimer = 0;
+  byte    use_sh1106   = 0;
+
 };
 
 #endif // ifdef USES_P023

@@ -101,11 +101,11 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
           P032_data->readout();
 
           UserVar[event->BaseVarIndex] = P032_data->ms5611_temperature / 100;
-          int elev = PCONFIG(1);
-
-          if (elev)
+          
+          const int elev = PCONFIG(1);
+          if (elev != 0)
           {
-            UserVar[event->BaseVarIndex + 1] = P032_data->pressureElevation(P032_data->ms5611_pressure, elev);
+            UserVar[event->BaseVarIndex + 1] = pressureElevation(P032_data->ms5611_pressure, elev);
           } else {
             UserVar[event->BaseVarIndex + 1] = P032_data->ms5611_pressure;
           }

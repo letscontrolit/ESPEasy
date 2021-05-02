@@ -59,7 +59,7 @@ private:
 
   double globalstack[STACK_SIZE];
   double *sp     = globalstack - 1;
-  double *sp_max = &globalstack[STACK_SIZE - 1];
+  const double *sp_max = &globalstack[STACK_SIZE - 1];
 
   // Check if it matches part of a number (identifier)
   // @param oc  Previous character
@@ -98,6 +98,8 @@ private:
   unsigned int op_arg_count(const char c);
 
 public:
+
+  RulesCalculate_t();
 
   CalculateReturnCode doCalculate(const char *input,
                                   double     *result);
