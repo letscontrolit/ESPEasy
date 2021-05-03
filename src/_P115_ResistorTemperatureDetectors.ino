@@ -1,8 +1,8 @@
 #include "_Plugin_Helper.h"
-#ifdef USES_P250
+#ifdef USES_P115
 
 // #######################################################################################################
-// ######################## Plugin 250: Resistor Temperature Detectors (MAX31865) ########################
+// ######################## Plugin 115: Resistor Temperature Detectors (MAX31865) ########################
 // #######################################################################################################
 
 // Original work by chri.kai.in
@@ -40,19 +40,19 @@
 
 #include <SPI.h>
 
-#define PLUGIN_250
-#define PLUGIN_ID_250               250
-#define PLUGIN_NAME_250             "Environment - Resistor Temperature Detectors"
-#define PLUGIN_VALUENAME1_250       "Temperature"
+#define PLUGIN_115  
+#define PLUGIN_ID_115               115
+#define PLUGIN_NAME_115             "Environment - Resistor Temperature Detectors"
+#define PLUGIN_VALUENAME1_115       "Temperature"
 
-#define P250_MAX_TYPE               PCONFIG(0)
-#define P250_RTD_TYPE               PCONFIG(1)
-#define P250_RTD_CON_TYPE           PCONFIG(2)
-#define P250_RTD_FILT_TYPE          PCONFIG(3)
-#define P250_RTD_RES                PCONFIG(4)
-#define P250_RTD_LM_TYPE            PCONFIG(5)
-#define P250_RTD_LM_SHTDWN          PCONFIG(6)
-#define P250_RTD_OFFSET             PCONFIG_FLOAT(0)
+#define P115_MAX_TYPE               PCONFIG(0)
+#define P115_RTD_TYPE               PCONFIG(1)
+#define P115_RTD_CON_TYPE           PCONFIG(2)
+#define P115_RTD_FILT_TYPE          PCONFIG(3)
+#define P115_RTD_RES                PCONFIG(4)
+#define P115_RTD_LM_TYPE            PCONFIG(5)
+#define P115_RTD_LM_SHTDWN          PCONFIG(6)
+#define P115_RTD_OFFSET             PCONFIG_FLOAT(0)
 
 #define CS_Delay()                  delayMicroseconds(500)
 #define MAX31865_CONVERSION_BREAK   100
@@ -60,22 +60,22 @@
 #define MAX31865_PT100              0
 #define MAX31865_PT1000             1
 
-#define P250_MAX31865               0
-#define P250_LM7x                   1
+#define P115_MAX31865               0
+#define P115_LM7x                   1
 
-#define P250_READ_ADDR_BASE         0x00
-#define P250_WRITE_ADDR_BASE        0x80
+#define P115_READ_ADDR_BASE         0x00
+#define P115_WRITE_ADDR_BASE        0x80
 
-#define P250_CONFIG                 0
-#define P250_RTD_MSB                1
-#define P250_RTD_LSB                2
-#define P250_HFT_MSB                3
-#define P250_HFT_LSB                4
-#define P250_LFT_MSB                5
-#define P250_LFT_LSB                6
-#define P250_FAULT                  7
+#define P115_CONFIG                 0
+#define P115_RTD_MSB                1
+#define P115_RTD_LSB                2
+#define P115_HFT_MSB                3
+#define P115_HFT_LSB                4
+#define P115_LFT_MSB                5
+#define P115_LFT_LSB                6
+#define P115_FAULT                  7
 
-#define P250_NO_REG                 8
+#define P115_NO_REG                 8
 
 // all failure defines
 #define MAX31865_FAULT_HIGHTHRESH   0x80
@@ -104,7 +104,7 @@
 #define LM7x_SD124                  0x08
 #define LM7x_SD125                  0x09
 
-boolean Plugin_250(byte function, struct EventStruct *event, String &string)
+boolean Plugin_115(byte function, struct EventStruct *event, String &string)
 {
   boolean success = false;
 
@@ -112,7 +112,7 @@ boolean Plugin_250(byte function, struct EventStruct *event, String &string)
   {
   case PLUGIN_DEVICE_ADD:
   {
-    Device[++deviceCount].Number = PLUGIN_ID_250;
+    Device[++deviceCount].Number = PLUGIN_ID_115;
     Device[deviceCount].Type = DEVICE_TYPE_SPI;
     Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
     Device[deviceCount].Ports = 0;
@@ -128,13 +128,13 @@ boolean Plugin_250(byte function, struct EventStruct *event, String &string)
 
   case PLUGIN_GET_DEVICENAME:
   {
-    string = F(PLUGIN_NAME_250);
+    string = F(PLUGIN_NAME_115);
     break;
   }
 
   case PLUGIN_GET_DEVICEVALUENAMES:
   {
-    strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_250));
+    strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_115));
     break;
   }
 
@@ -146,7 +146,7 @@ boolean Plugin_250(byte function, struct EventStruct *event, String &string)
 
   case PLUGIN_INIT:
   {
-    uint8_t CS_pin_no = Plugin_250_Get_SPI_CS_Pin(event);
+    uint8_t CS_pin_no = Plugin_115_Get_SPI_CS_Pin(event);
 
     // set the slaveSelectPin as an output:
     pinMode(CS_pin_no, OUTPUT);
@@ -157,7 +157,7 @@ boolean Plugin_250(byte function, struct EventStruct *event, String &string)
     SPI.setDataMode(SPI_MODE3);
     SPI.begin();
 
-    if (P250_MAX_TYPE == P250_MAX31865)
+    if (P115_MAX_TYPE == P115_MAX31865)
     {
 
       // activate 50Hz filter, clear all faults, no auto conversion, no one shot started
@@ -167,26 +167,26 @@ boolean Plugin_250(byte function, struct EventStruct *event, String &string)
       setConType(CS_pin_no, 0x00);
 
       // set HighFault Threshold MSB
-      write8BitRegister(CS_pin_no, (P250_WRITE_ADDR_BASE + P250_HFT_MSB), 0xFF);
+      write8BitRegister(CS_pin_no, (P115_WRITE_ADDR_BASE + P115_HFT_MSB), 0xFF);
 
       // set HighFault Threshold LSB
-      write8BitRegister(CS_pin_no, (P250_WRITE_ADDR_BASE + P250_HFT_LSB), 0xFF);
+      write8BitRegister(CS_pin_no, (P115_WRITE_ADDR_BASE + P115_HFT_LSB), 0xFF);
 
       // set LowFault Threshold MSB
-      write8BitRegister(CS_pin_no, (P250_WRITE_ADDR_BASE + P250_LFT_MSB), 0x00);
+      write8BitRegister(CS_pin_no, (P115_WRITE_ADDR_BASE + P115_LFT_MSB), 0x00);
 
       // set LowFault Threshold LSB
-      write8BitRegister(CS_pin_no, (P250_WRITE_ADDR_BASE + P250_LFT_LSB), 0x00);
+      write8BitRegister(CS_pin_no, (P115_WRITE_ADDR_BASE + P115_LFT_LSB), 0x00);
 
       // clear all faults
       clearFaults(CS_pin_no);
     }
 
-    if (P250_MAX_TYPE == P250_LM7x)
+    if (P115_MAX_TYPE == P115_LM7x)
     {
     }
 
-    addLog(LOG_LEVEL_INFO, F("P250 : MAX31865 Init"));
+    addLog(LOG_LEVEL_INFO, F("P115 : MAX31865 Init"));
     success = true;
     break;
   }
@@ -205,48 +205,48 @@ boolean Plugin_250(byte function, struct EventStruct *event, String &string)
 
     addFormSubHeader(F("Device Selection"));
 
-    const byte choice = P250_MAX_TYPE;
+    const byte choice = P115_MAX_TYPE;
     {
       const String TPoptions[2] = {F("MAX 31865"), F("LM7x")};
-      const int TPoptionValues[2] = {P250_MAX31865, P250_LM7x};
-      addFormSelector(F("Adapter IC"), F("p250_maxtype"), 2, TPoptions, TPoptionValues, choice);
+      const int TPoptionValues[2] = {P115_MAX31865, P115_LM7x};
+      addFormSelector(F("Adapter IC"), F("P115_maxtype"), 2, TPoptions, TPoptionValues, choice);
       addFormNote(F("Set used RTD Converter Module. Currently only MAX31865 is fully supported. LM7x derivatives are untested and experimental."));
     }
 
-    if (choice == P250_MAX31865)
+    if (choice == P115_MAX31865)
     {
       const String PToptions[2] = {F("PT100"), F("PT1000")};
       const int PToptionValues[2] = {MAX31865_PT100, MAX31865_PT1000};
-      addFormSelector(F("Resistor Type"), F("p250_rtdtype"), 2, PToptions, PToptionValues, P250_RTD_TYPE);
+      addFormSelector(F("Resistor Type"), F("P115_rtdtype"), 2, PToptions, PToptionValues, P115_RTD_TYPE);
       addFormNote(F("Set Resistor Type for MAX31865"));
 
       const String Coptions[2] = {F("2-/4-wire"), F("3-wire")};
       const int CoptionValues[2] = {0, 1};
-      addFormSelector(F("Connection Type"), F("p250_contype"), 2, Coptions, CoptionValues, P250_RTD_CON_TYPE);
+      addFormSelector(F("Connection Type"), F("P115_contype"), 2, Coptions, CoptionValues, P115_RTD_CON_TYPE);
       addFormNote(F("Set Connection Type for MAX31865"));
 
       const String FToptions[2] = {F("60 Hz"), F("50 Hz")};
       const int FToptionValues[2] = {0, 1};
-      addFormSelector(F("Supply Frequency Filter"), F("p250_filttype"), 2, FToptions, FToptionValues, P250_RTD_FILT_TYPE);
+      addFormSelector(F("Supply Frequency Filter"), F("P115_filttype"), 2, FToptions, FToptionValues, P115_RTD_FILT_TYPE);
       addFormNote(F("Set FIlter Frequency for Supply Voltage. Choose appropriate to your power net frequency (50/60 Hz)"));
 
-      addFormNumericBox(F("Reference Resistor"), F("p250_res"), P250_RTD_RES, 0);
+      addFormNumericBox(F("Reference Resistor"), F("P115_res"), P115_RTD_RES, 0);
       addFormNote(F("Set Reference Resistor for MAX31865"));
 
-      addFormFloatNumberBox(F("Offset [K]"), F("p250_offset"), P250_RTD_OFFSET, -50.0, 50.0, 2, 0.01);
+      addFormFloatNumberBox(F("Offset [K]"), F("P115_offset"), P115_RTD_OFFSET, -50.0, 50.0, 2, 0.01);
       addFormNote(F("Set Offset [K] for MAX31865. Valid values: [-50.0...50.0 K], min. stepsize: [0.01]"));
     }
 
-    if (choice == P250_LM7x)
+    if (choice == P115_LM7x)
     {
 
       const String PToptions[8] = {F("LM70"), F("LM71"), F("LM74"), F("TMP121"), F("TMP122"), F("TMP123"), F("TMP124"), F("TMP125")};
       const int PToptionValues[8] = {LM7x_SD70, LM7x_SD71, LM7x_SD74, LM7x_SD121, LM7x_SD122, LM7x_SD123, LM7x_SD124, LM7x_SD125};
-      addFormSelector(F("LM7x device details"), F("p250_rtd_lm_type"), 8, PToptions, PToptionValues, P250_RTD_LM_TYPE);
+      addFormSelector(F("LM7x device details"), F("P115_rtd_lm_type"), 8, PToptions, PToptionValues, P115_RTD_LM_TYPE);
       addFormNote(F("Choose LM7x device details to allow handling of device specifics,TMP122/124 not yet supported with all options -> fixed 12 Bit resolution, no advanced options active"));
 
-      addFormCheckBox(F("Enable Shutdown Mode"), F("p250_rtd_lm_shtdwn"), P250_RTD_LM_SHTDWN, false);
-      addFormNote(F("Enable shutdown mode for LM7x devices. Device is set to shutdown between sample cycles. Useful for very long call cycles, to save power.\n\r Without LM7x device conversion happens in between call cycles. Call Cylces should therefore not become lower than 250ms."));
+      addFormCheckBox(F("Enable Shutdown Mode"), F("P115_rtd_lm_shtdwn"), P115_RTD_LM_SHTDWN, false);
+      addFormNote(F("Enable shutdown mode for LM7x devices. Device is set to shutdown between sample cycles. Useful for very long call cycles, to save power.\n\r Without LM7x device conversion happens in between call cycles. Call Cylces should therefore not become lower than 350ms."));
     }
     success = true;
     break;
@@ -254,14 +254,14 @@ boolean Plugin_250(byte function, struct EventStruct *event, String &string)
 
   case PLUGIN_WEBFORM_SAVE:
   {
-    P250_MAX_TYPE = getFormItemInt(F("p250_maxtype"));
-    P250_RTD_TYPE = getFormItemInt(F("p250_rtdtype"));
-    P250_RTD_CON_TYPE = getFormItemInt(F("p250_contype"));
-    P250_RTD_FILT_TYPE = getFormItemInt(F("p250_filttype"));
-    P250_RTD_RES = getFormItemInt(F("p250_res"));
-    P250_RTD_OFFSET = getFormItemFloat(F("p250_offset"));
-    P250_RTD_LM_TYPE = getFormItemInt(F("p250_rtd_lm_type"));
-    P250_RTD_LM_SHTDWN = getFormItemInt(F("p250_rtd_lm_shtdwn"));
+    P115_MAX_TYPE = getFormItemInt(F("P115_maxtype"));
+    P115_RTD_TYPE = getFormItemInt(F("P115_rtdtype"));
+    P115_RTD_CON_TYPE = getFormItemInt(F("P115_contype"));
+    P115_RTD_FILT_TYPE = getFormItemInt(F("P115_filttype"));
+    P115_RTD_RES = getFormItemInt(F("P115_res"));
+    P115_RTD_OFFSET = getFormItemFloat(F("P115_offset"));
+    P115_RTD_LM_TYPE = getFormItemInt(F("P115_rtd_lm_type"));
+    P115_RTD_LM_SHTDWN = getFormItemInt(F("P115_rtd_lm_shtdwn"));
 
     success = true;
     break;
@@ -270,41 +270,41 @@ boolean Plugin_250(byte function, struct EventStruct *event, String &string)
   case PLUGIN_READ:
   {
     // Get the MAX Type (31865)
-    byte MaxType = P250_MAX_TYPE;
+    byte MaxType = P115_MAX_TYPE;
 
-    float Plugin_250_Celsius = NAN;
+    float Plugin_115_Celsius = NAN;
 
     switch (MaxType)
     {
-    case P250_MAX31865:
-      Plugin_250_Celsius = readMax31865(event);
+    case P115_MAX31865:
+      Plugin_115_Celsius = readMax31865(event);
       break;
-    case P250_LM7x:
-      Plugin_250_Celsius = readLM7x(event);
+    case P115_LM7x:
+      Plugin_115_Celsius = readLM7x(event);
       break;
     }
 
     if (loglevelActiveFor(LOG_LEVEL_INFO))
     {
-      String log = F("P250 : Temperature :");
+      String log = F("P115 : Temperature :");
       log += F(" MaxType: ");
       log += String(MaxType, DEC);
-      log += F(" Plugin_250_Celsius: ");
-      log += String(Plugin_250_Celsius, DEC);
-      log += F(" P250_RTD_TYPE: ");
-      log += String(P250_RTD_TYPE, DEC);
-      log += F(" P250_RTD_RES: ");
-      log += String(P250_RTD_RES, DEC);
+      log += F(" Plugin_115_Celsius: ");
+      log += String(Plugin_115_Celsius, DEC);
+      log += F(" P115_RTD_TYPE: ");
+      log += String(P115_RTD_TYPE, DEC);
+      log += F(" P115_RTD_RES: ");
+      log += String(P115_RTD_RES, DEC);
       addLog(LOG_LEVEL_INFO, log);
     }
 
-    if (Plugin_250_Celsius != NAN)
+    if (Plugin_115_Celsius != NAN)
     {
-      UserVar[event->BaseVarIndex] = Plugin_250_Celsius;
+      UserVar[event->BaseVarIndex] = Plugin_115_Celsius;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO))
       {
-        String log = F("P250 : Temperature ");
+        String log = F("P115 : Temperature ");
         log += String(UserVar[event->BaseVarIndex], DEC);
         log += F(" Valid : ");
         log += formatUserVarNoCheck(event->TaskIndex, 0);
@@ -316,7 +316,7 @@ boolean Plugin_250(byte function, struct EventStruct *event, String &string)
     {
       UserVar[event->BaseVarIndex] = NAN;
       UserVar[event->BaseVarIndex + 1] = NAN;
-      addLog(LOG_LEVEL_INFO, F("P250 : No Sensor attached !"));
+      addLog(LOG_LEVEL_INFO, F("P115 : No Sensor attached !"));
       success = false;
     }
 
@@ -333,20 +333,20 @@ float readLM7x(struct EventStruct *event)
   uint16_t device_id = 0;
   uint16_t rawValue = 0;
 
-  uint8_t CS_pin_no = Plugin_250_Get_SPI_CS_Pin(event);
+  uint8_t CS_pin_no = Plugin_115_Get_SPI_CS_Pin(event);
 
   // operate LM7x devices in polling mode, assuming conversion is ready with every call of this read function ( >=210ms call cycle)
   // this allows usage of multiples generations of LM7x devices, that doe not provde conversion ready information in temperature register
 
-  rawValue = readLM7xRegisters(CS_pin_no, P250_RTD_LM_TYPE, P250_RTD_LM_SHTDWN, &device_id);
+  rawValue = readLM7xRegisters(CS_pin_no, P115_RTD_LM_TYPE, P115_RTD_LM_SHTDWN, &device_id);
 
-  temperature = convertLM7xTemp(rawValue, P250_RTD_LM_TYPE);
+  temperature = convertLM7xTemp(rawValue, P115_RTD_LM_TYPE);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
     String log;
     log.reserve(66);
-    log = F("P250 : LM7x : readLM7x : ");
+    log = F("P115 : LM7x : readLM7x : ");
     log += F(" rawValue: ");
     log += String(rawValue, DEC);
     log += F(" device_id: 0x");
@@ -403,7 +403,7 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
     break;
   }
 
-  l_intTemperature = P250_convert_two_complement(l_rawValue, l_noBits);
+  l_intTemperature = P115_convert_two_complement(l_rawValue, l_noBits);
 
   l_returnValue = l_intTemperature * l_lsbvalue;
 
@@ -411,7 +411,7 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
   {
     String log;
     log.reserve(66);
-    log = F("P250 : LM7x : convertLM7xTemp : ");
+    log = F("P115 : LM7x : convertLM7xTemp : ");
     log += F(" l_returnValue: ");
     log += String(l_returnValue, DEC);
     log += F(" l_LM7xsubtype: 0x");
@@ -522,7 +522,7 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
   {
     String log;
     log.reserve(66);
-    log = F("P250 : LM7x : readLM7xRegisters : ");
+    log = F("P115 : LM7x : readLM7xRegisters : ");
     log += F(" l_returnValue: 0x");
     log += String(l_returnValue, HEX);
     log += F(" l_device_id: 0x");
@@ -536,16 +536,16 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
 float readMax31865(struct EventStruct *event)
 {
 
-  uint8_t registers[P250_NO_REG] = {0};
+  uint8_t registers[P115_NO_REG] = {0};
   uint16_t rawValue = 0;
 
-  uint8_t CS_pin_no = Plugin_250_Get_SPI_CS_Pin(event);
+  uint8_t CS_pin_no = Plugin_115_Get_SPI_CS_Pin(event);
 
   // clear all faults
   clearFaults(CS_pin_no);
 
   // set frequency filter
-  chooseFilterType(CS_pin_no, P250_RTD_FILT_TYPE);
+  chooseFilterType(CS_pin_no, P115_RTD_FILT_TYPE);
 
   //activate BIAS short before read, to reduce power consumption
   handleBias(CS_pin_no, true);
@@ -554,7 +554,7 @@ float readMax31865(struct EventStruct *event)
   delay(15);
 
   // configure read access with configuration from web interface
-  setConType(CS_pin_no, P250_RTD_CON_TYPE);
+  setConType(CS_pin_no, P115_RTD_CON_TYPE);
 
   //activate one shot conversion
   startOneShotConversion(CS_pin_no);
@@ -565,7 +565,7 @@ float readMax31865(struct EventStruct *event)
   uint32_t breakValue = 0;
   // wait for conversion to be ready
 
-  // while((read8BitRegister(CS_pin_no, (P250_READ_ADDR_BASE + P250_CONFIG)) & MAX31865_SET_ONE_SHOT)) {
+  // while((read8BitRegister(CS_pin_no, (P115_READ_ADDR_BASE + P115_CONFIG)) & MAX31865_SET_ONE_SHOT)) {
   //   breakValue++;
   //   if (breakValue >= MAX31865_CONVERSION_BREAK)
   //     break;
@@ -576,7 +576,7 @@ float readMax31865(struct EventStruct *event)
     String log;
     log.reserve(66);
 
-    log = F("P250 : MAX31865 : ");
+    log = F("P115 : MAX31865 : ");
     log += F("breakValue: ");
     log += String(breakValue, DEC);
 
@@ -585,12 +585,12 @@ float readMax31865(struct EventStruct *event)
   // delay(70);
 
   // read conversion result
-  rawValue = read16BitRegister(CS_pin_no, (P250_READ_ADDR_BASE + P250_RTD_MSB));
+  rawValue = read16BitRegister(CS_pin_no, (P115_READ_ADDR_BASE + P115_RTD_MSB));
 
   //deactivate BIAS short after read, to reduce power consumption
   handleBias(CS_pin_no, false);
 
-  registers[P250_FAULT] = read8BitRegister(CS_pin_no, (P250_READ_ADDR_BASE + P250_FAULT));
+  registers[P115_FAULT] = read8BitRegister(CS_pin_no, (P115_READ_ADDR_BASE + P115_FAULT));
 
   //# ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO))
@@ -598,14 +598,14 @@ float readMax31865(struct EventStruct *event)
     String log;
     log.reserve(66);
 
-    for (int i = 0; i < P250_NO_REG; ++i)
+    for (int i = 0; i < P115_NO_REG; ++i)
     {
-      registers[i] = read8BitRegister(CS_pin_no, (P250_READ_ADDR_BASE + i));
+      registers[i] = read8BitRegister(CS_pin_no, (P115_READ_ADDR_BASE + i));
     }
 
-    log = F("P250 : MAX31865 :");
+    log = F("P115 : MAX31865 :");
 
-    for (int i = 0; i < P250_NO_REG; ++i)
+    for (int i = 0; i < P115_NO_REG; ++i)
     {
       log += F(" 0x");
       log += String(registers[i], HEX);
@@ -620,40 +620,40 @@ float readMax31865(struct EventStruct *event)
 
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
-    if (registers[P250_FAULT])
+    if (registers[P115_FAULT])
     {
-      String log = F("P250 : MAX31865 : ");
+      String log = F("P115 : MAX31865 : ");
 
       log += F("Fault : 0x");
-      log += String(registers[P250_FAULT], HEX);
+      log += String(registers[P115_FAULT], HEX);
       log += F(" :");
 
-      if (registers[P250_FAULT] & MAX31865_FAULT_OVUV)
+      if (registers[P115_FAULT] & MAX31865_FAULT_OVUV)
       {
         log += F(" Under/Over voltage");
       }
 
-      if (registers[P250_FAULT] & MAX31865_FAULT_RTDINLOW)
+      if (registers[P115_FAULT] & MAX31865_FAULT_RTDINLOW)
       {
         log += F(" RTDIN- < 0.85 x Bias - FORCE- open");
       }
 
-      if (registers[P250_FAULT] & MAX31865_FAULT_REFINHIGH)
+      if (registers[P115_FAULT] & MAX31865_FAULT_REFINHIGH)
       {
         log += F(" REFIN- < 0.85 x Bias - FORCE- open");
       }
 
-      if (registers[P250_FAULT] & MAX31865_FAULT_REFINLOW)
+      if (registers[P115_FAULT] & MAX31865_FAULT_REFINLOW)
       {
         log += F(" REFIN- > 0.85 x Bias");
       }
 
-      if (registers[P250_FAULT] & MAX31865_FAULT_LOWTHRESH)
+      if (registers[P115_FAULT] & MAX31865_FAULT_LOWTHRESH)
       {
         log += F(" RTD Low Threshold");
       }
 
-      if (registers[P250_FAULT] & MAX31865_FAULT_HIGHTHRESH)
+      if (registers[P115_FAULT] & MAX31865_FAULT_HIGHTHRESH)
       {
         log += F(" RTD High Threshold");
       }
@@ -662,14 +662,14 @@ float readMax31865(struct EventStruct *event)
   }
   bool ValueValid = false;
 
-  if (registers[P250_FAULT] == 0x00)
+  if (registers[P115_FAULT] == 0x00)
     ValueValid = true;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
-    String log = F("P250 : Temperature :");
-    log += F(" registers[P250_FAULT]: ");
-    log += String(registers[P250_FAULT], HEX);
+    String log = F("P115 : Temperature :");
+    log += F(" registers[P115_FAULT]: ");
+    log += String(registers[P115_FAULT], HEX);
     log += F(" ValueValid: ");
     log += String(ValueValid, BIN);
     addLog(LOG_LEVEL_INFO, log);
@@ -678,23 +678,23 @@ float readMax31865(struct EventStruct *event)
   if (ValueValid)
   {
     rawValue >>= 1; // bottom fault bits is unused
-    float temperature = Plugin_250_convert_to_temperature(rawValue, getNomResistor(P250_RTD_TYPE), P250_RTD_RES);
+    float temperature = Plugin_115_convert_to_temperature(rawValue, getNomResistor(P115_RTD_TYPE), P115_RTD_RES);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO))
     {
-      String log = F("P250 : Temperature :");
+      String log = F("P115 : Temperature :");
       log += F(" rawValue: ");
       log += String(rawValue, DEC);
       log += F(" temperature: ");
       log += String(temperature, DEC);
-      log += F(" P250_RTD_TYPE: ");
-      log += String(P250_RTD_TYPE, DEC);
-      log += F(" P250_RTD_RES: ");
-      log += String(P250_RTD_RES, DEC);
+      log += F(" P115_RTD_TYPE: ");
+      log += String(P115_RTD_TYPE, DEC);
+      log += F(" P115_RTD_RES: ");
+      log += String(P115_RTD_RES, DEC);
       addLog(LOG_LEVEL_INFO, log);
     }
     //TODO CK: add offset handling from configuration webpage
-    temperature += P250_RTD_OFFSET;
+    temperature += P115_RTD_OFFSET;
 
     // Calculate Celsius
     return temperature;
@@ -711,14 +711,14 @@ void clearFaults(uint8_t l_CS_pin_no)
   uint8_t l_reg = 0;
 
   // read in config register
-  l_reg = read8BitRegister(l_CS_pin_no, (P250_READ_ADDR_BASE + P250_CONFIG));
+  l_reg = read8BitRegister(l_CS_pin_no, (P115_READ_ADDR_BASE + P115_CONFIG));
 
   // clear all faults ( write "0" to D2, D3, D5; write "1" to D2)
   l_reg &= ~(MAX31865_SET_ONE_SHOT | MAX31865_FAULT_CTRL_MASK);
   l_reg |= MAX31865_CLEAR_FAULTS;
 
   // write configuration to MAX31865 to enable VBIAS
-  write8BitRegister(l_CS_pin_no, (P250_WRITE_ADDR_BASE + P250_CONFIG), l_reg);
+  write8BitRegister(l_CS_pin_no, (P115_WRITE_ADDR_BASE + P115_CONFIG), l_reg);
 }
 
 void handleBias(uint8_t l_CS_pin_no, bool l_active)
@@ -726,7 +726,7 @@ void handleBias(uint8_t l_CS_pin_no, bool l_active)
   uint8_t l_reg = 0;
 
   // read in config register
-  l_reg = read8BitRegister(l_CS_pin_no, (P250_READ_ADDR_BASE + P250_CONFIG));
+  l_reg = read8BitRegister(l_CS_pin_no, (P115_READ_ADDR_BASE + P115_CONFIG));
 
   if (l_active)
   {
@@ -739,7 +739,7 @@ void handleBias(uint8_t l_CS_pin_no, bool l_active)
     l_reg &= ~MAX31865_SET_VBIAS_ON;
   }
   // write configuration to MAX31865 to enable VBIAS
-  write8BitRegister(l_CS_pin_no, (P250_WRITE_ADDR_BASE + P250_CONFIG), l_reg);
+  write8BitRegister(l_CS_pin_no, (P115_WRITE_ADDR_BASE + P115_CONFIG), l_reg);
 }
 
 void chooseFilterType(uint8_t l_CS_pin_no, uint8_t l_filtType)
@@ -747,7 +747,7 @@ void chooseFilterType(uint8_t l_CS_pin_no, uint8_t l_filtType)
   uint8_t l_reg = 0;
 
   // read in config register
-  l_reg = read8BitRegister(l_CS_pin_no, (P250_READ_ADDR_BASE + P250_CONFIG));
+  l_reg = read8BitRegister(l_CS_pin_no, (P115_READ_ADDR_BASE + P115_CONFIG));
 
   // configure access to sensor (2/4-wire OR 3 wire)
   switch (l_filtType)
@@ -764,7 +764,7 @@ void chooseFilterType(uint8_t l_CS_pin_no, uint8_t l_filtType)
   }
 
   // write to configuration register
-  write8BitRegister(l_CS_pin_no, (P250_WRITE_ADDR_BASE + P250_CONFIG), l_reg);
+  write8BitRegister(l_CS_pin_no, (P115_WRITE_ADDR_BASE + P115_CONFIG), l_reg);
 }
 
 void setConType(uint8_t l_CS_pin_no, uint8_t l_conType)
@@ -772,7 +772,7 @@ void setConType(uint8_t l_CS_pin_no, uint8_t l_conType)
   uint8_t l_reg = 0;
 
   // read in config register
-  l_reg = read8BitRegister(l_CS_pin_no, (P250_READ_ADDR_BASE + P250_CONFIG));
+  l_reg = read8BitRegister(l_CS_pin_no, (P115_READ_ADDR_BASE + P115_CONFIG));
 
   // configure access to sensor (2/4-wire OR 3 wire)
   switch (l_conType)
@@ -789,7 +789,7 @@ void setConType(uint8_t l_CS_pin_no, uint8_t l_conType)
   }
 
   // write to configuration register
-  write8BitRegister(l_CS_pin_no, (P250_WRITE_ADDR_BASE + P250_CONFIG), l_reg);
+  write8BitRegister(l_CS_pin_no, (P115_WRITE_ADDR_BASE + P115_CONFIG), l_reg);
 }
 
 void startOneShotConversion(uint8_t l_CS_pin_no)
@@ -797,13 +797,13 @@ void startOneShotConversion(uint8_t l_CS_pin_no)
   uint8_t l_reg = 0;
 
   // read in config register
-  l_reg = read8BitRegister(l_CS_pin_no, (P250_READ_ADDR_BASE + P250_CONFIG));
+  l_reg = read8BitRegister(l_CS_pin_no, (P115_READ_ADDR_BASE + P115_CONFIG));
 
   //activate one shot conversion
   l_reg |= MAX31865_SET_ONE_SHOT;
 
   // write to configuration register
-  write8BitRegister(l_CS_pin_no, (P250_WRITE_ADDR_BASE + P250_CONFIG), l_reg);
+  write8BitRegister(l_CS_pin_no, (P115_WRITE_ADDR_BASE + P115_CONFIG), l_reg);
 }
 
 /**************************************************************************/
@@ -819,7 +819,7 @@ void startOneShotConversion(uint8_t l_CS_pin_no)
     @returns Temperature in C
 */
 /**************************************************************************/
-float Plugin_250_convert_to_temperature(uint32_t l_rawvalue, float RTDnominal, float refResistor)
+float Plugin_115_convert_to_temperature(uint32_t l_rawvalue, float RTDnominal, float refResistor)
 {
 
 #define RTD_A 3.9083e-3
@@ -880,7 +880,7 @@ uint16_t getNomResistor(uint8_t l_RType)
   return (l_returnValue);
 }
 
-int Plugin_250_Get_SPI_CS_Pin(struct EventStruct *event)
+int Plugin_115_Get_SPI_CS_Pin(struct EventStruct *event)
 {
   // If no Pin is in Config we use 15 as default -> Hardware Chip Select on ESP8266
   if (CONFIG_PIN1 != 0)
@@ -907,7 +907,7 @@ void write8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
   {
     String log;
     log.reserve(66);
-    log = F("P250 : MAX31865 : write8BitRegister : ");
+    log = F("P115 : MAX31865 : write8BitRegister : ");
     log += F("l_address: 0x");
     log += String(l_address, HEX);
     log += F(" value: 0x");
@@ -933,7 +933,7 @@ void write16BitRegisters(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
   {
     String log;
     log.reserve(66);
-    log = F("P250 : MAX31865 : write16BitRegister : ");
+    log = F("P115 : MAX31865 : write16BitRegister : ");
     log += F("l_address: 0x");
     log += String(l_address, HEX);
     log += F(" value: 0x");
@@ -961,7 +961,7 @@ uint8_t read8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
   {
     String log;
     log.reserve(66);
-    log = F("P250 : MAX31865 : read8BitRegister : ");
+    log = F("P115 : MAX31865 : read8BitRegister : ");
     log += F("l_address: 0x");
     log += String(l_address, HEX);
     log += F(" l_returnValue: 0x");
@@ -993,7 +993,7 @@ uint16_t read16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
   {
     String log;
     log.reserve(66);
-    log = F("P250 : MAX31865 : read16BitRegister : ");
+    log = F("P115 : MAX31865 : read16BitRegister : ");
     log += F("l_address: 0x");
     log += String(l_address, HEX);
     log += F(" l_rawValue: 0x");
@@ -1004,7 +1004,7 @@ uint16_t read16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
   return l_rawValue;
 }
 
-int P250_convert_two_complement(uint16_t value, uint8_t nr_bits)
+int P115_convert_two_complement(uint16_t value, uint8_t nr_bits)
 {
   const bool negative = (value & (1 << (nr_bits - 1))) != 0;
   int l_returnValue = 0;
@@ -1023,7 +1023,7 @@ int P250_convert_two_complement(uint16_t value, uint8_t nr_bits)
   {
     String log;
     log.reserve(66);
-    log = F("P250 : LM7x : P250_convert_two_complement : ");
+    log = F("P115 : LM7x : P115_convert_two_complement : ");
     log += F(" l_returnValue: ");
     log += String(l_returnValue, DEC);
     log += F(" value: 0x");
@@ -1038,4 +1038,4 @@ int P250_convert_two_complement(uint16_t value, uint8_t nr_bits)
   return (l_returnValue);
 }
 
-#endif // USES_P250
+#endif // USES_P115

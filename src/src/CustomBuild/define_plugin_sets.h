@@ -991,7 +991,6 @@ To create/register a plugin, you have to :
     #define USES_P073   // 7DG
     #define USES_P079   // Wemos Motoshield
 
-    #define USES_P250   // RTD Sensors, e.g. MAX38165
 #endif
 
 
@@ -1110,8 +1109,9 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_SET_TESTING_D
     #define USES_P093   // Mitsubishi Heat Pump
-    #define USES_P094  // CUL Reader
-    #define USES_P114  // VEML6075 UVA/UVB sensor
+    #define USES_P094   // CUL Reader
+    #define USES_P114   // VEML6075 UVA/UVB sensor
+    #define USES_P115   // RTD Sensors - e.g. PT100/PT1000 via MAX31865
 #endif
 
 
