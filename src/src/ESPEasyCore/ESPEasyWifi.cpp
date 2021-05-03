@@ -328,6 +328,7 @@ bool checkAndResetWiFi() {
           // This is a valid status, no need to reset
           if (!WiFiEventData.WiFiServicesInitialized()) {
             WiFiEventData.setWiFiServicesInitialized();
+            setNetworkMedium(NetworkMedium_t::WIFI);
           }
 
           return false;
