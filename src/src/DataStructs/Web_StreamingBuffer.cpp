@@ -240,7 +240,8 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 #endif // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 
   sentBytes += length;
-  data                = "";
+  data       = "";
+  data.reserve(CHUNKED_BUFFER_SIZE);
   delay(0);
 }
 
@@ -250,14 +251,6 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   #endif
   
   web_server.client().flush();
-  String contenttype;
-
-  if (json) {
-    contenttype = F("application/json");
-  }
-  else {
-    contenttype = F("text/html");
-  }
 
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
@@ -268,10 +261,10 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   if (json) {
     web_server.sendHeader(F("Access-Control-Allow-Origin"), "*");
   }
-  web_server.send(200, contenttype, "");
+  web_server.send(200, json ? F("application/json") : F("text/html"), "");
 #else // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
-  unsigned int timeout        = 0;
-  uint32_t     freeBeforeSend = ESP.getFreeHeap();
+  unsigned int timeout          = 0;
+  const uint32_t freeBeforeSend = ESP.getFreeHeap();
 
   if (freeBeforeSend < 5000) { timeout = 100; }
 
@@ -283,7 +276,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   if (origin.length() > 0) {
     web_server.sendHeader(F("Access-Control-Allow-Origin"), origin);
   }
-  web_server.send(200, contenttype, "");
+  web_server.send(200, json ? F("application/json") : F("text/html"), "");
 
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&

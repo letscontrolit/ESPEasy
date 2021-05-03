@@ -71,6 +71,16 @@ void WiFi_AP_CandidatesList::begin_sync_scan() {
   candidates.clear();
 }
 
+void WiFi_AP_CandidatesList::purge_expired() {
+  for (auto it = scanned.begin(); it != scanned.end(); ) {
+    if (it->expired()) {
+      it = scanned.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
 void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   // Append or update found APs from scan.
   for (uint8_t i = 0; i < scancount; ++i) {
@@ -96,6 +106,7 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   }
   scanned.sort();
   loadCandidatesFromScanned();
+  WiFi.scanDelete();
 }
 
 bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {

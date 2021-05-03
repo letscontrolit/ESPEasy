@@ -133,11 +133,11 @@ bool NetworkConnected(uint32_t timeout_ms);
 
 bool hostReachable(const IPAddress& ip);
 
-bool connectClient(WiFiClient& client, const char *hostname, uint16_t port);
+bool connectClient(WiFiClient& client, const char *hostname, uint16_t port, uint32_t timeout_ms = 100);
 
-bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port);
+bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t timeout_ms = 100);
 
-bool resolveHostByName(const char *aHostname, IPAddress& aResult);
+bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms = 1000);
 
 bool hostReachable(const String& hostname);
 

@@ -57,64 +57,64 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
       if (event->idx != 0)
       {
         // We now create a URI for the request
-        String url;
-        url.reserve(128);
-        url = F("/json.htm?type=command&param=");
-
         const Sensor_VType sensorType = event->getSensorType();
+        String url;
+        const size_t expectedSize = sensorType == Sensor_VType::SENSOR_TYPE_STRING ? 64 + event->String2.length() : 128;
+        if (url.reserve(expectedSize)) {
+          url = F("/json.htm?type=command&param=");
 
+          switch (sensorType)
+          {
+            case Sensor_VType::SENSOR_TYPE_SWITCH:
+            case Sensor_VType::SENSOR_TYPE_DIMMER:
+              url += F("switchlight&idx=");
+              url += event->idx;
+              url += F("&switchcmd=");
 
-        switch (sensorType)
-        {
-          case Sensor_VType::SENSOR_TYPE_SWITCH:
-          case Sensor_VType::SENSOR_TYPE_DIMMER:
-            url += F("switchlight&idx=");
-            url += event->idx;
-            url += F("&switchcmd=");
-
-            if (UserVar[event->BaseVarIndex] == 0) {
-              url += F("Off");
-            } else {
-              if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
-                url += F("On");
+              if (UserVar[event->BaseVarIndex] == 0) {
+                url += F("Off");
               } else {
-                url += F("Set%20Level&level=");
-                url += UserVar[event->BaseVarIndex];
+                if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
+                  url += F("On");
+                } else {
+                  url += F("Set%20Level&level=");
+                  url += UserVar[event->BaseVarIndex];
+                }
               }
-            }
-            break;
+              break;
 
-          case Sensor_VType::SENSOR_TYPE_SINGLE:
-          case Sensor_VType::SENSOR_TYPE_LONG:
-          case Sensor_VType::SENSOR_TYPE_DUAL:
-          case Sensor_VType::SENSOR_TYPE_TRIPLE:
-          case Sensor_VType::SENSOR_TYPE_QUAD:
-          case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
-          case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
-          case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
-          case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
-          case Sensor_VType::SENSOR_TYPE_WIND:
-          case Sensor_VType::SENSOR_TYPE_STRING:
-          default:
-            url += F("udevice&idx=");
-            url += event->idx;
-            url += F("&nvalue=0");
-            url += F("&svalue=");
-            url += formatDomoticzSensorType(event);
-            break;
+            case Sensor_VType::SENSOR_TYPE_SINGLE:
+            case Sensor_VType::SENSOR_TYPE_LONG:
+            case Sensor_VType::SENSOR_TYPE_DUAL:
+            case Sensor_VType::SENSOR_TYPE_TRIPLE:
+            case Sensor_VType::SENSOR_TYPE_QUAD:
+            case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
+            case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
+            case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
+            case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
+            case Sensor_VType::SENSOR_TYPE_WIND:
+            case Sensor_VType::SENSOR_TYPE_STRING:
+            default:
+              url += F("udevice&idx=");
+              url += event->idx;
+              url += F("&nvalue=0");
+              url += F("&svalue=");
+              url += formatDomoticzSensorType(event);
+              break;
+          }
+
+          // Add WiFi reception quality
+          url += F("&rssi=");
+          url += mapRSSItoDomoticz();
+            # if FEATURE_ADC_VCC
+          url += F("&battery=");
+          url += mapVccToDomoticz();
+            # endif // if FEATURE_ADC_VCC
+
+          success = C001_DelayHandler->addToQueue(C001_queue_element(event->ControllerIndex, event->TaskIndex, url));
+          Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C001_DELAY_QUEUE,
+                                          C001_DelayHandler->getNextScheduleTime());
         }
-
-        // Add WiFi reception quality
-        url += F("&rssi=");
-        url += mapRSSItoDomoticz();
-          # if FEATURE_ADC_VCC
-        url += F("&battery=");
-        url += mapVccToDomoticz();
-          # endif // if FEATURE_ADC_VCC
-
-        success = C001_DelayHandler->addToQueue(C001_queue_element(event->ControllerIndex, event->TaskIndex, url));
-        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C001_DELAY_QUEUE,
-                                         C001_DelayHandler->getNextScheduleTime());
       } // if ixd !=0
       else
       {

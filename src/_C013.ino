@@ -3,6 +3,7 @@
 
 # include "src/Globals/Nodes.h"
 # include "src/DataStructs/C013_p2p_dataStructs.h"
+# include "src/Helpers/Misc.h"
 
 // #######################################################################################################
 // ########################### Controller Plugin 013: ESPEasy P2P network ################################
@@ -200,10 +201,13 @@ void C013_sendUDP(byte unit, byte *data, byte size)
 
   if (!beginWiFiUDP_randomPort(C013_portUDP)) { return; }
 
+  FeedSW_watchdog();
   if (C013_portUDP.beginPacket(remoteNodeIP, Settings.UDPPort) == 0) { return; }
   C013_portUDP.write(data, size);
   C013_portUDP.endPacket();
   C013_portUDP.stop();
+  FeedSW_watchdog();
+  delay(0);
 }
 
 void C013_Receive(struct EventStruct *event) {
