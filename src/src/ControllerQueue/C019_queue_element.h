@@ -4,6 +4,7 @@
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 
 
@@ -32,6 +33,7 @@ public:
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   pluginID_t plugin_id = INVALID_PLUGIN_ID;
   EventStruct event;
+  UnitMessageCount_t UnitMessageCount; 
 };
 
 // #endif //USES_C019

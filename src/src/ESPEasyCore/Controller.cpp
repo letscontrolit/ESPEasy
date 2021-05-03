@@ -524,20 +524,28 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
   bool success = false;
   if (!MQTT_queueFull(controller_idx))
   {
-    success = MQTTDelayHandler->addToQueue(MQTT_queue_element(), false);
-    if (success) {
+    {
+      MQTT_queue_element element;
       size_t pos = 0;
-      MQTTDelayHandler->sendQueue.back().controller_idx = controller_idx;
-      MQTTDelayHandler->sendQueue.back()._retained = retained;
-      message.getString(MQTTDelayHandler->sendQueue.back()._topic,   pos);
-      message.getString(MQTTDelayHandler->sendQueue.back()._payload, pos);
-      // Check to see if it was successful.
-      size_t payloadSize = message.getPayloadSize();
-      if ((MQTTDelayHandler->sendQueue.back()._topic.length() + MQTTDelayHandler->sendQueue.back()._payload.length() + 2) < payloadSize) {
-        success = false;
-        MQTTDelayHandler->sendQueue.pop_back();
-      } else {
-        MQTTDelayHandler->removeLastIfDuplicate();
+      element.controller_idx = controller_idx;
+      element._retained = retained;
+      const size_t payloadSize = message.getPayloadSize();
+      if (message.getString(element._topic,   pos) && message.getString(element._payload, pos)) {
+        success = true;
+        const size_t bytesLeft = payloadSize - pos;
+        if (bytesLeft >= 2) {
+          // There is some UnitMessageCount left
+          if (!(message.getBinaryData(&element.UnitMessageCount.unit, 1, pos) == 1 &&
+                message.getBinaryData(&element.UnitMessageCount.count, 1, pos) == 1)) 
+          {
+            // Whatever may have been present, it could not be loaded, so clear just to be sure.
+            element.UnitMessageCount.unit = 0;
+            element.UnitMessageCount.count = 0;
+          }
+        }
+      }
+      if (success) {
+        success = MQTTDelayHandler->addToQueue(std::move(element));
       }
     }
   }
@@ -556,7 +564,21 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const 
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler->addToQueue(MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained));
+  const bool success = MQTTDelayHandler->addToQueue(std::move(MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained)));
+
+  scheduleNextMQTTdelayQueue();
+  return success;
+}
+
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained) {
+  if (MQTTDelayHandler == nullptr) {
+    return false;
+  }
+
+  if (MQTT_queueFull(controller_idx)) {
+    return false;
+  }
+  const bool success = MQTTDelayHandler->addToQueue(std::move(MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained)));
 
   scheduleNextMQTTdelayQueue();
   return success;

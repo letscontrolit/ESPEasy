@@ -237,7 +237,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   LoadTaskSettings(event->TaskIndex);
 
   // Add a new element to the queue with the minimal payload
-  bool success = C011_DelayHandler->addToQueue(C011_queue_element(event));
+  bool success = C011_DelayHandler->addToQueue(std::move(C011_queue_element(event)));
 
   if (success) {
     // Element was added.

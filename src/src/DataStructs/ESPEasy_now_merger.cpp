@@ -149,7 +149,9 @@ bool ESPEasy_now_merger::getString(String& string, size_t& payload_pos) const
     if (stringLength == 0) {
       return false;
     }
-    string.reserve(stringLength);
+    if (!string.reserve(stringLength)) {
+      return false;
+    }
   }
 
   const size_t bufsize = 128;

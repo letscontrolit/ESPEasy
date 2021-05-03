@@ -2,6 +2,7 @@
 #define CONTROLLERQUEUE_SIMPLE_QUEUE_ELEMENT_STRING_ONLY_H
 
 #include "../../ESPEasy_common.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 
 
@@ -15,7 +16,7 @@ public:
 
   explicit simple_queue_element_string_only(int           ctrl_idx,
                                             taskIndex_t   TaskIndex,
-                                            const String& req);
+                                            String&&      req);
 
   size_t getSize() const;
 
@@ -26,6 +27,7 @@ public:
   unsigned long _timestamp         = millis();
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
+  UnitMessageCount_t UnitMessageCount; 
 };
 
 

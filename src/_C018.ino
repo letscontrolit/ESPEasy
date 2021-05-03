@@ -745,7 +745,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (C018_data != nullptr) {
         success = C018_DelayHandler->addToQueue(
-          C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
+          std::move(C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex))));
         Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C018_DELAY_QUEUE,
                                          C018_DelayHandler->getNextScheduleTime());
 
