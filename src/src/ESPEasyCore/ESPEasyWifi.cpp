@@ -1087,7 +1087,13 @@ void setConnectionSpeed() {
   if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.wifi_connect_attempt > 10)) {
     WiFi.setPhyMode(WIFI_PHY_MODE_11N);
   } else {
-    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+    WiFiPhyMode_t phyMode = WIFI_PHY_MODE_11G;
+    #ifdef USE_ESPEASY_NOW
+    if (active_network_medium == NetworkMedium_t::ESPEasyNOW_only) {
+      phyMode = WIFI_PHY_MODE_11B;
+    }
+    #endif
+    WiFi.setPhyMode(phyMode);
   }
   #endif // ifdef ESP8266
 
