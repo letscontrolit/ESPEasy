@@ -30,6 +30,7 @@
 # define P012_SIZE        PCONFIG(1)
 # define P012_TIMER       PCONFIG(2)
 # define P012_MODE        PCONFIG(3)
+# define P012_INVERSE_BTN PCONFIG(4)
 
 boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 {
@@ -109,6 +110,8 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       addRowLabel(F("Display button"));
       addPinSelect(false, F("taskdevicepin3"), CONFIG_PIN3);
 
+      addFormCheckBox(F("Inversed logic"), F("p012_inverse_btn"), P012_INVERSE_BTN == 1, false);
+
       addFormNumericBox(F("Display Timeout"), F("p012_timer"), P012_TIMER);
 
       String options3[3];
@@ -124,10 +127,11 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P012_I2C_ADDR = getFormItemInt(F("i2c_addr"));
-      P012_SIZE     = getFormItemInt(F("p012_size"));
-      P012_TIMER    = getFormItemInt(F("p012_timer"));
-      P012_MODE     = getFormItemInt(F("p012_mode"));
+      P012_I2C_ADDR    = getFormItemInt(F("i2c_addr"));
+      P012_SIZE        = getFormItemInt(F("p012_size"));
+      P012_TIMER       = getFormItemInt(F("p012_timer"));
+      P012_MODE        = getFormItemInt(F("p012_mode"));
+      P012_INVERSE_BTN = isFormItemChecked(F("p012_inversed_btn")) ? 1 : 0;
 
       // FIXME TD-er: This is a huge stack allocated object.
       char   deviceTemplate[P12_Nlines][P12_Nchars];
@@ -169,7 +173,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
     {
       if (CONFIG_PIN3 != -1)
       {
-        if (!digitalRead(CONFIG_PIN3))
+        if (digitalRead(CONFIG_PIN3) != P012_INVERSE_BTN)
         {
           P012_data_struct *P012_data =
             static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -264,12 +268,14 @@ String P012_parseTemplate(String& tmpString, byte lineSize) {
   String result            = parseTemplate_padded(tmpString, lineSize);
   const char degree[3]     = { 0xc2, 0xb0, 0 }; // Unicode degree symbol
   const char degree_lcd[2] = { 0xdf, 0 };       // P012_LCD degree symbol
+
   result.replace(degree, degree_lcd);
 
   char unicodePrefix = 0xc4;
-#ifdef USES_P012_POLISH_CHARS
-  if (result.indexOf(unicodePrefix) != -1) {
 
+# ifdef USES_P012_POLISH_CHARS
+
+  if (result.indexOf(unicodePrefix) != -1) {
     const char znak_a_uni[3] = { 0xc4, 0x85, 0 }; // Unicode znak a
     const char znak_a_lcd[2] = { 0x05, 0 };       // P012_LCD znak a
     result.replace(znak_a_uni, znak_a_lcd);
@@ -293,27 +299,27 @@ String P012_parseTemplate(String& tmpString, byte lineSize) {
   }
 
   unicodePrefix = 0xc5;
-  if (result.indexOf(unicodePrefix) != -1) {
 
-    const char znak_l_uni[3] = { 0xc5, 0x82, 0 }; // Unicode znak l
-    const char znak_l_lcd[2] = { 0x01, 0 };       // P012_LCD znak l
+  if (result.indexOf(unicodePrefix) != -1) {
+    const char znak_l_uni[3] = { 0xc5, 0x82, 0 };  // Unicode znak l
+    const char znak_l_lcd[2] = { 0x01, 0 };        // P012_LCD znak l
     result.replace(znak_l_uni, znak_l_lcd);
 
-    const char znak_L_uni[3] = { 0xc5, 0x81, 0 }; // Unicode znak L
+    const char znak_L_uni[3] = { 0xc5, 0x81, 0 };  // Unicode znak L
     result.replace(znak_L_uni, znak_l_lcd);
 
-    const char znak_n_uni[3] = { 0xc5, 0x84, 0 }; // Unicode znak n
-    const char znak_n_lcd[2] = { 0x04, 0 };       // P012_LCD znak n
+    const char znak_n_uni[3] = { 0xc5, 0x84, 0 };  // Unicode znak n
+    const char znak_n_lcd[2] = { 0x04, 0 };        // P012_LCD znak n
     result.replace(znak_n_uni, znak_n_lcd);
 
-    const char znak_N_uni[3] = { 0xc5, 0x83, 0 }; // Unicode znak N
+    const char znak_N_uni[3] = { 0xc5, 0x83, 0 };  // Unicode znak N
     result.replace(znak_N_uni, znak_n_lcd);
-    
-    const char znak_s_uni[3] = { 0xc5, 0x9b, 0 }; // Unicode znak s
-    const char znak_s_lcd[2] = { 0x06, 0 };       // P012_LCD znak s
+
+    const char znak_s_uni[3] = { 0xc5, 0x9b, 0 };  // Unicode znak s
+    const char znak_s_lcd[2] = { 0x06, 0 };        // P012_LCD znak s
     result.replace(znak_s_uni, znak_s_lcd);
 
-    const char znak_S_uni[3] = { 0xc5, 0x9a, 0 }; // Unicode znak S
+    const char znak_S_uni[3] = { 0xc5, 0x9a, 0 };  // Unicode znak S
     result.replace(znak_S_uni, znak_s_lcd);
 
     const char znak_z1_uni[3] = { 0xc5, 0xba, 0 }; // Unicode znak z z kreska
@@ -332,8 +338,8 @@ String P012_parseTemplate(String& tmpString, byte lineSize) {
   }
 
   unicodePrefix = 0xc3;
-  if (result.indexOf(unicodePrefix) != -1) {
 
+  if (result.indexOf(unicodePrefix) != -1) {
     const char znak_o_uni[3] = { 0xc3, 0xB3, 0 }; // Unicode znak o
     const char znak_o_lcd[2] = { 0x08, 0 };       // P012_LCD znak o
     result.replace(znak_o_uni, znak_o_lcd);
@@ -341,9 +347,10 @@ String P012_parseTemplate(String& tmpString, byte lineSize) {
     const char znak_O_uni[3] = { 0xc3, 0x93, 0 }; // Unicode znak O
     result.replace(znak_O_uni, znak_o_lcd);
   }
-#endif // USES_P012_POLISH_CHARS
+# endif // USES_P012_POLISH_CHARS
 
   unicodePrefix = 0xc3;
+
   if (result.indexOf(unicodePrefix) != -1) {
     // See: https://github.com/letscontrolit/ESPEasy/issues/2081
 
