@@ -292,7 +292,7 @@ void processMQTTdelayQueue() {
   START_TIMER;
   MQTT_queue_element *element(MQTTDelayHandler->getNext());
 
-  if (element == NULL) { return; }
+  if (element == nullptr) { return; }
 
   if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
     if (WiFiEventData.connectionFailures > 0) {

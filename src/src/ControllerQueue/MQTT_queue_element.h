@@ -2,6 +2,7 @@
 #define CONTROLLERQUEUE_MQTT_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 
 
@@ -19,9 +20,17 @@ public:
                               const String& payload,
                               bool          retained);
 
+  explicit MQTT_queue_element(int           ctrl_idx,
+                              taskIndex_t   TaskIndex,
+                              String&&      topic,
+                              String&&      payload,
+                              bool          retained);
+
   size_t getSize() const;
 
   bool isDuplicate(const MQTT_queue_element& other) const;
+
+  void removeEmptyTopics();
 
   String _topic;
   String _payload;
@@ -29,6 +38,7 @@ public:
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   bool _retained                   = false;
+  UnitMessageCount_t UnitMessageCount; 
 };
 
 

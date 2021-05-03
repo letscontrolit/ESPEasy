@@ -4,6 +4,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
@@ -36,6 +37,7 @@ public:
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   mutable byte valuesSent          = 0; // Value must be set by const function checkDone()
   byte valueCount                  = 0;
+  UnitMessageCount_t UnitMessageCount; 
 };
 
 

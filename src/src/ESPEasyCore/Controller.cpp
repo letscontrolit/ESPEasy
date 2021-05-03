@@ -499,7 +499,21 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const 
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler->addToQueue(MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained));
+  const bool success = MQTTDelayHandler->addToQueue(std::move(MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained)));
+
+  scheduleNextMQTTdelayQueue();
+  return success;
+}
+
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained) {
+  if (MQTTDelayHandler == nullptr) {
+    return false;
+  }
+
+  if (MQTT_queueFull(controller_idx)) {
+    return false;
+  }
+  const bool success = MQTTDelayHandler->addToQueue(std::move(MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained)));
 
   scheduleNextMQTTdelayQueue();
   return success;

@@ -4,6 +4,7 @@
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/Plugins.h"
 
 struct EventStruct;
@@ -36,6 +37,7 @@ public:
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   Sensor_VType sensorType     = Sensor_VType::SENSOR_TYPE_NONE;
   byte valueCount             = 0;
+  UnitMessageCount_t UnitMessageCount; 
 };
 
 #endif //USES_C016

@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 
 
@@ -31,6 +32,7 @@ public:
   unsigned long _timestamp         = millis();
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
+  UnitMessageCount_t UnitMessageCount; 
 };
 
 #endif //USES_C018
