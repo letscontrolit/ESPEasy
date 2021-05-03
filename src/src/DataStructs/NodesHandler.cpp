@@ -13,9 +13,12 @@
 #include "../Globals/ESPEasy_now_state.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/MQTT.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
+
+#define ESPEASY_NOW_ALLOWED_AGE_NO_TRACEROUTE  35000
 
 bool NodesHandler::addNode(const NodeStruct& node)
 {
@@ -211,7 +214,11 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
             mustSet = true;
           }
         } else if (distance_new < distance_res) {
-          mustSet = true;
+          if (it->second.getAge() < ESPEASY_NOW_ALLOWED_AGE_NO_TRACEROUTE) {
+            // Only allow this new one if it was seen recently 
+            // as it does not (yet) have a traceroute.
+            mustSet = true;
+          }
         }
         #else
         if (it->second < *res) {
@@ -487,7 +494,13 @@ bool NodesHandler::isEndpoint() const
 uint8_t NodesHandler::getESPEasyNOW_channel() const
 {
   if (isEndpoint()) {
-    return WiFi.channel();
+    if (active_network_medium == NetworkMedium_t::WIFI || 
+        Settings.ForceESPEasyNOWchannel == 0) {
+      return WiFi.channel();
+    }
+  }
+  if (Settings.ForceESPEasyNOWchannel > 0) {
+    return Settings.ForceESPEasyNOWchannel;
   }
   const NodeStruct *preferred = getPreferredNode();
   if (preferred != nullptr) {

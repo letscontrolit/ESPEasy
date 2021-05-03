@@ -92,6 +92,7 @@ struct LabelType {
     #ifdef USES_ESPEASY_NOW
     USE_ESPEASY_NOW,
     TEMP_DISABLE_ESPEASY_NOW,
+    FORCE_ESPEASY_NOW_CHANNEL,
     #endif
 
     BUILD_DESC,

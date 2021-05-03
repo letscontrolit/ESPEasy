@@ -98,6 +98,7 @@ void handle_advanced() {
 
 #ifdef USES_ESPEASY_NOW
     Settings.UseESPEasyNow(isFormItemChecked(getInternalLabel(LabelType::USE_ESPEASY_NOW)));
+    Settings.ForceESPEasyNOWchannel = getFormItemInt(getInternalLabel(LabelType::FORCE_ESPEASY_NOW_CHANNEL));
 #endif
 
     addHtmlError(SaveSettings());
@@ -255,6 +256,14 @@ void handle_advanced() {
 
 #ifdef USES_ESPEASY_NOW
   addFormCheckBox(LabelType::USE_ESPEASY_NOW, Settings.UseESPEasyNow());
+  {
+    addFormNumericBox(LabelType::FORCE_ESPEASY_NOW_CHANNEL, Settings.ForceESPEasyNOWchannel, 0, 14);
+    String note = F("Force channel to use for ");
+    note += F(ESPEASY_NOW_NAME);
+    note += F("-only mode (0 = use any channel)");
+    addFormNote(note);
+  }
+
 #endif
 
   addFormSeparator(2);

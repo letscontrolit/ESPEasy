@@ -489,6 +489,7 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::WIFI_PERIODICAL_SCAN);
 #ifdef USES_ESPEASY_NOW
   addRowLabelValue(LabelType::USE_ESPEASY_NOW);
+  addRowLabelValue(LabelType::FORCE_ESPEASY_NOW_CHANNEL);
 #endif
 }
 

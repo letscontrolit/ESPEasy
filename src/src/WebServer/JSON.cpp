@@ -208,6 +208,7 @@ void handle_json()
 #endif // ifdef SUPPORT_ARP
 #ifdef USES_ESPEASY_NOW
       stream_next_json_object_value(LabelType::USE_ESPEASY_NOW);
+      stream_next_json_object_value(LabelType::FORCE_ESPEASY_NOW_CHANNEL);
 #endif
       stream_next_json_object_value(LabelType::CONNECTION_FAIL_THRESH);
       stream_next_json_object_value(LabelType::WIFI_TX_MAX_PWR);
