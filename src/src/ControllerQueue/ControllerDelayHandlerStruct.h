@@ -108,12 +108,12 @@ struct ControllerDelayHandlerStruct {
   bool isDuplicate(const T& element) const {
     // Some controllers may receive duplicate messages, due to lost acknowledgement
     // This is actually the same message, so this should not be processed.
-    if (!unitLastMessageCount.isNew(element.UnitMessageCount)) {
+    if (!unitLastMessageCount.isNew(element.getUnitMessageCount())) {
       return true;
     }
     // The unit message count is still stored to make sure a new one with the same count
     // is considered a duplicate, even when the queue is empty.
-    unitLastMessageCount.add(element.UnitMessageCount);
+    unitLastMessageCount.add(element.getUnitMessageCount());
 
     // the setting 'deduplicate' does look at the content of the message and only compares it to messages in the queue.
     if (deduplicate && !sendQueue.empty()) {
@@ -171,7 +171,7 @@ struct ControllerDelayHandlerStruct {
   // Get the next element.
   // Remove front element when max_retries is reached.
   T* getNext() {
-    if (sendQueue.empty()) { return NULL; }
+    if (sendQueue.empty()) { return nullptr; }
 
     if (attempt > max_retries) {
       sendQueue.pop_front();
@@ -190,7 +190,7 @@ struct ControllerDelayHandlerStruct {
       }
     }
 
-    if (sendQueue.empty()) { return NULL; }
+    if (sendQueue.empty()) { return nullptr; }
     return &sendQueue.front();
   }
 
@@ -291,7 +291,7 @@ struct ControllerDelayHandlerStruct {
   void process_c##NNN####M##_delay_queue() {                                                                           \
     if (C##NNN####M##_DelayHandler == nullptr) return;                                                                 \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler->getNext());                                       \
-    if (element == NULL) return;                                                                                       \
+    if (element == nullptr) return;                                                                                       \
     MakeControllerSettings(ControllerSettings);                                                                        \
     bool ready = true;                                                                                                 \
     if (!AllocatedControllerSettings()) {                                                                              \

@@ -25,6 +25,8 @@ public:
 
   bool isDuplicate(const C011_queue_element& other) const;
 
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
+
   size_t getSize() const;
 
   String uri;
@@ -36,7 +38,6 @@ public:
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
-  UnitMessageCount_t UnitMessageCount; 
 };
 
 #endif //USES_C011

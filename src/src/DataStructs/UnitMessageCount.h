@@ -18,9 +18,9 @@ struct UnitMessageCount_t {
 };
 
 struct UnitLastMessageCount_map {
-  bool isNew(const UnitMessageCount_t& count) const;
+  bool isNew(const UnitMessageCount_t *count) const;
 
-  void add(const UnitMessageCount_t& count);
+  void add(const UnitMessageCount_t *count);
 
 private:
 

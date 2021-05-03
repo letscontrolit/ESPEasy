@@ -24,6 +24,8 @@ public:
 
   bool isDuplicate(const queue_element_formatted_uservar& other) const;
 
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
+
   String txt[VARS_PER_TASK];
   int idx                          = 0;
   unsigned long _timestamp         = millis();
@@ -31,7 +33,6 @@ public:
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
   byte valueCount                  = 0;
-  UnitMessageCount_t UnitMessageCount; 
 };
 
 #endif // CONTROLLERQUEUE_QUEUE_ELEMENT_FORMATTED_USERVAR_H

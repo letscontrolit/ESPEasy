@@ -31,13 +31,14 @@ public:
 
   bool isDuplicate(const C016_queue_element& other) const;
 
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
+
   float values[VARS_PER_TASK] = { 0 };
   unsigned long _timestamp    = 0; // Unix timestamp
   taskIndex_t TaskIndex       = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   Sensor_VType sensorType     = Sensor_VType::SENSOR_TYPE_NONE;
   byte valueCount             = 0;
-  UnitMessageCount_t UnitMessageCount; 
 };
 
 #endif //USES_C016

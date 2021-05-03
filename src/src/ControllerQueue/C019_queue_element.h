@@ -26,6 +26,7 @@ public:
 
   bool isDuplicate(const C019_queue_element& other) const;
 
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
 
   String packed;
   unsigned long _timestamp         = millis();
