@@ -30,6 +30,9 @@ public:
 
   bool isDuplicate(const MQTT_queue_element& other) const;
 
+  const UnitMessageCount_t* getUnitMessageCount() const { return &UnitMessageCount; }
+  UnitMessageCount_t* getUnitMessageCount() { return &UnitMessageCount; }
+
   void removeEmptyTopics();
 
   String _topic;

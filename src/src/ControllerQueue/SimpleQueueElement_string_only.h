@@ -22,12 +22,12 @@ public:
 
   bool isDuplicate(const simple_queue_element_string_only& other) const;
 
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
 
   String txt;
   unsigned long _timestamp         = millis();
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
-  UnitMessageCount_t UnitMessageCount; 
 };
 
 

@@ -44,4 +44,5 @@ bool C016_queue_element::isDuplicate(const C016_queue_element& other) const {
   return true;
 }
 
+
 #endif

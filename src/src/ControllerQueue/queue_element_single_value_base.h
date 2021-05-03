@@ -30,6 +30,8 @@ public:
 
   bool isDuplicate(const queue_element_single_value_base& other) const;
 
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
+
   String txt[VARS_PER_TASK];
   int idx                          = 0;
   unsigned long _timestamp         = millis();
@@ -37,7 +39,6 @@ public:
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   mutable byte valuesSent          = 0; // Value must be set by const function checkDone()
   byte valueCount                  = 0;
-  UnitMessageCount_t UnitMessageCount; 
 };
 
 

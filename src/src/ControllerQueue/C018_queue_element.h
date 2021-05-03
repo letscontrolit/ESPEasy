@@ -28,11 +28,12 @@ public:
 
   bool isDuplicate(const C018_queue_element& other) const;
 
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
+
   String packed;
   unsigned long _timestamp         = millis();
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
-  UnitMessageCount_t UnitMessageCount; 
 };
 
 #endif //USES_C018

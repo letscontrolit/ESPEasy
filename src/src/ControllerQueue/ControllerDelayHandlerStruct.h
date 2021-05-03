@@ -108,12 +108,12 @@ struct ControllerDelayHandlerStruct {
   bool isDuplicate(const T& element) const {
     // Some controllers may receive duplicate messages, due to lost acknowledgement
     // This is actually the same message, so this should not be processed.
-    if (!unitLastMessageCount.isNew(element.UnitMessageCount)) {
+    if (!unitLastMessageCount.isNew(element.getUnitMessageCount())) {
       return true;
     }
     // The unit message count is still stored to make sure a new one with the same count
     // is considered a duplicate, even when the queue is empty.
-    unitLastMessageCount.add(element.UnitMessageCount);
+    unitLastMessageCount.add(element.getUnitMessageCount());
 
     // the setting 'deduplicate' does look at the content of the message and only compares it to messages in the queue.
     if (deduplicate && !sendQueue.empty()) {

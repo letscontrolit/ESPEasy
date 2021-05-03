@@ -29,6 +29,8 @@ public:
 
   bool isDuplicate(const C015_queue_element& other) const;
 
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
+
   String txt[VARS_PER_TASK];
   int vPin[VARS_PER_TASK]          = { 0 };
   int idx                          = 0;
@@ -37,7 +39,6 @@ public:
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   mutable byte valuesSent          = 0; // Value must be set by const function checkDone()
   byte valueCount                  = 0;
-  UnitMessageCount_t UnitMessageCount; 
 };
 
 #endif //USES_C015
