@@ -945,7 +945,7 @@ bool ESPEasy_now_handler_t::handle_NTPquery(const ESPEasy_now_merger& message, b
 // * MQTT controller forwarder
 // *************************************************************
 
-bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const String& topic, const String& payload)
+bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const String& topic, const String& payload, const UnitMessageCount_t* unitMessageCount)
 {
   if (!use_EspEasy_now) { return false; }
 
@@ -965,7 +965,9 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
   bool processed = false;
 
   if (_enableESPEasyNowFallback /*&& !WiFiConnected(10) */) {
-    const NodeStruct *preferred = Nodes.getPreferredNode();
+    // Must make sure we don't forward it to the unit we received the message from.
+    const uint8_t unit_nr = (unitMessageCount == nullptr) ? 0 : unitMessageCount->unit;
+    const NodeStruct *preferred = Nodes.getPreferredNode_notMatching(unit_nr);
 
     if (preferred != nullptr /* && Nodes.getDistance() > preferred->distance */) {
       MAC_address mac = preferred->ESPEasy_Now_MAC();

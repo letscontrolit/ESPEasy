@@ -46,6 +46,7 @@ public:
 
   
   const NodeStruct* getPreferredNode() const;
+  const NodeStruct* getPreferredNode_notMatching(uint8_t unit_nr) const;
   const NodeStruct* getPreferredNode_notMatching(const MAC_address& not_matching) const;
 
 #ifdef USES_ESPEASY_NOW

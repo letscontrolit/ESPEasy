@@ -79,8 +79,8 @@ bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_
           log  = F(ESPEASY_NOW_NAME);
           log += F(": Node: ");
           log += String(node.unit);
-          log += F(" Traceroute received: ");
-          log += _nodeStats[node.unit].latestRoute().toString();
+          log += F(" DiscoveryRoute received: ");
+          log += traceRoute.toString();
           addLog(LOG_LEVEL_INFO, log);
         }
       }
@@ -175,6 +175,17 @@ const NodeStruct * NodesHandler::getPreferredNode() const {
   return getPreferredNode_notMatching(dummy);
 }
 
+const NodeStruct* NodesHandler::getPreferredNode_notMatching(uint8_t unit_nr) const {
+  MAC_address not_matching;
+  if (unit_nr != 0 && unit_nr != 255) {
+    const NodeStruct* node = getNode(unit_nr);
+    if (node != nullptr) {
+      not_matching = node->ESPEasy_Now_MAC();
+    }
+  }
+  return getPreferredNode_notMatching(not_matching);
+}
+
 const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address& not_matching) const {
   MAC_address this_mac;
 
@@ -205,7 +216,10 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
             distance_res = res->distance;
           } else if (successRate_res == 0) {
             // The new one has a route, so must set the new one.
-            mustSet = true;
+            distance_res = res->distance;
+            if (distance_new < 255) {
+              mustSet = true;
+            }
           }
         }
 

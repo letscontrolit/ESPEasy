@@ -11,6 +11,22 @@ ESPEasy_now_merger::ESPEasy_now_merger() {
   _firstPacketTimestamp = millis();
 }
 
+ESPEasy_now_merger::ESPEasy_now_merger(ESPEasy_now_merger&& other) :
+  _firstPacketTimestamp(other._firstPacketTimestamp),
+  _queue(std::move(other._queue)),
+  _nr_packets(other._nr_packets) {
+    other._firstPacketTimestamp = 0;
+    other._nr_packets = 255;
+  }
+
+ESPEasy_now_merger& ESPEasy_now_merger::operator=(ESPEasy_now_merger&& other)
+{
+  _firstPacketTimestamp = other._firstPacketTimestamp;
+  _queue      = std::move(other._queue);
+  _nr_packets = other._nr_packets;
+  return *this;
+}
+
 void ESPEasy_now_merger::addPacket(
   uint8_t            packet_nr,
   const MAC_address& mac,
@@ -28,16 +44,14 @@ void ESPEasy_now_merger::addPacket(
   }
   #endif
 
-  if (_queue.find(packet_nr) == _queue.end()) {
-    // Not yet present.
-    // Wwe might receive some packets several times if the sender does not receive our acknowledgement
-    ESPEasy_Now_packet packet;
-    packet.setReceivedPacket(mac, buf, packetSize);
-    if (packet.valid()) {
-      _queue[packet_nr] = std::move(packet);
-      _firstPacketTimestamp = millis();
-    }
-  }  
+  // FIXME TD-er: How to handle duplicates?
+  // We might receive some packets several times if the sender does not receive our acknowledgement
+  ESPEasy_Now_packet packet;
+  packet.setReceivedPacket(mac, buf, packetSize);
+  if (packet.valid()) {
+    _queue[packet_nr] = std::move(packet);
+    _firstPacketTimestamp = millis();
+  }
 }
 
 bool ESPEasy_now_merger::messageComplete() const

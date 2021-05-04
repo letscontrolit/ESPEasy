@@ -19,6 +19,10 @@ public:
 
   ESPEasy_now_merger();
 
+  ESPEasy_now_merger(ESPEasy_now_merger&& other);
+
+  ESPEasy_now_merger& operator=(ESPEasy_now_merger&& other);
+
   void addPacket(
     uint8_t            packet_nr,
     const MAC_address& mac,

@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 #include "../Helpers/Scheduler.h"
 
@@ -39,7 +40,8 @@ void processMQTTdelayQueue();
 bool processMQTT_message(controllerIndex_t controllerIndex,
                         const String    & topic,
                         const String    & payload,
-                        bool retained);
+                        bool retained,
+                        const UnitMessageCount_t* unitMessageCount);
 
 void updateMQTTclient_connected();
 
