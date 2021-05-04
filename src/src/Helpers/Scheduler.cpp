@@ -1013,21 +1013,23 @@ void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(deviceIndex_t   
                                                                 byte           *b_payload,
                                                                 unsigned int    length) {
   if (validDeviceIndex(DeviceIndex)) {
-    // Emplace empty event in the queue first and the fill it.
-    // This makes sure the relatively large event will not be in memory twice.
     const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::TaskPlugin, DeviceIndex, static_cast<byte>(Function));
-    ScheduledEventQueue.emplace_back(mixedId, EventStruct(TaskIndex));
-    ScheduledEventQueue.back().event.String1 = c_topic;
-
-    String& payload = ScheduledEventQueue.back().event.String2;
-    if (!payload.reserve(length)) {
+    EventStruct event(TaskIndex);
+    const size_t topic_length = strlen_P(c_topic);
+    if (!(event.String1.reserve(topic_length) && event.String2.reserve(length))) {
       addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
+      return;
     }
-
+    for (size_t i = 0; i < topic_length; ++i) {
+      event.String1 += c_topic[i];
+    }
     for (unsigned int i = 0; i < length; ++i) {
-      char c = static_cast<char>(*(b_payload + i));
-      payload += c;
+      const char c = static_cast<char>(*(b_payload + i));
+      event.String2 += c;
     }
+    // Emplace using move.
+    // This makes sure the relatively large event will not be in memory twice.
+    ScheduledEventQueue.emplace_back(mixedId, std::move(event));
   }
 }
 
