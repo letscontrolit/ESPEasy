@@ -77,19 +77,19 @@
 #define P039_RTD_TYPE               PCONFIG(3)
 #define P039_RTD_CON_TYPE           PCONFIG(4)
 #define P039_RTD_FILT_TYPE          PCONFIG(5)
-#define P039_RTD_RES                PCONFIG(6)
-#define P039_RTD_LM_TYPE            PCONFIG(7)
-#define P039_RTD_LM_SHTDWN          PCONFIG(8)
+#define P039_RTD_LM_TYPE            PCONFIG(6)
+#define P039_RTD_LM_SHTDWN          PCONFIG(7)
+#define P039_RTD_RES                PCONFIG_LONG(0)
 #define P039_RTD_OFFSET             PCONFIG_FLOAT(0)
 
-#define P039_TC               0
-#define P039_RTD              1
+#define P039_TC                     0
+#define P039_RTD                    1
 
-# define P039_MAX_6675        1
-# define P039_MAX_31855       2
-# define P039_MAX_31856       3
-# define P039_MAX31865        4
-# define P039_LM7x            5
+# define P039_MAX_6675              1
+# define P039_MAX_31855             2
+# define P039_MAX_31856             3
+# define P039_MAX31865              4
+# define P039_LM7x                  5
 
 // register offset values for MAX 31856
 # define P039_RAWVALUE              0
@@ -371,7 +371,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
             addFormNote(F("Set reference resistor for MAX31865. PT100: typically 430 [OHM]; PT1000: typically 4300 [OHM]"));
           }
           {
-            addFormFloatNumberBox(F("Offset [K]"), F("P039_offset"), P039_RTD_OFFSET, -50.0, 50.0, 2, 0.01);
+            addFormFloatNumberBox(F("Offset [K]"), F("P039_offset"), P039_RTD_OFFSET, -50.0f, 50.0f, 2, 0.01f);
             addFormNote(F("Set Offset [K] for MAX31865. Valid values: [-50.0...50.0 K], min. stepsize: [0.01]"));
           }
         }
@@ -442,7 +442,9 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex] = Plugin_039_Celsius;
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("P039 : Temperature ");
+          String log;
+          log.reserve(66u);
+          log = F("P039 : Temperature ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
           addLog(LOG_LEVEL_INFO, log);
         }
@@ -474,14 +476,14 @@ float readMax6675(struct EventStruct *event)
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
-      String log = F("P039 : MAX6675 : RAW - BIN:");
-
+      String log;
+      log.reserve(66u);
+      log = F("P039 : MAX6675 : RAW - BIN:");
       log += String(rawvalue, BIN);
-      log += " HEX:";
+      log += F(" HEX:");
       log += String(rawvalue, HEX);
-      log += " DEC:";
+      log += F(" DEC:");
       log += String(rawvalue);
-
       addLog(LOG_LEVEL_DEBUG, log);
     }
 
@@ -535,19 +537,20 @@ float readMax31855(struct EventStruct *event)
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
-      String log = F("P039 : MAX31855 : RAW - BIN:");
-
+      String log;
+      log.reserve(66u);
+      log = F("P039 : MAX31855 : RAW - BIN:");
       log += String(rawvalue, BIN);
-      log += " rawvalue,HEX: ";
+      log += F(" rawvalue,HEX: ");
       log += String(rawvalue, HEX);
-      log += " rawvalue,DEC: ";
+      log += F(" rawvalue,DEC: ");
       log += String(rawvalue);
-      log += " u_mB.value,DEC: ";
+      log += F(" u_mB.value,DEC: ");
       log += String(u_mB.value, DEC);
-      log += " u_mB.messageBuffer[],DEC:";
-      for (size_t i = 0; i < 4; i++)
+      log += F(" u_mB.messageBuffer[],DEC:");
+      for (size_t i = 0u; i < 4; i++)
       {
-              log +=" ";
+              log += ' ';
               log += String(u_mB.messageBuffer[i], DEC);
       }
       
@@ -568,7 +571,9 @@ float readMax31855(struct EventStruct *event)
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
       {
-        String log = F("P039 : MAX31855");
+        String log;
+        log.reserve(66u);
+        log = F("P039 : MAX31855");
 
         if (!sensorFault) {
           log += F("Fault resolved");
@@ -629,7 +634,7 @@ float readMax31856(struct EventStruct *event)
 
   uint32_t registers[17] = { 0 };
 
-  for (int i = 0; i < 17; ++i) {
+  for (int i = 0u; i < 17; ++i) {
     registers[i] = read8BitRegister(CS_pin_no, i);
   }
 
@@ -642,7 +647,7 @@ float readMax31856(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
       String log;
-      log.reserve(66);
+      log.reserve(66u);
       log = F("P039 : MAX31856 :");
 
       for (int i = 1; i < 17; ++i) {
@@ -668,8 +673,10 @@ float readMax31856(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
       if (sensorFault || faultResolved) {
-        String log = F("P039 : MAX31856");
-
+        String log;
+        log.reserve(66u);
+        log = F("P039 : MAX31856");
+        
         if (sensorFault == 0) {
           log += F("Fault resolved");
         } else {
@@ -748,7 +755,7 @@ float readMax31865(struct EventStruct *event)
 {
 
   uint8_t registers[MAX31865_NO_REG] = {0};
-  uint16_t rawValue = 0;
+  uint16_t rawValue = 0u;
 
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
@@ -788,19 +795,16 @@ float readMax31865(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      log.reserve(66);
+      log.reserve(66u);
 
-
-
-      for (int i = 0; i < MAX31865_NO_REG; ++i)
+      for (int i = 0u; i < MAX31865_NO_REG; ++i)
       {
         registers[i] = read8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + i));
       }
 
-
       log = F("P039 : MAX31865 :");
 
-      for (int i = 0; i < MAX31865_NO_REG; ++i)
+      for (int i = 0u; i < MAX31865_NO_REG; ++i)
       {
         log += F(" 0x");
         log += String(registers[i], HEX);
@@ -819,7 +823,9 @@ float readMax31865(struct EventStruct *event)
     {
       if (registers[MAX31865_FAULT])
       {
-        String log = F("P039 : MAX31865 : ");
+        String log;
+        log.reserve(66u);
+        log = F("P039 : MAX31865 : ");
 
         log += F("Fault : 0x");
         log += String(registers[MAX31865_FAULT], HEX);
@@ -869,7 +875,9 @@ float readMax31865(struct EventStruct *event)
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
-      String log = F("P039 : Temperature :");
+      String log;
+      log.reserve(66u);
+      log = F("P039 : Temperature :");
       log += F(" registers[MAX31865_FAULT]: ");
       log += String(registers[MAX31865_FAULT], HEX);
       log += F(" ValueValid: ");
@@ -889,7 +897,9 @@ float readMax31865(struct EventStruct *event)
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG))
       {
-        String log = F("P039 : Temperature :");
+        String log;
+        log.reserve(66u);
+        log = F("P039 : Temperature :");
         log += F(" rawValue: ");
         log += String(rawValue, DEC);
         log += F(" temperature: ");
@@ -918,7 +928,7 @@ float readMax31865(struct EventStruct *event)
 
 void clearFaults(uint8_t l_CS_pin_no)
 {
-  uint8_t l_reg = 0;
+  uint8_t l_reg = 0u;
 
   // read in config register
   l_reg = read8BitRegister(l_CS_pin_no,(MAX31865_READ_ADDR_BASE + MAX31865_CONFIG));
@@ -935,7 +945,7 @@ void clearFaults(uint8_t l_CS_pin_no)
 
 void handleBias(uint8_t l_CS_pin_no, bool l_active)
 {
-  uint8_t l_reg = 0;
+  uint8_t l_reg = 0u;
 
   // read in config register
   l_reg = read8BitRegister(l_CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG));
@@ -958,7 +968,7 @@ void handleBias(uint8_t l_CS_pin_no, bool l_active)
 
 void chooseFilterType(uint8_t l_CS_pin_no, uint8_t l_filtType)
 {
-  uint8_t l_reg = 0;
+  uint8_t l_reg = 0u;
 
   // read in config register
   l_reg = read8BitRegister(l_CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG));
@@ -984,7 +994,7 @@ void chooseFilterType(uint8_t l_CS_pin_no, uint8_t l_filtType)
 
 void setConType(uint8_t l_CS_pin_no, uint8_t l_conType)
 {
-  uint8_t l_reg = 0;
+  uint8_t l_reg = 0u;
 
   // read in config register
   l_reg = read8BitRegister(l_CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG));
@@ -1010,7 +1020,7 @@ void setConType(uint8_t l_CS_pin_no, uint8_t l_conType)
 
 void startOneShotConversion(uint8_t l_CS_pin_no)
 {
-  uint8_t l_reg = 0;
+  uint8_t l_reg = 0u;
 
   // read in config register
   l_reg = read8BitRegister(l_CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG));
@@ -1039,13 +1049,13 @@ void startOneShotConversion(uint8_t l_CS_pin_no)
 float Plugin_039_convert_to_temperature(uint32_t l_rawvalue, float RTDnominal, float refResistor)
 {
 
-  #define RTD_A 3.9083e-3
-  #define RTD_B -5.775e-7
+  #define RTD_A 3.9083e-3f
+  #define RTD_B -5.775e-7f
 
   float Z1, Z2, Z3, Z4, Rt, temp;
 
   Rt = l_rawvalue;
-  Rt /= 32768;
+  Rt /= 32768u;
   Rt *= refResistor;
 
   Z1 = -RTD_A;
@@ -1064,34 +1074,34 @@ float Plugin_039_convert_to_temperature(uint32_t l_rawvalue, float RTDnominal, f
 
   float rpoly = Rt;
 
-  temp = -242.02;
-  temp += 2.2228 * rpoly;
+  temp = -242.02f;
+  temp += 2.2228f * rpoly;
   rpoly *= Rt; // square
-  temp += 2.5859e-3 * rpoly;
+  temp += 2.5859e-3f * rpoly;
   rpoly *= Rt; // ^3
-  temp -= 4.8260e-6 * rpoly;
+  temp -= 4.8260e-6f * rpoly;
   rpoly *= Rt; // ^4
-  temp -= 2.8183e-8 * rpoly;
+  temp -= 2.8183e-8f * rpoly;
   rpoly *= Rt; // ^5
-  temp += 1.5243e-10 * rpoly;
+  temp += 1.5243e-10f * rpoly;
 
   return temp;
 }
 
 uint16_t getNomResistor(uint8_t l_RType)
 {
-  uint16_t l_returnValue = 100;
+  uint16_t l_returnValue = 100u;
 
   switch (l_RType)
   {
     case MAX31865_PT100:
-                          l_returnValue = 100;
+                          l_returnValue = 100u;
                           break;
     case MAX31865_PT1000:
-                          l_returnValue = 1000;
+                          l_returnValue = 1000u;
                           break;
     default:
-                          l_returnValue = 100;
+                          l_returnValue = 100u;
                           break;
   }
   return (l_returnValue);
@@ -1100,9 +1110,9 @@ uint16_t getNomResistor(uint8_t l_RType)
 float readLM7x(struct EventStruct *event)
 {
 
-  float temperature = 0;
-  uint16_t device_id = 0;
-  uint16_t rawValue = 0;
+  float temperature = 0.0f;
+  uint16_t device_id = 0u;
+  uint16_t rawValue = 0u;
 
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
@@ -1118,7 +1128,7 @@ float readLM7x(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      log.reserve(66);
+      log.reserve(66u);
       log = F("P039 : LM7x : readLM7x : ");
       log += F(" rawValue: ");
       log += String(rawValue, DEC);
@@ -1136,45 +1146,45 @@ float readLM7x(struct EventStruct *event)
 
 float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
 {
-  float l_returnValue = 0;
-  float l_lsbvalue = 0;
-  uint8_t l_noBits = 0;
+  float l_returnValue = 0.0f;
+  float l_lsbvalue = 0.0f;
+  uint8_t l_noBits = 0u;
   int l_intTemperature = 0;
 
   switch (l_LM7xsubtype)
   {
     case LM7x_SD70:
                         l_rawValue >>= 5;
-                        l_lsbvalue = 0.25;
-                        l_noBits = 11;
+                        l_lsbvalue = 0.25f;
+                        l_noBits = 11u;
                         break;
     case LM7x_SD71:
                         l_rawValue >>= 2;
-                        l_lsbvalue = 0.03125;
-                        l_noBits = 14;
+                        l_lsbvalue = 0.03125f;
+                        l_noBits = 14u;
                         break;
     case LM7x_SD74:
                         l_rawValue >>= 3;
-                        l_lsbvalue = 0.0625;
-                        l_noBits = 13;
+                        l_lsbvalue = 0.0625f;
+                        l_noBits = 13u;
                         break;
     case LM7x_SD121:
     case LM7x_SD122:
     case LM7x_SD123:
     case LM7x_SD124:
                         l_rawValue >>= 4;
-                        l_lsbvalue = 0.0625;
-                        l_noBits = 12;
+                        l_lsbvalue = 0.0625f;
+                        l_noBits = 12u;
                         break;
     case LM7x_SD125:
                         l_rawValue >>= 5;
-                        l_lsbvalue = 0.25;
-                        l_noBits = 10;
+                        l_lsbvalue = 0.25f;
+                        l_noBits = 10u;
                         break;
     default: // use lowest resolution as fallback if no device has been configured
                         l_rawValue >>= 5;
-                        l_lsbvalue = 0.25;
-                        l_noBits = 11;
+                        l_lsbvalue = 0.25f;
+                        l_noBits = 11u;
                         break;
   }
 
@@ -1187,7 +1197,7 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      log.reserve(66);
+      log.reserve(66u);
       log = F("P039 : LM7x : convertLM7xTemp : ");
       log += F(" l_returnValue: ");
       log += String(l_returnValue, DEC);
@@ -1209,8 +1219,8 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
 
 uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l_runMode, uint16_t *l_device_id)
 {
-  uint16_t l_returnValue = 0;
-  uint16_t l_mswaitTime = 0;
+  uint16_t l_returnValue = 0u;
+  uint16_t l_mswaitTime = 0u;
  
 
   switch (l_LM7xsubType)
@@ -1218,20 +1228,20 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
   case LM7x_SD70:
   case LM7x_SD71:
   case LM7x_SD74:
-    l_mswaitTime = 300;
-    break;
+                    l_mswaitTime = 300;
+                    break;
   case LM7x_SD121:
   case LM7x_SD122:
   case LM7x_SD123:
   case LM7x_SD124:
-    l_mswaitTime = 320;
-    break;
+                    l_mswaitTime = 320;
+                    break;
   case LM7x_SD125:
-    l_mswaitTime = 100;
-    break;
+                    l_mswaitTime = 100;
+                    break;
   default:
-    l_mswaitTime = 500;
-    break;
+                    l_mswaitTime = 500;
+                    break;
   }
 
   // // activate communication -> CS low
@@ -1240,7 +1250,7 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
   if (l_runMode)
   {
     // shutdown mode active -> conversion when called
-    uint8_t messageBuffer[12] ={0xFF, 0xFF, 0xFF, 0X00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF};
+    uint8_t messageBuffer[12] = {0xFF, 0xFF, 0xFF, 0X00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF};
 
     // send inital 4 bytes to wake the device and start the conversion
     transfer_n_ByteSPI(l_CS_pin_no, 4, &messageBuffer[0] );
@@ -1287,7 +1297,7 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
   else
   {
     // shutdown mode inactive -> normal background conversion during call cycle
-    uint8_t messageBuffer[8] ={0x00, 0x00, 0xFF, 0XFF, 0x00, 0x00, 0x00, 0x00};
+    uint8_t messageBuffer[8] = {0x00, 0x00, 0xFF, 0XFF, 0x00, 0x00, 0x00, 0x00};
 
     transfer_n_ByteSPI(l_CS_pin_no, 8, &messageBuffer[0] );
     
@@ -1311,7 +1321,7 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
     // // *(l_device_id) = SPI.transfer(0x00);
 
     // // start conversion until next read  (8 Bit sufficient)
-    // // 0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F allowed - else device goe to test mode (not desirable here)
+    // // 0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F allowed - else device goes to test mode (not desirable here)
     // SPI.transfer(0x00);
     // // SPI.transfer16(0x0000);
   }
@@ -1324,7 +1334,7 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      log.reserve(66);
+      log.reserve(66u);
       log = F("P039 : LM7x : readLM7xRegisters : ");
       log += F(" l_returnValue: 0x");
       log += String(l_returnValue, HEX);
@@ -1433,7 +1443,7 @@ void write8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      log.reserve(66);
+      log.reserve(66u);
       log = F("P039 : SPI : write8BitRegister : ");
       log += F("l_address: 0x");
       log += String(l_address, HEX);
@@ -1469,7 +1479,7 @@ void write16BitRegisters(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      log.reserve(66);
+      log.reserve(66u);
       log = F("P039 : SPI : write16BitRegister : ");
       log += F("l_address: 0x");
       log += String(l_address, HEX);
@@ -1504,7 +1514,7 @@ uint8_t read8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      log.reserve(66);
+      log.reserve(66u);
       log = F("P039 : SPI : read8BitRegister : ");
       log += F("l_address: 0x");
       log += String(l_address, HEX);
@@ -1543,7 +1553,7 @@ uint16_t read16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      log.reserve(66);
+      log.reserve(66u);
       log = F("P039 : SPI : read16BitRegister : ");
       log += F("l_address: 0x");
       log += String(l_address, HEX);
@@ -1578,7 +1588,7 @@ void transfer_n_ByteSPI(uint8_t l_CS_pin_no, uint8_t l_noBytesToSend, uint8_t* l
    // activate communication -> CS low
   handle_SPI_CS_Pin(l_CS_pin_no, LOW);
 
-  for (size_t i = 0; i < l_noBytesToSend; i++)
+  for (size_t i = 0u; i < l_noBytesToSend; i++)
   {
     l_inoutMessageBuffer[i] = SPI.transfer(l_inoutMessageBuffer[i]);
   }
@@ -1591,7 +1601,7 @@ void transfer_n_ByteSPI(uint8_t l_CS_pin_no, uint8_t l_noBytesToSend, uint8_t* l
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      log.reserve(66);
+      log.reserve(66u);
       log = F("P039 : SPI : transfer_n_ByteSPI : ");
       for (int i = 0; i < l_noBytesToSend; ++i)
       {
