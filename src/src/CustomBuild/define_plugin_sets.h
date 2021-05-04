@@ -1484,7 +1484,9 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_C019) || defined(USES_P098)
-  #define USES_ESPEASY_NOW
+  #ifndef USES_ESPEASY_NOW
+    #define USES_ESPEASY_NOW
+  #endif
 #endif
 
 #if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)

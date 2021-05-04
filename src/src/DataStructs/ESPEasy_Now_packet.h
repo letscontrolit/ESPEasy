@@ -21,12 +21,16 @@ public:
 
   ESPEasy_Now_packet();
 
-  bool setReceivedPacket(const MAC_address& mac,
+  ESPEasy_Now_packet(ESPEasy_Now_packet&& other);
+
+  ESPEasy_Now_packet& operator=(ESPEasy_Now_packet&& other);
+
+  bool ICACHE_FLASH_ATTR setReceivedPacket(const MAC_address& mac,
                          const uint8_t     *buf,
                          size_t             packetSize);
 
   // A packet may become invalid if it was not possible to allocate enough memory for the buffer
-  bool            valid() const;
+  bool ICACHE_FLASH_ATTR valid() const;
 
   bool            checksumValid() const;
 

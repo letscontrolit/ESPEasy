@@ -62,7 +62,7 @@ std::list<MAC_address> ESPEasy_now_MQTT_check_queue;
 
 void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t *buf, size_t count, void *cbarg) {
   START_TIMER;
-  size_t payload_length  = count - sizeof(ESPEasy_now_hdr);
+  const size_t payload_length  = count - sizeof(ESPEasy_now_hdr);
   if (count < sizeof(ESPEasy_now_hdr) || (payload_length > ESPEasy_Now_packet::getMaxPayloadSize())) {
     STOP_TIMER(INVALID_ESPEASY_NOW_LOOP);
     return; // Too small
@@ -82,7 +82,7 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
     STOP_TIMER(INVALID_ESPEASY_NOW_LOOP);
     return;
   }
-  uint64_t key = mac_to_key(mac, header.message_type, header.message_count);
+  const uint64_t key = mac_to_key(mac, header.message_type, header.message_count);
   ESPEasy_now_in_queue[key].addPacket(header.packet_nr, mac, buf, count);
   STOP_TIMER(RECEIVE_ESPEASY_NOW_LOOP);
 }

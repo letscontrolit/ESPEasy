@@ -27,7 +27,8 @@ public:
 private:
 
   // Create next packet when needed.
-  void                 createNextPacket();
+  // return false when it was needed, but failed to do so.
+  bool                 createNextPacket();
 
   size_t               getPayloadPos() const;
 

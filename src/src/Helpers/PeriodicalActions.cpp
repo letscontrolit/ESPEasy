@@ -283,7 +283,7 @@ void schedule_all_tasks_using_MQTT_controller() {
         // Schedule a call to each MQTT import plugin to notify the broker connection state
         EventStruct event(task);
         event.Par1 = MQTTclient_connected ? 1 : 0;
-        Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, &event);
+        Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, std::move(event));
       }
     }
   }

@@ -17,6 +17,27 @@ ESPEasy_Now_packet::ESPEasy_Now_packet(const ESPEasy_now_hdr& header, size_t pay
 ESPEasy_Now_packet::ESPEasy_Now_packet() : _valid(false)
 {}
 
+ESPEasy_Now_packet::ESPEasy_Now_packet(ESPEasy_Now_packet&& other)
+: _buf(std::move(other._buf)), _valid(other._valid)
+{
+  for (size_t i = 0; i < 6; ++i) {
+    _mac[i] = other._mac[i];
+    other._mac[i] = 0;
+  }
+  other._valid = false;
+}
+
+ESPEasy_Now_packet& ESPEasy_Now_packet::operator=(ESPEasy_Now_packet&& other)
+{
+  for (size_t i = 0; i < 6; ++i) {
+    _mac[i] = other._mac[i];
+    other._mac[i] = 0;
+  }
+  _buf = std::move(other._buf);
+  _valid = other._valid;
+  other._valid = false;
+}
+
 bool ESPEasy_Now_packet::setReceivedPacket(const MAC_address& mac,
                                            const uint8_t     *buf,
                                            size_t             packetSize)

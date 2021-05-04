@@ -12,9 +12,9 @@ String getPackedFromPlugin(struct EventStruct *event,
 C019_queue_element::C019_queue_element() {}
 
 C019_queue_element::C019_queue_element(struct EventStruct *event_p) :
-  controller_idx(event_p->ControllerIndex),
-  event(*event_p)
+  controller_idx(event_p->ControllerIndex)
 {
+  event.deep_copy(event_p);
   #ifdef USES_PACKED_RAW_DATA
   packed = getPackedFromPlugin(event_p, 0);
 

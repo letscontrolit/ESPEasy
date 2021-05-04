@@ -328,7 +328,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
     event = &TempEvent;
   }
   else {
-    TempEvent = (*event);
+    TempEvent.deep_copy(*event);
   }
 
   #ifndef BUILD_NO_RAM_TRACKER

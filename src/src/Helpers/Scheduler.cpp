@@ -998,9 +998,9 @@ void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsi
 * Thus only use these when the result is not needed immediately.
 * Proper use case is calling from a callback function, since those cannot use yield() or delay()
 \*********************************************************************************************/
-void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, struct EventStruct &&event) {
   if (validDeviceIndex(DeviceIndex)) {
-    schedule_event_timer(PluginPtrType::TaskPlugin, DeviceIndex, Function, event);
+    schedule_event_timer(PluginPtrType::TaskPlugin, DeviceIndex, Function, std::move(event));
   }
 }
 
@@ -1031,9 +1031,9 @@ void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(deviceIndex_t   
   }
 }
 
-void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct &&event) {
   if (validProtocolIndex(ProtocolIndex)) {
-    schedule_event_timer(PluginPtrType::ControllerPlugin, ProtocolIndex, Function, event);
+    schedule_event_timer(PluginPtrType::ControllerPlugin, ProtocolIndex, Function, std::move(event));
   }
 }
 
@@ -1076,16 +1076,16 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t Pro
   }
 }
 
-void ESPEasy_Scheduler::schedule_notification_event_timer(byte NotificationProtocolIndex, NPlugin::Function Function, struct EventStruct *event) {
-  schedule_event_timer(PluginPtrType::NotificationPlugin, NotificationProtocolIndex, static_cast<byte>(Function), event);
+void ESPEasy_Scheduler::schedule_notification_event_timer(byte NotificationProtocolIndex, NPlugin::Function Function, struct EventStruct &&event) {
+  schedule_event_timer(PluginPtrType::NotificationPlugin, NotificationProtocolIndex, static_cast<byte>(Function), std::move(event));
 }
 
-void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct &&event) {
   const unsigned long mixedId = createSystemEventMixedId(ptr_type, Index, Function);
 
   //  EventStructCommandWrapper eventWrapper(mixedId, *event);
   //  ScheduledEventQueue.push_back(eventWrapper);
-  ScheduledEventQueue.emplace_back(mixedId, *event);
+  ScheduledEventQueue.emplace_back(mixedId, std::move(event));
 }
 
 void ESPEasy_Scheduler::process_system_event_queue() {

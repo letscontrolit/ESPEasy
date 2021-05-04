@@ -23,7 +23,7 @@ public:
 
   ESPEasy_now_merger& operator=(ESPEasy_now_merger&& other);
 
-  void addPacket(
+  void ICACHE_FLASH_ATTR addPacket(
     uint8_t            packet_nr,
     const MAC_address& mac,
     const uint8_t     *buf,

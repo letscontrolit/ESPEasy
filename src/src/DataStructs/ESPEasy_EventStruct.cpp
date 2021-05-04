@@ -14,21 +14,6 @@ EventStruct::EventStruct(taskIndex_t taskIndex) :
   TaskIndex(taskIndex), BaseVarIndex(taskIndex * VARS_PER_TASK) 
 {}
 
-EventStruct::EventStruct(const struct EventStruct& event) :
-  String1(event.String1)
-  , String2(event.String2)
-  , String3(event.String3)
-  , String4(event.String4)
-  , String5(event.String5)
-  , Data(event.Data)
-  , idx(event.idx)
-  , Par1(event.Par1), Par2(event.Par2), Par3(event.Par3), Par4(event.Par4), Par5(event.Par5)
-  , Source(event.Source), TaskIndex(event.TaskIndex), ControllerIndex(event.ControllerIndex)
-  , NotificationIndex(event.NotificationIndex)
-  , BaseVarIndex(event.BaseVarIndex), sensorType(event.sensorType)
-  , OriginTaskIndex(event.OriginTaskIndex)
-{}
-
 EventStruct::EventStruct(struct EventStruct&& event) :
   String1(std::move(event.String1))
   , String2(std::move(event.String2))
@@ -49,20 +34,19 @@ EventStruct::EventStruct(struct EventStruct&& event) :
     event.Par3 = 0;
     event.Par4 = 0;
     event.Par5 = 0;
-    Source            = EventValueSource::Enum::VALUE_SOURCE_NOT_SET;
-    TaskIndex         = INVALID_TASK_INDEX;       
-    ControllerIndex   = INVALID_CONTROLLER_INDEX; 
-    NotificationIndex = INVALID_NOTIFIER_INDEX;   // index position in Settings.Notification, 0-3
-    BaseVarIndex      = 0;
-    sensorType        = Sensor_VType::SENSOR_TYPE_NOT_SET;
-    OriginTaskIndex   = 0;
-
+    event.Source            = EventValueSource::Enum::VALUE_SOURCE_NOT_SET;
+    event.TaskIndex         = INVALID_TASK_INDEX;       
+    event.ControllerIndex   = INVALID_CONTROLLER_INDEX; 
+    event.NotificationIndex = INVALID_NOTIFIER_INDEX;   // index position in Settings.Notification, 0-3
+    event.BaseVarIndex      = 0;
+    event.sensorType        = Sensor_VType::SENSOR_TYPE_NOT_SET;
+    event.OriginTaskIndex   = 0;
   }
 
-EventStruct& EventStruct::operator=(const struct EventStruct& other) {
+void EventStruct::deep_copy(const struct EventStruct& other) {
   // check for self-assignment
   if (&other == this) {
-    return *this;
+    return;
   }
   String1           = other.String1;
   String2           = other.String2;
@@ -83,8 +67,14 @@ EventStruct& EventStruct::operator=(const struct EventStruct& other) {
   BaseVarIndex      = other.BaseVarIndex;
   sensorType        = other.sensorType;
   OriginTaskIndex   = other.OriginTaskIndex;
-  return *this;
 }
+
+void EventStruct::deep_copy(const struct EventStruct* other) {
+  if (other != nullptr) {
+    deep_copy(*other);
+  }
+}
+
 
 EventStruct& EventStruct::operator=(struct EventStruct&& other) {
   // check for self-assignment

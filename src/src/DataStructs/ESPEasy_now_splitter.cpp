@@ -26,7 +26,9 @@ size_t ESPEasy_now_splitter::addBinaryData(const uint8_t *data, size_t length)
   size_t data_left = length;
 
   while ((data_left > 0) && (_totalSize > _bytesStored)) {
-    createNextPacket();
+    if (!createNextPacket()) {
+      return length - data_left;
+    }
     const size_t bytesAdded = _queue.back().addBinaryData(data, data_left, _payload_pos);
     if (bytesAdded == 0) {
       return length - data_left;
@@ -45,7 +47,7 @@ size_t ESPEasy_now_splitter::addString(const String& string)
   return addBinaryData(reinterpret_cast<const uint8_t *>(string.c_str()), length);
 }
 
-void ESPEasy_now_splitter::createNextPacket()
+bool ESPEasy_now_splitter::createNextPacket()
 {
   size_t current_PayloadSize = ESPEasy_Now_packet::getMaxPayloadSize();
 
@@ -62,18 +64,24 @@ void ESPEasy_now_splitter::createNextPacket()
        log += data_left;
        addLog(LOG_LEVEL_INFO, log);
      */
-    return;
+    return true;
   }
 
   // Determine size of next packet
   size_t message_bytes_left = _totalSize - _bytesStored;
   _header.payload_size = message_bytes_left - sizeof(ESPEasy_now_hdr);
-  _queue.emplace_back(_header, message_bytes_left);
+
+  ESPEasy_Now_packet newPacket(_header, message_bytes_left);
+  if (!newPacket.valid()) {
+    return false;
+  }
+  _queue.push_back(std::move(newPacket));
   _payload_pos = 0;
 
   // Set the packet number for the next packet.
   // Total packet count will be set right before sending them.
   _header.packet_nr++;
+  return true;
 }
 
 bool ESPEasy_now_splitter::sendToBroadcast()
