@@ -16,6 +16,7 @@ public:
 
 
   // Constructor for sending a packet
+  // Actual allocated size may be lower than requested.
   explicit ESPEasy_Now_packet(const ESPEasy_now_hdr& header,
                               size_t                 payloadSize);
 

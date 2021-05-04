@@ -4,15 +4,18 @@
 
 # include "../../ESPEasy_fdwdecl.h"
 # include "../Helpers/CRC_functions.h"
+# include "../Helpers/Memory.h"
 
 # define ESPEASY_NOW_MAX_PACKET_SIZE   200
 
 
 ESPEasy_Now_packet::ESPEasy_Now_packet(const ESPEasy_now_hdr& header, size_t payloadSize)
 {
-  setSize(payloadSize + sizeof(ESPEasy_now_hdr));
+  const size_t requestedSize = payloadSize + sizeof(ESPEasy_now_hdr);
+  setSize(requestedSize);
   setHeader(header);
 }
+
 
 ESPEasy_Now_packet::ESPEasy_Now_packet() : _valid(false)
 {}
@@ -29,6 +32,10 @@ ESPEasy_Now_packet::ESPEasy_Now_packet(ESPEasy_Now_packet&& other)
 
 ESPEasy_Now_packet& ESPEasy_Now_packet::operator=(ESPEasy_Now_packet&& other)
 {
+  if (&other == this) {
+    return *this;
+  }
+
   for (size_t i = 0; i < 6; ++i) {
     _mac[i] = other._mac[i];
     other._mac[i] = 0;
@@ -36,6 +43,7 @@ ESPEasy_Now_packet& ESPEasy_Now_packet::operator=(ESPEasy_Now_packet&& other)
   _buf = std::move(other._buf);
   _valid = other._valid;
   other._valid = false;
+  return *this;
 }
 
 bool ESPEasy_Now_packet::setReceivedPacket(const MAC_address& mac,
@@ -60,12 +68,10 @@ void ESPEasy_Now_packet::setSize(size_t packetSize)
   if (packetSize > ESPEASY_NOW_MAX_PACKET_SIZE) {
     packetSize = ESPEASY_NOW_MAX_PACKET_SIZE;
   }
-  #ifdef ESP8266
-  const size_t maxFreeBlock = ESP.getMaxFreeBlockSize();
+  const size_t maxFreeBlock = getMaxFreeBlock();
   if (packetSize > maxFreeBlock) {
     packetSize = maxFreeBlock;
   }
-  #endif
 
   _buf.resize(packetSize);
   _valid = _buf.size() >= packetSize;
@@ -97,7 +103,7 @@ size_t ESPEasy_Now_packet::getSize() const
 
 size_t ESPEasy_Now_packet::getPayloadSize() const
 {
-  size_t size = getSize();
+  const size_t size = getSize();
 
   if (size < sizeof(ESPEasy_now_hdr)) {
     // should not happen
