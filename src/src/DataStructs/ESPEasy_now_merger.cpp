@@ -28,9 +28,16 @@ void ESPEasy_now_merger::addPacket(
   }
   #endif
 
-  _queue.emplace(std::make_pair(packet_nr, ESPEasy_Now_packet()));
-  _queue[packet_nr].setReceivedPacket(mac, buf, packetSize);
-  _firstPacketTimestamp = millis();
+  if (_queue.find(packet_nr) == _queue.end()) {
+    // Not yet present.
+    // Wwe might receive some packets several times if the sender does not receive our acknowledgement
+    ESPEasy_Now_packet packet;
+    packet.setReceivedPacket(mac, buf, packetSize);
+    if (packet.valid()) {
+      _queue[packet_nr] = std::move(packet);
+      _firstPacketTimestamp = millis();
+    }
+  }  
 }
 
 bool ESPEasy_now_merger::messageComplete() const
