@@ -20,6 +20,8 @@ public:
 
   C019_queue_element();
 
+  C019_queue_element(C019_queue_element&& other);
+
   C019_queue_element(struct EventStruct *event);
 
   size_t getSize() const;

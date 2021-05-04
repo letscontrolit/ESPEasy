@@ -14,6 +14,8 @@ public:
 
   simple_queue_element_string_only();
 
+  simple_queue_element_string_only(simple_queue_element_string_only&& other);
+
   explicit simple_queue_element_string_only(int           ctrl_idx,
                                             taskIndex_t   TaskIndex,
                                             String&&      req);

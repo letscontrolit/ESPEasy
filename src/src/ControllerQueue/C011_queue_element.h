@@ -21,6 +21,8 @@ public:
 
   C011_queue_element();
 
+  C011_queue_element(C011_queue_element&& other);
+
   C011_queue_element(const struct EventStruct *event);
 
   bool isDuplicate(const C011_queue_element& other) const;

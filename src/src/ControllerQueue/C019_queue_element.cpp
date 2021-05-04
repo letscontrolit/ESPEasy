@@ -11,6 +11,16 @@ String getPackedFromPlugin(struct EventStruct *event,
 
 C019_queue_element::C019_queue_element() {}
 
+C019_queue_element::C019_queue_element(C019_queue_element&& other)
+  : packed(std::move(other.packed))
+  , _timestamp(other._timestamp)
+  , TaskIndex(other.TaskIndex)
+  , controller_idx(other.controller_idx)
+  , plugin_id(other.plugin_id)
+  , event(std::move(other.event))
+  , UnitMessageCount(other.UnitMessageCount)
+{}
+
 C019_queue_element::C019_queue_element(struct EventStruct *event_p) :
   controller_idx(event_p->ControllerIndex)
 {
@@ -33,14 +43,14 @@ size_t C019_queue_element::getSize() const {
   return sizeof(*this) + packed.length();
 }
 
-
 bool C019_queue_element::isDuplicate(const C019_queue_element& other) const {
-  if (other.controller_idx != controller_idx || 
-      other.TaskIndex != TaskIndex ||
-      other.plugin_id != plugin_id ||
-      other.packed != packed) {
+  if ((other.controller_idx != controller_idx) ||
+      (other.TaskIndex != TaskIndex) ||
+      (other.plugin_id != plugin_id) ||
+      (other.packed != packed)) {
     return false;
   }
+
   // FIXME TD-er: Must check event too?
   return false;
 }

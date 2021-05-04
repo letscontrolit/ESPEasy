@@ -21,6 +21,8 @@ public:
 
   C018_queue_element();
 
+  C018_queue_element(C018_queue_element&& other);
+
   C018_queue_element(struct EventStruct *event,
                      uint8_t             sampleSetCount);
 

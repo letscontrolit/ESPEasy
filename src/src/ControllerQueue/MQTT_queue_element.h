@@ -14,17 +14,19 @@ public:
 
   MQTT_queue_element();
 
+  MQTT_queue_element(MQTT_queue_element&& other);
+
   explicit MQTT_queue_element(int           ctrl_idx,
                               taskIndex_t   TaskIndex,
                               const String& topic,
                               const String& payload,
                               bool          retained);
 
-  explicit MQTT_queue_element(int           ctrl_idx,
-                              taskIndex_t   TaskIndex,
-                              String&&      topic,
-                              String&&      payload,
-                              bool          retained);
+  explicit MQTT_queue_element(int         ctrl_idx,
+                              taskIndex_t TaskIndex,
+                              String   && topic,
+                              String   && payload,
+                              bool        retained);
 
   size_t getSize() const;
 
@@ -41,7 +43,7 @@ public:
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   bool _retained                   = false;
-  UnitMessageCount_t UnitMessageCount; 
+  UnitMessageCount_t UnitMessageCount;
 };
 
 
