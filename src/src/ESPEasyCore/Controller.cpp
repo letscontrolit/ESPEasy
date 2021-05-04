@@ -519,7 +519,7 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
 
 #ifdef USES_ESPEASY_NOW
 
-bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, bool retained)
+bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, const UnitMessageCount_t& unitMessageCount, bool retained)
 {
   bool success = false;
   if (!MQTT_queueFull(controller_idx))
@@ -529,6 +529,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
       size_t pos = 0;
       element.controller_idx = controller_idx;
       element._retained = retained;
+      element.UnitMessageCount = unitMessageCount;
       const size_t payloadSize = message.getPayloadSize();
       if (message.getString(element._topic,   pos) && message.getString(element._payload, pos)) {
         success = true;
@@ -539,8 +540,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
                 message.getBinaryData(&element.UnitMessageCount.count, 1, pos) == 1)) 
           {
             // Whatever may have been present, it could not be loaded, so clear just to be sure.
-            element.UnitMessageCount.unit = 0;
-            element.UnitMessageCount.count = 0;
+            element.UnitMessageCount = unitMessageCount;
           }
         }
       }

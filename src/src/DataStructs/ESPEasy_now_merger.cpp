@@ -83,6 +83,17 @@ unsigned long ESPEasy_now_merger::getFirstPacketTimestamp() const
   return _firstPacketTimestamp;
 }
 
+bool ESPEasy_now_merger::getMessageCount(uint8_t& count) const
+{
+  auto it = _queue.find(0);
+
+  if (it == _queue.end()) {
+    return false;
+  }
+  count = it->second.getHeader().message_count;
+  return true;
+}
+
 bool ESPEasy_now_merger::getMac(uint8_t *mac) const
 {
   auto it = _queue.find(0);

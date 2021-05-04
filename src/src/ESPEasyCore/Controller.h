@@ -5,6 +5,7 @@
 
 #include "../DataTypes/EventValueSource.h"
 #include "../DataStructs/ESPEasy_now_merger.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 
 // ********************************************************************************
@@ -71,7 +72,7 @@ void SendStatus(struct EventStruct *event, const String& status);
 bool MQTT_queueFull(controllerIndex_t controller_idx);
 
 #ifdef USES_ESPEASY_NOW
-bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, bool retained);
+bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, const UnitMessageCount_t& unitMessageCount, bool retained);
 #endif
 
 bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  const char *topic, const char *payload, bool retained);

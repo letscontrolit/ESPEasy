@@ -1028,15 +1028,25 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
 
   if (validControllerIndex(controllerIndex)) {
     load_ControllerSettingsCache(controllerIndex);
-    bool success = MQTTpublish(controllerIndex, message, _mqtt_retainFlag);
-    if (!success) {
-      mustKeep = false;
-      return success;
-    }
-
     MAC_address mac;
 
+    bool success = false;
+
     if (message.getMac(mac)) {
+      UnitMessageCount_t UnitMessageCount;
+      const NodeStruct* node = Nodes.getNodeByMac(mac);
+      if (node != nullptr) {
+        if (message.getMessageCount(UnitMessageCount.count)) {
+          UnitMessageCount.unit = node->unit;
+        }
+      }
+      
+      success = MQTTpublish(controllerIndex, message, UnitMessageCount, _mqtt_retainFlag);
+      if (!success) {
+        mustKeep = false;
+        return success;
+      }
+
       ESPEasy_Now_MQTT_queue_check_packet query;
       const bool queue_full = MQTT_queueFull(controllerIndex);
       query.setState(queue_full);

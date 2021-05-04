@@ -62,6 +62,9 @@ public:
 
   unsigned long   getFirstPacketTimestamp() const;
 
+  bool getMessageCount(uint8_t& count) const;
+
+
 private:
 
   // Find packet + payload position in packet for payload_pos of entire message
