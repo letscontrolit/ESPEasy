@@ -3,6 +3,15 @@
 
 MQTT_queue_element::MQTT_queue_element() {}
 
+MQTT_queue_element::MQTT_queue_element(MQTT_queue_element&& other)
+  : _topic(std::move(other._topic)),
+  _payload(std::move(other._payload)),
+  _timestamp(other._timestamp),
+  TaskIndex(other.TaskIndex),
+  controller_idx(other.controller_idx),
+  _retained(other._retained),
+  UnitMessageCount(other.UnitMessageCount) {}
+
 MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
                                        taskIndex_t TaskIndex,
                                        const String& topic, const String& payload, bool retained) :
@@ -11,12 +20,12 @@ MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
   removeEmptyTopics();
 }
 
-MQTT_queue_element::MQTT_queue_element(int           ctrl_idx,
-                                        taskIndex_t   TaskIndex,
-                                        String&&      topic,
-                                        String&&      payload,
-                                        bool          retained)
- :
+MQTT_queue_element::MQTT_queue_element(int         ctrl_idx,
+                                       taskIndex_t TaskIndex,
+                                       String   && topic,
+                                       String   && payload,
+                                       bool        retained)
+  :
   _topic(std::move(topic)), _payload(std::move(payload)), TaskIndex(TaskIndex), controller_idx(ctrl_idx), _retained(retained)
 {
   removeEmptyTopics();
@@ -27,17 +36,11 @@ size_t MQTT_queue_element::getSize() const {
 }
 
 bool MQTT_queue_element::isDuplicate(const MQTT_queue_element& other) const {
-  if (other.controller_idx != controller_idx ||
-      other._retained != _retained) {
+  if ((other.controller_idx != controller_idx) ||
+      (other._retained != _retained) ||
+      other._topic != _topic ||
+      other._payload != _payload) {
     return false;
-  }
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
-    if (other._topic[i] != _topic[i]) {
-      return false;
-    }
-    if (other._payload[i] != _payload[i]) {
-      return false;
-    }
   }
   return true;
 }

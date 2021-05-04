@@ -17,6 +17,7 @@ class queue_element_formatted_uservar {
 public:
 
   queue_element_formatted_uservar();
+  queue_element_formatted_uservar(queue_element_formatted_uservar&& other);
 
   queue_element_formatted_uservar(struct EventStruct *event);
 

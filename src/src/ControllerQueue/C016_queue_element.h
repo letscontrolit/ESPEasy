@@ -23,6 +23,8 @@ public:
 
   C016_queue_element();
 
+  C016_queue_element(C016_queue_element&& other);
+
   C016_queue_element(const struct EventStruct *event,
                      byte                      value_count,
                      unsigned long             unixTime);

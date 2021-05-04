@@ -153,7 +153,7 @@ struct ControllerDelayHandlerStruct {
     }
 
     if (!queueFull(element)) {
-      sendQueue.push_back(element);
+      sendQueue.push_back(std::move(element));
       return true;
     }
 #ifndef BUILD_NO_DEBUG
