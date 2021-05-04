@@ -19,10 +19,16 @@ struct EventStruct
 {
   EventStruct();
   explicit EventStruct(taskIndex_t taskIndex);
-  explicit EventStruct(const struct EventStruct& event);
   explicit EventStruct(struct EventStruct&& event);
-  EventStruct& operator=(const struct EventStruct& other);
   EventStruct& operator=(struct EventStruct&& other);
+
+  // Explicit deep_copy function to make sure this object is not accidentally copied using the copy-constructor
+  // Copy constructor and assignment operator should not be used.
+  void deep_copy(const struct EventStruct& other);
+  void deep_copy(const struct EventStruct* other);
+  //  explicit EventStruct(const struct EventStruct& event);
+  //  EventStruct& operator=(const struct EventStruct& other);
+
 
   void setTaskIndex(taskIndex_t taskIndex);
 
