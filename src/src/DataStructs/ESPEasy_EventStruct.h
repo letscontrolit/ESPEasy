@@ -20,7 +20,9 @@ struct EventStruct
   EventStruct();
   explicit EventStruct(taskIndex_t taskIndex);
   explicit EventStruct(const struct EventStruct& event);
+  explicit EventStruct(struct EventStruct&& event);
   EventStruct& operator=(const struct EventStruct& other);
+  EventStruct& operator=(struct EventStruct&& other);
 
   void setTaskIndex(taskIndex_t taskIndex);
 
