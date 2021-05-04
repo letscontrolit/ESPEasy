@@ -173,7 +173,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
     {
       if (CONFIG_PIN3 != -1)
       {
-        if (digitalRead(CONFIG_PIN3) != P012_INVERSE_BTN)
+        if (digitalRead(CONFIG_PIN3) == P012_INVERSE_BTN)
         {
           P012_data_struct *P012_data =
             static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
