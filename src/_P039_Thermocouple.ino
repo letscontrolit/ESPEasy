@@ -348,38 +348,46 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
         if (choice == P039_MAX31865)
         {
-          const String PToptions[2] = {F("PT100"), F("PT1000")};
-          const int PToptionValues[2] = {MAX31865_PT100, MAX31865_PT1000};
-          addFormSelector(F("Resistor Type"), F("P039_rtdtype"), 2, PToptions, PToptionValues, P039_RTD_TYPE);
-          addFormNote(F("Set Resistor Type for MAX31865"));
-
-          const String Coptions[2] = {F("2-/4-wire"), F("3-wire")};
-          const int CoptionValues[2] = {0, 1};
-          addFormSelector(F("Connection Type"), F("P039_contype"), 2, Coptions, CoptionValues, P039_RTD_CON_TYPE);
-          addFormNote(F("Set Connection Type for MAX31865"));
-
-          const String FToptions[2] = {F("60 Hz"), F("50 Hz")};
-          const int FToptionValues[2] = {0, 1};
-          addFormSelector(F("Supply Frequency Filter"), F("P039_filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
-          addFormNote(F("Set filter frequency for supply voltage. Choose appropriate to your power net frequency (50/60 Hz)"));
-
-          addFormNumericBox(F("Reference Resistor [OHM]"), F("P039_res"), P039_RTD_RES, 0);
-          addFormNote(F("Set reference resistor for MAX31865. PT100: typically 430 [OHM]; PT1000: typically 4300 [OHM]"));
-
-          addFormFloatNumberBox(F("Offset [K]"), F("P039_offset"), P039_RTD_OFFSET, -50.0, 50.0, 2, 0.01);
-          addFormNote(F("Set Offset [K] for MAX31865. Valid values: [-50.0...50.0 K], min. stepsize: [0.01]"));
+          {
+            const String PToptions[2] = {F("PT100"), F("PT1000")};
+            const int PToptionValues[2] = {MAX31865_PT100, MAX31865_PT1000};
+            addFormSelector(F("Resistor Type"), F("P039_rtdtype"), 2, PToptions, PToptionValues, P039_RTD_TYPE);
+            addFormNote(F("Set Resistor Type for MAX31865"));
+          }
+          {
+            const String Coptions[2] = {F("2-/4-wire"), F("3-wire")};
+            const int CoptionValues[2] = {0, 1};
+            addFormSelector(F("Connection Type"), F("P039_contype"), 2, Coptions, CoptionValues, P039_RTD_CON_TYPE);
+            addFormNote(F("Set Connection Type for MAX31865"));
+          }
+          {
+            const String FToptions[2] = {F("60 Hz"), F("50 Hz")};
+            const int FToptionValues[2] = {0, 1};
+            addFormSelector(F("Supply Frequency Filter"), F("P039_filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
+            addFormNote(F("Set filter frequency for supply voltage. Choose appropriate to your power net frequency (50/60 Hz)"));
+          }
+          {
+            addFormNumericBox(F("Reference Resistor [OHM]"), F("P039_res"), P039_RTD_RES, 0);
+            addFormNote(F("Set reference resistor for MAX31865. PT100: typically 430 [OHM]; PT1000: typically 4300 [OHM]"));
+          }
+          {
+            addFormFloatNumberBox(F("Offset [K]"), F("P039_offset"), P039_RTD_OFFSET, -50.0, 50.0, 2, 0.01);
+            addFormNote(F("Set Offset [K] for MAX31865. Valid values: [-50.0...50.0 K], min. stepsize: [0.01]"));
+          }
         }
 
         if (choice == P039_LM7x)
         {
-
-          const String PToptions[8] = {F("LM70"), F("LM71"), F("LM74"), F("TMP121"), F("TMP122"), F("TMP123"), F("TMP124"), F("TMP125")};
-          const int PToptionValues[8] = {LM7x_SD70, LM7x_SD71, LM7x_SD74, LM7x_SD121, LM7x_SD122, LM7x_SD123, LM7x_SD124, LM7x_SD125};
-          addFormSelector(F("LM7x device details"), F("P039_rtd_lm_type"), 8, PToptions, PToptionValues, P039_RTD_LM_TYPE);
-          addFormNote(F("Choose LM7x device details to allow handling of device specifics,TMP122/124 not yet supported with all options -> fixed 12 Bit resolution, no advanced options active"));
-
-          addFormCheckBox(F("Enable Shutdown Mode"), F("P039_rtd_lm_shtdwn"), P039_RTD_LM_SHTDWN, false);
-          addFormNote(F("Enable shutdown mode for LM7x devices. Device is set to shutdown between sample cycles. Useful for very long call cycles, to save power.\n\r Without LM7x device conversion happens in between call cycles. Call Cylces should therefore not become lower than 350ms."));
+          {
+            const String PToptions[8] = {F("LM70"), F("LM71"), F("LM74"), F("TMP121"), F("TMP122"), F("TMP123"), F("TMP124"), F("TMP125")};
+            const int PToptionValues[8] = {LM7x_SD70, LM7x_SD71, LM7x_SD74, LM7x_SD121, LM7x_SD122, LM7x_SD123, LM7x_SD124, LM7x_SD125};
+            addFormSelector(F("LM7x device details"), F("P039_rtd_lm_type"), 8, PToptions, PToptionValues, P039_RTD_LM_TYPE);
+            addFormNote(F("Choose LM7x device details to allow handling of device specifics,TMP122/124 not yet supported with all options -> fixed 12 Bit resolution, no advanced options active"));
+          }
+          {
+            addFormCheckBox(F("Enable Shutdown Mode"), F("P039_rtd_lm_shtdwn"), P039_RTD_LM_SHTDWN, false);
+            addFormNote(F("Enable shutdown mode for LM7x devices. Device is set to shutdown between sample cycles. Useful for very long call cycles, to save power.\n\r Without LM7x device conversion happens in between call cycles. Call Cylces should therefore not become lower than 350ms."));
+          }
         }  
       }
       
