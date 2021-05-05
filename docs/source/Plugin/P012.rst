@@ -86,7 +86,7 @@ Example photo of a 4x20 (LCD2004) display:
 
 .. image:: P012_LCD_4x20.jpg
 
-**Attention** When using a 5V powered display with on-board pull-up resistors on the I2C bus, a level-convert should be used to connect to an ESP to avoid damage to the 3.3V I2C bus on the ESP!
+.. warning:: When using a 5V powered display with on-board pull-up resistors on the I2C bus, a level-convert should be used to connect to an ESP to avoid damage to the 3.3V I2C bus on the ESP and any other I2C devices connected!
 
 Commands available
 ^^^^^^^^^^^^^^^^^^
