@@ -168,7 +168,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       byte valueCount = getValueCountForTask(event->TaskIndex);
 
       
-      success = C015_DelayHandler->addToQueue(std::move(C015_queue_element(event, valueCount)));
+      success = C015_DelayHandler->addToQueue(C015_queue_element(event, valueCount));
 
       if (success) {
         // Element was added.
