@@ -110,7 +110,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       addRowLabel(F("Display button"));
       addPinSelect(false, F("taskdevicepin3"), CONFIG_PIN3);
 
-      addFormCheckBox(F("Inversed logic"), F("p012_inverse_btn"), P012_INVERSE_BTN == 1, false);
+      addFormCheckBox(F("Inversed logic"), F("p012_inversed_btn"), P012_INVERSE_BTN == 1, false);
 
       addFormNumericBox(F("Display Timeout"), F("p012_timer"), P012_TIMER);
 
