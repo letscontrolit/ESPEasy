@@ -194,6 +194,14 @@ String WifiSoftAPmacAddress() {
     return String(macaddress);
 }
 
+String WifiSTAmacAddress() {
+    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
+    uint8_t *macread = WiFi.macAddress(mac);
+    char     macaddress[20];
+    formatMAC(macread, macaddress);
+    return String(macaddress);
+}
+
 void CheckRunningServices() {
   set_mDNS();
   if (active_network_medium == NetworkMedium_t::WIFI) 
