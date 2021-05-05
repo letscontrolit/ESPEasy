@@ -136,6 +136,8 @@ bool ETHConnected() {
         }
       }
       return false;
+    } else {
+      setNetworkMedium(NetworkMedium_t::WIFI);
     }
   }
   return false;
