@@ -77,7 +77,7 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       
-      success = C009_DelayHandler->addToQueue(std::move(C009_queue_element(event)));
+      success = C009_DelayHandler->addToQueue(C009_queue_element(event));
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
       break;
     }
