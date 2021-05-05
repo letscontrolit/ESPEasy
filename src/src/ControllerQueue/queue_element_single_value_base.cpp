@@ -2,8 +2,6 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
-queue_element_single_value_base::queue_element_single_value_base() {}
-
 queue_element_single_value_base::queue_element_single_value_base(const struct EventStruct *event, byte value_count) :
   idx(event->idx),
   TaskIndex(event->TaskIndex),

@@ -2,10 +2,6 @@
 
 #include <list>
 
-ESPEasy_now_traceroute_struct::ESPEasy_now_traceroute_struct() {
-//  unit_vector.reserve(32); // prevent re-allocations
-}
-
 ESPEasy_now_traceroute_struct::ESPEasy_now_traceroute_struct(uint8_t size) {
   unit_vector.resize(size);
 }

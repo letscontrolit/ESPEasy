@@ -20,10 +20,13 @@ public:
   explicit ESPEasy_Now_packet(const ESPEasy_now_hdr& header,
                               size_t                 payloadSize);
 
-  ESPEasy_Now_packet();
+  ESPEasy_Now_packet() = default;
+
+  ESPEasy_Now_packet(const ESPEasy_Now_packet& other) = delete;
 
   ESPEasy_Now_packet(ESPEasy_Now_packet&& other);
 
+  ESPEasy_Now_packet& operator=(const ESPEasy_Now_packet& other) = delete;
   ESPEasy_Now_packet& operator=(ESPEasy_Now_packet&& other);
 
   bool ICACHE_FLASH_ATTR setReceivedPacket(const MAC_address& mac,

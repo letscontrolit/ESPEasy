@@ -18,9 +18,11 @@
 class C019_queue_element {
 public:
 
-  C019_queue_element();
+  C019_queue_element() = default;
 
-  C019_queue_element(C019_queue_element&& other);
+  C019_queue_element(const C019_queue_element& other) = delete;
+
+  C019_queue_element(C019_queue_element&& other) = default;
 
   C019_queue_element(struct EventStruct *event);
 

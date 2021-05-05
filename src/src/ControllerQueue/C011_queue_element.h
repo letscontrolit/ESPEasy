@@ -19,9 +19,11 @@ struct EventStruct;
 class C011_queue_element {
 public:
 
-  C011_queue_element();
+  C011_queue_element() = default;
 
-  C011_queue_element(C011_queue_element&& other);
+  C011_queue_element(C011_queue_element&& other) = default;
+
+  C011_queue_element(const C011_queue_element& other) = delete;
 
   C011_queue_element(const struct EventStruct *event);
 

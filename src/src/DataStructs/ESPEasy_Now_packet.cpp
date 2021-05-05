@@ -16,10 +16,6 @@ ESPEasy_Now_packet::ESPEasy_Now_packet(const ESPEasy_now_hdr& header, size_t pay
   setHeader(header);
 }
 
-
-ESPEasy_Now_packet::ESPEasy_Now_packet() : _valid(false)
-{}
-
 ESPEasy_Now_packet::ESPEasy_Now_packet(ESPEasy_Now_packet&& other)
 : _buf(std::move(other._buf)), _valid(other._valid)
 {

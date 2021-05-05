@@ -18,10 +18,10 @@ class ESPEasy_now_merger {
 public:
 
   ESPEasy_now_merger();
+  ESPEasy_now_merger(const ESPEasy_now_merger& other) = delete;
+  ESPEasy_now_merger(ESPEasy_now_merger&& other) = default;
 
-  ESPEasy_now_merger(ESPEasy_now_merger&& other);
-
-  ESPEasy_now_merger& operator=(ESPEasy_now_merger&& other);
+  ESPEasy_now_merger& operator=(ESPEasy_now_merger&& other) = default;
 
   void ICACHE_FLASH_ATTR addPacket(
     uint8_t            packet_nr,

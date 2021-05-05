@@ -16,7 +16,8 @@ struct EventStruct;
 class queue_element_formatted_uservar {
 public:
 
-  queue_element_formatted_uservar();
+  queue_element_formatted_uservar() = default;
+  queue_element_formatted_uservar(const queue_element_formatted_uservar& other) = delete;
   queue_element_formatted_uservar(queue_element_formatted_uservar&& other);
 
   queue_element_formatted_uservar(struct EventStruct *event);

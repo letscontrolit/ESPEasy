@@ -12,9 +12,11 @@
 class simple_queue_element_string_only {
 public:
 
-  simple_queue_element_string_only();
+  simple_queue_element_string_only() = default;
 
-  simple_queue_element_string_only(simple_queue_element_string_only&& other);
+  simple_queue_element_string_only(const simple_queue_element_string_only& other) = delete;
+  
+  simple_queue_element_string_only(simple_queue_element_string_only&& other) = default;
 
   explicit simple_queue_element_string_only(int           ctrl_idx,
                                             taskIndex_t   TaskIndex,

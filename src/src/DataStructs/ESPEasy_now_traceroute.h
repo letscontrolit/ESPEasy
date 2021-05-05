@@ -11,7 +11,7 @@
 \*********************************************************************************************/
 struct ESPEasy_now_traceroute_struct
 {
-  ESPEasy_now_traceroute_struct();
+  ESPEasy_now_traceroute_struct() = default;
 
   ESPEasy_now_traceroute_struct(uint8_t size);
 
