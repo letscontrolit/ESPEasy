@@ -68,7 +68,7 @@
 # define PLUGIN_VALUENAME1_039 "Temperature"
 
 // typically 500ns of wating on positive/negative edge of CS should be enough ( -> datasheet); to make sure we cover a lot of devices we spend 5ms ( factor 10 !)
-// TODO: analyze if less wating could be sufficient
+// TODO: c.k.i: analyze if less wating could be sufficient
 #define P039_CS_Delay()             delayMicroseconds(5)
 
 #define P039_MAX_TYPE               PCONFIG(0)
@@ -92,23 +92,25 @@
 # define P039_LM7x                  5
 
 // register offset values for MAX 31856
-# define P039_RAWVALUE              0
-# define P039_CR0                   1
-# define P039_CR1                   2
-# define P039_MASK                  3
-# define P039_CJHF                  4
-# define P039_CJLF                  5
-# define P039_LTHFTH                6
-# define P039_LTHFTL                7
-# define P039_LTLFTH                8
-# define P039_LTLFTL                9
-# define P039_CJTO                 10
-# define P039_CJTH                 11
-# define P039_CJTL                 12
-# define P039_LTCBH                13
-# define P039_LTCBM                14
-# define P039_LTCBL                15
-# define P039_SR                   16
+# define MAX31856_RAWVALUE           0
+# define MAX31856_CR0                1
+# define MAX31856_CR1                2
+# define MAX31856_MASK               3
+# define MAX31856_CJHF               4
+# define MAX31856_CJLF               5
+# define MAX31856_LTHFTH             6
+# define MAX31856_LTHFTL             7
+# define MAX31856_LTLFTH             8
+# define MAX31856_LTLFTL             9
+# define MAX31856_CJTO              10
+# define MAX31856_CJTH              11
+# define MAX31856_CJTL              12
+# define MAX31856_LTCBH             13
+# define MAX31856_LTCBM             14
+# define MAX31856_LTCBL             15
+# define MAX31856_SR                16
+
+#define MAX31856_NO_REG             17
 
 
 // RTD related defines
@@ -117,7 +119,7 @@
 
 // waiting time until "in sequence" conversion is ready (-> used in case device is set to shutdown in between call cycles)
 // typically 75ms should be OK - give a little adder to "be sure" conversion is done; alternatively ONE SHOT bit could be polled (system/SPI bus load !)
-// TODO: reduce to balanced minimum
+// TODO: c.k.i: reduce to balanced minimum
 #define MAX31865_CONVERSION_BREAK   100
 
 // sensor type
@@ -283,7 +285,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         // ensure MODE3 access to SPI device
         SPI.setDataMode(SPI_MODE3);
 
-        // TODO: more detailed inits depending on the sub devices expected , e.g. TMP 122/124
+        // TODO: c.k.i.: more detailed inits depending on the sub devices expected , e.g. TMP 122/124
       }
 
       addLog(LOG_LEVEL_INFO, F("P039 : SPI Init - DONE"));
@@ -295,29 +297,36 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
     {
       // FIXME TD-er: Why is this list needed? GPIO selector should provide this info.
         # ifdef ESP8266
-      addFormNote(F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
+          {
+            addFormNote(F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
+          }
         # endif // ifdef ESP8266
         # ifdef ESP32
-      addFormNote(F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15..19, 21..23, 25..27, 32, 33)"));
+          {
+            addFormNote(F("<b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15..19, 21..23, 25..27, 32, 33)"));
+          }
         # endif // ifdef ESP32
 
       // addHtml(F("<TR><TD>Info GPIO:<TD><b>1st GPIO</b> = CS (Usable GPIOs : 0, 2, 4, 5, 15)"));
-      
-      addFormSubHeader(F("Sensor Family Selection"));
-      
+      {
+        addFormSubHeader(F("Sensor Family Selection"));
+      }
+
       const byte family = P039_FAM_TYPE;
       {
-        const String Foptions[2] = {F("Thermoccouple"), F("RTD")};
+        const String Foptions[2] = {F("Thermocouple"), F("RTD")};
         const int FoptionValues[2] = {P039_TC, P039_RTD};
         addFormSelector(F("Sensor Family Type"), F("P039_famtype"), 2, Foptions, FoptionValues, family);
         addFormNote(F("Set sensor family of connected sensor - thermocouple or RTD. Submit the form after choice to allow update of sections below accordingly !"));
       }
 
-      addFormSubHeader(F("Device Selection"));
-      
       const byte choice = P039_MAX_TYPE;
 
       if (family == P039_TC){
+
+        {
+          addFormSubHeader(F("Device Type Settings"));
+        }
 
         {
           const String options[3]      = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
@@ -325,29 +334,38 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
           addFormSelector(F("Adapter IC"), F("P039_maxtype"), 3, options, optionValues, choice);
           addFormNote(F("Set adapter IC used. Submit the form after choice to allow update of sections below accordingly !"));
         }
-
-        addFormSubHeader(F("Sub-Device Settings"));
-
+    
         if (choice == P039_MAX_31856) {
-          addFormNote(F("Set Thermocouple type for MAX31856"));
-          const String Toptions[8]      = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T") };
-          const int    ToptionValues[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-          addFormSelector(F("Thermocouple type"), F("P039_tctype"), 8, Toptions, ToptionValues, P039_TC_TYPE);
+          {
+            addFormSubHeader(F("Device Settings"));
+          }
+          {
+            addFormNote(F("Set Thermocouple type for MAX31856"));
+            const String Toptions[8]      = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T") };
+            const int    ToptionValues[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+            addFormSelector(F("Thermocouple type"), F("P039_tctype"), 8, Toptions, ToptionValues, P039_TC_TYPE);
+          }
         }
       }
       else {
-        
+        {
+         addFormSubHeader(F("Device Type Settings"));
+        }
+
         {
           const String TPoptions[2] = {F("MAX 31865"), F("LM7x")};
           const int TPoptionValues[2] = {P039_MAX31865, P039_LM7x};
           addFormSelector(F("Adapter IC"), F("P039_maxtype"), 2, TPoptions, TPoptionValues, choice);
-          addFormNote(F("Set used RTD Converter Module. Currently only MAX31865 is fully supported. LM7x derivatives are untested and experimental. Submit the form after choice to allow update of sections below accordingly !"));
+          addFormNote(F("Set used RTD Converter Module. Currently only MAX31865 is fully supported. LM7x derivatives are untested and experimental.\nSubmit the form after choice to allow update of sections below accordingly !"));
         }
 
-        addFormSubHeader(F("Sub-Device Settings"));
+       
 
         if (choice == P039_MAX31865)
         {
+          {
+            addFormSubHeader(F("Device Settings"));
+          }
           {
             const String PToptions[2] = {F("PT100"), F("PT1000")};
             const int PToptionValues[2] = {MAX31865_PT100, MAX31865_PT1000};
@@ -379,14 +397,18 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         if (choice == P039_LM7x)
         {
           {
+            addFormSubHeader(F("Device Settings"));
+          }
+
+          {
             const String PToptions[8] = {F("LM70"), F("LM71"), F("LM74"), F("TMP121"), F("TMP122"), F("TMP123"), F("TMP124"), F("TMP125")};
             const int PToptionValues[8] = {LM7x_SD70, LM7x_SD71, LM7x_SD74, LM7x_SD121, LM7x_SD122, LM7x_SD123, LM7x_SD124, LM7x_SD125};
             addFormSelector(F("LM7x device details"), F("P039_rtd_lm_type"), 8, PToptions, PToptionValues, P039_RTD_LM_TYPE);
             addFormNote(F("Choose LM7x device details to allow handling of device specifics,TMP122/124 not yet supported with all options -> fixed 12 Bit resolution, no advanced options active"));
           }
           {
-            addFormCheckBox(F("Enable Shutdown Mode"), F("P039_rtd_lm_shtdwn"), P039_RTD_LM_SHTDWN, false);
-            addFormNote(F("Enable shutdown mode for LM7x devices. Device is set to shutdown between sample cycles. Useful for very long call cycles, to save power.\n\r Without LM7x device conversion happens in between call cycles. Call Cylces should therefore not become lower than 350ms."));
+            addFormCheckBox(F("Enable Shutdown Mode"), F("P039_rtd_lm_shtdwn"), P039_RTD_LM_SHTDWN);
+            addFormNote(F("Enable shutdown mode for LM7x devices. Device is set to shutdown between sample cycles. Useful for very long call cycles, to save power.\nWithout LM7x device conversion happens in between call cycles. Call Cylces should therefore not become lower than 350ms."));
           }
         }  
       }
@@ -406,7 +428,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       P039_RTD_RES = getFormItemInt(F("P039_res"));
       P039_RTD_OFFSET = getFormItemFloat(F("P039_offset"));
       P039_RTD_LM_TYPE = getFormItemInt(F("P039_rtd_lm_type"));
-      P039_RTD_LM_SHTDWN = getFormItemInt(F("P039_rtd_lm_shtdwn"));
+      P039_RTD_LM_SHTDWN = isFormItemChecked(F("P039_rtd_lm_shtdwn"));
 
       success       = true;
       break;
@@ -632,15 +654,15 @@ float readMax31856(struct EventStruct *event)
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
 
-  uint32_t registers[17] = { 0 };
+  uint32_t registers[MAX31856_NO_REG] = { 0 };
 
-  for (int i = 0u; i < 17; ++i) {
+  for (int i = 0u; i < MAX31856_NO_REG; ++i) {
     registers[i] = read8BitRegister(CS_pin_no, i);
   }
 
-  uint32_t rawvalue = registers[P039_LTCBH];
-  rawvalue = (rawvalue << 8) | registers[P039_LTCBM];
-  rawvalue = (rawvalue << 8) | registers[P039_LTCBL];
+  uint32_t rawvalue = registers[MAX31856_LTCBH];
+  rawvalue = (rawvalue << 8) | registers[MAX31856_LTCBM];
+  rawvalue = (rawvalue << 8) | registers[MAX31856_LTCBL];
 
   # ifndef BUILD_NO_DEBUG
 
@@ -650,7 +672,7 @@ float readMax31856(struct EventStruct *event)
       log.reserve(66u);
       log = F("P039 : MAX31856 :");
 
-      for (int i = 1; i < 17; ++i) {
+      for (int i = 1; i < MAX31856_NO_REG; ++i) {
         log += ' ';
         log += String(registers[i], HEX);
       }
@@ -659,7 +681,7 @@ float readMax31856(struct EventStruct *event)
 
   # endif // ifndef BUILD_NO_DEBUG
 
-  const uint32_t sr = registers[P039_SR];
+  const uint32_t sr = registers[MAX31856_SR];
 
   # ifndef BUILD_NO_DEBUG
 
@@ -724,9 +746,9 @@ float readMax31856(struct EventStruct *event)
 
   if (Plugin_039_SensorAttached)
   {
-    registers[P039_RAWVALUE] >>= 5; // bottom 5 bits are unused
+    registers[MAX31856_RAWVALUE] >>= 5; // bottom 5 bits are unused
     // We're left with (24 - 5 =) 19 bits
-    float temperature = Plugin_039_convert_two_complement(registers[P039_RAWVALUE], 19);
+    float temperature = Plugin_039_convert_two_complement(registers[MAX31856_RAWVALUE], 19);
 
     // Calculate Celsius
     return temperature / 128.0f;
@@ -1154,38 +1176,38 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
   switch (l_LM7xsubtype)
   {
     case LM7x_SD70:
-                        l_rawValue >>= 5;
-                        l_lsbvalue = 0.25f;
-                        l_noBits = 11u;
-                        break;
+      l_rawValue >>= 5;
+      l_lsbvalue = 0.25f;
+      l_noBits = 11u;
+      break;
     case LM7x_SD71:
-                        l_rawValue >>= 2;
-                        l_lsbvalue = 0.03125f;
-                        l_noBits = 14u;
-                        break;
+      l_rawValue >>= 2;
+      l_lsbvalue = 0.03125f;
+      l_noBits = 14u;
+      break;
     case LM7x_SD74:
-                        l_rawValue >>= 3;
-                        l_lsbvalue = 0.0625f;
-                        l_noBits = 13u;
-                        break;
+      l_rawValue >>= 3;
+      l_lsbvalue = 0.0625f;
+      l_noBits = 13u;
+      break;
     case LM7x_SD121:
     case LM7x_SD122:
     case LM7x_SD123:
     case LM7x_SD124:
-                        l_rawValue >>= 4;
-                        l_lsbvalue = 0.0625f;
-                        l_noBits = 12u;
-                        break;
+      l_rawValue >>= 4;
+      l_lsbvalue = 0.0625f;
+      l_noBits = 12u;
+      break;
     case LM7x_SD125:
-                        l_rawValue >>= 5;
-                        l_lsbvalue = 0.25f;
-                        l_noBits = 10u;
-                        break;
+      l_rawValue >>= 5;
+      l_lsbvalue = 0.25f;
+      l_noBits = 10u;
+      break;
     default: // use lowest resolution as fallback if no device has been configured
-                        l_rawValue >>= 5;
-                        l_lsbvalue = 0.25f;
-                        l_noBits = 11u;
-                        break;
+      l_rawValue >>= 5;
+      l_lsbvalue = 0.25f;
+      l_noBits = 11u;
+      break;
   }
 
   l_intTemperature = Plugin_039_convert_two_complement(l_rawValue, l_noBits);
@@ -1228,20 +1250,20 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
   case LM7x_SD70:
   case LM7x_SD71:
   case LM7x_SD74:
-                    l_mswaitTime = 300;
-                    break;
+    l_mswaitTime = 300;
+    break;
   case LM7x_SD121:
   case LM7x_SD122:
   case LM7x_SD123:
   case LM7x_SD124:
-                    l_mswaitTime = 320;
-                    break;
+    l_mswaitTime = 320;
+    break;
   case LM7x_SD125:
-                    l_mswaitTime = 100;
-                    break;
+    l_mswaitTime = 100;
+    break;
   default:
-                    l_mswaitTime = 500;
-                    break;
+    l_mswaitTime = 500;
+    break;
   }
 
   // // activate communication -> CS low
@@ -1357,8 +1379,7 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
 
     Initial Revision - chri.kai.in 2021
 
-    TODO:
-      - make it generic and carve out to generic _SPI_helper.c library 
+    TODO: c.k.i.: make it generic and carve out to generic _SPI_helper.c library 
 
 
 /**************************************************************************/
