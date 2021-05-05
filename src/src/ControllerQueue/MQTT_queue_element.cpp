@@ -1,17 +1,6 @@
 #include "../ControllerQueue/MQTT_queue_element.h"
 
 
-MQTT_queue_element::MQTT_queue_element() {}
-
-MQTT_queue_element::MQTT_queue_element(MQTT_queue_element&& other)
-  : _topic(std::move(other._topic)),
-  _payload(std::move(other._payload)),
-  _timestamp(other._timestamp),
-  TaskIndex(other.TaskIndex),
-  controller_idx(other.controller_idx),
-  _retained(other._retained),
-  UnitMessageCount(other.UnitMessageCount) {}
-
 MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
                                        taskIndex_t TaskIndex,
                                        const String& topic, const String& payload, bool retained) :

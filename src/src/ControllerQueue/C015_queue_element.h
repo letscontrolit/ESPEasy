@@ -19,7 +19,9 @@ struct EventStruct;
 class C015_queue_element {
 public:
 
-  C015_queue_element();
+  C015_queue_element() = default;
+
+  C015_queue_element(const C015_queue_element& other) = delete;
 
   C015_queue_element(C015_queue_element&& other);
 

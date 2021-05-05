@@ -19,9 +19,11 @@ struct EventStruct;
 class C018_queue_element {
 public:
 
-  C018_queue_element();
+  C018_queue_element() = default;
 
-  C018_queue_element(C018_queue_element&& other);
+  C018_queue_element(const C018_queue_element& other) = delete;
+
+  C018_queue_element(C018_queue_element&& other) = default;
 
   C018_queue_element(struct EventStruct *event,
                      uint8_t             sampleSetCount);

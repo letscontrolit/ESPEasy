@@ -8,15 +8,6 @@
 
 #ifdef USES_C018
 
-C018_queue_element::C018_queue_element() {}
-
-C018_queue_element::C018_queue_element(C018_queue_element&& other)
-  : packed(std::move(other.packed))
-  , _timestamp(other._timestamp)
-  , TaskIndex(other.TaskIndex)
-  , controller_idx(other.controller_idx)
-{}
-
 C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sampleSetCount) :
   TaskIndex(event->TaskIndex),
   controller_idx(event->ControllerIndex)

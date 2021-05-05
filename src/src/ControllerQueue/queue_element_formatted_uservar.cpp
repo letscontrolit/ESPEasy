@@ -5,8 +5,6 @@
 #include "../../_Plugin_Helper.h"
 
 
-queue_element_formatted_uservar::queue_element_formatted_uservar() {}
-
 queue_element_formatted_uservar::queue_element_formatted_uservar(queue_element_formatted_uservar&& other)
   :
   idx(other.idx),

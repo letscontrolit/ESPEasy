@@ -12,9 +12,11 @@
 class MQTT_queue_element {
 public:
 
-  MQTT_queue_element();
+  MQTT_queue_element() = default;
 
-  MQTT_queue_element(MQTT_queue_element&& other);
+  MQTT_queue_element(const MQTT_queue_element& other) = delete;
+  
+  MQTT_queue_element(MQTT_queue_element&& other) = default;
 
   explicit MQTT_queue_element(int           ctrl_idx,
                               taskIndex_t   TaskIndex,

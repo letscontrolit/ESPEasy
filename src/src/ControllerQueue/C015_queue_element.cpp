@@ -4,8 +4,6 @@
 
 #ifdef USES_C015
 
-C015_queue_element::C015_queue_element() {}
-
 C015_queue_element::C015_queue_element(C015_queue_element&& other)
   : idx(other.idx), _timestamp(other._timestamp), TaskIndex(other.TaskIndex)
   , controller_idx(other.controller_idx), valuesSent(other.valuesSent)

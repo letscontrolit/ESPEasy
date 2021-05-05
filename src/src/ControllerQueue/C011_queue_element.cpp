@@ -4,19 +4,6 @@
 
 #ifdef USES_C011
 
-C011_queue_element::C011_queue_element() {}
-
-C011_queue_element::C011_queue_element(C011_queue_element&& other)
-  : uri(std::move(other.uri))
-  , HttpMethod(std::move(other.HttpMethod))
-  , header(std::move(other.header))
-  , postStr(std::move(other.postStr))
-  , idx(other.idx)
-  , _timestamp(other._timestamp)
-  , TaskIndex(other.TaskIndex)
-  , controller_idx(other.controller_idx)
-  , sensorType(other.sensorType)
-{}
 
 C011_queue_element::C011_queue_element(const struct EventStruct *event) :
   idx(event->idx),
