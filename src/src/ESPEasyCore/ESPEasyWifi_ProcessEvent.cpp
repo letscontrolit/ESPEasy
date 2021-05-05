@@ -31,6 +31,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
+#include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
@@ -42,13 +43,23 @@
 void handle_unprocessedNetworkEvents()
 {
 #ifdef HAS_ETHERNET
-  // Must process the Ethernet Connected event regardless the active network medium.
-  // It may happen by plugging in the cable while WiFi was active.
-  if (!EthEventData.processedConnect) {
-    #ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processConnect()"));
-    #endif // ifndef BUILD_NO_DEBUG
-    processEthernetConnected();
+  if (EthEventData.unprocessedEthEvents()) {
+    // Process disconnect events before connect events.
+    if (!EthEventData.processedDisconnect) {
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processDisconnect()"));
+      #endif // ifndef BUILD_NO_DEBUG
+      processEthernetDisconnected();
+    }
+
+    // Must process the Ethernet Connected event regardless the active network medium.
+    // It may happen by plugging in the cable while WiFi was active.
+    if (!EthEventData.processedConnect) {
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processConnect()"));
+      #endif // ifndef BUILD_NO_DEBUG
+      processEthernetConnected();
+    }
   }
 
   if (active_network_medium == NetworkMedium_t::Ethernet) {
@@ -58,14 +69,6 @@ void handle_unprocessedNetworkEvents()
         NetworkConnectRelaxed();
       }
  
-      // Process disconnect events before connect events.
-      if (!EthEventData.processedDisconnect) {
-        #ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processDisconnect()"));
-        #endif // ifndef BUILD_NO_DEBUG
-        processEthernetDisconnected();
-      }
-
       if (!EthEventData.processedGotIP) {
         #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processGotIP()"));
@@ -85,6 +88,16 @@ void handle_unprocessedNetworkEvents()
   }
 
 #endif
+  if (WiFiEventData.unprocessedWifiEvents()) {
+    // Process disconnect events before connect events.
+    if (!WiFiEventData.processedDisconnect) {
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
+      #endif // ifndef BUILD_NO_DEBUG
+      processDisconnect();
+    }
+  }
+
   if (active_network_medium == NetworkMedium_t::WIFI || active_network_medium == NetworkMedium_t::ESPEasyNOW_only) {
     if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
       if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
@@ -96,14 +109,6 @@ void handle_unprocessedNetworkEvents()
       delay(0);
 
       NetworkConnectRelaxed();
-
-      // Process disconnect events before connect events.
-      if (!WiFiEventData.processedDisconnect) {
-        #ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("WIFI : Entering processDisconnect()"));
-        #endif // ifndef BUILD_NO_DEBUG
-        processDisconnect();
-      }
 
       if (!WiFiEventData.processedConnect) {
         #ifndef BUILD_NO_DEBUG
@@ -205,8 +210,9 @@ void handle_unprocessedNetworkEvents()
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
 void processDisconnect() {
-  if (WiFiEventData.processedDisconnect) { return; }
-  WiFiEventData.processedDisconnect = true;
+  if (WiFiEventData.processedDisconnect || 
+      WiFiEventData.processingDisconnect) { return; }
+  WiFiEventData.processingDisconnect = true;
   WiFiEventData.setWiFiDisconnected();
   WiFiEventData.wifiConnectAttemptNeeded = true;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
@@ -254,6 +260,8 @@ void processDisconnect() {
     WifiScan(false);
   }
   logConnectionStatus();
+  WiFiEventData.processedDisconnect = true;
+  WiFiEventData.processingDisconnect = false;
 }
 
 void processConnect() {
@@ -403,6 +411,7 @@ void processGotIP() {
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
+  scheduleNextMQTTdelayQueue();
 #endif // USES_MQTT
   Scheduler.sendGratuitousARP_now();
 
@@ -641,11 +650,11 @@ void processEthernetConnected() {
 void processEthernetDisconnected() {
   EthEventData.setEthDisconnected();
   EthEventData.processedDisconnect = true;
+  EthEventData.ethConnectAttemptNeeded = true;
   if (Settings.UseRules)
   {
     eventQueue.add(F("ETHERNET#Disconnected"));
   }
-  setNetworkMedium(NetworkMedium_t::WIFI);
 }
 
 void processEthernetGotIP() {
@@ -659,15 +668,19 @@ void processEthernetGotIP() {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
-    String log = F("ETH MAC: ");
+    String log;
+    log.reserve(160);
+    log = F("ETH MAC: ");
     log += NetworkMacAddress();
+    log += ' ';
     if (useStaticIP()) {
-      log += F("Static IP: ");
+      log += F("Static");
     } else {
-      log += F("DHCP IP: ");
+      log += F("DHCP");
     }
+    log += F(" IP: ");
     log += NetworkLocalIP().toString();
-    log += " (";
+    log += F(" (");
     log += NetworkGetHostname();
     log += F(") GW: ");
     log += NetworkGatewayIP().toString();
@@ -677,7 +690,7 @@ void processEthernetGotIP() {
       if (EthFullDuplex()) {
         log += F(" FULL_DUPLEX");
       }
-      log += F(" ");
+      log += ' ';
       log += EthLinkSpeed();
       log += F("Mbps");
     } else {
@@ -703,6 +716,7 @@ void processEthernetGotIP() {
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
+  scheduleNextMQTTdelayQueue();
 #endif // USES_MQTT
   Scheduler.sendGratuitousARP_now();
 
@@ -715,6 +729,7 @@ void processEthernetGotIP() {
 
   EthEventData.processedGotIP = true;
   EthEventData.setEthGotIP();
+  CheckRunningServices();
 }
 
 #endif

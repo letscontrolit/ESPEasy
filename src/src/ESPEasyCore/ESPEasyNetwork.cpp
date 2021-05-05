@@ -248,7 +248,11 @@ String WifiSoftAPmacAddress() {
 
 void CheckRunningServices() {
   set_mDNS();
-  SetWiFiTXpower();
+  if (active_network_medium == NetworkMedium_t::WIFI || 
+      active_network_medium == NetworkMedium_t::ESPEasyNOW_only) 
+  {
+    SetWiFiTXpower();
+  }
 }
 
 #ifdef HAS_ETHERNET

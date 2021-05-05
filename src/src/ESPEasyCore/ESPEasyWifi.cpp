@@ -662,7 +662,23 @@ bool WiFiScanAllowed() {
     handle_unprocessedNetworkEvents();
   }
   if (WiFiEventData.unprocessedWifiEvents()) {
-    addLog(LOG_LEVEL_ERROR, F("WiFi : Scan not allowed, unprocessed WiFi events"));
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("WiFi : Scan not allowed, unprocessed WiFi events: ");
+      if (!WiFiEventData.processedConnect) {
+        log += F(" conn");
+      }
+      if (!WiFiEventData.processedDisconnect) {
+        log += F(" disconn");
+      }
+      if (!WiFiEventData.processedGotIP) {
+        log += F(" gotIP");
+      }
+      if (!WiFiEventData.processedDHCPTimeout) {
+        log += F(" DHCP_t/o");
+      }
+      
+      addLog(LOG_LEVEL_ERROR, log);
+    }
     return false;
   }
   /*

@@ -424,6 +424,7 @@ void updateMQTTclient_connected() {
     timermqtt_interval = 250;
   }
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
+  scheduleNextMQTTdelayQueue();
 }
 
 void runPeriodicalMQTT() {
