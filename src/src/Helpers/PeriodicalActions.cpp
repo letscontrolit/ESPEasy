@@ -254,7 +254,9 @@ void runEach30Seconds()
 
 
 void scheduleNextMQTTdelayQueue() {
-  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
+  if (MQTTDelayHandler != nullptr) {
+    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
+  }
 }
 
 void schedule_all_tasks_using_MQTT_controller() {
