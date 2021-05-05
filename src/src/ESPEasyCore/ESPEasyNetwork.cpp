@@ -24,6 +24,9 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
       #ifdef HAS_ETHERNET
       // FIXME TD-er: How to 'end' ETH?
 //      ETH.end();
+      if (new_medium == NetworkMedium_t::WIFI) {
+        WiFiEventData.clearAll();
+      }
       #endif
       break;
     case NetworkMedium_t::WIFI:
