@@ -78,23 +78,23 @@ MISO  Master Input   GPIO12  D6        Hardware SPI
 SCK   Clock Output   GPIO14  D5        Hardware SPI
 CS    Chip Select    GPIO15  D8        Hardware SPI (CS is configurable through the web interface)
 ====  =============  ======  ========  =========================================================================
-.. note:: Write Access to device registers is requireed for MAX 31856 and MAX 31865 devices so far.
+.. note:: Write Access to device registers is required for MAX 31856 and MAX 31865 devices so far.
 
 Supported Hardware
 ------------------
 
 **[2021-05-03]: Added support for RTD sensor adapters based on Maxim Device MAX21865.**
 
-      This adapter device requires write access to internal configuration registers. For this device you will need to wire MOSI signal as well to your adapter.
+      This adapter device requires write access to internal configuration registers. For this device you will need to wire MOSI signal to your adapter.
       For MAX31865 multiple shields are available in the usual sources. Those are mostly based on `Adafruit MAX 31865 shield <https://www.adafruit.com/product/3328>`_ 
       and follow the original schematics and element values.
 
       .. image:: https://cdn-shop.adafruit.com/970x728/3328-01.jpg
-        :width: 800
+        :width: 400
         :alt: image showing the Adafruit MAX 31865 adapter shield for SPI bus
 
       The adapter can be purchased prepared for the required senor type (PT 100 or PT 1000). Basically this will influence the choice of the reference 
-      resitor. Those resistors are usualy chosen with the following values, but can be adjusted to the needs of the user and the application.
+      resistor. Those resistors are usualy chosen with the following values, but can be adjusted to the needs of the user and the application.
 
       ============  ===============================
       Sensor Type   Reference Resistor Value
@@ -103,21 +103,29 @@ Supported Hardware
       PT 1000       Rref = 4300 Ohm
       ============  ===============================
 
-      The populated true value can be directly stated in the device configuration and therefore adjusted to any available value.
+      The populated value can be directly stated in the device configuration and therefore adjusted to any desired resistor value.
 
       The modules often allow usage of 2-wire, 3-wire and 4-wire connection of an appropriate sensor. For activation of the connection type, it requires 
-      closing/opening of hardware bridges on the adapter **AND** adjustment of the configuration in the ESPEasy device configuration.
+      closing/opening of hardware bridges on the adapter **and** adjustment of the configuration in the ESPEasy device configuration.
 
-      MAX31865 devices support filtering of noise frequencies resulting from the net frequency of your power net. Basic filtering of 50/60 Hz noise 
+      MAX31865 devices support filtering of noise frequencies resulting from the frequency of your power net. Basic filtering of 50/60 Hz noise 
       contributions can be adjusted in the device configuration. See configuration examples below.
 
 **[2021-02-xx]:  Initial support of thermocouple sensors via Maxim devices MAX6675, MAX31855 and MAX31856**
 
       From the start this device allows usage of thermocouple sensors and adapters. Most of them are rather simple to use and access, as they only require read access to their SPI interface.
-      Nevertheless they provide powerful options to sense high temperature ranges and diffifult sensing scenarios. See system advantages and limitations on above mentioned Wikipedia page.
+      Nevertheless they provide powerful options to sense high temperature ranges and difficult sensing scenarios. See system advantages and limitations on above mentioned Wikipedia page on Thermocouples.
 
-      Depending on the type of adapter used, you will either have to chose the device according to the used sensor type (MAX6675/MAX31855 -> B, E, J, K, ...) or can configure the sensor type 
-      in ESPEasy configuration page (MAX31756).
+      .. image:: https://cdn-shop.adafruit.com/145x109/3263-01.jpg
+        :width: 400
+        :alt: image of Adafruit MAX 31856 shield
+
+      Depending on the type of adapter used, you will either have to chose the device according to the used sensor type (MAX6675/MAX31855 -> B, E, J, K, ...) or you can configure the sensor type 
+      in ESPEasy configuration page (MAX31856).
+
+      .. image:: https://cdn-shop.adafruit.com/970x728/269-03.jpg
+        :width: 400
+        :alt: image of Adafruit MAX 31855 shield
 
 
 Configuration in ESPEasy
@@ -267,6 +275,6 @@ Generic Plugin Configuration
   :width: 600
   :alt: image showing the plugin configuration details on DAQ mode and controller communication
 
-Finally the plugin requires configuration of DAQ Mode nd you can activate the communication to a chosen controller in the ESPEasy "Controller" Tab.
+Finally the plugin requires configuration of DAQ Mode and you can activate the communication to an exisiting controller from the ESPEasy "Controller" Tab.
 
 
