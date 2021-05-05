@@ -107,6 +107,12 @@ void dump(uint32_t addr);
  \*********************************************************************************************/
 String getTaskDeviceName(taskIndex_t TaskIndex);
 
+/********************************************************************************************\
+   Handler for getting Value Names from TaskIndex
+
+   value names can be accessed with variable index; maxium number of variables == VARS_PER_TASK
+ \*********************************************************************************************/
+ String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex);
 
 /********************************************************************************************\
    If RX and TX tied together, perform emergency reset to get the system out of boot loops
