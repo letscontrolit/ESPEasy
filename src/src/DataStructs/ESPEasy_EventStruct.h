@@ -14,13 +14,31 @@
 
 /*********************************************************************************************\
 * EventStruct
+* This should not be copied, only moved.
+* When copy is really needed, use deep_copy
 \*********************************************************************************************/
 struct EventStruct
 {
   EventStruct();
+  // Delete the copy constructor
+  EventStruct(const struct EventStruct& event) = delete;
+private:
+  // Hide the copy assignment operator by making it private
+  EventStruct& operator=(const EventStruct&) = default; 
+
+public:
+  EventStruct(struct EventStruct&& event) = default;
+  EventStruct& operator=(struct EventStruct&& other) = default;
+
   explicit EventStruct(taskIndex_t taskIndex);
-  explicit EventStruct(const struct EventStruct& event);
-  EventStruct& operator=(const struct EventStruct& other);
+
+  // Explicit deep_copy function to make sure this object is not accidentally copied using the copy-constructor
+  // Copy constructor and assignment operator should not be used.
+  void deep_copy(const struct EventStruct& other);
+  void deep_copy(const struct EventStruct* other);
+  //  explicit EventStruct(const struct EventStruct& event);
+  //  EventStruct& operator=(const struct EventStruct& other);
+
 
   void setTaskIndex(taskIndex_t taskIndex);
 

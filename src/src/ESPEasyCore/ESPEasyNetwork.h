@@ -21,6 +21,7 @@ String NetworkGetHostname();
 String NetworkCreateRFCCompliantHostname(bool force_add_unitnr = false);
 String createRFCCompliantHostname(const String& oldString);
 String WifiSoftAPmacAddress();
+String WifiSTAmacAddress();
 
 void CheckRunningServices();
 
