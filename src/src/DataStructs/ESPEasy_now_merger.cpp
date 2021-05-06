@@ -7,6 +7,7 @@
 
 # define ESPEASY_NOW_MESSAGE_TIMEOUT  5000
 
+
 ESPEasy_now_merger::ESPEasy_now_merger() {
   _firstPacketTimestamp = millis();
 }

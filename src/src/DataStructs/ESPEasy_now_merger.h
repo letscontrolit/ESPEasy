@@ -7,7 +7,6 @@
 
 # include "MAC_address.h"
 
-
 // Class to process all incoming messages from a single sender.
 // One or more packets form a complete message.
 // This class only contains packets which have the same:

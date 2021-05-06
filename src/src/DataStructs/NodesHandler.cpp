@@ -6,8 +6,6 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
-#include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/PeriodicalActions.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasy_now_peermanager.h"
 #include "../Globals/ESPEasy_now_state.h"
@@ -17,6 +15,8 @@
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/PeriodicalActions.h"
 
 #define ESPEASY_NOW_ALLOWED_AGE_NO_TRACEROUTE  35000
 
@@ -43,22 +43,30 @@ bool NodesHandler::addNode(const NodeStruct& node)
       ESPEasy_NOW_MAC = it->second.ESPEasy_Now_MAC();
 
       isNewNode = false;
-      it = _nodes.erase(it);
+      {
+        _nodes_mutex.lock();
+        it = _nodes.erase(it);
+        _nodes_mutex.unlock();
+      }
     } else {
       ++it;
     }
   }
-  _nodes[node.unit]             = node;
-  _nodes[node.unit].lastUpdated = millis();
-  if (node.getRSSI() >= 0 && rssi < 0) {
-    _nodes[node.unit].setRSSI(rssi);
-  }
-  const MAC_address node_ap(node.ap_mac);
-  if (node_ap.all_zero()) {
-    _nodes[node.unit].setAP_MAC(node_ap);
-  }
-  if (node.ESPEasy_Now_MAC().all_zero()) {
-    _nodes[node.unit].setESPEasyNow_mac(ESPEasy_NOW_MAC);
+  {
+    _nodes_mutex.lock();
+    _nodes[node.unit]             = node;
+    _nodes[node.unit].lastUpdated = millis();
+    if (node.getRSSI() >= 0 && rssi < 0) {
+      _nodes[node.unit].setRSSI(rssi);
+    }
+    const MAC_address node_ap(node.ap_mac);
+    if (node_ap.all_zero()) {
+      _nodes[node.unit].setAP_MAC(node_ap);
+    }
+    if (node.ESPEasy_Now_MAC().all_zero()) {
+      _nodes[node.unit].setESPEasyNow_mac(ESPEasy_NOW_MAC);
+    }
+    _nodes_mutex.unlock();
   }
   return isNewNode;
 }
@@ -67,7 +75,11 @@ bool NodesHandler::addNode(const NodeStruct& node)
 bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_struct& traceRoute)
 {
   const bool isNewNode = addNode(node);
-  _nodeStats[node.unit].setDiscoveryRoute(node.unit, traceRoute);
+  {
+    _nodeStats_mutex.lock();
+    _nodeStats[node.unit].setDiscoveryRoute(node.unit, traceRoute);
+    _nodeStats_mutex.unlock();
+  }
 
   ESPEasy_now_peermanager.addPeer(node.ESPEasy_Now_MAC(), node.channel);  
 
@@ -465,14 +477,20 @@ bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long&
       auto route_it = _nodeStats.find(it->second.unit);
       if (route_it != _nodeStats.end()) {
         if (route_it->second.getAge() > max_age_allowed) {
+          _nodeStats_mutex.lock();
           _nodeStats.erase(route_it);
+          _nodeStats_mutex.unlock();
         } else {
           mustErase = false;
         }
       }
       #endif
       if (mustErase) {
-        it          = _nodes.erase(it);
+        {
+          _nodes_mutex.lock();
+          it          = _nodes.erase(it);
+          _nodes_mutex.unlock();
+        }
         nodeRemoved = true;
       }
     } else {

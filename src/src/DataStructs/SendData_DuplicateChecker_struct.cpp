@@ -7,7 +7,6 @@
 #include "../../ESPEasy_fdwdecl.h"
 
 
-
 #define HISTORIC_ELEMENT_LIFETIME  10000 // 10 seconds
 
 const uint32_t SendData_DuplicateChecker_struct::DUPLICATE_CHECKER_INVALID_KEY = 0;
@@ -38,9 +37,16 @@ uint32_t SendData_DuplicateChecker_struct::add(struct EventStruct *event, const 
       // Item already exists in the queue, no need to ask around
       return DUPLICATE_CHECKER_INVALID_KEY;
     }
-
-    _queue.emplace(std::make_pair(key, SendData_DuplicateChecker_data(event)));
-    _historic[key] = millis();
+    {
+      _queue_mutex.lock();
+      _queue.emplace(std::make_pair(key, SendData_DuplicateChecker_data(event)));
+      _queue_mutex.unlock();
+    }
+    {
+      _historic_mutex.lock();
+      _historic[key] = millis();
+      _historic_mutex.unlock();
+    }
   }
   return key;
 }
@@ -54,7 +60,9 @@ bool SendData_DuplicateChecker_struct::historicKey(uint32_t key)
   if (it == _historic.end())
   {
     // Someone asked about it, so mark it here
+    _historic_mutex.lock();
     _historic[key] = millis();
+    _historic_mutex.unlock();
     return false;
   }
 
@@ -73,7 +81,11 @@ void SendData_DuplicateChecker_struct::remove(uint32_t key)
       addLog(LOG_LEVEL_DEBUG, String(F(ESPEASY_NOW_NAME)) + F(": message not sent as processed elsewhere"));
     }
     #endif
-    _queue.erase(it);
+    {
+      _queue_mutex.lock();
+      _queue.erase(it);
+      _queue_mutex.unlock();
+    }
   }
 }
 
@@ -83,7 +95,9 @@ void SendData_DuplicateChecker_struct::loop()
 
   for (auto it = _queue.begin(); it != _queue.end();) {
     if (it->second.doSend()) {
-      it = _queue.erase(it);
+      _queue_mutex.lock();
+      _queue.erase(it);
+      _queue_mutex.unlock();
 
       // Processed one, others will be processed later
       return;
@@ -98,7 +112,9 @@ void SendData_DuplicateChecker_struct::purge_old_historic()
   for (auto it = _historic.begin(); it != _historic.end();)
   {
     if (timePassedSince(it->second) > HISTORIC_ELEMENT_LIFETIME) {
+      _historic_mutex.lock();
       it = _historic.erase(it);
+      _historic_mutex.unlock();
     } else {
       ++it;
     }

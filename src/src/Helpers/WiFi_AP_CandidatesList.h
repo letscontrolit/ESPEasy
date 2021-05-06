@@ -2,6 +2,7 @@
 #define HELPERS_WIFI_AP_CANDIDATESLIST_H
 
 #include "../DataStructs/WiFi_AP_Candidate.h"
+#include "../Helpers/ESPEasyMutex.h"
 #include "../../ESPEasy_common.h"
 
 #include <list>
@@ -73,6 +74,8 @@ private:
   std::list<WiFi_AP_Candidate> known;
 
   std::list<WiFi_AP_Candidate> scanned;
+  ESPEasy_Mutex scanned_mutex;
+
 
   WiFi_AP_Candidate_const_iterator known_it;
 

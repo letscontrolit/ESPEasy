@@ -10,6 +10,9 @@
 #include "../DataStructs/ESPEasy_now_Node_statistics.h"
 #endif
 
+#include "../Helpers/ESPEasyMutex.h"
+
+
 class NodesHandler {
 public:
 
@@ -109,9 +112,11 @@ private:
   uint8_t _distance = 255;  // Cached value
 
   NodesMap _nodes;
+  ESPEasy_Mutex _nodes_mutex;
 
 #ifdef USES_ESPEASY_NOW
   ESPEasy_now_Node_statisticsMap _nodeStats;
+  ESPEasy_Mutex _nodeStats_mutex;
 #endif
 
   bool _recentlyBecameDistanceZero = false;

@@ -2,7 +2,9 @@
 #define DATASTRUCTS_SENDDATA_DUPLICATECHECKER_STRUCT_H
 
 
-#include "SendData_DuplicateChecker_data.h"
+#include "../DataStructs/SendData_DuplicateChecker_data.h"
+
+#include "../Helpers/ESPEasyMutex.h"
 
 #include <map>
 
@@ -36,9 +38,12 @@ private:
 
   // Map of key + event
   std::map<uint32_t, SendData_DuplicateChecker_data>_queue;
+  ESPEasy_Mutex _queue_mutex;
 
   // Map of key + timestamp last seen.
   std::map<uint32_t, uint32_t>_historic;
+  ESPEasy_Mutex _historic_mutex;
+
 };
 
 #endif // DATASTRUCTS_SENDDATA_DUPLICATECHECKER_STRUCT_H

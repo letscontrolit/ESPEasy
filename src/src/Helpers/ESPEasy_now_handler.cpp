@@ -25,6 +25,7 @@
 # include "../Helpers/CRC_functions.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/ESPEasy_time_calc.h"
+# include "../Helpers/ESPEasyMutex.h"
 # include "../Helpers/PeriodicalActions.h"
 # include "../Helpers/_CPlugin_Helper.h"
 
@@ -55,6 +56,7 @@ static uint64_t ICACHE_FLASH_ATTR mac_to_key(const uint8_t *mac, ESPEasy_now_hdr
   return key;
 }
 
+ESPEasy_Mutex ESPEasy_now_in_queue_mutex;
 std::map<uint64_t, ESPEasy_now_merger> ESPEasy_now_in_queue;
 
 std::list<ESPEasy_now_traceroute_struct> ESPEasy_now_traceroute_queue;
@@ -83,7 +85,12 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
     return;
   }
   const uint64_t key = mac_to_key(mac, header.message_type, header.message_count);
-  ESPEasy_now_in_queue[key].addPacket(header.packet_nr, mac, buf, count);
+
+  {
+    ESPEasy_now_in_queue_mutex.lock();
+    ESPEasy_now_in_queue[key].addPacket(header.packet_nr, mac, buf, count);
+    ESPEasy_now_in_queue_mutex.unlock();
+  }
   STOP_TIMER(RECEIVE_ESPEASY_NOW_LOOP);
 }
 
@@ -199,13 +206,17 @@ void ESPEasy_now_handler_t::end()
   _controllerIndex = INVALID_CONTROLLER_INDEX;
   _usedWiFiChannel = 0;
   use_EspEasy_now  = false;
-  ESPEasy_now_in_queue.clear();
   RTC.clearLastWiFi(); // Force a WiFi scan
   if (_last_used != 0) {
     // Only call WifiEspNow.end() if it was started.
     WifiEspNow.end();
     _last_used = 0;
     _last_started = 0;
+  }
+  {
+    ESPEasy_now_in_queue_mutex.lock();
+    ESPEasy_now_in_queue.clear();
+    ESPEasy_now_in_queue_mutex.unlock();
   }
   addLog(LOG_LEVEL_INFO, String(F(ESPEASY_NOW_NAME)) + F(" disabled"));
 }
@@ -354,7 +365,9 @@ bool ESPEasy_now_handler_t::loop_process_ESPEasyNOW_in_queue()
       }
 
       if (removeMessage) {
+        ESPEasy_now_in_queue_mutex.lock();
         it = ESPEasy_now_in_queue.erase(it);
+        ESPEasy_now_in_queue_mutex.unlock();
 
 /*
         // FIXME TD-er: For now only process one item and then wait for the next loop.
