@@ -101,6 +101,11 @@ struct WiFiEventData_t {
 
   bool performedClearWiFiCredentials = false;
 
+  // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
+  // This can cause recursion, so a semaphore is needed here.
+  bool processingDisconnect      = false;
+
+
   unsigned long connectionFailures = 0;
 
 
