@@ -1,5 +1,7 @@
 #include "../PluginStructs/P115_data_struct.h"
 
+#ifdef USES_P115
+
 P115_data_struct::P115_data_struct(
   uint8_t                i2c_addr,
   sfe_max1704x_devices_e device,
@@ -23,3 +25,5 @@ bool P115_data_struct::read(bool clearAlert)
   soc     = lipo.getSOC();
   return lipo.getAlert(clearAlert);
 }
+
+#endif
