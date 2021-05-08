@@ -1,0 +1,76 @@
+.. include:: ../Plugin/_plugin_substitutions_p11x.repl
+.. _P115_page:
+
+|P115_typename|
+==================================================
+
+|P115_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P115_type|
+
+Name: |P115_name|
+
+Status: |P115_status|
+
+GitHub: |P115_github|_
+
+Maintainer: |P115_maintainer|
+
+Used libraries: |P115_usedlibraries|
+
+Description
+-----------
+
+The MAX17043/MAX17044 are ultra-compact, low-cost, host-side fuel-gauge systems for lithium-ion (Li+) batteries in handheld and portable equipment.
+The MAX17043 is configured to operate with a single lithium cell and the MAX17044 is configured for a dual-cell 2S pack.
+
+The MAX17048/MAX17049 ICs are tiny, micropower current fuel gauges for lithium-ion (Li+) batteries in handheld and portable equipment. 
+The MAX17048 operates with a single lithium cell and the MAX17049 with two lithium cells in series.
+
+Configuration
+--------------
+
+Device Settings
+^^^^^^^^^^^^^^^^
+
+
+**Device**: Select the version of the MAX1704x:
+
+* ``MAX17043``
+* ``MAX17044`` - 2-cell version of the MAX17043 (full-scale range of 10V)
+* ``MAX17048``
+* ``MAX17049`` - 2-cell version of the MAX17048
+
+Datasheets:
+
+* `MAX17043-MAX17044.pdf <https://datasheets.maximintegrated.com/en/ds/MAX17043-MAX17044.pdf>`_
+* `MAX17048-MAX17049.pdf <https://datasheets.maximintegrated.com/en/ds/MAX17048-MAX17049.pdf>`_
+
+
+**Alert threshold** : Set the MAX1704x's percentage threshold that will trigger an alert.
+
+**Send Event on Alert** : Send an event, to be used in rules, when the alert is set.  This can be cleared with ``max1704xclearalert``
+
+.. Values
+.. ^^^^^^
+
+Events
+~~~~~~
+
+.. include:: P115_events.repl
+
+Command Summary
+---------------
+
+.. include:: P115_commands.repl
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+
+  |added| 2021-05-08 Added to main repository as Plugin 115 Energy - Fuel Gauge MAX1704x [TESTING]

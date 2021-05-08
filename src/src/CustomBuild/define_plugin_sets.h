@@ -1144,6 +1144,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P108 
      #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
    #endif
+   #ifndef USES_P115
+     #define USES_P115   // Fuel Gauge MAX1704x
+   #endif
 #endif
 
 // Collection of all display plugins. (also NeoPixel)
