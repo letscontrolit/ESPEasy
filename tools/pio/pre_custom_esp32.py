@@ -26,6 +26,7 @@ else:
 #    "-DPLUGIN_BUILD_NORMAL",
     "-DUSES_P001",  # Switch
     "-DUSES_P002",  # ADC
+    "-DUSES_P003",  # Generic pulse counter
     "-DUSES_P004",  # Dallas DS18b20
     "-DUSES_P026",  # System info
     "-DUSES_P027",  # INA219
