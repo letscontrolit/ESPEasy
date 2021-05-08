@@ -215,7 +215,6 @@ String getValue(LabelType::Enum label) {
     case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return jsonBool(Settings.UseMaxTXpowerForSending());
     case LabelType::WIFI_NR_EXTRA_SCANS:    return String(Settings.NumberExtraWiFiScans);
-    case LabelType::FORCE_ESPEASY_NOW_CHANNEL: return String(Settings.ForceESPEasyNOWchannel);
     case LabelType::WIFI_PERIODICAL_SCAN:   return jsonBool(Settings.PeriodicalScanWiFi());
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
@@ -293,6 +292,7 @@ String getValue(LabelType::Enum label) {
     #ifdef USES_ESPEASY_NOW
     case LabelType::USE_ESPEASY_NOW:        return jsonBool(Settings.UseESPEasyNow());
     case LabelType::TEMP_DISABLE_ESPEASY_NOW: return jsonBool(temp_disable_EspEasy_now_timer != 0);
+    case LabelType::FORCE_ESPEASY_NOW_CHANNEL: return String(Settings.ForceESPEasyNOWchannel);
     #endif
 
     case LabelType::BUILD_DESC:             return String(BUILD);
