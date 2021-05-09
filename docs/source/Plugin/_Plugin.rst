@@ -11,16 +11,20 @@ the core operating system. You can use as many plugins as you available tasks.
 List of official plugins
 ========================
 
-There's three different released versions of ESP Easy:
+There are different released versions of ESP Easy:
 
 :green:`NORMAL` is the stable release, you can consider these plugins reliable and you can use these in production.
 
-:yellow:`TESTING` is the release with new plugins that have not yet been fully tested and proven stable.
+:yellow:`TESTING` (split into A/B/C/D sets) with new plugins that have not yet been fully tested and proven stable. Because of space limitations, this is split into 4 sets. When only TESTING is mentioned, the plugin is available in all TESTING builds.
 
-:red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
+.. comment :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
+
+:yellow:`ENERGY` :yellow:`DISPLAY` are specialized builds holding all Energy- and Display- related plugins.
+
+:yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
 
 .. csv-table::
-   :header: "Plugin name", "Plugin status", "Plugin number"
+   :header: "Plugin name", "Build set", "Plugin number"
    :widths: 10, 8, 5
 
    ":ref:`P000_page`","|P000_status|","P000 (core)"

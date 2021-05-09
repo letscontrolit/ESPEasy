@@ -8,6 +8,7 @@ YFS401
 |P003_status|
 
 .. image:: P003_YFS401_1.jpg
+    :scale: 25 %
 
 Introduction
 ------------
@@ -40,7 +41,7 @@ Wiring
 Setup
 -----
 
-.. image:: P003_Setup_YFS401_1.png
+.. FIXME: wrong image .. image:: P003_Setup_YFS401_1.png
 
 .. danger:: Only task number 1..4 is currently supported for the pulse plugin!
 
@@ -64,9 +65,7 @@ Sensor
 * **GPIO <-- Pulse**: Pulse input is generally set to **GPIO 14 (D5)**.
 * **Debounce time**: Debounce time is generally set to **100**.
 * **Counter type**: In this example the type is set to **Delta/Total/Time**.
-* **Mode type**: Pulse input is generally set to **Falling**
-
-  ``LOW`` = count when signal go from not low to low (0.8+V to 0.8-V)
+* **Mode type**: Pulse input is generally set to **Falling** or **PULSE low**
 
   ``CHANGE`` = count on signal being changed, low to high (0.8-V to 2.4+V) or high to low (2.4+V to 0.8-V)
 
@@ -74,6 +73,12 @@ Sensor
 
   ``FALLING`` = count if signal is falling, from high to not high (2.4+V to 2.4-V)
 
+  ``PULSE low`` = count if a stable low signal ended followed by a stable high signal
+  
+  ``PULSE high`` = count if a stable high signal ended followed by a stable low signal.
+
+  ``PULSE change`` = count if the stable signal changes from high to low or from low to high
+  
 .. warning:: GPIO 16 (D0) is not compatible with pulse counters.
 
 Data acquisition
@@ -115,11 +120,6 @@ Rules examples
   EndOn
 
 
- .. Commands available
- .. ~~~~~~~~~~~~~~~~~~
-
- .. .. include:: P003_commands.repl
-
 Where to buy
 ------------
 
@@ -138,9 +138,14 @@ More pictures
 -------------
 
 .. image:: P003_YFS401_2.jpg
+    :scale: 25 %
 
 .. image:: P003_YFS401_3.jpg
+    :scale: 50 %
 
 .. image:: P003_YFS401_4.jpg
+    :scale: 25 %
 
 .. image:: P003_YFS401_5.jpg
+    :scale: 50 %
+

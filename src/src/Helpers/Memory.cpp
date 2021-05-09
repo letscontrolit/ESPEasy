@@ -1,4 +1,4 @@
-#include "Memory.h"
+#include "../Helpers/Memory.h"
 
 
 #ifdef ESP8266
@@ -77,14 +77,15 @@ unsigned long FreeMem(void)
 
 unsigned long getMaxFreeBlock()
 {
-  unsigned long freemem = FreeMem();
-
-  #ifdef CORE_POST_2_5_0
-
+  const unsigned long freemem = FreeMem();
   // computing max free block is a rather extensive operation, so only perform when free memory is already low.
   if (freemem < 6144) {
+  #if  defined(ESP32)
+    return ESP.getMaxAllocHeap();
+  #endif // if  defined(ESP32)
+  #ifdef CORE_POST_2_5_0
     return ESP.getMaxFreeBlockSize();
-  }
   #endif // ifdef CORE_POST_2_5_0
+  }
   return freemem;
 }
