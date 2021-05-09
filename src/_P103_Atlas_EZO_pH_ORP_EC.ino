@@ -31,7 +31,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
 {
   boolean success = false;
 
-  byte board_type;
+  byte board_type = UNKNOWN;
   byte I2Cchoice;
 
   switch (function)
