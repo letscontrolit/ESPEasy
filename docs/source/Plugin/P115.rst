@@ -24,11 +24,20 @@ Used libraries: |P115_usedlibraries|
 Description
 -----------
 
-The MAX17043/MAX17044 are ultra-compact, low-cost, host-side fuel-gauge systems for lithium-ion (Li+) batteries in handheld and portable equipment.
-The MAX17043 is configured to operate with a single lithium cell and the MAX17044 is configured for a dual-cell 2S pack.
+The MAX1704x are ultra-compact, low-cost, host-side fuel-gauge systems for lithium-ion (Li+) batteries in handheld and portable equipment.
 
-The MAX17048/MAX17049 ICs are tiny, micropower current fuel gauges for lithium-ion (Li+) batteries in handheld and portable equipment. 
-The MAX17048 operates with a single lithium cell and the MAX17049 with two lithium cells in series.
+* ``MAX17043``: single lithium cell 
+* ``MAX17044``: dual-cell 2S pack.
+* ``MAX17048``: single lithium cell
+* ``MAX17049``: dual-cell 2S pack.
+
+Datasheets:
+
+* `MAX17043-MAX17044.pdf <https://datasheets.maximintegrated.com/en/ds/MAX17043-MAX17044.pdf>`_
+* `MAX17048-MAX17049.pdf <https://datasheets.maximintegrated.com/en/ds/MAX17048-MAX17049.pdf>`_
+
+The MAX17048 & MAX17049 are more sophisticated versions, which support a number of extra features like measuring the change rate in percent per hour to measure load or charge rate.
+
 
 Configuration
 --------------
@@ -44,18 +53,17 @@ Device Settings
 * ``MAX17048``
 * ``MAX17049`` - 2-cell version of the MAX17048
 
-Datasheets:
-
-* `MAX17043-MAX17044.pdf <https://datasheets.maximintegrated.com/en/ds/MAX17043-MAX17044.pdf>`_
-* `MAX17048-MAX17049.pdf <https://datasheets.maximintegrated.com/en/ds/MAX17048-MAX17049.pdf>`_
-
-
 **Alert threshold** : Set the MAX1704x's percentage threshold that will trigger an alert.
 
 **Send Event on Alert** : Send an event, to be used in rules, when the alert is set.  This can be cleared with ``max1704xclearalert``
 
-.. Values
-.. ^^^^^^
+Values
+^^^^^^
+
+* Voltage: The measured voltage of the cell(s).
+* State of Charge (SoC): The percentage left of the cell.
+* Alert: Whether or not an alert was triggered (e.g. SoC below set threshold)
+* Rate: The change rate of the SoC in percent per hour. Negative value is a discharge, positive is charge rate. (MAX17048 & MAX17049 only)
 
 Events
 ~~~~~~
