@@ -103,10 +103,6 @@ private:
 
   void setRSSI(NodeStruct * node, int rssi);
 
-#ifdef USES_ESPEASY_NOW
-  bool hasTraceRoute(uint8_t unit) const;
-#endif
-
   unsigned long _lastTimeValidDistance = 0;
 
   uint8_t _distance = 255;  // Cached value

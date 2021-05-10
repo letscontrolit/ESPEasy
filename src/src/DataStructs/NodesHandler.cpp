@@ -216,7 +216,7 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
       } else {
         #ifdef USES_ESPEASY_NOW
 
-        uint8_t distance_new, distance_res = 0;
+        uint8_t distance_new, distance_res = 255;
 
         const int successRate_new = getRouteSuccessRate(it->second.unit, distance_new);
         const int successRate_res = getRouteSuccessRate(res->unit, distance_res);
@@ -254,7 +254,7 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
       }
       if (mustSet) {
         #ifdef USES_ESPEASY_NOW
-        if (it->second.ESPEasyNowPeer) {
+        if (it->second.ESPEasyNowPeer && it->second.distance < 255) {
           res = &(it->second);
         }
         #else
@@ -397,24 +397,29 @@ void NodesHandler::updateThisNode() {
 
     if (preferred != nullptr) {
       if (!preferred->isExpired()) {
-        const ESPEasy_now_traceroute_struct* tracert_ptr = getTraceRoute(preferred->unit);
-        if (tracert_ptr != nullptr && tracert_ptr->getDistance() < 255) {
-          // Make a copy of the traceroute
-          thisTraceRoute = *tracert_ptr;
-          thisTraceRoute.addUnit(thisNode.unit);
-
-          _distance = thisTraceRoute.getDistance();  // This node is already included in the traceroute.
-        }
-/*
-        if (_distance != lastDistance) {
-          if (isESPEasy_now_only() && WiFiConnected()) {
-            // We are connected to a 'fake AP' for ESPEasy-NOW, but found a known AP
-            // Try to reconnect to it.
-            RTC.clearLastWiFi(); // Force a WiFi scan
-            WifiDisconnect();
+        // Only take the distance of another node if it is running a build which does not send out traceroute
+        // If it is a build sending traceroute, only consider having a distance if you know how to reach the gateway node
+        // This does impose an issue when a gateway node is running an older version, as the next hops never will have a traceroute too.
+        // Therefore the reported build for those units will be faked to be an older version.
+        if (preferred->build < 20113) {
+          if (preferred->distance != 255) {
+            _distance = preferred->distance + 1;
+            thisNode.build = 20112;
+          }
+        } else {
+          const ESPEasy_now_traceroute_struct* tracert_ptr = getTraceRoute(preferred->unit);
+          if (tracert_ptr != nullptr && tracert_ptr->getDistance() < 255) {
+            // Make a copy of the traceroute
+            thisTraceRoute = *tracert_ptr;
+            thisTraceRoute.addUnit(thisNode.unit);
+            if (preferred->distance != 255) {
+              // Traceroute is only updated when a node is connected.
+              // Thus the traceroute may be outdated, while the node info will already indicate if a node has lost its route to the gateway node.
+              // So we only must set the distance of this node if the preferred node has a distance.
+              _distance = thisTraceRoute.getDistance();  // This node is already included in the traceroute.
+            }
           }
         }
-        */
       }
     }
     #endif
@@ -576,11 +581,6 @@ bool NodesHandler::lastTimeValidDistanceExpired() const
 }
 
 #ifdef USES_ESPEASY_NOW
-bool NodesHandler::hasTraceRoute(uint8_t unit) const
-{
-  return _nodeStats.find(unit) != _nodeStats.end();  
-}
-
 void NodesHandler::updateSuccessRate(byte unit, bool success)
 {
   auto it = _nodeStats.find(unit);

@@ -99,7 +99,7 @@ const ESPEasy_now_traceroute_struct * ESPEasy_now_Node_statistics_t::bestRoute()
     const int     successRate = routes[i].computeSuccessRate();
 
     if (distance == bestDistance) {
-      if (successRate > bestSuccessRate) {
+      if (successRate > bestSuccessRate && distance < 255) {
         bestSuccessRate = successRate;
         bestIndex       = i;
       }
