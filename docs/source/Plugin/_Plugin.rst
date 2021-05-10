@@ -145,7 +145,7 @@ Internal GPIO handling
 
 Plugins: :ref:`P000_page`
 
-Hardware: |P000_usedby_GPIO|, |P000_usedby_RTTTL|
+Hardware: |P000_usedby_GPIO|, |P000_usedby_RTTTL|, |P000_usedby_Relay|, |P000_usedby_Servo|, |P000_usedby_LevelConverter|
 
 Analog input
 ------------
