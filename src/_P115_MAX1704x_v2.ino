@@ -124,7 +124,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
     {
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P115_data) {
+      if (nullptr != P115_data && P115_data->initialized) {
         UserVar[event->BaseVarIndex + 0] = P115_data->voltage;
         UserVar[event->BaseVarIndex + 1] = P115_data->soc;
         UserVar[event->BaseVarIndex + 2] = P115_data->alert;
@@ -149,7 +149,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
     {
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P115_data) {
+      if (nullptr != P115_data && P115_data->initialized) {
         const String command = parseString(string, 1);
 
         if ((command == F("max1704xclearalert")))
@@ -173,7 +173,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
     {
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P115_data) {
+      if (nullptr != P115_data && P115_data->initialized) {
         if (P115_data->read(false)) {
           if (!P115_data->alert) {
             P115_data->alert = true;

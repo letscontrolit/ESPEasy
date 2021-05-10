@@ -6,9 +6,7 @@ P115_data_struct::P115_data_struct(
   uint8_t                i2c_addr,
   sfe_max1704x_devices_e device,
   int                    threshold)
-  : _device(device), lipo(device) {
-  lipo.setThreshold(threshold);
-}
+  : _device(device), lipo(device), _threshold(threshold), initialized(false) {}
 
 bool P115_data_struct::begin()
 {
@@ -26,8 +24,11 @@ bool P115_data_struct::begin()
         lipo.enableSOCAlert();
         break;
     }
+    lipo.setThreshold(_threshold);
+    initialized = true;
     return true;
   }
+  initialized = false;
   return false;
 }
 

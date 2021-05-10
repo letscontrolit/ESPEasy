@@ -22,15 +22,16 @@ public:
 
   void clearAlert();
 
-  sfe_max1704x_devices_e _device;
-  SFE_MAX1704X lipo;
-  
+  const sfe_max1704x_devices_e _device;
+  SFE_MAX1704X                 lipo;
+  const int                    _threshold;
 
-  float voltage = 0.0f;    // LiPo voltage
-  float soc     = 0.0f;    // LiPo state-of-charge (SOC)
-  bool  alert   = false;   // Whether alert has been triggered
-  float changeRate = 0.0f; // (MAX17048/49) Get rate of change per hour in %.
-                           // A positive rate is charging, negative is discharge.
+  float voltage    = 0.0f;  // LiPo voltage
+  float soc        = 0.0f;  // LiPo state-of-charge (SOC)
+  bool  alert      = false; // Whether alert has been triggered
+  float changeRate = 0.0f;  // (MAX17048/49) Get rate of change per hour in %.
+                            // A positive rate is charging, negative is discharge.
+  bool initialized = false;
 };
 
 
