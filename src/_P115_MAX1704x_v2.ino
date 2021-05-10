@@ -5,7 +5,7 @@
  * by: jbaream
  * this plugin is based in example1 by Paul Clark
  * from SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library
- * provides Battery Voltage, Battery State of Charge (SOC) and Alert Flag when SOC is below a threehold
+ * provides Battery Voltage, Battery State of Charge (SOC) and Alert Flag when SOC is below a threshold
  * defined in device configuration webform
  *
  * Datasheet: https://datasheets.maximintegrated.com/en/ds/MAX17043-MAX17044.pdf
@@ -23,6 +23,7 @@
 # define PLUGIN_VALUENAME1_115 "Voltage" // Battery voltage
 # define PLUGIN_VALUENAME2_115 "SOC"     // Battery state of charge in percentage
 # define PLUGIN_VALUENAME3_115 "Alert"   // (0 or 1) Alert when the battery SoC gets too low
+# define PLUGIN_VALUENAME4_115 "Rate"    // (MAX17048/49) Get rate of change per hour in %
 # define PLUGIN_xxx_DEBUG  false         // set to true for extra log info in the debug
 
 boolean Plugin_115(byte function, struct EventStruct *event, String& string)
@@ -40,8 +41,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3; // number of output variables. The value shuld match the number of keys
-                                                  // PLUGIN_VALUENAME1_xxx
+      Device[deviceCount].ValueCount         = 4; 
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
 
@@ -80,9 +80,11 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
+      /*
       byte choice          = PCONFIG(0);
       int  optionValues[1] = { 0x36 };
       addFormSelectorI2C(F("plugin_115_i2c"), 1, optionValues, choice);
+      */
       break;
     }
 
@@ -92,9 +94,9 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
         unsigned int choice = PCONFIG(3);
         String options[4];
         options[0]          = F("MAX17043");
-        options[1]          = F("MAX17044"); // 2-cell version of the MAX17043 (full-scale range of 10V)
+        options[1]          = F("MAX17044 (2S)"); // 2-cell version of the MAX17043 (full-scale range of 10V)
         options[2]          = F("MAX17048");
-        options[3]          = F("MAX17049"); // 2-cell version of the MAX17048
+        options[3]          = F("MAX17049 (2S)"); // 2-cell version of the MAX17048
         int optionValues[4] = { 0, 1, 2, 3 };
         addFormSelector(F("Device"), F("plugin_115_device"), 4, options, optionValues, choice);
       }
@@ -109,7 +111,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("plugin_115_i2c"));
+//      PCONFIG(0) = getFormItemInt(F("plugin_115_i2c"));
       PCONFIG(1) = getFormItemInt(F("plugin_115_threshold"));
       PCONFIG(2) = isFormItemChecked(F("plugin_115_alertevent"));
       PCONFIG(3) = getFormItemInt(F("plugin_115_device"));

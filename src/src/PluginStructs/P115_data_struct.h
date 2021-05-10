@@ -20,15 +20,17 @@ public:
   // Perform read and return true when an alert has been high
   bool read(bool clearAlert);
 
-  void clearAlert() {
-    alert = false;
-  }
+  void clearAlert();
 
-  SFE_MAX1704X lipo;      // Defaults to the MAX17043
+  sfe_max1704x_devices_e _device;
+  SFE_MAX1704X lipo;
+  
 
-  double voltage = 0;     // Variable to keep track of LiPo voltage
-  double soc     = 0;     // Variable to keep track of LiPo state-of-charge (SOC)
-  bool   alert   = false; // Variable to keep track of whether alert has been triggered
+  float voltage = 0.0f;    // LiPo voltage
+  float soc     = 0.0f;    // LiPo state-of-charge (SOC)
+  bool  alert   = false;   // Whether alert has been triggered
+  float changeRate = 0.0f; // (MAX17048/49) Get rate of change per hour in %.
+                           // A positive rate is charging, negative is discharge.
 };
 
 
