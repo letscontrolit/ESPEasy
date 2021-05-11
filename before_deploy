@@ -1,7 +1,26 @@
 #!/bin/bash
 
 VERSION=$(git describe)
-TMP_DIST=`mktemp -d`
+TMP_DIR=`mktemp -d`
+if [ $? -eq 0 ]; then
+    # Make sure coreutils is installed.
+    # if not, these terrible things may happen:
+    # https://www.letscontrolit.com/forum/viewtopic.php?f=6&t=8542
+    echo "Created ${TMP_DIR}"
+else
+    echo "Could not create tmp dir, mktemp -d failed"
+    exit 1
+fi
+
+TMP_DIST=`echo "${TMP_DIR}/ESPEasy_collect_dist"`
+mkdir -p ${TMP_DIST}
+if [ $? -eq 0 ]; then
+    echo "Created ${TMP_DIST}"
+else
+    echo "Could not create tmp dir: ${TMP_DIST}"
+    exit 1
+fi
+
 CURPATH=`pwd`
 BUILD_LOG=`echo "${TMP_DIST}/buildlog.txt"`
 
