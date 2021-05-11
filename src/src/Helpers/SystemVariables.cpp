@@ -19,6 +19,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
+#include "../Globals/Statistics.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Hardware.h"
@@ -87,6 +88,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
     switch (enumval)
     {
+      case BOOT_CAUSE:        value = String(lastBootCause); break; // Integer value to be used in rules
       case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
       case CR:                value = "\r"; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
@@ -258,6 +260,7 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
 String SystemVariables::toString(SystemVariables::Enum enumval)
 {
   switch (enumval) {
+    case Enum::BOOT_CAUSE:      return F("%bootcause%");
     case Enum::BSSID:           return F("%bssid%");
     case Enum::CR:              return F("%CR%");
     case Enum::IP4:             return F("%ip4%");
