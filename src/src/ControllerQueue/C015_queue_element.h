@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
@@ -18,7 +19,11 @@ struct EventStruct;
 class C015_queue_element {
 public:
 
-  C015_queue_element();
+  C015_queue_element() = default;
+
+  C015_queue_element(const C015_queue_element& other) = delete;
+
+  C015_queue_element(C015_queue_element&& other);
 
   C015_queue_element(const struct EventStruct *event, byte value_count);
 
@@ -27,6 +32,8 @@ public:
   size_t getSize() const;
 
   bool isDuplicate(const C015_queue_element& other) const;
+
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
 
   String txt[VARS_PER_TASK];
   int vPin[VARS_PER_TASK]          = { 0 };

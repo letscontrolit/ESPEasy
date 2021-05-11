@@ -230,9 +230,11 @@ public:
   * Thus only use these when the result is not needed immediately.
   * Proper use case is calling from a callback function, since those cannot use yield() or delay()
   \*********************************************************************************************/
+
+  // Note: event will be moved
   void schedule_plugin_task_event_timer(deviceIndex_t       DeviceIndex,
                                         byte                Function,
-                                        struct EventStruct *event);
+                                        struct EventStruct &&event);
 
   void schedule_mqtt_plugin_import_event_timer(deviceIndex_t   DeviceIndex,
                                                taskIndex_t     TaskIndex,
@@ -242,9 +244,10 @@ public:
                                                unsigned int    length);
 
 
+  // Note: the event will be moved
   void schedule_controller_event_timer(protocolIndex_t     ProtocolIndex,
                                        byte                Function,
-                                       struct EventStruct *event);
+                                       struct EventStruct &&event);
 
   void schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex,
                                             CPlugin::Function Function,
@@ -252,9 +255,10 @@ public:
                                             byte           *b_payload,
                                             unsigned int    length);
 
+  // Note: The event will be moved
   void schedule_notification_event_timer(byte                NotificationProtocolIndex,
                                          NPlugin::Function   Function,
-                                         struct EventStruct *event);
+                                         struct EventStruct &&event);
 
 
   static unsigned long createSystemEventMixedId(PluginPtrType ptr_type,
@@ -264,10 +268,11 @@ public:
                                                 byte          Index,
                                                 byte          Function);
 
+  // Note, the event will be moved
   void schedule_event_timer(PluginPtrType       ptr_type,
                             byte                Index,
                             byte                Function,
-                            struct EventStruct *event);
+                            struct EventStruct &&event);
 
   void process_system_event_queue();
 
