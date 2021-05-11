@@ -70,7 +70,7 @@
 # define PLUGIN_VALUENAME1_039 "Temperature"
 
 // typically 500ns of wating on positive/negative edge of CS should be enough ( -> datasheet); to make sure we cover a lot of devices we spend 1ms
-// TODO 2021-05-05: review of all covered device datasheets showed 1ms is more than enough; review with every newly added device
+// FIX 2021-05-05: review of all covered device datasheets showed 1ms is more than enough; review with every newly added device
 #define P039_CS_Delay()             delayMicroseconds(1u)
 
 #define P039_MAX_TYPE               PCONFIG(0)
@@ -84,35 +84,49 @@
 #define P039_RTD_RES                PCONFIG_LONG(0)
 #define P039_RTD_OFFSET             PCONFIG_FLOAT(0)
 
-#define P039_TC                     0
-#define P039_RTD                    1
+#define P039_TC                     0u
+#define P039_RTD                    1u
 
-# define P039_MAX_6675              1
-# define P039_MAX_31855             2
-# define P039_MAX_31856             3
-# define P039_MAX31865              4
-# define P039_LM7x                  5
+# define P039_MAX6675               1u
+# define P039_MAX31855              2u
+# define P039_MAX31856              3u
+# define P039_MAX31865              4u
+# define P039_LM7x                  5u
+
+// MAX 6675 related defines
+
+// bit masks to identify failures for MAX 6675
+#define MAX6675_TC_DEVID            0x0002u
+#define MAX6675_TC_OC               0x0004u
+
+// MAX 31855 related defines
+
+// bit masks to identify failures for MAX 31855
+#define MAX31855_TC_OC              0x00000001u
+#define MAX31855_TC_SC              0x00000002u
+#define MAX31855_TC_SCVCC           0x00000004u
+#define MAX31855_TC_GENFLT          0x00010000u
 
 // register offset values for MAX 31856
-# define MAX31856_RAWVALUE           0
-# define MAX31856_CR0                1
-# define MAX31856_CR1                2
-# define MAX31856_MASK               3
-# define MAX31856_CJHF               4
-# define MAX31856_CJLF               5
-# define MAX31856_LTHFTH             6
-# define MAX31856_LTHFTL             7
-# define MAX31856_LTLFTH             8
-# define MAX31856_LTLFTL             9
-# define MAX31856_CJTO              10
-# define MAX31856_CJTH              11
-# define MAX31856_CJTL              12
-# define MAX31856_LTCBH             13
-# define MAX31856_LTCBM             14
-# define MAX31856_LTCBL             15
-# define MAX31856_SR                16
+# define MAX31856_RAWVALUE           0u
+# define MAX31856_CR0                1u
+# define MAX31856_CR1                2u
+# define MAX31856_MASK               3u
+# define MAX31856_CJHF               4u
+# define MAX31856_CJLF               5u
+# define MAX31856_LTHFTH             6u
+# define MAX31856_LTHFTL             7u
+# define MAX31856_LTLFTH             8u
+# define MAX31856_LTLFTL             9u
+# define MAX31856_CJTO              10u
+# define MAX31856_CJTH              11u
+# define MAX31856_CJTL              12u
+# define MAX31856_LTCBH             13u
+# define MAX31856_LTCBM             14u
+# define MAX31856_LTCBL             15u
+# define MAX31856_SR                16u
 
-#define MAX31856_NO_REG             17
+#define MAX31856_NO_REG             17u
 
 
 // RTD related defines
@@ -122,60 +136,60 @@
 // waiting time until "in sequence" conversion is ready (-> used in case device is set to shutdown in between call cycles)
 // typically 70ms should be fine, according to datasheet maximum -> 66ms - give a little adder to "be sure" conversion is done
 // alternatively ONE SHOT bit could be polled (system/SPI bus load !)
-#define MAX31865_CONVERSION_BREAK   75
+#define MAX31865_CONVERSION_BREAK   75u
 
 // sensor type
-#define MAX31865_PT100              0
-#define MAX31865_PT1000             1
+#define MAX31865_PT100              0u
+#define MAX31865_PT1000             1u
 
 // base address for read/write acces to MAX 31865
-#define MAX31865_READ_ADDR_BASE         0x00
-#define MAX31865_WRITE_ADDR_BASE        0x80
+#define MAX31865_READ_ADDR_BASE         0x00u
+#define MAX31865_WRITE_ADDR_BASE        0x80u
 
 // register offset values for MAX 31865
-#define MAX31865_CONFIG                 0
-#define MAX31865_RTD_MSB                1
-#define MAX31865_RTD_LSB                2
-#define MAX31865_HFT_MSB                3
-#define MAX31865_HFT_LSB                4
-#define MAX31865_LFT_MSB                5
-#define MAX31865_LFT_LSB                6
-#define MAX31865_FAULT                  7
+#define MAX31865_CONFIG                 0u
+#define MAX31865_RTD_MSB                1u
+#define MAX31865_RTD_LSB                2u
+#define MAX31865_HFT_MSB                3u
+#define MAX31865_HFT_LSB                4u
+#define MAX31865_LFT_MSB                5u
+#define MAX31865_LFT_LSB                6u
+#define MAX31865_FAULT                  7u
 
 // total number of registers in MAX 31865
-#define MAX31865_NO_REG                 8
+#define MAX31865_NO_REG                 8u
 
 // bit masks to identify failures for MAX 31865
-#define MAX31865_FAULT_HIGHTHRESH   0x80
-#define MAX31865_FAULT_LOWTHRESH    0x40
-#define MAX31865_FAULT_REFINLOW     0x20
-#define MAX31865_FAULT_REFINHIGH    0x10
-#define MAX31865_FAULT_RTDINLOW     0x08
-#define MAX31865_FAULT_OVUV         0x04
+#define MAX31865_FAULT_HIGHTHRESH   0x80u
+#define MAX31865_FAULT_LOWTHRESH    0x40u
+#define MAX31865_FAULT_REFINLOW     0x20u
+#define MAX31865_FAULT_REFINHIGH    0x10u
+#define MAX31865_FAULT_RTDINLOW     0x08u
+#define MAX31865_FAULT_OVUV         0x04u
 
 // bit masks for access of configuration bits
-#define MAX31865_SET_50HZ           0x01
-#define MAX31865_CLEAR_FAULTS       0x02
-#define MAX31865_FAULT_CTRL_MASK    0x0C
-#define MAX31865_SET_3WIRE          0x10
-#define MAX31865_SET_ONE_SHOT       0x20
-#define MAX31865_SET_CONV_AUTO      0x40
-#define MAX31865_SET_VBIAS_ON       0x80
+#define MAX31865_SET_50HZ           0x01u
+#define MAX31865_CLEAR_FAULTS       0x02u
+#define MAX31865_FAULT_CTRL_MASK    0x0Cu
+#define MAX31865_SET_3WIRE          0x10u
+#define MAX31865_SET_ONE_SHOT       0x20u
+#define MAX31865_SET_CONV_AUTO      0x40u
+#define MAX31865_SET_VBIAS_ON       0x80u
 
 //LM7x related defines
 
 // LM7x subtype defines
-#define LM7x_SD70                   0x00
-#define LM7x_SD71                   0x01
-#define LM7x_SD74                   0x04
-#define LM7x_SD121                  0x05
-#define LM7x_SD122                  0x06
-#define LM7x_SD123                  0x07
-#define LM7x_SD124                  0x08
-#define LM7x_SD125                  0x09
+#define LM7x_SD70                   0x00u
+#define LM7x_SD71                   0x01u
+#define LM7x_SD74                   0x04u
+#define LM7x_SD121                  0x05u
+#define LM7x_SD122                  0x06u
+#define LM7x_SD123                  0x07u
+#define LM7x_SD124                  0x08u
+#define LM7x_SD125                  0x09u
 
 // bit masks for access of configuration bits
-#define LM7x_CONV_RDY               0x02
+#define LM7x_CONV_RDY               0x02u
 
 
 boolean Plugin_039(byte function, struct EventStruct *event, String& string)
@@ -229,9 +243,9 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       SPI.setHwCs(false);
       SPI.begin();
 
-      if (P039_MAX_TYPE == P039_MAX_31856) {
+      if (P039_MAX_TYPE == P039_MAX31856) {
 
-        // init string - content accoring to inital implemetnation of P039 - MAX31856 read function
+        // init string - content accoring to inital implementation of P039 - MAX31856 read function
         uint8_t sendBuffer[11] = {0x80, 0x01, (uint8_t) P039_TC_TYPE, 0xFF, 0x7F, 0xC0, 0x7F, 0xFF, 0x80, 0x00, 0x00 };
 
         transfer_n_ByteSPI(CS_pin_no, 11, &sendBuffer[0] );
@@ -338,12 +352,12 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
         {
           const String options[3]      = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
-          const int    optionValues[3] = { P039_MAX_6675, P039_MAX_31855, P039_MAX_31856 };
+          const int    optionValues[3] = { P039_MAX6675, P039_MAX31855, P039_MAX31856 };
           addFormSelector(F("Adapter IC"), F("P039_maxtype"), 3, options, optionValues, choice);
           addFormNote(F("Set adapter IC used. Submit the form after choice to allow update of sections below accordingly !"));
         }
     
-        if (choice == P039_MAX_31856) {
+        if (choice == P039_MAX31856) {
           {
             addFormSubHeader(F("Device Settings"));
           }
@@ -450,13 +464,13 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       float Plugin_039_Celsius = NAN;
 
       switch (MaxType) {
-        case P039_MAX_6675:
+        case P039_MAX6675:
           Plugin_039_Celsius = readMax6675(event);
           break;
-        case P039_MAX_31855:
+        case P039_MAX31855:
           Plugin_039_Celsius = readMax31855(event);
           break;
-        case P039_MAX_31856:
+        case P039_MAX31856:
           Plugin_039_Celsius = readMax31856(event);
           break;
         case P039_MAX31865:
@@ -541,7 +555,8 @@ float readMax6675(struct EventStruct *event)
   // Bit D2 is normally low and goes high if the thermocouple input is open. In order to allow the operation of the
   // open  thermocouple  detector,  T-  must  be  grounded. Make  the  ground  connection  as  close  to  the  GND  pin
   // as possible.
-  const bool Plugin_039_SensorAttached = !(rawvalue & 0x0004);
+  // 2021-05-11: FIXED: c.k.i.: OC Flag already checked; migrated to #define for improved maintenance
+  const bool Plugin_039_SensorAttached = !(rawvalue & MAX6675_TC_OC);
 
   if (Plugin_039_SensorAttached)
   {
@@ -611,9 +626,9 @@ float readMax31855(struct EventStruct *event)
   // FIXME TD-er: This static flag is shared among all instances of this plugin
   static bool sensorFault = false;
 
-  if (sensorFault != ((rawvalue & 0x7) == 0)) {
+  if (sensorFault != ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0)) {
     // Fault code changed, log them
-    sensorFault = ((rawvalue & 0x7) == 0);
+    sensorFault = ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0);
 
     # ifndef BUILD_NO_DEBUG
 
@@ -628,15 +643,15 @@ float readMax31855(struct EventStruct *event)
           } else {
             log += F("Fault code:");
 
-            if (rawvalue & 0x01) {
+            if (rawvalue & MAX31855_TC_OC) {
               log += F(" Open (no connection)");
             }
 
-            if (rawvalue & 0x02) {
+            if (rawvalue & MAX31855_TC_SC) {
               log += F(" Short-circuit to GND");
             }
 
-            if (rawvalue & 0x04) {
+            if (rawvalue & MAX31855_TC_SCVCC) {
               log += F(" Short-circuit to Vcc");
             }
           }
@@ -649,7 +664,8 @@ float readMax31855(struct EventStruct *event)
   }
 
   // D16 - This bit reads at 1 when any of the SCV, SCG, or OC faults are active. Default value is 0.
-  const bool Plugin_039_SensorAttached = !(rawvalue & 0x00010000);
+  // 2020-05-11: FIXED: c.k.i.: migrated plain flag mask to #defines to enhance maintainability; added all fault flags for safety reasons
+  const bool Plugin_039_SensorAttached = !(rawvalue & (MAX31855_TC_GENFLT | MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC));
 
   if (Plugin_039_SensorAttached)
   {
@@ -683,7 +699,7 @@ float readMax31856(struct EventStruct *event)
 
   uint32_t registers[MAX31856_NO_REG] = { 0 };
 
-  for (int i = 0u; i < MAX31856_NO_REG; ++i) {
+  for (uint8_t i = 0u; i < MAX31856_NO_REG; ++i) {
     registers[i] = read8BitRegister(CS_pin_no, i);
   }
 
@@ -829,6 +845,7 @@ float readMax31865(struct EventStruct *event)
   startOneShotConversion(CS_pin_no);
 
   // wait for 100ms -> conversion to be ready
+  // TODO: c.k.i.: remove blunt waiting for 100ms and wasting of run time, change to other mechnism: TIMER API or state machine
   delay(100);
 
   // read conversion result
