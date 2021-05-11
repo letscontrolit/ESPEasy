@@ -80,6 +80,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SYSHEAP);
   addSysVar_enum_html(SystemVariables::SYSSTACK);
   addSysVar_enum_html(SystemVariables::SYSNAME);
+  addSysVar_enum_html(SystemVariables::BOOT_CAUSE);
 #if FEATURE_ADC_VCC
   addSysVar_enum_html(SystemVariables::VCC);
 #endif // if FEATURE_ADC_VCC
