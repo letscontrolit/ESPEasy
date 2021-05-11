@@ -99,6 +99,8 @@ shift
 done
 
 VENV=`echo "${SRC}/venv/python3.8"`
+TMP_DIST=`echo "${SRC}/ESPEasy_collect_dist"`
+
 
 if (( $BUILD_ALL != 0 )); then
   BUILD_DOCS=1
@@ -138,6 +140,8 @@ if (( $HELP != 0 )); then
    echo "  sudo apt install -y software-properties-common"
    echo "  sudo add-apt-repository ppa:deadsnakes/ppa"
    echo "  sudo apt install -y python3.8"
+   echo "For Sphinx (convert):"
+   echo "  sudo apt install imagemagick"
    echo ""
    echo ""
    echo "Summary:"
@@ -146,6 +150,7 @@ if (( $HELP != 0 )); then
    echo "  Description  : ${DESCRIPTION}"
    echo "  SRC dir      : ${SRC}"
    echo "  Python venv  : ${VENV}"
+   echo "  TmpDir ZIP   : ${TMP_DIST}"
    echo "  Build Docs   : ${BUILD_DOCS}"
    echo "  Build ESP32  : ${BUILD_ESP32}"
    echo "  Build ESP82xx: ${BUILD_ESP82XX}"
@@ -159,6 +164,7 @@ else
    echo "  Description  : ${DESCRIPTION}"
    echo "  SRC dir      : ${SRC}"
    echo "  Python venv  : ${VENV}"
+   echo "  TmpDir ZIP   : ${TMP_DIST}"
    echo "  Build Docs   : ${BUILD_DOCS}"
    echo "  Build ESP32  : ${BUILD_ESP32}"
    echo "  Build ESP82xx: ${BUILD_ESP82XX}"
@@ -209,17 +215,12 @@ if [ $? -ne 0 ]; then
 fi
 
 pip install -U platformio
-pip install -r ${SRC}/docs/requirements.txt
+# suppress lots of messages when packages are already installed with the correct version.
+set -o pipefail; pip install -r ${SRC}/docs/requirements.txt | { grep -v "already satisfied" || :; }
 
 # fetch latest version from active branch
 cd ${SRC}
 git fetch --tags
-git rebase
-if [ $? -ne 0 ]; then
-  echo "Git rebase failed!"
-  exit 1
-fi
-
 git submodule update --init --recursive
 if [ -z $GITTAG ]; then
   if (( $PULL_REQ != 0 )); then
@@ -239,22 +240,38 @@ if [ -z $GITTAG ]; then
 
       echo "DESCRIPTION: ${DESCRIPTION}"
     fi
+  else 
+    # Just checkout the main branch and pull latest commits
+    git checkout ${BRANCH}
+    if [ $? -eq 0 ]; then
+      echo "Success!  git checkout ${BRANCH}"
+    else
+      echo "Could not checkout branch ${BRANCH}"
+      exit 1
+    fi
   fi
 else
   git checkout tags/$GITTAG -b $GITTAG
   if [ $? -eq 0 ]; then
     echo "Success!  git checkout tags/$GITTAG -b $GITTAG"
   else
-    echo "Could not checkout Git tag:"
-    echo "  git checkout tags/$GITTAG -b $GITTAG"
-    exit 1
-  fi
-  if [ -z "$DESCRIPTION" ]; then
-    DESCRIPTION=`git describe|cut -d'-' -f-3`
-
-    echo "DESCRIPTION: ${DESCRIPTION}"
+    git checkout tags/$GITTAG
+    if [ $? -eq 0 ]; then
+      echo "Success!  git checkout tags/$GITTAG"
+    else
+      echo "Could not checkout Git tag:"
+      echo "  git checkout tags/$GITTAG"
+      exit 1
+    fi
   fi
 fi
+
+if [ -z "$DESCRIPTION" ]; then
+  DESCRIPTION=`git describe|cut -d'-' -f-3`
+
+  echo "DESCRIPTION: ${DESCRIPTION}"
+fi
+
 
 if (( $BUILD_DOCS != 0 )); then
   # Build documentation
@@ -298,9 +315,106 @@ fi
 
 # Rename all built files, compute CRC and insert binaryFilename
 # Collect all in a zip file.
-if [ -z "$DESCRIPTION" ]
-then
-  ${SRC}/before_deploy
-else
-  ${SRC}/before_deploy -d ${DESCRIPTION}
+
+if [ -d ${TMP_DIST} ]; then
+  rm -Rf ${TMP_DIST}/*
 fi
+
+if [ ! -d ${TMP_DIST} ]; then
+  mkdir -p ${TMP_DIST}
+  if [ $? -eq 0 ]; then
+      echo "Created temp dir ${TMP_DIST} to collect files for zip"
+  else
+      echo "Could not create tmp dir: ${TMP_DIST}"
+      exit 1
+  fi
+fi
+
+BUILD_LOG=`echo "${TMP_DIST}/buildlog.txt"`
+
+# PIO 3.x :
+# BINARY_PATH=".pioenvs"
+
+# PIO 4.0 and newer:
+BINARY_PATH=`echo "${SRC}/.pio/build"`
+
+
+
+echo "### Creating zip archives"
+
+#Naming convention:
+# ESP_Easy_[github version]_[plugin set]_[chip type]_[flash memory].bin
+
+if [ -d "build_output/reject" ]; then
+  zip -qq ${SRC}/ESPEasy_ELF_files_$DESCRIPTION.zip build_output/reject/*
+fi
+
+zip -qq ${SRC}/ESPEasy_ELF_files_$DESCRIPTION.zip build_output/debug/*
+echo "### Created ${SRC}/ESPEasy_ELF_files_$DESCRIPTION.zip"
+
+
+mkdir -p ${TMP_DIST}
+cp -r dist/* ${TMP_DIST}/
+
+if (( $BUILD_DOCS != 0 )); then
+  if [ -d "docs/build" ]; then
+    # Docs have been created
+    zip -r -qq ${SRC}/ESPEasy_docs_$DESCRIPTION.zip docs/build/*
+    echo "### Created ${SRC}/ESPEasy_docs_$DESCRIPTION.zip"
+  fi
+fi
+
+#create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
+#rm -rf dist/Source 2>/dev/null
+
+mkdir -p ${TMP_DIST}/source
+cp -r lib ${TMP_DIST}/source/
+cp -r src ${TMP_DIST}/source/
+cp -r misc ${TMP_DIST}/source/
+cp -r static ${TMP_DIST}/source/
+cp -r tools ${TMP_DIST}/source/
+cp platformio*.ini ${TMP_DIST}/source/
+cp *.txt ${TMP_DIST}/source/
+cp *.csv ${TMP_DIST}/source/
+cp README* ${TMP_DIST}/source/
+
+cp -r build_output/bin/* ${TMP_DIST}/bin
+rm -f ${TMP_DIST}/bin/*ESP32*
+
+cd ${TMP_DIST}
+
+if (( $BUILD_ESP82XX != 0 )); then
+  if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+    echo
+    zip -qq ${SRC}/ESPEasy_ESP82xx_$DESCRIPTION.zip -r .
+    echo "### Created ${SRC}/ESPEasy_ESP82xx_$DESCRIPTION.zip"
+  fi
+fi
+
+cd ${SRC}
+# Remove non-ESP32 builds
+rm -f ${TMP_DIST}/bin/*
+
+# Remove flash tools not compatible with ESP32
+rm -f ${TMP_DIST}/dist/ESP.Easy.Flasher.exe
+rm -f ${TMP_DIST}/dist/esptool.exe
+rm -f ${TMP_DIST}/dist/FlashESP8266.exe
+
+
+if (( $BUILD_ESP32 != 0 )); then
+  # Copy ESP32 builds
+  cp -r build_output/bin/*ESP32* ${TMP_DIST}/bin
+
+  cd ${TMP_DIST}
+
+  if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+    echo
+    zip -qq ${SRC}/ESPEasy_ESP32_$DESCRIPTION.zip -r .
+    echo "### Created ${SRC}/ESPEasy_ESP32_$DESCRIPTION.zip"
+  fi
+fi
+
+rm -Rf ${TMP_DIST}/* 2>/dev/null
+rmdir ${TMP_DIST}
+
+echo "Done!"
