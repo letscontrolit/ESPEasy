@@ -28,6 +28,19 @@ More uses of these system variables can be seen in the rules section and formula
      - ESP_Easy
      - Name as configured through the webgui.
      - 
+   * - ``%bootcause%``
+     - 0
+     - (re)boot cause as integer value, to be used in rules. 
+       
+       * ``0`` = manual reboot (reset btn)
+       * ``1`` = cold boot
+       * ``2`` = deep sleep
+       * ``3`` = soft restart
+       * ``10`` = ext Watchdog
+       * ``11`` = SW Watchdog
+       * ``12`` = Exception
+       * ``20`` = Power unstable
+     - Yes
    * - ``%systime%``
      - 01:23:54
      - Current time if NTP is enabled (hh:mm:ss, hh:mm prior to v2.0).
@@ -50,7 +63,13 @@ More uses of these system variables can be seen in the rules section and formula
      - 
    * - ``%sunrise%``
      - 5:04
-     - Time of sunrise on current day, when NTP is active and coordinates set. If you want to postpone or trigger something earlier but still using the sunset/sunrise time as reference you can use this syntax: '''%sunrise+10m%''' or '''%sunset-1h%'''. Where the offset must be a integer with the prefix "m" for minutes or "h" for hours. Minus or plus is used to tell if the offset is prior or later than the sunset/sunrise. Any other letter positioned between the number and '%' is regarded as "seconds" notation.
+     - Time of sunrise on current day, when NTP is active and coordinates set. 
+       If you want to postpone or trigger something earlier but still using the sunset/sunrise time as reference you can use this syntax: 
+       
+       * ``%sunrise+10m%``
+       * ``%sunset-1h%``
+       
+       Where the offset must be a integer with the postfix "m" for minutes or "h" for hours. Minus or plus is used to tell if the offset is prior or later than the sunset/sunrise. Any other letter positioned between the number and '%' is regarded as "seconds" notation.
      - 
    * - ``%sunset%``
      - 22:03
@@ -98,7 +117,9 @@ More uses of these system variables can be seen in the rules section and formula
      - 
    * - ``%unixtime%``
      - 1521731277
-     - Unix time (seconds since epoch, 1970-01-01 00:00:00)<br>Example: 1521731277 = 2018-03-22 15:07:57
+     - Unix time (seconds since epoch, 1970-01-01 00:00:00)
+       
+       Example: 1521731277 = 2018-03-22 15:07:57
      - Yes
    * - ``%uptime%``
      - 3244
@@ -134,7 +155,9 @@ More uses of these system variables can be seen in the rules section and formula
      - Yes
    * - ``%vcc%``
      - 5.2
-     - VCC value, this is only available in the VCC versions of FW. If the variable output is "-1.0" it means that the VCC is not activated or that a reading has not been completed (could be due to incorrect cabling, interval set to "0", etc. etc.).
+     - VCC value, this is only available in the VCC builds of FW (with "VCC" in the file name).
+       
+       If the variable output is "-1.0" it means that the VCC is not activated or that a reading has not been completed (could be due to incorrect cabling, interval set to "0", etc. etc.).
      - Yes
    * - ``%mac%``
      - 00:14:22:01:23:45

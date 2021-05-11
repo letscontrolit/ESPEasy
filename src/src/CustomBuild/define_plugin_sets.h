@@ -1088,7 +1088,7 @@ To create/register a plugin, you have to :
 
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
-
+    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO)
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
