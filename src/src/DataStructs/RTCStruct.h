@@ -8,7 +8,15 @@
 #define RTC_BASE_USERVAR 74
 #define RTC_BASE_CACHE 124
 
-#define RTC_CACHE_DATA_SIZE 240
+#ifdef ESP8266
+#define RTC_CACHE_DATA_SIZE 240  // 10 elements
+#endif
+#ifdef ESP32
+// TODO TD-er: ESP32 can store much more samples in its RTC
+// However we must make sure the data can be flushed on demand or else 
+// one may have to wait for a long time to be able to read the data from the filesystem
+#define RTC_CACHE_DATA_SIZE 240 // 10 elements
+#endif
 #define CACHE_FILE_MAX_SIZE 24000
 
 /*********************************************************************************************\

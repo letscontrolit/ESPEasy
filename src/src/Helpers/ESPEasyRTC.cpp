@@ -83,15 +83,19 @@
 
 
 
-// #define RTC_STRUCT_DEBUG
+//#define RTC_STRUCT_DEBUG
 
 
 
 #ifdef ESP32
+constexpr size_t UserVar_nrelements = VARS_PER_TASK * TASKS_MAX;
+
+
 // Since the global UserVar and RTC objects are defined "extern", they cannot be located in the RTC memory.
 // Thus we have to keep a copy here.
-RTC_NOINIT_ATTR float UserVar_RTC[VARS_PER_TASK * TASKS_MAX];
 RTC_NOINIT_ATTR RTCStruct RTC_tmp;
+RTC_NOINIT_ATTR float UserVar_RTC[UserVar_nrelements];
+RTC_NOINIT_ATTR uint32_t UserVar_checksum;
 #endif
 
 
@@ -163,9 +167,10 @@ bool saveUserVarToRTC()
   // ESP8266 has the RTC struct stored in memory which we must actively fetch
   // ESP32   Uses a temp structure which is mapped to the RTC address range.
   #if defined(ESP32)
-  for (size_t i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
+  for (size_t i = 0; i < UserVar_nrelements; ++i) {
     UserVar_RTC[i] = UserVar[i];
   }
+  UserVar_checksum = calc_CRC32((byte *)(&UserVar[0]), UserVar_nrelements * sizeof(float)); 
   return true;
   #endif
 
@@ -188,10 +193,13 @@ bool readUserVarFromRTC()
   // ESP8266 has the RTC struct stored in memory which we must actively fetch
   // ESP32   Uses a temp structure which is mapped to the RTC address range.
   #if defined(ESP32)
-  for (size_t i = 0; i < VARS_PER_TASK * TASKS_MAX; ++i) {
-    UserVar[i] = UserVar_RTC[i];
+  if (calc_CRC32((byte *)(&UserVar_RTC[0]), UserVar_nrelements * sizeof(float)) == UserVar_checksum) {
+    for (size_t i = 0; i < UserVar_nrelements; ++i) {
+      UserVar[i] = UserVar_RTC[i];
+    }
+    return true;
   }
-  return true;
+  return false;
   #endif
 
   #ifdef ESP8266
