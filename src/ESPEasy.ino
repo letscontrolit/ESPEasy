@@ -264,8 +264,11 @@ void setup()
   log += FreeMem();
   addLog(LOG_LEVEL_INFO, log);
 
-  #ifdef ESP8266
-  // Our ESP32 code does not yet support RTC, so separate this in code for ESP8266 and ESP32
+  readBootCause();
+
+  log = F("INIT : ");
+  log += getLastBootCauseString();
+
   if (readFromRTC())
   {
     RTC.bootFailedCount++;
@@ -273,17 +276,14 @@ void setup()
     lastMixedSchedulerId_beforereboot = RTC.lastMixedSchedulerId;
     readUserVarFromRTC();
 
-    if (RTC.deepSleepState == 1)
+    if (RTC.deepSleepState != 1)
     {
-      log = F("INIT : Rebooted from deepsleep #");
-      lastBootCause = BOOT_CAUSE_DEEP_SLEEP;
-    }
-    else {
       node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
-      log = F("INIT : Warm boot #");
     }
 
+    log += F(" #");
     log += RTC.bootCounter;
+
     #ifndef BUILD_NO_DEBUG
     log += F(" Last Action before Reboot: ");
     log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
@@ -301,20 +301,6 @@ void setup()
       lastBootCause = BOOT_CAUSE_COLD_BOOT;
     log = F("INIT : Cold Boot");
   }
-  #endif // ESP8266
-
-  #ifdef ESP32
-  if (rtc_get_reset_reason( (RESET_REASON) 0) == DEEPSLEEP_RESET) {
-    log = F("INIT : Rebooted from deepsleep #");
-    lastBootCause = BOOT_CAUSE_DEEP_SLEEP;
-  } else {
-    // cold boot situation
-    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
-      lastBootCause = BOOT_CAUSE_COLD_BOOT;
-    log = F("INIT : Cold Boot");
-  }
-
-  #endif // ESP32
 
   log += F(" - Restart Reason: ");
   log += getResetReasonString();

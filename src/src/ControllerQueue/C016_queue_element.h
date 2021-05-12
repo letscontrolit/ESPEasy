@@ -4,6 +4,7 @@
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/Plugins.h"
 
 struct EventStruct;
@@ -22,6 +23,8 @@ public:
 
   C016_queue_element();
 
+  C016_queue_element(C016_queue_element&& other);
+
   C016_queue_element(const struct EventStruct *event,
                      byte                      value_count,
                      unsigned long             unixTime);
@@ -29,6 +32,8 @@ public:
   size_t getSize() const;
 
   bool isDuplicate(const C016_queue_element& other) const;
+
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
 
   float values[VARS_PER_TASK] = { 0 };
   unsigned long _timestamp    = 0; // Unix timestamp

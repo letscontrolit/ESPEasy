@@ -2,7 +2,7 @@
 .. |P110_type| replace:: :cyan:`Distance`
 .. |P110_typename| replace:: :cyan:`Distance - VL53L0X (200cm)`
 .. |P110_porttype| replace:: `.`
-.. |P110_status| replace:: :yellow:`TESTING`
+.. |P110_status| replace:: :yellow:`TESTING B`
 .. |P110_github| replace:: P110_VL53L0X.ino
 .. _P110_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P110_VL53L0X.ino
 .. |P110_usedby| replace:: `.`
@@ -15,7 +15,7 @@
 .. |P111_type| replace:: :cyan:`RFID`
 .. |P111_typename| replace:: :cyan:`RFID - MFRC522`
 .. |P111_porttype| replace:: `.`
-.. |P111_status| replace:: :yellow:`TESTING`
+.. |P111_status| replace:: :yellow:`TESTING C`
 .. |P111_github| replace:: P111_RC522_RFID.ino
 .. _P111_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P111_RC522_RFID.ino
 .. |P111_usedby| replace:: `.`
@@ -28,7 +28,7 @@
 .. |P113_type| replace:: :cyan:`Distance`
 .. |P113_typename| replace:: :cyan:`Distance - VL53L1X (400cm)`
 .. |P113_porttype| replace:: `.`
-.. |P113_status| replace:: :yellow:`TESTING`
+.. |P113_status| replace:: :yellow:`TESTING B`
 .. |P113_github| replace:: P113_VL53L1X.ino
 .. _P113_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P113_VL53L1X.ino
 .. |P113_usedby| replace:: `.`
