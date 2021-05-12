@@ -17,58 +17,34 @@
 //max 40 bytes: ( 74 - 64 ) * 4
 struct RTCStruct
 {
-  RTCStruct() : ID1(0), ID2(0), lastWiFiChannel(0), factoryResetCounter(0),
-                deepSleepState(0), bootFailedCount(0), flashDayCounter(0),
-                lastWiFiSettingsIndex(0),
-                flashCounter(0), bootCounter(0), lastMixedSchedulerId(0),
-                unused1(0), unused2(0),
-                lastSysTime(0) {}
+  RTCStruct() = default;
 
-  void init() {
-    ID1 = 0xAA;
-    ID2 = 0x55;
-    clearLastWiFi();
-    factoryResetCounter = 0;
-    deepSleepState = 0;
-    bootFailedCount = 0;
-    flashDayCounter = 0;
-    lastWiFiSettingsIndex = 0;
-    flashCounter = 0;
-    bootCounter = 0;
-    lastMixedSchedulerId = 0;
-    unused1 = 0;
-    unused2 = 0;
-    lastSysTime = 0;
-  }
+  RTCStruct(const RTCStruct& other) = delete;
 
-  void clearLastWiFi() {
-    for (byte i = 0; i < 6; ++i) {
-      lastBSSID[i] = 0;
-    }
-    lastWiFiChannel = 0;
-    lastWiFiSettingsIndex = 0;
-  }
+  RTCStruct& operator=(const RTCStruct&) = default; 
 
-  bool lastWiFi_set() const {
-    return lastBSSID[0] != 0 && lastWiFiChannel != 0 && lastWiFiSettingsIndex != 0;
-  }
+  void init();
+
+  void clearLastWiFi();
+
+  bool lastWiFi_set() const;
 
 
-  byte ID1;
-  byte ID2;
-  byte lastWiFiChannel;
-  byte factoryResetCounter;
-  byte deepSleepState;
-  byte bootFailedCount;
-  byte flashDayCounter;
-  byte lastWiFiSettingsIndex;
-  unsigned long flashCounter;
-  unsigned long bootCounter;
-  unsigned long lastMixedSchedulerId;
+  byte ID1 = 0;
+  byte ID2 = 0;
+  byte lastWiFiChannel = 0;
+  byte factoryResetCounter = 0;
+  byte deepSleepState = 0;
+  byte bootFailedCount = 0;
+  byte flashDayCounter = 0;
+  byte lastWiFiSettingsIndex = 0;
+  unsigned long flashCounter = 0;
+  unsigned long bootCounter = 0;
+  unsigned long lastMixedSchedulerId = 0;
   uint8_t lastBSSID[6] = { 0 };
-  byte unused1;  // Force alignment to 4 bytes
-  byte unused2;
-  unsigned long lastSysTime;
+  byte unused1 = 0;  // Force alignment to 4 bytes
+  byte unused2 = 0;
+  unsigned long lastSysTime = 0;
 };
 
 

@@ -269,8 +269,6 @@ void setup()
   log = F("INIT : ");
   log += getLastBootCauseString();
 
-  #ifdef ESP8266
-  // Our ESP32 code does not yet support RTC, so separate this in code for ESP8266 and ESP32
   if (readFromRTC())
   {
     RTC.bootFailedCount++;
@@ -303,7 +301,6 @@ void setup()
       lastBootCause = BOOT_CAUSE_COLD_BOOT;
     log = F("INIT : Cold Boot");
   }
-  #endif // ESP8266
 
   log += F(" - Restart Reason: ");
   log += getResetReasonString();
