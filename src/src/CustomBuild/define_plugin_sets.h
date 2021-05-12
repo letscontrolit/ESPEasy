@@ -1412,9 +1412,7 @@ To create/register a plugin, you have to :
     #endif
   #endif
   #ifndef USES_C016
-    #ifndef ESP32         // Not implemented yet for ESP32
-      #define USES_C016   // Cache controller
-    #endif
+    #define USES_C016   // Cache controller
   #endif
   #ifndef USES_C018
     #define USES_C018 // TTN RN2483
@@ -1441,13 +1439,6 @@ To create/register a plugin, you have to :
 //  #undef USES_P075   // Nextion
 //  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
 //  #undef USES_P082   // GPS
-
-  #ifdef USES_C016
-    // Cache controller uses RTC memory which we do not yet support on ESP32.
-    #undef USES_C016 // Cache controller
-  #endif
-
-
 #endif
 
 
