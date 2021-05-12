@@ -26,6 +26,11 @@
 # define PLUGIN_VALUENAME4_115 "Rate"    // (MAX17048/49) Get rate of change per hour in %
 # define PLUGIN_xxx_DEBUG  false         // set to true for extra log info in the debug
 
+# define P115_I2CADDR         PCONFIG(0)
+# define P115_THRESHOLD       PCONFIG(1)
+# define P115_ALERTEVENT      PCONFIG(2)
+# define P115_DEVICESELECTOR  PCONFIG(3)
+
 boolean Plugin_115(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -41,7 +46,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4; 
+      Device[deviceCount].ValueCount         = 4;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
 
@@ -62,14 +67,15 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_115));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_115));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_115));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_115));
       break;
     }
 
     case PLUGIN_INIT:
     {
-      const sfe_max1704x_devices_e device = static_cast<sfe_max1704x_devices_e>(PCONFIG(3));
-      const int threshold = PCONFIG(1);
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P115_data_struct(PCONFIG(0), device, threshold));
+      const sfe_max1704x_devices_e device = static_cast<sfe_max1704x_devices_e>(P115_DEVICESELECTOR);
+      const int threshold                 = P115_THRESHOLD;
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P115_data_struct(P115_I2CADDR, device, threshold));
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P115_data) {
@@ -81,17 +87,17 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       /*
-      byte choice          = PCONFIG(0);
-      int  optionValues[1] = { 0x36 };
-      addFormSelectorI2C(F("plugin_115_i2c"), 1, optionValues, choice);
-      */
+         byte choice          = P115_I2CADDR;
+         int  optionValues[1] = { 0x36 };
+         addFormSelectorI2C(F("plugin_115_i2c"), 1, optionValues, choice);
+       */
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        unsigned int choice = PCONFIG(3);
+        unsigned int choice = P115_DEVICESELECTOR;
         String options[4];
         options[0]          = F("MAX17043");
         options[1]          = F("MAX17044 (2S)"); // 2-cell version of the MAX17043 (full-scale range of 10V)
@@ -101,9 +107,9 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
         addFormSelector(F("Device"), F("plugin_115_device"), 4, options, optionValues, choice);
       }
 
-      addFormNumericBox(F("Alert threshold"), F("plugin_115_threshold"), PCONFIG(1), 1, 30);
+      addFormNumericBox(F("Alert threshold"), F("plugin_115_threshold"), P115_THRESHOLD, 1, 30);
       addUnit(F("%"));
-      addFormCheckBox(F("Send Event on Alert"), F("plugin_115_alertevent"), PCONFIG(2));
+      addFormCheckBox(F("Send Event on Alert"), F("plugin_115_alertevent"), P115_ALERTEVENT);
 
       success = true;
       break;
@@ -111,10 +117,10 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-//      PCONFIG(0) = getFormItemInt(F("plugin_115_i2c"));
-      PCONFIG(1) = getFormItemInt(F("plugin_115_threshold"));
-      PCONFIG(2) = isFormItemChecked(F("plugin_115_alertevent"));
-      PCONFIG(3) = getFormItemInt(F("plugin_115_device"));
+      //      P115_I2CADDR = getFormItemInt(F("plugin_115_i2c"));
+      P115_THRESHOLD      = getFormItemInt(F("plugin_115_threshold"));
+      P115_ALERTEVENT     = isFormItemChecked(F("plugin_115_alertevent"));
+      P115_DEVICESELECTOR = getFormItemInt(F("plugin_115_device"));
 
       success = true;
       break;
@@ -124,7 +130,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
     {
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P115_data && P115_data->initialized) {
+      if ((nullptr != P115_data) && P115_data->initialized) {
         UserVar[event->BaseVarIndex + 0] = P115_data->voltage;
         UserVar[event->BaseVarIndex + 1] = P115_data->soc;
         UserVar[event->BaseVarIndex + 2] = P115_data->alert;
@@ -149,7 +155,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
     {
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P115_data && P115_data->initialized) {
+      if ((nullptr != P115_data) && P115_data->initialized) {
         const String command = parseString(string, 1);
 
         if ((command == F("max1704xclearalert")))
@@ -173,12 +179,12 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
     {
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P115_data && P115_data->initialized) {
+      if ((nullptr != P115_data) && P115_data->initialized) {
         if (P115_data->read(false)) {
           if (!P115_data->alert) {
             P115_data->alert = true;
 
-            if (PCONFIG(2)) {
+            if (P115_ALERTEVENT) {
               // Need to send an event.
               if (Settings.UseRules) {
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -202,8 +208,8 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
       }
       break;
     }
-  }    // switch
+  } // switch
   return success;
-}      // function
+}   // function
 
 #endif // USES_P115
