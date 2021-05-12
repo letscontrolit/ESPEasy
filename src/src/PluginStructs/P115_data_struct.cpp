@@ -6,7 +6,11 @@ P115_data_struct::P115_data_struct(
   uint8_t                i2c_addr,
   sfe_max1704x_devices_e device,
   int                    threshold)
-  : _device(device), lipo(device), _threshold(threshold), initialized(false) {}
+  : _device(device), lipo(device), _threshold(threshold), initialized(false)
+{
+  // Call begin() immediately, or else _i2cPort in lipo object is still a nullptr
+  lipo.begin();
+}
 
 bool P115_data_struct::begin()
 {
@@ -14,7 +18,7 @@ bool P115_data_struct::begin()
   // parameters that go into its SoC algorithms. Calling this in your setup()
   // usually results in more accurate SoC readings.
   // Output: 0 on success, positive integer on fail.
-  if (lipo.quickStart() == 0) {
+  if (lipo.begin() && (lipo.quickStart() == 0)) {
     switch (_device) {
       case MAX1704X_MAX17043:
       case MAX1704X_MAX17044:
