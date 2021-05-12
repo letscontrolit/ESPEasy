@@ -23,7 +23,7 @@
 #define CACHE_STORAGE_BEHIND_SPIFFS 3
 
 
-#define RTC_STRUCT_DEBUG
+//#define RTC_STRUCT_DEBUG
 
 /********************************************************************************************\
    RTC located cache

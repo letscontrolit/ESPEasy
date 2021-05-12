@@ -5,6 +5,7 @@
 #include "../DataStructs/RTCCacheStruct.h"
 #include "../DataStructs/RTC_cache_handler_struct.h"
 #include "../DataStructs/TimingStats.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RuntimeData.h"
 #include "../Helpers/CRC_functions.h"

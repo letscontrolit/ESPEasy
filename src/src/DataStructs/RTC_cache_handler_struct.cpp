@@ -135,7 +135,9 @@ bool RTC_cache_handler_struct::write(uint8_t *data, unsigned int size) {
 bool RTC_cache_handler_struct::flush() {
   if (prepareFileForWrite()) {
     if (RTC_cache.writePos > 0) {
+      #ifdef RTC_STRUCT_DEBUG
       size_t filesize    = fw.size();
+      #endif
       int    bytesWriten = fw.write(&RTC_cache_data[0], RTC_cache.writePos);
 
       delay(0);
