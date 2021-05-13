@@ -36,3 +36,16 @@
 .. |P113_maintainer| replace:: `TD-er, tonhuisman`
 .. |P113_compileinfo| replace:: `.`
 .. |P113_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library (local copy)`
+
+.. |P115_name| replace:: :cyan:`MAX1704x`
+.. |P115_type| replace:: :cyan:`Energy`
+.. |P115_typename| replace:: :cyan:`Energy - MAX1704x`
+.. |P115_porttype| replace:: `.`
+.. |P115_status| replace:: :yellow:`ENERGY, TESTING B`
+.. |P115_github| replace:: _P115_MAX1704x_v2.ino
+.. _P115_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P115_MAX1704x_v2.ino
+.. |P115_usedby| replace:: `.`
+.. |P115_shortinfo| replace:: `Sparkfun Fuel Gauge Sensor`
+.. |P115_maintainer| replace:: `TD-er`
+.. |P115_compileinfo| replace:: `.`
+.. |P115_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library`
