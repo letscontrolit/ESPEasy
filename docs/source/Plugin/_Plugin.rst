@@ -137,6 +137,7 @@ There are different released versions of ESP Easy:
    ":ref:`P110_page`","|P110_status|","P110"
    ":ref:`P111_page`","|P111_status|","P111"
    ":ref:`P113_page`","|P113_status|","P113"
+   ":ref:`P115_page`","|P115_status|","P115"
 
 
 Internal GPIO handling
@@ -144,7 +145,7 @@ Internal GPIO handling
 
 Plugins: :ref:`P000_page`
 
-Hardware: |P000_usedby_GPIO|, |P000_usedby_RTTTL|
+Hardware: |P000_usedby_GPIO|, |P000_usedby_RTTTL|, |P000_usedby_Relay|, |P000_usedby_Servo|, |P000_usedby_LevelConverter|
 
 Analog input
 ------------
