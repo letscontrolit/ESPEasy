@@ -19,7 +19,14 @@ bool P115_data_struct::begin()
   // parameters that go into its SoC algorithms. Calling this in your setup()
   // usually results in more accurate SoC readings.
   // Output: 0 on success, positive integer on fail.
-  if (lipo.begin() && (lipo.quickStart() == 0)) {
+
+  // FIXME TD-er: Looks like begin() and/or quickStart() may not return expected values.
+  // const bool success = lipo.begin() && (lipo.quickStart() == 0);
+  lipo.begin();
+  lipo.quickStart();
+  const bool success = true;
+
+  if (success) {
     switch (_device) {
       case MAX1704X_MAX17043:
       case MAX1704X_MAX17044:
