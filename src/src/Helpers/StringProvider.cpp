@@ -296,13 +296,11 @@ String getValue(LabelType::Enum label) {
     #endif
 
     case LabelType::BUILD_DESC:             return String(BUILD);
-    case LabelType::GIT_BUILD:
-      {
-        String res = F(BUILD_GIT);
-        if (res.length() == 0) {
-          return getValue(LabelType::BUILD_TIME);
-        }
-        return res;
+    case LabelType::GIT_BUILD:              
+      { 
+        const String res(F(BUILD_GIT));
+        if (!res.isEmpty()) return res;
+        return get_git_head();
       }
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);

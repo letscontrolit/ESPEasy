@@ -143,7 +143,7 @@ void handle_sysinfo_json() {
   json_prop(F("build"),       String(BUILD));
   json_prop(F("notes"),       F(BUILD_NOTES));
   json_prop(F("libraries"),   getSystemLibraryString());
-  json_prop(F("git_version"), F(BUILD_GIT));
+  json_prop(F("git_version"), getValue(LabelType::GIT_BUILD));
   json_prop(F("plugins"),     getPluginDescriptionString());
   json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
   json_number(F("md5_check"), String(CRCValues.checkPassed()));

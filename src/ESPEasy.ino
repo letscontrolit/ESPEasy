@@ -258,7 +258,7 @@ void setup()
   emergencyReset();
 
   String log = F("\n\n\rINIT : Booting version: ");
-  log += F(BUILD_GIT);
+  log += getValue(LabelType::GIT_BUILD);
   log += " (";
   log += getSystemLibraryString();
   log += ')';
