@@ -1,8 +1,6 @@
 /*
  * Plugin 115 MAX1704x I2C, Sparkfun Fuel Gauge Sensor
  *
- * development version
- * by: jbaream
  * this plugin is based in example1 by Paul Clark
  * from SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library
  * provides Battery Voltage, Battery State of Charge (SOC) and Alert Flag when SOC is below a threshold
