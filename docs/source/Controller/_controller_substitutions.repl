@@ -184,6 +184,6 @@
 .. |C018_github| replace:: C018.ino
 .. _C018_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C018.ino
 .. |C018_usedby| replace:: `.`
-.. |C018_shortinfo| replace:: `Controller for the LoRaWAN/TTN network supporting RN2384 (434/868 MHz) and RN2903 (915 MHz)`
+.. |C018_shortinfo| replace:: `Controller for the LoRaWAN/TTN network supporting RN2483 (434/868 MHz) and RN2903 (915 MHz)`
 .. |C018_maintainer| replace:: `TD-er`
 .. |C018_compileinfo| replace:: `.`
