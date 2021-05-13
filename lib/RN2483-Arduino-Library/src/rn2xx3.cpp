@@ -97,6 +97,11 @@ bool rn2xx3::setSF(uint8_t sf)
   return _rn2xx3_handler.setSF(sf);
 }
 
+bool rn2xx3::setAdaptiveDataRate(bool enabled)
+{
+  return _rn2xx3_handler.setAdaptiveDataRate(enabled);
+}
+
 bool rn2xx3::init()
 {
   return _rn2xx3_handler.init();
@@ -196,12 +201,18 @@ int rn2xx3::getVbat()
 
 String rn2xx3::getDataRate()
 {
+  int dr;
+  int sf = _rn2xx3_handler.getSF(dr);
   String output;
 
-  output.reserve(9);
-  output  = sendRawCommand(F("radio get sf"));
-  output += "bw";
-  output += _rn2xx3_handler.readIntValue(F("radio get bw"));
+  output.reserve(24);
+  output  = F("sf:");
+  output += sf;
+  output += F(" dr:");
+  output += dr;
+
+  output += F(" ADR: ");
+  output += sendRawCommand(F("mac get adr"));
   return output;
 }
 
