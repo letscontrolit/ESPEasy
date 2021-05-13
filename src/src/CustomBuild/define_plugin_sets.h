@@ -1110,6 +1110,7 @@ To create/register a plugin, you have to :
     #define USES_P093   // Mitsubishi Heat Pump
     #define USES_P094  // CUL Reader
     #define USES_P114  // VEML6075 UVA/UVB sensor
+    #define USES_P115  // Fuel Gauge MAX1704x
 #endif
 
 
@@ -1142,6 +1143,9 @@ To create/register a plugin, you have to :
    #endif
    #ifndef USES_P108 
      #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+   #endif
+   #ifndef USES_P115
+     #define USES_P115   // Fuel Gauge MAX1704x
    #endif
 #endif
 
