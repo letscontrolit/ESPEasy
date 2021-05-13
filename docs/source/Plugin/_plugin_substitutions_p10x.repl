@@ -2,7 +2,7 @@
 .. |P100_type| replace:: :cyan:`Generic`
 .. |P100_typename| replace:: :cyan:`Pulse Counter - DS2423`
 .. |P100_porttype| replace:: `.`
-.. |P100_status| replace:: :yellow:`TESTING`
+.. |P100_status| replace:: :yellow:`TESTING B`
 .. |P100_github| replace:: P100_CCS811.ino
 .. _P100_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P100_DS2423_counter.ino
 .. |P100_usedby| replace:: `.`
@@ -15,7 +15,7 @@
 .. |P101_type| replace:: :cyan:`Communication`
 .. |P101_typename| replace:: :cyan:`Communication - Wake On LAN`
 .. |P101_porttype| replace:: `.`
-.. |P101_status| replace:: :yellow:`TESTING`
+.. |P101_status| replace:: :yellow:`TESTING B`
 .. |P101_github| replace:: P101_WakeOnLan.ino
 .. _P101_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P101_WakeOnLan.ino
 .. |P101_usedby| replace:: `.`
@@ -28,7 +28,7 @@
 .. |P102_type| replace:: :cyan:`Energy (AC)`
 .. |P102_typename| replace:: :cyan:`Energy (AC) - PZEM-004Tv30-Multiple`
 .. |P102_porttype| replace:: `.`
-.. |P102_status| replace:: :yellow:`TESTING`
+.. |P102_status| replace:: :yellow:`ENERGY`
 .. |P102_github| replace:: P102_PZEM004Tv3.ino
 .. _P102_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P102_PZEM004Tv3.ino
 .. |P102_usedby| replace:: `.`
@@ -41,7 +41,7 @@
 .. |P103_type| replace:: :cyan:`Environment`
 .. |P103_typename| replace:: :cyan:`Environment - Atlas Scientific EZO pH`
 .. |P103_porttype| replace:: `.`
-.. |P103_status| replace:: :yellow:`TESTING`
+.. |P103_status| replace:: :yellow:`MAX`
 .. |P103_github| replace:: P103_Atlas_EZO_pH.ino 
 .. _P103_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P103_Atlas_EZO_pH.ino 
 .. |P103_usedby| replace:: `.`
@@ -55,7 +55,7 @@
 .. |P104_type| replace:: :cyan:`Environment`
 .. |P104_typename| replace:: :cyan:`Environment - Atlas Scientific EC EZO`
 .. |P104_porttype| replace:: `.`
-.. |P104_status| replace:: :yellow:`TESTING`
+.. |P104_status| replace:: :yellow:`MAX`
 .. |P104_github| replace:: P104_Atlas_EZO_EC.ino
 .. _P104_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P104_Atlas_EZO_EC.ino 
 .. |P104_usedby| replace:: `.`
@@ -70,7 +70,7 @@
 .. |P105_type| replace:: :cyan:`Environment`
 .. |P105_typename| replace:: :cyan:`Environment - Atlas Scientific EZO ORP`
 .. |P105_porttype| replace:: `.`
-.. |P105_status| replace:: :yellow:`TESTING`
+.. |P105_status| replace:: :yellow:`MAX`
 .. |P105_github| replace:: P105_Atlas_EZO_ORP.ino
 .. _P105_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P105_Atlas_EZO_ORP.ino
 .. |P105_usedby| replace:: `.`
@@ -85,7 +85,7 @@
 .. |P106_type| replace:: :cyan:`Environment`
 .. |P106_typename| replace:: :cyan:`Environment - BME680`
 .. |P106_porttype| replace:: `.`
-.. |P106_status| replace:: :yellow:`TESTING`
+.. |P106_status| replace:: :yellow:`TESTING B`
 .. |P106_github| replace:: P106_BME680.ino
 .. _P106_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P106_BME680.ino
 .. |P106_usedby| replace:: `.`
@@ -98,7 +98,7 @@
 .. |P107_type| replace:: :cyan:`UV`
 .. |P107_typename| replace:: :cyan:`UV - SI1145`
 .. |P107_porttype| replace:: `.`
-.. |P107_status| replace:: :yellow:`TESTING`
+.. |P107_status| replace:: :yellow:`TESTING B`
 .. |P107_github| replace:: P107_Si1145.ino
 .. _P107_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P107_Si1145.ino
 .. |P107_usedby| replace:: `.`
@@ -111,7 +111,7 @@
 .. |P108_type| replace:: :cyan:`Energy (AC)`
 .. |P108_typename| replace:: :cyan:`Energy (AC) - DDS238-x`
 .. |P108_porttype| replace:: `.`
-.. |P108_status| replace:: :yellow:`TESTING`
+.. |P108_status| replace:: :yellow:`ENERGY, TESTING B`
 .. |P108_github| replace:: P108_DDS238.ino
 .. _P108_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P108_DDS238.ino
 .. |P108_usedby| replace:: `.`

@@ -295,6 +295,38 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+#ifdef USES_PACKED_RAW_DATA
+    case PLUGIN_GET_PACKED_RAW_DATA:
+    {
+      // Matching JS code:
+      // return decode(bytes, [header, int16_1e1, int32_1e3, int32_1e1, int32_1e1, uint16_1e2, uint8_1e1],
+      //   ['header', 'voltage', 'current', 'power', 'energy', 'powerfactor', 'frequency']);
+      //
+      // Resolutions:
+      //  Voltage:     0.1V     => int16_1e1  (range 80-260V)
+      //  Current:     0.001A   => int32_1e3
+      //  Power:       0.1W     => int32_1e1
+      //  Energy:      1Wh      => int32_1e1
+      //  PowerFactor: 0.01     => uint16_1e2 
+      //  Frequency:   0.1Hz    => uint8_1e1  (range 45Hz - 65Hz), offset 40Hz
+
+      // FIXME TD-er: Calling these functions is probably done within the 200 msec timeout used in the library.
+      // If not, this should be cached in a task data struct.
+      string += LoRa_addFloat(P102_PZEM_sensor->voltage(),       PackedData_int16_1e1);
+      string += LoRa_addFloat(P102_PZEM_sensor->current(),       PackedData_int32_1e3);
+      string += LoRa_addFloat(P102_PZEM_sensor->power(),         PackedData_int32_1e1);
+      string += LoRa_addFloat(P102_PZEM_sensor->energy(),        PackedData_int32_1e1);
+      string += LoRa_addFloat(P102_PZEM_sensor->pf(),            PackedData_uint16_1e2);
+      string += LoRa_addFloat(P102_PZEM_sensor->frequency() - 40, PackedData_uint8_1e1);
+      event->Par1 = 6; // valuecount 
+      
+      success = true;
+      break;
+    }
+#endif // USES_PACKED_RAW_DATA
+
+
+
     case PLUGIN_WRITE:
     {
       if (Plugin_102_init)

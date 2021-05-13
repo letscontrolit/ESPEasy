@@ -15,7 +15,7 @@
 .. |P041_type| replace:: :cyan:`Output`
 .. |P041_typename| replace:: :cyan:`Output - NeoPixel (Word Clock)`
 .. |P041_porttype| replace:: `.`
-.. |P041_status| replace:: :green:`NORMAL`
+.. |P041_status| replace:: :green:`DISPLAY, NORMAL`
 .. |P041_github| replace:: P041_NeoClock.ino
 .. _P041_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P041_NeoClock.ino
 .. |P041_usedby| replace:: `.`
@@ -28,7 +28,7 @@
 .. |P042_type| replace:: :cyan:`Output`
 .. |P042_typename| replace:: :cyan:`Output - NeoPixel (Candle)`
 .. |P042_porttype| replace:: `.`
-.. |P042_status| replace:: :green:`NORMAL`
+.. |P042_status| replace:: :green:`DISPLAY, NORMAL`
 .. |P042_github| replace:: P042_Candle.ino
 .. _P042_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P042_Candle.ino
 .. |P042_usedby| replace:: `.`

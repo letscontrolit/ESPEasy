@@ -57,6 +57,7 @@ void WiFiEventData_t::clearAll() {
   processedDisconnectAPmode = true;
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
+  wifiConnectInProgress     = false;
   wifi_TX_pwr = 0;
   usedChannel = 0;
 }
@@ -93,7 +94,8 @@ bool WiFiEventData_t::WiFiServicesInitialized() const {
 }
 
 void WiFiEventData_t::setWiFiDisconnected() {
-  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  wifiConnectInProgress = false;
+  wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
 }
 
 void WiFiEventData_t::setWiFiGotIP() {

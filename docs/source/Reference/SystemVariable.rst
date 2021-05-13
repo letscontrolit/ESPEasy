@@ -28,6 +28,19 @@ More uses of these system variables can be seen in the rules section and formula
      - ESP_Easy
      - Name as configured through the webgui.
      - 
+   * - ``%bootcause%``
+     - 0
+     - (re)boot cause as integer value, to be used in rules. 
+       
+       * ``0`` = manual reboot (reset btn)
+       * ``1`` = cold boot
+       * ``2`` = deep sleep
+       * ``3`` = soft restart
+       * ``10`` = ext Watchdog
+       * ``11`` = SW Watchdog
+       * ``12`` = Exception
+       * ``20`` = Power unstable
+     - Yes
    * - ``%systime%``
      - 01:23:54
      - Current time if NTP is enabled (hh:mm:ss, hh:mm prior to v2.0).
@@ -50,7 +63,13 @@ More uses of these system variables can be seen in the rules section and formula
      - 
    * - ``%sunrise%``
      - 5:04
-     - Time of sunrise on current day, when NTP is active and coordinates set. If you want to postpone or trigger something earlier but still using the sunset/sunrise time as reference you can use this syntax: '''%sunrise+10m%''' or '''%sunset-1h%'''. Where the offset must be a integer with the prefix "m" for minutes or "h" for hours. Minus or plus is used to tell if the offset is prior or later than the sunset/sunrise. Any other letter positioned between the number and '%' is regarded as "seconds" notation.
+     - Time of sunrise on current day, when NTP is active and coordinates set. 
+       If you want to postpone or trigger something earlier but still using the sunset/sunrise time as reference you can use this syntax: 
+       
+       * ``%sunrise+10m%``
+       * ``%sunset-1h%``
+       
+       Where the offset must be a integer with the postfix "m" for minutes or "h" for hours. Minus or plus is used to tell if the offset is prior or later than the sunset/sunrise. Any other letter positioned between the number and '%' is regarded as "seconds" notation.
      - 
    * - ``%sunset%``
      - 22:03
@@ -98,7 +117,9 @@ More uses of these system variables can be seen in the rules section and formula
      - 
    * - ``%unixtime%``
      - 1521731277
-     - Unix time (seconds since epoch, 1970-01-01 00:00:00)<br>Example: 1521731277 = 2018-03-22 15:07:57
+     - Unix time (seconds since epoch, 1970-01-01 00:00:00)
+       
+       Example: 1521731277 = 2018-03-22 15:07:57
      - Yes
    * - ``%uptime%``
      - 3244
@@ -134,7 +155,9 @@ More uses of these system variables can be seen in the rules section and formula
      - Yes
    * - ``%vcc%``
      - 5.2
-     - VCC value, this is only available in the VCC versions of FW. If the variable output is "-1.0" it means that the VCC is not activated or that a reading has not been completed (could be due to incorrect cabling, interval set to "0", etc. etc.).
+     - VCC value, this is only available in the VCC builds of FW (with "VCC" in the file name).
+       
+       If the variable output is "-1.0" it means that the VCC is not activated or that a reading has not been completed (could be due to incorrect cabling, interval set to "0", etc. etc.).
      - Yes
    * - ``%mac%``
      - 00:14:22:01:23:45
@@ -172,6 +195,12 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - Dew point(T,H): ``%c_dew_th%(18.6,67)``
      - Dew point(T,H): ``12.31``
      - Compute dew point given 2 values, temperature and relative humidity
+   * - Altitude(air,sea): ``%c_alt_pres_sea%(850,1000)``
+     - Altitude(air,sea): ``1350.03``
+     - Compute Altitude (m) given 2 values, atmospheric pressure and pressure at sea level (hPa). (Added: 2021/04/27)
+   * - PressureElevation(air,alt): ``%c_sea_pres_alt%(850,1350.03)``
+     - PressureElevation(air,alt): ``1000.00``
+     - Compensate air pressure for measured atmospheric pressure (hPa) and given altitude (m). (Added: 2021/04/27)
    * - cm to imperial: ``%c_cm2imp%(190)``
      - cm to imperial: ``6'2.8"``
      - Centimeter to imperial units

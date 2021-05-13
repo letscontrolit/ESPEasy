@@ -370,6 +370,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P110   // VL53L0X Time of Flight sensor
 // #define USES_P111   // RF522 RFID reader
 // #define USES_P113   // VL53L1X ToF
+// #define USES_P115   // MAX1704x
 
 
 // Special plugins needing IR library
