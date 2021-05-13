@@ -10,6 +10,7 @@ P115_data_struct::P115_data_struct(
 {
   // Call begin() immediately, or else _i2cPort in lipo object is still a nullptr
   lipo.begin();
+  _threshold = constrain(_threshold, 1, 32);
 }
 
 bool P115_data_struct::begin()

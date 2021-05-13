@@ -24,7 +24,7 @@ public:
 
   const sfe_max1704x_devices_e _device;
   SFE_MAX1704X                 lipo;
-  const int                    _threshold;
+  int                          _threshold;
 
   float voltage    = 0.0f;  // LiPo voltage
   float soc        = 0.0f;  // LiPo state-of-charge (SOC)

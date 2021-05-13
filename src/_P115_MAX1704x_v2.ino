@@ -103,11 +103,15 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
         options[1]          = F("MAX17044 (2S)"); // 2-cell version of the MAX17043 (full-scale range of 10V)
         options[2]          = F("MAX17048");
         options[3]          = F("MAX17049 (2S)"); // 2-cell version of the MAX17048
-        int optionValues[4] = { 0, 1, 2, 3 };
+        int optionValues[4] = {
+          MAX1704X_MAX17043,
+          MAX1704X_MAX17044,
+          MAX1704X_MAX17048,
+          MAX1704X_MAX17049 };
         addFormSelector(F("Device"), F("plugin_115_device"), 4, options, optionValues, choice);
       }
 
-      addFormNumericBox(F("Alert threshold"), F("plugin_115_threshold"), P115_THRESHOLD, 1, 30);
+      addFormNumericBox(F("Alert threshold"), F("plugin_115_threshold"), P115_THRESHOLD, 1, 32);
       addUnit(F("%"));
       addFormCheckBox(F("Send Event on Alert"), F("plugin_115_alertevent"), P115_ALERTEVENT);
 
@@ -134,16 +138,19 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 0] = P115_data->voltage;
         UserVar[event->BaseVarIndex + 1] = P115_data->soc;
         UserVar[event->BaseVarIndex + 2] = P115_data->alert;
+        UserVar[event->BaseVarIndex + 3] = P115_data->changeRate;
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
-          log.reserve(48);
+          log.reserve(64);
           log  = F("MAX1704x : Voltage: ");
           log += P115_data->voltage;
           log += F(" SoC: ");
           log += P115_data->soc;
           log += F(" Alert: ");
           log += P115_data->alert;
+          log += F(" Rate: ");
+          log += P115_data->changeRate;
           addLog(LOG_LEVEL_INFO, log);
         }
         success = true;
@@ -164,13 +171,6 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
           success = true;
         }
       }
-
-      break;
-    }
-
-    case PLUGIN_EXIT:
-    {
-      // perform cleanup tasks here. For example, free memory
 
       break;
     }
@@ -208,8 +208,8 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
       }
       break;
     }
-  } // switch
+  }
   return success;
-}   // function
+}
 
 #endif // USES_P115
