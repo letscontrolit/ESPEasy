@@ -39,7 +39,7 @@ String get_build_date() {
 
 String get_build_origin() {
   #if defined(CONTINUOUS_INTEGRATION)
-  return F("Travis");
+  return F("GitHub Actions");
   #elif defined(VAGRANT_BUILD)
   return F("Vagrant");
   #else 

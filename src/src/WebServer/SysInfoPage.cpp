@@ -17,6 +17,7 @@
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/ESPEasy_time.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 
@@ -142,7 +143,7 @@ void handle_sysinfo_json() {
   json_prop(F("build"),       String(BUILD));
   json_prop(F("notes"),       F(BUILD_NOTES));
   json_prop(F("libraries"),   getSystemLibraryString());
-  json_prop(F("git_version"), F(BUILD_GIT));
+  json_prop(F("git_version"), getValue(LabelType::GIT_BUILD));
   json_prop(F("plugins"),     getPluginDescriptionString());
   json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
   json_number(F("md5_check"), String(CRCValues.checkPassed()));
@@ -417,11 +418,10 @@ void handle_sysinfo_Network() {
 
   addTableSeparator(F("WiFi"), 2, 3, F("Wifi"));
 
-  const bool showWiFiConnectionInfo = 
-    active_network_medium == NetworkMedium_t::WIFI &&
-    NetworkConnected();
+  const bool showWiFiConnectionInfo = !WiFiEventData.WiFiDisconnected();
 
-  addRowLabel(F("Wifi Connection"));
+
+  addRowLabel(LabelType::WIFI_CONNECTION);
   if (showWiFiConnectionInfo)
   {
     String html;

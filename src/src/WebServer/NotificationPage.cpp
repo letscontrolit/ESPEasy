@@ -92,7 +92,7 @@ void handle_notifications() {
       {
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = notificationindex;
-        Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, &TempEvent);
+        Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, std::move(TempEvent));
       }
     }
   }

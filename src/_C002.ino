@@ -163,9 +163,9 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                   }
                   break;
                 }
-# if defined(USES_P088) || defined(USES_P115)
+# if defined(USES_P088)// || defined(USES_P115)
                 case 88:             // Send heatpump IR (P088) if IDX matches
-                case 115:            // Send heatpump IR (P115) if IDX matches
+//                case 115:            // Send heatpump IR (P115) if IDX matches
                 {
                   action  = F("heatpumpir,");
                   action += svalue1; // svalue1 is like 'gree,1,1,0,22,0,0'
@@ -267,7 +267,8 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         String pubname = CPlugin_002_pubname;
         parseControllerVariables(pubname, event, false);
 
-        success = MQTTpublish(event->ControllerIndex, event->TaskIndex, pubname.c_str(), json.c_str(), CPlugin_002_mqtt_retainFlag);
+        // Publish using move operator, thus pubname and json are empty after this call
+        success = MQTTpublish(event->ControllerIndex, event->TaskIndex, std::move(pubname), std::move(json), CPlugin_002_mqtt_retainFlag);
       } // if ixd !=0
       else
       {

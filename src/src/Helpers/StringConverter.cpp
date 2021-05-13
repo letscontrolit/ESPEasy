@@ -237,6 +237,7 @@ void addNewLine(String& line) {
    Format a value to the set number of decimals
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
+  if (event == nullptr) return "";
   isvalid = true;
 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -249,7 +250,8 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
   {
     // First try to format using the plugin specific formatting.
     String result;
-    EventStruct tempEvent(*event);
+    EventStruct tempEvent;
+    tempEvent.deep_copy(event);
     tempEvent.idx = rel_index;
     PluginCall(PLUGIN_FORMAT_USERVAR, &tempEvent, result);
     if (result.length() > 0) {

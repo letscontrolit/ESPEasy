@@ -3,6 +3,7 @@
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
@@ -103,15 +104,23 @@ struct ControllerDelayHandlerStruct {
     return true;
   }
 
-  // Return true if last element was removed
-  bool removeLastIfDuplicate() {
+  // Return true if message is already present in the queue
+  bool isDuplicate(const T& element) const {
+    // Some controllers may receive duplicate messages, due to lost acknowledgement
+    // This is actually the same message, so this should not be processed.
+    if (!unitLastMessageCount.isNew(element.getUnitMessageCount())) {
+      return true;
+    }
+    // The unit message count is still stored to make sure a new one with the same count
+    // is considered a duplicate, even when the queue is empty.
+    unitLastMessageCount.add(element.getUnitMessageCount());
+
+    // the setting 'deduplicate' does look at the content of the message and only compares it to messages in the queue.
     if (deduplicate && !sendQueue.empty()) {
-      auto back = sendQueue.back();
       // Use reverse iterator here, as it is more likely a duplicate is added shortly after another.
       auto it = sendQueue.rbegin(); // Same as back()
-      ++it;                         // The last element before back()
       for (; it != sendQueue.rend(); ++it) {
-        if (back.isDuplicate(*it)) {
+        if (element.isDuplicate(*it)) {
 #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(it->controller_idx);
@@ -120,8 +129,6 @@ struct ControllerDelayHandlerStruct {
             addLog(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
-
-          sendQueue.pop_back();
           return true;
         }
       }
@@ -130,8 +137,12 @@ struct ControllerDelayHandlerStruct {
   }
 
   // Try to add to the queue, if permitted by "delete_oldest"
-  // Return false when no item was added.
-  bool addToQueue(T&& element, bool checkDuplicate = true) {
+  // Return true when item was added, or skipped as it was considered a duplicate
+  bool addToQueue(T&& element) {
+    if (isDuplicate(element)) {
+      return true;
+    }
+
     if (delete_oldest) {
       // Force add to the queue.
       // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
@@ -139,20 +150,10 @@ struct ControllerDelayHandlerStruct {
         sendQueue.pop_front();
         attempt = 0;
       }
-      sendQueue.emplace_back(element);
-      if (checkDuplicate) {
-        // If message is already present consider adding to be a success.
-        removeLastIfDuplicate();
-      }
-      return true;
     }
 
     if (!queueFull(element)) {
-      sendQueue.emplace_back(element);
-      if (checkDuplicate) {
-        // If message is already present consider adding to be a success.
-        removeLastIfDuplicate();
-      }
+      sendQueue.push_back(std::move(element));
       return true;
     }
 #ifndef BUILD_NO_DEBUG
@@ -170,7 +171,7 @@ struct ControllerDelayHandlerStruct {
   // Get the next element.
   // Remove front element when max_retries is reached.
   T* getNext() {
-    if (sendQueue.empty()) { return NULL; }
+    if (sendQueue.empty()) { return nullptr; }
 
     if (attempt > max_retries) {
       sendQueue.pop_front();
@@ -189,7 +190,7 @@ struct ControllerDelayHandlerStruct {
       }
     }
 
-    if (sendQueue.empty()) { return NULL; }
+    if (sendQueue.empty()) { return nullptr; }
     return &sendQueue.front();
   }
 
@@ -239,6 +240,7 @@ struct ControllerDelayHandlerStruct {
   }
 
   std::list<T>  sendQueue;
+  mutable UnitLastMessageCount_map unitLastMessageCount;
   unsigned long lastSend;
   unsigned int  minTimeBetweenMessages;
   unsigned long expire_timeout = 0;
@@ -289,7 +291,7 @@ struct ControllerDelayHandlerStruct {
   void process_c##NNN####M##_delay_queue() {                                                                           \
     if (C##NNN####M##_DelayHandler == nullptr) return;                                                                 \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler->getNext());                                       \
-    if (element == NULL) return;                                                                                       \
+    if (element == nullptr) return;                                                                                       \
     MakeControllerSettings(ControllerSettings);                                                                        \
     bool ready = true;                                                                                                 \
     if (!AllocatedControllerSettings()) {                                                                              \
