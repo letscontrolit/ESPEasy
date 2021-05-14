@@ -39,7 +39,7 @@ struct SecurityStruct
   char          Password[26];
   byte          AllowedIPrangeLow[4] = {0}; // TD-er: Use these
   byte          AllowedIPrangeHigh[4] = {0};
-  byte          IPblockLevel = 0;
+  byte          IPblockLevel = 0;  
 
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
   uint8_t       ProgmemMd5[16] = {0}; // crc of the binary that last saved the struct to file.
