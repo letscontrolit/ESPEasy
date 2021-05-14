@@ -7,7 +7,7 @@
 struct EventStructCommandWrapper {
   EventStructCommandWrapper() : id(0) {}
 
-  EventStructCommandWrapper(unsigned long i, const EventStruct& e) : id(i), event(e) {}
+  EventStructCommandWrapper(unsigned long i, EventStruct&& e) : id(i), event(std::move(e)) {}
 
   unsigned long      id;
   String             cmd;

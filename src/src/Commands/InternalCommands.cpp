@@ -51,58 +51,59 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
     #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
-      log.reserve(128);
-      log += F("Too many arguments: cmd=");
-      log += cmd;
+      if (log.reserve(128)) {
+        log += F("Too many arguments: cmd=");
+        log += cmd;
 
-      if (nrArguments < 1) {
-        log += Line;
-      } else {
-        // Check for one more argument than allowed, since we apparently have one.
-        bool done = false;
-        int  i    = 1;
+        if (nrArguments < 1) {
+          log += Line;
+        } else {
+          // Check for one more argument than allowed, since we apparently have one.
+          bool done = false;
+          int  i    = 1;
 
-        while (!done) {
-          String parameter;
+          while (!done) {
+            String parameter;
 
-          if (i == nrArguments) {
-            parameter = tolerantParseStringKeepCase(Line, i + 1);
-          } else {
-            parameter = parseStringKeepCase(Line, i + 1);
-          }
-          done = parameter.length() == 0;
-
-          if (!done) {
-            if (i <= nrArguments) {
-              if (Settings.TolerantLastArgParse() && (i == nrArguments)) {
-                log += F(" (fixed)");
-              }
-              log += F(" Arg");
+            if (i == nrArguments) {
+              parameter = tolerantParseStringKeepCase(Line, i + 1);
             } else {
-              log += F(" ExtraArg");
+              parameter = parseStringKeepCase(Line, i + 1);
             }
-            log += String(i);
-            log += '=';
-            log += parameter;
-          }
-          ++i;
-        }
-      }
-      log += F(" lineLength=");
-      log += strlen(Line);
-      addLog(LOG_LEVEL_ERROR, log);
-      log  = F("Line: _");
-      log += Line;
-      log += '_';
-      addLog(LOG_LEVEL_ERROR, log);
+            done = parameter.length() == 0;
 
-      if (!Settings.TolerantLastArgParse()) {
-        log = F("Command not executed!");
-      } else {
-        log = F("Command executed, but may fail.");
+            if (!done) {
+              if (i <= nrArguments) {
+                if (Settings.TolerantLastArgParse() && (i == nrArguments)) {
+                  log += F(" (fixed)");
+                }
+                log += F(" Arg");
+              } else {
+                log += F(" ExtraArg");
+              }
+              log += String(i);
+              log += '=';
+              log += parameter;
+            }
+            ++i;
+          }
+        }
+        log += F(" lineLength=");
+        log += strlen(Line);
+        addLog(LOG_LEVEL_ERROR, log);
+        log  = F("Line: _");
+        log += Line;
+        log += '_';
+        addLog(LOG_LEVEL_ERROR, log);
+
+        if (!Settings.TolerantLastArgParse()) {
+          log = F("Command not executed!");
+        } else {
+          log = F("Command executed, but may fail.");
+        }
+        log += F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724");
+        addLog(LOG_LEVEL_ERROR, log);
       }
-      log += F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724");
-      addLog(LOG_LEVEL_ERROR, log);
     }
     #endif
 

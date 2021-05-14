@@ -231,6 +231,8 @@ String getMiscStatsName(int stat) {
     case PARSE_SYSVAR:            return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
+    case WIFI_SCAN_ASYNC:         return F("WiFi Scan Async");
+    case WIFI_SCAN_SYNC:          return F("WiFi Scan Sync (blocking)");
     case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");
     case C001_DELAY_QUEUE:
     case C002_DELAY_QUEUE:

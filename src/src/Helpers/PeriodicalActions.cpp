@@ -1,4 +1,4 @@
-#include "PeriodicalActions.h"
+#include "../Helpers/PeriodicalActions.h"
 
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy_fdwdecl.h"
@@ -200,7 +200,7 @@ void runEach30Seconds()
     String log;
     log.reserve(80);
     log = F("WD   : Uptime ");
-    log += wdcounter / 2;
+    log += getUptimeMinutes();
     log += F(" ConnectFailures ");
     log += WiFiEventData.connectionFailures;
     log += F(" FreeMem ");
@@ -224,6 +224,7 @@ void runEach30Seconds()
 //    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);
   }
+  WiFiScanPeriodical();
   sendSysInfoUDP(1);
   refreshNodeList();
 
@@ -253,7 +254,9 @@ void runEach30Seconds()
 
 
 void scheduleNextMQTTdelayQueue() {
-  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
+  if (MQTTDelayHandler != nullptr) {
+    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
+  }
 }
 
 void schedule_all_tasks_using_MQTT_controller() {
@@ -268,7 +271,7 @@ void schedule_all_tasks_using_MQTT_controller() {
         // Schedule a call to each MQTT import plugin to notify the broker connection state
         EventStruct event(task);
         event.Par1 = MQTTclient_connected ? 1 : 0;
-        Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, &event);
+        Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, std::move(event));
       }
     }
   }
@@ -291,7 +294,7 @@ void processMQTTdelayQueue() {
   START_TIMER;
   MQTT_queue_element *element(MQTTDelayHandler->getNext());
 
-  if (element == NULL) { return; }
+  if (element == nullptr) { return; }
 
   if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
     if (WiFiEventData.connectionFailures > 0) {
@@ -346,6 +349,7 @@ void updateMQTTclient_connected() {
     timermqtt_interval = 250;
   }
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
+  scheduleNextMQTTdelayQueue();
 }
 
 void runPeriodicalMQTT() {
@@ -371,6 +375,7 @@ void runPeriodicalMQTT() {
   }
 }
 
+// FIXME TD-er: Must move to a more logical part of the code
 controllerIndex_t firstEnabledMQTT_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);

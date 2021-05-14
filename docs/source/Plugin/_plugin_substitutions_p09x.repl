@@ -2,7 +2,7 @@
 .. |P090_type| replace:: :cyan:`Gases`
 .. |P090_typename| replace:: :cyan:`Gases - CCS811 TVOC/eCO2`
 .. |P090_porttype| replace:: `.`
-.. |P090_status| replace:: :yellow:`TESTING`
+.. |P090_status| replace:: :yellow:`TESTING A`
 .. |P090_github| replace:: P090_CCS811.ino
 .. _P090_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P090_CCS811.ino
 .. |P090_usedby| replace:: `.`
@@ -14,7 +14,7 @@
 .. |P091_name| replace:: :cyan:`Serial MCU controlled switch`
 .. |P091_type| replace:: :cyan:`Gases`
 .. |P091_typename| replace:: :cyan:`Switch input - Serial MCU controlled switch`
-.. |P091_status| replace:: :yellow:`TESTING`
+.. |P091_status| replace:: :yellow:`TESTING C`
 .. |P091_github| replace:: P091_SerSwitch.ino
 .. _P091_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P091_SerSwitch.ino
 .. |P091_usedby| replace:: `.`
@@ -26,7 +26,7 @@
 .. |P092_name| replace:: :cyan:`DL-Bus (Technische Alternative)`
 .. |P092_type| replace:: :cyan:`Heating`
 .. |P092_typename| replace:: :cyan:`Heating - DL-Bus (Technische Alternative)`
-.. |P092_status| replace:: :yellow:`TESTING`
+.. |P092_status| replace:: :yellow:`TESTING C`
 .. |P092_github| replace:: P092_DLbus.ino
 .. _P092_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P092_DLbus.ino
 .. |P092_usedby| replace:: `.`
@@ -38,7 +38,7 @@
 .. |P093_name| replace:: :cyan:`Mitsubishi Heat Pump`
 .. |P093_type| replace:: :cyan:`Energy (Heat)`
 .. |P093_typename| replace:: :cyan:`Energy (Heat) - Mitsubishi Heat Pump`
-.. |P093_status| replace:: :yellow:`TESTING`
+.. |P093_status| replace:: :yellow:`ENERGY, TESTING D`
 .. |P093_github| replace:: P093_MitsubishiAC.ino
 .. _P093_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P093_MitsubishiAC.ino
 .. |P093_usedby| replace:: `.`
@@ -50,7 +50,7 @@
 .. |P094_name| replace:: :cyan:`Communication - CUL Reader`
 .. |P094_type| replace:: :cyan:`Communication`
 .. |P094_typename| replace:: :cyan:`CUL Reader`
-.. |P094_status| replace:: :yellow:`TESTING`
+.. |P094_status| replace:: :yellow:`TESTING D`
 .. |P094_github| replace:: P094_CULReader.ino
 .. _P094_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P094_CULReader.ino
 .. |P094_usedby| replace:: `.`
@@ -63,7 +63,7 @@
 .. |P095_type| replace:: :cyan:`Display`
 .. |P095_typename| replace:: :cyan:`Display - TFT 2.4 inches ILI9341`
 .. |P095_porttype| replace:: `.`
-.. |P095_status| replace:: :yellow:`TESTING`
+.. |P095_status| replace:: :yellow:`DISPLAY, TESTING`
 .. |P095_github| replace:: _P095_ILI9341.ino
 .. _P095_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P095_ILI9341.ino
 .. |P095_usedby| replace:: `.`
@@ -76,7 +76,7 @@
 .. |P097_type| replace:: :cyan:`Internal`
 .. |P097_typename| replace:: :cyan:`Internal - Touch ESP32`
 .. |P097_porttype| replace:: `.`
-.. |P097_status| replace:: :yellow:`TESTING`
+.. |P097_status| replace:: :yellow:`TESTING A`
 .. |P097_github| replace:: _P097_Esp32Touch.ino
 .. _P097_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P097_Esp32Touch.ino
 .. |P097_usedby| replace:: `.`
@@ -89,7 +89,7 @@
 .. |P099_type| replace:: :cyan:`Touch`
 .. |P099_typename| replace:: :cyan:`Touch - XPT2046 touchscreen on TFT display`
 .. |P099_porttype| replace:: `SPI`
-.. |P099_status| replace:: :yellow:`TESTING`
+.. |P099_status| replace:: :yellow:`DISPLAY`
 .. |P099_github| replace:: _P099_XPT2046Touch.ino
 .. _P099_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P099_XPT2046Touch.ino
 .. |P099_usedby| replace:: `.`

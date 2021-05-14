@@ -54,7 +54,7 @@ This layer is called LoRaWAN.
 There are several modules available:
 
 - RFM95  & SX127x.  These are LoRa modules which needs to have the LoRaWAN stack implemented in software
-- Microchip RN2384/RN2903. These are the modules supported in this controller. They have the full LoRaWAN stack present in the module.
+- Microchip RN2483/RN2903. These are the modules supported in this controller. They have the full LoRaWAN stack present in the module.
 
 
 Nodes, Gateways, Application
@@ -128,7 +128,7 @@ Prerequisites:
 
 - An user account on the TTN network.
 - A TTN gateway in range to send data to (and receive data from)
-- Microchip RN2384 or RN2903 LoRaWAN module connected to a node running ESPeasy. (UART connection)
+- Microchip RN2483 or RN2903 LoRaWAN module connected to a node running ESPeasy. (UART connection)
 
 On the TTN network:
 - Create an application

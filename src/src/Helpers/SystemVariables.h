@@ -11,6 +11,7 @@ public:
 
   enum Enum {
     // For optmization, keep enums sorted alfabetically
+    BOOT_CAUSE,
     BSSID,
     CR,
     IP,
@@ -77,6 +78,7 @@ public:
     UNIXDAY_SEC,
     UNIXTIME,
     UPTIME,
+    UPTIME_MS,
     VCC,
     WI_CH,
 

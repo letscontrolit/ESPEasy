@@ -46,6 +46,10 @@ public:
     _timer_usec = start_time;
   }
 
+  void setMillisFromNow(uint32_t millisFromNow) {
+    _timer_usec = getMicros64() + (millisFromNow * 1000ull);
+  }
+
   bool isSet() const {
     return _timer_usec > 0ull;
   }

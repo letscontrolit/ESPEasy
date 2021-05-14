@@ -33,6 +33,8 @@ void handle_sysinfo_Firmware();
 
 void handle_sysinfo_SystemStatus();
 
+void handle_sysinfo_NetworkServices();
+
 void handle_sysinfo_ESP_Board();
 
 void handle_sysinfo_Storage();

@@ -3,7 +3,7 @@
 .. |P070_type| replace:: :cyan:`Output`
 .. |P070_typename| replace:: :cyan:`Output -  NeoPixel Ring Clock`
 .. |P070_porttype| replace:: `.`
-.. |P070_status| replace:: :yellow:`TESTING`
+.. |P070_status| replace:: :yellow:`DISPLAY, TESTING A`
 .. |P070_github| replace:: P070_NeoPixel_Clock.ino
 .. _P070_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P070_NeoPixel_Clock.ino
 .. |P070_usedby| replace:: `.`
@@ -16,7 +16,7 @@
 .. |P071_type| replace:: :cyan:`Communication`
 .. |P071_typename| replace:: :cyan:`Communication - Kamstrup Multical 401`
 .. |P071_porttype| replace:: `Serial`
-.. |P071_status| replace:: :yellow:`TESTING`
+.. |P071_status| replace:: :yellow:`TESTING A`
 .. |P071_github| replace:: P071_Kamstrup401.ino
 .. _P071_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P071_Kamstrup401.ino
 .. |P071_usedby| replace:: `.`
@@ -29,7 +29,7 @@
 .. |P072_type| replace:: :cyan:`Environment`
 .. |P072_typename| replace:: :cyan:`Environment - HDC1080 (I2C)`
 .. |P072_porttype| replace:: `.`
-.. |P072_status| replace:: :yellow:`TESTING`
+.. |P072_status| replace:: :yellow:`TESTING A`
 .. |P072_github| replace:: P072_HDC1080.ino
 .. _P072_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P072_HDC1080.ino
 .. |P072_usedby| replace:: `.`
@@ -55,7 +55,7 @@
 .. |P074_type| replace:: :cyan:`Light/Lux`
 .. |P074_typename| replace:: :cyan:`Light/Lux - TSL2591`
 .. |P074_porttype| replace:: `Serial`
-.. |P074_status| replace:: :yellow:`TESTING`
+.. |P074_status| replace:: :yellow:`TESTING A`
 .. |P074_github| replace:: P074_TSL2591.ino
 .. _P074_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P074_TSL2591.ino
 .. |P074_usedby| replace:: `.`
@@ -68,7 +68,7 @@
 .. |P075_type| replace:: :cyan:`Display`
 .. |P075_typename| replace:: :cyan:`Display - Nextion`
 .. |P075_porttype| replace:: `.`
-.. |P075_status| replace:: :yellow:`TESTING`
+.. |P075_status| replace:: :yellow:`DISPLAY, TESTING`
 .. |P075_github| replace:: P075_Nextion.ino
 .. _P075_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P075_Nextion.ino
 .. |P075_usedby| replace:: `.`
@@ -81,7 +81,7 @@
 .. |P076_type| replace:: :cyan:`Energy (AC)`
 .. |P076_typename| replace:: :cyan:`Energy (AC) - HLW8012/BL0937`
 .. |P076_porttype| replace:: `.`
-.. |P076_status| replace:: :yellow:`TESTING`
+.. |P076_status| replace:: :yellow:`ENERGY`
 .. |P076_github| replace:: P076_HLW8012.ino
 .. _P076_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P076_HLW8012.ino
 .. |P076_usedby| replace:: Sonoff POW (r1), Huafan SS, KMC 70011, Aplic WDP303075, SK03 Outdoor, BlitzWolf SHP, Teckin, Teckin US, Gosund SP1 v23
@@ -94,7 +94,7 @@
 .. |P077_type| replace:: :cyan:`Energy (AC)`
 .. |P077_typename| replace:: :cyan:`Energy (AC) - CSE7766`
 .. |P077_porttype| replace:: `.`
-.. |P077_status| replace:: :yellow:`TESTING`
+.. |P077_status| replace:: :yellow:`ENERGY`
 .. |P077_github| replace:: P077_CSE7766.ino
 .. _P077_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P077_CSE7766.ino
 .. |P077_usedby| replace:: `.`
@@ -107,7 +107,7 @@
 .. |P078_type| replace:: :cyan:`Energy (AC)`
 .. |P078_typename| replace:: :cyan:`Energy (AC) - Eastron SDM120C/220T/230/630`
 .. |P078_porttype| replace:: `Serial`
-.. |P078_status| replace:: :yellow:`TESTING`
+.. |P078_status| replace:: :yellow:`ENERGY`
 .. |P078_github| replace:: P078_Eastron.ino
 .. _P078_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P078_Eastron.ino
 .. |P078_usedby| replace:: `.`

@@ -397,22 +397,4 @@ float P028_data_struct::readHumidity()
   return h / 1024.0f;
 }
 
-float P028_data_struct::Plugin_028_readAltitude(float seaLevel)
-{
-  // Equation taken from BMP180 datasheet (page 16):
-  //  http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
-
-  // Note that using the equation from wikipedia can give bad results
-  // at high altitude.  See this thread for more information:
-  //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
-
-  float atmospheric = readPressure() / 100.0f;
-
-  return 44330.0f * (1.0f - pow(atmospheric / seaLevel, 0.1903f));
-}
-
-float P028_data_struct::pressureElevation(int altitude) {
-  return last_press_val / pow(1.0f - (altitude / 44330.0f), 5.255f);
-}
-
 #endif // ifdef USES_P028

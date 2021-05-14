@@ -255,7 +255,7 @@ void setup()
   emergencyReset();
 
   String log = F("\n\n\rINIT : Booting version: ");
-  log += F(BUILD_GIT);
+  log += getValue(LabelType::GIT_BUILD);
   log += " (";
   log += getSystemLibraryString();
   log += ')';
@@ -264,8 +264,11 @@ void setup()
   log += FreeMem();
   addLog(LOG_LEVEL_INFO, log);
 
-  #ifdef ESP8266
-  // Our ESP32 code does not yet support RTC, so separate this in code for ESP8266 and ESP32
+  readBootCause();
+
+  log = F("INIT : ");
+  log += getLastBootCauseString();
+
   if (readFromRTC())
   {
     RTC.bootFailedCount++;
@@ -273,17 +276,14 @@ void setup()
     lastMixedSchedulerId_beforereboot = RTC.lastMixedSchedulerId;
     readUserVarFromRTC();
 
-    if (RTC.deepSleepState == 1)
+    if (RTC.deepSleepState != 1)
     {
-      log = F("INIT : Rebooted from deepsleep #");
-      lastBootCause = BOOT_CAUSE_DEEP_SLEEP;
-    }
-    else {
       node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
-      log = F("INIT : Warm boot #");
     }
 
+    log += F(" #");
     log += RTC.bootCounter;
+
     #ifndef BUILD_NO_DEBUG
     log += F(" Last Action before Reboot: ");
     log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
@@ -301,20 +301,6 @@ void setup()
       lastBootCause = BOOT_CAUSE_COLD_BOOT;
     log = F("INIT : Cold Boot");
   }
-  #endif // ESP8266
-
-  #ifdef ESP32
-  if (rtc_get_reset_reason( (RESET_REASON) 0) == DEEPSLEEP_RESET) {
-    log = F("INIT : Rebooted from deepsleep #");
-    lastBootCause = BOOT_CAUSE_DEEP_SLEEP;
-  } else {
-    // cold boot situation
-    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
-      lastBootCause = BOOT_CAUSE_COLD_BOOT;
-    log = F("INIT : Cold Boot");
-  }
-
-  #endif // ESP32
 
   log += F(" - Restart Reason: ");
   log += getResetReasonString();
@@ -351,7 +337,10 @@ void setup()
       // Wait until scan has finished to make sure as many as possible are found
       // We're still in the setup phase, so nothing else is taking resources of the ESP.
       WifiScan(false); 
+      WiFiEventData.lastScanMoment.clear();
     }
+    // Start an extra async scan so we can continue, but we may find more APs by scanning twice.
+    WifiScan(true); 
   }
 
 //  setWifiMode(WIFI_STA);
@@ -548,6 +537,9 @@ int getLoopCountPerSec() {
   return loopCounterLast / 30;
 }
 
+int getUptimeMinutes() {
+  return wdcounter / 2;
+}
 
 
 
@@ -577,7 +569,7 @@ void loop()
      {
         String event = F("System#NoSleep=");
         event += Settings.deepSleep_wakeTime;
-        eventQueue.add(event);
+        eventQueue.addMove(std::move(event));
      }
 
 
@@ -586,7 +578,7 @@ void loop()
      sendSysInfoUDP(1);
   }
   // Work around for nodes that do not have WiFi connection for a long time and may reboot after N unsuccessful connect attempts
-  if ((wdcounter / 2) > 2) {
+  if (getUptimeMinutes() > 2) {
     // Apparently the uptime is already a few minutes. Let's consider it a successful boot.
      RTC.bootFailedCount = 0;
      saveToRTC();

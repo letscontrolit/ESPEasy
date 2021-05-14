@@ -113,7 +113,11 @@ namespace std
   #include <rom/rtc.h>
   #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
   #define PIN_D_MAX        39
+  #ifdef PLUGIN_BUILD_MAX_ESP32
+  #define MAX_SKETCH_SIZE 4194304   // 0x400000 look at partitions in csv file
+  #else // PLUGIN_BUILD_MAX_ESP32
   #define MAX_SKETCH_SIZE 1900544   // 0x1d0000 look at partitions in csv file
+  #endif // PLUGIN_BUILD_MAX_ESP32
 #endif
 
 #include <WiFiUdp.h>
@@ -129,8 +133,13 @@ using namespace fs;
 
 
 #ifdef USE_LITTLEFS
-  #include <LittleFS.h>
-  #define ESPEASY_FS LittleFS
+  #ifdef ESP32
+    #include <LITTLEFS.h>
+    #define ESPEASY_FS LITTLEFS
+  #else
+    #include <LittleFS.h>
+    #define ESPEASY_FS LittleFS
+  #endif
 #else 
   #ifdef ESP32
     #include <SPIFFS.h>

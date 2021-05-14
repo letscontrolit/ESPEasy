@@ -1000,9 +1000,9 @@ void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsi
 * Thus only use these when the result is not needed immediately.
 * Proper use case is calling from a callback function, since those cannot use yield() or delay()
 \*********************************************************************************************/
-void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, struct EventStruct &&event) {
   if (validDeviceIndex(DeviceIndex)) {
-    schedule_event_timer(PluginPtrType::TaskPlugin, DeviceIndex, Function, event);
+    schedule_event_timer(PluginPtrType::TaskPlugin, DeviceIndex, Function, std::move(event));
   }
 }
 
@@ -1013,27 +1013,29 @@ void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(deviceIndex_t   
                                                                 byte           *b_payload,
                                                                 unsigned int    length) {
   if (validDeviceIndex(DeviceIndex)) {
-    // Emplace empty event in the queue first and the fill it.
-    // This makes sure the relatively large event will not be in memory twice.
     const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::TaskPlugin, DeviceIndex, static_cast<byte>(Function));
-    ScheduledEventQueue.emplace_back(mixedId, EventStruct(TaskIndex));
-    ScheduledEventQueue.back().event.String1 = c_topic;
-
-    String& payload = ScheduledEventQueue.back().event.String2;
-    if (!payload.reserve(length)) {
+    EventStruct event(TaskIndex);
+    const size_t topic_length = strlen_P(c_topic);
+    if (!(event.String1.reserve(topic_length) && event.String2.reserve(length))) {
       addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
+      return;
     }
-
+    for (size_t i = 0; i < topic_length; ++i) {
+      event.String1 += c_topic[i];
+    }
     for (unsigned int i = 0; i < length; ++i) {
-      char c = static_cast<char>(*(b_payload + i));
-      payload += c;
+      const char c = static_cast<char>(*(b_payload + i));
+      event.String2 += c;
     }
+    // Emplace using move.
+    // This makes sure the relatively large event will not be in memory twice.
+    ScheduledEventQueue.emplace_back(mixedId, std::move(event));
   }
 }
 
-void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct &&event) {
   if (validProtocolIndex(ProtocolIndex)) {
-    schedule_event_timer(PluginPtrType::ControllerPlugin, ProtocolIndex, Function, event);
+    schedule_event_timer(PluginPtrType::ControllerPlugin, ProtocolIndex, Function, std::move(event));
   }
 }
 
@@ -1076,16 +1078,16 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t Pro
   }
 }
 
-void ESPEasy_Scheduler::schedule_notification_event_timer(byte NotificationProtocolIndex, NPlugin::Function Function, struct EventStruct *event) {
-  schedule_event_timer(PluginPtrType::NotificationPlugin, NotificationProtocolIndex, static_cast<byte>(Function), event);
+void ESPEasy_Scheduler::schedule_notification_event_timer(byte NotificationProtocolIndex, NPlugin::Function Function, struct EventStruct &&event) {
+  schedule_event_timer(PluginPtrType::NotificationPlugin, NotificationProtocolIndex, static_cast<byte>(Function), std::move(event));
 }
 
-void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct &&event) {
   const unsigned long mixedId = createSystemEventMixedId(ptr_type, Index, Function);
 
   //  EventStructCommandWrapper eventWrapper(mixedId, *event);
   //  ScheduledEventQueue.push_back(eventWrapper);
-  ScheduledEventQueue.emplace_back(mixedId, *event);
+  ScheduledEventQueue.emplace_back(mixedId, std::move(event));
 }
 
 void ESPEasy_Scheduler::process_system_event_queue() {

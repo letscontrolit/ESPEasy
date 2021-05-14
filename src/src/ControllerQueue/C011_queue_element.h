@@ -4,6 +4,7 @@
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
@@ -18,11 +19,17 @@ struct EventStruct;
 class C011_queue_element {
 public:
 
-  C011_queue_element();
+  C011_queue_element() = default;
+
+  C011_queue_element(C011_queue_element&& other) = default;
+
+  C011_queue_element(const C011_queue_element& other) = delete;
 
   C011_queue_element(const struct EventStruct *event);
 
   bool isDuplicate(const C011_queue_element& other) const;
+
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
 
   size_t getSize() const;
 

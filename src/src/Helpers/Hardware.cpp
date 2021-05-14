@@ -526,6 +526,61 @@ uint8_t getChipRevision() {
   return rev;
 }
 
+#ifdef ESP8266
+void readBootCause() {
+  lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
+  const rst_info * resetInfo = ESP.getResetInfoPtr();
+  if (resetInfo != nullptr) {
+    switch(resetInfo->reason) {
+        // normal startup by power on
+        case REASON_DEFAULT_RST:      lastBootCause = BOOT_CAUSE_COLD_BOOT; break;
+        // hardware watch dog reset
+        case REASON_WDT_RST:          lastBootCause = BOOT_CAUSE_EXT_WD; break;
+        // exception reset, GPIO status won’t change
+        case REASON_EXCEPTION_RST:    lastBootCause = BOOT_CAUSE_EXCEPTION; break;
+        // software watch dog reset, GPIO status won’t change
+        case REASON_SOFT_WDT_RST:     lastBootCause = BOOT_CAUSE_SW_WATCHDOG; break;
+        // software restart ,system_restart , GPIO status won’t change
+        case REASON_SOFT_RESTART:     lastBootCause = BOOT_CAUSE_SOFT_RESTART; break;
+        // wake up from deep-sleep
+        case REASON_DEEP_SLEEP_AWAKE: lastBootCause = BOOT_CAUSE_DEEP_SLEEP; break;
+        // external system reset
+        case REASON_EXT_SYS_RST:      lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break;
+        default:                      
+        break;
+    }
+
+  }
+
+}
+#endif
+
+#ifdef ESP32
+void readBootCause() {
+  lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
+  switch (rtc_get_reset_reason(0)) {
+    case NO_MEAN:           break;
+    case POWERON_RESET:     lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break;
+    case SW_RESET:          lastBootCause = BOOT_CAUSE_SOFT_RESTART; break;
+    case OWDT_RESET:        lastBootCause = BOOT_CAUSE_SW_WATCHDOG; break;
+    case DEEPSLEEP_RESET:   lastBootCause = BOOT_CAUSE_DEEP_SLEEP; break;
+    case SDIO_RESET:        lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break;
+    case TG0WDT_SYS_RESET: 
+    case TG1WDT_SYS_RESET:
+    case RTCWDT_SYS_RESET:  lastBootCause = BOOT_CAUSE_EXT_WD; break;
+    case INTRUSION_RESET: 
+    case TGWDT_CPU_RESET: 
+    case SW_CPU_RESET:      lastBootCause = BOOT_CAUSE_SOFT_RESTART; break; // Both call to ESP.reset() and on exception crash
+    case RTCWDT_CPU_RESET:  lastBootCause = BOOT_CAUSE_EXT_WD; break;
+    case EXT_CPU_RESET:     lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break; // reset button or cold boot, only for core 1
+    case RTCWDT_BROWN_OUT_RESET: lastBootCause = BOOT_CAUSE_POWER_UNSTABLE; break;
+    case RTCWDT_RTC_RESET:  lastBootCause = BOOT_CAUSE_COLD_BOOT; break;
+  }
+}
+#endif
+
+
+
 /********************************************************************************************\
    Hardware specific configurations
  \*********************************************************************************************/
@@ -548,7 +603,14 @@ String getDeviceModelBrandString(DeviceModel model) {
     #ifdef ESP32
       return F("Olimex");
     #endif
-
+    case DeviceMode_wESP32:
+    #ifdef ESP32
+      return F("wESP32");
+    #endif
+    case DeviceMode_WT32_ETH01:
+    #ifdef ESP32
+      return F("WT32-ETH01");
+    #endif
     case DeviceModel_default:
     case DeviceModel_MAX:      break;
 
@@ -594,10 +656,14 @@ String getDeviceModelString(DeviceModel model) {
     case DeviceMode_Olimex_ESP32_PoE: result     += F(" ESP32-PoE"); break;
     case DeviceMode_Olimex_ESP32_EVB: result     += F(" ESP32-EVB"); break;
     case DeviceMode_Olimex_ESP32_GATEWAY: result += F(" ESP32-GATEWAY"); break;
+    case DeviceMode_wESP32:           break;
+    case DeviceMode_WT32_ETH01:           result += F(" add-on"); break;
 #else
     case DeviceMode_Olimex_ESP32_PoE:
     case DeviceMode_Olimex_ESP32_EVB:
     case DeviceMode_Olimex_ESP32_GATEWAY:
+    case DeviceMode_wESP32:
+    case DeviceMode_WT32_ETH01:
 #endif
 
     case DeviceModel_default:
@@ -646,6 +712,8 @@ bool modelMatchingFlashSize(DeviceModel model) {
     case DeviceMode_Olimex_ESP32_PoE:
     case DeviceMode_Olimex_ESP32_EVB:
     case DeviceMode_Olimex_ESP32_GATEWAY:
+    case DeviceMode_wESP32:
+    case DeviceMode_WT32_ETH01:
 #if  defined(ESP32) && defined(HAS_ETHERNET)
       return size_MB == 4;
 #else

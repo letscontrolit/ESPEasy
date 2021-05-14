@@ -1,4 +1,275 @@
 -------------------------------------------------
+Changes in release mega-20210503 (since mega-20210223)
+-------------------------------------------------
+
+Release date: ma  3 mei 2021 10:58:06 CEST
+
+Ament Martin (9):
+      Patch to use the AP-Mode as daily driver
+      Allow optional usage of Sensor without WIFI avaiable. When set you can use the Sensor in AP-Mode without beeing forced to /setup.
+      First Version of ApDontForceSetup. Grouping Webserversettings in Advanced
+      Typo fixed
+      Missed a setting
+      Patch to use the AP-Mode as daily driver
+      Fixed missing setup for 404. And added some docu
+      ResetAdvanced to branch-mega and implement Option  at ConfigPage
+      Added missing setting
+
+Bartłomiej Zimoń (4):
+      add requested client event #3584
+      [P20_Ser2Net] add task index to sendevent function
+      Update _P020_Ser2Net.ino
+      Update _P020_Ser2Net.ino
+
+GravityRZ (1):
+      Update GPIO.rst
+
+Henri de Jong (3):
+      Possible sagemcom fix
+      Always max message size
+      Don't create buffer bigger than maximum
+
+Joerg Heinemann (2):
+      Initial documentation for P050_TCS34725
+      Initial documentation for P050_TCS34725
+
+Maxim Prokhorov (13):
+      Github actions instead of Travis
+      make sure to fetch the tag message
+      see if these work
+      once again
+      and again
+      try wildcard
+      fetch into local ref
+      fix order
+      order
+      files
+      more files
+      more more
+      build everything
+
+Peter Kretz (1):
+      Fix: [CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS]
+
+Plebs (18):
+      wip for new expander commands
+      wip new mcp commands
+      WIP
+      WIP
+      WIP
+      WIP
+      WIP
+      wip
+      WIP
+      WIP
+      small changes
+      fixing Travis
+      code optimizations
+      Moved PLUGIN_REQUEST to core
+      Update GPIO.cpp
+      added documentation
+      Added documentation for [PLUGIN#MCP#PINRANGE#x-y]
+      fixed typo
+
+TD-er (106):
+      Fix merge issues SendStatusOnlyIfNeeded
+      [P020 Ser2Net] Serial port selection on ESP32
+      Add MAX31856 support to P039_ThermoCouple
+      [Docs] Fix some documentation inconsistencies
+      [P020 Ser2Net] Restore serialsend command & add ser2netclientsend
+      [Controller Queue] Add flag to allow messages to expire
+      [Controller Queue] Add deduplicate check in controller queue
+      [Controller Settings] Fix merge conflict with ESPEasy-NOW PR
+      [Controller Queue] Fix initialization of expire timeout + improve dedup
+      [ESP32] Handle more WiFi events (e.g. STA_LOST_IP)
+      [WiFi] Process Station event Auth Changed
+      [Controller] Debug log on remove duplicate queued message
+      [GPIO] Fix warning of unused variable
+      [Build] Remove HWL8012 from "energy" build
+      [Energy build] Add P093 Mitsubishi Heat Pump
+      [Cleanup] Remove ICACHE_RAM_ATTR on wifi event function
+      [Build] LittleFS can only be built on 'beta' builds
+      [Build] No longer ignore RN2xx3 library on Custom IR builds
+      [Cleanup] Reduce IRAM usage in Dallas bit read/write code
+      [Build] Fix normal_beta_ESP8266_16M_LittleFS build
+      [Cleanup] Remove unneeded ICACHE_RAM_ATTR on DHCP timeout callback
+      [Build] Remove P076 HWL8012 from "testing" builds due to build size
+      [Build] Disable test_ESP8266_4M1M_VCC_MDNS_SD as it does not fit in IRAM
+      [Build] Set normal_IRext_no_rx_ESP8266_4M2M to LIMIT_BUILD_SIZE
+      [GPS] Fix running out of memory when no GPS data is received.
+      Fix higher load introduced recently by variable WiFi TX power
+      [GPS] Fix running out of memory when no GPS data is received.
+      Fix higher load introduced recently by variable WiFi TX power
+      [Scheduler] No need to call backgroundtasks() twice in the same loop
+      [Build] Make sure PLUGIN_USES_SERIAL is defined for USES_P020
+      [Build] Make test_ESP8266_4M1M build again
+      [testing build] Remove 2 more "energy" plugins from "testing" build
+      [WiFi] Make sure to reset WiFi if RSSI = +31
+      [ESP32] Update to PIO espressif32@3.1.0
+      [ESP32 ETH] Fix set config IPs to 0.0.0.0 when using DHCP + cleanup code
+      [1M builds] Init config.dat file to 36k size
+      [WiFi] Set max TX power always if forced in settings
+      [WebPage] Allow for basic web page layout changes in custom build
+      [WebPage] Add CSS styling to WiFi bar chart SVG
+      [Custom.h] Add DEFAULT_SSID2 & DEFAULT_KEY2
+      [WebPage] Allow to hide help buttons
+      [WiFi] Fix unit not reconnecting to WiFi
+      Fix build error in WebServer/404.cpp
+      [Ethernet] Proper handling of network events + revert to WiFi
+      [ESP32] Set to PIO espressif32@3.2.0 (#3564)
+      [Deployment cconfig] Allow for deployment SSID and emergency fallback
+      [Custom Build] Allow web UI customization in custom builds
+      [WiFi Setup] Make WiFi setup more intuitive
+      [WiFi Setup] Store WiFi scan results in WiFi_AP_CandidatesList
+      [WiFi setup] Fix layout setup page
+      [Webserver] Allow serving static files from SPIFFS when not logged in
+      [WiFi] Reset WiFi if it changes channel without disconnecting
+      [WiF] Prevent WiFi resets when not all events are processed.
+      [WebServer] Do not alias index.htm and index.html to handle_root()
+      [WiFi] Fix clear credentials on emergency fallback SSID
+      [WiFi Setup] Add clear WiFi credentials button (for deployment)
+      [WiFi Setup] Add "Include hidden SSID" as "advanced" setting bottom page
+      [WiFi Setup] Increase click area for selecting scan result
+      [Sysinfo] Show network services state on root- and setup page
+      [WiFi Setup] Only scan on WiFi setup page if needed to prevent disconnect
+      [WiFi] Decrease number of scans when AP is used, to make setup stable
+      [WiFi Setup] Implement captive portal to automatically sign in
+      [WiFi] Add periodical rescan option + reuse recent scans for reconnect
+      [Setup page] Add rescan button to setup page
+      [Build] Fix build issues when not using Custom.h
+      [Docs] Document new added WiFi settings
+      Fix Precision issues and initialisation of members in rules
+      [WiFi] Feed SW watchdog timer on WiFi related actions that may take time
+      [Custom build] Allow DEFAULT_WIFI_INCLUDE_HIDDEN_SSID in Custom.h
+      [WiFi] Fix issue where WiFi does not reconnect after disconnect
+      [Custom Build] Allow to embed custom CSS
+      [Network] Disconnect WiFi when switching to Ethernet
+      [WiFi] Allow faster reconnect on lost connection
+      [ESPEasy-NOW] Reduce load when not connected to WiFi
+      [WiFi] Fix merge issue
+      [ESP32 ETH] Add default definition for wESP32 and WT32-ETH01
+      [WiFi Setup] Hide password on Setup page ("*****")
+      [Customize Build] Allow to disable Node List columns on root page
+      [P020 Ser2Net] Re-apply connected event (#3587)
+      [CUL Reader] Append timestamp to received messages
+      [P039_Thermocouple] Uncrustify
+      [P039 ThermoCouple] Cleanup code + allow multiple instances
+      [VL53L0X] Include library description used by PIO
+      [lib/VL53L0x] Move lib files to lib/VL53L0X/src dir
+      [lib/VL53L1X] Include missing files from SparkFun_VL53L1X library
+      [PIO build] Use full VL53L0X & VL53L1X names of the libraries in PIO
+      [WebUI] Only redirect (used for captive portal) via AP or on clean setup
+      [Low Memory] Add some checks on success of reserving memory
+      [Low memory] Move strings when possible instead of copy them
+      [UDP timeouts] Add timeout on DNS resolve + reset softWDT on UDP connect
+      [Setup Page] Fix typo
+      [WiFi] Actively purge expired WiFi scan results to free RAM
+      [Root page] Allow again sending HTTP commands to reboot
+      [CUL reader] Reduce memory usage on log + web stats
+      [Memory Usage] Check success memory allocation string type value events
+      [CUL Reader] Fix sending received message + timestamp
+      Change delay(1) into delay(0) to reduce load
+      [WiFi] Fix not able to reconnect if unit immediately disconnects
+      [WiFi] Add copy constructor to WiFi_AP_Candidate class
+      Fix PLUGIN_WRITE for P020 Set2Net
+      [P020_Ser2Net] Fix sendConnectedEvent
+      [BME680] Fix elevation compensation + add 2 conversion commands
+      [ESP32] Revert back to Espressif32 PIO v 2.1.0 due to serial issues
+      [TTN] Add decoders for plugins 102-113 + TTNv3 decoder (#3611)
+      [TTNv3] Add selector for TTN stack version
+      [TTN] Include all 6 values for P102 PZEM004Tv3
+
+Ton Huisman (65):
+      [Merge] Remove (again)
+      [Task* commands] Some code cleanup
+      [Task* commands] Code cleanup and some corrections
+      [P110] Move P133 VL53L0X from PluginPlayground to main repository
+      [P111] MFRC522 RFID reader moved from PluginPlayground
+      [P111] Initialization corrections
+      [P110] Add to Custom-sample.h
+      [ESP32 MAX] Configuration for ESP32 with 16MB Flash
+      [ESP32 MAX] Include in travis build
+      [ESP32 MAX] Extend configurations with 2MB and 4MB SPIFFS, 4MB default
+      [ESP32 MAX] Enable SD-card support (and fix compilation errors)
+      [ESP32 MAX] Add configuration with 1MB SPIFFS
+      [ESP32 MAX] Mixed up partitions fixed
+      [ESP32 MAX] Switch to LittleFS, only 16M2M and 16M8M configs + ETH
+      [ESP32 MAX] Fix build issue, case-sensitive filename
+      [EPS32 MAX] Extend logging during configuration save
+      [P110] Add extra logging with model-id on init-errors
+      [P110] Add experimental support for VL53L1X
+      [P110] Improve code readability
+      [P111] Disabled Tag removal detection as this won't work properly
+      [P111] Add documentation
+      [Rules] Process all %vN% variables
+      [ESP32_MAX] Add plugin P108 to ESP32 Max set
+      [Rules] Calculate IF conditions before evaluation
+      [Rules] balanceParentheses(): Always use String.reserve when changing string
+      [Build] Display timestamp after copying files to build_output
+      [ESP32 MAX] Add 16M1M config (SPIFFS), rename 2M/8M (LittleFS) configs
+      [ESP32 MAX] Add ESP32_16M1M_ETH configuration, disable PS-RAM support
+      [P113] Add VL53L1X Time of Flight sensor to ESPEasy
+      [P113] Add VL53L1X to Custom-sample.h (disabled)
+      [P113] Add Documentation
+      [P110] Removed check for unsupported VL53L1X, added range to plugin description
+      [P113] Add secondary address to I2C_Scanner
+      [ESP32 MAX] Enable most plugins up to P125 (even when not in PR yet)
+      [ESP32 MAX] Enable P109 now that it is in PR
+      [ESP32 MAX] Clean up an obsolete comment
+      [P113] Removed Interval optional setting, minor source cleanup
+      [ESP32 MAX] Add ENERGY and DISPLAY plugin sets, remove EXPERIMENTAL set
+      [Docs] Documentation updates and corrections
+      [Docs] Correct a typo
+      [Docs] Restore default doc. header for P050, some corrections
+      [Docs] P050 Add missing Changelog section
+      [P113] Add 'Trigger delta' option, updated documentation
+      [P113] Apply uncrustify source formatting
+      [JSON] Add extra variables to JSon output
+      [JSON] Remove unneeded calls
+      [JSON] Add more variables, Location, NTP, Uptime_MS
+      [SysVars] Add %uptime_ms% System variable
+      [SysVars] Update documentation
+      [SysVars] Adjust documentation
+      [JSON] Add setting for quoted bool values (default on)
+      [JSON] Add documentation, initialize the setting during factory reset
+      [JSON] Invert setting logic, adjust setting index
+      [JSON] Fix merge typo
+      [JSON] Rename methods and define, small optimization
+      [ESP32] Add missing lib_deps dependency
+      [Build] Split testing sets into 4 pieces
+      [Build] Fix compilation error for MAX builds, missed 1 changed docs file
+      [Build] Add P114 (preliminary) to test D set
+      [Build] Disable dev build, update README.md and build documentation
+      [Build] Remove dev build instead of commenting it out
+      [Build] Remove reference to dev build from platformio.ini
+      [Build] Actions: Also build ESP8285, WROOM02 and 'hard' environments
+      [Build] Revert unneeded change to build.yml, add docs on use of Custom.h
+      [Build] Exclude C016 and SD-card features on 1M units to fit custom builds
+
+dependabot[bot] (4):
+      Bump pygments from 2.6.1 to 2.7.4
+      Bump jinja2 from 2.11.2 to 2.11.3
+      Bump pyyaml from 5.3.1 to 5.4
+      Bump bottle from 0.12.18 to 0.12.19
+
+glsf91 (1):
+      Added choice SH1106 controller to plugin 32
+
+martament (1):
+      Update SettingsStruct.cpp
+
+sakinit (1):
+      * Fixed rounding bug from issue 8 on breakout board.
+
+tonhuisman (5):
+      [TaskValueSet(AndRun)] Use TASKname and/or VARname instead of TASKnr/VARnr
+      [TaskValueSet(AndRun)] Minor documentation fixes
+      [Task* commands] Add support for TASKname/VARname in addition to TASKnr/VARnr + documentation
+      [Documentation] Add TaskValueSetAndRun
+      [Task* commands] Fix a few silly typos
+
+
+-------------------------------------------------
 Changes in release mega-20210223 (since mega-20210114)
 -------------------------------------------------
 
@@ -2514,7 +2785,7 @@ Release date: Tue Aug 13 04:00:10 CEST 2019
 Gijs Noorlander (21):
       [TTN] Add RN2483-Arduino-Library
       [TTN] Skeleton for C018 TTN RN2xx3 controller
-      [RN2384 lib] Only use const String& in function parameters
+      [RN2483 lib] Only use const String& in function parameters
       [LoRa plugin] Use separate object for C018 data
       [LoRa TTN] Create special interface for LoRa TTN controller
       [Controller page] Restructure Controller rendering page

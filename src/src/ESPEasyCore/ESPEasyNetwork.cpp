@@ -15,8 +15,8 @@
 #include <ETH.h>
 #endif
 
-void setNetworkMedium(NetworkMedium_t medium) {
-  if (active_network_medium == medium) {
+void setNetworkMedium(NetworkMedium_t new_medium) {
+  if (active_network_medium == new_medium) {
     return;
   }
   switch (active_network_medium) {
@@ -24,16 +24,21 @@ void setNetworkMedium(NetworkMedium_t medium) {
       #ifdef HAS_ETHERNET
       // FIXME TD-er: How to 'end' ETH?
 //      ETH.end();
+      if (new_medium == NetworkMedium_t::WIFI) {
+        WiFiEventData.clearAll();
+      }
       #endif
       break;
     case NetworkMedium_t::WIFI:
-      WiFiEventData.timerAPoff.setNow();
+      WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
       WiFiEventData.timerAPstart.clear();
-      WifiDisconnect();
+      if (new_medium == NetworkMedium_t::Ethernet) {
+        WifiDisconnect();
+      }
       break;
   }
   statusLED(true);
-  active_network_medium = medium;
+  active_network_medium = new_medium;
   addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
 }
 
@@ -192,9 +197,20 @@ String WifiSoftAPmacAddress() {
     return String(macaddress);
 }
 
+String WifiSTAmacAddress() {
+    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
+    uint8_t *macread = WiFi.macAddress(mac);
+    char     macaddress[20];
+    formatMAC(macread, macaddress);
+    return String(macaddress);
+}
+
 void CheckRunningServices() {
   set_mDNS();
-  SetWiFiTXpower();
+  if (active_network_medium == NetworkMedium_t::WIFI) 
+  {
+    SetWiFiTXpower();
+  }
 }
 
 #ifdef HAS_ETHERNET
