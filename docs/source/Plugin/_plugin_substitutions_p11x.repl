@@ -37,6 +37,19 @@
 .. |P113_compileinfo| replace:: `.`
 .. |P113_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library (local copy)`
 
+.. |P114_name| replace:: :cyan:`VEML6075`
+.. |P114_type| replace:: :cyan:`UV`
+.. |P114_typename| replace:: :cyan:`UV - VEML6075`
+.. |P114_porttype| replace:: `.`
+.. |P114_status| replace:: :yellow:`TESTING D`
+.. |P114_github| replace:: P114_VEML6075.ino
+.. _P114_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P114_VEML6075.ino
+.. |P114_usedby| replace:: `.`
+.. |P114_shortinfo| replace:: `UVA/UVB Sensor`
+.. |P114_maintainer| replace:: `TD-er, clumsy-stefan, tonhuisman`
+.. |P114_compileinfo| replace:: `.`
+.. |P114_usedlibraries| replace:: `.`
+
 .. |P115_name| replace:: :cyan:`MAX1704x`
 .. |P115_type| replace:: :cyan:`Energy`
 .. |P115_typename| replace:: :cyan:`Energy - MAX1704x`
