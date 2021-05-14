@@ -4,7 +4,7 @@
 .. |Plugin_Distance| replace:: :ref:`P110_page`, :ref:`P113_page`
 .. |Plugin_Dust| replace:: :ref:`P018_page`, :ref:`P053_page`, :ref:`P056_page`
 .. |Plugin_Energy_AC| replace:: :ref:`P076_page`, :ref:`P077_page`, :ref:`P078_page`, :ref:`P102_page`, :ref:`P108_page`
-.. |Plugin_Energy_DC| replace:: :ref:`P027_page`, :ref:`P085_page`
+.. |Plugin_Energy_DC| replace:: :ref:`P027_page`, :ref:`P085_page`, :ref:`P115_page`
 .. |Plugin_Energy_Heat| replace:: :ref:`P088_page`, :ref:`P093_page`
 .. |Plugin_Environment| replace:: :ref:`P004_page`, :ref:`P005_page`, :ref:`P006_page`, :ref:`P014_page`, :ref:`P024_page`, :ref:`P028_page`, :ref:`P030_page`, :ref:`P031_page`, :ref:`P032_page`, :ref:`P034_page`, :ref:`P039_page`, :ref:`P047_page`, :ref:`P051_page`, :ref:`P068_page`, :ref:`P069_page`, :ref:`P072_page`, :ref:`P103_page`, :ref:`P104_page`, :ref:`P105_page`, :ref:`P106_page`
 .. |Plugin_Extra_IO| replace:: :ref:`P011_page`, :ref:`P022_page`
@@ -15,7 +15,7 @@
 .. |Plugin_Hardware| replace:: :ref:`P046_page`
 .. |Plugin_Keypad| replace:: :ref:`P058_page`, :ref:`P061_page`, :ref:`P062_page`, :ref:`P063_page`
 .. |Plugin_Light_Color| replace:: :ref:`P050_page`, :ref:`P066_page`
-.. |Plugin_Light_UV| replace:: :ref:`P084_page`, :ref:`P107_page`
+.. |Plugin_Light_UV| replace:: :ref:`P084_page`, :ref:`P107_page`, :ref:`P114_page`
 .. |Plugin_Light_Lux| replace:: :ref:`P010_page`, :ref:`P015_page`, :ref:`P074_page`
 .. |Plugin_Motor| replace:: :ref:`P048_page`, :ref:`P079_page`
 .. |Plugin_Notify| replace:: :ref:`P055_page`, :ref:`P065_page`

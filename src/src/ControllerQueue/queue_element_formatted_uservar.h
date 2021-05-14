@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
@@ -15,13 +16,17 @@ struct EventStruct;
 class queue_element_formatted_uservar {
 public:
 
-  queue_element_formatted_uservar();
+  queue_element_formatted_uservar() = default;
+  queue_element_formatted_uservar(const queue_element_formatted_uservar& other) = delete;
+  queue_element_formatted_uservar(queue_element_formatted_uservar&& other);
 
   queue_element_formatted_uservar(struct EventStruct *event);
 
   size_t getSize() const;
 
   bool isDuplicate(const queue_element_formatted_uservar& other) const;
+
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
 
   String txt[VARS_PER_TASK];
   int idx                          = 0;

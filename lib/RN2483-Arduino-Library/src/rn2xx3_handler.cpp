@@ -269,11 +269,6 @@ bool rn2xx3_handler::init()
   setTXoutputPower(_moduleType == RN2xx3_datatypes::Model::RN2903 ? 5 : 1);
   setSF(_sf);
 
-  // TTN does not yet support Adaptive Data Rate.
-  // Using it is also only necessary in limited situations.
-  // Therefore disable it by default.
-  setAdaptiveDataRate(false);
-
   // Switch off automatic replies, because this library can not
   // handle more than one mac_rx per tx. See RN2483 datasheet,
   // 2.4.8.14, page 27 and the scenario on page 19.
@@ -447,6 +442,40 @@ bool rn2xx3_handler::setSF(uint8_t sf)
   }
   setLastError(F("error in setSF"));
   return false;
+}
+
+uint8_t rn2xx3_handler::getSF(int& dr)
+{
+  dr = readIntValue(F("mac get dr"));
+  if ((dr >= 0) && (dr <= 7)) {
+    switch (_fp)
+      {
+        case RN2xx3_datatypes::Freq_plan::TTN_EU:
+        case RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU:
+        case RN2xx3_datatypes::Freq_plan::DEFAULT_EU:
+
+          //  case TTN_FP_EU868:
+          //  case TTN_FP_IN865_867:
+          //  case TTN_FP_AS920_923:
+          //  case TTN_FP_AS923_925:
+          //  case TTN_FP_KR920_923:
+          _sf = 12 - dr;
+          _dr = dr;
+          break;
+        case RN2xx3_datatypes::Freq_plan::TTN_US:
+
+          // case TTN_FP_US915:
+          // case TTN_FP_AU915:
+          _sf = 10 - dr;
+          _dr = dr;
+          break;
+        default:
+          break;
+      }
+  } else {
+    dr = _dr;
+  }
+  return _sf;
 }
 
 bool rn2xx3_handler::setDR(int dr)
@@ -703,8 +732,10 @@ uint8_t rn2xx3_handler::get_busy_count() const {
 
 String rn2xx3_handler::sysver() {
   String ver = sendRawCommand(F("sys get ver"));
-
   ver.trim();
+  if (RN2xx3_datatypes::Model::RN_NA == _moduleType) {
+    _moduleType = RN2xx3_datatypes::parseVersion(ver, _firmware);
+  }
   return ver;
 }
 

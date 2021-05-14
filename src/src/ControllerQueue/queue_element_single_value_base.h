@@ -4,6 +4,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
@@ -16,18 +17,22 @@ struct EventStruct;
 class queue_element_single_value_base {
 public:
 
-  queue_element_single_value_base();
+  queue_element_single_value_base() = default;
 
   queue_element_single_value_base(const struct EventStruct *event,
                                   byte                      value_count);
 
-//  queue_element_single_value_base(queue_element_single_value_base &&rval);
+  queue_element_single_value_base(const queue_element_single_value_base &rval) = delete;
+  
+  queue_element_single_value_base(queue_element_single_value_base &&rval);
 
   bool   checkDone(bool succesfull) const;
 
   size_t getSize() const;
 
   bool isDuplicate(const queue_element_single_value_base& other) const;
+
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
 
   String txt[VARS_PER_TASK];
   int idx                          = 0;

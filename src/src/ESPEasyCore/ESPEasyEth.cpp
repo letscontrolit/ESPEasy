@@ -106,11 +106,41 @@ bool ETHConnectRelaxed() {
     Settings.ETH_Pin_mdio,
     (eth_phy_type_t)Settings.ETH_Phy_Type,
     (eth_clock_mode_t)Settings.ETH_Clock_Mode);
+  if (EthEventData.ethInitSuccess) {
+    EthEventData.ethConnectAttemptNeeded = false;
+  }
   return EthEventData.ethInitSuccess;
 }
 
 bool ETHConnected() {
-  return EthEventData.EthServicesInitialized();
+  if (EthEventData.EthServicesInitialized()) {
+    if (EthLinkUp()) {
+      return true;
+    }
+    // Apparently we missed an event
+    EthEventData.processedDisconnect = false;
+  } else if (EthEventData.ethInitSuccess) {
+    if (EthLinkUp()) {
+      EthEventData.setEthConnected();
+      if (NetworkLocalIP() != IPAddress(0, 0, 0, 0) && 
+          !EthEventData.EthGotIP()) {
+        EthEventData.processedGotIP = false;
+      }
+      if (EthEventData.lastConnectMoment.isSet()) {
+        if (!EthEventData.EthServicesInitialized()) {
+          if (EthEventData.lastConnectMoment.millisPassedSince() > 10000 &&
+              EthEventData.lastGetIPmoment.isSet()) {
+            EthEventData.processedGotIP = false;
+            EthEventData.markLostIP();
+          }
+        }
+      }
+      return false;
+    } else {
+      setNetworkMedium(NetworkMedium_t::WIFI);
+    }
+  }
+  return false;
 }
 
 #endif

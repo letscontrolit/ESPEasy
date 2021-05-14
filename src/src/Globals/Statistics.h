@@ -7,10 +7,15 @@
 
 class String;
 
+
 #define BOOT_CAUSE_MANUAL_REBOOT            0
 #define BOOT_CAUSE_COLD_BOOT                1
 #define BOOT_CAUSE_DEEP_SLEEP               2
+#define BOOT_CAUSE_SOFT_RESTART             3
 #define BOOT_CAUSE_EXT_WD                  10
+#define BOOT_CAUSE_SW_WATCHDOG             11
+#define BOOT_CAUSE_EXCEPTION               12
+#define BOOT_CAUSE_POWER_UNSTABLE          20
 
 #ifndef BUILD_NO_RAM_TRACKER
 extern uint32_t lowestRAM;
