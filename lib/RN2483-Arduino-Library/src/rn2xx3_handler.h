@@ -119,6 +119,7 @@ public:
                                              uint8_t port = 1);
 
   bool setSF(uint8_t sf);
+  uint8_t getSF(int& dr);
 
 
   /*
@@ -264,6 +265,7 @@ private:
   uint16_t _max_received_length = 0;
 
 
+  RN2xx3_datatypes::Firmware _firmware = RN2xx3_datatypes::Firmware::unknown;
   RN2xx3_datatypes::Model _moduleType = RN2xx3_datatypes::Model::RN_NA;
   RN2xx3_datatypes::Freq_plan _fp     = RN2xx3_datatypes::Freq_plan::TTN_EU;
   uint8_t _sf                         = 7;

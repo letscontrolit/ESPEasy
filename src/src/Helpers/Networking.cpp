@@ -18,6 +18,7 @@
 #include "../Helpers/Network.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringProvider.h"
 
 #include <IPAddress.h>
 
@@ -578,7 +579,7 @@ void SSDP_schema(WiFiClient& client) {
   ssdp_schema += F("</serialNumber>"
                    "<modelName>ESP Easy</modelName>"
                    "<modelNumber>");
-  ssdp_schema += F(BUILD_GIT);
+  ssdp_schema += getValue(LabelType::GIT_BUILD);
   ssdp_schema += F("</modelNumber>"
                    "<modelURL>http://www.letscontrolit.com</modelURL>"
                    "<manufacturer>http://www.letscontrolit.com</manufacturer>"

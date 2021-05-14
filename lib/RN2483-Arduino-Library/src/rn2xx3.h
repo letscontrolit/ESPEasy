@@ -88,6 +88,8 @@ public:
 
   bool   setSF(uint8_t sf);
 
+  bool   setAdaptiveDataRate(bool enabled);
+
   /*
    * Initialise the RN2xx3 and join the LoRa network (if applicable).
    * This function can only be called after calling initABP() or initOTAA().

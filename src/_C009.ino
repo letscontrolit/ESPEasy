@@ -127,7 +127,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
     ESP[F("version")]      = Settings.Version;
     ESP[F("build")]        = Settings.Build;
     ESP[F("build_notes")]  = String(F(BUILD_NOTES));
-    ESP[F("build_git")]    = String(F(BUILD_GIT));
+    ESP[F("build_git")]    = getValue(LabelType::GIT_BUILD);
     ESP[F("node_type_id")] = NODE_TYPE_ID;
     ESP[F("sleep")]        = Settings.deepSleep_wakeTime;
 
