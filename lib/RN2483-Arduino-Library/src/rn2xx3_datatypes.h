@@ -29,6 +29,13 @@ public:
     DEFAULT_EU
   };
 
+  enum TTN_stack_version {
+    TTN_v2 = 0,
+    TTN_v3 = 1,
+
+    TTN_NOT_SET
+  };
+
   enum TX_return_type {
     TX_FAIL = 0,    // The transmission failed.
                     // If you sent a confirmed message and it is not acked,

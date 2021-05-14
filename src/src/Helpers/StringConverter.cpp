@@ -237,6 +237,7 @@ void addNewLine(String& line) {
    Format a value to the set number of decimals
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
+  if (event == nullptr) return "";
   isvalid = true;
 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -249,7 +250,8 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
   {
     // First try to format using the plugin specific formatting.
     String result;
-    EventStruct tempEvent(*event);
+    EventStruct tempEvent;
+    tempEvent.deep_copy(event);
     tempEvent.idx = rel_index;
     PluginCall(PLUGIN_FORMAT_USERVAR, &tempEvent, result);
     if (result.length() > 0) {
@@ -904,6 +906,8 @@ void parseStandardConversions(String& s, bool useURLencode) {
   float arg2 = 0.0f;
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(arg1, arg2), 2))
   SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(arg1, arg2))
+  SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(arg1, arg2), 2))
+  SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(arg1, arg2), 2))
   #undef SMART_CONV
 }
 

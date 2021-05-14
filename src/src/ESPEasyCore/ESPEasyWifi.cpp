@@ -624,6 +624,9 @@ void WiFiScanPeriodical() {
 }
 
 bool WiFiScanAllowed() {
+  if (WiFi_AP_Candidates.scanComplete() == WIFI_SCAN_RUNNING) {
+    return false;
+  }
   if (!WiFiEventData.processedScanDone) { 
     processScanDone(); 
   }
@@ -631,6 +634,23 @@ bool WiFiScanAllowed() {
     handle_unprocessedNetworkEvents();
   }
   if (WiFiEventData.unprocessedWifiEvents()) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("WiFi : Scan not allowed, unprocessed WiFi events: ");
+      if (!WiFiEventData.processedConnect) {
+        log += F(" conn");
+      }
+      if (!WiFiEventData.processedDisconnect) {
+        log += F(" disconn");
+      }
+      if (!WiFiEventData.processedGotIP) {
+        log += F(" gotIP");
+      }
+      if (!WiFiEventData.processedDHCPTimeout) {
+        log += F(" DHCP_t/o");
+      }
+      
+      addLog(LOG_LEVEL_ERROR, log);
+    }
     return false;
   }
   /*
@@ -638,10 +658,8 @@ bool WiFiScanAllowed() {
     return true;
   }
   */
-  if (WiFi_AP_Candidates.scanComplete() <= 0) {
-    return true;
-  }
   if (WiFi_AP_Candidates.getBestCandidate().usable()) {
+    addLog(LOG_LEVEL_ERROR, F("WiFi : Scan not needed, good candidate present"));
     return false;
   }
   if (WiFiEventData.lastDisconnectMoment.isSet() && WiFiEventData.lastDisconnectMoment.millisPassedSince() < WIFI_RECONNECT_WAIT) {

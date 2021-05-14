@@ -64,7 +64,6 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      // FIXME TD-er must define a proper move operator
       success = C017_DelayHandler->addToQueue(C017_queue_element(event));
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C017_DELAY_QUEUE, C017_DelayHandler->getNextScheduleTime());
       break;

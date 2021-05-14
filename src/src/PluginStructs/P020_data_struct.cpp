@@ -78,7 +78,7 @@ bool P020_Task::hasClientConnected() {
     if (ser2netClient) { ser2netClient.stop(); }
     ser2netClient = ser2netServer->available();
     ser2netClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-    sendConnectedEvent(false);
+    sendConnectedEvent(true);
     addLog(LOG_LEVEL_INFO, F("Ser2Net   : Client connected!"));
   }
 

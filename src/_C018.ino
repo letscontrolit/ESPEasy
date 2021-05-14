@@ -135,6 +135,14 @@ struct C018_data_struct {
     return res;
   }
 
+  bool setTTNstack(RN2xx3_datatypes::TTN_stack_version version) {
+    if (!isInitialized()) { return false; }
+    bool res = myLora->setTTNstack(version);
+
+    C018_logError(F("setTTNstack"));
+    return res;
+  }
+
   bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan plan) {
     if (!isInitialized()) { return false; }
     bool res = myLora->setFrequencyPlan(plan);
@@ -150,6 +158,15 @@ struct C018_data_struct {
     C018_logError(F("setSF()"));
     return res;
   }
+
+  bool setAdaptiveDataRate(bool enabled) {
+    if (!isInitialized()) { return false; }
+    bool res = myLora->setAdaptiveDataRate(enabled);
+
+    C018_logError(F("setAdaptiveDataRate()"));
+    return res;
+  }
+
 
   bool initOTAA(const String& AppEUI = "", const String& AppKey = "", const String& DevEUI = "") {
     if (myLora == nullptr) { return false; }
@@ -313,7 +330,7 @@ private:
     //    String error = myLora->getLastError();
 
     if (error.length() > 0) {
-      String log = F("RN2384: ");
+      String log = F("RN2483: ");
       log += command;
       log += ": ";
       log += error;
@@ -419,6 +436,9 @@ struct C018_ConfigStruct
     if ((baudrate < 2400) || (baudrate > 115200)) {
       reset();
     }
+    if (stackVersion >= RN2xx3_datatypes::TTN_stack_version::TTN_NOT_SET) {
+      stackVersion  = RN2xx3_datatypes::TTN_stack_version::TTN_v2;  
+    }
   }
 
   void reset() {
@@ -432,6 +452,7 @@ struct C018_ConfigStruct
     resetpin      = -1;
     sf            = 7;
     frequencyplan = RN2xx3_datatypes::Freq_plan::TTN_EU;
+    stackVersion  = RN2xx3_datatypes::TTN_stack_version::TTN_v2;
     joinmethod    = C018_USE_OTAA;
   }
 
@@ -447,6 +468,8 @@ struct C018_ConfigStruct
   uint8_t       frequencyplan                                   = RN2xx3_datatypes::Freq_plan::TTN_EU;
   uint8_t       joinmethod                                      = C018_USE_OTAA;
   uint8_t       serialPort                                      = 0;
+  uint8_t       stackVersion                                    = RN2xx3_datatypes::TTN_stack_version::TTN_v2;
+  uint8_t       adr                                             = 0;
 };
 
 
@@ -537,6 +560,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       uint8_t sf;
       uint8_t frequencyplan;
       uint8_t joinmethod;
+      uint8_t stackVersion;
+      uint8_t adr;
 
       {
         // Keep this object in a small scope so we can destruct it as soon as possible again.
@@ -554,6 +579,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         sf            = customConfig->sf;
         frequencyplan = customConfig->frequencyplan;
         joinmethod    = customConfig->joinmethod;
+        stackVersion  = customConfig->stackVersion;
+        adr           = customConfig->adr;
 
         {
           addFormTextBox(F("Device EUI"), F("deveui"), customConfig->DeviceEUI, C018_DEVICE_EUI_LEN - 1);
@@ -592,7 +619,18 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
         addFormSelector(F("Frequency Plan"), F("frequencyplan"), 4, options, values, NULL, frequencyplan, false);
       }
+      {
+        String options[2] = { F("TTN v2"), F("TTN v3") };
+        int    values[2]  = { 
+          RN2xx3_datatypes::TTN_stack_version::TTN_v2,
+          RN2xx3_datatypes::TTN_stack_version::TTN_v3
+        };
+
+        addFormSelector(F("TTN Stack"), F("ttnstack"), 2, options, values, NULL, stackVersion, false);
+      }
+
       addFormNumericBox(F("Spread Factor"), F("sf"), sf, 7, 12);
+      addFormCheckBox(F("Adaptive Data Rate (ADR)"), F("adr"), adr);
 
 
       addTableSeparator(F("Serial Port Configuration"), 2, 3);
@@ -642,6 +680,9 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         addRowLabel(F("Sample Set Counter"));
         addHtmlInt(C018_data->getSampleSetCount());
 
+        addRowLabel(F("Data Rate"));
+        addHtml(C018_data->getDataRate());        
+
         {
           RN2xx3_status status = C018_data->getStatus();
 
@@ -681,6 +722,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         customConfig->sf            = getFormItemInt(F("sf"), customConfig->sf);
         customConfig->frequencyplan = getFormItemInt(F("frequencyplan"), customConfig->frequencyplan);
         customConfig->joinmethod    = getFormItemInt(F("joinmethod"), customConfig->joinmethod);
+        customConfig->stackVersion  = getFormItemInt(F("ttnstack"), customConfig->stackVersion);
+        customConfig->adr           = isFormItemChecked(F("adr"));
         serialHelper_webformSave(customConfig->serialPort, customConfig->rxpin, customConfig->txpin);
         SaveCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C018_ConfigStruct));
       }
@@ -719,7 +762,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (C018_data != nullptr) {
         success = C018_DelayHandler->addToQueue(
-          C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
+          std::move(C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex))));
         Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C018_DELAY_QUEUE,
                                          C018_DelayHandler->getNextScheduleTime());
 
@@ -770,6 +813,15 @@ bool C018_init(struct EventStruct *event) {
   taskIndex_t  SampleSetInitiator = INVALID_TASK_INDEX;
   unsigned int Port               = 0;
 
+  // Check if the object is already created.
+  // If so, delete it to make sure the module is initialized according to the full set parameters.
+  if (C018_data != nullptr) {
+    C018_data->reset();
+    delete C018_data;
+    C018_data = nullptr;
+  }
+
+
   if (C018_data == nullptr) {
     C018_data = new (std::nothrow) C018_data_struct;
 
@@ -809,6 +861,12 @@ bool C018_init(struct EventStruct *event) {
   }
 
   C018_data->setFrequencyPlan(static_cast<RN2xx3_datatypes::Freq_plan>(customConfig->frequencyplan));
+  if (!C018_data->setSF(customConfig->sf)) {
+    return false;
+  }
+  if (!C018_data->setAdaptiveDataRate(customConfig->adr != 0)) {
+    return false;
+  }
 
   if (customConfig->joinmethod == C018_USE_OTAA) {
     String log = F("OTAA: AppEUI: ");
@@ -830,7 +888,7 @@ bool C018_init(struct EventStruct *event) {
     }
   }
 
-  if (!C018_data->setSF(customConfig->sf)) {
+  if (!C018_data->setTTNstack(static_cast<RN2xx3_datatypes::TTN_stack_version>(customConfig->stackVersion))) {
     return false;
   }
 

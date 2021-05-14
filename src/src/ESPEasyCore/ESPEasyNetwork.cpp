@@ -24,6 +24,9 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
       #ifdef HAS_ETHERNET
       // FIXME TD-er: How to 'end' ETH?
 //      ETH.end();
+      if (new_medium == NetworkMedium_t::WIFI) {
+        WiFiEventData.clearAll();
+      }
       #endif
       break;
     case NetworkMedium_t::WIFI:
@@ -194,9 +197,20 @@ String WifiSoftAPmacAddress() {
     return String(macaddress);
 }
 
+String WifiSTAmacAddress() {
+    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
+    uint8_t *macread = WiFi.macAddress(mac);
+    char     macaddress[20];
+    formatMAC(macread, macaddress);
+    return String(macaddress);
+}
+
 void CheckRunningServices() {
   set_mDNS();
-  SetWiFiTXpower();
+  if (active_network_medium == NetworkMedium_t::WIFI) 
+  {
+    SetWiFiTXpower();
+  }
 }
 
 #ifdef HAS_ETHERNET
