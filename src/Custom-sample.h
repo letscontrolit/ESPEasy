@@ -167,12 +167,17 @@
 
 #define CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME 10
 
-#define USES_SSDP
-
+// Allow for remote provisioning of a node.
+// This is only allowed for custom builds.
+// To setup the configuration of the provisioning file, one must also define USE_SETTINGS_ARCHIVE
+// Default setting is to not allow to configure a node remotely, unless explicitly enabled.
+// #define USE_CUSTOM_PROVISIONING
 
 // #define USE_SETTINGS_ARCHIVE
 // #define FEATURE_I2CMULTIPLEXER
 // #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+
+#define USES_SSDP
 
 /*
  #######################################################################################################

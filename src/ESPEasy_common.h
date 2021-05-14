@@ -66,10 +66,6 @@ namespace std
 #if defined(ESP8266)
   #include "core_version.h"
   #define NODE_TYPE_ID      NODE_TYPE_ID_ESP_EASYM_STD
-  #define FILE_CONFIG       "config.dat"
-  #define FILE_SECURITY     "security.dat"
-  #define FILE_NOTIFICATION "notification.dat"
-  #define FILE_RULES        "rules1.txt"
   #include <lwip/init.h>
   #ifndef LWIP_VERSION_MAJOR
     #error
@@ -104,10 +100,6 @@ namespace std
 
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
   #define ICACHE_RAM_ATTR IRAM_ATTR
-  #define FILE_CONFIG       "/config.dat"
-  #define FILE_SECURITY     "/security.dat"
-  #define FILE_NOTIFICATION "/notification.dat"
-  #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
 //  #include  "esp32_ping.h"
   #include <rom/rtc.h>
