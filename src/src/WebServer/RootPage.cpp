@@ -198,9 +198,7 @@ void handle_root() {
       addRowLabelValue(LabelType::ETH_WIFI_MODE);
   #endif
 
-      if (
-        active_network_medium == NetworkMedium_t::WIFI &&
-        NetworkConnected())
+      if (!WiFiEventData.WiFiDisconnected())
       {
         addRowLabelValue(LabelType::IP_ADDRESS);
         addRowLabel(LabelType::WIFI_RSSI);

@@ -1396,9 +1396,9 @@ String createCacheFilename(unsigned int count) {
   #ifdef ESP32
   fname = '/';
   #endif // ifdef ESP32
-  fname += "cache_";
+  fname += F("cache_");
   fname += String(count);
-  fname += ".bin";
+  fname += F(".bin");
   return fname;
 }
 
@@ -1446,22 +1446,27 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   }
 #endif // ESP8266
 #ifdef ESP32
-  File root = ESPEASY_FS.open(F("/cache"));
+  File root = ESPEASY_FS.open(F("/"));
   File file = root.openNextFile();
 
   while (file)
   {
     if (!file.isDirectory()) {
-      int count = getCacheFileCountFromFilename(file.name());
+      const String fname(file.name());
+      if (fname.startsWith(F("/cache")) || fname.startsWith(F("cache"))) {
+        int count = getCacheFileCountFromFilename(fname);
 
-      if (count >= 0) {
-        if (lowest > count) {
-          lowest = count;
-        }
+        if (count >= 0) {
+          if (lowest > count) {
+            lowest = count;
+          }
 
-        if (highest < count) {
-          highest         = count;
-          filesizeHighest = file.size();
+          if (highest < count) {
+            highest         = count;
+            filesizeHighest = file.size();
+          }
+        } else {
+          addLog(LOG_LEVEL_INFO, String(F("RTC  : Cannot get count from: ")) + fname);
         }
       }
     }
