@@ -115,7 +115,8 @@ void addFormTextArea(const String& label,
 void addFormPasswordBox(const String& label,
                         const String& id,
                         const String& password,
-                        int           maxlength);
+                        int           maxlength,
+                        const String& title = "");
 
 bool getFormPassword(const String& id,
                      String      & password);
@@ -186,7 +187,8 @@ void addFormSelector_script(const String& label,
                             const int     indices[],
                             const String  attr[],
                             int           selectedIndex,
-                            const String& onChangeCall);
+                            const String& onChangeCall,
+                            const String& title = "");
 
 // ********************************************************************************
 // Add a GPIO pin select dropdown list

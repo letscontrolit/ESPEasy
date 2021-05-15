@@ -129,7 +129,7 @@ void addFormTextArea(const String& label,
 // Add a Password Box form
 // ********************************************************************************
 
-void addFormPasswordBox(const String& label, const String& id, const String& password, int maxlength)
+void addFormPasswordBox(const String& label, const String& id, const String& password, int maxlength, const String& title)
 {
   addRowLabel_tr_id(label, id);
 
@@ -138,6 +138,9 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   addHtmlAttribute(F("type"),      F("password"));
   addHtmlAttribute(F("name"),      id);
   addHtmlAttribute(F("maxlength"), maxlength);
+  if (title.length() > 0) {
+    addHtmlAttribute(F("title"),   title);
+  }
   addHtmlAttribute(F("value"),     (password.length() == 0) ? F("") : F("*****"));
   addHtml('>');
 }
@@ -251,10 +254,11 @@ void addFormSelector_script(const String& label,
                             const int     indices[],
                             const String  attr[],
                             int           selectedIndex,
-                            const String& onChangeCall)
+                            const String& onChangeCall,
+                            const String& title)
 {
   addRowLabel_tr_id(label, id);
-  do_addSelector_Head(id, "", onChangeCall, false);
+  do_addSelector_Head(id, "", onChangeCall, false, title);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
