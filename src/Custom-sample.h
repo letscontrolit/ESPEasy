@@ -177,6 +177,33 @@
 // #define FEATURE_I2CMULTIPLEXER
 // #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
 
+
+#ifdef USE_CUSTOM_PROVISIONING
+// For device models, see src/src/DataTypes/DeviceModel.h
+// #ifdef ESP32
+//  #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
+// #endif
+// #ifdef ESP8266
+//  #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
+// #endif
+//  #define DEFAULT_PROVISIONING_FETCH_RULES1      false
+//  #define DEFAULT_PROVISIONING_FETCH_RULES2      false
+//  #define DEFAULT_PROVISIONING_FETCH_RULES3      false
+//  #define DEFAULT_PROVISIONING_FETCH_RULES4      false
+//  #define DEFAULT_PROVISIONING_FETCH_NOTIFICATIONS false
+//  #define DEFAULT_PROVISIONING_FETCH_SECURITY     false
+//  #define DEFAULT_PROVISIONING_FETCH_CONFIG       false
+//  #define DEFAULT_PROVISIONING_FETCH_PROVISIONING false
+//  #define DEFAULT_PROVISIONING_SAVE_URL           false
+//  #define DEFAULT_PROVISIONING_SAVE_CREDENTIALS   false
+//  #define DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND false
+//  #define DEFAULT_PROVISIONING_URL                ""
+//  #define DEFAULT_PROVISIONING_USER               ""
+//  #define DEFAULT_PROVISIONING_PASS               ""
+#endif
+
+
+
 #define USES_SSDP
 
 /*
