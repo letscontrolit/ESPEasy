@@ -158,7 +158,7 @@ String Command_Debug(struct EventStruct *event, const char *Line)
 
 String Command_logentry(struct EventStruct *event, const char *Line)
 {
-  int level = LOG_LEVEL_INFO;
+  byte level = LOG_LEVEL_INFO;
   // An extra optional parameter to set log level.
   if (event->Par2 > LOG_LEVEL_NONE && event->Par2 <= LOG_LEVEL_DEBUG_MORE) { level = event->Par2; }
   addLog(level, tolerantParseStringKeepCase(Line, 2));
