@@ -6,6 +6,8 @@ on:
   push:
     branches: [mega]
     tags-ignore: '**'
+    paths-ignore:
+      - 'dist/Release_notes.txt'
   pull_request:
     branches: [mega]
 
