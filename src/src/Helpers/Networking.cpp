@@ -1228,7 +1228,8 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     error  = F("HTTP code: ");
     error += httpCode;
     error += ' ';
-    error += file_save;
+    error += url;
+
     addLog(LOG_LEVEL_ERROR, error);
     http.end();
     return false;

@@ -1649,16 +1649,17 @@ String getPartitionTable(byte pType, const String& itemSep, const String& lineEn
 #ifdef USE_DOWNLOAD
 String downloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr)
 {
-  if (!ResetFactoryDefaultPreference.allowFetchByCommand() || !getDownloadFiletypeChecked(filetype, filenr)) {
+  if (!getDownloadFiletypeChecked(filetype, filenr)) {
     // Not selected, so not downloaded
     return F("Not Allowed");
   }
 
   String filename = getFileName(filetype, filenr);
   String fullUrl;
+
   fullUrl.reserve(url.length() + filename.length() + 1); // May need to add an extra slash
   fullUrl = url;
-  fullUrl = parseTemplate(fullUrl, true); // URL encode
+  fullUrl = parseTemplate(fullUrl, true);                // URL encode
 
   // URLEncode may also encode the '/' into "%2f"
   // FIXME TD-er: Can this really occur?
@@ -1667,29 +1668,37 @@ String downloadFileType(const String& url, const String& user, const String& pas
   while (filename.startsWith(F("/"))) {
     filename = filename.substring(1);
   }
+
   if (!fullUrl.endsWith(F("/"))) {
     fullUrl += F("/");
   }
   fullUrl += filename;
 
   String error;
+
   if (ResetFactoryDefaultPreference.deleteFirst()) {
     if (fileExists(filename) && !tryDeleteFile(filename)) {
       return F("Could not delete existing file");
     }
+
     if (!downloadFile(fullUrl, filename, user, pass, error)) {
       return error;
     }
   } else {
     if (fileExists(filename)) {
+      String filename_bak = filename;
+      filename_bak += F("_bak");
+      if (fileExists(filename_bak)) {
+        return F("Could not rename to _bak");
+      }
+
       // Must download it to a tmp file.
       String tmpfile = filename;
-      tmpfile += F(".tmp");
+      tmpfile += F("_tmp");
+
       if (!downloadFile(fullUrl, tmpfile, user, pass, error)) {
         return error;
       }
-      String filename_bak = filename;
-      filename_bak += F("_bak");
 
       if (fileExists(filename) && !tryRenameFile(filename, filename_bak)) {
         return F("Could not rename to _bak");
@@ -1714,19 +1723,24 @@ String downloadFileType(const String& url, const String& user, const String& pas
   }
   return error;
 }
-#endif
+
+#endif // ifdef USE_DOWNLOAD
 
 #ifdef USE_CUSTOM_PROVISIONING
 
 String downloadFileType(FileType::Enum filetype, unsigned int filenr)
 {
-   String url, user, pass;
+  if (!ResetFactoryDefaultPreference.allowFetchByCommand()) {
+    return F("Not Allowed");
+  }
+  String url, user, pass;
 
   {
     MakeProvisioningSettings(ProvisioningSettings);
+
     if (AllocatedProvisioningSettings()) {
       loadProvisioningSettings(ProvisioningSettings);
-      url = ProvisioningSettings.url;
+      url  = ProvisioningSettings.url;
       user = ProvisioningSettings.user;
       pass = ProvisioningSettings.pass;
     }
@@ -1734,4 +1748,4 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
   return downloadFileType(url, user, pass, filetype, filenr);
 }
 
-#endif
+#endif // ifdef USE_CUSTOM_PROVISIONING
