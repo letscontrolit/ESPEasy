@@ -158,8 +158,10 @@ String Command_Debug(struct EventStruct *event, const char *Line)
 
 String Command_logentry(struct EventStruct *event, const char *Line)
 {
-  // FIXME TD-er: Add an extra optional parameter to set log level.
-  addLog(LOG_LEVEL_INFO, tolerantParseStringKeepCase(Line, 2));
+  int level = LOG_LEVEL_INFO;
+  // An extra optional parameter to set log level.
+  if (event->Par2 > LOG_LEVEL_NONE && event->Par2 <= LOG_LEVEL_DEBUG_MORE) { level = event->Par2; }
+  addLog(level, tolerantParseStringKeepCase(Line, 2));
   return return_command_success();
 }
 
