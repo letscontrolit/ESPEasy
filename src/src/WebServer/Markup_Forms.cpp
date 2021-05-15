@@ -44,18 +44,18 @@ void addFormNote(const String& text, const String& id)
 // Add a checkbox Form
 // ********************************************************************************
 
-void addFormCheckBox_disabled(const String& label, const String& id, boolean checked) {
-  addFormCheckBox(label, id, checked, true);
+void addFormCheckBox_disabled(const String& label, const String& id, boolean checked, const String& title) {
+  addFormCheckBox(label, id, checked, true, title);
 }
 
-void addFormCheckBox(const String& label, const String& id, boolean checked, bool disabled)
+void addFormCheckBox(const String& label, const String& id, boolean checked, bool disabled, const String& title)
 {
   addRowLabel_tr_id(label, id);
-  addCheckBox(id, checked, disabled);
+  addCheckBox(id, checked, disabled, title);
 }
 
-void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled) {
-  addFormCheckBox(getLabel(label), getInternalLabel(label), checked, disabled);
+void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled, const String& title) {
+  addFormCheckBox(getLabel(label), getInternalLabel(label), checked, disabled, title);
 }
 
 void addFormCheckBox_disabled(LabelType::Enum label, boolean checked) {
@@ -65,25 +65,25 @@ void addFormCheckBox_disabled(LabelType::Enum label, boolean checked) {
 // ********************************************************************************
 // Add a Numeric Box form
 // ********************************************************************************
-void addFormNumericBox(LabelType::Enum label, int value, int min, int max)
+void addFormNumericBox(LabelType::Enum label, int value, int min, int max, const String& title)
 {
-  addFormNumericBox(getLabel(label), getInternalLabel(label), value, min, max);
+  addFormNumericBox(getLabel(label), getInternalLabel(label), value, min, max, title);
 }
 
-void addFormNumericBox(const String& label, const String& id, int value, int min, int max)
-{
-  addRowLabel_tr_id(label, id);
-  addNumericBox(id, value, min, max);
-}
-
-void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals, float stepsize) {
-  addFormFloatNumberBox(getLabel(label), getInternalLabel(label), value, min, max, nrDecimals, stepsize);
-}
-
-void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, byte nrDecimals, float stepsize)
+void addFormNumericBox(const String& label, const String& id, int value, int min, int max, const String& title)
 {
   addRowLabel_tr_id(label, id);
-  addFloatNumberBox(id, value, min, max, nrDecimals, stepsize);
+  addNumericBox(id, value, min, max, F("widenumber"), title);
+}
+
+void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals, float stepsize, const String& title) {
+  addFormFloatNumberBox(getLabel(label), getInternalLabel(label), value, min, max, nrDecimals, stepsize, title);
+}
+
+void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, byte nrDecimals, float stepsize, const String& title)
+{
+  addRowLabel_tr_id(label, id);
+  addFloatNumberBox(id, value, min, max, nrDecimals, stepsize, title);
 }
 
 // ********************************************************************************
@@ -104,10 +104,11 @@ void addFormTextBox(const String& label,
                     int           maxlength,
                     bool          readonly,
                     bool          required,
-                    const String& pattern)
+                    const String& pattern,
+                    const String& title)
 {
   addRowLabel_tr_id(label, id);
-  addTextBox(id, value, maxlength, readonly, required, pattern);
+  addTextBox(id, value, maxlength, readonly, required, pattern, F("wide"), title);
 }
 
 void addFormTextArea(const String& label,
@@ -117,10 +118,11 @@ void addFormTextArea(const String& label,
                      int           rows,
                      int           columns,
                      bool          readonly,
-                     bool          required)
+                     bool          required,
+                     const String& title)
 {
   addRowLabel_tr_id(label, id);
-  addTextArea(id, value, maxlength, rows, columns, readonly, required);
+  addTextArea(id, value, maxlength, rows, columns, readonly, required, title);
 }
 
 // ********************************************************************************
@@ -189,10 +191,10 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
   addPinSelect(true, id, choice);
 }
 
-void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex)
+void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex, const String& title)
 {
   addRowLabel_tr_id(F("I2C Address"), id);
-  do_addSelector_Head(id, "", "", false);
+  do_addSelector_Head(id, "", "", false, title);
 
   for (byte x = 0; x < addressCount; x++)
   {
@@ -206,9 +208,15 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
   addSelector_Foot();
 }
 
-void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex)
+void addFormSelector(const String& label,
+                     const String& id,
+                     int optionCount,
+                     const String options[],
+                     const int indices[],
+                     int selectedIndex,
+                     const String& title)
 {
-  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
+  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false, title);
 }
 
 void addFormSelector(const String& label,
@@ -229,10 +237,11 @@ void addFormSelector(const String& label,
                      const int     indices[],
                      const String  attr[],
                      int           selectedIndex,
-                     boolean       reloadonchange)
+                     boolean       reloadonchange,
+                     const String& title)
 {
   addRowLabel_tr_id(label, id);
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true, F("wide"), title);
 }
 
 void addFormSelector_script(const String& label,

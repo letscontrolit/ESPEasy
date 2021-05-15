@@ -41,14 +41,15 @@ void addSelector(const String& id,
                  int           selectedIndex,
                  boolean       reloadonchange,
                  bool          enabled,
-                 const String& classname)
+                 const String& classname,
+                 const String& title)
 {
   // FIXME TD-er Change boolean to disabled
   if (reloadonchange)
   {
-    addSelector_Head_reloadOnChange(id, classname, !enabled);
+    addSelector_Head_reloadOnChange(id, classname, !enabled, title);
   } else {
-    do_addSelector_Head(id, classname, "", !enabled);
+    do_addSelector_Head(id, classname, F(""), !enabled, title);
   }
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
@@ -77,27 +78,30 @@ void addSelector_options(int optionCount, const String options[], const int indi
 }
 
 void addSelector_Head(const String& id) {
-  do_addSelector_Head(id, F("wide"), "", false);
+  do_addSelector_Head(id, F("wide"), F(""), false, F(""));
 }
 
 void addSelector_Head_reloadOnChange(const String& id) {
   addSelector_Head_reloadOnChange(id, F("wide"), false);
 }
 
-void addSelector_Head_reloadOnChange(const String& id, const String& classname, bool disabled) {
-  do_addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled);
+void addSelector_Head_reloadOnChange(const String& id, const String& classname, bool disabled, const String& title) {
+  do_addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled, title);
 }
 
-void addSelector_Head_reloadOnChange(const String& id, const String& classname, const String& onChangeCall, bool disabled) {
-  do_addSelector_Head(id, classname, onChangeCall, disabled);
+void addSelector_Head_reloadOnChange(const String& id, const String& classname, const String& onChangeCall, bool disabled, const String& title) {
+  do_addSelector_Head(id, classname, onChangeCall, disabled, title);
 }
 
-void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled)
+void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled, const String& title)
 {
   addHtml(F("<select "));
   addHtmlAttribute(F("class"), classname);
   addHtmlAttribute(F("name"),  id);
   addHtmlAttribute(F("id"),    id);
+  if (title.length() > 0) {
+    addHtmlAttribute(F("title"), title);
+  }
 
   if (disabled) {
     addDisabled();
@@ -255,7 +259,7 @@ void addFormSubHeader(const String& header)
 // ********************************************************************************
 // Add a checkbox
 // ********************************************************************************
-void addCheckBox(const String& id, boolean checked, bool disabled)
+void addCheckBox(const String& id, boolean checked, bool disabled, const String& title)
 {
   addHtml(F("<label class='container'>&nbsp;"));
   addHtml(F("<input "));
@@ -271,18 +275,25 @@ void addCheckBox(const String& id, boolean checked, bool disabled)
   addHtml(F("><span class='checkmark"));
 
   if (disabled) { addDisabled(); }
-  addHtml(F("'></span></label>"));
+  addHtml('\'');
+  if (title.length() > 0) {
+    addHtmlAttribute(F("title"), title);
+  }
+  addHtml(F("></span></label>"));
 }
 
 // ********************************************************************************
 // Add a numeric box
 // ********************************************************************************
-void addNumericBox(const String& id, int value, int min, int max)
+void addNumericBox(const String& id, int value, int min, int max, const String& classname, const String& title)
 {
   addHtml(F("<input "));
-  addHtmlAttribute(F("class"), F("widenumber"));
+  addHtmlAttribute(F("class"), classname);
   addHtmlAttribute(F("type"),  F("number"));
   addHtmlAttribute(F("name"),  id);
+  if (title.length() > 0) {
+    addHtmlAttribute(F("title"), title);
+  }
 
   if (value < min) {
     value = min;
@@ -305,7 +316,12 @@ void addNumericBox(const String& id, int value, int min, int max)
   addHtml('>');
 }
 
-void addFloatNumberBox(const String& id, float value, float min, float max, byte nrDecimals, float stepsize)
+void addNumericBox(const String& id, int value, int min, int max)
+{
+  addNumericBox(id, value, min, max, F("widenumber"));
+}
+
+void addFloatNumberBox(const String& id, float value, float min, float max, byte nrDecimals, float stepsize, const String& title)
 {
   String html;
 
@@ -331,6 +347,11 @@ void addFloatNumberBox(const String& id, float value, float min, float max, byte
 
   html += F(" style='width:7em;' value=");
   html += String(value, nrDecimals);
+  if (title.length() > 0) {
+    html += F("title='");
+    html += title;
+    html += F("' ");
+  }
   html += '>';
 
   addHtml(html);
@@ -339,8 +360,7 @@ void addFloatNumberBox(const String& id, float value, float min, float max, byte
 // ********************************************************************************
 // Add Textbox
 // ********************************************************************************
-void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern)
-{
+void addTextBox(const String& id, const String&  value, int maxlength, bool readonly, bool required, const String& pattern) {
   addTextBox(id, value, maxlength, readonly, required, pattern, F("wide"));
 }
 
@@ -350,7 +370,8 @@ void addTextBox(const String& id,
                 bool          readonly,
                 bool          required,
                 const String& pattern,
-                const String& classname)
+                const String& classname,
+                const String& title)
 {
   addHtml(F("<input "));
   addHtmlAttribute(F("class"),     classname);
@@ -370,13 +391,16 @@ void addTextBox(const String& id,
   if (pattern.length() > 0) {
     addHtmlAttribute(F("pattern"), pattern);
   }
+  if (title.length() > 0) {
+    addHtmlAttribute(F("title"),   title);
+  }
   addHtml('>');
 }
 
 // ********************************************************************************
 // Add Textarea
 // ********************************************************************************
-void addTextArea(const String& id, const String& value, int maxlength, int rows, int columns, bool readonly, bool required)
+void addTextArea(const String& id, const String& value, int maxlength, int rows, int columns, bool readonly, bool required, const String& title)
 {
   addHtml(F("<textarea "));
   addHtmlAttribute(F("class"),     F("wide"));
@@ -392,6 +416,9 @@ void addTextArea(const String& id, const String& value, int maxlength, int rows,
 
   if (required) {
     addHtml(F(" required "));
+  }
+  if (title.length() > 0) {
+    addHtmlAttribute(F("title"),   title);
   }
   addHtml('>');
   addHtml(value);
