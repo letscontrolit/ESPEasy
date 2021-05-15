@@ -18,6 +18,7 @@
 #include "../Helpers/Network.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringProvider.h"
 
 #include <IPAddress.h>
 
