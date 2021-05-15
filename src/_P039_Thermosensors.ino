@@ -57,6 +57,7 @@
 
 #include <SPI.h>
 #include <Misc.h>
+#include "src/PluginStructs/P039_data_struct.h"
 // #include <String.h>
 
 // // plugin-local quick activation of debug messages
@@ -70,8 +71,8 @@
 # define PLUGIN_VALUENAME1_039 "Temperature"
 
 // typically 500ns of wating on positive/negative edge of CS should be enough ( -> datasheet); to make sure we cover a lot of devices we spend 1ms
-// FIX 2021-05-05: review of all covered device datasheets showed 1ms is more than enough; review with every newly added device
-#define P039_CS_Delay()             delayMicroseconds(1u)
+// FIX 2021-05-05: review of all covered device datasheets showed 2ms is more than enough; review with every newly added device
+#define P039_CS_Delay()             delayMicroseconds(2u)
 
 #define P039_MAX_TYPE               PCONFIG(0)
 #define P039_TC_TYPE                PCONFIG(1)
@@ -108,23 +109,23 @@
 #define MAX31855_TC_GENFLT          0x00010000u
 
 // register offset values for MAX 31856
-# define MAX31856_RAWVALUE           0u
-# define MAX31856_CR0                1u
-# define MAX31856_CR1                2u
-# define MAX31856_MASK               3u
-# define MAX31856_CJHF               4u
-# define MAX31856_CJLF               5u
-# define MAX31856_LTHFTH             6u
-# define MAX31856_LTHFTL             7u
-# define MAX31856_LTLFTH             8u
-# define MAX31856_LTLFTL             9u
-# define MAX31856_CJTO              10u
-# define MAX31856_CJTH              11u
-# define MAX31856_CJTL              12u
-# define MAX31856_LTCBH             13u
-# define MAX31856_LTCBM             14u
-# define MAX31856_LTCBL             15u
-# define MAX31856_SR                16u
+#define MAX31856_RAWVALUE           0u
+#define MAX31856_CR0                1u
+#define MAX31856_CR1                2u
+#define MAX31856_MASK               3u
+#define MAX31856_CJHF               4u
+#define MAX31856_CJLF               5u
+#define MAX31856_LTHFTH             6u
+#define MAX31856_LTHFTL             7u
+#define MAX31856_LTLFTH             8u
+#define MAX31856_LTLFTL             9u
+#define MAX31856_CJTO               10u
+#define MAX31856_CJTH               11u
+#define MAX31856_CJTL               12u
+#define MAX31856_LTCBH              13u
+#define MAX31856_LTCBM              14u
+#define MAX31856_LTCBL              15u
+#define MAX31856_SR                 16u
 
 #define MAX31856_NO_REG             17u
 
@@ -136,7 +137,14 @@
 // waiting time until "in sequence" conversion is ready (-> used in case device is set to shutdown in between call cycles)
 // typically 70ms should be fine, according to datasheet maximum -> 66ms - give a little adder to "be sure" conversion is done
 // alternatively ONE SHOT bit could be polled (system/SPI bus load !)
-#define MAX31865_CONVERSION_BREAK   75u
+#define MAX31865_CONVERSION_TIME    70ul
+#define MAX31865_BIAS_WAIT_TIME     10ul
+
+// MAX 31865 Main States
+#define MAX31865_INIT_STATE         0u
+#define MAX31865_BIAS_ON_STATE      1u
+#define MAX31865_RD_STATE           2u
+#define MAX31865_RDY_STATE          3u
 
 // sensor type
 #define MAX31865_PT100              0u
@@ -234,6 +242,9 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P039_data_struct(0u, 0u, 0u, 0u, 0u, false));
+      P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
+
       uint8_t CS_pin_no = get_SPI_CS_Pin(event);
    
       // set the slaveSelectPin as an output:
@@ -292,8 +303,21 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         // set LowFault Threshold
         transfer_n_ByteSPI(CS_pin_no, 3, &initSendBufferLFTH[0]);
 
-        // finally clear all faults again - playing safe
+        // clear all faults
         clearFaults(CS_pin_no);
+
+        //activate BIAS short before read, to reduce power consumption
+        handleBias(CS_pin_no, true);
+
+        // save current timer for next calculation
+        P039_data->timer = millis();
+
+        // start time to follow up on BIAS activation before starting the conversion
+        // and start conversion sequence via TIMER API
+        if(nullptr != P039_data){
+          P039_data->mainState =  MAX31865_BIAS_ON_STATE;
+          Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
+        }
 
       }
       if (P039_MAX_TYPE == P039_LM7x)
@@ -304,13 +328,16 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         // TODO: c.k.i.: more detailed inits depending on the sub devices expected , e.g. TMP 122/124
       }
 
-      String log;
-      if((log.reserve(66u))) {
-        log = F("P039 : ");
-        log += getTaskDeviceName(event->TaskIndex);
-        log += F(" : SPI Init - DONE" );
-        addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log;
+        if((log.reserve(66u))) {
+          log = F("P039 : ");
+          log += getTaskDeviceName(event->TaskIndex);
+          log += F(" : SPI Init - DONE" );
+          addLog(LOG_LEVEL_INFO, log);
+        }
       }
+
       success = true;
       break;
     }
@@ -458,6 +485,8 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+
+
       // Get the MAX Type (6675 / 31855 / 31856)
       byte MaxType = P039_MAX_TYPE;
 
@@ -506,21 +535,176 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       }
       else
       {
-        String log;
-        if((log.reserve(66u))) {
-          log = F("P039 :  ");
-          log += getTaskDeviceName(event->TaskIndex);
-          log += F(" : ");
-          log += F("No Sensor attached !");
-          UserVar[event->BaseVarIndex]     = NAN;
-          UserVar[event->BaseVarIndex + 1] = NAN;
-          addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log;
+          if((log.reserve(66u))) {
+            log = F("P039 :  ");
+            log += getTaskDeviceName(event->TaskIndex);
+            log += F(" : ");
+            log += F("No Sensor attached !");
+            UserVar[event->BaseVarIndex]     = NAN;
+            UserVar[event->BaseVarIndex + 1] = NAN;
+            addLog(LOG_LEVEL_INFO, log);
+          }
         }
         success = false;
       }
 
       break;
     }
+
+    case PLUGIN_TIMER_IN: 
+    {
+      P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      uint8_t CS_pin_no = get_SPI_CS_Pin(event);
+
+      // Get the MAX Type (6675 / 31855 / 31856)
+      byte MaxType = P039_MAX_TYPE;
+
+      switch (MaxType) 
+      {
+        case P039_MAX31865:
+        {
+          if((nullptr != P039_data)){
+            switch(event->Par1)
+              {
+                case MAX31865_BIAS_ON_STATE:
+                {
+                  // calc delta since last call
+                  unsigned long delta = millis() - P039_data->timer;
+
+                  // save current timer for next calculation
+                  P039_data->timer = millis();
+
+                  // set next state in sequence -> READ STATE
+                  // P039_data->convReady = false;
+                  P039_data->mainState = MAX31865_RD_STATE;
+
+                  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                    String log;
+                    if((log.reserve(66u))) {
+                      log = F("P039 : ");
+                      log += getTaskDeviceName(event->TaskIndex);
+                      log += F(" : ");
+                      log += F("current state: MAX31865_BIAS_ON_STATE");
+                      log += F("; P039_data->mainState: ");
+                      log += String(P039_data->mainState, HEX);
+                      log += F("; delta: ");
+                      log += String(delta, DEC);
+                      log += F(" ms;");
+                      addLog(LOG_LEVEL_DEBUG, log);
+                    }
+                  }
+
+                  //activate one shot conversion
+                  startOneShotConversion(CS_pin_no);
+
+                  // start time to follow up on conversion and read the conversion result
+                  Scheduler.setPluginTaskTimer(MAX31865_CONVERSION_TIME, event->TaskIndex, MAX31865_RD_STATE);
+
+                  
+                  break;
+                }
+                case MAX31865_RD_STATE:
+                {
+                  // calc delta since last call
+                  unsigned long delta = millis() - P039_data->timer;
+
+                  // save current timer for next calculation
+                  P039_data->timer = millis();
+
+                  // read conversion result
+                  P039_data->conversionResult = read16BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_RTD_MSB));
+
+                  // deactivate BIAS short after read, to reduce power consumption
+                  handleBias(CS_pin_no, false);
+                                  
+                  //read fault register to get a full picture
+                  P039_data->deviceFaults = read8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_FAULT));
+
+                  // set next state in sequence -> READY STATE
+                  // P039_data->convReady = true;
+                  P039_data->mainState = MAX31865_RDY_STATE;
+
+                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                    String log;
+                    if((log.reserve(66u))) {
+                      log = F("P039 : ");
+                      log += getTaskDeviceName(event->TaskIndex);
+                      log += F(" : ");
+                      log += F("current state: MAX31865_RD_STATE ");
+                      log += F("P039_data->mainState: ");
+                      log += String(P039_data->mainState, HEX);
+                      addLog(LOG_LEVEL_DEBUG, log);
+
+                      log = F("P039 : ");
+                      log += getTaskDeviceName(event->TaskIndex);
+                      log += F("; : ");
+                      log += F("P039_data->conversionResult: ");
+                      log += String(P039_data->conversionResult, HEX);
+                      log += F("; P039_data->deviceFaults: ");
+                      log += String(P039_data->deviceFaults, HEX);
+                      log += F("; delta: ");
+                      log += String(delta, DEC);
+                      log += F("ms;");
+                      addLog(LOG_LEVEL_DEBUG, log);
+                    }
+                  }
+
+ 
+                  break;
+                }
+                case MAX31865_INIT_STATE:
+                default:
+                {
+                  // clear all faults
+                  clearFaults(CS_pin_no);
+
+                  //activate BIAS short before read, to reduce power consumption
+                  handleBias(CS_pin_no, true);
+
+                  // set next state in sequence -> BIAS ON STATE
+                  P039_data->mainState =  MAX31865_BIAS_ON_STATE;
+
+                  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                    String log;
+                    if((log.reserve(66u))) {
+                      log = F("P039 : ");
+                      log += getTaskDeviceName(event->TaskIndex);
+                      log += F(" : ");
+                      log += F("current state: MAX31865_INIT_STATE, default ");
+                      log += F("P039_data->mainState: ");
+                      log += String(P039_data->mainState, HEX);
+                      
+                      addLog(LOG_LEVEL_DEBUG, log);
+                    }
+                  }
+
+                  // save current timer for next calculation
+                  P039_data->timer = millis();
+
+                  // start time to follow up on BIAS activation before starting the conversion
+                  // and start conversion sequence via TIMER API
+                  Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
+
+
+                  break;
+                }
+              }
+            }
+          break;
+        }
+        default:
+        {
+          break;
+        }
+       }
+      
+      success = true;
+      break; 
+
+    } 
   }
   return success;
 }
@@ -715,7 +899,7 @@ float readMax31856(struct EventStruct *event)
       if((log.reserve(66u))) {
         log = F("P039 : MAX31856 :");
 
-        for (int i = 1; i < MAX31856_NO_REG; ++i) {
+        for (uint8_t i = 1; i < MAX31856_NO_REG; ++i) {
           log += ' ';
           log += String(registers[i], HEX);
         }
@@ -820,42 +1004,19 @@ int Plugin_039_convert_two_complement(uint32_t value, int nr_bits) {
 
 float readMax31865(struct EventStruct *event)
 {
+  P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
 
   uint8_t registers[MAX31865_NO_REG] = {0};
   uint16_t rawValue = 0u;
 
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
-  // clear all faults
-  clearFaults(CS_pin_no);
-
-  // set frequency filter
-  chooseFilterType(CS_pin_no, P039_RTD_FILT_TYPE);
-
-  //activate BIAS short before read, to reduce power consumption
-  handleBias(CS_pin_no, true);
-
-  // wait for external capacities to load (min. 10ms -> give 50% adder to "be sure")
-  delay(15);
-
-  // configure read access with configuration from web interface
-  setConType(CS_pin_no, P039_RTD_CON_TYPE);
-
-  //activate one shot conversion
-  startOneShotConversion(CS_pin_no);
-
-  // wait for 100ms -> conversion to be ready
-  // TODO: c.k.i.: remove blunt waiting for 100ms and wasting of run time, change to other mechnism: TIMER API or state machine
-  delay(100);
-
-  // read conversion result
-  rawValue = read16BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_RTD_MSB));
-
-  //deactivate BIAS short after read, to reduce power consumption
-  handleBias(CS_pin_no, false);
-
-
-  registers[MAX31865_FAULT] = read8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_FAULT));
+  // read conversion result and faults from plugin data structure 
+  // if pointer exists and conversion has been finished
+  if ((nullptr != P039_data) && (MAX31865_RDY_STATE == P039_data->mainState)) {
+    rawValue = P039_data->conversionResult;
+    registers[MAX31865_FAULT] = P039_data->deviceFaults;
+  }
 
 
   # ifndef BUILD_NO_DEBUG
@@ -864,16 +1025,15 @@ float readMax31865(struct EventStruct *event)
     {
       String log;
       if((log.reserve(66u))) {
-        log = getTaskDeviceName()
-
-        for (int i = 0u; i < MAX31865_NO_REG; ++i)
+       
+        for (uint8_t i = 0u; i < MAX31865_NO_REG; ++i)
         {
           registers[i] = read8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + i));
         }
 
         log = F("P039 : MAX31865 :");
 
-        for (int i = 0u; i < MAX31865_NO_REG; ++i)
+        for (uint8_t i = 0u; i < MAX31865_NO_REG; ++i)
         {
           log += F(" 0x");
           log += String(registers[i], HEX);
@@ -884,8 +1044,53 @@ float readMax31865(struct EventStruct *event)
     }
   # endif // ifndef BUILD_NO_DEBUG
 
+  // Prepare and start next conversion, before handling faults and rawValue
   // clear all faults
   clearFaults(CS_pin_no);
+
+  // set frequency filter
+  chooseFilterType(CS_pin_no, P039_RTD_FILT_TYPE);
+
+  // configure read access with configuration from web interface
+  setConType(CS_pin_no, P039_RTD_CON_TYPE);
+
+  //activate BIAS short before read, to reduce power consumption
+  handleBias(CS_pin_no, true);
+
+  // save current timer for next calculation
+  P039_data->timer = millis();
+  
+  // start time to follow up on BIAS activation before starting the conversion
+  // and start conversion sequence via TIMER API
+  if(nullptr != P039_data){
+      P039_data->mainState =  MAX31865_BIAS_ON_STATE;
+      Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
+  }
+ 
+  // // wait for external capacities to load (min. 10ms -> give 50% adder to "be sure")
+  // delay(15);
+
+  // //activate one shot conversion
+  // startOneShotConversion(CS_pin_no);
+
+  // if ((nullptr != P039_data)) {
+  // // mark conversion as started
+  // P039_data->convReady = false;
+  // P039_data->mainState = MAX31865_READ_STATE;
+  // }
+
+  // // start time to follow up on conversion and read the conversion result
+  // Scheduler.setPluginTaskTimer(MAX31865_CONVERSION_BREAK, event->TaskIndex, event->Par1); 
+
+  // wait for 100ms -> conversion to be ready
+  // TODO: c.k.i.: remove blunt waiting for 100ms and wasting of run time, change to other mechnism: TIMER API or state machine
+  // delay(100);
+
+  // read conversion result
+  // rawValue = read16BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_RTD_MSB));
+  
+  //deactivate BIAS short after read, to reduce power consumption
+  // handleBias(CS_pin_no, false);
 
   # ifndef BUILD_NO_DEBUG
 
@@ -939,7 +1144,7 @@ float readMax31865(struct EventStruct *event)
 
   bool ValueValid = false;
 
-  if (registers[MAX31865_FAULT] == 0x00)
+  if (registers[MAX31865_FAULT] == 0x00u)
     ValueValid = true;
 
   # ifndef BUILD_NO_DEBUG
@@ -1268,7 +1473,7 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
 
   # ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
       if((log.reserve(66u))) {
@@ -1283,7 +1488,7 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
         log += String(l_noBits, DEC);
         log += F(" l_lsbvalue: ");
         log += String(l_lsbvalue, DEC);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1406,7 +1611,7 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
 
   # ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
       if((log.reserve(66u))) {
@@ -1415,7 +1620,7 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
         log += String(l_returnValue, HEX);
         log += F(" l_device_id: 0x");
         log += String(*(l_device_id), HEX);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1515,7 +1720,7 @@ void write8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
 
    # ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
       if((log.reserve(66u))) {
@@ -1524,7 +1729,7 @@ void write8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
         log += String(l_address, HEX);
         log += F(" value: 0x");
         log += String(value, HEX);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1552,7 +1757,7 @@ void write16BitRegisters(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
 
   # ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
       if((log.reserve(66u))) {
@@ -1561,7 +1766,7 @@ void write16BitRegisters(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
         log += String(l_address, HEX);
         log += F(" value: 0x");
         log += String(value, HEX);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1588,7 +1793,7 @@ uint8_t read8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
 
   # ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
       if((log.reserve(66u))) {
@@ -1597,7 +1802,7 @@ uint8_t read8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
         log += String(l_address, HEX);
         log += F(" returnvalue: 0x");
         log += String(l_messageBuffer[1], HEX);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1623,12 +1828,12 @@ uint16_t read16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
   uint8_t l_messageBuffer[3] = {l_address, 0x00 , 0x00};
   uint16_t l_returnValue;
 
-  transfer_n_ByteSPI(l_CS_pin_no, 2, l_messageBuffer );
+  transfer_n_ByteSPI(l_CS_pin_no, 3, l_messageBuffer );
   l_returnValue = ((l_messageBuffer[1]<<8) | l_messageBuffer[2] );
 
   # ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
       if((log.reserve(66u))) {
@@ -1637,7 +1842,7 @@ uint16_t read16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
         log += String(l_address, HEX);
         log += F(" l_returnValue: 0x");
         log += String(l_returnValue, HEX);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1677,17 +1882,17 @@ void transfer_n_ByteSPI(uint8_t l_CS_pin_no, uint8_t l_noBytesToSend, uint8_t* l
 
   # ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
       if((log.reserve(66u))) {
         log = F("P039 : SPI : transfer_n_ByteSPI : ");
-        for (int i = 0; i < l_noBytesToSend; ++i)
+        for (uint8_t i = 0; i < l_noBytesToSend; ++i)
         {
           log += F(" 0x");
           log += String(l_inoutMessageBuffer[i], HEX);
         }
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
