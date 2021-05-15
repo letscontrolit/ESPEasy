@@ -48,9 +48,11 @@ void handle_settingsarchive() {
     }
 
     ResetFactoryDefaultPreference.deleteFirst(isFormItemChecked(F("del")));
+#ifdef USE_CUSTOM_PROVISIONING
     ResetFactoryDefaultPreference.saveURL(isFormItemChecked(F("saveurl")));
     ResetFactoryDefaultPreference.allowFetchByCommand(isFormItemChecked(F("allowcommand")));
     ResetFactoryDefaultPreference.storeCredentials(isFormItemChecked(F("savecred")));
+#endif
     applyFactoryDefaultPref();
 
     String error;
@@ -166,8 +168,10 @@ void handle_settingsarchive() {
     addRowLabel(F("Delete First"));
     addCheckBox("del", ResetFactoryDefaultPreference.deleteFirst());
     addFormNote(F("Needed on filesystem with not enough free space. Use with care!"));
+    #ifdef USE_CUSTOM_PROVISIONING
     addFormCheckBox(F("Allow Fetch by Command"), F("allowcommand"), ResetFactoryDefaultPreference.allowFetchByCommand());
-    addFormNote(F("Fetch files via a command does need a stored URL and credentials"));
+    addFormNote(F("Fetch files via a command does need stored URL (+ credentials)"));
+    #endif
 
     addTableSeparator(F("Files to Download"), 2, 3);
     for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
@@ -181,12 +185,11 @@ void handle_settingsarchive() {
       addDownloadFiletypeCheckbox(FileType::RULES_TXT, i);
     }
 
-    addFormSeparator(2);
-
     html_TR_TD();
     html_TD();
     addSubmitButton(F("Save Preferences"), F("savepref"));
 
+    addFormSeparator(2);
     addRowLabel(F("Try download files"));
     addSubmitButton(F("Download"), F("download"), F("red"));
   }
