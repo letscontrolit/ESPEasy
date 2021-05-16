@@ -31,8 +31,12 @@ void addSelector(const String& id,
                  int           selectedIndex,
                  boolean       reloadonchange,
                  bool          enabled,
-                 const String& classname,
-                 const String& title = "");
+                 const String& classname
+                 #ifdef        ENABLE_TOOLTIPS
+                 ,
+                 const String& title = ""
+                 #endif // ifdef ENABLE_TOOLTIPS
+                 );
 
 void addSelector_options(int          optionCount,
                          const String options[],
@@ -46,20 +50,32 @@ void addSelector_Head_reloadOnChange(const String& id);
 
 void addSelector_Head_reloadOnChange(const String& id,
                                      const String& classname,
-                                     bool          disabled,
-                                     const String& title = "");
+                                     bool          disabled
+                                     #ifdef        ENABLE_TOOLTIPS
+                                     ,
+                                     const String& title = ""
+                                     #endif // ifdef        ENABLE_TOOLTIPS
+                                     );
 
 void addSelector_Head_reloadOnChange(const String& id,
                                      const String& classname,
                                      const String& onChangeCall,
-                                     bool          disabled,
-                                     const String& title = "");
+                                     bool          disabled
+                                     #ifdef        ENABLE_TOOLTIPS
+                                     ,
+                                     const String& title = ""
+                                     #endif // ifdef        ENABLE_TOOLTIPS
+                                     );
 
 void do_addSelector_Head(const String& id,
                          const String& classname,
                          const String& onChangeCall,
-                         const bool  & disabled,
-                         const String& title = "");
+                         const bool& disabled
+                         #ifdef        ENABLE_TOOLTIPS
+                         ,
+                         const String& title = ""
+                         #endif // ifdef        ENABLE_TOOLTIPS
+                         );
 
 void addSelector_Item(const String& option,
                       int           index,
@@ -110,18 +126,25 @@ void addFormSubHeader(const String& header);
 // ********************************************************************************
 void addCheckBox(const String& id,
                  boolean       checked,
-                 bool          disabled = false,
-                 const String& title    = "");
+                 bool          disabled = false
+                 #ifdef        ENABLE_TOOLTIPS
+                 ,
+                 const String& title = ""
+                 #endif // ifdef ENABLE_TOOLTIPS
+                 );
 
 // ********************************************************************************
 // Add a numeric box
 // ********************************************************************************
+#ifdef        ENABLE_TOOLTIPS
 void addNumericBox(const String& id,
                    int           value,
                    int           min,
                    int           max,
                    const String& classname,
                    const String& title = "");
+#endif // ifdef ENABLE_TOOLTIPS
+
 void addNumericBox(const String& id,
                    int           value,
                    int           min,
@@ -132,8 +155,12 @@ void addFloatNumberBox(const String& id,
                        float         min,
                        float         max,
                        byte          nrDecimals = 6,
-                       float         stepsize   = 0.0f,
-                       const String& title      = "");
+                       float         stepsize   = 0.0f
+                       #ifdef ENABLE_TOOLTIPS
+                       ,
+                       const String& title = ""
+                       #endif // ifdef ENABLE_TOOLTIPS
+                       );
 
 // ********************************************************************************
 // Add Textbox
@@ -150,8 +177,12 @@ void addTextBox(const String& id,
                 bool          readonly,
                 bool          required,
                 const String& pattern,
-                const String& classname,
-                const String& title = "");
+                const String& classname
+                #ifdef        ENABLE_TOOLTIPS
+                ,
+                const String& title = ""
+                #endif // ifdef ENABLE_TOOLTIPS
+                );
 
 // ********************************************************************************
 // Add Textarea
@@ -162,8 +193,12 @@ void addTextArea(const String& id,
                  int           rows,
                  int           columns,
                  bool          readonly,
-                 bool          required,
-                 const String& title = "");
+                 bool          required
+                 #ifdef        ENABLE_TOOLTIPS
+                 ,
+                 const String& title = ""
+                 #endif // ifdef ENABLE_TOOLTIPS
+                 );
 
 // ********************************************************************************
 // Add Help Buttons

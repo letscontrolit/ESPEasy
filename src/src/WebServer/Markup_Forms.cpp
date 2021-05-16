@@ -44,18 +44,42 @@ void addFormNote(const String& text, const String& id)
 // Add a checkbox Form
 // ********************************************************************************
 
-void addFormCheckBox_disabled(const String& label, const String& id, boolean checked, const String& title) {
-  addFormCheckBox(label, id, checked, true, title);
+void addFormCheckBox_disabled(const String& label, const String& id, boolean checked
+                              #ifdef ENABLE_TOOLTIPS
+                              , const String& title
+                              #endif // ifdef ENABLE_TOOLTIPS
+                              ) {
+  addFormCheckBox(label, id, checked, true
+                  #ifdef ENABLE_TOOLTIPS
+                  , title
+                  #endif // ifdef ENABLE_TOOLTIPS
+                  );
 }
 
-void addFormCheckBox(const String& label, const String& id, boolean checked, bool disabled, const String& title)
+void addFormCheckBox(const String& label, const String& id, boolean checked, bool disabled
+                     #ifdef ENABLE_TOOLTIPS
+                     , const String& title
+                     #endif // ifdef ENABLE_TOOLTIPS
+                     )
 {
   addRowLabel_tr_id(label, id);
-  addCheckBox(id, checked, disabled, title);
+  addCheckBox(id, checked, disabled
+              #ifdef ENABLE_TOOLTIPS
+              , title
+              #endif // ifdef ENABLE_TOOLTIPS
+              );
 }
 
-void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled, const String& title) {
-  addFormCheckBox(getLabel(label), getInternalLabel(label), checked, disabled, title);
+void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled
+                     #ifdef ENABLE_TOOLTIPS
+                     , const String& title
+                     #endif // ifdef ENABLE_TOOLTIPS
+                     ) {
+  addFormCheckBox(getLabel(label), getInternalLabel(label), checked, disabled
+                  #ifdef ENABLE_TOOLTIPS
+                  , title
+                  #endif // ifdef ENABLE_TOOLTIPS
+                  );
 }
 
 void addFormCheckBox_disabled(LabelType::Enum label, boolean checked) {
@@ -65,25 +89,64 @@ void addFormCheckBox_disabled(LabelType::Enum label, boolean checked) {
 // ********************************************************************************
 // Add a Numeric Box form
 // ********************************************************************************
-void addFormNumericBox(LabelType::Enum label, int value, int min, int max, const String& title)
+void addFormNumericBox(LabelType::Enum label, int value, int min, int max
+                       #ifdef ENABLE_TOOLTIPS
+                       , const String& title
+                       #endif // ifdef ENABLE_TOOLTIPS
+                       )
 {
-  addFormNumericBox(getLabel(label), getInternalLabel(label), value, min, max, title);
+  addFormNumericBox(getLabel(label), getInternalLabel(label), value, min, max
+                    #ifdef ENABLE_TOOLTIPS
+                    , title
+                    #endif // ifdef ENABLE_TOOLTIPS
+                    );
 }
 
-void addFormNumericBox(const String& label, const String& id, int value, int min, int max, const String& title)
+void addFormNumericBox(const String& label, const String& id, int value, int min, int max
+                       #ifdef ENABLE_TOOLTIPS
+                       , const String& title
+                       #endif // ifdef ENABLE_TOOLTIPS
+                       )
 {
   addRowLabel_tr_id(label, id);
-  addNumericBox(id, value, min, max, F("widenumber"), title);
+  addNumericBox(id, value, min, max
+                #ifdef ENABLE_TOOLTIPS
+                , F("widenumber"), title
+                #endif // ifdef ENABLE_TOOLTIPS
+                );
 }
 
-void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals, float stepsize, const String& title) {
-  addFormFloatNumberBox(getLabel(label), getInternalLabel(label), value, min, max, nrDecimals, stepsize, title);
+void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals, float stepsize
+                           #ifdef ENABLE_TOOLTIPS
+                           , const String& title
+                           #endif // ifdef ENABLE_TOOLTIPS
+                           ) {
+  addFormFloatNumberBox(getLabel(label), getInternalLabel(label), value, min, max, nrDecimals, stepsize
+                        #ifdef ENABLE_TOOLTIPS
+                        , title
+                        #endif // ifdef ENABLE_TOOLTIPS
+                        );
 }
 
-void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, byte nrDecimals, float stepsize, const String& title)
+void addFormFloatNumberBox(const String& label,
+                           const String& id,
+                           float         value,
+                           float         min,
+                           float         max,
+                           byte          nrDecimals,
+                           float         stepsize
+                           #ifdef        ENABLE_TOOLTIPS
+                           ,
+                           const String& title
+                           #endif // ifdef ENABLE_TOOLTIPS
+                           )
 {
   addRowLabel_tr_id(label, id);
-  addFloatNumberBox(id, value, min, max, nrDecimals, stepsize, title);
+  addFloatNumberBox(id, value, min, max, nrDecimals, stepsize
+                    #ifdef ENABLE_TOOLTIPS
+                    , title
+                    #endif // ifdef ENABLE_TOOLTIPS
+                    );
 }
 
 // ********************************************************************************
@@ -98,38 +161,56 @@ void addTaskSelectBox(const String& label, const String& id, taskIndex_t choice)
 // ********************************************************************************
 // Add a Text Box form
 // ********************************************************************************
-void addFormTextBox(const String& label,
-                    const String& id,
-                    const String& value,
-                    int           maxlength,
-                    bool          readonly,
-                    bool          required,
-                    const String& pattern,
-                    const String& title)
+void addFormTextBox(const String  & label,
+                    const String  & id,
+                    const String  & value,
+                    int             maxlength,
+                    bool            readonly,
+                    bool            required,
+                    const String& pattern
+                    #ifdef          ENABLE_TOOLTIPS
+                    , const String& title
+                    #endif // ifdef ENABLE_TOOLTIPS
+                    )
 {
   addRowLabel_tr_id(label, id);
-  addTextBox(id, value, maxlength, readonly, required, pattern, F("wide"), title);
+  addTextBox(id, value, maxlength, readonly, required, pattern, F("wide")
+             #ifdef ENABLE_TOOLTIPS
+             , title
+             #endif // ifdef ENABLE_TOOLTIPS
+             );
 }
 
-void addFormTextArea(const String& label,
-                     const String& id,
-                     const String& value,
-                     int           maxlength,
-                     int           rows,
-                     int           columns,
-                     bool          readonly,
-                     bool          required,
-                     const String& title)
+void addFormTextArea(const String  & label,
+                     const String  & id,
+                     const String  & value,
+                     int             maxlength,
+                     int             rows,
+                     int             columns,
+                     bool            readonly,
+                     bool          required
+                     #ifdef          ENABLE_TOOLTIPS
+                     , const String& title
+                     #endif // ifdef ENABLE_TOOLTIPS
+                     )
 {
   addRowLabel_tr_id(label, id);
-  addTextArea(id, value, maxlength, rows, columns, readonly, required, title);
+  addTextArea(id, value, maxlength, rows, columns, readonly, required
+              #ifdef ENABLE_TOOLTIPS
+              , title
+              #endif // ifdef ENABLE_TOOLTIPS
+              );
 }
 
 // ********************************************************************************
 // Add a Password Box form
 // ********************************************************************************
 
-void addFormPasswordBox(const String& label, const String& id, const String& password, int maxlength, const String& title)
+void addFormPasswordBox(const String& label, const String& id, const String& password, int maxlength
+                        #ifdef ENABLE_TOOLTIPS
+                        , const String& title
+                        #endif // ifdef ENABLE_TOOLTIPS
+                        )
 {
   addRowLabel_tr_id(label, id);
 
@@ -138,10 +219,14 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   addHtmlAttribute(F("type"),      F("password"));
   addHtmlAttribute(F("name"),      id);
   addHtmlAttribute(F("maxlength"), maxlength);
+
+  #ifdef ENABLE_TOOLTIPS
+
   if (title.length() > 0) {
-    addHtmlAttribute(F("title"),   title);
+    addHtmlAttribute(F("title"), title);
   }
-  addHtmlAttribute(F("value"),     (password.length() == 0) ? F("") : F("*****"));
+  #endif // ifdef ENABLE_TOOLTIPS
+  addHtmlAttribute(F("value"), (password.length() == 0) ? F("") : F("*****"));
   addHtml('>');
 }
 
@@ -194,10 +279,18 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
   addPinSelect(true, id, choice);
 }
 
-void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex, const String& title)
+void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex
+                        #ifdef ENABLE_TOOLTIPS
+                        , const String& title
+                        #endif // ifdef ENABLE_TOOLTIPS
+                        )
 {
   addRowLabel_tr_id(F("I2C Address"), id);
-  do_addSelector_Head(id, "", "", false, title);
+  do_addSelector_Head(id, "", "", false
+                      #ifdef ENABLE_TOOLTIPS
+                      , title
+                      #endif // ifdef ENABLE_TOOLTIPS
+                      );
 
   for (byte x = 0; x < addressCount; x++)
   {
@@ -211,15 +304,22 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
   addSelector_Foot();
 }
 
-void addFormSelector(const String& label,
-                     const String& id,
-                     int optionCount,
-                     const String options[],
-                     const int indices[],
-                     int selectedIndex,
-                     const String& title)
+void addFormSelector(const String  & label,
+                     const String  & id,
+                     int             optionCount,
+                     const String    options[],
+                     const int       indices[],
+                     int           selectedIndex
+                     #ifdef          ENABLE_TOOLTIPS
+                     , const String& title
+                     #endif // ifdef ENABLE_TOOLTIPS
+                     )
 {
-  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false, title);
+  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false
+                  #ifdef ENABLE_TOOLTIPS
+                  , title
+                  #endif // ifdef ENABLE_TOOLTIPS
+                  );
 }
 
 void addFormSelector(const String& label,
@@ -233,32 +333,46 @@ void addFormSelector(const String& label,
   addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, reloadonchange);
 }
 
-void addFormSelector(const String& label,
-                     const String& id,
-                     int           optionCount,
-                     const String  options[],
-                     const int     indices[],
-                     const String  attr[],
-                     int           selectedIndex,
-                     boolean       reloadonchange,
-                     const String& title)
+void addFormSelector(const String  & label,
+                     const String  & id,
+                     int             optionCount,
+                     const String    options[],
+                     const int       indices[],
+                     const String    attr[],
+                     int             selectedIndex,
+                     boolean       reloadonchange
+                     #ifdef          ENABLE_TOOLTIPS
+                     , const String& title
+                     #endif // ifdef ENABLE_TOOLTIPS
+                     )
 {
   addRowLabel_tr_id(label, id);
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true, F("wide"), title);
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true, F("wide")
+              #ifdef ENABLE_TOOLTIPS
+              , title
+              #endif // ifdef ENABLE_TOOLTIPS
+              );
 }
 
-void addFormSelector_script(const String& label,
-                            const String& id,
-                            int           optionCount,
-                            const String  options[],
-                            const int     indices[],
-                            const String  attr[],
-                            int           selectedIndex,
-                            const String& onChangeCall,
-                            const String& title)
+void addFormSelector_script(const String  & label,
+                            const String  & id,
+                            int             optionCount,
+                            const String    options[],
+                            const int       indices[],
+                            const String    attr[],
+                            int             selectedIndex,
+                            const String& onChangeCall
+                            #ifdef          ENABLE_TOOLTIPS
+                            , const String& title
+                            #endif // ifdef ENABLE_TOOLTIPS
+                            )
 {
   addRowLabel_tr_id(label, id);
-  do_addSelector_Head(id, "", onChangeCall, false, title);
+  do_addSelector_Head(id, "", onChangeCall, false
+                      #ifdef ENABLE_TOOLTIPS
+                      , title
+                      #endif // ifdef ENABLE_TOOLTIPS
+                      );
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
@@ -341,7 +455,8 @@ int getFormItemInt(const String& key, int defaultValue) {
 
 bool getCheckWebserverArg_int(const String& key, int& value) {
   const String valueStr = web_server.arg(key);
-  if (valueStr.length() == 0) return false;
+
+  if (valueStr.length() == 0) { return false; }
   return validIntFromString(valueStr, value);
 }
 
@@ -380,7 +495,8 @@ int getFormItemInt(const String& id)
 float getFormItemFloat(const String& id)
 {
   const String val = web_server.arg(id);
-  float res = 0.0;
+  float res        = 0.0;
+
   if (val.length() > 0) {
     validFloatFromString(val, res);
   }

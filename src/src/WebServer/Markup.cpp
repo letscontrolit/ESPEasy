@@ -33,23 +33,34 @@ void addSelector(const String& id,
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
 }
 
-void addSelector(const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex,
-                 boolean       reloadonchange,
-                 bool          enabled,
-                 const String& classname,
-                 const String& title)
+void addSelector(const String  & id,
+                 int             optionCount,
+                 const String    options[],
+                 const int       indices[],
+                 const String    attr[],
+                 int             selectedIndex,
+                 boolean         reloadonchange,
+                 bool            enabled,
+                 const String& classname
+                 #ifdef          ENABLE_TOOLTIPS
+                 , const String& title
+                 #endif // ifdef ENABLE_TOOLTIPS
+                 )
 {
   // FIXME TD-er Change boolean to disabled
   if (reloadonchange)
   {
-    addSelector_Head_reloadOnChange(id, classname, !enabled, title);
+    addSelector_Head_reloadOnChange(id, classname, !enabled
+                                    #ifdef ENABLE_TOOLTIPS
+                                    , title
+                                    #endif // ifdef ENABLE_TOOLTIPS
+                                    );
   } else {
-    do_addSelector_Head(id, classname, F(""), !enabled, title);
+    do_addSelector_Head(id, classname, F(""), !enabled
+                        #ifdef ENABLE_TOOLTIPS
+                        , title
+                        #endif // ifdef ENABLE_TOOLTIPS
+                        );
   }
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
@@ -78,30 +89,58 @@ void addSelector_options(int optionCount, const String options[], const int indi
 }
 
 void addSelector_Head(const String& id) {
-  do_addSelector_Head(id, F("wide"), F(""), false, F(""));
+  do_addSelector_Head(id, F("wide"), F(""), false
+                      #ifdef ENABLE_TOOLTIPS
+                      , F("")
+                      #endif // ifdef ENABLE_TOOLTIPS
+                      );
 }
 
 void addSelector_Head_reloadOnChange(const String& id) {
   addSelector_Head_reloadOnChange(id, F("wide"), false);
 }
 
-void addSelector_Head_reloadOnChange(const String& id, const String& classname, bool disabled, const String& title) {
-  do_addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled, title);
+void addSelector_Head_reloadOnChange(const String& id, const String& classname, bool disabled
+                                     #ifdef ENABLE_TOOLTIPS
+                                     , const String& title
+                                     #endif // ifdef ENABLE_TOOLTIPS
+                                     ) {
+  do_addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled
+                      #ifdef ENABLE_TOOLTIPS
+                      , title
+                      #endif // ifdef ENABLE_TOOLTIPS
+                      );
 }
 
-void addSelector_Head_reloadOnChange(const String& id, const String& classname, const String& onChangeCall, bool disabled, const String& title) {
-  do_addSelector_Head(id, classname, onChangeCall, disabled, title);
+void addSelector_Head_reloadOnChange(const String& id, const String& classname, const String& onChangeCall, bool disabled
+                                     #ifdef ENABLE_TOOLTIPS
+                                     , const String& title
+                                     #endif
+                                     ) {
+  do_addSelector_Head(id, classname, onChangeCall, disabled
+                      # ifdef ENABLE_TOOLTIPS
+                      , title
+                      # endif // ifdef ENABLE_TOOLTIPS
+                      );
 }
 
-void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled, const String& title)
+void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled
+                         # ifdef ENABLE_TOOLTIPS
+                         , const String& title
+                         # endif // ifdef ENABLE_TOOLTIPS
+                         )
 {
   addHtml(F("<select "));
   addHtmlAttribute(F("class"), classname);
   addHtmlAttribute(F("name"),  id);
   addHtmlAttribute(F("id"),    id);
+
+  # ifdef ENABLE_TOOLTIPS
+
   if (title.length() > 0) {
     addHtmlAttribute(F("title"), title);
   }
+  # endif // ifdef ENABLE_TOOLTIPS
 
   if (disabled) {
     addDisabled();
@@ -259,7 +298,11 @@ void addFormSubHeader(const String& header)
 // ********************************************************************************
 // Add a checkbox
 // ********************************************************************************
-void addCheckBox(const String& id, boolean checked, bool disabled, const String& title)
+void addCheckBox(const String& id, boolean checked, bool disabled
+                 # ifdef ENABLE_TOOLTIPS
+                 , const String& title
+                 # endif // ifdef ENABLE_TOOLTIPS
+                 )
 {
   addHtml(F("<label class='container'>&nbsp;"));
   addHtml(F("<input "));
@@ -276,24 +319,39 @@ void addCheckBox(const String& id, boolean checked, bool disabled, const String&
 
   if (disabled) { addDisabled(); }
   addHtml('\'');
+  # ifdef ENABLE_TOOLTIPS
+
   if (title.length() > 0) {
     addHtmlAttribute(F("title"), title);
   }
+  # endif // ifdef ENABLE_TOOLTIPS
   addHtml(F("></span></label>"));
 }
 
 // ********************************************************************************
 // Add a numeric box
 // ********************************************************************************
-void addNumericBox(const String& id, int value, int min, int max, const String& classname, const String& title)
+void addNumericBox(const String& id, int value, int min, int max
+                   # ifdef ENABLE_TOOLTIPS
+                   , const String& classname, const String& title
+                   # endif // ifdef ENABLE_TOOLTIPS
+                   )
 {
   addHtml(F("<input "));
+  # ifdef ENABLE_TOOLTIPS
   addHtmlAttribute(F("class"), classname);
+  # else // ifdef ENABLE_TOOLTIPS
+  addHtmlAttribute(F("class"), F("widenumber"));
+  # endif // ifdef ENABLE_TOOLTIPS
   addHtmlAttribute(F("type"),  F("number"));
   addHtmlAttribute(F("name"),  id);
+
+  # ifdef ENABLE_TOOLTIPS
+
   if (title.length() > 0) {
     addHtmlAttribute(F("title"), title);
   }
+  # endif // ifdef ENABLE_TOOLTIPS
 
   if (value < min) {
     value = min;
@@ -316,12 +374,19 @@ void addNumericBox(const String& id, int value, int min, int max, const String& 
   addHtml('>');
 }
 
+# ifdef ENABLE_TOOLTIPS
 void addNumericBox(const String& id, int value, int min, int max)
 {
   addNumericBox(id, value, min, max, F("widenumber"));
 }
 
-void addFloatNumberBox(const String& id, float value, float min, float max, byte nrDecimals, float stepsize, const String& title)
+# endif // ifdef ENABLE_TOOLTIPS
+
+void addFloatNumberBox(const String& id, float value, float min, float max, byte nrDecimals, float stepsize
+                       # ifdef ENABLE_TOOLTIPS
+                       , const String& title
+                       # endif // ifdef ENABLE_TOOLTIPS
+                       )
 {
   String html;
 
@@ -335,8 +400,10 @@ void addFloatNumberBox(const String& id, float value, float min, float max, byte
   html += F(" max=");
   html += String(max, nrDecimals);
   html += F(" step=");
+
   if (stepsize <= 0.0f) {
     html += F("0.");
+
     for (byte i = 1; i < nrDecimals; ++i) {
       html += '0';
     }
@@ -347,11 +414,15 @@ void addFloatNumberBox(const String& id, float value, float min, float max, byte
 
   html += F(" style='width:7em;' value=");
   html += String(value, nrDecimals);
+
+  # ifdef ENABLE_TOOLTIPS
+
   if (title.length() > 0) {
     html += F("title='");
     html += title;
     html += F("' ");
   }
+  # endif // ifdef ENABLE_TOOLTIPS
   html += '>';
 
   addHtml(html);
@@ -364,14 +435,17 @@ void addTextBox(const String& id, const String&  value, int maxlength, bool read
   addTextBox(id, value, maxlength, readonly, required, pattern, F("wide"));
 }
 
-void addTextBox(const String& id,
-                const String& value,
-                int           maxlength,
-                bool          readonly,
-                bool          required,
-                const String& pattern,
-                const String& classname,
-                const String& title)
+void addTextBox(const String  & id,
+                const String  & value,
+                int             maxlength,
+                bool            readonly,
+                bool            required,
+                const String  & pattern,
+                const String& classname
+                # ifdef         ENABLE_TOOLTIPS
+                , const String& title
+                # endif // ifdef ENABLE_TOOLTIPS
+                )
 {
   addHtml(F("<input "));
   addHtmlAttribute(F("class"),     classname);
@@ -391,16 +465,30 @@ void addTextBox(const String& id,
   if (pattern.length() > 0) {
     addHtmlAttribute(F("pattern"), pattern);
   }
+
+  # ifdef ENABLE_TOOLTIPS
+
   if (title.length() > 0) {
-    addHtmlAttribute(F("title"),   title);
+    addHtmlAttribute(F("title"), title);
   }
+  # endif // ifdef ENABLE_TOOLTIPS
   addHtml('>');
 }
 
 // ********************************************************************************
 // Add Textarea
 // ********************************************************************************
-void addTextArea(const String& id, const String& value, int maxlength, int rows, int columns, bool readonly, bool required, const String& title)
+void addTextArea(const String  & id,
+                 const String  & value,
+                 int             maxlength,
+                 int             rows,
+                 int             columns,
+                 bool            readonly,
+                 bool          required
+                 # ifdef         ENABLE_TOOLTIPS
+                 , const String& title
+                 # endif // ifdef ENABLE_TOOLTIPS
+                 )
 {
   addHtml(F("<textarea "));
   addHtmlAttribute(F("class"),     F("wide"));
@@ -417,9 +505,13 @@ void addTextArea(const String& id, const String& value, int maxlength, int rows,
   if (required) {
     addHtml(F(" required "));
   }
+
+  # ifdef ENABLE_TOOLTIPS
+
   if (title.length() > 0) {
-    addHtmlAttribute(F("title"),   title);
+    addHtmlAttribute(F("title"), title);
   }
+  # endif // ifdef ENABLE_TOOLTIPS
   addHtml('>');
   addHtml(value);
   addHtml(F("</textarea>"));
@@ -432,13 +524,14 @@ void addTextArea(const String& id, const String& value, int maxlength, int rows,
 // adds a Help Button with points to the the given Wiki Subpage
 // If url starts with "RTD", it will be considered as a Read-the-docs link
 void addHelpButton(const String& url) {
-#ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
+# ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
+
   if (url.startsWith("RTD")) {
     addRTDHelpButton(url.substring(3));
   } else {
     addHelpButton(url, false);
   }
-#endif
+# endif // ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 }
 
 void addRTDHelpButton(const String& url)
@@ -448,12 +541,12 @@ void addRTDHelpButton(const String& url)
 
 void addHelpButton(const String& url, bool isRTD)
 {
-  #ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
+  # ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
   addHtmlLink(
     F("button help"),
     makeDocLink(url, isRTD),
     isRTD ? F("&#8505;") : F("&#10068;"));
-  #endif
+  # endif // ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 }
 
 void addRTDPluginButton(pluginID_t taskDeviceNumber) {
@@ -496,11 +589,11 @@ String makeDocLink(const String& url, bool isRTD) {
 
 void addPinSelect(boolean forI2C, const String& id,  int choice)
 {
-  #ifdef ESP32
-    # define NR_ITEMS_PIN_DROPDOWN  35 // 34 GPIO + 1
-  #else // ifdef ESP32
-    # define NR_ITEMS_PIN_DROPDOWN  14 // 13 GPIO + 1
-  #endif // ifdef ESP32
+  # ifdef ESP32
+    #  define NR_ITEMS_PIN_DROPDOWN  35 // 34 GPIO + 1
+  # else // ifdef ESP32
+    #  define NR_ITEMS_PIN_DROPDOWN  14 // 13 GPIO + 1
+  # endif // ifdef ESP32
 
   String *gpio_labels  = new String[NR_ITEMS_PIN_DROPDOWN];
   int    *gpio_numbers = new int[NR_ITEMS_PIN_DROPDOWN];
@@ -523,10 +616,10 @@ void addPinSelect(boolean forI2C, const String& id,  int choice)
   renderHTMLForPinSelect(gpio_labels, gpio_numbers, forI2C, id, choice, NR_ITEMS_PIN_DROPDOWN);
   delete[] gpio_numbers;
   delete[] gpio_labels;
-  #undef NR_ITEMS_PIN_DROPDOWN
+  # undef NR_ITEMS_PIN_DROPDOWN
 }
 
-#ifdef ESP32
+# ifdef ESP32
 void addADC_PinSelect(bool touchOnly, const String& id,  int choice)
 {
   int NR_ITEMS_PIN_DROPDOWN = touchOnly ? 10 : 19;
@@ -572,7 +665,7 @@ void addADC_PinSelect(bool touchOnly, const String& id,  int choice)
   delete[] gpio_labels;
 }
 
-#endif // ifdef ESP32
+# endif // ifdef ESP32
 
 
 // ********************************************************************************
@@ -596,7 +689,7 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
       }
 
       if (Settings.InitSPI != 0) {
-        #ifdef ESP32
+        # ifdef ESP32
 
         switch (Settings.InitSPI)
         {
@@ -607,9 +700,9 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
             disabled = (optionValues[x] == 14 || optionValues[x] == 12 || optionValues[x] == 13);
             break;
         }
-        #else // #ifdef ESP32
+        # else // #ifdef ESP32
         disabled = (optionValues[x] == 14 || optionValues[x] == 12 || optionValues[x] == 13);
-        #endif // ifdef ESP32
+        # endif // ifdef ESP32
       }
     }
     addSelector_Item(options[x],

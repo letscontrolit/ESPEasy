@@ -28,19 +28,31 @@ void addFormNote(const String& text,
 
 void addFormCheckBox_disabled(const String& label,
                               const String& id,
-                              boolean       checked,
-                              const String& title = "");
+                              boolean       checked
+                              #ifdef        ENABLE_TOOLTIPS
+                              ,
+                              const String& title = ""
+                              #endif // ifdef ENABLE_TOOLTIPS
+                              );
 
 void addFormCheckBox(const String& label,
                      const String& id,
                      boolean       checked,
-                     bool          disabled = false,
-                     const String& title    = "");
+                     bool          disabled = false
+                     #ifdef        ENABLE_TOOLTIPS
+                     ,
+                     const String& title = ""
+                     #endif // ifdef ENABLE_TOOLTIPS
+                     );
 
 void addFormCheckBox(LabelType::Enum label,
                      boolean         checked,
-                     bool            disabled = false,
-                     const String  & title    = "");
+                     bool            disabled = false
+                     #ifdef          ENABLE_TOOLTIPS
+                     ,
+                     const String  & title = ""
+                     #endif // ifdef ENABLE_TOOLTIPS
+                     );
 
 void addFormCheckBox_disabled(LabelType::Enum label,
                               boolean         checked);
@@ -50,24 +62,36 @@ void addFormCheckBox_disabled(LabelType::Enum label,
 // ********************************************************************************
 void addFormNumericBox(LabelType::Enum label,
                        int             value,
-                       int             min   = INT_MIN,
-                       int             max   = INT_MAX,
-                       const String  & title = "");
+                       int             min = INT_MIN,
+                       int             max = INT_MAX
+                       #ifdef          ENABLE_TOOLTIPS
+                       ,
+                       const String  & title = ""
+                       #endif // ifdef ENABLE_TOOLTIPS
+                       );
 
 void addFormNumericBox(const String& label,
                        const String& id,
                        int           value,
-                       int           min   = INT_MIN,
-                       int           max   = INT_MAX,
-                       const String& title = "");
+                       int           min = INT_MIN,
+                       int           max = INT_MAX
+                       #ifdef        ENABLE_TOOLTIPS
+                       ,
+                       const String& title = ""
+                       #endif // ifdef ENABLE_TOOLTIPS
+                       );
 
 void addFormFloatNumberBox(LabelType::Enum label,
                            float           value,
                            float           min,
                            float           max,
                            byte            nrDecimals = 6,
-                           float           stepsize   = 0.0f,
-                           const String  & title      = "");
+                           float           stepsize   = 0.0f
+                           #ifdef ENABLE_TOOLTIPS
+                           ,
+                           const String& title = ""
+                           #endif // ifdef ENABLE_TOOLTIPS
+                           );
 
 void addFormFloatNumberBox(const String& label,
                            const String& id,
@@ -75,8 +99,12 @@ void addFormFloatNumberBox(const String& label,
                            float         min,
                            float         max,
                            byte          nrDecimals = 6,
-                           float         stepsize   = 0.0f,
-                           const String& title      = "");
+                           float         stepsize   = 0.0f
+                           #ifdef ENABLE_TOOLTIPS
+                           ,
+                           const String& title = ""
+                           #endif // ifdef ENABLE_TOOLTIPS
+                           );
 
 // ********************************************************************************
 // Add a task selector form
@@ -94,8 +122,12 @@ void addFormTextBox(const String& label,
                     int           maxlength,
                     bool          readonly = false,
                     bool          required = false,
-                    const String& pattern  = "",
-                    const String& title    = "");
+                    const String& pattern  = ""
+                    #ifdef ENABLE_TOOLTIPS
+                    ,
+                    const String& title = ""
+                    #endif // ifdef ENABLE_TOOLTIPS
+                    );
 
 
 void addFormTextArea(const String& label,
@@ -105,8 +137,12 @@ void addFormTextArea(const String& label,
                      int           rows,
                      int           columns,
                      bool          readonly = false,
-                     bool          required = false,
-                     const String& title    = "");
+                     bool          required = false
+                     #ifdef        ENABLE_TOOLTIPS
+                     ,
+                     const String& title = ""
+                     #endif // ifdef ENABLE_TOOLTIPS
+                     );
 
 // ********************************************************************************
 // Add a Password Box form
@@ -115,8 +151,12 @@ void addFormTextArea(const String& label,
 void addFormPasswordBox(const String& label,
                         const String& id,
                         const String& password,
-                        int           maxlength,
-                        const String& title = "");
+                        int           maxlength
+                        #ifdef        ENABLE_TOOLTIPS
+                        ,
+                        const String& title = ""
+                        #endif // ifdef ENABLE_TOOLTIPS
+                        );
 
 bool getFormPassword(const String& id,
                      String      & password);
@@ -151,16 +191,24 @@ void addFormPinSelectI2C(const String& label,
 void addFormSelectorI2C(const String& id,
                         int           addressCount,
                         const int     addresses[],
-                        int           selectedIndex,
-                        const String& title = "");
+                        int           selectedIndex
+                        #ifdef ENABLE_TOOLTIPS
+                        ,
+                        const String& title = ""
+                        #endif
+                        );
 
 void addFormSelector(const String& label,
                      const String& id,
                      int           optionCount,
                      const String  options[],
                      const int     indices[],
-                     int           selectedIndex,
-                     const String& title = "");
+                     int           selectedIndex
+                     #ifdef ENABLE_TOOLTIPS
+                     ,
+                     const String& title = ""
+                     #endif
+                     );
 
 void addFormSelector(const String& label,
                      const String& id,
@@ -177,8 +225,12 @@ void addFormSelector(const String& label,
                      const int     indices[],
                      const String  attr[],
                      int           selectedIndex,
-                     boolean       reloadonchange,
-                     const String& title = "");
+                     boolean       reloadonchange
+                     #ifdef ENABLE_TOOLTIPS
+                     ,
+                     const String& title = ""
+                     #endif
+                     );
 
 void addFormSelector_script(const String& label,
                             const String& id,
@@ -187,8 +239,12 @@ void addFormSelector_script(const String& label,
                             const int     indices[],
                             const String  attr[],
                             int           selectedIndex,
-                            const String& onChangeCall,
-                            const String& title = "");
+                            const String& onChangeCall
+                            #ifdef ENABLE_TOOLTIPS
+                            ,
+                            const String& title = ""
+                            #endif
+                            );
 
 // ********************************************************************************
 // Add a GPIO pin select dropdown list
