@@ -70,6 +70,9 @@
 # define PLUGIN_NAME_039       "Environment - Thermosensors"
 # define PLUGIN_VALUENAME1_039 "Temperature"
 
+#define P039_SET                true
+#define P039_RESET              false
+
 // typically 500ns of wating on positive/negative edge of CS should be enough ( -> datasheet); to make sure we cover a lot of devices we spend 1ms
 // FIX 2021-05-05: review of all covered device datasheets showed 2µs is more than enough; review with every newly added device
 #define P039_CS_Delay()             delayMicroseconds(2u)
@@ -78,7 +81,7 @@
 #define P039_TC_TYPE                PCONFIG(1)
 #define P039_FAM_TYPE               PCONFIG(2)
 #define P039_RTD_TYPE               PCONFIG(3)
-#define P039_RTD_CON_TYPE           PCONFIG(4)
+#define P039_CONFIG_4               PCONFIG(4)
 #define P039_RTD_FILT_TYPE          PCONFIG(5)
 #define P039_RTD_LM_TYPE            PCONFIG(6)
 #define P039_RTD_LM_SHTDWN          PCONFIG(7)
@@ -136,10 +139,24 @@
 #define MAX31856_NO_REG             16u
 
 // bit masks to identify failures for MAX 31856
-#define MAX31856_TC_OC              0x00000001u
-#define MAX31856_TC_SC              0x00000002u
-#define MAX31856_TC_SCVCC           0x00000004u
-#define MAX31856_TC_GENFLT          0x00010000u
+#define MAX31856_TC_OC              0x01u
+#define MAX31856_TC_OVUV            0x02u
+#define MAX31856_TC_TCLOW           0x04u
+#define MAX31856_TC_TCLHIGH         0x08u
+#define MAX31856_TC_CJLOW           0x10u
+#define MAX31856_TC_CJHIGH          0x20u
+#define MAX31856_TC_TCRANGE         0x40u
+#define MAX31856_TC_CJRANGE         0x80u
+
+// bit masks for access of configuration bits
+#define MAX31856_SET_50HZ           0x01u
+#define MAX31856_CLEAR_FAULTS       0x02u
+#define MAX31856_FLT_ISR_MODE       0x04u
+#define MAX31856_CJ_SENS_DISABLE    0x08u
+#define MAX31856_FAULT_CTRL_MASK    0x30u
+#define MAX31856_SET_ONE_SHOT       0x40u
+#define MAX31856_SET_CONV_AUTO      0x80u
+
 
 
 // RTD related defines
@@ -276,25 +293,23 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
       if (P039_MAX_TYPE == P039_MAX31856) {
 
+
+        // ensure MODE3 access to SPI device
+        SPI.setDataMode(SPI_MODE3);
+
         // init string - content accoring to inital implementation of P039 - MAX31856 read function
-        uint8_t sendBuffer[11] = {0x80, 0x01, (uint8_t) P039_TC_TYPE, 0xFF, 0x7F, 0xC0, 0x7F, 0xFF, 0x80, 0x00, 0x00 };
+        // write to Adress 0x80
+        // activate 50Hz filter in CR0, choose averaging and TC type from configuration in CR1, activate OV/UV/OC faults, write defaults to CJHF, CJLF, LTHFTH, LTHFTL, LTLFTH, LTLFTL, CJTO
+        uint8_t sendBuffer[11] = {0x80, 0x01, (uint8_t) ((P039_CONFIG_4 << 4) | P039_TC_TYPE), 0xFC, 0x7F, 0xC0, 0x7F, 0xFF, 0x80, 0x00, 0x00 };
 
         transfer_n_ByteSPI(CS_pin_no, 11, &sendBuffer[0] );
 
-        // TODO: c.k.i.: check init string for MAX31856     
-        //   SPI.transfer(0x80);
-        //   SPI.transfer(0x01);         // noisefilter 50Hz (set this to 0x00 if You live in a 60Hz country)
-        //   SPI.transfer(P039_TC_TYPE); // thermocouple type
-        //   SPI.transfer(0xFF);
-        //   SPI.transfer(0x7F);
-        //   SPI.transfer(0xC0);
-        //   SPI.transfer(0x7F);
-        //   SPI.transfer(0xFF);
-        //   SPI.transfer(0x80);
-        //   SPI.transfer(0x00);
-        //   SPI.transfer(0x00);
+        // start on shot conversion for upcoming read cycle
+        change8BitRegister(CS_pin_no, (MAX31856_READ_ADDR_BASE + MAX31856_CR0),(MAX31856_WRITE_ADDR_BASE + MAX31856_CR0), MAX31856_SET_ONE_SHOT, P039_SET );
 
-      }
+     }
+
+
 
       if(P039_MAX_TYPE == P039_MAX31865){
 
@@ -305,11 +320,14 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         // ensure MODE3 access to SPI device
         SPI.setDataMode(SPI_MODE3);
 
+        // write intially 0x00 to CONFIG register
+        write8BitRegister(CS_pin_no, (MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), 0x00u);
+
         // activate 50Hz filter, clear all faults, no auto conversion, no conversion started
-        chooseFilterType(CS_pin_no, 0x01);
+        change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_50HZ, static_cast<bool>(P039_RTD_FILT_TYPE) );
 
         // configure 2/4-wire sensor connection as default
-        setConType(CS_pin_no, 0x00);
+        MAX31865_setConType(CS_pin_no, P039_CONFIG_4);
         
         // set HighFault Threshold
         transfer_n_ByteSPI(CS_pin_no, 3, &initSendBufferHFTH[0]);
@@ -318,10 +336,10 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         transfer_n_ByteSPI(CS_pin_no, 3, &initSendBufferLFTH[0]);
 
         // clear all faults
-        clearFaults(CS_pin_no);
+        MAX31865_clearFaults(CS_pin_no);
 
         //activate BIAS short before read, to reduce power consumption
-        handleBias(CS_pin_no, true);
+        change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_VBIAS_ON, P039_SET );
 
         // save current timer for next calculation
         P039_data->timer = millis();
@@ -405,9 +423,21 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
           }
           {
             addFormNote(F("Set Thermocouple type for MAX31856"));
-            const String Toptions[8]      = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T") };
-            const int    ToptionValues[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-            addFormSelector(F("Thermocouple type"), F("P039_tctype"), 8, Toptions, ToptionValues, P039_TC_TYPE);
+            const String Toptions[10]      = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T"), F("VM16"), F("VM32") };
+            const int    ToptionValues[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 12};
+            addFormSelector(F("Thermocouple type"), F("P039_tctype"), 10, Toptions, ToptionValues, P039_TC_TYPE);
+          }
+          {
+            const String Coptions[5] = {F("1 sample"), F("2 samples"), F("4 samples"), F("8 samples"), F("16 samples")};
+            const int CoptionValues[5] = {0, 1, 2, 3, 4};
+            addFormSelector(F("Averaging"), F("P039_contype"), 5, Coptions, CoptionValues, P039_CONFIG_4);
+            addFormNote(F("Set Averaging Type for MAX31856"));
+          }
+          {
+            const String FToptions[2] = {F("60 Hz"), F("50 Hz")};
+            const int FToptionValues[2] = {0, 1};
+            addFormSelector(F("Supply Frequency Filter"), F("P039_filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
+            addFormNote(F("Set filter frequency for supply voltage. Choose appropriate to your power net frequency (50/60 Hz)"));
           }
         }
       }
@@ -439,7 +469,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
           {
             const String Coptions[2] = {F("2-/4-wire"), F("3-wire")};
             const int CoptionValues[2] = {0, 1};
-            addFormSelector(F("Connection Type"), F("P039_contype"), 2, Coptions, CoptionValues, P039_RTD_CON_TYPE);
+            addFormSelector(F("Connection Type"), F("P039_contype"), 2, Coptions, CoptionValues, P039_CONFIG_4);
             addFormNote(F("Set Connection Type for MAX31865"));
           }
           {
@@ -487,7 +517,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       P039_MAX_TYPE = getFormItemInt(F("P039_maxtype"));
       P039_TC_TYPE  = getFormItemInt(F("P039_tctype"));
       P039_RTD_TYPE = getFormItemInt(F("P039_rtdtype"));
-      P039_RTD_CON_TYPE = getFormItemInt(F("P039_contype"));
+      P039_CONFIG_4 = getFormItemInt(F("P039_contype"));
       P039_RTD_FILT_TYPE = getFormItemInt(F("P039_filttype"));
       P039_RTD_RES = getFormItemInt(F("P039_res"));
       P039_RTD_OFFSET = getFormItemFloat(F("P039_offset"));
@@ -587,79 +617,86 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
               {
                 case MAX31865_BIAS_ON_STATE:
                 {
-                  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                 
+                  # ifndef BUILD_NO_DEBUG
+                    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 
-                    // calc delta since last call
-                    long delta = timePassedSince(P039_data->timer);
+                      // calc delta since last call
+                      long delta = timePassedSince(P039_data->timer);
 
-                    // save current timer for next calculation
-                    P039_data->timer = millis();
+                      // save current timer for next calculation
+                      P039_data->timer = millis();
 
 
-                    String log;
-                    if((log.reserve(120u))) {
-                      log = F("P039 : ");                                   // 7 char
-                      log += getTaskDeviceName(event->TaskIndex);           // 41 char
-                      log += F(" : ");                                      // 3 char
-                      log += F("current state: MAX31865_BIAS_ON_STATE");    // 37 char
-                      log += F("; delta: ");                                // 9 char
-                      log += String(delta, DEC);                            // 4 char
-                      log += F(" ms;");                                     // 4 char
-                      addLog(LOG_LEVEL_DEBUG, log);
+                      String log;
+                      if((log.reserve(120u))) {
+                        log = F("P039 : ");                                   // 7 char
+                        log += getTaskDeviceName(event->TaskIndex);           // 41 char
+                        log += F(" : ");                                      // 3 char
+                        log += F("current state: MAX31865_BIAS_ON_STATE");    // 37 char
+                        log += F("; delta: ");                                // 9 char
+                        log += String(delta, DEC);                            // 4 char
+                        log += F(" ms;");                                     // 4 char
+                        addLog(LOG_LEVEL_DEBUG, log);
+                      }
                     }
-                  }
+                  # endif // ifndef BUILD_NO_DEBUG
 
                   //activate one shot conversion
-                  startOneShotConversion(CS_pin_no);
+                  change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_ONE_SHOT, P039_SET );
 
                   // set next state in sequence -> READ STATE
                   // start time to follow up on conversion and read the conversion result
                   P039_data->convReady = false;
                   Scheduler.setPluginTaskTimer(MAX31865_CONVERSION_TIME, event->TaskIndex, MAX31865_RD_STATE);
- 
-                  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                  
+                  # ifndef BUILD_NO_DEBUG
+                    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 
-                    String log;
-                    if((log.reserve(75u))) {
-                      log = F("P039 : ");                                   // 7 char
-                      log += getTaskDeviceName(event->TaskIndex);           // 41 char
-                      log += F(" : ");                                      // 3 char
-                      log += F("; Next State: ");                           // 14 char
-                      log += String(event->Par1, HEX);                      // 4 char
-                      addLog(LOG_LEVEL_DEBUG, log);
+                      String log;
+                      if((log.reserve(75u))) {
+                        log = F("P039 : ");                                   // 7 char
+                        log += getTaskDeviceName(event->TaskIndex);           // 41 char
+                        log += F(" : ");                                      // 3 char
+                        log += F("; Next State: ");                           // 14 char
+                        log += String(event->Par1, HEX);                      // 4 char
+                        addLog(LOG_LEVEL_DEBUG, log);
+                      }
                     }
-                  }
+                  # endif // ifndef BUILD_NO_DEBUG
                   
                   break;
                 }
                 case MAX31865_RD_STATE:
                 {
 
-                  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                    // calc delta since last call
-                    long delta = timePassedSince(P039_data->timer);
+                  # ifndef BUILD_NO_DEBUG
+                    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                      // calc delta since last call
+                      long delta = timePassedSince(P039_data->timer);
 
-                    // save current timer for next calculation
-                    P039_data->timer = millis();
+                      // save current timer for next calculation
+                      P039_data->timer = millis();
 
-                    String log;
-                    if((log.reserve(110u))) {
-                      log = F("P039 : ");                             // 7 CHAR
-                      log += getTaskDeviceName(event->TaskIndex);     // 41 char ( max length of task device name)
-                      log += F(" : ");                                // 3 CHAR
-                      log += F("current state: MAX31865_RD_STATE ");  // 33 CHAR
-                      log += F("; delta: ");                          // 9 char
-                      log += String(delta, DEC);                      // 4 char - more than 1000ms delta will not occur
-                      log += F("ms;");                                // 3 char   
-                      addLog(LOG_LEVEL_DEBUG, log);
+                      String log;
+                      if((log.reserve(110u))) {
+                        log = F("P039 : ");                             // 7 CHAR
+                        log += getTaskDeviceName(event->TaskIndex);     // 41 char ( max length of task device name)
+                        log += F(" : ");                                // 3 CHAR
+                        log += F("current state: MAX31865_RD_STATE ");  // 33 CHAR
+                        log += F("; delta: ");                          // 9 char
+                        log += String(delta, DEC);                      // 4 char - more than 1000ms delta will not occur
+                        log += F("ms;");                                // 3 char   
+                        addLog(LOG_LEVEL_DEBUG, log);
+                      }
                     }
-                  }
+                  # endif // ifndef BUILD_NO_DEBUG
 
                   // read conversion result
                   P039_data->conversionResult = read16BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_RTD_MSB));
 
                   // deactivate BIAS short after read, to reduce power consumption
-                  handleBias(CS_pin_no, false);
+                  change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_VBIAS_ON, P039_RESET );
                                   
                   //read fault register to get a full picture
                   P039_data->deviceFaults = read8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_FAULT));
@@ -667,23 +704,25 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                   // mark conversion as ready
                   P039_data->convReady = true;
 
-                  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                  # ifndef BUILD_NO_DEBUG
+                    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 
-                      String log;
-                      if((log.reserve(140u))) {
-                        log = F("P039 : ");                              // 7 char
-                        log += getTaskDeviceName(event->TaskIndex);      // 41 char ( max length of task device name + 1)
-                        log += F(" : ");                                 // 3 char
-                        log += F("P039_data->conversionResult: ");       // 30 char
-                        log += String(P039_data->conversionResult, HEX); // 6 char
-                        log += F("; P039_data->deviceFaults: ");         // 27 char
-                        log += String(P039_data->deviceFaults, HEX);     // 4 char
-                        log += F("; Next State: ");                      // 13 char
-                        log += String(event->Par1, HEX);                 // 4 char
-                        addLog(LOG_LEVEL_DEBUG, log);
+                        String log;
+                        if((log.reserve(140u))) {
+                          log = F("P039 : ");                              // 7 char
+                          log += getTaskDeviceName(event->TaskIndex);      // 41 char ( max length of task device name + 1)
+                          log += F(" : ");                                 // 3 char
+                          log += F("P039_data->conversionResult: ");       // 30 char
+                          log += String(P039_data->conversionResult, HEX); // 6 char
+                          log += F("; P039_data->deviceFaults: ");         // 27 char
+                          log += String(P039_data->deviceFaults, HEX);     // 4 char
+                          log += F("; Next State: ");                      // 13 char
+                          log += String(event->Par1, HEX);                 // 4 char
+                          addLog(LOG_LEVEL_DEBUG, log);
+                      }
+
                     }
-
-                  }
+                  # endif // ifndef BUILD_NO_DEBUG
 
  
                   break;
@@ -692,28 +731,29 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                 default:
                 {
                   // clear all faults
-                  clearFaults(CS_pin_no);
+                  MAX31865_clearFaults(CS_pin_no);
 
                   //activate BIAS short before read, to reduce power consumption
-                  handleBias(CS_pin_no, true);
+                  change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_VBIAS_ON, P039_SET );
 
 
-                  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                    String log;
-                    if((log.reserve(130u))) {
-                      log = F("P039 : ");                                         // 7 char
-                      log += getTaskDeviceName(event->TaskIndex);                 // 41 char
-                      log += F(" : ");                                            // 3 char
-                      log += F("current state: MAX31865_INIT_STATE, default ");   // many char - 44
-                      log += F("next state: MAX31865_BIAS_ON_STATE");             // a little less char - 34
-                      addLog(LOG_LEVEL_DEBUG, log);
+                  # ifndef BUILD_NO_DEBUG
+                    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                      String log;
+                      if((log.reserve(130u))) {
+                        log = F("P039 : ");                                         // 7 char
+                        log += getTaskDeviceName(event->TaskIndex);                 // 41 char
+                        log += F(" : ");                                            // 3 char
+                        log += F("current state: MAX31865_INIT_STATE, default ");   // many char - 44
+                        log += F("next state: MAX31865_BIAS_ON_STATE");             // a little less char - 34
+                        addLog(LOG_LEVEL_DEBUG, log);
+                      }
+                      
+                      // save current timer for next calculation
+                      P039_data->timer = millis();
+
                     }
-                    
-                    // save current timer for next calculation
-                    P039_data->timer = millis();
-
-                  }
-
+                  # endif // ifndef BUILD_NO_DEBUG
 
                   // start time to follow up on BIAS activation before starting the conversion
                   // and start conversion sequence via TIMER API
@@ -746,7 +786,7 @@ float readMax6675(struct EventStruct *event)
 {
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
-  uint8_t messageBuffer[2] = {0x00, 0x00};
+  uint8_t messageBuffer[2] = {0};
   uint16_t rawvalue = 0u;
 
 
@@ -787,10 +827,10 @@ float readMax6675(struct EventStruct *event)
 
   if (Plugin_039_SensorAttached)
   {
-    // Shift RAW value 3 Bits to the right to get the data
+    // shift RAW value 3 Bits to the right to get the data
     rawvalue >>= 3;
 
-    // Calculate Celsius with device resolution 0.25 °K/bit
+    // calculate Celsius with device resolution 0.25 K/bit
     return (rawvalue * 0.25f);
   }
   else
@@ -803,7 +843,7 @@ float readMax31855(struct EventStruct *event)
 {
   P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-  uint8_t messageBuffer[4] = {0x00, 0x00, 0x00, 0x00};
+  uint8_t messageBuffer[4] = {0};
 
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
@@ -811,7 +851,8 @@ float readMax31855(struct EventStruct *event)
   transfer_n_ByteSPI(CS_pin_no, 4, &messageBuffer[0]);
 
   // merge rawvalue from 4 bytes of messageBuffer
-  uint32_t rawvalue = ((messageBuffer[0] << 24) | (messageBuffer[1] << 16) | (messageBuffer[2] << 8) | messageBuffer[3]);
+  uint32_t rawvalue = ((static_cast<uint32_t> (messageBuffer[0]) << 24) | (static_cast<uint32_t> (messageBuffer[1]) << 16) | (static_cast<uint32_t>(messageBuffer[2]) << 8) | static_cast<uint32_t>(messageBuffer[3]));
+
 
   
   # ifndef BUILD_NO_DEBUG
@@ -845,7 +886,7 @@ float readMax31855(struct EventStruct *event)
       // FIXED: c.k.i. : moved static fault flag to instance data structure
       P039_data->sensorFault = false;
 
-      // chech for fault flags in LSB of 32 Bit messageBuffer - lowest
+      // check for fault flags in LSB of 32 Bit messageBuffer
       if (P039_data->sensorFault != ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0)) {
         // Fault code changed, log them
         P039_data->sensorFault = ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0);
@@ -856,7 +897,7 @@ float readMax31855(struct EventStruct *event)
           {
             String log;
             if((log.reserve(66u))) {
-              log = F("P039 : MAX31855");               // 
+              log = F("P039 : MAX31855"); 
 
               if (!(P039_data->sensorFault)) {
                 log += F("Fault resolved");
@@ -922,15 +963,35 @@ float readMax31856(struct EventStruct *event)
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
 
-  uint32_t registers[MAX31856_NO_REG] = { 0 };
+  uint8_t registers[MAX31856_NO_REG] = { 0 };
+  uint8_t messageBuffer[MAX31856_NO_REG + 1] = { 0 };
 
+  messageBuffer[0] = MAX31856_READ_ADDR_BASE;
+
+  // "transfer" 0x0 starting at address 0x00 and read the all registers from the Chip
+  transfer_n_ByteSPI(CS_pin_no, (MAX31856_NO_REG + 1), &messageBuffer[0]);
+
+  // transfer data from messageBuffer and get rid of initial address byte
   for (uint8_t i = 0u; i < MAX31856_NO_REG; ++i) {
-    registers[i] = read8BitRegister(CS_pin_no, (MAX31856_READ_ADDR_BASE + i));
+    registers[i] = messageBuffer[i+1];
   }
 
-  uint32_t rawvalue = registers[MAX31856_LTCBH];
-  rawvalue = (rawvalue << 8) | registers[MAX31856_LTCBM];
-  rawvalue = (rawvalue << 8) | registers[MAX31856_LTCBL];
+  // configure device for next conversion
+  // activate frequency filter according to configuration
+  change8BitRegister(CS_pin_no, (MAX31856_READ_ADDR_BASE + MAX31856_CR0),(MAX31856_WRITE_ADDR_BASE + MAX31856_CR0), MAX31856_SET_50HZ, static_cast<bool>(P039_RTD_FILT_TYPE) );
+
+  // set averaging and TC type
+  write8BitRegister(CS_pin_no, (MAX31856_WRITE_ADDR_BASE + MAX31856_CR1), (uint8_t) ((P039_CONFIG_4 << 4) | P039_TC_TYPE));
+  
+
+  // start on shot conversion for next read cycle
+  change8BitRegister(CS_pin_no, (MAX31856_READ_ADDR_BASE + MAX31856_CR0),(MAX31856_WRITE_ADDR_BASE + MAX31856_CR0), MAX31856_SET_ONE_SHOT, P039_SET );
+
+
+  // now derive raw value from respective registers
+  uint32_t rawvalue = static_cast<uint32_t>(registers[MAX31856_LTCBH]);
+  rawvalue = (rawvalue << 8) | static_cast<uint32_t>(registers[MAX31856_LTCBM]);
+  rawvalue = (rawvalue << 8) | static_cast<uint32_t>(registers[MAX31856_LTCBL]);
 
   # ifndef BUILD_NO_DEBUG
 
@@ -944,13 +1005,17 @@ float readMax31856(struct EventStruct *event)
           log += ' ';
           log += String(registers[i], HEX);
         }
+        log+= F(" rawvalue, HEX: ");
+        log+= String(rawvalue, HEX);
+         log+= F(" rawvalue, DEC: ");
+        log+= String(rawvalue, DEC);
         addLog(LOG_LEVEL_DEBUG, log);
       }
     }
 
   # endif // ifndef BUILD_NO_DEBUG
 
-  const uint32_t sr = registers[MAX31856_SR];
+  const uint8_t sr = registers[MAX31856_SR];
 
   # ifndef BUILD_NO_DEBUG
 
@@ -975,39 +1040,39 @@ float readMax31856(struct EventStruct *event)
             } else {
               log += F("Fault :");
 
-              if (sr & 0x01) {
+              if (sr & MAX31856_TC_OC) {
                 log += F(" Open (no connection)");
               }
 
-              if (sr & 0x02) {
+              if (sr & MAX31856_TC_OVUV) {
                 log += F(" Over/Under Voltage");
               }
 
-              if (sr & 0x04) {
+              if (sr & MAX31856_TC_TCLOW) {
                 log += F(" TC Low");
               }
 
-              if (sr & 0x08) {
+              if (sr & MAX31856_TC_TCLHIGH) {
                 log += F(" TC High");
               }
 
-              if (sr & 0x10) {
+              if (sr & MAX31856_TC_CJLOW) {
                 log += F(" CJ Low");
               }
 
-              if (sr & 0x20) {
+              if (sr & MAX31856_TC_CJHIGH) {
                 log += F(" CJ High");
               }
 
-              if (sr & 0x40) {
+              if (sr & MAX31856_TC_TCRANGE) {
                 log += F(" TC Range");
               }
 
-              if (sr & 0x80) {
+              if (sr & MAX31856_TC_CJRANGE) {
                 log += F(" CJ Range");
               }
-            }
             addLog(LOG_LEVEL_DEBUG, log);
+            }
           }
         }
       }
@@ -1031,19 +1096,6 @@ float readMax31856(struct EventStruct *event)
     // Fault state, thus output no value.
     return NAN;
   }
-}
-
-int Plugin_039_convert_two_complement(uint32_t value, int nr_bits) {
-  const bool negative = (value & (1 << (nr_bits - 1))) != 0;
-  int nativeInt;
-
-  if (negative) {
-    // Add zeroes to the left to create the proper negative native-sized integer.
-    nativeInt = value | ~((1 << nr_bits) - 1);
-  } else {
-    nativeInt = value;
-  }
-  return nativeInt;
 }
 
 float readMax31865(struct EventStruct *event)
@@ -1108,16 +1160,17 @@ float readMax31865(struct EventStruct *event)
 
   // Prepare and start next conversion, before handling faults and rawValue
   // clear all faults
-  clearFaults(CS_pin_no);
+  MAX31865_clearFaults(CS_pin_no);
 
   // set frequency filter
-  chooseFilterType(CS_pin_no, P039_RTD_FILT_TYPE);
+  change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_50HZ, static_cast<bool>(P039_RTD_FILT_TYPE) );
+
 
   // configure read access with configuration from web interface
-  setConType(CS_pin_no, P039_RTD_CON_TYPE);
+  MAX31865_setConType(CS_pin_no, P039_CONFIG_4);
 
   //activate BIAS short before read, to reduce power consumption
-  handleBias(CS_pin_no, true);
+  change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_VBIAS_ON, P039_SET );
 
   // save current timer for next calculation
   P039_data->timer = millis();
@@ -1242,7 +1295,7 @@ float readMax31865(struct EventStruct *event)
   }
 }
 
-void clearFaults(uint8_t l_CS_pin_no)
+void MAX31865_clearFaults(uint8_t l_CS_pin_no)
 {
   uint8_t l_reg = 0u;
 
@@ -1254,100 +1307,34 @@ void clearFaults(uint8_t l_CS_pin_no)
   l_reg &= ~(MAX31865_SET_ONE_SHOT | MAX31865_FAULT_CTRL_MASK);
   l_reg |= MAX31865_CLEAR_FAULTS;
 
-  // write configuration to MAX31865 to enable VBIAS
+  // write configuration 
   write8BitRegister(l_CS_pin_no, (MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), l_reg);
 
 }
 
-void handleBias(uint8_t l_CS_pin_no, bool l_active)
+void MAX31865_setConType(uint8_t l_CS_pin_no, uint8_t l_conType)
 {
-  uint8_t l_reg = 0u;
+   bool l_set_reset = false;
 
-  // read in config register
-  l_reg = read8BitRegister(l_CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG));
-
-  if (l_active)
-  {
-    // activate BIAS
-    l_reg |= MAX31865_SET_VBIAS_ON;
-  }
-  else
-  {
-    // deactivate BIAS
-    l_reg &= ~MAX31865_SET_VBIAS_ON;
-  }
-
-  // write configuration to MAX31865 to enable VBIAS
-  write8BitRegister(l_CS_pin_no, (MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), l_reg);
-
-}
-
-void chooseFilterType(uint8_t l_CS_pin_no, uint8_t l_filtType)
-{
-  uint8_t l_reg = 0u;
-
-  // read in config register
-  l_reg = read8BitRegister(l_CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG));
-
-  // configure access to sensor (2/4-wire OR 3 wire)
-  switch (l_filtType)
-  {
-    case 0:
-              l_reg &= ~MAX31865_SET_50HZ;
-              break;
-    case 1:
-              l_reg |= MAX31865_SET_50HZ;
-              break;
-    default:
-              l_reg &= ~MAX31865_SET_50HZ;
-              break;
-  }
-
-  // write to configuration register
-  write8BitRegister(l_CS_pin_no, (MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), l_reg);
-
-}
-
-void setConType(uint8_t l_CS_pin_no, uint8_t l_conType)
-{
-  uint8_t l_reg = 0u;
-
-  // read in config register
-  l_reg = read8BitRegister(l_CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG));
- 
-  // configure access to sensor (2/4-wire OR 3 wire)
+  // configure if 3 WIRE bit will be set/reset
   switch (l_conType)
   {
     case 0:
-            l_reg &= ~MAX31865_SET_3WIRE;
+            l_set_reset = P039_RESET;
             break;
     case 1:
-            l_reg |= MAX31865_SET_3WIRE;
+            l_set_reset = P039_SET;
             break;
     default:
-            l_reg &= ~MAX31865_SET_3WIRE;
+            l_set_reset = P039_RESET;
             break;
   }
 
-  // write to configuration register
-  write8BitRegister(l_CS_pin_no, (MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), l_reg);
+  // change to configuration register
+  change8BitRegister(l_CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_3WIRE, l_set_reset );
 
 }
 
-void startOneShotConversion(uint8_t l_CS_pin_no)
-{
-  uint8_t l_reg = 0u;
-
-  // read in config register
-  l_reg = read8BitRegister(l_CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG));
-
-  //activate one shot conversion
-  l_reg |= MAX31865_SET_ONE_SHOT;
-
-  // write to configuration register
-  write8BitRegister(l_CS_pin_no, (MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), l_reg);
-
-}
 
 /**************************************************************************/
 /*!
@@ -1421,6 +1408,19 @@ uint16_t getNomResistor(uint8_t l_RType)
                           break;
   }
   return (l_returnValue);
+}
+
+int Plugin_039_convert_two_complement(uint32_t value, int nr_bits) {
+  const bool negative = (value & (1 << (nr_bits - 1))) != 0;
+  int nativeInt;
+
+  if (negative) {
+    // Add zeroes to the left to create the proper negative native-sized integer.
+    nativeInt = value | ~((1 << nr_bits) - 1);
+  } else {
+    nativeInt = value;
+  }
+  return nativeInt;
 }
 
 float readLM7x(struct EventStruct *event)
@@ -1787,7 +1787,7 @@ void write8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
 
 /**************************************************************************/
 
-void write16BitRegisters(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
+void write16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
 {
   uint8_t l_messageBuffer[3] = {l_address, (uint8_t) (value >> 8), (uint8_t) (value)};
 
@@ -1935,6 +1935,80 @@ void transfer_n_ByteSPI(uint8_t l_CS_pin_no, uint8_t l_noBytesToSend, uint8_t* l
     }
 
   # endif // ifndef BUILD_NO_DEBUG
+
+}
+
+/**************************************************************************/
+/*!
+    @brief read a 16Bit register and change a flag, writing it back, handling a GPIO CS
+    @param l_CS_pin_no the GPIO pin number used as CS
+    @param l_readaddress SPI read address of the device register
+    @param l_writeaddress SPI write address of the device register
+    @param l_flagmask mask set to apply on the read register
+    @param l_set_reset controls if flag mask will be set (-> true) or reset ( -> false)
+    
+
+    @returns
+
+    Initial Revision - chri.kai.in 2021 
+
+/**************************************************************************/
+
+void change16BitRegister(uint8_t l_CS_pin_no, uint8_t l_readaddress, uint8_t l_writeaddress, uint16_t l_flagmask, bool l_set_reset )
+{
+  uint16_t l_reg = 0u;
+
+  // read in config register
+  l_reg = read16BitRegister(l_CS_pin_no, l_readaddress);
+
+  if(l_set_reset){
+    l_reg |= l_flagmask;
+  }
+  else
+  {
+    l_reg &= ~(l_flagmask);
+  }
+  
+  // write to configuration register
+  write16BitRegister(l_CS_pin_no, l_writeaddress, l_reg);
+
+
+}
+
+/**************************************************************************/
+/*!
+    @brief read a 8 Bit register and change a flag, writing it back, handling a GPIO CS
+    @param l_CS_pin_no the GPIO pin number used as CS
+    @param l_readaddress SPI read address of the device register
+    @param l_writeaddress SPI write address of the device register
+    @param l_flagmask mask set to apply on the read register
+    @param l_set_reset controls if flag mask will be set (-> true) or reset ( -> false)
+    
+
+    @returns
+
+    Initial Revision - chri.kai.in 2021 
+
+/**************************************************************************/
+
+void change8BitRegister(uint8_t l_CS_pin_no, uint8_t l_readaddress, uint8_t l_writeaddress, uint8_t l_flagmask, bool l_set_reset )
+{
+  uint8_t l_reg = 0u;
+
+  // read in config register
+  l_reg = read8BitRegister(l_CS_pin_no, l_readaddress);
+
+  if(l_set_reset){
+    l_reg |= l_flagmask;
+  }
+  else
+  {
+    l_reg &= ~(l_flagmask);
+  }
+
+  // write to configuration register
+  write8BitRegister(l_CS_pin_no, l_writeaddress, l_reg);
+
 
 }
 
