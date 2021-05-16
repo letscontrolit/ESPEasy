@@ -61,9 +61,9 @@
 // #include <String.h>
 
 // // plugin-local quick activation of debug messages
-// #ifdef BUILD_NO_DEBUG
-//   #undef BUILD_NO_DEBUG
-// #endif
+#ifdef BUILD_NO_DEBUG
+  #undef BUILD_NO_DEBUG
+#endif
 
 # define PLUGIN_039
 # define PLUGIN_ID_039         39
@@ -71,7 +71,7 @@
 # define PLUGIN_VALUENAME1_039 "Temperature"
 
 // typically 500ns of wating on positive/negative edge of CS should be enough ( -> datasheet); to make sure we cover a lot of devices we spend 1ms
-// FIX 2021-05-05: review of all covered device datasheets showed 2ms is more than enough; review with every newly added device
+// FIX 2021-05-05: review of all covered device datasheets showed 2µs is more than enough; review with every newly added device
 #define P039_CS_Delay()             delayMicroseconds(2u)
 
 #define P039_MAX_TYPE               PCONFIG(0)
@@ -242,7 +242,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P039_data_struct(0u, 0u, 0u, 0u, 0u, false));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P039_data_struct());
       P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       uint8_t CS_pin_no = get_SPI_CS_Pin(event);
@@ -261,11 +261,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
         transfer_n_ByteSPI(CS_pin_no, 11, &sendBuffer[0] );
 
-        //    // activate communication -> CS low
-        //   handle_SPI_CS_Pin(CS_pin_no, LOW);
-
-        //   // delay(650);
-          
+        // TODO: c.k.i.: check init string for MAX31856     
         //   SPI.transfer(0x80);
         //   SPI.transfer(0x01);         // noisefilter 50Hz (set this to 0x00 if You live in a 60Hz country)
         //   SPI.transfer(P039_TC_TYPE); // thermocouple type
@@ -278,8 +274,6 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         //   SPI.transfer(0x00);
         //   SPI.transfer(0x00);
 
-        //   // stop communication -> CS high
-        //   handle_SPI_CS_Pin(CS_pin_no, HIGH);
       }
 
       if(P039_MAX_TYPE == P039_MAX31865){
@@ -315,11 +309,12 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         // start time to follow up on BIAS activation before starting the conversion
         // and start conversion sequence via TIMER API
         if(nullptr != P039_data){
-          P039_data->mainState =  MAX31865_BIAS_ON_STATE;
+          // P039_data->convReady = false;
           Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
         }
 
       }
+
       if (P039_MAX_TYPE == P039_LM7x)
       {
         // ensure MODE3 access to SPI device
@@ -330,10 +325,10 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
-        if((log.reserve(66u))) {
-          log = F("P039 : ");
-          log += getTaskDeviceName(event->TaskIndex);
-          log += F(" : SPI Init - DONE" );
+        if((log.reserve(70u))) {
+          log = F("P039 : ");                            // 7 char
+          log += getTaskDeviceName(event->TaskIndex);    // 41 char
+          log += F(" : SPI Init - DONE" );               // 18 char
           addLog(LOG_LEVEL_INFO, log);
         }
       }
@@ -517,16 +512,16 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
           if((log.reserve(66u))) {
-            log = F("P039 : ");
-            log += getTaskDeviceName(event->TaskIndex);
-            log += F(" : ");
+            log = F("P039 : ");                                                         // 7 char
+            log += getTaskDeviceName(event->TaskIndex);                                 // 41 char
+            log += F(" : ");                                                            // 3 char
           
             for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex);i++)
             {
-              log += getTaskValueName(event->TaskIndex, i);
-              log += F(": ");
-              log += formatUserVarNoCheck(event->TaskIndex, i); 
-              log += ' '; 
+              log += getTaskValueName(event->TaskIndex, i);                             // 41 char
+              log += F(": ");                                                           // 2 char
+              log += formatUserVarNoCheck(event->TaskIndex, i);                         //  char 
+              log += ' ';                                                               // 1 char
             }
             addLog(LOG_LEVEL_INFO, log);
           }
@@ -535,15 +530,16 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       }
       else
       {
+        UserVar[event->BaseVarIndex]     = NAN;
+        UserVar[event->BaseVarIndex + 1] = NAN;
+
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
-          if((log.reserve(66u))) {
-            log = F("P039 :  ");
-            log += getTaskDeviceName(event->TaskIndex);
-            log += F(" : ");
-            log += F("No Sensor attached !");
-            UserVar[event->BaseVarIndex]     = NAN;
-            UserVar[event->BaseVarIndex + 1] = NAN;
+          if((log.reserve(80u))) {
+            log = F("P039 :  ");                                                      // 7 char
+            log += getTaskDeviceName(event->TaskIndex);                               // 41 char
+            log += F(" : ");                                                          // 3 char
+            log += F("No Sensor attached !");                                         // 20 char
             addLog(LOG_LEVEL_INFO, log);
           }
         }
@@ -571,28 +567,24 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
               {
                 case MAX31865_BIAS_ON_STATE:
                 {
-                  // calc delta since last call
-                  unsigned long delta = millis() - P039_data->timer;
-
-                  // save current timer for next calculation
-                  P039_data->timer = millis();
-
-                  // set next state in sequence -> READ STATE
-                  // P039_data->convReady = false;
-                  P039_data->mainState = MAX31865_RD_STATE;
-
                   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+
+                    // calc delta since last call
+                    long delta = timePassedSince(P039_data->timer);
+
+                    // save current timer for next calculation
+                    P039_data->timer = millis();
+
+
                     String log;
-                    if((log.reserve(66u))) {
-                      log = F("P039 : ");
-                      log += getTaskDeviceName(event->TaskIndex);
-                      log += F(" : ");
-                      log += F("current state: MAX31865_BIAS_ON_STATE");
-                      log += F("; P039_data->mainState: ");
-                      log += String(P039_data->mainState, HEX);
-                      log += F("; delta: ");
-                      log += String(delta, DEC);
-                      log += F(" ms;");
+                    if((log.reserve(120u))) {
+                      log = F("P039 : ");                                   // 7 char
+                      log += getTaskDeviceName(event->TaskIndex);           // 41 char
+                      log += F(" : ");                                      // 3 char
+                      log += F("current state: MAX31865_BIAS_ON_STATE");    // 37 char
+                      log += F("; delta: ");                                // 9 char
+                      log += String(delta, DEC);                            // 4 char
+                      log += F(" ms;");                                     // 4 char
                       addLog(LOG_LEVEL_DEBUG, log);
                     }
                   }
@@ -600,19 +592,48 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                   //activate one shot conversion
                   startOneShotConversion(CS_pin_no);
 
+                  // set next state in sequence -> READ STATE
                   // start time to follow up on conversion and read the conversion result
+                  P039_data->convReady = false;
                   Scheduler.setPluginTaskTimer(MAX31865_CONVERSION_TIME, event->TaskIndex, MAX31865_RD_STATE);
+ 
+                  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 
+                    String log;
+                    if((log.reserve(75u))) {
+                      log = F("P039 : ");                                   // 7 char
+                      log += getTaskDeviceName(event->TaskIndex);           // 41 char
+                      log += F(" : ");                                      // 3 char
+                      log += F("; Next State: ");                           // 14 char
+                      log += String(event->Par1, HEX);                      // 4 char
+                      addLog(LOG_LEVEL_DEBUG, log);
+                    }
+                  }
                   
                   break;
                 }
                 case MAX31865_RD_STATE:
                 {
-                  // calc delta since last call
-                  unsigned long delta = millis() - P039_data->timer;
 
-                  // save current timer for next calculation
-                  P039_data->timer = millis();
+                  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                    // calc delta since last call
+                    long delta = timePassedSince(P039_data->timer);
+
+                    // save current timer for next calculation
+                    P039_data->timer = millis();
+
+                    String log;
+                    if((log.reserve(110u))) {
+                      log = F("P039 : ");                             // 7 CHAR
+                      log += getTaskDeviceName(event->TaskIndex);     // 41 char ( max length of task device name)
+                      log += F(" : ");                                // 3 CHAR
+                      log += F("current state: MAX31865_RD_STATE ");  // 33 CHAR
+                      log += F("; delta: ");                          // 9 char
+                      log += String(delta, DEC);                      // 4 char - more than 1000ms delta will not occur
+                      log += F("ms;");                                // 3 char   
+                      addLog(LOG_LEVEL_DEBUG, log);
+                    }
+                  }
 
                   // read conversion result
                   P039_data->conversionResult = read16BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_RTD_MSB));
@@ -623,33 +644,25 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                   //read fault register to get a full picture
                   P039_data->deviceFaults = read8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_FAULT));
 
-                  // set next state in sequence -> READY STATE
-                  // P039_data->convReady = true;
-                  P039_data->mainState = MAX31865_RDY_STATE;
+                  // mark conversion as ready
+                  P039_data->convReady = true;
 
-                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                    String log;
-                    if((log.reserve(66u))) {
-                      log = F("P039 : ");
-                      log += getTaskDeviceName(event->TaskIndex);
-                      log += F(" : ");
-                      log += F("current state: MAX31865_RD_STATE ");
-                      log += F("P039_data->mainState: ");
-                      log += String(P039_data->mainState, HEX);
-                      addLog(LOG_LEVEL_DEBUG, log);
+                  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 
-                      log = F("P039 : ");
-                      log += getTaskDeviceName(event->TaskIndex);
-                      log += F("; : ");
-                      log += F("P039_data->conversionResult: ");
-                      log += String(P039_data->conversionResult, HEX);
-                      log += F("; P039_data->deviceFaults: ");
-                      log += String(P039_data->deviceFaults, HEX);
-                      log += F("; delta: ");
-                      log += String(delta, DEC);
-                      log += F("ms;");
-                      addLog(LOG_LEVEL_DEBUG, log);
+                      String log;
+                      if((log.reserve(140u))) {
+                        log = F("P039 : ");                              // 7 char
+                        log += getTaskDeviceName(event->TaskIndex);      // 41 char ( max length of task device name + 1)
+                        log += F(" : ");                                 // 3 char
+                        log += F("P039_data->conversionResult: ");       // 30 char
+                        log += String(P039_data->conversionResult, HEX); // 6 char
+                        log += F("; P039_data->deviceFaults: ");         // 27 char
+                        log += String(P039_data->deviceFaults, HEX);     // 4 char
+                        log += F("; Next State: ");                      // 13 char
+                        log += String(event->Par1, HEX);                 // 4 char
+                        addLog(LOG_LEVEL_DEBUG, log);
                     }
+
                   }
 
  
@@ -664,28 +677,28 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                   //activate BIAS short before read, to reduce power consumption
                   handleBias(CS_pin_no, true);
 
-                  // set next state in sequence -> BIAS ON STATE
-                  P039_data->mainState =  MAX31865_BIAS_ON_STATE;
 
                   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                     String log;
-                    if((log.reserve(66u))) {
-                      log = F("P039 : ");
-                      log += getTaskDeviceName(event->TaskIndex);
-                      log += F(" : ");
-                      log += F("current state: MAX31865_INIT_STATE, default ");
-                      log += F("P039_data->mainState: ");
-                      log += String(P039_data->mainState, HEX);
-                      
+                    if((log.reserve(130u))) {
+                      log = F("P039 : ");                                         // 7 char
+                      log += getTaskDeviceName(event->TaskIndex);                 // 41 char
+                      log += F(" : ");                                            // 3 char
+                      log += F("current state: MAX31865_INIT_STATE, default ");   // many char - 44
+                      log += F("next state: MAX31865_BIAS_ON_STATE");             // a little less char - 34
                       addLog(LOG_LEVEL_DEBUG, log);
                     }
+                    
+                    // save current timer for next calculation
+                    P039_data->timer = millis();
+
                   }
 
-                  // save current timer for next calculation
-                  P039_data->timer = millis();
 
                   // start time to follow up on BIAS activation before starting the conversion
                   // and start conversion sequence via TIMER API
+                  // set next state in sequence -> BIAS ON STATE
+                  // P039_data->convReady = false;
                   Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
 
 
@@ -722,13 +735,13 @@ float readMax6675(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
       String log;
-      if((log.reserve(66u))) {
-        log = F("P039 : MAX6675 : RAW - BIN:");
-        log += String(rawvalue, BIN);
-        log += F(" HEX:");
-        log += String(rawvalue, HEX);
-        log += F(" DEC:");
-        log += String(rawvalue);
+      if((log.reserve(70u))) {
+        log = F("P039 : MAX6675 : RAW - BIN:");     // 27 char
+        log += String(rawvalue, BIN);               // 18 char
+        log += F(" HEX:");                          // 5 char
+        log += String(rawvalue, HEX);               // 4 char
+        log += F(" DEC:");                          // 5 char
+        log += String(rawvalue);                    // 5 char
         addLog(LOG_LEVEL_DEBUG, log);
       }
     }
@@ -758,11 +771,13 @@ float readMax6675(struct EventStruct *event)
 
 float readMax31855(struct EventStruct *event)
 {
+  P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
+  
   union {
       uint8_t messageBuffer[4] = {0x00, 0x00, 0x00, 0x00};
       uint32_t value;
   } u_mB;
-
+  
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
   // u_mB.messageBuffer[4] = {0x00, 0x00, 0x00, 0x00};
@@ -785,20 +800,20 @@ float readMax31855(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
       String log;
-      if((log.reserve(66u))) {
-        log = F("P039 : MAX31855 : RAW - BIN:");
-        log += String(rawvalue, BIN);
-        log += F(" rawvalue,HEX: ");
-        log += String(rawvalue, HEX);
-        log += F(" rawvalue,DEC: ");
-        log += String(rawvalue);
-        log += F(" u_mB.value,DEC: ");
-        log += String(u_mB.value, DEC);
+      if((log.reserve(140u))) {
+        log = F("P039 : MAX31855 : RAW - BIN:");      // 35 char
+        log += String(rawvalue, BIN);                 // 16 char
+        log += F(" rawvalue,HEX: ");                  // 15 char    
+        log += String(rawvalue, HEX);                 // 4 char
+        log += F(" rawvalue,DEC: ");                  // 15 char
+        log += String(rawvalue);                      // 5 char
+        log += F(" u_mB.value,DEC: ");                // 17 char
+        log += String(u_mB.value, DEC);               // 5 char
         log += F(" u_mB.messageBuffer[],DEC:");
         for (size_t i = 0u; i < 4; i++)
         {
-                log += ' ';
-                log += String(u_mB.messageBuffer[i], DEC);
+                log += ' ';                                 // 4 char
+                log += String(u_mB.messageBuffer[i], DEC);  // 20 char
         }
         addLog(LOG_LEVEL_DEBUG, log);
       }
@@ -807,45 +822,49 @@ float readMax31855(struct EventStruct *event)
   # endif // ifndef BUILD_NO_DEBUG
 
 
-  // FIXME TD-er: This static flag is shared among all instances of this plugin
-  static bool sensorFault = false;
 
-  if (sensorFault != ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0)) {
-    // Fault code changed, log them
-    sensorFault = ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0);
+  if((nullptr != P039_data)){
 
-    # ifndef BUILD_NO_DEBUG
+      // FIXED: c.k.i. : moved static fault flag to instance data structure
+      P039_data->sensorFault = false;
 
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
-      {
-        String log;
-        if((log.reserve(66u))) {
-          log = F("P039 : MAX31855");
+      if (P039_data->sensorFault != ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0)) {
+        // Fault code changed, log them
+        P039_data->sensorFault = ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0);
 
-          if (!sensorFault) {
-            log += F("Fault resolved");
-          } else {
-            log += F("Fault code:");
+        # ifndef BUILD_NO_DEBUG
 
-            if (rawvalue & MAX31855_TC_OC) {
-              log += F(" Open (no connection)");
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
+          {
+            String log;
+            if((log.reserve(66u))) {
+              log = F("P039 : MAX31855");               // 
+
+              if (!(P039_data->sensorFault)) {
+                log += F("Fault resolved");
+              } else {
+                log += F("Fault code:");
+
+                if (rawvalue & MAX31855_TC_OC) {
+                  log += F(" Open (no connection)");
+                }
+
+                if (rawvalue & MAX31855_TC_SC) {
+                  log += F(" Short-circuit to GND");
+                }
+
+                if (rawvalue & MAX31855_TC_SCVCC) {
+                  log += F(" Short-circuit to Vcc");
+                }
+              }
+              addLog(LOG_LEVEL_DEBUG, log);
             }
+          } 
 
-            if (rawvalue & MAX31855_TC_SC) {
-              log += F(" Short-circuit to GND");
-            }
+        # endif // ifndef BUILD_NO_DEBUG
+      }
 
-            if (rawvalue & MAX31855_TC_SCVCC) {
-              log += F(" Short-circuit to Vcc");
-            }
-          }
-          addLog(LOG_LEVEL_DEBUG, log);
-        }
-      } 
-
-    # endif // ifndef BUILD_NO_DEBUG
-
-  }
+  } 
 
   // D16 - This bit reads at 1 when any of the SCV, SCG, or OC faults are active. Default value is 0.
   // 2020-05-11: FIXED: c.k.i.: migrated plain flag mask to #defines to enhance maintainability; added all fault flags for safety reasons
@@ -878,6 +897,8 @@ float readMax31855(struct EventStruct *event)
 
 float readMax31856(struct EventStruct *event)
 {
+  P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
+
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
 
@@ -899,7 +920,7 @@ float readMax31856(struct EventStruct *event)
       if((log.reserve(66u))) {
         log = F("P039 : MAX31856 :");
 
-        for (uint8_t i = 1; i < MAX31856_NO_REG; ++i) {
+        for (uint8_t i = 0; i < MAX31856_NO_REG; ++i) {
           log += ' ';
           log += String(registers[i], HEX);
         }
@@ -913,64 +934,67 @@ float readMax31856(struct EventStruct *event)
 
   # ifndef BUILD_NO_DEBUG
 
-    // FIXME TD-er: This static flag is shared among all instances of this plugin
-    static bool sensorFault = false;
- 
-    sensorFault = (sr != 0); // Set new state
+    // FIXED: c.k.i. : moved static fault flag to instance data structure
+    if((nullptr != P039_data)){
 
-    const bool faultResolved = sensorFault && (sr == 0);
+      P039_data->sensorFault = false;
+  
+      P039_data->sensorFault = (sr != 0); // Set new state
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
-    {
-      if (sensorFault || faultResolved) {
-        String log;
-        if((log.reserve(66u))) {
-          log = F("P039 : MAX31856");
-          
-          if (sensorFault == 0) {
-            log += F("Fault resolved");
-          } else {
-            log += F("Fault :");
+      const bool faultResolved = (P039_data->sensorFault) && (sr == 0);
 
-            if (sr & 0x01) {
-              log += F(" Open (no connection)");
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
+      {
+        if ((P039_data->sensorFault) || faultResolved) {
+          String log;
+          if((log.reserve(66u))) {
+            log = F("P039 : MAX31856");
+            
+            if ((P039_data->sensorFault) == 0) {
+              log += F("Fault resolved");
+            } else {
+              log += F("Fault :");
+
+              if (sr & 0x01) {
+                log += F(" Open (no connection)");
+              }
+
+              if (sr & 0x02) {
+                log += F(" Over/Under Voltage");
+              }
+
+              if (sr & 0x04) {
+                log += F(" TC Low");
+              }
+
+              if (sr & 0x08) {
+                log += F(" TC High");
+              }
+
+              if (sr & 0x10) {
+                log += F(" CJ Low");
+              }
+
+              if (sr & 0x20) {
+                log += F(" CJ High");
+              }
+
+              if (sr & 0x40) {
+                log += F(" TC Range");
+              }
+
+              if (sr & 0x80) {
+                log += F(" CJ Range");
+              }
             }
-
-            if (sr & 0x02) {
-              log += F(" Over/Under Voltage");
-            }
-
-            if (sr & 0x04) {
-              log += F(" TC Low");
-            }
-
-            if (sr & 0x08) {
-              log += F(" TC High");
-            }
-
-            if (sr & 0x10) {
-              log += F(" CJ Low");
-            }
-
-            if (sr & 0x20) {
-              log += F(" CJ High");
-            }
-
-            if (sr & 0x40) {
-              log += F(" TC Range");
-            }
-
-            if (sr & 0x80) {
-              log += F(" CJ Range");
-            }
+            addLog(LOG_LEVEL_DEBUG, log);
           }
-          addLog(LOG_LEVEL_DEBUG, log);
         }
       }
     }
 
   # endif // ifndef BUILD_NO_DEBUG
-
+    
   const bool Plugin_039_SensorAttached = (sr == 0);
 
   if (Plugin_039_SensorAttached)
@@ -1011,9 +1035,27 @@ float readMax31865(struct EventStruct *event)
 
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
+  # ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+      {
+        String log;
+        if((log.reserve(66u))) {
+        
+          log = F("P039 : MAX31865 :");
+          log += F(" P039_data->convReady: ");
+          log += String(P039_data->convReady, BIN);
+
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+      }
+  # endif // ifndef BUILD_NO_DEBUG
+
+
+
   // read conversion result and faults from plugin data structure 
   // if pointer exists and conversion has been finished
-  if ((nullptr != P039_data) && (MAX31865_RDY_STATE == P039_data->mainState)) {
+  if ((nullptr != P039_data) && (true == P039_data->convReady)) {
     rawValue = P039_data->conversionResult;
     registers[MAX31865_FAULT] = P039_data->deviceFaults;
   }
@@ -1063,35 +1105,11 @@ float readMax31865(struct EventStruct *event)
   // start time to follow up on BIAS activation before starting the conversion
   // and start conversion sequence via TIMER API
   if(nullptr != P039_data){
-      P039_data->mainState =  MAX31865_BIAS_ON_STATE;
-      Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
+    // set next state to MAX31865_BIAS_ON_STATE
+    // P039_data->convReady = false;
+    Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
   }
  
-  // // wait for external capacities to load (min. 10ms -> give 50% adder to "be sure")
-  // delay(15);
-
-  // //activate one shot conversion
-  // startOneShotConversion(CS_pin_no);
-
-  // if ((nullptr != P039_data)) {
-  // // mark conversion as started
-  // P039_data->convReady = false;
-  // P039_data->mainState = MAX31865_READ_STATE;
-  // }
-
-  // // start time to follow up on conversion and read the conversion result
-  // Scheduler.setPluginTaskTimer(MAX31865_CONVERSION_BREAK, event->TaskIndex, event->Par1); 
-
-  // wait for 100ms -> conversion to be ready
-  // TODO: c.k.i.: remove blunt waiting for 100ms and wasting of run time, change to other mechnism: TIMER API or state machine
-  // delay(100);
-
-  // read conversion result
-  // rawValue = read16BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_RTD_MSB));
-  
-  //deactivate BIAS short after read, to reduce power consumption
-  // handleBias(CS_pin_no, false);
-
   # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
