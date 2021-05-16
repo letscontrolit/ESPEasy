@@ -61,9 +61,9 @@
 // #include <String.h>
 
 // // plugin-local quick activation of debug messages
-#ifdef BUILD_NO_DEBUG
-  #undef BUILD_NO_DEBUG
-#endif
+// #ifdef BUILD_NO_DEBUG
+//   #undef BUILD_NO_DEBUG
+// #endif
 
 # define PLUGIN_039
 # define PLUGIN_ID_039         39
@@ -108,26 +108,38 @@
 #define MAX31855_TC_SCVCC           0x00000004u
 #define MAX31855_TC_GENFLT          0x00010000u
 
-// register offset values for MAX 31856
-#define MAX31856_RAWVALUE           0u
-#define MAX31856_CR0                1u
-#define MAX31856_CR1                2u
-#define MAX31856_MASK               3u
-#define MAX31856_CJHF               4u
-#define MAX31856_CJLF               5u
-#define MAX31856_LTHFTH             6u
-#define MAX31856_LTHFTL             7u
-#define MAX31856_LTLFTH             8u
-#define MAX31856_LTLFTL             9u
-#define MAX31856_CJTO               10u
-#define MAX31856_CJTH               11u
-#define MAX31856_CJTL               12u
-#define MAX31856_LTCBH              13u
-#define MAX31856_LTCBM              14u
-#define MAX31856_LTCBL              15u
-#define MAX31856_SR                 16u
 
-#define MAX31856_NO_REG             17u
+// MAX 31856 related defines
+
+// base address for read/write acces to MAX 31856
+#define MAX31856_READ_ADDR_BASE       0x00u
+#define MAX31856_WRITE_ADDR_BASE      0x80u
+
+// register offset values for MAX 31856
+#define MAX31856_CR0                0u
+#define MAX31856_CR1                1u
+#define MAX31856_MASK               2u
+#define MAX31856_CJHF               3u
+#define MAX31856_CJLF               4u
+#define MAX31856_LTHFTH             5u
+#define MAX31856_LTHFTL             6u
+#define MAX31856_LTLFTH             7u
+#define MAX31856_LTLFTL             8u
+#define MAX31856_CJTO               9u
+#define MAX31856_CJTH               10u
+#define MAX31856_CJTL               11u
+#define MAX31856_LTCBH              12u
+#define MAX31856_LTCBM              13u
+#define MAX31856_LTCBL              14u
+#define MAX31856_SR                 15u
+
+#define MAX31856_NO_REG             16u
+
+// bit masks to identify failures for MAX 31856
+#define MAX31856_TC_OC              0x00000001u
+#define MAX31856_TC_SC              0x00000002u
+#define MAX31856_TC_SCVCC           0x00000004u
+#define MAX31856_TC_GENFLT          0x00010000u
 
 
 // RTD related defines
@@ -253,6 +265,14 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       // initialize SPI:
       SPI.setHwCs(false);
       SPI.begin();
+
+      if (P039_MAX_TYPE == P039_MAX6675) {
+
+        // ensure MODE3 access to SPI device
+        SPI.setDataMode(SPI_MODE3);
+        // SPI.setBitOrder(MSBFIRST);
+
+      }
 
       if (P039_MAX_TYPE == P039_MAX31856) {
 
@@ -726,9 +746,15 @@ float readMax6675(struct EventStruct *event)
 {
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
-  // "transfer" 0x0 and read the Data from the Chip
-  // uint16_t rawvalue = SPI.transfer16(0x0);
-  uint16_t rawvalue = read16BitRegister(CS_pin_no, 0x0000);
+  uint8_t messageBuffer[2] = {0x00, 0x00};
+  uint16_t rawvalue = 0u;
+
+
+  // "transfer" 2 bytes to SPI to get 16 Bit return value
+    transfer_n_ByteSPI(CS_pin_no, 2, &messageBuffer[0]);
+  
+  // merge 16Bit return value from messageBuffer
+  rawvalue = ((messageBuffer[0] << 8) | messageBuffer[1]);
 
   # ifndef BUILD_NO_DEBUG
 
@@ -737,11 +763,15 @@ float readMax6675(struct EventStruct *event)
       String log;
       if((log.reserve(70u))) {
         log = F("P039 : MAX6675 : RAW - BIN:");     // 27 char
-        log += String(rawvalue, BIN);               // 18 char
-        log += F(" HEX:");                          // 5 char
-        log += String(rawvalue, HEX);               // 4 char
+        log += String(rawvalue, BIN);          // 18 char
+        log += F(" HEX: 0x");                          // 5 char
+        log += String(rawvalue, HEX);          // 4 char
         log += F(" DEC:");                          // 5 char
-        log += String(rawvalue);                    // 5 char
+        log += String(rawvalue);               // 5 char
+        log += F(" MSB: 0x");                          // 5 char
+        log += String(messageBuffer[0], HEX);          // 5 char 
+        log += F(" LSB: 0x");                          // 5 char
+        log += String(messageBuffer[1], HEX);          // 5 char
         addLog(LOG_LEVEL_DEBUG, log);
       }
     }
@@ -760,8 +790,8 @@ float readMax6675(struct EventStruct *event)
     // Shift RAW value 3 Bits to the right to get the data
     rawvalue >>= 3;
 
-    // Calculate Celsius
-    return rawvalue * 0.25f;
+    // Calculate Celsius with device resolution 0.25 °K/bit
+    return (rawvalue * 0.25f);
   }
   else
   {
@@ -772,29 +802,18 @@ float readMax6675(struct EventStruct *event)
 float readMax31855(struct EventStruct *event)
 {
   P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
-  
-  union {
-      uint8_t messageBuffer[4] = {0x00, 0x00, 0x00, 0x00};
-      uint32_t value;
-  } u_mB;
-  
+
+  uint8_t messageBuffer[4] = {0x00, 0x00, 0x00, 0x00};
+
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
-  // u_mB.messageBuffer[4] = {0x00, 0x00, 0x00, 0x00};
-
   // "transfer" 0x0 and read the 32 Bit conversion register from the Chip
+  transfer_n_ByteSPI(CS_pin_no, 4, &messageBuffer[0]);
 
-  transfer_n_ByteSPI(CS_pin_no, 4, &u_mB.messageBuffer[0]);
-  uint16_t rawvalue = u_mB.value;
+  // merge rawvalue from 4 bytes of messageBuffer
+  uint32_t rawvalue = ((messageBuffer[0] << 24) | (messageBuffer[1] << 16) | (messageBuffer[2] << 8) | messageBuffer[3]);
 
-  // uint32_t rawvalue = read_n_ByteitRegister(CS_pin_no, 0x0000);
-
-  // // Shift MSB 16 Bits to the left
-  // rawvalue <<= 16;
-
-  // // "transfer" 0x0 and read the LSB Data from the Chip
-  // rawvalue |= read16BitRegister(CS_pin_no, 0x0000);
-
+  
   # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
@@ -806,14 +825,12 @@ float readMax31855(struct EventStruct *event)
         log += F(" rawvalue,HEX: ");                  // 15 char    
         log += String(rawvalue, HEX);                 // 4 char
         log += F(" rawvalue,DEC: ");                  // 15 char
-        log += String(rawvalue);                      // 5 char
-        log += F(" u_mB.value,DEC: ");                // 17 char
-        log += String(u_mB.value, DEC);               // 5 char
-        log += F(" u_mB.messageBuffer[],DEC:");
+        log += String(rawvalue, DEC);                 // 5 char
+        log += F("messageBuffer[],HEX:");
         for (size_t i = 0u; i < 4; i++)
         {
-                log += ' ';                                 // 4 char
-                log += String(u_mB.messageBuffer[i], DEC);  // 20 char
+                log += F(" 0x");                       // 12 char
+                log += String(messageBuffer[i], HEX);  // 8 char
         }
         addLog(LOG_LEVEL_DEBUG, log);
       }
@@ -823,11 +840,12 @@ float readMax31855(struct EventStruct *event)
 
 
 
-  if((nullptr != P039_data)){
+  if(nullptr != P039_data){
 
       // FIXED: c.k.i. : moved static fault flag to instance data structure
       P039_data->sensorFault = false;
 
+      // chech for fault flags in LSB of 32 Bit messageBuffer - lowest
       if (P039_data->sensorFault != ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0)) {
         // Fault code changed, log them
         P039_data->sensorFault = ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0);
@@ -886,7 +904,7 @@ float readMax31855(struct EventStruct *event)
     int temperature = Plugin_039_convert_two_complement(rawvalue, 14);
 
     // Calculate Celsius
-    return temperature * 0.25f;
+    return (temperature * 0.25f);
   }
   else
   {
@@ -897,15 +915,17 @@ float readMax31855(struct EventStruct *event)
 
 float readMax31856(struct EventStruct *event)
 {
-  P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
-
+  # ifndef BUILD_NO_DEBUG
+    P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
+  #endif
+  
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
 
   uint32_t registers[MAX31856_NO_REG] = { 0 };
 
   for (uint8_t i = 0u; i < MAX31856_NO_REG; ++i) {
-    registers[i] = read8BitRegister(CS_pin_no, i);
+    registers[i] = read8BitRegister(CS_pin_no, (MAX31856_READ_ADDR_BASE + i));
   }
 
   uint32_t rawvalue = registers[MAX31856_LTCBH];
@@ -999,9 +1019,9 @@ float readMax31856(struct EventStruct *event)
 
   if (Plugin_039_SensorAttached)
   {
-    registers[MAX31856_RAWVALUE] >>= 5; // bottom 5 bits are unused
+    rawvalue >>= 5; // bottom 5 bits are unused
     // We're left with (24 - 5 =) 19 bits
-    float temperature = Plugin_039_convert_two_complement(registers[MAX31856_RAWVALUE], 19);
+    float temperature = Plugin_039_convert_two_complement(rawvalue, 19);
 
     // Calculate Celsius
     return temperature / 128.0f;
