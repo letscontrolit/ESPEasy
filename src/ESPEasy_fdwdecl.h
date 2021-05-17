@@ -9,18 +9,7 @@
 
 void PluginInit(void);
 void CPluginInit(void);
-
-
-void     backgroundtasks();
-
-
-void flushAndDisconnectAllClients();
-
-
-float getCPUload();
-int getLoopCountPerSec();
-int getUptimeMinutes();
-
+void NPluginInit(void);
 
 
 

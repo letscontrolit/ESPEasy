@@ -1,7 +1,8 @@
 #include "../ESPEasyCore/ESPEasy_setup.h"
 
+#include "../../ESPEasy_fdwdecl.h" // Needed for PluginInit() and CPluginInit()
+
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_fdwdecl.h"
 #include "../../_Plugin_Helper.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
@@ -25,6 +26,66 @@
 #include "../Helpers/StringGenerator_System.h"
 #include "../WebServer/WebServer.h"
 
+
+#ifdef USE_RTOS_MULTITASKING
+#include "../Helpers/Networking.h"
+#include "../Helpers/PeriodicalActions.h"
+#endif
+
+#ifdef FEATURE_ARDUINO_OTA
+#include "../Helpers/OTA.h"
+#endif
+
+
+
+
+#ifdef USE_RTOS_MULTITASKING
+void RTOS_TaskServers( void * parameter )
+{
+ while (true){
+  delay(100);
+  web_server.handleClient();
+  checkUDP();
+ }
+}
+
+void RTOS_TaskSerial( void * parameter )
+{
+  while (true){
+    delay(100);
+    serial();
+  }
+}
+
+void RTOS_Task10ps( void * parameter )
+{
+ while (true){
+    delay(100);
+    run10TimesPerSecond();
+ }
+}
+
+void RTOS_HandleSchedule( void * parameter )
+{
+ while (true){
+    Scheduler.handle_schedule();
+ }
+}
+
+#endif
+
+
+/*********************************************************************************************\
+ * ISR call back function for handling the watchdog.
+\*********************************************************************************************/
+void sw_watchdog_callback(void *arg)
+{
+  yield(); // feed the WD
+  ++sw_watchdog_callback_count;
+}
+
+
+
 /*********************************************************************************************\
  * SETUP
 \*********************************************************************************************/
@@ -43,7 +104,7 @@ void ESPEasy_setup()
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM = FreeMem();
 #endif
-#ifndef ESP32
+#ifdef ESP8266
 //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
 #endif
 

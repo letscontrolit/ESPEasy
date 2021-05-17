@@ -21,7 +21,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 
 // ********************************************************************************

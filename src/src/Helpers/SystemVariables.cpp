@@ -2,7 +2,7 @@
 
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../DataStructs/TimingStats.h"
@@ -23,6 +23,7 @@
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
