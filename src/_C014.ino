@@ -2,7 +2,9 @@
 #ifdef USES_C014
 
 #include "src/Globals/Device.h"
+#include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Statistics.h"
 #include "_Plugin_Helper.h"
 
 //#######################################################################################################

@@ -3,7 +3,9 @@
 
 # include "src/Globals/Nodes.h"
 # include "src/DataStructs/C013_p2p_dataStructs.h"
+# include "src/ESPEasyCore/ESPEasyRules.h"
 # include "src/Helpers/Misc.h"
+# include "src/Helpers/Network.h"
 
 // #######################################################################################################
 // ########################### Controller Plugin 013: ESPEasy P2P network ################################

@@ -47,8 +47,8 @@ else:
     "-DUSES_P094",  # CUL Reader
 #   "-DUSES_P095",  # TFT ILI9341
     "-DUSES_P106",  # BME680
-    "-DUSES_P107",  # SI1145 UV index
     "-DUSES_P098",  # ESPEasy-NOW Reader
+#    "-DUSES_P107",  # SI1145 UV index
 
 #   "-DUSES_C015",  # Blynk
     "-DUSES_C016",  # Cache Controller

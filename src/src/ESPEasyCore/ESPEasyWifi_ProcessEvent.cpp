@@ -1,10 +1,8 @@
-#include "ESPEasyWifi_ProcessEvent.h"
+#include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
 
 // FIXME TD-er: Rename this to ESPEasyNetwork_ProcessEvent
 
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_fdwdecl.h"
-
 #include "../DataStructs/NodesHandler.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"

@@ -25,8 +25,6 @@
 # include "../Globals/ESPEasy_now_handler.h"
 #endif
 
-#include "../../ESPEasy_fdwdecl.h"
-
 
 // ********************************************************************************
 // WiFi state
