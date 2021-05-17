@@ -2,7 +2,6 @@
 
 #include "../ESPEasyCore/Controller.h"
 #include "../Helpers/ESPEasy_time_calc.h"
-#include "../../ESPEasy_fdwdecl.h"
 
 #define TIMEOUT_ASK_FOR_DUPLICATE 100
 

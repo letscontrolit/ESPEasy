@@ -4,7 +4,6 @@
 #include "../Globals/Plugins.h"
 #include "../Helpers/CRC_functions.h"
 #include "../Helpers/ESPEasy_time_calc.h"
-#include "../../ESPEasy_fdwdecl.h"
 
 
 #define HISTORIC_ELEMENT_LIFETIME  10000 // 10 seconds

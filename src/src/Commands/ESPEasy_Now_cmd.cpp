@@ -6,7 +6,6 @@
 #ifdef USES_ESPEASY_NOW
 
 #include "../Commands/Common.h"
-#include "../../ESPEasy_fdwdecl.h"
 #include "../../ESPEasy_common.h"
 #include "../Globals/ESPEasy_now_handler.h"
 

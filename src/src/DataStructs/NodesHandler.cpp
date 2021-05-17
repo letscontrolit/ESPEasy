@@ -2,7 +2,6 @@
 
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_fdwdecl.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -16,6 +15,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/PeriodicalActions.h"
 
 #define ESPEASY_NOW_ALLOWED_AGE_NO_TRACEROUTE  35000
