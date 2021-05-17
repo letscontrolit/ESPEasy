@@ -1,4 +1,4 @@
-#include "ESPEasyRules.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/TimingStats.h"

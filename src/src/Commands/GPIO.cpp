@@ -922,19 +922,17 @@ bool gpio_mode_range_helper(byte pin, byte pinMode, struct EventStruct *event, c
         String log = logPrefix + String(F(" : port#")) + String(pin) + String(F(": MODE set to ")) + logPostfix + String(F(". Value = ")) + String(currentState);
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
-        return return_command_success();
+        return true;
       } else {
         logErrorGpioOffline(logPrefix,pin);
-        return return_command_failed();
+        return false;
       }
-    } else {
-      logErrorModeOutOfRange(logPrefix,pin);
-      return return_command_failed();
     }
-  } else {
-    logErrorGpioOutOfRange(logPrefix,pin, Line);
-    return return_command_failed();
+    logErrorModeOutOfRange(logPrefix,pin);
+    return false;
   }
+  logErrorGpioOutOfRange(logPrefix,pin, Line);
+  return false;
 }
 
 bool getGPIOPinStateValues(String& str) {
