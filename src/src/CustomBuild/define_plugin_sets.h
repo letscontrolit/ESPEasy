@@ -1371,7 +1371,7 @@ To create/register a plugin, you have to :
     #define USES_P113   // VL53L1X
   #endif
   #ifndef USES_P114
-    #define USES_P114   // 
+    #define USES_P114   // VEML6075 UVA/UVB sensor
   #endif
   #ifndef USES_P115
     #define USES_P115   // 
