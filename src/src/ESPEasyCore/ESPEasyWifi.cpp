@@ -450,6 +450,11 @@ void SetWiFiTXpower(float dBm, float rssi) {
     return;
   }
 
+  if (Settings.UseESPEasyNow()) {
+    // Do not mess with WiFi TX power when ESPEasy-now is used.
+    return;
+  }
+
   // Range ESP32  : 2dBm - 20dBm
   // Range ESP8266: 0dBm - 20.5dBm
   float maxTXpwr;
