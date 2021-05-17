@@ -15,6 +15,7 @@
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
 #define WIFI_RECONNECT_WAIT                  20000  // in milliSeconds
+#define WIFI_CONNECT_TIMEOUT                 20000  // in milliSeconds
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;
@@ -31,6 +32,24 @@ bool WiFiEventData_t::WiFiConnectAllowed() const {
 bool WiFiEventData_t::unprocessedWifiEvents() const {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
   {
+    return false;
+  }
+  if (!processedConnect) {
+    if (lastConnectMoment.isSet() && lastConnectMoment.timeoutReached(WIFI_CONNECT_TIMEOUT)) {
+      return false;
+    }
+  }
+  if (!processedGotIP) {
+    if (lastGetIPmoment.isSet() && lastGetIPmoment.timeoutReached(WIFI_CONNECT_TIMEOUT)) {
+      return false;
+    }
+  }
+  if (!processedDisconnect) {
+    if (lastDisconnectMoment.isSet() && lastDisconnectMoment.timeoutReached(WIFI_CONNECT_TIMEOUT)) {
+      return false;
+    }
+  }
+  if (!processedDHCPTimeout) {
     return false;
   }
   return true;
