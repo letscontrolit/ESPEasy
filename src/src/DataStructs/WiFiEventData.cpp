@@ -15,7 +15,7 @@
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
 #define WIFI_RECONNECT_WAIT                  20000  // in milliSeconds
-#define WIFI_CONNECT_TIMEOUT                 20000  // in milliSeconds
+#define WIFI_PROCESS_EVENTS_TIMEOUT          10000  // in milliSeconds
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;
@@ -35,17 +35,17 @@ bool WiFiEventData_t::unprocessedWifiEvents() const {
     return false;
   }
   if (!processedConnect) {
-    if (lastConnectMoment.isSet() && lastConnectMoment.timeoutReached(WIFI_CONNECT_TIMEOUT)) {
+    if (lastConnectMoment.isSet() && lastConnectMoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
       return false;
     }
   }
   if (!processedGotIP) {
-    if (lastGetIPmoment.isSet() && lastGetIPmoment.timeoutReached(WIFI_CONNECT_TIMEOUT)) {
+    if (lastGetIPmoment.isSet() && lastGetIPmoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
       return false;
     }
   }
   if (!processedDisconnect) {
-    if (lastDisconnectMoment.isSet() && lastDisconnectMoment.timeoutReached(WIFI_CONNECT_TIMEOUT)) {
+    if (lastDisconnectMoment.isSet() && lastDisconnectMoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
       return false;
     }
   }
