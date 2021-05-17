@@ -300,7 +300,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         // init string - content accoring to inital implementation of P039 - MAX31856 read function
         // write to Adress 0x80
         // activate 50Hz filter in CR0, choose averaging and TC type from configuration in CR1, activate OV/UV/OC faults, write defaults to CJHF, CJLF, LTHFTH, LTHFTL, LTLFTH, LTLFTL, CJTO
-        uint8_t sendBuffer[11] = {0x80, 0x01, (uint8_t) ((P039_CONFIG_4 << 4) | P039_TC_TYPE), 0xFC, 0x7F, 0xC0, 0x7F, 0xFF, 0x80, 0x00, 0x00 };
+        uint8_t sendBuffer[11] = {0x80, static_cast<uint8_t> (P039_RTD_FILT_TYPE), static_cast<uint8_t> ((P039_CONFIG_4 << 4) | P039_TC_TYPE), 0xFC, 0x7F, 0xC0, 0x7F, 0xFF, 0x80, 0x00, 0x00 };
 
         transfer_n_ByteSPI(CS_pin_no, 11, &sendBuffer[0] );
 
@@ -398,7 +398,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       {
         const String Foptions[2] = {F("Thermocouple"), F("RTD")};
         const int FoptionValues[2] = {P039_TC, P039_RTD};
-        addFormSelector(F("Sensor Family Type"), F("P039_famtype"), 2, Foptions, FoptionValues, family);
+        addFormSelector(F("Sensor Family Type"), F("P039_famtype"), 2, Foptions, FoptionValues, family, true); // auto reload activated
         addFormNote(F("Set sensor family of connected sensor - thermocouple or RTD. Submit the form after choice to allow update of sections below accordingly !"));
       }
 
@@ -413,7 +413,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         {
           const String options[3]      = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
           const int    optionValues[3] = { P039_MAX6675, P039_MAX31855, P039_MAX31856 };
-          addFormSelector(F("Adapter IC"), F("P039_maxtype"), 3, options, optionValues, choice);
+          addFormSelector(F("Adapter IC"), F("P039_maxtype"), 3, options, optionValues, choice, true); // auto reload activated
           addFormNote(F("Set adapter IC used. Submit the form after choice to allow update of sections below accordingly !"));
         }
     
@@ -423,20 +423,38 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
           }
           {
             addFormNote(F("Set Thermocouple type for MAX31856"));
-            const String Toptions[10]      = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T"), F("VM16"), F("VM32") };
+            const String Toptions[10]      = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T"), F("VM8"), F("VM32") };
+
+            // 2021-05-17: c.k.i.: values are directly written to device register for configuration, therefore no linear values are used here
+            // MAX 31856 datasheet (page 20):
+            //    Thermocouple Type
+            //    0000 = B Type
+            //    0001 = E Type
+            //    0010 = J Type
+            //    0011 = K Type (default)
+            //    0100 = N Type
+            //    0101 = R Type
+            //    0110 = S Type
+            //    0111 = T Type
+            //    10xx = Voltage Mode, Gain = 8. Code = 8 x 1.6 x 217 x VIN
+            //    11xx = Voltage Mode, Gain = 32. Code = 32 x 1.6 x 217 x VIN
+            //    Where Code is 19 bit signed number from TC registers and VIN is thermocouple input voltage
+
             const int    ToptionValues[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 12};
             addFormSelector(F("Thermocouple type"), F("P039_tctype"), 10, Toptions, ToptionValues, P039_TC_TYPE);
           }
           {
-            const String Coptions[5] = {F("1 sample"), F("2 samples"), F("4 samples"), F("8 samples"), F("16 samples")};
+            const String Coptions[5] = {F("1"), F("2"), F("4"), F("8"), F("16")};
             const int CoptionValues[5] = {0, 1, 2, 3, 4};
             addFormSelector(F("Averaging"), F("P039_contype"), 5, Coptions, CoptionValues, P039_CONFIG_4);
+            addUnit(F("sample(s)"));
             addFormNote(F("Set Averaging Type for MAX31856"));
           }
           {
-            const String FToptions[2] = {F("60 Hz"), F("50 Hz")};
+            const String FToptions[2] = {F("60"), F("50")};
             const int FToptionValues[2] = {0, 1};
             addFormSelector(F("Supply Frequency Filter"), F("P039_filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
+            addUnit(F("Hz"));
             addFormNote(F("Set filter frequency for supply voltage. Choose appropriate to your power net frequency (50/60 Hz)"));
           }
         }
@@ -449,7 +467,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         {
           const String TPoptions[2] = {F("MAX 31865"), F("LM7x")};
           const int TPoptionValues[2] = {P039_MAX31865, P039_LM7x};
-          addFormSelector(F("Adapter IC"), F("P039_maxtype"), 2, TPoptions, TPoptionValues, choice);
+          addFormSelector(F("Adapter IC"), F("P039_maxtype"), 2, TPoptions, TPoptionValues, choice, true); // auto reload activated
           addFormNote(F("Set used RTD Converter Module. Currently only MAX31865 is fully supported. LM7x derivatives are untested and experimental.\nSubmit the form after choice to allow update of sections below accordingly !"));
         }
 
@@ -467,23 +485,27 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
             addFormNote(F("Set Resistor Type for MAX31865"));
           }
           {
-            const String Coptions[2] = {F("2-/4-wire"), F("3-wire")};
+            const String Coptions[2] = {F("2-/4"), F("3")};
             const int CoptionValues[2] = {0, 1};
             addFormSelector(F("Connection Type"), F("P039_contype"), 2, Coptions, CoptionValues, P039_CONFIG_4);
+            addUnit(F("wire"));
             addFormNote(F("Set Connection Type for MAX31865"));
           }
           {
-            const String FToptions[2] = {F("60 Hz"), F("50 Hz")};
+            const String FToptions[2] = {F("60"), F("50")};
             const int FToptionValues[2] = {0, 1};
             addFormSelector(F("Supply Frequency Filter"), F("P039_filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
+            addUnit(F("Hz"));
             addFormNote(F("Set filter frequency for supply voltage. Choose appropriate to your power net frequency (50/60 Hz)"));
           }
           {
-            addFormNumericBox(F("Reference Resistor [OHM]"), F("P039_res"), P039_RTD_RES, 0);
+            addFormNumericBox(F("Reference Resistor"), F("P039_res"), P039_RTD_RES, 0);
+            addUnit(F("Ohm"));
             addFormNote(F("Set reference resistor for MAX31865. PT100: typically 430 [OHM]; PT1000: typically 4300 [OHM]"));
           }
           {
-            addFormFloatNumberBox(F("Offset [K]"), F("P039_offset"), P039_RTD_OFFSET, -50.0f, 50.0f, 2, 0.01f);
+            addFormFloatNumberBox(F("Offset"), F("P039_offset"), P039_RTD_OFFSET, -50.0f, 50.0f, 2, 0.01f);
+            addUnit(F("K"));            
             addFormNote(F("Set Offset [K] for MAX31865. Valid values: [-50.0...50.0 K], min. stepsize: [0.01]"));
           }
         }
@@ -981,7 +1003,7 @@ float readMax31856(struct EventStruct *event)
   change8BitRegister(CS_pin_no, (MAX31856_READ_ADDR_BASE + MAX31856_CR0),(MAX31856_WRITE_ADDR_BASE + MAX31856_CR0), MAX31856_SET_50HZ, static_cast<bool>(P039_RTD_FILT_TYPE) );
 
   // set averaging and TC type
-  write8BitRegister(CS_pin_no, (MAX31856_WRITE_ADDR_BASE + MAX31856_CR1), (uint8_t) ((P039_CONFIG_4 << 4) | P039_TC_TYPE));
+  write8BitRegister(CS_pin_no, (MAX31856_WRITE_ADDR_BASE + MAX31856_CR1), static_cast<uint8_t> ((P039_CONFIG_4 << 4) | P039_TC_TYPE));
   
 
   // start on shot conversion for next read cycle
@@ -1789,7 +1811,7 @@ void write8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
 
 void write16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
 {
-  uint8_t l_messageBuffer[3] = {l_address, (uint8_t) (value >> 8), (uint8_t) (value)};
+  uint8_t l_messageBuffer[3] = {l_address, static_cast<uint8_t> (value >> 8), static_cast<uint8_t> (value)};
 
   transfer_n_ByteSPI(l_CS_pin_no, 3, l_messageBuffer);
 
