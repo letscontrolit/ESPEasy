@@ -13,6 +13,7 @@
 
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/Globals/NPlugins.h"
+#include "src/ESPEasyCore/ESPEasy_backgroundtasks.h"
 
 // The message body is included in event->String1
 

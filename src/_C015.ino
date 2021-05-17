@@ -3,7 +3,7 @@
 
 # include "src/Globals/CPlugins.h"
 # include "src/Commands/Common.h"
-
+# include "src/ESPEasyCore/ESPEasy_backgroundtasks.h"
 
 // #######################################################################################################
 // ########################### Controller Plugin 015: Blynk  #############################################

@@ -18,6 +18,7 @@
 
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Globals/ESPEasy_time.h"
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/I2Cdev.h"

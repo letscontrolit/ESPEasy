@@ -7,7 +7,7 @@
  #include "../DataStructs/ESPEasy_EventStruct.h"
  */
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include "../Commands/Common.h"
 
@@ -15,6 +15,7 @@
 
 #include "../DataTypes/SettingsType.h"
 
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/Serial.h"
 
