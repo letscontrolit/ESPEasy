@@ -14,90 +14,101 @@
 
 
 /*********************************************************************************************\
- * run background tasks
+* run background tasks
 \*********************************************************************************************/
-bool runningBackgroundTasks=false;
+bool runningBackgroundTasks = false;
 void backgroundtasks()
 {
-  //checkRAM(F("backgroundtasks"));
-  //always start with a yield
+  // checkRAM(F("backgroundtasks"));
+  // always start with a yield
   delay(0);
-/*
-  // Remove this watchdog feed for now.
-  // See https://github.com/letscontrolit/ESPEasy/issues/1722#issuecomment-419659193
 
-  #ifdef ESP32
-  // Have to find a similar function to call ESP32's esp_task_wdt_feed();
-  #else
-  ESP.wdtFeed();
-  #endif
-*/
+  /*
+     // Remove this watchdog feed for now.
+     // See https://github.com/letscontrolit/ESPEasy/issues/1722#issuecomment-419659193
 
-  //prevent recursion!
+   #ifdef ESP32
+     // Have to find a similar function to call ESP32's esp_task_wdt_feed();
+   #else
+     ESP.wdtFeed();
+   #endif
+   */
+
+  // prevent recursion!
   if (runningBackgroundTasks)
   {
     return;
   }
   START_TIMER
   const bool networkConnected = NetworkConnected();
-  runningBackgroundTasks=true;
+
+  runningBackgroundTasks = true;
 
   /*
-  // Not needed anymore, see: https://arduino-esp8266.readthedocs.io/en/latest/faq/readme.html#how-to-clear-tcp-pcbs-in-time-wait-state
-  if (networkConnected) {
-    #if defined(ESP8266)
+     // Not needed anymore, see: https://arduino-esp8266.readthedocs.io/en/latest/faq/readme.html#how-to-clear-tcp-pcbs-in-time-wait-state
+     if (networkConnected) {
+   #if defined(ESP8266)
       tcpCleanup();
-    #endif
-  }
-  */
+   #endif
+     }
+   */
 
   process_serialWriteBuffer();
-  if(!UseRTOSMultitasking){
+
+  if (!UseRTOSMultitasking) {
     serial();
+
     if (webserverRunning) {
       web_server.handleClient();
     }
+
     if (networkConnected) {
       checkUDP();
     }
   }
 
   #ifdef FEATURE_DNS_SERVER
+
   // process DNS, only used if the ESP has no valid WiFi config
   if (dnsServerActive) {
     dnsServer.processNextRequest();
   }
-  #endif
+  #endif // ifdef FEATURE_DNS_SERVER
 
   #ifdef FEATURE_ARDUINO_OTA
-  if(Settings.ArduinoOTAEnable && networkConnected)
-    ArduinoOTA.handle();
 
-  //once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
+  if (Settings.ArduinoOTAEnable && networkConnected) {
+    ArduinoOTA.handle();
+  }
+
+  // once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
   while (ArduinoOTAtriggered)
   {
     delay(0);
+
     if (NetworkConnected()) {
       ArduinoOTA.handle();
     }
   }
 
-  #endif
+  #endif // ifdef FEATURE_ARDUINO_OTA
 
   #ifdef FEATURE_MDNS
+
   // Allow MDNS processing
   if (networkConnected) {
-    #ifdef ESP8266
+    # ifdef ESP8266
+
     // ESP32 does not have an update() function
     MDNS.update();
-    #endif
+    # endif // ifdef ESP8266
   }
-  #endif
+  #endif // ifdef FEATURE_MDNS
 
   delay(0);
 
   statusLED(false);
 
-  runningBackgroundTasks=false;
+  runningBackgroundTasks = false;
   STOP_TIMER(BACKGROUND_TASKS);
 }

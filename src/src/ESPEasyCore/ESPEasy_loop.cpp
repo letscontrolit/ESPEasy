@@ -1,7 +1,6 @@
 #include "../ESPEasyCore/ESPEasy_loop.h"
 
 
-
 #include "../../ESPEasy-Globals.h"
 #include "../DataStructs/TimingStats.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -23,39 +22,44 @@
 void updateLoopStats() {
   ++loopCounter;
   ++loopCounter_full;
+
   if (lastLoopStart == 0) {
     lastLoopStart = micros();
     return;
   }
   const long usecSince = usecPassedSince(lastLoopStart);
+
   #ifdef USES_TIMING_STATS
   miscStats[LOOP_STATS].add(usecSince);
-  #endif
+  #endif // ifdef USES_TIMING_STATS
 
   loop_usec_duration_total += usecSince;
-  lastLoopStart = micros();
-  if (usecSince <= 0 || usecSince > 10000000)
+  lastLoopStart             = micros();
+
+  if ((usecSince <= 0) || (usecSince > 10000000)) {
     return; // No loop should take > 10 sec.
+  }
+
   if (shortestLoop > static_cast<unsigned long>(usecSince)) {
-    shortestLoop = usecSince;
+    shortestLoop   = usecSince;
     loopCounterMax = 30 * 1000000 / usecSince;
   }
-  if (longestLoop < static_cast<unsigned long>(usecSince))
+
+  if (longestLoop < static_cast<unsigned long>(usecSince)) {
     longestLoop = usecSince;
+  }
 }
 
-
-
 /*********************************************************************************************\
- * MAIN LOOP
+* MAIN LOOP
 \*********************************************************************************************/
 void ESPEasy_loop()
 {
   /*
-  //FIXME TD-er: No idea what this does.
-  if(MainLoopCall_ptr)
+     //FIXME TD-er: No idea what this does.
+     if(MainLoopCall_ptr)
       MainLoopCall_ptr();
-  */
+   */
   dummyString = String(); // Fixme TD-er  Make sure this global variable doesn't keep memory allocated.
 
   updateLoopStats();
@@ -63,43 +67,47 @@ void ESPEasy_loop()
   handle_unprocessedNetworkEvents();
 
   bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
+
   if (firstLoopConnectionsEstablished) {
-     addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
-     firstLoop = false;
-     timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
-     // schedule_all_task_device_timers(); // Disabled for now, since we are now using queues for controllers.
-     if (Settings.UseRules && isDeepSleepEnabled())
-     {
-        String event = F("System#NoSleep=");
-        event += Settings.deepSleep_wakeTime;
-        eventQueue.addMove(std::move(event));
-     }
+    addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
+    firstLoop               = false;
+    timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
+
+    // schedule_all_task_device_timers(); // Disabled for now, since we are now using queues for controllers.
+    if (Settings.UseRules && isDeepSleepEnabled())
+    {
+      String event = F("System#NoSleep=");
+      event += Settings.deepSleep_wakeTime;
+      eventQueue.addMove(std::move(event));
+    }
 
 
-     RTC.bootFailedCount = 0;
-     saveToRTC();
-     sendSysInfoUDP(1);
+    RTC.bootFailedCount = 0;
+    saveToRTC();
+    sendSysInfoUDP(1);
   }
+
   // Work around for nodes that do not have WiFi connection for a long time and may reboot after N unsuccessful connect attempts
   if (getUptimeMinutes() > 2) {
     // Apparently the uptime is already a few minutes. Let's consider it a successful boot.
-     RTC.bootFailedCount = 0;
-     saveToRTC();
+    RTC.bootFailedCount = 0;
+    saveToRTC();
   }
 
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
   if ((firstLoopConnectionsEstablished || readyForSleep()) && isDeepSleepEnabled())
   {
 #ifdef USES_MQTT
-      runPeriodicalMQTT();
-#endif //USES_MQTT
-      // Now run all frequent tasks
-      run50TimesPerSecond();
-      run10TimesPerSecond();
-      runEach30Seconds();
-      runOncePerSecond();
+    runPeriodicalMQTT();
+#endif // USES_MQTT
+    // Now run all frequent tasks
+    run50TimesPerSecond();
+    run10TimesPerSecond();
+    runEach30Seconds();
+    runOncePerSecond();
   }
-  //normal mode, run each task when its time
+
+  // normal mode, run each task when its time
   else
   {
     if (!UseRTOSMultitasking) {
@@ -110,8 +118,9 @@ void ESPEasy_loop()
 
   backgroundtasks();
 
-  if (readyForSleep()){
+  if (readyForSleep()) {
     prepare_deepSleep(Settings.Delay);
-    //deepsleep will never return, its a special kind of reboot
+
+    // deepsleep will never return, its a special kind of reboot
   }
 }

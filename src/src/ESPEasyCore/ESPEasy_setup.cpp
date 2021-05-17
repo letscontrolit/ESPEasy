@@ -28,55 +28,53 @@
 
 
 #ifdef USE_RTOS_MULTITASKING
-#include "../Helpers/Networking.h"
-#include "../Helpers/PeriodicalActions.h"
-#endif
+# include "../Helpers/Networking.h"
+# include "../Helpers/PeriodicalActions.h"
+#endif // ifdef USE_RTOS_MULTITASKING
 
 #ifdef FEATURE_ARDUINO_OTA
-#include "../Helpers/OTA.h"
-#endif
-
-
+# include "../Helpers/OTA.h"
+#endif // ifdef FEATURE_ARDUINO_OTA
 
 
 #ifdef USE_RTOS_MULTITASKING
-void RTOS_TaskServers( void * parameter )
+void RTOS_TaskServers(void *parameter)
 {
- while (true){
-  delay(100);
-  web_server.handleClient();
-  checkUDP();
- }
+  while (true) {
+    delay(100);
+    web_server.handleClient();
+    checkUDP();
+  }
 }
 
-void RTOS_TaskSerial( void * parameter )
+void RTOS_TaskSerial(void *parameter)
 {
-  while (true){
+  while (true) {
     delay(100);
     serial();
   }
 }
 
-void RTOS_Task10ps( void * parameter )
+void RTOS_Task10ps(void *parameter)
 {
- while (true){
+  while (true) {
     delay(100);
     run10TimesPerSecond();
- }
+  }
 }
 
-void RTOS_HandleSchedule( void * parameter )
+void RTOS_HandleSchedule(void *parameter)
 {
- while (true){
+  while (true) {
     Scheduler.handle_schedule();
- }
+  }
 }
 
-#endif
+#endif // ifdef USE_RTOS_MULTITASKING
 
 
 /*********************************************************************************************\
- * ISR call back function for handling the watchdog.
+* ISR call back function for handling the watchdog.
 \*********************************************************************************************/
 void sw_watchdog_callback(void *arg)
 {
@@ -84,39 +82,38 @@ void sw_watchdog_callback(void *arg)
   ++sw_watchdog_callback_count;
 }
 
-
-
 /*********************************************************************************************\
- * SETUP
+* SETUP
 \*********************************************************************************************/
 void ESPEasy_setup()
 {
 #ifdef ESP8266_DISABLE_EXTRA4K
   disable_extra4k_at_link_time();
-#endif
+#endif // ifdef ESP8266_DISABLE_EXTRA4K
 #ifdef PHASE_LOCKED_WAVEFORM
   enablePhaseLockedWaveform();
-#endif
+#endif // ifdef PHASE_LOCKED_WAVEFORM
   initWiFi();
-  
+
   run_compiletime_checks();
 #ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
-  lowestRAM = FreeMem();
-#endif
+  lowestRAM       = FreeMem();
+#endif // ifndef BUILD_NO_RAM_TRACKER
 #ifdef ESP8266
-//  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
-#endif
+
+  //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
+#endif // ifdef ESP8266
 
 
   // Read ADC at boot, before WiFi tries to connect.
   // see https://github.com/letscontrolit/ESPEasy/issues/2646
 #if FEATURE_ADC_VCC
   vcc = ESP.getVcc() / 1000.0f;
-#endif
+#endif // if FEATURE_ADC_VCC
 #ifdef ESP8266
   espeasy_analogRead(A0);
-#endif
+#endif // ifdef ESP8266
 
   initAnalogWrite();
 
@@ -124,9 +121,10 @@ void ESPEasy_setup()
 
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setup"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   Serial.begin(115200);
+
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
@@ -134,8 +132,10 @@ void ESPEasy_setup()
   if (SpiffsSectors() < 32)
   {
     serialPrintln(F("\nNo (or too small) FS area..\nSystem Halted\nPlease reflash with 128k FS minimum!"));
-    while (true)
+
+    while (true) {
       delay(1);
+    }
   }
 
   emergencyReset();
@@ -146,13 +146,13 @@ void ESPEasy_setup()
   log += getSystemLibraryString();
   log += ')';
   addLog(LOG_LEVEL_INFO, log);
-  log = F("INIT : Free RAM:");
+  log  = F("INIT : Free RAM:");
   log += FreeMem();
   addLog(LOG_LEVEL_INFO, log);
 
   readBootCause();
 
-  log = F("INIT : ");
+  log  = F("INIT : ");
   log += getLastBootCauseString();
 
   if (readFromRTC())
@@ -175,66 +175,75 @@ void ESPEasy_setup()
     log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     log += F(" Last systime: ");
     log += RTC.lastSysTime;
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
   }
-  //cold boot (RTC memory empty)
+
+  // cold boot (RTC memory empty)
   else
   {
     initRTC();
 
     // cold boot situation
-    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) // only set this if not set earlier during boot stage.
+    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) { // only set this if not set earlier during boot stage.
       lastBootCause = BOOT_CAUSE_COLD_BOOT;
+    }
     log = F("INIT : Cold Boot");
   }
 
   log += F(" - Restart Reason: ");
   log += getResetReasonString();
 
-  RTC.deepSleepState=0;
+  RTC.deepSleepState = 0;
   saveToRTC();
 
   addLog(LOG_LEVEL_INFO, log);
 
   fileSystemCheck();
-//  progMemMD5check();
+
+  //  progMemMD5check();
   LoadSettings();
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
-  if (RTC.bootFailedCount > 10 && RTC.bootCounter > 10) {
+
+  if ((RTC.bootFailedCount > 10) && (RTC.bootCounter > 10)) {
     byte toDisable = RTC.bootFailedCount - 10;
     toDisable = disablePlugin(toDisable);
+
     if (toDisable != 0) {
       toDisable = disableController(toDisable);
     }
+
     if (toDisable != 0) {
       toDisable = disableNotification(toDisable);
     }
   }
   #ifdef HAS_ETHERNET
+
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
   setNetworkMedium(Settings.NetworkMedium);
-  #endif
+  #endif // ifdef HAS_ETHERNET
+
   if (active_network_medium == NetworkMedium_t::WIFI) {
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
       WiFiEventData.wifiSetup = true;
       RTC.clearLastWiFi(); // Must scan all channels
       // Wait until scan has finished to make sure as many as possible are found
       // We're still in the setup phase, so nothing else is taking resources of the ESP.
-      WifiScan(false); 
+      WifiScan(false);
       WiFiEventData.lastScanMoment.clear();
     }
+
     // Start an extra async scan so we can continue, but we may find more APs by scanning twice.
-    WifiScan(true); 
+    WifiScan(true);
   }
 
-//  setWifiMode(WIFI_STA);
+  //  setWifiMode(WIFI_STA);
   checkRuleSets();
 
   // if different version, eeprom settings structure has changed. Full Reset needed
   // on a fresh ESP module eeprom values are set to 255. Version results into -1 (signed int)
-  if (Settings.Version != VERSION || Settings.PID != ESP_PROJECT_PID)
+  if ((Settings.Version != VERSION) || (Settings.PID != ESP_PROJECT_PID))
   {
     // Direct Serial is allowed here, since this is only an emergency task.
     serialPrint(F("\nPID:"));
@@ -253,26 +262,27 @@ void ESPEasy_setup()
   }
 
 
-  log = F("INIT : Free RAM:");
+  log  = F("INIT : Free RAM:");
   log += FreeMem();
   addLog(LOG_LEVEL_INFO, log);
 
-  if (Settings.UseSerial && Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)
+  if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
     Serial.setDebugOutput(true);
-  
+  }
+
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("hardwareInit"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   hardwareInit();
 
-  timermqtt_interval = 250; // Interval for checking MQTT
+  timermqtt_interval      = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
   CPluginInit();
   #ifdef USES_NOTIFIER
   NPluginInit();
-  #endif
+  #endif // ifdef USES_NOTIFIER
   PluginInit();
-  log = F("INFO : Plugins: ");
+  log  = F("INFO : Plugins: ");
   log += deviceCount + 1;
   log += ' ';
   log += getPluginDescriptionString();
@@ -306,11 +316,11 @@ void ESPEasy_setup()
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
-  #endif
+  #endif // ifdef FEATURE_REPORTING
 
   #ifdef FEATURE_ARDUINO_OTA
   ArduinoOTAInit();
-  #endif
+  #endif // ifdef FEATURE_ARDUINO_OTA
 
   if (node_time.systemTimePresent()) {
     node_time.initTime();
@@ -326,30 +336,31 @@ void ESPEasy_setup()
 
   UseRTOSMultitasking = Settings.UseRTOSMultitasking;
   #ifdef USE_RTOS_MULTITASKING
-    if(UseRTOSMultitasking){
-      log = F("RTOS : Launching tasks");
-      addLog(LOG_LEVEL_INFO, log);
-      xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 16384, NULL, 1, NULL, 1);
-      xTaskCreatePinnedToCore(RTOS_TaskSerial, "RTOS_TaskSerial", 8192, NULL, 1, NULL, 1);
-      xTaskCreatePinnedToCore(RTOS_Task10ps, "RTOS_Task10ps", 8192, NULL, 1, NULL, 1);
-      xTaskCreatePinnedToCore(
-                    RTOS_HandleSchedule,   /* Function to implement the task */
-                    "RTOS_HandleSchedule", /* Name of the task */
-                    16384,      /* Stack size in words */
-                    NULL,       /* Task input parameter */
-                    1,          /* Priority of the task */
-                    NULL,       /* Task handle. */
-                    1);         /* Core where the task should run */
-    }
-  #endif
+
+  if (UseRTOSMultitasking) {
+    log = F("RTOS : Launching tasks");
+    addLog(LOG_LEVEL_INFO, log);
+    xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 16384, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(RTOS_TaskSerial,  "RTOS_TaskSerial",  8192,  NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(RTOS_Task10ps,    "RTOS_Task10ps",    8192,  NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(
+      RTOS_HandleSchedule,   /* Function to implement the task */
+      "RTOS_HandleSchedule", /* Name of the task */
+      16384,                 /* Stack size in words */
+      NULL,                  /* Task input parameter */
+      1,                     /* Priority of the task */
+      NULL,                  /* Task handle. */
+      1);                    /* Core where the task should run */
+  }
+  #endif // ifdef USE_RTOS_MULTITASKING
 
   // Start the interval timers at N msec from now.
   // Make sure to start them at some time after eachother,
   // since they will keep running at the same interval.
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_20MSEC,  5); // timer for periodic actions 50 x per/sec
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_100MSEC, 66); // timer for periodic actions 10 x per/sec
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_1SEC,    777); // timer for periodic actions once per/sec
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_30SEC,   1333); // timer for watchdog once per 30 sec
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT,    88); // timer for interaction with MQTT
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_20MSEC,     5);    // timer for periodic actions 50 x per/sec
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_100MSEC,    66);   // timer for periodic actions 10 x per/sec
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_1SEC,       777);  // timer for periodic actions once per/sec
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_30SEC,      1333); // timer for watchdog once per 30 sec
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT,       88);   // timer for interaction with MQTT
   Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_STATISTICS, 2222);
 }
