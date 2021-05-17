@@ -25,6 +25,8 @@
 
 #include "src/PluginStructs/P016_data_struct.h"
 
+#include "src/ESPEasyCore/Serial.h"
+
 #ifdef P016_P035_Extended_AC
 #include <IRac.h>
 #endif

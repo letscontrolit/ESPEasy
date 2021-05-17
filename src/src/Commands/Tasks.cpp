@@ -15,8 +15,6 @@
 #include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 
-#include "../../Misc.h"
-
 //      taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX
 //	varNr = event->Par2 - 1;
 bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned int& varNr)
