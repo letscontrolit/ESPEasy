@@ -12,8 +12,16 @@
 #define NPLUGIN_001_TIMEOUT 5000
 
 #include "src/DataStructs/NotificationSettingsStruct.h"
-#include "src/Globals/NPlugins.h"
+#include "src/ESPEasyCore/ESPEasy_Log.h"
 #include "src/ESPEasyCore/ESPEasy_backgroundtasks.h"
+#include "src/Globals/NPlugins.h"
+#include "src/Globals/Settings.h"
+#include "src/Helpers/ESPEasy_Storage.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/Networking.h"
+#include "src/Helpers/StringParser.h"
+#include "src/Helpers/_CPlugin_Helper.h" // safeReadStringUntil
+
 
 // The message body is included in event->String1
 

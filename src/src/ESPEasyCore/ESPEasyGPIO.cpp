@@ -1,5 +1,5 @@
 
-#include "ESPEasyGPIO.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
 
 /****************************************************************************/
 // Central functions for GPIO handling

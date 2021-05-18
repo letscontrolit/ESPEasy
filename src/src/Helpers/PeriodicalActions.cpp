@@ -36,6 +36,11 @@
 #include "../Helpers/StringGenerator_WiFi.h"
 #include "../Helpers/StringProvider.h"
 
+#ifdef USES_C015
+#include "../../ESPEasy_fdwdecl.h"
+#endif
+
+
 
 #define PLUGIN_ID_MQTT_IMPORT         37
 
