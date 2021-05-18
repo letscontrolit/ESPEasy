@@ -1,6 +1,6 @@
 #include "../PluginStructs/P012_data_struct.h"
 
-// Needed also here for PlatformIO's library finder as the .h file 
+// Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
 #include <LiquidCrystal_I2C.h>
 
@@ -35,6 +35,7 @@ P012_data_struct::P012_data_struct(uint8_t addr,
   lcd.init(); // initialize the lcd
   lcd.backlight();
   lcd.print(F("ESP Easy"));
+  createCustomChars();
 }
 
 void P012_data_struct::setBacklightTimer(byte timer) {
@@ -224,4 +225,49 @@ String P012_data_struct::P012_parseTemplate(String& tmpString, byte lineSize) {
   return result;
 }
 
-#endif // ifdef USES_P012
+void P012_data_struct::createCustomChars() {
+# ifdef USES_P012_POLISH_CHARS
+  const byte LETTER_null[8] = { // spacja
+    0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000
+  };
+  const byte LETTER_a[8] = {    // a
+    0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b01111, 0b00010
+  };
+  const byte LETTER_c[8] = {    // c
+    0b00010, 0b00100, 0b01110, 0b10000, 0b10000, 0b10001, 0b01110, 0b00000
+  };
+  const byte LETTER_e[8] = {    // e
+    0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b01110, 0b00010
+  };
+  const byte LETTER_l[8] = {    // l
+    0b01100, 0b00100, 0b00101, 0b00110, 0b01100, 0b00100, 0b01110, 0b00000
+  };
+  const byte LETTER_n[8] = {    // n
+    0b00010, 0b00100, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b00000
+  };
+  const byte LETTER_o[8] = {    // o
+    0b00010, 0b00100, 0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0b00000
+  };
+  const byte LETTER_s[8] = {    // s
+    0b00010, 0b00100, 0b01110, 0b10000, 0b01110, 0b00001, 0b11110, 0b00000
+  };
+  const byte LETTER_z1[8] = {   // z z kreska
+    0b00010, 0b00100, 0b11111, 0b00010, 0b00100, 0b01000, 0b11111, 0b00000
+  };
+  const byte LETTER_z2[8] = {   // z z kropka
+    0b00100, 0b00000, 0b11111, 0b00010, 0b00100, 0b01000, 0b11111, 0b00000
+  };
+  lcd.print(F("Czekaj..."));    // Wait....
+  lcd.createChar(0, LETTER_o);  // probably defected memory cell
+  lcd.createChar(1, LETTER_l);
+  lcd.createChar(2, LETTER_e);
+  lcd.createChar(3, LETTER_c);
+  lcd.createChar(4, LETTER_n);
+  lcd.createChar(5, LETTER_a);
+  lcd.createChar(6, LETTER_s);
+  lcd.createChar(7, LETTER_z2);
+  lcd.createChar(8, LETTER_o);
+# endif // ifdef USES_P012_POLISH_CHARS
+}
+
+#endif  // ifdef USES_P012

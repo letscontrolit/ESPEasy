@@ -23,6 +23,8 @@ struct P012_data_struct : public PluginTaskData_base {
 
   String P012_parseTemplate(String& tmpString, byte lineSize);
 
+  void createCustomChars();
+
 
   LiquidCrystal_I2C lcd;
   int               Plugin_012_cols = 16;
