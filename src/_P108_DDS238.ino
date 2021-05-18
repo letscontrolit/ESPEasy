@@ -70,6 +70,7 @@ DF - Below doesn't look right; needs a RS485 to TTL(3.3v) level converter (see h
 
 #include <ESPeasySerial.h>
 #include "src/Helpers/Modbus_RTU.h"
+#include "src/DataStructs/ESPEasy_packed_raw_data.h"
 
 struct P108_data_struct : public PluginTaskData_base {
   P108_data_struct() {}

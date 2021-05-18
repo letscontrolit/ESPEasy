@@ -20,6 +20,8 @@ extern "C"
 #include <lwip/netif.h>
 }
 
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
+
 
 #define PLUGIN_089
 #define PLUGIN_ID_089             89

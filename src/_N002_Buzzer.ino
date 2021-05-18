@@ -12,6 +12,8 @@
 #include "src/Helpers/Audio.h"
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/Globals/NPlugins.h"
+#include "src/Helpers/ESPEasy_Storage.h"
+
 
 boolean NPlugin_002(NPlugin::Function function, struct EventStruct *event, String& string)
 {
