@@ -4,6 +4,7 @@
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/Misc.h"
 
 #include "../../ESPEasy_common.h"
 

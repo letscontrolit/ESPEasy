@@ -151,7 +151,7 @@ void handle_config() {
   addFormCheckBox(F("Don't force /setup in AP-Mode"), F("ApDontForceSetup"), Settings.ApDontForceSetup());
   addFormNote(F("When set you can use the Sensor in AP-Mode without being forced to /setup. /setup can still be called."));
 
-  addFormCheckBox(F("Don't Allow AP"), F("DoNotStartAP"), Settings.DoNotStartAP());
+  addFormCheckBox(F("Do Not Start AP"), F("DoNotStartAP"), Settings.DoNotStartAP());
   #ifdef HAS_ETHERNET
   addFormNote(F("Do not allow to start an AP when unable to connect to configured LAN/WiFi"));
   #else
