@@ -2,6 +2,8 @@
 
 #ifdef USES_NOTIFIER
 #include "src/Globals/NPlugins.h"
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+
 
 // ********************************************************************************
 
