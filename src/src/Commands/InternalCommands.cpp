@@ -396,6 +396,7 @@ bool executeInternalCommand(command_case_data & data)
       #endif
 
       if (data.cmd_lc[1] == 'i') {
+        COMMAND_CASE_R(   "wifiallowap", Command_Wifi_AllowAP,    0); // WiFi.h
         COMMAND_CASE_R(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
         COMMAND_CASE_A(   "wificonnect", Command_Wifi_Connect,    0); // WiFi.h
         COMMAND_CASE_A("wifidisconnect", Command_Wifi_Disconnect, 0); // WiFi.h
