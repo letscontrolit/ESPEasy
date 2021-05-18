@@ -227,34 +227,38 @@ String P012_data_struct::P012_parseTemplate(String& tmpString, byte lineSize) {
 
 void P012_data_struct::createCustomChars() {
 # ifdef USES_P012_POLISH_CHARS
-  const byte LETTER_null[8] = { // spacja
+/*
+  static const char LETTER_null[8] PROGMEM = { // spacja
     0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000
   };
-  const byte LETTER_a[8] = {    // a
+*/
+  static const char LETTER_a[8] PROGMEM = {    // a
     0b00000, 0b00000, 0b01110, 0b00001, 0b01111, 0b10001, 0b01111, 0b00010
   };
-  const byte LETTER_c[8] = {    // c
+  static const char LETTER_c[8] PROGMEM = {    // c
     0b00010, 0b00100, 0b01110, 0b10000, 0b10000, 0b10001, 0b01110, 0b00000
   };
-  const byte LETTER_e[8] = {    // e
+  static const char LETTER_e[8] PROGMEM = {    // e
     0b00000, 0b00000, 0b01110, 0b10001, 0b11111, 0b10000, 0b01110, 0b00010
   };
-  const byte LETTER_l[8] = {    // l
+  static const char LETTER_l[8] PROGMEM = {    // l
     0b01100, 0b00100, 0b00101, 0b00110, 0b01100, 0b00100, 0b01110, 0b00000
   };
-  const byte LETTER_n[8] = {    // n
+  static const char LETTER_n[8] PROGMEM = {    // n
     0b00010, 0b00100, 0b10110, 0b11001, 0b10001, 0b10001, 0b10001, 0b00000
   };
-  const byte LETTER_o[8] = {    // o
+  static const char LETTER_o[8] PROGMEM = {    // o
     0b00010, 0b00100, 0b01110, 0b10001, 0b10001, 0b10001, 0b01110, 0b00000
   };
-  const byte LETTER_s[8] = {    // s
+  static const char LETTER_s[8] PROGMEM = {    // s
     0b00010, 0b00100, 0b01110, 0b10000, 0b01110, 0b00001, 0b11110, 0b00000
   };
-  const byte LETTER_z1[8] = {   // z z kreska
+  /*
+  static const char LETTER_z1[8] PROGMEM = {   // z z kreska
     0b00010, 0b00100, 0b11111, 0b00010, 0b00100, 0b01000, 0b11111, 0b00000
   };
-  const byte LETTER_z2[8] = {   // z z kropka
+  */
+  static const char LETTER_z2[8] PROGMEM = {   // z z kropka
     0b00100, 0b00000, 0b11111, 0b00010, 0b00100, 0b01000, 0b11111, 0b00000
   };
   lcd.print(F("Czekaj..."));    // Wait....
