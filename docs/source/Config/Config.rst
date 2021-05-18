@@ -119,8 +119,8 @@ Allow optional usage of ESPEasy without WIFI avaiable.
 When checked you can use ESPEasy in AP-Mode without beeing forced to ``/setup``.
 
 
-Don't Allow AP
---------------
+Do Not Start AP
+---------------
 
 Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. 
 This flag may prevent to start an AP.
