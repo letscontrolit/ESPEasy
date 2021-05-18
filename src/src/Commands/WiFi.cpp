@@ -118,6 +118,12 @@ String Command_Wifi_Mode(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
+String Command_Wifi_AllowAP(struct EventStruct *event, const char* Line)
+{
+  Settings.DoNotStartAP(false);
+  return return_command_success();
+}
+
 // FIXME: TD-er This is not an erase, but actually storing the current settings
 // in the wifi settings of the core library
 String Command_WiFi_Erase(struct EventStruct *event, const char *Line)

@@ -18,6 +18,8 @@
 
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Globals/ESPEasy_time.h"
+#include "src/Globals/EventQueue.h"
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/I2Cdev.h"
@@ -26,8 +28,11 @@
 #include "src/Globals/Settings.h"
 
 #include "src/Helpers/ESPEasy_math.h"
+#include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
+#include "src/Helpers/Misc.h"
+#include "src/Helpers/Numerical.h"
 #include "src/Helpers/PortStatus.h"
 #include "src/Helpers/StringConverter.h"
 #include "src/Helpers/StringGenerator_GPIO.h"
@@ -38,6 +43,8 @@
 #include "src/WebServer/HTML_wrappers.h"
 #include "src/WebServer/Markup.h"
 #include "src/WebServer/Markup_Forms.h"
+#include "src/WebServer/WebServer.h"
+
 
 // Defines to make plugins more readable.
 

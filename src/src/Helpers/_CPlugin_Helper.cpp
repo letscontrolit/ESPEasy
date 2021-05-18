@@ -1,7 +1,7 @@
 #include "../Helpers/_CPlugin_Helper.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include "../CustomBuild/ESPEasyLimits.h"
 
@@ -11,6 +11,7 @@
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
 
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"

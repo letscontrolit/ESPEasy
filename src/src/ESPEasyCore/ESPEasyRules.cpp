@@ -1,8 +1,9 @@
-#include "ESPEasyRules.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Device.h"
 #include "../Globals/EventQueue.h"
@@ -21,7 +22,7 @@
 
 #include "../../_Plugin_Helper.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include <math.h>
 

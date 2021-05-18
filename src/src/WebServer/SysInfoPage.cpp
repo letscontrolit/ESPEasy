@@ -5,7 +5,7 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../Commands/Diagnostic.h"
@@ -26,6 +26,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"

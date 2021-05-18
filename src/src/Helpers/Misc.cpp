@@ -1,21 +1,20 @@
-#include "Misc.h"
+#include "../Helpers/Misc.h"
 
-
+#include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy-Globals.h"
-
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/Serial.h"
-
 #include "../Globals/ESPEasy_time.h"
-
+#include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
+
+
 
 
 bool remoteConfig(struct EventStruct *event, const String& string)
@@ -430,4 +429,17 @@ void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
   uint32_t newvalue = ((value << bitnr) & mask);
 
   number = (number & ~mask) | newvalue;
+}
+
+
+float getCPUload() {
+  return 100.0f - Scheduler.getIdleTimePct();
+}
+
+int getLoopCountPerSec() {
+  return loopCounterLast / 30;
+}
+
+int getUptimeMinutes() {
+  return wdcounter / 2;
 }

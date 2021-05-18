@@ -14,6 +14,7 @@
 
 #include <ESPeasySerial.h>
 
+#include "src/ESPEasyCore/Serial.h"
 
 #define PLUGIN_071
 #define PLUGIN_ID_071 71

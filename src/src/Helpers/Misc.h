@@ -171,4 +171,11 @@ void    set4BitToUL(uint32_t& number,
                     uint8_t   value);
 
 
+float getCPUload();
+
+int getLoopCountPerSec();
+
+int getUptimeMinutes();
+
+
 #endif // ifndef HELPERS_MISC_H
