@@ -65,6 +65,10 @@
 //   #undef BUILD_NO_DEBUG
 // #endif
 
+
+#define MAX31865_RD_ADDRESS(n)   (MAX31865_READ_ADDR_BASE + n)
+#define MAX31865_WR_ADDRESS(n)   (MAX31865_WRITE_ADDR_BASE + n)
+
 # define PLUGIN_039
 # define PLUGIN_ID_039         39
 # define PLUGIN_NAME_039       "Environment - Thermosensors"
@@ -291,6 +295,20 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
       }
 
+      if (P039_MAX_TYPE == P039_MAX31855) {
+
+        // ensure MODE3 access to SPI device
+        SPI.setDataMode(SPI_MODE3);
+        // SPI.setBitOrder(MSBFIRST);
+
+        if(nullptr != P039_data){
+          // FIXED: c.k.i. : moved static fault flag to instance data structure
+          P039_data->sensorFault = false;
+        }
+
+      }
+
+
       if (P039_MAX_TYPE == P039_MAX31856) {
 
 
@@ -303,6 +321,11 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         uint8_t sendBuffer[11] = {0x80, static_cast<uint8_t> (P039_RTD_FILT_TYPE), static_cast<uint8_t> ((P039_CONFIG_4 << 4) | P039_TC_TYPE), 0xFC, 0x7F, 0xC0, 0x7F, 0xFF, 0x80, 0x00, 0x00 };
 
         transfer_n_ByteSPI(CS_pin_no, 11, &sendBuffer[0] );
+
+        if(nullptr != P039_data){
+          // FIXED: c.k.i. : moved static fault flag to instance data structure
+          P039_data->sensorFault = false;
+        }
 
         // start on shot conversion for upcoming read cycle
         change8BitRegister(CS_pin_no, (MAX31856_READ_ADDR_BASE + MAX31856_CR0),(MAX31856_WRITE_ADDR_BASE + MAX31856_CR0), MAX31856_SET_ONE_SHOT, P039_SET );
@@ -324,7 +347,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         write8BitRegister(CS_pin_no, (MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), 0x00u);
 
         // activate 50Hz filter, clear all faults, no auto conversion, no conversion started
-        change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_50HZ, static_cast<bool>(P039_RTD_FILT_TYPE) );
+        change8BitRegister(CS_pin_no, MAX31865_RD_ADDRESS(MAX31865_CONFIG),MAX31865_WR_ADDRESS(MAX31865_CONFIG), MAX31865_SET_50HZ, static_cast<bool>(P039_RTD_FILT_TYPE) );
 
         // configure 2/4-wire sensor connection as default
         MAX31865_setConType(CS_pin_no, P039_CONFIG_4);
@@ -341,13 +364,13 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         //activate BIAS short before read, to reduce power consumption
         change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_VBIAS_ON, P039_SET );
 
-        // save current timer for next calculation
-        P039_data->timer = millis();
-
-        // start time to follow up on BIAS activation before starting the conversion
-        // and start conversion sequence via TIMER API
         if(nullptr != P039_data){
-          // P039_data->convReady = false;
+          // save current timer for next calculation
+          P039_data->timer = millis();
+
+          // start time to follow up on BIAS activation before starting the conversion
+          // and start conversion sequence via TIMER API
+
           Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
         }
 
@@ -363,7 +386,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
-        if((log.reserve(70u))) {
+        if((log.reserve(80u))) { // reserve value derived from example log file
           log = F("P039 : ");                            // 7 char
           log += getTaskDeviceName(event->TaskIndex);    // 41 char
           log += F(" : SPI Init - DONE" );               // 18 char
@@ -583,7 +606,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
-          if((log.reserve(66u))) {
+          if((log.reserve(95u))) { // reserve value derived from example log file
             log = F("P039 : ");                                                         // 7 char
             log += getTaskDeviceName(event->TaskIndex);                                 // 41 char
             log += F(" : ");                                                            // 3 char
@@ -607,7 +630,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
-          if((log.reserve(80u))) {
+          if((log.reserve(80u))) { // reserve value derived from example log file
             log = F("P039 :  ");                                                      // 7 char
             log += getTaskDeviceName(event->TaskIndex);                               // 41 char
             log += F(" : ");                                                          // 3 char
@@ -651,14 +674,14 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
 
                       String log;
-                      if((log.reserve(120u))) {
+                      if((log.reserve(120u))) { // reserve value derived from example log file
                         log = F("P039 : ");                                   // 7 char
                         log += getTaskDeviceName(event->TaskIndex);           // 41 char
                         log += F(" : ");                                      // 3 char
                         log += F("current state: MAX31865_BIAS_ON_STATE");    // 37 char
                         log += F("; delta: ");                                // 9 char
                         log += String(delta, DEC);                            // 4 char
-                        log += F(" ms;");                                     // 4 char
+                        log += F(" ms");                                      // 3 char
                         addLog(LOG_LEVEL_DEBUG, log);
                       }
                     }
@@ -676,12 +699,12 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 
                       String log;
-                      if((log.reserve(75u))) {
+                      if((log.reserve(90u))) { // reserve value derived from example log file
                         log = F("P039 : ");                                   // 7 char
                         log += getTaskDeviceName(event->TaskIndex);           // 41 char
                         log += F(" : ");                                      // 3 char
-                        log += F("; Next State: ");                           // 14 char
-                        log += String(event->Par1, HEX);                      // 4 char
+                        log += F("Next State: ");                             // 12 char
+                        log += String(event->Par1, DEC);                      // 4 char
                         addLog(LOG_LEVEL_DEBUG, log);
                       }
                     }
@@ -701,14 +724,14 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                       P039_data->timer = millis();
 
                       String log;
-                      if((log.reserve(110u))) {
-                        log = F("P039 : ");                             // 7 CHAR
+                      if((log.reserve(120u))) { // reserve value derived from example log file
+                        log = F("P039 : ");                             // 7 char
                         log += getTaskDeviceName(event->TaskIndex);     // 41 char ( max length of task device name)
-                        log += F(" : ");                                // 3 CHAR
-                        log += F("current state: MAX31865_RD_STATE ");  // 33 CHAR
+                        log += F(" : ");                                // 3 char
+                        log += F("current state: MAX31865_RD_STATE");   // 33 char
                         log += F("; delta: ");                          // 9 char
                         log += String(delta, DEC);                      // 4 char - more than 1000ms delta will not occur
-                        log += F("ms;");                                // 3 char   
+                        log += F(" ms");                                // 2 char   
                         addLog(LOG_LEVEL_DEBUG, log);
                       }
                     }
@@ -730,16 +753,16 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 
                         String log;
-                        if((log.reserve(140u))) {
-                          log = F("P039 : ");                              // 7 char
-                          log += getTaskDeviceName(event->TaskIndex);      // 41 char ( max length of task device name + 1)
-                          log += F(" : ");                                 // 3 char
-                          log += F("P039_data->conversionResult: ");       // 30 char
-                          log += String(P039_data->conversionResult, HEX); // 6 char
-                          log += F("; P039_data->deviceFaults: ");         // 27 char
-                          log += String(P039_data->deviceFaults, HEX);     // 4 char
-                          log += F("; Next State: ");                      // 13 char
-                          log += String(event->Par1, HEX);                 // 4 char
+                        if((log.reserve(160u))) { // reserve value derived from example log file
+                          log = F("P039 : ");                                // 7 char
+                          log += getTaskDeviceName(event->TaskIndex);        // 41 char ( max length of task device name + 1)
+                          log += F(" : ");                                   // 3 char
+                          log += F("P039_data->conversionResult: 0x");       // 30 char
+                          log += String(P039_data->conversionResult, HEX);   // 6 char
+                          log += F("; P039_data->deviceFaults: 0x");         // 27 char
+                          log += String(P039_data->deviceFaults, HEX);       // 4 char
+                          log += F("; Next State: ");                        // 13 char
+                          log += String(event->Par1, DEC);                   // 4 char
                           addLog(LOG_LEVEL_DEBUG, log);
                       }
 
@@ -762,12 +785,12 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                   # ifndef BUILD_NO_DEBUG
                     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                       String log;
-                      if((log.reserve(130u))) {
+                      if((log.reserve(140u))) { // reserve value derived from example log file
                         log = F("P039 : ");                                         // 7 char
                         log += getTaskDeviceName(event->TaskIndex);                 // 41 char
                         log += F(" : ");                                            // 3 char
-                        log += F("current state: MAX31865_INIT_STATE, default ");   // many char - 44
-                        log += F("next state: MAX31865_BIAS_ON_STATE");             // a little less char - 34
+                        log += F("current state: MAX31865_INIT_STATE, default;");   // many char - 44
+                        log += F(" next state: MAX31865_BIAS_ON_STATE");            // a little less char - 35
                         addLog(LOG_LEVEL_DEBUG, log);
                       }
                       
@@ -780,7 +803,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                   // start time to follow up on BIAS activation before starting the conversion
                   // and start conversion sequence via TIMER API
                   // set next state in sequence -> BIAS ON STATE
-                  // P039_data->convReady = false;
+
                   Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
 
 
@@ -823,13 +846,13 @@ float readMax6675(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
       String log;
-      if((log.reserve(70u))) {
-        log = F("P039 : MAX6675 : RAW - BIN:");     // 27 char
-        log += String(rawvalue, BIN);          // 18 char
+      if((log.reserve(120u))) { // reserve value derived from example log file
+        log = F("P039 : MAX6675 : RAW - BIN: ");       // 27 char
+        log += String(rawvalue, BIN);                  // 18 char
         log += F(" HEX: 0x");                          // 5 char
-        log += String(rawvalue, HEX);          // 4 char
-        log += F(" DEC:");                          // 5 char
-        log += String(rawvalue);               // 5 char
+        log += String(rawvalue, HEX);                  // 4 char
+        log += F(" DEC: ");                            // 5 char
+        log += String(rawvalue);                       // 5 char
         log += F(" MSB: 0x");                          // 5 char
         log += String(messageBuffer[0], HEX);          // 5 char 
         log += F(" LSB: 0x");                          // 5 char
@@ -882,18 +905,18 @@ float readMax31855(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
       String log;
-      if((log.reserve(140u))) {
-        log = F("P039 : MAX31855 : RAW - BIN:");      // 35 char
-        log += String(rawvalue, BIN);                 // 16 char
-        log += F(" rawvalue,HEX: ");                  // 15 char    
-        log += String(rawvalue, HEX);                 // 4 char
-        log += F(" rawvalue,DEC: ");                  // 15 char
-        log += String(rawvalue, DEC);                 // 5 char
-        log += F("messageBuffer[],HEX:");
+      if((log.reserve(180u))) { // reserve value derived from example log file
+        log = F("P039 : MAX31855 : RAW - BIN: ");      // 35 char
+        log += String(rawvalue, BIN);                  // 16 char
+        log += F(" rawvalue,HEX: 0x");                 // 15 char    
+        log += String(rawvalue, HEX);                  // 4 char
+        log += F(" rawvalue,DEC: ");                   // 15 char
+        log += String(rawvalue, DEC);                  // 5 char
+        log += F(" messageBuffer[],HEX:");             // 21 char
         for (size_t i = 0u; i < 4; i++)
         {
-                log += F(" 0x");                       // 12 char
-                log += String(messageBuffer[i], HEX);  // 8 char
+                log += F(" 0x");                       // 3 char
+                log += String(messageBuffer[i], HEX);  // 2 char
         }
         addLog(LOG_LEVEL_DEBUG, log);
       }
@@ -901,30 +924,25 @@ float readMax31855(struct EventStruct *event)
 
   # endif // ifndef BUILD_NO_DEBUG
 
-
-
   if(nullptr != P039_data){
 
       // FIXED: c.k.i. : moved static fault flag to instance data structure
-      P039_data->sensorFault = false;
 
       // check for fault flags in LSB of 32 Bit messageBuffer
       if (P039_data->sensorFault != ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0)) {
         // Fault code changed, log them
         P039_data->sensorFault = ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0);
 
-        # ifndef BUILD_NO_DEBUG
-
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
+         if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) 
           {
             String log;
-            if((log.reserve(66u))) {
-              log = F("P039 : MAX31855"); 
+            if((log.reserve(120u))) { // reserve value derived from example log file
+              log = F("P039 : MAX31855 : "); 
 
-              if (!(P039_data->sensorFault)) {
+              if ((P039_data->sensorFault)) {
                 log += F("Fault resolved");
               } else {
-                log += F("Fault code:");
+                log += F("Fault code :");
 
                 if (rawvalue & MAX31855_TC_OC) {
                   log += F(" Open (no connection)");
@@ -938,12 +956,29 @@ float readMax31855(struct EventStruct *event)
                   log += F(" Short-circuit to Vcc");
                 }
               }
-              addLog(LOG_LEVEL_DEBUG, log);
+              addLog(LOG_LEVEL_DEBUG_MORE, log);
             }
           } 
 
-        # endif // ifndef BUILD_NO_DEBUG
+
       }
+
+      # ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
+        {
+          String log;
+          if((log.reserve(120u))) { // reserve value derived from example log file
+            log = F("P039 : MAX31855 : ");    
+            log += F("rawvalue, HEX: 0x");
+            log += String(rawvalue, HEX);
+            log += F(" P039_data->sensorFault, HEX: 0x");
+            log += String(P039_data->sensorFault, HEX);
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+        } 
+       
+      # endif // ifndef BUILD_NO_DEBUG
 
   } 
 
@@ -978,9 +1013,8 @@ float readMax31855(struct EventStruct *event)
 
 float readMax31856(struct EventStruct *event)
 {
-  # ifndef BUILD_NO_DEBUG
-    P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
-  #endif
+
+  P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
   
   uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
@@ -1020,7 +1054,7 @@ float readMax31856(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
       String log;
-      if((log.reserve(66u))) {
+      if((log.reserve(140u))) { // reserve value derived from example log file
         log = F("P039 : MAX31856 :");
 
         for (uint8_t i = 0; i < MAX31856_NO_REG; ++i) {
@@ -1039,68 +1073,66 @@ float readMax31856(struct EventStruct *event)
 
   const uint8_t sr = registers[MAX31856_SR];
 
-  # ifndef BUILD_NO_DEBUG
+  // FIXED: c.k.i. : moved static fault flag to instance data structure
+  if((nullptr != P039_data)){
 
-    // FIXED: c.k.i. : moved static fault flag to instance data structure
-    if((nullptr != P039_data)){
+    // P039_data->sensorFault = false;
 
-      P039_data->sensorFault = false;
-  
-      P039_data->sensorFault = (sr != 0); // Set new state
+    P039_data->sensorFault = (sr != 0); // Set new state
 
-      const bool faultResolved = (P039_data->sensorFault) && (sr == 0);
+    const bool faultResolved = (P039_data->sensorFault) && (sr == 0);
 
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
-      {
-        if ((P039_data->sensorFault) || faultResolved) {
-          String log;
-          if((log.reserve(66u))) {
-            log = F("P039 : MAX31856");
-            
-            if ((P039_data->sensorFault) == 0) {
-              log += F("Fault resolved");
-            } else {
-              log += F("Fault :");
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) 
+    {
+      if ((P039_data->sensorFault) || faultResolved) {
+        String log;
+        if((log.reserve(140u))) { // reserve value derived from example log file
+          log = F("P039 : MAX31856 : ");
+          
+          if ((P039_data->sensorFault) == 0) {
+            log += F("Fault resolved");
+          } else {
+            log += F("Fault :");
 
-              if (sr & MAX31856_TC_OC) {
-                log += F(" Open (no connection)");
-              }
-
-              if (sr & MAX31856_TC_OVUV) {
-                log += F(" Over/Under Voltage");
-              }
-
-              if (sr & MAX31856_TC_TCLOW) {
-                log += F(" TC Low");
-              }
-
-              if (sr & MAX31856_TC_TCLHIGH) {
-                log += F(" TC High");
-              }
-
-              if (sr & MAX31856_TC_CJLOW) {
-                log += F(" CJ Low");
-              }
-
-              if (sr & MAX31856_TC_CJHIGH) {
-                log += F(" CJ High");
-              }
-
-              if (sr & MAX31856_TC_TCRANGE) {
-                log += F(" TC Range");
-              }
-
-              if (sr & MAX31856_TC_CJRANGE) {
-                log += F(" CJ Range");
-              }
-            addLog(LOG_LEVEL_DEBUG, log);
+            if (sr & MAX31856_TC_OC) {
+              log += F(" Open (no connection)");
             }
+
+            if (sr & MAX31856_TC_OVUV) {
+              log += F(" Over/Under Voltage");
+            }
+
+            if (sr & MAX31856_TC_TCLOW) {
+              log += F(" TC Low");
+            }
+
+            if (sr & MAX31856_TC_TCLHIGH) {
+              log += F(" TC High");
+            }
+
+            if (sr & MAX31856_TC_CJLOW) {
+              log += F(" CJ Low");
+            }
+
+            if (sr & MAX31856_TC_CJHIGH) {
+              log += F(" CJ High");
+            }
+
+            if (sr & MAX31856_TC_TCRANGE) {
+              log += F(" TC Range");
+            }
+
+            if (sr & MAX31856_TC_CJRANGE) {
+              log += F(" CJ Range");
+            }
+          addLog(LOG_LEVEL_DEBUG_MORE, log);
           }
         }
       }
     }
+  }
 
-  # endif // ifndef BUILD_NO_DEBUG
+
     
   const bool Plugin_039_SensorAttached = (sr == 0);
 
@@ -1134,7 +1166,7 @@ float readMax31865(struct EventStruct *event)
       if (loglevelActiveFor(LOG_LEVEL_DEBUG))
       {
         String log;
-        if((log.reserve(66u))) {
+        if((log.reserve(70u))) { // reserve value derived from example log file
         
           log = F("P039 : MAX31865 :");
           log += F(" P039_data->convReady: ");
@@ -1143,6 +1175,7 @@ float readMax31865(struct EventStruct *event)
           addLog(LOG_LEVEL_DEBUG, log);
         }
       }
+
   # endif // ifndef BUILD_NO_DEBUG
 
 
@@ -1157,10 +1190,10 @@ float readMax31865(struct EventStruct *event)
 
   # ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(66u))) {
+      if((log.reserve(80u))) { // reserve value derived from example log file
        
         for (uint8_t i = 0u; i < MAX31865_NO_REG; ++i)
         {
@@ -1175,9 +1208,10 @@ float readMax31865(struct EventStruct *event)
           log += String(registers[i], HEX);
         }
 
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
+
   # endif // ifndef BUILD_NO_DEBUG
 
   // Prepare and start next conversion, before handling faults and rawValue
@@ -1201,18 +1235,16 @@ float readMax31865(struct EventStruct *event)
   // and start conversion sequence via TIMER API
   if(nullptr != P039_data){
     // set next state to MAX31865_BIAS_ON_STATE
-    // P039_data->convReady = false;
+
     Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
   }
  
-  # ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       if (registers[MAX31865_FAULT])
       {
         String log;
-        if((log.reserve(66u))) {
+        if((log.reserve(200u))) { // reserve value derived from example log file
           log = F("P039 : MAX31865 : ");
 
           log += F("Fault : 0x");
@@ -1248,12 +1280,11 @@ float readMax31865(struct EventStruct *event)
           {
             log += F(" RTD High Threshold");
           }
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLog(LOG_LEVEL_DEBUG_MORE, log);
         }
       }
     }
 
-  # endif // ifndef BUILD_NO_DEBUG
 
   bool ValueValid = false;
 
@@ -1265,12 +1296,12 @@ float readMax31865(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      if((log.reserve(66u))) {
-        log = F("P039 : Temperature :");
-        log += F(" registers[MAX31865_FAULT]: ");
-        log += String(registers[MAX31865_FAULT], HEX);
-        log += F(" ValueValid: ");
-        log += String(ValueValid, BIN);
+      if((log.reserve(80u))) { // reserve value derived from example log file
+        log = F("P039 : Temperature :");                    // 20 char
+        log += F(" registers[MAX31865_FAULT], HEX: 0x");    // 35 char
+        log += String(registers[MAX31865_FAULT], HEX);      // 2 char
+        log += F(" ValueValid: ");                          // 13 char       
+        log += String(ValueValid, BIN);                     // 1 char
         addLog(LOG_LEVEL_DEBUG, log);
       }
     }
@@ -1288,16 +1319,16 @@ float readMax31865(struct EventStruct *event)
       if (loglevelActiveFor(LOG_LEVEL_DEBUG))
       {
         String log;
-        if((log.reserve(66u))) {
-          log = F("P039 : Temperature :");
-          log += F(" rawValue: ");
-          log += String(rawValue, DEC);
-          log += F(" temperature: ");
-          log += String(temperature, DEC);
-          log += F(" P039_RTD_TYPE: ");
-          log += String(P039_RTD_TYPE, DEC);
-          log += F(" P039_RTD_RES: ");
-          log += String(P039_RTD_RES, DEC);
+        if((log.reserve(100u))) { // reserve value derived from example log file
+          log = F("P039 : Temperature :");            // 20 char
+          log += F(" rawValue: ");                    // 11 char
+          log += String(rawValue, DEC);               // 5 char
+          log += F(" temperature: ");                 // 14 char
+          log += String(temperature, DEC);            // 11 char
+          log += F(" P039_RTD_TYPE: ");               // 16 char
+          log += String(P039_RTD_TYPE, DEC);          // 1 char
+          log += F(" P039_RTD_RES: ");                // 15 char
+          log += String(P039_RTD_RES, DEC);           // 4 char
           addLog(LOG_LEVEL_DEBUG, log);
         }
       }
@@ -1466,7 +1497,7 @@ float readLM7x(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      if((log.reserve(66u))) {
+      if((log.reserve(120u))) { // reserve value derived from example log file
         log = F("P039 : LM7x : readLM7x : ");
         log += F(" rawValue: ");
         log += String(rawValue, DEC);
@@ -1536,7 +1567,7 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(66u))) {
+      if((log.reserve(170u))) { // reserve value derived from example log file
         log = F("P039 : LM7x : convertLM7xTemp : ");
         log += F(" l_returnValue: ");
         log += String(l_returnValue, DEC);
@@ -1674,7 +1705,7 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(66u))) {
+      if((log.reserve(110u))) { // reserve value derived from example log file
         log = F("P039 : LM7x : readLM7xRegisters : ");
         log += F(" l_returnValue: 0x");
         log += String(l_returnValue, HEX);
@@ -1783,7 +1814,7 @@ void write8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(66u))) {
+      if((log.reserve(95u))) { // reserve value derived from example log file
         log = F("P039 : SPI : write8BitRegister : ");
         log += F("l_address: 0x");
         log += String(l_address, HEX);
@@ -1820,7 +1851,7 @@ void write16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(66u))) {
+      if((log.reserve(110u))) { // reserve value derived from example log file
         log = F("P039 : SPI : write16BitRegister : ");
         log += F("l_address: 0x");
         log += String(l_address, HEX);
@@ -1856,7 +1887,7 @@ uint8_t read8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(66u))) {
+      if((log.reserve(95u))) { // reserve value derived from example log file
         log = F("P039 : SPI : read8BitRegister : ");
         log += F("l_address: 0x");
         log += String(l_address, HEX);
@@ -1896,7 +1927,7 @@ uint16_t read16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(66u))) {
+      if((log.reserve(110u))) { // reserve value derived from example log file
         log = F("P039 : SPI : read16BitRegister : ");
         log += F("l_address: 0x");
         log += String(l_address, HEX);
@@ -1945,12 +1976,12 @@ void transfer_n_ByteSPI(uint8_t l_CS_pin_no, uint8_t l_noBytesToSend, uint8_t* l
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(66u))) {
-        log = F("P039 : SPI : transfer_n_ByteSPI : ");
+      if((log.reserve(120u))) { // reserve value derived from example log file
+        log = F("P039 : SPI : transfer_n_ByteSPI : ");      // 34 char
         for (uint8_t i = 0; i < l_noBytesToSend; ++i)
         {
-          log += F(" 0x");
-          log += String(l_inoutMessageBuffer[i], HEX);
+          log += F(" 0x");                                  // 3 char
+          log += String(l_inoutMessageBuffer[i], HEX);      // 2 char
         }
         addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
@@ -2020,6 +2051,8 @@ void change8BitRegister(uint8_t l_CS_pin_no, uint8_t l_readaddress, uint8_t l_wr
   // read in config register
   l_reg = read8BitRegister(l_CS_pin_no, l_readaddress);
 
+
+  //TODO: c.k.i.: analyze opportunity to use arduino bitSet/Clear macros instead
   if(l_set_reset){
     l_reg |= l_flagmask;
   }
