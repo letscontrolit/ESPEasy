@@ -1309,10 +1309,10 @@ To create/register a plugin, you have to :
 
   // Plugins
   #ifndef USES_P016
-    #define USES_P016   // IR
+//    #define USES_P016   // IR
   #endif
   #ifndef USES_P035
-    #define USES_P035   // IRTX
+//    #define USES_P035   // IRTX
   #endif
   #ifndef USES_P041
     #define USES_P041   // NeoClock
