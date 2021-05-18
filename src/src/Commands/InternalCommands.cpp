@@ -264,7 +264,7 @@ bool executeInternalCommand(command_case_data & data)
     case 'l': {
       COMMAND_CASE_A(            "let", Command_Rules_Let,         2); // Rules.h
       COMMAND_CASE_A(           "load", Command_Settings_Load,     0); // Settings.h
-      COMMAND_CASE_A(       "logentry", Command_logentry,          1); // Diagnostic.h
+      COMMAND_CASE_A(       "logentry", Command_logentry,         -1); // Diagnostic.h
       COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
       COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
       COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    3);    // GPIO.h
