@@ -15,6 +15,7 @@ String Command_Wifi_Disconnect(struct EventStruct *event, const char* Line);
 String Command_Wifi_APMode(struct EventStruct *event, const char* Line);
 String Command_Wifi_STAMode(struct EventStruct *event, const char* Line);
 String Command_Wifi_Mode(struct EventStruct *event, const char* Line);
+String Command_Wifi_AllowAP(struct EventStruct *event, const char* Line);
 
 // FIXME: TD-er This is not an erase, but actually storing the current settings
 // in the wifi settings of the core library

@@ -165,7 +165,9 @@ bool WiFiConnected() {
   if ((WiFiEventData.timerAPstart.isSet()) && WiFiEventData.timerAPstart.timeReached()) {
     // Timer reached, so enable AP mode.
     if (!WifiIsAP(WiFi.getMode())) {
-      setAP(true);
+      if (!Settings.DoNotStartAP()) {
+        setAP(true);
+      }
     }
     WiFiEventData.timerAPstart.clear();
   }
@@ -288,7 +290,9 @@ bool prepareWiFi() {
     WiFiEventData.wifiConnectAttemptNeeded = false;
 
     // No need to wait longer to start AP mode.
-    setAP(true);
+    if (!Settings.DoNotStartAP()) {
+      setAP(true);
+    }
     return false;
   }
   WiFiEventData.warnedNoValidWiFiSettings = false;

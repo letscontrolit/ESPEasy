@@ -516,6 +516,12 @@
 
     ``WifiAPKey,<WPA key>``"
     "
+    WifiAllowAP","
+    :red:`Internal`","
+    Uncheck the setting to prevent starting AP when unable to connect to a network.
+
+    ``WifiAllowAP``"
+    "
     WifiAPMode","
     :red:`Internal`","
     Force the unit into AP mode.
