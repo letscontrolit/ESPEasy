@@ -196,6 +196,16 @@ void SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t tas
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::DoNotStartAP() const {
+  return bitRead(VariousBits1, 17);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::DoNotStartAP(bool value) {
+  bitWrite(VariousBits1, 17, value);
+}
+
+template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (UDPPort > 65535) { UDPPort = 0; }
 
@@ -361,6 +371,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
   UseESPEasyNow(DEFAULT_USE_ESPEASYNOW);
   ApDontForceSetup(DEFAULT_AP_DONT_FORCE_SETUP);
+  DoNotStartAP(DEFAULT_DONT_ALLOW_START_AP);
 }
 
 template<unsigned int N_TASKS>

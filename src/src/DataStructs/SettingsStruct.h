@@ -115,6 +115,8 @@ class SettingsStruct_tmpl
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
 
+  bool DoNotStartAP() const;
+  void DoNotStartAP(bool value);
 
   void validate();
 
