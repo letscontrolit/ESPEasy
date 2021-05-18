@@ -261,7 +261,6 @@ void P012_data_struct::createCustomChars() {
   static const char LETTER_z2[8] PROGMEM = {   // z z kropka
     0b00100, 0b00000, 0b11111, 0b00010, 0b00100, 0b01000, 0b11111, 0b00000
   };
-  lcd.print(F("Czekaj..."));    // Wait....
   lcd.createChar(0, LETTER_o);  // probably defected memory cell
   lcd.createChar(1, LETTER_l);
   lcd.createChar(2, LETTER_e);
