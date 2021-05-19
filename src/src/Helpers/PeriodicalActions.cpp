@@ -292,7 +292,12 @@ void schedule_all_tasks_using_MQTT_controller() {
 }
 
 void processMQTTdelayQueue() {
-  if (MQTTDelayHandler == nullptr || !MQTTclient_connected) {
+  if (MQTTDelayHandler == nullptr) {
+    return;
+  }
+  runPeriodicalMQTT(); // Update MQTT connected state.
+  if (!MQTTclient_connected) {
+    scheduleNextMQTTdelayQueue();
     return;
   }
 
