@@ -1,8 +1,12 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C014
 
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Statistics.h"
+#include "src/Helpers/PeriodicalActions.h"
 #include "_Plugin_Helper.h"
 
 //#######################################################################################################

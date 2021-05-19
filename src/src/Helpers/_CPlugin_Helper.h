@@ -6,12 +6,14 @@
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
 
+
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Network.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/_CPlugin_Helper_webform.h"

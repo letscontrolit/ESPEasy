@@ -3,7 +3,7 @@
 #ifdef HAS_ETHERNET
 # include "ETH.h"
 #endif // ifdef HAS_ETHERNET
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -22,6 +22,7 @@
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_System.h"
