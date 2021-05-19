@@ -295,7 +295,7 @@ void processMQTTdelayQueue() {
   if (MQTTDelayHandler == nullptr) {
     return;
   }
-  updateMQTTclient_connected();
+  runPeriodicalMQTT(); // Update MQTT connected state.
   if (!MQTTclient_connected) {
     scheduleNextMQTTdelayQueue();
     return;
