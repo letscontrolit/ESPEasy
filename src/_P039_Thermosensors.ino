@@ -56,9 +56,9 @@
 //            https://www.ti.com/lit/gpn/TMP124
 
 #include <SPI.h>
-#include <Misc.h>
+// #include <Misc.h>
 #include "src/PluginStructs/P039_data_struct.h"
-// #include <String.h>
+
 
 // // plugin-local quick activation of debug messages
 // #ifdef BUILD_NO_DEBUG
@@ -422,7 +422,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         const String Foptions[2] = {F("Thermocouple"), F("RTD")};
         const int FoptionValues[2] = {P039_TC, P039_RTD};
         addFormSelector(F("Sensor Family Type"), F("P039_famtype"), 2, Foptions, FoptionValues, family, true); // auto reload activated
-        addFormNote(F("Set sensor family of connected sensor - thermocouple or RTD. Submit the form after choice to allow update of sections below accordingly !"));
+        addFormNote(F("Set sensor family of connected sensor - thermocouple or RTD."));
       }
 
       const byte choice = P039_MAX_TYPE;
@@ -437,7 +437,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
           const String options[3]      = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
           const int    optionValues[3] = { P039_MAX6675, P039_MAX31855, P039_MAX31856 };
           addFormSelector(F("Adapter IC"), F("P039_maxtype"), 3, options, optionValues, choice, true); // auto reload activated
-          addFormNote(F("Set adapter IC used. Submit the form after choice to allow update of sections below accordingly !"));
+          addFormNote(F("Set adapter IC used."));
         }
     
         if (choice == P039_MAX31856) {
@@ -491,7 +491,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
           const String TPoptions[2] = {F("MAX 31865"), F("LM7x")};
           const int TPoptionValues[2] = {P039_MAX31865, P039_LM7x};
           addFormSelector(F("Adapter IC"), F("P039_maxtype"), 2, TPoptions, TPoptionValues, choice, true); // auto reload activated
-          addFormNote(F("Set used RTD Converter Module. Currently only MAX31865 is fully supported. LM7x derivatives are untested and experimental.\nSubmit the form after choice to allow update of sections below accordingly !"));
+          addFormNote(F("Set used RTD Converter Module. Currently only MAX31865 is fully supported. LM7x derivatives are untested and experimental."));
         }
 
        
@@ -753,14 +753,14 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
                     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 
                         String log;
-                        if((log.reserve(160u))) { // reserve value derived from example log file
+                        if((log.reserve(170u))) { // reserve value derived from example log file
                           log = F("P039 : ");                                // 7 char
                           log += getTaskDeviceName(event->TaskIndex);        // 41 char ( max length of task device name + 1)
                           log += F(" : ");                                   // 3 char
-                          log += F("P039_data->conversionResult: 0x");       // 30 char
-                          log += String(P039_data->conversionResult, HEX);   // 6 char
-                          log += F("; P039_data->deviceFaults: 0x");         // 27 char
-                          log += String(P039_data->deviceFaults, HEX);       // 4 char
+                          log += F("P039_data->conversionResult: ");       // 30 char
+                          log += formatToHex_decimal(P039_data->conversionResult);   // 11 char
+                          log += F("; P039_data->deviceFaults: ");         // 27 char
+                          log += formatToHex_decimal(P039_data->deviceFaults);       // 9 char
                           log += F("; Next State: ");                        // 13 char
                           log += String(event->Par1, DEC);                   // 4 char
                           addLog(LOG_LEVEL_DEBUG, log);
@@ -846,17 +846,17 @@ float readMax6675(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
       String log;
-      if((log.reserve(120u))) { // reserve value derived from example log file
+      if((log.reserve(130u))) { // reserve value derived from example log file
         log = F("P039 : MAX6675 : RAW - BIN: ");       // 27 char
         log += String(rawvalue, BIN);                  // 18 char
-        log += F(" HEX: 0x");                          // 5 char
-        log += String(rawvalue, HEX);                  // 4 char
+        log += F(" HEX: ");                          // 5 char
+        log += formatToHex(rawvalue);                  // 4 char
         log += F(" DEC: ");                            // 5 char
         log += String(rawvalue);                       // 5 char
-        log += F(" MSB: 0x");                          // 5 char
-        log += String(messageBuffer[0], HEX);          // 5 char 
-        log += F(" LSB: 0x");                          // 5 char
-        log += String(messageBuffer[1], HEX);          // 5 char
+        log += F(" MSB: ");                          // 5 char
+        log += formatToHex_decimal(messageBuffer[0]);          // 9 char 
+        log += F(" LSB: ");                          // 5 char
+        log += formatToHex_decimal(messageBuffer[1]);          // 9 char
         addLog(LOG_LEVEL_DEBUG, log);
       }
     }
@@ -905,18 +905,18 @@ float readMax31855(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
       String log;
-      if((log.reserve(180u))) { // reserve value derived from example log file
+      if((log.reserve(200u))) { // reserve value derived from example log file
         log = F("P039 : MAX31855 : RAW - BIN: ");      // 35 char
         log += String(rawvalue, BIN);                  // 16 char
-        log += F(" rawvalue,HEX: 0x");                 // 15 char    
-        log += String(rawvalue, HEX);                  // 4 char
+        log += F(" rawvalue,HEX: ");                   // 15 char    
+        log += formatToHex(rawvalue);                  // 4 char
         log += F(" rawvalue,DEC: ");                   // 15 char
         log += String(rawvalue, DEC);                  // 5 char
         log += F(" messageBuffer[],HEX:");             // 21 char
         for (size_t i = 0u; i < 4; i++)
         {
-                log += F(" 0x");                       // 3 char
-                log += String(messageBuffer[i], HEX);  // 2 char
+                log += ' ';                                 // 1 char
+                log += formatToHex_decimal(messageBuffer[i]);  // 9 char
         }
         addLog(LOG_LEVEL_DEBUG, log);
       }
@@ -970,10 +970,10 @@ float readMax31855(struct EventStruct *event)
           String log;
           if((log.reserve(120u))) { // reserve value derived from example log file
             log = F("P039 : MAX31855 : ");    
-            log += F("rawvalue, HEX: 0x");
-            log += String(rawvalue, HEX);
-            log += F(" P039_data->sensorFault, HEX: 0x");
-            log += String(P039_data->sensorFault, HEX);
+            log += F("rawvalue: ");
+            log += formatToHex_decimal(rawvalue);
+            log += F(" P039_data->sensorFault: ");
+            log += formatToHex_decimal(P039_data->sensorFault);
             addLog(LOG_LEVEL_DEBUG, log);
           }
         } 
@@ -1054,25 +1054,35 @@ float readMax31856(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) 
     {
       String log;
-      if((log.reserve(140u))) { // reserve value derived from example log file
+      if((log.reserve(210u))) { // reserve value derived from example log file
         log = F("P039 : MAX31856 :");
 
         for (uint8_t i = 0; i < MAX31856_NO_REG; ++i) {
           log += ' ';
-          log += String(registers[i], HEX);
+          log += formatToHex_decimal(registers[i]);
         }
-        log+= F(" rawvalue, HEX: ");
-        log+= String(rawvalue, HEX);
-         log+= F(" rawvalue, DEC: ");
-        log+= String(rawvalue, DEC);
+        log+= F(" rawvalue: ");
+        log+= formatToHex_decimal(rawvalue);
         addLog(LOG_LEVEL_DEBUG, log);
       }
     }
 
   # endif // ifndef BUILD_NO_DEBUG
 
-  const uint8_t sr = registers[MAX31856_SR];
 
+  // ignore TC Range Bit in case Voltage Modes are used
+  // datasheet: 
+  // Thermocouple Out-of-Range fault. 
+  //    0 = The Thermocouple Hot Junction temperature is within the normal operating range (see Table 1).
+  //    1 = The Thermocouple Hot Junction temperature is outside of the normal operating range.
+  //  Note: The TC Range bit should be ignored in voltage mode.
+  uint8_t sr = registers[MAX31856_SR];
+
+  if ((8u == P039_TC_TYPE) || (12u == P039_TC_TYPE)) {
+    sr &= ~MAX31856_TC_TCRANGE; 
+  }
+ 
+  
   // FIXED: c.k.i. : moved static fault flag to instance data structure
   if((nullptr != P039_data)){
 
@@ -1140,10 +1150,34 @@ float readMax31856(struct EventStruct *event)
   {
     rawvalue >>= 5; // bottom 5 bits are unused
     // We're left with (24 - 5 =) 19 bits
-    float temperature = Plugin_039_convert_two_complement(rawvalue, 19);
 
-    // Calculate Celsius
-    return temperature / 128.0f;
+    {
+      float temperature = 0;
+
+      switch (P039_TC_TYPE)
+      {
+      case 8:
+        {
+          temperature = rawvalue/1677721.6f; // datasheet: rawvalue = 8 x 1.6 x 2^17 x VIN -> VIN = rawvalue / (8 x 1.6 x 2^17)
+          break;
+        }
+      case 12:
+        {
+          temperature = rawvalue/6710886.4f; // datasheet: rawvalue = 32 x 1.6 x 2^17 x VIN -> VIN = rawvalue / (32 x 1.6 x 2^17)
+          break;
+        }
+      default:
+        {
+          temperature = Plugin_039_convert_two_complement(rawvalue, 19);
+
+          // Calculate Celsius
+          temperature /= 128.0f;
+          break;
+        }
+      }
+      
+      return temperature;
+    }
   }
   else
   {
@@ -1166,11 +1200,11 @@ float readMax31865(struct EventStruct *event)
       if (loglevelActiveFor(LOG_LEVEL_DEBUG))
       {
         String log;
-        if((log.reserve(70u))) { // reserve value derived from example log file
+        if((log.reserve(80u))) { // reserve value derived from example log file
         
           log = F("P039 : MAX31865 :");
           log += F(" P039_data->convReady: ");
-          log += String(P039_data->convReady, BIN);
+          log += boolToString(P039_data->convReady);
 
           addLog(LOG_LEVEL_DEBUG, log);
         }
@@ -1193,7 +1227,7 @@ float readMax31865(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(80u))) { // reserve value derived from example log file
+      if((log.reserve(160u))) { // reserve value derived from example log file
        
         for (uint8_t i = 0u; i < MAX31865_NO_REG; ++i)
         {
@@ -1204,8 +1238,8 @@ float readMax31865(struct EventStruct *event)
 
         for (uint8_t i = 0u; i < MAX31865_NO_REG; ++i)
         {
-          log += F(" 0x");
-          log += String(registers[i], HEX);
+          log += ' ';
+          log += formatToHex_decimal(registers[i]);
         }
 
         addLog(LOG_LEVEL_DEBUG_MORE, log);
@@ -1244,11 +1278,11 @@ float readMax31865(struct EventStruct *event)
       if (registers[MAX31865_FAULT])
       {
         String log;
-        if((log.reserve(200u))) { // reserve value derived from example log file
+        if((log.reserve(210u))) { // reserve value derived from example log file
           log = F("P039 : MAX31865 : ");
 
-          log += F("Fault : 0x");
-          log += String(registers[MAX31865_FAULT], HEX);
+          log += F("Fault : ");
+          log += formatToHex_decimal(registers[MAX31865_FAULT]);
           log += F(" :");
 
           if (registers[MAX31865_FAULT] & MAX31865_FAULT_OVUV)
@@ -1296,12 +1330,12 @@ float readMax31865(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      if((log.reserve(80u))) { // reserve value derived from example log file
-        log = F("P039 : Temperature :");                    // 20 char
-        log += F(" registers[MAX31865_FAULT], HEX: 0x");    // 35 char
-        log += String(registers[MAX31865_FAULT], HEX);      // 2 char
-        log += F(" ValueValid: ");                          // 13 char       
-        log += String(ValueValid, BIN);                     // 1 char
+      if((log.reserve(85u))) { // reserve value derived from example log file
+        log = F("P039 : Temperature :");                            // 20 char
+        log += F(" registers[MAX31865_FAULT]: ");                   // 33 char
+        log += formatToHex_decimal(registers[MAX31865_FAULT]);      // 7 char
+        log += F(" ValueValid: ");                                  // 13 char       
+        log += boolToString(ValueValid);                            // 5 char
         addLog(LOG_LEVEL_DEBUG, log);
       }
     }
@@ -1319,10 +1353,10 @@ float readMax31865(struct EventStruct *event)
       if (loglevelActiveFor(LOG_LEVEL_DEBUG))
       {
         String log;
-        if((log.reserve(100u))) { // reserve value derived from example log file
+        if((log.reserve(110u))) { // reserve value derived from example log file
           log = F("P039 : Temperature :");            // 20 char
           log += F(" rawValue: ");                    // 11 char
-          log += String(rawValue, DEC);               // 5 char
+          log += formatToHex_decimal(rawValue);       // 9 char
           log += F(" temperature: ");                 // 14 char
           log += String(temperature, DEC);            // 11 char
           log += F(" P039_RTD_TYPE: ");               // 16 char
@@ -1497,12 +1531,12 @@ float readLM7x(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
       String log;
-      if((log.reserve(120u))) { // reserve value derived from example log file
+      if((log.reserve(130u))) { // reserve value derived from example log file
         log = F("P039 : LM7x : readLM7x : ");
         log += F(" rawValue: ");
-        log += String(rawValue, DEC);
-        log += F(" device_id: 0x");
-        log += String(device_id, HEX);
+        log += formatToHex_decimal(rawValue);
+        log += F(" device_id: ");
+        log += formatToHex(device_id);
         log += F(" temperature: ");
         log += String(temperature, DEC);
         addLog(LOG_LEVEL_DEBUG, log);
@@ -1567,14 +1601,14 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(170u))) { // reserve value derived from example log file
+      if((log.reserve(185u))) { // reserve value derived from example log file
         log = F("P039 : LM7x : convertLM7xTemp : ");
         log += F(" l_returnValue: ");
-        log += String(l_returnValue, DEC);
-        log += F(" l_LM7xsubtype: 0x");
-        log += String(l_LM7xsubtype, HEX);
-        log += F(" l_rawValue: 0x");
-        log += String(l_rawValue, HEX);
+        log += formatToHex_decimal(l_returnValue);
+        log += F(" l_LM7xsubtype: ");
+        log += formatToHex_decimal(l_LM7xsubtype);
+        log += F(" l_rawValue: ");
+        log += formatToHex_decimal(l_rawValue);
         log += F(" l_noBits: ");
         log += String(l_noBits, DEC);
         log += F(" l_lsbvalue: ");
@@ -1705,12 +1739,12 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(110u))) { // reserve value derived from example log file
+      if((log.reserve(115u))) { // reserve value derived from example log file
         log = F("P039 : LM7x : readLM7xRegisters : ");
-        log += F(" l_returnValue: 0x");
-        log += String(l_returnValue, HEX);
-        log += F(" l_device_id: 0x");
-        log += String(*(l_device_id), HEX);
+        log += F(" l_returnValue: ");
+        log += formatToHex_decimal(l_returnValue);
+        log += F(" l_device_id: ");
+        log += formatToHex(*(l_device_id));
         addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
@@ -1814,12 +1848,12 @@ void write8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(95u))) { // reserve value derived from example log file
+      if((log.reserve(100u))) { // reserve value derived from example log file
         log = F("P039 : SPI : write8BitRegister : ");
-        log += F("l_address: 0x");
-        log += String(l_address, HEX);
-        log += F(" value: 0x");
-        log += String(value, HEX);
+        log += F("l_address: ");
+        log += formatToHex(l_address);
+        log += F(" value: ");
+        log += formatToHex_decimal(value);
         addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
@@ -1842,7 +1876,7 @@ void write8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
 
 void write16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
 {
-  uint8_t l_messageBuffer[3] = {l_address, static_cast<uint8_t> (value >> 8), static_cast<uint8_t> (value)};
+  uint8_t l_messageBuffer[3] = {l_address, static_cast<uint8_t> ((value >> 8) & 0xFF), static_cast<uint8_t> (value & 0xFF)};
 
   transfer_n_ByteSPI(l_CS_pin_no, 3, l_messageBuffer);
 
@@ -1853,10 +1887,10 @@ void write16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
       String log;
       if((log.reserve(110u))) { // reserve value derived from example log file
         log = F("P039 : SPI : write16BitRegister : ");
-        log += F("l_address: 0x");
-        log += String(l_address, HEX);
-        log += F(" value: 0x");
-        log += String(value, HEX);
+        log += F("l_address: ");
+        log += formatToHex(l_address);
+        log += F(" value: ");
+        log += formatToHex_decimal(value);
         addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
@@ -1887,12 +1921,12 @@ uint8_t read8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       String log;
-      if((log.reserve(95u))) { // reserve value derived from example log file
+      if((log.reserve(100u))) { // reserve value derived from example log file
         log = F("P039 : SPI : read8BitRegister : ");
-        log += F("l_address: 0x");
-        log += String(l_address, HEX);
-        log += F(" returnvalue: 0x");
-        log += String(l_messageBuffer[1], HEX);
+        log += F("l_address: ");
+        log += formatToHex(l_address);
+        log += F(" returnvalue: ");
+        log += formatToHex_decimal(l_messageBuffer[1]);
         addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
@@ -1929,10 +1963,10 @@ uint16_t read16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
       String log;
       if((log.reserve(110u))) { // reserve value derived from example log file
         log = F("P039 : SPI : read16BitRegister : ");
-        log += F("l_address: 0x");
-        log += String(l_address, HEX);
-        log += F(" l_returnValue: 0x");
-        log += String(l_returnValue, HEX);
+        log += F("l_address: ");
+        log += formatToHex(l_address);
+        log += F(" l_returnValue: ");
+        log += formatToHex_decimal(l_returnValue);
         addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
@@ -1980,8 +2014,8 @@ void transfer_n_ByteSPI(uint8_t l_CS_pin_no, uint8_t l_noBytesToSend, uint8_t* l
         log = F("P039 : SPI : transfer_n_ByteSPI : ");      // 34 char
         for (uint8_t i = 0; i < l_noBytesToSend; ++i)
         {
-          log += F(" 0x");                                  // 3 char
-          log += String(l_inoutMessageBuffer[i], HEX);      // 2 char
+          log += ' ';                                               // 1 char
+          log += formatToHex_decimal(l_inoutMessageBuffer[i]);      // 9 char
         }
         addLog(LOG_LEVEL_DEBUG_MORE, log);
       }
