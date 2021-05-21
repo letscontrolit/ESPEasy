@@ -313,7 +313,9 @@ void processMQTTdelayQueue() {
   #ifndef USES_ESPEASY_NOW
   // When using ESPEasy_NOW we may still send MQTT messages even when we're not connected.
   // For all other situations no need to continue.
+  runPeriodicalMQTT(); // Update MQTT connected state.
   if (!MQTTclient_connected) {
+    scheduleNextMQTTdelayQueue();
     return;
   }
   #endif

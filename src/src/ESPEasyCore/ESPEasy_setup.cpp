@@ -225,6 +225,7 @@ void ESPEasy_setup()
   #endif // ifdef HAS_ETHERNET
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
+    WiFi_AP_Candidates.load_knownCredentials();
     if (!WiFi_AP_Candidates.hasKnownCredentials()) {
       WiFiEventData.wifiSetup = true;
       RTC.clearLastWiFi(); // Must scan all channels
@@ -234,7 +235,9 @@ void ESPEasy_setup()
       WiFiEventData.lastScanMoment.clear();
     }
 
-    // Start an extra async scan so we can continue, but we may find more APs by scanning twice.
+    // Always perform WiFi scan
+    // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
+    // Perhaps the WiFi radio needs some time to stabilize first?
     WifiScan(true);
   }
 

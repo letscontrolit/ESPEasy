@@ -1,4 +1,4 @@
-#include "Controller.h"
+#include "../ESPEasyCore/Controller.h"
 
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"

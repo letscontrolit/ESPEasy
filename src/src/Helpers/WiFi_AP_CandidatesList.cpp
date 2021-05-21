@@ -61,6 +61,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
     }
   }
   loadCandidatesFromScanned();
+  addFromRTC();
 }
 
 void WiFi_AP_CandidatesList::clearCache() {
