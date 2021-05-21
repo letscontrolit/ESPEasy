@@ -20,9 +20,10 @@
 #include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/WebServer_commandHelper.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #ifdef USES_MQTT
@@ -198,9 +199,7 @@ void handle_root() {
       addRowLabelValue(LabelType::ETH_WIFI_MODE);
   #endif
 
-      if (
-        active_network_medium == NetworkMedium_t::WIFI &&
-        NetworkConnected())
+      if (!WiFiEventData.WiFiDisconnected())
       {
         addRowLabelValue(LabelType::IP_ADDRESS);
         addRowLabel(LabelType::WIFI_RSSI);

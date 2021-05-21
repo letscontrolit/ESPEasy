@@ -15,6 +15,7 @@
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
 #define WIFI_RECONNECT_WAIT                  20000  // in milliSeconds
+#define WIFI_PROCESS_EVENTS_TIMEOUT          10000  // in milliSeconds
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;
@@ -31,6 +32,24 @@ bool WiFiEventData_t::WiFiConnectAllowed() const {
 bool WiFiEventData_t::unprocessedWifiEvents() const {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
   {
+    return false;
+  }
+  if (!processedConnect) {
+    if (lastConnectMoment.isSet() && lastConnectMoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
+      return false;
+    }
+  }
+  if (!processedGotIP) {
+    if (lastGetIPmoment.isSet() && lastGetIPmoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
+      return false;
+    }
+  }
+  if (!processedDisconnect) {
+    if (lastDisconnectMoment.isSet() && lastDisconnectMoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
+      return false;
+    }
+  }
+  if (!processedDHCPTimeout) {
     return false;
   }
   return true;
@@ -57,6 +76,7 @@ void WiFiEventData_t::clearAll() {
   processedDisconnectAPmode = true;
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
+  wifiConnectInProgress     = false;
   wifi_TX_pwr = 0;
   usedChannel = 0;
 }
@@ -93,7 +113,8 @@ bool WiFiEventData_t::WiFiServicesInitialized() const {
 }
 
 void WiFiEventData_t::setWiFiDisconnected() {
-  wifiStatus = ESPEASY_WIFI_DISCONNECTED;
+  wifiConnectInProgress = false;
+  wifiStatus            = ESPEASY_WIFI_DISCONNECTED;
 }
 
 void WiFiEventData_t::setWiFiGotIP() {

@@ -258,7 +258,7 @@ bool executeInternalCommand(command_case_data & data)
     case 'l': {
       COMMAND_CASE_A(            "let", Command_Rules_Let,         2); // Rules.h
       COMMAND_CASE_A(           "load", Command_Settings_Load,     0); // Settings.h
-      COMMAND_CASE_A(       "logentry", Command_logentry,          1); // Diagnostic.h
+      COMMAND_CASE_A(       "logentry", Command_logentry,         -1); // Diagnostic.h
       COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
       COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
       COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    3);    // GPIO.h
@@ -396,6 +396,7 @@ bool executeInternalCommand(command_case_data & data)
       #endif
 
       if (data.cmd_lc[1] == 'i') {
+        COMMAND_CASE_R(   "wifiallowap", Command_Wifi_AllowAP,    0); // WiFi.h
         COMMAND_CASE_R(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
         COMMAND_CASE_A(   "wificonnect", Command_Wifi_Connect,    0); // WiFi.h
         COMMAND_CASE_A("wifidisconnect", Command_Wifi_Disconnect, 0); // WiFi.h

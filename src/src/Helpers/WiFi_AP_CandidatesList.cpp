@@ -4,8 +4,10 @@
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/Misc.h"
+
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #define WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     3
 #define WIFI_CUSTOM_SUPPORT_KEY_INDEX        4
@@ -74,7 +76,9 @@ void WiFi_AP_CandidatesList::begin_sync_scan() {
 void WiFi_AP_CandidatesList::purge_expired() {
   for (auto it = scanned.begin(); it != scanned.end(); ) {
     if (it->expired()) {
+      scanned_mutex.lock();
       it = scanned.erase(it);
+      scanned_mutex.unlock();
     } else {
       ++it;
     }
@@ -88,13 +92,17 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
     // Remove previous scan result if present
     for (auto it = scanned.begin(); it != scanned.end(); ) {
       if (tmp == *it || it->expired()) {
+        scanned_mutex.lock();
         it = scanned.erase(it);
+        scanned_mutex.unlock();
       } else {
         ++it;
       }
     }
 //    if (Settings.IncludeHiddenSSID() || !tmp.isHidden) {
+      scanned_mutex.lock();
       scanned.push_back(tmp);
+      scanned_mutex.unlock();
       #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("WiFi : Scan result: ");
@@ -104,7 +112,11 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
       #endif // ifndef BUILD_NO_DEBUG
 //    }
   }
-  scanned.sort();
+  {
+    scanned_mutex.lock();
+    scanned.sort();
+    scanned_mutex.unlock();
+  }
   loadCandidatesFromScanned();
   WiFi.scanDelete();
 }
@@ -236,7 +248,9 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 
   for (auto scan = scanned.begin(); scan != scanned.end();) {
     if (scan->expired()) {
+      scanned_mutex.lock();
       scan = scanned.erase(scan);
+      scanned_mutex.unlock();
     } else {
       if (scan->isHidden) {
         if (Settings.IncludeHiddenSSID()) {

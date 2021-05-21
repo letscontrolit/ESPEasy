@@ -2,7 +2,7 @@
 .. |P110_type| replace:: :cyan:`Distance`
 .. |P110_typename| replace:: :cyan:`Distance - VL53L0X (200cm)`
 .. |P110_porttype| replace:: `.`
-.. |P110_status| replace:: :yellow:`TESTING`
+.. |P110_status| replace:: :yellow:`TESTING B`
 .. |P110_github| replace:: P110_VL53L0X.ino
 .. _P110_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P110_VL53L0X.ino
 .. |P110_usedby| replace:: `.`
@@ -15,7 +15,7 @@
 .. |P111_type| replace:: :cyan:`RFID`
 .. |P111_typename| replace:: :cyan:`RFID - MFRC522`
 .. |P111_porttype| replace:: `.`
-.. |P111_status| replace:: :yellow:`TESTING`
+.. |P111_status| replace:: :yellow:`TESTING C`
 .. |P111_github| replace:: P111_RC522_RFID.ino
 .. _P111_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P111_RC522_RFID.ino
 .. |P111_usedby| replace:: `.`
@@ -28,7 +28,7 @@
 .. |P113_type| replace:: :cyan:`Distance`
 .. |P113_typename| replace:: :cyan:`Distance - VL53L1X (400cm)`
 .. |P113_porttype| replace:: `.`
-.. |P113_status| replace:: :yellow:`TESTING`
+.. |P113_status| replace:: :yellow:`TESTING B`
 .. |P113_github| replace:: P113_VL53L1X.ino
 .. _P113_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P113_VL53L1X.ino
 .. |P113_usedby| replace:: `.`
@@ -36,3 +36,29 @@
 .. |P113_maintainer| replace:: `TD-er, tonhuisman`
 .. |P113_compileinfo| replace:: `.`
 .. |P113_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library (local copy)`
+
+.. |P114_name| replace:: :cyan:`VEML6075`
+.. |P114_type| replace:: :cyan:`UV`
+.. |P114_typename| replace:: :cyan:`UV - VEML6075`
+.. |P114_porttype| replace:: `.`
+.. |P114_status| replace:: :yellow:`TESTING D`
+.. |P114_github| replace:: P114_VEML6075.ino
+.. _P114_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P114_VEML6075.ino
+.. |P114_usedby| replace:: `.`
+.. |P114_shortinfo| replace:: `UVA/UVB Sensor`
+.. |P114_maintainer| replace:: `TD-er, clumsy-stefan, tonhuisman`
+.. |P114_compileinfo| replace:: `.`
+.. |P114_usedlibraries| replace:: `.`
+
+.. |P115_name| replace:: :cyan:`MAX1704x`
+.. |P115_type| replace:: :cyan:`Energy`
+.. |P115_typename| replace:: :cyan:`Energy - MAX1704x`
+.. |P115_porttype| replace:: `.`
+.. |P115_status| replace:: :yellow:`ENERGY, TESTING B`
+.. |P115_github| replace:: _P115_MAX1704x_v2.ino
+.. _P115_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P115_MAX1704x_v2.ino
+.. |P115_usedby| replace:: `.`
+.. |P115_shortinfo| replace:: `Sparkfun Fuel Gauge Sensor`
+.. |P115_maintainer| replace:: `TD-er`
+.. |P115_compileinfo| replace:: `.`
+.. |P115_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library`

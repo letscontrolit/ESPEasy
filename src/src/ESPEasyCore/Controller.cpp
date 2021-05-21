@@ -1,4 +1,4 @@
-#include "Controller.h"
+#include "../ESPEasyCore/Controller.h"
 
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"
@@ -500,6 +500,20 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const 
     return false;
   }
   const bool success = MQTTDelayHandler->addToQueue(MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained));
+
+  scheduleNextMQTTdelayQueue();
+  return success;
+}
+
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained) {
+  if (MQTTDelayHandler == nullptr) {
+    return false;
+  }
+
+  if (MQTT_queueFull(controller_idx)) {
+    return false;
+  }
+  const bool success = MQTTDelayHandler->addToQueue(MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained));
 
   scheduleNextMQTTdelayQueue();
   return success;

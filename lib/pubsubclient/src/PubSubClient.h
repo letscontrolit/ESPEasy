@@ -37,6 +37,15 @@
 #define MQTT_SOCKET_TIMEOUT 15
 #endif
 
+// ESP32_CONNECTION_TIMEOUT : Specific case for ESP32, we need to manually provide timeout as default (-1) leads to WDT reset (after 5 seconds).
+// By default (4500 milliseconds) 4,5 seconds to avoid reaching 5s default watchdog reset time.
+// This is multiplied in WiFiClient.cpp (part of arduino-esp32) by 1000 inside [WiFiClient::connect] method.
+// ESP8266 Arduino framework in contrast has fixed 5000ms timeout. No need to define it manually here.
+// See: https://github.com/knolleary/pubsubclient/pull/842
+#ifndef ESP32_CONNECTION_TIMEOUT
+#define ESP32_CONNECTION_TIMEOUT 4500
+#endif
+
 // MQTT_MAX_TRANSFER_SIZE : limit how much data is passed to the network client
 //  in each write call. Needed for the Arduino Wifi Shield. Leave undefined to
 //  pass the entire MQTT packet in each write call.

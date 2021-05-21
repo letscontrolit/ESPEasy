@@ -27,6 +27,7 @@ else:
 #    "-DPLUGIN_BUILD_NORMAL",
     "-DUSES_P001",  # Switch
     "-DUSES_P002",  # ADC
+    "-DUSES_P003",  # Generic Pulse Counter
     "-DUSES_P004",  # Dallas DS18b20
     "-DUSES_P026",  # System info
     "-DUSES_P027",  # INA219
@@ -46,7 +47,7 @@ else:
 #   "-DUSES_P094",  # CUL Reader
 #   "-DUSES_P095",  # TFT ILI9341
     "-DUSES_P106",  # BME680
-    "-DUSES_P107",  # SI1145 UV index
+#    "-DUSES_P107",  # SI1145 UV index
 
     "-DUSES_C016",  # Cache Controller
     "-DUSES_C018",  # TTN/RN2483

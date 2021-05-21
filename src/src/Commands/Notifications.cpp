@@ -26,7 +26,7 @@ String Command_Notifications_Notify(struct EventStruct *event, const char* Line)
 				// TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
 				TempEvent.NotificationIndex = index;
 				TempEvent.String1 = message;
-				Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, &TempEvent);
+				Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, std::move(TempEvent));
 			}
 		}
 	}

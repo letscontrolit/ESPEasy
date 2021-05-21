@@ -25,7 +25,8 @@ Used libraries: |P000_usedlibraries|
 Supported hardware
 ------------------
 
-|P000_usedby_GPIO|, |P000_usedby_RTTTL|
+|P000_usedby_GPIO|, |P000_usedby_RTTTL|, |P000_usedby_Relay|, |P000_usedby_Servo|, |P000_usedby_LevelConverter|
+
 
 Commands available
 ------------------

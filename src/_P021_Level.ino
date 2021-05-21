@@ -5,6 +5,7 @@
 //#######################################################################################################
 
 #include "src/Helpers/Rules_calculate.h"
+#include "src/WebServer/WebServer.h"
 
 #define PLUGIN_021
 #define PLUGIN_ID_021        21

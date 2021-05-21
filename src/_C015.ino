@@ -3,7 +3,7 @@
 
 # include "src/Globals/CPlugins.h"
 # include "src/Commands/Common.h"
-
+# include "src/ESPEasyCore/ESPEasy_backgroundtasks.h"
 
 // #######################################################################################################
 // ########################### Controller Plugin 015: Blynk  #############################################
@@ -167,7 +167,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       // Collect the values at the same run, to make sure all are from the same sample
       byte valueCount = getValueCountForTask(event->TaskIndex);
 
-      // FIXME TD-er must define a proper move operator
+      
       success = C015_DelayHandler->addToQueue(C015_queue_element(event, valueCount));
 
       if (success) {

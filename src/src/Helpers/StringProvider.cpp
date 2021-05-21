@@ -3,7 +3,7 @@
 #ifdef HAS_ETHERNET
 # include "ETH.h"
 #endif // ifdef HAS_ETHERNET
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -22,6 +22,7 @@
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_System.h"
@@ -254,7 +255,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();
     case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
-    case LabelType::STA_MAC:                return NetworkMacAddress();
+    case LabelType::STA_MAC:                return WifiSTAmacAddress();
     case LabelType::AP_MAC:                 return WifiSoftAPmacAddress();
     case LabelType::SSID:                   return WiFi.SSID();
     case LabelType::BSSID:                  return WiFi.BSSIDstr();
@@ -279,7 +280,12 @@ String getValue(LabelType::Enum label) {
     case LabelType::CONNECTION_FAIL_THRESH: return String(Settings.ConnectionFailuresThreshold);
 
     case LabelType::BUILD_DESC:             return String(BUILD);
-    case LabelType::GIT_BUILD:              return String(F(BUILD_GIT));
+    case LabelType::GIT_BUILD:              
+      { 
+        const String res(F(BUILD_GIT));
+        if (!res.isEmpty()) return res;
+        return get_git_head();
+      }
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
