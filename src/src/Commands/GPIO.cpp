@@ -179,7 +179,7 @@ String Command_GPIO_Status(struct EventStruct *event, const char *Line)
 {
   bool success = true;
   bool sendStatusFlag;
-  byte pluginID;
+  byte pluginID = 0;
 
   switch (tolower(parseString(Line, 2).charAt(0)))
   {

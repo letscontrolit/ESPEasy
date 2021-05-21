@@ -345,11 +345,9 @@ struct P014_data_struct : public PluginTaskData_base {
      ====================================================================== */
   int8_t setResolution(uint8_t res)
   {
-    uint8_t reg;
-    uint8_t error;
-
     // Get the current register value
-    error = readRegister(&reg);
+    uint8_t reg = 0;
+    uint8_t error = readRegister(&reg);
 
     if (error == 0) {
       // remove resolution bits

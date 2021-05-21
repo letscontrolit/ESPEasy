@@ -990,7 +990,7 @@ bool p073_plugin_write(struct EventStruct *event, const String& string) {
   #endif // P073_7DBIN_COMMAND
   } else {
     bool p073_validcmd = false;
-    bool p073_displayon;
+    bool p073_displayon = false;
 
     if (cmd.equals("7don")) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
