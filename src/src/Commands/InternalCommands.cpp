@@ -131,6 +131,26 @@ command_case_data::command_case_data(const char *cmd, struct EventStruct *event,
 }
 
 
+// Wrapper to reduce generated code by macro
+bool do_command_case_all(command_case_data         & data,
+                         const String              & cmd_test,
+                         command_function            pFunc,
+                         int                         nrArguments)
+{
+  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
+}
+
+// Wrapper to reduce generated code by macro
+bool do_command_case_all_restricted(command_case_data         & data,
+                                    const String              & cmd_test,
+                                    command_function            pFunc,
+                                    int                         nrArguments)
+{
+  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
+}
+
+
+
 bool do_command_case(command_case_data         & data,
                      const String              & cmd_test,
                      command_function            pFunc,
@@ -168,20 +188,21 @@ bool do_command_case(command_case_data         & data,
 
 bool executeInternalCommand(command_case_data & data)
 {
+  const size_t cmd_lc_length = data.cmd_lc.length();
+  if (cmd_lc_length < 2) return false; // No commands less than 2 characters
   // Simple macro to match command to function call.
 
   // EventValueSourceGroup::Enum::ALL
   #define COMMAND_CASE_A(S, C, NARGS) \
-  if (do_command_case(data, F(S), &C, NARGS, EventValueSourceGroup::Enum::ALL)) { return data.retval; }
+  if (do_command_case_all(data, F(S), &C, NARGS)) { return data.retval; }
 
   // EventValueSourceGroup::Enum::RESTRICTED
   #define COMMAND_CASE_R(S, C, NARGS) \
-  if (do_command_case(data, F(S), &C, NARGS, EventValueSourceGroup::Enum::RESTRICTED)) { return data.retval; }
+  if (do_command_case_all_restricted(data, F(S), &C, NARGS)) { return data.retval; }
 
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
 
   // FIXME TD-er: must determine nr arguments where NARGS is set to -1
-
   switch (data.cmd_lc[0]) {
     case 'a': {
       COMMAND_CASE_A("accessinfo", Command_AccessInfo_Ls,       0); // Network Command
@@ -270,7 +291,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'm': {
-      if (data.cmd_lc[3] == 'g') {
+      if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(   "mcpgpiorange", Command_GPIO_McpGPIORange, -1); // Gpio.h
         COMMAND_CASE_A( "mcpgpiopattern", Command_GPIO_McpGPIOPattern, -1); // Gpio.h
@@ -302,7 +323,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'p': {
-      if (data.cmd_lc[3] == 'g') {
+      if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "pcfgpio", Command_GPIO,                 2); // Gpio.h
         COMMAND_CASE_A(   "pcfgpiorange", Command_GPIO_PcfGPIORange,   -1); // Gpio.h
         COMMAND_CASE_A( "pcfgpiopattern", Command_GPIO_PcfGPIOPattern, -1); // Gpio.h
