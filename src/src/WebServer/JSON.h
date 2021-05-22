@@ -47,6 +47,8 @@ void stream_next_json_object_value(const String& object, const String& value);
 // Add JSON formatted data directly to the TXbuffer, including a closing '}'
 void stream_last_json_object_value(const String& object, const String& value);
 
+void stream_json_object_values(const LabelType::Enum labels[], bool markLast = false);
+
 void stream_next_json_object_value(LabelType::Enum label);
 
 void stream_last_json_object_value(LabelType::Enum label);

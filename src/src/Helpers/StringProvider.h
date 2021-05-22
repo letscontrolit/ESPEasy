@@ -147,6 +147,9 @@ struct LabelType {
     TIMEZONE_OFFSET,
     LATITUDE,
     LONGITUDE,
+
+
+    MAX_LABEL  // Keep as last
   };
 };
 

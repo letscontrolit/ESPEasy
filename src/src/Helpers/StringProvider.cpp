@@ -183,6 +183,10 @@ String getLabel(LabelType::Enum label) {
     case LabelType::TIMEZONE_OFFSET:        return F("Timezone Offset");
     case LabelType::LATITUDE:               return F("Latitude");
     case LabelType::LONGITUDE:              return F("Longitude");
+
+    case LabelType::MAX_LABEL:
+      break;
+
   }
   return F("MissingString");
 }
@@ -342,6 +346,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::TIMEZONE_OFFSET:        return String(Settings.TimeZone);
     case LabelType::LATITUDE:               return String(Settings.Latitude);
     case LabelType::LONGITUDE:              return String(Settings.Longitude);
+
+    case LabelType::MAX_LABEL:
+      break;
   }
   return F("MissingString");
 }
