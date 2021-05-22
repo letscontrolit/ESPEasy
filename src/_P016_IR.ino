@@ -319,7 +319,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
               strError += ' ';
             }
             else {
-              iCode = strtol(strCode, 0, 16);  // convert string with hexnumbers to uint32_t
+              iCode = strtoul(strCode, 0, 16);  // convert string with hexnumbers to uint64_t
             }
             P016_data->CommandLines[varNr].Code = iCode;
 
@@ -331,7 +331,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
               strError += ' ';
             }
             else {
-              iCode = strtol(strCode, 0, 16);  // convert string with hexnumbers to uint32_t
+              iCode = strtoul(strCode, 0, 16);  // convert string with hexnumbers to uint64_t
             }
             P016_data->CommandLines[varNr].AlternativeCode = iCode;
 
@@ -422,7 +422,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             iCode += 0x800000;                                            // Bit 23 for repeat
           char strCode[P16_Cchars];
           if (safe_strncpy(strCode, resultToHexidecimal(&results), P16_Cchars)) {
-            iCode += strtol(strCode,0,16);                               // Bits 21-0 for code
+            iCode += strtoul(strCode,0,16);                               // Bits 21-0 for code
             bool bAddNewCode = bitRead(PCONFIG_LONG(0), P016_BitAddNewCode);
             if (bAddNewCode && bEnableIRcodeAdding) {
               P016_data->AddCode(iCode);                                  // add code if not saved so far
