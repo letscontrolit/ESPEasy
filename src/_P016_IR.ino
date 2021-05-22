@@ -319,7 +319,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
               strError += ' ';
             }
             else {
-              iCode = strtoul(strCode, 0, 16);  // convert string with hexnumbers to uint64_t
+              iCode = strtoul(strCode, 0, 16);  // convert string with hexnumbers to uint32_t
             }
             P016_data->CommandLines[varNr].Code = iCode;
 
@@ -331,7 +331,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
               strError += ' ';
             }
             else {
-              iCode = strtoul(strCode, 0, 16);  // convert string with hexnumbers to uint64_t
+              iCode = strtoul(strCode, 0, 16);  // convert string with hexnumbers to uint32_t
             }
             P016_data->CommandLines[varNr].AlternativeCode = iCode;
 
