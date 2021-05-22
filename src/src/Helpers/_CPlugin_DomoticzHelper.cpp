@@ -14,6 +14,9 @@
 
 #include "../../ESPEasy-Globals.h"
 
+# ifdef USES_C002
+#  include <ArduinoJson.h>
+# endif // ifdef USES_C002
 
 
 // HUM_STAT can be one of:
@@ -192,8 +195,110 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       log += values;
       addLog(LOG_LEVEL_INFO, log);
     }
-    #endif
+    # endif // ifndef BUILD_NO_DEBUG
   }
   return values;
 }
-#endif // USES_DOMOTICZ
+
+# ifdef USES_C002
+#  include <ArduinoJson.h>
+
+bool deserializeDomoticzJson(const String& json,
+                             unsigned int& idx, float& nvalue, long& nvaluealt,
+                             String& svalue1, String& switchtype) {
+  DynamicJsonDocument root(512);
+
+  deserializeJson(root, json);
+
+  if (root.isNull()) {
+    return false;
+  }
+  idx       = root[F("idx")];
+  nvalue    = root[F("nvalue")];
+  nvaluealt = root[F("nvalue")];
+
+  // const char* name = root["name"]; // Not used
+  // const char* svalue = root["svalue"]; // Not used
+  const char *svalue1_c = root[F("svalue1")];
+
+  if (svalue1_c != nullptr) {
+    svalue1 = svalue1_c;
+  }
+
+  // const char* svalue2 = root["svalue2"]; // Not used
+  // const char* svalue3 = root["svalue3"]; // Not used
+  const char *switchtype_c = root[F("switchType")]; // Expect "On/Off" or "dimmer"
+
+  if (nvalue == 0) {
+    nvalue = nvaluealt;
+  }
+
+  if (switchtype_c == nullptr) {
+    switchtype = F("?");
+  } else {
+    switchtype = switchtype_c;
+  }
+  return true;
+}
+
+String serializeDomoticzJson(struct EventStruct *event)
+{
+  String json;
+  {
+    DynamicJsonDocument root(200);
+    root[F("idx")]  = event->idx;
+    root[F("RSSI")] = mapRSSItoDomoticz();
+      # if FEATURE_ADC_VCC
+    root[F("Battery")] = mapVccToDomoticz();
+      # endif // if FEATURE_ADC_VCC
+
+    const Sensor_VType sensorType = event->getSensorType();
+
+    switch (sensorType)
+    {
+      case Sensor_VType::SENSOR_TYPE_SWITCH:
+        root[F("command")] = String(F("switchlight"));
+
+        if (UserVar[event->BaseVarIndex] == 0) {
+          root[F("switchcmd")] = String(F("Off"));
+        }
+        else {
+          root[F("switchcmd")] = String(F("On"));
+        }
+        break;
+      case Sensor_VType::SENSOR_TYPE_DIMMER:
+        root[F("command")] = String(F("switchlight"));
+
+        if (UserVar[event->BaseVarIndex] == 0) {
+          root[F("switchcmd")] = String(F("Off"));
+        }
+        else {
+          root[F("Set%20Level")] = UserVar[event->BaseVarIndex];
+        }
+        break;
+
+      case Sensor_VType::SENSOR_TYPE_SINGLE:
+      case Sensor_VType::SENSOR_TYPE_LONG:
+      case Sensor_VType::SENSOR_TYPE_DUAL:
+      case Sensor_VType::SENSOR_TYPE_TRIPLE:
+      case Sensor_VType::SENSOR_TYPE_QUAD:
+      case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
+      case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
+      case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
+      case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
+      case Sensor_VType::SENSOR_TYPE_WIND:
+      case Sensor_VType::SENSOR_TYPE_STRING:
+      default:
+        root[F("nvalue")] = 0;
+        root[F("svalue")] = formatDomoticzSensorType(event);
+        break;
+    }
+
+    serializeJson(root, json);
+  }
+  return json;
+}
+
+# endif // ifdef USES_C002
+
+#endif // ifdef USES_DOMOTICZ
