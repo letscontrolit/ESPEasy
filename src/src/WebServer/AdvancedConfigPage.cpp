@@ -18,6 +18,9 @@
 
 #ifdef WEBSERVER_ADVANCED
 
+void setLogLevelFor(byte destination, LabelType::Enum label) {
+  setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
+}
 
 // ********************************************************************************
 // Web Interface config page
@@ -51,11 +54,11 @@ void handle_advanced() {
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
     Settings.SyslogPort     = getFormItemInt(F("syslogport"));
     Settings.UseSerial      = isFormItemChecked(F("useserial"));
-    setLogLevelFor(LOG_TO_SYSLOG, getFormItemInt(getInternalLabel(LabelType::SYSLOG_LOG_LEVEL)));
-    setLogLevelFor(LOG_TO_SERIAL, getFormItemInt(getInternalLabel(LabelType::SERIAL_LOG_LEVEL)));
-    setLogLevelFor(LOG_TO_WEBLOG, getFormItemInt(getInternalLabel(LabelType::WEB_LOG_LEVEL)));
+    setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
+    setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
+    setLogLevelFor(LOG_TO_WEBLOG, LabelType::WEB_LOG_LEVEL);
 #ifdef FEATURE_SD
-    setLogLevelFor(LOG_TO_SDCARD, getFormItemInt(getInternalLabel(LabelType::SD_LOG_LEVEL)));
+    setLogLevelFor(LOG_TO_SDCARD, LabelType::SD_LOG_LEVEL);
 #endif // ifdef FEATURE_SD
     Settings.UseValueLogger              = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate                    = getFormItemInt(F("baudrate"));
@@ -82,18 +85,18 @@ void handle_advanced() {
     #endif // WEBSERVER_NEW_RULES
     Settings.TolerantLastArgParse(isFormItemChecked(F("tolerantargparse")));
     Settings.SendToHttp_ack(isFormItemChecked(F("sendtohttp_ack")));
-    Settings.ForceWiFi_bg_mode(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_BG)));
-    Settings.WiFiRestart_connection_lost(isFormItemChecked(getInternalLabel(LabelType::RESTART_WIFI_LOST_CONN)));
-    Settings.EcoPowerMode(isFormItemChecked(getInternalLabel(LabelType::CPU_ECO_MODE)));
-    Settings.WifiNoneSleep(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_NOSLEEP)));
+    Settings.ForceWiFi_bg_mode(isFormItemChecked(LabelType::FORCE_WIFI_BG));
+    Settings.WiFiRestart_connection_lost(isFormItemChecked(LabelType::RESTART_WIFI_LOST_CONN));
+    Settings.EcoPowerMode(isFormItemChecked(LabelType::CPU_ECO_MODE));
+    Settings.WifiNoneSleep(isFormItemChecked(LabelType::FORCE_WIFI_NOSLEEP));
 #ifdef SUPPORT_ARP
-    Settings.gratuitousARP(isFormItemChecked(getInternalLabel(LabelType::PERIODICAL_GRAT_ARP)));
+    Settings.gratuitousARP(isFormItemChecked(LabelType::PERIODICAL_GRAT_ARP));
 #endif // ifdef SUPPORT_ARP
-    Settings.setWiFi_TX_power(getFormItemFloat(getInternalLabel(LabelType::WIFI_TX_MAX_PWR)));
-    Settings.WiFi_sensitivity_margin = getFormItemInt(getInternalLabel(LabelType::WIFI_SENS_MARGIN));
-    Settings.UseMaxTXpowerForSending(isFormItemChecked(getInternalLabel(LabelType::WIFI_SEND_AT_MAX_TX_PWR)));
-    Settings.NumberExtraWiFiScans = getFormItemInt(getInternalLabel(LabelType::WIFI_NR_EXTRA_SCANS));
-    Settings.PeriodicalScanWiFi(isFormItemChecked(getInternalLabel(LabelType::WIFI_PERIODICAL_SCAN)));
+    Settings.setWiFi_TX_power(getFormItemFloat(LabelType::WIFI_TX_MAX_PWR));
+    Settings.WiFi_sensitivity_margin = getFormItemInt(LabelType::WIFI_SENS_MARGIN);
+    Settings.UseMaxTXpowerForSending(isFormItemChecked(LabelType::WIFI_SEND_AT_MAX_TX_PWR));
+    Settings.NumberExtraWiFiScans = getFormItemInt(LabelType::WIFI_NR_EXTRA_SCANS);
+    Settings.PeriodicalScanWiFi(isFormItemChecked(LabelType::WIFI_PERIODICAL_SCAN));
     Settings.JSONBoolWithoutQuotes(isFormItemChecked(F("json_bool_with_quotes")));
 
     addHtmlError(SaveSettings());
@@ -154,13 +157,13 @@ void handle_advanced() {
   addFormIPBox(F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
   addFormNumericBox(F("Syslog UDP port"), F("syslogport"), Settings.SyslogPort, 0, 65535);
 
-  addFormLogLevelSelect(getLabel(LabelType::SYSLOG_LOG_LEVEL), getInternalLabel(LabelType::SYSLOG_LOG_LEVEL), Settings.SyslogLevel);
+  addFormLogLevelSelect(LabelType::SYSLOG_LOG_LEVEL, Settings.SyslogLevel);
   addFormLogFacilitySelect(F("Syslog Facility"), F("syslogfacility"), Settings.SyslogFacility);
-  addFormLogLevelSelect(getLabel(LabelType::SERIAL_LOG_LEVEL), getInternalLabel(LabelType::SERIAL_LOG_LEVEL), Settings.SerialLogLevel);
-  addFormLogLevelSelect(getLabel(LabelType::WEB_LOG_LEVEL),    getInternalLabel(LabelType::WEB_LOG_LEVEL),    Settings.WebLogLevel);
+  addFormLogLevelSelect(LabelType::SERIAL_LOG_LEVEL, Settings.SerialLogLevel);
+  addFormLogLevelSelect(LabelType::WEB_LOG_LEVEL,    Settings.WebLogLevel);
 
 #ifdef FEATURE_SD
-  addFormLogLevelSelect(getLabel(LabelType::SD_LOG_LEVEL),     getInternalLabel(LabelType::SD_LOG_LEVEL),     Settings.SDLogLevel);
+  addFormLogLevelSelect(LabelType::SD_LOG_LEVEL,     Settings.SDLogLevel);
 
   addFormCheckBox(F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
 #endif // ifdef FEATURE_SD
@@ -305,10 +308,10 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   }
 }
 
-void addFormLogLevelSelect(const String& label, const String& id, int choice)
+void addFormLogLevelSelect(LabelType::Enum label, int choice)
 {
-  addRowLabel(label);
-  addLogLevelSelect(id, choice);
+  addRowLabel(getLabel(label));
+  addLogLevelSelect(getInternalLabel(label), choice);
 }
 
 void addLogLevelSelect(const String& name, int choice)

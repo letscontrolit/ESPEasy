@@ -359,9 +359,19 @@ bool isFormItemChecked(const String& id)
   return web_server.arg(id) == F("on");
 }
 
+bool isFormItemChecked(const LabelType::Enum& id)
+{
+  return isFormItemChecked(getInternalLabel(id));
+}
+
 int getFormItemInt(const String& id)
 {
   return getFormItemInt(id, 0);
+}
+
+int getFormItemInt(const LabelType::Enum& id)
+{
+  return getFormItemInt(getInternalLabel(id), 0);
 }
 
 float getFormItemFloat(const String& id)
@@ -372,6 +382,11 @@ float getFormItemFloat(const String& id)
     validFloatFromString(val, res);
   }
   return res;
+}
+
+float getFormItemFloat(const LabelType::Enum& id)
+{
+  return getFormItemFloat(getInternalLabel(id));
 }
 
 bool isFormItem(const String& id)

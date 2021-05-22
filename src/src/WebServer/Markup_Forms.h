@@ -143,10 +143,14 @@ bool update_whenset_FormItemInt(const String& key, byte& value);
 // Note: Checkbox values will not appear in POST Form data if unchecked.
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.
 bool isFormItemChecked(const String& id);
+bool isFormItemChecked(const LabelType::Enum& id);
+
 
 int getFormItemInt(const String& id);
+int getFormItemInt(const LabelType::Enum& id);
 
 float getFormItemFloat(const String& id);
+float getFormItemFloat(const LabelType::Enum& id);
 
 bool isFormItem(const String& id);
 

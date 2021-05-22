@@ -13,7 +13,7 @@ void handle_advanced();
 
 void addFormDstSelect(bool isStart, uint16_t choice);
 
-void addFormLogLevelSelect(const String& label, const String& id, int choice);
+void addFormLogLevelSelect(LabelType::Enum label, int choice);
 
 void addLogLevelSelect(const String& name, int choice);
 
