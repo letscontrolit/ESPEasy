@@ -415,7 +415,6 @@ void processGotIP() {
     WiFiEventData.wifiSetup = false;
     SaveSecuritySettings();
   }
-  logConnectionStatus();
 
   if ((WiFiEventData.WiFiConnected() || WiFi.isConnected()) && hasIPaddr()) {
     WiFiEventData.processedGotIP = true;
