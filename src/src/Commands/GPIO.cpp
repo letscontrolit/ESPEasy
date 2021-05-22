@@ -553,6 +553,115 @@ bool getPluginIDAndPrefix(char selection, pluginID_t& pluginID, String& logPrefi
   return success;
 }
 
+struct range_pattern_helper_data {
+  String   logPrefix;
+  uint32_t write = 0;
+  uint32_t mask  = 0;
+
+  byte firstPin     = 0;
+  byte lastPin      = 0;
+  byte numBytes     = 0;
+  byte deltaStart   = 0;
+  byte numBits      = 0;
+  byte firstAddress = 0;
+  byte firstBank    = 0;
+  byte initVal      = 0;
+  bool isMask       = false;
+  bool valid        = false;
+};
+
+
+range_pattern_helper_data range_helper_shared(pluginID_t plugin, byte pin1, byte pin2)
+{
+  range_pattern_helper_data data;
+
+  switch (plugin) {
+    case PLUGIN_PCF:
+      data.logPrefix = F("PCF");
+      break;
+    case PLUGIN_MCP:
+      data.logPrefix = F("MCP");
+      break;
+  }
+
+  if ((pin2 < pin1) ||
+      !checkValidPortRange(plugin, pin1) ||
+      !checkValidPortRange(plugin, pin2) ||
+      ((pin2 - pin1 + 1) > 16)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = data.logPrefix;
+      log += F(": pin numbers out of range.");
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    return data;
+  }
+
+  data.firstPin   = ((pin1 - 1) & 0xF8) + 1;
+  data.lastPin    = ((pin2 - 1) & 0xF8) + 8;
+  data.numBytes   = (data.lastPin - data.firstPin + 1) / 8;
+  data.deltaStart = pin1 - data.firstPin;
+  data.numBits    = pin2 - pin1 + 1;
+
+  if (plugin == PLUGIN_MCP) {
+    data.firstAddress = ((pin1 - 1) / 16) + 0x20;
+    data.firstBank    = (((data.firstPin - 1) / 8) + 2) % 2;
+    data.initVal      = 2 * data.firstAddress + data.firstBank;
+  }
+
+  data.valid = true;
+  return data;
+}
+
+range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct EventStruct *event, const char *Line, bool isWritePattern)
+{
+  range_pattern_helper_data data = range_helper_shared(plugin, event->Par1, event->Par2);
+
+  if (!data.valid) {
+    return data;
+  }
+
+  if (isWritePattern) {
+    data.logPrefix += F("GPIOPattern");
+  } else {
+    data.logPrefix += F("GPIORange");
+  }
+  data.valid  = false;
+  data.isMask = parseString(Line, 5).length() != 0;
+
+  if (data.isMask) {
+    data.mask  = event->Par4 & ((1 << data.numBytes * 8) - 1);
+    data.mask &= ((1 << data.numBits) - 1);
+    data.mask  = data.mask << data.deltaStart;
+  } else {
+    data.mask = (1 << data.numBits) - 1;
+    data.mask = data.mask << (data.deltaStart);
+  }
+
+  if (isWritePattern) {                                         // write pattern is present
+    data.write  = event->Par3 & ((1 << data.numBytes * 8) - 1); // limit number of bytes
+    data.write &= ((1 << data.numBits) - 1);                    // limit to number of bits
+    data.write  = data.write << data.deltaStart;                // shift to start from starting pin
+  } else {                                                      // write pattern not present
+    if (event->Par3 == 0) {
+      data.write = 0;
+    } else if (event->Par3 == 1) {
+      data.write = (1 << data.numBits) - 1;
+      data.write = data.write << data.deltaStart;
+    } else {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log = data.logPrefix;
+        log += F(": write value must be 0 or 1.");
+        addLog(LOG_LEVEL_ERROR, log);
+      }
+      return data;
+    }
+  }
+
+
+  data.valid = true;
+  return data;
+}
+
 /******************************************************************************
 ** Par1=starting pin
 ** Par2=ending pin (must be higher of starting pin; and maximum 16 pin per command)
@@ -620,67 +729,22 @@ String Command_GPIO_PcfGPIORange(struct EventStruct *event, const char *Line)
 
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, bool isWritePattern)
 {
-  String log;
-  String logPrefix = isWritePattern ? String(F("McpGPIOPattern")) : String(F("McpGPIORange"));
+  range_pattern_helper_data data = range_pattern_helper_shared(PLUGIN_MCP, event, Line, isWritePattern);
 
-  if ((event->Par2 < event->Par1) ||
-      !checkValidPortRange(PLUGIN_MCP,
-                           event->Par1) || !checkValidPortRange(PLUGIN_MCP, event->Par2) || ((event->Par2 - event->Par1 + 1) > 16)) {
-    log = logPrefix + String(F(": pin numbers out of range."));
-    addLog(LOG_LEVEL_INFO, log);
+  if (!data.valid) {
     return false;
   }
 
-  bool isMask = (parseString(Line, 5) == "") ? false : true;
+  bool   onLine = false;
+  String log;
 
-  uint32_t write;
-  uint32_t mask;
-
-  byte firstPin     = int((event->Par1 - 1) / 8) * 8 + 1;
-  byte lastPin      = int((event->Par2 - 1) / 8) * 8 + 8;
-  byte numBytes     = (lastPin - firstPin + 1) / 8;
-  byte deltaStart   = event->Par1 - firstPin;
-  byte numBits      = event->Par2 - event->Par1 + 1;
-  byte firstAddress = int((event->Par1 - 1) / 16) + 0x20;
-  byte firstBank    = (((firstPin - 1) / 8) + 2) % 2;
-  byte initVal      = 2 * firstAddress + firstBank;
-  bool onLine       = false;
-
-  if (isMask) {
-    mask = event->Par4 & ((1 << numBytes * 8) - 1);
-
-    // mask &= (byte(pow(2,numBits))-1);
-    mask &= ((1 << numBits) - 1);
-    mask  = mask << deltaStart;
-  } else {
-    mask = (1 << numBits) - 1;
-    mask = mask << (deltaStart);
-  }
-
-  if (isWritePattern) {                               // write pattern is present
-    write  = event->Par3 & ((1 << numBytes * 8) - 1); // limit number of bytes
-    write &= ((1 << numBits) - 1);                    // limit to number of bits
-    write  = write << deltaStart;                     // shift to start from starting pin
-  } else {                                            // write pattern not present
-    if (event->Par3 == 0) {
-      write = 0;
-    } else if (event->Par3 == 1) {
-      write = (1 << numBits) - 1;
-      write = write << deltaStart;
-    } else {
-      log = logPrefix + String(F(": Write value must be 0 or 1."));
-      addLog(LOG_LEVEL_INFO, log);
-      return false;
-    }
-  }
-
-  for (byte i = 0; i < numBytes; i++) {
+  for (byte i = 0; i < data.numBytes; i++) {
     uint8_t readValue;
-    byte    currentVal            = initVal + i;
-    byte    currentAddress        = int(currentVal / 2);
-    byte    currentMask           = (mask  >> (8 * i)) & 0xFF;
+    byte    currentVal            = data.initVal + i;
+    byte    currentAddress        = static_cast<int>(currentVal / 2);
+    byte    currentMask           = (data.mask  >> (8 * i)) & 0xFF;
     byte    currentInvertedMask   = 0xFF - currentMask;
-    byte    currentWrite          = (write >> (8 * i)) & 0xFF;
+    byte    currentWrite          = (data.write >> (8 * i)) & 0xFF;
     byte    currentGPIORegister   = ((currentVal % 2) == 0) ? MCP23017_GPIOA : MCP23017_GPIOB;
     byte    currentIOModeRegister = ((currentVal % 2) == 0) ? MCP23017_IODIRA : MCP23017_IODIRB;
     byte    writeGPIOValue        = 0;
@@ -692,7 +756,7 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
       GPIO_MCP_ReadRegister(currentAddress, currentGPIORegister, &readValue);
 
       // write to port
-      writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
+      writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & data.mask);
       GPIO_MCP_WriteRegister(currentAddress, currentGPIORegister, writeGPIOValue);
 
       onLine = true;
@@ -706,14 +770,14 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
     for (byte j = 0; j < 8; j++) {
       // if ((currentMask & (byte(pow(2,j)))) >> j) { //only for the pins in the mask
       if ((currentMask & (1 << j)) >> j) { // only for the pins in the mask
-        byte currentPin    = firstPin + j + 8 * i;
+        byte currentPin    = data.firstPin + j + 8 * i;
         const uint32_t key = createKey(PLUGIN_MCP, currentPin);
 
         // state = onLine ? ((writeGPIOValue & byte(pow(2,j))) >> j) : -1;
         state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
-        log = logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
+        log = data.logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
@@ -724,7 +788,7 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
 
 byte getPcfAddress(uint8_t pin)
 {
-  byte retValue = int((pin - 1) / 8) + 0x20;
+  byte retValue = static_cast<int>((pin - 1) / 8) + 0x20;
 
   if (retValue > 0x27) { retValue += 0x10; }
   return retValue;
@@ -732,82 +796,40 @@ byte getPcfAddress(uint8_t pin)
 
 bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, bool isWritePattern)
 {
-  String log;
-  String logPrefix = isWritePattern ? String(F("PcfGPIOPattern")) : String(F("PcfGPIORange"));
+  range_pattern_helper_data data = range_pattern_helper_shared(PLUGIN_PCF, event, Line, isWritePattern);
 
-  if ((event->Par2 < event->Par1) ||
-      !checkValidPortRange(PLUGIN_PCF,
-                           event->Par1) || !checkValidPortRange(PLUGIN_PCF, event->Par2) || ((event->Par2 - event->Par1 + 1) > 16)) {
-    log = logPrefix + String(F(": pin numbers out of range."));
-    addLog(LOG_LEVEL_INFO, log);
+  if (!data.valid) {
     return false;
   }
 
-  bool isMask = (parseString(Line, 5) == "") ? false : true;
+  bool   onLine = false;
+  String log;
 
-  uint32_t write;
-  uint32_t mask;
-
-  byte firstPin   = int((event->Par1 - 1) / 8) * 8 + 1;
-  byte lastPin    = int((event->Par2 - 1) / 8) * 8 + 8;
-  byte numBytes   = (lastPin - firstPin + 1) / 8;
-  byte deltaStart = event->Par1 - firstPin;
-  byte numBits    = event->Par2 - event->Par1 + 1;
-
-  if (isMask) {
-    //    mask = event->Par4 & (byte(pow(256,numBytes))-1);
-    mask  = event->Par4 & ((1 << numBytes * 8) - 1);
-    mask &= ((1 << numBits) - 1);
-    mask  = mask << deltaStart;
-  } else {
-    mask = (1 << numBits) - 1;
-    mask = mask << (deltaStart);
-  }
-
-  if (isWritePattern) {                               // write pattern is present
-    write  = event->Par3 & ((1 << numBytes * 8) - 1); // limit number of bytes
-    write &= ((1 << numBits) - 1);                    // limit to number of bits
-    write  = write << deltaStart;                     // shift to start from starting pin
-  } else {                                            // write pattern not present
-    if (event->Par3 == 0) {
-      write = 0;
-    } else if (event->Par3 == 1) {
-      write = (1 << numBits) - 1;
-      write = write << deltaStart;
-    } else {
-      log = logPrefix + String(F(": Write value must be 0 or 1."));
-      addLog(LOG_LEVEL_INFO, log);
-      return false;
-    }
-  }
-
-  bool onLine = false;
-
-  for (byte i = 0; i < numBytes; i++) {
+  for (byte i = 0; i < data.numBytes; i++) {
     uint8_t readValue;
     byte    currentAddress = getPcfAddress(event->Par1 + 8 * i);
 
-    byte currentMask         = (mask  >> (8 * i)) & 0xFF;
+    byte currentMask         = (data.mask  >> (8 * i)) & 0xFF;
     byte currentInvertedMask = 0xFF - currentMask;
-    byte currentWrite        = (write >> (8 * i)) & 0xFF;
+    byte currentWrite        = (data.write >> (8 * i)) & 0xFF;
     byte writeGPIOValue      = 255;
 
     onLine = GPIO_PCF_ReadAllPins(currentAddress, &readValue);
 
-    if (onLine) { writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask); }
+    if (onLine) { writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & data.mask); }
 
     byte   mode = (onLine) ? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
     int8_t state;
 
     for (byte j = 0; j < 8; j++) {
-      byte currentPin    = firstPin + j + 8 * i;
+      byte currentPin    = data.firstPin + j + 8 * i;
       const uint32_t key = createKey(PLUGIN_PCF, currentPin);
 
       if ((currentMask & (1 << j)) >> j) { // only for the pins in the mask
         state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
-        log = logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
+        log = data.logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       } else {
@@ -821,7 +843,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
     }
 
     if (onLine) {
-      writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & mask);
+      writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & data.mask);
 
       // write to port
       GPIO_PCF_WriteAllPins(currentAddress, writeGPIOValue);
@@ -999,172 +1021,172 @@ bool getGPIOPinStateValues(String& str) {
   // parseString(string, 1) = device (gpio,mcpgpio,pcfgpio) that can be shortened to g, m or p
   // parseString(string, 2) = command (pinstate,pinrange)
   // parseString(string, 3) = gpio 1st number or a range separated by '-'
-  bool   success   = false;
-  String logPrefix = "";
+  bool   success = false;
+  String logPrefix;
+  const String device     = parseString(str, 1);
+  const String command    = parseString(str, 2);
+  const String gpio_descr = parseString(str, 3);
 
-  if ((parseString(str, 2).length() >= 8) && parseString(str, 2).equalsIgnoreCase(F("pinstate"))) {
+  if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinstate")) && (device.length() > 0)) {
     // returns pin value using syntax: [plugin#xxxxxxx#pinstate#x]
     int par1;
+    const bool validArgument = validIntFromString(gpio_descr, par1);
 
-    switch (parseString(str, 1)[0]) {
+    switch (device[0]) {
       case 'g':
 
-        if (validIntFromString(parseString(str, 3), par1)) {
-          str       = String(digitalRead(par1));
-          logPrefix = "GPIO";
+        if (validArgument) {
+          str       = digitalRead(par1);
+          logPrefix = F("GPIO");
           success   = true;
         }
         break;
 
       case 'm':
 
-        if (validIntFromString(parseString(str, 3), par1)) {
-          str       = String(GPIO_MCP_Read(par1));
-          logPrefix = "MCP";
+        if (validArgument) {
+          str       = GPIO_MCP_Read(par1);
+          logPrefix = F("MCP");
           success   = true;
         }
         break;
 
       case 'p':
 
-        if (validIntFromString(parseString(str, 3), par1)) {
+        if (validArgument) {
           str       = GPIO_PCF_Read(par1);
-          logPrefix = "PCF";
+          logPrefix = F("PCF");
           success   = true;
         }
         break;
     }
 
     if (success) {
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, logPrefix + String(F(" PLUGIN PINSTATE pin =")) + String(par1) + String(F("; value=")) + str);
+      #endif // ifndef BUILD_NO_DEBUG
     } else {
-      str = "0";
-      addLog(LOG_LEVEL_INFO, logPrefix + String(F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric")));
+      addLog(LOG_LEVEL_ERROR, logPrefix + String(F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric")));
     }
-  } else if ((parseString(str, 2).length() >= 8) && parseString(str, 2).equalsIgnoreCase(F("pinrange"))) {
+  } else if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinrange"))) {
     // returns pin value using syntax: [plugin#xxxxxxx#pinrange#x-y]
     int  par1, par2;
     bool successPar = false;
-    int  dashpos    = parseString(str, 3).indexOf('-');
+    int  dashpos    = gpio_descr.indexOf('-');
 
     if (dashpos != -1) {
       // Found an extra '-' in the 4th param, will split.
-      successPar  = validIntFromString(parseString(str, 3).substring(dashpos + 1), par2);
-      successPar &= validIntFromString(parseString(str, 3).substring(0, dashpos), par1);
+      successPar  = validIntFromString(gpio_descr.substring(dashpos + 1), par2);
+      successPar &= validIntFromString(gpio_descr.substring(0, dashpos), par1);
     }
 
     if (successPar) {
       uint16_t tempValue = 0;
 
-      switch (parseString(str, 1)[0]) {
+      switch (device[0]) {
         case 'm':
-          logPrefix = "MCP";
+          logPrefix = F("MCP");
           success   = mcpgpio_plugin_range_helper(par1, par2, tempValue);
           str       = String(tempValue);
           break;
 
         case 'p':
-          logPrefix = "PCF";
+          logPrefix = F("PCF");
           success   = mcpgpio_plugin_range_helper(par1, par2, tempValue);
           str       = String(tempValue);
           break;
       }
 
       if (success) {
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG,
                logPrefix + String(F(" PLUGIN RANGE pin start=")) + String(par1) + String(F("; pin end=")) + String(par2) + String(F(
                                                                                                                                     "; value=")) +
                str);
+        #endif // ifndef BUILD_NO_DEBUG
       } else {
-        str = "0";
-        addLog(LOG_LEVEL_INFO,
+        addLog(LOG_LEVEL_ERROR,
                logPrefix + String(F(" IS OFFLINE. PLUGIN RANGE pin start=")) + String(par1) + String(F("; pin end=")) + String(par2) +
                String(F("; value=")) + str);
       }
     } else {
-      str = "0";
-      addLog(LOG_LEVEL_INFO, logPrefix + String(F(" PLUGIN PINRANGE. Syntax error. Pin parameters are not numeric.")));
+      addLog(LOG_LEVEL_ERROR, logPrefix + String(F(" PLUGIN PINRANGE. Syntax error. Pin parameters are not numeric.")));
     }
   } else {
-    str = "0";
-    addLog(LOG_LEVEL_INFO, String(F("Syntax error. Invalid command. Valid commands are 'pinstate' and 'pinrange'.")));
+    addLog(LOG_LEVEL_ERROR, String(F("Syntax error. Invalid command. Valid commands are 'pinstate' and 'pinrange'.")));
+  }
+
+  if (!success) {
+    str = '0';
   }
   return success;
 }
 
 bool mcpgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t& result)
 {
-  String log;
-  String logPrefix = String(F("McpPluginRead"));
+  const range_pattern_helper_data data = range_helper_shared(PLUGIN_MCP, pin1, pin2);
 
-  if ((pin2 < pin1) || !checkValidPortRange(PLUGIN_MCP, pin1) || !checkValidPortRange(PLUGIN_MCP, pin2) || ((pin2 - pin1 + 1) > 16)) {
-    log = logPrefix + String(F(": pin numbers out of range."));
-    addLog(LOG_LEVEL_INFO, log);
+  if (!data.valid) {
     return false;
   }
 
-  byte firstPin     = int((pin1 - 1) / 8) * 8 + 1;
-  byte lastPin      = int((pin2 - 1) / 8) * 8 + 8;
-  byte numBytes     = (lastPin - firstPin + 1) / 8;
-  byte deltaStart   = pin1 - firstPin;
-  byte numBits      = pin2 - pin1 + 1;
-  byte firstAddress = int((pin1 - 1) / 16) + 0x20;
-  byte firstBank    = (((firstPin - 1) / 8) + 2) % 2;
-  byte initVal      = 2 * firstAddress + firstBank;
-  bool onLine       = false;
+  //  data.logPrefix += F("PluginRead");
 
+  String log;
+  bool success = false;
   uint32_t tempResult = 0;
 
-  for (byte i = 0; i < numBytes; i++) {
-    uint8_t readValue;
-    byte    currentVal          = initVal + i;
-    byte    currentAddress      = int(currentVal / 2);
-    byte    currentGPIORegister = ((currentVal % 2) == 0) ? MCP23017_GPIOA : MCP23017_GPIOB;
+  for (byte i = 0; i < data.numBytes; i++) {
+    uint8_t readValue              = 0;
+    const byte currentVal          = data.initVal + i;
+    const byte currentAddress      = static_cast<int>(currentVal / 2);
+    const byte currentGPIORegister = ((currentVal % 2) == 0) ? MCP23017_GPIOA : MCP23017_GPIOB;
 
-    onLine = GPIO_MCP_ReadRegister(currentAddress, currentGPIORegister, &readValue);
+    const bool onLine = GPIO_MCP_ReadRegister(currentAddress, currentGPIORegister, &readValue);
 
-    if (onLine) { tempResult += (readValue << (8 * i)); }
+    if (onLine) {
+      success = true; // One valid address
+      tempResult += (static_cast<uint32_t>(readValue) << (8 * i)); 
+    }
   }
 
-  tempResult  = tempResult >> deltaStart;
-  tempResult &= ((1 << numBits) - 1);
+  tempResult  = tempResult >> data.deltaStart;
+  tempResult &= ((1 << data.numBits) - 1);
   result      = uint16_t(tempResult);
 
-  return onLine;
+  return success;
 }
 
 bool pcfgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t& result)
 {
-  String log;
-  String logPrefix = String(F("PcfPluginRead"));
+  const range_pattern_helper_data data = range_helper_shared(PLUGIN_PCF, pin1, pin2);
 
-  if ((pin2 < pin1) || !checkValidPortRange(PLUGIN_PCF, pin1) || !checkValidPortRange(PLUGIN_PCF, pin2) || ((pin2 - pin1 + 1) > 16)) {
-    log = logPrefix + String(F(": pin numbers out of range."));
-    addLog(LOG_LEVEL_INFO, log);
+  if (!data.valid) {
     return false;
   }
 
-  byte firstPin   = int((pin1 - 1) / 8) * 8 + 1;
-  byte lastPin    = int((pin2 - 1) / 8) * 8 + 8;
-  byte numBytes   = (lastPin - firstPin + 1) / 8;
-  byte deltaStart = pin1 - firstPin;
-  byte numBits    = pin2 - pin1 + 1;
-  bool onLine     = false;
+  //  data.logPrefix += F("PluginRead");
 
+  String log;
+
+  bool success = false;
   uint32_t tempResult = 0;
 
-  for (byte i = 0; i < numBytes; i++) {
-    uint8_t readValue;
-    byte    currentAddress = getPcfAddress(pin1 + 8 * i);
+  for (byte i = 0; i < data.numBytes; i++) {
+    uint8_t readValue         = 0;
+    const byte currentAddress = getPcfAddress(pin1 + 8 * i);
 
-    onLine = GPIO_PCF_ReadAllPins(currentAddress, &readValue);
+    const bool onLine = GPIO_PCF_ReadAllPins(currentAddress, &readValue);
 
-    if (onLine) { tempResult += (readValue << (8 * i)); }
+    if (onLine) { 
+      success = true; // One valid address
+      tempResult += (static_cast<uint32_t>(readValue) << (8 * i)); 
+    }
   }
 
-  tempResult  = tempResult >> deltaStart;
-  tempResult &= ((1 << numBits) - 1);
+  tempResult  = tempResult >> data.deltaStart;
+  tempResult &= ((1 << data.numBits) - 1);
   result      = uint16_t(tempResult);
 
-  return onLine;
+  return success;
 }
