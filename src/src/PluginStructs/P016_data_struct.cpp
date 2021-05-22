@@ -63,7 +63,7 @@ void P016_data_struct::ExecuteCode(uint32_t  Code) {
   uint32_t _now = millis();
   if (iLastCmd == Code) {
     // same code as before
-    if (iCmdInhibitTime > (int32_t)(_now - iLastCmdTime)) {
+    if (iCmdInhibitTime > static_cast<uint32_t>(_now - iLastCmdTime)) {
       // inhibit time not ellapsed
       return;
     }

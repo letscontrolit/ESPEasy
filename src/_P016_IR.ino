@@ -238,7 +238,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++)
         {
           // settings for code <nn>
-          strCode = "";
+          strCode = F("");
           if (P016_data->CommandLines[varNr].Code > 0) {
             strCode = uint64ToString(P016_data->CommandLines[varNr].Code, 16); // convert code to hex for display
           }
@@ -248,7 +248,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           strID = F("Code");
           strID += (varNr + 1);
           addFormTextBox(strLabel, strID, strCode, P16_Cchars - 1);
-          strCode = "";
+          strCode = F("");
           if (P016_data->CommandLines[varNr].AlternativeCode > 0) {
             strCode = uint64ToString(P016_data->CommandLines[varNr].AlternativeCode, 16); // convert code to hex for display
           }
@@ -310,7 +310,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++)
           {
             iCode = 0;
-            strError = "";
+            strError = F("");
             strID = F("Code");
             strID += (varNr + 1);
 
@@ -417,7 +417,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
         if (nullptr != P016_data) {
           // convert result to uint32_t
-          uint32_t iCode = ((uint32_t) results.decode_type) * 0x1000000;  // Bits 31-24 (upper byte) for decode_type
+          uint32_t iCode = (static_cast<uint32_t> (results.decode_type)) * 0x1000000;  // Bits 31-24 (upper byte) for decode_type
           if (results.repeat)
             iCode += 0x800000;                                            // Bit 23 for repeat
           char strCode[P16_Cchars];
@@ -474,7 +474,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       state.clock = -1;
 
       String description = IRAcUtils::resultAcToString(&results);
-      if (description != "")
+      if (description.length() > 0)
         addLog(LOG_LEVEL_INFO, String(F("AC State: ")) + description); // If we got a human-readable description of the message, display it.
       if (IRac::isProtocolSupported(results.decode_type))              //Check If there is a replayable AC state and show the JSON command that can be send
       {
@@ -513,7 +513,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           doc[F("sleep")] = state.sleep; //Nr. of mins of sleep mode, or use sleep mode. (<= 0 means off.)
         if (state.clock >= 0)
           doc[F("clock")] = state.clock; //Nr. of mins past midnight to set the clock to. (< 0 means off.)
-        output="";
+        output = F("");
         serializeJson(doc, output);
         event->String2 = output;
         addLog(LOG_LEVEL_INFO, String(F("IRSENDAC,'")) + output+ '\''); //Show the command that the user can put to replay the AC state with P035
