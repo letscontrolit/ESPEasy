@@ -426,7 +426,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           }
           char strCode[P16_Cchars];
           if (safe_strncpy(strCode, resultToHexidecimal(&results), P16_Cchars)) {
-            iCode += hexToUL(strCode);                               // Bits 21-0 for code
+            iCode += strtoul(strCode, 0, 16);                               // Bits 21-0 for code
             bool bAddNewCode = bitRead(PCONFIG_LONG(0), P016_BitAddNewCode);
             if (bAddNewCode && bEnableIRcodeAdding) {
               P016_data->AddCode(iCode);                                  // add code if not saved so far
