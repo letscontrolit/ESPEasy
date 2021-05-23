@@ -405,9 +405,12 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         output += F("\",\"bits\":");
         output += uint64ToString(results.bits);
         output += '}';
-        String Log = F("IRSEND,\'");
+        String Log;
+        Log.reserve(output.length() + 22);
+        Log = F("IRSEND,\'");
         Log += output;
-        Log += "\'";
+        Log += F("\' type: 0x");
+        Log += uint64ToString(results.decode_type);
         addLog(LOG_LEVEL_INFO, Log); //JSON representation of the command
         event->String2 = output;
 

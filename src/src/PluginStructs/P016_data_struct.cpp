@@ -60,7 +60,6 @@ void P016_data_struct::ExecuteCode(uint32_t  Code) {
   if (Code == 0) {
     return;
   }
-  uint32_t _now = millis();
   if (iLastCmd == Code) {
     // same code as before
     if (iCmdInhibitTime > timePassedSince(iLastCmdTime)) {
@@ -72,7 +71,7 @@ void P016_data_struct::ExecuteCode(uint32_t  Code) {
     if ((CommandLines[i].Code == Code) || (CommandLines[i].AlternativeCode == Code)) {
       // code already saved
       iLastCmd = Code;
-      iLastCmdTime = _now;
+      iLastCmdTime = millis();
 
       if (CommandLines[i].Command[0] != 0) {
         bool _success = ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, CommandLines[i].Command);
