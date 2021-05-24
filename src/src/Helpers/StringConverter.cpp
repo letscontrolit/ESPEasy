@@ -137,6 +137,8 @@ unsigned long hexToUL(const String& input_c, size_t nrHexDecimals) {
 
   if (nr_decimals > inputLength) {
     nr_decimals = inputLength;
+  } else if (input_c.startsWith(F("0x"))) { // strtoul handles that prefix nicely
+    nr_decimals += 2;
   }
   String tmp = input_c.substring(0, nr_decimals);
 
