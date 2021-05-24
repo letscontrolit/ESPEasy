@@ -29,9 +29,14 @@ void addFormSeparator(int clspan)
 // ********************************************************************************
 // Add a note as row start
 // ********************************************************************************
+void addFormNote(const __FlashStringHelper * text)
+{
+  addFormNote(String(text));
+}
+
 void addFormNote(const String& text, const String& id)
 {
-  addRowLabel_tr_id("", id);
+  addRowLabel_tr_id(F(""), id);
   addHtmlDiv(F("note"), String(F("Note: ")) + text);
 }
 
@@ -198,7 +203,7 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
 void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex)
 {
   addRowLabel_tr_id(F("I2C Address"), id);
-  do_addSelector_Head(id, "", "", false);
+  do_addSelector_Head(id, F(""), F(""), false);
 
   for (byte x = 0; x < addressCount; x++)
   {
@@ -207,7 +212,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
     if (x == 0) {
       option += F(" - (default)");
     }
-    addSelector_Item(option, addresses[x], addresses[x] == selectedIndex, false, "");
+    addSelector_Item(option, addresses[x], addresses[x] == selectedIndex, false, F(""));
   }
   addSelector_Foot();
 }
@@ -251,7 +256,7 @@ void addFormSelector_script(const String& label,
                             const String& onChangeCall)
 {
   addRowLabel_tr_id(label, id);
-  do_addSelector_Head(id, "", onChangeCall, false);
+  do_addSelector_Head(id, F(""), onChangeCall, false);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
@@ -323,7 +328,9 @@ void addFormPinStateSelect(int gpio, int choice)
 // ********************************************************************************
 // Retrieve return values from form/checkbox.
 // ********************************************************************************
-
+int getFormItemInt(const __FlashStringHelper * key, int defaultValue) {
+  return getFormItemInt(String(key), defaultValue);
+}
 
 int getFormItemInt(const String& key, int defaultValue) {
   int value = defaultValue;
@@ -360,6 +367,11 @@ bool update_whenset_FormItemInt(const String& key, byte& value) {
 
 // Note: Checkbox values will not appear in POST Form data if unchecked.
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.
+bool isFormItemChecked(const __FlashStringHelper * id)
+{
+  return isFormItemChecked(String(id));
+}
+
 bool isFormItemChecked(const String& id)
 {
   return web_server.arg(id) == F("on");
@@ -370,6 +382,11 @@ bool isFormItemChecked(const LabelType::Enum& id)
   return isFormItemChecked(getInternalLabel(id));
 }
 
+int getFormItemInt(const __FlashStringHelper * id)
+{
+  return getFormItemInt(String(id), 0);
+}
+
 int getFormItemInt(const String& id)
 {
   return getFormItemInt(id, 0);
@@ -378,6 +395,11 @@ int getFormItemInt(const String& id)
 int getFormItemInt(const LabelType::Enum& id)
 {
   return getFormItemInt(getInternalLabel(id), 0);
+}
+
+float getFormItemFloat(const __FlashStringHelper * id)
+{
+  return getFormItemFloat(String(id));
 }
 
 float getFormItemFloat(const String& id)

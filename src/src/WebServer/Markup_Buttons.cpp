@@ -6,25 +6,31 @@
 #include "../Static/WebStaticData.h"
 
 
-void addButton(const String& url, const String& label) {
-  addButton(url, label, "");
+void addButton(const __FlashStringHelper * url, const __FlashStringHelper * label) {
+  addButton(url, label, F(""));
 }
 
-void addButton(const String& url, const String& label, const String& classes) {
-  addButton(url, label, classes, true);
+void addButton(const __FlashStringHelper * url, const __FlashStringHelper * label, const __FlashStringHelper * classes, bool enabled)
+{
+  html_add_button_prefix(classes, enabled);
+  addHtml(url);
+  addHtml(F("'>"));
+  addHtml(label);
+  addHtml(F("</a>"));
+}
+
+void addButton(const String& url, const String& label)
+{
+  addButton(url, label, F(""));
 }
 
 void addButton(const String& url, const String& label, const String& classes, bool enabled)
 {
   html_add_button_prefix(classes, enabled);
-  String html;
-
-  html.reserve(8 + url.length() + label.length());
-  html += url;
-  html += "'>";
-  html += label;
-  html += F("</a>");
-  addHtml(html);
+  addHtml(url);
+  addHtml(F("'>"));
+  addHtml(label);
+  addHtml(F("</a>"));
 }
 
 void addButtonWithSvg(const String& url, const String& label)
@@ -121,12 +127,22 @@ void addWideButton(const String& url, const String& label, const String& classes
 
 void addSubmitButton()
 {
-  addSubmitButton(F("Submit"), "");
+  addSubmitButton(F("Submit"), F(""));
 }
 
 // add submit button with different label and name
+void addSubmitButton(const __FlashStringHelper * value, const __FlashStringHelper * name)
+{
+  addSubmitButton(value, name, F(""));
+}
+
 void addSubmitButton(const String& value, const String& name) {
-  addSubmitButton(value, name, "");
+  addSubmitButton(value, name, F(""));
+}
+
+void addSubmitButton(const __FlashStringHelper * value, const __FlashStringHelper * name, const __FlashStringHelper * classes)
+{
+  addSubmitButton(String(value), String(name), String(classes));
 }
 
 void addSubmitButton(const String& value, const String& name, const String& classes)

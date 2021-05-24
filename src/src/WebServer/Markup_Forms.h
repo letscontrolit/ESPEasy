@@ -14,6 +14,7 @@ void addFormSeparator(int clspan);
 // ********************************************************************************
 // Add a note as row start
 // ********************************************************************************
+void addFormNote(const __FlashStringHelper * text);
 void addFormNote(const String& text, const String& id = "");
 
 // ********************************************************************************
@@ -133,6 +134,7 @@ void addFormPinStateSelect(int gpio, int choice);
 // ********************************************************************************
 
 
+int getFormItemInt(const __FlashStringHelper * key, int defaultValue);
 int getFormItemInt(const String& key, int defaultValue);
 
 bool getCheckWebserverArg_int(const String& key, int& value);
@@ -143,13 +145,15 @@ bool update_whenset_FormItemInt(const String& key, byte& value);
 
 // Note: Checkbox values will not appear in POST Form data if unchecked.
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.
+bool isFormItemChecked(const __FlashStringHelper * id);
 bool isFormItemChecked(const String& id);
 bool isFormItemChecked(const LabelType::Enum& id);
 
-
+int getFormItemInt(const __FlashStringHelper * id);
 int getFormItemInt(const String& id);
 int getFormItemInt(const LabelType::Enum& id);
 
+float getFormItemFloat(const __FlashStringHelper * id);
 float getFormItemFloat(const String& id);
 float getFormItemFloat(const LabelType::Enum& id);
 

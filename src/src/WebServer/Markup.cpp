@@ -462,6 +462,10 @@ void addTextArea(const String& id, const String& value, int maxlength, int rows,
 
 // adds a Help Button with points to the the given Wiki Subpage
 // If url starts with "RTD", it will be considered as a Read-the-docs link
+void addHelpButton(const __FlashStringHelper * url) {
+   addHelpButton(String(url));
+}
+
 void addHelpButton(const String& url) {
 #ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
   if (url.startsWith("RTD")) {

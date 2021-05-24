@@ -35,8 +35,8 @@ void handle_factoryreset() {
   addFormHeader(F("Factory Reset"));
 
 #ifndef LIMIT_BUILD_SIZE
-  if (web_server.hasArg("fdm")) {
-    DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
+  if (web_server.hasArg(F("fdm"))) {
+    DeviceModel model = static_cast<DeviceModel>(getFormItemInt(F("fdm")));
 
     if (modelMatchingFlashSize(model)) {
       setFactoryDefault(model);
@@ -46,11 +46,11 @@ void handle_factoryreset() {
 
   if (web_server.hasArg(F("savepref"))) {
     // User choose a pre-defined config and wants to save it as the new default.
-    ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
-    ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
-    ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
-    ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
-    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
+    ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked(F("kun")));
+    ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked(F("kw")));
+    ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked(F("knet")));
+    ResetFactoryDefaultPreference.keepNTP(isFormItemChecked(F("kntp")));
+    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked(F("klog")));
     applyFactoryDefaultPref();
     addHtmlError(SaveSettings());
   }
@@ -111,7 +111,7 @@ void handle_factoryreset() {
 void addPreDefinedConfigSelector() {
   DeviceModel active_model = ResetFactoryDefaultPreference.getDeviceModel();
 
-  addSelector_Head_reloadOnChange("fdm");
+  addSelector_Head_reloadOnChange(F("fdm"));
 
   for (byte x = 0; x < DeviceModel_MAX; ++x) {
     DeviceModel model = static_cast<DeviceModel>(x);
@@ -134,32 +134,32 @@ void handle_factoryreset_json() {
   TXBuffer.startJsonStream();
   addHtml('{');
 #ifndef LIMIT_BUILD_SIZE
-  if (web_server.hasArg("fdm")) {
-    DeviceModel model = static_cast<DeviceModel>(getFormItemInt("fdm"));
+  if (web_server.hasArg(F("fdm"))) {
+    DeviceModel model = static_cast<DeviceModel>(getFormItemInt(F("fdm")));
 
     if (modelMatchingFlashSize(model)) {
       setFactoryDefault(model);
     }
   }
 
-  if (web_server.hasArg("kun")) {
-    ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked("kun"));
+  if (web_server.hasArg(F("kun"))) {
+    ResetFactoryDefaultPreference.keepUnitName(isFormItemChecked(F("kun")));
   }
 
-  if (web_server.hasArg("kw")) {
-    ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked("kw"));
+  if (web_server.hasArg(F("kw"))) {
+    ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked(F("kw")));
   }
 
-  if (web_server.hasArg("knet")) {
-    ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked("knet"));
+  if (web_server.hasArg(F("knet"))) {
+    ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked(F("knet")));
   }
 
-  if (web_server.hasArg("kntp")) {
-    ResetFactoryDefaultPreference.keepNTP(isFormItemChecked("kntp"));
+  if (web_server.hasArg(F("kntp"))) {
+    ResetFactoryDefaultPreference.keepNTP(isFormItemChecked(F("kntp")));
   }
 
-  if (web_server.hasArg("klog")) {
-    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked("klog"));
+  if (web_server.hasArg(F("klog"))) {
+    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked(F("klog")));
   }
 #endif
   String error;

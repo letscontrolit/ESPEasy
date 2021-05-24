@@ -178,6 +178,16 @@ void handle_tools() {
 // ********************************************************************************
 // Web Interface debug page
 // ********************************************************************************
+void addWideButtonPlusDescription(const __FlashStringHelper * url,
+                                  const __FlashStringHelper * buttonText,
+                                  const __FlashStringHelper * description)
+{
+  html_TR_TD_height(30);
+  addWideButton(url, buttonText);
+  html_TD();
+  addHtml(description);
+}
+
 void addWideButtonPlusDescription(const String& url, const String& buttonText, const String& description)
 {
   html_TR_TD_height(30);
