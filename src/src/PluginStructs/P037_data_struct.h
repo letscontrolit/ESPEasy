@@ -21,7 +21,9 @@
 # define P037_FILTER_SUPPORT  // Enable filtering support
 # define P037_JSON_SUPPORT    // Enable Json support
 
-# ifdef LIMIT_BUILD_SIZE      // Leave out the fancy stuff if available flash is tight
+// # define P037_OVERRIDE        // When defined, do not limit features because of LIMIT_BUILD_SIZE
+
+# if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE) // Leave out the fancy stuff if available flash is tight
   #  ifdef PLUGIN_037_DEBUG
     #   undef PLUGIN_037_DEBUG
   #  endif // ifdef PLUGIN_037_DEBUG
@@ -168,4 +170,4 @@ private:
 };
 
 #endif    // ifdef USED_P037
-#endif    // ifndef PLUGINSTRUCTS_P037_DATA_STRUCT_H
+#endif // ifndef PLUGINSTRUCTS_P037_DATA_STRUCT_H
