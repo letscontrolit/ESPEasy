@@ -289,8 +289,8 @@ void DeleteNotNeededValues(String& s, byte numberOfValuesWanted)
     if (i < numberOfValuesWanted)
     {
       // yes, so just remove the tokens
-      s.replace(startToken, "");
-      s.replace(endToken,   "");
+      s.replace(startToken, F(""));
+      s.replace(endToken,  F(""));
     }
     else
     {
@@ -303,7 +303,7 @@ void DeleteNotNeededValues(String& s, byte numberOfValuesWanted)
         String p = s.substring(startIndex, endIndex + 4);
 
         // remove the whole string including tokens
-        s.replace(p, "");
+        s.replace(p, F(""));
 
         // find next ones
         startIndex = s.indexOf(startToken);

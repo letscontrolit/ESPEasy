@@ -1166,7 +1166,7 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
 bool downloadFile(const String& url, String file_save) {
   String error;
 
-  return downloadFile(url, file_save, "", "", error);
+  return downloadFile(url, file_save, F(""), F(""), error);
 }
 
 bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {

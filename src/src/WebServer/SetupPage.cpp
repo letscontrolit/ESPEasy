@@ -359,7 +359,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
   html_TR_TD();
   html_TD();
   html_BR();
-  addSubmitButton(F("Connect"), "");
+  addSubmitButton(F("Connect"), F(""));
 
   html_end_table();
 }

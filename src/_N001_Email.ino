@@ -139,7 +139,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 		// Wait for Client to Start Sending
 		// The MTA Exchange
 		while (true) {
-			if (!NPlugin_001_MTA(client, "", F("220 "))) break;
+			if (!NPlugin_001_MTA(client, F(""), F("220 "))) break;
 			if (!NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain, F("250 "))) break;
 			if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) break;
 			if (!NPlugin_001_MTA(client, String(F("MAIL FROM:<")) + notificationsettings.Sender + ">", F("250 "))) break;

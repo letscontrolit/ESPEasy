@@ -169,7 +169,7 @@ void handle_filelist() {
   }
   int endIdx = startIdx + pageSize - 1;
   html_table_class_multirow();
-  html_table_header("",        50);
+  html_table_header(F(""),        50);
   html_table_header(F("Filename"));
   html_table_header(F("Size"), 80);
   int count = -1;
@@ -393,7 +393,7 @@ void handle_SDfilelist() {
   addFormSubHeader(subheader);
   html_BR();
   html_table_class_multirow();
-  html_table_header("", 50);
+  html_table_header(F(""), 50);
   html_table_header(F("Name"));
   html_table_header(F("Size"));
   html_TR_TD();

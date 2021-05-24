@@ -167,7 +167,7 @@ String formatToHex(unsigned long value) {
 String formatHumanReadable(unsigned long value, unsigned long factor) {
   String result = formatHumanReadable(value, factor, 2);
 
-  result.replace(F(".00"), "");
+  result.replace(F(".00"), F(""));
   return result;
 }
 

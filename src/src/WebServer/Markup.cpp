@@ -48,7 +48,7 @@ void addSelector(const String& id,
   {
     addSelector_Head_reloadOnChange(id, classname, !enabled);
   } else {
-    do_addSelector_Head(id, classname, "", !enabled);
+    do_addSelector_Head(id, classname, F(""), !enabled);
   }
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
@@ -77,7 +77,7 @@ void addSelector_options(int optionCount, const String options[], const int indi
 }
 
 void addSelector_Head(const String& id) {
-  do_addSelector_Head(id, F("wide"), "", false);
+  do_addSelector_Head(id, F("wide"), F(""), false);
 }
 
 void addSelector_Head_reloadOnChange(const String& id) {

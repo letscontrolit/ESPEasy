@@ -277,7 +277,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   addRowLabel(F("Protocol"));
   byte choice = Settings.Protocol[controllerindex];
   addSelector_Head_reloadOnChange(F("protocol"));
-  addSelector_Item(F("- Standalone -"), 0, false, false, "");
+  addSelector_Item(F("- Standalone -"), 0, false, false, F(""));
 
   for (byte x = 0; x <= protocolCount; x++)
   {

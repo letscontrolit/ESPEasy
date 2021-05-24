@@ -35,7 +35,7 @@ void addButton(const String& url, const String& label, const String& classes, bo
 
 void addButtonWithSvg(const String& url, const String& label)
 {
-  addButtonWithSvg(url, label, "", false);
+  addButtonWithSvg(url, label, F(""), false);
 }
 
 void addButtonWithSvg(const String& url, const String& label, const String& svgPath, bool needConfirm) {
@@ -74,7 +74,7 @@ void addSaveButton(const String& url, const String& label)
 {
 #ifdef BUILD_MINIMAL_OTA
   addButtonWithSvg(url, label
-                   , ""
+                   , F("")
                    , false);
 #else // ifdef BUILD_MINIMAL_OTA
   addButtonWithSvg(url,
@@ -91,7 +91,7 @@ void addDeleteButton(const String& url, const String& label)
 {
 #ifdef BUILD_MINIMAL_OTA
   addButtonWithSvg(url, label
-                   , ""
+                   , F("")
                    , true);
 #else // ifdef BUILD_MINIMAL_OTA
   addButtonWithSvg(url,
@@ -105,7 +105,7 @@ void addDeleteButton(const String& url, const String& label)
 }
 
 void addWideButton(const String& url, const String& label) {
-  addWideButton(url, label, "", true);
+  addWideButton(url, label, F(""), true);
 }
 
 void addWideButton(const String& url, const String& label, const String& classes) {

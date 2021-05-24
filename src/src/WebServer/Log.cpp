@@ -27,7 +27,7 @@ void handle_log() {
 
   #ifdef WEBSERVER_LOG
   addHtml(F("<TR><TH id=\"headline\" align=\"left\">Log"));
-  addCopyButton(F("copyText"), "", F("Copy log to clipboard"));
+  addCopyButton(F("copyText"), F(""), F("Copy log to clipboard"));
   addHtml(F("</TR></table><div  id='current_loglevel' style='font-weight: bold;'>Logging: </div><div class='logviewer' id='copyText_1'></div>"));
   addHtml(F("Autoscroll: "));
   addCheckBox(F("autoscroll"), true);

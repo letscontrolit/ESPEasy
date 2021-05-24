@@ -268,7 +268,7 @@ bool captivePortal() {
     }
     #endif
     web_server.sendHeader(F("Location"), redirectURL, true);
-    web_server.send(302, F("text/plain"), "");   // Empty content inhibits Content-length header so we have to close the socket ourselves.
+    web_server.send(302, F("text/plain"), F(""));   // Empty content inhibits Content-length header so we have to close the socket ourselves.
     web_server.client().stop(); // Stop is needed because we sent no content length
     return true;
   }

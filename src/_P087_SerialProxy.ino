@@ -335,13 +335,13 @@ void P087_html_show_matchForms(struct EventStruct *event) {
           options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
           int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
-          addSelector(id, 2, options, optionValues, NULL, comparator, false, "");
+          addSelector(id, 2, options, optionValues, NULL, comparator, false, F(""));
           break;
         }
         case 2:
         {
           // Compare with
-          addTextBox(id, filter, 32, false, false, "", "");
+          addTextBox(id, filter, 32, false, false, F(""), F(""));
           break;
         }
       }

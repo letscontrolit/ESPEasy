@@ -226,7 +226,7 @@ void html_end_form() {
 }
 
 void html_add_button_prefix() {
-  html_add_button_prefix("", true);
+  html_add_button_prefix(F(""), true);
 }
 
 void html_add_button_prefix(const String& classes, bool enabled) {
@@ -252,7 +252,7 @@ void html_add_button_prefix(const String& classes, bool enabled) {
 }
 
 void html_add_wide_button_prefix() {
-  html_add_wide_button_prefix("", true);
+  html_add_wide_button_prefix(F(""), true);
 }
 
 void html_add_wide_button_prefix(const String& classes, bool enabled) {
