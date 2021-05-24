@@ -11,6 +11,8 @@
 # include <ESPeasySerial.h>
 # include <PZEM004Tv30.h>
 
+#include "src/DataStructs/ESPEasy_packed_raw_data.h"
+
 
 # define PLUGIN_102
 # define PLUGIN_ID_102        102

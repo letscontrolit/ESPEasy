@@ -7,7 +7,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/SystemVariables.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include <XPT2046_Touchscreen.h>
 

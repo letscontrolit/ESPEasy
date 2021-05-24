@@ -21,7 +21,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 
 // ********************************************************************************
@@ -165,7 +165,9 @@ bool WiFiConnected() {
   if ((WiFiEventData.timerAPstart.isSet()) && WiFiEventData.timerAPstart.timeReached()) {
     // Timer reached, so enable AP mode.
     if (!WifiIsAP(WiFi.getMode())) {
-      setAP(true);
+      if (!Settings.DoNotStartAP()) {
+        setAP(true);
+      }
     }
     WiFiEventData.timerAPstart.clear();
   }
@@ -288,7 +290,9 @@ bool prepareWiFi() {
     WiFiEventData.wifiConnectAttemptNeeded = false;
 
     // No need to wait longer to start AP mode.
-    setAP(true);
+    if (!Settings.DoNotStartAP()) {
+      setAP(true);
+    }
     return false;
   }
   WiFiEventData.warnedNoValidWiFiSettings = false;
@@ -658,10 +662,15 @@ bool WiFiScanAllowed() {
     return true;
   }
   */
-  if (WiFi_AP_Candidates.getBestCandidate().usable()) {
+  WiFi_AP_Candidates.purge_expired();
+  if (WiFiEventData.wifiConnectInProgress) {
+    return false;
+  }
+  if (NetworkConnected() && WiFi_AP_Candidates.getBestCandidate().usable()) {
     addLog(LOG_LEVEL_ERROR, F("WiFi : Scan not needed, good candidate present"));
     return false;
   }
+
   if (WiFiEventData.lastDisconnectMoment.isSet() && WiFiEventData.lastDisconnectMoment.millisPassedSince() < WIFI_RECONNECT_WAIT) {
     if (!NetworkConnected()) {
       return true;
