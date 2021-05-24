@@ -424,9 +424,9 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           if (results.repeat) {
             iCode += 0x800000;                                            // Bit 23 for repeat
           }
-          char strCode[P16_Cchars];
+          char strCode[P16_Cchars] = { 0 };                               // Initialize to all zeroes
           if (safe_strncpy(strCode, resultToHexidecimal(&results), P16_Cchars)) {
-            iCode += strtoul(strCode, 0, 16);                               // Bits 21-0 for code
+            iCode += hexToUL(strCode);                                    // Bits 21-0 for code
             bool bAddNewCode = bitRead(PCONFIG_LONG(0), P016_BitAddNewCode);
             if (bAddNewCode && bEnableIRcodeAdding) {
               P016_data->AddCode(iCode);                                  // add code if not saved so far
