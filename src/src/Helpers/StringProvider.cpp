@@ -35,7 +35,7 @@ String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
 }
 
-String getLabel(LabelType::Enum label) {
+const __FlashStringHelper * getLabel(LabelType::Enum label) {
   switch (label)
   {
     case LabelType::UNIT_NR:                return F("Unit Number");

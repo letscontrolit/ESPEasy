@@ -170,13 +170,13 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
         if (choice==0) {
           addHtml(F("<TR><TD>1st GPIO (5-MOSI):<TD>"));
-          addPinSelect(false, "taskdevicepin1", PCONFIG(1));
+          addPinSelect(false, F("taskdevicepin1"), PCONFIG(1));
           addHtml(F("<TR><TD>2nd GPIO (6-SCLK):<TD>"));
-          addPinSelect(false, "taskdevicepin2", PCONFIG(2));
+          addPinSelect(false, F("taskdevicepin2"), PCONFIG(2));
           addHtml(F("<TR><TD>3rd GPIO (7-nSEL):<TD>"));
-          addPinSelect(false, "taskdevicepin3", PCONFIG(3));
+          addPinSelect(false, F("taskdevicepin3"), PCONFIG(3));
           addHtml(F("<TR><TD>4th GPIO (8-MISO):<TD>"));
-          addPinSelect(false, "taskdeviceport", PCONFIG(4));
+          addPinSelect(false, F("taskdeviceport"), PCONFIG(4));
         }
 
         switch (choice)

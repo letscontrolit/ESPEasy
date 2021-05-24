@@ -137,14 +137,23 @@ void addSelector_Foot()
   addHtml(F("</select>"));
 }
 
+void addUnit(const __FlashStringHelper * unit)
+{
+  addHtml(F(" ["));
+  addHtml(unit);
+  addHtml(']');
+}
+
 void addUnit(const String& unit)
 {
-  String html;
+  addHtml(F(" ["));
+  addHtml(unit);
+  addHtml(']');
+}
 
-  html += F(" [");
-  html += unit;
-  html += "]";
-  addHtml(html);
+void addRowLabel_tr_id(const __FlashStringHelper * label, const String& id)
+{
+  addRowLabel_tr_id(String(label), id);
 }
 
 void addRowLabel_tr_id(const String& label, const String& id)
@@ -155,37 +164,48 @@ void addRowLabel_tr_id(const String& label, const String& id)
   addRowLabel(label, tr_id);
 }
 
+void addRowLabel(const __FlashStringHelper * label)
+{
+  html_TR_TD();
+  addHtml(label);
+  addHtml(':');
+  addHtml(F("</td>"));
+  html_TD();
+}
+
 void addRowLabel(const String& label, const String& id)
 {
   if (id.length() > 0) {
-    String html;
-    html += F("<TR id='");
-    html += id;
-    html += F("'><TD>");
-    addHtml(html);
+    addHtml(F("<TR id='"));
+    addHtml(id);
+    addHtml(F("'><TD>"));
   } else {
     html_TR_TD();
   }
 
   if (label.length() != 0) {
-    String html;
-    html += label;
-    html += ':';
-    addHtml(html);
+    addHtml(label);
+    addHtml(':');
   }
   addHtml(F("</td>"));
   html_TD();
 }
 
 // Add a row label and mark it with copy markers to copy it to clipboard.
+void addRowLabel_copy(const __FlashStringHelper * label) {
+  addHtml(F("<TR>"));
+  html_copyText_TD();
+  addHtml(label);
+  addHtml(':');
+  html_copyText_marker();
+  html_copyText_TD();
+}
+
 void addRowLabel_copy(const String& label) {
   addHtml(F("<TR>"));
   html_copyText_TD();
-  String html;
-
-  html += label;
-  html += ':';
-  addHtml(html);
+  addHtml(label);
+  addHtml(':');
   html_copyText_marker();
   html_copyText_TD();
 }
@@ -207,13 +227,31 @@ void addRowLabelValue_copy(LabelType::Enum label) {
 // ********************************************************************************
 // Add a header
 // ********************************************************************************
+void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size)
+{
+    addHtml(F("<TR><TD colspan="));
+    addHtml(String(colspan));
+    addHtml(F("><H"));
+    addHtml(String(h_size));
+    addHtml('>');
+    addHtml(label);
+    addHtml(F("</H"));
+    addHtml(String(h_size));
+    addHtml(F("></TD></TR>"));
+}
+
+void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size, const __FlashStringHelper * helpButton)
+{
+  addTableSeparator(String(label), colspan, h_size, String(helpButton));
+}
+
 void addTableSeparator(const String& label, int colspan, int h_size, const String& helpButton) {
   {
     String html;
     html.reserve(32 + label.length());
     html += F("<TR><TD colspan=");
     html += colspan;
-    html += "><H";
+    html += F("><H");
     html += h_size;
     html += '>';
     html += label;
@@ -226,11 +264,17 @@ void addTableSeparator(const String& label, int colspan, int h_size, const Strin
   {
     String html;
     html.reserve(16);
-    html += "</H";
+    html += F("</H");
     html += h_size;
     html += F("></TD></TR>");
     addHtml(html);
   }
+}
+
+void addFormHeader(const __FlashStringHelper * header) {
+  html_TR();
+  html_table_header(header, F(""), F(""), 225);
+  html_table_header(F(""));
 }
 
 void addFormHeader(const String& header, const String& helpButton) {
@@ -241,12 +285,16 @@ void addFormHeader(const String& header, const String& helpButton, const String&
 {
   html_TR();
   html_table_header(header, helpButton, rtdHelpButton, 225);
-  html_table_header("");
+  html_table_header(F(""));
 }
 
 // ********************************************************************************
 // Add a sub header
 // ********************************************************************************
+void addFormSubHeader(const __FlashStringHelper *  header) {
+  addTableSeparator(header, 2, 3);
+}
+
 void addFormSubHeader(const String& header)
 {
   addTableSeparator(header, 2, 3);
@@ -255,6 +303,11 @@ void addFormSubHeader(const String& header)
 // ********************************************************************************
 // Add a checkbox
 // ********************************************************************************
+void addCheckBox(const __FlashStringHelper * id, boolean checked, bool disabled)
+{
+  addCheckBox(String(id), checked, disabled);
+}
+
 void addCheckBox(const String& id, boolean checked, bool disabled)
 {
   addHtml(F("<label class='container'>&nbsp;"));
@@ -277,6 +330,11 @@ void addCheckBox(const String& id, boolean checked, bool disabled)
 // ********************************************************************************
 // Add a numeric box
 // ********************************************************************************
+void addNumericBox(const __FlashStringHelper * id, int value, int min, int max)
+{
+  addNumericBox(String(id), value, min, max);
+}
+
 void addNumericBox(const String& id, int value, int min, int max)
 {
   addHtml(F("<input "));
@@ -465,6 +523,11 @@ String makeDocLink(const String& url, bool isRTD) {
   }
   result += url;
   return result;
+}
+
+void addPinSelect(boolean forI2C, const __FlashStringHelper * id,  int choice)
+{
+  addPinSelect(forI2C, String(id), choice);
 }
 
 void addPinSelect(boolean forI2C, const String& id,  int choice)

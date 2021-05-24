@@ -205,7 +205,7 @@ void handle_notifications() {
         if (Notification[NotificationProtocolIndex].usesGPIO > 0)
         {
           addRowLabel(F("1st GPIO"));
-          addPinSelect(false, "pin1", NotificationSettings.Pin1);
+          addPinSelect(false, F("pin1"), NotificationSettings.Pin1);
         }
 
         addRowLabel(F("Enabled"));

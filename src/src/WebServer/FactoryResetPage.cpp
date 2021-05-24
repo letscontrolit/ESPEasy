@@ -68,19 +68,19 @@ void handle_factoryreset() {
     addTableSeparator(F("Settings to keep"), 2, 3);
 
     addRowLabel(F("Keep Unit/Name"));
-    addCheckBox("kun", ResetFactoryDefaultPreference.keepUnitName());
+    addCheckBox(F("kun"), ResetFactoryDefaultPreference.keepUnitName());
 
     addRowLabel(F("Keep WiFi config"));
-    addCheckBox("kw", ResetFactoryDefaultPreference.keepWiFi());
+    addCheckBox(F("kw"), ResetFactoryDefaultPreference.keepWiFi());
 
     addRowLabel(F("Keep Network config"));
-    addCheckBox("knet", ResetFactoryDefaultPreference.keepNetwork());
+    addCheckBox(F("knet"), ResetFactoryDefaultPreference.keepNetwork());
 
     addRowLabel(F("Keep NTP/DST config"));
-    addCheckBox("kntp", ResetFactoryDefaultPreference.keepNTP());
+    addCheckBox(F("kntp"), ResetFactoryDefaultPreference.keepNTP());
 
     addRowLabel(F("Keep log config"));
-    addCheckBox("klog", ResetFactoryDefaultPreference.keepLogSettings());
+    addCheckBox(F("klog"), ResetFactoryDefaultPreference.keepLogSettings());
 
     addTableSeparator(F("Pre-defined configurations"), 2, 3);
     addRowLabel(F("Pre-defined config"));

@@ -119,8 +119,8 @@ void html_table_class_multirow_noborder() {
   html_table(F("multirow"), false);
 }
 
-void html_table(const String& tableclass) {
-  html_table(tableclass, false);
+void html_table(const __FlashStringHelper * tableclass, bool boxed) {
+  html_table(String(tableclass), boxed);
 }
 
 void html_table(const String& tableclass, bool boxed) {
@@ -135,16 +135,60 @@ void html_table(const String& tableclass, bool boxed) {
   addHtml('>');
 }
 
+void html_table_header(const __FlashStringHelper * label) {
+  html_table_header(label, 0);
+}
+
 void html_table_header(const String& label) {
   html_table_header(label, 0);
+}
+
+void html_table_header(const __FlashStringHelper * label, int width) {
+  html_table_header(label, F(""), F(""), width);
 }
 
 void html_table_header(const String& label, int width) {
   html_table_header(label, F(""), F(""), width);
 }
 
+void html_table_header(const __FlashStringHelper * label, const __FlashStringHelper * helpButton, int width) {
+  html_table_header(label, helpButton, F(""), width);
+}
+
+void html_table_header(const String& label, const __FlashStringHelper * helpButton, int width) {
+  html_table_header(label, helpButton, F(""), width);
+}
+
+void html_table_header(const __FlashStringHelper * label, const String& helpButton, int width) {
+  html_table_header(label, helpButton, F(""), width);
+}
+
 void html_table_header(const String& label, const String& helpButton, int width) {
   html_table_header(label, helpButton, F(""), width);
+}
+
+void html_table_header(const __FlashStringHelper * label, const __FlashStringHelper * helpButton, const String& rtdHelpButton, int width) {
+  html_table_header(String(label), String(helpButton), rtdHelpButton, width);
+}
+
+void html_table_header(const String& label, const __FlashStringHelper * helpButton, const String& rtdHelpButton, int width) {
+  html_table_header(label, String(helpButton), rtdHelpButton, width);
+}
+
+void html_table_header(const __FlashStringHelper * label, const String& helpButton, const String& rtdHelpButton, int width) {
+  html_table_header(String(label), helpButton, rtdHelpButton, width);
+}
+
+void html_table_header(const __FlashStringHelper * label, const __FlashStringHelper * helpButton, const __FlashStringHelper * rtdHelpButton, int width) {
+  html_table_header(String(label), String(helpButton), String(rtdHelpButton), width);
+}
+
+void html_table_header(const String& label, const __FlashStringHelper * helpButton, const __FlashStringHelper * rtdHelpButton, int width) {
+  html_table_header(label, String(helpButton), String(rtdHelpButton), width);
+}
+
+void html_table_header(const __FlashStringHelper * label, const String& helpButton, const __FlashStringHelper * rtdHelpButton, int width) {
+  html_table_header(String(label), helpButton, String(rtdHelpButton), width);
 }
 
 void html_table_header(const String& label, const String& helpButton, const String& rtdHelpButton, int width) {
@@ -275,12 +319,24 @@ void addHtml(const char& html) {
   TXBuffer += html;
 }
 
+void addHtml(const __FlashStringHelper * html) {
+  TXBuffer += html;
+}
+
 void addHtml(const String& html) {
   TXBuffer += html;
 }
 
 void addHtmlInt(int int_val) {
   addHtml(String(int_val));
+}
+
+void addEncodedHtml(const __FlashStringHelper * html) {
+  // FIXME TD-er: What about the function htmlStrongEscape ??
+  String copy(html);
+
+  htmlEscape(copy);
+  addHtml(copy);
 }
 
 void addEncodedHtml(const String& html) {
@@ -291,12 +347,32 @@ void addEncodedHtml(const String& html) {
   addHtml(copy);
 }
 
+void addHtmlAttribute(const __FlashStringHelper * label, int value) {
+  addHtml(' ');
+  addHtml(label);
+  addHtml('=');
+  addHtmlInt(value);
+  addHtml(' ');
+}
+
 void addHtmlAttribute(const String& label, int value) {
   addHtml(' ');
   addHtml(label);
   addHtml('=');
   addHtmlInt(value);
   addHtml(' ');
+}
+
+void addHtmlAttribute(const __FlashStringHelper * label, const __FlashStringHelper * value) {
+  addHtmlAttribute(label, String(value));
+}
+
+void addHtmlAttribute(const __FlashStringHelper * label, const String& value) {
+  addHtml(' ');
+  addHtml(label);
+  addHtml(F("='"));
+  addEncodedHtml(value);
+  addHtml(F("' "));
 }
 
 void addHtmlAttribute(const String& label, const String& value) {

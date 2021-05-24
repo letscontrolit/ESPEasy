@@ -96,7 +96,7 @@ void handle_settingsarchive() {
     addTableSeparator(F("Download Settings"), 2, 3);
 
     addRowLabel(F("Delete First"));
-    addCheckBox("del", ResetFactoryDefaultPreference.deleteFirst());
+    addCheckBox(F("del"), ResetFactoryDefaultPreference.deleteFirst());
     addFormNote(F("Needed on filesystem with not enough free space. Use with care!"));
 
 

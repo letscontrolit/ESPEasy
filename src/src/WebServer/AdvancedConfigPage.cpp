@@ -70,7 +70,7 @@ void handle_advanced() {
     #endif // USES_SSDP
     Settings.WireClockStretchLimit       = getFormItemInt(F("wireclockstretchlimit"));
     Settings.UseRules                    = isFormItemChecked(F("userules"));
-    Settings.ConnectionFailuresThreshold = getFormItemInt(F("cft"));
+    Settings.ConnectionFailuresThreshold = getFormItemInt(LabelType::CONNECTION_FAIL_THRESH);
     Settings.ArduinoOTAEnable            = isFormItemChecked(F("arduinootaenable"));
     Settings.UseRTOSMultitasking         = isFormItemChecked(F("usertosmultitasking"));
 
@@ -204,7 +204,7 @@ void handle_advanced() {
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
   #endif // ifdef USES_SSDP
 
-  addFormNumericBox(getLabel(LabelType::CONNECTION_FAIL_THRESH), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
+  addFormNumericBox(LabelType::CONNECTION_FAIL_THRESH, Settings.ConnectionFailuresThreshold, 0, 100);
 #ifdef ESP8266
   addFormCheckBox(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
 #endif // ifdef ESP8266
