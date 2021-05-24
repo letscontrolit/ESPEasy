@@ -14,6 +14,52 @@
 /*********************************************************************************************\
 * Functions to load and store controller settings on the web page.
 \*********************************************************************************************/
+const __FlashStringHelper * toString(ControllerSettingsStruct::VarType parameterIdx, bool displayName)
+{
+  switch (parameterIdx) {
+    case ControllerSettingsStruct::CONTROLLER_USE_DNS:                  return  F("Locate Controller");      
+    case ControllerSettingsStruct::CONTROLLER_HOSTNAME:                 return  F("Controller Hostname");    
+    case ControllerSettingsStruct::CONTROLLER_IP:                       return  F("Controller IP");          
+    case ControllerSettingsStruct::CONTROLLER_PORT:                     return  F("Controller Port");        
+    case ControllerSettingsStruct::CONTROLLER_USER:                     return  F("Controller User");        
+    case ControllerSettingsStruct::CONTROLLER_PASS:                     return  F("Controller Password");    
+
+    case ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL:        return  F("Minimum Send Interval");  
+    case ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH:          return  F("Max Queue Depth");        
+    case ControllerSettingsStruct::CONTROLLER_MAX_RETRIES:              return  F("Max Retries");            
+    case ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION:        return  F("Full Queue Action");      
+    case ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE:             return  F("Allow Expire");           
+    case ControllerSettingsStruct::CONTROLLER_DEDUPLICATE:              return  F("De-duplicate");           
+    
+    case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:              return  F("Check Reply");            
+
+    case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:                return  F("Controller Client ID");   
+    case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT: return  F("Unique Client ID on Reconnect");   
+    case ControllerSettingsStruct::CONTROLLER_RETAINFLAG:               return  F("Publish Retain Flag");    
+    case ControllerSettingsStruct::CONTROLLER_SUBSCRIBE:                return  F("Controller Subscribe");   
+    case ControllerSettingsStruct::CONTROLLER_PUBLISH:                  return  F("Controller Publish");     
+    case ControllerSettingsStruct::CONTROLLER_LWT_TOPIC:                return  F("Controller LWT Topic");   
+    case ControllerSettingsStruct::CONTROLLER_LWT_CONNECT_MESSAGE:      return  F("LWT Connect Message");    
+    case ControllerSettingsStruct::CONTROLLER_LWT_DISCONNECT_MESSAGE:   return  F("LWT Disconnect Message"); 
+    case ControllerSettingsStruct::CONTROLLER_SEND_LWT:                 return  F("Send LWT to broker");     
+    case ControllerSettingsStruct::CONTROLLER_WILL_RETAIN:              return  F("Will Retain");            
+    case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:            return  F("Clean Session");          
+    case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS: return  F("Use Extended Credentials");  
+    case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:              return  F("Send Binary");            
+    case ControllerSettingsStruct::CONTROLLER_TIMEOUT:                  return  F("Client Timeout");         
+    case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:     return  F("Sample Set Initiator");   
+
+    case ControllerSettingsStruct::CONTROLLER_ENABLED:
+
+      if (displayName) { return  F("Enabled"); }
+      else {             return  F("controllerenabled"); }
+      
+
+    default:
+      return  F("Undefined");
+  }
+}
+
 String getControllerParameterName(protocolIndex_t                   ProtocolIndex,
                                   ControllerSettingsStruct::VarType parameterIdx,
                                   bool                              displayName,
@@ -32,48 +78,7 @@ String getControllerParameterName(protocolIndex_t                   ProtocolInde
   }
   isAlternative = false;
 
-  switch (parameterIdx) {
-    case ControllerSettingsStruct::CONTROLLER_USE_DNS:                  name = F("Locate Controller");      break;
-    case ControllerSettingsStruct::CONTROLLER_HOSTNAME:                 name = F("Controller Hostname");    break;
-    case ControllerSettingsStruct::CONTROLLER_IP:                       name = F("Controller IP");          break;
-    case ControllerSettingsStruct::CONTROLLER_PORT:                     name = F("Controller Port");        break;
-    case ControllerSettingsStruct::CONTROLLER_USER:                     name = F("Controller User");        break;
-    case ControllerSettingsStruct::CONTROLLER_PASS:                     name = F("Controller Password");    break;
-
-    case ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL:        name = F("Minimum Send Interval");  break;
-    case ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH:          name = F("Max Queue Depth");        break;
-    case ControllerSettingsStruct::CONTROLLER_MAX_RETRIES:              name = F("Max Retries");            break;
-    case ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION:        name = F("Full Queue Action");      break;
-    case ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE:             name = F("Allow Expire");           break;
-    case ControllerSettingsStruct::CONTROLLER_DEDUPLICATE:              name = F("De-duplicate");           break;
-    
-    case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:              name = F("Check Reply");            break;
-
-    case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:                name = F("Controller Client ID");   break;
-    case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT: name = F("Unique Client ID on Reconnect");   break;
-    case ControllerSettingsStruct::CONTROLLER_RETAINFLAG:               name = F("Publish Retain Flag");    break;
-    case ControllerSettingsStruct::CONTROLLER_SUBSCRIBE:                name = F("Controller Subscribe");   break;
-    case ControllerSettingsStruct::CONTROLLER_PUBLISH:                  name = F("Controller Publish");     break;
-    case ControllerSettingsStruct::CONTROLLER_LWT_TOPIC:                name = F("Controller LWT Topic");   break;
-    case ControllerSettingsStruct::CONTROLLER_LWT_CONNECT_MESSAGE:      name = F("LWT Connect Message");    break;
-    case ControllerSettingsStruct::CONTROLLER_LWT_DISCONNECT_MESSAGE:   name = F("LWT Disconnect Message"); break;
-    case ControllerSettingsStruct::CONTROLLER_SEND_LWT:                 name = F("Send LWT to broker");     break;
-    case ControllerSettingsStruct::CONTROLLER_WILL_RETAIN:              name = F("Will Retain");            break;
-    case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:            name = F("Clean Session");          break;
-    case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS: name = F("Use Extended Credentials");  break;
-    case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:              name = F("Send Binary");            break;
-    case ControllerSettingsStruct::CONTROLLER_TIMEOUT:                  name = F("Client Timeout");         break;
-    case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:     name = F("Sample Set Initiator");   break;
-
-    case ControllerSettingsStruct::CONTROLLER_ENABLED:
-
-      if (displayName) { name = F("Enabled"); }
-      else {             name = F("controllerenabled"); }
-      break;
-
-    default:
-      name = F("Undefined");
-  }
+  name = toString(parameterIdx, displayName);
 
   if (!displayName) {
     // Change name to lower case and remove spaces to make it an internal name.

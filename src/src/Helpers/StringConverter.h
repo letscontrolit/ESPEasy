@@ -197,6 +197,11 @@ void   htmlStrongEscape(String& html);
 
 String URLEncode(const char *msg);
 
+void   repl(const __FlashStringHelper * key,
+            const String& val,
+            String      & s,
+            bool       useURLencode);
+
 void   repl(const String& key,
             const String& val,
             String      & s,
@@ -226,18 +231,24 @@ void parseEventVariables(String            & s,
                          struct EventStruct *event,
                          bool             useURLencode);
 
-bool getConvertArgument(const String& marker,
+bool getConvertArgument(const __FlashStringHelper * marker,
                         const String& s,
                         float       & argument,
                         int         & startIndex,
                         int         & endIndex);
 
-bool getConvertArgument2(const String& marker,
+bool getConvertArgument2(const __FlashStringHelper * marker,
                          const String& s,
                          float       & arg1,
                          float       & arg2,
                          int         & startIndex,
                          int         & endIndex);
+
+bool getConvertArgumentString(const __FlashStringHelper * marker,
+                              const String& s,
+                              String      & argumentString,
+                              int         & startIndex,
+                              int         & endIndex);
 
 bool getConvertArgumentString(const String& marker,
                               const String& s,

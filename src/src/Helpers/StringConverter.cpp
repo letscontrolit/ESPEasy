@@ -230,21 +230,21 @@ void removeExtraNewLine(String& line) {
 }
 
 void addNewLine(String& line) {
-  line += "\r\n";
+  line += F("\r\n");
 }
 
 /*********************************************************************************************\
    Format a value to the set number of decimals
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
-  if (event == nullptr) return "";
+  if (event == nullptr) return F("");
   isvalid = true;
 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
   if (!validDeviceIndex(DeviceIndex)) {
     isvalid = false;
-    return "0";
+    return F("0");
   }
 
   {
@@ -278,7 +278,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
       addLog(LOG_LEVEL_ERROR, log);
     }
     #endif // ifndef BUILD_NO_DEBUG
-    return "";
+    return F("");
   }
 
   switch (sensorType) {
@@ -515,7 +515,7 @@ String parseStringKeepCase(const String& string, byte indexFind, char separator)
   String result;
 
   if (!GetArgv(string.c_str(), result, indexFind, separator)) {
-    return "";
+    return F("");
   }
   result.trim();
   return stripQuotes(result);
@@ -551,7 +551,7 @@ String parseStringToEndKeepCase(const String& string, byte indexFind, char separ
   }
 
   if (!hasArgument || (pos_begin < 0)) {
-    return "";
+    return F("");
   }
   String result = string.substring(pos_begin, pos_end);
 
@@ -650,6 +650,14 @@ String URLEncode(const char *msg)
     msg++;
   }
   return encodedMsg;
+}
+
+void repl(const __FlashStringHelper * key,
+            const String& val,
+            String      & s,
+            bool       useURLencode)
+{
+  repl(String(key), val, s, useURLencode);
 }
 
 void repl(const String& key, const String& val, String& s, bool useURLencode)
@@ -824,7 +832,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
 
 #undef SMART_REPL
 
-bool getConvertArgument(const String& marker, const String& s, float& argument, int& startIndex, int& endIndex) {
+bool getConvertArgument(const __FlashStringHelper * marker, const String& s, float& argument, int& startIndex, int& endIndex) {
   String argumentString;
 
   if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
@@ -833,7 +841,7 @@ bool getConvertArgument(const String& marker, const String& s, float& argument, 
   return false;
 }
 
-bool getConvertArgument2(const String& marker, const String& s, float& arg1, float& arg2, int& startIndex, int& endIndex) {
+bool getConvertArgument2(const __FlashStringHelper * marker, const String& s, float& arg1, float& arg2, int& startIndex, int& endIndex) {
   String argumentString;
 
   if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
@@ -848,7 +856,17 @@ bool getConvertArgument2(const String& marker, const String& s, float& arg1, flo
   return false;
 }
 
-bool getConvertArgumentString(const String& marker, const String& s, String& argumentString, int& startIndex, int& endIndex) {
+bool getConvertArgumentString(const __FlashStringHelper * marker, const String& s, String& argumentString, int& startIndex, int& endIndex) {
+  return getConvertArgumentString(String(marker), s, argumentString, startIndex, endIndex);
+}
+
+bool getConvertArgumentString(const String& marker,
+                              const String& s,
+                              String      & argumentString,
+                              int         & startIndex,
+                              int         & endIndex) {
+
+
   startIndex = s.indexOf(marker);
 
   if (startIndex == -1) { return false; }

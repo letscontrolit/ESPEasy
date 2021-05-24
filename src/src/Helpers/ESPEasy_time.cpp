@@ -341,7 +341,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       unixTime_d = static_cast<double>(txTm);
 
       // Add fractional part.
-      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0f);
+      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0);
 
       long total_delay = timePassedSince(beginWait);
 
