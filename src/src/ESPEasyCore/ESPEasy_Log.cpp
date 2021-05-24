@@ -183,14 +183,14 @@ void addToLog(byte logLevel, const char *line)
 {
   // Please note all functions called from here handling line must be PROGMEM aware.
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    addToSerialBuffer(String(millis()).c_str());
-    addToSerialBuffer(String(F(" : ")).c_str());
+    addToSerialBuffer(String(millis()));
+    addToSerialBuffer(F(" : "));
     String loglevelDisplayString = getLogLevelDisplayString(logLevel);
     while (loglevelDisplayString.length() < 6) {
       loglevelDisplayString += ' ';
     }
-    addToSerialBuffer(loglevelDisplayString.c_str());
-    addToSerialBuffer(String(F(" : ")).c_str());
+    addToSerialBuffer(loglevelDisplayString);
+    addToSerialBuffer(F(" : "));
     addToSerialBuffer(line);
     addNewlineToSerialBuffer();
   }
