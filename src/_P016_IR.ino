@@ -42,6 +42,9 @@
 #endif
 
 // History
+// @tonhuisman: 2021-05-23
+// CHG: use hexToUL() instead of strtol() for hex to (unsigned) long conversions
+// CHG: some String optimizations
 // @uwekaditz: 2020-10-19
 // CHG: reduce memory usage when plugin not used
 // NEW: Inhibit time between executing the same command
