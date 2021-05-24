@@ -73,11 +73,16 @@ void handle_log_JSON() {
   unsigned long lastTimeStamp  = 0;
 
   while (logLinesAvailable) {
-    String reply = Logging.get_logjson_formatted(logLinesAvailable, lastTimeStamp);
-
-    if (reply.length() > 0) {
-      addHtml(reply);
-
+    String message;
+    byte loglevel;
+    if (Logging.getNext(logLinesAvailable, lastTimeStamp, message, loglevel)) {
+      addHtml('{');
+      stream_next_json_object_value(F("timestamp"), String(lastTimeStamp));
+      stream_next_json_object_value(F("text"),  message);
+      stream_last_json_object_value(F("level"), String(loglevel));
+      if (logLinesAvailable) {
+        addHtml(F(",\n"));
+      }
       if (nrEntries == 0) {
         firstTimeStamp = lastTimeStamp;
       }

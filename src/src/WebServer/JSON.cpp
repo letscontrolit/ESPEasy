@@ -558,26 +558,34 @@ void stream_to_json_value(const String& value) {
 
   if (!isBool && ((value.length() == 0) || !isNum || mustConsiderAsString(detectedType))) {
     // Either empty, not a numerical or a BIN/HEX notation.
-    String html;
-    html.reserve(value.length() + 2);
-    html += '\"';
-    html += value;
-    html += '\"';
-    addHtml(html);
+    addHtml('\"');
+    if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
+      // Must replace characters, so make a deepcopy
+      String tmpValue(value);
+      tmpValue.replace('\n', '^');
+      tmpValue.replace('\r', '^');
+      tmpValue.replace('"',  '\'');
+      addHtml(tmpValue);
+    } else {
+      addHtml(value);
+    }
+    addHtml('\"');
   } else {
     addHtml(value);
   }
 }
 
+void stream_to_json_object_value(const __FlashStringHelper *  object, const String& value) {
+  addHtml('\"');
+  addHtml(object);
+  addHtml(F("\":"));
+  stream_to_json_value(value);
+}
+
 void stream_to_json_object_value(const String& object, const String& value) {
-  String html;
-
-  html.reserve(object.length() + 4);
-
-  html += '\"';
-  html += object;
-  html += "\":";
-  addHtml(html);
+  addHtml('\"');
+  addHtml(object);
+  addHtml(F("\":"));
   stream_to_json_value(value);
 }
 
@@ -586,14 +594,24 @@ String jsonBool(bool value) {
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.
+void stream_next_json_object_value(const __FlashStringHelper * object, const String& value) {
+  stream_to_json_object_value(object, value);
+  addHtml(F(",\n"));
+}
+
 void stream_next_json_object_value(const String& object, const String& value) {
-  addHtml(to_json_object_value(object, value));
+  stream_to_json_object_value(object, value);
   addHtml(F(",\n"));
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a closing '}'
+void stream_last_json_object_value(const __FlashStringHelper * object, const String& value) {
+  stream_to_json_object_value(object, value);
+  addHtml(F("\n}"));
+}
+
 void stream_last_json_object_value(const String& object, const String& value) {
-  addHtml(to_json_object_value(object, value));
+  stream_to_json_object_value(object, value);
   addHtml(F("\n}"));
 }
 
