@@ -102,8 +102,8 @@ void handle_hardware() {
   addFormNote(F("Press about 10s for factory reset"));
 
   addFormSubHeader(F("I2C Interface"));
-  addFormPinSelectI2C(formatGpioName_bidirectional("SDA"), F("psda"), Settings.Pin_i2c_sda);
-  addFormPinSelectI2C(formatGpioName_output("SCL"),        F("pscl"), Settings.Pin_i2c_scl);
+  addFormPinSelectI2C(formatGpioName_bidirectional(F("SDA")), F("psda"), Settings.Pin_i2c_sda);
+  addFormPinSelectI2C(formatGpioName_output(F("SCL")),        F("pscl"), Settings.Pin_i2c_scl);
   addFormNumericBox(F("Clock Speed"), F("pi2csp"), Settings.I2C_clockSpeed, 100, 3400000);
   addUnit(F("Hz"));
   addFormNote(F("Use 100 kHz for old I2C devices, 400 kHz is max for most."));

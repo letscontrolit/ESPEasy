@@ -222,6 +222,11 @@ void addFormSelector(const String& label, const String& id, int optionCount, con
   addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
 }
 
+void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex)
+{
+  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
+}
+
 void addFormSelector(const String& label,
                      const String& id,
                      int           optionCount,
@@ -244,12 +249,6 @@ void addFormSelector(const String& label,
 {
   addRowLabel_tr_id(label, id);
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
-}
-
-
-void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex)
-{
-  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
 }
 
 void addFormSelector(const String& label,
