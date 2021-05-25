@@ -144,8 +144,8 @@ void rulesProcessing(const String& event) {
 # ifndef BUILD_NO_DEBUG
     else {
       addLog(LOG_LEVEL_DEBUG, String(F("EVENT: ")) + event +
-             String(F(" is ingnored. File ")) + fileName +
-             String(F(" not found.")));
+             F(" is ingnored. File ") + fileName +
+             F(" not found."));
     }
 # endif    // ifndef BUILD_NO_DEBUG
     #endif // WEBSERVER_NEW_RULES

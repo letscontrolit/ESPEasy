@@ -180,14 +180,16 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
       {
         if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
-            String log;
             String command = parseString(string, 1);
             if (command == F("encwrite"))
             {
               if (event->Par1 >= 0)
               {
-                log = String(F("QEI  : ")) + string;
-                addLog(LOG_LEVEL_INFO, log);
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log = F("QEI  : ");
+                  log += string;
+                  addLog(LOG_LEVEL_INFO, log);
+                }
                 P_059_sensordefs[event->TaskIndex]->write(event->Par1);
                 Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
               }

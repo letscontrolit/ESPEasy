@@ -712,7 +712,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String log;
       String command = parseString(string, 1);
 
       // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
@@ -721,8 +720,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       if (command == F("inputswitchstate")) {
         success = true;
         //@giig1967g deprecated since 2019-11-26
-        log = String(F("inputswitchstate is deprecated")) + string;
-        addLog(LOG_LEVEL_ERROR, log);
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("inputswitchstate is deprecated");
+          log += string;
+          addLog(LOG_LEVEL_ERROR, log);
+        }
 
 /*        portStatusStruct tempStatus;
         const uint32_t key = createKey(PLUGIN_ID_001, Settings.TaskDevicePin1[event->Par1]);

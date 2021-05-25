@@ -178,7 +178,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
       }
 
 
-      if (getTaskDeviceName(event->TaskIndex) == "") {                    // Check to see if user entered device name.
+      if (getTaskDeviceName(event->TaskIndex) == F("")) {                    // Check to see if user entered device name.
         switch (Plugin_079_MotorShield_type) {
           case P079_BoardType::WemosMotorshield:
             safe_strncpy(ExtraTaskSettings.TaskDeviceName, F(PLUGIN_DEF_NAME1_079), sizeof(ExtraTaskSettings.TaskDeviceName)); // Name missing, populate default name.
@@ -257,16 +257,19 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
               lolin.getInfo();
 
               if (lolin.PRODUCT_ID != PRODUCT_ID_I2C_LOLIN) {
-                ModeStr += String(F(": Fail"));
+                ModeStr += F(": Fail");
               }
               else {
-                ModeStr += String(F(": Pass, ID=")) + lolin.PRODUCT_ID + String(F(", Ver=")) + lolin.VERSION_ID;
+                ModeStr += F(": Pass, ID=");
+                ModeStr += lolin.PRODUCT_ID;
+                ModeStr += F(", Ver=");
+                ModeStr += lolin.VERSION_ID;
               }
               break;
             }
           }
           addLog(LOG_LEVEL_INFO, ModeStr);
-          SendStatus(event, ModeStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, ModeStr + F(" <br>")); // Reply (echo) to sender. This will print message on browser.
           return true;                                             // Exit now. Info Log shows Lolin Info.
         }
         else {
@@ -322,16 +325,17 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
             if ((motor_speed < 0) || (motor_speed > 100)) {
               motor_speed = 100;
               # ifdef VERBOSE_P079
-              addLog(LOG_LEVEL_INFO, ModeStr + String(F(": Warning, invalid speed: Now using 100")));
+              addLog(LOG_LEVEL_INFO, ModeStr + F(": Warning, invalid speed: Now using 100"));
               # endif // ifdef VERBOSE_P079
             }
           }
         }
 
         if (parse_error == true) {
-          String ErrorStr = ModeStr + String(F(": CMD Syntax Error"));
+          String ErrorStr = ModeStr;
+          ErrorStr += F(": CMD Syntax Error");
           addLog(LOG_LEVEL_INFO, ErrorStr);
-          SendStatus(event, ErrorStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, ErrorStr + F(" <br>")); // Reply (echo) to sender. This will print message on browser.
         }
         else {
           switch (motor_dir) {

@@ -538,7 +538,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
           #ifndef BUILD_NO_RAM_TRACKER
           String descr;
           descr.reserve(20);
-          descr  = String(F("PluginCall_task_"));
+          descr  = F("PluginCall_task_");
           descr += event->TaskIndex;
           checkRAM(descr, String(Function));
           #endif
@@ -600,7 +600,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
           #ifndef BUILD_NO_RAM_TRACKER
           String descr;
           descr.reserve(20);
-          descr  = String(F("PluginCall_task_"));
+          descr  = F("PluginCall_task_");
           descr += event->TaskIndex;
           checkRAM(descr, String(Function));
           #endif

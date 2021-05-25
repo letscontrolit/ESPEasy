@@ -257,20 +257,20 @@ String serializeDomoticzJson(struct EventStruct *event)
     switch (sensorType)
     {
       case Sensor_VType::SENSOR_TYPE_SWITCH:
-        root[F("command")] = String(F("switchlight"));
+        root[F("command")] = F("switchlight");
 
         if (UserVar[event->BaseVarIndex] == 0) {
-          root[F("switchcmd")] = String(F("Off"));
+          root[F("switchcmd")] = F("Off");
         }
         else {
-          root[F("switchcmd")] = String(F("On"));
+          root[F("switchcmd")] = F("On");
         }
         break;
       case Sensor_VType::SENSOR_TYPE_DIMMER:
-        root[F("command")] = String(F("switchlight"));
+        root[F("command")] = F("switchlight");
 
         if (UserVar[event->BaseVarIndex] == 0) {
-          root[F("switchcmd")] = String(F("Off"));
+          root[F("switchcmd")] = F("Off");
         }
         else {
           root[F("Set%20Level")] = UserVar[event->BaseVarIndex];

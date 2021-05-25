@@ -116,17 +116,17 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   {
     // Create json root object
     DynamicJsonDocument root(1024);
-    root[F("module")]  = String(F("ESPEasy"));
-    root[F("version")] = String(F("1.04"));
+    root[F("module")]  = F("ESPEasy");
+    root[F("version")] = F("1.04");
 
     // Create nested objects
-    JsonObject data = root.createNestedObject(String(F("data")));
-    JsonObject ESP  = data.createNestedObject(String(F("ESP")));
+    JsonObject data = root.createNestedObject(F("data"));
+    JsonObject ESP  = data.createNestedObject(F("ESP"));
     ESP[F("name")]         = Settings.Name;
     ESP[F("unit")]         = Settings.Unit;
     ESP[F("version")]      = Settings.Version;
     ESP[F("build")]        = Settings.Build;
-    ESP[F("build_notes")]  = String(F(BUILD_NOTES));
+    ESP[F("build_notes")]  = F(BUILD_NOTES);
     ESP[F("build_git")]    = getValue(LabelType::GIT_BUILD);
     ESP[F("node_type_id")] = NODE_TYPE_ID;
     ESP[F("sleep")]        = Settings.deepSleep_wakeTime;
@@ -138,7 +138,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
     ESP[F("ip")] = NetworkLocalIP().toString();
 
     // Create nested SENSOR json object
-    JsonObject SENSOR = data.createNestedObject(String(F("SENSOR")));
+    JsonObject SENSOR = data.createNestedObject(F("SENSOR"));
 
     // char itemNames[valueCount][2];
     for (byte x = 0; x < element.valueCount; x++)

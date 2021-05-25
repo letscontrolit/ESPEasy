@@ -282,8 +282,13 @@ void DeleteNotNeededValues(String& s, byte numberOfValuesWanted)
 
   for (byte i = 1; i < 5; i++)
   {
-    String startToken = String(F("%")) + i + F("%");
-    String endToken   = String(F("%/")) + i + F("%");
+    String startToken;
+    startToken += '%';
+    startToken += i;
+    startToken += '%';
+    String endToken = F("%/");
+    endToken += i;
+    endToken += '%';
 
     // do we want to keep this one?
     if (i < numberOfValuesWanted)

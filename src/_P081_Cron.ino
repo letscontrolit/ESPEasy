@@ -225,10 +225,9 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
         log = SaveCustomTaskSettings(event->TaskIndex, (byte *)&expression_c, PLUGIN_081_EXPRESSION_SIZE);
       }
 
-      if (log != "")
+      if (log != F(""))
       {
-        log = String(PSTR(PLUGIN_NAME_081)) + String(F(": Saving ")) + log;
-        addLog(LOG_LEVEL_ERROR, log);
+        addLog(LOG_LEVEL_ERROR, String(PSTR(PLUGIN_NAME_081)) + F(": Saving ") + log);
       }
 
       clearPluginTaskData(event->TaskIndex);

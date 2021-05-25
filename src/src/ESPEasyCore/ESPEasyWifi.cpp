@@ -376,7 +376,7 @@ void resetWiFi() {
   WifiDisconnect();
 
   // Send this log only after WifiDisconnect() or else sending to syslog may cause issues
-  addLog(LOG_LEVEL_INFO, String(F("Reset WiFi.")));
+  addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
 
   //  setWifiMode(WIFI_OFF);
 

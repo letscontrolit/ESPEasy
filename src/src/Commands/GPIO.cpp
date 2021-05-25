@@ -84,8 +84,13 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
 
     if (state == -1) { globalMapPortStatus[key].mode = PIN_MODE_OFFLINE; }
 
-    String log = logPrefix + F(" port #") + String(port) + F(": added to monitor list.");
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = logPrefix; 
+      log += F(" port #"); 
+      log += port; 
+      log += F(": added to monitor list.");
+      addLog(LOG_LEVEL_INFO, log);
+    }
     String dummy;
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
 
@@ -131,8 +136,13 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
 
     removeMonitorFromPort(key);
-    String log = logPrefix + F(" port #") + String(port) + F(": removed from monitor list.");
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = logPrefix;
+      log += F(" port #");
+      log += port;
+      log += F(": removed from monitor list.");
+      addLog(LOG_LEVEL_INFO, log);
+    }
 
     return true;
   } else {
@@ -306,7 +316,7 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
 
 const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const char *Line)
 {
-  String logPrefix;
+  const __FlashStringHelper * logPrefix = F("");
   bool   success  = false;
   byte   pluginID = INVALID_PLUGIN_ID;
 
@@ -316,17 +326,17 @@ const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const 
 
       if (tolower(Line[1]) == 'u') { // pulse
         pluginID  = PLUGIN_GPIO;
-        logPrefix = String(F("GPIO"));
+        logPrefix = F("GPIO");
         success   = true;
       } else if (tolower(Line[1]) == 'c') { // pcfpulse
         pluginID  = PLUGIN_PCF;
-        logPrefix = String(F("PCF"));
+        logPrefix = F("PCF");
         success   = true;
       }
       break;
     case 'm': // mcp
       pluginID  = PLUGIN_MCP;
-      logPrefix = String(F("MCP"));
+      logPrefix = F("MCP");
       success   = true;
       break;
   }
@@ -343,8 +353,12 @@ const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const 
     createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, !event->Par2);
     GPIO_Write(pluginID, event->Par1, !event->Par2);
 
-    String log = logPrefix + String(F(" : port ")) + String(event->Par1);
-    log += String(F(". Pulse set for ")) + String(event->Par3) + String(F(" ms"));
+    String log = logPrefix;
+    log += F(" : port ");
+    log += event->Par1;
+    log += F(". Pulse set for ");
+    log += event->Par3;
+    log += F(" ms");
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
@@ -389,7 +403,11 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
         createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, !state);
         GPIO_Write(pluginID, event->Par1, !state);
 
-        String log = logPrefix + String(F(" toggle: port#")) + String(event->Par1) + String(F(": set to ")) + String(!state);
+        String log = logPrefix;
+        log += F(" toggle: port#");
+        log += event->Par1;
+        log += F(": set to ");
+        log += !state;
         addLog(LOG_LEVEL_ERROR, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
@@ -462,7 +480,11 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
 
       if ((mode == PIN_MODE_OUTPUT) || (pluginID == PLUGIN_PCF)) { GPIO_Write(pluginID, event->Par1, state, mode); }
 
-      String log = logPrefix + String(F(" : port#")) + String(event->Par1) + String(F(": set to ")) + String(state);
+      String log = logPrefix;
+      log += F(" : port#");
+      log += event->Par1;
+      log += F(": set to ");
+      log += state;
       addLog(LOG_LEVEL_INFO, log);
       SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       return return_command_success();
@@ -479,7 +501,7 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
 void logErrorGpio(const String& prefix, int port, const String& description)
 {
   if (port >= 0) {
-    addLog(LOG_LEVEL_ERROR, prefix + String(F(" : port#")) + String(port) + description);
+    addLog(LOG_LEVEL_ERROR, prefix + F(" : port#") + String(port) + description);
   }
 }
 

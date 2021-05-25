@@ -168,7 +168,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
   {
     char hostname[PLUGIN_089_HOSTNAME_SIZE];
     LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
-    addFormTextBox(String(F("Hostname")), F("p089_ping_host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
+    addFormTextBox(F("Hostname"), F("p089_ping_host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
     success = true;
     break;
   }

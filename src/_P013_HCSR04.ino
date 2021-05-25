@@ -31,6 +31,9 @@
 // map of sensors
 std::map<unsigned int, std::shared_ptr<NewPingESP8266> > P_013_sensordefs;
 
+// Forward declaration
+const __FlashStringHelper * Plugin_013_getErrorStatusString(taskIndex_t taskIndex);
+
 boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 {
   static byte switchstate[TASKS_MAX];
@@ -222,20 +225,23 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
         if (operatingMode == OPMODE_VALUE)
         {
-          float value = Plugin_013_read(event->TaskIndex);
-          String log = F("ULTRASONIC : TaskNr: ");
-          log += event->TaskIndex +1;
-          log += F(" Distance: ");
+          const float value = Plugin_013_read(event->TaskIndex);
           UserVar[event->BaseVarIndex] = value;
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          log += (measuringUnit == UNIT_CM) ? F(" cm ") : F(" inch ");
-          if (value == NO_ECHO)
-          {
-             log += F(" Error: ");
-             log += Plugin_013_getErrorStatusString(event->TaskIndex);
-          }
 
-          addLog(LOG_LEVEL_INFO,log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("ULTRASONIC : TaskNr: ");
+            log += event->TaskIndex +1;
+            log += F(" Distance: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
+            log += (measuringUnit == UNIT_CM) ? F(" cm ") : F(" inch ");
+            if (value == NO_ECHO)
+            {
+              log += F(" Error: ");
+              log += Plugin_013_getErrorStatusString(event->TaskIndex);
+            }
+
+            addLog(LOG_LEVEL_INFO,log);
+          }
         }
         success = true;
         break;
@@ -268,11 +274,13 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
             }
           }
           else {
-            String log = F("ULTRASONIC : TaskNr: ");
-            log += event->TaskIndex +1;
-            log += F(" Error: ");
-            log += Plugin_013_getErrorStatusString(event->TaskIndex);
-            addLog(LOG_LEVEL_INFO,log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("ULTRASONIC : TaskNr: ");
+              log += event->TaskIndex +1;
+              log += F(" Error: ");
+              log += Plugin_013_getErrorStatusString(event->TaskIndex);
+              addLog(LOG_LEVEL_INFO,log);
+            }
           }
 
         }
@@ -316,43 +324,43 @@ float Plugin_013_read(taskIndex_t taskIndex)
 }
 
 /*********************************************************************/
-String Plugin_013_getErrorStatusString(taskIndex_t taskIndex)
+const __FlashStringHelper * Plugin_013_getErrorStatusString(taskIndex_t taskIndex)
 /*********************************************************************/
 {
   if (P_013_sensordefs.count(taskIndex) == 0)
-    return String(F("invalid taskindex"));
+    return F("invalid taskindex");
 
   switch ((P_013_sensordefs[taskIndex])->getErrorState()) {
     case NewPingESP8266::STATUS_SENSOR_READY: {
-      return String(F("Sensor ready"));
+      return F("Sensor ready");
     }
 
     case NewPingESP8266::STATUS_MEASUREMENT_VALID: {
-      return String(F("no error, measurement valid"));
+      return F("no error, measurement valid");
     }
 
     case NewPingESP8266::STATUS_ECHO_TRIGGERED: {
-      return String(F("Echo triggered, waiting for Echo end"));
+      return F("Echo triggered, waiting for Echo end");
     }
 
     case NewPingESP8266::STATUS_ECHO_STATE_ERROR: {
-      return String(F("Echo pulse error, Echopin not low on trigger"));
+      return F("Echo pulse error, Echopin not low on trigger");
     }
 
     case NewPingESP8266::STATUS_ECHO_START_TIMEOUT_50ms: {
-      return String(F("Echo timeout error, no echo start whithin 50 ms"));
+      return F("Echo timeout error, no echo start whithin 50 ms");
     }
 
     case NewPingESP8266::STATUS_ECHO_START_TIMEOUT_DISTANCE: {
-      return String(F("Echo timeout error, no echo start whithin time for max. distance"));
+      return F("Echo timeout error, no echo start whithin time for max. distance");
     }
 
     case NewPingESP8266::STATUS_MAX_DISTANCE_EXCEEDED: {
-      return String(F("Echo too late, maximum distance exceeded"));
+      return F("Echo too late, maximum distance exceeded");
     }
 
     default: {
-      return String(F("unknown error"));
+      return F("unknown error");
     }
 
   }

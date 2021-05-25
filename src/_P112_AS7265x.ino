@@ -261,25 +261,27 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
           P112_data->sensor.setBulbCurrent(PCONFIG(3), AS7265x_LED_IR);
           P112_data->sensor.setBulbCurrent(PCONFIG(4), AS7265x_LED_UV);
 
-          String log = F("AS7265X: AMS Device Type: 0x");
-          log += P112_data->sensor.getDeviceType();
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("AS7265X: AMS Device Type: 0x");
+            log += P112_data->sensor.getDeviceType();
+            addLog(LOG_LEVEL_INFO, log);
 
-          log = F("AS7265X: AMS Hardware Version: 0x");
-          log += P112_data->sensor.getHardwareVersion();
-          addLog(LOG_LEVEL_INFO, log);
+            log = F("AS7265X: AMS Hardware Version: 0x");
+            log += P112_data->sensor.getHardwareVersion();
+            addLog(LOG_LEVEL_INFO, log);
 
-          log = F("AS7265X: AMS Major Firmware Version: 0x");
-          log += P112_data->sensor.getMajorFirmwareVersion();
-          addLog(LOG_LEVEL_INFO, log);
+            log = F("AS7265X: AMS Major Firmware Version: 0x");
+            log += P112_data->sensor.getMajorFirmwareVersion();
+            addLog(LOG_LEVEL_INFO, log);
 
-          log = F("AS7265X: AMS Patch Firmware Version: 0x");
-          log += P112_data->sensor.getPatchFirmwareVersion();
-          addLog(LOG_LEVEL_INFO, log)
+            log = F("AS7265X: AMS Patch Firmware Version: 0x");
+            log += P112_data->sensor.getPatchFirmwareVersion();
+            addLog(LOG_LEVEL_INFO, log);
 
-          log = F("AS7265X: AMS Build Firmware Version: 0x");
-          log += P112_data->sensor.getBuildFirmwareVersion();
-          addLog(LOG_LEVEL_INFO, log)
+            log = F("AS7265X: AMS Build Firmware Version: 0x");
+            log += P112_data->sensor.getBuildFirmwareVersion();
+            addLog(LOG_LEVEL_INFO, log);
+          }
 
           success = true;
         } else {
@@ -308,130 +310,59 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
               P112_data->sensor.disableBulb(AS7265x_LED_IR);
               P112_data->sensor.disableBulb(AS7265x_LED_UV);
 
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("410=")) + P112_data->sensor.getCalibratedA());
-              } else {
-                eventQueue.add(RuleEvent + String(F("410=")) + P112_data->sensor.getA());
-              }
+              queueEvent(event->TaskIndex, 410, PCONFIG(6) ? P112_data->sensor.getCalibratedA() : P112_data->sensor.getA());
               break;
             case 2:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("435=")) + P112_data->sensor.getCalibratedB());
-              } else {
-                eventQueue.add(RuleEvent + String(F("435=")) + P112_data->sensor.getB());
-              }
+              queueEvent(event->TaskIndex, 435, PCONFIG(6) ? P112_data->sensor.getCalibratedB() : P112_data->sensor.getB());
               break;
             case 3:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("460=")) + P112_data->sensor.getCalibratedC());
-              } else {
-                eventQueue.add(RuleEvent + String(F("460=")) + P112_data->sensor.getC());
-              }
+              queueEvent(event->TaskIndex, 460, PCONFIG(6) ? P112_data->sensor.getCalibratedC() : P112_data->sensor.getC());
               break;
             case 4:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("485=")) + P112_data->sensor.getCalibratedD());
-              } else {
-                eventQueue.add(RuleEvent + String(F("485=")) + P112_data->sensor.getD());
-              }
+              queueEvent(event->TaskIndex, 485, PCONFIG(6) ? P112_data->sensor.getCalibratedD() : P112_data->sensor.getD());
               break;
             case 5:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("510=")) + P112_data->sensor.getCalibratedE());
-              } else {
-                eventQueue.add(RuleEvent + String(F("510=")) + P112_data->sensor.getE());
-              }
+              queueEvent(event->TaskIndex, 510, PCONFIG(6) ? P112_data->sensor.getCalibratedE() : P112_data->sensor.getE());
               break;
             case 6:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("535=")) + P112_data->sensor.getCalibratedF());
-              } else {
-                eventQueue.add(RuleEvent + String(F("535=")) + P112_data->sensor.getF());
-              }
+              queueEvent(event->TaskIndex, 535, PCONFIG(6) ? P112_data->sensor.getCalibratedF() : P112_data->sensor.getF());
               break;
             case 7:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("560=")) + P112_data->sensor.getCalibratedG());
-              } else {
-                eventQueue.add(RuleEvent + String(F("560=")) + P112_data->sensor.getG());
-              }
+              queueEvent(event->TaskIndex, 560, PCONFIG(6) ? P112_data->sensor.getCalibratedG() : P112_data->sensor.getG());
               break;
             case 8:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("585=")) + P112_data->sensor.getCalibratedH());
-              } else {
-                eventQueue.add(RuleEvent + String(F("585=")) + P112_data->sensor.getH());
-              }
+              queueEvent(event->TaskIndex, 585, PCONFIG(6) ? P112_data->sensor.getCalibratedH() : P112_data->sensor.getH());
               break;
             case 9:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("610=")) + P112_data->sensor.getCalibratedR());
-              } else {
-                eventQueue.add(RuleEvent + String(F("610=")) + P112_data->sensor.getR());
-              }
+              queueEvent(event->TaskIndex, 610, PCONFIG(6) ? P112_data->sensor.getCalibratedR() : P112_data->sensor.getR());
               break;
             case 10:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("645=")) + P112_data->sensor.getCalibratedI());
-              } else {
-                eventQueue.add(RuleEvent + String(F("645=")) + P112_data->sensor.getI());
-              }
+              queueEvent(event->TaskIndex, 645, PCONFIG(6) ? P112_data->sensor.getCalibratedI() : P112_data->sensor.getI());
               break;
             case 11:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("680=")) + P112_data->sensor.getCalibratedS());
-              } else {
-                eventQueue.add(RuleEvent + String(F("680=")) + P112_data->sensor.getS());
-              }
+              queueEvent(event->TaskIndex, 680, PCONFIG(6) ? P112_data->sensor.getCalibratedS() : P112_data->sensor.getS());
               break;
             case 12:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("705=")) + P112_data->sensor.getCalibratedJ());
-              } else {
-                eventQueue.add(RuleEvent + String(F("705=")) + P112_data->sensor.getJ());
-              }
+              queueEvent(event->TaskIndex, 705, PCONFIG(6) ? P112_data->sensor.getCalibratedJ() : P112_data->sensor.getJ());
               break;
             case 13:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("730=")) + P112_data->sensor.getCalibratedT());
-              } else {
-                eventQueue.add(RuleEvent + String(F("730=")) + P112_data->sensor.getT());
-              }
+              queueEvent(event->TaskIndex, 730, PCONFIG(6) ? P112_data->sensor.getCalibratedT() : P112_data->sensor.getT());
               break;
             case 14:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("760=")) + P112_data->sensor.getCalibratedU());
-              } else {
-                eventQueue.add(RuleEvent + String(F("760=")) + P112_data->sensor.getU());
-              }
+              queueEvent(event->TaskIndex, 760, PCONFIG(6) ? P112_data->sensor.getCalibratedU() : P112_data->sensor.getU());
               break;
             case 15:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("810=")) + P112_data->sensor.getCalibratedV());
-              } else {
-                eventQueue.add(RuleEvent + String(F("810=")) + P112_data->sensor.getV());
-              }
+              queueEvent(event->TaskIndex, 810, PCONFIG(6) ? P112_data->sensor.getCalibratedV() : P112_data->sensor.getV());
               break;
             case 16:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("860=")) + P112_data->sensor.getCalibratedW());
-              } else {
-                eventQueue.add(RuleEvent + String(F("860=")) + P112_data->sensor.getW());
-              }
+              queueEvent(event->TaskIndex, 860, PCONFIG(6) ? P112_data->sensor.getCalibratedW() : P112_data->sensor.getW());
               break;
             case 17:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("900=")) + P112_data->sensor.getCalibratedK());
-              } else {
-                eventQueue.add(RuleEvent + String(F("900=")) + P112_data->sensor.getK());
-              }
+              queueEvent(event->TaskIndex, 900, PCONFIG(6) ? P112_data->sensor.getCalibratedK() : P112_data->sensor.getK());
               break;
             case 18:
-              if (PCONFIG(6)) {
-                eventQueue.add(RuleEvent + String(F("940=")) + P112_data->sensor.getCalibratedL());
-              } else {
-                eventQueue.add(RuleEvent + String(F("940=")) + P112_data->sensor.getL());
-              }
+              queueEvent(event->TaskIndex, 940, PCONFIG(6) ? P112_data->sensor.getCalibratedL() : P112_data->sensor.getL());
+              
               P112_data->MeasurementStatus = 0;
               UserVar[event->BaseVarIndex + 2] = 0;
               if (PCONFIG(0)) // Blue Status LED
@@ -479,6 +410,16 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
     }
   }
   return success;
+}
+
+void queueEvent(taskIndex_t TaskIndex, int wavelength, float value) {
+  String RuleEvent;
+  RuleEvent  = getTaskDeviceName(TaskIndex);
+  RuleEvent += '#';
+  RuleEvent += wavelength;
+  RuleEvent += '=';
+  RuleEvent += String(value, 2);
+  eventQueue.add(RuleEvent);
 }
 
 #endif // USES_P112
