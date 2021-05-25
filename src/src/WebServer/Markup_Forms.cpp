@@ -31,7 +31,13 @@ void addFormSeparator(int clspan)
 // ********************************************************************************
 void addFormNote(const __FlashStringHelper * text)
 {
-  addFormNote(String(text));
+  addRowLabel_tr_id(F(""), F(""));
+  addHtml(F(" <div "));
+  addHtmlAttribute(F("class"), F("note"));
+  addHtml('>');
+  addHtml(F("Note: "));
+  addHtml(text);
+  addHtml(F("</div>"));
 }
 
 void addFormNote(const String& text, const String& id)

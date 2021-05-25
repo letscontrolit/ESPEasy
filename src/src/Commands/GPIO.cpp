@@ -42,7 +42,7 @@ bool pcfgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t &result);
 
 /*************************************************************************/
 
-String Command_GPIO_Monitor(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_Monitor(struct EventStruct *event, const char *Line)
 {
   if (gpio_monitor_helper(event->Par2, event, Line)) {
     return return_command_success();
@@ -52,7 +52,7 @@ String Command_GPIO_Monitor(struct EventStruct *event, const char *Line)
   }
 }
 
-String Command_GPIO_MonitorRange(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_MonitorRange(struct EventStruct *event, const char *Line)
 {
   bool success = true;
 
@@ -84,7 +84,7 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
 
     if (state == -1) { globalMapPortStatus[key].mode = PIN_MODE_OFFLINE; }
 
-    String log = logPrefix + String(F(" port #")) + String(port) + String(F(": added to monitor list."));
+    String log = logPrefix + F(" port #") + String(port) + F(": added to monitor list.");
     addLog(LOG_LEVEL_INFO, log);
     String dummy;
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
@@ -96,7 +96,7 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
   }
 }
 
-String Command_GPIO_UnMonitor(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_UnMonitor(struct EventStruct *event, const char *Line)
 {
   if (gpio_unmonitor_helper(event->Par2, event, Line)) {
     return return_command_success();
@@ -106,7 +106,7 @@ String Command_GPIO_UnMonitor(struct EventStruct *event, const char *Line)
   }
 }
 
-String Command_GPIO_UnMonitorRange(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_UnMonitorRange(struct EventStruct *event, const char *Line)
 {
   bool success = true;
 
@@ -131,7 +131,7 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
 
     removeMonitorFromPort(key);
-    String log = logPrefix + String(F(" port #")) + String(port) + String(F(": removed from monitor list."));
+    String log = logPrefix + F(" port #") + String(port) + F(": removed from monitor list.");
     addLog(LOG_LEVEL_INFO, log);
 
     return true;
@@ -141,13 +141,13 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
   }
 }
 
-String Command_GPIO_LongPulse(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_LongPulse(struct EventStruct *event, const char *Line)
 {
   event->Par3 = event->Par3 * 1000;
   return Command_GPIO_LongPulse_Ms(event, Line);
 }
 
-String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char *Line)
 {
   String logPrefix; // = ;
   pluginID_t pluginID = INVALID_PLUGIN_ID;
@@ -163,8 +163,12 @@ String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char *Line)
 
     Scheduler.setGPIOTimer(event->Par3, pluginID, event->Par1, !event->Par2);
 
-    String log = logPrefix + String(F(" : port ")) + String(event->Par1);
-    log += String(F(". Pulse set for ")) + String(event->Par3) + String(F(" ms"));
+    String log = logPrefix;
+    log += F(" : port ");
+    log += event->Par1;
+    log += F(". Pulse set for ");
+    log += event->Par3;
+    log += F(" ms");
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
@@ -175,7 +179,7 @@ String Command_GPIO_LongPulse_Ms(struct EventStruct *event, const char *Line)
   }
 }
 
-String Command_GPIO_Status(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const char *Line)
 {
   bool success = true;
   bool sendStatusFlag;
@@ -210,7 +214,7 @@ String Command_GPIO_Status(struct EventStruct *event, const char *Line)
   }
 }
 
-String Command_GPIO_PWM(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const char *Line)
 {
   // Par1: GPIO
   // Par2: Duty Cycle
@@ -218,7 +222,7 @@ String Command_GPIO_PWM(struct EventStruct *event, const char *Line)
   // Par4: Frequency
 
   // For now, we only support the internal GPIO pins.
-  String   logPrefix = F("GPIO");
+  const __FlashStringHelper * logPrefix = F("GPIO");
   uint32_t frequency = event->Par4;
   uint32_t key       = 0;
 
@@ -250,7 +254,7 @@ String Command_GPIO_PWM(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
-String Command_GPIO_Tone(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_Tone(struct EventStruct *event, const char *Line)
 {
   // play a tone on pin par1, with frequency par2 and duration in msec par3.
   unsigned long duration   = event->Par3;
@@ -272,7 +276,7 @@ String Command_GPIO_Tone(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
-String Command_GPIO_RTTTL(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const char *Line)
 {
   #ifdef USE_RTTTL
 
@@ -300,7 +304,7 @@ String Command_GPIO_RTTTL(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
-String Command_GPIO_Pulse(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const char *Line)
 {
   String logPrefix;
   bool   success  = false;
@@ -351,7 +355,7 @@ String Command_GPIO_Pulse(struct EventStruct *event, const char *Line)
   }
 }
 
-String Command_GPIO_Toggle(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const char *Line)
 {
   String logPrefix;
   pluginID_t pluginID = INVALID_PLUGIN_ID;
@@ -407,7 +411,7 @@ String Command_GPIO_Toggle(struct EventStruct *event, const char *Line)
   }
 }
 
-String Command_GPIO(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *Line)
 {
   String logPrefix; // = new char;
   pluginID_t pluginID = INVALID_PLUGIN_ID;
@@ -688,12 +692,12 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
 **     mask = 973 = '1111001101'
 **     write pattern after mask = '1000xx11x1' where x indicates that the pin will not be changed
 ******************************************************************************/
-String Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char *Line)
 {
   return mcpgpio_range_pattern_helper(event, Line, true) ? return_command_success() : return_command_failed();
 }
 
-String Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char *Line)
 {
   return pcfgpio_range_pattern_helper(event, Line, true) ? return_command_success() : return_command_failed();
 }
@@ -717,12 +721,12 @@ String Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char *Line)
 **     mask = 973 = '1111001101'
 **     write pattern after mask = '1111xx11x1' where x indicates that the pin will not be changed
 ******************************************************************************/
-String Command_GPIO_McpGPIORange(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_McpGPIORange(struct EventStruct *event, const char *Line)
 {
   return mcpgpio_range_pattern_helper(event, Line, false) ? return_command_success() : return_command_failed();
 }
 
-String Command_GPIO_PcfGPIORange(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_PcfGPIORange(struct EventStruct *event, const char *Line)
 {
   return pcfgpio_range_pattern_helper(event, Line, false) ? return_command_success() : return_command_failed();
 }
@@ -917,7 +921,7 @@ bool setPCFMode(byte pin, byte mode)
  *             1 = INPUT PULLUP or INPUT PULLDOWN (only for GPIO16)
  *             2 = INPUT
  **********************************************/
-String Command_GPIO_Mode(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_Mode(struct EventStruct *event, const char *Line)
 {
   if (gpio_mode_range_helper(event->Par1, event->Par2, event, Line)) {
     return return_command_success();
@@ -927,7 +931,7 @@ String Command_GPIO_Mode(struct EventStruct *event, const char *Line)
   }
 }
 
-String Command_GPIO_ModeRange(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_GPIO_ModeRange(struct EventStruct *event, const char *Line)
 {
   bool success = true;
 
@@ -1022,7 +1026,7 @@ bool getGPIOPinStateValues(String& str) {
   // parseString(string, 2) = command (pinstate,pinrange)
   // parseString(string, 3) = gpio 1st number or a range separated by '-'
   bool   success = false;
-  String logPrefix;
+  const __FlashStringHelper * logPrefix = F("");
   const String device     = parseString(str, 1);
   const String command    = parseString(str, 2);
   const String gpio_descr = parseString(str, 3);
@@ -1063,10 +1067,10 @@ bool getGPIOPinStateValues(String& str) {
 
     if (success) {
       #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, logPrefix + String(F(" PLUGIN PINSTATE pin =")) + String(par1) + String(F("; value=")) + str);
+      addLog(LOG_LEVEL_DEBUG, String(logPrefix) + F(" PLUGIN PINSTATE pin =") + String(par1) + F("; value=") + str);
       #endif // ifndef BUILD_NO_DEBUG
     } else {
-      addLog(LOG_LEVEL_ERROR, logPrefix + String(F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric")));
+      addLog(LOG_LEVEL_ERROR, String(logPrefix) + F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric"));
     }
   } else if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinrange"))) {
     // returns pin value using syntax: [plugin#xxxxxxx#pinrange#x-y]
@@ -1100,17 +1104,17 @@ bool getGPIOPinStateValues(String& str) {
       if (success) {
         #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG,
-               logPrefix + String(F(" PLUGIN RANGE pin start=")) + String(par1) + String(F("; pin end=")) + String(par2) + String(F(
+               String(logPrefix) + F(" PLUGIN RANGE pin start=") + String(par1) + F("; pin end=") + String(par2) + String(F(
                                                                                                                                     "; value=")) +
                str);
         #endif // ifndef BUILD_NO_DEBUG
       } else {
         addLog(LOG_LEVEL_ERROR,
-               logPrefix + String(F(" IS OFFLINE. PLUGIN RANGE pin start=")) + String(par1) + String(F("; pin end=")) + String(par2) +
-               String(F("; value=")) + str);
+               String(logPrefix) + F(" IS OFFLINE. PLUGIN RANGE pin start=") + String(par1) + F("; pin end=") + String(par2) +
+               F("; value=") + str);
       }
     } else {
-      addLog(LOG_LEVEL_ERROR, logPrefix + String(F(" PLUGIN PINRANGE. Syntax error. Pin parameters are not numeric.")));
+      addLog(LOG_LEVEL_ERROR, String(logPrefix) + F(" PLUGIN PINRANGE. Syntax error. Pin parameters are not numeric."));
     }
   } else {
     addLog(LOG_LEVEL_ERROR, String(F("Syntax error. Invalid command. Valid commands are 'pinstate' and 'pinrange'.")));

@@ -134,6 +134,15 @@ command_case_data::command_case_data(const char *cmd, struct EventStruct *event,
 // Wrapper to reduce generated code by macro
 bool do_command_case_all(command_case_data         & data,
                          const String              & cmd_test,
+                         command_function_fs         pFunc,
+                         int                         nrArguments)
+{
+  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
+}
+
+
+bool do_command_case_all(command_case_data         & data,
+                         const String              & cmd_test,
                          command_function            pFunc,
                          int                         nrArguments)
 {
@@ -143,6 +152,15 @@ bool do_command_case_all(command_case_data         & data,
 // Wrapper to reduce generated code by macro
 bool do_command_case_all_restricted(command_case_data         & data,
                                     const String              & cmd_test,
+                                    command_function_fs         pFunc,
+                                    int                         nrArguments)
+{
+  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
+}
+
+
+bool do_command_case_all_restricted(command_case_data         & data,
+                                    const String              & cmd_test,
                                     command_function            pFunc,
                                     int                         nrArguments)
 {
@@ -150,12 +168,10 @@ bool do_command_case_all_restricted(command_case_data         & data,
 }
 
 
-
-bool do_command_case(command_case_data         & data,
-                     const String              & cmd_test,
-                     command_function            pFunc,
-                     int                         nrArguments,
-                     EventValueSourceGroup::Enum group)
+bool do_command_case_check(command_case_data         & data,
+                          const String              & cmd_test,
+                          int                         nrArguments,
+                          EventValueSourceGroup::Enum group)
 {
   // The data struct is re-used on each attempt to process an internal command.
   // Re-initialize the only two members that may have been altered by a previous call.
@@ -180,10 +196,38 @@ bool do_command_case(command_case_data         & data,
       data.retval = false;
       return true; // Command is handled
     }
-  } 
-  data.status = pFunc(data.event, data.line);
-  data.retval = true;
+  }
+  data.retval = true; // Mark the command should be executed.
   return true; // Command is handled
+}
+
+bool do_command_case(command_case_data         & data,
+                     const String              & cmd_test,
+                     command_function_fs         pFunc,
+                     int                         nrArguments,
+                     EventValueSourceGroup::Enum group)
+{
+  if (do_command_case_check(data, cmd_test, nrArguments, group)) {
+    // It has been handled, check if we need to execute it.
+    data.status = pFunc(data.event, data.line);
+    return true;
+  }
+  return false;
+}
+
+
+bool do_command_case(command_case_data         & data,
+                     const String              & cmd_test,
+                     command_function            pFunc,
+                     int                         nrArguments,
+                     EventValueSourceGroup::Enum group)
+{
+  if (do_command_case_check(data, cmd_test, nrArguments, group)) {
+    // It has been handled, check if we need to execute it.
+    data.status = pFunc(data.event, data.line);
+    return true;
+  }
+  return false;
 }
 
 bool executeInternalCommand(command_case_data & data)
