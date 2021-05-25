@@ -8,7 +8,9 @@
 // HTML string re-use to keep the executable smaller
 // Flash strings are not checked for duplication.
 // ********************************************************************************
+void wrap_html_tag(const __FlashStringHelper * tag, const String& text);
 void wrap_html_tag(const String& tag, const String& text);
+void wrap_html_tag(char tag, const String& text);
 
 void html_B(const String& text);
 
@@ -89,6 +91,7 @@ void html_add_form();
 
 void html_add_autosubmit_form();
 
+void html_add_script(const __FlashStringHelper * script, bool defer);
 void html_add_script(const String& script, bool defer);
 
 void html_add_script(bool defer);
@@ -96,6 +99,7 @@ void html_add_script(bool defer);
 void html_add_script_end();
 
 // if there is an error-string, add it to the html code with correct formatting
+void addHtmlError(const __FlashStringHelper * error);
 void addHtmlError(const String& error);
 
 void addHtml(const char& html);

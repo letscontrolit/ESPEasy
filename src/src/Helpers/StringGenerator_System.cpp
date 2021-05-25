@@ -14,7 +14,7 @@
 #include <PubSubClient.h>
 #include "../Globals/MQTT.h"
 
-String getMQTT_state() {
+const __FlashStringHelper * getMQTT_state() {
   switch (MQTTclient.state()) {
     case MQTT_CONNECTION_TIMEOUT: return F("Connection timeout");
     case MQTT_CONNECTION_LOST: return F("Connection lost");
@@ -28,7 +28,7 @@ String getMQTT_state() {
     case MQTT_CONNECT_UNAUTHORIZED: return F("Connect unauthorized");
     default: break;
   }
-  return "";
+  return F("");
 }
 
 #endif // USES_MQTT
@@ -36,7 +36,7 @@ String getMQTT_state() {
 /********************************************************************************************\
    Get system information
  \*********************************************************************************************/
-String getLastBootCauseString() {
+const __FlashStringHelper * getLastBootCauseString() {
   switch (lastBootCause)
   {
     case BOOT_CAUSE_MANUAL_REBOOT: return F("Manual Reboot");
@@ -48,7 +48,7 @@ String getLastBootCauseString() {
     case BOOT_CAUSE_EXCEPTION:     return F("Exception");
     case BOOT_CAUSE_POWER_UNSTABLE: return F("PWR Unstable"); // ESP32 only
   }
-  return getUnknownString();
+  return F("Unknown");
 }
 
 #ifdef ESP32

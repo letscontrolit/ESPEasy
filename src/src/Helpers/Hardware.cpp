@@ -490,7 +490,7 @@ uint8_t getChipCores() {
   return cores;
 }
 
-String getChipModel() {
+const __FlashStringHelper * getChipModel() {
 #ifdef ESP32
   {
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
@@ -584,7 +584,7 @@ void readBootCause() {
 /********************************************************************************************\
    Hardware specific configurations
  \*********************************************************************************************/
-String getDeviceModelBrandString(DeviceModel model) {
+const __FlashStringHelper * getDeviceModelBrandString(DeviceModel model) {
   switch (model) {
     case DeviceModel_Sonoff_Basic:
     case DeviceModel_Sonoff_TH1x:
@@ -616,7 +616,7 @@ String getDeviceModelBrandString(DeviceModel model) {
 
       // Do not use default: as this allows the compiler to detect any missing cases.
   }
-  return "";
+  return F("");
 }
 
 String getDeviceModelString(DeviceModel model) {

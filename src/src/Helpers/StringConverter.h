@@ -148,6 +148,10 @@ bool   isParameterSeparatorChar(char c);
 String stripQuotes(const String& text);
 
 bool   safe_strncpy(char         *dest,
+                    const __FlashStringHelper * source,
+                    size_t        max_size);
+
+bool   safe_strncpy(char         *dest,
                     const String& source,
                     size_t        max_size);
 

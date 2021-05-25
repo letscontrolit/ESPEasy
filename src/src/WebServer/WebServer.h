@@ -69,11 +69,11 @@ void   getWebPageTemplateDefaultFooter(String& tmpl);
 
 void   getErrorNotifications();
 
-String getGpMenuIcon(byte index);
+const __FlashStringHelper * getGpMenuIcon(byte index);
 
-String getGpMenuLabel(byte index);
+const __FlashStringHelper * getGpMenuLabel(byte index);
 
-String getGpMenuURL(byte index);
+const __FlashStringHelper * getGpMenuURL(byte index);
 
 bool   GpMenuVisible(byte index);
 

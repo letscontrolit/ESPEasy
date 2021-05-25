@@ -13,7 +13,7 @@
 \*********************************************************************************************/
 byte getValueCountFromSensorType(Sensor_VType sensorType);
 
-String getSensorTypeLabel(Sensor_VType sensorType);
+const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType);
 
 void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, byte pconfigIndex);
 

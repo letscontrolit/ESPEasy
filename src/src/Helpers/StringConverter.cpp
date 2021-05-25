@@ -465,6 +465,13 @@ String stripQuotes(const String& text) {
   return text;
 }
 
+bool safe_strncpy(char         *dest,
+                  const __FlashStringHelper * source,
+                  size_t        max_size) 
+{
+  return safe_strncpy(dest, String(source), max_size);
+}
+
 bool safe_strncpy(char *dest, const String& source, size_t max_size) {
   return safe_strncpy(dest, source.c_str(), max_size);
 }

@@ -104,6 +104,14 @@ void addDeleteButton(const String& url, const String& label)
 #endif // ifdef BUILD_MINIMAL_OTA
 }
 
+void addWideButton(const __FlashStringHelper * url, const __FlashStringHelper * label) {
+  html_add_wide_button_prefix(F(""), true);
+  addHtml(url);
+  addHtml("'>");
+  addHtml(label);
+  addHtml(F("</a>"));
+}
+
 void addWideButton(const String& url, const String& label) {
   addWideButton(url, label, F(""), true);
 }
@@ -115,14 +123,10 @@ void addWideButton(const String& url, const String& label, const String& classes
 void addWideButton(const String& url, const String& label, const String& classes, bool enabled)
 {
   html_add_wide_button_prefix(classes, enabled);
-  String html;
-
-  html.reserve(8 + url.length() + label.length());
-  html += url;
-  html += "'>";
-  html += label;
-  html += F("</a>");
-  addHtml(html);
+  addHtml(url);
+  addHtml(F("'>"));
+  addHtml(label);
+  addHtml(F("</a>"));
 }
 
 void addSubmitButton()

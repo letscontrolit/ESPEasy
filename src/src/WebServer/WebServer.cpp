@@ -583,7 +583,7 @@ void getErrorNotifications() {
 byte navMenuIndex = MENU_INDEX_MAIN;
 
 // See https://github.com/letscontrolit/ESPEasy/issues/1650
-String getGpMenuIcon(byte index) {
+const __FlashStringHelper * getGpMenuIcon(byte index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("&#8962;");
     case MENU_INDEX_CONFIG: return F("&#9881;");
@@ -594,10 +594,10 @@ String getGpMenuIcon(byte index) {
     case MENU_INDEX_NOTIFICATIONS: return F("&#9993;");
     case MENU_INDEX_TOOLS: return F("&#128295;");
   }
-  return "";
+  return F("");
 }
 
-String getGpMenuLabel(byte index) {
+const __FlashStringHelper * getGpMenuLabel(byte index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("Main");
     case MENU_INDEX_CONFIG: return F("Config");
@@ -608,10 +608,10 @@ String getGpMenuLabel(byte index) {
     case MENU_INDEX_NOTIFICATIONS: return F("Notifications");
     case MENU_INDEX_TOOLS: return F("Tools");
   }
-  return "";
+  return F("");
 }
 
-String getGpMenuURL(byte index) {
+const __FlashStringHelper * getGpMenuURL(byte index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("/");
     case MENU_INDEX_CONFIG: return F("/config");
@@ -622,7 +622,7 @@ String getGpMenuURL(byte index) {
     case MENU_INDEX_NOTIFICATIONS: return F("/notifications");
     case MENU_INDEX_TOOLS: return F("/tools");
   }
-  return "";
+  return F("");
 }
 
 

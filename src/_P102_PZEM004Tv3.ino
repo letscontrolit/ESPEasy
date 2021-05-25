@@ -46,6 +46,12 @@ boolean Plugin_102_init    = false;
 uint8_t P102_PZEM_ADDR_SET = 0; // Flag for status of programmation/Energy reset: 0=Reading / 1=Prog confirmed / 3=Prog done / 4=Reset
                                 // energy done
 
+// Forward declaration helper function
+const __FlashStringHelper * p102_getQueryString(byte query);
+
+
+
+
 boolean Plugin_102(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -352,7 +358,7 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-String p102_getQueryString(byte query) {
+const __FlashStringHelper * p102_getQueryString(byte query) {
   switch (query)
   {
     case 0: return F("Voltage_V");
@@ -362,7 +368,7 @@ String p102_getQueryString(byte query) {
     case 4: return F("Power_Factor_cosphi");
     case 5: return F("Frequency Hz");
   }
-  return "";
+  return F("");
 }
 
 #endif // USES_P102

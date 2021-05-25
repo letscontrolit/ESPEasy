@@ -137,14 +137,16 @@ void handle_tools() {
       addWideButton(F("update"), F("Update Firmware"), F(""), otaEnabled);
       addHelpButton(F("EasyOTA"));
       html_TD();
-      addHtml(F("Load a new firmware"));
+      addHtml(F("Load a new firmware "));
 
       if (otaEnabled) {
         if (use2step) {
-          addHtml(F(" <b>WARNING</b> only use 2-step OTA update."));
+          html_B(F("WARNING"));
+          addHtml(F(" only use 2-step OTA update."));
         }
       } else {
-        addHtml(F(" <b>WARNING</b> OTA not possible."));
+        html_B(F("WARNING"));
+        addHtml(F(" OTA not possible."));
       }
       addHtml(F(" Max sketch size: "));
       addHtmlInt(maxSketchSize / 1024);

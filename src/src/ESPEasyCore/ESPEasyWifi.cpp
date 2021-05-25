@@ -876,7 +876,7 @@ void setAPinternal(bool enable)
   }
 }
 
-String getWifiModeString(WiFiMode_t wifimode)
+const __FlashStringHelper * getWifiModeString(WiFiMode_t wifimode)
 {
   switch (wifimode) {
     case WIFI_OFF:   return F("OFF");

@@ -391,7 +391,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               label += String(filterSet);
               addRowLabel_tr_id(label, id);
             } else {
-              addHtml(F("<B>AND</>"));
+              html_B(F("AND"));
               html_BR();
             }
 

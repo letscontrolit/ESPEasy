@@ -11,31 +11,46 @@
 // HTML string re-use to keep the executable smaller
 // Flash strings are not checked for duplication.
 // ********************************************************************************
+void wrap_html_tag(const __FlashStringHelper * tag, const String& text) {
+  addHtml('<');
+  addHtml(tag);
+  addHtml('>');
+  addHtml(text);
+  addHtml(F("</"));
+  addHtml(tag);
+  addHtml('>');
+}
+
 void wrap_html_tag(const String& tag, const String& text) {
-  String html;
+  addHtml('<');
+  addHtml(tag);
+  addHtml('>');
+  addHtml(text);
+  addHtml(F("</"));
+  addHtml(tag);
+  addHtml('>');
+}
 
-  html.reserve(6 + (2 * tag.length()) + text.length());
-
-  html += '<';
-  html += tag;
-  html += '>';
-  html += text;
-  html += "</";
-  html += tag;
-  html += '>';
-  addHtml(html);
+void wrap_html_tag(char tag, const String& text) {
+  addHtml('<');
+  addHtml(tag);
+  addHtml('>');
+  addHtml(text);
+  addHtml(F("</"));
+  addHtml(tag);
+  addHtml('>');
 }
 
 void html_B(const String& text) {
-  wrap_html_tag("b", text);
+  wrap_html_tag('b', text);
 }
 
 void html_I(const String& text) {
-  wrap_html_tag("i", text);
+  wrap_html_tag('i', text);
 }
 
 void html_U(const String& text) {
-  wrap_html_tag("u", text);
+  wrap_html_tag('u', text);
 }
 
 void html_TR_TD_highlight() {
@@ -59,14 +74,9 @@ void html_TR() {
 void html_TR_TD_height(int height) {
   html_TR();
 
-  String html;
-
-  html.reserve(20);
-
-  html += F("<TD HEIGHT=\"");
-  html += height;
-  html += "\">";
-  addHtml(html);
+  addHtml(F("<TD HEIGHT=\""));
+  addHtml(String(height));
+  addHtml(F("\">"));
 }
 
 void html_TD() {
@@ -88,14 +98,9 @@ void html_reset_copyTextCounter() {
 void html_copyText_TD() {
   ++copyTextCounter;
 
-  String html;
-
-  html.reserve(24);
-
-  html += F("<TD id='copyText_");
-  html += copyTextCounter;
-  html += "'>";
-  addHtml(html);
+  addHtml(F("<TD id='copyText_"));
+  addHtml(String(copyTextCounter));
+  addHtml(F("'>"));
 }
 
 // Add some recognizable token to show which parts will be copied.
@@ -192,20 +197,15 @@ void html_table_header(const __FlashStringHelper * label, const String& helpButt
 }
 
 void html_table_header(const String& label, const String& helpButton, const String& rtdHelpButton, int width) {
-  String html;
-
-  html.reserve(25 + label.length());
-
-  html += F("<TH");
+  addHtml(F("<TH"));
 
   if (width > 0) {
-    html += F(" style='width:");
-    html += String(width);
-    html += F("px;'");
+    addHtml(F(" style='width:"));
+    addHtml(String(width));
+    addHtml(F("px;'"));
   }
-  html += '>';
-  html += label;
-  addHtml(html);
+  addHtml('>');
+  addHtml(label);
 
   if (helpButton.length() > 0) {
     addHelpButton(helpButton);
@@ -233,17 +233,14 @@ void html_add_button_prefix(const String& classes, bool enabled) {
   addHtml(F(" <a class='button link"));
 
   if (classes.length() > 0) {
-    String html;
-    html.reserve(classes.length() + 1);
-    html += ' ';
-    html += classes;
-    addHtml(html);
+    addHtml(' ');
+    addHtml(classes);
   }
 
   if (!enabled) {
     addDisabled();
   }
-  addHtml("'");
+  addHtml('\'');
 
   if (!enabled) {
     addDisabled();
@@ -274,6 +271,12 @@ void html_add_autosubmit_form() {
             "\n//--></script>"));
 }
 
+void html_add_script(const __FlashStringHelper * script, bool defer) {
+  html_add_script(defer);
+  addHtml(script);
+  html_add_script_end();
+}
+
 void html_add_script(const String& script, bool defer) {
   html_add_script(defer);
   addHtml(script);
@@ -294,25 +297,24 @@ void html_add_script_end() {
 }
 
 // if there is an error-string, add it to the html code with correct formatting
+void addHtmlError(const __FlashStringHelper * error) {
+  addHtmlError(String(error));
+}
+
 void addHtmlError(const String& error) {
   if (error.length() > 0)
   {
-    String html;
-    html.reserve(20);
-    html += F("<div class=\"");
+    addHtml(F("<div class=\""));
 
     if (error.startsWith(F("Warn"))) {
-      html += F("warning");
+      addHtml(F("warning"));
     } else {
-      html += F("alert");
+      addHtml(F("alert"));
     }
-    addHtml(html);
     addHtml(F("\"><span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>"));
     addHtml(error);
     addHtml(F("</div>"));
   }
-  else
-  {}
 }
 
 void addHtml(const char& html) {
@@ -333,10 +335,7 @@ void addHtmlInt(int int_val) {
 
 void addEncodedHtml(const __FlashStringHelper * html) {
   // FIXME TD-er: What about the function htmlStrongEscape ??
-  String copy(html);
-
-  htmlEscape(copy);
-  addHtml(copy);
+  addEncodedHtml(String(html));
 }
 
 void addEncodedHtml(const String& html) {
@@ -418,17 +417,13 @@ void addHtmlDiv(const String& htmlclass, const String& content, const String& id
 
 void addEnabled(boolean enabled)
 {
-  String html;
-
-  html.reserve(40);
-  html += F("<span class='enabled ");
+  addHtml(F("<span class='enabled "));
 
   if (enabled) {
-    html += F("on'>&#10004;");
+    addHtml(F("on'>&#10004;"));
   }
   else {
-    html += F("off'>&#10060;");
+    addHtml(F("off'>&#10060;"));
   }
-  html += F("</span>");
-  addHtml(html);
+  addHtml(F("</span>"));
 }

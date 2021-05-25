@@ -45,7 +45,7 @@ byte getValueCountFromSensorType(Sensor_VType sensorType)
   return 0;
 }
 
-String getSensorTypeLabel(Sensor_VType sensorType) {
+const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType) {
   switch (sensorType) {
     case Sensor_VType::SENSOR_TYPE_SINGLE:           return F("Single");
     case Sensor_VType::SENSOR_TYPE_TEMP_HUM:         return F("Temp / Hum");
@@ -63,7 +63,7 @@ String getSensorTypeLabel(Sensor_VType sensorType) {
     case Sensor_VType::SENSOR_TYPE_NONE:             return F("None");
     case Sensor_VType::SENSOR_TYPE_NOT_SET:  break;
   }
-  return "";
+  return F("");
 }
 
 void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, byte pconfigIndex)

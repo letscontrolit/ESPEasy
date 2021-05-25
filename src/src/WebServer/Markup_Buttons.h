@@ -20,6 +20,7 @@ void addSaveButton(const String& url, const String& label);
 
 void addDeleteButton(const String& url, const String& label);
 
+void addWideButton(const __FlashStringHelper * url, const __FlashStringHelper * label);
 void addWideButton(const String& url, const String& label);
 
 void addWideButton(const String& url, const String& label, const String& classes);
