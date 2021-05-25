@@ -2,17 +2,17 @@
 
 #ifdef USES_DOMOTICZ
 
-#include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataTypes/TaskIndex.h"
+# include "../DataStructs/ESPEasy_EventStruct.h"
+# include "../DataTypes/TaskIndex.h"
 
-#include "../ESPEasyCore/ESPEasy_Log.h"
+# include "../ESPEasyCore/ESPEasy_Log.h"
 
-#include "../Globals/ExtraTaskSettings.h"
+# include "../Globals/ExtraTaskSettings.h"
 
-#include "../Helpers/Convert.h"
-#include "../Helpers/StringConverter.h"
+# include "../Helpers/Convert.h"
+# include "../Helpers/StringConverter.h"
 
-#include "../../ESPEasy-Globals.h"
+# include "../../ESPEasy-Globals.h"
 
 # ifdef USES_C002
 #  include <ArduinoJson.h>
@@ -27,6 +27,7 @@
 // 3=Wet
 String humStatDomoticz(struct EventStruct *event, byte rel_index) {
   userVarIndex_t userVarIndex = event->BaseVarIndex + rel_index;
+
   if (validTaskVarIndex(rel_index) && validUserVarIndex(userVarIndex)) {
     const int hum = UserVar[userVarIndex];
 
@@ -50,14 +51,14 @@ int mapRSSItoDomoticz() {
 }
 
 int mapVccToDomoticz() {
-  #if FEATURE_ADC_VCC
+  # if FEATURE_ADC_VCC
 
   // Voltage range from 2.6V .. 3.6V => 0..100%
   if (vcc < 2.6f) { return 0; }
   return (vcc - 2.6f) * 100;
-  #else // if FEATURE_ADC_VCC
+  # else // if FEATURE_ADC_VCC
   return 255;
-  #endif // if FEATURE_ADC_VCC
+  # endif // if FEATURE_ADC_VCC
 }
 
 // Format including trailing semi colon
@@ -164,7 +165,8 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       break;
     default:
     {
-      #ifndef BUILD_NO_DEBUG
+      # ifndef BUILD_NO_DEBUG
+
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = F("Domoticz Controller: Not yet implemented sensor type: ");
         log += static_cast<byte>(event->sensorType);
@@ -172,7 +174,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
         log += event->idx;
         addLog(LOG_LEVEL_ERROR, log);
       }
-      #endif
+      # endif // ifndef BUILD_NO_DEBUG
       break;
     }
   }
@@ -185,7 +187,8 @@ String formatDomoticzSensorType(struct EventStruct *event) {
   }
   values.trim();
   {
-    #ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F(" Domoticz: Sensortype: ");
       log += static_cast<byte>(event->sensorType);
@@ -245,35 +248,43 @@ String serializeDomoticzJson(struct EventStruct *event)
 {
   String json;
   {
-    DynamicJsonDocument root(200);
-    root[F("idx")]  = event->idx;
-    root[F("RSSI")] = mapRSSItoDomoticz();
-      # if FEATURE_ADC_VCC
-    root[F("Battery")] = mapVccToDomoticz();
-      # endif // if FEATURE_ADC_VCC
+    json += '{';
+    json += to_json_object_value(F("idx"), String(event->idx));
+    json += ',';
+    json += to_json_object_value(F("RSSI"), String(mapRSSItoDomoticz()));
+    #  if FEATURE_ADC_VCC
+    json += ',';
+    json += to_json_object_value(F("Battery"), mapVccToDomoticz());
+    #  endif // if FEATURE_ADC_VCC
 
     const Sensor_VType sensorType = event->getSensorType();
 
     switch (sensorType)
     {
       case Sensor_VType::SENSOR_TYPE_SWITCH:
-        root[F("command")] = F("switchlight");
+        json += ',';
+        json += to_json_object_value(F("command"), F("switchlight"));
 
         if (UserVar[event->BaseVarIndex] == 0) {
-          root[F("switchcmd")] = F("Off");
+          json += ',';
+          json += to_json_object_value(F("switchcmd"), F("Off"));
         }
         else {
-          root[F("switchcmd")] = F("On");
+          json += ',';
+          json += to_json_object_value(F("switchcmd"), F("On"));
         }
         break;
       case Sensor_VType::SENSOR_TYPE_DIMMER:
-        root[F("command")] = F("switchlight");
+        json += ',';
+        json += to_json_object_value(F("command"), F("switchlight"));
 
         if (UserVar[event->BaseVarIndex] == 0) {
-          root[F("switchcmd")] = F("Off");
+          json += ',';
+          json += to_json_object_value(F("switchcmd"), F("Off"));
         }
         else {
-          root[F("Set%20Level")] = UserVar[event->BaseVarIndex];
+          json += ',';
+          json += to_json_object_value(F("Set%20Level"), String(UserVar[event->BaseVarIndex], 2));
         }
         break;
 
@@ -289,16 +300,18 @@ String serializeDomoticzJson(struct EventStruct *event)
       case Sensor_VType::SENSOR_TYPE_WIND:
       case Sensor_VType::SENSOR_TYPE_STRING:
       default:
-        root[F("nvalue")] = 0;
-        root[F("svalue")] = formatDomoticzSensorType(event);
+        json += ',';
+        json += to_json_object_value(F("nvalue"), F("0"));
+        json += ',';
+        json += to_json_object_value(F("svalue"), formatDomoticzSensorType(event));
         break;
     }
-
-    serializeJson(root, json);
+    json += '}';
   }
+
   return json;
 }
 
 # endif // ifdef USES_C002
 
-#endif // ifdef USES_DOMOTICZ
+#endif  // ifdef USES_DOMOTICZ
