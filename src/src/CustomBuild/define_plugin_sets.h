@@ -112,7 +112,7 @@ To create/register a plugin, you have to :
         #define WEBSERVER_WIFI_SCANNER
     #endif
     #ifndef WEBSERVER_NEW_RULES
-        #define WEBSERVER_NEW_RULES
+//        #define WEBSERVER_NEW_RULES
     #endif
 #endif
 
