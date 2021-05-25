@@ -412,7 +412,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
         #define SI7021_RESOLUTION_OPTION 4
 
       byte choice = PCONFIG(0);
-      String options[SI7021_RESOLUTION_OPTION];
+      const __FlashStringHelper * options[SI7021_RESOLUTION_OPTION];
       int optionValues[SI7021_RESOLUTION_OPTION];
       optionValues[0] = SI7021_RESOLUTION_14T_12RH;
       options[0]      = F("Temp 14 bits / RH 12 bits");

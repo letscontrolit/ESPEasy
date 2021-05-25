@@ -153,20 +153,22 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = PCONFIG(0);
-        byte nrchoices = 9;
-        String options[nrchoices];
-        options[0] = F("Main + Temp/Hygro");
-        options[1] = F("Wind");
-        options[2] = F("Rain");
-        options[3] = F("UV");
-        options[4] = F("Lightning strikes");
-        options[5] = F("Lightning distance");
+        {
+          const byte nrchoices = 9;
+          const __FlashStringHelper * options[nrchoices];
+          options[0] = F("Main + Temp/Hygro");
+          options[1] = F("Wind");
+          options[2] = F("Rain");
+          options[3] = F("UV");
+          options[4] = F("Lightning strikes");
+          options[5] = F("Lightning distance");
 
-        options[6] = F("Unknown 1, byte 6");
-        options[7] = F("Unknown 2, byte 16");
-        options[8] = F("Unknown 3, byte 19");
+          options[6] = F("Unknown 1, byte 6");
+          options[7] = F("Unknown 2, byte 16");
+          options[8] = F("Unknown 3, byte 19");
 
-        addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, NULL, choice);
+          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, NULL, choice);
+        }
 
         if (choice==0) {
           addHtml(F("<TR><TD>1st GPIO (5-MOSI):<TD>"));

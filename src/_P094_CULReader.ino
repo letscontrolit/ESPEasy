@@ -344,7 +344,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
 
     {
-      String options[P094_Match_Type_NR_ELEMENTS];
+      const __FlashStringHelper * options[P094_Match_Type_NR_ELEMENTS];
       int    optionValues[P094_Match_Type_NR_ELEMENTS];
 
       for (int i = 0; i < P094_Match_Type_NR_ELEMENTS; ++i) {
@@ -397,7 +397,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
 
             // Combo box with filter types
             {
-              String options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
+              const __FlashStringHelper * options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
               int    optionValues[P094_FILTER_VALUE_Type_NR_ELEMENTS];
 
               for (int i = 0; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
@@ -419,7 +419,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
           case 2:
           {
             // Comparator
-            String options[P094_FILTER_COMP_NR_ELEMENTS];
+            const __FlashStringHelper * options[P094_FILTER_COMP_NR_ELEMENTS];
             int    optionValues[P094_FILTER_COMP_NR_ELEMENTS];
 
             for (int i = 0; i < P094_FILTER_COMP_NR_ELEMENTS; ++i) {

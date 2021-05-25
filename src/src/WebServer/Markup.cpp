@@ -13,6 +13,17 @@
 // ********************************************************************************
 void addSelector(const String& id,
                  int           optionCount,
+                 const __FlashStringHelper * options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex)
+{
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, false, true, F("wide"));
+}
+
+
+void addSelector(const String& id,
+                 int           optionCount,
                  const String  options[],
                  const int     indices[],
                  const String  attr[],
@@ -20,6 +31,19 @@ void addSelector(const String& id,
 {
   addSelector(id, optionCount, options, indices, attr, selectedIndex, false, true, F("wide"));
 }
+
+void addSelector(const String& id,
+                 int           optionCount,
+                 const __FlashStringHelper * options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex,
+                 boolean       reloadonchange,
+                 bool          enabled)
+{
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
+}
+
 
 void addSelector(const String& id,
                  int           optionCount,
@@ -31,6 +55,27 @@ void addSelector(const String& id,
                  bool          enabled)
 {
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
+}
+
+void addSelector(const String& id,
+                 int           optionCount,
+                 const __FlashStringHelper * options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex,
+                 boolean       reloadonchange,
+                 bool          enabled,
+                 const String& classname)
+{
+  // FIXME TD-er Change boolean to disabled
+  if (reloadonchange)
+  {
+    addSelector_Head_reloadOnChange(id, classname, !enabled);
+  } else {
+    do_addSelector_Head(id, classname, F(""), !enabled);
+  }
+  addSelector_options(optionCount, options, indices, attr, selectedIndex);
+  addSelector_Foot();
 }
 
 void addSelector(const String& id,
@@ -52,6 +97,28 @@ void addSelector(const String& id,
   }
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
+}
+
+void addSelector_options(int optionCount, const __FlashStringHelper * options[], const int indices[], const String attr[], int selectedIndex)
+{
+  int index;
+
+  for (byte x = 0; x < optionCount; x++)
+  {
+    if (indices) {
+      index = indices[x];
+    }
+    else {
+      index = x;
+    }
+    String attr_str;
+
+    if (attr)
+    {
+      attr_str = attr[x];
+    }
+    addSelector_Item(options[x], index, selectedIndex == index, false, attr_str);
+  }
 }
 
 void addSelector_options(int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex)
@@ -107,6 +174,29 @@ void do_addSelector_Head(const String& id, const String& classname, const String
     addHtmlAttribute(F("onchange"), onChangeCall);
   }
   addHtml('>');
+}
+
+void addSelector_Item(const __FlashStringHelper * option, int index, boolean selected, boolean disabled, const String& attr)
+{
+  addHtml(F("<option "));
+  addHtmlAttribute(F("value"), index);
+
+  if (selected) {
+    addHtml(F(" selected"));
+  }
+
+  if (disabled) {
+    addDisabled();
+  }
+
+  if (attr.length() > 0)
+  {
+    addHtml(' ');
+    addHtml(attr);
+  }
+  addHtml('>');
+  addHtml(option);
+  addHtml(F("</option>"));
 }
 
 void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr)

@@ -174,6 +174,18 @@ void pconfig_webformSave(struct EventStruct *event, byte pconfigIndex)
 
 void sensorTypeHelper_loadOutputSelector(
   struct EventStruct *event, byte pconfigIndex, byte valuenr,
+  int optionCount, const __FlashStringHelper * options[], const int indices[])
+{
+  byte   choice = PCONFIG(pconfigIndex);
+  String label  = F("Value ");
+
+  label += (valuenr + 1);
+  addFormSelector(label, PCONFIG_LABEL(pconfigIndex), optionCount, options, indices, choice);
+}
+
+
+void sensorTypeHelper_loadOutputSelector(
+  struct EventStruct *event, byte pconfigIndex, byte valuenr,
   int optionCount, const String options[], const int indices[])
 {
   byte   choice = PCONFIG(pconfigIndex);

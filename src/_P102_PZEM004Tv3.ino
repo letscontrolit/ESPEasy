@@ -135,15 +135,19 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
         addHtml(F(
                   "<span style=\"color:red\"> <br><B>If several PZEMs foreseen, don't use HW serial (or invert Tx and Rx to configure as SW serial).</B></span>"));
         addFormSubHeader(F("PZEM actions"));
-        String options_model[3] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
-        addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 3, options_model, NULL, P102_PZEM_mode);
+        {
+          const __FlashStringHelper * options_model[3] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
+          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 3, options_model, NULL, P102_PZEM_mode);
+        }
 
         if (P102_PZEM_mode == 2)
         {
           addHtml(F(
                     "<span style=\"color:red\"> <br>When programming an address, only one PZEMv30 must be connected. Otherwise, all connected PZEMv30s will get the same address, which would cause a conflict during reading.</span>"));
-          String options_confirm[2] = { F("NO"), F("YES") };
-          addFormSelector(F("Confirm address programming ?"), F("P102_PZEM_addr_set"), 2, options_confirm, NULL, P102_PZEM_ADDR_SET);
+          {
+            const __FlashStringHelper * options_confirm[2] = { F("NO"), F("YES") };
+            addFormSelector(F("Confirm address programming ?"), F("P102_PZEM_addr_set"), 2, options_confirm, NULL, P102_PZEM_ADDR_SET);
+          }
           addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), (P102_PZEM_ADDR < 1) ? 1 : P102_PZEM_ADDR, 1, 247);
           addHtml(F("Select the address to set PZEM. Programming address 0 is forbidden."));
         }
@@ -162,8 +166,10 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
       else
       {
         addFormSubHeader(F("PZEM actions"));
-        String options_model[2] = { F("Read_value"), F("Reset_Energy") };
-        addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 2, options_model, NULL, P102_PZEM_mode);
+        {
+          const __FlashStringHelper * options_model[2] = { F("Read_value"), F("Reset_Energy") };
+          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 2, options_model, NULL, P102_PZEM_mode);
+        }
         addHtml(F(" Tx/Rx Pins config disabled: Configuration is available in the first PZEM plugin.<br>"));
         addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), P102_PZEM_ADDR, 1, 247);
       }
@@ -179,7 +185,7 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
       // To select the data in the 4 fields. In a separate scope to free memory of String array as soon as possible
 
       sensorTypeHelper_webformLoad_header();
-      String options[P102_NR_OUTPUT_OPTIONS];
+      const __FlashStringHelper * options[P102_NR_OUTPUT_OPTIONS];
 
       for (uint8_t i = 0; i < P102_NR_OUTPUT_OPTIONS; ++i) {
         options[i] = p102_getQueryString(i);

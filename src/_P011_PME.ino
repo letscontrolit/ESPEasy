@@ -52,7 +52,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       byte   choice     = PCONFIG(0);
-      String options[2] = { F("Digital"), F("Analog") };
+      const __FlashStringHelper * options[2] = { F("Digital"), F("Analog") };
       addFormSelector(F("Port Type"), F("p011"), 2, options, NULL, choice);
 
       success = true;

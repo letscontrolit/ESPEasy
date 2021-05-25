@@ -1081,7 +1081,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
   if (isI2CMultiplexerEnabled()) {
     bool multipleMuxPorts = bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
     {
-      String i2c_mux_channels[2];
+      const __FlashStringHelper * i2c_mux_channels[2];
       int    i2c_mux_channelOptions[2];
       int    i2c_mux_channelCount = 1;
       i2c_mux_channels[0]       = F("Single channel");

@@ -217,6 +217,36 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
   addSelector_Foot();
 }
 
+void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex)
+{
+  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
+}
+
+void addFormSelector(const String& label,
+                     const String& id,
+                     int           optionCount,
+                     const __FlashStringHelper * options[],
+                     const int     indices[],
+                     int           selectedIndex,
+                     bool          reloadonchange)
+{
+  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, reloadonchange);
+}
+
+void addFormSelector(const String& label,
+                     const String& id,
+                     int           optionCount,
+                     const __FlashStringHelper * options[],
+                     const int     indices[],
+                     const String  attr[],
+                     int           selectedIndex,
+                     boolean       reloadonchange)
+{
+  addRowLabel_tr_id(label, id);
+  addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
+}
+
+
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex)
 {
   addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
@@ -287,7 +317,7 @@ void addFormPinStateSelect(int gpio, int choice)
     bool hasPullUp, hasPullDown;
     getGpioPullResistor(gpio, hasPullUp, hasPullDown);
     int nr_options = 0;
-    String options[6];
+    const __FlashStringHelper * options[6];
     int    option_val[6];
     options[nr_options]    = F("Default");
     option_val[nr_options] = static_cast<int>(PinBootState::Default_state);

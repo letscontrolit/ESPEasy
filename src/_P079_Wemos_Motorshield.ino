@@ -138,9 +138,11 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
       }
 
 
-      const String options[] = { F("WEMOS V1.0"), F("LOLIN V2.0") };
-      int indices[]          = { static_cast<int>(P079_BoardType::WemosMotorshield), static_cast<int>(P079_BoardType::LolinMotorshield) };
-      addFormSelector(F("Motor Shield Type"), F("p079_shield_type"), 2, options, indices, SHIELD_VER_PCFG_P079);
+      {
+        const __FlashStringHelper * options[] = { F("WEMOS V1.0"), F("LOLIN V2.0") };
+        int indices[]          = { static_cast<int>(P079_BoardType::WemosMotorshield), static_cast<int>(P079_BoardType::LolinMotorshield) };
+        addFormSelector(F("Motor Shield Type"), F("p079_shield_type"), 2, options, indices, SHIELD_VER_PCFG_P079);
+      }
 
       if (Plugin_079_MotorShield_type == P079_BoardType::WemosMotorshield) {
         addFormNote(F("WEMOS V1.0 Motor Shield requires updated firmware, see <a href='https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield'>wiki</a>"));

@@ -96,7 +96,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {
         byte   choice = P020_SERIAL_PROCESSING;
-        String options[3];
+        const __FlashStringHelper * options[3];
         options[0] = F("None");
         options[1] = F("Generic");
         options[2] = F("RFLink");

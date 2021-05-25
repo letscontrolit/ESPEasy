@@ -93,12 +93,12 @@ void handle_hardware() {
   addFormHeader(F("Hardware Settings"), F("ESPEasy#Hardware_page"), F("Hardware/Hardware.html"));
 
   addFormSubHeader(F("Wifi Status LED"));
-  addFormPinSelect(formatGpioName_output("LED"), "pled", Settings.Pin_status_led);
+  addFormPinSelect(formatGpioName_output("LED"), F("pled"), Settings.Pin_status_led);
   addFormCheckBox(F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed);
   addFormNote(F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
 
   addFormSubHeader(F("Reset Pin"));
-  addFormPinSelect(formatGpioName_input(F("Switch")), "pres", Settings.Pin_Reset);
+  addFormPinSelect(formatGpioName_input(F("Switch")), F("pres"), Settings.Pin_Reset);
   addFormNote(F("Press about 10s for factory reset"));
 
   addFormSubHeader(F("I2C Interface"));
@@ -113,7 +113,7 @@ void handle_hardware() {
   addFormSubHeader(F("I2C Multiplexer"));
   // Select the type of multiplexer to use
   {
-    String i2c_muxtype_options[5];
+    const __FlashStringHelper * i2c_muxtype_options[5];
     int    i2c_muxtype_choices[5];
     i2c_muxtype_options[0] = F("- None -");
     i2c_muxtype_choices[0] = -1;
@@ -155,9 +155,11 @@ void handle_hardware() {
   // SPI Init
   addFormSubHeader(F("SPI Interface"));
   #ifdef ESP32
-    String spi_options[3] = { F("Disabled"), F("VSPI: CLK=GPIO-18, MISO=GPIO-19, MOSI=GPIO-23"), F("HSPI: CLK=GPIO-14, MISO=GPIO-12, MOSI=GPIO-13")};
+  {
+    const __FlashStringHelper * spi_options[3] = { F("Disabled"), F("VSPI: CLK=GPIO-18, MISO=GPIO-19, MOSI=GPIO-23"), F("HSPI: CLK=GPIO-14, MISO=GPIO-12, MOSI=GPIO-13")};
     addFormSelector(F("Init SPI"), F("initspi"), 3, spi_options, NULL, Settings.InitSPI);
     addFormNote(F("Changing SPI settings requires to manualy restart"));
+  }
   #else //for ESP8266 we keep the existing UI
   addFormCheckBox(F("Init SPI"), F("initspi"), Settings.InitSPI>0);
   addFormNote(F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
@@ -165,36 +167,42 @@ void handle_hardware() {
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
   
 #ifdef FEATURE_SD
-  addFormPinSelect(formatGpioName_output("SD Card CS"), "sd", Settings.Pin_sd_cs);
+  addFormPinSelect(formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
 #endif // ifdef FEATURE_SD
   
 #ifdef HAS_ETHERNET
   addFormSubHeader(F("Ethernet"));
-  addRowLabel_tr_id(F("Preferred network medium"), "ethwifi");
-  String ethWifiOptions[2] = {
-    toString(NetworkMedium_t::WIFI), 
-    toString(NetworkMedium_t::Ethernet) 
-    };
-  addSelector("ethwifi", 2, ethWifiOptions, NULL, NULL, static_cast<int>(Settings.NetworkMedium), false, true);
+  addRowLabel_tr_id(F("Preferred network medium"), F("ethwifi"));
+  {
+    const __FlashStringHelper * ethWifiOptions[2] = {
+      toString(NetworkMedium_t::WIFI), 
+      toString(NetworkMedium_t::Ethernet) 
+      };
+    addSelector(F("ethwifi"), 2, ethWifiOptions, NULL, NULL, static_cast<int>(Settings.NetworkMedium), false, true);
+  }
   addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
-  addRowLabel_tr_id(F("Ethernet PHY type"), "ethtype");
-  String ethPhyTypes[2] = { 
-    toString(EthPhyType_t::LAN8710), 
-    toString(EthPhyType_t::TLK110) };
-  addSelector("ethtype", 2, ethPhyTypes, NULL, NULL, static_cast<int>(Settings.ETH_Phy_Type), false, true);
-  addFormNumericBox(F("Ethernet PHY Address"), "ethphy", Settings.ETH_Phy_Addr, 0, 255);
+  addRowLabel_tr_id(F("Ethernet PHY type"), F("ethtype"));
+  {
+    const __FlashStringHelper * ethPhyTypes[2] = { 
+      toString(EthPhyType_t::LAN8710), 
+      toString(EthPhyType_t::TLK110) };
+    addSelector(F("ethtype"), 2, ethPhyTypes, NULL, NULL, static_cast<int>(Settings.ETH_Phy_Type), false, true);
+  }
+  addFormNumericBox(F("Ethernet PHY Address"), F("ethphy"), Settings.ETH_Phy_Addr, 0, 255);
   addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110)"));
-  addFormPinSelect(formatGpioName_output("Ethernet MDC pin"), "ethmdc", Settings.ETH_Pin_mdc);
-  addFormPinSelect(formatGpioName_input("Ethernet MIO pin"), "ethmdio", Settings.ETH_Pin_mdio);
-  addFormPinSelect(formatGpioName_output("Ethernet Power pin"), "ethpower", Settings.ETH_Pin_power);
-  addRowLabel_tr_id(F("Ethernet Clock"), "ethclock");
-  String ethClockOptions[4] = { 
-    toString(EthClockMode_t::Ext_crystal_osc),
-    toString(EthClockMode_t::Int_50MHz_GPIO_0),
-    toString(EthClockMode_t::Int_50MHz_GPIO_16),
-    toString(EthClockMode_t::Int_50MHz_GPIO_17_inv)
-     };
-  addSelector("ethclock", 4, ethClockOptions, NULL, NULL, static_cast<int>(Settings.ETH_Clock_Mode), false, true);
+  addFormPinSelect(formatGpioName_output(F("Ethernet MDC pin")), F("ethmdc"), Settings.ETH_Pin_mdc);
+  addFormPinSelect(formatGpioName_input(F("Ethernet MIO pin")), F("ethmdio"), Settings.ETH_Pin_mdio);
+  addFormPinSelect(formatGpioName_output(F("Ethernet Power pin")), F("ethpower"), Settings.ETH_Pin_power);
+  addRowLabel_tr_id(F("Ethernet Clock"), F("ethclock"));
+  {
+    const __FlashStringHelper * ethClockOptions[4] = { 
+      toString(EthClockMode_t::Ext_crystal_osc),
+      toString(EthClockMode_t::Int_50MHz_GPIO_0),
+      toString(EthClockMode_t::Int_50MHz_GPIO_16),
+      toString(EthClockMode_t::Int_50MHz_GPIO_17_inv)
+      };
+    addSelector(F("ethclock"), 4, ethClockOptions, NULL, NULL, static_cast<int>(Settings.ETH_Clock_Mode), false, true);
+  }
 #endif // ifdef HAS_ETHERNET
 
   addFormSubHeader(F("GPIO boot states"));

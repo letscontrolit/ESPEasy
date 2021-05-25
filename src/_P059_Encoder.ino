@@ -75,9 +75,11 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         if (PCONFIG_LONG(0) == 0 && PCONFIG_LONG(1) == 0)
           PCONFIG_LONG(1) = 100;
 
-        String options[3] = { F("1 pulse per cycle"), F("2 pulses per cycle"), F("4 pulses per cycle") };
-        int optionValues[3] = { 1, 2, 4 };
-        addFormSelector(F("Mode"), F("qei_mode"), 3, options, optionValues, PCONFIG(0));
+        {
+          const __FlashStringHelper * options[3] = { F("1 pulse per cycle"), F("2 pulses per cycle"), F("4 pulses per cycle") };
+          int optionValues[3] = { 1, 2, 4 };
+          addFormSelector(F("Mode"), F("qei_mode"), 3, options, optionValues, PCONFIG(0));
+        }
 
         addFormNumericBox(F("Limit min."), F("qei_limitmin"), PCONFIG_LONG(0));
         addFormNumericBox(F("Limit max."), F("qei_limitmax"), PCONFIG_LONG(1));

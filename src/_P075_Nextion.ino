@@ -153,7 +153,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     {
-      String options[4];
+      const __FlashStringHelper * options[4];
       options[0] = F("9600");
       options[1] = F("38400");
       options[2] = F("57600");

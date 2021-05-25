@@ -276,7 +276,7 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
     String weeklabel = isStart ? F("Start")  : F("End");
     weeklabel += F(" (week, dow, month)");
     String weekid  = isStart ? F("dststartweek")  : F("dstendweek");
-    String week[5]       = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
+    const __FlashStringHelper *  week[5] = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
     int    weekValues[5] = { 0, 1, 2, 3, 4 };
 
     addRowLabel(weeklabel);
@@ -285,7 +285,7 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   html_BR();
   {
     String dowid   = isStart ? F("dststartdow")   : F("dstenddow");
-    String dow[7]        = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
+    const __FlashStringHelper *  dow[7] = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
     int    dowValues[7]  = { 1, 2, 3, 4, 5, 6, 7 };
 
     addSelector(dowid, 7, dow, dowValues, NULL, rule.dow);
@@ -293,7 +293,7 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   html_BR();
   {
     String monthid = isStart ? F("dststartmonth") : F("dstendmonth");
-    String month[12]     = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
+    const __FlashStringHelper * month[12] = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
                              "Dec") };
     int    monthValues[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
@@ -316,7 +316,7 @@ void addFormLogLevelSelect(LabelType::Enum label, int choice)
 
 void addLogLevelSelect(const String& name, int choice)
 {
-  String options[LOG_LEVEL_NRELEMENTS + 1];
+  const __FlashStringHelper * options[LOG_LEVEL_NRELEMENTS + 1];
   int    optionValues[LOG_LEVEL_NRELEMENTS + 1] = { 0 };
 
   options[0]      = getLogLevelDisplayString(0);
@@ -335,7 +335,7 @@ void addFormLogFacilitySelect(const String& label, const String& id, int choice)
 
 void addLogFacilitySelect(const String& name, int choice)
 {
-  String options[12] =
+  const __FlashStringHelper * options[12] =
   { F("Kernel"), F("User"),   F("Daemon"),   F("Message"), F("Local0"),  F("Local1"),
     F("Local2"), F("Local3"), F("Local4"),   F("Local5"),  F("Local6"),  F("Local7") };
   int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };

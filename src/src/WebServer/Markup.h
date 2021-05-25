@@ -9,7 +9,7 @@
 // ********************************************************************************
 void addSelector(const String& id,
                  int           optionCount,
-                 const String  options[],
+                 const __FlashStringHelper * options[],
                  const int     indices[],
                  const String  attr[],
                  int           selectedIndex);
@@ -17,6 +17,13 @@ void addSelector(const String& id,
 void addSelector(const String& id,
                  int           optionCount,
                  const String  options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex);
+
+void addSelector(const String& id,
+                 int           optionCount,
+                 const __FlashStringHelper * options[],
                  const int     indices[],
                  const String  attr[],
                  int           selectedIndex,
@@ -30,9 +37,30 @@ void addSelector(const String& id,
                  const String  attr[],
                  int           selectedIndex,
                  boolean       reloadonchange,
+                 bool          enabled);
+
+
+void addSelector(const String& id,
+                 int           optionCount,
+                 const __FlashStringHelper * options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex,
+                 boolean       reloadonchange,
                  bool          enabled,
                  const String& classname);
 
+void addSelector(const String& id,
+                 int           optionCount,
+                 const String  options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex,
+                 boolean       reloadonchange,
+                 bool          enabled,
+                 const String& classname);
+
+void addSelector_options(int optionCount, const __FlashStringHelper * options[], const int indices[], const String attr[], int selectedIndex);
 void addSelector_options(int optionCount, const String options[], const int indices[], const String attr[], int selectedIndex);
 
 void addSelector_Head(const String& id);
@@ -45,6 +73,7 @@ void addSelector_Head_reloadOnChange(const String& id, const String& classname, 
 
 void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled);
 
+void addSelector_Item(const __FlashStringHelper * option, int index, boolean selected, boolean disabled, const String& attr);
 void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr);
 
 void addSelector_Foot();

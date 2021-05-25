@@ -660,14 +660,14 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
       addFormNote(F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
       addFormNote(F("MAX7219: 1st=DIN-Pin, 2nd=CLK-Pin, 3rd=CS-Pin"));
       {
-        String displtype[4] = { F("TM1637 - 4 digit (colon)"),
+        const __FlashStringHelper * displtype[4] = { F("TM1637 - 4 digit (colon)"),
                                 F("TM1637 - 4 digit (dots)"),
                                 F("TM1637 - 6 digit"),
                                 F("MAX7219 - 8 digit") };
         addFormSelector(F("Display Type"), F("plugin_073_displtype"), 4, displtype, NULL, PCONFIG(0));
       }
       {
-        String displout[6] = { F("Manual"),
+        const __FlashStringHelper * displout[6] = { F("Manual"),
                               F("Clock 24h - Blink"),
                               F("Clock 24h - No Blink"),
                               F("Clock 12h - Blink"),
@@ -680,7 +680,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
 
       #ifdef P073_EXTRA_FONTS
       {
-        String fontset[4] = { F("Default"),
+        const __FlashStringHelper * fontset[4] = { F("Default"),
                               F("Siekoo"),
                               F("Siekoo with uppercase 'CHNORUX'"),
                               F("dSEG7") };

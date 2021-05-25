@@ -23,9 +23,9 @@
   \*********************************************************************************************/
 void initLog();
 
-String getLogLevelDisplayString(int logLevel);
+const __FlashStringHelper * getLogLevelDisplayString(int logLevel);
 
-String getLogLevelDisplayStringFromIndex(byte index, int& logLevel);
+const __FlashStringHelper * getLogLevelDisplayStringFromIndex(byte index, int& logLevel);
 
 void disableSerialLog();
 

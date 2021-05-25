@@ -175,14 +175,14 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         {
-          String options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
+          const __FlashStringHelper * options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
           addFormSelector(F("Model Type"), P078_MODEL_LABEL, 4, options_model, NULL, P078_MODEL );
         }
 
         {
           // In a separate scope to free memory of String array as soon as possible
           sensorTypeHelper_webformLoad_header();
-          String options[P078_NR_OUTPUT_OPTIONS];
+          const __FlashStringHelper * options[P078_NR_OUTPUT_OPTIONS];
           for (int i = 0; i < P078_NR_OUTPUT_OPTIONS; ++i) {
             options[i] = p078_getQueryString(i);
           }

@@ -92,7 +92,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         // sensor.setGain(AS7265X_GAIN_37X); //This is 3.7x
         // sensor.setGain(AS7265X_GAIN_16X);
         // sensor.setGain(AS7265X_GAIN_64X);
-        String optionsMode[4];
+        const __FlashStringHelper * optionsMode[4];
         optionsMode[0] = F("1x");
         optionsMode[1] = F("3.7x (default)");
         optionsMode[2] = F("16x");
@@ -109,7 +109,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         // Integration cycles from 0 (2.78ms) to 255 (711ms)
         // sensor.setIntegrationCycles(49); //Default: 50*2.8ms = 140ms per reading
         // sensor.setIntegrationCycles(1);  //2*2.8ms = 5.6ms per reading
-        String optionsMode2[6];
+        const __FlashStringHelper * optionsMode2[6];
         optionsMode2[0] = F("2.8 ms");
         optionsMode2[1] = F("28 ms");
         optionsMode2[2] = F("56 ms");
@@ -136,7 +136,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_2MA);
         // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_4MA);
         // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_8MA); //Default
-        String optionsMode3[4];
+        const __FlashStringHelper * optionsMode3[4];
         optionsMode3[0] = F("1 mA");
         optionsMode3[1] = F("2 mA");
         optionsMode3[2] = F("4 mA");
@@ -158,7 +158,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_25MA, AS7265x_LED_WHITE);   //Allowed
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_WHITE);   //Allowed 
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_WHITE);  //Allowed
-        String optionsMode4[4];
+        const __FlashStringHelper * optionsMode4[4];
         optionsMode4[0] = F("12.5 mA (default)");
         optionsMode4[1] = F("25 mA");
         optionsMode4[2] = F("50 mA");
@@ -179,7 +179,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_25MA, AS7265x_LED_IR);      //Allowed
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_IR);      //Allowed
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_IR-bad); //Not allowed
-        String optionsMode5[3];
+        const __FlashStringHelper * optionsMode5[3];
         optionsMode5[0] = F("12.5 mA (default)");
         optionsMode5[1] = F("25 mA");
         optionsMode5[2] = F("50 mA");
@@ -197,7 +197,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_25MA, AS7265x_LED_UV-bad);  //Not allowed
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_UV-bad);  //Not allowed
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_UV-bad); //Not allowed
-        String optionsMode6[1];
+        const __FlashStringHelper * optionsMode6[1];
         optionsMode6[0] = F("12.5 mA (default)");
         int optionValuesMode6[1];
         optionValuesMode6[0] = AS7265X_LED_CURRENT_LIMIT_12_5MA;

@@ -130,7 +130,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case ControllerSettingsStruct::CONTROLLER_USE_DNS:
     {
       byte   choice = ControllerSettings.UseDNS;
-      String options[2];
+      const __FlashStringHelper * options[2];
       options[0] = F("Use IP address");
       options[1] = F("Use Hostname");
       addFormSelector(displayName, internalName, 2, options, NULL, NULL, choice, true);
@@ -194,7 +194,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     }
     case ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION:
     {
-      String options[2];
+      const __FlashStringHelper * options[2];
       options[0] = F("Ignore New");
       options[1] = F("Delete Oldest");
       addFormSelector(displayName, internalName, 2, options, NULL, NULL, ControllerSettings.DeleteOldest, false);
@@ -208,7 +208,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       break;
     case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:
     {
-      String options[2];
+      const __FlashStringHelper * options[2];
       options[0] = F("Ignore Acknowledgement");
       options[1] = F("Check Acknowledgement");
       addFormSelector(displayName, internalName, 2, options, NULL, NULL, ControllerSettings.MustCheckReply, false);

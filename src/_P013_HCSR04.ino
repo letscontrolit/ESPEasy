@@ -92,11 +92,13 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
         String strUnit = (measuringUnit == UNIT_CM) ? F("cm") : F("inch");
 
-        String optionsOpMode[2];
-        int optionValuesOpMode[2] = { 0, 1 };
-        optionsOpMode[0] = F("Value");
-        optionsOpMode[1] = F("State");
-        addFormSelector(F("Mode"), F("p013_mode"), 2, optionsOpMode, optionValuesOpMode, operatingMode);
+        {
+          const __FlashStringHelper * optionsOpMode[2];
+          int optionValuesOpMode[2] = { 0, 1 };
+          optionsOpMode[0] = F("Value");
+          optionsOpMode[1] = F("State");
+          addFormSelector(F("Mode"), F("p013_mode"), 2, optionsOpMode, optionValuesOpMode, operatingMode);
+        }
 
         if (operatingMode == OPMODE_STATE)
         {
@@ -106,17 +108,21 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Max Distance"), F("p013_max_distance"), max_distance, 0, 500);
         addUnit(strUnit);
 
-        String optionsUnit[2];
-        int optionValuesUnit[2] = { 0, 1 };
-        optionsUnit[0] = F("Metric");
-        optionsUnit[1] = F("Imperial");
-        addFormSelector(F("Unit"), F("p013_Unit"), 2, optionsUnit, optionValuesUnit, measuringUnit);
+        {
+          const __FlashStringHelper * optionsUnit[2];
+          int optionValuesUnit[2] = { 0, 1 };
+          optionsUnit[0] = F("Metric");
+          optionsUnit[1] = F("Imperial");
+          addFormSelector(F("Unit"), F("p013_Unit"), 2, optionsUnit, optionValuesUnit, measuringUnit);
+        }
 
-        String optionsFilter[2];
-        int optionValuesFilter[2] = { 0, 1 };
-        optionsFilter[0] = F("None");
-        optionsFilter[1] = F("Median");
-        addFormSelector(F("Filter"), F("p013_FilterType"), 2, optionsFilter, optionValuesFilter, filterType);
+        {
+          const __FlashStringHelper * optionsFilter[2];
+          int optionValuesFilter[2] = { 0, 1 };
+          optionsFilter[0] = F("None");
+          optionsFilter[1] = F("Median");
+          addFormSelector(F("Filter"), F("p013_FilterType"), 2, optionsFilter, optionValuesFilter, filterType);
+        }
 
         // enable filtersize option if filter is used,
         if (filterType != FILTER_NONE)

@@ -53,8 +53,8 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        String options[3];
-        options[0] = "";
+        const __FlashStringHelper *  options[3];
+        options[0] = F("");
         options[1] = F("Off");
         options[2] = F("On");
 

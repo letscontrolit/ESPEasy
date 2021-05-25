@@ -137,7 +137,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
     if ((channel != SC16IS752_CHANNEL_A) && (channel != SC16IS752_CHANNEL_B)) {
       channel = SC16IS752_CHANNEL_A;
     }
-    String chOptions[SC16IS752_CHANNELS];
+    const __FlashStringHelper * chOptions[SC16IS752_CHANNELS];
     int    chValues[SC16IS752_CHANNELS];
     chValues[0]  = SC16IS752_CHANNEL_A;
     chValues[1]  = SC16IS752_CHANNEL_B;

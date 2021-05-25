@@ -32,23 +32,22 @@ void initLog()
 /********************************************************************************************\
   Logging
   \*********************************************************************************************/
-String getLogLevelDisplayString(int logLevel) {
-  String res;
+const __FlashStringHelper * getLogLevelDisplayString(int logLevel) {
   switch (logLevel) {
-    case LOG_LEVEL_NONE:       res = F("None"); break;
-    case LOG_LEVEL_ERROR:      res = F("Error"); break;
-    case LOG_LEVEL_INFO:       res = F("Info"); break;
-    case LOG_LEVEL_DEBUG:      res = F("Debug"); break;
-    case LOG_LEVEL_DEBUG_MORE: res = F("Debug More"); break;
-    case LOG_LEVEL_DEBUG_DEV:  res = F("Debug dev"); break;
+    case LOG_LEVEL_NONE:       return F("None");
+    case LOG_LEVEL_ERROR:      return F("Error");
+    case LOG_LEVEL_INFO:       return F("Info");
+    case LOG_LEVEL_DEBUG:      return F("Debug");
+    case LOG_LEVEL_DEBUG_MORE: return F("Debug More");
+    case LOG_LEVEL_DEBUG_DEV:  return F("Debug dev");
 
     default:
     break;
   }
-  return res;
+  return F("");
 }
 
-String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
+const __FlashStringHelper * getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
   switch (index) {
     case 0: logLevel = LOG_LEVEL_ERROR;      break;
     case 1: logLevel = LOG_LEVEL_INFO;       break;
@@ -56,7 +55,7 @@ String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
     case 3: logLevel = LOG_LEVEL_DEBUG_MORE; break;
     case 4: logLevel = LOG_LEVEL_DEBUG_DEV;  break;
 
-    default: logLevel = -1; return "";
+    default: logLevel = -1; return F("");
   }
   return getLogLevelDisplayString(logLevel);
 }

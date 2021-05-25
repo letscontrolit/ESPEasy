@@ -291,7 +291,7 @@ void P087_html_show_matchForms(struct EventStruct *event) {
     addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
 
     {
-      String options[P087_Match_Type_NR_ELEMENTS];
+      const __FlashStringHelper * options[P087_Match_Type_NR_ELEMENTS];
       int optionValues[P087_Match_Type_NR_ELEMENTS];
 
       for (int i = 0; i < P087_Match_Type_NR_ELEMENTS; ++i) {

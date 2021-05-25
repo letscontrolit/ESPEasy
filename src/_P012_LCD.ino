@@ -90,12 +90,14 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte   choice2 = P012_SIZE;
-      String options2[2];
-      options2[0] = F("2 x 16");
-      options2[1] = F("4 x 20");
-      int optionValues2[2] = { 1, 2 };
-      addFormSelector(F("Display Size"), F("p012_size"), 2, options2, optionValues2, choice2);
+      {
+        byte   choice2 = P012_SIZE;
+        const __FlashStringHelper * options2[2];
+        options2[0] = F("2 x 16");
+        options2[1] = F("4 x 20");
+        int optionValues2[2] = { 1, 2 };
+        addFormSelector(F("Display Size"), F("p012_size"), 2, options2, optionValues2, choice2);
+      }
 
       {
         String strings[P12_Nlines];
@@ -114,12 +116,14 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Display Timeout"), F("p012_timer"), P012_TIMER);
 
-      String options3[3];
-      options3[0] = F("Continue to next line (as in v1.4)");
-      options3[1] = F("Truncate exceeding message");
-      options3[2] = F("Clear then truncate exceeding message");
-      int optionValues3[3] = { 0, 1, 2 };
-      addFormSelector(F("LCD command Mode"), F("p012_mode"), 3, options3, optionValues3, P012_MODE);
+      {
+        const __FlashStringHelper * options3[3];
+        options3[0] = F("Continue to next line (as in v1.4)");
+        options3[1] = F("Truncate exceeding message");
+        options3[2] = F("Clear then truncate exceeding message");
+        int optionValues3[3] = { 0, 1, 2 };
+        addFormSelector(F("LCD command Mode"), F("p012_mode"), 3, options3, optionValues3, P012_MODE);
+      }
 
       success = true;
       break;

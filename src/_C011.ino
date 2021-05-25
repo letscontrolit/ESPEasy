@@ -91,11 +91,11 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         addTableSeparator(F("HTTP Config"), 2, 3);
         {
           byte   choice    = 0;
-          String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+          const __FlashStringHelper * methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
 
           for (byte i = 0; i < 5; i++)
           {
-            if (methods[i].equals(HttpMethod)) {
+            if (HttpMethod.equals(methods[i])) {
               choice = i;
             }
           }

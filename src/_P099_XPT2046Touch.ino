@@ -162,10 +162,12 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
       }
       addFormNumericBox(F("Screen Height (px) (y)"), F("p099_height"), height_, 1, 65535);
 
-      byte choice2 = P099_CONFIG_ROTATION;
-      String options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") }; // Avoid unicode
-      int optionValues2[4] = { 0, 1, 2, 3 }; // Rotation similar to the TFT ILI9341 rotation
-      addFormSelector(F("Rotation"), F("p099_rotate"), 4, options2, optionValues2, choice2);
+      {
+        byte choice2 = P099_CONFIG_ROTATION;
+        const __FlashStringHelper * options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") }; // Avoid unicode
+        int optionValues2[4] = { 0, 1, 2, 3 }; // Rotation similar to the TFT ILI9341 rotation
+        addFormSelector(F("Rotation"), F("p099_rotate"), 4, options2, optionValues2, choice2);
+      }
 
       bool bRotationFlipped = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_ROTATION_FLIPPED);
       addFormCheckBox(F("Flip rotation 180&deg;"), F("p099_rotation_flipped"),  bRotationFlipped);
@@ -181,9 +183,11 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
       bitWrite(choice3, P099_FLAGS_SEND_XY,         bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY));
       bitWrite(choice3, P099_FLAGS_SEND_Z,          bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z));
       bitWrite(choice3, P099_FLAGS_SEND_OBJECTNAME, bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_OBJECTNAME));
-      String options3[P099_EVENTS_OPTIONS] = { F("None"), F("X and Y"), F("X, Y and Z"), F("Objectnames only"), F("Objectnames, X and Y"), F("Objectnames, X, Y and Z")};
-      int optionValues3[P099_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
-      addFormSelector(F("Events"), F("p099_events"), P099_EVENTS_OPTIONS, options3, optionValues3, choice3);
+      {
+        const __FlashStringHelper * options3[P099_EVENTS_OPTIONS] = { F("None"), F("X and Y"), F("X, Y and Z"), F("Objectnames only"), F("Objectnames, X and Y"), F("Objectnames, X, Y and Z")};
+        int optionValues3[P099_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
+        addFormSelector(F("Events"), F("p099_events"), P099_EVENTS_OPTIONS, options3, optionValues3, choice3);
+      }
       if (!Settings.UseRules) {
         addFormNote(F("Tools / Advanced / Rules must be enabled for events to be fired."));
       }
@@ -199,10 +203,12 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
         addFormSubHeader(F("Calibration"));
 
         bool tbUseCalibration = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION);
-        String options4[2] = { F("No"), F("Yes") };
-        int optionValues4[2] = { 0, 1 };
-        int choice4 = tbUseCalibration ? 1 : 0;
-        addFormSelector(F("Calibrate to screen resolution"), F("p099_use_calibration"), 2, options4, optionValues4, choice4, true);
+        {
+          const __FlashStringHelper * options4[2] = { F("No"), F("Yes") };
+          int optionValues4[2] = { 0, 1 };
+          int choice4 = tbUseCalibration ? 1 : 0;
+          addFormSelector(F("Calibrate to screen resolution"), F("p099_use_calibration"), 2, options4, optionValues4, choice4, true);
+        }
         if (tbUseCalibration) {
 
           addRowLabel(F("Calibration"), F(""));
@@ -242,9 +248,11 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
             choice5 = P099_CONFIG_OBJECTCOUNT = P099_INIT_OBJECTCOUNT;
           }
           # define P099_OBJECTCOUNT_OPTIONS 6
-          String options5[P099_OBJECTCOUNT_OPTIONS] = { F("None"), F("8"), F("16"), F("24"), F("32"), F("40") };
-          int optionValues5[P099_OBJECTCOUNT_OPTIONS] = { -1, 8, 16, 24, 32, 40 };
-          addFormSelector(F("# of objects"), F("p099_objectcount"), P099_OBJECTCOUNT_OPTIONS, options5, optionValues5, choice5, true);
+          {
+            const __FlashStringHelper * options5[P099_OBJECTCOUNT_OPTIONS] = { F("None"), F("8"), F("16"), F("24"), F("32"), F("40") };
+            int optionValues5[P099_OBJECTCOUNT_OPTIONS] = { -1, 8, 16, 24, 32, 40 };
+            addFormSelector(F("# of objects"), F("p099_objectcount"), P099_OBJECTCOUNT_OPTIONS, options5, optionValues5, choice5, true);
+          }
         }
         if (P099_CONFIG_OBJECTCOUNT > -1) {
 

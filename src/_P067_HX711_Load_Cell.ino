@@ -191,8 +191,10 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(F("Oversampling"), F("oversamplingChanA"), PCONFIG(0) & (1 << BIT_POS_OS_CHAN_A));
 
-        String optionsModeChanA[3] = { F("off"), F("Gain 64"), F("Gain 128") };
-        addFormSelector(F("Mode"), F("modeChanA"), 3, optionsModeChanA, NULL, (PCONFIG(0) >> BIT_POS_MODE_CHAN_A64) & 0x03);
+        {
+          const __FlashStringHelper * optionsModeChanA[3] = { F("off"), F("Gain 64"), F("Gain 128") };
+          addFormSelector(F("Mode"), F("modeChanA"), 3, optionsModeChanA, NULL, (PCONFIG(0) >> BIT_POS_MODE_CHAN_A64) & 0x03);
+        }
 
         int2float(PCONFIG(1), PCONFIG(2), &valFloat);
         addFormTextBox(F("Offset"), F("p067_offset_chanA"), String(valFloat, 3), 25);
@@ -204,8 +206,10 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(F("Oversampling"), F("oversamplingChanB"), PCONFIG(0) & (1 << BIT_POS_OS_CHAN_B));
 
-        String optionsModeChanB[2] = { F("off"), F("Gain 32") };
-        addFormSelector(F("Mode"), F("modeChanB"), 2, optionsModeChanB, NULL, (PCONFIG(0) >> BIT_POS_MODE_CHAN_B32) & 0x01);
+        {
+          const __FlashStringHelper * optionsModeChanB[2] = { F("off"), F("Gain 32") };
+          addFormSelector(F("Mode"), F("modeChanB"), 2, optionsModeChanB, NULL, (PCONFIG(0) >> BIT_POS_MODE_CHAN_B32) & 0x01);
+        }
 
         int2float(PCONFIG(3), PCONFIG(4), &valFloat);
         addFormTextBox(F("Offset"), F("p067_offset_chanB"), String(valFloat, 3), 25);

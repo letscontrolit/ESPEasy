@@ -113,7 +113,7 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      String options[3] = { F("MCP23017 (Matrix 9x8)"), F("PCF8574 (Matrix 5x4)"), F("PCF8574 (Direct 8)") };
+      const __FlashStringHelper * options[3] = { F("MCP23017 (Matrix 9x8)"), F("PCF8574 (Matrix 5x4)"), F("PCF8574 (Direct 8)") };
       addFormSelector(F("Chip (Mode)"), F("chip"), 3, options, NULL, PCONFIG(1));
 
       success = true;

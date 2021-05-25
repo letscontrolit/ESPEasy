@@ -101,6 +101,33 @@ void addFormSelector(const String& label, const String& id, int optionCount, con
 void addFormSelector(const String& label,
                      const String& id,
                      int           optionCount,
+                     const __FlashStringHelper * options[],
+                     const int     indices[],
+                     int           selectedIndex,
+                     bool          reloadonchange = false);
+
+void addFormSelector(const String& label,
+                     const String& id,
+                     int           optionCount,
+                     const __FlashStringHelper * options[],
+                     const int     indices[],
+                     const String  attr[],
+                     int           selectedIndex,
+                     boolean       reloadonchange);
+
+void addFormSelector_script(const String& label,
+                            const String& id,
+                            int           optionCount,
+                            const __FlashStringHelper * options[],
+                            const int     indices[],
+                            const String  attr[],
+                            int           selectedIndex,
+                            const String& onChangeCall);
+
+
+void addFormSelector(const String& label,
+                     const String& id,
+                     int           optionCount,
                      const String  options[],
                      const int     indices[],
                      int           selectedIndex,

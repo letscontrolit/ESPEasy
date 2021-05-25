@@ -83,7 +83,7 @@ boolean Plugin_111(byte function, struct EventStruct *event, String& string)
         #else // P111_USE_REMOVAL
         #define P111_removaltypes 2
         #endif // P111_USE_REMOVAL
-        String removaltype[P111_removaltypes] = { 
+        const __FlashStringHelper * removaltype[P111_removaltypes] = { 
                                                  F("None")
                                                  ,F("Autoremove after Time-out")
                                                  #ifdef P111_USE_REMOVAL
