@@ -191,8 +191,8 @@ void handle_controllers_ShowAllControllersTable()
 {
   html_table_class_multirow();
   html_TR();
-  html_table_header(F(""),           70);
-  html_table_header(F("Nr"),         50);
+  html_table_header(F(""),        70);
+  html_table_header(F("Nr"),      50);
   html_table_header(F("Enabled"), 100);
   html_table_header(F("Protocol"));
   html_table_header(F("Host"));
@@ -277,7 +277,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   addRowLabel(F("Protocol"));
   byte choice = Settings.Protocol[controllerindex];
   addSelector_Head_reloadOnChange(F("protocol"));
-  addSelector_Item(F("- Standalone -"), 0, false, false, F(""));
+  addSelector_Item(F("- Standalone -"), 0, false, false, EMPTY_STRING);
 
   for (byte x = 0; x <= protocolCount; x++)
   {

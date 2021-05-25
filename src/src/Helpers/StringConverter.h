@@ -78,7 +78,7 @@ String formatToHex_decimal(unsigned long value);
 String formatToHex_decimal(unsigned long value,
                            unsigned long factor);
 
-String boolToString(bool value);
+const __FlashStringHelper * boolToString(bool value);
 
 /*********************************************************************************************\
    Typical string replace functions.
@@ -190,7 +190,7 @@ String tolerantParseStringKeepCase(const String& string,
 
 // escapes special characters in strings for use in html-forms
 bool   htmlEscapeChar(char    c,
-                      String& escaped);
+                      const __FlashStringHelper * escaped);
 
 void   htmlEscape(String& html,
                   char    c);

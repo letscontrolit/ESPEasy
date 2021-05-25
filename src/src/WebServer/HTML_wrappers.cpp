@@ -153,7 +153,7 @@ void html_table_header(const __FlashStringHelper * label, int width) {
 }
 
 void html_table_header(const String& label, int width) {
-  html_table_header(label, F(""), F(""), width);
+  html_table_header(label, EMPTY_STRING, EMPTY_STRING, width);
 }
 
 void html_table_header(const __FlashStringHelper * label, const __FlashStringHelper * helpButton, int width) {
@@ -161,15 +161,15 @@ void html_table_header(const __FlashStringHelper * label, const __FlashStringHel
 }
 
 void html_table_header(const String& label, const __FlashStringHelper * helpButton, int width) {
-  html_table_header(label, helpButton, F(""), width);
+  html_table_header(label, helpButton, EMPTY_STRING, width);
 }
 
 void html_table_header(const __FlashStringHelper * label, const String& helpButton, int width) {
-  html_table_header(label, helpButton, F(""), width);
+  html_table_header(label, helpButton, EMPTY_STRING, width);
 }
 
 void html_table_header(const String& label, const String& helpButton, int width) {
-  html_table_header(label, helpButton, F(""), width);
+  html_table_header(label, helpButton, EMPTY_STRING, width);
 }
 
 void html_table_header(const __FlashStringHelper * label, const __FlashStringHelper * helpButton, const String& rtdHelpButton, int width) {
@@ -226,7 +226,7 @@ void html_end_form() {
 }
 
 void html_add_button_prefix() {
-  html_add_button_prefix(F(""), true);
+  html_add_button_prefix(EMPTY_STRING, true);
 }
 
 void html_add_button_prefix(const String& classes, bool enabled) {
@@ -249,7 +249,7 @@ void html_add_button_prefix(const String& classes, bool enabled) {
 }
 
 void html_add_wide_button_prefix() {
-  html_add_wide_button_prefix(F(""), true);
+  html_add_wide_button_prefix(EMPTY_STRING, true);
 }
 
 void html_add_wide_button_prefix(const String& classes, bool enabled) {
@@ -397,11 +397,11 @@ void addHtmlLink(const String& htmlclass, const String& url, const String& label
 }
 
 void addHtmlDiv(const String& htmlclass) {
-  addHtmlDiv(htmlclass, F(""));
+  addHtmlDiv(htmlclass, EMPTY_STRING);
 }
 
 void addHtmlDiv(const String& htmlclass, const String& content) {
-  addHtmlDiv(htmlclass, content, F(""));
+  addHtmlDiv(htmlclass, content, EMPTY_STRING);
 }
 
 void addHtmlDiv(const String& htmlclass, const String& content, const String& id) {

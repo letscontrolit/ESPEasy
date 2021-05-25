@@ -331,17 +331,17 @@ void P087_html_show_matchForms(struct EventStruct *event) {
         case 1:
         {
           // Comparator
-          String options[2];
+          const __FlashStringHelper * options[2];
           options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
           int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
-          addSelector(id, 2, options, optionValues, NULL, comparator, false, F(""));
+          addSelector(id, 2, options, optionValues, NULL, comparator, false, EMPTY_STRING);
           break;
         }
         case 2:
         {
           // Compare with
-          addTextBox(id, filter, 32, false, false, F(""), F(""));
+          addTextBox(id, filter, 32, false, false, EMPTY_STRING, EMPTY_STRING);
           break;
         }
       }

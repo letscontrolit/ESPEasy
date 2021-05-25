@@ -72,7 +72,7 @@ void addSelector(const String& id,
   {
     addSelector_Head_reloadOnChange(id, classname, !enabled);
   } else {
-    do_addSelector_Head(id, classname, F(""), !enabled);
+    do_addSelector_Head(id, classname, EMPTY_STRING, !enabled);
   }
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
@@ -93,7 +93,7 @@ void addSelector(const String& id,
   {
     addSelector_Head_reloadOnChange(id, classname, !enabled);
   } else {
-    do_addSelector_Head(id, classname, F(""), !enabled);
+    do_addSelector_Head(id, classname, EMPTY_STRING, !enabled);
   }
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
@@ -144,7 +144,7 @@ void addSelector_options(int optionCount, const String options[], const int indi
 }
 
 void addSelector_Head(const String& id) {
-  do_addSelector_Head(id, F("wide"), F(""), false);
+  do_addSelector_Head(id, F("wide"), EMPTY_STRING, false);
 }
 
 void addSelector_Head_reloadOnChange(const String& id) {
@@ -363,12 +363,12 @@ void addTableSeparator(const String& label, int colspan, int h_size, const Strin
 
 void addFormHeader(const __FlashStringHelper * header) {
   html_TR();
-  html_table_header(header, F(""), F(""), 225);
+  html_table_header(header, EMPTY_STRING, EMPTY_STRING, 225);
   html_table_header(F(""));
 }
 
 void addFormHeader(const String& header, const String& helpButton) {
-  addFormHeader(header, helpButton, F(""));
+  addFormHeader(header, helpButton, EMPTY_STRING);
 }
 
 void addFormHeader(const String& header, const String& helpButton, const String& rtdHelpButton)

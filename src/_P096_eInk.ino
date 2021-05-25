@@ -300,8 +300,8 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
 #endif
         String arguments = String(string);
 
-        String command = F("");
-        String subcommand = F("");
+        String command;
+        String subcommand;
 
         int argIndex = arguments.indexOf(',');
         if (argIndex)

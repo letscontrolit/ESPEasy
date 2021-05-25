@@ -167,7 +167,7 @@ String formatToHex(unsigned long value) {
 String formatHumanReadable(unsigned long value, unsigned long factor) {
   String result = formatHumanReadable(value, factor, 2);
 
-  result.replace(F(".00"), F(""));
+  result.replace(F(".00"), EMPTY_STRING);
   return result;
 }
 
@@ -216,7 +216,7 @@ String formatToHex_decimal(unsigned long value, unsigned long factor) {
   return result;
 }
 
-String boolToString(bool value) {
+const __FlashStringHelper * boolToString(bool value) {
   return value ? F("true") : F("false");
 }
 
@@ -224,7 +224,7 @@ String boolToString(bool value) {
    Typical string replace functions.
 \*********************************************************************************************/
 void removeExtraNewLine(String& line) {
-  while (line.endsWith("\r\n\r\n")) {
+  while (line.endsWith(F("\r\n\r\n"))) {
     line.remove(line.length() - 2);
   }
 }
@@ -237,7 +237,7 @@ void addNewLine(String& line) {
    Format a value to the set number of decimals
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
-  if (event == nullptr) return F("");
+  if (event == nullptr) return EMPTY_STRING;
   isvalid = true;
 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -278,7 +278,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
       addLog(LOG_LEVEL_ERROR, log);
     }
     #endif // ifndef BUILD_NO_DEBUG
-    return F("");
+    return EMPTY_STRING;
   }
 
   switch (sensorType) {
@@ -522,7 +522,7 @@ String parseStringKeepCase(const String& string, byte indexFind, char separator)
   String result;
 
   if (!GetArgv(string.c_str(), result, indexFind, separator)) {
-    return F("");
+    return EMPTY_STRING;
   }
   result.trim();
   return stripQuotes(result);
@@ -558,7 +558,7 @@ String parseStringToEndKeepCase(const String& string, byte indexFind, char separ
   }
 
   if (!hasArgument || (pos_begin < 0)) {
-    return F("");
+    return EMPTY_STRING;
   }
   String result = string.substring(pos_begin, pos_end);
 
@@ -575,7 +575,7 @@ String tolerantParseStringKeepCase(const String& string, byte indexFind, char se
 }
 
 // escapes special characters in strings for use in html-forms
-bool htmlEscapeChar(char c, String& escaped)
+bool htmlEscapeChar(char c, const __FlashStringHelper * escaped)
 {
   switch (c)
   {
@@ -591,10 +591,10 @@ bool htmlEscapeChar(char c, String& escaped)
 
 void htmlEscape(String& html, char c)
 {
-  String repl;
+  const __FlashStringHelper * repl = F("");
 
   if (htmlEscapeChar(c, repl)) {
-    html.replace(String(c), repl);
+    html.replace(String(c), String(repl));
   }
 }
 
@@ -784,7 +784,7 @@ void parseSingleControllerVariable(String            & s,
     LoadTaskSettings(event->TaskIndex);
     repl(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[taskValueIndex], s, useURLencode);
   } else {
-    repl(F("%valname%"), F(""), s, useURLencode);
+    repl(F("%valname%"), EMPTY_STRING, s, useURLencode);
   }
 }
 
@@ -825,7 +825,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
     LoadTaskSettings(event->TaskIndex);
     repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
   } else {
-    repl(F("%tskname%"), F(""), s, useURLencode);
+    repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
   }
 
   const bool vname_found = s.indexOf(F("%vname")) != -1;
@@ -839,7 +839,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
       if (validTaskIndex(event->TaskIndex)) {
         repl(vname, ExtraTaskSettings.TaskDeviceValueNames[i], s, useURLencode);
       } else {
-        repl(vname, F(""), s, useURLencode);
+        repl(vname, EMPTY_STRING, s, useURLencode);
       }
     }
   }
@@ -950,7 +950,7 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(data.arg1))
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
-  SMART_CONV(F("%c_2hex%"),   formatToHex(data.arg1, F("")))
+  SMART_CONV(F("%c_2hex%"),   formatToHex(data.arg1, EMPTY_STRING))
   #undef SMART_CONV
 
   // Conversions with 2 parameters

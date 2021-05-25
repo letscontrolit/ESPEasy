@@ -96,7 +96,7 @@ void pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& lab
 }
 
 void pluginWebformShowValue(const String& valName, const String& value, bool addBR) {
-  pluginWebformShowValue(valName, F(""), value, F(""), addBR);
+  pluginWebformShowValue(valName, EMPTY_STRING, value, EMPTY_STRING, addBR);
 }
 
 void pluginWebformShowValue(const String& valName, const String& valName_id, const String& value, const String& value_id, bool addBR) {

@@ -199,7 +199,7 @@ void addDeviceSelect(const String& name,  int choice)
   String deviceName;
 
   addSelector_Head_reloadOnChange(name);
-  addSelector_Item(F("- None -"), 0, false, false, F(""));
+  addSelector_Item(F("- None -"), 0, false, false, EMPTY_STRING);
 
   for (byte x = 0; x <= deviceCount; x++)
   {
@@ -1104,8 +1104,8 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
     }
 
     if (multipleMuxPorts) {
-      addRowLabel(F("Select connections"), F(""));
-      html_table(F(""), false); // Sub-table
+      addRowLabel(F("Select connections"), EMPTY_STRING);
+      html_table(EMPTY_STRING, false); // Sub-table
       html_table_header(F("Channel"));
       html_table_header(F("Enable"));
       html_table_header(F("Channel"));

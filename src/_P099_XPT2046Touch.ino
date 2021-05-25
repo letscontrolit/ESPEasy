@@ -211,8 +211,8 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
         }
         if (tbUseCalibration) {
 
-          addRowLabel(F("Calibration"), F(""));
-          html_table(F(""), false);  // Sub-table
+          addRowLabel(F("Calibration"));
+          html_table(EMPTY_STRING, false);  // Sub-table
           html_table_header(F(""));
           html_table_header(F("x"));
           html_table_header(F("y"));
@@ -256,8 +256,8 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
         }
         if (P099_CONFIG_OBJECTCOUNT > -1) {
 
-          addRowLabel(F("Object"), F(""));
-          html_table(F(""), false);  // Sub-table
+          addRowLabel(F("Object"));
+          html_table(EMPTY_STRING, false);  // Sub-table
           html_table_header(F("&nbsp;#&nbsp;"));
           html_table_header(F("Objectname"));
           html_table_header(F("Top-left x"));
@@ -275,7 +275,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
             addTextBox(getPluginCustomArgName(objectNr),
                       String(P099_data->StoredSettings.TouchObjects[objectNr].objectname),
                       P099_MaxObjectNameLength - 1,
-                      false, false, F(""), F(""));
+                      false, false, EMPTY_STRING, EMPTY_STRING);
             html_TD();
             addNumericBox(getPluginCustomArgName(objectNr + 100), P099_data->StoredSettings.TouchObjects[objectNr].top_left.x,     0, 65535);
             html_TD();
@@ -420,9 +420,9 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String command = F("");
-      String subcommand = F("");
-      String arguments = F("");
+      String command;
+      String subcommand;
+      String arguments;
       arguments.reserve(24);
 
       int argIndex = string.indexOf(',');

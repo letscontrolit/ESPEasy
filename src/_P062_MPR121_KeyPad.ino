@@ -120,8 +120,8 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         }
         P062_data->loadTouchObjects(event->TaskIndex);
 
-        addRowLabel(F("Object"), F(""));
-        html_table(F(""), false);  // Sub-table
+        addRowLabel(F("Object"));
+        html_table(EMPTY_STRING, false);  // Sub-table
         html_table_header(F("&nbsp;#&nbsp;"));
         html_table_header(F("Touch (0..255)"));
         html_table_header(F("Release (0..255)"));

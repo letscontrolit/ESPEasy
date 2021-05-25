@@ -3,10 +3,9 @@
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
 #include <ESPeasySerial.h>
-#include <Regexp.h>
-
 
 #ifdef USES_P094
+#include <Regexp.h>
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Helpers/StringConverter.h"

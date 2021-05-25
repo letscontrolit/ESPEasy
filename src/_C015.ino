@@ -184,7 +184,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
           if (!isvalid) {
             // send empty string to Blynk in case of error
-            formattedValue = F("");
+            formattedValue = EMPTY_STRING;
           }
 
           String valueName     = ExtraTaskSettings.TaskDeviceValueNames[x];

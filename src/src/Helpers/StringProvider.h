@@ -3,6 +3,9 @@
 
 #include "../../ESPEasy_common.h"
 
+
+
+
 struct LabelType;
 
 // enum LabelType::Enum : short;

@@ -234,11 +234,11 @@ size_t streamFile_htmlEscape(const String& fileName)
 
   if (f)
   {
-    String escaped;
-
     while (f.available())
     {
       char c = (char)f.read();
+
+      const __FlashStringHelper * escaped = F("");
 
       if (htmlEscapeChar(c, escaped)) {
         addHtml(escaped);
@@ -268,7 +268,7 @@ bool captivePortal() {
     }
     #endif
     web_server.sendHeader(F("Location"), redirectURL, true);
-    web_server.send(302, F("text/plain"), F(""));   // Empty content inhibits Content-length header so we have to close the socket ourselves.
+    web_server.send(302, F("text/plain"), EMPTY_STRING);   // Empty content inhibits Content-length header so we have to close the socket ourselves.
     web_server.client().stop(); // Stop is needed because we sent no content length
     return true;
   }

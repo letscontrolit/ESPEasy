@@ -91,7 +91,7 @@ void handle_rules() {
   html_TR_TD();
   html_end_form();
   addHtml(F("<button id='save_button' class='button' onClick='saveRulesFile()'>Save</button>"));
-  addHtmlDiv(F(""), F("Saved!"), F("toastmessage"));
+  addHtmlDiv(EMPTY_STRING, F("Saved!"), F("toastmessage"));
 
   addButton(fileName, F("Download to file"));
   html_end_table();
@@ -356,7 +356,7 @@ void handle_rules_delete() {
   if (removed)
   {
     web_server.sendHeader(F("Location"), F("/rules"), true);
-    web_server.send(302, F("text/plain"), F(""));
+    web_server.send(302, F("text/plain"), EMPTY_STRING);
   }
   else
   {
@@ -472,7 +472,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
         if (isAddNew) {
           web_server.sendHeader(F("Location"), F("/rules"), true);
-          web_server.send(302, F("text/plain"), F(""));
+          web_server.send(302, F("text/plain"), EMPTY_STRING);
           return true;
         }
       }
@@ -594,7 +594,7 @@ bool Rule_Download(const String& path)
 
 void Goto_Rules_Root() {
   web_server.sendHeader(F("Location"), F("/rules"), true);
-  web_server.send(302, F("text/plain"), F(""));
+  web_server.send(302, F("text/plain"), EMPTY_STRING);
 }
 
 bool EnumerateFileAndDirectory(String          & rootPath

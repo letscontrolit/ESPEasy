@@ -417,7 +417,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
                 RuleEvent += String((float)b / t * sRGBFactor, 4);
                 break;
               default:
-                RuleEvent = F("");
+                RuleEvent = EMPTY_STRING;
                 break;
               }
               if (RuleEvent.length() != 0) {
@@ -453,7 +453,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
               RuleEvent += c;
               break;
             default:
-              RuleEvent = F("");
+              RuleEvent = EMPTY_STRING;
               break;
             }
             if (RuleEvent.length() != 0) {

@@ -31,7 +31,7 @@ void addFormSeparator(int clspan)
 // ********************************************************************************
 void addFormNote(const __FlashStringHelper * text)
 {
-  addRowLabel_tr_id(F(""), F(""));
+  addRowLabel_tr_id(EMPTY_STRING, EMPTY_STRING);
   addHtml(F(" <div "));
   addHtmlAttribute(F("class"), F("note"));
   addHtml('>');
@@ -42,7 +42,7 @@ void addFormNote(const __FlashStringHelper * text)
 
 void addFormNote(const String& text, const String& id)
 {
-  addRowLabel_tr_id(F(""), id);
+  addRowLabel_tr_id(EMPTY_STRING, id);
   addHtmlDiv(F("note"), String(F("Note: ")) + text);
 }
 
@@ -177,7 +177,7 @@ void addFormIPBox(const String& label, const String& id, const byte ip[4])
   addHtmlAttribute(F("class"), F("wide"));
   addHtmlAttribute(F("type"),  F("text"));
   addHtmlAttribute(F("name"),  id);
-  addHtmlAttribute(F("value"), (empty_IP) ? F("") : formatIP(ip));
+  addHtmlAttribute(F("value"), (empty_IP) ? EMPTY_STRING : formatIP(ip));
   addHtml('>');
 }
 
@@ -209,7 +209,7 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
 void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex)
 {
   addRowLabel_tr_id(F("I2C Address"), id);
-  do_addSelector_Head(id, F(""), F(""), false);
+  do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false);
 
   for (byte x = 0; x < addressCount; x++)
   {
@@ -218,7 +218,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
     if (x == 0) {
       option += F(" - (default)");
     }
-    addSelector_Item(option, addresses[x], addresses[x] == selectedIndex, false, F(""));
+    addSelector_Item(option, addresses[x], addresses[x] == selectedIndex, false, EMPTY_STRING);
   }
   addSelector_Foot();
 }
@@ -291,7 +291,7 @@ void addFormSelector_script(const String& label,
                             const String& onChangeCall)
 {
   addRowLabel_tr_id(label, id);
-  do_addSelector_Head(id, F(""), onChangeCall, false);
+  do_addSelector_Head(id, EMPTY_STRING, onChangeCall, false);
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }

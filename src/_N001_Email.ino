@@ -119,10 +119,10 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			mailheader.replace(F("$emailfrom"), notificationsettings.Sender);
 		} else {
 			String senderName = email_address.substring(0, pos_less);
-			senderName.replace(F("\""), F("")); // Remove quotes
+			senderName.replace(F("\""), EMPTY_STRING); // Remove quotes
 			String address = email_address.substring(pos_less + 1);
-			address.replace(F("<"), F(""));
-			address.replace(F(">"), F(""));
+			address.replace(F("<"), EMPTY_STRING);
+			address.replace(F(">"), EMPTY_STRING);
 			address.trim();
 			senderName.trim();
 			mailheader.replace(F("$nodename"), senderName);
@@ -139,7 +139,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 		// Wait for Client to Start Sending
 		// The MTA Exchange
 		while (true) {
-			if (!NPlugin_001_MTA(client, F(""), F("220 "))) break;
+			if (!NPlugin_001_MTA(client, EMPTY_STRING, F("220 "))) break;
 			if (!NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain, F("250 "))) break;
 			if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) break;
 			if (!NPlugin_001_MTA(client, String(F("MAIL FROM:<")) + notificationsettings.Sender + ">", F("250 "))) break;

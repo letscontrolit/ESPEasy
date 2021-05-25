@@ -276,8 +276,8 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         String tmpString = String(string);
         String arguments = String(string);
 
-        String command = F("");
-        String subcommand = F("");
+        String command;
+        String subcommand;
 
         int argIndex = arguments.indexOf(',');
         if (argIndex)

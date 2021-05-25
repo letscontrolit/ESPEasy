@@ -254,7 +254,7 @@ String serializeDomoticzJson(struct EventStruct *event)
     json += to_json_object_value(F("RSSI"), String(mapRSSItoDomoticz()));
     #  if FEATURE_ADC_VCC
     json += ',';
-    json += to_json_object_value(F("Battery"), mapVccToDomoticz());
+    json += to_json_object_value(F("Battery"), String(mapVccToDomoticz()));
     #  endif // if FEATURE_ADC_VCC
 
     const Sensor_VType sensorType = event->getSensorType();

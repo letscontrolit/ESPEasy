@@ -157,7 +157,7 @@ void handle_notifications() {
     addRowLabel(F("Notification"));
     byte choice = Settings.Notification[notificationindex];
     addSelector_Head_reloadOnChange(F("notification"));
-    addSelector_Item(F("- None -"), 0, false, false, F(""));
+    addSelector_Item(F("- None -"), 0, false, false, EMPTY_STRING);
 
     for (byte x = 0; x <= notificationCount; x++)
     {

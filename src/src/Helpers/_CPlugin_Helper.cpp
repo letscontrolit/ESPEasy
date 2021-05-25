@@ -197,8 +197,8 @@ String do_create_http_request(
   const String& hostportString,
   const String& method, const String& uri) {
   return do_create_http_request(hostportString, method, uri,
-                                F(""), // auth_header
-                                F(""), // additional_options
+                                EMPTY_STRING, // auth_header
+                                EMPTY_STRING, // additional_options
                                 -1  // content_length
                                 );
 }
@@ -213,8 +213,8 @@ String do_create_http_request(
     defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString(),
     method,
     uri,
-    F(""), // auth_header
-    F(""), // additional_options
+    EMPTY_STRING, // auth_header
+    EMPTY_STRING, // additional_options
     content_length);
 }
 
@@ -229,7 +229,7 @@ String create_http_request_auth(
     method,
     uri,
     get_auth_header(controller_index, ControllerSettings),
-    F(""), // additional_options
+    EMPTY_STRING, // additional_options
     content_length);
 }
 

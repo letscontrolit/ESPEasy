@@ -146,7 +146,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         optionValuesMode3[1] = AS7265X_INDICATOR_CURRENT_LIMIT_2MA;
         optionValuesMode3[2] = AS7265X_INDICATOR_CURRENT_LIMIT_4MA;
         optionValuesMode3[3] = AS7265X_INDICATOR_CURRENT_LIMIT_8MA;
-        addFormSelector(F(""), F("p112_BlueStatusLEDCurrentLimit"), 4, optionsMode3, optionValuesMode3, choiceMode3);
+        addFormSelector(EMPTY_STRING, F("p112_BlueStatusLEDCurrentLimit"), 4, optionsMode3, optionValuesMode3, choiceMode3);
       }
       addHtml(F(" Current Limit"));
       addFormNote(F("Activate Status LEDs only for debugging purpose."));

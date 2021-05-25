@@ -94,7 +94,7 @@ struct P073_data_struct : public PluginTaskData_base {
     #endif // P073_7DBIN_COMMAND
     #ifdef P073_SCROLL_TEXT
     , txtScrolling(false), scrollCount(0), scrollPos(0), scrollFull(false)
-    , _scrollSpeed(0), _textToScroll(F(""))
+    , _scrollSpeed(0)
     #endif // P073_SCROLL_TEXT
      {
     ClearBuffer();
@@ -353,7 +353,7 @@ struct P073_data_struct : public PluginTaskData_base {
   }
 
   void setTextToScroll(const String& text) {
-    _textToScroll = F("");
+    _textToScroll = EMPTY_STRING;
     if (text.length() > 0) {
       int bufToFill = getBufferLength(displayModel);
       _textToScroll.reserve(text.length() + bufToFill + (scrollFull ? bufToFill : 0));
@@ -1473,7 +1473,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event, const String& text) {
     #endif // P073_SCROLL_TEXT
     if (data.length() > 0) {
       #ifdef P073_SCROLL_TEXT
-      P073_data->setTextToScroll(F("")); // Clear any scrolling text
+      P073_data->setTextToScroll(EMPTY_STRING); // Clear any scrolling text
       if (P073_data->txtScrolling && data.length() > bufLen) {
         P073_data->setBinaryData(data);
       } else

@@ -655,7 +655,7 @@ private:
 
   static void dumpPacket(const uint8_t* packet, size_t length, String& result) {
     for (size_t idx = 0; idx < length; ++idx) {
-      result += formatToHex(packet[idx], F(""));
+      result += formatToHex(packet[idx], EMPTY_STRING);
       result += ' ';
     }
   }

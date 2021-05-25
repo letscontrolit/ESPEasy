@@ -171,7 +171,7 @@ void rulesProcessing(const String& event) {
  \*********************************************************************************************/
 String rulesProcessingFile(const String& fileName, const String& event) {
   if (!Settings.UseRules || !fileExists(fileName)) {
-    return F("");
+    return EMPTY_STRING;
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile"));
@@ -192,7 +192,7 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   if (nestingLevel > RULES_MAX_NESTING_LEVEL) {
     addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
     nestingLevel--;
-    return F("");
+    return EMPTY_STRING;
   }
 
   fs::File f = tryOpenFile(fileName, "r+");
@@ -252,7 +252,7 @@ String rulesProcessingFile(const String& fileName, const String& event) {
           }
 
           // Prepare for new line
-          line = F("");
+          line = EMPTY_STRING;
           line.reserve(longestLineSize);
           firstNonSpaceRead = false;
           commentFound      = false;
@@ -302,7 +302,7 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  return F("");
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\
@@ -737,7 +737,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
 
   String eventTrigger;
 
-  action = F("");
+  action = EMPTY_STRING;
 
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
@@ -948,8 +948,8 @@ bool ruleMatch(const String& event, const String& rule) {
   tmpRule.trim();
 
   // Ignore escape char
-  tmpRule.replace(F("["), F(""));
-  tmpRule.replace(F("]"), F(""));
+  tmpRule.replace(F("["), EMPTY_STRING);
+  tmpRule.replace(F("]"), EMPTY_STRING);
 
   if (tmpEvent.equalsIgnoreCase(tmpRule)) {
     return true;
