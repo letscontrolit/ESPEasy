@@ -206,6 +206,11 @@ void   repl(const __FlashStringHelper * key,
             String      & s,
             bool       useURLencode);
 
+void   repl(const __FlashStringHelper * key,
+            const char* val,
+            String      & s,
+            bool       useURLencode);
+
 void   repl(const String& key,
             const String& val,
             String      & s,

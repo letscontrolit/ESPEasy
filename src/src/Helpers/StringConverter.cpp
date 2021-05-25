@@ -667,6 +667,14 @@ void repl(const __FlashStringHelper * key,
   repl(String(key), val, s, useURLencode);
 }
 
+void repl(const __FlashStringHelper * key,
+          const char* val,
+          String      & s,
+          bool       useURLencode)
+{
+  repl(String(key), String(val), s, useURLencode);
+}
+
 void repl(const String& key, const String& val, String& s, bool useURLencode)
 {
   if (useURLencode) {
@@ -681,8 +689,8 @@ void repl(const String& key, const String& val, String& s, bool useURLencode)
 #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 void parseSpecialCharacters(String& s, bool useURLencode)
 {
-  bool no_accolades   = s.indexOf('{') == -1 || s.indexOf('}') == -1;
-  bool no_html_entity = s.indexOf('&') == -1 || s.indexOf(';') == -1;
+  const bool no_accolades   = s.indexOf('{') == -1 || s.indexOf('}') == -1;
+  const bool no_html_entity = s.indexOf('&') == -1 || s.indexOf(';') == -1;
 
   if (no_accolades && no_html_entity) {
     return; // Nothing to replace
@@ -897,6 +905,27 @@ bool getConvertArgumentString(const String& marker,
 
 
 // FIXME TD-er: These macros really increase build size
+struct ConvertArgumentData {
+  ConvertArgumentData(String& s, bool useURLencode) : str(s), URLencode(useURLencode) {}
+
+  String& str;
+  float arg1, arg2 = 0.0f;
+  int   startIndex = 0;
+  int   endIndex   = 0;
+  bool  URLencode  = false;
+};
+
+void repl(ConvertArgumentData& data, const String& repl_str) {
+  repl(data.str.substring(data.startIndex, data.endIndex), repl_str, data.str, data.URLencode);
+}
+
+bool getConvertArgument(const __FlashStringHelper * marker, ConvertArgumentData& data) {
+  return getConvertArgument(marker, data.str, data.arg1, data.startIndex, data.endIndex);
+}
+
+bool getConvertArgument2(const __FlashStringHelper * marker, ConvertArgumentData& data) {
+  return getConvertArgument2(marker, data.str, data.arg1, data.arg2, data.startIndex, data.endIndex);
+}
 
 // Parse conversions marked with "%conv_marker%(float)"
 // Must be called last, since all sensor values must be converted, processed, etc.
@@ -904,35 +933,33 @@ void parseStandardConversions(String& s, bool useURLencode) {
   if (s.indexOf(F("%c_")) == -1) {
     return; // Nothing to replace
   }
-  float arg1       = 0.0f;
-  int   startIndex = 0;
-  int   endIndex   = 0;
+
+  ConvertArgumentData data(s, useURLencode);
 
   // These replacements should be done in a while loop per marker,
   // since they also replace the numerical parameter.
   // The marker may occur more than once per string, but with different parameters.
   #define SMART_CONV(T, FUN) \
-  while (getConvertArgument((T), s, arg1, startIndex, endIndex)) { repl(s.substring(startIndex, endIndex), (FUN), s, useURLencode); }
-  SMART_CONV(F("%c_w_dir%"),  getBearing(arg1))
-  SMART_CONV(F("%c_c2f%"),    toString(CelsiusToFahrenheit(arg1), 2))
-  SMART_CONV(F("%c_ms2Bft%"), String(m_secToBeaufort(arg1)))
-  SMART_CONV(F("%c_cm2imp%"), centimeterToImperialLength(arg1))
-  SMART_CONV(F("%c_mm2imp%"), millimeterToImperialLength(arg1))
-  SMART_CONV(F("%c_m2day%"),  toString(minutesToDay(arg1), 2))
-  SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(arg1))
-  SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(arg1))
-  SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(arg1))
-  SMART_CONV(F("%c_2hex%"),   formatToHex(arg1, F("")))
+  while (getConvertArgument((T), data)) { repl(data, (FUN)); }
+  SMART_CONV(F("%c_w_dir%"),  getBearing(data.arg1))
+  SMART_CONV(F("%c_c2f%"),    toString(CelsiusToFahrenheit(data.arg1), 2))
+  SMART_CONV(F("%c_ms2Bft%"), String(m_secToBeaufort(data.arg1)))
+  SMART_CONV(F("%c_cm2imp%"), centimeterToImperialLength(data.arg1))
+  SMART_CONV(F("%c_mm2imp%"), millimeterToImperialLength(data.arg1))
+  SMART_CONV(F("%c_m2day%"),  toString(minutesToDay(data.arg1), 2))
+  SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(data.arg1))
+  SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(data.arg1))
+  SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
+  SMART_CONV(F("%c_2hex%"),   formatToHex(data.arg1, F("")))
   #undef SMART_CONV
 
   // Conversions with 2 parameters
   #define SMART_CONV(T, FUN) \
-  while (getConvertArgument2((T), s, arg1, arg2, startIndex, endIndex)) { repl(s.substring(startIndex, endIndex), (FUN), s, useURLencode); }
-  float arg2 = 0.0f;
-  SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(arg1, arg2), 2))
-  SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(arg1, arg2))
-  SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(arg1, arg2), 2))
-  SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(arg1, arg2), 2))
+  while (getConvertArgument2((T), data)) { repl(data, (FUN)); }
+  SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(data.arg1, data.arg2), 2))
+  SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(data.arg1, data.arg2))
+  SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(data.arg1, data.arg2), 2))
+  SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(data.arg1, data.arg2), 2))
   #undef SMART_CONV
 }
 
