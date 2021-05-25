@@ -241,6 +241,11 @@ void addUnit(const String& unit)
   addHtml(']');
 }
 
+void addRowLabel_tr_id(const __FlashStringHelper * label, const __FlashStringHelper * id)
+{
+  addRowLabel_tr_id(String(label), String(id));
+}
+
 void addRowLabel_tr_id(const __FlashStringHelper * label, const String& id)
 {
   addRowLabel_tr_id(String(label), id);

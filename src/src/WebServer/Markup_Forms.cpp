@@ -59,6 +59,12 @@ void addFormCheckBox_disabled(const String& label, const String& id, boolean che
   addFormCheckBox(label, id, checked, true);
 }
 
+void addFormCheckBox(const __FlashStringHelper * label, const __FlashStringHelper * id, boolean checked, bool disabled)
+{
+  addRowLabel_tr_id(label, id);
+  addCheckBox(id, checked, disabled);
+}
+
 void addFormCheckBox(const __FlashStringHelper * label, const String& id, boolean checked, bool disabled)
 {
   addRowLabel_tr_id(label, id);

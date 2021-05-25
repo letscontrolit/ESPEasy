@@ -393,6 +393,20 @@ String wrapIfContains(const String& value, char contains, char wrap) {
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
+String to_json_object_value(const __FlashStringHelper * object,
+                            const __FlashStringHelper * value) 
+{
+  return to_json_object_value(String(object), String(value));
+}
+
+
+String to_json_object_value(const __FlashStringHelper * object,
+                            const String& value) 
+{
+  return to_json_object_value(String(object), value);
+}
+
+
 String to_json_object_value(const String& object, const String& value) {
   String result;
   bool   isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));

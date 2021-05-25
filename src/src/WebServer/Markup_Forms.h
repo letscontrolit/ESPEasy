@@ -27,6 +27,7 @@ void addFormNote(const String& text, const String& id = "");
 // ********************************************************************************
 
 void addFormCheckBox_disabled(const String& label, const String& id, boolean checked);
+void addFormCheckBox(const __FlashStringHelper * label, const __FlashStringHelper * id, boolean checked, bool disabled = false);
 void addFormCheckBox(const __FlashStringHelper * label, const String& id, boolean checked, bool disabled = false);
 void addFormCheckBox(const String& label, const String& id, boolean checked, bool disabled = false);
 void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled = false);
