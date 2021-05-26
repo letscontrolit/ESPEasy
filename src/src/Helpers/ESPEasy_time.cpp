@@ -135,7 +135,7 @@ unsigned long ESPEasy_time::now() {
           log += String((time_offset * 1000.0f) / syncInterval);
           log += F(" msec/second");
         }
-        addLog(LOG_LEVEL_INFO, log)
+        addLog(LOG_LEVEL_INFO, log);
       }
       sysTime = unixTime_d;
 

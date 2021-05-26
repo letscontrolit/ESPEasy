@@ -229,6 +229,10 @@ void html_add_button_prefix() {
   html_add_button_prefix(EMPTY_STRING, true);
 }
 
+void html_add_button_prefix(const __FlashStringHelper * classes, bool enabled) {
+  html_add_button_prefix(String(classes), enabled);
+}
+
 void html_add_button_prefix(const String& classes, bool enabled) {
   addHtml(F(" <a class='button link"));
 
@@ -395,6 +399,12 @@ void addHtmlLink(const String& htmlclass, const String& url, const String& label
   addHtml(label);
   addHtml(F("</a>"));
 }
+
+void addHtmlDiv(const __FlashStringHelper * htmlclass, const String& content, const String& id)
+{
+  addHtmlDiv(String(htmlclass), content, id);
+}
+
 
 void addHtmlDiv(const String& htmlclass) {
   addHtmlDiv(htmlclass, EMPTY_STRING);

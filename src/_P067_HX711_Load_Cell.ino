@@ -384,8 +384,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
         if ((modeChanA == modeAoff) && (modeChanB == modeBoff))
         {
-          log = F("HX711: No channel selected");
-          addLog(LOG_LEVEL_INFO,log);
+          addLog(LOG_LEVEL_INFO, F("HX711: No channel selected"));
         }
 
         // Channel A activated?
@@ -477,25 +476,21 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         String command = parseString(string, 1);
         if (command.equalsIgnoreCase(F("tarechana")))
         {
-          String log = F("HX711: tare channel A");
-
           float2int(-UserVar[event->BaseVarIndex + 2], &PCONFIG(1), &PCONFIG(2));
           Plugin_067_OversamplingValueChanA[event->TaskIndex] = 0;
           Plugin_067_OversamplingCountChanA[event->TaskIndex] = 0;
 
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("HX711: tare channel A"));
           success = true;
         }
 
         if (command.equalsIgnoreCase(F("tarechanb")))
         {
-          String log = F("HX711: tare channel B");
-
           float2int(-UserVar[event->BaseVarIndex + 3], &PCONFIG(3), &PCONFIG(4));
           Plugin_067_OversamplingValueChanB[event->TaskIndex] = 0;
           Plugin_067_OversamplingCountChanB[event->TaskIndex] = 0;
 
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("HX711: tare channel B"));
           success = true;
         }
         break;

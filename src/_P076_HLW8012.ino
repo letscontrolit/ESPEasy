@@ -260,8 +260,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       SaveCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
                              sizeof(hlwMultipliers));
       if (PLUGIN_076_DEBUG) {
-        String log = F("P076: Saved Calibration from Config Page");
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration from Config Page"));
       }
 
       if (Plugin_076_hlw) {
@@ -271,8 +270,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       }
 
       if (PLUGIN_076_DEBUG) {
-        String log = F("P076: Multipliers Reassigned");
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, F("P076: Multipliers Reassigned"));
       }
     }
 

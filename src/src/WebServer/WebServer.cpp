@@ -774,45 +774,41 @@ void writeDefaultCSS(void)
 int8_t level     = 0;
 int8_t lastLevel = -1;
 
+void json_quote_name(const __FlashStringHelper * val) {
+  json_quote_name(String(val));
+}
+
 void json_quote_name(const String& val) {
-  String html;
-
-  html.reserve(4 + val.length());
-
   if (lastLevel == level) {
-    html += ",";
+    addHtml(',');
   }
 
   if (val.length() > 0) {
-    html += '\"';
-    html += val;
-    html += '\"';
-    html += ':';
+    json_quote_val(val);
+    addHtml(':');
   }
-  addHtml(html);
 }
 
 void json_quote_val(const String& val) {
-  String html;
-
-  html.reserve(4 + val.length());
-  html += '\"';
-  html += val;
-  html += '\"';
-  addHtml(html);
-}
-
-void json_open() {
-  json_open(false, String());
+  addHtml('\"');
+  addHtml(val);
+  addHtml('\"');
 }
 
 void json_open(bool arr) {
-  json_open(arr, String());
+  json_open(arr, EMPTY_STRING);
+}
+
+void json_open(bool arr, const __FlashStringHelper * name) {
+  json_quote_name(name);
+  addHtml(arr ? '[' : '{');
+  lastLevel = level;
+  level++;
 }
 
 void json_open(bool arr, const String& name) {
   json_quote_name(name);
-  addHtml(arr ? "[" : "{");
+  addHtml(arr ? '[' : '{');
   lastLevel = level;
   level++;
 }
@@ -827,7 +823,7 @@ void json_close() {
 }
 
 void json_close(bool arr) {
-  addHtml(arr ? "]" : "}");
+  addHtml(arr ? ']' : '}');
   level--;
   lastLevel = level;
 }
@@ -869,34 +865,26 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
     LoadTaskSettings(x);
 
     {
-      String html;
-      html.reserve(32);
-
-      html += F("<option value='");
-      html += x;
-      html += '\'';
+      addHtml(F("<option value='"));
+      addHtml(String(x));
+      addHtml('\'');
 
       if (choice == x) {
-        html += F(" selected");
+        addHtml(F(" selected"));
       }
-      addHtml(html);
     }
 
     if (!validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
       addDisabled();
     }
     {
-      String html;
-      html.reserve(96);
-
-      html += '>';
-      html += x + 1;
-      html += F(" - ");
-      html += deviceName;
-      html += F(" - ");
-      html += ExtraTaskSettings.TaskDeviceName;
-      html += F("</option>");
-      addHtml(html);
+      addHtml('>');
+      addHtml(String(x + 1));
+      addHtml(F(" - "));
+      addHtml(deviceName);
+      addHtml(F(" - "));
+      addHtml(ExtraTaskSettings.TaskDeviceName);
+      addHtml(F("</option>"));
     }
   }
 }
@@ -922,19 +910,16 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 
   for (byte x = 0; x < valueCount; x++)
   {
-    String html;
-    html.reserve(96);
-    html += F("<option value='");
-    html += x;
-    html += '\'';
+    addHtml(F("<option value='"));
+    addHtml(String(x));
+    addHtml('\'');
 
     if (choice == x) {
-      html += F(" selected");
+      addHtml(F(" selected"));
     }
-    html += '>';
-    html += ExtraTaskSettings.TaskDeviceValueNames[x];
-    html += F("</option>");
-    addHtml(html);
+    addHtml('>');
+    addHtml(ExtraTaskSettings.TaskDeviceValueNames[x]);
+    addHtml(F("</option>"));
   }
 }
 

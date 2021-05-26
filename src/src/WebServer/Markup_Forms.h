@@ -107,8 +107,9 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice);
 void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex);
 
 
-void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex);
+void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange = false);
 void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex);
+void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const String options[], const int indices[], int selectedIndex);
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex);
 
 void addFormSelector(const String& label,

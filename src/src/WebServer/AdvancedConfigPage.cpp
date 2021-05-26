@@ -311,11 +311,6 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
 void addFormLogLevelSelect(LabelType::Enum label, int choice)
 {
   addRowLabel(getLabel(label));
-  addLogLevelSelect(getInternalLabel(label), choice);
-}
-
-void addLogLevelSelect(const String& name, int choice)
-{
   const __FlashStringHelper * options[LOG_LEVEL_NRELEMENTS + 1];
   int    optionValues[LOG_LEVEL_NRELEMENTS + 1] = { 0 };
 
@@ -324,23 +319,19 @@ void addLogLevelSelect(const String& name, int choice)
   for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
     options[i + 1] = getLogLevelDisplayStringFromIndex(i, optionValues[i + 1]);
   }
-  addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice);
+  addSelector(getInternalLabel(label), LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice);
+
 }
 
-void addFormLogFacilitySelect(const String& label, const String& id, int choice)
+void addFormLogFacilitySelect(const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel(label);
-  addLogFacilitySelect(id, choice);
-}
-
-void addLogFacilitySelect(const String& name, int choice)
-{
   const __FlashStringHelper * options[12] =
   { F("Kernel"), F("User"),   F("Daemon"),   F("Message"), F("Local0"),  F("Local1"),
     F("Local2"), F("Local3"), F("Local4"),   F("Local5"),  F("Local6"),  F("Local7") };
   int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
 
-  addSelector(name, 12, options, optionValues, NULL, choice);
+  addSelector(id, 12, options, optionValues, NULL, choice);
 }
 
 #endif // ifdef WEBSERVER_ADVANCED

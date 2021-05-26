@@ -198,8 +198,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       } // if ixd !=0
       else
       {
-        String log = F("MQTT : IDX cannot be zero!");
-        addLog(LOG_LEVEL_ERROR, log);
+        addLog(LOG_LEVEL_ERROR, F("MQTT : IDX cannot be zero!"));
       }
       break;
     }

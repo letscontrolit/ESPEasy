@@ -84,7 +84,15 @@ String getPluginCustomArgName(int varNr) {
 // if the regular values should also be displayed.
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-void pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const String& label, const String& value, bool addTrailingBreak) {
+void pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const __FlashStringHelper * label, const String& value, bool addTrailingBreak) {
+  pluginWebformShowValue(taskIndex, varNr, String(label), value, addTrailingBreak);
+}
+
+void pluginWebformShowValue(taskIndex_t   taskIndex,
+                            byte          varNr,
+                            const String& label,
+                            const String& value,
+                            bool          addTrailingBreak) {
   if (varNr > 0) {
     addHtmlDiv(F("div_br"));
   }

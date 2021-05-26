@@ -80,7 +80,7 @@ void html_end_table();
 void html_end_form();
 
 void html_add_button_prefix();
-
+void html_add_button_prefix(const __FlashStringHelper * classes, bool enabled);
 void html_add_button_prefix(const String& classes, bool enabled);
 
 void html_add_wide_button_prefix();
@@ -119,6 +119,8 @@ void addHtmlAttribute(const String& label, const String& value);
 void addDisabled();
 
 void addHtmlLink(const String& htmlclass, const String& url, const String& label);
+
+void addHtmlDiv(const __FlashStringHelper * htmlclass, const String& content = EMPTY_STRING, const String& id = EMPTY_STRING);
 
 void addHtmlDiv(const String& htmlclass);
 void addHtmlDiv(const String& htmlclass, const String& content);

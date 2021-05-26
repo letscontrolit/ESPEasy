@@ -555,8 +555,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         {
           if ((PCONFIG(0) == SER_SWITCH_YEWE) && (Plugin_091_commandstate != 1))
           { // check Tuya state if anybody ask for it
-            String log = F("SerSW   : ReadState");
-            addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, F("SerSW   : ReadState"));
             getmcustate();
           }
           if (PCONFIG(0) == SER_SWITCH_WIFIDIMMER) {

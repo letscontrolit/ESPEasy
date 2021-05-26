@@ -91,13 +91,15 @@ void   writeDefaultCSS(void);
 extern int8_t level;
 extern int8_t lastLevel;
 
+void json_quote_name(const __FlashStringHelper * val);
 void json_quote_name(const String& val);
 
 void json_quote_val(const String& val);
 
-void json_open();
+void json_open(bool arr = false);
 
-void json_open(bool arr);
+void json_open(bool          arr,
+               const __FlashStringHelper * name);
 
 void json_open(bool          arr,
                const String& name);

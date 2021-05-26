@@ -246,14 +246,19 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
   addSelector_Foot();
 }
 
-void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex)
+void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange)
 {
-  addFormSelector(String(label), String(id), optionCount, options, indices, NULL, selectedIndex, false);
+  addFormSelector(String(label), String(id), optionCount, options, indices, NULL, selectedIndex, reloadonchange);
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex)
 {
   addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
+}
+
+void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const String options[], const int indices[], int selectedIndex)
+{
+  addFormSelector(String(label), String(id), optionCount, options, indices, NULL, selectedIndex, false);
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex)

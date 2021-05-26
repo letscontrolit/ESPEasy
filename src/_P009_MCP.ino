@@ -281,7 +281,7 @@ addLog(LOG_LEVEL_INFO,"MCP INIT="+String(newStatus.state));
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
         if (round(PCONFIG_FLOAT(3)) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
-          addLog(LOG_LEVEL_DEBUG, F("MCP :SafeButton 1st click."))
+          addLog(LOG_LEVEL_DEBUG, F("MCP :SafeButton 1st click."));
           PCONFIG_LONG(3) = 1;
         }
 

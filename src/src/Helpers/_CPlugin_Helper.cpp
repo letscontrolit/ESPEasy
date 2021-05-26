@@ -244,7 +244,7 @@ String create_http_request_auth(int controller_number, int controller_index, Con
 }
 
 #ifndef BUILD_NO_DEBUG
-void log_connecting_to(const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
+void log_connecting_to(const __FlashStringHelper * prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
@@ -256,7 +256,7 @@ void log_connecting_to(const String& prefix, int controller_number, ControllerSe
 
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const String& prefix, int controller_number) {
+void log_connecting_fail(const __FlashStringHelper * prefix, int controller_number) {
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
@@ -269,7 +269,7 @@ void log_connecting_fail(const String& prefix, int controller_number) {
   }
 }
 
-bool count_connection_results(bool success, const String& prefix, int controller_number) {
+bool count_connection_results(bool success, const __FlashStringHelper * prefix, int controller_number) {
   if (!success)
   {
     ++WiFiEventData.connectionFailures;
@@ -305,7 +305,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));
 }
 
-bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel) {
+bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const __FlashStringHelper * loglabel) {
   START_TIMER;
 
   if (!NetworkConnected()) { return false; }

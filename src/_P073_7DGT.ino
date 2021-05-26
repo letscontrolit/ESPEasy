@@ -1518,8 +1518,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event, const String& text) {
 
 void tm1637_i2cStart(uint8_t clk_pin, uint8_t dio_pin) {
   #ifdef P073_DEBUG
-  String log = F("7DGT : Comm Start");
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Start"));
   #endif
   DIO_HIGH();
   CLK_HIGH();
@@ -1529,8 +1528,7 @@ void tm1637_i2cStart(uint8_t clk_pin, uint8_t dio_pin) {
 
 void tm1637_i2cStop(uint8_t clk_pin, uint8_t dio_pin) {
 #ifdef P073_DEBUG
-  String log = F("7DGT : Comm Stop");
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Stop"));
 #endif
   CLK_LOW();
   delayMicroseconds(TM1637_CLOCKDELAY);
@@ -1592,8 +1590,7 @@ void tm1637_i2cWrite_ack(uint8_t clk_pin, uint8_t dio_pin,
 
 void tm1637_i2cWrite(uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint) {
   #ifdef P073_DEBUG
-  String log = F("7DGT : WriteByte");
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG, F("7DGT : WriteByte"));
   #endif
   uint8_t i;
 
@@ -1622,8 +1619,7 @@ void tm1637_ClearDisplay(uint8_t clk_pin, uint8_t dio_pin) {
 void tm1637_SetPowerBrightness(uint8_t clk_pin, uint8_t dio_pin,
                                uint8_t brightlvl, bool poweron) {
   #ifdef P073_DEBUG
-  String log = F("7DGT : Set BRIGHT");
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_INFO, F("7DGT : Set BRIGHT"));
   #endif
   uint8_t brightvalue = (brightlvl & 0b111);
 

@@ -336,7 +336,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
         if (round(PCONFIG_FLOAT(3)) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
-          addLog(LOG_LEVEL_DEBUG, F("PCF :SafeButton 1st click."))
+          addLog(LOG_LEVEL_DEBUG, F("PCF :SafeButton 1st click."));
           PCONFIG_LONG(3) = 1;
         }
 

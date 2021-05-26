@@ -267,7 +267,7 @@ void handle_filelist_add_file(const String& filename, int filesize, int startIdx
     html += F("</a><TD>");
 
     if (filesize >= 0) {
-      html += String(filesize);
+      html += filesize;
     }
     addHtml(html);
   }

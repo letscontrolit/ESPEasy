@@ -164,18 +164,40 @@ bool loglevelActive(byte logLevel, byte logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
+//#ifdef LIMIT_BUILD_SIZE
+
+void addLog(byte loglevel, const __FlashStringHelper *str)
+{
+  addToLog(loglevel, str);
+}
+
+void addLog(byte logLevel, const char *line)
+{
+  addToLog(logLevel, line);
+}
+
+void addLog(byte loglevel, const String& string)
+{
+  addToLog(loglevel, string);
+}
+//#endif
+
 void addToLog(byte loglevel, const __FlashStringHelper *str)
 {
-  String copy;
-  if (copy.reserve(strlen_P((PGM_P)str))) {
-    copy = str;
-    addToLog(loglevel, copy.c_str());
+  if (loglevelActiveFor(loglevel)) {
+    String copy;
+    if (copy.reserve(strlen_P((PGM_P)str))) {
+      copy = str;
+      addToLog(loglevel, copy.c_str());
+    }
   }
 }
 
 void addToLog(byte loglevel, const String& string)
 {
-  addToLog(loglevel, string.c_str());
+  if (loglevelActiveFor(loglevel)) {
+    addToLog(loglevel, string.c_str());
+  }
 }
 
 void addToLog(byte logLevel, const char *line)

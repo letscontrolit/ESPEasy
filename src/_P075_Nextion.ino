@@ -327,8 +327,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         }
         else {
             #ifdef DEBUG_LOG
-             String log = F("NEXTION075: Interval values data disabled, idx & value not resent");
-             addLog(LOG_LEVEL_INFO, log);
+             addLog(LOG_LEVEL_INFO, F("NEXTION075: Interval values data disabled, idx & value not resent"));
             #endif
 
             success = false;
@@ -386,8 +385,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         break;
       }
       if(P075_data->rxPin < 0) {
-        String log = F("NEXTION075 : Missing RxD Pin, aborted serial receive");
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, F("NEXTION075 : Missing RxD Pin, aborted serial receive"));
         break;
       }
       if(P075_data->easySerial == nullptr) break;                   // P075_data->easySerial missing, exit.
@@ -518,8 +516,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
               }
               else {
                   #ifdef DEBUG_LOG
-                  String log = F("NEXTION075 : Unknown Pipe Command, skipped");
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLog(LOG_LEVEL_INFO, F("NEXTION075 : Unknown Pipe Command, skipped"));
                   #endif
               }
             }
@@ -541,8 +538,7 @@ void P075_sendCommand(taskIndex_t taskIndex, const char *cmd)
   P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(taskIndex));
   if (!P075_data) return;
   if (P075_data->txPin < 0) {
-      String log = F("NEXTION075 : Missing TxD Pin Number, aborted sendCommand");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("NEXTION075 : Missing TxD Pin Number, aborted sendCommand"));
   }
   else
   {
@@ -553,8 +549,7 @@ void P075_sendCommand(taskIndex_t taskIndex, const char *cmd)
           P075_data->easySerial->write(0xff);
       }
       else {
-          String log = F("NEXTION075 : P075_data->easySerial error, aborted sendCommand");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("NEXTION075 : P075_data->easySerial error, aborted sendCommand"));
       }
   }
 }
