@@ -589,26 +589,31 @@ String tolerantParseStringKeepCase(const String& string, byte indexFind, char se
 }
 
 // escapes special characters in strings for use in html-forms
-bool htmlEscapeChar(char c, const __FlashStringHelper * escaped)
+bool htmlEscapeChar(char c, String& esc)
 {
+  const __FlashStringHelper * escaped = F("");
   switch (c)
   {
-    case '&':  escaped = F("&amp;");  return true;
-    case '\"': escaped = F("&quot;"); return true;
-    case '\'': escaped = F("&#039;"); return true;
-    case '<':  escaped = F("&lt;");   return true;
-    case '>':  escaped = F("&gt;");   return true;
-    case '/':  escaped = F("&#047;"); return true;
+    case '&':  escaped = F("&amp;");  break;
+    case '\"': escaped = F("&quot;"); break;
+    case '\'': escaped = F("&#039;"); break;
+    case '<':  escaped = F("&lt;");   break;
+    case '>':  escaped = F("&gt;");   break;
+    case '/':  escaped = F("&#047;"); break;
+    default:
+      return false;
   }
-  return false;
+
+  esc = String(escaped);  
+  return true;
 }
 
 void htmlEscape(String& html, char c)
 {
-  const __FlashStringHelper * repl = F("");
+  String repl;
 
   if (htmlEscapeChar(c, repl)) {
-    html.replace(String(c), String(repl));
+    html.replace(String(c), repl);
   }
 }
 

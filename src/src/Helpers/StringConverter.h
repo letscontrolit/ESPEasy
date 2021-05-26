@@ -196,7 +196,7 @@ String tolerantParseStringKeepCase(const String& string,
 
 // escapes special characters in strings for use in html-forms
 bool   htmlEscapeChar(char    c,
-                      const __FlashStringHelper * escaped);
+                      String& esc);
 
 void   htmlEscape(String& html,
                   char    c);

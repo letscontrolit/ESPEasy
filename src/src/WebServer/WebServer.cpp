@@ -238,7 +238,7 @@ size_t streamFile_htmlEscape(const String& fileName)
     {
       char c = (char)f.read();
 
-      const __FlashStringHelper * escaped = F("");
+      String escaped;
 
       if (htmlEscapeChar(c, escaped)) {
         addHtml(escaped);
