@@ -241,7 +241,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
     if (x == 0) {
       option += F(" - (default)");
     }
-    addSelector_Item(option, addresses[x], addresses[x] == selectedIndex, false, EMPTY_STRING);
+    addSelector_Item(option, addresses[x], addresses[x] == selectedIndex);
   }
   addSelector_Foot();
 }

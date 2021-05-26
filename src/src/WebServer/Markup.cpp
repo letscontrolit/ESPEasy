@@ -750,8 +750,7 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
     addSelector_Item(options[x],
                      optionValues[x],
                      choice == optionValues[x],
-                     disabled,
-                     "");
+                     disabled);
   }
   addSelector_Foot();
 }

@@ -142,12 +142,9 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
   for (byte x = 0; x < optionCount; x++)
   {
     String name     = getSensorTypeLabel(static_cast<Sensor_VType>(options[x]));
-    bool   disabled = false;
     addSelector_Item(name,
                      options[x],
-                     choice == static_cast<Sensor_VType>(options[x]),
-                     disabled,
-                     "");
+                     choice == static_cast<Sensor_VType>(options[x]));
   }
   addSelector_Foot();
   {

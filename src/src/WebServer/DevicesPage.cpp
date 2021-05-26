@@ -199,7 +199,7 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
   String deviceName;
 
   addSelector_Head_reloadOnChange(name);
-  addSelector_Item(F("- None -"), 0, false, false, EMPTY_STRING);
+  addSelector_Item(F("- None -"), 0, false);
 
   for (byte x = 0; x <= deviceCount; x++)
   {
@@ -225,9 +225,7 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
 
         addSelector_Item(deviceName,
                          Device[deviceIndex].Number,
-                         choice == Device[deviceIndex].Number,
-                         false,
-                         "");
+                         choice == Device[deviceIndex].Number);
       }
     }
   }

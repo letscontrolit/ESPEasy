@@ -157,7 +157,7 @@ void handle_notifications() {
     addRowLabel(F("Notification"));
     byte choice = Settings.Notification[notificationindex];
     addSelector_Head_reloadOnChange(F("notification"));
-    addSelector_Item(F("- None -"), 0, false, false, EMPTY_STRING);
+    addSelector_Item(F("- None -"), 0, false);
 
     for (byte x = 0; x <= notificationCount; x++)
     {
@@ -165,9 +165,7 @@ void handle_notifications() {
       NPlugin_ptr[x](NPlugin::Function::NPLUGIN_GET_DEVICENAME, 0, NotificationName);
       addSelector_Item(NotificationName,
                        Notification[x].Number,
-                       choice == Notification[x].Number,
-                       false,
-                       "");
+                       choice == Notification[x].Number);
     }
     addSelector_Foot();
 

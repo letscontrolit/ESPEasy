@@ -97,7 +97,7 @@ boolean handle_custom(String path) {
         else {
           name += Settings.Name;
         }
-        addSelector_Item(name, it->first, choice == it->first, false, EMPTY_STRING);
+        addSelector_Item(name, it->first, choice == it->first);
       }
     }
     addSelector_Foot();

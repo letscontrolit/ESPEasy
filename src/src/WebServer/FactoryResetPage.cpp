@@ -113,16 +113,13 @@ void addPreDefinedConfigSelector() {
 
   addSelector_Head_reloadOnChange(F("fdm"));
 
-  for (byte x = 0; x < DeviceModel_MAX; ++x) {
+  for (uint8_t x = 0; x < static_cast<uint8_t>(DeviceModel::DeviceModel_MAX); ++x) {
     DeviceModel model = static_cast<DeviceModel>(x);
     if (modelMatchingFlashSize(model)) {
       addSelector_Item(
         getDeviceModelString(model),
         x,
-        model == active_model,
-        false,
-        ""
-        );
+        model == active_model);
     }
   }
   addSelector_Foot();

@@ -73,8 +73,8 @@ void addSelector_Head_reloadOnChange(const String& id, const String& classname, 
 
 void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled);
 
-void addSelector_Item(const __FlashStringHelper * option, int index, boolean selected, boolean disabled, const String& attr);
-void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr);
+void addSelector_Item(const __FlashStringHelper * option, int index, boolean selected, boolean disabled = false, const String& attr = EMPTY_STRING);
+void addSelector_Item(const String& option, int index, boolean selected, boolean disabled = false, const String& attr = EMPTY_STRING);
 
 void addSelector_Foot();
 

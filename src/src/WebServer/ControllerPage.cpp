@@ -285,8 +285,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
     addSelector_Item(getCPluginNameFromProtocolIndex(x),
                      Protocol[x].Number,
                      choice == Protocol[x].Number,
-                     disabled,
-                     "");
+                     disabled);
   }
   addSelector_Foot();
 
