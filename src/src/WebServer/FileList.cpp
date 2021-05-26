@@ -32,7 +32,7 @@ void handle_filelist_json() {
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
 
-  String fdelete = web_server.arg(F("delete"));
+  String fdelete = webArg(F("delete"));
 
   if (tryDeleteFile(fdelete)) {
     # if defined(ESP32)
@@ -47,7 +47,7 @@ void handle_filelist_json() {
   const int pageSize = 25;
   int startIdx       = 0;
 
-  String fstart = web_server.arg(F("start"));
+  String fstart = webArg(F("start"));
 
   if (fstart.length() > 0)
   {
@@ -141,7 +141,7 @@ void handle_filelist() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  String fdelete = web_server.arg(F("delete"));
+  String fdelete = webArg(F("delete"));
 
   if (tryDeleteFile(fdelete))
   {
@@ -161,7 +161,7 @@ void handle_filelist() {
   # endif // ifdef USES_C016
   const int pageSize = 25;
   int startIdx       = 0;
-  String fstart      = web_server.arg(F("start"));
+  String fstart      = webArg(F("start"));
 
   if (fstart.length() > 0)
   {
@@ -337,17 +337,17 @@ void handle_SDfilelist() {
   for (uint8_t i = 0; i < web_server.args(); i++) {
     if (web_server.argName(i) == F("delete"))
     {
-      fdelete = web_server.arg(i);
+      fdelete = webArg(i);
     }
 
     if (web_server.argName(i) == F("deletedir"))
     {
-      ddelete = web_server.arg(i);
+      ddelete = webArg(i);
     }
 
     if (web_server.argName(i) == F("chgto"))
     {
-      change_to_dir = web_server.arg(i);
+      change_to_dir = webArg(i);
     }
   }
 

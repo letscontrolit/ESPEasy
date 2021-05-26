@@ -62,7 +62,7 @@ unsigned long hexToUL(const String& input_c,
                       size_t        nrHexDecimals);
 
 String formatToHex(unsigned long value,
-                   const String& prefix);
+                   const __FlashStringHelper * prefix);
 
 String formatToHex(unsigned long value);
 
@@ -131,7 +131,7 @@ String wrapIfContains(const String& value,
 \*********************************************************************************************/
 String to_json_object_value(const __FlashStringHelper * object,
                             const __FlashStringHelper * value);
-                            
+
 String to_json_object_value(const __FlashStringHelper * object,
                             const String& value);
 

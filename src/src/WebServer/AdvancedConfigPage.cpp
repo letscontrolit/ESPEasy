@@ -35,10 +35,10 @@ void handle_advanced() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  if (web_server.arg(F("edit")).length() != 0)
+  if (webArg(F("edit")).length() != 0)
   {
 //    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
-    Settings.IP_Octet     = web_server.arg(F("ip")).toInt();
+    Settings.IP_Octet     = webArg(F("ip")).toInt();
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = getFormItemInt(F("timezone"));
     TimeChangeRule dst_start(getFormItemInt(F("dststartweek")), getFormItemInt(F("dststartdow")), getFormItemInt(F("dststartmonth")), getFormItemInt(F("dststarthour")), Settings.TimeZone);

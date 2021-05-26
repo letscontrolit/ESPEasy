@@ -216,7 +216,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      String expression = web_server.arg(F("p081_cron_exp"));
+      String expression = webArg(F("p081_cron_exp"));
       String log;
       {
         char expression_c[PLUGIN_081_EXPRESSION_SIZE];

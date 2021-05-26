@@ -87,7 +87,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      String plugin1 = web_server.arg(F("i2c_addr"));
+      String plugin1 = webArg(F("i2c_addr"));
       Plugin_048_MotorShield_address = (int)strtol(plugin1.c_str(), 0, 16);
 
       Plugin_048_MotorStepsPerRevolution = getFormItemInt(F("p048_MotorStepsPerRevolution"));

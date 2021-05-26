@@ -111,8 +111,8 @@ void addControllerEnabledForm(controllerIndex_t controllerindex) {
   ControllerSettingsStruct::VarType varType = ControllerSettingsStruct::CONTROLLER_ENABLED;
 
   bool   isAlternativeDisplayName = false;
-  String displayName              = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
-  String internalName             = getControllerParameterInternalName(ProtocolIndex, varType);
+  const String displayName        = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
+  const String internalName       = getControllerParameterInternalName(ProtocolIndex, varType);
   addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
 }
 
@@ -123,8 +123,8 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
   }
 
   bool   isAlternativeDisplayName = false;
-  String displayName              = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
-  String internalName             = getControllerParameterInternalName(ProtocolIndex, varType);
+  const String displayName        = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
+  const String internalName       = getControllerParameterInternalName(ProtocolIndex, varType);
 
   switch (varType) {
     case ControllerSettingsStruct::CONTROLLER_USE_DNS:
@@ -153,7 +153,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     }
     case ControllerSettingsStruct::CONTROLLER_USER:
     {
-      size_t fieldMaxLength =
+      const size_t fieldMaxLength =
         ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_USER_LENGTH : sizeof(SecuritySettings.ControllerUser[0]) - 1;
       addFormTextBox(displayName,
                      internalName,
@@ -163,7 +163,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     }
     case ControllerSettingsStruct::CONTROLLER_PASS:
     {
-      size_t fieldMaxLength = ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_PASS_LENGTH : sizeof(SecuritySettings.ControllerPassword[0]) - 1;
+      const size_t fieldMaxLength = ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_PASS_LENGTH : sizeof(SecuritySettings.ControllerPassword[0]) - 1;
       if (isAlternativeDisplayName) {
         // It is not a regular password, thus use normal text field.
         addFormTextBox(displayName, internalName, 
@@ -295,7 +295,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
 
       if (!ControllerSettings.UseDNS)
       {
-        String controllerip = web_server.arg(internalName);
+        String controllerip = webArg(internalName);
         str2ip(controllerip, ControllerSettings.IP);
       }
       break;
@@ -303,7 +303,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
       ControllerSettings.Port = getFormItemInt(internalName, ControllerSettings.Port);
       break;
     case ControllerSettingsStruct::CONTROLLER_USER:
-      setControllerUser(controllerindex, ControllerSettings, web_server.arg(internalName));
+      setControllerUser(controllerindex, ControllerSettings, webArg(internalName));
       break;
     case ControllerSettingsStruct::CONTROLLER_PASS:
     {

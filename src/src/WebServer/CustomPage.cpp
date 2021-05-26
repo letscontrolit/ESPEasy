@@ -136,7 +136,7 @@ boolean handle_custom(String path) {
   }
 
   // handle commands from a custom page
-  String webrequest = web_server.arg(F("cmd"));
+  String webrequest = webArg(F("cmd"));
 
   if (webrequest.length() > 0) {
     ExecuteCommand_all_config(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());

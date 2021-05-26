@@ -314,7 +314,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             strID = F("Code");
             strID += (varNr + 1);
 
-            if (!safe_strncpy(strCode, web_server.arg(strID), P16_Cchars)) {
+            if (!safe_strncpy(strCode, webArg(strID), P16_Cchars)) {
               strError += strID;
               strError += ' ';
             }
@@ -326,7 +326,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             iCode = 0;
             strID = F("ACode");
             strID += (varNr + 1);
-            if (!safe_strncpy(strCode, web_server.arg(strID), P16_Cchars)) {
+            if (!safe_strncpy(strCode, webArg(strID), P16_Cchars)) {
               strError += strID;
               strError += ' ';
             }
@@ -337,7 +337,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
             strID = F("Command");
             strID += (varNr + 1);
-            if (!safe_strncpy(P016_data->CommandLines[varNr].Command, web_server.arg(strID), P16_Nchars)) {
+            if (!safe_strncpy(P016_data->CommandLines[varNr].Command, webArg(strID), P16_Nchars)) {
               strError += strID;
             }
 

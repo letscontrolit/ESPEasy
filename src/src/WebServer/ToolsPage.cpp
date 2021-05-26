@@ -25,7 +25,7 @@ void handle_tools() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  String webrequest = web_server.arg(F("cmd"));
+  String webrequest = webArg(F("cmd"));
 
   handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND, webrequest);
   printToWeb     = false;

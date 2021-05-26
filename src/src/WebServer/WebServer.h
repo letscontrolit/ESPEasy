@@ -147,7 +147,7 @@ void    addSVG_param(const String& key,
 void    addSVG_param(const String& key,
                      const String& value);
 
-void    createSvgRect_noStroke(const String& classname,
+void    createSvgRect_noStroke(const __FlashStringHelper * classname,
                                unsigned int fillColor,
                                float        xoffset,
                                float        yoffset,
@@ -210,5 +210,22 @@ void getPartitionTableSVG(byte         pType,
 
 bool webArg2ip(const String& arg,
                byte         *IP);
+
+
+// Separate wrapper to get web_server.arg()
+// 1) To allow to have a __FlashStringHelper call -> reduce build size
+// 2) ESP32 does not return a const String &, but a temporary copy, thus we _must_ copy before using it.
+
+#ifdef ESP8266
+const String& webArg(const __FlashStringHelper * arg);
+const String& webArg(const String& arg);
+const String& webArg(int i);
+#endif 
+
+#ifdef ESP32
+String webArg(const __FlashStringHelper * arg);
+String webArg(const String& arg);
+String webArg(int i);
+#endif 
 
 #endif // ifndef WEBSERVER_WEBSERVER_H

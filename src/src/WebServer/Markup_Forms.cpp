@@ -93,6 +93,11 @@ void addFormNumericBox(LabelType::Enum label, int value, int min, int max)
   addFormNumericBox(getLabel(label), getInternalLabel(label), value, min, max);
 }
 
+void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min, int max)
+{
+  addFormNumericBox(String(label), String(id), value, min, max);
+}
+
 void addFormNumericBox(const String& label, const String& id, int value, int min, int max)
 {
   addRowLabel_tr_id(label, id);
@@ -121,6 +126,18 @@ void addTaskSelectBox(const String& label, const String& id, taskIndex_t choice)
 // ********************************************************************************
 // Add a Text Box form
 // ********************************************************************************
+void addFormTextBox(const __FlashStringHelper * label,
+                    const __FlashStringHelper * id,
+                    const String& value,
+                    int           maxlength,
+                    bool          readonly,
+                    bool          required,
+                    const String& pattern)
+{
+  addRowLabel_tr_id(label, id);
+  addTextBox(id, value, maxlength, readonly, required, pattern);
+}
+
 void addFormTextBox(const String& label,
                     const String& id,
                     const String& value,
@@ -165,7 +182,7 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
 
 bool getFormPassword(const String& id, String& password)
 {
-  password = web_server.arg(id);
+  password = webArg(id);
   return !password.equals(F("*****"));
 }
 
@@ -200,7 +217,7 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
 // Add a selector form
 // ********************************************************************************
 
-void addFormPinSelect(const String& label, const String& id, int choice)
+void addFormPinSelect(const String& label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel_tr_id(label, id);
   addPinSelect(false, id, choice);
@@ -227,6 +244,11 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
     addSelector_Item(option, addresses[x], addresses[x] == selectedIndex, false, EMPTY_STRING);
   }
   addSelector_Foot();
+}
+
+void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex)
+{
+  addFormSelector(String(label), String(id), optionCount, options, indices, NULL, selectedIndex, false);
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex)
@@ -381,7 +403,7 @@ int getFormItemInt(const String& key, int defaultValue) {
 }
 
 bool getCheckWebserverArg_int(const String& key, int& value) {
-  const String valueStr = web_server.arg(key);
+  const String valueStr = webArg(key);
   if (valueStr.length() == 0) return false;
   return validIntFromString(valueStr, value);
 }
@@ -415,7 +437,7 @@ bool isFormItemChecked(const __FlashStringHelper * id)
 
 bool isFormItemChecked(const String& id)
 {
-  return web_server.arg(id) == F("on");
+  return webArg(id) == F("on");
 }
 
 bool isFormItemChecked(const LabelType::Enum& id)
@@ -445,7 +467,7 @@ float getFormItemFloat(const __FlashStringHelper * id)
 
 float getFormItemFloat(const String& id)
 {
-  const String val = web_server.arg(id);
+  const String val = webArg(id);
   float res = 0.0;
   if (val.length() > 0) {
     validFloatFromString(val, res);
@@ -460,7 +482,7 @@ float getFormItemFloat(const LabelType::Enum& id)
 
 bool isFormItem(const String& id)
 {
-  return web_server.arg(id).length() != 0;
+  return webArg(id).length() != 0;
 }
 
 void copyFormPassword(const String& id, char *pPassword, int maxlength)

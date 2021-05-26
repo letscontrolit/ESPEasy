@@ -334,7 +334,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
       String error;
 
       for (int objectNr = 0; objectNr < P099_CONFIG_OBJECTCOUNT; objectNr++) {
-        if (!safe_strncpy(P099_data->StoredSettings.TouchObjects[objectNr].objectname, web_server.arg(getPluginCustomArgName(objectNr)), P099_MaxObjectNameLength)) {
+        if (!safe_strncpy(P099_data->StoredSettings.TouchObjects[objectNr].objectname, webArg(getPluginCustomArgName(objectNr)), P099_MaxObjectNameLength)) {
           error += getCustomTaskSettingsError(objectNr);
         }
         P099_data->StoredSettings.TouchObjects[objectNr].objectname[P099_MaxObjectNameLength - 1] = 0; // Terminate in case of uninitalized data

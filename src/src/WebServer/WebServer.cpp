@@ -106,7 +106,7 @@
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
   if (web_server.hasArg(arg)) { 
-    safe_strncpy(dest, web_server.arg(arg).c_str(), max_size); 
+    safe_strncpy(dest, webArg(arg).c_str(), max_size); 
   }
 }
 
@@ -218,7 +218,7 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
           log += F(": '");
           log += web_server.argName(i);
           log += F("' length: ");
-          log += web_server.arg(i).length();
+          log += webArg(i).length();
         }
         addLog(LOG_LEVEL_INFO, log);
       }
@@ -1015,7 +1015,7 @@ void addSVG_param(const String& key, const String& value) {
   addHtml(html);
 }
 
-void createSvgRect_noStroke(const String& classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
+void createSvgRect_noStroke(const __FlashStringHelper * classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
   createSvgRect(classname, fillColor, fillColor, xoffset, yoffset, width, height, 0, rx, ry);
 }
 
@@ -1136,9 +1136,8 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
 
   for (int i = 0; i < nbars; ++i) {
     unsigned int color = i < nbars_filled ? 0x0 : 0xa1a1a1; // Black/Grey
-    String classname = i < nbars_filled ? F("bar_highlight") : F("bar_dimmed");
     int barHeight      = (i + 1) * bar_height_step;
-    createSvgRect_noStroke(classname, color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
+    createSvgRect_noStroke(i < nbars_filled ? F("bar_highlight") : F("bar_dimmed"), color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
   }
   addHtml(F("</svg>\n"));
 }
@@ -1298,5 +1297,39 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
 #endif // ifdef ESP32
 
 bool webArg2ip(const String& arg, byte *IP) {
-  return str2ip(web_server.arg(arg), IP);
+  return str2ip(webArg(arg), IP);
 }
+
+#ifdef ESP8266
+const String& webArg(const __FlashStringHelper * arg)
+{
+  return web_server.arg(String(arg));
+}
+
+const String& webArg(const String& arg)
+{
+  return web_server.arg(arg);
+}
+
+const String& webArg(int i)
+{
+  return web_server.arg(i);
+}
+#endif
+
+#ifdef ESP32
+String webArg(const __FlashStringHelper * arg)
+{
+  return web_server.arg(String(arg));
+}
+
+String webArg(const String& arg)
+{
+  return web_server.arg(arg);
+}
+
+String webArg(int i)
+{
+  return web_server.arg(i);
+}
+#endif

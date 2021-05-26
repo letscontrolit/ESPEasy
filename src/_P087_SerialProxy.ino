@@ -154,7 +154,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       if (nullptr != P087_data) {
         for (byte varNr = 0; varNr < P87_Nlines; varNr++)
         {
-          P087_data->setLine(varNr, web_server.arg(getPluginCustomArgName(varNr)));
+          P087_data->setLine(varNr, webArg(getPluginCustomArgName(varNr)));
         }
 
         addHtmlError(SaveCustomTaskSettings(event->TaskIndex, P087_data->_lines, P87_Nlines, 0));

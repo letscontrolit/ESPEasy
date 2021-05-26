@@ -79,8 +79,8 @@ void handle_setup() {
         static byte status       = HANDLE_SETUP_SCAN_STAGE;
         static byte refreshCount = 0;
 
-        String ssid              = web_server.arg(F("ssid"));
-        String other             = web_server.arg(F("other"));
+        String ssid              = webArg(F("ssid"));
+        String other             = webArg(F("other"));
         String password;
         bool passwordGiven = getFormPassword(F("pass"), password);
         if (passwordGiven) {

@@ -151,7 +151,7 @@ unsigned long hexToUL(const String& input_c, size_t startpos, size_t nrHexDecima
   return hexToUL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
-String formatToHex(unsigned long value, const String& prefix) {
+String formatToHex(unsigned long value, const __FlashStringHelper * prefix) {
   String result = prefix;
   String hex(value, HEX);
 
@@ -636,11 +636,12 @@ void htmlStrongEscape(String& html)
     }
     else
     {
-      char s[4];
+      char s[4] = {0};
       sprintf_P(s, PSTR("%03d"), static_cast<int>(html[i]));
-      escaped += "&#";
+      escaped += '&';
+      escaped += '#';
       escaped += s;
-      escaped += ";";
+      escaped += ';';
     }
   }
   html = escaped;
@@ -964,7 +965,7 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(data.arg1))
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
-  SMART_CONV(F("%c_2hex%"),   formatToHex(data.arg1, EMPTY_STRING))
+  SMART_CONV(F("%c_2hex%"),   formatToHex(data.arg1, F("")))
   #undef SMART_CONV
 
   // Conversions with 2 parameters

@@ -169,7 +169,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       if (nullptr != P094_data) {
         for (byte varNr = 0; varNr < P94_Nlines; varNr++)
         {
-          P094_data->setLine(varNr, web_server.arg(getPluginCustomArgName(varNr)));
+          P094_data->setLine(varNr, webArg(getPluginCustomArgName(varNr)));
         }
 
         addHtmlError(SaveCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0));

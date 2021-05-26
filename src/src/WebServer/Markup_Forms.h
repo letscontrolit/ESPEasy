@@ -37,6 +37,7 @@ void addFormCheckBox_disabled(LabelType::Enum label, boolean checked);
 // Add a Numeric Box form
 // ********************************************************************************
 void addFormNumericBox(LabelType::Enum label, int value, int min = INT_MIN, int max = INT_MAX);
+void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min = INT_MIN, int max = INT_MAX);
 void addFormNumericBox(const String& label, const String& id, int value, int min = INT_MIN, int max = INT_MAX);
 
 void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals = 6, float stepsize = 0.0f);
@@ -50,6 +51,14 @@ void addTaskSelectBox(const String& label, const String& id, taskIndex_t choice)
 // ********************************************************************************
 // Add a Text Box form
 // ********************************************************************************
+void addFormTextBox(const __FlashStringHelper * label,
+                    const __FlashStringHelper * id,
+                    const String& value,
+                    int           maxlength,
+                    bool          readonly = false,
+                    bool          required = false,
+                    const String& pattern = "");
+
 void addFormTextBox(const String& label,
                     const String& id,
                     const String& value,
@@ -91,12 +100,14 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
 // Add a selector form
 // ********************************************************************************
 
-void addFormPinSelect(const String& label, const String& id, int choice);
+void addFormPinSelect(const String& label, const __FlashStringHelper * id, int choice);
 
 void addFormPinSelectI2C(const String& label, const String& id, int choice);
 
 void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex);
 
+
+void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex);
 void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex);
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex);
 

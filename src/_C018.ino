@@ -706,10 +706,10 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (customConfig) {
         customConfig->reset();
-        String deveui  = web_server.arg(F("deveui"));
-        String devaddr = web_server.arg(F("devaddr"));
-        String nskey   = web_server.arg(F("nskey"));
-        String appskey = web_server.arg(F("appskey"));
+        String deveui  = webArg(F("deveui"));
+        String devaddr = webArg(F("devaddr"));
+        String nskey   = webArg(F("nskey"));
+        String appskey = webArg(F("appskey"));
 
         strlcpy(customConfig->DeviceEUI,         deveui.c_str(),  sizeof(customConfig->DeviceEUI));
         strlcpy(customConfig->DeviceAddr,        devaddr.c_str(), sizeof(customConfig->DeviceAddr));

@@ -157,7 +157,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      String i2c_address = web_server.arg(F("i2c_addr"));
+      String i2c_address = webArg(F("i2c_addr"));
       I2C_ADDR_PCFG_P079   = (int)strtol(i2c_address.c_str(), 0, 16);
       SHIELD_VER_PCFG_P079 = getFormItemInt(F("p079_shield_type"));
 
