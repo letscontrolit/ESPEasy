@@ -82,9 +82,9 @@ void handle_settingsarchive() {
   if (web_server.hasArg(F("download"))) {
     // Try downloading files.
     // Don't use the ProvisioningSettings, as not all may be stored.
-    String url  = web_server.arg(F("url"));
-    String user = web_server.arg(F("user"));
-    String pass = web_server.arg(F("pass"));
+    String url  = webArg(F("url"));
+    String user = webArg(F("user"));
+    String pass = webArg(F("pass"));
 
     addTableSeparator(F("Download result"), 2, 3);
     bool somethingDownloaded = false;
@@ -166,7 +166,7 @@ void handle_settingsarchive() {
     addTableSeparator(F("Download Settings"), 2, 3);
 
     addRowLabel(F("Delete First"));
-    addCheckBox("del", ResetFactoryDefaultPreference.deleteFirst());
+    addCheckBox(F("del"), ResetFactoryDefaultPreference.deleteFirst());
     addFormNote(F("Needed on filesystem with not enough free space. Use with care!"));
     #ifdef USE_CUSTOM_PROVISIONING
     addFormCheckBox(F("Allow Fetch by Command"), F("allowcommand"), ResetFactoryDefaultPreference.allowFetchByCommand());
@@ -189,7 +189,14 @@ void handle_settingsarchive() {
     html_TD();
     addSubmitButton(F("Save Preferences"), F("savepref"));
 
-    addFormSeparator(2);
+    addTableSeparator(F("Archive Location"), 2, 3);
+
+    addFormTextBox(F("URL with settings"), F("url"), webArg(F("url")), 256);
+    addFormNote(F("Only HTTP supported. Do not include filename"));
+    addFormTextBox(F("User"), F("user"), webArg(F("user")), 64);
+    addFormPasswordBox(F("Pass"), F("pass"), webArg(F("pass")), 64);
+    addFormNote(F("URL, user and pass will not be stored"));
+
     addRowLabel(F("Try download files"));
     addSubmitButton(F("Download"), F("download"), F("red"));
   }

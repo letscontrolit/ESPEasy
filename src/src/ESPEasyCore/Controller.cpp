@@ -412,7 +412,7 @@ String getLWT_topic(const ControllerSettingsStruct& ControllerSettings) {
       LWTTopic  = ControllerSettings.Subscribe;
       LWTTopic += F("/LWT");
     }
-    LWTTopic.replace(String(F("/#")), String(F("/status")));
+    LWTTopic.replace(F("/#"), F("/status"));
     parseSystemVariables(LWTTopic, false);
   }
   return LWTTopic;

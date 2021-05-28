@@ -329,7 +329,7 @@ String formatUnitToIPAddress(byte unit, byte formatCode) {
     switch (formatCode) {
       case 1:                  // Return empty string
       {
-        return F("");
+        return EMPTY_STRING;
       }
       case 2: // Return "0"
       {
@@ -1126,7 +1126,7 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
 bool downloadFile(const String& url, String file_save) {
   String error;
 
-  return downloadFile(url, file_save, "", "", error);
+  return downloadFile(url, file_save, EMPTY_STRING, EMPTY_STRING, error);
 }
 
 bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {

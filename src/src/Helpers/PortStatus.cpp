@@ -189,7 +189,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
   return "";
 }
 
-String getPinModeString(byte mode) {
+const __FlashStringHelper * getPinModeString(byte mode) {
   switch (mode)
   {
     case PIN_MODE_UNDEFINED:    return F("undefined");

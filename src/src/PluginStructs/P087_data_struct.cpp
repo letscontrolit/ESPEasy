@@ -342,7 +342,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
   return match_result;
 }
 
-String P087_data_struct::MatchType_toString(P087_Match_Type matchType) {
+const __FlashStringHelper * P087_data_struct::MatchType_toString(P087_Match_Type matchType) {
   switch (matchType)
   {
     case P087_Match_Type::Regular_Match:          return F("Regular Match");
@@ -351,7 +351,7 @@ String P087_data_struct::MatchType_toString(P087_Match_Type matchType) {
     case P087_Match_Type::Global_Match_inverted:  return F("Global Match inverted");
     case P087_Match_Type::Filter_Disabled:        return F("Filter Disabled");
   }
-  return "";
+  return F("");
 }
 
 bool P087_data_struct::max_length_reached() const {

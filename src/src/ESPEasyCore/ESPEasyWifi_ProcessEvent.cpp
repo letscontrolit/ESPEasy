@@ -426,6 +426,7 @@ void processGotIP() {
     WiFiEventData.wifiSetup = false;
     SaveSecuritySettings();
   }
+
   if ((WiFiEventData.WiFiConnected() || WiFi.isConnected()) && hasIPaddr()) {
     WiFiEventData.processedGotIP = true;
     WiFiEventData.setWiFiGotIP();

@@ -45,7 +45,7 @@ byte getValueCountFromSensorType(Sensor_VType sensorType)
   return 0;
 }
 
-String getSensorTypeLabel(Sensor_VType sensorType) {
+const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType) {
   switch (sensorType) {
     case Sensor_VType::SENSOR_TYPE_SINGLE:           return F("Single");
     case Sensor_VType::SENSOR_TYPE_TEMP_HUM:         return F("Temp / Hum");
@@ -63,7 +63,7 @@ String getSensorTypeLabel(Sensor_VType sensorType) {
     case Sensor_VType::SENSOR_TYPE_NONE:             return F("None");
     case Sensor_VType::SENSOR_TYPE_NOT_SET:  break;
   }
-  return "";
+  return F("");
 }
 
 void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, byte pconfigIndex)
@@ -142,12 +142,9 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
   for (byte x = 0; x < optionCount; x++)
   {
     String name     = getSensorTypeLabel(static_cast<Sensor_VType>(options[x]));
-    bool   disabled = false;
     addSelector_Item(name,
                      options[x],
-                     choice == static_cast<Sensor_VType>(options[x]),
-                     disabled,
-                     "");
+                     choice == static_cast<Sensor_VType>(options[x]));
   }
   addSelector_Foot();
   {
@@ -171,6 +168,18 @@ void pconfig_webformSave(struct EventStruct *event, byte pconfigIndex)
 {
   PCONFIG(pconfigIndex) = getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0);
 }
+
+void sensorTypeHelper_loadOutputSelector(
+  struct EventStruct *event, byte pconfigIndex, byte valuenr,
+  int optionCount, const __FlashStringHelper * options[], const int indices[])
+{
+  byte   choice = PCONFIG(pconfigIndex);
+  String label  = F("Value ");
+
+  label += (valuenr + 1);
+  addFormSelector(label, PCONFIG_LABEL(pconfigIndex), optionCount, options, indices, choice);
+}
+
 
 void sensorTypeHelper_loadOutputSelector(
   struct EventStruct *event, byte pconfigIndex, byte valuenr,

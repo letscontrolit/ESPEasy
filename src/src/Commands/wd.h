@@ -8,7 +8,7 @@
 class String;
 struct EventStruct;
 
-String Command_WD_Config(EventStruct *event, const char* Line);
+const __FlashStringHelper * Command_WD_Config(EventStruct *event, const char* Line);
 String Command_WD_Read(EventStruct *event, const char* Line);
 
 #endif

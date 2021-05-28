@@ -108,9 +108,9 @@ public:
 
   bool          parsePacket(const String& received) const;
 
-  static String MatchType_toString(P094_Match_Type matchType);
-  static String P094_FilterValueType_toString(P094_Filter_Value_Type valueType);
-  static String P094_FilterComp_toString(P094_Filter_Comp comparator);
+  static const __FlashStringHelper * MatchType_toString(P094_Match_Type matchType);
+  static const __FlashStringHelper * P094_FilterValueType_toString(P094_Filter_Value_Type valueType);
+  static const __FlashStringHelper * P094_FilterComp_toString(P094_Filter_Comp comparator);
 
 
   // Made public so we don't have to copy the values when loading/saving.

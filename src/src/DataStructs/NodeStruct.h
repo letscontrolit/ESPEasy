@@ -16,6 +16,7 @@
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
 
+const __FlashStringHelper * getNodeTypeDisplayString(byte nodeType);
 
 /*********************************************************************************************\
 * NodeStruct

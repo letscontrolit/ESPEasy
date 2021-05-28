@@ -22,7 +22,7 @@
 
 #define P026_NR_OUTPUT_OPTIONS  14
 
-String Plugin_026_valuename(byte value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_026_valuename(byte value_nr, bool displayString) {
   switch (value_nr) {
     case 0:  return displayString ? F("Uptime") : F("uptime");
     case 1:  return displayString ? F("Free RAM") : F("freeheap");
@@ -41,7 +41,7 @@ String Plugin_026_valuename(byte value_nr, bool displayString) {
     default:
       break;
   }
-  return "";
+  return F("");
 }
 
 // Used for testing, just increment every time the task's PLUGIN_READ is called
@@ -118,7 +118,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      String options[P026_NR_OUTPUT_OPTIONS];
+      const __FlashStringHelper * options[P026_NR_OUTPUT_OPTIONS];
       int indices[P026_NR_OUTPUT_OPTIONS];
 
       int index = 0;

@@ -421,8 +421,8 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
         dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
           String thisTaskName = command.substring(0, dotPos); // Extract taskname prefix
-          thisTaskName.replace(F("["), F(""));                      // Remove the optional square brackets
-          thisTaskName.replace(F("]"), F(""));
+          thisTaskName.replace(F("["), EMPTY_STRING);                      // Remove the optional square brackets
+          thisTaskName.replace(F("]"), EMPTY_STRING);
           if (thisTaskName.length() > 0) {                    // Second precondition
             taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
             if (!validTaskIndex(thisTask)) {                  // Taskname not found or invalid, check for a task number?
@@ -547,7 +547,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
           #ifndef BUILD_NO_RAM_TRACKER
           String descr;
           descr.reserve(20);
-          descr  = String(F("PluginCall_task_"));
+          descr  = F("PluginCall_task_");
           descr += event->TaskIndex;
           checkRAM(descr, String(Function));
           #endif
@@ -609,7 +609,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
           #ifndef BUILD_NO_RAM_TRACKER
           String descr;
           descr.reserve(20);
-          descr  = String(F("PluginCall_task_"));
+          descr  = F("PluginCall_task_");
           descr += event->TaskIndex;
           checkRAM(descr, String(Function));
           #endif

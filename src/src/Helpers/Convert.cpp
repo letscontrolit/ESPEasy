@@ -3,7 +3,7 @@
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
 \*********************************************************************************************/
-String getBearing(int degrees)
+const __FlashStringHelper * getBearing(int degrees)
 {
   const int nr_directions = 16;
   float stepsize      = (360.0f / nr_directions);
@@ -31,7 +31,7 @@ String getBearing(int degrees)
       case 15: return F("NNW");
     }
   }
-  return "";
+  return F("");
 }
 
 float CelsiusToFahrenheit(float celsius) {

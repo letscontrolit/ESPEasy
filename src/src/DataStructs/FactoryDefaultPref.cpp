@@ -10,7 +10,7 @@ DeviceModel ResetFactoryDefaultPreference_struct::getDeviceModel() const {
 
 void ResetFactoryDefaultPreference_struct::setDeviceModel(DeviceModel model) {
   _preference &= ~(0xFF); // set DeviceModel bits to 0
-  _preference |= model;
+  _preference |= static_cast<uint32_t>(model);
 }
 
 bool ResetFactoryDefaultPreference_struct::keepWiFi() const {

@@ -425,14 +425,10 @@ void handle_sysinfo_Network() {
   addRowLabel(LabelType::WIFI_CONNECTION);
   if (showWiFiConnectionInfo)
   {
-    String html;
-    html.reserve(64);
-
-    html += toString(getConnectionProtocol());
-    html += F(" (RSSI ");
-    html += WiFi.RSSI();
-    html += F(" dBm)");
-    addHtml(html);
+    addHtml(toString(getConnectionProtocol()));
+    addHtml(F(" (RSSI "));
+    addHtml(String(WiFi.RSSI()));
+    addHtml(F(" dBm)"));
   } else addHtml('-');
 
   addRowLabel(LabelType::SSID);

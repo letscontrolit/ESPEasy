@@ -3,10 +3,9 @@
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
 #include <ESPeasySerial.h>
-#include <Regexp.h>
-
 
 #ifdef USES_P094
+#include <Regexp.h>
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Helpers/StringConverter.h"
@@ -424,17 +423,17 @@ bool P094_data_struct::parsePacket(const String& received) const {
   return match_result;
 }
 
-String P094_data_struct::MatchType_toString(P094_Match_Type matchType) {
+const __FlashStringHelper * P094_data_struct::MatchType_toString(P094_Match_Type matchType) {
   switch (matchType)
   {
     case P094_Match_Type::P094_Regular_Match:          return F("Regular Match");
     case P094_Match_Type::P094_Regular_Match_inverted: return F("Regular Match inverted");
     case P094_Match_Type::P094_Filter_Disabled:        return F("Filter Disabled");
   }
-  return "";
+  return F("");
 }
 
-String P094_data_struct::P094_FilterValueType_toString(P094_Filter_Value_Type valueType)
+const __FlashStringHelper * P094_data_struct::P094_FilterValueType_toString(P094_Filter_Value_Type valueType)
 {
   switch (valueType) {
     case P094_Filter_Value_Type::P094_not_used:      return F("---");
@@ -452,7 +451,7 @@ String P094_data_struct::P094_FilterValueType_toString(P094_Filter_Value_Type va
   return F("unknown");
 }
 
-String P094_data_struct::P094_FilterComp_toString(P094_Filter_Comp comparator)
+const __FlashStringHelper * P094_data_struct::P094_FilterComp_toString(P094_Filter_Comp comparator)
 {
   switch (comparator) {
     case P094_Filter_Comp::P094_Equal_OR:      return F("==");
@@ -460,7 +459,7 @@ String P094_data_struct::P094_FilterComp_toString(P094_Filter_Comp comparator)
     case P094_Filter_Comp::P094_Equal_MUST:    return F("== (must)");
     case P094_Filter_Comp::P094_NotEqual_MUST: return F("!= (must)");
   }
-  return "";
+  return F("");
 }
 
 bool P094_data_struct::max_length_reached() const {
