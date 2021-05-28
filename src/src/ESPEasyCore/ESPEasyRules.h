@@ -27,13 +27,13 @@ bool   processNextEvent();
 /********************************************************************************************\
    Rules processing
  \*********************************************************************************************/
-void   rulesProcessing(String& event);
+void   rulesProcessing(const String& event);
 
 /********************************************************************************************\
    Rules processing
  \*********************************************************************************************/
 String rulesProcessingFile(const String& fileName,
-                           String      & event);
+                           const String& event);
 
 
 /********************************************************************************************\
@@ -93,8 +93,7 @@ void substitute_eventvalue(String      & line,
                            const String& event);
 
 void parseCompleteNonCommentLine(String& line,
-                                 String& event,
-                                 String& log,
+                                 const String& event,
                                  String& action,
                                  bool  & match,
                                  bool  & codeBlock,
@@ -105,8 +104,7 @@ void parseCompleteNonCommentLine(String& line,
                                  byte  & fakeIfBlock);
 
 void processMatchedRule(String& action,
-                        String& event,
-                        String& log,
+                        const String& event,
                         bool  & match,
                         bool  & codeBlock,
                         bool  & isCommand,

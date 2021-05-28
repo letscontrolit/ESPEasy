@@ -1,8 +1,12 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C014
 
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Statistics.h"
+#include "src/Helpers/PeriodicalActions.h"
 #include "_Plugin_Helper.h"
 
 //#######################################################################################################
@@ -429,7 +433,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                       String log = F("C014 : Device has custom values: ");
                       log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x));
-                      addLog(LOG_LEVEL_DEBUG, log+" not implemented!")
+                      addLog(LOG_LEVEL_DEBUG, log+" not implemented!");
                     }
                   }
                 }
@@ -453,7 +457,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   String log = F("C014 : Device Disabled: ");
                   log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x));
-                  addLog(LOG_LEVEL_DEBUG, log+" not propagated!")
+                  addLog(LOG_LEVEL_DEBUG, log+" not propagated!");
                 }
               }
             } // device configured

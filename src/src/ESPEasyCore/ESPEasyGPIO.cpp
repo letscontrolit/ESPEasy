@@ -1,5 +1,5 @@
 
-#include "ESPEasyGPIO.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
 
 /****************************************************************************/
 // Central functions for GPIO handling
@@ -436,35 +436,34 @@ void GPIO_Monitor10xSec()
           break;
         case PLUGIN_MCP:
           currentState = GPIO_MCP_Read(gpioPort);
-          if (currentState==-1){
-            it->second.mode=PIN_MODE_OFFLINE;
-          } else if (it->second.mode==PIN_MODE_OFFLINE) {
-            it->second.mode=PIN_MODE_UNDEFINED;
-          }
           eventString = F("MCP");
           break;
         case PLUGIN_PCF:
           currentState = GPIO_PCF_Read(gpioPort);
-          if (currentState==-1){
-            it->second.mode=PIN_MODE_OFFLINE;
-          } else if (it->second.mode==PIN_MODE_OFFLINE) {
-            it->second.mode=PIN_MODE_UNDEFINED;
-          }
           eventString = F("PCF");
           break;
         default:
           caseFound=false;
         break;
       }
-      if (caseFound && ((it->second.state != currentState) || (it->second.forceMonitor && it->second.monitor))) {
-        // update state
-        if (!it->second.task) {
-          it->second.state = currentState; //update state ONLY if task flag=false otherwise it will not be picked up by 10xSEC function
-          // send event if not task, otherwise is sent in the task PLUGIN_TEN_PER_SECOND
-          if (it->second.monitor) sendMonitorEvent(eventString.c_str(), gpioPort, currentState);
+      if (caseFound) {
+        if (currentState == -1) {
+          it->second.mode = PIN_MODE_OFFLINE;
+        } else if (it->second.mode == PIN_MODE_OFFLINE) {
+          it->second.mode = PIN_MODE_UNDEFINED;
+        }
+        if (((it->second.state != currentState) || (it->second.forceMonitor && it->second.monitor))) {
+          // update state
+          if (!it->second.task) {
+            it->second.state = currentState; //update state ONLY if task flag=false otherwise it will not be picked up by 10xSEC function
+            // send event if not task, otherwise is sent in the task PLUGIN_TEN_PER_SECOND
+            if (it->second.monitor) { 
+              sendMonitorEvent(eventString.c_str(), gpioPort, currentState);
+            }
+          }
         }
       }
-      it->second.forceMonitor=0; //reset flag
+      it->second.forceMonitor = 0; //reset flag
     }
   }
 }

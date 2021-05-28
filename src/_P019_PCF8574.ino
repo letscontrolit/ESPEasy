@@ -3,6 +3,7 @@
 
 #include "src/DataStructs/PinMode.h"
 #include "src/Commands/GPIO.h"
+#include "src/ESPEasyCore/ESPEasyGPIO.h"
 
 // #######################################################################################################
 // #################################### Plugin 019: PCF8574 ##############################################
@@ -109,14 +110,16 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(1) = PLUGIN_019_DOUBLECLICK_MIN_INTERVAL;
       }
 
-      byte   choiceDC = PCONFIG(4);
-      String buttonDC[4];
-      buttonDC[0] = F("Disabled");
-      buttonDC[1] = F("Active only on LOW (EVENT=3)");
-      buttonDC[2] = F("Active only on HIGH (EVENT=3)");
-      buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
-      int buttonDCValues[4] = { PLUGIN_019_DC_DISABLED, PLUGIN_019_DC_LOW, PLUGIN_019_DC_HIGH, PLUGIN_019_DC_BOTH };
-      addFormSelector(F("Doubleclick event"), F("p019_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+      {
+        byte   choiceDC = PCONFIG(4);
+        const __FlashStringHelper * buttonDC[4];
+        buttonDC[0] = F("Disabled");
+        buttonDC[1] = F("Active only on LOW (EVENT=3)");
+        buttonDC[2] = F("Active only on HIGH (EVENT=3)");
+        buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
+        int buttonDCValues[4] = { PLUGIN_019_DC_DISABLED, PLUGIN_019_DC_LOW, PLUGIN_019_DC_HIGH, PLUGIN_019_DC_BOTH };
+        addFormSelector(F("Doubleclick event"), F("p019_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+      }
 
       addFormNumericBox(F("Doubleclick max. interval (ms)"),
                         F("p019_dcmaxinterval"),
@@ -129,15 +132,17 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(2) = PLUGIN_019_LONGPRESS_MIN_INTERVAL;
       }
 
-      byte   choiceLP = PCONFIG(5);
-      String buttonLP[4];
-      buttonLP[0] = F("Disabled");
-      buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
-      buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
-      buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
-      int buttonLPValues[4] =
-      { PLUGIN_019_LONGPRESS_DISABLED, PLUGIN_019_LONGPRESS_LOW, PLUGIN_019_LONGPRESS_HIGH, PLUGIN_019_LONGPRESS_BOTH };
-      addFormSelector(F("Longpress event"), F("p019_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+      {
+        byte   choiceLP = PCONFIG(5);
+        const __FlashStringHelper * buttonLP[4];
+        buttonLP[0] = F("Disabled");
+        buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
+        buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
+        buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
+        int buttonLPValues[4] =
+        { PLUGIN_019_LONGPRESS_DISABLED, PLUGIN_019_LONGPRESS_LOW, PLUGIN_019_LONGPRESS_HIGH, PLUGIN_019_LONGPRESS_BOTH };
+        addFormSelector(F("Longpress event"), F("p019_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+      }
 
       addFormNumericBox(F("Longpress min. interval (ms)"),
                         F("p019_lpmininterval"),
@@ -331,7 +336,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
         if (round(PCONFIG_FLOAT(3)) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
-          addLog(LOG_LEVEL_DEBUG, F("PCF :SafeButton 1st click."))
+          addLog(LOG_LEVEL_DEBUG, F("PCF :SafeButton 1st click."));
           PCONFIG_LONG(3) = 1;
         }
 

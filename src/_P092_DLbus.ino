@@ -61,6 +61,8 @@
 
 #include "src/PluginStructs/P092_data_struct.h"
 
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
+
 #define PLUGIN_092
 #define PLUGIN_ID_092         92
 
@@ -133,7 +135,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 #else
         int Opcount = 2;
 #endif
-        String  options[3];
+        const __FlashStringHelper *  options[3];
         options[0] = F("Input");
         options[1] = F("Input pullup");
         options[2] = F("Input pulldown");
@@ -144,7 +146,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Pin mode"), F("p092_pinmode"), Opcount, options, optionValues, choice);
       }
       {
-        const String Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (up to v8.2)"), F(
+        const __FlashStringHelper * Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (up to v8.2)"), F(
                                                            "UVR 61-3 (v8.3 or higher)") };
         const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 1611, 6132, 6133 };
 
@@ -165,7 +167,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           6, // F("Heat power (kW)")
           7  // F("Heat meter (MWh)")
         };
-        const String Options[P092_DLbus_OptionCount] = {
+        const __FlashStringHelper * Options[P092_DLbus_OptionCount] = {
           F("None"),
           F("Sensor"),
           F("Ext. sensor"),

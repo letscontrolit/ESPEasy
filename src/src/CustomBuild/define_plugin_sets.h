@@ -112,7 +112,7 @@ To create/register a plugin, you have to :
         #define WEBSERVER_WIFI_SCANNER
     #endif
     #ifndef WEBSERVER_NEW_RULES
-        #define WEBSERVER_NEW_RULES
+//        #define WEBSERVER_NEW_RULES
     #endif
 #endif
 
@@ -1312,10 +1312,10 @@ To create/register a plugin, you have to :
 
   // Plugins
   #ifndef USES_P016
-    #define USES_P016   // IR
+//    #define USES_P016   // IR
   #endif
   #ifndef USES_P035
-    #define USES_P035   // IRTX
+//    #define USES_P035   // IRTX
   #endif
   #ifndef USES_P041
     #define USES_P041   // NeoClock
@@ -1372,7 +1372,7 @@ To create/register a plugin, you have to :
     #define USES_P113   // VL53L1X
   #endif
   #ifndef USES_P114
-    #define USES_P114   // 
+    #define USES_P114   // VEML6075 UVA/UVB sensor
   #endif
   #ifndef USES_P115
     #define USES_P115   // 
@@ -1688,8 +1688,10 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef WEBSERVER_SETUP
-  #ifndef FEATURE_DNS_SERVER
-    #define FEATURE_DNS_SERVER
+  #ifndef PLUGIN_BUILD_MINIMAL_OTA
+    #ifndef FEATURE_DNS_SERVER
+      #define FEATURE_DNS_SERVER
+    #endif
   #endif
 #endif
 

@@ -5,7 +5,7 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../Commands/Diagnostic.h"
@@ -26,6 +26,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
@@ -423,14 +424,10 @@ void handle_sysinfo_Network() {
   addRowLabel(LabelType::WIFI_CONNECTION);
   if (showWiFiConnectionInfo)
   {
-    String html;
-    html.reserve(64);
-
-    html += toString(getConnectionProtocol());
-    html += F(" (RSSI ");
-    html += WiFi.RSSI();
-    html += F(" dBm)");
-    addHtml(html);
+    addHtml(toString(getConnectionProtocol()));
+    addHtml(F(" (RSSI "));
+    addHtml(String(WiFi.RSSI()));
+    addHtml(F(" dBm)"));
   } else addHtml('-');
 
   addRowLabel(LabelType::SSID);

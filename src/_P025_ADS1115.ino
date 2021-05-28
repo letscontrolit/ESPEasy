@@ -75,7 +75,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
       {
           #define ADS1115_PGA_OPTION 6
         byte pga                              = PCONFIG(1);
-        String pgaOptions[ADS1115_PGA_OPTION] = {
+        const __FlashStringHelper * pgaOptions[ADS1115_PGA_OPTION] = {
           F("2/3x gain (FS=6.144V)"),
           F("1x gain (FS=4.096V)"),
           F("2x gain (FS=2.048V)"),
@@ -89,7 +89,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
       {
           #define ADS1115_MUX_OPTION 8
         byte mux                              = PCONFIG(2);
-        String muxOptions[ADS1115_MUX_OPTION] = {
+        const __FlashStringHelper * muxOptions[ADS1115_MUX_OPTION] = {
           F("AIN0 - AIN1 (Differential)"),
           F("AIN0 - AIN3 (Differential)"),
           F("AIN1 - AIN3 (Differential)"),

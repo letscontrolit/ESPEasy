@@ -608,7 +608,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       addTableSeparator(F("Connection Configuration"), 2, 3);
       {
-        String options[4] = { F("SINGLE_CHANNEL_EU"), F("TTN_EU"), F("TTN_US"), F("DEFAULT_EU") };
+        const __FlashStringHelper * options[4] = { F("SINGLE_CHANNEL_EU"), F("TTN_EU"), F("TTN_US"), F("DEFAULT_EU") };
         int    values[4]  =
         {
           RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU,
@@ -620,7 +620,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         addFormSelector(F("Frequency Plan"), F("frequencyplan"), 4, options, values, NULL, frequencyplan, false);
       }
       {
-        String options[2] = { F("TTN v2"), F("TTN v3") };
+        const __FlashStringHelper * options[2] = { F("TTN v2"), F("TTN v3") };
         int    values[2]  = { 
           RN2xx3_datatypes::TTN_stack_version::TTN_v2,
           RN2xx3_datatypes::TTN_stack_version::TTN_v3
@@ -706,10 +706,10 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (customConfig) {
         customConfig->reset();
-        String deveui  = web_server.arg(F("deveui"));
-        String devaddr = web_server.arg(F("devaddr"));
-        String nskey   = web_server.arg(F("nskey"));
-        String appskey = web_server.arg(F("appskey"));
+        String deveui  = webArg(F("deveui"));
+        String devaddr = webArg(F("devaddr"));
+        String nskey   = webArg(F("nskey"));
+        String appskey = webArg(F("appskey"));
 
         strlcpy(customConfig->DeviceEUI,         deveui.c_str(),  sizeof(customConfig->DeviceEUI));
         strlcpy(customConfig->DeviceAddr,        devaddr.c_str(), sizeof(customConfig->DeviceAddr));

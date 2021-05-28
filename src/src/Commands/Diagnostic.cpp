@@ -7,7 +7,7 @@
  #include "../DataStructs/ESPEasy_EventStruct.h"
  */
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include "../Commands/Common.h"
 
@@ -15,6 +15,7 @@
 
 #include "../DataTypes/SettingsType.h"
 
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/Serial.h"
 
@@ -52,7 +53,7 @@ String Command_Lowmem(struct EventStruct *event, const char *Line)
   return return_result(event, result);
 }
 
-String Command_Malloc(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Malloc(struct EventStruct *event, const char *Line)
 {
   char *ramtest;
   int size = parseCommandArgumentInt(Line, 1);
@@ -74,7 +75,7 @@ String Command_SysLoad(struct EventStruct *event, const char *Line)
   return return_result(event, result);
 }
 
-String Command_SerialFloat(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_SerialFloat(struct EventStruct *event, const char *Line)
 {
   pinMode(1, INPUT);
   pinMode(3, INPUT);
@@ -82,7 +83,7 @@ String Command_SerialFloat(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_MemInfo(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_MemInfo(struct EventStruct *event, const char *Line)
 {
   serialPrint(F("SecurityStruct         | "));
   serialPrintln(String(sizeof(SecuritySettings)));
@@ -95,7 +96,7 @@ String Command_MemInfo(struct EventStruct *event, const char *Line)
   return return_see_serial(event);
 }
 
-String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_MemInfo_detail(struct EventStruct *event, const char *Line)
 {
 #ifndef BUILD_MINIMAL_OTA
   showSettingsFileLayout = true;
@@ -130,7 +131,7 @@ String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
   #endif // ifndef BUILD_MINIMAL_OTA
 }
 
-String Command_Background(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Background(struct EventStruct *event, const char *Line)
 {
   unsigned long timer = millis() + parseCommandArgumentInt(Line, 1);
 
@@ -144,7 +145,7 @@ String Command_Background(struct EventStruct *event, const char *Line)
 }
 #endif // BUILD_NO_DIAGNOSTIC_COMMANDS
 
-String Command_Debug(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Debug(struct EventStruct *event, const char *Line)
 {
   if (HasArgv(Line, 2)) {
     setLogLevelFor(LOG_TO_SERIAL, parseCommandArgumentInt(Line, 1));
@@ -156,15 +157,17 @@ String Command_Debug(struct EventStruct *event, const char *Line)
   return return_see_serial(event);
 }
 
-String Command_logentry(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_logentry(struct EventStruct *event, const char *Line)
 {
-  // FIXME TD-er: Add an extra optional parameter to set log level.
-  addLog(LOG_LEVEL_INFO, tolerantParseStringKeepCase(Line, 2));
+  byte level = LOG_LEVEL_INFO;
+  // An extra optional parameter to set log level.
+  if (event->Par2 > LOG_LEVEL_NONE && event->Par2 <= LOG_LEVEL_DEBUG_MORE) { level = event->Par2; }
+  addLog(level, tolerantParseStringKeepCase(Line, 2));
   return return_command_success();
 }
 
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-String Command_JSONPortStatus(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_JSONPortStatus(struct EventStruct *event, const char *Line)
 {
   addLog(LOG_LEVEL_INFO, F("JSON Port Status: Command not implemented yet."));
   return return_command_success();
@@ -214,7 +217,7 @@ void logPortStatus(const String& from) {
   }
 }
 
-String Command_logPortStatus(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, const char *Line)
 {
   logPortStatus("Rules");
   return return_command_success();

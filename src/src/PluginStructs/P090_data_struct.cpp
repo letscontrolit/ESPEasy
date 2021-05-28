@@ -510,7 +510,7 @@ float CCS811::getTemperature(void)
 //
 // Save the return value of any function of type CCS811Core::status, then pass
 // to this function to see what the output was.
-String CCS811::getDriverError(CCS811Core::status errorCode)
+const __FlashStringHelper * CCS811::getDriverError(CCS811Core::status errorCode)
 {
   switch (errorCode)
   {
@@ -536,7 +536,7 @@ String CCS811::getDriverError(CCS811Core::status errorCode)
 
 // getSensorError gets, clears, then prints the errors
 // saved within the error register.
-String CCS811::getSensorError()
+const __FlashStringHelper * CCS811::getSensorError()
 {
   uint8_t error = getErrorRegister();
 
@@ -576,7 +576,7 @@ String CCS811::getSensorError()
       return F("MsgInvalid");
     }
   }
-  return "";
+  return F("");
 }
 
 P090_data_struct::P090_data_struct(uint8_t i2cAddr) :

@@ -108,8 +108,7 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         if (!success) {
-          String log = F("LM75A: No reading!");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("LM75A: No reading!"));
         }
         else
         {

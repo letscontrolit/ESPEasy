@@ -1,7 +1,7 @@
-#include "Scheduler.h"
+#include "../Helpers/Scheduler.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../../_Plugin_Helper.h"
@@ -19,9 +19,7 @@
 #include "../Helpers/PortStatus.h"
 
 
-//#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
-
-#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
+#define TIMER_ID_SHIFT       28   // Must be decreased as soon as timers below reach 15
 #define SYSTEM_EVENT_QUEUE   0 // Not really a timer.
 #define CONST_INTERVAL_TIMER 1
 #define PLUGIN_TASK_TIMER    2

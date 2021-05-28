@@ -31,7 +31,7 @@ enum class P082_query : byte {
   P082_NR_OUTPUT_OPTIONS
 };
 
-String Plugin_082_valuename(P082_query value_nr, bool displayString);
+const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString);
 
 
 
