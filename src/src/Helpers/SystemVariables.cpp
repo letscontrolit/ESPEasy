@@ -234,12 +234,14 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
     return Enum::UNKNOWN;
   }
 
-  String str_prefix        = SystemVariables::toString(nextTested).substring(0, 2);
+  String str_prefix        = SystemVariables::toString(nextTested);
+  str_prefix               = str_prefix.substring(0, 2);
   bool   str_prefix_exists = str.indexOf(str_prefix) != -1;
 
   for (int i = nextTested; i < Enum::UNKNOWN; ++i) {
     SystemVariables::Enum enumval = static_cast<SystemVariables::Enum>(i);
-    String new_str_prefix         = SystemVariables::toString(enumval).substring(0, 2);
+    String new_str_prefix         = SystemVariables::toString(enumval);
+    new_str_prefix                = new_str_prefix.substring(0, 2);
 
     if ((str_prefix == new_str_prefix) && !str_prefix_exists) {
       // Just continue
@@ -258,7 +260,7 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
   return Enum::UNKNOWN;
 }
 
-String SystemVariables::toString(SystemVariables::Enum enumval)
+const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enumval)
 {
   switch (enumval) {
     case Enum::BOOT_CAUSE:      return F("%bootcause%");

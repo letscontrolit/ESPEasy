@@ -145,7 +145,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         char   thumbprint[60];
         String error = F("Specify server thumbprint with exactly 59 symbols string like " CPLUGIN_015_DEFAULT_THUMBPRINT);
 
-        if (!safe_strncpy(thumbprint, web_server.arg("c015_thumbprint"), 60) || (strlen(thumbprint) != 59)) {
+        if (!safe_strncpy(thumbprint, webArg("c015_thumbprint"), 60) || (strlen(thumbprint) != 59)) {
           addHtmlError(error);
         }
         SaveCustomControllerSettings(event->ControllerIndex, (byte *)&thumbprint, sizeof(thumbprint));
@@ -184,7 +184,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
           if (!isvalid) {
             // send empty string to Blynk in case of error
-            formattedValue = F("");
+            formattedValue = EMPTY_STRING;
           }
 
           String valueName     = ExtraTaskSettings.TaskDeviceValueNames[x];

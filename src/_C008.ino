@@ -9,7 +9,6 @@
 # define CPLUGIN_008
 # define CPLUGIN_ID_008         8
 # define CPLUGIN_NAME_008       "Generic HTTP"
-# include <ArduinoJson.h>
 
 bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& string)
 {

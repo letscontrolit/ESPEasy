@@ -66,7 +66,7 @@ boolean Plugin_114(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        String optionsMode2[5];
+        const __FlashStringHelper * optionsMode2[5];
         optionsMode2[0] = F("50 ms");
         optionsMode2[1] = F("100 ms");
         optionsMode2[2] = F("200 ms");
@@ -82,7 +82,7 @@ boolean Plugin_114(byte function, struct EventStruct *event, String& string)
       }
 
       {
-        String optionsMode3[2];
+        const __FlashStringHelper * optionsMode3[2];
         optionsMode3[0] = F("Normal Dynamic");
         optionsMode3[1] = F("High Dynamic");
         int optionValuesMode3[2];

@@ -96,7 +96,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
     {
       {
         unsigned int choice = P115_DEVICESELECTOR;
-        String options[4];
+        const __FlashStringHelper * options[4];
         options[0]          = F("MAX17043");
         options[1]          = F("MAX17044 (2S)"); // 2-cell version of the MAX17043 (full-scale range of 10V)
         options[2]          = F("MAX17048");

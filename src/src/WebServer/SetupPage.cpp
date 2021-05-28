@@ -79,8 +79,8 @@ void handle_setup() {
         static byte status       = HANDLE_SETUP_SCAN_STAGE;
         static byte refreshCount = 0;
 
-        String ssid              = web_server.arg(F("ssid"));
-        String other             = web_server.arg(F("other"));
+        String ssid              = webArg(F("ssid"));
+        String other             = webArg(F("other"));
         String password;
         bool passwordGiven = getFormPassword(F("pass"), password);
         if (passwordGiven) {
@@ -359,7 +359,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
   html_TR_TD();
   html_TD();
   html_BR();
-  addSubmitButton(F("Connect"), "");
+  addSubmitButton(F("Connect"), EMPTY_STRING);
 
   html_end_table();
 }

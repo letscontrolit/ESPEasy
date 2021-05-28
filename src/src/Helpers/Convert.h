@@ -6,7 +6,7 @@
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
 \*********************************************************************************************/
-String getBearing(int degrees);
+const __FlashStringHelper * getBearing(int degrees);
 
 float CelsiusToFahrenheit(float celsius);
 
