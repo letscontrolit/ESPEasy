@@ -57,6 +57,7 @@ struct P098_limit_switch_state {
   }
 
   unsigned long triggerpos  = 0;
+  unsigned long lastChanged = 0;
   bool          triggered   = false;
   bool          positionSet = false;
 };

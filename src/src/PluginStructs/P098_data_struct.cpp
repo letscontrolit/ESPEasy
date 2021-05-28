@@ -34,6 +34,7 @@ bool P098_data_struct::begin()
     initialized = true;
 
     stop();
+    state = P098_data_struct::State::Idle;
 
     int interruptPinMode = 0;
 
@@ -149,14 +150,13 @@ bool P098_data_struct::moveToPos(int pos)
 
 void P098_data_struct::stop()
 {
-  state = P098_data_struct::State::Idle;
   setPinState(_config.motorFwd, 0);
   setPinState(_config.motorRev, 0);
 }
 
 int P098_data_struct::getPosition() const
 {
-  if (!homePosSet()) { return -1; }
+//  if (!homePosSet()) { return -1; }
   return position - limitA.triggerpos;
 }
 
@@ -238,7 +238,7 @@ void P098_data_struct::release_limit_switch(
   int                               position)
 {
   if (switch_state.triggered) {
-    if (gpio_config.readState()) {
+    if (!gpio_config.readState()) {
       if (std::abs(switch_state.triggerpos - position) > P098_LIMIT_SWITCH_TRIGGERPOS_MARGIN) {
         switch_state.triggered = false;
       }
@@ -248,9 +248,10 @@ void P098_data_struct::release_limit_switch(
 
 void ICACHE_RAM_ATTR P098_data_struct::ISRlimitA(P098_data_struct *self)
 {
-  if (!self->limitA.triggered) {
+  if (!self->limitA.positionSet) {
     if (std::abs(self->limitA.triggerpos - self->position) > P098_LIMIT_SWITCH_TRIGGERPOS_MARGIN) {
       self->limitA.triggered  = true;
+      self->limitA.positionSet = true;
       self->limitA.triggerpos = self->position;
     }
   }
@@ -258,7 +259,7 @@ void ICACHE_RAM_ATTR P098_data_struct::ISRlimitA(P098_data_struct *self)
 
 void ICACHE_RAM_ATTR P098_data_struct::ISRlimitB(P098_data_struct *self)
 {
-  if (!self->limitB.triggered) {
+  if (!self->limitB.positionSet) {
     if (std::abs(self->limitB.triggerpos - self->position) > P098_LIMIT_SWITCH_TRIGGERPOS_MARGIN) {
       self->limitB.triggered   = true;
       self->limitB.positionSet = true;

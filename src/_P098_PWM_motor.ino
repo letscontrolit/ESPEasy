@@ -14,6 +14,7 @@
 # define PLUGIN_VALUENAME1_098 "Position"
 # define PLUGIN_VALUENAME2_098 "LimitA"
 # define PLUGIN_VALUENAME3_098 "LimitB"
+# define PLUGIN_VALUENAME4_098 "State"
 
 
 # define P098_PWM_FREQ       PCONFIG_LONG(0)
@@ -45,12 +46,12 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_098;
       Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 3;
+      Device[deviceCount].ValueCount         = 4;
       Device[deviceCount].SendDataOption     = false;
       Device[deviceCount].TimerOption        = false;
       break;
@@ -67,6 +68,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_098));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_098));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_098));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_098));
       break;
     }
 
@@ -202,7 +204,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         bool limitA_triggered, limitB_triggered = false;
         P098_data->getLimitSwitchStates(limitA_triggered, limitB_triggered);
 
-        if (!P098_data->loop()) {
+        if (!P098_data->loop()) {}
           switch (P098_data->state) {
             case P098_data_struct::State::Idle:
             case P098_data_struct::State::RunFwd:
@@ -231,10 +233,11 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
               break;
             }
           }
-        }
+        //}
         UserVar[event->BaseVarIndex + 0] = P098_data->getPosition();
         UserVar[event->BaseVarIndex + 1] = (limitA_triggered ? 1 : 0);
         UserVar[event->BaseVarIndex + 2] = (limitB_triggered ? 1 : 0);
+        UserVar[event->BaseVarIndex + 3] = static_cast<int>(P098_data->state);
       }
       break;
     }
