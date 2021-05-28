@@ -376,7 +376,7 @@ void resetWiFi() {
   WifiDisconnect();
 
   // Send this log only after WifiDisconnect() or else sending to syslog may cause issues
-  addLog(LOG_LEVEL_INFO, String(F("Reset WiFi.")));
+  addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
 
   //  setWifiMode(WIFI_OFF);
 
@@ -662,10 +662,15 @@ bool WiFiScanAllowed() {
     return true;
   }
   */
-  if (WiFi_AP_Candidates.getBestCandidate().usable()) {
+  WiFi_AP_Candidates.purge_expired();
+  if (WiFiEventData.wifiConnectInProgress) {
+    return false;
+  }
+  if (NetworkConnected() && WiFi_AP_Candidates.getBestCandidate().usable()) {
     addLog(LOG_LEVEL_ERROR, F("WiFi : Scan not needed, good candidate present"));
     return false;
   }
+
   if (WiFiEventData.lastDisconnectMoment.isSet() && WiFiEventData.lastDisconnectMoment.millisPassedSince() < WIFI_RECONNECT_WAIT) {
     if (!NetworkConnected()) {
       return true;
@@ -871,7 +876,7 @@ void setAPinternal(bool enable)
   }
 }
 
-String getWifiModeString(WiFiMode_t wifimode)
+const __FlashStringHelper * getWifiModeString(WiFiMode_t wifimode)
 {
   switch (wifimode) {
     case WIFI_OFF:   return F("OFF");

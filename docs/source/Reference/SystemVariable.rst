@@ -153,6 +153,15 @@ More uses of these system variables can be seen in the rules section and formula
      - 11
      - WiFi channel of current AP.
      - Yes
+   * - ``%iswifi%``
+     - 7
+     - Bitset of WiFi connection state
+
+       * ``0`` = disconnected
+       * ``1`` = Connected
+       * ``3`` = Got IP && Connected
+       * ``7`` = Got IP && Connected && Completed to set all flags WiFi is initialized
+     - Yes
    * - ``%vcc%``
      - 5.2
      - VCC value, this is only available in the VCC builds of FW (with "VCC" in the file name).
@@ -167,6 +176,14 @@ More uses of these system variables can be seen in the rules section and formula
      - 2212667
      - MAC address in integer to be used in rules (only the last 24 bit).
      - Yes
+   * - ``%isntp%``
+     - 1
+     - Indicates whether time was set
+     - yes
+   * - ``%ismqtt%``
+     - 1
+     - Indicates whether a configured MQTT broker is active
+     - yes
 
 
 Standard Conversions

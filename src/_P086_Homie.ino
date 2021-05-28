@@ -76,7 +76,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
         byte choice = 0;
         String labelText;
         String keyName;
-        String options[PLUGIN_086_VALUE_TYPES];
+        const __FlashStringHelper * options[PLUGIN_086_VALUE_TYPES];
         options[0] = F("integer");
         options[1] = F("float");
         options[2] = F("boolean");

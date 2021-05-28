@@ -225,29 +225,30 @@ void handle_sysvars() {
   TXBuffer.endStream();
 }
 
+void addSysVar_html_parsed(String input, bool URLencoded) {
+  // Make deepcopy for replacement, so parameter is a copy, not a const reference
+  parseSystemVariables(input, URLencoded); 
+  parseStandardConversions(input, URLencoded);
+  addHtml(input);
+}
+
+void addSysVar_html(const __FlashStringHelper * input) {
+  addSysVar_html(String(input));
+}
 
 void addSysVar_html(const String& input) {
   html_TR_TD();
   {
-    String html;
-    html.reserve(24 + input.length());
-    html += F("<pre>"); // Make monospaced (<tt> tag?)
-    html += F("<xmp>"); // Make sure HTML code is escaped. Tag depricated??
-    html += input;
-    html += F("</xmp>");
-    html += F("</pre>");
-    addHtml(html);
+    addHtml(F("<pre>")); // Make monospaced (<tt> tag?)
+    addHtml(F("<xmp>")); // Make sure HTML code is escaped. Tag depricated??
+    addHtml(input);
+    addHtml(F("</xmp>"));
+    addHtml(F("</pre>"));
   }
   html_TD();
-  String replacement(input);                // Make deepcopy for replacement
-  parseSystemVariables(replacement, false); // Not URL encoded
-  parseStandardConversions(replacement, false);
-  addHtml(replacement);
+  addSysVar_html_parsed(input, false); // Not URL encoded
   html_TD();
-  replacement = input;
-  parseSystemVariables(replacement, true); // URL encoded
-  parseStandardConversions(replacement, true);
-  addHtml(replacement);
+  addSysVar_html_parsed(input, true); // URL encoded
   delay(0);
 }
 

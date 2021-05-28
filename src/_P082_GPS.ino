@@ -193,7 +193,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       {
         // In a separate scope to free memory of String array as soon as possible
         sensorTypeHelper_webformLoad_header();
-        String options[static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS)];
+        const __FlashStringHelper * options[static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS)];
 
         for (byte i = 0; i < static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS); ++i) {
           options[i] = Plugin_082_valuename(static_cast<P082_query>(i), true);

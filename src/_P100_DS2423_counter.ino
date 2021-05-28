@@ -65,7 +65,7 @@ boolean Plugin_100(byte function, struct EventStruct *event, String& string)
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_100_DallasPin, Plugin_100_DallasPin);
 
         // Counter select
-        String resultsOptions[2]      = { F("A"), F("B") };
+        const __FlashStringHelper * resultsOptions[2]      = { F("A"), F("B") };
         int    resultsOptionValues[2] = { 0, 1 };
         addFormSelector(F("Counter"), F("p100_counter"), 2, resultsOptions, resultsOptionValues, PCONFIG(0));
         addFormNote(F("Counter value is incremental"));

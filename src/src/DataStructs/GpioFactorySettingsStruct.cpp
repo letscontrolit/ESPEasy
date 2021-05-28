@@ -23,25 +23,25 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
 
   switch (model) {
 #if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
-    case DeviceModel_Sonoff_Basic:
-    case DeviceModel_Sonoff_TH1x:
-    case DeviceModel_Sonoff_S2x:
-    case DeviceModel_Sonoff_TouchT1:
-    case DeviceModel_Sonoff_POWr2:
+    case DeviceModel::DeviceModel_Sonoff_Basic:
+    case DeviceModel::DeviceModel_Sonoff_TH1x:
+    case DeviceModel::DeviceModel_Sonoff_S2x:
+    case DeviceModel::DeviceModel_Sonoff_TouchT1:
+    case DeviceModel::DeviceModel_Sonoff_POWr2:
       button[0]  = 0;  // Single Button
       relais[0]  = 12; // Red Led and Relay (0 = Off, 1 = On)
       status_led = 13; // Green/Blue Led (0 = On, 1 = Off)
       i2c_sda    = -1;
       i2c_scl    = -1;
       break;
-    case DeviceModel_Sonoff_POW:
+    case DeviceModel::DeviceModel_Sonoff_POW:
       button[0]  = 0;  // Single Button
       relais[0]  = 12; // Red Led and Relay (0 = Off, 1 = On)
       status_led = 15; // Blue Led (0 = On, 1 = Off)
       i2c_sda    = -1;
       i2c_scl    = -1; // GPIO5 conflicts with HLW8012 Sel output
       break;
-    case DeviceModel_Sonoff_TouchT2:
+    case DeviceModel::DeviceModel_Sonoff_TouchT2:
       button[0]  = 0;  // Button 1
       button[1]  = 9;  // Button 2
       relais[0]  = 12; // Led and Relay1 (0 = Off, 1 = On)
@@ -50,7 +50,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda    = -1; // GPIO4 conflicts with GPIO_REL3
       i2c_scl    = -1; // GPIO5 conflicts with GPIO_REL2
       break;
-    case DeviceModel_Sonoff_TouchT3:
+    case DeviceModel::DeviceModel_Sonoff_TouchT3:
       button[0]  = 0;  // Button 1
       button[1]  = 10; // Button 2
       button[2]  = 9;  // Button 3
@@ -62,7 +62,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_scl    = -1; // GPIO5 conflicts with GPIO_REL2
       break;
 
-    case DeviceModel_Sonoff_4ch:
+    case DeviceModel::DeviceModel_Sonoff_4ch:
       button[0]  = 0;             // Button 1
       button[1]  = 9;             // Button 2
       button[2]  = 10;            // Button 3
@@ -75,14 +75,14 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda    = -1;            // GPIO4 conflicts with GPIO_REL3
       i2c_scl    = -1;            // GPIO5 conflicts with GPIO_REL2
       break;
-    case DeviceModel_Shelly1:
+    case DeviceModel::DeviceModel_Shelly1:
       button[0]  = 5;             // Single Button
       relais[0]  = 4;             // Red Led and Relay (0 = Off, 1 = On)
       status_led = 15;            // Blue Led (0 = On, 1 = Off)
       i2c_sda    = -1;            // GPIO4 conflicts with relay control.
       i2c_scl    = -1;            // GPIO5 conflicts with SW input
       break;
-    case DeviceModel_ShellyPLUG_S:
+    case DeviceModel::DeviceModel_ShellyPLUG_S:
       button[0]  = 13;            // Single Button
       relais[0]  = 15;            // Red Led and Relay (0 = Off, 1 = On)
       status_led = 2;             // Blue Led (0 = On, 1 = Off)
@@ -90,23 +90,23 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_scl    = -1;            // GPIO5 conflicts with SW input
       break;
 #else
-    case DeviceModel_Sonoff_Basic:
-    case DeviceModel_Sonoff_TH1x:
-    case DeviceModel_Sonoff_S2x:
-    case DeviceModel_Sonoff_TouchT1:
-    case DeviceModel_Sonoff_POWr2:
-    case DeviceModel_Sonoff_POW:
-    case DeviceModel_Sonoff_TouchT2:
-    case DeviceModel_Sonoff_TouchT3:
-    case DeviceModel_Sonoff_4ch:
-    case DeviceModel_Shelly1:
-    case DeviceModel_ShellyPLUG_S:
+    case DeviceModel::DeviceModel_Sonoff_Basic:
+    case DeviceModel::DeviceModel_Sonoff_TH1x:
+    case DeviceModel::DeviceModel_Sonoff_S2x:
+    case DeviceModel::DeviceModel_Sonoff_TouchT1:
+    case DeviceModel::DeviceModel_Sonoff_POWr2:
+    case DeviceModel::DeviceModel_Sonoff_POW:
+    case DeviceModel::DeviceModel_Sonoff_TouchT2:
+    case DeviceModel::DeviceModel_Sonoff_TouchT3:
+    case DeviceModel::DeviceModel_Sonoff_4ch:
+    case DeviceModel::DeviceModel_Shelly1:
+    case DeviceModel::DeviceModel_ShellyPLUG_S:
       break;
 #endif
 
 
 #ifdef ESP32
-    case DeviceMode_Olimex_ESP32_PoE:
+    case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
       button[0]             = 34; // BUT1 Button
       relais[0]             = -1; // No LED's or relays on board
       status_led            = -1;
@@ -120,7 +120,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       eth_clock_mode        = EthClockMode_t::Int_50MHz_GPIO_17_inv;
       network_medium = NetworkMedium_t::Ethernet;
       break;
-    case DeviceMode_Olimex_ESP32_EVB:
+    case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
       button[0] = 34; // BUT1 Button
       relais[0] = 32; // LED1 + Relay1 (0 = Off, 1 = On)
       relais[1] = 33; // LED2 + Relay2 (0 = Off, 1 = On)
@@ -137,7 +137,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       network_medium = NetworkMedium_t::Ethernet;
       break;
 
-    case DeviceMode_Olimex_ESP32_GATEWAY:
+    case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
       button[0]             = 34; // BUT1 Button
       relais[0]             = -1; // No LED's or relays on board
       status_led            = 33;
@@ -171,7 +171,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
 
       break;
 
-    case DeviceMode_wESP32:
+    case DeviceModel::DeviceModel_wESP32:
       status_led            = -1;
       i2c_sda               = 15;
       i2c_scl               = 4;
@@ -184,7 +184,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       network_medium = NetworkMedium_t::Ethernet;
       break;
 
-    case DeviceMode_WT32_ETH01:
+    case DeviceModel::DeviceModel_WT32_ETH01:
       status_led            = -1;
       i2c_sda               = 21;
       i2c_scl               = 22;
@@ -198,15 +198,15 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       break;
 
   #else
-      case DeviceMode_Olimex_ESP32_PoE:
-      case DeviceMode_Olimex_ESP32_EVB:
-      case DeviceMode_Olimex_ESP32_GATEWAY:
-      case DeviceMode_wESP32:
-      case DeviceMode_WT32_ETH01:
+      case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
+      case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
+      case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
+      case DeviceModel::DeviceModel_wESP32:
+      case DeviceModel::DeviceModel_WT32_ETH01:
   #endif
 
-    case DeviceModel_default:
-    case DeviceModel_MAX:
+    case DeviceModel::DeviceModel_default:
+    case DeviceModel::DeviceModel_MAX:
       break;
 
       // Do not use default: as this allows the compiler to detect any missing cases.

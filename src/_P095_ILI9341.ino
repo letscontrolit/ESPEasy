@@ -237,7 +237,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         }
 
         byte choice2 = PCONFIG(1);
-        String options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
+        const __FlashStringHelper * options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
         int optionValues2[4] = { 0, 1, 2, 3 };
         addFormSelector(F("Rotation"), F("p095_rotate"), 4, options2, optionValues2, choice2);
 
@@ -276,8 +276,8 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         String tmpString = String(string);
         String arguments = String(string);
 
-        String command = F("");
-        String subcommand = F("");
+        String command;
+        String subcommand;
 
         int argIndex = arguments.indexOf(',');
         if (argIndex)

@@ -211,6 +211,20 @@ String getTaskDeviceName(taskIndex_t TaskIndex) {
 }
 
 /********************************************************************************************\
+   Handler for getting Value Names from TaskIndex
+
+   - value names can be accessed with task variable index
+   - maximum number of variables <= defined number of variables in plugin
+ \*********************************************************************************************/
+String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
+
+  TaskValueIndex = (TaskValueIndex < getValueCountForTask(TaskIndex) ? TaskValueIndex : getValueCountForTask(TaskIndex));
+
+  LoadTaskSettings(TaskIndex);
+  return ExtraTaskSettings.TaskDeviceValueNames[TaskValueIndex];
+}
+
+/********************************************************************************************\
    If RX and TX tied together, perform emergency reset to get the system out of boot loops
  \*********************************************************************************************/
 void emergencyReset()

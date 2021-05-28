@@ -86,7 +86,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         {
           String argName = F("p037_template");
           argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
+          if (!safe_strncpy(deviceTemplate[varNr], webArg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
