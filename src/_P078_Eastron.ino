@@ -56,8 +56,8 @@ boolean Plugin_078_init = false;
 
 
 // Forward declaration helper functions
-const __FlashStringHelper * p078_getQueryString(byte query);
-const __FlashStringHelper * p078_getQueryValueString(byte query);
+const __FlashStringHelper * p078_getQueryString(byte query, byte model);
+const __FlashStringHelper * p078_getQueryValueString(byte query, byte model);
 unsigned int p078_getRegister(byte query, byte model);
 float p078_readVal(byte query, byte node, unsigned int model);
 
@@ -187,8 +187,9 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
             options[i] = p078_getQueryString(i, P078_MODEL);
           }
           for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
-          const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
-          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, nrOptions, options);
+            const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
+            sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, nrOptions, options);
+          }
         }
 
         success = true;
