@@ -54,6 +54,15 @@ ESPeasySerial* Plugin_078_SoftSerial = NULL;
 SDM* Plugin_078_SDM = NULL;
 boolean Plugin_078_init = false;
 
+
+// Forward declaration helper functions
+const __FlashStringHelper * p078_getQueryString(byte query);
+const __FlashStringHelper * p078_getQueryValueString(byte query);
+unsigned int p078_getRegister(byte query, byte model);
+float p078_readVal(byte query, byte node, unsigned int model);
+
+
+
 boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -157,7 +166,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         {
-          String options_model[5] = { F("SDM220 & SDM120CT & SDM120"), F("SDM230"), F("SDM72D"), F("DDM18SD"), F("SDM630") };
+          const __FlashStringHelper * options_model[5] = { F("SDM220 & SDM120CT & SDM120"), F("SDM230"), F("SDM72D"), F("DDM18SD"), F("SDM630") };
           addFormSelector(F("Model Type"), P078_MODEL_LABEL, 5, options_model, NULL, P078_MODEL );
           addFormNote(F("Submit after changing the modell to update Output Configuration."));
         }
@@ -165,54 +174,21 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         {
           // In a separate scope to free memory of String array as soon as possible
           sensorTypeHelper_webformLoad_header();
-          int model = P078_MODEL;
-
-          if (model == 0) {
-              String options[P078_NR_OUTPUT_OPTIONS_SDM220_SDM120CT_SDM120];
-              for (int i = 0; i < P078_NR_OUTPUT_OPTIONS_SDM220_SDM120CT_SDM120; ++i) {
-                options[i] = p078_getQueryString(i,model);
-              }
-              for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
-              const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
-              sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P078_NR_OUTPUT_OPTIONS_SDM220_SDM120CT_SDM120, options);
-            }
-          } else if (model == 1) {
-              String options[P078_NR_OUTPUT_OPTIONS_SDM230];
-              for (int i = 0; i < P078_NR_OUTPUT_OPTIONS_SDM230; ++i) {
-                options[i] = p078_getQueryString(i,model);
-              }
-              for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
-              const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
-              sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P078_NR_OUTPUT_OPTIONS_SDM230, options);
-            } 
-          } else if (model == 2) {
-              String options[P078_NR_OUTPUT_OPTIONS_SDM72D];
-              for (int i = 0; i < P078_NR_OUTPUT_OPTIONS_SDM72D; ++i) {
-                options[i] = p078_getQueryString(i,model);
-              }
-              for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
-              const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
-              sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P078_NR_OUTPUT_OPTIONS_SDM72D, options);
-            }  
-          } else if (model == 3) {
-              String options[P078_NR_OUTPUT_OPTIONS_DDM18SD];
-              for (int i = 0; i < P078_NR_OUTPUT_OPTIONS_DDM18SD; ++i) {
-                options[i] = p078_getQueryString(i,model);
-              }
-              for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
-              const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
-              sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P078_NR_OUTPUT_OPTIONS_DDM18SD, options);
-            } 
-          } else if (model == 4) {
-              String options[P078_NR_OUTPUT_OPTIONS_SDM630];
-              for (int i = 0; i < P078_NR_OUTPUT_OPTIONS_SDM630; ++i) {
-                options[i] = p078_getQueryString(i,model);
-              }
-              for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
-              const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
-              sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P078_NR_OUTPUT_OPTIONS_SDM630, options);
-            }   
-          } 
+          int nrOptions = 0;
+          switch (P078_MODEL) {
+            case 0: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM220_SDM120CT_SDM120; break;
+            case 1: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM230; break;
+            case 2: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM72D; break;
+            case 3: nrOptions = P078_NR_OUTPUT_OPTIONS_DDM18SD; break;
+            case 4: nrOptions = P078_NR_OUTPUT_OPTIONS_SDM630; break;
+          }
+          const __FlashStringHelper * options[nrOptions];
+          for (int i = 0; i < nrOptions; ++i) {
+            options[i] = p078_getQueryString(i, P078_MODEL);
+          }
+          for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
+          const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
+          sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, nrOptions, options);
         }
 
         success = true;
@@ -507,7 +483,7 @@ unsigned int p078_getRegister(byte query, byte model) {
   return 0;
 }
 
-String p078_getQueryString(byte query, byte model) {
+const __FlashStringHelper *  p078_getQueryString(byte query, byte model) {
   if (model == 0) { //SDM220 & SDM120CT & SDM120
     switch (query) {
       case 0:  return F("Voltage (V)");
@@ -667,10 +643,10 @@ String p078_getQueryString(byte query, byte model) {
 
     }  
   }
-  return "";
+  return F("");
 }
 
-String p078_getQueryValueString(byte query, byte model) {
+const __FlashStringHelper * p078_getQueryValueString(byte query, byte model) {
   if (model == 0) { //SDM220 & SDM120CT & SDM120
     switch (query) {
       case 0:  return F("V");
@@ -829,7 +805,7 @@ String p078_getQueryValueString(byte query, byte model) {
       case 85: return F("kVArh");
     }
   }
-  return "";
+  return F("");
 }
 
 

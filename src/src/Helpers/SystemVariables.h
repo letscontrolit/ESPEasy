@@ -11,6 +11,7 @@ public:
 
   enum Enum {
     // For optmization, keep enums sorted alfabetically
+    BOOT_CAUSE,
     BSSID,
     CR,
     IP,
@@ -77,6 +78,7 @@ public:
     UNIXDAY_SEC,
     UNIXTIME,
     UPTIME,
+    UPTIME_MS,
     VCC,
     WI_CH,
 
@@ -88,7 +90,7 @@ public:
   // Return UNKNOWN when nothing needs to be replaced.
   static Enum nextReplacementEnum(const String& str, Enum last_tested);
 
-  static String toString(Enum enumval);
+  static const __FlashStringHelper * toString(Enum enumval);
 
   static void parseSystemVariables(String& s, boolean useURLencode);
 

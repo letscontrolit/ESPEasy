@@ -145,7 +145,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           int resolutionChoice = P004_RESOLUTION;
 
           if ((resolutionChoice < 9) || (resolutionChoice > 12)) { resolutionChoice = activeRes; }
-          String resultsOptions[4]      = { F("9"), F("10"), F("11"), F("12") };
+          const __FlashStringHelper * resultsOptions[4]      = { F("9"), F("10"), F("11"), F("12") };
           int    resultsOptionValues[4] = { 9, 10, 11, 12 };
           addFormSelector(F("Device Resolution"), F("p004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
           addHtml(F(" Bit"));
@@ -153,7 +153,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
         {
           // Value in case of Error
-          String resultsOptions[5]      = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
+          const __FlashStringHelper * resultsOptions[5]      = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
           int    resultsOptionValues[5] = { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
           addFormSelector(F("Error State Value"), F("p004_err"), 5, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
         }

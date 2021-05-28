@@ -38,7 +38,7 @@ void handle_config() {
 
   if (web_server.args() != 0)
   {
-    String name = web_server.arg(F("name"));
+    String name = webArg(F("name"));
     name.trim();
 
     Settings.Delay              = getFormItemInt(F("delay"), Settings.Delay);
@@ -66,7 +66,7 @@ void handle_config() {
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
 
     // SSID 1
-    safe_strncpy(SecuritySettings.WifiSSID, web_server.arg(F("ssid")).c_str(), sizeof(SecuritySettings.WifiSSID));
+    safe_strncpy(SecuritySettings.WifiSSID, webArg(F("ssid")).c_str(), sizeof(SecuritySettings.WifiSSID));
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
 
     // SSID 2
@@ -78,6 +78,12 @@ void handle_config() {
 
     // Access point password.
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
+
+    // When set you can use the Sensor in AP-Mode without being forced to /setup
+    Settings.ApDontForceSetup(isFormItemChecked(F("ApDontForceSetup")));
+
+    // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.
+    Settings.DoNotStartAP(isFormItemChecked(F("DoNotStartAP")));
 
 
     // TD-er Read access control from form.
@@ -141,6 +147,17 @@ void handle_config() {
 
   addFormSeparator(2);
   addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
+
+  addFormCheckBox(F("Don't force /setup in AP-Mode"), F("ApDontForceSetup"), Settings.ApDontForceSetup());
+  addFormNote(F("When set you can use the Sensor in AP-Mode without being forced to /setup. /setup can still be called."));
+
+  addFormCheckBox(F("Do Not Start AP"), F("DoNotStartAP"), Settings.DoNotStartAP());
+  #ifdef HAS_ETHERNET
+  addFormNote(F("Do not allow to start an AP when unable to connect to configured LAN/WiFi"));
+  #else
+  addFormNote(F("Do not allow to start an AP when configured WiFi cannot be found"));
+  #endif
+
 
   // TD-er add IP access box F("ipblocklevel")
   addFormSubHeader(F("Client IP filtering"));

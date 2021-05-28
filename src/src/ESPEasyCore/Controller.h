@@ -59,7 +59,10 @@ void SendStatus(struct EventStruct *event, const String& status);
 #ifdef USES_MQTT
 bool MQTT_queueFull(controllerIndex_t controller_idx);
 
-bool MQTTpublish(controllerIndex_t controller_idx, const char *topic, const char *payload, bool retained);
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  const char *topic, const char *payload, bool retained);
+
+// Publish using the move operator for topic and message
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained);
 
 
 /*********************************************************************************************\

@@ -89,7 +89,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
     {
       byte   choiceMode = PCONFIG(0);
       {
-        String optionsMode[6];
+        const __FlashStringHelper * optionsMode[6];
         optionsMode[0] = F("2.4 ms");
         optionsMode[1] = F("24 ms");
         optionsMode[2] = F("50 ms");
@@ -108,7 +108,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
       byte   choiceMode2 = PCONFIG(1);
       {
-        String optionsMode2[4];
+        const __FlashStringHelper * optionsMode2[4];
         optionsMode2[0] = F("1x");
         optionsMode2[1] = F("4x");
         optionsMode2[2] = F("16x");
@@ -125,7 +125,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
       {
         #define P050_RGB_OPTIONS 6
-        String optionsRGB[P050_RGB_OPTIONS];
+        const __FlashStringHelper * optionsRGB[P050_RGB_OPTIONS];
         optionsRGB[0] = F("Raw RGB");
         optionsRGB[1] = F("Raw RGB transformed (3x3 matrix, below)");
         optionsRGB[2] = F("Normalized RGB (0..255)");
@@ -145,7 +145,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
 
       {
         #define P050_VALUE4_OPTIONS 4
-        String optionsOutput[P050_VALUE4_OPTIONS];
+        const __FlashStringHelper * optionsOutput[P050_VALUE4_OPTIONS];
         optionsOutput[0] = F("Color Temperature (deprecated) [K]");
         optionsOutput[1] = F("Color Temperature (DN40) [K]");
         optionsOutput[2] = F("Ambient Light [Lux]");
@@ -417,7 +417,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
                 RuleEvent += String((float)b / t * sRGBFactor, 4);
                 break;
               default:
-                RuleEvent = F("");
+                RuleEvent = EMPTY_STRING;
                 break;
               }
               if (RuleEvent.length() != 0) {
@@ -453,7 +453,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
               RuleEvent += c;
               break;
             default:
-              RuleEvent = F("");
+              RuleEvent = EMPTY_STRING;
               break;
             }
             if (RuleEvent.length() != 0) {

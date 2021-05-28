@@ -43,12 +43,15 @@ struct WiFiEventData_t {
 
 
   void markGotIP();
+  void markLostIP();
   void markDisconnect(WiFiDisconnectReason reason);
   void markConnected(const String& ssid,
                      const uint8_t bssid[6],
                      byte          channel);
   void markConnectedAPmode(const uint8_t mac[6]);
   void markDisconnectedAPmode(const uint8_t mac[6]);
+
+  void setAuthMode(uint8_t newMode);
 
 
   // WiFi related data
@@ -64,7 +67,13 @@ struct WiFiEventData_t {
   bool          bssid_changed   = false;
   bool          channel_changed = false;
 
+  uint8_t       auth_mode = 0;
+  uint8_t       lastScanChannel = 0;
+  uint8_t       usedChannel = 0;
+
+
   WiFiDisconnectReason    lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
+  LongTermTimer           lastScanMoment;
   LongTermTimer           lastConnectMoment;
   LongTermTimer           lastDisconnectMoment;
   LongTermTimer           lastWiFiResetMoment;
@@ -88,12 +97,18 @@ struct WiFiEventData_t {
   bool processedScanDone         = true;
   bool wifiConnectAttemptNeeded  = true;
   bool wifiConnectInProgress     = false;
+  bool warnedNoValidWiFiSettings = false;
+
+  bool performedClearWiFiCredentials = false;
+
+  // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
+  // This can cause recursion, so a semaphore is needed here.
+  bool processingDisconnect      = false;
+
 
   unsigned long connectionFailures = 0;
 
-  #ifdef ESP32
-  WiFiEventId_t wm_event_id;
-  #endif // ifdef ESP32
+
 };
 
 #endif   // ifndef DATASTRUCTS_WIFIEVENTDATA_H

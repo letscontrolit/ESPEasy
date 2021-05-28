@@ -24,7 +24,7 @@ void handle_devices();
 // TODO TD-er: Add JavaScript filter:
 //             https://www.w3schools.com/howto/howto_js_filter_dropdown.asp
 // ********************************************************************************
-void addDeviceSelect(const String& name,  int choice);
+void addDeviceSelect(const __FlashStringHelper * name,  int choice);
 
 // ********************************************************************************
 // Collect all submitted form data and store the task settings

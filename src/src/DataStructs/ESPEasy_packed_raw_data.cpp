@@ -1,4 +1,4 @@
-#include "ESPEasy_packed_raw_data.h"
+#include "../DataStructs/ESPEasy_packed_raw_data.h"
 
 
 uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offset) {

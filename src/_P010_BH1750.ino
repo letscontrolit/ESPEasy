@@ -7,7 +7,7 @@
 // #######################################################################################################
 
 
-# include "AS_BH1750.h"
+# include <AS_BH1750.h>
 
 # define PLUGIN_010
 # define PLUGIN_ID_010         10
@@ -70,7 +70,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       byte   choiceMode = PCONFIG(1);
-      String optionsMode[4];
+      const __FlashStringHelper * optionsMode[4];
       optionsMode[0] = F("RESOLUTION_LOW");
       optionsMode[1] = F("RESOLUTION_NORMAL");
       optionsMode[2] = F("RESOLUTION_HIGH");

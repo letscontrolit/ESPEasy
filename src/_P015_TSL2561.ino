@@ -86,7 +86,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
     {
       {
         #define TSL2561_INTEGRATION_OPTION 3
-        String options[TSL2561_INTEGRATION_OPTION];
+        const __FlashStringHelper * options[TSL2561_INTEGRATION_OPTION];
         int    optionValues[TSL2561_INTEGRATION_OPTION];
         optionValues[0] = 0x00;
         options[0]      = F("13.7 ms");
@@ -102,7 +102,7 @@ boolean Plugin_015(byte function, struct EventStruct *event, String& string)
 
       {
         #define TSL2561_GAIN_OPTION 4
-        String options[TSL2561_GAIN_OPTION];
+        const __FlashStringHelper * options[TSL2561_GAIN_OPTION];
         int    optionValues[TSL2561_GAIN_OPTION];
         optionValues[0] = P015_NO_GAIN;
         options[0]      = F("No Gain");

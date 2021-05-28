@@ -5,6 +5,7 @@
 #include "../WebServer/HTML_wrappers.h"
 
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
 
@@ -23,20 +24,25 @@ void handle_wifiscanner_json() {
   TXBuffer.startJsonStream();
   addHtml(F("[{"));
   bool firstentry = true;
-  int  n          = WiFi.scanNetworks(false, true);
 
-  for (int i = 0; i < n; ++i)
+  if (WiFi_AP_Candidates.scanComplete() <= 0) {
+    WiFiMode_t cur_wifimode = WiFi.getMode();
+    WifiScan(false);
+    setWifiMode(cur_wifimode);
+  }
+
+  for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
   {
     if (firstentry) { firstentry = false; }
     else { addHtml(F(",{")); }
-    String authType = WiFi_encryptionType(WiFi.encryptionType(i));
+    const String authType = it->encryption_type();
     if (authType.length() > 0) {
       stream_next_json_object_value(F("auth"), authType);
     }
-    stream_next_json_object_value(getLabel(LabelType::SSID),      WiFi.SSID(i));
-    stream_next_json_object_value(getLabel(LabelType::BSSID),     WiFi.BSSIDstr(i));
-    stream_next_json_object_value(getLabel(LabelType::CHANNEL),   String(WiFi.channel(i)));
-    stream_last_json_object_value(getLabel(LabelType::WIFI_RSSI), String(WiFi.RSSI(i)));
+    stream_next_json_object_value(getLabel(LabelType::SSID),      it->ssid);
+    stream_next_json_object_value(getLabel(LabelType::BSSID),     formatMAC(it->bssid));
+    stream_next_json_object_value(getLabel(LabelType::CHANNEL),   String(it->channel));
+    stream_last_json_object_value(getLabel(LabelType::WIFI_RSSI), String(it->rssi));
   }
   if (firstentry) {
     addHtml('}');
@@ -58,6 +64,7 @@ void handle_wifiscanner() {
 
   WiFiMode_t cur_wifimode = WiFi.getMode();
   WifiScan(false);
+  int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
   setWifiMode(cur_wifimode);
 
   navMenuIndex = MENU_INDEX_TOOLS;
@@ -70,20 +77,17 @@ void handle_wifiscanner() {
   html_table_header(F("Network info"));
   html_table_header(F("RSSI"), 50);
 
-  const int8_t scanCompleteStatus = WiFi.scanComplete();
-
   if (scanCompleteStatus <= 0) {
     addHtml(F("No Access Points found"));
   }
   else
   {
-    for (int i = 0; i < scanCompleteStatus; ++i)
+    for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
     {
       html_TR_TD();
-      int32_t rssi = 0;
-      addHtml(formatScanResult(i, "<TD>", rssi));
+      addHtml(it->toString(F("<TD>")));
       html_TD();
-      getWiFi_RSSI_icon(rssi, 45);
+      getWiFi_RSSI_icon(it->rssi, 45);
     }
   }
 

@@ -14,6 +14,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringParser.h"
 
 //      taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX
 //	varNr = event->Par2 - 1;
@@ -39,12 +40,42 @@ bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned i
   return true;
 }
 
+/**
+ * parse TaskName/TaskValue when not numeric for task name and value name and validate values
+ */
+bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex, unsigned int &varNr)
+{
+  if (!validTaskVars(event, taskIndex, varNr) || (event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK))  // Extra check required because of shortcutting in validTaskVars()
+  { 
+    String taskName;
+    taskIndex_t tmpTaskIndex = taskIndex;
+    if ((event->Par1 <= 0 || event->Par1 >= INVALID_TASK_INDEX) && GetArgv(Line, taskName, 2)) {
+      tmpTaskIndex = findTaskIndexByName(taskName);
+      if (tmpTaskIndex != INVALID_TASK_INDEX) {
+        event->Par1 = tmpTaskIndex + 1;
+      }
+    }
+    String valueName;
+    if ((event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK) && event->Par1 - 1 != INVALID_TASK_INDEX && GetArgv(Line, valueName, 3))
+    {
+      byte tmpVarNr = findDeviceValueIndexByName(valueName, event->Par1 - 1);
+      if (tmpVarNr != VARS_PER_TASK) {
+        event->Par2 = tmpVarNr + 1;
+      }
+    }
+    if (!validTaskVars(event, taskIndex, varNr)) return false; 
+  }
+
+  return true;
+}
+
 bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& taskIndex)
 {
   String TmpStr1;
   unsigned int varNr;
 
-  if (!validTaskVars(event, taskIndex, varNr)) { return false; }
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) { return false; }
+
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 
   if (GetArgv(Line, TmpStr1, 4)) {
@@ -62,18 +93,18 @@ bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& task
   return true;
 }
 
-String Command_Task_Clear(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) { return return_command_failed(); }
 
   taskClear(taskIndex, true);
   return return_command_success();
 }
 
-String Command_Task_ClearAll(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_ClearAll(struct EventStruct *event, const char *Line)
 {
   for (taskIndex_t t = 0; t < TASKS_MAX; t++) {
     taskClear(t, false);
@@ -81,13 +112,12 @@ String Command_Task_ClearAll(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_Task_EnableDisable(struct EventStruct *event, bool enable)
+const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event, bool enable, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
-  String dummy;
 
-  if (validTaskVars(event, taskIndex, varNr)) {
+  if (validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
     // This is a command so no guarantee the taskIndex is correct in the event
     event->setTaskIndex(taskIndex);
 
@@ -98,17 +128,17 @@ String Command_Task_EnableDisable(struct EventStruct *event, bool enable)
   return return_command_failed();
 }
 
-String Command_Task_Disable(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_Disable(struct EventStruct *event, const char *Line)
 {
-  return Command_Task_EnableDisable(event, false);
+  return Command_Task_EnableDisable(event, false, Line);
 }
 
-String Command_Task_Enable(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_Enable(struct EventStruct *event, const char *Line)
 {
-  return Command_Task_EnableDisable(event, true);
+  return Command_Task_EnableDisable(event, true, Line);
 }
 
-String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, const char *Line)
 {
   taskIndex_t taskIndex;
 
@@ -116,12 +146,13 @@ String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
-String Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) return return_command_failed(); 
+
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
   const int    result       = round(UserVar[uservarIndex]);
 
@@ -131,7 +162,7 @@ String Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
 {
   taskIndex_t taskIndex;
 
@@ -143,18 +174,18 @@ String Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
-String Command_Task_Run(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!validTaskVars(event, taskIndex, varNr)) { return return_command_failed(); }
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) { return return_command_failed(); }
 
   SensorSendTask(taskIndex);
   return return_command_success();
 }
 
-String Command_Task_RemoteConfig(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_RemoteConfig(struct EventStruct *event, const char *Line)
 {
   struct EventStruct TempEvent(event->TaskIndex);
   String request = Line;

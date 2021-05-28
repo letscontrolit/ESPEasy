@@ -1,8 +1,9 @@
-#include "ESPEasyRules.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Device.h"
 #include "../Globals/EventQueue.h"
@@ -15,12 +16,13 @@
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
 #include "../../_Plugin_Helper.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include <math.h>
 
@@ -107,7 +109,7 @@ bool processNextEvent() {
 /********************************************************************************************\
    Rules processing
  \*********************************************************************************************/
-void rulesProcessing(String& event) {
+void rulesProcessing(const String& event) {
   if (!Settings.UseRules) {
     return;
   }
@@ -127,17 +129,8 @@ void rulesProcessing(String& event) {
 
   if (Settings.OldRulesEngine()) {
     for (byte x = 0; x < RULESETS_MAX; x++) {
-#if defined(ESP8266)
-      String fileName = F("rules");
-#endif // if defined(ESP8266)
-#if defined(ESP32)
-      String fileName = F("/rules");
-#endif // if defined(ESP32)
-      fileName += x + 1;
-      fileName += F(".txt");
-
       if (activeRuleSets[x]) {
-        rulesProcessingFile(fileName, event);
+        rulesProcessingFile(getRulesFileName(x), event);
       }
     }
   } else {
@@ -151,8 +144,8 @@ void rulesProcessing(String& event) {
 # ifndef BUILD_NO_DEBUG
     else {
       addLog(LOG_LEVEL_DEBUG, String(F("EVENT: ")) + event +
-             String(F(" is ingnored. File ")) + fileName +
-             String(F(" not found.")));
+             F(" is ingnored. File ") + fileName +
+             F(" not found."));
     }
 # endif    // ifndef BUILD_NO_DEBUG
     #endif // WEBSERVER_NEW_RULES
@@ -176,9 +169,9 @@ void rulesProcessing(String& event) {
 /********************************************************************************************\
    Rules processing
  \*********************************************************************************************/
-String rulesProcessingFile(const String& fileName, String& event) {
+String rulesProcessingFile(const String& fileName, const String& event) {
   if (!Settings.UseRules || !fileExists(fileName)) {
-    return F("");
+    return EMPTY_STRING;
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile"));
@@ -193,14 +186,13 @@ String rulesProcessingFile(const String& fileName, String& event) {
 #endif // ifndef BUILD_NO_DEBUG
 
   static byte nestingLevel = 0;
-  String log;
 
   nestingLevel++;
 
   if (nestingLevel > RULES_MAX_NESTING_LEVEL) {
     addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
     nestingLevel--;
-    return log;
+    return EMPTY_STRING;
   }
 
   fs::File f = tryOpenFile(fileName, "r+");
@@ -246,13 +238,13 @@ String rulesProcessingFile(const String& fileName, String& event) {
           if ((lineLength > 0) && !line.startsWith(F("//"))) {
             // Parse the line and extract the action (if there is any)
             String action;
-            parseCompleteNonCommentLine(line, event, log, action, match, codeBlock,
+            parseCompleteNonCommentLine(line, event, action, match, codeBlock,
                                         isCommand, condition, ifBranche, ifBlock,
                                         fakeIfBlock);
 
             if (match) // rule matched for one action or a block of actions
             {
-              processMatchedRule(action, event, log, match, codeBlock,
+              processMatchedRule(action, event, match, codeBlock,
                                  isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
             }
 
@@ -260,7 +252,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
           }
 
           // Prepare for new line
-          line = F("");
+          line = EMPTY_STRING;
           line.reserve(longestLineSize);
           firstNonSpaceRead = false;
           commentFound      = false;
@@ -310,7 +302,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  return F("");
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\
@@ -342,15 +334,16 @@ bool rules_replace_common_mistakes(const String& from, const String& to, String&
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log;
-    log.reserve(32 + from.length() + to.length() + line.length());
-    log  = F("Rules (Syntax Error, auto-corrected): '");
-    log += from;
-    log += F("' => '");
-    log += to;
-    log += F("' in: '");
-    log += line;
-    log += '\'';
-    addLog(LOG_LEVEL_ERROR, log);
+    if (log.reserve(32 + from.length() + to.length() + line.length())) {
+      log  = F("Rules (Syntax Error, auto-corrected): '");
+      log += from;
+      log += F("' => '");
+      log += to;
+      log += F("' in: '");
+      log += line;
+      log += '\'';
+      addLog(LOG_LEVEL_ERROR, log);
+    }
   }
   line.replace(from, to);
   return true;
@@ -456,6 +449,9 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
   }
 
   if (cmd_s_lower.startsWith(F("bit"))) {
+    #define bitSetULL(value, bit) ((value) |= (1ULL << (bit)))
+    #define bitClearULL(value, bit) ((value) &= ~(1ULL << (bit)))
+    #define bitWriteULL(value, bit, bitvalue) (bitvalue ? bitSetULL(value, bit) : bitClearULL(value, bit))
     uint32_t bitnr = 0;
     uint64_t iarg2 = 0;
 
@@ -469,11 +465,11 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
     } else if (cmd_s_lower.equals(F("bitset"))) {
       // Syntax like {bitset:0:122} to set least significant bit of the given nr '122' to '1' => '123'
       result = iarg2;
-      bitSet(result, bitnr);
+      bitSetULL(result, bitnr);
     } else if (cmd_s_lower.equals(F("bitclear"))) {
       // Syntax like {bitclear:0:123} to set least significant bit of the given nr '123' to '0' => '122'
       result = iarg2;
-      bitClear(result, bitnr);
+      bitClearULL(result, bitnr);
     } else if (cmd_s_lower.equals(F("bitwrite"))) {
       uint32_t iarg3 = 0;
 
@@ -481,7 +477,7 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
       if (validUIntFromString(arg3, iarg3)) {
         const int bitvalue = (iarg3 & 1); // Only use the last bit of the given parameter
         result = iarg2;
-        bitWrite(result, bitnr, bitvalue);
+        bitWriteULL(result, bitnr, bitvalue);
       } else {
         // Need 3 parameters, but 3rd one is not a valid uint
         return false;
@@ -698,7 +694,7 @@ void substitute_eventvalue(String& line, const String& event) {
   }
 }
 
-void parseCompleteNonCommentLine(String& line, String& event, String& log,
+void parseCompleteNonCommentLine(String& line, const String& event,
                                  String& action, bool& match,
                                  bool& codeBlock, bool& isCommand,
                                  bool condition[], bool ifBranche[],
@@ -741,7 +737,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
   String eventTrigger;
 
-  action = F("");
+  action = EMPTY_STRING;
 
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
@@ -805,8 +801,8 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 #endif // ifndef BUILD_NO_DEBUG
 }
 
-void processMatchedRule(String& action, String& event,
-                        String& log, bool& match, bool& codeBlock,
+void processMatchedRule(String& action, const String& event,
+                        bool& match, bool& codeBlock,
                         bool& isCommand, bool condition[], bool ifBranche[],
                         byte& ifBlock, byte& fakeIfBlock) {
   String lcAction = action;
@@ -840,7 +836,7 @@ void processMatchedRule(String& action, String& event,
 #ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            log  = F("Lev.");
+            String log  = F("Lev.");
             log += String(ifBlock);
             log += F(": [elseif ");
             log += check;
@@ -867,7 +863,7 @@ void processMatchedRule(String& action, String& event,
 #ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            log  = F("Lev.");
+            String log  = F("Lev.");
             log += String(ifBlock);
             log += F(": [if ");
             log += check;
@@ -883,7 +879,7 @@ void processMatchedRule(String& action, String& event,
         fakeIfBlock++;
 
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          log  = F("Lev.");
+          String log  = F("Lev.");
           log += String(ifBlock);
           log += F(": Error: IF Nesting level exceeded!");
           addLog(LOG_LEVEL_ERROR, log);
@@ -902,7 +898,7 @@ void processMatchedRule(String& action, String& event,
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      log  = F("Lev.");
+      String log  = F("Lev.");
       log += String(ifBlock);
       log += F(": [else]=");
       log += boolToString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
@@ -952,8 +948,8 @@ bool ruleMatch(const String& event, const String& rule) {
   tmpRule.trim();
 
   // Ignore escape char
-  tmpRule.replace(F("["), F(""));
-  tmpRule.replace(F("]"), F(""));
+  tmpRule.replace(F("["), EMPTY_STRING);
+  tmpRule.replace(F("]"), EMPTY_STRING);
 
   if (tmpEvent.equalsIgnoreCase(tmpRule)) {
     return true;
@@ -1307,6 +1303,36 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds, String& timeStri
   return validTime;
 }
 
+// Balance the count of parentheses (aka round braces) by adding the missing left or right parentheses, if any
+// Returns the number of added parentheses, < 0 is left parentheses added, > 0 is right parentheses added
+int balanceParentheses(String& string) {
+  int left = 0;
+  int right = 0;
+  for (unsigned int i = 0; i < string.length(); i++) {
+    switch (string[i]) {
+      case '(':
+        left++;
+        break;
+      case ')':
+        right++;
+        break;
+    }
+  }
+  if (left != right) {
+    string.reserve(string.length() + abs(right - left)); // Re-allocate max. once
+  }
+  if (left > right) {
+    for (int i = 0; i < left - right; i++) {
+      string += ')';
+    }
+  } else if (right > left) {
+    for (int i = 0; i < right - left; i++) {
+      string = String(F("(")) + string; // This is quite 'expensive'
+    }
+  }
+  return left - right;
+}
+
 bool conditionMatch(const String& check) {
   int  posStart, posEnd;
   char compare;
@@ -1341,8 +1367,20 @@ bool conditionMatch(const String& check) {
     tmpCheck1    = timeString1;
     tmpCheck2    = timeString2;
   } else {
-    if (!validDoubleFromString(tmpCheck1, Value1) ||
-        !validDoubleFromString(tmpCheck2, Value2))
+    int condAnd = tmpCheck2.indexOf(F(" and "));
+    int condOr  = tmpCheck2.indexOf(F(" or "));
+    if (condAnd > -1 || condOr > -1) {            // Only parse first condition, rest will be parsed 'later'
+      if (condAnd > -1 && (condOr == -1 || condAnd < condOr)) {
+        tmpCheck2 = tmpCheck2.substring(0, condAnd);
+      } else if (condOr > -1) {
+        tmpCheck2 = tmpCheck2.substring(0, condOr);
+      }
+      tmpCheck2.trim();
+    }
+    balanceParentheses(tmpCheck1);
+    balanceParentheses(tmpCheck2);
+    if (isError(Calculate(tmpCheck1, Value1)) ||
+        isError(Calculate(tmpCheck2, Value2)))
     {
       return false;
     }
@@ -1393,7 +1431,37 @@ void createRuleEvents(struct EventStruct *event) {
 
   const byte valueCount = getValueCountForTask(event->TaskIndex);
 
-  if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
+  // Small optimization as sensor type string may result in large strings
+  // These also only yield a single value, so no need to check for combining task values.
+  if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+    size_t expectedSize = 2 + getTaskDeviceName(event->TaskIndex).length();
+    expectedSize += strlen(ExtraTaskSettings.TaskDeviceValueNames[0]);
+   
+    bool appendCompleteStringvalue = false;
+    String eventString;
+
+    if (eventString.reserve(expectedSize + event->String2.length())) {
+      appendCompleteStringvalue = true;
+    } else if (!eventString.reserve(expectedSize + 24)) {
+      // No need to continue as we can't even allocate the event, we probably also cannot process it
+      addLog(LOG_LEVEL_ERROR, F("Not enough memory for event"));
+      return;
+    }
+    eventString  = getTaskDeviceName(event->TaskIndex);
+    eventString += F("#");
+    eventString += ExtraTaskSettings.TaskDeviceValueNames[0];
+    eventString += F("=");
+    eventString += '`';
+    if (appendCompleteStringvalue) {
+      eventString += event->String2;
+    } else {
+      eventString += event->String2.substring(0, 10);
+      eventString += F("...");
+      eventString += event->String2.substring(event->String2.length() - 10);
+    }
+    eventString += '`';
+    eventQueue.addMove(std::move(eventString));    
+  } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
     String eventString;
     eventString.reserve(128); // Enough for most use cases, prevent lots of memory allocations.
     eventString  = getTaskDeviceName(event->TaskIndex);
@@ -1405,7 +1473,7 @@ void createRuleEvents(struct EventStruct *event) {
       }
       eventString += formatUserVarNoCheck(event, varNr);
     }
-    eventQueue.add(eventString);
+    eventQueue.addMove(std::move(eventString));
   } else {
     for (byte varNr = 0; varNr < valueCount; varNr++) {
       String eventString;
@@ -1415,7 +1483,7 @@ void createRuleEvents(struct EventStruct *event) {
       eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
       eventString += F("=");
       eventString += formatUserVarNoCheck(event, varNr);
-      eventQueue.add(eventString);
+      eventQueue.addMove(std::move(eventString));
     }
   }
 }

@@ -6,9 +6,10 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+void setNetworkMedium(NetworkMedium_t medium);
+
 void NetworkConnectRelaxed();
 bool NetworkConnected();
-void PrepareSend();
 IPAddress NetworkLocalIP();
 IPAddress NetworkSubnetMask();
 IPAddress NetworkGatewayIP();
@@ -20,8 +21,15 @@ String NetworkGetHostname();
 String NetworkCreateRFCCompliantHostname(bool force_add_unitnr = false);
 String createRFCCompliantHostname(const String& oldString);
 String WifiSoftAPmacAddress();
+String WifiSTAmacAddress();
 
 void CheckRunningServices();
+
+#ifdef HAS_ETHERNET
+bool EthFullDuplex();
+bool EthLinkUp();
+uint8_t EthLinkSpeed();
+#endif
 
 
 #endif 

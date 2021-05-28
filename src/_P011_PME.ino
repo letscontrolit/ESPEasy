@@ -1,6 +1,9 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P011
 
+#include "ESPEasy-Globals.h" // For dummyString
+
+
 // #######################################################################################################
 // #################################### Plugin 011: Pro Mini Extender ####################################
 // #######################################################################################################
@@ -49,7 +52,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       byte   choice     = PCONFIG(0);
-      String options[2] = { F("Digital"), F("Analog") };
+      const __FlashStringHelper * options[2] = { F("Digital"), F("Analog") };
       addFormSelector(F("Port Type"), F("p011"), 2, options, NULL, choice);
 
       success = true;
@@ -98,7 +101,10 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         Plugin_011_Write(event->Par1, event->Par2);
 
         // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-        log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
+        log = F("PME  : GPIO ");
+        log += event->Par1;
+        log += F(" Set to ");
+        log += event->Par2;
         addLog(LOG_LEVEL_INFO, log);
 
         // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
@@ -128,7 +134,10 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         savePortStatus(key, tempStatus);
 
         // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_PWM, event->Par2);
-        log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
+        log = F("PME  : GPIO ");
+        log += event->Par1;
+        log += F(" Set PWM to ");
+        log += event->Par2;
         addLog(LOG_LEVEL_INFO, log);
 
         // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
@@ -157,7 +166,11 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           savePortStatus(key, tempStatus);
 
           // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
+          log = F("PME  : GPIO ");
+          log += event->Par1;
+          log += F(" Pulsed for ");
+          log += event->Par3;
+          log += F(" mS");
           addLog(LOG_LEVEL_INFO, log);
 
           // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
@@ -186,7 +199,11 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           savePortStatus(key, tempStatus);
 
           // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
+          log = F("PME  : GPIO ");
+          log += event->Par1;
+          log += F(" Pulse set for ");
+          log += event->Par3;
+          log += F(" S");
           addLog(LOG_LEVEL_INFO, log);
 
           // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));

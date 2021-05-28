@@ -3,7 +3,7 @@
 
 # include "src/Globals/CPlugins.h"
 # include "src/Commands/Common.h"
-
+# include "src/ESPEasyCore/ESPEasy_backgroundtasks.h"
 
 // #######################################################################################################
 // ########################### Controller Plugin 015: Blynk  #############################################
@@ -145,7 +145,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         char   thumbprint[60];
         String error = F("Specify server thumbprint with exactly 59 symbols string like " CPLUGIN_015_DEFAULT_THUMBPRINT);
 
-        if (!safe_strncpy(thumbprint, web_server.arg("c015_thumbprint"), 60) || (strlen(thumbprint) != 59)) {
+        if (!safe_strncpy(thumbprint, webArg("c015_thumbprint"), 60) || (strlen(thumbprint) != 59)) {
           addHtmlError(error);
         }
         SaveCustomControllerSettings(event->ControllerIndex, (byte *)&thumbprint, sizeof(thumbprint));
@@ -167,7 +167,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       // Collect the values at the same run, to make sure all are from the same sample
       byte valueCount = getValueCountForTask(event->TaskIndex);
 
-      // FIXME TD-er must define a proper move operator
+      
       success = C015_DelayHandler->addToQueue(C015_queue_element(event, valueCount));
 
       if (success) {
@@ -184,7 +184,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
           if (!isvalid) {
             // send empty string to Blynk in case of error
-            formattedValue = F("");
+            formattedValue = EMPTY_STRING;
           }
 
           String valueName     = ExtraTaskSettings.TaskDeviceValueNames[x];
@@ -431,7 +431,7 @@ BLYNK_WRITE_DEFAULT() {
     eventCommand += vPin;
     eventCommand += F("=");
     eventCommand += pinValue;
-    eventQueue.add(eventCommand);
+    eventQueue.addMove(std::move(eventCommand));
   }
 }
 
@@ -440,8 +440,7 @@ BLYNK_CONNECTED() {
   // It’s common to call sync functions inside of this function.
   // Requests all stored on the server latest values for all widgets.
   if (Settings.UseRules) {
-    String eventCommand = F("blynk_connected");
-    eventQueue.add(eventCommand);
+    eventQueue.add(F("blynk_connected"));
   }
 
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "connected handler"));
@@ -450,8 +449,7 @@ BLYNK_CONNECTED() {
 // This is called when Smartphone App is opened
 BLYNK_APP_CONNECTED() {
   if (Settings.UseRules) {
-    String eventCommand = F("blynk_app_connected");
-    eventQueue.add(eventCommand);
+    eventQueue.add(F("blynk_app_connected"));
   }
 
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "app connected handler"));
@@ -460,8 +458,7 @@ BLYNK_APP_CONNECTED() {
 // This is called when Smartphone App is closed
 BLYNK_APP_DISCONNECTED() {
   if (Settings.UseRules) {
-    String eventCommand = F("blynk_app_disconnected");
-    eventQueue.add(eventCommand);
+    eventQueue.add(F("blynk_app_disconnected"));
   }
 
   // addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "app disconnected handler"));

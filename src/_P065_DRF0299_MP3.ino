@@ -136,11 +136,9 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
         if (command == F("stop"))
         {
-          String log = F("MP3  : stop");
-
           Plugin_065_SendCmd(0x0E, 0);
 
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("MP3  : stop"));
           success = true;
         }
 

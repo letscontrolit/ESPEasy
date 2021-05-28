@@ -222,10 +222,12 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
 
         addFormPinSelect(formatGpioName_output(F("EPD BUSY")), F("p096_epd_busy"), EPD_Settings.address_epd_busy);
 
-        byte choice2 = PCONFIG(1);
-        String options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
-        int optionValues2[4] = { 0, 1, 2, 3 };
-        addFormSelector(F("Rotation"), F("p096_rotate"), 4, options2, optionValues2, choice2);
+        {
+          byte choice2 = PCONFIG(1);
+          const __FlashStringHelper * options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
+          int optionValues2[4] = { 0, 1, 2, 3 };
+          addFormSelector(F("Rotation"), F("p096_rotate"), 4, options2, optionValues2, choice2);
+        }
 
         uint16_t width_ = PCONFIG(2);
         if(width_ == 0)
@@ -298,8 +300,8 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
 #endif
         String arguments = String(string);
 
-        String command = F("");
-        String subcommand = F("");
+        String command;
+        String subcommand;
 
         int argIndex = arguments.indexOf(',');
         if (argIndex)

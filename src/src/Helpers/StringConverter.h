@@ -32,10 +32,12 @@ bool string2float(const String& string,
 /********************************************************************************************\
    Convert a char string to IP byte array
  \*********************************************************************************************/
-boolean str2ip(const String& string,
+bool isIP(const String& string);
+
+bool str2ip(const String& string,
                byte         *IP);
 
-boolean str2ip(const char *string,
+bool str2ip(const char *string,
                byte       *IP);
 
 String  formatIP(const IPAddress& ip);
@@ -60,7 +62,7 @@ unsigned long hexToUL(const String& input_c,
                       size_t        nrHexDecimals);
 
 String formatToHex(unsigned long value,
-                   const String& prefix);
+                   const __FlashStringHelper * prefix);
 
 String formatToHex(unsigned long value);
 
@@ -76,7 +78,7 @@ String formatToHex_decimal(unsigned long value);
 String formatToHex_decimal(unsigned long value,
                            unsigned long factor);
 
-String boolToString(bool value);
+const __FlashStringHelper * boolToString(bool value);
 
 /*********************************************************************************************\
    Typical string replace functions.
@@ -127,6 +129,12 @@ String wrapIfContains(const String& value,
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
+String to_json_object_value(const __FlashStringHelper * object,
+                            const __FlashStringHelper * value);
+
+String to_json_object_value(const __FlashStringHelper * object,
+                            const String& value);
+
 String to_json_object_value(const String& object,
                             const String& value);
 
@@ -144,6 +152,10 @@ bool   isQuoteChar(char c);
 bool   isParameterSeparatorChar(char c);
 
 String stripQuotes(const String& text);
+
+bool   safe_strncpy(char         *dest,
+                    const __FlashStringHelper * source,
+                    size_t        max_size);
 
 bool   safe_strncpy(char         *dest,
                     const String& source,
@@ -184,7 +196,7 @@ String tolerantParseStringKeepCase(const String& string,
 
 // escapes special characters in strings for use in html-forms
 bool   htmlEscapeChar(char    c,
-                      String& escaped);
+                      String& esc);
 
 void   htmlEscape(String& html,
                   char    c);
@@ -195,14 +207,24 @@ void   htmlStrongEscape(String& html);
 
 String URLEncode(const char *msg);
 
+void   repl(const __FlashStringHelper * key,
+            const String& val,
+            String      & s,
+            bool       useURLencode);
+
+void   repl(const __FlashStringHelper * key,
+            const char* val,
+            String      & s,
+            bool       useURLencode);
+
 void   repl(const String& key,
             const String& val,
             String      & s,
-            boolean       useURLencode);
+            bool       useURLencode);
 
 #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 void parseSpecialCharacters(String& s,
-                            boolean useURLencode);
+                            bool useURLencode);
 #endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 
 /********************************************************************************************\
@@ -210,32 +232,38 @@ void parseSpecialCharacters(String& s,
  \*********************************************************************************************/
 void parseControllerVariables(String            & s,
                               struct EventStruct *event,
-                              boolean             useURLencode);
+                              bool             useURLencode);
 
 void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
                                    byte                taskValueIndex,
-                                   boolean             useURLencode);
+                                   bool             useURLencode);
 
 void parseSystemVariables(String& s,
-                          boolean useURLencode);
+                          bool useURLencode);
 
 void parseEventVariables(String            & s,
                          struct EventStruct *event,
-                         boolean             useURLencode);
+                         bool             useURLencode);
 
-bool getConvertArgument(const String& marker,
+bool getConvertArgument(const __FlashStringHelper * marker,
                         const String& s,
                         float       & argument,
                         int         & startIndex,
                         int         & endIndex);
 
-bool getConvertArgument2(const String& marker,
+bool getConvertArgument2(const __FlashStringHelper * marker,
                          const String& s,
                          float       & arg1,
                          float       & arg2,
                          int         & startIndex,
                          int         & endIndex);
+
+bool getConvertArgumentString(const __FlashStringHelper * marker,
+                              const String& s,
+                              String      & argumentString,
+                              int         & startIndex,
+                              int         & endIndex);
 
 bool getConvertArgumentString(const String& marker,
                               const String& s,
@@ -246,7 +274,7 @@ bool getConvertArgumentString(const String& marker,
 // Parse conversions marked with "%conv_marker%(float)"
 // Must be called last, since all sensor values must be converted, processed, etc.
 void parseStandardConversions(String& s,
-                              boolean useURLencode);
+                              bool useURLencode);
 
 
 bool HasArgv(const char  *string,

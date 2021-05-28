@@ -474,6 +474,16 @@ You must not use the task names ``Plugin``, ``var`` ``int`` as these have specia
 ``Plugin`` can be used in a so called ``PLUGIN_REQUEST``, for example: 
 ``[Plugin#GPIO#Pinstate#N]`` to get the pin state of a GPIO pin.
 
+``[Plugin#MCP#Pinstate#N]`` to get the pin state of a MCP pin.
+
+``[Plugin#PCF#Pinstate#N]`` to get the pin state of a PCF pin.
+
+For expanders you can use also the following:
+
+``[Plugin#MCP#PinRange#x-y]`` to get the pin state of a range of MCP pins from x o y.
+
+``[Plugin#PCF#PinRange#x-y]`` to get the pin state of a range of PCF pins from x o y.
+
 ``Var`` and ``int`` are used for internal variables. 
 The variables set with the ``Let`` command will be available in rules
 as ``var#N`` or ``int#N`` where ``N`` is 1..16.
@@ -1129,6 +1139,14 @@ Just create Generic - Dummy Device and variables inside it.
 
  TaskValueSet,TASKnr,VARnr,Value
 
+Alternatively, TASKname and/or VARname can be used instead of TASKnr and VARnr:
+
+ .. code-block:: html
+
+ TaskValueSet,TASKname,VARname,Value
+ TaskValueSet,TASKnr,VARname,Value
+ TaskValueSet,TASKname,VARnr,Value
+
 This example for two switches that toggle one device (LED and Relay on GPIO 13 and 16).
 
 
@@ -1149,6 +1167,27 @@ This example for two switches that toggle one device (LED and Relay on GPIO 13 a
     TaskValueSet 12,1,1
   else
     TaskValueSet 12,1,0
+  endif
+  gpio,16,[dummy#var1]
+  gpio,13,[dummy#var1]
+ endon
+
+ // Alternative for above example using TASKname/VARname
+ on sw1#state do
+  if [dummy#var1]=0
+    TaskValueSet dummy,var1,0
+  else
+    TaskValueSet dummy,var1,1
+  endif
+  gpio,16,[dummy#var1]
+  gpio,13,[dummy#var1]
+ endon
+
+ on sw1a#state do
+  if [dummy#var1]=0
+    TaskValueSet dummy,var1,1
+  else
+    TaskValueSet dummy,var1,0
   endif
   gpio,16,[dummy#var1]
   gpio,13,[dummy#var1]

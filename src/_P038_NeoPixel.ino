@@ -70,7 +70,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        const String options[] = { F("GRB"), F("GRBW") };
+        const __FlashStringHelper * options[] = { F("GRB"), F("GRBW") };
         int indices[] = { 1, 2 };
 
       	addFormNumericBox(F("Led Count"), F("p038_leds"), PCONFIG(0),1,999);

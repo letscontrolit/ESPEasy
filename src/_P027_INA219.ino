@@ -64,7 +64,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
     {
       {
         byte choiceMode = PCONFIG(0);
-        String optionsMode[3];
+        const __FlashStringHelper * optionsMode[3];
         optionsMode[0] = F("32V, 2A");
         optionsMode[1] = F("32V, 1A");
         optionsMode[2] = F("16V, 0.4A");
@@ -76,7 +76,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
       }
       {
         byte   choiceMeasureType = PCONFIG(2);
-        String options[4]        = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
+        const __FlashStringHelper * options[4]        = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
         addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, NULL, choiceMeasureType);
       }
 

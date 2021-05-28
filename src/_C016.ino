@@ -54,6 +54,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesPort       = false;
       Protocol[protocolCount].usesSampleSets = false;
       Protocol[protocolCount].needsNetwork   = false;
+      Protocol[protocolCount].allowsExpire   = false;
       break;
     }
 
@@ -107,7 +108,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
 
               MakeControllerSettings(ControllerSettings);
               LoadControllerSettings(event->ControllerIndex, ControllerSettings);
-              success = C016_DelayHandler->addToQueue(element);
+              success = C016_DelayHandler->addToQueue(std::move(element));
               Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C016_DELAY_QUEUE,
                  C016_DelayHandler->getNextScheduleTime());
        */

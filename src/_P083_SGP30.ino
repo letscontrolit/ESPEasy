@@ -90,7 +90,7 @@ boolean Plugin_083(byte function, struct EventStruct *event, String& string)
 
       if (nullptr != P083_data) {
         if (!P083_data->initialized) {
-          addLog(LOG_LEVEL_ERROR, F("SGP30: Sensor not found"))
+          addLog(LOG_LEVEL_ERROR, F("SGP30: Sensor not found"));
         } else {
           // Look at the stored base line values to see if we can restore them.
           uint16_t eco2_base = UserVar[P083_TVOC_BASELINE];
@@ -165,11 +165,11 @@ boolean Plugin_083(byte function, struct EventStruct *event, String& string)
             success = true;
             break;
           } else {
-            addLog(LOG_LEVEL_ERROR, F("SGP30: No new measured values"))
+            addLog(LOG_LEVEL_ERROR, F("SGP30: No new measured values"));
             break;
           }
         } else {
-          addLog(LOG_LEVEL_ERROR, F("SGP30: Sensor not found"))
+          addLog(LOG_LEVEL_ERROR, F("SGP30: Sensor not found"));
           break;
         }
       }

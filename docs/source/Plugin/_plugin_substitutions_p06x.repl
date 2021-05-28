@@ -54,7 +54,7 @@
 .. |P064_type| replace:: :cyan:`Gesture`
 .. |P064_typename| replace:: :cyan:`Gesture - APDS9960`
 .. |P064_porttype| replace:: `.`
-.. |P064_status| replace:: :red:`DEVELOPMENT`
+.. |P064_status| replace:: :yellow:`TESTING`
 .. |P064_github| replace:: P064_APDS9960.ino
 .. _P064_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P064_APDS9960.ino
 .. |P064_usedby| replace:: `.`
@@ -93,7 +93,7 @@
 .. |P067_type| replace:: :cyan:`Weight`
 .. |P067_typename| replace:: :cyan:`Weight - HX711 Load Cell`
 .. |P067_porttype| replace:: `.`
-.. |P067_status| replace:: :yellow:`TESTING`
+.. |P067_status| replace:: :yellow:`TESTING A`
 .. |P067_github| replace:: P067_HX711_Load_Cell.ino
 .. _P067_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P067_HX711_Load_Cell.ino
 .. |P067_usedby| replace:: `.`
@@ -106,7 +106,7 @@
 .. |P068_type| replace:: :cyan:`Environment`
 .. |P068_typename| replace:: :cyan:`Environment - SHT30/31/35`
 .. |P068_porttype| replace:: `.`
-.. |P068_status| replace:: :yellow:`TESTING`
+.. |P068_status| replace:: :yellow:`TESTING A`
 .. |P068_github| replace:: P068_SHT3x.ino
 .. _P068_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P068_SHT3x.ino
 .. |P068_usedby| replace:: `.`
@@ -119,7 +119,7 @@
 .. |P069_type| replace:: :cyan:`Environment`
 .. |P069_typename| replace:: :cyan:`Environment - LM75A`
 .. |P069_porttype| replace:: `.`
-.. |P069_status| replace:: :yellow:`TESTING`
+.. |P069_status| replace:: :yellow:`TESTING B`
 .. |P069_github| replace:: P069_LM75A.ino
 .. _P069_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P069_LM75A.ino
 .. |P069_usedby| replace:: `.`

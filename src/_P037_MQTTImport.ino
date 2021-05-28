@@ -9,11 +9,13 @@
 
 // This task reads data from the MQTT Import input stream and saves the value
 
+#include "src/Globals/EventQueue.h"
 #include "src/Globals/MQTT.h"
 #include "src/Globals/CPlugins.h"
 #include "src/Globals/Plugins.h"
+#include "src/Helpers/ESPEasy_Storage.h"
+#include "src/Helpers/Misc.h"
 #include "src/Helpers/StringParser.h"
-
 
 #define PLUGIN_037
 #define PLUGIN_ID_037         37
@@ -84,7 +86,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         {
           String argName = F("p037_template");
           argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
+          if (!safe_strncpy(deviceTemplate[varNr], webArg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -196,7 +198,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
               RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[x];
               RuleEvent += '=';
               RuleEvent += floatPayload;
-              eventQueue.add(RuleEvent);
+              eventQueue.addMove(std::move(RuleEvent));
             }
 
             success = true;

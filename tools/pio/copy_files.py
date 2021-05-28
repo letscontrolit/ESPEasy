@@ -23,6 +23,9 @@ def get_max_bin_size(env_name, file_suffix):
         if "factory" in file_suffix:
             # Factory bin files include a part which is not overwritten via OTA
             max_bin_size = max_bin_size + 65536
+    if "_ESP32_16M8M" in env_name or "_ESP32_16M2M" in env_name or "_ESP32_16M1M" in env_name:
+        # ESP32 with 4096k of sketch space.
+        max_bin_size = 4194304
     if "debug_" in env_name:
         # Debug env, used for analysis, not to be run on a node.
         max_bin_size = 0
@@ -41,6 +44,7 @@ def copy_to_build_output(sourcedir, variant, file_suffix):
         if ".bin" in file_suffix:
             file_size = os.path.getsize(full_in_file)
             if file_size > get_max_bin_size(variant, file_suffix):
+                print("\u001b[31m file size:\u001b[0m {} > {}".format(file_size, get_max_bin_size(variant, file_suffix)))
                 out_file = "{}reject{}{}".format(OUTPUT_DIR, os.path.sep, in_file)
                 if not os.path.isdir("{}{}".format(OUTPUT_DIR, "reject")):
                     os.mkdir("{}{}".format(OUTPUT_DIR, "reject"))
@@ -79,5 +83,7 @@ def bin_elf_copy(source, target, env):
     for suff in [".elf", ".bin", ".bin.gz", "-factory.bin", ".env.txt"]:
         copy_to_build_output(split_path[0], variant, suff)
 
+    import datetime
+    print("\u001b[33m Timestamp:\u001b[0m", datetime.datetime.now())
 
 env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", [bin_elf_copy])

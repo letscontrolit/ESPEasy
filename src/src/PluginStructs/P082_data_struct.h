@@ -7,8 +7,9 @@
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
 
-
+#ifndef LIMIT_BUILD_SIZE
 # define P082_SEND_GPS_TO_LOG
+#endif
 
 # define P082_TIMESTAMP_AGE       1500
 # define P082_DEFAULT_FIX_TIMEOUT 2500 // TTL of fix status in ms since last update
@@ -30,7 +31,7 @@ enum class P082_query : byte {
   P082_NR_OUTPUT_OPTIONS
 };
 
-String Plugin_082_valuename(P082_query value_nr, bool displayString);
+const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString);
 
 
 

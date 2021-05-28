@@ -3,7 +3,7 @@
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
 \*********************************************************************************************/
-String getBearing(int degrees)
+const __FlashStringHelper * getBearing(int degrees)
 {
   const int nr_directions = 16;
   float stepsize      = (360.0f / nr_directions);
@@ -31,7 +31,7 @@ String getBearing(int degrees)
       case 15: return F("NNW");
     }
   }
-  return "";
+  return F("");
 }
 
 float CelsiusToFahrenheit(float celsius) {
@@ -179,6 +179,34 @@ float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
   return 100.0f * pow((112.0f - 0.1f * temperature + dew_temperature) /
                      (112.0f + 0.9f * temperature), 8);
 }
+
+
+
+/********************************************************************************************\
+   Compensate air pressure for given altitude (in meters)
+ \*********************************************************************************************/
+float pressureElevation(float atmospheric, float altitude) {
+  // Equation taken from BMP180 datasheet (page 16):
+  //  http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
+
+  // Note that using the equation from wikipedia can give bad results
+  // at high altitude.  See this thread for more information:
+  //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
+  return atmospheric / pow(1.0f - (altitude / 44330.0f), 5.255f);
+}
+
+float altitudeFromPressure(float atmospheric, float seaLevel)
+{
+  // Equation taken from BMP180 datasheet (page 16):
+  //  http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
+
+  // Note that using the equation from wikipedia can give bad results
+  // at high altitude.  See this thread for more information:
+  //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
+  return 44330.0f * (1.0f - pow(atmospheric / seaLevel, 0.1903f));
+}
+
+
 
 
 /********************************************************************************************\

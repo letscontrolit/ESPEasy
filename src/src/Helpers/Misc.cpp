@@ -1,21 +1,20 @@
-#include "Misc.h"
+#include "../Helpers/Misc.h"
 
-
+#include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy-Globals.h"
-
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/Serial.h"
-
 #include "../Globals/ESPEasy_time.h"
-
+#include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
+
+
 
 
 bool remoteConfig(struct EventStruct *event, const String& string)
@@ -212,6 +211,20 @@ String getTaskDeviceName(taskIndex_t TaskIndex) {
 }
 
 /********************************************************************************************\
+   Handler for getting Value Names from TaskIndex
+
+   - value names can be accessed with task variable index
+   - maximum number of variables <= defined number of variables in plugin
+ \*********************************************************************************************/
+String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
+
+  TaskValueIndex = (TaskValueIndex < getValueCountForTask(TaskIndex) ? TaskValueIndex : getValueCountForTask(TaskIndex));
+
+  LoadTaskSettings(TaskIndex);
+  return ExtraTaskSettings.TaskDeviceValueNames[TaskValueIndex];
+}
+
+/********************************************************************************************\
    If RX and TX tied together, perform emergency reset to get the system out of boot loops
  \*********************************************************************************************/
 void emergencyReset()
@@ -256,6 +269,13 @@ void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
   #else // if defined(ESP32)
   ESP.reset();
   #endif // if defined(ESP32)
+}
+
+void FeedSW_watchdog()
+{
+  #ifdef ESP8266
+  ESP.wdtFeed();
+  #endif
 }
 
 void SendValueLogger(taskIndex_t TaskIndex)
@@ -409,4 +429,17 @@ void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
   uint32_t newvalue = ((value << bitnr) & mask);
 
   number = (number & ~mask) | newvalue;
+}
+
+
+float getCPUload() {
+  return 100.0f - Scheduler.getIdleTimePct();
+}
+
+int getLoopCountPerSec() {
+  return loopCounterLast / 30;
+}
+
+int getUptimeMinutes() {
+  return wdcounter / 2;
 }

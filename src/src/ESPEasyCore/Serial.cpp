@@ -77,8 +77,7 @@ void serial()
   }
 }
 
-void addToSerialBuffer(const char *line) {
-  process_serialWriteBuffer(); // Try to make some room first.
+int getRoomLeft() {
   int roomLeft = getMaxFreeBlock();
 
   if (roomLeft < 1000) {
@@ -88,12 +87,18 @@ void addToSerialBuffer(const char *line) {
   } else {
     roomLeft -= 4000;                          // leave some free for normal use.
   }
+  return roomLeft;
+}
+
+void addToSerialBuffer(const char *line) {
+  process_serialWriteBuffer(); // Try to make some room first.
+  int roomLeft = getRoomLeft();
 
   const char *c = line;
 
   while (roomLeft > 0) {
     // Must use PROGMEM aware functions here.
-    char ch = pgm_read_byte(c++);
+    const char ch = pgm_read_byte(c++);
 
     if (ch == '\0') {
       return;
@@ -101,6 +106,18 @@ void addToSerialBuffer(const char *line) {
       serialWriteBuffer.push_back(ch);
       --roomLeft;
     }
+  }
+}
+
+void addToSerialBuffer(const String& line) {
+  process_serialWriteBuffer(); // Try to make some room first.
+  int roomLeft = getRoomLeft();
+
+  auto it = line.begin();
+  while (roomLeft > 0 && it != line.end()) {
+    serialWriteBuffer.push_back(*it);
+    --roomLeft;
+    ++it;
   }
 }
 
@@ -119,9 +136,11 @@ void process_serialWriteBuffer() {
 
     if (snip < bytes_to_write) { bytes_to_write = snip; }
 
-    while (bytes_to_write > 0) {
+    while (bytes_to_write > 0 && !serialWriteBuffer.empty()) {
       const char c = serialWriteBuffer.front();
-      Serial.write(c);
+      if (Settings.UseSerial) {
+        Serial.write(c);
+      }
       serialWriteBuffer.pop_front();
       --bytes_to_write;
     }
@@ -130,13 +149,24 @@ void process_serialWriteBuffer() {
 
 // For now, only send it to the serial buffer and try to process it.
 // Later we may want to wrap it into a log.
+void serialPrint(const __FlashStringHelper * text) {
+  addToSerialBuffer(text);
+  process_serialWriteBuffer();
+}
+
 void serialPrint(const String& text) {
-  addToSerialBuffer(text.c_str());
+  addToSerialBuffer(text);
+  process_serialWriteBuffer();
+}
+
+void serialPrintln(const __FlashStringHelper * text) {
+  addToSerialBuffer(text);
+  addNewlineToSerialBuffer();
   process_serialWriteBuffer();
 }
 
 void serialPrintln(const String& text) {
-  addToSerialBuffer(text.c_str());
+  addToSerialBuffer(text);
   addNewlineToSerialBuffer();
   process_serialWriteBuffer();
 }

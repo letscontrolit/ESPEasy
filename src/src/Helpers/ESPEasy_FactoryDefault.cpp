@@ -1,4 +1,4 @@
-#include "ESPEasy_FactoryDefault.h"
+#include "../Helpers/ESPEasy_FactoryDefault.h"
 
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
@@ -109,6 +109,7 @@ void ResetFactory()
     str2ip((char *)DEFAULT_GW,     Settings.Gateway);
     str2ip((char *)DEFAULT_SUBNET, Settings.Subnet);
     #endif // if DEFAULT_USE_STATIC_IP
+    Settings.IncludeHiddenSSID(DEFAULT_WIFI_INCLUDE_HIDDEN_SSID);
   }
 
   Settings.clearNotifications();
@@ -137,6 +138,8 @@ void ResetFactory()
   if (!ResetFactoryDefaultPreference.keepWiFi()) {
     strcpy_P(SecuritySettings.WifiSSID,  PSTR(DEFAULT_SSID));
     strcpy_P(SecuritySettings.WifiKey,   PSTR(DEFAULT_KEY));
+    strcpy_P(SecuritySettings.WifiSSID2, PSTR(DEFAULT_SSID2));
+    strcpy_P(SecuritySettings.WifiKey2,  PSTR(DEFAULT_KEY2));
     strcpy_P(SecuritySettings.WifiAPKey, PSTR(DEFAULT_AP_KEY));
     SecuritySettings.WifiSSID2[0] = 0;
     SecuritySettings.WifiKey2[0]  = 0;
@@ -203,7 +206,7 @@ void ResetFactory()
   Settings.ETH_Pin_power  = gpio_settings.eth_power;
   Settings.ETH_Phy_Type   = gpio_settings.eth_phytype;
   Settings.ETH_Clock_Mode = gpio_settings.eth_clock_mode;
-  Settings.NetworkMedium  = gpio_settings.active_network_medium;
+  Settings.NetworkMedium  = gpio_settings.network_medium;
 
   /*
           Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
@@ -215,6 +218,8 @@ void ResetFactory()
           Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
    */
   Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+
+  Settings.JSONBoolWithoutQuotes(DEFAULT_JSON_BOOL_WITHOUT_QUOTES);
 
 #ifdef PLUGIN_DESCR
   strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));

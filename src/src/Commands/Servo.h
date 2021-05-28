@@ -15,7 +15,7 @@ typedef std::map<uint8_t, Servo> ServoPinMap_t;
 extern ServoPinMap_t ServoPinMap;
 #endif // USE_SERVO
 
-String Command_Servo(struct EventStruct *event,
+const __FlashStringHelper * Command_Servo(struct EventStruct *event,
                      const char         *Line);
 
 

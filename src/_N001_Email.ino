@@ -12,7 +12,16 @@
 #define NPLUGIN_001_TIMEOUT 5000
 
 #include "src/DataStructs/NotificationSettingsStruct.h"
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "src/Globals/NPlugins.h"
+#include "src/Globals/Settings.h"
+#include "src/Helpers/ESPEasy_Storage.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/Networking.h"
+#include "src/Helpers/StringParser.h"
+#include "src/Helpers/_CPlugin_Helper.h" // safeReadStringUntil
+
 
 // The message body is included in event->String1
 
@@ -86,10 +95,9 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 	// Use WiFiClient class to create TCP connections
 	WiFiClient client;
 	client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-	PrepareSend();
 	String aHost = notificationsettings.Server;
 	addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
-	if (!connectClient(client, aHost.c_str(), notificationsettings.Port)) {
+	if (!connectClient(client, aHost.c_str(), notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
 		addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
 		myStatus = false;
 	}else {
@@ -107,31 +115,31 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 		int pos_less = email_address.indexOf('<');
 		if (pos_less == -1) {
 			// No email address markup
-			mailheader.replace(String(F("$nodename")), Settings.getHostname());
-			mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
+			mailheader.replace(F("$nodename"), Settings.getHostname());
+			mailheader.replace(F("$emailfrom"), notificationsettings.Sender);
 		} else {
 			String senderName = email_address.substring(0, pos_less);
-			senderName.replace(F("\""), F("")); // Remove quotes
+			senderName.replace(F("\""), EMPTY_STRING); // Remove quotes
 			String address = email_address.substring(pos_less + 1);
-			address.replace(F("<"), F(""));
-			address.replace(F(">"), F(""));
+			address.replace(F("<"), EMPTY_STRING);
+			address.replace(F(">"), EMPTY_STRING);
 			address.trim();
 			senderName.trim();
-			mailheader.replace(String(F("$nodename")), senderName);
-			mailheader.replace(String(F("$emailfrom")), address);
+			mailheader.replace(F("$nodename"), senderName);
+			mailheader.replace(F("$emailfrom"), address);
 		}
 
-		mailheader.replace(String(F("$nodename")), Settings.getHostname());
-		mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
-		mailheader.replace(String(F("$ato")), notificationsettings.Receiver);
-		mailheader.replace(String(F("$subject")), aSub);
-		mailheader.replace(String(F("$espeasyversion")), String(BUILD));
+		mailheader.replace(F("$nodename"), Settings.getHostname());
+		mailheader.replace(F("$emailfrom"), notificationsettings.Sender);
+		mailheader.replace(F("$ato"), notificationsettings.Receiver);
+		mailheader.replace(F("$subject"), aSub);
+		mailheader.replace(F("$espeasyversion"), String(BUILD));
 		aMesg.replace(F("\r"), F("<br/>")); // re-write line breaks for Content-type: text/html
 
 		// Wait for Client to Start Sending
 		// The MTA Exchange
 		while (true) {
-			if (!NPlugin_001_MTA(client, "", F("220 "))) break;
+			if (!NPlugin_001_MTA(client, EMPTY_STRING, F("220 "))) break;
 			if (!NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain, F("250 "))) break;
 			if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) break;
 			if (!NPlugin_001_MTA(client, String(F("MAIL FROM:<")) + notificationsettings.Sender + ">", F("250 "))) break;
@@ -153,7 +161,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			}
 
 			if (!NPlugin_001_MTA(client, F("DATA"), F("354 "))) break;
-			if (!NPlugin_001_MTA(client, mailheader + aMesg + String(F("\r\n.\r\n")), F("250 "))) break;
+			if (!NPlugin_001_MTA(client, mailheader + aMesg + F("\r\n.\r\n"), F("250 "))) break;
 
 			myStatus = true;
 			break;

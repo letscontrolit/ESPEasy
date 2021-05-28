@@ -6,6 +6,7 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
+#include "../Commands/GPIO.h"
 
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
@@ -19,6 +20,8 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 #include "../Helpers/StringParser.h"
+
+#include <Arduino.h>
 
 /********************************************************************************************\
    Parse string template
@@ -43,7 +46,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate_padded"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  START_TIMER
+  START_TIMER;
 
   // Keep current loaded taskSettings to restore at the end.
   byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
@@ -80,12 +83,17 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
       command += format;
       command.replace('#', ',');
 
+      if (getGPIOPinStateValues(command)) {
+        newString += command;
+      }
+/* @giig1967g
       if (PluginCall(PLUGIN_REQUEST, 0, command))
       {
         // Do not call transformValue here.
         // The "format" is not empty so must not call the formatter function.
         newString += command;
       }
+*/
     }
     else if (deviceName.equals(F("var")) || deviceName.equals(F("int")))
     {
