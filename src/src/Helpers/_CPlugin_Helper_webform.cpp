@@ -48,7 +48,7 @@ const __FlashStringHelper * toString(ControllerSettingsStruct::VarType parameter
     case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:              return  F("Send Binary");            
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:                  return  F("Client Timeout");         
     case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:     return  F("Sample Set Initiator");   
-    case ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK: return F("Enable " + ESPEASY_NOW_NAME + " Fallback");
+    case ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK: return F("Enable " ESPEASY_NOW_NAME " Fallback");
 
     case ControllerSettingsStruct::CONTROLLER_ENABLED:
 

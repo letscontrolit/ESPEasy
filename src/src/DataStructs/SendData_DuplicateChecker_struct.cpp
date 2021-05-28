@@ -77,7 +77,7 @@ void SendData_DuplicateChecker_struct::remove(uint32_t key)
   if (it != _queue.end()) {
     #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      addLog(LOG_LEVEL_DEBUG, String(F(ESPEASY_NOW_NAME)) + F(": message not sent as processed elsewhere"));
+      addLog(LOG_LEVEL_DEBUG, F(ESPEASY_NOW_NAME ": message not sent as processed elsewhere"));
     }
     #endif
     {

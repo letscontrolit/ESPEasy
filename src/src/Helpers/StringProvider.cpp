@@ -123,9 +123,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
 
     #ifdef USES_ESPEASY_NOW
-    case LabelType::USE_ESPEASY_NOW:        return String(F("Enable ")) + F(ESPEASY_NOW_NAME);
-    case LabelType::TEMP_DISABLE_ESPEASY_NOW: return String(F("Temporary disable ")) + F(ESPEASY_NOW_NAME);
-    case LabelType::FORCE_ESPEASY_NOW_CHANNEL: return String(F("Force Channel ")) + F(ESPEASY_NOW_NAME);
+    case LabelType::USE_ESPEASY_NOW:        return F("Enable " ESPEASY_NOW_NAME);
+    case LabelType::TEMP_DISABLE_ESPEASY_NOW: return F("Temporary disable " ESPEASY_NOW_NAME);
+    case LabelType::FORCE_ESPEASY_NOW_CHANNEL: return F("Force Channel " ESPEASY_NOW_NAME);
     #endif
 
 

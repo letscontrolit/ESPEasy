@@ -3,6 +3,7 @@
 
 
 #include <stdint.h>
+#include <Arduino.h>
 
 class String;
 
@@ -25,7 +26,7 @@ enum class timeSource_t : uint8_t {
   No_time_source          = 255 // No time set
 };
 
-String toString(timeSource_t timeSource);
+const __FlashStringHelper* toString(timeSource_t timeSource);
 bool isExternalTimeSource(timeSource_t timeSource);
 
 

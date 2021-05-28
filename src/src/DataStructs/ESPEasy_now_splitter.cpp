@@ -233,7 +233,7 @@ bool ESPEasy_now_splitter::prepareForSend(const MAC_address& mac)
     _queue[i].setMac(mac);
     if (!_queue[i].valid()) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLog(LOG_LEVEL_ERROR, String(F(ESPEASY_NOW_NAME)) + F(": Could not prepare for send"));
+        addLog(LOG_LEVEL_ERROR, F(ESPEASY_NOW_NAME ": Could not prepare for send"));
       }
       return false;
     }

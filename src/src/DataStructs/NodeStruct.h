@@ -16,7 +16,6 @@
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
 
-const __FlashStringHelper * getNodeTypeDisplayString(byte nodeType);
 
 /*********************************************************************************************\
 * NodeStruct
@@ -36,6 +35,7 @@ struct __attribute__((__packed__)) NodeStruct
   // - lower load (TODO TD-er)
   bool operator<(const NodeStruct &other) const;
 
+  static const __FlashStringHelper * getNodeTypeDisplayString(byte nodeType);
   String        getNodeTypeDisplayString() const;
 
   String        getNodeName() const;

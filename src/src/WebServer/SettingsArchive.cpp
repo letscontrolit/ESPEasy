@@ -189,13 +189,7 @@ void handle_settingsarchive() {
     html_TD();
     addSubmitButton(F("Save Preferences"), F("savepref"));
 
-    addTableSeparator(F("Archive Location"), 2, 3);
-
-    addFormTextBox(F("URL with settings"), F("url"), webArg(F("url")), 256);
-    addFormNote(F("Only HTTP supported. Do not include filename"));
-    addFormTextBox(F("User"), F("user"), webArg(F("user")), 64);
-    addFormPasswordBox(F("Pass"), F("pass"), webArg(F("pass")), 64);
-    addFormNote(F("URL, user and pass will not be stored"));
+    addFormSeparator(2);
 
     addRowLabel(F("Try download files"));
     addSubmitButton(F("Download"), F("download"), F("red"));

@@ -362,7 +362,8 @@ void handle_root() {
           }
           html_TD();
           if (it->second.ESPEasyNowPeer) {
-            addHtml(String(F(ESPEASY_NOW_NAME)) + F(" "));
+            addHtml(F(ESPEASY_NOW_NAME));
+            addHtml(' ');
             addHtml(it->second.ESPEasy_Now_MAC().toString());
             addHtml(F(" (ch: "));
             addHtml(String(it->second.channel));

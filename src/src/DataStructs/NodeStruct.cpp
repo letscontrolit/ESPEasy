@@ -88,7 +88,7 @@ bool NodeStruct::operator<(const NodeStruct &other) const {
 }
 
 
-const __FlashStringHelper * getNodeTypeDisplayString(byte nodeType) {
+const __FlashStringHelper * NodeStruct::getNodeTypeDisplayString(byte nodeType) {
   switch (nodeType)
   {
     case NODE_TYPE_ID_ESP_EASY_STD:     return F("ESP Easy");
@@ -99,6 +99,10 @@ const __FlashStringHelper * getNodeTypeDisplayString(byte nodeType) {
     case NODE_TYPE_ID_NANO_EASY_STD:    return F("Nano Easy");
   }
   return F("");
+}
+
+String NodeStruct::getNodeTypeDisplayString() const {
+  return NodeStruct::getNodeTypeDisplayString(nodeType);
 }
 
 String NodeStruct::getNodeName() const {
