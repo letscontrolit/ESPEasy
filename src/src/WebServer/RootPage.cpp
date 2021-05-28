@@ -95,7 +95,7 @@ void handle_root() {
 
   String  sCommand;
   boolean rebootCmd = false;
-  sCommand  = web_server.arg(F("cmd"));
+  sCommand  = webArg(F("cmd"));
   rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
   {

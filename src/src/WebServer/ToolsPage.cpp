@@ -25,7 +25,7 @@ void handle_tools() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  String webrequest = web_server.arg(F("cmd"));
+  String webrequest = webArg(F("cmd"));
 
   handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND, webrequest);
   printToWeb     = false;
@@ -134,17 +134,19 @@ void handle_tools() {
       bool     otaEnabled = OTA_possible(maxSketchSize, use2step);
       addFormSubHeader(F("Firmware"));
       html_TR_TD_height(30);
-      addWideButton(F("update"), F("Update Firmware"), F(""), otaEnabled);
+      addWideButton(F("update"), F("Update Firmware"), EMPTY_STRING, otaEnabled);
       addHelpButton(F("EasyOTA"));
       html_TD();
-      addHtml(F("Load a new firmware"));
+      addHtml(F("Load a new firmware "));
 
       if (otaEnabled) {
         if (use2step) {
-          addHtml(F(" <b>WARNING</b> only use 2-step OTA update."));
+          html_B(F("WARNING"));
+          addHtml(F(" only use 2-step OTA update."));
         }
       } else {
-        addHtml(F(" <b>WARNING</b> OTA not possible."));
+        html_B(F("WARNING"));
+        addHtml(F(" OTA not possible."));
       }
       addHtml(F(" Max sketch size: "));
       addHtmlInt(maxSketchSize / 1024);
@@ -178,6 +180,16 @@ void handle_tools() {
 // ********************************************************************************
 // Web Interface debug page
 // ********************************************************************************
+void addWideButtonPlusDescription(const __FlashStringHelper * url,
+                                  const __FlashStringHelper * buttonText,
+                                  const __FlashStringHelper * description)
+{
+  html_TR_TD_height(30);
+  addWideButton(url, buttonText);
+  html_TD();
+  addHtml(description);
+}
+
 void addWideButtonPlusDescription(const String& url, const String& buttonText, const String& description)
 {
   html_TR_TD_height(30);

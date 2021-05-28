@@ -419,7 +419,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
       const byte family = P039_FAM_TYPE;
       {
-        const String Foptions[2] = {F("Thermocouple"), F("RTD")};
+        const __FlashStringHelper * Foptions[2] = {F("Thermocouple"), F("RTD")};
         const int FoptionValues[2] = {P039_TC, P039_RTD};
         addFormSelector(F("Sensor Family Type"), F("P039_famtype"), 2, Foptions, FoptionValues, family, true); // auto reload activated
         addFormNote(F("Set sensor family of connected sensor - thermocouple or RTD."));
@@ -434,7 +434,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         }
 
         {
-          const String options[3]      = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
+          const __FlashStringHelper * options[3]      = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
           const int    optionValues[3] = { P039_MAX6675, P039_MAX31855, P039_MAX31856 };
           addFormSelector(F("Adapter IC"), F("P039_maxtype"), 3, options, optionValues, choice, true); // auto reload activated
           addFormNote(F("Set adapter IC used."));
@@ -446,7 +446,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
           }
           {
             addFormNote(F("Set Thermocouple type for MAX31856"));
-            const String Toptions[10]      = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T"), F("VM8"), F("VM32") };
+            const __FlashStringHelper * Toptions[10]      = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T"), F("VM8"), F("VM32") };
 
             // 2021-05-17: c.k.i.: values are directly written to device register for configuration, therefore no linear values are used here
             // MAX 31856 datasheet (page 20):
@@ -467,14 +467,14 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
             addFormSelector(F("Thermocouple type"), F("P039_tctype"), 10, Toptions, ToptionValues, P039_TC_TYPE);
           }
           {
-            const String Coptions[5] = {F("1"), F("2"), F("4"), F("8"), F("16")};
+            const __FlashStringHelper * Coptions[5] = {F("1"), F("2"), F("4"), F("8"), F("16")};
             const int CoptionValues[5] = {0, 1, 2, 3, 4};
             addFormSelector(F("Averaging"), F("P039_contype"), 5, Coptions, CoptionValues, P039_CONFIG_4);
             addUnit(F("sample(s)"));
             addFormNote(F("Set Averaging Type for MAX31856"));
           }
           {
-            const String FToptions[2] = {F("60"), F("50")};
+            const __FlashStringHelper * FToptions[2] = {F("60"), F("50")};
             const int FToptionValues[2] = {0, 1};
             addFormSelector(F("Supply Frequency Filter"), F("P039_filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
             addUnit(F("Hz"));
@@ -488,7 +488,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         }
 
         {
-          const String TPoptions[2] = {F("MAX 31865"), F("LM7x")};
+          const __FlashStringHelper * TPoptions[2] = {F("MAX 31865"), F("LM7x")};
           const int TPoptionValues[2] = {P039_MAX31865, P039_LM7x};
           addFormSelector(F("Adapter IC"), F("P039_maxtype"), 2, TPoptions, TPoptionValues, choice, true); // auto reload activated
           addFormNote(F("Set used RTD Converter Module. Currently only MAX31865 is fully supported. LM7x derivatives are untested and experimental."));
@@ -502,20 +502,20 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
             addFormSubHeader(F("Device Settings"));
           }
           {
-            const String PToptions[2] = {F("PT100"), F("PT1000")};
+            const __FlashStringHelper * PToptions[2] = {F("PT100"), F("PT1000")};
             const int PToptionValues[2] = {MAX31865_PT100, MAX31865_PT1000};
             addFormSelector(F("Resistor Type"), F("P039_rtdtype"), 2, PToptions, PToptionValues, P039_RTD_TYPE);
             addFormNote(F("Set Resistor Type for MAX31865"));
           }
           {
-            const String Coptions[2] = {F("2-/4"), F("3")};
+            const __FlashStringHelper * Coptions[2] = {F("2-/4"), F("3")};
             const int CoptionValues[2] = {0, 1};
             addFormSelector(F("Connection Type"), F("P039_contype"), 2, Coptions, CoptionValues, P039_CONFIG_4);
             addUnit(F("wire"));
             addFormNote(F("Set Connection Type for MAX31865"));
           }
           {
-            const String FToptions[2] = {F("60"), F("50")};
+            const __FlashStringHelper * FToptions[2] = {F("60"), F("50")};
             const int FToptionValues[2] = {0, 1};
             addFormSelector(F("Supply Frequency Filter"), F("P039_filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
             addUnit(F("Hz"));
@@ -540,7 +540,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
           }
 
           {
-            const String PToptions[8] = {F("LM70"), F("LM71"), F("LM74"), F("TMP121"), F("TMP122"), F("TMP123"), F("TMP124"), F("TMP125")};
+            const __FlashStringHelper * PToptions[8] = {F("LM70"), F("LM71"), F("LM74"), F("TMP121"), F("TMP122"), F("TMP123"), F("TMP124"), F("TMP125")};
             const int PToptionValues[8] = {LM7x_SD70, LM7x_SD71, LM7x_SD74, LM7x_SD121, LM7x_SD122, LM7x_SD123, LM7x_SD124, LM7x_SD125};
             addFormSelector(F("LM7x device details"), F("P039_rtd_lm_type"), 8, PToptions, PToptionValues, P039_RTD_LM_TYPE);
             addFormNote(F("Choose LM7x device details to allow handling of device specifics,TMP122/124 not yet supported with all options -> fixed 12 Bit resolution, no advanced options active"));

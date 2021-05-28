@@ -420,7 +420,7 @@ bool handleRawRaw2Encoding(const String &cmd) {
 
   Plugin_035_irSender->sendRaw(buf, idx, IrHz);
   //printWebString += IrType + String(F(": Base32Hex RAW Code: ")) + IrRaw + String(F("<BR>kHz: ")) + IrHz + String(F("<BR>Pulse Len: ")) + IrPLen + String(F("<BR>Blank Len: ")) + IrBLen + String(F("<BR>"));
-  printToLog(String(F(": Base32Hex RAW Code Send ")), IrRaw, 0, 0);
+  printToLog(F(": Base32Hex RAW Code Send "), IrRaw, 0, 0);
   // printWebString += String(F(": Base32Hex RAW Code Send "));
   delete[] buf;
   buf = nullptr;
@@ -429,9 +429,21 @@ bool handleRawRaw2Encoding(const String &cmd) {
 
 
 void printToLog(String protocol, String data, int bits, int repeats) {
-  String tmp = String(F("IRTX: IR Code Sent: ")) + protocol + String(F(" Data: ")) + data;
-  if (bits > 0) tmp += String(F(" Bits: ")) + bits;
-  if (repeats > 0) tmp += String(F(" Repeats: ")) + repeats;
+  if (!loglevelActiveFor(LOG_LEVEL_INFO) && !printToWeb) {
+    return;
+  }
+  String tmp = F("IRTX: IR Code Sent: ");
+  tmp += protocol;
+  tmp += F(" Data: ");
+  tmp += data;
+  if (bits > 0) { 
+    tmp += F(" Bits: ");
+    tmp += bits;
+  }
+  if (repeats > 0) {
+    tmp += F(" Repeats: ");
+    tmp += repeats;
+  }
   addLog(LOG_LEVEL_INFO, tmp);
   if (printToWeb)
   {

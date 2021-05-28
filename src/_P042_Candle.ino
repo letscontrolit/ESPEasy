@@ -146,7 +146,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));
 
         {
-          String options[8];
+          const __FlashStringHelper * options[8];
           // int optionValues[8];
 
           options[0] = F("Off");

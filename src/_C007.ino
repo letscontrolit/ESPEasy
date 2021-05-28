@@ -99,13 +99,13 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
   url += F("&json=");
 
   for (byte i = 0; i < element.valueCount; ++i) {
-    url += (i == 0) ? F("{") : F(",");
+    url += (i == 0) ? '{' : ',';
     url += F("field");
     url += element.idx + i;
-    url += ":";
+    url += ':';
     url += element.txt[i];
   }
-  url += "}";
+  url += '}';
   url += F("&apikey=");
   url += getControllerPass(element.controller_idx, ControllerSettings); // "0UDNN17RW6XAS2E5" // api key
 
