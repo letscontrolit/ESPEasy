@@ -438,13 +438,13 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
     {
       {
         byte choice         = PCONFIG(0);
-        String options[2]   = { F("Normal"), F("ABC disabled") };
+        const __FlashStringHelper * options[2]   = { F("Normal"), F("ABC disabled") };
         int optionValues[2] = { ABC_enabled, ABC_disabled };
         addFormSelector(F("Auto Base Calibration"), F("p049_abcdisable"), 2, options, optionValues, choice);
       }
       {
         byte   choiceFilter     = PCONFIG(1);
-        String filteroptions[5] =
+        const __FlashStringHelper * filteroptions[5] =
         { F("Skip Unstable"), F("Use Unstable"), F("Fast Response"), F("Medium Response"), F("Slow Response") };
         int filteroptionValues[5] = {
           PLUGIN_049_FILTER_OFF,

@@ -120,8 +120,8 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         }
         P062_data->loadTouchObjects(event->TaskIndex);
 
-        addRowLabel(F("Object"), F(""));
-        html_table(F(""), false);  // Sub-table
+        addRowLabel(F("Object"));
+        html_table(EMPTY_STRING, false);  // Sub-table
         html_table_header(F("&nbsp;#&nbsp;"));
         html_table_header(F("Touch (0..255)"));
         html_table_header(F("Release (0..255)"));
@@ -154,7 +154,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         }
         html_end_table();
         if (canCalibrate) {
-          String options1[2] = { F("No"), F("Yes") };
+          const __FlashStringHelper * options1[2] = { F("No"), F("Yes") };
           int optionValues1[2] = { 0, 1 };
           int choice1 = tbUseCalibration ? 1 : 0;
           addFormSelector(F("Enable Calibration"), F("p062_use_calibration"), 2, options1, optionValues1, choice1, true);

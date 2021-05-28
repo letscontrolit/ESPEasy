@@ -18,7 +18,7 @@
 #include "../Helpers/StringParser.h"
 
 
-String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 {
 	if (NetworkConnected()) {
 		String host = parseString(Line, 2);

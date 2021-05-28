@@ -490,7 +490,7 @@ uint8_t getChipCores() {
   return cores;
 }
 
-String getChipModel() {
+const __FlashStringHelper * getChipModel() {
 #ifdef ESP32
   {
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
@@ -584,93 +584,95 @@ void readBootCause() {
 /********************************************************************************************\
    Hardware specific configurations
  \*********************************************************************************************/
-String getDeviceModelBrandString(DeviceModel model) {
+const __FlashStringHelper * getDeviceModelBrandString(DeviceModel model) {
   switch (model) {
-    case DeviceModel_Sonoff_Basic:
-    case DeviceModel_Sonoff_TH1x:
-    case DeviceModel_Sonoff_S2x:
-    case DeviceModel_Sonoff_TouchT1:
-    case DeviceModel_Sonoff_TouchT2:
-    case DeviceModel_Sonoff_TouchT3:
-    case DeviceModel_Sonoff_4ch:
-    case DeviceModel_Sonoff_POW:
-    case DeviceModel_Sonoff_POWr2:   return F("Sonoff");
-    case DeviceModel_Shelly1:
-    case DeviceModel_ShellyPLUG_S:   return F("Shelly");
-    case DeviceMode_Olimex_ESP32_PoE:
-    case DeviceMode_Olimex_ESP32_EVB:
-    case DeviceMode_Olimex_ESP32_GATEWAY:  
+    case DeviceModel::DeviceModel_Sonoff_Basic:
+    case DeviceModel::DeviceModel_Sonoff_TH1x:
+    case DeviceModel::DeviceModel_Sonoff_S2x:
+    case DeviceModel::DeviceModel_Sonoff_TouchT1:
+    case DeviceModel::DeviceModel_Sonoff_TouchT2:
+    case DeviceModel::DeviceModel_Sonoff_TouchT3:
+    case DeviceModel::DeviceModel_Sonoff_4ch:
+    case DeviceModel::DeviceModel_Sonoff_POW:
+    case DeviceModel::DeviceModel_Sonoff_POWr2:   return F("Sonoff");
+    case DeviceModel::DeviceModel_Shelly1:
+    case DeviceModel::DeviceModel_ShellyPLUG_S:   return F("Shelly");
+    case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
+    case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
+    case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:  
     #ifdef ESP32
       return F("Olimex");
     #endif
-    case DeviceMode_wESP32:
+    case DeviceModel::DeviceModel_wESP32:
     #ifdef ESP32
       return F("wESP32");
     #endif
-    case DeviceMode_WT32_ETH01:
+    case DeviceModel::DeviceModel_WT32_ETH01:
     #ifdef ESP32
       return F("WT32-ETH01");
     #endif
-    case DeviceModel_default:
-    case DeviceModel_MAX:      break;
+    case DeviceModel::DeviceModel_default:
+    case DeviceModel::DeviceModel_MAX:      break;
 
       // Do not use default: as this allows the compiler to detect any missing cases.
   }
-  return "";
+  return F("");
+}
+
+const __FlashStringHelper * getDeviceModelTypeString(DeviceModel model)
+{
+    switch (model) {
+#if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
+    case DeviceModel::DeviceModel_Sonoff_Basic:   return F(" Basic");   
+    case DeviceModel::DeviceModel_Sonoff_TH1x:    return F(" TH1x");    
+    case DeviceModel::DeviceModel_Sonoff_S2x:     return F(" S2x");     
+    case DeviceModel::DeviceModel_Sonoff_TouchT1: return F(" TouchT1"); 
+    case DeviceModel::DeviceModel_Sonoff_TouchT2: return F(" TouchT2"); 
+    case DeviceModel::DeviceModel_Sonoff_TouchT3: return F(" TouchT3"); 
+    case DeviceModel::DeviceModel_Sonoff_4ch:     return F(" 4ch");     
+    case DeviceModel::DeviceModel_Sonoff_POW:     return F(" POW");     
+    case DeviceModel::DeviceModel_Sonoff_POWr2:   return F(" POW-r2");  
+    case DeviceModel::DeviceModel_Shelly1:        return F("1");        
+    case DeviceModel::DeviceModel_ShellyPLUG_S:   return F(" PLUG S");  
+#else
+    case DeviceModel::DeviceModel_Sonoff_Basic:
+    case DeviceModel::DeviceModel_Sonoff_TH1x:
+    case DeviceModel::DeviceModel_Sonoff_S2x:
+    case DeviceModel::DeviceModel_Sonoff_TouchT1:
+    case DeviceModel::DeviceModel_Sonoff_TouchT2:
+    case DeviceModel::DeviceModel_Sonoff_TouchT3:
+    case DeviceModel::DeviceModel_Sonoff_4ch:
+    case DeviceModel::DeviceModel_Sonoff_POW:
+    case DeviceModel::DeviceModel_Sonoff_POWr2:
+    case DeviceModel::DeviceModel_Shelly1:
+    case DeviceModel::DeviceModel_ShellyPLUG_S:
+      return F("default");
+#endif
+#ifdef ESP32
+    case DeviceModel::DeviceModel_Olimex_ESP32_PoE:      return F(" ESP32-PoE");
+    case DeviceModel::DeviceModel_Olimex_ESP32_EVB:      return F(" ESP32-EVB");
+    case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:  return F(" ESP32-GATEWAY");
+    case DeviceModel::DeviceModel_wESP32:                break;
+    case DeviceModel::DeviceModel_WT32_ETH01:            return F(" add-on");
+#else
+    case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
+    case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
+    case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
+    case DeviceModel::DeviceModel_wESP32:
+    case DeviceModel::DeviceModel_WT32_ETH01:
+#endif
+
+    case DeviceModel::DeviceModel_default:
+    case DeviceModel::DeviceModel_MAX:             return F("default");
+
+      // Do not use default: as this allows the compiler to detect any missing cases.
+  }
+  return F("");
 }
 
 String getDeviceModelString(DeviceModel model) {
-  String result;
-
-  result.reserve(16);
-  result = getDeviceModelBrandString(model);
-
-  switch (model) {
-#if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
-    case DeviceModel_Sonoff_Basic:   result      += F(" Basic");   break;
-    case DeviceModel_Sonoff_TH1x:    result      += F(" TH1x");    break;
-    case DeviceModel_Sonoff_S2x:     result      += F(" S2x");     break;
-    case DeviceModel_Sonoff_TouchT1: result      += F(" TouchT1"); break;
-    case DeviceModel_Sonoff_TouchT2: result      += F(" TouchT2"); break;
-    case DeviceModel_Sonoff_TouchT3: result      += F(" TouchT3"); break;
-    case DeviceModel_Sonoff_4ch:     result      += F(" 4ch");     break;
-    case DeviceModel_Sonoff_POW:     result      += F(" POW");     break;
-    case DeviceModel_Sonoff_POWr2:   result      += F(" POW-r2");  break;
-    case DeviceModel_Shelly1:        result      += '1';           break;
-    case DeviceModel_ShellyPLUG_S:   result      += F(" PLUG S");  break;
-#else
-    case DeviceModel_Sonoff_Basic:
-    case DeviceModel_Sonoff_TH1x:
-    case DeviceModel_Sonoff_S2x:
-    case DeviceModel_Sonoff_TouchT1:
-    case DeviceModel_Sonoff_TouchT2:
-    case DeviceModel_Sonoff_TouchT3:
-    case DeviceModel_Sonoff_4ch:
-    case DeviceModel_Sonoff_POW:
-    case DeviceModel_Sonoff_POWr2:
-    case DeviceModel_Shelly1:
-    case DeviceModel_ShellyPLUG_S:
-      result += F("default");  break;
-#endif
-#ifdef ESP32
-    case DeviceMode_Olimex_ESP32_PoE: result     += F(" ESP32-PoE"); break;
-    case DeviceMode_Olimex_ESP32_EVB: result     += F(" ESP32-EVB"); break;
-    case DeviceMode_Olimex_ESP32_GATEWAY: result += F(" ESP32-GATEWAY"); break;
-    case DeviceMode_wESP32:           break;
-    case DeviceMode_WT32_ETH01:           result += F(" add-on"); break;
-#else
-    case DeviceMode_Olimex_ESP32_PoE:
-    case DeviceMode_Olimex_ESP32_EVB:
-    case DeviceMode_Olimex_ESP32_GATEWAY:
-    case DeviceMode_wESP32:
-    case DeviceMode_WT32_ETH01:
-#endif
-
-    case DeviceModel_default:
-    case DeviceModel_MAX:            result += F("default");  break;
-
-      // Do not use default: as this allows the compiler to detect any missing cases.
-  }
+  String result = getDeviceModelBrandString(model);
+  result       += getDeviceModelTypeString(model);
   return result;
 }
 
@@ -679,29 +681,29 @@ bool modelMatchingFlashSize(DeviceModel model) {
 
   // TD-er: This also checks for ESP8266/ESP8285/ESP32
   switch (model) {
-    case DeviceModel_Sonoff_Basic:
-    case DeviceModel_Sonoff_TH1x:
-    case DeviceModel_Sonoff_S2x:
-    case DeviceModel_Sonoff_TouchT1:
-    case DeviceModel_Sonoff_TouchT2:
-    case DeviceModel_Sonoff_TouchT3:
-    case DeviceModel_Sonoff_4ch:
+    case DeviceModel::DeviceModel_Sonoff_Basic:
+    case DeviceModel::DeviceModel_Sonoff_TH1x:
+    case DeviceModel::DeviceModel_Sonoff_S2x:
+    case DeviceModel::DeviceModel_Sonoff_TouchT1:
+    case DeviceModel::DeviceModel_Sonoff_TouchT2:
+    case DeviceModel::DeviceModel_Sonoff_TouchT3:
+    case DeviceModel::DeviceModel_Sonoff_4ch:
 #ifdef ESP8266    
       return size_MB == 1;
 #else
       return false;
 #endif
 
-    case DeviceModel_Sonoff_POW:
-    case DeviceModel_Sonoff_POWr2:   
+    case DeviceModel::DeviceModel_Sonoff_POW:
+    case DeviceModel::DeviceModel_Sonoff_POWr2:   
 #ifdef ESP8266    
       return size_MB == 4;
 #else
       return false;
 #endif
 
-    case DeviceModel_Shelly1:
-    case DeviceModel_ShellyPLUG_S:
+    case DeviceModel::DeviceModel_Shelly1:
+    case DeviceModel::DeviceModel_ShellyPLUG_S:
 #ifdef ESP8266    
       return size_MB == 2;
 #else
@@ -709,19 +711,19 @@ bool modelMatchingFlashSize(DeviceModel model) {
 #endif
 
     // These Olimex boards all have Ethernet
-    case DeviceMode_Olimex_ESP32_PoE:
-    case DeviceMode_Olimex_ESP32_EVB:
-    case DeviceMode_Olimex_ESP32_GATEWAY:
-    case DeviceMode_wESP32:
-    case DeviceMode_WT32_ETH01:
+    case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
+    case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
+    case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
+    case DeviceModel::DeviceModel_wESP32:
+    case DeviceModel::DeviceModel_WT32_ETH01:
 #if  defined(ESP32) && defined(HAS_ETHERNET)
       return size_MB == 4;
 #else
       return false;
 #endif
 
-    case DeviceModel_default:
-    case DeviceModel_MAX:
+    case DeviceModel::DeviceModel_default:
+    case DeviceModel::DeviceModel_MAX:
       return true;
 
       // Do not use default: as this allows the compiler to detect any missing cases.

@@ -12,13 +12,13 @@
 \*********************************************************************************************/
 
 #ifdef USES_MQTT
-String getMQTT_state();
+const __FlashStringHelper * getMQTT_state();
 #endif // USES_MQTT
 
 /********************************************************************************************\
    Get system information
  \*********************************************************************************************/
-String getLastBootCauseString();
+const __FlashStringHelper * getLastBootCauseString();
 
 #ifdef ESP32
 
