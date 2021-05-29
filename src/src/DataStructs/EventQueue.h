@@ -13,6 +13,8 @@ struct EventQueueStruct {
 
   void add(const String& event);
 
+  void add(const __FlashStringHelper * event);
+
   void addMove(String&& event);
 
   bool getNext(String& event);

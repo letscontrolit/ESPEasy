@@ -91,7 +91,7 @@ void handle_rules() {
   html_TR_TD();
   html_end_form();
   addHtml(F("<button id='save_button' class='button' onClick='saveRulesFile()'>Save</button>"));
-  addHtmlDiv(F(""), F("Saved!"), F("toastmessage"));
+  addHtmlDiv(EMPTY_STRING, F("Saved!"), F("toastmessage"));
 
   addButton(fileName, F("Download to file"));
   html_end_table();
@@ -138,7 +138,7 @@ void handle_rules_new() {
   const int rulesListPageSize = 25;
   int startIdx                = 0;
 
-  const String fstart = web_server.arg(F("start"));
+  const String fstart = webArg(F("start"));
 
   if (fstart.length() > 0)
   {
@@ -280,8 +280,8 @@ void handle_rules_backup() {
   #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_backup"));
   #  endif // ifndef BUILD_NO_RAM_TRACKER
-  String directory = web_server.arg(F("directory"));
-  String fileName  = web_server.arg(F("fileName"));
+  String directory = webArg(F("directory"));
+  String fileName  = webArg(F("fileName"));
   String error;
 
   if (directory.length() > 0)
@@ -339,7 +339,7 @@ void handle_rules_delete() {
   #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_delete"));
   #  endif // ifndef BUILD_NO_RAM_TRACKER
-  String fileName = web_server.arg(F("fileName"));
+  String fileName = webArg(F("fileName"));
   fileName = fileName.substring(0, fileName.length() - 4);
   bool removed = false;
   #  ifdef WEBSERVER_RULES_DEBUG
@@ -356,7 +356,7 @@ void handle_rules_delete() {
   if (removed)
   {
     web_server.sendHeader(F("Location"), F("/rules"), true);
-    web_server.send(302, F("text/plain"), F(""));
+    web_server.send(302, F("text/plain"), EMPTY_STRING);
   }
   else
   {
@@ -411,7 +411,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
     if (isAddNew)
     {
-      eventName = web_server.arg(F("eventName"));
+      eventName = webArg(F("eventName"));
       fileName += EventToFileName(eventName);
     }
     else
@@ -433,8 +433,8 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
     if (web_server.args() > 0)
     {
-      const String& rules = web_server.arg(F("rules"));
-      isNew = web_server.arg(F("IsNew")) == F("yes");
+      const String& rules = webArg(F("rules"));
+      isNew = webArg(F("IsNew")) == F("yes");
 
       // Overwrite verification
       if (isEdit && isNew) {
@@ -472,7 +472,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
         if (isAddNew) {
           web_server.sendHeader(F("Location"), F("/rules"), true);
-          web_server.send(302, F("text/plain"), F(""));
+          web_server.send(302, F("text/plain"), EMPTY_STRING);
           return true;
         }
       }
@@ -594,7 +594,7 @@ bool Rule_Download(const String& path)
 
 void Goto_Rules_Root() {
   web_server.sendHeader(F("Location"), F("/rules"), true);
-  web_server.send(302, F("text/plain"), F(""));
+  web_server.send(302, F("text/plain"), EMPTY_STRING);
 }
 
 bool EnumerateFileAndDirectory(String          & rootPath

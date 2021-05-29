@@ -71,7 +71,7 @@ boolean Plugin_110(byte function, struct EventStruct *event, String& string)
       {
         unsigned int choiceMode2 = PCONFIG(1);
         {
-          String optionsMode2[3];
+          const __FlashStringHelper * optionsMode2[3];
           optionsMode2[0] = F("Normal");
           optionsMode2[1] = F("Fast");
           optionsMode2[2] = F("Accurate");
@@ -81,7 +81,7 @@ boolean Plugin_110(byte function, struct EventStruct *event, String& string)
 
         int choiceMode3 = PCONFIG(2);
         {
-          String optionsMode3[2];
+          const __FlashStringHelper * optionsMode3[2];
           optionsMode3[0] = F("Normal");
           optionsMode3[1] = F("Long");
           int optionValuesMode3[2] = {0, 1 };

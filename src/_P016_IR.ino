@@ -175,7 +175,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
     if (irReceiver == 0 && irPin != -1)
     {
 
-      addLog(LOG_LEVEL_INFO, String(F("INIT: IR RX")));
+      addLog(LOG_LEVEL_INFO, F("INIT: IR RX"));
       addLog(LOG_LEVEL_INFO, String(F("IR lib Version: ")) + _IRREMOTEESP8266_VERSION_);
       irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
       irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
@@ -317,7 +317,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             strID = F("Code");
             strID += (varNr + 1);
 
-            if (!safe_strncpy(strCode, web_server.arg(strID), P16_Cchars)) {
+            if (!safe_strncpy(strCode, webArg(strID), P16_Cchars)) {
               strError += strID;
               strError += ' ';
             }
@@ -329,7 +329,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             iCode = 0;
             strID = F("ACode");
             strID += (varNr + 1);
-            if (!safe_strncpy(strCode, web_server.arg(strID), P16_Cchars)) {
+            if (!safe_strncpy(strCode, webArg(strID), P16_Cchars)) {
               strError += strID;
               strError += ' ';
             }
@@ -340,7 +340,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
             strID = F("Command");
             strID += (varNr + 1);
-            if (!safe_strncpy(P016_data->CommandLines[varNr].Command, web_server.arg(strID), P16_Nchars)) {
+            if (!safe_strncpy(P016_data->CommandLines[varNr].Command, webArg(strID), P16_Nchars)) {
               strError += strID;
             }
 
@@ -450,7 +450,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       #endif
       {
         addLog(LOG_LEVEL_INFO, F("IR: No replay solutions found! Press button again or try RAW encoding (timings are in the serial output)"));
-        serialPrint(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results));
+        serialPrint(F("IR: RAW TIMINGS: "));
+        serialPrint(resultToSourceCode(&results));
         event->String2 = F("NaN");
         yield(); // Feed the WDT as it can take a while to print.
                  //addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW source code //not showing up nicely in the web log
@@ -560,13 +561,15 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
 boolean displayRawToReadableB32Hex(String &outputStr, decode_results results)
 {
-  String line;
   uint16_t div[2];
 
   // print the values: either pulses or blanks
-  for (uint16_t i = 1; i < results.rawlen; i++)
-    line += uint64ToString(results.rawbuf[i] * RAWTICK, 10) + ",";
-  addLog(LOG_LEVEL_DEBUG, line); //Display the RAW timings
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String line;
+    for (uint16_t i = 1; i < results.rawlen; i++)
+      line += uint64ToString(results.rawbuf[i] * RAWTICK, 10) + ",";
+    addLog(LOG_LEVEL_DEBUG, line); //Display the RAW timings
+  }
 
   // Find a common denominator divisor for odd indexes (pulses) and then even indexes (blanks).
   for (uint16_t p = 0; p < 2; p++)
@@ -620,9 +623,19 @@ boolean displayRawToReadableB32Hex(String &outputStr, decode_results results)
       return false;
     }
     div[p] = bstDiv;
-
-    line = String(p ? String(F("Blank: ")) : String(F("Pulse: "))) + String(F(" divisor=")) + uint64ToString(bstDiv, 10) + String(F("  avgErr=")) + uint64ToString(bstAvg, 10) + String(F(" avgMul=")) + uint64ToString((uint16_t)bstMul, 10) + '.' + ((char)((bstMul - (uint16_t)bstMul) * 10) + '0');
-    addLog(LOG_LEVEL_DEBUG, line);
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String line;
+      line = p ? F("Blank: ") : F("Pulse: "); 
+      line += F(" divisor=");
+      line += uint64ToString(bstDiv, 10);
+      line += F("  avgErr=");
+      line += uint64ToString(bstAvg, 10);
+      line += F(" avgMul=");
+      line += uint64ToString((uint16_t)bstMul, 10);
+      line += '.';
+      line += ((char)((bstMul - (uint16_t)bstMul) * 10) + '0');
+      addLog(LOG_LEVEL_DEBUG, line);
+    }
   }
 
   // Generate the B32 Hex string, per the divisors found.
@@ -668,7 +681,12 @@ boolean displayRawToReadableB32Hex(String &outputStr, decode_results results)
     iOut = storeB32Hex(out, iOut, tmOut[d++]);
 
   out[iOut] = 0;
-  line = String(F("IRSEND,RAW2,")) + String(out) + String(F(",38,")) + uint64ToString(div[0], 10) + ',' + uint64ToString(div[1], 10);
+  String line = F("IRSEND,RAW2,");
+  line += out;
+  line += F(",38,");
+  line += uint64ToString(div[0], 10);
+  line += ',';
+  line += uint64ToString(div[1], 10);
   addLog(LOG_LEVEL_INFO, line);
   outputStr = line;
   return true;

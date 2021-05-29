@@ -27,7 +27,7 @@ public:
     FILE_UNKNOWN_type
   };
 
-  static String getSettingsTypeString(Enum settingsType);
+  static const __FlashStringHelper * getSettingsTypeString(Enum settingsType);
   static bool   getSettingsParameters(Enum settingsType,
                                       int  index,
                                       int& offset,

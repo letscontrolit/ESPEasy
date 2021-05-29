@@ -40,7 +40,7 @@ void WifiScan(bool async, uint8_t channel = 0);
 void WifiScan();
 void setSTA(bool enable);
 void setAP(bool enable);
-String getWifiModeString(WiFiMode_t wifimode);
+const __FlashStringHelper * getWifiModeString(WiFiMode_t wifimode);
 void setWifiMode(WiFiMode_t wifimode);
 bool WifiIsAP(WiFiMode_t wifimode);
 bool WifiIsSTA(WiFiMode_t wifimode);

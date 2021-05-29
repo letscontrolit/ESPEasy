@@ -61,6 +61,6 @@ String getPinStateJSON(bool          search,
                        const String& log,
                        int16_t       noSearchValue);
 
-String getPinModeString(byte mode);
+const __FlashStringHelper * getPinModeString(byte mode);
 
 #endif

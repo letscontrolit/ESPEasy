@@ -375,7 +375,7 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
   //    }
   if (SpiffsFull()) {
       #ifdef RTC_STRUCT_DEBUG
-    addLog(LOG_LEVEL_ERROR, String(F("RTC  : FS full")));
+    addLog(LOG_LEVEL_ERROR, F("RTC  : FS full"));
       #endif // ifdef RTC_STRUCT_DEBUG
     return false;
   }
@@ -405,7 +405,7 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
 
       if (!fw) {
           #ifdef RTC_STRUCT_DEBUG
-        addLog(LOG_LEVEL_ERROR, String(F("RTC  : error opening file")));
+        addLog(LOG_LEVEL_ERROR, F("RTC  : error opening file"));
           #endif // ifdef RTC_STRUCT_DEBUG
       } else {
           #ifdef RTC_STRUCT_DEBUG
@@ -426,7 +426,7 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
     }
   }
     #ifdef RTC_STRUCT_DEBUG
-  addLog(LOG_LEVEL_ERROR, String(F("RTC  : prepareFileForWrite failed")));
+  addLog(LOG_LEVEL_ERROR, F("RTC  : prepareFileForWrite failed"));
     #endif // ifdef RTC_STRUCT_DEBUG
   return false;
 }
