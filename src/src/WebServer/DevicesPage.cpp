@@ -871,13 +871,6 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     addHelpButton(String(F("Plugin")) + Settings.TaskDeviceNumber[taskIndex]);
     addRTDPluginButton(Settings.TaskDeviceNumber[taskIndex]);
 
-
-    if ((Device[DeviceIndex].Number == 3) && (taskIndex >= 4)) // Number == 3 = PulseCounter Plugin
-    {
-      // FIXME TD-er: Make a PLUGIN_WEBFORM_SHOW_TASKCONFIG_WARNING
-      addFormNote(F("This plugin is only supported on task 1-4 for now"));
-    }
-
     addFormTextBox(F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
 
     addFormCheckBox(F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex]);                 // ="taskdeviceenabled"
