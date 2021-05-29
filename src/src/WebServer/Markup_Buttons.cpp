@@ -6,30 +6,36 @@
 #include "../Static/WebStaticData.h"
 
 
-void addButton(const String& url, const String& label) {
-  addButton(url, label, "");
+void addButton(const __FlashStringHelper * url, const __FlashStringHelper * label) {
+  addButton(url, label, EMPTY_STRING);
 }
 
-void addButton(const String& url, const String& label, const String& classes) {
-  addButton(url, label, classes, true);
+void addButton(const __FlashStringHelper * url, const __FlashStringHelper * label, const __FlashStringHelper * classes, bool enabled)
+{
+  html_add_button_prefix(classes, enabled);
+  addHtml(url);
+  addHtml(F("'>"));
+  addHtml(label);
+  addHtml(F("</a>"));
+}
+
+void addButton(const String& url, const String& label)
+{
+  addButton(url, label, EMPTY_STRING);
 }
 
 void addButton(const String& url, const String& label, const String& classes, bool enabled)
 {
   html_add_button_prefix(classes, enabled);
-  String html;
-
-  html.reserve(8 + url.length() + label.length());
-  html += url;
-  html += "'>";
-  html += label;
-  html += F("</a>");
-  addHtml(html);
+  addHtml(url);
+  addHtml(F("'>"));
+  addHtml(label);
+  addHtml(F("</a>"));
 }
 
 void addButtonWithSvg(const String& url, const String& label)
 {
-  addButtonWithSvg(url, label, "", false);
+  addButtonWithSvg(url, label, EMPTY_STRING, false);
 }
 
 void addButtonWithSvg(const String& url, const String& label, const String& svgPath, bool needConfirm) {
@@ -68,7 +74,7 @@ void addSaveButton(const String& url, const String& label)
 {
 #ifdef BUILD_MINIMAL_OTA
   addButtonWithSvg(url, label
-                   , ""
+                   , EMPTY_STRING
                    , false);
 #else // ifdef BUILD_MINIMAL_OTA
   addButtonWithSvg(url,
@@ -85,7 +91,7 @@ void addDeleteButton(const String& url, const String& label)
 {
 #ifdef BUILD_MINIMAL_OTA
   addButtonWithSvg(url, label
-                   , ""
+                   , EMPTY_STRING
                    , true);
 #else // ifdef BUILD_MINIMAL_OTA
   addButtonWithSvg(url,
@@ -98,8 +104,16 @@ void addDeleteButton(const String& url, const String& label)
 #endif // ifdef BUILD_MINIMAL_OTA
 }
 
+void addWideButton(const __FlashStringHelper * url, const __FlashStringHelper * label) {
+  html_add_wide_button_prefix(EMPTY_STRING, true);
+  addHtml(url);
+  addHtml("'>");
+  addHtml(label);
+  addHtml(F("</a>"));
+}
+
 void addWideButton(const String& url, const String& label) {
-  addWideButton(url, label, "", true);
+  addWideButton(url, label, EMPTY_STRING, true);
 }
 
 void addWideButton(const String& url, const String& label, const String& classes) {
@@ -109,24 +123,30 @@ void addWideButton(const String& url, const String& label, const String& classes
 void addWideButton(const String& url, const String& label, const String& classes, bool enabled)
 {
   html_add_wide_button_prefix(classes, enabled);
-  String html;
-
-  html.reserve(8 + url.length() + label.length());
-  html += url;
-  html += "'>";
-  html += label;
-  html += F("</a>");
-  addHtml(html);
+  addHtml(url);
+  addHtml(F("'>"));
+  addHtml(label);
+  addHtml(F("</a>"));
 }
 
 void addSubmitButton()
 {
-  addSubmitButton(F("Submit"), "");
+  addSubmitButton(F("Submit"), F(""));
 }
 
 // add submit button with different label and name
+void addSubmitButton(const __FlashStringHelper * value, const __FlashStringHelper * name)
+{
+  addSubmitButton(value, name, F(""));
+}
+
 void addSubmitButton(const String& value, const String& name) {
-  addSubmitButton(value, name, "");
+  addSubmitButton(value, name, EMPTY_STRING);
+}
+
+void addSubmitButton(const __FlashStringHelper * value, const __FlashStringHelper * name, const __FlashStringHelper * classes)
+{
+  addSubmitButton(String(value), String(name), String(classes));
 }
 
 void addSubmitButton(const String& value, const String& name, const String& classes)

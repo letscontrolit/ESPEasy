@@ -21,6 +21,8 @@
 #include "../Helpers/StringGenerator_GPIO.h"
 #include "../Helpers/StringParser.h"
 
+#include <Arduino.h>
+
 /********************************************************************************************\
    Parse string template
  \*********************************************************************************************/
@@ -44,7 +46,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate_padded"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  START_TIMER
+  START_TIMER;
 
   // Keep current loaded taskSettings to restore at the end.
   byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;

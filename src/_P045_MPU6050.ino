@@ -125,7 +125,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
     {
       byte choice = PCONFIG(1);
       {
-        String options[10];
+        const __FlashStringHelper * options[10];
         options[0] = F("Movement detection");
         options[1] = F("Range acceleration X");
         options[2] = F("Range acceleration Y");

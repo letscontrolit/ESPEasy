@@ -239,13 +239,11 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         // Hardware serial is RX on 3 and TX on 1
         if (rxPin == 3 && txPin == 1)
         {
-          log = F("PMSx003 : using hardware serial");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("PMSx003 : using hardware serial"));
         }
         else
         {
-          log = F("PMSx003: using software serial");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("PMSx003: using software serial"));
         }
         P053_easySerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
         if (P053_easySerial == nullptr) {
@@ -257,8 +255,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         if (resetPin >= 0) // Reset if pin is configured
         {
           // Toggle 'reset' to assure we start reading header
-          log = F("PMSx003: resetting module");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("PMSx003: resetting module"));
           pinMode(resetPin, OUTPUT);
           digitalWrite(resetPin, LOW);
           delay(250);

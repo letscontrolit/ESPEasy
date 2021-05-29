@@ -65,18 +65,18 @@ String create_http_request_auth(int controller_number, int controller_index, Con
                                 const String& method, const String& uri);
 
 #ifndef BUILD_NO_DEBUG
-void log_connecting_to(const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings);
+void log_connecting_to(const __FlashStringHelper * prefix, int controller_number, ControllerSettingsStruct& ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const String& prefix, int controller_number);
+void log_connecting_fail(const __FlashStringHelper * prefix, int controller_number);
 
-bool count_connection_results(bool success, const String& prefix, int controller_number);
+bool count_connection_results(bool success, const __FlashStringHelper * prefix, int controller_number);
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings);
 
 bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings);
 
-bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel);
+bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const __FlashStringHelper * loglabel);
 
 // Use "client.available() || client.connected()" to read all lines from slow servers.
 // See: https://github.com/esp8266/Arduino/pull/5113

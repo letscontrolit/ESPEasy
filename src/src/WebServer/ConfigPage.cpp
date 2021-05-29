@@ -38,7 +38,7 @@ void handle_config() {
 
   if (web_server.args() != 0)
   {
-    String name = web_server.arg(F("name"));
+    String name = webArg(F("name"));
     name.trim();
 
     Settings.Delay              = getFormItemInt(F("delay"), Settings.Delay);
@@ -66,7 +66,7 @@ void handle_config() {
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
 
     // SSID 1
-    safe_strncpy(SecuritySettings.WifiSSID, web_server.arg(F("ssid")).c_str(), sizeof(SecuritySettings.WifiSSID));
+    safe_strncpy(SecuritySettings.WifiSSID, webArg(F("ssid")).c_str(), sizeof(SecuritySettings.WifiSSID));
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
 
     // SSID 2

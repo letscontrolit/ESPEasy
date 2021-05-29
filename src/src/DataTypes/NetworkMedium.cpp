@@ -11,7 +11,7 @@ bool isValid(NetworkMedium_t medium) {
   return false;
 }
 
-String toString(NetworkMedium_t medium) {
+const __FlashStringHelper * toString(NetworkMedium_t medium) {
   switch (medium) {
     case NetworkMedium_t::WIFI:     return F("WiFi");
     case NetworkMedium_t::Ethernet: return F("Ethernet");
