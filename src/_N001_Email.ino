@@ -115,31 +115,31 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 		int pos_less = email_address.indexOf('<');
 		if (pos_less == -1) {
 			// No email address markup
-			mailheader.replace(String(F("$nodename")), Settings.getHostname());
-			mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
+			mailheader.replace(F("$nodename"), Settings.getHostname());
+			mailheader.replace(F("$emailfrom"), notificationsettings.Sender);
 		} else {
 			String senderName = email_address.substring(0, pos_less);
-			senderName.replace(F("\""), F("")); // Remove quotes
+			senderName.replace(F("\""), EMPTY_STRING); // Remove quotes
 			String address = email_address.substring(pos_less + 1);
-			address.replace(F("<"), F(""));
-			address.replace(F(">"), F(""));
+			address.replace(F("<"), EMPTY_STRING);
+			address.replace(F(">"), EMPTY_STRING);
 			address.trim();
 			senderName.trim();
-			mailheader.replace(String(F("$nodename")), senderName);
-			mailheader.replace(String(F("$emailfrom")), address);
+			mailheader.replace(F("$nodename"), senderName);
+			mailheader.replace(F("$emailfrom"), address);
 		}
 
-		mailheader.replace(String(F("$nodename")), Settings.getHostname());
-		mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
-		mailheader.replace(String(F("$ato")), notificationsettings.Receiver);
-		mailheader.replace(String(F("$subject")), aSub);
-		mailheader.replace(String(F("$espeasyversion")), String(BUILD));
+		mailheader.replace(F("$nodename"), Settings.getHostname());
+		mailheader.replace(F("$emailfrom"), notificationsettings.Sender);
+		mailheader.replace(F("$ato"), notificationsettings.Receiver);
+		mailheader.replace(F("$subject"), aSub);
+		mailheader.replace(F("$espeasyversion"), String(BUILD));
 		aMesg.replace(F("\r"), F("<br/>")); // re-write line breaks for Content-type: text/html
 
 		// Wait for Client to Start Sending
 		// The MTA Exchange
 		while (true) {
-			if (!NPlugin_001_MTA(client, "", F("220 "))) break;
+			if (!NPlugin_001_MTA(client, EMPTY_STRING, F("220 "))) break;
 			if (!NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain, F("250 "))) break;
 			if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) break;
 			if (!NPlugin_001_MTA(client, String(F("MAIL FROM:<")) + notificationsettings.Sender + ">", F("250 "))) break;
@@ -161,7 +161,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			}
 
 			if (!NPlugin_001_MTA(client, F("DATA"), F("354 "))) break;
-			if (!NPlugin_001_MTA(client, mailheader + aMesg + String(F("\r\n.\r\n")), F("250 "))) break;
+			if (!NPlugin_001_MTA(client, mailheader + aMesg + F("\r\n.\r\n"), F("250 "))) break;
 
 			myStatus = true;
 			break;

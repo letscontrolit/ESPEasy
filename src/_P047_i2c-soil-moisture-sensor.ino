@@ -106,14 +106,14 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      String plugin1 = web_server.arg(F("i2c_addr"));
+      String plugin1 = webArg(F("i2c_addr"));
       P047_I2C_ADDR = (int)strtol(plugin1.c_str(), 0, 16);
 
       P047_SENSOR_SLEEP = isFormItemChecked(F("p047_sleep"));
 
       P047_CHECK_VERSION = isFormItemChecked(F("p047_version"));
 
-      String plugin4 = web_server.arg(F("p047_i2cSoilMoisture_changeAddr"));
+      String plugin4 = webArg(F("p047_i2cSoilMoisture_changeAddr"));
       P047_NEW_ADDR = (int)strtol(plugin4.c_str(), 0, 16);
 
       P047_CHANGE_ADDR = isFormItemChecked(F("p047_changeAddr"));

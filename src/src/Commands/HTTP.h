@@ -1,8 +1,8 @@
 #ifndef COMMAND_HTTP_H
 #define COMMAND_HTTP_H
 
-class String;
+#include <Arduino.h>
 
-String Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line);
+const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line);
 
 #endif // COMMAND_HTTP_H

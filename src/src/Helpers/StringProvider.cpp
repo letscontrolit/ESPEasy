@@ -35,7 +35,7 @@ String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
 }
 
-String getLabel(LabelType::Enum label) {
+const __FlashStringHelper * getLabel(LabelType::Enum label) {
   switch (label)
   {
     case LabelType::UNIT_NR:                return F("Unit Number");
@@ -183,6 +183,10 @@ String getLabel(LabelType::Enum label) {
     case LabelType::TIMEZONE_OFFSET:        return F("Timezone Offset");
     case LabelType::LATITUDE:               return F("Latitude");
     case LabelType::LONGITUDE:              return F("Longitude");
+
+    case LabelType::MAX_LABEL:
+      break;
+
   }
   return F("MissingString");
 }
@@ -289,7 +293,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
-    case LabelType::BUILD_TIME:             return get_build_date() + " " + get_build_time();
+    case LabelType::BUILD_TIME:             return String(get_build_date()) + F(" ") + get_build_time();
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::BUILD_PLATFORM:         return get_build_platform();
     case LabelType::GIT_HEAD:               return get_git_head();
@@ -342,6 +346,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::TIMEZONE_OFFSET:        return String(Settings.TimeZone);
     case LabelType::LATITUDE:               return String(Settings.Latitude);
     case LabelType::LONGITUDE:              return String(Settings.Longitude);
+
+    case LabelType::MAX_LABEL:
+      break;
   }
   return F("MissingString");
 }

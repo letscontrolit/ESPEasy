@@ -154,7 +154,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     }
     addRowLabel(rowLabel);
     addSelector_Head(id);
-    addSelector_Item(F("- None -"), -1, false, false, ""); // Empty choice
+    addSelector_Item(F("- None -"), -1, false); // Empty choice
     uint8_t tmpAddress[8];
 
     // get currently saved address
@@ -171,7 +171,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
       }
 
       bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-      addSelector_Item(option, index, selected, false, "");
+      addSelector_Item(option, index, selected);
     }
     addSelector_Foot();
   }

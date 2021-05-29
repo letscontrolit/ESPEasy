@@ -8,14 +8,14 @@
 
 class IPAddress;
 
-String return_command_success();
-String return_command_failed();
-String return_incorrect_nr_arguments();
-String return_incorrect_source();
-String return_not_connected();
+const __FlashStringHelper * return_command_success();
+const __FlashStringHelper * return_command_failed();
+const __FlashStringHelper * return_incorrect_nr_arguments();
+const __FlashStringHelper * return_incorrect_source();
+const __FlashStringHelper * return_not_connected();
 String return_result(struct EventStruct *event,
                      const String      & result);
-String return_see_serial(struct EventStruct *event);
+const __FlashStringHelper * return_see_serial(struct EventStruct *event);
 
 bool   IsNumeric(const char *source);
 

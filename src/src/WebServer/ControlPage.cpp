@@ -5,6 +5,7 @@
 
 
 # include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/WebServer.h"
 # include "../Helpers/WebServer_commandHelper.h"
 
 # include "../../ESPEasy-Globals.h"
@@ -18,7 +19,7 @@ void handle_control() {
   checkRAM(F("handle_control"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  String webrequest            = web_server.arg(F("cmd"));
+  String webrequest            = webArg(F("cmd"));
   HandledWebCommand_result res = handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest);
 
   switch (res) {

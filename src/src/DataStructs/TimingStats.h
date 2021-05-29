@@ -107,9 +107,9 @@ private:
 };
 
 
-String getPluginFunctionName(int function);
+const __FlashStringHelper * getPluginFunctionName(int function);
 bool   mustLogFunction(int function);
-String getCPluginCFunctionName(CPlugin::Function function);
+const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function);
 bool   mustLogCFunction(CPlugin::Function function);
 String getMiscStatsName(int stat);
 

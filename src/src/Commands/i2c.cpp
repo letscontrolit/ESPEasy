@@ -7,7 +7,7 @@
 
 #include "../../ESPEasy_common.h"
 
-String Command_i2c_Scanner(struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_i2c_Scanner(struct EventStruct *event, const char* Line)
 {
 	byte error, address;
 	for (address = 1; address <= 127; address++) {

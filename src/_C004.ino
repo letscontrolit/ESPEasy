@@ -124,7 +124,7 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
   String postStr = do_create_http_request(
     hostName, F("POST"),
     F("/update"), // uri
-    "",           // auth_header
+    EMPTY_STRING,           // auth_header
     F("Content-Type: application/x-www-form-urlencoded\r\n"),
     postDataStr.length());
 

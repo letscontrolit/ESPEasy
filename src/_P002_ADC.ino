@@ -298,7 +298,7 @@ void P002_performRead(struct EventStruct *event, int& value) {
   #endif // if defined(ESP32)
 }
 
-void P002_formatStatistics(const String& label, int raw, float float_value) {
+void P002_formatStatistics(const __FlashStringHelper * label, int raw, float float_value) {
   addRowLabel(label);
   addHtmlInt(raw);
   html_add_estimate_symbol();
