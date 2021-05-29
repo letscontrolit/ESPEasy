@@ -67,7 +67,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false; // FIXME TD-er: Must make this configurable
+      Device[deviceCount].PullUpOption       = true;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = true;
       Device[deviceCount].ValueCount         = PLUGIN_NR_VALUENAMES_003;
@@ -156,7 +156,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       config.gpio             = Settings.TaskDevicePin1[event->TaskIndex];
       config.taskIndex        = event->TaskIndex;
       config.interruptPinMode = static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(PCONFIG(P003_IDX_MODETYPE));
-      config.pullupPinMode    = INPUT_PULLUP; // FIXME TD-er: Must make this configurable
+      config.pullupPinMode    = Settings.TaskDevicePin1PullUp[event->TaskIndex] ? INPUT_PULLUP : INPUT;
+
+      // FIXME TD-er: Must set the state using globalMapPortStatus
 
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P003_data_struct(config));
