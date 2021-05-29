@@ -326,7 +326,7 @@ void addHtml(const char& html) {
 }
 
 void addHtml(const __FlashStringHelper * html) {
-  TXBuffer += html;
+  TXBuffer.addFlashString((PGM_P)html);
 }
 
 void addHtml(const String& html) {

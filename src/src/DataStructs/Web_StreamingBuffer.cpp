@@ -55,6 +55,14 @@ Web_StreamingBuffer Web_StreamingBuffer::operator+=(const String& a)          {
 }
 
 Web_StreamingBuffer Web_StreamingBuffer::operator+=(PGM_P str) {
+  return addFlashString(str);
+}
+
+Web_StreamingBuffer Web_StreamingBuffer::operator+=(const __FlashStringHelper* str) {
+  return addFlashString((PGM_P)str);
+}
+
+Web_StreamingBuffer Web_StreamingBuffer::addFlashString(PGM_P str) {
   ++flashStringCalls;
 
   if (!str) { return *this; // return if the pointer is void

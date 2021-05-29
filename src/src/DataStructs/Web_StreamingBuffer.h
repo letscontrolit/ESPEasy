@@ -44,8 +44,13 @@ public:
   Web_StreamingBuffer operator+=(uint32_t a);
   Web_StreamingBuffer operator+=(const String& a);
   Web_StreamingBuffer operator+=(PGM_P str);
+  Web_StreamingBuffer operator+=(const __FlashStringHelper* str);
+
+//private:
+  Web_StreamingBuffer addFlashString(PGM_P str);
   Web_StreamingBuffer addString(const String& a);
 
+public:
   void flush();
 
   void checkFull(void);
