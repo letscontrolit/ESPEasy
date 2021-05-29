@@ -19,7 +19,7 @@ Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),
   maxServerUsage(0), sentBytes(0), flashStringCalls(0), flashStringData(0)
 {
   buf.reserve(CHUNKED_BUFFER_SIZE + 50);
-  buf = "";
+  buf.clear();
 }
 
 Web_StreamingBuffer Web_StreamingBuffer::operator=(String& a)                 {
@@ -69,25 +69,32 @@ Web_StreamingBuffer Web_StreamingBuffer::addFlashString(PGM_P str) {
   }
 
   if (lowMemorySkip) { return *this; }
-  int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
-
-  if (flush_step < 1) { flush_step = 0; }
-  unsigned int pos          = 0;
   const unsigned int length = strlen_P((PGM_P)str);
 
   if (length == 0) { return *this; }
   flashStringData += length;
 
-  while (pos < length) {
-    if (flush_step == 0) {
-      sendContentBlocking(this->buf);
-      flush_step = CHUNKED_BUFFER_SIZE;
+  if ((this->buf.length() + length) > CHUNKED_BUFFER_SIZE) {
+    flush();
+    web_server.sendContent_P(str);
+  } else {
+    unsigned int pos          = 0;
+    int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
+
+    if (flush_step < 1) { flush_step = 0; }
+
+    while (pos < length) {
+      if (flush_step == 0) {
+        sendContentBlocking(this->buf);
+        flush_step = CHUNKED_BUFFER_SIZE;
+      }
+      this->buf += (char)pgm_read_byte(&str[pos]);
+      ++pos;
+      --flush_step;
     }
-    this->buf += (char)pgm_read_byte(&str[pos]);
-    ++pos;
-    --flush_step;
+    checkFull();
   }
-  checkFull();
+
   return *this;
 }
 
@@ -101,7 +108,9 @@ Web_StreamingBuffer Web_StreamingBuffer::addString(const String& a) {
 
   while (pos < length) {
     if (flush_step == 0) {
-      sendContentBlocking(this->buf);
+      if (this->buf.length() > 0) {
+        sendContentBlocking(this->buf);
+      }
       flush_step = CHUNKED_BUFFER_SIZE;
     }
     this->buf += a[pos];
@@ -114,14 +123,16 @@ Web_StreamingBuffer Web_StreamingBuffer::addString(const String& a) {
 
 void Web_StreamingBuffer::flush() {
   if (lowMemorySkip) {
-    this->buf = "";
+    this->buf.clear();
   } else {
-    sendContentBlocking(this->buf);
+    if (this->buf.length() > 0) {
+      sendContentBlocking(this->buf);
+    }
   }
 }
 
 void Web_StreamingBuffer::checkFull(void) {
-  if (lowMemorySkip) { this->buf = ""; }
+  if (lowMemorySkip) { this->buf.clear(); }
 
   if (this->buf.length() > CHUNKED_BUFFER_SIZE) {
     trackTotalMem();
@@ -146,7 +157,7 @@ void Web_StreamingBuffer::startStream(bool json, const String& origin) {
   initialRam   = ESP.getFreeHeap();
   beforeTXRam  = initialRam;
   sentBytes    = 0;
-  buf          = "";
+  buf.clear();
   
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
@@ -179,7 +190,7 @@ void Web_StreamingBuffer::trackCoreMem() {
 void Web_StreamingBuffer::endStream(void) {
   if (!lowMemorySkip) {
     if (buf.length() > 0) { sendContentBlocking(buf); }
-    buf = "";
+    buf.clear();
     sendContentBlocking(buf);
     finalRam = ESP.getFreeHeap();
 
@@ -248,7 +259,7 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 #endif // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 
   sentBytes += length;
-  data       = "";
+  data.clear();
   data.reserve(CHUNKED_BUFFER_SIZE);
   delay(0);
 }
