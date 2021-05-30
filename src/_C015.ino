@@ -193,25 +193,29 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
           valueFullName += valueName;
           String vPinNumberStr = valueName.substring(1, 4);
           int    vPinNumber    = vPinNumberStr.toInt();
-          String log           = F(C015_LOG_PREFIX);
-          log += Blynk.connected() ? F("(online): ") : F("(offline): ");
 
-          if ((vPinNumber > 0) && (vPinNumber < 256)) {
-            log += F("send ");
-            log += valueFullName;
-            log += F(" = ");
-            log += formattedValue;
-            log += F(" to blynk pin v");
-            log += vPinNumber;
-          }
-          else {
+          if (!(vPinNumber > 0) && (vPinNumber < 256)) {
             vPinNumber = -1;
-            log       += F("error got vPin number for ");
-            log       += valueFullName;
-            log       += F(", got not valid value: ");
-            log       += vPinNumberStr;
           }
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log           = F(C015_LOG_PREFIX);
+            log += Blynk.connected() ? F("(online): ") : F("(offline): ");
+
+            if ((vPinNumber > 0) && (vPinNumber < 256)) {
+              log += F("send ");
+              log += valueFullName;
+              log += F(" = ");
+              log += formattedValue;
+              log += F(" to blynk pin v");
+              log += vPinNumber;
+            } else {
+              log += F("error got vPin number for ");
+              log += valueFullName;
+              log += F(", got not valid value: ");
+              log += vPinNumberStr;
+            }
+            addLog(LOG_LEVEL_INFO, log);
+          }
           element.vPin[x] = vPinNumber;
           element.txt[x]  = formattedValue;
         }
@@ -286,11 +290,15 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     LoadCustomControllerSettings(controllerIndex, (byte *)&thumbprint, sizeof(thumbprint));
 
     if (strlen(thumbprint) != 59) {
-      addLog(LOG_LEVEL_INFO, C015_LOG_PREFIX "Saved thumprint value is not correct:");
-      addLog(LOG_LEVEL_INFO, thumbprint);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "Saved thumprint value is not correct:"));
+        addLog(LOG_LEVEL_INFO, thumbprint);
+      }
       strcpy(thumbprint, CPLUGIN_015_DEFAULT_THUMBPRINT);
-      addLog(LOG_LEVEL_INFO, C015_LOG_PREFIX "using default one:");
-      addLog(LOG_LEVEL_INFO, thumbprint);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "using default one:"));
+        addLog(LOG_LEVEL_INFO, thumbprint);
+      }
     }
     # endif // ifdef CPLUGIN_015_SSL
 
@@ -390,12 +398,14 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char *Line) {
     return err;
   }
 
-  String log = F(C015_LOG_PREFIX "(online): send blynk pin v");
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F(C015_LOG_PREFIX "(online): send blynk pin v");
 
-  log += vPin;
-  log += F(" = ");
-  log += data;
-  addLog(LOG_LEVEL_INFO, log);
+    log += vPin;
+    log += F(" = ");
+    log += data;
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   Blynk.virtualWrite(vPin, data);
   return return_command_success();

@@ -277,9 +277,14 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           SetPixelsBlack();
           Candle_pixels->setBrightness(Candle_bright);
           Candle_pixels->begin();
-          String log = F("CAND : Init WS2812 Pin : ");
-          log += CONFIG_PIN1;
-          addLog(LOG_LEVEL_DEBUG, log);
+
+          #ifndef BUILD_NO_DEBUG
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            String log = F("CAND : Init WS2812 Pin : ");
+            log += CONFIG_PIN1;
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+          #endif
         }
 
         success = true;
@@ -408,9 +413,13 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
              if (val_Type.toInt() > -1 && val_Type.toInt() < 8) {
                 PCONFIG(4) = val_Type.toInt();     // Type
                 Candle_type = (SimType)PCONFIG(4);
-                String log = F("CAND : CMD - Type : ");
-                log += val_Type;
-                addLog(LOG_LEVEL_DEBUG, log);
+                #ifndef BUILD_NO_DEBUG
+                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                  String log = F("CAND : CMD - Type : ");
+                  log += val_Type;
+                  addLog(LOG_LEVEL_DEBUG, log);
+                }
+                #endif
              }
           }
 
@@ -418,9 +427,13 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
              if (val_Bright.toInt() > -1 && val_Bright.toInt() < 256) {
                 PCONFIG(3) = val_Bright.toInt();     // Brightness
                 Candle_bright = PCONFIG(3);
-                String log = F("CAND : CMD - Bright : ");
-                log += val_Bright;
-                addLog(LOG_LEVEL_DEBUG, log);
+                #ifndef BUILD_NO_DEBUG
+                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                  String log = F("CAND : CMD - Bright : ");
+                  log += val_Bright;
+                  addLog(LOG_LEVEL_DEBUG, log);
+                }
+                #endif
              }
           }
 
@@ -440,17 +453,23 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
             PCONFIG(5) = 1;
             Candle_color = (ColorType)PCONFIG(5);   // ColorType (ColorSelected)
 
-            String log = F("CAND : CMD - R ");
-            log += r;
-            log += F(" G ");
-            log += g;
-            log += F(" B ");
-            log += b;
-            addLog(LOG_LEVEL_DEBUG, log);
+            #ifndef BUILD_NO_DEBUG
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              String log = F("CAND : CMD - R ");
+              log += r;
+              log += F(" G ");
+              log += g;
+              log += F(" B ");
+              log += b;
+              addLog(LOG_LEVEL_DEBUG, log);
+            }
+            #endif
           } else {
             PCONFIG(5) = 0;
             Candle_color = (ColorType)PCONFIG(5);   // ColorType (ColorDefault)
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, F("CAND : CMD - Color : DEFAULT"));
+            #endif
           }
 
           //SaveTaskSettings(event->TaskIndex);

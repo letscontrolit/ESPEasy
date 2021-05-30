@@ -163,14 +163,18 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
             // FIXME TD-er: It may be useful to generate events with string values.
             float floatPayload;
             if (!string2float(event->String2, floatPayload)) {
-              String log = F("IMPT : Bad Import MQTT Command ");
-              log += event->String1;
-              addLog(LOG_LEVEL_ERROR, log);
-              log = F("ERR  : Illegal Payload ");
-              log += event->String2;
-              log += ' ';
-              log += getTaskDeviceName(event->TaskIndex);
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+                String log = F("IMPT : Bad Import MQTT Command ");
+                log += event->String1;
+                addLog(LOG_LEVEL_ERROR, log);
+              }
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("ERR  : Illegal Payload ");
+                log += event->String2;
+                log += ' ';
+                log += getTaskDeviceName(event->TaskIndex);
+                addLog(LOG_LEVEL_INFO, log);
+              }
               success = false;
               break;
             }
@@ -245,8 +249,8 @@ bool MQTTSubscribe_037(struct EventStruct *event)
           String log = F("IMPT : Error subscribing to ");
           log += subscribeTo;
           addLog(LOG_LEVEL_ERROR, log);
-          return false;
         }
+        return false;
       }
     }
   }

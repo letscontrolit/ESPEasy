@@ -99,7 +99,8 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
             parseSingleControllerVariable(element.txt[x], event, x, true);
             element.txt[x].replace(F("%value%"), formattedValue);
 # ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
+              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
 # endif // ifndef BUILD_NO_DEBUG
           }
         }

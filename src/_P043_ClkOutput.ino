@@ -118,9 +118,11 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
               pinMode(CONFIG_PIN1, OUTPUT);
               digitalWrite(CONFIG_PIN1, state);
               UserVar[event->BaseVarIndex] = state;
-              String log = F("TCLK : State ");
-              log += state;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("TCLK : State ");
+                log += state;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
             }
           }

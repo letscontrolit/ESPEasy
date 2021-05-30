@@ -325,16 +325,18 @@ struct C018_data_struct {
 private:
 
   void C018_logError(const String& command) const {
-    String error = myLora->peekLastError();
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String error = myLora->peekLastError();
 
-    //    String error = myLora->getLastError();
+      //    String error = myLora->getLastError();
 
-    if (error.length() > 0) {
-      String log = F("RN2483: ");
-      log += command;
-      log += ": ";
-      log += error;
-      addLog(LOG_LEVEL_INFO, log);
+      if (error.length() > 0) {
+        String log = F("RN2483: ");
+        log += command;
+        log += ": ";
+        log += error;
+        addLog(LOG_LEVEL_INFO, log);
+      }
     }
   }
 
@@ -869,14 +871,16 @@ bool C018_init(struct EventStruct *event) {
   }
 
   if (customConfig->joinmethod == C018_USE_OTAA) {
-    String log = F("OTAA: AppEUI: ");
-    log += AppEUI;
-    log += F(" AppKey: ");
-    log += AppKey;
-    log += F(" DevEUI: ");
-    log += customConfig->DeviceEUI;
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("OTAA: AppEUI: ");
+      log += AppEUI;
+      log += F(" AppKey: ");
+      log += AppKey;
+      log += F(" DevEUI: ");
+      log += customConfig->DeviceEUI;
 
-    addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, log);
+    }
 
     if (!C018_data->initOTAA(AppEUI, AppKey, customConfig->DeviceEUI)) {
       return false;

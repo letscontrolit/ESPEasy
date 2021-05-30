@@ -128,9 +128,13 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
         // Create the motor shield object with the default I2C address
         AFMS = Adafruit_MotorShield(Plugin_048_MotorShield_address);
-        String log = F("MotorShield: Address: 0x");
-        log += String(Plugin_048_MotorShield_address, HEX);
-        addLog(LOG_LEVEL_DEBUG, log);
+        #ifndef BUILD_NO_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("MotorShield: Address: 0x");
+          log += String(Plugin_048_MotorShield_address, HEX);
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+        #endif
 
         if (param1.equalsIgnoreCase(F("DCMotor"))) {
           if (param2_is_int && (p2_int > 0) && (p2_int < 5))
@@ -206,6 +210,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
             myStepper = AFMS.getStepper(Plugin_048_MotorStepsPerRevolution, p2_int);
             myStepper->setSpeed(Plugin_048_StepperSpeed);
 
+            #ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
               String log = F("MotorShield: StepsPerRevolution: ");
               log += String(Plugin_048_MotorStepsPerRevolution);
@@ -213,6 +218,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
               log += String(Plugin_048_StepperSpeed);
               addLog(LOG_LEVEL_DEBUG_MORE, log);
             }
+            #endif
 
             if (param3.equalsIgnoreCase(F("Forward")))
             {
