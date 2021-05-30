@@ -705,7 +705,7 @@ void P049_html_show_stats(struct EventStruct *event) {
   switch (P049_data->getDetectedDevice()) {
     case MHZ19_A: addHtml(F("MH-Z19A")); break;
     case MHZ19_B: addHtml(F("MH-Z19B")); break;
-    default: addHtml("---"); break;
+    default: addHtml(F("---")); break;
   }
 }
 

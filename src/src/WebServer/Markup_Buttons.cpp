@@ -107,7 +107,7 @@ void addDeleteButton(const String& url, const String& label)
 void addWideButton(const __FlashStringHelper * url, const __FlashStringHelper * label) {
   html_add_wide_button_prefix(EMPTY_STRING, true);
   addHtml(url);
-  addHtml("'>");
+  addHtml(F("'>"));
   addHtml(label);
   addHtml(F("</a>"));
 }
@@ -188,7 +188,7 @@ void addCopyButton(const String& value, const String& delimiter, const String& n
   addHtmlAttribute(F("onclick"), F("setClipboard()"));
   addHtml('>');
   addHtml(name);
-  addHtml(" (");
+  addHtml(F(" ("));
   html_copyText_marker();
   addHtml(F(")</button>"));
 }

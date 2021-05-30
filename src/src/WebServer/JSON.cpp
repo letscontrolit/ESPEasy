@@ -266,7 +266,7 @@ void handle_json()
         if (it->second.ip[0] != 0)
         {
           if (comma_between) {
-            addHtml(",");
+            addHtml(',');
           } else {
             comma_between = true;
             addHtml(F("\"nodes\":[\n")); // open json array if >0 nodes
@@ -428,9 +428,9 @@ void handle_json()
       stream_last_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
 
       if (TaskIndex != lastActiveTaskIndex) {
-        addHtml(",");
+        addHtml(',');
       }
-      addHtml("\n");
+      addHtml('\n');
     }
   }
 

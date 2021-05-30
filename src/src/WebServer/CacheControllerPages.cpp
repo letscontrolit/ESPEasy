@@ -40,9 +40,9 @@ void handle_dumpcache() {
     LoadTaskSettings(i);
 
     for (int j = 0; j < VARS_PER_TASK; ++j) {
-      addHtml(";");
+      addHtml(';');
       addHtml(ExtraTaskSettings.TaskDeviceName);
-      addHtml("#");
+      addHtml('#');
       addHtml(ExtraTaskSettings.TaskDeviceValueNames[j]);
     }
   }
@@ -101,9 +101,9 @@ void handle_cache_json() {
 
   //     addHtml(F("UNIX timestamp;contr. idx;sensortype;taskindex;value count"));
   stream_to_json_value(F("UNIX timestamp"));
-  addHtml(",");
+  addHtml(',');
   stream_to_json_value(F("UTC timestamp"));
-  addHtml(",");
+  addHtml(',');
   stream_to_json_value(F("task index"));
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
@@ -113,7 +113,7 @@ void handle_cache_json() {
       String label = ExtraTaskSettings.TaskDeviceName;
       label += '#';
       label += ExtraTaskSettings.TaskDeviceValueNames[j];
-      addHtml(",");
+      addHtml(',');
       stream_to_json_value(label);
     }
   }
@@ -128,7 +128,7 @@ void handle_cache_json() {
 
     if (currentFile.length() > 0) {
       if (filenr != 0) {
-        addHtml(",");
+        addHtml(',');
       }
       stream_to_json_value(currentFile);
       ++filenr;

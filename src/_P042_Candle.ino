@@ -196,7 +196,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         // http://jscolor.com/examples/
         addHtml(F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='"));
         addHtml(hexvalue);
-        addHtml("'>");
+        addHtml(F("'>"));
         addFormNumericBox(F("RGB Color"), F("web_RGB_Red"), PCONFIG(0), 0, 255);
         addNumericBox(F("web_RGB_Green"), PCONFIG(1), 0, 255);
         addNumericBox(F("web_RGB_Blue"), PCONFIG(2), 0, 255);

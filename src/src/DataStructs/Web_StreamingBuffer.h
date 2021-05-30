@@ -35,8 +35,8 @@ public:
 
   Web_StreamingBuffer(void);
 
-  Web_StreamingBuffer operator=(String& a);
-  Web_StreamingBuffer operator=(const String& a);
+//  Web_StreamingBuffer operator=(String& a);
+//  Web_StreamingBuffer operator=(const String& a);
   Web_StreamingBuffer operator+=(char a);
   Web_StreamingBuffer operator+=(long unsigned int a);
   Web_StreamingBuffer operator+=(float a);
@@ -53,7 +53,7 @@ public:
 public:
   void flush();
 
-  void checkFull(void);
+  void checkFull();
 
   void startStream();
 
@@ -71,7 +71,7 @@ public:
 
   void trackCoreMem();
 
-  void endStream(void);
+  void endStream();
 
 private: 
 

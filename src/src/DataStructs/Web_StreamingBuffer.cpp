@@ -22,6 +22,7 @@ Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),
   buf.clear();
 }
 
+/*
 Web_StreamingBuffer Web_StreamingBuffer::operator=(String& a)                 {
   flush(); return addString(a);
 }
@@ -29,8 +30,13 @@ Web_StreamingBuffer Web_StreamingBuffer::operator=(String& a)                 {
 Web_StreamingBuffer Web_StreamingBuffer::operator=(const String& a)           {
   flush(); return addString(a);
 }
+*/
 
 Web_StreamingBuffer Web_StreamingBuffer::operator+=(char a)                   {
+  if (CHUNKED_BUFFER_SIZE > (this->buf.length() + 1)) {
+    this->buf += a;
+    return *this;
+  }
   return addString(String(a));
 }
 
@@ -131,10 +137,10 @@ void Web_StreamingBuffer::flush() {
   }
 }
 
-void Web_StreamingBuffer::checkFull(void) {
+void Web_StreamingBuffer::checkFull() {
   if (lowMemorySkip) { this->buf.clear(); }
 
-  if (this->buf.length() > CHUNKED_BUFFER_SIZE) {
+  if (this->buf.length() >= CHUNKED_BUFFER_SIZE) {
     trackTotalMem();
     sendContentBlocking(this->buf);
   }
@@ -187,7 +193,7 @@ void Web_StreamingBuffer::trackCoreMem() {
   }
 }
 
-void Web_StreamingBuffer::endStream(void) {
+void Web_StreamingBuffer::endStream() {
   if (!lowMemorySkip) {
     if (buf.length() > 0) { sendContentBlocking(buf); }
     buf.clear();

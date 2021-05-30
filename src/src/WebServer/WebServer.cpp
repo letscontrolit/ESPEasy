@@ -1065,7 +1065,7 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
   addHtml(toString(textXoffset, 2));
   addHtml(F("\" y=\""));
   addHtml(toString(textYoffset, 2));
-  addHtml("\">");
+  addHtml(F("\">"));
   addHtml(text);
   addHtml(F("</tspan>\n</text>"));
 }
