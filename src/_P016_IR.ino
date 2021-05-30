@@ -275,8 +275,6 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           }
           const String P016_HEX_INPUT_PATTERN = F("(0x)?[0-9a-fA-F]{0,16}"); // 16 nibbles = 64 bit, 0x prefix is allowed but not added by default
 
-          String strLabel;
-          strLabel.reserve(30); // Length of expected string, needed for strings > 11 chars
           String strCode;
           strCode.reserve(20);
 
@@ -298,7 +296,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             if (varNr < 9) {
               addHtml(F("&nbsp;"));
             }
-            addHtml(String(varNr + 1)); // #
+            addHtmlInt(varNr + 1); // #
             html_TD();
             { // Decode type
               addSelector(getPluginCustomArgName(rowCnt + 0), size, decodeTypes, decodeTypeOptions, NULL, static_cast<int>(P016_data->CommandLines[varNr].CodeDecodeType), false, true, F(""));
@@ -328,10 +326,9 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             html_TR(); // Separate row for the command input
 
             addHtml(F("<TD colspan=\"2\" style=\"text-align:right\">")); // Align label to right with the input field
-            strLabel = F("Command ");
-            strLabel += (varNr + 1);
-            strLabel += ':';
-            addHtml(strLabel);
+            addHtml(F("Command "));
+            addHtmlInt(varNr + 1);
+            addHtml(':');
             addHtml(F("<TD colspan=\"5\">")); // Use as much of available width (though limited to 500px by css)
             addTextBox(getPluginCustomArgName(rowCnt + 6), String(P016_data->CommandLines[varNr].Command), P16_Nchars - 1);
 
