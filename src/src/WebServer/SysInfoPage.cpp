@@ -426,7 +426,7 @@ void handle_sysinfo_Network() {
   {
     addHtml(toString(getConnectionProtocol()));
     addHtml(F(" (RSSI "));
-    addHtml(String(WiFi.RSSI()));
+    addHtmlInt(WiFi.RSSI());
     addHtml(F(" dBm)"));
   } else addHtml('-');
 

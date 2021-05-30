@@ -172,7 +172,11 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             addRowLabel(RGB.substring(i, i + 1));
             String id = F("p050_cal_");
             for (int j = 0; j < 3; j++) {
-              addHtml(String(static_cast<char>('a' + i)) + String(F("<sub>")) + String(j + 1) + String(F("</sub>")) + ':');
+              addHtml(String(static_cast<char>('a' + i)));
+              addHtml(F("<sub>"));
+              addHtmlInt(j + 1);
+              addHtml(F("</sub>"));
+              addHtml(':');
               addFloatNumberBox(id + static_cast<char>('a' + i) + '_' + String(j), P050_data->TransformationSettings.matrix[i][j], -255.999f, 255.999f);
             }
           }

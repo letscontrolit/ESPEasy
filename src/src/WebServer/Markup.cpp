@@ -332,13 +332,13 @@ void addRowLabelValue_copy(LabelType::Enum label) {
 void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size)
 {
     addHtml(F("<TR><TD colspan="));
-    addHtml(String(colspan));
+    addHtmlInt(colspan);
     addHtml(F("><H"));
-    addHtml(String(h_size));
+    addHtmlInt(h_size);
     addHtml('>');
     addHtml(label);
     addHtml(F("</H"));
-    addHtml(String(h_size));
+    addHtmlInt(h_size);
     addHtml(F("></TD></TR>"));
 }
 

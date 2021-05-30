@@ -75,7 +75,7 @@ void html_TR_TD_height(int height) {
   html_TR();
 
   addHtml(F("<TD HEIGHT=\""));
-  addHtml(String(height));
+  addHtmlInt(height);
   addHtml(F("\">"));
 }
 
@@ -99,7 +99,7 @@ void html_copyText_TD() {
   ++copyTextCounter;
 
   addHtml(F("<TD id='copyText_"));
-  addHtml(String(copyTextCounter));
+  addHtmlInt(copyTextCounter);
   addHtml(F("'>"));
 }
 
@@ -201,7 +201,7 @@ void html_table_header(const String& label, const String& helpButton, const Stri
 
   if (width > 0) {
     addHtml(F(" style='width:"));
-    addHtml(String(width));
+    addHtmlInt(width);
     addHtml(F("px;'"));
   }
   addHtml('>');
