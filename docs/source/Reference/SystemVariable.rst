@@ -74,10 +74,14 @@ More uses of these system variables can be seen in the rules section and formula
    * - ``%s_sunrise%``
      - 19296
      - Seconds since midnight of sunrise on current day, when NTP is active and coordinates set. 
+
+       Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
      -
    * - ``%m_sunrise%``
      - 321
      - Minutes since midnight of sunrise on current day, when NTP is active and coordinates set. 
+
+       Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
      - 
    * - ``%sunset%``
      - 22:03
@@ -86,10 +90,14 @@ More uses of these system variables can be seen in the rules section and formula
    * - ``%s_sunset%``
      - 78216
      - Seconds since midnight of sunset on current day, when NTP is active and coordinates set. 
+
+       Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
      - 
    * - ``%m_sunset%``
      - 1303
      - Minutes since midnight of sunset on current day, when NTP is active and coordinates set. 
+
+       Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
      - 
    * - ``%lcltime_am%``
      - 2020-03-16 1:23:54 AM
