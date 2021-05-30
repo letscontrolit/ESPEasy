@@ -80,10 +80,15 @@ Web_StreamingBuffer Web_StreamingBuffer::addFlashString(PGM_P str) {
   if (length == 0) { return *this; }
   flashStringData += length;
 
-  if ((this->buf.length() + length) > CHUNKED_BUFFER_SIZE) {
+  // FIXME TD-er: Not sure what happens, but streaming large flash chunks does cause allocation issues.
+  const bool stream_P = ESP.getFreeHeap() > 5000 && length < CHUNKED_BUFFER_SIZE;
+
+  if (stream_P && ((this->buf.length() + length) > CHUNKED_BUFFER_SIZE)) {
+    // Do not copy to the internal buffer, but stream immediately.
     flush();
     web_server.sendContent_P(str);
   } else {
+    // Copy to internal buffer and send in chunks
     unsigned int pos          = 0;
     int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
 
@@ -100,7 +105,6 @@ Web_StreamingBuffer Web_StreamingBuffer::addFlashString(PGM_P str) {
     }
     checkFull();
   }
-
   return *this;
 }
 
@@ -164,6 +168,7 @@ void Web_StreamingBuffer::startStream(bool json, const String& origin) {
   beforeTXRam  = initialRam;
   sentBytes    = 0;
   buf.clear();
+  buf.reserve(CHUNKED_BUFFER_SIZE);
   
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
@@ -198,6 +203,7 @@ void Web_StreamingBuffer::endStream() {
     if (buf.length() > 0) { sendContentBlocking(buf); }
     buf.clear();
     sendContentBlocking(buf);
+    web_server.client().flush(100);
     finalRam = ESP.getFreeHeap();
 
     /*
@@ -219,15 +225,16 @@ void Web_StreamingBuffer::endStream() {
 
 
 void Web_StreamingBuffer::sendContentBlocking(String& data) {
+  const uint32_t length   = data.length();
+#ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+    addLog(LOG_LEVEL_DEBUG_DEV, String(F("sendcontent free: ")) + ESP.getFreeHeap() + F(" chunk size:") + length);
+  }
+#endif // ifndef BUILD_NO_DEBUG
+  const uint32_t freeBeforeSend = ESP.getFreeHeap();
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendContentBlocking"));
   #endif
-  uint32_t freeBeforeSend = ESP.getFreeHeap();
-  const uint32_t length   = data.length();
-#ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_DEBUG_DEV, String("sendcontent free: ") + freeBeforeSend + " chunk size:" + length);
-#endif // ifndef BUILD_NO_DEBUG
-  freeBeforeSend = ESP.getFreeHeap();
 
   if (beforeTXRam > freeBeforeSend) {
     beforeTXRam = freeBeforeSend;
@@ -243,15 +250,16 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   if (length > 0) { web_server.sendContent(data); }
   web_server.sendContent("\r\n");
 #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
-  unsigned int timeout = 0;
+  unsigned int timeout = 1;
 
   if (freeBeforeSend < 5000) { timeout = 100; }
 
-  if (freeBeforeSend < 4000) { timeout = 1000; }
-  const uint32_t beginWait = millis();
+  if (freeBeforeSend < 4000) { timeout = 300; }
   web_server.sendContent(data);
 
-  while ((ESP.getFreeHeap() < freeBeforeSend) &&
+  data.clear();
+  const uint32_t beginWait = millis();
+  while ((!data.reserve(CHUNKED_BUFFER_SIZE) || (ESP.getFreeHeap() < 4000 /*freeBeforeSend*/ )) &&
          !timeOutReached(beginWait + timeout)) {
     if (ESP.getFreeHeap() < duringTXRam) {
       duringTXRam = ESP.getFreeHeap();
@@ -260,13 +268,12 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
     #ifndef BUILD_NO_RAM_TRACKER
     checkRAM(F("duringDataTX"));
     #endif
+
     delay(1);
   }
 #endif // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 
   sentBytes += length;
-  data.clear();
-  data.reserve(CHUNKED_BUFFER_SIZE);
   delay(0);
 }
 
