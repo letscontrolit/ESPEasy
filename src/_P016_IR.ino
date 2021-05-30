@@ -510,8 +510,8 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           event->String2 = output;
 
           // Check if this is a code we have a command for or we have to add
-            P016_data_struct *P016_data =
-          static_cast<P016_data_struct *>(getPluginTaskData(event->TaskIndex));
+          P016_data_struct *P016_data =
+                static_cast<P016_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if (nullptr != P016_data) {
             // convert result to uint64_t and 2x uint16_t
@@ -522,13 +522,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             String strCode = resultToHexidecimal(&results);
             if (strCode.length() <= P16_Cchars) {
               iCode += hexToULL(strCode);
-            // if (safe_strncpy(strCode, resultToHexidecimal(&results), P16_Cchars)) {
-              bool bAddNewCode = bitRead(PCONFIG_LONG(0), P016_BitAddNewCode);
-              if (bAddNewCode && bEnableIRcodeAdding) {
+              if (bitRead(PCONFIG_LONG(0), P016_BitAddNewCode) && bEnableIRcodeAdding) {
                 P016_data->AddCode(iCode, iCodeDecodeType, iCodeFlags);                                  // add code if not saved so far
               }
-              bool bExecuteCmd = bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd);
-              if (bExecuteCmd) {
+              if (bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd)) {
                 P016_data->ExecuteCode(iCode, iCodeDecodeType, iCodeFlags);                              // execute command for code if available
               }
             }

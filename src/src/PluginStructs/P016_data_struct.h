@@ -6,7 +6,9 @@
 
 # include <IRremoteESP8266.h>
 
-# define PLUGIN_016_DEBUG      // additional debug messages in the log
+# ifndef BUILD_NO_DEBUG
+#  define PLUGIN_016_DEBUG // additional debug messages in the log
+# endif // ifndef BUILD_NO_DEBUG
 
 // bit definition in PCONFIG_LONG(0)
 # define P016_BitAddNewCode  0 // Add automatically new code into Code of the command structure
