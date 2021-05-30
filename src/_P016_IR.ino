@@ -284,10 +284,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           html_table_header(F("&nbsp;#&nbsp;"));
           html_table_header(F("Decode type"));
           html_table_header(F("Repeat"));
-          html_table_header(F("Code"));
+          html_table_header(F("Code [Hex]"));
           html_table_header(F("Alt. Decode type"));
           html_table_header(F("Repeat"));
-          html_table_header(F("Alt. Code"));
+          html_table_header(F("Alt. Code [Hex]"));
 
           int rowCnt = 0;
 
