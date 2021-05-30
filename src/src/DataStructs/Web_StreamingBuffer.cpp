@@ -203,7 +203,12 @@ void Web_StreamingBuffer::endStream() {
     if (buf.length() > 0) { sendContentBlocking(buf); }
     buf.clear();
     sendContentBlocking(buf);
+    #ifdef ESP8266
     web_server.client().flush(100);
+    #endif
+    #ifdef ESP32
+    web_server.client().flush();
+    #endif
     finalRam = ESP.getFreeHeap();
 
     /*
