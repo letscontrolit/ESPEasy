@@ -64,11 +64,13 @@ bool Internal_GPIO_pulseHelper::init()
     pulseModeData.lastCheckState     = HIGH;
 
     // initialize internal variables for PULSE mode handling
+    #ifdef PULSE_STATISTIC
     resetStatsErrorVars();
     ISRdata.Step0counter         = ISRdata.pulseTotalCounter;
     pulseModeData.Step1counter   = ISRdata.pulseTotalCounter;
     pulseModeData.Step2OKcounter = ISRdata.pulseTotalCounter;
     pulseModeData.Step3OKcounter = ISRdata.pulseTotalCounter;
+    #endif
 
     const int intPinMode = static_cast<int>(config.interruptPinMode) & MODE_INTERRUPT_MASK;
     attachInterruptArg(

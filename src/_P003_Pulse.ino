@@ -166,7 +166,9 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         static_cast<P003_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P003_data) {
+        #ifdef PULSE_STATISTIC
         P003_data->pulseHelper.setStatsLogLevel(P003_PULSE_STATS_DEFAULT_LOG_LEVEL);
+        #endif
 
         // Restore the total counter from the unused 4th UserVar value.
         // It may be using a formula to generate the output, which makes it impossible to restore
