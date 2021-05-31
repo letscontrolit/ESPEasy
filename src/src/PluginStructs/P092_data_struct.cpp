@@ -630,9 +630,11 @@ void P092_data_struct::Plugin_092_StartReceiving(taskIndex_t taskindex) {
   DLbus_Data->StartReceiving();
   uint32_t start = millis();
 
-  String log = F("P092_receiving ... TaskIndex:");
-  log += taskindex;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("P092_receiving ... TaskIndex:");
+    log += taskindex;
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   while ((timePassedSince(start) < 100) && (DLbus_Data->ISR_PulseCount == 0)) {
     // wait for first pulse received (timeout 100ms)

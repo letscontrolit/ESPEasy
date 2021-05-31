@@ -133,6 +133,10 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SSID:              value = (WiFiEventData.WiFiDisconnected()) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
+      case SUNRISE_S:         value = getValue(LabelType::SUNRISE_S); break;
+      case SUNSET_S:          value = getValue(LabelType::SUNSET_S); break;
+      case SUNRISE_M:         value = getValue(LabelType::SUNRISE_M); break;
+      case SUNSET_M:          value = getValue(LabelType::SUNSET_M); break;
       case SYSBUILD_DATE:     value = get_build_date(); break;
       case SYSBUILD_DESCR:    value = getValue(LabelType::BUILD_DESC); break;
       case SYSBUILD_FILENAME: value = getValue(LabelType::BINARY_FILENAME); break;
@@ -294,6 +298,10 @@ const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enum
     case Enum::SSID:            return F("%ssid%");
     case Enum::SUNRISE:         return F("%sunrise");
     case Enum::SUNSET:          return F("%sunset");
+    case Enum::SUNRISE_S:       return F("%s_sunrise%");
+    case Enum::SUNSET_S:        return F("%s_sunset%");
+    case Enum::SUNRISE_M:       return F("%m_sunrise%");
+    case Enum::SUNSET_M:        return F("%m_sunset%");
     case Enum::SYSBUILD_DATE:   return F("%sysbuild_date%");
     case Enum::SYSBUILD_DESCR:  return F("%sysbuild_desc%");
     case Enum::SYSBUILD_FILENAME:  return F("%sysbuild_filename%");

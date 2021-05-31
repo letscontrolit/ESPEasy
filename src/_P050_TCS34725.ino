@@ -172,7 +172,11 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             addRowLabel(RGB.substring(i, i + 1));
             String id = F("p050_cal_");
             for (int j = 0; j < 3; j++) {
-              addHtml(String(static_cast<char>('a' + i)) + String(F("<sub>")) + String(j + 1) + String(F("</sub>")) + ':');
+              addHtml(String(static_cast<char>('a' + i)));
+              addHtml(F("<sub>"));
+              addHtmlInt(j + 1);
+              addHtml(F("</sub>"));
+              addHtml(':');
               addFloatNumberBox(id + static_cast<char>('a' + i) + '_' + String(j), P050_data->TransformationSettings.matrix[i][j], -255.999f, 255.999f);
             }
           }
@@ -334,27 +338,29 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         }
         UserVar[event->BaseVarIndex + 3] = value4;
 
-        String log = F("TCS34725: ");
-        switch (PCONFIG(3)) {
-          case 0:
-          case 1:
-            log += F("Color Temp (K): ");
-            break;
-          case 2:
-            log += F("Lux : ");
-            break;
-          case 3:
-            log += F("Clear : ");
-            break;
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("TCS34725: ");
+          switch (PCONFIG(3)) {
+            case 0:
+            case 1:
+              log += F("Color Temp (K): ");
+              break;
+            case 2:
+              log += F("Lux : ");
+              break;
+            case 3:
+              log += F("Clear : ");
+              break;
+          }
+          log += formatUserVarNoCheck(event->TaskIndex, 3);
+          log += F(" R: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
+          log += F(" G: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 1);
+          log += F(" B: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 2);
+          addLog(LOG_LEVEL_INFO, log);
         }
-        log += formatUserVarNoCheck(event->TaskIndex, 3);
-        log += F(" R: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 0);
-        log += F(" G: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 1);
-        log += F(" B: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 2);
-        addLog(LOG_LEVEL_INFO, log);
 
 #ifdef P050_OPTION_RGB_EVENTS
         // First RGB events
@@ -420,7 +426,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
                 RuleEvent = EMPTY_STRING;
                 break;
               }
-              if (RuleEvent.length() != 0) {
+              if (!RuleEvent.isEmpty()) {
                 eventQueue.add(RuleEvent);
               }
             }
@@ -456,7 +462,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
               RuleEvent = EMPTY_STRING;
               break;
             }
-            if (RuleEvent.length() != 0) {
+            if (!RuleEvent.isEmpty()) {
               eventQueue.add(RuleEvent);
             }
           }

@@ -107,7 +107,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 
         if (deviceName.equals(F("int"))) {
           nr_decimals = 0;
-        } else if (format.length() != 0)
+        } else if (!format.isEmpty())
         {
           // There is some formatting here, so do not throw away decimals
           trimTrailingZeros = false;
@@ -550,7 +550,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       String taskDeviceName = getTaskDeviceName(taskIndex);
 
-      if (taskDeviceName.length() != 0)
+      if (!taskDeviceName.isEmpty())
       {
         // Use entered taskDeviceName can have any case, so compare case insensitive.
         if (deviceName.equalsIgnoreCase(taskDeviceName))

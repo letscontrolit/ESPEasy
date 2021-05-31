@@ -55,7 +55,7 @@ void handle_filelist_json() {
   }
   int endIdx = startIdx + pageSize - 1;
 
-  addHtml("[{");
+  addHtml(F("[{"));
   bool firstentry = true;
   # if defined(ESP32)
   File root  = ESPEASY_FS.open("/");
@@ -72,7 +72,7 @@ void handle_filelist_json() {
         if (firstentry) {
           firstentry = false;
         } else {
-          addHtml(",{");
+          addHtml(F(",{"));
         }
         stream_next_json_object_value(F("fileName"), String(file.name()));
         stream_next_json_object_value(F("index"),    String(startIdx));
@@ -99,7 +99,7 @@ void handle_filelist_json() {
     if (firstentry) {
       firstentry = false;
     } else {
-      addHtml(",{");
+      addHtml(F(",{"));
     }
 
     stream_next_json_object_value(F("fileName"), String(dir.fileName()));
@@ -124,7 +124,7 @@ void handle_filelist_json() {
   }
 
   # endif // if defined(ESP8266)
-  addHtml("]");
+  addHtml(']');
   TXBuffer.endStream();
 }
 
