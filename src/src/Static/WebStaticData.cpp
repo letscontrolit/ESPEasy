@@ -23,7 +23,7 @@ void serve_CSS() {
     addHtml(F("<style>"));
 
     // Send CSS in chunks
-    TXBuffer += DATA_ESPEASY_DEFAULT_MIN_CSS;
+    TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS));
     addHtml(F("</style>"));
     return;
     #endif
@@ -80,32 +80,32 @@ void serve_JS(JSfiles_e JSfile) {
         switch (JSfile) {
           case JSfiles_e::UpdateSensorValuesDevicePage:
             #ifdef WEBSERVER_DEVICES
-            TXBuffer += DATA_UPDATE_SENSOR_VALUES_DEVICE_PAGE_JS;
+            TXBuffer.addFlashString((PGM_P)FPSTR(DATA_UPDATE_SENSOR_VALUES_DEVICE_PAGE_JS));
             #endif
             break;
           case JSfiles_e::FetchAndParseLog:
             #ifdef WEBSERVER_LOG
-            TXBuffer += DATA_FETCH_AND_PARSE_LOG_JS;
+            TXBuffer.addFlashString((PGM_P)FPSTR(DATA_FETCH_AND_PARSE_LOG_JS));
             #endif
             break;
           case JSfiles_e::SaveRulesFile:
             #ifdef WEBSERVER_RULES
-            TXBuffer += jsSaveRules;
+            TXBuffer.addFlashString((PGM_P)FPSTR(jsSaveRules));
             #endif
             break;
           case JSfiles_e::GitHubClipboard:
             #ifdef WEBSERVER_GITHUB_COPY
-            TXBuffer += DATA_GITHUB_CLIPBOARD_JS;
+            TXBuffer.addFlashString((PGM_P)FPSTR(DATA_GITHUB_CLIPBOARD_JS));
             #endif
             break;
           case JSfiles_e::Reboot:
-            TXBuffer += DATA_REBOOT_JS;
+            TXBuffer.addFlashString((PGM_P)FPSTR(DATA_REBOOT_JS));
             break;
           case JSfiles_e::Toasting:
-            TXBuffer += jsToastMessageBegin;
+            TXBuffer.addFlashString((PGM_P)FPSTR(jsToastMessageBegin));
             // we can push custom messages here in future releases...
             addHtml(F("Submitted"));
-            TXBuffer += jsToastMessageEnd;
+            TXBuffer.addFlashString((PGM_P)FPSTR(jsToastMessageEnd));
             break;
 
         }

@@ -153,6 +153,7 @@ void hardwareInit()
     }
     else
     {
+      SD.end();
       addLog(LOG_LEVEL_ERROR, F("SD   : Init failed"));
     }
   }

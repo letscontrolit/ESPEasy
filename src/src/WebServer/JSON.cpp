@@ -117,9 +117,9 @@ void handle_json()
   bool showTaskDetails     = true;
   bool showNodes           = true;
   {
-    String view = webArg("view");
+    const String view = webArg("view");
 
-    if (view.length() != 0) {
+    if (!view.isEmpty()) {
       if (view == F("sensorupdate")) {
         showSystem = false;
         showWifi   = false;
@@ -271,7 +271,7 @@ void handle_json()
         if (it->second.ip[0] != 0)
         {
           if (comma_between) {
-            addHtml(",");
+            addHtml(',');
           } else {
             comma_between = true;
             addHtml(F("\"nodes\":[\n")); // open json array if >0 nodes
@@ -433,9 +433,9 @@ void handle_json()
       stream_last_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
 
       if (TaskIndex != lastActiveTaskIndex) {
-        addHtml(",");
+        addHtml(',');
       }
-      addHtml("\n");
+      addHtml('\n');
     }
   }
 
@@ -561,7 +561,7 @@ void stream_to_json_value(const String& value) {
   bool isNum  = isNumerical(value, detectedType);
   bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
-  if (!isBool && ((value.length() == 0) || !isNum || mustConsiderAsString(detectedType))) {
+  if (!isBool && ((value.isEmpty()) || !isNum || mustConsiderAsString(detectedType))) {
     // Either empty, not a numerical or a BIN/HEX notation.
     addHtml('\"');
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {

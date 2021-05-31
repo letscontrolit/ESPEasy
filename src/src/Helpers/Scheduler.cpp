@@ -1101,8 +1101,10 @@ void ESPEasy_Scheduler::process_system_event_queue() {
 
   switch (ptr_type) {
     case PluginPtrType::TaskPlugin:
-      LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
-      Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
+      if (validDeviceIndex(Index)) {
+        LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
+        Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
+      }
       break;
     case PluginPtrType::ControllerPlugin:
       CPluginCall(Index, static_cast<CPlugin::Function>(Function), &ScheduledEventQueue.front().event, tmpString);

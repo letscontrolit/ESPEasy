@@ -35,7 +35,7 @@ void handle_advanced() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  if (webArg(F("edit")).length() != 0)
+  if (!webArg(F("edit")).isEmpty())
   {
 //    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
     Settings.IP_Octet     = webArg(F("ip")).toInt();

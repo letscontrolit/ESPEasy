@@ -42,7 +42,7 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
   isHidden = WiFi.isHidden(networkItem);
   #endif // ifdef ESP8266
   #ifdef ESP32
-  isHidden = ssid.length() == 0;
+  isHidden = ssid.isEmpty();
   #endif // ifdef ESP32
   last_seen = millis();
 }
@@ -109,7 +109,7 @@ void WiFi_AP_Candidate::setBSSID(const uint8_t *bssid_c) {
 
 bool WiFi_AP_Candidate::usable() const {
   // Allow for empty pass
-  // if (key.length() == 0) return false;
+  // if (key.isEmpty()) return false;
   if (isEmergencyFallback) {
     int allowedUptimeMinutes = 10;
     #ifdef CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME
@@ -122,7 +122,7 @@ bool WiFi_AP_Candidate::usable() const {
       return false;
     }
   }
-  if (!isHidden && (ssid.length() == 0)) { return false; }
+  if (!isHidden && (ssid.isEmpty())) { return false; }
   return true;
 }
 

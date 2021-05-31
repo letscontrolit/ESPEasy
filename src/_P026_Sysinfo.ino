@@ -166,7 +166,9 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       }
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SYS  : ");
+        String log;
+        log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1));
+        log = F("SYS  : ");
 
         for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
           if (i != 0) {

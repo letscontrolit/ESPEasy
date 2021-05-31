@@ -72,7 +72,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
             } else {
               parameter = parseStringKeepCase(Line, i + 1);
             }
-            done = parameter.length() == 0;
+            done = parameter.isEmpty();
 
             if (!done) {
               if (i <= nrArguments) {

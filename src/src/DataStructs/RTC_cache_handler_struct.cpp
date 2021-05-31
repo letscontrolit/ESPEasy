@@ -77,7 +77,7 @@ bool RTC_cache_handler_struct::peek(uint8_t *data, unsigned int size) {
         fname = createCacheFilename(peekfilenr);
       }
 
-      if (fname.length() == 0) { return false; }
+      if (fname.isEmpty()) { return false; }
       fp = tryOpenFile(fname, "r");
     }
 

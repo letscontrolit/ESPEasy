@@ -54,6 +54,8 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   if (Settings.TaskDeviceEnabled[taskIndex]) {
     Plugin_task_data[taskIndex]                     = data;
     Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
+  } else if (data != nullptr) {
+    delete data;
   }
 }
 
