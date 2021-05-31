@@ -409,7 +409,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           String val_Color = tmpString.substring(idx2+1, idx3);
           String val_Bright = tmpString.substring(idx3+1, idx4);
 
-          if (val_Type != "") {
+          if (!val_Type.isEmpty()) {
              if (val_Type.toInt() > -1 && val_Type.toInt() < 8) {
                 PCONFIG(4) = val_Type.toInt();     // Type
                 Candle_type = (SimType)PCONFIG(4);
@@ -423,7 +423,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
              }
           }
 
-          if (val_Bright != "") {
+          if (!val_Bright.isEmpty()) {
              if (val_Bright.toInt() > -1 && val_Bright.toInt() < 256) {
                 PCONFIG(3) = val_Bright.toInt();     // Brightness
                 Candle_bright = PCONFIG(3);
@@ -437,7 +437,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
              }
           }
 
-          if (val_Color != "") {
+          if (!val_Color.isEmpty()) {
             long number = strtol( &val_Color[0], NULL, 16);
             // Split RGB to r, g, b values
             byte r = number >> 16;

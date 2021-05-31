@@ -481,7 +481,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       state.clock = -1;
 
       String description = IRAcUtils::resultAcToString(&results);
-      if (description != "") {
+      if (!description.isEmpty()) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           // If we got a human-readable description of the message, display it.
           String log;

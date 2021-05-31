@@ -242,7 +242,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
         String paramDirection = parseString(tmpString, 3); // Direction, Forward/Backward/Stop
         String paramSpeed     = parseString(tmpString, 4); // Speed, 0-100
 
-        if ((paramMotor == "") && (paramDirection == "") && (paramSpeed == "")) {
+        if ((paramMotor.isEmpty()) && (paramDirection.isEmpty()) && (paramSpeed.isEmpty())) {
           switch (Plugin_079_MotorShield_type) {
             case P079_BoardType::WemosMotorshield:
             # ifdef VERBOSE_P079
@@ -277,7 +277,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
             motor_number = paramMotor.toInt();
           }
           else {
-            if (paramMotor == "") {
+            if (paramMotor.isEmpty()) {
               paramMotor = '?';
             }
             motor_number = 0;
@@ -305,7 +305,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
             parse_error    = true;
           }
 
-          if (paramSpeed == "") {
+          if (paramSpeed.isEmpty()) {
             switch (motor_dir) {
               case MOTOR_STATES::MOTOR_STOP:
               case MOTOR_STATES::MOTOR_STBY:
