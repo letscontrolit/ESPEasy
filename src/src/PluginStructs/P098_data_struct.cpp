@@ -36,23 +36,21 @@ bool P098_data_struct::begin()
     stop();
     state = P098_data_struct::State::Idle;
 
-    int interruptPinMode = 0;
-
-    if (setPinMode(_config.limitA, interruptPinMode)) {
+    if (setPinMode(_config.limitA)) {
       attachInterruptArg(
         digitalPinToInterrupt(_config.limitA.gpio),
         reinterpret_cast<void (*)(void *)>(ISRlimitA),
-        this, interruptPinMode);
+        this, CHANGE);
     }
 
-    if (setPinMode(_config.limitB, interruptPinMode)) {
+    if (setPinMode(_config.limitB)) {
       attachInterruptArg(
         digitalPinToInterrupt(_config.limitB.gpio),
         reinterpret_cast<void (*)(void *)>(ISRlimitB),
-        this, interruptPinMode);
+        this, CHANGE);
     }
 
-    if (setPinMode(_config.encoder, interruptPinMode)) {
+    if (setPinMode(_config.encoder)) {
       attachInterruptArg(
         digitalPinToInterrupt(_config.encoder.gpio),
         reinterpret_cast<void (*)(void *)>(ISRencoder),
@@ -66,19 +64,19 @@ bool P098_data_struct::begin()
 bool P098_data_struct::loop()
 {
   const State old_state(state);
+  check_limit_switch(_config.limitA, limitA);
+  check_limit_switch(_config.limitB, limitB);
 
   switch (state) {
     case P098_data_struct::State::Idle:
       return true;
     case P098_data_struct::State::RunFwd:
     {
-      release_limit_switch(_config.limitA, limitA, position);
       checkLimit(limitB);
       break;
     }
     case P098_data_struct::State::RunRev:
     {
-      release_limit_switch(_config.limitB, limitB, position);
       checkLimit(limitA);
       break;
     }
@@ -94,7 +92,7 @@ bool P098_data_struct::loop()
 
 bool P098_data_struct::homePosSet() const
 {
-  return limitA.positionSet;
+  return limitA.switchposSet;
 }
 
 bool P098_data_struct::canRun()
@@ -117,6 +115,7 @@ bool P098_data_struct::canRun()
 void P098_data_struct::findHome()
 {
   pos_dest = INT_MIN;
+  limitA.switchposSet = false;
   startMoving();
 }
 
@@ -124,6 +123,7 @@ void P098_data_struct::moveForward(int steps)
 {
   if (steps <= 0) {
     pos_dest = INT_MAX;
+    limitB.switchposSet = false;
   } else {
     pos_dest = position + steps;
   }
@@ -182,7 +182,7 @@ void P098_data_struct::startMoving()
 
 void P098_data_struct::checkLimit(volatile P098_limit_switch_state& switch_state)
 {
-  if (switch_state.triggered) {
+  if (switch_state.state == P098_limit_switch_state::State::High) {
     stop();
     state = P098_data_struct::State::StopLimitSw;
     return;
@@ -222,50 +222,96 @@ void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, byte sta
     PIN_MODE_OUTPUT);
 }
 
-bool P098_data_struct::setPinMode(const P098_GPIO_config& gpio_config, int& interruptPinMode)
+bool P098_data_struct::setPinMode(const P098_GPIO_config& gpio_config)
 {
   if (checkValidPortRange(GPIO_PLUGIN_ID, gpio_config.gpio)) {
     pinMode(gpio_config.gpio, gpio_config.pullUp ? INPUT_PULLUP : INPUT);
-    interruptPinMode = gpio_config.inverted ? FALLING : RISING;
     return true;
   }
   return false;
 }
 
-void P098_data_struct::release_limit_switch(
+void P098_data_struct::check_limit_switch(
   const P098_GPIO_config          & gpio_config,
-  volatile P098_limit_switch_state& switch_state,
-  int                               position)
+  volatile P098_limit_switch_state& switch_state)
 {
-  if (switch_state.triggered) {
-    if (!gpio_config.readState()) {
-      if (std::abs(switch_state.triggerpos - position) > P098_LIMIT_SWITCH_TRIGGERPOS_MARGIN) {
-        switch_state.triggered = false;
+  if (switch_state.state == P098_limit_switch_state::State::TriggerWaitBounce) {
+    if (switch_state.lastChanged != 0 && timePassedSince(switch_state.lastChanged) > gpio_config.debounceTime) {
+      if (gpio_config.readState()) {
+        switch_state.state = P098_limit_switch_state::State::High;
+        if (!switch_state.switchposSet) {
+          switch_state.switchpos = switch_state.triggerpos;
+          switch_state.switchposSet = true;
+        }
       }
     }
   }
 }
 
-void ICACHE_RAM_ATTR P098_data_struct::ISRlimitA(P098_data_struct *self)
+void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
+    const P098_GPIO_config          & gpio_config,
+    volatile P098_limit_switch_state& switch_state,
+    int                               position)
 {
-  if (!self->limitA.positionSet) {
-    if (std::abs(self->limitA.triggerpos - self->position) > P098_LIMIT_SWITCH_TRIGGERPOS_MARGIN) {
-      self->limitA.triggered  = true;
-      self->limitA.positionSet = true;
-      self->limitA.triggerpos = self->position;
+  const bool pinState = gpio_config.readState();
+  const P098_limit_switch_state::State oldState = switch_state.state;
+  switch (oldState) {
+    case P098_limit_switch_state::State::Low:
+      if (pinState) {
+        switch_state.state = P098_limit_switch_state::State::TriggerWaitBounce;
+      }
+      break;
+    case P098_limit_switch_state::State::TriggerWaitBounce:
+      if (switch_state.lastChanged != 0 && timePassedSince(switch_state.lastChanged) < gpio_config.debounceTime) {
+        if (!pinState) {
+          switch_state.state = P098_limit_switch_state::State::Low;
+        } else {
+          // Apparently we missed a (logic) falling edge, thus reset position and timestamp.
+          switch_state.lastChanged = millis();
+          switch_state.triggerpos = position;
+        }
+      } else {
+        if (pinState) {
+          // We can accept the stored trigger
+          switch_state.state = P098_limit_switch_state::State::High;
+        }
+      }
+      break;
+    case P098_limit_switch_state::State::High:
+      if (!pinState) {
+        switch_state.state = P098_limit_switch_state::State::Low;
+      }
+      break;
+  }
+  if (oldState != switch_state.state) {
+    switch (switch_state.state) {
+      case P098_limit_switch_state::State::Low:
+        switch_state.triggerpos  = 0;
+        switch_state.lastChanged = 0;
+        break;
+      case P098_limit_switch_state::State::TriggerWaitBounce:
+        switch_state.lastChanged = millis();
+        switch_state.triggerpos = position;
+        break;
+      case P098_limit_switch_state::State::High:
+        if (!switch_state.switchposSet) {
+          switch_state.switchpos = switch_state.triggerpos;
+          switch_state.switchposSet = true;
+        }
+        break;  
     }
   }
 }
 
+
+void ICACHE_RAM_ATTR P098_data_struct::ISRlimitA(P098_data_struct *self)
+{
+  process_limit_switch(self->_config.limitA, self->limitA, self->position);
+}
+
 void ICACHE_RAM_ATTR P098_data_struct::ISRlimitB(P098_data_struct *self)
 {
-  if (!self->limitB.positionSet) {
-    if (std::abs(self->limitB.triggerpos - self->position) > P098_LIMIT_SWITCH_TRIGGERPOS_MARGIN) {
-      self->limitB.triggered   = true;
-      self->limitB.positionSet = true;
-      self->limitB.triggerpos  = self->position;
-    }
-  }
+  process_limit_switch(self->_config.limitB, self->limitB, self->position);
 }
 
 void ICACHE_RAM_ATTR P098_data_struct::ISRencoder(P098_data_struct *self)

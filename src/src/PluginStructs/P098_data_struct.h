@@ -21,6 +21,7 @@ struct P098_GPIO_config {
   }
 
   int  gpio     = -1;
+  int  debounceTime = 100;
   bool pullUp   = false;
   bool inverted = false;
 };
@@ -51,15 +52,26 @@ struct P098_config_struct {
 };
 
 struct P098_limit_switch_state {
-  void clearTriggerPos() {
-    triggerpos  = 0;
-    positionSet = false;
-  }
+  // States:
+  // - Low              : triggerpos 0, logic state = low
+  // - TriggerWaitBounce: Stored triggerpos is preliminary, logic state = high
+  // - TriggerRejected  : logic state = low within bounce timeout
+  //                   -> clear triggerpos & clear timestamp
+  //                   -> new state: Low
+  // - High             : logic state was high for minimal debounce duration
+  //                      triggerpos is accepted.
+  //                      May also store the position of the limit switch.
+  enum class State {
+    Low,
+    TriggerWaitBounce,
+    High
+  };
 
-  unsigned long triggerpos  = 0;
+  int triggerpos  = 0;
+  int switchpos   = 0;
   unsigned long lastChanged = 0;
-  bool          triggered   = false;
-  bool          positionSet = false;
+  State state = State::Low;
+  bool switchposSet = false;
 };
 struct P098_data_struct : public PluginTaskData_base {
   enum class State {
@@ -117,16 +129,18 @@ private:
   void        startMoving();
 
   void        checkLimit(volatile P098_limit_switch_state& switch_state);
-
   void        checkPosition();
 
   static void setPinState(const P098_GPIO_config& gpio_config,
                           byte                    state);
 
-  static bool setPinMode(const P098_GPIO_config& gpio_config,
-                         int                   & interruptPinMode);
+  static bool setPinMode(const P098_GPIO_config& gpio_config);
 
-  static void release_limit_switch(
+  static void check_limit_switch(
+    const P098_GPIO_config          & gpio_config,
+    volatile P098_limit_switch_state& switch_state);
+
+  static void process_limit_switch(
     const P098_GPIO_config          & gpio_config,
     volatile P098_limit_switch_state& switch_state,
     int                               position);

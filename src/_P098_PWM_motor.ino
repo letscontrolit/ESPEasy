@@ -25,6 +25,8 @@
 # ifdef ESP32
 #  define P098_ANALOG_GPIO    PCONFIG(3)
 # endif // ifdef ESP32
+# define P098_LIMIT_SWA_DEBOUNCE PCONFIG(4)
+# define P098_LIMIT_SWB_DEBOUNCE PCONFIG(5)
 
 
 # define P098_FLAGBIT_LIM_A_PULLUP         0
@@ -84,6 +86,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
     {
       P098_LIMIT_SWA_GPIO = -1;
       P098_LIMIT_SWB_GPIO = -1;
+      P098_LIMIT_SWA_DEBOUNCE = 100;
+      P098_LIMIT_SWB_DEBOUNCE = 100;      
       P098_MOTOR_CONTROL  = 0; // No PWM
       P098_PWM_FREQ       = 1000;
       # ifdef ESP32
@@ -99,13 +103,6 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Motor Rev Inverted"), F("mot_rev_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_REV_INVERTED));
       addFormCheckBox(F("Encoder Pull-Up"),    F("enc_pu"),      bitRead(P098_FLAGS, P098_FLAGBIT_ENC_IN_PULLUP));
 
-      addFormPinSelect(formatGpioName_input_optional(F("Limit A")), F("limit_a"), P098_LIMIT_SWA_GPIO);
-      addFormCheckBox(F("Limit A Pull-Up"),  F("limit_a_pu"),  bitRead(P098_FLAGS, P098_FLAGBIT_LIM_A_PULLUP));
-      addFormCheckBox(F("Limit A Inverted"), F("limit_a_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_LIM_A_INVERTED));
-
-      addFormPinSelect(formatGpioName_input_optional(F("Limit B")), F("limit_b"), P098_LIMIT_SWB_GPIO);
-      addFormCheckBox(F("Limit B Pull-Up"),  F("limit_b_pu"),  bitRead(P098_FLAGS, P098_FLAGBIT_LIM_B_PULLUP));
-      addFormCheckBox(F("Limit B Inverted"), F("limit_b_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_LIM_B_INVERTED));
       {
         # define P098_PWM_MODE_TYPES  static_cast<int>(P098_config_struct::PWM_mode_type::MAX_TYPE)
         String options[P098_PWM_MODE_TYPES];
@@ -127,6 +124,23 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       # endif // ifdef ESP32
 
 
+      addFormSubHeader(F("Limit Switches"));
+
+      addFormPinSelect(formatGpioName_input_optional(F("Limit A")), F("limit_a"), P098_LIMIT_SWA_GPIO);
+      addFormNumericBox(F("Limit A Debounce"), F("limit_a_debounce"), P098_LIMIT_SWA_DEBOUNCE, 0, 1000);
+      addUnit(F("ms"));
+      addFormCheckBox(F("Limit A Pull-Up"),  F("limit_a_pu"),  bitRead(P098_FLAGS, P098_FLAGBIT_LIM_A_PULLUP));
+      addFormCheckBox(F("Limit A Inverted"), F("limit_a_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_LIM_A_INVERTED));
+
+      addFormSeparator(2);
+
+      addFormPinSelect(formatGpioName_input_optional(F("Limit B")), F("limit_b"), P098_LIMIT_SWB_GPIO);
+      addFormCheckBox(F("Limit B Pull-Up"),  F("limit_b_pu"),  bitRead(P098_FLAGS, P098_FLAGBIT_LIM_B_PULLUP));
+      addFormCheckBox(F("Limit B Inverted"), F("limit_b_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_LIM_B_INVERTED));
+      addFormNumericBox(F("Limit B Debounce"), F("limit_b_debounce"), P098_LIMIT_SWB_DEBOUNCE, 0, 1000);
+      addUnit(F("ms"));
+
+
       success = true;
       break;
     }
@@ -135,6 +149,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
     {
       P098_LIMIT_SWA_GPIO = getFormItemInt(F("limit_a"));
       P098_LIMIT_SWB_GPIO = getFormItemInt(F("limit_b"));
+      P098_LIMIT_SWA_DEBOUNCE = getFormItemInt(F("limit_a_debounce"));
+      P098_LIMIT_SWB_DEBOUNCE = getFormItemInt(F("limit_b_debounce"));
 
       P098_MOTOR_CONTROL = getFormItemInt(F("p098_motor_contr"));
       P098_PWM_FREQ      = getFormItemInt(F("p098_pwm_freq"));
@@ -170,6 +186,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       config.encoder.gpio  = CONFIG_PIN3;
       config.limitA.gpio   = P098_LIMIT_SWA_GPIO;
       config.limitB.gpio   = P098_LIMIT_SWB_GPIO;
+      config.limitA.debounceTime = P098_LIMIT_SWA_DEBOUNCE;
+      config.limitB.debounceTime = P098_LIMIT_SWB_DEBOUNCE;
       # ifdef ESP32
       config.gpio_analogIn = P098_ANALOG_GPIO;
       # endif // ifdef ESP32
