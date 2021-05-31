@@ -93,7 +93,7 @@ bool safeReadStringUntil(Stream     & input,
 String get_auth_header(const String& user, const String& pass) {
   String authHeader = "";
 
-  if ((user.length() != 0) && (pass.length() != 0)) {
+  if ((!user.isEmpty()) && (!pass.isEmpty())) {
     String auth = user;
     auth       += ":";
     auth       += pass;
@@ -634,6 +634,6 @@ void setControllerPass(controllerIndex_t controller_idx, const ControllerSetting
 
 bool hasControllerCredentialsSet(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
 {
-  return getControllerUser(controller_idx, ControllerSettings).length() != 0 &&
-         getControllerPass(controller_idx, ControllerSettings).length() != 0;
+  return !getControllerUser(controller_idx, ControllerSettings).isEmpty() &&
+         !getControllerPass(controller_idx, ControllerSettings).isEmpty();
 }

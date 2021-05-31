@@ -373,7 +373,7 @@ void P087_html_show_stats(struct EventStruct *event) {
     chksumStats += error;
     addHtml(chksumStats);
     addRowLabel(F("Length Last Sentence"));
-    addHtml(String(length_last));
+    addHtmlInt(length_last);
   }
 }
 

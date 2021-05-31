@@ -44,7 +44,7 @@ void handle_login() {
   html_end_table();
   html_end_form();
 
-  if (webrequest.length() != 0)
+  if (!webrequest.isEmpty())
   {
     char command[80];
     command[0] = 0;
