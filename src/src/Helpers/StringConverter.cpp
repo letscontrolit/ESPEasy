@@ -415,7 +415,7 @@ String to_json_object_value(const String& object, const String& value) {
   wrap_String(object, F("\""), result);
   result += F(":");
 
-  if (value.length() == 0) {
+  if (value.isEmpty()) {
     // Empty string
     result += F("\"\"");
     return result;
@@ -918,7 +918,7 @@ bool getConvertArgumentString(const String& marker,
 
   argumentString = s.substring(startIndexArgument, endIndex);
 
-  if (argumentString.length() == 0) { return false; }
+  if (argumentString.isEmpty()) { return false; }
   ++endIndex; // Must also strip ')' from the original string.
   return true;
 }

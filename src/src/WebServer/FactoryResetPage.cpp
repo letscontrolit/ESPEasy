@@ -181,7 +181,7 @@ void handle_factoryreset_json() {
     error = SaveSettings();
   }
 
-  if (error.length() == 0) {
+  if (error.isEmpty()) {
     error = F("ok");
   }
 

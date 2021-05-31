@@ -241,6 +241,13 @@ void addUnit(const String& unit)
   addHtml(']');
 }
 
+void addUnit(char unit)
+{
+  addHtml(F(" ["));
+  addHtml(unit);
+  addHtml(']');
+}
+
 void addRowLabel_tr_id(const __FlashStringHelper * label, const __FlashStringHelper * id)
 {
   addRowLabel_tr_id(String(label), String(id));
@@ -278,7 +285,7 @@ void addRowLabel(const String& label, const String& id)
     html_TR_TD();
   }
 
-  if (label.length() != 0) {
+  if (!label.isEmpty()) {
     addHtml(label);
     addHtml(':');
   }
@@ -325,13 +332,13 @@ void addRowLabelValue_copy(LabelType::Enum label) {
 void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size)
 {
     addHtml(F("<TR><TD colspan="));
-    addHtml(String(colspan));
+    addHtmlInt(colspan);
     addHtml(F("><H"));
-    addHtml(String(h_size));
+    addHtmlInt(h_size);
     addHtml('>');
     addHtml(label);
     addHtml(F("</H"));
-    addHtml(String(h_size));
+    addHtmlInt(h_size);
     addHtml(F("></TD></TR>"));
 }
 

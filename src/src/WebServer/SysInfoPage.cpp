@@ -355,7 +355,7 @@ void handle_sysinfo_memory() {
 # endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
 # if defined(CORE_POST_2_5_0)
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
-  addHtml("%");
+  addHtml('%');
 # endif // ifdef CORE_POST_2_5_0
 
 
@@ -427,7 +427,7 @@ void handle_sysinfo_Network() {
   {
     addHtml(toString(getConnectionProtocol()));
     addHtml(F(" (RSSI "));
-    addHtml(String(WiFi.RSSI()));
+    addHtmlInt(WiFi.RSSI());
     addHtml(F(" dBm)"));
   } else addHtml('-');
 
@@ -490,13 +490,13 @@ void handle_sysinfo_Firmware() {
   addTableSeparator(F("Firmware"), 2, 3);
 
   addRowLabelValue_copy(LabelType::BUILD_DESC);
-  addHtml(" ");
+  addHtml(' ');
   addHtml(F(BUILD_NOTES));
 
   addRowLabelValue_copy(LabelType::SYSTEM_LIBRARIES);
   addRowLabelValue_copy(LabelType::GIT_BUILD);
   addRowLabelValue_copy(LabelType::PLUGIN_COUNT);
-  addHtml(" ");
+  addHtml(' ');
   addHtml(getPluginDescriptionString());
 
   addRowLabel(F("Build Origin"));
@@ -594,7 +594,7 @@ void handle_sysinfo_Storage() {
       } else {
         addHtml(F(HTML_SYMBOL_WARNING));
       }
-      addHtml(")");
+      addHtml(')');
     }
     addHtml(F(" Device: "));
     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);

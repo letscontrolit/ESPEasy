@@ -151,6 +151,10 @@ struct LabelType {
     TIMEZONE_OFFSET,
     LATITUDE,
     LONGITUDE,
+    SUNRISE_S,
+    SUNSET_S,
+    SUNRISE_M,
+    SUNSET_M,
 
 
     MAX_LABEL  // Keep as last
