@@ -635,7 +635,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
     readPos += bufferSize;
   }
 
-  if ((tmpString.length() != 0) && (stringCount < nrStrings)) {
+  if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {
     result              += F("Incomplete custom settings for index ");
     result              += (index + 1);
     strings[stringCount] = tmpString;

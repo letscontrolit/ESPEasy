@@ -1032,7 +1032,7 @@ void createSvgRect(const String& classname,
                    float        rx,
                    float        ry) {
   addHtml(F("<rect"));
-  if (classname.length() != 0) {
+  if (!classname.isEmpty()) {
     addSVG_param(F("class"), classname);
   }
   addSVG_param(F("fill"), formatToHex(fillColor, F("#")));

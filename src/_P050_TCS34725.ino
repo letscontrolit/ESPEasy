@@ -426,7 +426,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
                 RuleEvent = EMPTY_STRING;
                 break;
               }
-              if (RuleEvent.length() != 0) {
+              if (!RuleEvent.isEmpty()) {
                 eventQueue.add(RuleEvent);
               }
             }
@@ -462,7 +462,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
               RuleEvent = EMPTY_STRING;
               break;
             }
-            if (RuleEvent.length() != 0) {
+            if (!RuleEvent.isEmpty()) {
               eventQueue.add(RuleEvent);
             }
           }

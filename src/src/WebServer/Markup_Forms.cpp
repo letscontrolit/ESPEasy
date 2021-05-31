@@ -487,7 +487,7 @@ float getFormItemFloat(const LabelType::Enum& id)
 
 bool isFormItem(const String& id)
 {
-  return webArg(id).length() != 0;
+  return !webArg(id).isEmpty();
 }
 
 void copyFormPassword(const String& id, char *pPassword, int maxlength)

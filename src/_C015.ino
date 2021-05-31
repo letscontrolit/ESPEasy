@@ -307,7 +307,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     if (ControllerSettings.UseDNS) {
       String hostName = ControllerSettings.getHost();
 
-      if (hostName.length() != 0) {
+      if (!hostName.isEmpty()) {
         log += F("Connecting to custom blynk server ");
         log += ControllerSettings.getHostPortString();
         Blynk.config(auth.c_str(),

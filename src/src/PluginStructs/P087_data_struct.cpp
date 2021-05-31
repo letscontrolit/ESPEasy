@@ -288,7 +288,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
         for (uint8_t n = 0; n < P087_NR_FILTERS; ++n) {
           unsigned int lines_index = n * 3 + P087_FIRST_FILTER_POS + 2;
 
-          if ((capture_index[n] == capture_vector[i].first) && (_lines[lines_index].length() != 0)) {
+          if ((capture_index[n] == capture_vector[i].first) && !(_lines[lines_index].isEmpty())) {
             String log;
             log.reserve(32);
             log  = F("P087: Index: ");

@@ -117,9 +117,9 @@ void handle_json()
   bool showTaskDetails     = true;
   bool showNodes           = true;
   {
-    String view = webArg("view");
+    const String view = webArg("view");
 
-    if (view.length() != 0) {
+    if (!view.isEmpty()) {
       if (view == F("sensorupdate")) {
         showSystem = false;
         showWifi   = false;

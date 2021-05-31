@@ -285,7 +285,7 @@ void addRowLabel(const String& label, const String& id)
     html_TR_TD();
   }
 
-  if (label.length() != 0) {
+  if (!label.isEmpty()) {
     addHtml(label);
     addHtml(':');
   }
