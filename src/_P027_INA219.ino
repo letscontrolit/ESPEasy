@@ -64,7 +64,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
     {
       {
         byte choiceMode = PCONFIG(0);
-        String optionsMode[3];
+        const __FlashStringHelper * optionsMode[3];
         optionsMode[0] = F("32V, 2A");
         optionsMode[1] = F("32V, 1A");
         optionsMode[2] = F("16V, 0.4A");
@@ -76,7 +76,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
       }
       {
         byte   choiceMeasureType = PCONFIG(2);
-        String options[4]        = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
+        const __FlashStringHelper * options[4]        = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
         addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, NULL, choiceMeasureType);
       }
 
@@ -102,32 +102,40 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         static_cast<P027_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P027_data) {
-        String log = F("INA219 0x");
-        log += String(i2caddr, HEX);
-        log += F(" setting Range to: ");
+        const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
+        String log;
+        if (mustLog) {
+          log = F("INA219 0x");
+          log += String(i2caddr, HEX);
+          log += F(" setting Range to: ");
+        }
 
         switch (PCONFIG(0))
         {
           case 0:
           {
-            log += F("32V, 2A");
+            if (mustLog)
+              log += F("32V, 2A");
             P027_data->setCalibration_32V_2A();
             break;
           }
           case 1:
           {
-            log += F("32V, 1A");
+            if (mustLog)
+              log += F("32V, 1A");
             P027_data->setCalibration_32V_1A();
             break;
           }
           case 2:
           {
-            log += F("16V, 400mA");
+            if (mustLog)
+              log += F("16V, 400mA");
             P027_data->setCalibration_16V_400mA();
             break;
           }
         }
-        addLog(LOG_LEVEL_INFO, log);
+        if (mustLog)
+          addLog(LOG_LEVEL_INFO, log);
         success = true;
       }
       break;
@@ -151,8 +159,12 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 1] = current;
         UserVar[event->BaseVarIndex + 2] = power;
 
-        String log = F("INA219 0x");
-        log += String(P027_I2C_ADDR, HEX);
+        const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
+        String log;
+        if (mustLog) {
+          log = F("INA219 0x");
+          log += String(P027_I2C_ADDR, HEX);
+        }
 
         // for backward compability we allow the user to select if only one measurement should be returned
         // or all 3 measurement at once
@@ -162,24 +174,30 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
           {
             event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar[event->BaseVarIndex] = voltage;
-            log                         += F(": Voltage: ");
-            log                         += voltage;
+            if (mustLog) {
+              log                         += F(": Voltage: ");
+              log                         += voltage;
+            }
             break;
           }
           case 1:
           {
             event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar[event->BaseVarIndex] = current;
-            log                         += F(" Current: ");
-            log                         += current;
+            if (mustLog) {
+              log                         += F(" Current: ");
+              log                         += current;
+            }
             break;
           }
           case 2:
           {
             event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar[event->BaseVarIndex] = power;
-            log                         += F(" Power: ");
-            log                         += power;
+            if (mustLog) {
+              log                         += F(" Power: ");
+              log                         += power;
+            }
             break;
           }
           case 3:
@@ -188,17 +206,19 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex]     = voltage;
             UserVar[event->BaseVarIndex + 1] = current;
             UserVar[event->BaseVarIndex + 2] = power;
-            log                             += F(": Voltage: ");
-            log                             += voltage;
-            log                             += F(" Current: ");
-            log                             += current;
-            log                             += F(" Power: ");
-            log                             += power;
+            if (mustLog) {
+              log                             += F(": Voltage: ");
+              log                             += voltage;
+              log                             += F(" Current: ");
+              log                             += current;
+              log                             += F(" Power: ");
+              log                             += power;
+            }
             break;
           }
         }
-
-        addLog(LOG_LEVEL_INFO, log);
+        if (mustLog)
+          addLog(LOG_LEVEL_INFO, log);
         success = true;
       }
       break;

@@ -38,15 +38,12 @@ void handle_config() {
 
   if (web_server.args() != 0)
   {
-    String name = web_server.arg(F("name"));
+    String name = webArg(F("name"));
     name.trim();
 
     Settings.Delay              = getFormItemInt(F("delay"), Settings.Delay);
     Settings.deepSleep_wakeTime = getFormItemInt(F("awaketime"), Settings.deepSleep_wakeTime);
     Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
-
-    // String apkey = web_server.arg(F("apkey"));
-    String ssid = web_server.arg(F("ssid"));
 
     if (strcmp(Settings.Name, name.c_str()) != 0) {
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
@@ -69,15 +66,24 @@ void handle_config() {
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
 
     // SSID 1
-    safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(), sizeof(SecuritySettings.WifiSSID));
+    safe_strncpy(SecuritySettings.WifiSSID, webArg(F("ssid")).c_str(), sizeof(SecuritySettings.WifiSSID));
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
 
     // SSID 2
     strncpy_webserver_arg(SecuritySettings.WifiSSID2, F("ssid2"));
     copyFormPassword(F("key2"),  SecuritySettings.WifiKey2,  sizeof(SecuritySettings.WifiKey2));
 
+    // Hidden SSID
+    Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
+
     // Access point password.
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
+
+    // When set you can use the Sensor in AP-Mode without being forced to /setup
+    Settings.ApDontForceSetup(isFormItemChecked(F("ApDontForceSetup")));
+
+    // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.
+    Settings.DoNotStartAP(isFormItemChecked(F("DoNotStartAP")));
 
 
     // TD-er Read access control from form.
@@ -135,8 +141,23 @@ void handle_config() {
   addFormPasswordBox(F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox(F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox(F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
+
+  addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
+  addFormNote(F("Must be checked to connect to a hidden SSID"));
+
   addFormSeparator(2);
   addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
+
+  addFormCheckBox(F("Don't force /setup in AP-Mode"), F("ApDontForceSetup"), Settings.ApDontForceSetup());
+  addFormNote(F("When set you can use the Sensor in AP-Mode without being forced to /setup. /setup can still be called."));
+
+  addFormCheckBox(F("Do Not Start AP"), F("DoNotStartAP"), Settings.DoNotStartAP());
+  #ifdef HAS_ETHERNET
+  addFormNote(F("Do not allow to start an AP when unable to connect to configured LAN/WiFi"));
+  #else
+  addFormNote(F("Do not allow to start an AP when configured WiFi cannot be found"));
+  #endif
+
 
   // TD-er add IP access box F("ipblocklevel")
   addFormSubHeader(F("Client IP filtering"));

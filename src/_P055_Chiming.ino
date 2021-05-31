@@ -252,7 +252,7 @@ boolean Plugin_055(byte function, struct EventStruct *event, String& string)
           if (!Plugin_055_Data)
             break;
 
-          String tokens = "";
+          String tokens;
           byte hours = node_time.hour();
           byte minutes = node_time.minute();
 
@@ -427,7 +427,7 @@ boolean Plugin_055_IsEmptyFIFO()
 
 void Plugin_055_AddStringFIFO(const String& param)
 {
-  if (param.length() == 0)
+  if (param.isEmpty())
     return;
 
   byte i = 0;

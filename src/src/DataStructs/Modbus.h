@@ -58,7 +58,7 @@ private:
   WiFiClient *ModbusClient;             // pointer to tcp client
   unsigned int errcnt;
   char sendBuffer[12] =  { 0, 1, 0, 0, 0, 6, 0x7e, 4, 0x9d, 7, 0, 1 };
-  String LogString    = "";             // for debug logging
+  String LogString;                     // for debug logging
   unsigned long timeout;                // send and read timeout
   MODBUS_states_t TXRXstate;            // state for handle() state machine
   unsigned int RXavailable;

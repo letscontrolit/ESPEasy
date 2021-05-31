@@ -95,17 +95,17 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
+        const __FlashStringHelper *  options[3];
+        options[0] = F("");
+        options[1] = F("Off");
+        options[2] = F("On");
  
         for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
         	addFormTextBox(String(F("Day,Time ")) + (x + 1), String(F("p043_clock")) + (x), timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]), 32);
           if (CONFIG_PIN1 >= 0) {
-            String options[3];
-            options[0] = "";
-            options[1] = F("Off");
-            options[2] = F("On");
-            addHtml(" ");
-            byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
+            addHtml(' ');
+            const byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
             addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice);
           }
           else addFormNumericBox(String(F("Value")) + (x + 1), String(F("p043_state")) + (x), ExtraTaskSettings.TaskDevicePluginConfig[x]);
@@ -120,12 +120,12 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         {
           String argc = F("p043_clock");
           argc += x;
-          String plugin1 = web_server.arg(argc);
+          String plugin1 = webArg(argc);
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = string2TimeLong(plugin1);
 
           argc = F("p043_state");
           argc += x;
-          String plugin2 = web_server.arg(argc);
+          String plugin2 = webArg(argc);
           ExtraTaskSettings.TaskDevicePluginConfig[x] = plugin2.toInt();
         }
         success = true;
@@ -161,9 +161,11 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex] = x+1;
                 UserVar[event->BaseVarIndex+1] = state;
               }
-              String log = F("TCLK : State ");
-              log += state;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("TCLK : State ");
+                log += state;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
             }
           }

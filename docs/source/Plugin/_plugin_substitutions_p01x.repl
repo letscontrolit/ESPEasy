@@ -28,7 +28,7 @@
 .. |P012_type| replace:: :cyan:`Display`
 .. |P012_typename| replace:: :cyan:`Display - LCD2004`
 .. |P012_porttype| replace:: `.`
-.. |P012_status| replace:: :green:`NORMAL`
+.. |P012_status| replace:: :green:`DISPLAY, NORMAL`
 .. |P012_github| replace:: P012_LCD.ino
 .. _P012_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P012_LCD.ino
 .. |P012_usedby| replace:: `.`

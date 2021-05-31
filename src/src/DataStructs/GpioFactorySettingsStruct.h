@@ -6,8 +6,9 @@
 #include "../DataTypes/NetworkMedium.h"
 
 
+
 struct GpioFactorySettingsStruct {
-  GpioFactorySettingsStruct(DeviceModel model = DeviceModel_default);
+  GpioFactorySettingsStruct(DeviceModel model = DeviceModel::DeviceModel_default);
 
   int8_t          button[4];
   int8_t          relais[4];
@@ -20,7 +21,7 @@ struct GpioFactorySettingsStruct {
   int8_t          eth_mdio;
   int8_t          eth_power;
   EthClockMode_t  eth_clock_mode;
-  NetworkMedium_t active_network_medium;
+  NetworkMedium_t network_medium;
 };
 
 

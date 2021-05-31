@@ -4,6 +4,7 @@
 
 #include "src/DataStructs/PinMode.h"
 #include "src/Commands/GPIO.h"
+#include "src/ESPEasyCore/ESPEasyGPIO.h"
 
 // #######################################################################################################
 // #################################### Plugin 009: MCP23017 input #######################################
@@ -111,13 +112,15 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       }
 
       byte   choiceDC = PCONFIG(4);
-      String buttonDC[4];
-      buttonDC[0] = F("Disabled");
-      buttonDC[1] = F("Active only on LOW (EVENT=3)");
-      buttonDC[2] = F("Active only on HIGH (EVENT=3)");
-      buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
-      int buttonDCValues[4] = { PLUGIN_009_DC_DISABLED, PLUGIN_009_DC_LOW, PLUGIN_009_DC_HIGH, PLUGIN_009_DC_BOTH };
-      addFormSelector(F("Doubleclick event"), F("p009_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+      {
+        const __FlashStringHelper * buttonDC[4];
+        buttonDC[0] = F("Disabled");
+        buttonDC[1] = F("Active only on LOW (EVENT=3)");
+        buttonDC[2] = F("Active only on HIGH (EVENT=3)");
+        buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
+        int buttonDCValues[4] = { PLUGIN_009_DC_DISABLED, PLUGIN_009_DC_LOW, PLUGIN_009_DC_HIGH, PLUGIN_009_DC_BOTH };
+        addFormSelector(F("Doubleclick event"), F("p009_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+      }
 
       addFormNumericBox(F("Doubleclick max. interval (ms)"),
                         F("p009_dcmaxinterval"),
@@ -130,16 +133,19 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(2) = PLUGIN_009_LONGPRESS_MIN_INTERVAL;
       }
 
-      byte   choiceLP = PCONFIG(5);
-      String buttonLP[4];
-      buttonLP[0] = F("Disabled");
-      buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
-      buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
-      buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
+      
+      {
+        byte   choiceLP = PCONFIG(5);
+        const __FlashStringHelper * buttonLP[4];
+        buttonLP[0] = F("Disabled");
+        buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
+        buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
+        buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
 
-      int buttonLPValues[4] =
-      { PLUGIN_009_LONGPRESS_DISABLED, PLUGIN_009_LONGPRESS_LOW, PLUGIN_009_LONGPRESS_HIGH, PLUGIN_009_LONGPRESS_BOTH };
-      addFormSelector(F("Longpress event"), F("p009_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+        int buttonLPValues[4] =
+        { PLUGIN_009_LONGPRESS_DISABLED, PLUGIN_009_LONGPRESS_LOW, PLUGIN_009_LONGPRESS_HIGH, PLUGIN_009_LONGPRESS_BOTH };
+        addFormSelector(F("Longpress event"), F("p009_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+      }
 
       addFormNumericBox(F("Longpress min. interval (ms)"),
                         F("p009_lpmininterval"),
@@ -183,7 +189,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // Turn on Pullup resistor
-      Plugin_009_Config(CONFIG_PORT, 1);
+      setMCPInputAndPullupMode(CONFIG_PORT, true);
 
       // apply INIT only if PIN is in range. Do not start INIT if pin not set in the device page.
       if (CONFIG_PORT >= 0)
@@ -196,7 +202,12 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
         // read and store current state to prevent switching at boot time
         // "state" could be -1, 0 or 1
-        newStatus.state                          = Plugin_009_Read(CONFIG_PORT);
+        newStatus.state                          = GPIO_MCP_Read(CONFIG_PORT);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("MCP INIT=");
+          log += newStatus.state;
+          addLog(LOG_LEVEL_INFO,log);
+        }
         newStatus.output                         = newStatus.state;
         (newStatus.state == -1) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the
                                                                                                               // device list we assume it's
@@ -246,63 +257,6 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    /*
-          case PLUGIN_UNCONDITIONAL_POLL:
-            {
-              // port monitoring, generates an event by rule command 'monitor,pcf,port#'
-              for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
-                if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_009) {
-                  const uint16_t port = getPortFromKey(it->first);
-                  int8_t state = Plugin_009_Read(port);
-                  if (it->second.state != state || it->second.forceMonitor) {
-                    if (it->second.mode == PIN_MODE_OFFLINE) it->second.mode=PIN_MODE_UNDEFINED; //changed from offline to online
-                    if (state == -1) it->second.mode=PIN_MODE_OFFLINE; //changed from online to offline
-                    if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up
-                       by 10xSEC function
-                    if (it->second.monitor) {
-                      it->second.forceMonitor=0; //reset flag
-                      String eventString = F("MCP#");
-                      eventString += port;
-                      eventString += '=';
-                      eventString += state;
-                      rulesProcessing(eventString);
-                    }
-                  }
-                }
-              }
-              break;
-            }
-          }
-          break;
-        }
-     */
-    /*
-          case PLUGIN_MONITOR:
-            {
-              // port monitoring, generates an event by rule command 'monitor,gpio,port#'
-              const uint32_t key = createKey(PLUGIN_ID_009,event->Par1);
-              const portStatusStruct currentStatus = globalMapPortStatus[key];
-
-          //if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
-            const int8_t state = Plugin_009_Read(event->Par1);
-            if (currentStatus.state != state || currentStatus.forceMonitor) {
-              if (!currentStatus.task) globalMapPortStatus[key].state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
-              if (currentStatus.monitor) {
-                globalMapPortStatus[key].forceMonitor=0; //reset flag
-                String eventString = F("MCP#");
-                    eventString += event->Par1;
-                    eventString += '=';
-                    eventString += state;
-                    rulesProcessing(eventString);
-                  }
-                }
-          //}
-
-      if ((currentStatus.state != state) || currentStatus.forceMonitor) {
-        if (!currentStatus.task) { globalMapPortStatus[key].state = state; // do not update state if task flag=1 otherwise it will not be
-                                                                           // picked up by 10xSEC function
-        }
-*/
     case PLUGIN_TEN_PER_SECOND:
          {
         const int8_t state = GPIO_MCP_Read(CONFIG_PORT);
@@ -331,7 +285,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
         if (round(PCONFIG_FLOAT(3)) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
-          addLog(LOG_LEVEL_DEBUG, F("MCP :SafeButton 1st click."))
+          addLog(LOG_LEVEL_DEBUG, F("MCP :SafeButton 1st click."));
           PCONFIG_LONG(3) = 1;
         }
 
@@ -575,7 +529,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TIMER_IN:
     {
-      Plugin_009_Write(event->Par1, event->Par2);
+      GPIO_MCP_Write(event->Par1, event->Par2);
 
       // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
       portStatusStruct tempStatus;
@@ -593,7 +547,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONLY_TIMER_IN:
     {
-      Plugin_009_Write(event->Par1, event->Par2);
+      GPIO_MCP_Write(event->Par1, event->Par2);
 
       // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
       portStatusStruct tempStatus;
@@ -615,6 +569,7 @@ boolean Plugin_009(byte function, struct EventStruct *event, String& string)
 // ********************************************************************************
 // MCP23017 read
 // ********************************************************************************
+/*
 int8_t Plugin_009_Read(byte Par1)
 {
   int8_t state        = -1;
@@ -641,10 +596,12 @@ int8_t Plugin_009_Read(byte Par1)
   }
   return state;
 }
+*/
 
 // ********************************************************************************
 // MCP23017 write
 // ********************************************************************************
+/*
 boolean Plugin_009_Write(byte Par1, byte Par2)
 {
   boolean success      = false;
@@ -706,10 +663,11 @@ boolean Plugin_009_Write(byte Par1, byte Par2)
   }
   return success;
 }
-
+*/
 // ********************************************************************************
 // MCP23017 config
 // ********************************************************************************
+/*
 void Plugin_009_Config(byte Par1, byte Par2)
 {
   // boolean success = false;
@@ -749,5 +707,5 @@ void Plugin_009_Config(byte Par1, byte Par2)
     Wire.endTransmission();
   }
 }
-
+*/
 #endif // USES_P009

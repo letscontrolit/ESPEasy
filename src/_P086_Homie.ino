@@ -74,9 +74,9 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
         addFormNote(F("Translation Plugin for controllers able to receive value updates according to the Homie convention."));
 
         byte choice = 0;
-        String labelText = "";
-        String keyName = "";
-        String options[PLUGIN_086_VALUE_TYPES];
+        String labelText;
+        String keyName;
+        const __FlashStringHelper * options[PLUGIN_086_VALUE_TYPES];
         options[0] = F("integer");
         options[1] = F("float");
         options[2] = F("boolean");
@@ -128,7 +128,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        String keyName = "";
+        String keyName;
         for (int i=0;i<PLUGIN_086_VALUE_MAX;i++) {
           keyName = F("p086_valueType");
           keyName += i;
@@ -162,7 +162,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
           String log = F("P086 : Value ");
           log += x+1;
           log += F(": ");
-          log += UserVar[event->BaseVarIndex+x];
+          log += formatUserVarNoCheck(event->TaskIndex, x);
           addLog(LOG_LEVEL_INFO,log);
         }
         success = true;
@@ -182,7 +182,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
               (event->Par1 == (event->TaskIndex + 1))) {// make sure that this instance is the target
             LoadTaskSettings(event->TaskIndex);
             String parameter = parseStringToEndKeepCase(string,4);
-            String log = "";
+            String log;
 /*            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
               log = F("P086 : Acknowledge :");
               log += string;
@@ -219,7 +219,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
               addLog(LOG_LEVEL_DEBUG, log);
             } */
             float floatValue = 0;
-            String enumList = "";
+            String enumList;
             int i = 0;
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               log = F("P086 : deviceNr:");
@@ -233,7 +233,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
             switch (Settings.TaskDevicePluginConfig[event->TaskIndex][taskVarIndex]) {
               case PLUGIN_086_VALUE_INTEGER:
               case PLUGIN_086_VALUE_FLOAT:
-                if (parameter!="") {
+                if (!parameter.isEmpty()) {
                   if (string2float(parameter,floatValue)) {
                     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                       log += F(" integer/float set to ");
@@ -285,7 +285,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
               case PLUGIN_086_VALUE_ENUM:
                 enumList = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
                 i = 1;
-                while (parseString(enumList,i)!="") { // lookup result in enum List
+                while (!parseString(enumList,i).isEmpty()) { // lookup result in enum List
                   if (parseString(enumList,i)==parameter) {
                     floatValue = i;
                     break;

@@ -120,8 +120,8 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         }
         P062_data->loadTouchObjects(event->TaskIndex);
 
-        addRowLabel(F("Object"), F(""));
-        html_table(F(""), false);  // Sub-table
+        addRowLabel(F("Object"));
+        html_table(EMPTY_STRING, false);  // Sub-table
         html_table_header(F("&nbsp;#&nbsp;"));
         html_table_header(F("Touch (0..255)"));
         html_table_header(F("Release (0..255)"));
@@ -134,7 +134,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         for (int objectNr = 0; objectNr < P062_MaxTouchObjects; objectNr++) {
           html_TR_TD();
           addHtml(F("&nbsp;"));
-          addHtml(String(objectNr + 1));
+          addHtmlInt(objectNr + 1);
           html_TD();
           addNumericBox(getPluginCustomArgName(objectNr + 100), P062_data->StoredSettings.TouchObjects[objectNr].touch,     0, 255);
           html_TD();
@@ -145,16 +145,16 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
             uint16_t max     = 0;
             P062_data->getCalibrationData(objectNr, &current, &min, &max);
             html_TD();
-            addHtml(String(current));
+            addHtmlInt(current);
             html_TD();
-            addHtml(String(min));
+            addHtmlInt(min);
             html_TD();
-            addHtml(String(max));
+            addHtmlInt(max);
           }
         }
         html_end_table();
         if (canCalibrate) {
-          String options1[2] = { F("No"), F("Yes") };
+          const __FlashStringHelper * options1[2] = { F("No"), F("Yes") };
           int optionValues1[2] = { 0, 1 };
           int choice1 = tbUseCalibration ? 1 : 0;
           addFormSelector(F("Enable Calibration"), F("p062_use_calibration"), 2, options1, optionValues1, choice1, true);

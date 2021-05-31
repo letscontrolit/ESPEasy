@@ -8,7 +8,7 @@
 
 #ifdef USES_P082
 
-String Plugin_082_valuename(P082_query value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString) {
   switch (value_nr) {
     case P082_query::P082_QUERY_LONG:        return displayString ? F("Longitude")          : F("long");
     case P082_query::P082_QUERY_LAT:         return displayString ? F("Latitude")           : F("lat");
@@ -24,7 +24,7 @@ String Plugin_082_valuename(P082_query value_nr, bool displayString) {
     case P082_query::P082_QUERY_DIST_REF:    return displayString ? F("Distance from Reference Point") : F("dist_ref");
     case P082_query::P082_NR_OUTPUT_OPTIONS: break;
   }
-  return "";
+  return F("");
 }
 
 
@@ -78,7 +78,10 @@ bool P082_data_struct::loop() {
       --available;
       char c = easySerial->read();
 # ifdef P082_SEND_GPS_TO_LOG
-      _currentSentence += c;
+      if (_currentSentence.length() <= 80) {
+        // No need to capture more than 80 bytes as a NMEA message is never that long.
+        _currentSentence += c;
+      }
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
       if (gps->encode(c)) {
@@ -161,8 +164,8 @@ bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps
   if (!gps->date.isValid() || !gps->time.isValid()) {
     return false;
   }
-  dateTime.tm_year = gps->date.year() - 1970;
-  dateTime.tm_mon  = gps->date.month();
+  dateTime.tm_year = gps->date.year() - 1900;
+  dateTime.tm_mon  = gps->date.month() - 1; // GPS month starts at 1, tm_mon at 0
   dateTime.tm_mday = gps->date.day();
 
   dateTime.tm_hour = gps->time.hour();

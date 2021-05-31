@@ -438,13 +438,13 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
     {
       {
         byte choice         = PCONFIG(0);
-        String options[2]   = { F("Normal"), F("ABC disabled") };
+        const __FlashStringHelper * options[2]   = { F("Normal"), F("ABC disabled") };
         int optionValues[2] = { ABC_enabled, ABC_disabled };
         addFormSelector(F("Auto Base Calibration"), F("p049_abcdisable"), 2, options, optionValues, choice);
       }
       {
         byte   choiceFilter     = PCONFIG(1);
-        String filteroptions[5] =
+        const __FlashStringHelper * filteroptions[5] =
         { F("Skip Unstable"), F("Use Unstable"), F("Fast Response"), F("Medium Response"), F("Slow Response") };
         int filteroptionValues[5] = {
           PLUGIN_049_FILTER_OFF,
@@ -570,18 +570,23 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
       float u           = 0;
 
       if (P049_data->read_ppm(ppm, temp, s, u)) {
-        String log = F("MHZ19: ");
+        const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
+        String log;
+        if (mustLog)
+          log = F("MHZ19: ");
 
         // During (and only ever at) sensor boot, 'u' is reported as 15000
         // We log but don't process readings during that time
         if (approximatelyEqual(u, 15000)) {
-          log += F("Bootup detected! ");
+          if (mustLog)
+            log += F("Bootup detected! ");
 
           if (P049_data->ABC_Disable) {
             // After bootup of the sensor the ABC will be enabled.
             // Thus only actively disable after bootup.
             P049_data->ABC_MustApply = true;
-            log                     += F("Will disable ABC when bootup complete. ");
+            if (mustLog)
+              log                     += F("Will disable ABC when bootup complete. ");
           }
           success = false;
 
@@ -614,16 +619,18 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        // Log values in all cases
-        log += F("PPM value: ");
-        log += ppm;
-        log += F(" Temp/S/U values: ");
-        log += temp;
-        log += '/';
-        log += s;
-        log += '/';
-        log += u;
-        addLog(LOG_LEVEL_INFO, log);
+        if (mustLog) {
+          // Log values in all cases
+          log += F("PPM value: ");
+          log += ppm;
+          log += F(" Temp/S/U values: ");
+          log += temp;
+          log += '/';
+          log += s;
+          log += '/';
+          log += u;
+          addLog(LOG_LEVEL_INFO, log);
+        }
         break;
 
         // #ifdef ENABLE_DETECTION_RANGE_COMMANDS
@@ -705,7 +712,7 @@ void P049_html_show_stats(struct EventStruct *event) {
   switch (P049_data->getDetectedDevice()) {
     case MHZ19_A: addHtml(F("MH-Z19A")); break;
     case MHZ19_B: addHtml(F("MH-Z19B")); break;
-    default: addHtml("---"); break;
+    default: addHtml(F("---")); break;
   }
 }
 

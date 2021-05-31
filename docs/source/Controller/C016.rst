@@ -63,8 +63,29 @@ Data Delivery
 
 The controller can deliver the data to:
 
+- JavaScript to process the data inside the browser. See the ``dump5.htm`` file in the ``misc`` folder.
 - Upload bin files to some server (HTTP post?) (TODO)
 - Provide a sample to any connected controller (TODO)
 - Do nothing and let some extern host pull the data from the node. (TODO)
-- JavaScript to process the data inside the browser. (TODO)
 - Feed it to some plugin (e.g. a display to show a chart) (TODO)
+
+
+Fetch and Decode data in the browser
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``dump5.htm`` (in ``misc`` directory) file should be uploaded to the file system of the ESP.
+When there are cache controller bin files present on the file system,
+open this htm file from the file browser in ESPEasy into a new tab in your browser.
+
+This presents a large button "Fetch cache files".
+When pressed, the JavaScript in this htm file will fetch JSON information from 
+ESPEasy describing the column names and the binary cache files present on the file system.
+
+Those bin files will be fetched and decoded in the browser.
+When done, a "Download" button will be presented which generates and downloads a new CSV file.
+
+This file can be opened in any spreadsheet program.
+LibreNMS has proven to be the easiest to parse the column separators and make the best guess on the data types in each cell.
+
+
+

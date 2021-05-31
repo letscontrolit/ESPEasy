@@ -4,6 +4,7 @@
 
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 
@@ -102,7 +103,7 @@ bool ControllerSettingsStruct::checkHostReachable(bool quick) {
   if (!NetworkConnected(10)) {
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
-  delay(1);       // Make sure the Watchdog will not trigger a reset.
+  delay(0);       // Make sure the Watchdog will not trigger a reset.
 
   if (quick && ipSet()) { return true; }
 
@@ -123,7 +124,7 @@ bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
 
   while (retry > 0 && !connected) {
     --retry;
-    connected = connectClient(client, getIP(), Port);
+    connected = connectClient(client, getIP(), Port, ClientTimeout);
 
     if (connected) { return true; }
 
@@ -141,6 +142,7 @@ bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
   byte retry     = 2;
   while (retry > 0) {
     --retry;
+    FeedSW_watchdog();
     if (client.beginPacket(getIP(), Port) == 1) {
       return true;
     }
@@ -176,7 +178,7 @@ bool ControllerSettingsStruct::updateIPcache() {
   if (!NetworkConnected()) { return false; }
   IPAddress tmpIP;
 
-  if (resolveHostByName(HostName, tmpIP)) {
+  if (resolveHostByName(HostName, tmpIP, ClientTimeout)) {
     for (byte x = 0; x < 4; x++) {
       IP[x] = tmpIP[x];
     }
@@ -253,4 +255,24 @@ bool ControllerSettingsStruct::sendBinary() const
 void ControllerSettingsStruct::sendBinary(bool value)
 {
   bitWrite(VariousFlags, 7, value);
+}
+
+bool ControllerSettingsStruct::allowExpire() const
+{
+  return bitRead(VariousFlags, 9);
+}
+
+void ControllerSettingsStruct::allowExpire(bool value)
+{
+  bitWrite(VariousFlags, 9, value);
+}
+
+bool ControllerSettingsStruct::deduplicate() const
+{
+  return bitRead(VariousFlags, 10);
+}
+
+void ControllerSettingsStruct::deduplicate(bool value)
+{
+  bitWrite(VariousFlags, 10, value);
 }

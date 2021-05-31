@@ -5,6 +5,7 @@
 //#######################################################################################################
 
 #include "src/Helpers/Rules_calculate.h"
+#include "src/WebServer/WebServer.h"
 
 #define PLUGIN_021
 #define PLUGIN_ID_021        21
@@ -88,11 +89,12 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         if (command == F("setlevel"))
         {
           String value = parseString(string, 2);
-          float result=0;
-          Calculate(value.c_str(), &result);
-          PCONFIG_FLOAT(0) = result;
-          SaveSettings();
-          success = true;
+          double result=0;
+          if (!isError(Calculate(value, result))) {
+            PCONFIG_FLOAT(0) = result;
+            SaveSettings();
+            success = true;
+          }
         }
         break;
       }
@@ -131,9 +133,11 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
           state = 0;
         if (state != switchstate[event->TaskIndex])
         {
-          String log = F("LEVEL: State ");
-          log += state;
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("LEVEL: State ");
+            log += state;
+            addLog(LOG_LEVEL_INFO, log);
+          }
           switchstate[event->TaskIndex] = state;
           digitalWrite(CONFIG_PIN1,state);
           UserVar[event->BaseVarIndex] = state;

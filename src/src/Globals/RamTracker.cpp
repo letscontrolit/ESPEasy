@@ -24,7 +24,7 @@ void checkRAM(const String &flashString, int a ) {
   checkRAM(flashString, String(a));
 }
 
-void checkRAM(const String &flashString, const String &a ) {
+void checkRAM(const String& flashString, const String &a ) {
   String s = flashString;
   s += " (";
   s += a;
@@ -32,7 +32,11 @@ void checkRAM(const String &flashString, const String &a ) {
   checkRAM(s);
 }
 
-void checkRAM( const String &descr ) {
+void checkRAM(const __FlashStringHelper * descr ) {
+  checkRAM(String(descr));
+}
+
+void checkRAM(const String& descr ) {
   myRamTracker.registerRamState(descr);
   
   uint32_t freeRAM = FreeMem();

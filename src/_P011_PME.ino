@@ -1,6 +1,9 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P011
 
+#include "ESPEasy-Globals.h" // For dummyString
+
+
 // #######################################################################################################
 // #################################### Plugin 011: Pro Mini Extender ####################################
 // #######################################################################################################
@@ -49,7 +52,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       byte   choice     = PCONFIG(0);
-      String options[2] = { F("Digital"), F("Analog") };
+      const __FlashStringHelper * options[2] = { F("Digital"), F("Analog") };
       addFormSelector(F("Port Type"), F("p011"), 2, options, NULL, choice);
 
       success = true;
@@ -66,16 +69,18 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       UserVar[event->BaseVarIndex] = Plugin_011_Read(PCONFIG(0), CONFIG_PORT);
-      String log = F("PME  : PortValue: ");
-      log += UserVar[event->BaseVarIndex];
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("PME  : PortValue: ");
+        log += formatUserVarNoCheck(event->TaskIndex, 0);
+        addLog(LOG_LEVEL_INFO, log);
+      }
       success = true;
       break;
     }
 
     case PLUGIN_WRITE:
     {
-      String log     = "";
+      String log;
       String command = parseString(string, 1);
 
       if (command == F("extgpio"))
@@ -96,11 +101,14 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         Plugin_011_Write(event->Par1, event->Par2);
 
         // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-        log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Set to ")) + String(event->Par2);
+        log = F("PME  : GPIO ");
+        log += event->Par1;
+        log += F(" Set to ");
+        log += event->Par2;
         addLog(LOG_LEVEL_INFO, log);
 
-        // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
-        SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+        // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+        SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
 
       if (command == F("extpwm"))
@@ -126,11 +134,14 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
         savePortStatus(key, tempStatus);
 
         // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_PWM, event->Par2);
-        log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Set PWM to ")) + String(event->Par2);
+        log = F("PME  : GPIO ");
+        log += event->Par1;
+        log += F(" Set PWM to ");
+        log += event->Par2;
         addLog(LOG_LEVEL_INFO, log);
 
-        // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
-        SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+        // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+        SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
 
       if (command == F("extpulse"))
@@ -155,11 +166,15 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           savePortStatus(key, tempStatus);
 
           // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Pulsed for ")) + String(event->Par3) + String(F(" mS"));
+          log = F("PME  : GPIO ");
+          log += event->Par1;
+          log += F(" Pulsed for ");
+          log += event->Par3;
+          log += F(" mS");
           addLog(LOG_LEVEL_INFO, log);
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
       }
 
@@ -184,11 +199,15 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           savePortStatus(key, tempStatus);
 
           // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          log = String(F("PME  : GPIO ")) + String(event->Par1) + String(F(" Pulse set for ")) + String(event->Par3) + String(F(" S"));
+          log = F("PME  : GPIO ");
+          log += event->Par1;
+          log += F(" Pulse set for ");
+          log += event->Par3;
+          log += F(" S");
           addLog(LOG_LEVEL_INFO, log);
 
-          // SendStatus(event->Source, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
-          SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, log, 0);
+          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
       }
 
@@ -199,7 +218,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           const uint32_t key = createKey(PLUGIN_ID_011, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
 
           if (!existPortStatus(key)) {                                // tempStatus.mode == PIN_MODE_OUTPUT) // has been set as output
-            SendStatusOnlyIfNeeded(event->Source, SEARCH_PIN_STATE, key, dummyString, 0);
+            SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummyString, 0);
           }
           else
           {
@@ -214,7 +233,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
             int state = Plugin_011_Read(type, port); // report as input (todo: analog reading)
 
             if (state != -1) {
-              SendStatusOnlyIfNeeded(event->Source, NO_SEARCH_PIN_STATE, key, dummyString, state);
+              SendStatusOnlyIfNeeded(event, NO_SEARCH_PIN_STATE, key, dummyString, state);
             }
 
             // status = getPinStateJSON(NO_SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par2, dummyString, state);

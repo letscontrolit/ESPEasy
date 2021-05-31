@@ -115,10 +115,10 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 
       if ((nullptr != P082_data) && P082_data->isInitialized()) {
         byte varNr = VARS_PER_TASK;
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Fix"),     String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0)));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),
-                                       String(P082_data->gps->satellitesStats.nrSatsTracked())));
-        addHtml(pluginWebformShowValue(event->TaskIndex, varNr++, F("Best SNR"), String(P082_data->gps->satellitesStats.getBestSNR()), true));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Fix"),     String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),
+                                       String(P082_data->gps->satellitesStats.nrSatsTracked()));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("Best SNR"), String(P082_data->gps->satellitesStats.getBestSNR()), true);
 
         // success = true;
       }
@@ -193,7 +193,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       {
         // In a separate scope to free memory of String array as soon as possible
         sensorTypeHelper_webformLoad_header();
-        String options[static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS)];
+        const __FlashStringHelper * options[static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS)];
 
         for (byte i = 0; i < static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS); ++i) {
           options[i] = Plugin_082_valuename(static_cast<P082_query>(i), true);
@@ -505,7 +505,7 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
           label.reserve(32);
 
           if (onlyGPS) {
-            label = "GPS";
+            label = F("GPS");
           } else {
             label = F("Other");
           }
@@ -518,14 +518,14 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
           }
           addRowLabel(label);
         } else {
-          addHtml(", ");
+          addHtml(F(", "));
         }
-        addHtml(String(id));
+        addHtmlInt(id);
 
         if (tracked) {
-          addHtml(" (");
-          addHtml(String(snr));
-          addHtml(")");
+          addHtml(F(" ("));
+          addHtmlInt(snr);
+          addHtml(')');
         }
       }
     }
@@ -547,7 +547,7 @@ void P082_html_show_stats(struct EventStruct *event) {
     return;
   }
   addRowLabel(F("Fix"));
-  addHtml(String(P082_data->hasFix(P082_TIMEOUT)));
+  addHtmlInt(P082_data->hasFix(P082_TIMEOUT));
 
   addRowLabel(F("Fix Quality"));
 
@@ -567,13 +567,13 @@ void P082_html_show_stats(struct EventStruct *event) {
   }
 
   addRowLabel(F("Satellites tracked"));
-  addHtml(String(P082_data->gps->satellitesStats.nrSatsTracked()));
+  addHtmlInt(P082_data->gps->satellitesStats.nrSatsTracked());
 
   addRowLabel(F("Satellites visible"));
-  addHtml(String(P082_data->gps->satellitesStats.nrSatsVisible()));
+  addHtmlInt(P082_data->gps->satellitesStats.nrSatsVisible());
 
   addRowLabel(F("Best SNR"));
-  addHtml(String(P082_data->gps->satellitesStats.getBestSNR()));
+  addHtmlInt(P082_data->gps->satellitesStats.getBestSNR());
   addHtml(F(" dBHz"));
 
   // Satellites tracked or in view.
@@ -594,16 +594,16 @@ void P082_html_show_stats(struct EventStruct *event) {
     dateTime = node_time.addSeconds(dateTime, (age / 1000), false);
     addHtml(ESPEasy_time::getDateTimeString(dateTime));
   } else {
-    addHtml(F("-"));
+    addHtml('-');
   }
 
   addRowLabel(F("Distance Travelled"));
-  addHtml(String(static_cast<int>(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DISTANCE)])));
+  addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DISTANCE)]));
   addUnit(F("m"));
 
   if (P082_referencePointSet(event)) {
     addRowLabel(F("Distance from Ref. Point"));
-    addHtml(String(static_cast<int>(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DIST_REF)])));
+    addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DIST_REF)]));
     addUnit(F("m"));
   }
 

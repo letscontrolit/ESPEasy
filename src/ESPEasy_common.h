@@ -81,8 +81,6 @@ namespace std
   #endif
   #include <ESP8266WiFi.h>
   //#include <ESP8266Ping.h>
-  #include <DNSServer.h>
-  #include <Servo.h>
   #ifndef LWIP_OPEN_SRC
   #define LWIP_OPEN_SRC
   #endif
@@ -95,9 +93,6 @@ namespace std
    #include "user_interface.h"
   }
 
-  #ifdef FEATURE_MDNS
-    #include <ESP8266mDNS.h>
-  #endif
   #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
   #define MAX_SKETCH_SIZE 1044464   // 1020 kB - 16 bytes
   #define PIN_D_MAX        16
@@ -117,15 +112,15 @@ namespace std
 //  #include  "esp32_ping.h"
   #include <rom/rtc.h>
   #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
-  #ifdef FEATURE_MDNS
-    #include <ESPmDNS.h>
-  #endif
   #define PIN_D_MAX        39
+  #ifdef PLUGIN_BUILD_MAX_ESP32
+  #define MAX_SKETCH_SIZE 4194304   // 0x400000 look at partitions in csv file
+  #else // PLUGIN_BUILD_MAX_ESP32
   #define MAX_SKETCH_SIZE 1900544   // 0x1d0000 look at partitions in csv file
+  #endif // PLUGIN_BUILD_MAX_ESP32
 #endif
 
 #include <WiFiUdp.h>
-#include <DNSServer.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <FS.h>
@@ -138,8 +133,13 @@ using namespace fs;
 
 
 #ifdef USE_LITTLEFS
-  #include <LittleFS.h>
-  #define ESPEASY_FS LittleFS
+  #ifdef ESP32
+    #include <LITTLEFS.h>
+    #define ESPEASY_FS LITTLEFS
+  #else
+    #include <LittleFS.h>
+    #define ESPEASY_FS LittleFS
+  #endif
 #else 
   #ifdef ESP32
     #include <SPIFFS.h>

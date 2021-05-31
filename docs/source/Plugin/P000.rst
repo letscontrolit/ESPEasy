@@ -25,13 +25,33 @@ Used libraries: |P000_usedlibraries|
 Supported hardware
 ------------------
 
-|P000_usedby_GPIO|, |P000_usedby_RTTTL|
+|P000_usedby_GPIO|, |P000_usedby_RTTTL|, |P000_usedby_Relay|, |P000_usedby_Servo|, |P000_usedby_LevelConverter|
+
 
 Commands available
 ------------------
 
+Internal GPIO
+^^^^^^^^^^^^^
+
 .. include:: P001_commands_GPIO.repl
+
+External MCPGPIO
+^^^^^^^^^^^^^^^^
+
+.. include:: P009_commands.repl
+
+External PCFGPIO
+^^^^^^^^^^^^^^^^
+
+.. include:: P019_commands.repl
+
+
+Ringtone Internal GPIO
+~~~~~~~~~~~~~~~~~~~~~~~
+
 .. include:: P001_commands_RTTTL.repl
+
 
 .. Events
 .. ~~~~~~

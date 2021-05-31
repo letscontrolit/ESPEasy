@@ -9,6 +9,7 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Numerical.h"
 
 
 
@@ -31,7 +32,7 @@ void handle_filelist_json() {
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
 
-  String fdelete = web_server.arg(F("delete"));
+  String fdelete = webArg(F("delete"));
 
   if (tryDeleteFile(fdelete)) {
     # if defined(ESP32)
@@ -46,15 +47,15 @@ void handle_filelist_json() {
   const int pageSize = 25;
   int startIdx       = 0;
 
-  String fstart = web_server.arg(F("start"));
+  String fstart = webArg(F("start"));
 
   if (fstart.length() > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    validIntFromString(fstart, startIdx);
   }
   int endIdx = startIdx + pageSize - 1;
 
-  addHtml("[{");
+  addHtml(F("[{"));
   bool firstentry = true;
   # if defined(ESP32)
   File root  = ESPEASY_FS.open("/");
@@ -71,7 +72,7 @@ void handle_filelist_json() {
         if (firstentry) {
           firstentry = false;
         } else {
-          addHtml(",{");
+          addHtml(F(",{"));
         }
         stream_next_json_object_value(F("fileName"), String(file.name()));
         stream_next_json_object_value(F("index"),    String(startIdx));
@@ -98,7 +99,7 @@ void handle_filelist_json() {
     if (firstentry) {
       firstentry = false;
     } else {
-      addHtml(",{");
+      addHtml(F(",{"));
     }
 
     stream_next_json_object_value(F("fileName"), String(dir.fileName()));
@@ -119,11 +120,11 @@ void handle_filelist_json() {
   }
 
   if (firstentry) {
-    addHtml("}");
+    addHtml('}');
   }
 
   # endif // if defined(ESP8266)
-  addHtml("]");
+  addHtml(']');
   TXBuffer.endStream();
 }
 
@@ -140,7 +141,7 @@ void handle_filelist() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  String fdelete = web_server.arg(F("delete"));
+  String fdelete = webArg(F("delete"));
 
   if (tryDeleteFile(fdelete))
   {
@@ -160,15 +161,15 @@ void handle_filelist() {
   # endif // ifdef USES_C016
   const int pageSize = 25;
   int startIdx       = 0;
-  String fstart      = web_server.arg(F("start"));
+  String fstart      = webArg(F("start"));
 
   if (fstart.length() > 0)
   {
-    startIdx = atoi(fstart.c_str());
+    validIntFromString(fstart, startIdx);
   }
   int endIdx = startIdx + pageSize - 1;
   html_table_class_multirow();
-  html_table_header("",        50);
+  html_table_header(F(""),        50);
   html_table_header(F("Filename"));
   html_table_header(F("Size"), 80);
   int count = -1;
@@ -251,7 +252,7 @@ void handle_filelist_add_file(const String& filename, int filesize, int startIdx
     if (startIdx > 0)
     {
       addHtml(F("&start="));
-      addHtml(String(startIdx));
+      addHtmlInt(startIdx);
     }
     addHtml(F("'>Del</a>"));
   }
@@ -266,7 +267,7 @@ void handle_filelist_add_file(const String& filename, int filesize, int startIdx
     html += F("</a><TD>");
 
     if (filesize >= 0) {
-      html += String(filesize);
+      html += filesize;
     }
     addHtml(html);
   }
@@ -327,26 +328,26 @@ void handle_SDfilelist() {
   sendHeadandTail_stdtemplate();
 
 
-  String fdelete       = "";
-  String ddelete       = "";
-  String change_to_dir = "";
-  String current_dir   = "";
-  String parent_dir    = "";
+  String fdelete;
+  String ddelete;
+  String change_to_dir;
+  String current_dir;
+  String parent_dir;
 
   for (uint8_t i = 0; i < web_server.args(); i++) {
     if (web_server.argName(i) == F("delete"))
     {
-      fdelete = web_server.arg(i);
+      fdelete = webArg(i);
     }
 
     if (web_server.argName(i) == F("deletedir"))
     {
-      ddelete = web_server.arg(i);
+      ddelete = webArg(i);
     }
 
     if (web_server.argName(i) == F("chgto"))
     {
-      change_to_dir = web_server.arg(i);
+      change_to_dir = webArg(i);
     }
   }
 
@@ -392,9 +393,9 @@ void handle_SDfilelist() {
   addFormSubHeader(subheader);
   html_BR();
   html_table_class_multirow();
-  html_table_header("", 50);
-  html_table_header("Name");
-  html_table_header("Size");
+  html_table_header(F(""), 50);
+  html_table_header(F("Name"));
+  html_table_header(F("Size"));
   html_TR_TD();
   {
     String html;

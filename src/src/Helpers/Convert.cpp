@@ -3,7 +3,7 @@
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
 \*********************************************************************************************/
-String getBearing(int degrees)
+const __FlashStringHelper * getBearing(int degrees)
 {
   const int nr_directions = 16;
   float stepsize      = (360.0f / nr_directions);
@@ -31,7 +31,7 @@ String getBearing(int degrees)
       case 15: return F("NNW");
     }
   }
-  return "";
+  return F("");
 }
 
 float CelsiusToFahrenheit(float celsius) {
@@ -181,6 +181,34 @@ float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
 }
 
 
+
+/********************************************************************************************\
+   Compensate air pressure for given altitude (in meters)
+ \*********************************************************************************************/
+float pressureElevation(float atmospheric, float altitude) {
+  // Equation taken from BMP180 datasheet (page 16):
+  //  http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
+
+  // Note that using the equation from wikipedia can give bad results
+  // at high altitude.  See this thread for more information:
+  //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
+  return atmospheric / pow(1.0f - (altitude / 44330.0f), 5.255f);
+}
+
+float altitudeFromPressure(float atmospheric, float seaLevel)
+{
+  // Equation taken from BMP180 datasheet (page 16):
+  //  http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
+
+  // Note that using the equation from wikipedia can give bad results
+  // at high altitude.  See this thread for more information:
+  //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
+  return 44330.0f * (1.0f - pow(atmospheric / seaLevel, 0.1903f));
+}
+
+
+
+
 /********************************************************************************************\
    In memory convert float to long
  \*********************************************************************************************/
@@ -206,10 +234,32 @@ float ul2float(unsigned long ul)
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
 \*********************************************************************************************/
-String toString(float value, byte decimals)
+String toString(const float& value, byte decimals)
 {
   String sValue = String(value, decimals);
 
   sValue.trim();
   return sValue;
+}
+
+String doubleToString(const double& value, int decimals, bool trimTrailingZeros) {
+  String res(value, decimals);
+  if (trimTrailingZeros) {
+    int dot_pos = res.lastIndexOf('.');
+    if (dot_pos != -1) {
+      bool someTrimmed = false;
+      for (int i = res.length()-1; i > dot_pos && res[i] == '0'; --i) {
+        someTrimmed = true;
+        res[i] = ' ';
+      }
+      if (someTrimmed) {
+        res.trim();
+      }
+      if (res.endsWith(F("."))) {
+        res[dot_pos] = ' ';
+        res.trim();
+      }
+    }
+  }
+  return res;
 }

@@ -12,7 +12,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 {
   if (!clientIPallowed()) { return HandledWebCommand_result::IP_not_allowed; }
   webrequest.trim();
-  if (webrequest.length() == 0) { return HandledWebCommand_result::NoCommand; }
+  if (webrequest.isEmpty()) { return HandledWebCommand_result::NoCommand; }
 
   addLog(LOG_LEVEL_INFO,  String(F("HTTP: ")) + webrequest);
   webrequest = parseTemplate(webrequest);
@@ -31,7 +31,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 
   if ((command == F("event")) || (command == F("asyncevent")))
   {
-    eventQueue.add(parseStringToEnd(webrequest, 2));
+    eventQueue.addMove(parseStringToEnd(webrequest, 2));
     handledCmd = true;
     sendOK     = true;
   } else if (command.equals(F("taskrun")) ||

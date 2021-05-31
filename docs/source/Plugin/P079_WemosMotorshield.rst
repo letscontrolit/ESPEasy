@@ -33,7 +33,7 @@ There is also a STM32F030 microcontroller onboard that handles the i2c communica
 Firmware Upgrade
 ----------------
 Piotr Bugalski has re-written the firmware for the Wemos V1.0 Motor Shield. It is published at https://github.com/pbugalski/wemos_motor_shield.
-Details to Piotr's firmware redesign can be found `Here <https://hackaday.io/project/18439-motor-shield-reprogramming>`_
+Details to Piotr's firmware redesign can be found `on the project page <https://hackaday.io/project/18439-motor-shield-reprogramming>`_
 
 The factory installed firmware has reliability issues, such as hard lockup (hang) of the I2C bus.
 When this occurs all I2c communication is lost.

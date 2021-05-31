@@ -13,7 +13,7 @@
 \*********************************************************************************************/
 byte getValueCountFromSensorType(Sensor_VType sensorType);
 
-String getSensorTypeLabel(Sensor_VType sensorType);
+const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType);
 
 void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, byte pconfigIndex);
 
@@ -29,7 +29,11 @@ void pconfig_webformSave(struct EventStruct *event, byte pconfigIndex);
 
 void sensorTypeHelper_loadOutputSelector(
   struct EventStruct *event, byte pconfigIndex, byte valuenr,
-  int optionCount, const String options[]);
+  int optionCount, const __FlashStringHelper * options[], const int indices[] = NULL);
+
+void sensorTypeHelper_loadOutputSelector(
+  struct EventStruct *event, byte pconfigIndex, byte valuenr,
+  int optionCount, const String options[], const int indices[] = NULL);
 
 
 #endif // HELPER_CPLUGIN_SENSORTYPEHELPER_H

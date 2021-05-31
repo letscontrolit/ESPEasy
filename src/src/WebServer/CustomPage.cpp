@@ -49,6 +49,8 @@ boolean handle_custom(String path) {
     return false;    // unknown file that does not exist...
   }
 
+  if (!isLoggedIn()) { return false; }
+
   if (dashboardPage) // for the dashboard page, create a default unit dropdown selector
   {
     // handle page redirects to other unit's as requested by the unit dropdown selector
@@ -95,7 +97,7 @@ boolean handle_custom(String path) {
         else {
           name += Settings.Name;
         }
-        addSelector_Item(name, it->first, choice == it->first, false, "");
+        addSelector_Item(name, it->first, choice == it->first);
       }
     }
     addSelector_Foot();
@@ -124,17 +126,17 @@ boolean handle_custom(String path) {
     html_add_button_prefix();
     addHtml(path);
     addHtml(F("?btnunit="));
-    addHtml(String(prev));
+    addHtmlInt(prev);
     addHtml(F("'>&lt;</a>"));
     html_add_button_prefix();
     addHtml(path);
     addHtml(F("?btnunit="));
-    addHtml(String(next));
+    addHtmlInt(next);
     addHtml(F("'>&gt;</a>"));
   }
 
   // handle commands from a custom page
-  String webrequest = web_server.arg(F("cmd"));
+  String webrequest = webArg(F("cmd"));
 
   if (webrequest.length() > 0) {
     ExecuteCommand_all_config(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
@@ -147,7 +149,7 @@ boolean handle_custom(String path) {
 
   if (dataFile)
   {
-    String page = "";
+    String page;
     page.reserve(dataFile.size());
 
     while (dataFile.available()) {

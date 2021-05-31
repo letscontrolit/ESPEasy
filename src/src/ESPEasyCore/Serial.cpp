@@ -1,11 +1,14 @@
-#include "Serial.h"
+#include "../ESPEasyCore/Serial.h"
 
 
 #include "../Commands/InternalCommands.h"
 
+#include "../Globals/Cache.h"
 #include "../Globals/Logging.h" //  For serialWriteBuffer
+#include "../Globals/Settings.h"
 
 #include "../Helpers/Memory.h"
+
 
 /********************************************************************************************\
  * Get data from Serial Interface
@@ -15,8 +18,32 @@ byte SerialInByte;
 int  SerialInByteCounter = 0;
 char InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
 
+void initSerial()
+{
+  if (log_to_serial_disabled || !Settings.UseSerial || activeTaskUseSerial0()) {
+    return;
+  }
+
+  // make sure previous serial buffers are flushed before resetting baudrate
+  Serial.flush();
+  Serial.begin(Settings.BaudRate);
+
+  // Serial.setDebugOutput(true);
+}
+
 void serial()
 {
+  if (Serial.available())
+  {
+    String dummy;
+
+    if (PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
+      return;
+    }
+  }
+
+  if (!Settings.UseSerial || activeTaskUseSerial0()) { return; }
+
   while (Serial.available())
   {
     delay(0);
@@ -50,8 +77,7 @@ void serial()
   }
 }
 
-void addToSerialBuffer(const char *line) {
-  process_serialWriteBuffer(); // Try to make some room first.
+int getRoomLeft() {
   int roomLeft = getMaxFreeBlock();
 
   if (roomLeft < 1000) {
@@ -61,17 +87,37 @@ void addToSerialBuffer(const char *line) {
   } else {
     roomLeft -= 4000;                          // leave some free for normal use.
   }
+  return roomLeft;
+}
 
-  const char* c = line;
+void addToSerialBuffer(const char *line) {
+  process_serialWriteBuffer(); // Try to make some room first.
+  int roomLeft = getRoomLeft();
+
+  const char *c = line;
+
   while (roomLeft > 0) {
     // Must use PROGMEM aware functions here.
-    char ch = pgm_read_byte(c++);
+    const char ch = pgm_read_byte(c++);
+
     if (ch == '\0') {
       return;
     } else {
       serialWriteBuffer.push_back(ch);
       --roomLeft;
     }
+  }
+}
+
+void addToSerialBuffer(const String& line) {
+  process_serialWriteBuffer(); // Try to make some room first.
+  int roomLeft = getRoomLeft();
+
+  auto it = line.begin();
+  while (roomLeft > 0 && it != line.end()) {
+    serialWriteBuffer.push_back(*it);
+    --roomLeft;
+    ++it;
   }
 }
 
@@ -90,9 +136,11 @@ void process_serialWriteBuffer() {
 
     if (snip < bytes_to_write) { bytes_to_write = snip; }
 
-    while (bytes_to_write > 0) {
+    while (bytes_to_write > 0 && !serialWriteBuffer.empty()) {
       const char c = serialWriteBuffer.front();
-      Serial.write(c);
+      if (Settings.UseSerial) {
+        Serial.write(c);
+      }
       serialWriteBuffer.pop_front();
       --bytes_to_write;
     }
@@ -101,13 +149,24 @@ void process_serialWriteBuffer() {
 
 // For now, only send it to the serial buffer and try to process it.
 // Later we may want to wrap it into a log.
+void serialPrint(const __FlashStringHelper * text) {
+  addToSerialBuffer(text);
+  process_serialWriteBuffer();
+}
+
 void serialPrint(const String& text) {
-  addToSerialBuffer(text.c_str());
+  addToSerialBuffer(text);
+  process_serialWriteBuffer();
+}
+
+void serialPrintln(const __FlashStringHelper * text) {
+  addToSerialBuffer(text);
+  addNewlineToSerialBuffer();
   process_serialWriteBuffer();
 }
 
 void serialPrintln(const String& text) {
-  addToSerialBuffer(text.c_str());
+  addToSerialBuffer(text);
   addNewlineToSerialBuffer();
   process_serialWriteBuffer();
 }

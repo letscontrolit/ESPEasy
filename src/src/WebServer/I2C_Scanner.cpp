@@ -72,7 +72,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
               int newpos = description.indexOf(',', pos);
 
               if (pos != 0) {
-                addHtml(",");
+                addHtml(',');
               }
 
               if (newpos == -1) {
@@ -91,7 +91,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
           nDevices++;
         }
         json_close();
-        addHtml("\n");
+        addHtml('\n');
       }
 #ifdef FEATURE_I2CMULTIPLEXER
     }
@@ -164,7 +164,13 @@ String getKnownI2Cdevice(byte address) {
       result =  F("PCF8574,MCP23017,LCD,PN532");
       break;
     case 0x29:
-      result =  F("TSL2561");
+      result =  F("TSL2561,TCS34725,VL53L0X,VL53L1X");
+      break;
+    case 0x30:
+      result =  F("VL53L0X,VL53L1X");
+      break;
+    case 0x36:
+      result =  F("MAX1704x");
       break;
     case 0x38:
     case 0x3A:
@@ -296,7 +302,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
         String description = getKnownI2Cdevice(address);
 
         if (description.length() > 0) {
-          description.replace(",", "<BR>");
+          description.replace(F(","), F("<BR>"));
           addHtml(description);
         }
         nDevices++;

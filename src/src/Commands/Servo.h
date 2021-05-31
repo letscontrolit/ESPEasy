@@ -7,9 +7,7 @@
 #include <map>
 
 #ifdef USE_SERVO
-# ifdef ESP32
-#  include <Servo.h>
-# endif // ifdef ESP32
+# include <Servo.h>
 
 // IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)
 
@@ -17,7 +15,7 @@ typedef std::map<uint8_t, Servo> ServoPinMap_t;
 extern ServoPinMap_t ServoPinMap;
 #endif // USE_SERVO
 
-String Command_Servo(struct EventStruct *event,
+const __FlashStringHelper * Command_Servo(struct EventStruct *event,
                      const char         *Line);
 
 

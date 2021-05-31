@@ -16,27 +16,27 @@
 
 
 // Simple function to return "Ok", to avoid flash string duplication in the firmware.
-String return_command_success()
+const __FlashStringHelper * return_command_success()
 {
   return F("\nOk");
 }
 
-String return_command_failed()
+const __FlashStringHelper * return_command_failed()
 {
   return F("\nFailed");
 }
 
-String return_incorrect_nr_arguments()
+const __FlashStringHelper * return_incorrect_nr_arguments()
 {
   return F("Too many arguments, try using quotes!");
 }
 
-String return_incorrect_source()
+const __FlashStringHelper * return_incorrect_source()
 {
   return F("Command not allowed from this source!");
 }
 
-String return_not_connected()
+const __FlashStringHelper * return_not_connected()
 {
   return F("Not connected to WiFi");
 }
@@ -51,7 +51,7 @@ String return_result(struct EventStruct *event, const String& result)
   return result;
 }
 
-String return_see_serial(struct EventStruct *event)
+const __FlashStringHelper * return_see_serial(struct EventStruct *event)
 {
   if (event->Source == EventValueSource::Enum::VALUE_SOURCE_SERIAL) {
     return return_command_success();
@@ -148,8 +148,9 @@ String Command_GetORSetBool(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (isInt(TmpStr1)) {
-        *value = atoi(TmpStr1.c_str()) > 0;
+      int tmp_int = 0;
+      if (validIntFromString(TmpStr1, tmp_int)) {
+        *value = tmp_int > 0;
       }
       else if (strcmp_P(PSTR("on"), TmpStr1.c_str()) == 0) { *value = true; }
       else if (strcmp_P(PSTR("true"), TmpStr1.c_str()) == 0) { *value = true; }
@@ -181,8 +182,9 @@ String Command_GetORSetUint8_t(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (isInt(TmpStr1)) {
-        *value = (uint8_t)atoi(TmpStr1.c_str());
+      int tmp_int = 0;
+      if (validIntFromString(TmpStr1, tmp_int)) {
+        *value = static_cast<uint8_t>(tmp_int);
       }
       else if (strcmp_P(PSTR("WIFI"), TmpStr1.c_str()) == 0) { *value = 0; }
       else if (strcmp_P(PSTR("ETHERNET"), TmpStr1.c_str()) == 0) { *value = 1; }
@@ -212,8 +214,9 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      if (isInt(TmpStr1)) {
-        *value = (int8_t)atoi(TmpStr1.c_str());
+      int tmp_int = 0;
+      if (validIntFromString(TmpStr1, tmp_int)) {
+        *value = static_cast<int8_t>(tmp_int);
       }
     }
   }

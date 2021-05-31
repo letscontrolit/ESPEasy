@@ -66,7 +66,7 @@ bool TimingStats::thresholdExceeded(unsigned long threshold) const {
 /********************************************************************************************\
    Functions used for displaying timing stats
  \*********************************************************************************************/
-String getPluginFunctionName(int function) {
+const __FlashStringHelper * getPluginFunctionName(int function) {
   switch (function) {
     case PLUGIN_INIT_ALL:              return F("INIT_ALL");
     case PLUGIN_INIT:                  return F("INIT");
@@ -78,6 +78,7 @@ String getPluginFunctionName(int function) {
     case PLUGIN_WEBFORM_SAVE:          return F("WEBFORM_SAVE");
     case PLUGIN_WEBFORM_LOAD:          return F("WEBFORM_LOAD");
     case PLUGIN_WEBFORM_SHOW_VALUES:   return F("WEBFORM_SHOW_VALUES");
+    case PLUGIN_FORMAT_USERVAR:        return F("FORMAT_USERVAR");
     case PLUGIN_GET_DEVICENAME:        return F("GET_DEVICENAME");
     case PLUGIN_GET_DEVICEVALUENAMES:  return F("GET_DEVICEVALUENAMES");
     case PLUGIN_WRITE:                 return F("WRITE");
@@ -95,7 +96,7 @@ String getPluginFunctionName(int function) {
     case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
     case PLUGIN_REQUEST:               return F("REQUEST");
   }
-  return getUnknownString();
+  return F("Unknown");
 }
 
 bool mustLogFunction(int function) {
@@ -110,6 +111,7 @@ bool mustLogFunction(int function) {
     case PLUGIN_WEBFORM_SAVE:          return false;
     case PLUGIN_WEBFORM_LOAD:          return false;
     case PLUGIN_WEBFORM_SHOW_VALUES:   return false;
+    case PLUGIN_FORMAT_USERVAR:        return false;
     case PLUGIN_GET_DEVICENAME:        return false;
     case PLUGIN_GET_DEVICEVALUENAMES:  return false;
     case PLUGIN_WRITE:                 return true;
@@ -130,7 +132,7 @@ bool mustLogFunction(int function) {
   return false;
 }
 
-String getCPluginCFunctionName(CPlugin::Function function) {
+const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function) {
   switch (function) {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return F("CPLUGIN_PROTOCOL_ADD");
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return F("CPLUGIN_PROTOCOL_TEMPLATE");
@@ -157,7 +159,7 @@ String getCPluginCFunctionName(CPlugin::Function function) {
       break;
 
   }
-  return getUnknownString();
+  return F("Unknown");
 }
 
 bool mustLogCFunction(CPlugin::Function function) {
@@ -221,6 +223,7 @@ String getMiscStatsName(int stat) {
     case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
     case RULES_PROCESSING:        return F("rulesProcessing()");
     case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
+    case SAVE_TO_RTC:             return F("saveToRTC()");
     case BACKGROUND_TASKS:        return F("backgroundtasks()");
     case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
     case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");
@@ -228,6 +231,8 @@ String getMiscStatsName(int stat) {
     case PARSE_SYSVAR:            return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
+    case WIFI_SCAN_ASYNC:         return F("WiFi Scan Async");
+    case WIFI_SCAN_SYNC:          return F("WiFi Scan Sync (blocking)");
     case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");
     case C001_DELAY_QUEUE:
     case C002_DELAY_QUEUE:

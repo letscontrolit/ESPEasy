@@ -69,7 +69,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        const String options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
+        const __FlashStringHelper * options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
         int indices[] = { P005_DHT11, P005_DHT22, P005_DHT12, P005_AM2301, P005_SI7021 };
 
         addFormSelector(F("Sensor model"), F("p005_dhttype"), 5, options, indices, PCONFIG(0) );
@@ -110,12 +110,12 @@ void P005_log(struct EventStruct *event, int logNr)
     case P005_error_invalid_NAN_reading: text += F("Invalid NAN reading"); break;
     case P005_info_temperature:
       text += F("Temperature: ");
-      text += UserVar[event->BaseVarIndex];
+      text += formatUserVarNoCheck(event->TaskIndex, 0);
       isError = false;
       break;
     case P005_info_humidity:
       text += F("Humidity: ");
-      text += UserVar[event->BaseVarIndex + 1];
+      text += formatUserVarNoCheck(event->TaskIndex, 1);
       isError = false;
       break;
   }

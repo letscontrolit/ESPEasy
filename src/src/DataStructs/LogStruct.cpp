@@ -16,13 +16,15 @@ void LogStruct::add(const byte loglevel, const char *line) {
   log_level[write_idx] = loglevel;
 
   // Must use PROGMEM aware functions here to process line
-  unsigned linelength = strlen_P(line);
+  unsigned int linelength = strlen_P(line);
 
   if (linelength > LOG_STRUCT_MESSAGE_SIZE - 1) {
     linelength = LOG_STRUCT_MESSAGE_SIZE - 1;
   }
   Message[write_idx] = "";
-  Message[write_idx].reserve(linelength);
+  if (!Message[write_idx].reserve(linelength)) {
+    return;
+  }
 
   const char* c = line;
   for (unsigned i = 0; i < linelength; ++i) {
@@ -42,21 +44,21 @@ bool LogStruct::get(String& output, const String& lineEnd) {
   return !isEmpty();
 }
 
-String LogStruct::get_logjson_formatted(bool& logLinesAvailable, unsigned long& timestamp) {
+bool LogStruct::getNext(bool& logLinesAvailable, unsigned long& timestamp, String& message, byte& loglevel) {
   lastReadTimeStamp = millis();
   logLinesAvailable = false;
 
   if (isEmpty()) {
-    return "";
+    return false;
   }
   read_idx  = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
   timestamp = timeStamp[read_idx];
-  String output = logjson_formatLine(read_idx);
-
-  if (isEmpty()) { return output; }
-  output           += ",\n";
-  logLinesAvailable = true;
-  return output;
+  message = Message[read_idx];
+  loglevel = log_level[read_idx];
+  if (!isEmpty()) { 
+    logLinesAvailable = true;
+  }
+  return true;
 }
 
 bool LogStruct::isEmpty() {
@@ -75,20 +77,6 @@ String LogStruct::formatLine(int index, const String& lineEnd) {
   output += " : ";
   output += Message[index];
   output += lineEnd;
-  return output;
-}
-
-String LogStruct::logjson_formatLine(int index) {
-  String output;
-
-  output.reserve(LOG_STRUCT_MESSAGE_SIZE + 64);
-  output  = "{";
-  output += to_json_object_value("timestamp", String(timeStamp[index]));
-  output += ",\n";
-  output += to_json_object_value("text",  Message[index]);
-  output += ",\n";
-  output += to_json_object_value("level", String(log_level[index]));
-  output += "}";
   return output;
 }
 

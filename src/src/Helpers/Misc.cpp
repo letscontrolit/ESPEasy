@@ -1,21 +1,20 @@
-#include "Misc.h"
+#include "../Helpers/Misc.h"
 
-
+#include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy-Globals.h"
-
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/Serial.h"
-
 #include "../Globals/ESPEasy_time.h"
-
+#include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
+
+
 
 
 bool remoteConfig(struct EventStruct *event, const String& string)
@@ -39,7 +38,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
       // tolerantParseStringKeepCase(Line, 4);
       String configCommand = parseStringToEndKeepCase(string, 4);
 
-      if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
+      if ((configTaskName.isEmpty()) || (configCommand.isEmpty())) {
         return success; // TD-er: Should this be return false?
       }
       taskIndex_t index = findTaskIndexByName(configTaskName);
@@ -212,6 +211,20 @@ String getTaskDeviceName(taskIndex_t TaskIndex) {
 }
 
 /********************************************************************************************\
+   Handler for getting Value Names from TaskIndex
+
+   - value names can be accessed with task variable index
+   - maximum number of variables <= defined number of variables in plugin
+ \*********************************************************************************************/
+String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
+
+  TaskValueIndex = (TaskValueIndex < getValueCountForTask(TaskIndex) ? TaskValueIndex : getValueCountForTask(TaskIndex));
+
+  LoadTaskSettings(TaskIndex);
+  return ExtraTaskSettings.TaskDeviceValueNames[TaskValueIndex];
+}
+
+/********************************************************************************************\
    If RX and TX tied together, perform emergency reset to get the system out of boot loops
  \*********************************************************************************************/
 void emergencyReset()
@@ -232,78 +245,6 @@ void emergencyReset()
   }
 }
 
-void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seconds)
-{
-  #ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log;
-    log  = F("timeStringToSeconds: ");
-    log += tBuf;
-    log += F(" -> ");
-    log += hours;
-    log += ':';
-    log += minutes;
-    log += ':';
-    log += seconds;
-    addLog(LOG_LEVEL_DEBUG, log);
-  }
-
-  #endif // ifndef BUILD_NO_DEBUG
-}
-
-// convert old and new time string to nr of seconds
-// return whether it should be considered a time string.
-bool timeStringToSeconds(const String& tBuf, int& time_seconds) {
-  time_seconds = -1;
-  int hours              = 0;
-  int minutes            = 0;
-  int seconds            = 0;
-  const int hour_sep_pos = tBuf.indexOf(':');
-
-  if (hour_sep_pos < 0) {
-    // Only hours, separator not found.
-    if (validIntFromString(tBuf, hours)) {
-      time_seconds = hours * 60 * 60;
-    }
-
-    // It is a valid time string, but could also be just a numerical.
-    logtimeStringToSeconds(tBuf, hours, minutes, seconds);
-    return false;
-  }
-
-  if (!validIntFromString(tBuf.substring(0, hour_sep_pos), hours)) {
-    logtimeStringToSeconds(tBuf, hours, minutes, seconds);
-    return false;
-  }
-  const int min_sep_pos = tBuf.indexOf(':', hour_sep_pos + 1);
-
-  if (min_sep_pos < 0) {
-    // Old format, only HH:MM
-    if (!validIntFromString(tBuf.substring(hour_sep_pos + 1), minutes)) {
-      logtimeStringToSeconds(tBuf, hours, minutes, seconds);
-      return false;
-    }
-  } else {
-    // New format, only HH:MM:SS
-    if (!validIntFromString(tBuf.substring(hour_sep_pos + 1, min_sep_pos), minutes)) {
-      logtimeStringToSeconds(tBuf, hours, minutes, seconds);
-      return false;
-    }
-
-    if (!validIntFromString(tBuf.substring(min_sep_pos + 1), seconds)) {
-      logtimeStringToSeconds(tBuf, hours, minutes, seconds);
-      return false;
-    }
-  }
-
-  if ((minutes < 0) || (minutes > 59)) { return false; }
-
-  if ((seconds < 0) || (seconds > 59)) { return false; }
-  time_seconds = hours * 60 * 60 + minutes * 60 + seconds;
-  logtimeStringToSeconds(tBuf, hours, minutes, seconds);
-  return true;
-}
 
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
@@ -328,6 +269,13 @@ void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
   #else // if defined(ESP32)
   ESP.reset();
   #endif // if defined(ESP32)
+}
+
+void FeedSW_watchdog()
+{
+  #ifdef ESP8266
+  ESP.wdtFeed();
+  #endif
 }
 
 void SendValueLogger(taskIndex_t TaskIndex)
@@ -482,3 +430,43 @@ void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
 
   number = (number & ~mask) | newvalue;
 }
+
+
+float getCPUload() {
+  return 100.0f - Scheduler.getIdleTimePct();
+}
+
+int getLoopCountPerSec() {
+  return loopCounterLast / 30;
+}
+
+int getUptimeMinutes() {
+  return wdcounter / 2;
+}
+
+#ifndef BUILD_NO_RAM_TRACKER
+void logMemUsageAfter(const __FlashStringHelper * function, int value) {
+  // Store free memory in an int, as subtracting may sometimes result in negative value.
+  // The recorded used memory is not an exact value, as background (or interrupt) tasks may also allocate or free heap memory.
+  static int last_freemem = ESP.getFreeHeap();
+  const int freemem_end = ESP.getFreeHeap();
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log;
+    log.reserve(128);
+    log  = F("After ");
+    log += function;
+    if (value >= 0) {
+      log += value;
+    }
+    while (log.length() < 30) log += ' ';
+    log += F("Free mem after: ");
+    log += freemem_end;
+    while (log.length() < 55) log += ' ';
+    log += F("diff: ");
+    log += last_freemem - freemem_end;
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+
+  last_freemem = freemem_end;
+}
+#endif

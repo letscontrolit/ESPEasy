@@ -4,6 +4,7 @@
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../Globals/Cache.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
@@ -112,7 +113,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
   {
     String id = F("i2cuart_addr");
     addRowLabel_tr_id(F("I2C Address"), id);
-    do_addSelector_Head(id, "", "", false);
+    do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false);
 
     if ((address < SC16IS752_I2C_BASE_ADDR) || (address >= (SC16IS752_I2C_BASE_ADDR + SC16IS752_I2C_ADDRESSES))) {
       // selected address is not in range
@@ -128,7 +129,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
       option += F(" (datasheet: ");
       option += formatToHex(addr * 2);
       option += ')';
-      addSelector_Item(option, addr, addr == address, false, "");
+      addSelector_Item(option, addr, addr == address);
     }
     addSelector_Foot();
   }
@@ -136,7 +137,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
     if ((channel != SC16IS752_CHANNEL_A) && (channel != SC16IS752_CHANNEL_B)) {
       channel = SC16IS752_CHANNEL_A;
     }
-    String chOptions[SC16IS752_CHANNELS];
+    const __FlashStringHelper * chOptions[SC16IS752_CHANNELS];
     int    chValues[SC16IS752_CHANNELS];
     chValues[0]  = SC16IS752_CHANNEL_A;
     chValues[1]  = SC16IS752_CHANNEL_B;
@@ -243,10 +244,6 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
                          static_cast<int>(ESPeasySerialType::getSerialType(port, rxPinDef, txPinDef)),
                          F("serialPortChanged(this)")); // Script to toggle GPIO visibility when changing selection.
   html_add_script(F("document.getElementById('serPort').onchange();"), false);
-
-  if (Settings.UseSerial) {
-    addFormNote(F("Do <b>NOT</b> combine HW Serial0 and log to serial on Tools->Advanced->Serial Port."));
-  }
 #ifdef ESP8266
   if ((rxPinDef == 15) || (txPinDef == 15)) {
     addFormNote(F("GPIO-15 (D8) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));
@@ -298,20 +295,6 @@ void serialHelper_webformSave(struct EventStruct *event) {
   serialHelper_webformSave(CONFIG_PORT, CONFIG_PIN1, CONFIG_PIN2);
 }
 
-void serialHelper_plugin_init(struct EventStruct *event) {
-  ESPEasySerialPort serType = serialHelper_getSerialType(event);
-
-  if (serType == ESPEasySerialPort::serial0) {
-    Settings.UseSerial = false; // Disable global Serial port.
-  }
-  #ifdef ESP8266
-
-  if (serType == ESPEasySerialPort::serial0_swap) {
-    Settings.UseSerial = false; // Disable global Serial port.
-  }
-  #endif // ifdef ESP8266
-}
-
 bool serialHelper_isValid_serialconfig(byte serialconfig) {
   if ((serialconfig >= 0x10) && (serialconfig <= 0x3f)) {
     return true;
@@ -324,7 +307,7 @@ void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte curre
   String id = F("serConf");
 
   addRowLabel_tr_id(F("Serial Config"), id);
-  do_addSelector_Head(id, "", "", false);
+  do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false);
 
   if (currentSelection == 0) {
     // Must truncate it to 1 byte, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
@@ -353,7 +336,7 @@ void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte curre
           case 1:  value += 0x10; break;
           case 2:  value += 0x30; break;
         }
-        addSelector_Item(label, value, value == currentSelection, false, "");
+        addSelector_Item(label, value, value == currentSelection);
       }
     }
   }

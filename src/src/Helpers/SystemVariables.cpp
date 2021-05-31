@@ -2,7 +2,7 @@
 
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../DataStructs/TimingStats.h"
@@ -17,10 +17,14 @@
 # include "../Globals/MQTT.h"
 #endif // ifdef USES_MQTT
 #include "../Globals/NetworkState.h"
+#include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
+#include "../Globals/Statistics.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
 
@@ -85,6 +89,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
     switch (enumval)
     {
+      case BOOT_CAUSE:        value = String(lastBootCause); break; // Integer value to be used in rules
       case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
       case CR:                value = "\r"; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
@@ -128,6 +133,10 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SSID:              value = (WiFiEventData.WiFiDisconnected()) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
+      case SUNRISE_S:         value = getValue(LabelType::SUNRISE_S); break;
+      case SUNSET_S:          value = getValue(LabelType::SUNSET_S); break;
+      case SUNRISE_M:         value = getValue(LabelType::SUNRISE_M); break;
+      case SUNSET_M:          value = getValue(LabelType::SUNSET_M); break;
       case SYSBUILD_DATE:     value = get_build_date(); break;
       case SYSBUILD_DESCR:    value = getValue(LabelType::BUILD_DESC); break;
       case SYSBUILD_FILENAME: value = getValue(LabelType::BINARY_FILENAME); break;
@@ -163,7 +172,8 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case UNIXDAY:           value = String(node_time.getUnixTime() / 86400); break;
       case UNIXDAY_SEC:       value = String(node_time.getUnixTime() % 86400); break;
       case UNIXTIME:          value = String(node_time.getUnixTime()); break;
-      case UPTIME:            value = String(wdcounter / 2); break;
+      case UPTIME:            value = String(getUptimeMinutes()); break;
+      case UPTIME_MS:         value = ull2String(getMicros64() / 1000); break;
       #if FEATURE_ADC_VCC
       case VCC:               value = String(vcc); break;
       #else // if FEATURE_ADC_VCC
@@ -185,30 +195,25 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
         break;
       default:
 
-        if (useURLencode) {
-          value = URLEncode(value.c_str());
-        }
-        s.replace(SystemVariables::toString(enumval), value);
+        repl(SystemVariables::toString(enumval), value, s, useURLencode);
         break;
     }
   }
   while (enumval != SystemVariables::Enum::UNKNOWN);
 
-  const int v_index = s.indexOf("%v");
+  int v_index = s.indexOf(F("%v"));
 
-  if ((v_index != -1) && isDigit(s[v_index + 2])) {
-    for (byte i = 0; i < CUSTOM_VARS_MAX; ++i) {
-      String key = "%v" + String(i + 1) + '%';
-
+  while ((v_index != -1)) {
+    unsigned int i;
+    if (validUIntFromString(s.substring(v_index + 2), i)) {
+      const String key = String(F("%v")) + String(i) + '%';
       if (s.indexOf(key) != -1) {
-        String value = String(customFloatVar[i]);
-
-        if (useURLencode) {
-          value = URLEncode(value.c_str());
-        }
-        s.replace(key, value);
+        const bool trimTrailingZeros = true;
+        const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        repl(key, value, s, useURLencode);
       }
     }
+    v_index = s.indexOf(F("%v"), v_index + 1); // Find next occurance
   }
 
   STOP_TIMER(PARSE_SYSVAR);
@@ -233,12 +238,14 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
     return Enum::UNKNOWN;
   }
 
-  String str_prefix        = SystemVariables::toString(nextTested).substring(0, 2);
+  String str_prefix        = SystemVariables::toString(nextTested);
+  str_prefix               = str_prefix.substring(0, 2);
   bool   str_prefix_exists = str.indexOf(str_prefix) != -1;
 
   for (int i = nextTested; i < Enum::UNKNOWN; ++i) {
     SystemVariables::Enum enumval = static_cast<SystemVariables::Enum>(i);
-    String new_str_prefix         = SystemVariables::toString(enumval).substring(0, 2);
+    String new_str_prefix         = SystemVariables::toString(enumval);
+    new_str_prefix                = new_str_prefix.substring(0, 2);
 
     if ((str_prefix == new_str_prefix) && !str_prefix_exists) {
       // Just continue
@@ -257,9 +264,10 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
   return Enum::UNKNOWN;
 }
 
-String SystemVariables::toString(SystemVariables::Enum enumval)
+const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enumval)
 {
   switch (enumval) {
+    case Enum::BOOT_CAUSE:      return F("%bootcause%");
     case Enum::BSSID:           return F("%bssid%");
     case Enum::CR:              return F("%CR%");
     case Enum::IP4:             return F("%ip4%");
@@ -290,6 +298,10 @@ String SystemVariables::toString(SystemVariables::Enum enumval)
     case Enum::SSID:            return F("%ssid%");
     case Enum::SUNRISE:         return F("%sunrise");
     case Enum::SUNSET:          return F("%sunset");
+    case Enum::SUNRISE_S:       return F("%s_sunrise%");
+    case Enum::SUNSET_S:        return F("%s_sunset%");
+    case Enum::SUNRISE_M:       return F("%m_sunrise%");
+    case Enum::SUNSET_M:        return F("%m_sunset%");
     case Enum::SYSBUILD_DATE:   return F("%sysbuild_date%");
     case Enum::SYSBUILD_DESCR:  return F("%sysbuild_desc%");
     case Enum::SYSBUILD_FILENAME:  return F("%sysbuild_filename%");
@@ -326,6 +338,7 @@ String SystemVariables::toString(SystemVariables::Enum enumval)
     case Enum::UNIXDAY_SEC:     return F("%unixday_sec%");
     case Enum::UNIXTIME:        return F("%unixtime%");
     case Enum::UPTIME:          return F("%uptime%");
+    case Enum::UPTIME_MS:       return F("%uptime_ms%");
     case Enum::VCC:             return F("%vcc%");
     case Enum::WI_CH:           return F("%wi_ch%");
     case Enum::UNKNOWN: break;

@@ -1,8 +1,13 @@
 #ifndef COMMAND_NOTIFICATIONS_H
 #define COMMAND_NOTIFICATIONS_H
 
-class String;
+#include "../../ESPEasy_common.h"
 
-String Command_Notifications_Notify(struct EventStruct *event, const char* Line);
+#ifdef USES_NOTIFIER
+
+
+const __FlashStringHelper * Command_Notifications_Notify(struct EventStruct *event, const char* Line);
+
+#endif
 
 #endif // COMMAND_NOTIFICATIONS_H

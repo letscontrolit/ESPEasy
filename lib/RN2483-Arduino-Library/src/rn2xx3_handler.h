@@ -119,6 +119,7 @@ public:
                                              uint8_t port = 1);
 
   bool setSF(uint8_t sf);
+  uint8_t getSF(int& dr);
 
 
   /*
@@ -154,6 +155,8 @@ public:
   }
 
   bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp);
+
+  bool setTTNstack(RN2xx3_datatypes::TTN_stack_version version);
 
 private:
 
@@ -251,8 +254,8 @@ private:
   unsigned long _start_prep  = 0;    // timestamp of preparing command
   unsigned long _start       = 0;    // timestamp of last set timeout
   unsigned long _timeout     = 100;  // timeout duration
-  uint32_t _rxdelay1         = 1000; // delay from last moment of sending to receive RX1 window
-  uint32_t _rxdelay2         = 2000; // delay from last moment of sending to receive RX2 window
+  uint32_t _rxdelay1         = 5000; // delay from last moment of sending to receive RX1 window
+  uint32_t _rxdelay2         = 6000; // delay from last moment of sending to receive RX2 window
   uint8_t _busy_count        = 0;    // Number of times the module replied with "busy"
   uint8_t _retry_count       = 0;    // Number of retries of current TX command
   RN_state _state            = RN_state::idle;
@@ -262,6 +265,7 @@ private:
   uint16_t _max_received_length = 0;
 
 
+  RN2xx3_datatypes::Firmware _firmware = RN2xx3_datatypes::Firmware::unknown;
   RN2xx3_datatypes::Model _moduleType = RN2xx3_datatypes::Model::RN_NA;
   RN2xx3_datatypes::Freq_plan _fp     = RN2xx3_datatypes::Freq_plan::TTN_EU;
   uint8_t _sf                         = 7;

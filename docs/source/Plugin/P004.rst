@@ -27,7 +27,7 @@ Supported hardware
 
 .. include:: ../Plugin/P004_DS18b20.rst
 
-|P004_usedby|
+.. .. |P004_usedby|
 
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^

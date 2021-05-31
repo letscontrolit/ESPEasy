@@ -1,9 +1,8 @@
-#include "ESPEasy_checks.h"
+#include "../Helpers/ESPEasy_checks.h"
 
 
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/C013_p2p_dataStructs.h"
 #include "../DataStructs/CRCStruct.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/DeviceStruct.h"
@@ -15,7 +14,6 @@
 #include "../DataStructs/LogStruct.h"
 #include "../DataStructs/NodeStruct.h"
 #include "../DataStructs/NodeStruct.h"
-#include "../DataStructs/NotificationSettingsStruct.h"
 #include "../DataStructs/PortStatusStruct.h"
 #include "../DataStructs/ProtocolStruct.h"
 #include "../DataStructs/RTCStruct.h"
@@ -30,9 +28,17 @@
 
 #include <cstddef>
 
+#ifdef USES_C013
+#include "../DataStructs/C013_p2p_dataStructs.h"
+#endif
+
+#ifdef USES_C016
+#include "../ControllerQueue/C016_queue_element.h"
+#endif
 
 #ifdef USES_NOTIFIER
 #include "../DataStructs/NotificationStruct.h"
+#include "../DataStructs/NotificationSettingsStruct.h"
 #endif
 
 
@@ -93,8 +99,15 @@ void run_compiletime_checks() {
   check_size<portStatusStruct,                      6u>();
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
+  #ifdef USES_C013
   check_size<C013_SensorInfoStruct,                 137u>();
   check_size<C013_SensorDataStruct,                 24u>();
+  #endif
+  #ifdef USES_C016
+  check_size<C016_queue_element,                    24u>();
+  #endif
+
+
   #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
     static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
   #endif
@@ -154,7 +167,7 @@ bool SettingsCheck(String& error) {
 
   #endif
 
-  return error.length() == 0;
+  return error.isEmpty();
 }
 
 #include "Numerical.h"
@@ -170,10 +183,11 @@ String checkTaskSettings(taskIndex_t taskIndex) {
     return F("Invalid character in name. Do not use ',-+/*=^%!#[]{}()' or space.");
   }
   String deviceName = ExtraTaskSettings.TaskDeviceName;
-  if (isFloat(deviceName)) {
+  NumericalType detectedType;
+  if (isNumerical(deviceName, detectedType)) {
     return F("Invalid name. Should not be numeric.");
   }
-  if (deviceName.length() == 0) {
+  if (deviceName.isEmpty()) {
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       // Decide what to do here, for now give a warning when task is enabled.
       return F("Warning: Task Device Name is empty. It is adviced to give tasks an unique name");

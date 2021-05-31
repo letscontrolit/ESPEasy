@@ -72,6 +72,30 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
     {
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       addFormPinSelect(F("Reset Pin"), F("taskdevicepin3"), CONFIG_PIN3);
+
+      bool autoTagRemoval = PCONFIG(0) == 0; // Inverted state!
+      addFormCheckBox(F("Automatic Tag removal"), F("p017_autotagremoval"), autoTagRemoval);
+
+      if (PCONFIG_LONG(1) == 0) PCONFIG_LONG(1) = 500; // Defaulty 500 mSec (was hardcoded value)
+      addFormNumericBox(F("Automatic Tag removal after"),F("p017_removaltimeout"), PCONFIG_LONG(1), 250, 60000); // 0.25 to 60 seconds
+      addUnit(F("mSec."));
+
+      addFormNumericBox(F("Value to set on Tag removal"),F("p017_removalvalue"), PCONFIG_LONG(0), 0, 2147483647); // Max allowed is int = 0x7FFFFFFF ...
+
+      bool eventOnRemoval = PCONFIG(1) == 1; // Normal state!
+      addFormCheckBox(F("Event on Tag removal"), F("p017_sendreset"), eventOnRemoval);
+
+      success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SAVE:
+    {
+      PCONFIG(0)      = isFormItemChecked(F("p017_autotagremoval")) ? 0 : 1; // Inverted logic!
+      PCONFIG(1)      = isFormItemChecked(F("p017_sendreset")) ? 1 : 0;
+      PCONFIG_LONG(0) = getFormItemInt(F("p017_removalvalue"));
+      PCONFIG_LONG(1) = getFormItemInt(F("p017_removaltimeout"));
+
       success = true;
       break;
     }
@@ -96,11 +120,14 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TIMER_IN:
     {
       // Reset card id on timeout
-      UserVar[event->BaseVarIndex]     = 0;
-      UserVar[event->BaseVarIndex + 1] = 0;
-      addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
-      sendData(event);
-      success = true;
+      if (PCONFIG(0) == 0) {
+        UserVar.setSensorTypeLong(event->TaskIndex, PCONFIG_LONG(0));
+        addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
+        if (PCONFIG(1) == 1) {
+          sendData(event);
+        }
+        success = true;
+      }
       break;
     }
 
@@ -131,9 +158,11 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         if (error == 1)
         {
           errorCount++;
-          String log = F("PN532: Read error: ");
-          log += errorCount;
-          addLog(LOG_LEVEL_ERROR, log);
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            String log = F("PN532: Read error: ");
+            log += errorCount;
+            addLog(LOG_LEVEL_ERROR, log);
+          }
         }
         else {
           errorCount = 0;
@@ -152,12 +181,11 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
             key <<= 8;
             key  += uid[i];
           }
-          unsigned long old_key = ((uint32_t)UserVar[event->BaseVarIndex]) | ((uint32_t)UserVar[event->BaseVarIndex + 1]) << 16;
+          unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);
           bool new_key          = false;
 
           if (old_key != key) {
-            UserVar[event->BaseVarIndex]     = (key & 0xFFFF);
-            UserVar[event->BaseVarIndex + 1] = ((key >> 16) & 0xFFFF);
+            UserVar.setSensorTypeLong(event->TaskIndex, key);
             new_key                          = true;
           }
 
@@ -177,7 +205,9 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
           }
 
           if (new_key) { sendData(event); }
-          Scheduler.setPluginTaskTimer(500, event->TaskIndex, event->Par1);
+          uint32_t resetTimer = PCONFIG_LONG(1);
+          if (resetTimer < 250) resetTimer = 250;
+          Scheduler.setPluginTaskTimer(resetTimer, event->TaskIndex, event->Par1);
         }
       }
       break;
@@ -193,9 +223,11 @@ boolean Plugin_017_Init(int8_t resetPin)
 {
   if (resetPin != -1)
   {
-    String log = F("PN532: Reset on pin: ");
-    log += resetPin;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("PN532: Reset on pin: ");
+      log += resetPin;
+      addLog(LOG_LEVEL_INFO, log);
+    }
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);
     delay(100);
@@ -211,13 +243,15 @@ boolean Plugin_017_Init(int8_t resetPin)
   uint32_t versiondata = getFirmwareVersion();
 
   if (versiondata) {
-    String log = F("PN532: Found chip PN5");
-    log += String((versiondata >> 24) & 0xFF, HEX);
-    log += F(" FW: ");
-    log += String((versiondata >> 16) & 0xFF, HEX);
-    log += '.';
-    log += String((versiondata >> 8) & 0xFF, HEX);
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("PN532: Found chip PN5");
+      log += String((versiondata >> 24) & 0xFF, HEX);
+      log += F(" FW: ");
+      log += String((versiondata >> 16) & 0xFF, HEX);
+      log += '.';
+      log += String((versiondata >> 8) & 0xFF, HEX);
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
   else {
     return false;

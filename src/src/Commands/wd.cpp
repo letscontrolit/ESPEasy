@@ -1,5 +1,6 @@
 #include "../Commands/wd.h"
 
+#ifndef LIMIT_BUILD_SIZE
 
 #include "../Commands/Common.h"
 
@@ -10,7 +11,7 @@
 #include "../Helpers/StringConverter.h"
 
 
-String Command_WD_Config(EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_WD_Config(EventStruct *event, const char* Line)
 {
   Wire.beginTransmission(event->Par1);  // address
   Wire.write(event->Par2);              // command
@@ -37,3 +38,5 @@ String Command_WD_Read(EventStruct *event, const char* Line)
   }
   return return_command_success();
 }
+
+#endif

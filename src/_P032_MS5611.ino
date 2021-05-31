@@ -101,21 +101,23 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
           P032_data->readout();
 
           UserVar[event->BaseVarIndex] = P032_data->ms5611_temperature / 100;
-          int elev = PCONFIG(1);
-
-          if (elev)
+          
+          const int elev = PCONFIG(1);
+          if (elev != 0)
           {
-            UserVar[event->BaseVarIndex + 1] = P032_data->pressureElevation(P032_data->ms5611_pressure, elev);
+            UserVar[event->BaseVarIndex + 1] = pressureElevation(P032_data->ms5611_pressure, elev);
           } else {
             UserVar[event->BaseVarIndex + 1] = P032_data->ms5611_pressure;
           }
 
-          String log = F("MS5611  : Temperature: ");
-          log += UserVar[event->BaseVarIndex];
-          addLog(LOG_LEVEL_INFO, log);
-          log  = F("MS5611  : Barometric Pressure: ");
-          log += UserVar[event->BaseVarIndex + 1];
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("MS5611  : Temperature: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 0);
+            addLog(LOG_LEVEL_INFO, log);
+            log  = F("MS5611  : Barometric Pressure: ");
+            log += formatUserVarNoCheck(event->TaskIndex, 1);
+            addLog(LOG_LEVEL_INFO, log);
+          }
           success = true;
         }
       }

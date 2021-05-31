@@ -43,17 +43,6 @@
 
 
 
-
-/*********************************************************************************************\
-* Custom Variables for usage in rules and http.
-* Syntax: %vX%
-* usage:
-* let,1,10
-* if %v1%=10 do ...
-\*********************************************************************************************/
-extern float customFloatVar[CUSTOM_VARS_MAX];
-extern float UserVar[VARS_PER_TASK * TASKS_MAX];
-
 extern int deviceCount;
 
 // Array of function pointers to call plugins.
@@ -61,12 +50,12 @@ extern boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
                                          struct EventStruct *,
                                          String&);
 
+// Vector to match a "DeviceIndex" to a plugin ID.
+// INVALID_DEVICE_INDEX may be used as index for this array, thus one larger
+extern pluginID_t DeviceIndex_to_Plugin_id[PLUGIN_MAX + 1];
 
 // Map to match a plugin ID to a "DeviceIndex"
 extern std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
-
-// Vector to match a "DeviceIndex" to a plugin ID.
-extern std::vector<pluginID_t> DeviceIndex_to_Plugin_id;
 
 // Vector containing "DeviceIndex" alfabetically sorted.
 extern std::vector<deviceIndex_t> DeviceIndex_sorted;

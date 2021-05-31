@@ -21,7 +21,7 @@
 
 // End of defines being patched by the Python build script.
 
-String get_binary_filename() {
+const __FlashStringHelper * get_binary_filename() {
  #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
    return F("firmware.bin");
  #else
@@ -29,17 +29,17 @@ String get_binary_filename() {
  #endif
 }
 
-String get_build_time() {
+const __FlashStringHelper * get_build_time() {
   return F(__TIME__);
 }
 
-String get_build_date() {
+const __FlashStringHelper * get_build_date() {
   return F(__DATE__);
 }
 
-String get_build_origin() {
+const __FlashStringHelper * get_build_origin() {
   #if defined(CONTINUOUS_INTEGRATION)
-  return F("Travis");
+  return F("GitHub Actions");
   #elif defined(VAGRANT_BUILD)
   return F("Vagrant");
   #else 
@@ -47,17 +47,17 @@ String get_build_origin() {
   #endif
 }
 
-String get_build_platform() {
+const __FlashStringHelper * get_build_platform() {
  #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
-    return "";
+    return F("");
   #else
     return F(SET_BUILD_PLATFORM);
  #endif
 }
 
-String get_git_head() {
+const __FlashStringHelper * get_git_head() {
  #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
-   return "";
+   return F("");
  #else
     return F(SET_BUILD_GIT_HEAD);
  #endif

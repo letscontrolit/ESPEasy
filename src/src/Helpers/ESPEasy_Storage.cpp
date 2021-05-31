@@ -1,4 +1,4 @@
-#include "ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_Storage.h"
 
 #include "../../ESPEasy_common.h"
 
@@ -7,6 +7,7 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
@@ -25,11 +26,9 @@
 
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
-#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
-#include "../Helpers/MDNS_Helper.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
@@ -130,7 +129,7 @@ bool fileExists(const String& fname) {
 fs::File tryOpenFile(const String& fname, const String& mode) {
   START_TIMER;
   fs::File f;
-  if (fname.length() == 0 || fname.equals(F("/"))) {
+  if (fname.isEmpty() || fname.equals(F("/"))) {
     return f;
   }
 
@@ -273,6 +272,13 @@ String BuildFixes()
     }
     #endif
   }
+  if (Settings.Build < 20112) {
+    Settings.WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
+    Settings.WiFi_sensitivity_margin = 3; // Margin in dBm on top of sensitivity.
+  }
+  if (Settings.Build < 20113) {
+    Settings.NumberExtraWiFiScans = 0;
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();
@@ -355,31 +361,32 @@ bool GarbageCollection() {
 /********************************************************************************************\
    Save settings to file system
  \*********************************************************************************************/
-String SaveSettings(void)
+String SaveSettings()
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveSettings"));
   #endif
-  MD5Builder md5;
-  uint8_t    tmp_md5[16] = { 0 };
   String     err;
+  {
+    Settings.StructSize = sizeof(Settings);
 
-  Settings.StructSize = sizeof(Settings);
+    // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
 
-  // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
-
-  /*
-     memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
-     md5.begin();
-     md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
-     md5.calculate();
-     md5.getBytes(tmp_md5);
-     if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
-      // Settings have changed, save to file.
-      memcpy(Settings.md5, tmp_md5, 16);
-   */
-  Settings.validate();
-  err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, (byte *)&Settings, sizeof(Settings));
+    /*
+      MD5Builder md5;
+      uint8_t    tmp_md5[16] = { 0 };
+      memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
+      md5.begin();
+      md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
+      md5.calculate();
+      md5.getBytes(tmp_md5);
+      if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
+        // Settings have changed, save to file.
+        memcpy(Settings.md5, tmp_md5, 16);
+    */
+    Settings.validate();
+    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, (byte *)&Settings, sizeof(Settings));
+  }
 
   if (err.length()) {
     return err;
@@ -390,6 +397,15 @@ String SaveSettings(void)
   if (!SettingsCheck(err)) { return err; }
 
   //  }
+
+  err = SaveSecuritySettings();
+  return err;
+}
+
+String SaveSecuritySettings() {
+  MD5Builder md5;
+  uint8_t    tmp_md5[16] = { 0 };
+  String     err;
 
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
@@ -430,7 +446,7 @@ void afterloadSettings() {
   if (!Settings.UseRules) {
     eventQueue.clear();
   }
-  set_mDNS(); // To update changes in hostname.
+  CheckRunningServices(); // To update changes in hostname.
 }
 
 /********************************************************************************************\
@@ -619,7 +635,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
     readPos += bufferSize;
   }
 
-  if ((tmpString.length() != 0) && (stringCount < nrStrings)) {
+  if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {
     result              += F("Incomplete custom settings for index ");
     result              += (index + 1);
     strings[stringCount] = tmpString;
@@ -738,7 +754,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
                           (byte *)&ExtraTaskSettings,
                           sizeof(struct ExtraTaskSettingsStruct));
 
-  if (err.length() == 0) {
+  if (err.isEmpty()) {
     err = checkTaskSettings(TaskIndex);
   }
   return err;
@@ -752,8 +768,8 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
-
   if (!validTaskIndex(TaskIndex)) {
+    ExtraTaskSettings.clear();
     return String(); // Un-initialized task index.
   }
   #ifndef BUILD_NO_RAM_TRACKER
@@ -1065,8 +1081,14 @@ String doSaveToFile(const char *fname, int index, const byte *memAddress, int da
     f.close();
     #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("FILE : Saved ");
-      log = log + fname;
+      String log;
+      log.reserve(48);
+      log += F("FILE : Saved ");
+      log += fname;
+      log += F(" offset: ");
+      log += index;
+      log += F(" size: ");
+      log += datasize;
       addLog(LOG_LEVEL_INFO, log);
     }
     #endif
@@ -1162,7 +1184,7 @@ String LoadFromFile(const char *fname, int offset, byte *memAddress, int datasiz
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
-  delay(1);
+  delay(0);
   START_TIMER;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadFromFile"));
@@ -1174,7 +1196,7 @@ String LoadFromFile(const char *fname, int offset, byte *memAddress, int datasiz
   f.close();
 
   STOP_TIMER(LOADFILE_STATS);
-  delay(1);
+  delay(0);
 
   return String();
 }
@@ -1374,9 +1396,9 @@ String createCacheFilename(unsigned int count) {
   #ifdef ESP32
   fname = '/';
   #endif // ifdef ESP32
-  fname += "cache_";
+  fname += F("cache_");
   fname += String(count);
-  fname += ".bin";
+  fname += F(".bin");
   return fname;
 }
 
@@ -1424,22 +1446,27 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   }
 #endif // ESP8266
 #ifdef ESP32
-  File root = ESPEASY_FS.open(F("/cache"));
+  File root = ESPEASY_FS.open(F("/"));
   File file = root.openNextFile();
 
   while (file)
   {
     if (!file.isDirectory()) {
-      int count = getCacheFileCountFromFilename(file.name());
+      const String fname(file.name());
+      if (fname.startsWith(F("/cache")) || fname.startsWith(F("cache"))) {
+        int count = getCacheFileCountFromFilename(fname);
 
-      if (count >= 0) {
-        if (lowest > count) {
-          lowest = count;
-        }
+        if (count >= 0) {
+          if (lowest > count) {
+            lowest = count;
+          }
 
-        if (highest < count) {
-          highest         = count;
-          filesizeHighest = file.size();
+          if (highest < count) {
+            highest         = count;
+            filesizeHighest = file.size();
+          }
+        } else {
+          addLog(LOG_LEVEL_INFO, String(F("RTC  : Cannot get count from: ")) + fname);
         }
       }
     }

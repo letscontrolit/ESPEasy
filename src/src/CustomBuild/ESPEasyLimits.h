@@ -72,7 +72,11 @@
     # define DEVICES_MAX                      95
   #else    // if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
     # ifdef ESP32
-      #  define DEVICES_MAX                      85
+      # ifdef PLUGIN_BUILD_MAX_ESP32
+        #  define DEVICES_MAX                      125
+      # else // ifdef PLUGIN_BUILD_MAX_ESP32
+      #  define DEVICES_MAX                      100
+      # endif // ifdef PLUGIN_BUILD_MAX_ESP32
     # else // ifdef ESP32
       #  define DEVICES_MAX                      60
     # endif // ifdef ESP32
@@ -91,9 +95,6 @@
 
 #ifndef UNIT_NUMBER_MAX
   #define UNIT_NUMBER_MAX                   254 // Stored in Settings.Unit  unit 255 = broadcast
-#endif
-#ifndef CUSTOM_VARS_MAX
-  #define CUSTOM_VARS_MAX                    16
 #endif
 
 

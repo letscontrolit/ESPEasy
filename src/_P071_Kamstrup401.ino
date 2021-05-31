@@ -14,6 +14,7 @@
 
 #include <ESPeasySerial.h>
 
+#include "src/ESPEasyCore/Serial.h"
 
 #define PLUGIN_071
 #define PLUGIN_ID_071 71
@@ -208,7 +209,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
                m_flow = atol(tmpstr);
               else
                m_flow = 0;
-
+              {
                String log = F("Kamstrup output: ");
                log += m_energy;
                log += F(" MJ;  ");
@@ -227,11 +228,11 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
                log += m_flow;
                log += F(" L/H");
 //              addLog(LOG_LEVEL_INFO, log);
-
+              }
               UserVar[event->BaseVarIndex] = m_energy; //gives energy in Wh
               UserVar[event->BaseVarIndex+1] = m_volume;  //gives volume in liters
 
-              log = F("Kamstrup  : Heat value: ");
+              String log = F("Kamstrup  : Heat value: ");
               log += m_energy/1000;
               log += F(" kWh");
               addLog(LOG_LEVEL_INFO, log);

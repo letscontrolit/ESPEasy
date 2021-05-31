@@ -38,7 +38,7 @@ Price : ~ 5.40€/$ (https://fr.aliexpress.com/item/32919729730.html)
 
 
 ## Dependencies
-Plugin lib_deps = Adafruit GFX, adafruit/Adafruit ILI9341 @ ^1.5.6
+Plugin lib_deps = Adafruit GFX, Adafruit ILI9341
 
 ## API Documentation
 
@@ -237,7 +237,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         }
 
         byte choice2 = PCONFIG(1);
-        String options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
+        const __FlashStringHelper * options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
         int optionValues2[4] = { 0, 1, 2, 3 };
         addFormSelector(F("Rotation"), F("p095_rotate"), 4, options2, optionValues2, choice2);
 
@@ -276,8 +276,8 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
         String tmpString = String(string);
         String arguments = String(string);
 
-        String command = F("");
-        String subcommand = F("");
+        String command;
+        String subcommand;
 
         int argIndex = arguments.indexOf(',');
         if (argIndex)
@@ -470,7 +470,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             addLog(LOG_LEVEL_INFO, F("Fail to parse command correctly; please check API documentation"));
             String log2  = F("Parsed command = \"");
             log2 += string;
-            log2 += "\"";
+            log2 += F("\"");
             addLog(LOG_LEVEL_INFO, log2);
           }
         } 
@@ -480,7 +480,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
             log.reserve(110);                           // Prevent re-allocation
             log = F("P095-ILI9341 : WRITE = ");
             log += tmpString;
-            SendStatus(event->Source, log);             // Reply (echo) to sender. This will print message on browser.
+            SendStatus(event, log);             // Reply (echo) to sender. This will print message on browser.
         }
         break;
       }
