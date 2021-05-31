@@ -57,7 +57,7 @@ void handle_log_JSON() {
 
     for (byte i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
       if (i != 0) {
-        addHtml(",");
+        addHtml(',');
       }
       addHtml('{');
       int loglevel;

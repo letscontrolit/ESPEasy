@@ -41,7 +41,7 @@ void P087_data_struct::post_init() {
   for (uint8_t i = 0; i < P87_MAX_CAPTURE_INDEX; ++i) {
     capture_index_used[i] = false;
   }
-  regex_empty = _lines[P087_REGEX_POS].length() == 0;
+  regex_empty = _lines[P087_REGEX_POS].isEmpty();
   String log = F("P087_post_init:");
 
   for (uint8_t i = 0; i < P087_NR_FILTERS; ++i) {
@@ -143,7 +143,7 @@ bool P087_data_struct::loop() {
 
 bool P087_data_struct::getSentence(String& string) {
   string        = last_sentence;
-  if (string.length() == 0) {
+  if (string.isEmpty()) {
     return false;
   }
   last_sentence = "";
@@ -288,7 +288,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
         for (uint8_t n = 0; n < P087_NR_FILTERS; ++n) {
           unsigned int lines_index = n * 3 + P087_FIRST_FILTER_POS + 2;
 
-          if ((capture_index[n] == capture_vector[i].first) && (_lines[lines_index].length() != 0)) {
+          if ((capture_index[n] == capture_vector[i].first) && !(_lines[lines_index].isEmpty())) {
             String log;
             log.reserve(32);
             log  = F("P087: Index: ");

@@ -129,7 +129,7 @@ bool fileExists(const String& fname) {
 fs::File tryOpenFile(const String& fname, const String& mode) {
   START_TIMER;
   fs::File f;
-  if (fname.length() == 0 || fname.equals(F("/"))) {
+  if (fname.isEmpty() || fname.equals(F("/"))) {
     return f;
   }
 
@@ -635,7 +635,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
     readPos += bufferSize;
   }
 
-  if ((tmpString.length() != 0) && (stringCount < nrStrings)) {
+  if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {
     result              += F("Incomplete custom settings for index ");
     result              += (index + 1);
     strings[stringCount] = tmpString;
@@ -754,7 +754,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
                           (byte *)&ExtraTaskSettings,
                           sizeof(struct ExtraTaskSettingsStruct));
 
-  if (err.length() == 0) {
+  if (err.isEmpty()) {
     err = checkTaskSettings(TaskIndex);
   }
   return err;

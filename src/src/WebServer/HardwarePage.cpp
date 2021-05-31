@@ -82,7 +82,7 @@ void handle_hardware() {
     }
     String error = SaveSettings();
     addHtmlError(error);
-    if (error.length() == 0) {
+    if (error.isEmpty()) {
       // Apply I2C settings.
       initI2C();
     }

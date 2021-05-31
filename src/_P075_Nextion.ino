@@ -217,7 +217,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
           SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
         }
 
-        if(getTaskDeviceName(event->TaskIndex) == "") {         // Check to see if user entered device name.
+        if(getTaskDeviceName(event->TaskIndex).isEmpty()) {         // Check to see if user entered device name.
             strcpy(ExtraTaskSettings.TaskDeviceName,PLUGIN_DEFAULT_NAME); // Name missing, populate default name.
         }
 //        PCONFIG(0) = isFormItemChecked(F("AdvHwSerial"));
