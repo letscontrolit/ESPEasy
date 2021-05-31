@@ -177,5 +177,9 @@ int getLoopCountPerSec();
 
 int getUptimeMinutes();
 
+#ifndef BUILD_NO_RAM_TRACKER
+void logMemUsageAfter(const __FlashStringHelper * function, int value = -1);
+#endif
+
 
 #endif // ifndef HELPERS_MISC_H

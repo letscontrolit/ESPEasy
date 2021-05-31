@@ -80,6 +80,7 @@ void addSelector_Foot();
 
 void addUnit(const __FlashStringHelper * unit);
 void addUnit(const String& unit);
+void addUnit(char unit);
 
 void addRowLabel_tr_id(const __FlashStringHelper * label, const __FlashStringHelper * id);
 void addRowLabel_tr_id(const __FlashStringHelper * label, const String& id);

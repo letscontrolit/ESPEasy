@@ -24,7 +24,7 @@ else:
   custom_defines=[
     "-DCONTROLLER_SET_ALL",
     "-DNOTIFIER_SET_NONE",
-#    "-DPLUGIN_BUILD_NORMAL",
+    "-DPLUGIN_BUILD_NONE",
     "-DUSES_P001",  # Switch
     "-DUSES_P002",  # ADC
 #    "-DUSES_P003",  # Generic Pulse Counter

@@ -85,7 +85,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
     pass = getControllerPass(controllerIndex, ControllerSettings);
     ClientTimeout = ControllerSettings.ClientTimeout;
 
-    if (pass.length() == 0) {
+    if (pass.isEmpty()) {
       addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
       return false;
     }

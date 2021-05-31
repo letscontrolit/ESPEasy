@@ -1,4 +1,4 @@
-#include "CPlugins.h"
+#include "../Globals/CPlugins.h"
 
 #include "../../_Plugin_Helper.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
@@ -12,7 +12,7 @@
 
 // FIXME TD-er: Make these private and add functions to access its content.
 std::map<cpluginID_t, protocolIndex_t> CPlugin_id_to_ProtocolIndex;
-std::vector<cpluginID_t> ProtocolIndex_to_CPlugin_id;
+cpluginID_t ProtocolIndex_to_CPlugin_id[CPLUGIN_MAX + 1];
 
 bool (*CPlugin_ptr[CPLUGIN_MAX])(CPlugin::Function,
                                  struct EventStruct *,
@@ -42,20 +42,38 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
 
       for (protocolIndex_t x = 0; x < CPLUGIN_MAX; x++) {
-        if (validCPluginID(ProtocolIndex_to_CPlugin_id[x])) {
-          const unsigned int next_ProtocolIndex = protocolCount + 2;
-
-          if (next_ProtocolIndex > Protocol.size()) {
-            // Increase with 8 to get some compromise between number of resizes and wasted space
-            unsigned int newSize = Protocol.size();
-            newSize = newSize + 8 - (newSize % 8);
-            Protocol.resize(newSize);
-          }
+        const cpluginID_t cpluginID = ProtocolIndex_to_CPlugin_id[x];
+        if (validCPluginID(cpluginID)) {
           #ifndef BUILD_NO_RAM_TRACKER
           checkRAM(F("CPluginCallADD"), x);
           #endif
+
+          /*
+          #ifndef BUILD_NO_DEBUG
+          const int freemem_begin = ESP.getFreeHeap();
+          #endif
+          */
+
           String dummy;
           CPluginCall(x, Function, event, dummy);
+          /*
+          #ifndef BUILD_NO_DEBUG
+          if (Function == CPlugin::Function::CPLUGIN_PROTOCOL_ADD) {
+            // See also logMemUsageAfter()
+            const int freemem_end = ESP.getFreeHeap();
+            String log = F("After CPLUGIN_ADD ");
+            log += cpluginID;
+            while (log.length() < 30) log += ' ';
+            log += F("Free mem after: ");
+            log += freemem_end;
+            while (log.length() < 54) log += ' ';
+            log += F("ctrlr: ");
+            log += freemem_begin - freemem_end;
+
+            addLog(LOG_LEVEL_INFO, log);
+          }
+          #endif
+          */
         }
       }
       return true;
@@ -127,9 +145,32 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
 bool CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, struct EventStruct *event, String& str) {
   if (validProtocolIndex(protocolIndex)) {
+    #ifndef BUILD_NO_DEBUG
+    const int freemem_begin = ESP.getFreeHeap();
+    #endif
+
     START_TIMER;
     bool ret = CPlugin_ptr[protocolIndex](Function, event, str);
     STOP_TIMER_CONTROLLER(protocolIndex, Function);
+    #ifndef BUILD_NO_DEBUG
+    if (Function == CPlugin::Function::CPLUGIN_INIT) {
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        // See also logMemUsageAfter()
+        const int freemem_end = ESP.getFreeHeap();
+        String log = F("After CPLUGIN_INIT ");
+        while (log.length() < 30) log += ' ';
+        log += F("Free mem after: ");
+        log += freemem_end;
+        while (log.length() < 54) log += ' ';
+        log += F("ctrlr: ");
+        log += freemem_begin - freemem_end;
+        while (log.length() < 73) log += ' ';
+        log += getCPluginNameFromProtocolIndex(protocolIndex);
+
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+    }
+    #endif
     return ret;
   }
   return false;
@@ -247,4 +288,17 @@ String getCPluginNameFromCPluginID(cpluginID_t cpluginID) {
     return name;
   }
   return getCPluginNameFromProtocolIndex(protocolIndex);
+}
+
+
+bool addCPlugin(cpluginID_t cpluginID, protocolIndex_t x) {
+  if (x < CPLUGIN_MAX) { 
+    ProtocolIndex_to_CPlugin_id[x] = cpluginID; 
+    CPlugin_id_to_ProtocolIndex[cpluginID] = x;
+    return true;
+  }
+  String log = F("System: Error - Too many C-Plugins. CPLUGIN_MAX = ");
+  log += CPLUGIN_MAX;
+  addLog(LOG_LEVEL_ERROR, log);
+  return false;
 }

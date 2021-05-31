@@ -234,7 +234,6 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
         // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
         UserVar[event->BaseVarIndex + P003_IDX_persistedTotalCounter] = pulseCounterTotal;
 
-
         switch (PCONFIG(P003_IDX_COUNTERTYPE))
         {
           case P003_CT_INDEX_COUNTER:

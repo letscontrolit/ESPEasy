@@ -30,18 +30,15 @@
 
 
 
-std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
-std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;
-std::vector<deviceIndex_t> DeviceIndex_sorted;
-
 int deviceCount = -1;
 
 boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
                                   struct EventStruct *,
                                   String&);
 
-
-
+pluginID_t DeviceIndex_to_Plugin_id[PLUGIN_MAX + 1];
+std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
+std::vector<deviceIndex_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index) {
@@ -510,7 +507,39 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
 
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
+        #ifndef BUILD_NO_DEBUG
+        const int freemem_begin = ESP.getFreeHeap();
+        #endif
+
         PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
+
+        #ifndef BUILD_NO_DEBUG
+        if (Function == PLUGIN_INIT) {
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            // See also logMemUsageAfter()
+            const int freemem_end = ESP.getFreeHeap();
+            String log;
+            log.reserve(128);
+            log  = F("After PLUGIN_INIT ");
+            log += F(" task: ");
+            if (taskIndex < 9) log += ' ';
+            log += taskIndex + 1;
+            while (log.length() < 30) log += ' ';
+            log += F("Free mem after: ");
+            log += freemem_end;
+            while (log.length() < 53) log += ' ';
+            log += F("plugin: ");
+            log += freemem_begin - freemem_end;
+            while (log.length() < 67) log += ' ';
+
+            log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
+            while (log.length() < 73) log += ' ';
+            log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
+
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+        }
+        #endif
       }
       if (Function == PLUGIN_INIT) {
         updateTaskCaches();

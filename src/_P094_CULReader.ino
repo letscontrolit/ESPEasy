@@ -456,15 +456,13 @@ void P094_html_show_stats(struct EventStruct *event) {
 
   {
     addRowLabel(F("Sentences (pass/fail)"));
-    String   chksumStats;
     uint32_t success, error, length_last;
     P094_data->getSentencesReceived(success, error, length_last);
-    chksumStats  = success;
-    chksumStats += '/';
-    chksumStats += error;
-    addHtml(chksumStats);
+    addHtmlInt(success);
+    addHtml('/');
+    addHtmlInt(error);
     addRowLabel(F("Length Last Sentence"));
-    addHtml(String(length_last));
+    addHtmlInt(length_last);
   }
 }
 

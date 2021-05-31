@@ -84,9 +84,11 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
         }
         interrupts();
         UserVar[event->BaseVarIndex] = (float)value;
-        String log = F("GPY  : Dust value: ");
-        log += value;
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("GPY  : Dust value: ");
+          log += value;
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
         break;
       }
