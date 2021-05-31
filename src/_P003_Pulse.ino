@@ -394,7 +394,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           //       i = increase the log level for regular statstic logs to "info"
 
           String subcommand = parseString(string, 2);
-          if (subcommand == F("i") || subcommand == F("r") || subcommand == "") {
+          if (subcommand == F("i") || subcommand == F("r") || subcommand.isEmpty()) {
             doStatisticLogging(event->TaskIndex, F("P003+"), P003_PULSE_STATS_ADHOC_LOG_LEVEL);
             doTimingLogging(event->TaskIndex, F("P003+"), P003_PULSE_STATS_ADHOC_LOG_LEVEL);
             if (subcommand == F("i")) P003_StatsLogLevel[event->TaskIndex] = LOG_LEVEL_INFO;

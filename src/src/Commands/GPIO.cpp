@@ -652,7 +652,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
     data.logPrefix += F("GPIORange");
   }
   data.valid  = false;
-  data.isMask = parseString(Line, 5).length() != 0;
+  data.isMask = !parseString(Line, 5).isEmpty();
 
   if (data.isMask) {
     data.mask  = event->Par4 & ((1 << data.numBytes * 8) - 1);

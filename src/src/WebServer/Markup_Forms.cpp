@@ -176,7 +176,7 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   addHtmlAttribute(F("type"),      F("password"));
   addHtmlAttribute(F("name"),      id);
   addHtmlAttribute(F("maxlength"), maxlength);
-  addHtmlAttribute(F("value"),     (password.length() == 0) ? F("") : F("*****"));
+  addHtmlAttribute(F("value"),     (password.isEmpty()) ? F("") : F("*****"));
   addHtml('>');
 }
 
@@ -409,7 +409,7 @@ int getFormItemInt(const String& key, int defaultValue) {
 
 bool getCheckWebserverArg_int(const String& key, int& value) {
   const String valueStr = webArg(key);
-  if (valueStr.length() == 0) return false;
+  if (valueStr.isEmpty()) return false;
   return validIntFromString(valueStr, value);
 }
 
@@ -487,7 +487,7 @@ float getFormItemFloat(const LabelType::Enum& id)
 
 bool isFormItem(const String& id)
 {
-  return webArg(id).length() != 0;
+  return !webArg(id).isEmpty();
 }
 
 void copyFormPassword(const String& id, char *pPassword, int maxlength)

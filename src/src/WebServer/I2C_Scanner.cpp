@@ -72,7 +72,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
               int newpos = description.indexOf(',', pos);
 
               if (pos != 0) {
-                addHtml(",");
+                addHtml(',');
               }
 
               if (newpos == -1) {
@@ -91,7 +91,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
           nDevices++;
         }
         json_close();
-        addHtml("\n");
+        addHtml('\n');
       }
 #ifdef FEATURE_I2CMULTIPLEXER
     }

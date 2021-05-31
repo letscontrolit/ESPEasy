@@ -505,7 +505,7 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
           label.reserve(32);
 
           if (onlyGPS) {
-            label = "GPS";
+            label = F("GPS");
           } else {
             label = F("Other");
           }
@@ -518,14 +518,14 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
           }
           addRowLabel(label);
         } else {
-          addHtml(", ");
+          addHtml(F(", "));
         }
         addHtmlInt(id);
 
         if (tracked) {
-          addHtml(" (");
+          addHtml(F(" ("));
           addHtmlInt(snr);
-          addHtml(")");
+          addHtml(')');
         }
       }
     }
@@ -594,7 +594,7 @@ void P082_html_show_stats(struct EventStruct *event) {
     dateTime = node_time.addSeconds(dateTime, (age / 1000), false);
     addHtml(ESPEasy_time::getDateTimeString(dateTime));
   } else {
-    addHtml(F("-"));
+    addHtml('-');
   }
 
   addRowLabel(F("Distance Travelled"));
