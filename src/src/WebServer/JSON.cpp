@@ -556,7 +556,7 @@ void stream_to_json_value(const String& value) {
   bool isNum  = isNumerical(value, detectedType);
   bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
-  if (!isBool && ((value.length() == 0) || !isNum || mustConsiderAsString(detectedType))) {
+  if (!isBool && ((value.isEmpty()) || !isNum || mustConsiderAsString(detectedType))) {
     // Either empty, not a numerical or a BIN/HEX notation.
     addHtml('\"');
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {

@@ -427,7 +427,7 @@ boolean Plugin_055_IsEmptyFIFO()
 
 void Plugin_055_AddStringFIFO(const String& param)
 {
-  if (param.length() == 0)
+  if (param.isEmpty())
     return;
 
   byte i = 0;

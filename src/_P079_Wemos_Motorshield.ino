@@ -178,7 +178,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
       }
 
 
-      if (getTaskDeviceName(event->TaskIndex).length() == 0) {                    // Check to see if user entered device name.
+      if (getTaskDeviceName(event->TaskIndex).isEmpty()) {                    // Check to see if user entered device name.
         switch (Plugin_079_MotorShield_type) {
           case P079_BoardType::WemosMotorshield:
             safe_strncpy(ExtraTaskSettings.TaskDeviceName, F(PLUGIN_DEF_NAME1_079), sizeof(ExtraTaskSettings.TaskDeviceName)); // Name missing, populate default name.

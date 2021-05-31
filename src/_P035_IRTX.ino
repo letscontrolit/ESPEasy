@@ -270,7 +270,7 @@ bool handle_AC_IRremote(const String &irData) {
 bool handleRawRaw2Encoding(const String &cmd) {
   bool raw=true;
   String IrType = parseString(cmd, 2);
-  if (IrType.length() == 0) return false;
+  if (IrType.isEmpty()) return false;
 
   if (IrType.equalsIgnoreCase(F("RAW"))) raw = true;
   else if (IrType.equalsIgnoreCase(F("RAW2")))  raw = false;

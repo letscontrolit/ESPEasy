@@ -257,7 +257,7 @@ struct C018_data_struct {
   // Cached data, only changing occasionally.
 
   String getDevaddr() {
-    if (cacheDevAddr.length() == 0)
+    if (cacheDevAddr.isEmpty())
     {
       updateCacheOnInit();
     }
@@ -265,7 +265,7 @@ struct C018_data_struct {
   }
 
   String hweui() {
-    if (cacheHWEUI.length() == 0) {
+    if (cacheHWEUI.isEmpty()) {
       if (isInitialized()) {
         cacheHWEUI = myLora->hweui();
       }
@@ -274,7 +274,7 @@ struct C018_data_struct {
   }
 
   String sysver() {
-    if (cacheSysVer.length() == 0) {
+    if (cacheSysVer.isEmpty()) {
       if (isInitialized()) {
         cacheSysVer = myLora->sysver();
       }

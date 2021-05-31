@@ -619,7 +619,7 @@ void parse_string_commands(String& line) {
         replacement = String(uval);
       }
 
-      if (replacement.length() == 0) {
+      if (replacement.isEmpty()) {
         // part in braces is not a supported command.
         // replace the {} with other characters to mask the braces so we can continue parsing.
         // We have to unmask then after we're finished.

@@ -41,7 +41,7 @@ void P087_data_struct::post_init() {
   for (uint8_t i = 0; i < P87_MAX_CAPTURE_INDEX; ++i) {
     capture_index_used[i] = false;
   }
-  regex_empty = _lines[P087_REGEX_POS].length() == 0;
+  regex_empty = _lines[P087_REGEX_POS].isEmpty();
   String log = F("P087_post_init:");
 
   for (uint8_t i = 0; i < P087_NR_FILTERS; ++i) {
@@ -143,7 +143,7 @@ bool P087_data_struct::loop() {
 
 bool P087_data_struct::getSentence(String& string) {
   string        = last_sentence;
-  if (string.length() == 0) {
+  if (string.isEmpty()) {
     return false;
   }
   last_sentence = "";

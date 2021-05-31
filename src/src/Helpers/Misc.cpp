@@ -38,7 +38,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
       // tolerantParseStringKeepCase(Line, 4);
       String configCommand = parseStringToEndKeepCase(string, 4);
 
-      if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
+      if ((configTaskName.isEmpty()) || (configCommand.isEmpty())) {
         return success; // TD-er: Should this be return false?
       }
       taskIndex_t index = findTaskIndexByName(configTaskName);

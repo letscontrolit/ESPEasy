@@ -129,7 +129,7 @@ bool fileExists(const String& fname) {
 fs::File tryOpenFile(const String& fname, const String& mode) {
   START_TIMER;
   fs::File f;
-  if (fname.length() == 0 || fname.equals(F("/"))) {
+  if (fname.isEmpty() || fname.equals(F("/"))) {
     return f;
   }
 
@@ -754,7 +754,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
                           (byte *)&ExtraTaskSettings,
                           sizeof(struct ExtraTaskSettingsStruct));
 
-  if (err.length() == 0) {
+  if (err.isEmpty()) {
     err = checkTaskSettings(TaskIndex);
   }
   return err;

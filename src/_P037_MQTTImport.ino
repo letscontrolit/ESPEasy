@@ -154,7 +154,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         {
           String subscriptionTopic = deviceTemplate[x];
           subscriptionTopic.trim();
-          if (subscriptionTopic.length() == 0) continue;							// skip blank subscriptions
+          if (subscriptionTopic.isEmpty()) continue;							// skip blank subscriptions
 
           // Now check if the incoming topic matches one of our subscriptions
           parseSystemVariables(subscriptionTopic, false);
@@ -261,7 +261,7 @@ bool MQTTSubscribe_037(struct EventStruct *event)
 // Check to see if Topic matches the MQTT subscription
 //
 bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) {
-  if (Topic.length() == 0 || Subscription.length() == 0)  {
+  if (Topic.isEmpty() || Subscription.isEmpty())  {
     return false;
   }
 

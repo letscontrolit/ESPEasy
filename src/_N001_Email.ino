@@ -190,7 +190,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 
 boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {
-	if (user.length() == 0 || pass.length() == 0) {
+	if (user.isEmpty() || pass.isEmpty()) {
 		// No user/password given.
 		return true;
 	}
