@@ -170,43 +170,48 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
         P_013_sensordefs[event->TaskIndex] =
           std::shared_ptr<NewPingESP8266> (new NewPingESP8266(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_distance_cm));
 
-        String log = F("ULTRASONIC : TaskNr: ");
-        log += event->TaskIndex +1;
-        log += F(" TrigPin: ");
-        log += Plugin_013_TRIG_Pin;
-        log += F(" IRQ_Pin: ");
-        log += Plugin_013_IRQ_Pin;
-        log += F(" max dist ");
-        log += (measuringUnit == UNIT_CM) ? F("[cm]: ") : F("[inch]: ");
-        log += max_distance;
-        log += F(" max echo: ");
-        log += P_013_sensordefs[event->TaskIndex]->getMaxEchoTime();
-        log += F(" Filter: ");
-        if (filterType == FILTER_NONE)
-          log += F("none");
-        else
-          if (filterType == FILTER_MEDIAN) {
-            log += F("Median size: ");
-            log += filterSize;
-          }
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("ULTRASONIC : TaskNr: ");
+          log += event->TaskIndex +1;
+          log += F(" TrigPin: ");
+          log += Plugin_013_TRIG_Pin;
+          log += F(" IRQ_Pin: ");
+          log += Plugin_013_IRQ_Pin;
+          log += F(" max dist ");
+          log += (measuringUnit == UNIT_CM) ? F("[cm]: ") : F("[inch]: ");
+          log += max_distance;
+          log += F(" max echo: ");
+          log += P_013_sensordefs[event->TaskIndex]->getMaxEchoTime();
+          log += F(" Filter: ");
+          if (filterType == FILTER_NONE)
+            log += F("none");
           else
-            log += F("invalid!");
-        log += F(" nr_tasks: ");
-        log += P_013_sensordefs.size();
-        addLog(LOG_LEVEL_INFO, log);
+            if (filterType == FILTER_MEDIAN) {
+              log += F("Median size: ");
+              log += filterSize;
+            }
+            else
+              log += F("invalid!");
+          log += F(" nr_tasks: ");
+          log += P_013_sensordefs.size();
+          addLog(LOG_LEVEL_INFO, log);
+        }
 
-        unsigned long tmpmillis = millis();
-        unsigned long tmpmicros = micros();
-        delay(100);
-        long millispassed = timePassedSince(tmpmillis);
-        long microspassed = usecPassedSince(tmpmicros);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          // FIXME TD-er: What kind of nonsense code is this?
+          unsigned long tmpmillis = millis();
+          unsigned long tmpmicros = micros();
+          delay(100);
+          long millispassed = timePassedSince(tmpmillis);
+          long microspassed = usecPassedSince(tmpmicros);
 
-        log = F("ULTRASONIC : micros() test: ");
-        log += millispassed;
-        log += F(" msec, ");
-        log += microspassed;
-        log += F(" usec, ");
-        addLog(LOG_LEVEL_INFO, log);
+          String log = F("ULTRASONIC : micros() test: ");
+          log += millispassed;
+          log += F(" msec, ");
+          log += microspassed;
+          log += F(" usec, ");
+          addLog(LOG_LEVEL_INFO, log);
+        }
 
         success = true;
         break;
@@ -262,11 +267,13 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
               state = 1;
             if (state != switchstate[event->TaskIndex])
             {
-              String log = F("ULTRASONIC : TaskNr: ");
-              log += event->TaskIndex +1;
-              log += F(" state: ");
-              log += state;
-              addLog(LOG_LEVEL_INFO,log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("ULTRASONIC : TaskNr: ");
+                log += event->TaskIndex +1;
+                log += F(" state: ");
+                log += state;
+                addLog(LOG_LEVEL_INFO,log);
+              }
               switchstate[event->TaskIndex] = state;
               UserVar[event->BaseVarIndex] = state;
               event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
@@ -314,7 +321,7 @@ float Plugin_013_read(taskIndex_t taskIndex)
       echoTime = (P_013_sensordefs[taskIndex])->ping_median(filterSize, max_distance_cm);
       break;
     default:
-      addLog(LOG_LEVEL_INFO, F("invalid Filter Type setting!"));
+      addLog(LOG_LEVEL_ERROR, F("invalid Filter Type setting!"));
   }
 
   if (measuringUnit == UNIT_CM)

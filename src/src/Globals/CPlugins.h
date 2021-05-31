@@ -52,7 +52,8 @@ controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid);
 extern std::map<cpluginID_t, protocolIndex_t> CPlugin_id_to_ProtocolIndex;
 
 // Vector to match a "ProtocolIndex" to a controller ID.
-extern std::vector<cpluginID_t> ProtocolIndex_to_CPlugin_id;
+// INVALID_CONTROLLER_INDEX may be used as index for this array.
+extern cpluginID_t ProtocolIndex_to_CPlugin_id[CPLUGIN_MAX + 1];
 
 
 bool validProtocolIndex(protocolIndex_t index);
@@ -75,6 +76,8 @@ protocolIndex_t getProtocolIndex(cpluginID_t cpluginID);
 
 String          getCPluginNameFromProtocolIndex(protocolIndex_t ProtocolIndex);
 String          getCPluginNameFromCPluginID(cpluginID_t cpluginID);
+
+bool            addCPlugin(cpluginID_t cpluginID, protocolIndex_t x);
 
 
 #endif // GLOBALS_CPLUGIN_H

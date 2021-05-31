@@ -243,7 +243,7 @@ void handle_controllers_ShowAllControllersTable()
           String hostDescription;
           CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
 
-          if (hostDescription.length() != 0) {
+          if (!hostDescription.isEmpty()) {
             addHtml(hostDescription);
           } else {
             addHtml(ControllerSettings.getHost());

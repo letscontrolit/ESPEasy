@@ -1174,9 +1174,9 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   uint16_t port;
   String   uri = splitURL(url, host, port, file);
 
-  if (file_save.length() == 0) {
+  if (file_save.isEmpty()) {
     file_save = file;
-  } else if ((file.length() == 0) && uri.endsWith("/")) {
+  } else if ((file.isEmpty()) && uri.endsWith("/")) {
     // file = file_save;
     uri += file_save;
   }
@@ -1192,7 +1192,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     addLog(LOG_LEVEL_ERROR, log);
   }
 
-  if (file_save.length() == 0) {
+  if (file_save.isEmpty()) {
     error = F("Empty filename");
     addLog(LOG_LEVEL_ERROR, error);
     return false;
