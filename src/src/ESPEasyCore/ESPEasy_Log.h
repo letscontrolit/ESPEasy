@@ -23,9 +23,9 @@
   \*********************************************************************************************/
 void initLog();
 
-String getLogLevelDisplayString(int logLevel);
+const __FlashStringHelper * getLogLevelDisplayString(int logLevel);
 
-String getLogLevelDisplayStringFromIndex(byte index, int& logLevel);
+const __FlashStringHelper * getLogLevelDisplayStringFromIndex(byte index, int& logLevel);
 
 void disableSerialLog();
 
@@ -44,14 +44,21 @@ bool loglevelActiveFor(byte destination, byte logLevel);
 
 bool loglevelActive(byte logLevel, byte logLevelSettings);
 
+//#ifdef LIMIT_BUILD_SIZE
+// Macro does add to the build size, but does take more resources as the string may need resources to create
+void addLog(byte loglevel, const __FlashStringHelper *str);
+void addLog(byte logLevel, const char *line);
+void addLog(byte loglevel, const String& string);
+//#else
+// Do this in a template to prevent casting to String when not needed.
+//#define addLog(L,S) if (loglevelActiveFor(L)) { addToLog(L,S); }
+//#endif
+
 void addToLog(byte loglevel, const __FlashStringHelper *str);
 
 void addToLog(byte loglevel, const String& string);
 
 void addToLog(byte logLevel, const char *line);
-
-// Do this in a template to prevent casting to String when not needed.
-#define addLog(L,S) if (loglevelActiveFor(L)) { addToLog(L,S); }
 
 
 #endif 

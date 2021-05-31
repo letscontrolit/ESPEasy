@@ -109,7 +109,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        String optionsPluginMode[2];
+        const __FlashStringHelper * optionsPluginMode[2];
         optionsPluginMode[0]           = F("Gesture/Proximity/Ambient Light Sensor");
         optionsPluginMode[1]           = F("R/G/B Colors");
         int optionsPluginModeValues[2] = { PLUGIN_MODE_GPL_064, PLUGIN_MODE_RGB_064 };
@@ -147,7 +147,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
       {
         // Gain options, multiple gain optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
-        String optionsGain[4];
+        const __FlashStringHelper * optionsGain[4];
         optionsGain[0] = F("1x");
         optionsGain[1] = F("2x");
         optionsGain[2] = F("4x (default)");
@@ -155,7 +155,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         int optionsGainValues[4] = { PGAIN_1X, PGAIN_2X, PGAIN_4X, PGAIN_8X }; // Also used for optionsALSGain
 
         // Led_Drive options, all Led_Drive optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
-        String optionsLedDrive[4];
+        const __FlashStringHelper * optionsLedDrive[4];
         optionsLedDrive[0] = F("100 mA (default)");
         optionsLedDrive[1] = F("50 mA");
         optionsLedDrive[2] = F("25 mA");
@@ -174,7 +174,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
           addFormSelector(F("Gesture LED Drive"), F("p064_gldrive"), 4, optionsLedDrive, optionsLedDriveValues, P064_GLDRIVE);
           {
             // Gesture Led-boost values
-            String optionsLedBoost[4];
+            const __FlashStringHelper * optionsLedBoost[4];
             optionsLedBoost[0] = F("100 %");
             optionsLedBoost[1] = F("150 %");
             optionsLedBoost[2] = F("200 %");
@@ -197,7 +197,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         }
         {
           // Ambient Light Sensor Gain options, values are equal to PGAIN values, so again avoid duplication
-          String optionsALSGain[4];
+          const __FlashStringHelper * optionsALSGain[4];
           optionsALSGain[0] = F("1x");
           optionsALSGain[1] = F("4x (default)");
           optionsALSGain[2] = F("16x");

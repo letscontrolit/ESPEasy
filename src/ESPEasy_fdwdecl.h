@@ -7,16 +7,9 @@
 // This is only needed until the classes that need these can include the appropriate .h files to have these forward declared.
 
 
-void     backgroundtasks();
-
-
-void flushAndDisconnectAllClients();
-
-
-float getCPUload();
-int getLoopCountPerSec();
-int getUptimeMinutes();
-
+void PluginInit(void);
+void CPluginInit(void);
+void NPluginInit(void);
 
 
 

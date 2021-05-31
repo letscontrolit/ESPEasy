@@ -53,8 +53,8 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        String options[3];
-        options[0] = "";
+        const __FlashStringHelper *  options[3];
+        options[0] = F("");
         options[1] = F("Off");
         options[2] = F("On");
 
@@ -69,7 +69,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 //          addHtml(timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]));
 //          addHtml("'>");
 
-          addHtml(" ");
+          addHtml(' ');
           byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
           addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice);
         }
@@ -83,12 +83,12 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         {
           String argc = F("p043_clock");
           argc += x;
-          String plugin1 = web_server.arg(argc);
+          String plugin1 = webArg(argc);
           ExtraTaskSettings.TaskDevicePluginConfigLong[x] = string2TimeLong(plugin1);
 
           argc = F("p043_state");
           argc += x;
-          String plugin2 = web_server.arg(argc);
+          String plugin2 = webArg(argc);
           ExtraTaskSettings.TaskDevicePluginConfig[x] = plugin2.toInt();
         }
         success = true;
@@ -118,9 +118,11 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
               pinMode(CONFIG_PIN1, OUTPUT);
               digitalWrite(CONFIG_PIN1, state);
               UserVar[event->BaseVarIndex] = state;
-              String log = F("TCLK : State ");
-              log += state;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("TCLK : State ");
+                log += state;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
             }
           }

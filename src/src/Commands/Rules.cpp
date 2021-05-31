@@ -19,7 +19,7 @@
 #include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 
-String Command_Rules_Execute(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Rules_Execute(struct EventStruct *event, const char *Line)
 {
   String filename;
 
@@ -38,7 +38,7 @@ String Command_Rules_UseRules(struct EventStruct *event, const char *Line)
                               1);
 }
 
-String Command_Rules_Async_Events(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Rules_Async_Events(struct EventStruct *event, const char *Line)
 {
   if (Settings.UseRules) {
     String eventName = parseStringToEndKeepCase(Line, 2);
@@ -49,7 +49,7 @@ String Command_Rules_Async_Events(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_Rules_Events(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Rules_Events(struct EventStruct *event, const char *Line)
 {
   if (Settings.UseRules) {
     const bool executeImmediately =
@@ -68,7 +68,7 @@ String Command_Rules_Events(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_Rules_Let(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Rules_Let(struct EventStruct *event, const char *Line)
 {
   String TmpStr1;
 

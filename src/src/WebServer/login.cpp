@@ -27,7 +27,7 @@ void handle_login() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  String webrequest = web_server.arg(F("password"));
+  String webrequest = webArg(F("password"));
   addHtml(F("<form method='post'>"));
   html_table_class_normal();
   addHtml(F("<TR><TD>Password<TD>"));
@@ -44,7 +44,7 @@ void handle_login() {
   html_end_table();
   html_end_form();
 
-  if (webrequest.length() != 0)
+  if (!webrequest.isEmpty())
   {
     char command[80];
     command[0] = 0;

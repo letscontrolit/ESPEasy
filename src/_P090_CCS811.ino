@@ -107,7 +107,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       // I2C address choice
-      String options[2]      = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
+      const __FlashStringHelper * options[2]      = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
       int    optionValues[2] = { 0x5A, 0x5B };
       addFormSelector(F("I2C Address"), F("i2c_addr"), 2, options, optionValues, P090_I2C_ADDR);
       break;
@@ -118,7 +118,7 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
       {
         // read frequency
         int frequencyChoice        = (int)P090_READ_INTERVAL;
-        String frequencyOptions[3] = { F("1 second"), F("10 seconds"), F("60 seconds") };
+        const __FlashStringHelper * frequencyOptions[3] = { F("1 second"), F("10 seconds"), F("60 seconds") };
         int    frequencyValues[3]  = { 1, 2, 3 };
         addFormSelector(F("Take reading every"), F("p090_read_frequency"), 3, frequencyOptions, frequencyValues, frequencyChoice);
       }

@@ -1,7 +1,7 @@
 #include "../Helpers/_CPlugin_Helper.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include "../CustomBuild/ESPEasyLimits.h"
 
@@ -11,6 +11,7 @@
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
 
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -92,7 +93,7 @@ bool safeReadStringUntil(Stream     & input,
 String get_auth_header(const String& user, const String& pass) {
   String authHeader = "";
 
-  if ((user.length() != 0) && (pass.length() != 0)) {
+  if ((!user.isEmpty()) && (!pass.isEmpty())) {
     String auth = user;
     auth       += ":";
     auth       += pass;
@@ -196,8 +197,8 @@ String do_create_http_request(
   const String& hostportString,
   const String& method, const String& uri) {
   return do_create_http_request(hostportString, method, uri,
-                                "", // auth_header
-                                "", // additional_options
+                                EMPTY_STRING, // auth_header
+                                EMPTY_STRING, // additional_options
                                 -1  // content_length
                                 );
 }
@@ -212,8 +213,8 @@ String do_create_http_request(
     defaultport ? ControllerSettings.getHost() : ControllerSettings.getHostPortString(),
     method,
     uri,
-    "", // auth_header
-    "", // additional_options
+    EMPTY_STRING, // auth_header
+    EMPTY_STRING, // additional_options
     content_length);
 }
 
@@ -228,7 +229,7 @@ String create_http_request_auth(
     method,
     uri,
     get_auth_header(controller_index, ControllerSettings),
-    "", // additional_options
+    EMPTY_STRING, // additional_options
     content_length);
 }
 
@@ -243,7 +244,7 @@ String create_http_request_auth(int controller_number, int controller_index, Con
 }
 
 #ifndef BUILD_NO_DEBUG
-void log_connecting_to(const String& prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
+void log_connecting_to(const __FlashStringHelper * prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
@@ -255,7 +256,7 @@ void log_connecting_to(const String& prefix, int controller_number, ControllerSe
 
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const String& prefix, int controller_number) {
+void log_connecting_fail(const __FlashStringHelper * prefix, int controller_number) {
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
@@ -268,7 +269,7 @@ void log_connecting_fail(const String& prefix, int controller_number) {
   }
 }
 
-bool count_connection_results(bool success, const String& prefix, int controller_number) {
+bool count_connection_results(bool success, const __FlashStringHelper * prefix, int controller_number) {
   if (!success)
   {
     ++WiFiEventData.connectionFailures;
@@ -304,7 +305,7 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));
 }
 
-bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const String& loglabel) {
+bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const __FlashStringHelper * loglabel) {
   START_TIMER;
 
   if (!NetworkConnected()) { return false; }
@@ -633,6 +634,6 @@ void setControllerPass(controllerIndex_t controller_idx, const ControllerSetting
 
 bool hasControllerCredentialsSet(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
 {
-  return getControllerUser(controller_idx, ControllerSettings).length() != 0 &&
-         getControllerPass(controller_idx, ControllerSettings).length() != 0;
+  return !getControllerUser(controller_idx, ControllerSettings).isEmpty() &&
+         !getControllerPass(controller_idx, ControllerSettings).isEmpty();
 }

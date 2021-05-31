@@ -158,35 +158,39 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
 
       byte   choice     = PCONFIG(P003_IDX_COUNTERTYPE);
       byte   choice2    = PCONFIG(P003_IDX_MODETYPE);
-      String options[P003_NR_COUNTERTYPES] = P003_COUNTERTYPE_LIST;
-      addFormSelector(F("Counter Type"), F("p003_countertype"), P003_NR_COUNTERTYPES, options, NULL, choice);
+      {
+        const __FlashStringHelper * options[P003_NR_COUNTERTYPES] = P003_COUNTERTYPE_LIST;
+        addFormSelector(F("Counter Type"), F("p003_countertype"), P003_NR_COUNTERTYPES, options, NULL, choice);
+      }
 
       if (choice != 0) {
         addHtml(F("<span style=\"color:red\">Total count is not persistent!</span>"));
       }
 
       #define P003_NR_MODETYPES  7
-      String modeRaise[P003_NR_MODETYPES];   // displayed texts
-      // KP: correction for modeRaise[0]: LOW=0 did not generate interupts and does not make sense. Thus it changed to "none"
-      //      Note: A correction to ONLOW = 0x04 (cf. Arduino.h) causes problems as it fires consecutive interupts, while GPIO is low 
-      modeRaise[0] = F("none");
-      modeRaise[1] = F("CHANGE");
-      modeRaise[2] = F("RISING");
-      modeRaise[3] = F("FALLING");
-      modeRaise[4] = F("PULSE low");
-      modeRaise[5] = F("PULSE high");
-      modeRaise[6] = F("PULSE change");
-      
-      int modeValues[P003_NR_MODETYPES];  // trigger flags
-      modeValues[0] = 0;    // KP: replaced LOW by 0, as it does nothing
-      modeValues[1] = CHANGE;
-      modeValues[2] = RISING;
-      modeValues[3] = FALLING;
-      modeValues[4] = PULSE_LOW;
-      modeValues[5] = PULSE_HIGH;
-      modeValues[6] = PULSE_CHANGE;
+      {
+        const __FlashStringHelper * modeRaise[P003_NR_MODETYPES];   // displayed texts
+        // KP: correction for modeRaise[0]: LOW=0 did not generate interupts and does not make sense. Thus it changed to "none"
+        //      Note: A correction to ONLOW = 0x04 (cf. Arduino.h) causes problems as it fires consecutive interupts, while GPIO is low 
+        modeRaise[0] = F("none");
+        modeRaise[1] = F("CHANGE");
+        modeRaise[2] = F("RISING");
+        modeRaise[3] = F("FALLING");
+        modeRaise[4] = F("PULSE low");
+        modeRaise[5] = F("PULSE high");
+        modeRaise[6] = F("PULSE change");
+        
+        int modeValues[P003_NR_MODETYPES];  // trigger flags
+        modeValues[0] = 0;    // KP: replaced LOW by 0, as it does nothing
+        modeValues[1] = CHANGE;
+        modeValues[2] = RISING;
+        modeValues[3] = FALLING;
+        modeValues[4] = PULSE_LOW;
+        modeValues[5] = PULSE_HIGH;
+        modeValues[6] = PULSE_CHANGE;
 
-      addFormSelector(F("Mode Type"), F("p003_raisetype"), P003_NR_MODETYPES, modeRaise, modeValues, choice2);
+        addFormSelector(F("Mode Type"), F("p003_raisetype"), P003_NR_MODETYPES, modeRaise, modeValues, choice2);
+      }
 
       success = true;
       break;
@@ -390,7 +394,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           //       i = increase the log level for regular statstic logs to "info"
 
           String subcommand = parseString(string, 2);
-          if (subcommand == F("i") || subcommand == F("r") || subcommand == "") {
+          if (subcommand == F("i") || subcommand == F("r") || subcommand.isEmpty()) {
             doStatisticLogging(event->TaskIndex, F("P003+"), P003_PULSE_STATS_ADHOC_LOG_LEVEL);
             doTimingLogging(event->TaskIndex, F("P003+"), P003_PULSE_STATS_ADHOC_LOG_LEVEL);
             if (subcommand == F("i")) P003_StatsLogLevel[event->TaskIndex] = LOG_LEVEL_INFO;

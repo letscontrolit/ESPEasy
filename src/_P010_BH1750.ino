@@ -7,7 +7,7 @@
 // #######################################################################################################
 
 
-# include "AS_BH1750.h"
+# include <AS_BH1750.h>
 
 # define PLUGIN_010
 # define PLUGIN_ID_010         10
@@ -70,7 +70,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       byte   choiceMode = PCONFIG(1);
-      String optionsMode[4];
+      const __FlashStringHelper * optionsMode[4];
       optionsMode[0] = F("RESOLUTION_LOW");
       optionsMode[1] = F("RESOLUTION_NORMAL");
       optionsMode[2] = F("RESOLUTION_HIGH");
@@ -123,13 +123,15 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
       if (lux != -1) {
         UserVar[event->BaseVarIndex] = lux;
-        String log = F("BH1750 Address: 0x");
-        log += String(address, HEX);
-        log += F(" Mode: 0x");
-        log += String(mode);
-        log += F(" : Light intensity: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 0);
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("BH1750 Address: 0x");
+          log += String(address, HEX);
+          log += F(" Mode: 0x");
+          log += String(mode);
+          log += F(" : Light intensity: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
       }
       break;

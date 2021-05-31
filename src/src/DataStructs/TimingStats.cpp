@@ -66,7 +66,7 @@ bool TimingStats::thresholdExceeded(unsigned long threshold) const {
 /********************************************************************************************\
    Functions used for displaying timing stats
  \*********************************************************************************************/
-String getPluginFunctionName(int function) {
+const __FlashStringHelper * getPluginFunctionName(int function) {
   switch (function) {
     case PLUGIN_INIT_ALL:              return F("INIT_ALL");
     case PLUGIN_INIT:                  return F("INIT");
@@ -96,7 +96,7 @@ String getPluginFunctionName(int function) {
     case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
     case PLUGIN_REQUEST:               return F("REQUEST");
   }
-  return getUnknownString();
+  return F("Unknown");
 }
 
 bool mustLogFunction(int function) {
@@ -132,7 +132,7 @@ bool mustLogFunction(int function) {
   return false;
 }
 
-String getCPluginCFunctionName(CPlugin::Function function) {
+const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function) {
   switch (function) {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return F("CPLUGIN_PROTOCOL_ADD");
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return F("CPLUGIN_PROTOCOL_TEMPLATE");
@@ -159,7 +159,7 @@ String getCPluginCFunctionName(CPlugin::Function function) {
       break;
 
   }
-  return getUnknownString();
+  return F("Unknown");
 }
 
 bool mustLogCFunction(CPlugin::Function function) {

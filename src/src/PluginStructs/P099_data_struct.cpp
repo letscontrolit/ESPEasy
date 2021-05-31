@@ -7,7 +7,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/SystemVariables.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include <XPT2046_Touchscreen.h>
 
@@ -220,7 +220,7 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x, uint16_t y, Stri
  * Checks if the name doesn't exceed the max. length.
  */
 bool P099_data_struct::setTouchObjectState(String touchObject, bool state, uint8_t checkObjectCount) {
-  if (touchObject.length() == 0 || touchObject.substring(0, 1) == F("_")) return false;
+  if (touchObject.isEmpty() || touchObject.substring(0, 1) == F("_")) return false;
   String findObject = (state ? F("_") : F("")); // When enabling, try to find a disabled object
   findObject += touchObject;
   String thisObject;
