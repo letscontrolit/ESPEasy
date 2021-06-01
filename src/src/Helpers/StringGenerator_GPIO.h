@@ -64,5 +64,7 @@ String createGPIO_label(int  gpio,
 
 const __FlashStringHelper * getConflictingUse(int gpio, bool includeI2C = true);
 
+String getConflictingUse_wrapped(int gpio, bool includeI2C = true);
+
 
 #endif

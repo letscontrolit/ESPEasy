@@ -344,15 +344,17 @@ void addFormPinStateSelect(int gpio, int choice)
   bool input, output, warning;
 
   if (getGpioInfo(gpio, pinnr, input, output, warning)) {
-    String label;
-    label.reserve(32);
-    label  = F("Pin mode ");
-    label += createGPIO_label(gpio, pinnr, input, output, warning);
-    label += getConflictingUse(gpio);
-    String id = "p";
+    String id;
+    id += 'p';
     id += gpio;
+    {
+      String label;
+      label.reserve(32);
+      label  = F("Pin mode ");
+      label += createGPIO_label(gpio, pinnr, input, output, warning);
 
-    addRowLabel_tr_id(label, id);
+      addRowLabel_tr_id(label, id);
+    }
     bool hasPullUp, hasPullDown;
     getGpioPullResistor(gpio, hasPullUp, hasPullDown);
     int nr_options = 0;
@@ -391,6 +393,12 @@ void addFormPinStateSelect(int gpio, int choice)
       }
     }
     addSelector(id, nr_options, options, option_val, NULL, choice, false, enabled);
+    {
+      const String conflict = getConflictingUse(gpio);
+      if (!conflict.isEmpty()) {
+        addUnit(conflict);
+      }
+    }
   }
 }
 

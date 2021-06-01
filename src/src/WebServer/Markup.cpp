@@ -659,7 +659,7 @@ void addPinSelect(boolean forI2C, const String& id,  int choice)
     const bool UsableGPIO = getGpioInfo(gpio, pinnr, input, output, warning);
     if (UsableGPIO || (i == 0)) {
       gpio_labels[i]  = createGPIO_label(gpio, pinnr, input, output, warning);
-      gpio_labels[i] += getConflictingUse(gpio, !forI2C);
+      gpio_labels[i] += getConflictingUse_wrapped(gpio, !forI2C);
       gpio_numbers[i] = gpio;
       ++i;
     }
@@ -702,7 +702,7 @@ void addADC_PinSelect(bool touchOnly, const String& id,  int choice)
           if (adc != 0) {
             gpio_labels[i] += F(" / ");
             gpio_labels[i] += createGPIO_label(gpio, pinnr, input, output, warning);
-            gpio_labels[i] += getConflictingUse(gpio);
+            gpio_labels[i] += getConflictingUse_wrapped(gpio);
           }
           gpio_numbers[i] = gpio;
           ++i;

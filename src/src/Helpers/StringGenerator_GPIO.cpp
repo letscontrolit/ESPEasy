@@ -148,15 +148,25 @@ const __FlashStringHelper * getConflictingUse(int gpio, bool includeI2C)
   bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
 
   if (serialPinConflict) {
-    if (gpio == 1) { return F(" TX0"); }
+    if (gpio == 1) { return F("TX0"); }
 
-    if (gpio == 3) { return F(" RX0"); }
+    if (gpio == 3) { return F("RX0"); }
   }
   if (includeI2C && Settings.isI2C_pin(gpio)) {
-    return F(" I2C");
+    return F("I2C");
   }
   if (Settings.isSPI_pin(gpio)) {
-    return F(" SPI");
+    return F("SPI");
   }
   return F("");
+}
+
+String getConflictingUse_wrapped(int gpio, bool includeI2C)
+{
+  String conflict = getConflictingUse(gpio, includeI2C);
+  if (conflict.isEmpty()) return conflict;
+  String res = F(" [");
+  res += conflict;
+  res += ']';
+  return res;
 }
