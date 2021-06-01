@@ -1057,7 +1057,6 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P089   // Ping
-    #define USES_P098   // PWM motor
 #endif
 
 #ifdef PLUGIN_SET_TESTING_A
@@ -1081,6 +1080,7 @@ To create/register a plugin, you have to :
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
     //#define USES_P099   // XPT2046 Touchscreen
+    #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
 #endif
 
 #ifdef PLUGIN_SET_TESTING_B
