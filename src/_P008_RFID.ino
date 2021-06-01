@@ -144,9 +144,11 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
               Plugin_008_timeoutCount++;
               if (Plugin_008_timeoutCount > 5)
               {
-                String log = F("RFID : reset bits: ");
-                log += Plugin_008_bitCount;
-                addLog(LOG_LEVEL_INFO, log );
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log = F("RFID : reset bits: ");
+                  log += Plugin_008_bitCount;
+                  addLog(LOG_LEVEL_INFO, log );
+                }
                 // reset after ~5 sec
                 Plugin_008_keyBuffer = 0;
                 Plugin_008_bitCount = 0;

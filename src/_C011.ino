@@ -334,19 +334,25 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary)
   // write?db=testdb&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%
   //	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname%
   //  Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
-  addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
-  addLog(LOG_LEVEL_DEBUG_MORE, s);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
+    addLog(LOG_LEVEL_DEBUG_MORE, s);
+  }
   const byte valueCount = getValueCountForTask(event->TaskIndex);
 
   DeleteNotNeededValues(s, valueCount);
 
-  addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
-  addLog(LOG_LEVEL_DEBUG_MORE, s);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
+    addLog(LOG_LEVEL_DEBUG_MORE, s);
+  }
 
   parseControllerVariables(s, event, !sendBinary);
 
-  addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
-  addLog(LOG_LEVEL_DEBUG_MORE, s);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
+    addLog(LOG_LEVEL_DEBUG_MORE, s);
+  }
 }
 
 #endif // ifdef USES_C011

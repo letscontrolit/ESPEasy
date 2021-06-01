@@ -80,32 +80,32 @@ enum class eP036pinmode {
 
 typedef struct {
   String   LineContent;       // content
+  int      CurrentLeft = 0;   // current left pix position
+  float    dPix        = 0.0f; // pix change per scroll time (100ms)
+  float    fPixSum     = 0.0f; // pix sum while scrolling (100ms)
   uint16_t LastWidth   = 0;   // width of last line in pix
   uint16_t Width       = 0;   // width in pix
   uint8_t  Height      = 0;   // Height in Pix
   uint8_t  ypos        = 0;   // y position in pix
-  int      CurrentLeft = 0;   // current left pix position
-  float    dPix        = 0.0f; // pix change per scroll time (100ms)
-  float    fPixSum     = 0.0f; // pix sum while scrolling (100ms)
 } tScrollLine;
 
 typedef struct {
-  const char *Font  = nullptr; // font for this line setting
-  uint8_t     Space = 0;       // space in pix between lines for this line setting
-  uint16_t    wait  = 0;       // waiting time before scrolling
   tScrollLine Line[P36_MAX_LinesPerPage];
+  const char *Font  = nullptr; // font for this line setting
+  uint16_t    wait  = 0;       // waiting time before scrolling
+  uint8_t     Space = 0;       // space in pix between lines for this line setting
 } tScrollingLines;
 
 typedef struct {
-  uint8_t     Scrolling                  = 0;       // 0=Ready, 1=Scrolling
-  const char *Font                       = nullptr; // font for this line setting
-  uint8_t     dPix                       = 0;       // pix change per scroll time (25ms)
-  int         dPixSum                    = 0;       // act pix change
-  uint8_t     linesPerFrame              = 0;       // the number of lines in each frame
-  int         ypos[P36_MAX_LinesPerPage] = { 0 };   // ypos contains the heights of the various lines - this depends on the font and the
-                                                    // number of lines
   String LineIn[P36_MAX_LinesPerPage];
   String LineOut[P36_MAX_LinesPerPage];
+  int         ypos[P36_MAX_LinesPerPage] = { 0 };   // ypos contains the heights of the various lines - this depends on the font and the
+                                                    // number of lines
+  int         dPixSum                    = 0;       // act pix change
+  const char *Font                       = nullptr; // font for this line setting
+  uint8_t     Scrolling                  = 0;       // 0=Ready, 1=Scrolling
+  uint8_t     dPix                       = 0;       // pix change per scroll time (25ms)
+  uint8_t     linesPerFrame              = 0;       // the number of lines in each frame
 } tScrollingPages;
 
 typedef struct {
@@ -123,8 +123,8 @@ typedef struct {
 } tFontSizes;
 
 typedef struct {
-  uint8_t     Top;      // top in pix for this line setting
   const char *fontData; // font for this line setting
+  uint8_t     Top;      // top in pix for this line setting
   uint8_t     Height;   // font height in pix
   uint8_t     Space;    // space in pix between lines for this line setting
 } tFontSettings;
@@ -228,8 +228,8 @@ struct P036_data_struct : public PluginTaskData_base {
 
   // display
   p036_resolution  disp_resolution   = p036_resolution::pix128x64;
-  bool             bLineScrollEnabled = false;
   uint8_t          TopLineOffset      = 0; // Offset for top line, used for rotated image while using displays < P36_MaxDisplayHeight lines
+  bool             bLineScrollEnabled = false;
   // Display button
   bool    ButtonState     = false;         // button not touched
   uint8_t ButtonLastState = 0;             // Last state checked (debouncing in progress)
@@ -237,12 +237,12 @@ struct P036_data_struct : public PluginTaskData_base {
   uint8_t RepeatCounter   = 0;             // Repeat delay counter when holding button pressed
   uint8_t displayTimer    = 0;             // counter for display OFF
   // frame header
-  bool           bHideHeader = false;
-  bool           bHideFooter = false;
-  bool           bAlternativHeader = false;
   uint16_t       HeaderCount       = 0;
   eHeaderContent HeaderContent = eHeaderContent::eSSID;
   eHeaderContent HeaderContentAlternative = eHeaderContent::eSSID;
+  bool           bHideHeader = false;
+  bool           bHideFooter = false;
+  bool           bAlternativHeader = false;
 
   // frames
   uint8_t MaxFramesToDisplay    = 0;    // total number of frames to display

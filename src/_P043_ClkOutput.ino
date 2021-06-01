@@ -69,7 +69,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 //          addHtml(timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]));
 //          addHtml("'>");
 
-          addHtml(" ");
+          addHtml(' ');
           byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
           addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice);
         }
@@ -118,9 +118,11 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
               pinMode(CONFIG_PIN1, OUTPUT);
               digitalWrite(CONFIG_PIN1, state);
               UserVar[event->BaseVarIndex] = state;
-              String log = F("TCLK : State ");
-              log += state;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("TCLK : State ");
+                log += state;
+                addLog(LOG_LEVEL_INFO, log);
+              }
               sendData(event);
             }
           }

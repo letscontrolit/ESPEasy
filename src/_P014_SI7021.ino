@@ -152,7 +152,7 @@ struct P014_data_struct : public PluginTaskData_base {
       {
         // Still waiting for data
         // Should be handled in the loop()
-        addLog(LOG_LEVEL_INFO, F("SI7021 : Read Error !"));
+        addLog(LOG_LEVEL_ERROR, F("SI7021 : Read Error !"));
         break;
       }
 
@@ -287,7 +287,7 @@ struct P014_data_struct : public PluginTaskData_base {
 
     // Check CRC of data received
     if (checkCRC(raw, checksum) != 0) {
-      addLog(LOG_LEVEL_INFO, F("SI7021 : checksum error!"));
+      addLog(LOG_LEVEL_ERROR, F("SI7021 : checksum error!"));
       return -1;
     }
 

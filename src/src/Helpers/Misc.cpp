@@ -38,7 +38,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
       // tolerantParseStringKeepCase(Line, 4);
       String configCommand = parseStringToEndKeepCase(string, 4);
 
-      if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
+      if ((configTaskName.isEmpty()) || (configCommand.isEmpty())) {
         return success; // TD-er: Should this be return false?
       }
       taskIndex_t index = findTaskIndexByName(configTaskName);
@@ -443,3 +443,30 @@ int getLoopCountPerSec() {
 int getUptimeMinutes() {
   return wdcounter / 2;
 }
+
+#ifndef BUILD_NO_RAM_TRACKER
+void logMemUsageAfter(const __FlashStringHelper * function, int value) {
+  // Store free memory in an int, as subtracting may sometimes result in negative value.
+  // The recorded used memory is not an exact value, as background (or interrupt) tasks may also allocate or free heap memory.
+  static int last_freemem = ESP.getFreeHeap();
+  const int freemem_end = ESP.getFreeHeap();
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log;
+    log.reserve(128);
+    log  = F("After ");
+    log += function;
+    if (value >= 0) {
+      log += value;
+    }
+    while (log.length() < 30) log += ' ';
+    log += F("Free mem after: ");
+    log += freemem_end;
+    while (log.length() < 55) log += ' ';
+    log += F("diff: ");
+    log += last_freemem - freemem_end;
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+
+  last_freemem = freemem_end;
+}
+#endif

@@ -127,10 +127,14 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
         task->blinkLED();
         if (P044_BAUDRATE == 115200) {
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
+          #endif
           task->CRCcheck = true;
         } else {
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC off"));
+          #endif
           task->CRCcheck = false;
         }
 

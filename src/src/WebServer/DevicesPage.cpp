@@ -314,7 +314,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
         // Restore the settings that were already set by the user
         for (byte i = 0; i < VARS_PER_TASK; ++i) {
-          if (oldNames[i].length() != 0) {
+          if (!oldNames[i].isEmpty()) {
             safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[i], oldNames[i], sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
             ExtraTaskSettings.TaskDeviceValueDecimals[i] = oldNrDec[i];
           }
@@ -870,13 +870,6 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
 
     addHelpButton(String(F("Plugin")) + Settings.TaskDeviceNumber[taskIndex]);
     addRTDPluginButton(Settings.TaskDeviceNumber[taskIndex]);
-
-
-    if ((Device[DeviceIndex].Number == 3) && (taskIndex >= 4)) // Number == 3 = PulseCounter Plugin
-    {
-      // FIXME TD-er: Make a PLUGIN_WEBFORM_SHOW_TASKCONFIG_WARNING
-      addFormNote(F("This plugin is only supported on task 1-4 for now"));
-    }
 
     addFormTextBox(F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
 

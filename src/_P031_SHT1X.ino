@@ -368,15 +368,17 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
             P031_data->startMeasurement();
           } else if (P031_data->hasError()) {
             // Log error
-            switch (P031_data->state) {
-              case P031_COMMAND_NO_ACK:
-                addLog(LOG_LEVEL_ERROR, F("SHT1X : Sensor did not ACK command"));
-                break;
-              case P031_NO_DATA:
-                addLog(LOG_LEVEL_ERROR, F("SHT1X : Data not ready"));
-                break;
-              default:
-                break;
+            if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+              switch (P031_data->state) {
+                case P031_COMMAND_NO_ACK:
+                  addLog(LOG_LEVEL_ERROR, F("SHT1X : Sensor did not ACK command"));
+                  break;
+                case P031_NO_DATA:
+                  addLog(LOG_LEVEL_ERROR, F("SHT1X : Data not ready"));
+                  break;
+                default:
+                  break;
+              }
             }
             P031_data->state = P031_IDLE;
           }
