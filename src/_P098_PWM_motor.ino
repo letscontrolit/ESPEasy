@@ -14,7 +14,7 @@
 # define PLUGIN_VALUENAME1_098 "Position"
 # define PLUGIN_VALUENAME2_098 "LimitA"
 # define PLUGIN_VALUENAME3_098 "LimitB"
-# define PLUGIN_VALUENAME4_098 "State"
+# define PLUGIN_VALUENAME4_098 "LimitApos"
 
 
 # define P098_PWM_FREQ       PCONFIG_LONG(0)
@@ -47,7 +47,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number           = PLUGIN_ID_098;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
+      Device[deviceCount].Type               = DEVICE_TYPE_CUSTOM3;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
@@ -82,6 +82,56 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string = F("M Fwd:");
+      string += F("&nbsp;");
+      string += formatGpioLabel(Settings.TaskDevicePin1[event->TaskIndex], true);
+      string += event->String1;
+      string += F("M Rev:");
+      string += F("&nbsp;");
+      string += formatGpioLabel(Settings.TaskDevicePin2[event->TaskIndex], true);
+      string += event->String1;
+      string += F("Enc:");
+      string += F("&nbsp;");
+      string += formatGpioLabel(Settings.TaskDevicePin3[event->TaskIndex], true);
+      string += event->String1;
+      # ifdef ESP32
+      string += F("Analog:");
+      string += F("&nbsp;");
+      string += formatGpioLabel(P098_ANALOG_GPIO, true);
+      string += event->String1;
+      #endif
+      string += F("Lim A:");
+      string += F("&nbsp;");
+      string += formatGpioLabel(P098_LIMIT_SWA_GPIO, true);
+      string += event->String1;
+      string += F("Lim B:");
+      string += F("&nbsp;");
+      string += formatGpioLabel(P098_LIMIT_SWB_GPIO, true);
+      success = true;
+      break;
+    }
+
+/*
+    case PLUGIN_WEBFORM_SHOW_VALUES:
+    {
+      P098_data_struct *P098_data =
+        static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P098_data) {
+        byte varNr = VARS_PER_TASK;
+        int limitApos, limitBpos;
+        P098_data->getLimitSwitchPositions(limitApos, limitBpos);
+
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("LimitBpos"), String(limitBpos));
+        pluginWebformShowValue(event->TaskIndex, varNr++, F("State"),  String(static_cast<int>(P098_data->state)), true);
+
+        // success = true;
+      }
+      break;
+    }
+*/
     case PLUGIN_SET_DEFAULTS:
     {
       P098_LIMIT_SWA_GPIO     = -1;
@@ -207,7 +257,11 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P098_data) {
-        P098_data->begin();
+        // Restore the last known values on warm boot.
+        P098_data->begin(
+          UserVar[event->BaseVarIndex + 0], // Position
+          UserVar[event->BaseVarIndex + 3], // limitApos
+          0);                               // limitBpos is not stored in RTC
         success = true;
       }
       break;
@@ -254,10 +308,12 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         }
 
         // }
+        int limitApos, limitBpos;
+        P098_data->getLimitSwitchPositions(limitApos, limitBpos);
         UserVar[event->BaseVarIndex + 0] = P098_data->getPosition();
-        UserVar[event->BaseVarIndex + 1] = (limitA_triggered ? 1 : 0);
-        UserVar[event->BaseVarIndex + 2] = (limitB_triggered ? 1 : 0);
-        UserVar[event->BaseVarIndex + 3] = static_cast<int>(P098_data->state);
+        UserVar[event->BaseVarIndex + 1] = limitA_triggered ? 1 : 0;
+        UserVar[event->BaseVarIndex + 2] = limitB_triggered ? 1 : 0;
+        UserVar[event->BaseVarIndex + 3] = limitApos;
       }
       break;
     }

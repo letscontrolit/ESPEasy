@@ -143,6 +143,8 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
                                           const String& string,
                                           byte          paramNr);
 
+bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, String& description, const String& newline);
+
 int getValueCountForTask(taskIndex_t taskIndex);
 
 // Check if the DeviceVType is set and update if it isn't.

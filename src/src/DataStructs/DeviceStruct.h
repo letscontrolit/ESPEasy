@@ -15,6 +15,9 @@
 #define DEVICE_TYPE_SPI                    23 // connected through SPI
 #define DEVICE_TYPE_SPI2                   24 // connected through SPI, 2 GPIOs
 #define DEVICE_TYPE_SPI3                   25 // connected through SPI, 3 GPIOs
+#define DEVICE_TYPE_CUSTOM1                30 // Custom labels, 1 GPIO
+#define DEVICE_TYPE_CUSTOM2                31 // Custom labels, 2 GPIOs
+#define DEVICE_TYPE_CUSTOM3                32 // Custom labels, 3 GPIOs
 #define DEVICE_TYPE_DUMMY                  99 // Dummy device, has no physical connection
 
 #define I2C_MULTIPLEXER_NONE               -1 // None selected

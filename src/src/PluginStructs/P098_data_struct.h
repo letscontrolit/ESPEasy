@@ -86,7 +86,7 @@ struct P098_data_struct : public PluginTaskData_base {
   P098_data_struct(const P098_config_struct& config);
   ~P098_data_struct();
 
-  bool begin();
+  bool begin(int pos, int limitApos, int limitBpos);
 
   // Perform regular loop
   // Return false when state should be checked.
@@ -115,6 +115,10 @@ struct P098_data_struct : public PluginTaskData_base {
 
   void getLimitSwitchStates(bool& limitA,
                             bool& limitB) const;
+
+  void getLimitSwitchPositions(int& limitA,
+                               int& limitB) const;
+
 
   State state       = State::Idle;
   bool  initialized = false;

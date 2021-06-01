@@ -28,11 +28,17 @@ P098_data_struct::~P098_data_struct() {
   }
 }
 
-bool P098_data_struct::begin()
+bool P098_data_struct::begin(int pos, int limitApos, int limitBpos)
 {
   if (!initialized) {
     initialized = true;
 
+    const bool switchPosSet = pos != 0 && limitApos != 0;
+
+    limitA.switchposSet = switchPosSet;
+    limitA.switchpos = switchPosSet ? limitApos : 0;
+    limitB.switchpos = limitBpos;
+    position = pos + limitA.switchpos;
     stop();
     state = P098_data_struct::State::Idle;
 
@@ -157,8 +163,10 @@ void P098_data_struct::stop()
 
 int P098_data_struct::getPosition() const
 {
-  //  if (!homePosSet()) { return -1; }
-  return position - limitA.triggerpos;
+  if (limitA.switchposSet) { 
+    return position - limitA.switchpos;
+  }
+  return position;
 }
 
 void P098_data_struct::getLimitSwitchStates(bool& limitA_triggered, bool& limitB_triggered) const
@@ -166,6 +174,13 @@ void P098_data_struct::getLimitSwitchStates(bool& limitA_triggered, bool& limitB
   limitA_triggered = _config.limitA.readState();
   limitB_triggered = _config.limitB.readState();
 }
+
+void P098_data_struct::getLimitSwitchPositions(int& limitApos, int& limitBpos) const
+{
+  limitApos = limitA.switchposSet ? limitA.switchpos : 0;
+  limitBpos = limitB.switchposSet ? limitB.switchpos : 0;
+}
+
 
 void P098_data_struct::startMoving()
 {
@@ -211,6 +226,12 @@ void P098_data_struct::checkPosition()
   if (mustStop) {
     stop();
     state = P098_data_struct::State::StopPosReached;
+    /*
+    // Correct for position error
+    if (std::abs(position - pos_dest) > 10) {
+      startMoving();
+    }
+    */
   }
 }
 

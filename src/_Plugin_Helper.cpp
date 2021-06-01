@@ -136,6 +136,13 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
   return found_taskIndex == taskIndex;
 }
 
+bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, String& description, const String& newline)
+{
+  struct EventStruct TempEvent(taskIndex);
+  TempEvent.String1 = newline;
+  return PluginCall(PLUGIN_WEBFORM_SHOW_GPIO_DESCR, &TempEvent, description);
+}
+
 int getValueCountForTask(taskIndex_t taskIndex) {
   struct EventStruct TempEvent(taskIndex);
   String dummy;

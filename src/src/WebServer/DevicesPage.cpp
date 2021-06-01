@@ -644,6 +644,27 @@ void handle_devicess_ShowAllTasksTable(byte page)
               }
               break;
             }
+            case DEVICE_TYPE_CUSTOM3:
+              showpin3 = true;
+
+            // fallthrough
+            case DEVICE_TYPE_CUSTOM2:
+              showpin2 = true;
+
+            // fallthrough
+            case DEVICE_TYPE_CUSTOM1:
+            {
+              showpin1 = true;
+              String description;
+              if (pluginWebformShowGPIOdescription(x, description, F("<BR>"))) {
+                showpin1 = false;
+                showpin2 = false;
+                showpin3 = false;
+                addHtml(description);
+              }
+              break;
+            }
+            
             default:
               showpin1 = true;
               showpin2 = true;
