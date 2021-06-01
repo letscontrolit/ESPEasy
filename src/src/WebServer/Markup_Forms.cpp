@@ -348,6 +348,7 @@ void addFormPinStateSelect(int gpio, int choice)
     label.reserve(32);
     label  = F("Pin mode ");
     label += createGPIO_label(gpio, pinnr, input, output, warning);
+    label += getConflictingUse(gpio);
     String id = "p";
     id += gpio;
 

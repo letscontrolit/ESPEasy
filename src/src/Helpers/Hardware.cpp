@@ -859,6 +859,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
         break;
     }
 
+
     // FIXME TD-er: Must we also check for pins used for MDC/MDIO and Eth PHY power?
   }
 

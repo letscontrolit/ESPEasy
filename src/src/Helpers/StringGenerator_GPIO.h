@@ -21,7 +21,7 @@ enum gpio_direction {
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings
 \*********************************************************************************************/
-String formatGpioDirection(gpio_direction direction);
+const __FlashStringHelper * formatGpioDirection(gpio_direction direction);
 
 String formatGpioLabel(int  gpio,
                        bool includeWarning);
@@ -62,6 +62,7 @@ String createGPIO_label(int  gpio,
                         bool output,
                         bool warning);
 
+const __FlashStringHelper * getConflictingUse(int gpio, bool includeI2C = true);
 
 
 #endif

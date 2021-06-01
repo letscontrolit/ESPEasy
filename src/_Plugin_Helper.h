@@ -143,7 +143,7 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
                                           const String& string,
                                           byte          paramNr);
 
-bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, String& description, const String& newline);
+bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, const String& newline);
 
 int getValueCountForTask(taskIndex_t taskIndex);
 

@@ -653,10 +653,13 @@ void addPinSelect(boolean forI2C, const String& id,  int choice)
 
   while (i < NR_ITEMS_PIN_DROPDOWN && gpio <= MAX_GPIO) {
     int  pinnr = -1;
-    bool input, output, warning;
+    bool input, output, warning = false;
 
-    if (getGpioInfo(gpio, pinnr, input, output, warning) || (i == 0)) {
+    // Make sure getGpioInfo is called (compiler may optimize it away if (i == 0))
+    const bool UsableGPIO = getGpioInfo(gpio, pinnr, input, output, warning);
+    if (UsableGPIO || (i == 0)) {
       gpio_labels[i]  = createGPIO_label(gpio, pinnr, input, output, warning);
+      gpio_labels[i] += getConflictingUse(gpio, !forI2C);
       gpio_numbers[i] = gpio;
       ++i;
     }
@@ -699,6 +702,7 @@ void addADC_PinSelect(bool touchOnly, const String& id,  int choice)
           if (adc != 0) {
             gpio_labels[i] += F(" / ");
             gpio_labels[i] += createGPIO_label(gpio, pinnr, input, output, warning);
+            gpio_labels[i] += getConflictingUse(gpio);
           }
           gpio_numbers[i] = gpio;
           ++i;
@@ -729,7 +733,7 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
 
     if (optionValues[x] != -1) // empty selection can never be disabled...
     {
-      if (!forI2C && ((optionValues[x] == Settings.Pin_i2c_sda) || (optionValues[x] == Settings.Pin_i2c_scl))) {
+      if (!forI2C && Settings.isI2C_pin(optionValues[x])) {
         disabled = true;
       }
 
@@ -737,22 +741,10 @@ void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C
         disabled = true;
       }
 
-      if (Settings.InitSPI != 0) {
-        #ifdef ESP32
-
-        switch (Settings.InitSPI)
-        {
-          case 1:
-            disabled = (optionValues[x] == 18 || optionValues[x] == 19 || optionValues[x] == 23);
-            break;
-          case 2:
-            disabled = (optionValues[x] == 14 || optionValues[x] == 12 || optionValues[x] == 13);
-            break;
-        }
-        #else // #ifdef ESP32
-        disabled = (optionValues[x] == 14 || optionValues[x] == 12 || optionValues[x] == 13);
-        #endif // ifdef ESP32
+      if (Settings.isSPI_pin(optionValues[x])) {
+        disabled = true;
       }
+
     }
     addSelector_Item(options[x],
                      optionValues[x],

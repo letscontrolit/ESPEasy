@@ -6,13 +6,13 @@
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings
 \*********************************************************************************************/
-String formatGpioDirection(gpio_direction direction) {
+const __FlashStringHelper * formatGpioDirection(gpio_direction direction) {
   switch (direction) {
     case gpio_input:         return F("&larr; ");
     case gpio_output:        return F("&rarr; ");
     case gpio_bidirectional: return F("&#8644; ");
   }
-  return "";
+  return F("");
 }
 
 String formatGpioLabel(int gpio, bool includeWarning) {
@@ -139,14 +139,24 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
   if (warning) {
     result += ' ';
     result += F(HTML_SYMBOL_WARNING);
-
-    bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
-
-    if (serialPinConflict) {
-      if (gpio == 1) { result += F(" TX0"); }
-
-      if (gpio == 3) { result += F(" RX0"); }
-    }
   }
   return result;
+}
+
+const __FlashStringHelper * getConflictingUse(int gpio, bool includeI2C)
+{
+  bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
+
+  if (serialPinConflict) {
+    if (gpio == 1) { return F(" TX0"); }
+
+    if (gpio == 3) { return F(" RX0"); }
+  }
+  if (includeI2C && Settings.isI2C_pin(gpio)) {
+    return F(" I2C");
+  }
+  if (Settings.isSPI_pin(gpio)) {
+    return F(" SPI");
+  }
+  return F("");
 }

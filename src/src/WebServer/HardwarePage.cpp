@@ -156,7 +156,10 @@ void handle_hardware() {
   addFormSubHeader(F("SPI Interface"));
   #ifdef ESP32
   {
-    const __FlashStringHelper * spi_options[3] = { F("Disabled"), F("VSPI: CLK=GPIO-18, MISO=GPIO-19, MOSI=GPIO-23"), F("HSPI: CLK=GPIO-14, MISO=GPIO-12, MOSI=GPIO-13")};
+    const __FlashStringHelper * spi_options[3] = { 
+      F("Disabled"), 
+      F("VSPI: CLK=GPIO-18, MISO=GPIO-19, MOSI=GPIO-23"), 
+      F("HSPI: CLK=GPIO-14, MISO=GPIO-12, MOSI=GPIO-13")};
     addFormSelector(F("Init SPI"), F("initspi"), 3, spi_options, NULL, Settings.InitSPI);
     addFormNote(F("Changing SPI settings requires to manualy restart"));
   }

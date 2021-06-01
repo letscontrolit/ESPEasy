@@ -47,7 +47,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number           = PLUGIN_ID_098;
-      Device[deviceCount].Type               = DEVICE_TYPE_CUSTOM3;
+      Device[deviceCount].Type               = DEVICE_TYPE_CUSTOM0;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
@@ -74,64 +74,56 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_GET_DEVICEGPIONAMES:
-    {
-      event->String1 = formatGpioName_output(F("Motor Fwd"));
-      event->String2 = formatGpioName_output(F("Motor Rev"));
-      event->String3 = formatGpioName_input_optional(F("Encoder"));
-      break;
-    }
-
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string = F("M Fwd:");
-      string += F("&nbsp;");
-      string += formatGpioLabel(Settings.TaskDevicePin1[event->TaskIndex], true);
-      string += event->String1;
-      string += F("M Rev:");
-      string += F("&nbsp;");
-      string += formatGpioLabel(Settings.TaskDevicePin2[event->TaskIndex], true);
-      string += event->String1;
-      string += F("Enc:");
-      string += F("&nbsp;");
-      string += formatGpioLabel(Settings.TaskDevicePin3[event->TaskIndex], true);
-      string += event->String1;
+      addHtml(F("M Fwd:"));
+      addHtml(F("&nbsp;"));
+      addHtml(formatGpioLabel(Settings.TaskDevicePin1[event->TaskIndex], true));
+      addHtml(event->String1);
+      addHtml(F("M Rev:"));
+      addHtml(F("&nbsp;"));
+      addHtml(formatGpioLabel(Settings.TaskDevicePin2[event->TaskIndex], true));
+      addHtml(event->String1);
+      addHtml(F("Enc:"));
+      addHtml(F("&nbsp;"));
+      addHtml(formatGpioLabel(Settings.TaskDevicePin3[event->TaskIndex], true));
+      addHtml(event->String1);
       # ifdef ESP32
-      string += F("Analog:");
-      string += F("&nbsp;");
-      string += formatGpioLabel(P098_ANALOG_GPIO, true);
-      string += event->String1;
-      #endif
-      string += F("Lim A:");
-      string += F("&nbsp;");
-      string += formatGpioLabel(P098_LIMIT_SWA_GPIO, true);
-      string += event->String1;
-      string += F("Lim B:");
-      string += F("&nbsp;");
-      string += formatGpioLabel(P098_LIMIT_SWB_GPIO, true);
+      addHtml(F("Analog:"));
+      addHtml(F("&nbsp;"));
+      addHtml(formatGpioLabel(P098_ANALOG_GPIO, true));
+      addHtml(event->String1);
+      # endif // ifdef ESP32
+      addHtml(F("Lim A:"));
+      addHtml(F("&nbsp;"));
+      addHtml(formatGpioLabel(P098_LIMIT_SWA_GPIO, true));
+      addHtml(event->String1);
+      addHtml(F("Lim B:"));
+      addHtml(F("&nbsp;"));
+      addHtml(formatGpioLabel(P098_LIMIT_SWB_GPIO, true));
       success = true;
       break;
     }
 
-/*
-    case PLUGIN_WEBFORM_SHOW_VALUES:
-    {
-      P098_data_struct *P098_data =
-        static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
+    /*
+        case PLUGIN_WEBFORM_SHOW_VALUES:
+        {
+          P098_data_struct *P098_data =
+            static_cast<P098_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P098_data) {
-        byte varNr = VARS_PER_TASK;
-        int limitApos, limitBpos;
-        P098_data->getLimitSwitchPositions(limitApos, limitBpos);
+          if (nullptr != P098_data) {
+            byte varNr = VARS_PER_TASK;
+            int limitApos, limitBpos;
+            P098_data->getLimitSwitchPositions(limitApos, limitBpos);
 
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("LimitBpos"), String(limitBpos));
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("State"),  String(static_cast<int>(P098_data->state)), true);
+            pluginWebformShowValue(event->TaskIndex, varNr++, F("LimitBpos"), String(limitBpos));
+            pluginWebformShowValue(event->TaskIndex, varNr++, F("State"),  String(static_cast<int>(P098_data->state)), true);
 
-        // success = true;
-      }
-      break;
-    }
-*/
+            // success = true;
+          }
+          break;
+        }
+     */
     case PLUGIN_SET_DEFAULTS:
     {
       P098_LIMIT_SWA_GPIO     = -1;
@@ -149,9 +141,18 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormSubHeader(F("Motor Control"));
+
+      // We load/save the TaskDevicePin ourselves to allow to combine the pin specific configuration be shown along with the pin selection.
+      addFormPinSelect(formatGpioName_output(F("Motor Fwd")), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
       addFormCheckBox(F("Motor Fwd Inverted"), F("mot_fwd_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_FWD_INVERTED));
+
+      addFormSeparator(2);
+
+      addFormPinSelect(formatGpioName_output(F("Motor Rev")), F("taskdevicepin2"), Settings.TaskDevicePin2[event->TaskIndex]);
       addFormCheckBox(F("Motor Rev Inverted"), F("mot_rev_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_REV_INVERTED));
-      addFormCheckBox(F("Encoder Pull-Up"),    F("enc_pu"),      bitRead(P098_FLAGS, P098_FLAGBIT_ENC_IN_PULLUP));
+
+      addFormSeparator(2);
 
       {
         # define P098_PWM_MODE_TYPES  static_cast<int>(P098_config_struct::PWM_mode_type::MAX_TYPE)
@@ -166,13 +167,18 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       }
       addFormNumericBox(F("PWM Frequency"), F("p098_pwm_freq"), P098_PWM_FREQ, 1000, 100000);
       addUnit(F("Hz"));
+
+      addFormSubHeader(F("Feedback"));
+
+      addFormPinSelect(formatGpioName_input_optional(F("Encoder")), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+      addFormCheckBox(F("Encoder Pull-Up"), F("enc_pu"), bitRead(P098_FLAGS, P098_FLAGBIT_ENC_IN_PULLUP));
+
       # ifdef ESP32
       {
         addRowLabel(formatGpioName_input_optional(F("Analog Feedback")));
         addADC_PinSelect(true, F("analogpin"), P098_ANALOG_GPIO);
       }
       # endif // ifdef ESP32
-
 
       addFormSubHeader(F("Limit Switches"));
 
@@ -197,6 +203,11 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      // We load/save the TaskDevicePin ourselves to allow to combine the pin specific configuration be shown along with the pin selection.
+      Settings.TaskDevicePin1[event->TaskIndex] = getFormItemInt(F("taskdevicepin1"));
+      Settings.TaskDevicePin2[event->TaskIndex] = getFormItemInt(F("taskdevicepin2"));
+      Settings.TaskDevicePin3[event->TaskIndex] = getFormItemInt(F("taskdevicepin3"));
+
       P098_LIMIT_SWA_GPIO     = getFormItemInt(F("limit_a"));
       P098_LIMIT_SWB_GPIO     = getFormItemInt(F("limit_b"));
       P098_LIMIT_SWA_DEBOUNCE = getFormItemInt(F("limit_a_debounce"));
