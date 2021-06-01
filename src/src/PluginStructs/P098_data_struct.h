@@ -17,13 +17,14 @@ struct P098_GPIO_config {
 
   bool readState() const {
     const bool state = digitalRead(gpio) != 0;
+
     return inverted ? !state : state;
   }
 
-  int  gpio     = -1;
+  int  gpio         = -1;
   int  debounceTime = 100;
-  bool pullUp   = false;
-  bool inverted = false;
+  bool pullUp       = false;
+  bool inverted     = false;
 };
 struct P098_config_struct {
   // Stored, so do not change values
@@ -67,11 +68,11 @@ struct P098_limit_switch_state {
     High
   };
 
-  int triggerpos  = 0;
-  int switchpos   = 0;
-  unsigned long lastChanged = 0;
-  State state = State::Low;
-  bool switchposSet = false;
+  int           triggerpos   = 0;
+  int           switchpos    = 0;
+  unsigned long lastChanged  = 0;
+  State         state        = State::Low;
+  bool          switchposSet = false;
 };
 struct P098_data_struct : public PluginTaskData_base {
   enum class State {

@@ -64,6 +64,7 @@ bool P098_data_struct::begin()
 bool P098_data_struct::loop()
 {
   const State old_state(state);
+
   check_limit_switch(_config.limitA, limitA);
   check_limit_switch(_config.limitB, limitB);
 
@@ -114,7 +115,7 @@ bool P098_data_struct::canRun()
 
 void P098_data_struct::findHome()
 {
-  pos_dest = INT_MIN;
+  pos_dest            = INT_MIN;
   limitA.switchposSet = false;
   startMoving();
 }
@@ -122,7 +123,7 @@ void P098_data_struct::findHome()
 void P098_data_struct::moveForward(int steps)
 {
   if (steps <= 0) {
-    pos_dest = INT_MAX;
+    pos_dest            = INT_MAX;
     limitB.switchposSet = false;
   } else {
     pos_dest = position + steps;
@@ -156,7 +157,7 @@ void P098_data_struct::stop()
 
 int P098_data_struct::getPosition() const
 {
-//  if (!homePosSet()) { return -1; }
+  //  if (!homePosSet()) { return -1; }
   return position - limitA.triggerpos;
 }
 
@@ -236,11 +237,12 @@ void P098_data_struct::check_limit_switch(
   volatile P098_limit_switch_state& switch_state)
 {
   if (switch_state.state == P098_limit_switch_state::State::TriggerWaitBounce) {
-    if (switch_state.lastChanged != 0 && timePassedSince(switch_state.lastChanged) > gpio_config.debounceTime) {
+    if ((switch_state.lastChanged != 0) && (timePassedSince(switch_state.lastChanged) > gpio_config.debounceTime)) {
       if (gpio_config.readState()) {
         switch_state.state = P098_limit_switch_state::State::High;
+
         if (!switch_state.switchposSet) {
-          switch_state.switchpos = switch_state.triggerpos;
+          switch_state.switchpos    = switch_state.triggerpos;
           switch_state.switchposSet = true;
         }
       }
@@ -249,26 +251,29 @@ void P098_data_struct::check_limit_switch(
 }
 
 void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
-    const P098_GPIO_config          & gpio_config,
-    volatile P098_limit_switch_state& switch_state,
-    int                               position)
+  const P098_GPIO_config          & gpio_config,
+  volatile P098_limit_switch_state& switch_state,
+  int                               position)
 {
-  const bool pinState = gpio_config.readState();
+  const bool pinState                           = gpio_config.readState();
   const P098_limit_switch_state::State oldState = switch_state.state;
+
   switch (oldState) {
     case P098_limit_switch_state::State::Low:
+
       if (pinState) {
         switch_state.state = P098_limit_switch_state::State::TriggerWaitBounce;
       }
       break;
     case P098_limit_switch_state::State::TriggerWaitBounce:
-      if (switch_state.lastChanged != 0 && timePassedSince(switch_state.lastChanged) < gpio_config.debounceTime) {
+
+      if ((switch_state.lastChanged != 0) && (timePassedSince(switch_state.lastChanged) < gpio_config.debounceTime)) {
         if (!pinState) {
           switch_state.state = P098_limit_switch_state::State::Low;
         } else {
           // Apparently we missed a (logic) falling edge, thus reset position and timestamp.
           switch_state.lastChanged = millis();
-          switch_state.triggerpos = position;
+          switch_state.triggerpos  = position;
         }
       } else {
         if (pinState) {
@@ -278,11 +283,13 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
       }
       break;
     case P098_limit_switch_state::State::High:
+
       if (!pinState) {
         switch_state.state = P098_limit_switch_state::State::Low;
       }
       break;
   }
+
   if (oldState != switch_state.state) {
     switch (switch_state.state) {
       case P098_limit_switch_state::State::Low:
@@ -291,18 +298,18 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
         break;
       case P098_limit_switch_state::State::TriggerWaitBounce:
         switch_state.lastChanged = millis();
-        switch_state.triggerpos = position;
+        switch_state.triggerpos  = position;
         break;
       case P098_limit_switch_state::State::High:
+
         if (!switch_state.switchposSet) {
-          switch_state.switchpos = switch_state.triggerpos;
+          switch_state.switchpos    = switch_state.triggerpos;
           switch_state.switchposSet = true;
         }
-        break;  
+        break;
     }
   }
 }
-
 
 void ICACHE_RAM_ATTR P098_data_struct::ISRlimitA(P098_data_struct *self)
 {

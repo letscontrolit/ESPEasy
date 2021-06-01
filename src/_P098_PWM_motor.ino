@@ -84,14 +84,14 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P098_LIMIT_SWA_GPIO = -1;
-      P098_LIMIT_SWB_GPIO = -1;
+      P098_LIMIT_SWA_GPIO     = -1;
+      P098_LIMIT_SWB_GPIO     = -1;
       P098_LIMIT_SWA_DEBOUNCE = 100;
-      P098_LIMIT_SWB_DEBOUNCE = 100;      
-      P098_MOTOR_CONTROL  = 0; // No PWM
-      P098_PWM_FREQ       = 1000;
+      P098_LIMIT_SWB_DEBOUNCE = 100;
+      P098_MOTOR_CONTROL      = 0; // No PWM
+      P098_PWM_FREQ           = 1000;
       # ifdef ESP32
-      P098_ANALOG_GPIO = -1;   // Analog feedback
+      P098_ANALOG_GPIO = -1;       // Analog feedback
       # endif // ifdef ESP32
 
       break;
@@ -147,8 +147,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P098_LIMIT_SWA_GPIO = getFormItemInt(F("limit_a"));
-      P098_LIMIT_SWB_GPIO = getFormItemInt(F("limit_b"));
+      P098_LIMIT_SWA_GPIO     = getFormItemInt(F("limit_a"));
+      P098_LIMIT_SWB_GPIO     = getFormItemInt(F("limit_b"));
       P098_LIMIT_SWA_DEBOUNCE = getFormItemInt(F("limit_a_debounce"));
       P098_LIMIT_SWB_DEBOUNCE = getFormItemInt(F("limit_b_debounce"));
 
@@ -181,11 +181,11 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       P098_config_struct config;
-      config.motorFwd.gpio = CONFIG_PIN1;
-      config.motorRev.gpio = CONFIG_PIN2;
-      config.encoder.gpio  = CONFIG_PIN3;
-      config.limitA.gpio   = P098_LIMIT_SWA_GPIO;
-      config.limitB.gpio   = P098_LIMIT_SWB_GPIO;
+      config.motorFwd.gpio       = CONFIG_PIN1;
+      config.motorRev.gpio       = CONFIG_PIN2;
+      config.encoder.gpio        = CONFIG_PIN3;
+      config.limitA.gpio         = P098_LIMIT_SWA_GPIO;
+      config.limitB.gpio         = P098_LIMIT_SWB_GPIO;
       config.limitA.debounceTime = P098_LIMIT_SWA_DEBOUNCE;
       config.limitB.debounceTime = P098_LIMIT_SWB_DEBOUNCE;
       # ifdef ESP32
@@ -223,35 +223,37 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         P098_data->getLimitSwitchStates(limitA_triggered, limitB_triggered);
 
         if (!P098_data->loop()) {}
-          switch (P098_data->state) {
-            case P098_data_struct::State::Idle:
-            case P098_data_struct::State::RunFwd:
-            case P098_data_struct::State::RunRev:
-              break;
-            case P098_data_struct::State::StopLimitSw:
-            case P098_data_struct::State::StopPosReached:
-            {
-              if (Settings.UseRules) {
-                String RuleEvent = getTaskDeviceName(event->TaskIndex);
-                RuleEvent += '#';
 
-                if (limitA_triggered) {
-                  eventQueue.addMove(String(RuleEvent + F("limitA")));
-                }
+        switch (P098_data->state) {
+          case P098_data_struct::State::Idle:
+          case P098_data_struct::State::RunFwd:
+          case P098_data_struct::State::RunRev:
+            break;
+          case P098_data_struct::State::StopLimitSw:
+          case P098_data_struct::State::StopPosReached:
+          {
+            if (Settings.UseRules) {
+              String RuleEvent = getTaskDeviceName(event->TaskIndex);
+              RuleEvent += '#';
 
-                if (limitB_triggered) {
-                  eventQueue.addMove(String(RuleEvent + F("limitB")));
-                }
-
-                if (P098_data->state == P098_data_struct::State::StopPosReached) {
-                  eventQueue.addMove(String(RuleEvent + F("positionReached")));
-                }
+              if (limitA_triggered) {
+                eventQueue.addMove(String(RuleEvent + F("limitA")));
               }
-              P098_data->state = P098_data_struct::State::Idle;
-              break;
+
+              if (limitB_triggered) {
+                eventQueue.addMove(String(RuleEvent + F("limitB")));
+              }
+
+              if (P098_data->state == P098_data_struct::State::StopPosReached) {
+                eventQueue.addMove(String(RuleEvent + F("positionReached")));
+              }
             }
+            P098_data->state = P098_data_struct::State::Idle;
+            break;
           }
-        //}
+        }
+
+        // }
         UserVar[event->BaseVarIndex + 0] = P098_data->getPosition();
         UserVar[event->BaseVarIndex + 1] = (limitA_triggered ? 1 : 0);
         UserVar[event->BaseVarIndex + 2] = (limitB_triggered ? 1 : 0);
