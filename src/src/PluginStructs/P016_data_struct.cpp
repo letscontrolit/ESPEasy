@@ -20,8 +20,10 @@ void P016_data_struct::convertCommandLines(struct EventStruct *event) {
   String log;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    #  ifndef PLUGIN_016_DEBUG
+    log.reserve(20); // less space needed
+    #  else // ifndef PLUGIN_016_DEBUG
     log.reserve(80);
-    #  ifdef PLUGIN_016_DEBUG
 
     log  = F("P016: struct size: ");
     log += sizeof(CommandLines);
@@ -34,7 +36,6 @@ void P016_data_struct::convertCommandLines(struct EventStruct *event) {
     addLog(LOG_LEVEL_INFO, log);
     #  endif // ifdef PLUGIN_016_DEBUG
   }
-  tCommandLines CommandLinesV1[P16_Nlines];   // holds the CustomTaskSettings V1
 
   // read V1 data && convert
   LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(CommandLinesV1), sizeof(CommandLinesV1));
@@ -95,7 +96,7 @@ void P016_data_struct::convertCommandLines(struct EventStruct *event) {
 # endif // ifdef P16_SETTINGS_V1
 
 void P016_data_struct::loadCommandLines(struct EventStruct *event) {
-  # if defined(P16_SETTINGS_V2) && defined(P16_SETTINGS_V1)
+  # ifdef P16_SETTINGS_V1
 
   // Convert the settings if both versions are defined and PCONFIG(7) != latest version
   if (PCONFIG(7) != P16_SETTINGS_LATEST) {
@@ -103,13 +104,14 @@ void P016_data_struct::loadCommandLines(struct EventStruct *event) {
 
     convertCommandLines(event);
   } else {
-  # endif // if defined(P16_SETTINGS_V2) && defined(P16_SETTINGS_V1)
+  # endif // ifdef P16_SETTINGS_V1
+
   // read V2 settings data
   LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(CommandLines), sizeof(CommandLines));
-  # if defined(P16_SETTINGS_V2) && defined(P16_SETTINGS_V1)
+  # ifdef P16_SETTINGS_V1
 }
 
-  # endif // if defined(P16_SETTINGS_V2) && defined(P16_SETTINGS_V1)
+  # endif // ifdef P16_SETTINGS_V1
 
   for (int i = 0; i < P16_Nlines; ++i) {
     CommandLines[i].Command[P16_Nchars - 1] = 0; // Terminate in case of uninitalized data

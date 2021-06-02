@@ -5,6 +5,7 @@
 #ifdef USES_P016
 
 # include <IRremoteESP8266.h>
+# include "../src/src/Helpers/Memory.h"
 
 # define PLUGIN_016_DEBUG      // additional debug messages in the log
 
@@ -16,8 +17,8 @@
 # define P16_Nchars   64       // max chars per command line
 # define P16_Cchars   20       // max chars per code
 
-# define P16_SETTINGS_V1       // Settings v1 original settings
-# define P16_SETTINGS_V2       // Settings v2 includes 64 bit codes and some separated flags, should not be undefined!
+# define P16_SETTINGS_V1       // Settings v1 original settings when enabled, settings conversion is also enabled
+// Settings v2 includes 64 bit codes and some separated flags, should not be undefined!
 
 # ifdef P16_SETTINGS_V1
 #  define P16_CMDBIT_REPEAT 23 // Only used for V1 settings
@@ -29,7 +30,6 @@
 # define P16_FLAGS_REPEAT    0 // Repeat code
 // # define P16_FLAGS_HASH      1  // Code is a Hash
 
-# ifdef P16_SETTINGS_V2
 typedef struct {
   char          Command[P16_Nchars]       = { 0 };
   uint64_t      Code                      = 0; // received code (can be added automatically)
@@ -39,7 +39,6 @@ typedef struct {
   uint16_t      CodeFlags                 = 0;
   uint16_t      AlternativeCodeFlags      = 0;
 } tCommandLinesV2;
-# endif // ifdef P16_SETTINGS_V2
 
 # ifdef P16_SETTINGS_V1
 typedef struct {
@@ -68,11 +67,10 @@ public:
                    uint16_t      CodeFlags  = 0u);
 
   // CustomTaskSettings
-  # ifdef P16_SETTINGS_V2
+  # ifdef P16_SETTINGS_V1
+  tCommandLines CommandLinesV1[P16_Nlines]; // holds the CustomTaskSettings V1
+  # endif  // ifdef P16_SETTINGS_V1
   tCommandLinesV2 CommandLines[P16_Nlines]; // holds the CustomTaskSettings, V2
-  # else // ifdef P16_SETTINGS_V2
-  tCommandLines CommandLines[P16_Nlines];   // holds the CustomTaskSettings
-  # endif // ifdef P16_SETTINGS_V2
 
   bool bCodeChanged = false;                // set if code has been added and CommandLines need to be saved (in PLUGIN_ONCE_A_SECOND)
 

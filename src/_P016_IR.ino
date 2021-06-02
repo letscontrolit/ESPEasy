@@ -122,7 +122,25 @@ const uint16_t kMinUnknownSize = 12;
 
 IRrecv *irReceiver = nullptr;
 bool bEnableIRcodeAdding = false;
+#ifdef P016_P035_USE_RAW_RAW2
 boolean displayRawToReadableB32Hex(String &outputStr, decode_results results);
+#endif
+
+#ifdef PLUGIN_016_DEBUG
+void P016_infoLogMemory(const String & text) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log;
+    log.reserve(37 + text.length());
+    log  = F("P016: Free memory ");
+    log += text;
+    log += F(": ");
+    log += ESP.getFreeHeap();
+    log += F(" stack: ");
+    log += getCurrentFreeStack();
+    addLog(LOG_LEVEL_INFO, log);
+  }
+}
+#endif
 
 boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 {
@@ -194,12 +212,17 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
         irReceiver->enableIRIn();                         // Start the receiver
       }
-      if (irReceiver != nullptr && irPin == -1)
+      if (nullptr != irReceiver && irPin == -1)
       {
         irReceiver->disableIRIn();
         delete irReceiver;
         irReceiver = nullptr;
       }
+
+      #ifdef PLUGIN_016_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT done"));
+      #endif // PLUGIN_016_DEBUG
+
       success = true;
       break;
     }
@@ -221,10 +244,22 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       success = true;
       break;
     }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      #ifdef PLUGIN_016_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_SET_DEFAULTS ..."));
+      #endif // PLUGIN_016_DEBUG
+
+      P016_SETTINGS_VERSION = P16_SETTINGS_LATEST; // New installs don't need conversion
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       #ifdef PLUGIN_016_DEBUG
       addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_WEBFORM_LOAD ..."));
+      P016_infoLogMemory(F("before load"));
       #endif // PLUGIN_016_DEBUG
 
       addRowLabel(F("Info"));
@@ -344,6 +379,11 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         }
       }
 
+      #ifdef PLUGIN_016_DEBUG
+      P016_infoLogMemory(F("after load"));
+      addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_WEBFORM_LOAD done"));
+      #endif // PLUGIN_016_DEBUG
+
       success = true;
       break;
     }
@@ -354,7 +394,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_WEBFORM_SAVE ..."));
       #endif // PLUGIN_016_DEBUG
 
-      PCONFIG(7) = P16_SETTINGS_LATEST; // Set to use the current settings version.
+      P016_SETTINGS_VERSION = P16_SETTINGS_LATEST; // Set to use the current settings version.
 
       // update now
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
@@ -398,6 +438,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             }
             P016_data->CommandLines[varNr].Code = iCode;
 
+            delay(0);
             // Alternate Code & flags
             P016_data->CommandLines[varNr].AlternativeCodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 3)));
             bitWrite(P016_data->CommandLines[varNr].AlternativeCodeFlags, P16_FLAGS_REPEAT, isFormItemChecked(getPluginCustomArgName(rowCnt + 4)));
@@ -418,7 +459,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
             }
             P016_data->CommandLines[varNr].Command[P16_Nchars - 1] = 0; // Terminate string
 
-            if (strError.length() > 0) {
+            if (!strError.isEmpty()) {
               addHtmlError(strError);
             }
 
@@ -427,22 +468,13 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           }
 
           #ifdef PLUGIN_016_DEBUG
-          String log;
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            log.reserve(55);
-            log  = F("P016: Free memory before save: ");
-            log += ESP.getFreeHeap();
-          }
+          P016_infoLogMemory(F("before save"));
           #endif
           {
             SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P016_data->CommandLines), sizeof(P016_data->CommandLines));
           }
           #ifdef PLUGIN_016_DEBUG
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            log += F(" after save: ");
-            log += ESP.getFreeHeap();
-            addLog(LOG_LEVEL_DEBUG, log);
-          }
+          P016_infoLogMemory(F("after save"));
           #endif
 
           // Need to delete the allocated object here
@@ -637,13 +669,11 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           }
         }
         #endif // P016_P035_Extended_AC
-        if (P016_SEND_IR_TO_CONTROLLER) {
-          sendData(event);
-        } else {
+        if (!P016_SEND_IR_TO_CONTROLLER) {
           unsigned long IRcode = results.value;
           UserVar.setSensorTypeLong(event->TaskIndex, IRcode);
-          sendData(event);
         }
+        sendData(event);
       }
       success = true;
       break;
