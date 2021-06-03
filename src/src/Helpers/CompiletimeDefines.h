@@ -5,12 +5,12 @@
 
 //#include "../../ESPEasy_common.h"
 
-String get_binary_filename();
-String get_build_time();
-String get_build_date();
-String get_build_origin();
-String get_build_platform();
-String get_git_head();
+const __FlashStringHelper * get_binary_filename();
+const __FlashStringHelper * get_build_time();
+const __FlashStringHelper * get_build_date();
+const __FlashStringHelper * get_build_origin();
+const __FlashStringHelper * get_build_platform();
+const __FlashStringHelper * get_git_head();
 
 
 #endif // HELPERS_COMPILETIMEDEFINES_H

@@ -121,7 +121,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
       {
         {
           byte choice = PCONFIG(0);
-          String options[4];
+          const __FlashStringHelper * options[4];
           options[0] = F("Yewelink/TUYA");
           options[1] = F("Sonoff Dual");
           options[2] = F("LC TECH");
@@ -133,7 +133,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         if (PCONFIG(0) == SER_SWITCH_YEWE)
         {
           byte choice = PCONFIG(1);
-          String buttonOptions[4];
+          const __FlashStringHelper * buttonOptions[4];
           buttonOptions[0] = F("1");
           buttonOptions[1] = F("2/Dimmer#2");
           buttonOptions[2] = F("3/Dimmer#3");
@@ -145,7 +145,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
           byte choice = PCONFIG(1);
-          String modeoptions[3];
+          const __FlashStringHelper * modeoptions[3];
           modeoptions[0] = F("Normal");
           modeoptions[1] = F("Exclude/Blinds mode");
           modeoptions[2] = F("Simultaneous mode");
@@ -157,7 +157,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         {
           {
             byte choice = PCONFIG(1);
-            String buttonOptions[4];
+            const __FlashStringHelper * buttonOptions[4];
             buttonOptions[0] = F("1");
             buttonOptions[1] = F("2");
             buttonOptions[2] = F("3");
@@ -168,7 +168,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
           {
             byte choice = PCONFIG(2);
-            String speedOptions[8];
+            const __FlashStringHelper * speedOptions[8];
             speedOptions[0] = F("9600");
             speedOptions[1] = F("19200");
             speedOptions[2] = F("115200");
@@ -555,8 +555,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         {
           if ((PCONFIG(0) == SER_SWITCH_YEWE) && (Plugin_091_commandstate != 1))
           { // check Tuya state if anybody ask for it
-            String log = F("SerSW   : ReadState");
-            addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, F("SerSW   : ReadState"));
             getmcustate();
           }
           if (PCONFIG(0) == SER_SWITCH_WIFIDIMMER) {

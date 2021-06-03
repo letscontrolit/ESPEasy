@@ -115,13 +115,13 @@
 .. |P038_compileinfo| replace:: `.`
 .. |P038_usedlibraries| replace:: `.`
 
-.. |P039_name| replace:: :cyan:`Thermocouple`
+.. |P039_name| replace:: :cyan:`Thermosensors`
 .. |P039_type| replace:: :cyan:`Environment`
-.. |P039_typename| replace:: :cyan:`Environment - Thermocouple`
+.. |P039_typename| replace:: :cyan:`Environment - Thermosensors`
 .. |P039_porttype| replace:: `.`
 .. |P039_status| replace:: :green:`NORMAL`
-.. |P039_github| replace:: P039_Thermocouple.ino
-.. _P039_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P039_Thermocouple.ino
+.. |P039_github| replace:: P039_Thermosensors.ino
+.. _P039_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P039_Thermosensors.ino
 .. |P039_usedby| replace:: `.`
 .. |P039_shortinfo| replace:: `.`
 .. |P039_maintainer| replace:: `.`

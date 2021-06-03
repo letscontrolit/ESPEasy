@@ -7,6 +7,11 @@ void EventQueueStruct::add(const String& event)
   _eventQueue.push_back(event);
 }
 
+void EventQueueStruct::add(const __FlashStringHelper * event)
+{
+  _eventQueue.push_back(event);
+}
+
 void EventQueueStruct::addMove(String&& event)
 {
   _eventQueue.emplace_back(std::move(event));

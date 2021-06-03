@@ -69,11 +69,11 @@ void   getWebPageTemplateDefaultFooter(String& tmpl);
 
 void   getErrorNotifications();
 
-String getGpMenuIcon(byte index);
+const __FlashStringHelper * getGpMenuIcon(byte index);
 
-String getGpMenuLabel(byte index);
+const __FlashStringHelper * getGpMenuLabel(byte index);
 
-String getGpMenuURL(byte index);
+const __FlashStringHelper * getGpMenuURL(byte index);
 
 bool   GpMenuVisible(byte index);
 
@@ -91,13 +91,15 @@ void   writeDefaultCSS(void);
 extern int8_t level;
 extern int8_t lastLevel;
 
+void json_quote_name(const __FlashStringHelper * val);
 void json_quote_name(const String& val);
 
 void json_quote_val(const String& val);
 
-void json_open();
+void json_open(bool arr = false);
 
-void json_open(bool arr);
+void json_open(bool          arr,
+               const __FlashStringHelper * name);
 
 void json_open(bool          arr,
                const String& name);
@@ -147,7 +149,7 @@ void    addSVG_param(const String& key,
 void    addSVG_param(const String& key,
                      const String& value);
 
-void    createSvgRect_noStroke(const String& classname,
+void    createSvgRect_noStroke(const __FlashStringHelper * classname,
                                unsigned int fillColor,
                                float        xoffset,
                                float        yoffset,
@@ -210,5 +212,22 @@ void getPartitionTableSVG(byte         pType,
 
 bool webArg2ip(const String& arg,
                byte         *IP);
+
+
+// Separate wrapper to get web_server.arg()
+// 1) To allow to have a __FlashStringHelper call -> reduce build size
+// 2) ESP32 does not return a const String &, but a temporary copy, thus we _must_ copy before using it.
+
+#ifdef ESP8266
+const String& webArg(const __FlashStringHelper * arg);
+const String& webArg(const String& arg);
+const String& webArg(int i);
+#endif 
+
+#ifdef ESP32
+String webArg(const __FlashStringHelper * arg);
+String webArg(const String& arg);
+String webArg(int i);
+#endif 
 
 #endif // ifndef WEBSERVER_WEBSERVER_H

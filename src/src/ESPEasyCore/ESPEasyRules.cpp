@@ -1,8 +1,9 @@
-#include "ESPEasyRules.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Commands/InternalCommands.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Device.h"
 #include "../Globals/EventQueue.h"
@@ -21,7 +22,7 @@
 
 #include "../../_Plugin_Helper.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #include <math.h>
 
@@ -108,7 +109,7 @@ bool processNextEvent() {
 /********************************************************************************************\
    Rules processing
  \*********************************************************************************************/
-void rulesProcessing(String& event) {
+void rulesProcessing(const String& event) {
   if (!Settings.UseRules) {
     return;
   }
@@ -128,17 +129,8 @@ void rulesProcessing(String& event) {
 
   if (Settings.OldRulesEngine()) {
     for (byte x = 0; x < RULESETS_MAX; x++) {
-#if defined(ESP8266)
-      String fileName = F("rules");
-#endif // if defined(ESP8266)
-#if defined(ESP32)
-      String fileName = F("/rules");
-#endif // if defined(ESP32)
-      fileName += x + 1;
-      fileName += F(".txt");
-
       if (activeRuleSets[x]) {
-        rulesProcessingFile(fileName, event);
+        rulesProcessingFile(getRulesFileName(x), event);
       }
     }
   } else {
@@ -152,8 +144,8 @@ void rulesProcessing(String& event) {
 # ifndef BUILD_NO_DEBUG
     else {
       addLog(LOG_LEVEL_DEBUG, String(F("EVENT: ")) + event +
-             String(F(" is ingnored. File ")) + fileName +
-             String(F(" not found.")));
+             F(" is ingnored. File ") + fileName +
+             F(" not found."));
     }
 # endif    // ifndef BUILD_NO_DEBUG
     #endif // WEBSERVER_NEW_RULES
@@ -177,9 +169,9 @@ void rulesProcessing(String& event) {
 /********************************************************************************************\
    Rules processing
  \*********************************************************************************************/
-String rulesProcessingFile(const String& fileName, String& event) {
+String rulesProcessingFile(const String& fileName, const String& event) {
   if (!Settings.UseRules || !fileExists(fileName)) {
-    return F("");
+    return EMPTY_STRING;
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile"));
@@ -194,14 +186,13 @@ String rulesProcessingFile(const String& fileName, String& event) {
 #endif // ifndef BUILD_NO_DEBUG
 
   static byte nestingLevel = 0;
-  String log;
 
   nestingLevel++;
 
   if (nestingLevel > RULES_MAX_NESTING_LEVEL) {
     addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
     nestingLevel--;
-    return log;
+    return EMPTY_STRING;
   }
 
   fs::File f = tryOpenFile(fileName, "r+");
@@ -247,13 +238,13 @@ String rulesProcessingFile(const String& fileName, String& event) {
           if ((lineLength > 0) && !line.startsWith(F("//"))) {
             // Parse the line and extract the action (if there is any)
             String action;
-            parseCompleteNonCommentLine(line, event, log, action, match, codeBlock,
+            parseCompleteNonCommentLine(line, event, action, match, codeBlock,
                                         isCommand, condition, ifBranche, ifBlock,
                                         fakeIfBlock);
 
             if (match) // rule matched for one action or a block of actions
             {
-              processMatchedRule(action, event, log, match, codeBlock,
+              processMatchedRule(action, event, match, codeBlock,
                                  isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
             }
 
@@ -261,7 +252,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
           }
 
           // Prepare for new line
-          line = F("");
+          line = EMPTY_STRING;
           line.reserve(longestLineSize);
           firstNonSpaceRead = false;
           commentFound      = false;
@@ -311,7 +302,7 @@ String rulesProcessingFile(const String& fileName, String& event) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  return F("");
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\
@@ -628,7 +619,7 @@ void parse_string_commands(String& line) {
         replacement = String(uval);
       }
 
-      if (replacement.length() == 0) {
+      if (replacement.isEmpty()) {
         // part in braces is not a supported command.
         // replace the {} with other characters to mask the braces so we can continue parsing.
         // We have to unmask then after we're finished.
@@ -703,7 +694,7 @@ void substitute_eventvalue(String& line, const String& event) {
   }
 }
 
-void parseCompleteNonCommentLine(String& line, String& event, String& log,
+void parseCompleteNonCommentLine(String& line, const String& event,
                                  String& action, bool& match,
                                  bool& codeBlock, bool& isCommand,
                                  bool condition[], bool ifBranche[],
@@ -746,7 +737,7 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 
   String eventTrigger;
 
-  action = F("");
+  action = EMPTY_STRING;
 
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
@@ -810,8 +801,8 @@ void parseCompleteNonCommentLine(String& line, String& event, String& log,
 #endif // ifndef BUILD_NO_DEBUG
 }
 
-void processMatchedRule(String& action, String& event,
-                        String& log, bool& match, bool& codeBlock,
+void processMatchedRule(String& action, const String& event,
+                        bool& match, bool& codeBlock,
                         bool& isCommand, bool condition[], bool ifBranche[],
                         byte& ifBlock, byte& fakeIfBlock) {
   String lcAction = action;
@@ -845,7 +836,7 @@ void processMatchedRule(String& action, String& event,
 #ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            log  = F("Lev.");
+            String log  = F("Lev.");
             log += String(ifBlock);
             log += F(": [elseif ");
             log += check;
@@ -872,7 +863,7 @@ void processMatchedRule(String& action, String& event,
 #ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            log  = F("Lev.");
+            String log  = F("Lev.");
             log += String(ifBlock);
             log += F(": [if ");
             log += check;
@@ -888,7 +879,7 @@ void processMatchedRule(String& action, String& event,
         fakeIfBlock++;
 
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          log  = F("Lev.");
+          String log  = F("Lev.");
           log += String(ifBlock);
           log += F(": Error: IF Nesting level exceeded!");
           addLog(LOG_LEVEL_ERROR, log);
@@ -907,7 +898,7 @@ void processMatchedRule(String& action, String& event,
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      log  = F("Lev.");
+      String log  = F("Lev.");
       log += String(ifBlock);
       log += F(": [else]=");
       log += boolToString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
@@ -957,8 +948,8 @@ bool ruleMatch(const String& event, const String& rule) {
   tmpRule.trim();
 
   // Ignore escape char
-  tmpRule.replace(F("["), F(""));
-  tmpRule.replace(F("]"), F(""));
+  tmpRule.replace(F("["), EMPTY_STRING);
+  tmpRule.replace(F("]"), EMPTY_STRING);
 
   if (tmpEvent.equalsIgnoreCase(tmpRule)) {
     return true;

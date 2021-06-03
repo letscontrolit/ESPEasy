@@ -1,4 +1,4 @@
-#include "ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../DataStructs/LogStruct.h"
 #include "../ESPEasyCore/Serial.h"
@@ -32,23 +32,22 @@ void initLog()
 /********************************************************************************************\
   Logging
   \*********************************************************************************************/
-String getLogLevelDisplayString(int logLevel) {
-  String res;
+const __FlashStringHelper * getLogLevelDisplayString(int logLevel) {
   switch (logLevel) {
-    case LOG_LEVEL_NONE:       res = F("None"); break;
-    case LOG_LEVEL_ERROR:      res = F("Error"); break;
-    case LOG_LEVEL_INFO:       res = F("Info"); break;
-    case LOG_LEVEL_DEBUG:      res = F("Debug"); break;
-    case LOG_LEVEL_DEBUG_MORE: res = F("Debug More"); break;
-    case LOG_LEVEL_DEBUG_DEV:  res = F("Debug dev"); break;
+    case LOG_LEVEL_NONE:       return F("None");
+    case LOG_LEVEL_ERROR:      return F("Error");
+    case LOG_LEVEL_INFO:       return F("Info");
+    case LOG_LEVEL_DEBUG:      return F("Debug");
+    case LOG_LEVEL_DEBUG_MORE: return F("Debug More");
+    case LOG_LEVEL_DEBUG_DEV:  return F("Debug dev");
 
     default:
     break;
   }
-  return res;
+  return F("");
 }
 
-String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
+const __FlashStringHelper * getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
   switch (index) {
     case 0: logLevel = LOG_LEVEL_ERROR;      break;
     case 1: logLevel = LOG_LEVEL_INFO;       break;
@@ -56,7 +55,7 @@ String getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
     case 3: logLevel = LOG_LEVEL_DEBUG_MORE; break;
     case 4: logLevel = LOG_LEVEL_DEBUG_DEV;  break;
 
-    default: logLevel = -1; return "";
+    default: logLevel = -1; return F("");
   }
   return getLogLevelDisplayString(logLevel);
 }
@@ -165,32 +164,56 @@ bool loglevelActive(byte logLevel, byte logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
+//#ifdef LIMIT_BUILD_SIZE
+
+void addLog(byte loglevel, const __FlashStringHelper *str)
+{
+  addToLog(loglevel, str);
+}
+
+void addLog(byte logLevel, const char *line)
+{
+  addToLog(logLevel, line);
+}
+
+void addLog(byte loglevel, const String& string)
+{
+  addToLog(loglevel, string);
+}
+//#endif
+
 void addToLog(byte loglevel, const __FlashStringHelper *str)
 {
-  String copy;
-  if (copy.reserve(strlen_P((PGM_P)str))) {
-    copy = str;
-    addToLog(loglevel, copy.c_str());
+  if (loglevelActiveFor(loglevel)) {
+    String copy;
+    if (copy.reserve(strlen_P((PGM_P)str))) {
+      copy = str;
+      addToLog(loglevel, copy.c_str());
+    }
   }
 }
 
 void addToLog(byte loglevel, const String& string)
 {
-  addToLog(loglevel, string.c_str());
+  if (loglevelActiveFor(loglevel)) {
+    addToLog(loglevel, string.c_str());
+  }
 }
 
 void addToLog(byte logLevel, const char *line)
 {
   // Please note all functions called from here handling line must be PROGMEM aware.
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    addToSerialBuffer(String(millis()).c_str());
-    addToSerialBuffer(String(F(" : ")).c_str());
-    String loglevelDisplayString = getLogLevelDisplayString(logLevel);
-    while (loglevelDisplayString.length() < 6) {
-      loglevelDisplayString += ' ';
+    addToSerialBuffer(String(millis()));
+    addToSerialBuffer(F(" : "));
+    {
+      String loglevelDisplayString = getLogLevelDisplayString(logLevel);
+      while (loglevelDisplayString.length() < 6) {
+        loglevelDisplayString += ' ';
+      }
+      addToSerialBuffer(loglevelDisplayString);
     }
-    addToSerialBuffer(loglevelDisplayString.c_str());
-    addToSerialBuffer(String(F(" : ")).c_str());
+    addToSerialBuffer(F(" : "));
     addToSerialBuffer(line);
     addNewlineToSerialBuffer();
   }

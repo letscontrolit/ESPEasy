@@ -154,7 +154,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       if (nullptr != P087_data) {
         for (byte varNr = 0; varNr < P87_Nlines; varNr++)
         {
-          P087_data->setLine(varNr, web_server.arg(getPluginCustomArgName(varNr)));
+          P087_data->setLine(varNr, webArg(getPluginCustomArgName(varNr)));
         }
 
         addHtmlError(SaveCustomTaskSettings(event->TaskIndex, P087_data->_lines, P87_Nlines, 0));
@@ -291,7 +291,7 @@ void P087_html_show_matchForms(struct EventStruct *event) {
     addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
 
     {
-      String options[P087_Match_Type_NR_ELEMENTS];
+      const __FlashStringHelper * options[P087_Match_Type_NR_ELEMENTS];
       int optionValues[P087_Match_Type_NR_ELEMENTS];
 
       for (int i = 0; i < P087_Match_Type_NR_ELEMENTS; ++i) {
@@ -331,17 +331,17 @@ void P087_html_show_matchForms(struct EventStruct *event) {
         case 1:
         {
           // Comparator
-          String options[2];
+          const __FlashStringHelper * options[2];
           options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
           int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
-          addSelector(id, 2, options, optionValues, NULL, comparator, false, "");
+          addSelector(id, 2, options, optionValues, NULL, static_cast<int>(comparator), false, true, EMPTY_STRING);
           break;
         }
         case 2:
         {
           // Compare with
-          addTextBox(id, filter, 32, false, false, "", "");
+          addTextBox(id, filter, 32, false, false, EMPTY_STRING, EMPTY_STRING);
           break;
         }
       }
@@ -373,7 +373,7 @@ void P087_html_show_stats(struct EventStruct *event) {
     chksumStats += error;
     addHtml(chksumStats);
     addRowLabel(F("Length Last Sentence"));
-    addHtml(String(length_last));
+    addHtmlInt(length_last);
   }
 }
 

@@ -129,7 +129,7 @@ bool fileExists(const String& fname) {
 fs::File tryOpenFile(const String& fname, const String& mode) {
   START_TIMER;
   fs::File f;
-  if (fname.length() == 0 || fname.equals(F("/"))) {
+  if (fname.isEmpty() || fname.equals(F("/"))) {
     return f;
   }
 
@@ -278,6 +278,16 @@ String BuildFixes()
   }
   if (Settings.Build < 20113) {
     Settings.NumberExtraWiFiScans = 0;
+  }
+  if (Settings.Build < 20114) {
+    // P003_Pulse was always using the pull-up, now it is a setting.
+    for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
+      if (Settings.TaskDeviceNumber[taskIndex] == 3) {
+        Settings.TaskDevicePin1PullUp[taskIndex] = true;
+      }
+    }
+    // Disable periodical scanning as it does cause lots of strange issues.
+    Settings.PeriodicalScanWiFi(false);
   }
 
   Settings.Build = BUILD;
@@ -635,7 +645,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
     readPos += bufferSize;
   }
 
-  if ((tmpString.length() != 0) && (stringCount < nrStrings)) {
+  if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {
     result              += F("Incomplete custom settings for index ");
     result              += (index + 1);
     strings[stringCount] = tmpString;
@@ -754,7 +764,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
                           (byte *)&ExtraTaskSettings,
                           sizeof(struct ExtraTaskSettingsStruct));
 
-  if (err.length() == 0) {
+  if (err.isEmpty()) {
     err = checkTaskSettings(TaskIndex);
   }
   return err;
@@ -1396,9 +1406,9 @@ String createCacheFilename(unsigned int count) {
   #ifdef ESP32
   fname = '/';
   #endif // ifdef ESP32
-  fname += "cache_";
+  fname += F("cache_");
   fname += String(count);
-  fname += ".bin";
+  fname += F(".bin");
   return fname;
 }
 
@@ -1446,22 +1456,27 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   }
 #endif // ESP8266
 #ifdef ESP32
-  File root = ESPEASY_FS.open(F("/cache"));
+  File root = ESPEASY_FS.open(F("/"));
   File file = root.openNextFile();
 
   while (file)
   {
     if (!file.isDirectory()) {
-      int count = getCacheFileCountFromFilename(file.name());
+      const String fname(file.name());
+      if (fname.startsWith(F("/cache")) || fname.startsWith(F("cache"))) {
+        int count = getCacheFileCountFromFilename(fname);
 
-      if (count >= 0) {
-        if (lowest > count) {
-          lowest = count;
-        }
+        if (count >= 0) {
+          if (lowest > count) {
+            lowest = count;
+          }
 
-        if (highest < count) {
-          highest         = count;
-          filesizeHighest = file.size();
+          if (highest < count) {
+            highest         = count;
+            filesizeHighest = file.size();
+          }
+        } else {
+          addLog(LOG_LEVEL_INFO, String(F("RTC  : Cannot get count from: ")) + fname);
         }
       }
     }

@@ -3,6 +3,9 @@
 
 #include "../../ESPEasy_common.h"
 
+
+
+
 struct LabelType;
 
 // enum LabelType::Enum : short;
@@ -147,6 +150,13 @@ struct LabelType {
     TIMEZONE_OFFSET,
     LATITUDE,
     LONGITUDE,
+    SUNRISE_S,
+    SUNSET_S,
+    SUNRISE_M,
+    SUNSET_M,
+
+
+    MAX_LABEL  // Keep as last
   };
 };
 
@@ -159,7 +169,7 @@ String getEthLinkSpeedState();
 
 String getInternalLabel(LabelType::Enum label,
                         char            replaceSpace = '_');
-String getLabel(LabelType::Enum label);
+const __FlashStringHelper * getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);
 

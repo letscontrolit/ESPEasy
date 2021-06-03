@@ -96,7 +96,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {
         byte   choice = P020_SERIAL_PROCESSING;
-        String options[3];
+        const __FlashStringHelper * options[3];
         options[0] = F("None");
         options[1] = F("Generic");
         options[2] = F("RFLink");
@@ -154,10 +154,23 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         CONFIG_PIN1 = rxPin;
         CONFIG_PIN2 = txPin;
       }
-      addLog(LOG_LEVEL_INFO,
-             String(F("Ser2net: TaskIndex=")) + event->TaskIndex + String(F(" port=")) + CONFIG_PORT + String(F(" rxPin=")) + rxPin +
-             String(F(" txPin=")) + txPin + String(F(" BAUDRATE=")) + P020_BAUDRATE + String(F(" SERVER_PORT=")) + P020_SERVER_PORT +
-             String(F(" SERIAL_PROCESSING=")) + P020_SERIAL_PROCESSING);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("Ser2net: TaskIndex=");
+        log += event->TaskIndex;
+        log += F(" port=");
+        log += CONFIG_PORT;
+        log += F(" rxPin=");
+        log += rxPin;
+        log += F(" txPin=");
+        log += txPin;
+        log += F(" BAUDRATE=");
+        log += P020_BAUDRATE;
+        log += F(" SERVER_PORT=");
+        log += P020_SERVER_PORT;
+        log += F(" SERIAL_PROCESSING=");
+        log += P020_SERIAL_PROCESSING;
+        addLog(LOG_LEVEL_INFO, log);
+      }
 
       // serial0 on esp32 is Ser2net: port=2 rxPin=3 txPin=1; serial1 on esp32 is Ser2net: port=4 rxPin=13 txPin=15; Serial2 on esp32 is
       // Ser2net: port=4 rxPin=16 txPin=17

@@ -14,8 +14,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
-
-#include "../../Misc.h"
+#include "../Helpers/StringParser.h"
 
 //      taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX
 //	varNr = event->Par2 - 1;
@@ -94,7 +93,7 @@ bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& task
   return true;
 }
 
-String Command_Task_Clear(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
@@ -105,7 +104,7 @@ String Command_Task_Clear(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_Task_ClearAll(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_ClearAll(struct EventStruct *event, const char *Line)
 {
   for (taskIndex_t t = 0; t < TASKS_MAX; t++) {
     taskClear(t, false);
@@ -113,7 +112,7 @@ String Command_Task_ClearAll(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_Task_EnableDisable(struct EventStruct *event, bool enable, const char *Line)
+const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event, bool enable, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
@@ -129,17 +128,17 @@ String Command_Task_EnableDisable(struct EventStruct *event, bool enable, const 
   return return_command_failed();
 }
 
-String Command_Task_Disable(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_Disable(struct EventStruct *event, const char *Line)
 {
   return Command_Task_EnableDisable(event, false, Line);
 }
 
-String Command_Task_Enable(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_Enable(struct EventStruct *event, const char *Line)
 {
   return Command_Task_EnableDisable(event, true, Line);
 }
 
-String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, const char *Line)
 {
   taskIndex_t taskIndex;
 
@@ -147,7 +146,7 @@ String Command_Task_ValueSet(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
-String Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
@@ -163,7 +162,7 @@ String Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
 {
   taskIndex_t taskIndex;
 
@@ -175,7 +174,7 @@ String Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
-String Command_Task_Run(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
   unsigned int varNr;
@@ -186,7 +185,7 @@ String Command_Task_Run(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_Task_RemoteConfig(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Task_RemoteConfig(struct EventStruct *event, const char *Line)
 {
   struct EventStruct TempEvent(event->TaskIndex);
   String request = Line;

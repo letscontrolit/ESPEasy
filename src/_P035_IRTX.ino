@@ -101,9 +101,11 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         int irPin = CONFIG_PIN1;
         if (Plugin_035_irSender == 0 && irPin != -1)
         {
-          addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
-          addLog(LOG_LEVEL_INFO, String(F("IR lib Version: ")) + _IRREMOTEESP8266_VERSION_);
-          addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSEND: ")) + listProtocols());
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
+            addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_));
+            addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSEND: ")) + listProtocols());
+          }
           Plugin_035_irSender = new IRsend(irPin);
           Plugin_035_irSender->begin(); // Start the sender
         }
@@ -117,8 +119,10 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
 #ifdef P016_P035_Extended_AC
         if (Plugin_035_commonAc == nullptr && irPin != -1)
         {
-          addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
-          addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols());
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
+            addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols());
+          }
           Plugin_035_commonAc = new (std::nothrow) IRac(irPin);
         }
         if (Plugin_035_commonAc != nullptr && irPin == -1)
@@ -209,14 +213,16 @@ bool handle_AC_IRremote(const String &irData) {
   DeserializationError error = deserializeJson(doc, irData);         // Deserialize the JSON document
   if (error)         // Test if parsing succeeds.
   {
-    addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str());
+    if (loglevelActiveFor(LOG_LEVEL_INFO))
+      addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str());
     return false; //do not continue with sending the signal.
   }
   String sprotocol = doc[F("protocol")];
   st.protocol = strToDecodeType(sprotocol.c_str());
   if (!IRac::isProtocolSupported(st.protocol)) //Check if we support the protocol
   {
-    addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported:")) + sprotocol);
+    if (loglevelActiveFor(LOG_LEVEL_INFO))
+      addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported:")) + sprotocol);
     return false; //do not continue with sending of the signal.
   }
 
@@ -264,7 +270,7 @@ bool handle_AC_IRremote(const String &irData) {
 bool handleRawRaw2Encoding(const String &cmd) {
   bool raw=true;
   String IrType = parseString(cmd, 2);
-  if (IrType.length() == 0) return false;
+  if (IrType.isEmpty()) return false;
 
   if (IrType.equalsIgnoreCase(F("RAW"))) raw = true;
   else if (IrType.equalsIgnoreCase(F("RAW2")))  raw = false;
@@ -420,7 +426,7 @@ bool handleRawRaw2Encoding(const String &cmd) {
 
   Plugin_035_irSender->sendRaw(buf, idx, IrHz);
   //printWebString += IrType + String(F(": Base32Hex RAW Code: ")) + IrRaw + String(F("<BR>kHz: ")) + IrHz + String(F("<BR>Pulse Len: ")) + IrPLen + String(F("<BR>Blank Len: ")) + IrBLen + String(F("<BR>"));
-  printToLog(String(F(": Base32Hex RAW Code Send ")), IrRaw, 0, 0);
+  printToLog(F(": Base32Hex RAW Code Send "), IrRaw, 0, 0);
   // printWebString += String(F(": Base32Hex RAW Code Send "));
   delete[] buf;
   buf = nullptr;
@@ -429,9 +435,21 @@ bool handleRawRaw2Encoding(const String &cmd) {
 
 
 void printToLog(String protocol, String data, int bits, int repeats) {
-  String tmp = String(F("IRTX: IR Code Sent: ")) + protocol + String(F(" Data: ")) + data;
-  if (bits > 0) tmp += String(F(" Bits: ")) + bits;
-  if (repeats > 0) tmp += String(F(" Repeats: ")) + repeats;
+  if (!loglevelActiveFor(LOG_LEVEL_INFO) && !printToWeb) {
+    return;
+  }
+  String tmp = F("IRTX: IR Code Sent: ");
+  tmp += protocol;
+  tmp += F(" Data: ");
+  tmp += data;
+  if (bits > 0) { 
+    tmp += F(" Bits: ");
+    tmp += bits;
+  }
+  if (repeats > 0) {
+    tmp += F(" Repeats: ");
+    tmp += repeats;
+  }
   addLog(LOG_LEVEL_INFO, tmp);
   if (printToWeb)
   {

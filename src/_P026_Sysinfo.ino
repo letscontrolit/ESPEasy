@@ -22,7 +22,7 @@
 
 #define P026_NR_OUTPUT_OPTIONS  13
 
-String Plugin_026_valuename(byte value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_026_valuename(byte value_nr, bool displayString) {
   switch (value_nr) {
     case 0:  return displayString ? F("Uptime") : F("uptime");
     case 1:  return displayString ? F("Free RAM") : F("freeheap");
@@ -40,7 +40,7 @@ String Plugin_026_valuename(byte value_nr, bool displayString) {
     default:
       break;
   }
-  return "";
+  return F("");
 }
 
 boolean Plugin_026(byte function, struct EventStruct *event, String& string)
@@ -114,7 +114,7 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      String options[P026_NR_OUTPUT_OPTIONS];
+      const __FlashStringHelper * options[P026_NR_OUTPUT_OPTIONS];
       int indices[P026_NR_OUTPUT_OPTIONS];
 
       int index = 0;
@@ -162,7 +162,9 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       }
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SYS  : ");
+        String log;
+        log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1));
+        log = F("SYS  : ");
 
         for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
           if (i != 0) {

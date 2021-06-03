@@ -58,6 +58,11 @@
 
 #include <ESPeasySerial.h>
 #include "src/Helpers/Modbus_RTU.h"
+#include "src/DataStructs/ESPEasy_packed_raw_data.h"
+
+// Forward declaration of functions:
+const __FlashStringHelper * Plugin_085_valuename(byte value_nr, bool displayString);
+
 
 struct P085_data_struct : public PluginTaskData_base {
   P085_data_struct() {}
@@ -250,7 +255,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       {
         // In a separate scope to free memory of String array as soon as possible
         sensorTypeHelper_webformLoad_header();
-        String options[P085_NR_OUTPUT_OPTIONS];
+        const __FlashStringHelper * options[P085_NR_OUTPUT_OPTIONS];
 
         for (int i = 0; i < P085_NR_OUTPUT_OPTIONS; ++i) {
           options[i] = Plugin_085_valuename(i, true);
@@ -390,7 +395,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
   return success;
 }
 
-String Plugin_085_valuename(byte value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_085_valuename(byte value_nr, bool displayString) {
   switch (value_nr) {
     case P085_QUERY_V:      return displayString ? F("Voltage (V)") : F("V");
     case P085_QUERY_A:      return displayString ? F("Current (A)") : F("A");
@@ -402,7 +407,7 @@ String Plugin_085_valuename(byte value_nr, bool displayString) {
     case P085_QUERY_h_tot:  return displayString ? F("Meter Running Time (h)") : F("h_tot");
     case P085_QUERY_h_load: return displayString ? F("Load Running Time (h)") : F("h_load");
   }
-  return "";
+  return F("");
 }
 
 int p085_storageValueToBaudrate(byte baudrate_setting) {

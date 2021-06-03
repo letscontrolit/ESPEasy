@@ -1,0 +1,13 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    | ``max1704xclearalert``
+
+    ","
+
+    | Clear the alert state. An alert event will only be sent when the alert state is set. Clearing it allows for new events to be set.
+
+    "

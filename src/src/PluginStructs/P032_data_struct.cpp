@@ -91,30 +91,31 @@ void P032_data_struct::readout() {
   D1 = read_adc(MS5xxx_CMD_ADC_D1 + MS5xxx_CMD_ADC_4096);
 
   // calculate 1st order pressure and temperature (MS5611 1st order algorithm)
-  dT                 = D2 - ms5611_prom[5] * (1 << 8);
-  Offset             = ms5611_prom[2] * (1 << 16) + dT * ms5611_prom[4] / (1 << 7);
-  SENS               = ms5611_prom[1] * (1 << 15) + dT * ms5611_prom[3] / (1 << 8);
-  ms5611_temperature = (2000 + (dT * ms5611_prom[6]) / (1 << 23));
-  ms5611_pressure    = (((D1 * SENS) / (1 << 21) - Offset) / (1 << 15));
+  dT                 = D2 - ms5611_prom[5] * static_cast<double>(1 << 8);
+  Offset             = ms5611_prom[2] * static_cast<double>(1 << 16) + dT * ms5611_prom[4] / static_cast<double>(1 << 7);
+  SENS               = ms5611_prom[1] * static_cast<double>(1 << 15) + dT * ms5611_prom[3] / static_cast<double>(1 << 8);
+  ms5611_temperature = (2000 + (dT * ms5611_prom[6]) / static_cast<double>(1 << 23));
 
   // perform higher order corrections
   double T2 = 0., OFF2 = 0., SENS2 = 0.;
 
   if (ms5611_temperature < 2000) {
-    T2    = dT * dT / (1 << 31);
-    OFF2  = 5 * (ms5611_temperature - 2000) * (ms5611_temperature - 2000) / (1 << 1);
-    SENS2 = 5 * (ms5611_temperature - 2000) * (ms5611_temperature - 2000) / (1 << 2);
+    T2    = dT * dT / static_cast<double>(1 << 31);
+    const double temp_20deg = ms5611_temperature - 2000;
+    OFF2  = 5.0 * temp_20deg * temp_20deg / static_cast<double>(1 << 1);
+    SENS2 = 5.0 * temp_20deg * temp_20deg / static_cast<double>(1 << 2);
 
     if (ms5611_temperature < -1500) {
-      OFF2  += 7 * (ms5611_temperature + 1500) * (ms5611_temperature + 1500);
-      SENS2 += 11 * (ms5611_temperature + 1500) * (ms5611_temperature + 1500) / (1 << 1);
+      const double temp_min15deg = ms5611_temperature + 1500;
+      OFF2  += 7.0 * temp_min15deg * temp_min15deg;
+      SENS2 += 11.0 * temp_min15deg * temp_min15deg / static_cast<double>(1 << 1);
     }
   }
 
   ms5611_temperature -= T2;
   Offset             -= OFF2;
   SENS               -= SENS2;
-  ms5611_pressure     = (((D1 * SENS) / (1 << 21) - Offset) / (1 << 15)); // FIXME TD-er: This is computed twice, is that correct?
+  ms5611_pressure     = (((D1 * SENS) / static_cast<double>(1 << 21) - Offset) / static_cast<double>(1 << 15));
 }
 
 
