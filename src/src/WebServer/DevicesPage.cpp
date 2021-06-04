@@ -395,7 +395,9 @@ void GpioToHtml(int8_t pin) {
   if (pin == -1) return;
   addHtml(formatGpioLabel(pin, false));
   if (Settings.isSPI_pin(pin) ||
-      Settings.isI2C_pin(pin)) {
+      Settings.isI2C_pin(pin) ||
+      Settings.isEthernetPin(pin) || 
+      Settings.isEthernetPinOptional(pin)) {
     addHtml(' ');
     addHtml(F(HTML_SYMBOL_WARNING));
   }

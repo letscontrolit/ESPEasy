@@ -144,12 +144,12 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Motor Control"));
 
       // We load/save the TaskDevicePin ourselves to allow to combine the pin specific configuration be shown along with the pin selection.
-      addFormPinSelect(formatGpioName_output(F("Motor Fwd")), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("Motor Fwd")), F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
       addFormCheckBox(F("Motor Fwd Inverted"), F("mot_fwd_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_FWD_INVERTED));
 
       addFormSeparator(2);
 
-      addFormPinSelect(formatGpioName_output(F("Motor Rev")), F("taskdevicepin2"), Settings.TaskDevicePin2[event->TaskIndex]);
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("Motor Rev")), F("taskdevicepin2"), Settings.TaskDevicePin2[event->TaskIndex]);
       addFormCheckBox(F("Motor Rev Inverted"), F("mot_rev_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_MOTOR_REV_INVERTED));
 
       addFormSeparator(2);
@@ -170,19 +170,19 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Feedback"));
 
-      addFormPinSelect(formatGpioName_input_optional(F("Encoder")), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+      addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_input_optional(F("Encoder")), F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
       addFormCheckBox(F("Encoder Pull-Up"), F("enc_pu"), bitRead(P098_FLAGS, P098_FLAGBIT_ENC_IN_PULLUP));
 
       # ifdef ESP32
       {
         addRowLabel(formatGpioName_input_optional(F("Analog Feedback")));
-        addADC_PinSelect(true, F("analogpin"), P098_ANALOG_GPIO);
+        addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_Optional, F("analogpin"), P098_ANALOG_GPIO);
       }
       # endif // ifdef ESP32
 
       addFormSubHeader(F("Limit Switches"));
 
-      addFormPinSelect(formatGpioName_input_optional(F("Limit A")), F("limit_a"), P098_LIMIT_SWA_GPIO);
+      addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_input_optional(F("Limit A")), F("limit_a"), P098_LIMIT_SWA_GPIO);
       addFormNumericBox(F("Limit A Debounce"), F("limit_a_debounce"), P098_LIMIT_SWA_DEBOUNCE, 0, 1000);
       addUnit(F("ms"));
       addFormCheckBox(F("Limit A Pull-Up"),  F("limit_a_pu"),  bitRead(P098_FLAGS, P098_FLAGBIT_LIM_A_PULLUP));
@@ -190,7 +190,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
       addFormSeparator(2);
 
-      addFormPinSelect(formatGpioName_input_optional(F("Limit B")), F("limit_b"), P098_LIMIT_SWB_GPIO);
+      addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_input_optional(F("Limit B")), F("limit_b"), P098_LIMIT_SWB_GPIO);
       addFormCheckBox(F("Limit B Pull-Up"),  F("limit_b_pu"),  bitRead(P098_FLAGS, P098_FLAGBIT_LIM_B_PULLUP));
       addFormCheckBox(F("Limit B Inverted"), F("limit_b_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_LIM_B_INVERTED));
       addFormNumericBox(F("Limit B Debounce"), F("limit_b_debounce"), P098_LIMIT_SWB_DEBOUNCE, 0, 1000);

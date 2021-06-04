@@ -216,17 +216,23 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
 // ********************************************************************************
 // Add a selector form
 // ********************************************************************************
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice)
+{
+  addRowLabel_tr_id(label, id);
+  addPinSelect(purpose, id, choice);
+}
+
 
 void addFormPinSelect(const String& label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel_tr_id(label, id);
-  addPinSelect(false, id, choice);
+  addPinSelect(PinSelectPurpose::Generic, id, choice);
 }
 
 void addFormPinSelectI2C(const String& label, const String& id, int choice)
 {
   addRowLabel_tr_id(label, id);
-  addPinSelect(true, id, choice);
+  addPinSelect(PinSelectPurpose::I2C, id, choice);
 }
 
 void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex)
@@ -338,6 +344,10 @@ void addFormPinStateSelect(int gpio, int choice)
 
   if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
     // do not add the pin state select for these pins.
+    enabled = false;
+  }
+  if (Settings.isEthernetPin(gpio)) {
+    // do not add the pin state select for non-optional Ethernet pins
     enabled = false;
   }
   int  pinnr = -1;

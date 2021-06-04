@@ -153,8 +153,17 @@ class SettingsStruct_tmpl
 
   bool getSPI_pins(int8_t spi_gpios[3]) const;
 
+  // Return true when pin is one of the SPI pins and SPI is enabled
   bool isSPI_pin(int8_t pin) const;
+
+  // Return true when pin is one of the configured I2C pins.
   bool isI2C_pin(int8_t pin) const;
+
+  // Return true when pin is one of the fixed Ethernet pins and Ethernet is enabled
+  bool isEthernetPin(int8_t pin) const;
+
+  // Return true when pin is one of the optional Ethernet pins and Ethernet is enabled
+  bool isEthernetPinOptional(int8_t pin) const;
 
   // Access to TaskDevicePin1 ... TaskDevicePin3
   // @param pinnr 1 = TaskDevicePin1, ..., 3 = TaskDevicePin3

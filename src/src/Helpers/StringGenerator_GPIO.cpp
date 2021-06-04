@@ -2,11 +2,12 @@
 
 #include "../Globals/Settings.h"
 #include "../Helpers/Hardware.h"
+#include "../../ESPEasy_common.h"
 
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings
 \*********************************************************************************************/
-const __FlashStringHelper * formatGpioDirection(gpio_direction direction) {
+const __FlashStringHelper* formatGpioDirection(gpio_direction direction) {
   switch (direction) {
     case gpio_input:         return F("&larr; ");
     case gpio_output:        return F("&rarr; ");
@@ -143,29 +144,72 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
   return result;
 }
 
-const __FlashStringHelper * getConflictingUse(int gpio, bool includeI2C)
+const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 {
-  bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
-
-  if (serialPinConflict) {
+  if (Settings.UseSerial) {
     if (gpio == 1) { return F("TX0"); }
 
     if (gpio == 3) { return F("RX0"); }
   }
-  if (includeI2C && Settings.isI2C_pin(gpio)) {
-    return F("I2C");
+  bool includeI2C = true;
+  bool includeSPI = true;
+
+  #ifdef HAS_ETHERNET
+  bool includeEthernet = true;
+  #endif // ifdef HAS_ETHERNET
+
+  switch (purpose) {
+    case PinSelectPurpose::I2C:
+      includeI2C = false;
+      break;
+    case PinSelectPurpose::SPI:
+      includeSPI = false;
+      break;
+    case PinSelectPurpose::Ethernet:
+      #ifdef HAS_ETHERNET
+      includeEthernet = false;
+      #endif // ifdef HAS_ETHERNET
+      break;
+    case PinSelectPurpose::Generic:
+    case PinSelectPurpose::Generic_input:
+    case PinSelectPurpose::Generic_output:
+    case PinSelectPurpose::Generic_bidir:
+      break;
   }
-  if (Settings.isSPI_pin(gpio)) {
+
+  if (includeI2C && Settings.isI2C_pin(gpio)) {
+    return (Settings.Pin_i2c_sda == gpio) ?  F("I2C SDA") : F("I2C SCL");
+  }
+
+  if (includeSPI && Settings.isSPI_pin(gpio)) {
     return F("SPI");
   }
+  #ifdef HAS_ETHERNET
+
+  if (Settings.isEthernetPin(gpio)) {
+    return F("Eth");
+  }
+
+  if (includeEthernet && Settings.isEthernetPinOptional(gpio)) {
+    if (Settings.ETH_Pin_mdc == gpio) { return F("Eth MDC"); }
+
+    if (Settings.ETH_Pin_mdio == gpio) { return F("Eth MDIO"); }
+
+    if (Settings.ETH_Pin_power == gpio) { return F("Eth Pwr"); }
+
+    return F("Eth");
+  }
+  #endif // ifdef HAS_ETHERNET
   return F("");
 }
 
-String getConflictingUse_wrapped(int gpio, bool includeI2C)
+String getConflictingUse_wrapped(int gpio, PinSelectPurpose purpose)
 {
-  String conflict = getConflictingUse(gpio, includeI2C);
-  if (conflict.isEmpty()) return conflict;
+  String conflict = getConflictingUse(gpio, purpose);
+
+  if (conflict.isEmpty()) { return conflict; }
   String res = F(" [");
+
   res += conflict;
   res += ']';
   return res;

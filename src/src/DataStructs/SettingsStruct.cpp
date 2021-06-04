@@ -520,6 +520,36 @@ bool SettingsStruct_tmpl<N_TASKS>::isI2C_pin(int8_t pin) const {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
+  #ifdef HAS_ETHERNET
+  if (pin < 0) return false;
+  if (NetworkMedium == NetworkMedium_t::Ethernet) {
+    if (19 == pin) return true; // ETH TXD0
+    if (21 == pin) return true; // ETH TX EN
+    if (22 == pin) return true; // ETH TXD1
+    if (25 == pin) return true; // ETH RXD0
+    if (26 == pin) return true; // ETH RXD1
+    if (27 == pin) return true; // ETH CRS_DV
+  }
+  #endif
+  return false;
+}
+
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
+  #ifdef HAS_ETHERNET
+  if (pin < 0) return false;
+  if (NetworkMedium == NetworkMedium_t::Ethernet) {
+    if (ETH_Pin_mdc == pin) return true;
+    if (ETH_Pin_mdio == pin) return true;
+    if (ETH_Pin_power == pin) return true;
+  }
+  #endif
+  return false;
+}
+
+template<unsigned int N_TASKS>
 int8_t SettingsStruct_tmpl<N_TASKS>::getTaskDevicePin(taskIndex_t taskIndex, byte pinnr) const {
   if (validTaskIndex(taskIndex)) {
     switch(pinnr) {

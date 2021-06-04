@@ -110,7 +110,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       }
 
       addRowLabel(F("Display button"));
-      addPinSelect(false, F("taskdevicepin3"), CONFIG_PIN3);
+      addPinSelect(PinSelectPurpose::Generic_input, F("taskdevicepin3"), CONFIG_PIN3);
 
       addFormCheckBox(F("Inversed logic"), F("p012_inversed_btn"), P012_INVERSE_BTN == 1, false);
 
