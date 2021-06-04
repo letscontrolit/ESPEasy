@@ -4,6 +4,8 @@
 
 # include "../ESPEasyCore/ESPEasyGPIO.h"
 
+# include "../Commands/GPIO.h" // FIXME TD-er: Only needed till we can call GPIO commands from the ESPEasy core.
+
 # define GPIO_PLUGIN_ID  1
 
 
@@ -237,11 +239,31 @@ void P098_data_struct::checkPosition()
 
 void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, byte state)
 {
-  GPIO_Write(
-    GPIO_PLUGIN_ID,
-    gpio_config.gpio,
-    state == 0 ? gpio_config.low() : gpio_config.high(),
-    PIN_MODE_OUTPUT);
+  // FIXME TD-er: Must move this code to the ESPEasy core code.
+  byte   mode = PIN_MODE_OUTPUT;
+  state = state == 0 ? gpio_config.low() : gpio_config.high();
+  const uint32_t key = createKey(GPIO_PLUGIN_ID, gpio_config.gpio);
+
+  if (globalMapPortStatus[key].mode != PIN_MODE_OFFLINE)
+  {
+    int8_t currentState;
+    GPIO_Read(GPIO_PLUGIN_ID, gpio_config.gpio, currentState);
+
+    if (currentState == -1) {
+      mode  = PIN_MODE_OFFLINE;
+      state = -1;
+    }
+
+    createAndSetPortStatus_Mode_State(key, mode, state);
+
+    if (mode == PIN_MODE_OUTPUT)  { 
+      GPIO_Write(
+        GPIO_PLUGIN_ID,
+        gpio_config.gpio,
+        state, 
+        mode);
+    }
+  }
 }
 
 bool P098_data_struct::setPinMode(const P098_GPIO_config& gpio_config)
