@@ -242,13 +242,13 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       P098_config_struct config;
-      config.motorFwd.gpio       = CONFIG_PIN1;
-      config.motorRev.gpio       = CONFIG_PIN2;
-      config.encoder.gpio        = CONFIG_PIN3;
-      config.limitA.gpio         = P098_LIMIT_SWA_GPIO;
-      config.limitB.gpio         = P098_LIMIT_SWB_GPIO;
-      config.limitA.debounceTime = P098_LIMIT_SWA_DEBOUNCE;
-      config.limitB.debounceTime = P098_LIMIT_SWB_DEBOUNCE;
+      config.motorFwd.gpio          = CONFIG_PIN1;
+      config.motorRev.gpio          = CONFIG_PIN2;
+      config.encoder.gpio           = CONFIG_PIN3;
+      config.limitA.gpio            = P098_LIMIT_SWA_GPIO;
+      config.limitB.gpio            = P098_LIMIT_SWB_GPIO;
+      config.limitA.debounceTime_us = P098_LIMIT_SWA_DEBOUNCE * 1000;
+      config.limitB.debounceTime_us = P098_LIMIT_SWB_DEBOUNCE * 1000;
       # ifdef ESP32
       config.gpio_analogIn = P098_ANALOG_GPIO;
       # endif // ifdef ESP32

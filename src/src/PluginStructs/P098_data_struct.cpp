@@ -38,9 +38,9 @@ bool P098_data_struct::begin(int pos, int limitApos, int limitBpos)
     const bool switchPosSet = pos != 0 && limitApos != 0;
 
     limitA.switchposSet = switchPosSet;
-    limitA.switchpos = switchPosSet ? limitApos : 0;
-    limitB.switchpos = limitBpos;
-    position = pos + limitA.switchpos;
+    limitA.switchpos    = switchPosSet ? limitApos : 0;
+    limitB.switchpos    = limitBpos;
+    position            = pos + limitA.switchpos;
     stop();
     state = P098_data_struct::State::Idle;
 
@@ -165,7 +165,7 @@ void P098_data_struct::stop()
 
 int P098_data_struct::getPosition() const
 {
-  if (limitA.switchposSet) { 
+  if (limitA.switchposSet) {
     return position - limitA.switchpos;
   }
   return position;
@@ -182,7 +182,6 @@ void P098_data_struct::getLimitSwitchPositions(int& limitApos, int& limitBpos) c
   limitApos = limitA.switchposSet ? limitA.switchpos : 0;
   limitBpos = limitB.switchposSet ? limitB.switchpos : 0;
 }
-
 
 void P098_data_struct::startMoving()
 {
@@ -228,19 +227,21 @@ void P098_data_struct::checkPosition()
   if (mustStop) {
     stop();
     state = P098_data_struct::State::StopPosReached;
+
     /*
-    // Correct for position error
-    if (std::abs(position - pos_dest) > 10) {
-      startMoving();
-    }
-    */
+       // Correct for position error
+       if (std::abs(position - pos_dest) > 10) {
+       startMoving();
+       }
+     */
   }
 }
 
 void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, byte state)
 {
   // FIXME TD-er: Must move this code to the ESPEasy core code.
-  byte   mode = PIN_MODE_OUTPUT;
+  byte mode = PIN_MODE_OUTPUT;
+
   state = state == 0 ? gpio_config.low() : gpio_config.high();
   const uint32_t key = createKey(GPIO_PLUGIN_ID, gpio_config.gpio);
 
@@ -256,11 +257,11 @@ void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, byte sta
 
     createAndSetPortStatus_Mode_State(key, mode, state);
 
-    if (mode == PIN_MODE_OUTPUT)  { 
+    if (mode == PIN_MODE_OUTPUT)  {
       GPIO_Write(
         GPIO_PLUGIN_ID,
         gpio_config.gpio,
-        state, 
+        state,
         mode);
     }
   }
@@ -280,13 +281,18 @@ void P098_data_struct::check_limit_switch(
   volatile P098_limit_switch_state& switch_state)
 {
   if (switch_state.state == P098_limit_switch_state::State::TriggerWaitBounce) {
-    if ((switch_state.lastChanged != 0) && (timePassedSince(switch_state.lastChanged) > gpio_config.debounceTime)) {
-      if (gpio_config.readState()) {
-        switch_state.state = P098_limit_switch_state::State::High;
+    if (switch_state.lastChanged_us != 0) {
+      const uint64_t currentTime          = getMicros64();
+      const uint64_t timeSinceLastTrigger = currentTime - switch_state.lastChanged_us;
 
-        if (!switch_state.switchposSet) {
-          switch_state.switchpos    = switch_state.triggerpos;
-          switch_state.switchposSet = true;
+      if (timeSinceLastTrigger > gpio_config.debounceTime_us) {
+        if (gpio_config.readState()) {
+          switch_state.state = P098_limit_switch_state::State::High;
+
+          if (!switch_state.switchposSet) {
+            switch_state.switchpos    = switch_state.triggerpos;
+            switch_state.switchposSet = true;
+          }
         }
       }
     }
@@ -298,60 +304,69 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
   volatile P098_limit_switch_state& switch_state,
   int                               position)
 {
-  const bool pinState                           = gpio_config.readState();
-  const P098_limit_switch_state::State oldState = switch_state.state;
+  noInterrupts();
+  {
+    const bool pinState                           = gpio_config.readState();
+    const P098_limit_switch_state::State oldState = switch_state.state;
 
-  switch (oldState) {
-    case P098_limit_switch_state::State::Low:
-
-      if (pinState) {
-        switch_state.state = P098_limit_switch_state::State::TriggerWaitBounce;
-      }
-      break;
-    case P098_limit_switch_state::State::TriggerWaitBounce:
-
-      if ((switch_state.lastChanged != 0) && (timePassedSince(switch_state.lastChanged) < gpio_config.debounceTime)) {
-        if (!pinState) {
-          switch_state.state = P098_limit_switch_state::State::Low;
-        } else {
-          // Apparently we missed a (logic) falling edge, thus reset position and timestamp.
-          switch_state.lastChanged = millis();
-          switch_state.triggerpos  = position;
-        }
-      } else {
-        if (pinState) {
-          // We can accept the stored trigger
-          switch_state.state = P098_limit_switch_state::State::High;
-        }
-      }
-      break;
-    case P098_limit_switch_state::State::High:
-
-      if (!pinState) {
-        switch_state.state = P098_limit_switch_state::State::Low;
-      }
-      break;
-  }
-
-  if (oldState != switch_state.state) {
-    switch (switch_state.state) {
+    switch (oldState) {
       case P098_limit_switch_state::State::Low:
-        switch_state.triggerpos  = 0;
-        switch_state.lastChanged = 0;
+
+        if (pinState) {
+          switch_state.state = P098_limit_switch_state::State::TriggerWaitBounce;
+        }
         break;
       case P098_limit_switch_state::State::TriggerWaitBounce:
-        switch_state.lastChanged = millis();
-        switch_state.triggerpos  = position;
+
+      {
+        const uint64_t currentTime          = getMicros64();
+        const uint64_t timeSinceLastTrigger = currentTime - switch_state.lastChanged_us;
+
+        if ((switch_state.lastChanged_us != 0) && (timeSinceLastTrigger < gpio_config.debounceTime_us)) {
+          if (!pinState) {
+            switch_state.state = P098_limit_switch_state::State::Low;
+          } else {
+            // Apparently we missed a (logic) falling edge, thus reset position and timestamp.
+            switch_state.lastChanged_us = getMicros64();
+            switch_state.triggerpos     = position;
+          }
+        } else {
+          if (pinState) {
+            // We can accept the stored trigger
+            switch_state.state = P098_limit_switch_state::State::High;
+          }
+        }
         break;
+      }
       case P098_limit_switch_state::State::High:
 
-        if (!switch_state.switchposSet) {
-          switch_state.switchpos    = switch_state.triggerpos;
-          switch_state.switchposSet = true;
+        if (!pinState) {
+          switch_state.state = P098_limit_switch_state::State::Low;
         }
         break;
     }
+
+    if (oldState != switch_state.state) {
+      switch (switch_state.state) {
+        case P098_limit_switch_state::State::Low:
+          switch_state.triggerpos     = 0;
+          switch_state.lastChanged_us = 0;
+          break;
+        case P098_limit_switch_state::State::TriggerWaitBounce:
+          switch_state.lastChanged_us = getMicros64();
+          switch_state.triggerpos     = position;
+          break;
+        case P098_limit_switch_state::State::High:
+
+          if (!switch_state.switchposSet) {
+            switch_state.switchpos    = switch_state.triggerpos;
+            switch_state.switchposSet = true;
+          }
+          break;
+      }
+    }
   }
+  interrupts(); // enable interrupts again.
 }
 
 void ICACHE_RAM_ATTR P098_data_struct::ISRlimitA(P098_data_struct *self)
@@ -366,6 +381,8 @@ void ICACHE_RAM_ATTR P098_data_struct::ISRlimitB(P098_data_struct *self)
 
 void ICACHE_RAM_ATTR P098_data_struct::ISRencoder(P098_data_struct *self)
 {
+  noInterrupts();
+
   switch (self->state) {
     case P098_data_struct::State::RunFwd:
       ++(self->position);
@@ -376,6 +393,7 @@ void ICACHE_RAM_ATTR P098_data_struct::ISRencoder(P098_data_struct *self)
     default:
       break;
   }
+  interrupts(); // enable interrupts again.
 }
 
 #endif // ifdef USES_P098

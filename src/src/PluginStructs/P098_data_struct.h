@@ -21,10 +21,10 @@ struct P098_GPIO_config {
     return inverted ? !state : state;
   }
 
-  int  gpio         = -1;
-  int  debounceTime = 100;
-  bool pullUp       = false;
-  bool inverted     = false;
+  uint64_t debounceTime_us = 100000;
+  int      gpio            = -1;
+  bool     pullUp          = false;
+  bool     inverted        = false;
 };
 struct P098_config_struct {
   // Stored, so do not change values
@@ -68,11 +68,11 @@ struct P098_limit_switch_state {
     High
   };
 
-  int           triggerpos   = 0;
-  int           switchpos    = 0;
-  unsigned long lastChanged  = 0;
-  State         state        = State::Low;
-  bool          switchposSet = false;
+  uint64_t lastChanged_us = 0;
+  int      triggerpos     = 0;
+  int      switchpos      = 0;
+  State    state          = State::Low;
+  bool     switchposSet   = false;
 };
 struct P098_data_struct : public PluginTaskData_base {
   enum class State {
@@ -86,7 +86,9 @@ struct P098_data_struct : public PluginTaskData_base {
   P098_data_struct(const P098_config_struct& config);
   ~P098_data_struct();
 
-  bool begin(int pos, int limitApos, int limitBpos);
+  bool begin(int pos,
+             int limitApos,
+             int limitBpos);
 
   // Perform regular loop
   // Return false when state should be checked.
