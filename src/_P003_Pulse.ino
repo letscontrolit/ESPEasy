@@ -129,26 +129,6 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WEBFORM_SHOW_VALUES:
-    {
-      unsigned long pulseCounter, pulseCounterTotal = 0;
-      float pulseTime_msec        = 0.0;
-      P003_data_struct *P003_data =
-        static_cast<P003_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P003_data) {
-        P003_data->pulseHelper.getPulseCounters(pulseCounter, pulseCounterTotal, pulseTime_msec);
-      }
-
-      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[P003_IDX_pulseCounter],      String(pulseCounter));
-      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[P003_IDX_pulseTotalCounter], String(pulseCounterTotal));
-      pluginWebformShowValue(ExtraTaskSettings.TaskDeviceValueNames[P003_IDX_pulseTime],         String(pulseTime_msec), false);
-
-      success = true;
-
-      break;
-    }
-
     case PLUGIN_INIT:
     {
       Internal_GPIO_pulseHelper::pulseCounterConfig config;

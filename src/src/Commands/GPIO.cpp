@@ -21,7 +21,7 @@
 // Forward declarations of functions used in this module
 // Normally those would be declared in the .h file as private members
 // But since these are not part of a class, forward declare them in the .cpp
-void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
+//void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
 bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefix);
 void logErrorGpioOffline(const String& prefix, int port);
 void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line = nullptr);
@@ -534,6 +534,18 @@ void logErrorGpioNotOutput(const String& prefix, int port)
 void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState)
 {
   // WARNING: operator [] creates an entry in the map if key does not exist
+
+  #ifdef ESP32
+  switch (newMode) {
+    case PIN_MODE_PWM:
+    case PIN_MODE_SERVO:
+      break;
+    default:
+      checkAndClearPWM(key);
+      break;
+  }
+  #endif
+
 
   // If it doesn't exist, it is now created.
   globalMapPortStatus[key].mode = newMode;
