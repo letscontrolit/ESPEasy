@@ -320,15 +320,15 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
         String paramPort = parseString(tmpString, 4); // UDP Port (optional)
 
         // Populate Parameters with default settings when missing from command line.
-        if (paramMac == "") {                         // Missing from command line, use default setting.
+        if (paramMac.isEmpty()) {                         // Missing from command line, use default setting.
           paramMac = macString;
         }
 
-        if (paramIp == "") { // Missing from command line, use default setting.
+        if (paramIp.isEmpty()) { // Missing from command line, use default setting.
           paramIp = ipString;
         }
 
-        if (paramPort == "") {
+        if (paramPort.isEmpty()) {
           int portNumber = UDP_PORT_P101; // Get default Port from user settings.
           paramPort = portNumber;
         }
@@ -422,7 +422,7 @@ uint8_t safeName(taskIndex_t index) {
 
   devName.toLowerCase();
 
-  if (devName == "") {
+  if (devName.isEmpty()) {
     safeCode = NAME_MISSING;
   }
 

@@ -21,7 +21,7 @@
 // Forward declarations of functions used in this module
 // Normally those would be declared in the .h file as private members
 // But since these are not part of a class, forward declare them in the .cpp
-void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
+//void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
 bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefix);
 void logErrorGpioOffline(const String& prefix, int port);
 void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line = nullptr);
@@ -652,7 +652,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
     data.logPrefix += F("GPIORange");
   }
   data.valid  = false;
-  data.isMask = parseString(Line, 5).length() != 0;
+  data.isMask = !parseString(Line, 5).isEmpty();
 
   if (data.isMask) {
     data.mask  = event->Par4 & ((1 << data.numBytes * 8) - 1);

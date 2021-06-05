@@ -107,7 +107,7 @@ void addDeleteButton(const String& url, const String& label)
 void addWideButton(const __FlashStringHelper * url, const __FlashStringHelper * label) {
   html_add_wide_button_prefix(EMPTY_STRING, true);
   addHtml(url);
-  addHtml("'>");
+  addHtml(F("'>"));
   addHtml(label);
   addHtml(F("</a>"));
 }
@@ -176,11 +176,11 @@ void addSubmitButton(const String& value, const String& name, const String& clas
 // add copy to clipboard button
 void addCopyButton(const String& value, const String& delimiter, const String& name)
 {
-  TXBuffer += jsClipboardCopyPart1;
+  TXBuffer.addFlashString((PGM_P)FPSTR(jsClipboardCopyPart1));
   addHtml(value);
-  TXBuffer += jsClipboardCopyPart2;
+  TXBuffer.addFlashString((PGM_P)FPSTR(jsClipboardCopyPart2));
   addHtml(delimiter);
-  TXBuffer += jsClipboardCopyPart3;
+  TXBuffer.addFlashString((PGM_P)FPSTR(jsClipboardCopyPart3));
 
   // Fix HTML
   addHtml(F("<button "));
@@ -188,7 +188,7 @@ void addCopyButton(const String& value, const String& delimiter, const String& n
   addHtmlAttribute(F("onclick"), F("setClipboard()"));
   addHtml('>');
   addHtml(name);
-  addHtml(" (");
+  addHtml(F(" ("));
   html_copyText_marker();
   addHtml(F(")</button>"));
 }

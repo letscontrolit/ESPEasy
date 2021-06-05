@@ -279,7 +279,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings) {
   String clientid = ControllerSettings.ClientID;
 
-  if (clientid.length() == 0) {
+  if (clientid.isEmpty()) {
     // Try to generate some default
     clientid = F(CONTROLLER_DEFAULT_CLIENTID);
   }
@@ -380,7 +380,7 @@ String getLWT_topic(const ControllerSettingsStruct& ControllerSettings) {
   if (ControllerSettings.mqtt_sendLWT()) {
     LWTTopic = ControllerSettings.MQTTLwtTopic;
 
-    if (LWTTopic.length() == 0)
+    if (LWTTopic.isEmpty())
     {
       LWTTopic  = ControllerSettings.Subscribe;
       LWTTopic += F("/LWT");
@@ -397,7 +397,7 @@ String getLWT_messageConnect(const ControllerSettingsStruct& ControllerSettings)
   if (ControllerSettings.mqtt_sendLWT()) {
     LWTMessageConnect = ControllerSettings.LWTMessageConnect;
 
-    if (LWTMessageConnect.length() == 0) {
+    if (LWTMessageConnect.isEmpty()) {
       LWTMessageConnect = F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE);
     }
     parseSystemVariables(LWTMessageConnect, false);
@@ -411,7 +411,7 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
   if (ControllerSettings.mqtt_sendLWT()) {
     LWTMessageDisconnect = ControllerSettings.LWTMessageDisconnect;
 
-    if (LWTMessageDisconnect.length() == 0) {
+    if (LWTMessageDisconnect.isEmpty()) {
       LWTMessageDisconnect = F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE);
     }
     parseSystemVariables(LWTMessageDisconnect, false);
@@ -448,7 +448,7 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
 
 void SendStatus(struct EventStruct *event, const String& status)
 {
-  if (status.length() == 0) { return; }
+  if (status.isEmpty()) { return; }
 
   switch (event->Source)
   {

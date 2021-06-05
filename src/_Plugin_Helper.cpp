@@ -54,6 +54,8 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   if (Settings.TaskDeviceEnabled[taskIndex]) {
     Plugin_task_data[taskIndex]                     = data;
     Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
+  } else if (data != nullptr) {
+    delete data;
   }
 }
 
@@ -132,6 +134,14 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
     return true;
   }
   return found_taskIndex == taskIndex;
+}
+
+bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, const String& newline)
+{
+  struct EventStruct TempEvent(taskIndex);
+  TempEvent.String1 = newline;
+  String dummy;
+  return PluginCall(PLUGIN_WEBFORM_SHOW_GPIO_DESCR, &TempEvent, dummy);
 }
 
 int getValueCountForTask(taskIndex_t taskIndex) {

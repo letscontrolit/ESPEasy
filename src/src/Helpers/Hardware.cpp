@@ -153,6 +153,7 @@ void hardwareInit()
     }
     else
     {
+      SD.end();
       addLog(LOG_LEVEL_ERROR, F("SD   : Init failed"));
     }
   }
@@ -820,6 +821,19 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     output = false;
   }
 
+  if (gpio == 37 || gpio == 38) {
+    // Pins are not present on the ESP32
+    input  = false;
+    output = false;
+  }
+
+  if (gpio >= 6 && gpio <= 11) {
+    // Connected to the integrated SPI flash.
+    input = false;
+    output = false;
+    warning = true;
+  }
+
   if ((input == false) && (output == false)) {
     return false;
   }
@@ -858,6 +872,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
         break;
     }
 
+
     // FIXME TD-er: Must we also check for pins used for MDC/MDIO and Eth PHY power?
   }
 
@@ -890,7 +905,9 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   return true;
 }
 
-#else // ifdef ESP32
+#endif
+
+#ifdef ESP8266
 
 // return true when pin can be used.
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
@@ -950,9 +967,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   if (pinnr < 0 || pinnr > 16) {
     input  = false;
     output = false;
-    return false;
   }
-  return true;
+  return input || output;
 }
 
 bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
@@ -974,7 +990,7 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   return true;
 }
 
-#endif // ifdef ESP32
+#endif
 
 
 #ifdef ESP32
