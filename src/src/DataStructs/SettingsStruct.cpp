@@ -471,6 +471,98 @@ void SettingsStruct_tmpl<N_TASKS>::setPinBootState(uint8_t gpio_pin, PinBootStat
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
+  spi_gpios[0] = -1;
+  spi_gpios[1] = -1;
+  spi_gpios[2] = -1;
+  if (InitSPI > 0) {
+    # ifdef ESP32
+    switch (InitSPI) {
+      case 1:
+      {
+        spi_gpios[0] = 18; spi_gpios[1] = 19; spi_gpios[2] = 23;
+        break;
+      }
+      case 2:
+      {
+        spi_gpios[0] = 14; // HSPI_SCLK
+        spi_gpios[1] = 12; // HSPI_MISO
+        spi_gpios[2] = 13; // HSPI_MOSI
+        break;
+      }
+      default:
+      return false;
+    }
+    # endif // ifdef ESP32
+    # ifdef ESP8266
+    spi_gpios[0] = 14; spi_gpios[1] = 12; spi_gpios[2] = 13;
+    # endif // ifdef ESP8266
+    return true;
+  }
+  return false;
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
+  if (pin < 0) return false;
+  int8_t spi_gpios[3];
+  if (getSPI_pins(spi_gpios)) {
+    for (byte i = 0; i < 3; ++i) {
+      if (spi_gpios[i] == pin) return true;
+    }
+  }
+  return false;
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isI2C_pin(int8_t pin) const {
+  if (pin < 0) return false;
+  return Pin_i2c_sda == pin || Pin_i2c_scl == pin;
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
+  #ifdef HAS_ETHERNET
+  if (pin < 0) return false;
+  if (NetworkMedium == NetworkMedium_t::Ethernet) {
+    if (19 == pin) return true; // ETH TXD0
+    if (21 == pin) return true; // ETH TX EN
+    if (22 == pin) return true; // ETH TXD1
+    if (25 == pin) return true; // ETH RXD0
+    if (26 == pin) return true; // ETH RXD1
+    if (27 == pin) return true; // ETH CRS_DV
+  }
+  #endif
+  return false;
+}
+
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
+  #ifdef HAS_ETHERNET
+  if (pin < 0) return false;
+  if (NetworkMedium == NetworkMedium_t::Ethernet) {
+    if (ETH_Pin_mdc == pin) return true;
+    if (ETH_Pin_mdio == pin) return true;
+    if (ETH_Pin_power == pin) return true;
+  }
+  #endif
+  return false;
+}
+
+template<unsigned int N_TASKS>
+int8_t SettingsStruct_tmpl<N_TASKS>::getTaskDevicePin(taskIndex_t taskIndex, byte pinnr) const {
+  if (validTaskIndex(taskIndex)) {
+    switch(pinnr) {
+      case 1: return TaskDevicePin1[taskIndex];
+      case 2: return TaskDevicePin2[taskIndex];
+      case 3: return TaskDevicePin3[taskIndex];
+    }
+  }
+  return -1;
+}
+
+template<unsigned int N_TASKS>
 float SettingsStruct_tmpl<N_TASKS>::getWiFi_TX_power() const {
   return WiFi_TX_power / 4.0f;
 }
