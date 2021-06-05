@@ -35,5 +35,5 @@ six==1.15.0
 snowballstemmer==2.0.0
 tabulate==0.8.7
 tornado==6.0.4
-urllib3==1.25.10
+urllib3==1.26.5
 watchdog==0.10.3
