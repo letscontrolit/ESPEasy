@@ -1223,7 +1223,7 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
       analogWrite(gpio, new_value);
             #endif // if defined(ESP8266)
             #if defined(ESP32)
-      frequency = analogWriteESP32(gpio, dutyCycle, frequency);
+      frequency = analogWriteESP32(gpio, new_value, frequency);
             #endif // if defined(ESP32)
       delay(1);
     }
