@@ -29,7 +29,15 @@
 # define P16_FLAGS_REPEAT    0 // Repeat code
 // # define P16_FLAGS_HASH      1  // Code is a Hash
 
-typedef struct {
+struct tCommandLinesV2 {
+  # ifdef P16_SETTINGS_V1
+  tCommandLinesV2();
+  tCommandLinesV2(const String& command,
+                  uint32_t      oldCode,
+                  uint32_t      oldAlternativeCode,
+                  uint8_t       i);
+  # endif // ifdef P16_SETTINGS_V1
+
   char          Command[P16_Nchars]       = { 0 };
   uint64_t      Code                      = 0; // received code (can be added automatically)
   uint64_t      AlternativeCode           = 0; // alternative code fpr the same command
@@ -37,7 +45,7 @@ typedef struct {
   decode_type_t AlternativeCodeDecodeType = decode_type_t::UNKNOWN;
   uint16_t      CodeFlags                 = 0;
   uint16_t      AlternativeCodeFlags      = 0;
-} tCommandLinesV2;
+};
 
 # ifdef P16_SETTINGS_V1
 typedef struct {
@@ -54,7 +62,6 @@ struct P016_data_struct : public PluginTaskData_base {
 public:
 
   P016_data_struct();
-  ~P016_data_struct();
 
   void init(struct EventStruct *event,
             uint16_t            CmdInhibitTime);

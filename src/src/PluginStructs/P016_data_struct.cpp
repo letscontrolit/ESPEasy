@@ -6,11 +6,69 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include <IRutils.h>
 
-P016_data_struct::P016_data_struct() {}
+# ifdef P16_SETTINGS_V1
+tCommandLinesV2::tCommandLinesV2() {} // Default constructor
 
-P016_data_struct::~P016_data_struct() {
-  CommandLines.clear(); // Release any allocated memory explicitly
+// Conversion constructor
+tCommandLinesV2::tCommandLinesV2(const String& command,
+                                 uint32_t      oldCode,
+                                 uint32_t      oldAlternativeCode,
+                                 uint8_t       i) {
+  String log;
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    #  ifndef PLUGIN_016_DEBUG
+    log.reserve(20); // less space needed
+    #  else // ifndef PLUGIN_016_DEBUG
+    log.reserve(80);
+    #  endif // ifndef PLUGIN_016_DEBUG
+  }
+
+  log  = F("P016: converting "); // Still a little logging
+  log += i;
+  #  ifdef PLUGIN_016_DEBUG
+  log += ':';
+  #  endif // ifdef PLUGIN_016_DEBUG
+
+  if (command.length() > 0) {
+    safe_strncpy(Command, command, P16_Nchars);
+  }
+
+  if (oldCode > 0) {
+    CodeDecodeType = static_cast<decode_type_t>((oldCode >> 24));                // decode_type
+    bitWrite(CodeFlags, P16_FLAGS_REPEAT, oldCode & (0x1 << P16_CMDBIT_REPEAT)); // Repeat flag
+    Code = oldCode & 0x7FFFFF;                                                   // Only keep lowest 23 bits
+    #  ifdef PLUGIN_016_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      log += F(" type ");
+      log += typeToString(CodeDecodeType, (oldCode & (0x1 << P16_CMDBIT_REPEAT)) != 0);
+      log += F(" code 0x");
+      log += uint64ToString(oldCode, 16);
+    }
+    #  endif // ifdef PLUGIN_016_DEBUG
+  }
+
+  if (oldAlternativeCode > 0) {
+    AlternativeCodeDecodeType = static_cast<decode_type_t>((oldAlternativeCode >> 24));                // decode_type
+    bitWrite(AlternativeCodeFlags, P16_FLAGS_REPEAT, oldAlternativeCode & (0x1 << P16_CMDBIT_REPEAT)); // Repeat flag
+    AlternativeCode = oldAlternativeCode & 0x7FFFFF;                                                   // Only keep lowest 23 bits
+    #  ifdef PLUGIN_016_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      log += F(" alt.type ");
+      log += typeToString(AlternativeCodeDecodeType, (oldAlternativeCode & (0x1 << P16_CMDBIT_REPEAT)) != 0);
+      log += F(" alt.code 0x");
+      log += uint64ToString(oldAlternativeCode, 16);
+    }
+    #  endif // ifdef PLUGIN_016_DEBUG
+  }
+  addLog(LOG_LEVEL_INFO, log);
 }
+
+# endif // ifdef P16_SETTINGS_V1
+
+P016_data_struct::P016_data_struct() {}
 
 void P016_data_struct::init(struct EventStruct *event, uint16_t CmdInhibitTime) {
   loadCommandLines(event);
@@ -56,58 +114,10 @@ void P016_data_struct::convertCommandLines(struct EventStruct *event) {
   }
 
   CommandLines.clear(); // Start fresh
-  uint16_t codeFlags            = 0;
-  uint16_t alternativeCodeFlags = 0;
 
   for (int i = 0; i < P16_Nlines; ++i) {
-    CommandLines.push_back(tCommandLinesV2());
+    CommandLines.push_back(tCommandLinesV2(String(CommandLinesV1[i].Command), CommandLinesV1[i].Code, CommandLinesV1[i].AlternativeCode, i));
 
-    if (safe_strncpy(CommandLines[i].Command, CommandLinesV1[i].Command, P16_Nchars)) { // This should never fail.
-      codeFlags            = 0;
-      alternativeCodeFlags = 0;
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("P016: converting "); // Still a little logging
-        log += i;
-        #  ifdef PLUGIN_016_DEBUG
-        log += ':';
-        #  endif // ifdef PLUGIN_016_DEBUG
-      }
-
-      if (CommandLinesV1[i].Code > 0) {
-        CommandLines[i].CodeDecodeType = static_cast<decode_type_t>((CommandLinesV1[i].Code >> 24)); // decode_type
-        bitWrite(codeFlags, P16_FLAGS_REPEAT, CommandLinesV1[i].Code & (0x1 << P16_CMDBIT_REPEAT));  // Repeat flag
-        #  ifdef PLUGIN_016_DEBUG
-
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          log += F(" type ");
-          log += typeToString(CommandLines[i].CodeDecodeType, (CommandLinesV1[i].Code & (0x1 << P16_CMDBIT_REPEAT)) != 0);
-          log += F(" code 0x");
-          log += uint64ToString(CommandLinesV1[i].Code, 16);
-        }
-        #  endif // ifdef PLUGIN_016_DEBUG
-      }
-
-      if (CommandLinesV1[i].AlternativeCode > 0) {
-        CommandLines[i].AlternativeCodeDecodeType = static_cast<decode_type_t>((CommandLinesV1[i].AlternativeCode >> 24)); // decode_type
-        bitWrite(alternativeCodeFlags, P16_FLAGS_REPEAT, CommandLinesV1[i].AlternativeCode & (0x1 << P16_CMDBIT_REPEAT));  // Repeat flag
-        #  ifdef PLUGIN_016_DEBUG
-
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          log += F(" alt.type ");
-          log +=
-            typeToString(CommandLines[i].AlternativeCodeDecodeType, (CommandLinesV1[i].AlternativeCode & (0x1 << P16_CMDBIT_REPEAT)) != 0);
-          log += F(" alt.code 0x");
-          log += uint64ToString(CommandLinesV1[i].AlternativeCode, 16);
-        }
-        #  endif // ifdef PLUGIN_016_DEBUG
-      }
-      CommandLines[i].Code                 = CommandLinesV1[i].Code & 0x7FFFFF;   // Only keep lowest 23 bits
-      CommandLines[i].CodeFlags            = codeFlags;
-      CommandLines[i].AlternativeCode      = CommandLinesV1[i].AlternativeCode & 0x7FFFFF;
-      CommandLines[i].AlternativeCodeFlags = alternativeCodeFlags;
-      addLog(LOG_LEVEL_INFO, log);
-    }
     delay(0);
   }
   CommandLinesV1.clear(); // clean up after conversion
@@ -129,7 +139,6 @@ void P016_data_struct::loadCommandLines(struct EventStruct *event) {
   {
     // read V2 settings data
 
-    // LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(CommandLines), sizeof(CommandLines));
     CommandLines.clear(); // Start fresh
     int loadOffset = 0;
 

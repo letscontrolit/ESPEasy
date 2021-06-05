@@ -22,7 +22,7 @@
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 #include <IRrecv.h>
-#include "../src/src/Helpers/Memory.h"
+#include "src/Helpers/Memory.h"
 
 #include "src/PluginStructs/P016_data_struct.h"
 
@@ -379,6 +379,9 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
           // Need to delete the allocated object here
           delete P016_data;
+        }
+        if (P016_SETTINGS_VERSION != P16_SETTINGS_LATEST) {
+          addFormNote(F("These settings are converted from a previous version and will be stored in updated format when submitted."));
         }
       }
 
