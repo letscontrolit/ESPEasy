@@ -279,6 +279,16 @@ String BuildFixes()
   if (Settings.Build < 20113) {
     Settings.NumberExtraWiFiScans = 0;
   }
+  if (Settings.Build < 20114) {
+    // P003_Pulse was always using the pull-up, now it is a setting.
+    for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
+      if (Settings.TaskDeviceNumber[taskIndex] == 3) {
+        Settings.TaskDevicePin1PullUp[taskIndex] = true;
+      }
+    }
+    // Disable periodical scanning as it does cause lots of strange issues.
+    Settings.PeriodicalScanWiFi(false);
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();
