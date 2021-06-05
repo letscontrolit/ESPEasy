@@ -5,7 +5,6 @@
 #ifdef USES_P016
 
 # include <IRremoteESP8266.h>
-# include "../src/src/Helpers/Memory.h"
 
 # define PLUGIN_016_DEBUG      // additional debug messages in the log
 
@@ -18,7 +17,7 @@
 # define P16_Cchars   20       // max chars per code
 
 # define P16_SETTINGS_V1       // Settings v1 original settings when enabled, settings conversion is also enabled
-// Settings v2 includes 64 bit codes and some separated flags, should not be undefined!
+// Settings v2 includes 64 bit codes and some separated flags
 
 # ifdef P16_SETTINGS_V1
 #  define P16_CMDBIT_REPEAT 23 // Only used for V1 settings
@@ -55,10 +54,12 @@ struct P016_data_struct : public PluginTaskData_base {
 public:
 
   P016_data_struct();
+  ~P016_data_struct();
 
   void init(struct EventStruct *event,
             uint16_t            CmdInhibitTime);
   void loadCommandLines(struct EventStruct *event);
+  void saveCommandLines(struct EventStruct *event);
   void AddCode(uint64_t      Code,
                decode_type_t DecodeType = decode_type_t::UNKNOWN,
                uint16_t      CodeFlags  = 0u);
@@ -67,10 +68,7 @@ public:
                    uint16_t      CodeFlags  = 0u);
 
   // CustomTaskSettings
-  # ifdef P16_SETTINGS_V1
-  tCommandLines CommandLinesV1[P16_Nlines]; // holds the CustomTaskSettings V1
-  # endif  // ifdef P16_SETTINGS_V1
-  tCommandLinesV2 CommandLines[P16_Nlines]; // holds the CustomTaskSettings, V2
+  std::vector<tCommandLinesV2>CommandLines; // holds the CustomTaskSettings V2
 
   bool bCodeChanged = false;                // set if code has been added and CommandLines need to be saved (in PLUGIN_ONCE_A_SECOND)
 
@@ -82,11 +80,14 @@ private:
                     uint16_t      CodeFlags);
   void convertCommandLines(struct EventStruct *event);
 
-  uint16_t      iCmdInhibitTime; // inhibit time for sending the same command again
-  uint64_t      iLastCmd;        // last command send
-  decode_type_t iLastDecodeType; // last decode_type sent
-  uint16_t      iLastCodeFlags;  // last flags sent
-  uint32_t      iLastCmdTime;    // time while last command was send
+  # ifdef P16_SETTINGS_V1
+  std::vector<tCommandLines>CommandLinesV1; // holds the CustomTaskSettings V1, allocated when needed for conversion
+  # endif  // ifdef P16_SETTINGS_V1
+  uint16_t      iCmdInhibitTime;            // inhibit time for sending the same command again
+  uint64_t      iLastCmd;                   // last command send
+  decode_type_t iLastDecodeType;            // last decode_type sent
+  uint16_t      iLastCodeFlags;             // last flags sent
+  uint32_t      iLastCmdTime;               // time while last command was send
 };
 
 #endif // ifdef USES_P016

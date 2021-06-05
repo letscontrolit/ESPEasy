@@ -22,6 +22,7 @@
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
 #include <IRrecv.h>
+#include "../src/src/Helpers/Memory.h"
 
 #include "src/PluginStructs/P016_data_struct.h"
 
@@ -45,6 +46,8 @@
 #define P016_MAX_DECODETYPES 97   // The number of decodeTypes supported by IRrecv, actual value is logged during PLUGIN_WEBFORM_LOAD when PLUGIN_016_DEBUG is on
 
 // History
+// @tonhuisman: 2021-06-05
+// CHG: Move internal settings from fixed array to std::vector, and change saving to file to separate chunks (to try avoiding stack overflows)
 // @tonhuisman: 2021-05-24
 // CHG: Added support for 64 bit IR codes, with DecodeType and Repeat separated from the Code/AlternativeCode in settings (V2)
 // CHG: includes conversion of the old V1 to the new V2 settings format, after first save of V2 settings further conversion is skipped
@@ -134,7 +137,7 @@ void P016_infoLogMemory(const String & text) {
     log  = F("P016: Free memory ");
     log += text;
     log += F(": ");
-    log += ESP.getFreeHeap();
+    log += FreeMem();
     log += F(" stack: ");
     log += getCurrentFreeStack();
     addLog(LOG_LEVEL_INFO, log);
@@ -422,7 +425,9 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
           int rowCnt = 0;
 
+          P016_data->CommandLines.clear(); // Start fresh
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++) {
+            P016_data->CommandLines.push_back(tCommandLinesV2());
             strError = F("");
 
             // Normal Code & flags
@@ -470,9 +475,9 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
           #ifdef PLUGIN_016_DEBUG
           P016_infoLogMemory(F("before save"));
           #endif
-          {
-            SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P016_data->CommandLines), sizeof(P016_data->CommandLines));
-          }
+
+          P016_data->saveCommandLines(event);
+
           #ifdef PLUGIN_016_DEBUG
           P016_infoLogMemory(F("after save"));
           #endif
@@ -496,7 +501,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
       if (nullptr != P016_data) {
         if (P016_data->bCodeChanged) {  // code has been added -> SaveCustomTaskSettings 
-          SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P016_data->CommandLines), sizeof(P016_data->CommandLines));
+          P016_data->saveCommandLines(event);
           P016_data->bCodeChanged = false;
           #ifdef PLUGIN_016_DEBUG
           addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_ONCE_A_SECOND CustomTaskSettings Saved"));

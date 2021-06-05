@@ -8,6 +8,10 @@
 
 P016_data_struct::P016_data_struct() {}
 
+P016_data_struct::~P016_data_struct() {
+  CommandLines.clear(); // Release any allocated memory explicitly
+}
+
 void P016_data_struct::init(struct EventStruct *event, uint16_t CmdInhibitTime) {
   loadCommandLines(event);
   iCmdInhibitTime = CmdInhibitTime;
@@ -26,23 +30,38 @@ void P016_data_struct::convertCommandLines(struct EventStruct *event) {
     log.reserve(80);
 
     log  = F("P016: struct size: ");
-    log += sizeof(CommandLines);
-    log += '/';
     log += sizeof(tCommandLinesV2);
     log += '/';
     log += sizeof(tCommandLines);
     log += F(" enum: ");
     log += sizeof(decode_type_t);
+    log += F(" p016: ");
+    log += sizeof(P016_data_struct);
     addLog(LOG_LEVEL_INFO, log);
     #  endif // ifdef PLUGIN_016_DEBUG
   }
 
   // read V1 data && convert
-  LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(CommandLinesV1), sizeof(CommandLinesV1));
+  CommandLinesV1.clear(); // Start fresh
+  int loadOffset = 0;
+
+  for (uint8_t i = 0; i < P16_Nlines; i++) {
+    CommandLinesV1.push_back(tCommandLines());
+    LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type,
+                 event->TaskIndex,
+                 (uint8_t *)&(CommandLinesV1[i]),
+                 sizeof(tCommandLines),
+                 loadOffset);
+    loadOffset += sizeof(tCommandLines);
+  }
+
+  CommandLines.clear(); // Start fresh
   uint16_t codeFlags            = 0;
   uint16_t alternativeCodeFlags = 0;
 
   for (int i = 0; i < P16_Nlines; ++i) {
+    CommandLines.push_back(tCommandLinesV2());
+
     if (safe_strncpy(CommandLines[i].Command, CommandLinesV1[i].Command, P16_Nchars)) { // This should never fail.
       codeFlags            = 0;
       alternativeCodeFlags = 0;
@@ -91,6 +110,7 @@ void P016_data_struct::convertCommandLines(struct EventStruct *event) {
     }
     delay(0);
   }
+  CommandLinesV1.clear(); // clean up after conversion
 }
 
 # endif // ifdef P16_SETTINGS_V1
@@ -103,18 +123,42 @@ void P016_data_struct::loadCommandLines(struct EventStruct *event) {
     addLog(LOG_LEVEL_ERROR, F("P016 IR: Settings conversion, save task settings to store in new format."));
 
     convertCommandLines(event);
-  } else {
+  }
+  else
   # endif // ifdef P16_SETTINGS_V1
+  {
+    // read V2 settings data
 
-  // read V2 settings data
-  LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(CommandLines), sizeof(CommandLines));
-  # ifdef P16_SETTINGS_V1
-}
+    // LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(CommandLines), sizeof(CommandLines));
+    CommandLines.clear(); // Start fresh
+    int loadOffset = 0;
 
-  # endif // ifdef P16_SETTINGS_V1
+    for (uint8_t i = 0; i < P16_Nlines; i++) {
+      CommandLines.push_back(tCommandLinesV2());
+      LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type,
+                   event->TaskIndex,
+                   (uint8_t *)&(CommandLines[i]),
+                   sizeof(tCommandLinesV2),
+                   loadOffset);
+      loadOffset += sizeof(tCommandLinesV2);
+    }
+  }
 
   for (int i = 0; i < P16_Nlines; ++i) {
     CommandLines[i].Command[P16_Nchars - 1] = 0; // Terminate in case of uninitalized data
+  }
+}
+
+void P016_data_struct::saveCommandLines(struct EventStruct *event) {
+  int saveOffset = 0;
+
+  for (uint8_t i = 0; i < P16_Nlines; i++) {
+    SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
+               event->TaskIndex,
+               (uint8_t *)&(CommandLines[i]),
+               sizeof(tCommandLinesV2),
+               saveOffset);
+    saveOffset += sizeof(tCommandLinesV2);
   }
 }
 
