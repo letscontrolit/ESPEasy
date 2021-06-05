@@ -80,7 +80,7 @@ boolean Plugin_097(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
-      addADC_PinSelect(true, F("taskdevicepin1"), CONFIG_PIN1);
+      addADC_PinSelect(AdcPinSelectPurpose::TouchOnly, F("taskdevicepin1"), CONFIG_PIN1);
 
       addFormSubHeader(F("Touch Settings"));
 
