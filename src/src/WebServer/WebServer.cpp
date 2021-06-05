@@ -261,7 +261,7 @@ size_t streamFile_htmlEscape(const String& fileName)
 bool captivePortal() {
   const bool fromAP = web_server.client().localIP() == apIP;
   const bool hasWiFiCredentials = SecuritySettings.hasWiFiCredentials();
-  if (hasWiFiCredentials && !fromAP) {
+  if (hasWiFiCredentials || !fromAP) {
     return false;
   }
   if (!isIP(web_server.hostHeader()) && web_server.hostHeader() != (NetworkGetHostname() + F(".local"))) {

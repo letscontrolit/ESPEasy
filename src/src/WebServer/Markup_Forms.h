@@ -4,6 +4,7 @@
 #include "../WebServer/common.h"
 
 #include "../Globals/Plugins.h"
+#include "../Helpers/StringGenerator_GPIO.h"
 
 
 // ********************************************************************************
@@ -100,6 +101,7 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
 // Add a selector form
 // ********************************************************************************
 
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice);
 void addFormPinSelect(const String& label, const __FlashStringHelper * id, int choice);
 
 void addFormPinSelectI2C(const String& label, const String& id, int choice);

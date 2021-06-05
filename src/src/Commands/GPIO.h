@@ -13,6 +13,11 @@
 #include <Arduino.h>
 
 
+// FIXME TD-er: This fwd declaration should not be in .h file.
+// Only needed till GPIO can be set from ESPEasy core.
+void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
+
+
 const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const char* Line);
