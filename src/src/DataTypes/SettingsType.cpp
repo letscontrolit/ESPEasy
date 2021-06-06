@@ -9,7 +9,7 @@
 #include "../Globals/Settings.h"
 
 
-String SettingsType::getSettingsTypeString(Enum settingsType) {
+const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsType) {
   switch (settingsType) {
     case Enum::BasicSettings_Type:             return F("Settings");
     case Enum::TaskSettings_Type:              return F("TaskSettings");
@@ -22,7 +22,7 @@ String SettingsType::getSettingsTypeString(Enum settingsType) {
 
     case Enum::SettingsType_MAX: break;
   }
-  return "";
+  return F("");
 }
 
 /********************************************************************************************\

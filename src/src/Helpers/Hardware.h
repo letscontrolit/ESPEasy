@@ -73,14 +73,20 @@ uint32_t getChipId();
 
 uint8_t getChipCores();
 
-String getChipModel();
+const __FlashStringHelper * getChipModel();
 
 uint8_t getChipRevision();
 
 /********************************************************************************************\
+   Boot information
+ \*********************************************************************************************/
+void readBootCause();
+
+
+/********************************************************************************************\
    Hardware specific configurations
  \*********************************************************************************************/
-String getDeviceModelBrandString(DeviceModel model);
+const __FlashStringHelper * getDeviceModelBrandString(DeviceModel model);
 
 String getDeviceModelString(DeviceModel model);
 

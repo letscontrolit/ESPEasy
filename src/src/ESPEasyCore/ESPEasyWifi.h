@@ -14,10 +14,12 @@
 
 #include "../DataTypes/WiFiConnectionProtocol.h"
 
-#define WIFI_RECONNECT_WAIT                20000  // in milliSeconds
-#define WIFI_AP_OFF_TIMER_DURATION         60000  // in milliSeconds
+#define WIFI_RECONNECT_WAIT                 20000 // in milliSeconds
+#define WIFI_AP_OFF_TIMER_DURATION         300000 // in milliSeconds
 #define WIFI_CONNECTION_CONSIDERED_STABLE  300000 // in milliSeconds
 #define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
+#define WIFI_SCAN_INTERVAL_AP_USED         125000 // in milliSeconds
+#define WIFI_SCAN_INTERVAL_MINIMAL          60000 // in milliSeconds
 
 bool WiFiConnected();
 void WiFiConnectRelaxed();
@@ -32,11 +34,13 @@ void SetWiFiTXpower(float dBm, float rssi);
 float GetRSSIthreshold(float& maxTXpwr);
 WiFiConnectionProtocol getConnectionProtocol();
 void WifiDisconnect();
+void WiFiScanPeriodical();
+bool WiFiScanAllowed();
 void WifiScan(bool async, uint8_t channel = 0);
 void WifiScan();
 void setSTA(bool enable);
 void setAP(bool enable);
-String getWifiModeString(WiFiMode_t wifimode);
+const __FlashStringHelper * getWifiModeString(WiFiMode_t wifimode);
 void setWifiMode(WiFiMode_t wifimode);
 bool WifiIsAP(WiFiMode_t wifimode);
 bool WifiIsSTA(WiFiMode_t wifimode);

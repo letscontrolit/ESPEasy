@@ -9,6 +9,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 
@@ -134,7 +135,7 @@ unsigned long ESPEasy_time::now() {
           log += String((time_offset * 1000.0f) / syncInterval);
           log += F(" msec/second");
         }
-        addLog(LOG_LEVEL_INFO, log)
+        addLog(LOG_LEVEL_INFO, log);
       }
       sysTime = unixTime_d;
 
@@ -270,7 +271,9 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   packetBuffer[14] = 49;
   packetBuffer[15] = 52;
 
+  FeedSW_watchdog();
   if (udp.beginPacket(timeServerIP, 123) == 0) { // NTP requests are to port 123
+    FeedSW_watchdog();
     udp.stop();
     return false;
   }
@@ -338,7 +341,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       unixTime_d = static_cast<double>(txTm);
 
       // Add fractional part.
-      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0f);
+      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0);
 
       long total_delay = timePassedSince(beginWait);
 

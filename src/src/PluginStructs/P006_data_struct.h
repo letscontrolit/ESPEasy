@@ -18,9 +18,6 @@ struct P006_data_struct : public PluginTaskData_base {
 
   float    readTemperature(void);
 
-  float    pressureElevation(float atmospheric,
-                             int   altitude);
-
   uint8_t  oversampling = BMP085_ULTRAHIGHRES;
   int16_t  ac1, ac2, ac3, b1, b2, mb, mc, md = 0;
   uint16_t ac4, ac5, ac6 = 0;

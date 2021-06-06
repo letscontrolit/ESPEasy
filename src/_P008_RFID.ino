@@ -144,9 +144,11 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
               Plugin_008_timeoutCount++;
               if (Plugin_008_timeoutCount > 5)
               {
-                String log = F("RFID : reset bits: ");
-                log += Plugin_008_bitCount;
-                addLog(LOG_LEVEL_INFO, log );
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log = F("RFID : reset bits: ");
+                  log += Plugin_008_bitCount;
+                  addLog(LOG_LEVEL_INFO, log );
+                }
                 // reset after ~5 sec
                 Plugin_008_keyBuffer = 0;
                 Plugin_008_bitCount = 0;
@@ -205,13 +207,15 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       case PLUGIN_WEBFORM_LOAD:
         {
           byte choice = PCONFIG(0);
-          String options[2];
-          options[0] = F("26 Bits");
-          options[1] = F("34 Bits");
-          int optionValues[2];
-          optionValues[0] = 26;
-          optionValues[1] = 34;
-          addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
+          {
+            const __FlashStringHelper * options[2];
+            options[0] = F("26 Bits");
+            options[1] = F("34 Bits");
+            int optionValues[2];
+            optionValues[0] = 26;
+            optionValues[1] = 34;
+            addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
+          }
           bool presentHexToDec = PCONFIG(1) == 1;
           addFormCheckBox(F("Present hex as decimal value"), F("p008_hexasdec"), presentHexToDec);
           addFormNote(F("Useful only for numeric keypad input!"));

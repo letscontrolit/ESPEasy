@@ -18,6 +18,8 @@
 
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
+#include "src/Globals/ESPEasy_time.h"
+#include "src/Globals/EventQueue.h"
 #include "src/Globals/ExtraTaskSettings.h"
 #include "src/Globals/GlobalMapPortStatus.h"
 #include "src/Globals/I2Cdev.h"
@@ -26,8 +28,11 @@
 #include "src/Globals/Settings.h"
 
 #include "src/Helpers/ESPEasy_math.h"
+#include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
+#include "src/Helpers/Misc.h"
+#include "src/Helpers/Numerical.h"
 #include "src/Helpers/PortStatus.h"
 #include "src/Helpers/StringConverter.h"
 #include "src/Helpers/StringGenerator_GPIO.h"
@@ -38,6 +43,8 @@
 #include "src/WebServer/HTML_wrappers.h"
 #include "src/WebServer/Markup.h"
 #include "src/WebServer/Markup_Forms.h"
+#include "src/WebServer/WebServer.h"
+
 
 // Defines to make plugins more readable.
 
@@ -108,6 +115,12 @@ String               getPluginCustomArgName(int varNr);
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
 void pluginWebformShowValue(taskIndex_t   taskIndex,
                             byte          varNr,
+                            const __FlashStringHelper * label,
+                            const String& value,
+                            bool          addTrailingBreak = false);
+
+void pluginWebformShowValue(taskIndex_t   taskIndex,
+                            byte          varNr,
                             const String& label,
                             const String& value,
                             bool          addTrailingBreak = false);
@@ -129,6 +142,8 @@ void pluginWebformShowValue(const String& valName,
 bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
                                           const String& string,
                                           byte          paramNr);
+
+bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, const String& newline);
 
 int getValueCountForTask(taskIndex_t taskIndex);
 

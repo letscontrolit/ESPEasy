@@ -120,7 +120,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 
           if ((command == F("event")) || (command == F("asyncevent"))) {
             if (Settings.UseRules) {
-              eventQueue.add(parseStringToEnd(cmd, 2));
+              eventQueue.addMove(parseStringToEnd(cmd, 2));
             }
           } else {
             ExecuteCommand(event->TaskIndex, EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str(), true, true, true);
@@ -149,14 +149,10 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         String tmppubname = pubname;
         parseSingleControllerVariable(tmppubname, event, x, false);
         String value;
-
-        // Small optimization so we don't try to copy potentially large strings
         if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
-          MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
           value = event->String2.substring(0, 20); // For the log
         } else {
           value = formatUserVarNoCheck(event, x);
-          MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag);
         }
 # ifndef BUILD_NO_DEBUG
 
@@ -168,6 +164,14 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
           addLog(LOG_LEVEL_DEBUG, log);
         }
 # endif // ifndef BUILD_NO_DEBUG
+
+        // Small optimization so we don't try to copy potentially large strings
+        if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+          MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag);
+        } else {
+          // Publish using move operator, thus tmppubname and value are empty after this call
+          MQTTpublish(event->ControllerIndex, event->TaskIndex, std::move(tmppubname), std::move(value), mqtt_retainFlag);
+        }
       }
       break;
     }

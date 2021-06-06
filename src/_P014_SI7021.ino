@@ -152,7 +152,7 @@ struct P014_data_struct : public PluginTaskData_base {
       {
         // Still waiting for data
         // Should be handled in the loop()
-        addLog(LOG_LEVEL_INFO, F("SI7021 : Read Error !"));
+        addLog(LOG_LEVEL_ERROR, F("SI7021 : Read Error !"));
         break;
       }
 
@@ -287,7 +287,7 @@ struct P014_data_struct : public PluginTaskData_base {
 
     // Check CRC of data received
     if (checkCRC(raw, checksum) != 0) {
-      addLog(LOG_LEVEL_INFO, F("SI7021 : checksum error!"));
+      addLog(LOG_LEVEL_ERROR, F("SI7021 : checksum error!"));
       return -1;
     }
 
@@ -345,11 +345,9 @@ struct P014_data_struct : public PluginTaskData_base {
      ====================================================================== */
   int8_t setResolution(uint8_t res)
   {
-    uint8_t reg;
-    uint8_t error;
-
     // Get the current register value
-    error = readRegister(&reg);
+    uint8_t reg = 0;
+    uint8_t error = readRegister(&reg);
 
     if (error == 0) {
       // remove resolution bits
@@ -414,7 +412,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
         #define SI7021_RESOLUTION_OPTION 4
 
       byte choice = PCONFIG(0);
-      String options[SI7021_RESOLUTION_OPTION];
+      const __FlashStringHelper * options[SI7021_RESOLUTION_OPTION];
       int optionValues[SI7021_RESOLUTION_OPTION];
       optionValues[0] = SI7021_RESOLUTION_14T_12RH;
       options[0]      = F("Temp 14 bits / RH 12 bits");

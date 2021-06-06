@@ -11,6 +11,8 @@
 # include <ESPeasySerial.h>
 # include <PZEM004Tv30.h>
 
+#include "src/DataStructs/ESPEasy_packed_raw_data.h"
+
 
 # define PLUGIN_102
 # define PLUGIN_ID_102        102
@@ -43,6 +45,12 @@ PZEM004Tv30 *P102_PZEM_sensor = nullptr;
 boolean Plugin_102_init    = false;
 uint8_t P102_PZEM_ADDR_SET = 0; // Flag for status of programmation/Energy reset: 0=Reading / 1=Prog confirmed / 3=Prog done / 4=Reset
                                 // energy done
+
+// Forward declaration helper function
+const __FlashStringHelper * p102_getQueryString(byte query);
+
+
+
 
 boolean Plugin_102(byte function, struct EventStruct *event, String& string)
 {
@@ -127,15 +135,19 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
         addHtml(F(
                   "<span style=\"color:red\"> <br><B>If several PZEMs foreseen, don't use HW serial (or invert Tx and Rx to configure as SW serial).</B></span>"));
         addFormSubHeader(F("PZEM actions"));
-        String options_model[3] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
-        addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 3, options_model, NULL, P102_PZEM_mode);
+        {
+          const __FlashStringHelper * options_model[3] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
+          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 3, options_model, NULL, P102_PZEM_mode);
+        }
 
         if (P102_PZEM_mode == 2)
         {
           addHtml(F(
                     "<span style=\"color:red\"> <br>When programming an address, only one PZEMv30 must be connected. Otherwise, all connected PZEMv30s will get the same address, which would cause a conflict during reading.</span>"));
-          String options_confirm[2] = { F("NO"), F("YES") };
-          addFormSelector(F("Confirm address programming ?"), F("P102_PZEM_addr_set"), 2, options_confirm, NULL, P102_PZEM_ADDR_SET);
+          {
+            const __FlashStringHelper * options_confirm[2] = { F("NO"), F("YES") };
+            addFormSelector(F("Confirm address programming ?"), F("P102_PZEM_addr_set"), 2, options_confirm, NULL, P102_PZEM_ADDR_SET);
+          }
           addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), (P102_PZEM_ADDR < 1) ? 1 : P102_PZEM_ADDR, 1, 247);
           addHtml(F("Select the address to set PZEM. Programming address 0 is forbidden."));
         }
@@ -154,8 +166,10 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
       else
       {
         addFormSubHeader(F("PZEM actions"));
-        String options_model[2] = { F("Read_value"), F("Reset_Energy") };
-        addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 2, options_model, NULL, P102_PZEM_mode);
+        {
+          const __FlashStringHelper * options_model[2] = { F("Read_value"), F("Reset_Energy") };
+          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 2, options_model, NULL, P102_PZEM_mode);
+        }
         addHtml(F(" Tx/Rx Pins config disabled: Configuration is available in the first PZEM plugin.<br>"));
         addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), P102_PZEM_ADDR, 1, 247);
       }
@@ -171,7 +185,7 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
       // To select the data in the 4 fields. In a separate scope to free memory of String array as soon as possible
 
       sensorTypeHelper_webformLoad_header();
-      String options[P102_NR_OUTPUT_OPTIONS];
+      const __FlashStringHelper * options[P102_NR_OUTPUT_OPTIONS];
 
       for (uint8_t i = 0; i < P102_NR_OUTPUT_OPTIONS; ++i) {
         options[i] = p102_getQueryString(i);
@@ -295,6 +309,38 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+#ifdef USES_PACKED_RAW_DATA
+    case PLUGIN_GET_PACKED_RAW_DATA:
+    {
+      // Matching JS code:
+      // return decode(bytes, [header, int16_1e1, int32_1e3, int32_1e1, int32_1e1, uint16_1e2, uint8_1e1],
+      //   ['header', 'voltage', 'current', 'power', 'energy', 'powerfactor', 'frequency']);
+      //
+      // Resolutions:
+      //  Voltage:     0.1V     => int16_1e1  (range 80-260V)
+      //  Current:     0.001A   => int32_1e3
+      //  Power:       0.1W     => int32_1e1
+      //  Energy:      1Wh      => int32_1e1
+      //  PowerFactor: 0.01     => uint16_1e2 
+      //  Frequency:   0.1Hz    => uint8_1e1  (range 45Hz - 65Hz), offset 40Hz
+
+      // FIXME TD-er: Calling these functions is probably done within the 200 msec timeout used in the library.
+      // If not, this should be cached in a task data struct.
+      string += LoRa_addFloat(P102_PZEM_sensor->voltage(),       PackedData_int16_1e1);
+      string += LoRa_addFloat(P102_PZEM_sensor->current(),       PackedData_int32_1e3);
+      string += LoRa_addFloat(P102_PZEM_sensor->power(),         PackedData_int32_1e1);
+      string += LoRa_addFloat(P102_PZEM_sensor->energy(),        PackedData_int32_1e1);
+      string += LoRa_addFloat(P102_PZEM_sensor->pf(),            PackedData_uint16_1e2);
+      string += LoRa_addFloat(P102_PZEM_sensor->frequency() - 40, PackedData_uint8_1e1);
+      event->Par1 = 6; // valuecount 
+      
+      success = true;
+      break;
+    }
+#endif // USES_PACKED_RAW_DATA
+
+
+
     case PLUGIN_WRITE:
     {
       if (Plugin_102_init)
@@ -318,7 +364,7 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-String p102_getQueryString(byte query) {
+const __FlashStringHelper * p102_getQueryString(byte query) {
   switch (query)
   {
     case 0: return F("Voltage_V");
@@ -328,7 +374,7 @@ String p102_getQueryString(byte query) {
     case 4: return F("Power_Factor_cosphi");
     case 5: return F("Frequency Hz");
   }
-  return "";
+  return F("");
 }
 
 #endif // USES_P102

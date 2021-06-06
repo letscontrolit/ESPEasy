@@ -1,7 +1,19 @@
 #include "../DataStructs/WiFi_AP_Candidate.h"
 
+#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../Globals/SecuritySettings.h"
+#include "../Globals/Statistics.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
+#include "../../ESPEasy_common.h"
+
+
+
+
+#define WIFI_AP_CANDIDATE_MAX_AGE   300000  // 5 minutes in msec
+
 
 WiFi_AP_Candidate::WiFi_AP_Candidate(byte index_c, const String& ssid_c, const String& pass) :
   rssi(0), channel(0), index(index_c), isHidden(false)
@@ -30,13 +42,34 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
   isHidden = WiFi.isHidden(networkItem);
   #endif // ifdef ESP8266
   #ifdef ESP32
-  isHidden = ssid.length() == 0;
+  isHidden = ssid.isEmpty();
   #endif // ifdef ESP32
+  last_seen = millis();
+}
+
+WiFi_AP_Candidate::WiFi_AP_Candidate(const WiFi_AP_Candidate& other)
+: ssid(other.ssid), key(other.key), last_seen(other.last_seen), 
+  rssi(other.rssi), channel(other.channel), index(other.index), 
+  enc_type(other.enc_type), isHidden(other.isHidden), 
+  lowPriority(other.lowPriority), 
+  isEmergencyFallback(other.isEmergencyFallback)
+{
+  setBSSID(other.bssid);
 }
 
 WiFi_AP_Candidate::WiFi_AP_Candidate() {}
 
 bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
+  if (isEmergencyFallback != other.isEmergencyFallback) {
+    return isEmergencyFallback;
+  }
+  if (lowPriority != other.lowPriority) {
+    return !lowPriority;
+  }
+  if (isHidden != other.isHidden) {
+    return !isHidden;
+  }
+
   // RSSI values >= 0 are invalid
   if (rssi >= 0) { return false; }
 
@@ -54,12 +87,15 @@ WiFi_AP_Candidate& WiFi_AP_Candidate::operator=(const WiFi_AP_Candidate& other) 
   if (this != &other) { // not a self-assignment
     ssid    = other.ssid;
     key     = other.key;
+    last_seen = other.last_seen;
     rssi    = other.rssi;
     channel = other.channel;
     setBSSID(other.bssid);
     isHidden = other.isHidden;
     index    = other.index;
     enc_type = other.enc_type;
+    lowPriority = other.lowPriority;
+    isEmergencyFallback = other.isEmergencyFallback;
   }
   return *this;
 }
@@ -72,9 +108,29 @@ void WiFi_AP_Candidate::setBSSID(const uint8_t *bssid_c) {
 
 bool WiFi_AP_Candidate::usable() const {
   // Allow for empty pass
-  // if (key.length() == 0) return false;
-  if (!isHidden && (ssid.length() == 0)) { return false; }
+  // if (key.isEmpty()) return false;
+  if (isEmergencyFallback) {
+    int allowedUptimeMinutes = 10;
+    #ifdef CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME
+    allowedUptimeMinutes = CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME;
+    #endif
+    if (getUptimeMinutes() > allowedUptimeMinutes || 
+        !SecuritySettings.hasWiFiCredentials() || 
+        WiFiEventData.performedClearWiFiCredentials ||
+        lastBootCause != BOOT_CAUSE_COLD_BOOT) {
+      return false;
+    }
+  }
+  if (!isHidden && (ssid.isEmpty())) { return false; }
   return true;
+}
+
+bool WiFi_AP_Candidate::expired() const {
+  if (last_seen == 0) {
+    // Not set, so cannot expire
+    return false;
+  }
+  return timePassedSince(last_seen) > WIFI_AP_CANDIDATE_MAX_AGE;
 }
 
 bool WiFi_AP_Candidate::allowQuickConnect() const {

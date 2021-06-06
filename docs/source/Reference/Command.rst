@@ -188,10 +188,10 @@ P003 :ref:`P003_page`
 .. .. include:: ../Plugin/P011_commands.repl
 
 
-.. P012 :ref:`P012_page`
-.. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+P012 :ref:`P012_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. .. include:: ../Plugin/P012_commands.repl
+.. include:: ../Plugin/P012_commands.repl
 
 
 .. P013 :ref:`P013_page`
@@ -652,3 +652,8 @@ P101 :ref:`P101_page`
 .. include:: ../Plugin/P101_commands.repl
 
 
+
+P115 :ref:`P115_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P115_commands.repl

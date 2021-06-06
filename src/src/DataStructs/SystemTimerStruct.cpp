@@ -17,7 +17,7 @@ systemTimerStruct::systemTimerStruct(int recurringCount, unsigned long msecFromN
     // Create a new timer which should be "scheduled" now to clear up any data
     Par1 = 0; // Do not reschedule
     Par5 = 0; // Do not execute
-    addLog(LOG_LEVEL_INFO, F("TIMER: disable timer"))
+    addLog(LOG_LEVEL_INFO, F("TIMER: disable timer"));
   }
 }
 

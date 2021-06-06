@@ -90,13 +90,14 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
             element.txt[x] = tmppubname;
             parseSingleControllerVariable(element.txt[x], event, x, false);
             element.txt[x].replace(F("%value%"), formattedValue);
-            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
+              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
           }
         }
       }
 
-      // FIXME TD-er must define a proper move operator
-      success = C010_DelayHandler->addToQueue(C010_queue_element(element));
+      
+      success = C010_DelayHandler->addToQueue(std::move(element));
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C010_DELAY_QUEUE, C010_DelayHandler->getNextScheduleTime());
       break;
     }
@@ -124,7 +125,7 @@ bool do_process_c010_delay_queue(int controller_number, const C010_queue_element
 
 bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  while (element.txt[element.valuesSent] == "") {
+  while (element.txt[element.valuesSent].isEmpty()) {
     // A non valid value, which we are not going to send.
     // Increase sent counter until a valid value is found.
     if (element.checkDone(true)) {

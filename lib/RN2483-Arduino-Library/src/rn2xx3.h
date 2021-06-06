@@ -88,6 +88,8 @@ public:
 
   bool   setSF(uint8_t sf);
 
+  bool   setAdaptiveDataRate(bool enabled);
+
   /*
    * Initialise the RN2xx3 and join the LoRa network (if applicable).
    * This function can only be called after calling initABP() or initOTAA().
@@ -284,6 +286,11 @@ public:
    * Returns false if you are trying to use the wrong channels on the wrong module type.
    */
   bool                     setFrequencyPlan(RN2xx3_datatypes::Freq_plan);
+
+  /*
+   * Set version of TTN stack to use.
+   */
+  bool                     setTTNstack(RN2xx3_datatypes::TTN_stack_version version);
 
   /*
    * Returns the last downlink message HEX string.

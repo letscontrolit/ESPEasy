@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-String WiFi_encryptionType(byte encryptionType);
+const __FlashStringHelper * WiFi_encryptionType(byte encryptionType);
 
 #ifndef ESP32
 String SDKwifiStatusToString(uint8_t sdk_wifistatus);

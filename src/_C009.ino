@@ -31,7 +31,6 @@
 # define CPLUGIN_009
 # define CPLUGIN_ID_009         9
 # define CPLUGIN_NAME_009       "FHEM HTTP"
-# include <ArduinoJson.h>
 
 bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& string)
 {
@@ -76,7 +75,7 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      // FIXME TD-er must define a proper move operator
+
       success = C009_DelayHandler->addToQueue(C009_queue_element(event));
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
       break;
@@ -110,51 +109,86 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   if (!try_connect_host(controller_number, client, ControllerSettings)) {
     return false;
   }
-
   LoadTaskSettings(element.TaskIndex);
   String jsonString;
+  jsonString.reserve(768);
   {
-    // Create json root object
-    DynamicJsonDocument root(1024);
-    root[F("module")]  = String(F("ESPEasy"));
-    root[F("version")] = String(F("1.04"));
-
-    // Create nested objects
-    JsonObject data = root.createNestedObject(String(F("data")));
-    JsonObject ESP  = data.createNestedObject(String(F("ESP")));
-    ESP[F("name")]         = Settings.Name;
-    ESP[F("unit")]         = Settings.Unit;
-    ESP[F("version")]      = Settings.Version;
-    ESP[F("build")]        = Settings.Build;
-    ESP[F("build_notes")]  = String(F(BUILD_NOTES));
-    ESP[F("build_git")]    = String(F(BUILD_GIT));
-    ESP[F("node_type_id")] = NODE_TYPE_ID;
-    ESP[F("sleep")]        = Settings.deepSleep_wakeTime;
-
-    // embed IP, important if there is NAT/PAT
-    // char ipStr[20];
-    // IPAddress ip = NetworkLocalIP();
-    // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-    ESP[F("ip")] = NetworkLocalIP().toString();
-
-    // Create nested SENSOR json object
-    JsonObject SENSOR = data.createNestedObject(String(F("SENSOR")));
-
-    // char itemNames[valueCount][2];
-    for (byte x = 0; x < element.valueCount; x++)
+    jsonString = '{';
     {
-      // Each sensor value get an own object (0..n)
-      // sprintf(itemNames[x],"%d",x);
-      JsonObject val = SENSOR.createNestedObject(String(x));
-      val[F("deviceName")] = getTaskDeviceName(element.TaskIndex);
-      val[F("valueName")]  = ExtraTaskSettings.TaskDeviceValueNames[x];
-      val[F("type")]       = static_cast<int>(element.sensorType);
-      val[F("value")]      = element.txt[x];
-    }
+      jsonString += to_json_object_value(F("module"),  F("ESPEasy"));
+      jsonString += ',';
+      jsonString += to_json_object_value(F("version"), F("1.04"));
 
-    // Create json buffer
-    serializeJson(root, jsonString);
+      // Create nested object "ESP" inside "data"
+      jsonString += ',';
+      jsonString += F("\"data\":{");
+      {
+        jsonString += F("\"ESP\":{");
+        {
+          // Create nested objects in "ESP":
+          jsonString += to_json_object_value(F("name"), Settings.Name);
+          jsonString += ',';
+          jsonString += to_json_object_value(F("unit"), String(Settings.Unit));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("version"), String(Settings.Version));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("build"), String(Settings.Build));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("build_notes"), F(BUILD_NOTES));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("build_git"), getValue(LabelType::GIT_BUILD));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("node_type_id"), String(NODE_TYPE_ID));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("sleep"), String(Settings.deepSleep_wakeTime));
+
+          // embed IP, important if there is NAT/PAT
+          // char ipStr[20];
+          // IPAddress ip = NetworkLocalIP();
+          // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+          jsonString += ',';
+          jsonString += to_json_object_value(F("ip"), NetworkLocalIP().toString());
+        }
+        jsonString += '}'; // End "ESP"
+
+        jsonString += ',';
+
+        // Create nested object "SENSOR" json object inside "data"
+        jsonString += F("\"SENSOR\":{");
+        {
+          // char itemNames[valueCount][2];
+          for (byte x = 0; x < element.valueCount; x++)
+          {
+            // Each sensor value get an own object (0..n)
+            // sprintf(itemNames[x],"%d",x);
+            if (x != 0) {
+              jsonString += ',';
+            }
+
+            jsonString += '"';
+            jsonString += x;
+            jsonString += F("\":{");
+            {
+              jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element.TaskIndex));
+              jsonString += ',';
+              jsonString += to_json_object_value(F("valueName"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+              jsonString += ',';
+              jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
+              jsonString += ',';
+              jsonString += to_json_object_value(F("value"), element.txt[x]);
+            }
+            jsonString += '}'; // End "sensor value N"
+          }
+        }
+        jsonString += '}';     // End "SENSOR"
+      }
+      jsonString += '}';       // End "data"
+    }
+    jsonString += '}';         // End JSON structure
   }
+
+  // addLog(LOG_LEVEL_INFO, F("C009 Test JSON:"));
+  // addLog(LOG_LEVEL_INFO, jsonString);
 
   // We now create a URI for the request
   String request = create_http_request_auth(

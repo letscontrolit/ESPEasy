@@ -1,6 +1,9 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P002
 
+
+#include "src/Helpers/Hardware.h"
+
 // #######################################################################################################
 // #################################### Plugin 002: Analog ###############################################
 // #######################################################################################################
@@ -127,7 +130,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     {
       #if defined(ESP32)
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
-      addADC_PinSelect(false, F("taskdevicepin1"), CONFIG_PIN1);
+      addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
 
       #endif // if defined(ESP32)
 
@@ -295,7 +298,7 @@ void P002_performRead(struct EventStruct *event, int& value) {
   #endif // if defined(ESP32)
 }
 
-void P002_formatStatistics(const String& label, int raw, float float_value) {
+void P002_formatStatistics(const __FlashStringHelper * label, int raw, float float_value) {
   addRowLabel(label);
   addHtmlInt(raw);
   html_add_estimate_symbol();

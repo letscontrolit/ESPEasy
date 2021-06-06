@@ -70,12 +70,13 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
           element.txt[x] += event->idx + x;
           element.txt[x] += F("?value=");
           element.txt[x] += formattedValue;
-          addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
+            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
         }
       }
 
-      // FIXME TD-er must define a proper move operator
-      success = C012_DelayHandler->addToQueue(C012_queue_element(element));
+      
+      success = C012_DelayHandler->addToQueue(std::move(element));
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C012_DELAY_QUEUE, C012_DelayHandler->getNextScheduleTime());
       break;
     }
@@ -103,7 +104,7 @@ bool do_process_c012_delay_queue(int controller_number, const C012_queue_element
 
 bool do_process_c012_delay_queue(int controller_number, const C012_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  while (element.txt[element.valuesSent] == "") {
+  while (element.txt[element.valuesSent].isEmpty()) {
     // A non valid value, which we are not going to send.
     // Increase sent counter until a valid value is found.
     if (element.checkDone(true)) {

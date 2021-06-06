@@ -92,7 +92,7 @@ void handle_notifications() {
       {
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = notificationindex;
-        Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, &TempEvent);
+        Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, std::move(TempEvent));
       }
     }
   }
@@ -103,7 +103,7 @@ void handle_notifications() {
   {
     html_table_class_multirow();
     html_TR();
-    html_table_header("",           70);
+    html_table_header(F(""),           70);
     html_table_header(F("Nr"),      50);
     html_table_header(F("Enabled"), 100);
     html_table_header(F("Service"));
@@ -157,7 +157,7 @@ void handle_notifications() {
     addRowLabel(F("Notification"));
     byte choice = Settings.Notification[notificationindex];
     addSelector_Head_reloadOnChange(F("notification"));
-    addSelector_Item(F("- None -"), 0, false, false, "");
+    addSelector_Item(F("- None -"), 0, false);
 
     for (byte x = 0; x <= notificationCount; x++)
     {
@@ -165,9 +165,7 @@ void handle_notifications() {
       NPlugin_ptr[x](NPlugin::Function::NPLUGIN_GET_DEVICENAME, 0, NotificationName);
       addSelector_Item(NotificationName,
                        Notification[x].Number,
-                       choice == Notification[x].Number,
-                       false,
-                       "");
+                       choice == Notification[x].Number);
     }
     addSelector_Foot();
 
@@ -205,7 +203,7 @@ void handle_notifications() {
         if (Notification[NotificationProtocolIndex].usesGPIO > 0)
         {
           addRowLabel(F("1st GPIO"));
-          addPinSelect(false, "pin1", NotificationSettings.Pin1);
+          addPinSelect(PinSelectPurpose::Generic, F("pin1"), NotificationSettings.Pin1);
         }
 
         addRowLabel(F("Enabled"));

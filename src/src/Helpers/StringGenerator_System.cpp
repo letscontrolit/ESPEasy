@@ -1,4 +1,4 @@
-#include "StringGenerator_System.h"
+#include "../Helpers/StringGenerator_System.h"
 
 
 #include <Arduino.h>
@@ -14,7 +14,7 @@
 #include <PubSubClient.h>
 #include "../Globals/MQTT.h"
 
-String getMQTT_state() {
+const __FlashStringHelper * getMQTT_state() {
   switch (MQTTclient.state()) {
     case MQTT_CONNECTION_TIMEOUT: return F("Connection timeout");
     case MQTT_CONNECTION_LOST: return F("Connection lost");
@@ -28,7 +28,7 @@ String getMQTT_state() {
     case MQTT_CONNECT_UNAUTHORIZED: return F("Connect unauthorized");
     default: break;
   }
-  return "";
+  return F("");
 }
 
 #endif // USES_MQTT
@@ -36,18 +36,19 @@ String getMQTT_state() {
 /********************************************************************************************\
    Get system information
  \*********************************************************************************************/
-String getLastBootCauseString() {
+const __FlashStringHelper * getLastBootCauseString() {
   switch (lastBootCause)
   {
-    case BOOT_CAUSE_MANUAL_REBOOT: return F("Manual reboot");
-    case BOOT_CAUSE_DEEP_SLEEP: // nobody should ever see this, since it should sleep again right away.
-      return F("Deep sleep");
-    case BOOT_CAUSE_COLD_BOOT:
-      return F("Cold boot");
-    case BOOT_CAUSE_EXT_WD:
-      return F("External Watchdog");
+    case BOOT_CAUSE_MANUAL_REBOOT: return F("Manual Reboot");
+    case BOOT_CAUSE_DEEP_SLEEP:    return F("Deep Sleep");
+    case BOOT_CAUSE_COLD_BOOT:     return F("Cold Boot");
+    case BOOT_CAUSE_EXT_WD:        return F("External Watchdog");
+    case BOOT_CAUSE_SOFT_RESTART:  return F("Soft Reboot");
+    case BOOT_CAUSE_SW_WATCHDOG:   return F("SW Watchdog");
+    case BOOT_CAUSE_EXCEPTION:     return F("Exception");
+    case BOOT_CAUSE_POWER_UNSTABLE: return F("PWR Unstable"); // ESP32 only
   }
-  return getUnknownString();
+  return F("Unknown");
 }
 
 #ifdef ESP32

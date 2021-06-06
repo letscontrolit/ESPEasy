@@ -10,6 +10,7 @@
 //
 
 
+#include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/StringConverter.h"
 #include "src/PluginStructs/P094_data_struct.h"
 
@@ -22,6 +23,11 @@
 
 #define P094_BAUDRATE           PCONFIG_LONG(0)
 #define P094_BAUDRATE_LABEL     PCONFIG_LABEL(0)
+
+#define P094_DEBUG_SENTENCE_LENGTH  PCONFIG_LONG(1)
+#define P094_DEBUG_SENTENCE_LABEL   PCONFIG_LABEL(1)
+
+#define P094_APPEND_RECEIVE_SYSTIME PCONFIG(0)
 
 #define P094_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 #define P094_NR_OUTPUT_OPTIONS  1
@@ -66,6 +72,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = false;
+//      Device[deviceCount].DuplicateDetection = true;
       break;
     }
 
@@ -116,6 +123,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_SET_DEFAULTS:
     {
       P094_BAUDRATE = P094_DEFAULT_BAUDRATE;
+      P094_DEBUG_SENTENCE_LENGTH = 0;
 
       success = true;
       break;
@@ -143,12 +151,17 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       addFormSubHeader(F("Statistics"));
       P094_html_show_stats(event);
 
+      addFormNumericBox(F("(debug) Generated length"), P094_DEBUG_SENTENCE_LABEL, P094_DEBUG_SENTENCE_LENGTH, 0, 1024);
+
+      addFormCheckBox(F("Append system time"), F("systime"), P094_APPEND_RECEIVE_SYSTIME);
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
       P094_BAUDRATE = getFormItemInt(P094_BAUDRATE_LABEL);
+      P094_DEBUG_SENTENCE_LENGTH = getFormItemInt(P094_DEBUG_SENTENCE_LABEL);
 
       P094_data_struct *P094_data =
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -156,12 +169,14 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       if (nullptr != P094_data) {
         for (byte varNr = 0; varNr < P94_Nlines; varNr++)
         {
-          P094_data->setLine(varNr, web_server.arg(getPluginCustomArgName(varNr)));
+          P094_data->setLine(varNr, webArg(getPluginCustomArgName(varNr)));
         }
 
         addHtmlError(SaveCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0));
         success = true;
       }
+
+      P094_APPEND_RECEIVE_SYSTIME = isFormItemChecked(F("systime"));
 
       break;
     }
@@ -199,15 +214,30 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
           // Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
           delay(0); // Processing a full sentence may take a while, run some
                     // background tasks.
-          P094_data->getSentence(event->String2);
+          P094_data->getSentence(event->String2, P094_APPEND_RECEIVE_SYSTIME);
 
           if (event->String2.length() > 0) {
             if (Plugin_094_match_all(event->TaskIndex, event->String2)) {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("CUL Reader: Sending: ");
-                log += event->String2;
-                addLog(LOG_LEVEL_INFO, log);
+                String log;
+                if (log.reserve(128)) {
+                  log = F("CUL Reader: Sending: ");
+                  const size_t messageLength = event->String2.length();
+                  if (messageLength < 100) {
+                    log += event->String2;
+                  } else {
+                    // Split string so we get start and end
+                    log += event->String2.substring(0, 40);
+                    log += F("...");
+                    log += event->String2.substring(messageLength - 40);
+                  }
+                  addLog(LOG_LEVEL_INFO, log);
+                }
               }
+              // Filter length options:
+              // - 22 char, for hash-value then we filter the exact meter including serial and meter type, (that will also prevent very quit sending meters, which normaly is a fault)
+              // - 38 char, The exact message, because we have 2 byte from the value payload
+              //sendData_checkDuplicates(event, event->String2.substring(0, 22));
               sendData(event);
             }
           }
@@ -218,10 +248,29 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_READ: {
-      P094_data_struct *P094_data =
-        static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (P094_DEBUG_SENTENCE_LENGTH > 0) {
+        P094_data_struct *P094_data =
+          static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P094_data)) {}
+        if ((nullptr != P094_data)) {
+          const uint32_t debug_count = P094_data->getDebugCounter();
+          event->String2.reserve(P094_DEBUG_SENTENCE_LENGTH);
+          event->String2 = String(debug_count);
+          event->String2 += '_';
+          const char c = '0' + debug_count % 10;
+          for (long i = event->String2.length(); i < P094_DEBUG_SENTENCE_LENGTH; ++i) {
+            event->String2 += c;
+          }
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("CUL Reader: Sending: ");
+            log += event->String2.substring(0, 20);
+            log += F("...");
+            addLog(LOG_LEVEL_INFO, log);
+          }
+//          sendData_checkDuplicates(event, event->String2.substring(0, 22));
+          sendData(event);
+        }
+      }
       break;
     }
 
@@ -250,7 +299,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
   return success;
 }
 
-bool Plugin_094_match_all(taskIndex_t taskIndex, String& received)
+bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received)
 {
   P094_data_struct *P094_data =
     static_cast<P094_data_struct *>(getPluginTaskData(taskIndex));
@@ -295,7 +344,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
 
     {
-      String options[P094_Match_Type_NR_ELEMENTS];
+      const __FlashStringHelper * options[P094_Match_Type_NR_ELEMENTS];
       int    optionValues[P094_Match_Type_NR_ELEMENTS];
 
       for (int i = 0; i < P094_Match_Type_NR_ELEMENTS; ++i) {
@@ -342,13 +391,13 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               label += String(filterSet);
               addRowLabel_tr_id(label, id);
             } else {
-              addHtml(F("<B>AND</>"));
+              html_B(F("AND"));
               html_BR();
             }
 
             // Combo box with filter types
             {
-              String options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
+              const __FlashStringHelper * options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
               int    optionValues[P094_FILTER_VALUE_Type_NR_ELEMENTS];
 
               for (int i = 0; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
@@ -356,7 +405,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
                 options[i]      = P094_data_struct::P094_FilterValueType_toString(filterValueType);
                 optionValues[i] = filterValueType;
               }
-              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, NULL, capture, false, true, "");
+              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, NULL, capture, false, true, EMPTY_STRING);
             }
 
             break;
@@ -370,7 +419,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
           case 2:
           {
             // Comparator
-            String options[P094_FILTER_COMP_NR_ELEMENTS];
+            const __FlashStringHelper * options[P094_FILTER_COMP_NR_ELEMENTS];
             int    optionValues[P094_FILTER_COMP_NR_ELEMENTS];
 
             for (int i = 0; i < P094_FILTER_COMP_NR_ELEMENTS; ++i) {
@@ -378,13 +427,13 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
               optionValues[i] = enumValue;
             }
-            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, true, "");
+            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, true, EMPTY_STRING);
             break;
           }
           case 3:
           {
             // Compare with
-            addTextBox(id, filter, 8, false, false, "", "");
+            addTextBox(id, filter, 8, false, false, EMPTY_STRING, EMPTY_STRING);
             break;
           }
         }
@@ -402,22 +451,18 @@ void P094_html_show_stats(struct EventStruct *event) {
   }
   {
     addRowLabel(F("Current Sentence"));
-    String sentencePart;
-    P094_data->getSentence(sentencePart);
-    addHtml(sentencePart);
+    addHtml(P094_data->peekSentence());
   }
 
   {
     addRowLabel(F("Sentences (pass/fail)"));
-    String   chksumStats;
     uint32_t success, error, length_last;
     P094_data->getSentencesReceived(success, error, length_last);
-    chksumStats  = success;
-    chksumStats += '/';
-    chksumStats += error;
-    addHtml(chksumStats);
+    addHtmlInt(success);
+    addHtml('/');
+    addHtmlInt(error);
     addRowLabel(F("Length Last Sentence"));
-    addHtml(String(length_last));
+    addHtmlInt(length_last);
   }
 }
 

@@ -102,10 +102,21 @@ class SettingsStruct_tmpl
   bool ApDontForceSetup() const;
   void ApDontForceSetup(bool value);
 
+  // Perform periodical WiFi scans so that in case of a WiFi disconnect a node may reconnect to a better AP
+  bool PeriodicalScanWiFi() const;
+  void PeriodicalScanWiFi(bool value);
+
+  // When outputting JSON bools use quoted values (on, backward compatible) or use official JSON true/false unquoted
+  bool JSONBoolWithoutQuotes() const;
+  void JSONBoolWithoutQuotes(bool value);
+
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
+
+  bool DoNotStartAP() const;
+  void DoNotStartAP(bool value);
 
   void validate();
 
@@ -139,6 +150,24 @@ class SettingsStruct_tmpl
 
   PinBootState getPinBootState(uint8_t gpio_pin) const;
   void setPinBootState(uint8_t gpio_pin, PinBootState state);
+
+  bool getSPI_pins(int8_t spi_gpios[3]) const;
+
+  // Return true when pin is one of the SPI pins and SPI is enabled
+  bool isSPI_pin(int8_t pin) const;
+
+  // Return true when pin is one of the configured I2C pins.
+  bool isI2C_pin(int8_t pin) const;
+
+  // Return true when pin is one of the fixed Ethernet pins and Ethernet is enabled
+  bool isEthernetPin(int8_t pin) const;
+
+  // Return true when pin is one of the optional Ethernet pins and Ethernet is enabled
+  bool isEthernetPinOptional(int8_t pin) const;
+
+  // Access to TaskDevicePin1 ... TaskDevicePin3
+  // @param pinnr 1 = TaskDevicePin1, ..., 3 = TaskDevicePin3
+  int8_t getTaskDevicePin(taskIndex_t taskIndex, byte pinnr) const;
 
   float getWiFi_TX_power() const;
   void setWiFi_TX_power(float dBm);
@@ -264,6 +293,7 @@ class SettingsStruct_tmpl
   #endif
   uint8_t       WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
   int8_t        WiFi_sensitivity_margin = 3;  // Margin in dBm on top of sensitivity.
+  uint8_t       NumberExtraWiFiScans = 0;
 };
 
 /*

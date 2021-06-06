@@ -21,6 +21,8 @@
 #include "../Helpers/StringGenerator_GPIO.h"
 #include "../Helpers/StringParser.h"
 
+#include <Arduino.h>
+
 /********************************************************************************************\
    Parse string template
  \*********************************************************************************************/
@@ -44,7 +46,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate_padded"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  START_TIMER
+  START_TIMER;
 
   // Keep current loaded taskSettings to restore at the end.
   byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
@@ -105,7 +107,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 
         if (deviceName.equals(F("int"))) {
           nr_decimals = 0;
-        } else if (format.length() != 0)
+        } else if (!format.isEmpty())
         {
           // There is some formatting here, so do not throw away decimals
           trimTrailingZeros = false;
@@ -548,7 +550,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       String taskDeviceName = getTaskDeviceName(taskIndex);
 
-      if (taskDeviceName.length() != 0)
+      if (!taskDeviceName.isEmpty())
       {
         // Use entered taskDeviceName can have any case, so compare case insensitive.
         if (deviceName.equalsIgnoreCase(taskDeviceName))

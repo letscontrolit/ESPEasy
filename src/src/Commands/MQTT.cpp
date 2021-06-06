@@ -21,7 +21,7 @@
 #include "../Helpers/StringConverter.h"
 
 
-String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, const char *Line)
 {
   // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
@@ -42,9 +42,8 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
       MakeControllerSettings(ControllerSettings);
       if (!AllocatedControllerSettings()) {
-        String error = F("MQTT : Cannot publish, out of RAM");
-        addLog(LOG_LEVEL_ERROR, error);
-        return error;
+        addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot publish, out of RAM"));
+        return F("MQTT : Cannot publish, out of RAM");
       }
 
       LoadControllerSettings(enabledMqttController, ControllerSettings);
@@ -76,6 +75,7 @@ boolean MQTTsubscribe(controllerIndex_t controller_idx, const char* topic, boole
 {
   if (MQTTclient.subscribe(topic)) {
     Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+    scheduleNextMQTTdelayQueue();
     String log = F("Subscribed to: ");  log += topic;
     addLog(LOG_LEVEL_INFO, log);
     return true;
@@ -84,7 +84,7 @@ boolean MQTTsubscribe(controllerIndex_t controller_idx, const char* topic, boole
   return false;
 }
 
-String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
 {
   if (MQTTclient.connected() ) {
     // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
@@ -95,9 +95,8 @@ String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
         // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
         MakeControllerSettings(ControllerSettings);
         if (!AllocatedControllerSettings()) {
-          String error = F("MQTT : Cannot subscribe, out of RAM");
-          addLog(LOG_LEVEL_ERROR, error);
-          return error;
+          addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot subscribe, out of RAM"));
+          return F("MQTT : Cannot subscribe, out of RAM");
         }
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();

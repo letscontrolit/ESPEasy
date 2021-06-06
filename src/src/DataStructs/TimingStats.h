@@ -81,6 +81,8 @@
 # define HANDLE_SCHEDULER_IDLE   60
 # define HANDLE_SCHEDULER_TASK   61
 # define HANDLE_SERVING_WEBPAGE  62
+# define WIFI_SCAN_ASYNC         63
+# define WIFI_SCAN_SYNC          64
 
 
 class TimingStats {
@@ -105,9 +107,9 @@ private:
 };
 
 
-String getPluginFunctionName(int function);
+const __FlashStringHelper * getPluginFunctionName(int function);
 bool   mustLogFunction(int function);
-String getCPluginCFunctionName(CPlugin::Function function);
+const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function);
 bool   mustLogCFunction(CPlugin::Function function);
 String getMiscStatsName(int stat);
 

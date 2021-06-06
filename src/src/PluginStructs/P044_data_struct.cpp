@@ -273,7 +273,7 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
       LoadTaskSettings(event->TaskIndex);
       String eventString = getTaskDeviceName(event->TaskIndex);
       eventString += F("#Data");
-      eventQueue.add(eventString);
+      eventQueue.addMove(std::move(eventString));
     }
   } // done
 }

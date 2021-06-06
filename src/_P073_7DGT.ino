@@ -94,7 +94,7 @@ struct P073_data_struct : public PluginTaskData_base {
     #endif // P073_7DBIN_COMMAND
     #ifdef P073_SCROLL_TEXT
     , txtScrolling(false), scrollCount(0), scrollPos(0), scrollFull(false)
-    , _scrollSpeed(0), _textToScroll(F(""))
+    , _scrollSpeed(0)
     #endif // P073_SCROLL_TEXT
      {
     ClearBuffer();
@@ -353,7 +353,7 @@ struct P073_data_struct : public PluginTaskData_base {
   }
 
   void setTextToScroll(const String& text) {
-    _textToScroll = F("");
+    _textToScroll = EMPTY_STRING;
     if (text.length() > 0) {
       int bufToFill = getBufferLength(displayModel);
       _textToScroll.reserve(text.length() + bufToFill + (scrollFull ? bufToFill : 0));
@@ -660,14 +660,14 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
       addFormNote(F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
       addFormNote(F("MAX7219: 1st=DIN-Pin, 2nd=CLK-Pin, 3rd=CS-Pin"));
       {
-        String displtype[4] = { F("TM1637 - 4 digit (colon)"),
+        const __FlashStringHelper * displtype[4] = { F("TM1637 - 4 digit (colon)"),
                                 F("TM1637 - 4 digit (dots)"),
                                 F("TM1637 - 6 digit"),
                                 F("MAX7219 - 8 digit") };
         addFormSelector(F("Display Type"), F("plugin_073_displtype"), 4, displtype, NULL, PCONFIG(0));
       }
       {
-        String displout[6] = { F("Manual"),
+        const __FlashStringHelper * displout[6] = { F("Manual"),
                               F("Clock 24h - Blink"),
                               F("Clock 24h - No Blink"),
                               F("Clock 12h - Blink"),
@@ -680,7 +680,7 @@ boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
 
       #ifdef P073_EXTRA_FONTS
       {
-        String fontset[4] = { F("Default"),
+        const __FlashStringHelper * fontset[4] = { F("Default"),
                               F("Siekoo"),
                               F("Siekoo with uppercase 'CHNORUX'"),
                               F("dSEG7") };
@@ -990,7 +990,7 @@ bool p073_plugin_write(struct EventStruct *event, const String& string) {
   #endif // P073_7DBIN_COMMAND
   } else {
     bool p073_validcmd = false;
-    bool p073_displayon;
+    bool p073_displayon = false;
 
     if (cmd.equals("7don")) {
       addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
@@ -1473,7 +1473,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event, const String& text) {
     #endif // P073_SCROLL_TEXT
     if (data.length() > 0) {
       #ifdef P073_SCROLL_TEXT
-      P073_data->setTextToScroll(F("")); // Clear any scrolling text
+      P073_data->setTextToScroll(EMPTY_STRING); // Clear any scrolling text
       if (P073_data->txtScrolling && data.length() > bufLen) {
         P073_data->setBinaryData(data);
       } else
@@ -1518,8 +1518,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event, const String& text) {
 
 void tm1637_i2cStart(uint8_t clk_pin, uint8_t dio_pin) {
   #ifdef P073_DEBUG
-  String log = F("7DGT : Comm Start");
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Start"));
   #endif
   DIO_HIGH();
   CLK_HIGH();
@@ -1529,8 +1528,7 @@ void tm1637_i2cStart(uint8_t clk_pin, uint8_t dio_pin) {
 
 void tm1637_i2cStop(uint8_t clk_pin, uint8_t dio_pin) {
 #ifdef P073_DEBUG
-  String log = F("7DGT : Comm Stop");
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Stop"));
 #endif
   CLK_LOW();
   delayMicroseconds(TM1637_CLOCKDELAY);
@@ -1592,8 +1590,7 @@ void tm1637_i2cWrite_ack(uint8_t clk_pin, uint8_t dio_pin,
 
 void tm1637_i2cWrite(uint8_t clk_pin, uint8_t dio_pin, uint8_t bytetoprint) {
   #ifdef P073_DEBUG
-  String log = F("7DGT : WriteByte");
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLog(LOG_LEVEL_DEBUG, F("7DGT : WriteByte"));
   #endif
   uint8_t i;
 
@@ -1622,8 +1619,7 @@ void tm1637_ClearDisplay(uint8_t clk_pin, uint8_t dio_pin) {
 void tm1637_SetPowerBrightness(uint8_t clk_pin, uint8_t dio_pin,
                                uint8_t brightlvl, bool poweron) {
   #ifdef P073_DEBUG
-  String log = F("7DGT : Set BRIGHT");
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_INFO, F("7DGT : Set BRIGHT"));
   #endif
   uint8_t brightvalue = (brightlvl & 0b111);
 
