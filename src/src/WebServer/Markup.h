@@ -62,7 +62,7 @@ void addSelector(const String& id,
                  const String& classname
                  #ifdef        ENABLE_TOOLTIPS
                  ,
-                 const String& title = ""
+                 const String& tooltip = EMPTY_STRING
                  #endif // ifdef ENABLE_TOOLTIPS
                  );
 
@@ -78,7 +78,7 @@ void addSelector_Head_reloadOnChange(const String& id,
                                      bool          disabled
                                      #ifdef        ENABLE_TOOLTIPS
                                      ,
-                                     const String& title = ""
+                                     const String& tooltip = EMPTY_STRING
                                      #endif // ifdef        ENABLE_TOOLTIPS
                                      );
 
@@ -88,7 +88,7 @@ void addSelector_Head_reloadOnChange(const String& id,
                                      bool          disabled
                                      #ifdef        ENABLE_TOOLTIPS
                                      ,
-                                     const String& title = ""
+                                     const String& tooltip = EMPTY_STRING
                                      #endif // ifdef        ENABLE_TOOLTIPS
                                      );
 
@@ -98,7 +98,7 @@ void do_addSelector_Head(const String& id,
                          const bool& disabled
                          #ifdef        ENABLE_TOOLTIPS
                          ,
-                         const String& title = ""
+                         const String& tooltip = EMPTY_STRING
                          #endif // ifdef        ENABLE_TOOLTIPS
                          );
 
@@ -155,7 +155,7 @@ void addCheckBox(const String& id,
                  bool          disabled = false
                  #ifdef        ENABLE_TOOLTIPS
                  ,
-                 const String& title = ""
+                 const String& tooltip = EMPTY_STRING
                  #endif // ifdef ENABLE_TOOLTIPS
                  );
 void addCheckBox(const __FlashStringHelper * id, boolean checked, bool disabled = false);
@@ -169,7 +169,7 @@ void addNumericBox(const String& id,
                    int           min,
                    int           max,
                    const String& classname,
-                   const String& title = "");
+                   const String& tooltip = EMPTY_STRING);
 #endif // ifdef ENABLE_TOOLTIPS
 
 void addFloatNumberBox(const String& id,
@@ -180,7 +180,7 @@ void addFloatNumberBox(const String& id,
                        float         stepsize   = 0.0f
                        #ifdef ENABLE_TOOLTIPS
                        ,
-                       const String& title = ""
+                       const String& tooltip = EMPTY_STRING
                        #endif // ifdef ENABLE_TOOLTIPS
                        );
 void addNumericBox(const __FlashStringHelper * id, int value, int min, int max);
@@ -204,7 +204,7 @@ void addTextBox(const String& id,
                 const String& classname
                 #ifdef        ENABLE_TOOLTIPS
                 ,
-                const String& title = ""
+                const String& tooltip = EMPTY_STRING
                 #endif // ifdef ENABLE_TOOLTIPS
                 );
 
@@ -220,7 +220,7 @@ void addTextArea(const String& id,
                  bool          required
                  #ifdef        ENABLE_TOOLTIPS
                  ,
-                 const String& title = ""
+                 const String& tooltip = EMPTY_STRING
                  #endif // ifdef ENABLE_TOOLTIPS
                  );
 

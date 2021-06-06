@@ -88,7 +88,7 @@ void addSelector(const String  & id,
                  bool            enabled,
                  const String& classname
                  #ifdef          ENABLE_TOOLTIPS
-                 , const String& title
+                 , const String& tooltip
                  #endif // ifdef ENABLE_TOOLTIPS
                  )
 {
@@ -97,13 +97,13 @@ void addSelector(const String  & id,
   {
     addSelector_Head_reloadOnChange(id, classname, !enabled
                                     #ifdef ENABLE_TOOLTIPS
-                                    , title
+                                    , tooltip
                                     #endif // ifdef ENABLE_TOOLTIPS
                                     );
   } else {
     do_addSelector_Head(id, classname, EMPTY_STRING, !enabled
                         #ifdef ENABLE_TOOLTIPS
-                        , title
+                        , tooltip
                         #endif // ifdef ENABLE_TOOLTIPS
                         );
   }
@@ -169,31 +169,31 @@ void addSelector_Head_reloadOnChange(const String& id) {
 
 void addSelector_Head_reloadOnChange(const String& id, const String& classname, bool disabled
                                      #ifdef ENABLE_TOOLTIPS
-                                     , const String& title
+                                     , const String& tooltip
                                      #endif // ifdef ENABLE_TOOLTIPS
                                      ) {
   do_addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled
                       #ifdef ENABLE_TOOLTIPS
-                      , title
+                      , tooltip
                       #endif // ifdef ENABLE_TOOLTIPS
                       );
 }
 
 void addSelector_Head_reloadOnChange(const String& id, const String& classname, const String& onChangeCall, bool disabled
                                      #ifdef ENABLE_TOOLTIPS
-                                     , const String& title
+                                     , const String& tooltip
                                      #endif
                                      ) {
   do_addSelector_Head(id, classname, onChangeCall, disabled
                       # ifdef ENABLE_TOOLTIPS
-                      , title
+                      , tooltip
                       # endif // ifdef ENABLE_TOOLTIPS
                       );
 }
 
 void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled
                          # ifdef ENABLE_TOOLTIPS
-                         , const String& title
+                         , const String& tooltip
                          # endif // ifdef ENABLE_TOOLTIPS
                          )
 {
@@ -204,8 +204,8 @@ void do_addSelector_Head(const String& id, const String& classname, const String
 
   # ifdef ENABLE_TOOLTIPS
 
-  if (title.length() > 0) {
-    addHtmlAttribute(F("title"), title);
+  if (tooltip.length() > 0) {
+    addHtmlAttribute(F("title"), tooltip);
   }
   # endif // ifdef ENABLE_TOOLTIPS
 
@@ -539,7 +539,7 @@ void addCheckBox(const __FlashStringHelper *id, boolean checked, bool disabled)
 
 void addCheckBox(const String& id, boolean checked, bool disabled
                  # ifdef ENABLE_TOOLTIPS
-                 , const String& title
+                 , const String& tooltip
                  # endif // ifdef ENABLE_TOOLTIPS
                  )
 {
@@ -560,8 +560,8 @@ void addCheckBox(const String& id, boolean checked, bool disabled
   addHtml('\'');
   # ifdef ENABLE_TOOLTIPS
 
-  if (title.length() > 0) {
-    addHtmlAttribute(F("title"), title);
+  if (tooltip.length() > 0) {
+    addHtmlAttribute(F("title"), tooltip);
   }
   # endif // ifdef ENABLE_TOOLTIPS
   addHtml(F("></span></label>"));
@@ -577,7 +577,7 @@ void addNumericBox(const __FlashStringHelper *id, int value, int min, int max)
 
 void addNumericBox(const String& id, int value, int min, int max
                    # ifdef ENABLE_TOOLTIPS
-                   , const String& classname, const String& title
+                   , const String& classname, const String& tooltip
                    # endif // ifdef ENABLE_TOOLTIPS
                    )
 {
@@ -592,8 +592,8 @@ void addNumericBox(const String& id, int value, int min, int max
 
   # ifdef ENABLE_TOOLTIPS
 
-  if (title.length() > 0) {
-    addHtmlAttribute(F("title"), title);
+  if (tooltip.length() > 0) {
+    addHtmlAttribute(F("title"), tooltip);
   }
   # endif // ifdef ENABLE_TOOLTIPS
 
@@ -628,7 +628,7 @@ void addNumericBox(const String& id, int value, int min, int max)
 
 void addFloatNumberBox(const String& id, float value, float min, float max, byte nrDecimals, float stepsize
                        # ifdef ENABLE_TOOLTIPS
-                       , const String& title
+                       , const String& tooltip
                        # endif // ifdef ENABLE_TOOLTIPS
                        )
 {
@@ -661,9 +661,9 @@ void addFloatNumberBox(const String& id, float value, float min, float max, byte
 
   # ifdef ENABLE_TOOLTIPS
 
-  if (title.length() > 0) {
+  if (tooltip.length() > 0) {
     html += F("title='");
-    html += title;
+    html += tooltip;
     html += F("' ");
   }
   # endif // ifdef ENABLE_TOOLTIPS
@@ -687,7 +687,7 @@ void addTextBox(const String  & id,
                 const String  & pattern,
                 const String& classname
                 # ifdef         ENABLE_TOOLTIPS
-                , const String& title
+                , const String& tooltip
                 # endif // ifdef ENABLE_TOOLTIPS
                 )
 {
@@ -712,8 +712,8 @@ void addTextBox(const String  & id,
 
   # ifdef ENABLE_TOOLTIPS
 
-  if (title.length() > 0) {
-    addHtmlAttribute(F("title"), title);
+  if (tooltip.length() > 0) {
+    addHtmlAttribute(F("title"), tooltip);
   }
   # endif // ifdef ENABLE_TOOLTIPS
   addHtml('>');
@@ -730,7 +730,7 @@ void addTextArea(const String  & id,
                  bool            readonly,
                  bool          required
                  # ifdef         ENABLE_TOOLTIPS
-                 , const String& title
+                 , const String& tooltip
                  # endif // ifdef ENABLE_TOOLTIPS
                  )
 {
@@ -752,8 +752,8 @@ void addTextArea(const String  & id,
 
   # ifdef ENABLE_TOOLTIPS
 
-  if (title.length() > 0) {
-    addHtmlAttribute(F("title"), title);
+  if (tooltip.length() > 0) {
+    addHtmlAttribute(F("title"), tooltip);
   }
   # endif // ifdef ENABLE_TOOLTIPS
   addHtml('>');

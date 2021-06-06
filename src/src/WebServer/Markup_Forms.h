@@ -32,7 +32,7 @@ void addFormCheckBox_disabled(const String& label,
                               boolean       checked
                               #ifdef        ENABLE_TOOLTIPS
                               ,
-                              const String& title = ""
+                              const String& tooltip = EMPTY_STRING
                               #endif // ifdef ENABLE_TOOLTIPS
                               );
 
@@ -42,7 +42,7 @@ void addFormCheckBox(const String& label,
                      bool          disabled = false
                      #ifdef        ENABLE_TOOLTIPS
                      ,
-                     const String& title = ""
+                     const String& tooltip = EMPTY_STRING
                      #endif // ifdef ENABLE_TOOLTIPS
                      );
 
@@ -51,7 +51,7 @@ void addFormCheckBox(LabelType::Enum label,
                      bool            disabled = false
                      #ifdef          ENABLE_TOOLTIPS
                      ,
-                     const String  & title = ""
+                     const String  & tooltip = EMPTY_STRING
                      #endif // ifdef ENABLE_TOOLTIPS
                      );
 
@@ -69,7 +69,7 @@ void addFormNumericBox(LabelType::Enum label,
                        int             max = INT_MAX
                        #ifdef          ENABLE_TOOLTIPS
                        ,
-                       const String  & title = ""
+                       const String  & tooltip = EMPTY_STRING
                        #endif // ifdef ENABLE_TOOLTIPS
                        );
 
@@ -80,7 +80,7 @@ void addFormNumericBox(const String& label,
                        int           max = INT_MAX
                        #ifdef        ENABLE_TOOLTIPS
                        ,
-                       const String& title = ""
+                       const String& tooltip = EMPTY_STRING
                        #endif // ifdef ENABLE_TOOLTIPS
                        );
 
@@ -92,7 +92,7 @@ void addFormFloatNumberBox(LabelType::Enum label,
                            float           stepsize   = 0.0f
                            #ifdef ENABLE_TOOLTIPS
                            ,
-                           const String& title = ""
+                           const String& tooltip = EMPTY_STRING
                            #endif // ifdef ENABLE_TOOLTIPS
                            );
 
@@ -105,7 +105,7 @@ void addFormFloatNumberBox(const String& label,
                            float         stepsize   = 0.0f
                            #ifdef ENABLE_TOOLTIPS
                            ,
-                           const String& title = ""
+                           const String& tooltip = EMPTY_STRING
                            #endif // ifdef ENABLE_TOOLTIPS
                            );
 void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min = INT_MIN, int max = INT_MAX);
@@ -138,7 +138,7 @@ void addFormTextBox(const String& label,
                     const String& pattern  = ""
                     #ifdef ENABLE_TOOLTIPS
                     ,
-                    const String& title = ""
+                    const String& tooltip = EMPTY_STRING
                     #endif // ifdef ENABLE_TOOLTIPS
                     );
 
@@ -153,7 +153,7 @@ void addFormTextArea(const String& label,
                      bool          required = false
                      #ifdef        ENABLE_TOOLTIPS
                      ,
-                     const String& title = ""
+                     const String& tooltip = EMPTY_STRING
                      #endif // ifdef ENABLE_TOOLTIPS
                      );
 
@@ -167,7 +167,7 @@ void addFormPasswordBox(const String& label,
                         int           maxlength
                         #ifdef        ENABLE_TOOLTIPS
                         ,
-                        const String& title = ""
+                        const String& tooltip = EMPTY_STRING
                         #endif // ifdef ENABLE_TOOLTIPS
                         );
 
@@ -211,7 +211,7 @@ void addFormSelectorI2C(const String& id,
                         int           selectedIndex
                         #ifdef ENABLE_TOOLTIPS
                         ,
-                        const String& title = ""
+                        const String& tooltip = EMPTY_STRING
                         #endif
                         );
 
@@ -223,7 +223,7 @@ void addFormSelector(const String& label,
                      int           selectedIndex
                      #ifdef ENABLE_TOOLTIPS
                      ,
-                     const String& title = ""
+                     const String& tooltip = EMPTY_STRING
                      #endif
                      );
 
@@ -276,7 +276,7 @@ void addFormSelector(const String& label,
                      boolean       reloadonchange
                      #ifdef ENABLE_TOOLTIPS
                      ,
-                     const String& title = ""
+                     const String& tooltip = EMPTY_STRING
                      #endif
                      );
 
@@ -290,7 +290,7 @@ void addFormSelector_script(const String& label,
                             const String& onChangeCall
                             #ifdef ENABLE_TOOLTIPS
                             ,
-                            const String& title = ""
+                            const String& tooltip = EMPTY_STRING
                             #endif
                             );
 
