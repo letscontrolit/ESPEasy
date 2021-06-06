@@ -106,14 +106,14 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      String plugin1 = web_server.arg(F("i2c_addr"));
+      String plugin1 = webArg(F("i2c_addr"));
       P047_I2C_ADDR = (int)strtol(plugin1.c_str(), 0, 16);
 
       P047_SENSOR_SLEEP = isFormItemChecked(F("p047_sleep"));
 
       P047_CHECK_VERSION = isFormItemChecked(F("p047_version"));
 
-      String plugin4 = web_server.arg(F("p047_i2cSoilMoisture_changeAddr"));
+      String plugin4 = webArg(F("p047_i2cSoilMoisture_changeAddr"));
       P047_NEW_ADDR = (int)strtol(plugin4.c_str(), 0, 16);
 
       P047_CHANGE_ADDR = isFormItemChecked(F("p047_changeAddr"));
@@ -127,7 +127,9 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         // wake sensor
         Plugin_047_getVersion(P047_I2C_ADDR);
         delayBackground(20);
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->wake"));
+        #endif
       }
 
       uint8_t sensorVersion = 0;
@@ -149,8 +151,10 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
       // check if we want to change the sensor address
       if (P047_CHANGE_ADDR) {
-        addLog(LOG_LEVEL_INFO, String(F("SoilMoisture: Change Address: 0x")) + String(P047_I2C_ADDR, HEX) + String(F("->0x")) +
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, String(F("SoilMoisture: Change Address: 0x")) + String(P047_I2C_ADDR, HEX) + String(F("->0x")) +
                String(P047_NEW_ADDR, HEX));
+        }
 
         if (Plugin_047_setAddress(P047_I2C_ADDR, P047_NEW_ADDR)) {
           P047_I2C_ADDR = P047_NEW_ADDR;
@@ -179,28 +183,32 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 1] = moisture;
         UserVar[event->BaseVarIndex + 2] = light;
 
-        String log = F("SoilMoisture: Address: 0x");
-        log += String(P047_I2C_ADDR, HEX);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("SoilMoisture: Address: 0x");
+          log += String(P047_I2C_ADDR, HEX);
 
-        if (P047_CHECK_VERSION) {
-          log += F(" Version: 0x");
-          log += String(sensorVersion, HEX);
+          if (P047_CHECK_VERSION) {
+            log += F(" Version: 0x");
+            log += String(sensorVersion, HEX);
+          }
+          addLog(LOG_LEVEL_INFO, log);
+          log  = F("SoilMoisture: Temperature: ");
+          log += temperature;
+          addLog(LOG_LEVEL_INFO, log);
+          log  = F("SoilMoisture: Moisture: ");
+          log += moisture;
+          addLog(LOG_LEVEL_INFO, log);
+          log  = F("SoilMoisture: Light: ");
+          log += light;
+          addLog(LOG_LEVEL_INFO, log);
         }
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("SoilMoisture: Temperature: ");
-        log += temperature;
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("SoilMoisture: Moisture: ");
-        log += moisture;
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("SoilMoisture: Light: ");
-        log += light;
-        addLog(LOG_LEVEL_INFO, log);
 
         if (P047_SENSOR_SLEEP) {
           // send sensor to sleep
           I2C_write8(P047_I2C_ADDR, SOILMOISTURESENSOR_SLEEP);
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->sleep"));
+          #endif
         }
         success = true;
         break;

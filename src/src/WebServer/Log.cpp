@@ -27,7 +27,7 @@ void handle_log() {
 
   #ifdef WEBSERVER_LOG
   addHtml(F("<TR><TH id=\"headline\" align=\"left\">Log"));
-  addCopyButton(F("copyText"), "", F("Copy log to clipboard"));
+  addCopyButton(F("copyText"), EMPTY_STRING, F("Copy log to clipboard"));
   addHtml(F("</TR></table><div  id='current_loglevel' style='font-weight: bold;'>Logging: </div><div class='logviewer' id='copyText_1'></div>"));
   addHtml(F("Autoscroll: "));
   addCheckBox(F("autoscroll"), true);
@@ -49,7 +49,7 @@ void handle_log_JSON() {
   if (!isLoggedIn()) { return; }
   #ifdef WEBSERVER_LOG
   TXBuffer.startJsonStream();
-  String webrequest = web_server.arg(F("view"));
+  String webrequest = webArg(F("view"));
   addHtml(F("{\"Log\": {"));
 
   if (webrequest == F("legend")) {
@@ -57,7 +57,7 @@ void handle_log_JSON() {
 
     for (byte i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
       if (i != 0) {
-        addHtml(",");
+        addHtml(',');
       }
       addHtml('{');
       int loglevel;
@@ -73,11 +73,16 @@ void handle_log_JSON() {
   unsigned long lastTimeStamp  = 0;
 
   while (logLinesAvailable) {
-    String reply = Logging.get_logjson_formatted(logLinesAvailable, lastTimeStamp);
-
-    if (reply.length() > 0) {
-      addHtml(reply);
-
+    String message;
+    byte loglevel;
+    if (Logging.getNext(logLinesAvailable, lastTimeStamp, message, loglevel)) {
+      addHtml('{');
+      stream_next_json_object_value(F("timestamp"), String(lastTimeStamp));
+      stream_next_json_object_value(F("text"),  message);
+      stream_last_json_object_value(F("level"), String(loglevel));
+      if (logLinesAvailable) {
+        addHtml(F(",\n"));
+      }
       if (nrEntries == 0) {
         firstTimeStamp = lastTimeStamp;
       }

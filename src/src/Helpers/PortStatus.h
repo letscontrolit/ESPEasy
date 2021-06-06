@@ -6,6 +6,12 @@
 #include "../DataStructs/PortStatusStruct.h"
 #include "../Globals/Plugins.h"
 
+
+#ifdef ESP32
+void checkAndClearPWM(uint32_t key);
+#endif
+
+
 /**********************************************************
 *                                                         *
 * Helper Functions for managing the status data structure *
@@ -61,6 +67,6 @@ String getPinStateJSON(bool          search,
                        const String& log,
                        int16_t       noSearchValue);
 
-String getPinModeString(byte mode);
+const __FlashStringHelper * getPinModeString(byte mode);
 
 #endif

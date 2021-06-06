@@ -577,8 +577,8 @@ bool MQTTSubscribe_037(struct EventStruct *event)
           String log = F("IMPT : Error subscribing to ");
           log += subscribeTo;
           addLog(LOG_LEVEL_ERROR, log);
-          return false;
         }
+        return false;
       }
     }
   }
@@ -589,7 +589,7 @@ bool MQTTSubscribe_037(struct EventStruct *event)
 // Check to see if Topic matches the MQTT subscription
 //
 bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) {
-  if (Topic.length() == 0 || Subscription.length() == 0)  {
+  if (Topic.isEmpty() || Subscription.isEmpty())  {
     return false;
   }
 

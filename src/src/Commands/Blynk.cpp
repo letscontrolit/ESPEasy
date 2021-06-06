@@ -27,7 +27,7 @@ controllerIndex_t firstEnabledBlynk_ControllerIndex() {
   return INVALID_CONTROLLER_INDEX;
 }
 
-String Command_Blynk_Get(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Blynk_Get(struct EventStruct *event, const char *Line)
 {
   controllerIndex_t first_enabled_blynk_controller = firstEnabledBlynk_ControllerIndex();
 
@@ -85,7 +85,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
     pass = getControllerPass(controllerIndex, ControllerSettings);
     ClientTimeout = ControllerSettings.ClientTimeout;
 
-    if (pass.length() == 0) {
+    if (pass.isEmpty()) {
       addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
       return false;
     }

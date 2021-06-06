@@ -53,9 +53,9 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
       // We now create a URI for the request
       String url = F("variableset ");
       url    += event->idx;
-      url    += ",";
+      url    += ',';
       url    += formatUserVarNoCheck(event, 0);
-      url    += "\n";
+      url    += '\n';
       success = C003_DelayHandler->addToQueue(C003_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C003_DELAY_QUEUE, C003_DelayHandler->getNextScheduleTime());
 

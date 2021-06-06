@@ -115,9 +115,11 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
     {
       addFormSubHeader(F("7-Seg. Clock"));
 
-      int16_t choice     = PCONFIG(1);
-      String  options[3] = { F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)") };
-      addFormSelector(F("Clock Type"), F("clocktype"), 3, options, NULL, choice);
+      {
+        int16_t choice     = PCONFIG(1);
+        const __FlashStringHelper * options[3] = { F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)") };
+        addFormSelector(F("Clock Type"), F("clocktype"), 3, options, NULL, choice);
+      }
 
       addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), PCONFIG(2), 0,  7);
       addFormNumericBox(F("Seg. for x<b>X</b>:xx"), F("clocksegh1"),  PCONFIG(3), 0,  7);

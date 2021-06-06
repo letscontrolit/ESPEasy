@@ -169,7 +169,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       if (nullptr != P094_data) {
         for (byte varNr = 0; varNr < P94_Nlines; varNr++)
         {
-          P094_data->setLine(varNr, web_server.arg(getPluginCustomArgName(varNr)));
+          P094_data->setLine(varNr, webArg(getPluginCustomArgName(varNr)));
         }
 
         addHtmlError(SaveCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0));
@@ -344,7 +344,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
 
     {
-      String options[P094_Match_Type_NR_ELEMENTS];
+      const __FlashStringHelper * options[P094_Match_Type_NR_ELEMENTS];
       int    optionValues[P094_Match_Type_NR_ELEMENTS];
 
       for (int i = 0; i < P094_Match_Type_NR_ELEMENTS; ++i) {
@@ -391,13 +391,13 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               label += String(filterSet);
               addRowLabel_tr_id(label, id);
             } else {
-              addHtml(F("<B>AND</>"));
+              html_B(F("AND"));
               html_BR();
             }
 
             // Combo box with filter types
             {
-              String options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
+              const __FlashStringHelper * options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
               int    optionValues[P094_FILTER_VALUE_Type_NR_ELEMENTS];
 
               for (int i = 0; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
@@ -405,7 +405,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
                 options[i]      = P094_data_struct::P094_FilterValueType_toString(filterValueType);
                 optionValues[i] = filterValueType;
               }
-              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, NULL, capture, false, true, "");
+              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, NULL, capture, false, true, EMPTY_STRING);
             }
 
             break;
@@ -419,7 +419,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
           case 2:
           {
             // Comparator
-            String options[P094_FILTER_COMP_NR_ELEMENTS];
+            const __FlashStringHelper * options[P094_FILTER_COMP_NR_ELEMENTS];
             int    optionValues[P094_FILTER_COMP_NR_ELEMENTS];
 
             for (int i = 0; i < P094_FILTER_COMP_NR_ELEMENTS; ++i) {
@@ -427,13 +427,13 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
               optionValues[i] = enumValue;
             }
-            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, true, "");
+            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, true, EMPTY_STRING);
             break;
           }
           case 3:
           {
             // Compare with
-            addTextBox(id, filter, 8, false, false, "", "");
+            addTextBox(id, filter, 8, false, false, EMPTY_STRING, EMPTY_STRING);
             break;
           }
         }
@@ -456,15 +456,13 @@ void P094_html_show_stats(struct EventStruct *event) {
 
   {
     addRowLabel(F("Sentences (pass/fail)"));
-    String   chksumStats;
     uint32_t success, error, length_last;
     P094_data->getSentencesReceived(success, error, length_last);
-    chksumStats  = success;
-    chksumStats += '/';
-    chksumStats += error;
-    addHtml(chksumStats);
+    addHtmlInt(success);
+    addHtml('/');
+    addHtmlInt(error);
     addRowLabel(F("Length Last Sentence"));
-    addHtml(String(length_last));
+    addHtmlInt(length_last);
   }
 }
 

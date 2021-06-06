@@ -350,7 +350,7 @@ String formatUnitToIPAddress(byte unit, byte formatCode) {
     switch (formatCode) {
       case 1:                  // Return empty string
       {
-        return F("");
+        return EMPTY_STRING;
       }
       case 2: // Return "0"
       {
@@ -1166,7 +1166,7 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
 bool downloadFile(const String& url, String file_save) {
   String error;
 
-  return downloadFile(url, file_save, "", "", error);
+  return downloadFile(url, file_save, EMPTY_STRING, EMPTY_STRING, error);
 }
 
 bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {
@@ -1174,9 +1174,9 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   uint16_t port;
   String   uri = splitURL(url, host, port, file);
 
-  if (file_save.length() == 0) {
+  if (file_save.isEmpty()) {
     file_save = file;
-  } else if ((file.length() == 0) && uri.endsWith("/")) {
+  } else if ((file.isEmpty()) && uri.endsWith("/")) {
     // file = file_save;
     uri += file_save;
   }
@@ -1192,7 +1192,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     addLog(LOG_LEVEL_ERROR, log);
   }
 
-  if (file_save.length() == 0) {
+  if (file_save.isEmpty()) {
     error = F("Empty filename");
     addLog(LOG_LEVEL_ERROR, error);
     return false;

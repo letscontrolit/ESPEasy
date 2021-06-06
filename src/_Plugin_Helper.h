@@ -115,6 +115,12 @@ String               getPluginCustomArgName(int varNr);
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
 void pluginWebformShowValue(taskIndex_t   taskIndex,
                             byte          varNr,
+                            const __FlashStringHelper * label,
+                            const String& value,
+                            bool          addTrailingBreak = false);
+
+void pluginWebformShowValue(taskIndex_t   taskIndex,
+                            byte          varNr,
                             const String& label,
                             const String& value,
                             bool          addTrailingBreak = false);
@@ -136,6 +142,8 @@ void pluginWebformShowValue(const String& valName,
 bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
                                           const String& string,
                                           byte          paramNr);
+
+bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, const String& newline);
 
 int getValueCountForTask(taskIndex_t taskIndex);
 

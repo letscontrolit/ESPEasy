@@ -12,7 +12,7 @@
 #include "../Helpers/StringConverter.h"
 
 
-String Command_Notifications_Notify(struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_Notifications_Notify(struct EventStruct *event, const char* Line)
 {
 	String message;
 	GetArgv(Line, message, 3);

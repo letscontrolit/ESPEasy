@@ -1,10 +1,10 @@
 #ifndef COMMAND_SYSTEM_H
 #define COMMAND_SYSTEM_H
 
-class String;
+#include <Arduino.h>
 
-String Command_System_NoSleep(struct EventStruct *event, const char* Line);
-String Command_System_deepSleep(struct EventStruct *event, const char* Line);
-String Command_System_Reboot(struct EventStruct *event, const char* Line);
+const __FlashStringHelper * Command_System_NoSleep(struct EventStruct *event, const char* Line);
+const __FlashStringHelper * Command_System_deepSleep(struct EventStruct *event, const char* Line);
+const __FlashStringHelper * Command_System_Reboot(struct EventStruct *event, const char* Line);
 
 #endif // COMMAND_SYSTEM_H
