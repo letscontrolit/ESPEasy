@@ -1567,14 +1567,16 @@ To create/register a plugin, you have to :
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
-  #ifdef USES_P076
-    #undef USES_P076   // HWL8012   in POW r1
-  #endif
-  #ifdef USES_P093
-    #undef USES_P093   // Mitsubishi Heat Pump
-  #endif
-  #ifdef USES_P100 // Pulse Counter - DS2423
-    #undef USES_P100
+  #ifndef PLUGIN_SET_TESTING
+    #ifdef USES_P076
+      #undef USES_P076   // HWL8012   in POW r1
+    #endif
+    #ifdef USES_P093
+      #undef USES_P093   // Mitsubishi Heat Pump
+    #endif
+    #ifdef USES_P100 // Pulse Counter - DS2423
+      #undef USES_P100
+    #endif
   #endif
   #ifdef USES_C012
     #undef USES_C012 // Blynk
