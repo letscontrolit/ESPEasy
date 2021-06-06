@@ -897,6 +897,8 @@ void setWifiMode(WiFiMode_t wifimode) {
   }
 
   if (cur_mode == WIFI_OFF) {
+    WiFiEventData.markWiFiTurnOn();
+
     #if defined(ESP32)
     esp_wifi_set_ps(WIFI_PS_NONE);
     #endif

@@ -56,16 +56,22 @@ bool WiFiEventData_t::unprocessedWifiEvents() const {
 }
 
 void WiFiEventData_t::clearAll() {
-  lastDisconnectMoment.clear();
-  lastConnectMoment.clear();
-  lastGetIPmoment.clear();
+  markWiFiTurnOn();
   lastGetScanMoment.clear();
   last_wifi_connect_attempt_moment.clear();
   timerAPstart.clear();
 
-  setWiFiDisconnected();
   lastWiFiResetMoment.setNow();
-  wifi_considered_stable = false;
+  wifi_TX_pwr = 0;
+  usedChannel = 0;
+}
+
+void WiFiEventData_t::markWiFiTurnOn() {
+  setWiFiDisconnected();
+  lastDisconnectMoment.clear();
+  lastConnectMoment.clear();
+  lastGetIPmoment.clear();
+  wifi_considered_stable    = false;
 
   // Mark all flags to default to prevent handling old events.
   processedConnect          = true;
@@ -77,17 +83,11 @@ void WiFiEventData_t::clearAll() {
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
   wifiConnectInProgress     = false;
-  wifi_TX_pwr = 0;
-  usedChannel = 0;
 }
 
 void WiFiEventData_t::markWiFiBegin() {
-  setWiFiDisconnected();
-  lastDisconnectMoment.clear();
-  lastConnectMoment.clear();
-  lastGetIPmoment.clear();
+  markWiFiTurnOn();
   last_wifi_connect_attempt_moment.setNow();
-  wifi_considered_stable = false;
   wifiConnectInProgress  = true;
   usedChannel = 0;
   ++wifi_connect_attempt;

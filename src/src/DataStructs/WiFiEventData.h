@@ -29,6 +29,7 @@ struct WiFiEventData_t {
   bool unprocessedWifiEvents() const;
 
   void clearAll();
+  void markWiFiTurnOn();
   void markWiFiBegin();
 
   bool WiFiDisconnected() const;
