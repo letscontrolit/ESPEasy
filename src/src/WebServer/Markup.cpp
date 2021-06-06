@@ -557,6 +557,7 @@ void addCheckBox(const String& id, boolean checked, bool disabled
   addHtml(F("><span class='checkmark"));
 
   if (disabled) { addDisabled(); }
+  addHtml(F("'></span></label>"));
   addHtml('\'');
   # ifdef ENABLE_TOOLTIPS
 
