@@ -80,7 +80,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-docs-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
       - name: Build documentation
         run: |
           cd docs
