@@ -15,6 +15,7 @@ struct P098_GPIO_config {
     return inverted ? 1 : 0;
   }
 
+  // Don't call this from ISR functions.
   bool readState() const {
     const bool state = digitalRead(gpio) != 0;
 

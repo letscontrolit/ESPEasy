@@ -287,6 +287,7 @@ void P098_data_struct::check_limit_switch(
 
       if (timeSinceLastTrigger > gpio_config.debounceTime_us) {
         if (gpio_config.readState()) {
+          switch_state.lastChanged_us = 0;
           switch_state.state = P098_limit_switch_state::State::High;
 
           if (!switch_state.switchposSet) {
@@ -306,7 +307,8 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
 {
   noInterrupts();
   {
-    const bool pinState                           = gpio_config.readState();
+    // Don't call gpio_config.readState() here
+    const bool pinState = gpio_config.inverted ? digitalRead(gpio_config.gpio) == 0 : digitalRead(gpio_config.gpio) != 0;
     const P098_limit_switch_state::State oldState = switch_state.state;
 
     switch (oldState) {
@@ -357,7 +359,7 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
           switch_state.triggerpos     = position;
           break;
         case P098_limit_switch_state::State::High:
-
+          switch_state.lastChanged_us = 0;
           if (!switch_state.switchposSet) {
             switch_state.switchpos    = switch_state.triggerpos;
             switch_state.switchposSet = true;
