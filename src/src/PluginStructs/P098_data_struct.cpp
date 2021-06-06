@@ -173,8 +173,13 @@ int P098_data_struct::getPosition() const
 
 void P098_data_struct::getLimitSwitchStates(bool& limitA_triggered, bool& limitB_triggered) const
 {
-  limitA_triggered = _config.limitA.readState();
-  limitB_triggered = _config.limitB.readState();
+  limitA_triggered = limitA.state == P098_limit_switch_state::State::High ? 1 : 0;
+  limitB_triggered = limitB.state == P098_limit_switch_state::State::High ? 1 : 0;
+
+  /*
+     limitA_triggered = _config.limitA.readState();
+     limitB_triggered = _config.limitB.readState();
+   */
 }
 
 void P098_data_struct::getLimitSwitchPositions(int& limitApos, int& limitBpos) const
@@ -280,20 +285,23 @@ void P098_data_struct::check_limit_switch(
   const P098_GPIO_config          & gpio_config,
   volatile P098_limit_switch_state& switch_state)
 {
+  // State is changed first in ISR, but compared after values are copied.
+  const int triggerpos          = switch_state.triggerpos;
+  const uint64_t lastChanged_us = switch_state.lastChanged_us;
+
   if (switch_state.state == P098_limit_switch_state::State::TriggerWaitBounce) {
-    if (switch_state.lastChanged_us != 0) {
-      const uint64_t currentTime          = getMicros64();
-      const uint64_t timeSinceLastTrigger = currentTime - switch_state.lastChanged_us;
+    if (lastChanged_us != 0) {
+      const uint64_t timeSinceLastTrigger = getMicros64() - lastChanged_us;
 
       if (timeSinceLastTrigger > gpio_config.debounceTime_us) {
-        if (gpio_config.readState()) {
-          switch_state.lastChanged_us = 0;
-          switch_state.state = P098_limit_switch_state::State::High;
+        if (!switch_state.switchposSet) {
+          switch_state.switchpos    = triggerpos;
+          switch_state.switchposSet = true;
+        }
 
-          if (!switch_state.switchposSet) {
-            switch_state.switchpos    = switch_state.triggerpos;
-            switch_state.switchposSet = true;
-          }
+        // Perform an extra check here on the state as it may have changed in the ISR call
+        if (switch_state.state == P098_limit_switch_state::State::TriggerWaitBounce) {
+          switch_state.state = P098_limit_switch_state::State::High;
         }
       }
     }
@@ -308,64 +316,41 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
   noInterrupts();
   {
     // Don't call gpio_config.readState() here
-    const bool pinState = gpio_config.inverted ? digitalRead(gpio_config.gpio) == 0 : digitalRead(gpio_config.gpio) != 0;
-    const P098_limit_switch_state::State oldState = switch_state.state;
+    const bool pinState        = gpio_config.inverted ? digitalRead(gpio_config.gpio) == 0 : digitalRead(gpio_config.gpio) != 0;
+    const uint64_t currentTime = getMicros64();
 
-    switch (oldState) {
+
+    switch (switch_state.state) {
       case P098_limit_switch_state::State::Low:
 
         if (pinState) {
-          switch_state.state = P098_limit_switch_state::State::TriggerWaitBounce;
+          switch_state.state          = P098_limit_switch_state::State::TriggerWaitBounce;
+          switch_state.lastChanged_us = currentTime;
+          switch_state.triggerpos     = position;
         }
         break;
       case P098_limit_switch_state::State::TriggerWaitBounce:
-
       {
-        const uint64_t currentTime          = getMicros64();
-        const uint64_t timeSinceLastTrigger = currentTime - switch_state.lastChanged_us;
-
-        if ((switch_state.lastChanged_us != 0) && (timeSinceLastTrigger < gpio_config.debounceTime_us)) {
-          if (!pinState) {
-            switch_state.state = P098_limit_switch_state::State::Low;
-          } else {
-            // Apparently we missed a (logic) falling edge, thus reset position and timestamp.
-            switch_state.lastChanged_us = getMicros64();
-            switch_state.triggerpos     = position;
-          }
+        // Do not evaluate the debounce time here, evaluate in the loop
+        if (pinState) {
+          // Only situation we can get here is when we missed a low state interrupt.
+          switch_state.lastChanged_us = currentTime;
+          switch_state.triggerpos     = position;
         } else {
-          if (pinState) {
-            // We can accept the stored trigger
-            switch_state.state = P098_limit_switch_state::State::High;
-          }
+          switch_state.state          = P098_limit_switch_state::State::Low;
+          switch_state.lastChanged_us = 0;
+          switch_state.triggerpos     = 0;
         }
         break;
       }
       case P098_limit_switch_state::State::High:
 
         if (!pinState) {
-          switch_state.state = P098_limit_switch_state::State::Low;
+          switch_state.state          = P098_limit_switch_state::State::Low;
+          switch_state.lastChanged_us = 0;
+          switch_state.triggerpos     = 0;
         }
         break;
-    }
-
-    if (oldState != switch_state.state) {
-      switch (switch_state.state) {
-        case P098_limit_switch_state::State::Low:
-          switch_state.triggerpos     = 0;
-          switch_state.lastChanged_us = 0;
-          break;
-        case P098_limit_switch_state::State::TriggerWaitBounce:
-          switch_state.lastChanged_us = getMicros64();
-          switch_state.triggerpos     = position;
-          break;
-        case P098_limit_switch_state::State::High:
-          switch_state.lastChanged_us = 0;
-          if (!switch_state.switchposSet) {
-            switch_state.switchpos    = switch_state.triggerpos;
-            switch_state.switchposSet = true;
-          }
-          break;
-      }
     }
   }
   interrupts(); // enable interrupts again.
