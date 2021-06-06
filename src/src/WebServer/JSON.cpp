@@ -83,9 +83,10 @@ void handle_csvval()
 
       for (byte x = 0; x < taskValCount; x++)
       {
-        if (valNr == INVALID_VALUE_NUM || valNr == x)
+        if ((valNr == INVALID_VALUE_NUM) || (valNr == x))
         {
           htmlData += formatUserVarNoCheck(taskNr, x);
+
           if (x != taskValCount - 1)
           {
             htmlData += ';';
@@ -98,6 +99,7 @@ void handle_csvval()
   addHtml(htmlData);
   TXBuffer.endStream();
 }
+
 // ********************************************************************************
 // Web Interface JSON page (no password!)
 // ********************************************************************************
@@ -107,22 +109,23 @@ void handle_json()
   const bool showSpecificTask = validTaskIndex(taskNr);
   bool showSystem             = true;
   bool showWifi               = true;
-  #ifdef HAS_ETHERNET
-  bool showEthernet           = true;
-  #endif
-  bool showDataAcquisition    = true;
-  bool showTaskDetails        = true;
-  bool showNodes              = true;
-  {
-    String view = web_server.arg("view");
 
-    if (view.length() != 0) {
+  #ifdef HAS_ETHERNET
+  bool showEthernet = true;
+  #endif // ifdef HAS_ETHERNET
+  bool showDataAcquisition = true;
+  bool showTaskDetails     = true;
+  bool showNodes           = true;
+  {
+    const String view = webArg("view");
+
+    if (!view.isEmpty()) {
       if (view == F("sensorupdate")) {
-        showSystem          = false;
-        showWifi            = false;
+        showSystem = false;
+        showWifi   = false;
         #ifdef HAS_ETHERNET
-        showEthernet        = false;
-        #endif
+        showEthernet = false;
+        #endif // ifdef HAS_ETHERNET
         showDataAcquisition = false;
         showTaskDetails     = false;
         showNodes           = false;
@@ -138,97 +141,122 @@ void handle_json()
 
     if (showSystem) {
       addHtml(F("\"System\":{\n"));
-      stream_next_json_object_value(LabelType::BUILD_DESC);
-      stream_next_json_object_value(LabelType::GIT_BUILD);
-      stream_next_json_object_value(LabelType::SYSTEM_LIBRARIES);
-      stream_next_json_object_value(LabelType::PLUGIN_COUNT);
-      stream_next_json_object_value(LabelType::PLUGIN_DESCRIPTION);
-      stream_next_json_object_value(LabelType::LOCAL_TIME);
-      stream_next_json_object_value(LabelType::ISNTP);
-      stream_next_json_object_value(LabelType::UNIT_NR);
-      stream_next_json_object_value(LabelType::UNIT_NAME);
-      stream_next_json_object_value(LabelType::UPTIME);
-      stream_next_json_object_value(LabelType::UPTIME_MS);
-      stream_next_json_object_value(LabelType::BOOT_TYPE);
-      stream_next_json_object_value(LabelType::RESET_REASON);
 
       if (wdcounter > 0)
       {
         stream_next_json_object_value(LabelType::LOAD_PCT);
         stream_next_json_object_value(LabelType::LOOP_COUNT);
       }
-      stream_next_json_object_value(LabelType::CPU_ECO_MODE);
 
-      #ifdef CORE_POST_2_5_0
-      stream_next_json_object_value(LabelType::HEAP_MAX_FREE_BLOCK);
-      stream_next_json_object_value(LabelType::HEAP_FRAGMENTATION);
-      #endif // ifdef CORE_POST_2_5_0
-      stream_next_json_object_value(LabelType::FREE_MEM);
-      stream_next_json_object_value(LabelType::SUNRISE);
-      stream_next_json_object_value(LabelType::SUNSET);
-      stream_next_json_object_value(LabelType::TIMEZONE_OFFSET);
-      stream_next_json_object_value(LabelType::LATITUDE);
-      stream_last_json_object_value(LabelType::LONGITUDE);
+      static const LabelType::Enum labels[] PROGMEM =
+      {
+        LabelType::BUILD_DESC,
+        LabelType::GIT_BUILD,
+        LabelType::SYSTEM_LIBRARIES,
+        LabelType::PLUGIN_COUNT,
+        LabelType::PLUGIN_DESCRIPTION,
+        LabelType::LOCAL_TIME,
+        LabelType::ISNTP,
+        LabelType::UNIT_NR,
+        LabelType::UNIT_NAME,
+        LabelType::UPTIME,
+        LabelType::UPTIME_MS,
+        LabelType::BOOT_TYPE,
+        LabelType::RESET_REASON,
+        LabelType::CPU_ECO_MODE,
+
+        #ifdef CORE_POST_2_5_0
+        LabelType::HEAP_MAX_FREE_BLOCK,
+        LabelType::HEAP_FRAGMENTATION,
+        #endif // ifdef CORE_POST_2_5_0
+        LabelType::FREE_MEM,
+        LabelType::SUNRISE,
+        LabelType::SUNSET,
+        LabelType::TIMEZONE_OFFSET,
+        LabelType::LATITUDE,
+        LabelType::LONGITUDE,
+
+
+        LabelType::MAX_LABEL
+      };
+
+      stream_json_object_values(labels, true);
       addHtml(F(",\n"));
     }
 
     if (showWifi) {
       addHtml(F("\"WiFi\":{\n"));
-      #if defined(ESP8266)
-      stream_next_json_object_value(LabelType::HOST_NAME);
-      #endif // if defined(ESP8266)
+      static const LabelType::Enum labels[] PROGMEM =
+      {
+        LabelType::HOST_NAME,
       #ifdef FEATURE_MDNS
-      stream_next_json_object_value(LabelType::M_DNS);
+        LabelType::M_DNS,
       #endif // ifdef FEATURE_MDNS
-      stream_next_json_object_value(LabelType::IP_CONFIG);
-      stream_next_json_object_value(LabelType::IP_ADDRESS);
-      stream_next_json_object_value(LabelType::IP_SUBNET);
-      stream_next_json_object_value(LabelType::GATEWAY);
-      stream_next_json_object_value(LabelType::STA_MAC);
-      stream_next_json_object_value(LabelType::DNS_1);
-      stream_next_json_object_value(LabelType::DNS_2);
-      stream_next_json_object_value(LabelType::SSID);
-      stream_next_json_object_value(LabelType::BSSID);
-      stream_next_json_object_value(LabelType::CHANNEL);
-      stream_next_json_object_value(LabelType::ENCRYPTION_TYPE_STA);
-      stream_next_json_object_value(LabelType::CONNECTED_MSEC);
-      stream_next_json_object_value(LabelType::LAST_DISCONNECT_REASON);
-      stream_next_json_object_value(LabelType::LAST_DISC_REASON_STR);
-      stream_next_json_object_value(LabelType::NUMBER_RECONNECTS);
-      stream_next_json_object_value(LabelType::WIFI_STORED_SSID1);
-      stream_next_json_object_value(LabelType::WIFI_STORED_SSID2);
-      stream_next_json_object_value(LabelType::FORCE_WIFI_BG);
-      stream_next_json_object_value(LabelType::RESTART_WIFI_LOST_CONN);
+        LabelType::IP_CONFIG,
+        LabelType::IP_ADDRESS,
+        LabelType::IP_SUBNET,
+        LabelType::GATEWAY,
+        LabelType::STA_MAC,
+        LabelType::DNS_1,
+        LabelType::DNS_2,
+        LabelType::SSID,
+        LabelType::BSSID,
+        LabelType::CHANNEL,
+        LabelType::ENCRYPTION_TYPE_STA,
+        LabelType::CONNECTED_MSEC,
+        LabelType::LAST_DISCONNECT_REASON,
+        LabelType::LAST_DISC_REASON_STR,
+        LabelType::NUMBER_RECONNECTS,
+        LabelType::WIFI_STORED_SSID1,
+        LabelType::WIFI_STORED_SSID2,
+        LabelType::FORCE_WIFI_BG,
+        LabelType::RESTART_WIFI_LOST_CONN,
 #ifdef ESP8266
-      stream_next_json_object_value(LabelType::FORCE_WIFI_NOSLEEP);
+        LabelType::FORCE_WIFI_NOSLEEP,
 #endif // ifdef ESP8266
 #ifdef SUPPORT_ARP
-      stream_next_json_object_value(LabelType::PERIODICAL_GRAT_ARP);
+        LabelType::PERIODICAL_GRAT_ARP,
 #endif // ifdef SUPPORT_ARP
-      stream_next_json_object_value(LabelType::CONNECTION_FAIL_THRESH);
-      stream_next_json_object_value(LabelType::WIFI_TX_MAX_PWR);
-      stream_next_json_object_value(LabelType::WIFI_CUR_TX_PWR);
-      stream_next_json_object_value(LabelType::WIFI_SENS_MARGIN);
-      stream_next_json_object_value(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
-      stream_next_json_object_value(LabelType::WIFI_NR_EXTRA_SCANS);
-      stream_next_json_object_value(LabelType::WIFI_PERIODICAL_SCAN);
-      stream_last_json_object_value(LabelType::WIFI_RSSI);
+        LabelType::CONNECTION_FAIL_THRESH,
+        LabelType::WIFI_TX_MAX_PWR,
+        LabelType::WIFI_CUR_TX_PWR,
+        LabelType::WIFI_SENS_MARGIN,
+        LabelType::WIFI_SEND_AT_MAX_TX_PWR,
+        LabelType::WIFI_NR_EXTRA_SCANS,
+        LabelType::WIFI_PERIODICAL_SCAN,
+        LabelType::WIFI_RSSI,
+
+
+        LabelType::MAX_LABEL
+      };
+
+      stream_json_object_values(labels, true);
+
       // TODO: PKR: Add ETH Objects
       addHtml(F(",\n"));
     }
 
     #ifdef HAS_ETHERNET
+
     if (showEthernet) {
       addHtml(F("\"Ethernet\":{\n"));
-      stream_next_json_object_value(LabelType::ETH_WIFI_MODE);
-      stream_next_json_object_value(LabelType::ETH_CONNECTED);
-      stream_next_json_object_value(LabelType::ETH_DUPLEX);
-      stream_next_json_object_value(LabelType::ETH_SPEED);
-      stream_next_json_object_value(LabelType::ETH_STATE);
-      stream_last_json_object_value(LabelType::ETH_SPEED_STATE);
+      static const LabelType::Enum labels[] PROGMEM =
+      {
+        LabelType::ETH_WIFI_MODE,
+        LabelType::ETH_CONNECTED,
+        LabelType::ETH_DUPLEX,
+        LabelType::ETH_SPEED,
+        LabelType::ETH_STATE,
+        LabelType::ETH_SPEED_STATE,
+
+
+        LabelType::MAX_LABEL
+      };
+
+      stream_json_object_values(labels, true);
       addHtml(F(",\n"));
     }
-    #endif
+    #endif // ifdef HAS_ETHERNET
 
     if (showNodes) {
       bool comma_between = false;
@@ -238,7 +266,7 @@ void handle_json()
         if (it->second.ip[0] != 0)
         {
           if (comma_between) {
-            addHtml(",");
+            addHtml(',');
           } else {
             comma_between = true;
             addHtml(F("\"nodes\":[\n")); // open json array if >0 nodes
@@ -308,6 +336,7 @@ void handle_json()
 
       // For simplicity, do the optional values first.
       const byte valueCount = getValueCountForTask(TaskIndex);
+
       if (valueCount != 0) {
         if ((taskInterval > 0) && Settings.TaskDeviceEnabled[TaskIndex]) {
           ttl_json = taskInterval;
@@ -322,7 +351,8 @@ void handle_json()
         {
           addHtml('{');
           const String value = formatUserVarNoCheck(TaskIndex, x);
-          byte nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[x];
+          byte nrDecimals    = ExtraTaskSettings.TaskDeviceValueDecimals[x];
+
           if (mustConsiderAsString(value)) {
             // Flag as not to treat as a float
             nrDecimals = 255;
@@ -330,7 +360,7 @@ void handle_json()
           stream_next_json_object_value(F("ValueNumber"), String(x + 1));
           stream_next_json_object_value(F("Name"),        String(ExtraTaskSettings.TaskDeviceValueNames[x]));
           stream_next_json_object_value(F("NrDecimals"),  String(nrDecimals));
-          stream_last_json_object_value(F("Value"),       value);
+          stream_last_json_object_value(F("Value"), value);
 
           if (x < (valueCount - 1)) {
             addHtml(F(",\n"));
@@ -398,9 +428,9 @@ void handle_json()
       stream_last_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
 
       if (TaskIndex != lastActiveTaskIndex) {
-        addHtml(",");
+        addHtml(',');
       }
-      addHtml("\n");
+      addHtml('\n');
     }
   }
 
@@ -526,28 +556,36 @@ void stream_to_json_value(const String& value) {
   bool isNum  = isNumerical(value, detectedType);
   bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
-  if (!isBool && ((value.length() == 0) || !isNum || mustConsiderAsString(detectedType))) {
+  if (!isBool && ((value.isEmpty()) || !isNum || mustConsiderAsString(detectedType))) {
     // Either empty, not a numerical or a BIN/HEX notation.
-    String html;
-    html.reserve(value.length() + 2);
-    html += '\"';
-    html += value;
-    html += '\"';
-    addHtml(html);
+    addHtml('\"');
+    if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
+      // Must replace characters, so make a deepcopy
+      String tmpValue(value);
+      tmpValue.replace('\n', '^');
+      tmpValue.replace('\r', '^');
+      tmpValue.replace('"',  '\'');
+      addHtml(tmpValue);
+    } else {
+      addHtml(value);
+    }
+    addHtml('\"');
   } else {
     addHtml(value);
   }
 }
 
+void stream_to_json_object_value(const __FlashStringHelper *  object, const String& value) {
+  addHtml('\"');
+  addHtml(object);
+  addHtml(F("\":"));
+  stream_to_json_value(value);
+}
+
 void stream_to_json_object_value(const String& object, const String& value) {
-  String html;
-
-  html.reserve(object.length() + 4);
-
-  html += '\"';
-  html += object;
-  html += "\":";
-  addHtml(html);
+  addHtml('\"');
+  addHtml(object);
+  addHtml(F("\":"));
   stream_to_json_value(value);
 }
 
@@ -556,15 +594,47 @@ String jsonBool(bool value) {
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.
+void stream_next_json_object_value(const __FlashStringHelper * object, const String& value) {
+  stream_to_json_object_value(object, value);
+  addHtml(F(",\n"));
+}
+
 void stream_next_json_object_value(const String& object, const String& value) {
-  addHtml(to_json_object_value(object, value));
+  stream_to_json_object_value(object, value);
   addHtml(F(",\n"));
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a closing '}'
-void stream_last_json_object_value(const String& object, const String& value) {
-  addHtml(to_json_object_value(object, value));
+void stream_last_json_object_value(const __FlashStringHelper * object, const String& value) {
+  stream_to_json_object_value(object, value);
   addHtml(F("\n}"));
+}
+
+void stream_last_json_object_value(const String& object, const String& value) {
+  stream_to_json_object_value(object, value);
+  addHtml(F("\n}"));
+}
+
+void stream_json_object_values(const LabelType::Enum labels[], bool markLast)
+{
+  size_t i = 0;
+
+  while (true) {
+    const LabelType::Enum cur  = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i));
+    const LabelType::Enum next = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i + 1));
+    const bool nextIsLast      = next == LabelType::MAX_LABEL;
+
+    if (markLast && nextIsLast) {
+      stream_last_json_object_value(cur);
+    } else {
+      stream_next_json_object_value(cur);
+    }
+
+    if (nextIsLast) {
+      return;
+    }
+    ++i;
+  }
 }
 
 void stream_next_json_object_value(LabelType::Enum label) {

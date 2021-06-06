@@ -1,21 +1,20 @@
-#include "Misc.h"
+#include "../Helpers/Misc.h"
 
-
+#include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy-Globals.h"
-
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/Serial.h"
-
 #include "../Globals/ESPEasy_time.h"
-
+#include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
+
+
 
 
 bool remoteConfig(struct EventStruct *event, const String& string)
@@ -39,7 +38,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
       // tolerantParseStringKeepCase(Line, 4);
       String configCommand = parseStringToEndKeepCase(string, 4);
 
-      if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
+      if ((configTaskName.isEmpty()) || (configCommand.isEmpty())) {
         return success; // TD-er: Should this be return false?
       }
       taskIndex_t index = findTaskIndexByName(configTaskName);
@@ -209,6 +208,20 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
 String getTaskDeviceName(taskIndex_t TaskIndex) {
   LoadTaskSettings(TaskIndex);
   return ExtraTaskSettings.TaskDeviceName;
+}
+
+/********************************************************************************************\
+   Handler for getting Value Names from TaskIndex
+
+   - value names can be accessed with task variable index
+   - maximum number of variables <= defined number of variables in plugin
+ \*********************************************************************************************/
+String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
+
+  TaskValueIndex = (TaskValueIndex < getValueCountForTask(TaskIndex) ? TaskValueIndex : getValueCountForTask(TaskIndex));
+
+  LoadTaskSettings(TaskIndex);
+  return ExtraTaskSettings.TaskDeviceValueNames[TaskValueIndex];
 }
 
 /********************************************************************************************\
@@ -417,3 +430,43 @@ void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
 
   number = (number & ~mask) | newvalue;
 }
+
+
+float getCPUload() {
+  return 100.0f - Scheduler.getIdleTimePct();
+}
+
+int getLoopCountPerSec() {
+  return loopCounterLast / 30;
+}
+
+int getUptimeMinutes() {
+  return wdcounter / 2;
+}
+
+#ifndef BUILD_NO_RAM_TRACKER
+void logMemUsageAfter(const __FlashStringHelper * function, int value) {
+  // Store free memory in an int, as subtracting may sometimes result in negative value.
+  // The recorded used memory is not an exact value, as background (or interrupt) tasks may also allocate or free heap memory.
+  static int last_freemem = ESP.getFreeHeap();
+  const int freemem_end = ESP.getFreeHeap();
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log;
+    log.reserve(128);
+    log  = F("After ");
+    log += function;
+    if (value >= 0) {
+      log += value;
+    }
+    while (log.length() < 30) log += ' ';
+    log += F("Free mem after: ");
+    log += freemem_end;
+    while (log.length() < 55) log += ' ';
+    log += F("diff: ");
+    log += last_freemem - freemem_end;
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+
+  last_freemem = freemem_end;
+}
+#endif

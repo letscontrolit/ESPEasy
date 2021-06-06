@@ -86,7 +86,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         {
           String argName = F("p037_template");
           argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
+          if (!safe_strncpy(deviceTemplate[varNr], webArg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -154,7 +154,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         {
           String subscriptionTopic = deviceTemplate[x];
           subscriptionTopic.trim();
-          if (subscriptionTopic.length() == 0) continue;							// skip blank subscriptions
+          if (subscriptionTopic.isEmpty()) continue;							// skip blank subscriptions
 
           // Now check if the incoming topic matches one of our subscriptions
           parseSystemVariables(subscriptionTopic, false);
@@ -163,14 +163,18 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
             // FIXME TD-er: It may be useful to generate events with string values.
             float floatPayload;
             if (!string2float(event->String2, floatPayload)) {
-              String log = F("IMPT : Bad Import MQTT Command ");
-              log += event->String1;
-              addLog(LOG_LEVEL_ERROR, log);
-              log = F("ERR  : Illegal Payload ");
-              log += event->String2;
-              log += ' ';
-              log += getTaskDeviceName(event->TaskIndex);
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+                String log = F("IMPT : Bad Import MQTT Command ");
+                log += event->String1;
+                addLog(LOG_LEVEL_ERROR, log);
+              }
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("ERR  : Illegal Payload ");
+                log += event->String2;
+                log += ' ';
+                log += getTaskDeviceName(event->TaskIndex);
+                addLog(LOG_LEVEL_INFO, log);
+              }
               success = false;
               break;
             }
@@ -245,8 +249,8 @@ bool MQTTSubscribe_037(struct EventStruct *event)
           String log = F("IMPT : Error subscribing to ");
           log += subscribeTo;
           addLog(LOG_LEVEL_ERROR, log);
-          return false;
         }
+        return false;
       }
     }
   }
@@ -257,7 +261,7 @@ bool MQTTSubscribe_037(struct EventStruct *event)
 // Check to see if Topic matches the MQTT subscription
 //
 bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) {
-  if (Topic.length() == 0 || Subscription.length() == 0)  {
+  if (Topic.isEmpty() || Subscription.isEmpty())  {
     return false;
   }
 

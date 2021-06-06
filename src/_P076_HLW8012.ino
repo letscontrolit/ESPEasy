@@ -177,7 +177,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
 
     {
       // Place this in a scope, to keep memory usage low.
-      String modeRaise[4];
+      const __FlashStringHelper * modeRaise[4];
       modeRaise[0] = F("LOW");
       modeRaise[1] = F("CHANGE");
       modeRaise[2] = F("RISING");
@@ -189,7 +189,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       modeValues[2] = RISING;
       modeValues[3] = FALLING;
 
-      String modeCurr[2];
+      const __FlashStringHelper * modeCurr[2];
       modeCurr[0] = F("LOW");
       modeCurr[1] = F("HIGH");
 
@@ -260,8 +260,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       SaveCustomTaskSettings(event->TaskIndex, (byte *)&hlwMultipliers,
                              sizeof(hlwMultipliers));
       if (PLUGIN_076_DEBUG) {
-        String log = F("P076: Saved Calibration from Config Page");
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration from Config Page"));
       }
 
       if (Plugin_076_hlw) {
@@ -271,8 +270,7 @@ boolean Plugin_076(byte function, struct EventStruct *event, String &string) {
       }
 
       if (PLUGIN_076_DEBUG) {
-        String log = F("P076: Multipliers Reassigned");
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, F("P076: Multipliers Reassigned"));
       }
     }
 

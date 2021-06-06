@@ -20,7 +20,7 @@
 #endif // if defined(ESP32)
 
 
-#define BUILD                           20113    // git version e.g. "20103" can be read as "2.1.03" (stored in int16_t)
+#define BUILD                           20114    // git version e.g. "20103" can be read as "2.1.03" (stored in int16_t)
 #ifndef BUILD_NOTES
 #if defined(ESP8266)
   # define BUILD_NOTES                 " - Mega"

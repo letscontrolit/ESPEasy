@@ -10,6 +10,11 @@
 #include <SD.h>
 #endif
 
+bool match_ext(const String& path, const __FlashStringHelper * ext) {
+  return (path.endsWith(ext) || path.endsWith(String(ext) + F(".gz")));
+}
+
+
 // ********************************************************************************
 // Web Interface server web file from FS
 // ********************************************************************************
@@ -31,12 +36,12 @@ bool loadFromFS(boolean spiffs, String path) {
   if (path.endsWith(F("/"))) { path += F("index.htm"); }
 
   if (path.endsWith(F(".src"))) { path = path.substring(0, path.lastIndexOf(".")); }
-  else if (path.endsWith(F(".htm")) || path.endsWith(F(".html")) || path.endsWith(F(".htm.gz")) || path.endsWith(F(".html.gz"))) { dataType = F("text/html"); }
-  else if (path.endsWith(F(".css")) || path.endsWith(F(".css.gz"))) { dataType = F("text/css"); }
-  else if (path.endsWith(F(".js")) || path.endsWith(F(".js.gz"))) { dataType = F("application/javascript"); }
-  else if (path.endsWith(F(".png")) || path.endsWith(F(".png.gz"))) { dataType = F("image/png"); }
-  else if (path.endsWith(F(".gif")) || path.endsWith(F(".gif.gz"))) { dataType = F("image/gif"); }
-  else if (path.endsWith(F(".jpg")) || path.endsWith(F(".jpg.gz"))) { dataType = F("image/jpeg"); }
+  else if (match_ext(path, F(".htm")) || match_ext(path, F(".html"))) { dataType = F("text/html"); }
+  else if (match_ext(path, F(".css"))) { dataType = F("text/css"); }
+  else if (match_ext(path, F(".js"))) { dataType = F("application/javascript"); }
+  else if (match_ext(path, F(".png"))) { dataType = F("image/png"); }
+  else if (match_ext(path, F(".gif"))) { dataType = F("image/gif"); }
+  else if (match_ext(path, F(".jpg"))) { dataType = F("image/jpeg"); }
   else if (path.endsWith(F(".ico"))) { dataType = F("image/x-icon"); }
   else if (path.endsWith(F(".svg"))) { dataType = F("image/svg+xml"); }
   else if (path.endsWith(F(".json"))) { dataType = F("application/json"); }

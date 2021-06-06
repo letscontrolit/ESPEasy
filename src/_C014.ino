@@ -1,8 +1,12 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C014
 
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Statistics.h"
+#include "src/Helpers/PeriodicalActions.h"
 #include "_Plugin_Helper.h"
 
 //#######################################################################################################
@@ -374,7 +378,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                     break;
                           }
                           CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$datatype", valueName.c_str(), errorCounter);
-                          if (unitName!="") CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$format", unitName.c_str(), errorCounter);
+                          if (!unitName.isEmpty()) CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$format", unitName.c_str(), errorCounter);
                           nodeCount++;
                         }
                       }
@@ -429,11 +433,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                       String log = F("C014 : Device has custom values: ");
                       log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x));
-                      addLog(LOG_LEVEL_DEBUG, log+" not implemented!")
+                      addLog(LOG_LEVEL_DEBUG, log+" not implemented!");
                     }
                   }
                 }
-                if (valuesList!="")
+                if (!valuesList.isEmpty())
                 {
                   // only add device to list if it has nodes!
                   // $name	Device → Controller	Friendly name of the Node	Yes	Yes
@@ -453,7 +457,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   String log = F("C014 : Device Disabled: ");
                   log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x));
-                  addLog(LOG_LEVEL_DEBUG, log+" not propagated!")
+                  addLog(LOG_LEVEL_DEBUG, log+" not propagated!");
                 }
               }
             } // device configured
@@ -608,7 +612,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                       if (Settings.TaskDevicePluginConfig[taskIndex][valueNr]==4) { // Enumeration parameter, find Number of item. PLUGIN_086_VALUE_ENUM
                         String enumList = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
                         int i = 1;
-                        while (parseString(enumList,i)!="") { // lookup result in enum List
+                        while (!parseString(enumList,i).isEmpty()) { // lookup result in enum List
                           if (parseString(enumList,i)==event->String2) break;
                           i++;
                         }
@@ -766,7 +770,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           addLog(LOG_LEVEL_DEBUG, log);
         } */
         success = false;
-        if (string!="") {
+        if (!string.isEmpty()) {
           String commandName = parseString(string, 1); // could not find a way to get the command out of the event structure.
           if (commandName == F("gpio")) //!ToDo : As gpio is like any other plugin commands should be integrated below!
           {

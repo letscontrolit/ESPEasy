@@ -70,6 +70,10 @@ DF - Below doesn't look right; needs a RS485 to TTL(3.3v) level converter (see h
 
 #include <ESPeasySerial.h>
 #include "src/Helpers/Modbus_RTU.h"
+#include "src/DataStructs/ESPEasy_packed_raw_data.h"
+
+// Forward declaration of functions
+const __FlashStringHelper * Plugin_108_valuename(byte value_nr, bool displayString);
 
 struct P108_data_struct : public PluginTaskData_base {
   P108_data_struct() {}
@@ -222,7 +226,7 @@ boolean Plugin_108(byte function, struct EventStruct *event, String& string) {
       {
         // In a separate scope to free memory of String array as soon as possible
         sensorTypeHelper_webformLoad_header();
-        String options[P108_NR_OUTPUT_OPTIONS];
+        const __FlashStringHelper * options[P108_NR_OUTPUT_OPTIONS];
 
         for (int i = 0; i < P108_NR_OUTPUT_OPTIONS; ++i) {
           options[i] = Plugin_108_valuename(i, true);
@@ -347,7 +351,7 @@ boolean Plugin_108(byte function, struct EventStruct *event, String& string) {
   return success;
 }
 
-String Plugin_108_valuename(byte value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_108_valuename(byte value_nr, bool displayString) {
   switch (value_nr) {
     case P108_QUERY_V: return displayString ? F("Voltage (V)") : F("V");
     case P108_QUERY_A: return displayString ? F("Current (A)") : F("A");
@@ -359,7 +363,7 @@ String Plugin_108_valuename(byte value_nr, bool displayString) {
     case P108_QUERY_Wh_exp: return displayString ? F("Export Energy (Wh)") : F("Wh_exp");
     case P108_QUERY_Wh_tot: return displayString ? F("Total Energy (Wh)") : F("Wh_tot");
   }
-  return "";
+  return F("");
 }
 
 int p108_storageValueToBaudrate(byte baudrate_setting) {

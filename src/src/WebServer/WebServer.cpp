@@ -106,7 +106,7 @@
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
   if (web_server.hasArg(arg)) { 
-    safe_strncpy(dest, web_server.arg(arg).c_str(), max_size); 
+    safe_strncpy(dest, webArg(arg).c_str(), max_size); 
   }
 }
 
@@ -145,22 +145,25 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
     lastWeb = millis();
 
     if (Tail) {
-      addHtml(pageTemplate.substring(
-                11 +                                      // Size of "{{content}}"
-                pageTemplate.indexOf(F("{{content}}")))); // advance beyond content key
+      int pos = pageTemplate.indexOf(F("{{content}}"));
+      if (pos >= 0) {
+        pos += 11; // Size of "{{content}}"
+        const int length = pageTemplate.length();
+        // Prevent copy'ing the string, just stream directly to the buffer.
+        for (int i = pos; i < length; ++i) {
+          addHtml(pageTemplate[i]);
+        }
+      }
     } else {
       int indexStart = 0;
       int indexEnd   = 0;
       int readPos    = 0; // Position of data sent to TXBuffer
       String varName;     // , varValue;
-      String meta;
-
-      if (rebooting) {
-        meta = F("<meta http-equiv='refresh' content='10 url=/'>");
-      }
 
       while ((indexStart = pageTemplate.indexOf(F("{{"), indexStart)) >= 0) {
-        addHtml(pageTemplate.substring(readPos, indexStart));
+        for (int i = readPos; i < indexStart; ++i) {
+          addHtml(pageTemplate[i]);
+        }
         readPos = indexStart;
 
         if ((indexEnd = pageTemplate.indexOf(F("}}"), indexStart)) > 0) {
@@ -175,7 +178,9 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
             getErrorNotifications();
           }
           else if (varName == F("meta")) {
-            addHtml(meta);
+            if (rebooting) {
+              addHtml(F("<meta http-equiv='refresh' content='10 url=/'>"));
+            }
           }
           else {
             getWebPageTemplateVar(varName);
@@ -218,7 +223,7 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
           log += F(": '");
           log += web_server.argName(i);
           log += F("' length: ");
-          log += web_server.arg(i).length();
+          log += webArg(i).length();
         }
         addLog(LOG_LEVEL_INFO, log);
       }
@@ -234,11 +239,11 @@ size_t streamFile_htmlEscape(const String& fileName)
 
   if (f)
   {
-    String escaped;
-
     while (f.available())
     {
       char c = (char)f.read();
+
+      String escaped;
 
       if (htmlEscapeChar(c, escaped)) {
         addHtml(escaped);
@@ -256,7 +261,7 @@ size_t streamFile_htmlEscape(const String& fileName)
 bool captivePortal() {
   const bool fromAP = web_server.client().localIP() == apIP;
   const bool hasWiFiCredentials = SecuritySettings.hasWiFiCredentials();
-  if (hasWiFiCredentials && !fromAP) {
+  if (hasWiFiCredentials || !fromAP) {
     return false;
   }
   if (!isIP(web_server.hostHeader()) && web_server.hostHeader() != (NetworkGetHostname() + F(".local"))) {
@@ -268,7 +273,7 @@ bool captivePortal() {
     }
     #endif
     web_server.sendHeader(F("Location"), redirectURL, true);
-    web_server.send(302, F("text/plain"), "");   // Empty content inhibits Content-length header so we have to close the socket ourselves.
+    web_server.send(302, F("text/plain"), EMPTY_STRING);   // Empty content inhibits Content-length header so we have to close the socket ourselves.
     web_server.client().stop(); // Stop is needed because we sent no content length
     return true;
   }
@@ -450,14 +455,14 @@ void setWebserverRunning(bool state) {
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 {
-  static size_t expectedSize = 579;
-
-  tmpl.reserve(expectedSize);
   const bool addJS   = true;
   const bool addMeta = true;
 
   if (tmplName == F("TmplAP"))
   {
+    static size_t expectedSize = 200;
+
+    tmpl.reserve(expectedSize);
     getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
 
     #ifndef WEBPAGE_TEMPLATE_AP_HEADER
@@ -470,35 +475,53 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
     tmpl += F("</header>");
     getWebPageTemplateDefaultContentSection(tmpl);
     getWebPageTemplateDefaultFooter(tmpl);
+    if (tmpl.length() > expectedSize) {
+      expectedSize = tmpl.length();
+    }
   }
   else if (tmplName == F("TmplMsg"))
   {
+    static size_t expectedSize = 200;
+
+    tmpl.reserve(expectedSize);
     getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
     tmpl += F("<body>");
     getWebPageTemplateDefaultHeader(tmpl, F("{{name}}"), false);
     getWebPageTemplateDefaultContentSection(tmpl);
     getWebPageTemplateDefaultFooter(tmpl);
+    if (tmpl.length() > expectedSize) {
+      expectedSize = tmpl.length();
+    }
   }
   else if (tmplName == F("TmplDsh"))
   {
+    static size_t expectedSize = 200;
+
+    tmpl.reserve(expectedSize);
     getWebPageTemplateDefaultHead(tmpl, !addMeta, addJS);
     tmpl += F(
       "<body>"
       "{{content}}"
       "</body></html>"
       );
+    if (tmpl.length() > expectedSize) {
+      expectedSize = tmpl.length();
+    }
   }
   else // all other template names e.g. TmplStd
   {
+    static size_t expectedSize = 200;
+
+    tmpl.reserve(expectedSize);
     getWebPageTemplateDefaultHead(tmpl, addMeta, addJS);
     tmpl += F("<body class='bodymenu'>"
               "<span class='message' id='rbtmsg'></span>");
     getWebPageTemplateDefaultHeader(tmpl, F("{{name}} {{logo}}"), true);
     getWebPageTemplateDefaultContentSection(tmpl);
     getWebPageTemplateDefaultFooter(tmpl);
-  }
-  if (tmpl.length() > expectedSize) {
-    expectedSize = tmpl.length();
+    if (tmpl.length() > expectedSize) {
+      expectedSize = tmpl.length();
+    }
   }
 //  addLog(LOG_LEVEL_INFO, String(F("tmpl.length(): ")) + String(tmpl.length()));
 }
@@ -583,7 +606,7 @@ void getErrorNotifications() {
 byte navMenuIndex = MENU_INDEX_MAIN;
 
 // See https://github.com/letscontrolit/ESPEasy/issues/1650
-String getGpMenuIcon(byte index) {
+const __FlashStringHelper * getGpMenuIcon(byte index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("&#8962;");
     case MENU_INDEX_CONFIG: return F("&#9881;");
@@ -594,10 +617,10 @@ String getGpMenuIcon(byte index) {
     case MENU_INDEX_NOTIFICATIONS: return F("&#9993;");
     case MENU_INDEX_TOOLS: return F("&#128295;");
   }
-  return "";
+  return F("");
 }
 
-String getGpMenuLabel(byte index) {
+const __FlashStringHelper * getGpMenuLabel(byte index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("Main");
     case MENU_INDEX_CONFIG: return F("Config");
@@ -608,10 +631,10 @@ String getGpMenuLabel(byte index) {
     case MENU_INDEX_NOTIFICATIONS: return F("Notifications");
     case MENU_INDEX_TOOLS: return F("Tools");
   }
-  return "";
+  return F("");
 }
 
-String getGpMenuURL(byte index) {
+const __FlashStringHelper * getGpMenuURL(byte index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("/");
     case MENU_INDEX_CONFIG: return F("/config");
@@ -622,7 +645,7 @@ String getGpMenuURL(byte index) {
     case MENU_INDEX_NOTIFICATIONS: return F("/notifications");
     case MENU_INDEX_TOOLS: return F("/tools");
   }
-  return "";
+  return F("");
 }
 
 
@@ -774,45 +797,41 @@ void writeDefaultCSS(void)
 int8_t level     = 0;
 int8_t lastLevel = -1;
 
+void json_quote_name(const __FlashStringHelper * val) {
+  json_quote_name(String(val));
+}
+
 void json_quote_name(const String& val) {
-  String html;
-
-  html.reserve(4 + val.length());
-
   if (lastLevel == level) {
-    html += ",";
+    addHtml(',');
   }
 
   if (val.length() > 0) {
-    html += '\"';
-    html += val;
-    html += '\"';
-    html += ':';
+    json_quote_val(val);
+    addHtml(':');
   }
-  addHtml(html);
 }
 
 void json_quote_val(const String& val) {
-  String html;
-
-  html.reserve(4 + val.length());
-  html += '\"';
-  html += val;
-  html += '\"';
-  addHtml(html);
-}
-
-void json_open() {
-  json_open(false, String());
+  addHtml('\"');
+  addHtml(val);
+  addHtml('\"');
 }
 
 void json_open(bool arr) {
-  json_open(arr, String());
+  json_open(arr, EMPTY_STRING);
+}
+
+void json_open(bool arr, const __FlashStringHelper * name) {
+  json_quote_name(name);
+  addHtml(arr ? '[' : '{');
+  lastLevel = level;
+  level++;
 }
 
 void json_open(bool arr, const String& name) {
   json_quote_name(name);
-  addHtml(arr ? "[" : "{");
+  addHtml(arr ? '[' : '{');
   lastLevel = level;
   level++;
 }
@@ -827,7 +846,7 @@ void json_close() {
 }
 
 void json_close(bool arr) {
-  addHtml(arr ? "]" : "}");
+  addHtml(arr ? ']' : '}');
   level--;
   lastLevel = level;
 }
@@ -869,34 +888,26 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
     LoadTaskSettings(x);
 
     {
-      String html;
-      html.reserve(32);
-
-      html += F("<option value='");
-      html += x;
-      html += '\'';
+      addHtml(F("<option value='"));
+      addHtmlInt(x);
+      addHtml('\'');
 
       if (choice == x) {
-        html += F(" selected");
+        addHtml(F(" selected"));
       }
-      addHtml(html);
     }
 
     if (!validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
       addDisabled();
     }
     {
-      String html;
-      html.reserve(96);
-
-      html += '>';
-      html += x + 1;
-      html += F(" - ");
-      html += deviceName;
-      html += F(" - ");
-      html += ExtraTaskSettings.TaskDeviceName;
-      html += F("</option>");
-      addHtml(html);
+      addHtml('>');
+      addHtmlInt(x + 1);
+      addHtml(F(" - "));
+      addHtml(deviceName);
+      addHtml(F(" - "));
+      addHtml(ExtraTaskSettings.TaskDeviceName);
+      addHtml(F("</option>"));
     }
   }
 }
@@ -922,19 +933,16 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
 
   for (byte x = 0; x < valueCount; x++)
   {
-    String html;
-    html.reserve(96);
-    html += F("<option value='");
-    html += x;
-    html += '\'';
+    addHtml(F("<option value='"));
+    addHtmlInt(x);
+    addHtml('\'');
 
     if (choice == x) {
-      html += F(" selected");
+      addHtml(F(" selected"));
     }
-    html += '>';
-    html += ExtraTaskSettings.TaskDeviceValueNames[x];
-    html += F("</option>");
-    addHtml(html);
+    addHtml('>');
+    addHtml(ExtraTaskSettings.TaskDeviceValueNames[x]);
+    addHtml(F("</option>"));
   }
 }
 
@@ -997,25 +1005,19 @@ String getControllerSymbol(byte index)
    }
  */
 void addSVG_param(const String& key, float value) {
-  String value_str = String(value, 2);
-
-  addSVG_param(key, value_str);
+  addSVG_param(key, String(value, 2));
 }
 
 void addSVG_param(const String& key, const String& value) {
-  String html;
-
-  html.reserve(8 + key.length() + value.length());
-  html += ' ';
-  html += key;
-  html += '=';
-  html += '\"';
-  html += value;
-  html += '\"';
-  addHtml(html);
+  addHtml(' ');
+  addHtml(key);
+  addHtml('=');
+  addHtml('\"');
+  addHtml(value);
+  addHtml('\"');
 }
 
-void createSvgRect_noStroke(const String& classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
+void createSvgRect_noStroke(const __FlashStringHelper * classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
   createSvgRect(classname, fillColor, fillColor, xoffset, yoffset, width, height, 0, rx, ry);
 }
 
@@ -1030,7 +1032,7 @@ void createSvgRect(const String& classname,
                    float        rx,
                    float        ry) {
   addHtml(F("<rect"));
-  if (classname.length() != 0) {
+  if (!classname.isEmpty()) {
     addSVG_param(F("class"), classname);
   }
   addSVG_param(F("fill"), formatToHex(fillColor, F("#")));
@@ -1052,22 +1054,18 @@ void createSvgHorRectPath(unsigned int color, int xoffset, int yoffset, int size
   float width = SVG_BAR_WIDTH * size / range;
 
   if (width < 2) { width = 2; }
-  String html;
-
-  html.reserve(96);
-  html += formatToHex(color, F("<path fill=\"#"));
-  html += F("\" d=\"M");
-  html += toString(SVG_BAR_WIDTH * xoffset / range, 2);
-  html += ' ';
-  html += yoffset;
-  html += 'h';
-  html += toString(width, 2);
-  html += 'v';
-  html += height;
-  html += 'H';
-  html += toString(SVG_BAR_WIDTH * xoffset / range, 2);
-  html += F("z\"/>\n");
-  addHtml(html);
+  addHtml(formatToHex(color, F("<path fill=\"#")));
+  addHtml(F("\" d=\"M"));
+  addHtml(toString(SVG_BAR_WIDTH * xoffset / range, 2));
+  addHtml(' ');
+  addHtmlInt(yoffset);
+  addHtml('h');
+  addHtml(toString(width, 2));
+  addHtml('v');
+  addHtmlInt(height);
+  addHtml('H');
+  addHtml(toString(SVG_BAR_WIDTH * xoffset / range, 2));
+  addHtml(F("z\"/>\n"));
 }
 
 void createSvgTextElement(const String& text, float textXoffset, float textYoffset) {
@@ -1080,7 +1078,7 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
   addHtml(toString(textXoffset, 2));
   addHtml(F("\" y=\""));
   addHtml(toString(textYoffset, 2));
-  addHtml("\">");
+  addHtml(F("\">"));
   addHtml(text);
   addHtml(F("</tspan>\n</text>"));
 }
@@ -1093,20 +1091,16 @@ void write_SVG_image_header(int width, int height) {
 }
 
 void write_SVG_image_header(int width, int height, bool useViewbox) {
-  String html;
-
-  html.reserve(128);
-  html += F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"");
-  html += width;
-  html += F("\" height=\"");
-  html += height;
-  html += F("\" version=\"1.1\"");
+  addHtml(F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\""));
+  addHtmlInt(width);
+  addHtml(F("\" height=\""));
+  addHtmlInt(height);
+  addHtml(F("\" version=\"1.1\""));
 
   if (useViewbox) {
-    html += F(" viewBox=\"0 0 100 100\"");
+    addHtml(F(" viewBox=\"0 0 100 100\""));
   }
-  html += '>';
-  addHtml(html);
+  addHtml('>');
 }
 
 /*
@@ -1136,9 +1130,8 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
 
   for (int i = 0; i < nbars; ++i) {
     unsigned int color = i < nbars_filled ? 0x0 : 0xa1a1a1; // Black/Grey
-    String classname = i < nbars_filled ? F("bar_highlight") : F("bar_dimmed");
     int barHeight      = (i + 1) * bar_height_step;
-    createSvgRect_noStroke(classname, color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
+    createSvgRect_noStroke(i < nbars_filled ? F("bar_highlight") : F("bar_dimmed"), color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
   }
   addHtml(F("</svg>\n"));
 }
@@ -1298,5 +1291,39 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
 #endif // ifdef ESP32
 
 bool webArg2ip(const String& arg, byte *IP) {
-  return str2ip(web_server.arg(arg), IP);
+  return str2ip(webArg(arg), IP);
 }
+
+#ifdef ESP8266
+const String& webArg(const __FlashStringHelper * arg)
+{
+  return web_server.arg(String(arg));
+}
+
+const String& webArg(const String& arg)
+{
+  return web_server.arg(arg);
+}
+
+const String& webArg(int i)
+{
+  return web_server.arg(i);
+}
+#endif
+
+#ifdef ESP32
+String webArg(const __FlashStringHelper * arg)
+{
+  return web_server.arg(String(arg));
+}
+
+String webArg(const String& arg)
+{
+  return web_server.arg(arg);
+}
+
+String webArg(int i)
+{
+  return web_server.arg(i);
+}
+#endif

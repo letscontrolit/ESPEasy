@@ -1,5 +1,8 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P018
+
+#include "src/Helpers/Hardware.h"
+
 //#######################################################################################################
 //#################################### Plugin 018: GP2Y10 ###############################################
 //#######################################################################################################
@@ -81,9 +84,11 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
         }
         interrupts();
         UserVar[event->BaseVarIndex] = (float)value;
-        String log = F("GPY  : Dust value: ");
-        log += value;
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("GPY  : Dust value: ");
+          log += value;
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
         break;
       }

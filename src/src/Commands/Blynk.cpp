@@ -1,15 +1,16 @@
 #include "../Commands/Blynk.h"
 
-#include "../../ESPEasy_fdwdecl.h"
 #include "../Commands/Common.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
-#include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/_CPlugin_Helper.h"
 
+#include "../../ESPEasy_fdwdecl.h"
 
 #ifdef USES_C012
 
@@ -26,7 +27,7 @@ controllerIndex_t firstEnabledBlynk_ControllerIndex() {
   return INVALID_CONTROLLER_INDEX;
 }
 
-String Command_Blynk_Get(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Blynk_Get(struct EventStruct *event, const char *Line)
 {
   controllerIndex_t first_enabled_blynk_controller = firstEnabledBlynk_ControllerIndex();
 
@@ -84,7 +85,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
     pass = getControllerPass(controllerIndex, ControllerSettings);
     ClientTimeout = ControllerSettings.ClientTimeout;
 
-    if (pass.length() == 0) {
+    if (pass.isEmpty()) {
       addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
       return false;
     }

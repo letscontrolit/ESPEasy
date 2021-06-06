@@ -138,9 +138,11 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
       }
 
 
-      const String options[] = { F("WEMOS V1.0"), F("LOLIN V2.0") };
-      int indices[]          = { static_cast<int>(P079_BoardType::WemosMotorshield), static_cast<int>(P079_BoardType::LolinMotorshield) };
-      addFormSelector(F("Motor Shield Type"), F("p079_shield_type"), 2, options, indices, SHIELD_VER_PCFG_P079);
+      {
+        const __FlashStringHelper * options[] = { F("WEMOS V1.0"), F("LOLIN V2.0") };
+        int indices[]          = { static_cast<int>(P079_BoardType::WemosMotorshield), static_cast<int>(P079_BoardType::LolinMotorshield) };
+        addFormSelector(F("Motor Shield Type"), F("p079_shield_type"), 2, options, indices, SHIELD_VER_PCFG_P079);
+      }
 
       if (Plugin_079_MotorShield_type == P079_BoardType::WemosMotorshield) {
         addFormNote(F("WEMOS V1.0 Motor Shield requires updated firmware, see <a href='https://www.letscontrolit.com/wiki/index.php?title=WemosMotorshield'>wiki</a>"));
@@ -155,7 +157,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      String i2c_address = web_server.arg(F("i2c_addr"));
+      String i2c_address = webArg(F("i2c_addr"));
       I2C_ADDR_PCFG_P079   = (int)strtol(i2c_address.c_str(), 0, 16);
       SHIELD_VER_PCFG_P079 = getFormItemInt(F("p079_shield_type"));
 
@@ -176,7 +178,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
       }
 
 
-      if (getTaskDeviceName(event->TaskIndex) == "") {                    // Check to see if user entered device name.
+      if (getTaskDeviceName(event->TaskIndex).isEmpty()) {                    // Check to see if user entered device name.
         switch (Plugin_079_MotorShield_type) {
           case P079_BoardType::WemosMotorshield:
             safe_strncpy(ExtraTaskSettings.TaskDeviceName, F(PLUGIN_DEF_NAME1_079), sizeof(ExtraTaskSettings.TaskDeviceName)); // Name missing, populate default name.
@@ -240,7 +242,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
         String paramDirection = parseString(tmpString, 3); // Direction, Forward/Backward/Stop
         String paramSpeed     = parseString(tmpString, 4); // Speed, 0-100
 
-        if ((paramMotor == "") && (paramDirection == "") && (paramSpeed == "")) {
+        if ((paramMotor.isEmpty()) && (paramDirection.isEmpty()) && (paramSpeed.isEmpty())) {
           switch (Plugin_079_MotorShield_type) {
             case P079_BoardType::WemosMotorshield:
             # ifdef VERBOSE_P079
@@ -255,16 +257,19 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
               lolin.getInfo();
 
               if (lolin.PRODUCT_ID != PRODUCT_ID_I2C_LOLIN) {
-                ModeStr += String(F(": Fail"));
+                ModeStr += F(": Fail");
               }
               else {
-                ModeStr += String(F(": Pass, ID=")) + lolin.PRODUCT_ID + String(F(", Ver=")) + lolin.VERSION_ID;
+                ModeStr += F(": Pass, ID=");
+                ModeStr += lolin.PRODUCT_ID;
+                ModeStr += F(", Ver=");
+                ModeStr += lolin.VERSION_ID;
               }
               break;
             }
           }
           addLog(LOG_LEVEL_INFO, ModeStr);
-          SendStatus(event, ModeStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, ModeStr + F(" <br>")); // Reply (echo) to sender. This will print message on browser.
           return true;                                             // Exit now. Info Log shows Lolin Info.
         }
         else {
@@ -272,7 +277,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
             motor_number = paramMotor.toInt();
           }
           else {
-            if (paramMotor == "") {
+            if (paramMotor.isEmpty()) {
               paramMotor = '?';
             }
             motor_number = 0;
@@ -300,7 +305,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
             parse_error    = true;
           }
 
-          if (paramSpeed == "") {
+          if (paramSpeed.isEmpty()) {
             switch (motor_dir) {
               case MOTOR_STATES::MOTOR_STOP:
               case MOTOR_STATES::MOTOR_STBY:
@@ -320,16 +325,17 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
             if ((motor_speed < 0) || (motor_speed > 100)) {
               motor_speed = 100;
               # ifdef VERBOSE_P079
-              addLog(LOG_LEVEL_INFO, ModeStr + String(F(": Warning, invalid speed: Now using 100")));
+              addLog(LOG_LEVEL_INFO, ModeStr + F(": Warning, invalid speed: Now using 100"));
               # endif // ifdef VERBOSE_P079
             }
           }
         }
 
         if (parse_error == true) {
-          String ErrorStr = ModeStr + String(F(": CMD Syntax Error"));
+          String ErrorStr = ModeStr;
+          ErrorStr += F(": CMD Syntax Error");
           addLog(LOG_LEVEL_INFO, ErrorStr);
-          SendStatus(event, ErrorStr + String(F(" <br>"))); // Reply (echo) to sender. This will print message on browser.
+          SendStatus(event, ErrorStr + F(" <br>")); // Reply (echo) to sender. This will print message on browser.
         }
         else {
           switch (motor_dir) {

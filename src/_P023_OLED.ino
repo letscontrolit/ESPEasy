@@ -69,19 +69,19 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
       {
         byte choice2         = PCONFIG(1);
-        String options2[2]   = { F("Normal"), F("Rotated") };
+        const __FlashStringHelper * options2[2]   = { F("Normal"), F("Rotated") };
         int optionValues2[2] = { 1, 2 };
         addFormSelector(F("Rotation"), F("p023_rotate"), 2, options2, optionValues2, choice2);
       }
       {
         byte   choice3          = PCONFIG(3);
-        String options3[3]      = { F("128x64"), F("128x32"), F("64x48") };
+        const __FlashStringHelper * options3[3]      = { F("128x64"), F("128x32"), F("64x48") };
         int    optionValues3[3] = { 1, 3, 2 };
         addFormSelector(F("Display Size"), F("p023_size"), 3, options3, optionValues3, choice3);
       }
       {
         byte   choice4          = PCONFIG(4);
-        String options4[2]      = { F("Normal"), F("Optimized") };
+        const __FlashStringHelper * options4[2]      = { F("Normal"), F("Optimized") };
         int    optionValues4[2] = { 1, 2 };
         addFormSelector(F("Font Width"), F("p023_font_spacing"), 2, options4, optionValues4, choice4);
       }
@@ -96,7 +96,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       }
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
-      addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
+      addFormPinSelect(PinSelectPurpose::Generic_input, F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
 
       addFormNumericBox(F("Display Timeout"), F("plugin_23_timer"), PCONFIG(2));
 
@@ -120,7 +120,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
       for (byte varNr = 0; varNr < P23_Nlines; varNr++)
       {
-        if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P23_Nchars)) {
+        if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P23_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
         }
       }

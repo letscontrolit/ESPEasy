@@ -4,6 +4,7 @@
 #include "../WebServer/common.h"
 
 #include "../Globals/Plugins.h"
+#include "../Helpers/StringGenerator_GPIO.h"
 
 
 // ********************************************************************************
@@ -14,6 +15,7 @@ void addFormSeparator(int clspan);
 // ********************************************************************************
 // Add a note as row start
 // ********************************************************************************
+void addFormNote(const __FlashStringHelper * text);
 void addFormNote(const String& text, const String& id = "");
 
 // ********************************************************************************
@@ -26,6 +28,8 @@ void addFormNote(const String& text, const String& id = "");
 // ********************************************************************************
 
 void addFormCheckBox_disabled(const String& label, const String& id, boolean checked);
+void addFormCheckBox(const __FlashStringHelper * label, const __FlashStringHelper * id, boolean checked, bool disabled = false);
+void addFormCheckBox(const __FlashStringHelper * label, const String& id, boolean checked, bool disabled = false);
 void addFormCheckBox(const String& label, const String& id, boolean checked, bool disabled = false);
 void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled = false);
 void addFormCheckBox_disabled(LabelType::Enum label, boolean checked);
@@ -34,6 +38,7 @@ void addFormCheckBox_disabled(LabelType::Enum label, boolean checked);
 // Add a Numeric Box form
 // ********************************************************************************
 void addFormNumericBox(LabelType::Enum label, int value, int min = INT_MIN, int max = INT_MAX);
+void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min = INT_MIN, int max = INT_MAX);
 void addFormNumericBox(const String& label, const String& id, int value, int min = INT_MIN, int max = INT_MAX);
 
 void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals = 6, float stepsize = 0.0f);
@@ -47,6 +52,14 @@ void addTaskSelectBox(const String& label, const String& id, taskIndex_t choice)
 // ********************************************************************************
 // Add a Text Box form
 // ********************************************************************************
+void addFormTextBox(const __FlashStringHelper * label,
+                    const __FlashStringHelper * id,
+                    const String& value,
+                    int           maxlength,
+                    bool          readonly = false,
+                    bool          required = false,
+                    const String& pattern = "");
+
 void addFormTextBox(const String& label,
                     const String& id,
                     const String& value,
@@ -88,13 +101,45 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
 // Add a selector form
 // ********************************************************************************
 
-void addFormPinSelect(const String& label, const String& id, int choice);
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice);
+void addFormPinSelect(const String& label, const __FlashStringHelper * id, int choice);
 
 void addFormPinSelectI2C(const String& label, const String& id, int choice);
 
 void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex);
 
+
+void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange = false);
+void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex);
+void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const String options[], const int indices[], int selectedIndex);
 void addFormSelector(const String& label, const String& id, int optionCount, const String options[], const int indices[], int selectedIndex);
+
+void addFormSelector(const String& label,
+                     const String& id,
+                     int           optionCount,
+                     const __FlashStringHelper * options[],
+                     const int     indices[],
+                     int           selectedIndex,
+                     bool          reloadonchange);
+
+void addFormSelector(const String& label,
+                     const String& id,
+                     int           optionCount,
+                     const __FlashStringHelper * options[],
+                     const int     indices[],
+                     const String  attr[],
+                     int           selectedIndex,
+                     boolean       reloadonchange);
+
+void addFormSelector_script(const String& label,
+                            const String& id,
+                            int           optionCount,
+                            const __FlashStringHelper * options[],
+                            const int     indices[],
+                            const String  attr[],
+                            int           selectedIndex,
+                            const String& onChangeCall);
+
 
 void addFormSelector(const String& label,
                      const String& id,
@@ -132,6 +177,7 @@ void addFormPinStateSelect(int gpio, int choice);
 // ********************************************************************************
 
 
+int getFormItemInt(const __FlashStringHelper * key, int defaultValue);
 int getFormItemInt(const String& key, int defaultValue);
 
 bool getCheckWebserverArg_int(const String& key, int& value);
@@ -142,11 +188,17 @@ bool update_whenset_FormItemInt(const String& key, byte& value);
 
 // Note: Checkbox values will not appear in POST Form data if unchecked.
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.
+bool isFormItemChecked(const __FlashStringHelper * id);
 bool isFormItemChecked(const String& id);
+bool isFormItemChecked(const LabelType::Enum& id);
 
+int getFormItemInt(const __FlashStringHelper * id);
 int getFormItemInt(const String& id);
+int getFormItemInt(const LabelType::Enum& id);
 
+float getFormItemFloat(const __FlashStringHelper * id);
 float getFormItemFloat(const String& id);
+float getFormItemFloat(const LabelType::Enum& id);
 
 bool isFormItem(const String& id);
 

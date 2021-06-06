@@ -10,7 +10,7 @@ enum class WiFiConnectionProtocol {
     WiFi_Protocol_11n
 };
 
-String toString(WiFiConnectionProtocol proto);
+const __FlashStringHelper * toString(WiFiConnectionProtocol proto);
 
 
 

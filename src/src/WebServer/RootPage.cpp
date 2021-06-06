@@ -20,9 +20,10 @@
 #include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/WebServer_commandHelper.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #ifdef USES_MQTT
@@ -94,7 +95,7 @@ void handle_root() {
 
   String  sCommand;
   boolean rebootCmd = false;
-  sCommand  = web_server.arg(F("cmd"));
+  sCommand  = webArg(F("cmd"));
   rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
   {

@@ -39,7 +39,6 @@ size_t C015_queue_element::getSize() const {
 bool C015_queue_element::isDuplicate(const C015_queue_element& other) const {
   if ((other.controller_idx != controller_idx) ||
       (other.TaskIndex != TaskIndex) ||
-      (other.sensorType != sensorType) ||
       (other.valueCount != valueCount) ||
       (other.idx != idx)) {
     return false;
