@@ -317,7 +317,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     {
       addLog(LOG_LEVEL_DEBUG, F("isFormItemChecked"));
       String probeType(F("K,"));
-      probeType += web_server.arg(F("Plugin_103_ec_probe_type"));
+      probeType += webArg(F("Plugin_103_ec_probe_type"));
       char setProbeTypeCmd[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
       _P103_send_I2C_command(I2Cchoice, probeType, setProbeTypeCmd);
     }
@@ -370,7 +370,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     if (board_type == PH || board_type == EC)
     {
       char deviceTemperatureTemplate[40] = {0};
-      String tmpString = web_server.arg(F("Plugin_103_temperature_template"));
+      String tmpString = webArg(F("Plugin_103_temperature_template"));
       safe_strncpy(deviceTemperatureTemplate, tmpString.c_str(), sizeof(deviceTemperatureTemplate) - 1);
       ZERO_TERMINATE(deviceTemperatureTemplate); // be sure that our string ends with a \0
 

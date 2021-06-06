@@ -71,9 +71,33 @@ More uses of these system variables can be seen in the rules section and formula
        
        Where the offset must be a integer with the postfix "m" for minutes or "h" for hours. Minus or plus is used to tell if the offset is prior or later than the sunset/sunrise. Any other letter positioned between the number and '%' is regarded as "seconds" notation.
      - 
+   * - ``%s_sunrise%``
+     - 19296
+     - Seconds since midnight of sunrise on current day, when NTP is active and coordinates set. 
+
+       Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
+     -
+   * - ``%m_sunrise%``
+     - 321
+     - Minutes since midnight of sunrise on current day, when NTP is active and coordinates set. 
+
+       Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
+     - 
    * - ``%sunset%``
      - 22:03
      - Time of sunset on current day, when NTP is active and coordinates set. For example on how to offset this time see the information for ``%sunrise%``.
+     - 
+   * - ``%s_sunset%``
+     - 78216
+     - Seconds since midnight of sunset on current day, when NTP is active and coordinates set. 
+
+       Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
+     - 
+   * - ``%m_sunset%``
+     - 1303
+     - Minutes since midnight of sunset on current day, when NTP is active and coordinates set. 
+
+       Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
      - 
    * - ``%lcltime_am%``
      - 2020-03-16 1:23:54 AM
@@ -153,6 +177,15 @@ More uses of these system variables can be seen in the rules section and formula
      - 11
      - WiFi channel of current AP.
      - Yes
+   * - ``%iswifi%``
+     - 7
+     - Bitset of WiFi connection state
+
+       * ``0`` = disconnected
+       * ``1`` = Connected
+       * ``3`` = Got IP && Connected
+       * ``7`` = Got IP && Connected && Completed to set all flags WiFi is initialized
+     - Yes
    * - ``%vcc%``
      - 5.2
      - VCC value, this is only available in the VCC builds of FW (with "VCC" in the file name).
@@ -167,6 +200,14 @@ More uses of these system variables can be seen in the rules section and formula
      - 2212667
      - MAC address in integer to be used in rules (only the last 24 bit).
      - Yes
+   * - ``%isntp%``
+     - 1
+     - Indicates whether time was set
+     - yes
+   * - ``%ismqtt%``
+     - 1
+     - Indicates whether a configured MQTT broker is active
+     - yes
 
 
 Standard Conversions

@@ -1,39 +1,29 @@
 #include "ESPEasy_common.h"
 
-#include "src/Globals/CPlugins.h"
-#include "src/Globals/Protocol.h"
-#include "src/Globals/Settings.h"
-
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/TimingStats.h"
 
 #include "src/DataTypes/ESPEasy_plugin_functions.h"
+
+#include "src/Globals/CPlugins.h"
+#include "src/Globals/Protocol.h"
+#include "src/Globals/Settings.h"
+
+#include "src/Helpers/Misc.h"
 
 // ********************************************************************************
 // Initialize all Controller CPlugins that where defined earlier
 // and initialize the function call pointer into the CCPlugin array
 // ********************************************************************************
 
-static const char ADDCPLUGIN_ERROR[] PROGMEM = "System: Error - Too many C-Plugins";
-
-// Because of compiler-bug (multiline defines gives an error if file ending is CRLF) the define is striped to a single line
-
-/*
- #define ADDCPLUGIN(NNN) \
-   if (x < CPLUGIN_MAX) \
-   { \
-    ProtocolIndex_to_CPlugin_id[x] = CPLUGIN_ID_##NNN; \
-    CPlugin_id_to_ProtocolIndex[CPLUGIN_ID_##NNN] = x; \
-    CPlugin_ptr[x++] = &CPlugin_##NNN; \
-   } \
-  else \
-    addLog(LOG_LEVEL_ERROR, FPSTR(ADDCPLUGIN_ERROR));
-*/
-#define ADDCPLUGIN(NNN) if (x < CPLUGIN_MAX) {     ProtocolIndex_to_CPlugin_id[x] = CPLUGIN_ID_##NNN; CPlugin_id_to_ProtocolIndex[CPLUGIN_ID_##NNN] = x; CPlugin_ptr[x++] = &CPlugin_##NNN; } else addLog(LOG_LEVEL_ERROR, FPSTR(ADDCPLUGIN_ERROR));
+// Uncrustify must not be used on macros, so turn it off.
+// *INDENT-OFF*
+#define ADDCPLUGIN(NNN) if (addCPlugin(CPLUGIN_ID_##NNN, x)) { CPlugin_ptr[x++] = &CPlugin_##NNN; }
+// Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
+// *INDENT-ON*
 
 void CPluginInit(void)
 {
-  ProtocolIndex_to_CPlugin_id.resize(CPLUGIN_MAX + 1); // INVALID_CONTROLLER_INDEX may be used as index for this array.
   ProtocolIndex_to_CPlugin_id[CPLUGIN_MAX] = INVALID_C_PLUGIN_ID;
   byte x;
 
@@ -150,8 +140,15 @@ void CPluginInit(void)
 // When extending this, search for EXTEND_CONTROLLER_IDS 
 // in the code to find all places that need to be updated too.
 
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("ADDCPLUGIN(...)"));
+  #endif
 
   CPluginCall(CPlugin::Function::CPLUGIN_PROTOCOL_ADD, 0);
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("CPLUGIN_PROTOCOL_ADD"));
+  #endif
+
 
   // Set all not supported cplugins to disabled.
   for (controllerIndex_t controller = 0; controller < CONTROLLER_MAX; ++controller) {

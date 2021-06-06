@@ -146,7 +146,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));
 
         {
-          String options[8];
+          const __FlashStringHelper * options[8];
           // int optionValues[8];
 
           options[0] = F("Off");
@@ -196,7 +196,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
         // http://jscolor.com/examples/
         addHtml(F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='"));
         addHtml(hexvalue);
-        addHtml("'>");
+        addHtml(F("'>"));
         addFormNumericBox(F("RGB Color"), F("web_RGB_Red"), PCONFIG(0), 0, 255);
         addNumericBox(F("web_RGB_Green"), PCONFIG(1), 0, 255);
         addNumericBox(F("web_RGB_Blue"), PCONFIG(2), 0, 255);
@@ -277,9 +277,14 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           SetPixelsBlack();
           Candle_pixels->setBrightness(Candle_bright);
           Candle_pixels->begin();
-          String log = F("CAND : Init WS2812 Pin : ");
-          log += CONFIG_PIN1;
-          addLog(LOG_LEVEL_DEBUG, log);
+
+          #ifndef BUILD_NO_DEBUG
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            String log = F("CAND : Init WS2812 Pin : ");
+            log += CONFIG_PIN1;
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+          #endif
         }
 
         success = true;
@@ -404,27 +409,35 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           String val_Color = tmpString.substring(idx2+1, idx3);
           String val_Bright = tmpString.substring(idx3+1, idx4);
 
-          if (val_Type != "") {
+          if (!val_Type.isEmpty()) {
              if (val_Type.toInt() > -1 && val_Type.toInt() < 8) {
                 PCONFIG(4) = val_Type.toInt();     // Type
                 Candle_type = (SimType)PCONFIG(4);
-                String log = F("CAND : CMD - Type : ");
-                log += val_Type;
-                addLog(LOG_LEVEL_DEBUG, log);
+                #ifndef BUILD_NO_DEBUG
+                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                  String log = F("CAND : CMD - Type : ");
+                  log += val_Type;
+                  addLog(LOG_LEVEL_DEBUG, log);
+                }
+                #endif
              }
           }
 
-          if (val_Bright != "") {
+          if (!val_Bright.isEmpty()) {
              if (val_Bright.toInt() > -1 && val_Bright.toInt() < 256) {
                 PCONFIG(3) = val_Bright.toInt();     // Brightness
                 Candle_bright = PCONFIG(3);
-                String log = F("CAND : CMD - Bright : ");
-                log += val_Bright;
-                addLog(LOG_LEVEL_DEBUG, log);
+                #ifndef BUILD_NO_DEBUG
+                if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+                  String log = F("CAND : CMD - Bright : ");
+                  log += val_Bright;
+                  addLog(LOG_LEVEL_DEBUG, log);
+                }
+                #endif
              }
           }
 
-          if (val_Color != "") {
+          if (!val_Color.isEmpty()) {
             long number = strtol( &val_Color[0], NULL, 16);
             // Split RGB to r, g, b values
             byte r = number >> 16;
@@ -440,17 +453,23 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
             PCONFIG(5) = 1;
             Candle_color = (ColorType)PCONFIG(5);   // ColorType (ColorSelected)
 
-            String log = F("CAND : CMD - R ");
-            log += r;
-            log += F(" G ");
-            log += g;
-            log += F(" B ");
-            log += b;
-            addLog(LOG_LEVEL_DEBUG, log);
+            #ifndef BUILD_NO_DEBUG
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              String log = F("CAND : CMD - R ");
+              log += r;
+              log += F(" G ");
+              log += g;
+              log += F(" B ");
+              log += b;
+              addLog(LOG_LEVEL_DEBUG, log);
+            }
+            #endif
           } else {
             PCONFIG(5) = 0;
             Candle_color = (ColorType)PCONFIG(5);   // ColorType (ColorDefault)
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, F("CAND : CMD - Color : DEFAULT"));
+            #endif
           }
 
           //SaveTaskSettings(event->TaskIndex);

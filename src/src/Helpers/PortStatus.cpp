@@ -6,6 +6,27 @@
 #include "../../ESPEasy-Globals.h"
 
 
+#ifdef ESP32
+
+#include "../Helpers/Hardware.h"
+
+void checkAndClearPWM(uint32_t key) {
+  if (existPortStatus(key)) {
+    switch (globalMapPortStatus[key].mode) {
+      case PIN_MODE_PWM:
+      case PIN_MODE_SERVO:
+        {
+          const uint16_t port = getPortFromKey(key);
+          analogWriteESP32(port, 0);
+        }
+        break;
+    }
+  }
+}
+
+#endif
+
+
 /**********************************************************
 *                                                         *
 * Helper Functions for managing the status data structure *
@@ -14,9 +35,24 @@
 void savePortStatus(uint32_t key, struct portStatusStruct& tempStatus) {
   // FIXME TD-er: task and monitor are unsigned, should we only check for == ????
   if ((tempStatus.task <= 0) && (tempStatus.monitor <= 0) && (tempStatus.command <= 0)) {
+    #ifdef ESP32
+    checkAndClearPWM(key);
+    #endif
+
     globalMapPortStatus.erase(key);
   }
   else {
+    #ifdef ESP32
+    switch (tempStatus.mode) {
+      case PIN_MODE_PWM:
+      case PIN_MODE_SERVO:
+        break;
+      default:
+        checkAndClearPWM(key);
+        break;
+    }
+    #endif
+
     globalMapPortStatus[key] = tempStatus;
   }
 }
@@ -33,6 +69,10 @@ void removeTaskFromPort(uint32_t key) {
     if ((it->second.task <= 0) && (it->second.monitor <= 0) && (it->second.command <= 0) &&
         (it->second.init <= 0)) {
       // erase using the key, so the iterator can be const
+      #ifdef ESP32
+      checkAndClearPWM(key);
+      #endif
+
       globalMapPortStatus.erase(key);
     }
   }
@@ -46,6 +86,10 @@ void removeMonitorFromPort(uint32_t key) {
     if ((it->second.task <= 0) && (it->second.monitor <= 0) && (it->second.command <= 0) &&
         (it->second.init <= 0)) {
       // erase using the key, so the iterator can be const
+      #ifdef ESP32
+      checkAndClearPWM(key);
+      #endif
+
       globalMapPortStatus.erase(key);
     }
   }
@@ -189,7 +233,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
   return "";
 }
 
-String getPinModeString(byte mode) {
+const __FlashStringHelper * getPinModeString(byte mode) {
   switch (mode)
   {
     case PIN_MODE_UNDEFINED:    return F("undefined");

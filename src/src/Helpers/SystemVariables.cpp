@@ -133,6 +133,10 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SSID:              value = (WiFiEventData.WiFiDisconnected()) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
+      case SUNRISE_S:         value = getValue(LabelType::SUNRISE_S); break;
+      case SUNSET_S:          value = getValue(LabelType::SUNSET_S); break;
+      case SUNRISE_M:         value = getValue(LabelType::SUNRISE_M); break;
+      case SUNSET_M:          value = getValue(LabelType::SUNSET_M); break;
       case SYSBUILD_DATE:     value = get_build_date(); break;
       case SYSBUILD_DESCR:    value = getValue(LabelType::BUILD_DESC); break;
       case SYSBUILD_FILENAME: value = getValue(LabelType::BINARY_FILENAME); break;
@@ -234,12 +238,14 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
     return Enum::UNKNOWN;
   }
 
-  String str_prefix        = SystemVariables::toString(nextTested).substring(0, 2);
+  String str_prefix        = SystemVariables::toString(nextTested);
+  str_prefix               = str_prefix.substring(0, 2);
   bool   str_prefix_exists = str.indexOf(str_prefix) != -1;
 
   for (int i = nextTested; i < Enum::UNKNOWN; ++i) {
     SystemVariables::Enum enumval = static_cast<SystemVariables::Enum>(i);
-    String new_str_prefix         = SystemVariables::toString(enumval).substring(0, 2);
+    String new_str_prefix         = SystemVariables::toString(enumval);
+    new_str_prefix                = new_str_prefix.substring(0, 2);
 
     if ((str_prefix == new_str_prefix) && !str_prefix_exists) {
       // Just continue
@@ -258,7 +264,7 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
   return Enum::UNKNOWN;
 }
 
-String SystemVariables::toString(SystemVariables::Enum enumval)
+const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enumval)
 {
   switch (enumval) {
     case Enum::BOOT_CAUSE:      return F("%bootcause%");
@@ -292,6 +298,10 @@ String SystemVariables::toString(SystemVariables::Enum enumval)
     case Enum::SSID:            return F("%ssid%");
     case Enum::SUNRISE:         return F("%sunrise");
     case Enum::SUNSET:          return F("%sunset");
+    case Enum::SUNRISE_S:       return F("%s_sunrise%");
+    case Enum::SUNSET_S:        return F("%s_sunset%");
+    case Enum::SUNRISE_M:       return F("%m_sunrise%");
+    case Enum::SUNSET_M:        return F("%m_sunset%");
     case Enum::SYSBUILD_DATE:   return F("%sysbuild_date%");
     case Enum::SYSBUILD_DESCR:  return F("%sysbuild_desc%");
     case Enum::SYSBUILD_FILENAME:  return F("%sysbuild_filename%");

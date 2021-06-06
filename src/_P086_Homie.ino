@@ -76,7 +76,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
         byte choice = 0;
         String labelText;
         String keyName;
-        String options[PLUGIN_086_VALUE_TYPES];
+        const __FlashStringHelper * options[PLUGIN_086_VALUE_TYPES];
         options[0] = F("integer");
         options[1] = F("float");
         options[2] = F("boolean");
@@ -233,7 +233,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
             switch (Settings.TaskDevicePluginConfig[event->TaskIndex][taskVarIndex]) {
               case PLUGIN_086_VALUE_INTEGER:
               case PLUGIN_086_VALUE_FLOAT:
-                if (parameter!="") {
+                if (!parameter.isEmpty()) {
                   if (string2float(parameter,floatValue)) {
                     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                       log += F(" integer/float set to ");
@@ -285,7 +285,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
               case PLUGIN_086_VALUE_ENUM:
                 enumList = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
                 i = 1;
-                while (parseString(enumList,i)!="") { // lookup result in enum List
+                while (!parseString(enumList,i).isEmpty()) { // lookup result in enum List
                   if (parseString(enumList,i)==parameter) {
                     floatValue = i;
                     break;

@@ -5,7 +5,7 @@
 
 #ifdef USES_DOMOTICZ
 
-#include "../Helpers/_CPlugin_Helper.h"
+# include "../Helpers/_CPlugin_Helper.h"
 
 // HUM_STAT can be one of:
 
@@ -27,7 +27,19 @@ String formatUserVarDomoticz(struct EventStruct *event,
 String formatUserVarDomoticz(int value);
 
 String formatDomoticzSensorType(struct EventStruct *event);
-#endif // USES_DOMOTICZ
+
+# ifdef USES_C002
+bool   deserializeDomoticzJson(const String& json,
+                               unsigned int& idx,
+                               float       & nvalue,
+                               long        & nvaluealt,
+                               String      & svalue1,
+                               String      & switchtype);
+
+String serializeDomoticzJson(struct EventStruct *event);
+
+# endif // ifdef USES_C002
+#endif // ifdef USES_DOMOTICZ
 
 
 #endif // ifndef HELPERS__CPLUGIN_DOMOTICZHELPER_H

@@ -485,7 +485,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
 void preProcessReplace(String& input, UnaryOperator op) {
   String find = toString(op);
 
-  if (find.length() == 0) { return; }
+  if (find.isEmpty()) { return; }
   find += '('; // Add opening parenthesis.
 
   const String replace = String(static_cast<char>(op)) + '(';

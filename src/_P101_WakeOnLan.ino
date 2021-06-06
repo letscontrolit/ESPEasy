@@ -192,7 +192,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       }
 
       // Check IP Address.
-      if (!safe_strncpy(ipString, web_server.arg(getPluginCustomArgName(0)), IP_BUFF_SIZE_P101)) {
+      if (!safe_strncpy(ipString, webArg(getPluginCustomArgName(0)), IP_BUFF_SIZE_P101)) {
         // msgStr = getCustomTaskSettingsError(0); // Report string too long.
         // errorStr += msgStr;
         // msgStr    = wolStr + msgStr;
@@ -229,7 +229,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       }
 
       // Check MAC Address.
-      if (!safe_strncpy(macString, web_server.arg(getPluginCustomArgName(1)), MAC_BUFF_SIZE_P101)) {
+      if (!safe_strncpy(macString, webArg(getPluginCustomArgName(1)), MAC_BUFF_SIZE_P101)) {
         // msgStr += getCustomTaskSettingsError(1); // Report string too long.
         // errorStr += msgStr;
         // msgStr    = wolStr + msgStr;
@@ -320,15 +320,15 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
         String paramPort = parseString(tmpString, 4); // UDP Port (optional)
 
         // Populate Parameters with default settings when missing from command line.
-        if (paramMac == "") {                         // Missing from command line, use default setting.
+        if (paramMac.isEmpty()) {                         // Missing from command line, use default setting.
           paramMac = macString;
         }
 
-        if (paramIp == "") { // Missing from command line, use default setting.
+        if (paramIp.isEmpty()) { // Missing from command line, use default setting.
           paramIp = ipString;
         }
 
-        if (paramPort == "") {
+        if (paramPort.isEmpty()) {
           int portNumber = UDP_PORT_P101; // Get default Port from user settings.
           paramPort = portNumber;
         }
@@ -422,7 +422,7 @@ uint8_t safeName(taskIndex_t index) {
 
   devName.toLowerCase();
 
-  if (devName == "") {
+  if (devName.isEmpty()) {
     safeCode = NAME_MISSING;
   }
 

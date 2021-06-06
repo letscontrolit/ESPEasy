@@ -153,30 +153,28 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         byte choice = PCONFIG(0);
-        byte nrchoices = 9;
-        String options[nrchoices];
-        options[0] = F("Main + Temp/Hygro");
-        options[1] = F("Wind");
-        options[2] = F("Rain");
-        options[3] = F("UV");
-        options[4] = F("Lightning strikes");
-        options[5] = F("Lightning distance");
+        {
+          const byte nrchoices = 9;
+          const __FlashStringHelper * options[nrchoices];
+          options[0] = F("Main + Temp/Hygro");
+          options[1] = F("Wind");
+          options[2] = F("Rain");
+          options[3] = F("UV");
+          options[4] = F("Lightning strikes");
+          options[5] = F("Lightning distance");
 
-        options[6] = F("Unknown 1, byte 6");
-        options[7] = F("Unknown 2, byte 16");
-        options[8] = F("Unknown 3, byte 19");
+          options[6] = F("Unknown 1, byte 6");
+          options[7] = F("Unknown 2, byte 16");
+          options[8] = F("Unknown 3, byte 19");
 
-        addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, NULL, choice);
+          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, NULL, choice);
+        }
 
         if (choice==0) {
-          addHtml(F("<TR><TD>1st GPIO (5-MOSI):<TD>"));
-          addPinSelect(false, "taskdevicepin1", PCONFIG(1));
-          addHtml(F("<TR><TD>2nd GPIO (6-SCLK):<TD>"));
-          addPinSelect(false, "taskdevicepin2", PCONFIG(2));
-          addHtml(F("<TR><TD>3rd GPIO (7-nSEL):<TD>"));
-          addPinSelect(false, "taskdevicepin3", PCONFIG(3));
-          addHtml(F("<TR><TD>4th GPIO (8-MISO):<TD>"));
-          addPinSelect(false, "taskdeviceport", PCONFIG(4));
+          addFormPinSelect(PinSelectPurpose::SPI, F("1st GPIO (5-MOSI)"), F("taskdevicepin1"), PCONFIG(1));
+          addFormPinSelect(PinSelectPurpose::SPI, F("2nd GPIO (6-SCLK)"), F("taskdevicepin2"), PCONFIG(2));
+          addFormPinSelect(PinSelectPurpose::SPI, F("3rd GPIO (7-nSEL)"), F("taskdevicepin3"), PCONFIG(3));
+          addFormPinSelect(PinSelectPurpose::SPI, F("4th GPIO (8-MISO)"), F("taskdeviceport"), PCONFIG(4));
         }
 
         switch (choice)

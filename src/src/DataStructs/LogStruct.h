@@ -29,7 +29,7 @@ struct LogStruct {
     // Returns whether new lines are available.
     bool get(String& output, const String& lineEnd);
 
-    String get_logjson_formatted(bool& logLinesAvailable, unsigned long& timestamp);
+    bool getNext(bool& logLinesAvailable, unsigned long& timestamp, String& message, byte& loglevel);
 
     bool isEmpty();
 
@@ -37,8 +37,6 @@ struct LogStruct {
 
   private:
     String formatLine(int index, const String& lineEnd);
-
-    String logjson_formatLine(int index);
 
     void clearExpiredEntries();
 

@@ -125,7 +125,7 @@ struct P052_data_struct : public PluginTaskData_base {
 unsigned int _plugin_052_last_measurement = 0;
 
 
-String Plugin_052_valuename(byte value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_052_valuename(byte value_nr, bool displayString) {
   switch (value_nr) {
     case 0:  return displayString ? F("Empty") : F("");
     case 1:  return displayString ? F("Carbon Dioxide") : F("co2");
@@ -138,7 +138,7 @@ String Plugin_052_valuename(byte value_nr, bool displayString) {
     default:
       break;
   }
-  return "";
+  return F("");
 }
 
 boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
@@ -278,7 +278,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_WEBFORM_LOAD: {
 
       {
-        String options[P052_NR_OUTPUT_OPTIONS];
+        const __FlashStringHelper * options[P052_NR_OUTPUT_OPTIONS];
 
         for (byte i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
           options[i] = Plugin_052_valuename(i, true);
@@ -353,7 +353,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
 
             /*
                if (has_meas_mode) {
-               String options[2] = { F("Continuous"), F("Single Measurement") };
+               const __FlashStringHelper * options[2] = { F("Continuous"), F("Single Measurement") };
                addFormSelector(F("Measurement Mode"), F("p052_mode"), 2, options, NULL, meas_mode);
                }
              */
@@ -373,7 +373,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
          // ABC functionality disabled for now, due to a bug in the firmware.
          // See https://github.com/letscontrolit/ESPEasy/issues/759
          byte choiceABCperiod = PCONFIG(4);
-         String optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
+         const __FlashStringHelper * optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
          day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
          addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod,
          NULL, choiceABCperiod);

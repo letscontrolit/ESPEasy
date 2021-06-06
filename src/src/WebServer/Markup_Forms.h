@@ -4,6 +4,7 @@
 #include "../WebServer/common.h"
 
 #include "../Globals/Plugins.h"
+#include "../Helpers/StringGenerator_GPIO.h"
 
 
 // ********************************************************************************
@@ -14,8 +15,8 @@ void addFormSeparator(int clspan);
 // ********************************************************************************
 // Add a note as row start
 // ********************************************************************************
-void addFormNote(const String& text,
-                 const String& id = "");
+void addFormNote(const __FlashStringHelper * text);
+void addFormNote(const String& text, const String& id = "");
 
 // ********************************************************************************
 // Create Forms
@@ -56,6 +57,8 @@ void addFormCheckBox(LabelType::Enum label,
 
 void addFormCheckBox_disabled(LabelType::Enum label,
                               boolean         checked);
+void addFormCheckBox(const __FlashStringHelper * label, const __FlashStringHelper * id, boolean checked, bool disabled = false);
+void addFormCheckBox(const __FlashStringHelper * label, const String& id, boolean checked, bool disabled = false);
 
 // ********************************************************************************
 // Add a Numeric Box form
@@ -105,6 +108,8 @@ void addFormFloatNumberBox(const String& label,
                            const String& title = ""
                            #endif // ifdef ENABLE_TOOLTIPS
                            );
+void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min = INT_MIN, int max = INT_MAX);
+
 
 // ********************************************************************************
 // Add a task selector form
@@ -116,6 +121,14 @@ void addTaskSelectBox(const String& label,
 // ********************************************************************************
 // Add a Text Box form
 // ********************************************************************************
+void addFormTextBox(const __FlashStringHelper * label,
+                    const __FlashStringHelper * id,
+                    const String& value,
+                    int           maxlength,
+                    bool          readonly = false,
+                    bool          required = false,
+                    const String& pattern = "");
+
 void addFormTextBox(const String& label,
                     const String& id,
                     const String& value,
@@ -183,6 +196,10 @@ void addFormIPaccessControlSelect(const String& label,
 void addFormPinSelect(const String& label,
                       const String& id,
                       int           choice);
+void addFormPinSelect(const String& label,
+                      const __FlashStringHelper * id,
+                      int           choice);
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice);
 
 void addFormPinSelectI2C(const String& label,
                          const String& id,
@@ -209,6 +226,37 @@ void addFormSelector(const String& label,
                      const String& title = ""
                      #endif
                      );
+
+void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange = false);
+void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex);
+void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const String options[], const int indices[], int selectedIndex);
+
+void addFormSelector(const String& label,
+                     const String& id,
+                     int           optionCount,
+                     const __FlashStringHelper * options[],
+                     const int     indices[],
+                     int           selectedIndex,
+                     bool          reloadonchange);
+
+void addFormSelector(const String& label,
+                     const String& id,
+                     int           optionCount,
+                     const __FlashStringHelper * options[],
+                     const int     indices[],
+                     const String  attr[],
+                     int           selectedIndex,
+                     boolean       reloadonchange);
+
+void addFormSelector_script(const String& label,
+                            const String& id,
+                            int           optionCount,
+                            const __FlashStringHelper * options[],
+                            const int     indices[],
+                            const String  attr[],
+                            int           selectedIndex,
+                            const String& onChangeCall);
+
 
 void addFormSelector(const String& label,
                      const String& id,
@@ -257,8 +305,8 @@ void addFormPinStateSelect(int gpio,
 // ********************************************************************************
 
 
-int  getFormItemInt(const String& key,
-                    int           defaultValue);
+int getFormItemInt(const __FlashStringHelper * key, int defaultValue);
+int getFormItemInt(const String& key, int defaultValue);
 
 bool getCheckWebserverArg_int(const String& key,
                               int         & value);
@@ -271,11 +319,17 @@ bool update_whenset_FormItemInt(const String& key,
 
 // Note: Checkbox values will not appear in POST Form data if unchecked.
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.
-bool  isFormItemChecked(const String& id);
+bool isFormItemChecked(const __FlashStringHelper * id);
+bool isFormItemChecked(const String& id);
+bool isFormItemChecked(const LabelType::Enum& id);
 
-int   getFormItemInt(const String& id);
+int getFormItemInt(const __FlashStringHelper * id);
+int getFormItemInt(const String& id);
+int getFormItemInt(const LabelType::Enum& id);
 
+float getFormItemFloat(const __FlashStringHelper * id);
 float getFormItemFloat(const String& id);
+float getFormItemFloat(const LabelType::Enum& id);
 
 bool  isFormItem(const String& id);
 

@@ -193,7 +193,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       {
         // In a separate scope to free memory of String array as soon as possible
         sensorTypeHelper_webformLoad_header();
-        String options[static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS)];
+        const __FlashStringHelper * options[static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS)];
 
         for (byte i = 0; i < static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS); ++i) {
           options[i] = Plugin_082_valuename(static_cast<P082_query>(i), true);
@@ -505,7 +505,7 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
           label.reserve(32);
 
           if (onlyGPS) {
-            label = "GPS";
+            label = F("GPS");
           } else {
             label = F("Other");
           }
@@ -518,14 +518,14 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
           }
           addRowLabel(label);
         } else {
-          addHtml(", ");
+          addHtml(F(", "));
         }
         addHtmlInt(id);
 
         if (tracked) {
-          addHtml(" (");
+          addHtml(F(" ("));
           addHtmlInt(snr);
-          addHtml(")");
+          addHtml(')');
         }
       }
     }
@@ -594,7 +594,7 @@ void P082_html_show_stats(struct EventStruct *event) {
     dateTime = node_time.addSeconds(dateTime, (age / 1000), false);
     addHtml(ESPEasy_time::getDateTimeString(dateTime));
   } else {
-    addHtml(F("-"));
+    addHtml('-');
   }
 
   addRowLabel(F("Distance Travelled"));

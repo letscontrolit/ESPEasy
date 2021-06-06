@@ -47,7 +47,7 @@ void handleNotFound() {
     message += F(" NAME:");
     message += web_server.argName(i);
     message += F("\n VALUE:");
-    message += web_server.arg(i);
+    message += webArg(i);
     message += '\n';
   }
   web_server.send(404, F("text/plain"), message);

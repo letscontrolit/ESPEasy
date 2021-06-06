@@ -55,7 +55,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
         #define MLX90614_OPTION 2
 
       byte choice = PCONFIG(0);
-      String options[MLX90614_OPTION];
+      const __FlashStringHelper * options[MLX90614_OPTION];
       int optionValues[MLX90614_OPTION];
       optionValues[0] = (0x07);
       options[0]      = F("IR object temperature");

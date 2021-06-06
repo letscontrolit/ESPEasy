@@ -35,7 +35,7 @@ String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
 }
 
-String getLabel(LabelType::Enum label) {
+const __FlashStringHelper * getLabel(LabelType::Enum label) {
   switch (label)
   {
     case LabelType::UNIT_NR:                return F("Unit Number");
@@ -178,11 +178,19 @@ String getLabel(LabelType::Enum label) {
     case LabelType::ETH_WIFI_MODE:          return F("Network Type");
     case LabelType::SUNRISE:                return F("Sunrise");
     case LabelType::SUNSET:                 return F("Sunset");
+    case LabelType::SUNRISE_S:              return F("Sunrise sec.");
+    case LabelType::SUNSET_S:               return F("Sunset sec.");
+    case LabelType::SUNRISE_M:              return F("Sunrise min.");
+    case LabelType::SUNSET_M:               return F("Sunset min.");
     case LabelType::ISNTP:                  return F("Use NTP");
     case LabelType::UPTIME_MS:              return F("Uptime (ms)");
     case LabelType::TIMEZONE_OFFSET:        return F("Timezone Offset");
     case LabelType::LATITUDE:               return F("Latitude");
     case LabelType::LONGITUDE:              return F("Longitude");
+
+    case LabelType::MAX_LABEL:
+      break;
+
   }
   return F("MissingString");
 }
@@ -289,7 +297,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
-    case LabelType::BUILD_TIME:             return get_build_date() + " " + get_build_time();
+    case LabelType::BUILD_TIME:             return String(get_build_date()) + F(" ") + get_build_time();
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::BUILD_PLATFORM:         return get_build_platform();
     case LabelType::GIT_HEAD:               return get_git_head();
@@ -337,11 +345,18 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_WIFI_MODE:          return toString(active_network_medium);
     case LabelType::SUNRISE:                return node_time.getSunriseTimeString(':');
     case LabelType::SUNSET:                 return node_time.getSunsetTimeString(':');
+    case LabelType::SUNRISE_S:              return String(node_time.sunRise.tm_hour * 3600 + node_time.sunRise.tm_min * 60 + node_time.sunRise.tm_sec);
+    case LabelType::SUNSET_S:               return String(node_time.sunSet.tm_hour * 3600 + node_time.sunSet.tm_min * 60 + node_time.sunSet.tm_sec);
+    case LabelType::SUNRISE_M:              return String(node_time.sunRise.tm_hour * 60 + node_time.sunRise.tm_min);
+    case LabelType::SUNSET_M:               return String(node_time.sunSet.tm_hour * 60 + node_time.sunSet.tm_min);
     case LabelType::ISNTP:                  return jsonBool(Settings.UseNTP);
     case LabelType::UPTIME_MS:              return ull2String(getMicros64() / 1000);
     case LabelType::TIMEZONE_OFFSET:        return String(Settings.TimeZone);
     case LabelType::LATITUDE:               return String(Settings.Latitude);
     case LabelType::LONGITUDE:              return String(Settings.Longitude);
+
+    case LabelType::MAX_LABEL:
+      break;
   }
   return F("MissingString");
 }
