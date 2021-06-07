@@ -48,23 +48,26 @@ const __FlashStringHelper * SDKwifiStatusToString(uint8_t sdk_wifistatus)
 #endif
 #endif
 
+const __FlashStringHelper * ArduinoWifiStatusToFlashString(uint8_t arduino_corelib_wifistatus) {
+  switch (arduino_corelib_wifistatus) {
+    case WL_NO_SHIELD:       return F("WL_NO_SHIELD");
+    case WL_IDLE_STATUS:     return F("WL_IDLE_STATUS");
+    case WL_NO_SSID_AVAIL:   return F("WL_NO_SSID_AVAIL");
+    case WL_SCAN_COMPLETED:  return F("WL_SCAN_COMPLETED");
+    case WL_CONNECTED:       return F("WL_CONNECTED");
+    case WL_CONNECT_FAILED:  return F("WL_CONNECT_FAILED");
+    case WL_CONNECTION_LOST: return F("WL_CONNECTION_LOST");
+    case WL_DISCONNECTED:    return F("WL_DISCONNECTED");
+  }
+  return F("-");
+}
+
 String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
   #ifdef LIMIT_BUILD_SIZE
   return String(arduino_corelib_wifistatus);
   #else
-  String log;
-
-  switch (arduino_corelib_wifistatus) {
-    case WL_NO_SHIELD:       log += F("WL_NO_SHIELD"); break;
-    case WL_IDLE_STATUS:     log += F("WL_IDLE_STATUS"); break;
-    case WL_NO_SSID_AVAIL:   log += F("WL_NO_SSID_AVAIL"); break;
-    case WL_SCAN_COMPLETED:  log += F("WL_SCAN_COMPLETED"); break;
-    case WL_CONNECTED:       log += F("WL_CONNECTED"); break;
-    case WL_CONNECT_FAILED:  log += F("WL_CONNECT_FAILED"); break;
-    case WL_CONNECTION_LOST: log += F("WL_CONNECTION_LOST"); break;
-    case WL_DISCONNECTED:    log += F("WL_DISCONNECTED"); break;
-    default:  log                += arduino_corelib_wifistatus; break;
-  }
+  String log = ArduinoWifiStatusToFlashString(arduino_corelib_wifistatus);
+  log += arduino_corelib_wifistatus;
   return log;
   #endif
 }
