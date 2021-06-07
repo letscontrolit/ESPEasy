@@ -129,7 +129,9 @@ void preinit() {
   // (global class instances like WiFi, Serial... are not yet initialized)..
   // No global object methods or C++ exceptions can be called in here!
   // The below is a static class method, which is similar to a function, so it's ok.
+  #ifndef CORE_POST_3_0_0
   ESP8266WiFiClass::preinitWiFiOff();
+  #endif
 
   // Prevent RF calibration on power up.
   // TD-er: disabled on 2021-06-07 as it may cause several issues with some boards.

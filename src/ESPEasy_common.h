@@ -64,6 +64,13 @@ namespace std
 
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
+
+  #ifndef CORE_POST_3_0_0
+    #define IRAM_ATTR ICACHE_RAM_ATTR
+  #endif
+
+
+
   #include "core_version.h"
   #define NODE_TYPE_ID      NODE_TYPE_ID_ESP_EASYM_STD
   #define FILE_CONFIG       "config.dat"
