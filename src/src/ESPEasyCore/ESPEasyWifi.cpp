@@ -248,6 +248,7 @@ void AttemptWiFiConnect() {
     }
     WiFiEventData.markWiFiBegin();
     if (prepareWiFi()) {
+      RTC.clearLastWiFi();
       float tx_pwr = 0; // Will be set higher based on RSSI when needed.
       // FIXME TD-er: Must check WiFiEventData.wifi_connect_attempt to increase TX power
       if (Settings.UseMaxTXpowerForSending()) {

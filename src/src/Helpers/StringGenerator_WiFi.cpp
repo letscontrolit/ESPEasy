@@ -22,14 +22,19 @@ switch (encryptionType) {
 	break;
       
   }
-  return F("Unknown");
+  return F("-");
 }
 
-#ifndef ESP32
-String SDKwifiStatusToString(uint8_t sdk_wifistatus) {
-  #ifdef LIMIT_BUILD_SIZE
+
+#ifdef ESP8266
+#ifdef LIMIT_BUILD_SIZE
+String SDKwifiStatusToString(uint8_t sdk_wifistatus)
+{
   return String(sdk_wifistatus);
-  #else
+}
+#else
+const __FlashStringHelper * SDKwifiStatusToString(uint8_t sdk_wifistatus)
+{
   switch (sdk_wifistatus) {
     case STATION_IDLE:           return F("STATION_IDLE");
     case STATION_CONNECTING:     return F("STATION_CONNECTING");
@@ -39,10 +44,9 @@ String SDKwifiStatusToString(uint8_t sdk_wifistatus) {
     case STATION_GOT_IP:         return F("STATION_GOT_IP");
   }
   return F("Unknown");
-  #endif
 }
-
-#endif // ifndef ESP32
+#endif
+#endif
 
 String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
   #ifdef LIMIT_BUILD_SIZE

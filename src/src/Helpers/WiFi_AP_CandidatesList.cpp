@@ -152,15 +152,6 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
     }
   }
 
-
-  if (currentCandidate.usable()) {
-    // Store in RTC
-    RTC.lastWiFiChannel = currentCandidate.channel;
-    currentCandidate.bssid.get(RTC.lastBSSID);
-    RTC.lastWiFiSettingsIndex = currentCandidate.index;
-  }
-
-
   if (mustPop) {
     known_it = known.begin();
     if (!candidates.empty()) {
@@ -199,6 +190,13 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
       }
     }
   }
+  if (currentCandidate.usable()) {
+    // Store in RTC
+    RTC.lastWiFiChannel = currentCandidate.channel;
+    currentCandidate.bssid.get(RTC.lastBSSID);
+    RTC.lastWiFiSettingsIndex = currentCandidate.index;
+  }
+
   candidates.clear();
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
 }
