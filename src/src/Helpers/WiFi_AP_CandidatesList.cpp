@@ -310,6 +310,10 @@ void WiFi_AP_CandidatesList::addFromRTC() {
   fromRTC.setBSSID(RTC.lastBSSID);
   fromRTC.channel = RTC.lastWiFiChannel;
 
+  if (!fromRTC.usable()) {
+    return;
+  }
+
   if (candidates.size() > 0 && candidates.front().ssid.equals(fromRTC.ssid)) {
     // Front candidate was already from RTC.
     candidates.pop_front();

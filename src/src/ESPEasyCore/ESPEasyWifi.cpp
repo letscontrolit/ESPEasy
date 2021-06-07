@@ -927,6 +927,7 @@ void setWifiMode(WiFiMode_t wifimode) {
 
 
   if (wifimode == WIFI_OFF) {
+    WiFiEventData.markWiFiTurnOn();
     delay(100);
     #if defined(ESP32)
     esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
