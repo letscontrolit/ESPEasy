@@ -52,6 +52,7 @@ struct LabelType {
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
     RESET_REASON,            // Software/System restart
+    DEEP_SLEEP_ALTERNATIVE_CALL,
     LAST_TASK_BEFORE_REBOOT, // Last scheduled task.
     SW_WD_COUNT,
 

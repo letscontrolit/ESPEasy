@@ -79,6 +79,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
+    case LabelType::DEEP_SLEEP_ALTERNATIVE_CALL: return F("Deep Sleep Alternative");
     case LabelType::RESET_REASON:           return F("Reset Reason");
     case LabelType::LAST_TASK_BEFORE_REBOOT: return F("Last Action before Reboot");
     case LabelType::SW_WD_COUNT:            return F("SW WD count");
@@ -251,6 +252,7 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
+    case LabelType::DEEP_SLEEP_ALTERNATIVE_CALL: return jsonBool(Settings.UseAlternativeDeepSleep());
     case LabelType::RESET_REASON:           return getResetReasonString();
     case LabelType::LAST_TASK_BEFORE_REBOOT: return ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
     case LabelType::SW_WD_COUNT:            return String(sw_watchdog_callback_count);

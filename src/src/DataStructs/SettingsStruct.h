@@ -118,6 +118,10 @@ class SettingsStruct_tmpl
   bool DoNotStartAP() const;
   void DoNotStartAP(bool value);
 
+  bool UseAlternativeDeepSleep() const;
+  void UseAlternativeDeepSleep(bool value);
+
+
   void validate();
 
   bool networkSettingsEmpty() const;

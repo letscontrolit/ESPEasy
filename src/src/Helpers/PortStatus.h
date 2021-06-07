@@ -6,6 +6,12 @@
 #include "../DataStructs/PortStatusStruct.h"
 #include "../Globals/Plugins.h"
 
+
+#ifdef ESP32
+void checkAndClearPWM(uint32_t key);
+#endif
+
+
 /**********************************************************
 *                                                         *
 * Helper Functions for managing the status data structure *

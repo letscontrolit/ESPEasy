@@ -205,6 +205,17 @@ void SettingsStruct_tmpl<N_TASKS>::DoNotStartAP(bool value) {
   bitWrite(VariousBits1, 17, value);
 }
 
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::UseAlternativeDeepSleep() const {
+  return bitRead(VariousBits1, 18);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::UseAlternativeDeepSleep(bool value) {
+  bitWrite(VariousBits1, 18, value);
+}
+
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (UDPPort > 65535) { UDPPort = 0; }
