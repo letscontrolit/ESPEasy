@@ -1,0 +1,145 @@
+# NOTICE the generate-matrix and build are c/p from the build workflow
+# NOTICE manual deletion following a re-created tag and push will also trigger this
+#
+# Checks whether the pushed commit is buildable and creates a release with the provided tag. Only triggered on mega-* tag push
+# Documentation and distribution files (tools, readme, etc.) are uploaded as .zip files prepared similarly to the build_ESPEasy.sh
+# Every .bin build artifact is merged in a single .zip file, which is then uploaded as a single release asset
+
+name: Release
+
+on:
+  push:
+    branches-ignore: '**'
+    tags: 'mega-*'
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-20.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - id: set-matrix
+        run: |
+          pip install platformio
+          python tools/ci/generate-matrix.py
+
+  build:
+    needs: generate-matrix
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+      - uses: actions/cache@v2
+        if: ${{ contains(matrix.env, 'esp32') }}
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-esp32-${{ hashFiles('platformio*.ini') }}
+      - uses: actions/cache@v2
+        if: ${{ contains(matrix.env, 'esp8266') }}
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-esp8266-${{ hashFiles('platformio*.ini') }}
+      - name: Dependencies
+        run: |
+          sudo apt install binutils
+          pip install -r requirements.txt
+          platformio update
+      - name: Build and archive
+        id: build-and-archive
+        env:
+          CHIP: ${{ matrix.chip }}
+          ENV: ${{ matrix.env }}
+        run: |
+          python tools/ci/build-and-archive.py
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Binaries
+          path: ESPEasy_${{ matrix.env }}.zip
+          if-no-files-found: ignore
+
+  prepare-dist:
+    needs: build
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
+      - name: Build documentation
+        run: |
+          cd docs
+          sudo apt install imagemagick zip
+          pip install -r requirements.txt
+          make html
+          cd ..
+          zip -r -qq ESPEasy_docs.zip docs/build/*
+      - name: Package utilities
+        run: |
+          cd dist
+          zip -r -qq ../ESPEasy_dist.zip *
+          cd ..
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Distribution
+          path: |
+            ESPEasy_docs.zip
+            ESPEasy_dist.zip
+
+  prepare-notes:
+    needs: build
+    runs-on: ubuntu-20.04
+    outputs:
+      notes: ${{ steps.release-notes.outputs.result }}
+    steps:
+      - id: release-notes
+        uses: actions/github-script@v4
+        with:
+          result-encoding: string
+          script: |
+            const tagRefObj = await github.git.getRef({
+              ...context.repo,
+              ref: context.ref.replace('refs/', '')
+            });
+
+            const tagObj = await github.git.getTag({
+              ...context.repo,
+              tag_sha: tagRefObj.data.object.sha
+            });
+
+            return tagObj.data.message;
+
+  release:
+    needs: [build, prepare-dist, prepare-notes]
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - uses: actions/download-artifact@v2
+        with:
+          path: artifacts/
+      - run: |
+          ls -R
+          sudo apt install zipmerge
+          zipmerge ESPEasy_binaries.zip artifacts/Binaries/*.zip
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "ESPEasy_binaries.zip,artifacts/Distribution/*.zip"
+          body: ${{ needs.prepare-notes.outputs.notes }}
+          token: ${{ secrets.GITHUB_TOKEN }}
