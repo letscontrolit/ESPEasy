@@ -255,7 +255,7 @@ void AttemptWiFiConnect() {
       }
       SetWiFiTXpower(tx_pwr, candidate.rssi);
       if (candidate.allowQuickConnect()) {
-        WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid);
+        WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
       }

@@ -432,7 +432,7 @@ void processDisconnectAPmode() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const int nrStationsConnected = WiFi.softAPgetStationNum();
     String    log                 = F("AP Mode: Client disconnected: ");
-    log += formatMAC(WiFiEventData.lastMacDisconnectedAPmode);
+    log += WiFiEventData.lastMacDisconnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += nrStationsConnected;
     addLog(LOG_LEVEL_INFO, log);
@@ -448,7 +448,7 @@ void processConnectAPmode() {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
-    log += formatMAC(WiFiEventData.lastMacConnectedAPmode);
+    log += WiFiEventData.lastMacConnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += WiFi.softAPgetStationNum();
     addLog(LOG_LEVEL_INFO, log);
@@ -608,7 +608,7 @@ void processEthernetGotIP() {
     String log;
     log.reserve(160);
     log = F("ETH MAC: ");
-    log += NetworkMacAddress();
+    log += NetworkMacAddress().toString();
     log += ' ';
     if (useStaticIP()) {
       log += F("Static");

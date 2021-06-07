@@ -156,10 +156,7 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
   if (currentCandidate.usable()) {
     // Store in RTC
     RTC.lastWiFiChannel = currentCandidate.channel;
-
-    for (byte i = 0; i < 6; ++i) {
-      RTC.lastBSSID[i] = currentCandidate.bssid[i];
-    }
+    currentCandidate.bssid.get(RTC.lastBSSID);
     RTC.lastWiFiSettingsIndex = currentCandidate.index;
   }
 
@@ -307,7 +304,7 @@ void WiFi_AP_CandidatesList::addFromRTC() {
   }
 
   WiFi_AP_Candidate fromRTC(RTC.lastWiFiSettingsIndex, ssid, key);
-  fromRTC.setBSSID(RTC.lastBSSID);
+  fromRTC.bssid   = RTC.lastBSSID;
   fromRTC.channel = RTC.lastWiFiChannel;
 
   if (!fromRTC.usable()) {

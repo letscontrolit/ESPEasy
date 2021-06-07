@@ -182,16 +182,12 @@ void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], 
 }
 
 void WiFiEventData_t::markConnectedAPmode(const uint8_t mac[6]) {
-  for (byte i = 0; i < 6; ++i) {
-    lastMacConnectedAPmode[i] = mac[i];
-  }
+  lastMacConnectedAPmode = mac;
   processedConnectAPmode = false;
 }
 
 void WiFiEventData_t::markDisconnectedAPmode(const uint8_t mac[6]) {
-  for (byte i = 0; i < 6; ++i) {
-    lastMacDisconnectedAPmode[i] = mac[i];
-  }
+  lastMacDisconnectedAPmode = mac;
   processedDisconnectAPmode = false;
 }
 

@@ -82,9 +82,14 @@ void ethPrintSettings() {
   }
 }
 
-uint8_t * ETHMacAddress(uint8_t* mac) {
-    esp_eth_get_mac(mac);
-    return mac;
+MAC_address ETHMacAddress() {
+  MAC_address mac;
+  if(!EthEventData.ethInitSuccess) {
+    addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddress() only on connected Ethernet!"));
+  } else {
+    esp_eth_get_mac(mac.mac);
+  }
+  return mac;
 }
 
 bool ETHConnectRelaxed() {
