@@ -535,6 +535,18 @@ void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newSta
 {
   // WARNING: operator [] creates an entry in the map if key does not exist
 
+  #ifdef ESP32
+  switch (newMode) {
+    case PIN_MODE_PWM:
+    case PIN_MODE_SERVO:
+      break;
+    default:
+      checkAndClearPWM(key);
+      break;
+  }
+  #endif
+
+
   // If it doesn't exist, it is now created.
   globalMapPortStatus[key].mode = newMode;
   auto it = globalMapPortStatus.find(key);
