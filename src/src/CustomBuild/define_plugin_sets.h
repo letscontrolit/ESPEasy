@@ -1593,7 +1593,9 @@ To create/register a plugin, you have to :
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
   #endif
   #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
-    #undef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #ifndef SIZE_1M
+      #undef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif // ifndef SIZE_1M
   #endif
   #ifdef USES_SSDP
     #undef USES_SSDP
