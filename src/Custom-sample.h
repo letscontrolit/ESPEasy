@@ -28,14 +28,14 @@
 #define BUILD_GIT           "My Build: "  __DATE__ " "  __TIME__
 
 
-#define DEFAULT_NAME        "MyEspEasyDevice"                        // Enter your device friendly name
+#define DEFAULT_NAME        "CEEMDongNai"                            // Enter your device friendly name
 #define UNIT                0                                        // Unit Number
 #define DEFAULT_DELAY       60                                       // Sleep Delay in seconds
 
 // --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
 #define DEFAULT_AP_IP       192, 168, 4, 1                           // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_SUBNET   255, 255, 255, 0                         // Enter IP address (comma separated) for AP (config) mode
-#define DEFAULT_AP_KEY      "configesp"                              // Enter network WPA key for AP (config) mode
+#define DEFAULT_AP_KEY      "CEEMDongNai"                              // Enter network WPA key for AP (config) mode
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
 #define DEFAULT_SSID                         "MyHomeSSID"            // Enter your network SSID
@@ -126,7 +126,7 @@
 #define DEFAULT_TIME_ZONE                       0                 // Time Offset (in minutes)
 #define DEFAULT_USE_DST                         false             // (true|false) Use Daily Time Saving
 
-#define DEFAULT_LATITUDE                        0.0f              // Default Latitude  
+#define DEFAULT_LATITUDE                        0.0f              // Default Latitude
 #define DEFAULT_LONGITUDE                       0.0f              // Default Longitude
 
 #define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
@@ -356,7 +356,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P095   // ILI9341
 // #define USES_P096   // eInk
 // #define USES_P097   // ESP32Touch
-// #define USES_P098   // 
+// #define USES_P098   //
 // #define USES_P099   // XPT2046 touchscreen
 
 // #define USES_P100   // DS2423 counter
@@ -377,7 +377,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P016   // IR
 // #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
 // #define USES_P035   // IRTX
-// #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised 
+// #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised
                                  //common arguments for controlling all deeply supported A/C units
 // #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
 // #define USES_P088   // Heatpump IR
@@ -406,7 +406,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_C013   // ESPEasy P2P network
 // #define USES_C014   // homie 3 & 4dev MQTT
 // #define USES_C015   // Blynk
-// #define USES_C016   // Cache controller
+#define USES_C016   // Cache controller
 // #define USES_C017   // Zabbix
 // #define USES_C018   // TTN/RN2483
 
