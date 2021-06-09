@@ -195,6 +195,21 @@ JSON bool output without quotes
 
 ESPEasy JSON output has always used quoted bool values, ``"true"`` and ``"false"``, that are in fact string values. According to JSON standards, bool values should be ``true`` and ``false``, so this setting selects what type of bool values will be emitted. As existing functionality is to be left unaltered/backward compatible as much as possible, by default this setting is unchecked.
 
+
+Deep Sleep Alternative
+^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2021-06-07
+
+On some ESP8266 boards deep sleep does consume quite a lot compared to the stated 20 uA by Espressif.
+For those boards it may be beneficial to use alternative code to set the WiFi radio in such a mode that allows the ESP to really enter deep sleep.
+However, on older boards like the ESP12E or ESP12F, this alternative code prevents the ESP to wake up at all.
+
+This option is only available for ESP82xx boards.
+
+Default: disabled.
+
+
 Use SSDP
 ^^^^^^^^
 
