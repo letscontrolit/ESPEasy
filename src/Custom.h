@@ -273,7 +273,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P019   // PCF8574
 
 // #define USES_P020   // Ser2Net
-// #define USES_P021   // Level
+ #define USES_P021   // Level
 // #define USES_P022   // PCA9685
  #define USES_P023   // OLED
 // #define USES_P024   // MLX90614
