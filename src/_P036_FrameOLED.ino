@@ -14,6 +14,9 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2021-06-10
+// NEW: Add option to send events on Display On/Off (1,0) and Contrast Low/Med/High (0,1,2)
+// CHG: Eliminate a couple of superfluous variables saving a little .bin size
 // @uwekaditz: 2020-10-19
 // CHG: ressouce-saving string calculation
 // @uwekaditz: 2020-10-211
@@ -101,6 +104,13 @@
 #define P036_CONTRAST    PCONFIG(6)
 #define P036_RESOLUTION  PCONFIG(7)
 
+#ifndef LIMIT_BUILD_SIZE
+#define P036_SEND_EVENTS      // Enable sending events on Display On/Off and Contrast Low/Med/High
+#endif
+
+#ifdef P036_SEND_EVENTS
+void P036_SendEvent(struct EventStruct *event, String eventName, int eventValue);
+#endif
 
 boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -257,6 +267,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Disable all scrolling while WiFi is disconnected"), F("p036_ScrollWithoutWifi"), !tbScrollWithoutWifi);
       addFormNote(F("When checked, all scrollings (pages and lines) are disabled as long as WiFi is not connected."));
 
+      #ifdef P036_SEND_EVENTS
+      addFormCheckBox(F("Generate event for Display On/Off and Contrast"), F("p036_SendEvents"), bitRead(PCONFIG_LONG(0), 28)); // Bit 28
+      addFormNote(F("Events named &lt;taskname&gt;#display=1/0 (on/off) and &lt;taskname&gt;#contrast=0/1/2 (low/med/high)"));
+      #endif
+
       addFormSubHeader(F("Content"));
 
       bool tbHideHeader = bitRead(PCONFIG_LONG(0), 25);             // Bit 25
@@ -370,6 +385,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           break;
         }
       }
+      #ifdef P036_SEND_EVENTS
+      bitWrite(lSettings, 28, isFormItemChecked(F("p036_SendEvents")));                     // Bit 28 SendEvents
+      #endif
 
       PCONFIG_LONG(0) = lSettings;
 
@@ -458,6 +476,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       //      Set the initial value of OnOff to On
       UserVar[event->BaseVarIndex] = 1;
+      #ifdef P036_SEND_EVENTS
+      if (bitRead(PCONFIG_LONG(0), 28)) {
+        P036_SendEvent(event, F("display"), 1);
+      }
+      #endif
 
       if (CONFIG_PIN3 != -1) // Button related setup
       {
@@ -555,6 +578,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           P036_data->display->displayOn();
           UserVar[event->BaseVarIndex] = 1;     //  Save the fact that the display is now ON
           P036_data->P036_JumpToPage(event, 0); //  Start to display the first page, function needs 65ms!
+          #ifdef P036_SEND_EVENTS
+          if (bitRead(PCONFIG_LONG(0), 28)) {
+            P036_SendEvent(event, F("display"), 1);
+          }
+          #endif
         }
         P036_data->markButtonStateProcessed();
 
@@ -619,6 +647,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         {
           P036_data->display->displayOff();
           UserVar[event->BaseVarIndex] = 0; //  Save the fact that the display is now OFF
+          #ifdef P036_SEND_EVENTS
+          if (bitRead(PCONFIG_LONG(0), 28)) {
+            P036_SendEvent(event, F("display"), 0);
+          }
+          #endif
         }
       }
 
@@ -741,6 +774,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       String command    = parseString(string, 1);
       String subcommand = parseString(string, 2);
       int    LineNo     = event->Par1;
+      #ifdef P036_SEND_EVENTS
+      bool   sendEvents = bitRead(PCONFIG_LONG(0), 28); // Bit 28 Send Events
+      #endif
 
       if ((command == F("oledframedcmd")) && P036_data->isInitialized()) {
         if (subcommand == F("display"))
@@ -753,6 +789,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_data->displayTimer = P036_TIMER;
             P036_data->display->displayOn();
             UserVar[event->BaseVarIndex] = 1; //  Save the fact that the display is now ON
+            #ifdef P036_SEND_EVENTS
+            if (sendEvents) {
+              P036_SendEvent(event, F("display"), 1);
+            }
+            #endif
           }
 
           if (para1 == F("off")) {
@@ -760,21 +801,41 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_data->displayTimer = 0;
             P036_data->display->displayOff();
             UserVar[event->BaseVarIndex] = 0; //  Save the fact that the display is now OFF
+            #ifdef P036_SEND_EVENTS
+            if (sendEvents) {
+              P036_SendEvent(event, F("display"), 0);
+            }
+            #endif
           }
 
           if (para1 == F("low")) {
             success = true;
             P036_data->setContrast(P36_CONTRAST_LOW);
+            #ifdef P036_SEND_EVENTS
+            if (sendEvents) {
+              P036_SendEvent(event, F("contrast"), 0);
+            }
+            #endif
           }
 
           if (para1 == F("med")) {
             success = true;
             P036_data->setContrast(P36_CONTRAST_MED);
+            #ifdef P036_SEND_EVENTS
+            if (sendEvents) {
+              P036_SendEvent(event, F("contrast"), 1);
+            }
+            #endif
           }
 
           if (para1 == F("high")) {
             success = true;
             P036_data->setContrast(P36_CONTRAST_HIGH);
+            #ifdef P036_SEND_EVENTS
+            if (sendEvents) {
+              P036_SendEvent(event, F("contrast"), 2);
+            }
+            #endif
           }
         }
         else if ((subcommand == F("frame")) && (event->Par2 >= 0) && (event->Par2 <= P036_data->MaxFramesToDisplay + 1))
@@ -785,6 +846,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             // display was OFF, turn it ON
             P036_data->display->displayOn();
             UserVar[event->BaseVarIndex] = 1;           //  Save the fact that the display is now ON
+            #ifdef P036_SEND_EVENTS
+            if (sendEvents) {
+              P036_SendEvent(event, F("display"), 1);
+            }
+            #endif
           }
           uint8_t nextFrame = (event->Par2 == 0 ? 0xFF : event->Par2 - 1);
           P036_data->P036_JumpToPage(event, nextFrame); //  Start to display the selected page, function needs 65ms!
@@ -827,6 +893,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             // display was OFF, turn it ON
             P036_data->display->displayOn();
             UserVar[event->BaseVarIndex] = 1; //  Save the fact that the display is now ON
+            #ifdef P036_SEND_EVENTS
+            if (sendEvents) {
+              P036_SendEvent(event, F("display"), 1);
+            }
+            #endif
           }
 
           if (UserVar[event->BaseVarIndex] == 1) {
@@ -872,5 +943,19 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
+#ifdef P036_SEND_EVENTS
+void P036_SendEvent(struct EventStruct *event, String eventName, int eventValue) {
+  if (Settings.UseRules) {
+    String RuleEvent;
+    RuleEvent += getTaskDeviceName(event->TaskIndex);
+    RuleEvent += '#';
+    RuleEvent += eventName;
+    RuleEvent += '=';
+    RuleEvent += eventValue;
+    eventQueue.addMove(std::move(RuleEvent));
+  }
+}
+#endif
 
 #endif // USES_P036
