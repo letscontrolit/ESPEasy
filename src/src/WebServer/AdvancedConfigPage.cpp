@@ -98,6 +98,9 @@ void handle_advanced() {
     Settings.NumberExtraWiFiScans = getFormItemInt(LabelType::WIFI_NR_EXTRA_SCANS);
     Settings.PeriodicalScanWiFi(isFormItemChecked(LabelType::WIFI_PERIODICAL_SCAN));
     Settings.JSONBoolWithoutQuotes(isFormItemChecked(F("json_bool_with_quotes")));
+    #ifdef ESP8266
+    Settings.UseAlternativeDeepSleep(isFormItemChecked(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL));
+    #endif
 
     addHtmlError(SaveSettings());
 
@@ -199,6 +202,10 @@ void handle_advanced() {
   #endif // if defined(ESP32)
 
   addFormCheckBox(F("JSON bool output without quotes"), F("json_bool_with_quotes"), Settings.JSONBoolWithoutQuotes());
+  #ifdef ESP8266
+  addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
+  #endif
+
 
   #ifdef USES_SSDP
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
