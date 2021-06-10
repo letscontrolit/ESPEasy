@@ -164,12 +164,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       // Use number 5 to remain compatible with existing configurations,
       // but the item should be one of the first choices.
       {
-        uint8_t choice = P036_CONTROLLER;
         const __FlashStringHelper *  options[2];
         options[0] = F("SSD1306 (128x64 dot controller)");
         options[1] = F("SH1106 (132x64 dot controller)");
         int optionValues[2] = { 1, 2 };
-        addFormSelector(F("Controller"), F("p036_controller"), 2, options, optionValues, choice);
+        addFormSelector(F("Controller"), F("p036_controller"), 2, options, optionValues, P036_CONTROLLER);
       }
 
       {
@@ -182,12 +181,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        uint8_t choice = P036_ROTATE;
         const __FlashStringHelper *  options[2];
         options[0] = F("Normal");
         options[1] = F("Rotated");
         int optionValues[2] = { 1, 2 };
-        addFormSelector(F("Rotation"), F("p036_rotate"), 2, options, optionValues, choice);
+        addFormSelector(F("Rotation"), F("p036_rotate"), 2, options, optionValues, P036_ROTATE);
       }
 
       {
@@ -201,7 +199,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("Will be automatically reduced if there is no font to fit this setting."));
 
       {
-        uint8_t choice = P036_SCROLL;
         const __FlashStringHelper *  options[5];
         options[0] = F("Very Slow");
         options[1] = F("Slow");
@@ -214,12 +211,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ePageScrollSpeed::ePSS_Fast),
           static_cast<int>(ePageScrollSpeed::ePSS_VeryFast),
           static_cast<int>(ePageScrollSpeed::ePSS_Instant) };
-        addFormSelector(F("Scroll"), F("p036_scroll"), 5, options, optionValues, choice);
+        addFormSelector(F("Scroll"), F("p036_scroll"), 5, options, optionValues, P036_SCROLL);
       }
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       addFormPinSelect(PinSelectPurpose::Generic_input, F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
-      bool tbPin3Invers = bitRead(PCONFIG_LONG(0), 16);      // Bit 16
 
       {
         uint8_t choice = uint8_t(bitRead(PCONFIG_LONG(0), 26)); // Bit 26 Input PullUp
@@ -242,9 +238,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Pin mode"), F("p036_pinmode"), Opcount, options, optionValues, choice);
       }
 
-      addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"), tbPin3Invers);
-      bool bStepThroughPages = bitRead(PCONFIG_LONG(0), 19); // Bit 19
-      addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bStepThroughPages);
+      addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"), bitRead(PCONFIG_LONG(0), 16)); // Bit 16
+
+      addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bitRead(PCONFIG_LONG(0), 19)); // Bit 19
 
       addFormNumericBox(F("Display Timeout"), F("p036_timer"), P036_TIMER);
 
@@ -263,23 +259,19 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Contrast"), F("p036_contrast"), 3, options, optionValues, choice);
       }
 
-      bool tbScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24); // Bit 24
-      addFormCheckBox(F("Disable all scrolling while WiFi is disconnected"), F("p036_ScrollWithoutWifi"), !tbScrollWithoutWifi);
+      addFormCheckBox(F("Disable all scrolling while WiFi is disconnected"), F("p036_ScrollWithoutWifi"), !bitRead(PCONFIG_LONG(0), 24)); // Bit 24
       addFormNote(F("When checked, all scrollings (pages and lines) are disabled as long as WiFi is not connected."));
 
       #ifdef P036_SEND_EVENTS
-      addFormCheckBox(F("Generate event for Display On/Off and Contrast"), F("p036_SendEvents"), bitRead(PCONFIG_LONG(0), 28)); // Bit 28
+      addFormCheckBox(F("Generate events for Display On/Off and Contrast"), F("p036_SendEvents"), bitRead(PCONFIG_LONG(0), 28)); // Bit 28
       addFormNote(F("Events named &lt;taskname&gt;#display=1/0 (on/off) and &lt;taskname&gt;#contrast=0/1/2 (low/med/high)"));
       #endif
 
       addFormSubHeader(F("Content"));
 
-      bool tbHideHeader = bitRead(PCONFIG_LONG(0), 25);             // Bit 25
-      addFormCheckBox(F("Hide header"), F("p036_HideHeader"), tbHideHeader);
+      addFormCheckBox(F("Hide header"), F("p036_HideHeader"), bitRead(PCONFIG_LONG(0), 25)); // Bit 25
 
       {
-        uint8_t choice9      = get8BitFromUL(PCONFIG_LONG(0), 8); // Bit15-8 HeaderContent
-        uint8_t choice10     = get8BitFromUL(PCONFIG_LONG(0), 0); // Bit7-0 HeaderContentAlternative
         const __FlashStringHelper *  options9[14] =
         { F("SSID"),         F("SysName"),         F("IP"),                 F("MAC"),                 F("RSSI"),                 F("BSSID"),
           F("WiFi channel"), F("Unit"),            F("SysLoad"),            F("SysHeap"),             F("SysStack"),             F("Date"),
@@ -299,15 +291,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(eHeaderContent::eDate),
           static_cast<int>(eHeaderContent::eTime),
           static_cast<int>(eHeaderContent::ePageNo) };
-        addFormSelector(F("Header"),             F("p036_header"),          14, options9, optionValues9, choice9);
-        addFormSelector(F("Header (alternate)"), F("p036_headerAlternate"), 14, options9, optionValues9, choice10);
+        addFormSelector(F("Header"),             F("p036_header"),          14, options9, optionValues9, get8BitFromUL(PCONFIG_LONG(0), 8)); // Bit15-8 HeaderContent
+        addFormSelector(F("Header (alternate)"), F("p036_headerAlternate"), 14, options9, optionValues9, get8BitFromUL(PCONFIG_LONG(0), 0)); // Bit7-0 HeaderContentAlternative
       }
 
-      bool tbScrollLines = bitRead(PCONFIG_LONG(0), 17);             // Bit 17
-      addFormCheckBox(F("Scroll long lines"),              F("p036_ScrollLines"), tbScrollLines);
+      addFormCheckBox(F("Scroll long lines"),              F("p036_ScrollLines"), bitRead(PCONFIG_LONG(0), 17)); // Bit 17
 
-      bool tbNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18); // Bit 18
-      addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),   !tbNoDisplayOnReceivedText);
+      addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),   !bitRead(PCONFIG_LONG(0), 18)); // Bit 18
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
       {
