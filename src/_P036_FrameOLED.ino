@@ -300,7 +300,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         optionValues[1] = 1;
         optionValues[2] = 3;
         addFormSelector(F("Generate events"), F("p036_generateEvents"), 3, options, optionValues, choice);
-        addFormNote(F("Events named &lt;taskname&gt; #display=1/0 (on/off), #contrast=0/1/2 (low/med/high), #frame=&lt;frame&gt; and #line=&lt;linenr&gt;"));
+        addFormNote(F("Events named &lt;taskname&gt; #display=1/0 (on/off), #contrast=0/1/2 (low/med/high), #frame=&lt;framenr&gt; and #line=&lt;linenr&gt;"));
       }
       #endif
 
