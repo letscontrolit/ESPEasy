@@ -1,7 +1,8 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P068
 
-# include "src//Helpers/Convert.h"
+# include "src/Helpers/Convert.h"
+# include "src/Helpers/ESPEasy_math.h"
 
 // #######################################################################################################
 // ################ Plugin 68: SHT30/SHT31/SHT35 Temperature and Humidity Sensor (I2C) ###################
@@ -98,7 +99,7 @@ void SHT3X::readFromSensor()
       tmp = ((((data[0] << 8) | data[1]) * 175.0f) / 65535.0f) - 45.0f;
       hum = ((((data[3] << 8) | data[4]) * 100.0f) / 65535.0f);
       // Humidity temperature compensation borrowed from P028 BME280
-      if ((tmpOff > 0.1f) || (tmpOff < -0.1f)) {
+      if (definitelyGreaterThan(tmpOff, 0.1f) || definitelyLessThan(tmpOff, -0.1f)) {
         float last_dew_temp_val = compute_dew_point_temp(tmp + (tmpOff / 2.0f), hum);
         hum = compute_humidity_from_dewpoint(tmp + tmpOff, last_dew_temp_val);
         tmp = tmp + tmpOff;
