@@ -17,6 +17,7 @@
 // @tonhuisman: 2021-06-11
 // ADD: Send events on Frame and Line
 // CHG: Setting contrast always turns on display, reduce code size by some refactoring
+// CHG: Introduce #define constants for 'magic numbers', replace PCONFIG_LONG(0) by P036_FLAGS_0 to anticipate on a second set of 32 flags
 // @tonhuisman: 2021-06-10
 // NEW: Add option to send events on Display On/Off (1,0) and Contrast Low/Med/High (0,1,2)
 // CHG: Eliminate a couple of superfluous variables saving a little .bin size
@@ -107,11 +108,32 @@
 #define P036_CONTRAST    PCONFIG(6)
 #define P036_RESOLUTION  PCONFIG(7)
 
+#define P036_FLAGS_0     PCONFIG_LONG(0)
+
+#define P036_FLAG_HEADER_ALTERNATIVE   0 // Bit 7-0 HeaderContentAlternative
+#define P036_FLAG_HEADER               8 // Bit15-8 HeaderContent
+#define P036_FLAG_PIN3_INVERSE        16 // Bit 16 Pin3Invers
+#define P036_FLAG_SCROLL_LINES        17 // Bit 17 ScrollLines
+#define P036_FLAG_NODISPLAY_ONRECEIVE 18 // Bit 18 NoDisplayOnReceivingText
+#define P036_FLAG_STEP_PAGES_BUTTON   19 // Bit 19 StepThroughPagesWithButton
+#define P036_FLAG_SETTINGS_VERSION    20 // Bit23-20 Version CustomTaskSettings -> version V1
+#define P036_FLAG_SCROLL_WITHOUTWIFI  24 // Bit 24 ScrollWithoutWifi
+#define P036_FLAG_HIDE_HEADER         25 // Bit 25 Hide header
+#define P036_FLAG_INPUT_PULLUP        26 // Bit 26 Input PullUp
+#define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown
+#define P036_FLAG_SEND_EVENTS         28 // Bit 28 SendEvents
+#define P036_FLAG_EVENTS_FRAME_LINE   29 // Bit 29 SendEvents also on Frame & Line
+
+
 #ifndef LIMIT_BUILD_SIZE
 #define P036_SEND_EVENTS      // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
 #endif
 
 #ifdef P036_SEND_EVENTS
+#define P036_EVENT_DISPLAY  0 // event: <taskname>#display=0/1
+#define P036_EVENT_CONTRAST 1 // event: <taskname>#contrast=0/1/2
+#define P036_EVENT_FRAME    2 // event: <taskname>#frame=1..n
+#define P036_EVENT_LINE     3 // event: <taskname>#line=1..n
 void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue);
 #endif
 
@@ -220,10 +242,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormPinSelect(PinSelectPurpose::Generic_input, F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
 
       {
-        uint8_t choice = uint8_t(bitRead(PCONFIG_LONG(0), 26)); // Bit 26 Input PullUp
+        uint8_t choice = uint8_t(bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)); // Bit 26 Input PullUp
         int Opcount = 2;
 #ifdef INPUT_PULLDOWN
-        choice += uint8_t(bitRead(PCONFIG_LONG(0), 27)) * 2;    // Bit 27 Input PullDown
+        choice += uint8_t(bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLDOWN)) * 2;  // Bit 27 Input PullDown
         if (choice > 2) {
           choice = 2;
         }
@@ -240,9 +262,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Pin mode"), F("p036_pinmode"), Opcount, options, optionValues, choice);
       }
 
-      addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"), bitRead(PCONFIG_LONG(0), 16)); // Bit 16
+      addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"), bitRead(P036_FLAGS_0, P036_FLAG_PIN3_INVERSE)); // Bit 16
 
-      addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bitRead(PCONFIG_LONG(0), 19)); // Bit 19
+      addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bitRead(P036_FLAGS_0, P036_FLAG_STEP_PAGES_BUTTON)); // Bit 19
 
       addFormNumericBox(F("Display Timeout"), F("p036_timer"), P036_TIMER);
 
@@ -261,17 +283,30 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Contrast"), F("p036_contrast"), 3, options, optionValues, choice);
       }
 
-      addFormCheckBox(F("Disable all scrolling while WiFi is disconnected"), F("p036_ScrollWithoutWifi"), !bitRead(PCONFIG_LONG(0), 24)); // Bit 24
+      addFormCheckBox(F("Disable all scrolling while WiFi is disconnected"), F("p036_ScrollWithoutWifi"), !bitRead(P036_FLAGS_0, P036_FLAG_SCROLL_WITHOUTWIFI)); // Bit 24
       addFormNote(F("When checked, all scrollings (pages and lines) are disabled as long as WiFi is not connected."));
 
       #ifdef P036_SEND_EVENTS
-      addFormCheckBox(F("Generate events for Display, Contrast,Frame &amp; Line"), F("p036_SendEvents"), bitRead(PCONFIG_LONG(0), 28)); // Bit 28
-      addFormNote(F("Events named &lt;taskname&gt; #display=1/0 (on/off), #contrast=0/1/2 (low/med/high), #frame=&lt;frame&gt; and #line=&lt;linenr&gt;"));
+      {
+        uint8_t choice = 0;
+        bitWrite(choice, 0, bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS));
+        bitWrite(choice, 1, bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE));
+        const __FlashStringHelper * options[3];
+        options[0] = F("None");
+        options[1] = F("Display &amp; Contrast");
+        options[2] = F("Display, Contrast, Frame &amp; Line");
+        int optionValues[3]; // Bitmap
+        optionValues[0] = 0;
+        optionValues[1] = 1;
+        optionValues[2] = 3;
+        addFormSelector(F("Generate events"), F("p036_generateEvents"), 3, options, optionValues, choice);
+        addFormNote(F("Events named &lt;taskname&gt; #display=1/0 (on/off), #contrast=0/1/2 (low/med/high), #frame=&lt;frame&gt; and #line=&lt;linenr&gt;"));
+      }
       #endif
 
       addFormSubHeader(F("Content"));
 
-      addFormCheckBox(F("Hide header"), F("p036_HideHeader"), bitRead(PCONFIG_LONG(0), 25)); // Bit 25
+      addFormCheckBox(F("Hide header"), F("p036_HideHeader"), bitRead(P036_FLAGS_0, P036_FLAG_HIDE_HEADER)); // Bit 25
 
       {
         const __FlashStringHelper *  options9[14] =
@@ -293,13 +328,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(eHeaderContent::eDate),
           static_cast<int>(eHeaderContent::eTime),
           static_cast<int>(eHeaderContent::ePageNo) };
-        addFormSelector(F("Header"),             F("p036_header"),          14, options9, optionValues9, get8BitFromUL(PCONFIG_LONG(0), 8)); // Bit15-8 HeaderContent
-        addFormSelector(F("Header (alternate)"), F("p036_headerAlternate"), 14, options9, optionValues9, get8BitFromUL(PCONFIG_LONG(0), 0)); // Bit7-0 HeaderContentAlternative
+        addFormSelector(F("Header"),             F("p036_header"),          14, options9, optionValues9, get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER)); // Bit15-8 HeaderContent
+        addFormSelector(F("Header (alternate)"), F("p036_headerAlternate"), 14, options9, optionValues9, get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE)); // Bit7-0 HeaderContentAlternative
       }
 
-      addFormCheckBox(F("Scroll long lines"),              F("p036_ScrollLines"), bitRead(PCONFIG_LONG(0), 17)); // Bit 17
+      addFormCheckBox(F("Scroll long lines"),              F("p036_ScrollLines"), bitRead(P036_FLAGS_0, P036_FLAG_SCROLL_LINES)); // Bit 17
 
-      addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),   !bitRead(PCONFIG_LONG(0), 18)); // Bit 18
+      addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),   !bitRead(P036_FLAGS_0, P036_FLAG_NODISPLAY_ONRECEIVE)); // Bit 18
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
       {
@@ -309,7 +344,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         P036_data_struct *P036_data = new (std::nothrow) P036_data_struct();
 
         if (nullptr != P036_data) {
-          P036_data->loadDisplayLines(event->TaskIndex, get4BitFromUL(PCONFIG_LONG(0), 20)); // Bit23-20 Version CustomTaskSettings
+          P036_data->loadDisplayLines(event->TaskIndex, get4BitFromUL(P036_FLAGS_0, P036_FLAG_SETTINGS_VERSION)); // Bit23-20 Version CustomTaskSettings
 
           String strLabel;
 
@@ -351,36 +386,38 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       P036_RESOLUTION = getFormItemInt(F("p036_size"));
 
       uint32_t lSettings = 0;
-      set8BitToUL(lSettings, 8, uint8_t(getFormItemInt(F("p036_header")) & 0xff));          // Bit15-8 HeaderContent
-      set8BitToUL(lSettings, 0, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff)); // Bit 7-0 HeaderContentAlternative
-      bitWrite(lSettings, 16, isFormItemChecked(F("p036_pin3invers")));                     // Bit 16 Pin3Invers
-      bitWrite(lSettings, 17, isFormItemChecked(F("p036_ScrollLines")));                    // Bit 17 ScrollLines
-      bitWrite(lSettings, 18, !isFormItemChecked(F("p036_NoDisplay")));                     // Bit 18 NoDisplayOnReceivingText
-      bitWrite(lSettings, 19, isFormItemChecked(F("p036_StepPages")));                      // Bit 19 StepThroughPagesWithButton
+      set8BitToUL(lSettings, P036_FLAG_HEADER, uint8_t(getFormItemInt(F("p036_header")) & 0xff));          // Bit15-8 HeaderContent
+      set8BitToUL(lSettings, P036_FLAG_HEADER_ALTERNATIVE, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff)); // Bit 7-0 HeaderContentAlternative
+      bitWrite(lSettings, P036_FLAG_PIN3_INVERSE, isFormItemChecked(F("p036_pin3invers")));                // Bit 16 Pin3Invers
+      bitWrite(lSettings, P036_FLAG_SCROLL_LINES, isFormItemChecked(F("p036_ScrollLines")));               // Bit 17 ScrollLines
+      bitWrite(lSettings, P036_FLAG_NODISPLAY_ONRECEIVE, !isFormItemChecked(F("p036_NoDisplay")));         // Bit 18 NoDisplayOnReceivingText
+      bitWrite(lSettings, P036_FLAG_STEP_PAGES_BUTTON, isFormItemChecked(F("p036_StepPages")));            // Bit 19 StepThroughPagesWithButton
       // save CustomTaskSettings always in version V1
-      set4BitToUL(lSettings, 20, 0x01);                                                     // Bit23-20 Version CustomTaskSettings ->
-                                                                                            // version V1
-      bitWrite(lSettings, 24, !isFormItemChecked(F("p036_ScrollWithoutWifi")));             // Bit 24 ScrollWithoutWifi
-      bitWrite(lSettings, 25, isFormItemChecked(F("p036_HideHeader")));                     // Bit 25 Hide header
+      set4BitToUL(lSettings, P036_FLAG_SETTINGS_VERSION, 0x01);                                            // Bit23-20 Version CustomTaskSettings ->
+                                                                                                           // version V1
+      bitWrite(lSettings, P036_FLAG_SCROLL_WITHOUTWIFI, !isFormItemChecked(F("p036_ScrollWithoutWifi")));  // Bit 24 ScrollWithoutWifi
+      bitWrite(lSettings, P036_FLAG_HIDE_HEADER, isFormItemChecked(F("p036_HideHeader")));                 // Bit 25 Hide header
 
       int P036pinmode = getFormItemInt(F("p036_pinmode"));
       switch (P036pinmode) {
         case 1:
         {
-          bitWrite(lSettings, 26, true);                                                    // Bit 26 Input PullUp
+          bitWrite(lSettings, P036_FLAG_INPUT_PULLUP, true);                                               // Bit 26 Input PullUp
           break;
         }
         case 2:
         {
-          bitWrite(lSettings, 27, true);                                                    // Bit 27 Input PullDown
+          bitWrite(lSettings, P036_FLAG_INPUT_PULLDOWN, true);                                            // Bit 27 Input PullDown
           break;
         }
       }
       #ifdef P036_SEND_EVENTS
-      bitWrite(lSettings, 28, isFormItemChecked(F("p036_SendEvents")));                     // Bit 28 SendEvents
+      uint8_t generateEvents = getFormItemInt(F("p036_generateEvents")) & 0xFF;
+      bitWrite(lSettings, P036_FLAG_SEND_EVENTS,       bitRead(generateEvents, 0));                       // Bit 28 SendEvents
+      bitWrite(lSettings, P036_FLAG_EVENTS_FRAME_LINE, bitRead(generateEvents, 1));                       // Bit 29 SendEventsFrameLine
       #endif
 
-      PCONFIG_LONG(0) = lSettings;
+      P036_FLAGS_0 = lSettings;
 
       {
         // For load and save of the display lines, we must not rely on the data in memory.
@@ -443,11 +480,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       // Load the custom settings from flash
 
-      P036_data->bHideHeader = bitRead(PCONFIG_LONG(0), 25); // Bit 25 Hide header
+      P036_data->bHideHeader = bitRead(P036_FLAGS_0, P036_FLAG_HIDE_HEADER); // Bit 25 Hide header
 
       // Init the display and turn it on
       if (!(P036_data->init(event->TaskIndex,
-                            get4BitFromUL(PCONFIG_LONG(0), 20), // Bit23-20 Version CustomTaskSettings
+                            get4BitFromUL(P036_FLAGS_0, P036_FLAG_SETTINGS_VERSION), // Bit23-20 Version CustomTaskSettings
                             P036_CONTROLLER,                               // Type
                             P036_ADR,                                      // I2C address
                             Settings.Pin_i2c_sda,
@@ -467,9 +504,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       //      Set the initial value of OnOff to On
       UserVar[event->BaseVarIndex] = 1;
       #ifdef P036_SEND_EVENTS
-      if (bitRead(PCONFIG_LONG(0), 28)) {
-        P036_SendEvent(event, 0, 1);
-        P036_SendEvent(event, 2, P036_data->currentFrameToDisplay + 1);
+      if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS)) {
+        P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
+        if (bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE)) {
+          P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
+        }
       }
       #endif
 
@@ -477,13 +516,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       {
 
 #ifdef INPUT_PULLDOWN
-        if (bitRead(PCONFIG_LONG(0), 27)) {      // Bit 27 Input PullDown
+        if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLDOWN)) {      // Bit 27 Input PullDown
           pinMode(CONFIG_PIN3, INPUT_PULLDOWN); // Reset pinstate to PIN_MODE_INPUT_PULLDOWN
         }
         else
 #endif
         {
-          if (bitRead(PCONFIG_LONG(0), 26)) {      // Bit 26 Input PullUp
+          if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)) {      // Bit 26 Input PullUp
             pinMode(CONFIG_PIN3, INPUT_PULLUP);   // Reset pinstate to PIN_MODE_INPUT_PULLUP
           }
           else {
@@ -530,7 +569,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       if (CONFIG_PIN3 != -1)
       {
-        P036_data->registerButtonState(digitalRead(CONFIG_PIN3), bitRead(PCONFIG_LONG(0), 16)); // Bit 16
+        P036_data->registerButtonState(digitalRead(CONFIG_PIN3), bitRead(P036_FLAGS_0, P036_FLAG_PIN3_INVERSE)); // Bit 16
       }
       success = true;
       break;
@@ -552,14 +591,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         P036_data->disableFrameChangeCnt--;
       }
 
-      int lTaskTimer = Settings.TaskDeviceTimer[event->TaskIndex];
-      P036_data->bAlternativHeader = (++P036_data->HeaderCount > (lTaskTimer * 5)); // change header after half of display time
+      P036_data->bAlternativHeader = (++P036_data->HeaderCount > (Settings.TaskDeviceTimer[event->TaskIndex] * 5)); // change header after half of display time
 
       if ((CONFIG_PIN3 != -1) && P036_data->ButtonState)
       {
-        bool bStepThroughPages = bitRead(PCONFIG_LONG(0), 19);          //  Bit 19
-
-        if (bStepThroughPages && (UserVar[event->BaseVarIndex] == 1)) { //  When display already on, switch to next page when enabled
+        if (bitRead(P036_FLAGS_0, P036_FLAG_STEP_PAGES_BUTTON) && (UserVar[event->BaseVarIndex] == 1)) { // Bit 19 When display already on, switch to next page when enabled
           if (P036_data->ScrollingPages.Scrolling == 0) {               // page scrolling not running -> switch to next page is allowed
             P036_data->P036_JumpToPage(event, 0xFF);                    //  Start to display the next page, function needs 65ms!
           }
@@ -568,21 +604,21 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex] = 1;     //  Save the fact that the display is now ON
           P036_data->P036_JumpToPage(event, 0); //  Start to display the first page, function needs 65ms!
           #ifdef P036_SEND_EVENTS
-          if (bitRead(PCONFIG_LONG(0), 28)) {
-            P036_SendEvent(event, 0, 1);
+          if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS)) {
+            P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
           }
           #endif
         }
         P036_data->markButtonStateProcessed();
 
 #ifdef INPUT_PULLDOWN
-        if (bitRead(PCONFIG_LONG(0), 27)) {      // Bit 27 Input PullDown
+        if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLDOWN)) {      // Bit 27 Input PullDown
           pinMode(CONFIG_PIN3, INPUT_PULLDOWN); // Reset pinstate to PIN_MODE_INPUT_PULLDOWN
         }
         else
 #endif
         {
-          if (bitRead(PCONFIG_LONG(0), 26)) {      // Bit 26 Input PullUp
+          if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)) {      // Bit 26 Input PullUp
             pinMode(CONFIG_PIN3, INPUT_PULLUP);   // Reset pinstate to PIN_MODE_INPUT_PULLUP
           }
           else {
@@ -593,10 +629,20 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P036_data->bLineScrollEnabled) {
+        #ifdef P036_SEND_EVENTS
+        uint8_t currentFrame = P036_data->currentFrameToDisplay;
+        #endif
         if ((UserVar[event->BaseVarIndex] == 1) && (P036_data->ScrollingPages.Scrolling == 0)) {
           // Display is on.
           P036_data->display_scrolling_lines(); // line scrolling
         }
+        #ifdef P036_SEND_EVENTS
+        if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS) &&
+            bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE) && 
+            currentFrame != P036_data->currentFrameToDisplay) { // Bit 28 Send Events && Bit 29 Send Events Frame & Line
+          P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
+        }
+        #endif
       }
       success = true;
       break;
@@ -637,8 +683,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           P036_data->display->displayOff();
           UserVar[event->BaseVarIndex] = 0; //  Save the fact that the display is now OFF
           #ifdef P036_SEND_EVENTS
-          if (bitRead(PCONFIG_LONG(0), 28)) {
-            P036_SendEvent(event, 0, 0);
+          if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS)) {
+            P036_SendEvent(event, P036_EVENT_DISPLAY, 0);
           }
           #endif
         }
@@ -647,8 +693,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (UserVar[event->BaseVarIndex] == 1) {
         // Display is on.
 
-        P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 8)); // Bit15-8 HeaderContent
-        P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0)); // Bit 7-0
+        P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER)); // Bit15-8 HeaderContent
+        P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE)); // Bit 7-0
                                                                                                               // HeaderContentAlternative
         P036_data->display_header();                                                                          // Update Header
 
@@ -687,9 +733,19 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
+      #ifdef P036_SEND_EVENTS
+      uint8_t currentFrame = P036_data->currentFrameToDisplay;
+      #endif
       if ((UserVar[event->BaseVarIndex] == 1) && P036_data->display_scroll_timer()) {     // page scrolling only when the display is on
         Scheduler.setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
       }
+      #ifdef P036_SEND_EVENTS
+      if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS) &&
+          bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE) &&
+          currentFrame != P036_data->currentFrameToDisplay) { // Bit 28 Send Events && Bit 29 Send Events Frame & Line
+        P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
+      }
+      #endif
       return success;
     }
 
@@ -764,7 +820,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       String subcommand = parseString(string, 2);
       int    LineNo     = event->Par1;
       #ifdef P036_SEND_EVENTS
-      bool   sendEvents = bitRead(PCONFIG_LONG(0), 28); // Bit 28 Send Events
+      bool   sendEvents = bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS); // Bit 28 Send Events
       #endif
 
       if ((command == F("oledframedcmd")) && P036_data->isInitialized()) {
@@ -780,7 +836,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = 1; //  Save the fact that the display is now ON
             #ifdef P036_SEND_EVENTS
             if (sendEvents) {
-              P036_SendEvent(event, 0, 1);
+              P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
             }
             #endif
           }
@@ -792,7 +848,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = 0; //  Save the fact that the display is now OFF
             #ifdef P036_SEND_EVENTS
             if (sendEvents) {
-              P036_SendEvent(event, 0, 0);
+              P036_SendEvent(event, P036_EVENT_DISPLAY, 0);
             }
             #endif
           }
@@ -802,9 +858,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_data->setContrast(P36_CONTRAST_LOW);
             #ifdef P036_SEND_EVENTS
             if (sendEvents) {
-              P036_SendEvent(event, 1, 0);
+              P036_SendEvent(event, P036_EVENT_CONTRAST, 0);
               if (UserVar[event->BaseVarIndex] == 0) {
-                P036_SendEvent(event, 0, 1);
+                P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
               }
             }
             #endif
@@ -816,9 +872,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_data->setContrast(P36_CONTRAST_MED);
             #ifdef P036_SEND_EVENTS
             if (sendEvents) {
-              P036_SendEvent(event, 1, 1);
+              P036_SendEvent(event, P036_EVENT_CONTRAST, 1);
               if (UserVar[event->BaseVarIndex] == 0) {
-                P036_SendEvent(event, 0, 1);
+                P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
               }
             }
             #endif
@@ -830,9 +886,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_data->setContrast(P36_CONTRAST_HIGH);
             #ifdef P036_SEND_EVENTS
             if (sendEvents) {
-              P036_SendEvent(event, 1, 2);
+              P036_SendEvent(event, P036_EVENT_CONTRAST, 2);
               if (UserVar[event->BaseVarIndex] == 0) {
-                P036_SendEvent(event, 0, 1);
+                P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
               }
             }
             #endif
@@ -849,15 +905,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = 1;           //  Save the fact that the display is now ON
             #ifdef P036_SEND_EVENTS
             if (sendEvents) {
-              P036_SendEvent(event, 0, 1);
+              P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
             }
             #endif
           }
           uint8_t nextFrame = (event->Par2 == 0 ? 0xFF : event->Par2 - 1);
           P036_data->P036_JumpToPage(event, nextFrame); //  Start to display the selected page, function needs 65ms!
           #ifdef P036_SEND_EVENTS
-          if (sendEvents) {
-            P036_SendEvent(event, 2, P036_data->currentFrameToDisplay + 1);
+          if (sendEvents && bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE)) { // Bit 29 Send Events Frame & Line
+            P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
           }
           #endif
         }
@@ -893,19 +949,19 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
           P036_data->MaxFramesToDisplay = 0xff;                         // update frame count
 
-          bool bNoDisplayOnReceivedText = bitRead(PCONFIG_LONG(0), 18); // Bit 18 NoDisplayOnReceivedText
-
           #ifdef P036_SEND_EVENTS
           uint8_t currentFrame = P036_data->currentFrameToDisplay;
           #endif
-          if ((UserVar[event->BaseVarIndex] == 0) && !bNoDisplayOnReceivedText) {
+          if ((UserVar[event->BaseVarIndex] == 0) && !bitRead(P036_FLAGS_0, P036_FLAG_NODISPLAY_ONRECEIVE)) { // Bit 18 NoDisplayOnReceivedText
             // display was OFF, turn it ON
             P036_data->display->displayOn();
             UserVar[event->BaseVarIndex] = 1; //  Save the fact that the display is now ON
             #ifdef P036_SEND_EVENTS
             if (sendEvents) {
-              P036_SendEvent(event, 0, 1);
-              P036_SendEvent(event, 3, LineNo);
+              P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
+              if (bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE)) { // Bit 29 Send Events Frame & Line
+                P036_SendEvent(event, P036_EVENT_LINE, LineNo);
+              }
             }
             #endif
           }
@@ -916,8 +972,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_data->P036_JumpToPage(event, nextFrame);                                            //  Start to display the selected page,
             // function needs 65ms!
             #ifdef P036_SEND_EVENTS
-            if (sendEvents && currentFrame != P036_data->currentFrameToDisplay) {
-              P036_SendEvent(event, 2, P036_data->currentFrameToDisplay + 1);
+            if (sendEvents && bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE) && currentFrame != P036_data->currentFrameToDisplay) {
+              P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
             }
             #endif
           }
@@ -966,22 +1022,22 @@ void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventVal
     RuleEvent += getTaskDeviceName(event->TaskIndex);
     RuleEvent += '#';
     switch (eventId) {
-      case 0: 
+      case P036_EVENT_DISPLAY: 
       {
         RuleEvent += F("display");
         break;
       }
-      case 1: 
+      case P036_EVENT_CONTRAST: 
       {
         RuleEvent += F("contrast");
         break;
       }
-      case 2: 
+      case P036_EVENT_FRAME: 
       {
         RuleEvent += F("frame");
         break;
       }
-      case 3: 
+      case P036_EVENT_LINE: 
       {
         RuleEvent += F("line");
         break;
