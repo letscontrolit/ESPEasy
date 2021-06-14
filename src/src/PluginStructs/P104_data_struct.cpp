@@ -272,14 +272,14 @@ void P104_data_struct::configureZones() {
   # endif // ifdef P104_DEBUG
 
   P->displayClear();
-  
-  for (auto idx = zones.begin(); idx != zones.end(); ++idx) {
-    if ((*idx).zone <= expectedZones) {
-      zoneOffset += (*idx).offset;
-      P->setZone(currentZone, zoneOffset, zoneOffset + (*idx).size - 1);
-      zoneOffset += (*idx).size;
 
-      switch ((*idx).font) {
+  for (auto it = zones.begin(); it != zones.end(); ++it) {
+    if (it->zone <= expectedZones) {
+      zoneOffset += it->offset;
+      P->setZone(currentZone, zoneOffset, zoneOffset + it->size - 1);
+      zoneOffset += it->size;
+
+      switch (it->font) {
         case 0: {
           P->setFont(nullptr); // default font
           break;
@@ -295,11 +295,11 @@ void P104_data_struct::configureZones() {
       }
 
       // Special Effects
-      P->setZoneEffect(currentZone, ((*idx).specialEffect & 0x01) == 0x01, PA_FLIP_UD);
-      P->setZoneEffect(currentZone, ((*idx).specialEffect & 0x02) == 0x02, PA_FLIP_LR);
+      P->setZoneEffect(currentZone, (it->specialEffect & 0x01) == 0x01, PA_FLIP_UD);
+      P->setZoneEffect(currentZone, (it->specialEffect & 0x02) == 0x02, PA_FLIP_LR);
 
       // Brightness
-      P->setIntensity(currentZone, (*idx).brightness);
+      P->setIntensity(currentZone, it->brightness);
 
       # ifdef P104_DEBUG
       log  = F("P104: configureZones #");
@@ -312,8 +312,8 @@ void P104_data_struct::configureZones() {
       # endif // ifdef P104_DEBUG
 
       // Content == text && text != ""
-      if (((*idx).content == 0) && (!(*idx).text.isEmpty())) {
-        displayOneZoneText(currentZone, idx, (*idx).text);
+      if ((it->content == 0) && (!it->text.isEmpty())) {
+        displayOneZoneText(currentZone, it, it->text);
       }
       currentZone++;
     }
@@ -324,7 +324,7 @@ void P104_data_struct::configureZones() {
  * Display the text with attributes for a specific zone
  *********************************************************/
 void P104_data_struct::displayOneZoneText(uint8_t                                 zone,
-                                          std::vector<P104_zone_struct>::iterator idx,
+                                          std::vector<P104_zone_struct>::iterator it,
                                           const String                          & text) {
   if ((zone < 0) || (zone > P104_MAX_ZONES)) { return; } // double check
   sZoneBuffers[zone] = String(text); // We explicitly want a copy here so it can be modified by parseTemplate()
@@ -347,11 +347,11 @@ void P104_data_struct::displayOneZoneText(uint8_t                               
   # endif // ifdef P104_DEBUG
   P->displayZoneText(zone,
                      sZoneBuffers[zone].c_str(),
-                     static_cast<textPosition_t>((*idx).alignment),
-                     (*idx).speed,
-                     (*idx).pause,
-                     static_cast<textEffect_t>((*idx).animationIn),
-                     static_cast<textEffect_t>((*idx).animationOut));
+                     static_cast<textPosition_t>(it->alignment),
+                     it->speed,
+                     it->pause,
+                     static_cast<textEffect_t>(it->animationIn),
+                     static_cast<textEffect_t>(it->animationOut));
 }
 
 /*******************************************************
@@ -372,25 +372,25 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
     if (validIntFromString(parseString(string, 3), zoneIndex) &&
         (zoneIndex > 0) &&
         (static_cast<unsigned int>(zoneIndex) <= zones.size())) {
-      for (auto idx = zones.begin(); idx != zones.end(); ++idx) {
-        if ((*idx).zone == zoneIndex) { // This zone
-          if (sub.equals(F("txt"))) {   // subcommand: txt,zone,<text>
-            displayOneZoneText(zoneIndex - 1, idx, parseStringKeepCase(string, 4));
-            return true;                // Quick success exit
+      for (auto it = zones.begin(); it != zones.end(); ++it) {
+        if (it->zone == zoneIndex) {   // This zone
+          if (sub.equals(F("txt"))) {  // subcommand: txt,zone,<text>
+            displayOneZoneText(zoneIndex - 1, it, parseStringKeepCase(string, 4));
+            return true;               // Quick success exit
           }
 
-          if (sub.equals(F("size"))) {  // subcommand: size,zone,<size> (1..)
+          if (sub.equals(F("size"))) { // subcommand: size,zone,<size> (1..)
             if ((value4 > 0) && (value4 <= 64)) {
-              (*idx).size = value4;
+              it->size    = value4;
               reconfigure = true;
               break;
             }
           }
 
-          if (sub.equals(F("bright"))) { // subcommand: bright,zone,<brightness> (0..15)
+          if (sub.equals(F("bright"))) {                      // subcommand: bright,zone,<brightness> (0..15)
             if ((value4 >= 0) && (value4 <= 15)) {
-              (*idx).brightness = value4;
-              P->setIntensity(zoneIndex - 1, (*idx).brightness); // Change brightness directly
+              it->brightness = value4;
+              P->setIntensity(zoneIndex - 1, it->brightness); // Change brightness directly
               return true;
             }
           }
@@ -430,21 +430,21 @@ void P104_data_struct::createHString(char *pH,
 bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
   bool retval = false;
 
-  for (auto idx = zones.begin(); idx != zones.end() && !retval; ++idx) {
-    switch ((*idx).content) {
+  for (auto it = zones.begin(); it != zones.end() && !retval; ++it) {
+    switch (it->content) {
       case 1: // time
       {
         getTime(szTimeL, flasher);
 
         # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
 
-        if ((*idx).layout == 2) {
+        if (it->layout == 2) {
           createHString(szTimeH, szTimeL);
-          displayOneZoneText((*idx).zone - 1, idx, String(szTimeH));
+          displayOneZoneText(it->zone - 1, it, String(szTimeH));
         } else
         # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
         {
-          displayOneZoneText((*idx).zone - 1, idx, String(szTimeL));
+          displayOneZoneText(it->zone - 1, it, String(szTimeL));
         }
         flasher = !flasher;
         retval  = true;
@@ -463,7 +463,7 @@ bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
     }
 
     if (retval) {
-      P->displayReset((*idx).zone - 1);
+      P->displayReset(it->zone - 1);
     }
   }
 
@@ -517,7 +517,7 @@ bool P104_data_struct::saveSettings() {
   # endif // ifdef P104_DEBUG
 
   uint8_t zoneIndexP1;
-  uint8_t idx = 0;
+  uint8_t index = 0;
 
   zones.clear(); // Start afresh
 
@@ -525,20 +525,20 @@ bool P104_data_struct::saveSettings() {
     zoneIndexP1 = zoneIndex + 1;
     zones.push_back(P104_zone_struct(zoneIndexP1));
 
-    zones[zoneIndex].size          = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_SIZE));
-    zones[zoneIndex].text          = enquoteString(webArg(getPluginCustomArgName(idx + P104_OFFSET_TEXT)));
-    zones[zoneIndex].content       = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_CONTENT));
-    zones[zoneIndex].alignment     = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_ALIGNMENT));
-    zones[zoneIndex].animationIn   = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_ANIM_IN));
-    zones[zoneIndex].speed         = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_SPEED));
-    zones[zoneIndex].animationOut  = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_ANIM_OUT));
-    zones[zoneIndex].pause         = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_PAUSE));
-    zones[zoneIndex].font          = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_FONT));
-    zones[zoneIndex].layout        = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_LAYOUT));
-    zones[zoneIndex].specialEffect = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_SPEC_EFFECT));
-    zones[zoneIndex].offset        = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_OFFSET));
-    zones[zoneIndex].brightness    = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_BRIGHTNESS));
-    zones[zoneIndex].repeatDelay   = getFormItemInt(getPluginCustomArgName(idx + P104_OFFSET_REPEATDELAY));
+    zones[zoneIndex].size          = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_SIZE));
+    zones[zoneIndex].text          = enquoteString(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
+    zones[zoneIndex].content       = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_CONTENT));
+    zones[zoneIndex].alignment     = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_ALIGNMENT));
+    zones[zoneIndex].animationIn   = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_ANIM_IN));
+    zones[zoneIndex].speed         = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_SPEED));
+    zones[zoneIndex].animationOut  = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT));
+    zones[zoneIndex].pause         = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_PAUSE));
+    zones[zoneIndex].font          = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_FONT));
+    zones[zoneIndex].layout        = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_LAYOUT));
+    zones[zoneIndex].specialEffect = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_SPEC_EFFECT));
+    zones[zoneIndex].offset        = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_OFFSET));
+    zones[zoneIndex].brightness    = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_BRIGHTNESS));
+    zones[zoneIndex].repeatDelay   = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_REPEATDELAY));
     # ifdef P104_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -548,7 +548,7 @@ bool P104_data_struct::saveSettings() {
     }
     # endif // ifdef P104_DEBUG
 
-    idx += P104_OFFSET_COUNT;
+    index += P104_OFFSET_COUNT;
     delay(0);
   }
 
@@ -556,50 +556,50 @@ bool P104_data_struct::saveSettings() {
   numDevices = 0;                              // Count the number of connected display units
 
   if (zbuffer.reserve(bufSize)) {
-    for (auto idx = zones.begin(); idx != zones.end(); ++idx) {
-      if ((*idx).zone <= expectedZones) { // sizes: (estimated)
+    for (auto it = zones.begin(); it != zones.end(); ++it) {
+      if (it->zone <= expectedZones) { // sizes: (estimated)
         // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
-        zbuffer += (*idx).size;           // 2
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).text;           // ~15
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).content;        // 1
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).alignment;      // 1
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).animationIn;    // 2
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).speed;          // 5
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).animationOut;   // 2
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).pause;          // 5
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).font;           // 1
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).layout;         // 1
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).specialEffect;  // 1
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).offset;         // 2
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).brightness;     // 2
-        zbuffer += P104_FIELD_SEP;        // 1
-        zbuffer += (*idx).repeatDelay;    // 4
-        zbuffer += P104_FIELD_SEP;        // 1
+        zbuffer += it->size;           // 2
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->text;           // ~15
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->content;        // 1
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->alignment;      // 1
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->animationIn;    // 2
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->speed;          // 5
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->animationOut;   // 2
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->pause;          // 5
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->font;           // 1
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->layout;         // 1
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->specialEffect;  // 1
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->offset;         // 2
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->brightness;     // 2
+        zbuffer += P104_FIELD_SEP;     // 1
+        zbuffer += it->repeatDelay;    // 4
+        zbuffer += P104_FIELD_SEP;     // 1
 
-        zbuffer += P104_ZONE_SEP;         // 1
-                                          // 58 total
-        numDevices += (*idx).size + (*idx).offset;
+        zbuffer += P104_ZONE_SEP;      // 1
+                                       // 58 total
+        numDevices += it->size + it->offset;
         # ifdef P104_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           log  = F("P104: append zone: ");
-          log += (*idx).zone;
+          log += it->zone;
           log += F(" buffer len: ");
           log += zbuffer.length();
           log += F(" size: ");
-          log += (*idx).size;
+          log += it->size;
           addLog(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P104_DEBUG
@@ -914,45 +914,45 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       html_table_header(F("Repeat (sec)"));
     }
 
-    uint8_t idx  = 0;
-    uint8_t zone = 0;
+    uint8_t index = 0;
+    uint8_t zone  = 0;
 
-    for (auto zns = zones.begin(); zns != zones.end(); ++zns) {
-      if ((*zns).zone <= expectedZones) {
+    for (auto it = zones.begin(); it != zones.end(); ++it) {
+      if (it->zone <= expectedZones) {
         html_TR_TD(); // All columns use max. width available
         addHtml(F("&nbsp;"));
         addHtmlInt(zone + 1);
         html_TD();    // Size
-        addNumericBox(getPluginCustomArgName(idx + P104_OFFSET_SIZE), (*zns).size, 1, 64);
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SIZE), it->size, 1, 64);
         html_TD();    // text
-        addTextBox(getPluginCustomArgName(idx + P104_OFFSET_TEXT), (*zns).text, 100, false, false, EMPTY_STRING, EMPTY_STRING);
+        addTextBox(getPluginCustomArgName(index + P104_OFFSET_TEXT), it->text, 100, false, false, EMPTY_STRING, EMPTY_STRING);
         html_TD();    // Content
-        addSelector(getPluginCustomArgName(idx + P104_OFFSET_CONTENT),
+        addSelector(getPluginCustomArgName(index + P104_OFFSET_CONTENT),
                     contentCount,
                     contentTypes,
                     contentOptions,
                     NULL,
-                    (*zns).content,
+                    it->content,
                     false,
                     true,
                     EMPTY_STRING);
         html_TD(); // Alignment
-        addSelector(getPluginCustomArgName(idx + P104_OFFSET_ALIGNMENT),
+        addSelector(getPluginCustomArgName(index + P104_OFFSET_ALIGNMENT),
                     3,
                     alignmentTypes,
                     alignmentOptions,
                     NULL,
-                    (*zns).alignment,
+                    it->alignment,
                     false,
                     true,
                     EMPTY_STRING);
         html_TD(); // Animation In (without None by passing the second element index)
-        addSelector(getPluginCustomArgName(idx + P104_OFFSET_ANIM_IN),
+        addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_IN),
                     animationCount - 1,
                     &animationTypes[1],
                     &animationOptions[1],
                     NULL,
-                    (*zns).animationIn,
+                    it->animationIn,
                     false,
                     true,
                     F("")
@@ -961,7 +961,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     # endif // ifdef P104_USE_TOOLTIPS
                     );
         html_TD(); // Speed In
-        addNumericBox(getPluginCustomArgName(idx + P104_OFFSET_SPEED), (*zns).speed, 0, 65535
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SPEED), it->speed, 0, 65535
                       # ifdef P104_USE_TOOLTIPS
                       , EMPTY_STRING // classname
                       , F("Speed")   // title
@@ -983,12 +983,12 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         html_TD();
 
         html_TD(); // Animation Out
-        addSelector(getPluginCustomArgName(idx + P104_OFFSET_ANIM_OUT),
+        addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
                     animationCount,
                     animationTypes,
                     animationOptions,
                     NULL,
-                    (*zns).animationOut,
+                    it->animationOut,
                     false,
                     true,
                     EMPTY_STRING
@@ -998,7 +998,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     );
 
         html_TD(); // Speed Out
-        addNumericBox(getPluginCustomArgName(idx + P104_OFFSET_PAUSE), (*zns).pause, 0, 65535
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_PAUSE), it->pause, 0, 65535
                       # ifdef P104_USE_TOOLTIPS
                       , EMPTY_STRING // classname
                       , F("Pause")   // title
@@ -1006,54 +1006,54 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       );
 
         html_TD(); // Font
-        addSelector(getPluginCustomArgName(idx + P104_OFFSET_FONT),
+        addSelector(getPluginCustomArgName(index + P104_OFFSET_FONT),
                     fontCount,
                     fontTypes,
                     fontOptions,
                     NULL,
-                    (*zns).font,
+                    it->font,
                     false,
                     true,
                     EMPTY_STRING);
 
         html_TD(); // Layout
-        addSelector(getPluginCustomArgName(idx + P104_OFFSET_LAYOUT),
+        addSelector(getPluginCustomArgName(index + P104_OFFSET_LAYOUT),
                     layoutCount,
                     layoutTypes,
                     layoutOptions,
                     NULL,
-                    (*zns).layout,
+                    it->layout,
                     false,
                     true,
                     EMPTY_STRING);
 
         html_TD(); // Special effects
-        addSelector(getPluginCustomArgName(idx + P104_OFFSET_SPEC_EFFECT),
+        addSelector(getPluginCustomArgName(index + P104_OFFSET_SPEC_EFFECT),
                     specialEffectCount,
                     specialEffectTypes,
                     specialEffectOptions,
                     NULL,
-                    (*zns).specialEffect,
+                    it->specialEffect,
                     false,
                     true,
                     EMPTY_STRING);
 
         html_TD(); // Offset
-        addNumericBox(getPluginCustomArgName(idx + P104_OFFSET_OFFSET), (*zns).offset, 0, 254);
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_OFFSET), it->offset, 0, 254);
         html_TD(); // Brightness
 
-        if ((*zns).brightness == 0) { (*zns).brightness = 7; }
-        addNumericBox(getPluginCustomArgName(idx + P104_OFFSET_BRIGHTNESS), (*zns).brightness, 1, 15);
+        if (it->brightness == 0) { it->brightness = 7; }
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_BRIGHTNESS), it->brightness, 1, 15);
 
-        html_TD();                                                                                         // Repeat (sec)
-        addNumericBox(getPluginCustomArgName(idx + P104_OFFSET_REPEATDELAY), (*zns).repeatDelay, -1, 86400 // max delay 24 hours
+        html_TD();                                                                                        // Repeat (sec)
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_REPEATDELAY), it->repeatDelay, -1, 86400 // max delay 24 hours
                       # ifdef P104_USE_TOOLTIPS
-                      , EMPTY_STRING                                                                       // classname
-                      , F("Repeat after this delay (sec), -1 = off")                                       // tooltip
+                      , EMPTY_STRING                                                                      // classname
+                      , F("Repeat after this delay (sec), -1 = off")                                      // tooltip
                       # endif // ifdef P104_USE_TOOLTIPS
                       );
         delay(0);
-        idx += P104_OFFSET_COUNT;
+        index += P104_OFFSET_COUNT;
         zone++;
       }
     }
