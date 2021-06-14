@@ -42,10 +42,6 @@ bool str2ip(const char *string,
 
 String  formatIP(const IPAddress& ip);
 
-void formatMAC(const uint8_t * mac, char (& strMAC)[20]);
-
-String formatMAC(const uint8_t *mac);
-
 
 /********************************************************************************************\
    Handling HEX strings
