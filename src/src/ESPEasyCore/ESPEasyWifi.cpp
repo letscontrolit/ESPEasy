@@ -21,7 +21,132 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
+// FIXME TD-er: Cleanup of WiFi code
+#ifdef ESPEASY_WIFI_CLEANUP_WORK_IN_PROGRESS
+bool ESPEasyWiFi_t::begin() {
 
+  return true;
+}
+
+void ESPEasyWiFi_t::end() {
+
+
+}
+
+
+void ESPEasyWiFi_t::loop() {
+  switch (_state) {
+    case WiFiState_e::OFF:
+    break;
+    case WiFiState_e::AP_only:
+    break;
+    case WiFiState_e::ErrorRecovery:
+    // Wait for timeout to expire
+    // Start again from scratch
+    break;
+    case WiFiState_e::STA_Scanning:
+    case WiFiState_e::STA_AP_Scanning:
+    // Check if scanning is finished
+    // When scanning per channel, call for scanning next channel
+    break;
+    case WiFiState_e::STA_Connecting:
+    case WiFiState_e::STA_Reconnecting:
+    // Check if (re)connecting has finished
+    break;
+    case WiFiState_e::STA_Connected:
+    // Check if still connected
+    // Reconnect if not.
+    // Else mark last timestamp seen as connected
+    break;
+  }
+
+
+  {
+    // Check if we need to start AP
+    // Flag captive portal in webserver and/or whether we might be in setup mode
+  }
+
+#ifdef USE_IMPROV
+  {
+    // Check for Improv mode.
+  }
+#endif
+
+
+}
+
+
+IPAddress  ESPEasyWiFi_t::getIP() const {
+
+  IPAddress res;
+
+
+  return res;
+}
+
+void  ESPEasyWiFi_t::disconnect() {
+
+}
+
+
+void ESPEasyWiFi_t::checkConnectProgress() {
+
+}
+
+void ESPEasyWiFi_t::startScanning() {
+  _state = WiFiState_e::STA_Scanning;
+  WifiScan(true);
+  _last_state_change.setNow();
+}
+
+
+bool ESPEasyWiFi_t::connectSTA() {
+  if (!WiFi_AP_Candidates.hasKnownCredentials()) {
+    if (!WiFiEventData.warnedNoValidWiFiSettings) {
+      addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
+      WiFiEventData.warnedNoValidWiFiSettings = true;
+    }
+    WiFiEventData.last_wifi_connect_attempt_moment.clear();
+    WiFiEventData.wifi_connect_attempt     = 1;
+    WiFiEventData.wifiConnectAttemptNeeded = false;
+
+    // No need to wait longer to start AP mode.
+    if (!Settings.DoNotStartAP()) {
+      setAP(true);
+    }
+    return false;
+  }
+  WiFiEventData.warnedNoValidWiFiSettings = false;
+  setSTA(true);
+  char hostname[40];
+  safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
+  #if defined(ESP8266)
+  wifi_station_set_hostname(hostname);
+
+  #endif // if defined(ESP8266)
+  #if defined(ESP32)
+  WiFi.setHostname(hostname);
+  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+  #endif // if defined(ESP32)
+  setConnectionSpeed();
+  setupStaticIPconfig();
+
+
+
+    // Start the process of connecting or starting AP
+    if (WiFi_AP_Candidates.getNext(true)) {
+      // Try to connect to AP
+
+    } else {
+      // No (known) AP, start scanning
+      startScanning();
+    }
+
+
+  return true;
+}
+
+#endif // ESPEASY_WIFI_CLEANUP_WORK_IN_PROGRESS
 
 
 // ********************************************************************************
@@ -98,7 +223,7 @@ bool WiFiConnected() {
 
   if (WiFiEventData.unprocessedWifiEvents()) { return false; }
 
-  bool wifi_isconnected = false;
+  bool wifi_isconnected = WiFi.isConnected();
   #ifdef ESP8266
   // Perform check on SDK function, see: https://github.com/esp8266/Arduino/issues/7432
   station_status_t status = wifi_station_get_connect_status();
@@ -113,21 +238,12 @@ bool WiFiConnected() {
       break;
     case STATION_IDLE:
     case STATION_CONNECTING:
-      wifi_isconnected = WiFiEventData.WiFiServicesInitialized();
       break;
 
     default:
       wifi_isconnected = false;
       break;
   }
-
-
-  #endif
-  #ifdef ESP32
-  if (WiFi.isConnected()) {
-    wifi_isconnected = true;
-  }
-
   #endif
 
   if (recursiveCall) return wifi_isconnected;
@@ -206,6 +322,31 @@ void WiFiConnectRelaxed() {
     return;
   }
   if (WiFiEventData.unprocessedWifiEvents()) {
+    handle_unprocessedNetworkEvents();
+  }
+  if (WiFiEventData.unprocessedWifiEvents()) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("WiFi : Connecting not possible, unprocessed WiFi events: ");
+      if (!WiFiEventData.processedConnect) {
+        log += F(" conn");
+      }
+      if (!WiFiEventData.processedDisconnect) {
+        log += F(" disconn");
+      }
+      if (!WiFiEventData.processedGotIP) {
+        log += F(" gotIP");
+      }
+      if (!WiFiEventData.processedDHCPTimeout) {
+        log += F(" DHCP_t/o");
+      }
+      
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    return;
+  }
+
+
+  if (WiFiEventData.unprocessedWifiEvents()) {
     // Still need to process WiFi events
     return;
   }
@@ -235,6 +376,8 @@ void AttemptWiFiConnect() {
       WiFiEventData.timerAPoff.setMillisFromNow(WIFI_RECONNECT_WAIT + WIFI_AP_OFF_TIMER_DURATION);
     }
   }
+
+  WiFiEventData.markWiFiTurnOn();
 
   if (WiFi_AP_Candidates.getNext(WiFiScanAllowed())) {
     const WiFi_AP_Candidate& candidate = WiFi_AP_Candidates.getCurrent();
@@ -603,8 +746,15 @@ void WifiDisconnect()
   WiFi.disconnect();
   WiFi.removeEvent(wm_event_id);
   #else // if defined(ESP32)
+
+  // Only call disconnect when STA is active
+  if (WifiIsSTA(WiFiMode())) {
+    wifi_station_disconnect();
+  }
+  station_config conf{};
+  memset(&conf, 0, sizeof(conf));
   ETS_UART_INTR_DISABLE();
-  wifi_station_disconnect();
+  wifi_station_set_config_current(&conf);
   ETS_UART_INTR_ENABLE();
   #endif // if defined(ESP32)
   WiFiEventData.setWiFiDisconnected();
@@ -974,8 +1124,11 @@ void setWifiMode(WiFiMode_t wifimode) {
 
     SetWiFiTXpower();
     if (WifiIsSTA(wifimode)) {
-      if (!WiFi.getAutoConnect()) {
-        WiFi.setAutoConnect(true); 
+      if (WiFi.getAutoConnect()) {
+        WiFi.setAutoConnect(false); 
+      }
+      if (WiFi.getAutoReconnect()) {
+        WiFi.setAutoReconnect(false);
       }
     }
     delay(100); // Must allow for some time to init.

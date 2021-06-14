@@ -67,6 +67,7 @@ String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
   return String(arduino_corelib_wifistatus);
   #else
   String log = ArduinoWifiStatusToFlashString(arduino_corelib_wifistatus);
+  log += ' ';
   log += arduino_corelib_wifistatus;
   return log;
   #endif

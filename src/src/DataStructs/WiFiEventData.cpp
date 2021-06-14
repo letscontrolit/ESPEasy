@@ -83,6 +83,7 @@ void WiFiEventData_t::markWiFiTurnOn() {
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
   wifiConnectInProgress     = false;
+  processingDisconnect.clear();
 }
 
 void WiFiEventData_t::markWiFiBegin() {
