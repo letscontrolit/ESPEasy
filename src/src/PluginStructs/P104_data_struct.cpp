@@ -58,7 +58,7 @@ bool P104_data_struct::begin() {
 
   if (cs_pin > -1) {
     addLog(LOG_LEVEL_INFO, F("P104: P->begin() called"));
-    P->begin();
+    P->begin(expectedZones);
     return true;
   }
   return false;
@@ -264,16 +264,20 @@ void P104_data_struct::configureZones() {
   String log;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-      log.reserve(32)) {
+      log.reserve(45)) {
     log  = F("P104: configureZones to do: ");
     log += zones.size();
     addLog(LOG_LEVEL_INFO, log);
   }
   # endif // ifdef P104_DEBUG
 
+  P->displayClear();
+  
   for (auto idx = zones.begin(); idx != zones.end(); ++idx) {
     if ((*idx).zone <= expectedZones) {
-      P->setZone(currentZone, zoneOffset, zoneOffset + (*idx).size);
+      zoneOffset += (*idx).offset;
+      P->setZone(currentZone, zoneOffset, zoneOffset + (*idx).size - 1);
+      zoneOffset += (*idx).size;
 
       switch ((*idx).font) {
         case 0: {
@@ -294,16 +298,21 @@ void P104_data_struct::configureZones() {
       P->setZoneEffect(currentZone, ((*idx).specialEffect & 0x01) == 0x01, PA_FLIP_UD);
       P->setZoneEffect(currentZone, ((*idx).specialEffect & 0x02) == 0x02, PA_FLIP_LR);
 
+      // Brightness
+      P->setIntensity(currentZone, (*idx).brightness);
+
       # ifdef P104_DEBUG
       log  = F("P104: configureZones #");
       log += (currentZone + 1);
       log += '/';
       log += expectedZones;
+      log += F(" offset: ");
+      log += zoneOffset;
       addLog(LOG_LEVEL_INFO, log);
       # endif // ifdef P104_DEBUG
 
       // Content == text && text != ""
-      if (((*idx).content == 0) && ((*idx).text.length() != 0)) {
+      if (((*idx).content == 0) && (!(*idx).text.isEmpty())) {
         displayOneZoneText(currentZone, idx, (*idx).text);
       }
       currentZone++;
