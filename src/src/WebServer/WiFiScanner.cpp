@@ -40,7 +40,7 @@ void handle_wifiscanner_json() {
       stream_next_json_object_value(F("auth"), authType);
     }
     stream_next_json_object_value(getLabel(LabelType::SSID),      it->ssid);
-    stream_next_json_object_value(getLabel(LabelType::BSSID),     formatMAC(it->bssid));
+    stream_next_json_object_value(getLabel(LabelType::BSSID),     it->bssid.toString());
     stream_next_json_object_value(getLabel(LabelType::CHANNEL),   String(it->channel));
     stream_last_json_object_value(getLabel(LabelType::WIFI_RSSI), String(it->rssi));
   }
