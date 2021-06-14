@@ -90,7 +90,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
     switch (enumval)
     {
       case BOOT_CAUSE:        value = String(lastBootCause); break; // Integer value to be used in rules
-      case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
+      case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr()); break;
       case CR:                value = "\r"; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
       case IP4:               value = String( (int) NetworkLocalIP()[3] ); break; // 4th IP octet
