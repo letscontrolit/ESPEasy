@@ -224,7 +224,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
         return success;
       }
 
-      sht3x->tmpOff = PCONFIG(1) * 10.0f;
+      sht3x->tmpOff = PCONFIG(1) / 10.0f;
       sht3x->readFromSensor();
       UserVar[event->BaseVarIndex + 0] = sht3x->tmp;
       UserVar[event->BaseVarIndex + 1] = sht3x->hum;
