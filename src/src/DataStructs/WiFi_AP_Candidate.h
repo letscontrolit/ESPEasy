@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/MAC_address.h"
 struct WiFi_AP_Candidate {
   // Construct from stored credentials
   // @param index  The index of the stored credentials
@@ -16,7 +17,7 @@ struct WiFi_AP_Candidate {
   // Construct using index from WiFi scan result
   WiFi_AP_Candidate(uint8_t networkItem);
 
-  WiFi_AP_Candidate(const WiFi_AP_Candidate& other);
+  WiFi_AP_Candidate(const WiFi_AP_Candidate& other) = default;
 
   // Default constructor
   WiFi_AP_Candidate();
@@ -26,9 +27,7 @@ struct WiFi_AP_Candidate {
 
   bool               operator==(const WiFi_AP_Candidate& other) const;
 
-  WiFi_AP_Candidate& operator=(const WiFi_AP_Candidate& other);
-
-  void               setBSSID(const uint8_t *bssid_c);
+  WiFi_AP_Candidate& operator=(const WiFi_AP_Candidate& other) = default;
 
   // Check if the candidate data can be used to actually connect to an AP.
   bool               usable() const;
@@ -42,7 +41,8 @@ struct WiFi_AP_Candidate {
   // Check to see if the BSSID is set
   bool               bssid_set() const;
 
-  bool               bssid_match(const uint8_t *bssid_c) const;
+  bool               bssid_match(const uint8_t bssid_c[6]) const;
+  bool               bssid_match(const MAC_address& other) const;
 
   // Create a formatted string
   String             toString(const String& separator = " ") const;
@@ -55,7 +55,7 @@ struct WiFi_AP_Candidate {
   unsigned long last_seen = 0;
   int32_t rssi     = 0;
   int32_t channel  = 0;
-  uint8_t bssid[6] = { 0 };
+  MAC_address bssid;
   byte    index    = 0;     // Index of the matching credentials
   byte    enc_type = 0;     // Encryption used (e.g. WPA2)
   bool    isHidden = false; // Hidden SSID
