@@ -187,7 +187,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
           P057_data->ledMatrix.ClearRowBuffer();
 
-          while (text[txt] && seg < 8)
+          while (txt < text.length() && text[txt] && seg < 8)
           {
             setDot = (txt < text.length() - 1 && text[txt + 1] == '.');
             char c = text[txt];
