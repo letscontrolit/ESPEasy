@@ -180,23 +180,21 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
       {
         String text = parseStringToEnd(string, 2);
 
-        if (text.length() > 0) {
+        if (!text.isEmpty()) {
           uint8_t seg = 0;
-          bool    setDot = false;
+          uint8_t txt = 0; // Separate indexers for text and segments
+          bool    setDot;
 
           P057_data->ledMatrix.ClearRowBuffer();
 
-          while (text[seg] && seg < 8)
+          while (text[txt] && seg < 8)
           {
-            // uint16_t value = 0;
-            if (seg < text.length() - 1 && text[seg + 1] == '.') {
-              setDot = true;
-            }
-            char c = text[seg];
+            setDot = (txt < text.length() - 1 && text[txt + 1] == '.');
+            char c = text[txt];
             P057_data->ledMatrix.SetDigit(seg, c, setDot);
             seg++;
-            if (setDot) { seg++; } // extra increment to skip past the dot
-            setDot = false;
+            txt++;
+            if (setDot) { txt++; } // extra increment to skip past the dot
           }
           P057_data->ledMatrix.TransmitRowBuffer();
           success = true;
