@@ -313,7 +313,7 @@ void P104_data_struct::configureZones() {
 
       // Content == text && text != ""
       if ((it->content == 0) && (!it->text.isEmpty())) {
-        displayOneZoneText(currentZone, it, it->text);
+        displayOneZoneText(currentZone, *it, it->text);
       }
       currentZone++;
     }
@@ -323,9 +323,9 @@ void P104_data_struct::configureZones() {
 /**********************************************************
  * Display the text with attributes for a specific zone
  *********************************************************/
-void P104_data_struct::displayOneZoneText(uint8_t                                 zone,
-                                          std::vector<P104_zone_struct>::iterator it,
-                                          const String                          & text) {
+void P104_data_struct::displayOneZoneText(uint8_t                 zone,
+                                          const P104_zone_struct& zstruct,
+                                          const String          & text) {
   if ((zone < 0) || (zone > P104_MAX_ZONES)) { return; } // double check
   sZoneBuffers[zone] = String(text); // We explicitly want a copy here so it can be modified by parseTemplate()
 
@@ -347,11 +347,11 @@ void P104_data_struct::displayOneZoneText(uint8_t                               
   # endif // ifdef P104_DEBUG
   P->displayZoneText(zone,
                      sZoneBuffers[zone].c_str(),
-                     static_cast<textPosition_t>(it->alignment),
-                     it->speed,
-                     it->pause,
-                     static_cast<textEffect_t>(it->animationIn),
-                     static_cast<textEffect_t>(it->animationOut));
+                     static_cast<textPosition_t>(zstruct.alignment),
+                     zstruct.speed,
+                     zstruct.pause,
+                     static_cast<textEffect_t>(zstruct.animationIn),
+                     static_cast<textEffect_t>(zstruct.animationOut));
 }
 
 /*******************************************************
@@ -375,7 +375,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
       for (auto it = zones.begin(); it != zones.end(); ++it) {
         if (it->zone == zoneIndex) {   // This zone
           if (sub.equals(F("txt"))) {  // subcommand: txt,zone,<text>
-            displayOneZoneText(zoneIndex - 1, it, parseStringKeepCase(string, 4));
+            displayOneZoneText(zoneIndex - 1, *it, parseStringKeepCase(string, 4));
             return true;               // Quick success exit
           }
 
@@ -440,11 +440,11 @@ bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
 
         if (it->layout == 2) {
           createHString(szTimeH, szTimeL);
-          displayOneZoneText(it->zone - 1, it, String(szTimeH));
+          displayOneZoneText(it->zone - 1, *it, String(szTimeH));
         } else
         # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
         {
-          displayOneZoneText(it->zone - 1, it, String(szTimeL));
+          displayOneZoneText(it->zone - 1, *it, String(szTimeL));
         }
         flasher = !flasher;
         retval  = true;
@@ -478,13 +478,13 @@ bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
  * enquoteString wrap in ", ' or ` unless all 3 quote types are used
  *****************************************/
 String enquoteString(const String& input) {
-  String quoteChar = F("\"");
+  char quoteChar = '"';
 
   if (input.indexOf(quoteChar) > -1) {
-    quoteChar = F("\'");
+    quoteChar = '\'';
 
     if (input.indexOf(quoteChar) > -1) {
-      quoteChar = F("`");
+      quoteChar = '`';
 
       if (input.indexOf(quoteChar) > -1) {
         return input; // All types of supported quotes used, return original string
@@ -525,20 +525,20 @@ bool P104_data_struct::saveSettings() {
     zoneIndexP1 = zoneIndex + 1;
     zones.push_back(P104_zone_struct(zoneIndexP1));
 
-    zones[zoneIndex].size          = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_SIZE));
+    zones[zoneIndex].size          = getFormItemIntCustomArgName(index + P104_OFFSET_SIZE);
     zones[zoneIndex].text          = enquoteString(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
-    zones[zoneIndex].content       = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_CONTENT));
-    zones[zoneIndex].alignment     = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_ALIGNMENT));
-    zones[zoneIndex].animationIn   = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_ANIM_IN));
-    zones[zoneIndex].speed         = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_SPEED));
-    zones[zoneIndex].animationOut  = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT));
-    zones[zoneIndex].pause         = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_PAUSE));
-    zones[zoneIndex].font          = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_FONT));
-    zones[zoneIndex].layout        = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_LAYOUT));
-    zones[zoneIndex].specialEffect = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_SPEC_EFFECT));
-    zones[zoneIndex].offset        = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_OFFSET));
-    zones[zoneIndex].brightness    = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_BRIGHTNESS));
-    zones[zoneIndex].repeatDelay   = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_REPEATDELAY));
+    zones[zoneIndex].content       = getFormItemIntCustomArgName(index + P104_OFFSET_CONTENT);
+    zones[zoneIndex].alignment     = getFormItemIntCustomArgName(index + P104_OFFSET_ALIGNMENT);
+    zones[zoneIndex].animationIn   = getFormItemIntCustomArgName(index + P104_OFFSET_ANIM_IN);
+    zones[zoneIndex].speed         = getFormItemIntCustomArgName(index + P104_OFFSET_SPEED);
+    zones[zoneIndex].animationOut  = getFormItemIntCustomArgName(index + P104_OFFSET_ANIM_OUT);
+    zones[zoneIndex].pause         = getFormItemIntCustomArgName(index + P104_OFFSET_PAUSE);
+    zones[zoneIndex].font          = getFormItemIntCustomArgName(index + P104_OFFSET_FONT);
+    zones[zoneIndex].layout        = getFormItemIntCustomArgName(index + P104_OFFSET_LAYOUT);
+    zones[zoneIndex].specialEffect = getFormItemIntCustomArgName(index + P104_OFFSET_SPEC_EFFECT);
+    zones[zoneIndex].offset        = getFormItemIntCustomArgName(index + P104_OFFSET_OFFSET);
+    zones[zoneIndex].brightness    = getFormItemIntCustomArgName(index + P104_OFFSET_BRIGHTNESS);
+    zones[zoneIndex].repeatDelay   = getFormItemIntCustomArgName(index + P104_OFFSET_REPEATDELAY);
     # ifdef P104_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {

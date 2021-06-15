@@ -408,9 +408,9 @@ struct P104_data_struct : public PluginTaskData_base {
 
 private:
 
-  void displayOneZoneText(uint8_t                                 currentZone,
-                          std::vector<P104_zone_struct>::iterator idx,
-                          const String                          & text);
+  void displayOneZoneText(uint8_t                 currentZone,
+                          const P104_zone_struct& idx,
+                          const String          & text);
   void getTime(char *psz,
                bool  f);
   void createHString(char *pH,
