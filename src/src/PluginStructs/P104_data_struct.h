@@ -21,7 +21,7 @@
 // # define P104_MEDIUM_ANIMATIONS             // disable some complex animations
 
 
-# define P104_MAX_MESG   8           // Message size for time/date
+# define P104_MAX_MESG  15           // Message size for time/date
 
 # ifdef ESP32
 #  define P104_MAX_ZONES        16u  // 1..P104_MAX_ZONES zones selectable
@@ -411,10 +411,7 @@ private:
   void displayOneZoneText(uint8_t                 currentZone,
                           const P104_zone_struct& idx,
                           const String          & text);
-  void getTime(char *psz,
-               bool  f);
-  void createHString(char *pH,
-                     char *pL);
+
   MD_MAX72XX::moduleType_t mod;
 
   taskIndex_t taskIndex;
@@ -432,9 +429,10 @@ private:
 
   // time/date stuff
   bool   flasher = false;        // seconds passing flasher
-  char   szTimeL[P104_MAX_MESG]; // mm:ss\0
+  char   szTimeL[P104_MAX_MESG]; // dd-mm-yy mm:ss\0
   char   szTimeH[P104_MAX_MESG];
   String sZoneBuffers[P104_MAX_ZONES];
+  int8_t lastDay = -1;
 
   // Stored settings
   tP104_StoredSettings StoredSettings;

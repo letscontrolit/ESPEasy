@@ -407,18 +407,54 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
   return false;       // Default: unknown command
 }
 
-void P104_data_struct::getTime(char *psz,
-                               bool  f = true) {
-  uint16_t h, m;
+void getTime(char *psz,
+             bool  seconds = false,
+             bool  colon   = true) {
+  uint16_t h, m, s;
 
   h = node_time.hour();
   m = node_time.minute();
-  sprintf(psz, "%02d%c%02d", h, (f ? ':' : ' '), m);
+
+  if (!seconds) {
+    sprintf(psz, "%02d%c%02d", h, (colon ? ':' : ' '), m);
+  } else {
+    s = node_time.second();
+    sprintf(psz, "%02d%c%02d %02d", h, (colon ? ':' : ' '), m, s);
+  }
+}
+
+void getDate(char *psz,
+             bool  year    = true,
+             bool  fourDgt = false) {
+  uint16_t d, m, y;
+
+  d = node_time.day();
+  m = node_time.month();
+
+  if (year) {
+    y = node_time.year() - (fourDgt ? 0 : 2000); // Will we survive into 21xx?
+    sprintf(psz, "%02d %02d %02d", d, m, y);     // last %02d will expand to 04 when needed
+  } else {
+    sprintf(psz, "%02d %02d", d, m);
+  }
+}
+
+void getDateTime(char *psz,
+                 bool  colon = true) {
+  uint16_t d, M, y, h, m;
+
+  d = node_time.day();
+  M = node_time.month();
+
+  y = node_time.year() - 2000; // Will we survive into 21xx?
+  h = node_time.hour();
+  m = node_time.minute();
+  sprintf(psz, "%02d %02d %02d %02d%c%02d", d, M, y, h, (colon ? ':' : ' '), m);
 }
 
 # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-void P104_data_struct::createHString(char *pH,
-                                     char *pL) {
+void createHString(char *pH,
+                   char *pL) {
   for (; *pL != '\0'; pL++) {
     *pH++ = *pL | 0x80; // offset character
   }
@@ -428,34 +464,37 @@ void P104_data_struct::createHString(char *pH,
 # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
 
 bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
-  bool retval = false;
+  bool retval     = false;
+  bool newFlasher = !flasher;
 
-  for (auto it = zones.begin(); it != zones.end() && !retval; ++it) {
+  for (auto it = zones.begin(); it != zones.end(); ++it) {
+    retval = false;
+
     switch (it->content) {
       case 1: // time
+      case 2: // time sec
       {
-        getTime(szTimeL, flasher);
-
-        # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-
-        if (it->layout == 2) {
-          createHString(szTimeH, szTimeL);
-          displayOneZoneText(it->zone - 1, *it, String(szTimeH));
-        } else
-        # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-        {
-          displayOneZoneText(it->zone - 1, *it, String(szTimeL));
-        }
-        flasher = !flasher;
+        getTime(szTimeL, it->content == 2, flasher);
+        flasher = newFlasher;
         retval  = true;
         break;
       }
-      case 2:  // date/4
+      case 3: // date/4
+      case 4: // date/6
+      case 5: // date/7
       {
+        if (lastDay != node_time.day()) {
+          getDate(szTimeL, it->content != 3, it->content == 5);
+          retval  = true;
+          lastDay = node_time.day();
+        }
         break; // TODO
       }
-      case 3:  // date/6
+      case 6:  // date-time/9
       {
+        getDateTime(szTimeL, flasher);
+        flasher = newFlasher;
+        retval  = true;
         break; // TODO
       }
       default:
@@ -463,6 +502,16 @@ bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
     }
 
     if (retval) {
+      # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+
+      if (it->layout == 2) {
+        createHString(szTimeH, szTimeL);
+        displayOneZoneText(it->zone - 1, *it, String(szTimeH));
+      } else
+      # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+      {
+        displayOneZoneText(it->zone - 1, *it, String(szTimeL));
+      }
       P->displayReset(it->zone - 1);
     }
   }
@@ -883,15 +932,17 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     };
     int specialEffectOptions[] = { 0, 1, 2, 3 };
 
-    int contentCount                          = 5;
+    int contentCount                          = 7;
     const __FlashStringHelper *contentTypes[] = {
       F("Text"),
-      F("Clock (size: 4)"),
-      F("Date (size: 4)"),
-      F("Date (size: 6)"),
-      F("Date/time (size: 8)")
+      F("Clock (4 mod.)"),
+      F("Clock sec (6 mod.)"),
+      F("Date (4 mod.)"),
+      F("Date yy (6 mod.)"),
+      F("Date yyyy (7 mod.)"),
+      F("Date/time (9 mod.)")
     };
-    int contentOptions[] { 0, 1, 2, 3, 4 };
+    int contentOptions[] { 0, 1, 2, 3, 4, 5, 6 };
 
     delay(0);
 
@@ -1060,8 +1111,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     html_end_table();
   }
 
-  addFormNote(F("Maximum nr. of modules possible (Zones * Size + Offset) = 255."));
-  addFormNote(F("'Animation In' or 'Animation Out' and 'Special Effects' marked with <b>*</b> should <b>not</b> be combined in a Zone."));
+  addFormNote(F("- Maximum nr. of modules possible (Zones * Size + Offset) = 255."));
+  addFormNote(F("- 'Animation In' or 'Animation Out' and 'Special Effects' marked with <b>*</b> should <b>not</b> be combined in a Zone."));
+  addFormNote(F("- 'Layout' 'Double upper' and 'Double lower' are only supported for 'Content' types 'Clock' and 'Date'."));
 
   return true;
 }

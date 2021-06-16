@@ -225,6 +225,19 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
+    case PLUGIN_EXIT: {
+      P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P104_data) {
+        return success;
+      }
+
+      P104_data->P->displayClear();
+      success = true;
+
+      break;
+    }
+
     case PLUGIN_WRITE: {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
