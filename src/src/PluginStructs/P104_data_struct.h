@@ -31,7 +31,10 @@
 #  define P104_SETTINGS_BUFFER  512
 # endif // ifdef ESP32
 
-# define P104_USE_TOOLTIPS // Enable tooltips in UI
+# define P104_MAX_MODULES_PER_ZONE 64      // Maximum allowed modules per zone
+# define P104_MAX_TEXT_LENGTH_PER_ZONE 100 // Limit the Text content length
+
+# define P104_USE_TOOLTIPS                 // Enable tooltips in UI
 
 # ifdef LIMIT_BUILD_SIZE
   #  ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
@@ -89,6 +92,25 @@
 # define P104_CONFIG_ZONE_COUNT   PCONFIG(0)
 # define P104_CONFIG_TOTAL_UNITS  PCONFIG(1)
 # define P104_CONFIG_HARDWARETYPE PCONFIG(2)
+
+# define P104_CONTENT_TEXT        0
+# define P104_CONTENT_TIME        1
+# define P104_CONTENT_TIME_SEC    2
+# define P104_CONTENT_DATE4       3
+# define P104_CONTENT_DATE6       4
+# define P104_CONTENT_DATE6_YYYY  5
+# define P104_CONTENT_DATE_TIME   6
+
+# define P104_SPECIAL_EFFECT_NONE       0
+# define P104_SPECIAL_EFFECT_UP_DOWN    1
+# define P104_SPECIAL_EFFECT_LEFT_RIGHT 2
+# define P104_SPECIAL_EFFECT_BOTH       P104_SPECIAL_EFFECT_UP_DOWN + P104_SPECIAL_EFFECT_LEFT_RIGHT // Used as a bitmap
+
+# define P104_LAYOUT_STANDARD     0
+# define P104_LAYOUT_DOUBLE_UPPER 1
+# define P104_LAYOUT_DOUBLE_LOWER 2
+
+# define P104_DEFAULT_FONT_ID     0
 
 # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
 
@@ -420,6 +442,7 @@ private:
 
   bool    initialized   = false;
   int8_t  expectedZones = -1;
+  int8_t  previousZones = -1;
   uint8_t numDevices    = 0;
 
   String error;

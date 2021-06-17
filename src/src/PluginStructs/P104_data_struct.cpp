@@ -280,7 +280,7 @@ void P104_data_struct::configureZones() {
       zoneOffset += it->size;
 
       switch (it->font) {
-        case 0: {
+        case P104_DEFAULT_FONT_ID: {
           P->setFont(nullptr); // default font
           break;
         }
@@ -295,8 +295,8 @@ void P104_data_struct::configureZones() {
       }
 
       // Special Effects
-      P->setZoneEffect(currentZone, (it->specialEffect & 0x01) == 0x01, PA_FLIP_UD);
-      P->setZoneEffect(currentZone, (it->specialEffect & 0x02) == 0x02, PA_FLIP_LR);
+      P->setZoneEffect(currentZone, (it->specialEffect & P104_SPECIAL_EFFECT_UP_DOWN) == P104_SPECIAL_EFFECT_UP_DOWN,       PA_FLIP_UD);
+      P->setZoneEffect(currentZone, (it->specialEffect & P104_SPECIAL_EFFECT_LEFT_RIGHT) == P104_SPECIAL_EFFECT_LEFT_RIGHT, PA_FLIP_LR);
 
       // Brightness
       P->setIntensity(currentZone, it->brightness);
@@ -373,14 +373,15 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
         (zoneIndex > 0) &&
         (static_cast<unsigned int>(zoneIndex) <= zones.size())) {
       for (auto it = zones.begin(); it != zones.end(); ++it) {
-        if (it->zone == zoneIndex) {   // This zone
-          if (sub.equals(F("txt"))) {  // subcommand: txt,zone,<text>
+        if (it->zone == zoneIndex) {                                        // This zone
+          if (sub.equals(F("txt")) && (it->content == P104_CONTENT_TEXT)) { // subcommand: txt,zone,<text> (only allowed for zones with Text
+                                                                            // content)
             displayOneZoneText(zoneIndex - 1, *it, parseStringKeepCase(string, 4));
-            return true;               // Quick success exit
+            return true;                                                    // Quick success exit
           }
 
-          if (sub.equals(F("size"))) { // subcommand: size,zone,<size> (1..)
-            if ((value4 > 0) && (value4 <= 64)) {
+          if (sub.equals(F("size"))) {                                      // subcommand: size,zone,<size> (1..)
+            if ((value4 > 0) && (value4 <= P104_MAX_MODULES_PER_ZONE)) {
               it->size    = value4;
               reconfigure = true;
               break;
@@ -471,26 +472,26 @@ bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
     retval = false;
 
     switch (it->content) {
-      case 1: // time
-      case 2: // time sec
+      case P104_CONTENT_TIME:     // time
+      case P104_CONTENT_TIME_SEC: // time sec
       {
         getTime(szTimeL, it->content == 2, flasher);
         flasher = newFlasher;
         retval  = true;
         break;
       }
-      case 3: // date/4
-      case 4: // date/6
-      case 5: // date/7
+      case P104_CONTENT_DATE4:      // date/4
+      case P104_CONTENT_DATE6:      // date/6
+      case P104_CONTENT_DATE6_YYYY: // date/7
       {
         if (lastDay != node_time.day()) {
           getDate(szTimeL, it->content != 3, it->content == 5);
           retval  = true;
           lastDay = node_time.day();
         }
-        break; // TODO
+        break;                     // TODO
       }
-      case 6:  // date-time/9
+      case P104_CONTENT_DATE_TIME: // date-time/9
       {
         getDateTime(szTimeL, flasher);
         flasher = newFlasher;
@@ -504,7 +505,7 @@ bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
     if (retval) {
       # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
 
-      if (it->layout == 2) {
+      if (it->layout == P104_LAYOUT_DOUBLE_LOWER) {
         createHString(szTimeH, szTimeL);
         displayOneZoneText(it->zone - 1, *it, String(szTimeH));
       } else
@@ -550,6 +551,9 @@ String enquoteString(const String& input) {
   return result;
 }
 
+/***************************************
+ * saveSettings gather the zones data from the UI and store in customsettings
+ **************************************/
 bool P104_data_struct::saveSettings() {
   error = EMPTY_STRING; // Clear
   String zbuffer;
@@ -711,7 +715,8 @@ bool P104_data_struct::saveSettings() {
 **************************************************************/
 bool P104_data_struct::webform_load(struct EventStruct *event) {
   {
-    const __FlashStringHelper *hardwareTypes[8] = {
+    # define P104_hardwareTypeCount 8
+    const __FlashStringHelper *hardwareTypes[P104_hardwareTypeCount] = {
       F("Generic (DR:0, CR:1, RR:0)"),    // 010
       F("Parola (DR:1, CR:1, RR:0)"),     // 110
       F("FC16 (DR:1, CR:0, RR:0)"),       // 100
@@ -721,7 +726,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Other 3 (DR:0, CR:1, RR:1)"),    // 011
       F("Other 4 (DR:1, CR:0, RR:1)")     // 101
     };
-    int hardwareOptions[8] = {
+    int hardwareOptions[P104_hardwareTypeCount] = {
       static_cast<int>(MD_MAX72XX::moduleType_t::GENERIC_HW),
       static_cast<int>(MD_MAX72XX::moduleType_t::PAROLA_HW),
       static_cast<int>(MD_MAX72XX::moduleType_t::FC16_HW),
@@ -731,7 +736,12 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       static_cast<int>(MD_MAX72XX::moduleType_t::DR0CR1RR1_HW),
       static_cast<int>(MD_MAX72XX::moduleType_t::DR1CR0RR1_HW)
     };
-    addFormSelector(F("Hardware type"), F("plugin_104_hardware"), 8, hardwareTypes, hardwareOptions, P104_CONFIG_HARDWARETYPE);
+    addFormSelector(F("Hardware type"),
+                    F("plugin_104_hardware"),
+                    P104_hardwareTypeCount,
+                    hardwareTypes,
+                    hardwareOptions,
+                    P104_CONFIG_HARDWARETYPE);
     addFormNote(F("DR = Digits as Rows, CR = Column Reversed, RR = Row Reversed; 0 = no, 1 = yes."));
   }
 
@@ -895,11 +905,11 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     const __FlashStringHelper *fontTypes[] = {
       F("Default")
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-      , F("Clock double height")
+      , F("Numeric, double height")
     # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     };
     int fontOptions[] = {
-      0
+      P104_DEFAULT_FONT_ID
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , P104_DOUBLE_HEIGHT_FONT_ID
     # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
@@ -917,9 +927,10 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     };
     int layoutOptions[] = {
-      0
+      P104_LAYOUT_STANDARD
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-      , 1, 2
+      , P104_LAYOUT_DOUBLE_UPPER
+      , P104_LAYOUT_DOUBLE_LOWER
     # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     };
 
@@ -930,7 +941,12 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Flip left/right *"),
       F("Flip up/down &amp; left/right *")
     };
-    int specialEffectOptions[] = { 0, 1, 2, 3 };
+    int specialEffectOptions[] = {
+      P104_SPECIAL_EFFECT_NONE,
+      P104_SPECIAL_EFFECT_UP_DOWN,
+      P104_SPECIAL_EFFECT_LEFT_RIGHT,
+      P104_SPECIAL_EFFECT_BOTH
+    };
 
     int contentCount                          = 7;
     const __FlashStringHelper *contentTypes[] = {
@@ -942,7 +958,15 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Date yyyy (7 mod.)"),
       F("Date/time (9 mod.)")
     };
-    int contentOptions[] { 0, 1, 2, 3, 4, 5, 6 };
+    int contentOptions[] {
+      P104_CONTENT_TEXT,
+      P104_CONTENT_TIME,
+      P104_CONTENT_TIME_SEC,
+      P104_CONTENT_DATE4,
+      P104_CONTENT_DATE6,
+      P104_CONTENT_DATE6_YYYY,
+      P104_CONTENT_DATE_TIME
+    };
 
     delay(0);
 
@@ -974,10 +998,16 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         addHtml(F("&nbsp;"));
         addHtmlInt(zone + 1);
         html_TD();    // Size
-        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SIZE), it->size, 1, 64);
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SIZE), it->size, 1, P104_MAX_MODULES_PER_ZONE);
         html_TD();    // text
-        addTextBox(getPluginCustomArgName(index + P104_OFFSET_TEXT), it->text, 100, false, false, EMPTY_STRING, EMPTY_STRING);
-        html_TD();    // Content
+        addTextBox(getPluginCustomArgName(index + P104_OFFSET_TEXT),
+                   it->text,
+                   P104_MAX_TEXT_LENGTH_PER_ZONE,
+                   false,
+                   false,
+                   EMPTY_STRING,
+                   EMPTY_STRING);
+        html_TD(); // Content
         addSelector(getPluginCustomArgName(index + P104_OFFSET_CONTENT),
                     contentCount,
                     contentTypes,
