@@ -12,7 +12,6 @@ void processProbeRequestAPmode();
 void processConnectAPmode();
 void processDisableAPmode();
 void processScanDone();
-void markWiFi_services_initialized();
 
 #ifdef HAS_ETHERNET
 void processEthernetConnected();

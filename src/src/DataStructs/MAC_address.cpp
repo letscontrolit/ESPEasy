@@ -1,4 +1,4 @@
-#include "MAC_address.h"
+#include "../DataStructs/MAC_address.h"
 
 #include "../../ESPEasy_common.h"
 
@@ -57,16 +57,9 @@ bool MAC_address::all_one() const
 
 String MAC_address::toString() const
 {
-  char str[20] = { 0 };
-
-  toString(str);
+  char str[18] = { 0 };
+  sprintf_P(str, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return String(str);
-}
-
-void MAC_address::toString(char (& strMAC)[20]) const
-{
-  sprintf_P(strMAC, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  ZERO_TERMINATE(strMAC);
 }
 
 bool MAC_address::mac_addr_cmp(const uint8_t other[6]) const

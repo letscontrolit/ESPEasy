@@ -32,6 +32,7 @@ struct WiFiEventData_t {
   bool unprocessedWifiEvents() const;
 
   void clearAll();
+  void markWiFiTurnOn();
   void markWiFiBegin();
 
   bool WiFiDisconnected() const;
@@ -75,6 +76,8 @@ struct WiFiEventData_t {
   uint8_t       lastScanChannel = 0;
   uint8_t       usedChannel = 0;
 
+  bool          eventError = false;
+
 
   WiFiDisconnectReason    lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
   LongTermTimer           lastScanMoment;
@@ -91,6 +94,10 @@ struct WiFiEventData_t {
   MAC_address             lastMacConnectedAPmode;
   MAC_address             lastMacDisconnectedAPmode;
 
+  // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
+  // This can cause recursion, so a semaphore is needed here.
+  LongTermTimer           processingDisconnect;
+
 
   // Semaphore like bools for processing data gathered from WiFi events.
   bool processedConnect          = true;
@@ -106,11 +113,6 @@ struct WiFiEventData_t {
   bool warnedNoValidWiFiSettings = false;
 
   bool performedClearWiFiCredentials = false;
-
-  // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
-  // This can cause recursion, so a semaphore is needed here.
-  bool processingDisconnect      = false;
-
 
   unsigned long connectionFailures = 0;
 

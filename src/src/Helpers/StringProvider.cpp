@@ -354,7 +354,7 @@ String getValue(LabelType::Enum label) {
                                                           getValue(LabelType::ETH_IP_SUBNET));
     case LabelType::ETH_IP_GATEWAY:         return NetworkGatewayIP().toString();
     case LabelType::ETH_IP_DNS:             return NetworkDnsIP(0).toString();
-    case LabelType::ETH_MAC:                return NetworkMacAddress();
+    case LabelType::ETH_MAC:                return NetworkMacAddress().toString();
     case LabelType::ETH_DUPLEX:             return EthLinkUp() ? (EthFullDuplex() ? F("Full Duplex") : F("Half Duplex")) : F("Link Down");
     case LabelType::ETH_SPEED:              return EthLinkUp() ? getEthSpeed() : F("Link Down");
     case LabelType::ETH_STATE:              return EthLinkUp() ? F("Link Up") : F("Link Down");

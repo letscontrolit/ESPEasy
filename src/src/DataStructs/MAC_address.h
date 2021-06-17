@@ -41,7 +41,6 @@ public:
 
   String toString() const;
 
-  void toString(char (& strMAC)[20]) const;
 
   // An universally administered address (UAA) is uniquely assigned to a device by its manufacturer.
   // The first three octets (in transmission order) identify the organization that issued
