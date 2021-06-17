@@ -183,17 +183,17 @@ void P104_data_struct::loadSettings() {
 
         tmp_val = parseString(tmp, 1 + P104_OFFSET_BRIGHTNESS, P104_FIELD_SEP);
 
-        if (tmp_val.isEmpty()) {
+        if (tmp_val.isEmpty() || !validIntFromString(tmp_val, tmp_int)) {
           zones[zoneIndex].brightness = 7;
-        } else if (validIntFromString(tmp_val, tmp_int)) {
+        } else {
           zones[zoneIndex].brightness = tmp_int;
         }
 
         tmp_val = parseString(tmp, 1 + P104_OFFSET_REPEATDELAY, P104_FIELD_SEP);
 
-        if (tmp_val.isEmpty()) {
+        if (tmp_val.isEmpty() || !validIntFromString(tmp_val, tmp_int)) {
           zones[zoneIndex].repeatDelay = -1;
-        } else if (validIntFromString(tmp_val, tmp_int)) {
+        } else {
           zones[zoneIndex].repeatDelay = tmp_int;
         }
 
@@ -590,8 +590,14 @@ bool P104_data_struct::saveSettings() {
     zones[zoneIndex].layout        = getFormItemIntCustomArgName(index + P104_OFFSET_LAYOUT);
     zones[zoneIndex].specialEffect = getFormItemIntCustomArgName(index + P104_OFFSET_SPEC_EFFECT);
     zones[zoneIndex].offset        = getFormItemIntCustomArgName(index + P104_OFFSET_OFFSET);
-    zones[zoneIndex].brightness    = getFormItemIntCustomArgName(index + P104_OFFSET_BRIGHTNESS);
-    zones[zoneIndex].repeatDelay   = getFormItemIntCustomArgName(index + P104_OFFSET_REPEATDELAY);
+
+    if (previousZones == expectedZones) {
+      zones[zoneIndex].brightness  = getFormItemIntCustomArgName(index + P104_OFFSET_BRIGHTNESS);
+      zones[zoneIndex].repeatDelay = getFormItemIntCustomArgName(index + P104_OFFSET_REPEATDELAY);
+    } else {
+      zones[zoneIndex].brightness  = 7u;
+      zones[zoneIndex].repeatDelay = -1;
+    }
     # ifdef P104_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -636,9 +642,15 @@ bool P104_data_struct::saveSettings() {
         zbuffer += P104_FIELD_SEP;     // 1
         zbuffer += it->offset;         // 2
         zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->brightness;     // 2
+
+        if (it->brightness != 7) {
+          zbuffer += it->brightness;   // 2
+        }
         zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->repeatDelay;    // 4
+
+        if (it->repeatDelay > -1) {
+          zbuffer += it->repeatDelay;  // 4
+        }
         zbuffer += P104_FIELD_SEP;     // 1
 
         zbuffer += P104_ZONE_SEP;      // 1
@@ -1148,10 +1160,14 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
   return true;
 }
 
+/**************************************************************
+* webform_save
+**************************************************************/
 bool P104_data_struct::webform_save(struct EventStruct *event) {
   P104_CONFIG_ZONE_COUNT   = getFormItemInt(F("plugin_104_zone"));
   P104_CONFIG_HARDWARETYPE = getFormItemInt(F("plugin_104_hardware"));
 
+  previousZones = expectedZones;
   expectedZones = P104_CONFIG_ZONE_COUNT;
 
   saveSettings();                       // Determines numDevices
