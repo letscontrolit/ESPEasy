@@ -1,6 +1,9 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P068
 
+# include "src/Helpers/Convert.h"
+# include "src/Helpers/ESPEasy_math.h"
+
 // #######################################################################################################
 // ################ Plugin 68: SHT30/SHT31/SHT35 Temperature and Humidity Sensor (I2C) ###################
 // #######################################################################################################
@@ -12,6 +15,10 @@
 // ########################## Adapted to ESPEasy 2.0 by Jochen Krapf #####################################
 // #######################################################################################################
 
+// Changelog:
+// 2021-06-12 @tonhuisman: Add temperature offset setting, with humidity compensation method 'borrowed' from BME280 sensor
+// 2020-??    @TD-er: Maitenance updates
+// 2017-07-18 @JK-de: Plugin adaption for ESPEasy 2.0
 
 #define PLUGIN_068
 #define PLUGIN_ID_068         68
@@ -35,8 +42,9 @@ public:
             uint8_t LSB,
             uint8_t CRC);
 
-  float tmp = 0;
-  float hum = 0;
+  float tmp    = 0.0f;
+  float hum    = 0.0f;
+  float tmpOff = 0.0f;
 
 private:
 
@@ -90,6 +98,12 @@ void SHT3X::readFromSensor()
     {
       tmp = ((((data[0] << 8) | data[1]) * 175.0f) / 65535.0f) - 45.0f;
       hum = ((((data[3] << 8) | data[4]) * 100.0f) / 65535.0f);
+      // Humidity temperature compensation borrowed from P028 BME280
+      if (!essentiallyEqual(tmpOff, 0.0f)) {
+        float last_dew_temp_val = compute_dew_point_temp(tmp + (tmpOff / 2.0f), hum);
+        hum = compute_humidity_from_dewpoint(tmp + tmpOff, last_dew_temp_val);
+        tmp = tmp + tmpOff;
+      }
     }
   }
   else
@@ -178,6 +192,9 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormNumericBox(F("Temperature offset"), F("p068_tempoffset"), PCONFIG(1));
+      addUnit(F("x 0.1C"));
+      addFormNote(F("Offset in units of 0.1 degree Celsius"));
       success = true;
       break;
     }
@@ -185,6 +202,7 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PCONFIG(0) = getFormItemInt(F("i2c_addr"));
+      PCONFIG(1) = getFormItemInt(F("p068_tempoffset"));
 
       success = true;
       break;
@@ -206,11 +224,14 @@ boolean Plugin_068(byte function, struct EventStruct *event, String& string)
         return success;
       }
 
+      sht3x->tmpOff = PCONFIG(1) / 10.0f;
       sht3x->readFromSensor();
       UserVar[event->BaseVarIndex + 0] = sht3x->tmp;
       UserVar[event->BaseVarIndex + 1] = sht3x->hum;
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SHT3x: Temperature: ");
+        String log;
+        log.reserve(25);
+        log = F("SHT3x: Temperature: ");
         log += formatUserVarNoCheck(event->TaskIndex, 0);
         addLog(LOG_LEVEL_INFO, log);
         log  = F("SHT3x: Humidity: ");
