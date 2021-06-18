@@ -16,7 +16,16 @@
 # include "src/Helpers/Misc.h"
 # include "src/Helpers/StringParser.h"
 
-# define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT // Enables double height numeric font used by double-height time/date display
+// # define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT // Enables double height numeric font used by double-height time/date display
+# define P104_USE_FULL_DOUBLEHEIGHT_FONT // Enables the use of a full (lower ascii only) set double height font
+# define P104_USE_VERTICAL_FONT          // Enables the use of a vertical font
+# define P104_USE_EXT_ASCII_FONT         // Enables the use of a extended ascii font
+// # ifdef PLUGIN_DISPLAY_COLLECTION
+# define P104_USE_ARABIC_FONT            // Enables the use of a Arabic font (see usage in MD_Parola examples)
+# define P104_USE_GREEK_FONT             // Enables the use of a Greek font (see usage in MD_Parola examples)
+# define P104_USE_KATAKANA_FONT          // Enables the use of a Katakana font (see usage in MD_Parola examples)
+// # endif // ifdef PLUGIN_DISPLAY_COLLECTION
+
 // # define P104_MINIMAL_ANIMATIONS            // disable most animations
 // # define P104_MEDIUM_ANIMATIONS             // disable some complex animations
 
@@ -31,22 +40,37 @@
 #  define P104_SETTINGS_BUFFER  512
 # endif // ifdef ESP32
 
-# define P104_MAX_MODULES_PER_ZONE 64      // Maximum allowed modules per zone
+# define P104_MAX_MODULES_PER_ZONE     64  // Maximum allowed modules per zone
 # define P104_MAX_TEXT_LENGTH_PER_ZONE 100 // Limit the Text content length
 
 # define P104_USE_TOOLTIPS                 // Enable tooltips in UI
 
 # ifdef LIMIT_BUILD_SIZE
-  #  ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-
-// #   undef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-  #  endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
   #  ifdef P104_DEBUG
   #   undef P104_DEBUG
   #  endif // ifdef P104_DEBUG
   #  ifdef P104_USE_TOOLTIPS
   #   undef P104_USE_TOOLTIPS
   #  endif // ifdef P104_USE_TOOLTIPS
+// Disable all fonts
+  #  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+  #   undef P104_USE_FULL_DOUBLEHEIGHT_FONT
+  #  endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+  #  ifdef P104_USE_VERTICAL_FONT
+  #   undef P104_USE_VERTICAL_FONT
+  #  endif // ifdef P104_USE_VERTICAL_FONT
+  #  ifdef P104_USE_EXT_ASCII_FONT
+  #   undef P104_USE_EXT_ASCII_FONT
+  #  endif // ifdef P104_USE_EXT_ASCII_FONT
+  #  ifdef P104_USE_ARABIC_FONT
+  #   undef P104_USE_ARABIC_FONT
+  #  endif // ifdef P104_USE_ARABIC_FONT
+  #  ifdef P104_USE_GREEK_FONT
+  #   undef P104_USE_GREEK_FONT
+  #  endif // ifdef P104_USE_GREEK_FONT
+  #  ifdef P104_USE_KATAKANA_FONT
+  #   undef P104_USE_KATAKANA_FONT
+  #  endif // ifdef P104_USE_KATAKANA_FONT
 # endif    // ifdef LIMIT_BUILD_SIZE
 
 # if defined(P104_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
@@ -92,6 +116,10 @@
 # define P104_CONFIG_ZONE_COUNT   PCONFIG(0)
 # define P104_CONFIG_TOTAL_UNITS  PCONFIG(1)
 # define P104_CONFIG_HARDWARETYPE PCONFIG(2)
+# define P104_CONFIG_FLAGS        PCONFIG_LONG(0)
+
+# define P104_CONFIG_FLAG_CLEAR_DISABLE 0
+# define P104_CONFIG_FLAG_LOG_ALL_TEXT  1
 
 # define P104_CONTENT_TEXT        0
 # define P104_CONTENT_TIME        1
@@ -100,6 +128,7 @@
 # define P104_CONTENT_DATE6       4
 # define P104_CONTENT_DATE6_YYYY  5
 # define P104_CONTENT_DATE_TIME   6
+# define P104_CONTENT_count       7 // The number of content type options
 
 # define P104_SPECIAL_EFFECT_NONE       0
 # define P104_SPECIAL_EFFECT_UP_DOWN    1
@@ -110,273 +139,72 @@
 # define P104_LAYOUT_DOUBLE_UPPER 1
 # define P104_LAYOUT_DOUBLE_LOWER 2
 
+# define P104_BRIGHTNESS_MAX      15 // Brightness levels range from 0 .. 15
+
+// Font related stuff
+
+// To add a font:
+// - generate the font using one of the font tools (or obtain externally, or craft it manually...)
+// - add a new font define, like #define P104_USE_MY_FANCY_FONT
+// - select an unused new numeric font ID define, like #define P104_MY_FANCY_FONT_ID n
+// - include the .h file guarded by #ifdef P104_MY_FANCY_FONT
+// - extend in P104_data_struct::webform_load the fontTypes, fontOptions arrays like the P104_USE_NUMERIC_DOUBLEHEIGHT_FONT example
+// - extend in P104_data_struct::handlePluginWrite the list of supported font id's for the "font" command
+// - extend in P104_data_struct::configureZones the switch/case statement to conditionaly support the new font
+// - update documentation
+
+// This is the default font id
 # define P104_DEFAULT_FONT_ID     0
 
+// These fonts are copied from the MD_Parola examples
 # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
 
 #  define P104_DOUBLE_HEIGHT_FONT_ID 1
 
-// each char table is specific for each display and maps all numbers/symbols
-MD_MAX72XX::fontType_t numeric7SegDouble[] PROGMEM =
-{
-  0,                                                                                      // 0
-  0,                                                                                      // 1
-  0,                                                                                      // 2
-  0,                                                                                      // 3
-  0,                                                                                      // 4
-  0,                                                                                      // 5
-  0,                                                                                      // 6
-  0,                                                                                      // 7
-  0,                                                                                      // 8
-  0,                                                                                      // 9
-  0,                                                                                      // 10
-  0,                                                                                      // 11
-  0,                                                                                      // 12
-  0,                                                                                      // 13
-  0,                                                                                      // 14
-  0,                                                                                      // 15
-  0,                                                                                      // 16
-  0,                                                                                      // 17
-  0,                                                                                      // 18
-  0,                                                                                      // 19
-  0,                                                                                      // 20
-  0,                                                                                      // 21
-  0,                                                                                      // 22
-  0,                                                                                      // 23
-  0,                                                                                      // 24
-  0,                                                                                      // 25
-  0,                                                                                      // 26
-  0,                                                                                      // 27
-  0,                                                                                      // 28
-  0,                                                                                      // 29
-  0,                                                                                      // 30
-  0,                                                                                      // 31
-  2,  0,    0,                                                                            // 32 - 'Space'
-  0,                                                                                      // 33 - '!'
-  0,                                                                                      // 34 - '"'
-  0,                                                                                      // 35 - '#'
-  0,                                                                                      // 36 - '$'
-  0,                                                                                      // 37 - '%'
-  0,                                                                                      // 38 - '&'
-  0,                                                                                      // 39 - '''
-  0,                                                                                      // 40 - '('
-  0,                                                                                      // 41 - ')'
-  0,                                                                                      // 42 - '*'
-  0,                                                                                      // 43 - '+'
-  0,                                                                                      // 44 - ','
-  0,                                                                                      // 45 - '-'
-  2,  48,   48,                                                                           // 46 - '.'
-  0,                                                                                      // 47 - '/'
-  10, 62,   127,    192,      192,      192,      192,      192,      192,      127, 62,  // 48 - '0'
-  10, 0,    0,      0,        0,        0,        0,        0,        0,        127, 62,  // 49 - '1'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      64, 0,    // 50 - '2'
-  10, 0,    65,     193,      193,      193,      193,      193,      193,      127, 62,  // 51 - '3'
-  10, 0,    0,      1,        1,        1,        1,        1,        1,        127, 62,  // 52 - '4'
-  10, 0,    64,     193,      193,      193,      193,      193,      193,      127, 62,  // 53 - '5'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      127, 62,  // 54 - '6'
-  10, 0,    0,      0,        0,        0,        0,        0,        0,        127, 62,  // 55 - '7'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      127, 62,  // 56 - '8'
-  10, 0,    64,     193,      193,      193,      193,      193,      193,      127, 62,  // 57 - '9'
-  2,  6,    6,                                                                            // 58 - ':'
-  0,                                                                                      // 59 - ';'
-  0,                                                                                      // 60 - '<'
-  0,                                                                                      // 61 - '='
-  0,                                                                                      // 62 - '>'
-  0,                                                                                      // 63 - '?'
-  0,                                                                                      // 64 - '@'
-  10, 62,   127,    1,        1,        1,        1,        1,        1,        127, 62,  // 65 - 'A'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      127, 62,  // 66 - 'B'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      65, 0,    // 67 - 'C'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      127, 62,  // 68 - 'D'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      65, 0,    // 69 - 'E'
-  10, 62,   127,    1,        1,        1,        1,        1,        1,        1, 0,     // 70 - 'F'
-  0,                                                                                      // 71 - 'G'
-  0,                                                                                      // 72 - 'H'
-  0,                                                                                      // 73 - 'I'
-  0,                                                                                      // 74 - 'J'
-  0,                                                                                      // 75 - 'K'
-  0,                                                                                      // 76 - 'L'
-  0,                                                                                      // 77 - 'M'
-  0,                                                                                      // 78 - 'N'
-  0,                                                                                      // 79 - 'O'
-  0,                                                                                      // 80 - 'P'
-  0,                                                                                      // 81 - 'Q'
-  0,                                                                                      // 82 - 'R'
-  0,                                                                                      // 83 - 'S'
-  0,                                                                                      // 84 - 'T'
-  0,                                                                                      // 85 - 'U'
-  0,                                                                                      // 86 - 'V'
-  0,                                                                                      // 87 - 'W'
-  0,                                                                                      // 88 - 'X'
-  0,                                                                                      // 89 - 'Y'
-  0,                                                                                      // 90 - 'Z'
-  0,                                                                                      // 91 - '['
-  0,                                                                                      // 92 - '\'
-  0,                                                                                      // 93 - ']'
-  0,                                                                                      // 94 - '^'
-  0,                                                                                      // 95 - '_'
-  0,                                                                                      // 96 - '`'
-  10, 62,   127,    1,        1,        1,        1,        1,        1,        127, 62,  // 97 - 'a'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      127, 62,  // 98 - 'b'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      65, 0,    // 99 - 'c'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      127, 62,  // 100 - 'd'
-  10, 62,   127,    193,      193,      193,      193,      193,      193,      65, 0,    // 101 - 'e'
-  10, 62,   127,    1,        1,        1,        1,        1,        1,        1, 0,     // 102 - 'f'
-  0,                                                                                      // 103 - 'g'
-  0,                                                                                      // 104 - 'h'
-  0,                                                                                      // 105 - 'i'
-  0,                                                                                      // 106 - 'j'
-  0,                                                                                      // 107 - 'k'
-  0,                                                                                      // 108 - 'l'
-  0,                                                                                      // 109 - 'm'
-  0,                                                                                      // 110 - 'n'
-  0,                                                                                      // 111 - 'o'
-  0,                                                                                      // 112 - 'p'
-  0,                                                                                      // 113 - 'q'
-  0,                                                                                      // 114 - 'r'
-  0,                                                                                      // 115 - 's'
-  0,                                                                                      // 116 - 't'
-  0,                                                                                      // 117 - 'u'
-  0,                                                                                      // 118 - 'v'
-  0,                                                                                      // 119 - 'w'
-  0,                                                                                      // 120 - 'x'
-  0,                                                                                      // 121 - 'y'
-  0,                                                                                      // 122 - 'z'
-  0,                                                                                      // 123 - '{'
-  2,  255,  255,                                                                          // 124 - '|'
-  0,                                                                                      // 125
-  0,                                                                                      // 126
-  0,                                                                                      // 127
-  0,                                                                                      // 128
-  0,                                                                                      // 129
-  0,                                                                                      // 130
-  0,                                                                                      // 131
-  0,                                                                                      // 132
-  0,                                                                                      // 133
-  0,                                                                                      // 134
-  0,                                                                                      // 135
-  0,                                                                                      // 136
-  0,                                                                                      // 137
-  0,                                                                                      // 138
-  0,                                                                                      // 139
-  0,                                                                                      // 140
-  0,                                                                                      // 141
-  0,                                                                                      // 142
-  0,                                                                                      // 143
-  0,                                                                                      // 144
-  0,                                                                                      // 145
-  0,                                                                                      // 146
-  0,                                                                                      // 147
-  0,                                                                                      // 148
-  0,                                                                                      // 149
-  0,                                                                                      // 150
-  0,                                                                                      // 151
-  0,                                                                                      // 152
-  0,                                                                                      // 153
-  0,                                                                                      // 154
-  0,                                                                                      // 155
-  0,                                                                                      // 156
-  0,                                                                                      // 157
-  0,                                                                                      // 158
-  0,                                                                                      // 159
-  2,  0,    0,                                                                            // 160 high space
-  0,                                                                                      // 161
-  0,                                                                                      // 162
-  0,                                                                                      // 163
-  0,                                                                                      // 164
-  0,                                                                                      // 165
-  0,                                                                                      // 166
-  0,                                                                                      // 167
-  0,                                                                                      // 168
-  0,                                                                                      // 169
-  0,                                                                                      // 170
-  0,                                                                                      // 171
-  0,                                                                                      // 172
-  0,                                                                                      // 173
-  2,  0,    0,                                                                            // 174 high period
-  0,                                                                                      // 175
-  10, 124,  254,    3,        3,        3,        3,        3,        3,        254, 124, // 176 - '0'
-  10, 0,    0,      0,        0,        0,        0,        0,        0,        254, 124, // 177 - '1'
-  10, 0,    2,      131,      131,      131,      131,      131,      131,      254, 124, // 178 - '2'
-  10, 0,    130,    131,      131,      131,      131,      131,      131,      254, 124, // 179 - '3'
-  10, 124,  254,    128,      128,      128,      128,      128,      128,      254, 124, // 180 - '4'
-  10, 124,  254,    131,      131,      131,      131,      131,      131,      2, 0,     // 181 - '5'
-  10, 124,  254,    131,      131,      131,      131,      131,      131,      2, 0,     // 182 - '6'
-  10, 0,    2,      3,        3,        3,        3,        3,        3,        254, 124, // 183 - '7'
-  10, 124,  254,    131,      131,      131,      131,      131,      131,      254, 124, // 184 - '8'
-  10, 124,  254,    131,      131,      131,      131,      131,      131,      254, 124, // 185 - '9'
-  2,  96,   96,                                                                           // 186 - ':'
-  0,                                                                                      // 187
-  0,                                                                                      // 188
-  0,                                                                                      // 189
-  0,                                                                                      // 190
-  0,                                                                                      // 191
-  0,                                                                                      // 192
-  10, 124,  254,    131,      131,      131,      131,      131,      131,      254, 124, // 193 - 'A'
-  10, 124,  254,    128,      128,      128,      128,      128,      128,      0, 0,     // 194 - 'B'
-  10, 0,    0,      128,      128,      128,      128,      128,      128,      0, 0,     // 195 - 'C'
-  10, 0,    0,      128,      128,      128,      128,      128,      128,      254, 124, // 196 - 'D'
-  10, 124,  254,    131,      131,      131,      131,      131,      131,      130, 0,   // 197 - 'E'
-  10, 124,  254,    131,      131,      131,      131,      131,      131,      130, 0,   // 198 - 'F'
-  0,                                                                                      // 199
-  0,                                                                                      // 200
-  0,                                                                                      // 201
-  0,                                                                                      // 202
-  0,                                                                                      // 203
-  0,                                                                                      // 204
-  0,                                                                                      // 205
-  0,                                                                                      // 206
-  0,                                                                                      // 207
-  0,                                                                                      // 208
-  0,                                                                                      // 209
-  0,                                                                                      // 210
-  0,                                                                                      // 211
-  0,                                                                                      // 212
-  0,                                                                                      // 213
-  0,                                                                                      // 214
-  0,                                                                                      // 215
-  0,                                                                                      // 216
-  0,                                                                                      // 217
-  0,                                                                                      // 218
-  0,                                                                                      // 219
-  0,                                                                                      // 220
-  0,                                                                                      // 221
-  0,                                                                                      // 222
-  0,                                                                                      // 223
-  0,                                                                                      // 224
-  10, 124,  254,    131,      131,      131,      131,      131,      131,      254, 124, // 225 - 'a'
-  10, 124,  254,    128,      128,      128,      128,      128,      128,      0, 0,     // 226 - 'b'
-  10, 0,    0,      128,      128,      128,      128,      128,      128,      0, 0,     // 227 - 'c'
-  10, 0,    0,      128,      128,      128,      128,      128,      128,      254, 124, // 228 - 'd'
-  10, 124,  254,    131,      131,      131,      131,      131,      131,      130, 0,   // 229 - 'e'
-  10, 124,  254,    131,      131,      131,      131,      131,      131,      130, 0,   // 230 - 'f'
-  0,                                                                                      // 231
-  0,                                                                                      // 232
-  0,                                                                                      // 233
-  0,                                                                                      // 234
-  0,                                                                                      // 235
-  0,                                                                                      // 236
-  0,                                                                                      // 237
-  0,                                                                                      // 238
-  0,                                                                                      // 239
-  0,                                                                                      // 240
-  0,                                                                                      // 241
-  0,                                                                                      // 242
-  0,                                                                                      // 243
-  0,                                                                                      // 244
-  0,                                                                                      // 245
-  0,                                                                                      // 246
-  0,                                                                                      // 247
-  0,                                                                                      // 104
-  0,                                                                                      // 249
-  0,                                                                                      // 250
-  0,                                                                                      // 251
-  2,  255,  255,                                                                          // 252 - '|'
-  0,                                                                                      // 253
-  0,                                                                                      // 254
-  0,                                                                                      // 255
-};
+#  include "../Static/Fonts/P104_font_numeric7SegDouble.h"
 # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+
+# ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+
+#  define P104_FULL_DOUBLEHEIGHT_FONT_ID 2
+
+#  include "../Static/Fonts/P104_font_BigFont.h"
+# endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+
+# ifdef P104_USE_VERTICAL_FONT
+
+#  define P104_VERTICAL_FONT_ID 3
+
+#  include "../Static/Fonts/P104_font_vertical.h"
+# endif // ifdef P104_USE_VERTICAL_FONT
+
+# ifdef P104_USE_EXT_ASCII_FONT
+
+#  define P104_EXT_ASCII_FONT_ID 4
+
+#  include "../Static/Fonts/P104_font_ExtASCII.h"
+# endif // ifdef P104_USE_EXT_ASCII_FONT
+
+# ifdef P104_USE_ARABIC_FONT
+
+#  define P104_ARABIC_FONT_ID 5
+
+#  include "../Static/Fonts/P104_font_arabic.h"
+# endif // ifdef P104_USE_ARABIC_FONT
+
+# ifdef P104_USE_GREEK_FONT
+
+#  define P104_GREEK_FONT_ID 6
+
+#  include "../Static/Fonts/P104_font_greek.h"
+# endif // ifdef P104_USE_GREEK_FONT
+
+# ifdef P104_USE_KATAKANA_FONT
+
+#  define P104_KATAKANA_FONT_ID 7
+
+#  include "../Static/Fonts/P104_font_katakana.h"
+# endif // ifdef P104_USE_KATAKANA_FONT
 
 struct P104_zone_struct {
   P104_zone_struct(uint8_t _zone) : zone(_zone) {}
@@ -426,7 +254,9 @@ struct P104_data_struct : public PluginTaskData_base {
                          const String& string);
   bool handlePluginOncePerSecond(taskIndex_t taskIndex);
 
-  MD_Parola *P; // = MD_Parola(mod, /*din_pin, clk_pin,*/ cs_pin, modules);
+  MD_Parola *P = nullptr;
+
+  bool logAllText = false;
 
 private:
 
@@ -437,7 +267,7 @@ private:
   MD_MAX72XX::moduleType_t mod;
 
   taskIndex_t taskIndex;
-  int8_t      din_pin, clk_pin, cs_pin;
+  int8_t      cs_pin;
   uint8_t     modules = 1u;
 
   bool    initialized   = false;

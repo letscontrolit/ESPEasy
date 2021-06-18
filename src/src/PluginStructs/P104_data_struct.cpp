@@ -18,35 +18,19 @@
 // Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
 
+# if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+void createHString(String& string);
+# endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+
 P104_data_struct::P104_data_struct(MD_MAX72XX::moduleType_t _mod,
                                    taskIndex_t              _taskIndex,
                                    int8_t                   _cs_pin,
                                    uint8_t                  _modulesize)
-  : mod(_mod), taskIndex(_taskIndex), din_pin(-1), clk_pin(-1), cs_pin(_cs_pin), modules(_modulesize) {
-  # ifdef ESP32
-
-  switch (Settings.InitSPI) {
-    case 1:
-      din_pin = 23;
-      clk_pin = 19;
-      break;
-    case 2:
-      din_pin = 13;
-      clk_pin = 14;
-      break;
-  }
-  # else // ESP82xx
-
-  if (Settings.InitSPI == 1) {
-    din_pin = 13;
-    clk_pin = 14;
-  }
-  # endif // ifdef ESP32
-
-  if (din_pin == -1) {
+  : mod(_mod), taskIndex(_taskIndex), cs_pin(_cs_pin), modules(_modulesize) {
+  if (Settings.InitSPI < 1) {
     addLog(LOG_LEVEL_ERROR, F("DOTMATRIX: Required SPI not enabled. Initialization aborted!"));
   } else {
-    P = new MD_Parola(mod, /*din_pin, clk_pin,*/ cs_pin, modules);
+    P = new MD_Parola(mod, cs_pin, modules);
   }
 }
 
@@ -56,8 +40,8 @@ bool P104_data_struct::begin() {
     initialized = true;
   }
 
-  if (cs_pin > -1) {
-    addLog(LOG_LEVEL_INFO, F("P104: P->begin() called"));
+  if ((P != nullptr) && (cs_pin > -1)) {
+    addLog(LOG_LEVEL_INFO, F("dotmatrix: P->begin() called"));
     P->begin(expectedZones);
     return true;
   }
@@ -118,6 +102,7 @@ void P104_data_struct::loadSettings() {
 
       zones.clear();
       zonesInitialized = false;
+      numDevices       = 0;
 
       int16_t  offset2;
       uint16_t prev2 = 0;
@@ -198,8 +183,9 @@ void P104_data_struct::loadSettings() {
         }
 
         delay(0);
-        prev2   = offset2 + 1;
-        offset2 = buffer.indexOf(P104_ZONE_SEP, prev2);
+        prev2       = offset2 + 1;
+        offset2     = buffer.indexOf(P104_ZONE_SEP, prev2);
+        numDevices += zones[zoneIndex].size + zones[zoneIndex].offset;
         zoneIndex++;
       }
       buffer.reserve(0); // Free some memory
@@ -291,6 +277,44 @@ void P104_data_struct::configureZones() {
           break;
         }
         # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+        # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+        case P104_FULL_DOUBLEHEIGHT_FONT_ID: {
+          P->setFont(currentZone, BigFont);
+          P->setCharSpacing(P->getCharSpacing() * 2); // double spacing as well
+          break;
+        }
+        # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+        # ifdef P104_USE_VERTICAL_FONT
+        case P104_VERTICAL_FONT_ID: {
+          P->setFont(currentZone, _fontVertical);
+          break;
+        }
+        # endif // ifdef P104_USE_VERTICAL_FONT
+        # ifdef P104_USE_EXT_ASCII_FONT
+        case P104_EXT_ASCII_FONT_ID: {
+          P->setFont(currentZone, ExtASCII);
+          break;
+        }
+        # endif // ifdef P104_USE_EXT_ASCII_FONT
+        # ifdef P104_USE_ARABIC_FONT
+        case P104_ARABIC_FONT_ID: {
+          P->setFont(currentZone, fontArabic);
+          break;
+        }
+        # endif // ifdef P104_USE_ARABIC_FONT
+        # ifdef P104_USE_GREEK_FONT
+        case P104_GREEK_FONT_ID: {
+          P->setFont(currentZone, fontGreek);
+          break;
+        }
+        # endif // ifdef P104_USE_GREEK_FONT
+        # ifdef P104_USE_KATAKANA_FONT
+        case P104_KATAKANA_FONT_ID: {
+          P->setFont(currentZone, fontKatakana);
+          break;
+        }
+        # endif // ifdef P104_USE_KATAKANA_FONT
+
           // Extend here with more fonts if/when available
       }
 
@@ -312,7 +336,7 @@ void P104_data_struct::configureZones() {
       # endif // ifdef P104_DEBUG
 
       // Content == text && text != ""
-      if ((it->content == 0) && (!it->text.isEmpty())) {
+      if ((it->content == P104_CONTENT_TEXT) && (!it->text.isEmpty())) {
         displayOneZoneText(currentZone, *it, it->text);
       }
       currentZone++;
@@ -330,13 +354,21 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
   sZoneBuffers[zone] = String(text); // We explicitly want a copy here so it can be modified by parseTemplate()
 
   parseTemplate(sZoneBuffers[zone]);
-  # ifdef P104_DEBUG
+
+  # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+
+  if (zstruct.layout == P104_LAYOUT_DOUBLE_LOWER) {
+    createHString(sZoneBuffers[zone]);
+  }
+  # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+
   String log;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-      log.reserve(33 + text.length() + sZoneBuffers[zone].length())) {
+      logAllText &&
+      log.reserve(28 + text.length() + sZoneBuffers[zone].length())) {
     log  = F("dotmatrix: ZoneText: ");
-    log += zone;
+    log += zone + 1; // UI-number
     log += F(", '");
     log += text;
     log += F("' -> '");
@@ -344,7 +376,7 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
     log += '\'';
     addLog(LOG_LEVEL_INFO, log);
   }
-  # endif // ifdef P104_DEBUG
+
   P->displayZoneText(zone,
                      sZoneBuffers[zone].c_str(),
                      static_cast<textPosition_t>(zstruct.alignment),
@@ -360,6 +392,7 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
 bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                                          const String& string) {
   bool   reconfigure = false;
+  bool   success     = false;
   String command     = parseString(string, 1);
 
   if (command.equals(F("dotmatrix"))) { // main command: dotmatrix
@@ -367,33 +400,165 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
     int zoneIndex;
     int value4;
-    validIntFromString(parseString(string, 4), value4);
+    String string4 = parseStringKeepCase(string, 4);
+    validIntFromString(string4, value4);
 
     if (validIntFromString(parseString(string, 3), zoneIndex) &&
         (zoneIndex > 0) &&
         (static_cast<unsigned int>(zoneIndex) <= zones.size())) {
-      for (auto it = zones.begin(); it != zones.end(); ++it) {
-        if (it->zone == zoneIndex) {                                        // This zone
-          if (sub.equals(F("txt")) && (it->content == P104_CONTENT_TEXT)) { // subcommand: txt,zone,<text> (only allowed for zones with Text
-                                                                            // content)
-            displayOneZoneText(zoneIndex - 1, *it, parseStringKeepCase(string, 4));
-            return true;                                                    // Quick success exit
+      if (sub.equals(F("clear")) && // subcommand: clear[,all]
+          (string4.isEmpty() ||
+           string4.equalsIgnoreCase(F("all")))) {
+        P->displayClear();
+        success = true;
+      }
+
+      for (auto it = zones.begin(); it != zones.end() && !success; ++it) {
+        if ((it->zone == zoneIndex) &&  // This zone, and animation is done
+            P->getZoneStatus(zoneIndex - 1)) {
+          if (sub.equals(F("clear"))) { // subcommand: clear,<zone>
+            P->displayClear(zoneIndex - 1);
+            success = true;
+            break;
           }
 
-          if (sub.equals(F("size"))) {                                      // subcommand: size,zone,<size> (1..)
-            if ((value4 > 0) && (value4 <= P104_MAX_MODULES_PER_ZONE)) {
-              it->size    = value4;
-              reconfigure = true;
-              break;
-            }
+          if (sub.equals(F("txt")) &&               // subcommand: txt,<zone>,<text> (only allowed for zones with Text content)
+              (it->content == P104_CONTENT_TEXT)) { // no length check, so longer than the UI allows is made possible
+            displayOneZoneText(zoneIndex - 1, *it, string4);
+            success = true;
+            break;
           }
 
-          if (sub.equals(F("bright"))) {                      // subcommand: bright,zone,<brightness> (0..15)
-            if ((value4 >= 0) && (value4 <= 15)) {
-              it->brightness = value4;
-              P->setIntensity(zoneIndex - 1, it->brightness); // Change brightness directly
-              return true;
-            }
+          if (sub.equals(F("content")) && // subcommand: content,zone,<contenttype> (0..<P104_CONTENT_count>-1)
+              (value4 >= 0) &&
+              (value4 < P104_CONTENT_count)) {
+            it->content = value4;
+            reconfigure = true;
+            break;
+          }
+
+          if (sub.equals(F("font")) && // subcommand: font,zone,<font id> (only for incuded font id's)
+              (
+                (value4 == 0)
+                # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+                || (value4 == P104_DOUBLE_HEIGHT_FONT_ID)
+                # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+                # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+                || (value4 == P104_FULL_DOUBLEHEIGHT_FONT_ID)
+                # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+                # ifdef P104_USE_VERTICAL_FONT
+                || (value4 == P104_VERTICAL_FONT_ID)
+                # endif // ifdef P104_USE_VERTICAL_FONT
+                # ifdef P104_USE_EXT_ASCII_FONT
+                || (value4 == P104_EXT_ASCII_FONT_ID)
+                # endif // ifdef P104_USE_EXT_ASCII_FONT
+                # ifdef P104_USE_ARABIC_FONT
+                || (value4 == P104_ARABIC_FONT_ID)
+                # endif // ifdef P104_USE_ARABIC_FONT
+                # ifdef P104_USE_GREEK_FONT
+                || (value4 == P104_GREEK_FONT_ID)
+                # endif // ifdef P104_USE_GREEK_FONT
+                # ifdef P104_USE_KATAKANA_FONT
+                || (value4 == P104_KATAKANA_FONT_ID)
+                # endif // ifdef P104_USE_KATAKANA_FONT
+              )
+              ) {
+            it->content = value4;
+            reconfigure = true;
+            break;
+          }
+
+          # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+
+          if (sub.equals(F("layout")) && // subcommand: layout,zone,<layout> (0..2), only when double-height font is available
+              (value4 >= 0) &&
+              (value4 <= P104_LAYOUT_DOUBLE_LOWER)) {
+            it->layout  = value4;
+            reconfigure = true;
+            break;
+          }
+          # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+
+          if (sub.equals(F("size")) && // subcommand: size,zone,<size> (1..)
+              (value4 > 0) &&
+              (value4 <= P104_MAX_MODULES_PER_ZONE)) {
+            it->size    = value4;
+            reconfigure = true;
+            break;
+          }
+
+          if (sub.equals(F("offset")) && // subcommand: offset,zone,<size> (0..<size>-1)
+              (value4 >= 0) &&
+              (value4 < P104_MAX_MODULES_PER_ZONE) &&
+              (value4 < it->size)) {
+            it->offset  = value4;
+            reconfigure = true;
+            break;
+          }
+
+          if (sub.equals(F("alignment")) &&                             // subcommand: alignment,zone,<alignment> (0..3)
+              (value4 >= 0) &&
+              (value4 <= static_cast<int>(textPosition_t::PA_RIGHT))) { // last item in the enum
+            it->alignment = value4;
+            reconfigure   = true;
+            break;
+          }
+
+          if (sub.equals(F("anim.in")) && // subcommand: anim.in,zone,<animation> (1..<PA_last_value>-1)
+              (value4 > 0) &&
+              (value4 < static_cast<int>(textEffect_t::PA_last_value))) {
+            it->animationIn = value4;
+            reconfigure     = true;
+            break;
+          }
+
+          if (sub.equals(F("anim.out")) && // subcommand: anim.out,zone,<animation> (0..<PA_last_value>-1)
+              (value4 > 0) &&
+              (value4 < static_cast<int>(textEffect_t::PA_last_value))) {
+            it->animationOut = value4;
+            reconfigure      = true;
+            break;
+          }
+
+          if (sub.equals(F("speed")) && // subcommand: speed,zone,<speed_ms> (0..65535)
+              (value4 >= 0) &&
+              (value4 <= 65535)) {
+            it->speed   = value4;
+            reconfigure = true;
+            break;
+          }
+
+          if (sub.equals(F("pause")) && // subcommand: pause,zone,<pause_ms> (0..65535)
+              (value4 >= 0) &&
+              (value4 <= 65535)) {
+            it->pause   = value4;
+            reconfigure = true;
+            break;
+          }
+
+          if (sub.equals(F("specialeffect")) && // subcommand: specialeffect,zone,<effect> (0..3)
+              (value4 >= 0) &&
+              (value4 <= P104_SPECIAL_EFFECT_BOTH)) {
+            it->specialEffect = value4;
+            reconfigure       = true;
+            break;
+          }
+
+          if (sub.equals(F("brightness")) && // subcommand: brightness,zone,<brightness> (0..15)
+              (value4 >= 0) &&
+              (value4 <= P104_BRIGHTNESS_MAX)) {
+            it->brightness = value4;
+            P->setIntensity(zoneIndex - 1, it->brightness); // Change brightness directly
+            success = true;
+            break;
+          }
+
+          if (sub.equals(F("repeat")) && // subcommand: repeaat,zone,<repeat_sec> (-1..86400 = 24h)
+              (value4 >= -1) &&
+              (value4 <= 86400)) {
+            it->repeatDelay = value4;
+            reconfigure     = true;
+            break;
           }
         }
       }
@@ -402,10 +567,23 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
   if (reconfigure) {
     configureZones(); // Re-initialize
-    return true;      // Successful
+    success = true;   // Successful
   }
 
-  return false;       // Default: unknown command
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log;
+
+    if (log.reserve(32 + string.length())) {
+      log = F("dotmatrix: command ");
+
+      if (!success) { log += F("UN"); }
+      log += F("succesful: ");
+      log += string;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  }
+
+  return success; // Default: unknown command
 }
 
 void getTime(char *psz,
@@ -453,16 +631,14 @@ void getDateTime(char *psz,
   sprintf(psz, "%02d %02d %02d %02d%c%02d", d, M, y, h, (colon ? ':' : ' '), m);
 }
 
-# ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-void createHString(char *pH,
-                   char *pL) {
-  for (; *pL != '\0'; pL++) {
-    *pH++ = *pL | 0x80; // offset character
+# if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+void createHString(String& string) {
+  for (uint32_t i = 0; i < string.length(); i++) {
+    string[i] |= 0x80;
   }
-  *pH = '\0';           // terminate the string
 }
 
-# endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+# endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
 bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
   bool retval     = false;
@@ -503,16 +679,7 @@ bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
     }
 
     if (retval) {
-      # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-
-      if (it->layout == P104_LAYOUT_DOUBLE_LOWER) {
-        createHString(szTimeH, szTimeL);
-        displayOneZoneText(it->zone - 1, *it, String(szTimeH));
-      } else
-      # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-      {
-        displayOneZoneText(it->zone - 1, *it, String(szTimeL));
-      }
+      displayOneZoneText(it->zone - 1, *it, String(szTimeL));
       P->displayReset(it->zone - 1);
     }
   }
@@ -726,7 +893,9 @@ bool P104_data_struct::saveSettings() {
 * webform_load
 **************************************************************/
 bool P104_data_struct::webform_load(struct EventStruct *event) {
-  {
+  addFormSubHeader(F("Device settings"));
+
+  {                                       // Hardware types
     # define P104_hardwareTypeCount 8
     const __FlashStringHelper *hardwareTypes[P104_hardwareTypeCount] = {
       F("Generic (DR:0, CR:1, RR:0)"),    // 010
@@ -758,6 +927,12 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
   }
 
   {
+    addFormCheckBox(F("Clear display on disable"), F("plugin_104_cleardisable"), bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE));
+
+    addFormCheckBox(F("Log all text"),             F("plugin_104_logalltext"),   bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT));
+  }
+
+  { // Zones
     String zonesList[P104_MAX_ZONES];
     int    zonesOptions[P104_MAX_ZONES];
 
@@ -818,7 +993,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # if ENA_GROW
     animationCount += 2;
     # endif // ENA_GROW
-    const __FlashStringHelper *animationTypes[] {
+    String animationTypes[] {
       F("None")
       , F("Print")
       , F("Scroll up")
@@ -908,42 +1083,103 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , static_cast<int>(textEffect_t::PA_GROW_DOWN)
     # endif // ENA_GROW
     };
+
+    // Append the numeric value as a reference for the 'anim.in' and 'anim.out' subcommands
+    for (uint8_t a = 0; a < animationCount; a++) {
+      animationTypes[a] += F(" (");
+      animationTypes[a] += a;
+      animationTypes[a] += ')';
+    }
     delay(0);
 
     int fontCount = 1;
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     fontCount++;
     # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    fontCount++;
+    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # ifdef P104_USE_VERTICAL_FONT
+    fontCount++;
+    # endif // ifdef P104_USE_VERTICAL_FONT
+    # ifdef P104_USE_EXT_ASCII_FONT
+    fontCount++;
+    # endif // ifdef P104_USE_EXT_ASCII_FONT
+    # ifdef P104_USE_ARABIC_FONT
+    fontCount++;
+    # endif // ifdef P104_USE_ARABIC_FONT
+    # ifdef P104_USE_GREEK_FONT
+    fontCount++;
+    # endif // ifdef P104_USE_GREEK_FONT
+    # ifdef P104_USE_KATAKANA_FONT
+    fontCount++;
+    # endif // ifdef P104_USE_KATAKANA_FONT
     const __FlashStringHelper *fontTypes[] = {
       F("Default")
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , F("Numeric, double height")
     # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+      , F("Full, double height")
+    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # ifdef P104_USE_VERTICAL_FONT
+      , F("Vertical")
+    # endif // ifdef P104_USE_VERTICAL_FONT
+    # ifdef P104_USE_EXT_ASCII_FONT
+      , F("Ext. ASCII")
+      # endif // ifdef P104_USE_EXT_ASCII_FONT
+    # ifdef P104_USE_ARABIC_FONT
+      , F("Arabic")
+    # endif // ifdef P104_USE_ARABIC_FONT
+    # ifdef P104_USE_GREEK_FONT
+      , F("Greek")
+    # endif // ifdef P104_USE_GREEK_FONT
+    # ifdef P104_USE_KATAKANA_FONT
+      , F("Katakana")
+    # endif // ifdef P104_USE_KATAKANA_FONT
     };
     int fontOptions[] = {
       P104_DEFAULT_FONT_ID
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , P104_DOUBLE_HEIGHT_FONT_ID
     # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+      , P104_FULL_DOUBLEHEIGHT_FONT_ID
+    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # ifdef P104_USE_VERTICAL_FONT
+      , P104_VERTICAL_FONT_ID
+    # endif // ifdef P104_USE_VERTICAL_FONT
+    # ifdef P104_USE_EXT_ASCII_FONT
+      , P104_EXT_ASCII_FONT_ID
+      # endif // ifdef P104_USE_EXT_ASCII_FONT
+    # ifdef P104_USE_ARABIC_FONT
+      , P104_ARABIC_FONT_ID
+    # endif // ifdef P104_USE_ARABIC_FONT
+    # ifdef P104_USE_GREEK_FONT
+      , P104_GREEK_FONT_ID
+    # endif // ifdef P104_USE_GREEK_FONT
+    # ifdef P104_USE_KATAKANA_FONT
+      , P104_KATAKANA_FONT_ID
+    # endif // ifdef P104_USE_KATAKANA_FONT
     };
 
     int layoutCount = 1;
-    # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
     layoutCount += 2;
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
     const __FlashStringHelper *layoutTypes[] = {
       F("Standard")
-    # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
       , F("Double, upper")
       , F("Double, lower")
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
     };
     int layoutOptions[] = {
       P104_LAYOUT_STANDARD
-    # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
       , P104_LAYOUT_DOUBLE_UPPER
       , P104_LAYOUT_DOUBLE_LOWER
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
     };
 
     int specialEffectCount                          = 4;
@@ -951,7 +1187,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("None"),
       F("Flip up/down"),
       F("Flip left/right *"),
-      F("Flip up/down &amp; left/right *")
+      F("Flip u/d &amp; l/r *")
     };
     int specialEffectOptions[] = {
       P104_SPECIAL_EFFECT_NONE,
@@ -960,7 +1196,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_SPECIAL_EFFECT_BOTH
     };
 
-    int contentCount                          = 7;
     const __FlashStringHelper *contentTypes[] = {
       F("Text"),
       F("Clock (4 mod.)"),
@@ -1021,7 +1256,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                    EMPTY_STRING);
         html_TD(); // Content
         addSelector(getPluginCustomArgName(index + P104_OFFSET_CONTENT),
-                    contentCount,
+                    P104_CONTENT_count,
                     contentTypes,
                     contentOptions,
                     NULL,
@@ -1136,7 +1371,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         html_TD(); // Brightness
 
         if (it->brightness == 0) { it->brightness = 7; }
-        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_BRIGHTNESS), it->brightness, 1, 15);
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_BRIGHTNESS), it->brightness, 0, P104_BRIGHTNESS_MAX);
 
         html_TD();                                                                                        // Repeat (sec)
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_REPEATDELAY), it->repeatDelay, -1, 86400 // max delay 24 hours
@@ -1153,9 +1388,17 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     html_end_table();
   }
 
-  addFormNote(F("- Maximum nr. of modules possible (Zones * Size + Offset) = 255."));
+  String devicesMsg;
+
+  if (devicesMsg.reserve(80)) {
+    devicesMsg  = F("- Maximum nr. of modules possible (Zones * Size + Offset) = 255. Last saved: ");
+    devicesMsg += numDevices;
+    addFormNote(devicesMsg);
+  }
   addFormNote(F("- 'Animation In' or 'Animation Out' and 'Special Effects' marked with <b>*</b> should <b>not</b> be combined in a Zone."));
+  # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) && !defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
   addFormNote(F("- 'Layout' 'Double upper' and 'Double lower' are only supported for 'Content' types 'Clock' and 'Date'."));
+  # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) && !defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
   return true;
 }
@@ -1166,6 +1409,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 bool P104_data_struct::webform_save(struct EventStruct *event) {
   P104_CONFIG_ZONE_COUNT   = getFormItemInt(F("plugin_104_zone"));
   P104_CONFIG_HARDWARETYPE = getFormItemInt(F("plugin_104_hardware"));
+
+  bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE, isFormItemChecked(F("plugin_104_cleardisable")));
+  bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT,  isFormItemChecked(F("plugin_104_logalltext")));
 
   previousZones = expectedZones;
   expectedZones = P104_CONFIG_ZONE_COUNT;

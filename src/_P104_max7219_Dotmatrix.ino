@@ -14,6 +14,10 @@
 // TODO: Generic commands:
 //
 // History:
+// 2021-06-18 tonhuisman: Implement PLUGIN_WRITE commands
+//                        Implement several fonts extracted from MD_Parola examples (Vertical, Extended ASCII, Full Double Height, Arabic,
+//                        Greek, Katakana) (NB: Vertical isn't working as expected yet) Will be disabled when flash memory is tight
+// 2021-06-16 tonhuisman: Implement Clock and Date (once per second)
 // 2021-06-13 tonhuisman: First working version, many improvemnts to make, like command handling, repeat timer implementaation
 // 2021-05 tonhuisman: Store and retrieve settings for max 8 (ESP82xx) or 16 (ESP32) zones
 // 2021-04 tonhuisman: Pickup and rework to get it working with ESPEasy
@@ -186,39 +190,21 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
+      P104_data->logAllText = bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT);
+
       // initialise the LED display
       if (P104_data->begin()) {
         // Setup the zones from configuration
         P104_data->configureZones();
 
+        // Not sure if we'll need this in the future...
         //     invertUpperZone = (HARDWARE_TYPE == MD_MAX72XX::GENERIC_HW || HARDWARE_TYPE == MD_MAX72XX::PAROLA_HW);
-
-        // Set up zones for 2 halves of the display
-        // # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-
-        // if (PCONFIG(1) == 2) {
-        //   P104_data->P.setZone(ZONE_LOWER, 0,          PCONFIG(1) - 1);
-        //   P104_data->P.setZone(ZONE_UPPER, PCONFIG(1), numDevices - 1);
-        //   P104_data->P.setFont(numeric7SegDouble);
-        //   P104_data->P.setCharSpacing(P104_data->P.getCharSpacing() * 2); // double height --> double spacing
-        // }
-        // # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-
 
         //      if (invertUpperZone)
         //      {
         //        P.setZoneEffect(ZONE_UPPER, true, PA_FLIP_UD);
         //        P.setZoneEffect(ZONE_UPPER, true, PA_FLIP_LR);
 
-        //        P.displayZoneText(ZONE_LOWER, szTimeL, PA_RIGHT, SPEED_TIME, PAUSE_TIME, PA_PRINT, PA_NO_EFFECT);
-        //        P.displayZoneText(ZONE_UPPER, szTimeH, PA_LEFT, SPEED_TIME, PAUSE_TIME, PA_PRINT, PA_NO_EFFECT);
-        //      }
-        //      else
-        //      {
-        // P104_data->P.displayZoneText(ZONE_LOWER, szTimeL, PA_CENTER, SPEED_TIME, PAUSE_TIME, PA_PRINT, PA_NO_EFFECT);
-        // P104_data->P.displayZoneText(ZONE_UPPER, szTimeH, PA_CENTER, SPEED_TIME, PAUSE_TIME, PA_PRINT, PA_NO_EFFECT);
-
-        //      }
 
         success = true;
       }
@@ -232,7 +218,9 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      P104_data->P->displayClear();
+      if (bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE)) {
+        P104_data->P->displayClear();
+      }
       success = true;
 
       break;
