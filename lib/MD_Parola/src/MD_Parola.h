@@ -24,8 +24,7 @@
 
    System Components
    -----------------
-   - Hardware - documentation for supported hardware found in the [MD_MAX72xx library] (http://github.com/MajicDesigns/MD_MAX72XX)
-      documentation.
+- Hardware - documentation for supported hardware found in the [MD_MAX72xx library] (http://github.com/MajicDesigns/MD_MAX72XX) documentation.
    - \subpage pageSoftware
    - \subpage pageRevHistory
    - \subpage pageCopyright
@@ -52,6 +51,14 @@
 
    \page pageRevHistory Revision History
   // 2021-04-27, tonhuisman: added constant values textEffect_t enum to retain settings when enabling/disabling compile-time options
+May 2010 - version 3.5.7
+- Fixed issues with text occasionally remaining on edge of display for diagonal scroll effects
+
+Mar 2021 - version 3.5.6
+- Added TG_Combo, TG_Coord and TG_Zones examples
+- Deleted Test_TG example
+- Fixed ENA_* no longer working (compiler changes)
+- Deleted revision history prior to v2.0.0
 
    Dec 2020 - version 3.5.5
    - Fixed erratic zone scrolling behavior in introduced with changes to 3.5.3
@@ -554,6 +561,7 @@ enum textEffect_t
   PA_GROW_UP   = 27,         ///< Text grows from the bottom up and shrinks from the top down
   PA_GROW_DOWN = 28,         ///< Text grows from the top down and and shrinks from the bottom up
 #endif // ENA_GROW
+  PA_last_value              // Keep this item last so we can do some kind of range check
 };
 
 /**

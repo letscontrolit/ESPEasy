@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  * \brief Implements diagonal scroll effect
  */
 
+#if ENA_SCR_DIA
+
 void MD_PZone::effectDiag(bool bUp, bool bLeft, bool bIn)
 // Scroll the display diagonally up or down, left or right, depending on the selected effect
 {
@@ -37,7 +39,7 @@ void MD_PZone::effectDiag(bool bUp, bool bLeft, bool bIn)
     case INITIALISE:
       PRINT_STATE("I DIAG");
       _nextPos = COL_SIZE - 1;   // the position in the animation
-      _MX->control(_zoneStart, _zoneEnd, MD_MAX72XX::WRAPAROUND, 0);
+      _MX->control(_zoneStart, _zoneEnd, MD_MAX72XX::WRAPAROUND, MD_MAX72XX::OFF);
       _fsmState = PUT_CHAR;
       // fall through to next state
 
@@ -68,6 +70,10 @@ void MD_PZone::effectDiag(bool bUp, bool bLeft, bool bIn)
 
           _MX->setColumn(j - _nextPos, c);
         }
+
+        // clear last few columns to the left of the text displayed
+        for (int16_t j = 0; j < _nextPos; j++)
+          _MX->setColumn(ZONE_END_COL(_zoneEnd) - j, EMPTY_BAR);
       }
       else  // going right
       {
@@ -83,6 +89,10 @@ void MD_PZone::effectDiag(bool bUp, bool bLeft, bool bIn)
 
           _MX->setColumn(j + _nextPos, c);
         }
+
+        // clear last few columns to the right of the text displayed
+        for (int16_t j = 0; j < _nextPos; j++)
+          _MX->setColumn(ZONE_START_COL(_zoneStart) + j, EMPTY_BAR);
       }
 
       // check if we have finished
@@ -150,3 +160,5 @@ void MD_PZone::effectDiag(bool bUp, bool bLeft, bool bIn)
     }
   }
 }
+
+#endif
