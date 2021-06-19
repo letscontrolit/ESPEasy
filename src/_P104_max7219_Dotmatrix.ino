@@ -6,14 +6,53 @@
 // #######################################################################################################
 //
 // Chips/displays supported:
-//  MAX7219/21 -- 3 pins (SPI + CS) - Dot matrix display, 8x8 leds per unit, units can be connected daisy chained, up to 255 (theoretically,
-// untested yet)
+//  MAX7219/21 -- 3 pins (SPI + CS) - Dot matrix display, 8x8 leds per unit/module, units can be connected daisy chained, up to 255
+// (theoretically, untested yet)
 //
-// TODO: Plugin Content can be setup as:
-//
-// TODO: Generic commands:
+// Plugin Commands:
+// Commands have this syntax: dotmatrix,<subcommand>,<zone>[,<argument>]
+// <zone> is in the range of configured zones, limited to 1..8 (ESP8266) or 1..16 (ESP32)
+// Subcommands:
+// clear[,all|<zone>]           : Clears the entire display (all zones if 'all' or no zone specified) or the zone specified
+// size,<zone>,<modules>        : Set the number of modules (Size) for that zone (1..64). A complete reconfiguration will be done if this
+//                                setting is changed
+// txt,<zone>,<text>            : Put the <text> (use quotes if it contains spaces or commas) in the specified zone
+// settxt,<zone>,<text>         : As the txt subcommand, but also stores the text in the settings for that zone (not automatically saved)
+// content,<zone>,<contenttype> : Set the desired content type for that zone (0..)
+//                                0 = Text : Any text, including variable expansion
+//                                1 = Clock (4 mod.) : Time in 4 digits (HH:mm) 24h with flashing colon
+//                                2 = Clock sec (6 mod) : Time in 6 digits (HH:mm ss) 24h with flashing colon between HH and mm
+//                                3 = Date (4 mod.) : Date in 4 digits (dd MM)
+//                                4 = Date yy (6 mod.) : Date in 6 digits (dd MM yy)
+//                                5 = Date yyyy (7 mod.) : Date in 8 digits (dd MM yyyy)
+//                                6 = Date/time (9 mod.) : Date + time in 10 digits (dd MM yy HH:mm) 24h, flashing colon between HH and mm
+//                                The (n mod.) suffix indicates the number of modules required to make all digits visible at once
+// alignment,<zone>,<alignment> : Set the Alignment of the zone (0 = Left, 1 = Center, 2 = Right). A complete reconfiguration will be done
+//                                if this setting is changed
+// anim.in,<zone>,<animation>   : Set the Animation In type of the zone (1..). A complete reconfiguration will be done if this setting is
+//                                changed
+// anim.out,<zone>,<animation>  : Set the Animation Out type of the zone (0..). A complete reconfiguration will be done if this setting is
+//                                changed
+//                                The supported animation ID's are visible in the Animation In/Out selection comboboxes
+//                                Only supported animations are accepted (some can be disabled at compiletime)
+// speed,<zone>,<speed>         : Set the Speed of the zone, determining the delay in millis between each animation step
+// pause,<zone>,<pause>         : Set the Pause of the zone, determining the delay in millis after Animation In is completed before
+//                                Animation Out starts
+// font,<zone>,<font ID>        : Set the font for the zone. The font ID is visible in the UI in the Font selection combobox.
+// layout,<zone>,<layout ID>    : Set the Layout type if a double-height font is included (upper(1) or lower(2) part) else only Default (0)
+//                                is available
+// specialeffect,<zone>,<effect>: Set the Special Effects field, 0 = None, 1 = Flip Up/Done, 2 = Flip Left/Right, 3 = Flip u/d & l/r
+//                                Any special effect marked with an asterisk * should not be combined with an Animation marked with an
+//                                asterisk, as that could result in unexpected effects during display (it may look strange)
+// offset,<zone>,<modules>      : Set the Offset of modules for that zone (0..size). A complete reconfiguration will be done if this setting
+//                                is changed
+// brightness,<zone>,<level>    : Set the Brightness for the zone, range from 0 (off) to 15 (very bright)
+// repeat,<zone>,<delay_sec>    : Set the Repeat (sec) for the zone, after this delay the text & animation will be repeated.
+//                                -1 = off, range 0..86400 seconds (24h)
 //
 // History:
+// 2021-06-19 tonhuisman: Implement repeat delay, add settxt command, add command reference (above), bug fixing, some source reorganization
+//                        Webform_Load now works on current settings if the plugin is active, instead of last stored settings
 // 2021-06-18 tonhuisman: Implement PLUGIN_WRITE commands
 //                        Implement several fonts extracted from MD_Parola examples (Vertical, Extended ASCII, Full Double Height, Arabic,
 //                        Greek, Katakana) (NB: Vertical isn't working as expected yet) Will be disabled when flash memory is tight
@@ -63,14 +102,12 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
-    case PLUGIN_GET_DEVICEGPIONAMES:
-    {
+    case PLUGIN_GET_DEVICEGPIONAMES: {
       event->String1 = formatGpioName_output("CS");
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD:
-    {
+    case PLUGIN_WEBFORM_LOAD: {
       int8_t din_pin = -1;
       int8_t clk_pin = -1;
       int    pinnr = -1;
@@ -115,23 +152,35 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
       note += F("->CLK-Pin");
       addFormNote(note);
 
-      P104_data_struct *P104_data = new (std::nothrow) P104_data_struct(static_cast<MD_MAX72XX::moduleType_t>(P104_CONFIG_HARDWARETYPE),
-                                                                        event->TaskIndex,
-                                                                        CONFIG_PIN1,
-                                                                        P104_CONFIG_TOTAL_UNITS);
+      P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      bool createdWhileActive = false;
+
+      if (nullptr == P104_data) { // Create new object if not active atm.
+        P104_data = new (std::nothrow) P104_data_struct(static_cast<MD_MAX72XX::moduleType_t>(P104_CONFIG_HARDWARETYPE),
+                                                        event->TaskIndex,
+                                                        CONFIG_PIN1,
+                                                        -1);
+        createdWhileActive = true;
+      }
 
       if (nullptr == P104_data) {
         addFormNote(F("Memory allocation error, re-open task to load."));
         return success;
       }
+
+      if (createdWhileActive) {
+        P104_data->loadSettings();
+      }
       success = P104_data->webform_load(event);
 
-      delete P104_data; // Clean up
+      if (createdWhileActive) {
+        delete P104_data; // Clean up
+      }
       break;
     }
 
-    case PLUGIN_WEBFORM_SAVE:
-    {
+    case PLUGIN_WEBFORM_SAVE: {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       bool createdWhileActive = false;
@@ -258,16 +307,14 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (P104_data->P->displayAnimate()) {          // At least 1 zone is ready
-        bool allDone = true;                         // Assume all is done
-
-        for (uint8_t z = 0; z < P104_CONFIG_ZONE_COUNT && allDone; z++) {
-          allDone &= P104_data->P->getZoneStatus(z); // Check if really all is done
+      if (P104_data->P->displayAnimate()) { // At least 1 zone is ready
+        for (uint8_t z = 0; z < P104_CONFIG_ZONE_COUNT; z++) {
+          if (P104_data->P->getZoneStatus(z)) {
+            P104_data->checkRepeatTimer(z);
+          }
         }
 
-        if (allDone) {
-          P104_data->handlePluginOncePerSecond(event->TaskIndex);
-        }
+        P104_data->handlePluginOncePerSecond(event->TaskIndex);
       }
     }
   }

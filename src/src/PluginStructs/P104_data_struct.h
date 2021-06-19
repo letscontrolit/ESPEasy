@@ -40,10 +40,12 @@
 #  define P104_SETTINGS_BUFFER  512
 # endif // ifdef ESP32
 
-# define P104_MAX_MODULES_PER_ZONE     64  // Maximum allowed modules per zone
-# define P104_MAX_TEXT_LENGTH_PER_ZONE 100 // Limit the Text content length
+# define P104_MAX_MODULES_PER_ZONE     64    // Maximum allowed modules per zone
+# define P104_MAX_TEXT_LENGTH_PER_ZONE 100   // Limit the Text content length
+# define P104_MAX_SPEED_PAUSE_VALUE    65535 // Value is in milliseconds
+# define P104_MAX_REPEATDELAY_VALUE    86400 // Value is in seconds
 
-# define P104_USE_TOOLTIPS                 // Enable tooltips in UI
+# define P104_USE_TOOLTIPS                   // Enable tooltips in UI
 
 # ifdef LIMIT_BUILD_SIZE
   #  ifdef P104_DEBUG
@@ -222,6 +224,7 @@ struct P104_zone_struct {
   uint8_t  brightness;
   uint16_t speed, pause;
   int32_t  repeatDelay;
+  uint32_t _repeatTimer;
 };
 
 struct tP104_StoredSettings {
@@ -253,6 +256,7 @@ struct P104_data_struct : public PluginTaskData_base {
   bool handlePluginWrite(taskIndex_t   taskIndex,
                          const String& string);
   bool handlePluginOncePerSecond(taskIndex_t taskIndex);
+  void checkRepeatTimer(uint8_t z);
 
   MD_Parola *P = nullptr;
 
@@ -285,6 +289,7 @@ private:
   char   szTimeL[P104_MAX_MESG]; // dd-mm-yy mm:ss\0
   char   szTimeH[P104_MAX_MESG];
   String sZoneBuffers[P104_MAX_ZONES];
+  String sZoneInitial[P104_MAX_ZONES];
   int8_t lastDay = -1;
 
   // Stored settings

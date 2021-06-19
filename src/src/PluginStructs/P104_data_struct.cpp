@@ -19,9 +19,12 @@
 // is in a directory which is excluded in the src_filter
 
 # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
-void createHString(String& string);
+void createHString(String& string); // Forward definition
 # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
+/****************************************************************
+ * Constructor
+ ***************************************************************/
 P104_data_struct::P104_data_struct(MD_MAX72XX::moduleType_t _mod,
                                    taskIndex_t              _taskIndex,
                                    int8_t                   _cs_pin,
@@ -34,6 +37,9 @@ P104_data_struct::P104_data_struct(MD_MAX72XX::moduleType_t _mod,
   }
 }
 
+/*******************************
+ * Initializer/starter
+ ******************************/
 bool P104_data_struct::begin() {
   if (!initialized) {
     loadSettings();
@@ -339,9 +345,16 @@ void P104_data_struct::configureZones() {
       if ((it->content == P104_CONTENT_TEXT) && (!it->text.isEmpty())) {
         displayOneZoneText(currentZone, *it, it->text);
       }
+
+      if (it->repeatDelay > -1) {
+        it->_repeatTimer = millis();
+      }
       currentZone++;
     }
   }
+
+  // synchronise the start
+  P->synchZoneStart();
 }
 
 /**********************************************************
@@ -351,6 +364,7 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
                                           const P104_zone_struct& zstruct,
                                           const String          & text) {
   if ((zone < 0) || (zone > P104_MAX_ZONES)) { return; } // double check
+  sZoneInitial[zone] = String(text); // Keep the original string for future use
   sZoneBuffers[zone] = String(text); // We explicitly want a copy here so it can be modified by parseTemplate()
 
   parseTemplate(sZoneBuffers[zone]);
@@ -386,6 +400,86 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
                      static_cast<textEffect_t>(zstruct.animationOut));
 }
 
+/**************************************************
+ * Check if an animatio is available in the current build
+ *************************************************/
+bool isAnimationAvailable(uint8_t animation, bool noneIsAllowed = false) {
+  switch(animation) {
+    case static_cast<int>(textEffect_t::PA_NO_EFFECT):
+    {
+      return noneIsAllowed;
+    }
+    case static_cast<int>(textEffect_t::PA_PRINT):
+    case static_cast<int>(textEffect_t::PA_SCROLL_UP):
+    case static_cast<int>(textEffect_t::PA_SCROLL_DOWN):
+    case static_cast<int>(textEffect_t::PA_SCROLL_LEFT):
+    case static_cast<int>(textEffect_t::PA_SCROLL_RIGHT):
+    {
+      return true;
+    }
+    # if ENA_SPRITE
+    case static_cast<int>(textEffect_t::PA_SPRITE):
+    {
+      return true;
+    }
+    # endif // ENA_SPRITE
+    # if ENA_MISC
+    case static_cast<int>(textEffect_t::PA_SLICE):
+    case static_cast<int>(textEffect_t::PA_MESH):
+    case static_cast<int>(textEffect_t::PA_FADE):
+    case static_cast<int>(textEffect_t::PA_DISSOLVE):
+    case static_cast<int>(textEffect_t::PA_BLINDS):
+    case static_cast<int>(textEffect_t::PA_RANDOM):
+    {
+      return true;
+    }
+    # endif // ENA_MISC
+    # if ENA_WIPE
+    case static_cast<int>(textEffect_t::PA_WIPE):
+    case static_cast<int>(textEffect_t::PA_WIPE_CURSOR):
+    {
+      return true;
+    }
+    # endif // ENA_WIPE
+    # if ENA_SCAN
+    case static_cast<int>(textEffect_t::PA_SCAN_HORIZ):
+    case static_cast<int>(textEffect_t::PA_SCAN_HORIZX):
+    case static_cast<int>(textEffect_t::PA_SCAN_VERT):
+    case static_cast<int>(textEffect_t::PA_SCAN_VERTX):
+    {
+      return true;
+    }
+    # endif // ENA_SCAN
+    # if ENA_OPNCLS
+    case static_cast<int>(textEffect_t::PA_OPENING):
+    case static_cast<int>(textEffect_t::PA_OPENING_CURSOR):
+    case static_cast<int>(textEffect_t::PA_CLOSING):
+    case static_cast<int>(textEffect_t::PA_CLOSING_CURSOR):
+    {
+      return true;
+    }
+    # endif // ENA_OPNCLS
+    # if ENA_SCR_DIA
+    case static_cast<int>(textEffect_t::PA_SCROLL_UP_LEFT):
+    case static_cast<int>(textEffect_t::PA_SCROLL_UP_RIGHT):
+    case static_cast<int>(textEffect_t::PA_SCROLL_DOWN_LEFT):
+    case static_cast<int>(textEffect_t::PA_SCROLL_DOWN_RIGHT):
+    {
+      return true;
+    }
+    # endif // ENA_SCR_DIA
+    # if ENA_GROW
+    case static_cast<int>(textEffect_t::PA_GROW_UP):
+    case static_cast<int>(textEffect_t::PA_GROW_DOWN):
+    {
+      return true;
+    }
+    # endif // ENA_GROW
+    default:
+      return false;
+  }
+}
+
 /*******************************************************
  * handlePluginWrite : process commands
  ******************************************************/
@@ -413,17 +507,30 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
         success = true;
       }
 
+      // subcommands are processed in the same order as they are presented in the UI
       for (auto it = zones.begin(); it != zones.end() && !success; ++it) {
-        if ((it->zone == zoneIndex) &&  // This zone, and animation is done
-            P->getZoneStatus(zoneIndex - 1)) {
+        if ((it->zone == zoneIndex)) {  // This zone
           if (sub.equals(F("clear"))) { // subcommand: clear,<zone>
             P->displayClear(zoneIndex - 1);
             success = true;
             break;
           }
 
-          if (sub.equals(F("txt")) &&               // subcommand: txt,<zone>,<text> (only allowed for zones with Text content)
+          if (sub.equals(F("size")) && // subcommand: size,zone,<size> (1..)
+              (value4 > 0) &&
+              (value4 <= P104_MAX_MODULES_PER_ZONE)) {
+            reconfigure = (it->size != value4);
+            it->size    = value4;
+            success     = true;
+            break;
+          }
+
+          if ((sub.equals(F("txt")) ||              // subcommand: [set]txt,<zone>,<text> (only allowed for zones with Text content)
+               sub.equals(F("settxt"))) &&
               (it->content == P104_CONTENT_TEXT)) { // no length check, so longer than the UI allows is made possible
+            if (sub.equals(F("settxt"))) {          // subcommand: settxt,<zone>,<text> (stores the text in the settings, is not saved)
+              it->text = string4;
+            }
             displayOneZoneText(zoneIndex - 1, *it, string4);
             success = true;
             break;
@@ -432,8 +539,52 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           if (sub.equals(F("content")) && // subcommand: content,zone,<contenttype> (0..<P104_CONTENT_count>-1)
               (value4 >= 0) &&
               (value4 < P104_CONTENT_count)) {
+            reconfigure = (it->content != value4);
             it->content = value4;
-            reconfigure = true;
+            success     = true;
+            break;
+          }
+
+          if (sub.equals(F("alignment")) &&                             // subcommand: alignment,zone,<alignment> (0..3)
+              (value4 >= 0) &&
+              (value4 <= static_cast<int>(textPosition_t::PA_RIGHT))) { // last item in the enum
+            reconfigure   = (it->alignment != value4);
+            it->alignment = value4;
+            success       = true;
+            break;
+          }
+
+          if (sub.equals(F("anim.in")) && // subcommand: anim.in,zone,<animation> (1..)
+              isAnimationAvailable(value4)) {
+            reconfigure     = (it->animationIn != value4);
+            it->animationIn = value4;
+            success         = true;
+            break;
+          }
+
+          if (sub.equals(F("speed")) && // subcommand: speed,zone,<speed_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
+              (value4 >= 0) &&
+              (value4 <= P104_MAX_SPEED_PAUSE_VALUE)) {
+            reconfigure = (it->speed != value4);
+            it->speed   = value4;
+            success     = true;
+            break;
+          }
+
+          if (sub.equals(F("anim.out")) && // subcommand: anim.out,zone,<animation> (0..)
+              isAnimationAvailable(value4, true)) {
+            reconfigure      = (it->animationOut != value4);
+            it->animationOut = value4;
+            success          = true;
+            break;
+          }
+
+          if (sub.equals(F("pause")) && // subcommand: pause,zone,<pause_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
+              (value4 >= 0) &&
+              (value4 <= P104_MAX_SPEED_PAUSE_VALUE)) {
+            reconfigure = (it->pause != value4);
+            it->pause   = value4;
+            success     = true;
             break;
           }
 
@@ -463,8 +614,9 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                 # endif // ifdef P104_USE_KATAKANA_FONT
               )
               ) {
-            it->content = value4;
-            reconfigure = true;
+            reconfigure = (it->font != value4);
+            it->font    = value4;
+            success     = true;
             break;
           }
 
@@ -473,17 +625,19 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           if (sub.equals(F("layout")) && // subcommand: layout,zone,<layout> (0..2), only when double-height font is available
               (value4 >= 0) &&
               (value4 <= P104_LAYOUT_DOUBLE_LOWER)) {
+            reconfigure = (it->layout != value4);
             it->layout  = value4;
-            reconfigure = true;
+            success     = true;
             break;
           }
           # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
-          if (sub.equals(F("size")) && // subcommand: size,zone,<size> (1..)
-              (value4 > 0) &&
-              (value4 <= P104_MAX_MODULES_PER_ZONE)) {
-            it->size    = value4;
-            reconfigure = true;
+          if (sub.equals(F("specialeffect")) && // subcommand: specialeffect,zone,<effect> (0..3)
+              (value4 >= 0) &&
+              (value4 <= P104_SPECIAL_EFFECT_BOTH)) {
+            reconfigure       = (it->specialEffect != value4);
+            it->specialEffect = value4;
+            success           = true;
             break;
           }
 
@@ -491,56 +645,9 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
               (value4 >= 0) &&
               (value4 < P104_MAX_MODULES_PER_ZONE) &&
               (value4 < it->size)) {
+            reconfigure = (it->offset != value4);
             it->offset  = value4;
-            reconfigure = true;
-            break;
-          }
-
-          if (sub.equals(F("alignment")) &&                             // subcommand: alignment,zone,<alignment> (0..3)
-              (value4 >= 0) &&
-              (value4 <= static_cast<int>(textPosition_t::PA_RIGHT))) { // last item in the enum
-            it->alignment = value4;
-            reconfigure   = true;
-            break;
-          }
-
-          if (sub.equals(F("anim.in")) && // subcommand: anim.in,zone,<animation> (1..<PA_last_value>-1)
-              (value4 > 0) &&
-              (value4 < static_cast<int>(textEffect_t::PA_last_value))) {
-            it->animationIn = value4;
-            reconfigure     = true;
-            break;
-          }
-
-          if (sub.equals(F("anim.out")) && // subcommand: anim.out,zone,<animation> (0..<PA_last_value>-1)
-              (value4 > 0) &&
-              (value4 < static_cast<int>(textEffect_t::PA_last_value))) {
-            it->animationOut = value4;
-            reconfigure      = true;
-            break;
-          }
-
-          if (sub.equals(F("speed")) && // subcommand: speed,zone,<speed_ms> (0..65535)
-              (value4 >= 0) &&
-              (value4 <= 65535)) {
-            it->speed   = value4;
-            reconfigure = true;
-            break;
-          }
-
-          if (sub.equals(F("pause")) && // subcommand: pause,zone,<pause_ms> (0..65535)
-              (value4 >= 0) &&
-              (value4 <= 65535)) {
-            it->pause   = value4;
-            reconfigure = true;
-            break;
-          }
-
-          if (sub.equals(F("specialeffect")) && // subcommand: specialeffect,zone,<effect> (0..3)
-              (value4 >= 0) &&
-              (value4 <= P104_SPECIAL_EFFECT_BOTH)) {
-            it->specialEffect = value4;
-            reconfigure       = true;
+            success     = true;
             break;
           }
 
@@ -555,12 +662,18 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
           if (sub.equals(F("repeat")) && // subcommand: repeaat,zone,<repeat_sec> (-1..86400 = 24h)
               (value4 >= -1) &&
-              (value4 <= 86400)) {
+              (value4 <= P104_MAX_REPEATDELAY_VALUE)) {
+            reconfigure     = (it->repeatDelay != value4);
             it->repeatDelay = value4;
-            reconfigure     = true;
+            success         = true;
+
+            if (it->repeatDelay > -1) {
+              it->_repeatTimer = millis();
+            }
             break;
           }
         }
+
       }
     }
   }
@@ -640,6 +753,9 @@ void createHString(String& string) {
 
 # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
+/************************************************************************
+ * execute all PLUGIN_ONE_PER_SECOND tasks
+ ***********************************************************************/
 bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
   bool retval     = false;
   bool newFlasher = !flasher;
@@ -647,40 +763,46 @@ bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
   for (auto it = zones.begin(); it != zones.end(); ++it) {
     retval = false;
 
-    switch (it->content) {
-      case P104_CONTENT_TIME:     // time
-      case P104_CONTENT_TIME_SEC: // time sec
-      {
-        getTime(szTimeL, it->content == 2, flasher);
-        flasher = newFlasher;
-        retval  = true;
-        break;
-      }
-      case P104_CONTENT_DATE4:      // date/4
-      case P104_CONTENT_DATE6:      // date/6
-      case P104_CONTENT_DATE6_YYYY: // date/7
-      {
-        if (lastDay != node_time.day()) {
-          getDate(szTimeL, it->content != 3, it->content == 5);
+    if (P->getZoneStatus(it->zone - 1)) {
+      switch (it->content) {
+        case P104_CONTENT_TIME:     // time
+        case P104_CONTENT_TIME_SEC: // time sec
+        {
+          getTime(szTimeL, it->content == 2, flasher);
+          flasher = newFlasher;
           retval  = true;
-          lastDay = node_time.day();
+          break;
         }
-        break;                     // TODO
+        case P104_CONTENT_DATE4:      // date/4
+        case P104_CONTENT_DATE6:      // date/6
+        case P104_CONTENT_DATE6_YYYY: // date/7
+        {
+          if (lastDay != node_time.day()) {
+            getDate(szTimeL, it->content != 3, it->content == 5);
+            retval  = true;
+            lastDay = node_time.day();
+          }
+          break;
+        }
+        case P104_CONTENT_DATE_TIME: // date-time/9
+        {
+          getDateTime(szTimeL, flasher);
+          flasher = newFlasher;
+          retval  = true;
+          break;
+        }
+        default:
+          break;
       }
-      case P104_CONTENT_DATE_TIME: // date-time/9
-      {
-        getDateTime(szTimeL, flasher);
-        flasher = newFlasher;
-        retval  = true;
-        break; // TODO
-      }
-      default:
-        break;
-    }
 
-    if (retval) {
-      displayOneZoneText(it->zone - 1, *it, String(szTimeL));
-      P->displayReset(it->zone - 1);
+      if (retval) {
+        displayOneZoneText(it->zone - 1, *it, String(szTimeL));
+        P->displayReset(it->zone - 1);
+
+        if (it->repeatDelay > -1) {
+          it->_repeatTimer = millis();
+        }
+      }
     }
   }
 
@@ -689,6 +811,38 @@ bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
     P->synchZoneStart();
   }
   return retval;
+}
+
+/***************************************************
+ * restart a zone if the repeat delay (if any) has passed
+ **************************************************/
+void P104_data_struct::checkRepeatTimer(uint8_t z) {
+  bool handled = false;
+
+  for (auto it = zones.begin(); it != zones.end() && !handled; ++it) {
+    if (it->zone == z + 1) {
+      handled = true;
+
+      if ((it->repeatDelay > -1) && (timePassedSince(it->_repeatTimer) >= (it->repeatDelay - 1) * 1000)) { // Compensated for the '1' in
+                                                                                                           // PLUGIN_ONE_PER_SECOND
+        if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log;
+          log.reserve(51);
+          log  = F("dotmatrix: Repeat zone: ");
+          log += it->zone;
+          log += F(" delay: ");
+          log += it->repeatDelay;
+          log += F(" (");
+          log += String(timePassedSince(it->_repeatTimer) / 1000.0f); // Decimals can be useful here
+          log += ')';
+          addLog(LOG_LEVEL_INFO, log);
+        }
+        displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
+        P->displayReset(it->zone - 1);
+        it->_repeatTimer = millis();
+      }
+    }
+  }
 }
 
 /******************************************
@@ -958,8 +1112,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
   if (expectedZones == 0) { expectedZones++; } // Minimum of 1 zone
 
-  loadSettings();
-
   {
     const __FlashStringHelper *alignmentTypes[3] = {
       F("Left"),
@@ -1118,49 +1270,49 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Default")
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , F("Numeric, double height")
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
       , F("Full, double height")
-    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
       , F("Vertical")
-    # endif // ifdef P104_USE_VERTICAL_FONT
+    # endif   // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
       , F("Ext. ASCII")
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , F("Arabic")
-    # endif // ifdef P104_USE_ARABIC_FONT
+    # endif   // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
       , F("Greek")
-    # endif // ifdef P104_USE_GREEK_FONT
+    # endif   // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
       , F("Katakana")
-    # endif // ifdef P104_USE_KATAKANA_FONT
+    # endif   // ifdef P104_USE_KATAKANA_FONT
     };
     int fontOptions[] = {
       P104_DEFAULT_FONT_ID
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , P104_DOUBLE_HEIGHT_FONT_ID
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
       , P104_FULL_DOUBLEHEIGHT_FONT_ID
-    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
       , P104_VERTICAL_FONT_ID
-    # endif // ifdef P104_USE_VERTICAL_FONT
+    # endif   // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
       , P104_EXT_ASCII_FONT_ID
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , P104_ARABIC_FONT_ID
-    # endif // ifdef P104_USE_ARABIC_FONT
+    # endif   // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
       , P104_GREEK_FONT_ID
-    # endif // ifdef P104_USE_GREEK_FONT
+    # endif   // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
       , P104_KATAKANA_FONT_ID
-    # endif // ifdef P104_USE_KATAKANA_FONT
+    # endif   // ifdef P104_USE_KATAKANA_FONT
     };
 
     int layoutCount = 1;
@@ -1289,7 +1441,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     # endif // ifdef P104_USE_TOOLTIPS
                     );
         html_TD(); // Speed In
-        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SPEED), it->speed, 0, 65535
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SPEED), it->speed, 0, P104_MAX_SPEED_PAUSE_VALUE
                       # ifdef P104_USE_TOOLTIPS
                       , EMPTY_STRING // classname
                       , F("Speed")   // title
@@ -1326,7 +1478,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     );
 
         html_TD(); // Speed Out
-        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_PAUSE), it->pause, 0, 65535
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_PAUSE), it->pause, 0, P104_MAX_SPEED_PAUSE_VALUE
                       # ifdef P104_USE_TOOLTIPS
                       , EMPTY_STRING // classname
                       , F("Pause")   // title
@@ -1373,11 +1525,14 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         if (it->brightness == 0) { it->brightness = 7; }
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_BRIGHTNESS), it->brightness, 0, P104_BRIGHTNESS_MAX);
 
-        html_TD();                                                                                        // Repeat (sec)
-        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_REPEATDELAY), it->repeatDelay, -1, 86400 // max delay 24 hours
+        html_TD();                                                   // Repeat (sec)
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_REPEATDELAY),
+                      it->repeatDelay,
+                      -1,
+                      P104_MAX_REPEATDELAY_VALUE                     // max delay 86400 sec. = 24 hours
                       # ifdef P104_USE_TOOLTIPS
-                      , EMPTY_STRING                                                                      // classname
-                      , F("Repeat after this delay (sec), -1 = off")                                      // tooltip
+                      , EMPTY_STRING                                 // classname
+                      , F("Repeat after this delay (sec), -1 = off") // tooltip
                       # endif // ifdef P104_USE_TOOLTIPS
                       );
         delay(0);
