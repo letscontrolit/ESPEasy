@@ -39,7 +39,7 @@ void MD_PZone::effectDiag(bool bUp, bool bLeft, bool bIn)
     case INITIALISE:
       PRINT_STATE("I DIAG");
       _nextPos = COL_SIZE - 1;   // the position in the animation
-      _MX->control(_zoneStart, _zoneEnd, MD_MAX72XX::WRAPAROUND, MD_MAX72XX::OFF);
+      _MX->control(_zoneStart, _zoneEnd, MD_MAX72XX::WRAPAROUND, MD_MAX72XX::MD_OFF);
       _fsmState = PUT_CHAR;
       // fall through to next state
 
