@@ -485,7 +485,9 @@ bool isAnimationAvailable(uint8_t animation, bool noneIsAllowed = false) {
  ******************************************************/
 bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                                          const String& string) {
+  #ifdef P104_USE_COMMANDS
   bool   reconfigure = false;
+  #endif
   bool   success     = false;
   String command     = parseString(string, 1);
 
@@ -516,6 +518,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
+          #ifdef P104_USE_COMMANDS
           if (sub.equals(F("size")) && // subcommand: size,zone,<size> (1..)
               (value4 > 0) &&
               (value4 <= P104_MAX_MODULES_PER_ZONE)) {
@@ -524,6 +527,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             success     = true;
             break;
           }
+          #endif
 
           if ((sub.equals(F("txt")) ||              // subcommand: [set]txt,<zone>,<text> (only allowed for zones with Text content)
                sub.equals(F("settxt"))) &&
@@ -536,6 +540,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
+          #ifdef P104_USE_COMMANDS
           if (sub.equals(F("content")) && // subcommand: content,zone,<contenttype> (0..<P104_CONTENT_count>-1)
               (value4 >= 0) &&
               (value4 < P104_CONTENT_count)) {
@@ -672,16 +677,19 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             }
             break;
           }
+          #endif
         }
 
       }
     }
   }
 
+  #ifdef P104_USE_COMMANDS
   if (reconfigure) {
     configureZones(); // Re-initialize
     success = true;   // Successful
   }
+  #endif
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
