@@ -26,6 +26,9 @@
 #  define P104_USE_GREEK_FONT                                 // Enables the use of a Greek font (see usage in MD_Parola examples)
 #  define P104_USE_KATAKANA_FONT                              // Enables the use of a Katakana font (see usage in MD_Parola examples)
 #  define P104_USE_COMMANDS                                   // Enables the use of all commands, not just clear, txt and settxt
+#  ifdef P104_DEBUG
+#   undef P104_DEBUG
+#  endif // ifdef P104_DEBUG
 # endif // ifdef PLUGIN_DISPLAY_COLLECTION
 
 // # define P104_MINIMAL_ANIMATIONS            // disable most animations
