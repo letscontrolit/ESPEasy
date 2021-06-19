@@ -16,7 +16,8 @@
 # include "src/Helpers/Misc.h"
 # include "src/Helpers/StringParser.h"
 
-// # define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT // Enables double height numeric font used by double-height time/date display
+// # define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT                   // Enables double height numeric font used by double-height time/date
+                                                              // display
 # define P104_USE_FULL_DOUBLEHEIGHT_FONT                      // Enables the use of a full (lower ascii only) set double height font
 # if !defined(PLUGIN_DISPLAY_COLLECTION) && !defined(ESP8266) // To make it fit in the ESP8266 display build, a few fonts are disabled and
                                                               // most commands
@@ -26,10 +27,18 @@
 #  define P104_USE_GREEK_FONT                                 // Enables the use of a Greek font (see usage in MD_Parola examples)
 #  define P104_USE_KATAKANA_FONT                              // Enables the use of a Katakana font (see usage in MD_Parola examples)
 #  define P104_USE_COMMANDS                                   // Enables the use of all commands, not just clear, txt and settxt
+# endif // if !defined(PLUGIN_DISPLAY_COLLECTION) && !defined(ESP8266)
+# if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266)   // To make it fit in the ESP8266 display build
+#  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+#   undef P104_USE_FULL_DOUBLEHEIGHT_FONT
+#   ifndef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+#    define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+#   endif // ifndef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+#  endif  // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #  ifdef P104_DEBUG
 #   undef P104_DEBUG
-#  endif // ifdef P104_DEBUG
-# endif // ifdef PLUGIN_DISPLAY_COLLECTION
+#  endif  // ifdef P104_DEBUG
+# endif   // if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266)
 
 // # define P104_MINIMAL_ANIMATIONS            // disable most animations
 // # define P104_MEDIUM_ANIMATIONS             // disable some complex animations
