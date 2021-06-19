@@ -561,7 +561,6 @@ enum textEffect_t
   PA_GROW_UP   = 27,         ///< Text grows from the bottom up and shrinks from the top down
   PA_GROW_DOWN = 28,         ///< Text grows from the top down and and shrinks from the bottom up
 #endif // ENA_GROW
-  PA_last_value              // Keep this item last so we can do some kind of range check
 };
 
 /**
