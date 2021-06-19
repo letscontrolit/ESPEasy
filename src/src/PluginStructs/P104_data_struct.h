@@ -18,9 +18,10 @@
 
 // # define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT // Enables double height numeric font used by double-height time/date display
 # define P104_USE_FULL_DOUBLEHEIGHT_FONT                      // Enables the use of a full (lower ascii only) set double height font
-# define P104_USE_VERTICAL_FONT                               // Enables the use of a vertical font
-# define P104_USE_EXT_ASCII_FONT                              // Enables the use of a extended ascii font
-# if !defined(PLUGIN_DISPLAY_COLLECTION) && !defined(ESP8266) // To make it fit in the ESP8266 build, a few fonts are disabled
+# if !defined(PLUGIN_DISPLAY_COLLECTION) && !defined(ESP8266) // To make it fit in the ESP8266 display build, a few fonts are disabled and
+                                                              // most commands
+#  define P104_USE_VERTICAL_FONT                              // Enables the use of a vertical font
+#  define P104_USE_EXT_ASCII_FONT                             // Enables the use of an extended ascii font
 #  define P104_USE_ARABIC_FONT                                // Enables the use of a Arabic font (see usage in MD_Parola examples)
 #  define P104_USE_GREEK_FONT                                 // Enables the use of a Greek font (see usage in MD_Parola examples)
 #  define P104_USE_KATAKANA_FONT                              // Enables the use of a Katakana font (see usage in MD_Parola examples)

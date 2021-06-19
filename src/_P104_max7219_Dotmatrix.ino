@@ -53,6 +53,7 @@
 // History:
 // 2021-06-19 tonhuisman: Implement repeat delay, add settxt command, add command reference (above), bug fixing, some source reorganization
 //                        Webform_Load now works on current settings if the plugin is active, instead of last stored settings
+//                        Disabled most commands a some fonts to make the build fit in the ESP8266 display configuration
 // 2021-06-18 tonhuisman: Implement PLUGIN_WRITE commands
 //                        Implement several fonts extracted from MD_Parola examples (Vertical, Extended ASCII, Full Double Height, Arabic,
 //                        Greek, Katakana) (NB: Vertical isn't working as expected yet) Will be disabled when flash memory is tight
