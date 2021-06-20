@@ -288,7 +288,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 }
 
 void WiFi_AP_CandidatesList::addFromRTC() {
-  if (!RTC.lastWiFi_set()) { return; }
+  if (!Settings.UseLastWiFiFromRTC() || !RTC.lastWiFi_set()) { return; }
 
   if (SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) 
   { 

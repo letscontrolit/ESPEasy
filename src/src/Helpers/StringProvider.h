@@ -27,6 +27,7 @@ struct LabelType {
     WIFI_SEND_AT_MAX_TX_PWR,
     WIFI_NR_EXTRA_SCANS,
     WIFI_PERIODICAL_SCAN,
+    WIFI_USE_LAST_CONN_FROM_RTC,
 
     FREE_MEM,            // 9876
     FREE_STACK,          // 3456
