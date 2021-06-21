@@ -62,9 +62,7 @@ void backgroundtasks()
       web_server.handleClient();
     }
 
-    if (networkConnected) {
-      checkUDP();
-    }
+    checkUDP();
   }
 
   #ifdef FEATURE_DNS_SERVER
@@ -77,7 +75,7 @@ void backgroundtasks()
 
   #ifdef FEATURE_ARDUINO_OTA
 
-  if (Settings.ArduinoOTAEnable && networkConnected) {
+  if (Settings.ArduinoOTAEnable) {
     ArduinoOTA.handle();
   }
 
@@ -86,9 +84,7 @@ void backgroundtasks()
   {
     delay(0);
 
-    if (NetworkConnected()) {
-      ArduinoOTA.handle();
-    }
+    ArduinoOTA.handle();
   }
 
   #endif // ifdef FEATURE_ARDUINO_OTA
