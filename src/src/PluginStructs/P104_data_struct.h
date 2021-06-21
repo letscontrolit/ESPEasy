@@ -16,28 +16,52 @@
 # include "src/Helpers/Misc.h"
 # include "src/Helpers/StringParser.h"
 
-// # define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT                   // Enables double height numeric font used by double-height time/date
-                                                              // display
-# define P104_USE_FULL_DOUBLEHEIGHT_FONT                      // Enables the use of a full (lower ascii only) set double height font
-# if !defined(PLUGIN_DISPLAY_COLLECTION) && !defined(ESP8266) // To make it fit in the ESP8266 display build, a few fonts are disabled and
-                                                              // most commands
-#  define P104_USE_VERTICAL_FONT                              // Enables the use of a vertical font
-#  define P104_USE_EXT_ASCII_FONT                             // Enables the use of an extended ascii font
-#  define P104_USE_ARABIC_FONT                                // Enables the use of a Arabic font (see usage in MD_Parola examples)
-#  define P104_USE_GREEK_FONT                                 // Enables the use of a Greek font (see usage in MD_Parola examples)
-#  define P104_USE_KATAKANA_FONT                              // Enables the use of a Katakana font (see usage in MD_Parola examples)
-#  define P104_USE_COMMANDS                                   // Enables the use of all commands, not just clear, txt and settxt
-# endif // if !defined(PLUGIN_DISPLAY_COLLECTION) && !defined(ESP8266)
-# if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266)   // To make it fit in the ESP8266 display build
+// # define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT                 // Enables double height numeric font for double-height time/date
+# define P104_USE_FULL_DOUBLEHEIGHT_FONT                    // Enables the use of a full (lower ascii only) set double height font
+# define P104_USE_VERTICAL_FONT                             // Enables the use of a vertical font
+# define P104_USE_EXT_ASCII_FONT                            // Enables the use of an extended ascii font
+# define P104_USE_ARABIC_FONT                               // Enables the use of a Arabic font (see usage in MD_Parola examples)
+# define P104_USE_GREEK_FONT                                // Enables the use of a Greek font (see usage in MD_Parola examples)
+# define P104_USE_KATAKANA_FONT                             // Enables the use of a Katakana font (see usage in MD_Parola examples)
+# define P104_USE_COMMANDS                                  // Enables the use of all commands, not just clear, txt and settxt
+# define P104_USE_DATETIME_OPTIONS                          // Enables extra date/time options
+# define P104_ADD_SETTINGS_NOTES                            // Adds some notes on the Settings page
+
+# if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266) // To make it fit in the ESP8266 display build
 #  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #   undef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #   ifndef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
 #    define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
 #   endif // ifndef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
 #  endif  // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+#  ifdef P104_USE_VERTICAL_FONT
+#   undef P104_USE_VERTICAL_FONT
+#  endif  // ifdef P104_USE_VERTICAL_FONT
+#  ifdef P104_USE_EXT_ASCII_FONT
+#   undef P104_USE_EXT_ASCII_FONT
+#  endif  // ifdef P104_USE_EXT_ASCII_FONT
+#  ifdef P104_USE_ARABIC_FONT
+#   undef P104_USE_ARABIC_FONT
+#  endif  // ifdef P104_USE_ARABIC_FONT
+#  ifdef P104_USE_GREEK_FONT
+#   undef P104_USE_GREEK_FONT
+#  endif  // ifdef P104_USE_GREEK_FONT
+#  ifdef P104_USE_KATAKANA_FONT
+#   undef P104_USE_KATAKANA_FONT
+#  endif  // ifdef P104_USE_KATAKANA_FONT
+#  ifdef P104_USE_COMMANDS
+#   undef P104_USE_COMMANDS
+#  endif  // ifdef P104_USE_COMMANDS
+#  ifdef P104_USE_DATETIME_OPTIONS
+#   undef P104_USE_DATETIME_OPTIONS
+#  endif  // ifdef P104_USE_DATETIME_OPTIONS
+#  ifdef P104_ADD_SETTINGS_NOTES
+#   undef P104_ADD_SETTINGS_NOTES
+#  endif  // ifdef P104_ADD_SETTINGS_NOTES
 #  ifdef P104_DEBUG
 #   undef P104_DEBUG
 #  endif  // ifdef P104_DEBUG
+#  define P104_MEDIUM_ANIMATIONS
 # endif   // if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266)
 
 // # define P104_MINIMAL_ANIMATIONS            // disable most animations
@@ -62,35 +86,35 @@
 # define P104_USE_TOOLTIPS                   // Enable tooltips in UI
 
 # ifdef LIMIT_BUILD_SIZE
-  #  ifdef P104_DEBUG
-  #   undef P104_DEBUG
-  #  endif // ifdef P104_DEBUG
-  #  ifdef P104_USE_TOOLTIPS
-  #   undef P104_USE_TOOLTIPS
-  #  endif // ifdef P104_USE_TOOLTIPS
+#  ifdef P104_DEBUG
+#   undef P104_DEBUG
+#  endif // ifdef P104_DEBUG
+#  ifdef P104_USE_TOOLTIPS
+#   undef P104_USE_TOOLTIPS
+#  endif // ifdef P104_USE_TOOLTIPS
 // Disable all fonts
-  #  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
-  #   undef P104_USE_FULL_DOUBLEHEIGHT_FONT
-  #  endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
-  #  ifdef P104_USE_VERTICAL_FONT
-  #   undef P104_USE_VERTICAL_FONT
-  #  endif // ifdef P104_USE_VERTICAL_FONT
-  #  ifdef P104_USE_EXT_ASCII_FONT
-  #   undef P104_USE_EXT_ASCII_FONT
-  #  endif // ifdef P104_USE_EXT_ASCII_FONT
-  #  ifdef P104_USE_ARABIC_FONT
-  #   undef P104_USE_ARABIC_FONT
-  #  endif // ifdef P104_USE_ARABIC_FONT
-  #  ifdef P104_USE_GREEK_FONT
-  #   undef P104_USE_GREEK_FONT
-  #  endif // ifdef P104_USE_GREEK_FONT
-  #  ifdef P104_USE_KATAKANA_FONT
-  #   undef P104_USE_KATAKANA_FONT
-  #  endif // ifdef P104_USE_KATAKANA_FONT
+#  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+#   undef P104_USE_FULL_DOUBLEHEIGHT_FONT
+#  endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+#  ifdef P104_USE_VERTICAL_FONT
+#   undef P104_USE_VERTICAL_FONT
+#  endif // ifdef P104_USE_VERTICAL_FONT
+#  ifdef P104_USE_EXT_ASCII_FONT
+#   undef P104_USE_EXT_ASCII_FONT
+#  endif // ifdef P104_USE_EXT_ASCII_FONT
+#  ifdef P104_USE_ARABIC_FONT
+#   undef P104_USE_ARABIC_FONT
+#  endif // ifdef P104_USE_ARABIC_FONT
+#  ifdef P104_USE_GREEK_FONT
+#   undef P104_USE_GREEK_FONT
+#  endif // ifdef P104_USE_GREEK_FONT
+#  ifdef P104_USE_KATAKANA_FONT
+#   undef P104_USE_KATAKANA_FONT
+#  endif // ifdef P104_USE_KATAKANA_FONT
 # endif    // ifdef LIMIT_BUILD_SIZE
 
 # if defined(P104_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
-  #  undef P104_USE_TOOLTIPS
+#  undef P104_USE_TOOLTIPS
 # endif // if defined(P104_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
 
 
@@ -98,8 +122,10 @@
 #  define ENA_MISC 0 // Disabling some MD_Parola features
 #  define ENA_WIPE 0
 #  define ENA_SCAN 0
-#  define P104_MEDIUM_ANIMATIONS
-# endif // ifdef P104_MINIMAL_ANIMATIONS
+#  ifndef P104_MEDIUM_ANIMATIONS
+#   define P104_MEDIUM_ANIMATIONS
+#  endif // ifndef P104_MEDIUM_ANIMATIONS
+# endif  // ifdef P104_MINIMAL_ANIMATIONS
 
 # ifdef P104_MEDIUM_ANIMATIONS
 #  define ENA_SPRITE  0 // Disabling more MD_Parola features
@@ -133,18 +159,34 @@
 # define P104_CONFIG_TOTAL_UNITS  PCONFIG(1)
 # define P104_CONFIG_HARDWARETYPE PCONFIG(2)
 # define P104_CONFIG_FLAGS        PCONFIG_LONG(0)
+# define P104_CONFIG_DATETIME     PCONFIG_LONG(1)
 
 # define P104_CONFIG_FLAG_CLEAR_DISABLE 0
 # define P104_CONFIG_FLAG_LOG_ALL_TEXT  1
+
+# define P104_CONFIG_DATETIME_FLASH     0
+# define P104_CONFIG_DATETIME_12H       1
+# define P104_CONFIG_DATETIME_AMPM      2
+# define P104_CONFIG_DATETIME_YEAR4DGT  3
+# define P104_CONFIG_DATETIME_FORMAT    4 // Uses 4 bits, leave some space for a few options
+# define P104_CONFIG_DATETIME_SEP_CHAR  8 // Uses 4 bits
+
+# define P104_DATE_FORMAT_EU        0
+# define P104_DATE_FORMAT_US        1
+# define P104_DATE_FORMAT_JP        2
+
+# define P104_DATE_SEPARATOR_SPACE  0
+# define P104_DATE_SEPARATOR_SLASH  1
+# define P104_DATE_SEPARATOR_DASH   2
+# define P104_DATE_SEPARATOR_DOT    3
 
 # define P104_CONTENT_TEXT        0
 # define P104_CONTENT_TIME        1
 # define P104_CONTENT_TIME_SEC    2
 # define P104_CONTENT_DATE4       3
 # define P104_CONTENT_DATE6       4
-# define P104_CONTENT_DATE6_YYYY  5
-# define P104_CONTENT_DATE_TIME   6
-# define P104_CONTENT_count       7 // The number of content type options
+# define P104_CONTENT_DATE_TIME   5
+# define P104_CONTENT_count       6 // The number of content type options
 
 # define P104_SPECIAL_EFFECT_NONE       0
 # define P104_SPECIAL_EFFECT_UP_DOWN    1
@@ -239,6 +281,7 @@ struct P104_zone_struct {
   uint16_t speed, pause;
   int32_t  repeatDelay;
   uint32_t _repeatTimer;
+  int8_t   _lastChecked = -1;
 };
 
 struct tP104_StoredSettings {
@@ -269,7 +312,7 @@ struct P104_data_struct : public PluginTaskData_base {
 
   bool handlePluginWrite(taskIndex_t   taskIndex,
                          const String& string);
-  bool handlePluginOncePerSecond(taskIndex_t taskIndex);
+  bool handlePluginOncePerSecond(struct EventStruct *event);
   void checkRepeatTimer(uint8_t z);
 
   MD_Parola *P = nullptr;
@@ -304,7 +347,6 @@ private:
   char   szTimeH[P104_MAX_MESG];
   String sZoneBuffers[P104_MAX_ZONES];
   String sZoneInitial[P104_MAX_ZONES];
-  int8_t lastDay = -1;
 
   // Stored settings
   tP104_StoredSettings StoredSettings;

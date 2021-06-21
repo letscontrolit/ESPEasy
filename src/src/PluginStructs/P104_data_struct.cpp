@@ -707,49 +707,139 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
   return success; // Default: unknown command
 }
 
-void getTime(char *psz,
-             bool  seconds = false,
-             bool  colon   = true) {
-  uint16_t h, m, s;
+int8_t getTime(char *psz,
+               bool  seconds  = false,
+               bool  colon    = true,
+               bool  time12h  = false,
+               bool  timeAmpm = false) {
+  uint16_t h, M, s;
+  String ampm;
 
-  h = node_time.hour();
-  m = node_time.minute();
+  # ifdef P104_USE_DATETIME_OPTIONS
+  if (time12h) {
+    if (timeAmpm) {
+      ampm = (node_time.hour() >= 12 ? F("p") : F("a"));
+    }
+    h = node_time.hour() % 12;
+    if (h == 0) { h = 12; }
+  } else
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
+  {
+    h = node_time.hour();
+  }
+  M = node_time.minute();
 
   if (!seconds) {
-    sprintf(psz, "%02d%c%02d", h, (colon ? ':' : ' '), m);
+    sprintf_P(psz, PSTR("%02d%c%02d%s"), h, (colon ? ':' : ' '), M, ampm.c_str());
   } else {
     s = node_time.second();
-    sprintf(psz, "%02d%c%02d %02d", h, (colon ? ':' : ' '), m, s);
+    sprintf_P(psz, PSTR("%02d%c%02d %02d%s"), h, (colon ? ':' : ' '), M, s, ampm.c_str());
   }
+  return M;
 }
 
 void getDate(char *psz,
-             bool  year    = true,
-             bool  fourDgt = false) {
+             bool  showYear  = true,
+             bool  fourDgt   = false
+             # ifdef P104_USE_DATETIME_OPTIONS
+             , uint8_t dateFmt = 0,
+             uint8_t dateSep = 0
+             # endif // ifdef P104_USE_DATETIME_OPTIONS
+             ) {
   uint16_t d, m, y;
+  uint16_t year       = (fourDgt ? node_time.year() : node_time.year() - 2000);
+  # ifdef P104_USE_DATETIME_OPTIONS
+  String   separators = F(" /-.");
+  char     sep        = separators[dateSep];
+  # else // ifdef P104_USE_DATETIME_OPTIONS
+  char     sep        = ' ';
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
 
-  d = node_time.day();
-  m = node_time.month();
+  # ifdef P104_USE_DATETIME_OPTIONS
+  switch (dateFmt) {
+    case P104_DATE_FORMAT_US:
+      d = node_time.month();
+      m = node_time.day();
+      y = year;
+      break;
+    case P104_DATE_FORMAT_JP:
+      d = year;
+      m = node_time.month();
+      y = node_time.day();
+      break;
+    default:
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
+      d = node_time.day();
+      m = node_time.month();
+      y = year;
+  # ifdef P104_USE_DATETIME_OPTIONS
+  }
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
 
-  if (year) {
-    y = node_time.year() - (fourDgt ? 0 : 2000); // Will we survive into 21xx?
-    sprintf(psz, "%02d %02d %02d", d, m, y);     // last %02d will expand to 04 when needed
+  if (showYear) {
+    sprintf_P(psz, PSTR("%02d%c%02d%c%02d"), d, sep, m, sep, y);     // %02d will expand to 04 when needed
   } else {
-    sprintf(psz, "%02d %02d", d, m);
+    sprintf_P(psz, PSTR("%02d%c%02d"), d, sep, m);
   }
 }
 
-void getDateTime(char *psz,
-                 bool  colon = true) {
-  uint16_t d, M, y, h, m;
+uint8_t getDateTime(char    *psz,
+                    bool    colon    = true,
+                    bool    time12h  = false,
+                    bool    timeAmpm = false,
+                    bool    fourDgt  = false
+                    # ifdef P104_USE_DATETIME_OPTIONS
+                    , uint8_t dateFmt  = 0,
+                    uint8_t dateSep  = 0
+                    # endif // ifdef P104_USE_DATETIME_OPTIONS
+                    ) {
+  uint16_t d, M, y;
+  uint8_t  h, m;
+  uint16_t year       = (fourDgt ? node_time.year() : node_time.year() - 2000);
+  String   ampm;
+  # ifdef P104_USE_DATETIME_OPTIONS
+  String   separators = F(" /-.");
+  char     sep        = separators[dateSep];
+  # else // ifdef P104_USE_DATETIME_OPTIONS
+  char     sep        = ' ';
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
 
-  d = node_time.day();
-  M = node_time.month();
+  # ifdef P104_USE_DATETIME_OPTIONS
+  if (time12h) {
+    if (timeAmpm) {
+      ampm = (node_time.hour() >= 12 ? F("p") : F("a"));
+    }
+    h = node_time.hour() % 12;
+    if (h == 0) { h = 12; }
+  } else 
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
+  {
+    h = node_time.hour();
+  }
+  M = node_time.minute();
 
-  y = node_time.year() - 2000; // Will we survive into 21xx?
-  h = node_time.hour();
-  m = node_time.minute();
-  sprintf(psz, "%02d %02d %02d %02d%c%02d", d, M, y, h, (colon ? ':' : ' '), m);
+  # ifdef P104_USE_DATETIME_OPTIONS
+  switch (dateFmt) {
+    case P104_DATE_FORMAT_US:
+      d = node_time.month();
+      m = node_time.day();
+      y = year;
+      break;
+    case P104_DATE_FORMAT_JP:
+      d = year;
+      m = node_time.month();
+      y = node_time.day();
+      break;
+    default:
+  #endif // ifdef P104_USE_DATETIME_OPTIONS
+      d = node_time.day();
+      m = node_time.month();
+      y = year;
+  # ifdef P104_USE_DATETIME_OPTIONS
+  }
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
+  sprintf_P(psz, PSTR("%02d%c%02d%c%02d %02d%c%02d%s"), d, sep, m, sep, y, h, (colon ? ':' : ' '), M, ampm.c_str()); // %02d will expand to 04 when needed
+  return M;
 }
 
 # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
@@ -764,46 +854,76 @@ void createHString(String& string) {
 /************************************************************************
  * execute all PLUGIN_ONE_PER_SECOND tasks
  ***********************************************************************/
-bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
-  bool retval     = false;
-  bool newFlasher = !flasher;
+bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
+  bool redisplay  = false;
+  bool useSeconds;
+  # ifdef P104_USE_DATETIME_OPTIONS
+  bool useFlasher = !bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FLASH);
+  bool time12h    = bitRead(P104_CONFIG_DATETIME,  P104_CONFIG_DATETIME_12H);
+  bool timeAmpm   = bitRead(P104_CONFIG_DATETIME,  P104_CONFIG_DATETIME_AMPM);
+  bool year4dgt   = bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_YEAR4DGT);
+  # else // ifdef P104_USE_DATETIME_OPTIONS
+  bool useFlasher = true;
+  bool time12h    = false;
+  bool timeAmpm   = false;
+  bool year4dgt   = false;
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
+  bool newFlasher = !flasher && useFlasher;
 
   for (auto it = zones.begin(); it != zones.end(); ++it) {
-    retval = false;
+    redisplay = false;
 
-    if (P->getZoneStatus(it->zone - 1)) {
+    if (P->getZoneStatus(it->zone - 1)) { // Animations done?
       switch (it->content) {
         case P104_CONTENT_TIME:     // time
         case P104_CONTENT_TIME_SEC: // time sec
         {
-          getTime(szTimeL, it->content == 2, flasher);
-          flasher = newFlasher;
-          retval  = true;
+          useSeconds       = it->content == P104_CONTENT_TIME_SEC;
+          int8_t m         = getTime(szTimeL, useSeconds, flasher || !useFlasher, time12h, timeAmpm);
+          flasher          = newFlasher;
+          redisplay        = useFlasher || useSeconds || (it->_lastChecked != m);
+          it->_lastChecked = m;
           break;
         }
         case P104_CONTENT_DATE4:      // date/4
         case P104_CONTENT_DATE6:      // date/6
-        case P104_CONTENT_DATE6_YYYY: // date/7
         {
-          if (lastDay != node_time.day()) {
-            getDate(szTimeL, it->content != 3, it->content == 5);
-            retval  = true;
-            lastDay = node_time.day();
+          if (it->_lastChecked != node_time.day()) {
+            getDate(szTimeL,
+                    it->content != P104_CONTENT_DATE4,
+                    year4dgt
+                    # ifdef P104_USE_DATETIME_OPTIONS
+                    , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT),
+                    get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR)
+                    # endif // ifdef P104_USE_DATETIME_OPTIONS
+                    );
+            redisplay        = true;
+            it->_lastChecked = node_time.day();
           }
           break;
         }
         case P104_CONTENT_DATE_TIME: // date-time/9
         {
-          getDateTime(szTimeL, flasher);
-          flasher = newFlasher;
-          retval  = true;
+          int8_t m         = getDateTime(szTimeL,
+                                         flasher || !useFlasher,
+                                         time12h,
+                                         timeAmpm,
+                                         year4dgt
+                                         # ifdef P104_USE_DATETIME_OPTIONS
+                                         , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT),
+                                         get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR)
+                                         # endif // ifdef P104_USE_DATETIME_OPTIONS
+                                         );
+          flasher          = newFlasher;
+          redisplay        = useFlasher || (it->_lastChecked != m);
+          it->_lastChecked = m;
           break;
         }
         default:
           break;
       }
 
-      if (retval) {
+      if (redisplay) {
         displayOneZoneText(it->zone - 1, *it, String(szTimeL));
         P->displayReset(it->zone - 1);
 
@@ -814,11 +934,11 @@ bool P104_data_struct::handlePluginOncePerSecond(taskIndex_t taskIndex) {
     }
   }
 
-  if (retval) {
+  if (redisplay) {
     // synchronise the start
     P->synchZoneStart();
   }
-  return retval;
+  return redisplay;
 }
 
 /***************************************************
@@ -833,6 +953,7 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
 
       if ((it->repeatDelay > -1) && (timePassedSince(it->_repeatTimer) >= (it->repeatDelay - 1) * 1000)) { // Compensated for the '1' in
                                                                                                            // PLUGIN_ONE_PER_SECOND
+        # ifdef P104_DEBUG
         if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
           log.reserve(51);
@@ -845,6 +966,7 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
           log += ')';
           addLog(LOG_LEVEL_INFO, log);
         }
+        # endif // ifdef P104_DEBUG
         displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
         P->displayReset(it->zone - 1);
         it->_repeatTimer = millis();
@@ -1085,7 +1207,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     hardwareTypes,
                     hardwareOptions,
                     P104_CONFIG_HARDWARETYPE);
+    # ifdef P104_ADD_SETTINGS_NOTES
     addFormNote(F("DR = Digits as Rows, CR = Column Reversed, RR = Row Reversed; 0 = no, 1 = yes."));
+    # endif // ifdef P104_ADD_SETTINGS_NOTES
   }
 
   {
@@ -1093,6 +1217,53 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
     addFormCheckBox(F("Log all text"),             F("plugin_104_logalltext"),   bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT));
   }
+
+  # ifdef P104_USE_DATETIME_OPTIONS
+  {
+    addFormSubHeader(F("Content options"));
+
+    addFormCheckBox(F("Clock with flashing colon"), F("plugin_104_clockflash"), !bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FLASH));
+    addFormCheckBox(F("Clock 12h display"),         F("plugin_104_clock12h"),   bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_12H));
+    addFormCheckBox(F("Clock 12h AM/PM indicator"), F("plugin_104_clockampm"),  bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_AMPM));
+    addFormCheckBox(F("Year use 4 digits"),         F("plugin_104_year4dgt"),   bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_YEAR4DGT));
+  }
+  { // Date format
+    const __FlashStringHelper * dateFormats[] = {
+      F("Day Month [Year]"),
+      F("Month Day [Year] (US-style)"),
+      F("[Year] Month Day (Japanese-style)")
+    };
+    int dateFormatOptions[] = {
+      P104_DATE_FORMAT_EU,
+      P104_DATE_FORMAT_US,
+      P104_DATE_FORMAT_JP
+    };
+    addFormSelector(F("Date format"), F("plugin_104_dateformat"),
+                    3,
+                    dateFormats, dateFormatOptions,
+                    get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT));
+  }
+  { // Date separator
+    const __FlashStringHelper * dateSeparators[] = {
+      F("Space"),
+      F("Slash /"),
+      F("Dash -"),
+      F("Dot <b>.</b>")
+    };
+    int dateSeparatorOptions[] = {
+      P104_DATE_SEPARATOR_SPACE,
+      P104_DATE_SEPARATOR_SLASH,
+      P104_DATE_SEPARATOR_DASH,
+      P104_DATE_SEPARATOR_DOT
+    };
+    addFormSelector(F("Date separator"), F("plugin_104_dateseparator"),
+                    4,
+                    dateSeparators, dateSeparatorOptions,
+                    get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR));
+  }
+  #endif // ifdef P104_USE_DATETIME_OPTIONS
+
+  addFormSubHeader(F("Zones"));
 
   { // Zones
     String zonesList[P104_MAX_ZONES];
@@ -1102,6 +1273,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       zonesList[i]    = String(i + 1);
       zonesOptions[i] = i + 1; // No 0 needed or wanted
     }
+    # if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
     String zonetip;
 
     if (zonetip.reserve(58)) {
@@ -1109,18 +1281,21 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       zonetip += P104_MAX_ZONES;
       zonetip += F(" zones, changing will save and reload the page.");
     }
+    # endif // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
     addFormSelector(F("Zones"), F("plugin_104_zone"), P104_MAX_ZONES, zonesList, zonesOptions, NULL, P104_CONFIG_ZONE_COUNT, true
                     # ifdef P104_USE_TOOLTIPS
                     , zonetip
                     # endif // ifdef P104_USE_TOOLTIPS
                     );
+    # ifdef P104_ADD_SETTINGS_NOTES
     addFormNote(zonetip);
+    # endif // ifdef P104_ADD_SETTINGS_NOTES
   }
   expectedZones = P104_CONFIG_ZONE_COUNT;
 
   if (expectedZones == 0) { expectedZones++; } // Minimum of 1 zone
 
-  {
+  { // Optionlists and zones table
     const __FlashStringHelper *alignmentTypes[3] = {
       F("Left"),
       F("Center"),
@@ -1361,9 +1536,8 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Clock (4 mod.)"),
       F("Clock sec (6 mod.)"),
       F("Date (4 mod.)"),
-      F("Date yy (6 mod.)"),
-      F("Date yyyy (7 mod.)"),
-      F("Date/time (9 mod.)")
+      F("Date yr (6/7 mod.)"),
+      F("Date/time (9/13 mod.)")
     };
     int contentOptions[] {
       P104_CONTENT_TEXT,
@@ -1371,7 +1545,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_CONTENT_TIME_SEC,
       P104_CONTENT_DATE4,
       P104_CONTENT_DATE6,
-      P104_CONTENT_DATE6_YYYY,
       P104_CONTENT_DATE_TIME
     };
 
@@ -1551,6 +1724,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     html_end_table();
   }
 
+  # ifdef P104_ADD_SETTINGS_NOTES
   String devicesMsg;
 
   if (devicesMsg.reserve(80)) {
@@ -1562,6 +1736,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
   # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) && !defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
   addFormNote(F("- 'Layout' 'Double upper' and 'Double lower' are only supported for 'Content' types 'Clock' and 'Date'."));
   # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) && !defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+  # endif // ifdef P104_ADD_SETTINGS_NOTES
 
   return true;
 }
@@ -1575,6 +1750,17 @@ bool P104_data_struct::webform_save(struct EventStruct *event) {
 
   bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE, isFormItemChecked(F("plugin_104_cleardisable")));
   bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT,  isFormItemChecked(F("plugin_104_logalltext")));
+
+  # ifdef P104_USE_DATETIME_OPTIONS
+  uint32_t ulDateTime = 0;
+  bitWrite(ulDateTime,    P104_CONFIG_DATETIME_FLASH,    !isFormItemChecked(F("plugin_104_clockflash"))); // Inverted flag
+  bitWrite(ulDateTime,    P104_CONFIG_DATETIME_12H,      isFormItemChecked(F("plugin_104_clock12h")));
+  bitWrite(ulDateTime,    P104_CONFIG_DATETIME_AMPM,     isFormItemChecked(F("plugin_104_clockampm")));
+  bitWrite(ulDateTime,    P104_CONFIG_DATETIME_YEAR4DGT, isFormItemChecked(F("plugin_104_year4dgt")));
+  set4BitToUL(ulDateTime, P104_CONFIG_DATETIME_FORMAT,   getFormItemInt(F("plugin_104_dateformat")));
+  set4BitToUL(ulDateTime, P104_CONFIG_DATETIME_SEP_CHAR, getFormItemInt(F("plugin_104_dateseparator")));
+  P104_CONFIG_DATETIME = ulDateTime;
+  #endif // ifdef P104_USE_DATETIME_OPTIONS
 
   previousZones = expectedZones;
   expectedZones = P104_CONFIG_ZONE_COUNT;

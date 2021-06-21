@@ -51,6 +51,9 @@
 //                                -1 = off, range 0..86400 seconds (24h)
 //
 // History:
+// 2021-06-21 tonhuisman: Add options for 'formatting' time & date, will be disabled on memory-tight configs guarded by
+//                        P104_USE_DATETIME_OPTIONS
+//                        Introduced guard P104_ADD_SETTINGS_NOTES to disable some addFormNotes() to further reduce code size
 // 2021-06-19 tonhuisman: Implement repeat delay, add settxt command, add command reference (above), bug fixing, some source reorganization
 //                        Webform_Load now works on current settings if the plugin is active, instead of last stored settings
 //                        Disabled most commands a some fonts to make the build fit in the ESP8266 display configuration
@@ -315,7 +318,7 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
           }
         }
 
-        P104_data->handlePluginOncePerSecond(event->TaskIndex);
+        P104_data->handlePluginOncePerSecond(event);
       }
     }
   }
