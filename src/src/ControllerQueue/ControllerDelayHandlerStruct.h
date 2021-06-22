@@ -83,8 +83,18 @@ struct ControllerDelayHandlerStruct {
 
     // Number of elements is not exceeding the limit, check memory
     int freeHeap = ESP.getFreeHeap();
+    {
+      #ifdef CORE_POST_3_0_0
+      HeapSelectIram ephemeral;
+      const int freeHeap2 = ESP.getFreeHeap();
+      if (freeHeap2 < freeHeap) {
+        freeHeap = freeHeap2;
+      }
+      #endif
+    }
 
-    if (freeHeap > 5000) { return false; // Memory is not an issue.
+    if (freeHeap > 5000) { 
+      return false; // Memory is not an issue.
     }
 #ifndef BUILD_NO_DEBUG
 
