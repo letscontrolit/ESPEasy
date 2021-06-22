@@ -181,6 +181,11 @@ void handle_root() {
         addHtml(html);
       }
       {
+        #ifdef CORE_POST_3_0_0
+        addRowLabelValue(LabelType::FREE_HEAP_IRAM);
+        #endif
+      }
+      {
         addRowLabel(LabelType::FREE_STACK);
         String html;
         html.reserve(64);

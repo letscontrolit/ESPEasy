@@ -4,8 +4,15 @@
 MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
                                        taskIndex_t TaskIndex,
                                        const String& topic, const String& payload, bool retained) :
-  _topic(topic), _payload(payload), TaskIndex(TaskIndex), controller_idx(ctrl_idx), _retained(retained)
+  TaskIndex(TaskIndex), controller_idx(ctrl_idx), _retained(retained)
 {
+  #ifdef CORE_POST_3_0_0
+  HeapSelectIram ephemeral;
+  #endif
+  // Copy in the scope of the constructor, so we might store it in the 2nd heap
+  _topic = topic;
+  _payload = payload;
+
   removeEmptyTopics();
 }
 
@@ -14,9 +21,15 @@ MQTT_queue_element::MQTT_queue_element(int         ctrl_idx,
                                        String   && topic,
                                        String   && payload,
                                        bool        retained)
-  :
-  _topic(std::move(topic)), _payload(std::move(payload)), TaskIndex(TaskIndex), controller_idx(ctrl_idx), _retained(retained)
+  : TaskIndex(TaskIndex), controller_idx(ctrl_idx), _retained(retained)
 {
+  #ifdef CORE_POST_3_0_0
+  HeapSelectIram ephemeral;
+  #endif
+  // Copy in the scope of the constructor, so we might store it in the 2nd heap
+  _topic = std::move(topic);
+  _payload = std::move(payload);
+
   removeEmptyTopics();
 }
 

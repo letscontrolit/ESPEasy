@@ -19,6 +19,10 @@
   #define STR(x) STR_HELPER(x)
 #endif
 
+#ifdef CORE_POST_3_0_0
+  #include <umm_malloc/umm_heap_select.h>
+#endif
+
 #ifdef __GCC__
 #pragma GCC system_header
 #endif

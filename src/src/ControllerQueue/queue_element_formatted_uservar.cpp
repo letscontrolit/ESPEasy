@@ -14,6 +14,10 @@ queue_element_formatted_uservar::queue_element_formatted_uservar(queue_element_f
   sensorType(other.sensorType),
   valueCount(other.valueCount)
 {
+  #ifdef CORE_POST_3_0_0
+  HeapSelectIram ephemeral;
+  #endif // ifdef CORE_POST_3_0_0
+
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     txt[i] = std::move(other.txt[i]);
   }
@@ -25,6 +29,10 @@ queue_element_formatted_uservar::queue_element_formatted_uservar(EventStruct *ev
   controller_idx(event->ControllerIndex),
   sensorType(event->sensorType)
 {
+  #ifdef CORE_POST_3_0_0
+  HeapSelectIram ephemeral;
+  #endif // ifdef CORE_POST_3_0_0
+
   valueCount = getValueCountForTask(TaskIndex);
 
   for (byte i = 0; i < valueCount; ++i) {

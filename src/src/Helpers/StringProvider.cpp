@@ -31,6 +31,12 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/AccessControl.h"
 
+
+#ifdef CORE_POST_3_0_0
+#include <umm_malloc/umm_heap_select.h>
+#endif
+
+
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
 }
@@ -56,6 +62,10 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
+#ifdef CORE_POST_3_0_0
+    case LabelType::FREE_HEAP_IRAM:         return F("Free Heap IRAM");
+#endif
+
 #if defined(CORE_POST_2_5_0) || defined(ESP32)
     case LabelType::HEAP_MAX_FREE_BLOCK:    return F("Heap Max Free Block");
 #endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
@@ -218,6 +228,18 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
+
+#ifdef CORE_POST_3_0_0
+    case LabelType::FREE_HEAP_IRAM:
+      {
+        #ifdef CORE_POST_3_0_0
+        HeapSelectIram ephemeral;
+        #endif
+        return String(ESP.getFreeHeap());
+      }
+
+#endif
+
 #if defined(CORE_POST_2_5_0)
     case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxFreeBlockSize());
 #endif // if defined(CORE_POST_2_5_0)

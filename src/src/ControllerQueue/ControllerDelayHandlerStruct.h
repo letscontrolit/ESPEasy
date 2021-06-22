@@ -153,6 +153,10 @@ struct ControllerDelayHandlerStruct {
     }
 
     if (!queueFull(element)) {
+      #ifdef CORE_POST_3_0_0
+      HeapSelectIram ephemeral;
+      #endif
+
       sendQueue.push_back(std::move(element));
       return true;
     }

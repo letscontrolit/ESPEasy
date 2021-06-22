@@ -9,6 +9,10 @@ C015_queue_element::C015_queue_element(C015_queue_element&& other)
   , controller_idx(other.controller_idx), valuesSent(other.valuesSent)
   , valueCount(other.valueCount)
 {
+  #ifdef CORE_POST_3_0_0
+  HeapSelectIram ephemeral;
+  #endif // ifdef CORE_POST_3_0_0
+
   for (byte i = 0; i < VARS_PER_TASK; ++i) {
     txt[i]  = std::move(other.txt[i]);
     vPin[i] = other.vPin[i];
