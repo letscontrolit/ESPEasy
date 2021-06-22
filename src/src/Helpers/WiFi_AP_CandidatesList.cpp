@@ -113,6 +113,21 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
       #endif // ifndef BUILD_NO_DEBUG
 //    }
   }
+  after_process_WiFiscan();
+}
+
+#ifdef ESP8266
+void WiFi_AP_CandidatesList::process_WiFiscan(const bss_info& ap) {
+  WiFi_AP_Candidate tmp(ap);
+  {
+    scanned_mutex.lock();
+    scanned.push_back(tmp);
+    scanned_mutex.unlock();
+  }
+}
+#endif
+
+void WiFi_AP_CandidatesList::after_process_WiFiscan() {
   {
     scanned_mutex.lock();
     scanned.sort();
