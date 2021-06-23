@@ -571,7 +571,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         {
           // Try to allocate on 2nd heap
           #ifdef USE_SECOND_HEAP
-          HeapSelectIram ephemeral;
+//          HeapSelectIram ephemeral;
           #endif
           std::shared_ptr<C018_ConfigStruct> tmp_shared(new (std::nothrow) C018_ConfigStruct);
           customConfig = std::move(tmp_shared);
@@ -716,7 +716,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       {
         // Try to allocate on 2nd heap
         #ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
+//        HeapSelectIram ephemeral;
         #endif
         std::shared_ptr<C018_ConfigStruct> tmp_shared(new (std::nothrow) C018_ConfigStruct);
         customConfig = std::move(tmp_shared);
@@ -867,7 +867,7 @@ bool C018_init(struct EventStruct *event) {
   {
     // Try to allocate on 2nd heap
     #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
+//    HeapSelectIram ephemeral;
     #endif
     std::shared_ptr<C018_ConfigStruct> tmp_shared(new (std::nothrow) C018_ConfigStruct);
     customConfig = std::move(tmp_shared);

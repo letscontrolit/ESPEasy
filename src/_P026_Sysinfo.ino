@@ -220,7 +220,7 @@ float P026_get_value(int type)
     }
     case 1:
     {
-      value = ESP.getFreeHeap();
+      value = FreeMem();
       break;
     }
     case 2:
@@ -268,10 +268,8 @@ float P026_get_value(int type)
     case 13:
     {
       #ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
+      value = FreeMem2ndHeap();
       #endif
-
-      value = ESP.getFreeHeap();
       break;
     }
 

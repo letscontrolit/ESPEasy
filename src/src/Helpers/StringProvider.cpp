@@ -222,16 +222,11 @@ String getValue(LabelType::Enum label) {
     case LabelType::WIFI_NR_EXTRA_SCANS:    return String(Settings.NumberExtraWiFiScans);
     case LabelType::WIFI_PERIODICAL_SCAN:   return jsonBool(Settings.PeriodicalScanWiFi());
 
-    case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
+    case LabelType::FREE_MEM:               return String(FreeMem());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
 
 #ifdef USE_SECOND_HEAP
-    case LabelType::FREE_HEAP_IRAM:
-      {
-        HeapSelectIram ephemeral;
-        return String(ESP.getFreeHeap());
-      }
-
+    case LabelType::FREE_HEAP_IRAM:         return String(FreeMem2ndHeap());
 #endif
 
 #if defined(CORE_POST_2_5_0)
