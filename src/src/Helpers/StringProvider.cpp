@@ -59,7 +59,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
 #ifdef USE_SECOND_HEAP
-    case LabelType::FREE_HEAP_IRAM:         return F("Free Heap IRAM");
+    case LabelType::FREE_HEAP_IRAM:         return F("Free 2nd Heap");
 #endif
 
 #if defined(CORE_POST_2_5_0) || defined(ESP32)
