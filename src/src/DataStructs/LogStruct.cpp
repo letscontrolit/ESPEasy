@@ -21,14 +21,24 @@ void LogStruct::add(const byte loglevel, const char *line) {
   if (linelength > LOG_STRUCT_MESSAGE_SIZE - 1) {
     linelength = LOG_STRUCT_MESSAGE_SIZE - 1;
   }
-  Message[write_idx] = "";
-  if (!Message[write_idx].reserve(linelength)) {
-    return;
-  }
+  {
+    // Must copy using pgm_read_byte as some log entries may be served directly from flash
+    // Copy to a String in DRAM for speed, then either move (in DRAM) or copy to 2nd heap
+    String tmp;
+    tmp.reserve(linelength);
+    const char* c = line;
+    for (unsigned i = 0; i < linelength; ++i) {
+      tmp += static_cast<char>(pgm_read_byte(c++));
+    }
 
-  const char* c = line;
-  for (unsigned i = 0; i < linelength; ++i) {
-    Message[write_idx] += static_cast<char>(pgm_read_byte(c++));
+    #ifdef CORE_POST_3_0_0
+    {
+      HeapSelectIram ephemeral;
+      Message[write_idx] = tmp;
+    }
+    #else
+      Message[write_idx] = std::move(tmp);
+    #endif
   }
 }
 
