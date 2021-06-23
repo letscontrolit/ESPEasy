@@ -19,7 +19,7 @@
   #define STR(x) STR_HELPER(x)
 #endif
 
-#ifdef CORE_POST_3_0_0
+#ifdef USE_SECOND_HEAP
   #include <umm_malloc/umm_heap_select.h>
 #endif
 

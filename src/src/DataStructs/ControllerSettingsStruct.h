@@ -169,13 +169,14 @@ private:
 };
 
 
-#ifdef CORE_POST_3_0_0
+#ifdef USE_SECOND_HEAP
 #include <umm_malloc/umm_heap_select.h>
 #endif
 
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
 
-#ifdef CORE_POST_3_0_0
+/*
+#ifdef USE_SECOND_HEAP
 // Try to allocate the controller settings to the 2nd heap
 #define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr; \
 {                                                                                                 \
@@ -186,10 +187,11 @@ typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_t
 ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
 
 #else
+*/
 #define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new (std::nothrow)  ControllerSettingsStruct()); \
   ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
 
-#endif
+//#endif
 
 // Check to see if MakeControllerSettings was successful
 #define AllocatedControllerSettings() (ControllerSettingsStruct_ptr.get() != nullptr)

@@ -13,9 +13,9 @@ C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sample
   controller_idx(event->ControllerIndex)
 {
   # ifdef USES_PACKED_RAW_DATA
-    #ifdef CORE_POST_3_0_0
+    #ifdef USE_SECOND_HEAP
     HeapSelectIram ephemeral;
-    #endif // ifdef CORE_POST_3_0_0
+    #endif
 
     packed = getPackedFromPlugin(event, sampleSetCount);
 

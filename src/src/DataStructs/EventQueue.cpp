@@ -4,7 +4,7 @@ EventQueueStruct::EventQueueStruct() {}
 
 void EventQueueStruct::add(const String& event)
 {
-  #ifdef CORE_POST_3_0_0
+  #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
   #endif
 
@@ -13,7 +13,7 @@ void EventQueueStruct::add(const String& event)
 
 void EventQueueStruct::add(const __FlashStringHelper * event)
 {
-  #ifdef CORE_POST_3_0_0
+  #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
   #endif
   _eventQueue.push_back(event);
@@ -21,7 +21,7 @@ void EventQueueStruct::add(const __FlashStringHelper * event)
 
 void EventQueueStruct::addMove(String&& event)
 {
-  #ifdef CORE_POST_3_0_0
+  #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
   _eventQueue.push_back(event);
   #else
@@ -34,7 +34,7 @@ bool EventQueueStruct::getNext(String& event)
   if (_eventQueue.empty()) {
     return false;
   }
-  #ifdef CORE_POST_3_0_0
+  #ifdef USE_SECOND_HEAP
   event = _eventQueue.front();
   #else
   event = std::move(_eventQueue.front());

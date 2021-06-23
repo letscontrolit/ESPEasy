@@ -357,7 +357,7 @@ void handle_sysinfo_memory() {
   addHtml('%');
 # endif // ifdef CORE_POST_2_5_0
   {
-    #ifdef CORE_POST_3_0_0
+    #ifdef USE_SECOND_HEAP
     addRowLabelValue(LabelType::FREE_HEAP_IRAM);
     #endif
   }

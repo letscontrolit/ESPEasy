@@ -181,7 +181,7 @@ void handle_root() {
         addHtml(html);
       }
       {
-        #ifdef CORE_POST_3_0_0
+        #ifdef USE_SECOND_HEAP
         addRowLabelValue(LabelType::FREE_HEAP_IRAM);
         #endif
       }

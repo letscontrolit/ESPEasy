@@ -30,7 +30,7 @@ struct LabelType {
 
     FREE_MEM,            // 9876
     FREE_STACK,          // 3456
-#ifdef CORE_POST_3_0_0
+#ifdef USE_SECOND_HEAP
     FREE_HEAP_IRAM,
 #endif
 #if defined(CORE_POST_2_5_0) || defined(ESP32)

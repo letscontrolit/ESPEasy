@@ -13,8 +13,8 @@
   #define LOG_STRUCT_MESSAGE_LINES 30
   #define LOG_BUFFER_EXPIRE         30000  // Time after which a buffered log item is considered expired.
 #else
-  #ifdef CORE_POST_3_0_0
-    #define LOG_STRUCT_MESSAGE_LINES 25
+  #ifdef USE_SECOND_HEAP
+    #define LOG_STRUCT_MESSAGE_LINES 15
   #else
     #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
       #define LOG_STRUCT_MESSAGE_LINES 10

@@ -132,9 +132,9 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
       std::shared_ptr<C011_ConfigStruct> customConfig;
       {
         // Try to allocate on 2nd heap
-        #ifdef CORE_POST_3_0_0
+        #ifdef USE_SECOND_HEAP
         HeapSelectIram ephemeral;
-        #endif // ifdef CORE_POST_3_0_0
+        #endif
         std::shared_ptr<C011_ConfigStruct> tmp_shared(new (std::nothrow) C011_ConfigStruct);
         customConfig = std::move(tmp_shared);
       }
@@ -222,9 +222,9 @@ bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMetho
   std::shared_ptr<C011_ConfigStruct> customConfig;
   {
     // Try to allocate on 2nd heap
-    #ifdef CORE_POST_3_0_0
+    #ifdef USE_SECOND_HEAP
     HeapSelectIram ephemeral;
-    #endif // ifdef CORE_POST_3_0_0
+    #endif
     std::shared_ptr<C011_ConfigStruct> tmp_shared(new (std::nothrow) C011_ConfigStruct);
     customConfig = std::move(tmp_shared);
   }

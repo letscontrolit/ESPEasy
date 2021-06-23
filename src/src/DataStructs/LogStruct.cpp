@@ -31,9 +31,12 @@ void LogStruct::add(const byte loglevel, const char *line) {
       tmp += static_cast<char>(pgm_read_byte(c++));
     }
 
-    #ifdef CORE_POST_3_0_0
+    #ifdef USE_SECOND_HEAP
     {
-      HeapSelectIram ephemeral;
+      if (millis() > 5000) {
+        HeapSelectIram ephemeral;
+      }
+      Message[write_idx] = EMPTY_STRING; // Have to clear it first or else it will re-allocate on the same heap
       Message[write_idx] = tmp;
     }
     #else

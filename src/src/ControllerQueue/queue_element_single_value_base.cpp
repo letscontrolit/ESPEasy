@@ -14,9 +14,9 @@ queue_element_single_value_base::queue_element_single_value_base(queue_element_s
   controller_idx(rval.controller_idx),
   valuesSent(rval.valuesSent), valueCount(rval.valueCount)
 {
-  #ifdef CORE_POST_3_0_0
+  #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  #endif // ifdef CORE_POST_3_0_0
+  #endif
 
   for (byte i = 0; i < VARS_PER_TASK; ++i) {
     txt[i] = std::move(rval.txt[i]);

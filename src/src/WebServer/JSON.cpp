@@ -170,7 +170,7 @@ void handle_json()
         LabelType::HEAP_FRAGMENTATION,
         #endif // ifdef CORE_POST_2_5_0
         LabelType::FREE_MEM,
-      #ifdef CORE_POST_3_0_0
+      #ifdef USE_SECOND_HEAP
         LabelType::FREE_HEAP_IRAM,
       #endif
         LabelType::SUNRISE,

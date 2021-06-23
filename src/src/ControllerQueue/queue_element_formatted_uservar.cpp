@@ -14,9 +14,9 @@ queue_element_formatted_uservar::queue_element_formatted_uservar(queue_element_f
   sensorType(other.sensorType),
   valueCount(other.valueCount)
 {
-  #ifdef CORE_POST_3_0_0
+  #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  #endif // ifdef CORE_POST_3_0_0
+  #endif
 
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     txt[i] = std::move(other.txt[i]);
@@ -29,9 +29,9 @@ queue_element_formatted_uservar::queue_element_formatted_uservar(EventStruct *ev
   controller_idx(event->ControllerIndex),
   sensorType(event->sensorType)
 {
-  #ifdef CORE_POST_3_0_0
+  #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  #endif // ifdef CORE_POST_3_0_0
+  #endif
 
   valueCount = getValueCountForTask(TaskIndex);
 

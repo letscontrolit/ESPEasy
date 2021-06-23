@@ -31,11 +31,7 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/AccessControl.h"
 
-
-#ifdef CORE_POST_3_0_0
-#include <umm_malloc/umm_heap_select.h>
-#endif
-
+#include "../../ESPEasy_common.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
@@ -62,7 +58,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
-#ifdef CORE_POST_3_0_0
+#ifdef USE_SECOND_HEAP
     case LabelType::FREE_HEAP_IRAM:         return F("Free Heap IRAM");
 #endif
 
@@ -229,12 +225,10 @@ String getValue(LabelType::Enum label) {
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
 
-#ifdef CORE_POST_3_0_0
+#ifdef USE_SECOND_HEAP
     case LabelType::FREE_HEAP_IRAM:
       {
-        #ifdef CORE_POST_3_0_0
         HeapSelectIram ephemeral;
-        #endif
         return String(ESP.getFreeHeap());
       }
 

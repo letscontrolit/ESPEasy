@@ -570,9 +570,9 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         std::shared_ptr<C018_ConfigStruct> customConfig;
         {
           // Try to allocate on 2nd heap
-          #ifdef CORE_POST_3_0_0
+          #ifdef USE_SECOND_HEAP
           HeapSelectIram ephemeral;
-          #endif // ifdef CORE_POST_3_0_0
+          #endif
           std::shared_ptr<C018_ConfigStruct> tmp_shared(new (std::nothrow) C018_ConfigStruct);
           customConfig = std::move(tmp_shared);
         }
@@ -715,9 +715,9 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       std::shared_ptr<C018_ConfigStruct> customConfig;
       {
         // Try to allocate on 2nd heap
-        #ifdef CORE_POST_3_0_0
+        #ifdef USE_SECOND_HEAP
         HeapSelectIram ephemeral;
-        #endif // ifdef CORE_POST_3_0_0
+        #endif
         std::shared_ptr<C018_ConfigStruct> tmp_shared(new (std::nothrow) C018_ConfigStruct);
         customConfig = std::move(tmp_shared);
       }
@@ -866,9 +866,9 @@ bool C018_init(struct EventStruct *event) {
   std::shared_ptr<C018_ConfigStruct> customConfig;
   {
     // Try to allocate on 2nd heap
-    #ifdef CORE_POST_3_0_0
+    #ifdef USE_SECOND_HEAP
     HeapSelectIram ephemeral;
-    #endif // ifdef CORE_POST_3_0_0
+    #endif
     std::shared_ptr<C018_ConfigStruct> tmp_shared(new (std::nothrow) C018_ConfigStruct);
     customConfig = std::move(tmp_shared);
   }
