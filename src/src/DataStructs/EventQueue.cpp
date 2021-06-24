@@ -1,5 +1,7 @@
 #include "EventQueue.h"
 
+#include "../../ESPEasy_common.h"
+
 EventQueueStruct::EventQueueStruct() {}
 
 void EventQueueStruct::add(const String& event)
@@ -16,7 +18,8 @@ void EventQueueStruct::add(const __FlashStringHelper * event)
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
   #endif
-  _eventQueue.push_back(event);
+  // Wrap in String() constructor to make sure it is using the 2nd heap allocator if present.
+  _eventQueue.push_back(String(event));
 }
 
 void EventQueueStruct::addMove(String&& event)
@@ -35,7 +38,12 @@ bool EventQueueStruct::getNext(String& event)
     return false;
   }
   #ifdef USE_SECOND_HEAP
-  event = _eventQueue.front();
+  {
+    // Fetch the event and make sure it is allocated on the DRAM heap, not the 2nd heap
+    // Otherwise checks like strnlen_P may crash on it.
+    HeapSelectDram ephemeral;
+    event = std::move(String(_eventQueue.front()));
+  }
   #else
   event = std::move(_eventQueue.front());
   #endif

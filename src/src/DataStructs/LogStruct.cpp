@@ -34,6 +34,8 @@ void LogStruct::add(const byte loglevel, const char *line) {
     #ifdef USE_SECOND_HEAP
     {
       if (millis() > 5000) {
+        // FIXME TD-er: Must check if we're called from loop() and not from setup()
+        // For now we can probably expect not to be in the setup() anymore???
         HeapSelectIram ephemeral;
       }
       Message[write_idx] = EMPTY_STRING; // Have to clear it first or else it will re-allocate on the same heap
@@ -51,6 +53,11 @@ bool LogStruct::get(String& output, const String& lineEnd) {
   lastReadTimeStamp = millis();
 
   if (!isEmpty()) {
+    #ifdef USE_SECOND_HEAP
+    // Fetch the log line and make sure it is allocated on the DRAM heap, not the 2nd heap
+    // Otherwise checks like strnlen_P may crash on it.
+    HeapSelectDram ephemeral;
+    #endif
     read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
     output  += formatLine(read_idx, lineEnd);
   }

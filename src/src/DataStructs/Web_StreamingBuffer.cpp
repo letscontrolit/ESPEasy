@@ -10,7 +10,7 @@
 
 #include "../Helpers/ESPEasy_time_calc.h"
 
-
+#include "../../ESPEasy_common.h"
 
 #define CHUNKED_BUFFER_SIZE          400
 
@@ -69,6 +69,10 @@ Web_StreamingBuffer Web_StreamingBuffer::operator+=(const __FlashStringHelper* s
 }
 
 Web_StreamingBuffer Web_StreamingBuffer::addFlashString(PGM_P str) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   ++flashStringCalls;
 
   if (!str) { return *this; // return if the pointer is void
@@ -163,6 +167,10 @@ void Web_StreamingBuffer::startJsonStream() {
 }
 
 void Web_StreamingBuffer::startStream(bool json, const String& origin) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   maxCoreUsage = maxServerUsage = 0;
   initialRam   = ESP.getFreeHeap();
   beforeTXRam  = initialRam;
@@ -183,6 +191,10 @@ void Web_StreamingBuffer::startStream(bool json, const String& origin) {
 }
 
 void Web_StreamingBuffer::trackTotalMem() {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   beforeTXRam = ESP.getFreeHeap();
 
   if ((initialRam - beforeTXRam) > maxServerUsage) {
@@ -191,6 +203,10 @@ void Web_StreamingBuffer::trackTotalMem() {
 }
 
 void Web_StreamingBuffer::trackCoreMem() {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   duringTXRam = ESP.getFreeHeap();
 
   if ((initialRam - duringTXRam) > maxCoreUsage) {
@@ -199,6 +215,10 @@ void Web_StreamingBuffer::trackCoreMem() {
 }
 
 void Web_StreamingBuffer::endStream() {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   if (!lowMemorySkip) {
     if (buf.length() > 0) { sendContentBlocking(buf); }
     buf.clear();
@@ -230,6 +250,10 @@ void Web_StreamingBuffer::endStream() {
 
 
 void Web_StreamingBuffer::sendContentBlocking(String& data) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   const uint32_t length   = data.length();
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
@@ -283,6 +307,10 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 }
 
 void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendHeaderBlocking"));
   #endif
