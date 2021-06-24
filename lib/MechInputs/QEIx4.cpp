@@ -28,7 +28,9 @@
 
 
 #ifndef CORE_POST_3_0_0
-  #define IRAM_ATTR ICACHE_RAM_ATTR
+  #ifdef ESP8266
+    #define IRAM_ATTR ICACHE_RAM_ATTR
+  #endif
 #endif
 
 

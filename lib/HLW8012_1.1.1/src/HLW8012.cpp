@@ -23,7 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "HLW8012.h"
 
   #ifndef CORE_POST_3_0_0
-    #define IRAM_ATTR ICACHE_RAM_ATTR
+    #ifdef ESP8266
+      #define IRAM_ATTR ICACHE_RAM_ATTR
+    #endif
   #endif
 
 void HLW8012::begin(

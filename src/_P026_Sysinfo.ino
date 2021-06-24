@@ -38,7 +38,7 @@ const __FlashStringHelper * Plugin_026_valuename(byte value_nr, bool displayStri
     case 10: return displayString ? F("Free Stack") : F("freestack");
     case 11: return displayString ? F("None") : F("");
     case 12: return displayString ? F("WiFi TX pwr") : F("txpwr");
-    case 13: return displayString ? F("Free IRAM") : F("freeiram");
+    case 13: return displayString ? F("Free 2nd Heap") : F("free2ndheap");
     default:
       break;
   }
