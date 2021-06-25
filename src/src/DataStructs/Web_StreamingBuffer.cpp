@@ -254,6 +254,8 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   HeapSelectDram ephemeral;
   #endif
 
+  delay(0); // Try to prevent WDT reboots
+
   const uint32_t length   = data.length();
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {

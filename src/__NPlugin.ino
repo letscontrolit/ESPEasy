@@ -31,6 +31,10 @@ static const char ADDNPLUGIN_ERROR[] PROGMEM = "System: Error - Too many N-Plugi
 
 void NPluginInit(void)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   byte x;
 
   // Clear pointer table for all plugins
