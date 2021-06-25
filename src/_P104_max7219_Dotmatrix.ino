@@ -49,8 +49,19 @@
 // brightness,<zone>,<level>    : Set the Brightness for the zone, range from 0 (off) to 15 (very bright)
 // repeat,<zone>,<delay_sec>    : Set the Repeat (sec) for the zone, after this delay the text & animation will be repeated.
 //                                -1 = off, range 0..86400 seconds (24h)
+// bar,<zone>,<graph-string>    : Set the graph-string for a Bargraph zone, format: value,max,min,direction,barType|...
+//                                value: numeric value of type double
+//                                max: value for a full bar display, default 100 (percent)
+//                                min: value for minimal bar display, default 0
+//                                direction: 0 (default): right to left, 1: left to right
+//                                barType: 0: solid, width: 8/number of graphStrings
+//                                         1: solid, width: 1 on, 1 off
+//                                Up to 8 graphStrings can be provided, width is determined by the number of graphStrings
 //
 // History:
+// 2021-06-24 tonhuisman: Add min/max range with negative minimal value support and zero-point indication if possible
+// 2021-06-23 tonhuisman: Add Bar-graph option and bar command (initial feature, options to implement) guarded with P104_USE_BAR_GRAPH
+// 2021-06-22 tonhuisman: Add Bar-graph initial code-infrastructure
 // 2021-06-21 tonhuisman: Add options for 'formatting' time & date, will be disabled on memory-tight configs guarded by
 //                        P104_USE_DATETIME_OPTIONS
 //                        Introduced guard P104_ADD_SETTINGS_NOTES to disable some addFormNotes() to further reduce code size

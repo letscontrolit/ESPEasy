@@ -49,6 +49,9 @@ bool P104_data_struct::begin() {
   if ((P != nullptr) && (cs_pin > -1)) {
     addLog(LOG_LEVEL_INFO, F("dotmatrix: P->begin() called"));
     P->begin(expectedZones);
+    #ifdef P104_USE_BAR_GRAPH
+    pM = P->getGraphicObject();
+    #endif
     return true;
   }
   return false;
@@ -269,6 +272,10 @@ void P104_data_struct::configureZones() {
     if (it->zone <= expectedZones) {
       zoneOffset += it->offset;
       P->setZone(currentZone, zoneOffset, zoneOffset + it->size - 1);
+      # ifdef P104_USE_BAR_GRAPH
+      it->_startModule = zoneOffset;
+      P->getDisplayExtent(currentZone, it->_lower, it->_upper);
+      # endif // ifdef P104_USE_BAR_GRAPH
       zoneOffset += it->size;
 
       switch (it->font) {
@@ -399,6 +406,187 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
                      static_cast<textEffect_t>(zstruct.animationIn),
                      static_cast<textEffect_t>(zstruct.animationOut));
 }
+
+# ifdef P104_USE_BAR_GRAPH
+
+void P104_data_struct::modulesOnOff(uint8_t start, uint8_t end, MD_MAX72XX::controlValue_t on_off) {
+  for (uint8_t m = start; m <= end; m++) {
+    pM->control(m, MD_MAX72XX::UPDATE, on_off);
+  }
+}
+
+/********************************************************************
+ * Process a graph-string to display in a zone, format:
+ * value,100%-range,direction,bartype|...
+ *******************************************************************/
+void P104_data_struct::displayBarGraph(uint8_t zone,
+                                       const P104_zone_struct& zstruct,
+                                       const String&graph) {
+  // TODO
+  if (graph.isEmpty()) { return; }
+  sZoneInitial[zone] = String(graph); // Keep the original string for future use
+
+  # define NOT_A_COMMA 0x02 // Something else than a comma, or the parseString function will get confused
+  String parsedGraph = String(graph);
+  parseTemplate(parsedGraph);
+  parsedGraph.replace(',', NOT_A_COMMA);
+
+  std::vector<P104_bargraph_struct> barGraphs;
+  uint8_t currentBar = 0;
+  bool loop = true;
+  // Parse the graph-string
+  while (loop && currentBar < 8) { // Maximum 8 valuesets possible
+    String graphpart = parseString(parsedGraph, currentBar + 1, '|');
+    graphpart.trim();
+    graphpart.replace(NOT_A_COMMA, ',');
+    if (graphpart.isEmpty()) {
+      loop = false;
+    } else {
+      barGraphs.push_back(P104_bargraph_struct(currentBar));
+    }
+    if (loop && validDoubleFromString(parseString(graphpart, 1), barGraphs[currentBar].value)) { // value
+      String datapart = parseString(graphpart, 2); // max (default: 100.0)
+      if (datapart.isEmpty()) {
+        barGraphs[currentBar].max = 100.0;
+      } else {
+        validDoubleFromString(datapart, barGraphs[currentBar].max);
+      }
+      datapart = parseString(graphpart, 3); // min (default: 0.0)
+      if (datapart.isEmpty()) {
+        barGraphs[currentBar].min = 0.0;
+      } else {
+        validDoubleFromString(datapart, barGraphs[currentBar].min);
+      }
+      datapart = parseString(graphpart, 4); // direction
+      if (datapart.isEmpty()) {
+        barGraphs[currentBar].direction = 0;
+      } else {
+        int value = 0;
+        validIntFromString(datapart, value);
+        barGraphs[currentBar].direction = value;
+      }
+      datapart = parseString(graphpart, 5); // barType
+      if (datapart.isEmpty()) {
+        barGraphs[currentBar].barType = 0;
+      } else {
+        int value = 0;
+        validIntFromString(datapart, value);
+        barGraphs[currentBar].barType = value;
+      }
+      if (definitelyGreaterThan(barGraphs[currentBar].min, barGraphs[currentBar].max)) {
+        std::swap(barGraphs[currentBar].min, barGraphs[currentBar].max);
+      }
+    }
+    #ifdef P104_DEBUG // Temporary logging
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      log.reserve(70);
+      log = F("P104: Bar-graph: ");
+      if (loop) {
+        log += currentBar;
+        log += F(" in: ");
+        log += graphpart;
+        log += F(" value: ");
+        log += barGraphs[currentBar].value;
+        log += F(" max: ");
+        log += barGraphs[currentBar].max;
+        log += F(" min: ");
+        log += barGraphs[currentBar].min;
+        log += F(" dir: ");
+        log += barGraphs[currentBar].direction;
+        log += F(" typ: ");
+        log += barGraphs[currentBar].barType;
+      } else {
+        log += F(" bsize: ");
+        log += barGraphs.size();
+      }
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    #endif
+    currentBar++; // next
+  }
+  # undef NOT_A_COMMA
+  if (barGraphs.size() > 0) {
+    uint8_t barWidth = 8 / barGraphs.size(); // Divide the 8 pixel width per number of bars to show
+    uint8_t pixTop, pixBottom;
+    int16_t zeroPoint;
+    #ifdef P104_DEBUG
+    String log;
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      log.reserve(64);
+      log = F("P104: bar Width: ");
+      log += barWidth;
+      log += F(" low: ");
+      log += zstruct._lower;
+      log += F(" high: ");
+      log += zstruct._upper;
+    }
+    #endif
+    modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_OFF); // Stop updates on modules
+    uint8_t row = 0;
+    if (barGraphs.size() == 3 || barGraphs.size() == 5) { // Center within the rows a bit
+      for (;row < (barGraphs.size() == 3 ? 1 : 2); row++) {
+        for (uint8_t col = zstruct._lower; col < zstruct._upper; col++) {
+          pM->setPoint(row, col, false); // all off
+        }
+      }
+    }
+    for (auto it = barGraphs.begin(); it != barGraphs.end(); ++it) {
+      if (essentiallyEqual(it->min, 0.0)) {
+        pixTop    = zstruct._lower + ((zstruct._upper - zstruct._lower) / it->max) * it->value;
+        pixBottom = 0;
+        zeroPoint = 0;
+      } else {
+        if (definitelyLessThan(it->min, 0.0) && definitelyGreaterThan(it->max, 0.0)) { // Zero-point is used
+          zeroPoint = (it->min * -1) / ((it->max - it->min) / (1.0 * (zstruct._upper - zstruct._lower)));
+        } else {
+          zeroPoint = 0;
+        }
+        pixTop    = zstruct._lower + zeroPoint + ((zstruct._upper - zstruct._lower) / (it->max - it->min)) * it->value;
+        pixBottom = zstruct._lower + zeroPoint;
+        if (definitelyLessThan(it->value, 0.0)) {
+          std::swap(pixTop, pixBottom);        }
+      }
+      #ifdef P104_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        log += F(" B: ");
+        log += pixBottom;
+        log += F(" T: ");
+        log += pixTop;
+        log += F(" Z: ");
+        log += zeroPoint;
+      }
+      #endif
+      bool on_off;
+      for (uint8_t r = 0; r < barWidth; r++) {
+        for (uint8_t col = zstruct._lower; col < zstruct._upper; col++) {
+          if (zeroPoint == 0) {
+            on_off = col <= pixTop;
+          } else {
+            on_off = (col >= pixBottom && col <= pixTop); // valid area
+            if (barWidth > 2 && (r == 0 || r == barWidth - 1) && col == zstruct._lower + zeroPoint) {
+              on_off = false; // when bar wider than 2, turn off zeropoint top and bottom led
+            }
+          }
+          pM->setPoint(row + r, col, on_off);
+        }
+      }
+      row += barWidth; // Next set of rows
+    }
+    for (; row < 8; row++) { // Clear unused rows
+      for (uint8_t col = zstruct._lower; col < zstruct._upper; col++) {
+        pM->setPoint(row, col, false); // all off
+      }
+    }
+    #ifdef P104_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    #endif
+    modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_ON);  // Continue updates on modules
+  }
+}
+# endif // ifdef P104_USE_BAR_GRAPH
 
 /**************************************************
  * Check if an animatio is available in the current build
@@ -678,6 +866,19 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
           #endif
+
+          #ifdef P104_USE_BAR_GRAPH
+          if ((sub.equals(F("bar")) ||                   // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones with Bargraph content)
+               sub.equals(F("setbar"))) &&
+              (it->content == P104_CONTENT_BAR_GRAPH)) { // no length check, so longer than the UI allows is made possible
+            if (sub.equals(F("setbar"))) {               // subcommand: setbar,<zone>,<graph-string> (stores the graph-string in the settings, is not saved)
+              it->text = string4;
+            }
+            displayBarGraph(zoneIndex - 1, *it, string4);
+            success = true;
+            break;
+          }
+          #endif
         }
 
       }
@@ -919,6 +1120,15 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
           it->_lastChecked = m;
           break;
         }
+        # ifdef P104_USE_BAR_GRAPH
+        case P104_CONTENT_BAR_GRAPH:
+        {
+          if (!it->text.isEmpty()) {
+            displayBarGraph(it->zone - 1, *it, it->text);
+          }
+          break;
+        }
+        # endif // ifdef P104_USE_BAR_GRAPH
         default:
           break;
       }
@@ -967,8 +1177,15 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
           addLog(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P104_DEBUG
-        displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
-        P->displayReset(it->zone - 1);
+        if (it->content == P104_CONTENT_TEXT) {
+          displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
+          P->displayReset(it->zone - 1);
+        }
+        #ifdef P104_USE_BAR_GRAPH
+        if (it->content == P104_CONTENT_BAR_GRAPH) {
+          displayBarGraph(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
+        }
+        #endif
         it->_repeatTimer = millis();
       }
     }
@@ -1538,6 +1755,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Date (4 mod.)"),
       F("Date yr (6/7 mod.)"),
       F("Date/time (9/13 mod.)")
+      #ifdef P104_USE_BAR_GRAPH
+      , F("Bar graph")
+      #endif
     };
     int contentOptions[] {
       P104_CONTENT_TEXT,
@@ -1546,6 +1766,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_CONTENT_DATE4,
       P104_CONTENT_DATE6,
       P104_CONTENT_DATE_TIME
+      #ifdef P104_USE_BAR_GRAPH
+      , P104_CONTENT_BAR_GRAPH
+      #endif
     };
 
     delay(0);

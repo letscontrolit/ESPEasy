@@ -25,6 +25,8 @@
 # define P104_USE_KATAKANA_FONT                             // Enables the use of a Katakana font (see usage in MD_Parola examples)
 # define P104_USE_COMMANDS                                  // Enables the use of all commands, not just clear, txt and settxt
 # define P104_USE_DATETIME_OPTIONS                          // Enables extra date/time options
+# define P104_USE_BAR_GRAPH                                 // Enables the use of Bar-graph feature
+
 # define P104_ADD_SETTINGS_NOTES                            // Adds some notes on the Settings page
 
 # if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266) // To make it fit in the ESP8266 display build
@@ -186,7 +188,12 @@
 # define P104_CONTENT_DATE4       3
 # define P104_CONTENT_DATE6       4
 # define P104_CONTENT_DATE_TIME   5
-# define P104_CONTENT_count       6 // The number of content type options
+# define P104_CONTENT_BAR_GRAPH   6
+# ifdef P104_USE_BAR_GRAPH
+#  define P104_CONTENT_count       7 // The number of content type options
+# else // ifdef P104_USE_BAR_GRAPH
+#  define P104_CONTENT_count       6 // The number of content type options
+# endif // ifdef P104_USE_BAR_GRAPH
 
 # define P104_SPECIAL_EFFECT_NONE       0
 # define P104_SPECIAL_EFFECT_UP_DOWN    1
@@ -282,7 +289,24 @@ struct P104_zone_struct {
   int32_t  repeatDelay;
   uint32_t _repeatTimer;
   int8_t   _lastChecked = -1;
+  # ifdef P104_USE_BAR_GRAPH
+  uint8_t  _startModule;   // starting module, end module is _startModule + size - 1
+  uint16_t _lower, _upper; // lower and upper pixel numbers
+  # endif // ifdef P104_USE_BAR_GRAPH
 };
+
+# ifdef P104_USE_BAR_GRAPH
+struct P104_bargraph_struct {
+  P104_bargraph_struct(uint8_t _graph) : graph(_graph) {}
+
+  uint8_t graph;
+  double  value;
+  double  max;
+  double  min;
+  uint8_t barType;
+  uint8_t direction;
+};
+# endif // ifdef P104_USE_BAR_GRAPH
 
 struct tP104_StoredSettings {
   uint16_t bufferSize = 0u;
@@ -314,8 +338,19 @@ struct P104_data_struct : public PluginTaskData_base {
                          const String& string);
   bool handlePluginOncePerSecond(struct EventStruct *event);
   void checkRepeatTimer(uint8_t z);
+  # ifdef P104_USE_BAR_GRAPH
+  void displayBarGraph(uint8_t                 zone,
+                       const P104_zone_struct& zstruct,
+                       const String          & graph);
+  # endif // ifdef P104_USE_BAR_GRAPH
 
   MD_Parola *P = nullptr;
+  # ifdef P104_USE_BAR_GRAPH
+  MD_MAX72XX *pM = nullptr;
+  void modulesOnOff(uint8_t                    start,
+                    uint8_t                    end,
+                    MD_MAX72XX::controlValue_t on_off);
+  # endif // ifdef P104_USE_BAR_GRAPH
 
   bool logAllText = false;
 
