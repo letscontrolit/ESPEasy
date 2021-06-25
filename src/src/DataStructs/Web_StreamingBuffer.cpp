@@ -23,16 +23,16 @@ Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),
 }
 
 /*
-Web_StreamingBuffer Web_StreamingBuffer::operator=(String& a)                 {
+Web_StreamingBuffer& Web_StreamingBuffer::operator=(String& a)                 {
   flush(); return addString(a);
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator=(const String& a)           {
+Web_StreamingBuffer& Web_StreamingBuffer::operator=(const String& a)           {
   flush(); return addString(a);
 }
 */
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(char a)                   {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(char a)                   {
   if (CHUNKED_BUFFER_SIZE > (this->buf.length() + 1)) {
     this->buf += a;
     return *this;
@@ -40,35 +40,35 @@ Web_StreamingBuffer Web_StreamingBuffer::operator+=(char a)                   {
   return addString(String(a));
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(long unsigned int a)     {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(long unsigned int a)     {
   return addString(String(a));
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(float a)                  {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(float a)                  {
   return addString(String(a));
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(int a)                    {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(int a)                    {
   return addString(String(a));
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(uint32_t a)               {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(uint32_t a)               {
   return addString(String(a));
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(const String& a)          {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const String& a)          {
   return addString(a);
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(PGM_P str) {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(PGM_P str) {
   return addFlashString(str);
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(const __FlashStringHelper* str) {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const __FlashStringHelper* str) {
   return addFlashString((PGM_P)str);
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::addFlashString(PGM_P str) {
+Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   ++flashStringCalls;
 
   if (!str) { return *this; // return if the pointer is void
@@ -108,7 +108,7 @@ Web_StreamingBuffer Web_StreamingBuffer::addFlashString(PGM_P str) {
   return *this;
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::addString(const String& a) {
+Web_StreamingBuffer& Web_StreamingBuffer::addString(const String& a) {
   if (lowMemorySkip) { return *this; }
   int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
 
