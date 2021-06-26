@@ -407,6 +407,46 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
                      static_cast<textEffect_t>(zstruct.animationOut));
 }
 
+/*********************************************
+ * Update all or the specified zone
+ ********************************************/
+void P104_data_struct::updateZone(uint8_t                 zone,
+                                  const P104_zone_struct& zstruct) {
+  if (zone == 0) {
+    for (auto it = zones.begin(); it != zones.end(); ++it) {
+      if (it->content == P104_CONTENT_TEXT) {
+        displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
+        P->displayReset(it->zone - 1);
+      }
+      #ifdef P104_USE_BAR_GRAPH
+      if (it->content == P104_CONTENT_BAR_GRAPH) {
+        displayBarGraph(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed bar graph
+      }
+      #endif
+      if (zstruct.content == P104_CONTENT_TEXT
+      #ifdef P104_USE_BAR_GRAPH
+          || zstruct.content == P104_CONTENT_BAR_GRAPH
+      #endif
+      ) {
+        if (it->repeatDelay > -1) { // Restart repeat timer
+          it->_repeatTimer = millis();
+        }
+      }
+    }
+  } else {
+    if (zstruct.content == P104_CONTENT_TEXT) {
+      displayOneZoneText(zstruct.zone - 1, zstruct, sZoneInitial[zstruct.zone - 1]); // Re-send last displayed text
+      P->displayReset(zstruct.zone - 1);
+    }
+    #ifdef P104_USE_BAR_GRAPH
+    if (zstruct.content == P104_CONTENT_BAR_GRAPH) {
+      displayBarGraph(zstruct.zone - 1, zstruct, sZoneInitial[zstruct.zone - 1]); // Re-send last displayed bar graph
+    }
+    #endif
+    // Repeat timer is/should be started elsewhere
+  }
+}
+
 # ifdef P104_USE_BAR_GRAPH
 
 void P104_data_struct::modulesOnOff(uint8_t start, uint8_t end, MD_MAX72XX::controlValue_t on_off) {
@@ -682,26 +722,43 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
   if (command.equals(F("dotmatrix"))) { // main command: dotmatrix
     String sub = parseString(string, 2);
 
-    int zoneIndex;
-    int value4;
+    int    zoneIndex;
     String string4 = parseStringKeepCase(string, 4);
+    #ifdef P104_USE_COMMANDS
+    int    value4;
     validIntFromString(string4, value4);
+    #endif
 
+    // Global subcommands
+    if (sub.equals(F("clear")) && // subcommand: clear[,all]
+        (string4.isEmpty() ||
+          string4.equalsIgnoreCase(F("all")))) {
+      P->displayClear();
+      success = true;
+    }
+
+    if (sub.equals(F("update")) && // subcommand: update[,all]
+        (string4.isEmpty() ||
+          string4.equalsIgnoreCase(F("all")))) {
+      updateZone(0, P104_zone_struct(0));
+      success = true;
+    }
+
+    // Zone-specific subcommands
     if (validIntFromString(parseString(string, 3), zoneIndex) &&
         (zoneIndex > 0) &&
         (static_cast<unsigned int>(zoneIndex) <= zones.size())) {
-      if (sub.equals(F("clear")) && // subcommand: clear[,all]
-          (string4.isEmpty() ||
-           string4.equalsIgnoreCase(F("all")))) {
-        P->displayClear();
-        success = true;
-      }
-
       // subcommands are processed in the same order as they are presented in the UI
       for (auto it = zones.begin(); it != zones.end() && !success; ++it) {
         if ((it->zone == zoneIndex)) {  // This zone
           if (sub.equals(F("clear"))) { // subcommand: clear,<zone>
             P->displayClear(zoneIndex - 1);
+            success = true;
+            break;
+          }
+
+          if (sub.equals(F("update"))) { // subcommand: update,<zone>
+            updateZone(zoneIndex, *it);
             success = true;
             break;
           }
@@ -879,6 +936,12 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
           #endif
+
+          if (success) { // Reset the repeat timer
+            if (it->repeatDelay > -1) {
+              it->_repeatTimer = millis();
+            }
+          }
         }
 
       }
@@ -1057,6 +1120,7 @@ void createHString(String& string) {
  ***********************************************************************/
 bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
   bool redisplay  = false;
+  bool success    = false;
   bool useSeconds;
   # ifdef P104_USE_DATETIME_OPTIONS
   bool useFlasher = !bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FLASH);
@@ -1125,6 +1189,7 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
         {
           if (!it->text.isEmpty()) {
             displayBarGraph(it->zone - 1, *it, it->text);
+            success = true;
           }
           break;
         }
@@ -1148,7 +1213,7 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
     // synchronise the start
     P->synchZoneStart();
   }
-  return redisplay;
+  return redisplay || success;
 }
 
 /***************************************************
@@ -1183,7 +1248,7 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
         }
         #ifdef P104_USE_BAR_GRAPH
         if (it->content == P104_CONTENT_BAR_GRAPH) {
-          displayBarGraph(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
+          displayBarGraph(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed bar graph
         }
         #endif
         it->_repeatTimer = millis();

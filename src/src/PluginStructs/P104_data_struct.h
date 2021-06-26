@@ -338,6 +338,8 @@ struct P104_data_struct : public PluginTaskData_base {
                          const String& string);
   bool handlePluginOncePerSecond(struct EventStruct *event);
   void checkRepeatTimer(uint8_t z);
+  void updateZone(uint8_t                 zone,
+                  const P104_zone_struct& zstruct);
   # ifdef P104_USE_BAR_GRAPH
   void displayBarGraph(uint8_t                 zone,
                        const P104_zone_struct& zstruct,

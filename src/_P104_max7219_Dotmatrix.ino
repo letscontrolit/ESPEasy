@@ -14,6 +14,7 @@
 // <zone> is in the range of configured zones, limited to 1..8 (ESP8266) or 1..16 (ESP32)
 // Subcommands:
 // clear[,all|<zone>]           : Clears the entire display (all zones if 'all' or no zone specified) or the zone specified
+// update[,all|<zone>]          : Updates the entire display (all zones if 'all' or no zone specified) or the zone specified
 // size,<zone>,<modules>        : Set the number of modules (Size) for that zone (1..64). A complete reconfiguration will be done if this
 //                                setting is changed
 // txt,<zone>,<text>            : Put the <text> (use quotes if it contains spaces or commas) in the specified zone
@@ -59,6 +60,7 @@
 //                                Up to 8 graphStrings can be provided, width is determined by the number of graphStrings
 //
 // History:
+// 2021-06-26 tonhuisman: Add update command for updating one or all zones, restart repeat timer if content is updated by command, bugfixes
 // 2021-06-24 tonhuisman: Add min/max range with negative minimal value support and zero-point indication if possible
 // 2021-06-23 tonhuisman: Add Bar-graph option and bar command (initial feature, options to implement) guarded with P104_USE_BAR_GRAPH
 // 2021-06-22 tonhuisman: Add Bar-graph initial code-infrastructure
