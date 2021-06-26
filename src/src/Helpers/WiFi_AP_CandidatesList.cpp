@@ -77,9 +77,10 @@ void WiFi_AP_CandidatesList::begin_sync_scan() {
 void WiFi_AP_CandidatesList::purge_expired() {
   for (auto it = scanned.begin(); it != scanned.end(); ) {
     if (it->expired()) {
-      scanned_mutex.lock();
-      it = scanned.erase(it);
-      scanned_mutex.unlock();
+      if (scanned_mutex.try_lock()) {
+        it = scanned.erase(it);
+        scanned_mutex.unlock();
+      }
     } else {
       ++it;
     }
@@ -90,29 +91,41 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   // Append or update found APs from scan.
   for (uint8_t i = 0; i < scancount; ++i) {
     const WiFi_AP_Candidate tmp(i);
+
     // Remove previous scan result if present
-    for (auto it = scanned.begin(); it != scanned.end(); ) {
-      if (tmp == *it || it->expired()) {
-        scanned_mutex.lock();
-        it = scanned.erase(it);
-        scanned_mutex.unlock();
+    for (auto it = scanned.begin(); it != scanned.end();) {
+      if ((tmp == *it) || it->expired()) {
+        if (scanned_mutex.try_lock()) {
+          it = scanned.erase(it);
+          scanned_mutex.unlock();
+        }
       } else {
         ++it;
       }
     }
-//    if (Settings.IncludeHiddenSSID() || !tmp.isHidden) {
-      scanned_mutex.lock();
-      scanned.push_back(tmp);
-      scanned_mutex.unlock();
-      #ifndef BUILD_NO_DEBUG
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("WiFi : Scan result: ");
-        log += tmp.toString();
-        addLog(LOG_LEVEL_DEBUG, log);
+    uint8_t retry = 3;
+
+    while (retry > 0) {
+      --retry;
+
+      if (scanned_mutex.try_lock()) {
+        scanned.push_back(tmp);
+        scanned_mutex.unlock();
+        retry = 0;
+
+        #ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("WiFi : Scan result: ");
+          log += tmp.toString();
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+        #endif // ifndef BUILD_NO_DEBUG
       }
-      #endif // ifndef BUILD_NO_DEBUG
-//    }
+      delay(0);
+    }
   }
+
   after_process_WiFiscan();
 }
 
@@ -120,18 +133,26 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
 void WiFi_AP_CandidatesList::process_WiFiscan(const bss_info& ap) {
   WiFi_AP_Candidate tmp(ap);
   {
-    scanned_mutex.lock();
-    scanned.push_back(tmp);
-    scanned_mutex.unlock();
+    uint8_t retry = 3;
+    while (retry > 0) {
+      --retry;
+      if (scanned_mutex.try_lock()) {
+        scanned.push_back(tmp);
+        scanned_mutex.unlock();
+        retry = 0;
+      }
+      delay(0);
+    }
   }
 }
 #endif
 
 void WiFi_AP_CandidatesList::after_process_WiFiscan() {
   {
-    scanned_mutex.lock();
-    scanned.sort();
-    scanned_mutex.unlock();
+    if (scanned_mutex.try_lock()) {
+      scanned.sort();
+      scanned_mutex.unlock();
+    }
   }
   loadCandidatesFromScanned();
   WiFi.scanDelete();
@@ -259,9 +280,10 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 
   for (auto scan = scanned.begin(); scan != scanned.end();) {
     if (scan->expired()) {
-      scanned_mutex.lock();
-      scan = scanned.erase(scan);
-      scanned_mutex.unlock();
+      if (scanned_mutex.try_lock()) {
+        scan = scanned.erase(scan);
+        scanned_mutex.unlock();
+      }
     } else {
       if (scan->isHidden) {
         if (Settings.IncludeHiddenSSID()) {
