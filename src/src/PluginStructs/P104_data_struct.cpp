@@ -69,7 +69,7 @@ void P104_data_struct::loadSettings() {
   if (taskIndex < TASKS_MAX) {
     LoadCustomTaskSettings(taskIndex, (byte *)&StoredSettings, sizeof(StoredSettings.bufferSize));
     uint16_t structDataSize = StoredSettings.bufferSize + sizeof(StoredSettings.bufferSize);
-    # ifdef P104_DEBUG
+    # ifdef P104_DEBUG_DEV
     String log;
 
     if (loglevelActiveFor(LOG_LEVEL_INFO) &&
@@ -80,7 +80,7 @@ void P104_data_struct::loadSettings() {
       log += taskIndex;
       addLog(LOG_LEVEL_INFO, log);
     }
-    # endif // ifdef P104_DEBUG
+    # endif // ifdef P104_DEBUG_DEV
     LoadCustomTaskSettings(taskIndex, (byte *)&StoredSettings, structDataSize); // Read only actual data
     StoredSettings.buffer[StoredSettings.bufferSize + 1] = '\0';                // Terminate string
 
@@ -90,7 +90,7 @@ void P104_data_struct::loadSettings() {
       String buffer;
       buffer.reserve(StoredSettings.bufferSize + 1);
       buffer = String(StoredSettings.buffer);
-      # ifdef P104_DEBUG
+      # ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         log  = F("P104: loadSettings bufferSize: ");
@@ -98,16 +98,16 @@ void P104_data_struct::loadSettings() {
         log += F(" untrimmed: ");
         log += buffer.length();
       }
-      # endif // ifdef P104_DEBUG
+      # endif // ifdef P104_DEBUG_DEV
       buffer.trim();
-      # ifdef P104_DEBUG
+      # ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         log += F(" trimmed: ");
         log += buffer.length();
         addLog(LOG_LEVEL_INFO, log);
       }
-      # endif // ifdef P104_DEBUG
+      # endif // ifdef P104_DEBUG_DEV
 
       zones.clear();
       zonesInitialized = false;
@@ -199,7 +199,7 @@ void P104_data_struct::loadSettings() {
       }
       buffer.reserve(0); // Free some memory
     }
-    # ifdef P104_DEBUG
+    # ifdef P104_DEBUG_DEV
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log  = F("P104: read zones from config: ");
@@ -209,7 +209,7 @@ void P104_data_struct::loadSettings() {
       // log += sizeof(P104_zone_struct);
       addLog(LOG_LEVEL_INFO, log);
     }
-    # endif // ifdef P104_DEBUG
+    # endif // ifdef P104_DEBUG_DEV
 
     if (expectedZones == -1) { expectedZones = zoneIndex; }
 
@@ -233,14 +233,14 @@ void P104_data_struct::loadSettings() {
       delay(0);
     }
     zonesInitialized = true;
-    # ifdef P104_DEBUG
+    # ifdef P104_DEBUG_DEV
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log  = F("P104: total zones initialized: ");
       log += zoneIndex;
       addLog(LOG_LEVEL_INFO, log);
     }
-    # endif // ifdef P104_DEBUG
+    # endif // ifdef P104_DEBUG_DEV
   }
 }
 
@@ -255,7 +255,7 @@ void P104_data_struct::configureZones() {
   uint8_t currentZone = 0;
   uint8_t zoneOffset  = 0;
 
-  # ifdef P104_DEBUG
+  # ifdef P104_DEBUG_DEV
   String log;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
@@ -264,7 +264,7 @@ void P104_data_struct::configureZones() {
     log += zones.size();
     addLog(LOG_LEVEL_INFO, log);
   }
-  # endif // ifdef P104_DEBUG
+  # endif // ifdef P104_DEBUG_DEV
 
   P->displayClear();
 
@@ -338,7 +338,7 @@ void P104_data_struct::configureZones() {
       // Brightness
       P->setIntensity(currentZone, it->brightness);
 
-      # ifdef P104_DEBUG
+      # ifdef P104_DEBUG_DEV
       log  = F("P104: configureZones #");
       log += (currentZone + 1);
       log += '/';
@@ -346,7 +346,7 @@ void P104_data_struct::configureZones() {
       log += F(" offset: ");
       log += zoneOffset;
       addLog(LOG_LEVEL_INFO, log);
-      # endif // ifdef P104_DEBUG
+      # endif // ifdef P104_DEBUG_DEV
 
       // Content == text && text != ""
       if ((it->content == P104_CONTENT_TEXT) && (!it->text.isEmpty())) {
@@ -449,6 +449,9 @@ void P104_data_struct::updateZone(uint8_t                 zone,
 
 # ifdef P104_USE_BAR_GRAPH
 
+/***********************************************
+ * Enable/Disable updating a range of modules
+ **********************************************/
 void P104_data_struct::modulesOnOff(uint8_t start, uint8_t end, MD_MAX72XX::controlValue_t on_off) {
   for (uint8_t m = start; m <= end; m++) {
     pM->control(m, MD_MAX72XX::UPDATE, on_off);
@@ -457,12 +460,11 @@ void P104_data_struct::modulesOnOff(uint8_t start, uint8_t end, MD_MAX72XX::cont
 
 /********************************************************************
  * Process a graph-string to display in a zone, format:
- * value,100%-range,direction,bartype|...
+ * value,max-value,min-value,direction,bartype|...
  *******************************************************************/
 void P104_data_struct::displayBarGraph(uint8_t zone,
                                        const P104_zone_struct& zstruct,
                                        const String&graph) {
-  // TODO
   if (graph.isEmpty()) { return; }
   sZoneInitial[zone] = String(graph); // Keep the original string for future use
 
@@ -517,11 +519,11 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
         std::swap(barGraphs[currentBar].min, barGraphs[currentBar].max);
       }
     }
-    #ifdef P104_DEBUG // Temporary logging
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    #ifdef P104_DEBUG
+    if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(70);
-      log = F("P104: Bar-graph: ");
+      log = F("dotmatrix: Bar-graph: ");
       if (loop) {
         log += currentBar;
         log += F(" in: ");
@@ -542,52 +544,59 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
       }
       addLog(LOG_LEVEL_INFO, log);
     }
-    #endif
+    #endif // ifdef P104_DEBUG
     currentBar++; // next
   }
   # undef NOT_A_COMMA
   if (barGraphs.size() > 0) {
     uint8_t barWidth = 8 / barGraphs.size(); // Divide the 8 pixel width per number of bars to show
     uint8_t pixTop, pixBottom;
-    int16_t zeroPoint;
+    uint8_t zeroPoint;
     #ifdef P104_DEBUG
     String log;
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log.reserve(64);
-      log = F("P104: bar Width: ");
+    if (logAllText && 
+        loglevelActiveFor(LOG_LEVEL_INFO) &&
+        log.reserve(64)) {
+      log = F("dotmatrix: bar Width: ");
       log += barWidth;
       log += F(" low: ");
       log += zstruct._lower;
       log += F(" high: ");
       log += zstruct._upper;
     }
-    #endif
+    #endif // ifdef P104_DEBUG
     modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_OFF); // Stop updates on modules
+    P->setIntensity(zstruct.zone - 1, zstruct.brightness); // don't forget to set the brightness
     uint8_t row = 0;
-    if (barGraphs.size() == 3 || barGraphs.size() == 5) { // Center within the rows a bit
-      for (;row < (barGraphs.size() == 3 ? 1 : 2); row++) {
-        for (uint8_t col = zstruct._lower; col < zstruct._upper; col++) {
+    if (barGraphs.size() == 3 || barGraphs.size() == 5 || barGraphs.size() == 6) { // Center within the rows a bit
+      for (;row < (barGraphs.size() == 5 ? 2 : 1); row++) {
+        for (uint8_t col = zstruct._lower; col <= zstruct._upper; col++) {
           pM->setPoint(row, col, false); // all off
         }
       }
     }
     for (auto it = barGraphs.begin(); it != barGraphs.end(); ++it) {
       if (essentiallyEqual(it->min, 0.0)) {
-        pixTop    = zstruct._lower + ((zstruct._upper - zstruct._lower) / it->max) * it->value;
-        pixBottom = 0;
+        pixTop    = zstruct._lower - 1 + (((zstruct._upper + 1) - zstruct._lower) / it->max) * it->value;
+        pixBottom = zstruct._lower - 1;
         zeroPoint = 0;
       } else {
         if (definitelyLessThan(it->min, 0.0) && definitelyGreaterThan(it->max, 0.0)) { // Zero-point is used
-          zeroPoint = (it->min * -1) / ((it->max - it->min) / (1.0 * (zstruct._upper - zstruct._lower)));
+          zeroPoint = (it->min * -1.0) / ((it->max - it->min) / (1.0 * ((zstruct._upper + 1) - zstruct._lower)));
         } else {
           zeroPoint = 0;
         }
-        pixTop    = zstruct._lower + zeroPoint + ((zstruct._upper - zstruct._lower) / (it->max - it->min)) * it->value;
+        pixTop    = zstruct._lower + zeroPoint + (((zstruct._upper + 1) - zstruct._lower) / (it->max - it->min)) * it->value;
         pixBottom = zstruct._lower + zeroPoint;
         if (definitelyLessThan(it->value, 0.0)) {
-          std::swap(pixTop, pixBottom);        }
+          std::swap(pixTop, pixBottom);
+        }
       }
-      #ifdef P104_DEBUG
+      if (it->direction == 1) { // Left to right display: Flip values
+        pixBottom = zstruct._upper - (pixBottom - zstruct._lower);
+        pixTop    = zstruct._lower + (zstruct._upper - pixTop);
+      }
+      #ifdef P104_DEBUG_DEV
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         log += F(" B: ");
         log += pixBottom;
@@ -596,40 +605,66 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
         log += F(" Z: ");
         log += zeroPoint;
       }
-      #endif
+      #endif // ifdef P104_DEBUG_DEV
       bool on_off;
       for (uint8_t r = 0; r < barWidth; r++) {
-        for (uint8_t col = zstruct._lower; col < zstruct._upper; col++) {
-          if (zeroPoint == 0) {
-            on_off = col <= pixTop;
-          } else {
+        if (it->direction == 0) { // Right to left display
+          for (uint8_t col = zstruct._lower; col <= zstruct._upper; col++) {
             on_off = (col >= pixBottom && col <= pixTop); // valid area
-            if (barWidth > 2 && (r == 0 || r == barWidth - 1) && col == zstruct._lower + zeroPoint) {
+            if (zeroPoint != 0 &&
+                it->barType == P104_BARTYPE_STANDARD &&
+                barWidth > 2 &&
+                (r == 0 || r == barWidth - 1) &&
+                col == zstruct._lower + zeroPoint) {
               on_off = false; // when bar wider than 2, turn off zeropoint top and bottom led
             }
+            if (it->barType == P104_BARTYPE_SINGLE && r > 0) {
+              on_off = false; // barType 1 = only a single line is drawn, independent of the width
+            }
+            if (it->barType == P104_BARTYPE_ALT_DOT && barWidth > 1 && on_off) {
+              on_off = ((r % 2) == (col % 2)); // barType 2 = dotted line when bar is wider than 1 pixel
+            }
+            pM->setPoint(row + r, col, on_off);
           }
-          pM->setPoint(row + r, col, on_off);
+        } else { // Left to right
+          for (uint8_t col = zstruct._upper; col >= zstruct._lower; col--) {
+            on_off = (col <= pixBottom && col >= pixTop); // valid area
+            if (zeroPoint != 0 &&
+                it->barType == P104_BARTYPE_STANDARD &&
+                barWidth > 2 &&
+                (r == 0 || r == barWidth - 1) &&
+                col == zstruct._upper - zeroPoint) {
+              on_off = false; // barType 0 = when bar wider than 2, turn off zeropoint top and bottom led
+            }
+            if (it->barType == P104_BARTYPE_SINGLE && r > 0) {
+              on_off = false; // barType 1 = only a single line is drawn, independent of the width
+            }
+            if (it->barType == P104_BARTYPE_ALT_DOT && barWidth > 1 && on_off) {
+              on_off = ((r % 2) == (col % 2)); // barType 2 = dotted line when bar is wider than 1 pixel
+            }
+            pM->setPoint(row + r, col, on_off);
+          }
         }
       }
       row += barWidth; // Next set of rows
     }
     for (; row < 8; row++) { // Clear unused rows
-      for (uint8_t col = zstruct._lower; col < zstruct._upper; col++) {
+      for (uint8_t col = zstruct._lower; col <= zstruct._upper; col++) {
         pM->setPoint(row, col, false); // all off
       }
     }
     #ifdef P104_DEBUG
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, log);
     }
-    #endif
+    #endif // ifdef P104_DEBUG
     modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_ON);  // Continue updates on modules
   }
 }
 # endif // ifdef P104_USE_BAR_GRAPH
 
 /**************************************************
- * Check if an animatio is available in the current build
+ * Check if an animation is available in the current build
  *************************************************/
 bool isAnimationAvailable(uint8_t animation, bool noneIsAllowed = false) {
   switch(animation) {
@@ -1158,8 +1193,8 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
                     it->content != P104_CONTENT_DATE4,
                     year4dgt
                     # ifdef P104_USE_DATETIME_OPTIONS
-                    , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT),
-                    get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR)
+                    , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT)
+                    , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR)
                     # endif // ifdef P104_USE_DATETIME_OPTIONS
                     );
             redisplay        = true;
@@ -1175,8 +1210,8 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
                                          timeAmpm,
                                          year4dgt
                                          # ifdef P104_USE_DATETIME_OPTIONS
-                                         , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT),
-                                         get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR)
+                                         , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT)
+                                         , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR)
                                          # endif // ifdef P104_USE_DATETIME_OPTIONS
                                          );
           flasher          = newFlasher;
@@ -1187,8 +1222,8 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
         # ifdef P104_USE_BAR_GRAPH
         case P104_CONTENT_BAR_GRAPH:
         {
-          if (!it->text.isEmpty()) {
-            displayBarGraph(it->zone - 1, *it, it->text);
+          if (!it->text.isEmpty() || !sZoneInitial[it->zone - 1].isEmpty()) {
+            displayBarGraph(it->zone - 1, *it, !sZoneInitial[it->zone - 1].isEmpty() ? sZoneInitial[it->zone - 1] : it->text);
             success = true;
           }
           break;
@@ -1246,6 +1281,13 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
           displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
           P->displayReset(it->zone - 1);
         }
+        if (it->content == P104_CONTENT_TIME || 
+            it->content == P104_CONTENT_TIME_SEC || 
+            it->content == P104_CONTENT_DATE4 || 
+            it->content == P104_CONTENT_DATE6 || 
+            it->content == P104_CONTENT_DATE_TIME) {
+          it->_lastChecked = -1; // Invalidate so next run will re-display the date/time
+        }
         #ifdef P104_USE_BAR_GRAPH
         if (it->content == P104_CONTENT_BAR_GRAPH) {
           displayBarGraph(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed bar graph
@@ -1291,7 +1333,7 @@ bool P104_data_struct::saveSettings() {
   error = EMPTY_STRING; // Clear
   String zbuffer;
 
-  # ifdef P104_DEBUG
+  # ifdef P104_DEBUG_DEV
   String log;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
@@ -1300,7 +1342,7 @@ bool P104_data_struct::saveSettings() {
     log += expectedZones;
     addLog(LOG_LEVEL_INFO, log);
   }
-  # endif // ifdef P104_DEBUG
+  # endif // ifdef P104_DEBUG_DEV
 
   uint8_t zoneIndexP1;
   uint8_t index = 0;
@@ -1331,14 +1373,14 @@ bool P104_data_struct::saveSettings() {
       zones[zoneIndex].brightness  = 7u;
       zones[zoneIndex].repeatDelay = -1;
     }
-    # ifdef P104_DEBUG
+    # ifdef P104_DEBUG_DEV
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log  = F("P104: add zone: ");
       log += zoneIndexP1;
       addLog(LOG_LEVEL_INFO, log);
     }
-    # endif // ifdef P104_DEBUG
+    # endif // ifdef P104_DEBUG_DEV
 
     index += P104_OFFSET_COUNT;
     delay(0);
@@ -1378,18 +1420,22 @@ bool P104_data_struct::saveSettings() {
 
         if (it->brightness != 7) {
           zbuffer += it->brightness;   // 2
+        } else {
+          zbuffer += 'i';              // Invalid so will be read as default
         }
         zbuffer += P104_FIELD_SEP;     // 1
 
         if (it->repeatDelay > -1) {
           zbuffer += it->repeatDelay;  // 4
+        } else {
+          zbuffer += 'i';              // Invalid so will be read as default
         }
         zbuffer += P104_FIELD_SEP;     // 1
 
         zbuffer += P104_ZONE_SEP;      // 1
                                        // 58 total
         numDevices += it->size + it->offset;
-        # ifdef P104_DEBUG
+        # ifdef P104_DEBUG_DEV
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           log  = F("P104: append zone: ");
@@ -1400,13 +1446,13 @@ bool P104_data_struct::saveSettings() {
           log += it->size;
           addLog(LOG_LEVEL_INFO, log);
         }
-        # endif // ifdef P104_DEBUG
+        # endif // ifdef P104_DEBUG_DEV
       }
       delay(0);
     }
     zbuffer.trim();
     StoredSettings.bufferSize = zbuffer.length();
-    # ifdef P104_DEBUG
+    # ifdef P104_DEBUG_DEV
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log  = F("P104: saveSettings zones: ");
@@ -1417,7 +1463,7 @@ bool P104_data_struct::saveSettings() {
       log += numDevices;
       addLog(LOG_LEVEL_INFO, log);
     }
-    # endif // ifdef P104_DEBUG
+    # endif // ifdef P104_DEBUG_DEV
   } else {
     addLog(LOG_LEVEL_ERROR, F("DOTMATRIX: Can't allocate string for saving settings, insufficient memory!"));
     return false; // Don't continue
@@ -1432,7 +1478,7 @@ bool P104_data_struct::saveSettings() {
       return false;
     }
     uint16_t structDataSize = StoredSettings.bufferSize + sizeof(StoredSettings.bufferSize);
-    # ifdef P104_DEBUG
+    # ifdef P104_DEBUG_DEV
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log  = F("P104: saveSettings structSize: ");
@@ -1444,7 +1490,7 @@ bool P104_data_struct::saveSettings() {
       zbuffer.replace(P104_ZONE_SEP,  P104_ZONE_DISP);
       addLog(LOG_LEVEL_INFO, zbuffer);
     }
-    # endif // ifdef P104_DEBUG
+    # endif // ifdef P104_DEBUG_DEV
     zbuffer.clear(); // Clear string after reporting any errors
     error += SaveCustomTaskSettings(taskIndex, (byte *)&StoredSettings, structDataSize);
     return error.isEmpty();
@@ -1495,9 +1541,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
   }
 
   {
-    addFormCheckBox(F("Clear display on disable"), F("plugin_104_cleardisable"), bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE));
+    addFormCheckBox(F("Clear display on disable"),      F("plugin_104_cleardisable"), bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE));
 
-    addFormCheckBox(F("Log all text"),             F("plugin_104_logalltext"),   bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT));
+    addFormCheckBox(F("Log all displayed text (info)"), F("plugin_104_logalltext"),   bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT));
   }
 
   # ifdef P104_USE_DATETIME_OPTIONS
@@ -1507,7 +1553,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     addFormCheckBox(F("Clock with flashing colon"), F("plugin_104_clockflash"), !bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FLASH));
     addFormCheckBox(F("Clock 12h display"),         F("plugin_104_clock12h"),   bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_12H));
     addFormCheckBox(F("Clock 12h AM/PM indicator"), F("plugin_104_clockampm"),  bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_AMPM));
-    addFormCheckBox(F("Year use 4 digits"),         F("plugin_104_year4dgt"),   bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_YEAR4DGT));
   }
   { // Date format
     const __FlashStringHelper * dateFormats[] = {
@@ -1538,10 +1583,12 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_DATE_SEPARATOR_DASH,
       P104_DATE_SEPARATOR_DOT
     };
-    addFormSelector(F("Date separator"), F("plugin_104_dateseparator"),
+    addFormSelector(F("Date separator"),     F("plugin_104_dateseparator"),
                     4,
                     dateSeparators, dateSeparatorOptions,
                     get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR));
+
+    addFormCheckBox(F("Year uses 4 digits"), F("plugin_104_year4dgt"),   bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_YEAR4DGT));
   }
   #endif // ifdef P104_USE_DATETIME_OPTIONS
 

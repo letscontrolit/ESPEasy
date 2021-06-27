@@ -4,7 +4,8 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P104
 
-# define P104_DEBUG // Log some extra (tech) data, useful during development
+# define P104_DEBUG     // Log some extra (tech) data, also useful during development
+# define P104_DEBUG_DEV // Log some extra development info
 
 # include "../CustomBuild/StorageLayout.h"
 # include "src/Globals/EventQueue.h"
@@ -23,7 +24,7 @@
 # define P104_USE_ARABIC_FONT                               // Enables the use of a Arabic font (see usage in MD_Parola examples)
 # define P104_USE_GREEK_FONT                                // Enables the use of a Greek font (see usage in MD_Parola examples)
 # define P104_USE_KATAKANA_FONT                             // Enables the use of a Katakana font (see usage in MD_Parola examples)
-# define P104_USE_COMMANDS                                  // Enables the use of all commands, not just clear, txt and settxt
+# define P104_USE_COMMANDS                                  // Enables the use of all commands, not just clear, txt, settxt and update
 # define P104_USE_DATETIME_OPTIONS                          // Enables extra date/time options
 # define P104_USE_BAR_GRAPH                                 // Enables the use of Bar-graph feature
 
@@ -63,6 +64,9 @@
 #  ifdef P104_DEBUG
 #   undef P104_DEBUG
 #  endif  // ifdef P104_DEBUG
+#  ifdef P104_DEBUG_DEV
+#   undef P104_DEBUG_DEV
+#  endif  // ifdef P104_DEBUG_DEV
 #  define P104_MEDIUM_ANIMATIONS
 # endif   // if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266)
 
@@ -91,6 +95,9 @@
 #  ifdef P104_DEBUG
 #   undef P104_DEBUG
 #  endif // ifdef P104_DEBUG
+#  ifdef P104_DEBUG_DEV
+#   undef P104_DEBUG_DEV
+#  endif // ifdef P104_DEBUG_DEV
 #  ifdef P104_USE_TOOLTIPS
 #   undef P104_USE_TOOLTIPS
 #  endif // ifdef P104_USE_TOOLTIPS
@@ -206,13 +213,17 @@
 
 # define P104_BRIGHTNESS_MAX      15 // Brightness levels range from 0 .. 15
 
+# define P104_BARTYPE_STANDARD    0  // Solid line, with zero-mark if width > 2
+# define P104_BARTYPE_SINGLE      1  // Solid single-line, even if width allows more
+# define P104_BARTYPE_ALT_DOT     2  // Dotted line, alternating odd/even, only if bar width > 1
+
 // Font related stuff
 
 // To add a font:
 // - generate the font using one of the font tools (or obtain externally, or craft it manually...)
 // - add a new font define, like #define P104_USE_MY_FANCY_FONT
 // - select an unused new numeric font ID define, like #define P104_MY_FANCY_FONT_ID n
-// - include the .h file guarded by #ifdef P104_MY_FANCY_FONT
+// - include the .h file guarded by #ifdef P104_USE_MY_FANCY_FONT
 // - extend in P104_data_struct::webform_load the fontTypes, fontOptions arrays like the P104_USE_NUMERIC_DOUBLEHEIGHT_FONT example
 // - extend in P104_data_struct::handlePluginWrite the list of supported font id's for the "font" command
 // - extend in P104_data_struct::configureZones the switch/case statement to conditionaly support the new font
@@ -340,33 +351,31 @@ struct P104_data_struct : public PluginTaskData_base {
   void checkRepeatTimer(uint8_t z);
   void updateZone(uint8_t                 zone,
                   const P104_zone_struct& zstruct);
-  # ifdef P104_USE_BAR_GRAPH
-  void displayBarGraph(uint8_t                 zone,
-                       const P104_zone_struct& zstruct,
-                       const String          & graph);
-  # endif // ifdef P104_USE_BAR_GRAPH
 
   MD_Parola *P = nullptr;
-  # ifdef P104_USE_BAR_GRAPH
-  MD_MAX72XX *pM = nullptr;
-  void modulesOnOff(uint8_t                    start,
-                    uint8_t                    end,
-                    MD_MAX72XX::controlValue_t on_off);
-  # endif // ifdef P104_USE_BAR_GRAPH
 
   bool logAllText = false;
 
 private:
+
+  # ifdef P104_USE_BAR_GRAPH
+  MD_MAX72XX *pM = nullptr;
+  void displayBarGraph(uint8_t                 zone,
+                       const P104_zone_struct& zstruct,
+                       const String          & graph);
+  void modulesOnOff(uint8_t                    start,
+                    uint8_t                    end,
+                    MD_MAX72XX::controlValue_t on_off);
+  # endif // ifdef P104_USE_BAR_GRAPH
 
   void displayOneZoneText(uint8_t                 currentZone,
                           const P104_zone_struct& idx,
                           const String          & text);
 
   MD_MAX72XX::moduleType_t mod;
-
-  taskIndex_t taskIndex;
-  int8_t      cs_pin;
-  uint8_t     modules = 1u;
+  taskIndex_t              taskIndex;
+  int8_t                   cs_pin;
+  uint8_t                  modules = 1u;
 
   bool    initialized   = false;
   int8_t  expectedZones = -1;
@@ -377,13 +386,13 @@ private:
 
   std::vector<P104_zone_struct>zones;
   bool                         zonesInitialized = false;
+  String                       sZoneBuffers[P104_MAX_ZONES];
+  String                       sZoneInitial[P104_MAX_ZONES];
 
   // time/date stuff
-  bool   flasher = false;        // seconds passing flasher
-  char   szTimeL[P104_MAX_MESG]; // dd-mm-yy mm:ss\0
-  char   szTimeH[P104_MAX_MESG];
-  String sZoneBuffers[P104_MAX_ZONES];
-  String sZoneInitial[P104_MAX_ZONES];
+  bool flasher = false;        // seconds passing flasher
+  char szTimeL[P104_MAX_MESG]; // dd-mm-yy mm:ss\0
+  char szTimeH[P104_MAX_MESG];
 
   // Stored settings
   tP104_StoredSettings StoredSettings;

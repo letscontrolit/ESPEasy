@@ -51,15 +51,18 @@
 // repeat,<zone>,<delay_sec>    : Set the Repeat (sec) for the zone, after this delay the text & animation will be repeated.
 //                                -1 = off, range 0..86400 seconds (24h)
 // bar,<zone>,<graph-string>    : Set the graph-string for a Bargraph zone, format: value,max,min,direction,barType|...
-//                                value: numeric value of type double
+//                                value: numeric value of type double, variables can be used
 //                                max: value for a full bar display, default 100 (percent)
 //                                min: value for minimal bar display, default 0
 //                                direction: 0 (default): right to left, 1: left to right
 //                                barType: 0: solid, width: 8/number of graphStrings
-//                                         1: solid, width: 1 on, 1 off
+//                                         1: solid, width: 1
+//                                         2: dotted line, only on bar wider than 1 pixel
 //                                Up to 8 graphStrings can be provided, width is determined by the number of graphStrings
 //
 // History:
+// 2021-06-27 tonhuisman: Implement 'barType' option for Bar-graph, bugfixes, bugfixes, bugfixes
+// 2021-06-26 tonhuisman: Implement 'direction' option for Bar-graph, bugfixes
 // 2021-06-26 tonhuisman: Add update command for updating one or all zones, restart repeat timer if content is updated by command, bugfixes
 // 2021-06-24 tonhuisman: Add min/max range with negative minimal value support and zero-point indication if possible
 // 2021-06-23 tonhuisman: Add Bar-graph option and bar command (initial feature, options to implement) guarded with P104_USE_BAR_GRAPH
