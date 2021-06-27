@@ -40,7 +40,11 @@ void backgroundtasks()
     return;
   }
   START_TIMER
+  #ifdef FEATURE_MDNS
   const bool networkConnected = NetworkConnected();
+  #else
+  NetworkConnected();
+  #endif
 
   runningBackgroundTasks = true;
 
