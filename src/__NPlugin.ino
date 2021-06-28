@@ -151,6 +151,9 @@ void NPluginInit(void)
 
 byte NPluginCall(NPlugin::Function Function, struct EventStruct *event)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
   int x;
   struct EventStruct TempEvent;
 
