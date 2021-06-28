@@ -116,6 +116,10 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
 }
 
 bool fileExists(const String& fname) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   const String patched_fname = patch_fname(fname);
   auto search = Cache.fileExistsMap.find(patched_fname);
   if (search != Cache.fileExistsMap.end()) {
