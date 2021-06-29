@@ -57,10 +57,11 @@
 //                                direction: 0 (default): right to left, 1: left to right
 //                                barType: 0: solid, width: 8/number of graphStrings
 //                                         1: solid, width: 1
-//                                         2: dotted line, only on bar wider than 1 pixel
+//                                         2: dotted line, alternating, only on bar wider than 1 pixel
 //                                Up to 8 graphStrings can be provided, width is determined by the number of graphStrings
 //
 // History:
+// 2021-06-28 tonhuisman: Bugfixes during testing, re-enable subcommands for ESP8266 display build
 // 2021-06-27 tonhuisman: Implement 'barType' option for Bar-graph, bugfixes, bugfixes, bugfixes
 // 2021-06-26 tonhuisman: Implement 'direction' option for Bar-graph, bugfixes
 // 2021-06-26 tonhuisman: Add update command for updating one or all zones, restart repeat timer if content is updated by command, bugfixes
@@ -239,8 +240,8 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
-        log.reserve(32);
-        log  = F("P104: PLUGIN_INIT numDevices: ");
+        log.reserve(38);
+        log  = F("dotmatrix: PLUGIN_INIT numDevices: ");
         log += numDevices;
         addLog(LOG_LEVEL_INFO, log);
       }
@@ -287,7 +288,7 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      if (bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE)) {
+      if (bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE)) { // Clear on exit?
         P104_data->P->displayClear();
       }
       success = true;
@@ -302,7 +303,7 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      success = P104_data->handlePluginWrite(event->TaskIndex, string);
+      success = P104_data->handlePluginWrite(event->TaskIndex, string); // process commands
 
       break;
     }
@@ -314,7 +315,7 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
         return success;
       }
 
-      P104_data->P->displayAnimate();
+      P104_data->P->displayAnimate(); // Keep the animations moving
       success = true;
 
       break;
@@ -329,12 +330,12 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
 
       if (P104_data->P->displayAnimate()) { // At least 1 zone is ready
         for (uint8_t z = 0; z < P104_CONFIG_ZONE_COUNT; z++) {
-          if (P104_data->P->getZoneStatus(z)) {
+          if (P104_data->P->getZoneStatus(z)) { // If the zone is ready, see if it should be repeated
             P104_data->checkRepeatTimer(z);
           }
         }
 
-        P104_data->handlePluginOncePerSecond(event);
+        P104_data->handlePluginOncePerSecond(event); // Update date & time contents, if needed
       }
     }
   }

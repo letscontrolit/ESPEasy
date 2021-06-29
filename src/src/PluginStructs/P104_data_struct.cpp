@@ -227,7 +227,7 @@ void P104_data_struct::loadSettings() {
       zones[zoneIndex].layout        = 0u;
       zones[zoneIndex].specialEffect = 0u;
       zones[zoneIndex].offset        = 0u;
-      zones[zoneIndex].brightness    = 7u; // 32Just below average brightness 1..15
+      zones[zoneIndex].brightness    = 7u; // Average brightness 1..15
       zones[zoneIndex].repeatDelay   = -1; // Off by default
       zoneIndex++;
       delay(0);
@@ -608,6 +608,7 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
       #endif // ifdef P104_DEBUG_DEV
       bool on_off;
       for (uint8_t r = 0; r < barWidth; r++) {
+        // FIXME tonhuisman: Refactor into a single for loop to reduce codesize
         if (it->direction == 0) { // Right to left display
           for (uint8_t col = zstruct._lower; col <= zstruct._upper; col++) {
             on_off = (col >= pixBottom && col <= pixTop); // valid area
@@ -957,7 +958,17 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             }
             break;
           }
-          #endif
+          #else // ifdef P104_USE_COMMANDS
+          {
+            String validCommands = F("|size|content|alignment|anim.in|speed|anim.out|pause|font|layout|specialeffect|offset|brightness|repeat|");
+            String testSub = F("|");
+            testSub += sub;
+            testSub += '|';
+            if (validCommands.indexOf(testSub) > -1) {
+              addLog(LOG_LEVEL_ERROR, F("dotmatrix: subcommand not included in build."));
+            }
+          }
+          #endif // ifdef P104_USE_COMMANDS
 
           #ifdef P104_USE_BAR_GRAPH
           if ((sub.equals(F("bar")) ||                   // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones with Bargraph content)
@@ -1054,24 +1065,28 @@ void getDate(char *psz,
   char     sep        = ' ';
   # endif // ifdef P104_USE_DATETIME_OPTIONS
 
+  d = node_time.day();
+  m = node_time.month();
+  y = year;
   # ifdef P104_USE_DATETIME_OPTIONS
-  switch (dateFmt) {
-    case P104_DATE_FORMAT_US:
-      d = node_time.month();
-      m = node_time.day();
-      y = year;
-      break;
-    case P104_DATE_FORMAT_JP:
-      d = year;
-      m = node_time.month();
-      y = node_time.day();
-      break;
-    default:
-  # endif // ifdef P104_USE_DATETIME_OPTIONS
-      d = node_time.day();
-      m = node_time.month();
-      y = year;
-  # ifdef P104_USE_DATETIME_OPTIONS
+  if (showYear) {
+    switch (dateFmt) {
+      case P104_DATE_FORMAT_US:
+        d = node_time.month();
+        m = node_time.day();
+        y = year;
+        break;
+      case P104_DATE_FORMAT_JP:
+        d = year;
+        m = node_time.month();
+        y = node_time.day();
+        break;
+    }
+  } else {
+    if (dateFmt == P104_DATE_FORMAT_US ||
+        dateFmt == P104_DATE_FORMAT_JP) {
+      std::swap(d, m);
+    }
   }
   # endif // ifdef P104_USE_DATETIME_OPTIONS
 
@@ -1366,7 +1381,7 @@ bool P104_data_struct::saveSettings() {
     zones[zoneIndex].specialEffect = getFormItemIntCustomArgName(index + P104_OFFSET_SPEC_EFFECT);
     zones[zoneIndex].offset        = getFormItemIntCustomArgName(index + P104_OFFSET_OFFSET);
 
-    if (previousZones == expectedZones) {
+    if (zoneIndex < previousZones) {
       zones[zoneIndex].brightness  = getFormItemIntCustomArgName(index + P104_OFFSET_BRIGHTNESS);
       zones[zoneIndex].repeatDelay = getFormItemIntCustomArgName(index + P104_OFFSET_REPEATDELAY);
     } else {

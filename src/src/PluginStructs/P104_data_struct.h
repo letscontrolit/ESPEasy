@@ -52,21 +52,21 @@
 #  ifdef P104_USE_KATAKANA_FONT
 #   undef P104_USE_KATAKANA_FONT
 #  endif  // ifdef P104_USE_KATAKANA_FONT
-#  ifdef P104_USE_COMMANDS
-#   undef P104_USE_COMMANDS
-#  endif  // ifdef P104_USE_COMMANDS
+// #  ifdef P104_USE_COMMANDS
+// #   undef P104_USE_COMMANDS
+// #  endif  // ifdef P104_USE_COMMANDS
 #  ifdef P104_USE_DATETIME_OPTIONS
 #   undef P104_USE_DATETIME_OPTIONS
-#  endif  // ifdef P104_USE_DATETIME_OPTIONS
+#  endif // ifdef P104_USE_DATETIME_OPTIONS
 #  ifdef P104_ADD_SETTINGS_NOTES
 #   undef P104_ADD_SETTINGS_NOTES
-#  endif  // ifdef P104_ADD_SETTINGS_NOTES
+#  endif // ifdef P104_ADD_SETTINGS_NOTES
 #  ifdef P104_DEBUG
 #   undef P104_DEBUG
-#  endif  // ifdef P104_DEBUG
+#  endif // ifdef P104_DEBUG
 #  ifdef P104_DEBUG_DEV
 #   undef P104_DEBUG_DEV
-#  endif  // ifdef P104_DEBUG_DEV
+#  endif // ifdef P104_DEBUG_DEV
 #  define P104_MEDIUM_ANIMATIONS
 # endif   // if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266)
 
