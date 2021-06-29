@@ -896,7 +896,7 @@ bool C018_init(struct EventStruct *event) {
     return false;
   }
 
-  if (!C018_data->txUncnf("ESPeasy (TTN)", Port)) {
+  if (!C018_data->txUncnf(F("ESPeasy (TTN)"), Port)) {
     return false;
   }
   return true;
