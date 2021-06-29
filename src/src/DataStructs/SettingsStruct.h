@@ -121,6 +121,8 @@ class SettingsStruct_tmpl
   bool UseAlternativeDeepSleep() const;
   void UseAlternativeDeepSleep(bool value);
 
+  bool UseLastWiFiFromRTC() const;
+  void UseLastWiFiFromRTC(bool value);
 
   void validate();
 
