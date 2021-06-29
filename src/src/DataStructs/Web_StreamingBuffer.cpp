@@ -73,10 +73,30 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   HeapSelectDram ephemeral;
   #endif
 
-  ++flashStringCalls;
 
-  if (!str) { return *this; // return if the pointer is void
+  if (!str) { 
+    return *this; // return if the pointer is void
   }
+
+  #ifdef USE_SECOND_HEAP
+  if (mmu_is_iram(str)) {
+    // Have to copy the string using mmu_get functions
+    // This is not a flash string.
+    bool done = false;
+    const char* cur_char = str;
+    while (!done) {
+      const uint8_t ch = mmu_get_uint8(cur_char++);
+      if (ch == 0) return *this;
+      if (CHUNKED_BUFFER_SIZE > (this->buf.length() + 1)) {
+        this->buf += (char)ch;
+      } else {
+        this->operator+=((char)ch);
+      }
+    }
+  }
+  #endif
+
+  ++flashStringCalls;
 
   if (lowMemorySkip) { return *this; }
   const unsigned int length = strlen_P((PGM_P)str);
