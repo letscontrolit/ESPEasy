@@ -612,6 +612,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
 
   // FIXME TD-er: For now stack allocated, may need to be heap allocated?
   if (maxStringLength >= bufferSize) { return F("Max 128 chars allowed"); }
+
   char buffer[bufferSize];
 
   String   result;
@@ -621,32 +622,38 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   String   tmpString;
   tmpString.reserve(bufferSize);
 
-  while (stringCount < nrStrings && readPos < max_size) {
-    result += LoadFromFile(settingsType,
-                           index,
-                           (byte *)&buffer,
-                           bufferSize,
-                           readPos);
+  {
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    #endif
 
-    for (int i = 0; i < bufferSize && stringCount < nrStrings; ++i) {
-      uint16_t curPos = readPos + i;
+    while (stringCount < nrStrings && readPos < max_size) {
+      result += LoadFromFile(settingsType,
+                            index,
+                            (byte *)&buffer,
+                            bufferSize,
+                            readPos);
 
-      if (curPos >= nextStringPos) {
-        if (buffer[i] == 0) {
-          if (maxStringLength != 0) {
-            // Specific string length, so we have to set the next string position.
-            nextStringPos += maxStringLength;
+      for (int i = 0; i < bufferSize && stringCount < nrStrings; ++i) {
+        uint16_t curPos = readPos + i;
+
+        if (curPos >= nextStringPos) {
+          if (buffer[i] == 0) {
+            if (maxStringLength != 0) {
+              // Specific string length, so we have to set the next string position.
+              nextStringPos += maxStringLength;
+            }
+            strings[stringCount] = tmpString;
+            tmpString            = "";
+            tmpString.reserve(bufferSize);
+            ++stringCount;
+          } else {
+            tmpString += buffer[i];
           }
-          strings[stringCount] = tmpString;
-          tmpString            = "";
-          tmpString.reserve(bufferSize);
-          ++stringCount;
-        } else {
-          tmpString += buffer[i];
         }
       }
+      readPos += bufferSize;
     }
-    readPos += bufferSize;
   }
 
   if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {

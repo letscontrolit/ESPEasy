@@ -137,6 +137,9 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
 // ********************************************************************************
 void sortDeviceIndexArray() {
   // First fill the existing number of the DeviceIndex.
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
   DeviceIndex_sorted.resize(deviceCount + 1);
 
   for (deviceIndex_t x = 0; x <= deviceCount; x++) {
@@ -317,6 +320,10 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
       for (deviceIndex_t x = 0; x < PLUGIN_MAX; x++) {
         if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
           if (Function == PLUGIN_DEVICE_ADD) {
+            #ifdef USE_SECOND_HEAP
+            HeapSelectIram ephemeral;
+            #endif
+
             if ((deviceCount + 2) > static_cast<int>(Device.size())) {
               // Increase with 16 to get some compromise between number of resizes and wasted space
               unsigned int newSize = Device.size();
