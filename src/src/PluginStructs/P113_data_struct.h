@@ -22,6 +22,7 @@ public:
   P113_data_struct(uint8_t i2c_addr,
                    int     timing,
                    bool    range);
+  P113_data_struct() = delete;
 
   bool     begin();
   bool     startRead();

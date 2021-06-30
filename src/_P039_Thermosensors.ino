@@ -1189,6 +1189,9 @@ float readMax31856(struct EventStruct *event)
 float readMax31865(struct EventStruct *event)
 {
   P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
+  if (P039_data == nullptr) {
+    return NAN;
+  }
 
   uint8_t registers[MAX31865_NO_REG] = {0};
   uint16_t rawValue = 0u;
@@ -1262,12 +1265,12 @@ float readMax31865(struct EventStruct *event)
   //activate BIAS short before read, to reduce power consumption
   change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_VBIAS_ON, P039_SET );
 
-  // save current timer for next calculation
-  P039_data->timer = millis();
-  
   // start time to follow up on BIAS activation before starting the conversion
   // and start conversion sequence via TIMER API
   if(nullptr != P039_data){
+    // save current timer for next calculation
+    P039_data->timer = millis();
+
     // set next state to MAX31865_BIAS_ON_STATE
 
     Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
