@@ -320,7 +320,7 @@ struct P049_data_struct : public PluginTaskData_base {
   unsigned long lastInitTimestamp  = 0;
 
   ESPeasySerial *easySerial = nullptr;
-  byte           mhzResp[9]; // 9 byte response buffer
+  byte           mhzResp[9] = {0}; // 9 byte response buffer
   // Default of the sensor is to run ABC
   bool ABC_Disable     = false;
   bool ABC_MustApply   = false;

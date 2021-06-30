@@ -120,7 +120,7 @@ String Command_GetORSetString(struct EventStruct *event,
         serialPrintln();
         return return_result(event, result);
       }
-      strcpy(target, TmpStr1.c_str());
+      safe_strncpy(target, TmpStr1, len);
     }
   }
 

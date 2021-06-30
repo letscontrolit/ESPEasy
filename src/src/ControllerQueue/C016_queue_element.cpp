@@ -37,6 +37,18 @@ C016_queue_element::C016_queue_element(const struct EventStruct *event, byte val
   }
 }
 
+C016_queue_element& C016_queue_element::operator=(C016_queue_element&& other) {
+  _timestamp = other._timestamp;
+  TaskIndex = other.TaskIndex;
+  controller_idx = other.controller_idx;
+  sensorType = other.sensorType;
+  valueCount = other.valueCount;
+  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+    values[i] = other.values[i];
+  }
+  return *this;
+}
+
 size_t C016_queue_element::getSize() const {
   return sizeof(*this);
 }
