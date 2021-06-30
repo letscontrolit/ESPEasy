@@ -667,7 +667,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
   data.isMask = !parseString(Line, 5).isEmpty();
 
   if (data.isMask) {
-    data.mask  = event->Par4 & ((1 << data.numBytes * 8) - 1);
+    data.mask  = event->Par4 & ((1 << (data.numBytes * 8)) - 1);
     data.mask &= ((1 << data.numBits) - 1);
     data.mask  = data.mask << data.deltaStart;
   } else {
@@ -676,7 +676,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
   }
 
   if (isWritePattern) {                                         // write pattern is present
-    data.write  = event->Par3 & ((1 << data.numBytes * 8) - 1); // limit number of bytes
+    data.write  = event->Par3 & ((1 << (data.numBytes * 8)) - 1); // limit number of bytes
     data.write &= ((1 << data.numBits) - 1);                    // limit to number of bits
     data.write  = data.write << data.deltaStart;                // shift to start from starting pin
   } else {                                                      // write pattern not present

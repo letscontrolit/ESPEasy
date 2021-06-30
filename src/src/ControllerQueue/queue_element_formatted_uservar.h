@@ -28,11 +28,15 @@ public:
 
   queue_element_formatted_uservar(struct EventStruct *event);
 
-  size_t getSize() const;
+  queue_element_formatted_uservar& operator=(queue_element_formatted_uservar&& other);
 
-  bool isDuplicate(const queue_element_formatted_uservar& other) const;
+  size_t                           getSize() const;
 
-  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
+  bool                             isDuplicate(const queue_element_formatted_uservar& other) const;
+
+  const UnitMessageCount_t       * getUnitMessageCount() const {
+    return nullptr;
+  }
 
   String txt[VARS_PER_TASK];
   int idx                          = 0;
