@@ -111,7 +111,7 @@ String getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex) {
   HeapSelectDram ephemeral;
   #endif
 
-  String deviceName = "";
+  String deviceName;
 
   if (validDeviceIndex(deviceIndex)) {
     Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, nullptr, deviceName);
@@ -137,9 +137,6 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
 // ********************************************************************************
 void sortDeviceIndexArray() {
   // First fill the existing number of the DeviceIndex.
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
   DeviceIndex_sorted.resize(deviceCount + 1);
 
   for (deviceIndex_t x = 0; x <= deviceCount; x++) {
@@ -161,8 +158,8 @@ void sortDeviceIndexArray() {
     while (innerLoop  >= 1)
     {
       const String cur(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop]));
-      const String next(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop - 1]));
-      if (cur < next) {
+      const String prev(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop - 1]));
+      if (cur < prev) {
         deviceIndex_t temp = DeviceIndex_sorted[innerLoop - 1];
         DeviceIndex_sorted[innerLoop - 1] = DeviceIndex_sorted[innerLoop];
         DeviceIndex_sorted[innerLoop]     = temp;
