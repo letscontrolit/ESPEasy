@@ -33,12 +33,7 @@ void LogStruct::add(const byte loglevel, const char *line) {
 
     #ifdef USE_SECOND_HEAP
     {
-      if (millis() > 5000) {
-        // FIXME TD-er: Must check if we're called from loop() and not from setup()
-        // For now we can probably expect not to be in the setup() anymore???
-        HeapSelectIram ephemeral;
-      }
-      Message[write_idx] = EMPTY_STRING; // Have to clear it first or else it will re-allocate on the same heap
+      HeapSelectIram ephemeral;
       Message[write_idx] = tmp;
     }
     #else
