@@ -213,4 +213,19 @@ uint8_t EthLinkSpeed()
     return ETH.linkSpeed();
   return 0;
 }
+
+
+void stop_eth_dhcps() {
+  esp_err_t err = tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_ETH);
+  if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED){
+/*
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("ETH   : DHCP server could not be stopped! Error: ");
+      log += err;
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+*/
+  }
+}
+
 #endif
