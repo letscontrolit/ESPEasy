@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-typedef byte    protocolIndex_t;
+typedef uint8_t    protocolIndex_t;
 
 extern protocolIndex_t   INVALID_PROTOCOL_INDEX;
 

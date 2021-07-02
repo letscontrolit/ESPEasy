@@ -82,7 +82,7 @@ struct P099_data_struct : public PluginTaskData_base
   struct tP099_Touchobjects
   {
     char        objectname[P099_MaxObjectNameLength] = { 0 };
-    byte        flags = 0;
+    uint8_t        flags = 0;
     tP099_Point top_left;
     tP099_Point bottom_right;
   };

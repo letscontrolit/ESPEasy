@@ -9,13 +9,13 @@ C015_queue_element::C015_queue_element(C015_queue_element&& other)
   , controller_idx(other.controller_idx), valuesSent(other.valuesSent)
   , valueCount(other.valueCount)
 {
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     txt[i]  = std::move(other.txt[i]);
     vPin[i] = other.vPin[i];
   }
 }
 
-C015_queue_element::C015_queue_element(const struct EventStruct *event, byte value_count) :
+C015_queue_element::C015_queue_element(const struct EventStruct *event, uint8_t value_count) :
   idx(event->idx),
   TaskIndex(event->TaskIndex),
   controller_idx(event->ControllerIndex),
@@ -44,7 +44,7 @@ bool C015_queue_element::isDuplicate(const C015_queue_element& other) const {
     return false;
   }
 
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (other.txt[i] != txt[i]) {
       return false;
     }
