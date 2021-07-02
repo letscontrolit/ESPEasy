@@ -559,7 +559,7 @@ int8_t i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data,
   _wire->beginTransmission((uint8_t)dev_id);
   _wire->write((uint8_t)reg_addr);
   _wire->endTransmission();
-  if (len != _wire->requestFrom((uint8_t)dev_id, (byte)len)) {
+  if (len != _wire->requestFrom((uint8_t)dev_id, (uint8_t)len)) {
 #ifdef BME680_DEBUG
     Serial.print("Failed to read ");
     Serial.print(len);

@@ -117,7 +117,7 @@ QEIx4* QEIx4::__instance[4] = { 0 };
 
 QEIx4::QEIx4()
 {
-	for (byte i=0; i<4; i++)
+	for (uint8_t i=0; i<4; i++)
 		if (__instance[i] == 0)
 		{
 			__instance[i] = this;
@@ -137,7 +137,7 @@ QEIx4::QEIx4()
 
 QEIx4::~QEIx4()
 {
-	for (byte i=0; i<4; i++)
+	for (uint8_t i=0; i<4; i++)
 		if (__instance[i] == this)
 		{
 			__instance[i] = 0;
@@ -236,7 +236,7 @@ void IRAM_ATTR QEIx4::processStateMachine()
 
 void IRAM_ATTR QEIx4::ISR()
 {
-	for (byte i=0; i<4; i++)
+	for (uint8_t i=0; i<4; i++)
 		if (__instance[i])
 		{
 			__instance[i]->processStateMachine();
