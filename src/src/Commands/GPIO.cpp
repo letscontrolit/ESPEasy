@@ -407,7 +407,7 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
         log += F(" toggle: port#");
         log += event->Par1;
         log += F(": set to ");
-        log += !state;
+        log += static_cast<int>(!state);
         addLog(LOG_LEVEL_ERROR, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
@@ -417,11 +417,9 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
       case PIN_MODE_OFFLINE:
         logErrorGpioOffline(logPrefix, event->Par1);
         return return_command_failed();
-        break;
       default:
         logErrorGpioNotOutput(logPrefix, event->Par1);
         return return_command_failed();
-        break;
     }
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
