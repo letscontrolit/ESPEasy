@@ -167,9 +167,9 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
     case GPIO_TIMER:
     {
       result = F("GPIO: ");
-      byte GPIOType = static_cast<byte>((id) & 0xFF);
-      byte pinNumber = static_cast<byte>((id >> 8) & 0xFF);
-      byte pinStateValue = static_cast<byte>((id >> 16) & 0xFF);
+      uint8_t GPIOType = static_cast<uint8_t>((id) & 0xFF);
+      uint8_t pinNumber = static_cast<uint8_t>((id >> 8) & 0xFF);
+      uint8_t pinStateValue = static_cast<uint8_t>((id >> 16) & 0xFF);
 
       switch (GPIOType)
       {
@@ -843,7 +843,7 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
 * GPIO Timer
 * Special timer to handle timed GPIO actions
 \*********************************************************************************************/
-unsigned long ESPEasy_Scheduler::createGPIOTimerId(byte GPIOType, byte pinNumber, int Par1) {
+unsigned long ESPEasy_Scheduler::createGPIOTimerId(uint8_t GPIOType, uint8_t pinNumber, int Par1) {
   const unsigned long mask = (1 << TIMER_ID_SHIFT) - 1;
 
   //  const unsigned long mixed = (Par1 << 8) + pinNumber;
@@ -854,7 +854,7 @@ unsigned long ESPEasy_Scheduler::createGPIOTimerId(byte GPIOType, byte pinNumber
 
 void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
-  byte GPIOType = GPIO_TYPE_INVALID;
+  uint8_t GPIOType = GPIO_TYPE_INVALID;
 
   switch (pluginID) {
     case PLUGIN_GPIO:
@@ -877,13 +877,13 @@ void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, pluginID_t plugi
 
 
 void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
-  byte GPIOType = static_cast<byte>((id) & 0xFF);
-  byte pinNumber = static_cast<byte>((id >> 8) & 0xFF);
-  byte pinStateValue = static_cast<byte>((id >> 16) & 0xFF);
+  uint8_t GPIOType = static_cast<uint8_t>((id) & 0xFF);
+  uint8_t pinNumber = static_cast<uint8_t>((id >> 8) & 0xFF);
+  uint8_t pinStateValue = static_cast<uint8_t>((id >> 16) & 0xFF);
 
   bool success = true;
 
-  byte pluginID;
+  uint8_t pluginID;
 
   switch (GPIOType)
   {
@@ -1006,7 +1006,7 @@ void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsi
 * Thus only use these when the result is not needed immediately.
 * Proper use case is calling from a callback function, since those cannot use yield() or delay()
 \*********************************************************************************************/
-void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, struct EventStruct &&event) {
+void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, uint8_t Function, struct EventStruct &&event) {
   if (validDeviceIndex(DeviceIndex)) {
     schedule_event_timer(PluginPtrType::TaskPlugin, DeviceIndex, Function, std::move(event));
   }
@@ -1014,12 +1014,12 @@ void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceInd
 
 void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(deviceIndex_t   DeviceIndex,
                                                                 taskIndex_t     TaskIndex,
-                                                                byte            Function,
+                                                                uint8_t            Function,
                                                                 char           *c_topic,
-                                                                byte           *b_payload,
+                                                                uint8_t           *b_payload,
                                                                 unsigned int    length) {
   if (validDeviceIndex(DeviceIndex)) {
-    const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::TaskPlugin, DeviceIndex, static_cast<byte>(Function));
+    const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::TaskPlugin, DeviceIndex, static_cast<uint8_t>(Function));
     EventStruct event(TaskIndex);
     const size_t topic_length = strlen_P(c_topic);
     if (!(event.String1.reserve(topic_length) && event.String2.reserve(length))) {
@@ -1039,7 +1039,7 @@ void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(deviceIndex_t   
   }
 }
 
-void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct &&event) {
+void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, uint8_t Function, struct EventStruct &&event) {
   if (validProtocolIndex(ProtocolIndex)) {
     schedule_event_timer(PluginPtrType::ControllerPlugin, ProtocolIndex, Function, std::move(event));
   }
@@ -1052,7 +1052,7 @@ unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type
   return getMixedId(SYSTEM_EVENT_QUEUE, subId);
 }
 
-unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function) {
+unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type, uint8_t Index, uint8_t Function) {
   unsigned long subId = static_cast<unsigned long>(ptr_type);
 
   subId = (subId << 8) + Index;
@@ -1063,12 +1063,12 @@ unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type
 void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex,
                                                              CPlugin::Function Function,
                                                              char           *c_topic,
-                                                             byte           *b_payload,
+                                                             uint8_t           *b_payload,
                                                              unsigned int    length) {
   if (validProtocolIndex(ProtocolIndex)) {
     // Emplace empty event in the queue first and the fill it.
     // This makes sure the relatively large event will not be in memory twice.
-    const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::ControllerPlugin, ProtocolIndex, static_cast<byte>(Function));
+    const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::ControllerPlugin, ProtocolIndex, static_cast<uint8_t>(Function));
     ScheduledEventQueue.emplace_back(mixedId, EventStruct());
     ScheduledEventQueue.back().event.String1 = c_topic;
 
@@ -1084,11 +1084,11 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t Pro
   }
 }
 
-void ESPEasy_Scheduler::schedule_notification_event_timer(byte NotificationProtocolIndex, NPlugin::Function Function, struct EventStruct &&event) {
-  schedule_event_timer(PluginPtrType::NotificationPlugin, NotificationProtocolIndex, static_cast<byte>(Function), std::move(event));
+void ESPEasy_Scheduler::schedule_notification_event_timer(uint8_t NotificationProtocolIndex, NPlugin::Function Function, struct EventStruct &&event) {
+  schedule_event_timer(PluginPtrType::NotificationPlugin, NotificationProtocolIndex, static_cast<uint8_t>(Function), std::move(event));
 }
 
-void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct &&event) {
+void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, uint8_t Index, uint8_t Function, struct EventStruct &&event) {
   const unsigned long mixedId = createSystemEventMixedId(ptr_type, Index, Function);
 
   //  EventStructCommandWrapper eventWrapper(mixedId, *event);
@@ -1103,8 +1103,8 @@ void ESPEasy_Scheduler::process_system_event_queue() {
 
   if (ScheduledEventQueue.size() == 0) { return; }
   unsigned long id       = ScheduledEventQueue.front().id;
-  byte Function          = id & 0xFF;
-  byte Index             = (id >> 8) & 0xFF;
+  uint8_t Function          = id & 0xFF;
+  uint8_t Index             = (id >> 8) & 0xFF;
   PluginPtrType ptr_type = static_cast<PluginPtrType>((id >> 16) & 0xFF);
 
   // At this moment, the String is not being used in the plugin calls, so just supply a dummy String.

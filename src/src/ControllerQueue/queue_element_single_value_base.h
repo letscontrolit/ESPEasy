@@ -20,7 +20,7 @@ public:
   queue_element_single_value_base() = default;
 
   queue_element_single_value_base(const struct EventStruct *event,
-                                  byte                      value_count);
+                                  uint8_t                      value_count);
 
 #ifdef USE_SECOND_HEAP
   queue_element_single_value_base(const queue_element_single_value_base& rval) = default;
@@ -48,8 +48,8 @@ public:
   unsigned long _timestamp         = millis();
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
-  mutable byte valuesSent          = 0; // Value must be set by const function checkDone()
-  byte valueCount                  = 0;
+  mutable uint8_t valuesSent          = 0; // Value must be set by const function checkDone()
+  uint8_t valueCount                  = 0;
 };
 
 

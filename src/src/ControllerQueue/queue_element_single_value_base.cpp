@@ -2,7 +2,7 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
-queue_element_single_value_base::queue_element_single_value_base(const struct EventStruct *event, byte value_count) :
+queue_element_single_value_base::queue_element_single_value_base(const struct EventStruct *event, uint8_t value_count) :
   idx(event->idx),
   TaskIndex(event->TaskIndex),
   controller_idx(event->ControllerIndex),
@@ -18,7 +18,7 @@ queue_element_single_value_base::queue_element_single_value_base(queue_element_s
   HeapSelectIram ephemeral;
   #endif
 
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     txt[i] = std::move(rval.txt[i]);
   }
 }
@@ -34,7 +34,7 @@ queue_element_single_value_base& queue_element_single_value_base::operator=(queu
   HeapSelectIram ephemeral;
   #endif // ifdef USE_SECOND_HEAP
 
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     txt[i] = std::move(rval.txt[i]);
   }
   return *this;
@@ -62,7 +62,7 @@ bool queue_element_single_value_base::isDuplicate(const queue_element_single_val
     return false;
   }
 
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (other.txt[i] != txt[i]) {
       return false;
     }

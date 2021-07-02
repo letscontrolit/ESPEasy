@@ -58,7 +58,7 @@ bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *
     String valueName;
     if ((event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK) && event->Par1 - 1 != INVALID_TASK_INDEX && GetArgv(Line, valueName, 3))
     {
-      byte tmpVarNr = findDeviceValueIndexByName(valueName, event->Par1 - 1);
+      uint8_t tmpVarNr = findDeviceValueIndexByName(valueName, event->Par1 - 1);
       if (tmpVarNr != VARS_PER_TASK) {
         event->Par2 = tmpVarNr + 1;
       }

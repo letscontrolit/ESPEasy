@@ -18,7 +18,7 @@
 
 #ifdef WEBSERVER_ADVANCED
 
-void setLogLevelFor(byte destination, LabelType::Enum label) {
+void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
   setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
 }
 

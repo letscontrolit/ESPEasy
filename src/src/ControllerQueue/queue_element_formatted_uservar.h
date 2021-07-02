@@ -44,7 +44,7 @@ public:
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   Sensor_VType sensorType          = Sensor_VType::SENSOR_TYPE_NONE;
-  byte valueCount                  = 0;
+  uint8_t valueCount                  = 0;
 };
 
 #endif // CONTROLLERQUEUE_QUEUE_ELEMENT_FORMATTED_USERVAR_H

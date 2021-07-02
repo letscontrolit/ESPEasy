@@ -15,7 +15,7 @@
 #define WIFI_AP_CANDIDATE_MAX_AGE   300000  // 5 minutes in msec
 
 
-WiFi_AP_Candidate::WiFi_AP_Candidate(byte index_c, const String& ssid_c, const String& pass) :
+WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c, const String& pass) :
   rssi(0), channel(0), index(index_c), isHidden(false)
 {
   const size_t ssid_length = ssid_c.length();
