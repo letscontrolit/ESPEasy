@@ -28,7 +28,7 @@
 #define P015_GAIN        PCONFIG(3)
 
 
-boolean Plugin_015(byte function, struct EventStruct *event, String& string)
+boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
 {
   bool success = false;
 

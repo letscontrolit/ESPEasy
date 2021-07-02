@@ -17,7 +17,7 @@
 
 int8_t Plugin_080_DallasPin;
 
-boolean Plugin_080(byte function, struct EventStruct *event, String& string)
+boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

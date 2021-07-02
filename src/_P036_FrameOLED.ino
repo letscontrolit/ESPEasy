@@ -59,7 +59,7 @@
 // CHG: Using a calculation to reduce line content for scrolling pages instead of a while loop
 // CHG: Using SetBit and GetBit functions to change the content of PCONFIG_LONG(0)
 // CHG: Memory usage reduced (only P036_DisplayLinesV1 is now used)
-// CHG: using uint8_t and uint16_t instead of byte and word
+// CHG: using uint8_t and uint16_t instead of uint8_t and word
 // @uwekaditz: 2019-11-17
 // CHG: commands for P036
 // 1. Display commands: oledframedcmd display [on, off, low, med, high]

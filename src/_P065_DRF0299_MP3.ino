@@ -41,7 +41,7 @@
 ESPeasySerial* P065_easySerial = NULL;
 
 
-boolean Plugin_065(byte function, struct EventStruct *event, String& string)
+boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -194,25 +194,25 @@ void Plugin_065_SetEQ(int8_t eq)
   Plugin_065_SendCmd(0x07, eq);
 }
 
-void Plugin_065_SendCmd(byte cmd, int16_t data)
+void Plugin_065_SendCmd(uint8_t cmd, int16_t data)
 {
   if (!P065_easySerial)
     return;
 
-  byte buffer[10] = { 0x7E, 0xFF, 0x06, 0, 0x00, 0, 0, 0, 0, 0xEF };
+  uint8_t buffer[10] = { 0x7E, 0xFF, 0x06, 0, 0x00, 0, 0, 0, 0, 0xEF };
 
   buffer[3] = cmd;
-  buffer[5] = data >> 8;   // high byte
-  buffer[6] = data & 0xFF;   // low byte
+  buffer[5] = data >> 8;   // high uint8_t
+  buffer[6] = data & 0xFF;   // low uint8_t
 
   int16_t checksum = -(buffer[1] + buffer[2] + buffer[3] + buffer[4] + buffer[5] + buffer[6]);
-  buffer[7] = checksum >> 8;   // high byte
-  buffer[8] = checksum & 0xFF;   // low byte
+  buffer[7] = checksum >> 8;   // high uint8_t
+  buffer[8] = checksum & 0xFF;   // low uint8_t
 
-  P065_easySerial->write(buffer, 10);   //Send the byte array
+  P065_easySerial->write(buffer, 10);   //Send the uint8_t array
 
   String log = F("MP3  : Send Cmd ");
-  for (byte i=0; i<10; i++)
+  for (uint8_t i=0; i<10; i++)
   {
     log += String(buffer[i], 16);
     log += ' ';
