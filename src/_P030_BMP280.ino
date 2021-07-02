@@ -67,7 +67,7 @@ int32_t bmp280_t_fine;
 
 boolean Plugin_030_init[2] = { false, false };
 
-boolean Plugin_030(byte function, struct EventStruct *event, String& string)
+boolean Plugin_030(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -104,7 +104,7 @@ boolean Plugin_030(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
+      uint8_t choice = PCONFIG(0);
 
       /*String options[2] = { F("0x76 - default settings (SDO Low)"), F("0x77 - alternate settings (SDO HIGH)") };*/
       int optionValues[2] = { 0x76, 0x77 };

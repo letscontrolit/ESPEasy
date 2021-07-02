@@ -70,7 +70,7 @@
 #define P090_READ_INTERVAL            PCONFIG_LONG(0)
 
 
-boolean Plugin_090(byte function, struct EventStruct *event, String& string)
+boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -279,8 +279,8 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
       if (P090_COMPENSATE_ENABLE)
       {
         // we're checking a var from another task, so calculate that basevar
-        byte  TaskIndex    = P090_TEMPERATURE_TASK_INDEX;
-        byte  BaseVarIndex = TaskIndex * VARS_PER_TASK + P090_TEMPERATURE_TASK_VALUE;
+        uint8_t  TaskIndex    = P090_TEMPERATURE_TASK_INDEX;
+        uint8_t  BaseVarIndex = TaskIndex * VARS_PER_TASK + P090_TEMPERATURE_TASK_VALUE;
         float temperature  = UserVar[BaseVarIndex]; // in degrees C
         // convert to celsius if required
         int temperature_in_fahrenheit = P090_TEMPERATURE_SCALE;
@@ -292,8 +292,8 @@ boolean Plugin_090(byte function, struct EventStruct *event, String& string)
           temp        =  F("F");
         }
 
-        byte  TaskIndex2    = P090_HUMIDITY_TASK_INDEX;
-        byte  BaseVarIndex2 = TaskIndex2 * VARS_PER_TASK + P090_HUMIDITY_TASK_VALUE;
+        uint8_t  TaskIndex2    = P090_HUMIDITY_TASK_INDEX;
+        uint8_t  BaseVarIndex2 = TaskIndex2 * VARS_PER_TASK + P090_HUMIDITY_TASK_VALUE;
         float humidity      = UserVar[BaseVarIndex2]; // in % relative
 
       #ifndef BUILD_NO_DEBUG

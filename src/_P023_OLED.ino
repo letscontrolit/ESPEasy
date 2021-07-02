@@ -20,7 +20,7 @@
 #define PLUGIN_NAME_023       "Display - OLED SSD1306"
 #define PLUGIN_VALUENAME1_023 "OLED"
 
-boolean Plugin_023(byte function, struct EventStruct *event, String& string)
+boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -55,7 +55,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
+      uint8_t choice = PCONFIG(0);
 
       /*String options[2] = { F("3C"), F("3D") };*/
       int optionValues[2] = { 0x3C, 0x3D };
@@ -68,19 +68,19 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Use SH1106 controller"), F("p023_use_sh1106"), PCONFIG(5));
 
       {
-        byte choice2         = PCONFIG(1);
+        uint8_t choice2         = PCONFIG(1);
         const __FlashStringHelper * options2[2]   = { F("Normal"), F("Rotated") };
         int optionValues2[2] = { 1, 2 };
         addFormSelector(F("Rotation"), F("p023_rotate"), 2, options2, optionValues2, choice2);
       }
       {
-        byte   choice3          = PCONFIG(3);
+        uint8_t   choice3          = PCONFIG(3);
         const __FlashStringHelper * options3[3]      = { F("128x64"), F("128x32"), F("64x48") };
         int    optionValues3[3] = { 1, 3, 2 };
         addFormSelector(F("Display Size"), F("p023_size"), 3, options3, optionValues3, choice3);
       }
       {
-        byte   choice4          = PCONFIG(4);
+        uint8_t   choice4          = PCONFIG(4);
         const __FlashStringHelper * options4[2]      = { F("Normal"), F("Optimized") };
         int    optionValues4[2] = { 1, 2 };
         addFormSelector(F("Font Width"), F("p023_font_spacing"), 2, options4, optionValues4, choice4);
@@ -89,7 +89,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         String strings[P23_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
 
-        for (byte varNr = 0; varNr < 8; varNr++)
+        for (uint8_t varNr = 0; varNr < 8; varNr++)
         {
           addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 64);
         }
@@ -118,7 +118,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       char   deviceTemplate[P23_Nlines][P23_Nchars];
       String error;
 
-      for (byte varNr = 0; varNr < P23_Nlines; varNr++)
+      for (uint8_t varNr = 0; varNr < P23_Nlines; varNr++)
       {
         if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P23_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
@@ -128,18 +128,18 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       if (error.length() > 0) {
         addHtmlError(error);
       }
-      SaveCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemplate, sizeof(deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemplate, sizeof(deviceTemplate));
       success = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      byte address                           = PCONFIG(0);
-      byte type                              = 0;
+      uint8_t address                           = PCONFIG(0);
+      uint8_t type                              = 0;
       P023_data_struct::Spacing font_spacing = P023_data_struct::Spacing::normal;
-      byte displayTimer                      = PCONFIG(2);
-      byte use_sh1106                        = PCONFIG(5);
+      uint8_t displayTimer                      = PCONFIG(2);
+      uint8_t use_sh1106                        = PCONFIG(5);
 
 
       switch (PCONFIG(3)) {
@@ -228,7 +228,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         String strings[P23_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
 
-        for (byte x = 0; x < 8; x++)
+        for (uint8_t x = 0; x < 8; x++)
         {
           if (strings[x].length())
           {

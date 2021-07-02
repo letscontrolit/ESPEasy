@@ -35,7 +35,7 @@ void NPluginInit(void)
   HeapSelectDram ephemeral;
   #endif
 
-  byte x;
+  uint8_t x;
 
   // Clear pointer table for all plugins
   for (x = 0; x < NPLUGIN_MAX; x++)
@@ -149,7 +149,7 @@ void NPluginInit(void)
   NPluginCall(NPlugin::Function::NPLUGIN_PROTOCOL_ADD, 0);
 }
 
-byte NPluginCall(NPlugin::Function Function, struct EventStruct *event)
+uint8_t NPluginCall(NPlugin::Function Function, struct EventStruct *event)
 {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
