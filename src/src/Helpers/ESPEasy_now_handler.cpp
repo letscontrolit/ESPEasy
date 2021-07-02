@@ -146,6 +146,10 @@ bool ESPEasy_now_handler_t::begin()
   const String passphrase = F(ESPEASY_NOW_TMP_PASSPHRASE);
 
   setAP(true);
+  #ifdef ESP32
+  // We're running a dummy AP, so don't run DHCP server.
+  tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
+  #endif
 
   // Make sure AP will not be turned off.
   WiFiEventData.timerAPoff.clear();
