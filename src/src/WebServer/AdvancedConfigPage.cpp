@@ -98,7 +98,8 @@ void handle_advanced() {
     Settings.NumberExtraWiFiScans = getFormItemInt(LabelType::WIFI_NR_EXTRA_SCANS);
     Settings.PeriodicalScanWiFi(isFormItemChecked(LabelType::WIFI_PERIODICAL_SCAN));
     Settings.UseLastWiFiFromRTC(isFormItemChecked(LabelType::WIFI_USE_LAST_CONN_FROM_RTC));
-    Settings.JSONBoolWithoutQuotes(isFormItemChecked(F("json_bool_with_quotes")));
+    Settings.JSONBoolWithoutQuotes(isFormItemChecked(LabelType::JSON_BOOL_QUOTES));
+    Settings.EnableTimingStats(isFormItemChecked(LabelType::ENABLE_TIMING_STATISTICS));
     #ifdef ESP8266
     Settings.UseAlternativeDeepSleep(isFormItemChecked(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL));
     #endif
@@ -207,7 +208,10 @@ void handle_advanced() {
   addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif // if defined(ESP32)
 
-  addFormCheckBox(F("JSON bool output without quotes"), F("json_bool_with_quotes"), Settings.JSONBoolWithoutQuotes());
+  addFormCheckBox(LabelType::JSON_BOOL_QUOTES, Settings.JSONBoolWithoutQuotes());
+  #ifdef USES_TIMING_STATS
+  addFormCheckBox(LabelType::ENABLE_TIMING_STATISTICS, Settings.EnableTimingStats());
+  #endif
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
   #endif

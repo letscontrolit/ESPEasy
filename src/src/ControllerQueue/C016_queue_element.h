@@ -29,6 +29,9 @@ public:
                      byte                      value_count,
                      unsigned long             unixTime);
 
+  C016_queue_element& operator=(C016_queue_element&& other);
+
+
   size_t getSize() const;
 
   bool isDuplicate(const C016_queue_element& other) const;

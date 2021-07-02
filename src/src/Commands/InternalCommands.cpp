@@ -135,7 +135,7 @@ command_case_data::command_case_data(const char *cmd, struct EventStruct *event,
 
 // Wrapper to reduce generated code by macro
 bool do_command_case_all(command_case_data         & data,
-                         const String              & cmd_test,
+                         const __FlashStringHelper * cmd_test,
                          command_function_fs         pFunc,
                          int                         nrArguments)
 {
@@ -144,7 +144,7 @@ bool do_command_case_all(command_case_data         & data,
 
 
 bool do_command_case_all(command_case_data         & data,
-                         const String              & cmd_test,
+                         const __FlashStringHelper * cmd_test,
                          command_function            pFunc,
                          int                         nrArguments)
 {
@@ -153,7 +153,7 @@ bool do_command_case_all(command_case_data         & data,
 
 // Wrapper to reduce generated code by macro
 bool do_command_case_all_restricted(command_case_data         & data,
-                                    const String              & cmd_test,
+                                    const __FlashStringHelper * cmd_test,
                                     command_function_fs         pFunc,
                                     int                         nrArguments)
 {
@@ -162,7 +162,7 @@ bool do_command_case_all_restricted(command_case_data         & data,
 
 
 bool do_command_case_all_restricted(command_case_data         & data,
-                                    const String              & cmd_test,
+                                    const __FlashStringHelper * cmd_test,
                                     command_function            pFunc,
                                     int                         nrArguments)
 {
@@ -171,9 +171,9 @@ bool do_command_case_all_restricted(command_case_data         & data,
 
 
 bool do_command_case_check(command_case_data         & data,
-                          const String              & cmd_test,
-                          int                         nrArguments,
-                          EventValueSourceGroup::Enum group)
+                           const __FlashStringHelper * cmd_test,
+                           int                         nrArguments,
+                           EventValueSourceGroup::Enum group)
 {
   // The data struct is re-used on each attempt to process an internal command.
   // Re-initialize the only two members that may have been altered by a previous call.
@@ -204,7 +204,7 @@ bool do_command_case_check(command_case_data         & data,
 }
 
 bool do_command_case(command_case_data         & data,
-                     const String              & cmd_test,
+                     const __FlashStringHelper * cmd_test,
                      command_function_fs         pFunc,
                      int                         nrArguments,
                      EventValueSourceGroup::Enum group)
@@ -219,7 +219,7 @@ bool do_command_case(command_case_data         & data,
 
 
 bool do_command_case(command_case_data         & data,
-                     const String              & cmd_test,
+                     const __FlashStringHelper * cmd_test,
                      command_function            pFunc,
                      int                         nrArguments,
                      EventValueSourceGroup::Enum group)

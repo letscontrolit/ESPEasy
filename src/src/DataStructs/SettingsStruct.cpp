@@ -181,6 +181,16 @@ void SettingsStruct_tmpl<N_TASKS>::JSONBoolWithoutQuotes(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::EnableTimingStats() const {
+  return bitRead(VariousBits1, 17);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EnableTimingStats(bool value) {
+  bitWrite(VariousBits1, 17, value);
+}
+
+template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
   if (validTaskIndex(taskIndex)) {
     return bitRead(TaskDeviceSendDataFlags[taskIndex], 0);

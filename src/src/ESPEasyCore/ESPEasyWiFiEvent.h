@@ -61,7 +61,9 @@ void onProbeRequestAPmode(const WiFiEventSoftAPModeProbeRequestReceived& event);
 
 void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event);
 
-#endif // ifdef ESP32
+void onWiFiScanDone(void *arg, STATUS status);
+
+#endif
 
 
 #endif // ESPEASY_WIFI_EVENT_H

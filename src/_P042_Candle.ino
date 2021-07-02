@@ -512,7 +512,7 @@ void type_Static_Light() {
 void type_Simple_Candle() {
   int r, g, b;
   if (Candle_color == ColorDefault) {
-    r = 226, g = 042, b =  35;   // Regular (orange) flame
+    r = 226, g = 42, b =  35;   // Regular (orange) flame
     //r = 158, g =   8, b = 148;   // Purple flame
     //r =  74, g = 150, b =  12;   // Green flame
   } else {
