@@ -915,7 +915,13 @@ bool getConvertArgumentString(const String& marker,
 
 // FIXME TD-er: These macros really increase build size
 struct ConvertArgumentData {
-  ConvertArgumentData(String& s, bool useURLencode) : str(s), URLencode(useURLencode) {}
+  ConvertArgumentData(String& s, bool useURLencode) 
+    : str(s),
+      arg1(0.0f), arg2(0.0f),
+      startIndex(0), endIndex(0),
+      URLencode(useURLencode) {}
+
+  ConvertArgumentData() = delete;
 
   String& str;
   float arg1, arg2 = 0.0f;

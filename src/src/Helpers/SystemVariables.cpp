@@ -206,7 +206,9 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
   while ((v_index != -1)) {
     unsigned int i;
     if (validUIntFromString(s.substring(v_index + 2), i)) {
-      const String key = String(F("%v")) + String(i) + '%';
+      String key = F("%v");
+      key += i;
+      key += '%';
       if (s.indexOf(key) != -1) {
         const bool trimTrailingZeros = true;
         const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
