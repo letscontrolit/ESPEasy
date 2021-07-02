@@ -53,6 +53,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return F("Send With Max TX Power");
     case LabelType::WIFI_NR_EXTRA_SCANS:    return F("Extra WiFi scan loops");
     case LabelType::WIFI_PERIODICAL_SCAN:   return F("Periodical Scan WiFi");
+    case LabelType::WIFI_USE_LAST_CONN_FROM_RTC: return F("Use Last Connected AP from RTC");
 
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
@@ -215,6 +216,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return jsonBool(Settings.UseMaxTXpowerForSending());
     case LabelType::WIFI_NR_EXTRA_SCANS:    return String(Settings.NumberExtraWiFiScans);
     case LabelType::WIFI_PERIODICAL_SCAN:   return jsonBool(Settings.PeriodicalScanWiFi());
+    case LabelType::WIFI_USE_LAST_CONN_FROM_RTC: return jsonBool(Settings.UseLastWiFiFromRTC());
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
@@ -337,7 +339,7 @@ String getValue(LabelType::Enum label) {
                                                           getValue(LabelType::ETH_IP_SUBNET));
     case LabelType::ETH_IP_GATEWAY:         return NetworkGatewayIP().toString();
     case LabelType::ETH_IP_DNS:             return NetworkDnsIP(0).toString();
-    case LabelType::ETH_MAC:                return NetworkMacAddress();
+    case LabelType::ETH_MAC:                return NetworkMacAddress().toString();
     case LabelType::ETH_DUPLEX:             return EthLinkUp() ? (EthFullDuplex() ? F("Full Duplex") : F("Half Duplex")) : F("Link Down");
     case LabelType::ETH_SPEED:              return EthLinkUp() ? getEthSpeed() : F("Link Down");
     case LabelType::ETH_STATE:              return EthLinkUp() ? F("Link Up") : F("Link Down");
