@@ -91,7 +91,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
     {
       case BOOT_CAUSE:        value = String(lastBootCause); break; // Integer value to be used in rules
       case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr()); break;
-      case CR:                value = "\r"; break;
+      case CR:                value = '\r'; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
       case IP4:               value = String( (int) NetworkLocalIP()[3] ); break; // 4th IP octet
       case SUBNET:            value = getValue(LabelType::IP_SUBNET); break;
@@ -99,15 +99,15 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case GATEWAY:           value = getValue(LabelType::GATEWAY); break;
       case CLIENTIP:          value = getValue(LabelType::CLIENT_IP); break;
       #ifdef USES_MQTT
-      case ISMQTT:            value = String(MQTTclient_connected); break;
+      case ISMQTT:            value = String(MQTTclient_connected ? 1 : 0); break;
       #else // ifdef USES_MQTT
-      case ISMQTT:            value = "0"; break;
+      case ISMQTT:            value = '0'; break;
       #endif // ifdef USES_MQTT
 
       #ifdef USES_P037
-      case ISMQTTIMP:         value = String(P037_MQTTImport_connected); break;
+      case ISMQTTIMP:         value = String(P037_MQTTImport_connected ? 1 : 0); break;
       #else // ifdef USES_P037
-      case ISMQTTIMP:         value = "0"; break;
+      case ISMQTTIMP:         value = '0'; break;
       #endif // USES_P037
 
 
@@ -125,11 +125,11 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       #endif
       case LCLTIME:           value = getValue(LabelType::LOCAL_TIME); break;
       case LCLTIME_AM:        value = node_time.getDateTimeString_ampm('-', ':', ' '); break;
-      case LF:                value = "\n"; break;
+      case LF:                value = '\n'; break;
       case MAC:               value = getValue(LabelType::STA_MAC); break;
       case MAC_INT:           value = String(getChipId()); break; // Last 24 bit of MAC address as integer, to be used in rules.
       case RSSI:              value = getValue(LabelType::WIFI_RSSI); break;
-      case SPACE:             value = " "; break;
+      case SPACE:             value = ' '; break;
       case SSID:              value = (WiFiEventData.WiFiDisconnected()) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
