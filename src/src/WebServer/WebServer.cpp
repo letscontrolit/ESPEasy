@@ -763,7 +763,8 @@ void writeDefaultCSS(void)
 {
   return; // TODO
 
-#ifndef BUILD_NO_DEBUG
+/*
+#ifndef WEBSERVER_USE_CDN_JS_CSS
 
   if (!fileExists(F("esp.css")))
   {
@@ -785,7 +786,8 @@ void writeDefaultCSS(void)
       f.close();
     }
   }
-#endif // ifndef BUILD_NO_DEBUG
+#endif
+*/
 }
 
 // ********************************************************************************

@@ -8,6 +8,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RuntimeData.h"
+#include "../Globals/Settings.h"
 #include "../Helpers/CRC_functions.h"
 #include "../../ESPEasy_common.h"
 
