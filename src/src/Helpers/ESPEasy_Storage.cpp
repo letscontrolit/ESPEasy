@@ -665,7 +665,6 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   return result;
 }
 
-
 /********************************************************************************************\
    Save array of Strings from Custom settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)

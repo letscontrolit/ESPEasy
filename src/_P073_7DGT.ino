@@ -439,7 +439,7 @@ void LogBufferContent(String prefix) {
   int      dotpos = 0;
   uint8_t  showbuffer[8] = {0};
   bool     showperiods[8];
-  uint8_t     spidata[2] = {0};
+  uint8_t  spidata[2] = {0};
   uint8_t  pin1, pin2, pin3;
   uint8_t     displayModel;
   uint8_t     output;
