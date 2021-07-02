@@ -109,6 +109,10 @@ class SettingsStruct_tmpl
   // When outputting JSON bools use quoted values (on, backward compatible) or use official JSON true/false unquoted
   bool JSONBoolWithoutQuotes() const;
   void JSONBoolWithoutQuotes(bool value);
+  
+  // Enable timing statistics (may consume a few kB of RAM)
+  bool EnableTimingStats() const;
+  void EnableTimingStats(bool value);
 
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)

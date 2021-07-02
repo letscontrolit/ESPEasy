@@ -16,6 +16,10 @@ struct WiFi_AP_Candidate {
 
   // Construct using index from WiFi scan result
   WiFi_AP_Candidate(uint8_t networkItem);
+  #ifdef ESP8266
+  WiFi_AP_Candidate(const bss_info& ap);
+  #endif
+
 
   WiFi_AP_Candidate(const WiFi_AP_Candidate& other) = default;
 
