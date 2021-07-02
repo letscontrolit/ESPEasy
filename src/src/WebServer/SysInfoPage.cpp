@@ -488,6 +488,7 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::USE_ESPEASY_NOW);
   addRowLabelValue(LabelType::FORCE_ESPEASY_NOW_CHANNEL);
 #endif
+  addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
 }
 
 void handle_sysinfo_Firmware() {

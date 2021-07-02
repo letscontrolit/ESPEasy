@@ -448,6 +448,27 @@ Also it is yet unknown if it does have a negative impact on overall WiFi perform
 During a scan the node is listening on a different channel, so it may not respond to requests sent to it for roughly a 1.6 seconds.
 
 
+Use Last Connected AP from RTC
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2021-06-20
+
+The last used (stable) connection is stored in RTC memory.
+This will survive a reboot (and deep sleep) as long as the unit remains powered.
+
+On WiFi reconnect, the stored last active connection is tried first.
+This can reduce the time needed to reconnect on a reboot, or when waking from deep sleep.
+
+Side effect is that if a node cannot see the stronger configured AP when connecting, it may never try to connect to the stronger AP as on reconnect the last used is tried first.
+
+Especially on mesh networks this appears to cause a lot of instability, therefore this is now made an optional feature.
+
+This is no new functionality, as it was present before and also enabled by default.
+
+New default value since 2021-06-20: unchecked
+
+
+
 Show JSON
 =========
 
