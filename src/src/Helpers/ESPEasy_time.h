@@ -19,20 +19,12 @@ public:
   static void breakTime(unsigned long timeInput,
                         struct tm   & tm);
 
-// Restore the last known system time
-// This may be useful to get some idea of what time it is.
-// This way the unit can do things based on local time even when NTP servers may not respond.
-// Do not use this when booting from deep sleep.
-// Only call this once during boot.
-void restoreLastKnownUnixTime(unsigned long lastSysTime, uint8_t deepSleepState);
-
   // Restore the last known system time
   // This may be useful to get some idea of what time it is.
   // This way the unit can do things based on local time even when NTP servers may not respond.
   // Do not use this when booting from deep sleep.
   // Only call this once during boot.
-  void          restoreLastKnownUnixTime(unsigned long lastSysTime,
-                                         byte          deepSleepState);
+  void restoreLastKnownUnixTime(unsigned long lastSysTime, uint8_t deepSleepState);
 
   void          setExternalTimeSource(double       time,
                                       timeSource_t source);
