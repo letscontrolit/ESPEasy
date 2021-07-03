@@ -2,7 +2,7 @@
 
 #include "../Globals/ESPEasyWiFiEvent.h"
 
-const __FlashStringHelper * WiFi_encryptionType(byte encryptionType) {
+const __FlashStringHelper * WiFi_encryptionType(uint8_t encryptionType) {
 switch (encryptionType) {
   #ifdef ESP32
     case WIFI_AUTH_OPEN:             return F("open"); 

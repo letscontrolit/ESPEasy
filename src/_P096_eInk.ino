@@ -129,20 +129,20 @@ struct Plugin_096_EPD_SettingStruct
   {
 
   }
-  byte address_epd_cs;
-  byte address_epd_dc;
-  byte address_epd_rst;
-  byte address_epd_busy;
-  byte rotation;
+  uint8_t address_epd_cs;
+  uint8_t address_epd_dc;
+  uint8_t address_epd_rst;
+  uint8_t address_epd_busy;
+  uint8_t rotation;
   int width;
   int height;
 } EPD_Settings;
 
 //The display pointer
 LOLIN_IL3897 *eInkScreen = NULL;
-byte plugin_096_sequence_in_progress = false;
+uint8_t plugin_096_sequence_in_progress = false;
 
-boolean Plugin_096(byte function, struct EventStruct *event, String& string)
+boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -189,7 +189,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
       {
-        byte init = PCONFIG(0);
+        uint8_t init = PCONFIG(0);
 
         //if already configured take it from settings, else use default values (only for pin values)
         if(init != 1)
@@ -209,7 +209,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte init = PCONFIG(0);
+        uint8_t init = PCONFIG(0);
 
         //if already configured take it from settings, else use default values (only for pin values)
         if(init == 1)
@@ -223,7 +223,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
         addFormPinSelect(formatGpioName_output(F("EPD BUSY")), F("p096_epd_busy"), EPD_Settings.address_epd_busy);
 
         {
-          byte choice2 = PCONFIG(1);
+          uint8_t choice2 = PCONFIG(1);
           const __FlashStringHelper * options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
           int optionValues2[4] = { 0, 1, 2, 3 };
           addFormSelector(F("Rotation"), F("p096_rotate"), 4, options2, optionValues2, choice2);
@@ -257,7 +257,7 @@ boolean Plugin_096(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        byte init = PCONFIG(0);
+        uint8_t init = PCONFIG(0);
 
         //if already configured take it from settings, else use default values (only for pin values)
         if(init != 1)

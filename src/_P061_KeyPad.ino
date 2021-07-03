@@ -62,7 +62,7 @@
 
 
 
-boolean Plugin_061(byte function, struct EventStruct *event, String& string)
+boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -99,7 +99,7 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte addr = PCONFIG(0);
+      uint8_t addr = PCONFIG(0);
 
       int optionValues[16] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F };
       addFormSelectorI2C(F("i2c_addr"), (PCONFIG(1) == 0) ? 8 : 16, optionValues, addr);
@@ -145,9 +145,9 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_FIFTY_PER_SECOND:
     {
-      static byte lastScanCode = 0xFF;
-      static byte sentScanCode = 0xFF;
-      byte actScanCode         = 0;
+      static uint8_t lastScanCode = 0xFF;
+      static uint8_t sentScanCode = 0xFF;
+      uint8_t actScanCode         = 0;
 
       switch (PCONFIG(1))
       {
@@ -216,7 +216,7 @@ boolean Plugin_061(byte function, struct EventStruct *event, String& string)
 #define MCP23017_OLATB          0x15 // OUTPUT LATCH REGISTER   OL7 OL6 OL5 OL4 OL3 OL2 OL1 OL0 0000 0000
 
 
-void MCP23017_setReg(byte addr, byte reg, byte data)
+void MCP23017_setReg(uint8_t addr, uint8_t reg, uint8_t data)
 {
   Wire.beginTransmission(addr);
   Wire.write(reg);
@@ -224,7 +224,7 @@ void MCP23017_setReg(byte addr, byte reg, byte data)
   Wire.endTransmission();
 }
 
-byte MCP23017_getReg(byte addr, byte reg)
+uint8_t MCP23017_getReg(uint8_t addr, uint8_t reg)
 {
   Wire.beginTransmission(addr);
   Wire.write(reg);
@@ -238,7 +238,7 @@ byte MCP23017_getReg(byte addr, byte reg)
   return 0xFF;
 }
 
-void MCP23017_KeyPadMatrixInit(byte addr)
+void MCP23017_KeyPadMatrixInit(uint8_t addr)
 {
   MCP23017_setReg(addr, MCP23017_IODIRA, 0x00); // port A to output
   MCP23017_setReg(addr, MCP23017_GPIOA,  0x00); // port A to low
@@ -247,10 +247,10 @@ void MCP23017_KeyPadMatrixInit(byte addr)
   MCP23017_setReg(addr, MCP23017_GPPUB,  0xFF); // port B pullup on
 }
 
-byte MCP23017_KeyPadMatrixScan(byte addr)
+uint8_t MCP23017_KeyPadMatrixScan(uint8_t addr)
 {
-  byte rowMask = 1;
-  byte colData;
+  uint8_t rowMask = 1;
+  uint8_t colData;
 
   colData = MCP23017_getReg(addr, MCP23017_GPIOB);
 
@@ -258,7 +258,7 @@ byte MCP23017_KeyPadMatrixScan(byte addr)
     return 0;            // no key pressed!
   }
 
-  for (byte row = 0; row <= 8; row++)
+  for (uint8_t row = 0; row <= 8; row++)
   {
     if (row == 0) {
       MCP23017_setReg(addr, MCP23017_IODIRA, 0xFF); // no bit of port A to output
@@ -273,9 +273,9 @@ byte MCP23017_KeyPadMatrixScan(byte addr)
 
     if (colData != 0xFF) // any key pressed?
     {
-      byte colMask = 1;
+      uint8_t colMask = 1;
 
-      for (byte col = 1; col <= 8; col++)
+      for (uint8_t col = 1; col <= 8; col++)
       {
         if ((colData & colMask) == 0)                   // this key pressed?
         {
@@ -293,14 +293,14 @@ byte MCP23017_KeyPadMatrixScan(byte addr)
 
 // PCF8574 Matrix //////////////////////////////////////////////////////////////
 
-void PCF8574_setReg(byte addr, byte data)
+void PCF8574_setReg(uint8_t addr, uint8_t data)
 {
   Wire.beginTransmission(addr);
   Wire.write(data);
   Wire.endTransmission();
 }
 
-byte PCF8574_getReg(byte addr)
+uint8_t PCF8574_getReg(uint8_t addr)
 {
   Wire.requestFrom(addr, (uint8_t)0x1);
 
@@ -311,15 +311,15 @@ byte PCF8574_getReg(byte addr)
   return 0xFF;
 }
 
-void PCF8574_KeyPadMatrixInit(byte addr)
+void PCF8574_KeyPadMatrixInit(uint8_t addr)
 {
   PCF8574_setReg(addr, 0xF0); // low nibble to output 0
 }
 
-byte PCF8574_KeyPadMatrixScan(byte addr)
+uint8_t PCF8574_KeyPadMatrixScan(uint8_t addr)
 {
-  byte rowMask = 1;
-  byte colData;
+  uint8_t rowMask = 1;
+  uint8_t colData;
 
   colData = PCF8574_getReg(addr) & 0xF0;
 
@@ -327,7 +327,7 @@ byte PCF8574_KeyPadMatrixScan(byte addr)
     return 0;            // no key pressed!
   }
 
-  for (byte row = 0; row <= 4; row++)
+  for (uint8_t row = 0; row <= 4; row++)
   {
     if (row == 0) {
       PCF8574_setReg(addr, 0xFF); // no bit of port A to output
@@ -342,9 +342,9 @@ byte PCF8574_KeyPadMatrixScan(byte addr)
 
     if (colData != 0xF0) // any key pressed?
     {
-      byte colMask = 0x10;
+      uint8_t colMask = 0x10;
 
-      for (byte col = 1; col <= 4; col++)
+      for (uint8_t col = 1; col <= 4; col++)
       {
         if ((colData & colMask) == 0) // this key pressed?
         {
@@ -362,23 +362,23 @@ byte PCF8574_KeyPadMatrixScan(byte addr)
 
 // PCF8574 Direct //////////////////////////////////////////////////////////////
 
-void PCF8574_KeyPadDirectInit(byte addr)
+void PCF8574_KeyPadDirectInit(uint8_t addr)
 {
   PCF8574_setReg(addr, 0xFF); // all to input
 }
 
-byte PCF8574_KeyPadDirectScan(byte addr)
+uint8_t PCF8574_KeyPadDirectScan(uint8_t addr)
 {
-  byte colData;
+  uint8_t colData;
 
   colData = PCF8574_getReg(addr);
 
   if (colData == 0xFF) { // no key pressed?
     return 0;            // no key pressed!
   }
-  byte colMask = 0x01;
+  uint8_t colMask = 0x01;
 
-  for (byte col = 1; col <= 8; col++)
+  for (uint8_t col = 1; col <= 8; col++)
   {
     if ((colData & colMask) == 0) // this key pressed?
     {

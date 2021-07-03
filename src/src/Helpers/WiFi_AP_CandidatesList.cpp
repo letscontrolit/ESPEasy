@@ -29,7 +29,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
   {
     // Add the known SSIDs
     String ssid, key;
-    byte   index = 1; // Index 0 is the "unset" value
+    uint8_t   index = 1; // Index 0 is the "unset" value
 
     bool done = false;
 
@@ -413,7 +413,7 @@ void WiFi_AP_CandidatesList::purge_unusable() {
   candidates.unique();
 }
 
-bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key) const {
+bool WiFi_AP_CandidatesList::get_SSID_key(uint8_t index, String& ssid, String& key) const {
   switch (index) {
     case 1:
       ssid = SecuritySettings.WifiSSID;

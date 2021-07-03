@@ -113,7 +113,7 @@ IRrecv *irReceiver = NULL;
 bool bEnableIRcodeAdding = false;
 boolean displayRawToReadableB32Hex(String &outputStr, decode_results results);
 
-boolean Plugin_016(byte function, struct EventStruct *event, String &string)
+boolean Plugin_016(uint8_t function, struct EventStruct *event, String &string)
 {
   boolean success = false;
 
@@ -423,7 +423,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
         if (nullptr != P016_data) {
           // convert result to uint32_t
-          uint32_t iCode = ((uint32_t) results.decode_type) * 0x1000000;  // Bits 31-24 (upper byte) for decode_type
+          uint32_t iCode = ((uint32_t) results.decode_type) * 0x1000000;  // Bits 31-24 (upper uint8_t) for decode_type
           if (results.repeat)
             iCode += 0x800000;                                            // Bit 23 for repeat
           char strCode[P16_Cchars];
