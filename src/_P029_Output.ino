@@ -9,7 +9,7 @@
 #define PLUGIN_ID_029         29
 #define PLUGIN_NAME_029       "Output - Domoticz MQTT Helper"
 #define PLUGIN_VALUENAME1_029 "Output"
-boolean Plugin_029(byte function, struct EventStruct *event, String& string)
+boolean Plugin_029(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -46,7 +46,7 @@ boolean Plugin_029(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         // We need the index of the controller we are: 0-CONTROLLER_MAX
-        byte controllerNr = 0;
+        uint8_t controllerNr = 0;
           for (controllerIndex_t i=0; i < CONTROLLER_MAX; i++)
           {
 //            if (Settings.Protocol[i] == CPLUGIN_ID_002) { controllerNr = i; }   -> error: 'CPLUGIN_ID_002' was not declared in this scope

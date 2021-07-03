@@ -34,7 +34,7 @@
 #define P050_OPTION_RGB_EVENTS
 // #endif
 
-boolean Plugin_050(byte function, struct EventStruct *event, String& string)
+boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -87,7 +87,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte   choiceMode = PCONFIG(0);
+      uint8_t   choiceMode = PCONFIG(0);
       {
         const __FlashStringHelper * optionsMode[6];
         optionsMode[0] = F("2.4 ms");
@@ -106,7 +106,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         addFormSelector(F("Integration Time"), F("p050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
       }
 
-      byte   choiceMode2 = PCONFIG(1);
+      uint8_t   choiceMode2 = PCONFIG(1);
       {
         const __FlashStringHelper * optionsMode2[4];
         optionsMode2[0] = F("1x");

@@ -27,7 +27,7 @@ queue_element_formatted_uservar::queue_element_formatted_uservar(EventStruct *ev
 {
   valueCount = getValueCountForTask(TaskIndex);
 
-  for (byte i = 0; i < valueCount; ++i) {
+  for (uint8_t i = 0; i < valueCount; ++i) {
     txt[i] = formatUserVarNoCheck(event, i);
   }
 }
@@ -67,7 +67,7 @@ bool queue_element_formatted_uservar::isDuplicate(const queue_element_formatted_
     return false;
   }
 
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (other.txt[i] != txt[i]) {
       return false;
     }

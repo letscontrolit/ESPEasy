@@ -19,7 +19,7 @@
 # include "./src/PluginStructs/P114_data_struct.h"
 
 
-boolean Plugin_114(byte function, struct EventStruct *event, String& string)
+boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

@@ -23,17 +23,17 @@ struct P023_data_struct : public PluginTaskData_base {
     optimized = 0x02
   };
 
-  P023_data_struct(byte    _address,
-                   byte    _type,
+  P023_data_struct(uint8_t    _address,
+                   uint8_t    _type,
                    Spacing _font_spacing,
-                   byte    _displayTimer,
-                   byte    _use_sh1106);
+                   uint8_t    _displayTimer,
+                   uint8_t    _use_sh1106);
 
-  void   setDisplayTimer(byte _displayTimer);
+  void   setDisplayTimer(uint8_t _displayTimer);
   void   checkDisplayTimer();
 
   String parseTemplate(String& tmpString,
-                       byte    lineSize);
+                       uint8_t    lineSize);
 
   void   resetDisplay();
 
@@ -72,11 +72,11 @@ struct P023_data_struct : public PluginTaskData_base {
 
   void init_OLED();
 
-  byte    address      = 0;
-  byte    type         = 0;
+  uint8_t    address      = 0;
+  uint8_t    type         = 0;
   Spacing font_spacing = Spacing::normal;
-  byte    displayTimer = 0;
-  byte    use_sh1106   = 0;
+  uint8_t    displayTimer = 0;
+  uint8_t    use_sh1106   = 0;
 
 };
 

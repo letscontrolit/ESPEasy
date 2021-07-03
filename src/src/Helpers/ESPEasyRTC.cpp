@@ -36,7 +36,7 @@
    So, if we want to access some data at the beginning of user data area,
    address: 256/4 = 64
    data   : data pointer
-   size   : data length, byte
+   size   : data length, uint8_t
 
    Prototype:
     bool system_rtc_mem_read (
@@ -114,7 +114,7 @@ bool saveToRTC()
   #else // if defined(ESP32)
 
   START_TIMER
-  if (!system_rtc_mem_write(RTC_BASE_STRUCT, (byte *)&RTC, sizeof(RTC)) || !readFromRTC())
+  if (!system_rtc_mem_write(RTC_BASE_STRUCT, (uint8_t *)&RTC, sizeof(RTC)) || !readFromRTC())
   {
       # ifdef RTC_STRUCT_DEBUG
     addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing to RTC"));
@@ -154,7 +154,7 @@ bool readFromRTC()
   RTC = RTC_tmp;
   #endif
   #ifdef ESP8266
-  if (!system_rtc_mem_read(RTC_BASE_STRUCT, (byte *)&RTC, sizeof(RTC))) {
+  if (!system_rtc_mem_read(RTC_BASE_STRUCT, (uint8_t *)&RTC, sizeof(RTC))) {
     return false;
   }
   #endif
@@ -172,17 +172,17 @@ bool saveUserVarToRTC()
   for (size_t i = 0; i < UserVar_nrelements; ++i) {
     UserVar_RTC[i] = UserVar[i];
   }
-  UserVar_checksum = calc_CRC32((byte *)(&UserVar[0]), UserVar_nrelements * sizeof(float)); 
+  UserVar_checksum = calc_CRC32((uint8_t *)(&UserVar[0]), UserVar_nrelements * sizeof(float)); 
   return true;
   #endif
 
   #ifdef ESP8266
   // addLog(LOG_LEVEL_DEBUG, F("RTCMEM: saveUserVarToRTC"));
-  byte    *buffer = UserVar.get();
+  uint8_t    *buffer = UserVar.get();
   size_t   size   = UserVar.getNrElements() * sizeof(float);
   uint32_t sum    = calc_CRC32(buffer, size);
   bool  ret    = system_rtc_mem_write(RTC_BASE_USERVAR, buffer, size);
-  ret &= system_rtc_mem_write(RTC_BASE_USERVAR + (size >> 2), (byte *)&sum, 4);
+  ret &= system_rtc_mem_write(RTC_BASE_USERVAR + (size >> 2), (uint8_t *)&sum, 4);
   return ret;
   #endif
 }
@@ -195,7 +195,7 @@ bool readUserVarFromRTC()
   // ESP8266 has the RTC struct stored in memory which we must actively fetch
   // ESP32   Uses a temp structure which is mapped to the RTC address range.
   #if defined(ESP32)
-  if (calc_CRC32((byte *)(&UserVar_RTC[0]), UserVar_nrelements * sizeof(float)) == UserVar_checksum) {
+  if (calc_CRC32((uint8_t *)(&UserVar_RTC[0]), UserVar_nrelements * sizeof(float)) == UserVar_checksum) {
     for (size_t i = 0; i < UserVar_nrelements; ++i) {
       UserVar[i] = UserVar_RTC[i];
     }
@@ -206,12 +206,12 @@ bool readUserVarFromRTC()
 
   #ifdef ESP8266
   // addLog(LOG_LEVEL_DEBUG, F("RTCMEM: readUserVarFromRTC"));
-  byte    *buffer = UserVar.get();
+  uint8_t    *buffer = UserVar.get();
   size_t   size   = UserVar.getNrElements() * sizeof(float);
   bool  ret    = system_rtc_mem_read(RTC_BASE_USERVAR, buffer, size);
   uint32_t sumRAM = calc_CRC32(buffer, size);
   uint32_t sumRTC = 0;
-  ret &= system_rtc_mem_read(RTC_BASE_USERVAR + (size >> 2), (byte *)&sumRTC, 4);
+  ret &= system_rtc_mem_read(RTC_BASE_USERVAR + (size >> 2), (uint8_t *)&sumRTC, 4);
 
   if (!ret || (sumRTC != sumRAM))
   {
