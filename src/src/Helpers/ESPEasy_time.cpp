@@ -73,7 +73,8 @@ void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
   tm.tm_mday = time + 1;  // day of month start at 1
 }
 
-void ESPEasy_time::restoreLastKnownUnixTime(unsigned long lastSysTime, byte deepSleepState)
+
+void ESPEasy_time::restoreLastKnownUnixTime(unsigned long lastSysTime, uint8_t deepSleepState)
 {
   static bool firstCall = true;
 
@@ -272,7 +273,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   }
 
   const int NTP_PACKET_SIZE = 48;     // NTP time is in the first 48 bytes of message
-  byte packetBuffer[NTP_PACKET_SIZE]; // buffer to hold incoming & outgoing packets
+  uint8_t packetBuffer[NTP_PACKET_SIZE]; // buffer to hold incoming & outgoing packets
 
   log += F(" queried");
 #ifndef BUILD_NO_DEBUG

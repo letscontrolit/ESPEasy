@@ -70,7 +70,7 @@ void etharp_gratuitous_r(struct netif *netif) {
 /*********************************************************************************************\
    Syslog client
 \*********************************************************************************************/
-void syslog(byte logLevel, const char *message)
+void syslog(uint8_t logLevel, const char *message)
 {
   if ((Settings.Syslog_IP[0] != 0) && NetworkConnected())
   {
@@ -81,7 +81,7 @@ void syslog(byte logLevel, const char *message)
       // problem resolving the hostname or port
       return;
     }
-    byte prio = Settings.SyslogFacility * 8;
+    uint8_t prio = Settings.SyslogFacility * 8;
 
     if (logLevel == LOG_LEVEL_ERROR) {
       prio += 3; // syslog error
@@ -271,7 +271,7 @@ void checkUDP()
               default:
               {
                 struct EventStruct TempEvent;
-                TempEvent.Data = reinterpret_cast<byte *>(&packetBuffer[0]);
+                TempEvent.Data = reinterpret_cast<uint8_t *>(&packetBuffer[0]);
                 TempEvent.Par1 = remoteIP[3];
                 TempEvent.Par2 = len;
                 String dummy;
@@ -297,7 +297,7 @@ void checkUDP()
 /*********************************************************************************************\
    Send event using UDP message
 \*********************************************************************************************/
-void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
+void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -305,12 +305,12 @@ void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
 
   if (destUnit != 0)
   {
-    sendUDP(destUnit, (const byte *)data, dataLength);
+    sendUDP(destUnit, (const uint8_t *)data, dataLength);
     delay(10);
   } else {
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
-        sendUDP(it->first, (const byte *)data, dataLength);
+        sendUDP(it->first, (const uint8_t *)data, dataLength);
         delay(10);
       }
     }
@@ -322,7 +322,7 @@ void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
    Get formatted IP address for unit
    formatcodes: 0 = default toString(), 1 = empty string when invalid, 2 = 0 when invalid
 \*********************************************************************************************/
-String formatUnitToIPAddress(byte unit, byte formatCode) {
+String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
   IPAddress unitIPAddress = getIPAddressForUnit(unit);
 
   if (unitIPAddress[0] == 0) { // Invalid?
@@ -343,7 +343,7 @@ String formatUnitToIPAddress(byte unit, byte formatCode) {
 /*********************************************************************************************\
    Get IP address for unit
 \*********************************************************************************************/
-IPAddress getIPAddressForUnit(byte unit) {
+IPAddress getIPAddressForUnit(uint8_t unit) {
   IPAddress remoteNodeIP;
 
   if (unit == 255) {
@@ -367,7 +367,7 @@ IPAddress getIPAddressForUnit(byte unit) {
 /*********************************************************************************************\
    Send UDP message (unit 255=broadcast)
 \*********************************************************************************************/
-void sendUDP(byte unit, const byte *data, byte size)
+void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -435,7 +435,7 @@ void refreshNodeList()
 /*********************************************************************************************\
    Broadcast system info to other nodes. (to update node lists)
 \*********************************************************************************************/
-void sendSysInfoUDP(byte repeats)
+void sendSysInfoUDP(uint8_t repeats)
 {
   if ((Settings.UDPPort == 0) || !NetworkConnected(10)) {
     return;
@@ -629,7 +629,7 @@ bool SSDP_begin() {
 /********************************************************************************************\
    Send SSDP messages (notify & responses)
  \*********************************************************************************************/
-void SSDP_send(byte method) {
+void SSDP_send(uint8_t method) {
   uint32_t ip = NetworkLocalIP();
 
   // FIXME TD-er: Why create String objects of these flashstrings?
@@ -849,7 +849,7 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
   high = ip;
 
   // Compute subnet range.
-  for (byte i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < 4; ++i) {
     if (subnet[i] != 255) {
       low[i]  = low[i] & subnet[i];
       high[i] = high[i] | ~subnet[i];
@@ -929,7 +929,7 @@ bool hostReachable(const IPAddress& ip) {
 
   /*
      // Only do 1 ping at a time to return early
-     byte retry = 3;
+     uint8_t retry = 3;
      while (retry > 0) {
    #if defined(ESP8266)
       if (Ping.ping(ip, 1)) return true;

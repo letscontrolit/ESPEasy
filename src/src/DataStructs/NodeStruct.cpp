@@ -19,7 +19,7 @@ bool NodeStruct::validate() {
   if (build < 20107) {
     // webserverPort introduced in 20107
     webgui_portnumber = 80;
-    for (byte i = 0; i < 6; ++i) {
+    for (uint8_t i = 0; i < 6; ++i) {
       ap_mac[i] = 0;
     }
     load              = 0;
@@ -88,7 +88,7 @@ bool NodeStruct::operator<(const NodeStruct &other) const {
 }
 
 
-const __FlashStringHelper * NodeStruct::getNodeTypeDisplayString(byte nodeType) {
+const __FlashStringHelper * NodeStruct::getNodeTypeDisplayString(uint8_t nodeType) {
   switch (nodeType)
   {
     case NODE_TYPE_ID_ESP_EASY_STD:     return F("ESP Easy");

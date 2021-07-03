@@ -181,7 +181,7 @@ struct P077_data_struct : public PluginTaskData_base {
 
 
 
-boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
+boolean Plugin_077(uint8_t function, struct EventStruct *event, String &string) {
   boolean success = false;
 
   switch (function) {

@@ -70,7 +70,7 @@ private:
   void purge_unusable();
 
   // Load SSID and pass/key from the settings.
-  bool get_SSID_key(byte    index,
+  bool get_SSID_key(uint8_t    index,
                     String& ssid,
                     String& key) const;
 

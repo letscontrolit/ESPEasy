@@ -106,7 +106,7 @@ bool    validatePort(const String& portStr);
 
 // ************************************************************************************************
 
-boolean Plugin_101(byte function, struct EventStruct *event, String& string)
+boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -263,7 +263,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       }
 
       // Save all the Task parameters.
-      SaveCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemplate, sizeof(deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemplate, sizeof(deviceTemplate));
       UDP_PORT_P101 = getFormItemInt(F(FORM_PORT_P101));
       success       = true;
       break;
@@ -283,7 +283,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       char   ipString[IP_BUFF_SIZE_P101]   = "";
       char   macString[MAC_BUFF_SIZE_P101] = "";
       bool   taskEnable                    = false;
-      byte   parse_error                   = false;
+      uint8_t   parse_error                   = false;
       String msgStr;
       String strings[2];
       String tmpString    = string;

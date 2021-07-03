@@ -19,6 +19,12 @@ public:
   static void breakTime(unsigned long timeInput,
                         struct tm   & tm);
 
+// Restore the last known system time
+// This may be useful to get some idea of what time it is.
+// This way the unit can do things based on local time even when NTP servers may not respond.
+// Do not use this when booting from deep sleep.
+// Only call this once during boot.
+void restoreLastKnownUnixTime(unsigned long lastSysTime, uint8_t deepSleepState);
 
   // Restore the last known system time
   // This may be useful to get some idea of what time it is.
@@ -104,31 +110,31 @@ int year() const
 }
 
 // Get current month
-byte month() const 
+uint8_t month() const 
 {
   return tm.tm_mon + 1; // tm_mon starts at 0
 }
 
 // Get current day of the month
-byte day() const 
+uint8_t day() const 
 {
   return tm.tm_mday;
 }
 
 // Get current hour
-byte hour() const 
+uint8_t hour() const 
 {
   return tm.tm_hour;
 }
 
 // Get current minute
-byte minute() const 
+uint8_t minute() const 
 {
   return tm.tm_min;
 }
 
 // Get current second
-byte second() const 
+uint8_t second() const 
 {
   return tm.tm_sec;
 }
@@ -189,7 +195,7 @@ public:
   struct tm sunSet;
   timeSource_t timeSource = timeSource_t::No_time_source;
 
-  byte PrevMinutes = 0;
+  uint8_t PrevMinutes = 0;
 };
 
 

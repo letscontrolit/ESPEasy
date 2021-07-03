@@ -130,7 +130,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
   switch (varType) {
     case ControllerSettingsStruct::CONTROLLER_USE_DNS:
     {
-      byte   choice = ControllerSettings.UseDNS;
+      uint8_t   choice = ControllerSettings.UseDNS;
       const __FlashStringHelper * options[2];
       options[0] = F("Use IP address");
       options[1] = F("Use Hostname");
@@ -290,7 +290,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
         IPAddress IP;
         resolveHostByName(ControllerSettings.HostName, IP, ControllerSettings.ClientTimeout);
 
-        for (byte x = 0; x < 4; x++) {
+        for (uint8_t x = 0; x < 4; x++) {
           ControllerSettings.IP[x] = IP[x];
         }
       }

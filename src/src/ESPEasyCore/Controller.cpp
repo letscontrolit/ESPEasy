@@ -124,7 +124,7 @@ bool validUserVar(struct EventStruct *event) {
     default:
       break;
   }
-  byte valueCount = getValueCountForTask(event->TaskIndex);
+  uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);
@@ -141,7 +141,7 @@ bool validUserVar(struct EventStruct *event) {
 \*********************************************************************************************/
 
 // handle MQTT messages
-void incoming_mqtt_callback(char *c_topic, byte *b_payload, unsigned int length) {
+void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int length) {
   statusLED(true);
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
@@ -263,7 +263,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   delay(0);
 
 
-  byte controller_number = Settings.Protocol[controller_idx];
+  uint8_t controller_number = Settings.Protocol[controller_idx];
 
   count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number);
 
@@ -672,7 +672,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
 
     float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
 
-    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++) {
+    for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
       preValue[varNr] = UserVar[TempEvent.BaseVarIndex + varNr];
     }
 
@@ -690,7 +690,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
       if (Device[DeviceIndex].FormulaOption) {
         START_TIMER;
 
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
           if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
           {

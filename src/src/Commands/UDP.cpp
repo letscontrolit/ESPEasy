@@ -15,7 +15,7 @@
 
 const __FlashStringHelper * Command_UDP_Test(struct EventStruct *event, const char *Line)
 {
-  for (byte x = 0; x < event->Par2; x++)
+  for (uint8_t x = 0; x < event->Par2; x++)
   {
     String eventName = "Test ";
     eventName += x;

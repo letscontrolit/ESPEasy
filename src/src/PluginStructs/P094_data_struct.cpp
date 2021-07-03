@@ -172,7 +172,7 @@ void P094_data_struct::setMaxLength(uint16_t maxlenght) {
   max_length = maxlenght;
 }
 
-void P094_data_struct::setLine(byte varNr, const String& line) {
+void P094_data_struct::setLine(uint8_t varNr, const String& line) {
   if (varNr < P94_Nlines) {
     _lines[varNr] = line;
   }

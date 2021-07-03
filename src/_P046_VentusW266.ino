@@ -52,14 +52,14 @@
 //  0 1 2  3  4 5  6  7 8  9  0 1 2 3  4 5 6  7  8 9  0 1 2
 // hh=header > This is actually not part of the real payload but a wanted artifact of the sniffing method.
 // hh=humidity (bcd) > Humidity is bcd encoded
-// tlth=temperature-low/temphigh (*10) > Temperature is stored as a 16bit integer holding the temperature in Celsius * 10 but low byte first.
-// b=battery (1=low) > This byte is 00 but 01 when the battery of the transmitter runs low
+// tlth=temperature-low/temphigh (*10) > Temperature is stored as a 16bit integer holding the temperature in Celsius * 10 but low uint8_t first.
+// b=battery (1=low) > This uint8_t is 00 but 01 when the battery of the transmitter runs low
 // wb=bearing (cw0-15) > The windbearing in 16 clockwise steps (0 = north, 4 = east, 8 = south and C = west)
-// alah=windaverage-low/high (m/s/2) > A 16 bit int holding the wind avarage in m/s * 2, low byte first
-// rlrh=rainfall-low/high (1/4mm) > A 16 bit int holding the wind gust in m/s * 2, low byte first
+// alah=windaverage-low/high (m/s/2) > A 16 bit int holding the wind avarage in m/s * 2, low uint8_t first
+// rlrh=rainfall-low/high (1/4mm) > A 16 bit int holding the wind gust in m/s * 2, low uint8_t first
 // uv=uvindex (*10) > The UV value * 10
 // ld=lightningstorm-distance (km, 3F is max) > The distance to the stormfront in km
-// lllh=strikecount-low/high (#) > A 16 bit integer holding the number of detected lightning strikes, low byte first
+// lllh=strikecount-low/high (#) > A 16 bit integer holding the number of detected lightning strikes, low uint8_t first
 // crc > poly 0x31, init 0xff, revin&revout, xorout 0x00. Like Maxim 1-wire but with a 0xff initvalue. Crc is calculated over bytes 1-22
 
 // Events:
@@ -91,7 +91,7 @@
 #define PLUGIN_VALUENAME2_046       ""
 #define PLUGIN_VALUENAME3_046       ""
 
-#define Plugin_046_MagicByte        0x7F                        // When we read this byte on MOSI, switch to MISO
+#define Plugin_046_MagicByte        0x7F                        // When we read this uint8_t on MOSI, switch to MISO
 #define Plugin_046_RAW_BUFFER_SIZE  24                          // Payload is 23 bytes, added space for header
 #define Plugin_046_Payload          23
 
@@ -101,15 +101,15 @@ struct P046_data_struct {
   int8_t Plugin_046_nSELpin = -1;
   int8_t Plugin_046_MISOpin = -1;
                                                                   // Vars used in data collection:
-  byte Plugin_046_ISR_Buffer[Plugin_046_RAW_BUFFER_SIZE];         // Buffer used in ISR routine
-  //Test data: volatile byte Plugin_046_databuffer[] = {0x7F, 0x98, 0x33, 0x1A, 0xB0, 0x00, 0x00, 0xB0, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x3F, 0x8A, 0x25, 0x00, 0x49, 0x00}; // Buffer used by other instances
-  byte Plugin_046_databuffer[Plugin_046_RAW_BUFFER_SIZE];         // Buffer used by other instances
+  uint8_t Plugin_046_ISR_Buffer[Plugin_046_RAW_BUFFER_SIZE];         // Buffer used in ISR routine
+  //Test data: volatile uint8_t Plugin_046_databuffer[] = {0x7F, 0x98, 0x33, 0x1A, 0xB0, 0x00, 0x00, 0xB0, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x3F, 0x8A, 0x25, 0x00, 0x49, 0x00}; // Buffer used by other instances
+  uint8_t Plugin_046_databuffer[Plugin_046_RAW_BUFFER_SIZE];         // Buffer used by other instances
   bool Plugin_046_ReceiveActive = false;                          // Active session in progress
   bool Plugin_046_MasterSlave = false;                            // Which pin o read? false=MOSI, true=MISO
   bool Plugin_046_newData = false;                                // "Valid" data ready, please process
-  byte Plugin_046_bitpointer;                                     // Pointer for received bit
-  byte Plugin_046_bytepointer;                                    // Pointer for ISR receive buffer
-  byte Plugin_046_receivedData;                                   // Byte to store received bits
+  uint8_t Plugin_046_bitpointer;                                     // Pointer for received bit
+  uint8_t Plugin_046_bytepointer;                                    // Pointer for ISR receive buffer
+  uint8_t Plugin_046_receivedData;                                   // Byte to store received bits
 
 };
 
@@ -130,7 +130,7 @@ volatile int Plugin_046_strikesph = 0;
 void Plugin_046_ISR_nSEL() ICACHE_RAM_ATTR;                     // Interrupt routines
 void Plugin_046_ISR_SCLK() ICACHE_RAM_ATTR;
 
-boolean Plugin_046(byte function, struct EventStruct *event, String& string)
+boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -152,9 +152,9 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte choice = PCONFIG(0);
+        uint8_t choice = PCONFIG(0);
         {
-          const byte nrchoices = 9;
+          const uint8_t nrchoices = 9;
           const __FlashStringHelper * options[nrchoices];
           options[0] = F("Main + Temp/Hygro");
           options[1] = F("Wind");
@@ -163,9 +163,9 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
           options[4] = F("Lightning strikes");
           options[5] = F("Lightning distance");
 
-          options[6] = F("Unknown 1, byte 6");
-          options[7] = F("Unknown 2, byte 16");
-          options[8] = F("Unknown 3, byte 19");
+          options[6] = F("Unknown 1, uint8_t 6");
+          options[7] = F("Unknown 2, uint8_t 16");
+          options[8] = F("Unknown 3, uint8_t 19");
 
           addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, NULL, choice);
         }
@@ -282,7 +282,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
           P046_data = new P046_data_struct();
         }
 
-        byte choice = PCONFIG(0);
+        uint8_t choice = PCONFIG(0);
         switch (choice)
         {
           case (0):
@@ -373,7 +373,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
         if (P046_data->Plugin_046_databuffer[0] == Plugin_046_MagicByte) // buffer[0] should be the MagicByte if valid
         {
           UserVar[event->BaseVarIndex + 1] = 0;
-          byte choice = PCONFIG(0);   // Which instance?
+          uint8_t choice = PCONFIG(0);   // Which instance?
           switch (choice)
           {
             case (0):
@@ -381,7 +381,7 @@ boolean Plugin_046(byte function, struct EventStruct *event, String& string)
               int myTemp = int((P046_data->Plugin_046_databuffer[5] * 256) + P046_data->Plugin_046_databuffer[4]);
               if (myTemp > 0x8000) { myTemp |= 0xffff0000; }                    // int @ esp8266 = 32 bits!
               float temperature = float(myTemp) / 10.0f; // Temperature
-              byte myHum = (P046_data->Plugin_046_databuffer[2] >> 4) * 10 + (P046_data->Plugin_046_databuffer[2] & 0x0f);
+              uint8_t myHum = (P046_data->Plugin_046_databuffer[2] >> 4) * 10 + (P046_data->Plugin_046_databuffer[2] & 0x0f);
               float humidity = float(myHum);
               UserVar[event->BaseVarIndex] = temperature;
               UserVar[event->BaseVarIndex + 1] = humidity;
@@ -516,7 +516,7 @@ void Plugin_046_ISR_SCLK()                                      // Interrupt on 
           P046_data->Plugin_046_MasterSlave = true;
         }
         P046_data->Plugin_046_ISR_Buffer[P046_data->Plugin_046_bytepointer] = P046_data->Plugin_046_receivedData;
-        P046_data->Plugin_046_bytepointer++;                               // TReady for the next byte ...
+        P046_data->Plugin_046_bytepointer++;                               // TReady for the next uint8_t ...
         if (P046_data->Plugin_046_bytepointer > Plugin_046_RAW_BUFFER_SIZE) {
           P046_data->Plugin_046_ReceiveActive = false;                     // We don't want a bufferoverflow, so abort
           P046_data->Plugin_046_MasterSlave = false;

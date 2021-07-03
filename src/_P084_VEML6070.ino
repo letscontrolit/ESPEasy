@@ -32,7 +32,7 @@
 #define VEML6070_base_value ((VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT) * (1)
 #define VEML6070_max_value  ((VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT) * (VEML6070_UV_MAX_INDEX)
 
-boolean Plugin_084(byte function, struct EventStruct *event, String& string)
+boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -153,7 +153,7 @@ uint16_t VEML6070_ReadUv(bool *status)
   return uv_raw;
 }
 
-bool VEML6070_Init(byte it)
+bool VEML6070_Init(uint8_t it)
 {
   boolean succes = I2C_write8(VEML6070_ADDR_L, ((it << 2) | 0x02));
 

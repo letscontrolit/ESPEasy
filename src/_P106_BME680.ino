@@ -27,7 +27,7 @@
 # define PLUGIN_VALUENAME4_106 "Gas"
 
 
-boolean Plugin_106(byte function, struct EventStruct *event, String& string)
+boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -66,7 +66,7 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
+      uint8_t choice = PCONFIG(0);
 
       /*
          String options[2];

@@ -147,7 +147,7 @@ struct ControllerSettingsStruct
   void      deduplicate(bool value);
 
   bool         UseDNS;
-  byte         IP[4];
+  uint8_t      IP[4];
   unsigned int Port;
   char         HostName[65];
   char         Publish[129];

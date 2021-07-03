@@ -24,10 +24,10 @@ void handle_dumpcache() {
 
   C016_startCSVdump();
   unsigned long timestamp;
-  byte  controller_idx;
-  byte  TaskIndex;
+  uint8_t  controller_idx;
+  uint8_t  TaskIndex;
   Sensor_VType  sensorType;
-  byte  valueCount;
+  uint8_t  valueCount;
   float val1;
   float val2;
   float val3;
@@ -62,7 +62,7 @@ void handle_dumpcache() {
       html += ';';
       html += controller_idx;
       html += ';';
-      html += static_cast<byte>(sensorType);
+      html += static_cast<uint8_t>(sensorType);
       html += ';';
       html += TaskIndex;
       html += ';';

@@ -484,7 +484,7 @@ void logTimerStatistics() {
     firstRun = false;
   }
 
-  byte loglevel = LOG_LEVEL_DEBUG;
+  uint8_t loglevel = LOG_LEVEL_DEBUG;
   updateLoopStats_30sec(loglevel);
 #ifndef BUILD_NO_DEBUG
 //  logStatistics(loglevel, true);
@@ -496,7 +496,7 @@ void logTimerStatistics() {
 #endif
 }
 
-void updateLoopStats_30sec(byte loglevel) {
+void updateLoopStats_30sec(uint8_t loglevel) {
   loopCounterLast = loopCounter;
   loopCounter = 0;
   if (loopCounterLast > loopCounterMax)

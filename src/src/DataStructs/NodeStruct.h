@@ -35,7 +35,7 @@ struct __attribute__((__packed__)) NodeStruct
   // - lower load (TODO TD-er)
   bool operator<(const NodeStruct &other) const;
 
-  static const __FlashStringHelper * getNodeTypeDisplayString(byte nodeType);
+  static const __FlashStringHelper * getNodeTypeDisplayString(uint8_t nodeType);
   String        getNodeTypeDisplayString() const;
 
   String        getNodeName() const;
@@ -86,10 +86,10 @@ struct __attribute__((__packed__)) NodeStruct
 
   uint8_t  sta_mac[6]        = { 0 }; // STA mode MAC
   uint8_t  ip[4]             = { 0 };
-  byte     unit              = 0;
+  uint8_t  unit              = 0;
   uint16_t build             = 0;
-  byte     nodeName[25]      = { 0 };
-  byte     nodeType          = 0;
+  uint8_t  nodeName[25]      = { 0 };
+  uint8_t  nodeType          = 0;
   uint16_t webgui_portnumber = 80;
   uint8_t  ap_mac[6]         = { 0 }; // AP mode MAC
   uint8_t  load              = 127;   // Default to average load
@@ -104,7 +104,7 @@ struct __attribute__((__packed__)) NodeStruct
   // When kept as node info, this is the last time stamp the node info was updated.
   unsigned long lastUpdated = (1 << 30);
 };
-typedef std::map<byte, NodeStruct> NodesMap;
+typedef std::map<uint8_t, NodeStruct> NodesMap;
 
 
 #endif // DATASTRUCTS_NODESTRUCT_H

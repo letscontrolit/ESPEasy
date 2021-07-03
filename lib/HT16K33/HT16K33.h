@@ -26,7 +26,7 @@ protected:
   uint8_t _addr;
   uint16_t _rowBuffer[8];
   uint16_t _keyBuffer[3];
-  byte _keydown;
+  uint8_t _keydown;
 
   static const uint8_t _digits[16];
 };

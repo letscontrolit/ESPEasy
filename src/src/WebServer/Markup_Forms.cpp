@@ -104,11 +104,11 @@ void addFormNumericBox(const String& label, const String& id, int value, int min
   addNumericBox(id, value, min, max);
 }
 
-void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals, float stepsize) {
+void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, uint8_t nrDecimals, float stepsize) {
   addFormFloatNumberBox(getLabel(label), getInternalLabel(label), value, min, max, nrDecimals, stepsize);
 }
 
-void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, byte nrDecimals, float stepsize)
+void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, uint8_t nrDecimals, float stepsize)
 {
   addRowLabel_tr_id(label, id);
   addFloatNumberBox(id, value, min, max, nrDecimals, stepsize);
@@ -190,7 +190,7 @@ bool getFormPassword(const String& id, String& password)
 // Add a IP Box form
 // ********************************************************************************
 
-void addFormIPBox(const String& label, const String& id, const byte ip[4])
+void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
 {
   bool empty_IP = (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
 
@@ -261,7 +261,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
   addRowLabel_tr_id(F("I2C Address"), id);
   do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false);
 
-  for (byte x = 0; x < addressCount; x++)
+  for (uint8_t x = 0; x < addressCount; x++)
   {
     String option = formatToHex_decimal(addresses[x]);
 
@@ -463,7 +463,7 @@ bool update_whenset_FormItemInt(const String& key, int& value) {
   return false;
 }
 
-bool update_whenset_FormItemInt(const String& key, byte& value) {
+bool update_whenset_FormItemInt(const String& key, uint8_t& value) {
   int tmpVal;
 
   if (getCheckWebserverArg_int(key, tmpVal)) {
