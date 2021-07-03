@@ -5,7 +5,7 @@
 #ifdef USES_P104
 
 # define P104_DEBUG     // Log some extra (tech) data, also useful during development
-# define P104_DEBUG_DEV // Log some extra development info
+// # define P104_DEBUG_DEV // Log some extra development info
 
 # include "../CustomBuild/StorageLayout.h"
 # include "src/Globals/EventQueue.h"
@@ -27,6 +27,8 @@
 # define P104_USE_COMMANDS                                  // Enables the use of all commands, not just clear, txt, settxt and update
 # define P104_USE_DATETIME_OPTIONS                          // Enables extra date/time options
 # define P104_USE_BAR_GRAPH                                 // Enables the use of Bar-graph feature
+# define P104_USE_ZONE_ACTIONS                              // Enables the use of Actions per zone (New above/New below/Delete)
+# define P104_USE_ZONE_ORDERING                             // Enables the use of Zone ordering (Numeric order (1..n)/Display order (n..1))
 
 # define P104_ADD_SETTINGS_NOTES                            // Adds some notes on the Settings page
 
@@ -161,8 +163,9 @@
 # define P104_OFFSET_OFFSET       11u
 # define P104_OFFSET_BRIGHTNESS   12u
 # define P104_OFFSET_REPEATDELAY  13u
+# define P104_OFFSET_ACTION       14u
 
-# define P104_OFFSET_COUNT        14u // Highest P104_OFFSET_* defined + 1
+# define P104_OFFSET_COUNT        15u // Highest P104_OFFSET_* defined + 1
 
 # define P104_CONFIG_ZONE_COUNT   PCONFIG(0)
 # define P104_CONFIG_TOTAL_UNITS  PCONFIG(1)
@@ -172,6 +175,7 @@
 
 # define P104_CONFIG_FLAG_CLEAR_DISABLE 0
 # define P104_CONFIG_FLAG_LOG_ALL_TEXT  1
+# define P104_CONFIG_FLAG_ZONE_ORDER    2
 
 # define P104_CONFIG_DATETIME_FLASH     0
 # define P104_CONFIG_DATETIME_12H       1
@@ -188,6 +192,11 @@
 # define P104_DATE_SEPARATOR_SLASH  1
 # define P104_DATE_SEPARATOR_DASH   2
 # define P104_DATE_SEPARATOR_DOT    3
+
+# define P104_ACTION_NONE         0
+# define P104_ACTION_ADD_ABOVE    1
+# define P104_ACTION_ADD_BELOW    2
+# define P104_ACTION_DELETE       3
 
 # define P104_CONTENT_TEXT        0
 # define P104_CONTENT_TIME        1
@@ -283,7 +292,22 @@
 # endif // ifdef P104_USE_KATAKANA_FONT
 
 struct P104_zone_struct {
-  P104_zone_struct(uint8_t _zone) : zone(_zone) {}
+  P104_zone_struct(uint8_t _zone) : zone(_zone) {
+    size          = 0u;
+    text          = F("");
+    alignment     = 0u;
+    animationIn   = 1u; // Doesn't allow 'None'
+    speed         = 0u;
+    animationOut  = 0u;
+    pause         = 0u;
+    font          = 0u;
+    content       = 0u;
+    layout        = 0u;
+    specialEffect = 0u;
+    offset        = 0u;
+    brightness    = 7u;
+    repeatDelay   = -1;
+  }
 
   uint8_t  zone;
   uint8_t  size;
@@ -328,7 +352,7 @@ struct P104_data_struct : public PluginTaskData_base {
   P104_data_struct(MD_MAX72XX::moduleType_t _mod,
                    taskIndex_t              _taskIndex,
                    int8_t                   _cs_pin,
-                   byte                     _modules);
+                   uint8_t                  _modules);
 
   bool   begin();
   void   loadSettings();
@@ -366,6 +390,14 @@ private:
   void modulesOnOff(uint8_t                    start,
                     uint8_t                    end,
                     MD_MAX72XX::controlValue_t on_off);
+  void drawOneBarGraph(uint16_t lower,
+                       uint16_t upper,
+                       int16_t  pixBottom,
+                       int16_t  pixTop,
+                       uint16_t zeroPoint,
+                       uint8_t  barWidth,
+                       uint8_t  barType,
+                       uint8_t  row);
   # endif // ifdef P104_USE_BAR_GRAPH
 
   void displayOneZoneText(uint8_t                 currentZone,
@@ -381,6 +413,7 @@ private:
   int8_t  expectedZones = -1;
   int8_t  previousZones = -1;
   uint8_t numDevices    = 0;
+  uint8_t zoneOrder     = 0;
 
   String error;
 

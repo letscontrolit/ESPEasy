@@ -67,7 +67,7 @@ bool P104_data_struct::begin() {
  *************************************/
 void P104_data_struct::loadSettings() {
   if (taskIndex < TASKS_MAX) {
-    LoadCustomTaskSettings(taskIndex, (byte *)&StoredSettings, sizeof(StoredSettings.bufferSize));
+    LoadCustomTaskSettings(taskIndex, (uint8_t *)&StoredSettings, sizeof(StoredSettings.bufferSize));
     uint16_t structDataSize = StoredSettings.bufferSize + sizeof(StoredSettings.bufferSize);
     # ifdef P104_DEBUG_DEV
     String log;
@@ -81,7 +81,7 @@ void P104_data_struct::loadSettings() {
       addLog(LOG_LEVEL_INFO, log);
     }
     # endif // ifdef P104_DEBUG_DEV
-    LoadCustomTaskSettings(taskIndex, (byte *)&StoredSettings, structDataSize); // Read only actual data
+    LoadCustomTaskSettings(taskIndex, (uint8_t *)&StoredSettings, structDataSize); // Read only actual data
     StoredSettings.buffer[StoredSettings.bufferSize + 1] = '\0';                // Terminate string
 
     uint8_t zoneIndex = 0;
@@ -216,19 +216,6 @@ void P104_data_struct::loadSettings() {
     while (zoneIndex < expectedZones) {
       zones.push_back(P104_zone_struct(zoneIndex + 1));
 
-      zones[zoneIndex].size          = 0u;
-      zones[zoneIndex].alignment     = 0u;
-      zones[zoneIndex].animationIn   = 1u; // Doesn't allow 'None'
-      zones[zoneIndex].speed         = 0u;
-      zones[zoneIndex].animationOut  = 0u;
-      zones[zoneIndex].pause         = 0u;
-      zones[zoneIndex].font          = 0u;
-      zones[zoneIndex].content       = 0u;
-      zones[zoneIndex].layout        = 0u;
-      zones[zoneIndex].specialEffect = 0u;
-      zones[zoneIndex].offset        = 0u;
-      zones[zoneIndex].brightness    = 7u; // Average brightness 1..15
-      zones[zoneIndex].repeatDelay   = -1; // Off by default
       zoneIndex++;
       delay(0);
     }
@@ -353,6 +340,13 @@ void P104_data_struct::configureZones() {
         displayOneZoneText(currentZone, *it, it->text);
       }
 
+      # ifdef P104_USE_BAR_GRAPH
+      // Content == Bar-graph && text != ""
+      if ((it->content == P104_CONTENT_BAR_GRAPH) && (!it->text.isEmpty())) {
+        displayBarGraph(currentZone, *it, it->text);
+      }
+      # endif // ifdef P104_USE_BAR_GRAPH
+
       if (it->repeatDelay > -1) {
         it->_repeatTimer = millis();
       }
@@ -458,6 +452,39 @@ void P104_data_struct::modulesOnOff(uint8_t start, uint8_t end, MD_MAX72XX::cont
   }
 }
 
+/********************************************************
+ * draw a single bar-graph, arguments already adjusted for direction
+ *******************************************************/
+void P104_data_struct::drawOneBarGraph(uint16_t lower,
+                                       uint16_t upper,
+                                       int16_t  pixBottom,
+                                       int16_t  pixTop,
+                                       uint16_t zeroPoint,
+                                       uint8_t  barWidth,
+                                       uint8_t  barType,
+                                       uint8_t  row) {
+  bool on_off;
+  for (uint8_t r = 0; r < barWidth; r++) {
+    for (uint8_t col = lower; col <= upper; col++) {
+      on_off = (col >= pixBottom && col <= pixTop); // valid area
+      if (zeroPoint != 0 &&
+          barType == P104_BARTYPE_STANDARD &&
+          barWidth > 2 &&
+          (r == 0 || r == barWidth - 1) &&
+          col == lower + zeroPoint) {
+        on_off = false; // when bar wider than 2, turn off zeropoint top and bottom led
+      }
+      if (barType == P104_BARTYPE_SINGLE && r > 0) {
+        on_off = false; // barType 1 = only a single line is drawn, independent of the width
+      }
+      if (barType == P104_BARTYPE_ALT_DOT && barWidth > 1 && on_off) {
+        on_off = ((r % 2) == (col % 2)); // barType 2 = dotted line when bar is wider than 1 pixel
+      }
+      pM->setPoint(row + r, col, on_off);
+    }
+  }
+}
+
 /********************************************************************
  * Process a graph-string to display in a zone, format:
  * value,max-value,min-value,direction,bartype|...
@@ -549,9 +576,9 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
   }
   # undef NOT_A_COMMA
   if (barGraphs.size() > 0) {
-    uint8_t barWidth = 8 / barGraphs.size(); // Divide the 8 pixel width per number of bars to show
-    uint8_t pixTop, pixBottom;
-    uint8_t zeroPoint;
+    uint8_t  barWidth = 8 / barGraphs.size(); // Divide the 8 pixel width per number of bars to show
+    int16_t  pixTop, pixBottom;
+    uint16_t zeroPoint;
     #ifdef P104_DEBUG
     String log;
     if (logAllText && 
@@ -592,12 +619,14 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
           std::swap(pixTop, pixBottom);
         }
       }
-      if (it->direction == 1) { // Left to right display: Flip values
+      if (it->direction == 1) { // Left to right display: Flip values within the lower/upper range
         pixBottom = zstruct._upper - (pixBottom - zstruct._lower);
         pixTop    = zstruct._lower + (zstruct._upper - pixTop);
+        std::swap(pixBottom, pixTop);
+        zeroPoint = zstruct._upper - zstruct._lower - zeroPoint + (zeroPoint == 0 ? 1 : 0);
       }
       #ifdef P104_DEBUG_DEV
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
         log += F(" B: ");
         log += pixBottom;
         log += F(" T: ");
@@ -606,47 +635,7 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
         log += zeroPoint;
       }
       #endif // ifdef P104_DEBUG_DEV
-      bool on_off;
-      for (uint8_t r = 0; r < barWidth; r++) {
-        // FIXME tonhuisman: Refactor into a single for loop to reduce codesize
-        if (it->direction == 0) { // Right to left display
-          for (uint8_t col = zstruct._lower; col <= zstruct._upper; col++) {
-            on_off = (col >= pixBottom && col <= pixTop); // valid area
-            if (zeroPoint != 0 &&
-                it->barType == P104_BARTYPE_STANDARD &&
-                barWidth > 2 &&
-                (r == 0 || r == barWidth - 1) &&
-                col == zstruct._lower + zeroPoint) {
-              on_off = false; // when bar wider than 2, turn off zeropoint top and bottom led
-            }
-            if (it->barType == P104_BARTYPE_SINGLE && r > 0) {
-              on_off = false; // barType 1 = only a single line is drawn, independent of the width
-            }
-            if (it->barType == P104_BARTYPE_ALT_DOT && barWidth > 1 && on_off) {
-              on_off = ((r % 2) == (col % 2)); // barType 2 = dotted line when bar is wider than 1 pixel
-            }
-            pM->setPoint(row + r, col, on_off);
-          }
-        } else { // Left to right
-          for (uint8_t col = zstruct._upper; col >= zstruct._lower; col--) {
-            on_off = (col <= pixBottom && col >= pixTop); // valid area
-            if (zeroPoint != 0 &&
-                it->barType == P104_BARTYPE_STANDARD &&
-                barWidth > 2 &&
-                (r == 0 || r == barWidth - 1) &&
-                col == zstruct._upper - zeroPoint) {
-              on_off = false; // barType 0 = when bar wider than 2, turn off zeropoint top and bottom led
-            }
-            if (it->barType == P104_BARTYPE_SINGLE && r > 0) {
-              on_off = false; // barType 1 = only a single line is drawn, independent of the width
-            }
-            if (it->barType == P104_BARTYPE_ALT_DOT && barWidth > 1 && on_off) {
-              on_off = ((r % 2) == (col % 2)); // barType 2 = dotted line when bar is wider than 1 pixel
-            }
-            pM->setPoint(row + r, col, on_off);
-          }
-        }
-      }
+      drawOneBarGraph(zstruct._lower, zstruct._upper, pixBottom, pixTop, zeroPoint, barWidth, it->barType, row);
       row += barWidth; // Next set of rows
     }
     for (; row < 8; row++) { // Clear unused rows
@@ -1234,16 +1223,6 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
           it->_lastChecked = m;
           break;
         }
-        # ifdef P104_USE_BAR_GRAPH
-        case P104_CONTENT_BAR_GRAPH:
-        {
-          if (!it->text.isEmpty() || !sZoneInitial[it->zone - 1].isEmpty()) {
-            displayBarGraph(it->zone - 1, *it, !sZoneInitial[it->zone - 1].isEmpty() ? sZoneInitial[it->zone - 1] : it->text);
-            success = true;
-          }
-          break;
-        }
-        # endif // ifdef P104_USE_BAR_GRAPH
         default:
           break;
       }
@@ -1359,43 +1338,80 @@ bool P104_data_struct::saveSettings() {
   }
   # endif // ifdef P104_DEBUG_DEV
 
-  uint8_t zoneIndexP1;
-  uint8_t index = 0;
+  uint8_t index      = 0;
+  uint8_t action     = 0;
+  uint8_t zoneIndex  = 0;
+  int8_t  zoneOffset = 0;
 
   zones.clear(); // Start afresh
 
-  for (uint8_t zoneIndex = 0; zoneIndex < expectedZones; zoneIndex++) {
-    zoneIndexP1 = zoneIndex + 1;
-    zones.push_back(P104_zone_struct(zoneIndexP1));
+  for (uint8_t zCounter = 0; zCounter < expectedZones; zCounter++) {
+    #ifdef P104_USE_ZONE_ACTIONS
+    action = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_ACTION));
 
-    zones[zoneIndex].size          = getFormItemIntCustomArgName(index + P104_OFFSET_SIZE);
-    zones[zoneIndex].text          = enquoteString(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
-    zones[zoneIndex].content       = getFormItemIntCustomArgName(index + P104_OFFSET_CONTENT);
-    zones[zoneIndex].alignment     = getFormItemIntCustomArgName(index + P104_OFFSET_ALIGNMENT);
-    zones[zoneIndex].animationIn   = getFormItemIntCustomArgName(index + P104_OFFSET_ANIM_IN);
-    zones[zoneIndex].speed         = getFormItemIntCustomArgName(index + P104_OFFSET_SPEED);
-    zones[zoneIndex].animationOut  = getFormItemIntCustomArgName(index + P104_OFFSET_ANIM_OUT);
-    zones[zoneIndex].pause         = getFormItemIntCustomArgName(index + P104_OFFSET_PAUSE);
-    zones[zoneIndex].font          = getFormItemIntCustomArgName(index + P104_OFFSET_FONT);
-    zones[zoneIndex].layout        = getFormItemIntCustomArgName(index + P104_OFFSET_LAYOUT);
-    zones[zoneIndex].specialEffect = getFormItemIntCustomArgName(index + P104_OFFSET_SPEC_EFFECT);
-    zones[zoneIndex].offset        = getFormItemIntCustomArgName(index + P104_OFFSET_OFFSET);
+    if ((action == P104_ACTION_ADD_ABOVE && zoneOrder == 0) ||
+        (action == P104_ACTION_ADD_BELOW && zoneOrder == 1)) {
+      zones.push_back(P104_zone_struct(0));
+      zoneOffset++;
+      # ifdef P104_DEBUG_DEV
 
-    if (zoneIndex < previousZones) {
-      zones[zoneIndex].brightness  = getFormItemIntCustomArgName(index + P104_OFFSET_BRIGHTNESS);
-      zones[zoneIndex].repeatDelay = getFormItemIntCustomArgName(index + P104_OFFSET_REPEATDELAY);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        log  = F("P104: insert before zone: ");
+        log += (zoneIndex + 1);
+        addLog(LOG_LEVEL_INFO, log);
+      }
+      # endif // ifdef P104_DEBUG_DEV
+    }
+    #endif // ifdef P104_USE_ZONE_ACTIONS
+    zoneIndex = zCounter + zoneOffset;
+
+    if (action != P104_ACTION_DELETE) {
+      zones.push_back(P104_zone_struct(zoneIndex + 1));
+
+      zones[zoneIndex].size          = getFormItemIntCustomArgName(index + P104_OFFSET_SIZE);
+      zones[zoneIndex].text          = enquoteString(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
+      zones[zoneIndex].content       = getFormItemIntCustomArgName(index + P104_OFFSET_CONTENT);
+      zones[zoneIndex].alignment     = getFormItemIntCustomArgName(index + P104_OFFSET_ALIGNMENT);
+      zones[zoneIndex].animationIn   = getFormItemIntCustomArgName(index + P104_OFFSET_ANIM_IN);
+      zones[zoneIndex].speed         = getFormItemIntCustomArgName(index + P104_OFFSET_SPEED);
+      zones[zoneIndex].animationOut  = getFormItemIntCustomArgName(index + P104_OFFSET_ANIM_OUT);
+      zones[zoneIndex].pause         = getFormItemIntCustomArgName(index + P104_OFFSET_PAUSE);
+      zones[zoneIndex].font          = getFormItemIntCustomArgName(index + P104_OFFSET_FONT);
+      zones[zoneIndex].layout        = getFormItemIntCustomArgName(index + P104_OFFSET_LAYOUT);
+      zones[zoneIndex].specialEffect = getFormItemIntCustomArgName(index + P104_OFFSET_SPEC_EFFECT);
+      zones[zoneIndex].offset        = getFormItemIntCustomArgName(index + P104_OFFSET_OFFSET);
+
+      if (zones[zoneIndex].size != 0) { // for newly added zone, use defaults
+        zones[zoneIndex].brightness  = getFormItemIntCustomArgName(index + P104_OFFSET_BRIGHTNESS);
+        zones[zoneIndex].repeatDelay = getFormItemIntCustomArgName(index + P104_OFFSET_REPEATDELAY);
+      }
     } else {
-      zones[zoneIndex].brightness  = 7u;
-      zones[zoneIndex].repeatDelay = -1;
+      zoneOffset--;
     }
     # ifdef P104_DEBUG_DEV
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log  = F("P104: add zone: ");
-      log += zoneIndexP1;
+      log += (zoneIndex + 1);
       addLog(LOG_LEVEL_INFO, log);
     }
     # endif // ifdef P104_DEBUG_DEV
+
+    #ifdef P104_USE_ZONE_ACTIONS
+    if ((action == P104_ACTION_ADD_BELOW && zoneOrder == 0) ||
+        (action == P104_ACTION_ADD_ABOVE && zoneOrder == 1)) {
+      zones.push_back(P104_zone_struct(0));
+      zoneOffset++;
+      # ifdef P104_DEBUG_DEV
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        log  = F("P104: insert after zone: ");
+        log += (zoneIndex + 2);
+        addLog(LOG_LEVEL_INFO, log);
+      }
+      # endif // ifdef P104_DEBUG_DEV
+    }
+    #endif // ifdef P104_USE_ZONE_ACTIONS
 
     index += P104_OFFSET_COUNT;
     delay(0);
@@ -1406,63 +1422,61 @@ bool P104_data_struct::saveSettings() {
 
   if (zbuffer.reserve(bufSize)) {
     for (auto it = zones.begin(); it != zones.end(); ++it) {
-      if (it->zone <= expectedZones) { // sizes: (estimated)
-        // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
-        zbuffer += it->size;           // 2
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->text;           // ~15
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->content;        // 1
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->alignment;      // 1
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->animationIn;    // 2
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->speed;          // 5
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->animationOut;   // 2
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->pause;          // 5
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->font;           // 1
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->layout;         // 1
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->specialEffect;  // 1
-        zbuffer += P104_FIELD_SEP;     // 1
-        zbuffer += it->offset;         // 2
-        zbuffer += P104_FIELD_SEP;     // 1
+      // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
+      zbuffer += it->size;           // 2
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->text;           // ~15
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->content;        // 1
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->alignment;      // 1
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->animationIn;    // 2
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->speed;          // 5
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->animationOut;   // 2
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->pause;          // 5
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->font;           // 1
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->layout;         // 1
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->specialEffect;  // 1
+      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->offset;         // 2
+      zbuffer += P104_FIELD_SEP;     // 1
 
-        if (it->brightness != 7) {
-          zbuffer += it->brightness;   // 2
-        } else {
-          zbuffer += 'i';              // Invalid so will be read as default
-        }
-        zbuffer += P104_FIELD_SEP;     // 1
-
-        if (it->repeatDelay > -1) {
-          zbuffer += it->repeatDelay;  // 4
-        } else {
-          zbuffer += 'i';              // Invalid so will be read as default
-        }
-        zbuffer += P104_FIELD_SEP;     // 1
-
-        zbuffer += P104_ZONE_SEP;      // 1
-                                       // 58 total
-        numDevices += it->size + it->offset;
-        # ifdef P104_DEBUG_DEV
-
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          log  = F("P104: append zone: ");
-          log += it->zone;
-          log += F(" buffer len: ");
-          log += zbuffer.length();
-          log += F(" size: ");
-          log += it->size;
-          addLog(LOG_LEVEL_INFO, log);
-        }
-        # endif // ifdef P104_DEBUG_DEV
+      if (it->brightness != 7) {
+        zbuffer += it->brightness;   // 2
+      } else {
+        zbuffer += 'i';              // Invalid so will be read as default
       }
+      zbuffer += P104_FIELD_SEP;     // 1
+
+      if (it->repeatDelay > -1) {
+        zbuffer += it->repeatDelay;  // 4
+      } else {
+        zbuffer += 'i';              // Invalid so will be read as default
+      }
+      zbuffer += P104_FIELD_SEP;     // 1
+
+      zbuffer += P104_ZONE_SEP;      // 1
+                                      // 58 total
+      numDevices += (it->size != 0 ? it->size : 1) + it->offset; // Count corrected for newly added zones
+      # ifdef P104_DEBUG_DEV
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        log  = F("P104: append zone: ");
+        log += it->zone;
+        log += F(" buffer len: ");
+        log += zbuffer.length();
+        log += F(" size: ");
+        log += it->size;
+        addLog(LOG_LEVEL_INFO, log);
+      }
+      # endif // ifdef P104_DEBUG_DEV
       delay(0);
     }
     zbuffer.trim();
@@ -1507,7 +1521,7 @@ bool P104_data_struct::saveSettings() {
     }
     # endif // ifdef P104_DEBUG_DEV
     zbuffer.clear(); // Clear string after reporting any errors
-    error += SaveCustomTaskSettings(taskIndex, (byte *)&StoredSettings, structDataSize);
+    error += SaveCustomTaskSettings(taskIndex, (uint8_t *)&StoredSettings, structDataSize);
     return error.isEmpty();
   }
   error.reserve(55);
@@ -1634,6 +1648,15 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # ifdef P104_ADD_SETTINGS_NOTES
     addFormNote(zonetip);
     # endif // ifdef P104_ADD_SETTINGS_NOTES
+
+    #ifdef P104_USE_ZONE_ORDERING
+    const __FlashStringHelper *orderTypes[] = {
+      F("Numeric order (1..n)"),
+      F("Display order (n..1)")
+    };
+    int orderOptions[] = { 0, 1 };
+    addFormSelector(F("Zone order"), F("plugin_104_zoneorder"), 2, orderTypes, orderOptions, NULL, bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0, true);
+    #endif // ifdef P104_USE_ZONE_ORDERING
   }
   expectedZones = P104_CONFIG_ZONE_COUNT;
 
@@ -1897,6 +1920,25 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , P104_CONTENT_BAR_GRAPH
       #endif
     };
+    #ifdef P104_USE_ZONE_ACTIONS
+    uint8_t actionCount = 0;
+    const __FlashStringHelper *actionTypes[4];
+    int actionOptions[4];
+    actionTypes[actionCount] = F("None");
+    actionOptions[actionCount] = P104_ACTION_NONE;
+    actionCount++;
+    if (zones.size() < P104_MAX_ZONES) {
+      actionTypes[actionCount] = F("New above");
+      actionOptions[actionCount] = P104_ACTION_ADD_ABOVE;
+      actionCount++;
+      actionTypes[actionCount] = F("New below");
+      actionOptions[actionCount] = P104_ACTION_ADD_BELOW;
+      actionCount++;
+    }
+    actionTypes[actionCount] = F("Delete");
+    actionOptions[actionCount] = P104_ACTION_DELETE;
+    actionCount++;
+    #endif // ifdef P104_USE_ZONE_ACTIONS
 
     delay(0);
 
@@ -1911,27 +1953,47 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       html_table_header(F("Alignment"));
       html_table_header(F("Animation In/Out")); // 1st and 2nd row title
       html_table_header(F("Speed/Pause"));      // 1st and 2nd row title
-      html_table_header(F("Font"));
-      html_table_header(F("Layout"));
+      html_table_header(F("Font/Layout"));      // 1st and 2nd row title
       html_table_header(F("Special Effects"));
       html_table_header(F("Offset"));
       html_table_header(F("Brightness"));
       html_table_header(F("Repeat (sec)"));
+      #ifdef P104_USE_ZONE_ACTIONS
+      html_table_header(F(""), 15); // Spacer
+      html_table_header(F("Action"), 45);
+      #endif // ifdef P104_USE_ZONE_ACTIONS
     }
 
-    uint8_t index = 0;
-    uint8_t zone  = 0;
+    uint16_t index;
+    int16_t  startZone, endZone;
+    int8_t   incrZone = 1;
+    #ifdef P104_USE_ZONE_ACTIONS
+    uint8_t  currentRow = 0;
+    #endif // ifdef P104_USE_ZONE_ACTIONS
 
-    for (auto it = zones.begin(); it != zones.end(); ++it) {
-      if (it->zone <= expectedZones) {
+    #ifdef P104_USE_ZONE_ORDERING
+    if (bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER)) {
+      startZone = zones.size() - 1;
+      endZone   = -1;
+      incrZone  = -1;
+    } else 
+    #endif // ifdef P104_USE_ZONE_ORDERING
+    {
+      startZone = 0;
+      endZone   = zones.size();
+    }
+
+    for (int8_t zone = startZone; zone != endZone; zone += incrZone) {
+      if (zones[zone].zone <= expectedZones) {
+        index = (zones[zone].zone - 1) * P104_OFFSET_COUNT;
         html_TR_TD(); // All columns use max. width available
         addHtml(F("&nbsp;"));
-        addHtmlInt(zone + 1);
+        addHtmlInt(zones[zone].zone);
         html_TD();    // Size
-        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SIZE), it->size, 1, P104_MAX_MODULES_PER_ZONE);
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SIZE), zones[zone].size, 1, P104_MAX_MODULES_PER_ZONE);
         html_TD();    // text
         addTextBox(getPluginCustomArgName(index + P104_OFFSET_TEXT),
-                   it->text,
+                   zones[zone].text,
                    P104_MAX_TEXT_LENGTH_PER_ZONE,
                    false,
                    false,
@@ -1943,7 +2005,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     contentTypes,
                     contentOptions,
                     NULL,
-                    it->content,
+                    zones[zone].content,
                     false,
                     true,
                     EMPTY_STRING);
@@ -1953,7 +2015,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     alignmentTypes,
                     alignmentOptions,
                     NULL,
-                    it->alignment,
+                    zones[zone].alignment,
                     false,
                     true,
                     EMPTY_STRING);
@@ -1963,7 +2025,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     &animationTypes[1],
                     &animationOptions[1],
                     NULL,
-                    it->animationIn,
+                    zones[zone].animationIn,
                     false,
                     true,
                     F("")
@@ -1972,47 +2034,10 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     # endif // ifdef P104_USE_TOOLTIPS
                     );
         html_TD(); // Speed In
-        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SPEED), it->speed, 0, P104_MAX_SPEED_PAUSE_VALUE
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SPEED), zones[zone].speed, 0, P104_MAX_SPEED_PAUSE_VALUE
                       # ifdef P104_USE_TOOLTIPS
                       , EMPTY_STRING // classname
                       , F("Speed")   // title
-                      # endif // ifdef P104_USE_TOOLTIPS
-                      );
-
-        html_TD(); // Fill columns
-        html_TD();
-        html_TD();
-        html_TD();
-        html_TD();
-        html_TD();
-
-        // Split here
-        html_TR_TD(); // Start new row
-        html_TD();    // Start with some blank columns
-        html_TD();
-        html_TD();
-        html_TD();
-
-        html_TD(); // Animation Out
-        addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
-                    animationCount,
-                    animationTypes,
-                    animationOptions,
-                    NULL,
-                    it->animationOut,
-                    false,
-                    true,
-                    EMPTY_STRING
-                    # ifdef P104_USE_TOOLTIPS
-                    , F("Animation Out")
-                    # endif // ifdef P104_USE_TOOLTIPS
-                    );
-
-        html_TD(); // Speed Out
-        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_PAUSE), it->pause, 0, P104_MAX_SPEED_PAUSE_VALUE
-                      # ifdef P104_USE_TOOLTIPS
-                      , EMPTY_STRING // classname
-                      , F("Pause")   // title
                       # endif // ifdef P104_USE_TOOLTIPS
                       );
 
@@ -2022,10 +2047,55 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     fontTypes,
                     fontOptions,
                     NULL,
-                    it->font,
+                    zones[zone].font,
                     false,
                     true,
                     EMPTY_STRING);
+
+        html_TD(4); // Fill columns
+        #ifdef P104_USE_ZONE_ACTIONS
+        html_TD();    // Spacer
+        addHtml(F("|"));
+        if (currentRow < 2) {
+          addHtml(F("<TD style=\"text-align:center;font-size:90%\">")); // Action column, text centered and font-size 90%
+        } else {
+          html_TD();
+        }
+        if (currentRow == 0) {
+          addHtml(F("(applied immediately!)"));
+          currentRow++;
+        } else if (currentRow == 1) {
+          addHtml(F("(Delete can't be undone!)"));
+          currentRow++;
+        }
+        #endif // ifdef P104_USE_ZONE_ACTIONS
+
+        // Split here
+        html_TR_TD(); // Start new row
+        html_TD(4);    // Start with some blank columns
+
+        html_TD(); // Animation Out
+        addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
+                    animationCount,
+                    animationTypes,
+                    animationOptions,
+                    NULL,
+                    zones[zone].animationOut,
+                    false,
+                    true,
+                    EMPTY_STRING
+                    # ifdef P104_USE_TOOLTIPS
+                    , F("Animation Out")
+                    # endif // ifdef P104_USE_TOOLTIPS
+                    );
+
+        html_TD(); // Pause after Animation In
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_PAUSE), zones[zone].pause, 0, P104_MAX_SPEED_PAUSE_VALUE
+                      # ifdef P104_USE_TOOLTIPS
+                      , EMPTY_STRING // classname
+                      , F("Pause")   // title
+                      # endif // ifdef P104_USE_TOOLTIPS
+                      );
 
         html_TD(); // Layout
         addSelector(getPluginCustomArgName(index + P104_OFFSET_LAYOUT),
@@ -2033,7 +2103,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     layoutTypes,
                     layoutOptions,
                     NULL,
-                    it->layout,
+                    zones[zone].layout,
                     false,
                     true,
                     EMPTY_STRING);
@@ -2044,21 +2114,21 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     specialEffectTypes,
                     specialEffectOptions,
                     NULL,
-                    it->specialEffect,
+                    zones[zone].specialEffect,
                     false,
                     true,
                     EMPTY_STRING);
 
         html_TD(); // Offset
-        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_OFFSET), it->offset, 0, 254);
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_OFFSET), zones[zone].offset, 0, 254);
         html_TD(); // Brightness
 
-        if (it->brightness == 0) { it->brightness = 7; }
-        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_BRIGHTNESS), it->brightness, 0, P104_BRIGHTNESS_MAX);
+        if (zones[zone].brightness == 0) { zones[zone].brightness = 7; }
+        addNumericBox(getPluginCustomArgName(index + P104_OFFSET_BRIGHTNESS), zones[zone].brightness, 0, P104_BRIGHTNESS_MAX);
 
         html_TD();                                                   // Repeat (sec)
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_REPEATDELAY),
-                      it->repeatDelay,
+                      zones[zone].repeatDelay,
                       -1,
                       P104_MAX_REPEATDELAY_VALUE                     // max delay 86400 sec. = 24 hours
                       # ifdef P104_USE_TOOLTIPS
@@ -2066,9 +2136,23 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       , F("Repeat after this delay (sec), -1 = off") // tooltip
                       # endif // ifdef P104_USE_TOOLTIPS
                       );
+
+        #ifdef P104_USE_ZONE_ACTIONS
+        html_TD(); // Spacer
+        addHtml(F("|"));
+        html_TD(); // Action
+        addSelector(getPluginCustomArgName(index + P104_OFFSET_ACTION),
+                    actionCount,
+                    actionTypes,
+                    actionOptions,
+                    NULL,
+                    0, // Always start with 0
+                    true,
+                    true,
+                    EMPTY_STRING);
+        #endif // ifdef P104_USE_ZONE_ACTIONS
+
         delay(0);
-        index += P104_OFFSET_COUNT;
-        zone++;
       }
     }
     html_end_table();
@@ -2101,6 +2185,11 @@ bool P104_data_struct::webform_save(struct EventStruct *event) {
   bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE, isFormItemChecked(F("plugin_104_cleardisable")));
   bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT,  isFormItemChecked(F("plugin_104_logalltext")));
 
+  #ifdef P104_USE_ZONE_ORDERING  
+  zoneOrder = getFormItemInt(F("plugin_104_zoneorder")); // Is used in saveSettings()
+  bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER,    zoneOrder == 1);
+  #endif // ifdef P104_USE_ZONE_ORDERING
+
   # ifdef P104_USE_DATETIME_OPTIONS
   uint32_t ulDateTime = 0;
   bitWrite(ulDateTime,    P104_CONFIG_DATETIME_FLASH,    !isFormItemChecked(F("plugin_104_clockflash"))); // Inverted flag
@@ -2110,16 +2199,19 @@ bool P104_data_struct::webform_save(struct EventStruct *event) {
   set4BitToUL(ulDateTime, P104_CONFIG_DATETIME_FORMAT,   getFormItemInt(F("plugin_104_dateformat")));
   set4BitToUL(ulDateTime, P104_CONFIG_DATETIME_SEP_CHAR, getFormItemInt(F("plugin_104_dateseparator")));
   P104_CONFIG_DATETIME = ulDateTime;
-  #endif // ifdef P104_USE_DATETIME_OPTIONS
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
 
   previousZones = expectedZones;
   expectedZones = P104_CONFIG_ZONE_COUNT;
 
-  saveSettings();                       // Determines numDevices
+  bool result = saveSettings();         // Determines numDevices and re-fills zones list
 
+  P104_CONFIG_ZONE_COUNT  = zones.size();
   P104_CONFIG_TOTAL_UNITS = numDevices; // Store counted number of devices
 
-  return true;
+  zones.clear();                        // Free some memory (temporarily)
+
+  return result;
 }
 
 #endif // ifdef USES_P104

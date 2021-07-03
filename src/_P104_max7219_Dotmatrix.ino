@@ -61,6 +61,10 @@
 //                                Up to 8 graphStrings can be provided, width is determined by the number of graphStrings
 //
 // History:
+// 2021-06-29-2021-07-03: Add Actions column to insert before/after zone or delete a zone, order the zones either in numeric order
+//            tonhuisman: or in display order ('upside-down'), fixed many bugs, refactored bar-graph method, other improvements
+//                        All optional at compile-time by P104_USE_ZONE_ACTIONS and P104_USE_ZONE_ORDERING
+//                        Disabled P104_DEBUG_DEV by default
 // 2021-06-28 tonhuisman: Bugfixes during testing, re-enable subcommands for ESP8266 display build
 // 2021-06-27 tonhuisman: Implement 'barType' option for Bar-graph, bugfixes, bugfixes, bugfixes
 // 2021-06-26 tonhuisman: Implement 'direction' option for Bar-graph, bugfixes
@@ -93,7 +97,7 @@
 # include "src/PluginStructs/P104_data_struct.h"
 
 
-boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
@@ -162,7 +166,7 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
         note += createGPIO_label(din_pin, pinnr, true, true, false);
         note += ')';
       }
-      note += F("->DIN-Pin, CLK");
+      note += F("->DIN, CLK");
 
       if (clk_pin != -1) {
         note += '(';
@@ -170,7 +174,7 @@ boolean Plugin_104(byte function, struct EventStruct *event, String& string) {
         note += createGPIO_label(clk_pin, pinnr, true, true, false);
         note += ')';
       }
-      note += F("->CLK-Pin");
+      note += F("->CLK");
       addFormNote(note);
 
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
