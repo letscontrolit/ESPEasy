@@ -407,7 +407,7 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
         log += F(" toggle: port#");
         log += event->Par1;
         log += F(": set to ");
-        log += !state;
+        log += static_cast<int>(!state);
         addLog(LOG_LEVEL_ERROR, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
@@ -417,11 +417,9 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
       case PIN_MODE_OFFLINE:
         logErrorGpioOffline(logPrefix, event->Par1);
         return return_command_failed();
-        break;
       default:
         logErrorGpioNotOutput(logPrefix, event->Par1);
         return return_command_failed();
-        break;
     }
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
@@ -667,7 +665,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
   data.isMask = !parseString(Line, 5).isEmpty();
 
   if (data.isMask) {
-    data.mask  = event->Par4 & ((1 << data.numBytes * 8) - 1);
+    data.mask  = event->Par4 & ((1 << (data.numBytes * 8)) - 1);
     data.mask &= ((1 << data.numBits) - 1);
     data.mask  = data.mask << data.deltaStart;
   } else {
@@ -676,7 +674,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
   }
 
   if (isWritePattern) {                                         // write pattern is present
-    data.write  = event->Par3 & ((1 << data.numBytes * 8) - 1); // limit number of bytes
+    data.write  = event->Par3 & ((1 << (data.numBytes * 8)) - 1); // limit number of bytes
     data.write &= ((1 << data.numBits) - 1);                    // limit to number of bits
     data.write  = data.write << data.deltaStart;                // shift to start from starting pin
   } else {                                                      // write pattern not present

@@ -604,45 +604,49 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
     #endif
   }
 
-  const uint16_t bufferSize = 128;
+  const uint32_t bufferSize = 128;
 
   // FIXME TD-er: For now stack allocated, may need to be heap allocated?
   if (maxStringLength >= bufferSize) { return F("Max 128 chars allowed"); }
+
   char buffer[bufferSize];
 
   String   result;
-  uint16_t readPos       = 0;
-  uint16_t nextStringPos = 0;
-  uint16_t stringCount   = 0;
+  uint32_t readPos       = 0;
+  uint32_t nextStringPos = 0;
+  uint32_t stringCount   = 0;
   String   tmpString;
   tmpString.reserve(bufferSize);
 
-  while (stringCount < nrStrings && readPos < max_size) {
-    result += LoadFromFile(settingsType,
-                           index,
-                           (byte *)&buffer,
-                           bufferSize,
-                           readPos);
+  {
+    while (stringCount < nrStrings && static_cast<int>(readPos) < max_size) {
+      const uint32_t readSize = std::min(bufferSize, max_size - readPos);
+      result += LoadFromFile(settingsType,
+                            index,
+                            (uint8_t *)&buffer,
+                            readSize,
+                            readPos);
 
-    for (int i = 0; i < bufferSize && stringCount < nrStrings; ++i) {
-      uint16_t curPos = readPos + i;
+      for (uint32_t i = 0; i < readSize && stringCount < nrStrings; ++i) {
+        const uint32_t curPos = readPos + i;
 
-      if (curPos >= nextStringPos) {
-        if (buffer[i] == 0) {
-          if (maxStringLength != 0) {
-            // Specific string length, so we have to set the next string position.
-            nextStringPos += maxStringLength;
+        if (curPos >= nextStringPos) {
+          if (buffer[i] == 0) {
+            if (maxStringLength != 0) {
+              // Specific string length, so we have to set the next string position.
+              nextStringPos += maxStringLength;
+            }
+            strings[stringCount] = tmpString;
+            tmpString            = "";
+            tmpString.reserve(readSize);
+            ++stringCount;
+          } else {
+            tmpString += buffer[i];
           }
-          strings[stringCount] = tmpString;
-          tmpString            = "";
-          tmpString.reserve(bufferSize);
-          ++stringCount;
-        } else {
-          tmpString += buffer[i];
         }
       }
+      readPos += bufferSize;
     }
-    readPos += bufferSize;
   }
 
   if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {
@@ -652,7 +656,6 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   }
   return result;
 }
-
 
 /********************************************************************************************\
    Save array of Strings from Custom settings

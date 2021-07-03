@@ -398,13 +398,19 @@ void AttemptWiFiConnect() {
         tx_pwr = Settings.getWiFi_TX_power();
       }
       SetWiFiTXpower(tx_pwr, candidate.rssi);
+      // Start connect attempt now, so no longer needed to attempt new connection.
+      WiFiEventData.wifiConnectAttemptNeeded = false;
+      #ifdef ESP8266
+      ETS_UART_INTR_DISABLE();
+      #endif
       if (candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
       }
-      // Start connect attempt now, so no longer needed to attempt new connection.
-      WiFiEventData.wifiConnectAttemptNeeded = false;
+      #ifdef ESP8266
+      ETS_UART_INTR_ENABLE();
+      #endif
     }
   } else {
     if (!wifiAPmodeActivelyUsed() || WiFiEventData.wifiSetupConnect) {
@@ -412,7 +418,7 @@ void AttemptWiFiConnect() {
         return;
       }
       // Maybe not scan async to give the ESP some slack in power consumption?
-      const bool async = true;
+      const bool async = false;
       WifiScan(async);
     }
   }
@@ -441,6 +447,7 @@ bool prepareWiFi() {
   }
   WiFiEventData.warnedNoValidWiFiSettings = false;
   setSTA(true);
+
   char hostname[40];
   safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
@@ -866,6 +873,27 @@ void WifiScan(bool async, uint8_t channel) {
     }
     --nrScans;
     #ifdef ESP8266
+    {
+      static bool FIRST_SCAN = true;
+
+      struct scan_config config;
+      memset(&config, 0, sizeof(config));
+      config.ssid = nullptr;
+      config.bssid = nullptr;
+      config.channel = channel;
+      config.show_hidden = 1;
+      config.scan_type = WIFI_SCAN_TYPE_ACTIVE;
+      if (FIRST_SCAN) {
+        config.scan_time.active.min = 100;
+        config.scan_time.active.max = 200;
+      } else {
+        config.scan_time.active.min = 400;
+        config.scan_time.active.max = 500;
+      }
+      FIRST_SCAN = false;
+      wifi_station_scan(&config, &onWiFiScanDone);
+ 
+    }
     WiFi.scanNetworks(async, show_hidden, channel);
     #endif
     #ifdef ESP32
@@ -1305,6 +1333,11 @@ String ESPeasyWifiStatusToString() {
 }
 
 void logConnectionStatus() {
+  static unsigned long lastLog = 0;
+  if (lastLog != 0 && timePassedSince(lastLog) < 1000) {
+    return;
+  }
+  lastLog = millis();
 #ifndef BUILD_NO_DEBUG
   #ifdef ESP8266
   const uint8_t arduino_corelib_wifistatus = WiFi.status();

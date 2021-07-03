@@ -27,7 +27,7 @@
 # define P102_QUERY3          PCONFIG(5)
 # define P102_QUERY4          PCONFIG(6)
 # define P102_PZEM_FIRST      PCONFIG(7)
-# define P102_PZEM_ATTEMPT    PCONFIG(8)
+# define P102_PZEM_ATTEMPT    PCONFIG_LONG(1)
 
 # define P102_PZEM_mode_DFLT  0 // Read value
 # define P102_QUERY1_DFLT     0 // Voltage (V)

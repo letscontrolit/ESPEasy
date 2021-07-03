@@ -47,6 +47,21 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
   last_seen = millis();
 }
 
+#ifdef ESP8266
+WiFi_AP_Candidate::WiFi_AP_Candidate(const bss_info& ap) :
+  rssi(ap.rssi), channel(ap.channel), bssid(ap.bssid), 
+  index(0), enc_type(ap.authmode), isHidden(ap.is_hidden)
+{
+  last_seen = millis();
+  ssid.reserve(ap.ssid_len);
+  for (int i = 0; i < ap.ssid_len; ++i) {
+    ssid += ap.ssid[i];
+  }
+
+}
+#endif
+
+
 WiFi_AP_Candidate::WiFi_AP_Candidate() {}
 
 bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {

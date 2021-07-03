@@ -161,9 +161,8 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
           if (tbUseCalibration) {
             addFormCheckBox(F("Clear calibrationdata"), F("p062_clear_calibrate"), false);
           }
-        } else {
-          delete P062_data;
         }
+        delete P062_data;
       }
       success = true;
       break;
