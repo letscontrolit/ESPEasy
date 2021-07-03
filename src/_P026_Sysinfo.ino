@@ -22,7 +22,6 @@
 
 #define P026_NR_OUTPUT_OPTIONS  14
 
-
 const __FlashStringHelper * Plugin_026_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case 0:  return displayString ? F("Uptime") : F("uptime");
