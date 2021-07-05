@@ -54,7 +54,7 @@ public:
     void begin( const char* auth,
                 const char* domain = BLYNK_DEFAULT_DOMAIN,
                 uint16_t port      = BLYNK_SERVER_PORT,
-                const byte mac[]   = NULL)
+                const uint8_t mac[]   = NULL)
     {
         BLYNK_LOG1(BLYNK_F("Getting IP..."));
         if (!Ethernet.begin(SelectMacAddress(auth, mac))) {
@@ -75,7 +75,7 @@ public:
                 uint16_t port,
                 IPAddress local,
                 IPAddress dns,
-                const byte mac[] = NULL)
+                const uint8_t mac[] = NULL)
     {
         BLYNK_LOG1(BLYNK_F("Using static IP"));
         Ethernet.begin(SelectMacAddress(auth, mac), local, dns);
@@ -96,7 +96,7 @@ public:
                 IPAddress dns,
                 IPAddress gateway,
                 IPAddress subnet,
-                const byte mac[] = NULL)
+                const uint8_t mac[] = NULL)
     {
         BLYNK_LOG1(BLYNK_F("Using static IP"));
         Ethernet.begin(SelectMacAddress(auth, mac), local, dns, gateway, subnet);
@@ -113,7 +113,7 @@ public:
     void begin( const char* auth,
                 IPAddress addr,
                 uint16_t port    = BLYNK_SERVER_PORT,
-                const byte mac[] = NULL)
+                const uint8_t mac[] = NULL)
     {
         BLYNK_LOG1(BLYNK_F("Getting IP..."));
         if (!Ethernet.begin(SelectMacAddress(auth, mac))) {
@@ -133,7 +133,7 @@ public:
                 IPAddress addr,
                 uint16_t port,
                 IPAddress local,
-                const byte mac[] = NULL)
+                const uint8_t mac[] = NULL)
     {
         BLYNK_LOG1(BLYNK_F("Using static IP"));
         Ethernet.begin(SelectMacAddress(auth, mac), local);
@@ -154,7 +154,7 @@ public:
                 IPAddress dns,
                 IPAddress gateway,
                 IPAddress subnet,
-                const byte mac[] = NULL)
+                const uint8_t mac[] = NULL)
     {
         BLYNK_LOG1(BLYNK_F("Using static IP"));
         Ethernet.begin(SelectMacAddress(auth, mac), local, dns, gateway, subnet);
@@ -169,10 +169,10 @@ public:
 
 private:
 
-    byte* SelectMacAddress(const char* token, const byte mac[])
+    uint8_t* SelectMacAddress(const char* token, const uint8_t mac[])
     {
         if (mac != NULL) {
-            return (byte*)mac;
+            return (uint8_t*)mac;
         }
 
         macAddress[0] = 0xFE;
@@ -198,7 +198,7 @@ private:
     }
 
 private:
-    byte macAddress[6];
+    uint8_t macAddress[6];
 
 };
 

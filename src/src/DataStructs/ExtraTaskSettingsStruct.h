@@ -24,7 +24,7 @@ struct ExtraTaskSettingsStruct
 
   bool checkUniqueValueNames() const;
 
-  void clearUnusedValueNames(byte usedVars);
+  void clearUnusedValueNames(uint8_t usedVars);
 
   bool checkInvalidCharInNames(const char* name) const;
 
@@ -35,7 +35,7 @@ struct ExtraTaskSettingsStruct
   char    TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
   char    TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
   long    TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX];
-  byte    TaskDeviceValueDecimals[VARS_PER_TASK];
+  uint8_t    TaskDeviceValueDecimals[VARS_PER_TASK];
   int16_t TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX];
 };
 

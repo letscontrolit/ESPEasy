@@ -76,24 +76,24 @@ bool string2float(const String& string, float& floatvalue) {
 }
 
 /********************************************************************************************\
-   Convert a char string to IP byte array
+   Convert a char string to IP uint8_t array
  \*********************************************************************************************/
 bool isIP(const String& string) {
   IPAddress tmpip;
   return (tmpip.fromString(string));
 }
 
-bool str2ip(const String& string, byte *IP) {
+bool str2ip(const String& string, uint8_t *IP) {
   return str2ip(string.c_str(), IP);
 }
 
-bool str2ip(const char *string, byte *IP)
+bool str2ip(const char *string, uint8_t *IP)
 {
   IPAddress tmpip; // Default constructor => set to 0.0.0.0
 
   if ((*string == 0) || tmpip.fromString(string)) {
     // Eiher empty string or a valid IP addres, so copy value.
-    for (byte i = 0; i < 4; ++i) {
+    for (uint8_t i = 0; i < 4; ++i) {
       IP[i] = tmpip[i];
     }
     return true;
@@ -162,7 +162,7 @@ String formatHumanReadable(unsigned long value, unsigned long factor) {
 
 String formatHumanReadable(unsigned long value, unsigned long factor, int NrDecimals) {
   float floatValue(value);
-  byte  steps = 0;
+  uint8_t  steps = 0;
 
   while (value >= factor) {
     value /= factor;
@@ -225,7 +225,7 @@ void addNewLine(String& line) {
 /*********************************************************************************************\
    Format a value to the set number of decimals
 \*********************************************************************************************/
-String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck, bool& isvalid) {
+String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCheck, bool& isvalid) {
   if (event == nullptr) return EMPTY_STRING;
   isvalid = true;
 
@@ -249,7 +249,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
   }
 
 
-  const byte   valueCount = getValueCountForTask(event->TaskIndex);
+  const uint8_t   valueCount = getValueCountForTask(event->TaskIndex);
   Sensor_VType sensorType = event->getSensorType();
 
   if (valueCount <= rel_index) {
@@ -298,7 +298,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
   }
   LoadTaskSettings(event->TaskIndex);
 
-  byte nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
+  uint8_t nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
 
   if (!Device[DeviceIndex].configurableDecimals()) {
     nrDecimals = 0;
@@ -309,7 +309,7 @@ String doFormatUserVar(struct EventStruct *event, byte rel_index, bool mustCheck
   return result;
 }
 
-String formatUserVarNoCheck(taskIndex_t TaskIndex, byte rel_index) {
+String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {
   bool isvalid;
 
   // FIXME TD-er: calls to this function cannot handle Sensor_VType::SENSOR_TYPE_STRING
@@ -318,21 +318,21 @@ String formatUserVarNoCheck(taskIndex_t TaskIndex, byte rel_index) {
   return doFormatUserVar(&TempEvent, rel_index, false, isvalid);
 }
 
-String formatUserVar(taskIndex_t TaskIndex, byte rel_index, bool& isvalid) {
+String formatUserVar(taskIndex_t TaskIndex, uint8_t rel_index, bool& isvalid) {
   // FIXME TD-er: calls to this function cannot handle Sensor_VType::SENSOR_TYPE_STRING
   struct EventStruct TempEvent(TaskIndex);
 
   return doFormatUserVar(&TempEvent, rel_index, true, isvalid);
 }
 
-String formatUserVarNoCheck(struct EventStruct *event, byte rel_index)
+String formatUserVarNoCheck(struct EventStruct *event, uint8_t rel_index)
 {
   bool isvalid;
 
   return doFormatUserVar(event, rel_index, false, isvalid);
 }
 
-String formatUserVar(struct EventStruct *event, byte rel_index, bool& isvalid)
+String formatUserVar(struct EventStruct *event, uint8_t rel_index, bool& isvalid)
 {
   return doFormatUserVar(event, rel_index, true, isvalid);
 }
@@ -514,14 +514,14 @@ String to_internal_string(const String& input, char replaceSpace) {
    IndexFind = 1 => command.
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
-String parseString(const String& string, byte indexFind, char separator) {
+String parseString(const String& string, uint8_t indexFind, char separator) {
   String result = parseStringKeepCase(string, indexFind, separator);
 
   result.toLowerCase();
   return result;
 }
 
-String parseStringKeepCase(const String& string, byte indexFind, char separator) {
+String parseStringKeepCase(const String& string, uint8_t indexFind, char separator) {
   String result;
 
   if (!GetArgv(string.c_str(), result, indexFind, separator)) {
@@ -531,19 +531,19 @@ String parseStringKeepCase(const String& string, byte indexFind, char separator)
   return stripQuotes(result);
 }
 
-String parseStringToEnd(const String& string, byte indexFind, char separator) {
+String parseStringToEnd(const String& string, uint8_t indexFind, char separator) {
   String result = parseStringToEndKeepCase(string, indexFind, separator);
 
   result.toLowerCase();
   return result;
 }
 
-String parseStringToEndKeepCase(const String& string, byte indexFind, char separator) {
+String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char separator) {
   // Loop over the arguments to find the first and last pos of the arguments.
   int  pos_begin = string.length();
   int  pos_end = pos_begin;
   int  tmppos_begin, tmppos_end = -1;
-  byte nextArgument = indexFind;
+  uint8_t nextArgument = indexFind;
   bool hasArgument  = false;
 
   while (GetArgvBeginEnd(string.c_str(), nextArgument, tmppos_begin, tmppos_end, separator))
@@ -569,7 +569,7 @@ String parseStringToEndKeepCase(const String& string, byte indexFind, char separ
   return stripQuotes(result);
 }
 
-String tolerantParseStringKeepCase(const String& string, byte indexFind, char separator)
+String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char separator)
 {
   if (Settings.TolerantLastArgParse()) {
     return parseStringToEndKeepCase(string, indexFind, separator);
@@ -787,7 +787,7 @@ void parseControllerVariables(String& s, struct EventStruct *event, bool useURLe
 
 void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
-                                   byte                taskValueIndex,
+                                   uint8_t                taskValueIndex,
                                    bool             useURLencode) {
   if (validTaskIndex(event->TaskIndex)) {
     LoadTaskSettings(event->TaskIndex);
@@ -819,7 +819,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
       if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
         SMART_REPL(F("%val1%"), String(UserVar.getSensorTypeLong(event->TaskIndex)))
       } else {
-        for (byte i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
+        for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
           String valstr = F("%val");
           valstr += (i + 1);
           valstr += '%';
@@ -840,7 +840,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   const bool vname_found = s.indexOf(F("%vname")) != -1;
 
   if (vname_found) {
-    for (byte i = 0; i < 4; ++i) {
+    for (uint8_t i = 0; i < 4; ++i) {
       String vname = F("%vname");
       vname += (i + 1);
       vname += '%';
@@ -915,7 +915,13 @@ bool getConvertArgumentString(const String& marker,
 
 // FIXME TD-er: These macros really increase build size
 struct ConvertArgumentData {
-  ConvertArgumentData(String& s, bool useURLencode) : str(s), URLencode(useURLencode) {}
+  ConvertArgumentData(String& s, bool useURLencode) 
+    : str(s),
+      arg1(0.0f), arg2(0.0f),
+      startIndex(0), endIndex(0),
+      URLencode(useURLencode) {}
+
+  ConvertArgumentData() = delete;
 
   String& str;
   float arg1, arg2 = 0.0f;
