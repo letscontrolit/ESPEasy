@@ -213,6 +213,8 @@ void P104_data_struct::loadSettings() {
 
     if (expectedZones == -1) { expectedZones = zoneIndex; }
 
+    if (expectedZones == 0) { expectedZones++; } // Guarantee at least 1 zone to be displayed
+
     while (zoneIndex < expectedZones) {
       zones.push_back(P104_zone_struct(zoneIndex + 1));
 
@@ -1789,7 +1791,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     // Append the numeric value as a reference for the 'anim.in' and 'anim.out' subcommands
     for (uint8_t a = 0; a < animationCount; a++) {
       animationTypes[a] += F(" (");
-      animationTypes[a] += a;
+      animationTypes[a] += animationOptions[a];
       animationTypes[a] += ')';
     }
     delay(0);
@@ -1828,7 +1830,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , F("Vertical")
     # endif   // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
-      , F("Ext. ASCII")
+      , F("Extended ASCII")
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , F("Arabic")
@@ -1924,18 +1926,18 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     uint8_t actionCount = 0;
     const __FlashStringHelper *actionTypes[4];
     int actionOptions[4];
-    actionTypes[actionCount] = F("None");
+    actionTypes[actionCount]   = F("None");
     actionOptions[actionCount] = P104_ACTION_NONE;
     actionCount++;
     if (zones.size() < P104_MAX_ZONES) {
-      actionTypes[actionCount] = F("New above");
+      actionTypes[actionCount]   = F("New above");
       actionOptions[actionCount] = P104_ACTION_ADD_ABOVE;
       actionCount++;
-      actionTypes[actionCount] = F("New below");
+      actionTypes[actionCount]   = F("New below");
       actionOptions[actionCount] = P104_ACTION_ADD_BELOW;
       actionCount++;
     }
-    actionTypes[actionCount] = F("Delete");
+    actionTypes[actionCount]   = F("Delete");
     actionOptions[actionCount] = P104_ACTION_DELETE;
     actionCount++;
     #endif // ifdef P104_USE_ZONE_ACTIONS
@@ -1986,11 +1988,14 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     for (int8_t zone = startZone; zone != endZone; zone += incrZone) {
       if (zones[zone].zone <= expectedZones) {
         index = (zones[zone].zone - 1) * P104_OFFSET_COUNT;
+
         html_TR_TD(); // All columns use max. width available
         addHtml(F("&nbsp;"));
         addHtmlInt(zones[zone].zone);
+
         html_TD();    // Size
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SIZE), zones[zone].size, 1, P104_MAX_MODULES_PER_ZONE);
+
         html_TD();    // text
         addTextBox(getPluginCustomArgName(index + P104_OFFSET_TEXT),
                    zones[zone].text,
@@ -1999,6 +2004,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                    false,
                    EMPTY_STRING,
                    EMPTY_STRING);
+
         html_TD(); // Content
         addSelector(getPluginCustomArgName(index + P104_OFFSET_CONTENT),
                     P104_CONTENT_count,
@@ -2009,6 +2015,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     false,
                     true,
                     EMPTY_STRING);
+
         html_TD(); // Alignment
         addSelector(getPluginCustomArgName(index + P104_OFFSET_ALIGNMENT),
                     3,
@@ -2019,6 +2026,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     false,
                     true,
                     EMPTY_STRING);
+
         html_TD(); // Animation In (without None by passing the second element index)
         addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_IN),
                     animationCount - 1,
@@ -2033,6 +2041,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     , F("Animation In")
                     # endif // ifdef P104_USE_TOOLTIPS
                     );
+
         html_TD(); // Speed In
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SPEED), zones[zone].speed, 0, P104_MAX_SPEED_PAUSE_VALUE
                       # ifdef P104_USE_TOOLTIPS
@@ -2054,6 +2063,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(4); // Fill columns
         #ifdef P104_USE_ZONE_ACTIONS
+
         html_TD();    // Spacer
         addHtml(F("|"));
         if (currentRow < 2) {
@@ -2072,9 +2082,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         // Split here
         html_TR_TD(); // Start new row
-        html_TD(4);    // Start with some blank columns
+        html_TD(4);   // Start with some blank columns
 
-        html_TD(); // Animation Out
+        html_TD();    // Animation Out
         addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
                     animationCount,
                     animationTypes,
@@ -2121,12 +2131,13 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Offset
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_OFFSET), zones[zone].offset, 0, 254);
+
         html_TD(); // Brightness
 
         if (zones[zone].brightness == 0) { zones[zone].brightness = 7; }
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_BRIGHTNESS), zones[zone].brightness, 0, P104_BRIGHTNESS_MAX);
 
-        html_TD();                                                   // Repeat (sec)
+        html_TD(); // Repeat (sec)
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_REPEATDELAY),
                       zones[zone].repeatDelay,
                       -1,
@@ -2140,6 +2151,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         #ifdef P104_USE_ZONE_ACTIONS
         html_TD(); // Spacer
         addHtml(F("|"));
+
         html_TD(); // Action
         addSelector(getPluginCustomArgName(index + P104_OFFSET_ACTION),
                     actionCount,
