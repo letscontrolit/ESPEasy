@@ -59,7 +59,7 @@
 // CHG: Using a calculation to reduce line content for scrolling pages instead of a while loop
 // CHG: Using SetBit and GetBit functions to change the content of PCONFIG_LONG(0)
 // CHG: Memory usage reduced (only P036_DisplayLinesV1 is now used)
-// CHG: using uint8_t and uint16_t instead of byte and word
+// CHG: using uint8_t and uint16_t instead of uint8_t and word
 // @uwekaditz: 2019-11-17
 // CHG: commands for P036
 // 1. Display commands: oledframedcmd display [on, off, low, med, high]
@@ -804,7 +804,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           // calculate Pix length of new Content
           P036_data->display->setFont(P036_data->ScrollingPages.Font);
-          uint16_t PixLength = P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content));
+          uint16_t PixLength = P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
 
           if (PixLength > 255) {
             String str_error = F("Pixel length of ");
@@ -812,12 +812,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             str_error += F(" too long for line! Max. 255 pix!");
             addHtmlError(str_error);
 
-            int   strlen         = String(P036_data->DisplayLinesV1[LineNo - 1].Content).length();
-            float fAvgPixPerChar = ((float)PixLength) / strlen;
-            int   iCharToRemove  = ceil(((float)(PixLength - 255)) / fAvgPixPerChar);
+            const int strlen = strnlen_P(P036_data->DisplayLinesV1[LineNo - 1].Content, sizeof(P036_data->DisplayLinesV1[LineNo - 1].Content));
+            if (strlen > 0) {
+              const float fAvgPixPerChar = ((float)PixLength) / strlen;
+              const int   iCharToRemove  = ceil(((float)(PixLength - 255)) / fAvgPixPerChar);
 
-            // shorten string because OLED controller can not handle such long strings
-            P036_data->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
+              // shorten string because OLED controller can not handle such long strings
+              P036_data->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
+            }
           }
           P036_data->MaxFramesToDisplay = 0xff;                         // update frame count
 
@@ -848,7 +850,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           log += F(" Length:");
           log += P036_data->DisplayLinesV1[LineNo - 1].Content).length();
           log += F(" Pix: ");
-          log += P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content));
+          log += P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
           log += F(" Reserved:");
           log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
           addLog(LOG_LEVEL_INFO, log);

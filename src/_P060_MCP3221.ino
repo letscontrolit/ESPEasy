@@ -17,7 +17,7 @@
 #define PLUGIN_VALUENAME1_060 "Analog"
 
 
-boolean Plugin_060(byte function, struct EventStruct *event, String& string)
+boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -53,7 +53,7 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte addr = PCONFIG(0);
+      uint8_t addr = PCONFIG(0);
 
       int optionValues[8] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
       addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
@@ -100,7 +100,7 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte address = PCONFIG(0);
+      uint8_t address = PCONFIG(0);
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P060_data_struct(address));
       P060_data_struct *P060_data =

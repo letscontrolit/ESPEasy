@@ -22,7 +22,7 @@
 #include "src/PluginStructs/P069_data_struct.h"
 
 
-boolean Plugin_069(byte function, struct EventStruct *event, String& string)
+boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

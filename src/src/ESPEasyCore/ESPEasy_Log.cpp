@@ -47,7 +47,7 @@ const __FlashStringHelper * getLogLevelDisplayString(int logLevel) {
   return F("");
 }
 
-const __FlashStringHelper * getLogLevelDisplayStringFromIndex(byte index, int& logLevel) {
+const __FlashStringHelper * getLogLevelDisplayStringFromIndex(uint8_t index, int& logLevel) {
   switch (index) {
     case 0: logLevel = LOG_LEVEL_ERROR;      break;
     case 1: logLevel = LOG_LEVEL_INFO;       break;
@@ -65,7 +65,7 @@ void disableSerialLog() {
   setLogLevelFor(LOG_TO_SERIAL, 0);
 }
 
-void setLogLevelFor(byte destination, byte logLevel) {
+void setLogLevelFor(uint8_t destination, uint8_t logLevel) {
   switch (destination) {
     case LOG_TO_SERIAL:
       if (!log_to_serial_disabled || logLevel == 0) {
@@ -82,7 +82,7 @@ void setLogLevelFor(byte destination, byte logLevel) {
 }
 
 void updateLogLevelCache() {
-  byte max_lvl = 0;
+  uint8_t max_lvl = 0;
   const bool useSerial = Settings.UseSerial && !activeTaskUseSerial0();
   if (log_to_serial_disabled) {
     if (useSerial) {
@@ -106,11 +106,11 @@ void updateLogLevelCache() {
   highest_active_log_level = max_lvl;
 }
 
-bool loglevelActiveFor(byte logLevel) {
+bool loglevelActiveFor(uint8_t logLevel) {
   return loglevelActive(logLevel, highest_active_log_level);
 }
 
-byte getSerialLogLevel() {
+uint8_t getSerialLogLevel() {
   if (log_to_serial_disabled || !Settings.UseSerial || activeTaskUseSerial0()) return 0;
   if (!(WiFiEventData.WiFiServicesInitialized())){
     if (Settings.SerialLogLevel < LOG_LEVEL_INFO) {
@@ -120,8 +120,8 @@ byte getSerialLogLevel() {
   return Settings.SerialLogLevel;
 }
 
-byte getWebLogLevel() {
-  byte logLevelSettings = 0;
+uint8_t getWebLogLevel() {
+  uint8_t logLevelSettings = 0;
   if (Logging.logActiveRead()) {
     logLevelSettings = Settings.WebLogLevel;
   } else {
@@ -132,8 +132,8 @@ byte getWebLogLevel() {
   return logLevelSettings;
 }
 
-bool loglevelActiveFor(byte destination, byte logLevel) {
-  byte logLevelSettings = 0;
+bool loglevelActiveFor(uint8_t destination, uint8_t logLevel) {
+  uint8_t logLevelSettings = 0;
   switch (destination) {
     case LOG_TO_SERIAL: {
       logLevelSettings = getSerialLogLevel();
@@ -160,29 +160,29 @@ bool loglevelActiveFor(byte destination, byte logLevel) {
 }
 
 
-bool loglevelActive(byte logLevel, byte logLevelSettings) {
+bool loglevelActive(uint8_t logLevel, uint8_t logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
 //#ifdef LIMIT_BUILD_SIZE
 
-void addLog(byte loglevel, const __FlashStringHelper *str)
+void addLog(uint8_t loglevel, const __FlashStringHelper *str)
 {
   addToLog(loglevel, str);
 }
 
-void addLog(byte logLevel, const char *line)
+void addLog(uint8_t logLevel, const char *line)
 {
   addToLog(logLevel, line);
 }
 
-void addLog(byte loglevel, const String& string)
+void addLog(uint8_t loglevel, const String& string)
 {
   addToLog(loglevel, string);
 }
 //#endif
 
-void addToLog(byte loglevel, const __FlashStringHelper *str)
+void addToLog(uint8_t loglevel, const __FlashStringHelper *str)
 {
   if (loglevelActiveFor(loglevel)) {
     String copy;
@@ -193,14 +193,14 @@ void addToLog(byte loglevel, const __FlashStringHelper *str)
   }
 }
 
-void addToLog(byte loglevel, const String& string)
+void addToLog(uint8_t loglevel, const String& string)
 {
   if (loglevelActiveFor(loglevel)) {
     addToLog(loglevel, string.c_str());
   }
 }
 
-void addToLog(byte logLevel, const char *line)
+void addToLog(uint8_t logLevel, const char *line)
 {
   // Please note all functions called from here handling line must be PROGMEM aware.
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {

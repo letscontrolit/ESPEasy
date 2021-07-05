@@ -404,7 +404,7 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 
 
 void logTimerStatistics() {
-  byte loglevel = LOG_LEVEL_DEBUG;
+  uint8_t loglevel = LOG_LEVEL_DEBUG;
   updateLoopStats_30sec(loglevel);
 #ifndef BUILD_NO_DEBUG
 //  logStatistics(loglevel, true);
@@ -416,7 +416,7 @@ void logTimerStatistics() {
 #endif
 }
 
-void updateLoopStats_30sec(byte loglevel) {
+void updateLoopStats_30sec(uint8_t loglevel) {
   loopCounterLast = loopCounter;
   loopCounter = 0;
   if (loopCounterLast > loopCounterMax)
@@ -483,6 +483,7 @@ void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
+  setWifiMode(WIFI_OFF);
   ESPEASY_FS.end();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();

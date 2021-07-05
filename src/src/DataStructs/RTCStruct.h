@@ -38,20 +38,20 @@ struct RTCStruct
   bool lastWiFi_set() const;
 
 
-  byte ID1 = 0;
-  byte ID2 = 0;
-  byte lastWiFiChannel = 0;
-  byte factoryResetCounter = 0;
-  byte deepSleepState = 0;
-  byte bootFailedCount = 0;
-  byte flashDayCounter = 0;
-  byte lastWiFiSettingsIndex = 0;
+  uint8_t ID1 = 0;
+  uint8_t ID2 = 0;
+  uint8_t lastWiFiChannel = 0;
+  uint8_t factoryResetCounter = 0;
+  uint8_t deepSleepState = 0;
+  uint8_t bootFailedCount = 0;
+  uint8_t flashDayCounter = 0;
+  uint8_t lastWiFiSettingsIndex = 0;
   unsigned long flashCounter = 0;
   unsigned long bootCounter = 0;
   unsigned long lastMixedSchedulerId = 0;
   uint8_t lastBSSID[6] = { 0 };
-  byte unused1 = 0;  // Force alignment to 4 bytes
-  byte unused2 = 0;
+  uint8_t unused1 = 0;  // Force alignment to 4 bytes
+  uint8_t unused2 = 0;
   unsigned long lastSysTime = 0;
 };
 
