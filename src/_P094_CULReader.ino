@@ -56,7 +56,7 @@
 // Timeout between sentences.
 
 
-boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
@@ -82,10 +82,10 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES: {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P094_NR_OUTPUT_VALUES) {
-          const byte pconfigIndex = i + P094_QUERY1_CONFIG_POS;
-          byte choice             = PCONFIG(pconfigIndex);
+          const uint8_t pconfigIndex = i + P094_QUERY1_CONFIG_POS;
+          uint8_t choice             = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
             Plugin_094_valuename(choice, false),
@@ -110,7 +110,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       if ((nullptr != P094_data) && P094_data->isInitialized()) {
         uint32_t success, error, length_last;
         P094_data->getSentencesReceived(success, error, length_last);
-        byte varNr = VARS_PER_TASK;
+        uint8_t varNr = VARS_PER_TASK;
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success));
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error));
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true);
@@ -167,7 +167,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P094_data) {
-        for (byte varNr = 0; varNr < P94_Nlines; varNr++)
+        for (uint8_t varNr = 0; varNr < P94_Nlines; varNr++)
         {
           P094_data->setLine(varNr, webArg(getPluginCustomArgName(varNr)));
         }
@@ -236,7 +236,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
               }
               // Filter length options:
               // - 22 char, for hash-value then we filter the exact meter including serial and meter type, (that will also prevent very quit sending meters, which normaly is a fault)
-              // - 38 char, The exact message, because we have 2 byte from the value payload
+              // - 38 char, The exact message, because we have 2 uint8_t from the value payload
               //sendData_checkDuplicates(event, event->String2.substring(0, 22));
               sendData(event);
             }
@@ -323,7 +323,7 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received)
   return res;
 }
 
-String Plugin_094_valuename(byte value_nr, bool displayString) {
+String Plugin_094_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case P094_QUERY_VALUE: return displayString ? F("Value")          : F("v");
   }
@@ -363,18 +363,18 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     }
 
 
-    byte filterSet                  = 0;
+    uint8_t filterSet                  = 0;
     uint32_t optional              = 0;
     P094_Filter_Value_Type capture = P094_Filter_Value_Type::P094_packet_length;
     P094_Filter_Comp comparator    = P094_Filter_Comp::P094_Equal_OR;
     String filter;
 
-    for (byte filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine)
+    for (uint8_t filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine)
     {
       // Filter parameter number on a filter line.
       bool newLine = (filterLine % P094_AND_FILTER_BLOCK) == 0;
 
-      for (byte filterLinePar = 0; filterLinePar < P094_ITEMS_PER_FILTER; ++filterLinePar)
+      for (uint8_t filterLinePar = 0; filterLinePar < P094_ITEMS_PER_FILTER; ++filterLinePar)
       {
         String id = getPluginCustomArgName(P094_data_struct::P094_Get_filter_base_index(filterLine) + filterLinePar);
 

@@ -8,23 +8,23 @@
 
 struct P111_data_struct : public PluginTaskData_base {
 
-  P111_data_struct(byte csPin, byte rstPin);
+  P111_data_struct(uint8_t csPin, uint8_t rstPin);
   void init();
-  byte readCardStatus(unsigned long *key, bool *removedTag);
+  uint8_t readCardStatus(unsigned long *key, bool *removedTag);
   String getCardName();
 
   MFRC522 *mfrc522;
 
-  byte counter = 0;
+  uint8_t counter = 0;
 
 private:
   bool reset(int8_t csPin, int8_t resetPin);
-  byte readPassiveTargetID(uint8_t *uid, uint8_t *uidLength);
+  uint8_t readPassiveTargetID(uint8_t *uid, uint8_t *uidLength);
 
-  byte _csPin;
-  byte _rstPin;
+  uint8_t _csPin;
+  uint8_t _rstPin;
 
-  byte errorCount   = 0;
+  uint8_t errorCount   = 0;
   bool removedState = true; // On startup, there will usually not be a tag nearby
 };
 

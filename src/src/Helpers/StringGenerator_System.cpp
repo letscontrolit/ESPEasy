@@ -58,7 +58,9 @@ const __FlashStringHelper * getLastBootCauseString() {
   #include <rom/rtc.h>
  #endif
 
-String getResetReasonString(byte icore) {
+
+// See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
+String getResetReasonString(uint8_t icore) {
   bool isDEEPSLEEP_RESET(false);
 
   #ifdef ESP32S2

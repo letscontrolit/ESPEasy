@@ -92,7 +92,7 @@ private:
   size_t              peekfilenr  = 0;
   size_t              peekreadpos = 0;
 
-  byte storageLocation = CACHE_STORAGE_SPIFFS;
+  uint8_t storageLocation = CACHE_STORAGE_SPIFFS;
   bool writeerror      = false;
 };
 

@@ -17,6 +17,7 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
 
@@ -200,6 +201,29 @@ void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
 
 void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event) {
   WiFiEventData.setAuthMode(event.newMode);
+}
+
+void onWiFiScanDone(void *arg, STATUS status) {
+  if (status == OK) {
+    auto *head = reinterpret_cast<bss_info *>(arg);
+    int scanCount = 0;
+    for (bss_info *it = head; it != nullptr; it = STAILQ_NEXT(it, next)) {
+      WiFi_AP_Candidates.process_WiFiscan(*it);
+      ++scanCount;
+    }
+    WiFi_AP_Candidates.after_process_WiFiscan();
+    WiFiEventData.lastGetScanMoment.setNow();
+    WiFiEventData.processedScanDone = true;
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("WiFi : Scan finished, found: ");
+      log += scanCount;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  }
+
+  WiFiMode_t mode = WiFi.getMode();
+  WiFi.mode(WIFI_OFF);
+  WiFi.mode(mode);
 }
 
 #endif // ifdef ESP8266

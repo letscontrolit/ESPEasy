@@ -21,7 +21,7 @@
 
 // FIXME TD-er: This plugin uses a lot of calls to the P022_data_struct, which could be combined in single functions.
 
-boolean Plugin_022(byte function, struct EventStruct *event, String& string)
+boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean  success = false;
   int      address = 0;
