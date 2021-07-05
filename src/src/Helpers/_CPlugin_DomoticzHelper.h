@@ -14,7 +14,7 @@
 // 2=Dry
 // 3=Wet
 String humStatDomoticz(struct EventStruct *event,
-                       byte                rel_index);
+                       uint8_t                rel_index);
 
 int    mapRSSItoDomoticz();
 
@@ -22,7 +22,7 @@ int    mapVccToDomoticz();
 
 // Format including trailing semi colon
 String formatUserVarDomoticz(struct EventStruct *event,
-                             byte                rel_index);
+                             uint8_t                rel_index);
 
 String formatUserVarDomoticz(int value);
 

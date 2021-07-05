@@ -15,7 +15,7 @@
 #define PLUGIN_VALUENAME2_006 "Pressure"
 
 
-boolean Plugin_006(byte function, struct EventStruct *event, String& string)
+boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

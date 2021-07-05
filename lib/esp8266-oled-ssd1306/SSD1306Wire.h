@@ -89,7 +89,7 @@ class SSD1306Wire : public OLEDDisplay {
         sendCommand(minBoundY);
         sendCommand(maxBoundY);
 
-        byte k = 0;
+        uint8_t k = 0;
         for (y = minBoundY; y <= maxBoundY; y++) {
           for (x = minBoundX; x <= maxBoundX; x++) {
             if (k == 0) {

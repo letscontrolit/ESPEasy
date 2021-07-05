@@ -172,7 +172,7 @@ bool TinyGPSPlus::endOfTermHandler()
   // If it's the checksum term, and the checksum checks out, commit
   if (isChecksumTerm)
   {
-    byte checksum = 16 * fromHex(term[0]) + fromHex(term[1]);
+    uint8_t checksum = 16 * fromHex(term[0]) + fromHex(term[1]);
     if (checksum == parity)
     {
       passedChecksumCount++;
@@ -447,7 +447,7 @@ void TinyGPSSatellites::commit()
   satsTracked = 0;
   satsVisible = 0;
   bestSNR = 0;
-  for (byte i = 0; i < _GPS_MAX_ARRAY_LENGTH; ++i) {
+  for (uint8_t i = 0; i < _GPS_MAX_ARRAY_LENGTH; ++i) {
     if (id[i] != 0) {
       if (snr[i] != 0) {
         ++satsTracked;
@@ -531,7 +531,7 @@ void TinyGPSSatellites::setSatId(const char *term)
       ++pos;
       uint32_t value = atol(term);
       if (id[pos] != value) {
-        id[pos] = static_cast<byte>(value);
+        id[pos] = static_cast<uint8_t>(value);
         snr[pos] = 0;
       }
    }
@@ -551,7 +551,7 @@ void TinyGPSSatellites::setMessageSeqNr(const char *term, uint8_t sentenceSystem
    int32_t seqNr = atol(term);
    int32_t newPos = (seqNr - 1) * 4 + (sentenceSystem * _GPS_MAX_NR_ACTIVE_SATELLITES);
    if (newPos >= 0 && newPos < _GPS_MAX_ARRAY_LENGTH) {
-     for (byte i = newPos; i < (newPos + 4) && i < _GPS_MAX_ARRAY_LENGTH; ++i) {
+     for (uint8_t i = newPos; i < (newPos + 4) && i < _GPS_MAX_ARRAY_LENGTH; ++i) {
        id[i] = 0;
        snr[i] = 0;
      }

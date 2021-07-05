@@ -100,6 +100,7 @@ const __FlashStringHelper * getPluginFunctionName(int function) {
 }
 
 bool mustLogFunction(int function) {
+  if (!Settings.EnableTimingStats()) return false;
   switch (function) {
     case PLUGIN_INIT_ALL:              return false;
     case PLUGIN_INIT:                  return false;
@@ -163,6 +164,7 @@ const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function) 
 }
 
 bool mustLogCFunction(CPlugin::Function function) {
+  if (!Settings.EnableTimingStats()) return false;
   switch (function) {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return false;
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return false;

@@ -33,8 +33,12 @@ int getDeepSleepMax()
 #if defined(CORE_POST_2_5_0)
   dsmax = INT_MAX;
 
-  if ((ESP.deepSleepMax() / 1000000ULL) <= (uint64_t)INT_MAX) {
-    dsmax = (int)(ESP.deepSleepMax() / 1000000ULL);
+  // Convert to sec and add 5% margin.
+  // See: https://github.com/esp8266/Arduino/pull/4936#issuecomment-410435875
+  const uint64_t sdk_dsmax_sec = ESP.deepSleepMax() / 1050000ULL;
+
+  if (sdk_dsmax_sec <= static_cast<uint64_t>(INT_MAX)) {
+    dsmax = sdk_dsmax_sec;
   }
 #endif // if defined(CORE_POST_2_5_0)
   return dsmax;
@@ -125,11 +129,10 @@ void deepSleepStart(int dsdelay)
 
   #if defined(ESP8266)
     # if defined(CORE_POST_2_5_0)
-  uint64_t deepSleep_usec = dsdelay * 1000000ULL;
-
-  if ((deepSleep_usec > ESP.deepSleepMax()) || (dsdelay < 0)) {
-    deepSleep_usec = ESP.deepSleepMax();
+  if ((dsdelay < 0) || dsdelay > getDeepSleepMax()) {
+    dsdelay = getDeepSleepMax();
   }
+  uint64_t deepSleep_usec = dsdelay * 1000000ULL;
 
   if (Settings.UseAlternativeDeepSleep()) {
     // See: https://github.com/esp8266/Arduino/issues/6318#issuecomment-711389479
@@ -163,7 +166,7 @@ void deepSleepStart(int dsdelay)
     }
     yield();
   } else {
-    ESP.deepSleepInstant(deepSleep_usec, WAKE_RF_DEFAULT);
+    ESP.deepSleep(deepSleep_usec, WAKE_RF_DEFAULT);
   }
     # else // if defined(CORE_POST_2_5_0)
 

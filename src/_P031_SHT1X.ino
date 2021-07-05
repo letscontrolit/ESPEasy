@@ -35,7 +35,7 @@ public:
 
 	P031_data_struct() {}
 
-  byte init(byte data_pin, byte clock_pin, bool pullUp, byte clockdelay) {
+  uint8_t init(uint8_t data_pin, uint8_t clock_pin, bool pullUp, uint8_t clockdelay) {
     _dataPin = data_pin;
     _clockPin = clock_pin;
     _clockdelay = clockdelay;
@@ -131,13 +131,13 @@ public:
     delay(11);
   }
 
-  byte readStatus()
+  uint8_t readStatus()
   {
     sendCommand(SHT1X_CMD_READ_STATUS);
     return readData(8);
   }
 
-  void sendCommand(const byte cmd)
+  void sendCommand(const uint8_t cmd)
   {
     sendCommandTime = millis();
     pinMode(_dataPin, OUTPUT);
@@ -181,7 +181,7 @@ public:
     int val = 0;
 
     if (bits == 16) {
-      // Read most significant byte
+      // Read most significant uint8_t
       val = p031_shiftIn(_dataPin, _clockPin, MSBFIRST);
       val <<= 8;
 
@@ -195,7 +195,7 @@ public:
       pinMode(_dataPin, input_mode);
     }
 
-    // Read least significant byte
+    // Read least significant uint8_t
     val |= p031_shiftIn(_dataPin, _clockPin, MSBFIRST);
 
     // Keep DATA pin high to skip CRC
@@ -247,15 +247,15 @@ public:
   unsigned long sendCommandTime = 0;
 
   int input_mode = 0;
-  byte _dataPin = 0;
-  byte _clockPin = 0;
-  byte state = P031_IDLE;
-  byte _clockdelay = 0;
+  uint8_t _dataPin = 0;
+  uint8_t _clockPin = 0;
+  uint8_t state = P031_IDLE;
+  uint8_t _clockdelay = 0;
 };
 
 
 
-boolean Plugin_031(byte function, struct EventStruct *event, String& string)
+boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -321,12 +321,12 @@ boolean Plugin_031(byte function, struct EventStruct *event, String& string)
         if (nullptr == P031_data) {
           return success;
         }
-        byte status = P031_data->init(
+        uint8_t status = P031_data->init(
           CONFIG_PIN1, CONFIG_PIN2,
           Settings.TaskDevicePin1PullUp[event->TaskIndex],
           PCONFIG(0));
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("SHT1X : Status byte: ");
+          String log = F("SHT1X : Status uint8_t: ");
           log += String(status, HEX);
           log += F(" - resolution: ");
           log += ((status & 1) ? F("low") : F("high"));

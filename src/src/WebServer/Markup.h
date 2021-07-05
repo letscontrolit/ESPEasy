@@ -131,7 +131,7 @@ void addCheckBox(const String& id, boolean checked, bool disabled = false);
 void addNumericBox(const __FlashStringHelper * id, int value, int min, int max);
 void addNumericBox(const String& id, int value, int min, int max);
 
-void addFloatNumberBox(const String& id, float value, float min, float max, byte nrDecimals = 6, float stepsize = 0.0f);
+void addFloatNumberBox(const String& id, float value, float min, float max, uint8_t nrDecimals = 6, float stepsize = 0.0f);
 
 // ********************************************************************************
 // Add Textbox

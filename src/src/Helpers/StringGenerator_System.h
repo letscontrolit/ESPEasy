@@ -23,7 +23,7 @@ const __FlashStringHelper * getLastBootCauseString();
 #ifdef ESP32
 
 // See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
-String  getResetReasonString(byte icore);
+String  getResetReasonString(uint8_t icore);
 #endif // ifdef ESP32
 
 String  getResetReasonString();

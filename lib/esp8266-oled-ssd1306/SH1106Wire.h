@@ -90,7 +90,7 @@ class SH1106Wire : public OLEDDisplay {
         uint8_t minBoundXp2H = (minBoundX + 2) & 0x0F;
         uint8_t minBoundXp2L = 0x10 | ((minBoundX + 2) >> 4 );
 
-        byte k = 0;
+        uint8_t k = 0;
         for (y = minBoundY; y <= maxBoundY; y++) {
           sendCommand(0xB0 + y);
           sendCommand(minBoundXp2H);
