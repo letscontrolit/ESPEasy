@@ -18,15 +18,15 @@ struct UserVarStruct {
 
   // 32 bit unsigned int stored at the memory location of the float
   uint32_t getUint32(taskIndex_t taskIndex,
-                     byte        varNr) const;
+                     uint8_t        varNr) const;
   void     setUint32(taskIndex_t taskIndex,
-                     byte        varNr,
+                     uint8_t        varNr,
                      uint32_t    value);
 
 
   size_t getNrElements() const;
 
-  byte * get();
+  uint8_t * get();
 
 private:
 

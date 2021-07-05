@@ -156,12 +156,12 @@ class I2Cdev {
 
         public:
             static void setup(int khz, boolean pullup);
-            static byte beginTransmission(byte device);
-            static byte write(byte value);
-            static byte writeBuf(byte device, byte address, byte *data, byte num);
-            static byte readBuf(byte device, byte address, byte *data, byte num);
+            static uint8_t beginTransmission(uint8_t device);
+            static uint8_t write(uint8_t value);
+            static uint8_t writeBuf(uint8_t device, uint8_t address, uint8_t *data, uint8_t num);
+            static uint8_t readBuf(uint8_t device, uint8_t address, uint8_t *data, uint8_t num);
             static void reset();
-            static byte stop();
+            static uint8_t stop();
     };
 #endif
 

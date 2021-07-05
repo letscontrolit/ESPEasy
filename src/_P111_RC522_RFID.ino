@@ -26,7 +26,7 @@
 
 // #define P111_USE_REMOVAL      // Enable (real) Tag Removal detection options
 
-boolean Plugin_111(byte function, struct EventStruct *event, String& string)
+boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -167,7 +167,7 @@ boolean Plugin_111(byte function, struct EventStruct *event, String& string)
 
         unsigned long key        = P111_NO_KEY;
         bool          removedTag = false;
-        byte          error      = P111_data->readCardStatus(&key, &removedTag);
+        uint8_t          error      = P111_data->readCardStatus(&key, &removedTag);
 
         if (error == 0) {
           unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);

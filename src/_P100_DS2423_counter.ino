@@ -14,7 +14,7 @@
 # define PLUGIN_NAME_100       "Pulse Counter - DS2423 [TESTING]"
 # define PLUGIN_VALUENAME1_100 "CountDelta"
 
-boolean Plugin_100(byte function, struct EventStruct *event, String& string)
+boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

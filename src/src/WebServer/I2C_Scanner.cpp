@@ -26,7 +26,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
       , i2c_addresses_t &excludeDevices
 #endif
 ) {
-  byte error, address;
+  uint8_t error, address;
 
   for (address = 1; address <= 127; address++)
   {
@@ -143,7 +143,7 @@ void handle_i2cscanner_json() {
 #endif // WEBSERVER_NEW_UI
 
 
-String getKnownI2Cdevice(byte address) {
+String getKnownI2Cdevice(uint8_t address) {
   String result;
   #ifndef LIMIT_BUILD_SIZE
 
@@ -266,7 +266,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
       , i2c_addresses_t &excludeDevices
 #endif
 ) {
-  byte error, address;
+  uint8_t error, address;
 
   for (address = 1; address <= 127; address++)
   {

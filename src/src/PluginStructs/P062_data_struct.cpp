@@ -58,7 +58,7 @@ bool P062_data_struct::readKey(uint16_t& key) {
   {
     uint16_t colMask = 0x01;
 
-    for (byte col = 1; col <= 12; col++)
+    for (uint8_t col = 1; col <= 12; col++)
     {
       if (key & colMask) // this key pressed?
       {
