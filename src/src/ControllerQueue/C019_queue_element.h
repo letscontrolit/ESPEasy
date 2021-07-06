@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/UnitMessageCount.h"
+#include "../DataStructs/MessageRouteInfo.h"
 #include "../Globals/CPlugins.h"
 
 
@@ -30,7 +30,7 @@ public:
 
   bool isDuplicate(const C019_queue_element& other) const;
 
-  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
+  const MessageRouteInfo_t* getUnitMessageCount() const { return nullptr; }
 
   String packed;
   unsigned long _timestamp         = millis();
@@ -38,7 +38,7 @@ public:
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   pluginID_t plugin_id = INVALID_PLUGIN_ID;
   EventStruct event;
-  UnitMessageCount_t UnitMessageCount; 
+  MessageRouteInfo_t MessageRouteInfo; 
 };
 
 // #endif //USES_C019

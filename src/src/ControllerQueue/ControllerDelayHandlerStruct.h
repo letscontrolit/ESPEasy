@@ -3,7 +3,7 @@
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
-#include "../DataStructs/UnitMessageCount.h"
+#include "../DataStructs/MessageRouteInfo.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
@@ -108,12 +108,12 @@ struct ControllerDelayHandlerStruct {
   bool isDuplicate(const T& element) const {
     // Some controllers may receive duplicate messages, due to lost acknowledgement
     // This is actually the same message, so this should not be processed.
-    if (!unitLastMessageCount.isNew(element.getUnitMessageCount())) {
+    if (!unitMessageRouteInfo_map.isNew(element.getUnitMessageCount())) {
       return true;
     }
     // The unit message count is still stored to make sure a new one with the same count
     // is considered a duplicate, even when the queue is empty.
-    unitLastMessageCount.add(element.getUnitMessageCount());
+    unitMessageRouteInfo_map.add(element.getUnitMessageCount());
 
     // the setting 'deduplicate' does look at the content of the message and only compares it to messages in the queue.
     if (deduplicate && !sendQueue.empty()) {
@@ -240,7 +240,7 @@ struct ControllerDelayHandlerStruct {
   }
 
   std::list<T>  sendQueue;
-  mutable UnitLastMessageCount_map unitLastMessageCount;
+  mutable UnitMessageRouteInfo_map unitMessageRouteInfo_map;
   unsigned long lastSend;
   unsigned int  minTimeBetweenMessages;
   unsigned long expire_timeout = 0;

@@ -381,7 +381,7 @@ bool processMQTT_message(controllerIndex_t controllerIndex,
                         const String    & topic,
                         const String    & payload,
                         bool retained,
-                        const UnitMessageCount_t* unitMessageCount) 
+                        const MessageRouteInfo_t* unitMessageCount) 
 {
   bool processed = false;
 

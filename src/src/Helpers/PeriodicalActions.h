@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/UnitMessageCount.h"
+#include "../DataStructs/MessageRouteInfo.h"
 #include "../Globals/CPlugins.h"
 #include "../Helpers/Scheduler.h"
 
@@ -41,7 +41,7 @@ bool processMQTT_message(controllerIndex_t controllerIndex,
                         const String    & topic,
                         const String    & payload,
                         bool retained,
-                        const UnitMessageCount_t* unitMessageCount);
+                        const MessageRouteInfo_t* unitMessageCount);
 
 void updateMQTTclient_connected();
 

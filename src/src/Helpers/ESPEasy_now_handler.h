@@ -14,7 +14,7 @@
 # include "../DataStructs/ESPEasy_Now_p2p_data.h"
 # include "../DataStructs/ESPEasy_now_traceroute.h"
 # include "../DataStructs/MAC_address.h"
-# include "../DataStructs/UnitMessageCount.h"
+# include "../DataStructs/MessageRouteInfo.h"
 # include "../DataStructs/WiFi_AP_Candidate.h"
 # include "../Globals/CPlugins.h"
 
@@ -72,7 +72,7 @@ public:
   bool sendToMQTT(controllerIndex_t controllerIndex,
                   const String    & topic,
                   const String    & payload,
-                  const UnitMessageCount_t* unitMessageCount);
+                  const MessageRouteInfo_t* unitMessageCount);
 
   bool sendMQTTCheckControllerQueue(controllerIndex_t controllerIndex);
   bool sendMQTTCheckControllerQueue(const MAC_address& mac, 

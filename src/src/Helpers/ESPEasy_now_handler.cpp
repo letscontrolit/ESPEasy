@@ -969,7 +969,7 @@ bool ESPEasy_now_handler_t::handle_NTPquery(const ESPEasy_now_merger& message, b
 // * MQTT controller forwarder
 // *************************************************************
 
-bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const String& topic, const String& payload, const UnitMessageCount_t* unitMessageCount)
+bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const String& topic, const String& payload, const MessageRouteInfo_t* unitMessageCount)
 {
   if (!use_EspEasy_now) { return false; }
 
@@ -1059,15 +1059,15 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
     bool success = false;
 
     if (message.getMac(mac)) {
-      UnitMessageCount_t UnitMessageCount;
+      MessageRouteInfo_t MessageRouteInfo;
       const NodeStruct* node = Nodes.getNodeByMac(mac);
       if (node != nullptr) {
-        if (message.getMessageCount(UnitMessageCount.count)) {
-          UnitMessageCount.unit = node->unit;
+        if (message.getMessageCount(MessageRouteInfo.count)) {
+          MessageRouteInfo.unit = node->unit;
         }
       }
       
-      success = MQTTpublish(controllerIndex, message, UnitMessageCount, _mqtt_retainFlag);
+      success = MQTTpublish(controllerIndex, message, MessageRouteInfo, _mqtt_retainFlag);
       if (!success) {
         mustKeep = false;
         return success;
