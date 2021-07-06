@@ -16,7 +16,7 @@ P028_data_struct::P028_data_struct(uint8_t addr) :
   state(BMx_Uninitialized) {}
 
 
-byte P028_data_struct::get_config_settings() const {
+uint8_t P028_data_struct::get_config_settings() const {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
@@ -26,7 +26,7 @@ byte P028_data_struct::get_config_settings() const {
   }
 }
 
-byte P028_data_struct::get_control_settings() const {
+uint8_t P028_data_struct::get_control_settings() const {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:

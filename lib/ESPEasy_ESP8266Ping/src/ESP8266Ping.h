@@ -38,8 +38,8 @@ class PingClass {
   public:
     PingClass();
 
-    bool ping(IPAddress dest,   byte count = 5);
-    bool ping(const char* host, byte count = 5);
+    bool ping(IPAddress dest,   uint8_t count = 5);
+    bool ping(const char* host, uint8_t count = 5);
 
     int averageTime();
 
@@ -50,7 +50,7 @@ class PingClass {
     IPAddress _dest;
     ping_option _options;
 
-    static byte _expected_count, _errors, _success;
+    static uint8_t _expected_count, _errors, _success;
     static int _avg_time;
 };
 

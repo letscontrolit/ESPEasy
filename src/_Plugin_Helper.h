@@ -114,13 +114,13 @@ String               getPluginCustomArgName(int varNr);
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
 void pluginWebformShowValue(taskIndex_t   taskIndex,
-                            byte          varNr,
+                            uint8_t          varNr,
                             const __FlashStringHelper * label,
                             const String& value,
                             bool          addTrailingBreak = false);
 
 void pluginWebformShowValue(taskIndex_t   taskIndex,
-                            byte          varNr,
+                            uint8_t          varNr,
                             const String& label,
                             const String& value,
                             bool          addTrailingBreak = false);
@@ -141,7 +141,7 @@ void pluginWebformShowValue(const String& valName,
 // Return if parameter at given paramNr matches given taskIndex.
 bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
                                           const String& string,
-                                          byte          paramNr);
+                                          uint8_t          paramNr);
 
 bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, const String& newline);
 

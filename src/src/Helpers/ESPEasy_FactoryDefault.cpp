@@ -220,6 +220,7 @@ void ResetFactory()
   Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
 
   Settings.JSONBoolWithoutQuotes(DEFAULT_JSON_BOOL_WITHOUT_QUOTES);
+  Settings.EnableTimingStats(DEFAULT_ENABLE_TIMING_STATS);
 
 #ifdef PLUGIN_DESCR
   strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));

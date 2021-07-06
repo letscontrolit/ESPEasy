@@ -37,7 +37,7 @@ unsigned long ntpGetTime() {
   static const char timeServer[] = "time.nist.gov";
 
   const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message  
-  byte packetBuffer[NTP_PACKET_SIZE];
+  uint8_t packetBuffer[NTP_PACKET_SIZE];
 
   EthernetUDP Udp;
   Udp.begin(8888);

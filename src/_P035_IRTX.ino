@@ -56,7 +56,7 @@ IRsend *Plugin_035_irSender = nullptr;
 
 #define P35_Ntimings 250 //Defines the ammount of timings that can be stored. Used in RAW and RAW2 encodings
 
-boolean Plugin_035(byte function, struct EventStruct *event, String &command)
+boolean Plugin_035(uint8_t function, struct EventStruct *event, String &command)
 {
   bool success = false;
 
@@ -543,9 +543,9 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // (The correct size, and a legacy shorter size.)
       // Guess which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
+      // the correct length/uint8_t size.
       // This should provide backward compatiblity with legacy messages.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      stateSize = inputLength / 2;  // Every two hex chars is a uint8_t.
       // Use at least the minimum size.
       stateSize = std::max(stateSize, kDaikinStateLengthShort);
       // If we think it isn't a "short" message.
@@ -559,8 +559,8 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // Fujitsu has four distinct & different size states, so make a best guess
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // the correct length/uint8_t size.
+      stateSize = inputLength / 2;  // Every two hex chars is a uint8_t.
       // Use at least the minimum size.
       stateSize = std::max(stateSize,
                            (uint16_t) (kFujitsuAcStateLengthShort - 1));
@@ -575,8 +575,8 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // HitachiAc3 has two distinct & different size states, so make a best
       // guess which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // the correct length/uint8_t size.
+      stateSize = inputLength / 2;  // Every two hex chars is a uint8_t.
       // Use at least the minimum size.
       stateSize = std::max(stateSize,
                            (uint16_t) (kHitachiAc3MinStateLength));
@@ -592,8 +592,8 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // MWM has variable size states, so make a best guess
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // the correct length/uint8_t size.
+      stateSize = inputLength / 2;  // Every two hex chars is a uint8_t.
       // Use at least the minimum size.
       stateSize = std::max(stateSize, (uint16_t) 3);
       // Cap the maximum size.
@@ -603,8 +603,8 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // Samsung has two distinct & different size states, so make a best guess
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // the correct length/uint8_t size.
+      stateSize = inputLength / 2;  // Every two hex chars is a uint8_t.
       // Use at least the minimum size.
       stateSize = std::max(stateSize, (uint16_t) (kSamsungAcStateLength));
       // If we think it isn't a "normal" message.
@@ -630,7 +630,7 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
     return false;
   }
 
-  // Ptr to the least significant byte of the resulting state for this protocol.
+  // Ptr to the least significant uint8_t of the resulting state for this protocol.
   uint8_t *statePtr = &state[stateSize - 1];
 
   // Convert the string into a state array of the correct length.
@@ -652,12 +652,12 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       return false;
     }
     if (i % 2 == 1)
-    { // Odd: Upper half of the byte.
+    { // Odd: Upper half of the uint8_t.
       *statePtr += (c << 4);
-      statePtr--; // Advance up to the next least significant byte of state.
+      statePtr--; // Advance up to the next least significant uint8_t of state.
     }
     else
-    { // Even: Lower half of the byte.
+    { // Even: Lower half of the uint8_t.
       *statePtr = c;
     }
   }

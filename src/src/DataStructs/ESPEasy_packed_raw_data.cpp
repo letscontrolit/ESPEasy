@@ -34,21 +34,21 @@ uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offse
   return 0;
 }
 
-void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, byte *data, uint8_t& cursor) {
+void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, uint8_t *data, uint8_t& cursor) {
   // Clip values to upper limit
   const uint64_t upperlimit = (1ull << (8*byteSize)) - 1;
   if (value > upperlimit) { value = upperlimit; }
   for (uint8_t x = 0; x < byteSize; x++) {
-    byte next = 0;
+    uint8_t next = 0;
     if (sizeof(value) > x) {
-      next = static_cast<byte>((value >> (x * 8)) & 0xFF);
+      next = static_cast<uint8_t>((value >> (x * 8)) & 0xFF);
     }
     data[cursor] = next;
     ++cursor;
   }
 }
 
-void LoRa_intToBytes(int64_t value, uint8_t byteSize, byte *data, uint8_t& cursor) {
+void LoRa_intToBytes(int64_t value, uint8_t byteSize, uint8_t *data, uint8_t& cursor) {
   // Clip values to lower limit
   const int64_t lowerlimit = (1ull << ((8*byteSize) - 1)) * -1;
   if (value < lowerlimit) { value = lowerlimit; }
@@ -58,7 +58,7 @@ void LoRa_intToBytes(int64_t value, uint8_t byteSize, byte *data, uint8_t& curso
   LoRa_uintToBytes(value, byteSize, data, cursor);
 }
 
-String LoRa_base16Encode(byte *data, size_t size) {
+String LoRa_base16Encode(uint8_t *data, size_t size) {
   String output;
   output.reserve(size * 2);
   char buffer[3];
@@ -74,7 +74,7 @@ String LoRa_base16Encode(byte *data, size_t size) {
 String LoRa_addInt(uint64_t value, PackedData_enum datatype) {
   float factor, offset;
   uint8_t byteSize = getPackedDataTypeSize(datatype, factor, offset);
-  byte data[4] = {0};
+  uint8_t data[4] = {0};
   uint8_t cursor = 0;
   LoRa_uintToBytes((value + offset) * factor, byteSize, &data[0], cursor);
   return LoRa_base16Encode(data, cursor);
@@ -84,7 +84,7 @@ String LoRa_addInt(uint64_t value, PackedData_enum datatype) {
 String LoRa_addFloat(float value, PackedData_enum datatype) {
   float factor, offset;
   uint8_t byteSize = getPackedDataTypeSize(datatype, factor, offset);
-  byte data[4] = {0};
+  uint8_t data[4] = {0};
   uint8_t cursor = 0;
   LoRa_intToBytes((value + offset) * factor, byteSize, &data[0], cursor);
   return LoRa_base16Encode(data, cursor);

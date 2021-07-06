@@ -100,8 +100,8 @@ void parseCompleteNonCommentLine(String& line,
                                  bool  & isCommand,
                                  bool    condition[],
                                  bool    ifBranche[],
-                                 byte  & ifBlock,
-                                 byte  & fakeIfBlock);
+                                 uint8_t  & ifBlock,
+                                 uint8_t  & fakeIfBlock);
 
 void processMatchedRule(String& action,
                         const String& event,
@@ -110,8 +110,8 @@ void processMatchedRule(String& action,
                         bool  & isCommand,
                         bool    condition[],
                         bool    ifBranche[],
-                        byte  & ifBlock,
-                        byte  & fakeIfBlock);
+                        uint8_t  & ifBlock,
+                        uint8_t  & fakeIfBlock);
 
 /********************************************************************************************\
    Check if an event matches to a given rule
