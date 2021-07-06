@@ -996,7 +996,7 @@ String saveProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
   if (memcmp(tmp_md5, ProvisioningSettings.md5, 16) != 0) {
     // Settings have changed, save to file.
     memcpy(ProvisioningSettings.md5, tmp_md5, 16);
-    err = SaveToFile_trunc(getFileName(FileType::PROVISIONING_DAT).c_str(), 0, (byte *)&ProvisioningSettings, sizeof(ProvisioningStruct));
+    err = SaveToFile_trunc(getFileName(FileType::PROVISIONING_DAT).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
   }
   return err;
 }
@@ -1009,7 +1009,7 @@ String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
   uint8_t calculatedMd5[16] = { 0 };
   MD5Builder md5;
 
-  String err = LoadFromFile(getFileName(FileType::PROVISIONING_DAT).c_str(), 0, (byte *)&ProvisioningSettings, sizeof(ProvisioningStruct));
+  String err = LoadFromFile(getFileName(FileType::PROVISIONING_DAT).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
   md5.begin();
   md5.add(((uint8_t *)&ProvisioningSettings) + 16, sizeof(ProvisioningSettings) - 16);
   md5.calculate();
@@ -1098,7 +1098,7 @@ String SaveToFile(const char *fname, int index, const uint8_t *memAddress, int d
   return doSaveToFile(fname, index, memAddress, datasize, "r+");
 }
 
-String SaveToFile_trunc(const char *fname, int index, const byte *memAddress, int datasize)
+String SaveToFile_trunc(const char *fname, int index, const uint8_t *memAddress, int datasize)
 {
   return doSaveToFile(fname, index, memAddress, datasize, "w+");
 }

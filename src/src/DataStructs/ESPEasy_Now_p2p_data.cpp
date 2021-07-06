@@ -26,20 +26,20 @@ bool ESPEasy_Now_p2p_data::validate() const {
 }
 
 bool ESPEasy_Now_p2p_data::addFloat(float value) {
-  return addBinaryData((byte *)(&value), sizeof(float));
+  return addBinaryData((uint8_t *)(&value), sizeof(float));
 }
 
 bool ESPEasy_Now_p2p_data::getFloat(float& value, size_t& offset) const {
   if ((offset + sizeof(float)) >= dataSize) {
     return false;
   }
-  memcpy((byte *)(&value), &data[offset], sizeof(float));
+  memcpy((uint8_t *)(&value), &data[offset], sizeof(float));
   offset += sizeof(float);
   return true;
 }
 
 bool ESPEasy_Now_p2p_data::addString(const String& value) {
-  return addBinaryData((byte *)(value.c_str()), value.length() + 1); // Include null termination
+  return addBinaryData((uint8_t *)(value.c_str()), value.length() + 1); // Include null termination
 }
 
 bool ESPEasy_Now_p2p_data::getString(String& value, size_t& offset) const {

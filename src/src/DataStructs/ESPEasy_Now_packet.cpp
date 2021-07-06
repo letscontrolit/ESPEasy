@@ -150,7 +150,7 @@ void ESPEasy_Now_packet::setMac(const MAC_address& mac)
 
 void ESPEasy_Now_packet::setBroadcast()
 {
-  for (byte i = 0; i < 6; ++i)
+  for (uint8_t i = 0; i < 6; ++i)
   {
     _mac[i] = 0xFF;
   }

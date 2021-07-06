@@ -101,7 +101,7 @@ const __FlashStringHelper * NodeStruct::getNodeTypeDisplayString(uint8_t nodeTyp
   return F("");
 }
 
-String NodeStruct::getNodeTypeDisplayString() const {
+const __FlashStringHelper * NodeStruct::getNodeTypeDisplayString() const {
   return NodeStruct::getNodeTypeDisplayString(nodeType);
 }
 

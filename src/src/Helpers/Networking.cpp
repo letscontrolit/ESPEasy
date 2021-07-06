@@ -458,12 +458,12 @@ void sendSysInfoUDP(uint8_t repeats)
   }
 
   // Prepare UDP packet to send
-  byte data[80];
+  uint8_t data[80];
   data[0] = 255;
   data[1] = 1;
   memcpy(&data[2], thisNode, sizeof(NodeStruct));
 
-  for (byte counter = 0; counter < repeats; counter++)
+  for (uint8_t counter = 0; counter < repeats; counter++)
   {
     statusLED(true);
 

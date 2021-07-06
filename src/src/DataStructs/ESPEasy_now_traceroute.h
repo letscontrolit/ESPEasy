@@ -23,7 +23,7 @@ struct ESPEasy_now_traceroute_struct
                   uint8_t& successRate) const;
 
   // Append unit at the end (thus furthest distance)
-  void           addUnit(byte unit);
+  void           addUnit(uint8_t unit);
 
   uint8_t        getDistance() const;
 
@@ -33,7 +33,7 @@ struct ESPEasy_now_traceroute_struct
   // Make sure the array is large enough to store the data.
   uint8_t* get();
 
-  void     setSuccessRate_last_node(byte unit, uint8_t successRate);
+  void     setSuccessRate_last_node(uint8_t unit, uint8_t successRate);
 
   // Return true when this tracerouteis more favorable
   bool     operator<(const ESPEasy_now_traceroute_struct& other) const;
@@ -45,7 +45,7 @@ struct ESPEasy_now_traceroute_struct
   // Compute success rate
   int computeSuccessRate() const;
 
-  bool unitInTraceRoute(byte unit) const;
+  bool unitInTraceRoute(uint8_t unit) const;
 
 private:
 
@@ -55,6 +55,6 @@ private:
   std::vector<uint8_t>unit_vector;
 };
 
-typedef std::map<byte, ESPEasy_now_traceroute_struct> TraceRouteMap;
+typedef std::map<uint8_t, ESPEasy_now_traceroute_struct> TraceRouteMap;
 
 #endif // ifndef DATASTRUCTS_ESPEASY_NOW_TRACEROUTE_H

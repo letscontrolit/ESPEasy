@@ -334,7 +334,7 @@ void NodesHandler::updateThisNode() {
     if (addIP) {
       IPAddress localIP = NetworkLocalIP();
 
-      for (byte i = 0; i < 4; ++i) {
+      for (uint8_t i = 0; i < 4; ++i) {
         thisNode.ip[i] = localIP[i];
       }
     }
@@ -581,7 +581,7 @@ bool NodesHandler::lastTimeValidDistanceExpired() const
 }
 
 #ifdef USES_ESPEASY_NOW
-void NodesHandler::updateSuccessRate(byte unit, bool success)
+void NodesHandler::updateSuccessRate(uint8_t unit, bool success)
 {
   auto it = _nodeStats.find(unit);
   if (it != _nodeStats.end()) {
@@ -598,7 +598,7 @@ void NodesHandler::updateSuccessRate(const MAC_address& mac, bool success)
   updateSuccessRate(node->unit, success);
 }
 
-int NodesHandler::getRouteSuccessRate(byte unit, uint8_t& distance) const
+int NodesHandler::getRouteSuccessRate(uint8_t unit, uint8_t& distance) const
 {
   distance = 255;
   auto it = _nodeStats.find(unit);
@@ -612,7 +612,7 @@ int NodesHandler::getRouteSuccessRate(byte unit, uint8_t& distance) const
   return 0;
 }
 
-uint8_t NodesHandler::getSuccessRate(byte unit) const
+uint8_t NodesHandler::getSuccessRate(uint8_t unit) const
 {
   auto it = _nodeStats.find(unit);
   if (it != _nodeStats.end()) {
@@ -621,7 +621,7 @@ uint8_t NodesHandler::getSuccessRate(byte unit) const
   return 127;
 }
 
-ESPEasy_Now_MQTT_queue_check_packet::QueueState NodesHandler::getMQTTQueueState(byte unit) const
+ESPEasy_Now_MQTT_queue_check_packet::QueueState NodesHandler::getMQTTQueueState(uint8_t unit) const
 {
   auto it = _nodeStats.find(unit);
   if (it != _nodeStats.end()) {
@@ -631,7 +631,7 @@ ESPEasy_Now_MQTT_queue_check_packet::QueueState NodesHandler::getMQTTQueueState(
 
 }
 
-void NodesHandler::setMQTTQueueState(byte unit, ESPEasy_Now_MQTT_queue_check_packet::QueueState state)
+void NodesHandler::setMQTTQueueState(uint8_t unit, ESPEasy_Now_MQTT_queue_check_packet::QueueState state)
 {
   auto it = _nodeStats.find(unit);
   if (it != _nodeStats.end()) {

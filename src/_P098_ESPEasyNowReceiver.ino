@@ -21,7 +21,7 @@ struct P098_data_struct : public PluginTaskData_base {
   ~P098_data_struct() {}
 };
 
-boolean Plugin_098(byte function, struct EventStruct *event, String& string)
+boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

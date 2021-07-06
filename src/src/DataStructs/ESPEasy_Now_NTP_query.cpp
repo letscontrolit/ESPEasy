@@ -149,11 +149,11 @@ void ESPEasy_Now_NTP_query::reset(bool success)
   _expectedWander_ms = (1 << 30);
   _timeSource        = timeSource_t::No_time_source;
 
-  for (byte i = 0; i < 6; ++i) {
+  for (uint8_t i = 0; i < 6; ++i) {
     _mac_prev_fail[i] = success ? 0 : _mac[i];
   }
 
-  for (byte i = 0; i < 6; ++i) {
+  for (uint8_t i = 0; i < 6; ++i) {
     _mac[i] = 0;
   }
 }
@@ -180,7 +180,7 @@ bool ESPEasy_Now_NTP_query::hasLowerWander() const
 
 bool ESPEasy_Now_NTP_query::isBroadcast() const
 {
-  for (byte i = 0; i < 6; ++i) {
+  for (uint8_t i = 0; i < 6; ++i) {
     if (_mac[i] != 0xFF) { return false; }
   }
   return true;
@@ -193,7 +193,7 @@ void ESPEasy_Now_NTP_query::markSendTime()
 
 void ESPEasy_Now_NTP_query::createBroadcastNTP()
 {
-  for (byte i = 0; i < 6; ++i)
+  for (uint8_t i = 0; i < 6; ++i)
   {
     _mac[i] = 0xFF;
   }

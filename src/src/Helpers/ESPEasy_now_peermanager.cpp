@@ -112,7 +112,7 @@ void ESPEasy_now_peermanager_t::removeAllPeers() {
 
 void ESPEasy_now_peermanager_t::addKnownPeers()
 {
-  for (byte peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
+  for (uint8_t peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
     if (SecuritySettings.peerMacSet(peer)) {
       addPeer(SecuritySettings.EspEasyNowPeerMAC[peer], 0);
     }

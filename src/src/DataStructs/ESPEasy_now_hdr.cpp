@@ -2,7 +2,7 @@
 
 #ifdef USES_ESPEASY_NOW
 
-String ESPEasy_now_hdr::toString(ESPEasy_now_hdr::message_t messageType)
+const __FlashStringHelper *  ESPEasy_now_hdr::toString(ESPEasy_now_hdr::message_t messageType)
 {
   switch (messageType) {
     case ESPEasy_now_hdr::message_t::NotSet: return F("-");

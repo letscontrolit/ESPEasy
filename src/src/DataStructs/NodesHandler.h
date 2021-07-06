@@ -85,16 +85,16 @@ public:
   void setRSSI(uint8_t unit, int rssi);
 
 #ifdef USES_ESPEASY_NOW
-  void updateSuccessRate(byte unit, bool success);
+  void updateSuccessRate(uint8_t unit, bool success);
   void updateSuccessRate(const MAC_address& mac, bool success);
 
-  int getRouteSuccessRate(byte unit, uint8_t& distance) const;
+  int getRouteSuccessRate(uint8_t unit, uint8_t& distance) const;
 
-  uint8_t getSuccessRate(byte unit) const;
+  uint8_t getSuccessRate(uint8_t unit) const;
 
-  ESPEasy_Now_MQTT_queue_check_packet::QueueState getMQTTQueueState(byte unit) const;
+  ESPEasy_Now_MQTT_queue_check_packet::QueueState getMQTTQueueState(uint8_t unit) const;
 
-  void setMQTTQueueState(byte unit, ESPEasy_Now_MQTT_queue_check_packet::QueueState state);
+  void setMQTTQueueState(uint8_t unit, ESPEasy_Now_MQTT_queue_check_packet::QueueState state);
   void setMQTTQueueState(const MAC_address& mac, ESPEasy_Now_MQTT_queue_check_packet::QueueState state);
 
 #endif

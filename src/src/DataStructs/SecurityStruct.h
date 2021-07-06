@@ -19,7 +19,7 @@ struct SecurityStruct
 
   void validate();
 
-  bool peerMacSet(byte peer_index) const;
+  bool peerMacSet(uint8_t peer_index) const;
 
   void clearWiFiCredentials();
 
@@ -45,7 +45,7 @@ struct SecurityStruct
   uint8_t       ProgmemMd5[16] = {0}; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16] = {0};
 
-  byte       EspEasyNowPeerMAC[ESPEASY_NOW_PEER_MAX][6];
+  uint8_t       EspEasyNowPeerMAC[ESPEASY_NOW_PEER_MAX][6];
 };
 
 

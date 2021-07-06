@@ -10,7 +10,7 @@ unsigned long ESPEasy_now_Node_statistics_t::getAge() const
   return timePassedSince(last_update_route[last_route_index]);
 }
 
-void ESPEasy_now_Node_statistics_t::addRoute(byte unit, const ESPEasy_now_traceroute_struct& route)
+void ESPEasy_now_Node_statistics_t::addRoute(uint8_t unit, const ESPEasy_now_traceroute_struct& route)
 {
   if (route.getDistance() == 255) {
     return;
@@ -42,14 +42,14 @@ void ESPEasy_now_Node_statistics_t::addRoute(byte unit, const ESPEasy_now_tracer
   }
 }
 
-void ESPEasy_now_Node_statistics_t::setDiscoveryRoute(byte unit, const ESPEasy_now_traceroute_struct& route)
+void ESPEasy_now_Node_statistics_t::setDiscoveryRoute(uint8_t unit, const ESPEasy_now_traceroute_struct& route)
 {
   discovery_route = route;
   discovery_route.addUnit(unit);
   discovery_route.setSuccessRate_last_node(unit, success_rate);
 }
 
-void ESPEasy_now_Node_statistics_t::updateSuccessRate(byte unit, bool success)
+void ESPEasy_now_Node_statistics_t::updateSuccessRate(uint8_t unit, bool success)
 {
   if (success) {
     if (timePassedSince(last_update) < 100) {

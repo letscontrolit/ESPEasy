@@ -21,7 +21,7 @@ uint8_t ESPEasy_now_traceroute_struct::getUnit(uint8_t distance, uint8_t& succes
   return unit_vector[distance * 2];
 }
 
-void ESPEasy_now_traceroute_struct::addUnit(byte unit)
+void ESPEasy_now_traceroute_struct::addUnit(uint8_t unit)
 {
   // Only add the unit if it isn't already part of the traceroute.
   const uint8_t index = static_cast<uint8_t>(unit_vector.size());
@@ -57,7 +57,7 @@ uint8_t * ESPEasy_now_traceroute_struct::get()
   return &(unit_vector[0]);
 }
 
-void ESPEasy_now_traceroute_struct::setSuccessRate_last_node(byte unit, uint8_t successRate)
+void ESPEasy_now_traceroute_struct::setSuccessRate_last_node(uint8_t unit, uint8_t successRate)
 {
   int index = unit_vector.size() - 2;
   int attempt = 0;
@@ -137,7 +137,7 @@ int ESPEasy_now_traceroute_struct::computeSuccessRate() const
   return res;
 }
 
-bool ESPEasy_now_traceroute_struct::unitInTraceRoute(byte unit) const
+bool ESPEasy_now_traceroute_struct::unitInTraceRoute(uint8_t unit) const
 {
   const uint8_t max_distance = getDistance();
   for (uint8_t distance = 0; distance <= max_distance; ++distance) {

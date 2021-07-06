@@ -15,12 +15,12 @@ struct ESPEasy_now_Node_statistics_t {
   unsigned long getAge() const;
 
   // Store route received via traceroute packet
-  void addRoute(byte unit, const ESPEasy_now_traceroute_struct& route);
+  void addRoute(uint8_t unit, const ESPEasy_now_traceroute_struct& route);
 
   // Store route received via Discovery packet
-  void setDiscoveryRoute(byte unit, const ESPEasy_now_traceroute_struct& route);
+  void setDiscoveryRoute(uint8_t unit, const ESPEasy_now_traceroute_struct& route);
 
-  void updateSuccessRate(byte unit, bool success);
+  void updateSuccessRate(uint8_t unit, bool success);
 
   uint8_t getNodeSuccessRate() const;
 
@@ -53,7 +53,7 @@ private:
   ESPEasy_Now_MQTT_queue_check_packet::QueueState mqtt_queue_state = ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset;
 };
 
-typedef std::map<byte, ESPEasy_now_Node_statistics_t> ESPEasy_now_Node_statisticsMap;
+typedef std::map<uint8_t, ESPEasy_now_Node_statistics_t> ESPEasy_now_Node_statisticsMap;
 
 #endif
 

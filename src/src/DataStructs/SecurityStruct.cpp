@@ -16,7 +16,7 @@ SecurityStruct::SecurityStruct() {
     ZERO_FILL(ControllerUser[i]);
     ZERO_FILL(ControllerPassword[i]);
   }
-  for (byte i = 0; i < ESPEASY_NOW_PEER_MAX; ++i) {
+  for (uint8_t i = 0; i < ESPEASY_NOW_PEER_MAX; ++i) {
     ZERO_FILL(EspEasyNowPeerMAC[i]);
   }
   ZERO_FILL(Password);
@@ -36,7 +36,7 @@ void SecurityStruct::validate() {
   ZERO_TERMINATE(Password);
 }
 
-bool SecurityStruct::peerMacSet(byte peer_index) const {
+bool SecurityStruct::peerMacSet(uint8_t peer_index) const {
   if (peer_index >= ESPEASY_NOW_PEER_MAX) {
     return false;
   }

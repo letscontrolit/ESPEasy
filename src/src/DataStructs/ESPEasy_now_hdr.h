@@ -30,7 +30,7 @@ public:
     ChecksumError = 255
   };
 
-  static String toString(message_t messageType);
+  static const __FlashStringHelper *  toString(message_t messageType);
 
   ESPEasy_now_hdr();
 

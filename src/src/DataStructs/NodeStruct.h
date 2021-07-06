@@ -36,7 +36,7 @@ struct __attribute__((__packed__)) NodeStruct
   bool operator<(const NodeStruct &other) const;
 
   static const __FlashStringHelper * getNodeTypeDisplayString(uint8_t nodeType);
-  String        getNodeTypeDisplayString() const;
+  const __FlashStringHelper *        getNodeTypeDisplayString() const;
 
   String        getNodeName() const;
 

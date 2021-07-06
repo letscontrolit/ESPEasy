@@ -49,7 +49,7 @@ static uint64_t ICACHE_FLASH_ATTR mac_to_key(const uint8_t *mac, ESPEasy_now_hdr
   key  = key << 8;
   key += static_cast<uint8_t>(messageType);
 
-  for (byte i = 0; i < 6; ++i) {
+  for (uint8_t i = 0; i < 6; ++i) {
     key  = key << 8;
     key += mac[i];
   }

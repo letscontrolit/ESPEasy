@@ -116,7 +116,7 @@ bool do_process_c019_delay_queue(int controller_number, const C019_queue_element
   data.sensorType      = element.event.sensorType;
   data.valueCount      = getValueCountForTask(taskIndex);
 
-  for (byte i = 0; i < data.valueCount; ++i)
+  for (uint8_t i = 0; i < data.valueCount; ++i)
   {
     switch (data.sensorType) {
       case Sensor_VType::SENSOR_TYPE_LONG:
