@@ -35,7 +35,7 @@ public:
 
   bool                             isDuplicate(const queue_element_single_value_base& other) const;
 
-  const MessageRouteInfo_t       * getUnitMessageCount() const {
+  const MessageRouteInfo_t       * getMessageRouteInfo() const {
     return nullptr;
   }
 

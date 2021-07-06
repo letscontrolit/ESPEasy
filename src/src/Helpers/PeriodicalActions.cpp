@@ -350,11 +350,11 @@ void processMQTTdelayQueue() {
     message += ';';
     message += element->_payload;
 
-    processed = processMQTT_message(element->controller_idx, element->_topic, message, element->_retained, element->getUnitMessageCount());
+    processed = processMQTT_message(element->controller_idx, element->_topic, message, element->_retained, element->getMessageRouteInfo());
   } else 
   #endif
   {
-    processed = processMQTT_message(element->controller_idx, element->_topic, element->_payload, element->_retained, element->getUnitMessageCount());
+    processed = processMQTT_message(element->controller_idx, element->_topic, element->_payload, element->_retained, element->getMessageRouteInfo());
   }
 
 
@@ -381,13 +381,13 @@ bool processMQTT_message(controllerIndex_t controllerIndex,
                         const String    & topic,
                         const String    & payload,
                         bool retained,
-                        const MessageRouteInfo_t* unitMessageCount) 
+                        const MessageRouteInfo_t* messageRouteInfo) 
 {
   bool processed = false;
 
   #ifdef USES_ESPEASY_NOW
   if (!MQTTclient_connected) {
-    processed = ESPEasy_now_handler.sendToMQTT(controllerIndex, topic, payload, unitMessageCount);
+    processed = ESPEasy_now_handler.sendToMQTT(controllerIndex, topic, payload, messageRouteInfo);
   }
   #endif
 

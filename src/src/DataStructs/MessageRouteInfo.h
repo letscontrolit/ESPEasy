@@ -20,9 +20,16 @@ struct MessageRouteInfo_t {
 
   MessageRouteInfo_t(const uint8_t_vector& serializedData);
 
+  bool deserialize(const uint8_t_vector& serializedData);
   bool deserialize(const uint8_t* serializedData, size_t size);
 
   uint8_t_vector serialize() const;
+
+  size_t getSerializedSize() const;
+
+  bool appendUnit(uint8_t unitnr);
+
+  bool traceHasUnit(uint8_t unitnr) const;
 
   uint8_t unit  = 0; // Initialize to "not set"
   uint8_t count = 0;

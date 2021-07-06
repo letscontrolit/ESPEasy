@@ -969,7 +969,7 @@ bool ESPEasy_now_handler_t::handle_NTPquery(const ESPEasy_now_merger& message, b
 // * MQTT controller forwarder
 // *************************************************************
 
-bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const String& topic, const String& payload, const MessageRouteInfo_t* unitMessageCount)
+bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const String& topic, const String& payload, const MessageRouteInfo_t* messageRouteInfo)
 {
   if (!use_EspEasy_now) { return false; }
 
@@ -990,7 +990,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
 
   if (_enableESPEasyNowFallback /*&& !WiFiConnected(10) */) {
     // Must make sure we don't forward it to the unit we received the message from.
-    const uint8_t unit_nr = (unitMessageCount == nullptr) ? 0 : unitMessageCount->unit;
+    const uint8_t unit_nr = (messageRouteInfo == nullptr) ? 0 : messageRouteInfo->unit;
     const NodeStruct *preferred = Nodes.getPreferredNode_notMatching(unit_nr);
 
     if (preferred != nullptr /* && Nodes.getDistance() > preferred->distance */) {
@@ -1008,9 +1008,17 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
       // each string has null termination
       const size_t topic_length   = topic.length() + 1;
       const size_t payload_length = payload.length() + 1;
+      size_t routeInfo_length = 0;
+
+      MessageRouteInfo_t::uint8_t_vector routeInfo;
+      // FIXME TD-er: Must check if the intended recipient supports routeInfo
+      if (messageRouteInfo != nullptr) {
+        routeInfo = messageRouteInfo->serialize();
+        routeInfo_length = routeInfo.size();
+      }
 
       // Todo: Add   cpluginID_t cpluginID; to the message
-      size_t len = topic_length + payload_length;
+      size_t len = topic_length + payload_length + routeInfo_length;
 
       ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::MQTTControllerMessage, len);
 
@@ -1018,6 +1026,9 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
         return false;
       }
       if (payload_length != msg.addString(payload)) {
+        return false;
+      }
+      if (routeInfo_length != 0 && routeInfo_length != msg.addBinaryData(&(routeInfo[0]), routeInfo_length)) {
         return false;
       }
 

@@ -519,7 +519,7 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
 
 #ifdef USES_ESPEASY_NOW
 
-bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, const MessageRouteInfo_t& unitMessageCount, bool retained)
+bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, const MessageRouteInfo_t& messageRouteInfo, bool retained)
 {
   bool success = false;
   if (!MQTT_queueFull(controller_idx))
@@ -529,18 +529,27 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
       size_t pos = 0;
       element.controller_idx = controller_idx;
       element._retained = retained;
-      element.MessageRouteInfo = unitMessageCount;
+      element.MessageRouteInfo = messageRouteInfo;
       const size_t payloadSize = message.getPayloadSize();
       if (message.getString(element._topic,   pos) && message.getString(element._payload, pos)) {
         success = true;
         const size_t bytesLeft = payloadSize - pos;
-        if (bytesLeft >= 2) {
+        if (bytesLeft >= 4) {
+          bool validMessageRouteInfo = false;
           // There is some MessageRouteInfo left
-          if (!(message.getBinaryData(&element.MessageRouteInfo.unit, 1, pos) == 1 &&
-                message.getBinaryData(&element.MessageRouteInfo.count, 1, pos) == 1)) 
-          {
+          MessageRouteInfo_t::uint8_t_vector routeInfoData;
+          routeInfoData.resize(bytesLeft);
+          // Use temp position as we don't yet know the true size of the message route info
+          size_t tmp_pos = pos;
+          if (message.getBinaryData(&routeInfoData[0], bytesLeft, tmp_pos) == bytesLeft) {
+            validMessageRouteInfo = element.MessageRouteInfo.deserialize(routeInfoData);
+            if (validMessageRouteInfo) {
+              pos += element.MessageRouteInfo.getSerializedSize();
+            }
+          }
+          if (!validMessageRouteInfo) {
             // Whatever may have been present, it could not be loaded, so clear just to be sure.
-            element.MessageRouteInfo = unitMessageCount;
+            element.MessageRouteInfo = messageRouteInfo;
           }
         }
       }

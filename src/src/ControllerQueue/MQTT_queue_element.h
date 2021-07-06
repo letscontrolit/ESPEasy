@@ -34,8 +34,8 @@ public:
 
   bool isDuplicate(const MQTT_queue_element& other) const;
 
-  const MessageRouteInfo_t* getUnitMessageCount() const { return &MessageRouteInfo; }
-  MessageRouteInfo_t* getUnitMessageCount() { return &MessageRouteInfo; }
+  const MessageRouteInfo_t* getMessageRouteInfo() const { return &MessageRouteInfo; }
+  MessageRouteInfo_t* getMessageRouteInfo() { return &MessageRouteInfo; }
 
   void removeEmptyTopics();
 

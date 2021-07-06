@@ -41,7 +41,7 @@ bool processMQTT_message(controllerIndex_t controllerIndex,
                         const String    & topic,
                         const String    & payload,
                         bool retained,
-                        const MessageRouteInfo_t* unitMessageCount);
+                        const MessageRouteInfo_t* messageRouteInfo);
 
 void updateMQTTclient_connected();
 

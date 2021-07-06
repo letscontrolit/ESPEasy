@@ -72,7 +72,7 @@ public:
   bool sendToMQTT(controllerIndex_t controllerIndex,
                   const String    & topic,
                   const String    & payload,
-                  const MessageRouteInfo_t* unitMessageCount);
+                  const MessageRouteInfo_t* messageRouteInfo);
 
   bool sendMQTTCheckControllerQueue(controllerIndex_t controllerIndex);
   bool sendMQTTCheckControllerQueue(const MAC_address& mac, 

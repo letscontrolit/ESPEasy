@@ -26,7 +26,7 @@ public:
 
   bool isDuplicate(const simple_queue_element_string_only& other) const;
 
-  const MessageRouteInfo_t* getUnitMessageCount() const { return nullptr; }
+  const MessageRouteInfo_t* getMessageRouteInfo() const { return nullptr; }
 
   String txt;
   unsigned long _timestamp         = millis();

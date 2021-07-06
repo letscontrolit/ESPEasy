@@ -72,7 +72,7 @@ void SendStatus(struct EventStruct *event, const String& status);
 bool MQTT_queueFull(controllerIndex_t controller_idx);
 
 #ifdef USES_ESPEASY_NOW
-bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, const MessageRouteInfo_t& unitMessageCount, bool retained);
+bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& message, const MessageRouteInfo_t& messageRouteInfo, bool retained);
 #endif
 
 bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  const char *topic, const char *payload, bool retained);

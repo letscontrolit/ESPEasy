@@ -36,7 +36,7 @@ public:
 
   bool isDuplicate(const C016_queue_element& other) const;
 
-  const MessageRouteInfo_t* getUnitMessageCount() const { return nullptr; }
+  const MessageRouteInfo_t* getMessageRouteInfo() const { return nullptr; }
 
   float values[VARS_PER_TASK] = { 0 };
   unsigned long _timestamp    = 0; // Unix timestamp

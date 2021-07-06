@@ -28,7 +28,7 @@ public:
 
   bool                             isDuplicate(const queue_element_formatted_uservar& other) const;
 
-  const MessageRouteInfo_t       * getUnitMessageCount() const {
+  const MessageRouteInfo_t       * getMessageRouteInfo() const {
     return nullptr;
   }
 
