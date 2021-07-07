@@ -44,7 +44,7 @@ MessageRouteInfo_t::uint8_t_vector MessageRouteInfo_t::serialize() const {
   res[index++] = unit;
   res[index++] = count;
   res[index++] = dest_unit;
-  res[index++] = trace.size();
+  res[index++] = static_cast<uint8_t>(std::min(trace.size(), 255u));
   for (size_t i = 0; i < trace.size(); ++i) {
     res[index++] = trace[i];
   }
@@ -56,20 +56,60 @@ size_t MessageRouteInfo_t::getSerializedSize() const {
 }
 
 bool MessageRouteInfo_t::appendUnit(uint8_t unitnr) {
-  if (unitnr == 0 || unitnr == 255 || traceHasUnit(unitnr)) {
-    return false;
-  }
-  trace.push_back(unitnr);
-}
-
-bool MessageRouteInfo_t::traceHasUnit(uint8_t unitnr) const {
   if (unitnr == 0 || unitnr == 255) {
     return false;
   }
-  for (auto it = trace.begin(); it != trace.end(); ++it) {
-    if (*it == unitnr) return true;
+  if (unit == 0) {
+    unit = unitnr;
+  } else {
+    trace.push_back(unitnr);
   }
-  return false;
+  return true;
+}
+
+bool MessageRouteInfo_t::traceHasUnit(uint8_t unitnr) const {
+  return countUnitInTrace(unitnr) != 0;
+}
+
+size_t MessageRouteInfo_t::countUnitInTrace(uint8_t unitnr) const {
+  size_t res = 0;
+  if (unitnr == 0 || unitnr == 255) {
+    return res;
+  }
+  for (auto it = trace.begin(); it != trace.end(); ++it) {
+    if (*it == unitnr) {
+      ++res;
+    }
+  }
+  if (unitnr == unit) {
+    ++res;
+  }
+  return res;
+}
+
+uint8_t MessageRouteInfo_t::getLastUnitNotMatching(uint8_t unitnr) const {
+  for (auto it = trace.rbegin(); it != trace.rend(); ++it) {
+    if (*it != unitnr) {
+      return *it;
+    }
+  }
+  // Try the source unit
+  if (unitnr != unit) return unit;
+  return 0;
+}
+
+String MessageRouteInfo_t::toString() const {
+  String res;
+  res = F("src: ");
+  res += unit;
+  res += F(" dst: ");
+  res += dest_unit;
+  res += F(" path:");
+  for (auto it = trace.begin(); it != trace.end(); ++it) {
+    res += ' ';
+    res += *it;
+  }
+  return res;
 }
 
 

@@ -393,9 +393,17 @@ bool processMQTT_message(controllerIndex_t controllerIndex,
 
   if (!processed) {
     if (MQTTclient.publish(topic.c_str(), payload.c_str(), retained)) {
+      // FIXME TD-er: Must check if connected via WiFi or Ethernet
       if (WiFiEventData.connectionFailures > 0) {
         --WiFiEventData.connectionFailures;
       }
+//#ifndef BUILD_NO_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG) && messageRouteInfo != nullptr) {
+        String log = F("MQTT : published from mesh: ");
+        log += messageRouteInfo->toString();
+        addLog(LOG_LEVEL_DEBUG, log);
+      }
+//#endif // ifndef BUILD_NO_DEBUG
       processed = true;
     }
   }

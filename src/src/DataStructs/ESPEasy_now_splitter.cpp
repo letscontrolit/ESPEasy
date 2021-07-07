@@ -20,7 +20,7 @@ ESPEasy_now_splitter::ESPEasy_now_splitter(ESPEasy_now_hdr::message_t message_ty
 
 size_t ESPEasy_now_splitter::addBinaryData(const uint8_t *data, size_t length)
 {
-  if (data == nullptr) {
+  if (data == nullptr || length == 0) {
     return 0;
   }
   size_t data_left = length;

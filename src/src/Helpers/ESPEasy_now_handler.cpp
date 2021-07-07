@@ -990,10 +990,14 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
 
   if (_enableESPEasyNowFallback /*&& !WiFiConnected(10) */) {
     // Must make sure we don't forward it to the unit we received the message from.
-    const uint8_t unit_nr = (messageRouteInfo == nullptr) ? 0 : messageRouteInfo->unit;
+    const uint8_t unit_nr = (messageRouteInfo == nullptr) ? 0 : messageRouteInfo->getLastUnitNotMatching(Settings.Unit);
     const NodeStruct *preferred = Nodes.getPreferredNode_notMatching(unit_nr);
 
     if (preferred != nullptr /* && Nodes.getDistance() > preferred->distance */) {
+      if ((messageRouteInfo != nullptr) && messageRouteInfo->countUnitInTrace(preferred->unit) > 2) {
+        // Preferred node appears in trace quite often, reduce success rate of this node.
+        Nodes.updateSuccessRate(preferred->unit, false);
+      }
       MAC_address mac = preferred->ESPEasy_Now_MAC();
       switch (Nodes.getMQTTQueueState(preferred->unit)) {
         case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset:
@@ -1011,8 +1015,8 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
       size_t routeInfo_length = 0;
 
       MessageRouteInfo_t::uint8_t_vector routeInfo;
-      // FIXME TD-er: Must check if the intended recipient supports routeInfo
-      if (messageRouteInfo != nullptr) {
+      // Check if the intended recipient supports routeInfo
+      if (messageRouteInfo != nullptr && preferred->build > 20113) {
         routeInfo = messageRouteInfo->serialize();
         routeInfo_length = routeInfo.size();
       }

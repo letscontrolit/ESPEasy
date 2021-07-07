@@ -544,6 +544,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
           if (message.getBinaryData(&routeInfoData[0], bytesLeft, tmp_pos) == bytesLeft) {
             validMessageRouteInfo = element.MessageRouteInfo.deserialize(routeInfoData);
             if (validMessageRouteInfo) {
+              // Move pos for the actual number of bytes we read.
               pos += element.MessageRouteInfo.getSerializedSize();
             }
           }
@@ -551,6 +552,8 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
             // Whatever may have been present, it could not be loaded, so clear just to be sure.
             element.MessageRouteInfo = messageRouteInfo;
           }
+          // Append our own unit number
+          element.MessageRouteInfo.appendUnit(Settings.Unit);
         }
       }
       if (success) {
