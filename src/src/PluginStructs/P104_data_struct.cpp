@@ -115,7 +115,7 @@ void P104_data_struct::loadSettings() {
 
       int16_t  offset2;
       uint16_t prev2 = 0;
-      String   tmp, fld, tmp_val;
+      String   tmp, fld;
       int tmp_int;
       offset2 = buffer.indexOf(P104_ZONE_SEP);
 
@@ -175,19 +175,11 @@ void P104_data_struct::loadSettings() {
           zones[zoneIndex].offset = tmp_int;
         }
 
-        tmp_val = parseString(tmp, 1 + P104_OFFSET_BRIGHTNESS, P104_FIELD_SEP);
-
-        if (tmp_val.isEmpty() || !validIntFromString(tmp_val, tmp_int)) {
-          zones[zoneIndex].brightness = 7;
-        } else {
+        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_BRIGHTNESS, P104_FIELD_SEP), tmp_int)) {
           zones[zoneIndex].brightness = tmp_int;
         }
 
-        tmp_val = parseString(tmp, 1 + P104_OFFSET_REPEATDELAY, P104_FIELD_SEP);
-
-        if (tmp_val.isEmpty() || !validIntFromString(tmp_val, tmp_int)) {
-          zones[zoneIndex].repeatDelay = -1;
-        } else {
+        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_REPEATDELAY, P104_FIELD_SEP), tmp_int)) {
           zones[zoneIndex].repeatDelay = tmp_int;
         }
 
@@ -1298,7 +1290,7 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
 /******************************************
  * enquoteString wrap in ", ' or ` unless all 3 quote types are used
  *****************************************/
-String enquoteString(const String& input) {
+String P104_data_struct::enquoteString(const String& input) {
   char quoteChar = '"';
 
   if (input.indexOf(quoteChar) > -1) {
@@ -1449,19 +1441,9 @@ bool P104_data_struct::saveSettings() {
       zbuffer += P104_FIELD_SEP;     // 1
       zbuffer += it->offset;         // 2
       zbuffer += P104_FIELD_SEP;     // 1
-
-      if (it->brightness != 7) {
-        zbuffer += it->brightness;   // 2
-      } else {
-        zbuffer += 'i';              // Invalid so will be read as default
-      }
+      zbuffer += it->brightness;     // 2
       zbuffer += P104_FIELD_SEP;     // 1
-
-      if (it->repeatDelay > -1) {
-        zbuffer += it->repeatDelay;  // 4
-      } else {
-        zbuffer += 'i';              // Invalid so will be read as default
-      }
+      zbuffer += it->repeatDelay;    // 4
       zbuffer += P104_FIELD_SEP;     // 1
 
       zbuffer += P104_ZONE_SEP;      // 1
@@ -2134,7 +2116,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Brightness
 
-        if (zones[zone].brightness == 0) { zones[zone].brightness = 7; }
+        if (zones[zone].brightness == -1) { zones[zone].brightness = 7; }
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_BRIGHTNESS), zones[zone].brightness, 0, P104_BRIGHTNESS_MAX);
 
         html_TD(); // Repeat (sec)

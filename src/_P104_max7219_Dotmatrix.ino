@@ -62,6 +62,7 @@
 //                                Up to 8 graphStrings can be provided, width is determined by the number of graphStrings
 //
 // History:
+// 2021-07-08 tonhuisman: Several bugfixes: settings defaults, fix brightness to enable 0 value, simplify storing the zone settings
 // 2021-06-29-2021-07-03: Add Actions column to insert before/after zone or delete a zone, order the zones either in numeric order
 //            tonhuisman: or in display order ('upside-down'), fixed many bugs, refactored bar-graph method, other improvements
 //                        All optional at compile-time by P104_USE_ZONE_ACTIONS and P104_USE_ZONE_ORDERING

@@ -5,7 +5,7 @@
 #ifdef USES_P104
 
 # define P104_DEBUG     // Log some extra (tech) data, also useful during development
-// # define P104_DEBUG_DEV // Log some extra development info
+# define P104_DEBUG_DEV // Log some extra development info
 
 # include "../CustomBuild/StorageLayout.h"
 # include "src/Globals/EventQueue.h"
@@ -294,7 +294,7 @@
 struct P104_zone_struct {
   P104_zone_struct(uint8_t _zone) : zone(_zone) {
     size          = 0u;
-    text          = F("");
+    text          = F("\"\"");
     alignment     = 0u;
     animationIn   = 1u; // Doesn't allow 'None'
     speed         = 0u;
@@ -305,7 +305,7 @@ struct P104_zone_struct {
     layout        = 0u;
     specialEffect = 0u;
     offset        = 0u;
-    brightness    = 7u;
+    brightness    = -1;
     repeatDelay   = -1;
   }
 
@@ -319,7 +319,7 @@ struct P104_zone_struct {
   uint8_t  layout;
   uint8_t  specialEffect;
   uint8_t  offset;
-  uint8_t  brightness;
+  int8_t   brightness;
   uint16_t speed, pause;
   int32_t  repeatDelay;
   uint32_t _repeatTimer;
@@ -400,9 +400,10 @@ private:
                        uint8_t  row);
   # endif // ifdef P104_USE_BAR_GRAPH
 
-  void displayOneZoneText(uint8_t                 currentZone,
-                          const P104_zone_struct& idx,
-                          const String          & text);
+  void   displayOneZoneText(uint8_t                 currentZone,
+                            const P104_zone_struct& idx,
+                            const String          & text);
+  String enquoteString(const String& input);
 
   MD_MAX72XX::moduleType_t mod;
   taskIndex_t              taskIndex;
