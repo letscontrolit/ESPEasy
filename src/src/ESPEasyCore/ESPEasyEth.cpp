@@ -10,7 +10,11 @@
 #include "../Helpers/StringConverter.h"
 
 #include <ETH.h>
-#include <eth_phy/phy.h>
+#if ESP_IDF_VERSION_MAJOR > 3
+ #include <esp_eth_phy.h>
+#else
+ #include <eth_phy/phy.h>
+#endif
 
 bool ethUseStaticIP() {
   return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[0] != 255;
@@ -87,7 +91,11 @@ MAC_address ETHMacAddress() {
   if(!EthEventData.ethInitSuccess) {
     addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddress() only on connected Ethernet!"));
   } else {
+    #if ESP_IDF_VERSION_MAJOR > 3
+    ETH.macAddress(mac.mac);
+    #else
     esp_eth_get_mac(mac.mac);
+    #endif
   }
   return mac;
 }
