@@ -50,7 +50,7 @@
 #define DEFAULT_SUBNET                       "255.255.255.0"         // Enter your Subnet
 #define DEFAULT_IPRANGE_LOW                  "0.0.0.0"               // Allowed IP range to access webserver
 #define DEFAULT_IPRANGE_HIGH                 "255.255.255.255"       // Allowed IP range to access webserver
-#define DEFAULT_IP_BLOCK_LEVEL               1                       // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2:
+#define DEFAULT_IP_BLOCK_LEVEL               0                       // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2:
 // ONLY_IP_RANGE_ALLOWED
 #define DEFAULT_ADMIN_USERNAME               "admin"
 #define DEFAULT_ADMIN_PASS                   ""
@@ -78,13 +78,13 @@
 
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
-#define DEFAULT_SUB         "sensors/espeasy/%sysname%/#"                   // Enter your sub
+#define DEFAULT_SUB         "%mac_int%/#"                                   // Enter your sub
 #define DEFAULT_SERVER      "192.168.0.8"                                   // Enter your Server IP address
 #define DEFAULT_SERVER_HOST ""                                              // Server hostname
 #define DEFAULT_SERVER_USEDNS false                                         // true: Use hostname.  false: use IP
 #define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
 
-#define DEFAULT_PORT        8080                                            // Enter your Server port value
+#define DEFAULT_PORT        1883                                            // Enter your Server port value
 
 #define DEFAULT_PROTOCOL    5                                               // Protocol used for controller communications
                                                                             //   0 = Stand-alone (no controller set)
@@ -118,15 +118,15 @@
 #define DEFAULT_MQTT_LWT_TOPIC                  ""                // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected"       // Default lwt message
 #define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
-#define DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID   0
+#define DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID   1
 
-#define DEFAULT_USE_NTP                         true             // (true|false) Use NTP Server
+#define DEFAULT_USE_NTP                         true              // (true|false) Use NTP Server
 #define DEFAULT_NTP_HOST                        "by.pool.ntp.org"     // NTP Server Hostname
 #define DEFAULT_TIME_ZONE                       180                 // Time Offset (in minutes)
 #define DEFAULT_USE_DST                         false             // (true|false) Use Daily Time Saving
 
-#define DEFAULT_LATITUDE                        0.0f              // Default Latitude  
-#define DEFAULT_LONGITUDE                       0.0f              // Default Longitude
+#define DEFAULT_LATITUDE                        54.0f              // Default Latitude  
+#define DEFAULT_LONGITUDE                       27.0f              // Default Longitude
 
 #define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
