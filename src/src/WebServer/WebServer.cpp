@@ -145,22 +145,25 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
     lastWeb = millis();
 
     if (Tail) {
-      addHtml(pageTemplate.substring(
-                11 +                                      // Size of "{{content}}"
-                pageTemplate.indexOf(F("{{content}}")))); // advance beyond content key
+      int pos = pageTemplate.indexOf(F("{{content}}"));
+      if (pos >= 0) {
+        pos += 11; // Size of "{{content}}"
+        const int length = pageTemplate.length();
+        // Prevent copy'ing the string, just stream directly to the buffer.
+        for (int i = pos; i < length; ++i) {
+          addHtml(pageTemplate[i]);
+        }
+      }
     } else {
       int indexStart = 0;
       int indexEnd   = 0;
       int readPos    = 0; // Position of data sent to TXBuffer
       String varName;     // , varValue;
-      String meta;
-
-      if (rebooting) {
-        meta = F("<meta http-equiv='refresh' content='10 url=/'>");
-      }
 
       while ((indexStart = pageTemplate.indexOf(F("{{"), indexStart)) >= 0) {
-        addHtml(pageTemplate.substring(readPos, indexStart));
+        for (int i = readPos; i < indexStart; ++i) {
+          addHtml(pageTemplate[i]);
+        }
         readPos = indexStart;
 
         if ((indexEnd = pageTemplate.indexOf(F("}}"), indexStart)) > 0) {
@@ -175,7 +178,9 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
             getErrorNotifications();
           }
           else if (varName == F("meta")) {
-            addHtml(meta);
+            if (rebooting) {
+              addHtml(F("<meta http-equiv='refresh' content='10 url=/'>"));
+            }
           }
           else {
             getWebPageTemplateVar(varName);
@@ -256,7 +261,7 @@ size_t streamFile_htmlEscape(const String& fileName)
 bool captivePortal() {
   const bool fromAP = web_server.client().localIP() == apIP;
   const bool hasWiFiCredentials = SecuritySettings.hasWiFiCredentials();
-  if (hasWiFiCredentials && !fromAP) {
+  if (hasWiFiCredentials || !fromAP) {
     return false;
   }
   if (!isIP(web_server.hostHeader()) && web_server.hostHeader() != (NetworkGetHostname() + F(".local"))) {
@@ -450,14 +455,14 @@ void setWebserverRunning(bool state) {
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 {
-  static size_t expectedSize = 579;
-
-  tmpl.reserve(expectedSize);
   const bool addJS   = true;
   const bool addMeta = true;
 
   if (tmplName == F("TmplAP"))
   {
+    static size_t expectedSize = 200;
+
+    tmpl.reserve(expectedSize);
     getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
 
     #ifndef WEBPAGE_TEMPLATE_AP_HEADER
@@ -470,35 +475,53 @@ void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
     tmpl += F("</header>");
     getWebPageTemplateDefaultContentSection(tmpl);
     getWebPageTemplateDefaultFooter(tmpl);
+    if (tmpl.length() > expectedSize) {
+      expectedSize = tmpl.length();
+    }
   }
   else if (tmplName == F("TmplMsg"))
   {
+    static size_t expectedSize = 200;
+
+    tmpl.reserve(expectedSize);
     getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
     tmpl += F("<body>");
     getWebPageTemplateDefaultHeader(tmpl, F("{{name}}"), false);
     getWebPageTemplateDefaultContentSection(tmpl);
     getWebPageTemplateDefaultFooter(tmpl);
+    if (tmpl.length() > expectedSize) {
+      expectedSize = tmpl.length();
+    }
   }
   else if (tmplName == F("TmplDsh"))
   {
+    static size_t expectedSize = 200;
+
+    tmpl.reserve(expectedSize);
     getWebPageTemplateDefaultHead(tmpl, !addMeta, addJS);
     tmpl += F(
       "<body>"
       "{{content}}"
       "</body></html>"
       );
+    if (tmpl.length() > expectedSize) {
+      expectedSize = tmpl.length();
+    }
   }
   else // all other template names e.g. TmplStd
   {
+    static size_t expectedSize = 200;
+
+    tmpl.reserve(expectedSize);
     getWebPageTemplateDefaultHead(tmpl, addMeta, addJS);
     tmpl += F("<body class='bodymenu'>"
               "<span class='message' id='rbtmsg'></span>");
     getWebPageTemplateDefaultHeader(tmpl, F("{{name}} {{logo}}"), true);
     getWebPageTemplateDefaultContentSection(tmpl);
     getWebPageTemplateDefaultFooter(tmpl);
-  }
-  if (tmpl.length() > expectedSize) {
-    expectedSize = tmpl.length();
+    if (tmpl.length() > expectedSize) {
+      expectedSize = tmpl.length();
+    }
   }
 //  addLog(LOG_LEVEL_INFO, String(F("tmpl.length(): ")) + String(tmpl.length()));
 }
@@ -580,10 +603,10 @@ void getErrorNotifications() {
   // Check checksum of stored settings.
 }
 
-byte navMenuIndex = MENU_INDEX_MAIN;
+uint8_t navMenuIndex = MENU_INDEX_MAIN;
 
 // See https://github.com/letscontrolit/ESPEasy/issues/1650
-const __FlashStringHelper * getGpMenuIcon(byte index) {
+const __FlashStringHelper * getGpMenuIcon(uint8_t index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("&#8962;");
     case MENU_INDEX_CONFIG: return F("&#9881;");
@@ -597,7 +620,7 @@ const __FlashStringHelper * getGpMenuIcon(byte index) {
   return F("");
 }
 
-const __FlashStringHelper * getGpMenuLabel(byte index) {
+const __FlashStringHelper * getGpMenuLabel(uint8_t index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("Main");
     case MENU_INDEX_CONFIG: return F("Config");
@@ -611,7 +634,7 @@ const __FlashStringHelper * getGpMenuLabel(byte index) {
   return F("");
 }
 
-const __FlashStringHelper * getGpMenuURL(byte index) {
+const __FlashStringHelper * getGpMenuURL(uint8_t index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("/");
     case MENU_INDEX_CONFIG: return F("/config");
@@ -626,7 +649,7 @@ const __FlashStringHelper * getGpMenuURL(byte index) {
 }
 
 
-bool GpMenuVisible(byte index) {
+bool GpMenuVisible(uint8_t index) {
   switch (index) {
     case MENU_INDEX_MAIN: return MENU_INDEX_MAIN_VISIBLE;
     case MENU_INDEX_CONFIG: return MENU_INDEX_CONFIG_VISIBLE;
@@ -660,7 +683,7 @@ void getWebPageTemplateVar(const String& varName)
   {
     addHtml(F("<div class='menubar'>"));
 
-    for (byte i = 0; i < 8; i++)
+    for (uint8_t i = 0; i < 8; i++)
     {
       if (!GpMenuVisible(i)) {
         // hide menu item
@@ -740,7 +763,8 @@ void writeDefaultCSS(void)
 {
   return; // TODO
 
-#ifndef BUILD_NO_DEBUG
+/*
+#ifndef WEBSERVER_USE_CDN_JS_CSS
 
   if (!fileExists(F("esp.css")))
   {
@@ -762,7 +786,8 @@ void writeDefaultCSS(void)
       f.close();
     }
   }
-#endif // ifndef BUILD_NO_DEBUG
+#endif
+*/
 }
 
 // ********************************************************************************
@@ -866,7 +891,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
 
     {
       addHtml(F("<option value='"));
-      addHtml(String(x));
+      addHtmlInt(x);
       addHtml('\'');
 
       if (choice == x) {
@@ -879,7 +904,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
     }
     {
       addHtml('>');
-      addHtml(String(x + 1));
+      addHtmlInt(x + 1);
       addHtml(F(" - "));
       addHtml(deviceName);
       addHtml(F(" - "));
@@ -906,12 +931,12 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
   addHtml('>');
 
   LoadTaskSettings(TaskIndex);
-  const byte valueCount = getValueCountForTask(TaskIndex);
+  const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
-  for (byte x = 0; x < valueCount; x++)
+  for (uint8_t x = 0; x < valueCount; x++)
   {
     addHtml(F("<option value='"));
-    addHtml(String(x));
+    addHtmlInt(x);
     addHtml('\'');
 
     if (choice == x) {
@@ -963,7 +988,7 @@ bool isLoggedIn(bool mustProvideLogin)
   return true;
 }
 
-String getControllerSymbol(byte index)
+String getControllerSymbol(uint8_t index)
 {
   String ret = F("<p style='font-size:20px; background: #00000000;'>&#");
 
@@ -973,7 +998,7 @@ String getControllerSymbol(byte index)
 }
 
 /*
-   String getValueSymbol(byte index)
+   String getValueSymbol(uint8_t index)
    {
    String ret = F("&#");
    ret += 10112 + index;
@@ -982,22 +1007,16 @@ String getControllerSymbol(byte index)
    }
  */
 void addSVG_param(const String& key, float value) {
-  String value_str = String(value, 2);
-
-  addSVG_param(key, value_str);
+  addSVG_param(key, String(value, 2));
 }
 
 void addSVG_param(const String& key, const String& value) {
-  String html;
-
-  html.reserve(8 + key.length() + value.length());
-  html += ' ';
-  html += key;
-  html += '=';
-  html += '\"';
-  html += value;
-  html += '\"';
-  addHtml(html);
+  addHtml(' ');
+  addHtml(key);
+  addHtml('=');
+  addHtml('\"');
+  addHtml(value);
+  addHtml('\"');
 }
 
 void createSvgRect_noStroke(const __FlashStringHelper * classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
@@ -1015,7 +1034,7 @@ void createSvgRect(const String& classname,
                    float        rx,
                    float        ry) {
   addHtml(F("<rect"));
-  if (classname.length() != 0) {
+  if (!classname.isEmpty()) {
     addSVG_param(F("class"), classname);
   }
   addSVG_param(F("fill"), formatToHex(fillColor, F("#")));
@@ -1037,22 +1056,18 @@ void createSvgHorRectPath(unsigned int color, int xoffset, int yoffset, int size
   float width = SVG_BAR_WIDTH * size / range;
 
   if (width < 2) { width = 2; }
-  String html;
-
-  html.reserve(96);
-  html += formatToHex(color, F("<path fill=\"#"));
-  html += F("\" d=\"M");
-  html += toString(SVG_BAR_WIDTH * xoffset / range, 2);
-  html += ' ';
-  html += yoffset;
-  html += 'h';
-  html += toString(width, 2);
-  html += 'v';
-  html += height;
-  html += 'H';
-  html += toString(SVG_BAR_WIDTH * xoffset / range, 2);
-  html += F("z\"/>\n");
-  addHtml(html);
+  addHtml(formatToHex(color, F("<path fill=\"#")));
+  addHtml(F("\" d=\"M"));
+  addHtml(toString(SVG_BAR_WIDTH * xoffset / range, 2));
+  addHtml(' ');
+  addHtmlInt(yoffset);
+  addHtml('h');
+  addHtml(toString(width, 2));
+  addHtml('v');
+  addHtmlInt(height);
+  addHtml('H');
+  addHtml(toString(SVG_BAR_WIDTH * xoffset / range, 2));
+  addHtml(F("z\"/>\n"));
 }
 
 void createSvgTextElement(const String& text, float textXoffset, float textYoffset) {
@@ -1065,7 +1080,7 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
   addHtml(toString(textXoffset, 2));
   addHtml(F("\" y=\""));
   addHtml(toString(textYoffset, 2));
-  addHtml("\">");
+  addHtml(F("\">"));
   addHtml(text);
   addHtml(F("</tspan>\n</text>"));
 }
@@ -1078,20 +1093,16 @@ void write_SVG_image_header(int width, int height) {
 }
 
 void write_SVG_image_header(int width, int height, bool useViewbox) {
-  String html;
-
-  html.reserve(128);
-  html += F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"");
-  html += width;
-  html += F("\" height=\"");
-  html += height;
-  html += F("\" version=\"1.1\"");
+  addHtml(F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\""));
+  addHtmlInt(width);
+  addHtml(F("\" height=\""));
+  addHtmlInt(height);
+  addHtml(F("\" version=\"1.1\""));
 
   if (useViewbox) {
-    html += F(" viewBox=\"0 0 100 100\"");
+    addHtml(F(" viewBox=\"0 0 100 100\""));
   }
-  html += '>';
-  addHtml(html);
+  addHtml('>');
 }
 
 /*
@@ -1232,7 +1243,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 # include <esp_partition.h>
 
-int getPartionCount(byte pType) {
+int getPartionCount(uint8_t pType) {
   esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);
   esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
   int nrPartitions                         = 0;
@@ -1246,7 +1257,7 @@ int getPartionCount(byte pType) {
   return nrPartitions;
 }
 
-void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
+void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
   int nrPartitions = getPartionCount(pType);
 
   if (nrPartitions == 0) { return; }
@@ -1281,7 +1292,7 @@ void getPartitionTableSVG(byte pType, unsigned int partitionColor) {
 
 #endif // ifdef ESP32
 
-bool webArg2ip(const String& arg, byte *IP) {
+bool webArg2ip(const String& arg, uint8_t *IP) {
   return str2ip(webArg(arg), IP);
 }
 

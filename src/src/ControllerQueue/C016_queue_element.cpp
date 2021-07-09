@@ -16,25 +16,37 @@ C016_queue_element::C016_queue_element(C016_queue_element&& other)
   , sensorType(other.sensorType)
   , valueCount(other.valueCount)
 {
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     values[i] = other.values[i];
   }
 }
 
-C016_queue_element::C016_queue_element(const struct EventStruct *event, byte value_count, unsigned long unixTime) :
+C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t value_count, unsigned long unixTime) :
   _timestamp(unixTime),
   TaskIndex(event->TaskIndex),
   controller_idx(event->ControllerIndex),
   sensorType(event->sensorType),
   valueCount(value_count)
 {
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (i < value_count) {
       values[i] = UserVar[event->BaseVarIndex + i];
     } else {
       values[i] = 0.0f;
     }
   }
+}
+
+C016_queue_element& C016_queue_element::operator=(C016_queue_element&& other) {
+  _timestamp = other._timestamp;
+  TaskIndex = other.TaskIndex;
+  controller_idx = other.controller_idx;
+  sensorType = other.sensorType;
+  valueCount = other.valueCount;
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    values[i] = other.values[i];
+  }
+  return *this;
 }
 
 size_t C016_queue_element::getSize() const {
@@ -49,7 +61,7 @@ bool C016_queue_element::isDuplicate(const C016_queue_element& other) const {
     return false;
   }
 
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (other.values[i] != values[i]) {
       return false;
     }

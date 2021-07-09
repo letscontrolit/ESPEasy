@@ -82,7 +82,7 @@ void handle_hardware() {
     }
     String error = SaveSettings();
     addHtmlError(error);
-    if (error.length() == 0) {
+    if (error.isEmpty()) {
       // Apply I2C settings.
       initI2C();
     }
@@ -93,12 +93,12 @@ void handle_hardware() {
   addFormHeader(F("Hardware Settings"), F("ESPEasy#Hardware_page"), F("Hardware/Hardware.html"));
 
   addFormSubHeader(F("Wifi Status LED"));
-  addFormPinSelect(formatGpioName_output("LED"), F("pled"), Settings.Pin_status_led);
+  addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output("LED"), F("pled"), Settings.Pin_status_led);
   addFormCheckBox(F("Inversed LED"), F("pledi"), Settings.Pin_status_led_Inversed);
   addFormNote(F("Use &rsquo;GPIO-2 (D4)&rsquo; with &rsquo;Inversed&rsquo; checked for onboard LED"));
 
   addFormSubHeader(F("Reset Pin"));
-  addFormPinSelect(formatGpioName_input(F("Switch")), F("pres"), Settings.Pin_Reset);
+  addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_input(F("Switch")), F("pres"), Settings.Pin_Reset);
   addFormNote(F("Press about 10s for factory reset"));
 
   addFormSubHeader(F("I2C Interface"));
@@ -148,7 +148,7 @@ void handle_hardware() {
     }
     addFormSelector(F("I2C Multiplexer address"), F("pi2cmuxaddr"), mux_opt + 1, i2c_mux_options, i2c_mux_choices, Settings.I2C_Multiplexer_Addr);
   }
-  addFormPinSelect(formatGpioName_output_optional("Reset"), F("pi2cmuxreset"), Settings.I2C_Multiplexer_ResetPin);
+  addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional("Reset"), F("pi2cmuxreset"), Settings.I2C_Multiplexer_ResetPin);
   addFormNote(F("Will be pulled low to force a reset. Reset is not available on PCA9540."));
 #endif
 
@@ -156,7 +156,10 @@ void handle_hardware() {
   addFormSubHeader(F("SPI Interface"));
   #ifdef ESP32
   {
-    const __FlashStringHelper * spi_options[3] = { F("Disabled"), F("VSPI: CLK=GPIO-18, MISO=GPIO-19, MOSI=GPIO-23"), F("HSPI: CLK=GPIO-14, MISO=GPIO-12, MOSI=GPIO-13")};
+    const __FlashStringHelper * spi_options[3] = { 
+      F("Disabled"), 
+      F("VSPI: CLK=GPIO-18, MISO=GPIO-19, MOSI=GPIO-23"), 
+      F("HSPI: CLK=GPIO-14, MISO=GPIO-12, MOSI=GPIO-13")};
     addFormSelector(F("Init SPI"), F("initspi"), 3, spi_options, NULL, Settings.InitSPI);
     addFormNote(F("Changing SPI settings requires to manualy restart"));
   }
@@ -167,7 +170,7 @@ void handle_hardware() {
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
   
 #ifdef FEATURE_SD
-  addFormPinSelect(formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
+  addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
 #endif // ifdef FEATURE_SD
   
 #ifdef HAS_ETHERNET
@@ -190,9 +193,9 @@ void handle_hardware() {
   }
   addFormNumericBox(F("Ethernet PHY Address"), F("ethphy"), Settings.ETH_Phy_Addr, 0, 255);
   addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110)"));
-  addFormPinSelect(formatGpioName_output(F("Ethernet MDC pin")), F("ethmdc"), Settings.ETH_Pin_mdc);
-  addFormPinSelect(formatGpioName_input(F("Ethernet MIO pin")), F("ethmdio"), Settings.ETH_Pin_mdio);
-  addFormPinSelect(formatGpioName_output(F("Ethernet Power pin")), F("ethpower"), Settings.ETH_Pin_power);
+  addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_output(F("Ethernet MDC pin")), F("ethmdc"), Settings.ETH_Pin_mdc);
+  addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_input(F("Ethernet MIO pin")), F("ethmdio"), Settings.ETH_Pin_mdio);
+  addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_output(F("Ethernet Power pin")), F("ethpower"), Settings.ETH_Pin_power);
   addRowLabel_tr_id(F("Ethernet Clock"), F("ethclock"));
   {
     const __FlashStringHelper * ethClockOptions[4] = { 

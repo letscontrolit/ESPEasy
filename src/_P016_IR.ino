@@ -113,7 +113,7 @@ IRrecv *irReceiver = NULL;
 bool bEnableIRcodeAdding = false;
 boolean displayRawToReadableB32Hex(String &outputStr, decode_results results);
 
-boolean Plugin_016(byte function, struct EventStruct *event, String &string)
+boolean Plugin_016(uint8_t function, struct EventStruct *event, String &string)
 {
   boolean success = false;
 
@@ -172,8 +172,10 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
     if (irReceiver == 0 && irPin != -1)
     {
 
-      addLog(LOG_LEVEL_INFO, F("INIT: IR RX"));
-      addLog(LOG_LEVEL_INFO, String(F("IR lib Version: ")) + _IRREMOTEESP8266_VERSION_);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, F("INIT: IR RX"));
+        addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_));
+      }
       irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
       irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
       irReceiver->enableIRIn();                         // Start the receiver
@@ -405,10 +407,14 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         output += F("\",\"bits\":");
         output += uint64ToString(results.bits);
         output += '}';
-        String Log = F("IRSEND,\'");
-        Log += output;
-        Log += "\'";
-        addLog(LOG_LEVEL_INFO, Log); //JSON representation of the command
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String Log;
+          Log.reserve(10 + output.length());
+          Log = F("IRSEND,\'");
+          Log += output;
+          Log += '\'';
+          addLog(LOG_LEVEL_INFO, Log); //JSON representation of the command
+        }
         event->String2 = output;
 
         // Check if this is a code we have a command for or we have to add
@@ -417,7 +423,7 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
 
         if (nullptr != P016_data) {
           // convert result to uint32_t
-          uint32_t iCode = ((uint32_t) results.decode_type) * 0x1000000;  // Bits 31-24 (upper byte) for decode_type
+          uint32_t iCode = ((uint32_t) results.decode_type) * 0x1000000;  // Bits 31-24 (upper uint8_t) for decode_type
           if (results.repeat)
             iCode += 0x800000;                                            // Bit 23 for repeat
           char strCode[P16_Cchars];
@@ -475,8 +481,16 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
       state.clock = -1;
 
       String description = IRAcUtils::resultAcToString(&results);
-      if (description != "")
-        addLog(LOG_LEVEL_INFO, String(F("AC State: ")) + description); // If we got a human-readable description of the message, display it.
+      if (!description.isEmpty()) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          // If we got a human-readable description of the message, display it.
+          String log;
+          log.reserve(10 + description.length());
+          log = F("AC State: ");
+          log += description;
+          addLog(LOG_LEVEL_INFO, log); 
+        }
+      }
       if (IRac::isProtocolSupported(results.decode_type))              //Check If there is a replayable AC state and show the JSON command that can be send
       {
         IRAcUtils::decodeToState(&results, &state);
@@ -517,7 +531,15 @@ boolean Plugin_016(byte function, struct EventStruct *event, String &string)
         output="";
         serializeJson(doc, output);
         event->String2 = output;
-        addLog(LOG_LEVEL_INFO, String(F("IRSENDAC,'")) + output+ '\''); //Show the command that the user can put to replay the AC state with P035
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          //Show the command that the user can put to replay the AC state with P035
+          String log;
+          log.reserve(12 + output.length());
+          log = F("IRSENDAC,'");
+          log += output;
+          log += '\'';
+          addLog(LOG_LEVEL_INFO, log); 
+        }
       }
 #endif // P016_P035_Extended_AC
     if (P016_SEND_IR_TO_CONTROLLER)  sendData(event);
@@ -674,14 +696,15 @@ boolean displayRawToReadableB32Hex(String &outputStr, decode_results results)
     iOut = storeB32Hex(out, iOut, tmOut[d++]);
 
   out[iOut] = 0;
-  String line = F("IRSEND,RAW2,");
-  line += out;
-  line += F(",38,");
-  line += uint64ToString(div[0], 10);
-  line += ',';
-  line += uint64ToString(div[1], 10);
-  addLog(LOG_LEVEL_INFO, line);
-  outputStr = line;
+  
+  outputStr.reserve(32 + iOut);
+  outputStr = F("IRSEND,RAW2,");
+  outputStr += out;
+  outputStr += F(",38,");
+  outputStr += uint64ToString(div[0], 10);
+  outputStr += ',';
+  outputStr += uint64ToString(div[1], 10);
+  addLog(LOG_LEVEL_INFO, outputStr);
   return true;
 }
 

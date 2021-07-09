@@ -54,6 +54,8 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   if (Settings.TaskDeviceEnabled[taskIndex]) {
     Plugin_task_data[taskIndex]                     = data;
     Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
+  } else if (data != nullptr) {
+    delete data;
   }
 }
 
@@ -84,12 +86,12 @@ String getPluginCustomArgName(int varNr) {
 // if the regular values should also be displayed.
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-void pluginWebformShowValue(taskIndex_t taskIndex, byte varNr, const __FlashStringHelper * label, const String& value, bool addTrailingBreak) {
+void pluginWebformShowValue(taskIndex_t taskIndex, uint8_t varNr, const __FlashStringHelper * label, const String& value, bool addTrailingBreak) {
   pluginWebformShowValue(taskIndex, varNr, String(label), value, addTrailingBreak);
 }
 
 void pluginWebformShowValue(taskIndex_t   taskIndex,
-                            byte          varNr,
+                            uint8_t          varNr,
                             const String& label,
                             const String& value,
                             bool          addTrailingBreak) {
@@ -121,7 +123,7 @@ void pluginWebformShowValue(const String& valName, const String& valName_id, con
   }
 }
 
-bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& string, byte paramNr) {
+bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& string, uint8_t paramNr) {
   if (!validTaskIndex(taskIndex)) {
     return false;
   }
@@ -132,6 +134,14 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
     return true;
   }
   return found_taskIndex == taskIndex;
+}
+
+bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, const String& newline)
+{
+  struct EventStruct TempEvent(taskIndex);
+  TempEvent.String1 = newline;
+  String dummy;
+  return PluginCall(PLUGIN_WEBFORM_SHOW_GPIO_DESCR, &TempEvent, dummy);
 }
 
 int getValueCountForTask(taskIndex_t taskIndex) {

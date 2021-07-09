@@ -21,7 +21,7 @@
 
 // FIXME TD-er: This plugin uses a lot of calls to the P022_data_struct, which could be combined in single functions.
 
-boolean Plugin_022(byte function, struct EventStruct *event, String& string)
+boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean  success = false;
   int      address = 0;
@@ -208,6 +208,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       if ((command == F("pcapwm")) || (instanceCommand && (command == F("pwm"))))
       {
         success = true;
+
+        // "log" is also sent along with the SendStatusOnlyIfNeeded
         log     = F("PCA 0x");
         log    += String(address, HEX);
         log    += F(": PWM ");
@@ -236,17 +238,23 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             newStatus.state   = event->Par2;
             savePortStatus(key, newStatus);
 
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              addLog(LOG_LEVEL_INFO, log);
+            }
 
             // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
             SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
           }
           else {
-            addLog(LOG_LEVEL_ERROR, log + F(" the pwm value ") + String(event->Par2) + F(" is invalid value."));
+            if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+              addLog(LOG_LEVEL_ERROR, log + F(" the pwm value ") + String(event->Par2) + F(" is invalid value."));
+            }
           }
         }
         else {
-          addLog(LOG_LEVEL_ERROR, log + F(" is invalid value."));
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            addLog(LOG_LEVEL_ERROR, log + F(" is invalid value."));
+          }
         }
       }
 

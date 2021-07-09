@@ -90,8 +90,8 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
     switch (enumval)
     {
       case BOOT_CAUSE:        value = String(lastBootCause); break; // Integer value to be used in rules
-      case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? F("00:00:00:00:00:00") : WiFi.BSSIDstr()); break;
-      case CR:                value = "\r"; break;
+      case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr()); break;
+      case CR:                value = '\r'; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
       case IP4:               value = String( (int) NetworkLocalIP()[3] ); break; // 4th IP octet
       case SUBNET:            value = getValue(LabelType::IP_SUBNET); break;
@@ -99,15 +99,15 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case GATEWAY:           value = getValue(LabelType::GATEWAY); break;
       case CLIENTIP:          value = getValue(LabelType::CLIENT_IP); break;
       #ifdef USES_MQTT
-      case ISMQTT:            value = String(MQTTclient_connected); break;
+      case ISMQTT:            value = String(MQTTclient_connected ? 1 : 0); break;
       #else // ifdef USES_MQTT
-      case ISMQTT:            value = "0"; break;
+      case ISMQTT:            value = '0'; break;
       #endif // ifdef USES_MQTT
 
       #ifdef USES_P037
-      case ISMQTTIMP:         value = String(P037_MQTTImport_connected); break;
+      case ISMQTTIMP:         value = String(P037_MQTTImport_connected ? 1 : 0); break;
       #else // ifdef USES_P037
-      case ISMQTTIMP:         value = "0"; break;
+      case ISMQTTIMP:         value = '0'; break;
       #endif // USES_P037
 
 
@@ -125,14 +125,18 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       #endif
       case LCLTIME:           value = getValue(LabelType::LOCAL_TIME); break;
       case LCLTIME_AM:        value = node_time.getDateTimeString_ampm('-', ':', ' '); break;
-      case LF:                value = "\n"; break;
+      case LF:                value = '\n'; break;
       case MAC:               value = getValue(LabelType::STA_MAC); break;
       case MAC_INT:           value = String(getChipId()); break; // Last 24 bit of MAC address as integer, to be used in rules.
       case RSSI:              value = getValue(LabelType::WIFI_RSSI); break;
-      case SPACE:             value = " "; break;
+      case SPACE:             value = ' '; break;
       case SSID:              value = (WiFiEventData.WiFiDisconnected()) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
+      case SUNRISE_S:         value = getValue(LabelType::SUNRISE_S); break;
+      case SUNSET_S:          value = getValue(LabelType::SUNSET_S); break;
+      case SUNRISE_M:         value = getValue(LabelType::SUNRISE_M); break;
+      case SUNSET_M:          value = getValue(LabelType::SUNSET_M); break;
       case SYSBUILD_DATE:     value = get_build_date(); break;
       case SYSBUILD_DESCR:    value = getValue(LabelType::BUILD_DESC); break;
       case SYSBUILD_FILENAME: value = getValue(LabelType::BINARY_FILENAME); break;
@@ -202,7 +206,9 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
   while ((v_index != -1)) {
     unsigned int i;
     if (validUIntFromString(s.substring(v_index + 2), i)) {
-      const String key = String(F("%v")) + String(i) + '%';
+      String key = F("%v");
+      key += i;
+      key += '%';
       if (s.indexOf(key) != -1) {
         const bool trimTrailingZeros = true;
         const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
@@ -294,6 +300,10 @@ const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enum
     case Enum::SSID:            return F("%ssid%");
     case Enum::SUNRISE:         return F("%sunrise");
     case Enum::SUNSET:          return F("%sunset");
+    case Enum::SUNRISE_S:       return F("%s_sunrise%");
+    case Enum::SUNSET_S:        return F("%s_sunset%");
+    case Enum::SUNRISE_M:       return F("%m_sunrise%");
+    case Enum::SUNSET_M:        return F("%m_sunset%");
     case Enum::SYSBUILD_DATE:   return F("%sysbuild_date%");
     case Enum::SYSBUILD_DESCR:  return F("%sysbuild_desc%");
     case Enum::SYSBUILD_FILENAME:  return F("%sysbuild_filename%");

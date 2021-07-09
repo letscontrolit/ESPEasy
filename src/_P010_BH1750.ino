@@ -15,7 +15,7 @@
 # define PLUGIN_VALUENAME1_010 "Lux"
 
 
-boolean Plugin_010(byte function, struct EventStruct *event, String& string)
+boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -51,7 +51,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
+      uint8_t choice = PCONFIG(0);
 
       /*
          String options[2];
@@ -69,7 +69,7 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte   choiceMode = PCONFIG(1);
+      uint8_t   choiceMode = PCONFIG(1);
       const __FlashStringHelper * optionsMode[4];
       optionsMode[0] = F("RESOLUTION_LOW");
       optionsMode[1] = F("RESOLUTION_NORMAL");
@@ -123,13 +123,15 @@ boolean Plugin_010(byte function, struct EventStruct *event, String& string)
 
       if (lux != -1) {
         UserVar[event->BaseVarIndex] = lux;
-        String log = F("BH1750 Address: 0x");
-        log += String(address, HEX);
-        log += F(" Mode: 0x");
-        log += String(mode);
-        log += F(" : Light intensity: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 0);
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("BH1750 Address: 0x");
+          log += String(address, HEX);
+          log += F(" Mode: 0x");
+          log += String(mode);
+          log += F(" : Light intensity: ");
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
       }
       break;

@@ -53,7 +53,7 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 		//     if (command == F("email"))
 		//     {
 		//       MakeNotificationSettings(NotificationSettings);
-		//       LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+		//       LoadNotificationSettings(event->NotificationIndex, (uint8_t*)&NotificationSettings, sizeof(NotificationSettingsStruct));
 		//       NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
 		//       success = true;
 		//     }
@@ -63,7 +63,7 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 		case NPlugin::Function::NPLUGIN_NOTIFY:
 		{
 			MakeNotificationSettings(NotificationSettings);
-			LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+			LoadNotificationSettings(event->NotificationIndex, (uint8_t*)&NotificationSettings, sizeof(NotificationSettingsStruct));
 			NotificationSettings.validate();
 			String subject = NotificationSettings.Subject;
 			String body;
@@ -96,9 +96,11 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 	WiFiClient client;
 	client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 	String aHost = notificationsettings.Server;
-	addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
+	if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+		addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
 	if (!connectClient(client, aHost.c_str(), notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
-		addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
+		if (loglevelActiveFor(LOG_LEVEL_ERROR))
+			addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
 		myStatus = false;
 	}else {
 		String mailheader = F(
@@ -154,7 +156,8 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			while (nextAddressAvailable) {
 				String mailFound = F("Email: To ");
 				mailFound += emailTo;
-				addLog(LOG_LEVEL_INFO, mailFound);
+				if (loglevelActiveFor(LOG_LEVEL_INFO))
+					addLog(LOG_LEVEL_INFO, mailFound);
 				if (!NPlugin_001_MTA(client, String(F("RCPT TO:<")) + emailTo + ">", F("250 "))) break;
 				++i;
 				nextAddressAvailable = getNextMailAddress(notificationsettings.Receiver, emailTo, i);
@@ -173,9 +176,11 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 		if (myStatus == true) {
 			addLog(LOG_LEVEL_INFO, F("EMAIL: Connection Closed Successfully"));
 		}else {
-			String log = F("EMAIL: Connection Closed With Error. Used header: ");
-			log += mailheader;
-			addLog(LOG_LEVEL_ERROR, log);
+			if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+				String log = F("EMAIL: Connection Closed With Error. Used header: ");
+				log += mailheader;
+				addLog(LOG_LEVEL_ERROR, log);
+			}
 		}
 	}
 	return myStatus;
@@ -185,7 +190,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 
 boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {
-	if (user.length() == 0 || pass.length() == 0) {
+	if (user.isEmpty() || pass.isEmpty()) {
 		// No user/password given.
 		return true;
 	}
@@ -202,7 +207,8 @@ boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& p
 
 boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWaitForPattern)
 {
-	addLog(LOG_LEVEL_DEBUG, aStr);
+	if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+		addLog(LOG_LEVEL_DEBUG, aStr);
 
 	if (aStr.length()) client.println(aStr);
 
@@ -211,9 +217,11 @@ boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aW
 	backgroundtasks();
 	while (true) {
 		if (timeOutReached(timer)) {
-			String log = F("NPlugin_001_MTA: timeout. ");
-			log += aStr;
-			addLog(LOG_LEVEL_ERROR, log);
+			if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+				String log = F("NPlugin_001_MTA: timeout. ");
+				log += aStr;
+				addLog(LOG_LEVEL_ERROR, log);
+			}
 			return false;
 		}
 
@@ -223,7 +231,8 @@ boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aW
 		String line;
 		safeReadStringUntil(client, line, '\n');
 
-		addLog(LOG_LEVEL_DEBUG, line);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+			addLog(LOG_LEVEL_DEBUG, line);
 
 		if (line.indexOf(aWaitForPattern) >= 0) {
 			return true;

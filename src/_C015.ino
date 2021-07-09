@@ -107,7 +107,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
       char thumbprint[60];
-      LoadCustomControllerSettings(event->ControllerIndex, (byte *)&thumbprint, sizeof(thumbprint));
+      LoadCustomControllerSettings(event->ControllerIndex, (uint8_t *)&thumbprint, sizeof(thumbprint));
 
       if (strlen(thumbprint) != 59) {
         strcpy(thumbprint, CPLUGIN_015_DEFAULT_THUMBPRINT);
@@ -148,7 +148,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         if (!safe_strncpy(thumbprint, webArg("c015_thumbprint"), 60) || (strlen(thumbprint) != 59)) {
           addHtmlError(error);
         }
-        SaveCustomControllerSettings(event->ControllerIndex, (byte *)&thumbprint, sizeof(thumbprint));
+        SaveCustomControllerSettings(event->ControllerIndex, (uint8_t *)&thumbprint, sizeof(thumbprint));
           # endif // ifdef CPLUGIN_015_SSL
       }
       break;
@@ -165,7 +165,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       // Collect the values at the same run, to make sure all are from the same sample
-      byte valueCount = getValueCountForTask(event->TaskIndex);
+      uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
       
       success = C015_DelayHandler->addToQueue(C015_queue_element(event, valueCount));
@@ -177,7 +177,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         C015_queue_element& element = C015_DelayHandler->sendQueue.back();
         LoadTaskSettings(event->TaskIndex);
 
-        for (byte x = 0; x < valueCount; x++)
+        for (uint8_t x = 0; x < valueCount; x++)
         {
           bool   isvalid;
           String formattedValue = formatUserVar(event, x, isvalid);
@@ -193,25 +193,29 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
           valueFullName += valueName;
           String vPinNumberStr = valueName.substring(1, 4);
           int    vPinNumber    = vPinNumberStr.toInt();
-          String log           = F(C015_LOG_PREFIX);
-          log += Blynk.connected() ? F("(online): ") : F("(offline): ");
 
-          if ((vPinNumber > 0) && (vPinNumber < 256)) {
-            log += F("send ");
-            log += valueFullName;
-            log += F(" = ");
-            log += formattedValue;
-            log += F(" to blynk pin v");
-            log += vPinNumber;
-          }
-          else {
+          if (!(vPinNumber > 0) && (vPinNumber < 256)) {
             vPinNumber = -1;
-            log       += F("error got vPin number for ");
-            log       += valueFullName;
-            log       += F(", got not valid value: ");
-            log       += vPinNumberStr;
           }
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log           = F(C015_LOG_PREFIX);
+            log += Blynk.connected() ? F("(online): ") : F("(offline): ");
+
+            if ((vPinNumber > 0) && (vPinNumber < 256)) {
+              log += F("send ");
+              log += valueFullName;
+              log += F(" = ");
+              log += formattedValue;
+              log += F(" to blynk pin v");
+              log += vPinNumber;
+            } else {
+              log += F("error got vPin number for ");
+              log += valueFullName;
+              log += F(", got not valid value: ");
+              log += vPinNumberStr;
+            }
+            addLog(LOG_LEVEL_INFO, log);
+          }
           element.vPin[x] = vPinNumber;
           element.txt[x]  = formattedValue;
         }
@@ -283,14 +287,18 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
 
     # ifdef CPLUGIN_015_SSL
     char thumbprint[60];
-    LoadCustomControllerSettings(controllerIndex, (byte *)&thumbprint, sizeof(thumbprint));
+    LoadCustomControllerSettings(controllerIndex, (uint8_t *)&thumbprint, sizeof(thumbprint));
 
     if (strlen(thumbprint) != 59) {
-      addLog(LOG_LEVEL_INFO, C015_LOG_PREFIX "Saved thumprint value is not correct:");
-      addLog(LOG_LEVEL_INFO, thumbprint);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "Saved thumprint value is not correct:"));
+        addLog(LOG_LEVEL_INFO, thumbprint);
+      }
       strcpy(thumbprint, CPLUGIN_015_DEFAULT_THUMBPRINT);
-      addLog(LOG_LEVEL_INFO, C015_LOG_PREFIX "using default one:");
-      addLog(LOG_LEVEL_INFO, thumbprint);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "using default one:"));
+        addLog(LOG_LEVEL_INFO, thumbprint);
+      }
     }
     # endif // ifdef CPLUGIN_015_SSL
 
@@ -299,7 +307,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     if (ControllerSettings.UseDNS) {
       String hostName = ControllerSettings.getHost();
 
-      if (hostName.length() != 0) {
+      if (!hostName.isEmpty()) {
         log += F("Connecting to custom blynk server ");
         log += ControllerSettings.getHostPortString();
         Blynk.config(auth.c_str(),
@@ -384,18 +392,20 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char *Line) {
 
   String data = parseString(Line, 3);
 
-  if (data.length() == 0) {
+  if (data.isEmpty()) {
     String err = F("Skip sending empty data to blynk vPin ");
     err += vPin;
     return err;
   }
 
-  String log = F(C015_LOG_PREFIX "(online): send blynk pin v");
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F(C015_LOG_PREFIX "(online): send blynk pin v");
 
-  log += vPin;
-  log += F(" = ");
-  log += data;
-  addLog(LOG_LEVEL_INFO, log);
+    log += vPin;
+    log += F(" = ");
+    log += data;
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   Blynk.virtualWrite(vPin, data);
   return return_command_success();
@@ -415,7 +425,7 @@ boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeou
 
 // This is called for all virtual pins, that don't have BLYNK_WRITE handler
 BLYNK_WRITE_DEFAULT() {
-  byte  vPin     = request.pin;
+  uint8_t  vPin     = request.pin;
   float pinValue = param.asFloat();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

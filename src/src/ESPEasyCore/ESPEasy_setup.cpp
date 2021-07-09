@@ -128,6 +128,10 @@ void ESPEasy_setup()
   // serialPrint("\n\n\nBOOOTTT\n\n\n");
 
   initLog();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("initLog()"));
+  #endif
+
 
   if (SpiffsSectors() < 32)
   {
@@ -140,73 +144,86 @@ void ESPEasy_setup()
 
   emergencyReset();
 
-  String log = F("\n\n\rINIT : Booting version: ");
-  log += getValue(LabelType::GIT_BUILD);
-  log += " (";
-  log += getSystemLibraryString();
-  log += ')';
-  addLog(LOG_LEVEL_INFO, log);
-  log  = F("INIT : Free RAM:");
-  log += FreeMem();
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("\n\n\rINIT : Booting version: ");
+    log += getValue(LabelType::GIT_BUILD);
+    log += " (";
+    log += getSystemLibraryString();
+    log += ')';
+    addLog(LOG_LEVEL_INFO, log);
+    log  = F("INIT : Free RAM:");
+    log += FreeMem();
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   readBootCause();
 
-  log  = F("INIT : ");
-  log += getLastBootCauseString();
-
-  if (readFromRTC())
   {
-    RTC.bootFailedCount++;
-    RTC.bootCounter++;
-    lastMixedSchedulerId_beforereboot = RTC.lastMixedSchedulerId;
-    readUserVarFromRTC();
+    String log  = F("INIT : ");
+    log += getLastBootCauseString();
 
-    if (RTC.deepSleepState != 1)
+    if (readFromRTC())
     {
-      node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
+      RTC.bootFailedCount++;
+      RTC.bootCounter++;
+      lastMixedSchedulerId_beforereboot = RTC.lastMixedSchedulerId;
+      readUserVarFromRTC();
+
+      if (RTC.deepSleepState != 1)
+      {
+        node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
+      }
+
+      log += F(" #");
+      log += RTC.bootCounter;
+
+      #ifndef BUILD_NO_DEBUG
+      log += F(" Last Action before Reboot: ");
+      log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
+      log += F(" Last systime: ");
+      log += RTC.lastSysTime;
+      #endif // ifndef BUILD_NO_DEBUG
     }
 
-    log += F(" #");
-    log += RTC.bootCounter;
+    // cold boot (RTC memory empty)
+    else
+    {
+      initRTC();
 
-    #ifndef BUILD_NO_DEBUG
-    log += F(" Last Action before Reboot: ");
-    log += ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot);
-    log += F(" Last systime: ");
-    log += RTC.lastSysTime;
-    #endif // ifndef BUILD_NO_DEBUG
-  }
-
-  // cold boot (RTC memory empty)
-  else
-  {
-    initRTC();
-
-    // cold boot situation
-    if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) { // only set this if not set earlier during boot stage.
-      lastBootCause = BOOT_CAUSE_COLD_BOOT;
+      // cold boot situation
+      if (lastBootCause == BOOT_CAUSE_MANUAL_REBOOT) { // only set this if not set earlier during boot stage.
+        lastBootCause = BOOT_CAUSE_COLD_BOOT;
+      }
+      log = F("INIT : Cold Boot");
     }
-    log = F("INIT : Cold Boot");
+
+    log += F(" - Restart Reason: ");
+    log += getResetReasonString();
+
+    RTC.deepSleepState = 0;
+    saveToRTC();
+
+    addLog(LOG_LEVEL_INFO, log);
   }
-
-  log += F(" - Restart Reason: ");
-  log += getResetReasonString();
-
-  RTC.deepSleepState = 0;
-  saveToRTC();
-
-  addLog(LOG_LEVEL_INFO, log);
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("RTC init"));
+  #endif
 
   fileSystemCheck();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("fileSystemCheck()"));
+  #endif
 
   //  progMemMD5check();
   LoadSettings();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("LoadSettings()"));
+  #endif
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
 
   if ((RTC.bootFailedCount > 10) && (RTC.bootCounter > 10)) {
-    byte toDisable = RTC.bootFailedCount - 10;
+    uint8_t toDisable = RTC.bootFailedCount - 10;
     toDisable = disablePlugin(toDisable);
 
     if (toDisable != 0) {
@@ -240,9 +257,17 @@ void ESPEasy_setup()
     // Perhaps the WiFi radio needs some time to stabilize first?
     WifiScan(true);
   }
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("WifiScan()"));
+  #endif
+
 
   //  setWifiMode(WIFI_STA);
   checkRuleSets();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("checkRuleSets()"));
+  #endif
+
 
   // if different version, eeprom settings structure has changed. Full Reset needed
   // on a fresh ESP module eeprom values are set to 255. Version results into -1 (signed int)
@@ -259,15 +284,20 @@ void ESPEasy_setup()
   }
 
   initSerial();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("initSerial()"));
+  #endif
+
 
   if (Settings.Build != BUILD) {
     BuildFixes();
   }
 
-
-  log  = F("INIT : Free RAM:");
-  log += FreeMem();
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log  = F("INIT : Free RAM:");
+    log += FreeMem();
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
     Serial.setDebugOutput(true);
@@ -277,28 +307,47 @@ void ESPEasy_setup()
   checkRAM(F("hardwareInit"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
   hardwareInit();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("hardwareInit()"));
+  #endif
+
 
   timermqtt_interval      = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
   CPluginInit();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("CPluginInit()"));
+  #endif
   #ifdef USES_NOTIFIER
   NPluginInit();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("NPluginInit()"));
+  #endif
   #endif // ifdef USES_NOTIFIER
+
   PluginInit();
-  log  = F("INFO : Plugins: ");
-  log += deviceCount + 1;
-  log += ' ';
-  log += getPluginDescriptionString();
-  log += " (";
-  log += getSystemLibraryString();
-  log += ')';
-  addLog(LOG_LEVEL_INFO, log);
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("PluginInit()"));
+  #endif
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log  = F("INFO : Plugins: ");
+    log += deviceCount + 1;
+    log += ' ';
+    log += getPluginDescriptionString();
+    log += " (";
+    log += getSystemLibraryString();
+    log += ')';
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
     addLog(LOG_LEVEL_ERROR, String(F("Programming error! - Increase PLUGIN_MAX (")) + deviceCount + ')');
   }
 
   clearAllCaches();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("clearAllCaches()"));
+  #endif
 
   if (Settings.UseRules && isDeepSleepEnabled())
   {
@@ -314,8 +363,15 @@ void ESPEasy_setup()
   }
 
   NetworkConnectRelaxed();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("NetworkConnectRelaxed()"));
+  #endif
 
   setWebserverRunning(true);
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("setWebserverRunning()"));
+  #endif
+
 
   #ifdef FEATURE_REPORTING
   ReportStatus();
@@ -323,26 +379,41 @@ void ESPEasy_setup()
 
   #ifdef FEATURE_ARDUINO_OTA
   ArduinoOTAInit();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("ArduinoOTAInit()"));
+  #endif
   #endif // ifdef FEATURE_ARDUINO_OTA
 
   if (node_time.systemTimePresent()) {
     node_time.initTime();
+    #ifndef BUILD_NO_RAM_TRACKER
+    logMemUsageAfter(F("node_time.initTime()"));
+    #endif
   }
 
   if (Settings.UseRules)
   {
     String event = F("System#Boot");
     rulesProcessing(event); // TD-er: Process events in the setup() now.
+    #ifndef BUILD_NO_RAM_TRACKER
+    logMemUsageAfter(F("rulesProcessing(System#Boot)"));
+    #endif
   }
 
   writeDefaultCSS();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("writeDefaultCSS()"));
+  #endif
+
 
   UseRTOSMultitasking = Settings.UseRTOSMultitasking;
   #ifdef USE_RTOS_MULTITASKING
 
   if (UseRTOSMultitasking) {
-    log = F("RTOS : Launching tasks");
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("RTOS : Launching tasks");
+      addLog(LOG_LEVEL_INFO, log);
+    }
     xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 16384, NULL, 1, NULL, 1);
     xTaskCreatePinnedToCore(RTOS_TaskSerial,  "RTOS_TaskSerial",  8192,  NULL, 1, NULL, 1);
     xTaskCreatePinnedToCore(RTOS_Task10ps,    "RTOS_Task10ps",    8192,  NULL, 1, NULL, 1);
@@ -366,4 +437,8 @@ void ESPEasy_setup()
   Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_30SEC,      1333); // timer for watchdog once per 30 sec
   Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT,       88);   // timer for interaction with MQTT
   Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_STATISTICS, 2222);
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("Scheduler.setIntervalTimerOverride"));
+  #endif
+
 }

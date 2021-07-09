@@ -32,10 +32,10 @@
 #define BIT_POS_CALIB_CHAN_A      5
 #define BIT_POS_CALIB_CHAN_B      6
 
-std::map<byte, int32_t> Plugin_067_OversamplingValueChanA;
-std::map<byte, int16_t> Plugin_067_OversamplingCountChanA;
-std::map<byte, int32_t> Plugin_067_OversamplingValueChanB;
-std::map<byte, int16_t> Plugin_067_OversamplingCountChanB;
+std::map<uint8_t, int32_t> Plugin_067_OversamplingValueChanA;
+std::map<uint8_t, int16_t> Plugin_067_OversamplingCountChanA;
+std::map<uint8_t, int32_t> Plugin_067_OversamplingValueChanB;
+std::map<uint8_t, int16_t> Plugin_067_OversamplingCountChanB;
 
 enum {modeAoff, modeA64, modeA128};
 enum {modeBoff, modeB32};
@@ -97,7 +97,7 @@ int32_t readHX711(int16_t pinSCL, int16_t pinDOUT, int16_t config0, uint8_t *cha
       nextChannel = chanB32;
   }
 
-  for (byte i = 0; i < 24; i++)
+  for (uint8_t i = 0; i < 24; i++)
   {
     digitalWrite(pinSCL, HIGH);
     delayMicroseconds(1);
@@ -108,7 +108,7 @@ int32_t readHX711(int16_t pinSCL, int16_t pinDOUT, int16_t config0, uint8_t *cha
     mask >>= 1;
   }
 
-  for (byte i = 0; i < (nextChannel + 1); i++)
+  for (uint8_t i = 0; i < (nextChannel + 1); i++)
   {
     digitalWrite(pinSCL, HIGH);
     delayMicroseconds(1);
@@ -140,7 +140,7 @@ void int2float(int16_t valInt0, int16_t valInt1, float *valFloat)
   *valFloat = offset;
 }
 
-boolean Plugin_067(byte function, struct EventStruct *event, String& string)
+boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

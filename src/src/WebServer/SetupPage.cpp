@@ -76,15 +76,15 @@ void handle_setup() {
     } else {    
   //    if (active_network_medium == NetworkMedium_t::WIFI)
   //    {
-        static byte status       = HANDLE_SETUP_SCAN_STAGE;
-        static byte refreshCount = 0;
+        static uint8_t status       = HANDLE_SETUP_SCAN_STAGE;
+        static uint8_t refreshCount = 0;
 
         String ssid              = webArg(F("ssid"));
         String other             = webArg(F("other"));
         String password;
         bool passwordGiven = getFormPassword(F("pass"), password);
         if (passwordGiven) {
-          passwordGiven = password.length() != 0;
+          passwordGiven = !password.isEmpty();
         }
         const bool emptyPassAllowed = isFormItemChecked(F("emptypass"));
         const bool performRescan = web_server.hasArg(F("performrescan"));
@@ -93,14 +93,14 @@ void handle_setup() {
           WifiScan(false);
         }
 
-        if (other.length() != 0)
+        if (!other.isEmpty())
         {
           ssid = other;
         }
 
         if (!performRescan) {
           // if ssid config not set and params are both provided
-          if ((status == HANDLE_SETUP_SCAN_STAGE) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
+          if ((status == HANDLE_SETUP_SCAN_STAGE) && (!ssid.isEmpty()) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
           {
             if (clearButtonPressed) {
               addHtmlError(F("Warning: Need to confirm to clear WiFi credentials"));
@@ -364,7 +364,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
   html_end_table();
 }
 
-bool handle_setup_connectingStage(byte refreshCount) {
+bool handle_setup_connectingStage(uint8_t refreshCount) {
   if (refreshCount > 0)
   {
     //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));

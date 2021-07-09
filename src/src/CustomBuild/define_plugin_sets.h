@@ -1566,17 +1566,16 @@ To create/register a plugin, you have to :
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
-  #ifdef USES_P076
-    #undef USES_P076   // HWL8012   in POW r1
-  #endif
-  #ifdef USES_P092
-    #undef USES_P092   // DL-Bus
-  #endif
-  #ifdef USES_P093
-    #undef USES_P093   // Mitsubishi Heat Pump
-  #endif
-  #ifdef USES_P100 // Pulse Counter - DS2423
-    #undef USES_P100
+  #ifndef PLUGIN_SET_TESTING
+    #ifdef USES_P076
+      #undef USES_P076   // HWL8012   in POW r1
+    #endif
+    #ifdef USES_P093
+      #undef USES_P093   // Mitsubishi Heat Pump
+    #endif
+    #ifdef USES_P100 // Pulse Counter - DS2423
+      #undef USES_P100
+    #endif
   #endif
   #ifdef USES_C012
     #undef USES_C012 // Blynk
@@ -1692,6 +1691,11 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-
+// Here we can re-enable specific features in the TESTING sets as we have created some space there by splitting them up
+#if defined(TESTING_USE_RTTTL) && (defined(PLUGIN_SET_TESTING_A) || defined(PLUGIN_SET_TESTING_B) || defined(PLUGIN_SET_TESTING_C) || defined(PLUGIN_SET_TESTING_D))
+  #ifndef USE_RTTTL
+    #define USE_RTTTL
+  #endif
+#endif
 
 #endif // DEFINE_PLUGIN_SETS_H

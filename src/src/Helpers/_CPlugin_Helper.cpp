@@ -93,7 +93,7 @@ bool safeReadStringUntil(Stream     & input,
 String get_auth_header(const String& user, const String& pass) {
   String authHeader = "";
 
-  if ((user.length() != 0) && (pass.length() != 0)) {
+  if ((!user.isEmpty()) && (!pass.isEmpty())) {
     String auth = user;
     auth       += ":";
     auth       += pass;
@@ -336,7 +336,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   bool success = !must_check_reply;
 
   // This will send the request to the server
-  byte written = client.print(postStr);
+  uint8_t written = client.print(postStr);
 
   // as of 2018/11/01 the print function only returns one byte (upd to 256 chars sent). However if the string sent can be longer than this
   // therefore we calculate modulo 256.
@@ -552,7 +552,7 @@ String send_via_http(const String& logIdentifier,
   if (httpCode > 0) {
     response = http.getString();
 
-    byte loglevel = LOG_LEVEL_ERROR;
+    uint8_t loglevel = LOG_LEVEL_ERROR;
     // HTTP codes:
     // 1xx Informational response
     // 2xx Success
@@ -634,6 +634,6 @@ void setControllerPass(controllerIndex_t controller_idx, const ControllerSetting
 
 bool hasControllerCredentialsSet(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings)
 {
-  return getControllerUser(controller_idx, ControllerSettings).length() != 0 &&
-         getControllerPass(controller_idx, ControllerSettings).length() != 0;
+  return !getControllerUser(controller_idx, ControllerSettings).isEmpty() &&
+         !getControllerPass(controller_idx, ControllerSettings).isEmpty();
 }

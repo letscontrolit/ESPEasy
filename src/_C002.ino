@@ -185,9 +185,11 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       {
         String json = serializeDomoticzJson(event);
 # ifndef BUILD_NO_DEBUG
-        String log = F("MQTT : ");
-        log += json;
-        addLog(LOG_LEVEL_DEBUG, log);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("MQTT : ");
+          log += json;
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
 # endif // ifndef BUILD_NO_DEBUG
 
         String pubname = CPlugin_002_pubname;

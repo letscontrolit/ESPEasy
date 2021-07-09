@@ -57,7 +57,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
       if (C010_DelayHandler == nullptr) {
         break;
       }
-      const byte valueCount = getValueCountForTask(event->TaskIndex);
+      const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
       if (valueCount == 0) {
         break;
@@ -80,7 +80,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 
         parseControllerVariables(pubname, event, false);
 
-        for (byte x = 0; x < valueCount; x++)
+        for (uint8_t x = 0; x < valueCount; x++)
         {
           bool   isvalid;
           String formattedValue = formatUserVar(event, x, isvalid);
@@ -90,7 +90,8 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
             element.txt[x] = tmppubname;
             parseSingleControllerVariable(element.txt[x], event, x, false);
             element.txt[x].replace(F("%value%"), formattedValue);
-            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
+              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
           }
         }
       }
@@ -124,7 +125,7 @@ bool do_process_c010_delay_queue(int controller_number, const C010_queue_element
 
 bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  while (element.txt[element.valuesSent] == "") {
+  while (element.txt[element.valuesSent].isEmpty()) {
     // A non valid value, which we are not going to send.
     // Increase sent counter until a valid value is found.
     if (element.checkDone(true)) {

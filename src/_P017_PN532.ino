@@ -35,7 +35,7 @@
 uint8_t Plugin_017_pn532_packetbuffer[64];
 uint8_t Plugin_017_command;
 
-boolean Plugin_017(byte function, struct EventStruct *event, String& string)
+boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -107,7 +107,7 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
       // if (!Settings.WireClockStretchLimit)
       //   Wire.setClockStretchLimit(2000);
 
-      for (byte x = 0; x < 3; x++)
+      for (uint8_t x = 0; x < 3; x++)
       {
         if (Plugin_017_Init(CONFIG_PIN3)) {
           break;
@@ -134,8 +134,8 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
     {
       static unsigned long tempcounter = 0;
-      static byte counter;
-      static byte errorCount = 0;
+      static uint8_t counter;
+      static uint8_t errorCount = 0;
 
       counter++;
 
@@ -153,14 +153,16 @@ boolean Plugin_017(byte function, struct EventStruct *event, String& string)
         counter = 0;
         uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
         uint8_t uidLength;
-        byte    error = Plugin_017_readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
+        uint8_t    error = Plugin_017_readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
 
         if (error == 1)
         {
           errorCount++;
-          String log = F("PN532: Read error: ");
-          log += errorCount;
-          addLog(LOG_LEVEL_ERROR, log);
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            String log = F("PN532: Read error: ");
+            log += errorCount;
+            addLog(LOG_LEVEL_ERROR, log);
+          }
         }
         else {
           errorCount = 0;
@@ -221,9 +223,11 @@ boolean Plugin_017_Init(int8_t resetPin)
 {
   if (resetPin != -1)
   {
-    String log = F("PN532: Reset on pin: ");
-    log += resetPin;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("PN532: Reset on pin: ");
+      log += resetPin;
+      addLog(LOG_LEVEL_INFO, log);
+    }
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);
     delay(100);
@@ -239,13 +243,15 @@ boolean Plugin_017_Init(int8_t resetPin)
   uint32_t versiondata = getFirmwareVersion();
 
   if (versiondata) {
-    String log = F("PN532: Found chip PN5");
-    log += String((versiondata >> 24) & 0xFF, HEX);
-    log += F(" FW: ");
-    log += String((versiondata >> 16) & 0xFF, HEX);
-    log += '.';
-    log += String((versiondata >> 8) & 0xFF, HEX);
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("PN532: Found chip PN5");
+      log += String((versiondata >> 24) & 0xFF, HEX);
+      log += F(" FW: ");
+      log += String((versiondata >> 16) & 0xFF, HEX);
+      log += '.';
+      log += String((versiondata >> 8) & 0xFF, HEX);
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
   else {
     return false;
@@ -319,7 +325,7 @@ void Plugin_017_powerDown(void)
 /*********************************************************************************************\
 * PN532 read tag
 \*********************************************************************************************/
-byte Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t *uidLength)
+uint8_t Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t *uidLength)
 {
   Plugin_017_pn532_packetbuffer[0] = PN532_COMMAND_INLISTPASSIVETARGET;
   Plugin_017_pn532_packetbuffer[1] = 1; // max 1 cards at once
@@ -397,7 +403,7 @@ int8_t Plugin_017_writeCommand(const uint8_t *header, uint8_t hlen)
 
   Wire.write(checksum);
   Wire.write(PN532_POSTAMBLE);
-  byte status = Wire.endTransmission();
+  uint8_t status = Wire.endTransmission();
 
   if (status != 0) {
     return PN532_INVALID_FRAME;
@@ -474,7 +480,7 @@ int8_t Plugin_017_readAckFrame()
 
   do {
     if (Wire.requestFrom(PN532_I2C_ADDRESS,  sizeof(PN532_ACK) + 1)) {
-      if (Wire.read() & 1) { // check first byte --- status
+      if (Wire.read() & 1) { // check first uint8_t --- status
         break;               // PN532 is ready
       }
     }

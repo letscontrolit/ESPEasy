@@ -128,6 +128,10 @@ void handle_sysvars() {
   addSysVar_html(F("%sunset-1h%"));
   addSysVar_html(F("%sunrise%"));
   addSysVar_html(F("%sunrise+10m%"));
+  addSysVar_html(F("%s_sunset%"));
+  addSysVar_html(F("%s_sunrise%"));
+  addSysVar_html(F("%m_sunset%"));
+  addSysVar_html(F("%m_sunrise%"));
 
   addTableSeparator(F("Custom Variables"), 3, 3);
 

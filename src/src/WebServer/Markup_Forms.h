@@ -4,6 +4,7 @@
 #include "../WebServer/common.h"
 
 #include "../Globals/Plugins.h"
+#include "../Helpers/StringGenerator_GPIO.h"
 
 
 // ********************************************************************************
@@ -40,8 +41,8 @@ void addFormNumericBox(LabelType::Enum label, int value, int min = INT_MIN, int 
 void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min = INT_MIN, int max = INT_MAX);
 void addFormNumericBox(const String& label, const String& id, int value, int min = INT_MIN, int max = INT_MAX);
 
-void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals = 6, float stepsize = 0.0f);
-void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, byte nrDecimals = 6, float stepsize = 0.0f);
+void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, uint8_t nrDecimals = 6, float stepsize = 0.0f);
+void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, uint8_t nrDecimals = 6, float stepsize = 0.0f);
 
 // ********************************************************************************
 // Add a task selector form
@@ -89,7 +90,7 @@ bool getFormPassword(const String& id, String& password);
 // Add a IP Box form
 // ********************************************************************************
 
-void addFormIPBox(const String& label, const String& id, const byte ip[4]);
+void addFormIPBox(const String& label, const String& id, const uint8_t ip[4]);
 
 // ********************************************************************************
 // Add a IP Access Control select dropdown list
@@ -100,6 +101,7 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
 // Add a selector form
 // ********************************************************************************
 
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice);
 void addFormPinSelect(const String& label, const __FlashStringHelper * id, int choice);
 
 void addFormPinSelectI2C(const String& label, const String& id, int choice);
@@ -182,7 +184,7 @@ bool getCheckWebserverArg_int(const String& key, int& value);
 
 bool update_whenset_FormItemInt(const String& key, int& value);
 
-bool update_whenset_FormItemInt(const String& key, byte& value);
+bool update_whenset_FormItemInt(const String& key, uint8_t& value);
 
 // Note: Checkbox values will not appear in POST Form data if unchecked.
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.

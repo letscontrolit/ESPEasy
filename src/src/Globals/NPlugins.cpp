@@ -52,7 +52,7 @@ String getNPluginNameFromNotifierIndex(notifierIndex_t NotifierIndex) {
  \*********************************************************************************************/
 nprotocolIndex_t getNProtocolIndex(npluginID_t Number)
 {
-  for (byte x = 0; x <= notificationCount; x++) {
+  for (uint8_t x = 0; x <= notificationCount; x++) {
     if (Notification[x].Number == Number) {
       return x;
     }

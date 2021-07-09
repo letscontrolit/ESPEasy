@@ -151,16 +151,16 @@ struct Plugin_095_TFT_SettingStruct
   {
 
   }
-  byte address_tft_cs;
-  byte address_tft_dc;
-  byte address_tft_rst;
-  byte rotation;
+  uint8_t address_tft_cs;
+  uint8_t address_tft_dc;
+  uint8_t address_tft_rst;
+  uint8_t rotation;
 } TFT_Settings;
 
 //The display pointer
 Adafruit_ILI9341 *tft = NULL;
 
-boolean Plugin_095(byte function, struct EventStruct *event, String& string)
+boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -207,7 +207,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
       {
-        byte init = PCONFIG(0);
+        uint8_t init = PCONFIG(0);
 
         //if already configured take it from settings, else use default values (only for pin values)
         if(init != 1)
@@ -226,7 +226,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        byte init = PCONFIG(0);
+        uint8_t init = PCONFIG(0);
 
         //if already configured take it from settings, else use default values (only for pin values)
         if(init == 1)
@@ -236,7 +236,7 @@ boolean Plugin_095(byte function, struct EventStruct *event, String& string)
           TFT_Settings.address_tft_rst = PIN(2);
         }
 
-        byte choice2 = PCONFIG(1);
+        uint8_t choice2 = PCONFIG(1);
         const __FlashStringHelper * options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
         int optionValues2[4] = { 0, 1, 2, 3 };
         addFormSelector(F("Rotation"), F("p095_rotate"), 4, options2, optionValues2, choice2);

@@ -56,7 +56,7 @@ IRsend *Plugin_035_irSender = nullptr;
 
 #define P35_Ntimings 250 //Defines the ammount of timings that can be stored. Used in RAW and RAW2 encodings
 
-boolean Plugin_035(byte function, struct EventStruct *event, String &command)
+boolean Plugin_035(uint8_t function, struct EventStruct *event, String &command)
 {
   bool success = false;
 
@@ -101,9 +101,11 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
         int irPin = CONFIG_PIN1;
         if (Plugin_035_irSender == 0 && irPin != -1)
         {
-          addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
-          addLog(LOG_LEVEL_INFO, String(F("IR lib Version: ")) + _IRREMOTEESP8266_VERSION_);
-          addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSEND: ")) + listProtocols());
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
+            addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_));
+            addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSEND: ")) + listProtocols());
+          }
           Plugin_035_irSender = new IRsend(irPin);
           Plugin_035_irSender->begin(); // Start the sender
         }
@@ -117,8 +119,10 @@ boolean Plugin_035(byte function, struct EventStruct *event, String &command)
 #ifdef P016_P035_Extended_AC
         if (Plugin_035_commonAc == nullptr && irPin != -1)
         {
-          addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
-          addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols());
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
+            addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols());
+          }
           Plugin_035_commonAc = new (std::nothrow) IRac(irPin);
         }
         if (Plugin_035_commonAc != nullptr && irPin == -1)
@@ -209,14 +213,16 @@ bool handle_AC_IRremote(const String &irData) {
   DeserializationError error = deserializeJson(doc, irData);         // Deserialize the JSON document
   if (error)         // Test if parsing succeeds.
   {
-    addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str());
+    if (loglevelActiveFor(LOG_LEVEL_INFO))
+      addLog(LOG_LEVEL_INFO, String(F("IRTX: Deserialize Json failed: ")) + error.c_str());
     return false; //do not continue with sending the signal.
   }
   String sprotocol = doc[F("protocol")];
   st.protocol = strToDecodeType(sprotocol.c_str());
   if (!IRac::isProtocolSupported(st.protocol)) //Check if we support the protocol
   {
-    addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported:")) + sprotocol);
+    if (loglevelActiveFor(LOG_LEVEL_INFO))
+      addLog(LOG_LEVEL_INFO, String(F("IRTX: Protocol not supported:")) + sprotocol);
     return false; //do not continue with sending of the signal.
   }
 
@@ -264,7 +270,7 @@ bool handle_AC_IRremote(const String &irData) {
 bool handleRawRaw2Encoding(const String &cmd) {
   bool raw=true;
   String IrType = parseString(cmd, 2);
-  if (IrType.length() == 0) return false;
+  if (IrType.isEmpty()) return false;
 
   if (IrType.equalsIgnoreCase(F("RAW"))) raw = true;
   else if (IrType.equalsIgnoreCase(F("RAW2")))  raw = false;
@@ -537,9 +543,9 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // (The correct size, and a legacy shorter size.)
       // Guess which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
+      // the correct length/uint8_t size.
       // This should provide backward compatiblity with legacy messages.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      stateSize = inputLength / 2;  // Every two hex chars is a uint8_t.
       // Use at least the minimum size.
       stateSize = std::max(stateSize, kDaikinStateLengthShort);
       // If we think it isn't a "short" message.
@@ -553,8 +559,8 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // Fujitsu has four distinct & different size states, so make a best guess
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // the correct length/uint8_t size.
+      stateSize = inputLength / 2;  // Every two hex chars is a uint8_t.
       // Use at least the minimum size.
       stateSize = std::max(stateSize,
                            (uint16_t) (kFujitsuAcStateLengthShort - 1));
@@ -569,8 +575,8 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // HitachiAc3 has two distinct & different size states, so make a best
       // guess which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // the correct length/uint8_t size.
+      stateSize = inputLength / 2;  // Every two hex chars is a uint8_t.
       // Use at least the minimum size.
       stateSize = std::max(stateSize,
                            (uint16_t) (kHitachiAc3MinStateLength));
@@ -586,8 +592,8 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // MWM has variable size states, so make a best guess
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // the correct length/uint8_t size.
+      stateSize = inputLength / 2;  // Every two hex chars is a uint8_t.
       // Use at least the minimum size.
       stateSize = std::max(stateSize, (uint16_t) 3);
       // Cap the maximum size.
@@ -597,8 +603,8 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       // Samsung has two distinct & different size states, so make a best guess
       // which one we are being presented with based on the number of
       // hexadecimal digits provided. i.e. Zero-pad if you need to to get
-      // the correct length/byte size.
-      stateSize = inputLength / 2;  // Every two hex chars is a byte.
+      // the correct length/uint8_t size.
+      stateSize = inputLength / 2;  // Every two hex chars is a uint8_t.
       // Use at least the minimum size.
       stateSize = std::max(stateSize, (uint16_t) (kSamsungAcStateLength));
       // If we think it isn't a "normal" message.
@@ -624,7 +630,7 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
     return false;
   }
 
-  // Ptr to the least significant byte of the resulting state for this protocol.
+  // Ptr to the least significant uint8_t of the resulting state for this protocol.
   uint8_t *statePtr = &state[stateSize - 1];
 
   // Convert the string into a state array of the correct length.
@@ -646,12 +652,12 @@ bool parseStringAndSendAirCon(const int irtype, const String str)
       return false;
     }
     if (i % 2 == 1)
-    { // Odd: Upper half of the byte.
+    { // Odd: Upper half of the uint8_t.
       *statePtr += (c << 4);
-      statePtr--; // Advance up to the next least significant byte of state.
+      statePtr--; // Advance up to the next least significant uint8_t of state.
     }
     else
-    { // Even: Lower half of the byte.
+    { // Even: Lower half of the uint8_t.
       *statePtr = c;
     }
   }

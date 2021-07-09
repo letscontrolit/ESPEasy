@@ -38,7 +38,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
       // tolerantParseStringKeepCase(Line, 4);
       String configCommand = parseStringToEndKeepCase(string, 4);
 
-      if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
+      if ((configTaskName.isEmpty()) || (configCommand.isEmpty())) {
         return success; // TD-er: Should this be return false?
       }
       taskIndex_t index = findTaskIndexByName(configTaskName);
@@ -292,9 +292,9 @@ void SendValueLogger(taskIndex_t TaskIndex)
 
     if (validDeviceIndex(DeviceIndex)) {
       LoadTaskSettings(TaskIndex);
-      const byte valueCount = getValueCountForTask(TaskIndex);
+      const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
-      for (byte varNr = 0; varNr < valueCount; varNr++)
+      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
         logger += node_time.getDateString('-');
         logger += ' ';
@@ -409,22 +409,22 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
 
 // Simple bitwise get/set functions
 
-uint8_t get8BitFromUL(uint32_t number, byte bitnr) {
+uint8_t get8BitFromUL(uint32_t number, uint8_t bitnr) {
   return (number >> bitnr) & 0xFF;
 }
 
-void set8BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+void set8BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
   uint32_t mask     = (0xFFUL << bitnr);
   uint32_t newvalue = ((value << bitnr) & mask);
 
   number = (number & ~mask) | newvalue;
 }
 
-uint8_t get4BitFromUL(uint32_t number, byte bitnr) {
+uint8_t get4BitFromUL(uint32_t number, uint8_t bitnr) {
   return (number >> bitnr) &  0x0F;
 }
 
-void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+void set4BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
   uint32_t mask     = (0x0FUL << bitnr);
   uint32_t newvalue = ((value << bitnr) & mask);
 
@@ -443,3 +443,30 @@ int getLoopCountPerSec() {
 int getUptimeMinutes() {
   return wdcounter / 2;
 }
+
+#ifndef BUILD_NO_RAM_TRACKER
+void logMemUsageAfter(const __FlashStringHelper * function, int value) {
+  // Store free memory in an int, as subtracting may sometimes result in negative value.
+  // The recorded used memory is not an exact value, as background (or interrupt) tasks may also allocate or free heap memory.
+  static int last_freemem = ESP.getFreeHeap();
+  const int freemem_end = ESP.getFreeHeap();
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log;
+    log.reserve(128);
+    log  = F("After ");
+    log += function;
+    if (value >= 0) {
+      log += value;
+    }
+    while (log.length() < 30) log += ' ';
+    log += F("Free mem after: ");
+    log += freemem_end;
+    while (log.length() < 55) log += ' ';
+    log += F("diff: ");
+    log += last_freemem - freemem_end;
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+
+  last_freemem = freemem_end;
+}
+#endif

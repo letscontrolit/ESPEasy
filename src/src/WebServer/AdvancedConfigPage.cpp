@@ -18,7 +18,7 @@
 
 #ifdef WEBSERVER_ADVANCED
 
-void setLogLevelFor(byte destination, LabelType::Enum label) {
+void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
   setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
 }
 
@@ -35,7 +35,7 @@ void handle_advanced() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  if (webArg(F("edit")).length() != 0)
+  if (!webArg(F("edit")).isEmpty())
   {
 //    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
     Settings.IP_Octet     = webArg(F("ip")).toInt();
@@ -97,7 +97,12 @@ void handle_advanced() {
     Settings.UseMaxTXpowerForSending(isFormItemChecked(LabelType::WIFI_SEND_AT_MAX_TX_PWR));
     Settings.NumberExtraWiFiScans = getFormItemInt(LabelType::WIFI_NR_EXTRA_SCANS);
     Settings.PeriodicalScanWiFi(isFormItemChecked(LabelType::WIFI_PERIODICAL_SCAN));
-    Settings.JSONBoolWithoutQuotes(isFormItemChecked(F("json_bool_with_quotes")));
+    Settings.UseLastWiFiFromRTC(isFormItemChecked(LabelType::WIFI_USE_LAST_CONN_FROM_RTC));
+    Settings.JSONBoolWithoutQuotes(isFormItemChecked(LabelType::JSON_BOOL_QUOTES));
+    Settings.EnableTimingStats(isFormItemChecked(LabelType::ENABLE_TIMING_STATISTICS));
+    #ifdef ESP8266
+    Settings.UseAlternativeDeepSleep(isFormItemChecked(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL));
+    #endif
 
     addHtmlError(SaveSettings());
 
@@ -198,7 +203,14 @@ void handle_advanced() {
   addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif // if defined(ESP32)
 
-  addFormCheckBox(F("JSON bool output without quotes"), F("json_bool_with_quotes"), Settings.JSONBoolWithoutQuotes());
+  addFormCheckBox(LabelType::JSON_BOOL_QUOTES, Settings.JSONBoolWithoutQuotes());
+  #ifdef USES_TIMING_STATS
+  addFormCheckBox(LabelType::ENABLE_TIMING_STATISTICS, Settings.EnableTimingStats());
+  #endif
+  #ifdef ESP8266
+  addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
+  #endif
+
 
   #ifdef USES_SSDP
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
@@ -249,6 +261,7 @@ void handle_advanced() {
     addFormNote(note);
   }
   addFormCheckBox(LabelType::WIFI_PERIODICAL_SCAN, Settings.PeriodicalScanWiFi());
+  addFormCheckBox(LabelType::WIFI_USE_LAST_CONN_FROM_RTC, Settings.UseLastWiFiFromRTC());
 
 
 

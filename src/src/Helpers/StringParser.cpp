@@ -36,12 +36,12 @@ String parseTemplate(String& tmpString, bool useURLencode)
   return parseTemplate_padded(tmpString, 0, useURLencode);
 }
 
-String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
+String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize)
 {
   return parseTemplate_padded(tmpString, minimal_lineSize, false);
 }
 
-String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useURLencode)
+String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool useURLencode)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate_padded"));
@@ -49,7 +49,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   START_TIMER;
 
   // Keep current loaded taskSettings to restore at the end.
-  byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
+  uint8_t   currentTaskIndex = ExtraTaskSettings.TaskIndex;
   String newString;
 
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
@@ -107,7 +107,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 
         if (deviceName.equals(F("int"))) {
           nr_decimals = 0;
-        } else if (format.length() != 0)
+        } else if (!format.isEmpty())
         {
           // There is some formatting here, so do not throw away decimals
           trimTrailingZeros = false;
@@ -126,7 +126,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
       taskIndex_t taskIndex = findTaskIndexByName(deviceName);
 
       if (validTaskIndex(taskIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
-        byte valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+        uint8_t valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
         if (valueNr != VARS_PER_TASK) {
           // here we know the task and value, so find the uservar
@@ -197,7 +197,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 // valueFormat="transformation#justification"
 void transformValue(
   String      & newString,
-  byte          lineSize,
+  uint8_t          lineSize,
   String        value,
   String      & valueFormat,
   const String& tmpString)
@@ -377,7 +377,7 @@ void transformValue(
               indexDot = value.length();
             }
 
-            for (byte f = 0; f < (x - indexDot); f++) {
+            for (uint8_t f = 0; f < (x - indexDot); f++) {
               value = (tempValueFormat[0] == 'd' ? ' ' : '0') + value;
             }
             break;
@@ -410,7 +410,7 @@ void transformValue(
                 {
                   int filler = valueJust[1] - value.length() - '0'; // char '0' = 48; char '9' = 58
 
-                  for (byte f = 0; f < filler; f++) {
+                  for (uint8_t f = 0; f < filler; f++) {
                     newString += ' ';
                   }
                 }
@@ -424,7 +424,7 @@ void transformValue(
                 {
                   int filler = valueJust[1] - value.length() - '0'; // 48
 
-                  for (byte f = 0; f < filler; f++) {
+                  for (uint8_t f = 0; f < filler; f++) {
                     value += ' ';
                   }
                 }
@@ -496,7 +496,7 @@ void transformValue(
       {
         int filler = lineSize - newString.length() - value.length() - tmpString.length();
 
-        for (byte f = 0; f < filler; f++) {
+        for (uint8_t f = 0; f < filler; f++) {
           newString += ' ';
         }
       }
@@ -550,7 +550,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       String taskDeviceName = getTaskDeviceName(taskIndex);
 
-      if (taskDeviceName.length() != 0)
+      if (!taskDeviceName.isEmpty())
       {
         // Use entered taskDeviceName can have any case, so compare case insensitive.
         if (deviceName.equalsIgnoreCase(taskDeviceName))
@@ -566,7 +566,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
 
 // Find the first device value index of a taskIndex.
 // Return VARS_PER_TASK if none found.
-byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
+uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
 {
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
@@ -590,9 +590,9 @@ byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
   }
   LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
 
-  const byte valCount = getValueCountForTask(taskIndex);
+  const uint8_t valCount = getValueCountForTask(taskIndex);
 
-  for (byte valueNr = 0; valueNr < valCount; valueNr++)
+  for (uint8_t valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
     if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))
