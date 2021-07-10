@@ -547,6 +547,13 @@ bool MQTTpublish(controllerIndex_t controller_idx, const ESPEasy_now_merger& mes
               // Move pos for the actual number of bytes we read.
               pos += element.MessageRouteInfo.getSerializedSize();
             }
+            {
+              String log = F("MQTT  : MQTTpublish MessageRouteInfo: ");
+              log += element.MessageRouteInfo.toString();
+              log += F(" bytesLeft: ");
+              log += bytesLeft;
+              addLog(LOG_LEVEL_INFO, log);
+            }
           }
           if (!validMessageRouteInfo) {
             // Whatever may have been present, it could not be loaded, so clear just to be sure.

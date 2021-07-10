@@ -62,6 +62,14 @@ bool MessageRouteInfo_t::appendUnit(uint8_t unitnr) {
   if (unit == 0) {
     unit = unitnr;
   } else {
+    // First check we're not adding the same unitnr twice.
+    auto it = trace.rbegin();
+    if (it != trace.rend()) {
+      if (*it == unitnr) {
+        return true;
+      }
+    }
+
     trace.push_back(unitnr);
   }
   return true;
