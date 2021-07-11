@@ -908,6 +908,7 @@ void WifiScan(bool async, uint8_t channel) {
     }
     --nrScans;
     #ifdef ESP8266
+    /*
     {
       static bool FIRST_SCAN = true;
 
@@ -929,6 +930,7 @@ void WifiScan(bool async, uint8_t channel) {
       wifi_station_scan(&config, &onWiFiScanDone);
  
     }
+    */
     WiFi.scanNetworks(async, show_hidden, channel);
     #endif
     #ifdef ESP32
