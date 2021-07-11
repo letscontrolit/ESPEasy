@@ -86,7 +86,7 @@
 #  define P104_SETTINGS_BUFFER  512
 # endif // ifdef ESP32
 
-# define P104_MAX_MODULES_PER_ZONE     64    // Maximum allowed modules per zone
+# define P104_MAX_MODULES_PER_ZONE     255   // Maximum allowed modules per zone
 # define P104_MAX_TEXT_LENGTH_PER_ZONE 100   // Limit the Text content length
 # define P104_MAX_SPEED_PAUSE_VALUE    65535 // Value is in milliseconds
 # define P104_MAX_REPEATDELAY_VALUE    86400 // Value is in seconds
