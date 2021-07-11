@@ -751,14 +751,14 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
     // Global subcommands
     if (sub.equals(F("clear")) && // subcommand: clear[,all]
         (string4.isEmpty() ||
-          string4.equalsIgnoreCase(F("all")))) {
+         string4.equalsIgnoreCase(F("all")))) {
       P->displayClear();
       success = true;
     }
 
     if (sub.equals(F("update")) && // subcommand: update[,all]
         (string4.isEmpty() ||
-          string4.equalsIgnoreCase(F("all")))) {
+         string4.equalsIgnoreCase(F("all")))) {
       updateZone(0, P104_zone_struct(0));
       success = true;
     }
@@ -1620,10 +1620,14 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
     String zonetip;
 
-    if (zonetip.reserve(58)) {
+    if (zonetip.reserve(90)) {
       zonetip  = F("Select between 1 and ");
       zonetip += P104_MAX_ZONES;
-      zonetip += F(" zones, changing will save and reload the page.");
+      zonetip += F(" zones, changing");
+      #ifdef P104_USE_ZONE_ORDERING
+      zonetip += F(" Zones or Zone order");
+      #endif // ifdef P104_USE_ZONE_ORDERING
+      zonetip += F(" will save and reload the page.");
     }
     # endif // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
     addFormSelector(F("Zones"), F("plugin_104_zone"), P104_MAX_ZONES, zonesList, zonesOptions, NULL, P104_CONFIG_ZONE_COUNT, true
@@ -1631,9 +1635,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     , zonetip
                     # endif // ifdef P104_USE_TOOLTIPS
                     );
-    # ifdef P104_ADD_SETTINGS_NOTES
-    addFormNote(zonetip);
-    # endif // ifdef P104_ADD_SETTINGS_NOTES
 
     #ifdef P104_USE_ZONE_ORDERING
     const __FlashStringHelper *orderTypes[] = {
@@ -1641,8 +1642,15 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Display order (n..1)")
     };
     int orderOptions[] = { 0, 1 };
-    addFormSelector(F("Zone order"), F("plugin_104_zoneorder"), 2, orderTypes, orderOptions, NULL, bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0, true);
+    addFormSelector(F("Zone order"), F("plugin_104_zoneorder"), 2, orderTypes, orderOptions, NULL, bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0, true
+                    # ifdef P104_USE_TOOLTIPS
+                    , zonetip
+                    # endif // ifdef P104_USE_TOOLTIPS
+                    );
     #endif // ifdef P104_USE_ZONE_ORDERING
+    # ifdef P104_ADD_SETTINGS_NOTES
+    addFormNote(zonetip);
+    # endif // ifdef P104_ADD_SETTINGS_NOTES
   }
   expectedZones = P104_CONFIG_ZONE_COUNT;
 
@@ -1803,27 +1811,27 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     fontCount++;
     # endif // ifdef P104_USE_KATAKANA_FONT
     const __FlashStringHelper *fontTypes[] = {
-      F("Default")
+      F("Default (0)")
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-      , F("Numeric, double height")
+      , F("Numeric, double height (1)")
     # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
-      , F("Full, double height")
+      , F("Full, double height (2)")
     # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
-      , F("Vertical")
+      , F("Vertical (3)")
     # endif   // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
-      , F("Extended ASCII")
+      , F("Extended ASCII (4)")
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
-      , F("Arabic")
+      , F("Arabic (5)")
     # endif   // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
-      , F("Greek")
+      , F("Greek (6)")
     # endif   // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
-      , F("Katakana")
+      , F("Katakana (7)")
     # endif   // ifdef P104_USE_KATAKANA_FONT
     };
     int fontOptions[] = {

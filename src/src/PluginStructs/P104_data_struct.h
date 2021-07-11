@@ -5,7 +5,7 @@
 #ifdef USES_P104
 
 # define P104_DEBUG     // Log some extra (tech) data, also useful during development
-# define P104_DEBUG_DEV // Log some extra development info
+// # define P104_DEBUG_DEV // Log some extra development info
 
 # include "../CustomBuild/StorageLayout.h"
 # include "src/Globals/EventQueue.h"
