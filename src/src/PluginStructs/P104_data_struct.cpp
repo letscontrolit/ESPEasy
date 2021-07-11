@@ -796,8 +796,9 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           if ((sub.equals(F("txt")) ||              // subcommand: [set]txt,<zone>,<text> (only allowed for zones with Text content)
                sub.equals(F("settxt"))) &&
               (it->content == P104_CONTENT_TEXT)) { // no length check, so longer than the UI allows is made possible
-            if (sub.equals(F("settxt"))) {          // subcommand: settxt,<zone>,<text> (stores the text in the settings, is not saved)
-              it->text = string4;
+            if (sub.equals(F("settxt")) &&          // subcommand: settxt,<zone>,<text> (stores the text in the settings, is not saved)
+                string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE) {
+              it->text = string4;                   // Only if not too long, could 'blow up' the settings when saved
             }
             displayOneZoneText(zoneIndex - 1, *it, string4);
             success = true;
@@ -957,8 +958,9 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           if ((sub.equals(F("bar")) ||                   // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones with Bargraph content)
                sub.equals(F("setbar"))) &&
               (it->content == P104_CONTENT_BAR_GRAPH)) { // no length check, so longer than the UI allows is made possible
-            if (sub.equals(F("setbar"))) {               // subcommand: setbar,<zone>,<graph-string> (stores the graph-string in the settings, is not saved)
-              it->text = string4;
+            if (sub.equals(F("setbar")) &&               // subcommand: setbar,<zone>,<graph-string> (stores the graph-string in the settings, is not saved)
+                string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE) {
+              it->text = string4;                        // Only if not too long, could 'blow up' the settings when saved
             }
             displayBarGraph(zoneIndex - 1, *it, string4);
             success = true;
