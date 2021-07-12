@@ -52,16 +52,20 @@
 // repeat,<zone>,<delay_sec>    : Set the Repeat (sec) for the zone, after this delay the text & animation will be repeated.
 //                                -1 = off, range 0..86400 seconds (24h)
 // bar,<zone>,<graph-string>    : Set the graph-string for a Bargraph zone, format: value,max,min,direction,barType|...
+// setbar,<zone>,<graph-string> : as the bar subcommand, but also stores the graph-string in the settings for that zone (not automatically saved)
 //                                value: numeric value of type double, variables can be used
 //                                max: value for a full bar display, default 100 (percent)
 //                                min: value for minimal bar display, default 0
 //                                direction: 0 (default): right to left, 1: left to right
-//                                barType: 0: solid, width: 8/number of graphStrings
+//                                barType: 0: solid, width: 8/number of graph-strings
 //                                         1: solid, width: 1
-//                                         2: dotted line, alternating, only on bar wider than 1 pixel
-//                                Up to 8 graphStrings can be provided, width is determined by the number of graphStrings
+//                                         2: dotted line, alternating, only if the bar is wider than 1 pixel
+//                                Up to 8 graph-strings can be provided and must be separated by a pipe |
+//                                The bar width is determined by the number of graph-strings
 //
 // History:
+// 2021-07-12 tonhuisman: Reduce number of reconfiguration during command handling, will be applied the next time content is displayed
+//                        update/correct some documentation
 // 2021-07-08 tonhuisman: Several bugfixes: settings defaults, fix brightness to enable 0 value, simplify storing the zone settings
 // 2021-06-29-2021-07-03: Add Actions column to insert before/after zone or delete a zone, order the zones either in numeric order
 //            tonhuisman: or in display order ('upside-down'), fixed many bugs, refactored bar-graph method, other improvements

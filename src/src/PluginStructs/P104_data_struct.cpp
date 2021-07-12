@@ -783,7 +783,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           }
 
           #ifdef P104_USE_COMMANDS
-          if (sub.equals(F("size")) && // subcommand: size,zone,<size> (1..)
+          if (sub.equals(F("size")) && // subcommand: size,<zone>,<size> (1..)
               (value4 > 0) &&
               (value4 <= P104_MAX_MODULES_PER_ZONE)) {
             reconfigure = (it->size != value4);
@@ -806,7 +806,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           }
 
           #ifdef P104_USE_COMMANDS
-          if (sub.equals(F("content")) && // subcommand: content,zone,<contenttype> (0..<P104_CONTENT_count>-1)
+          if (sub.equals(F("content")) && // subcommand: content,<zone>,<contenttype> (0..<P104_CONTENT_count>-1)
               (value4 >= 0) &&
               (value4 < P104_CONTENT_count)) {
             reconfigure = (it->content != value4);
@@ -815,50 +815,45 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("alignment")) &&                             // subcommand: alignment,zone,<alignment> (0..3)
+          if (sub.equals(F("alignment")) &&                             // subcommand: alignment,<zone>,<alignment> (0..3)
               (value4 >= 0) &&
               (value4 <= static_cast<int>(textPosition_t::PA_RIGHT))) { // last item in the enum
-            reconfigure   = (it->alignment != value4);
             it->alignment = value4;
             success       = true;
             break;
           }
 
-          if (sub.equals(F("anim.in")) && // subcommand: anim.in,zone,<animation> (1..)
+          if (sub.equals(F("anim.in")) && // subcommand: anim.in,<zone>,<animation> (1..)
               isAnimationAvailable(value4)) {
-            reconfigure     = (it->animationIn != value4);
             it->animationIn = value4;
             success         = true;
             break;
           }
 
-          if (sub.equals(F("speed")) && // subcommand: speed,zone,<speed_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
+          if (sub.equals(F("speed")) && // subcommand: speed,<zone>,<speed_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
               (value4 >= 0) &&
               (value4 <= P104_MAX_SPEED_PAUSE_VALUE)) {
-            reconfigure = (it->speed != value4);
             it->speed   = value4;
             success     = true;
             break;
           }
 
-          if (sub.equals(F("anim.out")) && // subcommand: anim.out,zone,<animation> (0..)
+          if (sub.equals(F("anim.out")) && // subcommand: anim.out,<zone>,<animation> (0..)
               isAnimationAvailable(value4, true)) {
-            reconfigure      = (it->animationOut != value4);
             it->animationOut = value4;
             success          = true;
             break;
           }
 
-          if (sub.equals(F("pause")) && // subcommand: pause,zone,<pause_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
+          if (sub.equals(F("pause")) && // subcommand: pause,<zone>,<pause_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
               (value4 >= 0) &&
               (value4 <= P104_MAX_SPEED_PAUSE_VALUE)) {
-            reconfigure = (it->pause != value4);
             it->pause   = value4;
             success     = true;
             break;
           }
 
-          if (sub.equals(F("font")) && // subcommand: font,zone,<font id> (only for incuded font id's)
+          if (sub.equals(F("font")) && // subcommand: font,<zone>,<font id> (only for incuded font id's)
               (
                 (value4 == 0)
                 # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
@@ -892,7 +887,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
           # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
-          if (sub.equals(F("layout")) && // subcommand: layout,zone,<layout> (0..2), only when double-height font is available
+          if (sub.equals(F("layout")) && // subcommand: layout,<zone>,<layout> (0..2), only when double-height font is available
               (value4 >= 0) &&
               (value4 <= P104_LAYOUT_DOUBLE_LOWER)) {
             reconfigure = (it->layout != value4);
@@ -902,7 +897,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           }
           # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
-          if (sub.equals(F("specialeffect")) && // subcommand: specialeffect,zone,<effect> (0..3)
+          if (sub.equals(F("specialeffect")) && // subcommand: specialeffect,<zone>,<effect> (0..3)
               (value4 >= 0) &&
               (value4 <= P104_SPECIAL_EFFECT_BOTH)) {
             reconfigure       = (it->specialEffect != value4);
@@ -911,7 +906,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("offset")) && // subcommand: offset,zone,<size> (0..<size>-1)
+          if (sub.equals(F("offset")) && // subcommand: offset,<zone>,<size> (0..<size>-1)
               (value4 >= 0) &&
               (value4 < P104_MAX_MODULES_PER_ZONE) &&
               (value4 < it->size)) {
@@ -921,7 +916,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("brightness")) && // subcommand: brightness,zone,<brightness> (0..15)
+          if (sub.equals(F("brightness")) && // subcommand: brightness,<zone>,<brightness> (0..15)
               (value4 >= 0) &&
               (value4 <= P104_BRIGHTNESS_MAX)) {
             it->brightness = value4;
@@ -930,10 +925,9 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          if (sub.equals(F("repeat")) && // subcommand: repeaat,zone,<repeat_sec> (-1..86400 = 24h)
+          if (sub.equals(F("repeat")) && // subcommand: repeaat,<zone>,<repeat_sec> (-1..86400 = 24h)
               (value4 >= -1) &&
               (value4 <= P104_MAX_REPEATDELAY_VALUE)) {
-            reconfigure     = (it->repeatDelay != value4);
             it->repeatDelay = value4;
             success         = true;
 

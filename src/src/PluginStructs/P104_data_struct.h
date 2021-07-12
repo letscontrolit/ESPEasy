@@ -234,6 +234,8 @@
 // - select an unused new numeric font ID define, like #define P104_MY_FANCY_FONT_ID n
 // - include the .h file guarded by #ifdef P104_USE_MY_FANCY_FONT
 // - extend in P104_data_struct::webform_load the fontTypes, fontOptions arrays like the P104_USE_NUMERIC_DOUBLEHEIGHT_FONT example
+//   the description should include the font ID for documentation purposes
+//   don't forget to guard the extra code with #ifdef P104_USE_MY_FANCY_FONT
 // - extend in P104_data_struct::handlePluginWrite the list of supported font id's for the "font" command
 // - extend in P104_data_struct::configureZones the switch/case statement to conditionaly support the new font
 // - update documentation
