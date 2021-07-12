@@ -405,6 +405,8 @@ void AttemptWiFiConnect() {
       } else {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
       }
+    } else {
+      WiFiEventData.wifiConnectInProgress = false;
     }
   } else {
     if (!wifiAPmodeActivelyUsed() || WiFiEventData.wifiSetupConnect) {
