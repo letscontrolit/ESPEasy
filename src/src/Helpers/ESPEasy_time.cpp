@@ -119,7 +119,7 @@ unsigned long ESPEasy_time::now() {
     // nextSyncTime & sysTime are in seconds
     double unixTime_d = -1.0;
 
-    if (externalUnixTime_d > 0.0f) {
+    if (externalUnixTime_d > 0.0) {
       unixTime_d = externalUnixTime_d;
 
       // Correct for the delay between the last received external time and applying it
@@ -129,7 +129,7 @@ unsigned long ESPEasy_time::now() {
 
     // Try NTP if the time source is not external.
     bool updatedTime = (unixTime_d > 0.0);
-    if (!isExternalTimeSource(timeSource)) {
+    if (!isExternalTimeSource(timeSource) || timeSource_t::NTP_time_source == timeSource) {
       if (getNtpTime(unixTime_d)) {
         updatedTime = true;
       }
@@ -233,6 +233,13 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   if (!Settings.UseNTP || !NetworkConnected(10)) {
     return false;
   }
+  if (lastNTPSyncTime != 0) {
+    if (timePassedSince(lastNTPSyncTime) < static_cast<long>(1000 * syncInterval)) {
+      // Make sure not to flood the NTP servers with requests.
+      return false;
+    }
+  }
+
   IPAddress timeServerIP;
   String    log = F("NTP  : NTP host ");
 
@@ -392,6 +399,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       }
       udp.stop();
       timeSource = timeSource_t::NTP_time_source;
+      lastNTPSyncTime = millis();
       CheckRunningServices(); // FIXME TD-er: Sometimes services can only be started after NTP is successful
       return true;
     }

@@ -181,6 +181,7 @@ public:
   uint32_t prevMillis = 0;
   uint32_t nextSyncTime = 0;
   uint32_t lastSyncTime = 0;
+  uint32_t lastNTPSyncTime = 0;
   double externalUnixTime_d = -1.0; // Used to set time from a source other than NTP.
   struct tm tsRise, tsSet;
   struct tm sunRise;
