@@ -969,7 +969,11 @@ bool ESPEasy_now_handler_t::handle_NTPquery(const ESPEasy_now_merger& message, b
 // * MQTT controller forwarder
 // *************************************************************
 
-bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const String& topic, const String& payload, const MessageRouteInfo_t* messageRouteInfo)
+bool ESPEasy_now_handler_t::sendToMQTT(
+  controllerIndex_t controllerIndex, 
+  const String& topic, 
+  const String& payload, 
+  const MessageRouteInfo_t* messageRouteInfo)
 {
   if (!use_EspEasy_now) { return false; }
 
@@ -1017,8 +1021,9 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
       MessageRouteInfo_t::uint8_t_vector routeInfo;
       // Check if the intended recipient supports routeInfo
       if (messageRouteInfo != nullptr && preferred->build > 20113) {
-        routeInfo = messageRouteInfo->serialize();
-        routeInfo_length = routeInfo.size();
+        // FIXME TD-er: Disabled for now as forwarding messages does not work well right now
+//        routeInfo = messageRouteInfo->serialize();
+//        routeInfo_length = routeInfo.size();
       }
 
       // Todo: Add   cpluginID_t cpluginID; to the message
@@ -1033,7 +1038,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(controllerIndex_t controllerIndex, const 
         return false;
       }
       if (routeInfo_length != 0 && routeInfo_length != msg.addBinaryData(&(routeInfo[0]), routeInfo_length)) {
-        return false;
+//        return false;
       }
 
       WifiEspNowSendStatus sendStatus = msg.send(mac, _ClientTimeout, preferred->channel);
