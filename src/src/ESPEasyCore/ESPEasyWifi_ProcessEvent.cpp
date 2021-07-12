@@ -96,6 +96,14 @@ void handle_unprocessedNetworkEvents()
   if (active_network_medium == NetworkMedium_t::WIFI) {
     if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
       if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
+        if (WiFiEventData.wifiConnectInProgress) {
+          if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() > 20000) {
+            WiFiEventData.last_wifi_connect_attempt_moment.clear();
+          }
+          if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
+            WiFiEventData.wifiConnectInProgress = false;
+          }
+        }
         delay(10);
       }
 
@@ -524,6 +532,10 @@ void processScanDone() {
   }
 
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
+
+  if (WiFi_AP_Candidates.addedKnownCandidate()) {
+    NetworkConnectRelaxed();
+  }
 }
 
 
