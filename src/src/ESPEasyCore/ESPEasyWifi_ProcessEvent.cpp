@@ -533,9 +533,7 @@ void processScanDone() {
 
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
 
-  if (WiFi_AP_Candidates.addedKnownCandidate()) {
-    NetworkConnectRelaxed();
-  }
+  NetworkConnectRelaxed();
 }
 
 
