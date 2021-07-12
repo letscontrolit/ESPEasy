@@ -470,6 +470,7 @@ bool prepareWiFi() {
   #endif // if defined(ESP32)
   setConnectionSpeed();
   setupStaticIPconfig();
+  WiFiEventData.wifiConnectAttemptNeeded = true;
 
   return true;
 }
