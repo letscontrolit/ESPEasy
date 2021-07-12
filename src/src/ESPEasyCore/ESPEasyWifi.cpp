@@ -400,17 +400,11 @@ void AttemptWiFiConnect() {
       SetWiFiTXpower(tx_pwr, candidate.rssi);
       // Start connect attempt now, so no longer needed to attempt new connection.
       WiFiEventData.wifiConnectAttemptNeeded = false;
-      #ifdef ESP8266
-      ETS_UART_INTR_DISABLE();
-      #endif
       if (candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
       }
-      #ifdef ESP8266
-      ETS_UART_INTR_ENABLE();
-      #endif
     }
   } else {
     if (!wifiAPmodeActivelyUsed() || WiFiEventData.wifiSetupConnect) {
@@ -750,11 +744,11 @@ WiFiConnectionProtocol getConnectionProtocol() {
 // ********************************************************************************
 void WifiDisconnect()
 {
-  #if defined(ESP32)
+  #ifdef ESP32
   WiFi.disconnect();
   WiFi.removeEvent(wm_event_id);
-  #else // if defined(ESP32)
-
+  #endif
+  #ifdef ESP8266
   // Only call disconnect when STA is active
   if (WifiIsSTA(WiFiMode())) {
     wifi_station_disconnect();
