@@ -65,6 +65,15 @@
 .. |P104_usedlibraries| replace::  `MD_Parola, MD_MAX72XX (modified to work with ESPEasy)`
 .. |P104_datasheet| replace::  `.`
 
+.. |P104-Font-Default_typename| replace:: `Default font characters`
+.. |P104-Font-Numeric7Segment_typename| replace:: `Num, double height characters`
+.. |P104-Font-DoubleHeight_typename| replace:: `Full, double height characters`
+.. |P104-Font-Vertical_typename| replace:: `Vertical font characters`
+.. |P104-Font-ExtASCII_typename| replace:: `Extended ASCII characters`
+.. |P104-Font-Arabic_typename| replace:: `Arabic font characters`
+.. |P104-Font-Greek_typename| replace:: `Greek font characters`
+.. |P104-Font-Katakana_typename| replace:: `Katakana font characters`
+
 
 .. |P105_name| replace:: :cyan:`Atlas Scientific EZO ORP`
 .. |P105_type| replace:: :cyan:`Environment`

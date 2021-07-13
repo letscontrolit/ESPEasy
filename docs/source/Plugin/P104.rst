@@ -221,7 +221,17 @@ The Arabic, Greek and Katakana fonts have all their characters in the 'high-asci
 
 On 'bin-size-challenged' builds the *Full, double height* font is replaced by the *Numeric, double height* font, to limit the bin-size a bit more. This font can display only numeric content.
 
-**TODO:** *Draw font tables for all available fonts*
+Font overview:
+^^^^^^^^^^^^^^
+
+* :ref:`P104-Font-Default_page`
+* :ref:`P104-Font-Numeric7Segment_page`
+* :ref:`P104-Font-DoubleHeight_page`
+* :ref:`P104-Font-Vertical_page`
+* :ref:`P104-Font-ExtASCII_page`
+* :ref:`P104-Font-Arabic_page`
+* :ref:`P104-Font-Greek_page`
+* :ref:`P104-Font-Katakana_page`
 
 **Layout** Determines wether the standard layout should be used, or the Upper/Lower part of a double-height font.
 
