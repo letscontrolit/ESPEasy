@@ -21,6 +21,7 @@
 # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 void createHString(String& string); // Forward definition
 # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+void reverseStr(String& str); // Forward definition
 
 /****************************************************************
  * Constructor
@@ -261,20 +262,20 @@ void P104_data_struct::configureZones() {
 
       switch (it->font) {
         case P104_DEFAULT_FONT_ID: {
-          P->setFont(nullptr); // default font
+          P->setFont(currentZone, nullptr); // default font
           break;
         }
         # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
         case P104_DOUBLE_HEIGHT_FONT_ID: {
           P->setFont(currentZone, numeric7SegDouble);
-          P->setCharSpacing(P->getCharSpacing() * 2); // double spacing as well
+          P->setCharSpacing(currentZone, P->getCharSpacing() * 2); // double spacing as well
           break;
         }
         # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
         # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
         case P104_FULL_DOUBLEHEIGHT_FONT_ID: {
           P->setFont(currentZone, BigFont);
-          P->setCharSpacing(P->getCharSpacing() * 2); // double spacing as well
+          P->setCharSpacing(currentZone, P->getCharSpacing() * 2); // double spacing as well
           break;
         }
         # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
@@ -330,7 +331,7 @@ void P104_data_struct::configureZones() {
       # endif // ifdef P104_DEBUG_DEV
 
       // Content == text && text != ""
-      if ((it->content == P104_CONTENT_TEXT) && (!it->text.isEmpty())) {
+      if ((it->content == P104_CONTENT_TEXT || it->content == P104_CONTENT_TEXT_REV) && (!it->text.isEmpty())) {
         displayOneZoneText(currentZone, *it, it->text);
       }
 
@@ -366,10 +367,14 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
 
   # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
-  if (zstruct.layout == P104_LAYOUT_DOUBLE_LOWER) {
+  if (zstruct.layout == P104_LAYOUT_DOUBLE_UPPER) {
     createHString(sZoneBuffers[zone]);
   }
   # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+
+  if (zstruct.content == P104_CONTENT_TEXT_REV) {
+    reverseStr(sZoneBuffers[zone]);
+  }
 
   String log;
 
@@ -402,7 +407,7 @@ void P104_data_struct::updateZone(uint8_t                 zone,
                                   const P104_zone_struct& zstruct) {
   if (zone == 0) {
     for (auto it = zones.begin(); it != zones.end(); ++it) {
-      if (it->content == P104_CONTENT_TEXT) {
+      if (it->content == P104_CONTENT_TEXT || it->content == P104_CONTENT_TEXT_REV) {
         displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
         P->displayReset(it->zone - 1);
       }
@@ -412,6 +417,7 @@ void P104_data_struct::updateZone(uint8_t                 zone,
       }
       #endif
       if (zstruct.content == P104_CONTENT_TEXT
+          || zstruct.content == P104_CONTENT_TEXT_REV
       #ifdef P104_USE_BAR_GRAPH
           || zstruct.content == P104_CONTENT_BAR_GRAPH
       #endif
@@ -422,7 +428,7 @@ void P104_data_struct::updateZone(uint8_t                 zone,
       }
     }
   } else {
-    if (zstruct.content == P104_CONTENT_TEXT) {
+    if (zstruct.content == P104_CONTENT_TEXT || zstruct.content == P104_CONTENT_TEXT_REV) {
       displayOneZoneText(zstruct.zone - 1, zstruct, sZoneInitial[zstruct.zone - 1]); // Re-send last displayed text
       P->displayReset(zstruct.zone - 1);
     }
@@ -795,7 +801,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
           if ((sub.equals(F("txt")) ||              // subcommand: [set]txt,<zone>,<text> (only allowed for zones with Text content)
                sub.equals(F("settxt"))) &&
-              (it->content == P104_CONTENT_TEXT)) { // no length check, so longer than the UI allows is made possible
+              (it->content == P104_CONTENT_TEXT || it->content == P104_CONTENT_TEXT_REV)) { // no length check, so longer than the UI allows is made possible
             if (sub.equals(F("settxt")) &&          // subcommand: settxt,<zone>,<text> (stores the text in the settings, is not saved)
                 string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE) {
               it->text = string4;                   // Only if not too long, could 'blow up' the settings when saved
@@ -1144,6 +1150,14 @@ void createHString(String& string) {
 
 # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
+void reverseStr(String& str) {
+    uint16_t n = str.length();
+ 
+    // Swap character starting from two corners
+    for (uint16_t i = 0; i < n / 2; i++)
+        std::swap(str[i], str[n - i - 1]);
+}
+
 /************************************************************************
  * execute all PLUGIN_ONE_PER_SECOND tasks
  ***********************************************************************/
@@ -1261,7 +1275,7 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
           addLog(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P104_DEBUG
-        if (it->content == P104_CONTENT_TEXT) {
+        if (it->content == P104_CONTENT_TEXT || it->content == P104_CONTENT_TEXT_REV) {
           displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
           P->displayReset(it->zone - 1);
         }
@@ -1888,6 +1902,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
     const __FlashStringHelper *contentTypes[] = {
       F("Text"),
+      F("Text reverse"),
       F("Clock (4 mod.)"),
       F("Clock sec (6 mod.)"),
       F("Date (4 mod.)"),
@@ -1899,6 +1914,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     };
     int contentOptions[] {
       P104_CONTENT_TEXT,
+      P104_CONTENT_TEXT_REV,
       P104_CONTENT_TIME,
       P104_CONTENT_TIME_SEC,
       P104_CONTENT_DATE4,

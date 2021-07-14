@@ -4,7 +4,7 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P104
 
-# define P104_DEBUG     // Log some extra (tech) data, also useful during development
+# define P104_DEBUG // Log some extra (tech) data, also useful during development
 // # define P104_DEBUG_DEV // Log some extra development info
 
 # include "../CustomBuild/StorageLayout.h"
@@ -17,7 +17,9 @@
 # include "src/Helpers/Misc.h"
 # include "src/Helpers/StringParser.h"
 
-// # define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT                 // Enables double height numeric font for double-height time/date
+# if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)
+#  define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT                // Enables double height numeric font for double-height time/date
+# endif // if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)
 # define P104_USE_FULL_DOUBLEHEIGHT_FONT                    // Enables the use of a full (lower ascii only) set double height font
 # define P104_USE_VERTICAL_FONT                             // Enables the use of a vertical font
 # define P104_USE_EXT_ASCII_FONT                            // Enables the use of an extended ascii font
@@ -199,16 +201,17 @@
 # define P104_ACTION_DELETE       3
 
 # define P104_CONTENT_TEXT        0
-# define P104_CONTENT_TIME        1
-# define P104_CONTENT_TIME_SEC    2
-# define P104_CONTENT_DATE4       3
-# define P104_CONTENT_DATE6       4
-# define P104_CONTENT_DATE_TIME   5
-# define P104_CONTENT_BAR_GRAPH   6
+# define P104_CONTENT_TEXT_REV    1
+# define P104_CONTENT_TIME        2
+# define P104_CONTENT_TIME_SEC    3
+# define P104_CONTENT_DATE4       4
+# define P104_CONTENT_DATE6       5
+# define P104_CONTENT_DATE_TIME   6
+# define P104_CONTENT_BAR_GRAPH   7
 # ifdef P104_USE_BAR_GRAPH
-#  define P104_CONTENT_count       7 // The number of content type options
+#  define P104_CONTENT_count       8 // The number of content type options
 # else // ifdef P104_USE_BAR_GRAPH
-#  define P104_CONTENT_count       6 // The number of content type options
+#  define P104_CONTENT_count       7 // The number of content type options
 # endif // ifdef P104_USE_BAR_GRAPH
 
 # define P104_SPECIAL_EFFECT_NONE       0

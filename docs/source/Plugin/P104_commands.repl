@@ -29,15 +29,16 @@
         "
         ``DotMatrix,content,<zone>,<contenttype>``
         ","
-        Set the Content type for the specified zone, where ``<contenttype>`` is a numeric value from 0..6.
+        Set the Content type for the specified zone, where ``<contenttype>`` is a numeric value from 0..7.
 
         0. Text
-        1. Clock
-        2. Clock sec
-        3. Date
-        4. Date yy
-        5. Date/time
-        6. Bar graph
+        1. Text (reverse)
+        2. Clock
+        3. Clock sec
+        4. Date
+        5. Date yy
+        6. Date/time
+        7. Bar graph
 
         Will cause a reconfiguration of all zones.
         "

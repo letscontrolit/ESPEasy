@@ -22,12 +22,13 @@
 // settxt,<zone>,<text>         : As the txt subcommand, but also stores the text in the settings for that zone (not automatically saved)
 // content,<zone>,<contenttype> : Set the desired content type for that zone (0..)
 //                                0 = Text : Any text, including variable expansion
-//                                1 = Clock (4 mod.) : Time in 4 digits (HH:mm) 24h with flashing colon or Clock settings are applied
-//                                2 = Clock sec (6 mod) : Time in 6 digits (HH:mm ss) 24h with flashing colon between HH and mm
-//                                3 = Date (4 mod.) : Date in 4 digits (dd MM)
-//                                4 = Date yy (6/7 mod.) : Date in 6 or 8 digits (dd MM yy / dd mm yyyy)
-//                                5 = Date/time (9/13 mod.) : Date + time in 10 digits (dd MM yy HH:mm) 24h, flashing colon between HH and mm
-//                                6 = Bar graph : See below at bar/setbar commands on how to set the graphString(s).
+//                                1 = Text reverse : Any text, including variable expansion, reversed when displayed
+//                                2 = Clock (4 mod.) : Time in 4 digits (HH:mm) 24h with flashing colon or Clock settings are applied
+//                                3 = Clock sec (6 mod) : Time in 6 digits (HH:mm ss) 24h with flashing colon between HH and mm
+//                                4 = Date (4 mod.) : Date in 4 digits (dd MM)
+//                                5 = Date yy (6/7 mod.) : Date in 6 or 8 digits (dd MM yy / dd mm yyyy)
+//                                6 = Date/time (9/13 mod.) : Date + time in 10 digits (dd MM yy HH:mm) 24h, flashing colon between HH and mm
+//                                7 = Bar graph : See below at bar/setbar commands on how to set the graphString(s).
 //                                The (n mod.) suffix indicates the number of modules required to make all digits visible at once
 // alignment,<zone>,<alignment> : Set the Alignment of the zone (0 = Left, 1 = Center, 2 = Right). A complete reconfiguration will be done
 //                                if this setting is changed
@@ -64,6 +65,7 @@
 //                                The bar width is determined by the number of graph-strings
 //
 // History:
+// 2021-07-14 tonhuisman: Fix some bugs in font selection, add Text reverse content type to improve usability of Vertical font
 // 2021-07-12 tonhuisman: Reduce number of reconfiguration during command handling, will be applied the next time content is displayed
 //                        update/correct some documentation
 // 2021-07-08 tonhuisman: Several bugfixes: settings defaults, fix brightness to enable 0 value, simplify storing the zone settings

@@ -174,6 +174,7 @@ This are the available options:
 Between round braces the expected number of modules, required to display the complete content, is added.
 
 * *Text* A plain text, or with variables (as described above) will be displayed. The number of modules isn't estimated.
+* *Text reverse* Like *Text*, but the result will be reversed before displaying it. Makes the Vertical font more usable.
 * *Clock* Shows the current time according to the **Content options** settings.
 * *Clock sec* Shows the current time, including seconds and according to the **Content options** settings.
 * *Date* Show the date in a day and month format, formatted as configured in the **Content options** settings.
