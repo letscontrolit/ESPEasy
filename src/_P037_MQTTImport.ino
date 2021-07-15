@@ -82,23 +82,23 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         addFormSubHeader(F("Options"));
-#if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT) || defined(P037_FILTER_SUPPORT)
-        String optionsNoYes[2] = { F("No"), F("Yes") };
+        #if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT) || defined(P037_FILTER_SUPPORT)
+        const __FlashStringHelper * optionsNoYes[2] = { F("No"), F("Yes") };
         int optionValuesNoYes[2] = { 0, 1 };
-#endif
+        #endif
 
-#ifdef P037_JSON_SUPPORT
+        #ifdef P037_JSON_SUPPORT
         addFormSelector(F("Parse JSON messages"), F("p037_parse_json"),     2, optionsNoYes, optionValuesNoYes, P037_PARSE_JSON, true);
-#endif
-#ifdef P037_FILTER_SUPPORT
+        #endif
+        #ifdef P037_FILTER_SUPPORT
         addFormSelector(F("Apply filters"),       F("p037_apply_filters"),  2, optionsNoYes, optionValuesNoYes, P037_APPLY_FILTERS, true);
-#endif
-#ifdef P037_MAPPING_SUPPORT
+        #endif
+        #ifdef P037_MAPPING_SUPPORT
         addFormSelector(F("Apply mappings"),      F("p037_apply_mappings"), 2, optionsNoYes, optionValuesNoYes, P037_APPLY_MAPPINGS, true);
-#endif
-#if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT) || defined(P037_FILTER_SUPPORT)
+        #endif
+        #if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT) || defined(P037_FILTER_SUPPORT)
         addFormNote(F("Changing a Yes/No option will reload the page. Changing to No will clear corresponding settings!"));
-#endif
+        #endif
         addFormCheckBox(F("Generate events for accepted topics"),
                                                 F("p037_send_events"), P037_SEND_EVENTS);
         addFormNote(F("Event: &lt;TaskName&gt;#&lt;topic&gt;=&lt;payload&gt;"));
@@ -107,23 +107,23 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
         if (nullptr == P037_data) {
           return success;
-          }
+        }
         success = P037_data->webform_load(
-#ifdef P037_MAPPING_SUPPORT
+        #ifdef P037_MAPPING_SUPPORT
                                           P037_APPLY_MAPPINGS
-#endif
-#if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
+        #endif
+        #if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
                                           ,
-#endif
-#ifdef P037_FILTER_SUPPORT
+        #endif
+        #ifdef P037_FILTER_SUPPORT
                                           P037_APPLY_FILTERS
-#endif
-#if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
+        #endif
+        #if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
                                           ,
-#endif
-#ifdef P037_JSON_SUPPORT
+        #endif
+        #ifdef P037_JSON_SUPPORT
                                           P037_PARSE_JSON
-#endif
+        #endif
                                          );
         delete P037_data;
         break;
@@ -131,15 +131,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-#ifdef P037_JSON_SUPPORT
+        #ifdef P037_JSON_SUPPORT
         P037_PARSE_JSON     = getFormItemInt(F("p037_parse_json"));
-#endif
-#ifdef P037_MAPPING_SUPPORT
+        #endif
+        #ifdef P037_MAPPING_SUPPORT
         P037_APPLY_MAPPINGS = getFormItemInt(F("p037_apply_mappings"));
-#endif
-#ifdef P037_FILTER_SUPPORT
+        #endif
+        #ifdef P037_FILTER_SUPPORT
         P037_APPLY_FILTERS  = getFormItemInt(F("p037_apply_filters"));
-#endif
+        #endif
         P037_SEND_EVENTS    = isFormItemChecked(F("p037_send_events"));
 
         P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
@@ -148,15 +148,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
           return success;
         }
         success = P037_data->webform_save(
-#ifdef P037_FILTER_SUPPORT
+        #ifdef P037_FILTER_SUPPORT
                                           P037_APPLY_FILTERS
-#endif
-#if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
+        #endif
+        #if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
                                           ,
-#endif
-#ifdef P037_JSON_SUPPORT
+        #endif
+        #ifdef P037_JSON_SUPPORT
                                           P037_PARSE_JSON
-#endif
+        #endif
                                          );
         delete P037_data;
         break;
@@ -532,7 +532,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         break;
 
       }
-  }
+    }
 
   return success;
 }

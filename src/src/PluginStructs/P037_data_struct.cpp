@@ -22,9 +22,9 @@ P037_data_struct::~P037_data_struct() {}
 bool P037_data_struct::loadSettings() {
   if (_taskIndex < TASKS_MAX) {
     String tmp;
+    tmp.reserve(45);
     LoadCustomTaskSettings(_taskIndex, (uint8_t*)&StoredSettings, sizeof(StoredSettings));
     for (uint8_t i = 0; i < VARS_PER_TASK; i++) {
-      tmp.reserve(45);
       tmp = StoredSettings.deviceTemplate[i];
       tmp.trim();
       deviceTemplate[i] = tmp;
@@ -134,9 +134,9 @@ void P037_data_struct::parseMappings() {
     #endif
     String filters = P037_FILTER_LIST; // Anticipate more filters
     while (filterMap.length() > 0 && _maxFilter < P037_MAX_FILTERS * 3) {
-      int16_t comma   = filterMap.indexOf(F(","));
-      int16_t equals  = filterMap.indexOf(filters.substring(0, 1));
-      int16_t dash    = filterMap.indexOf(filters.substring(1, 2));
+      int16_t comma  = filterMap.indexOf(F(","));
+      int16_t equals = filterMap.indexOf(filters.substring(0, 1));
+      int16_t dash   = filterMap.indexOf(filters.substring(1, 2));
       if (comma == -1) comma = filterMap.length(); // last value
       if ((equals == -1 && dash > -1) || (equals > -1 && dash > -1 && dash < equals)) {
         operandIndex = 1;
@@ -219,7 +219,7 @@ bool P037_data_struct::webform_load(
 
   #ifdef P037_JSON_SUPPORT
   if (jsonEnabled) {
-      addRowLabel(F("MQTT Topic"), F(""));
+      addRowLabel(F("MQTT Topic"));
       html_table(F(""), false);  // Sub-table
       html_table_header(F("&nbsp;#&nbsp;"));
       html_table_header(F("Topic"), 500);
@@ -232,7 +232,7 @@ bool P037_data_struct::webform_load(
     if (jsonEnabled) { // Add a column with the json attribute to use for value
       html_TR_TD();
       addHtml(F("&nbsp;"));
-      addHtml(String(varNr + 1));
+      addHtmlInt(varNr + 1);
       html_TD();
       addTextBox(String(F("p037_template")) + (varNr + 1),
                 StoredSettings.deviceTemplate[varNr],
@@ -268,9 +268,9 @@ bool P037_data_struct::webform_load(
     addFormNote(F("Name - value filters are case-sensitive. Do not use ',' or '|'."));
 
     #ifdef P037_FILTER_PER_TOPIC
-    addRowLabel(F("Filter for MQTT Topic"), F(""));
+    addRowLabel(F("Filter for MQTT Topic"));
     #else
-    addRowLabel(F("Filter"), F(""));
+    addRowLabel(F("Filter"));
     #endif
     html_table(F(""), false);  // Sub-table
     html_table_header(F("&nbsp;#&nbsp;"));
@@ -278,13 +278,13 @@ bool P037_data_struct::webform_load(
     html_table_header(F("Operand"), 180);
     html_table_header(F("Value"));
 
-    String filterOptions[P037_FILTER_COUNT];
+    const __FlashStringHelper * filterOptions[P037_FILTER_COUNT];
     filterOptions[0] = F("equals");     // map name to value
     filterOptions[1] = F("range");      // between 2 values
     #if P037_FILTER_COUNT >= 3
     filterOptions[2] = F("list");       // list of multiple values
     #endif
-    int filterIndices[P037_FILTER_COUNT] = { 0, 1
+    int filterIndices[] = { 0, 1
     #if P037_FILTER_COUNT >= 3
     , 2
     #endif
@@ -305,7 +305,7 @@ bool P037_data_struct::webform_load(
 
       html_TR_TD();
       addHtml(F("&nbsp;"));
-      addHtml(String(filterNr));
+      addHtmlInt(filterNr);
       html_TD();
       addTextBox(getPluginCustomArgName(idx + 100 + 0),
                 _filter[idx + 0],
@@ -336,7 +336,7 @@ bool P037_data_struct::webform_load(
     while (extraFilters < P037_EXTRA_VALUES && idx < P037_MAX_FILTERS * 3) {
       html_TR_TD();
       addHtml(F("&nbsp;"));
-      addHtml(String(filterNr));
+      addHtmlInt(filterNr);
       html_TD();
       addTextBox(getPluginCustomArgName(idx + 100 + 0),
                 F(""),
@@ -383,17 +383,17 @@ bool P037_data_struct::webform_load(
     addFormSubHeader(F("Name - value mappings"));
     addFormNote(F("Name - value mappings are case-sensitive. Do not use ',' or '|'."));
 
-    addRowLabel(F("Mapping"), F(""));
+    addRowLabel(F("Mapping"));
     html_table(F(""), false);  // Sub-table
     html_table_header(F("&nbsp;#&nbsp;"));
     html_table_header(F("Name"));
     html_table_header(F("Operand"), 180);
     html_table_header(F("Value"));
 
-    String operandOptions[P037_OPERAND_COUNT];
-    operandOptions[0] = F("map");        // map name to int
-    operandOptions[1] = F("percentage"); // map attribute value to percentage of provided value
-    int operandIndices[P037_OPERAND_COUNT] = { 0, 1 };
+    const __FlashStringHelper * operandOptions[] = {
+          F("map"),          // map name to int
+          F("percentage") }; // map attribute value to percentage of provided value
+    int operandIndices[] = { 0, 1 };
 
     String operands = P037_OPERAND_LIST; // Anticipate more operations
     int8_t operandIndex;
@@ -407,7 +407,7 @@ bool P037_data_struct::webform_load(
 
       html_TR_TD();
       addHtml(F("&nbsp;"));
-      addHtml(String(mapNr));
+      addHtmlInt(mapNr);
       html_TD();
       addTextBox(getPluginCustomArgName(idx + 0),
                 _mapping[idx + 0],
@@ -436,7 +436,7 @@ bool P037_data_struct::webform_load(
     while (extraMappings < P037_EXTRA_VALUES && idx < P037_MAX_MAPPINGS * 3) {
       html_TR_TD();
       addHtml(F("&nbsp;"));
-      addHtml(String(mapNr));
+      addHtmlInt(mapNr);
       html_TD();
       addTextBox(getPluginCustomArgName(idx + 0),
                 F(""),
@@ -490,6 +490,7 @@ bool P037_data_struct::webform_save(
   bool success = false;
 
   String error;
+  error.reserve(80); // Estimated
   for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
   {
     String argName = F("p037_template");
@@ -513,11 +514,12 @@ bool P037_data_struct::webform_save(
   valueMap.reserve(sizeof(StoredSettings.valueMappings) / 2);
 
   String left, right;
-  bool firstError = true;
+  bool firstError;
   #endif
 
 // Mapping must be processed first, then Filtering, because they are parsed in that order
   #ifdef P037_MAPPING_SUPPORT
+  firstError = true;
   String operands = P037_OPERAND_LIST;
   uint8_t mapNr = 1;
   left.reserve(32);
@@ -691,7 +693,7 @@ String P037_data_struct::mapValue(const String& input, const String& attribute) 
             break;
           }
           default:
-          break;
+            break;
         }
       }
     }
