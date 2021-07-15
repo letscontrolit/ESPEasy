@@ -22,7 +22,7 @@ P037_data_struct::~P037_data_struct() {}
 bool P037_data_struct::loadSettings() {
   if (_taskIndex < TASKS_MAX) {
     String tmp;
-    LoadCustomTaskSettings(_taskIndex, (byte*)&StoredSettings, sizeof(StoredSettings));
+    LoadCustomTaskSettings(_taskIndex, (uint8_t*)&StoredSettings, sizeof(StoredSettings));
     for (uint8_t i = 0; i < VARS_PER_TASK; i++) {
       tmp.reserve(45);
       tmp = StoredSettings.deviceTemplate[i];
@@ -226,7 +226,7 @@ bool P037_data_struct::webform_load(
       html_table_header(F("JSON Attribute"), 200);
   }
   #endif
-  for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+  for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
   {
     #ifdef P037_JSON_SUPPORT
     if (jsonEnabled) { // Add a column with the json attribute to use for value
@@ -490,7 +490,7 @@ bool P037_data_struct::webform_save(
   bool success = false;
 
   String error;
-  for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+  for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
   {
     String argName = F("p037_template");
     argName += varNr + 1;
@@ -622,7 +622,7 @@ bool P037_data_struct::webform_save(
   addLog(LOG_LEVEL_INFO, valueMap);
   #endif
   #endif
-  SaveCustomTaskSettings(_taskIndex, (byte*)&StoredSettings, sizeof(StoredSettings));
+  SaveCustomTaskSettings(_taskIndex, (uint8_t*)&StoredSettings, sizeof(StoredSettings));
 
   #ifdef P037_MAPPING_SUPPORT
   _maxIdx = -1; // Invalidate current mappings and filters
