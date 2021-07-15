@@ -37,7 +37,7 @@
 # define P020_DEFAULT_BAUDRATE   115200
 
 
-boolean Plugin_020(byte function, struct EventStruct *event, String& string)
+boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -92,10 +92,10 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
     { 
       addFormNumericBox(F("TCP Port"),  F("p020_port"), P020_SERVER_PORT, 0);
       addFormNumericBox(F("Baud Rate"), F("p020_baud"), P020_BAUDRATE,    0);
-      byte serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
+      uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {
-        byte   choice = P020_SERIAL_PROCESSING;
+        uint8_t   choice = P020_SERIAL_PROCESSING;
         const __FlashStringHelper * options[3];
         options[0] = F("None");
         options[1] = F("Generic");
@@ -174,7 +174,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
       // serial0 on esp32 is Ser2net: port=2 rxPin=3 txPin=1; serial1 on esp32 is Ser2net: port=4 rxPin=13 txPin=15; Serial2 on esp32 is
       // Ser2net: port=4 rxPin=16 txPin=17
-      byte serialconfig = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
+      uint8_t serialconfig = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
       task->serialBegin(port, rxPin, txPin, P020_BAUDRATE, serialconfig);
       task->startServer(P020_SERVER_PORT);
 

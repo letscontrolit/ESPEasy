@@ -155,7 +155,7 @@ struct P077_data_struct : public PluginTaskData_base {
 
   //  uint8_t cse_receive_flag = 0;
 
-  uint8_t serial_in_buffer[32];
+  uint8_t serial_in_buffer[32] = {0};
   long voltage_cycle = 0;
   long current_cycle = 0;
   long power_cycle = 0;
@@ -168,14 +168,20 @@ struct P077_data_struct : public PluginTaskData_base {
   float energy_power = 0;   // 123.1 W
 
   // stats
-  long t_max = 0, t_all = 0, t_pkt = 0, t_pkt_tmp = 0;
-  uint16_t count_bytes = 0, count_max = 0, count_pkt = 0;
-  uint8_t checksum = 0, adjustment = 0;
+  long t_max = 0;
+  long t_all = 0;
+  long t_pkt = 0;
+  long t_pkt_tmp = 0;
+  uint16_t count_bytes = 0;
+  uint16_t count_max = 0;
+  uint16_t count_pkt = 0;
+  uint8_t checksum = 0;
+  uint8_t adjustment = 0;
 };
 
 
 
-boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
+boolean Plugin_077(uint8_t function, struct EventStruct *event, String &string) {
   boolean success = false;
 
   switch (function) {

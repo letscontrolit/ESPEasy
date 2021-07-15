@@ -60,9 +60,9 @@ struct pinStatesStruct
 {
   pinStatesStruct() : value(0), plugin(0), index(0), mode(0) {}
   uint16_t value;
-  byte plugin;
-  byte index;
-  byte mode;
+  uint8_t plugin;
+  uint8_t index;
+  uint8_t mode;
 } pinStates[PINSTATE_TABLE_MAX];
 */
 

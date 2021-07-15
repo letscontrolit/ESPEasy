@@ -164,7 +164,7 @@ void WiFiEventData_t::markDisconnect(WiFiDisconnectReason reason) {
   wifiConnectInProgress = false;
 }
 
-void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], byte channel) {
+void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], uint8_t channel) {
   usedChannel = channel;
   lastConnectMoment.setNow();
   processedConnect    = false;
@@ -174,7 +174,7 @@ void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], 
   auth_mode           = WiFi_AP_Candidates.getCurrent().enc_type;
 
   RTC.lastWiFiChannel = channel;
-  for (byte i = 0; i < 6; ++i) {
+  for (uint8_t i = 0; i < 6; ++i) {
     if (RTC.lastBSSID[i] != bssid[i]) {
       bssid_changed    = true;
       RTC.lastBSSID[i] = bssid[i];

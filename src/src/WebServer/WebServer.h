@@ -23,7 +23,7 @@
 #define MENU_INDEX_RULES         5
 #define MENU_INDEX_NOTIFICATIONS 6
 #define MENU_INDEX_TOOLS         7
-extern byte navMenuIndex;
+extern uint8_t navMenuIndex;
 
 // Uncrustify must not be used on macros, so turn it off.
 // *INDENT-OFF*
@@ -69,13 +69,13 @@ void   getWebPageTemplateDefaultFooter(String& tmpl);
 
 void   getErrorNotifications();
 
-const __FlashStringHelper * getGpMenuIcon(byte index);
+const __FlashStringHelper * getGpMenuIcon(uint8_t index);
 
-const __FlashStringHelper * getGpMenuLabel(byte index);
+const __FlashStringHelper * getGpMenuLabel(uint8_t index);
 
-const __FlashStringHelper * getGpMenuURL(byte index);
+const __FlashStringHelper * getGpMenuURL(uint8_t index);
 
-bool   GpMenuVisible(byte index);
+bool   GpMenuVisible(uint8_t index);
 
 void   getWebPageTemplateVar(const String& varName);
 
@@ -138,10 +138,10 @@ void addTaskValueSelect(const String& name,
 // ********************************************************************************
 bool isLoggedIn(bool mustProvideLogin = true);
 
-String  getControllerSymbol(byte index);
+String  getControllerSymbol(uint8_t index);
 
 /*
-   String getValueSymbol(byte index);
+   String getValueSymbol(uint8_t index);
  */
 void    addSVG_param(const String& key,
                      float         value);
@@ -203,15 +203,15 @@ void getStorageTableSVG(SettingsType::Enum settingsType);
 
 #ifdef ESP32
 
-int  getPartionCount(byte pType);
+int  getPartionCount(uint8_t pType);
 
-void getPartitionTableSVG(byte         pType,
+void getPartitionTableSVG(uint8_t         pType,
                           unsigned int partitionColor);
 
 #endif // ifdef ESP32
 
 bool webArg2ip(const String& arg,
-               byte         *IP);
+               uint8_t         *IP);
 
 
 // Separate wrapper to get web_server.arg()

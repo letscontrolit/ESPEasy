@@ -8,7 +8,7 @@
 
 #include <MFRC522.h>
 
-P111_data_struct::P111_data_struct(byte csPin, byte rstPin) : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin)
+P111_data_struct::P111_data_struct(uint8_t csPin, uint8_t rstPin) : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin)
 {}
 
 void P111_data_struct::init() {
@@ -21,9 +21,9 @@ void P111_data_struct::init() {
 /**
  * read status and tag
  */
-byte P111_data_struct::readCardStatus(unsigned long *key, bool *removedTag) {
+uint8_t P111_data_struct::readCardStatus(unsigned long *key, bool *removedTag) {
 
-  byte error = 0;
+  uint8_t error = 0;
 
   uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
   uint8_t uidLength;
@@ -103,7 +103,7 @@ bool P111_data_struct::reset(int8_t csPin, int8_t resetPin) {
   if (result) {
     //String log = F("RC522: Found");
     // Get the MFRC522 software version
-    byte v = mfrc522->PCD_ReadRegister(mfrc522->VersionReg);
+    uint8_t v = mfrc522->PCD_ReadRegister(mfrc522->VersionReg);
     
     // When 0x00 or 0xFF is returned, communication probably failed
     if ((v == 0x00) || (v == 0xFF)) {
@@ -129,7 +129,7 @@ bool P111_data_struct::reset(int8_t csPin, int8_t resetPin) {
 /*********************************************************************************************\
  * RC522 read tag ID
 \*********************************************************************************************/
-byte P111_data_struct::readPassiveTargetID(uint8_t *uid, uint8_t *uidLength) { //needed ? see above (not PN532)
+uint8_t P111_data_struct::readPassiveTargetID(uint8_t *uid, uint8_t *uidLength) { //needed ? see above (not PN532)
   // Getting ready for Reading PICCs
   if ( ! mfrc522->PICC_IsNewCardPresent()) { //If a new PICC placed to RFID reader continue
     return 2;
@@ -139,9 +139,9 @@ byte P111_data_struct::readPassiveTargetID(uint8_t *uid, uint8_t *uidLength) { /
     return 1;
   }
   
-  // There are Mifare PICCs which have 4 byte or 7 byte UID care if you use 7 byte PICC
-  // I think we should assume every PICC as they have 4 byte UID
-  // Until we support 7 byte PICCs
+  // There are Mifare PICCs which have 4 uint8_t or 7 uint8_t UID care if you use 7 uint8_t PICC
+  // I think we should assume every PICC as they have 4 uint8_t UID
+  // Until we support 7 uint8_t PICCs
   addLog(LOG_LEVEL_INFO, F("MFRC522: Scanned PICC's UID"));
   for (uint8_t i = 0; i < 4; i++) {  //
     uid[i] = mfrc522->uid.uidByte[i];

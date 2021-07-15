@@ -209,7 +209,7 @@ bool matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
 {
   unsigned long Mask;
 
-  for (byte y = 0; y < 8; y++)
+  for (uint8_t y = 0; y < 8; y++)
   {
     if (((clockSet >> (y * 4)) & 0xf) == 0xf)         // if nibble y has the wildcard value 0xf
     {

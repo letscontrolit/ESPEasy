@@ -17,7 +17,7 @@
 
 
 struct P044_Task : public PluginTaskData_base {
-  enum class ParserState : byte {
+  enum class ParserState : uint8_t {
     WAITING,
     READING,
     CHECKSUM
@@ -73,7 +73,7 @@ struct P044_Task : public PluginTaskData_base {
                           int16_t       rxPin,
                           int16_t       txPin,
                           unsigned long baud,
-                          byte          config);
+                          uint8_t          config);
 
   void serialEnd();
 

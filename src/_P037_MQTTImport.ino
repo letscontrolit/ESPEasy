@@ -42,7 +42,7 @@ String P037_getMQTTLastTopicPart(String topic) {
 }
 #endif // P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
 
-boolean Plugin_037(byte function, struct EventStruct *event, String& string)
+boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -246,7 +246,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         // As we can receive quite a lot of topics not intended for this plugin,
         // first do a quick check if the topic matches here, to try and avoid a bunch of unneeded mapping, filtering and logging
         bool matchedTopic = false; // Ignore by default
-        for (byte x = 0; x < VARS_PER_TASK; x++)
+        for (uint8_t x = 0; x < VARS_PER_TASK; x++)
         {
           if (P037_data->deviceTemplate[x].length() == 0) continue;							// skip blank subscriptions
 
@@ -294,7 +294,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
 
         #ifdef P037_FILTER_SUPPORT
         #ifdef P037_FILTER_PER_TOPIC
-        for (byte x = 0; x < VARS_PER_TASK && matchedTopic; x++) {
+        for (uint8_t x = 0; x < VARS_PER_TASK && matchedTopic; x++) {
           if (P037_data->deviceTemplate[x].length() == 0) continue;							// skip blank subscriptions
         #else
         int8_t x = -1;
@@ -341,7 +341,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         #endif // P037_FILTER_SUPPORT
 
         // Get the Topic and see if it matches any of the subscriptions
-        for (byte x = 0; x < VARS_PER_TASK && processData; x++)
+        for (uint8_t x = 0; x < VARS_PER_TASK && processData; x++)
         {
           if (P037_data->deviceTemplate[x].length() == 0) continue;							// skip blank subscriptions
 
@@ -547,10 +547,10 @@ bool MQTTSubscribe_037(struct EventStruct *event)
   }
 
   //char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-  LoadCustomTaskSettings(event->TaskIndex, (byte*)&P037_data->StoredSettings, sizeof(P037_data->StoredSettings));
+  LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&P037_data->StoredSettings, sizeof(P037_data->StoredSettings));
 
   // Now loop over all import variables and subscribe to those that are not blank
-  for (byte x = 0; x < VARS_PER_TASK; x++)
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
   {
     String subscribeTo = P037_data->StoredSettings.deviceTemplate[x];
     subscribeTo.trim();

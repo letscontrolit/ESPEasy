@@ -15,7 +15,7 @@
 #define WIFI_AP_CANDIDATE_MAX_AGE   300000  // 5 minutes in msec
 
 
-WiFi_AP_Candidate::WiFi_AP_Candidate(byte index_c, const String& ssid_c, const String& pass) :
+WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c, const String& pass) :
   rssi(0), channel(0), index(index_c), isHidden(false)
 {
   const size_t ssid_length = ssid_c.length();
@@ -46,6 +46,21 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
   #endif // ifdef ESP32
   last_seen = millis();
 }
+
+#ifdef ESP8266
+WiFi_AP_Candidate::WiFi_AP_Candidate(const bss_info& ap) :
+  rssi(ap.rssi), channel(ap.channel), bssid(ap.bssid), 
+  index(0), enc_type(ap.authmode), isHidden(ap.is_hidden)
+{
+  last_seen = millis();
+  ssid.reserve(ap.ssid_len);
+  for (int i = 0; i < ap.ssid_len; ++i) {
+    ssid += ap.ssid[i];
+  }
+
+}
+#endif
+
 
 WiFi_AP_Candidate::WiFi_AP_Candidate() {}
 

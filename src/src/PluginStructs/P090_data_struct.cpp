@@ -153,7 +153,7 @@ CCS811Core::status CCS811Core::multiWriteRegister(uint8_t offset, uint8_t *input
 
   while (i < length)           // send data bytes
   {
-    Wire.write(*inputPointer); // receive a byte as character
+    Wire.write(*inputPointer); // receive a uint8_t as character
     inputPointer++;
     i++;
   }
@@ -416,7 +416,7 @@ CCS811Core::status CCS811::setEnvironmentalData(float relativeHumidity, float te
   uint32_t rH   = relativeHumidity * 1000; // 42.348 becomes 42348
   uint32_t temp = temperature * 1000;      // 23.2 becomes 23200
 
-  byte envData[4];
+  uint8_t envData[4];
 
   //Split value into 7-bit integer and 9-bit fractional
 
