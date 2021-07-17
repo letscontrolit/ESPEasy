@@ -85,7 +85,7 @@
 
 // A plugin has to implement the following function
 
-boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
+boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
 {
   // function: reason the plugin was called
   // event: ??add description here??
@@ -136,11 +136,11 @@ boolean Plugin_xxx(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       // Called to show the I2C parameters in the web interface (only called for I2C devices)
-      byte choice = Pxxx_I2C_ADDR; // define to get the stored I2C address (e.g. PCONFIG(1))
+      uint8_t choice = Pxxx_I2C_ADDR; // define to get the stored I2C address (e.g. PCONFIG(1))
 
       int optionValues[16];
 
-      for (byte x = 0; x < 16; x++)
+      for (uint8_t x = 0; x < 16; x++)
       {
         if (x < 8) {
           optionValues[x] = 0x20 + x;

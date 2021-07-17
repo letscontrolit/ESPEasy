@@ -89,15 +89,15 @@ struct ControllerDelayHandlerStruct {
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = "Controller-";
+      String log = F("Controller-");
       log += element.controller_idx + 1;
-      log += " : Memory used: ";
+      log += F(" : Memory used: ");
       log += getQueueMemorySize();
-      log += " bytes ";
+      log += F(" bytes ");
       log += sendQueue.size();
-      log += " items ";
+      log += F(" items ");
       log += freeHeap;
-      log += " free";
+      log += F(" free");
       addLog(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
@@ -244,9 +244,9 @@ struct ControllerDelayHandlerStruct {
   unsigned long lastSend;
   unsigned int  minTimeBetweenMessages;
   unsigned long expire_timeout = 0;
-  byte          max_queue_depth;
-  byte          attempt;
-  byte          max_retries;
+  uint8_t          max_queue_depth;
+  uint8_t          attempt;
+  uint8_t          max_retries;
   bool          delete_oldest;
   bool          must_check_reply;
   bool          deduplicate;

@@ -104,11 +104,11 @@ void addFormNumericBox(const String& label, const String& id, int value, int min
   addNumericBox(id, value, min, max);
 }
 
-void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals, float stepsize) {
+void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, uint8_t nrDecimals, float stepsize) {
   addFormFloatNumberBox(getLabel(label), getInternalLabel(label), value, min, max, nrDecimals, stepsize);
 }
 
-void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, byte nrDecimals, float stepsize)
+void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, uint8_t nrDecimals, float stepsize)
 {
   addRowLabel_tr_id(label, id);
   addFloatNumberBox(id, value, min, max, nrDecimals, stepsize);
@@ -190,7 +190,7 @@ bool getFormPassword(const String& id, String& password)
 // Add a IP Box form
 // ********************************************************************************
 
-void addFormIPBox(const String& label, const String& id, const byte ip[4])
+void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
 {
   bool empty_IP = (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
 
@@ -216,17 +216,23 @@ void addFormIPaccessControlSelect(const String& label, const String& id, int cho
 // ********************************************************************************
 // Add a selector form
 // ********************************************************************************
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice)
+{
+  addRowLabel_tr_id(label, id);
+  addPinSelect(purpose, id, choice);
+}
+
 
 void addFormPinSelect(const String& label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel_tr_id(label, id);
-  addPinSelect(false, id, choice);
+  addPinSelect(PinSelectPurpose::Generic, id, choice);
 }
 
 void addFormPinSelectI2C(const String& label, const String& id, int choice)
 {
   addRowLabel_tr_id(label, id);
-  addPinSelect(true, id, choice);
+  addPinSelect(PinSelectPurpose::I2C, id, choice);
 }
 
 void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex)
@@ -234,7 +240,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
   addRowLabel_tr_id(F("I2C Address"), id);
   do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false);
 
-  for (byte x = 0; x < addressCount; x++)
+  for (uint8_t x = 0; x < addressCount; x++)
   {
     String option = formatToHex_decimal(addresses[x]);
 
@@ -340,18 +346,25 @@ void addFormPinStateSelect(int gpio, int choice)
     // do not add the pin state select for these pins.
     enabled = false;
   }
+  if (Settings.isEthernetPin(gpio)) {
+    // do not add the pin state select for non-optional Ethernet pins
+    enabled = false;
+  }
   int  pinnr = -1;
   bool input, output, warning;
 
   if (getGpioInfo(gpio, pinnr, input, output, warning)) {
-    String label;
-    label.reserve(32);
-    label  = F("Pin mode ");
-    label += createGPIO_label(gpio, pinnr, input, output, warning);
-    String id = "p";
+    String id;
+    id += 'p';
     id += gpio;
+    {
+      String label;
+      label.reserve(32);
+      label  = F("Pin mode ");
+      label += createGPIO_label(gpio, pinnr, input, output, warning);
 
-    addRowLabel_tr_id(label, id);
+      addRowLabel_tr_id(label, id);
+    }
     bool hasPullUp, hasPullDown;
     getGpioPullResistor(gpio, hasPullUp, hasPullDown);
     int nr_options = 0;
@@ -390,6 +403,12 @@ void addFormPinStateSelect(int gpio, int choice)
       }
     }
     addSelector(id, nr_options, options, option_val, NULL, choice, false, enabled);
+    {
+      const String conflict = getConflictingUse(gpio);
+      if (!conflict.isEmpty()) {
+        addUnit(conflict);
+      }
+    }
   }
 }
 
@@ -423,7 +442,7 @@ bool update_whenset_FormItemInt(const String& key, int& value) {
   return false;
 }
 
-bool update_whenset_FormItemInt(const String& key, byte& value) {
+bool update_whenset_FormItemInt(const String& key, uint8_t& value) {
   int tmpVal;
 
   if (getCheckWebserverArg_int(key, tmpVal)) {

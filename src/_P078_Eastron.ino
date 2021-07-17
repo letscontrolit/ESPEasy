@@ -57,18 +57,18 @@ boolean Plugin_078_init              = false;
 
 
 // Forward declaration helper functions
-const __FlashStringHelper* p078_getQueryString(byte query,
-                                               byte model);
-const __FlashStringHelper* p078_getQueryValueString(byte query,
-                                                    byte model);
-unsigned int               p078_getRegister(byte query,
-                                            byte model);
-float                      p078_readVal(byte         query,
-                                        byte         node,
+const __FlashStringHelper* p078_getQueryString(uint8_t query,
+                                               uint8_t model);
+const __FlashStringHelper* p078_getQueryValueString(uint8_t query,
+                                                    uint8_t model);
+unsigned int               p078_getRegister(uint8_t query,
+                                            uint8_t model);
+float                      p078_readVal(uint8_t      query,
+                                        uint8_t      node,
                                         unsigned int model);
 
 
-boolean Plugin_078(byte function, struct EventStruct *event, String& string)
+boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -96,6 +96,21 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_GET_DEVICEVALUENAMES:
+      {
+        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+          if ( i < P078_NR_OUTPUT_VALUES) {
+            uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+            safe_strncpy(
+              ExtraTaskSettings.TaskDeviceValueNames[i],
+              p078_getQueryValueString(choice),
+              sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          } else {
+            ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          }
+        }
+        break;
+      }
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
@@ -211,9 +226,9 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
       // Save output selector parameters.
       int model = P078_MODEL;
 
-      for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
-        const byte choice       = PCONFIG(pconfigIndex);
+      for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P078_QUERY1_CONFIG_POS;
+        const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, p078_getQueryValueString(choice, model));
       }
 
@@ -294,8 +309,8 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
     {
       if (Plugin_078_init)
       {
-        int  model  = P078_MODEL;
-        byte dev_id = P078_DEV_ID;
+        int     model  = P078_MODEL;
+        uint8_t dev_id = P078_DEV_ID;
         UserVar[event->BaseVarIndex]     = p078_readVal(P078_QUERY1, dev_id, model);
         UserVar[event->BaseVarIndex + 1] = p078_readVal(P078_QUERY2, dev_id, model);
         UserVar[event->BaseVarIndex + 2] = p078_readVal(P078_QUERY3, dev_id, model);
@@ -310,10 +325,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-float p078_readVal(byte query, byte node, unsigned int model) {
+float p078_readVal(uint8_t query, uint8_t node, unsigned int model) {
   if (Plugin_078_SDM == NULL) { return 0.0f; }
 
-  byte  retry_count = 3;
+  uint8_t  retry_count = 3;
   bool  success     = false;
   float _tempvar    = NAN;
 
@@ -342,7 +357,7 @@ float p078_readVal(byte query, byte node, unsigned int model) {
   return _tempvar;
 }
 
-unsigned int p078_getRegister(byte query, byte model) {
+unsigned int p078_getRegister(uint8_t query, uint8_t model) {
   if (model == 0) { // SDM220 & SDM120CT & SDM120
     switch (query) {
       case 0:  return SDM_PHASE_1_VOLTAGE;
@@ -503,7 +518,7 @@ unsigned int p078_getRegister(byte query, byte model) {
   return 0;
 }
 
-const __FlashStringHelper* p078_getQueryString(byte query, byte model) {
+const __FlashStringHelper* p078_getQueryString(uint8_t query, uint8_t model) {
   if (model == 0) { // SDM220 & SDM120CT & SDM120
     switch (query) {
       case 0:  return F("Voltage (V)");
@@ -664,7 +679,7 @@ const __FlashStringHelper* p078_getQueryString(byte query, byte model) {
   return F("");
 }
 
-const __FlashStringHelper* p078_getQueryValueString(byte query, byte model) {
+const __FlashStringHelper* p078_getQueryValueString(uint8_t query, uint8_t model) {
   if (model == 0) { // SDM220 & SDM120CT & SDM120
     switch (query) {
       case 0:  return F("V");
@@ -825,7 +840,7 @@ const __FlashStringHelper* p078_getQueryValueString(byte query, byte model) {
   return F("");
 }
 
-int p078_storageValueToBaudrate(byte baudrate_setting) {
+int p078_storageValueToBaudrate(uint8_t baudrate_setting) {
   unsigned int baudrate = 9600;
 
   switch (baudrate_setting) {

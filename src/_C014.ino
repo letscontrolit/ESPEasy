@@ -41,7 +41,7 @@
 #define CPLUGIN_014_GPIO_VALUE      "gpio" // name for gpio value i.e. "gpio1"
 #define CPLUGIN_014_CMD_VALUE_NAME  "Command" // human readabele name for command value
 
-byte msgCounter=0; // counter for send Messages (currently for information / log only!
+uint8_t msgCounter=0; // counter for send Messages (currently for information / log only!
 
 String CPlugin_014_pubname;
 bool CPlugin_014_mqtt_retainFlag = false;
@@ -333,12 +333,12 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               { // device enabled
                 valuesList="";
 
-                const byte valueCount = getValueCountForTask(x);
+                const uint8_t valueCount = getValueCountForTask(x);
                 if (!Device[DeviceIndex].SendDataOption) // check if device is not sending data = assume that it can receive.
                 {
                   if (Device[DeviceIndex].Number==86) // Homie receiver
                   {
-                    for (byte varNr = 0; varNr < valueCount; varNr++) {
+                    for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
                       if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
                         if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0]!=0) { // do not send if Value Name is empty!
                           CPLUGIN_014_addToList(valuesList,ExtraTaskSettings.TaskDeviceValueNames[varNr]);
@@ -388,10 +388,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                   // ignore cutom values for now! Assume all Values are standard float.
                   // String customValuesStr;
                   // customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesStr);
-                  byte customValues = false;
+                  uint8_t customValues = false;
                   if (!customValues)
                   { // standard Values
-                    for (byte varNr = 0; varNr < valueCount; varNr++)
+                    for (uint8_t varNr = 0; varNr < valueCount; varNr++)
                     {
                       if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
                       {
@@ -705,8 +705,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         parseControllerVariables(pubname, event, false);
         LoadTaskSettings(event->TaskIndex);
 
-        byte valueCount = getValueCountForTask(event->TaskIndex);
-        for (byte x = 0; x < valueCount; x++)
+        uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+        for (uint8_t x = 0; x < valueCount; x++)
         {
           String tmppubname = pubname;
           String value;

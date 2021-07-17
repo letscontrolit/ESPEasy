@@ -3,6 +3,7 @@
 
 #include "../WebServer/common.h"
 #include "../Globals/Plugins.h"
+#include "../Helpers/StringGenerator_GPIO.h"
 
 // ********************************************************************************
 // Add Selector
@@ -73,6 +74,8 @@ void addSelector_Head_reloadOnChange(const String& id, const String& classname, 
 
 void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled);
 
+void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int gpio, boolean selected, boolean disabled = false, const String& attr = EMPTY_STRING);
+
 void addSelector_Item(const __FlashStringHelper * option, int index, boolean selected, boolean disabled = false, const String& attr = EMPTY_STRING);
 void addSelector_Item(const String& option, int index, boolean selected, boolean disabled = false, const String& attr = EMPTY_STRING);
 
@@ -128,7 +131,7 @@ void addCheckBox(const String& id, boolean checked, bool disabled = false);
 void addNumericBox(const __FlashStringHelper * id, int value, int min, int max);
 void addNumericBox(const String& id, int value, int min, int max);
 
-void addFloatNumberBox(const String& id, float value, float min, float max, byte nrDecimals = 6, float stepsize = 0.0f);
+void addFloatNumberBox(const String& id, float value, float min, float max, uint8_t nrDecimals = 6, float stepsize = 0.0f);
 
 // ********************************************************************************
 // Add Textbox
@@ -158,18 +161,20 @@ void addRTDPluginButton(pluginID_t taskDeviceNumber);
 
 String makeDocLink(const String& url, bool isRTD);
 
-void addPinSelect(boolean forI2C, const __FlashStringHelper * id,  int choice);
-void addPinSelect(boolean forI2C, const String& id,  int choice);
+
+void addPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * id,  int choice);
+void addPinSelect(PinSelectPurpose purpose, const String& id,  int choice);
 
 
 #ifdef ESP32
-void addADC_PinSelect(bool touchOnly, const String& id,  int choice);
+enum class AdcPinSelectPurpose {
+    TouchOnly,
+    ADC_Touch,
+    ADC_Touch_HallEffect,
+    ADC_Touch_Optional
+};
+void addADC_PinSelect(AdcPinSelectPurpose purpose, const String& id,  int choice);
 #endif
 
-
-// ********************************************************************************
-// Helper function actually rendering dropdown list for addPinSelect()
-// ********************************************************************************
-void renderHTMLForPinSelect(String options[], int optionValues[], boolean forI2C, const String& id,  int choice, int count);
 
 #endif

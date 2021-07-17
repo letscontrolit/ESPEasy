@@ -15,7 +15,7 @@
 
 #define HDC1080_I2C_ADDRESS      0x40 // I2C address for the sensor
 
-boolean Plugin_072(byte function, struct EventStruct *event, String& string)
+boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -52,7 +52,7 @@ boolean Plugin_072(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      byte hdc1080_msb, hdc1080_lsb;
+      uint8_t hdc1080_msb, hdc1080_lsb;
       uint16_t hdc1080_rawtemp, hdc1080_rawhum;
       float    hdc1080_temp, hdc1080_hum;
 
