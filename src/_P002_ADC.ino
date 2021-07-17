@@ -92,7 +92,7 @@ private:
   int16_t OversamplingMaxVal = 0;
 };
 
-boolean Plugin_002(byte function, struct EventStruct *event, String& string)
+boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

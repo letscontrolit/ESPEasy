@@ -9,13 +9,17 @@ struct WiFi_AP_Candidate {
   // @param index  The index of the stored credentials
   // @param ssid_c SSID of the credentials
   // @param pass   Password/key of the credentials
-  WiFi_AP_Candidate(byte          index,
+  WiFi_AP_Candidate(uint8_t          index,
                     const String& ssid_c,
                     const String& pass);
 
 
   // Construct using index from WiFi scan result
   WiFi_AP_Candidate(uint8_t networkItem);
+  #ifdef ESP8266
+  WiFi_AP_Candidate(const bss_info& ap);
+  #endif
+
 
   WiFi_AP_Candidate(const WiFi_AP_Candidate& other) = default;
 
@@ -56,8 +60,8 @@ struct WiFi_AP_Candidate {
   int32_t rssi     = 0;
   int32_t channel  = 0;
   MAC_address bssid;
-  byte    index    = 0;     // Index of the matching credentials
-  byte    enc_type = 0;     // Encryption used (e.g. WPA2)
+  uint8_t    index    = 0;     // Index of the matching credentials
+  uint8_t    enc_type = 0;     // Encryption used (e.g. WPA2)
   bool    isHidden = false; // Hidden SSID
   bool    lowPriority = false; // Try as last attempt
   bool    isEmergencyFallback = false;

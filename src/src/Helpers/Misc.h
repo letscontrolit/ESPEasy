@@ -157,17 +157,17 @@ void HSV2RGBW(float H,
 // Simple bitwise get/set functions
 
 uint8_t get8BitFromUL(uint32_t number,
-                      byte     bitnr);
+                      uint8_t     bitnr);
 
 void    set8BitToUL(uint32_t& number,
-                    byte      bitnr,
+                    uint8_t      bitnr,
                     uint8_t   value);
 
 uint8_t get4BitFromUL(uint32_t number,
-                      byte     bitnr);
+                      uint8_t     bitnr);
 
 void    set4BitToUL(uint32_t& number,
-                    byte      bitnr,
+                    uint8_t      bitnr,
                     uint8_t   value);
 
 

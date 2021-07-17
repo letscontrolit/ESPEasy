@@ -148,7 +148,7 @@ bool SHT3X::CRC8(uint8_t MSB, uint8_t LSB, uint8_t CRC)
 // PLUGIN
 // =============================================
 
-boolean Plugin_068(byte function, struct EventStruct *event, String& string)
+boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

@@ -14,7 +14,7 @@
    Only use this function to determine nr of output values when changing output type of a task
    To get the actual output values for a task, use getValueCountForTask
 \*********************************************************************************************/
-byte getValueCountFromSensorType(Sensor_VType sensorType)
+uint8_t getValueCountFromSensorType(Sensor_VType sensorType)
 {
   switch (sensorType)
   {
@@ -66,22 +66,22 @@ const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType) {
   return F("");
 }
 
-void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, byte pconfigIndex)
+void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pconfigIndex)
 {
-  byte optionValues[12];
+  uint8_t optionValues[12];
 
-  optionValues[0]  = static_cast<byte>(Sensor_VType::SENSOR_TYPE_SINGLE);
-  optionValues[1]  = static_cast<byte>(Sensor_VType::SENSOR_TYPE_TEMP_HUM);
-  optionValues[2]  = static_cast<byte>(Sensor_VType::SENSOR_TYPE_TEMP_BARO);
-  optionValues[3]  = static_cast<byte>(Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO);
-  optionValues[4]  = static_cast<byte>(Sensor_VType::SENSOR_TYPE_DUAL);
-  optionValues[5]  = static_cast<byte>(Sensor_VType::SENSOR_TYPE_TRIPLE);
-  optionValues[6]  = static_cast<byte>(Sensor_VType::SENSOR_TYPE_QUAD);
-  optionValues[7]  = static_cast<byte>(Sensor_VType::SENSOR_TYPE_SWITCH);
-  optionValues[8]  = static_cast<byte>(Sensor_VType::SENSOR_TYPE_DIMMER);
-  optionValues[9]  = static_cast<byte>(Sensor_VType::SENSOR_TYPE_LONG);
-  optionValues[10] = static_cast<byte>(Sensor_VType::SENSOR_TYPE_WIND);
-  optionValues[11] = static_cast<byte>(Sensor_VType::SENSOR_TYPE_STRING);
+  optionValues[0]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
+  optionValues[1]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TEMP_HUM);
+  optionValues[2]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TEMP_BARO);
+  optionValues[3]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO);
+  optionValues[4]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DUAL);
+  optionValues[5]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TRIPLE);
+  optionValues[6]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD);
+  optionValues[7]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SWITCH);
+  optionValues[8]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DIMMER);
+  optionValues[9]  = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_LONG);
+  optionValues[10] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_WIND);
+  optionValues[11] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_STRING);
   sensorTypeHelper_webformLoad(event, pconfigIndex, 11, optionValues);
 }
 
@@ -90,19 +90,19 @@ void sensorTypeHelper_webformLoad_header()
   addFormSubHeader(F("Output Configuration"));
 }
 
-void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, byte pconfigIndex)
+void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, uint8_t pconfigIndex)
 {
   sensorTypeHelper_webformLoad_header();
 
-  byte optionValues[4];
-  optionValues[0] = static_cast<byte>(Sensor_VType::SENSOR_TYPE_SINGLE);
-  optionValues[1] = static_cast<byte>(Sensor_VType::SENSOR_TYPE_DUAL);
-  optionValues[2] = static_cast<byte>(Sensor_VType::SENSOR_TYPE_TRIPLE);
-  optionValues[3] = static_cast<byte>(Sensor_VType::SENSOR_TYPE_QUAD);
+  uint8_t optionValues[4];
+  optionValues[0] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
+  optionValues[1] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_DUAL);
+  optionValues[2] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TRIPLE);
+  optionValues[3] = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD);
   sensorTypeHelper_webformLoad(event, pconfigIndex, 4, optionValues);
 }
 
-void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, int optionCount, const byte options[])
+void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigIndex, int optionCount, const uint8_t options[])
 {
   if (pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
     return;
@@ -111,12 +111,12 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
   if (!validDeviceIndex(DeviceIndex)) {
     choice = Sensor_VType::SENSOR_TYPE_NONE;
-    PCONFIG(pconfigIndex) = static_cast<byte>(choice);
+    PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
   } else if (getValueCountFromSensorType(choice) != getValueCountForTask(event->TaskIndex)) {
     // Invalid value
     checkDeviceVTypeForTask(event);
     choice                = event->sensorType;
-    PCONFIG(pconfigIndex) = static_cast<byte>(choice);
+    PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
   }
   String outputTypeLabel = F("Output Data Type");
   if (Device[DeviceIndex].OutputDataType ==  Output_Data_type_t::Simple) {
@@ -130,7 +130,7 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
       default:
       {
         choice = Device[DeviceIndex].VType;
-        PCONFIG(pconfigIndex) = static_cast<byte>(choice);
+        PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
         break;
       }
     }
@@ -139,7 +139,7 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
   addRowLabel(outputTypeLabel);
   addSelector_Head(PCONFIG_LABEL(pconfigIndex));
 
-  for (byte x = 0; x < optionCount; x++)
+  for (uint8_t x = 0; x < optionCount; x++)
   {
     String name     = getSensorTypeLabel(static_cast<Sensor_VType>(options[x]));
     addSelector_Item(name,
@@ -156,7 +156,7 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, byte pconfigIndex, 
   }
 }
 
-void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, byte pconfigIndex, byte valueIndex, const String& defaultValueName)
+void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, uint8_t pconfigIndex, uint8_t valueIndex, const String& defaultValueName)
 {
   if (defaultValueName.equals(ExtraTaskSettings.TaskDeviceValueNames[valueIndex])) {
     ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[valueIndex]);
@@ -164,16 +164,16 @@ void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, byte pconfig
   pconfig_webformSave(event, pconfigIndex);
 }
 
-void pconfig_webformSave(struct EventStruct *event, byte pconfigIndex)
+void pconfig_webformSave(struct EventStruct *event, uint8_t pconfigIndex)
 {
   PCONFIG(pconfigIndex) = getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0);
 }
 
 void sensorTypeHelper_loadOutputSelector(
-  struct EventStruct *event, byte pconfigIndex, byte valuenr,
+  struct EventStruct *event, uint8_t pconfigIndex, uint8_t valuenr,
   int optionCount, const __FlashStringHelper * options[], const int indices[])
 {
-  byte   choice = PCONFIG(pconfigIndex);
+  uint8_t   choice = PCONFIG(pconfigIndex);
   String label  = F("Value ");
 
   label += (valuenr + 1);
@@ -182,10 +182,10 @@ void sensorTypeHelper_loadOutputSelector(
 
 
 void sensorTypeHelper_loadOutputSelector(
-  struct EventStruct *event, byte pconfigIndex, byte valuenr,
+  struct EventStruct *event, uint8_t pconfigIndex, uint8_t valuenr,
   int optionCount, const String options[], const int indices[])
 {
-  byte   choice = PCONFIG(pconfigIndex);
+  uint8_t   choice = PCONFIG(pconfigIndex);
   String label  = F("Value ");
 
   label += (valuenr + 1);

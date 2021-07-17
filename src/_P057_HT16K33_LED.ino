@@ -72,7 +72,7 @@
 
 #include "src/PluginStructs/P057_data_struct.h"
 
-boolean Plugin_057(byte function, struct EventStruct *event, String& string)
+boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -103,7 +103,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte addr = PCONFIG(0);
+      uint8_t addr = PCONFIG(0);
 
       int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
       addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
@@ -153,7 +153,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte address = PCONFIG(0);
+      uint8_t address = PCONFIG(0);
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P057_data_struct(address));
       P057_data_struct *P057_data =
@@ -216,7 +216,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         String   param;
         String   paramKey;
         String   paramVal;
-        byte     paramIdx = 2;
+        uint8_t     paramIdx = 2;
         uint8_t  seg      = 0;
         uint16_t value    = 0;
 
@@ -239,7 +239,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("MX   : ");
 
-                for (byte i = 0; i < 8; i++)
+                for (uint8_t i = 0; i < 8; i++)
                 {
                   log += String(P057_data->ledMatrix.GetRow(i), 16);
                   log += F("h, ");
@@ -251,7 +251,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
             else if (param == F("test"))
             {
-              for (byte i = 0; i < 8; i++) {
+              for (uint8_t i = 0; i < 8; i++) {
                 P057_data->ledMatrix.SetRow(i, 1 << i);
               }
               success = true;
@@ -331,8 +331,8 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-      byte hours   = node_time.hour();
-      byte minutes = node_time.minute();
+      uint8_t hours   = node_time.hour();
+      uint8_t minutes = node_time.minute();
 
       // P057_data->ledMatrix.ClearRowBuffer();
       P057_data->ledMatrix.SetDigit(PCONFIG(5), minutes % 10);

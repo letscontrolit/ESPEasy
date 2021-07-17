@@ -55,7 +55,7 @@ bool validIntFromString(const String& tBuf,
                         int         & result);
 
 
-boolean Plugin_003(byte function, struct EventStruct *event, String& string)
+boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -103,7 +103,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
                         , PCONFIG(P003_IDX_DEBOUNCETIME));
 
       {
-        byte choice  = PCONFIG(P003_IDX_COUNTERTYPE);
+        uint8_t choice  = PCONFIG(P003_IDX_COUNTERTYPE);
         const __FlashStringHelper *options[P003_NR_COUNTERTYPES] = P003_COUNTERTYPE_LIST;
         addFormSelector(F("Counter Type"), F("p003_countertype"), P003_NR_COUNTERTYPES, options, NULL, choice);
         if (choice != 0) {
@@ -262,7 +262,7 @@ boolean Plugin_003(byte function, struct EventStruct *event, String& string)
           //     to the first active P003 task instance
 
           // Legacy: Allow for an optional taskIndex parameter.
-          byte tidx = 1;
+          uint8_t tidx = 1;
 
           if (command == F("setpulsecountertotal")) { tidx = 2; }
 

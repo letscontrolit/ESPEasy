@@ -40,7 +40,7 @@ void CHT16K33::TransmitRowBuffer(void)
   // Display Memory
   Wire.beginTransmission(_addr);
   Wire.write(0); // start data at address 0
-  for (byte i=0; i<8; i++)
+  for (uint8_t i=0; i<8; i++)
   {
     Wire.write(_rowBuffer[i] & 0xFF);
     Wire.write(_rowBuffer[i] >> 8);
@@ -50,7 +50,7 @@ void CHT16K33::TransmitRowBuffer(void)
 
 void CHT16K33::ClearRowBuffer(void)
 {
-  for (byte i=0; i<8; i++)
+  for (uint8_t i=0; i<8; i++)
     _rowBuffer[i] = 0;
 };
 
@@ -132,7 +132,7 @@ uint8_t CHT16K33::ReadKeys(void)
   Wire.requestFrom(_addr, (uint8_t)6);
   if (Wire.available() == 6)
   {
-    for (byte i=0; i<3; i++)
+    for (uint8_t i=0; i<3; i++)
     {
       _keyBuffer[i] = Wire.read() | (Wire.read() << 8);
     }
@@ -140,10 +140,10 @@ uint8_t CHT16K33::ReadKeys(void)
     // Wire.endTransmission();
   }
 
-  for (byte i=0; i<3; i++)
+  for (uint8_t i=0; i<3; i++)
   {
-    byte mask = 1;
-    for (byte k=0; k<12; k++)
+    uint8_t mask = 1;
+    for (uint8_t k=0; k<12; k++)
     {
       if (_keyBuffer[i] & mask)
       {

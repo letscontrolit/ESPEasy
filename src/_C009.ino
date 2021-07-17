@@ -157,7 +157,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
         jsonString += F("\"SENSOR\":{");
         {
           // char itemNames[valueCount][2];
-          for (byte x = 0; x < element.valueCount; x++)
+          for (uint8_t x = 0; x < element.valueCount; x++)
           {
             // Each sensor value get an own object (0..n)
             // sprintf(itemNames[x],"%d",x);
