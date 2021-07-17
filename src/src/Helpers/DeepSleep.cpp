@@ -1,4 +1,4 @@
-#include "DeepSleep.h"
+#include "../Helpers/DeepSleep.h"
 
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"
@@ -33,8 +33,12 @@ int getDeepSleepMax()
 #if defined(CORE_POST_2_5_0)
   dsmax = INT_MAX;
 
-  if ((ESP.deepSleepMax() / 1000000ULL) <= (uint64_t)INT_MAX) {
-    dsmax = (int)(ESP.deepSleepMax() / 1000000ULL);
+  // Convert to sec and add 5% margin.
+  // See: https://github.com/esp8266/Arduino/pull/4936#issuecomment-410435875
+  const uint64_t sdk_dsmax_sec = ESP.deepSleepMax() / 1050000ULL;
+
+  if (sdk_dsmax_sec <= static_cast<uint64_t>(INT_MAX)) {
+    dsmax = sdk_dsmax_sec;
   }
 #endif // if defined(CORE_POST_2_5_0)
   return dsmax;
@@ -125,43 +129,45 @@ void deepSleepStart(int dsdelay)
 
   #if defined(ESP8266)
     # if defined(CORE_POST_2_5_0)
+  if ((dsdelay < 0) || dsdelay > getDeepSleepMax()) {
+    dsdelay = getDeepSleepMax();
+  }
   uint64_t deepSleep_usec = dsdelay * 1000000ULL;
 
-  if ((deepSleep_usec > ESP.deepSleepMax()) || (dsdelay < 0)) {
-    deepSleep_usec = ESP.deepSleepMax();
+  if (Settings.UseAlternativeDeepSleep()) {
+    // See: https://github.com/esp8266/Arduino/issues/6318#issuecomment-711389479
+    #include "c_types.h"
+    // system_phy_set_powerup_option:
+    // 1 = RF initialization only calibrate VDD33 and Tx power which will take about 18 ms
+    // 2 = RF initialization only calibrate VDD33 which will take about 2 ms
+    system_phy_set_powerup_option(2); // calibrate only 2ms;
+    system_deep_sleep_set_option(static_cast<int>(WAKE_RF_DEFAULT));
+    uint32_t*RT= (uint32_t *)0x60000700;
+    uint32 t_us = 1.31 * deepSleep_usec;
+    {
+      RT[4] = 0;
+      *RT = 0;
+      RT[1]=100;
+      RT[3] = 0x10010;
+      RT[6] = 8;
+      RT[17] = 4;
+      RT[2] = 1<<20;
+      ets_delay_us(10);
+      RT[1]=t_us>>3;
+      RT[3] = 0x640C8;
+      RT[4]= 0;
+      RT[6] = 0x18;
+      RT[16] = 0x7F;
+      RT[17] = 0x20;
+      RT[39] = 0x11;
+      RT[40] = 0x03;
+      RT[2] |= 1<<20;
+      __asm volatile ("waiti 0");
+    }
+    yield();
+  } else {
+    ESP.deepSleep(deepSleep_usec, WAKE_RF_DEFAULT);
   }
-
-  // See: https://github.com/esp8266/Arduino/issues/6318#issuecomment-711389479
-  #include "c_types.h"
-  // system_phy_set_powerup_option:
-  // 1 = RF initialization only calibrate VDD33 and Tx power which will take about 18 ms
-  // 2 = RF initialization only calibrate VDD33 which will take about 2 ms
-  system_phy_set_powerup_option(2); // calibrate only 2ms;
-  system_deep_sleep_set_option(static_cast<int>(WAKE_RF_DEFAULT));
-  uint32_t*RT= (uint32_t *)0x60000700;
-  uint32 t_us = 1.31 * deepSleep_usec;
-  {
-    RT[4] = 0;
-    *RT = 0;
-    RT[1]=100;
-    RT[3] = 0x10010;
-    RT[6] = 8;
-    RT[17] = 4;
-    RT[2] = 1<<20;
-    ets_delay_us(10);
-    RT[1]=t_us>>3;
-    RT[3] = 0x640C8;
-    RT[4]= 0;
-    RT[6] = 0x18;
-    RT[16] = 0x7F;
-    RT[17] = 0x20;
-    RT[39] = 0x11;
-    RT[40] = 0x03;
-    RT[2] |= 1<<20;
-    __asm volatile ("waiti 0");
-  }
-  yield();
-  // ESP.deepSleepInstant(deepSleep_usec, WAKE_RF_DEFAULT);
     # else // if defined(CORE_POST_2_5_0)
 
   if ((dsdelay > 4294) || (dsdelay < 0)) {

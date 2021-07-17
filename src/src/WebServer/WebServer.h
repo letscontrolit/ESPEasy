@@ -23,7 +23,7 @@
 #define MENU_INDEX_RULES         5
 #define MENU_INDEX_NOTIFICATIONS 6
 #define MENU_INDEX_TOOLS         7
-extern byte navMenuIndex;
+extern uint8_t navMenuIndex;
 
 // Uncrustify must not be used on macros, so turn it off.
 // *INDENT-OFF*
@@ -69,13 +69,13 @@ void   getWebPageTemplateDefaultFooter(String& tmpl);
 
 void   getErrorNotifications();
 
-String getGpMenuIcon(byte index);
+const __FlashStringHelper * getGpMenuIcon(uint8_t index);
 
-String getGpMenuLabel(byte index);
+const __FlashStringHelper * getGpMenuLabel(uint8_t index);
 
-String getGpMenuURL(byte index);
+const __FlashStringHelper * getGpMenuURL(uint8_t index);
 
-bool   GpMenuVisible(byte index);
+bool   GpMenuVisible(uint8_t index);
 
 void   getWebPageTemplateVar(const String& varName);
 
@@ -91,13 +91,15 @@ void   writeDefaultCSS(void);
 extern int8_t level;
 extern int8_t lastLevel;
 
+void json_quote_name(const __FlashStringHelper * val);
 void json_quote_name(const String& val);
 
 void json_quote_val(const String& val);
 
-void json_open();
+void json_open(bool arr = false);
 
-void json_open(bool arr);
+void json_open(bool          arr,
+               const __FlashStringHelper * name);
 
 void json_open(bool          arr,
                const String& name);
@@ -136,10 +138,10 @@ void addTaskValueSelect(const String& name,
 // ********************************************************************************
 bool isLoggedIn(bool mustProvideLogin = true);
 
-String  getControllerSymbol(byte index);
+String  getControllerSymbol(uint8_t index);
 
 /*
-   String getValueSymbol(byte index);
+   String getValueSymbol(uint8_t index);
  */
 void    addSVG_param(const String& key,
                      float         value);
@@ -147,7 +149,7 @@ void    addSVG_param(const String& key,
 void    addSVG_param(const String& key,
                      const String& value);
 
-void    createSvgRect_noStroke(const String& classname,
+void    createSvgRect_noStroke(const __FlashStringHelper * classname,
                                unsigned int fillColor,
                                float        xoffset,
                                float        yoffset,
@@ -201,14 +203,31 @@ void getStorageTableSVG(SettingsType::Enum settingsType);
 
 #ifdef ESP32
 
-int  getPartionCount(byte pType);
+int  getPartionCount(uint8_t pType);
 
-void getPartitionTableSVG(byte         pType,
+void getPartitionTableSVG(uint8_t         pType,
                           unsigned int partitionColor);
 
 #endif // ifdef ESP32
 
 bool webArg2ip(const String& arg,
-               byte         *IP);
+               uint8_t         *IP);
+
+
+// Separate wrapper to get web_server.arg()
+// 1) To allow to have a __FlashStringHelper call -> reduce build size
+// 2) ESP32 does not return a const String &, but a temporary copy, thus we _must_ copy before using it.
+
+#ifdef ESP8266
+const String& webArg(const __FlashStringHelper * arg);
+const String& webArg(const String& arg);
+const String& webArg(int i);
+#endif 
+
+#ifdef ESP32
+String webArg(const __FlashStringHelper * arg);
+String webArg(const String& arg);
+String webArg(int i);
+#endif 
 
 #endif // ifndef WEBSERVER_WEBSERVER_H

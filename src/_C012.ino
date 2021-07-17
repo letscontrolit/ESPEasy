@@ -57,10 +57,10 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
       LoadTaskSettings(event->TaskIndex);
 
       // Collect the values at the same run, to make sure all are from the same sample
-      byte valueCount = getValueCountForTask(event->TaskIndex);
+      uint8_t valueCount = getValueCountForTask(event->TaskIndex);
       C012_queue_element element(event, valueCount);
 
-      for (byte x = 0; x < valueCount; x++)
+      for (uint8_t x = 0; x < valueCount; x++)
       {
         bool   isvalid;
         String formattedValue = formatUserVar(event, x, isvalid);
@@ -70,7 +70,8 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
           element.txt[x] += event->idx + x;
           element.txt[x] += F("?value=");
           element.txt[x] += formattedValue;
-          addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
+            addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
         }
       }
 
@@ -103,7 +104,7 @@ bool do_process_c012_delay_queue(int controller_number, const C012_queue_element
 
 bool do_process_c012_delay_queue(int controller_number, const C012_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  while (element.txt[element.valuesSent] == "") {
+  while (element.txt[element.valuesSent].isEmpty()) {
     // A non valid value, which we are not going to send.
     // Increase sent counter until a valid value is found.
     if (element.checkDone(true)) {

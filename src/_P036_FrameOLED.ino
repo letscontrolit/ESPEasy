@@ -59,7 +59,7 @@
 // CHG: Using a calculation to reduce line content for scrolling pages instead of a while loop
 // CHG: Using SetBit and GetBit functions to change the content of PCONFIG_LONG(0)
 // CHG: Memory usage reduced (only P036_DisplayLinesV1 is now used)
-// CHG: using uint8_t and uint16_t instead of byte and word
+// CHG: using uint8_t and uint16_t instead of uint8_t and word
 // @uwekaditz: 2019-11-17
 // CHG: commands for P036
 // 1. Display commands: oledframedcmd display [on, off, low, med, high]
@@ -155,7 +155,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       // but the item should be one of the first choices.
       {
         uint8_t choice = P036_CONTROLLER;
-        String  options[2];
+        const __FlashStringHelper *  options[2];
         options[0] = F("SSD1306 (128x64 dot controller)");
         options[1] = F("SH1106 (132x64 dot controller)");
         int optionValues[2] = { 1, 2 };
@@ -163,7 +163,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        String options[P36_MaxSizesCount]      = { F("128x64"), F("128x32"), F("64x48") };
+        const __FlashStringHelper * options[P36_MaxSizesCount]      = { F("128x64"), F("128x32"), F("64x48") };
         int    optionValues[P36_MaxSizesCount] =
         { static_cast<int>(p036_resolution::pix128x64),
           static_cast<int>(p036_resolution::pix128x32),
@@ -173,7 +173,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       {
         uint8_t choice = P036_ROTATE;
-        String  options[2];
+        const __FlashStringHelper *  options[2];
         options[0] = F("Normal");
         options[1] = F("Rotated");
         int optionValues[2] = { 1, 2 };
@@ -192,7 +192,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       {
         uint8_t choice = P036_SCROLL;
-        String  options[5];
+        const __FlashStringHelper *  options[5];
         options[0] = F("Very Slow");
         options[1] = F("Slow");
         options[2] = F("Fast");
@@ -208,7 +208,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
-      addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
+      addFormPinSelect(PinSelectPurpose::Generic_input, F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
       bool tbPin3Invers = bitRead(PCONFIG_LONG(0), 16);      // Bit 16
 
       {
@@ -221,7 +221,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
         Opcount = 3;
 #endif
-        String  options[3];
+        const __FlashStringHelper *  options[3];
         options[0] = F("Input");
         options[1] = F("Input pullup");
         options[2] = F("Input pulldown");
@@ -242,7 +242,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         uint8_t choice = P036_CONTRAST;
 
         if (choice == 0) { choice = P36_CONTRAST_HIGH; }
-        String options[3];
+        const __FlashStringHelper * options[3];
         options[0] = F("Low");
         options[1] = F("Medium");
         options[2] = F("High");
@@ -265,7 +265,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       {
         uint8_t choice9      = get8BitFromUL(PCONFIG_LONG(0), 8); // Bit15-8 HeaderContent
         uint8_t choice10     = get8BitFromUL(PCONFIG_LONG(0), 0); // Bit7-0 HeaderContentAlternative
-        String  options9[14] =
+        const __FlashStringHelper *  options9[14] =
         { F("SSID"),         F("SysName"),         F("IP"),                 F("MAC"),                 F("RSSI"),                 F("BSSID"),
           F("WiFi channel"), F("Unit"),            F("SysLoad"),            F("SysHeap"),             F("SysStack"),             F("Date"),
           F("Time"),         F("PageNumbers") };
@@ -384,7 +384,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
           {
-            if (!safe_strncpy(P036_data->DisplayLinesV1[varNr].Content, web_server.arg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
+            if (!safe_strncpy(P036_data->DisplayLinesV1[varNr].Content, webArg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
               error += getCustomTaskSettingsError(varNr);
             }
             P036_data->DisplayLinesV1[varNr].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
@@ -804,7 +804,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           // calculate Pix length of new Content
           P036_data->display->setFont(P036_data->ScrollingPages.Font);
-          uint16_t PixLength = P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content));
+          uint16_t PixLength = P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
 
           if (PixLength > 255) {
             String str_error = F("Pixel length of ");
@@ -812,12 +812,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             str_error += F(" too long for line! Max. 255 pix!");
             addHtmlError(str_error);
 
-            int   strlen         = String(P036_data->DisplayLinesV1[LineNo - 1].Content).length();
-            float fAvgPixPerChar = ((float)PixLength) / strlen;
-            int   iCharToRemove  = ceil(((float)(PixLength - 255)) / fAvgPixPerChar);
+            const int strlen = strnlen_P(P036_data->DisplayLinesV1[LineNo - 1].Content, sizeof(P036_data->DisplayLinesV1[LineNo - 1].Content));
+            if (strlen > 0) {
+              const float fAvgPixPerChar = ((float)PixLength) / strlen;
+              const int   iCharToRemove  = ceil(((float)(PixLength - 255)) / fAvgPixPerChar);
 
-            // shorten string because OLED controller can not handle such long strings
-            P036_data->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
+              // shorten string because OLED controller can not handle such long strings
+              P036_data->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
+            }
           }
           P036_data->MaxFramesToDisplay = 0xff;                         // update frame count
 
@@ -848,7 +850,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           log += F(" Length:");
           log += P036_data->DisplayLinesV1[LineNo - 1].Content).length();
           log += F(" Pix: ");
-          log += P036_data->display->getStringWidth(String(P036_data->DisplayLinesV1[LineNo - 1].Content));
+          log += P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
           log += F(" Reserved:");
           log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
           addLog(LOG_LEVEL_INFO, log);

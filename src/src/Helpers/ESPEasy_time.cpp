@@ -74,7 +74,7 @@ void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
 }
 
 
-void ESPEasy_time::restoreLastKnownUnixTime(unsigned long lastSysTime, byte deepSleepState)
+void ESPEasy_time::restoreLastKnownUnixTime(unsigned long lastSysTime, uint8_t deepSleepState)
 {
   static bool firstCall = true;
   if (firstCall && lastSysTime != 0 && deepSleepState != 1) {
@@ -135,7 +135,7 @@ unsigned long ESPEasy_time::now() {
           log += String((time_offset * 1000.0f) / syncInterval);
           log += F(" msec/second");
         }
-        addLog(LOG_LEVEL_INFO, log)
+        addLog(LOG_LEVEL_INFO, log);
       }
       sysTime = unixTime_d;
 
@@ -252,7 +252,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   }
 
   const int NTP_PACKET_SIZE = 48;     // NTP time is in the first 48 bytes of message
-  byte packetBuffer[NTP_PACKET_SIZE]; // buffer to hold incoming & outgoing packets
+  uint8_t packetBuffer[NTP_PACKET_SIZE]; // buffer to hold incoming & outgoing packets
 
   log += F(" queried");
 #ifndef BUILD_NO_DEBUG
@@ -341,7 +341,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       unixTime_d = static_cast<double>(txTm);
 
       // Add fractional part.
-      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0f);
+      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0);
 
       long total_delay = timePassedSince(beginWait);
 

@@ -31,7 +31,7 @@ public:
    * Encode binary data to a HEX string as needed when passed
    * to the RN2xx3 module.
    */
-  static String base16encode(const byte *data, uint8_t size);
+  static String base16encode(const uint8_t *data, uint8_t size);
 };
 
 

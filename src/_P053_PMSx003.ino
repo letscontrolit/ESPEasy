@@ -51,9 +51,9 @@ void SerialRead16(uint16_t* value, uint16_t* checksum)
 
 #if 0
   // Low-level logging to see data from sensor
-  String log = F("PMSx003 : byte high=0x");
+  String log = F("PMSx003 : uint8_t high=0x");
   log += String(data_high,HEX);
-  log += F(" byte low=0x");
+  log += F(" uint8_t low=0x");
   log += String(data_low,HEX);
   log += F(" result=0x");
   log += String(*value,HEX);
@@ -75,7 +75,7 @@ boolean PacketAvailable(void)
     // find header (buffer may be out of sync)
     if (!P053_easySerial->available()) return false;
     while ((P053_easySerial->peek() != PMSx003_SIG1) && P053_easySerial->available()) {
-      P053_easySerial->read(); // Read until the buffer starts with the first byte of a message, or buffer empty.
+      P053_easySerial->read(); // Read until the buffer starts with the first uint8_t of a message, or buffer empty.
     }
     if (P053_easySerial->available() < PMSx003_SIZE) return false; // Not enough yet for a complete packet
   }
@@ -103,7 +103,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
     return false;
   }
 
-  uint16_t data[13]; // byte data_low, data_high;
+  uint16_t data[13]; // uint8_t data_low, data_high;
   for (int i = 0; i < 13; i++)
     SerialRead16(&data[i], &checksum);
 
@@ -154,7 +154,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
   return false;
 }
 
-boolean Plugin_053(byte function, struct EventStruct *event, String& string)
+boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -239,13 +239,11 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         // Hardware serial is RX on 3 and TX on 1
         if (rxPin == 3 && txPin == 1)
         {
-          log = F("PMSx003 : using hardware serial");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("PMSx003 : using hardware serial"));
         }
         else
         {
-          log = F("PMSx003: using software serial");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("PMSx003: using software serial"));
         }
         P053_easySerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
         if (P053_easySerial == nullptr) {
@@ -257,8 +255,7 @@ boolean Plugin_053(byte function, struct EventStruct *event, String& string)
         if (resetPin >= 0) // Reset if pin is configured
         {
           // Toggle 'reset' to assure we start reading header
-          log = F("PMSx003: resetting module");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("PMSx003: resetting module"));
           pinMode(resetPin, OUTPUT);
           digitalWrite(resetPin, LOW);
           delay(250);

@@ -746,8 +746,8 @@ uint16_t I2Cdev::readTimeout = I2CDEV_DEFAULT_READ_TIMEOUT;
     // added by Jeff Rowberg 2013-05-07:
     // Arduino Wire-style "beginTransmission" function
     // (takes 7-bit device address like the Wire method, NOT 8-bit: 0x68, not 0xD0/0xD1)
-    byte Fastwire::beginTransmission(byte device) {
-        byte twst, retry;
+    uint8_t Fastwire::beginTransmission(uint8_t device) {
+        uint8_t twst, retry;
         retry = 2;
         do {
             TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO) | (1 << TWSTA);
@@ -766,8 +766,8 @@ uint16_t I2Cdev::readTimeout = I2CDEV_DEFAULT_READ_TIMEOUT;
         return 0;
     }
 
-    byte Fastwire::writeBuf(byte device, byte address, byte *data, byte num) {
-        byte twst, retry;
+    uint8_t Fastwire::writeBuf(uint8_t device, uint8_t address, uint8_t *data, uint8_t num) {
+        uint8_t twst, retry;
 
         retry = 2;
         do {
@@ -793,7 +793,7 @@ uint16_t I2Cdev::readTimeout = I2CDEV_DEFAULT_READ_TIMEOUT;
         twst = TWSR & 0xF8;
         if (twst != TW_MT_DATA_ACK) return 6;
 
-        for (byte i = 0; i < num; i++) {
+        for (uint8_t i = 0; i < num; i++) {
             //Serial.print(data[i], HEX);
             //Serial.print(" ");
             TWDR = data[i]; // send data to the previously addressed device
@@ -807,8 +807,8 @@ uint16_t I2Cdev::readTimeout = I2CDEV_DEFAULT_READ_TIMEOUT;
         return 0;
     }
 
-    byte Fastwire::write(byte value) {
-        byte twst;
+    uint8_t Fastwire::write(uint8_t value) {
+        uint8_t twst;
         //Serial.println(value, HEX);
         TWDR = value; // send data
         TWCR = (1 << TWINT) | (1 << TWEN);
@@ -818,8 +818,8 @@ uint16_t I2Cdev::readTimeout = I2CDEV_DEFAULT_READ_TIMEOUT;
         return 0;
     }
 
-    byte Fastwire::readBuf(byte device, byte address, byte *data, byte num) {
-        byte twst, retry;
+    uint8_t Fastwire::readBuf(uint8_t device, uint8_t address, uint8_t *data, uint8_t num) {
+        uint8_t twst, retry;
 
         retry = 2;
         do {
@@ -885,7 +885,7 @@ uint16_t I2Cdev::readTimeout = I2CDEV_DEFAULT_READ_TIMEOUT;
         TWCR = 0;
     }
 
-    byte Fastwire::stop() {
+    uint8_t Fastwire::stop() {
         TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
         if (!waitInt()) return 1;
         return 0;
@@ -1000,7 +1000,7 @@ uint16_t I2Cdev::readTimeout = I2CDEV_DEFAULT_READ_TIMEOUT;
     twi_Write_Vars *ptwv = 0;
     static void (*fNextInterruptFunction)(void) = 0;
 
-    void twi_Finish(byte bRetVal) {
+    void twi_Finish(uint8_t bRetVal) {
         if (ptwv) {
             free(ptwv);
             ptwv = 0;

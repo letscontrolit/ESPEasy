@@ -59,19 +59,21 @@
 
 \**************************************************/
 
-#include "src/PluginStructs/P092_data_struct.h"
+# include "src/PluginStructs/P092_data_struct.h"
 
-#define PLUGIN_092
-#define PLUGIN_ID_092         92
+# include "src/ESPEasyCore/ESPEasyNetwork.h"
+
+# define PLUGIN_092
+# define PLUGIN_ID_092         92
 
 // #define PLUGIN_092_DEBUG    // additional debug messages in the log
-#define PLUGIN_NAME_092       "Heating - DL-Bus (Technische Alternative)  [TESTING]"
-#define PLUGIN_VALUENAME1_092 "Value"
+# define PLUGIN_NAME_092       "Heating - DL-Bus (Technische Alternative)  [TESTING]"
+# define PLUGIN_VALUENAME1_092 "Value"
 
 // global values needed for all tasks
-uint8_t  P092_Last_DLB_Pin;             // check if DL bus pin has been changed by one task -> change requires new init because of interrupt
-boolean P092_init = false;              // P092_data_struct can be initialized only once, even if several tasks running
-P092_data_struct *P092_data = nullptr;  // pointer to P092_data_struct, must be the same for all tasks
+uint8_t P092_Last_DLB_Pin;             // check if DL bus pin has been changed by one task -> change requires new init because of interrupt
+boolean P092_init           = false;   // P092_data_struct can be initialized only once, even if several tasks running
+P092_data_struct *P092_data = nullptr; // pointer to P092_data_struct, must be the same for all tasks
 
 boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -116,7 +118,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        uint8_t choice = PCONFIG(2);  // Input mode
+        uint8_t choice = PCONFIG(2); // Input mode
+
         if (choice == 0) {
           // pinmode was never set -> use default settings (as it was before)
           if ((PCONFIG(0) == 6133) || (PCONFIG(0) == 6132)) {
@@ -128,15 +131,15 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
             choice = static_cast<uint8_t>(eP092pinmode::ePPM_InputPullUp);
           }
         }
-#ifdef INPUT_PULLDOWN
+# ifdef INPUT_PULLDOWN
         int Opcount = 3;
-#else
+# else // ifdef INPUT_PULLDOWN
         int Opcount = 2;
-#endif
-        String  options[3];
-        options[0] = F("Input");
-        options[1] = F("Input pullup");
-        options[2] = F("Input pulldown");
+# endif // ifdef INPUT_PULLDOWN
+        const __FlashStringHelper *options[3];
+        options[0]          = F("Input");
+        options[1]          = F("Input pullup");
+        options[2]          = F("Input pulldown");
         int optionValues[3] =
         { static_cast<int>(eP092pinmode::ePPM_Input),
           static_cast<int>(eP092pinmode::ePPM_InputPullUp),
@@ -144,8 +147,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Pin mode"), F("p092_pinmode"), Opcount, options, optionValues, choice);
       }
       {
-        const String Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (up to v8.2)"), F(
-                                                           "UVR 61-3 (v8.3 or higher)") };
+        const __FlashStringHelper *Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (up to v8.2)"), F(
+                                                                         "UVR 61-3 (v8.3 or higher)") };
         const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 1611, 6132, 6133 };
 
         addFormSelector(F("DL-Bus Type"), F("p092_dlbtype"), P092_DLbus_DeviceCount, Devices, DevTypes, NULL, PCONFIG(0), true);
@@ -165,7 +168,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           6, // F("Heat power (kW)")
           7  // F("Heat meter (MWh)")
         };
-        const String Options[P092_DLbus_OptionCount] = {
+        const __FlashStringHelper *Options[P092_DLbus_OptionCount] = {
           F("None"),
           F("Sensor"),
           F("Ext. sensor"),
@@ -300,13 +303,13 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         if (P092_data->DLbus_Data->IsISRset) {
           // interrupt was already attached to P092_DLB_Pin
-          P092_data->DLbus_Data->IsISRset = false;  //to ensure that a new interrupt is attached in P092_data->init()
+          P092_data->DLbus_Data->IsISRset = false; // to ensure that a new interrupt is attached in P092_data->init()
           detachInterrupt(digitalPinToInterrupt(P092_data->DLbus_Data->ISR_DLB_Pin));
           addLog(LOG_LEVEL_INFO, F("P092_save: detachInterrupt"));
         }
       }
 
-#ifdef PLUGIN_092_DEBUG
+# ifdef PLUGIN_092_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("PLUGIN_WEBFORM_SAVE :");
@@ -377,7 +380,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         log += P092_data->P092_DataSettings.IdxCRC;
         addLog(LOG_LEVEL_INFO, log);
       }
-#endif // PLUGIN_092_DEBUG
+# endif // PLUGIN_092_DEBUG
       UserVar[event->BaseVarIndex] = NAN;
       success                      = true;
       break;
@@ -385,9 +388,12 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      String log = F("PLUGIN_092_INIT Task:");
-      log += event->TaskIndex;
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("PLUGIN_092_INIT Task:");
+        log += event->TaskIndex;
+        addLog(LOG_LEVEL_INFO, log);
+      }
+
       if (P092_init) {
         addLog(LOG_LEVEL_INFO, F("INIT -> Already done!"));
       }
@@ -406,20 +412,20 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         else {
           addLog(LOG_LEVEL_INFO, F("P092_data_struct -> Already created"));
         }
-          P092_data_struct *P092_data =
-            static_cast<P092_data_struct *>(getPluginTaskData(event->TaskIndex));
+        P092_data_struct *P092_data =
+          static_cast<P092_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-            addLog(LOG_LEVEL_INFO, F("Init P092_data_struct ..."));
+        addLog(LOG_LEVEL_INFO, F("Init P092_data_struct ..."));
 
         if (!P092_data->init(CONFIG_PIN1, PCONFIG(0), eP092pinmode PCONFIG(2))) {
-              addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
-              clearPluginTaskData(event->TaskIndex);
-              return false;
-            }
+          addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
+          clearPluginTaskData(event->TaskIndex);
+          return false;
+        }
 
-            P092_init       = true;
-          }
-      
+        P092_init = true;
+      }
+
       success                      = true;
       UserVar[event->BaseVarIndex] = NAN;
       break;
@@ -465,9 +471,11 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         if (success) {
           P092_data->P092_LastReceived = millis();
-          String log = F("Received data OK TI:");
-          log += event->TaskIndex;
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("Received data OK TI:");
+            log += event->TaskIndex;
+            addLog(LOG_LEVEL_INFO, log);
+          }
         }
         P092_data->P092_ReceivedOK = success;
       }
@@ -477,7 +485,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
       if ((P092_data->DLbus_Data->IsNoData == false) &&
           ((P092_data->P092_ReceivedOK == false) ||
-          (timePassedSince(P092_data->P092_LastReceived) > (static_cast<long>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000 / 2))))) {
+           (timePassedSince(P092_data->P092_LastReceived) > (static_cast<long>(Settings.TaskDeviceTimer[event->TaskIndex] * 1000 / 2))))) {
         P092_data->Plugin_092_StartReceiving(event->TaskIndex);
         success = true;
       }
@@ -486,9 +494,11 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      String log = F("PLUGIN_092_READ Task:");
-      log += event->TaskIndex;
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("PLUGIN_092_READ Task:");
+        log += event->TaskIndex;
+        addLog(LOG_LEVEL_INFO, log);
+      }
 
       if (!NetworkConnected()) {
         // too busy for DLbus while wifi connect is running
@@ -507,12 +517,14 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P092_data->DLbus_Data->ISR_DLB_Pin != CONFIG_PIN1) {
-        String log = F("## P092_read: Error DL-Bus: Device Pin setting not correct!");
-        log += F(" DLB_Pin:");
-        log += P092_data->DLbus_Data->ISR_DLB_Pin;
-        log += F(" Setting:");
-        log += CONFIG_PIN1;
-        addLog(LOG_LEVEL_ERROR, log);
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("## P092_read: Error DL-Bus: Device Pin setting not correct!");
+          log += F(" DLB_Pin:");
+          log += P092_data->DLbus_Data->ISR_DLB_Pin;
+          log += F(" Setting:");
+          log += CONFIG_PIN1;
+          addLog(LOG_LEVEL_ERROR, log);
+        }
         return false;
       }
 

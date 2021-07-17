@@ -1,8 +1,12 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C014
 
+#include "src/Commands/InternalCommands.h"
 #include "src/Globals/Device.h"
+#include "src/Globals/MQTT.h"
 #include "src/Globals/Plugins.h"
+#include "src/Globals/Statistics.h"
+#include "src/Helpers/PeriodicalActions.h"
 #include "_Plugin_Helper.h"
 
 //#######################################################################################################
@@ -37,7 +41,7 @@
 #define CPLUGIN_014_GPIO_VALUE      "gpio" // name for gpio value i.e. "gpio1"
 #define CPLUGIN_014_CMD_VALUE_NAME  "Command" // human readabele name for command value
 
-byte msgCounter=0; // counter for send Messages (currently for information / log only!
+uint8_t msgCounter=0; // counter for send Messages (currently for information / log only!
 
 String CPlugin_014_pubname;
 bool CPlugin_014_mqtt_retainFlag = false;
@@ -329,12 +333,12 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               { // device enabled
                 valuesList="";
 
-                const byte valueCount = getValueCountForTask(x);
+                const uint8_t valueCount = getValueCountForTask(x);
                 if (!Device[DeviceIndex].SendDataOption) // check if device is not sending data = assume that it can receive.
                 {
                   if (Device[DeviceIndex].Number==86) // Homie receiver
                   {
-                    for (byte varNr = 0; varNr < valueCount; varNr++) {
+                    for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
                       if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
                         if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0]!=0) { // do not send if Value Name is empty!
                           CPLUGIN_014_addToList(valuesList,ExtraTaskSettings.TaskDeviceValueNames[varNr]);
@@ -374,7 +378,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                     break;
                           }
                           CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$datatype", valueName.c_str(), errorCounter);
-                          if (unitName!="") CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$format", unitName.c_str(), errorCounter);
+                          if (!unitName.isEmpty()) CPlugin_014_sendMQTTnode(nodename, deviceName.c_str(), ExtraTaskSettings.TaskDeviceValueNames[varNr], "/$format", unitName.c_str(), errorCounter);
                           nodeCount++;
                         }
                       }
@@ -384,10 +388,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                   // ignore cutom values for now! Assume all Values are standard float.
                   // String customValuesStr;
                   // customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesStr);
-                  byte customValues = false;
+                  uint8_t customValues = false;
                   if (!customValues)
                   { // standard Values
-                    for (byte varNr = 0; varNr < valueCount; varNr++)
+                    for (uint8_t varNr = 0; varNr < valueCount; varNr++)
                     {
                       if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
                       {
@@ -429,11 +433,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                       String log = F("C014 : Device has custom values: ");
                       log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x));
-                      addLog(LOG_LEVEL_DEBUG, log+" not implemented!")
+                      addLog(LOG_LEVEL_DEBUG, log+" not implemented!");
                     }
                   }
                 }
-                if (valuesList!="")
+                if (!valuesList.isEmpty())
                 {
                   // only add device to list if it has nodes!
                   // $name	Device → Controller	Friendly name of the Node	Yes	Yes
@@ -453,7 +457,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   String log = F("C014 : Device Disabled: ");
                   log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x));
-                  addLog(LOG_LEVEL_DEBUG, log+" not propagated!")
+                  addLog(LOG_LEVEL_DEBUG, log+" not propagated!");
                 }
               }
             } // device configured
@@ -608,7 +612,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                       if (Settings.TaskDevicePluginConfig[taskIndex][valueNr]==4) { // Enumeration parameter, find Number of item. PLUGIN_086_VALUE_ENUM
                         String enumList = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
                         int i = 1;
-                        while (parseString(enumList,i)!="") { // lookup result in enum List
+                        while (!parseString(enumList,i).isEmpty()) { // lookup result in enum List
                           if (parseString(enumList,i)==event->String2) break;
                           i++;
                         }
@@ -701,8 +705,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         parseControllerVariables(pubname, event, false);
         LoadTaskSettings(event->TaskIndex);
 
-        byte valueCount = getValueCountForTask(event->TaskIndex);
-        for (byte x = 0; x < valueCount; x++)
+        uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+        for (uint8_t x = 0; x < valueCount; x++)
         {
           String tmppubname = pubname;
           String value;
@@ -766,7 +770,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           addLog(LOG_LEVEL_DEBUG, log);
         } */
         success = false;
-        if (string!="") {
+        if (!string.isEmpty()) {
           String commandName = parseString(string, 1); // could not find a way to get the command out of the event structure.
           if (commandName == F("gpio")) //!ToDo : As gpio is like any other plugin commands should be integrated below!
           {

@@ -16,7 +16,7 @@ struct EventStruct;
 * C016_queue_element for queueing requests for C016: Cached HTTP.
 \*********************************************************************************************/
 
-// TD-er: This one has a fixed byte order and is stored.
+// TD-er: This one has a fixed uint8_t order and is stored.
 // This also means the order of members should not be changed!
 class C016_queue_element {
 public:
@@ -26,8 +26,11 @@ public:
   C016_queue_element(C016_queue_element&& other);
 
   C016_queue_element(const struct EventStruct *event,
-                     byte                      value_count,
+                     uint8_t                      value_count,
                      unsigned long             unixTime);
+
+  C016_queue_element& operator=(C016_queue_element&& other);
+
 
   size_t getSize() const;
 
@@ -40,7 +43,7 @@ public:
   taskIndex_t TaskIndex       = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   Sensor_VType sensorType     = Sensor_VType::SENSOR_TYPE_NONE;
-  byte valueCount             = 0;
+  uint8_t valueCount             = 0;
 };
 
 #endif //USES_C016

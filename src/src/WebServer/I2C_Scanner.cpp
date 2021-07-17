@@ -26,7 +26,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
       , i2c_addresses_t &excludeDevices
 #endif
 ) {
-  byte error, address;
+  uint8_t error, address;
 
   for (address = 1; address <= 127; address++)
   {
@@ -72,7 +72,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
               int newpos = description.indexOf(',', pos);
 
               if (pos != 0) {
-                addHtml(",");
+                addHtml(',');
               }
 
               if (newpos == -1) {
@@ -91,7 +91,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
           nDevices++;
         }
         json_close();
-        addHtml("\n");
+        addHtml('\n');
       }
 #ifdef FEATURE_I2CMULTIPLEXER
     }
@@ -143,7 +143,7 @@ void handle_i2cscanner_json() {
 #endif // WEBSERVER_NEW_UI
 
 
-String getKnownI2Cdevice(byte address) {
+String getKnownI2Cdevice(uint8_t address) {
   String result;
   #ifndef LIMIT_BUILD_SIZE
 
@@ -168,6 +168,9 @@ String getKnownI2Cdevice(byte address) {
       break;
     case 0x30:
       result =  F("VL53L0X,VL53L1X");
+      break;
+    case 0x36:
+      result =  F("MAX1704x");
       break;
     case 0x38:
     case 0x3A:
@@ -263,7 +266,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
       , i2c_addresses_t &excludeDevices
 #endif
 ) {
-  byte error, address;
+  uint8_t error, address;
 
   for (address = 1; address <= 127; address++)
   {

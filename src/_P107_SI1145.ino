@@ -14,7 +14,7 @@
 # define PLUGIN_VALUENAME2_107 "Infra"
 # define PLUGIN_VALUENAME3_107 "UV"
 
-boolean Plugin_107(byte function, struct EventStruct *event, String& string)
+boolean Plugin_107(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

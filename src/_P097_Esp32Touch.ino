@@ -34,7 +34,7 @@ DRAM_ATTR uint32_t p097_pinTouchedPrev = 0;
 DRAM_ATTR uint32_t p097_timestamp[10]  = { 0 };
 
 
-boolean Plugin_097(byte function, struct EventStruct *event, String& string)
+boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -80,7 +80,7 @@ boolean Plugin_097(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
-      addADC_PinSelect(true, F("taskdevicepin1"), CONFIG_PIN1);
+      addADC_PinSelect(AdcPinSelectPurpose::TouchOnly, F("taskdevicepin1"), CONFIG_PIN1);
 
       addFormSubHeader(F("Touch Settings"));
 

@@ -1,4 +1,4 @@
-#include "ESPEasy_checks.h"
+#include "../Helpers/ESPEasy_checks.h"
 
 
 #include "../../ESPEasy_common.h"
@@ -167,7 +167,7 @@ bool SettingsCheck(String& error) {
 
   #endif
 
-  return error.length() == 0;
+  return error.isEmpty();
 }
 
 #include "Numerical.h"
@@ -187,7 +187,7 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   if (isNumerical(deviceName, detectedType)) {
     return F("Invalid name. Should not be numeric.");
   }
-  if (deviceName.length() == 0) {
+  if (deviceName.isEmpty()) {
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       // Decide what to do here, for now give a warning when task is enabled.
       return F("Warning: Task Device Name is empty. It is adviced to give tasks an unique name");

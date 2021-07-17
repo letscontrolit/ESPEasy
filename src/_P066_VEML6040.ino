@@ -24,7 +24,7 @@
 
 #include <math.h> 
 
-boolean Plugin_066(byte function, struct EventStruct *event, String& string)
+boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -72,13 +72,13 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        String optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F("640ms (1031)"), F(
+        const __FlashStringHelper * optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F("640ms (1031)"), F(
                                     "1280ms (515)") };
         addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, NULL, PCONFIG(1));
       }
 
       {
-        String optionsVarMap[6] = {
+        const __FlashStringHelper * optionsVarMap[6] = {
           F("R, G, B, W"),
           F("r, g, b, W - relative rgb [&#37;]"),
           F("r, g, b, W - relative rgb^Gamma [&#37;]"),
@@ -180,7 +180,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 
 // VEML6040 /////////////////////////////////////////////////////////////
 
-void VEML6040_setControlReg(byte data)
+void VEML6040_setControlReg(uint8_t data)
 {
   Wire.beginTransmission(VEML6040_ADDR);
   Wire.write(0);    // command 0=control register
@@ -189,7 +189,7 @@ void VEML6040_setControlReg(byte data)
   Wire.endTransmission();
 }
 
-float VEML6040_GetValue(byte reg)
+float VEML6040_GetValue(uint8_t reg)
 {
   Wire.beginTransmission(VEML6040_ADDR);
   Wire.write(reg);
@@ -205,7 +205,7 @@ float VEML6040_GetValue(byte reg)
   return -1.0f;
 }
 
-void VEML6040_Init(byte it)
+void VEML6040_Init(uint8_t it)
 {
   VEML6040_setControlReg(it << 4); // IT=it, TRIG=0, AF=0, SD=0
 }
@@ -222,7 +222,7 @@ float Plugin_066_CalcCCT(float R, float G, float B)
   return CCT;
 }
 
-float Plugin_066_CalcAmbientLight(float G, byte it)
+float Plugin_066_CalcAmbientLight(float G, uint8_t it)
 {
   float Sensitivity[6] = { 0.25168f, 0.12584f, 0.06292f, 0.03146f, 0.01573f, 0.007865f };
 

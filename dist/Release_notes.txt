@@ -2785,7 +2785,7 @@ Release date: Tue Aug 13 04:00:10 CEST 2019
 Gijs Noorlander (21):
       [TTN] Add RN2483-Arduino-Library
       [TTN] Skeleton for C018 TTN RN2xx3 controller
-      [RN2384 lib] Only use const String& in function parameters
+      [RN2483 lib] Only use const String& in function parameters
       [LoRa plugin] Use separate object for C018 data
       [LoRa TTN] Create special interface for LoRa TTN controller
       [Controller page] Restructure Controller rendering page

@@ -1,5 +1,3 @@
-.. include:: ../Plugin/_plugin_substitutions_p00x.repl
-
 
 **TODO** : Check commands M..Z and check for all commands whether the "class" is still valid.
 
@@ -205,7 +203,16 @@
     :red:`Internal`","
     Add string to log
 
-    ``LogEntry,<string>``"
+    ``LogEntry,<string>[,<level>]``
+    
+    ``<level>`` is optional and can be any of these (numeric) values:
+    
+    - 1 = ERROR
+    - 2 = INFO (default)
+    - 3 = DEBUG
+    - 4 = DEBUG_DEV
+    
+    When a ``<level>`` is provided, it will be present in the log output if the 'Tolerant last parameter' Advanced setting is enabled."
     "
     LogPortStatus","
     :red:`Internal`","
@@ -487,6 +494,12 @@
     Change AP WPA key
 
     ``WifiAPKey,<WPA key>``"
+    "
+    WifiAllowAP","
+    :red:`Internal`","
+    Uncheck the setting to prevent starting AP when unable to connect to a network.
+
+    ``WifiAllowAP``"
     "
     WifiAPMode","
     :red:`Internal`","

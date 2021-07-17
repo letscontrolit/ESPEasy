@@ -99,7 +99,7 @@ Supported hardware: |P000_usedby_GPIO|
   Frequencies above 30 kHz are not stable and will likely crash the ESP.
   "
   "
-  ``Servo,<servo>,<GPIO>,<position>``
+  ``Servo,<servo ID>,<GPIO>,<position>``
 
   GPIO: 0 ... **15**
 
@@ -108,8 +108,9 @@ Supported hardware: |P000_usedby_GPIO|
   Position: -180 ... 180 (see warning below)
   ","
   **To control a servo motor.**
-  We currently support a maximum of two servo motors so you can build a pan & tilt device if you like.
-
+  Builds before 2020/11/22 only supported a maximum of 2 servos. Later builds allow more and no longer need the ``servo ID`` as a new ID is generated based on the GPIO pin used.
+  To remain compatible with existing rules, the number of parameters has not changed.
+  
   .. warning::
      Most servos are not able to turn full 360°! Normally the servos are able to go from **-90°** to **90°**, some rare servos do allow for -135° to 135°.
 

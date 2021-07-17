@@ -109,7 +109,11 @@
 #endif
 
 #ifndef DEFAULT_AP_DONT_FORCE_SETUP                       
-#define DEFAULT_AP_DONT_FORCE_SETUP            false // Allow optional usage of Sensor without WIFI avaiable  // When set you can use the Sensor in AP-Mode without beeing forced to /setup                                                 
+#define DEFAULT_AP_DONT_FORCE_SETUP      false // Allow optional usage of Sensor without WIFI avaiable  // When set you can use the Sensor in AP-Mode without beeing forced to /setup                                                 
+#endif
+
+#ifndef DEFAULT_DONT_ALLOW_START_AP
+#define DEFAULT_DONT_ALLOW_START_AP      false // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.     
 #endif
 
 // --- Default Controller ------------------------------------------------------------------------------
@@ -218,6 +222,9 @@
 #endif
 #ifndef DEFAULT_JSON_BOOL_WITHOUT_QUOTES
 #define DEFAULT_JSON_BOOL_WITHOUT_QUOTES false
+#endif
+#ifndef DEFAULT_ENABLE_TIMING_STATS
+#define DEFAULT_ENABLE_TIMING_STATS false
 #endif
 
 

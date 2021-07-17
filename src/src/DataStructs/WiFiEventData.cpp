@@ -15,6 +15,7 @@
 #define ESPEASY_WIFI_SERVICES_INITIALIZED    2
 
 #define WIFI_RECONNECT_WAIT                  20000  // in milliSeconds
+#define WIFI_PROCESS_EVENTS_TIMEOUT          10000  // in milliSeconds
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;
@@ -33,20 +34,44 @@ bool WiFiEventData_t::unprocessedWifiEvents() const {
   {
     return false;
   }
+  if (!processedConnect) {
+    if (lastConnectMoment.isSet() && lastConnectMoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
+      return false;
+    }
+  }
+  if (!processedGotIP) {
+    if (lastGetIPmoment.isSet() && lastGetIPmoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
+      return false;
+    }
+  }
+  if (!processedDisconnect) {
+    if (lastDisconnectMoment.isSet() && lastDisconnectMoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
+      return false;
+    }
+  }
+  if (!processedDHCPTimeout) {
+    return false;
+  }
   return true;
 }
 
 void WiFiEventData_t::clearAll() {
-  lastDisconnectMoment.clear();
-  lastConnectMoment.clear();
-  lastGetIPmoment.clear();
+  markWiFiTurnOn();
   lastGetScanMoment.clear();
   last_wifi_connect_attempt_moment.clear();
   timerAPstart.clear();
 
-  setWiFiDisconnected();
   lastWiFiResetMoment.setNow();
-  wifi_considered_stable = false;
+  wifi_TX_pwr = 0;
+  usedChannel = 0;
+}
+
+void WiFiEventData_t::markWiFiTurnOn() {
+  setWiFiDisconnected();
+  lastDisconnectMoment.clear();
+  lastConnectMoment.clear();
+  lastGetIPmoment.clear();
+  wifi_considered_stable    = false;
 
   // Mark all flags to default to prevent handling old events.
   processedConnect          = true;
@@ -58,17 +83,12 @@ void WiFiEventData_t::clearAll() {
   processedScanDone         = true;
   wifiConnectAttemptNeeded  = true;
   wifiConnectInProgress     = false;
-  wifi_TX_pwr = 0;
-  usedChannel = 0;
+  processingDisconnect.clear();
 }
 
 void WiFiEventData_t::markWiFiBegin() {
-  setWiFiDisconnected();
-  lastDisconnectMoment.clear();
-  lastConnectMoment.clear();
-  lastGetIPmoment.clear();
+  markWiFiTurnOn();
   last_wifi_connect_attempt_moment.setNow();
-  wifi_considered_stable = false;
   wifiConnectInProgress  = true;
   usedChannel = 0;
   ++wifi_connect_attempt;
@@ -144,7 +164,7 @@ void WiFiEventData_t::markDisconnect(WiFiDisconnectReason reason) {
   wifiConnectInProgress = false;
 }
 
-void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], byte channel) {
+void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], uint8_t channel) {
   usedChannel = channel;
   lastConnectMoment.setNow();
   processedConnect    = false;
@@ -154,7 +174,7 @@ void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], 
   auth_mode           = WiFi_AP_Candidates.getCurrent().enc_type;
 
   RTC.lastWiFiChannel = channel;
-  for (byte i = 0; i < 6; ++i) {
+  for (uint8_t i = 0; i < 6; ++i) {
     if (RTC.lastBSSID[i] != bssid[i]) {
       bssid_changed    = true;
       RTC.lastBSSID[i] = bssid[i];
@@ -163,16 +183,12 @@ void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], 
 }
 
 void WiFiEventData_t::markConnectedAPmode(const uint8_t mac[6]) {
-  for (byte i = 0; i < 6; ++i) {
-    lastMacConnectedAPmode[i] = mac[i];
-  }
+  lastMacConnectedAPmode = mac;
   processedConnectAPmode = false;
 }
 
 void WiFiEventData_t::markDisconnectedAPmode(const uint8_t mac[6]) {
-  for (byte i = 0; i < 6; ++i) {
-    lastMacDisconnectedAPmode[i] = mac[i];
-  }
+  lastMacDisconnectedAPmode = mac;
   processedDisconnectAPmode = false;
 }
 

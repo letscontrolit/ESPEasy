@@ -2,6 +2,8 @@
 
 #ifdef USES_NOTIFIER
 #include "src/Globals/NPlugins.h"
+#include "src/DataStructs/ESPEasy_EventStruct.h"
+
 
 // ********************************************************************************
 
@@ -29,7 +31,7 @@ static const char ADDNPLUGIN_ERROR[] PROGMEM = "System: Error - Too many N-Plugi
 
 void NPluginInit(void)
 {
-  byte x;
+  uint8_t x;
 
   // Clear pointer table for all plugins
   for (x = 0; x < NPLUGIN_MAX; x++)
@@ -143,7 +145,7 @@ void NPluginInit(void)
   NPluginCall(NPlugin::Function::NPLUGIN_PROTOCOL_ADD, 0);
 }
 
-byte NPluginCall(NPlugin::Function Function, struct EventStruct *event)
+uint8_t NPluginCall(NPlugin::Function Function, struct EventStruct *event)
 {
   int x;
   struct EventStruct TempEvent;

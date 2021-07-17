@@ -164,7 +164,7 @@ class OLEDDisplay : public Print {
     void drawVerticalLine(int16_t x, int16_t y, int16_t length);
 
     // Draws a rounded progress bar with the outer dimensions given by width and height. Progress is
-    // a unsigned byte value between 0 and 100
+    // a unsigned uint8_t value between 0 and 100
     void drawProgressBar(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t progress);
 
     // Draw a bitmap in the internal image format
@@ -277,7 +277,7 @@ class OLEDDisplay : public Print {
 
     // converts utf8 characters to extended ascii
     static char* utf8ascii(String s);
-    static byte utf8ascii(byte ascii);
+    static uint8_t utf8ascii(uint8_t ascii);
 
     void inline drawInternal(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const char *data, uint16_t offset, uint16_t bytesInData) __attribute__((always_inline));
 

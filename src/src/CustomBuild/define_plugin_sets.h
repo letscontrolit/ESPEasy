@@ -112,7 +112,7 @@ To create/register a plugin, you have to :
         #define WEBSERVER_WIFI_SCANNER
     #endif
     #ifndef WEBSERVER_NEW_RULES
-        #define WEBSERVER_NEW_RULES
+//        #define WEBSERVER_NEW_RULES
     #endif
 #endif
 
@@ -1110,6 +1110,7 @@ To create/register a plugin, you have to :
     #define USES_P093   // Mitsubishi Heat Pump
     #define USES_P094  // CUL Reader
     #define USES_P114  // VEML6075 UVA/UVB sensor
+    #define USES_P115  // Fuel Gauge MAX1704x
 #endif
 
 
@@ -1142,6 +1143,9 @@ To create/register a plugin, you have to :
    #endif
    #ifndef USES_P108 
      #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
+   #endif
+   #ifndef USES_P115
+     #define USES_P115   // Fuel Gauge MAX1704x
    #endif
 #endif
 
@@ -1305,10 +1309,10 @@ To create/register a plugin, you have to :
 
   // Plugins
   #ifndef USES_P016
-    #define USES_P016   // IR
+//    #define USES_P016   // IR
   #endif
   #ifndef USES_P035
-    #define USES_P035   // IRTX
+//    #define USES_P035   // IRTX
   #endif
   #ifndef USES_P041
     #define USES_P041   // NeoClock
@@ -1365,7 +1369,7 @@ To create/register a plugin, you have to :
     #define USES_P113   // VL53L1X
   #endif
   #ifndef USES_P114
-    #define USES_P114   // 
+    #define USES_P114   // VEML6075 UVA/UVB sensor
   #endif
   #ifndef USES_P115
     #define USES_P115   // 
@@ -1408,9 +1412,7 @@ To create/register a plugin, you have to :
     #endif
   #endif
   #ifndef USES_C016
-    #ifndef ESP32         // Not implemented yet for ESP32
-      #define USES_C016   // Cache controller
-    #endif
+    #define USES_C016   // Cache controller
   #endif
   #ifndef USES_C018
     #define USES_C018 // TTN RN2483
@@ -1437,13 +1439,6 @@ To create/register a plugin, you have to :
 //  #undef USES_P075   // Nextion
 //  #undef USES_P078   // Eastron Modbus Energy meters (doesn't work yet on ESP32)
 //  #undef USES_P082   // GPS
-
-  #ifdef USES_C016
-    // Cache controller uses RTC memory which we do not yet support on ESP32.
-    #undef USES_C016 // Cache controller
-  #endif
-
-
 #endif
 
 
@@ -1571,17 +1566,16 @@ To create/register a plugin, you have to :
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
-  #ifdef USES_P076
-    #undef USES_P076   // HWL8012   in POW r1
-  #endif
-  #ifdef USES_P092
-    #undef USES_P092   // DL-Bus
-  #endif
-  #ifdef USES_P093
-    #undef USES_P093   // Mitsubishi Heat Pump
-  #endif
-  #ifdef USES_P100 // Pulse Counter - DS2423
-    #undef USES_P100
+  #ifndef PLUGIN_SET_TESTING
+    #ifdef USES_P076
+      #undef USES_P076   // HWL8012   in POW r1
+    #endif
+    #ifdef USES_P093
+      #undef USES_P093   // Mitsubishi Heat Pump
+    #endif
+    #ifdef USES_P100 // Pulse Counter - DS2423
+      #undef USES_P100
+    #endif
   #endif
   #ifdef USES_C012
     #undef USES_C012 // Blynk
@@ -1690,11 +1684,18 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef WEBSERVER_SETUP
-  #ifndef FEATURE_DNS_SERVER
-    #define FEATURE_DNS_SERVER
+  #ifndef PLUGIN_BUILD_MINIMAL_OTA
+    #ifndef FEATURE_DNS_SERVER
+      #define FEATURE_DNS_SERVER
+    #endif
   #endif
 #endif
 
-
+// Here we can re-enable specific features in the TESTING sets as we have created some space there by splitting them up
+#if defined(TESTING_USE_RTTTL) && (defined(PLUGIN_SET_TESTING_A) || defined(PLUGIN_SET_TESTING_B) || defined(PLUGIN_SET_TESTING_C) || defined(PLUGIN_SET_TESTING_D))
+  #ifndef USE_RTTTL
+    #define USE_RTTTL
+  #endif
+#endif
 
 #endif // DEFINE_PLUGIN_SETS_H

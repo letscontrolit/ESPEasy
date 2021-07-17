@@ -88,6 +88,8 @@ public:
 
   bool   setSF(uint8_t sf);
 
+  bool   setAdaptiveDataRate(bool enabled);
+
   /*
    * Initialise the RN2xx3 and join the LoRa network (if applicable).
    * This function can only be called after calling initABP() or initOTAA().
@@ -159,7 +161,7 @@ public:
    * This method expects a raw byte array as first parameter.
    * The second parameter is the count of the bytes to send.
    */
-  RN2xx3_datatypes::TX_return_type txBytes(const byte *,
+  RN2xx3_datatypes::TX_return_type txBytes(const uint8_t *,
                                            uint8_t size,
                                            uint8_t port = 1);
 

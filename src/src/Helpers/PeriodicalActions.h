@@ -48,7 +48,7 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex();
 
 void logTimerStatistics();
 
-void updateLoopStats_30sec(byte loglevel);
+void updateLoopStats_30sec(uint8_t loglevel);
 
 /********************************************************************************************\
    Clean up all before going to sleep or reboot.
