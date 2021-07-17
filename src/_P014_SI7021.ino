@@ -235,7 +235,7 @@ struct P014_data_struct : public PluginTaskData_base {
     Wire.write(SI7021_READ_REG);
     Wire.endTransmission();
 
-    // request 1 byte result
+    // request 1 uint8_t result
     Wire.requestFrom(SI7021_I2C_ADDRESS, 1);
 
     if (Wire.available() >= 1) {
@@ -372,7 +372,7 @@ struct P014_data_struct : public PluginTaskData_base {
   uint8_t       res                = 0;
 };
 
-boolean Plugin_014(byte function, struct EventStruct *event, String& string)
+boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -411,7 +411,7 @@ boolean Plugin_014(byte function, struct EventStruct *event, String& string)
     {
         #define SI7021_RESOLUTION_OPTION 4
 
-      byte choice = PCONFIG(0);
+      uint8_t choice = PCONFIG(0);
       const __FlashStringHelper * options[SI7021_RESOLUTION_OPTION];
       int optionValues[SI7021_RESOLUTION_OPTION];
       optionValues[0] = SI7021_RESOLUTION_14T_12RH;

@@ -49,7 +49,7 @@ struct WiFiEventData_t {
   void markDisconnect(WiFiDisconnectReason reason);
   void markConnected(const String& ssid,
                      const uint8_t bssid[6],
-                     byte          channel);
+                     uint8_t          channel);
   void markConnectedAPmode(const uint8_t mac[6]);
   void markDisconnectedAPmode(const uint8_t mac[6]);
 

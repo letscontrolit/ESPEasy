@@ -4,7 +4,7 @@
 // AM2321 Temperature & Humidity Sensor library for Arduino
 // Сделана Тимофеевым Е.Н. из AM2320-master
 
-unsigned int CRC16(byte *ptr, byte length)
+unsigned int CRC16(uint8_t *ptr, uint8_t length)
 {
       unsigned int crc = 0xFFFF;
       uint8_t s = 0x00;
@@ -27,7 +27,7 @@ AM2320::AM2320()
 
 int AM2320::Read()
 {
-	byte buf[8];
+	uint8_t buf[8];
 	for(int s = 0; s < 8; s++) buf[s] = 0x00;
 
 	Wire.beginTransmission(AM2320_address);

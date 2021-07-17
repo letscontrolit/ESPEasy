@@ -24,7 +24,7 @@
 #define Plugin_048_MotorStepsPerRevolution PCONFIG(1)
 #define Plugin_048_StepperSpeed            PCONFIG(2)
 
-boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   Adafruit_MotorShield AFMS;
@@ -144,7 +144,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
             if (param3.equalsIgnoreCase(F("Forward")))
             {
-              byte speed = 255;
+              uint8_t speed = 255;
 
               if (param4_is_int && (p4_int >= 0) && (p4_int <= 255)) {
                 speed = p4_int;
@@ -164,7 +164,7 @@ boolean Plugin_048(byte function, struct EventStruct *event, String& string) {
 
             if (param3.equalsIgnoreCase(F("Backward")))
             {
-              byte speed = 255;
+              uint8_t speed = 255;
 
               if (param4_is_int && (p4_int >= 0) && (p4_int <= 255)) {
                 speed = p4_int;
