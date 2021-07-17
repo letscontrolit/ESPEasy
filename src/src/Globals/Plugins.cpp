@@ -32,7 +32,7 @@
 
 int deviceCount = -1;
 
-boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
+boolean (*Plugin_ptr[PLUGIN_MAX])(uint8_t,
                                   struct EventStruct *,
                                   String&);
 
@@ -255,7 +255,7 @@ void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, int value1) 
 /**
  * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
  */
-bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
+bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
   bool retval = false;
   if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
   {
@@ -308,7 +308,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEv
 /*********************************************************************************************\
 * Function call to all or specific plugins
 \*********************************************************************************************/
-bool PluginCall(byte Function, struct EventStruct *event, String& str)
+bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 {
   struct EventStruct TempEvent;
 

@@ -127,7 +127,7 @@ void addSelector_options(int optionCount, const __FlashStringHelper *options[], 
 {
   int index;
 
-  for (byte x = 0; x < optionCount; x++)
+  for (uint8_t x = 0; x < optionCount; x++)
   {
     if (indices) {
       index = indices[x];
@@ -149,7 +149,7 @@ void addSelector_options(int optionCount, const String options[], const int indi
 {
   int index;
 
-  for (byte x = 0; x < optionCount; x++)
+  for (uint8_t x = 0; x < optionCount; x++)
   {
     if (indices) {
       index = indices[x];
@@ -638,7 +638,7 @@ void addNumericBox(const String& id, int value, int min, int max)
 
 #endif // ifdef ENABLE_TOOLTIPS
 
-void addFloatNumberBox(const String& id, float value, float min, float max, byte nrDecimals, float stepsize
+void addFloatNumberBox(const String& id, float value, float min, float max, uint8_t nrDecimals, float stepsize
                        #ifdef ENABLE_TOOLTIPS
                        , const String& tooltip
                        #endif // ifdef ENABLE_TOOLTIPS
@@ -660,7 +660,7 @@ void addFloatNumberBox(const String& id, float value, float min, float max, byte
   if (stepsize <= 0.0f) {
     html += F("0.");
 
-    for (byte i = 1; i < nrDecimals; ++i) {
+    for (uint8_t i = 1; i < nrDecimals; ++i) {
       html += '0';
     }
     html += '1';

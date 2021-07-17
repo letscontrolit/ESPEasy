@@ -492,7 +492,7 @@ private:
       uint8_t value = _serial->read();
 
       if (_readPos == 0) {
-        // Wait for start byte.
+        // Wait for start uint8_t.
         if (value == 0xfc) {
           addByteToReadBuffer(value);
         } else {
@@ -502,7 +502,7 @@ private:
         // Read header + data part - data length is at index 4.
         addByteToReadBuffer(value);
       } else {
-        // Done, last byte is checksum.
+        // Done, last uint8_t is checksum.
         uint8_t length = _readPos;
         _readPos = 0;
         return processIncomingPacket(_readBuffer, length, value);
@@ -691,7 +691,7 @@ private:
   const Mappings _mappings;
 };
 
-boolean Plugin_093(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_093(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {

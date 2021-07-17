@@ -34,9 +34,9 @@ std::map<unsigned int, std::shared_ptr<NewPingESP8266> > P_013_sensordefs;
 // Forward declaration
 const __FlashStringHelper * Plugin_013_getErrorStatusString(taskIndex_t taskIndex);
 
-boolean Plugin_013(byte function, struct EventStruct *event, String& string)
+boolean Plugin_013(uint8_t function, struct EventStruct *event, String& string)
 {
-  static byte switchstate[TASKS_MAX];
+  static uint8_t switchstate[TASKS_MAX];
   boolean success = false;
 
   switch (function)
@@ -259,7 +259,7 @@ boolean Plugin_013(byte function, struct EventStruct *event, String& string)
 
         if (operatingMode == OPMODE_STATE)
         {
-          byte state = 0;
+          uint8_t state = 0;
           float value = Plugin_013_read(event->TaskIndex);
           if (value != NO_ECHO)
           {

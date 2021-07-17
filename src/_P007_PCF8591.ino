@@ -12,11 +12,11 @@
 #define PLUGIN_NAME_007       "Analog input - PCF8591"
 #define PLUGIN_VALUENAME1_007 "Analog"
 
-boolean Plugin_007(byte function, struct EventStruct *event, String& string)
+boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static byte portValue = 0;
+  // static uint8_t portValue = 0;
 
   switch (function)
   {
@@ -50,8 +50,8 @@ boolean Plugin_007(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      byte unit       = (CONFIG_PORT - 1) / 4;
-      byte port       = CONFIG_PORT - (unit * 4);
+      uint8_t unit       = (CONFIG_PORT - 1) / 4;
+      uint8_t port       = CONFIG_PORT - (unit * 4);
       uint8_t address = 0x48 + unit;
 
       // get the current pin value

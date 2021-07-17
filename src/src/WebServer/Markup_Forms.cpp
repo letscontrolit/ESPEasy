@@ -161,7 +161,7 @@ void addFormFloatNumberBox(const String& label,
                            float         value,
                            float         min,
                            float         max,
-                           byte          nrDecimals,
+                           uint8_t       nrDecimals,
                            float         stepsize
                            #ifdef        ENABLE_TOOLTIPS
                            ,
@@ -280,7 +280,7 @@ bool getFormPassword(const String& id, String& password)
 // Add a IP Box form
 // ********************************************************************************
 
-void addFormIPBox(const String& label, const String& id, const byte ip[4])
+void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
 {
   bool empty_IP = (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
 
@@ -344,7 +344,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const int addresses[
                       #endif // ifdef ENABLE_TOOLTIPS
                       );
 
-  for (byte x = 0; x < addressCount; x++)
+  for (uint8_t x = 0; x < addressCount; x++)
   {
     String option = formatToHex_decimal(addresses[x]);
 
@@ -575,7 +575,7 @@ bool update_whenset_FormItemInt(const String& key, int& value) {
   return false;
 }
 
-bool update_whenset_FormItemInt(const String& key, byte& value) {
+bool update_whenset_FormItemInt(const String& key, uint8_t& value) {
   int tmpVal;
 
   if (getCheckWebserverArg_int(key, tmpVal)) {

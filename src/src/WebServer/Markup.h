@@ -219,7 +219,7 @@ void addFloatNumberBox(const String& id,
                        float         value,
                        float         min,
                        float         max,
-                       byte          nrDecimals = 6,
+                       uint8_t       nrDecimals = 6,
                        float         stepsize   = 0.0f
                        #ifdef ENABLE_TOOLTIPS
                        ,

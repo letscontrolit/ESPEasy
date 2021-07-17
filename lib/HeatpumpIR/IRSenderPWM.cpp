@@ -14,7 +14,7 @@
 #if defined(__SAM3X8E__) || defined(__SAM3X8H__)
 // Arduino Due
 	uint32_t IR_USE_PWM_PINMASK;
-	byte IR_USE_PWM_CH;
+	uint8_t IR_USE_PWM_CH;
 #endif
 
 IRSenderPWM::IRSenderPWM(uint8_t pin) : IRSender(pin)

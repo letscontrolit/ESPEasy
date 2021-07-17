@@ -110,6 +110,8 @@ void addFormFloatNumberBox(const String& label,
                            );
 void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min = INT_MIN, int max = INT_MAX);
 
+void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, uint8_t nrDecimals = 6, float stepsize = 0.0f);
+void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, uint8_t nrDecimals = 6, float stepsize = 0.0f);
 
 // ********************************************************************************
 // Add a task selector form
@@ -180,7 +182,7 @@ bool getFormPassword(const String& id,
 
 void addFormIPBox(const String& label,
                   const String& id,
-                  const byte    ip[4]);
+                  const uint8_t ip[4]);
 
 // ********************************************************************************
 // Add a IP Access Control select dropdown list
@@ -315,7 +317,7 @@ bool update_whenset_FormItemInt(const String& key,
                                 int         & value);
 
 bool update_whenset_FormItemInt(const String& key,
-                                byte        & value);
+                                uint8_t     & value);
 
 // Note: Checkbox values will not appear in POST Form data if unchecked.
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.

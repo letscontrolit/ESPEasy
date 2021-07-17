@@ -27,7 +27,7 @@
 #define PLUGIN_VALUENAME4_037 "Value4"
 
 
-boolean Plugin_037(byte function, struct EventStruct *event, String& string)
+boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -67,9 +67,9 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&deviceTemplate, sizeof(deviceTemplate));
 
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
         	addFormTextBox(String(F("MQTT Topic ")) + (varNr + 1), String(F("p037_template")) +
         			(varNr + 1), deviceTemplate[varNr], 40);
@@ -82,7 +82,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
       {
         String error;
         char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
           String argName = F("p037_template");
           argName += varNr + 1;
@@ -94,7 +94,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
           addHtmlError(error);
         }
 
-        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&deviceTemplate, sizeof(deviceTemplate));
 
         success = true;
         break;
@@ -148,9 +148,9 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
 
         LoadTaskSettings(event->TaskIndex);
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&deviceTemplate, sizeof(deviceTemplate));
 
-        for (byte x = 0; x < VARS_PER_TASK; x++)
+        for (uint8_t x = 0; x < VARS_PER_TASK; x++)
         {
           String subscriptionTopic = deviceTemplate[x];
           subscriptionTopic.trim();
@@ -220,10 +220,10 @@ bool MQTTSubscribe_037(struct EventStruct *event)
 {
   // We must subscribe to the topics.
   char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-  LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+  LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&deviceTemplate, sizeof(deviceTemplate));
 
   // Now loop over all import variables and subscribe to those that are not blank
-  for (byte x = 0; x < VARS_PER_TASK; x++)
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
   {
     String subscribeTo = deviceTemplate[x];
 
