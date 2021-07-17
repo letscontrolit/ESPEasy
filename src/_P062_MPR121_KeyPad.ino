@@ -35,7 +35,7 @@
 #define P062_DEFAULT_TOUCH_TRESHOLD   12 // Defaults got from MPR_121 source
 #define P062_DEFAULT_RELEASE_TRESHOLD 6
 
-boolean Plugin_062(byte function, struct EventStruct *event, String& string)
+boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -72,7 +72,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte addr = PCONFIG(0);
+      uint8_t addr = PCONFIG(0);
 
       int optionValues[4] = { 0x5A, 0x5B, 0x5C, 0x5D };
       addFormSelectorI2C(F("i2c_addr"), 4, optionValues, addr);
@@ -161,9 +161,8 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
           if (tbUseCalibration) {
             addFormCheckBox(F("Clear calibrationdata"), F("p062_clear_calibrate"), false);
           }
-        } else {
-          delete P062_data;
         }
+        delete P062_data;
       }
       success = true;
       break;
@@ -290,7 +289,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
               uint16_t colMask = 0x01;
               log.reserve(55);
 
-              for (byte col = 0; col < P062_MaxTouchObjects; col++)
+              for (uint8_t col = 0; col < P062_MaxTouchObjects; col++)
               {
                 if (key & colMask) // this key pressed?
                 {

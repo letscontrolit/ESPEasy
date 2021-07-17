@@ -24,7 +24,7 @@
 #define P083_ECO2_BASELINE (event->BaseVarIndex + 3)
 
 
-boolean Plugin_083(byte function, struct EventStruct *event, String& string)
+boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

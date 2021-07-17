@@ -85,7 +85,7 @@ public:
     }
 
     char hostname[PLUGIN_089_HOSTNAME_SIZE];
-    LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
+    LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
 
     /* This one lost as well, DNS dead? */
     if (WiFi.hostByName(hostname, ip) == false) {
@@ -130,7 +130,7 @@ public:
   }
 };
 
-boolean Plugin_089(byte function, struct EventStruct *event, String& string)
+boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -167,7 +167,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
   case PLUGIN_WEBFORM_LOAD:
   {
     char hostname[PLUGIN_089_HOSTNAME_SIZE];
-    LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
+    LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
     addFormTextBox(F("Hostname"), F("p089_ping_host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
     success = true;
     break;
@@ -179,7 +179,7 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
     // Reset "Fails" if settings updated
     UserVar[event->BaseVarIndex] = 0;
     strncpy(hostname,  webArg(F("p089_ping_host")).c_str() , sizeof(hostname));
-    SaveCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
+    SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
     success = true;
     break;
   }

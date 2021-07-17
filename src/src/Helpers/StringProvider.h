@@ -49,6 +49,9 @@ struct LabelType {
     #endif // ESP32_ENABLE_PSRAM
 #endif // ifdef ESP32
 
+    JSON_BOOL_QUOTES,
+    ENABLE_TIMING_STATISTICS,
+
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
     RESET_REASON,            // Software/System restart

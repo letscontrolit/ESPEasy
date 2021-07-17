@@ -107,7 +107,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
       char thumbprint[60];
-      LoadCustomControllerSettings(event->ControllerIndex, (byte *)&thumbprint, sizeof(thumbprint));
+      LoadCustomControllerSettings(event->ControllerIndex, (uint8_t *)&thumbprint, sizeof(thumbprint));
 
       if (strlen(thumbprint) != 59) {
         strcpy(thumbprint, CPLUGIN_015_DEFAULT_THUMBPRINT);
@@ -148,7 +148,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         if (!safe_strncpy(thumbprint, webArg("c015_thumbprint"), 60) || (strlen(thumbprint) != 59)) {
           addHtmlError(error);
         }
-        SaveCustomControllerSettings(event->ControllerIndex, (byte *)&thumbprint, sizeof(thumbprint));
+        SaveCustomControllerSettings(event->ControllerIndex, (uint8_t *)&thumbprint, sizeof(thumbprint));
           # endif // ifdef CPLUGIN_015_SSL
       }
       break;
@@ -165,7 +165,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       // Collect the values at the same run, to make sure all are from the same sample
-      byte valueCount = getValueCountForTask(event->TaskIndex);
+      uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
       
       success = C015_DelayHandler->addToQueue(C015_queue_element(event, valueCount));
@@ -177,7 +177,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         C015_queue_element& element = C015_DelayHandler->sendQueue.back();
         LoadTaskSettings(event->TaskIndex);
 
-        for (byte x = 0; x < valueCount; x++)
+        for (uint8_t x = 0; x < valueCount; x++)
         {
           bool   isvalid;
           String formattedValue = formatUserVar(event, x, isvalid);
@@ -287,7 +287,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
 
     # ifdef CPLUGIN_015_SSL
     char thumbprint[60];
-    LoadCustomControllerSettings(controllerIndex, (byte *)&thumbprint, sizeof(thumbprint));
+    LoadCustomControllerSettings(controllerIndex, (uint8_t *)&thumbprint, sizeof(thumbprint));
 
     if (strlen(thumbprint) != 59) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -425,7 +425,7 @@ boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeou
 
 // This is called for all virtual pins, that don't have BLYNK_WRITE handler
 BLYNK_WRITE_DEFAULT() {
-  byte  vPin     = request.pin;
+  uint8_t  vPin     = request.pin;
   float pinValue = param.asFloat();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

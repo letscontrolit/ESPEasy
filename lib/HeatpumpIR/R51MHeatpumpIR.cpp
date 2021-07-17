@@ -12,7 +12,7 @@ R51MHeatpumpIR::R51MHeatpumpIR() : HeatpumpIR()
 
 void R51MHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
-  const static byte tempMap [] PROGMEM = {0,1,3,2,6,7,5,4,12,13,9,8,10,11 };
+  const static uint8_t tempMap [] PROGMEM = {0,1,3,2,6,7,5,4,12,13,9,8,10,11 };
   // Sensible defaults for the heat pump mode
   
   uint8_t data[] = { 0xB2, 0x0F, 0x00  }; // The actual data is in this part

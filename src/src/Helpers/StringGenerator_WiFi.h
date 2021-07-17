@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-const __FlashStringHelper * WiFi_encryptionType(byte encryptionType);
+const __FlashStringHelper * WiFi_encryptionType(uint8_t encryptionType);
 
 #ifdef ESP8266
 #ifdef LIMIT_BUILD_SIZE

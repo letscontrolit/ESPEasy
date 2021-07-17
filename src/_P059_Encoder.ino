@@ -26,7 +26,7 @@
 
 std::map<unsigned int, std::shared_ptr<QEIx4> > P_059_sensordefs;
 
-boolean Plugin_059(byte function, struct EventStruct *event, String& string)
+boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -114,7 +114,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = 0;
 
         String log = F("QEI  : GPIO: ");
-        for (byte i=0; i<3; i++)
+        for (uint8_t i=0; i<3; i++)
         {
           int pin = PIN(i);
           if (pin >= 0)

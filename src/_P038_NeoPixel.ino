@@ -40,7 +40,7 @@ Adafruit_NeoPixel *Plugin_038_pixels;
 
 int MaxPixels = 0;
 
-boolean Plugin_038(byte function, struct EventStruct *event, String& string)
+boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -96,7 +96,7 @@ boolean Plugin_038(byte function, struct EventStruct *event, String& string)
       {
         if (!Plugin_038_pixels)
         {
-          byte striptype = PCONFIG(1);
+          uint8_t striptype = PCONFIG(1);
           if (striptype == 1)
             Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
           else if (striptype == 2)

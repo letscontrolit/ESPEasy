@@ -1044,15 +1044,10 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
     HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0)); // Bit 7-0
     // HeaderContentAlternative
 
-    //      Now create the string for the outgoing and incoming frames
-    String tmpString;
-    tmpString.reserve(P36_NcharsV1);
-
     //      Construct the outgoing string
     for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
     {
-      tmpString =
-        String(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
+      String tmpString(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
       ScrollingPages.LineOut[i] = P36_parseTemplate(tmpString, 20);
     }
 
@@ -1085,8 +1080,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       //        Contruct incoming strings
       for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
       {
-        tmpString =
-          String(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
+        String tmpString(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
         ScrollingPages.LineIn[i] = P36_parseTemplate(tmpString, 20);
 
         if (ScrollingPages.LineIn[i].length() > 0) { foundText = true; }
@@ -1109,7 +1103,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       for (uint8_t i = 0; i < NFrames; i++) {
         for (uint8_t k = 0; k < ScrollingPages.linesPerFrame; k++)
         {
-          tmpString = String(DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
+          String tmpString(DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
           tmpString = P36_parseTemplate(tmpString, 20);
 
           if (tmpString.length() > 0) {
