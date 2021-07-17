@@ -103,7 +103,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
             uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
             safe_strncpy(
               ExtraTaskSettings.TaskDeviceValueNames[i],
-              p078_getQueryValueString(choice),
+              p078_getQueryValueString(choice, P078_MODEL),
               sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
           } else {
             ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
@@ -115,7 +115,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
       serialHelper_getGpioNames(event);
-      event->String3 = formatGpioName_output_optional("DE");
+      event->String3 = formatGpioName_output_optional(F("DE"));
       break;
     }
 
@@ -211,8 +211,8 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           options[i] = p078_getQueryString(i, P078_MODEL);
         }
 
-        for (byte i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
-          const byte pconfigIndex = i + P078_QUERY1_CONFIG_POS;
+        for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
+          const uint8_t pconfigIndex = i + P078_QUERY1_CONFIG_POS;
           sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, nrOptions, options);
         }
       }
@@ -269,25 +269,6 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
-
-    case PLUGIN_GET_DEVICEVALUENAMES:
-    {
-      int model = P078_MODEL;
-
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
-        if (i < P078_NR_OUTPUT_VALUES) {
-          byte choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
-          safe_strncpy(
-            ExtraTaskSettings.TaskDeviceValueNames[i],
-            p078_getQueryValueString(choice, model),
-            sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
-        } else {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
-        }
-      }
-      break;
-    }
-
 
     case PLUGIN_EXIT:
     {
@@ -347,9 +328,9 @@ float p078_readVal(uint8_t query, uint8_t node, unsigned int model) {
     log += node;
     log += ',';
     log += model;
-    log += ") ";
+    log += F(") ");
     log += p078_getQueryString(query, model);
-    log += ": ";
+    log += F(": ");
     log += _tempvar;
     addLog(LOG_LEVEL_INFO, log);
   }
