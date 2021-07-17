@@ -88,7 +88,7 @@ void addFormFloatNumberBox(LabelType::Enum label,
                            float           value,
                            float           min,
                            float           max,
-                           byte            nrDecimals = 6,
+                           uint8_t         nrDecimals = 6,
                            float           stepsize   = 0.0f
                            #ifdef ENABLE_TOOLTIPS
                            ,
@@ -101,7 +101,7 @@ void addFormFloatNumberBox(const String& label,
                            float         value,
                            float         min,
                            float         max,
-                           byte          nrDecimals = 6,
+                           uint8_t       nrDecimals = 6,
                            float         stepsize   = 0.0f
                            #ifdef ENABLE_TOOLTIPS
                            ,
@@ -110,8 +110,6 @@ void addFormFloatNumberBox(const String& label,
                            );
 void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min = INT_MIN, int max = INT_MAX);
 
-void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, uint8_t nrDecimals = 6, float stepsize = 0.0f);
-void addFormFloatNumberBox(const String& label, const String& id, float value, float min, float max, uint8_t nrDecimals = 6, float stepsize = 0.0f);
 
 // ********************************************************************************
 // Add a task selector form

@@ -144,7 +144,7 @@ void addFormNumericBox(const String& label, const String& id, int value, int min
                 );
 }
 
-void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, byte nrDecimals, float stepsize
+void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, uint8_t nrDecimals, float stepsize
                            #ifdef ENABLE_TOOLTIPS
                            , const String& tooltip
                            #endif // ifdef ENABLE_TOOLTIPS
