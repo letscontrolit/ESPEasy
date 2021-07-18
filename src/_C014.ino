@@ -79,20 +79,24 @@ bool CPlugin_014_sendMQTTdevice(String tmppubname, taskIndex_t taskIndex, const 
   if (mqttReturn) { msgCounter++; }
   else { errorCounter++; }
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO) && mqttReturn) {
+#ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE) && mqttReturn) {
     String log = F("C014 : T:");
     log += topic;
     log += F(" P: ");
     log += payload;
-    addLog(LOG_LEVEL_DEBUG_MORE, log + " success!");
+    log += F(" success!");
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
   }
+#endif
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO) && !mqttReturn) {
+  if (loglevelActiveFor(LOG_LEVEL_ERROR) && !mqttReturn) {
     String log = F("C014 : T:");
     log += topic;
     log += F(" P: ");
     log += payload;
-    addLog(LOG_LEVEL_ERROR, log + " ERROR!");
+    log += F(" ERROR!");
+    addLog(LOG_LEVEL_ERROR, log);
   }
   processMQTTdelayQueue();
   return mqttReturn;
@@ -113,24 +117,26 @@ bool CPlugin_014_sendMQTTnode(String      tmppubname,
   if (mqttReturn) { msgCounter++; }
   else { errorCounter++; }
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO) && mqttReturn) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE) && mqttReturn) {
     String log = F("C014 : V:");
     log += value;
     log += F(" T: ");
     log += topic;
     log += F(" P: ");
     log += payload;
-    addLog(LOG_LEVEL_DEBUG_MORE, log + " success!");
+    log += F(" success!");
+    addLog(LOG_LEVEL_DEBUG_MORE, log);
   }
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO) && !mqttReturn) {
+  if (loglevelActiveFor(LOG_LEVEL_ERROR) && !mqttReturn) {
     String log = F("C014 : V:");
     log += value;
     log += F(" T: ");
     log += topic;
     log += F(" P: ");
     log += payload;
-    addLog(LOG_LEVEL_ERROR, log + " ERROR!");
+    log += F(" ERROR!");
+    addLog(LOG_LEVEL_ERROR, log);
   }
   processMQTTdelayQueue();
   return mqttReturn;
@@ -147,7 +153,6 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 {
   bool   success      = false;
   int    errorCounter = 0;
-  String log;
   String pubname;
   String tmppubname;
 
@@ -418,7 +423,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                             if ((ExtraTaskSettings.TaskDevicePluginConfig[varNr] != 0) ||
                                 (ExtraTaskSettings.TaskDevicePluginConfig[varNr + 5] != 0)) {
                               unitName  = ExtraTaskSettings.TaskDevicePluginConfig[varNr];
-                              unitName += ":";
+                              unitName += ':';
                               unitName += ExtraTaskSettings.TaskDevicePluginConfig[varNr + valueCount];
                             }
                             break;
@@ -427,7 +432,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                             if ((ExtraTaskSettings.TaskDevicePluginConfig[varNr] != 0) ||
                                 (ExtraTaskSettings.TaskDevicePluginConfig[varNr + 5] != 0)) {
                               unitName  = ExtraTaskSettings.TaskDevicePluginConfig[varNr];
-                              unitName += ":";
+                              unitName += ':';
                               unitName += ExtraTaskSettings.TaskDevicePluginConfig[varNr + valueCount];
                             }
                             break;
@@ -536,7 +541,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                     String log = F("C014 : Device has custom values: ");
                     log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x));
-                    addLog(LOG_LEVEL_DEBUG, log + " not implemented!");
+                    log += F(" not implemented!");
+                    addLog(LOG_LEVEL_DEBUG, log);
                   }
                 }
               }
@@ -573,7 +579,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                 String log = F("C014 : Device Disabled: ");
                 log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x));
-                addLog(LOG_LEVEL_DEBUG, log + " not propagated!");
+                log += F(" not propagated!");
+                addLog(LOG_LEVEL_DEBUG, log);
               }
             }
           } // device configured
@@ -610,10 +617,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         log         += F(" errors! (");
         log         += msgCounter;
         log         += F(" messages)");
-        msgCounter   = 0;
-        errorCounter = 0;
         addLog(LOG_LEVEL_INFO, log);
       }
+      msgCounter   = 0;
+      errorCounter = 0;
       break;
     }
 
@@ -680,6 +687,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           lastindex = nodeName.lastIndexOf('/');
           nodeName  = nodeName.substring(lastindex + 1);
 
+          String log;
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             log  = F("C014 : MQTT received: ");
             log += F("/set: N: ");
@@ -773,11 +781,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               log += F(" cmd: ");
               log += cmd;
-              addLog(LOG_LEVEL_INFO, log + F(" OK"));
+              log += F(" OK");
+              addLog(LOG_LEVEL_INFO, log);
             }
           } else {
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              addLog(LOG_LEVEL_INFO, log + F(" INVALID MSG"));
+              log += F(" INVALID MSG");
+              addLog(LOG_LEVEL_INFO, log);
             }
           }
         }
@@ -793,7 +803,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               eventQueue.add(newEvent);
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log = F("C014 : taskIndex:");
+                String log = F("C014 : taskIndex:");
 
                 if (!validTaskIndex(taskIndex)) {
                   log += F("Invalid");
@@ -810,6 +820,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               }
             }
           } else { // not an event
+            String log;
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               log = F("C014 :");
             }
@@ -946,7 +957,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             log += F(" (");
             log += valueInt;
             log += F(")");
-            addLog(LOG_LEVEL_INFO, log + " success!");
+            log += F(" success!");
+            addLog(LOG_LEVEL_INFO, log);
           }
 
           if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
@@ -957,7 +969,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             log += F(" (");
             log += valueInt;
             log += F(")");
-            addLog(LOG_LEVEL_ERROR, log + " ERROR!");
+            log += F(" ERROR!");
+            addLog(LOG_LEVEL_ERROR, log);
           }
         } else // not gpio
         {
@@ -990,7 +1003,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 log += topic;
                 log += F(" value: ");
                 log += valueStr;
-                addLog(LOG_LEVEL_INFO, log + " success!");
+                log += F(" success!");
+                addLog(LOG_LEVEL_INFO, log);
               }
 
               if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
@@ -1002,7 +1016,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 log += topic;
                 log += F(" value: ");
                 log += valueStr;
-                addLog(LOG_LEVEL_ERROR, log + " ERROR!");
+                log += F(" ERROR!");
+                addLog(LOG_LEVEL_ERROR, log);
               }
             } else if (parseString(commandName, 1) == F("homievalueset")) { // acknolages value form P086 Homie Receiver
               switch (Settings.TaskDevicePluginConfig[deviceIndex - 1][taskVarIndex]) {
@@ -1054,7 +1069,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 log += valueInt;
                 log += F(" valueStr:");
                 log += valueStr;
-                addLog(LOG_LEVEL_INFO, log + " success!");
+                log += F(" success!");
+                addLog(LOG_LEVEL_INFO, log);
               }
 
               if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
@@ -1066,7 +1082,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 log += topic;
                 log += F(" value: ");
                 log += valueStr;
-                addLog(LOG_LEVEL_ERROR, log + " failed!");
+                log += F(" failed!");
+                addLog(LOG_LEVEL_ERROR, log);
               }
             } else // Acknowledge not implemented yet
             {
