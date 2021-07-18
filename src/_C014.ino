@@ -72,9 +72,22 @@ bool   CPlugin_014_mqtt_retainFlag = false;
  */
 
 // send MQTT Message with CPLUGIN_014_BASE_TOPIC Topic scheme / Payload
-bool CPlugin_014_sendMQTTdevice(String tmppubname, taskIndex_t taskIndex, const char *topic, const char *payload, int& errorCounter) {
+bool CPlugin_014_sendMQTTdevice(const String& tmppubname, 
+                                taskIndex_t taskIndex, 
+                                const __FlashStringHelper *topic, 
+                                const __FlashStringHelper *payload, 
+                                int& errorCounter) 
+{
+  return CPlugin_014_sendMQTTdevice(tmppubname, taskIndex, topic, String(payload), errorCounter);
+}
+
+bool CPlugin_014_sendMQTTdevice(String tmppubname, 
+                                taskIndex_t taskIndex, 
+                                const __FlashStringHelper *topic, 
+                                const String& payload, 
+                                int& errorCounter) {
   tmppubname.replace(F("#"), topic);
-  bool mqttReturn = MQTTpublish(CPLUGIN_ID_014, taskIndex, tmppubname.c_str(), payload, true);
+  bool mqttReturn = MQTTpublish(CPLUGIN_ID_014, taskIndex, tmppubname.c_str(), payload.c_str(), true);
 
   if (mqttReturn) { msgCounter++; }
   else { errorCounter++; }
@@ -201,26 +214,26 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 # ifdef CPLUGIN_014_V3
 
         // $stats/uptime	Device → Controller	Time elapsed in seconds since the boot of the device	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$stats/uptime", toString(getUptimeMinutes() * 60, 0).c_str(), errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$stats/uptime"), toString(getUptimeMinutes() * 60, 0), errorCounter);
 
         // $stats/signal	Device → Controller	Signal strength in %	Yes	No
         float RssI = WiFi.RSSI();
         RssI = isnan(RssI) ? -100.0f : RssI;
         RssI = min(max(2 * (RssI + 100.0f), 0.0f), 100.0f);
 
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$stats/signal", toString(RssI, 1).c_str(), errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$stats/signal"), toString(RssI, 1), errorCounter);
 # endif // ifdef CPLUGIN_014_V3
 
         if (errorCounter > 0)
         {
           // alert: this is the state the device is when connected to the MQTT broker, but something wrong is happening. E.g. a sensor is
           // not providing data and needs human intervention. You have to send this message when something is wrong.
-          CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$state", "alert", errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("alert"), errorCounter);
           success = false;
         } else {
           // ready: this is the state the device is in when it is connected to the MQTT broker, has sent all Homie messages and is ready to
           // operate. You have to send this message after all other announcements message have been sent.
-          CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$state", "ready", errorCounter);
+          CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("ready"), errorCounter);
           success = true;
         }
 
@@ -262,40 +275,40 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
         // init: this is the state the device is in when it is connected to the MQTT broker, but has not yet sent all Homie messages and is
         // not yet ready to operate. This is the first message that must that must be sent.
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$state", "init",                    errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("init"),                    errorCounter);
 
         // $homie	Device → Controller	Version of the Homie convention the device conforms to	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$homie", CPLUGIN_014_HOMIE_VERSION, errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$homie"), F(CPLUGIN_014_HOMIE_VERSION), errorCounter);
 
         // $name	Device → Controller	Friendly name of the device	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$name",  Settings.Name,             errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$name"),  Settings.Name,             errorCounter);
 
         // $localip	Device → Controller	IP of the device on the local network	Yes	Yes
 # ifdef CPLUGIN_014_V3
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$localip", formatIP(NetworkLocalIP()).c_str(), errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$localip"), formatIP(NetworkLocalIP()), errorCounter);
 
         // $mac	Device → Controller	Mac address of the device network interface. The format MUST be of the type A1:B2:C3:D4:E5:F6	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$mac",     NetworkMacAddress().c_str(),        errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$mac"),     NetworkMacAddress(),        errorCounter);
 
         // $implementation	Device → Controller	An identifier for the Homie implementation (example esp8266)	Yes	Yes
           #  if defined(ESP8266)
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$implementation", "ESP8266", errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$implementation"), F("ESP8266"), errorCounter);
           #  endif // if defined(ESP8266)
           #  if defined(ESP32)
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$implementation", "ESP32",   errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$implementation"), F("ESP32"),   errorCounter);
           #  endif // if defined(ESP32)
 
         // $fw/version	Device → Controller	Version of the firmware running on the device	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$fw/version", toString(Settings.Build, 0).c_str(),
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$fw/version"), toString(Settings.Build, 0),
                                    errorCounter);
 
         // $fw/name	Device → Controller	Name of the firmware running on the device. Allowed characters are the same as the device ID	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$fw/name", getNodeTypeDisplayString(NODE_TYPE_ID).c_str(),
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$fw/name"), getNodeTypeDisplayString(NODE_TYPE_ID),
                                    errorCounter);
 
         // $stats/interval	Device → Controller	Interval in seconds at which the device refreshes its $stats/+: See next section for
         // details about statistical attributes	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$stats/interval", CPLUGIN_014_INTERVAL,
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$stats/interval"), F(CPLUGIN_014_INTERVAL),
                                    errorCounter);
 # endif // ifdef CPLUGIN_014_V3
 
@@ -589,19 +602,19 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         // and finally ...
         // $nodes	Device → Controller	Nodes the device exposes, with format id separated by a , if there are multiple nodes. To
         // make a node an array, append [] to the ID.	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$nodes", nodesList.c_str(), errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$nodes"), nodesList, errorCounter);
       }
 
       if (errorCounter > 0)
       {
         // alert: this is the state the device is when connected to the MQTT broker, but something wrong is happening. E.g. a sensor is not
         // providing data and needs human intervention. You have to send this message when something is wrong.
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$state", "alert", errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("alert"), errorCounter);
         success = false;
       } else {
         // ready: this is the state the device is in when it is connected to the MQTT broker, has sent all Homie messages and is ready to
         // operate. You have to send this message after all other announcements message have been sent.
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$state", "ready", errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("ready"), errorCounter);
         success = true;
       }
 
@@ -638,7 +651,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
       // disconnected: this is the state the device is in when it is cleanly disconnected from the MQTT broker. You must send this message
       // before cleanly disconnecting
-      success = CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$state", "disconnected", errorCounter);
+      success = CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("disconnected"), errorCounter);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("C014 : Device: ");
@@ -657,7 +670,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       pubname.replace(F("%sysname%"), Settings.Name);
 
       // sleeping: this is the state the device is in when the device is sleeping. You have to send this message before sleeping.
-      success = CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, "$state", "sleeping", errorCounter);
+      success = CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("sleeping"), errorCounter);
       break;
     }
 
