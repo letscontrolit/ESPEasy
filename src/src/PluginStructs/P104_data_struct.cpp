@@ -1151,7 +1151,7 @@ void createHString(String& string) {
 # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
 void reverseStr(String& str) {
-    uint16_t n = str.length();
+    const uint16_t n = str.length();
  
     // Swap character starting from two corners
     for (uint16_t i = 0; i < n / 2; i++) {

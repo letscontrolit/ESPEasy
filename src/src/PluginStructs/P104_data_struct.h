@@ -314,9 +314,12 @@ struct P104_zone_struct {
     repeatDelay   = -1;
   }
 
+  String   text;
+  int32_t  repeatDelay;
+  uint32_t _repeatTimer;
+  uint16_t speed, pause;
   uint8_t  zone;
   uint8_t  size;
-  String   text;
   uint8_t  alignment;
   uint8_t  animationIn, animationOut;
   uint8_t  font;
@@ -325,13 +328,10 @@ struct P104_zone_struct {
   uint8_t  specialEffect;
   uint8_t  offset;
   int8_t   brightness;
-  uint16_t speed, pause;
-  int32_t  repeatDelay;
-  uint32_t _repeatTimer;
   int8_t   _lastChecked = -1;
   # ifdef P104_USE_BAR_GRAPH
-  uint8_t  _startModule;   // starting module, end module is _startModule + size - 1
   uint16_t _lower, _upper; // lower and upper pixel numbers
+  uint8_t  _startModule;   // starting module, end module is _startModule + size - 1
   # endif // ifdef P104_USE_BAR_GRAPH
 };
 
@@ -339,10 +339,10 @@ struct P104_zone_struct {
 struct P104_bargraph_struct {
   P104_bargraph_struct(uint8_t _graph) : graph(_graph) {}
 
-  uint8_t graph;
   double  value;
   double  max;
   double  min;
+  uint8_t graph;
   uint8_t barType;
   uint8_t direction;
 };
@@ -410,31 +410,30 @@ private:
                             const String          & text);
   String enquoteString(const String& input);
 
-  MD_MAX72XX::moduleType_t mod;
-  taskIndex_t              taskIndex;
-  int8_t                   cs_pin;
-  uint8_t                  modules = 1u;
-
-  bool     initialized   = false;
-  int8_t   expectedZones = -1;
-  int8_t   previousZones = -1;
-  uint16_t numDevices    = 0;
-  uint8_t  zoneOrder     = 0;
-
   String error;
-
-  std::vector<P104_zone_struct>zones;
-  bool                         zonesInitialized = false;
-  String                       sZoneBuffers[P104_MAX_ZONES];
-  String                       sZoneInitial[P104_MAX_ZONES];
-
-  // time/date stuff
-  bool flasher = false;        // seconds passing flasher
-  char szTimeL[P104_MAX_MESG]; // dd-mm-yy mm:ss\0
-  char szTimeH[P104_MAX_MESG];
 
   // Stored settings
   tP104_StoredSettings StoredSettings;
+
+  std::vector<P104_zone_struct>zones;
+  String                       sZoneBuffers[P104_MAX_ZONES];
+  String                       sZoneInitial[P104_MAX_ZONES];
+
+  MD_MAX72XX::moduleType_t mod;
+  uint16_t                 numDevices = 0;
+  taskIndex_t              taskIndex;
+  int8_t                   cs_pin;
+  uint8_t                  modules          = 1u;
+  int8_t                   expectedZones    = -1;
+  int8_t                   previousZones    = -1;
+  uint8_t                  zoneOrder        = 0;
+  bool                     initialized      = false;
+  bool                     zonesInitialized = false;
+  bool                     flasher          = false; // seconds passing flasher
+
+  // time/date stuff
+  char szTimeL[P104_MAX_MESG];                       // dd-mm-yy mm:ss\0
+  char szTimeH[P104_MAX_MESG];
 };
 
 #endif // ifdef USES_P104

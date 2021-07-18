@@ -65,6 +65,7 @@
 //                                The bar width is determined by the number of graph-strings
 //
 // History:
+// 2021-07-18 tonhuisman: Small optimizations and improvements
 // 2021-07-14 tonhuisman: Fix some bugs in font selection, add Text reverse content type to improve usability of Vertical font
 // 2021-07-12 tonhuisman: Reduce number of reconfiguration during command handling, will be applied the next time content is displayed
 //                        update/correct some documentation
