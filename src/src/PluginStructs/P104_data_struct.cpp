@@ -21,7 +21,7 @@
 # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 void createHString(String& string); // Forward definition
 # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
-void reverseStr(String& str); // Forward definition
+void reverseStr(String& str);       // Forward definition
 
 /****************************************************************
  * Constructor
@@ -50,9 +50,9 @@ bool P104_data_struct::begin() {
   if ((P != nullptr) && (cs_pin > -1)) {
     addLog(LOG_LEVEL_INFO, F("dotmatrix: P->begin() called"));
     P->begin(expectedZones);
-    #ifdef P104_USE_BAR_GRAPH
+    # ifdef P104_USE_BAR_GRAPH
     pM = P->getGraphicObject();
-    #endif
+    # endif // ifdef P104_USE_BAR_GRAPH
     return true;
   }
   return false;
@@ -331,11 +331,12 @@ void P104_data_struct::configureZones() {
       # endif // ifdef P104_DEBUG_DEV
 
       // Content == text && text != ""
-      if ((it->content == P104_CONTENT_TEXT || it->content == P104_CONTENT_TEXT_REV) && (!it->text.isEmpty())) {
+      if (((it->content == P104_CONTENT_TEXT) || (it->content == P104_CONTENT_TEXT_REV)) && (!it->text.isEmpty())) {
         displayOneZoneText(currentZone, *it, it->text);
       }
 
       # ifdef P104_USE_BAR_GRAPH
+
       // Content == Bar-graph && text != ""
       if ((it->content == P104_CONTENT_BAR_GRAPH) && (!it->text.isEmpty())) {
         displayBarGraph(currentZone, *it, it->text);
@@ -407,36 +408,40 @@ void P104_data_struct::updateZone(uint8_t                 zone,
                                   const P104_zone_struct& zstruct) {
   if (zone == 0) {
     for (auto it = zones.begin(); it != zones.end(); ++it) {
-      if (it->content == P104_CONTENT_TEXT || it->content == P104_CONTENT_TEXT_REV) {
+      if ((it->content == P104_CONTENT_TEXT) || (it->content == P104_CONTENT_TEXT_REV)) {
         displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
         P->displayReset(it->zone - 1);
       }
-      #ifdef P104_USE_BAR_GRAPH
+      # ifdef P104_USE_BAR_GRAPH
+
       if (it->content == P104_CONTENT_BAR_GRAPH) {
         displayBarGraph(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed bar graph
       }
-      #endif
-      if (zstruct.content == P104_CONTENT_TEXT
+      # endif // ifdef P104_USE_BAR_GRAPH
+
+      if ((zstruct.content == P104_CONTENT_TEXT)
           || zstruct.content == P104_CONTENT_TEXT_REV
-      #ifdef P104_USE_BAR_GRAPH
+          # ifdef P104_USE_BAR_GRAPH
           || zstruct.content == P104_CONTENT_BAR_GRAPH
-      #endif
-      ) {
+          # endif // ifdef P104_USE_BAR_GRAPH
+          ) {
         if (it->repeatDelay > -1) { // Restart repeat timer
           it->_repeatTimer = millis();
         }
       }
     }
   } else {
-    if (zstruct.content == P104_CONTENT_TEXT || zstruct.content == P104_CONTENT_TEXT_REV) {
+    if ((zstruct.content == P104_CONTENT_TEXT) || (zstruct.content == P104_CONTENT_TEXT_REV)) {
       displayOneZoneText(zstruct.zone - 1, zstruct, sZoneInitial[zstruct.zone - 1]); // Re-send last displayed text
       P->displayReset(zstruct.zone - 1);
     }
-    #ifdef P104_USE_BAR_GRAPH
+    # ifdef P104_USE_BAR_GRAPH
+
     if (zstruct.content == P104_CONTENT_BAR_GRAPH) {
       displayBarGraph(zstruct.zone - 1, zstruct, sZoneInitial[zstruct.zone - 1]); // Re-send last displayed bar graph
     }
-    #endif
+    # endif // ifdef P104_USE_BAR_GRAPH
+
     // Repeat timer is/should be started elsewhere
   }
 }
@@ -464,20 +469,24 @@ void P104_data_struct::drawOneBarGraph(uint16_t lower,
                                        uint8_t  barType,
                                        uint8_t  row) {
   bool on_off;
+
   for (uint8_t r = 0; r < barWidth; r++) {
     for (uint8_t col = lower; col <= upper; col++) {
       on_off = (col >= pixBottom && col <= pixTop); // valid area
-      if (zeroPoint != 0 &&
-          barType == P104_BARTYPE_STANDARD &&
-          barWidth > 2 &&
-          (r == 0 || r == barWidth - 1) &&
-          col == lower + zeroPoint) {
+
+      if ((zeroPoint != 0) &&
+          (barType == P104_BARTYPE_STANDARD) &&
+          (barWidth > 2) &&
+          ((r == 0) || (r == barWidth - 1)) &&
+          (col == lower + zeroPoint)) {
         on_off = false; // when bar wider than 2, turn off zeropoint top and bottom led
       }
-      if (barType == P104_BARTYPE_SINGLE && r > 0) {
+
+      if ((barType == P104_BARTYPE_SINGLE) && (r > 0)) {
         on_off = false; // barType 1 = only a single line is drawn, independent of the width
       }
-      if (barType == P104_BARTYPE_ALT_DOT && barWidth > 1 && on_off) {
+
+      if ((barType == P104_BARTYPE_ALT_DOT) && (barWidth > 1) && on_off) {
         on_off = ((r % 2) == (col % 2)); // barType 2 = dotted line when bar is wider than 1 pixel
       }
       pM->setPoint(row + r, col, on_off);
@@ -489,44 +498,50 @@ void P104_data_struct::drawOneBarGraph(uint16_t lower,
  * Process a graph-string to display in a zone, format:
  * value,max-value,min-value,direction,bartype|...
  *******************************************************************/
-void P104_data_struct::displayBarGraph(uint8_t zone,
+void P104_data_struct::displayBarGraph(uint8_t                 zone,
                                        const P104_zone_struct& zstruct,
-                                       const String&graph) {
+                                       const String          & graph) {
   if (graph.isEmpty()) { return; }
   sZoneInitial[zone] = String(graph); // Keep the original string for future use
 
-  # define NOT_A_COMMA 0x02 // Something else than a comma, or the parseString function will get confused
+  #  define NOT_A_COMMA 0x02          // Something else than a comma, or the parseString function will get confused
   String parsedGraph = String(graph);
   parseTemplate(parsedGraph);
   parsedGraph.replace(',', NOT_A_COMMA);
 
   std::vector<P104_bargraph_struct> barGraphs;
   uint8_t currentBar = 0;
-  bool loop = true;
+  bool    loop       = true;
+
   // Parse the graph-string
   while (loop && currentBar < 8) { // Maximum 8 valuesets possible
     String graphpart = parseString(parsedGraph, currentBar + 1, '|');
     graphpart.trim();
     graphpart.replace(NOT_A_COMMA, ',');
+
     if (graphpart.isEmpty()) {
       loop = false;
     } else {
       barGraphs.push_back(P104_bargraph_struct(currentBar));
     }
+
     if (loop && validDoubleFromString(parseString(graphpart, 1), barGraphs[currentBar].value)) { // value
-      String datapart = parseString(graphpart, 2); // max (default: 100.0)
+      String datapart = parseString(graphpart, 2);                                               // max (default: 100.0)
+
       if (datapart.isEmpty()) {
         barGraphs[currentBar].max = 100.0;
       } else {
         validDoubleFromString(datapart, barGraphs[currentBar].max);
       }
       datapart = parseString(graphpart, 3); // min (default: 0.0)
+
       if (datapart.isEmpty()) {
         barGraphs[currentBar].min = 0.0;
       } else {
         validDoubleFromString(datapart, barGraphs[currentBar].min);
       }
       datapart = parseString(graphpart, 4); // direction
+
       if (datapart.isEmpty()) {
         barGraphs[currentBar].direction = 0;
       } else {
@@ -535,6 +550,7 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
         barGraphs[currentBar].direction = value;
       }
       datapart = parseString(graphpart, 5); // barType
+
       if (datapart.isEmpty()) {
         barGraphs[currentBar].barType = 0;
       } else {
@@ -542,15 +558,18 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
         validIntFromString(datapart, value);
         barGraphs[currentBar].barType = value;
       }
+
       if (definitelyGreaterThan(barGraphs[currentBar].min, barGraphs[currentBar].max)) {
         std::swap(barGraphs[currentBar].min, barGraphs[currentBar].max);
       }
     }
-    #ifdef P104_DEBUG
+    #  ifdef P104_DEBUG
+
     if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(70);
       log = F("dotmatrix: Bar-graph: ");
+
       if (loop) {
         log += currentBar;
         log += F(" in: ");
@@ -571,37 +590,41 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
       }
       addLog(LOG_LEVEL_INFO, log);
     }
-    #endif // ifdef P104_DEBUG
+    #  endif // ifdef P104_DEBUG
     currentBar++; // next
   }
-  # undef NOT_A_COMMA
+  #  undef NOT_A_COMMA
+
   if (barGraphs.size() > 0) {
     uint8_t  barWidth = 8 / barGraphs.size(); // Divide the 8 pixel width per number of bars to show
     int16_t  pixTop, pixBottom;
     uint16_t zeroPoint;
-    #ifdef P104_DEBUG
+    #  ifdef P104_DEBUG
     String log;
-    if (logAllText && 
+
+    if (logAllText &&
         loglevelActiveFor(LOG_LEVEL_INFO) &&
         log.reserve(64)) {
-      log = F("dotmatrix: bar Width: ");
+      log  = F("dotmatrix: bar Width: ");
       log += barWidth;
       log += F(" low: ");
       log += zstruct._lower;
       log += F(" high: ");
       log += zstruct._upper;
     }
-    #endif // ifdef P104_DEBUG
+    #  endif // ifdef P104_DEBUG
     modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_OFF); // Stop updates on modules
     P->setIntensity(zstruct.zone - 1, zstruct.brightness); // don't forget to set the brightness
     uint8_t row = 0;
-    if (barGraphs.size() == 3 || barGraphs.size() == 5 || barGraphs.size() == 6) { // Center within the rows a bit
-      for (;row < (barGraphs.size() == 5 ? 2 : 1); row++) {
+
+    if ((barGraphs.size() == 3) || (barGraphs.size() == 5) || (barGraphs.size() == 6)) { // Center within the rows a bit
+      for (; row < (barGraphs.size() == 5 ? 2 : 1); row++) {
         for (uint8_t col = zstruct._lower; col <= zstruct._upper; col++) {
-          pM->setPoint(row, col, false); // all off
+          pM->setPoint(row, col, false);                                                 // all off
         }
       }
     }
+
     for (auto it = barGraphs.begin(); it != barGraphs.end(); ++it) {
       if (essentiallyEqual(it->min, 0.0)) {
         pixTop    = zstruct._lower - 1 + (((zstruct._upper + 1) - zstruct._lower) / it->max) * it->value;
@@ -615,17 +638,20 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
         }
         pixTop    = zstruct._lower + zeroPoint + (((zstruct._upper + 1) - zstruct._lower) / (it->max - it->min)) * it->value;
         pixBottom = zstruct._lower + zeroPoint;
+
         if (definitelyLessThan(it->value, 0.0)) {
           std::swap(pixTop, pixBottom);
         }
       }
+
       if (it->direction == 1) { // Left to right display: Flip values within the lower/upper range
         pixBottom = zstruct._upper - (pixBottom - zstruct._lower);
         pixTop    = zstruct._lower + (zstruct._upper - pixTop);
         std::swap(pixBottom, pixTop);
         zeroPoint = zstruct._upper - zstruct._lower - zeroPoint + (zeroPoint == 0 ? 1 : 0);
       }
-      #ifdef P104_DEBUG_DEV
+      #  ifdef P104_DEBUG_DEV
+
       if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
         log += F(" B: ");
         log += pixBottom;
@@ -634,30 +660,33 @@ void P104_data_struct::displayBarGraph(uint8_t zone,
         log += F(" Z: ");
         log += zeroPoint;
       }
-      #endif // ifdef P104_DEBUG_DEV
+      #  endif // ifdef P104_DEBUG_DEV
       drawOneBarGraph(zstruct._lower, zstruct._upper, pixBottom, pixTop, zeroPoint, barWidth, it->barType, row);
       row += barWidth; // Next set of rows
     }
-    for (; row < 8; row++) { // Clear unused rows
+
+    for (; row < 8; row++) {           // Clear unused rows
       for (uint8_t col = zstruct._lower; col <= zstruct._upper; col++) {
         pM->setPoint(row, col, false); // all off
       }
     }
-    #ifdef P104_DEBUG
+    #  ifdef P104_DEBUG
+
     if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, log);
     }
-    #endif // ifdef P104_DEBUG
+    #  endif // ifdef P104_DEBUG
     modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_ON);  // Continue updates on modules
   }
 }
+
 # endif // ifdef P104_USE_BAR_GRAPH
 
 /**************************************************
  * Check if an animation is available in the current build
  *************************************************/
 bool isAnimationAvailable(uint8_t animation, bool noneIsAllowed = false) {
-  switch(animation) {
+  switch (animation) {
     case static_cast<int>(textEffect_t::PA_NO_EFFECT):
     {
       return noneIsAllowed;
@@ -738,21 +767,21 @@ bool isAnimationAvailable(uint8_t animation, bool noneIsAllowed = false) {
  ******************************************************/
 bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                                          const String& string) {
-  #ifdef P104_USE_COMMANDS
-  bool   reconfigure = false;
-  #endif
-  bool   success     = false;
-  String command     = parseString(string, 1);
+  # ifdef P104_USE_COMMANDS
+  bool reconfigure = false;
+  # endif // ifdef P104_USE_COMMANDS
+  bool   success = false;
+  String command = parseString(string, 1);
 
   if (command.equals(F("dotmatrix"))) { // main command: dotmatrix
     String sub = parseString(string, 2);
 
-    int    zoneIndex;
+    int zoneIndex;
     String string4 = parseStringKeepCase(string, 4);
-    #ifdef P104_USE_COMMANDS
-    int    value4;
+    # ifdef P104_USE_COMMANDS
+    int value4;
     validIntFromString(string4, value4);
-    #endif
+    # endif // ifdef P104_USE_COMMANDS
 
     // Global subcommands
     if (sub.equals(F("clear")) && // subcommand: clear[,all]
@@ -788,7 +817,8 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          #ifdef P104_USE_COMMANDS
+          # ifdef P104_USE_COMMANDS
+
           if (sub.equals(F("size")) && // subcommand: size,<zone>,<size> (1..)
               (value4 > 0) &&
               (value4 <= P104_MAX_MODULES_PER_ZONE)) {
@@ -797,21 +827,26 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             success     = true;
             break;
           }
-          #endif
+          # endif // ifdef P104_USE_COMMANDS
 
-          if ((sub.equals(F("txt")) ||              // subcommand: [set]txt,<zone>,<text> (only allowed for zones with Text content)
+          if ((sub.equals(F("txt")) ||                                                          // subcommand: [set]txt,<zone>,<text> (only
+                                                                                                // allowed for zones with Text content)
                sub.equals(F("settxt"))) &&
-              (it->content == P104_CONTENT_TEXT || it->content == P104_CONTENT_TEXT_REV)) { // no length check, so longer than the UI allows is made possible
-            if (sub.equals(F("settxt")) &&          // subcommand: settxt,<zone>,<text> (stores the text in the settings, is not saved)
-                string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE) {
-              it->text = string4;                   // Only if not too long, could 'blow up' the settings when saved
+              ((it->content == P104_CONTENT_TEXT) || (it->content == P104_CONTENT_TEXT_REV))) { // no length check, so longer than the UI
+                                                                                                // allows is made possible
+            if (sub.equals(F("settxt")) &&                                                      // subcommand: settxt,<zone>,<text> (stores
+                                                                                                // the text in the settings, is not saved)
+                (string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE)) {
+              it->text = string4;                                                               // Only if not too long, could 'blow up' the
+                                                                                                // settings when saved
             }
             displayOneZoneText(zoneIndex - 1, *it, string4);
             success = true;
             break;
           }
 
-          #ifdef P104_USE_COMMANDS
+          # ifdef P104_USE_COMMANDS
+
           if (sub.equals(F("content")) && // subcommand: content,<zone>,<contenttype> (0..<P104_CONTENT_count>-1)
               (value4 >= 0) &&
               (value4 < P104_CONTENT_count)) {
@@ -839,8 +874,8 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           if (sub.equals(F("speed")) && // subcommand: speed,<zone>,<speed_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
               (value4 >= 0) &&
               (value4 <= P104_MAX_SPEED_PAUSE_VALUE)) {
-            it->speed   = value4;
-            success     = true;
+            it->speed = value4;
+            success   = true;
             break;
           }
 
@@ -854,35 +889,35 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           if (sub.equals(F("pause")) && // subcommand: pause,<zone>,<pause_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
               (value4 >= 0) &&
               (value4 <= P104_MAX_SPEED_PAUSE_VALUE)) {
-            it->pause   = value4;
-            success     = true;
+            it->pause = value4;
+            success   = true;
             break;
           }
 
           if (sub.equals(F("font")) && // subcommand: font,<zone>,<font id> (only for incuded font id's)
               (
                 (value4 == 0)
-                # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+                #  ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
                 || (value4 == P104_DOUBLE_HEIGHT_FONT_ID)
-                # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-                # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+                #  endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+                #  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
                 || (value4 == P104_FULL_DOUBLEHEIGHT_FONT_ID)
-                # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
-                # ifdef P104_USE_VERTICAL_FONT
+                #  endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+                #  ifdef P104_USE_VERTICAL_FONT
                 || (value4 == P104_VERTICAL_FONT_ID)
-                # endif // ifdef P104_USE_VERTICAL_FONT
-                # ifdef P104_USE_EXT_ASCII_FONT
+                #  endif // ifdef P104_USE_VERTICAL_FONT
+                #  ifdef P104_USE_EXT_ASCII_FONT
                 || (value4 == P104_EXT_ASCII_FONT_ID)
-                # endif // ifdef P104_USE_EXT_ASCII_FONT
-                # ifdef P104_USE_ARABIC_FONT
+                #  endif // ifdef P104_USE_EXT_ASCII_FONT
+                #  ifdef P104_USE_ARABIC_FONT
                 || (value4 == P104_ARABIC_FONT_ID)
-                # endif // ifdef P104_USE_ARABIC_FONT
-                # ifdef P104_USE_GREEK_FONT
+                #  endif // ifdef P104_USE_ARABIC_FONT
+                #  ifdef P104_USE_GREEK_FONT
                 || (value4 == P104_GREEK_FONT_ID)
-                # endif // ifdef P104_USE_GREEK_FONT
-                # ifdef P104_USE_KATAKANA_FONT
+                #  endif // ifdef P104_USE_GREEK_FONT
+                #  ifdef P104_USE_KATAKANA_FONT
                 || (value4 == P104_KATAKANA_FONT_ID)
-                # endif // ifdef P104_USE_KATAKANA_FONT
+                #  endif // ifdef P104_USE_KATAKANA_FONT
               )
               ) {
             reconfigure = (it->font != value4);
@@ -891,7 +926,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
-          # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+          #  if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
           if (sub.equals(F("layout")) && // subcommand: layout,<zone>,<layout> (0..2), only when double-height font is available
               (value4 >= 0) &&
@@ -901,7 +936,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             success     = true;
             break;
           }
-          # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+          #  endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
           if (sub.equals(F("specialeffect")) && // subcommand: specialeffect,<zone>,<effect> (0..3)
               (value4 >= 0) &&
@@ -942,31 +977,36 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             }
             break;
           }
-          #else // ifdef P104_USE_COMMANDS
+          # else // ifdef P104_USE_COMMANDS
           {
-            String validCommands = F("|size|content|alignment|anim.in|speed|anim.out|pause|font|layout|specialeffect|offset|brightness|repeat|");
+            String validCommands = F(
+              "|size|content|alignment|anim.in|speed|anim.out|pause|font|layout|specialeffect|offset|brightness|repeat|");
             String testSub = F("|");
             testSub += sub;
             testSub += '|';
+
             if (validCommands.indexOf(testSub) > -1) {
               addLog(LOG_LEVEL_ERROR, F("dotmatrix: subcommand not included in build."));
             }
           }
-          #endif // ifdef P104_USE_COMMANDS
+          # endif // ifdef P104_USE_COMMANDS
 
-          #ifdef P104_USE_BAR_GRAPH
-          if ((sub.equals(F("bar")) ||                   // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones with Bargraph content)
+          # ifdef P104_USE_BAR_GRAPH
+
+          if ((sub.equals(F("bar")) ||                   // subcommand: [set]bar,<zone>,<graph-string> (only allowed for zones with Bargraph
+                                                         // content)
                sub.equals(F("setbar"))) &&
               (it->content == P104_CONTENT_BAR_GRAPH)) { // no length check, so longer than the UI allows is made possible
-            if (sub.equals(F("setbar")) &&               // subcommand: setbar,<zone>,<graph-string> (stores the graph-string in the settings, is not saved)
-                string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE) {
+            if (sub.equals(F("setbar")) &&               // subcommand: setbar,<zone>,<graph-string> (stores the graph-string in the
+                                                         // settings, is not saved)
+                (string4.length() <= P104_MAX_TEXT_LENGTH_PER_ZONE)) {
               it->text = string4;                        // Only if not too long, could 'blow up' the settings when saved
             }
             displayBarGraph(zoneIndex - 1, *it, string4);
             success = true;
             break;
           }
-          #endif
+          # endif // ifdef P104_USE_BAR_GRAPH
 
           if (success) { // Reset the repeat timer
             if (it->repeatDelay > -1) {
@@ -974,17 +1014,17 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             }
           }
         }
-
       }
     }
   }
 
-  #ifdef P104_USE_COMMANDS
+  # ifdef P104_USE_COMMANDS
+
   if (reconfigure) {
     configureZones(); // Re-initialize
     success = true;   // Successful
   }
-  #endif
+  # endif // ifdef P104_USE_COMMANDS
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
@@ -1008,14 +1048,16 @@ int8_t getTime(char *psz,
                bool  time12h  = false,
                bool  timeAmpm = false) {
   uint16_t h, M, s;
-  String ampm;
+  String   ampm;
 
   # ifdef P104_USE_DATETIME_OPTIONS
+
   if (time12h) {
     if (timeAmpm) {
       ampm = (node_time.hour() >= 12 ? F("p") : F("a"));
     }
     h = node_time.hour() % 12;
+
     if (h == 0) { h = 12; }
   } else
   # endif // ifdef P104_USE_DATETIME_OPTIONS
@@ -1033,27 +1075,29 @@ int8_t getTime(char *psz,
   return M;
 }
 
-void getDate(char *psz,
-             bool  showYear  = true,
-             bool  fourDgt   = false
-             # ifdef P104_USE_DATETIME_OPTIONS
-             , uint8_t dateFmt = 0,
-             uint8_t dateSep = 0
+void getDate(char     *psz,
+             bool      showYear = true,
+             bool      fourDgt  = false
+             # ifdef   P104_USE_DATETIME_OPTIONS
+             , uint8_t dateFmt = 0
+             , uint8_t dateSep = 0
              # endif // ifdef P104_USE_DATETIME_OPTIONS
              ) {
   uint16_t d, m, y;
-  uint16_t year       = (fourDgt ? node_time.year() : node_time.year() - 2000);
+  uint16_t year = (fourDgt ? node_time.year() : node_time.year() - 2000);
+
   # ifdef P104_USE_DATETIME_OPTIONS
-  String   separators = F(" /-.");
-  char     sep        = separators[dateSep];
+  String separators = F(" /-.");
+  char   sep        = separators[dateSep];
   # else // ifdef P104_USE_DATETIME_OPTIONS
-  char     sep        = ' ';
+  char sep = ' ';
   # endif // ifdef P104_USE_DATETIME_OPTIONS
 
   d = node_time.day();
   m = node_time.month();
   y = year;
   # ifdef P104_USE_DATETIME_OPTIONS
+
   if (showYear) {
     switch (dateFmt) {
       case P104_DATE_FORMAT_US:
@@ -1068,8 +1112,8 @@ void getDate(char *psz,
         break;
     }
   } else {
-    if (dateFmt == P104_DATE_FORMAT_US ||
-        dateFmt == P104_DATE_FORMAT_JP) {
+    if ((dateFmt == P104_DATE_FORMAT_US) ||
+        (dateFmt == P104_DATE_FORMAT_JP)) {
       std::swap(d, m);
     }
   }
@@ -1082,35 +1126,38 @@ void getDate(char *psz,
   }
 }
 
-uint8_t getDateTime(char    *psz,
-                    bool    colon    = true,
-                    bool    time12h  = false,
-                    bool    timeAmpm = false,
-                    bool    fourDgt  = false
-                    # ifdef P104_USE_DATETIME_OPTIONS
-                    , uint8_t dateFmt  = 0,
-                    uint8_t dateSep  = 0
+uint8_t getDateTime(char     *psz,
+                    bool      colon    = true,
+                    bool      time12h  = false,
+                    bool      timeAmpm = false,
+                    bool      fourDgt  = false
+                    # ifdef   P104_USE_DATETIME_OPTIONS
+                    , uint8_t dateFmt = 0
+                    , uint8_t dateSep = 0
                     # endif // ifdef P104_USE_DATETIME_OPTIONS
                     ) {
   uint16_t d, M, y;
   uint8_t  h, m;
-  uint16_t year       = (fourDgt ? node_time.year() : node_time.year() - 2000);
+  uint16_t year = (fourDgt ? node_time.year() : node_time.year() - 2000);
   String   ampm;
+
   # ifdef P104_USE_DATETIME_OPTIONS
-  String   separators = F(" /-.");
-  char     sep        = separators[dateSep];
+  String separators = F(" /-.");
+  char   sep        = separators[dateSep];
   # else // ifdef P104_USE_DATETIME_OPTIONS
-  char     sep        = ' ';
+  char sep = ' ';
   # endif // ifdef P104_USE_DATETIME_OPTIONS
 
   # ifdef P104_USE_DATETIME_OPTIONS
+
   if (time12h) {
     if (timeAmpm) {
       ampm = (node_time.hour() >= 12 ? F("p") : F("a"));
     }
     h = node_time.hour() % 12;
+
     if (h == 0) { h = 12; }
-  } else 
+  } else
   # endif // ifdef P104_USE_DATETIME_OPTIONS
   {
     h = node_time.hour();
@@ -1118,6 +1165,7 @@ uint8_t getDateTime(char    *psz,
   M = node_time.minute();
 
   # ifdef P104_USE_DATETIME_OPTIONS
+
   switch (dateFmt) {
     case P104_DATE_FORMAT_US:
       d = node_time.month();
@@ -1130,14 +1178,16 @@ uint8_t getDateTime(char    *psz,
       y = node_time.day();
       break;
     default:
-  #endif // ifdef P104_USE_DATETIME_OPTIONS
-      d = node_time.day();
-      m = node_time.month();
-      y = year;
-  # ifdef P104_USE_DATETIME_OPTIONS
-  }
   # endif // ifdef P104_USE_DATETIME_OPTIONS
-  sprintf_P(psz, PSTR("%02d%c%02d%c%02d %02d%c%02d%s"), d, sep, m, sep, y, h, (colon ? ':' : ' '), M, ampm.c_str()); // %02d will expand to 04 when needed
+  d = node_time.day();
+  m = node_time.month();
+  y = year;
+  # ifdef P104_USE_DATETIME_OPTIONS
+}
+
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
+  sprintf_P(psz, PSTR("%02d%c%02d%c%02d %02d%c%02d%s"), d, sep, m, sep, y, h, (colon ? ':' : ' '), M, ampm.c_str()); // %02d will expand to
+                                                                                                                     // 04 when needed
   return M;
 }
 
@@ -1151,21 +1201,22 @@ void createHString(String& string) {
 # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
 void reverseStr(String& str) {
-    const uint16_t n = str.length();
- 
-    // Swap character starting from two corners
-    for (uint16_t i = 0; i < n / 2; i++) {
-      std::swap(str[i], str[n - i - 1]);
-    }
+  const uint16_t n = str.length();
+
+  // Swap character starting from two corners
+  for (uint16_t i = 0; i < n / 2; i++) {
+    std::swap(str[i], str[n - i - 1]);
+  }
 }
 
 /************************************************************************
  * execute all PLUGIN_ONE_PER_SECOND tasks
  ***********************************************************************/
 bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
-  bool redisplay  = false;
-  bool success    = false;
+  bool redisplay = false;
+  bool success   = false;
   bool useSeconds;
+
   # ifdef P104_USE_DATETIME_OPTIONS
   bool useFlasher = !bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FLASH);
   bool time12h    = bitRead(P104_CONFIG_DATETIME,  P104_CONFIG_DATETIME_12H);
@@ -1184,18 +1235,18 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
 
     if (P->getZoneStatus(it->zone - 1)) { // Animations done?
       switch (it->content) {
-        case P104_CONTENT_TIME:     // time
-        case P104_CONTENT_TIME_SEC: // time sec
+        case P104_CONTENT_TIME:           // time
+        case P104_CONTENT_TIME_SEC:       // time sec
         {
-          useSeconds       = it->content == P104_CONTENT_TIME_SEC;
-          int8_t m         = getTime(szTimeL, useSeconds, flasher || !useFlasher, time12h, timeAmpm);
+          useSeconds = it->content == P104_CONTENT_TIME_SEC;
+          int8_t m = getTime(szTimeL, useSeconds, flasher || !useFlasher, time12h, timeAmpm);
           flasher          = newFlasher;
           redisplay        = useFlasher || useSeconds || (it->_lastChecked != m);
           it->_lastChecked = m;
           break;
         }
-        case P104_CONTENT_DATE4:      // date/4
-        case P104_CONTENT_DATE6:      // date/6
+        case P104_CONTENT_DATE4: // date/4
+        case P104_CONTENT_DATE6: // date/6
         {
           if (it->_lastChecked != node_time.day()) {
             getDate(szTimeL,
@@ -1213,16 +1264,16 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
         }
         case P104_CONTENT_DATE_TIME: // date-time/9
         {
-          int8_t m         = getDateTime(szTimeL,
-                                         flasher || !useFlasher,
-                                         time12h,
-                                         timeAmpm,
-                                         year4dgt
-                                         # ifdef P104_USE_DATETIME_OPTIONS
-                                         , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT)
-                                         , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR)
-                                         # endif // ifdef P104_USE_DATETIME_OPTIONS
-                                         );
+          int8_t m = getDateTime(szTimeL,
+                                 flasher || !useFlasher,
+                                 time12h,
+                                 timeAmpm,
+                                 year4dgt
+                                 # ifdef P104_USE_DATETIME_OPTIONS
+                                 , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT)
+                                 , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR)
+                                 # endif // ifdef P104_USE_DATETIME_OPTIONS
+                                 );
           flasher          = newFlasher;
           redisplay        = useFlasher || (it->_lastChecked != m);
           it->_lastChecked = m;
@@ -1263,6 +1314,7 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
       if ((it->repeatDelay > -1) && (timePassedSince(it->_repeatTimer) >= (it->repeatDelay - 1) * 1000)) { // Compensated for the '1' in
                                                                                                            // PLUGIN_ONE_PER_SECOND
         # ifdef P104_DEBUG
+
         if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
           log.reserve(51);
@@ -1276,22 +1328,26 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
           addLog(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P104_DEBUG
-        if (it->content == P104_CONTENT_TEXT || it->content == P104_CONTENT_TEXT_REV) {
+
+        if ((it->content == P104_CONTENT_TEXT) ||
+            (it->content == P104_CONTENT_TEXT_REV)) {
           displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
           P->displayReset(it->zone - 1);
         }
-        if (it->content == P104_CONTENT_TIME || 
-            it->content == P104_CONTENT_TIME_SEC || 
-            it->content == P104_CONTENT_DATE4 || 
-            it->content == P104_CONTENT_DATE6 || 
-            it->content == P104_CONTENT_DATE_TIME) {
+
+        if ((it->content == P104_CONTENT_TIME) ||
+            (it->content == P104_CONTENT_TIME_SEC) ||
+            (it->content == P104_CONTENT_DATE4) ||
+            (it->content == P104_CONTENT_DATE6) ||
+            (it->content == P104_CONTENT_DATE_TIME)) {
           it->_lastChecked = -1; // Invalidate so next run will re-display the date/time
         }
-        #ifdef P104_USE_BAR_GRAPH
+        # ifdef P104_USE_BAR_GRAPH
+
         if (it->content == P104_CONTENT_BAR_GRAPH) {
           displayBarGraph(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed bar graph
         }
-        #endif
+        # endif // ifdef P104_USE_BAR_GRAPH
         it->_repeatTimer = millis();
       }
     }
@@ -1351,23 +1407,23 @@ bool P104_data_struct::saveSettings() {
   zones.clear(); // Start afresh
 
   for (uint8_t zCounter = 0; zCounter < expectedZones; zCounter++) {
-    #ifdef P104_USE_ZONE_ACTIONS
+    # ifdef P104_USE_ZONE_ACTIONS
     action = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_ACTION));
 
-    if ((action == P104_ACTION_ADD_ABOVE && zoneOrder == 0) ||
-        (action == P104_ACTION_ADD_BELOW && zoneOrder == 1)) {
+    if (((action == P104_ACTION_ADD_ABOVE) && (zoneOrder == 0)) ||
+        ((action == P104_ACTION_ADD_BELOW) && (zoneOrder == 1))) {
       zones.push_back(P104_zone_struct(0));
       zoneOffset++;
-      # ifdef P104_DEBUG_DEV
+      #  ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         log  = F("P104: insert before zone: ");
         log += (zoneIndex + 1);
         addLog(LOG_LEVEL_INFO, log);
       }
-      # endif // ifdef P104_DEBUG_DEV
+      #  endif // ifdef P104_DEBUG_DEV
     }
-    #endif // ifdef P104_USE_ZONE_ACTIONS
+    # endif    // ifdef P104_USE_ZONE_ACTIONS
     zoneIndex = zCounter + zoneOffset;
 
     if (action != P104_ACTION_DELETE) {
@@ -1402,21 +1458,22 @@ bool P104_data_struct::saveSettings() {
     }
     # endif // ifdef P104_DEBUG_DEV
 
-    #ifdef P104_USE_ZONE_ACTIONS
-    if ((action == P104_ACTION_ADD_BELOW && zoneOrder == 0) ||
-        (action == P104_ACTION_ADD_ABOVE && zoneOrder == 1)) {
+    # ifdef P104_USE_ZONE_ACTIONS
+
+    if (((action == P104_ACTION_ADD_BELOW) && (zoneOrder == 0)) ||
+        ((action == P104_ACTION_ADD_ABOVE) && (zoneOrder == 1))) {
       zones.push_back(P104_zone_struct(0));
       zoneOffset++;
-      # ifdef P104_DEBUG_DEV
+      #  ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         log  = F("P104: insert after zone: ");
         log += (zoneIndex + 2);
         addLog(LOG_LEVEL_INFO, log);
       }
-      # endif // ifdef P104_DEBUG_DEV
+      #  endif // ifdef P104_DEBUG_DEV
     }
-    #endif // ifdef P104_USE_ZONE_ACTIONS
+    # endif    // ifdef P104_USE_ZONE_ACTIONS
 
     index += P104_OFFSET_COUNT;
     delay(0);
@@ -1428,37 +1485,37 @@ bool P104_data_struct::saveSettings() {
   if (zbuffer.reserve(bufSize)) {
     for (auto it = zones.begin(); it != zones.end(); ++it) {
       // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
-      zbuffer += it->size;           // 2
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->text;           // ~15
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->content;        // 1
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->alignment;      // 1
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->animationIn;    // 2
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->speed;          // 5
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->animationOut;   // 2
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->pause;          // 5
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->font;           // 1
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->layout;         // 1
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->specialEffect;  // 1
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->offset;         // 2
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->brightness;     // 2
-      zbuffer += P104_FIELD_SEP;     // 1
-      zbuffer += it->repeatDelay;    // 4
-      zbuffer += P104_FIELD_SEP;     // 1
+      zbuffer += it->size;                                       // 2
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->text;                                       // ~15
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->content;                                    // 1
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->alignment;                                  // 1
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->animationIn;                                // 2
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->speed;                                      // 5
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->animationOut;                               // 2
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->pause;                                      // 5
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->font;                                       // 1
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->layout;                                     // 1
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->specialEffect;                              // 1
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->offset;                                     // 2
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->brightness;                                 // 2
+      zbuffer += P104_FIELD_SEP;                                 // 1
+      zbuffer += it->repeatDelay;                                // 4
+      zbuffer += P104_FIELD_SEP;                                 // 1
 
-      zbuffer += P104_ZONE_SEP;      // 1
-                                      // 58 total
+      zbuffer += P104_ZONE_SEP;                                  // 1
+                                                                 // 58 total
       numDevices += (it->size != 0 ? it->size : 1) + it->offset; // Count corrected for newly added zones
       # ifdef P104_DEBUG_DEV
 
@@ -1474,6 +1531,7 @@ bool P104_data_struct::saveSettings() {
       # endif // ifdef P104_DEBUG_DEV
       delay(0);
     }
+
     if (numDevices > 255) {
       error += F("More than 255 modules configured (");
       error += numDevices;
@@ -1571,9 +1629,12 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
   }
 
   {
-    addFormCheckBox(F("Clear display on disable"),      F("plugin_104_cleardisable"), bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE));
+    addFormCheckBox(F("Clear display on disable"), F("plugin_104_cleardisable"),
+                    bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE));
 
-    addFormCheckBox(F("Log all displayed text (info)"), F("plugin_104_logalltext"),   bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT));
+    addFormCheckBox(F("Log all displayed text (info)"),
+                    F("plugin_104_logalltext"),
+                    bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT));
   }
 
   # ifdef P104_USE_DATETIME_OPTIONS
@@ -1585,7 +1646,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     addFormCheckBox(F("Clock 12h AM/PM indicator"), F("plugin_104_clockampm"),  bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_AMPM));
   }
   { // Date format
-    const __FlashStringHelper * dateFormats[] = {
+    const __FlashStringHelper *dateFormats[] = {
       F("Day Month [Year]"),
       F("Month Day [Year] (US-style)"),
       F("[Year] Month Day (Japanese-style)")
@@ -1601,7 +1662,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT));
   }
   { // Date separator
-    const __FlashStringHelper * dateSeparators[] = {
+    const __FlashStringHelper *dateSeparators[] = {
       F("Space"),
       F("Slash /"),
       F("Dash -"),
@@ -1613,14 +1674,14 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_DATE_SEPARATOR_DASH,
       P104_DATE_SEPARATOR_DOT
     };
-    addFormSelector(F("Date separator"),     F("plugin_104_dateseparator"),
+    addFormSelector(F("Date separator"), F("plugin_104_dateseparator"),
                     4,
                     dateSeparators, dateSeparatorOptions,
                     get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR));
 
-    addFormCheckBox(F("Year uses 4 digits"), F("plugin_104_year4dgt"),   bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_YEAR4DGT));
+    addFormCheckBox(F("Year uses 4 digits"), F("plugin_104_year4dgt"), bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_YEAR4DGT));
   }
-  #endif // ifdef P104_USE_DATETIME_OPTIONS
+  # endif // ifdef P104_USE_DATETIME_OPTIONS
 
   addFormSubHeader(F("Zones"));
 
@@ -1639,30 +1700,31 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       zonetip  = F("Select between 1 and ");
       zonetip += P104_MAX_ZONES;
       zonetip += F(" zones, changing");
-      #ifdef P104_USE_ZONE_ORDERING
+      #  ifdef P104_USE_ZONE_ORDERING
       zonetip += F(" Zones or Zone order");
-      #endif // ifdef P104_USE_ZONE_ORDERING
+      #  endif // ifdef P104_USE_ZONE_ORDERING
       zonetip += F(" will save and reload the page.");
     }
-    # endif // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
+    # endif    // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
     addFormSelector(F("Zones"), F("plugin_104_zone"), P104_MAX_ZONES, zonesList, zonesOptions, NULL, P104_CONFIG_ZONE_COUNT, true
                     # ifdef P104_USE_TOOLTIPS
                     , zonetip
                     # endif // ifdef P104_USE_TOOLTIPS
                     );
 
-    #ifdef P104_USE_ZONE_ORDERING
+    # ifdef P104_USE_ZONE_ORDERING
     const __FlashStringHelper *orderTypes[] = {
       F("Numeric order (1..n)"),
       F("Display order (n..1)")
     };
     int orderOptions[] = { 0, 1 };
-    addFormSelector(F("Zone order"), F("plugin_104_zoneorder"), 2, orderTypes, orderOptions, NULL, bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0, true
-                    # ifdef P104_USE_TOOLTIPS
+    addFormSelector(F("Zone order"), F("plugin_104_zoneorder"), 2, orderTypes, orderOptions, NULL,
+                    bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0, true
+                    #  ifdef P104_USE_TOOLTIPS
                     , zonetip
-                    # endif // ifdef P104_USE_TOOLTIPS
+                    #  endif // ifdef P104_USE_TOOLTIPS
                     );
-    #endif // ifdef P104_USE_ZONE_ORDERING
+    # endif                  // ifdef P104_USE_ZONE_ORDERING
     # ifdef P104_ADD_SETTINGS_NOTES
     addFormNote(zonetip);
     # endif // ifdef P104_ADD_SETTINGS_NOTES
@@ -1915,9 +1977,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Date (4 mod.)"),
       F("Date yr (6/7 mod.)"),
       F("Date/time (9/13 mod.)")
-      #ifdef P104_USE_BAR_GRAPH
+      # ifdef P104_USE_BAR_GRAPH
       , F("Bar graph")
-      #endif
+      # endif // ifdef P104_USE_BAR_GRAPH
     };
     int contentOptions[] {
       P104_CONTENT_TEXT,
@@ -1927,17 +1989,18 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_CONTENT_DATE4,
       P104_CONTENT_DATE6,
       P104_CONTENT_DATE_TIME
-      #ifdef P104_USE_BAR_GRAPH
+      # ifdef P104_USE_BAR_GRAPH
       , P104_CONTENT_BAR_GRAPH
-      #endif
+      # endif // ifdef P104_USE_BAR_GRAPH
     };
-    #ifdef P104_USE_ZONE_ACTIONS
+    # ifdef P104_USE_ZONE_ACTIONS
     uint8_t actionCount = 0;
     const __FlashStringHelper *actionTypes[4];
     int actionOptions[4];
     actionTypes[actionCount]   = F("None");
     actionOptions[actionCount] = P104_ACTION_NONE;
     actionCount++;
+
     if (zones.size() < P104_MAX_ZONES) {
       actionTypes[actionCount]   = F("New above");
       actionOptions[actionCount] = P104_ACTION_ADD_ABOVE;
@@ -1949,7 +2012,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     actionTypes[actionCount]   = F("Delete");
     actionOptions[actionCount] = P104_ACTION_DELETE;
     actionCount++;
-    #endif // ifdef P104_USE_ZONE_ACTIONS
+    # endif // ifdef P104_USE_ZONE_ACTIONS
 
     delay(0);
 
@@ -1969,26 +2032,27 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       html_table_header(F("Offset"));
       html_table_header(F("Brightness"));
       html_table_header(F("Repeat (sec)"));
-      #ifdef P104_USE_ZONE_ACTIONS
-      html_table_header(F(""), 15); // Spacer
+      # ifdef P104_USE_ZONE_ACTIONS
+      html_table_header(F(""),       15); // Spacer
       html_table_header(F("Action"), 45);
-      #endif // ifdef P104_USE_ZONE_ACTIONS
+      # endif // ifdef P104_USE_ZONE_ACTIONS
     }
 
     uint16_t index;
     int16_t  startZone, endZone;
     int8_t   incrZone = 1;
-    #ifdef P104_USE_ZONE_ACTIONS
-    uint8_t  currentRow = 0;
-    #endif // ifdef P104_USE_ZONE_ACTIONS
+    # ifdef P104_USE_ZONE_ACTIONS
+    uint8_t currentRow = 0;
+    # endif // ifdef P104_USE_ZONE_ACTIONS
 
-    #ifdef P104_USE_ZONE_ORDERING
+    # ifdef P104_USE_ZONE_ORDERING
+
     if (bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER)) {
       startZone = zones.size() - 1;
       endZone   = -1;
       incrZone  = -1;
-    } else 
-    #endif // ifdef P104_USE_ZONE_ORDERING
+    } else
+    # endif // ifdef P104_USE_ZONE_ORDERING
     {
       startZone = 0;
       endZone   = zones.size();
@@ -2002,10 +2066,10 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         addHtml(F("&nbsp;"));
         addHtmlInt(zones[zone].zone);
 
-        html_TD();    // Size
+        html_TD(); // Size
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SIZE), zones[zone].size, 1, P104_MAX_MODULES_PER_ZONE);
 
-        html_TD();    // text
+        html_TD(); // text
         addTextBox(getPluginCustomArgName(index + P104_OFFSET_TEXT),
                    zones[zone].text,
                    P104_MAX_TEXT_LENGTH_PER_ZONE,
@@ -2068,18 +2132,24 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     zones[zone].font,
                     false,
                     true,
-                    EMPTY_STRING);
+                    EMPTY_STRING
+                    # ifdef P104_USE_TOOLTIPS
+                    , F("Font") // title
+                    # endif // ifdef P104_USE_TOOLTIPS
+                    );
 
         html_TD(4); // Fill columns
-        #ifdef P104_USE_ZONE_ACTIONS
+        # ifdef P104_USE_ZONE_ACTIONS
 
-        html_TD();    // Spacer
+        html_TD();  // Spacer
         addHtml(F("|"));
+
         if (currentRow < 2) {
           addHtml(F("<TD style=\"text-align:center;font-size:90%\">")); // Action column, text centered and font-size 90%
         } else {
           html_TD();
         }
+
         if (currentRow == 0) {
           addHtml(F("(applied immediately!)"));
           currentRow++;
@@ -2087,13 +2157,13 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
           addHtml(F("(Delete can't be undone!)"));
           currentRow++;
         }
-        #endif // ifdef P104_USE_ZONE_ACTIONS
+        # endif // ifdef P104_USE_ZONE_ACTIONS
 
         // Split here
         html_TR_TD(); // Start new row
-        html_TD(4);   // Start with some blank columns
+        html_TD(4); // Start with some blank columns
 
-        html_TD();    // Animation Out
+        html_TD();  // Animation Out
         addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
                     animationCount,
                     animationTypes,
@@ -2125,7 +2195,11 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     zones[zone].layout,
                     false,
                     true,
-                    EMPTY_STRING);
+                    EMPTY_STRING
+                    # ifdef P104_USE_TOOLTIPS
+                    , F("Layout") // title
+                    # endif // ifdef P104_USE_TOOLTIPS
+                    );
 
         html_TD(); // Special effects
         addSelector(getPluginCustomArgName(index + P104_OFFSET_SPEC_EFFECT),
@@ -2157,7 +2231,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       # endif // ifdef P104_USE_TOOLTIPS
                       );
 
-        #ifdef P104_USE_ZONE_ACTIONS
+        # ifdef P104_USE_ZONE_ACTIONS
         html_TD(); // Spacer
         addHtml(F("|"));
 
@@ -2171,7 +2245,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     true,
                     true,
                     EMPTY_STRING);
-        #endif // ifdef P104_USE_ZONE_ACTIONS
+        # endif // ifdef P104_USE_ZONE_ACTIONS
 
         delay(0);
       }
@@ -2188,10 +2262,10 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     addFormNote(devicesMsg);
   }
   addFormNote(F("- 'Animation In' or 'Animation Out' and 'Special Effects' marked with <b>*</b> should <b>not</b> be combined in a Zone."));
-  # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) && !defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+  #  if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) && !defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
   addFormNote(F("- 'Layout' 'Double upper' and 'Double lower' are only supported for 'Content' types 'Clock' and 'Date'."));
-  # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) && !defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
-  # endif // ifdef P104_ADD_SETTINGS_NOTES
+  #  endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) && !defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+  # endif  // ifdef P104_ADD_SETTINGS_NOTES
 
   return true;
 }
@@ -2206,17 +2280,17 @@ bool P104_data_struct::webform_save(struct EventStruct *event) {
   bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_CLEAR_DISABLE, isFormItemChecked(F("plugin_104_cleardisable")));
   bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT,  isFormItemChecked(F("plugin_104_logalltext")));
 
-  #ifdef P104_USE_ZONE_ORDERING  
+  # ifdef P104_USE_ZONE_ORDERING
   zoneOrder = getFormItemInt(F("plugin_104_zoneorder")); // Is used in saveSettings()
-  bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER,    zoneOrder == 1);
-  #endif // ifdef P104_USE_ZONE_ORDERING
+  bitWrite(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER, zoneOrder == 1);
+  # endif // ifdef P104_USE_ZONE_ORDERING
 
   # ifdef P104_USE_DATETIME_OPTIONS
   uint32_t ulDateTime = 0;
-  bitWrite(ulDateTime,    P104_CONFIG_DATETIME_FLASH,    !isFormItemChecked(F("plugin_104_clockflash"))); // Inverted flag
-  bitWrite(ulDateTime,    P104_CONFIG_DATETIME_12H,      isFormItemChecked(F("plugin_104_clock12h")));
-  bitWrite(ulDateTime,    P104_CONFIG_DATETIME_AMPM,     isFormItemChecked(F("plugin_104_clockampm")));
-  bitWrite(ulDateTime,    P104_CONFIG_DATETIME_YEAR4DGT, isFormItemChecked(F("plugin_104_year4dgt")));
+  bitWrite(ulDateTime, P104_CONFIG_DATETIME_FLASH,    !isFormItemChecked(F("plugin_104_clockflash"))); // Inverted flag
+  bitWrite(ulDateTime, P104_CONFIG_DATETIME_12H,      isFormItemChecked(F("plugin_104_clock12h")));
+  bitWrite(ulDateTime, P104_CONFIG_DATETIME_AMPM,     isFormItemChecked(F("plugin_104_clockampm")));
+  bitWrite(ulDateTime, P104_CONFIG_DATETIME_YEAR4DGT, isFormItemChecked(F("plugin_104_year4dgt")));
   set4BitToUL(ulDateTime, P104_CONFIG_DATETIME_FORMAT,   getFormItemInt(F("plugin_104_dateformat")));
   set4BitToUL(ulDateTime, P104_CONFIG_DATETIME_SEP_CHAR, getFormItemInt(F("plugin_104_dateseparator")));
   P104_CONFIG_DATETIME = ulDateTime;

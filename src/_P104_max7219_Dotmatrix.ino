@@ -27,7 +27,8 @@
 //                                3 = Clock sec (6 mod) : Time in 6 digits (HH:mm ss) 24h with flashing colon between HH and mm
 //                                4 = Date (4 mod.) : Date in 4 digits (dd MM)
 //                                5 = Date yy (6/7 mod.) : Date in 6 or 8 digits (dd MM yy / dd mm yyyy)
-//                                6 = Date/time (9/13 mod.) : Date + time in 10 digits (dd MM yy HH:mm) 24h, flashing colon between HH and mm
+//                                6 = Date/time (9/13 mod.) : Date + time in 10 digits (dd MM yy HH:mm) 24h, flashing colon between HH and
+//                                    mm
 //                                7 = Bar graph : See below at bar/setbar commands on how to set the graphString(s).
 //                                The (n mod.) suffix indicates the number of modules required to make all digits visible at once
 // alignment,<zone>,<alignment> : Set the Alignment of the zone (0 = Left, 1 = Center, 2 = Right). A complete reconfiguration will be done
@@ -53,7 +54,8 @@
 // repeat,<zone>,<delay_sec>    : Set the Repeat (sec) for the zone, after this delay the text & animation will be repeated.
 //                                -1 = off, range 0..86400 seconds (24h)
 // bar,<zone>,<graph-string>    : Set the graph-string for a Bargraph zone, format: value,max,min,direction,barType|...
-// setbar,<zone>,<graph-string> : as the bar subcommand, but also stores the graph-string in the settings for that zone (not automatically saved)
+// setbar,<zone>,<graph-string> : as the bar subcommand, but also stores the graph-string in the settings for that zone (not automatically
+//                                saved)
 //                                value: numeric value of type double, variables can be used
 //                                max: value for a full bar display, default 100 (percent)
 //                                min: value for minimal bar display, default 0
@@ -341,7 +343,7 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
         return success;
       }
 
-      if (P104_data->P->displayAnimate()) { // At least 1 zone is ready
+      if (P104_data->P->displayAnimate()) {     // At least 1 zone is ready
         for (uint8_t z = 0; z < P104_CONFIG_ZONE_COUNT; z++) {
           if (P104_data->P->getZoneStatus(z)) { // If the zone is ready, see if it should be repeated
             P104_data->checkRepeatTimer(z);
