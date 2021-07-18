@@ -103,8 +103,8 @@ namespace std
   #define ARDUINO_ESP8266_RELEASE "2_4_0"
 
   #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
-  #ifndef ESP32S2
-  #define ICACHE_RAM_ATTR IRAM_ATTR
+  #if ESP_IDF_VERSION_MAJOR < 3
+    #define ICACHE_RAM_ATTR IRAM_ATTR
   #endif
   #define FILE_CONFIG       "/config.dat"
   #define FILE_SECURITY     "/security.dat"
@@ -115,7 +115,11 @@ namespace std
   #ifdef ESP32S2
     #include <esp32s2/rom/rtc.h>
   #else
+   #if ESP_IDF_VERSION_MAJOR > 3
+    #include <esp32/rom/rtc.h>
+   #else
     #include <rom/rtc.h>
+   #endif
   #endif
   #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
   #define PIN_D_MAX        39
