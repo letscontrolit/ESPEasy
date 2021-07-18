@@ -415,11 +415,11 @@ private:
   int8_t                   cs_pin;
   uint8_t                  modules = 1u;
 
-  bool    initialized   = false;
-  int8_t  expectedZones = -1;
-  int8_t  previousZones = -1;
-  uint8_t numDevices    = 0;
-  uint8_t zoneOrder     = 0;
+  bool     initialized   = false;
+  int8_t   expectedZones = -1;
+  int8_t   previousZones = -1;
+  uint16_t numDevices    = 0;
+  uint8_t  zoneOrder     = 0;
 
   String error;
 

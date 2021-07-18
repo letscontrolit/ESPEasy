@@ -1154,8 +1154,9 @@ void reverseStr(String& str) {
     uint16_t n = str.length();
  
     // Swap character starting from two corners
-    for (uint16_t i = 0; i < n / 2; i++)
-        std::swap(str[i], str[n - i - 1]);
+    for (uint16_t i = 0; i < n / 2; i++) {
+      std::swap(str[i], str[n - i - 1]);
+    }
 }
 
 /************************************************************************
@@ -1472,6 +1473,12 @@ bool P104_data_struct::saveSettings() {
       }
       # endif // ifdef P104_DEBUG_DEV
       delay(0);
+    }
+    if (numDevices > 255) {
+      error += F("More than 255 modules configured (");
+      error += numDevices;
+      error += ')';
+      error += '\n';
     }
     zbuffer.trim();
     StoredSettings.bufferSize = zbuffer.length();
