@@ -628,7 +628,7 @@ void P082_setSystemTime(struct EventStruct *event) {
 
   // Set the externalTimesource 10 seconds earlier to make sure no call is made
   // to NTP (if set)
-  if (node_time.nextSyncTime > (node_time.sysTime + 10)) {
+  if (node_time.nextSyncTime > (node_time.getUnixTime() + 10)) {
     return;
   }
 

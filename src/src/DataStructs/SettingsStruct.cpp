@@ -239,6 +239,17 @@ void SettingsStruct_tmpl<N_TASKS>::EnableTimingStats(bool value) {
 
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::UseDS1307RTC() const {
+  return bitRead(VariousBits1, 21);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::UseDS1307RTC(bool value) {
+  bitWrite(VariousBits1, 21, value);
+}
+
+
+template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (UDPPort > 65535) { UDPPort = 0; }
 

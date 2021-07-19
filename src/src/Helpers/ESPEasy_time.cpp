@@ -18,6 +18,10 @@
 #include <time.h>
 
 
+
+#define DS1307_CTRL_ID 0x68
+
+
 ESPEasy_time::ESPEasy_time() {
   memset(&tm, 0, sizeof(tm));
   memset(&tsRise, 0, sizeof(tm));
@@ -74,14 +78,21 @@ void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
 }
 
 
-void ESPEasy_time::restoreLastKnownUnixTime(unsigned long lastSysTime, uint8_t deepSleepState)
+void ESPEasy_time::restoreFromRTC()
 {
   static bool firstCall = true;
-  if (firstCall && lastSysTime != 0 && deepSleepState != 1) {
+  if (firstCall && RTC.lastSysTime != 0 && RTC.deepSleepState != 1) {
     firstCall = false;
     timeSource = Restore_RTC_time_source;
-    externalTimeSource = static_cast<double>(lastSysTime);
+    externalTimeSource = static_cast<double>(RTC.lastSysTime);
     // Do not add the current uptime as offset. This will be done when calling now()
+  }
+  if (Settings.UseDS1307RTC()) {
+    struct tm tml;
+    if (DS1307_get(tml)) {
+      timeSource = DS1307_RTC_time_source;
+      externalTimeSource = static_cast<double>(makeTime(tml));
+    }
   }
 }
 
@@ -93,6 +104,16 @@ void ESPEasy_time::setExternalTimeSource(double time, timeSource_t source) {
 uint32_t ESPEasy_time::getUnixTime() const
 {
   return static_cast<uint32_t>(sysTime);
+}
+
+void ESPEasy_time::setUnixTime(uint32_t UnixTime)
+{
+  sysTime = UnixTime;
+  if (Settings.UseDS1307RTC()) {
+    struct tm tml;
+    breakTime(UnixTime, tml);
+    DS1307_set(tml);
+  }
 }
 
 void ESPEasy_time::initTime()
@@ -198,6 +219,7 @@ bool ESPEasy_time::systemTimePresent() const {
       break;
     case NTP_time_source:  
     case Restore_RTC_time_source: 
+    case DS1307_RTC_time_source:
     case GPS_time_source:
     case Manual_set:
       return true;
@@ -296,7 +318,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log = F("NTP  : NTP host (");
           log += timeServerIP.toString();
-          log += ") unsynchronized";
+          log += F(") unsynchronized");
           addLog(LOG_LEVEL_ERROR, log);
         }
         if (!useNTPpool) {
@@ -631,4 +653,58 @@ struct tm ESPEasy_time::getSunSet(int secOffset) const {
   return addSeconds(tsSet, secOffset, true);
 }
 
+// FIXME TD-er: Move these BCD functions to the global conversion functions.
+uint8_t bcd2bin(uint8_t val) {
+  return val - 6 * (val >> 4);
+}
 
+uint8_t bin2bcd(uint8_t val) {
+  return val + 6 * (val / 10);
+}
+
+bool ESPEasy_time::DS1307_get(struct tm& tml)
+{
+  Wire.beginTransmission(DS1307_CTRL_ID);
+  Wire.write((byte)0x00);
+  Wire.endTransmission();
+
+  Wire.requestFrom(DS1307_CTRL_ID, 7);
+
+  if (Wire.available() < 7) {
+    return false;
+  }
+
+  uint8_t sec = Wire.read();
+
+  tml.tm_sec  = bcd2bin(sec & 0x7f);
+  tml.tm_min  = bcd2bin(Wire.read());
+  tml.tm_hour = bcd2bin(Wire.read() & 0x3f);
+  tml.tm_wday = bcd2bin(Wire.read());
+  tml.tm_mday = bcd2bin(Wire.read());
+  tml.tm_mon  = bcd2bin(Wire.read());
+  tml.tm_year = bcd2bin(Wire.read()) + 30;
+
+  if (sec & 0x80) {
+    return false;
+  }
+  return true;
+}
+
+bool ESPEasy_time::DS1307_set(const struct tm& tml)
+{
+  Wire.beginTransmission(DS1307_CTRL_ID);
+  Wire.write((byte)0x00);          // reset register pointer
+  Wire.write(bin2bcd(tml.tm_sec)); //
+  Wire.write(bin2bcd(tml.tm_min));
+  Wire.write(bin2bcd(tml.tm_hour));   // sets 24 hour format
+  Wire.write(bin2bcd(tml.tm_wday));
+  Wire.write(bin2bcd(tml.tm_mday));
+  Wire.write(bin2bcd(tml.tm_mon));
+  Wire.write(bin2bcd(tml.tm_year - 30));
+  Wire.endTransmission();
+
+  if (Wire.endTransmission() != 0) {
+    return false;
+  }
+  return true;
+}

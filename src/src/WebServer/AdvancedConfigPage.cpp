@@ -63,6 +63,7 @@ void handle_advanced() {
     Settings.UseValueLogger              = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate                    = getFormItemInt(F("baudrate"));
     Settings.UseNTP                      = isFormItemChecked(F("usentp"));
+    Settings.UseDS1307RTC(isFormItemChecked(F("useDS1307RTC")));
     Settings.DST                         = isFormItemChecked(F("dst"));
     Settings.WDI2CAddress                = getFormItemInt(F("wdi2caddress"));
     #ifdef USES_SSDP
@@ -141,6 +142,7 @@ void handle_advanced() {
   addFormSubHeader(F("NTP Settings"));
 
   addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP);
+  addFormCheckBox(F("Use DS1307RTC"), F("useDS1307RTC"), Settings.UseDS1307RTC());
   addFormTextBox(F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
 
   addFormSubHeader(F("DST Settings"));
