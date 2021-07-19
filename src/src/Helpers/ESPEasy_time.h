@@ -166,8 +166,8 @@ void calcSunRiseAndSet();
 struct tm getSunRise(int secOffset) const;
 struct tm getSunSet(int secOffset) const;
 
-bool DS1307_get(struct tm& tml);
-bool DS1307_set(const struct tm& tml);
+bool ExtRTC_get(uint32_t &unixtime);
+bool ExtRTC_set(uint32_t unixtime);
 
 
 

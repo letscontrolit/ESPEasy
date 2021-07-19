@@ -40,6 +40,14 @@ enum class PinBootState {
 
 };
 
+// Do not change order as values are stored in settings
+enum class ExtTimeSource_e {
+  None = 0,
+  DS1307,
+  DS3231,
+  PCF8523
+};
+
 
 /*********************************************************************************************\
  * SettingsStruct
@@ -128,8 +136,11 @@ class SettingsStruct_tmpl
   bool UseLastWiFiFromRTC() const;
   void UseLastWiFiFromRTC(bool value);
 
-  bool UseDS1307RTC() const;
-  void UseDS1307RTC(bool value);
+  ExtTimeSource_e ExtTimeSource() const;
+  void ExtTimeSource(ExtTimeSource_e value);
+
+  bool UseNTP() const;
+  void UseNTP(bool value);
 
 
   void validate();
@@ -220,7 +231,7 @@ class SettingsStruct_tmpl
   boolean       UseRules;
   boolean       UseSerial;
   boolean       UseSSDP;
-  boolean       UseNTP;
+  uint8_t       ExternalTimeSource;
   unsigned long WireClockStretchLimit;
   boolean       GlobalSync;
   unsigned long ConnectionFailuresThreshold;

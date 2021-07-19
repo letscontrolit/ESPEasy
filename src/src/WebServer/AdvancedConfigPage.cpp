@@ -62,8 +62,10 @@ void handle_advanced() {
 #endif // ifdef FEATURE_SD
     Settings.UseValueLogger              = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate                    = getFormItemInt(F("baudrate"));
-    Settings.UseNTP                      = isFormItemChecked(F("usentp"));
-    Settings.UseDS1307RTC(isFormItemChecked(F("useDS1307RTC")));
+    Settings.UseNTP(isFormItemChecked(F("usentp")));
+    Settings.ExtTimeSource(
+      static_cast<ExtTimeSource_e>(getFormItemInt(F("exttimesource")))
+    );
     Settings.DST                         = isFormItemChecked(F("dst"));
     Settings.WDI2CAddress                = getFormItemInt(F("wdi2caddress"));
     #ifdef USES_SSDP
@@ -141,8 +143,8 @@ void handle_advanced() {
 
   addFormSubHeader(F("NTP Settings"));
 
-  addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP);
-  addFormCheckBox(F("Use DS1307RTC"), F("useDS1307RTC"), Settings.UseDS1307RTC());
+  addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP());
+  addFormExtTimeSourceSelect(F("External Time Source"), F("exttimesource"), Settings.ExtTimeSource());
   addFormTextBox(F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
 
   addFormSubHeader(F("DST Settings"));
@@ -322,6 +324,22 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
     addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
   }
 }
+
+void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
+{
+  addRowLabel(label);
+  const __FlashStringHelper * options[4] =
+    { F("None"), F("DS1307"), F("DS3231"), F("PCF8523")};
+  int optionValues[4] = { 
+    static_cast<int>(ExtTimeSource_e::None),
+    static_cast<int>(ExtTimeSource_e::DS1307),
+    static_cast<int>(ExtTimeSource_e::DS3231),
+    static_cast<int>(ExtTimeSource_e::PCF8523)
+    };
+
+  addSelector(id, 4, options, optionValues, NULL, static_cast<int>(choice));
+}
+
 
 void addFormLogLevelSelect(LabelType::Enum label, int choice)
 {

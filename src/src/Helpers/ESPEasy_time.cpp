@@ -17,6 +17,8 @@
 
 #include <time.h>
 
+#include <RTClib.h>
+
 
 
 #define DS1307_CTRL_ID 0x68
@@ -83,16 +85,12 @@ void ESPEasy_time::restoreFromRTC()
   static bool firstCall = true;
   if (firstCall && RTC.lastSysTime != 0 && RTC.deepSleepState != 1) {
     firstCall = false;
-    timeSource = Restore_RTC_time_source;
-    externalTimeSource = static_cast<double>(RTC.lastSysTime);
+    setExternalTimeSource(RTC.lastSysTime, Restore_RTC_time_source);
     // Do not add the current uptime as offset. This will be done when calling now()
   }
-  if (Settings.UseDS1307RTC()) {
-    struct tm tml;
-    if (DS1307_get(tml)) {
-      timeSource = DS1307_RTC_time_source;
-      externalTimeSource = static_cast<double>(makeTime(tml));
-    }
+  uint32_t unixtime = 0;
+  if (ExtRTC_get(unixtime)) {
+    setExternalTimeSource(unixtime, External_RTC_time_source);
   }
 }
 
@@ -109,11 +107,8 @@ uint32_t ESPEasy_time::getUnixTime() const
 void ESPEasy_time::setUnixTime(uint32_t UnixTime)
 {
   sysTime = UnixTime;
-  if (Settings.UseDS1307RTC()) {
-    struct tm tml;
-    breakTime(UnixTime, tml);
-    DS1307_set(tml);
-  }
+
+  ExtRTC_set(UnixTime);
 }
 
 void ESPEasy_time::initTime()
@@ -158,8 +153,7 @@ unsigned long ESPEasy_time::now() {
         }
         addLog(LOG_LEVEL_INFO, log);
       }
-      sysTime = unixTime_d;
-
+      setUnixTime(unixTime_d);
 
       time_zone.applyTimeZone(unixTime_d);
       nextSyncTime = (uint32_t)unixTime_d + syncInterval;
@@ -219,19 +213,19 @@ bool ESPEasy_time::systemTimePresent() const {
       break;
     case NTP_time_source:  
     case Restore_RTC_time_source: 
-    case DS1307_RTC_time_source:
+    case External_RTC_time_source:
     case GPS_time_source:
     case Manual_set:
       return true;
   }
-  return nextSyncTime > 0 || Settings.UseNTP || externalTimeSource > 0.0f;
+  return nextSyncTime > 0 || Settings.UseNTP() || externalTimeSource > 0.0f;
 }
 
 
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP || !NetworkConnected(10)) {
+  if (!Settings.UseNTP() || !NetworkConnected(10)) {
     return false;
   }
   IPAddress timeServerIP;
@@ -662,49 +656,98 @@ uint8_t bin2bcd(uint8_t val) {
   return val + 6 * (val / 10);
 }
 
-bool ESPEasy_time::DS1307_get(struct tm& tml)
+
+bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
 {
-  Wire.beginTransmission(DS1307_CTRL_ID);
-  Wire.write((byte)0x00);
-  Wire.endTransmission();
+  switch (Settings.ExtTimeSource()) {
+    case ExtTimeSource_e::None:
+      return false;
+    case ExtTimeSource_e::DS1307:
+      {
+        RTC_DS1307 rtc;
+        if (!rtc.begin()) {
+          // Not found
+          break;
+        }
+        unixtime = rtc.now().unixtime();
+        return true;
+      }
+    case ExtTimeSource_e::DS3231:
+      {
+        RTC_DS3231 rtc;
+        if (!rtc.begin()) {
+          // Not found
+          break;
+        }
+        if (rtc.lostPower()) {
+          // Cannot get the time from the module
+          break;
+        }
+        unixtime = rtc.now().unixtime();
+        return true;
+      }
+      
+    case ExtTimeSource_e::PCF8523:
+      {
+        RTC_PCF8523 rtc;
+        if (!rtc.begin()) {
+          // Not found
+          break;
+        }
+        if (rtc.lostPower()) {
+          // Cannot get the time from the module
+          break;
+        }
+        unixtime = rtc.now().unixtime();
+        return true;
+      }
 
-  Wire.requestFrom(DS1307_CTRL_ID, 7);
-
-  if (Wire.available() < 7) {
-    return false;
   }
-
-  uint8_t sec = Wire.read();
-
-  tml.tm_sec  = bcd2bin(sec & 0x7f);
-  tml.tm_min  = bcd2bin(Wire.read());
-  tml.tm_hour = bcd2bin(Wire.read() & 0x3f);
-  tml.tm_wday = bcd2bin(Wire.read());
-  tml.tm_mday = bcd2bin(Wire.read());
-  tml.tm_mon  = bcd2bin(Wire.read());
-  tml.tm_year = bcd2bin(Wire.read()) + 30;
-
-  if (sec & 0x80) {
-    return false;
-  }
-  return true;
+  addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot get time from external time source"));
+  return false;
 }
 
-bool ESPEasy_time::DS1307_set(const struct tm& tml)
+bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
 {
-  Wire.beginTransmission(DS1307_CTRL_ID);
-  Wire.write((byte)0x00);          // reset register pointer
-  Wire.write(bin2bcd(tml.tm_sec)); //
-  Wire.write(bin2bcd(tml.tm_min));
-  Wire.write(bin2bcd(tml.tm_hour));   // sets 24 hour format
-  Wire.write(bin2bcd(tml.tm_wday));
-  Wire.write(bin2bcd(tml.tm_mday));
-  Wire.write(bin2bcd(tml.tm_mon));
-  Wire.write(bin2bcd(tml.tm_year - 30));
-  Wire.endTransmission();
-
-  if (Wire.endTransmission() != 0) {
-    return false;
+  if (externalTimeSource == External_RTC_time_source) {
+    // Do not adjust the external RTC time if we already used it as a time source.
+    return true;
   }
-  return true;
+  switch (Settings.ExtTimeSource()) {
+    case ExtTimeSource_e::None:
+      return false;
+    case ExtTimeSource_e::DS1307:
+      {
+        RTC_DS1307 rtc;
+        if (!rtc.begin()) {
+          // Not found
+          break;
+        }
+        rtc.adjust(DateTime(unixtime));
+        return true;
+      }
+    case ExtTimeSource_e::DS3231:
+      {
+        RTC_DS3231 rtc;
+        if (!rtc.begin()) {
+          // Not found
+          break;
+        }
+        rtc.adjust(DateTime(unixtime));
+        return true;
+      }
+      
+    case ExtTimeSource_e::PCF8523:
+      {
+        RTC_PCF8523 rtc;
+        if (!rtc.begin()) {
+          // Not found
+          break;
+        }
+        rtc.adjust(DateTime(unixtime));
+        return true;
+      }
+  }
+  addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot set time to external time source"));
+  return false;
 }

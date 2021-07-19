@@ -360,7 +360,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::SUNSET_S:               return String(node_time.sunSet.tm_hour * 3600 + node_time.sunSet.tm_min * 60 + node_time.sunSet.tm_sec);
     case LabelType::SUNRISE_M:              return String(node_time.sunRise.tm_hour * 60 + node_time.sunRise.tm_min);
     case LabelType::SUNSET_M:               return String(node_time.sunSet.tm_hour * 60 + node_time.sunSet.tm_min);
-    case LabelType::ISNTP:                  return jsonBool(Settings.UseNTP);
+    case LabelType::ISNTP:                  return jsonBool(Settings.UseNTP());
     case LabelType::UPTIME_MS:              return ull2String(getMicros64() / 1000);
     case LabelType::TIMEZONE_OFFSET:        return String(Settings.TimeZone);
     case LabelType::LATITUDE:               return String(Settings.Latitude);

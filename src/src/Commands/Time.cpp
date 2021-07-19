@@ -27,11 +27,11 @@ String Command_NTPHost(struct EventStruct *event, const char *Line)
 String Command_useNTP(struct EventStruct *event, const char *Line)
 {
   if (HasArgv(Line, 2)) {
-    Settings.UseNTP = event->Par1;
+    Settings.UseNTP(event->Par1);
   } else {
     serialPrintln();
     String result = F("UseNTP:");
-    result += boolToString(Settings.UseNTP);
+    result += boolToString(Settings.UseNTP());
     return return_result(event, result);
   }
   return return_command_success();
