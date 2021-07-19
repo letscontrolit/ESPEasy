@@ -21,11 +21,13 @@ static void breakTime(unsigned long timeInput, struct tm& tm);
 // This way the unit can do things based on local time even when NTP servers may not respond.
 // Do not use this when booting from deep sleep.
 // Only call this once during boot.
-void restoreLastKnownUnixTime(unsigned long lastSysTime, uint8_t deepSleepState);
+void restoreFromRTC();
 
 void setExternalTimeSource(double time, timeSource_t source);
 
 uint32_t getUnixTime() const;
+
+void setUnixTime(uint32_t UnixTime);
 
 void initTime();
 
@@ -38,7 +40,6 @@ bool reportNewMinute();
 bool systemTimePresent() const;
 
 bool getNtpTime(double& unixTime_d);
-
 
 
 /********************************************************************************************\
@@ -165,9 +166,8 @@ void calcSunRiseAndSet();
 struct tm getSunRise(int secOffset) const;
 struct tm getSunSet(int secOffset) const;
 
-
-
-
+bool DS1307_get(struct tm& tml);
+bool DS1307_set(const struct tm& tml);
 
 
 
@@ -175,8 +175,10 @@ public:
 
 struct tm tm;
 uint32_t  syncInterval = 3600;       // time sync will be attempted after this many seconds
+private:
 double    sysTime = 0.0;             // Use high resolution double to get better sync between nodes when using NTP
 uint32_t  prevMillis = 0;
+public:
 uint32_t  nextSyncTime = 0;
 double    externalTimeSource = -1.0; // Used to set time from a source other than NTP.
 struct tm tsRise, tsSet;

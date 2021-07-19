@@ -169,11 +169,6 @@ void ESPEasy_setup()
       lastMixedSchedulerId_beforereboot = RTC.lastMixedSchedulerId;
       readUserVarFromRTC();
 
-      if (RTC.deepSleepState != 1)
-      {
-        node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
-      }
-
       log += F(" #");
       log += RTC.bootCounter;
 
@@ -196,6 +191,8 @@ void ESPEasy_setup()
       }
       log = F("INIT : Cold Boot");
     }
+
+    node_time.restoreFromRTC();
 
     log += F(" - Restart Reason: ");
     log += getResetReasonString();

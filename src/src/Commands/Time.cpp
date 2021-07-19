@@ -87,7 +87,7 @@ String Command_DateTime(struct EventStruct *event, const char *Line)
       tm.tm_sec  = 0;
     }
 
-    node_time.sysTime    = makeTime(tm);
+    node_time.setUnixTime(makeTime(tm));
     node_time.timeSource = Manual_set;
   } else  {
     // serialPrintln();
