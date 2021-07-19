@@ -1713,7 +1713,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     );
 
     # ifdef P104_USE_ZONE_ORDERING
-    const __FlashStringHelper *orderTypes[] = {
+    String orderTypes[] = {
       F("Numeric order (1..n)"),
       F("Display order (n..1)")
     };
