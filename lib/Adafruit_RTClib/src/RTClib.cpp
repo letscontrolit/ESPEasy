@@ -43,12 +43,7 @@
 /**************************************************************************/
 
 #include "RTClib.h"
-#if defined(__AVR__) && !defined(TWCR) && defined(USICR)
-#include <TinyWireM.h>
-#define Wire TinyWireM
-#else
 #include <Wire.h>
-#endif
 
 #ifdef __AVR__
 #include <avr/pgmspace.h>
