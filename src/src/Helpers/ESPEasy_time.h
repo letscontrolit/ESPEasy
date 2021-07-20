@@ -180,11 +180,11 @@ double    sysTime = 0.0;             // Use high resolution double to get better
 uint32_t  prevMillis = 0;
 public:
 uint32_t  nextSyncTime = 0;
-double    externalTimeSource = -1.0; // Used to set time from a source other than NTP.
+double    timeExtTimeSource = -1.0; // Used to set time from a source other than NTP.
 struct tm tsRise, tsSet;
 struct tm sunRise;
 struct tm sunSet;
-timeSource_t timeSource = No_time_source;
+timeSource_t timeSource = timeSource_t::No_time_source;
 
 uint8_t PrevMinutes = 0;
 

@@ -192,8 +192,6 @@ void ESPEasy_setup()
       log = F("INIT : Cold Boot");
     }
 
-    node_time.restoreFromRTC();
-
     log += F(" - Restart Reason: ");
     log += getResetReasonString();
 
@@ -216,6 +214,8 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));
   #endif
+
+  node_time.restoreFromRTC();
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
 

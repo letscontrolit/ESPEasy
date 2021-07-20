@@ -88,7 +88,7 @@ String Command_DateTime(struct EventStruct *event, const char *Line)
     }
 
     node_time.setUnixTime(makeTime(tm));
-    node_time.timeSource = Manual_set;
+    node_time.timeSource = timeSource_t::Manual_set;
   } else  {
     // serialPrintln();
     String result = F("Datetime:");

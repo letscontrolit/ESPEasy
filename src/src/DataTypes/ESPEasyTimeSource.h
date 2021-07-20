@@ -9,7 +9,7 @@
 #include "../../src/Globals/Plugins.h"
 
 
-enum timeSource_t {
+enum class timeSource_t {
   No_time_source,
   NTP_time_source,
   Restore_RTC_time_source,
