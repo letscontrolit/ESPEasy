@@ -141,11 +141,11 @@ void handle_advanced() {
   addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect_unused());
 */
 
-  addFormSubHeader(F("NTP Settings"));
+  addFormSubHeader(F("Time Source"));
 
   addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP());
-  addFormExtTimeSourceSelect(F("External Time Source"), F("exttimesource"), Settings.ExtTimeSource());
   addFormTextBox(F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
+  addFormExtTimeSourceSelect(F("External Time Source"), F("exttimesource"), Settings.ExtTimeSource());
 
   addFormSubHeader(F("DST Settings"));
   addFormDstSelect(true,  Settings.DST_Start);
