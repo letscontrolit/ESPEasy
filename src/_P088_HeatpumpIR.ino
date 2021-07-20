@@ -49,7 +49,7 @@
 IRSenderIRremoteESP8266 *Plugin_088_irSender = NULL;
 int panasonicCKPTimer = 0;
 
-boolean Plugin_088(byte function, struct EventStruct *event, String& string)
+boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 

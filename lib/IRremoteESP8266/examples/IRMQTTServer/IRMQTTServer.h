@@ -362,7 +362,7 @@ const char* kMqttTopics[] = {
     KEY_JSON};  // KEY_JSON needs to be the last one.
 
 
-void mqttCallback(char* topic, byte* payload, unsigned int length);
+void mqttCallback(char* topic, uint8_t* payload, unsigned int length);
 String listOfCommandTopics(void);
 void handleSendMqttDiscovery(void);
 void subscribing(const String topic_name);
@@ -371,7 +371,7 @@ void mqttLog(const char* str);
 bool mountSpiffs(void);
 bool reconnect(void);
 void receivingMQTT(String const topic_name, String const callback_str);
-void callback(char* topic, byte* payload, unsigned int length);
+void callback(char* topic, uint8_t* payload, unsigned int length);
 void sendMQTTDiscovery(const char *topic);
 void doBroadcast(TimerMs *timer, const uint32_t interval,
                  IRac *climates[], const bool retain,

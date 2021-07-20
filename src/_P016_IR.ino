@@ -145,7 +145,7 @@ void P016_infoLogMemory(const String & text) {
 }
 #endif
 
-boolean Plugin_016(byte function, struct EventStruct *event, String &string)
+boolean Plugin_016(uint8_t function, struct EventStruct *event, String &string)
 {
   boolean success = false;
 

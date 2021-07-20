@@ -20,7 +20,7 @@
 # define PLUGIN_VALUENAME2_113 "Ambient"
 
 
-boolean Plugin_113(byte function, struct EventStruct *event, String& string)
+boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -57,7 +57,7 @@ boolean Plugin_113(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice          = PCONFIG(0);
+      uint8_t choice          = PCONFIG(0);
       int  optionValues[2] = { 0x29, 0x30 };
       addFormSelectorI2C(F("plugin_113_vl53l1x_i2c"), 2, optionValues, choice);
 
