@@ -27,8 +27,6 @@ void setExternalTimeSource(double time, timeSource_t source);
 
 uint32_t getUnixTime() const;
 
-void setUnixTime(uint32_t UnixTime);
-
 void initTime();
 
 // Update and get the current systime

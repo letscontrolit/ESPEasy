@@ -101,21 +101,12 @@ void ESPEasy_time::setExternalTimeSource(double time, timeSource_t source) {
   timeSource         = source;
   externalUnixTime_d = time;
   lastSyncTime       = millis();
-  nextSyncTime       = 0;
+  initTime();
 }
 
 uint32_t ESPEasy_time::getUnixTime() const
 {
   return static_cast<uint32_t>(sysTime);
-}
-
-void ESPEasy_time::setUnixTime(uint32_t UnixTime)
-{
-  sysTime = UnixTime;
-
-  if (ExtRTC_set(UnixTime)) {
-
-  }
 }
 
 void ESPEasy_time::initTime()
@@ -151,6 +142,13 @@ unsigned long ESPEasy_time::now() {
         || timePassedSince(lastSyncTime) > static_cast<long>(1000 * syncInterval)) {
       if (getNtpTime(unixTime_d)) {
         updatedTime = true;
+      } else {
+        uint32_t tmp_unixtime;
+        if (ExtRTC_get(tmp_unixtime)) {
+          unixTime_d = tmp_unixtime;
+          timeSource = timeSource_t::External_RTC_time_source;
+          updatedTime = true;
+        }
       }
     }
     if (updatedTime) {
@@ -158,7 +156,8 @@ unsigned long ESPEasy_time::now() {
       timeSynced = true;
 
       const double time_offset = unixTime_d - sysTime;
-      setUnixTime(unixTime_d);
+      sysTime = unixTime_d;
+      ExtRTC_set(sysTime);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log         = F("Time set to ");
@@ -763,7 +762,8 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
 
 bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
 {
-  if (timeSource == timeSource_t::External_RTC_time_source) {
+  if (timeSource == timeSource_t::External_RTC_time_source || 
+      !isExternalTimeSource(timeSource)) {
     // Do not adjust the external RTC time if we already used it as a time source.
     return true;
   }

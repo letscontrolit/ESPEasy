@@ -23,6 +23,9 @@ const __FlashStringHelper* toString(timeSource_t timeSource)
 
 bool isExternalTimeSource(timeSource_t timeSource)
 {
+  // timeSource_t::ESP_now_peer should NOT be considered "external"
+  // It may be an unreliable source if no other source is present in the network.
+
   switch (timeSource) {
     case timeSource_t::GPS_PPS_time_source:
     case timeSource_t::GPS_time_source:

@@ -644,7 +644,6 @@ void P082_setSystemTime(struct EventStruct *event) {
     double time = makeTime(dateTime);
     time += static_cast<double>(age) / 1000.0;
     node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
-    node_time.initTime();
   }
   P082_pps_time = 0;
 }
