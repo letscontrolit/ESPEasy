@@ -45,7 +45,8 @@ enum class ExtTimeSource_e {
   None = 0,
   DS1307,
   DS3231,
-  PCF8523
+  PCF8523,
+  PCF8563
 };
 
 

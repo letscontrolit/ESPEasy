@@ -328,16 +328,17 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
 void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
 {
   addRowLabel(label);
-  const __FlashStringHelper * options[4] =
-    { F("None"), F("DS1307"), F("DS3231"), F("PCF8523")};
-  int optionValues[4] = { 
+  const __FlashStringHelper * options[5] =
+    { F("None"), F("DS1307"), F("DS3231"), F("PCF8523"), F("PCF8563")};
+  int optionValues[5] = { 
     static_cast<int>(ExtTimeSource_e::None),
     static_cast<int>(ExtTimeSource_e::DS1307),
     static_cast<int>(ExtTimeSource_e::DS3231),
-    static_cast<int>(ExtTimeSource_e::PCF8523)
+    static_cast<int>(ExtTimeSource_e::PCF8523),
+    static_cast<int>(ExtTimeSource_e::PCF8563)
     };
 
-  addSelector(id, 4, options, optionValues, NULL, static_cast<int>(choice));
+  addSelector(id, 5, options, optionValues, NULL, static_cast<int>(choice));
 }
 
 
