@@ -682,16 +682,6 @@ struct tm ESPEasy_time::getSunSet(int secOffset) const {
   return addSeconds(tsSet, secOffset, true);
 }
 
-// FIXME TD-er: Move these BCD functions to the global conversion functions.
-uint8_t bcd2bin(uint8_t val) {
-  return val - 6 * (val >> 4);
-}
-
-uint8_t bin2bcd(uint8_t val) {
-  return val + 6 * (val / 10);
-}
-
-
 bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
 {
   bool timeRead = false;
@@ -703,6 +693,10 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
         RTC_DS1307 rtc;
         if (!rtc.begin()) {
           // Not found
+          break;
+        }
+        if (!rtc.isrunning()) {
+          // not running
           break;
         }
         unixtime = rtc.now().unixtime();
@@ -732,7 +726,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           // Not found
           break;
         }
-        if (rtc.lostPower()) {
+        if (rtc.lostPower() || !rtc.initialized() || !rtc.isrunning()) {
           // Cannot get the time from the module
           break;
         }
@@ -747,7 +741,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           // Not found
           break;
         }
-        if (rtc.lostPower()) {
+        if (rtc.lostPower() || !rtc.isrunning()) {
           // Cannot get the time from the module
           break;
         }
@@ -801,6 +795,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
         RTC_PCF8523 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
+          rtc.start();
           timeAdjusted = true;
         }
         break;
@@ -810,6 +805,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
         RTC_PCF8563 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
+          rtc.start();
           timeAdjusted = true;
         }
         break;

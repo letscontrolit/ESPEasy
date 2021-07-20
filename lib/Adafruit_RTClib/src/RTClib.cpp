@@ -1599,7 +1599,7 @@ void RTC_DS3231::adjust(const DateTime &dt) {
   // The RTC must know the day of the week for the weekly alarms to work.
   RTCWireBus->_I2C_WRITE(bin2bcd(dowToDS3231(dt.dayOfTheWeek())));
   RTCWireBus->_I2C_WRITE(bin2bcd(dt.day()));
-  RTCWireBus->_I2C_WRITE(bin2bcd(dt.month()));
+  RTCWireBus->_I2C_WRITE(bin2bcd(dt.month()) + 0x7F); // Need to write the century bit
   RTCWireBus->_I2C_WRITE(bin2bcd(dt.year() - 2000U));
   RTCWireBus->endTransmission();
 
@@ -1623,10 +1623,20 @@ DateTime RTC_DS3231::now() {
   RTCWireBus->requestFrom(DS3231_ADDRESS, 7);
   uint8_t ss = bcd2bin(RTCWireBus->_I2C_READ() & 0x7F);
   uint8_t mm = bcd2bin(RTCWireBus->_I2C_READ());
-  uint8_t hh = bcd2bin(RTCWireBus->_I2C_READ());
-  RTCWireBus->_I2C_READ();
+  uint8_t hh_raw = RTCWireBus->_I2C_READ();
+  uint8_t hh = 0;
+  if (hh_raw & 0x40) {
+    // 12h mode, first take the last 5 bits
+    hh = bcd2bin(hh_raw & 0x1F);
+    if (hh_raw & 0x20) {
+      hh += 12;
+    }
+  } else {
+    hh = bcd2bin(hh_raw);
+  }
+  RTCWireBus->_I2C_READ(); // skip day-of-week
   uint8_t d = bcd2bin(RTCWireBus->_I2C_READ());
-  uint8_t m = bcd2bin(RTCWireBus->_I2C_READ());
+  uint8_t m = bcd2bin(RTCWireBus->_I2C_READ() & 0x7F); // Skip century bit.
   uint16_t y = bcd2bin(RTCWireBus->_I2C_READ()) + 2000U;
 
   return DateTime(y, m, d, hh, mm, ss);
