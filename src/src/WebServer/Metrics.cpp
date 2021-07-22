@@ -1,9 +1,9 @@
-#include "../WebServer/Metrics.h"
+# include "../WebServer/Metrics.h"
 
-#include "../WebServer/WebServer.h"
-#include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
+# include "../WebServer/WebServer.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/Markup.h"
+# include "../WebServer/Markup_Buttons.h" 
 
 
 #include "../../ESPEasy-Globals.h"
@@ -61,130 +61,115 @@
 
 
 void handle_metrics() {
+    TXBuffer.startStream();
+
+
     int result;
     String resultString;
     resultString.reserve(1000);
 
 
     //uptime
-    resultString = F("# HELP espeasy_uptime current device uptime in minutes\n");
-    resultString += F("# TYPE espeasy_uptime counter\n");        
-    resultString += "espeasy_uptime ";
-    resultString += getValue(LabelType::UPTIME);       
-    resultString += "\n";
-  
+    addHtml(F("# HELP espeasy_uptime current device uptime in minutes\n"));
+    addHtml(F("# TYPE espeasy_uptime counter\n"));
+    addHtml("espeasy_uptime ");
+    addHtml(getValue(LabelType::UPTIME));       
+    addHtml("\n");    
 
     //load
-    resultString += F("# HELP espeasy_load device percentage load\n");
-    resultString += F("# TYPE espeasy_load gauge\n");         
-    resultString += "espeasy_load ";
-    resultString += getValue(LabelType::LOAD_PCT);     
-    resultString += "\n";
+    addHtml(F("# HELP espeasy_load device percentage load\n"));
+    addHtml(F("# TYPE espeasy_load gauge\n"));
+    addHtml("espeasy_load ");
+    addHtml(getValue(LabelType::LOAD_PCT));
+    addHtml("\n");
 
     //Free RAM
-    resultString += F("# HELP espeasy_free_ram device amount of RAM free in Bytes\n");
-    resultString += F("# TYPE espeasy_free_ram gauge\n");    
-    resultString += "espeasy_free_ram ";
-    resultString += getValue(LabelType::FREE_MEM);   
-    resultString += "\n";
+    addHtml(F("# HELP espeasy_free_ram device amount of RAM free in Bytes\n"));
+    addHtml(F("# TYPE espeasy_free_ram gauge\n"));
+    addHtml("espeasy_free_ram ");
+    addHtml(getValue(LabelType::FREE_MEM));
+    addHtml("\n");
 
     //Free RAM
-    resultString += F("# HELP espeasy_free_stack device amount of Stack free in Bytes\n");
-    resultString += F("# TYPE espeasy_free_stack gauge\n");     
-    resultString += "espeasy_free_stack ";
-    resultString += getValue(LabelType::FREE_STACK);  
-    resultString += "\n";
+    addHtml(F("# HELP espeasy_free_stack device amount of Stack free in Bytes\n"));
+    addHtml(F("# TYPE espeasy_free_stack gauge\n"));
+    addHtml("espeasy_free_stack ");
+    addHtml(getValue(LabelType::FREE_STACK));
+    addHtml("\n");
 
     //Wifi strength
-    resultString += F("# HELP espeasy_wifi_rssi Wifi connection Strength\n");
-    resultString += F("# TYPE espeasy_wifi_rssi gauge\n");   
-    resultString += "espeasy_wifi_rssi ";
-    resultString += getValue(LabelType::WIFI_RSSI); 
-    resultString += "\n";
+    addHtml(F("# HELP espeasy_wifi_rssi Wifi connection Strength\n"));
+    addHtml(F("# TYPE espeasy_wifi_rssi gauge\n"));
+    addHtml("espeasy_wifi_rssi ");
+    addHtml(getValue(LabelType::WIFI_RSSI));
+    addHtml("\n");
 
     //Wifi uptime
-    resultString += F("# HELP espeasy_wifi_connected Time wifi has been connected in milliseconds\n");
-    resultString += F("# TYPE espeasy_wifi_connected counter\n");    
-    resultString += "espeasy_wifi_connected ";
-    resultString += getValue(LabelType::CONNECTED_MSEC);
-    resultString += "\n";
+    addHtml(F("# HELP espeasy_wifi_connected Time wifi has been connected in milliseconds\n"));
+    addHtml(F("# TYPE espeasy_wifi_connected counter\n"));
+    addHtml("espeasy_wifi_connected ");
+    addHtml(getValue(LabelType::CONNECTED_MSEC));
+    addHtml("\n");
 
     //Wifi reconnects
-    resultString += F("# HELP espeasy_wifi_reconnects Number of times Wifi has reconnected since boot\n");
-    resultString += F("# TYPE espeasy_wifi_reconnects counter\n");   
-    resultString += "espeasy_wifi_reconnects ";
-    resultString += getValue(LabelType::NUMBER_RECONNECTS); 
-    resultString += "\n";
+    addHtml(F("# HELP espeasy_wifi_reconnects Number of times Wifi has reconnected since boot\n"));
+    addHtml(F("# TYPE espeasy_wifi_reconnects counter\n"));
+    addHtml("espeasy_wifi_reconnects ");
+    addHtml(getValue(LabelType::NUMBER_RECONNECTS));
+    addHtml("\n");
 
     //devices
-    resultString += handle_metrics_devices();
+    handle_metrics_devices();
 
-
-
-    web_server.send(200, F("text/plain;"), resultString);
-
+      TXBuffer.endStream();
 }
 
 
 
-String handle_metrics_value_name(const String& valName){
-    return String(valName);
-}
 
-String handle_metrics_value_value(const String& valValue){
-    return String(valValue);
-}
-
-
-
-String handle_metrics_devices(){
+void handle_metrics_devices(){
     String returnString = "";
 
 
-    for (taskIndex_t x = 0; x < 128 && validTaskIndex(x); x++)
-    {
+    for (taskIndex_t x = 0; validTaskIndex(x); x++)
+    {        
         const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
         const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.TaskDeviceNumber[x];
          if (pluginID_set){
-             LoadTaskSettings(x);
-            int8_t spi_gpios[3] { -1, -1, -1 };
-            struct EventStruct TempEvent(x);
-            addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
-            String deviceName = ExtraTaskSettings.TaskDeviceName;
-            returnString += F("# HELP espeasy_device_");
-            returnString += deviceName;
-            returnString += F(" Values from connected device\n");
-            returnString += F("# TYPE espeasy_device_");
-            returnString += deviceName;
-            returnString += F(" gauge\n");
-            if (validDeviceIndex(DeviceIndex)) {
-                String customValuesString;
-                //const bool customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
-                const bool customValues = 0;
-                if (!customValues)
-                {
-                    const uint8_t valueCount = getValueCountForTask(x);
-                    for (uint8_t varNr = 0; varNr < valueCount; varNr++)
+            LoadTaskSettings(x);            
+            if (Settings.TaskDeviceEnabled[x]){
+                String deviceName = ExtraTaskSettings.TaskDeviceName;
+                addHtml(F("# HELP espeasy_device_"));
+                addHtml(deviceName);
+                addHtml(F(" Values from connected device\n"));
+                addHtml(F("# TYPE espeasy_device_"));
+                addHtml(deviceName);
+                addHtml(F(" gauge\n"));
+                if (validDeviceIndex(DeviceIndex)) {
+                    String customValuesString;
+                    //const bool customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
+                    const bool customValues = 0; //TODO: handle custom values
+                    if (!customValues)
                     {
-                        if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
+                        const uint8_t valueCount = getValueCountForTask(x);
+                        for (uint8_t varNr = 0; varNr < valueCount; varNr++)
                         {
-                              String valName = String(F("valuename_")) + x + '_' + varNr;
-                              String valValue = String(F("value_")) + x + '_' + varNr;
-                              returnString += F("espeasy_device_");
-                              returnString += deviceName;
-                              returnString += F("{valueName=\"");
-                              returnString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-                              returnString += F("\"} ");
-                              returnString += formatUserVarNoCheck(x, varNr);
-                              returnString += "\n";
-                            
+                            if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
+                            {
+                                addHtml(F("espeasy_device_"));
+                                addHtml(deviceName);
+                                addHtml(F("{valueName=\""));
+                                addHtml(ExtraTaskSettings.TaskDeviceValueNames[varNr]);
+                                addHtml(F("\"} "));
+                                addHtml(formatUserVarNoCheck(x, varNr));
+                                addHtml("\n");
+                                
+                            }
                         }
                     }
                 }
             }
-            
          }
     }
-    return returnString;
 }
 

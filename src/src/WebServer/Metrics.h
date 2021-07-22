@@ -9,12 +9,8 @@
 void handle_metrics();
 
 
-String handle_matrics_value_name(const String& valName);
 
-
-String handle_matrics_value_value(const String& valValue);
-
-String handle_metrics_devices();
+void handle_metrics_devices();
 
 
 #endif    // ifdef WEBSERVER_METRICS
