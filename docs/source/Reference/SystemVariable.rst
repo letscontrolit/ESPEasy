@@ -214,7 +214,7 @@ More uses of these system variables can be seen in the rules section and formula
      -
    * - ``%dns1%``
      - 10.0.0.1
-     - The configured primairy Domain Name Server IP-address
+     - The configured primary Domain Name Server IP-address
      -
    * - ``%dns2%``
      - (IP unset)
