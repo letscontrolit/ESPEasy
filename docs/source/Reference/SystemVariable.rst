@@ -203,12 +203,23 @@ More uses of these system variables can be seen in the rules section and formula
    * - ``%isntp%``
      - 1
      - Indicates whether time was set
-     - yes
+     - Yes
    * - ``%ismqtt%``
      - 1
      - Indicates whether a configured MQTT broker is active
-     - yes
-
+     - Yes
+   * - ``%dns%``
+     - 10.0.0.1 / (IP unset)
+     - The configured Domain Name Server IP-addresses
+     -
+   * - ``%dns1%``
+     - 10.0.0.1
+     - The configured primairy Domain Name Server IP-address
+     -
+   * - ``%dns2%``
+     - (IP unset)
+     - The configured secondary Domain Name Server IP-address
+     -
 
 Standard Conversions
 ^^^^^^^^^^^^^^^^^^^^
