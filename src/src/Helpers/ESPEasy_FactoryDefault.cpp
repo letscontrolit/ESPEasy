@@ -89,7 +89,7 @@ void ResetFactory()
 
   if (!ResetFactoryDefaultPreference.keepNTP()) {
     Settings.clearTimeSettings();
-    Settings.UseNTP = DEFAULT_USE_NTP;
+    Settings.UseNTP(DEFAULT_USE_NTP);
     strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
     Settings.TimeZone = DEFAULT_TIME_ZONE;
     Settings.DST      = DEFAULT_USE_DST;
