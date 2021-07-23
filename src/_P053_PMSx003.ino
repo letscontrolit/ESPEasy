@@ -228,7 +228,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
       default:
         break; // Ignore invalid options
     }
-    if (PCONFIG(2) == 1 && PCONFIG(0) == PMSx003_TYPE_ST) { // Events only applicable to ST model
+    if (Settings.UseRules && PCONFIG(2) == 1 && PCONFIG(0) == PMSx003_TYPE_ST) { // Events only applicable to ST model
       switch(PCONFIG(1)) {
         case PLUGIN_053_OUTPUT_PART:
         {
