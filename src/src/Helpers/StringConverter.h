@@ -126,13 +126,16 @@ String wrapIfContains(const String& value,
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
 String to_json_object_value(const __FlashStringHelper * object,
-                            const __FlashStringHelper * value);
+                            const __FlashStringHelper * value,
+                            bool wrapInQuotes = false);
 
 String to_json_object_value(const __FlashStringHelper * object,
-                            const String& value);
+                            const String& value,
+                            bool wrapInQuotes = false);
 
 String to_json_object_value(const String& object,
-                            const String& value);
+                            const String& value,
+                            bool wrapInQuotes = false);
 
 /*********************************************************************************************\
    Strip wrapping chars (e.g. quotes)
