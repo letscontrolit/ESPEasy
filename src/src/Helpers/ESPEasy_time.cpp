@@ -1,5 +1,7 @@
 #include "ESPEasy_time.h"
 
+#include "../DataTypes/TimeSource.h"
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 
