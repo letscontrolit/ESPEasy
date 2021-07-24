@@ -617,6 +617,12 @@ void parse_string_commands(String& line) {
         // Syntax like let 1,{ord:B}
         uint8_t uval = arg1.c_str()[0];
         replacement = String(uval);
+      } else if (cmd_s_lower.equals(F("urlencode"))) {
+        // Convert to url-encoded string
+        // Syntax like {urlencode:"string to/encode"}
+        if (!arg1.isEmpty()) {
+          replacement = URLEncode(arg1.c_str());
+        }
       }
 
       if (replacement.isEmpty()) {

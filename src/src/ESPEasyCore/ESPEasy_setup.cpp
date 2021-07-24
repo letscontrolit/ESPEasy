@@ -172,11 +172,6 @@ void ESPEasy_setup()
       lastMixedSchedulerId_beforereboot = RTC.lastMixedSchedulerId;
       readUserVarFromRTC();
 
-      if (RTC.deepSleepState != 1)
-      {
-        node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
-      }
-
       log += F(" #");
       log += RTC.bootCounter;
 
@@ -222,6 +217,8 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));
   #endif
+
+  node_time.restoreFromRTC();
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
 

@@ -156,6 +156,7 @@ void handle_json()
         LabelType::PLUGIN_COUNT,
         LabelType::PLUGIN_DESCRIPTION,
         LabelType::LOCAL_TIME,
+        LabelType::TIME_SOURCE,
         LabelType::ISNTP,
         LabelType::UNIT_NR,
         LabelType::UNIT_NAME,
