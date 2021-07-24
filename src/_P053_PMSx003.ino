@@ -49,6 +49,11 @@
 
 #define PLUGIN_053_OUTPUT_PART 0 // Particles pm1.0/pm2.5/pm10
 #define PLUGIN_053_OUTPUT_THC  1 // pm2.5/Temp/Hum/HCHO
+#define PLUGIN_053_OUTPUT_CNT  2 // cnt1.0/cnt2.5/cnt10
+
+#define PLUGIN_053_EVENT_NONE      0 // Events: None
+#define PLUGIN_053_EVENT_PARTICLES 1 // Particles/temp/humi/hcho
+#define PLUGIN_053_EVENT_PARTCOUNT 2 // also Particle count
 
 ESPeasySerial *P053_easySerial = nullptr;
 boolean Plugin_053_init = false;
@@ -120,6 +125,17 @@ boolean PacketAvailable(void)
     if (P053_easySerial->available() < P053_packetSize(Plugin_053_sensortype)) return false; // Not enough yet for a complete packet
   }
   return true;
+}
+
+void Plugin_053_SendEvent(const String &baseEvent, const String &name, double value) {
+  String valueEvent;
+  valueEvent.reserve(32);
+  // Temperature
+  valueEvent  = baseEvent;
+  valueEvent += name;
+  valueEvent += '=';
+  valueEvent += value;
+  eventQueue.addMove(std::move(valueEvent));
 }
 
 boolean Plugin_053_process_data(struct EventStruct *event) {
@@ -225,59 +241,78 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
         UserVar[event->BaseVarIndex + 3] = static_cast<float>(data[12]) / 1000.0; // HCHO
         break;
       }
+      case PLUGIN_053_OUTPUT_CNT:
+      {
+        UserVar[event->BaseVarIndex]     = data[8];
+        UserVar[event->BaseVarIndex + 1] = data[9];
+        UserVar[event->BaseVarIndex + 2] = data[10];
+        UserVar[event->BaseVarIndex + 3] = data[11];
+        break;
+      }
       default:
         break; // Ignore invalid options
     }
-    if (Settings.UseRules && PCONFIG(2) == 1 && PCONFIG(0) == PMSx003_TYPE_ST) { // Events only applicable to ST model
+    if (Settings.UseRules && PCONFIG(2) > 0 && PCONFIG(0) == PMSx003_TYPE_ST) { // Events only applicable to ST model
+      String baseEvent;
+      baseEvent.reserve(21);
+      baseEvent  = getTaskDeviceName(event->TaskIndex);
+      baseEvent += '#';
+
       switch(PCONFIG(1)) {
         case PLUGIN_053_OUTPUT_PART:
         {
-          String baseEvent;
-          baseEvent.reserve(41);
-          baseEvent  = getTaskDeviceName(event->TaskIndex);
-          baseEvent += '#';
-          String valueEvent;
-          valueEvent.reserve(52);
           // Temperature
-          valueEvent  = baseEvent;
-          valueEvent += F("Temp");
-          valueEvent += '=';
-          valueEvent += static_cast<float>(data[13]) / 10.0;
-          eventQueue.addMove(std::move(valueEvent));
+          Plugin_053_SendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0);
           // Humidity
-          valueEvent  = baseEvent;
-          valueEvent += F("Humi");
-          valueEvent += '=';
-          valueEvent += static_cast<float>(data[14]) / 10.0;
-          eventQueue.addMove(std::move(valueEvent));
+          Plugin_053_SendEvent(baseEvent, F("Humi"), static_cast<float>(data[14]) / 10.0);
           // Formaldebyde (HCHO)
-          valueEvent  = baseEvent;
-          valueEvent += F("HCHO");
-          valueEvent += '=';
-          valueEvent += static_cast<float>(data[12]) / 1000.0;
-          eventQueue.addMove(std::move(valueEvent));
+          Plugin_053_SendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0);
+
+          if (PCONFIG(2) == 2) {
+            // Particle count per 0.1 L > 1.0 micron
+            Plugin_053_SendEvent(baseEvent, F("cnt1.0"), data[8]);
+            // Particle count per 0.1 L > 2.5 micron
+            Plugin_053_SendEvent(baseEvent, F("cnt2.5"), data[9]);
+            // Particle count per 0.1 L > 5 micron
+            Plugin_053_SendEvent(baseEvent, F("cnt5"), data[10]);
+            // Particle count per 0.1 L > 10 micron
+            Plugin_053_SendEvent(baseEvent, F("cnt10"), data[11]);
+          }
           break;
         }
         case PLUGIN_053_OUTPUT_THC:
         {
-          String baseEvent;
-          baseEvent.reserve(41);
-          baseEvent  = getTaskDeviceName(event->TaskIndex);
-          baseEvent += '#';
-          String valueEvent;
-          valueEvent.reserve(52);
           // Particles 1.0 ug/m3
-          valueEvent  = baseEvent;
-          valueEvent += F("pm1.0");
-          valueEvent += '=';
-          valueEvent += data[3];
-          eventQueue.addMove(std::move(valueEvent));
+          Plugin_053_SendEvent(baseEvent, F("pm1.0"), data[3]);
           // Particles 10 ug/m3
-          valueEvent  = baseEvent;
-          valueEvent += F("pm10");
-          valueEvent += '=';
-          valueEvent += data[5];
-          eventQueue.addMove(std::move(valueEvent));
+          Plugin_053_SendEvent(baseEvent, F("pm10"), data[5]);
+
+          if (PCONFIG(2) == 2) {
+            // Particle count per 0.1 L > 1.0 micron
+            Plugin_053_SendEvent(baseEvent, F("cnt1.0"), data[8]);
+            // Particle count per 0.1 L > 2.5 micron
+            Plugin_053_SendEvent(baseEvent, F("cnt2.5"), data[9]);
+            // Particle count per 0.1 L > 5 micron
+            Plugin_053_SendEvent(baseEvent, F("cnt5"), data[10]);
+            // Particle count per 0.1 L > 10 micron
+            Plugin_053_SendEvent(baseEvent, F("cnt10"), data[11]);
+          }
+          break;
+        }
+        case PLUGIN_053_OUTPUT_CNT:
+        {
+          // Particles 1.0 ug/m3
+          Plugin_053_SendEvent(baseEvent, F("pm1.0"), data[3]);
+          // Particles 2.5 ug/m3
+          Plugin_053_SendEvent(baseEvent, F("pm2.5"), data[4]);
+          // Particles 10 ug/m3
+          Plugin_053_SendEvent(baseEvent, F("pm10"), data[5]);
+          // Temperature
+          Plugin_053_SendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0);
+          // Humidity
+          Plugin_053_SendEvent(baseEvent, F("Humi"), static_cast<float>(data[14]) / 10.0);
+          // Formaldebyde (HCHO)
+          Plugin_053_SendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0);
           break;
         }
         default:
@@ -396,14 +431,21 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       {
         addFormSubHeader(F("Output"));
         const __FlashStringHelper * outputOptions[] = {
-          F("Particles: pm1.0, pm2.5, pm10"),
-          F("Particles: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)")
+          F("Particles &micro;g/m3: pm1.0, pm2.5, pm10"),
+          F("Particles &micro;g/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)"),
+          F("Part. count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)")
         };
-        int outputOptionValues[] = { PLUGIN_053_OUTPUT_PART, PLUGIN_053_OUTPUT_THC };
-        addFormSelector(F("Output values"), F("p053_output"), 2, outputOptions, outputOptionValues, PCONFIG(1), true);
+        int outputOptionValues[] = { PLUGIN_053_OUTPUT_PART, PLUGIN_053_OUTPUT_THC, PLUGIN_053_OUTPUT_CNT };
+        addFormSelector(F("Output values"), F("p053_output"), 3, outputOptions, outputOptionValues, PCONFIG(1), true);
         addFormNote(F("Manually change 'Values' names and decimals accordingly! Changing this reloads the page."));
-        addFormCheckBox(F("Events for non-output values"), F("p053_events"), PCONFIG(2) == 1);
-        addFormNote(F("Only generates the 'missing' events, (taskname#temp/humi/hcho or taskname#pm1.0/pm10)."));
+        const __FlashStringHelper * eventOptions[] = {
+          F("None"),
+          F("Particles &micro;g/m3 and Temp/Humi/HCHO"),
+          F("Particles &micro;g/m3, Temp/Humi/HCHO and Particle count / 0.1L")
+        };
+        int eventOptionValues[] = { PLUGIN_053_EVENT_NONE, PLUGIN_053_EVENT_PARTICLES, PLUGIN_053_EVENT_PARTCOUNT};
+        addFormSelector(F("Events for non-output values"), F("p053_events"), 3, eventOptions, eventOptionValues, PCONFIG(2));
+        addFormNote(F("Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm10, taskname#cnt1.0/cnt2.5/cnt5/cnt10)."));
       }
       #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       success = true;
@@ -414,10 +456,11 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       PCONFIG(0) = getFormItemInt(F("p053_model"));
       PCONFIG(1) = getFormItemInt(F("p053_output"));
-      if (PCONFIG(0) == PMSx003_TYPE || PCONFIG(0) == PMS3003_TYPE) { // Base models only support particle values, no use in setting other output values
+      if ((PCONFIG(0) == PMSx003_TYPE && PCONFIG(1) == PLUGIN_053_OUTPUT_THC)
+         || PCONFIG(0) == PMS3003_TYPE) { // Base models only support particle values, no use in setting other output values
         PCONFIG(1) = PLUGIN_053_OUTPUT_PART;
       }
-      PCONFIG(2) = isFormItemChecked(F("P053_events")) ? 1 : 0;
+      PCONFIG(2) = getFormItemInt(F("P053_events"));
       #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       success = true;
       break;
