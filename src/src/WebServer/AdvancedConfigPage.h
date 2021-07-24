@@ -3,6 +3,8 @@
 
 #include "../WebServer/common.h"
 
+#include "../DataTypes/TimeSource.h"
+
 
 #ifdef WEBSERVER_ADVANCED
 
