@@ -139,17 +139,17 @@ Available options:
 
 .. image:: P053_OutputValuesOptions.png
 
-*Particles µg/m3: pm1.0, pm2.5, pm10* The default output values, available for all supported sensors.
+*Particles /m3: pm1.0, pm2.5, pm10* The default output values, available for all supported sensors.
 
-- PM1.0 - Concentration of particles > 1 micron (µm/m3)
-- PM2.5 - Concentration of particles > 2.5 micron (µm/m3)
-- PM10 - Concentration of particles > 10 micron (µm/m3)
+- PM1.0 - Concentration of particles > 1 µm/m3
+- PM2.5 - Concentration of particles > 2.5 µm/m3
+- PM10 - Concentration of particles > 10 µm/m3
 
-*(As shown in the screenshot above)*
+*(As shown in the overview screenshot above)*
 
-*Particles µg/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)* Output values, providing some measurements only supported by the PMS5003ST model.
+*Particles /m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)* Particles 2.5 µm/m3 combined with other measurement values only supported by the PMS5003ST sensor.
 
-- PM2.5 - Concentration of particles > 2.5 micron (µm/m3)
+- PM2.5 - Concentration of particles > 2.5 µm/m3)
 - Temp - Temperature
 - Humi - Humidity
 - HCHO - Formaldehyde concentration measurement (Formula: CH\ :sub:`2`\ O, or H-CHO)
@@ -158,12 +158,12 @@ Available options:
 
 *(Value names adjusted manually)*
 
-*Part. count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)* Count of Particles per 0.1 L of air, available on the PMS1003, PMS5003, PMS5003ST and PMS7003 sensor models.
+*Particles /0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)* Count of Particles per 0.1 L of air, available on the PMS1003, PMS5003, PMS5003ST and PMS7003 sensor models.
 
-- cnt1.0 - Count of particles per 0.1L of air > 1 micron
-- cnt2.5 - Count of particles per 0.1L of air > 2.5 micron
-- cnt5 - Count of particles per 0.1L of air > 5 micron
-- cnt10 - Count of particles per 0.1L of air > 10 micron
+- cnt1.0 - Count of particles > 1 micron per 0.1L of air
+- cnt2.5 - Count of particles > 2.5 micron per 0.1L of air
+- cnt5 - Count of particles > 5 micron per 0.1L of air
+- cnt10 - Count of particles > 10 micron per 0.1L of air
 
 .. image:: P053_OutputValuesCnt.png
 
@@ -177,19 +177,19 @@ Available options:
 
 .. image:: P053_EventOptions.png
 
-*Particles µg/m3 and Temp/Humi/HCHO*:
+*Particles /m3 and Temp/Humi/HCHO*:
 
-When *Particles µg/m3: pm1.0, pm2.5, pm10* is selected: ``<Taskname>#Temp``, ``<Taskname>#Humi`` and ``<Taskname>#HCHO``, with the measured value available in ``%eventvalue1%`` (or it's alias ``%eventvalue%``).
+When *Particles /m3: pm1.0, pm2.5, pm10* is selected: ``<Taskname>#Temp``, ``<Taskname>#Humi`` and ``<Taskname>#HCHO``, with the measured value available in ``%eventvalue1%`` (or it's alias ``%eventvalue%``).
 
-When *Particles µg/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)* is selected: ``<Taskname>#pm1.0`` and ``<Taskname>#pm10``.
+When *Particles /m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)* is selected: ``<Taskname>#pm1.0`` and ``<Taskname>#pm10``.
 
-*Particles µg/m3, Temp/Humi/HCHO and Particle count / 0.1L*:
+*Particles /m3, Temp/Humi/HCHO and Particles /0.1L*:
 
-All of the above, and also ``<Taskname>#cnt1.0``, ``<Taskname>#cnt2.5`` and ``<Taskname>#cnt10`` events are generated if these are not selected as **Output values**.
+All of the above, and also ``<Taskname>#pm2.5``, ``<Taskname>#cnt1.0``, ``<Taskname>#cnt2.5`` and ``<Taskname>#cnt10`` events are generated if these are not selected as **Output values**.
 
 These events can be used to store the values in a Dummy Device, so they can be sent out using a Controller, or they can be directly sent to an external system.
 
-Example: (Sensor device called PMS5003ST and Dummy device named ``Particles`` with 2 values named ``pm1.0`` and ``pm10``)
+Example: (Sensor device using model PMS5003ST and Dummy device named ``Particles`` with 2 values named ``pm1.0`` and ``pm10``)
 
 .. code-block:: none
 
@@ -214,17 +214,17 @@ Some rules can be used to set the sensor up to sleep most of the time:
 
   on System#Boot do
     gpio,16,0
-    LoopTimerSet,1,20
+    LoopTimerSet,1,50
   endon
   On Rules#Timer=1 do
     LongPulse,16,1,5
   endon
 
-These rules use a ``System#Boot`` event to set GPIO16 to low (0) and start a 20 sec loop-timer. (Another timer can be used if desired, then also adjust the Rules#Timer=n value)
+These rules use the ``System#Boot`` event to set GPIO16 to low (0) and start a 50 sec loop-timer. (Another timer nr. can be used if desired, then also adjust the ``On Rules#Timer=n do`` n value)
 
-The ``Rules#Timer=1`` event is triggered by this timer and sends a 5 seconds "high" pulse to the sensor waking it up.
+The ``Rules#Timer=1`` event is triggered by this timer and sends a 5 second "high" pulse to the sensor waking it up and starting a measurement.
 
-Set the delay inside the dustsensor task to 30 seconds for this. The ESPEasy plugin gets the data and stores it when the sensor gets active.
+Set the delay inside the dustsensor task to 60 seconds (default setting) for this. The plugin gets the data and stores it when the sensor gets active.
 
 Troubleshooting
 ^^^^^^^^^^^^^^^^
