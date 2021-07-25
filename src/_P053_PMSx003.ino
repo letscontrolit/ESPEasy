@@ -112,7 +112,7 @@ uint8_t P053_packetSize(uint8_t sensorType) {
   return 0u;
 }
 
-boolean PacketAvailable(void)
+boolean P053_PacketAvailable(void)
 {
   if (P053_easySerial != nullptr) // Software serial
   {
@@ -252,7 +252,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
       default:
         break; // Ignore invalid options
     }
-    if (Settings.UseRules && PCONFIG(2) > 0 && PCONFIG(0) == PMSx003_TYPE_ST) { // Events only applicable to ST model
+    if (Settings.UseRules && PCONFIG(2) > 0 && PCONFIG(0) != PMS3003_TYPE) { // Events not applicable to PMS2003 & PMS3003 models
       String baseEvent;
       baseEvent.reserve(21);
       baseEvent  = getTaskDeviceName(event->TaskIndex);
@@ -268,7 +268,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
           // Formaldebyde (HCHO)
           Plugin_053_SendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0);
 
-          if (PCONFIG(2) == 2) {
+          if (PCONFIG(2) == PLUGIN_053_OUTPUT_CNT) {
             // Particle count per 0.1 L > 1.0 micron
             Plugin_053_SendEvent(baseEvent, F("cnt1.0"), data[8]);
             // Particle count per 0.1 L > 2.5 micron
@@ -282,12 +282,12 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
         }
         case PLUGIN_053_OUTPUT_THC:
         {
-          // Particles 1.0 ug/m3
+          // Particles > 1.0 um/m3
           Plugin_053_SendEvent(baseEvent, F("pm1.0"), data[3]);
-          // Particles 10 ug/m3
+          // Particles > 10 um/m3
           Plugin_053_SendEvent(baseEvent, F("pm10"), data[5]);
 
-          if (PCONFIG(2) == 2) {
+          if (PCONFIG(2) == PLUGIN_053_OUTPUT_CNT) {
             // Particle count per 0.1 L > 1.0 micron
             Plugin_053_SendEvent(baseEvent, F("cnt1.0"), data[8]);
             // Particle count per 0.1 L > 2.5 micron
@@ -301,11 +301,11 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
         }
         case PLUGIN_053_OUTPUT_CNT:
         {
-          // Particles 1.0 ug/m3
+          // Particles > 1.0 um/m3
           Plugin_053_SendEvent(baseEvent, F("pm1.0"), data[3]);
-          // Particles 2.5 ug/m3
+          // Particles > 2.5 um/m3
           Plugin_053_SendEvent(baseEvent, F("pm2.5"), data[4]);
-          // Particles 10 ug/m3
+          // Particles > 10 um/m3
           Plugin_053_SendEvent(baseEvent, F("pm10"), data[5]);
           // Temperature
           Plugin_053_SendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0);
@@ -431,17 +431,18 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       {
         addFormSubHeader(F("Output"));
         const __FlashStringHelper * outputOptions[] = {
-          F("Particles &micro;g/m3: pm1.0, pm2.5, pm10"),
-          F("Particles &micro;g/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)"),
-          F("Part. count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)")
+          F("Particles /m3: pm1.0, pm2.5, pm10"),
+          F("Particles /m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)"),
+          F("Particles /0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)")
         };
         int outputOptionValues[] = { PLUGIN_053_OUTPUT_PART, PLUGIN_053_OUTPUT_THC, PLUGIN_053_OUTPUT_CNT };
         addFormSelector(F("Output values"), F("p053_output"), 3, outputOptions, outputOptionValues, PCONFIG(1), true);
         addFormNote(F("Manually change 'Values' names and decimals accordingly! Changing this reloads the page."));
+
         const __FlashStringHelper * eventOptions[] = {
           F("None"),
-          F("Particles &micro;g/m3 and Temp/Humi/HCHO"),
-          F("Particles &micro;g/m3, Temp/Humi/HCHO and Particle count / 0.1L")
+          F("Particles /m3 and Temp/Humi/HCHO"),
+          F("Particles /m3, Temp/Humi/HCHO and Particles /0.1L")
         };
         int eventOptionValues[] = { PLUGIN_053_EVENT_NONE, PLUGIN_053_EVENT_PARTICLES, PLUGIN_053_EVENT_PARTCOUNT};
         addFormSelector(F("Events for non-output values"), F("p053_events"), 3, eventOptions, eventOptionValues, PCONFIG(2));
@@ -537,7 +538,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     // sync.
     case PLUGIN_TEN_PER_SECOND:
       {
-        if (Plugin_053_init && PacketAvailable()) {
+        if (Plugin_053_init && P053_PacketAvailable()) {
           // Check if a complete packet is available in the UART FIFO.
             addLog(LOG_LEVEL_DEBUG_MORE, F("PMSx003 : Packet available"));
             success = Plugin_053_process_data(event);
