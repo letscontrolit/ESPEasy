@@ -431,9 +431,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       {
         addFormSubHeader(F("Output"));
         const __FlashStringHelper * outputOptions[] = {
-          F("Particles /m3: pm1.0, pm2.5, pm10"),
-          F("Particles /m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)"),
-          F("Particles /0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)")
+          F("Particles &micro;g/m3: pm1.0, pm2.5, pm10"),
+          F("Particles &micro;g/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)"),
+          F("Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)")
         };
         int outputOptionValues[] = { PLUGIN_053_OUTPUT_PART, PLUGIN_053_OUTPUT_THC, PLUGIN_053_OUTPUT_CNT };
         addFormSelector(F("Output values"), F("p053_output"), 3, outputOptions, outputOptionValues, PCONFIG(1), true);
@@ -441,8 +441,8 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
         const __FlashStringHelper * eventOptions[] = {
           F("None"),
-          F("Particles /m3 and Temp/Humi/HCHO"),
-          F("Particles /m3, Temp/Humi/HCHO and Particles /0.1L")
+          F("Particles &micro;g/m3 and Temp/Humi/HCHO"),
+          F("Particles &micro;g/m3, Temp/Humi/HCHO and Particles count/0.1L")
         };
         int eventOptionValues[] = { PLUGIN_053_EVENT_NONE, PLUGIN_053_EVENT_PARTICLES, PLUGIN_053_EVENT_PARTCOUNT};
         addFormSelector(F("Events for non-output values"), F("p053_events"), 3, eventOptions, eventOptionValues, PCONFIG(2));
