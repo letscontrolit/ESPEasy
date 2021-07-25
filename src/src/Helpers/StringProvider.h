@@ -17,6 +17,7 @@ struct LabelType {
     HOST_NAME,
 
     LOCAL_TIME,
+    TIME_SOURCE,
     UPTIME,
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
@@ -27,6 +28,7 @@ struct LabelType {
     WIFI_SEND_AT_MAX_TX_PWR,
     WIFI_NR_EXTRA_SCANS,
     WIFI_PERIODICAL_SCAN,
+    WIFI_USE_LAST_CONN_FROM_RTC,
 
     FREE_MEM,            // 9876
     FREE_STACK,          // 3456
@@ -48,9 +50,13 @@ struct LabelType {
     #endif // ESP32_ENABLE_PSRAM
 #endif // ifdef ESP32
 
+    JSON_BOOL_QUOTES,
+    ENABLE_TIMING_STATISTICS,
+
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
     RESET_REASON,            // Software/System restart
+    DEEP_SLEEP_ALTERNATIVE_CALL,
     LAST_TASK_BEFORE_REBOOT, // Last scheduled task.
     SW_WD_COUNT,
 

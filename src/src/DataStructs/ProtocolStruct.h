@@ -16,7 +16,7 @@ struct ProtocolStruct
   bool useExtendedCredentials() const;
 
   uint16_t defaultPort;
-  byte     Number;
+  uint8_t     Number;
   bool     usesMQTT       : 1;
   bool     usesAccount    : 1;
   bool     usesPassword   : 1;

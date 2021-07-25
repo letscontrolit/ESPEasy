@@ -96,6 +96,14 @@ void handle_unprocessedNetworkEvents()
   if (active_network_medium == NetworkMedium_t::WIFI) {
     if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
       if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
+        if (WiFiEventData.wifiConnectInProgress) {
+          if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() > 20000) {
+            WiFiEventData.last_wifi_connect_attempt_moment.clear();
+          }
+          if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
+            WiFiEventData.wifiConnectInProgress = false;
+          }
+        }
         delay(10);
       }
 
@@ -131,7 +139,9 @@ void handle_unprocessedNetworkEvents()
     if (WiFiEventData.WiFiServicesInitialized() != should_be_initialized)
     {
       if (!WiFiEventData.WiFiServicesInitialized()) {
-        markWiFi_services_initialized();
+        WiFiEventData.processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
+        WiFiEventData.setWiFiServicesInitialized();
+        CheckRunningServices();
       }
     }
 
@@ -203,9 +213,16 @@ void handle_unprocessedNetworkEvents()
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
 void processDisconnect() {
+  if (WiFiEventData.processingDisconnect.isSet()) {
+    if (WiFiEventData.processingDisconnect.millisPassedSince() > 5000 || WiFiEventData.processedDisconnect) {
+      WiFiEventData.processingDisconnect.clear();
+    }
+  }
+
+
   if (WiFiEventData.processedDisconnect || 
-      WiFiEventData.processingDisconnect) { return; }
-  WiFiEventData.processingDisconnect = true;
+      WiFiEventData.processingDisconnect.isSet()) { return; }
+  WiFiEventData.processingDisconnect.setNow();
   WiFiEventData.setWiFiDisconnected();
   WiFiEventData.wifiConnectAttemptNeeded = true;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
@@ -248,7 +265,7 @@ void processDisconnect() {
   }
   logConnectionStatus();
   WiFiEventData.processedDisconnect = true;
-  WiFiEventData.processingDisconnect = false;
+  WiFiEventData.processingDisconnect.clear();
 }
 
 void processConnect() {
@@ -432,7 +449,7 @@ void processDisconnectAPmode() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const int nrStationsConnected = WiFi.softAPgetStationNum();
     String    log                 = F("AP Mode: Client disconnected: ");
-    log += formatMAC(WiFiEventData.lastMacDisconnectedAPmode);
+    log += WiFiEventData.lastMacDisconnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += nrStationsConnected;
     addLog(LOG_LEVEL_INFO, log);
@@ -448,7 +465,7 @@ void processConnectAPmode() {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("AP Mode: Client connected: ");
-    log += formatMAC(WiFiEventData.lastMacConnectedAPmode);
+    log += WiFiEventData.lastMacConnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += WiFi.softAPgetStationNum();
     addLog(LOG_LEVEL_INFO, log);
@@ -515,59 +532,12 @@ void processScanDone() {
   }
 
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
+
+  NetworkConnectRelaxed();
 }
 
 
-void markWiFi_services_initialized() {
-  // Check to see if the WiFi status may be out of sync.
-  bool missedEvent = false;
-  if (WiFi.isConnected() != WiFiEventData.WiFiServicesInitialized()) {
-    // Apparently we may have missed some WiFi events.
-    if (WiFi.isConnected()) {
-      if (WiFiEventData.WiFiConnected() == 0) {
-        #ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Connected' event"));
-        #endif
-        WiFiEventData.processedConnect = false;
-        missedEvent = true;
-      }
-    } else {
-      if (WiFiEventData.WiFiConnected()) {
-        #ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Disconnected' event"));
-        #endif
-        WiFiEventData.processedDisconnect = false;
-        missedEvent = true;
-      }
-    }
-  }
-  bool hasIP = hasIPaddr();
-  if (hasIP != WiFiEventData.WiFiGotIP()) {
-    // Apparently we did miss some WiFi events.
-    if (hasIP) {
-      #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, F("WiFi : Force 'WiFi Got IP' event"));
-      #endif
-      WiFiEventData.processedGotIP = false;
-      missedEvent = true;
-    } else {
-      // FIXME TD-er: What to do here, as we don't get events when loosing IP address
-    }
-  }
-  if (missedEvent) {
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("WiFi : Missed WiFi event. Status: ");
-      log += ESPeasyWifiStatusToString();
-      addLog(LOG_LEVEL_DEBUG, log);
-    }
-    if (checkAndResetWiFi()) {
-      return;
-    }
-  }
-  WiFiEventData.processedDHCPTimeout  = true;  // FIXME TD-er:  Find out when this happens  (happens on ESP32 sometimes)
-  WiFiEventData.setWiFiServicesInitialized();
-  CheckRunningServices();
-}
+
 
 #ifdef HAS_ETHERNET
 
@@ -608,7 +578,7 @@ void processEthernetGotIP() {
     String log;
     log.reserve(160);
     log = F("ETH MAC: ");
-    log += NetworkMacAddress();
+    log += NetworkMacAddress().toString();
     log += ' ';
     if (useStaticIP()) {
       log += F("Static");

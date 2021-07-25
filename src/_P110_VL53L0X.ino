@@ -26,7 +26,7 @@
 
 boolean Plugin_110_init[3] = {false, false, false};
 
-boolean Plugin_110(byte function, struct EventStruct *event, String& string)
+boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -61,7 +61,7 @@ boolean Plugin_110(byte function, struct EventStruct *event, String& string)
       }
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
       {
-        byte choice = PCONFIG(0);
+        uint8_t choice = PCONFIG(0);
         int optionValues[2] = { 0x29, 0x30 };
         addFormSelectorI2C(F("plugin_110_vl53l0x_i2c"), 2, optionValues, choice);
         addFormNote(F("SDO Low=0x29, High=0x30"));

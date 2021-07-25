@@ -59,7 +59,7 @@ String FileNameToEvent(const String& fileName) {
 }
 
 void checkRuleSets() {
-  for (byte x = 0; x < RULESETS_MAX; x++) {
+  for (uint8_t x = 0; x < RULESETS_MAX; x++) {
 #if defined(ESP8266)
     String fileName = F("rules");
 #endif // if defined(ESP8266)
@@ -128,7 +128,7 @@ void rulesProcessing(const String& event) {
   }
 
   if (Settings.OldRulesEngine()) {
-    for (byte x = 0; x < RULESETS_MAX; x++) {
+    for (uint8_t x = 0; x < RULESETS_MAX; x++) {
       if (activeRuleSets[x]) {
         rulesProcessingFile(getRulesFileName(x), event);
       }
@@ -185,7 +185,7 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   }
 #endif // ifndef BUILD_NO_DEBUG
 
-  static byte nestingLevel = 0;
+  static uint8_t nestingLevel = 0;
 
   nestingLevel++;
 
@@ -207,10 +207,10 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   bool isCommand = false;
   bool condition[RULES_IF_MAX_NESTING_LEVEL];
   bool ifBranche[RULES_IF_MAX_NESTING_LEVEL];
-  byte ifBlock     = 0;
-  byte fakeIfBlock = 0;
+  uint8_t ifBlock     = 0;
+  uint8_t fakeIfBlock = 0;
 
-  std::vector<byte> buf;
+  std::vector<uint8_t> buf;
   buf.resize(RULES_BUFFER_SIZE);
 
   bool firstNonSpaceRead = false;
@@ -589,7 +589,7 @@ void parse_string_commands(String& line) {
            } else if (cmd_s_lower.equals(F("div100ths"))) {
            // division and giving the 100ths as integer
            // 5 / 100 would yield 5
-           // useful for fractions that use a full byte gaining a
+           // useful for fractions that use a full uint8_t gaining a
            // precision/granularity of 1/256 instead of only 1/100
            // Syntax like XXX{div100ths:24:256}XXX
            if (validUInt64FromString(arg1, iarg1)
@@ -617,6 +617,12 @@ void parse_string_commands(String& line) {
         // Syntax like let 1,{ord:B}
         uint8_t uval = arg1.c_str()[0];
         replacement = String(uval);
+      } else if (cmd_s_lower.equals(F("urlencode"))) {
+        // Convert to url-encoded string
+        // Syntax like {urlencode:"string to/encode"}
+        if (!arg1.isEmpty()) {
+          replacement = URLEncode(arg1.c_str());
+        }
       }
 
       if (replacement.isEmpty()) {
@@ -698,7 +704,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
                                  String& action, bool& match,
                                  bool& codeBlock, bool& isCommand,
                                  bool condition[], bool ifBranche[],
-                                 byte& ifBlock, byte& fakeIfBlock) {
+                                 uint8_t& ifBlock, uint8_t& fakeIfBlock) {
   const bool lineStartsWith_on = line.substring(0, 3).equalsIgnoreCase(F("on "));
 
   if (!codeBlock && !match) {
@@ -804,7 +810,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
 void processMatchedRule(String& action, const String& event,
                         bool& match, bool& codeBlock,
                         bool& isCommand, bool condition[], bool ifBranche[],
-                        byte& ifBlock, byte& fakeIfBlock) {
+                        uint8_t& ifBlock, uint8_t& fakeIfBlock) {
   String lcAction = action;
 
   lcAction.toLowerCase();
@@ -1242,7 +1248,7 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds, String& timeStri
     // Should only try to match "7:07", not "7:07 and 10:11:12" 
     // Or else it will find "7:07:11"
     bool done = false;
-    for (byte pos = 0; !done && timeString.length() < 8 && pos < tBuf.length(); ++pos) {
+    for (uint8_t pos = 0; !done && timeString.length() < 8 && pos < tBuf.length(); ++pos) {
       char c = tBuf[pos];
       if (isdigit(c) || c == ':') {
         timeString += c;
@@ -1429,7 +1435,7 @@ void createRuleEvents(struct EventStruct *event) {
 
   LoadTaskSettings(event->TaskIndex);
 
-  const byte valueCount = getValueCountForTask(event->TaskIndex);
+  const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   // Small optimization as sensor type string may result in large strings
   // These also only yield a single value, so no need to check for combining task values.
@@ -1467,7 +1473,7 @@ void createRuleEvents(struct EventStruct *event) {
     eventString  = getTaskDeviceName(event->TaskIndex);
     eventString += F("#All=");
 
-    for (byte varNr = 0; varNr < valueCount; varNr++) {
+    for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       if (varNr != 0) {
         eventString += ',';
       }
@@ -1475,7 +1481,7 @@ void createRuleEvents(struct EventStruct *event) {
     }
     eventQueue.addMove(std::move(eventString));
   } else {
-    for (byte varNr = 0; varNr < valueCount; varNr++) {
+    for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       String eventString;
       eventString.reserve(64); // Enough for most use cases, prevent lots of memory allocations.
       eventString  = getTaskDeviceName(event->TaskIndex);

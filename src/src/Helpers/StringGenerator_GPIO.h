@@ -17,11 +17,22 @@ enum gpio_direction {
   gpio_bidirectional
 };
 
+enum class PinSelectPurpose {
+  Generic,
+  Generic_input,
+  Generic_output,
+  Generic_bidir,
+  I2C,
+  SPI,
+  Ethernet
+
+};
+
 
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings
 \*********************************************************************************************/
-String formatGpioDirection(gpio_direction direction);
+const __FlashStringHelper * formatGpioDirection(gpio_direction direction);
 
 String formatGpioLabel(int  gpio,
                        bool includeWarning);
@@ -62,6 +73,9 @@ String createGPIO_label(int  gpio,
                         bool output,
                         bool warning);
 
+const __FlashStringHelper * getConflictingUse(int gpio, PinSelectPurpose purpose = PinSelectPurpose::Generic);
+
+String getConflictingUse_wrapped(int gpio, PinSelectPurpose purpose = PinSelectPurpose::Generic);
 
 
 #endif

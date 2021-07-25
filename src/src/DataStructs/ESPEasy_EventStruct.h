@@ -50,7 +50,7 @@ public:
   String String3;
   String String4;
   String String5;
-  byte  *Data = nullptr;
+  uint8_t  *Data = nullptr;
   int    idx  = 0;
   int    Par1 = 0;
   int    Par2 = 0;
@@ -63,9 +63,9 @@ public:
   taskIndex_t            TaskIndex         = INVALID_TASK_INDEX;       // index position in TaskSettings array, 0-11
   controllerIndex_t      ControllerIndex   = INVALID_CONTROLLER_INDEX; // index position in Settings.Controller, 0-3
   notifierIndex_t        NotificationIndex = INVALID_NOTIFIER_INDEX;   // index position in Settings.Notification, 0-3
-  byte                   BaseVarIndex      = 0;
+  uint8_t                   BaseVarIndex      = 0;
   Sensor_VType           sensorType        = Sensor_VType::SENSOR_TYPE_NOT_SET;
-  byte                   OriginTaskIndex   = 0;
+  uint8_t                   OriginTaskIndex   = 0;
 };
 
 #endif // ESPEASY_EVENTSTRUCT_H

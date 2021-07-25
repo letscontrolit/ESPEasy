@@ -92,7 +92,7 @@ private:
   int16_t OversamplingMaxVal = 0;
 };
 
-boolean Plugin_002(byte function, struct EventStruct *event, String& string)
+boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -130,7 +130,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     {
       #if defined(ESP32)
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
-      addADC_PinSelect(false, F("taskdevicepin1"), CONFIG_PIN1);
+      addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
 
       #endif // if defined(ESP32)
 

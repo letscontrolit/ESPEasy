@@ -105,8 +105,8 @@ const __FlashStringHelper * Command_MQTT_Subscribe(struct EventStruct *event, co
       String eventName = Line;
       String topic = eventName.substring(10);
       if (!MQTTsubscribe(enabledMqttController, topic.c_str(), mqtt_retainFlag))
-         return_command_failed();
-      return_command_success();
+         return return_command_failed();
+      return return_command_success();
     }
     return F("No MQTT controller enabled");
   }

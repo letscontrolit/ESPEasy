@@ -242,19 +242,22 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         decPt        = true;
         detectedType = NumericalType::FloatingPoint;
       } else {
+        if (result == F("-")) return emptyString;
         return result;
       }
     }
   }
 
-  for (unsigned int x = firstDec; x < bufLength; ++x) {
+  bool done = false;
+
+  for (unsigned int x = firstDec; !done && x < bufLength; ++x) {
     c = tBuf.charAt(x);
 
     if (c == '.') {
-      if (NumericalType::FloatingPoint != requestedType) { return result; }
+      if (NumericalType::FloatingPoint != requestedType) { done = true; }
 
       // Only one decimal point allowed
-      if (decPt) { return result; }
+      if (decPt) { done = true; }
       else {
         decPt        = true;
         detectedType = NumericalType::FloatingPoint;
@@ -265,25 +268,28 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         case NumericalType::Integer:
 
           if (!isdigit(c)) {
-            return result;
+            done = true;
           }
           break;
         case NumericalType::HexadecimalUInt:
 
           if (!isxdigit(c)) {
-            return result;
+            done = true;
           }
           break;
         case NumericalType::BinaryUint:
 
           if ((c != '0') && (c != '1')) {
-            return result;
+            done = true;
           }
           break;
       }
     }
-    result += c;
+    if (!done) {
+      result += c;
+    }
   }
+  if (result == F("-")) return emptyString;
   return result;
 }
 

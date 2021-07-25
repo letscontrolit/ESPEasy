@@ -8,7 +8,7 @@
 #include "../Globals/Protocol.h"
 
 /*
-   void logStatistics(byte loglevel, bool clearStats) {
+   void logStatistics(uint8_t loglevel, bool clearStats) {
    if (loglevelActiveFor(loglevel)) {
     String log;
     log.reserve(80);
