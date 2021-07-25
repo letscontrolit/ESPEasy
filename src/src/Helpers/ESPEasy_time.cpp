@@ -1,5 +1,7 @@
 #include "ESPEasy_time.h"
 
+#include "../DataTypes/TimeSource.h"
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 
@@ -17,6 +19,12 @@
 #include "ESPEasy_time_calc.h"
 
 #include <time.h>
+
+#include <RTClib.h>
+
+
+
+#define DS1307_CTRL_ID 0x68
 
 
 ESPEasy_time::ESPEasy_time() {
@@ -74,15 +82,19 @@ void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
 }
 
 
-void ESPEasy_time::restoreLastKnownUnixTime(unsigned long lastSysTime, uint8_t deepSleepState)
+void ESPEasy_time::restoreFromRTC()
 {
   static bool firstCall = true;
+  uint32_t unixtime = 0;
+  if (ExtRTC_get(unixtime)) {
+    setExternalTimeSource(unixtime, timeSource_t::External_RTC_time_source);
+    firstCall = false;
+    return;
+  }
 
-  if (firstCall && (lastSysTime != 0) && (deepSleepState != 1)) {
-    firstCall          = false;
-    timeSource         = timeSource_t::Restore_RTC_time_source;
-    externalUnixTime_d = static_cast<double>(lastSysTime);
-
+  if (firstCall && RTC.lastSysTime != 0 && RTC.deepSleepState != 1) {
+    firstCall = false;
+    setExternalTimeSource(RTC.lastSysTime, timeSource_t::Restore_RTC_time_source);
     // Do not add the current uptime as offset. This will be done when calling now()
     lastSyncTime = 0;
     initTime();
@@ -93,7 +105,7 @@ void ESPEasy_time::setExternalTimeSource(double time, timeSource_t source) {
   timeSource         = source;
   externalUnixTime_d = time;
   lastSyncTime       = millis();
-  nextSyncTime       = 0;
+  initTime();
 }
 
 uint32_t ESPEasy_time::getUnixTime() const
@@ -129,17 +141,29 @@ unsigned long ESPEasy_time::now() {
 
     // Try NTP if the time source is not external.
     bool updatedTime = (unixTime_d > 0.0);
-    if (!isExternalTimeSource(timeSource) || timeSource_t::NTP_time_source == timeSource) {
+    if (!isExternalTimeSource(timeSource) 
+        || timeSource_t::NTP_time_source == timeSource 
+        || timePassedSince(lastSyncTime) > static_cast<long>(1000 * syncInterval)) {
       if (getNtpTime(unixTime_d)) {
         updatedTime = true;
+      } else {
+        uint32_t tmp_unixtime;
+        if (ExtRTC_get(tmp_unixtime)) {
+          unixTime_d = tmp_unixtime;
+          timeSource = timeSource_t::External_RTC_time_source;
+          updatedTime = true;
+        }
       }
     }
     if (updatedTime) {
       prevMillis = millis(); // restart counting from now (thanks to Korman for this fix)
       timeSynced = true;
 
+      const double time_offset = unixTime_d - sysTime;
+      sysTime = unixTime_d;
+      ExtRTC_set(sysTime);
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        double time_offset = unixTime_d - sysTime;
         String log         = F("Time set to ");
         log += String(unixTime_d, 3);
 
@@ -155,8 +179,6 @@ unsigned long ESPEasy_time::now() {
         }
         addLog(LOG_LEVEL_INFO, log);
       }
-      sysTime = unixTime_d;
-
 
       time_zone.applyTimeZone(unixTime_d);
       nextSyncTime = (uint32_t)unixTime_d + syncInterval;
@@ -219,18 +241,19 @@ bool ESPEasy_time::systemTimePresent() const {
       break;
     case timeSource_t::NTP_time_source:  
     case timeSource_t::Restore_RTC_time_source: 
+    case timeSource_t::External_RTC_time_source:
     case timeSource_t::GPS_time_source:
     case timeSource_t::GPS_PPS_time_source:
     case timeSource_t::ESP_now_peer:
     case timeSource_t::Manual_set:
       return true;
   }
-  return nextSyncTime > 0 || Settings.UseNTP || externalUnixTime_d > 0.0f;
+  return nextSyncTime > 0 || Settings.UseNTP() || externalUnixTime_d > 0.0f;
 }
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP || !NetworkConnected(10)) {
+  if (!Settings.UseNTP() || !NetworkConnected(10)) {
     return false;
   }
   if (lastNTPSyncTime != 0) {
@@ -324,7 +347,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log = F("NTP  : NTP host (");
           log += timeServerIP.toString();
-          log += ") unsynchronized";
+          log += F(") unsynchronized");
           addLog(LOG_LEVEL_ERROR, log);
         }
 
@@ -651,4 +674,144 @@ struct tm ESPEasy_time::getSunRise(int secOffset) const {
 
 struct tm ESPEasy_time::getSunSet(int secOffset) const {
   return addSeconds(tsSet, secOffset, true);
+}
+
+bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
+{
+  bool timeRead = false;
+  switch (Settings.ExtTimeSource()) {
+    case ExtTimeSource_e::None:
+      return false;
+    case ExtTimeSource_e::DS1307:
+      {
+        RTC_DS1307 rtc;
+        if (!rtc.begin()) {
+          // Not found
+          break;
+        }
+        if (!rtc.isrunning()) {
+          // not running
+          break;
+        }
+        unixtime = rtc.now().unixtime();
+        timeRead = true;
+        break;
+      }
+    case ExtTimeSource_e::DS3231:
+      {
+        RTC_DS3231 rtc;
+        if (!rtc.begin()) {
+          // Not found
+          break;
+        }
+        if (rtc.lostPower()) {
+          // Cannot get the time from the module
+          break;
+        }
+        unixtime = rtc.now().unixtime();
+        timeRead = true;
+        break;
+      }
+      
+    case ExtTimeSource_e::PCF8523:
+      {
+        RTC_PCF8523 rtc;
+        if (!rtc.begin()) {
+          // Not found
+          break;
+        }
+        if (rtc.lostPower() || !rtc.initialized() || !rtc.isrunning()) {
+          // Cannot get the time from the module
+          break;
+        }
+        unixtime = rtc.now().unixtime();
+        timeRead = true;
+        break;
+      }
+    case ExtTimeSource_e::PCF8563:
+      {
+        RTC_PCF8563 rtc;
+        if (!rtc.begin()) {
+          // Not found
+          break;
+        }
+        if (rtc.lostPower() || !rtc.isrunning()) {
+          // Cannot get the time from the module
+          break;
+        }
+        unixtime = rtc.now().unixtime();
+        timeRead = true;
+        break;
+      }
+
+  }
+  if (timeRead) {
+    String log = F("ExtRTC: Read external time source: ");
+    log += unixtime;
+    addLog(LOG_LEVEL_INFO, log);
+    return true;
+  }
+  addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot get time from external time source"));
+  return false;
+}
+
+bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
+{
+  if (timeSource == timeSource_t::External_RTC_time_source || 
+      !isExternalTimeSource(timeSource)) {
+    // Do not adjust the external RTC time if we already used it as a time source.
+    return true;
+  }
+  bool timeAdjusted = false;
+  switch (Settings.ExtTimeSource()) {
+    case ExtTimeSource_e::None:
+      return false;
+    case ExtTimeSource_e::DS1307:
+      {
+        RTC_DS1307 rtc;
+        if (rtc.begin()) {
+          rtc.adjust(DateTime(unixtime));
+          timeAdjusted = true;
+        }
+        break;
+      }
+    case ExtTimeSource_e::DS3231:
+      {
+        RTC_DS3231 rtc;
+        if (rtc.begin()) {
+          rtc.adjust(DateTime(unixtime));
+          timeAdjusted = true;
+        }
+        break;
+      }
+      
+    case ExtTimeSource_e::PCF8523:
+      {
+        RTC_PCF8523 rtc;
+        if (rtc.begin()) {
+          rtc.adjust(DateTime(unixtime));
+          rtc.start();
+          timeAdjusted = true;
+        }
+        break;
+      }
+    case ExtTimeSource_e::PCF8563:
+      {
+        RTC_PCF8563 rtc;
+        if (rtc.begin()) {
+          rtc.adjust(DateTime(unixtime));
+          rtc.start();
+          timeAdjusted = true;
+        }
+        break;
+      }
+  }
+  if (timeAdjusted) {
+    String log = F("ExtRTC: External time source set to: ");
+    log += unixtime;
+    addLog(LOG_LEVEL_INFO, log);
+    return true;
+  }
+  addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot set time to external time source"));
+  return false;
 }

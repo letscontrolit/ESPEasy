@@ -22,6 +22,8 @@ enum class timeSource_t : uint8_t {
   // Sources which may drift over time due to lack of external synchronization.
   ESP_now_peer        = 40,     // < 5 msec accuracy between nodes, but time on the whole network may drift
 
+  External_RTC_time_source = 45, // Typically +/- 500 msec off.
+
   Restore_RTC_time_source = 50, // > 1 sec difference per reboot
   No_time_source          = 255 // No time set
 };

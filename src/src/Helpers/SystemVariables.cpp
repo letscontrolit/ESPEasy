@@ -96,6 +96,8 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case IP4:               value = String( (int) NetworkLocalIP()[3] ); break; // 4th IP octet
       case SUBNET:            value = getValue(LabelType::IP_SUBNET); break;
       case DNS:               value = getValue(LabelType::DNS); break;
+      case DNS_1:             value = getValue(LabelType::DNS_1); break;
+      case DNS_2:             value = getValue(LabelType::DNS_2); break;
       case GATEWAY:           value = getValue(LabelType::GATEWAY); break;
       case CLIENTIP:          value = getValue(LabelType::CLIENT_IP); break;
       #ifdef USES_MQTT
@@ -276,6 +278,8 @@ const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enum
     case Enum::IP:              return F("%ip%");
     case Enum::SUBNET:          return F("%subnet%");
     case Enum::DNS:             return F("%dns%");
+    case Enum::DNS_1:           return F("%dns1%");
+    case Enum::DNS_2:           return F("%dns2%");
     case Enum::GATEWAY:         return F("%gateway%");
     case Enum::CLIENTIP:        return F("%clientip%");
     case Enum::ISMQTT:          return F("%ismqtt%");
