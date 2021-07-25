@@ -60,6 +60,7 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/CompiletimeDefines.h"
 
 #include "../Static/WebStaticData.h"
 
@@ -545,12 +546,13 @@ void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool add
   {
     String tmp;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}</h1><BR>");
+    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}</h1><div class='div_r'>Release: {{build}}</div><BR>");
   #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
     tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
   #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
 
     tmp.replace(F("{{title}}"), title);
+    tmp.replace(F("{{build}}"), parseString(get_binary_filename(), 4, '_')); // Assuming binary filename is ESP_Easy_mega_<date>_...
     tmpl += tmp;
   }
 
