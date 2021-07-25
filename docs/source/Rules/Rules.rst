@@ -905,6 +905,15 @@ For example:
    logentry,{bitwrite:0:122:1}   // Set least significant bit of the given nr '122' to '1' => '123'
  endon
 
+urlencode
+^^^^^^^^^^
+
+(Added: 2021-07-22)
+
+Replace any not-allowed characters in an url with their hex replacement (%-notation).
+
+Usage: ``{urlencode:"string to/encode"}`` will result in ``string%20to%2fencode``
+
 XOR / AND / OR
 ^^^^^^^^^^^^^^
 

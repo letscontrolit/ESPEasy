@@ -59,6 +59,8 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SUBNET);
   addSysVar_enum_html(SystemVariables::GATEWAY);
   addSysVar_enum_html(SystemVariables::DNS);
+  addSysVar_enum_html(SystemVariables::DNS_1);
+  addSysVar_enum_html(SystemVariables::DNS_2);
   addSysVar_enum_html(SystemVariables::RSSI);
   addSysVar_enum_html(SystemVariables::SSID);
   addSysVar_enum_html(SystemVariables::BSSID);

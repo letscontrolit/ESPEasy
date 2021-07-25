@@ -100,11 +100,24 @@ Rules Settings
 * Tolerant last parameter - When checked, the last parameter of a command will have less strict parsing.
 * SendToHTTP wait for ack - When checked, the command SendToHTTP will wait for an acknowledgement from the server.
 
-NTP Settings
-------------
+Time Source
+-----------
 
 * Use NTP - Check to  query an NTP server for proper system time.
 * NTP Hostname - When left empty, a random host from pool.ntp.org will be used. (when NTP is enabled)
+* External Time Source - Set of supported external RTC chips which can keep the time while the ESP is not powered (e.g. deep sleep)
+
+External Time Source is added on 2021-07-21.
+
+Supported RTC chips:
+
+* `DS1307 <https://datasheets.maximintegrated.com/en/ds/DS1307.pdf>`_
+* `DS3231  <https://datasheets.maximintegrated.com/en/ds/DS3231.pdf>`_
+* `PCF8523  <https://www.nxp.com/docs/en/data-sheet/PCF8523.pdf>`_
+* `PCF8563  <https://www.nxp.com/docs/en/data-sheet/PCF8563.pdf>`_
+
+Most modules sold with one of these RTC chips also have a battery socket to keep track of time while the rest is not powered.
+This allows ESPEasy to know the correct date and time after been powered off for a while, or deep sleep, without the need for working network to query a NTP server.
 
 DST Settings
 ------------
