@@ -27,7 +27,7 @@
 # define P102_QUERY3          PCONFIG(5)
 # define P102_QUERY4          PCONFIG(6)
 # define P102_PZEM_FIRST      PCONFIG(7)
-# define P102_PZEM_ATTEMPT    PCONFIG(8)
+# define P102_PZEM_ATTEMPT    PCONFIG_LONG(1)
 
 # define P102_PZEM_mode_DFLT  0 // Read value
 # define P102_QUERY1_DFLT     0 // Voltage (V)
@@ -47,12 +47,12 @@ uint8_t P102_PZEM_ADDR_SET = 0; // Flag for status of programmation/Energy reset
                                 // energy done
 
 // Forward declaration helper function
-const __FlashStringHelper * p102_getQueryString(byte query);
+const __FlashStringHelper * p102_getQueryString(uint8_t query);
 
 
 
 
-boolean Plugin_102(byte function, struct EventStruct *event, String& string)
+boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -83,9 +83,9 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P102_NR_OUTPUT_VALUES) {
-          byte choice = PCONFIG(i + P102_QUERY1_CONFIG_POS);
+          uint8_t choice = PCONFIG(i + P102_QUERY1_CONFIG_POS);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
             p102_getQueryString(choice),
@@ -191,8 +191,8 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
         options[i] = p102_getQueryString(i);
       }
 
-      for (byte i = 0; i < P102_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P102_QUERY1_CONFIG_POS;
+      for (uint8_t i = 0; i < P102_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P102_QUERY1_CONFIG_POS;
         sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P102_NR_OUTPUT_OPTIONS, options);
       }
 
@@ -204,9 +204,9 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
       serialHelper_webformSave(event);
 
       // Save output selector parameters.
-      for (byte i = 0; i < P102_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P102_QUERY1_CONFIG_POS;
-        const byte choice       = PCONFIG(pconfigIndex);
+      for (uint8_t i = 0; i < P102_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P102_QUERY1_CONFIG_POS;
+        const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, p102_getQueryString(choice));
       }
       P102_PZEM_mode     = getFormItemInt(F("P102_PZEM_mode"));
@@ -285,7 +285,7 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
         PZEM[4] = P102_PZEM_sensor->pf();
         PZEM[5] = P102_PZEM_sensor->frequency();
 
-        for (byte i = 0; i < 6; i++) // Check each PZEM field
+        for (uint8_t i = 0; i < 6; i++) // Check each PZEM field
         {
           if (PZEM[i] != PZEM[i])    // Check if NAN
           {
@@ -364,7 +364,7 @@ boolean Plugin_102(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-const __FlashStringHelper * p102_getQueryString(byte query) {
+const __FlashStringHelper * p102_getQueryString(uint8_t query) {
   switch (query)
   {
     case 0: return F("Voltage_V");

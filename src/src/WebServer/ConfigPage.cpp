@@ -95,7 +95,7 @@ void handle_config() {
         IPAddress low, high;
         getSubnetRange(low, high);
 
-        for (byte i = 0; i < 4; ++i) {
+        for (uint8_t i = 0; i < 4; ++i) {
           SecuritySettings.AllowedIPrangeLow[i]  = low[i];
           SecuritySettings.AllowedIPrangeHigh[i] = high[i];
         }
@@ -164,10 +164,10 @@ void handle_config() {
   {
     IPAddress low, high;
     getIPallowedRange(low, high);
-    byte iplow[4];
-    byte iphigh[4];
+    uint8_t iplow[4];
+    uint8_t iphigh[4];
 
-    for (byte i = 0; i < 4; ++i) {
+    for (uint8_t i = 0; i < 4; ++i) {
       iplow[i]  = low[i];
       iphigh[i] = high[i];
     }

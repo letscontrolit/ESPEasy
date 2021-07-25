@@ -11,17 +11,17 @@ struct P012_data_struct : public PluginTaskData_base {
   P012_data_struct(uint8_t addr,
                    uint8_t lcd_size,
                    uint8_t mode,
-                   byte    timer);
+                   uint8_t    timer);
 
-  void setBacklightTimer(byte timer);
+  void setBacklightTimer(uint8_t timer);
 
   void checkTimer();
 
   void lcdWrite(const String& text,
-                byte          col,
-                byte          row);
+                uint8_t          col,
+                uint8_t          row);
 
-  String P012_parseTemplate(String& tmpString, byte lineSize);
+  String P012_parseTemplate(String& tmpString, uint8_t lineSize);
 
   void createCustomChars();
 
@@ -30,7 +30,7 @@ struct P012_data_struct : public PluginTaskData_base {
   int               Plugin_012_cols = 16;
   int               Plugin_012_rows = 2;
   int               Plugin_012_mode = 1;
-  byte              displayTimer    = 0;
+  uint8_t              displayTimer    = 0;
 };
 
 #endif // ifdef USES_P012

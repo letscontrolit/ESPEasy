@@ -17,26 +17,26 @@
 //********************************************************************************
 // Internal GPIO write
 //********************************************************************************
-void GPIO_Internal_Write(int pin, byte value);
+void GPIO_Internal_Write(int pin, uint8_t value);
 
 //********************************************************************************
 // Internal GPIO read
 //********************************************************************************
 bool GPIO_Internal_Read(int pin);
 bool GPIO_Read_Switch_State(struct EventStruct *event);
-bool GPIO_Read_Switch_State(int pinNumber, byte pinMode);
+bool GPIO_Read_Switch_State(int pinNumber, uint8_t pinMode);
 
 //********************************************************************************
 // MCP23017 read
 //********************************************************************************
 int8_t GPIO_MCP_Read(int Par1);
-bool GPIO_MCP_ReadRegister(byte mcpAddr, uint8_t regAddr, uint8_t *retValue);
+bool GPIO_MCP_ReadRegister(uint8_t mcpAddr, uint8_t regAddr, uint8_t *retValue);
 
 //********************************************************************************
 // MCP23017 write
 //********************************************************************************
-bool GPIO_MCP_Write(int Par1, byte Par2);
-void GPIO_MCP_WriteRegister(byte mcpAddr, uint8_t regAddr, uint8_t regValue);
+bool GPIO_MCP_Write(int Par1, uint8_t Par2);
+void GPIO_MCP_WriteRegister(uint8_t mcpAddr, uint8_t regAddr, uint8_t regValue);
 
 //********************************************************************************
 // MCP23017 pullUP
@@ -52,7 +52,7 @@ bool GPIO_PCF_ReadAllPins(uint8_t address, uint8_t *retValue);
 //********************************************************************************
 // PCF8574 write
 //********************************************************************************
-bool GPIO_PCF_Write(int Par1, byte Par2);
+bool GPIO_PCF_Write(int Par1, uint8_t Par2);
 void GPIO_PCF_WriteAllPins(uint8_t Par1, uint8_t Par2);
 
 //*********************************************************
@@ -70,14 +70,14 @@ void GPIO_Monitor10xSec();
 void sendMonitorEvent(const char* prefix, int port, int8_t state);
 
 bool checkValidPortRange(pluginID_t pluginID, int port);
-bool checkValidPortAddress(pluginID_t pluginID, byte address);
+bool checkValidPortAddress(pluginID_t pluginID, uint8_t address);
 
 void setInternalGPIOPullupMode(uint8_t port);
 bool setMCPInputAndPullupMode(uint8_t Par1, bool enablePullUp);
 bool setMCPOutputMode(uint8_t Par1);
 bool setPCFInputMode(uint8_t pin);
 
-bool GPIO_Write(pluginID_t pluginID, int port, byte value, byte pinMode=PIN_MODE_OUTPUT);
+bool GPIO_Write(pluginID_t pluginID, int port, uint8_t value, uint8_t pinMode=PIN_MODE_OUTPUT);
 bool GPIO_Read(pluginID_t pluginID, int port, int8_t &value);
 
 #endif

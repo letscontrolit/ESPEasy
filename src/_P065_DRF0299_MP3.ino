@@ -47,7 +47,7 @@
 ESPeasySerial *P065_easySerial = NULL;
 
 
-boolean Plugin_065(byte function, struct EventStruct *event, String& string)
+boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -229,13 +229,13 @@ void Plugin_065_SetRepeat(int8_t repeat)
   Plugin_065_SendCmd(0x11, (repeat <= 0) ? 0 : 1);
 }
 
-void Plugin_065_SendCmd(byte cmd, int16_t data)
+void Plugin_065_SendCmd(uint8_t cmd, int16_t data)
 {
   if (!P065_easySerial) {
     return;
   }
 
-  byte buffer[10] = { 0x7E, 0xFF, 0x06, 0, 0x00, 0, 0, 0, 0, 0xEF };
+  uint8_t buffer[10] = { 0x7E, 0xFF, 0x06, 0, 0x00, 0, 0, 0, 0, 0xEF };
 
   buffer[3] = cmd;
   buffer[5] = data >> 8;   // high byte
@@ -251,7 +251,7 @@ void Plugin_065_SendCmd(byte cmd, int16_t data)
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("MP3  : Send Cmd ");
 
-    for (byte i = 0; i < 10; i++) {
+    for (uint8_t i = 0; i < 10; i++) {
       log += String(buffer[i], 16);
       log += ' ';
     }

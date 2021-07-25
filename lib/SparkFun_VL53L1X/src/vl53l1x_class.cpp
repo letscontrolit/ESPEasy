@@ -1043,7 +1043,7 @@ VL53L1X_ERROR VL53L1X::VL53L1_I2CRead(uint8_t DeviceAddr, uint16_t RegisterAddr,
 		//End of fix
 	}
 
-	dev_i2c->requestFrom(((uint8_t)(((DeviceAddr) >> 1) & 0x7F)), (byte)NumByteToRead);
+	dev_i2c->requestFrom(((uint8_t)(((DeviceAddr) >> 1) & 0x7F)), (uint8_t)NumByteToRead);
 
 	int i = 0;
 	while (dev_i2c->available())

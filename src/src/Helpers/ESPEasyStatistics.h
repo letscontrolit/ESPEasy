@@ -9,7 +9,7 @@
 
 #include "../DataStructs/TimingStats.h"
 
-//void logStatistics(byte loglevel, bool clearStats);
+//void logStatistics(uint8_t loglevel, bool clearStats);
 
 void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset);
 

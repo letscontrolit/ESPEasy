@@ -15,7 +15,7 @@
 #define PLUGIN_VALUENAME1_032 "Temperature"
 #define PLUGIN_VALUENAME2_032 "Pressure"
 
-boolean Plugin_032(byte function, struct EventStruct *event, String& string)
+boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -52,7 +52,7 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
+      uint8_t choice = PCONFIG(0);
 
       /*String options[2] = { F("0x77 - default I2C address"), F("0x76 - alternate I2C address") };*/
       int optionValues[2] = { 0x77, 0x76 };

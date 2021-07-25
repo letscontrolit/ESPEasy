@@ -29,7 +29,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
   {
     // Add the known SSIDs
     String ssid, key;
-    byte   index = 1; // Index 0 is the "unset" value
+    uint8_t   index = 1; // Index 0 is the "unset" value
 
     bool done = false;
 
@@ -77,9 +77,10 @@ void WiFi_AP_CandidatesList::begin_sync_scan() {
 void WiFi_AP_CandidatesList::purge_expired() {
   for (auto it = scanned.begin(); it != scanned.end(); ) {
     if (it->expired()) {
-      scanned_mutex.lock();
-      it = scanned.erase(it);
-      scanned_mutex.unlock();
+      if (scanned_mutex.try_lock()) {
+        it = scanned.erase(it);
+        scanned_mutex.unlock();
+      }
     } else {
       ++it;
     }
@@ -90,33 +91,68 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   // Append or update found APs from scan.
   for (uint8_t i = 0; i < scancount; ++i) {
     const WiFi_AP_Candidate tmp(i);
+
     // Remove previous scan result if present
-    for (auto it = scanned.begin(); it != scanned.end(); ) {
-      if (tmp == *it || it->expired()) {
-        scanned_mutex.lock();
-        it = scanned.erase(it);
-        scanned_mutex.unlock();
+    for (auto it = scanned.begin(); it != scanned.end();) {
+      if ((tmp == *it) || it->expired()) {
+        if (scanned_mutex.try_lock()) {
+          it = scanned.erase(it);
+          scanned_mutex.unlock();
+        }
       } else {
         ++it;
       }
     }
-//    if (Settings.IncludeHiddenSSID() || !tmp.isHidden) {
-      scanned_mutex.lock();
-      scanned.push_back(tmp);
-      scanned_mutex.unlock();
-      #ifndef BUILD_NO_DEBUG
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("WiFi : Scan result: ");
-        log += tmp.toString();
-        addLog(LOG_LEVEL_DEBUG, log);
+    uint8_t retry = 3;
+
+    while (retry > 0) {
+      --retry;
+
+      if (scanned_mutex.try_lock()) {
+        scanned.push_back(tmp);
+        scanned_mutex.unlock();
+        retry = 0;
+
+        #ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("WiFi : Scan result: ");
+          log += tmp.toString();
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+        #endif // ifndef BUILD_NO_DEBUG
       }
-      #endif // ifndef BUILD_NO_DEBUG
-//    }
+      delay(0);
+    }
   }
+
+  after_process_WiFiscan();
+}
+
+#ifdef ESP8266
+void WiFi_AP_CandidatesList::process_WiFiscan(const bss_info& ap) {
+  WiFi_AP_Candidate tmp(ap);
   {
-    scanned_mutex.lock();
-    scanned.sort();
-    scanned_mutex.unlock();
+    uint8_t retry = 3;
+    while (retry > 0) {
+      --retry;
+      if (scanned_mutex.try_lock()) {
+        scanned.push_back(tmp);
+        scanned_mutex.unlock();
+        retry = 0;
+      }
+      delay(0);
+    }
+  }
+}
+#endif
+
+void WiFi_AP_CandidatesList::after_process_WiFiscan() {
+  {
+    if (scanned_mutex.try_lock()) {
+      scanned.sort();
+      scanned_mutex.unlock();
+    }
   }
   loadCandidatesFromScanned();
   WiFi.scanDelete();
@@ -151,18 +187,6 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
       mustPop = false;
     }
   }
-
-
-  if (currentCandidate.usable()) {
-    // Store in RTC
-    RTC.lastWiFiChannel = currentCandidate.channel;
-
-    for (byte i = 0; i < 6; ++i) {
-      RTC.lastBSSID[i] = currentCandidate.bssid[i];
-    }
-    RTC.lastWiFiSettingsIndex = currentCandidate.index;
-  }
-
 
   if (mustPop) {
     known_it = known.begin();
@@ -202,6 +226,13 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
       }
     }
   }
+  if (currentCandidate.usable()) {
+    // Store in RTC
+    RTC.lastWiFiChannel = currentCandidate.channel;
+    currentCandidate.bssid.get(RTC.lastBSSID);
+    RTC.lastWiFiSettingsIndex = currentCandidate.index;
+  }
+
   candidates.clear();
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
 }
@@ -249,9 +280,10 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 
   for (auto scan = scanned.begin(); scan != scanned.end();) {
     if (scan->expired()) {
-      scanned_mutex.lock();
-      scan = scanned.erase(scan);
-      scanned_mutex.unlock();
+      if (scanned_mutex.try_lock()) {
+        scan = scanned.erase(scan);
+        scanned_mutex.unlock();
+      }
     } else {
       if (scan->isHidden) {
         if (Settings.IncludeHiddenSSID()) {
@@ -293,7 +325,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 }
 
 void WiFi_AP_CandidatesList::addFromRTC() {
-  if (!RTC.lastWiFi_set()) { return; }
+  if (!Settings.UseLastWiFiFromRTC() || !RTC.lastWiFi_set()) { return; }
 
   if (SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) 
   { 
@@ -307,8 +339,12 @@ void WiFi_AP_CandidatesList::addFromRTC() {
   }
 
   WiFi_AP_Candidate fromRTC(RTC.lastWiFiSettingsIndex, ssid, key);
-  fromRTC.setBSSID(RTC.lastBSSID);
+  fromRTC.bssid   = RTC.lastBSSID;
   fromRTC.channel = RTC.lastWiFiChannel;
+
+  if (!fromRTC.usable()) {
+    return;
+  }
 
   if (candidates.size() > 0 && candidates.front().ssid.equals(fromRTC.ssid)) {
     // Front candidate was already from RTC.
@@ -377,7 +413,7 @@ void WiFi_AP_CandidatesList::purge_unusable() {
   candidates.unique();
 }
 
-bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key) const {
+bool WiFi_AP_CandidatesList::get_SSID_key(uint8_t index, String& ssid, String& key) const {
   switch (index) {
     case 1:
       ssid = SecuritySettings.WifiSSID;

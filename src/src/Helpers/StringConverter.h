@@ -30,21 +30,17 @@ bool string2float(const String& string,
 
 
 /********************************************************************************************\
-   Convert a char string to IP byte array
+   Convert a char string to IP uint8_t array
  \*********************************************************************************************/
 bool isIP(const String& string);
 
 bool str2ip(const String& string,
-               byte         *IP);
+               uint8_t         *IP);
 
 bool str2ip(const char *string,
-               byte       *IP);
+               uint8_t       *IP);
 
 String  formatIP(const IPAddress& ip);
-
-void formatMAC(const uint8_t * mac, char (& strMAC)[20]);
-
-String formatMAC(const uint8_t *mac);
 
 
 /********************************************************************************************\
@@ -91,22 +87,22 @@ void   addNewLine(String& line);
    Format a value to the set number of decimals
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event,
-                       byte                rel_index,
+                       uint8_t                rel_index,
                        bool                mustCheck,
                        bool              & isvalid);
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex,
-                            byte        rel_index);
+                            uint8_t        rel_index);
 
 String formatUserVar(taskIndex_t TaskIndex,
-                     byte        rel_index,
+                     uint8_t        rel_index,
                      bool      & isvalid);
 
 String formatUserVarNoCheck(struct EventStruct *event,
-                            byte                rel_index);
+                            uint8_t                rel_index);
 
 String formatUserVar(struct EventStruct *event,
-                     byte                rel_index,
+                     uint8_t                rel_index,
                      bool              & isvalid);
 
 
@@ -130,13 +126,16 @@ String wrapIfContains(const String& value,
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
 String to_json_object_value(const __FlashStringHelper * object,
-                            const __FlashStringHelper * value);
+                            const __FlashStringHelper * value,
+                            bool wrapInQuotes = false);
 
 String to_json_object_value(const __FlashStringHelper * object,
-                            const String& value);
+                            const String& value,
+                            bool wrapInQuotes = false);
 
 String to_json_object_value(const String& object,
-                            const String& value);
+                            const String& value,
+                            bool wrapInQuotes = false);
 
 /*********************************************************************************************\
    Strip wrapping chars (e.g. quotes)
@@ -175,23 +174,23 @@ String to_internal_string(const String& input,
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
 String parseString(const String& string,
-                   byte          indexFind,
+                   uint8_t          indexFind,
                    char          separator = ',');
 
 String parseStringKeepCase(const String& string,
-                           byte          indexFind,
+                           uint8_t          indexFind,
                            char          separator = ',');
 
 String parseStringToEnd(const String& string,
-                        byte          indexFind,
+                        uint8_t          indexFind,
                         char          separator = ',');
 
 String parseStringToEndKeepCase(const String& string,
-                                byte          indexFind,
+                                uint8_t          indexFind,
                                 char          separator = ',');
 
 String tolerantParseStringKeepCase(const String& string,
-                                   byte          indexFind,
+                                   uint8_t          indexFind,
                                    char          separator = ',');
 
 // escapes special characters in strings for use in html-forms
@@ -236,7 +235,7 @@ void parseControllerVariables(String            & s,
 
 void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
-                                   byte                taskValueIndex,
+                                   uint8_t                taskValueIndex,
                                    bool             useURLencode);
 
 void parseSystemVariables(String& s,
