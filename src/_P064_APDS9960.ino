@@ -54,7 +54,7 @@
 #include "src/PluginStructs/P064_data_struct.h"
 
 
-boolean Plugin_064(byte function, struct EventStruct *event, String& string)
+boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -99,7 +99,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte addr = 0x39;                                         // P064_ADDR; chip has only 1 address
+      uint8_t addr = 0x39;                                         // P064_ADDR; chip has only 1 address
 
       int optionValues[1] = { 0x39 };
       addFormSelectorI2C(F("i2c_addr"), 1, optionValues, addr); // Only for display I2C address

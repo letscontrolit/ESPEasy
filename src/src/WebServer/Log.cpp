@@ -55,7 +55,7 @@ void handle_log_JSON() {
   if (webrequest == F("legend")) {
     addHtml(F("\"Legend\": ["));
 
-    for (byte i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
+    for (uint8_t i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
       if (i != 0) {
         addHtml(',');
       }
@@ -74,7 +74,7 @@ void handle_log_JSON() {
 
   while (logLinesAvailable) {
     String message;
-    byte loglevel;
+    uint8_t loglevel;
     if (Logging.getNext(logLinesAvailable, lastTimeStamp, message, loglevel)) {
       addHtml('{');
       stream_next_json_object_value(F("timestamp"), String(lastTimeStamp));

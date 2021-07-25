@@ -288,6 +288,7 @@ void handle_sysinfo_basicInfo() {
   if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
+    addRowLabelValue(LabelType::TIME_SOURCE);
   }
 
   addRowLabel(LabelType::UPTIME);
@@ -484,6 +485,7 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
   addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
   addRowLabelValue(LabelType::WIFI_PERIODICAL_SCAN);
+  addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
 }
 
 void handle_sysinfo_Firmware() {
