@@ -14,7 +14,7 @@ HELPERS_ESPEASY_MATH_H
 
 
 void handle_metrics() {
-    TXBuffer.startStream();
+    TXBuffer.startStream(F("text/plain"), F("*"));
 
     //uptime
     addHtml(F("# HELP espeasy_uptime current device uptime in minutes\n"));
