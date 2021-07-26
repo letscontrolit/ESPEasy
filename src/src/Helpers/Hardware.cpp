@@ -822,10 +822,110 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
   }
 }
 
-#ifdef ESP32
+#ifdef ESP32S2
 
 // ********************************************************************************
-// Get info of a specific GPIO pin.
+// Get info of a specific GPIO pin - ESP32-S2
+// ********************************************************************************
+bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
+  pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
+
+  // Input GPIOs:  0-21, 26, 33-46
+  // Output GPIOs: 0-21, 26, 33-45
+  input  = gpio <= 46;
+  output = gpio <= 45;
+
+  if ((gpio < 0) || ((gpio > 21) && (gpio < 26)) || ((gpio > 26) && (gpio < 33))) {
+    input  = false;
+    output = false;
+  }
+
+  if (gpio == 26) {
+    // Pin shared with the flash memory and/or PSRAM.
+    // Cannot be used as regular GPIO
+    input = false;
+    output = false;
+    warning = true;
+  }
+
+  if ((gpio > 26) && (gpio < 33)) {
+    // SPIHD, SPIWP, SPICS0, SPICLK, SPIQ, SPID pins of ESP32-S2FH2 and ESP32-S2FH4 
+    // are connected to embedded flash and not recommended for other uses.
+    warning = true;
+  }
+
+
+  if ((input == false) && (output == false)) {
+    return false;
+  }
+
+  if (gpio == 45) {
+    // VDD_SPI can work as the power supply for the external device at either
+    // 1.8 V (when GPIO45 is 1 during boot), or
+    // 3.3 V (when GPIO45 is 0 and at default state during boot). 
+    warning = true;    
+  }
+
+  // GPIO 0  State during boot determines boot mode.
+  warning = gpio == 0;
+
+
+  if (gpio == 46) {
+    // Part of the boot strapping pins.
+    warning = true;
+  }
+
+/*
+  # ifdef HAS_ETHERNET
+
+  // Check pins used for RMII Ethernet PHY
+  if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
+    switch (gpio) {
+      case 0:
+      case 21:
+      case 19:
+      case 22:
+      case 25:
+      case 26:
+      case 27:
+        warning = true;
+        break;
+    }
+
+
+    // FIXME TD-er: Must we also check for pins used for MDC/MDIO and Eth PHY power?
+  }
+
+
+  # endif // ifdef HAS_ETHERNET
+
+*/
+  return true;
+}
+
+bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
+  hasPullDown = false;
+  hasPullUp = false;
+
+  int pinnr;
+  bool input;
+  bool output;
+  bool warning;
+  if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
+    return false;
+  }
+  if (gpio <= 45) {
+    hasPullUp = true;
+    hasPullDown = true;
+  }
+  return true;
+}
+
+#else 
+  #ifdef ESP32
+
+// ********************************************************************************
+// Get info of a specific GPIO pin - classic ESP32
 // ********************************************************************************
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
   pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
@@ -923,6 +1023,7 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   }
   return true;
 }
+#endif
 
 #endif
 
@@ -1023,7 +1124,34 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
 {
   t = -1;
 
+#ifdef ESP32S2
   switch (gpio_pin) {
+    case 1 : adc = 1; ch = 0; t = 1; break;
+    case 2 : adc = 1; ch = 1; t = 2; break;
+    case 3 : adc = 1; ch = 2; t = 3; break;
+    case 4 : adc = 1; ch = 3; t = 4; break;
+    case 5 : adc = 1; ch = 4; t = 5; break;
+    case 6 : adc = 1; ch = 5; t = 6; break;
+    case 7 : adc = 1; ch = 6; t = 7; break;
+    case 8 : adc = 1; ch = 7; t = 8; break;
+    case 9 : adc = 1; ch = 8; t = 9; break;
+    case 10 : adc = 1; ch = 9; t = 10; break;
+    case 11 : adc = 2; ch = 0; t = 11; break;
+    case 12 : adc = 2; ch = 1; t = 12; break;
+    case 13 : adc = 2; ch = 2; t = 13; break;
+    case 14 : adc = 2; ch = 3; t = 14; break;
+    case 15 : adc = 2; ch = 4;  break;
+    case 16 : adc = 2; ch = 5;  break;
+    case 17 : adc = 2; ch = 6;  break;
+    case 18 : adc = 2; ch = 7;  break;
+    case 19 : adc = 2; ch = 8;  break;
+    case 20 : adc = 2; ch = 9;  break;
+    default:
+      return false;
+  }
+#else
+  // Classic ESP32
+    switch (gpio_pin) {
     case -1: adc = 0; break; // Hall effect Sensor
     case 36: adc = 1; ch = 0; break;
     case 37: adc = 1; ch = 1; break;
@@ -1046,15 +1174,16 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
     default:
       return false;
   }
+#endif
   return true;
 }
 
 int touchPinToGpio(int touch_pin)
 {
   switch (touch_pin) {
-    #ifndef ESP32S2
+  #ifndef ESP32S2
     case 0: return T0;
-    #endif
+  #endif
     case 1: return T1;
     case 2: return T2;
     case 3: return T3;
@@ -1064,6 +1193,13 @@ int touchPinToGpio(int touch_pin)
     case 7: return T7;
     case 8: return T8;
     case 9: return T9;
+  #ifdef ESP32S2
+    case 10: return T10;
+    case 11: return T11;
+    case 12: return T12;
+    case 13: return T13;
+    case 14: return T14;
+  #endif
     default:
       break;
   }
