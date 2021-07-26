@@ -1094,7 +1094,8 @@ To create/register a plugin, you have to :
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
-
+    // FIXME TD-er: Disabled due to build size
+    //#define USES_P109   // ThermoOLED
     #define USES_P110   // VL53L0X Time of Flight sensor
     #define USES_P113   // VL53L1X ToF
 #endif
@@ -1189,6 +1190,10 @@ To create/register a plugin, you have to :
    #endif
    #ifndef USES_P099
     #define USES_P099   // XPT2046 Touchscreen
+   #endif
+   #ifndef USES_P109
+     // FIXME TD-er: Disabled for now, due to build size.
+     //#define USES_P109   // ThermoOLED
    #endif
 #endif
 
