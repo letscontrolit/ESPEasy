@@ -54,7 +54,7 @@ String CreateBuildDescription(char separator) {
   {
     result += 'T';
     xPluginEnumerator  cplugins;
-    const unsigned int size = ProtocolIndex_to_CPlugin_id.size();
+    const unsigned int size = CPLUGIN_MAX;
     cplugins.setSize(size);
 
     for (size_t i = 0; i < size; ++i) {
@@ -65,7 +65,7 @@ String CreateBuildDescription(char separator) {
   {
     result += 'P';
     xPluginEnumerator  plugins;
-    const unsigned int size = DeviceIndex_to_Plugin_id.size();
+    const unsigned int size = PLUGIN_MAX;
     plugins.setSize(size);
 
     for (size_t i = 0; i < size; ++i) {
