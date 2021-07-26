@@ -571,18 +571,28 @@ void readBootCause() {
   switch (rtc_get_reset_reason(0)) {
     case NO_MEAN:           break;
     case POWERON_RESET:     lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break;
+    #ifndef ESP32S2
     case SW_RESET:          lastBootCause = BOOT_CAUSE_SOFT_RESTART; break;
     case OWDT_RESET:        lastBootCause = BOOT_CAUSE_SW_WATCHDOG; break;
+    #endif
     case DEEPSLEEP_RESET:   lastBootCause = BOOT_CAUSE_DEEP_SLEEP; break;
+    #ifndef ESP32S2
     case SDIO_RESET:        lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break;
+    #endif
     case TG0WDT_SYS_RESET: 
     case TG1WDT_SYS_RESET:
+    #ifndef ESP32S2
     case RTCWDT_SYS_RESET:  lastBootCause = BOOT_CAUSE_EXT_WD; break;
-    case INTRUSION_RESET: 
-    case TGWDT_CPU_RESET: 
-    case SW_CPU_RESET:      lastBootCause = BOOT_CAUSE_SOFT_RESTART; break; // Both call to ESP.reset() and on exception crash
+    #endif
+    #ifndef ESP32S2
+    case SW_CPU_RESET:
+    case TGWDT_CPU_RESET:
+    #endif
+    case INTRUSION_RESET:   lastBootCause = BOOT_CAUSE_SOFT_RESTART; break; // Both call to ESP.reset() and on exception crash
     case RTCWDT_CPU_RESET:  lastBootCause = BOOT_CAUSE_EXT_WD; break;
+    #ifndef ESP32S2
     case EXT_CPU_RESET:     lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break; // reset button or cold boot, only for core 1
+    #endif
     case RTCWDT_BROWN_OUT_RESET: lastBootCause = BOOT_CAUSE_POWER_UNSTABLE; break;
     case RTCWDT_RTC_RESET:  lastBootCause = BOOT_CAUSE_COLD_BOOT; break;
   }
