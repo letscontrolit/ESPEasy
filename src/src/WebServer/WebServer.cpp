@@ -546,13 +546,20 @@ void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool add
   {
     String tmp;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}</h1><div class='div_r'>Release: {{build}}</div><BR>");
+    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}"
+            #if BUILD_IN_WEBHEADER
+            "<div style='float:right;font-size:10pt'>Build: {{build}}</div>"
+            #endif // #if BUILD_IN_WEBHEADER
+            "</h1><BR>"
+            );
   #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
     tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
   #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
 
     tmp.replace(F("{{title}}"), title);
+    #if BUILD_IN_WEBHEADER
     tmp.replace(F("{{build}}"), parseString(get_binary_filename(), 4, '_')); // Assuming binary filename is ESP_Easy_mega_<date>_...
+    #endif // #if BUILD_IN_WEBHEADER
     tmpl += tmp;
   }
 
@@ -574,13 +581,20 @@ void getWebPageTemplateDefaultFooter(String& tmpl) {
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   tmpl += F("<footer>"
             "<br>"
-            "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community</h6>"
+            "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community"
+            #if BUILD_IN_WEBFOOTER
+            "<div style='float: right;font-size:10pt;'>Build: {{build}}</div>"
+            #endif // #if BUILD_IN_WEBFOOTER
+            "</h6>"
             "</footer>"
             "</body></html>"
             );
 #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   tmpl += F(WEBPAGE_TEMPLATE_DEFAULT_FOOTER);
 #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
+  #if BUILD_IN_WEBFOOTER
+  tmpl.replace(F("{{build}}"), get_binary_filename()); // In the footer, show full build binary name
+  #endif // #if BUILD_IN_WEBFOOTER
 }
 
 void getErrorNotifications() {

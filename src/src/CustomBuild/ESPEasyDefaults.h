@@ -309,6 +309,13 @@
 #define DEFAULT_SYNC_UDP_PORT                   0                       // Used for ESPEasy p2p. (IANA registered port: 8266)
 #endif
 
+#ifndef BUILD_IN_WEBHEADER
+#define BUILD_IN_WEBHEADER                      true
+#endif
+#ifndef BUILD_IN_WEBFOOTER
+#define BUILD_IN_WEBFOOTER                      true                    // If not defined show build in footer of webpage
+#endif
+
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
 
