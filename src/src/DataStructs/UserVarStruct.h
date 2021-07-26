@@ -5,6 +5,8 @@
 
 #include "../DataTypes/TaskIndex.h"
 
+#include <vector>
+
 struct UserVarStruct {
   UserVarStruct();
 
