@@ -93,7 +93,8 @@ void run_compiletime_checks() {
   // LogStruct is mainly dependent on the number of lines.
   // Has to be round up to multiple of 4.
   #ifdef ESP32S2
-  const unsigned int LogStructSize = 644; // FIXME TD-er: Why is this larger?
+  // FIXME TD-er: Why is this larger?
+  const unsigned int LogStructSize = ((12u + 21 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #else
   const unsigned int LogStructSize = ((12u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #endif

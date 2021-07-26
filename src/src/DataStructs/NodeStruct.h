@@ -25,8 +25,8 @@ struct NodeStruct
   String    nodeName;
   IPAddress ip;
   uint16_t  build;
-  uint8_t      age;
-  uint8_t      nodeType;
+  uint8_t   age;
+  uint8_t   nodeType;
   uint16_t  webgui_portnumber;
 };
 typedef std::map<uint8_t, NodeStruct> NodesMap;
