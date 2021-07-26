@@ -1191,7 +1191,8 @@ To create/register a plugin, you have to :
     #define USES_P099   // XPT2046 Touchscreen
    #endif
    #ifndef USES_P109
-     #define USES_P109   // ThermoOLED
+     // FIXME TD-er: Disabled for now, due to build size.
+     //#define USES_P109   // ThermoOLED
    #endif
 #endif
 
