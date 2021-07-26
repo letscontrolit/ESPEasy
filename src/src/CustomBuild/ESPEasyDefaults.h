@@ -310,7 +310,7 @@
 #endif
 
 #ifndef BUILD_IN_WEBHEADER
-#define BUILD_IN_WEBHEADER                      true
+#define BUILD_IN_WEBHEADER                      false
 #endif
 #ifndef BUILD_IN_WEBFOOTER
 #define BUILD_IN_WEBFOOTER                      true                    // If not defined show build in footer of webpage
