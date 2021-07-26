@@ -297,14 +297,11 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
 
         Plugin_109_prev_temp = 99;
 
-        if (SPIFFS.exists("thermo.dat"))
+        fs::File f = tryOpenFile(F("thermo.dat"), F("r"));
+        if (f)
         {
-          fs::File f = SPIFFS.open("thermo.dat", "r");
-          if (f)
-          {
-            f.read( ((uint8_t *)&UserVar[event->BaseVarIndex] + 0), 16 );
-            f.close();
-          }
+          f.read( ((uint8_t *)&UserVar[event->BaseVarIndex] + 0), 16 );
+          f.close();
         }
         Plugin_109_lastsavetime = millis();
         if (UserVar[event->BaseVarIndex] < 1) {
@@ -469,7 +466,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
          if ((Plugin_109_lastsavetime+30000) < millis()) {
            Plugin_109_saveneeded = 0;
            Plugin_109_lastsavetime = millis();         
-           fs::File f = SPIFFS.open("thermo.dat", "w");
+           fs::File f = tryOpenFile(F("thermo.dat"), F("w"));
            if (f)
            {
             f.write( ((uint8_t *)&UserVar[event->BaseVarIndex] + 0), 16 );
@@ -478,7 +475,8 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
            }
            String logstr = F("Thermo : Save UserVars to SPIFFS");
            addLog(LOG_LEVEL_INFO, logstr);
-        }}
+          }
+        }
         success = true;
         }
         break;
