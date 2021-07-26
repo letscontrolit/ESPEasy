@@ -16,7 +16,7 @@
 #define PLUGIN_053_ENABLE_EXTRA_SENSORS // Can be unset for memory-tight builds to remove support for the PMSx003ST and PMS2003/PMS3003 sensor models
 // #define PLUGIN_053_ENABLE_S_AND_T // Enable setting to support S and T types, in addition to bas PMSx003 and PMSx003ST
 
-#if defined(SIZE_1M) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS) // Turn off for 1M builds
+#if defined(SIZE_1M) && defined(PLUGIN_BUILD_MINIMAL_OTA) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS) // Turn off for 1M OTA builds
 #undef PLUGIN_053_ENABLE_EXTRA_SENSORS
 #endif
 
