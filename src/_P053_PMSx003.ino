@@ -160,12 +160,18 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
     return false;
   }
 
-  int loopSize = Plugin_053_sensortype == PMSx003_TYPE_ST ? 17 : 13;
-  uint16_t data[17]; // uint8_t data_low, data_high;
-  for (int i = 0; i < loopSize; i++)
+  uint8_t frameData = 0;
+  switch (Plugin_053_sensortype) {
+    case PMSx003_TYPE:    frameData = 13; break; // PMS1003/PMS5003/PMS7003
+    case PMS3003_TYPE:    frameData =  9; break; // PMS2003/PMS3003
+    case PMSx003_TYPE_ST: frameData = 17; break; // PMS5003ST
+    default: break;
+  }
+  uint16_t data[17] = { 0 }; // uint8_t data_low, data_high;
+  for (uint8_t i = 0; i < frameData; i++)
     SerialRead16(&data[i], &checksum);
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Available on all supported sensor models
     String log;
     log.reserve(87);
     log = F("PMSx003 : pm1.0=");
@@ -183,7 +189,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && PCONFIG(0) != PMS3003_TYPE) { // Count values not available on PMS2003 and PMS3003
     String log;
     log.reserve(96);
     log = F("PMSx003 : count/0.1L : 0.3um=");
@@ -202,7 +208,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
   }
 
   #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && PCONFIG(0) == PMSx003_TYPE_ST) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && PCONFIG(0) == PMSx003_TYPE_ST) { // Values only available on PMS5003ST
     String log;
     log.reserve(45);
     log = F("PMSx003 : temp=");
