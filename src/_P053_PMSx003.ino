@@ -189,7 +189,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && PCONFIG(0) != PMS3003_TYPE) { // Count values not available on PMS2003 and PMS3003
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && (PCONFIG(0) != PMS3003_TYPE)) { // 'Count' values not available on PMS2003/PMS3003 models (handled as 1 model in code) 
     String log;
     log.reserve(96);
     log = F("PMSx003 : count/0.1L : 0.3um=");
@@ -208,7 +208,7 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
   }
 
   #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && PCONFIG(0) == PMSx003_TYPE_ST) { // Values only available on PMS5003ST
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && (PCONFIG(0) == PMSx003_TYPE_ST)) { // Values only available on PMS5003ST
     String log;
     log.reserve(45);
     log = F("PMSx003 : temp=");
