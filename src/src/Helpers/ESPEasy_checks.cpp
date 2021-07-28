@@ -82,8 +82,8 @@ void run_compiletime_checks() {
   check_size<NotificationSettingsStruct,            996u>();
   #endif
   check_size<ExtraTaskSettingsStruct,               472u>();
-  #ifdef ESP32S2
-  // FIXME TD-er: Why is this larger?
+  #if ESP_IDF_VERSION_MAJOR > 3
+  // String class has increased with 4 bytes
   check_size<EventStruct,                           116u>(); // Is not stored
   #else
   check_size<EventStruct,                           96u>(); // Is not stored
@@ -92,8 +92,8 @@ void run_compiletime_checks() {
 
   // LogStruct is mainly dependent on the number of lines.
   // Has to be round up to multiple of 4.
-  #ifdef ESP32S2
-  // FIXME TD-er: Why is this larger?
+  #if ESP_IDF_VERSION_MAJOR > 3
+  // String class has increased with 4 bytes
   const unsigned int LogStructSize = ((12u + 21 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #else
   const unsigned int LogStructSize = ((12u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
@@ -104,8 +104,9 @@ void run_compiletime_checks() {
   #ifdef USES_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif
-  #ifdef ESP32S2
-  check_size<NodeStruct,                            32u>(); // FIXME TD-er: Why is this larger?
+  #if ESP_IDF_VERSION_MAJOR > 3
+  // String class has increased with 4 bytes
+  check_size<NodeStruct,                            32u>();
   #else
   check_size<NodeStruct,                            28u>();
   #endif
