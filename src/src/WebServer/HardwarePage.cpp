@@ -6,6 +6,8 @@
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
 
+#include "../CustomBuild/ESPEasyLimits.h"
+
 #include "../DataStructs/DeviceStruct.h"
 
 #include "../Globals/Settings.h"

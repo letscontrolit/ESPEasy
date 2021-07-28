@@ -3,6 +3,8 @@
 
 #include "../WebServer/HTML_wrappers.h"
 
+#include "../CustomBuild/ESPEasyLimits.h"
+
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Hardware.h"
