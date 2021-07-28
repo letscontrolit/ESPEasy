@@ -17,6 +17,7 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 
+
 //#include "../../ESPEasy-Globals.h"
 
 #ifdef ESP32
@@ -165,32 +166,34 @@ void hardwareInit()
 
 void initI2C() {
   // configure hardware pins according to eeprom settings.
-  if (Settings.Pin_i2c_sda != -1 && Settings.Pin_i2c_scl != -1)
+  if (!validGpio(Settings.Pin_i2c_sda) ||
+      !validGpio(Settings.Pin_i2c_scl)) 
   {
-    addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
-    I2CSelectClockSpeed(false); // Set normal clock speed
-    Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+    return;
+  }
+  addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
+  I2CSelectClockSpeed(false); // Set normal clock speed
+  Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
 
-    if (Settings.WireClockStretchLimit)
-    {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("INIT : I2C custom clockstretchlimit:");
-        log += Settings.WireClockStretchLimit;
-        addLog(LOG_LEVEL_INFO, log);
-      }
-        #if defined(ESP8266)
-      Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
-        #endif // if defined(ESP8266)
+  if (Settings.WireClockStretchLimit)
+  {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("INIT : I2C custom clockstretchlimit:");
+      log += Settings.WireClockStretchLimit;
+      addLog(LOG_LEVEL_INFO, log);
     }
+      #if defined(ESP8266)
+    Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
+      #endif // if defined(ESP8266)
+  }
 
 #ifdef FEATURE_I2CMULTIPLEXER
 
-    if (Settings.I2C_Multiplexer_ResetPin != -1) { // Initialize Reset pin to High if configured
-      pinMode(Settings.I2C_Multiplexer_ResetPin, OUTPUT);
-      digitalWrite(Settings.I2C_Multiplexer_ResetPin, HIGH);
-    }
-#endif // ifdef FEATURE_I2CMULTIPLEXER
+  if (Settings.I2C_Multiplexer_ResetPin != -1) { // Initialize Reset pin to High if configured
+    pinMode(Settings.I2C_Multiplexer_ResetPin, OUTPUT);
+    digitalWrite(Settings.I2C_Multiplexer_ResetPin, HIGH);
   }
+#endif // ifdef FEATURE_I2CMULTIPLEXER
 
   // I2C Watchdog boot status check
   if (Settings.WDI2CAddress != 0)
@@ -822,13 +825,15 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
   }
 }
 
-#ifdef ESP32S2
+#ifdef ESP32
 
 // ********************************************************************************
-// Get info of a specific GPIO pin - ESP32-S2
+// Get info of a specific GPIO pin
 // ********************************************************************************
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
   pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
+
+#ifdef ESP32S2
 
   // Input GPIOs:  0-21, 26, 33-46
   // Output GPIOs: 0-21, 26, 33-45
@@ -900,35 +905,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   # endif // ifdef HAS_ETHERNET
 
 */
-  return true;
-}
-
-bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
-  hasPullDown = false;
-  hasPullUp = false;
-
-  int pinnr;
-  bool input;
-  bool output;
-  bool warning;
-  if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
-    return false;
-  }
-  if (gpio <= 45) {
-    hasPullUp = true;
-    hasPullDown = true;
-  }
-  return true;
-}
-
-#else 
-  #ifdef ESP32
-
-// ********************************************************************************
-// Get info of a specific GPIO pin - classic ESP32
-// ********************************************************************************
-bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
-  pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
+#else
+  // ESP32 classic
 
   // Input GPIOs:  0-19, 21-23, 25-27, 32-39
   // Output GPIOs: 0-19, 21-23, 25-27, 32-33
@@ -997,6 +975,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
 
   # endif // ifdef HAS_ETHERNET
+
+#endif
   return true;
 }
 
@@ -1011,6 +991,14 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
     return false;
   }
+
+#ifdef ESP32S2
+  if (gpio <= 45) {
+    hasPullUp = true;
+    hasPullDown = true;
+  }
+#else
+  // ESP32 classic
   if (gpio >= 34) {
     // For GPIO 34 .. 39, no pull-up nor pull-down.
   } else if (gpio == 12) {
@@ -1021,10 +1009,10 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
     hasPullUp = true;
     hasPullDown = true;
   }
+
+#endif
   return true;
 }
-#endif
-
 #endif
 
 #ifdef ESP8266
@@ -1112,6 +1100,15 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
 
 #endif
 
+bool validGpio(int gpio) {
+  if (gpio < 0 || gpio > MAX_GPIO) return false;
+  int pinnr;
+  bool input;
+  bool output;
+  bool warning;
+  return getGpioInfo(gpio, pinnr, input, output, warning);
+}
+
 
 #ifdef ESP32
 
@@ -1151,7 +1148,7 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
   }
 #else
   // Classic ESP32
-    switch (gpio_pin) {
+  switch (gpio_pin) {
     case -1: adc = 0; break; // Hall effect Sensor
     case 36: adc = 1; ch = 0; break;
     case 37: adc = 1; ch = 1; break;
@@ -1180,10 +1177,8 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
 
 int touchPinToGpio(int touch_pin)
 {
+#ifdef ESP32S2
   switch (touch_pin) {
-  #ifndef ESP32S2
-    case 0: return T0;
-  #endif
     case 1: return T1;
     case 2: return T2;
     case 3: return T3;
@@ -1193,16 +1188,31 @@ int touchPinToGpio(int touch_pin)
     case 7: return T7;
     case 8: return T8;
     case 9: return T9;
-  #ifdef ESP32S2
     case 10: return T10;
     case 11: return T11;
     case 12: return T12;
     case 13: return T13;
     case 14: return T14;
-  #endif
     default:
       break;
   }
+#else
+ // ESP32 classic
+  switch (touch_pin) {
+    case 0: return T0;
+    case 1: return T1;
+    case 2: return T2;
+    case 3: return T3;
+    case 4: return T4;
+    case 5: return T5;
+    case 6: return T6;
+    case 7: return T7;
+    case 8: return T8;
+    case 9: return T9;
+    default:
+      break;
+  }
+#endif
   return -1;
 }
 

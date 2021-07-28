@@ -33,7 +33,11 @@
     #define TASKS_MAX                          32
   #endif
   #ifndef MAX_GPIO
-    #define MAX_GPIO                           39
+    #ifdef ESP32S2
+      #define MAX_GPIO                           46
+    #else
+      #define MAX_GPIO                           39
+    #endif
   #endif
 #endif
 
