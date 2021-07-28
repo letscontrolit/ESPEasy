@@ -128,7 +128,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
-      if (Plugin_004_DallasPin_RX != -1 && Plugin_004_DallasPin_TX != -1) {
+      if (validGpio(Plugin_004_DallasPin_RX) && validGpio(Plugin_004_DallasPin_TX)) {
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
 
         {
@@ -187,7 +187,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
-      if (Plugin_004_DallasPin_RX != -1 && Plugin_004_DallasPin_TX != -1) {
+      if (validGpio(Plugin_004_DallasPin_RX) && validGpio(Plugin_004_DallasPin_TX)) {
         // save the address for selected device and store into extra tasksettings
         Dallas_addr_selector_webform_save(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
 
@@ -235,7 +235,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
-      if ((addr[0] != 0) && (Plugin_004_DallasPin_RX != -1) && (Plugin_004_DallasPin_TX != -1)) {
+      if ((addr[0] != 0) && (validGpio(Plugin_004_DallasPin_RX)) && (validGpio(Plugin_004_DallasPin_TX))) {
         const uint8_t res = P004_RESOLUTION;
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, addr, res));
         P004_data_struct *P004_data =

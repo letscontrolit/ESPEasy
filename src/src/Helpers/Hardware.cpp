@@ -33,7 +33,7 @@ void hardwareInit()
   // set GPIO pins state if not set to default
   bool hasPullUp, hasPullDown;
 
-  for (int gpio = 0; gpio <= PIN_D_MAX; ++gpio) {
+  for (int gpio = 0; gpio <= MAX_GPIO; ++gpio) {
     const bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
     if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
@@ -189,7 +189,7 @@ void initI2C() {
 
 #ifdef FEATURE_I2CMULTIPLEXER
 
-  if (Settings.I2C_Multiplexer_ResetPin != -1) { // Initialize Reset pin to High if configured
+  if (validGpio(Settings.I2C_Multiplexer_ResetPin)) { // Initialize Reset pin to High if configured
     pinMode(Settings.I2C_Multiplexer_ResetPin, OUTPUT);
     digitalWrite(Settings.I2C_Multiplexer_ResetPin, HIGH);
   }
@@ -1083,11 +1083,7 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   hasPullDown = false;
   hasPullUp = false;
 
-  int pinnr;
-  bool input;
-  bool output;
-  bool warning;
-  if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
+  if (!validGpio(gpio)) {
     return false;
   }
   if (gpio == 16) {

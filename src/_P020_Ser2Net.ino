@@ -183,7 +183,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      if (P020_RESET_TARGET_PIN != -1) {
+      if (validGpio(P020_RESET_TARGET_PIN)) {
         pinMode(P020_RESET_TARGET_PIN, OUTPUT);
         digitalWrite(P020_RESET_TARGET_PIN, LOW);
         delay(500);

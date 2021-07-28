@@ -307,7 +307,7 @@ struct C018_data_struct {
 
       if (rn2xx3_handler::RN_state::must_perform_init == state) {
         if (myLora->get_busy_count() > 10) {
-          if (_resetPin != -1) {
+          if (validGpio(_resetPin)) {
             pinMode(_resetPin, OUTPUT);
             digitalWrite(_resetPin, LOW);
             delay(50);
@@ -363,7 +363,7 @@ private:
 
     while (retries > 0 && !autobaud_success) {
       if (retries == 1) {
-        if (_resetPin != -1) {
+        if (validGpio(_resetPin)) {
           pinMode(_resetPin, OUTPUT);
           digitalWrite(_resetPin, LOW);
           delay(50);

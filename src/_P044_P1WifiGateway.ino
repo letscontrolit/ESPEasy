@@ -117,7 +117,7 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
           break;
         }
 
-        if (P044_RESET_TARGET_PIN != -1) {
+        if (validGpio(P044_RESET_TARGET_PIN)) {
           pinMode(P044_RESET_TARGET_PIN, OUTPUT);
           digitalWrite(P044_RESET_TARGET_PIN, LOW);
           delay(500);

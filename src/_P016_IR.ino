@@ -169,7 +169,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String &string)
     P016_data->init(event->TaskIndex, P016_CMDINHIBIT);
 
     int irPin = CONFIG_PIN1;
-    if (irReceiver == 0 && irPin != -1)
+    if (irReceiver == 0 && validGpio(irPin))
     {
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {

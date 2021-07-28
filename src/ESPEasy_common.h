@@ -95,7 +95,6 @@ namespace std
 
   #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
   #define MAX_SKETCH_SIZE 1044464   // 1020 kB - 16 bytes
-  #define PIN_D_MAX        16
 #endif
 #if defined(ESP32)
 
@@ -115,14 +114,12 @@ namespace std
 
   #ifdef ESP32S2
     #include <esp32s2/rom/rtc.h>
-    #define PIN_D_MAX        46
   #else
    #if ESP_IDF_VERSION_MAJOR > 3
     #include <esp32/rom/rtc.h>
    #else
     #include <rom/rtc.h>
    #endif
-   #define PIN_D_MAX        39
   #endif
   
   #include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....

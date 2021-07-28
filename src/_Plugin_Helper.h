@@ -31,6 +31,7 @@
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
+#include "src/Helpers/Hardware.h"
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/Numerical.h"
 #include "src/Helpers/PortStatus.h"

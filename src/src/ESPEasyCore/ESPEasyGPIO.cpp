@@ -484,11 +484,7 @@ bool checkValidPortRange(pluginID_t pluginID, int port)
   switch (pluginID)
   {
     case PLUGIN_GPIO:
-    {
-      int  pinnr = -1;
-      bool input, output, warning;
-      return getGpioInfo(port, pinnr, input, output, warning);
-    }
+      return validGpio(port);
 
     case PLUGIN_MCP:
     case PLUGIN_PCF:

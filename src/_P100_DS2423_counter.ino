@@ -61,7 +61,7 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
       // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
       int8_t Plugin_100_DallasPin = CONFIG_PIN1;
 
-      if (Plugin_100_DallasPin != -1) {
+      if (validGpio(Plugin_100_DallasPin)) {
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_100_DallasPin, Plugin_100_DallasPin);
 
         // Counter select
@@ -112,7 +112,7 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
       Dallas_plugin_get_addr(addr, event->TaskIndex);
 
       if (addr[0] != 0) {
-        if (CONFIG_PIN1 != -1) {
+        if (validGpio(CONFIG_PIN1)) {
           float value = 0;
 
           if (Dallas_readCounter(addr, &value, CONFIG_PIN1, CONFIG_PIN1, PCONFIG(0)))
