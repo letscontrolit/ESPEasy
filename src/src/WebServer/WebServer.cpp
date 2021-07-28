@@ -558,7 +558,7 @@ void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool add
 
     tmp.replace(F("{{title}}"), title);
     #if BUILD_IN_WEBHEADER
-    tmp.replace(F("{{build}}"), parseString(get_binary_filename(), 4, '_')); // Assuming binary filename is ESP_Easy_mega_<date>_...
+    tmp.replace(F("{{build}}"), get_build_date());
     #endif // #if BUILD_IN_WEBHEADER
     tmpl += tmp;
   }
@@ -583,7 +583,7 @@ void getWebPageTemplateDefaultFooter(String& tmpl) {
             "<br>"
             "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community"
             #if BUILD_IN_WEBFOOTER
-            "<div style='float: right;font-size:10pt;'>Build: {{build}}</div>"
+            "<div style='float: right;font-size:10pt;'>Build: {{build}} {{date}}</div>"
             #endif // #if BUILD_IN_WEBFOOTER
             "</h6>"
             "</footer>"
@@ -593,7 +593,8 @@ void getWebPageTemplateDefaultFooter(String& tmpl) {
   tmpl += F(WEBPAGE_TEMPLATE_DEFAULT_FOOTER);
 #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   #if BUILD_IN_WEBFOOTER
-  tmpl.replace(F("{{build}}"), get_binary_filename()); // In the footer, show full build binary name
+  tmpl.replace(F("{{build}}"), get_binary_filename()); // In the footer, show full build binary name, will be 'firmware.bin' when compiled using Arduino IDE.
+  tmpl.replace(F("{{date}}"),  get_build_date());      // And the compile-date
   #endif // #if BUILD_IN_WEBFOOTER
 }
 
