@@ -3,6 +3,8 @@
 
 #include "../WebServer/common.h"
 
+#include "../DataTypes/TimeSource.h"
+
 
 #ifdef WEBSERVER_ADVANCED
 
@@ -12,6 +14,8 @@
 void handle_advanced();
 
 void addFormDstSelect(bool isStart, uint16_t choice);
+
+void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice);
 
 void addFormLogLevelSelect(LabelType::Enum label, int choice);
 
