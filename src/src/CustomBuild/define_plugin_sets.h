@@ -1083,6 +1083,7 @@ To create/register a plugin, you have to :
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
     //#define USES_P099   // XPT2046 Touchscreen
+    #define USES_P105   // AHT1x
 #endif
 
 #ifdef PLUGIN_SET_TESTING_B
@@ -1356,7 +1357,7 @@ To create/register a plugin, you have to :
     #define USES_P104   // Atlas EZO EC
   #endif
   #ifndef USES_P105
-    #define USES_P105   // Atlas EZO_ORP
+    #define USES_P105   // AHT1x
   #endif
   #ifndef USES_P108
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)

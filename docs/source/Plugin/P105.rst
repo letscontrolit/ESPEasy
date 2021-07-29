@@ -41,4 +41,4 @@ Change log
 .. versionchanged:: 2.0
   ...
 
-  |added| 2020-04-25
+  |added| 2021-07-29
