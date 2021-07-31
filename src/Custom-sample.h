@@ -170,6 +170,8 @@
 
 #define USES_SSDP
 
+#define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
+
 
 // #define USE_SETTINGS_ARCHIVE
 // #define FEATURE_I2CMULTIPLEXER
