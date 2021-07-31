@@ -364,7 +364,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P102   // PZEM004Tv3
 // #define USES_P103   // Atlas_EZO_pH
 // #define USES_P104   // Atlas_EZO_EC
-// #define USES_P105   // Atlas_EZO_ORP
+// #define USES_P105   // AHT1x
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
 // #define USES_P109   // ThermoOLED
