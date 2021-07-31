@@ -10,7 +10,6 @@
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/RuntimeData.h"
-#include "../Globals/Device.h"
 
 #include "../Helpers/Misc.h"
 #include "../Helpers/Rules_calculate.h"
