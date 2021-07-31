@@ -22,6 +22,7 @@
 #ifdef USES_P105
 
 #include "_Plugin_Helper.h"
+#include "src/WebServer/Markup.h"
 
 #include "src/PluginStructs/P105_data_struct.h"
 
@@ -81,6 +82,30 @@ boolean Plugin_105(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      bool hasOtherI2CDevices = false;
+
+      for (taskIndex_t x = 0; validTaskIndex(x) && !hasOtherI2CDevices; x++) {
+        const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
+
+        if (validDeviceIndex(DeviceIndex)
+            && (Settings.TaskDeviceDataFeed[x] == 0)
+            && ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
+                #ifdef PLUGIN_USES_SERIAL // Has I2C Serial option
+                || (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL)
+                || (Device[DeviceIndex].Type == DEVICE_TYPE_SERIAL_PLUS1)
+                #endif // ifdef PLUGIN_USES_SERIAL
+                )
+            ) {
+          hasOtherI2CDevices = true;
+        }
+      }
+
+      if (hasOtherI2CDevices) {
+        addRowLabel_tr_id(EMPTY_STRING, EMPTY_STRING);
+        addHtmlDiv(F("note warning"), F("Attention: This device may cause I2C issues when combined with other I2C devices on the same bus!"));
+
+        // addFormNote(F("<div class=\"warn\"></div>"));
+      }
       success = true;
       break;
     }
