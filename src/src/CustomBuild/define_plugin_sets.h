@@ -116,7 +116,7 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#ifndef USE_CUSTOM_H
+#ifndef PLUGIN_BUILD_CUSTOM
     #ifndef USES_SSDP
         #define USES_SSDP
     #endif
@@ -128,6 +128,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif
+    #ifndef USE_EXT_RTC
+        #define USE_EXT_RTC
     #endif
 #endif
 
@@ -407,6 +410,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef NOTIFIER_SET_NONE
         #define NOTIFIER_SET_NONE
+    #endif
+    #ifdef USE_EXT_RTC
+        #undef USE_EXT_RTC
     #endif
 #endif
 
@@ -1538,6 +1544,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
+  #endif
+  #ifdef USE_EXT_RTC
+    #undef USE_EXT_RTC
   #endif
 #endif
 
