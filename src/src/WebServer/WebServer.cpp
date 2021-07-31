@@ -542,13 +542,16 @@ void getWebPageTemplateDefaultHead(String& tmpl, bool addMeta, bool addJS) {
             "</head>");
 }
 
+# define GITHUB_RELEASES_LINK_PREFIX "<a href='https://github.com/letscontrolit/ESPEasy/releases' title='Click to show latest release on Github' target='_blank' style='font-size: 15px; text-decoration: none'>"
+# define GITHUB_RELEASES_LINK_SUFFIX "</a>"
+
 void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool addMenu) {
   {
     String tmp;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
     tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}"
             #if BUILD_IN_WEBHEADER
-            "<div style='float:right;font-size:10pt'>Build: <a href='https://github.com/letscontrolit/ESPEasy/releases' style='font-size: 15px; text-decoration: none'>{{build}}</a></div>"
+            "<div style='float:right;font-size:10pt'>Build: "GITHUB_RELEASES_LINK_PREFIX"{{build}}"GITHUB_RELEASES_LINK_SUFFIX"</div>"
             #endif // #if BUILD_IN_WEBHEADER
             "</h1><BR>"
             );
@@ -583,7 +586,7 @@ void getWebPageTemplateDefaultFooter(String& tmpl) {
             "<br>"
             "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community"
             #if BUILD_IN_WEBFOOTER
-            "<div style='float: right'>Build: <a href='https://github.com/letscontrolit/ESPEasy/releases' style='font-size: 15px; text-decoration: none'>{{build}} {{date}}</a></div>"
+            "<div style='float: right'>Build: "GITHUB_RELEASES_LINK_PREFIX"{{build}} {{date}}"GITHUB_RELEASES_LINK_SUFFIX"</div>"
             #endif // #if BUILD_IN_WEBFOOTER
             "</h6>"
             "</footer>"
