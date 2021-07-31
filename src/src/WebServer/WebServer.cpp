@@ -551,7 +551,7 @@ void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool add
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
     tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}"
             #if BUILD_IN_WEBHEADER
-            "<div style='float:right;font-size:10pt'>Build: "GITHUB_RELEASES_LINK_PREFIX"{{build}}"GITHUB_RELEASES_LINK_SUFFIX"</div>"
+            "<div style='float:right;font-size:10pt'>Build: "GITHUB_RELEASES_LINK_PREFIX"{{date}}"GITHUB_RELEASES_LINK_SUFFIX"</div>"
             #endif // #if BUILD_IN_WEBHEADER
             "</h1><BR>"
             );
@@ -561,7 +561,7 @@ void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool add
 
     tmp.replace(F("{{title}}"), title);
     #if BUILD_IN_WEBHEADER
-    tmp.replace(F("{{build}}"), get_build_date());
+    tmp.replace(F("{{date}}"), get_build_date());
     #endif // #if BUILD_IN_WEBHEADER
     tmpl += tmp;
   }
