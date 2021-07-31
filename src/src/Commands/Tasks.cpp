@@ -74,7 +74,7 @@ bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& task
   String TmpStr1;
   unsigned int varNr;
 
-  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) { return false; }
+  if (!(validateAndParseTaskValueArguments(event, Line, taskIndex, varNr) && (getDevicePluginID_from_TaskIndex(taskIndex) ==  33))) { return false; } // PluginID 33 = Dummy Device
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 
