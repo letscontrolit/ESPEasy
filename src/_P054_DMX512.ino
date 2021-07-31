@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P054
 //#######################################################################################################
 //######################################## Plugin 054: DMX512 TX ########################################
@@ -45,7 +46,7 @@
 // Pin 2: DMX- (cold)
 // Pin 3: DMX+ (hot)
 
-// Note: The ESP serial FIFO has size of 128 byte. Therefore it is rcommented to use DMX buffer sizes below 128
+// Note: The ESP serial FIFO has size of 128 uint8_t. Therefore it is rcommented to use DMX buffer sizes below 128
 
 
 //#include <*.h>   //no lib needed
@@ -55,7 +56,7 @@
 #define PLUGIN_ID_054         54
 #define PLUGIN_NAME_054       "Communication - DMX512 TX [TESTING]"
 
-byte* Plugin_054_DMXBuffer = 0;
+uint8_t* Plugin_054_DMXBuffer = 0;
 int16_t Plugin_054_DMXSize = 32;
 
 static inline void PLUGIN_054_Limit(int16_t& value, int16_t min, int16_t max)
@@ -67,7 +68,7 @@ static inline void PLUGIN_054_Limit(int16_t& value, int16_t min, int16_t max)
 }
 
 
-boolean Plugin_054(byte function, struct EventStruct *event, String& string)
+boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -78,7 +79,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_054;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = SENSOR_TYPE_NONE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
@@ -125,7 +126,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
 
         if (Plugin_054_DMXBuffer)
           delete [] Plugin_054_DMXBuffer;
-        Plugin_054_DMXBuffer = new byte[Plugin_054_DMXSize];
+        Plugin_054_DMXBuffer = new uint8_t[Plugin_054_DMXSize];
         memset(Plugin_054_DMXBuffer, 0, Plugin_054_DMXSize);
 
         success = true;
@@ -143,7 +144,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
           String param;
           String paramKey;
           String paramVal;
-          byte paramIdx = 2;
+          uint8_t paramIdx = 2;
           int16_t channel = 1;
           int16_t value = 0;
           //FIXME TD-er: Same code in _P057
@@ -247,7 +248,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
 
           //send DMX data
           Serial1.begin(250000, SERIAL_8N2);
-          Serial1.write(0);   //start byte
+          Serial1.write(0);   //start uint8_t
           Serial1.write(Plugin_054_DMXBuffer, Plugin_054_DMXSize);
         }
         break;

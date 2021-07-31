@@ -1,0 +1,91 @@
+.. include:: _controller_substitutions.repl
+
+.. _C016_page:
+
+|C016_typename|
+==================================================
+
+|C016_shortinfo|
+
+Controller details
+------------------
+
+Type: |C016_type|
+
+Name: |C016_name|
+
+Status: |C016_status|
+
+GitHub: |C016_github|_
+
+Maintainer: |C016_maintainer|
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2019/04/05
+  Initial pre-alpha version of this plugin.
+
+Description
+-----------
+
+This controller is a cache layer to collect data while not connected to a network.
+
+The data will first be stored in RTC memory, which will survive a crash/reboot and even an OTA update.
+
+If this RTC buffer is full, it will be flushed to whatever is set here as storage.
+
+Data Format
+-----------
+
+Each time a plugin sends data to this controller, a sample set is stored.
+
+A typical sample set contains:
+
+- UNIX timestamp
+- task index delivering the data
+- 4 float values
+
+Storage
+-------
+
+The controller can save the samples from RTC memory to several places on the flash:
+
+- Files on SPIFFS
+- Part reserved for OTA update (TODO)
+- Unused flash after the partitioned space (TODO)
+
+Data Delivery
+-------------
+
+The controller can deliver the data to:
+
+- JavaScript to process the data inside the browser. See the ``dump5.htm`` file in the ``misc`` folder.
+- Upload bin files to some server (HTTP post?) (TODO)
+- Provide a sample to any connected controller (TODO)
+- Do nothing and let some extern host pull the data from the node. (TODO)
+- Feed it to some plugin (e.g. a display to show a chart) (TODO)
+
+
+Fetch and Decode data in the browser
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``dump5.htm`` (in ``misc`` directory) file should be uploaded to the file system of the ESP.
+When there are cache controller bin files present on the file system,
+open this htm file from the file browser in ESPEasy into a new tab in your browser.
+
+This presents a large button "Fetch cache files".
+When pressed, the JavaScript in this htm file will fetch JSON information from 
+ESPEasy describing the column names and the binary cache files present on the file system.
+
+Those bin files will be fetched and decoded in the browser.
+When done, a "Download" button will be presented which generates and downloads a new CSV file.
+
+This file can be opened in any spreadsheet program.
+LibreNMS has proven to be the easiest to parse the column separators and make the best guess on the data types in each cell.
+
+
+

@@ -1,0 +1,76 @@
+.. csv-table::
+        :header: "Command", "Examples"
+        :widths: 20, 30
+
+        "
+        ``MotorShieldCMD,DCMotor,<Motornumber>,<Action>,<Speed>``
+
+        Motornumber:
+
+        ``1`` Motor M1
+
+        ``2`` Motor M2
+
+        ``3`` Motor M3
+
+        ``4`` Motor M4
+
+
+        Action:
+
+        ``Forward`` Turn on DC Motor, Direction Forward
+
+        ``Backward`` Turn on DC Motor, Direction Backward
+
+        ``Release`` Stop applying voltage to the motor, causing the motor to run freely.
+
+        Speed: a value from 0-255
+
+        ","
+        Turn on DC Motor, Direction: Forward. Speed: 99
+
+        ``http://<ESP IP address>/control?cmd=MotorShieldCMD,DCMotor,0,Forward,99``
+
+        Stopping the DC Motor:
+        
+        ``http://<ESP IP address>/control?cmd=MotorShieldCMD,DCMotor,0,Release``
+        "
+        "
+        ``MotorShieldCMD,Stepper,<Motornumber>,<Action>,<Steps>,<stepsize>``
+
+        Motornumber:
+
+        ``1`` Stepper M1 & M2
+
+        ``2`` Motor M3 & M4
+
+        Action:
+
+        ``Forward`` Turn on DC Motor, Direction Forward
+
+        ``Backward`` Turn on DC Motor, Direction Backward
+
+        ``Release`` Stop applying voltage to the motor, causing the motor to run freely.
+
+        Steps: a value from 0-255
+
+        Stepsize:
+
+        ``SINGLE`` Perform a single (full) step
+        
+        ``DOUBLE`` Perform 2 (full) steps
+        
+        ``INTERLEAVE`` Perform half step
+        
+        ``MICROSTEP`` Perform quarter step
+
+        ","
+        Turn on DC Motor, Direction: Forward. Steps: 99
+
+        ``http://<ESP IP address>/control?cmd=MotorShieldCMD,Stepper,0,Forward,99,``
+
+        Stopping the DC Motor:
+        
+        ``http://<ESP IP address>/control?cmd=MotorShieldCMD,Stepper,0,Release``
+        "
+

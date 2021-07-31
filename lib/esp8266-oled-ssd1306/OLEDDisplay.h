@@ -50,7 +50,7 @@
 #ifndef DISPLAY_HEIGHT
   #define DISPLAY_HEIGHT 64
 #endif
-#define DISPLAY_BUFFER_SIZE DISPLAY_WIDTH * DISPLAY_HEIGHT / 8
+#define DISPLAY_BUFFER_SIZE ((DISPLAY_WIDTH) * (DISPLAY_HEIGHT) / 8)
 
 // Header Values
 #define JUMPTABLE_BYTES 4
@@ -164,7 +164,7 @@ class OLEDDisplay : public Print {
     void drawVerticalLine(int16_t x, int16_t y, int16_t length);
 
     // Draws a rounded progress bar with the outer dimensions given by width and height. Progress is
-    // a unsigned byte value between 0 and 100
+    // a unsigned uint8_t value between 0 and 100
     void drawProgressBar(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t progress);
 
     // Draw a bitmap in the internal image format
@@ -212,6 +212,11 @@ class OLEDDisplay : public Print {
 
     // Normal display mode
     void normalDisplay(void);
+
+    // Command to set the COM signals pin configuration to match the OLED panel hardware layout
+    // 128x64 and 64x48 _compins should be 0x12 (alread set during init())
+    // 128x32           _compins should be 0x02
+    void SetComPins(uint8_t _compins);
 
     // Set display contrast
     // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
@@ -272,7 +277,7 @@ class OLEDDisplay : public Print {
 
     // converts utf8 characters to extended ascii
     static char* utf8ascii(String s);
-    static byte utf8ascii(byte ascii);
+    static uint8_t utf8ascii(uint8_t ascii);
 
     void inline drawInternal(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const char *data, uint16_t offset, uint16_t bytesInData) __attribute__((always_inline));
 

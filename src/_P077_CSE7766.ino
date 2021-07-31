@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P077
 //#######################################################################################################
 //###################### Plugin 077: CSE7766 - Energy (Sonoff S31 and Sonoff Pow R2) ####################
@@ -5,7 +6,7 @@
 //###################################### stefan@clumsy.ch      ##########################################
 //#######################################################################################################
 
-#include <Arduino.h>
+
 
 #define PLUGIN_077
 #define PLUGIN_ID_077         77
@@ -154,7 +155,7 @@ struct P077_data_struct : public PluginTaskData_base {
 
   //  uint8_t cse_receive_flag = 0;
 
-  uint8_t serial_in_buffer[32];
+  uint8_t serial_in_buffer[32] = {0};
   long voltage_cycle = 0;
   long current_cycle = 0;
   long power_cycle = 0;
@@ -167,20 +168,26 @@ struct P077_data_struct : public PluginTaskData_base {
   float energy_power = 0;   // 123.1 W
 
   // stats
-  long t_max = 0, t_all = 0, t_pkt = 0, t_pkt_tmp = 0;
-  uint16_t count_bytes = 0, count_max = 0, count_pkt = 0;
-  uint8_t checksum = 0, adjustment = 0;
+  long t_max = 0;
+  long t_all = 0;
+  long t_pkt = 0;
+  long t_pkt_tmp = 0;
+  uint16_t count_bytes = 0;
+  uint16_t count_max = 0;
+  uint16_t count_pkt = 0;
+  uint8_t checksum = 0;
+  uint8_t adjustment = 0;
 };
 
 
 
-boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
+boolean Plugin_077(uint8_t function, struct EventStruct *event, String &string) {
   boolean success = false;
 
   switch (function) {
   case PLUGIN_DEVICE_ADD: {
     Device[++deviceCount].Number = PLUGIN_ID_077;
-    Device[deviceCount].VType = SENSOR_TYPE_QUAD;
+    Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_QUAD;
     Device[deviceCount].Ports = 0;
     Device[deviceCount].PullUpOption = false;
     Device[deviceCount].InverseLogicOption = false;
@@ -235,14 +242,8 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
     break;
   }
 
-  case PLUGIN_EXIT: {
-    clearPluginTaskData(event->TaskIndex);
-    success = true;
-    break;
-  }
-
   case PLUGIN_INIT: {
-    initPluginTaskData(event->TaskIndex, new P077_data_struct());
+    initPluginTaskData(event->TaskIndex, new (std::nothrow) P077_data_struct());
     if (PCONFIG(0) == 0) PCONFIG(0) = HLW_UREF_PULSE;
     if (PCONFIG(1) == 0) PCONFIG(1) = HLW_IREF_PULSE;
     if (PCONFIG(2) == 0) PCONFIG(2) = HLW_PREF_PULSE;

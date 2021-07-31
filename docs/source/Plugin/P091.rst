@@ -1,0 +1,50 @@
+.. include:: ../Plugin/_plugin_substitutions_p09x.repl
+.. _P091_page:
+
+|P091_typename|
+==================================================
+
+|P091_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P091_type|
+
+Name: |P091_name|
+
+Status: |P091_status|
+
+GitHub: |P091_github|_
+
+Maintainer: |P091_maintainer|
+
+Used libraries: |P091_usedlibraries|
+
+Supported hardware
+------------------
+
+Compatible device list
+^^^^^^^^^^^^^^^^^^^^^^
+
+* Tuya Wifi Touch wall switch (originally controlled by Tuya Smart/Smart Life app)
+* Tuya Wifi Dimmer Switch (originally controlled by Tuya Smart/Smart Life app)
+* Sonoff Dual - v1 only! (R2 has no serial MCU!)
+* LCTECH compatible 5V WiFi relay 1,2 and 4 relay versions also supported.
+
+|P091_usedby|
+
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+.. include:: P091_commands.repl
+
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added| 2020-03-02

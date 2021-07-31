@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P063
 //#######################################################################################################
 //#################################### Plugin 063: TTP229 KeyPad ########################################
@@ -28,7 +29,6 @@
 #define PLUGIN_NAME_063       "Keypad - TTP229 Touch"
 #define PLUGIN_VALUENAME1_063 "ScanCode"
 
-// #include <*.h>   no lib required
 
 
 uint16_t readTTP229(int16_t pinSCL, int16_t pinSDO)
@@ -44,7 +44,7 @@ uint16_t readTTP229(int16_t pinSCL, int16_t pinSDO)
   delayMicroseconds(10);
 
   pinMode(pinSDO, INPUT);
-  for (byte i = 0; i < 16; i++)
+  for (uint8_t i = 0; i < 16; i++)
   {
     digitalWrite(pinSCL, HIGH);
     delayMicroseconds(1);
@@ -59,7 +59,7 @@ uint16_t readTTP229(int16_t pinSCL, int16_t pinSDO)
 }
 
 
-boolean Plugin_063(byte function, struct EventStruct *event, String& string)
+boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -70,7 +70,7 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_063;
         Device[deviceCount].Type = DEVICE_TYPE_DUAL;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SWITCH;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
@@ -172,7 +172,7 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
           if (key && PCONFIG(1))
           {
             uint16_t colMask = 0x01;
-            for (byte col = 1; col <= 16; col++)
+            for (uint8_t col = 1; col <= 16; col++)
             {
               if (key & colMask)   // this key pressed?
               {
@@ -187,7 +187,7 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
           {
             keyLast = key;
             UserVar[event->BaseVarIndex] = (float)key;
-            event->sensorType = SENSOR_TYPE_SWITCH;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
             String log = F("Tkey : ");
             if (PCONFIG(1))

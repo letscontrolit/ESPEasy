@@ -1,3 +1,4 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P065
 //#######################################################################################################
 //############################# Plugin 065: P065_DFR0299_MP3 ############################################
@@ -36,10 +37,11 @@
 #include <ESPeasySerial.h>
 
 
+
 ESPeasySerial* P065_easySerial = NULL;
 
 
-boolean Plugin_065(byte function, struct EventStruct *event, String& string)
+boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -50,7 +52,7 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_065;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_NONE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -100,13 +102,13 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
         #pragma GCC diagnostic pop
 
 
-        P065_easySerial = new ESPeasySerial(-1, CONFIG_PIN1);   // no RX, only TX
+        P065_easySerial = new (std::nothrow) ESPeasySerial(static_cast<ESPEasySerialPort>(CONFIG_PORT), -1, CONFIG_PIN1);   // no RX, only TX
+        if (P065_easySerial != nullptr) {
+          P065_easySerial->begin(9600);
+          Plugin_065_SetVol(PCONFIG(0));   // set default volume
 
-        P065_easySerial->begin(9600);
-
-        Plugin_065_SetVol(PCONFIG(0));   // set default volume
-
-        success = true;
+          success = true;
+        }
         break;
       }
 
@@ -134,11 +136,9 @@ boolean Plugin_065(byte function, struct EventStruct *event, String& string)
 
         if (command == F("stop"))
         {
-          String log = F("MP3  : stop");
-
           Plugin_065_SendCmd(0x0E, 0);
 
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("MP3  : stop"));
           success = true;
         }
 
@@ -194,25 +194,25 @@ void Plugin_065_SetEQ(int8_t eq)
   Plugin_065_SendCmd(0x07, eq);
 }
 
-void Plugin_065_SendCmd(byte cmd, int16_t data)
+void Plugin_065_SendCmd(uint8_t cmd, int16_t data)
 {
   if (!P065_easySerial)
     return;
 
-  byte buffer[10] = { 0x7E, 0xFF, 0x06, 0, 0x00, 0, 0, 0, 0, 0xEF };
+  uint8_t buffer[10] = { 0x7E, 0xFF, 0x06, 0, 0x00, 0, 0, 0, 0, 0xEF };
 
   buffer[3] = cmd;
-  buffer[5] = data >> 8;   // high byte
-  buffer[6] = data & 0xFF;   // low byte
+  buffer[5] = data >> 8;   // high uint8_t
+  buffer[6] = data & 0xFF;   // low uint8_t
 
   int16_t checksum = -(buffer[1] + buffer[2] + buffer[3] + buffer[4] + buffer[5] + buffer[6]);
-  buffer[7] = checksum >> 8;   // high byte
-  buffer[8] = checksum & 0xFF;   // low byte
+  buffer[7] = checksum >> 8;   // high uint8_t
+  buffer[8] = checksum & 0xFF;   // low uint8_t
 
-  P065_easySerial->write(buffer, 10);   //Send the byte array
+  P065_easySerial->write(buffer, 10);   //Send the uint8_t array
 
   String log = F("MP3  : Send Cmd ");
-  for (byte i=0; i<10; i++)
+  for (uint8_t i=0; i<10; i++)
   {
     log += String(buffer[i], 16);
     log += ' ';

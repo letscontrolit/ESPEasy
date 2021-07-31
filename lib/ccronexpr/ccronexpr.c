@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-/*
+/* 
  * File:   ccronexpr.c
  * Author: alex
- *
+ * 
  * Created on February 24, 2015, 9:35 AM
  */
 
@@ -76,86 +76,122 @@ void* cron_malloc(size_t n);
 void cron_free(void* p);
 #endif /* CRON_TEST_MALLOC */
 
-#ifdef _WIN32
-#ifdef CRON_USE_LOCAL_TIME
-time_t cron_mktime(struct tm* tm) {
-    return mktime(tm);
-}
+/**
+ * Time functions from standard library.
+ * This part defines: cron_mktime: create time_t from tm
+ *                    cron_time: create tm from time_t
+ */
 
-struct tm* cron_time(time_t* date, struct tm* out) {
-    errno_t err = localtime_s(out, date);
-    return 0 == err ? out : NULL;
-}
-#else /* CRON_USE_LOCAL_TIME */
+/* forward declarations for platforms that may need them */
+/* can be hidden in time.h */
+#if !defined(_WIN32) && !defined(__AVR__) && !defined(ESP8266) && !defined(ESP_PLATFORM) && !defined(ANDROID)
+struct tm *gmtime_r(const time_t *timep, struct tm *result);
+time_t timegm(struct tm* __tp);
+struct tm *localtime_r(const time_t *timep, struct tm *result);
+#endif /* PLEASE CHECK _WIN32 AND ANDROID NEEDS FOR THESE DECLARATIONS */
 #ifdef __MINGW32__
 /* To avoid warning when building with mingw */
 time_t _mkgmtime(struct tm* tm);
 #endif /* __MINGW32__ */
 
-time_t cron_mktime(struct tm* tm) {
+/* function definitions */
+time_t cron_mktime_gm(struct tm* tm) {
+#if defined(_WIN32)
+/* http://stackoverflow.com/a/22557778 */
     return _mkgmtime(tm);
-}
-
-struct tm* cron_time(time_t* date, struct tm* out) {
-#ifdef __MINGW32__
-    (void)(out); /* To avoid unused warning */
-    return gmtime(date);
-#else /* !__MINGW32__ */
-    errno_t err = gmtime_s(out, date);
-    return 0 == err ? out : NULL;
-#endif
-}
-
-#endif /* CRON_USE_LOCAL_TIME */
+#elif defined(__AVR__)
+/* https://www.nongnu.org/avr-libc/user-manual/group__avr__time.html */
+    return mk_gmtime(tm);
+#elif defined(ESP8266) || defined(ESP_PLATFORM)
+    /* https://linux.die.net/man/3/timegm */
+    /* http://www.catb.org/esr/time-programming/ */
+    /* portable version of timegm() */
+    time_t ret = -1;
+    char *tz_orig = NULL;
+    char *tz = NULL;
+    tz_orig = getenv("TZ");
+    if (tz_orig)
+        tz = strdup(tz_orig);
+    setenv("TZ", "UTC+0", 1);
+    tzset();
+    ret = mktime(tm);
+    if (tz) {
+        setenv("TZ", tz, 1);
+        free(tz);
+    } else
+        unsetenv("TZ");
+    tzset();
+    return ret;
 #elif defined(ANDROID)
-struct tm *gmtime_r(const time_t *timep, struct tm *result);
-
-#ifdef CRON_USE_LOCAL_TIME
-struct tm *localtime_r(const time_t *timep, struct tm *result);
-
-time_t cron_mktime(struct tm* tm) {
-    return mktime(tm);
-}
-
-struct tm* cron_time(time_t* date, struct tm* out) {
-    return localtime_r(date, out);
-}
-#else /* CRON_USE_LOCAL_TIME */
-time_t cron_mktime(struct tm* tm) {
-        /* https://github.com/adobe/chromium/blob/cfe5bf0b51b1f6b9fe239c2a3c2f2364da9967d7/base/os_compat_android.cc#L20 */
+    /* https://github.com/adobe/chromium/blob/cfe5bf0b51b1f6b9fe239c2a3c2f2364da9967d7/base/os_compat_android.cc#L20 */
     static const time_t kTimeMax = ~(1L << (sizeof (time_t) * CHAR_BIT - 1));
     static const time_t kTimeMin = (1L << (sizeof (time_t) * CHAR_BIT - 1));
     time64_t result = timegm64(tm);
     if (result < kTimeMin || result > kTimeMax) return -1;
     return result;
+#else
+    return timegm(tm);
+#endif
+}
+
+struct tm* cron_time_gm(time_t* date, struct tm* out) {
+#if defined(__MINGW32__)
+    (void)(out); /* To avoid unused warning */
+    return gmtime(date);
+#elif defined(_WIN32)
+    errno_t err = gmtime_s(out, date);
+    return 0 == err ? out : NULL;
+#elif defined(__AVR__)
+    /* https://www.nongnu.org/avr-libc/user-manual/group__avr__time.html */
+    gmtime_r(date, out);
+    return out;
+#else
+    return gmtime_r(date, out);
+#endif
+}
+
+time_t cron_mktime_local(struct tm* tm) {
+    tm->tm_isdst = -1;
+    return mktime(tm);
+}
+
+struct tm* cron_time_local(time_t* date, struct tm* out) {
+#if defined(_WIN32)
+    errno_t err = localtime_s(out, date);
+    return 0 == err ? out : NULL;
+#elif defined(__AVR__)
+    /* https://www.nongnu.org/avr-libc/user-manual/group__avr__time.html */
+    localtime_r(date, out);
+    return out;
+#else
+    return localtime_r(date, out);
+#endif
+}
+
+/* Defining 'cron_' time functions to use use UTC (default) or local time */
+#ifndef CRON_USE_LOCAL_TIME
+time_t cron_mktime(struct tm* tm) {
+    return cron_mktime_gm(tm);
 }
 
 struct tm* cron_time(time_t* date, struct tm* out) {
-    return gmtime_r(date, out);
+    return cron_time_gm(date, out);
 }
-#endif /* CRON_USE_LOCAL_TIME */
-#elif defined(ESP8266) || defined(ESP32)
-#ifdef CRON_USE_LOCAL_TIME
-time_t cron_mktime(struct tm* tm) {
-   return mktime(tm);
-}
-struct tm* cron_time(time_t* date, struct tm* out) {
-    return localtime_r(date, out);
-}
+
 #else /* CRON_USE_LOCAL_TIME */
 time_t cron_mktime(struct tm* tm) {
-  time_t t = mktime( tm );
-  #ifdef __TM_GMTOFF
-    return t + localtime( &t )->tm_gmtoff;
-  #else
-    return t;
-  #endif
+    return cron_mktime_local(tm);
 }
+
 struct tm* cron_time(time_t* date, struct tm* out) {
-    return gmtime_r(date, out);
+    return cron_time_local(date, out);
 }
-#endif /* CRON_USE_LOCAL_TIME*/
-#endif
+
+#endif /* CRON_USE_LOCAL_TIME */
+
+/**
+ * Functions.
+ */
 
 void cron_set_bit(uint8_t* rbyte, int idx) {
     uint8_t j = (uint8_t) (idx / 8);
@@ -246,6 +282,7 @@ static int add_to_field(struct tm* calendar, int field, int val) {
         calendar->tm_hour = calendar->tm_hour + val;
         break;
     case CRON_CF_DAY_OF_WEEK: /* mkgmtime ignores this field */
+        break;
     case CRON_CF_DAY_OF_MONTH:
         calendar->tm_mday = calendar->tm_mday + val;
         break;
@@ -485,11 +522,11 @@ static int do_next(cron_expr* expr, struct tm* calendar, unsigned int dot) {
     if (!resets || !empty_list) {
         res = -1;
     }
-    if (resets) {
-        cron_free(resets);
-    }
     if (empty_list) {
         cron_free(empty_list);
+    }
+    if (resets) {
+        cron_free(resets);
     }
     return res;
 }
@@ -558,7 +595,7 @@ static char* str_replace(char *orig, const char *rep, const char *with) {
 static unsigned int parse_uint(const char* str, int* errcode) {
     char* endptr;
     errno = 0;
-    long int l = strtol(str, &endptr, 0);
+    long int l = strtol(str, &endptr, 10);
     if (errno == ERANGE || *endptr != '\0' || l < 0 || l > INT_MAX) {
         *errcode = 1;
         return 0;
@@ -613,6 +650,7 @@ static char** split_str(const char* str, char del, size_t* len_out) {
         int c = str[i];
         if (del == str[i]) {
             if (bi > 0) {
+                if (ri >= len)  goto return_error;
                 tmp = strdupl(buf, bi);
                 if (!tmp) goto return_error;
                 res[ri++] = tmp;
@@ -625,6 +663,7 @@ static char** split_str(const char* str, char del, size_t* len_out) {
     }
     /* tail */
     if (bi > 0) {
+        if (ri >= len)  goto return_error;
         tmp = strdupl(buf, bi);
         if (!tmp) goto return_error;
         res[ri++] = tmp;
@@ -634,10 +673,10 @@ static char** split_str(const char* str, char del, size_t* len_out) {
     return res;
 
     return_error:
+    free_splitted(res, len);
     if (buf) {
         cron_free(buf);
     }
-    free_splitted(res, len);
     *len_out = 0;
     return NULL;
 }
@@ -828,17 +867,17 @@ static void set_number_hits(const char* value, uint8_t* target, unsigned int min
 }
 
 static void set_months(char* value, uint8_t* targ, const char** error) {
-    int err;
     unsigned int i;
     unsigned int max = 12;
 
     char* replaced = NULL;
 
-    err = to_upper(value);
-    if (err) return;
+    to_upper(value);
     replaced = replace_ordinals(value, MONTHS_ARR, CRON_MONTHS_ARR_LEN);
-    if (!replaced) return;
-
+    if (!replaced) {
+        *error = "Invalid month format";
+        return;
+    }
     set_number_hits(replaced, targ, 1, max + 1, error);
     cron_free(replaced);
 
@@ -851,11 +890,26 @@ static void set_months(char* value, uint8_t* targ, const char** error) {
     }
 }
 
-static void set_days(char* field, uint8_t* targ, int max, const char** error) {
+static void set_days_of_week(char* field, uint8_t* targ, const char** error) {
+    unsigned int max = 7;
+    char* replaced = NULL;
+
     if (1 == strlen(field) && '?' == field[0]) {
         field[0] = '*';
     }
-    set_number_hits(field, targ, 0, max, error);
+    to_upper(field);
+    replaced = replace_ordinals(field, DAYS_ARR, CRON_DAYS_ARR_LEN);
+    if (!replaced) {
+        *error = "Invalid day format";
+        return;
+    }
+    set_number_hits(replaced, targ, 0, max + 1, error);
+    cron_free(replaced);
+    if (cron_get_bit(targ, 7)) {
+        /* Sunday can be represented as 0 or 7*/
+        cron_set_bit(targ, 0);
+        cron_del_bit(targ, 7);
+    }
 }
 
 static void set_days_of_month(char* field, uint8_t* targ, const char** error) {
@@ -870,7 +924,6 @@ void cron_parse_expr(const char* expression, cron_expr* target, const char** err
     const char* err_local;
     size_t len = 0;
     char** fields = NULL;
-    char* days_replaced = NULL;
     if (!error) {
         error = &err_local;
     }
@@ -879,36 +932,33 @@ void cron_parse_expr(const char* expression, cron_expr* target, const char** err
         *error = "Invalid NULL expression";
         goto return_res;
     }
+    if (!target) {
+        *error = "Invalid NULL target";
+        goto return_res;
+    }
 
     fields = split_str(expression, ' ', &len);
     if (len != 6) {
         *error = "Invalid number of fields, expression must consist of 6 fields";
         goto return_res;
     }
+    memset(target, 0, sizeof(*target));
     set_number_hits(fields[0], target->seconds, 0, 60, error);
     if (*error) goto return_res;
     set_number_hits(fields[1], target->minutes, 0, 60, error);
     if (*error) goto return_res;
     set_number_hits(fields[2], target->hours, 0, 24, error);
     if (*error) goto return_res;
-    to_upper(fields[5]);
-    days_replaced = replace_ordinals(fields[5], DAYS_ARR, CRON_DAYS_ARR_LEN);
-    set_days(days_replaced, target->days_of_week, 8, error);
-    cron_free(days_replaced);
-    if (*error) goto return_res;
-    if (cron_get_bit(target->days_of_week, 7)) {
-        /* Sunday can be represented as 0 or 7*/
-        cron_set_bit(target->days_of_week, 0);
-        cron_del_bit(target->days_of_week, 7);
-    }
     set_days_of_month(fields[3], target->days_of_month, error);
     if (*error) goto return_res;
     set_months(fields[4], target->months, error);
     if (*error) goto return_res;
+    set_days_of_week(fields[5], target->days_of_week, error);
+    if (*error) goto return_res;
 
     goto return_res;
 
-    return_res:
+    return_res: 
     free_splitted(fields, len);
 }
 

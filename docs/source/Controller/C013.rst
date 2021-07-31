@@ -23,7 +23,7 @@ Maintainer: |C013_maintainer|
 Change log
 ----------
 
-.. versionchanged:: 2.0
+.. versionchanged:: 2.0 
   ...
 
   |improved|
@@ -60,6 +60,58 @@ Later updates may add:
 
 * Distribution of settings
 * Sending commands
+
+
+Sharing Plugins among Nodes
+---------------------------
+
+It is possible to share the data collected by a plugin on one node so it can be used on another node.
+This data can be used as if it is actually being run on the second node.
+
+For example, a Dallas DS18b20 sensor on Node-1 is shared using the ESPeasy p2p controller.
+This plugin can then automatically be setup on Node-2 and using the data collected by Node-1.
+
+This is a rather non-intuitive process to setup.
+
+Prerequisites
+^^^^^^^^^^^^^
+
+* Same UDP port must be setup on both nodes. (preferrably UDP port 8266) This can be done in Tools -> Advanced -> UDP port
+* Nodes must be rebooted after UDP port has changed. (Builds before 2020-07-19)
+* Each node must have an unique unit number. This must not be 0 and not 255, but anything inbetween is fine.
+
+
+How to share a plugin
+^^^^^^^^^^^^^^^^^^^^^
+
+* Check to see if all nodes can see eachother. This will be visible on the main page showing a list of all nodes.
+* Enable p2p networking controller on receiving node
+* Make sure the receiving node has the spot free which is being used on the 'sending' node (For example slot 12)
+* Enable p2p networking controller on sending node
+* Set the plugin you want to share to use the p2p controller
+
+Any node that is setup to receive data like this will see a plugin being added if the spot in the device list was still free.
+
+Builds made after 2019/08/08 will show in the device overview page from which unit the shared plugin does get its data.
+This also means the plugin must be removed and re-created if the sending node is changed. (e.g. another node or change of unit number)
+
+In later builds there will be added an option to update this node number.
+
+
+Some tips on trouble shooting
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Make sure to reboot the node after changing the UDP port.
+* Make sure all nodes have an unique unit number and share the same UDP port.
+* If you have ArduinoOTA enabled, use another port for ESPeasy p2p UDP (port suggested in most OTA examples use port 8266)
+* Ping the nodes from some other host to keep their WiFi awake.
+* Disable "Eco mode" in the advanced settings.
+* Sharing a plugin to be auto installed on another node is only sent right after the plugin is set to use the p2p controller. So if you don't see it appear on the other node, save it again on the source node.
+* Make sure the same plugin is available in the build on both nodes. (e.g. both supporting Dallas DS18b20, if that's the one you want to share)
+* When using the "Guest" feature of an access point, some will not allow direct communication between clients on the same AP. This will also prevent this p2p protocol to share data.
+* If updating from builds before 2019/08/08, you may need to remove and add again a plugin receiving data from a remote node.
+
+
 
 Sending & Known Nodes
 ---------------------
@@ -111,10 +163,10 @@ Of each known node the following data is kept:
 The key to index this ``NodeStruct`` is the nodes unit number.
 
 ASCII Data
-~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 Command Message
-***************
+^^^^^^^^^^^^^^^^
 
 First byte is not 0xFF.
 
@@ -123,19 +175,13 @@ The entire message processed as a command like this:
 .. code-block:: C++
 
   packetBuffer[len] = 0;
-  String request = &packetBuffer[0];
-  struct EventStruct TempEvent;
-  parseCommandString(&TempEvent, request);
-  TempEvent.Source = VALUE_SOURCE_SYSTEM;
-  if (!PluginCall(PLUGIN_WRITE, &TempEvent, request)) {
-    ExecuteCommand(VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
-  }
+  ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
 
 As can be seen, no checks for size, and it is just expected to be a valid ESPeasy command.
 Also no check to see if the command is supported by the receiving end and no feedback to the sender.
 
 Binary Data
-~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 Binary data is marked with the first byte 0xFF.
 
@@ -161,7 +207,7 @@ Message types supported, determined by the 2nd byte:
 * 5: Sensor data
 
 Sysinfo Message
-***************
+^^^^^^^^^^^^^^^^
 
 There are 2 types of Sysinfo messages, a standard and an extended message.
 The extended message starts with the same information as the standard one.
@@ -188,7 +234,7 @@ The node type is defined as:
 * 81 = "Nano Easy"
 
 Sensor Info message
-*******************
+^^^^^^^^^^^^^^^^^^^^
 
 Sensor Info messages are just a description of a shared sensor.
 It contains some information to setup a new sensor on the receiving end.
@@ -201,7 +247,7 @@ These messages are just a serialized byte stream of ``struct C013_SensorInfoStru
   {
     byte header = 255;
     byte ID = 3;
-    byte sourcelUnit;
+    byte sourceUnit;
     byte destUnit;
     byte sourceTaskIndex;
     byte destTaskIndex;
@@ -212,7 +258,7 @@ These messages are just a serialized byte stream of ``struct C013_SensorInfoStru
 
 
 Sensor Data message
-*******************
+^^^^^^^^^^^^^^^^^^^^
 
 
 These messages are just a serialized byte stream of ``struct C013_SensorDataStruct`` .
@@ -223,7 +269,7 @@ These messages are just a serialized byte stream of ``struct C013_SensorDataStru
   {
     byte header = 255;
     byte ID = 5;
-    byte sourcelUnit;
+    byte sourceUnit;
     byte destUnit;
     byte sourceTaskIndex;
     byte destTaskIndex;

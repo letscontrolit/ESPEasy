@@ -22,10 +22,10 @@
   License along with MechInputs.  If not, see
   <http://www.gnu.org/licenses/>.
   -------------------------------------------------------------------------*/
-#ifdef ESP8266  // Needed for precompile issues.
+//#ifdef ESP8266  // Needed for precompile issues.
 #include "jkSDS011.h"
 
-CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
+CjkSDS011::CjkSDS011(ESPEasySerialPort port, int16_t pinRX, int16_t pinTX)
 {
   _sws = ! ( pinRX < 0 || pinRX == 3 );
   _pm2_5 = NAN;
@@ -38,15 +38,16 @@ CjkSDS011::CjkSDS011(int16_t pinRX, int16_t pinTX)
   _command.SetPacketLength(19);
   _working_period = -1;
   _sleepmode_active = false;
-  _serial = new ESPeasySerial(pinRX, pinTX);
-  _serial->begin(9600);
+  _serial = new (std::nothrow) ESPeasySerial(port, pinRX, pinTX);
+  if (_serial != nullptr)
+    _serial->begin(9600);
 }
 
 CjkSDS011::~CjkSDS011() {
   delete _serial;
 }
 
-void CjkSDS011::SendCommand(byte byte1, byte byte2, byte byte3) {
+void CjkSDS011::SendCommand(uint8_t byte1, uint8_t byte2, uint8_t byte3) {
   _command[0] = 0xAA; // Head
   _command[1] = 0xB4; // Command ID
   _command[2] = byte1; // Data Byte 1
@@ -65,8 +66,8 @@ void CjkSDS011::SendCommand(byte byte1, byte byte2, byte byte3) {
   _command[15] = 0xFF; // Device ID byte 1, FF: All sensor response
   _command[16] = 0xFF; // Device ID byte 2, FF: All sensor response
 
-  byte checksum = 0;
-  for (byte i=2; i< 17; ++i) {
+  uint8_t checksum = 0;
+  for (uint8_t i=2; i< 17; ++i) {
     checksum += _command[i];
   }
   _command[17] = checksum; // Checksum
@@ -78,7 +79,7 @@ void CjkSDS011::SendCommand(byte byte1, byte byte2, byte byte3) {
 }
 
 void CjkSDS011::SetSleepMode(bool enabled) {
-  byte databyte3 = enabled ? 0 : 1;
+  uint8_t databyte3 = enabled ? 0 : 1;
   SendCommand(6, 1, databyte3);
 }
 
@@ -93,6 +94,9 @@ void CjkSDS011::SetWorkingPeriod(int minutes) {
   const int currentWorkingPeriod = GetWorkingPeriod();
   if (minutes != currentWorkingPeriod)
     SendCommand(8, 1, minutes);
+  // In some cases the Sensor is set to "report query"-mode, this makes sure to set active reporting of values, otherwise the sensor won't work.
+  Process();
+  SendCommand(2, 1, 0);
 }
 
 int CjkSDS011::GetWorkingPeriod() {
@@ -124,14 +128,16 @@ void CjkSDS011::ParseCommandReply() {
 
 void CjkSDS011::Process()
 {
-  while (_serial->available())
+  int serial_available = _serial->available();
+  while (serial_available > 0)
   {
+    --serial_available;
   	_data.AddData(_serial->read());
 
     if (_data[0] == 0xAA && _data[9] == 0xAB)   // correct packet frame?
     {
-      byte checksum = 0;
-      for (byte i=2; i<= 7; i++)
+      uint8_t checksum = 0;
+      for (uint8_t i=2; i<= 7; i++)
         checksum += _data[i];
       if (checksum != _data[8])
         continue;
@@ -161,6 +167,9 @@ void CjkSDS011::Process()
         return;
       }
     }
+    if (serial_available == 0) {
+      serial_available = _serial->available();
+    }
   }
 }
 
@@ -186,4 +195,4 @@ boolean CjkSDS011::ReadAverage(float &pm25, float &pm10)
   pm10 = NAN;
   return false;
 }
-#endif
+// #endif

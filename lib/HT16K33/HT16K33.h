@@ -13,7 +13,7 @@ class CHT16K33 {
   void ClearRowBuffer(void);
   void SetRow(uint8_t com, uint16_t data);
   uint16_t GetRow(uint8_t com);
-  void SetDigit(uint8_t com, uint8_t c);
+  void SetDigit(uint8_t com, uint8_t c, bool setDot = false);
 
   // LED output and control
   void SetBrightness(uint8_t b);
@@ -26,7 +26,7 @@ protected:
   uint8_t _addr;
   uint16_t _rowBuffer[8];
   uint16_t _keyBuffer[3];
-  byte _keydown;
+  uint8_t _keydown;
 
   static const uint8_t _digits[16];
 };

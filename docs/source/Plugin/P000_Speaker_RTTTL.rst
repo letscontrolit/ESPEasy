@@ -22,7 +22,7 @@ RTTTL (Ring Tone [Text] Transfer Language) was developed by Nokia to play more "
 
 After that the actual tune is then created using standard notes (a, b, c, d, e, f, and g), before the note the duration is set, after the note the octave is set:
 
-.. code-block:: html
+.. code-block:: none
 
    <duration><note><octave>
 
@@ -35,7 +35,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
   ESP              Speaker
   GPIO     <-->    Positive (red)
@@ -52,7 +52,7 @@ Rules examples
 
 From ESP Easy v2.0.0 its possible to play melodies via `RTTTL <https://en.wikipedia.org/wiki/Ring_Tone_Transfer_Language#Technical_specification>`_ (don't forget to remove the spaces and replace # with -, this might be fixed in future releases):
 
-.. code-block:: html
+.. code-block:: none
 
    http://<ESP IP address>/control?cmd=rtttl,14:d=4,o=5,b=112:8a,8a,a,8a,8a,a,8a,8c6,8f.,16g,2a,8a-,8a-,8a-.,16a-,8a-,8a,8a.,16a,8a,8g,8g,8a,g,c6
 
@@ -62,7 +62,7 @@ You can also use these from rules. We use it to let our alarm system give feedba
 
 To make a boot-sound on startup, create a rule like this:
 
-.. code-block:: html
+.. code-block:: none
 
    On System#Boot do
      rtttl,14:d=10,o=6,b=180,c,e,g
@@ -72,7 +72,7 @@ To make a boot-sound on startup, create a rule like this:
 
 Besides RTTTL it's also possible to play a single tone on a pin, via a buzzer, speaker or piezo element:
 
-.. code-block:: html
+.. code-block:: none
 
    http://<ESP IP address>/control?cmd=tone,14,1300,200
 

@@ -1,0 +1,115 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``heatpumpir,<model>,<powerstate>,<mode>,<fan>,<temperature>,<swingV>,<swingH>``
+
+        model:
+
+        ``panasonic_ckp`` Panasonic CPK series
+
+        ``panasonic_dke`` Panasonic DKE series
+
+        ``panasonic_jke`` Panasonic JKE series
+
+        ``panasonic_nke`` Panasonic NKE series
+
+        ``panasonic_lke`` Panasonic LKE series
+
+        ``carrier_nqv``   Carrier/Toshiba
+
+        ``carrier_mca``   Carrier/Toshiba
+
+        ``midea``         Midea
+
+        ``fujitsu_awyz``  Fujitsu AWYZ
+
+        ``mitsubishi_fd`` Mitsubishi FD
+
+        ``mitsubishi_fe`` Mitsubishi FE
+
+        ``mitsubishi_msy`` Mitsubishi MSY
+
+        ``mitsubishi_msc`` Mitsubishi MSC
+
+        ``mitsubishi_fa`` Mitsubishi FA
+
+        ``samsung_aqv``   Samsung AQV
+
+        ``samsung_fjm``   Samsung FJM
+
+        ``sharp``         Sharp
+
+        ``daikin``        Daikin
+
+        ``daikin_arc417`` Daikin ARC417
+
+        ``mitsubishi_heavy_zj`` Mitsubishi Heavy Electric ZJ
+
+        ``mitsubishi_heavy_zm`` Mitsubishi Heavy Electric ZM
+
+        ``mitsubishi_heavy_fdtc`` Mitsubishi Heavy FDTC
+
+        ``mitsubishi_sez`` Mitsubishi SEZ
+
+        ``hyundai``       Hyundai
+
+        ``hisense_aud``   Hisense
+
+        ``gree``          Gree (generic)
+
+        ``greeyan``       Gree YAN
+
+        ``greeyaa``       Gree YAN
+
+        ``fuego``         Fuego
+
+        ``toshiba``       Toshiba
+
+        ``toshiba_daiseikai`` Toshiba Daiseikai
+
+        ``ivt``           IVT
+
+        ``hitachi``       Hitachi
+
+        ``ballu``         Ballu
+
+        ``AUX``           AUX
+
+        powerstate:
+
+        ``0`` Power off
+
+        ``1`` Power on
+
+        mode:
+
+        ``1`` Automatic
+
+        ``2`` Heat
+
+        ``3`` Cool
+
+        ``4`` Dry
+
+        ``5`` Fan only
+
+        ``6`` Maintenance heating (10 or 8 degrees Celsius)
+
+        fan: a value from 0 to 5, 0 is auto speed
+
+        temperature: temperature in degrees Celsius, 16-30
+
+        swingV: vertical swing position (not supported on most models)
+
+        swingH: horizontal swing position (not supported on most models)
+
+        ","
+        Examples:
+        Panasonic CKP on, automatic mode, automatic fan speed, 22 degrees C, automatic horizontal & vertical swing
+
+        ``http://<ESP IP address>/control?cmd=heatpumpir,panasonic_ckp,1,1,0,22,0,0``
+
+        For more examples, read the comments in the source code of |P088_github|_
+        "

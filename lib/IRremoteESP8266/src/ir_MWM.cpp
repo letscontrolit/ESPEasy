@@ -1,16 +1,17 @@
 // Copyright 2018 Brett T. Warden
-// derived from ir_Lasertag.cpp, Copyright 2017 David Conran
+
+/// @file
+/// @brief Disney Made With Magic (MWM) Support
+/// derived from ir_Lasertag.cpp
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/pull/557
+
+// Supports:
+//   Brand: Disney,  Model: Made With Magic (Glow With The Show) wand
 
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//                      MM   MM WW   WW MM   MM
-//                      MMM MMM WW   WW MMM MMM
-//                      MM M MM WW W WW MM M MM
-//                      MM   MM WWW WWW MM   MM
-//                      MM   MM WW   WW MM   MM
 
 // Constants
 const uint16_t kMWMMinSamples = 6;  // Msgs are >=3 bytes, bytes have >=2
@@ -26,18 +27,15 @@ const int16_t kSpace = 1;
 const int16_t kMark = 0;
 
 #if SEND_MWM
-// Send a MWM packet.
-// This protocol is 2400 bps serial, 1 start bit (mark), 1 stop bit (space), no
-// parity
-//
-// Args:
-//   data:    The message you wish to send.
-//   nbits:   Bit size of the protocol you want to send.
-//   repeat:  Nr. of extra times the data will be sent.
-//
-// Status: Implemented.
-//
-void IRsend::sendMWM(uint8_t data[], uint16_t nbytes, uint16_t repeat) {
+/// Send a MWM packet/message.
+/// Status: Implemented.
+/// @param[in] data The message to be sent.
+/// @param[in] nbytes The number of bytes of message to be sent.
+/// @param[in] repeat The number of times the command is to be repeated.
+/// @note This protocol is 2400 bps serial, 1 start bit (mark),
+///   1 stop bit (space), no parity
+void IRsend::sendMWM(const uint8_t data[], const uint16_t nbytes,
+                     const uint16_t repeat) {
   if (nbytes < 3) return;  // Shortest possible message is 3 bytes
 
   // Set 38kHz IR carrier frequency & a 1/4 (25%) duty cycle.
@@ -70,29 +68,26 @@ void IRsend::sendMWM(uint8_t data[], uint16_t nbytes, uint16_t repeat) {
 #endif  // SEND_MWM
 
 #if DECODE_MWM
-// Decode the supplied MWM message.
-// This protocol is 2400 bps serial, 1 start bit (mark), 1 stop bit (space), no
-// parity
-//
-// Args:
-//   results: Ptr to the data to decode and where to store the decode result.
-//   nbits:   The number of data bits to expect.
-//   strict:  Flag indicating if we should perform strict matching.
-// Returns:
-//   boolean: True if it can decode it, false if it can't.
-//
-// Status: Implemented.
-//
-bool IRrecv::decodeMWM(decode_results *results, uint16_t nbits, bool strict) {
+/// Decode the supplied MWM message.
+/// Status: Implemented.
+/// @param[in,out] results Ptr to the data to decode & where to store the result
+/// @param[in] offset The starting index to use when attempting to decode the
+///   raw data. Typically/Defaults to kStartOffset.
+/// @param[in] nbits The number of data bits to expect.
+/// @param[in] strict Flag indicating if we should perform strict matching.
+/// @return True if it can decode it, false if it can't.
+/// @note This protocol is 2400 bps serial, 1 start bit (mark),
+///   1 stop bit (space), no parity
+bool IRrecv::decodeMWM(decode_results *results, uint16_t offset,
+                       const uint16_t nbits, const bool strict) {
   DPRINTLN("DEBUG: decodeMWM");
 
   // Compliance
-  if (results->rawlen < kMWMMinSamples) {
+  if (results->rawlen <= kMWMMinSamples + offset) {
     DPRINTLN("DEBUG: decodeMWM: too few samples");
     return false;
   }
 
-  uint16_t offset = kStartOffset;
   uint16_t used = 0;
   uint64_t data = 0;
   uint16_t frame_bits = 0;
@@ -105,7 +100,7 @@ bool IRrecv::decodeMWM(decode_results *results, uint16_t nbits, bool strict) {
   for (; offset < results->rawlen && results->bits < 8 * kStateSizeMax;
        frame_bits++) {
     DPRINT("DEBUG: decodeMWM: offset = ");
-    DPRINTLN(uint64ToString(offset));
+    DPRINTLN(offset);
     int16_t level = getRClevel(results, &offset, &used, kMWMTick, kMWMTolerance,
                                kMWMExcess, kMWMDelta, kMWMMaxWidth);
     if (level < 0) {
@@ -129,7 +124,7 @@ bool IRrecv::decodeMWM(decode_results *results, uint16_t nbits, bool strict) {
           DPRINT("DEBUG: decodeMWM: data_bits = ");
           DPRINTLN(data_bits);
           DPRINT("DEBUG: decodeMWM: Finished byte: ");
-          DPRINTLN(data);
+          DPRINTLN(uint64ToString(data));
           results->state[data_bits / 8 - 1] = data & 0xFF;
           results->bits = data_bits;
           data = 0;

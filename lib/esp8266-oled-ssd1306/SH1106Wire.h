@@ -52,9 +52,6 @@ class SH1106Wire : public OLEDDisplay {
 
     bool connect() {
       Wire.begin(this->_sda, this->_scl);
-      // Let's use ~700khz if ESP8266 is in 160Mhz mode
-      // this will be limited to ~400khz if the ESP8266 in 80Mhz mode.
-      Wire.setClock(700000);
       return true;
     }
 
@@ -93,7 +90,7 @@ class SH1106Wire : public OLEDDisplay {
         uint8_t minBoundXp2H = (minBoundX + 2) & 0x0F;
         uint8_t minBoundXp2L = 0x10 | ((minBoundX + 2) >> 4 );
 
-        byte k = 0;
+        uint8_t k = 0;
         for (y = minBoundY; y <= maxBoundY; y++) {
           sendCommand(0xB0 + y);
           sendCommand(minBoundXp2H);

@@ -1,4 +1,8 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P018
+
+#include "src/Helpers/Hardware.h"
+
 //#######################################################################################################
 //#################################### Plugin 018: GP2Y10 ###############################################
 //#######################################################################################################
@@ -9,9 +13,9 @@
 #define PLUGIN_VALUENAME1_018 "Dust"
 
 boolean Plugin_018_init = false;
-byte Plugin_GP2Y10_LED_Pin = 0;
+uint8_t Plugin_GP2Y10_LED_Pin = 0;
 
-boolean Plugin_018(byte function, struct EventStruct *event, String& string)
+boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -21,7 +25,7 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_018;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_SINGLE;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -66,23 +70,25 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
       {
         Plugin_GP2Y10_LED_Pin = CONFIG_PIN1;
         noInterrupts();
-        byte x;
+        uint8_t x;
         int value;
         value = 0;
         for (x = 0; x < 25; x++)
         {
           digitalWrite(Plugin_GP2Y10_LED_Pin, LOW);
           delayMicroseconds(280);
-          value = value + analogRead(A0);
+          value = value + espeasy_analogRead(A0);
           delayMicroseconds(40);
           digitalWrite(Plugin_GP2Y10_LED_Pin, HIGH);
           delayMicroseconds(9680);
         }
         interrupts();
         UserVar[event->BaseVarIndex] = (float)value;
-        String log = F("GPY  : Dust value: ");
-        log += value;
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("GPY  : Dust value: ");
+          log += value;
+          addLog(LOG_LEVEL_INFO, log);
+        }
         success = true;
         break;
       }

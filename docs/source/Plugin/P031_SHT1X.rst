@@ -21,7 +21,7 @@ Wiring
 ------
 
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               S8
   GPIO (X)   <-->   TX
@@ -36,12 +36,23 @@ Wiring
 Setup
 -----
 
+This sensor does not communicate via some standard protocol.
+The clock line can be shared with other instances of this plugin in order to
+accommodate for more sensors on the same node.
+
+Using long wires can cause a decay of the signal, due to the internal capacitance of the wire.
+To overcome this signal attenuation, the clock speed of the signal can be lowered.
+
+For example, a delay of 10 usec can be enough to use 30m CAT6 UTP cable with these sensors.
+With a delay of 0, on a 80 MHz ESP8266, the clock signal is about 200 kHz.
+With a delay of 10, on the same node, the clock signal is about 40 kHz.
+
 
 
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
   //Code below...
 

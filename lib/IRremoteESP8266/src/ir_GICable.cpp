@@ -1,21 +1,19 @@
 // Copyright 2018 David Conran
 
+/// @file
+/// @brief G.I. Cable
+/// @see https://github.com/cyborg5/IRLib2/blob/master/IRLibProtocols/IRLib_P09_GICable.h
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/447
+
+// Supports:
+//   Brand: G.I. Cable,  Model: XRC-200 remote
+
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//              GGGG      IIIII       CCCCC    AAA   BBBBB   LL      EEEEEEE
-//             GG  GG      III       CC    C  AAAAA  BB   B  LL      EE
-//            GG           III       CC      AA   AA BBBBBB  LL      EEEEE
-//            GG   GG ...  III  ...  CC    C AAAAAAA BB   BB LL      EE
-//             GGGGGG ... IIIII ...   CCCCC  AA   AA BBBBBB  LLLLLLL EEEEEEE
-//
-// Ref:
-//   https://github.com/cyborg5/IRLib2/blob/master/IRLibProtocols/IRLib_P09_GICable.h
-//   https://github.com/markszabo/IRremoteESP8266/issues/447
 
 // Constants
 const uint16_t kGicableHdrMark = 9000;
@@ -31,17 +29,11 @@ const uint32_t kGicableMinGap =
      kGicableBits * (kGicableBitMark + kGicableOneSpace) + kGicableBitMark);
 
 #if SEND_GICABLE
-// Send a raw G.I. Cable formatted message.
-//
-// Args:
-//   data:   The message to be sent.
-//   nbits:  The number of bits of the message to be sent.
-//           Typically kGicableBits.
-//   repeat: The number of times the command is to be repeated.
-//
-// Status: Alpha / Untested.
-//
-// Ref:
+/// Send a raw G.I. Cable formatted message.
+/// Status: Alpha / Untested.
+/// @param[in] data The message to be sent.
+/// @param[in] nbits The number of bits of message to be sent.
+/// @param[in] repeat The number of times the command is to be repeated.
 void IRsend::sendGICable(uint64_t data, uint16_t nbits, uint16_t repeat) {
   sendGeneric(kGicableHdrMark, kGicableHdrSpace, kGicableBitMark,
               kGicableOneSpace, kGicableBitMark, kGicableZeroSpace,
@@ -59,44 +51,31 @@ void IRsend::sendGICable(uint64_t data, uint16_t nbits, uint16_t repeat) {
 #endif  // SEND_GICABLE
 
 #if DECODE_GICABLE
-// Decode the supplied G.I. Cable message.
-//
-// Args:
-//   results: Ptr to the data to decode and where to store the decode result.
-//   nbits:   The number of data bits to expect. Typically kGicableBits.
-//   strict:  Flag indicating if we should perform strict matching.
-// Returns:
-//   boolean: True if it can decode it, false if it can't.
-//
-// Status: Alpha / Not tested against a real device.
-bool IRrecv::decodeGICable(decode_results *results, uint16_t nbits,
-                           bool strict) {
-  if (results->rawlen < 2 * (nbits + kHeader + kFooter) - 1)
-    return false;  // Can't possibly be a valid GICABLE message.
+/// Decode the supplied G.I. Cable message.
+/// Status: Alpha / Not tested against a real device.
+/// @param[in,out] results Ptr to the data to decode & where to store the decode
+///   result.
+/// @param[in] offset The starting index to use when attempting to decode the
+///   raw data. Typically/Defaults to kStartOffset.
+/// @param[in] nbits The number of data bits to expect.
+/// @param[in] strict Flag indicating if we should perform strict matching.
+/// @return A boolean. True if it can decode it, false if it can't.
+bool IRrecv::decodeGICable(decode_results *results, uint16_t offset,
+                           const uint16_t nbits, const bool strict) {
   if (strict && nbits != kGicableBits)
     return false;  // Not strictly an GICABLE message.
 
   uint64_t data = 0;
-  uint16_t offset = kStartOffset;
-
-  // Header
-  if (!matchMark(results->rawbuf[offset++], kGicableHdrMark)) return false;
-  if (!matchSpace(results->rawbuf[offset++], kGicableHdrSpace)) return false;
-
-  // Data
-  match_result_t data_result =
-      matchData(&(results->rawbuf[offset]), nbits, kGicableBitMark,
-                kGicableOneSpace, kGicableBitMark, kGicableZeroSpace);
-  if (data_result.success == false) return false;
-  data = data_result.data;
-  offset += data_result.used;
-
-  // Footer
-  if (!matchMark(results->rawbuf[offset++], kGicableBitMark)) return false;
-  if (offset < results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset++], kGicableMinGap))
-    return false;
-
+  // Match Header + Data + Footer
+  uint16_t used;
+  used = matchGeneric(results->rawbuf + offset, &data,
+                      results->rawlen - offset, nbits,
+                      kGicableHdrMark, kGicableHdrSpace,
+                      kGicableBitMark, kGicableOneSpace,
+                      kGicableBitMark, kGicableZeroSpace,
+                      kGicableBitMark, kGicableMinGap, true);
+  if (!used) return false;
+  offset += used;
   // Compliance
   if (strict) {
     // We expect a repeat frame.

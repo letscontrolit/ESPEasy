@@ -22,7 +22,7 @@
   License along with MechInputs.  If not, see
   <http://www.gnu.org/licenses/>.
   -------------------------------------------------------------------------*/
-#ifdef ESP8266  // Needed for precompile issues.
+//#ifdef ESP8266  // Needed for precompile issues.
 #ifndef _jkSDS011_H_
 #define _jkSDS011_H_
 
@@ -35,7 +35,7 @@
 class CjkSDS011
 {
 public:
-  CjkSDS011(int16_t pinRX, int16_t pinTX);
+  CjkSDS011(ESPEasySerialPort port, int16_t pinRX, int16_t pinTX);
   virtual ~CjkSDS011();
 
   void Process();
@@ -60,11 +60,11 @@ public:
   int GetWorkingPeriod();
 
 private:
-  void SendCommand(byte byte1, byte byte2, byte byte3);
+  void SendCommand(uint8_t byte1, uint8_t byte2, uint8_t byte3);
   void ParseCommandReply();
 
 //  SensorSerial _serial;
-  ESPeasySerial *_serial;
+  ESPeasySerial *_serial = nullptr;
   CSensorSerialBuffer _data;
   CSensorSerialBuffer _command;
   float _pm2_5;
@@ -79,4 +79,4 @@ private:
 };
 
 #endif
-#endif
+//#endif

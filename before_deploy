@@ -1,8 +1,34 @@
 #!/bin/bash
 
 VERSION=$(git describe)
-TMP_DIST=`mktemp -d`
+TMP_DIR=`mktemp -d`
+if [ $? -eq 0 ]; then
+    # Make sure coreutils is installed.
+    # if not, these terrible things may happen:
+    # https://www.letscontrolit.com/forum/viewtopic.php?f=6&t=8542
+    echo "Created ${TMP_DIR}"
+else
+    echo "Could not create tmp dir, mktemp -d failed"
+    exit 1
+fi
+
+TMP_DIST=`echo "${TMP_DIR}/ESPEasy_collect_dist"`
+mkdir -p ${TMP_DIST}
+if [ $? -eq 0 ]; then
+    echo "Created ${TMP_DIST}"
+else
+    echo "Could not create tmp dir: ${TMP_DIST}"
+    exit 1
+fi
+
 CURPATH=`pwd`
+BUILD_LOG=`echo "${TMP_DIST}/buildlog.txt"`
+
+# PIO 3.x :
+# BINARY_PATH=".pioenvs"
+
+# PIO 4.0 and newer:
+BINARY_PATH=".pio/build"
 
 while getopts d: option
 do
@@ -18,95 +44,27 @@ if [ ! -d ${TMP_DIST} ]; then
   exit 1
 fi
 
+echo "### Creating zip archives"
+
 #Naming convention:
 # ESP_Easy_[github version]_[plugin set]_[chip type]_[flash memory].bin
+
+if [ -d "build_output/reject" ]; then
+  zip -qq ${CURPATH}/ESPEasy_ELF_files_$VERSION.zip build_output/reject/*
+fi
+
+zip -qq ${CURPATH}/ESPEasy_ELF_files_$VERSION.zip build_output/debug/*
+echo "### Created ESPEasy_ELF_files_$VERSION.zip"
+
 
 mkdir -p ${TMP_DIST}
 cp -r dist/* ${TMP_DIST}/
 
 if [ -d "docs/build" ]; then
   # Docs have been created
-  mkdir -p ${TMP_DIST}/docs
-  cp -r docs/build/* ${TMP_DIST}/docs/
+  zip -r -qq ${CURPATH}/ESPEasy_docs_$VERSION.zip docs/build/*
+  echo "### Created ESPEasy_docs_$VERSION.zip"
 fi
-
-mkdir -p ${TMP_DIST}/memstats
-
-for ENV in \
-  dev_ESP8266_4M\
-  esp-wrover-kit_test_1M8_partition\
-  esp32test_1M8_partition\
-  hard_SONOFF_POW_4M\
-  hard_Ventus_W266\
-  hard_core_250_SONOFF_POW_4M\
-  hard_core_250_Shelly_1_2M256\
-  minimal_ESP8266_1M_OTA\
-  minimal_ESP8285_1M_OTA\
-  minimal_core_250_ESP8266_1M_OTA\
-  minimal_core_250_ESP8285_1M_OTA\
-  normal_ESP8266_1M\
-  normal_ESP8266_1M_VCC\
-  normal_ESP8266_4M\
-  normal_ESP8285_1M\
-  normal_IR_ESP8266_1M\
-  normal_IR_ESP8266_4M\
-  normal_WROOM02_2M\
-  normal_core_241_ESP8266_1M\
-  normal_core_241_ESP8266_4M\
-  normal_core_242_ESP8266_1M\
-  normal_core_250_ESP8266_1M\
-  normal_core_250_ESP8266_4M\
-  normal_core_250_IR_ESP8266_4M\
-  normal_core_250_WROOM02_2M256\
-  normal_core_260_sdk2_alpha_ESP8266_4M\
-  test_ESP8266_4M_VCC\
-  test_core_242_ESP8266_4M\
-  test_core_250_ESP8266_4M\
-  test_core_260_alpha_ESP8266_4M_VCC\
-  test_core_260_sdk2_alpha_ESP8266_4M\
-  test_core_260_sdk222_alpha_ESP8266_4M\
-  test_core_260_sdk3_alpha_ESP8266_4M;\
-do
-  MAX_FILESIZE=1044464
-  if [[ ${ENV} == *"1024"* ]]; then
-    # max 602 kiB
-    MAX_FILESIZE=892912
-  fi
-  if [[ ${ENV} == *"1024_OTA"* ]]; then
-    # max 602 kiB
-    MAX_FILESIZE=616448
-  fi
-  if [[ ${ENV} == *"esp32"* ]]; then
-    MAX_FILESIZE=1310720
-  fi
-  if [[ ${ENV} == *"1M8_partition"* ]]; then
-    MAX_FILESIZE=1900544
-  fi
-  if [[ ${ENV} == *"core_250"* ]]; then
-    # disable core 250 for now, since it is buggy (20180211)
-    MAX_FILESIZE=0
-  fi
-
-  FILESIZE=$(stat -c%s .pioenvs/${ENV}/firmware.bin )
-  if (( FILESIZE < MAX_FILESIZE )); then
-    echo
-    echo "### Deploying environment $ENV for version $VERSION"
-    BIN=.pioenvs/${ENV}/ESP_Easy_${VERSION}_${ENV}.bin
-    cp .pioenvs/${ENV}/firmware.bin $BIN
-    python2 crc2.py $BIN
-    mv $BIN "${TMP_DIST}/bin/ESP_Easy_${VERSION}_${ENV}.bin"
-  else
-    echo "Build too large for $ENV $FILESIZE > $MAX_FILESIZE "
-  fi
-
-  ELFFILE=`echo ".pioenvs/${ENV}/firmware.elf"`
-  if [ -f $ELFFILE ]; then
-    SYMBOLS_STATS=`echo "${TMP_DIST}/memstats/symbols_${ENV}.txt"`
-    STRINGS_STATS=`echo "${TMP_DIST}/memstats/strings_${ENV}.txt"`
-    readelf -a ${ELFFILE} |grep 3ff |sort -n -k 3 > ${SYMBOLS_STATS}
-    objdump  -s -j .rodata ${ELFFILE} > ${STRINGS_STATS}
-  fi
-done
 
 #create a source structure that is the same as the original ESPEasy project (and works with the howto on the wiki)
 #rm -rf dist/Source 2>/dev/null
@@ -114,13 +72,36 @@ done
 mkdir -p ${TMP_DIST}/source
 cp -r lib ${TMP_DIST}/source/
 cp -r src ${TMP_DIST}/source/
-cp platformio.ini ${TMP_DIST}/source/
+cp -r misc ${TMP_DIST}/source/
+cp -r static ${TMP_DIST}/source/
+cp -r tools ${TMP_DIST}/source/
+cp platformio*.ini ${TMP_DIST}/source/
+cp *.txt ${TMP_DIST}/source/
+cp *.csv ${TMP_DIST}/source/
+cp README* ${TMP_DIST}/source/
+
+cp -r build_output/bin/* ${TMP_DIST}/bin
+rm -f ${TMP_DIST}/bin/*ESP32*
 
 cd ${TMP_DIST}
 
-echo
-echo "### Creating zip archive"
-zip ${CURPATH}/ESPEasy_$VERSION.zip -r .
+if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+  echo
+  zip -qq ${CURPATH}/ESPEasy_ESP82xx_$VERSION.zip -r .
+  echo "### Created ESPEasy_ESP82xx_$VERSION.zip"
+fi
+
+cd ${CURPATH}
+rm -f ${TMP_DIST}/bin/*
+cp -r build_output/bin/*ESP32* ${TMP_DIST}/bin
+
+cd ${TMP_DIST}
+
+if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+  echo
+  zip -qq ${CURPATH}/ESPEasy_ESP32_$VERSION.zip -r .
+  echo "### Created ESPEasy_ESP32_$VERSION.zip"
+fi
 
 rm -Rf ${TMP_DIST}/* 2>/dev/null
 rmdir ${TMP_DIST}

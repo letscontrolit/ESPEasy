@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P078
 
 //#######################################################################################################
@@ -14,14 +16,17 @@
 #define PLUGIN_ID_078         78
 #define PLUGIN_NAME_078       "Energy (AC) - Eastron SDM120C/220T/230/630 [TESTING]"
 
-#define P078_DEV_ID   PCONFIG(0)
-#define P078_MODEL    PCONFIG(1)
-#define P078_BAUDRATE PCONFIG(2)
-#define P078_QUERY1   PCONFIG(3)
-#define P078_QUERY2   PCONFIG(4)
-#define P078_QUERY3   PCONFIG(5)
-#define P078_QUERY4   PCONFIG(6)
-#define P078_DEPIN    CONFIG_PIN3
+#define P078_DEV_ID          PCONFIG(0)
+#define P078_DEV_ID_LABEL    PCONFIG_LABEL(0)
+#define P078_MODEL           PCONFIG(1)
+#define P078_MODEL_LABEL     PCONFIG_LABEL(1)
+#define P078_BAUDRATE        PCONFIG(2)
+#define P078_BAUDRATE_LABEL  PCONFIG_LABEL(2)
+#define P078_QUERY1          PCONFIG(3)
+#define P078_QUERY2          PCONFIG(4)
+#define P078_QUERY3          PCONFIG(5)
+#define P078_QUERY4          PCONFIG(6)
+#define P078_DEPIN           CONFIG_PIN3
 
 #define P078_DEV_ID_DFLT     1
 #define P078_MODEL_DFLT      0  // SDM120C
@@ -31,10 +36,12 @@
 #define P078_QUERY3_DFLT     2  // Power (W)
 #define P078_QUERY4_DFLT     5  // Power Factor (cos-phi)
 
+#define P078_NR_OUTPUT_VALUES          4
+#define P078_NR_OUTPUT_OPTIONS        10
+#define P078_QUERY1_CONFIG_POS  3
 
-
-#include <SDM.h>    // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
 #include <ESPeasySerial.h>
+#include <SDM.h>    // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
 
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
@@ -42,7 +49,16 @@ ESPeasySerial* Plugin_078_SoftSerial = NULL;
 SDM* Plugin_078_SDM = NULL;
 boolean Plugin_078_init = false;
 
-boolean Plugin_078(byte function, struct EventStruct *event, String& string)
+
+// Forward declaration helper functions
+const __FlashStringHelper * p078_getQueryString(uint8_t query);
+const __FlashStringHelper * p078_getQueryValueString(uint8_t query);
+unsigned int p078_getRegister(uint8_t query, uint8_t model);
+float p078_readVal(uint8_t query, uint8_t node, unsigned int model);
+
+
+
+boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -52,13 +68,13 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
       {
         Device[++deviceCount].Number = PLUGIN_ID_078;
-        Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;     // connected through 3 datapins
-        Device[deviceCount].VType = SENSOR_TYPE_QUAD;
+        Device[deviceCount].Type = DEVICE_TYPE_SERIAL_PLUS1;     // connected through 3 datapins
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_QUAD;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 4;
+        Device[deviceCount].ValueCount = P078_NR_OUTPUT_VALUES;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
@@ -73,20 +89,17 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
       {
-        if (P078_QUERY1 == 0 && P078_QUERY2 == 0 && P078_QUERY3 == 0 && P078_QUERY4 == 0) {
-          P078_QUERY1 = P078_QUERY1_DFLT;
-          P078_QUERY2 = P078_QUERY2_DFLT;
-          P078_QUERY3 = P078_QUERY3_DFLT;
-          P078_QUERY4 = P078_QUERY4_DFLT;
+        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+          if ( i < P078_NR_OUTPUT_VALUES) {
+            uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+            safe_strncpy(
+              ExtraTaskSettings.TaskDeviceValueNames[i],
+              p078_getQueryValueString(choice),
+              sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+          } else {
+            ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+          }
         }
-        safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[0],
-          p078_getQueryValueString(P078_QUERY1), sizeof(ExtraTaskSettings.TaskDeviceValueNames[0]));
-        safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[1],
-          p078_getQueryValueString(P078_QUERY2), sizeof(ExtraTaskSettings.TaskDeviceValueNames[1]));
-        safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[2],
-          p078_getQueryValueString(P078_QUERY3), sizeof(ExtraTaskSettings.TaskDeviceValueNames[2]));
-        safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[3],
-          p078_getQueryValueString(P078_QUERY4), sizeof(ExtraTaskSettings.TaskDeviceValueNames[3]));
         break;
       }
 
@@ -97,54 +110,88 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_WEBFORM_LOAD:
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
       {
-        serialHelper_webformLoad(event);
+        string += serialHelper_getSerialTypeLabel(event);
+        success = true;
+        break;
+      }
 
-        if (P078_DEV_ID == 0 || P078_DEV_ID > 247 || P078_BAUDRATE >= 6) {
-          // Load some defaults
-          P078_DEV_ID = P078_DEV_ID_DFLT;
-          P078_MODEL = P078_MODEL_DFLT;
-          P078_BAUDRATE = P078_BAUDRATE_DFLT;
-          P078_QUERY1 = P078_QUERY1_DFLT;
-          P078_QUERY2 = P078_QUERY2_DFLT;
-          P078_QUERY3 = P078_QUERY3_DFLT;
-          P078_QUERY4 = P078_QUERY4_DFLT;
-        }
-        addFormNumericBox(F("Modbus Address"), F("p078_dev_id"), P078_DEV_ID, 1, 247);
+    case PLUGIN_SET_DEFAULTS:
+      {
+        P078_DEV_ID = P078_DEV_ID_DFLT;
+        P078_MODEL = P078_MODEL_DFLT;
+        P078_BAUDRATE = P078_BAUDRATE_DFLT;
+        P078_QUERY1 = P078_QUERY1_DFLT;
+        P078_QUERY2 = P078_QUERY2_DFLT;
+        P078_QUERY3 = P078_QUERY3_DFLT;
+        P078_QUERY4 = P078_QUERY4_DFLT;
 
-        String options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
-        addFormSelector(F("Model Type"), F("p078_model"), 4, options_model, NULL, P078_MODEL );
+        success = true;
+        break;
+      }
 
+    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    {
+      if (P078_DEV_ID == 0 || P078_DEV_ID > 247 || P078_BAUDRATE >= 6) {
+        // Load some defaults
+        P078_DEV_ID = P078_DEV_ID_DFLT;
+        P078_MODEL = P078_MODEL_DFLT;
+        P078_BAUDRATE = P078_BAUDRATE_DFLT;
+        P078_QUERY1 = P078_QUERY1_DFLT;
+        P078_QUERY2 = P078_QUERY2_DFLT;
+        P078_QUERY3 = P078_QUERY3_DFLT;
+        P078_QUERY4 = P078_QUERY4_DFLT;
+      }
+      {
         String options_baudrate[6];
         for (int i = 0; i < 6; ++i) {
           options_baudrate[i] = String(p078_storageValueToBaudrate(i));
         }
-        addFormSelector(F("Baud Rate"), F("p078_baudrate"), 6, options_baudrate, NULL, P078_BAUDRATE );
+        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, NULL, P078_BAUDRATE );
+        addUnit(F("baud"));
+      }
 
-        if (P078_MODEL == 0 && P078_BAUDRATE > 3)
-          addFormNote(F("<span style=\"color:red\"> SDM120 only allows up to 9600 baud with default 2400!</span>"));
+      if (P078_MODEL == 0 && P078_BAUDRATE > 3)
+        addFormNote(F("<span style=\"color:red\"> SDM120 only allows up to 9600 baud with default 2400!</span>"));
 
-        if (P078_MODEL == 3 && P078_BAUDRATE == 0)
-          addFormNote(F("<span style=\"color:red\"> SDM630 only allows 2400 to 38400 baud with default 9600!</span>"));
+      if (P078_MODEL == 3 && P078_BAUDRATE == 0)
+        addFormNote(F("<span style=\"color:red\"> SDM630 only allows 2400 to 38400 baud with default 9600!</span>"));
 
-        String options_query[10];
-        for (int i = 0; i < 10; ++i) {
-          options_query[i] = p078_getQueryString(i);
+      addFormNumericBox(F("Modbus Address"), P078_DEV_ID_LABEL, P078_DEV_ID, 1, 247);
+
+      if (Plugin_078_SDM != nullptr) {
+        addRowLabel(F("Checksum (pass/fail)"));
+        String chksumStats;
+        chksumStats = Plugin_078_SDM->getSuccCount();
+        chksumStats += '/';
+        chksumStats += Plugin_078_SDM->getErrCount();
+        addHtml(chksumStats);
+      }
+
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD:
+      {
+        {
+          const __FlashStringHelper * options_model[4] = { F("SDM120C"), F("SDM220T"), F("SDM230"), F("SDM630") };
+          addFormSelector(F("Model Type"), P078_MODEL_LABEL, 4, options_model, NULL, P078_MODEL );
         }
-        addFormSelector(F("Variable 1"), F("p078_query1"), 10, options_query, NULL, P078_QUERY1);
-        addFormSelector(F("Variable 2"), F("p078_query2"), 10, options_query, NULL, P078_QUERY2);
-        addFormSelector(F("Variable 3"), F("p078_query3"), 10, options_query, NULL, P078_QUERY3);
-        addFormSelector(F("Variable 4"), F("p078_query4"), 10, options_query, NULL, P078_QUERY4);
 
-        if (Plugin_078_SDM != nullptr) {
-          addRowLabel(F("Checksum (pass/fail)"));
-          String chksumStats;
-          chksumStats = Plugin_078_SDM->getSuccCount();
-          chksumStats += '/';
-          chksumStats += Plugin_078_SDM->getErrCount();
-          addHtml(chksumStats);
+        {
+          // In a separate scope to free memory of String array as soon as possible
+          sensorTypeHelper_webformLoad_header();
+          const __FlashStringHelper * options[P078_NR_OUTPUT_OPTIONS];
+          for (int i = 0; i < P078_NR_OUTPUT_OPTIONS; ++i) {
+            options[i] = p078_getQueryString(i);
+          }
+          for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
+            const uint8_t pconfigIndex = i + P078_QUERY1_CONFIG_POS;
+            sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P078_NR_OUTPUT_OPTIONS, options);
+          }
         }
+
 
         success = true;
         break;
@@ -152,15 +199,16 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-          serialHelper_webformSave(event);
+          // Save output selector parameters.
+          for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
+            const uint8_t pconfigIndex = i + P078_QUERY1_CONFIG_POS;
+            const uint8_t choice = PCONFIG(pconfigIndex);
+            sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, p078_getQueryValueString(choice));
+          }
 
-          P078_DEV_ID = getFormItemInt(F("p078_dev_id"));
-          P078_MODEL = getFormItemInt(F("p078_model"));
-          P078_BAUDRATE = getFormItemInt(F("p078_baudrate"));
-          P078_QUERY1 = getFormItemInt(F("p078_query1"));
-          P078_QUERY2 = getFormItemInt(F("p078_query2"));
-          P078_QUERY3 = getFormItemInt(F("p078_query3"));
-          P078_QUERY4 = getFormItemInt(F("p078_query4"));
+          P078_DEV_ID = getFormItemInt(P078_DEV_ID_LABEL);
+          P078_MODEL = getFormItemInt(P078_MODEL_LABEL);
+          P078_BAUDRATE = getFormItemInt(P078_BAUDRATE_LABEL);
 
           Plugin_078_init = false; // Force device setup next time
           success = true;
@@ -174,7 +222,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           delete Plugin_078_SoftSerial;
           Plugin_078_SoftSerial=NULL;
         }
-        Plugin_078_SoftSerial = new ESPeasySerial(CONFIG_PIN1, CONFIG_PIN2);
+        Plugin_078_SoftSerial = new (std::nothrow) ESPeasySerial(static_cast<ESPEasySerialPort>(CONFIG_PORT), CONFIG_PIN1, CONFIG_PIN2);
+        if (Plugin_078_SoftSerial == nullptr) {
+          break;
+        }
         unsigned int baudrate = p078_storageValueToBaudrate(P078_BAUDRATE);
         Plugin_078_SoftSerial->begin(baudrate);
 
@@ -183,8 +234,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
           Plugin_078_SDM=NULL;
         }
         Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
-        Plugin_078_SDM->begin();
-        success = true;
+        if (Plugin_078_SDM != nullptr) {
+          Plugin_078_SDM->begin();
+          success = true;
+        }
         break;
       }
 
@@ -207,7 +260,7 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
         if (Plugin_078_init)
         {
           int model = P078_MODEL;
-          byte dev_id = P078_DEV_ID;
+          uint8_t dev_id = P078_DEV_ID;
           UserVar[event->BaseVarIndex]     = p078_readVal(P078_QUERY1, dev_id, model);
           UserVar[event->BaseVarIndex + 1] = p078_readVal(P078_QUERY2, dev_id, model);
           UserVar[event->BaseVarIndex + 2] = p078_readVal(P078_QUERY3, dev_id, model);
@@ -221,10 +274,10 @@ boolean Plugin_078(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-float p078_readVal(byte query, byte node, unsigned int model) {
-  if (Plugin_078_SDM == NULL) return 0.0;
+float p078_readVal(uint8_t query, uint8_t node, unsigned int model) {
+  if (Plugin_078_SDM == NULL) return 0.0f;
 
-  byte retry_count = 3;
+  uint8_t retry_count = 3;
   bool success = false;
   float _tempvar = NAN;
   while (retry_count > 0 && !success) {
@@ -249,7 +302,7 @@ float p078_readVal(byte query, byte node, unsigned int model) {
   return _tempvar;
 }
 
-unsigned int p078_getRegister(byte query, byte model) {
+unsigned int p078_getRegister(uint8_t query, uint8_t model) {
   if (model == 0) { // SDM120C
     switch (query) {
       case 0: return SDM120C_VOLTAGE;
@@ -306,7 +359,7 @@ unsigned int p078_getRegister(byte query, byte model) {
   return 0;
 }
 
-String p078_getQueryString(byte query) {
+const __FlashStringHelper * p078_getQueryString(uint8_t query) {
   switch(query)
   {
     case 0: return F("Voltage (V)");
@@ -320,10 +373,10 @@ String p078_getQueryString(byte query) {
     case 8: return F("Export Active Energy (Wh)");
     case 9: return F("Total Active Energy (Wh)");
   }
-  return "";
+  return F("");
 }
 
-String p078_getQueryValueString(byte query) {
+const __FlashStringHelper * p078_getQueryValueString(uint8_t query) {
   switch(query)
   {
     case 0: return F("V");
@@ -337,11 +390,11 @@ String p078_getQueryValueString(byte query) {
     case 8: return F("Wh_exp");
     case 9: return F("Wh_tot");
   }
-  return "";
+  return F("");
 }
 
 
-int p078_storageValueToBaudrate(byte baudrate_setting) {
+int p078_storageValueToBaudrate(uint8_t baudrate_setting) {
   unsigned int baudrate = 9600;
   switch (baudrate_setting) {
     case 0:  baudrate = 1200; break;

@@ -1,0 +1,69 @@
+.. csv-table::
+   :header: "Command", "Extra information"
+   :widths: 20, 30
+
+   "
+   ``TFTCMD,<tftcmd_subcommand>``
+   ","
+   Control the screen (on, off, clear,..) 
+
+   Examples:
+
+   - ``tftcmd,on``           Switch display on.
+   - ``tftcmd,off``          Switch display off.
+   - ``tftcmd,clear``        Clear whole display.
+   - ``tftcmd,clear,green``  Clear whole display with green color.
+   - ``tftcmd,inv,1``        Invert the dispaly (value:0 normal display, 1 inverted display)
+   - ``tftcmd,rot,2``        Rotate display (value from 0 to 3 inclusive) 
+   "
+   "
+   ``TFT,<tft_subcommand>,....``
+   ","
+   Draw line, rect, circle, triangle and text
+   
+   Subcommands:
+   
+   - ``tft,txt,<text>``  Write simple text (use last position, color and size)
+   - ``tft,txp,<X>,<Y>``  Set text position (move the cursor)
+   - ``tft,txc,<foreColor>,<backgroundColor>``  Set text color (background is transparent if not provided
+   - ``tft,txs,<SIZE>``  Set text size
+   - ``tft,txtfull,<row>,<col>,<size=1>,<foreColor=white>,<backColor=black>,<text>``  Write text with all options
+   - ``tft,l,<x1>,<y1>,<2>,<y2>,<color>``  Draw a simple line
+   - ``tft,lh,<y>,<width>,<color>``  Draw an horizontal line (width = Line width in pixels (positive = right of first point, negative = point of first corner).
+   - ``tft,lv,<x>,<height>,<color>``  Draw a vertical line (height= Line height in pixels (positive = below first point, negative = above first point).
+   - ``tft,r,<x>,<y>,<width>,<height>,<color>``  Draw a rectangle
+   - ``tft,rf,<x>,<y>,<width>,<height>,<bordercolor>,<innercolor>``  Draw a filled rectangle
+   - ``tft,c,<x>,<y>,<radius>,<color>``  Draw a circle
+   - ``tft,cf,<x>,<y>,<radius>,<bordercolor>,<innercolor>``  Draw a filled circle
+   - ``tft,t,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<color>`` Draw a triangle
+   - ``tft,tf,<x1>,<y1>,<x2>,<y2>,<x3>,<y3>,<bordercolor>,<innercolor>``  Draw a filled triangle
+   - ``tft,rr,<x>,<y>,<width>,<height>,<corner_radius>,<color>``  Draw a round rectangle
+   - ``tft,rrf,<x>,<y>,<width>,<height>,<corner_radius>,<bordercolor>,<innercolor>``  Draw a filled round rectangle
+   - ``tft,px,<x>,<y>,<color>``  Print a single pixel
+   - ``tft,font,<fontname>``  Switch to font - SEVENSEG24, SEVENSEG18, FREESANS, DEFAULT
+   "
+       
+Examples:
+
+Write Text :
+    ``tft,txtfull,0,0,HelloWorld``
+
+Write Text another place:
+    ``tft,txtfull,100,40,HelloWorld``
+
+Write bigger Text :
+    ``tft,txtfull,0,0,3,HelloWorld``
+
+Write RED Text :
+    ``tft,txtfull,0,0,3,HelloWorld``
+
+Write RED Text (size is 1):
+    ``tft,txtfull,0,0,1,RED,HelloWorld``
+
+Write RED Text on YELLOW background (size is 1):
+    ``tft,txtfull,0,0,1,RED,YELLOW,HelloWorld``
+
+Select font :
+
+- ``tft,font,SEVENSEG24`` 
+- ``tft,txtfull,0,0,1,RED,17.0``

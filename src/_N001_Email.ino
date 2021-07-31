@@ -1,3 +1,5 @@
+#include "ESPEasy_common.h"
+
 #ifdef USES_N001
 //#######################################################################################################
 //########################### Notification Plugin 001: Email ############################################
@@ -9,62 +11,81 @@
 
 #define NPLUGIN_001_TIMEOUT 5000
 
+#include "src/DataStructs/NotificationSettingsStruct.h"
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/ESPEasy_backgroundtasks.h"
+#include "src/Globals/NPlugins.h"
+#include "src/Globals/Settings.h"
+#include "src/Helpers/ESPEasy_Storage.h"
+#include "src/Helpers/ESPEasy_time_calc.h"
+#include "src/Helpers/Networking.h"
+#include "src/Helpers/StringParser.h"
+#include "src/Helpers/_CPlugin_Helper.h" // safeReadStringUntil
+
+
 // The message body is included in event->String1
 
-boolean NPlugin_001(byte function, struct EventStruct *event, String& string)
+boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& string)
 {
 	boolean success = false;
 
 	switch (function) {
-	case NPLUGIN_PROTOCOL_ADD:
-	{
-		Notification[++notificationCount].Number = NPLUGIN_ID_001;
-		Notification[notificationCount].usesMessaging = true;
-		Notification[notificationCount].usesGPIO = 0;
-		break;
-	}
+		case NPlugin::Function::NPLUGIN_PROTOCOL_ADD:
+		{
+			Notification[++notificationCount].Number = NPLUGIN_ID_001;
+			Notification[notificationCount].usesMessaging = true;
+			Notification[notificationCount].usesGPIO = 0;
+			break;
+		}
 
-	case NPLUGIN_GET_DEVICENAME:
-	{
-		string = F(NPLUGIN_NAME_001);
-		break;
-	}
+		case NPlugin::Function::NPLUGIN_GET_DEVICENAME:
+		{
+			string = F(NPLUGIN_NAME_001);
+			break;
+		}
 
-	// Edwin: NPLUGIN_WRITE seems to be not implemented/not used yet? Disabled because its confusing now.
-	// case NPLUGIN_WRITE:
-	//   {
-	//     String log = "";
-	//     String command = parseString(string, 1);
-	//
-	//     if (command == F("email"))
-	//     {
-	//       MakeNotificationSettings(NotificationSettings);
-	//       LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
-	//       NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
-	//       success = true;
-	//     }
-	//     break;
-	//   }
+		// Edwin: NPlugin::Function::NPLUGIN_WRITE seems to be not implemented/not used yet? Disabled because its confusing now.
+		// case NPlugin::Function::NPLUGIN_WRITE:
+		//   {
+		//     String log;
+		//     String command = parseString(string, 1);
+		//
+		//     if (command == F("email"))
+		//     {
+		//       MakeNotificationSettings(NotificationSettings);
+		//       LoadNotificationSettings(event->NotificationIndex, (uint8_t*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+		//       NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
+		//       success = true;
+		//     }
+		//     break;
+		//   }
 
-	case NPLUGIN_NOTIFY:
-	{
-		MakeNotificationSettings(NotificationSettings);
-		LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
-		String subject = NotificationSettings.Subject;
-		String body = "";
-		if (event->String1.length() > 0)
-			body = event->String1;
-		else
-			body = NotificationSettings.Body;
-		subject = parseTemplate(subject, subject.length());
-		body = parseTemplate(body, body.length());
-		NPlugin_001_send(NotificationSettings, subject, body);
-		success = true;
+		case NPlugin::Function::NPLUGIN_NOTIFY:
+		{
+			MakeNotificationSettings(NotificationSettings);
+			LoadNotificationSettings(event->NotificationIndex, (uint8_t*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+			NotificationSettings.validate();
+			String subject = NotificationSettings.Subject;
+			String body;
+			if (event->String1.length() > 0)
+				body = event->String1;
+			else
+				body = NotificationSettings.Body;
+			subject = parseTemplate(subject);
+			body = parseTemplate(body);
+			NPlugin_001_send(NotificationSettings, subject, body);
+			success = true;
+			break;
+		}
+
+		default:
 		break;
-	}
 	}
 	return success;
 }
+
+
+#ifdef USES_NOTIFIER
 
 boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg)
 {
@@ -75,9 +96,11 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 	WiFiClient client;
 	client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 	String aHost = notificationsettings.Server;
-	addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
-	if (!connectClient(client, aHost.c_str(), notificationsettings.Port)) {
-		addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
+	if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+		addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
+	if (!connectClient(client, aHost.c_str(), notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
+		if (loglevelActiveFor(LOG_LEVEL_ERROR))
+			addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
 		myStatus = false;
 	}else {
 		String mailheader = F(
@@ -94,38 +117,38 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 		int pos_less = email_address.indexOf('<');
 		if (pos_less == -1) {
 			// No email address markup
-			mailheader.replace(String(F("$nodename")), Settings.Name);
-			mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
+			mailheader.replace(F("$nodename"), Settings.getHostname());
+			mailheader.replace(F("$emailfrom"), notificationsettings.Sender);
 		} else {
 			String senderName = email_address.substring(0, pos_less);
-			senderName.replace("\"", ""); // Remove quotes
+			senderName.replace(F("\""), EMPTY_STRING); // Remove quotes
 			String address = email_address.substring(pos_less + 1);
-			address.replace("<", "");
-			address.replace(">", "");
+			address.replace(F("<"), EMPTY_STRING);
+			address.replace(F(">"), EMPTY_STRING);
 			address.trim();
 			senderName.trim();
-			mailheader.replace(String(F("$nodename")), senderName);
-			mailheader.replace(String(F("$emailfrom")), address);
+			mailheader.replace(F("$nodename"), senderName);
+			mailheader.replace(F("$emailfrom"), address);
 		}
 
-		mailheader.replace(String(F("$nodename")), Settings.Name);
-		mailheader.replace(String(F("$emailfrom")), notificationsettings.Sender);
-		mailheader.replace(String(F("$ato")), notificationsettings.Receiver);
-		mailheader.replace(String(F("$subject")), aSub);
-		mailheader.replace(String(F("$espeasyversion")), String(BUILD));
-		aMesg.replace("\r", F("<br/>")); // re-write line breaks for Content-type: text/html
+		mailheader.replace(F("$nodename"), Settings.getHostname());
+		mailheader.replace(F("$emailfrom"), notificationsettings.Sender);
+		mailheader.replace(F("$ato"), notificationsettings.Receiver);
+		mailheader.replace(F("$subject"), aSub);
+		mailheader.replace(F("$espeasyversion"), String(BUILD));
+		aMesg.replace(F("\r"), F("<br/>")); // re-write line breaks for Content-type: text/html
 
 		// Wait for Client to Start Sending
 		// The MTA Exchange
 		while (true) {
-			if (!NPlugin_001_MTA(client, "", F("220 "))) break;
+			if (!NPlugin_001_MTA(client, EMPTY_STRING, F("220 "))) break;
 			if (!NPlugin_001_MTA(client, String(F("EHLO ")) + notificationsettings.Domain, F("250 "))) break;
 			if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) break;
 			if (!NPlugin_001_MTA(client, String(F("MAIL FROM:<")) + notificationsettings.Sender + ">", F("250 "))) break;
 
 			bool nextAddressAvailable = true;
 			int i = 0;
-			String emailTo = "";
+			String emailTo;
 			if (!getNextMailAddress(notificationsettings.Receiver, emailTo, i)) {
 				addLog(LOG_LEVEL_ERROR, F("Email: No recipient given"));
 				break;
@@ -133,14 +156,15 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			while (nextAddressAvailable) {
 				String mailFound = F("Email: To ");
 				mailFound += emailTo;
-				addLog(LOG_LEVEL_INFO, mailFound);
+				if (loglevelActiveFor(LOG_LEVEL_INFO))
+					addLog(LOG_LEVEL_INFO, mailFound);
 				if (!NPlugin_001_MTA(client, String(F("RCPT TO:<")) + emailTo + ">", F("250 "))) break;
 				++i;
 				nextAddressAvailable = getNextMailAddress(notificationsettings.Receiver, emailTo, i);
 			}
 
 			if (!NPlugin_001_MTA(client, F("DATA"), F("354 "))) break;
-			if (!NPlugin_001_MTA(client, mailheader + aMesg + String(F("\r\n.\r\n")), F("250 "))) break;
+			if (!NPlugin_001_MTA(client, mailheader + aMesg + F("\r\n.\r\n"), F("250 "))) break;
 
 			myStatus = true;
 			break;
@@ -152,17 +176,21 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 		if (myStatus == true) {
 			addLog(LOG_LEVEL_INFO, F("EMAIL: Connection Closed Successfully"));
 		}else {
-			String log = F("EMAIL: Connection Closed With Error. Used header: ");
-			log += mailheader;
-			addLog(LOG_LEVEL_ERROR, log);
+			if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+				String log = F("EMAIL: Connection Closed With Error. Used header: ");
+				log += mailheader;
+				addLog(LOG_LEVEL_ERROR, log);
+			}
 		}
 	}
 	return myStatus;
 }
 
+#endif
+
 boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {
-	if (user.length() == 0 || pass.length() == 0) {
+	if (user.isEmpty() || pass.isEmpty()) {
 		// No user/password given.
 		return true;
 	}
@@ -179,7 +207,8 @@ boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& p
 
 boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWaitForPattern)
 {
-	addLog(LOG_LEVEL_DEBUG, aStr);
+	if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+		addLog(LOG_LEVEL_DEBUG, aStr);
 
 	if (aStr.length()) client.println(aStr);
 
@@ -188,9 +217,11 @@ boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aW
 	backgroundtasks();
 	while (true) {
 		if (timeOutReached(timer)) {
-			String log = F("NPlugin_001_MTA: timeout. ");
-			log += aStr;
-			addLog(LOG_LEVEL_ERROR, log);
+			if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+				String log = F("NPlugin_001_MTA: timeout. ");
+				log += aStr;
+				addLog(LOG_LEVEL_ERROR, log);
+			}
 			return false;
 		}
 
@@ -200,7 +231,8 @@ boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aW
 		String line;
 		safeReadStringUntil(client, line, '\n');
 
-		addLog(LOG_LEVEL_DEBUG, line);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+			addLog(LOG_LEVEL_DEBUG, line);
 
 		if (line.indexOf(aWaitForPattern) >= 0) {
 			return true;

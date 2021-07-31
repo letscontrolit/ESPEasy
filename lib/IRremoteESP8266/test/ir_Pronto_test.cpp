@@ -58,7 +58,8 @@ TEST(TestSendPronto, MoreDataThanNeededInNormal) {
   uint16_t pronto_test[8] = {0x0000, 0x0067, 0x0001, 0x0000,
                              0x0001, 0x0002, 0x0003, 0x0004};
   irsend.sendPronto(pronto_test, 8);
-  EXPECT_EQ("m25s50", irsend.outputStr());  // Only send the data required.
+  EXPECT_EQ("f40244d50m24s49",
+            irsend.outputStr());  // Only send the data required.
 }
 
 TEST(TestSendPronto, MoreDataThanNeededInRepeat) {
@@ -70,7 +71,8 @@ TEST(TestSendPronto, MoreDataThanNeededInRepeat) {
   uint16_t pronto_test[8] = {0x0000, 0x0067, 0x0000, 0x0001,
                              0x0001, 0x0002, 0x0003, 0x0004};
   irsend.sendPronto(pronto_test, 8);
-  EXPECT_EQ("m25s50", irsend.outputStr());  // Only send the data required.
+  EXPECT_EQ("f40244d50m24s49",
+            irsend.outputStr());  // Only send the data required.
 }
 
 TEST(TestSendPronto, MoreDataThanNeededInBoth) {
@@ -82,9 +84,11 @@ TEST(TestSendPronto, MoreDataThanNeededInBoth) {
   uint16_t pronto_test[10] = {0x0000, 0x0067, 0x0001, 0x0001, 0x0001,
                               0x0002, 0x0003, 0x0004, 0x5,    0x6};
   irsend.sendPronto(pronto_test, 10);
-  EXPECT_EQ("m25s50", irsend.outputStr());  // Only send the data required.
+  EXPECT_EQ("f40244d50m24s49",
+             irsend.outputStr());  // Only send the data required.
   irsend.sendPronto(pronto_test, 10, 1);
-  EXPECT_EQ("m25s50m75s100", irsend.outputStr());  // Only the data required.
+  EXPECT_EQ("f40244d50m24s49m74s99",
+             irsend.outputStr());  // Only the data required.
 }
 
 TEST(TestSendPronto, ShortestValidCodeThatSendsNothing) {
@@ -134,18 +138,19 @@ TEST(TestSendPronto, NonRepeatingCode) {
   EXPECT_EQ(0x1, irsend.capture.address);
   EXPECT_EQ(0x0, irsend.capture.command);
   EXPECT_EQ(
-      "m2400s600"
-      "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
-      "m600s600m600s600m600s600m600s27650"
-      "m2400s600"
-      "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
-      "m600s600m600s600m600s600m600s27650"
-      "m2400s600"
-      "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
-      "m600s600m600s600m600s600m600s27650"
-      "m2400s600"
-      "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
-      "m600s600m600s600m600s600m600s600",
+      "f40244d50"
+      "m2390s597"
+      "m597s597m597s597m597s597m597s597m597s597m597s597m597s597m1195s597"
+      "m597s597m597s597m597s597m597s27539"
+      "m2390s597"
+      "m597s597m597s597m597s597m597s597m597s597m597s597m597s597m1195s597"
+      "m597s597m597s597m597s597m597s27539"
+      "m2390s597"
+      "m597s597m597s597m597s597m597s597m597s597m597s597m597s597m1195s597"
+      "m597s597m597s597m597s597m597s27539"
+      "m2390s597"
+      "m597s597m597s597m597s597m597s597m597s597m597s597m597s597m1195s597"
+      "m597s597m597s597m597s597m597s597",
       irsend.outputStr());
 
   // Now try repeating it.
@@ -160,18 +165,19 @@ TEST(TestSendPronto, NonRepeatingCode) {
   EXPECT_EQ(0x1, irsend.capture.address);
   EXPECT_EQ(0x0, irsend.capture.command);
   EXPECT_EQ(
-      "m2400s600"
-      "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
-      "m600s600m600s600m600s600m600s27650"
-      "m2400s600"
-      "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
-      "m600s600m600s600m600s600m600s27650"
-      "m2400s600"
-      "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
-      "m600s600m600s600m600s600m600s27650"
-      "m2400s600"
-      "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
-      "m600s600m600s600m600s600m600s600",
+      "f40244d50"
+      "m2390s597"
+      "m597s597m597s597m597s597m597s597m597s597m597s597m597s597m1195s597"
+      "m597s597m597s597m597s597m597s27539"
+      "m2390s597"
+      "m597s597m597s597m597s597m597s597m597s597m597s597m597s597m1195s597"
+      "m597s597m597s597m597s597m597s27539"
+      "m2390s597"
+      "m597s597m597s597m597s597m597s597m597s597m597s597m597s597m1195s597"
+      "m597s597m597s597m597s597m597s27539"
+      "m2390s597"
+      "m597s597m597s597m597s597m597s597m597s597m597s597m597s597m1195s597"
+      "m597s597m597s597m597s597m597s597",
       irsend.outputStr());
 }
 
@@ -201,10 +207,11 @@ TEST(TestSendPronto, RepeatSequenceOnlyForSony) {
   EXPECT_EQ(0x1A, irsend.capture.address);
   EXPECT_EQ(0x24AE, irsend.capture.command);
   EXPECT_EQ(
-      "m2400s600"
-      "m600s600m1200s600m1200s600m1200s600m600s600m1200s600m600s600m600s600"
-      "m1200s600m600s600m1200s600m1200s600m1200s600m600s600m600s600m1200s600"
-      "m600s600m600s600m1200s600m600s25350",
+      "f40244d50"
+      "m2390s597"
+      "m597s597m1195s597m1195s597m1195s597m597s597m1195s597m597s597m597s597"
+      "m1195s597m597s597m1195s597m1195s597m1195s597m597s597m597s597m1195s597"
+      "m597s597m597s597m1195s597m597s25248",
       irsend.outputStr());
 
   // Send the Pronto code with 2 repeats.
@@ -218,18 +225,19 @@ TEST(TestSendPronto, RepeatSequenceOnlyForSony) {
   EXPECT_EQ(0x1A, irsend.capture.address);
   EXPECT_EQ(0x24AE, irsend.capture.command);
   EXPECT_EQ(
-      "m2400s600"
-      "m600s600m1200s600m1200s600m1200s600m600s600m1200s600m600s600m600s600"
-      "m1200s600m600s600m1200s600m1200s600m1200s600m600s600m600s600m1200s600"
-      "m600s600m600s600m1200s600m600s25350"
-      "m2400s600"
-      "m600s600m1200s600m1200s600m1200s600m600s600m1200s600m600s600m600s600"
-      "m1200s600m600s600m1200s600m1200s600m1200s600m600s600m600s600m1200s600"
-      "m600s600m600s600m1200s600m600s25350"
-      "m2400s600"
-      "m600s600m1200s600m1200s600m1200s600m600s600m1200s600m600s600m600s600"
-      "m1200s600m600s600m1200s600m1200s600m1200s600m600s600m600s600m1200s600"
-      "m600s600m600s600m1200s600m600s25350",
+      "f40244d50"
+      "m2390s597"
+      "m597s597m1195s597m1195s597m1195s597m597s597m1195s597m597s597m597s597"
+      "m1195s597m597s597m1195s597m1195s597m1195s597m597s597m597s597m1195s597"
+      "m597s597m597s597m1195s597m597s25248"
+      "m2390s597"
+      "m597s597m1195s597m1195s597m1195s597m597s597m1195s597m597s597m597s597"
+      "m1195s597m597s597m1195s597m1195s597m1195s597m597s597m597s597m1195s597"
+      "m597s597m597s597m1195s597m597s25248"
+      "m2390s597"
+      "m597s597m1195s597m1195s597m1195s597m597s597m1195s597m597s597m597s597"
+      "m1195s597m597s597m1195s597m1195s597m1195s597m597s597m597s597m1195s597"
+      "m597s597m597s597m1195s597m597s25248",
       irsend.outputStr());
 }
 
@@ -265,14 +273,15 @@ TEST(TestSendPronto, RepeatSequenceOnlyForPanasonic) {
   EXPECT_EQ(0x4004, irsend.capture.address);
   EXPECT_EQ(0x1007C7D, irsend.capture.command);
   EXPECT_EQ(
-      "m3456s1701"
-      "m432s432m432s1296m432s432m432s432m432s432m432s432m432s432m432s432"
-      "m432s432m432s432m432s432m432s432m432s432m432s1296m432s432m432s432"
-      "m432s432m432s432m432s432m432s432m432s432m432s432m432s432m432s1296"
-      "m432s432m432s432m432s432m432s432m432s432m432s432m432s432m432s432"
-      "m432s432m432s1296m432s1296m432s1296m432s1296m432s1296m432s432m432s432"
-      "m432s432m432s1296m432s1296m432s1296m432s1296m432s1296m432s432m432s1296"
-      "m432s73224",
+      "f36682d50"
+      "m3494s1719"
+      "m436s436m436s1310m436s436m436s436m436s436m436s436m436s436m436s436"
+      "m436s436m436s436m436s436m436s436m436s436m436s1310m436s436m436s436"
+      "m436s436m436s436m436s436m436s436m436s436m436s436m436s436m436s1310"
+      "m436s436m436s436m436s436m436s436m436s436m436s436m436s436m436s436"
+      "m436s436m436s1310m436s1310m436s1310m436s1310m436s1310m436s436m436s436"
+      "m436s436m436s1310m436s1310m436s1310m436s1310m436s1310m436s436m436s1310"
+      "m436s74037",
       irsend.outputStr());
 }
 
@@ -305,12 +314,13 @@ TEST(TestSendPronto, NormalPlusRepeatSequence) {
   EXPECT_EQ(0x18, irsend.capture.address);
   EXPECT_EQ(0x8, irsend.capture.command);
   EXPECT_EQ(
-      "m8892s4446"
-      "m546s546m546s546m546s546m546s1664m546s1664m546s546m546s546m546s546"
-      "m546s1664m546s1664m546s1664m546s546m546s546m546s1664m546s1664m546s1664"
-      "m546s546m546s546m546s546m546s1664m546s546m546s546m546s546m546s546"
-      "m546s1664m546s1664m546s1664m546s546m546s1664m546s1664m546s1664m546s1664"
-      "m546s39858",
+      "f38028d50"
+      "m8994s4497"
+      "m552s552m552s552m552s552m552s1683m552s1683m552s552m552s552m552s552"
+      "m552s1683m552s1683m552s1683m552s552m552s552m552s1683m552s1683m552s1683"
+      "m552s552m552s552m552s552m552s1683m552s552m552s552m552s552m552s552"
+      "m552s1683m552s1683m552s1683m552s552m552s1683m552s1683m552s1683m552s1683"
+      "m552s40317",
       irsend.outputStr());
 
   // Send it again with a single repeat.
@@ -324,13 +334,14 @@ TEST(TestSendPronto, NormalPlusRepeatSequence) {
   EXPECT_EQ(0x18, irsend.capture.address);
   EXPECT_EQ(0x8, irsend.capture.command);
   EXPECT_EQ(
-      "m8892s4446"
-      "m546s546m546s546m546s546m546s1664m546s1664m546s546m546s546m546s546"
-      "m546s1664m546s1664m546s1664m546s546m546s546m546s1664m546s1664m546s1664"
-      "m546s546m546s546m546s546m546s1664m546s546m546s546m546s546m546s546"
-      "m546s1664m546s1664m546s1664m546s546m546s1664m546s1664m546s1664m546s1664"
-      "m546s39858"
-      "m8892s2210m546s95212",
+      "f38028d50"
+      "m8994s4497"
+      "m552s552m552s552m552s552m552s1683m552s1683m552s552m552s552m552s552"
+      "m552s1683m552s1683m552s1683m552s552m552s552m552s1683m552s1683m552s1683"
+      "m552s552m552s552m552s552m552s1683m552s552m552s552m552s552m552s552"
+      "m552s1683m552s1683m552s1683m552s552m552s1683m552s1683m552s1683m552s1683"
+      "m552s40317"
+      "m8994s2235m552s96310",
       irsend.outputStr());
 
   // Send it again with a two repeats.
@@ -344,13 +355,83 @@ TEST(TestSendPronto, NormalPlusRepeatSequence) {
   EXPECT_EQ(0x18, irsend.capture.address);
   EXPECT_EQ(0x8, irsend.capture.command);
   EXPECT_EQ(
-      "m8892s4446"
-      "m546s546m546s546m546s546m546s1664m546s1664m546s546m546s546m546s546"
-      "m546s1664m546s1664m546s1664m546s546m546s546m546s1664m546s1664m546s1664"
-      "m546s546m546s546m546s546m546s1664m546s546m546s546m546s546m546s546"
-      "m546s1664m546s1664m546s1664m546s546m546s1664m546s1664m546s1664m546s1664"
-      "m546s39858"
-      "m8892s2210m546s95212"
-      "m8892s2210m546s95212",
+      "f38028d50"
+      "m8994s4497"
+      "m552s552m552s552m552s552m552s1683m552s1683m552s552m552s552m552s552"
+      "m552s1683m552s1683m552s1683m552s552m552s552m552s1683m552s1683m552s1683"
+      "m552s552m552s552m552s552m552s1683m552s552m552s552m552s552m552s552"
+      "m552s1683m552s1683m552s1683m552s552m552s1683m552s1683m552s1683m552s1683"
+      "m552s40317"
+      "m8994s2235m552s96310"
+      "m8994s2235m552s96310",
+      irsend.outputStr());
+}
+
+// Tests for #1034
+TEST(TestSendPronto, Issue1034) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(0);
+  irsend.begin();
+
+  // JVC code allegedly.
+  uint16_t pronto_test[40] = {
+      0x0000, 0x006c, 0x0001, 0x0011, 0x0140, 0x00a0, 0x0014, 0x003c, 0x0014,
+      0x003c, 0x0014, 0x0014, 0x0014, 0x0014, 0x0014, 0x0014, 0x0014, 0x003c,
+      0x0014, 0x0014, 0x0014, 0x003c, 0x0014, 0x0014, 0x0014, 0x0014, 0x0014,
+      0x0014, 0x0014, 0x0014, 0x0014, 0x003c, 0x0014, 0x0014, 0x0014, 0x0014,
+      0x0014, 0x0014, 0x0014, 0x0384};
+
+  irsend.reset();
+  irsend.sendPronto(pronto_test, 40, 1);
+  irsend.makeDecodeResult();
+  EXPECT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(JVC, irsend.capture.decode_type);
+  EXPECT_EQ(kJvcBits, irsend.capture.bits);
+  EXPECT_EQ(0xc508, irsend.capture.value);
+  EXPECT_EQ(0xa3, irsend.capture.address);
+  EXPECT_EQ(0x10, irsend.capture.command);
+}
+
+// Tests for #1103
+TEST(TestSendPronto, Issue1103) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(0);
+  irsend.begin();
+  // Based on raw data:
+  //   uint16_t rawData[7] = {20100, 20472, 15092, 30704, 20102, 20472, 15086};
+  // and output from `raw_to_pronto_code.py --hz 38000`:
+  // Pronto code = '0000 006D 0004 0000 02FB 0309 023D 048E 02FB 0309 023D 0ED8'
+  uint16_t pronto_test[12] = {
+      0x0000, 0x006D, 0x0004, 0x0000, 0x02FB, 0x0309, 0x023D, 0x048E,
+      0x02FB, 0x0309, 0x023D, 0x0ED8};
+  irsend.reset();
+  irsend.sendPronto(pronto_test, 12);
+  EXPECT_EQ(
+      "f38028d50m20066s20435m15069s30665m20066s20435m15069s99940",
+      irsend.outputStr());
+  // Which pretty much matches the `rawData` above.
+
+  // Shorter test.
+  // uint16_t rawData[4] = {20100, 20472, 15092, 30704};
+  // and output from `raw_to_pronto_code.py --hz 38000`:
+  //   Pronto code = '0000 006D 0002 0000 02FB 0309 023D 048E'
+  uint16_t pronto_test2[8] = {
+      0x0000, 0x006D, 0x0002, 0x0000, 0x02FB, 0x0309, 0x023D, 0x048E};
+  irsend.reset();
+  irsend.sendPronto(pronto_test2, 8);
+  EXPECT_EQ(
+      "f38028d50m20066s20435m15069s30665",
+      irsend.outputStr());
+  // Which pretty much matches the `rawData` above.
+
+  // Ref:
+  //  https://github.com/crankyoldgit/IRremoteESP8266/issues/1103#issuecomment-628946514
+  uint16_t pronto_test_using_repeat[12] = {
+      0x0000, 0x006D, 0x0000, 0x0004, 0x02fb, 0x0309, 0x023d, 0x048e, 0x02fb,
+      0x0309, 0x023d, 0x0474};
+  irsend.reset();
+  irsend.sendPronto(pronto_test_using_repeat, 12);
+  EXPECT_EQ(
+      "f38028d50m20066s20435m15069s30665m20066s20435m15069s29982",
       irsend.outputStr());
 }

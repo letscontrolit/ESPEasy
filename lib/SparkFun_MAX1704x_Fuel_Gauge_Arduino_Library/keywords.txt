@@ -1,0 +1,63 @@
+#######################################
+# Syntax Coloring Map For MAX1704x
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SFE_MAX17043	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+isConnected	KEYWORD2
+enableDebugging	KEYWORD2
+disableDebugging	KEYWORD2
+quickStart	KEYWORD2
+getVoltage	KEYWORD2
+getSOC	KEYWORD2
+getVersion	KEYWORD2
+getThreshold	KEYWORD2
+setThreshold	KEYWORD2
+getAlert	KEYWORD2
+clearAlert	KEYWORD2
+enableSOCAlert	KEYWORD2
+disableSOCAlert	KEYWORD2
+sleep	KEYWORD2
+wake	KEYWORD2
+reset	KEYWORD2
+getConfigRegister	KEYWORD2
+getCompensation	KEYWORD2
+setCompensation	KEYWORD2
+setResetVoltage	KEYWORD2
+getResetVoltage	KEYWORD2
+enableComparator	KEYWORD2
+disableComparator	KEYWORD2
+getChangeRate	KEYWORD2
+getStatus	KEYWORD2
+isReset	KEYWORD2
+isVoltageHigh	KEYWORD2
+isVoltageLow	KEYWORD2
+isVoltageReset	KEYWORD2
+isLow	KEYWORD2
+isChange	KEYWORD2
+enableAlert	KEYWORD2
+disableAlert	KEYWORD2
+getVALRTMax	KEYWORD2
+getVALRTMin	KEYWORD2
+setVALRTMax	KEYWORD2
+setVALRTMin	KEYWORD2
+isHibernating	KEYWORD2
+getHIBRTActThr	KEYWORD2
+setHIBRTActThr	KEYWORD2
+getHIBRTHibThr	KEYWORD2
+setHIBRTHibThr	KEYWORD2
+enableHibernate	KEYWORD2
+disableHibernate	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

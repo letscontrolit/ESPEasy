@@ -51,7 +51,7 @@ The NodeMCU boards have almost all usable pins made available and some which nee
      - :yellow:`Boot fail if pulled high`
    * - 16 (D0)
      - :red:`High at boot, pull down to GND`:yellow:`no interrupt`
-     - :yellow:`no PWM / I2C support`
+     - :yellow:`no I2C support`
      - Used to wake up from deep sleep
    * - 9 (SD2)
      - :red:`High at boot`
@@ -243,3 +243,9 @@ It is best not to use any of the GPIO pins 6 - 11.
 
 GPIO 6, 7 & 8 may output some PWM signals at boot.
 GPIO 9, 10 & 11 output high at boot and may fail to boot of pulled either high or low.
+
+
+Pins used for RMII Ethernet PHY
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Reference/Ethernet_PHY_ESP32.rst

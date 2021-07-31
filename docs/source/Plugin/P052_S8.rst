@@ -12,7 +12,7 @@ S8
 Introduction
 ------------
 
-This is the flagship CO2 sensor from Swedish company Senseair.
+This is a CO2 sensor from Swedish company Senseair.
 
 Specifications:
  * 400 to 2000 ppm
@@ -28,7 +28,7 @@ Wiring
 
 Circuit wiring (S8 seen from PCB side, with the 5 vias down and the 4 vias up):
 
-.. code-block:: html
+.. code-block:: none
 
     ESP               S8
     GPIO (7)   <-->   TX (3rd via [middle] of the 5 vias)
@@ -95,7 +95,7 @@ Indicators (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
  on CO2#Level do
   if [CO2#Level]>2000

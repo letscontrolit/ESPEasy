@@ -1,0 +1,34 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 40
+
+        "
+        ``MitsubishiHP,temperature,<value>``
+        ","
+        Value must be between ``16`` and ``31``.
+        "
+        "
+        ``MitsubishiHP,power,<value>``
+        ","
+        Value = ``ON`` or ``OFF``
+        "
+        "
+        ``MitsubishiHP,mode,<value>``
+        ","
+        Value = ``HEAT``, ``COOL``, ``FAN``, ``DRY`` or ``AUTO``
+        "
+        "
+        ``MitsubishiHP,fan,<value>``
+        ","
+        Value = ``1``, ``2``, ``3``, ``4``, ``AUTO`` or ``QUIET``
+        "
+        "
+        ``MitsubishiHP,vane,<value>``
+        ","
+        Value = ``1``, ``2``, ``3``, ``4``, ``5``, ``SWING`` or ``AUTO``
+        "
+        "
+        ``MitsubishiHP,widevane,<value>``
+        ","
+        Value = ``<<``, ``<``, ``|``, ``>``, ``>>``, ``<>`` or ``SWING``
+        "

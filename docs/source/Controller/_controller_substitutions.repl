@@ -45,9 +45,9 @@
 .. |C004_maintainer| replace:: `.`
 .. |C004_compileinfo| replace:: `.`
 
-.. |C005_name| replace:: :cyan:`OpenHAB MQTT`
+.. |C005_name| replace:: :cyan:`Home Assistant (openHAB) MQTT`
 .. |C005_type| replace:: :cyan:`Controller`
-.. |C005_typename| replace:: :cyan:`Controller - OpenHAB MQTT`
+.. |C005_typename| replace:: :cyan:`Controller - Home Assistant (openHAB) MQTT`
 .. |C005_status| replace:: :green:`NORMAL`
 .. |C005_github| replace:: C005.ino
 .. _C005_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C005.ino
@@ -111,9 +111,9 @@
 .. |C010_maintainer| replace:: `.`
 .. |C010_compileinfo| replace:: `.`
 
-.. |C011_name| replace:: :cyan:`Generic HTTP`
+.. |C011_name| replace:: :cyan:`Generic HTTP Advanced`
 .. |C011_type| replace:: :cyan:`Controller`
-.. |C011_typename| replace:: :cyan:`Controller - Generic HTTP`
+.. |C011_typename| replace:: :cyan:`Controller - Generic HTTP Advanced`
 .. |C011_status| replace:: :yellow:`TESTING`
 .. |C011_github| replace:: C011.ino
 .. _C011_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C011.ino
@@ -141,5 +141,49 @@
 .. _C013_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C013.ino
 .. |C013_usedby| replace:: `.`
 .. |C013_shortinfo| replace:: `.`
-.. |C013_maintainer| replace:: `.`
+.. |C013_maintainer| replace:: `TD-er`
 .. |C013_compileinfo| replace:: `.`
+
+.. |C014_name| replace:: :cyan:`Homie MQTT (Version 3.0.1 & 4.0.0dev)`
+.. |C014_type| replace:: :cyan:`Controller`
+.. |C014_typename| replace:: :cyan:`Controller - Homie MQTT convention`
+.. |C014_status| replace:: :yellow:`TESTING`
+.. |C014_github| replace:: C014.ino
+.. _C014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C014.ino
+.. |C014_usedby| replace:: `.`
+.. |C014_shortinfo| replace:: `Controller for communication following the Homie convention`
+.. |C014_maintainer| replace:: `.`
+.. |C014_compileinfo| replace:: `Can be compiled for Homie 3.0.1 or 4.0.0dev`
+
+.. |C016_name| replace:: :cyan:`Cache`
+.. |C016_type| replace:: :cyan:`Controller`
+.. |C016_typename| replace:: :cyan:`Controller - Cache`
+.. |C016_status| replace:: :red:`DEVELOPMENT`
+.. |C016_github| replace:: C016.ino
+.. _C016_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C016.ino
+.. |C016_usedby| replace:: `.`
+.. |C016_shortinfo| replace:: `Cache layer to collect data while offline`
+.. |C016_maintainer| replace:: `TD-er`
+.. |C016_compileinfo| replace:: `Not in nightly builds. Only pre-built for special builds.`
+
+.. |C017_name| replace:: :cyan:`Zabbix`
+.. |C017_type| replace:: :cyan:`Controller`
+.. |C017_typename| replace:: :cyan:`Controller - Zabbix`
+.. |C017_status| replace:: :yellow:`TESTING`
+.. |C017_github| replace:: C017.ino
+.. _C017_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C017.ino
+.. |C017_usedby| replace:: `.`
+.. |C017_shortinfo| replace:: `.`
+.. |C017_maintainer| replace:: `.`
+.. |C017_compileinfo| replace:: `.`
+
+.. |C018_name| replace:: :cyan:`LoRa TTN - RN2483/RN2903`
+.. |C018_type| replace:: :cyan:`Controller`
+.. |C018_typename| replace:: :cyan:`Controller - LoRa TTN - RN2483/RN2903`
+.. |C018_status| replace:: :yellow:`TESTING`
+.. |C018_github| replace:: C018.ino
+.. _C018_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C018.ino
+.. |C018_usedby| replace:: `.`
+.. |C018_shortinfo| replace:: `Controller for the LoRaWAN/TTN network supporting RN2483 (434/868 MHz) and RN2903 (915 MHz)`
+.. |C018_maintainer| replace:: `TD-er`
+.. |C018_compileinfo| replace:: `.`

@@ -10,7 +10,7 @@
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
  *
  * Suggested circuit:
- *     https://github.com/markszabo/IRremoteESP8266/wiki#ir-sending
+ *     https://github.com/crankyoldgit/IRremoteESP8266/wiki#ir-sending
  *
  * Common mistakes & tips:
  *   * Don't just connect the IR LED directly to the pin, it won't
@@ -28,9 +28,7 @@
  *     for your first time. e.g. ESP-12 etc.
  */
 
-#ifndef UNIT_TEST
 #include <Arduino.h>
-#endif
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 
@@ -53,7 +51,11 @@ uint8_t samsungState[kSamsungAcStateLength] = {
 
 void setup() {
   irsend.begin();
+#if ESP8266
   Serial.begin(115200, SERIAL_8N1, SERIAL_TX_ONLY);
+#else  // ESP8266
+  Serial.begin(115200, SERIAL_8N1);
+#endif  // ESP8266
 }
 
 void loop() {

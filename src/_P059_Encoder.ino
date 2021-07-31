@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P059
 //#######################################################################################################
 //#################################### Plugin 059: Rotary Encoder #######################################
@@ -24,7 +26,7 @@
 
 std::map<unsigned int, std::shared_ptr<QEIx4> > P_059_sensordefs;
 
-boolean Plugin_059(byte function, struct EventStruct *event, String& string)
+boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -35,7 +37,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         Device[++deviceCount].Number = PLUGIN_ID_059;
         Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SWITCH;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = false;
@@ -73,9 +75,11 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         if (PCONFIG_LONG(0) == 0 && PCONFIG_LONG(1) == 0)
           PCONFIG_LONG(1) = 100;
 
-        String options[3] = { F("1 pulse per cycle"), F("2 pulses per cycle"), F("4 pulses per cycle") };
-        int optionValues[3] = { 1, 2, 4 };
-        addFormSelector(F("Mode"), F("qei_mode"), 3, options, optionValues, PCONFIG(0));
+        {
+          const __FlashStringHelper * options[3] = { F("1 pulse per cycle"), F("2 pulses per cycle"), F("4 pulses per cycle") };
+          int optionValues[3] = { 1, 2, 4 };
+          addFormSelector(F("Mode"), F("qei_mode"), 3, options, optionValues, PCONFIG(0));
+        }
 
         addFormNumericBox(F("Limit min."), F("qei_limitmin"), PCONFIG_LONG(0));
         addFormNumericBox(F("Limit max."), F("qei_limitmax"), PCONFIG_LONG(1));
@@ -110,7 +114,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
         ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = 0;
 
         String log = F("QEI  : GPIO: ");
-        for (byte i=0; i<3; i++)
+        for (uint8_t i=0; i<3; i++)
         {
           int pin = PIN(i);
           if (pin >= 0)
@@ -148,7 +152,7 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
           {
             long c = P_059_sensordefs[event->TaskIndex]->read();
             UserVar[event->BaseVarIndex] = (float)c;
-            event->sensorType = SENSOR_TYPE_SWITCH;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
             String log = F("QEI  : ");
             log += c;
@@ -176,15 +180,18 @@ boolean Plugin_059(byte function, struct EventStruct *event, String& string)
       {
         if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
-            String log = "";
             String command = parseString(string, 1);
             if (command == F("encwrite"))
             {
               if (event->Par1 >= 0)
               {
-                log = String(F("QEI  : ")) + string;
-                addLog(LOG_LEVEL_INFO, log);
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log = F("QEI  : ");
+                  log += string;
+                  addLog(LOG_LEVEL_INFO, log);
+                }
                 P_059_sensordefs[event->TaskIndex]->write(event->Par1);
+                Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
               }
               success = true; // Command is handled.
             }

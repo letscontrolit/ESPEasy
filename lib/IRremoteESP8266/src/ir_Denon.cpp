@@ -1,23 +1,22 @@
 // Copyright 2016 Massimiliano Pinto
 // Copyright 2017 David Conran
+/// @file
+/// @brief Denon support
+/// Original Denon support added by https://github.com/csBlueChip
+/// Ported over by Massimiliano Pinto
+/// @see https://github.com/z3t0/Arduino-IRremote/blob/master/ir_Denon.cpp
+/// @see http://assets.denon.com/documentmaster/us/denon%20master%20ir%20hex.xls
+
+// Supports:
+//   Brand: Denon, Model: AVR-3801 A/V Receiver (probably)
 
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
 
-//                    DDDD   EEEEE  N   N   OOO   N   N
-//                     D  D  E      NN  N  O   O  NN  N
-//                     D  D  EEE    N N N  O   O  N N N
-//                     D  D  E      N  NN  O   O  N  NN
-//                    DDDD   EEEEE  N   N   OOO   N   N
-
-// Original Denon support added by https://github.com/csBlueChip
-// Ported over by Massimiliano Pinto
 
 // Constants
-// Ref:
-//   https://github.com/z3t0/Arduino-IRremote/blob/master/ir_Denon.cpp
 const uint16_t kDenonTick = 263;
 const uint16_t kDenonHdrMarkTicks = 1;
 const uint16_t kDenonHdrMark = kDenonHdrMarkTicks * kDenonTick;
@@ -39,21 +38,13 @@ const uint32_t kDenonMinGap = kDenonMinGapTicks * kDenonTick;
 const uint64_t kDenonManufacturer = 0x2A4CULL;
 
 #if SEND_DENON
-// Send a Denon message
-//
-// Args:
-//   data:   Contents of the message to be sent.
-//   nbits:  Nr. of bits of data to be sent. Typically DENON_BITS.
-//   repeat: Nr. of additional times the message is to be sent.
-//
-// Status: BETA / Should be working.
-//
-// Notes:
-//   Some Denon devices use a Kaseikyo/Panasonic 48-bit format
-//   Others use the Sharp protocol.
-// Ref:
-//   https://github.com/z3t0/Arduino-IRremote/blob/master/ir_Denon.cpp
-//   http://assets.denon.com/documentmaster/us/denon%20master%20ir%20hex.xls
+/// Send a Denon formatted message.
+/// Status: STABLE / Should be working.
+/// @param[in] data The message to be sent.
+/// @param[in] nbits The number of bits of message to be sent.
+/// @param[in] repeat The number of times the command is to be repeated.
+/// @note Some Denon devices use a Kaseikyo/Panasonic 48-bit format
+///   Others use the Sharp protocol.
 void IRsend::sendDenon(uint64_t data, uint16_t nbits, uint16_t repeat) {
   if (nbits >= kPanasonicBits)  // Is this really Panasonic?
     sendPanasonic64(data, nbits, repeat);
@@ -66,24 +57,23 @@ void IRsend::sendDenon(uint64_t data, uint16_t nbits, uint16_t repeat) {
 #endif
 
 #if DECODE_DENON
-// Decode a Denon message.
-//
-// Args:
-//   results: Ptr to the data to decode and where to store the decode result.
-//   nbits:   Expected nr. of data bits. (Typically DENON_BITS)
-// Returns:
-//   boolean: True if it can decode it, false if it can't.
-//
-// Status: BETA / Should work fine.
-//
-// Ref:
-//   https://github.com/z3t0/Arduino-IRremote/blob/master/ir_Denon.cpp
-bool IRrecv::decodeDenon(decode_results *results, uint16_t nbits, bool strict) {
+/// Decode the supplied Delonghi A/C message.
+/// Status: STABLE / Should work fine.
+/// @param[in,out] results Ptr to the data to decode & where to store the decode
+///   result.
+/// @param[in] offset The starting index to use when attempting to decode the
+///   raw data. Typically/Defaults to kStartOffset.
+/// @param[in] nbits The number of data bits to expect.
+/// @param[in] strict Flag indicating if we should perform strict matching.
+/// @return A boolean. True if it can decode it, false if it can't.
+/// @see https://github.com/z3t0/Arduino-IRremote/blob/master/ir_Denon.cpp
+bool IRrecv::decodeDenon(decode_results *results, uint16_t offset,
+                         const uint16_t nbits, const bool strict) {
   // Compliance
   if (strict) {
     switch (nbits) {
-      case DENON_BITS:
-      case DENON_48_BITS:
+      case kDenonBits:
+      case kDenon48Bits:
       case kDenonLegacyBits:
         break;
       default:
@@ -98,38 +88,22 @@ bool IRrecv::decodeDenon(decode_results *results, uint16_t nbits, bool strict) {
   // Ditto for Panasonic, it's the same except for a different
   // manufacturer code.
 
-  if (!decodeSharp(results, nbits, true, false) &&
-      !decodePanasonic(results, nbits, true, kDenonManufacturer)) {
+  if (!decodeSharp(results, offset, nbits, true, false) &&
+      !decodePanasonic(results, offset, nbits, true, kDenonManufacturer)) {
     // We couldn't decode it as expected, so try the old legacy method.
     // NOTE: I don't think this following protocol actually exists.
     //       Looks like a partial version of the Sharp protocol.
-    // Check we have enough data
-    if (results->rawlen < 2 * nbits + kHeader + kFooter - 1) return false;
     if (strict && nbits != kDenonLegacyBits) return false;
 
     uint64_t data = 0;
-    uint16_t offset = kStartOffset;
 
-    // Header
-    if (!matchMark(results->rawbuf[offset], kDenonHdrMark)) return false;
-    // Calculate how long the common tick time is based on the header mark.
-    uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kDenonHdrMarkTicks;
-    if (!matchSpace(results->rawbuf[offset], kDenonHdrSpace)) return false;
-    uint32_t s_tick =
-        results->rawbuf[offset++] * kRawTick / kDenonHdrSpaceTicks;
-
-    // Data
-    match_result_t data_result =
-        matchData(&(results->rawbuf[offset]), nbits,
-                  kDenonBitMarkTicks * m_tick, kDenonOneSpaceTicks * s_tick,
-                  kDenonBitMarkTicks * m_tick, kDenonZeroSpaceTicks * s_tick);
-    if (data_result.success == false) return false;
-    data = data_result.data;
-    offset += data_result.used;
-
-    // Footer
-    if (!matchMark(results->rawbuf[offset++], kDenonBitMarkTicks * m_tick))
-      return false;
+    // Match Header + Data + Footer
+    if (!matchGeneric(results->rawbuf + offset, &data,
+                      results->rawlen - offset, nbits,
+                      kDenonHdrMark, kDenonHdrSpace,
+                      kDenonBitMark, kDenonOneSpace,
+                      kDenonBitMark, kDenonZeroSpace,
+                      kDenonBitMark, 0, false)) return false;
 
     // Success
     results->bits = nbits;

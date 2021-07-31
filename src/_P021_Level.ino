@@ -1,17 +1,21 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P021
 //#######################################################################################################
 //#################################### Plugin 021: Level Control ########################################
 //#######################################################################################################
+
+#include "src/Helpers/Rules_calculate.h"
+#include "src/WebServer/WebServer.h"
 
 #define PLUGIN_021
 #define PLUGIN_ID_021        21
 #define PLUGIN_NAME_021       "Regulator - Level Control"
 #define PLUGIN_VALUENAME1_021 "Output"
 
-boolean Plugin_021(byte function, struct EventStruct *event, String& string)
+boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static byte switchstate[TASKS_MAX];
+  static uint8_t switchstate[TASKS_MAX];
 
   switch (function)
   {
@@ -20,7 +24,7 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
       {
         Device[++deviceCount].Number = PLUGIN_ID_021;
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = SENSOR_TYPE_SWITCH;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SWITCH;
         Device[deviceCount].Ports = 0;
         Device[deviceCount].PullUpOption = false;
         Device[deviceCount].InverseLogicOption = false;
@@ -85,11 +89,12 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
         if (command == F("setlevel"))
         {
           String value = parseString(string, 2);
-          float result=0;
-          Calculate(value.c_str(), &result);
-          PCONFIG_FLOAT(0) = result;
-          SaveSettings();
-          success = true;
+          double result=0;
+          if (!isError(Calculate(value, result))) {
+            PCONFIG_FLOAT(0) = result;
+            SaveSettings();
+            success = true;
+          }
         }
         break;
       }
@@ -115,10 +120,10 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
       {
         // we're checking a var from another task, so calculate that basevar
-        byte TaskIndex = PCONFIG(0);
-        byte BaseVarIndex = TaskIndex * VARS_PER_TASK + PCONFIG(1);
+        taskIndex_t TaskIndex = PCONFIG(0);
+        uint8_t BaseVarIndex = TaskIndex * VARS_PER_TASK + PCONFIG(1);
         float value = UserVar[BaseVarIndex];
-        byte state = switchstate[event->TaskIndex];
+        uint8_t state = switchstate[event->TaskIndex];
         // compare with threshold value
         float valueLowThreshold = PCONFIG_FLOAT(0) - (PCONFIG_FLOAT(1) / 2);
         float valueHighThreshold = PCONFIG_FLOAT(0) + (PCONFIG_FLOAT(1) / 2);
@@ -128,9 +133,11 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
           state = 0;
         if (state != switchstate[event->TaskIndex])
         {
-          String log = F("LEVEL: State ");
-          log += state;
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("LEVEL: State ");
+            log += state;
+            addLog(LOG_LEVEL_INFO, log);
+          }
           switchstate[event->TaskIndex] = state;
           digitalWrite(CONFIG_PIN1,state);
           UserVar[event->BaseVarIndex] = state;

@@ -12,7 +12,9 @@ Welcome to ESP Easy's documentation!
 
    ESPEasy/AboutUs.rst
    ESPEasy/FunctionBlocks.rst
+   Config/Config.rst
    Controller/_Controller.rst
+   Hardware/Hardware.rst
    Plugin/_Plugin.rst
    Rules/Rules.rst
    Tools/Tools.rst
@@ -27,13 +29,20 @@ Welcome to ESP Easy's documentation!
    :maxdepth: 2
    :caption: Appendix
 
+   Participate/PlatformIO.rst
+   Participate/ArduinoIDE.rst
    Participate/Documentation.rst
+   Participate/ProjectStructure.rst
+   Reference/Flashing.rst
    Reference/Safety.rst
    Reference/Command.rst
    Reference/Events.rst
    Reference/GPIO.rst
    Reference/SystemVariable.rst
+   Reference/URLs.rst
+   Reference/RTC.rst
    Reference/ChangeLog.rst
+   Reference/ExternalHostedStaticFiles.rst
 
 .. toctree::
    :glob:

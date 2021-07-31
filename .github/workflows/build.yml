@@ -1,0 +1,92 @@
+# Checks whether the pushed commit can be build with PIO. Only triggered on normal push to the mega branch without tag and with pull requests targeting mega
+
+name: Build
+
+on:
+  push:
+    branches: [mega]
+    tags-ignore: '**'
+    paths-ignore:
+      - 'dist/Release_notes.txt'
+  pull_request:
+    branches: [mega]
+
+jobs:
+  documentation:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
+      - name: Build documentation
+        run: |
+          cd docs
+          sudo apt install imagemagick zip
+          pip install -r requirements.txt
+          make html
+          cd ..
+          zip -r -qq ESPEasy_docs.zip docs/build/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Documentation
+          path: ESPEasy_docs.zip
+  generate-matrix:
+    runs-on: ubuntu-20.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - id: set-matrix
+        run: |
+          pip install platformio
+          python tools/ci/generate-matrix.py
+
+  build:
+    needs: generate-matrix
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+      - uses: actions/cache@v2
+        if: ${{ contains(matrix.env, 'esp32') }}
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-esp32-${{ hashFiles('platformio*.ini') }}
+      - uses: actions/cache@v2
+        if: ${{ contains(matrix.env, 'esp8266') }}
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-esp8266-${{ hashFiles('platformio*.ini') }}
+      - name: Dependencies
+        run: |
+          sudo apt install binutils
+          pip install -r requirements.txt
+          platformio update
+      - name: Build and archive
+        id: build-and-archive
+        env:
+          CHIP: ${{ matrix.chip }}
+          ENV: ${{ matrix.env }}
+        run: |
+          python tools/ci/build-and-archive.py
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Binaries
+          path: ESPEasy_${{ matrix.env }}.zip
+          if-no-files-found: ignore

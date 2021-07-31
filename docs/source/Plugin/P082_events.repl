@@ -7,7 +7,7 @@
    Will trigger when the GPS unit got a good position from the satellites.
    ","
 
-   .. code-block:: html
+   .. code-block:: none
 
       on GPS#GotFix do
        GPIO,2,1 //LED on
@@ -19,10 +19,28 @@
    Will trigger when the GPS unit is not having a good position from the satellites.
    ","
 
-   .. code-block:: html
+   .. code-block:: none
 
       on GPS#LostFix do
         GPIO,2,0 //LED off
       endon
 
    "
+   "
+   ``GPS#travelled``
+   When configured to update every N meters travelled, this event will be triggered if the GPS moved more than N meters away from the last position this trigger was given.
+   This means the total travel distance can be more if the GPS does not move in a straight line.
+   ","
+
+   .. code-block:: none
+
+      on GPS#travelled do
+        LogEntry,'Travelled %eventvalue% meter'
+      endon
+
+   "
+
+
+
+
+   

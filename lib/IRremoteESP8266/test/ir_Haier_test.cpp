@@ -1,6 +1,7 @@
 // Copyright 2018 David Conran
 
 #include "ir_Haier.h"
+#include "IRac.h"
 #include "IRrecv.h"
 #include "IRrecv_test.h"
 #include "IRsend.h"
@@ -19,6 +20,7 @@ TEST(TestSendHaierAC, SendDataOnly) {
   irsend.reset();
   irsend.sendHaierAC(haier_zero);
   EXPECT_EQ(
+      "f38000d50"
       "m3000s3000m3000s4300"
       "m520s650m520s650m520s650m520s650m520s650m520s650m520s650m520s650"
       "m520s650m520s650m520s650m520s650m520s650m520s650m520s650m520s650"
@@ -37,6 +39,7 @@ TEST(TestSendHaierAC, SendDataOnly) {
   irsend.reset();
   irsend.sendHaierAC(haier_test);
   EXPECT_EQ(
+      "f38000d50"
       "m3000s3000m3000s4300"
       "m520s1650m520s650m520s1650m520s650m520s650m520s1650m520s650m520s1650"
       "m520s650m520s650m520s650m520s650m520s650m520s650m520s650m520s1650"
@@ -62,6 +65,7 @@ TEST(TestSendHaierAC, SendWithRepeats) {
   irsend.reset();
   irsend.sendHaierAC(haier_test, kHaierACStateLength, 2);  // two repeats.
   EXPECT_EQ(
+      "f38000d50"
       "m3000s3000m3000s4300"
       "m520s1650m520s650m520s1650m520s650m520s650m520s1650m520s650m520s1650"
       "m520s650m520s650m520s650m520s650m520s650m520s650m520s650m520s1650"
@@ -128,6 +132,8 @@ TEST(TestHaierACClass, Command) {
   EXPECT_EQ(kHaierAcCmdSwing, haier.getCommand());
   haier.setCommand(kHaierAcCmdOn);
   EXPECT_EQ(kHaierAcCmdOn, haier.getCommand());
+  haier.setCommand(kHaierAcCmdOff);
+  EXPECT_EQ(kHaierAcCmdOff, haier.getCommand());
 
   // Test unexpected values.
   haier.setCommand(0b00001110);
@@ -340,71 +346,58 @@ TEST(TestHaierACClass, Timers) {
   EXPECT_EQ(kHaierAcCmdTimerCancel, haier.getCommand());
 }
 
-TEST(TestHaierACClass, TimeToString) {
-  EXPECT_EQ("00:00", IRHaierAC::timeToString(0));
-  EXPECT_EQ("00:01", IRHaierAC::timeToString(1));
-  EXPECT_EQ("00:10", IRHaierAC::timeToString(10));
-  EXPECT_EQ("00:59", IRHaierAC::timeToString(59));
-
-  EXPECT_EQ("01:00", IRHaierAC::timeToString(60));
-  EXPECT_EQ("01:01", IRHaierAC::timeToString(61));
-  EXPECT_EQ("01:59", IRHaierAC::timeToString(60 + 59));
-  EXPECT_EQ("18:59", IRHaierAC::timeToString(18 * 60 + 59));
-  EXPECT_EQ("23:59", IRHaierAC::timeToString(23 * 60 + 59));
-}
-
 TEST(TestHaierACClass, MessageConstuction) {
   IRHaierAC haier(0);
 
   EXPECT_EQ(
-      "Command: 1 (On), Mode: 0 (AUTO), Temp: 25C, Fan: 0 (AUTO), "
+      "Command: 1 (On), Mode: 0 (Auto), Temp: 25C, Fan: 1 (Low), "
       "Swing: 0 (Off), Sleep: Off, Health: Off, "
-      "Current Time: 00:00, On Timer: Off, Off Timer: Off",
+      "Clock: 00:00, On Timer: Off, Off Timer: Off",
       haier.toString());
   haier.setMode(kHaierAcCool);
   haier.setTemp(21);
   haier.setFan(kHaierAcFanHigh);
   EXPECT_EQ(
-      "Command: 3 (Fan), Mode: 1 (COOL), Temp: 21C, Fan: 3 (MAX), "
+      "Command: 3 (Fan), Mode: 1 (Cool), Temp: 21C, Fan: 3 (High), "
       "Swing: 0 (Off), Sleep: Off, Health: Off, "
-      "Current Time: 00:00, On Timer: Off, Off Timer: Off",
+      "Clock: 00:00, On Timer: Off, Off Timer: Off",
       haier.toString());
   haier.setSwing(kHaierAcSwingChg);
   haier.setHealth(true);
   haier.setSleep(true);
   haier.setCurrTime(615);  // 10:15am
   EXPECT_EQ(
-      "Command: 8 (Sleep), Mode: 3 (HEAT), Temp: 21C, Fan: 3 (MAX), "
-      "Swing: 3 (Chg), Sleep: On, Health: On, "
-      "Current Time: 10:15, On Timer: Off, Off Timer: Off",
+      "Command: 8 (Sleep), Mode: 1 (Cool), Temp: 21C, Fan: 3 (High), "
+      "Swing: 3 (Change), Sleep: On, Health: On, "
+      "Clock: 10:15, On Timer: Off, Off Timer: Off",
       haier.toString());
   haier.setOnTimer(800);    // 1:20pm
   haier.setOffTimer(1125);  // 6:45pm
   haier.setCommand(kHaierAcCmdOn);
 
   EXPECT_EQ(
-      "Command: 1 (On), Mode: 2 (DRY), Temp: 21C, Fan: 2, "
-      "Swing: 3 (Chg), Sleep: On, Health: On, "
-      "Current Time: 10:15, On Timer: 13:20, Off Timer: 18:45",
+      "Command: 1 (On), Mode: 1 (Cool), Temp: 21C, Fan: 3 (High), "
+      "Swing: 3 (Change), Sleep: On, Health: On, "
+      "Clock: 10:15, On Timer: 13:20, Off Timer: 18:45",
       haier.toString());
 
   // Now change a few already set things.
   haier.setMode(kHaierAcHeat);
   EXPECT_EQ(
-      "Command: 2 (Mode), Mode: 3 (HEAT), Temp: 21C, Fan: 2, "
-      "Swing: 3 (Chg), Sleep: On, Health: On, "
-      "Current Time: 10:15, On Timer: 13:52, Off Timer: 18:45",
+      "Command: 2 (Mode), Mode: 3 (Heat), Temp: 21C, Fan: 3 (High), "
+      "Swing: 3 (Change), Sleep: On, Health: On, "
+      "Clock: 10:15, On Timer: 13:20, Off Timer: 18:45",
       haier.toString());
 
   haier.setTemp(25);
   EXPECT_EQ(
-      "Command: 6 (Temp Up), Mode: 3 (HEAT), Temp: 25C, Fan: 2, "
-      "Swing: 3 (Chg), Sleep: On, Health: On, "
-      "Current Time: 10:15, On Timer: 13:52, Off Timer: 18:45",
+      "Command: 6 (Temp Up), Mode: 3 (Heat), Temp: 25C, Fan: 3 (High), "
+      "Swing: 3 (Change), Sleep: On, Health: On, "
+      "Clock: 10:15, On Timer: 13:20, Off Timer: 18:45",
       haier.toString());
 
   uint8_t expectedState[kHaierACStateLength] = {0xA5, 0x96, 0xEA, 0xCF, 0x32,
-                                                0x2D, 0x0D, 0x74, 0xD4};
+                                                0x6D, 0x6D, 0x54, 0x54};
   EXPECT_STATE_EQ(expectedState, haier.getRaw(), kHaierACBits);
 
   // Check that the checksum is valid.
@@ -416,9 +409,9 @@ TEST(TestHaierACClass, MessageConstuction) {
   EXPECT_FALSE(IRHaierAC::validChecksum(randomState));
   haier.setRaw(randomState);
   EXPECT_EQ(
-      "Command: 9 (Timer Set), Mode: 3 (HEAT), Temp: 20C, Fan: 2, "
+      "Command: 9 (Timer Set), Mode: 3 (Heat), Temp: 20C, Fan: 3 (High), "
       "Swing: 1 (Up), Sleep: On, Health: Off, "
-      "Current Time: 16:32, On Timer: Off, Off Timer: Off",
+      "Clock: 16:32, On Timer: Off, Off Timer: Off",
       haier.toString());
   // getRaw() should correct the checksum.
   EXPECT_TRUE(IRHaierAC::validChecksum(haier.getRaw()));
@@ -681,15 +674,15 @@ TEST(TestHaierACYRW02Class, MessageConstuction) {
 
   EXPECT_EQ(
       "Power: On, Button: 5 (Power), Mode: 0 (Auto), Temp: 25C,"
-      " Fan: 10 (Auto), Turbo: 0 (Off), Swing: 0 (Off), Sleep: Off,"
+      " Fan: 5 (Auto), Turbo: 0 (Off), Swing: 0 (Off), Sleep: Off,"
       " Health: On",
       haier.toString());
   haier.setMode(kHaierAcYrw02Cool);
   haier.setTemp(21);
   haier.setFan(kHaierAcYrw02FanHigh);
   EXPECT_EQ(
-      "Power: On, Button: 4 (Fan), Mode: 2 (Cool), Temp: 21C,"
-      " Fan: 2 (High), Turbo: 0 (Off), Swing: 0 (Off), Sleep: Off,"
+      "Power: On, Button: 4 (Fan), Mode: 1 (Cool), Temp: 21C,"
+      " Fan: 1 (High), Turbo: 0 (Off), Swing: 0 (Off), Sleep: Off,"
       " Health: On",
       haier.toString());
 
@@ -698,8 +691,8 @@ TEST(TestHaierACYRW02Class, MessageConstuction) {
   haier.setSleep(true);
   haier.setTurbo(kHaierAcYrw02TurboHigh);
   EXPECT_EQ(
-      "Power: On, Button: 8 (Turbo), Mode: 2 (Cool), Temp: 21C,"
-      " Fan: 2 (High), Turbo: 1 (High), Swing: 2 (Middle),"
+      "Power: On, Button: 8 (Turbo), Mode: 1 (Cool), Temp: 21C,"
+      " Fan: 1 (High), Turbo: 1 (High), Swing: 2 (Middle),"
       " Sleep: On, Health: Off",
       haier.toString());
 }
@@ -713,8 +706,8 @@ TEST(TestHaierACYRW02Class, RealStates) {
   IRHaierACYRW02 haier(0);
   haier.setRaw(expectedState1);
   EXPECT_EQ(
-      "Power: On, Button: 7 (Health), Mode: 8 (Heat), Temp: 30C,"
-      " Fan: 2 (High), Turbo: 0 (Off), Swing: 1 (Top), Sleep: Off,"
+      "Power: On, Button: 7 (Health), Mode: 4 (Heat), Temp: 30C,"
+      " Fan: 1 (High), Turbo: 0 (Off), Swing: 1 (Highest), Sleep: Off,"
       " Health: Off",
       haier.toString());
 
@@ -723,8 +716,8 @@ TEST(TestHaierACYRW02Class, RealStates) {
       0x80, 0x00, 0x00, 0x00, 0x00, 0x05, 0x75};
   haier.setRaw(expectedState2);
   EXPECT_EQ(
-      "Power: Off, Button: 5 (Power), Mode: 8 (Heat), Temp: 30C,"
-      " Fan: 2 (High), Turbo: 0 (Off), Swing: 0 (Off), Sleep: Off,"
+      "Power: Off, Button: 5 (Power), Mode: 4 (Heat), Temp: 30C,"
+      " Fan: 1 (High), Turbo: 0 (Off), Swing: 0 (Off), Sleep: Off,"
       " Health: Off",
       haier.toString());
 
@@ -733,8 +726,8 @@ TEST(TestHaierACYRW02Class, RealStates) {
       0x20, 0x00, 0x00, 0x00, 0x00, 0x01, 0x2B};
   haier.setRaw(expectedState3);
   EXPECT_EQ(
-      "Power: On, Button: 1 (Temp Down), Mode: 2 (Cool), Temp: 16C,"
-      " Fan: 2 (High), Turbo: 0 (Off), Swing: 2 (Middle), Sleep: Off,"
+      "Power: On, Button: 1 (Temp Down), Mode: 1 (Cool), Temp: 16C,"
+      " Fan: 1 (High), Turbo: 0 (Off), Swing: 2 (Middle), Sleep: Off,"
       " Health: On",
       haier.toString());
 
@@ -744,8 +737,8 @@ TEST(TestHaierACYRW02Class, RealStates) {
       0x20, 0x80, 0x00, 0x00, 0x00, 0x0B, 0xD7};
   haier.setRaw(expectedState4);
   EXPECT_EQ(
-      "Power: On, Button: 11 (Sleep), Mode: 2 (Cool), Temp: 25C,"
-      " Fan: 10 (Auto), Turbo: 0 (Off), Swing: 12 (Auto), Sleep: On,"
+      "Power: On, Button: 11 (Sleep), Mode: 1 (Cool), Temp: 25C,"
+      " Fan: 5 (Auto), Turbo: 0 (Off), Swing: 12 (Auto), Sleep: On,"
       " Health: On",
       haier.toString());
 
@@ -755,8 +748,8 @@ TEST(TestHaierACYRW02Class, RealStates) {
       0x20, 0x80, 0x00, 0x00, 0x00, 0x04, 0x85};
   haier.setRaw(expectedState5);
   EXPECT_EQ(
-      "Power: On, Button: 4 (Fan), Mode: 2 (Cool), Temp: 25C,"
-      " Fan: 2 (High), Turbo: 0 (Off), Swing: 12 (Auto), Sleep: On,"
+      "Power: On, Button: 4 (Fan), Mode: 1 (Cool), Temp: 25C,"
+      " Fan: 1 (High), Turbo: 0 (Off), Swing: 12 (Auto), Sleep: On,"
       " Health: On",
       haier.toString());
 }
@@ -776,7 +769,8 @@ TEST(TestDecodeHaierAC, NormalDecodeWithStrict) {
   irsend.reset();
   irsend.sendHaierAC(expectedState);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeHaierAC(&irsend.capture, kHaierACBits, true));
+  ASSERT_TRUE(irrecv.decodeHaierAC(&irsend.capture, kStartOffset, kHaierACBits,
+                                   true));
   EXPECT_EQ(HAIER_AC, irsend.capture.decode_type);
   EXPECT_EQ(kHaierACBits, irsend.capture.bits);
   EXPECT_FALSE(irsend.capture.repeat);
@@ -800,7 +794,8 @@ TEST(TestDecodeHaierAC, RealExample1) {
   irsend.begin();
 
   irsend.reset();
-  // Data from Issue #404 captured by kuzin2006
+  // Data from Issue #404 captured by kuzin2006,
+  // ON COOL 16C FAN LOW ALL OFF 12:00AM
   uint16_t rawData[149] = {
       3030, 3044, 3030, 4304, 576,  1694, 550,  582,  552, 1704, 552, 714, 550,
       582,  550,  1706, 552,  582,  550,  1836, 552,  582, 578,  568, 550, 582,
@@ -825,13 +820,13 @@ TEST(TestDecodeHaierAC, RealExample1) {
   EXPECT_FALSE(irsend.capture.repeat);
   EXPECT_STATE_EQ(expectedState, irsend.capture.state, irsend.capture.bits);
 
-  IRHaierAC haier(0);
-  haier.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Command: 1 (On), Mode: 0 (AUTO), Temp: 16C, Fan: 0 (AUTO), "
+      "Command: 1 (On), Mode: 1 (Cool), Temp: 16C, Fan: 1 (Low), "
       "Swing: 0 (Off), Sleep: Off, Health: Off, "
-      "Current Time: 00:01, On Timer: Off, Off Timer: Off",
-      haier.toString());
+      "Clock: 00:01, On Timer: Off, Off Timer: Off",
+      IRAcUtils::resultAcToString(&irsend.capture));
+  stdAc::state_t r, p;
+  ASSERT_TRUE(IRAcUtils::decodeToState(&irsend.capture, &r, &p));
 }
 
 // Decode a "real" example message.
@@ -842,6 +837,7 @@ TEST(TestDecodeHaierAC, RealExample2) {
 
   irsend.reset();
   // Data from Issue #404 captured by kuzin2006
+  // TEMP 21C
   uint16_t rawData[149] = {
       3028, 3046, 3028, 4304, 576, 1694, 552, 582,  550, 1704, 552, 714,
       550,  582,  552,  1704, 550, 582,  550, 1836, 552, 582,  578, 1690,
@@ -870,9 +866,9 @@ TEST(TestDecodeHaierAC, RealExample2) {
   IRHaierAC haier(0);
   haier.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Command: 6 (Temp Up), Mode: 0 (AUTO), Temp: 22C, Fan: 0 (AUTO), "
+      "Command: 6 (Temp Up), Mode: 1 (Cool), Temp: 22C, Fan: 1 (Low), "
       "Swing: 0 (Off), Sleep: Off, Health: Off, "
-      "Current Time: 00:01, On Timer: Off, Off Timer: Off",
+      "Clock: 00:01, On Timer: Off, Off Timer: Off",
       haier.toString());
 }
 
@@ -884,6 +880,7 @@ TEST(TestDecodeHaierAC, RealExample3) {
 
   irsend.reset();
   // Data from Issue #404 captured by kuzin2006
+  // HEALTH ON
   uint16_t rawData[149] = {
       3030, 3044, 3030, 4302, 578, 1692, 550, 582,  550, 1706, 550, 714,
       550,  582,  552,  1706, 550, 582,  550, 1836, 552, 1706, 578, 1690,
@@ -912,9 +909,9 @@ TEST(TestDecodeHaierAC, RealExample3) {
   IRHaierAC haier(0);
   haier.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Command: 12 (Health), Mode: 0 (AUTO), Temp: 30C, Fan: 0 (AUTO), "
+      "Command: 12 (Health), Mode: 1 (Cool), Temp: 30C, Fan: 1 (Low), "
       "Swing: 0 (Off), Sleep: Off, Health: On, "
-      "Current Time: 00:09, On Timer: Off, Off Timer: Off",
+      "Clock: 00:09, On Timer: Off, Off Timer: Off",
       haier.toString());
 }
 
@@ -982,8 +979,159 @@ TEST(TestDecodeHaierAC_YRW02, RealExample) {
   IRHaierACYRW02 haier(0);
   haier.setRaw(irsend.capture.state);
   EXPECT_EQ(
-      "Power: On, Button: 5 (Power), Mode: 2 (Cool), Temp: 17C,"
-      " Fan: 2 (High), Turbo: 0 (Off), Swing: 2 (Middle), Sleep: Off,"
+      "Power: On, Button: 5 (Power), Mode: 1 (Cool), Temp: 17C,"
+      " Fan: 1 (High), Turbo: 0 (Off), Swing: 2 (Middle), Sleep: Off,"
       " Health: On",
       haier.toString());
+}
+
+// Default state of the remote needed to include hidden data.
+// Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/668
+TEST(TestHaierAcIssues, Issue668) {
+  IRHaierAC ac(0);
+  IRHaierAC acText(1);
+  IRrecv irrecv(0);
+  ac.begin();
+
+  // Turn on the AC.
+  ac._irsend.reset();
+  char expected_on[] =
+      "Command: 1 (On), Mode: 1 (Cool), Temp: 25C, Fan: 1 (Low), "
+      "Swing: 0 (Off), Sleep: Off, Health: Off, Clock: 00:00, "
+      "On Timer: Off, Off Timer: Off";
+  // State taken from real capture:
+  //   https://github.com/crankyoldgit/IRremoteESP8266/issues/668#issuecomment-483531895
+  uint8_t expected_on_state[9] = {
+      0xA5, 0x91, 0x20, 0x00, 0x0C, 0xC0, 0x20, 0x00, 0x42};
+  ac.setMode(kHaierAcCool);
+  ac.setCommand(kHaierAcCmdOn);
+  EXPECT_EQ(expected_on, ac.toString());
+  ac.send();
+  ac._irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decode(&ac._irsend.capture));
+  ASSERT_EQ(HAIER_AC, ac._irsend.capture.decode_type);
+  EXPECT_EQ(kHaierACBits, ac._irsend.capture.bits);
+  EXPECT_STATE_EQ(expected_on_state,
+                  ac._irsend.capture.state, ac._irsend.capture.bits);
+  acText.setRaw(ac._irsend.capture.state);
+  EXPECT_EQ(expected_on, acText.toString());
+
+  // Set the temp to 25C
+  ac._irsend.reset();
+  ac.setTemp(25);
+  EXPECT_EQ(expected_on, ac.toString());
+  ASSERT_EQ(25, ac.getTemp());
+  ac.send();
+  ac._irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decode(&ac._irsend.capture));
+  ASSERT_EQ(HAIER_AC, ac._irsend.capture.decode_type);
+  EXPECT_EQ(kHaierACBits, ac._irsend.capture.bits);
+  EXPECT_STATE_EQ(expected_on_state,
+                  ac._irsend.capture.state, ac._irsend.capture.bits);
+  acText.setRaw(ac._irsend.capture.state);
+  EXPECT_EQ(expected_on, acText.toString());
+
+  // Increase the temp by 1.
+  ac._irsend.reset();
+  char expected_temp_plus_one[] =
+      "Command: 6 (Temp Up), Mode: 1 (Cool), Temp: 26C, Fan: 1 (Low), "
+      "Swing: 0 (Off), Sleep: Off, Health: Off, Clock: 00:00, "
+      "On Timer: Off, Off Timer: Off";
+  // State taken from real capture:
+  //   https://github.com/crankyoldgit/IRremoteESP8266/issues/668#issuecomment-483531895
+  uint8_t expected_temp_plus_one_state[9] = {
+      0xA5, 0xA6, 0x20, 0x00, 0x0C, 0xC0, 0x20, 0x00, 0x57};
+  ASSERT_EQ(25, ac.getTemp());
+  ac.setTemp(ac.getTemp() + 1);
+  ASSERT_EQ(26, ac.getTemp());
+  EXPECT_EQ(expected_temp_plus_one, ac.toString());
+  ac.send();
+  ac._irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decode(&ac._irsend.capture));
+  ASSERT_EQ(HAIER_AC, ac._irsend.capture.decode_type);
+  EXPECT_EQ(kHaierACBits, ac._irsend.capture.bits);
+  EXPECT_STATE_EQ(expected_temp_plus_one_state,
+                  ac._irsend.capture.state, ac._irsend.capture.bits);
+  acText.setRaw(ac._irsend.capture.state);
+  EXPECT_EQ(expected_temp_plus_one, acText.toString());
+
+  // Decrease the temp by 1.
+  ac._irsend.reset();
+  char expected_temp_minus_one[] =
+      "Command: 7 (Temp Down), Mode: 1 (Cool), Temp: 25C, Fan: 1 (Low), "
+      "Swing: 0 (Off), Sleep: Off, Health: Off, Clock: 00:00, "
+      "On Timer: Off, Off Timer: Off";
+  ASSERT_EQ(26, ac.getTemp());
+  ac.setTemp(ac.getTemp() - 1);
+  ASSERT_EQ(25, ac.getTemp());
+  EXPECT_EQ(expected_temp_minus_one, ac.toString());
+  ac.send();
+  ac._irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decode(&ac._irsend.capture));
+  ASSERT_EQ(HAIER_AC, ac._irsend.capture.decode_type);
+  EXPECT_EQ(kHaierACBits, ac._irsend.capture.bits);
+  acText.setRaw(ac._irsend.capture.state);
+  EXPECT_EQ(expected_temp_minus_one, acText.toString());
+}
+
+TEST(TestHaierACClass, toCommon) {
+  IRHaierAC ac(0);
+  ac.setCommand(kHaierAcCmdOn);
+  ac.setMode(kHaierAcCool);
+  ac.setTemp(20);
+  ac.setFan(kHaierAcFanHigh);
+  ac.setSwing(kHaierAcSwingChg);
+  ac.setHealth(true);
+  ac.setSleep(true);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::HAIER_AC, ac.toCommon().protocol);
+  ASSERT_EQ(-1, ac.toCommon().model);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_TRUE(ac.toCommon().filter);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kAuto, ac.toCommon().swingv);
+  ASSERT_EQ(0, ac.toCommon().sleep);
+  // Unsupported.
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  ASSERT_FALSE(ac.toCommon().turbo);
+  ASSERT_FALSE(ac.toCommon().light);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().clean);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_EQ(-1, ac.toCommon().clock);
+}
+
+TEST(TestHaierACYRW02Class, toCommon) {
+  IRHaierACYRW02 ac(0);
+  ac.setPower(true);
+  ac.setMode(kHaierAcYrw02Cool);
+  ac.setTemp(20);
+  ac.setFan(kHaierAcYrw02FanHigh);
+  ac.setSwing(kHaierAcYrw02SwingTop);
+  ac.setHealth(true);
+  ac.setSleep(true);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::HAIER_AC_YRW02, ac.toCommon().protocol);
+  ASSERT_EQ(-1, ac.toCommon().model);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_TRUE(ac.toCommon().filter);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kHighest, ac.toCommon().swingv);
+  ASSERT_EQ(0, ac.toCommon().sleep);
+  // Unsupported.
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  ASSERT_FALSE(ac.toCommon().turbo);
+  ASSERT_FALSE(ac.toCommon().light);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().clean);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_EQ(-1, ac.toCommon().clock);
 }

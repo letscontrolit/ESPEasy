@@ -94,7 +94,7 @@ class SSD1306Brzo : public OLEDDisplay {
        sendCommand(minBoundY);
        sendCommand(maxBoundY);
 
-       byte k = 0;
+       uint8_t k = 0;
        uint8_t sendBuffer[17];
        sendBuffer[0] = 0x40;
        brzo_i2c_start_transaction(this->_address, BRZO_I2C_SPEED);

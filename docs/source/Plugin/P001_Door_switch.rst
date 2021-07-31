@@ -25,7 +25,7 @@ Specifications:
 Wiring
 ------
 
-.. code-block:: html
+.. code-block:: none
 
   ESP               Door switch
   GPIO (X)   <-->   Signal
@@ -111,7 +111,7 @@ Indicators/values (recommended settings)
 Rules examples
 --------------
 
-.. code-block:: html
+.. code-block:: none
 
     on Door#State=1 do
       timerSet,1,1
