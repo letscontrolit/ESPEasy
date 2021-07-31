@@ -542,9 +542,6 @@ void getWebPageTemplateDefaultHead(String& tmpl, bool addMeta, bool addJS) {
             "</head>");
 }
 
-# define GITHUB_RELEASES_LINK_PREFIX "<a href='https://github.com/letscontrolit/ESPEasy/releases' title='Click to show latest release on Github' target='_blank' style='font-size: 15px; text-decoration: none'>"
-# define GITHUB_RELEASES_LINK_SUFFIX "</a>"
-
 void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool addMenu) {
   {
     String tmp;
