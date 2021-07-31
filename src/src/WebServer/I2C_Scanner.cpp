@@ -214,6 +214,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x4D:
       result =  F("PCF8591,MCP3221,LM75A");
       break;
+    case 0x51:
+      result =  F("PCF8563");
+      break;
     case 0x58:
       result =  F("SGP30");
       break;
@@ -231,6 +234,18 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x60:
       result =  F("Adafruit Motorshield v2,SI1145");
+      break;
+    case 0x62:
+      result = F("Atlas EZO ORP");
+      break;
+    case 0x63:
+      result = F("Atlas EZO pH");
+      break;
+    case 0x64:
+      result = F("Atlas EZO EC");
+      break;
+    case 0x68:
+      result =  F("DS1307,DS3231,PCF8523");
       break;
     case 0x70:
       result =  F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9543a/6a/8a I2C multiplexer,PCA9540 I2C multiplexer");

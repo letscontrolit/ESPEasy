@@ -383,20 +383,22 @@ String wrapIfContains(const String& value, char contains, char wrap) {
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
 String to_json_object_value(const __FlashStringHelper * object,
-                            const __FlashStringHelper * value) 
+                            const __FlashStringHelper * value,
+                            bool wrapInQuotes) 
 {
-  return to_json_object_value(String(object), String(value));
+  return to_json_object_value(String(object), String(value), wrapInQuotes);
 }
 
 
 String to_json_object_value(const __FlashStringHelper * object,
-                            const String& value) 
+                            const String& value,
+                            bool wrapInQuotes) 
 {
-  return to_json_object_value(String(object), value);
+  return to_json_object_value(String(object), value, wrapInQuotes);
 }
 
 
-String to_json_object_value(const String& object, const String& value) {
+String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
   String result;
   bool   isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
@@ -409,7 +411,7 @@ String to_json_object_value(const String& object, const String& value) {
     result += F("\"\"");
     return result;
   }
-  if (!isBool && mustConsiderAsString(value)) {
+  if (wrapInQuotes || (!isBool && mustConsiderAsString(value))) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
       // Must replace characters, so make a deepcopy

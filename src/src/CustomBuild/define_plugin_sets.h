@@ -116,7 +116,7 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#ifndef USE_CUSTOM_H
+#ifndef PLUGIN_BUILD_CUSTOM
     #ifndef USES_SSDP
         #define USES_SSDP
     #endif
@@ -128,6 +128,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif
+    #ifndef USE_EXT_RTC
+        #define USE_EXT_RTC
     #endif
 #endif
 
@@ -143,6 +146,9 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef ENABLE_TOOLTIPS
+  #define ENABLE_TOOLTIPS
+#endif // ENABLE_TOOLTIPS
 
 /******************************************************************************\
  * Available options **********************************************************
@@ -408,6 +414,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef NOTIFIER_SET_NONE
         #define NOTIFIER_SET_NONE
+    #endif
+    #ifdef USE_EXT_RTC
+        #undef USE_EXT_RTC
     #endif
 #endif
 
@@ -1095,7 +1104,8 @@ To create/register a plugin, you have to :
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
-
+    // FIXME TD-er: Disabled due to build size
+    //#define USES_P109   // ThermoOLED
     #define USES_P110   // VL53L0X Time of Flight sensor
     #define USES_P113   // VL53L1X ToF
 #endif
@@ -1190,6 +1200,10 @@ To create/register a plugin, you have to :
    #endif
    #ifndef USES_P099
     #define USES_P099   // XPT2046 Touchscreen
+   #endif
+   #ifndef USES_P109
+     // FIXME TD-er: Disabled for now, due to build size.
+     //#define USES_P109   // ThermoOLED
    #endif
 #endif
 
@@ -1535,6 +1549,9 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
   #endif
+  #ifdef USE_EXT_RTC
+    #undef USE_EXT_RTC
+  #endif
 #endif
 
 // Disable some diagnostic parts to make builds fit.
@@ -1566,6 +1583,9 @@ To create/register a plugin, you have to :
   #endif
   #ifdef USE_RTTTL
     #undef USE_RTTTL
+  #endif
+  #ifdef ENABLE_TOOLTIPS
+    #undef ENABLE_TOOLTIPS
   #endif
   #ifdef USES_BLYNK
     #undef USES_BLYNK
