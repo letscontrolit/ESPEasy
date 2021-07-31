@@ -10,6 +10,7 @@
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/RuntimeData.h"
+#include "../Globals/Device.h"
 
 #include "../Helpers/Misc.h"
 #include "../Helpers/Rules_calculate.h"
@@ -74,7 +75,7 @@ bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& task
   String TmpStr1;
   unsigned int varNr;
 
-  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) { return false; }
+  if (!(validateAndParseTaskValueArguments(event, Line, taskIndex, varNr) && (getTaskDevicePluginID(taskIndex) ==  33))) { return false; } // PluginID 33 = Dummy Device
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 

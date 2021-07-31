@@ -114,6 +114,11 @@ String getTaskDeviceName(taskIndex_t TaskIndex);
  \*********************************************************************************************/
  String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex);
 
+/*********************************************************************************************
+ * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
+ ********************************************************************************************/
+pluginID_t getTaskDevicePluginID(taskIndex_t TaskIndex);
+
 /********************************************************************************************\
    If RX and TX tied together, perform emergency reset to get the system out of boot loops
  \*********************************************************************************************/

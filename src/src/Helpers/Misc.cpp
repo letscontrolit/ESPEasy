@@ -224,6 +224,18 @@ String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
   return ExtraTaskSettings.TaskDeviceValueNames[TaskValueIndex];
 }
 
+/*********************************************************************************************
+ * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
+ ********************************************************************************************/
+pluginID_t getTaskDevicePluginID(taskIndex_t TaskIndex) {
+  if (validTaskIndex(TaskIndex)) {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+
+    return (validDeviceIndex(DeviceIndex) ? Device[DeviceIndex].Number : INVALID_PLUGIN_ID);
+  }
+  return INVALID_PLUGIN_ID;
+}
+
 /********************************************************************************************\
    If RX and TX tied together, perform emergency reset to get the system out of boot loops
  \*********************************************************************************************/
