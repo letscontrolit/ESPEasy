@@ -256,7 +256,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
           // TSL2591_VISIBLE: Reads all and subtracts out just the visible!
           const uint16_t visible =  ( (fullLuminosity & 0xFFFF) - (fullLuminosity >> 16));
 
-          const uint16_t lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
+          const float lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
 
           UserVar[event->BaseVarIndex + 0] = lux;
           UserVar[event->BaseVarIndex + 1] = full;
