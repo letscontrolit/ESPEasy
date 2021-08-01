@@ -50,6 +50,12 @@ boolean Plugin_034(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_INIT:
+    {
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
     {
       uint8_t dht_dat[5];
