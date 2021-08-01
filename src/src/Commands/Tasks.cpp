@@ -77,7 +77,7 @@ bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& task
 
   if (!(validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)
         && Settings.TaskDeviceEnabled[taskIndex]
-        && (getDevicePluginID_from_TaskIndex(taskIndex) == 33))) { // PluginID 33 = Dummy Device
+        && (getPluginID_from_TaskIndex(taskIndex) == 33))) { // PluginID 33 = Dummy Device
     return false; 
   }
 
