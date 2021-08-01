@@ -74,6 +74,11 @@ bool validTaskVarIndex(taskVarIndex_t index);
 bool          supportedPluginID(pluginID_t pluginID);
 
 deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
+/*********************************************************************************************
+ * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
+ ********************************************************************************************/
+pluginID_t getDevicePluginID_from_TaskIndex(taskIndex_t taskIndex);
+
 
 
 /********************************************************************************************\
