@@ -62,7 +62,10 @@ void handle_advanced() {
 #endif // ifdef FEATURE_SD
     Settings.UseValueLogger              = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate                    = getFormItemInt(F("baudrate"));
-    Settings.UseNTP                      = isFormItemChecked(F("usentp"));
+    Settings.UseNTP(isFormItemChecked(F("usentp")));
+    Settings.ExtTimeSource(
+      static_cast<ExtTimeSource_e>(getFormItemInt(F("exttimesource")))
+    );
     Settings.DST                         = isFormItemChecked(F("dst"));
     Settings.WDI2CAddress                = getFormItemInt(F("wdi2caddress"));
     #ifdef USES_SSDP
@@ -138,10 +141,11 @@ void handle_advanced() {
   addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect_unused());
 */
 
-  addFormSubHeader(F("NTP Settings"));
+  addFormSubHeader(F("Time Source"));
 
-  addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP);
+  addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP());
   addFormTextBox(F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
+  addFormExtTimeSourceSelect(F("External Time Source"), F("exttimesource"), Settings.ExtTimeSource());
 
   addFormSubHeader(F("DST Settings"));
   addFormDstSelect(true,  Settings.DST_Start);
@@ -320,6 +324,23 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
     addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
   }
 }
+
+void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
+{
+  addRowLabel(label);
+  const __FlashStringHelper * options[5] =
+    { F("None"), F("DS1307"), F("DS3231"), F("PCF8523"), F("PCF8563")};
+  int optionValues[5] = { 
+    static_cast<int>(ExtTimeSource_e::None),
+    static_cast<int>(ExtTimeSource_e::DS1307),
+    static_cast<int>(ExtTimeSource_e::DS3231),
+    static_cast<int>(ExtTimeSource_e::PCF8523),
+    static_cast<int>(ExtTimeSource_e::PCF8563)
+    };
+
+  addSelector(id, 5, options, optionValues, NULL, static_cast<int>(choice));
+}
+
 
 void addFormLogLevelSelect(LabelType::Enum label, int choice)
 {

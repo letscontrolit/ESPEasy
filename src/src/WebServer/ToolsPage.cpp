@@ -79,6 +79,10 @@ void handle_tools() {
 
   addWideButtonPlusDescription(F("json"),        F("Show JSON"),    F("Open JSON output"));
 
+  # ifdef WEBSERVER_METRICS
+  addWideButtonPlusDescription(F("metrics"),        F("Show Metrics"),    F("Open Prometheus Metrics"));
+  # endif //ifdef WEBSERVER_METRICS
+
   # ifdef WEBSERVER_TIMINGSTATS
   addWideButtonPlusDescription(F("timingstats"), F("Timing stats"), F("Open timing statistics of system"));
   # endif // WEBSERVER_TIMINGSTATS
