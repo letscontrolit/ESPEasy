@@ -33,8 +33,8 @@ const __FlashStringHelper * AHTx_Device::getDeviceName() const {
     case AHTx_device_type::AHT10_DEVICE: return F("AHT10");
     case AHTx_device_type::AHT20_DEVICE: return F("AHT20");
     case AHTx_device_type::AHT21_DEVICE: return F("AHT21");
-    default: return F("AHTx");
   }
+  return F("AHTx");
 }
 
 bool AHTx_Device::initialize() {
@@ -160,7 +160,7 @@ bool P105_data_struct::updateMeasurements(unsigned long task_index) {
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Log raw measuerd values only on level DEBUG
       String log;
-      log.reserve(50); // Prevent re-allocation
+      log.reserve(50);                        // Prevent re-allocation
       log  = getDeviceName();
       log += F(" : humidity ");
       log += device.getHumidity();
