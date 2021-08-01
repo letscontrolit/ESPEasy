@@ -5,6 +5,7 @@
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
+#include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
 #include "../../ESPEasy_common.h"
 
@@ -40,14 +41,7 @@ enum class PinBootState {
 
 };
 
-// Do not change order as values are stored in settings
-enum class ExtTimeSource_e {
-  None = 0,
-  DS1307,
-  DS3231,
-  PCF8523,
-  PCF8563
-};
+
 
 
 /*********************************************************************************************\
