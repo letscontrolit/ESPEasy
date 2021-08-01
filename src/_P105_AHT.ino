@@ -88,7 +88,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      if (static_cast<AHTx_device_type>(PCONFIG(1)) ==  AHT10_DEVICE) {
+      if (static_cast<AHTx_device_type>(PCONFIG(1)) ==  AHTx_device_type::AHT10_DEVICE) {
         bool hasOtherI2CDevices = false;
 
         for (taskIndex_t x = 0; validTaskIndex(x) && !hasOtherI2CDevices; x++) {
@@ -114,8 +114,10 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         }
       }
       {
-        const String options[] = { F("AHT10"), F("AHT20"), F("AHT21") };
-        int indices[]          = { AHT10_DEVICE, AHT20_DEVICE, AHT21_DEVICE };
+        const __FlashStringHelper *options[] = { F("AHT10"), F("AHT20"), F("AHT21") };
+        const int indices[]                  = { static_cast<int>(AHTx_device_type::AHT10_DEVICE),
+                                                 static_cast<int>(AHTx_device_type::AHT20_DEVICE),
+                                                 static_cast<int>(AHTx_device_type::AHT21_DEVICE) };
         addFormSelector(F("Sensor model"), F("p105_ahttype"), 3, options, indices, PCONFIG(1), true);
         addFormNote(F("Changing Sensor model will reload the page."));
       }
@@ -128,7 +130,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
     {
       PCONFIG(1) = getFormItemInt(F("p105_ahttype"));
 
-      if (static_cast<AHTx_device_type>(PCONFIG(1)) != AHT10_DEVICE) {
+      if (static_cast<AHTx_device_type>(PCONFIG(1)) != AHTx_device_type::AHT10_DEVICE) {
         PCONFIG(0) = 0x38; // AHT20/AHT21 only support a single I2C address.
       } else {
         PCONFIG(0) = getFormItemInt(F("i2c_addr"));
@@ -172,11 +174,11 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P105_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P105_data) {
-        if (P105_data->state != AHTx_New_values) {
+        if (P105_data->state != AHTx_state::AHTx_New_values) {
           success = false;
           break;
         }
-        P105_data->state = AHTx_Values_read;
+        P105_data->state = AHTx_state::AHTx_Values_read;
 
         UserVar[event->BaseVarIndex]     = P105_data->getTemperature();
         UserVar[event->BaseVarIndex + 1] = P105_data->getHumidity();

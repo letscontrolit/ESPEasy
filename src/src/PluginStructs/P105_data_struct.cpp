@@ -30,15 +30,15 @@ AHTx_Device::AHTx_Device(uint8_t addr, AHTx_device_type type) :
 
 const __FlashStringHelper * AHTx_Device::getDeviceName() const {
   switch (device_type) {
-    case AHT10_DEVICE: return F("AHT10");
-    case AHT20_DEVICE: return F("AHT20");
-    case AHT21_DEVICE: return F("AHT21");
+    case AHTx_device_type::AHT10_DEVICE: return F("AHT10");
+    case AHTx_device_type::AHT20_DEVICE: return F("AHT20");
+    case AHTx_device_type::AHT21_DEVICE: return F("AHT21");
     default: return F("AHTx");
   }
 }
 
 bool AHTx_Device::initialize() {
-  const uint8_t cmd_init = (device_type == AHT10_DEVICE) ? 0xE1 : 0xBE;
+  const uint8_t cmd_init = (device_type == AHTx_device_type::AHT10_DEVICE) ? 0xE1 : 0xBE;
 
   return I2C_write16_reg(i2cAddress, cmd_init, 0x0800);
 }
@@ -81,29 +81,29 @@ bool AHTx_Device::readData() {
 
   value        = (value << 8) | data[2];
   value        = (value << 4) | (data[3] >> 4);
-  last_hum_val = static_cast<float>(value) / (1 << 20) * 100;
+  last_hum_val = (static_cast<float>(value) / (1 << 20)) * 100.0f;
 
   // 20 bits temperature value
   value         = data[3] & 0x0F;
   value         = (value << 8) | data[4];
   value         = (value << 8) | data[5];
-  last_temp_val = static_cast<float>(value) / (1 << 20) * 200 - 50;
+  last_temp_val = ((static_cast<float>(value) / (1 << 20)) * 200.0f) - 50.0f;
 
   return true;
 }
 
 P105_data_struct::P105_data_struct(uint8_t addr, AHTx_device_type dev) :
   device(addr, dev),
-  state(AHTx_Uninitialized),
+  state(AHTx_state::AHTx_Uninitialized),
   last_measurement(0),
   trigger_time(0) {}
 
 bool P105_data_struct::initialized() const {
-  return state != AHTx_Uninitialized;
+  return state != AHTx_state::AHTx_Uninitialized;
 }
 
 void P105_data_struct::setUninitialized() {
-  state = AHTx_Uninitialized;
+  state = AHTx_state::AHTx_Uninitialized;
 }
 
 // Perform the measurements with interval
@@ -125,28 +125,28 @@ bool P105_data_struct::updateMeasurements(unsigned long task_index) {
     addLog(LOG_LEVEL_INFO, log);
 
     trigger_time = current_time;
-    state        = AHTx_Trigger_measurement;
+    state        = AHTx_state::AHTx_Trigger_measurement;
     return false;
   }
 
-  if ((state != AHTx_Wait_for_samples) && (state != AHTx_Trigger_measurement)) {
+  if ((state != AHTx_state::AHTx_Wait_for_samples) && (state != AHTx_state::AHTx_Trigger_measurement)) {
     if (!timeOutReached(last_measurement + (Settings.TaskDeviceTimer[task_index] * 1000))) {
       // Timeout has not yet been reached.
       return false;
     }
     trigger_time = current_time;
-    state        = AHTx_Trigger_measurement;
+    state        = AHTx_state::AHTx_Trigger_measurement;
   }
 
   // state: AHTx_Wait_for_samples or AHTx_Trigger_measurement
   AHTx_Status status = device.readStatus();
 
   if (status.valid() && status.calibrated() && !status.busy()) {
-    if (state == AHTx_Trigger_measurement) {
+    if (state == AHTx_state::AHTx_Trigger_measurement) {
       device.triggerMeasurement();
 
       trigger_time = current_time;
-      state        = AHTx_Wait_for_samples;
+      state        = AHTx_state::AHTx_Wait_for_samples;
       return false;
     }
 
@@ -156,7 +156,7 @@ bool P105_data_struct::updateMeasurements(unsigned long task_index) {
     }
 
     last_measurement = current_time;
-    state            = AHTx_New_values;
+    state            = AHTx_state::AHTx_New_values;
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Log raw measuerd values only on level DEBUG
       String log;
@@ -182,7 +182,7 @@ bool P105_data_struct::updateMeasurements(unsigned long task_index) {
     addLog(LOG_LEVEL_ERROR, log);
     device.softReset();
 
-    state = AHTx_Uninitialized;
+    state = AHTx_state::AHTx_Uninitialized;
   }
 
   return false;

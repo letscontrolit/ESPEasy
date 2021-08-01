@@ -4,13 +4,13 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P105
 
-enum AHTx_device_type {
+enum class AHTx_device_type {
   AHT10_DEVICE = 10,
   AHT20_DEVICE = 20,
   AHT21_DEVICE = 21,
 };
 
-enum AHTx_state {
+enum class AHTx_state {
   AHTx_Uninitialized = 0,
   AHTx_Initialized,
   AHTx_Trigger_measurement,
