@@ -48,9 +48,12 @@ unsigned long ESPEasy_Now_NTP_query::computeExpectedWander(timeSource_t  timeSou
     }
     case timeSource_t::GPS_time_source:
     {
+      // Not sure about the wander here, as GPS does not have a drift.
+      // But the moment a message is received from a second's start may differ.
       expectedWander_ms += 10;
       break;
     }
+    case timeSource_t::External_RTC_time_source:
     case timeSource_t::NTP_time_source:
     {
       expectedWander_ms += 10;
