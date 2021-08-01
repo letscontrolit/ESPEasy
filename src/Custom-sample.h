@@ -174,6 +174,11 @@
 // Default setting is to not allow to configure a node remotely, unless explicitly enabled.
 // #define USE_CUSTOM_PROVISIONING
 
+#define USES_SSDP
+
+#define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
+
+
 // #define USE_SETTINGS_ARCHIVE
 // #define FEATURE_I2CMULTIPLEXER
 // #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
@@ -394,9 +399,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P100   // DS2423 counter
 // #define USES_P101   // WakeOnLan
 // #define USES_P102   // PZEM004Tv3
-// #define USES_P103   // Atlas_EZO_pH
-// #define USES_P104   // Atlas_EZO_EC
-// #define USES_P105   // Atlas_EZO_ORP
+// #define USES_P103   // Atlas_EZO_pH_ORP_EC
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
 // #define USES_P109   // ThermoOLED

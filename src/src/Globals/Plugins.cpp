@@ -84,10 +84,13 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
   return INVALID_DEVICE_INDEX;
 }
 
+/*********************************************************************************************
+ * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
+ ********************************************************************************************/
 pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex) {
   deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
-  if (deviceIndex == INVALID_DEVICE_INDEX) {
+  if (!validDeviceIndex(deviceIndex)) {
     return INVALID_PLUGIN_ID;
   }
   return DeviceIndex_to_Plugin_id[deviceIndex];

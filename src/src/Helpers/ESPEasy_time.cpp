@@ -20,11 +20,11 @@
 
 #include <time.h>
 
+#ifdef USE_EXT_RTC
 #include <RTClib.h>
+#endif
 
 
-
-#define DS1307_CTRL_ID 0x68
 
 
 ESPEasy_time::ESPEasy_time() {
@@ -684,6 +684,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
       return false;
     case ExtTimeSource_e::DS1307:
       {
+        #ifdef USE_EXT_RTC
         RTC_DS1307 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -695,10 +696,12 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
         }
         unixtime = rtc.now().unixtime();
         timeRead = true;
+        #endif
         break;
       }
     case ExtTimeSource_e::DS3231:
       {
+        #ifdef USE_EXT_RTC
         RTC_DS3231 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -710,11 +713,13 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
         }
         unixtime = rtc.now().unixtime();
         timeRead = true;
+        #endif
         break;
       }
       
     case ExtTimeSource_e::PCF8523:
       {
+        #ifdef USE_EXT_RTC
         RTC_PCF8523 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -726,10 +731,12 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
         }
         unixtime = rtc.now().unixtime();
         timeRead = true;
+        #endif
         break;
       }
     case ExtTimeSource_e::PCF8563:
       {
+        #ifdef USE_EXT_RTC
         RTC_PCF8563 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -741,6 +748,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
         }
         unixtime = rtc.now().unixtime();
         timeRead = true;
+        #endif
         break;
       }
 
@@ -768,41 +776,49 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
       return false;
     case ExtTimeSource_e::DS1307:
       {
+        #ifdef USE_EXT_RTC
         RTC_DS1307 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           timeAdjusted = true;
         }
+        #endif
         break;
       }
     case ExtTimeSource_e::DS3231:
       {
+        #ifdef USE_EXT_RTC
         RTC_DS3231 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           timeAdjusted = true;
         }
+        #endif
         break;
       }
       
     case ExtTimeSource_e::PCF8523:
       {
+        #ifdef USE_EXT_RTC
         RTC_PCF8523 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           rtc.start();
           timeAdjusted = true;
         }
+        #endif
         break;
       }
     case ExtTimeSource_e::PCF8563:
       {
+        #ifdef USE_EXT_RTC
         RTC_PCF8563 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           rtc.start();
           timeAdjusted = true;
         }
+        #endif
         break;
       }
   }
