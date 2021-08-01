@@ -485,6 +485,33 @@ New default value since 2021-06-20: unchecked
 Show JSON
 =========
 
+Show Metrics
+=========
+
+Shows various system metrics and device values in prometheus format
+
+- `Prometheus monitoring system and time series database <https://prometheus.io/>`_
+
+Metrics are exposed on the prometheus standard /metrics url
+
+System metrics exposed are:
+
+* uptime
+* CPU load
+* RAM free
+* Stack free 
+* Wifi Strength
+* WIfi connection time
+* Wifi reconnection count (since boot)
+
+In Addition, device values are exposed.  
+
+This allows easy connection via prometheus to grafana for graphing, as in the screenshot below:
+
+.. image:: images/Grafana.png
+
+
+
 Timing Stats
 ============
 
