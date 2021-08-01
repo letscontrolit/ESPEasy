@@ -19,12 +19,13 @@
 #define PLUGIN_VALUENAME2_056 "PM10"    // Dust <10µm in µg/m³
 
 #include <jkSDS011.h>
+#include "ESPEasy-Globals.h"
 
 
 CjkSDS011 *Plugin_056_SDS = NULL;
 
 
-boolean Plugin_056(byte function, struct EventStruct *event, String& string)
+boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
 {
   bool success = false;
 

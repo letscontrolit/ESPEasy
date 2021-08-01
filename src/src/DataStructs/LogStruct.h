@@ -23,13 +23,13 @@
 
 struct LogStruct {
     
-    void add(const byte loglevel, const char *line);
+    void add(const uint8_t loglevel, const char *line);
 
     // Read the next item and append it to the given string.
     // Returns whether new lines are available.
     bool get(String& output, const String& lineEnd);
 
-    String get_logjson_formatted(bool& logLinesAvailable, unsigned long& timestamp);
+    bool getNext(bool& logLinesAvailable, unsigned long& timestamp, String& message, uint8_t& loglevel);
 
     bool isEmpty();
 
@@ -38,8 +38,6 @@ struct LogStruct {
   private:
     String formatLine(int index, const String& lineEnd);
 
-    String logjson_formatLine(int index);
-
     void clearExpiredEntries();
 
     String Message[LOG_STRUCT_MESSAGE_LINES];
@@ -47,7 +45,7 @@ struct LogStruct {
     int write_idx = 0;
     int read_idx = 0;
     unsigned long lastReadTimeStamp = 0;
-    byte log_level[LOG_STRUCT_MESSAGE_LINES] = {0};
+    uint8_t log_level[LOG_STRUCT_MESSAGE_LINES] = {0};
 
 };
 

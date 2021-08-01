@@ -153,7 +153,7 @@ CCS811Core::status CCS811Core::multiWriteRegister(uint8_t offset, uint8_t *input
 
   while (i < length)           // send data bytes
   {
-    Wire.write(*inputPointer); // receive a byte as character
+    Wire.write(*inputPointer); // receive a uint8_t as character
     inputPointer++;
     i++;
   }
@@ -416,26 +416,34 @@ CCS811Core::status CCS811::setEnvironmentalData(float relativeHumidity, float te
   uint32_t rH   = relativeHumidity * 1000; // 42.348 becomes 42348
   uint32_t temp = temperature * 1000;      // 23.2 becomes 23200
 
-  byte envData[4];
+  uint8_t envData[4];
 
-  // Split value into 7-bit integer and 9-bit fractional
-  envData[0] = ((rH % 1000) / 100) > 7 ? (rH / 1000 + 1) << 1 : (rH / 1000) << 1;
-  envData[1] = 0; // CCS811 only supports increments of 0.5 so bits 7-0 will always be zero
+  //Split value into 7-bit integer and 9-bit fractional
 
-  if ((((rH % 1000) / 100) > 2) && (((rH % 1000) / 100) < 8))
-  {
-    envData[0] |= 1; // Set 9th bit of fractional to indicate 0.5%
-  }
+  //Incorrect way from datasheet.
+  //envData[0] = ((rH % 1000) / 100) > 7 ? (rH / 1000 + 1) << 1 : (rH / 1000) << 1;
+  //envData[1] = 0; //CCS811 only supports increments of 0.5 so bits 7-0 will always be zero
+  //if (((rH % 1000) / 100) > 2 && (((rH % 1000) / 100) < 8))
+  //{
+  //	envData[0] |= 1; //Set 9th bit of fractional to indicate 0.5%
+  //}
 
-  temp += 25000;     // Add the 25C offset
-  // Split value into 7-bit integer and 9-bit fractional
-  envData[2] = ((temp % 1000) / 100) > 7 ? (temp / 1000 + 1) << 1 : (temp / 1000) << 1;
+  //Correct rounding. See issue 8: https://github.com/sparkfun/Qwiic_BME280_CCS811_Combo/issues/8
+  envData[0] = (rH + 250) / 500;
+  envData[1] = 0; //CCS811 only supports increments of 0.5 so bits 7-0 will always be zero
+
+  temp += 25000; //Add the 25C offset
+  //Split value into 7-bit integer and 9-bit fractional
+  //envData[2] = ((temp % 1000) / 100) > 7 ? (temp / 1000 + 1) << 1 : (temp / 1000) << 1;
+  //envData[3] = 0;
+  //if (((temp % 1000) / 100) > 2 && (((temp % 1000) / 100) < 8))
+  //{
+  //	envData[2] |= 1;  //Set 9th bit of fractional to indicate 0.5C
+  //}
+
+  //Correct rounding
+  envData[2] = (temp + 250) / 500;
   envData[3] = 0;
-
-  if ((((temp % 1000) / 100) > 2) && (((temp % 1000) / 100) < 8))
-  {
-    envData[2] |= 1; // Set 9th bit of fractional to indicate 0.5C
-  }
 
   CCS811Core::status returnError = multiWriteRegister(CSS811_ENV_DATA, envData, 4);
 
@@ -502,7 +510,7 @@ float CCS811::getTemperature(void)
 //
 // Save the return value of any function of type CCS811Core::status, then pass
 // to this function to see what the output was.
-String CCS811::getDriverError(CCS811Core::status errorCode)
+const __FlashStringHelper * CCS811::getDriverError(CCS811Core::status errorCode)
 {
   switch (errorCode)
   {
@@ -528,7 +536,7 @@ String CCS811::getDriverError(CCS811Core::status errorCode)
 
 // getSensorError gets, clears, then prints the errors
 // saved within the error register.
-String CCS811::getSensorError()
+const __FlashStringHelper * CCS811::getSensorError()
 {
   uint8_t error = getErrorRegister();
 
@@ -568,7 +576,7 @@ String CCS811::getSensorError()
       return F("MsgInvalid");
     }
   }
-  return "";
+  return F("");
 }
 
 P090_data_struct::P090_data_struct(uint8_t i2cAddr) :

@@ -10,8 +10,9 @@
 
 #include "../../ESPEasy_common.h"
 
-
-
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
 
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
@@ -106,6 +107,12 @@ void dump(uint32_t addr);
  \*********************************************************************************************/
 String getTaskDeviceName(taskIndex_t TaskIndex);
 
+/********************************************************************************************\
+   Handler for getting Value Names from TaskIndex
+
+   value names can be accessed with variable index; maxium number of variables == VARS_PER_TASK
+ \*********************************************************************************************/
+ String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex);
 
 /********************************************************************************************\
    If RX and TX tied together, perform emergency reset to get the system out of boot loops
@@ -121,6 +128,7 @@ void delayedReboot(int rebootDelay, ESPEasy_Scheduler::IntendedRebootReason_e re
 
 void reboot(ESPEasy_Scheduler::IntendedRebootReason_e reason);
 
+void FeedSW_watchdog();
 
 void SendValueLogger(taskIndex_t TaskIndex);
 
@@ -149,18 +157,29 @@ void HSV2RGBW(float H,
 // Simple bitwise get/set functions
 
 uint8_t get8BitFromUL(uint32_t number,
-                      byte     bitnr);
+                      uint8_t     bitnr);
 
 void    set8BitToUL(uint32_t& number,
-                    byte      bitnr,
+                    uint8_t      bitnr,
                     uint8_t   value);
 
 uint8_t get4BitFromUL(uint32_t number,
-                      byte     bitnr);
+                      uint8_t     bitnr);
 
 void    set4BitToUL(uint32_t& number,
-                    byte      bitnr,
+                    uint8_t      bitnr,
                     uint8_t   value);
+
+
+float getCPUload();
+
+int getLoopCountPerSec();
+
+int getUptimeMinutes();
+
+#ifndef BUILD_NO_RAM_TRACKER
+void logMemUsageAfter(const __FlashStringHelper * function, int value = -1);
+#endif
 
 
 #endif // ifndef HELPERS_MISC_H

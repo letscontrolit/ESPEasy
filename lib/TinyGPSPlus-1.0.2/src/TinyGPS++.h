@@ -268,7 +268,8 @@ private:
    char stagingBuffer[_GPS_MAX_FIELD_SIZE + 1] = {0};
    char buffer[_GPS_MAX_FIELD_SIZE + 1] = {0};
    unsigned long lastCommitTime = 0;
-   bool valid, updated = false;
+   bool valid = false;
+   bool updated = false;
    const char *sentenceName = nullptr;
    int termNumber = 0;
    friend class TinyGPSPlus;

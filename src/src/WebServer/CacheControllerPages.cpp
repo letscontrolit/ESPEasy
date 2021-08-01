@@ -24,10 +24,10 @@ void handle_dumpcache() {
 
   C016_startCSVdump();
   unsigned long timestamp;
-  byte  controller_idx;
-  byte  TaskIndex;
+  uint8_t  controller_idx;
+  uint8_t  TaskIndex;
   Sensor_VType  sensorType;
-  byte  valueCount;
+  uint8_t  valueCount;
   float val1;
   float val2;
   float val3;
@@ -40,9 +40,9 @@ void handle_dumpcache() {
     LoadTaskSettings(i);
 
     for (int j = 0; j < VARS_PER_TASK; ++j) {
-      addHtml(";");
+      addHtml(';');
       addHtml(ExtraTaskSettings.TaskDeviceName);
-      addHtml("#");
+      addHtml('#');
       addHtml(ExtraTaskSettings.TaskDeviceValueNames[j]);
     }
   }
@@ -62,7 +62,7 @@ void handle_dumpcache() {
       html += ';';
       html += controller_idx;
       html += ';';
-      html += static_cast<byte>(sensorType);
+      html += static_cast<uint8_t>(sensorType);
       html += ';';
       html += TaskIndex;
       html += ';';
@@ -101,9 +101,9 @@ void handle_cache_json() {
 
   //     addHtml(F("UNIX timestamp;contr. idx;sensortype;taskindex;value count"));
   stream_to_json_value(F("UNIX timestamp"));
-  addHtml(",");
+  addHtml(',');
   stream_to_json_value(F("UTC timestamp"));
-  addHtml(",");
+  addHtml(',');
   stream_to_json_value(F("task index"));
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
@@ -113,7 +113,7 @@ void handle_cache_json() {
       String label = ExtraTaskSettings.TaskDeviceName;
       label += '#';
       label += ExtraTaskSettings.TaskDeviceValueNames[j];
-      addHtml(",");
+      addHtml(',');
       stream_to_json_value(label);
     }
   }
@@ -128,7 +128,7 @@ void handle_cache_json() {
 
     if (currentFile.length() > 0) {
       if (filenr != 0) {
-        addHtml(",");
+        addHtml(',');
       }
       stream_to_json_value(currentFile);
       ++filenr;

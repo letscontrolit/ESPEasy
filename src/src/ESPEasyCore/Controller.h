@@ -19,7 +19,7 @@ bool validUserVar(struct EventStruct *event);
 \*********************************************************************************************/
 
 // handle MQTT messages
-void incoming_mqtt_callback(char *c_topic, byte *b_payload, unsigned int length);
+void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int length);
 
 /*********************************************************************************************\
 * Disconnect from MQTT message broker
@@ -60,6 +60,9 @@ void SendStatus(struct EventStruct *event, const String& status);
 bool MQTT_queueFull(controllerIndex_t controller_idx);
 
 bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  const char *topic, const char *payload, bool retained);
+
+// Publish using the move operator for topic and message
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained);
 
 
 /*********************************************************************************************\

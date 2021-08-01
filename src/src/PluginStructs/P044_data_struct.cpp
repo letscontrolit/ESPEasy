@@ -214,7 +214,7 @@ bool P044_Task::validP1char(char ch) {
 }
 
 void P044_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin,
-                            unsigned long baud, byte config) {
+                            unsigned long baud, uint8_t config) {
   serialEnd();
 
   if (rxPin >= 0) {
@@ -273,7 +273,7 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
       LoadTaskSettings(event->TaskIndex);
       String eventString = getTaskDeviceName(event->TaskIndex);
       eventString += F("#Data");
-      eventQueue.add(eventString);
+      eventQueue.addMove(std::move(eventString));
     }
   } // done
 }

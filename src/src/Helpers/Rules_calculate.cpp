@@ -9,6 +9,12 @@
 #include "../Helpers/StringConverter.h"
 
 
+RulesCalculate_t::RulesCalculate_t() {
+  for (int i = 0; i < STACK_SIZE; ++i) {
+    globalstack[i] = 0.0;
+  }
+}
+
 /********************************************************************************************\
    Instance of the RulesCalculate to perform calculations
    These functions are wrapped in a class to
@@ -479,7 +485,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, double *res
 void preProcessReplace(String& input, UnaryOperator op) {
   String find = toString(op);
 
-  if (find.length() == 0) { return; }
+  if (find.isEmpty()) { return; }
   find += '('; // Add opening parenthesis.
 
   const String replace = String(static_cast<char>(op)) + '(';

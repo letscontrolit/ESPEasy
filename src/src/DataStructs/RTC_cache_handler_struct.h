@@ -23,6 +23,8 @@
 #define CACHE_STORAGE_BEHIND_SPIFFS 3
 
 
+//#define RTC_STRUCT_DEBUG
+
 /********************************************************************************************\
    RTC located cache
  \*********************************************************************************************/
@@ -79,15 +81,17 @@ private:
                          size_t        nrBytes);
 #endif // ifdef RTC_STRUCT_DEBUG
 
+#ifdef ESP8266
   RTC_cache_struct    RTC_cache;
   std::vector<uint8_t>RTC_cache_data;
+#endif
   File                fw;
   File                fr;
   File                fp;
   size_t              peekfilenr  = 0;
   size_t              peekreadpos = 0;
 
-  byte storageLocation = CACHE_STORAGE_SPIFFS;
+  uint8_t storageLocation = CACHE_STORAGE_SPIFFS;
   bool writeerror      = false;
 };
 

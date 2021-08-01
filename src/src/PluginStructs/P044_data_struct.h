@@ -13,11 +13,11 @@
 #define P044_CHECKSUM_LENGTH               4
 #define P044_DATAGRAM_START_CHAR           '/'
 #define P044_DATAGRAM_END_CHAR             '!'
-#define P044_DATAGRAM_MAX_SIZE             2048
+#define P044_DATAGRAM_MAX_SIZE             2048u
 
 
 struct P044_Task : public PluginTaskData_base {
-  enum class ParserState : byte {
+  enum class ParserState : uint8_t {
     WAITING,
     READING,
     CHECKSUM
@@ -73,7 +73,7 @@ struct P044_Task : public PluginTaskData_base {
                           int16_t       rxPin,
                           int16_t       txPin,
                           unsigned long baud,
-                          byte          config);
+                          uint8_t          config);
 
   void serialEnd();
 

@@ -1,6 +1,6 @@
 #include "NodeStruct.h"
 
-String getNodeTypeDisplayString(byte nodeType) {
+const __FlashStringHelper * getNodeTypeDisplayString(uint8_t nodeType) {
   switch (nodeType)
   {
     case NODE_TYPE_ID_ESP_EASY_STD:     return F("ESP Easy");
@@ -10,11 +10,11 @@ String getNodeTypeDisplayString(byte nodeType) {
     case NODE_TYPE_ID_ARDUINO_EASY_STD: return F("Arduino Easy");
     case NODE_TYPE_ID_NANO_EASY_STD:    return F("Nano Easy");
   }
-  return "";
+  return F("");
 }
 
   NodeStruct::NodeStruct() :
     build(0), age(0), nodeType(0), webgui_portnumber(0)
   {
-    for (byte i = 0; i < 4; ++i) { ip[i] = 0; }
+    for (uint8_t i = 0; i < 4; ++i) { ip[i] = 0; }
   }

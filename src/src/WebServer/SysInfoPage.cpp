@@ -5,7 +5,7 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../Commands/Diagnostic.h"
@@ -17,6 +17,7 @@
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/ESPEasy_time.h"
+#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 
@@ -25,12 +26,18 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 #include "../Helpers/StringGenerator_System.h"
 
 #include "../Static/WebStaticData.h"
+
+#ifdef USES_MQTT
+# include "../Globals/MQTT.h"
+# include "../Helpers/PeriodicalActions.h" // For finding enabled MQTT controller
+#endif
 
 #ifdef ESP32
 # include <esp_partition.h>
@@ -118,6 +125,8 @@ void handle_sysinfo_json() {
   json_prop(F("connected"),     getValue(LabelType::CONNECTED));
   json_prop(F("ldr"),           getValue(LabelType::LAST_DISC_REASON_STR));
   json_number(F("reconnects"),  getValue(LabelType::NUMBER_RECONNECTS));
+  json_prop(F("ssid1"),         getValue(LabelType::WIFI_STORED_SSID1));
+  json_prop(F("ssid2"),         getValue(LabelType::WIFI_STORED_SSID2));
   json_close();
 
 # ifdef HAS_ETHERNET
@@ -135,7 +144,7 @@ void handle_sysinfo_json() {
   json_prop(F("build"),       String(BUILD));
   json_prop(F("notes"),       F(BUILD_NOTES));
   json_prop(F("libraries"),   getSystemLibraryString());
-  json_prop(F("git_version"), F(BUILD_GIT));
+  json_prop(F("git_version"), getValue(LabelType::GIT_BUILD));
   json_prop(F("plugins"),     getPluginDescriptionString());
   json_prop(F("md5"),         String(CRCValues.compileTimeMD5[0], HEX));
   json_number(F("md5_check"), String(CRCValues.checkPassed()));
@@ -259,6 +268,8 @@ void handle_sysinfo() {
 
   handle_sysinfo_SystemStatus();
 
+  handle_sysinfo_NetworkServices();
+
   handle_sysinfo_ESP_Board();
 
   handle_sysinfo_Storage();
@@ -276,6 +287,7 @@ void handle_sysinfo_basicInfo() {
   if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
+    addRowLabelValue(LabelType::TIME_SOURCE);
   }
 
   addRowLabel(LabelType::UPTIME);
@@ -343,7 +355,7 @@ void handle_sysinfo_memory() {
 # endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
 # if defined(CORE_POST_2_5_0)
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
-  addHtml("%");
+  addHtml('%');
 # endif // ifdef CORE_POST_2_5_0
 
 
@@ -362,7 +374,7 @@ void handle_sysinfo_memory() {
     addHtml(html);
   }
 
-# ifdef ESP32
+# if defined(ESP32) && defined(ESP32_ENABLE_PSRAM)
 
   if (ESP.getPsramSize() > 0) {
     addRowLabelValue(LabelType::PSRAM_SIZE);
@@ -370,7 +382,7 @@ void handle_sysinfo_memory() {
     addRowLabelValue(LabelType::PSRAM_MIN_FREE);
     addRowLabelValue(LabelType::PSRAM_MAX_FREE_BLOCK);
   }
-# endif // ifdef ESP32
+# endif // if defined(ESP32) && defined(ESP32_ENABLE_PSRAM)
 }
 
 # ifdef HAS_ETHERNET
@@ -407,21 +419,16 @@ void handle_sysinfo_Network() {
 
   addTableSeparator(F("WiFi"), 2, 3, F("Wifi"));
 
-  const bool showWiFiConnectionInfo = 
-    active_network_medium == NetworkMedium_t::WIFI &&
-    NetworkConnected();
+  const bool showWiFiConnectionInfo = !WiFiEventData.WiFiDisconnected();
 
-  addRowLabel(F("Wifi Connection"));
+
+  addRowLabel(LabelType::WIFI_CONNECTION);
   if (showWiFiConnectionInfo)
   {
-    String html;
-    html.reserve(64);
-
-    html += toString(getConnectionProtocol());
-    html += F(" (RSSI ");
-    html += WiFi.RSSI();
-    html += F(" dBm)");
-    addHtml(html);
+    addHtml(toString(getConnectionProtocol()));
+    addHtml(F(" (RSSI "));
+    addHtmlInt(WiFi.RSSI());
+    addHtml(F(" dBm)"));
   } else addHtml('-');
 
   addRowLabel(LabelType::SSID);
@@ -451,10 +458,13 @@ void handle_sysinfo_Network() {
   {
     addRowLabel(LabelType::LAST_DISCONNECT_REASON);
     addHtml(getValue(LabelType::LAST_DISC_REASON_STR));
+    addRowLabelValue(LabelType::WIFI_STORED_SSID1);
+    addRowLabelValue(LabelType::WIFI_STORED_SSID2);
   }
 
   addRowLabelValue(LabelType::STA_MAC);
   addRowLabelValue(LabelType::AP_MAC);
+  html_TR();
 }
 
 void handle_sysinfo_WiFiSettings() {
@@ -472,19 +482,22 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::WIFI_CUR_TX_PWR);
   addRowLabelValue(LabelType::WIFI_SENS_MARGIN);
   addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
+  addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
+  addRowLabelValue(LabelType::WIFI_PERIODICAL_SCAN);
+  addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
 }
 
 void handle_sysinfo_Firmware() {
   addTableSeparator(F("Firmware"), 2, 3);
 
   addRowLabelValue_copy(LabelType::BUILD_DESC);
-  addHtml(" ");
+  addHtml(' ');
   addHtml(F(BUILD_NOTES));
 
   addRowLabelValue_copy(LabelType::SYSTEM_LIBRARIES);
   addRowLabelValue_copy(LabelType::GIT_BUILD);
   addRowLabelValue_copy(LabelType::PLUGIN_COUNT);
-  addHtml(" ");
+  addHtml(' ');
   addHtml(getPluginDescriptionString());
 
   addRowLabel(F("Build Origin"));
@@ -505,6 +518,23 @@ void handle_sysinfo_SystemStatus() {
     # ifdef FEATURE_SD
   addRowLabelValue(LabelType::SD_LOG_LEVEL);
     # endif // ifdef FEATURE_SD
+}
+
+void handle_sysinfo_NetworkServices() {
+  addTableSeparator(F("Network Services"), 2, 3);
+
+  addRowLabel(F("Network Connected"));
+  addEnabled(NetworkConnected());
+
+  addRowLabel(F("NTP Initialized"));
+  addEnabled(statusNTPInitialized);
+
+  #ifdef USES_MQTT
+  if (validControllerIndex(firstEnabledMQTT_ControllerIndex())) {
+    addRowLabel(F("MQTT Client Connected"));
+    addEnabled(MQTTclient_connected);
+  }
+  #endif
 }
 
 void handle_sysinfo_ESP_Board() {
@@ -564,7 +594,7 @@ void handle_sysinfo_Storage() {
       } else {
         addHtml(F(HTML_SYMBOL_WARNING));
       }
-      addHtml(")");
+      addHtml(')');
     }
     addHtml(F(" Device: "));
     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);

@@ -34,10 +34,23 @@ function Decoder(bytes, port) {
 
       case 85:
         // AcuDC243
+        // FIXME TD-er: Same code as in P108, Make new type for this with 4 selectable variables
         return decode(bytes, [header, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4],
           ['header', 'unit1', 'val_1', 'unit2', 'val_2', 'unit3', 'val_3', 'unit4', 'val_4']);
 
+      case 102:
+        // PZEM004T v30
+        data = decode(bytes, [header, int16_1e1, int32_1e3, int32_1e1, int32_1e1, uint16_1e2, uint8_1e1],
+          ['header', 'voltage', 'current', 'power', 'energy', 'powerfactor', 'frequency']);
+        data.frequency += 40;
+        return data;
 
+      case 108:
+        // DDS238-x ZN
+        // FIXME TD-er: Same code as in P085, Make new type for this with 4 selectable variables
+        return decode_plugin(input.fPort, input.bytes, [header, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4],
+          ['header', 'unit1', 'val_1', 'unit2', 'val_2', 'unit3', 'val_3', 'unit4', 'val_4']);
+  
     }
 
 

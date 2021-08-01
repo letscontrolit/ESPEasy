@@ -15,8 +15,8 @@
 #include <ETH.h>
 #endif
 
-void setNetworkMedium(NetworkMedium_t medium) {
-  if (active_network_medium == medium) {
+void setNetworkMedium(NetworkMedium_t new_medium) {
+  if (active_network_medium == new_medium) {
     return;
   }
   switch (active_network_medium) {
@@ -24,16 +24,21 @@ void setNetworkMedium(NetworkMedium_t medium) {
       #ifdef HAS_ETHERNET
       // FIXME TD-er: How to 'end' ETH?
 //      ETH.end();
+      if (new_medium == NetworkMedium_t::WIFI) {
+        WiFiEventData.clearAll();
+      }
       #endif
       break;
     case NetworkMedium_t::WIFI:
-      WiFiEventData.timerAPoff.setNow();
+      WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
       WiFiEventData.timerAPstart.clear();
-      WifiDisconnect();
+      if (new_medium == NetworkMedium_t::Ethernet) {
+        WifiDisconnect();
+      }
       break;
   }
   statusLED(true);
-  active_network_medium = medium;
+  active_network_medium = new_medium;
   addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
 }
 
@@ -121,32 +126,15 @@ IPAddress NetworkDnsIP (uint8_t dns_no) {
   return WiFi.dnsIP(dns_no);
 }
 
-String NetworkMacAddress() {
+MAC_address NetworkMacAddress() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(!EthEventData.ethInitSuccess) {
-      addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddress() only on connected Ethernet!"));
-    } else {
-      return ETH.macAddress();
-    }
+    return ETHMacAddress();
   }
   #endif
-  
-  uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-  uint8_t *macread = NetworkMacAddressAsBytes(mac);
-  char     macaddress[20];
-  formatMAC(macread, macaddress);
-  
-  return String(macaddress);
-}
-
-uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
-  #ifdef HAS_ETHERNET
-  if(active_network_medium == NetworkMedium_t::Ethernet) {
-    return ETHMacAddress(mac);
-  }
-  #endif
-  return WiFi.macAddress(mac);
+  MAC_address mac;
+  WiFi.macAddress(mac.mac);
+  return mac;
 }
 
 String NetworkGetHostname() {
@@ -185,16 +173,23 @@ String createRFCCompliantHostname(const String& oldString) {
 }
 
 String WifiSoftAPmacAddress() {
-    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-    uint8_t *macread = WiFi.softAPmacAddress(mac);
-    char     macaddress[20];
-    formatMAC(macread, macaddress);
-    return String(macaddress);
+  MAC_address mac;
+  WiFi.softAPmacAddress(mac.mac);
+  return mac.toString();
+}
+
+String WifiSTAmacAddress() {
+  MAC_address mac;
+  WiFi.macAddress(mac.mac);
+  return mac.toString();
 }
 
 void CheckRunningServices() {
   set_mDNS();
-  SetWiFiTXpower();
+  if (active_network_medium == NetworkMedium_t::WIFI) 
+  {
+    SetWiFiTXpower();
+  }
 }
 
 #ifdef HAS_ETHERNET

@@ -13,6 +13,9 @@ ESP32 does also have RTC memory, but that's organised a bit different.
 RTC layout ESPEasy
 ------------------
 
+ESP8266
+^^^^^^^
+
 On the ESP82xx the RTC memory is addressable per 32 bit.
 
 In total, there is 768 bytes (192 addressable blocks).
@@ -24,6 +27,18 @@ In total, there is 768 bytes (192 addressable blocks).
 * 122 .. 123 UserVar checksum:  RTC_BASE_USERVAR + (sizeof(UserVar) / 4)
 * 128 .. 131 (16 bytes) Cache Controller (C016) meta data
 * 132 .. 191 (240 bytes) Cache Controller (C016) data 6 blocks per sample => max 10 samples
+
+
+ESP32
+^^^^^
+
+On ESP32, the compiler determines where an object is stored in RTC.
+Thus data stored in RTC may appear corrupt to a newly flashed build if the addresses where an object is stored may have changed.
+
+Structures stored in RTC:
+
+* RTC Struct
+* UserVar (task values)
 
 
 RTC Struct

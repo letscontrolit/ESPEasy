@@ -32,10 +32,10 @@
 #define BIT_POS_CALIB_CHAN_A      5
 #define BIT_POS_CALIB_CHAN_B      6
 
-std::map<byte, int32_t> Plugin_067_OversamplingValueChanA;
-std::map<byte, int16_t> Plugin_067_OversamplingCountChanA;
-std::map<byte, int32_t> Plugin_067_OversamplingValueChanB;
-std::map<byte, int16_t> Plugin_067_OversamplingCountChanB;
+std::map<uint8_t, int32_t> Plugin_067_OversamplingValueChanA;
+std::map<uint8_t, int16_t> Plugin_067_OversamplingCountChanA;
+std::map<uint8_t, int32_t> Plugin_067_OversamplingValueChanB;
+std::map<uint8_t, int16_t> Plugin_067_OversamplingCountChanB;
 
 enum {modeAoff, modeA64, modeA128};
 enum {modeBoff, modeB32};
@@ -97,7 +97,7 @@ int32_t readHX711(int16_t pinSCL, int16_t pinDOUT, int16_t config0, uint8_t *cha
       nextChannel = chanB32;
   }
 
-  for (byte i = 0; i < 24; i++)
+  for (uint8_t i = 0; i < 24; i++)
   {
     digitalWrite(pinSCL, HIGH);
     delayMicroseconds(1);
@@ -108,7 +108,7 @@ int32_t readHX711(int16_t pinSCL, int16_t pinDOUT, int16_t config0, uint8_t *cha
     mask >>= 1;
   }
 
-  for (byte i = 0; i < (nextChannel + 1); i++)
+  for (uint8_t i = 0; i < (nextChannel + 1); i++)
   {
     digitalWrite(pinSCL, HIGH);
     delayMicroseconds(1);
@@ -140,7 +140,7 @@ void int2float(int16_t valInt0, int16_t valInt1, float *valFloat)
   *valFloat = offset;
 }
 
-boolean Plugin_067(byte function, struct EventStruct *event, String& string)
+boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -191,8 +191,10 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(F("Oversampling"), F("oversamplingChanA"), PCONFIG(0) & (1 << BIT_POS_OS_CHAN_A));
 
-        String optionsModeChanA[3] = { F("off"), F("Gain 64"), F("Gain 128") };
-        addFormSelector(F("Mode"), F("modeChanA"), 3, optionsModeChanA, NULL, (PCONFIG(0) >> BIT_POS_MODE_CHAN_A64) & 0x03);
+        {
+          const __FlashStringHelper * optionsModeChanA[3] = { F("off"), F("Gain 64"), F("Gain 128") };
+          addFormSelector(F("Mode"), F("modeChanA"), 3, optionsModeChanA, NULL, (PCONFIG(0) >> BIT_POS_MODE_CHAN_A64) & 0x03);
+        }
 
         int2float(PCONFIG(1), PCONFIG(2), &valFloat);
         addFormTextBox(F("Offset"), F("p067_offset_chanA"), String(valFloat, 3), 25);
@@ -204,8 +206,10 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
         addFormCheckBox(F("Oversampling"), F("oversamplingChanB"), PCONFIG(0) & (1 << BIT_POS_OS_CHAN_B));
 
-        String optionsModeChanB[2] = { F("off"), F("Gain 32") };
-        addFormSelector(F("Mode"), F("modeChanB"), 2, optionsModeChanB, NULL, (PCONFIG(0) >> BIT_POS_MODE_CHAN_B32) & 0x01);
+        {
+          const __FlashStringHelper * optionsModeChanB[2] = { F("off"), F("Gain 32") };
+          addFormSelector(F("Mode"), F("modeChanB"), 2, optionsModeChanB, NULL, (PCONFIG(0) >> BIT_POS_MODE_CHAN_B32) & 0x01);
+        }
 
         int2float(PCONFIG(3), PCONFIG(4), &valFloat);
         addFormTextBox(F("Offset"), F("p067_offset_chanB"), String(valFloat, 3), 25);
@@ -380,8 +384,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
         if ((modeChanA == modeAoff) && (modeChanB == modeBoff))
         {
-          log = F("HX711: No channel selected");
-          addLog(LOG_LEVEL_INFO,log);
+          addLog(LOG_LEVEL_INFO, F("HX711: No channel selected"));
         }
 
         // Channel A activated?
@@ -473,25 +476,21 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
         String command = parseString(string, 1);
         if (command.equalsIgnoreCase(F("tarechana")))
         {
-          String log = F("HX711: tare channel A");
-
           float2int(-UserVar[event->BaseVarIndex + 2], &PCONFIG(1), &PCONFIG(2));
           Plugin_067_OversamplingValueChanA[event->TaskIndex] = 0;
           Plugin_067_OversamplingCountChanA[event->TaskIndex] = 0;
 
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("HX711: tare channel A"));
           success = true;
         }
 
         if (command.equalsIgnoreCase(F("tarechanb")))
         {
-          String log = F("HX711: tare channel B");
-
           float2int(-UserVar[event->BaseVarIndex + 3], &PCONFIG(3), &PCONFIG(4));
           Plugin_067_OversamplingValueChanB[event->TaskIndex] = 0;
           Plugin_067_OversamplingCountChanB[event->TaskIndex] = 0;
 
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("HX711: tare channel B"));
           success = true;
         }
         break;

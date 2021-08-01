@@ -27,7 +27,7 @@
 # define PLUGIN_VALUENAME4_106 "Gas"
 
 
-boolean Plugin_106(byte function, struct EventStruct *event, String& string)
+boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -66,7 +66,7 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
+      uint8_t choice = PCONFIG(0);
 
       /*
          String options[2];
@@ -132,8 +132,15 @@ boolean Plugin_106(byte function, struct EventStruct *event, String& string)
 
         UserVar[event->BaseVarIndex + 0] = P106_data->bme.temperature;
         UserVar[event->BaseVarIndex + 1] = P106_data->bme.humidity;
-        UserVar[event->BaseVarIndex + 2] = P106_data->bme.pressure / 100.0f;
         UserVar[event->BaseVarIndex + 3] = P106_data->bme.gas_resistance / 1000.0f;
+
+        const int elev = PCONFIG(1);
+        if (elev != 0)
+        {
+          UserVar[event->BaseVarIndex + 2] = pressureElevation(P106_data->bme.pressure / 100.0f, elev);
+        } else {
+          UserVar[event->BaseVarIndex + 2] = P106_data->bme.pressure / 100.0f;
+        }
       }
 
       success = true;
