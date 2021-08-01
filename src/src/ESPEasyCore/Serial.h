@@ -13,8 +13,6 @@ void initSerial();
 
 void serial();
 
-void addToSerialBuffer(const char *line);
-
 void addToSerialBuffer(const String& line);
 
 void addNewlineToSerialBuffer();

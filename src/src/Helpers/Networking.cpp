@@ -68,7 +68,7 @@ void etharp_gratuitous_r(struct netif *netif) {
 /*********************************************************************************************\
    Syslog client
 \*********************************************************************************************/
-void syslog(uint8_t logLevel, const char *message)
+void syslog(uint8_t logLevel, const String& message)
 {
   if ((Settings.Syslog_IP[0] != 0) && NetworkConnected())
   {
@@ -112,23 +112,15 @@ void syslog(uint8_t logLevel, const char *message)
       portUDP.write((uint8_t *)header.c_str(), header.length());
       #endif // ifdef ESP32
     }
-    const char *c = message;
-    bool done     = false;
 
-    while (!done) {
-      // Must use PROGMEM aware functions here to process message
-      char ch = pgm_read_byte(c++);
-
-      if (ch == '\0') {
-        done = true;
-      } else {
-        #ifdef ESP8266
-        portUDP.write(ch);
-        #endif // ifdef ESP8266
-        #ifdef ESP32
-        portUDP.write((uint8_t)ch);
-        #endif // ifdef ESP32
-      }
+    const size_t messageLength = message.length();
+    for (size_t i = 0; i < messageLength; ++i) {
+      #ifdef ESP8266
+      portUDP.write(message[i]);
+      #endif // ifdef ESP8266
+      #ifdef ESP32
+      portUDP.write((uint8_t)message[i]);
+      #endif // ifdef ESP32
     }
     portUDP.endPacket();
     FeedSW_watchdog();

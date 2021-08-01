@@ -27,7 +27,7 @@
 
 struct LogStruct {
     
-    void add(const uint8_t loglevel, const char *line);
+    void add(const uint8_t loglevel, const String& line);
 
     // Read the next item and append it to the given string.
     // Returns whether new lines are available.

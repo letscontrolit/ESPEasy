@@ -4,8 +4,7 @@
 #include "../Helpers/StringConverter.h"
 
 
-
-void LogStruct::add(const uint8_t loglevel, const char *line) {
+void LogStruct::add(const uint8_t loglevel, const String& line) {
   write_idx = (write_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
 
   if (write_idx == read_idx) {
@@ -15,30 +14,10 @@ void LogStruct::add(const uint8_t loglevel, const char *line) {
   timeStamp[write_idx] = millis();
   log_level[write_idx] = loglevel;
 
-  // Must use PROGMEM aware functions here to process line
-  unsigned int linelength = strlen_P(line);
-
-  if (linelength > LOG_STRUCT_MESSAGE_SIZE - 1) {
-    linelength = LOG_STRUCT_MESSAGE_SIZE - 1;
-  }
-  {
-    // Must copy using pgm_read_byte as some log entries may be served directly from flash
-    // Copy to a String in DRAM for speed, then either move (in DRAM) or copy to 2nd heap
-    String tmp;
-    tmp.reserve(linelength);
-    const char* c = line;
-    for (unsigned i = 0; i < linelength; ++i) {
-      tmp += static_cast<char>(pgm_read_byte(c++));
-    }
-
-    #ifdef USE_SECOND_HEAP
-    {
-      HeapSelectIram ephemeral;
-      Message[write_idx] = tmp;
-    }
-    #else
-      Message[write_idx] = std::move(tmp);
-    #endif
+  if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
+    Message[write_idx] = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
+  } else {
+    Message[write_idx] = line;
   }
 }
 

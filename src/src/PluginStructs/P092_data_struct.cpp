@@ -29,7 +29,7 @@ DLBus::DLBus()
   {
     __instance             = this;
     ISR_PtrChangeBitStream = DLbus_ChangeBitStream;
-    addToLog(LOG_LEVEL_INFO, F("Class DLBus created"));
+    addLog(LOG_LEVEL_INFO, F("Class DLBus created"));
   }
 }
 
@@ -39,21 +39,21 @@ DLBus::~DLBus()
   {
     __instance             = nullptr;
     ISR_PtrChangeBitStream = nullptr;
-    addToLog(LOG_LEVEL_INFO, F("Class DLBus destroyed"));
+    addLog(LOG_LEVEL_INFO, F("Class DLBus destroyed"));
   }
 }
 
 void DLBus::AddToInfoLog(const String& string)
 {
   if ((IsLogLevelInfo) && (LogLevelInfo != 0xff)) {
-    addToLog(LogLevelInfo, string);
+    addLog(LogLevelInfo, string);
   }
 }
 
 void DLBus::AddToErrorLog(const String& string)
 {
   if (LogLevelError != 0xff) {
-    addToLog(LogLevelError, string);
+    addLog(LogLevelError, string);
   }
 }
 

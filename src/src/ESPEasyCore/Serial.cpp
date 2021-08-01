@@ -90,25 +90,6 @@ int getRoomLeft() {
   return roomLeft;
 }
 
-void addToSerialBuffer(const char *line) {
-  process_serialWriteBuffer(); // Try to make some room first.
-  int roomLeft = getRoomLeft();
-
-  const char *c = line;
-
-  while (roomLeft > 0) {
-    // Must use PROGMEM aware functions here.
-    const char ch = pgm_read_byte(c++);
-
-    if (ch == '\0') {
-      return;
-    } else {
-      serialWriteBuffer.push_back(ch);
-      --roomLeft;
-    }
-  }
-}
-
 void addToSerialBuffer(const String& line) {
   process_serialWriteBuffer(); // Try to make some room first.
   int roomLeft = getRoomLeft();
@@ -150,7 +131,7 @@ void process_serialWriteBuffer() {
 // For now, only send it to the serial buffer and try to process it.
 // Later we may want to wrap it into a log.
 void serialPrint(const __FlashStringHelper * text) {
-  addToSerialBuffer(text);
+  addToSerialBuffer(String(text));
   process_serialWriteBuffer();
 }
 
@@ -160,7 +141,7 @@ void serialPrint(const String& text) {
 }
 
 void serialPrintln(const __FlashStringHelper * text) {
-  addToSerialBuffer(text);
+  addToSerialBuffer(String(text));
   addNewlineToSerialBuffer();
   process_serialWriteBuffer();
 }
