@@ -102,6 +102,9 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_SYSINFO
         #define WEBSERVER_SYSINFO
     #endif
+    #ifndef WEBSERVER_METRICS
+        #define WEBSERVER_METRICS
+    #endif
     #ifndef WEBSERVER_TOOLS
         #define WEBSERVER_TOOLS
     #endif
@@ -286,6 +289,7 @@ To create/register a plugin, you have to :
     #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
     #endif
+    #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
 #endif
 
 #ifdef USES_FHEM
@@ -407,6 +411,9 @@ To create/register a plugin, you have to :
 
     #ifndef LIMIT_BUILD_SIZE
         #define LIMIT_BUILD_SIZE
+    #endif
+    #ifdef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
+        #undef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
     #endif
     #ifndef NOTIFIER_SET_NONE
         #define NOTIFIER_SET_NONE
@@ -1613,7 +1620,7 @@ To create/register a plugin, you have to :
   #ifdef USES_C018
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
   #endif
-  #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+  #if defined(USE_TRIGONOMETRIC_FUNCTIONS_RULES) && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
     #undef USE_TRIGONOMETRIC_FUNCTIONS_RULES
   #endif
   #ifdef USES_SSDP
