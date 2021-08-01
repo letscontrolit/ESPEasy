@@ -183,13 +183,13 @@ void handle_rules_new() {
                                    if (fi.isDirectory)
                                    {
                                      addHtml(F("</TD><TD></TD><TD></TD><TD>"));
-                                     addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
+                                     addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name)
                                                    , F("Backup")
                                                    );
                                    }
                                    else
                                    {
-                                     String encodedPath =  URLEncode((fi.Name + F(".txt")).c_str());
+                                     String encodedPath =  URLEncode(String(fi.Name + F(".txt")));
 
                                      // File Name
                                      {

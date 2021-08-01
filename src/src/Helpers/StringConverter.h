@@ -208,7 +208,7 @@ void   htmlEscape(String& html);
 
 void   htmlStrongEscape(String& html);
 
-String URLEncode(const char *msg);
+String URLEncode(const String& msg);
 
 void   repl(const __FlashStringHelper * key,
             const String& val,

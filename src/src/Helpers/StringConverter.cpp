@@ -654,26 +654,28 @@ void htmlStrongEscape(String& html)
 // ********************************************************************************
 // URNEncode char string to string object
 // ********************************************************************************
-String URLEncode(const char *msg)
+String URLEncode(const String& msg)
 {
   const char *hex = "0123456789abcdef";
   String encodedMsg;
 
-  encodedMsg.reserve(strlen(msg));
+  const size_t msg_length = msg.length();
 
-  while (*msg != '\0') {
-    if ((('a' <= *msg) && (*msg <= 'z'))
-        || (('A' <= *msg) && (*msg <= 'Z'))
-        || (('0' <= *msg) && (*msg <= '9'))
-        || ('-' == *msg) || ('_' == *msg)
-        || ('.' == *msg) || ('~' == *msg)) {
-      encodedMsg += *msg;
+  encodedMsg.reserve(msg_length);
+
+  for (size_t i = 0; i < msg_length; ++i) {
+    const char ch = msg[i];
+    if ((('a' <= ch) && (ch <= 'z'))
+        || (('A' <= ch) && (ch <= 'Z'))
+        || (('0' <= ch) && (ch <= '9'))
+        || ('-' == ch) || ('_' == ch)
+        || ('.' == ch) || ('~' == ch)) {
+      encodedMsg += ch;
     } else {
       encodedMsg += '%';
-      encodedMsg += hex[*msg >> 4];
-      encodedMsg += hex[*msg & 15];
+      encodedMsg += hex[ch >> 4];
+      encodedMsg += hex[ch & 15];
     }
-    msg++;
   }
   return encodedMsg;
 }
@@ -699,7 +701,7 @@ void repl(const String& key, const String& val, String& s, bool useURLencode)
   if (useURLencode) {
     // URLEncode does take resources, so check first if needed.
     if (s.indexOf(key) == -1) { return; }
-    s.replace(key, URLEncode(val.c_str()));
+    s.replace(key, URLEncode(val));
   } else {
     s.replace(key, val);
   }

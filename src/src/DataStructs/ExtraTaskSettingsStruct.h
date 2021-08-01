@@ -30,6 +30,8 @@ struct ExtraTaskSettingsStruct
 
   bool checkInvalidCharInNames() const;
 
+  static bool validCharForNames(char character);
+
   taskIndex_t  TaskIndex;  // Always < TASKS_MAX or INVALID_TASK_INDEX
   char    TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
   char    TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];

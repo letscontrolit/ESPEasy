@@ -621,7 +621,7 @@ void parse_string_commands(String& line) {
         // Convert to url-encoded string
         // Syntax like {urlencode:"string to/encode"}
         if (!arg1.isEmpty()) {
-          replacement = URLEncode(arg1.c_str());
+          replacement = URLEncode(arg1);
         }
       }
 
