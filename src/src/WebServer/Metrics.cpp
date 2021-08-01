@@ -75,7 +75,6 @@ void handle_metrics() {
 
 
 void handle_metrics_devices(){
-    String returnString = "";
 
 
     for (taskIndex_t x = 0; validTaskIndex(x); x++)
