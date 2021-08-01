@@ -10,6 +10,7 @@
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/RuntimeData.h"
+#include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
 #include "../Helpers/Rules_calculate.h"
@@ -74,7 +75,11 @@ bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& task
   String TmpStr1;
   unsigned int varNr;
 
-  if (!(validateAndParseTaskValueArguments(event, Line, taskIndex, varNr) && (getDevicePluginID_from_TaskIndex(taskIndex) ==  33))) { return false; } // PluginID 33 = Dummy Device
+  if (!(validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)
+        && Settings.TaskDeviceEnabled[taskIndex]
+        && (getDevicePluginID_from_TaskIndex(taskIndex) == 33))) { // PluginID 33 = Dummy Device
+    return false; 
+  }
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
 
@@ -151,7 +156,10 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) return return_command_failed(); 
+  if (!(validateAndParseTaskValueArguments(event, Line, taskIndex, varNr) 
+        && Settings.TaskDeviceEnabled[taskIndex])) {
+    return return_command_failed();
+  }
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
   const int    result       = round(UserVar[uservarIndex]);
@@ -179,7 +187,10 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) { return return_command_failed(); }
+  if (!(validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)
+        && Settings.TaskDeviceEnabled[taskIndex])) {
+    return return_command_failed();
+  }
 
   SensorSendTask(taskIndex);
   return return_command_success();
