@@ -508,7 +508,7 @@ In Addition, device values are exposed.
 
 This allows easy connection via prometheus to grafana for graphing, as in the screenshot below:
 
-.. image:: images/Grafana.png
+.. image:: images/PrometheusGrafana.png
 
 
 
