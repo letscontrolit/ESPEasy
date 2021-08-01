@@ -990,7 +990,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           log += F(" Content:");
           log += String(P036_data->DisplayLinesV1[LineNo - 1].Content);
           log += F(" Length:");
-          log += P036_data->DisplayLinesV1[LineNo - 1].Content).length();
+          log += String(P036_data->DisplayLinesV1[LineNo - 1].Content).length();
           log += F(" Pix: ");
           log += P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
           log += F(" Reserved:");
@@ -1006,8 +1006,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         log += command;
         log += F(" SubCmd:");
         log += subcommand;
-        log += F(" Success:"):
-        log += jsonBool(success);
+        log += F(" Success:");
+        log += success ? F("true") : F("false");
         addLog(LOG_LEVEL_INFO, log);
       }
 #endif // PLUGIN_036_DEBUG
