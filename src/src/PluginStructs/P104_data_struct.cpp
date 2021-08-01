@@ -1075,22 +1075,22 @@ int8_t getTime(char *psz,
   return M;
 }
 
-void getDate(char     *psz,
-             bool      showYear = true,
-             bool      fourDgt  = false
-             # ifdef   P104_USE_DATETIME_OPTIONS
-             , uint8_t dateFmt = 0
-             , uint8_t dateSep = 0
+void getDate(char           *psz,
+             bool            showYear = true,
+             bool            fourDgt  = false
+             # ifdef         P104_USE_DATETIME_OPTIONS
+             , const uint8_t dateFmt = 0
+             , const uint8_t dateSep = 0
              # endif // ifdef P104_USE_DATETIME_OPTIONS
              ) {
   uint16_t d, m, y;
-  uint16_t year = (fourDgt ? node_time.year() : node_time.year() - 2000);
+  const uint16_t year = (fourDgt ? node_time.year() : node_time.year() - 2000);
 
   # ifdef P104_USE_DATETIME_OPTIONS
-  String separators = F(" /-.");
-  char   sep        = separators[dateSep];
+  const String separators = F(" /-.");
+  const char   sep        = separators[dateSep];
   # else // ifdef P104_USE_DATETIME_OPTIONS
-  char sep = ' ';
+  const char sep = ' ';
   # endif // ifdef P104_USE_DATETIME_OPTIONS
 
   d = node_time.day();
@@ -1126,26 +1126,26 @@ void getDate(char     *psz,
   }
 }
 
-uint8_t getDateTime(char     *psz,
-                    bool      colon    = true,
-                    bool      time12h  = false,
-                    bool      timeAmpm = false,
-                    bool      fourDgt  = false
-                    # ifdef   P104_USE_DATETIME_OPTIONS
-                    , uint8_t dateFmt = 0
-                    , uint8_t dateSep = 0
+uint8_t getDateTime(char           *psz,
+                    bool            colon    = true,
+                    bool            time12h  = false,
+                    bool            timeAmpm = false,
+                    bool            fourDgt  = false
+                    # ifdef         P104_USE_DATETIME_OPTIONS
+                    , const uint8_t dateFmt = 0
+                    , const uint8_t dateSep = 0
                     # endif // ifdef P104_USE_DATETIME_OPTIONS
                     ) {
+  String ampm;
   uint16_t d, M, y;
   uint8_t  h, m;
-  uint16_t year = (fourDgt ? node_time.year() : node_time.year() - 2000);
-  String   ampm;
+  const uint16_t year = (fourDgt ? node_time.year() : node_time.year() - 2000);
 
   # ifdef P104_USE_DATETIME_OPTIONS
-  String separators = F(" /-.");
-  char   sep        = separators[dateSep];
+  const String separators = F(" /-.");
+  const char   sep        = separators[dateSep];
   # else // ifdef P104_USE_DATETIME_OPTIONS
-  char sep = ' ';
+  const char sep = ' ';
   # endif // ifdef P104_USE_DATETIME_OPTIONS
 
   # ifdef P104_USE_DATETIME_OPTIONS
@@ -1607,7 +1607,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Other 3 (DR:0, CR:1, RR:1)"),    // 011
       F("Other 4 (DR:1, CR:0, RR:1)")     // 101
     };
-    int hardwareOptions[P104_hardwareTypeCount] = {
+    const int hardwareOptions[P104_hardwareTypeCount] = {
       static_cast<int>(MD_MAX72XX::moduleType_t::GENERIC_HW),
       static_cast<int>(MD_MAX72XX::moduleType_t::PAROLA_HW),
       static_cast<int>(MD_MAX72XX::moduleType_t::FC16_HW),
@@ -1651,7 +1651,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Month Day [Year] (US-style)"),
       F("[Year] Month Day (Japanese-style)")
     };
-    int dateFormatOptions[] = {
+    const int dateFormatOptions[] = {
       P104_DATE_FORMAT_EU,
       P104_DATE_FORMAT_US,
       P104_DATE_FORMAT_JP
@@ -1668,7 +1668,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Dash -"),
       F("Dot <b>.</b>")
     };
-    int dateSeparatorOptions[] = {
+    const int dateSeparatorOptions[] = {
       P104_DATE_SEPARATOR_SPACE,
       P104_DATE_SEPARATOR_SLASH,
       P104_DATE_SEPARATOR_DASH,
@@ -1713,11 +1713,11 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     );
 
     # ifdef P104_USE_ZONE_ORDERING
-    String orderTypes[] = {
+    const String orderTypes[] = {
       F("Numeric order (1..n)"),
       F("Display order (n..1)")
     };
-    int orderOptions[] = { 0, 1 };
+    const int    orderOptions[] = { 0, 1 };
     addFormSelector(F("Zone order"), F("plugin_104_zoneorder"), 2, orderTypes, orderOptions, NULL,
                     bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0, true
                     #  ifdef P104_USE_TOOLTIPS
@@ -1739,7 +1739,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Center"),
       F("Right")
     };
-    int alignmentOptions[3] = {
+    const int alignmentOptions[3] = {
       static_cast<int>(textPosition_t::PA_LEFT),
       static_cast<int>(textPosition_t::PA_CENTER),
       static_cast<int>(textPosition_t::PA_RIGHT)
@@ -1811,7 +1811,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , F("Grow down")
     # endif // ENA_GROW
     };
-    int animationOptions[] = {
+    const int animationOptions[] = {
       static_cast<int>(textEffect_t::PA_NO_EFFECT)
       , static_cast<int>(textEffect_t::PA_PRINT)
       , static_cast<int>(textEffect_t::PA_SCROLL_UP)
@@ -1911,7 +1911,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , F("Katakana (7)")
     # endif   // ifdef P104_USE_KATAKANA_FONT
     };
-    int fontOptions[] = {
+    const int fontOptions[] = {
       P104_DEFAULT_FONT_ID
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , P104_DOUBLE_HEIGHT_FONT_ID
@@ -1947,7 +1947,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , F("Double, lower")
     # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
     };
-    int layoutOptions[] = {
+    const int layoutOptions[] = {
       P104_LAYOUT_STANDARD
     # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
       , P104_LAYOUT_DOUBLE_UPPER
@@ -1962,7 +1962,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Flip left/right *"),
       F("Flip u/d &amp; l/r *")
     };
-    int specialEffectOptions[] = {
+    const int specialEffectOptions[] = {
       P104_SPECIAL_EFFECT_NONE,
       P104_SPECIAL_EFFECT_UP_DOWN,
       P104_SPECIAL_EFFECT_LEFT_RIGHT,
@@ -1981,7 +1981,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , F("Bar graph")
       # endif // ifdef P104_USE_BAR_GRAPH
     };
-    int contentOptions[] {
+    const int contentOptions[] {
       P104_CONTENT_TEXT,
       P104_CONTENT_TEXT_REV,
       P104_CONTENT_TIME,
@@ -2004,10 +2004,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     if (zones.size() < P104_MAX_ZONES) {
       actionTypes[actionCount]   = F("New above");
       actionOptions[actionCount] = P104_ACTION_ADD_ABOVE;
-      actionCount++;
       actionTypes[actionCount]   = F("New below");
       actionOptions[actionCount] = P104_ACTION_ADD_BELOW;
-      actionCount++;
+      actionCount               += 2;
     }
     actionTypes[actionCount]   = F("Delete");
     actionOptions[actionCount] = P104_ACTION_DELETE;
