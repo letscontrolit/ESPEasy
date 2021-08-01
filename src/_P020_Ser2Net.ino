@@ -257,8 +257,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       }
       
       if (command == F("serialsend")) {
-        const char *tmpBuf = string.substring(11).c_str();
-        task->ser2netSerial->write(tmpBuf);
+        task->ser2netSerial->write(string.substring(11).c_str());
         task->ser2netSerial->flush();
         success = true;
       }
