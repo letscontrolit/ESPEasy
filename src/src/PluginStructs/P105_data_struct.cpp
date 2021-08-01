@@ -1,262 +1,191 @@
-#ifdef USES_P105
-
 #include "../PluginStructs/P105_data_struct.h"
 
+#ifdef USES_P105
 
-uint8_t AHTSetCalCmd[3]   = { AHTX_CMD, 0x08, 0x00 }; // load factory calibration coeff
-uint8_t AHTSetCycleCmd[3] = { AHTX_CMD, 0x28, 0x00 }; // enable cycle mode
-uint8_t AHTMeasureCmd[3]  = { 0xAC, 0x33, 0x00 };     // start measurement command
-uint8_t AHTResetCmd       =   0xBA;                   // soft reset command
+# include "../Helpers/Convert.h"
 
+struct AHTx_Status {
+  inline AHTx_Status(uint8_t stat) : status(stat) {}
 
-P105_data_struct::P105_data_struct(uint8_t addr) :
-  last_hum_val(0.0f),
-  last_temp_val(0.0f),
-  last_measurement(0),
+  inline bool valid() const {
+    return status != 0xFF;
+  }
+
+  inline bool calibrated() const {
+    return (status & (1 << 3)) != 0;
+  }
+
+  inline bool busy() const {
+    return (status & (1 << 7)) != 0;
+  }
+
+  const uint8_t status;
+};
+
+AHTx_Device::AHTx_Device(uint8_t addr, AHTx_device_type type) :
   i2cAddress(addr),
-  state(AHT_state::Uninitialized) {}
+  device_type(type),
+  last_hum_val(0.0f),
+  last_temp_val(0.0f) {}
 
-
-bool P105_data_struct::initialized() const {
-  return state != Uninitialized;
+const __FlashStringHelper * AHTx_Device::getDeviceName() const {
+  switch (device_type) {
+    case AHT10_DEVICE: return F("AHT10");
+    case AHT20_DEVICE: return F("AHT20");
+    case AHT21_DEVICE: return F("AHT21");
+    default: return F("AHTx");
+  }
 }
 
-// Only perform the measurements with big interval to prevent the sensor from warming up.
-bool P105_data_struct::update(unsigned long task_index) {
+bool AHTx_Device::initialize() {
+  const uint8_t cmd_init = (device_type == AHT10_DEVICE) ? 0xE1 : 0xBE;
+
+  return I2C_write16_reg(i2cAddress, cmd_init, 0x0800);
+}
+
+bool AHTx_Device::triggerMeasurement() {
+  return I2C_write16_reg(i2cAddress, 0xAC, 0x3300); // measurement time takes over 80 msec
+}
+
+bool AHTx_Device::softReset() {
+  return I2C_write8(i2cAddress, 0xBA); // soft reset takes less than 20 msec
+}
+
+uint8_t AHTx_Device::readStatus() {
+  return I2C_read8(i2cAddress, NULL);
+}
+
+bool AHTx_Device::readData() {
+  const uint8_t data_len = 6;
+
+  // I2C_read8 len
+  if (Wire.requestFrom(i2cAddress, data_len) == 0) {
+    return false;
+  }
+
+  uint8_t data[data_len];
+
+  for (uint8_t i = 0; i < data_len; ++i) {
+    data[i] = Wire.read();
+  }
+
+  // check status
+  AHTx_Status status = data[0];
+
+  if (!(status.valid() && status.calibrated())) {
+    return false;
+  }
+
+  // 20 bits humidity value
+  uint32_t value = data[1];
+
+  value        = (value << 8) | data[2];
+  value        = (value << 4) | (data[3] >> 4);
+  last_hum_val = static_cast<float>(value) / (1 << 20) * 100;
+
+  // 20 bits temperature value
+  value         = data[3] & 0x0F;
+  value         = (value << 8) | data[4];
+  value         = (value << 8) | data[5];
+  last_temp_val = static_cast<float>(value) / (1 << 20) * 200 - 50;
+
+  return true;
+}
+
+P105_data_struct::P105_data_struct(uint8_t addr, AHTx_device_type dev) :
+  device(addr, dev),
+  state(AHTx_Uninitialized),
+  last_measurement(0),
+  trigger_time(0) {}
+
+bool P105_data_struct::initialized() const {
+  return state != AHTx_Uninitialized;
+}
+
+void P105_data_struct::setUninitialized() {
+  state = AHTx_Uninitialized;
+}
+
+// Perform the measurements with interval
+bool P105_data_struct::updateMeasurements(unsigned long task_index) {
   const unsigned long current_time = millis();
 
   if (!initialized()) {
-    if (!begin()) {
+    String log;
+    log.reserve(30);
+
+    if (!device.initialize()) {
+      log  = getDeviceName();
+      log += F(" : unable to initialize");
+      addLog(LOG_LEVEL_ERROR, log);
       return false;
     }
-    state            = Initialized;
-    last_measurement = 0;
+    log  = getDeviceName();
+    log += F(" : initialized");
+    addLog(LOG_LEVEL_INFO, log);
+
+    trigger_time = current_time;
+    state        = AHTx_Trigger_measurement;
+    return false;
   }
 
-  if (state != Wait_for_samples) {
+  if ((state != AHTx_Wait_for_samples) && (state != AHTx_Trigger_measurement)) {
+    if (!timeOutReached(last_measurement + (Settings.TaskDeviceTimer[task_index] * 1000))) {
+      // Timeout has not yet been reached.
+      return false;
+    }
+    trigger_time = current_time;
+    state        = AHTx_Trigger_measurement;
+  }
+
+  // state: AHTx_Wait_for_samples or AHTx_Trigger_measurement
+  AHTx_Status status = device.readStatus();
+
+  if (status.valid() && status.calibrated() && !status.busy()) {
+    if (state == AHTx_Trigger_measurement) {
+      device.triggerMeasurement();
+
+      trigger_time = current_time;
+      state        = AHTx_Wait_for_samples;
+      return false;
+    }
+
+    // state: AHTx_Wait_for_samples
+    if (!device.readData()) {
+      return false;
+    }
+
     last_measurement = current_time;
+    state            = AHTx_New_values;
 
-    startMeasurement();
-    state = Wait_for_samples;
-    return false;
-  }
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Log raw measuerd values only on level DEBUG
+      String log;
+      log.reserve(50); // Prevent re-allocation
+      log  = getDeviceName();
+      log += F(" : humidity ");
+      log += device.getHumidity();
+      log += F("% temperature ");
+      log += device.getTemperature();
+      log += 'C';
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
 
-  // make sure we wait for the measurement to complete
-  if (!timeOutReached(last_measurement + AHT10_MEASURMENT_DELAY)) {
-    return false;
-  }
-
-  if (!readMeasurement()) {
-    state = Initialized;
-    return false;
-  }
-
-  last_measurement = current_time;
-  state            = New_values;
-  last_temp_val    = readTemperature();
-  last_hum_val     = readHumidity();
-
-
-  /*
-     String log;
-
-     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-     log.reserve(120); // Prevent re-allocation
-     log  = getDeviceName();
-     log += F(":");
-     }
-     boolean logAdded = false;
-
-
-     if ((tempOffset > 0.1f) || (tempOffset < -0.1f)) {
-     // There is some offset to apply.
-     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log += F(" Apply temp offset ");
-      log += tempOffset;
-      log += F("C");
-     }
-
-     if (hasHumidity()) {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log += F(" humidity ");
-        log += last_hum_val;
-      }
-      last_hum_val = compute_humidity_from_dewpoint(last_temp_val + tempOffset, last_dew_temp_val);
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log += F("% => ");
-        log += last_hum_val;
-        log += F("%");
-      }
-     } else {
-      last_hum_val = 0.0f;
-     }
-
-     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log += F(" temperature ");
-      log += last_temp_val;
-     }
-     last_temp_val = last_temp_val + tempOffset;
-
-     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log     += F("C => ");
-      log     += last_temp_val;
-      log     += F("C");
-      logAdded = true;
-     }
-     }
-
-     if (hasHumidity()) {
-     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log     += F(" dew point ");
-      log     += last_dew_temp_val;
-      log     += F("C");
-      logAdded = true;
-     }
-     }
-
-     if (logAdded && loglevelActiveFor(LOG_LEVEL_INFO)) {
-     addLog(LOG_LEVEL_INFO, log);
-     }
-
-   */
-
-  return true;
-}
-
-bool P105_data_struct::begin() {
-  Wire.beginTransmission(i2cAddress);
-  Wire.write(AHTResetCmd);
-  Wire.endTransmission();
-
-  delay(AHT10_SOFT_RESET_DELAY);
-
-  Wire.beginTransmission(i2cAddress);
-  Wire.write(AHTSetCalCmd, 3);
-
-  if (Wire.endTransmission() != 0) {
-    return false;
-  }
-
-  delay(AHT10_MEASURMENT_DELAY);
-
-  if (readStatus(i2cAddress) & 0x08) { // Sensor calibrated?
     return true;
   }
 
+  if (timePassedSince(trigger_time) > 1000) {
+    // should not happen
+    String log;
+    log.reserve(15); // Prevent re-allocation
+    log  = getDeviceName();
+    log += F(" : reset");
+    addLog(LOG_LEVEL_ERROR, log);
+    device.softReset();
+
+    state = AHTx_Uninitialized;
+  }
+
   return false;
-}
-
-/**************************************************************************/
-
-/*
-    readStatusByte()
-    Read status byte from sensor over I2C
- */
-
-/**************************************************************************/
-unsigned inline char P105_data_struct::readStatus(uint8_t address) {
-  // uint8_t result = 0;
-  // Need for AHT20?
-  // Wire.beginTransmission(aht1x_address);
-  // Wire.write(0x71);
-  // if (Wire.endTransmission() != 0) return false;
-  Wire.requestFrom(address, (uint8_t)1);
-  return Wire.read();
-}
-
-/**************************************************************************/
-
-/*
-    readTemperature()
-    Read temperature, °C
-    NOTE:
-    - temperature range      -40°C..+80°C
-    - temperature resolution 0.01°C
-    - temperature accuracy   ±0.3°C
- */
-
-/**************************************************************************/
-float P105_data_struct::readTemperature()
-{
-  if (AHT10_rawDataBuffer[0] == AHT10_ERROR) { return AHT10_ERROR;                                                                             //
-                                                                                                                                               // error
-                                                                                                                                               // handler,
-                                                                                                                                               // collision
-                                                                                                                                               // on
-                                                                                                                                               // I2C
-                                                                                                                                               // bus
-  }
-  uint32_t temperature = ((uint32_t)(AHT10_rawDataBuffer[3] & 0x0F) << 16) | ((uint32_t)AHT10_rawDataBuffer[4] << 8) | AHT10_rawDataBuffer[5]; //
-                                                                                                                                               // 20-bit
-                                                                                                                                               // raw
-                                                                                                                                               // temperature
-                                                                                                                                               // data
-
-  return static_cast<float>(temperature) * 0.000191f - 50.0f;
-}
-
-/**************************************************************************/
-
-/*
-    readHumidity()
-    Read relative humidity, %
-    NOTE:
-    - prolonged exposure for 60 hours at humidity > 80% can lead to a
-      temporary drift of the signal +3%. Sensor slowly returns to the
-      calibrated state at normal operating conditions.
-    - relative humidity range      0%..100%
-    - relative humidity resolution 0.024%
-    - relative humidity accuracy   ±2%
- */
-
-/**************************************************************************/
-float P105_data_struct::readHumidity()
-{
-  if (AHT10_rawDataBuffer[0] == AHT10_ERROR) { return AHT10_ERROR;                                                                         //
-                                                                                                                                           // error
-                                                                                                                                           // handler,
-                                                                                                                                           // collision
-                                                                                                                                           // on
-                                                                                                                                           // I2C
-                                                                                                                                           // bus
-  }
-  uint32_t rawData = (((uint32_t)AHT10_rawDataBuffer[1] << 16) | ((uint32_t)AHT10_rawDataBuffer[2] << 8) | (AHT10_rawDataBuffer[3])) >> 4; //
-                                                                                                                                           // 20-bit
-                                                                                                                                           // raw
-                                                                                                                                           // humidity
-                                                                                                                                           // data
-
-  const float humidity = static_cast<float>(rawData) * 0.000095f;
-
-  if (humidity < 0) { return 0; }
-
-  if (humidity > 100) { return 100; }
-
-  return humidity;
-}
-
-bool P105_data_struct::startMeasurement() {
-  Wire.beginTransmission(i2cAddress);
-  Wire.write(AHTMeasureCmd, 3);
-
-  if (Wire.endTransmission() != 0) {
-    return false;
-  }
-  return true;
-}
-
-bool P105_data_struct::readMeasurement() {
-  Wire.requestFrom(i2cAddress, (uint8_t)6);
-
-  for (uint8_t i = 0; Wire.available() > 0 && i < 6; i++) {
-    AHT10_rawDataBuffer[i] = Wire.read();
-  }
-
-  if (AHT10_rawDataBuffer[0] & 0x80) {
-    return false; // device is busy
-  }
-  return true;
 }
 
 #endif // ifdef USES_P105

@@ -486,7 +486,7 @@ Show JSON
 =========
 
 Show Metrics
-=========
+============
 
 Shows various system metrics and device values in prometheus format
 
@@ -496,12 +496,12 @@ Metrics are exposed on the prometheus standard /metrics url
 
 System metrics exposed are:
 
-* uptime
+* Uptime
 * CPU load
 * RAM free
 * Stack free 
 * Wifi Strength
-* WIfi connection time
+* Wifi connection time
 * Wifi reconnection count (since boot)
 
 In Addition, device values are exposed.  

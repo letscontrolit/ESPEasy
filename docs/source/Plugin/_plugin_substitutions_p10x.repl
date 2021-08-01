@@ -66,19 +66,21 @@
 .. |P104_datasheet| replace::  https://atlas-scientific.com/files/electrically-isolated-ezo-carrier-board.pdf
 
 
-.. |P105_name| replace:: :cyan:`AHT10`
+.. |P105_name| replace:: :cyan:`AHT10/20/21`
 .. |P105_type| replace:: :cyan:`Environment`
-.. |P105_typename| replace:: :cyan:`Environment - AHT10`
+.. |P105_typename| replace:: :cyan:`Environment - AHT10/20/21`
 .. |P105_porttype| replace:: `.`
 .. |P105_status| replace:: :yellow:`TESTING A`
-.. |P105_github| replace:: P105_TempHumidty_AHT1x.ino
-.. _P105_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P105_TempHumidty_AHT1x.ino
+.. |P105_github| replace:: P105_AHT.ino
+.. _P105_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P105_AHT.ino
 .. |P105_usedby| replace:: `.`
 .. |P105_shortinfo| replace:: `.`
-.. |P105_maintainer| replace:: fmuntean tonhuisman
+.. |P105_maintainer| replace:: sakinit tonhuisman
 .. |P105_compileinfo| replace:: `.`
 .. |P105_usedlibraries| replace::  `.`
-.. |P105_datasheet| replace::  https://server4.eca.ir/eshop/AHT10/Aosong_AHT10_en_draft_0c.pdf
+.. |P105_datasheet| replace:: http://www.aosong.com/en/products-40.html
+.. |P105_datasheet2| replace:: http://www.aosong.com/en/products-32.html
+.. |P105_datasheet3| replace:: http://www.aosong.com/en/products-60.html
 
 
 .. |P106_name| replace:: :cyan:`BME680`
