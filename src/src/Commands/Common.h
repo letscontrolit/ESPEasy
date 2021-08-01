@@ -17,8 +17,6 @@ String return_result(struct EventStruct *event,
                      const String      & result);
 const __FlashStringHelper * return_see_serial(struct EventStruct *event);
 
-bool   IsNumeric(const char *source);
-
 String Command_GetORSetIP(struct EventStruct *event,
                           const String      & targetDescription,
                           const char         *Line,

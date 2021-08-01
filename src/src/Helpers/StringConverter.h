@@ -189,6 +189,10 @@ String parseStringToEndKeepCase(const String& string,
                                 uint8_t          indexFind,
                                 char          separator = ',');
 
+String tolerantParseStringKeepCase(const char * string,
+                                   uint8_t          indexFind,
+                                   char          separator = ',');
+
 String tolerantParseStringKeepCase(const String& string,
                                    uint8_t          indexFind,
                                    char          separator = ',');

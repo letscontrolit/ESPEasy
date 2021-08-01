@@ -571,6 +571,14 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
   return stripQuotes(result);
 }
 
+String tolerantParseStringKeepCase(const char * string,
+                                   uint8_t          indexFind,
+                                   char          separator)
+{
+  return tolerantParseStringKeepCase(String(string), indexFind, separator);
+}
+
+
 String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char separator)
 {
   if (Settings.TolerantLastArgParse()) {
